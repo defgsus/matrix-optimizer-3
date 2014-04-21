@@ -51,7 +51,7 @@ void Projector::recalc_()
         return;
 
     // aspect ratio
-    aspect_ = (Float)height_/width_;
+    aspect_ = (Float)width_/height_;
 
     // get actual position
     pos_ = glm::rotateY(glm::rotateX(Vec3(0,0,-radius_), longitude_), latitude_);
