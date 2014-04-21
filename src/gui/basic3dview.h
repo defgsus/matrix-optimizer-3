@@ -18,18 +18,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 ****************************************************************************/
 
-#ifndef MOSRC_GUI_BASIC3DVIEWER_H
-#define MOSRC_GUI_BASIC3DVIEWER_H
+#ifndef MOSRC_GUI_BASIC3DVIEW_H
+#define MOSRC_GUI_BASIC3DVIEW_H
 
 #include <QGLWidget>
 
 #include "types/vector.h"
 
-class Basic3DViewer : public QGLWidget
+class Basic3DView : public QGLWidget
 {
     Q_OBJECT
 public:
-    explicit Basic3DViewer(QWidget *parent = 0);
+    explicit Basic3DView(QWidget *parent = 0);
+
+    MO::Mat4 transformationMatrix() const;
 
 signals:
 
@@ -45,18 +47,23 @@ protected:
     void mouseMoveEvent(QMouseEvent *);
 
     //void initializeGL();
+
+    /** Sets the viewport and the projection matrix */
     void resizeGL(int w, int h);
+    /** Clears buffer and applies the transformation matrix */
     void paintGL();
 
     /** Draws coordinate system */
     void drawCoords_(int len);
 
+private:
+
     MO::Mat4
         projectionMatrix_,
-        transformationMatrix_;
-
+        rotationMatrix_;
+    MO::Float distanceZ_;
 
     QPoint lastMousePos_;
 };
 
-#endif // MOSRC_GUI_BASIC3DVIEWER_H
+#endif // MOSRC_GUI_BASIC3DVIEW_H

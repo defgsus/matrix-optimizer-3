@@ -20,14 +20,16 @@ SOURCES += \
         src/gui/mainwindow.cpp \
     src/gui/projectorsetupwidget.cpp \
     src/projection/projector.cpp \
-    src/gui/basic3dviewer.cpp
+    src/gui/basic3dview.cpp \
+    src/gui/projectorsetupview.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
     src/gui/projectorsetupwidget.h \
     src/types/vector.h \
     src/projection/projector.h \
-    src/gui/basic3dviewer.h
+    src/gui/basic3dview.h \
+    src/gui/projectorsetupview.h
 
 FORMS += \
         src/gui/mainwindow.ui \

@@ -20,47 +20,54 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 #include <QPainter>
 #include <QMouseEvent>
-#include <QDebug>
 
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "basic3dviewer.h"
+#include "basic3dview.h"
 
-Basic3DViewer::Basic3DViewer(QWidget *parent) :
+Basic3DView::Basic3DView(QWidget *parent) :
     QGLWidget(parent)
 {
     viewInit();
 }
 
-void Basic3DViewer::viewInit(MO::Float distanceZ)
+void Basic3DView::viewInit(MO::Float distanceZ)
 {
-    transformationMatrix_ = glm::translate(MO::Mat4(), MO::Vec3(0,0,-distanceZ));
+    distanceZ_ = distanceZ;
+    rotationMatrix_ = MO::Mat4();
     updateGL();
 }
 
-void Basic3DViewer::viewRotateX(MO::Float d)
-{
-    if (!d) return;
-    transformationMatrix_ *=
-            glm::rotate(MO::Mat4(), d, MO::Vec3(1,0,0));
-    updateGL();
-}
-
-void Basic3DViewer::viewRotateY(MO::Float d)
+void Basic3DView::viewRotateX(MO::Float d)
 {
     if (!d) return;
-    transformationMatrix_ *=
-        glm::rotate(MO::Mat4(), d, MO::Vec3(0,1,0));
+    rotationMatrix_ =
+            glm::rotate(MO::Mat4(), d, MO::Vec3(1,0,0))
+            * rotationMatrix_;
     updateGL();
 }
 
+void Basic3DView::viewRotateY(MO::Float d)
+{
+    if (!d) return;
+    rotationMatrix_ =
+            glm::rotate(MO::Mat4(), d, MO::Vec3(0,1,0))
+            * rotationMatrix_;
+    updateGL();
+}
 
-void Basic3DViewer::mousePressEvent(QMouseEvent * e)
+MO::Mat4 Basic3DView::transformationMatrix() const
+{
+    MO::Mat4 m = glm::translate(MO::Mat4(), MO::Vec3(0,0,-distanceZ_));
+    return m * rotationMatrix_;
+}
+
+void Basic3DView::mousePressEvent(QMouseEvent * e)
 {
     lastMousePos_ = e->pos();
 }
 
-void Basic3DViewer::mouseMoveEvent(QMouseEvent * e)
+void Basic3DView::mouseMoveEvent(QMouseEvent * e)
 {
     int dx = lastMousePos_.x() - e->x(),
         dy = lastMousePos_.y() - e->y();
@@ -73,10 +80,8 @@ void Basic3DViewer::mouseMoveEvent(QMouseEvent * e)
     }
 }
 
-void Basic3DViewer::resizeGL(int w, int h)
+void Basic3DView::resizeGL(int w, int h)
 {
-    qDebug() << w << h;
-
     projectionMatrix_ = glm::perspective(63.f, (float)w/h, 0.1f, 1000.0f);
 
     glViewport(0,0,w,h);
@@ -88,17 +93,17 @@ void Basic3DViewer::resizeGL(int w, int h)
 }
 
 
-void Basic3DViewer::paintGL()
+void Basic3DView::paintGL()
 {
-    glLoadMatrixf(glm::value_ptr(transformationMatrix_));
+    glLoadMatrixf(glm::value_ptr(transformationMatrix()));
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    drawCoords_(10);
+//    drawCoords_(10);
 }
 
 
-void Basic3DViewer::drawCoords_(int len)
+void Basic3DView::drawCoords_(int len)
 {
     const GLfloat s = 0.1;
     glBegin(GL_LINES);
