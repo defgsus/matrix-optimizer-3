@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 ****************************************************************************/
 
-#ifndef PROJECTORSETUPWIDGET_H
-#define PROJECTORSETUPWIDGET_H
+#ifndef MOSRC_GUI_PROJECTORSETUPWIDGET_H
+#define MOSRC_GUI_PROJECTORSETUPWIDGET_H
 
 #include <QWidget>
 
@@ -39,4 +39,4 @@ private:
     Ui::ProjectorSetupWidget *ui;
 };
 
-#endif // PROJECTORSETUPWIDGET_H
+#endif // MOSRC_GUI_PROJECTORSETUPWIDGET_H

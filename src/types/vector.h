@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 ****************************************************************************/
 
-#ifndef MO_TYPES_VECTOR_H
-#define MO_TYPES_VECTOR_H
+#ifndef MOSRC_TYPES_VECTOR_H
+#define MOSRC_TYPES_VECTOR_H
 
 #include <iostream>
 #include <glm/glm.hpp>
@@ -92,4 +92,4 @@ std::ostream& operator << (std::ostream& s, const glm::detail::tmat4x4<F>& m)
     return s;
 }
 
-#endif // MO_TYPES_VECTOR_H
+#endif // MOSRC_TYPES_VECTOR_H
