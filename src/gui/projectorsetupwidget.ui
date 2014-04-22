@@ -364,7 +364,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QWidget" name="widget" native="true">
+        <widget class="ProjectorSetupView" name="widget" native="true">
          <property name="minimumSize">
           <size>
            <width>180</width>
@@ -540,6 +540,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ProjectorSetupView</class>
+   <extends>QWidget</extends>
+   <header>gui/projectorsetupview.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
