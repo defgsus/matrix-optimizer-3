@@ -19,6 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 ****************************************************************************/
 
 #include <glm/gtx/polar_coordinates.hpp>
+
+#include "math/vector.h"
 #include "projectorsetupview.h"
 
 ProjectorSetupView::ProjectorSetupView(QWidget *parent) :
@@ -50,7 +52,6 @@ void ProjectorSetupView::paintGL()
 void ProjectorSetupView::calcDomeVerts_(MO::Float rad, MO::Float arc)
 {
     domevert_.clear();
-    std::cout << PI << ", " << TWO_PI << std::endl;
 
     for (int j=10; j<=arc; j+=10)
     for (int i=0; i<360; i+=10)

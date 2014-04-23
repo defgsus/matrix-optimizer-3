@@ -29,7 +29,9 @@ HEADERS += \
     src/types/vector.h \
     src/projection/projector.h \
     src/gui/basic3dview.h \
-    src/gui/projectorsetupview.h
+    src/gui/projectorsetupview.h \
+    src/math/vector.h \
+    src/math/constants.h
 
 FORMS += \
         src/gui/mainwindow.ui \
