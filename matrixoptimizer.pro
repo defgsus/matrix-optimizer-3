@@ -21,7 +21,8 @@ SOURCES += \
     src/gui/projectorsetupwidget.cpp \
     src/projection/projector.cpp \
     src/gui/basic3dview.cpp \
-    src/gui/projectorsetupview.cpp
+    src/gui/projectorsetupview.cpp \
+    src/math/timeline1d.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -31,7 +32,9 @@ HEADERS += \
     src/gui/basic3dview.h \
     src/gui/projectorsetupview.h \
     src/math/vector.h \
-    src/math/constants.h
+    src/math/constants.h \
+    src/math/timeline1d.h \
+    src/math/interpol.h
 
 FORMS += \
         src/gui/mainwindow.ui \
