@@ -20,7 +20,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 #include "timeline1dview.h"
 
+namespace MO {
+namespace GUI {
+
 Timeline1DView::Timeline1DView(QWidget *parent) :
     QWidget(parent)
 {
 }
+
+} // namespace GUI
+} // namespace MO

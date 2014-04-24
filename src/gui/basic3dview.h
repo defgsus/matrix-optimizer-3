@@ -25,6 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 #include "types/vector.h"
 
+namespace MO {
+namespace GUI {
+
 class Basic3DView : public QGLWidget
 {
     Q_OBJECT
@@ -65,5 +68,8 @@ private:
 
     QPoint lastMousePos_;
 };
+
+} // namespace GUI
+} // namespace MO
 
 #endif // MOSRC_GUI_BASIC3DVIEW_H

@@ -24,6 +24,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #include <vector>
 #include "gui/basic3dview.h"
 
+namespace MO {
+namespace GUI {
+
 class ProjectorSetupView : public Basic3DView
 {
     Q_OBJECT
@@ -45,5 +48,8 @@ private:
 
     std::vector<MO::Float> domevert_;
 };
+
+} // namespace GUI
+} // namespace MO
 
 #endif // MOSRC_GUI_PROJECTORSETUPVIEW_H

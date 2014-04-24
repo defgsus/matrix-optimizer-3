@@ -23,6 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #include "math/vector.h"
 #include "projectorsetupview.h"
 
+namespace MO {
+namespace GUI {
+
 ProjectorSetupView::ProjectorSetupView(QWidget *parent) :
     Basic3DView(parent)
 {
@@ -75,3 +78,6 @@ void ProjectorSetupView::calcDomeVerts_(MO::Float rad, MO::Float arc)
         domevert_.push_back(v3[2]);
     }
 }
+
+} // namespace GUI
+} // namespace MO

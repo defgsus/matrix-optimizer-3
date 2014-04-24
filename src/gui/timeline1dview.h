@@ -23,6 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 #include <QWidget>
 
+namespace MO {
+namespace GUI {
+
 class Timeline1DView : public QWidget
 {
     Q_OBJECT
@@ -34,5 +37,8 @@ signals:
 public slots:
 
 };
+
+} // namespace GUI
+} // namespace MO
 
 #endif // MOSRC_GUI_TIMELINE1DVIEW_H
