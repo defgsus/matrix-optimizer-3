@@ -25,8 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
     @version 2011/11/16 created (grabed together from kepler project)
     @version 2014/04/24 grabed from libmag
     */
-#ifndef MOSRC_MATH_Timeline1D_H
-#define MOSRC_MATH_Timeline1D_H
+#ifndef MOSRC_MATH_TIMELINE1D_H
+#define MOSRC_MATH_TIMELINE1D_H
 
 #include <iostream>
 #include <list>
@@ -107,7 +107,7 @@ class Timeline1D
 
     /** the type of hash-value generated for the time of a point. <br>
         <b>NOTE</b>: actually this is no random hash value. the points
-        in TpList (more specific in Timeline1D::data) are always ordered
+        in TpList (more specific in Timeline1D::data_) are always ordered
         according to their time. TpHash is simply the integer version of
         the time multiplied by a reasonable large constant. */
     typedef long int TpHash;
@@ -321,4 +321,4 @@ class Timeline1D
 
 } // namespace MO
 
-#endif // MOSRC_MATH_Timeline1D_H
+#endif // MOSRC_MATH_TIMELINE1D_H
