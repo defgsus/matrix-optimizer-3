@@ -13,11 +13,9 @@
 #include <iostream>
 #include <glm/glm.hpp>
 
+#include "types/float.h"
+
 namespace MO {
-
-    // ------------ basic numeric types -------------
-
-    typedef float Float;
 
     // -------- basic vector and matrix types -------
 
@@ -27,6 +25,13 @@ namespace MO {
 
     typedef glm::detail::tmat3x3<Float> Mat3;
     typedef glm::detail::tmat4x4<Float> Mat4;
+
+    typedef glm::detail::tvec2<Double> DVec2;
+    typedef glm::detail::tvec3<Double> DVec3;
+    typedef glm::detail::tvec4<Double> DVec4;
+
+    typedef glm::detail::tmat3x3<Double> DMat3;
+    typedef glm::detail::tmat4x4<Double> DMat4;
 
 } // namespace MO
 

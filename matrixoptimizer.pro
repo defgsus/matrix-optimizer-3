@@ -36,7 +36,8 @@ HEADERS += \
     src/math/constants.h \
     src/math/timeline1d.h \
     src/math/interpol.h \
-    src/gui/timeline1dview.h
+    src/gui/timeline1dview.h \
+    src/types/float.h
 
 FORMS += \
         src/gui/mainwindow.ui \
