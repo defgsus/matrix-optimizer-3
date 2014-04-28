@@ -10,7 +10,7 @@
 #ifndef MOSRC_TYPES_FLOAT_H
 #define MOSRC_TYPES_FLOAT_H
 
-#include <QDebug>
+#include <qglobal.h> // for Q_STATIC_ASSERT
 
 namespace MO {
 
