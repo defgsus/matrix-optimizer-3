@@ -19,6 +19,12 @@ class TestTimeline
 public:
 
     bool run();
+
+private:
+
+    bool test(Timeline1D::Point::Type type);
+
+    std::vector<double> writepos, values, readpos;
 };
 
 } // namespace MO
