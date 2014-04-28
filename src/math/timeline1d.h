@@ -15,6 +15,7 @@
 #include <map>
 #include <vector>
 
+#include "types/float.h"
 
 namespace MO {
 
@@ -30,9 +31,6 @@ class Timeline1D
     public:
 
     // ------------ types -------------
-
-    /** type of data is always double */
-    typedef double Float;
 
     /** one que-point of a Timeline1D */
     struct Point
@@ -75,7 +73,7 @@ class Timeline1D
             these names <b>must never change</b>!! */
         static const char *getPersistentName(Type type);
 
-        Float
+        Double
             /** time of the que-point in seconds */
             t,
             /** value of the que-point */
@@ -92,7 +90,7 @@ class Timeline1D
         in TpList (more specific in Timeline1D::data_) are always ordered
         according to their time. TpHash is simply the integer version of
         the time multiplied by a reasonable large constant. */
-    typedef long int TpHash;
+    typedef int64_t TpHash;
 
     /** the default container mapping between hashvalues and points */
     typedef std::map<TpHash, Point> TpList;
@@ -112,19 +110,21 @@ class Timeline1D
     unsigned int size() const { return data_.size(); }
 
     /** get value at time (with limits) */
-    Float get(Float time);
+    Double get(Double time);
 
     /** get value at time (without limits) */
-    Float getNoLimit(Float time);
+    Double getNoLimit(Double time);
 
     /** return smallest time */
-    Float tmin() const {
+    Double tmin() const
+    {
         if (data_.begin() == data_.end()) return 0.0;
         else return data_.begin()->second.t;
     }
 
     /** return largest time */
-    Float tmax() const {
+    Double tmax() const
+    {
         if (data_.rbegin() == data_.rend()) return 0.0;
         else return data_.rbegin()->second.t;
     }
@@ -134,34 +134,35 @@ class Timeline1D
 
     /** returns the TpList::iterator for a point at time 't',
         or data_.end() if there is no point */
-    TpList::iterator find(Float t)
+    TpList::iterator find(Double t)
     {
-        TpList::iterator i = data_.find(hash(t));
+        const TpHash h = hash(t);
+        TpList::iterator i = data_.find(h);
         // must check left and right because of rounding errors
         if (i==data_.end())
-            i = data_.find(hash(t)+1);
+            i = data_.find(h+1);
         if (i==data_.end())
-            i = data_.find(hash(t)-1);
+            i = data_.find(h-1);
         return i;
     }
 
     /** return the TpList::iterator of the next point after time 't',
         or data_.end() if none there. <br>
         returns the next point <b>even</b> if there is a point at 't' */
-    TpList::iterator next_after(Float t)
+    TpList::iterator next_after(Double t)
     {
         return data_.upper_bound(hash(t));
     }
 
     /** return the TpList::iterator of the first point >= time 't',
         or data_.end() if none there */
-    TpList::iterator first(Float t)
+    TpList::iterator first(Double t)
     {
         return data_.lower_bound(hash(t));
     }
 
     /** return the closest point to time 't', or data_.end() */
-    TpList::iterator closest(Float t);
+    TpList::iterator closest(Double t);
 
     // ---------- modify -------------
 
@@ -169,34 +170,34 @@ class Timeline1D
     void clear();
 
     /** adds a point if time is not already present */
-    Point* add(Float time, Float value, Point::Type typ = Point::DEFAULT);
+    Point* add(Double time, Double value, Point::Type typ = Point::DEFAULT);
 
     /** adds a point if time is not already present and if the timeline at this point
         is not already 'value' +/- 'thresh' */
-    Point* add(Float time, Float value, Float thresh, Point::Type typ = Point::DEFAULT);
+    Point* add(Double time, Double value, Double thresh, Point::Type typ = Point::DEFAULT);
 
     /** adds a point as given in structure */
     Point* add(Point &p);
 
     /** deletes a point if it is at time */
-    void remove(Float time);
+    void remove(Double time);
 
     /** set a low and high limit for output values */
-    void setLimit(Float lmin, Float lmax)
+    void setLimit(Double lmin, Double lmax)
     {
         setLowerLimit(lmin);
         setUpperLimit(lmax);
     }
 
     /** set a lower limit for the output */
-    void setLowerLimit(Float lmin)
+    void setLowerLimit(Double lmin)
     {
         lmin_ = lmin;
         lowerLimit_ = true;
     }
 
     /** set an upper limit for the output */
-    void setUpperLimit(Float lmax)
+    void setUpperLimit(Double lmax)
     {
         lmax_ = lmax;
         upperLimit_ = true;
@@ -218,10 +219,10 @@ class Timeline1D
     // ------------- functions- --------------
 
     /** shift all data-points by 'secOff' seconds */
-    void shiftTime(Float secOff);
+    void shiftTime(Double secOff);
 
     /** scales all values to the range -amp to amp */
-    void normalize(Float amp = 1.0);
+    void normalize(Double amp = 1.0);
 
     // ---------- more handling ----------------
 
@@ -258,7 +259,7 @@ class Timeline1D
     /** true if upper limit is used */
          upperLimit_;
 
-    Float
+    Double
     /** the lower limit for output */
         lmin_,
     /** the upper limit for output */
@@ -267,7 +268,7 @@ class Timeline1D
     // ------------------- private functions -----------------------
 
     /** type of point at this location, or default. */
-    Point::Type currentType_(Float time);
+    Point::Type currentType_(Double time);
 
     /** returns true if the iterator 'i' is the LAST element in data */
     bool isLastElement_(TpList::iterator i)
@@ -279,14 +280,14 @@ class Timeline1D
 
     /** linearly fade between the two points. <br>
         'time' must be <b>between</b> 'p1's and 'p2's time */
-    Float fadeLinear_(Point &p1, Point &p2, Float time)
+    Double fadeLinear_(Point &p1, Point &p2, Double time)
     {
-        Float f = (time - p1.t) / (p2.t - p1.t);
+        Double f = (time - p1.t) / (p2.t - p1.t);
         return p1.val*(1.0-f) + f*p2.val;
     }
 
     /** limit the value according to limit-settings */
-    Float limit_(Float val)
+    Double limit_(Double val)
     {
         if (lowerLimit_) val = std::max(lmin_, val);
         if (upperLimit_) val = std::min(lmax_, val);
@@ -294,7 +295,7 @@ class Timeline1D
     }
 
     /** return the hash value for a specific time */
-    TpHash hash(Float time)
+    TpHash hash(Double time)
     {
         return (TpHash)(time * 4096.0);
     }

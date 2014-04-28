@@ -66,16 +66,16 @@ Timeline1D::~Timeline1D()
 
 
 
-Timeline1D::Float Timeline1D::get(Float time)
+Double Timeline1D::get(Double time)
 {
     return limit_(getNoLimit(time));
 }
 
-Timeline1D::Float Timeline1D::getNoLimit(Float time)
+Double Timeline1D::getNoLimit(Double time)
 {
     if (data_.empty()) return 0.0;
 
-    TpHash htime = hash(time);
+    const TpHash htime = hash(time);
 
     TpList::iterator i1 = data_.upper_bound(htime);
 
@@ -94,7 +94,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
         isLast = isLastElement_(i1);
     }
 
-    Float ret;
+    Double ret;
 
     // before first
     if ( (isFirst) && htime < i1->first )
@@ -104,14 +104,16 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
     }
     else
     // after last
-    if (isOver) {
+    if (isOver)
+    {
         if (!isFirst) i1--;
         ret = i1->second.val;
         return ret;
     }
     else
     // on last
-    if (isLast) {
+    if (isLast)
+    {
         ret = i1->second.val;
         return ret;
     }
@@ -134,7 +136,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
             Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
-            Float f = (time-t1->t)/(t2->t - t1->t);
+            Double f = (time-t1->t)/(t2->t - t1->t);
 
             ret = t1->val*(1.0-f) + f*(t2->val);
             return ret;
@@ -152,7 +154,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
             Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
-            Float f = (time-t1->t)/(t2->t - t1->t);
+            Double f = (time-t1->t)/(t2->t - t1->t);
             f = 3.0*f*f*(1.0-f) + f*f*f;
 
             ret = t1->val*(1.0-f) + f*(t2->val);
@@ -171,7 +173,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
             Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
-            Float
+            Double
                 t0 = (time-t1->t),
                 t = t0/(t2->t - t1->t),
                 tq = t*t,
@@ -197,7 +199,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
             Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
-            Float
+            Double
                 t = (time-t1->t)/(t2->t - t1->t),
                 tq2 = t*t,
                 tq3 = tq2*t,
@@ -223,7 +225,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
                 return ret;
             }
 
-            Float d1 = 0, d2 = 0;
+            Double d1 = 0, d2 = 0;
 
             if (i0!=data_.begin())
             {
@@ -239,7 +241,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
             Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
-            Float
+            Double
                 tt = (time-t1->t),
                 t = tt/(t2->t - t1->t),
                 tq = t*t,
@@ -265,7 +267,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
                 return ret;
             }
 
-            Float y0,y1,y2,y3, t1,t2;
+            Double y0,y1,y2,y3, t1,t2;
             y0=y1=y2=y3=i1->second.val;
             t1=i1->second.t; t2=t1+1.0;
 
@@ -305,7 +307,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
 
             // interpolate between i1,i2 in i0,11,i2,i3
 
-            Float
+            Double
                 t = (time - t1) / (t2-t1),
                 tq = t*t,
 
@@ -332,7 +334,7 @@ Timeline1D::Float Timeline1D::getNoLimit(Float time)
             // get adjacent points
             TpList::iterator im;
             // we want to interpolate between y2 and y3
-            Float
+            Double
                 y2 = i1->second.val,y0=y2,y1=y2,y3=y2,y4=y2,y5=y2,
                 t2=i1->second.t, t3=t2+1.0;
 
@@ -383,7 +385,7 @@ void Timeline1D::clear()
 }
 
 
-Timeline1D::Point* Timeline1D::add(Float time, Float value, Point::Type typ)
+Timeline1D::Point* Timeline1D::add(Double time, Double value, Point::Type typ)
 {
     // check if present
     TpList::iterator i = find(time);
@@ -422,9 +424,9 @@ Timeline1D::Point* Timeline1D::add(Float time, Float value, Point::Type typ)
 
 
 
-Timeline1D::Point* Timeline1D::add(Float time, Float value, Float thresh, Point::Type typ)
+Timeline1D::Point* Timeline1D::add(Double time, Double value, Double thresh, Point::Type typ)
 {
-    Float v = get(time);
+    Double v = get(time);
     if (value>=v-thresh && value<=v+thresh) return 0;
 
     return add(time, value, typ);
@@ -439,7 +441,7 @@ Timeline1D::Point* Timeline1D::add(Point &p)
     return cur_;
 }
 
-Timeline1D::Point::Type Timeline1D::currentType_(Float time)
+Timeline1D::Point::Type Timeline1D::currentType_(Double time)
 {
     if (data_.empty()) return Point::SYMMETRIC;
 
@@ -451,7 +453,7 @@ Timeline1D::Point::Type Timeline1D::currentType_(Float time)
 }
 
 
-void Timeline1D::remove(Float time)
+void Timeline1D::remove(Double time)
 {
     // check if present
     TpList::iterator i = find(time);
@@ -468,7 +470,7 @@ void Timeline1D::setAutoDerivative(TpList::iterator &i)
 {
     // prev, next
     TpList::iterator i0,i1;
-    Float t0,t1,v0,v1;
+    Double t0,t1,v0,v1;
 
     i0 = i;
     if (i0==data_.begin())
@@ -506,10 +508,11 @@ void Timeline1D::setAutoDerivative(TpList::iterator start, TpList::iterator end)
 }
 
 
-void Timeline1D::shiftTime(Float secOff)
+void Timeline1D::shiftTime(Double secOff)
 {
     // first, copy all points
     std::list<Timeline1D::Point> plist;
+
     for (TpList::iterator i=data_.begin();
             i != data_.end(); i++)
     {
@@ -545,7 +548,7 @@ bool Timeline1D::saveFile(const char *filename)
 
 void Timeline1D::saveFile(FILE *f)
 {
-    fprintf(f, "timeline2d { ");
+    fprintf(f, "timeline1d { ");
     // version
     fprintf(f, "1 ");
     // nr of points
@@ -573,7 +576,7 @@ bool Timeline1D::loadFile(const char *filename)
 
 bool Timeline1D::loadFile(FILE *f)
 {
-    int e = fscanf(f, "timeline2d { ");
+    int e = fscanf(f, "timeline1d { ");
 
     // version
     int ver;
@@ -588,12 +591,12 @@ bool Timeline1D::loadFile(FILE *f)
     clear();
 
     int typ;
-    float t,val;
+    Double t,val;
     for (int i=0; i<nr; i++)
     {
-        e = fscanf(f, "%d %g %g ", &typ, &t, &val);
+        e = fscanf(f, "%d %lg %lg ", &typ, &t, &val);
         if (e!=3) return false;
-        add(t, val, (Timeline1D::Point::Point::Type)typ);
+        add(t, val, (Timeline1D::Point::Type)typ);
     }
     e = fscanf(f, "} ");
 
@@ -606,9 +609,9 @@ bool Timeline1D::loadFile(FILE *f)
 
 
 
-void Timeline1D::normalize(Float amp)
+void Timeline1D::normalize(Double amp)
 {
-    Float ma = 0.0;
+    Double ma = 0.0;
     for (TpList::iterator i=data_.begin();
             i!=data_.end(); i++)
     {
@@ -626,7 +629,7 @@ void Timeline1D::normalize(Float amp)
 
 
 
-Timeline1D::TpList::iterator Timeline1D::closest(Float t)
+Timeline1D::TpList::iterator Timeline1D::closest(Double t)
 {
     std::cout << "searching for " << t << "\n";
 
