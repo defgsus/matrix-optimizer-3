@@ -22,34 +22,34 @@ Basic3DView::Basic3DView(QWidget *parent) :
     viewInit();
 }
 
-void Basic3DView::viewInit(MO::Float distanceZ)
+void Basic3DView::viewInit(Float distanceZ)
 {
     distanceZ_ = distanceZ;
-    rotationMatrix_ = MO::Mat4();
+    rotationMatrix_ = Mat4();
     updateGL();
 }
 
-void Basic3DView::viewRotateX(MO::Float d)
+void Basic3DView::viewRotateX(Float d)
 {
     if (!d) return;
     rotationMatrix_ =
-            glm::rotate(MO::Mat4(), d, MO::Vec3(1,0,0))
+            glm::rotate(Mat4(), d, Vec3(1,0,0))
             * rotationMatrix_;
     updateGL();
 }
 
-void Basic3DView::viewRotateY(MO::Float d)
+void Basic3DView::viewRotateY(Float d)
 {
     if (!d) return;
     rotationMatrix_ =
-            glm::rotate(MO::Mat4(), d, MO::Vec3(0,1,0))
+            glm::rotate(Mat4(), d, Vec3(0,1,0))
             * rotationMatrix_;
     updateGL();
 }
 
-MO::Mat4 Basic3DView::transformationMatrix() const
+Mat4 Basic3DView::transformationMatrix() const
 {
-    MO::Mat4 m = glm::translate(MO::Mat4(), MO::Vec3(0,0,-distanceZ_));
+    Mat4 m = glm::translate(Mat4(), Vec3(0,0,-distanceZ_));
     return m * rotationMatrix_;
 }
 

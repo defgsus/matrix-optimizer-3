@@ -22,15 +22,15 @@ class Basic3DView : public QGLWidget
 public:
     explicit Basic3DView(QWidget *parent = 0);
 
-    MO::Mat4 transformationMatrix() const;
+    Mat4 transformationMatrix() const;
 
 signals:
 
 public slots:
 
-    void viewInit(MO::Float distanceZ = 10.f);
-    void viewRotateX(MO::Float degree);
-    void viewRotateY(MO::Float degree);
+    void viewInit(Float distanceZ = 10.f);
+    void viewRotateX(Float degree);
+    void viewRotateY(Float degree);
 
 protected:
 
@@ -49,10 +49,10 @@ protected:
 
 private:
 
-    MO::Mat4
+    Mat4
         projectionMatrix_,
         rotationMatrix_;
-    MO::Float distanceZ_;
+    Float distanceZ_;
 
     QPoint lastMousePos_;
 };

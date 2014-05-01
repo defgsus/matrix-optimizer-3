@@ -10,11 +10,11 @@
 #include <QApplication>
 
 #include "gui/mainwindow.h"
-#include "tests/testtimeline.h"
+//#include "tests/testtimeline.h"
 
 int main(int argc, char *argv[])
 {
-    MO::TestTimeline t; return t.run();
+    //MO::TestTimeline t; return t.run();
 
     QApplication a(argc, argv);
     MO::GUI::MainWindow w;
