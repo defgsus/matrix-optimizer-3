@@ -26,7 +26,8 @@ SOURCES += \
     src/math/timeline1d.cpp \
     src/gui/timeline1dview.cpp \
     src/tests/testtimeline.cpp \
-    src/io/console.cpp
+    src/io/console.cpp \
+    src/audio/audiosource.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -42,7 +43,8 @@ HEADERS += \
     src/gui/timeline1dview.h \
     src/types/float.h \
     src/tests/testtimeline.h \
-    src/io/console.h
+    src/io/console.h \
+    src/audio/audiosource.h
 
 FORMS += \
         src/gui/mainwindow.ui \
