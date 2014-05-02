@@ -65,8 +65,7 @@ class Timeline1D
             MAX
         };
 
-        /** returns the name of the type.
-            these names are */
+        /** returns the user-friendly name of the type. */
         static const char *getName(Type type);
 
         /** returns the <b>persistent</b> name of the type.

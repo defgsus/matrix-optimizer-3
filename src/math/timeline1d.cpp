@@ -19,15 +19,15 @@ const char *Timeline1D::Point::getName(Point::Type type)
     switch (type)
     {
         default:
-        case Timeline1D::Point::DEFAULT: return "default"; break;
-        case Timeline1D::Point::CONSTANT: return "constant"; break;
-        case Timeline1D::Point::LINEAR: return "linear"; break;
-        case Timeline1D::Point::SMOOTH: return "smooth"; break;
-        case Timeline1D::Point::SYMMETRIC: return "symmetric"; break;
-        case Timeline1D::Point::SYMMETRIC2: return "hermite"; break;
+        case Timeline1D::Point::DEFAULT:     return "default";    break;
+        case Timeline1D::Point::CONSTANT:    return "constant";   break;
+        case Timeline1D::Point::LINEAR:      return "linear";     break;
+        case Timeline1D::Point::SMOOTH:      return "smooth";     break;
+        case Timeline1D::Point::SYMMETRIC:   return "symmetric";  break;
+        case Timeline1D::Point::SYMMETRIC2:  return "hermite";    break;
         case Timeline1D::Point::SPLINE4_SYM: return "symmetric4"; break;
-        case Timeline1D::Point::SPLINE4: return "spline4"; break;
-        case Timeline1D::Point::SPLINE6: return "spline6"; break;
+        case Timeline1D::Point::SPLINE4:     return "spline4";    break;
+        case Timeline1D::Point::SPLINE6:     return "spline6";    break;
     }
 }
 
@@ -36,15 +36,15 @@ const char *Timeline1D::Point::getPersistentName(Point::Type type)
     switch (type)
     {
         default:
-        case Timeline1D::Point::DEFAULT: return "def"; break;
-        case Timeline1D::Point::CONSTANT: return "const"; break;
-        case Timeline1D::Point::LINEAR: return "linear"; break;
-        case Timeline1D::Point::SMOOTH: return "smooth"; break;
-        case Timeline1D::Point::SYMMETRIC: return "sym"; break;
-        case Timeline1D::Point::SYMMETRIC2: return "hermite"; break;
-        case Timeline1D::Point::SPLINE4_SYM: return "sym4"; break;
-        case Timeline1D::Point::SPLINE4: return "spline4"; break;
-        case Timeline1D::Point::SPLINE6: return "spline6"; break;
+        case Timeline1D::Point::DEFAULT:     return "def";     break;
+        case Timeline1D::Point::CONSTANT:    return "const";   break;
+        case Timeline1D::Point::LINEAR:      return "linear";  break;
+        case Timeline1D::Point::SMOOTH:      return "smooth";  break;
+        case Timeline1D::Point::SYMMETRIC:   return "sym";     break;
+        case Timeline1D::Point::SYMMETRIC2:  return "hermite"; break;
+        case Timeline1D::Point::SPLINE4_SYM: return "sym4";    break;
+        case Timeline1D::Point::SPLINE4:     return "spline4"; break;
+        case Timeline1D::Point::SPLINE6:     return "spline6"; break;
     }
 }
 
@@ -631,8 +631,6 @@ void Timeline1D::normalize(Double amp)
 
 Timeline1D::TpList::iterator Timeline1D::closest(Double t)
 {
-    std::cout << "searching for " << t << "\n";
-
     if (data_.empty()) return data_.end();
 
     // check for last point
@@ -641,7 +639,7 @@ Timeline1D::TpList::iterator Timeline1D::closest(Double t)
 
     // i >= t
     i = first(t);
-    if (i==data_.end()) { std::cout << "none\n"; return i; }
+    if (i==data_.end()) return i;
 
     if (i==data_.begin()) return i;
 
