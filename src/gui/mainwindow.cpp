@@ -12,7 +12,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "projectorsetupwidget.h"
-
+#include "timeline1dview.h"
+#include "math/timeline1d.h"
 namespace MO {
 namespace GUI {
 
@@ -26,6 +27,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     auto v = new ProjectorSetupWidget(centralWidget());
     l->addWidget(v);
+
+    auto tl = new Timeline1D;
+    for (int i=0; i<100; ++i)
+        tl->add((Double)rand()/RAND_MAX * 10.0, (Double)rand()/RAND_MAX, Timeline1D::Point::SYMMETRIC);
+    auto tlv = new Timeline1DView(tl, this);
+    l->addWidget(tlv);
 }
 
 MainWindow::~MainWindow()

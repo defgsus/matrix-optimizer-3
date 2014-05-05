@@ -12,19 +12,34 @@
 
 #include <QWidget>
 
+#include "types/float.h"
+
 namespace MO {
+
+class Timeline1D;
+
 namespace GUI {
 
 class Timeline1DView : public QWidget
 {
     Q_OBJECT
 public:
-    explicit Timeline1DView(QWidget *parent = 0);
+    explicit Timeline1DView(Timeline1D * timeline = 0, QWidget *parent = 0);
+
+    /** Assigns a new (or no) Timeline1D */
+    void setTimeline(Timeline1D * timeline = 0);
+
+    Double screen2time(int x) const;
 
 signals:
 
 public slots:
 
+protected:
+
+    void paintEvent(QPaintEvent *);
+
+    Timeline1D * tl_;
 };
 
 } // namespace GUI
