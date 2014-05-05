@@ -650,5 +650,40 @@ Timeline1D::TpList::iterator Timeline1D::closest(Double t)
 }
 
 
+void Timeline1D::getMinMax(Double tStart, Double tEnd, Double& minimal, Double& maximal)
+{
+    auto i = closest(tStart);
+
+    // break early
+    if (i == data_.end())
+    {
+        minimal = maximal = 0.0;
+        return;
+    }
+
+    minimal = maximal = limit_(i->second.val);
+
+    auto last = closest(tEnd);
+
+    // XXX may need some finetuning
+    if (last == data_.end())
+        return;
+
+    if (i->second.t >= last->second.t)
+        return;
+
+    // check each point
+    while (i != last)
+    {
+        ++i;
+        if (i == data_.end()) // safety
+            return;
+
+        const Double v = limit_(i->second.val);
+        minimal = std::min(minimal, v);
+        maximal = std::max(maximal, v);
+    }
+
+}
 
 } // namespace MO

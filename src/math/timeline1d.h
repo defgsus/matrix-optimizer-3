@@ -163,6 +163,11 @@ class Timeline1D
     /** return the closest point to time 't', or data_.end() */
     TpList::iterator closest(Double t);
 
+    /** Returns the smallest and greatest values found within the given time range.
+        Any limit is applied. Only the que points are considered, any curve
+        exceeding the points is not considered. */
+    void getMinMax(Double tStart, Double tEnd, Double& minimal, Double& maximal);
+
     // ---------- modify -------------
 
     /** remove all points */
