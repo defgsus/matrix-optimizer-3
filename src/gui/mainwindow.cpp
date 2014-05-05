@@ -14,6 +14,7 @@
 #include "projectorsetupwidget.h"
 #include "timeline1dview.h"
 #include "math/timeline1d.h"
+
 namespace MO {
 namespace GUI {
 
@@ -25,8 +26,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     auto l = new QVBoxLayout(centralWidget());
 
-    auto v = new ProjectorSetupWidget(centralWidget());
-    l->addWidget(v);
+    //auto v = new ProjectorSetupWidget(centralWidget());
+    //l->addWidget(v);
 
     auto tl = new Timeline1D;
     for (int i=0; i<100; ++i)

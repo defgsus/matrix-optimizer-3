@@ -29,7 +29,7 @@ public:
     /** Assigns a new (or no) Timeline1D */
     void setTimeline(Timeline1D * timeline = 0);
 
-    Double screen2time(int x) const;
+    Double screen2time(Double x) const;
 
 signals:
 
@@ -40,6 +40,8 @@ protected:
     void paintEvent(QPaintEvent *);
 
     Timeline1D * tl_;
+
+    int overPaint_;
 };
 
 } // namespace GUI

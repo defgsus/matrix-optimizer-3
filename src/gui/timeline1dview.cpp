@@ -16,9 +16,10 @@
 namespace MO {
 namespace GUI {
 
-Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent) :
-    QWidget(parent),
-    tl_ (tl)
+Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
+    :   QWidget     (parent),
+        tl_         (tl),
+        overPaint_  (4)
 {
     setMinimumSize(100,60);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -31,14 +32,15 @@ void Timeline1DView::setTimeline(Timeline1D *timeline)
     repaint(rect());
 }
 
-Double Timeline1DView::screen2time(int x) const
+Double Timeline1DView::screen2time(Double x) const
 {
-    return (Double)x / width() * 10.0;
+    return x / width() * 10.0;
 }
 
 void Timeline1DView::paintEvent(QPaintEvent * e)
 {
     QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing, true);
 
     // -- background --
     p.setPen(Qt::NoPen);
@@ -51,18 +53,22 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
 
     // -- curve --
 
+    overPaint_ = std::max(1, overPaint_);
+
     const int i0 = e->rect().left(),
-              i1 = e->rect().right();
+              i1 = e->rect().right(),
+              im = (i1 - i0) * overPaint_;
 
     p.setPen(QPen(QColor(0,255,0)));
     p.setBrush(Qt::NoBrush);
 
     int y0=0, y;
-    for (int i=i0; i<=i1; ++i)
+    for (int i=0; i<=im; ++i)
     {
-        y = height() - 1 - tl_->get(screen2time(i)) * height();
-        if (i!=i0)
-            p.drawLine(i-1, y0, i, y);
+        Double x = (Double)i / overPaint_;
+        y = height() - 1 - tl_->get(screen2time(x)) * height();
+        if (x!=0)
+            p.drawLine(x-1, y0, x, y);
         y0 = y;
     }
 }
