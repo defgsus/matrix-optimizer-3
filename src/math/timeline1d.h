@@ -91,6 +91,11 @@ class Timeline1D
         the time multiplied by a reasonable large constant. */
     typedef int64_t TpHash;
 
+    static const TpHash InvalidHash = 0xffffffffffffffff;
+
+    /** Returns the hash value for a specific time */
+    static TpHash hash(Double time) { return (TpHash)(time * 4096.0); }
+
     /** the default container mapping between hashvalues and points */
     typedef std::map<TpHash, Point> TpList;
 
@@ -296,12 +301,6 @@ class Timeline1D
         if (lowerLimit_) val = std::max(lmin_, val);
         if (upperLimit_) val = std::min(lmax_, val);
         return val;
-    }
-
-    /** return the hash value for a specific time */
-    TpHash hash(Double time)
-    {
-        return (TpHash)(time * 4096.0);
     }
 
 };

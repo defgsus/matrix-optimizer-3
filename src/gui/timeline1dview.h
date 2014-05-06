@@ -12,12 +12,9 @@
 
 #include <QWidget>
 
-#include "types/float.h"
+#include "math/timeline1d.h"
 
 namespace MO {
-
-class Timeline1D;
-
 namespace GUI {
 
 class Timeline1DView : public QWidget
@@ -29,7 +26,12 @@ public:
     /** Assigns a new (or no) Timeline1D */
     void setTimeline(Timeline1D * timeline = 0);
 
+    // --------- conversion screen/time/value --------
+
     Double screen2time(Double x) const;
+    Double screen2value(Double y) const;
+    int time2screen(Double time) const;
+    int value2screen(Double val) const;
 
 signals:
 
@@ -38,10 +40,28 @@ public slots:
 protected:
 
     void paintEvent(QPaintEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void mousePressEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+
+    void clearHover_();
+    void setHover_(const Timeline1D::Point&);
+
+    /** Returns the screen rect for a given point */
+    QRect handleRect_(const Timeline1D::Point&);
+
+    // ____________ MEMBER _____________
 
     Timeline1D * tl_;
 
-    int overPaint_;
+    // ---- config ----
+
+    int overPaint_,
+        handleRadius_;
+
+    // ---- interaction ----
+
+    Timeline1D::TpHash hoverHash_;
 };
 
 } // namespace GUI

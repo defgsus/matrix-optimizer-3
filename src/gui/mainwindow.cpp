@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //l->addWidget(v);
 
     auto tl = new Timeline1D;
-    for (int i=0; i<100; ++i)
+    for (int i=0; i<20; ++i)
         tl->add((Double)rand()/RAND_MAX * 10.0, (Double)rand()/RAND_MAX, Timeline1D::Point::SYMMETRIC);
     auto tlv = new Timeline1DView(tl, this);
     l->addWidget(tlv);
