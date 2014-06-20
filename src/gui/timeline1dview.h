@@ -46,9 +46,10 @@ protected:
 
     void clearHover_();
     void setHover_(const Timeline1D::Point&);
+    bool isHover_() const;
 
     /** Returns the screen rect for a given point */
-    QRect handleRect_(const Timeline1D::Point&);
+    QRect handleRect_(const Timeline1D::Point&, bool hovered);
 
     // ____________ MEMBER _____________
 
@@ -57,7 +58,8 @@ protected:
     // ---- config ----
 
     int overPaint_,
-        handleRadius_;
+        handleRadius_,
+        handleRadiusHovered_;
 
     // ---- interaction ----
 

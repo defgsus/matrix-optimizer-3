@@ -21,6 +21,7 @@ Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
         tl_         (tl),
         overPaint_  (4),
         handleRadius_(3),
+        handleRadiusHovered_(4),
         hoverHash_   (Timeline1D::InvalidHash)
 {
     setMinimumSize(100,60);
@@ -55,12 +56,21 @@ int Timeline1DView::value2screen(Double val) const
     return height() - 1 - val * height();
 }
 
-QRect Timeline1DView::handleRect_(const Timeline1D::Point& p)
+QRect Timeline1DView::handleRect_(const Timeline1D::Point& p, bool hovered)
 {
-    QRect r(0,0,handleRadius_*2, handleRadius_*2);
-    r.moveTo(time2screen(p.t) - handleRadius_,
-             value2screen(p.val) - handleRadius_);
+    if (!hovered)
+    {
+        QRect r(0,0,handleRadius_*2, handleRadius_*2);
+        r.moveTo(time2screen(p.t) - handleRadius_,
+                 value2screen(p.val) - handleRadius_);
+        return r;
+    }
+
+    QRect r(0,0,handleRadiusHovered_*2, handleRadiusHovered_*2);
+    r.moveTo(time2screen(p.t) - handleRadiusHovered_,
+             value2screen(p.val) - handleRadiusHovered_);
     return r;
+
 }
 
 void Timeline1DView::paintEvent(QPaintEvent * e)
@@ -82,19 +92,20 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
     overPaint_ = std::max(1, overPaint_);
 
     const int i0 = e->rect().left(),
-              i1 = e->rect().right(),
+              i1 = e->rect().right() + 1,
               im = (i1 - i0) * overPaint_;
 
     p.setPen(QPen(QColor(0,255,0)));
     p.setBrush(Qt::NoBrush);
 
-    int y0=0, y;
+    int y0=0, x0=0, y;
     for (int i=0; i<=im; ++i)
     {
-        Double x = (Double)i / overPaint_;
+        Double x = i0 + (Double)i / overPaint_;
         y = value2screen( tl_->get(screen2time(x)) );
-        if (x!=0)
-            p.drawLine(x-1, y0, x, y);
+        if (i!=0)
+            p.drawLine(x0, y0, x, y);
+        x0 = x;
         y0 = y;
     }
 
@@ -108,12 +119,13 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
 
     for (auto it = it0; it != it1 && it != tl_->getData().end(); ++it)
     {
-        if (hoverHash_ == it->first)
+        const bool hovered = (hoverHash_ == it->first);
+        if (hovered)
             p.setBrush(QBrush(QColor(255,255,255,200)));
         else
             p.setBrush(QBrush(QColor(255,255,0,200)));
 
-        p.drawRect(handleRect_(it->second));
+        p.drawRect(handleRect_(it->second, hovered));
     }
 }
 
@@ -127,7 +139,7 @@ void Timeline1DView::clearHover_()
     {
         auto it1 = tl_->getData().lower_bound(wasHash);
         if (it1 != tl_->getData().end())
-            repaint(handleRect_(it1->second));
+            repaint(handleRect_(it1->second, true));
     }
 }
 
@@ -138,16 +150,21 @@ void Timeline1DView::setHover_(const Timeline1D::Point & p)
     bool newstate = hash != hoverHash_;
 
     hoverHash_ = hash;
-    repaint(handleRect_(p));
+    repaint(handleRect_(p, true));
 
     if (newstate)
     {
         // remove old flag
         auto it1 = tl_->getData().lower_bound(hoverHash_);
         if (it1 != tl_->getData().end())
-            repaint(handleRect_(it1->second));
+            repaint(handleRect_(it1->second, true));
     }
 
+}
+
+bool Timeline1DView::isHover_() const
+{
+    return hoverHash_ != Timeline1D::InvalidHash;
 }
 
 void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
@@ -163,8 +180,11 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
 
     auto oldHoverHash = hoverHash_;
 
-    auto it = tl_->closest(x);
-    if (it != tl_->getData().end())
+    // get the timeline points in range
+    auto it = tl_->first(x-rx),
+         last = tl_->next_after(x+rx);
+    // iterate over all of them
+    for (; it != tl_->getData().end() && it != last; ++it)
     {
         if (x >= it->second.t - rx
          && x <= it->second.t + rx
@@ -173,6 +193,8 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         {
             if (it->first == oldHoverHash)
                 return;
+
+            // set new hover point
             setHover_(it->second);
 
             e->accept();
@@ -184,7 +206,7 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
 
 }
 
-void Timeline1DView::mousePressEvent(QMouseEvent * )
+void Timeline1DView::mousePressEvent(QMouseEvent * e)
 {
 
 }
