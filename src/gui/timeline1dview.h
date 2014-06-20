@@ -11,6 +11,8 @@
 #define MOSRC_GUI_TIMELINE1DVIEW_H
 
 #include <QWidget>
+#include <QSet>
+#include <QVector>
 
 #include "math/timeline1d.h"
 
@@ -47,9 +49,34 @@ protected:
     void clearHover_();
     void setHover_(const Timeline1D::Point&);
     bool isHover_() const;
+    Timeline1D::TpList::iterator hoverPoint_();
+
+    void clearSelect_();
+    void addSelect_(const Timeline1D::Point&);
+    /** is anyone selected? */
+    bool isSelected_() const { return !selectHashSet_.empty(); }
+    void moveSelected_(Double dx, Double dy);
 
     /** Returns the screen rect for a given point */
     QRect handleRect_(const Timeline1D::Point&, bool hovered);
+
+    // _________ PRIVATE TYPES _________
+
+    enum Action_
+    {
+        A_NOTHING,
+        A_START_DRAG_SELECTED
+    };
+
+    struct DragPoint_
+    {
+        Timeline1D::Point
+            oldp,
+            newp;
+        DragPoint_() { }
+        DragPoint_(const Timeline1D::Point oldp) : oldp(oldp), newp(oldp) { }
+        //DragPoint_(const Timeline1D::Point oldp, const Timeline1D::Point newp) : oldp(oldp), newp(newp) { }
+    };
 
     // ____________ MEMBER _____________
 
@@ -63,7 +90,17 @@ protected:
 
     // ---- interaction ----
 
-    Timeline1D::TpHash hoverHash_;
+    Timeline1D::TpHash
+        hoverHash_;
+
+    QSet<Timeline1D::TpHash>
+        selectHashSet_;
+
+    QVector<DragPoint_>
+        dragPoints_;
+
+    Action_ action_;
+    QPoint dragStart_;
 };
 
 } // namespace GUI
