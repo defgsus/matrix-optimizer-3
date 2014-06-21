@@ -10,6 +10,8 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QDebug>
+#include <QWheelEvent>
+#include <QMouseEvent>
 
 #include "timeline1dview.h"
 
@@ -19,10 +21,13 @@ namespace GUI {
 Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
     :   QWidget     (parent),
         tl_         (tl),
+
         overPaint_  (4),
         handleRadius_(3),
         handleRadiusHovered_(4),
         handleRadiusSelected_(6),
+        zoomChange_ (0.05),
+
         hoverHash_  (Timeline1D::InvalidHash),
         action_     (A_NOTHING)
 {
@@ -221,6 +226,37 @@ void Timeline1DView::addSelect_(const Timeline1D::Point & p)
     update(handleRect_(p, RS_UPDATE));
 }
 
+void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
+{
+    const Double
+        tx = (Double)scrx / width(),
+        ty = 1.0 - (Double)scry / height();
+
+    ViewSpace olds(space_);
+
+    space_.scaleX *= fx;
+    space_.scaleY *= fy;
+
+    const Double
+        changex = (olds.scaleX - space_.scaleX),
+        changey = (olds.scaleY - space_.scaleY);
+
+    space_.offsetX -= changex * tx;
+    space_.offsetY -= changey * ty;
+}
+
+void Timeline1DView::wheelEvent(QWheelEvent * e)
+{
+    changeScale_(e->x(), e->y(),
+                 e->angleDelta().y() > 0? (1.0 - zoomChange_)
+                                        : e->angleDelta().y() < 0? (1.0 + zoomChange_) : 1.0,
+                 e->angleDelta().x() > 0? (1.0 - zoomChange_)
+                                        : e->angleDelta().x() < 0? (1.0 + zoomChange_) : 1.0
+                );
+
+    e->accept();
+    update();
+}
 
 void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
 {

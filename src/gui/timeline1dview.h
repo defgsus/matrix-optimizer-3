@@ -87,6 +87,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *);
     void mousePressEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
+    void wheelEvent(QWheelEvent *);
 
     void clearHover_();
     void setHover_(const Timeline1D::Point&);
@@ -102,6 +103,8 @@ protected:
     /** Returns the screen rect for a given point */
     QRect handleRect_(const Timeline1D::Point&, RectStyle_ rs);
 
+    void changeScale_(int screenX, int screenY, Double factorX, Double factorY);
+
     // ____________ MEMBER _____________
 
     Timeline1D * tl_;
@@ -114,6 +117,8 @@ protected:
         handleRadius_,
         handleRadiusHovered_,
         handleRadiusSelected_;
+    Double
+        zoomChange_;
 
     // ---- interaction ----
 
