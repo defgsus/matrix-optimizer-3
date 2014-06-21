@@ -22,9 +22,11 @@ Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
         overPaint_  (4),
         handleRadius_(3),
         handleRadiusHovered_(4),
+        handleRadiusSelected_(6),
         hoverHash_  (Timeline1D::InvalidHash),
         action_     (A_NOTHING)
 {
+    space_.scaleX = 10;
     setMinimumSize(100,60);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMouseTracking(true);
@@ -40,38 +42,40 @@ void Timeline1DView::setTimeline(Timeline1D *timeline)
 
 Double Timeline1DView::screen2time(Double x) const
 {
-    return x / width() * 10.0;
+    return x / width() * space_.scaleX - space_.offsetX;
 }
 
 Double Timeline1DView::screen2value(Double y) const
 {
-    return (height() - 1 - y) / height();
+    return (height() - 1 - y) / height() * space_.scaleY - space_.offsetY;
 }
 
 int Timeline1DView::time2screen(Double time) const
 {
-    return time / 10.0 * width();
+    return (time + space_.offsetX) / space_.scaleX * width();
 }
 
 int Timeline1DView::value2screen(Double val) const
 {
-    return height() - 1 - val * height();
+    return height() - 1 - (val + space_.offsetY) * height() / space_.scaleY;
 }
 
-QRect Timeline1DView::handleRect_(const Timeline1D::Point& p, bool hovered)
+QRect Timeline1DView::handleRect_(const Timeline1D::Point& p, RectStyle_ rs)
 {
-    if (!hovered)
+    int r = handleRadius_;
+
+    switch (rs)
     {
-        QRect r(0,0,handleRadius_*2, handleRadius_*2);
-        r.moveTo(time2screen(p.t) - handleRadius_,
-                 value2screen(p.val) - handleRadius_);
-        return r;
+        case RS_HOVER: r = handleRadiusHovered_; break;
+        case RS_SELECTED: r = handleRadiusSelected_; break;
+        case RS_UPDATE: r = handleRadiusSelected_+1; break;
+        case RS_NORMAL: break;
     }
 
-    QRect r(0,0,handleRadiusHovered_*2, handleRadiusHovered_*2);
-    r.moveTo(time2screen(p.t) - handleRadiusHovered_,
-             value2screen(p.val) - handleRadiusHovered_);
-    return r;
+    QRect rect(0,0,r*2,r*2);
+    rect.moveTo(time2screen(p.t) - r,
+                value2screen(p.val) - r);
+    return rect;
 
 }
 
@@ -116,8 +120,8 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
     p.setPen(Qt::NoPen);
     p.setBrush(QBrush(QColor(255,255,0,200)));
 
-    auto it0 = tl_->first(screen2time(i0)),
-         it1 = tl_->first(screen2time(i1));
+    auto it0 = tl_->first(screen2time(i0-handleRadiusSelected_)),
+         it1 = tl_->first(screen2time(i1+handleRadiusSelected_));
 
     for (auto it = it0; it != it1 && it != tl_->getData().end(); ++it)
     {
@@ -125,14 +129,22 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
         const bool selected = (selectHashSet_.contains(it->first));
 
         if (selected)
-            p.setBrush(QBrush(QColor(200,255,200,200)));
+            p.setBrush(QBrush(QColor(200,255,200)));
         else
         if (hovered)
             p.setBrush(QBrush(QColor(250,250,150,200)));
         else
             p.setBrush(QBrush(QColor(200,200,100,200)));
 
-        p.drawRect(handleRect_(it->second, hovered));
+        p.drawRect(handleRect_(it->second, hovered? RS_HOVER : RS_NORMAL));
+
+        if (selected)
+        {
+            p.setBrush(Qt::NoBrush);
+            p.setPen(QPen(QColor(200,255,200)));
+            p.drawRect(handleRect_(it->second, RS_SELECTED));
+            p.setPen(Qt::NoPen);
+        }
     }
 }
 
@@ -146,7 +158,7 @@ void Timeline1DView::clearHover_()
     {
         auto it1 = tl_->getData().lower_bound(wasHash);
         if (it1 != tl_->getData().end())
-            update(handleRect_(it1->second, true));
+            update(handleRect_(it1->second, RS_UPDATE));
     }
 }
 
@@ -154,19 +166,19 @@ void Timeline1DView::setHover_(const Timeline1D::Point & p)
 {
     auto hash = Timeline1D::hash(p.t);
 
-    bool newstate = hash != hoverHash_;
+    if (hash == hoverHash_)
+        return;
 
-    hoverHash_ = hash;
-    update(handleRect_(p, true));
-
-    if (newstate && tl_)
+    if (isHover_() && tl_)
     {
         // remove old flag
         auto it1 = tl_->getData().lower_bound(hoverHash_);
         if (it1 != tl_->getData().end())
-            update(handleRect_(it1->second, true));
+            update(handleRect_(it1->second, RS_UPDATE));
     }
 
+    hoverHash_ = hash;
+    update(handleRect_(p, RS_UPDATE));
 }
 
 bool Timeline1DView::isHover_() const
@@ -192,7 +204,7 @@ void Timeline1DView::clearSelect_()
     {
         auto it1 = tl_->getData().lower_bound(i);
         if (it1 != tl_->getData().end())
-            update(handleRect_(it1->second, true));
+            update(handleRect_(it1->second, RS_UPDATE));
     }
     selectHashSet_.clear();
 }
@@ -206,7 +218,7 @@ void Timeline1DView::addSelect_(const Timeline1D::Point & p)
 
     selectHashSet_.insert(hash);
 
-    update(handleRect_(p, true));
+    update(handleRect_(p, RS_UPDATE));
 }
 
 
@@ -222,13 +234,39 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
            rx = screen2time(e->x()+handleRadius_) - x,
            ry = screen2value(e->y()-handleRadius_) - y;
 
-    if (action_ == A_START_DRAG_SELECTED)
+    // --- drag position / space ---
+
+    if (action_ == A_DRAG_SPACE)
     {
         // mouse delta in timeline space
         Double dx = screen2time(e->x()) - screen2time(dragStart_.x()),
                dy = screen2value(e->y()) - screen2value(dragStart_.y());
 
+        space_.offsetX = dragStartSpace_.offsetX + dx;
+        space_.offsetY = dragStartSpace_.offsetY + dy;
+
+        update();
+
+        e->accept();
+        return;
+    }
+
+    // --- drag selected points ---
+
+    if (action_ == A_DRAG_SELECTED)
+    {
+        // mouse delta in timeline space
+        Double dx = screen2time(e->x()) - screen2time(dragStart_.x()),
+               dy = screen2value(e->y()) - screen2value(dragStart_.y());
+
+        // only move vertically on CTRL
+        if (e->modifiers() & Qt::CTRL)
+            dx = 0;
+
         moveSelected_(dx, dy);
+
+        e->accept();
+        return;
     }
 
 
@@ -258,6 +296,7 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
             return;
         }
     }
+
     // unhover
     clearHover_();
 
@@ -267,6 +306,8 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
 {
     if (!tl_)
         return;
+
+    // ---- click on point ----
 
     if (isHover_())
     {
@@ -278,11 +319,13 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
                 return;
 
             // keep selection when shift pressed
-            if (!(e->modifiers() & Qt::SHIFT))
+            if (!(e->modifiers() & Qt::SHIFT)
+                // or when already selected
+                && !selectHashSet_.contains(hoverHash_))
                 clearSelect_();
 
             addSelect_(point->second);
-            action_ = A_START_DRAG_SELECTED;
+            action_ = A_DRAG_SELECTED;
             dragStart_ = e->pos();
             e->accept();
             // copy the points to drag
@@ -295,6 +338,21 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
             }
             return;
         }
+    }
+
+    // ----- click in empty space -----
+
+    // drag space / position
+    if (e->button() == Qt::LeftButton)
+    {
+        //if (!(e->modifiers() & Qt::SHIFT))
+        clearSelect_();
+
+        action_ = A_DRAG_SPACE;
+        dragStart_ = e->pos();
+        dragStartSpace_ = space_;
+        e->accept();
+        return;
     }
 }
 
@@ -326,6 +384,8 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         return;
     }
 
+    selectHashSet_.clear();
+
     for (auto &p : dragPoints_)
     {
         auto it = tl_->first(p.newp.t);
@@ -333,14 +393,26 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         if (it == tl_->getData().end())
             continue;
 
+        if (tl_->find(p.oldp.t + dx) != tl_->getData().end())
+        {
+            qDebug() << "already there";
+            continue;
+        }
+
         // delete previous point
-        tl_->getData().erase(it);
+        tl_->remove(it->second.t);
 
         // create a new one
         auto newp = tl_->add(p.oldp.t + dx, p.oldp.val + dy, p.oldp.type);
 
         if (newp != 0)
+        {
+            // keep the new position to find it next time
             p.newp = *newp;
+
+            // update selection hash
+            selectHashSet_.insert(tl_->hash(newp->t));
+        }
     }
 
     update();
