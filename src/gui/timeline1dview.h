@@ -54,6 +54,17 @@ signals:
 
 public slots:
 
+    /** Fits the whole curve into view */
+    void fitToView(int marginInPixels = 10);
+
+    /** Fits the selected curve into view */
+    void fitSelectionToView(int marginInPixels = 10);
+
+protected slots:
+
+    void slotPointContextMenu();
+    void slotEmptyContextMenu();
+
 protected:
 
     // _________ PRIVATE TYPES _________
@@ -84,8 +95,10 @@ protected:
     };
 
     void paintEvent(QPaintEvent *);
+    void keyPressEvent(QKeyEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void mousePressEvent(QMouseEvent *);
+    void mouseDoubleClickEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
     void wheelEvent(QWheelEvent *);
 
@@ -96,6 +109,7 @@ protected:
 
     void clearSelect_();
     void addSelect_(const Timeline1D::Point&);
+    void selectAll_();
     /** is anyone selected? */
     bool isSelected_() const { return !selectHashSet_.empty(); }
     void moveSelected_(Double dx, Double dy);
@@ -104,6 +118,9 @@ protected:
     QRect handleRect_(const Timeline1D::Point&, RectStyle_ rs);
 
     void changeScale_(int screenX, int screenY, Double factorX, Double factorY);
+    void fitToView_(Double tmin, Double tmax, int marginInPixels);
+
+    void changePointType_(Timeline1D::Point::Type t);
 
     // ____________ MEMBER _____________
 

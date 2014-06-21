@@ -191,6 +191,9 @@ class Timeline1D
     /** deletes a point if it is at time */
     void remove(Double time);
 
+    /** removes the point with this hash. */
+    void remove(TpHash hash);
+
     /** set a low and high limit for output values */
     void setLimit(Double lmin, Double lmax)
     {

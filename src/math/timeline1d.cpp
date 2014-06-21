@@ -465,6 +465,18 @@ void Timeline1D::remove(Double time)
     data_.erase(i);
 }
 
+void Timeline1D::remove(TpHash hash)
+{
+    // check if present
+    TpList::iterator i = data_.lower_bound(hash);
+    if (i==data_.end()) return;
+
+    // reset cur if it was pointing to that point
+    if (cur_==&i->second) cur_ = 0;
+
+    data_.erase(i);
+}
+
 
 void Timeline1D::setAutoDerivative(TpList::iterator &i)
 {

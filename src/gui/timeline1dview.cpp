@@ -12,6 +12,8 @@
 #include <QDebug>
 #include <QWheelEvent>
 #include <QMouseEvent>
+#include <QAction>
+#include <QMenu>
 
 #include "timeline1dview.h"
 
@@ -32,10 +34,12 @@ Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
         action_     (A_NOTHING)
 {
     space_.scaleX = 10;
+
     setMinimumSize(100,60);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    setMouseTracking(true);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
+    setMouseTracking(true);
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 void Timeline1DView::setTimeline(Timeline1D *timeline)
@@ -47,22 +51,105 @@ void Timeline1DView::setTimeline(Timeline1D *timeline)
 
 Double Timeline1DView::screen2time(Double x) const
 {
-    return x / width() * space_.scaleX - space_.offsetX;
+    return x / width() * space_.scaleX + space_.offsetX;
 }
 
 Double Timeline1DView::screen2value(Double y) const
 {
-    return (height() - 1 - y) / height() * space_.scaleY - space_.offsetY;
+    return (height() - 1 - y) / height() * space_.scaleY + space_.offsetY;
 }
 
 int Timeline1DView::time2screen(Double time) const
 {
-    return (time + space_.offsetX) / space_.scaleX * width();
+    return (time - space_.offsetX) / space_.scaleX * width();
 }
 
 int Timeline1DView::value2screen(Double val) const
 {
-    return height() - 1 - (val + space_.offsetY) * height() / space_.scaleY;
+    return height() - 1 - (val - space_.offsetY) * height() / space_.scaleY;
+}
+
+void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
+{
+    const Double
+        tx = (Double)scrx / width(),
+        ty = 1.0 - (Double)scry / height();
+
+    ViewSpace olds(space_);
+
+    space_.scaleX *= fx;
+    space_.scaleY *= fy;
+
+    const Double
+        changex = (olds.scaleX - space_.scaleX),
+        changey = (olds.scaleY - space_.scaleY);
+
+    space_.offsetX += changex * tx;
+    space_.offsetY += changey * ty;
+}
+
+void Timeline1DView::fitToView(int marginInPixels)
+{
+    if (!tl_) return;
+    fitToView_(tl_->tmin(), tl_->tmax(), marginInPixels);
+}
+
+void Timeline1DView::fitSelectionToView(int marginInPixels)
+{
+    if (!tl_ || !isSelected_()) return;
+
+    // find min/max time of selection
+    Double tmin = 0.0, tmax = 0.0;
+
+    bool f = true;
+    for (auto h : selectHashSet_)
+    {
+        auto pointIt = tl_->getData().lower_bound(h);
+        if (pointIt != tl_->getData().end())
+        {
+            if (f)
+            {
+                tmin = tmax = pointIt->second.t;
+                f = false;
+            }
+            else
+            {
+                tmin = std::min(tmin, pointIt->second.t);
+                tmax = std::max(tmax, pointIt->second.t);
+            }
+        }
+    }
+
+    if (tmax > tmin)
+        fitToView_(tmin, tmax, marginInPixels);
+}
+
+
+void Timeline1DView::fitToView_(Double tmin, Double tmax, int marginInPixels)
+{
+    if (!tl_) return;
+
+    Double
+        deltax = std::max((Double)0.01, tmax - tmin),
+        deltay,
+        vmin, vmax;
+    tl_->getMinMax(tmin, tmax, vmin, vmax);
+    deltay = std::max((Double)0.01, vmax - vmin);
+
+    space_.offsetX = tmin;
+    space_.offsetY = vmin;
+    space_.scaleX = deltax;
+    space_.scaleY = deltay;
+
+    Double mx = screen2time(marginInPixels) - screen2time(0),
+           my = -(screen2value(marginInPixels) - screen2value(0));
+
+    space_.offsetX -= mx;
+    space_.offsetY -= my;
+    space_.scaleX += mx*2;
+    space_.scaleY += my*2;
+
+    update();
 }
 
 QRect Timeline1DView::handleRect_(const Timeline1D::Point& p, RectStyle_ rs)
@@ -86,6 +173,8 @@ QRect Timeline1DView::handleRect_(const Timeline1D::Point& p, RectStyle_ rs)
 
 void Timeline1DView::paintEvent(QPaintEvent * e)
 {
+    qDebug() << space_.offsetX << "," << space_.offsetY << "   " << space_.scaleX << "," << space_.scaleY;
+
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing, true);
 
@@ -226,36 +315,30 @@ void Timeline1DView::addSelect_(const Timeline1D::Point & p)
     update(handleRect_(p, RS_UPDATE));
 }
 
-void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
-{
-    const Double
-        tx = (Double)scrx / width(),
-        ty = 1.0 - (Double)scry / height();
-
-    ViewSpace olds(space_);
-
-    space_.scaleX *= fx;
-    space_.scaleY *= fy;
-
-    const Double
-        changex = (olds.scaleX - space_.scaleX),
-        changey = (olds.scaleY - space_.scaleY);
-
-    space_.offsetX -= changex * tx;
-    space_.offsetY -= changey * ty;
-}
 
 void Timeline1DView::wheelEvent(QWheelEvent * e)
 {
     changeScale_(e->x(), e->y(),
                  e->angleDelta().y() > 0? (1.0 - zoomChange_)
                                         : e->angleDelta().y() < 0? (1.0 + zoomChange_) : 1.0,
-                 e->angleDelta().x() > 0? (1.0 - zoomChange_)
-                                        : e->angleDelta().x() < 0? (1.0 + zoomChange_) : 1.0
+                 e->angleDelta().x() < 0? (1.0 - zoomChange_)
+                                        : e->angleDelta().x() > 0? (1.0 + zoomChange_) : 1.0
                 );
 
     e->accept();
     update();
+}
+
+void Timeline1DView::keyPressEvent(QKeyEvent * e)
+{
+    // select all
+    if (e->key() == Qt::Key_A && (e->modifiers() & Qt::CTRL))
+    {
+        selectAll_();
+        return;
+    }
+
+    QWidget::keyPressEvent(e);
 }
 
 void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
@@ -278,8 +361,8 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         Double dx = screen2time(e->x()) - screen2time(dragStart_.x()),
                dy = screen2value(e->y()) - screen2value(dragStart_.y());
 
-        space_.offsetX = dragStartSpace_.offsetX + dx;
-        space_.offsetY = dragStartSpace_.offsetY + dy;
+        space_.offsetX = dragStartSpace_.offsetX - dx;
+        space_.offsetY = dragStartSpace_.offsetY - dy;
 
         update();
 
@@ -374,6 +457,18 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
             }
             return;
         }
+
+        if (e->button() == Qt::RightButton)
+        {
+            // clear selection when clicking on unselected
+            if (!(e->modifiers() & Qt::SHIFT)
+                && !selectHashSet_.contains(hoverHash_))
+                clearSelect_();
+
+            e->accept();
+            slotPointContextMenu();
+            return;
+        }
     }
 
     // ----- click in empty space -----
@@ -382,11 +477,36 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
     if (e->button() == Qt::LeftButton)
     {
         //if (!(e->modifiers() & Qt::SHIFT))
-        clearSelect_();
+        //clearSelect_();
 
         action_ = A_DRAG_SPACE;
         dragStart_ = e->pos();
         dragStartSpace_ = space_;
+        e->accept();
+        return;
+    }
+
+    if (e->button() == Qt::RightButton)
+    {
+        slotEmptyContextMenu();
+        e->accept();
+        return;
+    }
+}
+
+void Timeline1DView::mouseDoubleClickEvent(QMouseEvent * e)
+{
+    // --- double-click on point ---
+    if (isHover_())
+    {
+        return;
+    }
+
+    // --- double-click in empty space ---
+
+    if (e->button() == Qt::LeftButton)
+    {
+        clearSelect_();
         e->accept();
         return;
     }
@@ -397,6 +517,19 @@ void Timeline1DView::mouseReleaseEvent(QMouseEvent * )
     action_ = A_NOTHING;
 }
 
+
+void Timeline1DView::selectAll_()
+{
+    selectHashSet_.clear();
+
+    if (!tl_)
+        return;
+
+    for (auto &it : tl_->getData())
+        selectHashSet_.insert(it.first);
+
+    update();
+}
 
 void Timeline1DView::moveSelected_(Double dx, Double dy)
 {
@@ -452,6 +585,131 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
     }
 
     update();
+}
+
+void Timeline1DView::slotPointContextMenu()
+{
+    if (!isHover_() || !tl_)
+        return;
+
+    auto pointIt = tl_->getData().lower_bound(hoverHash_);
+    if (pointIt == tl_->getData().end())
+        return;
+
+    QAction * a;
+
+    // main popup
+    QMenu * pop = new QMenu(this);
+    connect(pop, SIGNAL(triggered(QAction*)), pop, SLOT(deleteLater()));
+
+    // point type submenu
+    QMenu * pointpop = new QMenu(pop);
+    for (int i=1; i<Timeline1D::Point::MAX; ++i)
+    {
+        Timeline1D::Point::Type type = (Timeline1D::Point::Type)i;
+
+        a = new QAction(Timeline1D::Point::getName(type), pointpop);
+        pointpop->addAction(a);
+        a->setCheckable(true);
+        a->setChecked(pointIt->second.type == type);
+        connect(a, &QAction::triggered, [=]()
+        {
+            changePointType_(type);
+            update();
+        });
+    }
+
+    // --- single point popup ---
+
+    if (!isSelected_())
+    {
+        pop->addMenu(pointpop);
+        pointpop->setTitle(tr("change point type"));
+
+        a = new QAction(tr("delete point"), pop);
+        pop->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            tl_->remove(pointIt->second.t);
+            update();
+        });
+    }
+
+    // --- selected points popup ---
+    else
+    {
+        pop->addMenu(pointpop);
+        pointpop->setTitle(tr("change points type"));
+
+        a = new QAction(tr("delete points"), pop);
+        pop->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            for (auto h : selectHashSet_)
+                tl_->remove(h);
+            update();
+        });
+    }
+
+
+    pop->exec(QCursor::pos());
+}
+
+void Timeline1DView::slotEmptyContextMenu()
+{
+    if (!tl_)
+        return;
+
+    QAction * a;
+
+    // main popup
+    QMenu * pop = new QMenu(this);
+    connect(pop, SIGNAL(triggered(QAction*)), pop, SLOT(deleteLater()));
+
+    a = new QAction(tr("select all"), pop);
+    pop->addAction(a);
+    connect(a, &QAction::triggered, [=]()
+    {
+        selectAll_();
+    });
+
+    a = new QAction(tr("clear selection"), pop);
+    pop->addAction(a);
+    connect(a, &QAction::triggered, [=]()
+    {
+        clearSelect_();
+    });
+
+    pop->addSeparator();
+
+    a = new QAction(tr("fit to view"), pop);
+    pop->addAction(a);
+    connect(a, SIGNAL(triggered()), this, SLOT(fitToView()));
+
+    a = new QAction(tr("fit selection to view"), pop);
+    pop->addAction(a);
+    connect(a, SIGNAL(triggered()), this, SLOT(fitSelectionToView()));
+
+    pop->exec(QCursor::pos());
+}
+
+void Timeline1DView::changePointType_(Timeline1D::Point::Type t)
+{
+    if (isSelected_())
+    {
+        for (auto &h : selectHashSet_)
+        {
+            auto pointIt = tl_->getData().lower_bound(h);
+            if (pointIt != tl_->getData().end())
+                pointIt->second.type = t;
+        }
+    }
+    else if (isHover_())
+    {
+        auto pointIt = tl_->getData().lower_bound(hoverHash_);
+        if (pointIt != tl_->getData().end())
+            pointIt->second.type = t;
+    }
 }
 
 } // namespace GUI
