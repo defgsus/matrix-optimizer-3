@@ -31,6 +31,7 @@ Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
         zoomChange_ (0.05),
 
         hoverHash_  (Timeline1D::InvalidHash),
+        hoverCurveHash_(Timeline1D::InvalidHash),
         action_     (A_NOTHING)
 {
     space_.scaleX = 10;
@@ -347,11 +348,14 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         return;
 
     // mouse coords in timeline space
+    const
     Double x = screen2time(e->x()),
            y = screen2value(e->y()),
     // handle radius in timeline space
            rx = screen2time(e->x()+handleRadius_) - x,
            ry = screen2value(e->y()-handleRadius_) - y;
+    // one pixel in timeline space
+           //onePixT = screen2time(1) - screen2time(0);
 
     // --- drag position / space ---
 
@@ -388,9 +392,13 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         return;
     }
 
+    // -- no action defined yet --
+    //Q_ASSERT(action_ == A_NOTHING);
 
 
     // --------- on hover over --------------
+
+    hoverCurveHash_ = Timeline1D::InvalidHash;
 
     auto oldHoverHash = hoverHash_;
 
@@ -411,6 +419,8 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
             // set new hover point
             setHover_(it->second);
 
+            setCursor(Qt::OpenHandCursor);
+
             e->accept();
             return;
         }
@@ -419,12 +429,62 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
     // unhover
     clearHover_();
 
+    // ----- hover on curve -----
+
+    it = tl_->closest(x);
+    if (it != tl_->getData().end())
+    {
+        // get the point left of mouse
+        if (it->second.t > x && it != tl_->getData().begin())
+            --it;
+
+        if (it->second.t <= x)
+        {
+            // get value and derivative at mousepos
+            const Double vx = tl_->get(x),
+                        vx0 = tl_->get(x - 0.01),
+                        vx1 = tl_->get(x + 0.01),
+                        dx = (vx1 - vx0) / 0.01;
+
+            // get mouse distance to curve
+            const int dist_scr = abs(value2screen(vx) - e->y());
+            // if within range (+derivative)
+            if (dist_scr <= 2+abs(dx))
+            {
+                setCursor(Qt::CrossCursor);
+                e->accept();
+                hoverCurveHash_ = it->first;
+                return;
+            }
+        }
+    }
+
+
+    // -- start dragging space --
+    if (true /* can drag space */)
+    {
+        action_ = A_START_DRAG_SPACE;
+        setCursor(Qt::SizeAllCursor);
+    }
+    else
+        setCursor(Qt::ArrowCursor);
 }
 
 void Timeline1DView::mousePressEvent(QMouseEvent * e)
 {
     if (!tl_)
         return;
+
+    // ---- click on curve ----
+
+    if (hoverCurveHash_ != Timeline1D::InvalidHash)
+    {
+        addPoint_(screen2time(e->x()), screen2value(e->y()));
+        hoverCurveHash_ = Timeline1D::InvalidHash;
+        e->accept();
+        setCursor(Qt::OpenHandCursor);
+        return;
+    }
 
     // ---- click on point ----
 
@@ -447,6 +507,8 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
             action_ = A_DRAG_SELECTED;
             dragStart_ = e->pos();
             e->accept();
+            setCursor(Qt::ClosedHandCursor);
+
             // copy the points to drag set
             dragPoints_.clear();
             for (auto &h : selectHashSet_)
@@ -479,11 +541,14 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
         //if (!(e->modifiers() & Qt::SHIFT))
         //clearSelect_();
 
-        action_ = A_DRAG_SPACE;
-        dragStart_ = e->pos();
-        dragStartSpace_ = space_;
-        e->accept();
-        return;
+        if (action_ == A_START_DRAG_SPACE)
+        {
+            action_ = A_DRAG_SPACE;
+            dragStart_ = e->pos();
+            dragStartSpace_ = space_;
+            e->accept();
+            return;
+        }
     }
 
     if (e->button() == Qt::RightButton)
@@ -541,11 +606,6 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
     {
         for (auto &p : dragPoints_)
         {
-            /*auto it = tl_->first(p.newp.t);
-
-            if (it == tl_->getData().end())
-                continue;
-            */
             if (p.valid)
                 p.it->second.val = p.oldp.val + dy;
         }
@@ -562,24 +622,7 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
     for (auto &p : dragPoints_)
     {
         if (!p.valid) continue;
-        /*
-        // is there a point at the goal time already?
-        auto it2 = tl_->find(p.oldp.t + dx);
-        if (it2 != tl_->getData().end())
-        {
-            qDebug() << "found" << it2->second.t;
-            if (it2 != p.it)
-            {
-            qDebug() << "taken at" << it2->second.t;
-            selectHashSet_.insert(p.it->first);
-            continue;
-            }
-        }
 
-        // delete previous point
-        tl_->getData().erase(p.it);
-        p.valid = false;
-        */
         // create a new point
         auto newp = tl_->add(p.oldp.t + dx, p.oldp.val + dy, p.oldp.type);
 
@@ -587,10 +630,14 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         if (newp == 0)
         {
             auto it2 = tl_->find(p.oldp.t + dx);
+
+            // same point? then change value only
             if (it2 == p.it)
             {
                 p.it->second.val = p.oldp.val + dy;
             }
+
+            // update selection hash
             selectHashSet_.insert(p.it->first);
             continue;
         }
@@ -599,10 +646,10 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         tl_->getData().erase(p.it);
         p.valid = false;
 
-
-        // keep the new position to find it next time
+        // keep the new point/iterator to find it next time
         p.newp = *newp;
         p.it = tl_->find(p.newp.t);
+
         if (p.it != tl_->getData().end())
         {
             p.valid = true;
@@ -610,36 +657,6 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
             // update selection hash
             selectHashSet_.insert(p.it->first);
         }
-        /*
-        auto it = tl_->first(p.newp.t);
-
-        if (it == tl_->getData().end())
-            continue;
-
-        // time didn't really change?
-        auto it2 = tl_->find(p.oldp.t + dx);
-        if (it2 != tl_->getData().end())
-        {
-            it2->second.val = p.oldp.val + dy;
-            selectHashSet_.insert(it2->first);
-            continue;
-        }
-
-        // delete previous point
-        tl_->remove(it->second.t);
-
-        // create a new one
-        auto newp = tl_->add(p.oldp.t + dx, p.oldp.val + dy, p.oldp.type);
-
-        if (newp != 0)
-        {
-            // keep the new position to find it next time
-            p.newp = *newp;
-
-            // update selection hash
-            selectHashSet_.insert(tl_->hash(newp->t));
-        }
-        */
     }
 
     update();
@@ -768,6 +785,19 @@ void Timeline1DView::changePointType_(Timeline1D::Point::Type t)
         if (pointIt != tl_->getData().end())
             pointIt->second.type = t;
     }
+}
+
+void Timeline1DView::addPoint_(Double t, Double v)
+{
+    if (!tl_)
+        return;
+
+    auto p = tl_->add(t, v);
+
+    if (!p)
+        return;
+
+    setHover_(*p);
 }
 
 } // namespace GUI

@@ -72,6 +72,7 @@ protected:
     enum Action_
     {
         A_NOTHING,
+        A_START_DRAG_SPACE,
         A_DRAG_SPACE,
         A_DRAG_SELECTED
     };
@@ -94,8 +95,6 @@ protected:
             it;
         DragPoint_() { }
         DragPoint_(const Timeline1D::TpList::iterator& it) : valid(true), oldp(it->second), newp(it->second), it(it) { }
-        //DragPoint_(const Timeline1D::Point& oldp) : oldp(oldp), newp(oldp) { }
-        //DragPoint_(const Timeline1D::Point oldp, const Timeline1D::Point newp) : oldp(oldp), newp(newp) { }
     };
 
     void paintEvent(QPaintEvent *);
@@ -116,7 +115,6 @@ protected:
     void selectAll_();
     /** is anyone selected? */
     bool isSelected_() const { return !selectHashSet_.empty(); }
-    void moveSelected_(Double dx, Double dy);
 
     /** Returns the screen rect for a given point */
     QRect handleRect_(const Timeline1D::Point&, RectStyle_ rs);
@@ -125,6 +123,8 @@ protected:
     void fitToView_(Double tmin, Double tmax, int marginInPixels);
 
     void changePointType_(Timeline1D::Point::Type t);
+    void moveSelected_(Double dx, Double dy);
+    void addPoint_(Double t, Double v);
 
     // ____________ MEMBER _____________
 
@@ -144,7 +144,8 @@ protected:
     // ---- interaction ----
 
     Timeline1D::TpHash
-        hoverHash_;
+        hoverHash_,
+        hoverCurveHash_;
 
     QSet<Timeline1D::TpHash>
         selectHashSet_;
