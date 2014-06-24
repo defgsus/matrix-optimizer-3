@@ -34,7 +34,7 @@ Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
         hoverCurveHash_(Timeline1D::InvalidHash),
         action_     (A_NOTHING)
 {
-    space_.scaleX = 10;
+    space_.setScaleX(10);
 
     setMinimumSize(100,60);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -52,22 +52,22 @@ void Timeline1DView::setTimeline(Timeline1D *timeline)
 
 Double Timeline1DView::screen2time(Double x) const
 {
-    return x / width() * space_.scaleX + space_.offsetX;
+    return space_.mapXTo(x / width());
 }
 
 Double Timeline1DView::screen2value(Double y) const
 {
-    return (height() - 1 - y) / height() * space_.scaleY + space_.offsetY;
+    return space_.mapYTo( (height() - 1 - y) / height() );
 }
 
 int Timeline1DView::time2screen(Double time) const
 {
-    return (time - space_.offsetX) / space_.scaleX * width();
+    return space_.mapXFrom(time) * width();
 }
 
 int Timeline1DView::value2screen(Double val) const
 {
-    return height() - 1 - (val - space_.offsetY) * height() / space_.scaleY;
+    return height() - 1 - space_.mapYFrom(val) * height();
 }
 
 void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
@@ -76,17 +76,17 @@ void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
         tx = (Double)scrx / width(),
         ty = 1.0 - (Double)scry / height();
 
-    ViewSpace olds(space_);
+    UTIL::ViewSpace<Double> olds(space_);
 
-    space_.scaleX *= fx;
-    space_.scaleY *= fy;
+    space_.setScaleX( space_.scaleX() * fx );
+    space_.setScaleY( space_.scaleY() * fy );
 
     const Double
-        changex = (olds.scaleX - space_.scaleX),
-        changey = (olds.scaleY - space_.scaleY);
+        changex = (olds.scaleX() - space_.scaleX()),
+        changey = (olds.scaleY() - space_.scaleY());
 
-    space_.offsetX += changex * tx;
-    space_.offsetY += changey * ty;
+    space_.setX( space_.x() + changex * tx );
+    space_.setY( space_.y() + changey * ty );
 }
 
 void Timeline1DView::fitToView(int marginInPixels)
@@ -137,18 +137,18 @@ void Timeline1DView::fitToView_(Double tmin, Double tmax, int marginInPixels)
     tl_->getMinMax(tmin, tmax, vmin, vmax);
     deltay = std::max((Double)0.01, vmax - vmin);
 
-    space_.offsetX = tmin;
-    space_.offsetY = vmin;
-    space_.scaleX = deltax;
-    space_.scaleY = deltay;
+    space_.setX( tmin );
+    space_.setY( vmin );
+    space_.setScaleX( deltax );
+    space_.setScaleY( deltay );
 
     Double mx = screen2time(marginInPixels) - screen2time(0),
            my = -(screen2value(marginInPixels) - screen2value(0));
 
-    space_.offsetX -= mx;
-    space_.offsetY -= my;
-    space_.scaleX += mx*2;
-    space_.scaleY += my*2;
+    space_.setX( space_.x() - mx );
+    space_.setY( space_.y() - my );
+    space_.setScaleX( space_.scaleX() + mx*2 );
+    space_.setScaleY( space_.scaleY() + my*2 );
 
     update();
 }
@@ -422,8 +422,8 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         Double dx = screen2time(e->x()) - screen2time(dragStart_.x()),
                dy = screen2value(e->y()) - screen2value(dragStart_.y());
 
-        space_.offsetX = dragStartSpace_.offsetX - dx;
-        space_.offsetY = dragStartSpace_.offsetY - dy;
+        space_.setX( dragStartSpace_.x() - dx );
+        space_.setY( dragStartSpace_.y() - dy );
 
         update();
 

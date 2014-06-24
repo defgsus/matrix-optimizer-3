@@ -15,6 +15,7 @@
 #include <QVector>
 
 #include "math/timeline1d.h"
+#include "gui/util/viewspace.h"
 
 namespace MO {
 namespace GUI {
@@ -23,15 +24,6 @@ class Timeline1DView : public QWidget
 {
     Q_OBJECT
 public:
-    // --------- types -------------
-
-    struct ViewSpace
-    {
-        Double offsetX, offsetY,
-               scaleX, scaleY;
-
-        ViewSpace() : offsetX(0.0), offsetY(0.0), scaleX(1.0), scaleY(1.0) { }
-    };
 
     // ---------- ctor -------------
 
@@ -133,7 +125,7 @@ protected:
 
     Timeline1D * tl_;
 
-    ViewSpace space_;
+    UTIL::ViewSpace<Double> space_;
 
     // ---- config ----
 
@@ -156,7 +148,7 @@ protected:
     QVector<DragPoint_>
         dragPoints_;
 
-    ViewSpace dragStartSpace_;
+    UTIL::ViewSpace<Double> dragStartSpace_;
 
     Action_ action_;
     QPoint dragStart_,
