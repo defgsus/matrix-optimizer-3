@@ -57,6 +57,9 @@ public:
     Float mapXDistanceTo(Float x) const;
     Float mapXDistanceFrom(Float x) const;
 
+    Float mapYDistanceTo(Float y) const;
+    Float mapYDistanceFrom(Float y) const;
+
     // ----------- control --------------
 
 
@@ -105,6 +108,18 @@ template <typename Float>
 Float ViewSpace<Float>::mapXDistanceFrom(Float x) const
 {
     return x / sx_;
+}
+
+template <typename Float>
+Float ViewSpace<Float>::mapYDistanceTo(Float y) const
+{
+    return y * sy_;
+}
+
+template <typename Float>
+Float ViewSpace<Float>::mapYDistanceFrom(Float y) const
+{
+    return y / sy_;
 }
 
 

@@ -13,6 +13,7 @@
 #include <set>
 
 #include <QObject>
+#include <QPen>
 
 #include "gui/util/viewspace.h"
 
@@ -27,14 +28,22 @@ namespace PAINTER {
 class Grid : public QObject
 {
     Q_OBJECT
+
 public:
     Grid(QObject * parent = 0);
 
     // -------------- getter ----------------
 
-    Double quantizeX(Double x);
+    Double quantizeX(Double x) const;
+    Double quantizeY(Double y) const;
+
+    bool isDrawX() const { return doDrawX_; }
+    bool isDrawY() const { return doDrawY_; }
 
     // -------------- setter ----------------
+
+    void setDrawX(bool doit) { doDrawX_ = doit; }
+    void setDrawY(bool doit) { doDrawY_ = doit; }
 
     template <typename F>
     void setViewSpace(const UTIL::ViewSpace<F>& viewspace) { viewspace_ = viewspace; }
@@ -49,7 +58,11 @@ protected:
 
     UTIL::ViewSpace<Double> viewspace_;
 
-    std::set<Double> spacingX_;
+    std::set<Double> spacingX_, spacingY_;
+
+    QPen pen_;
+
+    bool doDrawX_, doDrawY_;
 };
 
 } // namespace PAINTER
