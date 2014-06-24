@@ -20,6 +20,8 @@
 namespace MO {
 namespace GUI {
 
+namespace PAINTER { class Grid; }
+
 class Timeline1DView : public QWidget
 {
     Q_OBJECT
@@ -126,6 +128,8 @@ protected:
     Timeline1D * tl_;
 
     UTIL::ViewSpace<Double> space_;
+
+    PAINTER::Grid * gridPainter_;
 
     // ---- config ----
 

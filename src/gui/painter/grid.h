@@ -10,14 +10,38 @@
 #ifndef MO_GUI_PAINTER_GRID_H
 #define MO_GUI_PAINTER_GRID_H
 
+#include <QObject>
+
+#include "gui/util/viewspace.h"
+
+class QRect;
+class QSize;
+class QPainter;
+
 namespace MO {
 namespace GUI {
 namespace PAINTER {
 
-class Grid
+class Grid : public QObject
 {
+    Q_OBJECT
 public:
-    Grid();
+    Grid(QObject * parent = 0);
+
+    // -------------- setter ----------------
+
+    template <typename F>
+    void setViewSpace(const UTIL::ViewSpace<F>& viewspace) { viewspace_ = viewspace; }
+
+    // ----------- draw action --------------
+
+    void paint(QPainter & p);
+
+    void paint(QPainter & p, const QRect& rect);
+
+protected:
+
+    UTIL::ViewSpace<Double> viewspace_;
 };
 
 } // namespace PAINTER

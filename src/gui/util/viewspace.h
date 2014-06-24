@@ -23,6 +23,15 @@ public:
 
     ViewSpace() : x_(0), y_(0), sx_(1), sy_(1) { }
 
+    // ------------ assignment ----------
+
+    template <typename OtherFloat>
+    ViewSpace<Float>& operator = (const ViewSpace<OtherFloat>& o)
+    {
+        x_ = o.x; y_ = o.y; sx_ = o.sx_; sy_ = o.sy_;
+        return *this;
+    }
+
     // ------------ getter --------------
 
     Float x() const { return x_; }

@@ -16,6 +16,7 @@
 #include <QMenu>
 
 #include "timeline1dview.h"
+#include "painter/grid.h"
 
 namespace MO {
 namespace GUI {
@@ -23,6 +24,7 @@ namespace GUI {
 Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
     :   QWidget     (parent),
         tl_         (tl),
+        gridPainter_(new PAINTER::Grid(this)),
 
         overPaint_  (4),
         handleRadius_(5),
@@ -234,6 +236,9 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
     //p.setBrush(QBrush(QColor(palette().color(backgroundRole()))));
     p.setBrush(QBrush(QColor(50,50,50)));
     p.drawRect(e->rect());
+
+    gridPainter_->setViewSpace(space_);
+    gridPainter_->paint(p);
 
     if (!tl_)
         return;
