@@ -232,13 +232,16 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
     p.setRenderHint(QPainter::Antialiasing, true);
 
     // -- background --
+
     p.setPen(Qt::NoPen);
     //p.setBrush(QBrush(QColor(palette().color(backgroundRole()))));
     p.setBrush(QBrush(QColor(50,50,50)));
     p.drawRect(e->rect());
 
+    // -- grid --
+
     gridPainter_->setViewSpace(space_);
-    gridPainter_->paint(p);
+    gridPainter_->paint(p, e->rect());
 
     if (!tl_)
         return;

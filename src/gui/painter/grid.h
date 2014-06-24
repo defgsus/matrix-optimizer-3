@@ -10,6 +10,8 @@
 #ifndef MO_GUI_PAINTER_GRID_H
 #define MO_GUI_PAINTER_GRID_H
 
+#include <set>
+
 #include <QObject>
 
 #include "gui/util/viewspace.h"
@@ -28,6 +30,10 @@ class Grid : public QObject
 public:
     Grid(QObject * parent = 0);
 
+    // -------------- getter ----------------
+
+    Double quantizeX(Double x);
+
     // -------------- setter ----------------
 
     template <typename F>
@@ -42,6 +48,8 @@ public:
 protected:
 
     UTIL::ViewSpace<Double> viewspace_;
+
+    std::set<Double> spacingX_;
 };
 
 } // namespace PAINTER

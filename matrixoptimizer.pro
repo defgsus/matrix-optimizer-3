@@ -47,7 +47,8 @@ HEADERS += \
     src/io/console.h \
     src/audio/audiosource.h \
     src/gui/painter/grid.h \
-    src/gui/util/viewspace.h
+    src/gui/util/viewspace.h \
+    src/math/functions.h
 
 FORMS += \
         src/gui/mainwindow.ui \
