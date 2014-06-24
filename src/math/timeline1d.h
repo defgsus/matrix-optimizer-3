@@ -102,6 +102,7 @@ class Timeline1D
     /** the default container mapping between hashvalues and points */
     typedef std::map<TpHash, Point> TpList;
 
+    static bool hasAutoDerivative(Point::Type type);
 
     // ------- ctor / dtor -----------
 
@@ -310,6 +311,13 @@ class Timeline1D
     }
 
 };
+
+inline bool Timeline1D::hasAutoDerivative(Point::Type type)
+{
+    return (type == Point::SYMMETRIC ||
+            type == Point::SYMMETRIC2);
+}
+
 
 } // namespace MO
 

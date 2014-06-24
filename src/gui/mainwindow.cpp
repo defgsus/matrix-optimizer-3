@@ -32,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
     auto tl = new Timeline1D;
     for (int i=0; i<20; ++i)
         tl->add((Double)rand()/RAND_MAX * 10.0, (Double)rand()/RAND_MAX, Timeline1D::Point::SYMMETRIC);
+    tl->setAutoDerivative();
     auto tlv = new Timeline1DView(tl, this);
     l->addWidget(tlv);
 }

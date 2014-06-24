@@ -8,6 +8,7 @@
     @version 2014/04/24 grabed from libmag
 */
 #include <cmath> // for fabs()
+//#include <QDebug>
 
 #include "math/timeline1d.h"
 #include "math/interpol.h"
@@ -412,8 +413,7 @@ Timeline1D::Point* Timeline1D::add(Double time, Double value, Point::Type typ)
     *cur_ = p;
 
     // automatically set the derivative
-    if (p.type == Point::SYMMETRIC ||
-        p.type == Point::SYMMETRIC2)
+    if (hasAutoDerivative(p.type))
     {
         TpList::iterator i = first(p.t);
         setAutoDerivative(i);
@@ -436,7 +436,7 @@ Timeline1D::Point* Timeline1D::add(Point &p)
 {
     add(p.t, p.val, p.type);
 
-    cur_->d1 = p.d1;
+    //cur_->d1 = p.d1;
 
     return cur_;
 }
@@ -511,6 +511,8 @@ void Timeline1D::setAutoDerivative(TpList::iterator &i)
     }
 
     i->second.d1 = (v1-v0)/(t1-t0);
+
+    //qDebug() << "der" << v0 << v1 << i->second.t << i->second.d1;
 }
 
 void Timeline1D::setAutoDerivative(TpList::iterator start, TpList::iterator end)

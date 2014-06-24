@@ -172,6 +172,41 @@ QRect Timeline1DView::handleRect_(const Timeline1D::Point& p, RectStyle_ rs)
 
 }
 
+void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
+{
+    if (!tl_)
+        return;
+
+    auto first = tl_->find(p.t),
+         last = first;
+
+    if (first == tl_->getData().end())
+        return;
+
+    // expand left
+    int i=0;
+    while ((i++)<3 && first != tl_->getData().begin())
+        --first;
+
+    // expand right
+    i=0;
+    while ((i++)<4)
+    {
+        auto next = last;
+        ++next;
+        if (next == tl_->getData().end())
+            break;
+        last = next;
+    }
+
+    if (first != tl_->getData().end() && last != tl_->getData().end())
+    {
+        const Double x1 = time2screen(first->second.t) - handleRadiusSelected_,
+                     x2 = time2screen(last->second.t) + handleRadiusSelected_;
+        update(x1, 0, x2-x1, height());
+    }
+}
+
 void Timeline1DView::paintEvent(QPaintEvent * e)
 {
     //qDebug() << space_.offsetX << "," << space_.offsetY << "   " << space_.scaleX << "," << space_.scaleY;
@@ -480,9 +515,7 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
     if (hoverCurveHash_ != Timeline1D::InvalidHash)
     {
         addPoint_(screen2time(e->x()), screen2value(e->y()));
-        hoverCurveHash_ = Timeline1D::InvalidHash;
         e->accept();
-        setCursor(Qt::OpenHandCursor);
         return;
     }
 
@@ -571,7 +604,7 @@ void Timeline1DView::mouseDoubleClickEvent(QMouseEvent * e)
 
     if (e->button() == Qt::LeftButton)
     {
-        clearSelect_();
+        addPoint_(screen2time(e->x()), screen2value(e->y()));
         e->accept();
         return;
     }
@@ -596,6 +629,49 @@ void Timeline1DView::selectAll_()
     update();
 }
 
+void Timeline1DView::selectDirection_(int dir)
+{
+    const Double x = screen2time(popupClick_.x()),
+                 y = screen2value(popupClick_.y());
+    qDebug() << x << y;
+    switch (dir)
+    {
+    case Qt::LeftArrow:
+        for (auto i = tl_->getData().begin(); i!=tl_->getData().end(); ++i)
+        {
+            if (i->second.t <= x)
+                selectHashSet_.insert(i->first);
+            if (i->second.t > x)
+                break;
+        }
+    break;
+    case Qt::RightArrow:
+        for (auto i = tl_->first(x); ; ++i)
+            if (i == tl_->getData().end())
+                break;
+            else
+                selectHashSet_.insert(i->first);
+    break;
+    case Qt::UpArrow:
+        for (auto i = tl_->getData().begin(); i!=tl_->getData().end(); ++i)
+        {
+            if (i->second.val >= y)
+                selectHashSet_.insert(i->first);
+        }
+    break;
+    case Qt::DownArrow:
+        for (auto i = tl_->getData().begin(); i!=tl_->getData().end(); ++i)
+        {
+            if (i->second.val <= y)
+                selectHashSet_.insert(i->first);
+        }
+    break;
+    default: return;
+    }
+
+    update();
+}
+
 void Timeline1DView::moveSelected_(Double dx, Double dy)
 {
     if (!tl_)
@@ -608,10 +684,9 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         {
             if (p.valid)
                 p.it->second.val = p.oldp.val + dy;
+            updateAroundPoint_(p.it->second);
         }
 
-        // TODO: only need to update the rect sourrounding the moved point
-        update();
         return;
     }
 
@@ -635,6 +710,7 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
             if (it2 == p.it)
             {
                 p.it->second.val = p.oldp.val + dy;
+                updateAroundPoint_(p.it->second);
             }
 
             // update selection hash
@@ -654,12 +730,15 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         {
             p.valid = true;
 
+            // recalc derivative (because we deleted a point)
+            updateDerivatives_(p.it);
+
             // update selection hash
             selectHashSet_.insert(p.it->first);
+
+            updateAroundPoint_(p.it->second);
         }
     }
-
-    update();
 }
 
 void Timeline1DView::slotPointContextMenu_()
@@ -726,6 +805,7 @@ void Timeline1DView::slotPointContextMenu_()
         });
     }
 
+    popupClick_ = mapFromGlobal(QCursor::pos());
 
     pop->exec(QCursor::pos());
 }
@@ -741,6 +821,16 @@ void Timeline1DView::slotEmptyContextMenu_()
     QMenu * pop = new QMenu(this);
     connect(pop, SIGNAL(triggered(QAction*)), pop, SLOT(deleteLater()));
 
+    if (isSelected_())
+    {
+        a = new QAction(tr("unselect"), pop);
+        pop->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            clearSelect_();
+        });
+    }
+
     a = new QAction(tr("select all"), pop);
     pop->addAction(a);
     connect(a, &QAction::triggered, [=]()
@@ -748,13 +838,25 @@ void Timeline1DView::slotEmptyContextMenu_()
         selectAll_();
     });
 
-    a = new QAction(tr("clear selection"), pop);
-    pop->addAction(a);
-    connect(a, &QAction::triggered, [=]()
-    {
-        clearSelect_();
-    });
+    QMenu * selectpop = new QMenu(pop);
+    pop->addMenu(selectpop);
+    selectpop->setTitle(tr("add to selection"));
 
+    a = new QAction(tr("all points left"), selectpop);
+    selectpop->addAction(a);
+    connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::LeftArrow); });
+    a = new QAction(tr("all points right"), selectpop);
+    selectpop->addAction(a);
+    connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::RightArrow); });
+    a = new QAction(tr("all points above"), selectpop);
+    selectpop->addAction(a);
+    connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::UpArrow); });
+    a = new QAction(tr("all points below"), selectpop);
+    selectpop->addAction(a);
+    connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::DownArrow); });
+
+
+    // ----------
     pop->addSeparator();
 
     a = new QAction(tr("fit to view"), pop);
@@ -764,6 +866,8 @@ void Timeline1DView::slotEmptyContextMenu_()
     a = new QAction(tr("fit selection to view"), pop);
     pop->addAction(a);
     connect(a, SIGNAL(triggered()), this, SLOT(fitSelectionToView()));
+
+    popupClick_ = mapFromGlobal(QCursor::pos());
 
     pop->exec(QCursor::pos());
 }
@@ -797,8 +901,43 @@ void Timeline1DView::addPoint_(Double t, Double v)
     if (!p)
         return;
 
+    clearSelect_();
+    addSelect_(*p);
     setHover_(*p);
+    hoverCurveHash_ = Timeline1D::InvalidHash;
+
+    setCursor(Qt::OpenHandCursor);
+
+    updateDerivatives_(tl_->find(t));
+    updateAroundPoint_(*p);
 }
+
+void Timeline1DView::updateDerivatives_(Timeline1D::TpList::iterator p)
+{
+    auto it = p;
+    int i = 0;
+
+    while (it != tl_->getData().end() && (i++) < 1)
+    {
+        if (Timeline1D::hasAutoDerivative(it->second.type))
+            tl_->setAutoDerivative(it);
+
+        if (it == tl_->getData().begin())
+            break;
+        --it;
+    }
+
+    it = p;
+    i = 0;
+
+    while (it != tl_->getData().end() && (i++) < 1)
+    {
+        if (Timeline1D::hasAutoDerivative(it->second.type))
+            tl_->setAutoDerivative(it);
+        ++it;
+    }
+}
+
 
 } // namespace GUI
 } // namespace MO

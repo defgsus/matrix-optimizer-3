@@ -113,11 +113,14 @@ protected:
     void clearSelect_();
     void addSelect_(const Timeline1D::Point&);
     void selectAll_();
+    void selectDirection_(int dir);
     /** is anyone selected? */
     bool isSelected_() const { return !selectHashSet_.empty(); }
 
     /** Returns the screen rect for a given point */
     QRect handleRect_(const Timeline1D::Point&, RectStyle_ rs);
+    void updateAroundPoint_(const Timeline1D::Point&);
+    void updateDerivatives_(Timeline1D::TpList::iterator it);
 
     void changeScale_(int screenX, int screenY, Double factorX, Double factorY);
     void fitToView_(Double tmin, Double tmax, int marginInPixels);
@@ -156,7 +159,8 @@ protected:
     ViewSpace dragStartSpace_;
 
     Action_ action_;
-    QPoint dragStart_;
+    QPoint dragStart_,
+           popupClick_;
 };
 
 } // namespace GUI
