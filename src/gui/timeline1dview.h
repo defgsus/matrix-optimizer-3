@@ -127,7 +127,7 @@ protected:
 
     Timeline1D * tl_;
 
-    UTIL::ViewSpace<Double> space_;
+    UTIL::ViewSpace space_;
 
     PAINTER::Grid * gridPainter_;
 
@@ -152,7 +152,7 @@ protected:
     QVector<DragPoint_>
         dragPoints_;
 
-    UTIL::ViewSpace<Double> dragStartSpace_;
+    UTIL::ViewSpace dragStartSpace_;
 
     Action_ action_;
     QPoint dragStart_,

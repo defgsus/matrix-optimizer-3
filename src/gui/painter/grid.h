@@ -46,7 +46,7 @@ public:
     void setDrawY(bool doit) { doDrawY_ = doit; }
 
     template <typename F>
-    void setViewSpace(const UTIL::ViewSpace<F>& viewspace) { viewspace_ = viewspace; }
+    void setViewSpace(const UTIL::ViewSpaceT<F>& viewspace) { viewspace_ = viewspace; }
 
     // ----------- draw action --------------
 
@@ -56,7 +56,7 @@ public:
 
 protected:
 
-    UTIL::ViewSpace<Double> viewspace_;
+    UTIL::ViewSpace viewspace_;
 
     std::set<Double> spacingX_, spacingY_;
 

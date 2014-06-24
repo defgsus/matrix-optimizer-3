@@ -28,7 +28,8 @@ SOURCES += \
     src/tests/testtimeline.cpp \
     src/io/console.cpp \
     src/audio/audiosource.cpp \
-    src/gui/painter/grid.cpp
+    src/gui/painter/grid.cpp \
+    src/gui/ruler.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -48,7 +49,8 @@ HEADERS += \
     src/audio/audiosource.h \
     src/gui/painter/grid.h \
     src/gui/util/viewspace.h \
-    src/math/functions.h
+    src/math/functions.h \
+    src/gui/ruler.h
 
 FORMS += \
         src/gui/mainwindow.ui \

@@ -78,7 +78,7 @@ void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
         tx = (Double)scrx / width(),
         ty = 1.0 - (Double)scry / height();
 
-    UTIL::ViewSpace<Double> olds(space_);
+    UTIL::ViewSpace olds(space_);
 
     space_.setScaleX( space_.scaleX() * fx );
     space_.setScaleY( space_.scaleY() * fy );

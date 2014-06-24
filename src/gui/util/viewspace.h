@@ -17,16 +17,16 @@ namespace GUI {
 namespace UTIL {
 
 template <typename Float>
-class ViewSpace
+class ViewSpaceT
 {
 public:
 
-    ViewSpace() : x_(0), y_(0), sx_(1), sy_(1) { }
+    ViewSpaceT() : x_(0), y_(0), sx_(1), sy_(1) { }
 
     // ------------ assignment ----------
 
     template <typename OtherFloat>
-    ViewSpace<Float>& operator = (const ViewSpace<OtherFloat>& o)
+    ViewSpaceT<Float>& operator = (const ViewSpaceT<OtherFloat>& o)
     {
         x_ = o.x; y_ = o.y; sx_ = o.sx_; sy_ = o.sy_;
         return *this;
@@ -45,6 +45,9 @@ public:
     void setY(Float y) { y_ = y; }
     void setScaleX(Float sx) { sx_ = sx; }
     void setScaleY(Float sy) { sy_ = sy; }
+
+    void addX(Float x) { x_ += x; }
+    void addY(Float y) { y_ += y; }
 
     // ----------- mapping --------------
 
@@ -75,52 +78,58 @@ private:
 // --------------- implementation -------------------
 
 template <typename Float>
-Float ViewSpace<Float>::mapXTo(Float x) const
+Float ViewSpaceT<Float>::mapXTo(Float x) const
 {
     return x * sx_ + x_;
 }
 
 template <typename Float>
-Float ViewSpace<Float>::mapYTo(Float y) const
+Float ViewSpaceT<Float>::mapYTo(Float y) const
 {
     return y * sy_ + y_;
 }
 
 template <typename Float>
-Float ViewSpace<Float>::mapXFrom(Float x) const
+Float ViewSpaceT<Float>::mapXFrom(Float x) const
 {
     return (x - x_) / sx_;
 }
 
 template <typename Float>
-Float ViewSpace<Float>::mapYFrom(Float y) const
+Float ViewSpaceT<Float>::mapYFrom(Float y) const
 {
     return (y - y_) / sy_;
 }
 
 template <typename Float>
-Float ViewSpace<Float>::mapXDistanceTo(Float x) const
+Float ViewSpaceT<Float>::mapXDistanceTo(Float x) const
 {
     return x * sx_;
 }
 
 template <typename Float>
-Float ViewSpace<Float>::mapXDistanceFrom(Float x) const
+Float ViewSpaceT<Float>::mapXDistanceFrom(Float x) const
 {
     return x / sx_;
 }
 
 template <typename Float>
-Float ViewSpace<Float>::mapYDistanceTo(Float y) const
+Float ViewSpaceT<Float>::mapYDistanceTo(Float y) const
 {
     return y * sy_;
 }
 
 template <typename Float>
-Float ViewSpace<Float>::mapYDistanceFrom(Float y) const
+Float ViewSpaceT<Float>::mapYDistanceFrom(Float y) const
 {
     return y / sy_;
 }
+
+
+
+// ------------ default type ----------------
+
+typedef ViewSpaceT<Double> ViewSpace;
 
 
 } // namespace UTIL
