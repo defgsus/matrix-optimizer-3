@@ -183,10 +183,18 @@ void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
     if (first == tl_->getData().end())
         return;
 
+    const int expand_left = 3,
+              expand_right = 4;
+
+    int x1 = 0, x2 = width();
+
     // expand left
     int i=0;
-    while ((i++)<3 && first != tl_->getData().begin())
+    while ((i++)<expand_left && first != tl_->getData().begin())
         --first;
+
+    if (i==expand_left-1)
+        x1 = time2screen(first->second.t) - handleRadiusSelected_;
 
     // expand right
     i=0;
@@ -198,11 +206,11 @@ void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
             break;
         last = next;
     }
+    if (i==expand_right-1)
+        x2 = time2screen(last->second.t) + handleRadiusSelected_;
 
     if (first != tl_->getData().end() && last != tl_->getData().end())
     {
-        const Double x1 = time2screen(first->second.t) - handleRadiusSelected_,
-                     x2 = time2screen(last->second.t) + handleRadiusSelected_;
         update(x1, 0, x2-x1, height());
     }
 }
@@ -516,7 +524,8 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
     {
         addPoint_(screen2time(e->x()), screen2value(e->y()));
         e->accept();
-        return;
+
+        // do not return but go on to click-on-point (start dragging)
     }
 
     // ---- click on point ----
@@ -605,13 +614,17 @@ void Timeline1DView::mouseDoubleClickEvent(QMouseEvent * e)
     if (e->button() == Qt::LeftButton)
     {
         addPoint_(screen2time(e->x()), screen2value(e->y()));
-        e->accept();
+        // go to drag action imidiately
+        mousePressEvent(e);
         return;
     }
 }
 
 void Timeline1DView::mouseReleaseEvent(QMouseEvent * )
 {
+    if (action_ == A_DRAG_SELECTED)
+        setCursor(Qt::OpenHandCursor);
+
     action_ = A_NOTHING;
 }
 
@@ -684,6 +697,8 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         {
             if (p.valid)
                 p.it->second.val = p.oldp.val + dy;
+
+            updateDerivatives_(p.it);
             updateAroundPoint_(p.it->second);
         }
 
