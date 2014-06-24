@@ -25,9 +25,9 @@ Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
         tl_         (tl),
 
         overPaint_  (4),
-        handleRadius_(3),
-        handleRadiusHovered_(4),
-        handleRadiusSelected_(6),
+        handleRadius_(5),
+        handleRadiusHovered_(handleRadius_*1.2),
+        handleRadiusSelected_(handleRadiusHovered_*1.4),
         zoomChange_ (0.05),
 
         hoverHash_  (Timeline1D::InvalidHash),
@@ -183,8 +183,8 @@ void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
     if (first == tl_->getData().end())
         return;
 
-    const int expand_left = 3,
-              expand_right = 4;
+    int expand_left = 2,
+        expand_right = 2;
 
     int x1 = 0, x2 = width();
 
@@ -193,12 +193,12 @@ void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
     while ((i++)<expand_left && first != tl_->getData().begin())
         --first;
 
-    if (i==expand_left-1)
+    if (i>expand_left && first != tl_->getData().end())
         x1 = time2screen(first->second.t) - handleRadiusSelected_;
 
     // expand right
     i=0;
-    while ((i++)<4)
+    while ((i++)<expand_right)
     {
         auto next = last;
         ++next;
@@ -206,13 +206,10 @@ void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
             break;
         last = next;
     }
-    if (i==expand_right-1)
+    if (i>expand_right && last != tl_->getData().end())
         x2 = time2screen(last->second.t) + handleRadiusSelected_;
 
-    if (first != tl_->getData().end() && last != tl_->getData().end())
-    {
-        update(x1, 0, x2-x1, height());
-    }
+    update(x1, 0, x2-x1, height());
 }
 
 void Timeline1DView::paintEvent(QPaintEvent * e)
@@ -235,8 +232,8 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
 
     overPaint_ = std::max(1, overPaint_);
 
-    const int i0 = e->rect().left(),
-              i1 = e->rect().right() + 1,
+    const int i0 = e->rect().left() - 1,
+              i1 = e->rect().right() + 2,
               im = (i1 - i0) * overPaint_;
 
     p.setPen(QPen(QColor(0,255,0)));
@@ -698,8 +695,14 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
             if (p.valid)
                 p.it->second.val = p.oldp.val + dy;
 
-            updateDerivatives_(p.it);
             updateAroundPoint_(p.it->second);
+        }
+
+        // recalc derivatives
+        for (auto &p : dragPoints_)
+        {
+            if (p.valid)
+                updateDerivatives_(p.it);
         }
 
         return;
@@ -734,6 +737,7 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         }
 
         // delete previous point
+        updateAroundPoint_(p.it->second);
         tl_->getData().erase(p.it);
         p.valid = false;
 
@@ -745,14 +749,18 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         {
             p.valid = true;
 
-            // recalc derivative (because we deleted a point)
-            updateDerivatives_(p.it);
-
             // update selection hash
             selectHashSet_.insert(p.it->first);
 
             updateAroundPoint_(p.it->second);
         }
+    }
+
+    // recalc derivatives
+    for (auto &p : dragPoints_)
+    {
+        if (p.valid)
+            updateDerivatives_(p.it);
     }
 }
 
