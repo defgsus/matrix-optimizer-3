@@ -183,9 +183,17 @@ void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
     if (first == tl_->getData().end())
         return;
 
+    // determine number of neighbour points
+
     int expand_left = 2,
         expand_right = 2;
 
+    if (p.type == Timeline1D::Point::SPLINE6)
+    {
+        expand_left = expand_right = 3;
+    }
+
+    // maximum window when in doubt
     int x1 = 0, x2 = width();
 
     // expand left
@@ -194,7 +202,7 @@ void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
         --first;
 
     if (i>expand_left && first != tl_->getData().end())
-        x1 = time2screen(first->second.t) - handleRadiusSelected_;
+        x1 = time2screen(first->second.t) - handleRadiusSelected_ - 1;
 
     // expand right
     i=0;
@@ -207,8 +215,10 @@ void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
         last = next;
     }
     if (i>expand_right && last != tl_->getData().end())
-        x2 = time2screen(last->second.t) + handleRadiusSelected_;
+        x2 = time2screen(last->second.t) + handleRadiusSelected_ + 1;
 
+    // wow, not clear if this is actually more efficient in any case
+    // than a simple update()
     update(x1, 0, x2-x1, height());
 }
 
@@ -344,12 +354,19 @@ void Timeline1DView::clearSelect_()
     selectHashSet_.clear();
 }
 
-void Timeline1DView::addSelect_(const Timeline1D::Point & p)
+void Timeline1DView::addSelect_(const Timeline1D::Point & p, bool do_swap)
 {
     auto hash = Timeline1D::hash(p.t);
 
     if (selectHashSet_.contains(hash))
+    {
+        if (do_swap)
+        {
+            selectHashSet_.remove(hash);
+            update(handleRect_(p, RS_UPDATE));
+        }
         return;
+    }
 
     selectHashSet_.insert(hash);
 
@@ -515,6 +532,8 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
     if (!tl_)
         return;
 
+    const bool isShift = e->modifiers() & Qt::SHIFT;
+
     // ---- click on curve ----
 
     if (hoverCurveHash_ != Timeline1D::InvalidHash)
@@ -537,12 +556,13 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
                 return;
 
             // keep selection when shift pressed
-            if (!(e->modifiers() & Qt::SHIFT)
+            if (!isShift
                 // or when already selected
-                && !selectHashSet_.contains(hoverHash_))
+             && !selectHashSet_.contains(hoverHash_))
                 clearSelect_();
 
-            addSelect_(point->second);
+            addSelect_(point->second, isShift);
+
             action_ = A_DRAG_SELECTED;
             dragStart_ = e->pos();
             e->accept();
@@ -643,7 +663,7 @@ void Timeline1DView::selectDirection_(int dir)
 {
     const Double x = screen2time(popupClick_.x()),
                  y = screen2value(popupClick_.y());
-    qDebug() << x << y;
+
     switch (dir)
     {
     case Qt::LeftArrow:
@@ -769,6 +789,7 @@ void Timeline1DView::slotPointContextMenu_()
     if (!isHover_() || !tl_)
         return;
 
+    // get the hovered point
     auto pointIt = tl_->getData().lower_bound(hoverHash_);
     if (pointIt == tl_->getData().end())
         return;

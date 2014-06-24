@@ -111,7 +111,7 @@ protected:
     Timeline1D::TpList::iterator hoverPoint_();
 
     void clearSelect_();
-    void addSelect_(const Timeline1D::Point&);
+    void addSelect_(const Timeline1D::Point&, bool do_swap = false);
     void selectAll_();
     void selectDirection_(int dir);
     /** is anyone selected? */
