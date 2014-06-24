@@ -173,7 +173,7 @@ QRect Timeline1DView::handleRect_(const Timeline1D::Point& p, RectStyle_ rs)
 
 void Timeline1DView::paintEvent(QPaintEvent * e)
 {
-    qDebug() << space_.offsetX << "," << space_.offsetY << "   " << space_.scaleX << "," << space_.scaleY;
+    //qDebug() << space_.offsetX << "," << space_.offsetY << "   " << space_.scaleX << "," << space_.scaleY;
 
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing, true);
@@ -447,13 +447,13 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
             action_ = A_DRAG_SELECTED;
             dragStart_ = e->pos();
             e->accept();
-            // copy the points to drag
+            // copy the points to drag set
             dragPoints_.clear();
             for (auto &h : selectHashSet_)
             {
                 auto it = tl_->getData().lower_bound(h);
                 if (it != tl_->getData().end())
-                    dragPoints_.push_back(DragPoint_(it->second));
+                    dragPoints_.push_back(DragPoint_(it));
             }
             return;
         }
@@ -466,7 +466,7 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
                 clearSelect_();
 
             e->accept();
-            slotPointContextMenu();
+            slotPointContextMenu_();
             return;
         }
     }
@@ -488,7 +488,7 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
 
     if (e->button() == Qt::RightButton)
     {
-        slotEmptyContextMenu();
+        slotEmptyContextMenu_();
         e->accept();
         return;
     }
@@ -537,34 +537,91 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         return;
 
     // only move vertically?
-    if (dx == 0)
+    if (fabs(dx) < Timeline1D::timeQuantum())
     {
         for (auto &p : dragPoints_)
         {
-            auto it = tl_->first(p.newp.t);
+            /*auto it = tl_->first(p.newp.t);
 
             if (it == tl_->getData().end())
                 continue;
-
-            it->second.val = p.oldp.val + dy;
+            */
+            if (p.valid)
+                p.it->second.val = p.oldp.val + dy;
         }
 
+        // TODO: only need to update the rect sourrounding the moved point
         update();
         return;
     }
 
+    // potentially we change all the points so
+    // we need to rebuild the selection hash
     selectHashSet_.clear();
 
     for (auto &p : dragPoints_)
     {
+        if (!p.valid) continue;
+        /*
+        // is there a point at the goal time already?
+        auto it2 = tl_->find(p.oldp.t + dx);
+        if (it2 != tl_->getData().end())
+        {
+            qDebug() << "found" << it2->second.t;
+            if (it2 != p.it)
+            {
+            qDebug() << "taken at" << it2->second.t;
+            selectHashSet_.insert(p.it->first);
+            continue;
+            }
+        }
+
+        // delete previous point
+        tl_->getData().erase(p.it);
+        p.valid = false;
+        */
+        // create a new point
+        auto newp = tl_->add(p.oldp.t + dx, p.oldp.val + dy, p.oldp.type);
+
+        // was there a point already?
+        if (newp == 0)
+        {
+            auto it2 = tl_->find(p.oldp.t + dx);
+            if (it2 == p.it)
+            {
+                p.it->second.val = p.oldp.val + dy;
+            }
+            selectHashSet_.insert(p.it->first);
+            continue;
+        }
+
+        // delete previous point
+        tl_->getData().erase(p.it);
+        p.valid = false;
+
+
+        // keep the new position to find it next time
+        p.newp = *newp;
+        p.it = tl_->find(p.newp.t);
+        if (p.it != tl_->getData().end())
+        {
+            p.valid = true;
+
+            // update selection hash
+            selectHashSet_.insert(p.it->first);
+        }
+        /*
         auto it = tl_->first(p.newp.t);
 
         if (it == tl_->getData().end())
             continue;
 
-        if (tl_->find(p.oldp.t + dx) != tl_->getData().end())
+        // time didn't really change?
+        auto it2 = tl_->find(p.oldp.t + dx);
+        if (it2 != tl_->getData().end())
         {
-            qDebug() << "already there";
+            it2->second.val = p.oldp.val + dy;
+            selectHashSet_.insert(it2->first);
             continue;
         }
 
@@ -582,12 +639,13 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
             // update selection hash
             selectHashSet_.insert(tl_->hash(newp->t));
         }
+        */
     }
 
     update();
 }
 
-void Timeline1DView::slotPointContextMenu()
+void Timeline1DView::slotPointContextMenu_()
 {
     if (!isHover_() || !tl_)
         return;
@@ -655,7 +713,7 @@ void Timeline1DView::slotPointContextMenu()
     pop->exec(QCursor::pos());
 }
 
-void Timeline1DView::slotEmptyContextMenu()
+void Timeline1DView::slotEmptyContextMenu_()
 {
     if (!tl_)
         return;

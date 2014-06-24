@@ -96,6 +96,9 @@ class Timeline1D
     /** Returns the hash value for a specific time */
     static TpHash hash(Double time) { return (TpHash)(time * 4096.0); }
 
+    /** Returns the smallest possible change in time. @see TpHash */
+    static Double timeQuantum() { return 1.0 / 4096.0; }
+
     /** the default container mapping between hashvalues and points */
     typedef std::map<TpHash, Point> TpList;
 

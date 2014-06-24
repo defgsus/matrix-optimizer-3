@@ -62,8 +62,8 @@ public slots:
 
 protected slots:
 
-    void slotPointContextMenu();
-    void slotEmptyContextMenu();
+    void slotPointContextMenu_();
+    void slotEmptyContextMenu_();
 
 protected:
 
@@ -86,11 +86,15 @@ protected:
 
     struct DragPoint_
     {
+        bool valid;
         Timeline1D::Point
             oldp,
             newp;
+        Timeline1D::TpList::iterator
+            it;
         DragPoint_() { }
-        DragPoint_(const Timeline1D::Point oldp) : oldp(oldp), newp(oldp) { }
+        DragPoint_(const Timeline1D::TpList::iterator& it) : valid(true), oldp(it->second), newp(it->second), it(it) { }
+        //DragPoint_(const Timeline1D::Point& oldp) : oldp(oldp), newp(oldp) { }
         //DragPoint_(const Timeline1D::Point oldp, const Timeline1D::Point newp) : oldp(oldp), newp(newp) { }
     };
 
