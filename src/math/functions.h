@@ -7,8 +7,8 @@
     <p>created 6/24/2014</p>
 */
 
-#ifndef FUNCTIONS_H
-#define FUNCTIONS_H
+#ifndef MOSCR_FUNCTIONS_H
+#define MOSCR_FUNCTIONS_H
 
 #include <cmath>
 
@@ -24,4 +24,4 @@ Float quant(Float value, Float steps)
 } // namespace MATH
 } // namespace MO
 
-#endif // FUNCTIONS_H
+#endif // MOSRC_FUNCTIONS_H

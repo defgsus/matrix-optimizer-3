@@ -7,8 +7,8 @@
     <p>created 6/25/2014</p>
 */
 
-#ifndef RULER_H
-#define RULER_H
+#ifndef MOSRC_GUI_RULER_H
+#define MOSRC_GUI_RULER_H
 
 #include <QWidget>
 
@@ -90,4 +90,4 @@ private:
 } // namespace GUI
 } // namespace MO
 
-#endif // RULER_H
+#endif // MOSRC_GUI_RULER_H

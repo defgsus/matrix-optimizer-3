@@ -7,8 +7,8 @@
     <p>created 6/24/2014</p>
 */
 
-#ifndef MO_GUI_UTIL_VIEWSPACE_H
-#define MO_GUI_UTIL_VIEWSPACE_H
+#ifndef MOSRC_GUI_UTIL_VIEWSPACE_H
+#define MOSRC_GUI_UTIL_VIEWSPACE_H
 
 #include "types/float.h"
 
@@ -160,4 +160,4 @@ typedef ViewSpaceT<Double> ViewSpace;
 } // namespace GUI
 } // namespace MO
 
-#endif // MO_GUI_UTIL_VIEWSPACE_H
+#endif // MOSRC_GUI_UTIL_VIEWSPACE_H

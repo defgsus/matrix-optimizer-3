@@ -7,8 +7,8 @@
     <p>created 6/24/2014</p>
 */
 
-#ifndef MO_GUI_PAINTER_GRID_H
-#define MO_GUI_PAINTER_GRID_H
+#ifndef MOSRC_GUI_PAINTER_GRID_H
+#define MOSRC_GUI_PAINTER_GRID_H
 
 #include <set>
 
@@ -81,4 +81,4 @@ protected:
 } // namespace MO
 
 
-#endif // MO_GUI_PAINTER_GRID_H
+#endif // MOSRC_GUI_PAINTER_GRID_H
