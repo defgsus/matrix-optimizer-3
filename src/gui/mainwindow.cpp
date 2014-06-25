@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //auto v = new ProjectorSetupWidget(centralWidget());
     //l->addWidget(v);
 
+    //MO_IO_ERROR("parent = " );
 
     auto grid = new QGridLayout();
     l->addLayout(grid);

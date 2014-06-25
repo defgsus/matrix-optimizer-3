@@ -44,7 +44,7 @@ bool Io::save(const QString& filename)
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        MO_IO_ERROR("could not save '" << filename << "'");
+        MO_IO_ERROR("Io could not save '" << filename << "'");
         return false;
     }
 
@@ -62,7 +62,7 @@ bool Io::load(const QString& filename)
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        MO_IO_ERROR("could not load '" << filename << "'");
+        MO_IO_ERROR("Io could not load '" << filename << "'");
         return false;
     }
 
@@ -82,10 +82,12 @@ bool Io::startWriting()
 
     data_.clear();
     if (xmlw_) delete xmlw_;
+
     xmlw_ = new QXmlStreamWriter(&data_);
     xmlw_->setAutoFormatting(true);
     xmlw_->writeStartDocument();
-    return newSection("csmod-io");
+
+    return newSection("mo");
 }
 
 bool Io::stopWriting()
@@ -173,7 +175,7 @@ bool Io::nextSubSection()
 {
     if (!xmlr_) return false;
     cur_section_ = "";
-    //qDebug() << ":: " << xmlr_->name().toQString() << "\n";
+    //qDebug() << ":: " << xmlr_->name().toString() << "\n";
     if (!xmlr_->readNextStartElement()) return false;
     cur_section_ = xmlr_->name().toString();
     return true;
