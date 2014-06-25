@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
         auto tlv = new Timeline1DView(tl, this);
         grid->addWidget(tlv, 1, 1);
         tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
-#if (1)
+#if (0)
         tlv->setOptions(
                         Timeline1DView::O_MoveViewY
                     |   Timeline1DView::O_MovePoints

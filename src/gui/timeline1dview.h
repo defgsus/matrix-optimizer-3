@@ -104,7 +104,9 @@ protected:
         A_NOTHING,
         A_START_DRAG_SPACE,
         A_DRAG_SPACE,
-        A_DRAG_SELECTED
+        A_DRAG_SELECTED,
+        A_START_SELECT_FRAME,
+        A_SELECT_FRAME
     };
 
     enum RectStyle_
@@ -129,6 +131,7 @@ protected:
 
     void paintEvent(QPaintEvent *);
     void keyPressEvent(QKeyEvent *);
+    void keyReleaseEvent(QKeyEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void mousePressEvent(QMouseEvent *);
     void mouseDoubleClickEvent(QMouseEvent *);
@@ -142,6 +145,7 @@ protected:
 
     void clearSelect_();
     void addSelect_(const Timeline1D::Point&, bool do_swap = false);
+    void addSelect_(const QRect& rect, bool do_swap = false);
     void selectAll_();
     void selectDirection_(int dir);
     /** is anyone selected? */
@@ -158,6 +162,8 @@ protected:
     void changePointType_(Timeline1D::Point::Type t);
     void moveSelected_(Double dx, Double dy);
     void addPoint_(Double t, Double v);
+
+    QCursor defaultCursor_() const;
 
     /** Limits the time to the screen when moving/zooming is disabled. */
     Double limitX_(Double time) const;
@@ -182,6 +188,9 @@ protected:
         handleRadiusSelected_;
     Double
         zoomChange_;
+    int modifierSelectFrame_,
+        modifierMultiSelect_,
+        modifierMoveVert_;
 
     // ---- interaction ----
 
@@ -200,6 +209,8 @@ protected:
     Action_ action_;
     QPoint dragStart_,
            popupClick_;
+
+    QRect selRect_;
 };
 
 } // namespace GUI

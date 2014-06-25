@@ -22,20 +22,23 @@ namespace MO {
 namespace GUI {
 
 Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
-    :   QWidget     (parent),
-        tl_         (tl),
-        gridPainter_(new PAINTER::Grid(this)),
+    :   QWidget                 (parent),
+        tl_                     (tl),
+        gridPainter_            (new PAINTER::Grid(this)),
 
-        options_    (O_EnableAll),
-        overPaint_  (4),
-        handleRadius_(5),
-        handleRadiusHovered_(handleRadius_*1.2),
-        handleRadiusSelected_(handleRadiusHovered_*1.4),
-        zoomChange_ (0.05),
+        options_                (O_EnableAll),
+        overPaint_              (4),
+        handleRadius_           (5),
+        handleRadiusHovered_    (handleRadius_*1.2),
+        handleRadiusSelected_   (handleRadiusHovered_*1.4),
+        zoomChange_             (0.05),
+        modifierSelectFrame_    (Qt::SHIFT),
+        modifierMultiSelect_    (Qt::CTRL),
+        modifierMoveVert_       (Qt::CTRL),
 
-        hoverHash_  (Timeline1D::InvalidHash),
-        hoverCurveHash_(Timeline1D::InvalidHash),
-        action_     (A_NOTHING)
+        hoverHash_              (Timeline1D::InvalidHash),
+        hoverCurveHash_         (Timeline1D::InvalidHash),
+        action_                 (A_NOTHING)
 {
     space_.setScaleX(10);
 
@@ -335,6 +338,15 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
             p.setPen(Qt::NoPen);
         }
     }
+
+    // ------ selection frame -------
+
+    if (action_ == A_SELECT_FRAME)
+    {
+        p.setPen(QPen(QColor(255,255,255)));
+        p.setBrush(Qt::NoBrush);
+        p.drawRect(selRect_);
+    }
 }
 
 void Timeline1DView::clearHover_()
@@ -417,6 +429,28 @@ void Timeline1DView::addSelect_(const Timeline1D::Point & p, bool do_swap)
     update(handleRect_(p, RS_UPDATE));
 }
 
+void Timeline1DView::addSelect_(const QRect &rect, bool do_swap)
+{
+    if (!tl_)
+        return;
+
+    const Double xmin = screen2time(rect.left()),
+                 xmax = screen2time(rect.right()),
+                 ymin = screen2value(rect.bottom()),
+                 ymax = screen2value(rect.top());
+
+    auto it = tl_->first(xmin);
+
+    for (; it != tl_->getData().end(); ++it)
+    {
+        if (it->second.t > xmax)
+            break;
+
+        if (it->second.val >= ymin && it->second.val <= ymax)
+            addSelect_(it->second, do_swap);
+    }
+}
+
 
 void Timeline1DView::wheelEvent(QWheelEvent * e)
 {
@@ -434,8 +468,31 @@ void Timeline1DView::wheelEvent(QWheelEvent * e)
     update();
 }
 
+QCursor Timeline1DView::defaultCursor_() const
+{
+    return Qt::ArrowCursor;
+}
+
 void Timeline1DView::keyPressEvent(QKeyEvent * e)
 {
+    // change to select-frame mode
+    if (e->modifiers() & modifierSelectFrame_)
+    {
+        if (!isHover_())
+        {
+            if (action_ == A_START_SELECT_FRAME)
+            {
+                setCursor(defaultCursor_());
+                action_ = A_NOTHING;
+            }
+            else
+            {
+                setCursor(Qt::CrossCursor);
+                action_ = A_START_SELECT_FRAME;
+            }
+        }
+    }
+
     // select all
     if (e->key() == Qt::Key_A && (e->modifiers() & Qt::CTRL))
     {
@@ -444,6 +501,24 @@ void Timeline1DView::keyPressEvent(QKeyEvent * e)
     }
 
     QWidget::keyPressEvent(e);
+}
+
+void Timeline1DView::keyReleaseEvent(QKeyEvent * e)
+{
+    // change to select-frame mode
+    if (e->modifiers() & modifierSelectFrame_)
+    {
+        if (!isHover_())
+        {
+            if (action_ == A_START_SELECT_FRAME)
+            {
+                setCursor(defaultCursor_());
+                action_ = A_NOTHING;
+            }
+        }
+    }
+
+    QWidget::keyReleaseEvent(e);
 }
 
 void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
@@ -496,7 +571,7 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
                dy = screen2value(e->y()) - screen2value(dragStart_.y());
 
         // only move vertically on CTRL
-        if (e->modifiers() & Qt::CTRL)
+        if (e->modifiers() & modifierMoveVert_)
             dx = 0;
 
         moveSelected_(dx, dy);
@@ -505,8 +580,21 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         return;
     }
 
-    // -- no action defined yet --
-    //Q_ASSERT(action_ == A_NOTHING);
+    if (action_ == A_SELECT_FRAME)
+    {
+        update(selRect_.adjusted(-1,-1,1,1));
+        // adjust rectangle
+        selRect_.setLeft(std::min(e->x(), dragStart_.x()));
+        selRect_.setTop(std::min(e->y(), dragStart_.y()));
+        selRect_.setRight(std::max(e->x(), dragStart_.x()));
+        selRect_.setBottom(std::max(e->y(), dragStart_.y()));
+        update(selRect_.adjusted(-1,-1,1,1));
+
+        e->accept();
+        return;
+    }
+
+    // -- no action defined here --
 
 
     // --------- on hover over --------------
@@ -578,6 +666,17 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         }
     }
 
+    // ---- hover over empty space -----
+
+    // --- start selection frame ---
+    if ((e->modifiers() & modifierSelectFrame_)
+        && (options_ & O_EditAll))
+    {
+        action_ = A_START_SELECT_FRAME;
+        setCursor(Qt::CrossCursor);
+    }
+    else
+
     // -- start dragging space --
     if (options_ & O_MoveView)
     {
@@ -598,7 +697,7 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
     if (!tl_)
         return;
 
-    const bool isShift = e->modifiers() & Qt::SHIFT;
+    const bool isMultiSel = e->modifiers() & modifierMultiSelect_;
 
     // ---- click on curve ----
 
@@ -622,12 +721,12 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
                 return;
 
             // keep selection when shift pressed
-            if (!isShift
+            if (!isMultiSel
                 // or when already selected
              && !selectHashSet_.contains(hoverHash_))
                 clearSelect_();
 
-            addSelect_(point->second, isShift);
+            addSelect_(point->second, isMultiSel);
 
             if (options_ & O_MovePoints)
             {
@@ -652,7 +751,7 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
         if (e->button() == Qt::RightButton)
         {
             // clear selection when clicking on unselected
-            if (!(e->modifiers() & Qt::SHIFT)
+            if (!(e->modifiers() & modifierMultiSelect_)
                 && !selectHashSet_.contains(hoverHash_))
                 clearSelect_();
 
@@ -667,8 +766,15 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
     // drag space / position
     if (e->button() == Qt::LeftButton)
     {
-        //if (!(e->modifiers() & Qt::SHIFT))
-        //clearSelect_();
+        if (action_ == A_START_SELECT_FRAME)
+        {
+            action_ = A_SELECT_FRAME;
+            dragStart_ = e->pos();
+            selRect_ = QRect(e->pos(), QSize(1,1));
+            update(selRect_.adjusted(-1,-1,1,1));
+            e->accept();
+            return;
+        }
 
         if (action_ == A_START_DRAG_SPACE)
         {
@@ -711,8 +817,21 @@ void Timeline1DView::mouseDoubleClickEvent(QMouseEvent * e)
     }
 }
 
-void Timeline1DView::mouseReleaseEvent(QMouseEvent * )
+void Timeline1DView::mouseReleaseEvent(QMouseEvent * e)
 {
+    const bool isMultiSel = e->modifiers() & modifierMultiSelect_;
+
+    if (action_ == A_SELECT_FRAME)
+    {
+        if (!isMultiSel)
+            clearSelect_();
+
+        addSelect_(selRect_, isMultiSel);
+
+        update(selRect_.adjusted(-1,-1,1,1));
+    }
+
+    // back to hover over point
     if (action_ == A_DRAG_SELECTED)
         setCursor(Qt::OpenHandCursor);
 
