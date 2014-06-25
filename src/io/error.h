@@ -36,10 +36,10 @@ class IoException : public BasicException
 
 
 #define MO_ERROR(text__) \
-{ ::MO::BasicException e; e << text__; throw e; }
+{ throw ::MO::BasicException() << text__; }
 
 #define MO_IO_ERROR(text__) \
-{ ::MO::IoException e; e << text__; throw e; }
+{ throw ::MO::BasicException() << text__; }
 
 } // namespace MO
 

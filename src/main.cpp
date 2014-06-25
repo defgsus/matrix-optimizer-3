@@ -22,18 +22,18 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     MO::GUI::MainWindow w;
     w.show();
-    /*
+
     try
     {
-        //throw MO::BasicException();
-        MO_IO_ERROR("w " << &w);
+        //throw MO::BasicException() << "hallo";
+        //MO_IO_ERROR("w " << &w);
         return a.exec();
     }
     //catch (std::exception& e)
-    catch (MO::BasicException& e)
+    catch (std::exception& e)
     {
         std::cout << "std::exception '" << e.what() << "'" << std::endl;
         throw;
     }
-    */
+
 }
