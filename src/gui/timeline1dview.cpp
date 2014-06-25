@@ -391,11 +391,14 @@ void Timeline1DView::addSelect_(const Timeline1D::Point & p, bool do_swap)
 
 void Timeline1DView::wheelEvent(QWheelEvent * e)
 {
+    if (action_ == A_DRAG_SELECTED)
+        return;
+
     changeScale_(e->x(), e->y(),
                  e->angleDelta().y() > 0? (1.0 - zoomChange_)
                                         : e->angleDelta().y() < 0? (1.0 + zoomChange_) : 1.0,
-                 e->angleDelta().x() < 0? (1.0 - zoomChange_)
-                                        : e->angleDelta().x() > 0? (1.0 + zoomChange_) : 1.0
+                 e->angleDelta().x() > 0? (1.0 - zoomChange_)
+                                        : e->angleDelta().x() < 0? (1.0 + zoomChange_) : 1.0
                 );
 
     e->accept();
@@ -773,9 +776,14 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         }
 
         // delete previous point
+        const Double t0 = p.it->second.t;
         updateAroundPoint_(p.it->second);
         tl_->getData().erase(p.it);
         p.valid = false;
+        // update derivative around erased point
+        auto it3 = tl_->next_after(t0);
+        if (it3 != tl_->getData().end())
+            updateDerivatives_(it3, 2);
 
         // keep the new point/iterator to find it next time
         p.newp = *newp;
@@ -940,14 +948,20 @@ void Timeline1DView::changePointType_(Timeline1D::Point::Type t)
         {
             auto pointIt = tl_->getData().lower_bound(h);
             if (pointIt != tl_->getData().end())
+            {
                 pointIt->second.type = t;
+                updateDerivatives_(pointIt);
+            }
         }
     }
     else if (isHover_())
     {
         auto pointIt = tl_->getData().lower_bound(hoverHash_);
         if (pointIt != tl_->getData().end())
+        {
             pointIt->second.type = t;
+            updateDerivatives_(pointIt);
+        }
     }
 }
 
@@ -972,12 +986,12 @@ void Timeline1DView::addPoint_(Double t, Double v)
     updateAroundPoint_(*p);
 }
 
-void Timeline1DView::updateDerivatives_(Timeline1D::TpList::iterator p)
+void Timeline1DView::updateDerivatives_(Timeline1D::TpList::iterator p, int lr)
 {
     auto it = p;
     int i = 0;
 
-    while (it != tl_->getData().end() && (i++) < 1)
+    while (it != tl_->getData().end() && (i++) <= lr)
     {
         if (Timeline1D::hasAutoDerivative(it->second.type))
             tl_->setAutoDerivative(it);
@@ -990,7 +1004,7 @@ void Timeline1DView::updateDerivatives_(Timeline1D::TpList::iterator p)
     it = p;
     i = 0;
 
-    while (it != tl_->getData().end() && (i++) < 1)
+    while (it != tl_->getData().end() && (i++) <= lr)
     {
         if (Timeline1D::hasAutoDerivative(it->second.type))
             tl_->setAutoDerivative(it);

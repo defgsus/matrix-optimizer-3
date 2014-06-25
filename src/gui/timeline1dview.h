@@ -123,7 +123,7 @@ protected:
     /** Returns the screen rect for a given point */
     QRect handleRect_(const Timeline1D::Point&, RectStyle_ rs);
     void updateAroundPoint_(const Timeline1D::Point&);
-    void updateDerivatives_(Timeline1D::TpList::iterator it);
+    void updateDerivatives_(Timeline1D::TpList::iterator it, int leftRight = 1);
 
     void changeScale_(int screenX, int screenY, Double factorX, Double factorY);
     void fitToView_(Double tmin, Double tmax, int marginInPixels);

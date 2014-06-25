@@ -25,14 +25,14 @@ Grid::Grid(QObject *parent)
 {
 
     spacingX_.insert(0.0010);
-    spacingX_.insert(0.0025);
+    //spacingX_.insert(0.0025);
     spacingX_.insert(0.005);
     spacingX_.insert(0.01);
-    spacingX_.insert(0.02);
-    spacingX_.insert(0.025);
+    //spacingX_.insert(0.02);
+    //spacingX_.insert(0.025);
     spacingX_.insert(0.05);
     spacingX_.insert(0.1);
-    spacingX_.insert(0.25);
+    //spacingX_.insert(0.25);
     spacingX_.insert(0.5);
     spacingX_.insert(1.0);
     spacingX_.insert(2.0);
