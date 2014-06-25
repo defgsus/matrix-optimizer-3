@@ -84,7 +84,7 @@ void Ruler::mousePressEvent(QMouseEvent * e)
     if (e->button() == Qt::LeftButton
         && (options() & O_DragAll))
     {
-        dragStart_ = e->pos();
+        dragStart_ = lastPos_ = e->pos();
         dragStartSpace_ = space_;
         setCursor(Qt::ClosedHandCursor);
         e->accept();
@@ -95,24 +95,47 @@ void Ruler::mousePressEvent(QMouseEvent * e)
 
 void Ruler::mouseMoveEvent(QMouseEvent * e)
 {
+    const Double zoomChange_ = 0.01;
+
     if (action_ == A_DRAG_SPACE)
     {
+        bool changed = false;
+
         Double
-            dx = space_.mapXDistanceTo(e->x() - dragStart_.x()) / width(),
-            dy = space_.mapYDistanceTo(e->y() - dragStart_.y()) / height();
+            dx = space_.mapXDistanceTo(lastPos_.x() - e->x()) / width(),
+            dy = space_.mapYDistanceTo(lastPos_.y() - e->y()) / height();
 
-        if (!(options_ & O_DragX))
-            dx = 0;
-        if (!(options_ & O_DragY))
-            dy = 0;
-
-        if (dx || dy)
+        if (options_ & O_DragX)
         {
-            space_.setX( dragStartSpace_.x() - dx );
-            space_.setY( dragStartSpace_.y() + dy );
+            space_.addX( dx );
+            changed = true;
+        }
+        else if (options_ & O_ZoomY)
+        {
+            space_.zoomY( 1.0 + zoomChange_ * (lastPos_.x() - e->x()),
+                          (Double)e->y() / height() );
+            changed = true;
+        }
+
+        if (options_ & O_DragY)
+        {
+            space_.addY( -dy );
+            changed = true;
+        }
+        else if (options_ & O_ZoomX)
+        {
+            space_.zoomX( 1.0 + zoomChange_ * (lastPos_.y() - e->y()),
+                          (Double)e->x() / width() );
+            changed = true;
+        }
+
+        if (changed)
+        {
             emit viewSpaceChanged(space_);
             update();
         }
+
+        lastPos_ = e->pos();
 
         e->accept();
         return;

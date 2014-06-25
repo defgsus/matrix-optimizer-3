@@ -41,12 +41,12 @@ MainWindow::MainWindow(QWidget *parent) :
         auto rulerX = new Ruler(this);
         rulerX->setFixedHeight(40);
         grid->addWidget(rulerX, 0, 1);
-        rulerX->setOptions(Ruler::O_DragX | Ruler::O_DrawX | Ruler::O_DrawTextX);
+        rulerX->setOptions(Ruler::O_DragX | Ruler::O_DrawX | Ruler::O_DrawTextX | Ruler::O_ZoomX);
 
         auto rulerY = new Ruler(this);
         rulerY->setFixedWidth(40);
         grid->addWidget(rulerY, 1, 0);
-        rulerY->setOptions(Ruler::O_DragY | Ruler::O_DrawY | Ruler::O_DrawTextY);
+        rulerY->setOptions(Ruler::O_DragY | Ruler::O_DrawY | Ruler::O_DrawTextY | Ruler::O_ZoomY);
 #endif
 
         auto tl = new Timeline1D;

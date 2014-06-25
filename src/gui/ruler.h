@@ -31,10 +31,12 @@ public:
         O_DrawTextY = 8,
         O_DragX = 16,
         O_DragY = 32,
+        O_ZoomX = 64,
+        O_ZoomY = 128,
 
         O_DrawAll = O_DrawX | O_DrawY | O_DrawTextX | O_DrawTextY,
         O_DragAll = O_DragX | O_DragY,
-        O_EnableAll = 0xffff
+        O_EnableAll = O_DrawAll | O_DrawAll
     };
 
     // ------------- ctor ------------------
@@ -80,7 +82,7 @@ private:
 
     Action_ action_;
 
-    QPoint dragStart_;
+    QPoint dragStart_, lastPos_;
     UTIL::ViewSpace dragStartSpace_;
 };
 
