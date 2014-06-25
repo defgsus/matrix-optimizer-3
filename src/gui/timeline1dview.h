@@ -27,10 +27,35 @@ class Timeline1DView : public QWidget
     Q_OBJECT
 public:
 
+    enum Option
+    {
+        O_MovePointsX = 1,
+        O_MovePointsY = 1<<1,
+        O_AddRemovePoints = 1<<2,
+        O_ChangePointType = 1<<3,
+
+        O_MoveViewX = 1<<8,
+        O_MoveViewY = 1<<9,
+        O_ZoomViewX = 1<<10,
+        O_ZoomViewY = 1<<11,
+
+        O_MoveView = O_MoveViewX | O_MoveViewY,
+        O_ZoomView = O_ZoomViewX | O_ZoomViewY,
+        O_ChangeViewAll = O_MoveViewX | O_MoveViewY | O_ZoomViewX | O_ZoomViewY,
+
+        O_MovePoints = O_MovePointsX | O_MovePointsY,
+        O_EditAll = O_MovePoints | O_AddRemovePoints | O_ChangePointType,
+
+        O_EnableAll = 0xffffffff
+    };
+
     // ---------- ctor -------------
 
     explicit Timeline1DView(Timeline1D * timeline = 0, QWidget *parent = 0);
 
+    // ---------- getter -----------
+
+    int options() const { return options_; }
 
     // ----------- assignment ------
 
@@ -54,14 +79,16 @@ signals:
 
 public slots:
 
+    void setOptions(int options);
+
     /** Sets a new viewspace for the timeline */
     void setViewSpace(const UTIL::ViewSpace &, bool send_signal = false);
 
     /** Fits the whole curve into view */
-    void fitToView(int marginInPixels = 10);
+    void fitToView(bool fitX = true, bool fitY = true, int marginInPixels = 10);
 
     /** Fits the selected curve into view */
-    void fitSelectionToView(int marginInPixels = 10);
+    void fitSelectionToView(bool fitX = true, bool fitY = true, int marginInPixels = 10);
 
 protected slots:
 
@@ -126,11 +153,16 @@ protected:
     void updateDerivatives_(Timeline1D::TpList::iterator it, int leftRight = 1);
 
     void changeScale_(int screenX, int screenY, Double factorX, Double factorY);
-    void fitToView_(Double tmin, Double tmax, int marginInPixels);
+    void fitToView_(Double tmin, Double tmax, bool fitX, bool fitY, int marginInPixels);
 
     void changePointType_(Timeline1D::Point::Type t);
     void moveSelected_(Double dx, Double dy);
     void addPoint_(Double t, Double v);
+
+    /** Limits the time to the screen when moving/zooming is disabled. */
+    Double limitX_(Double time) const;
+    /** Limits the value to the screen when moving/zooming is disabled. */
+    Double limitY_(Double value) const;
 
     // ____________ MEMBER _____________
 
@@ -141,6 +173,8 @@ protected:
     PAINTER::Grid * gridPainter_;
 
     // ---- config ----
+
+    int options_;
 
     int overPaint_,
         handleRadius_,

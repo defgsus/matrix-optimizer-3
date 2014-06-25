@@ -26,6 +26,7 @@ Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
         tl_         (tl),
         gridPainter_(new PAINTER::Grid(this)),
 
+        options_    (O_EnableAll),
         overPaint_  (4),
         handleRadius_(5),
         handleRadiusHovered_(handleRadius_*1.2),
@@ -80,13 +81,29 @@ int Timeline1DView::value2screen(Double val) const
 
 void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
 {
+    if (!(options_ & O_ZoomViewX))
+        fx = 0;
+    if (!(options_ & O_ZoomViewY))
+        fy = 0;
+
     const Double
         tx = (Double)scrx / width(),
         ty = 1.0 - (Double)scry / height();
 
-    space_.zoom(fx, fy, tx, ty);
+    if (fx || fy)
+    {
+        space_.zoom(fx, fy, tx, ty);
+        emit viewSpaceChanged(space_);
+    }
+}
 
-    emit viewSpaceChanged(space_);
+void Timeline1DView::setOptions(int options)
+{
+    bool changed = (options != options_);
+    options_ = options;
+
+    if (changed)
+        update();
 }
 
 void Timeline1DView::setViewSpace(const UTIL::ViewSpace &v, bool send)
@@ -97,13 +114,13 @@ void Timeline1DView::setViewSpace(const UTIL::ViewSpace &v, bool send)
     update();
 }
 
-void Timeline1DView::fitToView(int marginInPixels)
+void Timeline1DView::fitToView(bool fitX, bool fitY, int marginInPixels)
 {
     if (!tl_) return;
-    fitToView_(tl_->tmin(), tl_->tmax(), marginInPixels);
+    fitToView_(tl_->tmin(), tl_->tmax(), fitX, fitY, marginInPixels);
 }
 
-void Timeline1DView::fitSelectionToView(int marginInPixels)
+void Timeline1DView::fitSelectionToView(bool fitX, bool fitY, int marginInPixels)
 {
     if (!tl_ || !isSelected_()) return;
 
@@ -130,13 +147,13 @@ void Timeline1DView::fitSelectionToView(int marginInPixels)
     }
 
     if (tmax > tmin)
-        fitToView_(tmin, tmax, marginInPixels);
+        fitToView_(tmin, tmax, fitX, fitY, marginInPixels);
 }
 
 
-void Timeline1DView::fitToView_(Double tmin, Double tmax, int marginInPixels)
+void Timeline1DView::fitToView_(Double tmin, Double tmax, bool fitX, bool fitY, int marginInPixels)
 {
-    if (!tl_) return;
+    if (!tl_ || !(fitX || fitY)) return;
 
     Double
         deltax = std::max((Double)0.01, tmax - tmin),
@@ -145,18 +162,30 @@ void Timeline1DView::fitToView_(Double tmin, Double tmax, int marginInPixels)
     tl_->getMinMax(tmin, tmax, vmin, vmax);
     deltay = std::max((Double)0.01, vmax - vmin);
 
-    space_.setX( tmin );
-    space_.setY( vmin );
-    space_.setScaleX( deltax );
-    space_.setScaleY( deltay );
+    if (fitX)
+    {
+        space_.setX( tmin );
+        space_.setScaleX( deltax );
+    }
+    if (fitY)
+    {
+        space_.setY( vmin );
+        space_.setScaleY( deltay );
+    }
 
     Double mx = screen2time(marginInPixels) - screen2time(0),
            my = -(screen2value(marginInPixels) - screen2value(0));
 
-    space_.setX( space_.x() - mx );
-    space_.setY( space_.y() - my );
-    space_.setScaleX( space_.scaleX() + mx*2 );
-    space_.setScaleY( space_.scaleY() + my*2 );
+    if (fitX)
+    {
+        space_.setX( space_.x() - mx );
+        space_.setScaleX( space_.scaleX() + mx*2 );
+    }
+    if (fitY)
+    {
+        space_.setY( space_.y() - my );
+        space_.setScaleY( space_.scaleY() + my*2 );
+    }
 
     emit viewSpaceChanged(space_);
     update();
@@ -440,11 +469,19 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         Double dx = screen2time(e->x()) - screen2time(dragStart_.x()),
                dy = screen2value(e->y()) - screen2value(dragStart_.y());
 
-        space_.setX( dragStartSpace_.x() - dx );
-        space_.setY( dragStartSpace_.y() - dy );
+        if (!(options_ & O_MoveViewX))
+            dx = 0;
+        if (!(options_ & O_MoveViewY))
+            dy = 0;
 
-        emit viewSpaceChanged(space_);
-        update();
+        if (dx || dy)
+        {
+            space_.setX( dragStartSpace_.x() - dx );
+            space_.setY( dragStartSpace_.y() - dy );
+
+            emit viewSpaceChanged(space_);
+            update();
+        }
 
         e->accept();
         return;
@@ -474,31 +511,34 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
 
     // --------- on hover over --------------
 
-    hoverCurveHash_ = Timeline1D::InvalidHash;
-
-    auto oldHoverHash = hoverHash_;
-
-    // get the timeline points in range
-    auto it = tl_->first(x-rx),
-         last = tl_->next_after(x+rx);
-    // iterate over all of them
-    for (; it != tl_->getData().end() && it != last; ++it)
+    if (options_ & O_EditAll)
     {
-        if (x >= it->second.t - rx
-         && x <= it->second.t + rx
-         && y >= it->second.val - ry
-         && y <= it->second.val + ry)
+        hoverCurveHash_ = Timeline1D::InvalidHash;
+
+        auto oldHoverHash = hoverHash_;
+
+        // get the timeline points in range
+        auto it = tl_->first(x-rx),
+             last = tl_->next_after(x+rx);
+        // iterate over all of them
+        for (; it != tl_->getData().end() && it != last; ++it)
         {
-            if (it->first == oldHoverHash)
+            if (x >= it->second.t - rx
+             && x <= it->second.t + rx
+             && y >= it->second.val - ry
+             && y <= it->second.val + ry)
+            {
+                if (it->first == oldHoverHash)
+                    return;
+
+                // set new hover point
+                setHover_(it->second);
+
+                setCursor(Qt::OpenHandCursor);
+
+                e->accept();
                 return;
-
-            // set new hover point
-            setHover_(it->second);
-
-            setCursor(Qt::OpenHandCursor);
-
-            e->accept();
-            return;
+            }
         }
     }
 
@@ -507,40 +547,47 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
 
     // ----- hover on curve -----
 
-    it = tl_->closest(x);
-    if (it != tl_->getData().end())
+    if (options_ & O_AddRemovePoints)
     {
-        // get the point left of mouse
-        if (it->second.t > x && it != tl_->getData().begin())
-            --it;
-
-        if (it->second.t <= x)
+        auto it = tl_->closest(x);
+        if (it != tl_->getData().end())
         {
-            // get value and derivative at mousepos
-            const Double vx = tl_->get(x),
-                        vx0 = tl_->get(x - 0.01),
-                        vx1 = tl_->get(x + 0.01),
-                        dx = (vx1 - vx0) / 0.01;
+            // get the point left of mouse
+            if (it->second.t > x && it != tl_->getData().begin())
+                --it;
 
-            // get mouse distance to curve
-            const int dist_scr = abs(value2screen(vx) - e->y());
-            // if within range (+derivative)
-            if (dist_scr <= 2+abs(dx))
+            if (it->second.t <= x)
             {
-                setCursor(Qt::CrossCursor);
-                e->accept();
-                hoverCurveHash_ = it->first;
-                return;
+                // get value and derivative at mousepos
+                const Double vx = tl_->get(x),
+                            vx0 = tl_->get(x - 0.01),
+                            vx1 = tl_->get(x + 0.01),
+                            dx = (vx1 - vx0) / 0.01;
+
+                // get mouse distance to curve
+                const int dist_scr = abs(value2screen(vx) - e->y());
+                // if within range (+derivative)
+                if (dist_scr <= 2+abs(dx))
+                {
+                    setCursor(Qt::CrossCursor);
+                    e->accept();
+                    hoverCurveHash_ = it->first;
+                    return;
+                }
             }
         }
     }
 
-
     // -- start dragging space --
-    if (true /* can drag space */)
+    if (options_ & O_MoveView)
     {
         action_ = A_START_DRAG_SPACE;
-        setCursor(Qt::SizeAllCursor);
+        if (!(options_ & O_MoveViewX))
+            setCursor(Qt::SizeVerCursor);
+        else if (!(options_ & O_MoveViewY))
+            setCursor(Qt::SizeHorCursor);
+        else
+            setCursor(Qt::SizeAllCursor);
     }
     else
         setCursor(Qt::ArrowCursor);
@@ -582,19 +629,23 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
 
             addSelect_(point->second, isShift);
 
-            action_ = A_DRAG_SELECTED;
-            dragStart_ = e->pos();
-            e->accept();
-            setCursor(Qt::ClosedHandCursor);
-
-            // copy the points to drag set
-            dragPoints_.clear();
-            for (auto &h : selectHashSet_)
+            if (options_ & O_MovePoints)
             {
-                auto it = tl_->getData().lower_bound(h);
-                if (it != tl_->getData().end())
-                    dragPoints_.push_back(DragPoint_(it));
+                action_ = A_DRAG_SELECTED;
+                dragStart_ = e->pos();
+                setCursor(Qt::ClosedHandCursor);
+
+                // copy the points to drag set
+                dragPoints_.clear();
+                for (auto &h : selectHashSet_)
+                {
+                    auto it = tl_->getData().lower_bound(h);
+                    if (it != tl_->getData().end())
+                        dragPoints_.push_back(DragPoint_(it));
+                }
             }
+
+            e->accept();
             return;
         }
 
@@ -642,6 +693,7 @@ void Timeline1DView::mouseDoubleClickEvent(QMouseEvent * e)
     // --- double-click on point ---
     if (isHover_())
     {
+        e->accept();
         return;
     }
 
@@ -649,10 +701,13 @@ void Timeline1DView::mouseDoubleClickEvent(QMouseEvent * e)
 
     if (e->button() == Qt::LeftButton)
     {
-        addPoint_(screen2time(e->x()), screen2value(e->y()));
-        // go to drag action imidiately
-        mousePressEvent(e);
-        return;
+        if (options_ & O_AddRemovePoints)
+        {
+            addPoint_(screen2time(e->x()), screen2value(e->y()));
+            // go to drag action imidiately
+            mousePressEvent(e);
+            return;
+        }
     }
 }
 
@@ -669,7 +724,7 @@ void Timeline1DView::selectAll_()
 {
     selectHashSet_.clear();
 
-    if (!tl_)
+    if (!tl_ || !(options_ & O_EditAll))
         return;
 
     for (auto &it : tl_->getData())
@@ -680,6 +735,9 @@ void Timeline1DView::selectAll_()
 
 void Timeline1DView::selectDirection_(int dir)
 {
+    if (!(options_ & O_EditAll))
+        return;
+
     const Double x = screen2time(popupClick_.x()),
                  y = screen2value(popupClick_.y());
 
@@ -721,9 +779,39 @@ void Timeline1DView::selectDirection_(int dir)
     update();
 }
 
+Double Timeline1DView::limitX_(Double time) const
+{
+    // limit to screen
+    if (!(options_ & O_MoveViewX) && !(options_ & O_ZoomViewX))
+        return std::max(screen2time(0),
+                        std::min(screen2time(width()-1),
+                            time ));
+    else
+        return time;
+}
+
+Double Timeline1DView::limitY_(Double value) const
+{
+    // limit to screen
+    if (!(options_ & O_MoveViewY) && !(options_ & O_ZoomViewY))
+        return std::max(screen2value(height()-1),
+                        std::min(screen2value(0),
+                            value ));
+    else
+        return value;
+}
+
 void Timeline1DView::moveSelected_(Double dx, Double dy)
 {
     if (!tl_)
+        return;
+
+    if (!(options_ & O_MovePointsX))
+        dx = 0;
+    if (!(options_ & O_MovePointsY))
+        dy = 0;
+
+    if (!(dx || dy))
         return;
 
     // only move vertically?
@@ -732,8 +820,9 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         for (auto &p : dragPoints_)
         {
             if (p.valid)
-                p.it->second.val = p.oldp.val + dy;
-
+            {
+                p.it->second.val = limitY_( p.oldp.val + dy );
+            }
             updateAroundPoint_(p.it->second);
         }
 
@@ -756,17 +845,17 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         if (!p.valid) continue;
 
         // create a new point
-        auto newp = tl_->add(p.oldp.t + dx, p.oldp.val + dy, p.oldp.type);
+        auto newp = tl_->add(limitX_(p.oldp.t + dx), limitY_(p.oldp.val + dy), p.oldp.type);
 
         // was there a point already?
         if (newp == 0)
         {
-            auto it2 = tl_->find(p.oldp.t + dx);
+            auto it2 = tl_->find(limitX_(p.oldp.t + dx));
 
             // same point? then change value only
             if (it2 == p.it)
             {
-                p.it->second.val = p.oldp.val + dy;
+                p.it->second.val = limitY_( p.oldp.val + dy );
                 updateAroundPoint_(p.it->second);
             }
 
@@ -845,33 +934,48 @@ void Timeline1DView::slotPointContextMenu_()
 
     if (!isSelected_())
     {
-        pop->addMenu(pointpop);
-        pointpop->setTitle(tr("change point type"));
-
-        a = new QAction(tr("delete point"), pop);
-        pop->addAction(a);
-        connect(a, &QAction::triggered, [=]()
+        if (options_ & O_ChangePointType)
         {
-            tl_->remove(pointIt->second.t);
-            update();
-        });
+            pop->addMenu(pointpop);
+            pointpop->setTitle(tr("change point type"));
+        }
+
+        if (options_ & O_AddRemovePoints)
+        {
+            a = new QAction(tr("delete point"), pop);
+            pop->addAction(a);
+            connect(a, &QAction::triggered, [=]()
+            {
+                tl_->remove(pointIt->second.t);
+                update();
+            });
+        }
     }
 
     // --- selected points popup ---
     else
     {
-        pop->addMenu(pointpop);
-        pointpop->setTitle(tr("change points type"));
-
-        a = new QAction(tr("delete points"), pop);
-        pop->addAction(a);
-        connect(a, &QAction::triggered, [=]()
+        if (options_ & O_ChangePointType)
         {
-            for (auto h : selectHashSet_)
-                tl_->remove(h);
-            update();
-        });
+            pop->addMenu(pointpop);
+            pointpop->setTitle(tr("change points type"));
+        }
+
+        if (options_ & O_AddRemovePoints)
+        {
+            a = new QAction(tr("delete points"), pop);
+            pop->addAction(a);
+            connect(a, &QAction::triggered, [=]()
+            {
+                for (auto h : selectHashSet_)
+                    tl_->remove(h);
+                update();
+            });
+        }
     }
+
+    if (pop->actions().empty())
+        return;
 
     popupClick_ = mapFromGlobal(QCursor::pos());
 
@@ -891,49 +995,99 @@ void Timeline1DView::slotEmptyContextMenu_()
 
     if (isSelected_())
     {
-        a = new QAction(tr("unselect"), pop);
+        if (options_ & O_EditAll)
+        {
+            a = new QAction(tr("unselect"), pop);
+            pop->addAction(a);
+            connect(a, &QAction::triggered, [=]()
+            {
+                clearSelect_();
+            });
+        }
+    }
+
+    if (options_ & O_EditAll)
+    {
+        a = new QAction(tr("select all"), pop);
         pop->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            clearSelect_();
+            selectAll_();
         });
+
+        QMenu * selectpop = new QMenu(pop);
+        pop->addMenu(selectpop);
+        selectpop->setTitle(tr("add to selection"));
+
+        a = new QAction(tr("all points left"), selectpop);
+        selectpop->addAction(a);
+        connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::LeftArrow); });
+        a = new QAction(tr("all points right"), selectpop);
+        selectpop->addAction(a);
+        connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::RightArrow); });
+        a = new QAction(tr("all points above"), selectpop);
+        selectpop->addAction(a);
+        connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::UpArrow); });
+        a = new QAction(tr("all points below"), selectpop);
+        selectpop->addAction(a);
+        connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::DownArrow); });
+
     }
-
-    a = new QAction(tr("select all"), pop);
-    pop->addAction(a);
-    connect(a, &QAction::triggered, [=]()
-    {
-        selectAll_();
-    });
-
-    QMenu * selectpop = new QMenu(pop);
-    pop->addMenu(selectpop);
-    selectpop->setTitle(tr("add to selection"));
-
-    a = new QAction(tr("all points left"), selectpop);
-    selectpop->addAction(a);
-    connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::LeftArrow); });
-    a = new QAction(tr("all points right"), selectpop);
-    selectpop->addAction(a);
-    connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::RightArrow); });
-    a = new QAction(tr("all points above"), selectpop);
-    selectpop->addAction(a);
-    connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::UpArrow); });
-    a = new QAction(tr("all points below"), selectpop);
-    selectpop->addAction(a);
-    connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::DownArrow); });
 
 
     // ----------
     pop->addSeparator();
 
-    a = new QAction(tr("fit to view"), pop);
-    pop->addAction(a);
-    connect(a, SIGNAL(triggered()), this, SLOT(fitToView()));
+    if (options_ & O_ChangeViewAll)
+    {
+        if (options_ & O_ZoomViewX)
+        {
+            a = new QAction(tr("fit time to view"), pop);
+            pop->addAction(a);
+            connect(a, &QAction::triggered, [=]() { fitToView(true, false); } );
+        }
 
-    a = new QAction(tr("fit selection to view"), pop);
-    pop->addAction(a);
-    connect(a, SIGNAL(triggered()), this, SLOT(fitSelectionToView()));
+        if (options_ & O_ZoomViewY)
+        {
+            a = new QAction(tr("fit values to view"), pop);
+            pop->addAction(a);
+            connect(a, &QAction::triggered, [=]() { fitToView(false, true); } );
+        }
+
+        if (options_ & O_ZoomView)
+        {
+            a = new QAction(tr("fit to view"), pop);
+            pop->addAction(a);
+            connect(a, &QAction::triggered, [=]() { fitToView(true, true); } );
+        }
+
+        if (isSelected_())
+        {
+            if (options_ & O_ZoomViewX)
+            {
+                a = new QAction(tr("fit selection time to view"), pop);
+                pop->addAction(a);
+                connect(a, &QAction::triggered, [=]() { fitSelectionToView(true, false); } );
+            }
+
+            if (options_ & O_ZoomViewY)
+            {
+                a = new QAction(tr("fit selection value to view"), pop);
+                pop->addAction(a);
+                connect(a, &QAction::triggered, [=]() { fitSelectionToView(false, true); } );
+            }
+
+            if (options_ & O_ZoomView)
+            {
+                a = new QAction(tr("fit selection to view"), pop);
+                pop->addAction(a);
+                connect(a, &QAction::triggered, [=]() { fitSelectionToView(true, true); } );
+            }
+        }
+    }
+
+    if (pop->actions().empty())
+        return;
 
     popupClick_ = mapFromGlobal(QCursor::pos());
 
@@ -942,6 +1096,9 @@ void Timeline1DView::slotEmptyContextMenu_()
 
 void Timeline1DView::changePointType_(Timeline1D::Point::Type t)
 {
+    if (!tl_ || !(options_ & O_ChangePointType))
+        return;
+
     if (isSelected_())
     {
         for (auto &h : selectHashSet_)
@@ -967,7 +1124,7 @@ void Timeline1DView::changePointType_(Timeline1D::Point::Type t)
 
 void Timeline1DView::addPoint_(Double t, Double v)
 {
-    if (!tl_)
+    if (!tl_ || !(options_ & O_AddRemovePoints))
         return;
 
     auto p = tl_->add(t, v);
@@ -988,6 +1145,9 @@ void Timeline1DView::addPoint_(Double t, Double v)
 
 void Timeline1DView::updateDerivatives_(Timeline1D::TpList::iterator p, int lr)
 {
+    if (!tl_)
+        return;
+
     auto it = p;
     int i = 0;
 
