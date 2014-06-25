@@ -13,7 +13,7 @@
 #include <QMouseEvent>
 
 #include "ruler.h"
-#include "painter/grid.h"
+#include "gui/painter/grid.h"
 
 namespace MO {
 namespace GUI {
@@ -49,8 +49,12 @@ void Ruler::setOptions(int options)
 
     options_ = options;
 
-    gridPainter_->setDrawX(options_ & O_DrawX);
-    gridPainter_->setDrawY(options_ & O_DrawY);
+    gridPainter_->setOptions(
+        (PAINTER::Grid::O_DrawX * ((options_ & O_DrawX) != 0))
+    |   (PAINTER::Grid::O_DrawY * ((options_ & O_DrawY) != 0))
+    |   (PAINTER::Grid::O_DrawTextX * ((options_ & O_DrawTextX) != 0))
+    |   (PAINTER::Grid::O_DrawTextY * ((options_ & O_DrawTextY) != 0))
+    );
 
     if (changed)
         update();

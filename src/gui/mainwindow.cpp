@@ -15,6 +15,7 @@
 #include "timeline1dview.h"
 #include "ruler.h"
 #include "math/timeline1d.h"
+#include "gui/painter/grid.h"
 
 namespace MO {
 namespace GUI {
@@ -30,18 +31,23 @@ MainWindow::MainWindow(QWidget *parent) :
     //auto v = new ProjectorSetupWidget(centralWidget());
     //l->addWidget(v);
 
+
     auto grid = new QGridLayout();
     l->addLayout(grid);
 
+#define HAVE_RULER
+
+#ifdef HAVE_RULER
         auto rulerX = new Ruler(this);
         rulerX->setFixedHeight(40);
         grid->addWidget(rulerX, 0, 1);
-        rulerX->setOptions(Ruler::O_DragX | Ruler::O_DrawX);
+        rulerX->setOptions(Ruler::O_DragX | Ruler::O_DrawX | Ruler::O_DrawTextX);
 
         auto rulerY = new Ruler(this);
         rulerY->setFixedWidth(40);
         grid->addWidget(rulerY, 1, 0);
-        rulerY->setOptions(Ruler::O_DragY | Ruler::O_DrawY);
+        rulerY->setOptions(Ruler::O_DragY | Ruler::O_DrawY | Ruler::O_DrawTextY);
+#endif
 
         auto tl = new Timeline1D;
         for (int i=0; i<200; ++i)
@@ -50,7 +56,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
         auto tlv = new Timeline1DView(tl, this);
         grid->addWidget(tlv, 1, 1);
+        tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
 
+#ifdef HAVE_RULER
         connect(rulerX, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), tlv, SLOT(setViewSpace(UTIL::ViewSpace)));
         connect(tlv, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerX, SLOT(setViewSpace(UTIL::ViewSpace)));
 
@@ -61,6 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(rulerY, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerX, SLOT(setViewSpace(UTIL::ViewSpace)));
 
         rulerX->setViewSpace(rulerX->viewSpace(), true);
+#endif
 }
 
 MainWindow::~MainWindow()

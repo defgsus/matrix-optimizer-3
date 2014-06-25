@@ -52,6 +52,12 @@ void Timeline1DView::setTimeline(Timeline1D *timeline)
     update();
 }
 
+void Timeline1DView::setGridOptions(int options)
+{
+    gridPainter_->setOptions(options);
+    update();
+}
+
 Double Timeline1DView::screen2time(Double x) const
 {
     return space_.mapXTo(x / width());

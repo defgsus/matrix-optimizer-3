@@ -30,6 +30,19 @@ class Grid : public QObject
     Q_OBJECT
 
 public:
+
+    enum Option
+    {
+        O_DrawX = 1,
+        O_DrawY = 2,
+        O_DrawTextX = 4,
+        O_DrawTextY = 8,
+
+        O_DrawAll = 0xffff
+    };
+
+    // -------------- types -----------------
+
     Grid(QObject * parent = 0);
 
     // -------------- getter ----------------
@@ -37,13 +50,11 @@ public:
     Double quantizeX(Double x) const;
     Double quantizeY(Double y) const;
 
-    bool isDrawX() const { return doDrawX_; }
-    bool isDrawY() const { return doDrawY_; }
+    int options() const { return options_; }
 
     // -------------- setter ----------------
 
-    void setDrawX(bool doit) { doDrawX_ = doit; }
-    void setDrawY(bool doit) { doDrawY_ = doit; }
+    void setOptions(int options) { options_ = options; }
 
     template <typename F>
     void setViewSpace(const UTIL::ViewSpaceT<F>& viewspace) { viewspace_ = viewspace; }
@@ -60,9 +71,9 @@ protected:
 
     std::set<Double> spacingX_, spacingY_;
 
-    QPen pen_;
+    QPen pen_, textPen_;
 
-    bool doDrawX_, doDrawY_;
+    int options_;
 };
 
 } // namespace PAINTER

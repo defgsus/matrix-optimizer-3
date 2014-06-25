@@ -27,9 +27,12 @@ public:
     {
         O_DrawX = 1,
         O_DrawY = 2,
-        O_DragX = 4,
-        O_DragY = 8,
+        O_DrawTextX = 4,
+        O_DrawTextY = 8,
+        O_DragX = 16,
+        O_DragY = 32,
 
+        O_DrawAll = O_DrawX | O_DrawY | O_DrawTextX | O_DrawTextY,
         O_DragAll = O_DragX | O_DragY,
         O_EnableAll = 0xffff
     };

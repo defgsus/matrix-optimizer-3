@@ -20,8 +20,8 @@ namespace PAINTER {
 Grid::Grid(QObject *parent)
     :   QObject     (parent),
         pen_        (QColor(255,255,255,50)),
-        doDrawX_    (true),
-        doDrawY_    (true)
+        textPen_    (QColor(255,255,255,150)),
+        options_    (O_DrawAll)
 {
 
     spacingX_.insert(0.0010);
@@ -110,12 +110,9 @@ void Grid::paint(QPainter & p)
 
 void Grid::paint(QPainter &p, const QRect &rect)
 {
-    if (!doDrawX_ && !doDrawY_)
-        return;
+    p.setBrush(Qt::NoBrush);
 
-    p.setPen(pen_);
-
-    if (doDrawX_)
+    if ((options_ & O_DrawX) || (options_ & O_DrawTextX))
     {
         const int width = p.window().width();
 
@@ -126,17 +123,41 @@ void Grid::paint(QPainter &p, const QRect &rect)
             x0 = viewspace_.mapXTo((Double)rect.left() / width),
             x1 = viewspace_.mapXTo((Double)rect.right() / width);
 
-        // draw nice lines
         if (spacing > 0)
-        for (Double x = x0; x<x1+spacing; x += spacing)
         {
-            const int sx = viewspace_.mapXFrom(MATH::quant(x,spacing)) * width;
+            // draw nice lines
+            if (options_ & O_DrawX)
+            {
+                p.setPen(pen_);
+                for (Double x = x0; x<x1+spacing; x += spacing)
+                {
+                    const Double qx = MATH::quant(x,spacing);
+                    const int sx = viewspace_.mapXFrom(qx) * width;
 
-            p.drawLine(sx, rect.top(), sx, rect.bottom());
+                    p.drawLine(sx, rect.top(), sx, rect.bottom());
+                }
+            }
+
+            // draw text
+            if ((options_ & O_DrawTextX) && rect.top() < 40)
+            {
+                p.setPen(textPen_);
+                const int fh = p.fontMetrics().height() * 0.8;
+                int hs = (int)(x0/spacing) % 2;
+                for (Double x = x0-spacing; x<x1+spacing; x += spacing)
+                {
+                    const Double qx = MATH::quant(x,spacing);
+                    const int sx = viewspace_.mapXFrom(qx) * width;
+
+                    p.drawText(sx+2, (hs+1)*fh, QString::number(qx));
+
+                    hs = (hs + 1) % 2;
+                }
+            }
         }
     }
 
-    if (doDrawY_)
+    if ((options_ & O_DrawY) || (options_ & O_DrawTextY))
     {
         const int height = p.window().height();
 
@@ -146,11 +167,31 @@ void Grid::paint(QPainter &p, const QRect &rect)
             y0 = viewspace_.mapYTo((Double)(height-1-rect.bottom()) / height);
 
         if (spacing > 0)
-        for (Double y = y0; y<y1+spacing; y += spacing)
         {
-            const int sy = height-1-viewspace_.mapYFrom(MATH::quant(y,spacing)) * height;
+            // grid lines
+            if (options_ & O_DrawY)
+            {
+                p.setPen(pen_);
+                for (Double y = y0; y<y1+spacing; y += spacing)
+                {
+                    const int sy = height - 1 - viewspace_.mapYFrom(MATH::quant(y,spacing)) * height;
 
-            p.drawLine(rect.left(), sy, rect.right(), sy);
+                    p.drawLine(rect.left(), sy, rect.right(), sy);
+                }
+            }
+
+            // text
+            if (options_ & O_DrawTextY)
+            {
+                p.setPen(textPen_);
+                for (Double y = y0; y<y1+spacing; y += spacing)
+                {
+                    const Double qy = MATH::quant(y,spacing);
+                    const int sy = height - 1 - viewspace_.mapYFrom(qy) * height;
+
+                    p.drawText(0, sy-1, QString::number(qy));
+                }
+            }
         }
     }
 }

@@ -37,6 +37,9 @@ public:
     /** Assigns a new (or no) Timeline1D */
     void setTimeline(Timeline1D * timeline = 0);
 
+    /** Sets the options for the background grid as or-wise combination of PAINTER::Grid::Option */
+    void setGridOptions(int options);
+
     // --------- conversion screen/time/value --------
 
     Double screen2time(Double x) const;
