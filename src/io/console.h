@@ -11,9 +11,7 @@
 #define MOSRC_IO_CONSOLE_H
 
 #include <iostream>
-#include <qglobal.h>
-
-//namespace MO {
+#include <qglobal.h> // for Q_OS_.. flags
 
 
 // --------------- colored console output ----------
@@ -74,6 +72,10 @@
     std::ostream& operator<<(std::ostream& os, const ColorStream& cs);
 
 #endif // Q_OS_WIN
+
+
+
+
 
 
 #endif // CONSOLE_H

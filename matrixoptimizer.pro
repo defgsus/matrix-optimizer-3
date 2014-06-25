@@ -29,7 +29,8 @@ SOURCES += \
     src/io/console.cpp \
     src/audio/audiosource.cpp \
     src/gui/painter/grid.cpp \
-    src/gui/ruler.cpp
+    src/gui/ruler.cpp \
+    src/io/io.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -50,7 +51,10 @@ HEADERS += \
     src/gui/painter/grid.h \
     src/gui/util/viewspace.h \
     src/math/functions.h \
-    src/gui/ruler.h
+    src/gui/ruler.h \
+    src/io/io.h \
+    src/io/log.h \
+    src/io/error.h
 
 FORMS += \
         src/gui/mainwindow.ui \
