@@ -46,7 +46,13 @@ public:
 
 signals:
 
+    /** Send when viewspace was changed by user */
+    void viewSpaceChanged(const UTIL::ViewSpace&);
+
 public slots:
+
+    /** Sets a new viewspace for the timeline */
+    void setViewSpace(const UTIL::ViewSpace &, bool send_signal = false);
 
     /** Fits the whole curve into view */
     void fitToView(int marginInPixels = 10);

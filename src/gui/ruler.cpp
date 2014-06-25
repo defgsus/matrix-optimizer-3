@@ -22,6 +22,7 @@ namespace GUI {
 Ruler::Ruler(QWidget *parent) :
     QWidget         (parent),
     gridPainter_    (new PAINTER::Grid(this)),
+    options_        (O_EnableAll),
     action_         (A_NOTHING)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -29,6 +30,9 @@ Ruler::Ruler(QWidget *parent) :
 
     setCursor(Qt::OpenHandCursor);
     setMouseTracking(true);
+
+    // update grid painter
+    setOptions(options_);
 }
 
 void Ruler::setViewSpace(const UTIL::ViewSpace & v, bool send_signal)
@@ -39,6 +43,18 @@ void Ruler::setViewSpace(const UTIL::ViewSpace & v, bool send_signal)
     update();
 }
 
+void Ruler::setOptions(int options)
+{
+    bool changed = (options_ != options);
+
+    options_ = options;
+
+    gridPainter_->setDrawX(options_ & O_DrawX);
+    gridPainter_->setDrawY(options_ & O_DrawY);
+
+    if (changed)
+        update();
+}
 
 void Ruler::paintEvent(QPaintEvent * e)
 {
@@ -61,7 +77,8 @@ void Ruler::paintEvent(QPaintEvent * e)
 
 void Ruler::mousePressEvent(QMouseEvent * e)
 {
-    if (e->button() == Qt::LeftButton)
+    if (e->button() == Qt::LeftButton
+        && (options() & O_DragAll))
     {
         dragStart_ = e->pos();
         dragStartSpace_ = space_;
@@ -76,14 +93,19 @@ void Ruler::mouseMoveEvent(QMouseEvent * e)
 {
     if (action_ == A_DRAG_SPACE)
     {
-        const Double
-                dx = space_.mapXDistanceTo(e->x() - dragStart_.x()) / width(),
-                dy = space_.mapYDistanceTo(e->y() - dragStart_.y()) / height();
+        Double
+            dx = space_.mapXDistanceTo(e->x() - dragStart_.x()) / width(),
+            dy = space_.mapYDistanceTo(e->y() - dragStart_.y()) / height();
+
+        if (!(options_ & O_DragX))
+            dx = 0;
+        if (!(options_ & O_DragY))
+            dy = 0;
 
         if (dx || dy)
         {
             space_.setX( dragStartSpace_.x() - dx );
-            space_.setY( dragStartSpace_.y() - dy );
+            space_.setY( dragStartSpace_.y() + dy );
             emit viewSpaceChanged(space_);
             update();
         }

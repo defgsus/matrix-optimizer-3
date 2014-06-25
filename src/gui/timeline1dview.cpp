@@ -91,6 +91,14 @@ void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
     space_.setY( space_.y() + changey * ty );
 }
 
+void Timeline1DView::setViewSpace(const UTIL::ViewSpace &v, bool send)
+{
+    space_ = v;
+    if (send)
+        emit viewSpaceChanged(space_);
+    update();
+}
+
 void Timeline1DView::fitToView(int marginInPixels)
 {
     if (!tl_) return;
@@ -152,6 +160,7 @@ void Timeline1DView::fitToView_(Double tmin, Double tmax, int marginInPixels)
     space_.setScaleX( space_.scaleX() + mx*2 );
     space_.setScaleY( space_.scaleY() + my*2 );
 
+    emit viewSpaceChanged(space_);
     update();
 }
 
@@ -433,6 +442,7 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         space_.setX( dragStartSpace_.x() - dx );
         space_.setY( dragStartSpace_.y() - dy );
 
+        emit viewSpaceChanged(space_);
         update();
 
         e->accept();

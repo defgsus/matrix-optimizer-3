@@ -22,17 +22,27 @@ class Ruler : public QWidget
 {
     Q_OBJECT
 public:
+
+    enum Option
+    {
+        O_DrawX = 1,
+        O_DrawY = 2,
+        O_DragX = 4,
+        O_DragY = 8,
+
+        O_DragAll = O_DragX | O_DragY,
+        O_EnableAll = 0xffff
+    };
+
+    // ------------- ctor ------------------
+
     explicit Ruler(QWidget *parent = 0);
 
     // ------------- getter ----------------
 
     const UTIL::ViewSpace& viewSpace() const { return space_; }
 
-    // ----------- setter ------------------
-
-    void setViewSpace(const UTIL::ViewSpace&, bool send_signal = true);
-
-
+    int options() const { return options_; }
 
 signals:
 
@@ -40,6 +50,10 @@ signals:
     void viewSpaceChanged(const UTIL::ViewSpace&);
 
 public slots:
+
+    void setViewSpace(const UTIL::ViewSpace&, bool send_signal = false);
+
+    void setOptions(int options);
 
 protected:
 
@@ -58,6 +72,8 @@ private:
 
     UTIL::ViewSpace space_;
     PAINTER::Grid * gridPainter_;
+
+    int options_;
 
     Action_ action_;
 

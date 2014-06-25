@@ -142,13 +142,13 @@ void Grid::paint(QPainter &p, const QRect &rect)
 
         const Double
             spacing = quantizeY( viewspace_.mapYDistanceTo((Double)20 / height) ),
-            y0 = viewspace_.mapYTo((Double)rect.top() / height),
-            y1 = viewspace_.mapYTo((Double)rect.bottom() / height);
+            y1 = viewspace_.mapYTo((Double)(height-1-rect.top()) / height),
+            y0 = viewspace_.mapYTo((Double)(height-1-rect.bottom()) / height);
 
         if (spacing > 0)
         for (Double y = y0; y<y1+spacing; y += spacing)
         {
-            const int sy = viewspace_.mapYFrom(MATH::quant(y,spacing)) * height;
+            const int sy = height-1-viewspace_.mapYFrom(MATH::quant(y,spacing)) * height;
 
             p.drawLine(rect.left(), sy, rect.right(), sy);
         }
