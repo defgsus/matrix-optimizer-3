@@ -84,17 +84,9 @@ void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
         tx = (Double)scrx / width(),
         ty = 1.0 - (Double)scry / height();
 
-    UTIL::ViewSpace olds(space_);
+    space_.zoom(fx, fy, tx, ty);
 
-    space_.setScaleX( space_.scaleX() * fx );
-    space_.setScaleY( space_.scaleY() * fy );
-
-    const Double
-        changex = (olds.scaleX() - space_.scaleX()),
-        changey = (olds.scaleY() - space_.scaleY());
-
-    space_.setX( space_.x() + changex * tx );
-    space_.setY( space_.y() + changey * ty );
+    emit viewSpaceChanged(space_);
 }
 
 void Timeline1DView::setViewSpace(const UTIL::ViewSpace &v, bool send)

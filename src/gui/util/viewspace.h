@@ -49,6 +49,12 @@ public:
     void addX(Float x) { x_ += x; }
     void addY(Float y) { y_ += y; }
 
+    // ------ high-level changes --------
+
+    void zoomX(Float scale, Float t = 0.5);
+    void zoomY(Float scale, Float t = 0.5);
+    void zoom(Float scaleX, Float scaleY, Float tx = 0.5, Float ty = 0.5);
+
     // ----------- mapping --------------
 
     Float mapXTo(Float x) const;
@@ -63,10 +69,6 @@ public:
     Float mapYDistanceTo(Float y) const;
     Float mapYDistanceFrom(Float y) const;
 
-    // ----------- control --------------
-
-
-
 private:
 
     Double x_,
@@ -78,54 +80,76 @@ private:
 // --------------- implementation -------------------
 
 template <typename Float>
-Float ViewSpaceT<Float>::mapXTo(Float x) const
+inline Float ViewSpaceT<Float>::mapXTo(Float x) const
 {
     return x * sx_ + x_;
 }
 
 template <typename Float>
-Float ViewSpaceT<Float>::mapYTo(Float y) const
+inline Float ViewSpaceT<Float>::mapYTo(Float y) const
 {
     return y * sy_ + y_;
 }
 
 template <typename Float>
-Float ViewSpaceT<Float>::mapXFrom(Float x) const
+inline Float ViewSpaceT<Float>::mapXFrom(Float x) const
 {
     return (x - x_) / sx_;
 }
 
 template <typename Float>
-Float ViewSpaceT<Float>::mapYFrom(Float y) const
+inline Float ViewSpaceT<Float>::mapYFrom(Float y) const
 {
     return (y - y_) / sy_;
 }
 
 template <typename Float>
-Float ViewSpaceT<Float>::mapXDistanceTo(Float x) const
+inline Float ViewSpaceT<Float>::mapXDistanceTo(Float x) const
 {
     return x * sx_;
 }
 
 template <typename Float>
-Float ViewSpaceT<Float>::mapXDistanceFrom(Float x) const
+inline Float ViewSpaceT<Float>::mapXDistanceFrom(Float x) const
 {
     return x / sx_;
 }
 
 template <typename Float>
-Float ViewSpaceT<Float>::mapYDistanceTo(Float y) const
+inline Float ViewSpaceT<Float>::mapYDistanceTo(Float y) const
 {
     return y * sy_;
 }
 
 template <typename Float>
-Float ViewSpaceT<Float>::mapYDistanceFrom(Float y) const
+inline Float ViewSpaceT<Float>::mapYDistanceFrom(Float y) const
 {
     return y / sy_;
 }
 
 
+template <typename Float>
+inline void ViewSpaceT<Float>::zoomX(Float scale, Float t)
+{
+    const Float oldsx = sx_;
+    sx_ *= scale;
+    x_ += (oldsx - sx_) * t;
+}
+
+template <typename Float>
+inline void ViewSpaceT<Float>::zoomY(Float scale, Float t)
+{
+    const Float oldsy = sy_;
+    sy_ *= scale;
+    y_ += (oldsy - sy_) * t;
+}
+
+template <typename Float>
+inline void ViewSpaceT<Float>::zoom(Float scaleX, Float scaleY, Float tx, Float ty)
+{
+    zoomX(scaleX, tx);
+    zoomY(scaleY, ty);
+}
 
 // ------------ default type ----------------
 
