@@ -1115,8 +1115,21 @@ void Timeline1DView::slotPointContextMenu_()
         }
     }
 
-    if (pop->actions().empty())
+    if (isSelected())
+    {
+        if (!pop->isEmpty())
+            pop->addSeparator();
+
+        a = new QAction(tr("copy selection"), pop);
+        pop->addAction(a);
+        connect(a, SIGNAL(triggered()), this, SLOT(copySelection()));
+    }
+
+    if (pop->isEmpty())
+    {
+        pop->deleteLater();
         return;
+    }
 
     popupClick_ = mapFromGlobal(QCursor::pos());
 
@@ -1175,15 +1188,27 @@ void Timeline1DView::slotEmptyContextMenu_()
 
         pop->addSeparator();
 
-        a = new QAction(tr("copy timeline"), pop);
-        pop->addAction(a);
-        connect(a, SIGNAL(triggered()), this, SLOT(copyAll()));
+        if (!tl_->empty())
+        {
+            a = new QAction(tr("copy timeline"), pop);
+            pop->addAction(a);
+            connect(a, SIGNAL(triggered()), this, SLOT(copyAll()));
+        }
 
-        a = new QAction(tr("paste timeline"), pop);
-        a->setEnabled(isTimelineInClipboard());
-        pop->addAction(a);
-        connect(a, SIGNAL(triggered()), this, SLOT(paste()));
+        if (isSelected())
+        {
+            a = new QAction(tr("copy selection"), pop);
+            pop->addAction(a);
+            connect(a, SIGNAL(triggered()), this, SLOT(copySelection()));
+        }
 
+        const ClipboardType ctype = isTimelineInClipboard();
+        if (ctype != C_NONE)
+        {
+            a = new QAction(ctype == C_SELECTION? tr("paste selection here") : tr("paste timeline"), pop);
+            pop->addAction(a);
+            connect(a, SIGNAL(triggered()), this, SLOT(paste()));
+        }
     }
 
 
@@ -1238,8 +1263,11 @@ void Timeline1DView::slotEmptyContextMenu_()
         }
     }
 
-    if (pop->actions().empty())
+    if (pop->isEmpty())
+    {
+        pop->deleteLater();
         return;
+    }
 
     popupClick_ = mapFromGlobal(QCursor::pos());
 
@@ -1324,6 +1352,20 @@ void Timeline1DView::updateDerivatives_(MATH::Timeline1D::TpList::iterator p, in
     }
 }
 
+
+
+// ----------------------- CLIPBOARD ------------------------
+
+Timeline1DView::ClipboardType Timeline1DView::isTimelineInClipboard()
+{
+    const auto list = QApplication::clipboard()->mimeData()->formats();
+    if (list.contains("mo/timeline"))
+        return C_WHOLE;
+    if (list.contains("mo/timeline-sel"))
+        return C_SELECTION;
+    return C_NONE;
+}
+
 void Timeline1DView::copyAll()
 {
     if (!tl_)
@@ -1340,9 +1382,31 @@ void Timeline1DView::copyAll()
     QApplication::clipboard()->setMimeData(data);
 }
 
-bool Timeline1DView::isTimelineInClipboard()
+void Timeline1DView::copySelection()
 {
-    return QApplication::clipboard()->mimeData()->formats().contains("mo/timeline");
+    if (!tl_ || !isSelected())
+        return;
+
+    QByteArray bytes;
+    QDataStream stream(&bytes, QIODevice::WriteOnly);
+
+    // make a copy
+    MATH::Timeline1D tl(*tl_);
+
+    // and remove all unselected points
+    std::set<MATH::Timeline1D::TpHash> times;
+    for (auto &i : tl.getData())
+        if (!selectHashSet_.contains(i.first))
+            times.insert(i.first);
+    for (auto i : times)
+        tl.remove(i);
+
+    tl.serialize(stream);
+
+    auto data = new QMimeData();
+    data->setData("mo/timeline-sel", bytes);
+
+    QApplication::clipboard()->setMimeData(data);
 }
 
 void Timeline1DView::paste()
@@ -1350,24 +1414,59 @@ void Timeline1DView::paste()
     if (!tl_)
         return;
 
-    if (isTimelineInClipboard())
+    ClipboardType ctype = isTimelineInClipboard();
+
+    if (ctype != C_NONE)
     {
+        // read data
         QByteArray bytes =
-            QApplication::clipboard()->mimeData()->data("mo/timeline");
+            QApplication::clipboard()->mimeData()->data(
+                    ctype == C_WHOLE? "mo/timeline" : "mo/timeline-sel");
 
         QDataStream stream(&bytes, QIODevice::ReadOnly);
 
+        // create a temp timeline with the data
         MATH::Timeline1D tl;
         try
         {
             tl.deserialize(stream);
-            *tl_ = tl;
-            update();
         }
         catch (Exception& e)
         {
             QMessageBox::warning(this, "!", tr("Error pasting timeline data\n%1").arg(e.what()));
+            return;
         }
+
+        // paste selection
+        if (ctype == C_SELECTION)
+        {
+            if (tl.getData().empty())
+                return;
+
+            const Double
+                    clipTime = tl.getData().begin()->second.t,
+                    clipVal = tl.getData().begin()->second.val,
+                    insertTime = screen2time(popupClick_.x()) - clipTime,
+                    insertVal = screen2value(popupClick_.y()) - clipVal;
+
+            clearSelect_();
+            for (auto &i : tl.getData())
+            {
+                auto p =
+                    tl_->add(limitX_(i.second.t + insertTime),
+                             limitY_(i.second.val + insertVal),
+                             i.second.type);
+                if (p)
+                    addSelect_(*p);
+            }
+        }
+        // whole timeline
+        else
+        {
+            *tl_ = tl;
+        }
+
+        update();
     }
 }
 

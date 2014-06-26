@@ -51,6 +51,13 @@ public:
         O_EnableAll = 0xffffffff
     };
 
+    enum ClipboardType
+    {
+        C_NONE,
+        C_WHOLE,
+        C_SELECTION
+    };
+
     // ---------- ctor -------------
 
     explicit Timeline1DView(MATH::Timeline1D * timeline = 0, QWidget *parent = 0);
@@ -62,7 +69,7 @@ public:
     /** is anyone selected? */
     bool isSelected() const { return !selectHashSet_.empty(); }
 
-    static bool isTimelineInClipboard();
+    static ClipboardType isTimelineInClipboard();
 
     // ----------- assignment ------
 
@@ -104,6 +111,7 @@ public slots:
     void unselect();
 
     void copyAll();
+    void copySelection();
     void paste();
 
 protected slots:

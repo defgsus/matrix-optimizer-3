@@ -144,6 +144,9 @@ class Timeline1D
     /** return number of que points */
     unsigned int size() const { return data_.size(); }
 
+    /** Returns wheter the timeline has no points */
+    bool empty() const { return data_.empty(); }
+
     /** get value at time (with limits) */
     Double get(Double time);
 
