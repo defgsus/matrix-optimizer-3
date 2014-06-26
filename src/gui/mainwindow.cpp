@@ -41,6 +41,12 @@ MainWindow::MainWindow(QWidget *parent) :
         l->addWidget(tlv);
         //tlv->setOptions(Timeline1DView::O_ChangeViewX | Timeline1DView::O_MovePoints);
         //tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
+        auto space = tlv->viewSpace();
+        space.setMinX(0);
+        space.setMinY(0);
+        space.setMaxX(10);
+        space.setMaxY(1);
+        tlv->setViewSpace(space, true);
 
         auto tl2 = new MATH::Timeline1D;
         tl2->setLimit(0,1);

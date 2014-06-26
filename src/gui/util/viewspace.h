@@ -34,15 +34,25 @@ public:
     Double scaleX() const { return sx_; }
     Double scaleY() const { return sy_; }
 
+    Double minX() const { return minx_; }
+    Double maxX() const { return maxx_; }
+    Double minY() const { return miny_; }
+    Double maxY() const { return maxy_; }
+
     // ----------- setter ---------------
 
-    void setX(Double x) { x_ = x; }
-    void setY(Double y) { y_ = y; }
-    void setScaleX(Double sx) { sx_ = sx; }
-    void setScaleY(Double sy) { sy_ = sy; }
+    void setX(Double x);
+    void setY(Double y);
+    void setScaleX(Double sx);
+    void setScaleY(Double sy);
 
-    void addX(Double x) { x_ += x; }
-    void addY(Double y) { y_ += y; }
+    void addX(Double x);
+    void addY(Double y);
+
+    void setMinX(Double minx);
+    void setMaxX(Double maxx);
+    void setMinY(Double miny);
+    void setMaxY(Double maxy);
 
     // ------ high-level changes --------
 
@@ -66,10 +76,23 @@ public:
 
 private:
 
-    Double x_,
-           y_,
-           sx_,
-           sy_;
+    void applyLimits_();
+
+    Double
+        x_,
+        y_,
+        sx_,
+        sy_,
+        minx_,
+        miny_,
+        maxx_,
+        maxy_;
+
+    bool
+        doMinx_,
+        doMiny_,
+        doMaxx_,
+        doMaxy_;
 };
 
 

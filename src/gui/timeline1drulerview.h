@@ -35,6 +35,8 @@ public:
     Ruler * rulerX() { return rulerX_; }
     Ruler * rulerY() { return rulerY_; }
 
+    const UTIL::ViewSpace& viewSpace() const;
+
     // ----------- assignment ------
 
     /** Assigns a new (or no) Timeline1D */

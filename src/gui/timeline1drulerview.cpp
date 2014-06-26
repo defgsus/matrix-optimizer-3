@@ -91,6 +91,11 @@ void Timeline1DRulerView::setTimeline(MATH::Timeline1D *timeline)
     timelineView_->setTimeline(timeline);
 }
 
+const UTIL::ViewSpace& Timeline1DRulerView::viewSpace() const
+{
+    return timelineView_->viewSpace();
+}
+
 void Timeline1DRulerView::setGridOptions(int options)
 {
     timelineView_->setGridOptions(options);
