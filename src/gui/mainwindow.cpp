@@ -50,9 +50,9 @@ MainWindow::MainWindow(QWidget *parent) :
         rulerY->setOptions(Ruler::O_DragY | Ruler::O_DrawY | Ruler::O_DrawTextY | Ruler::O_ZoomY);
 #endif
 
-        auto tl = new Timeline1D;
+        auto tl = new MATH::Timeline1D;
         for (int i=0; i<200; ++i)
-            tl->add((Double)rand()/RAND_MAX * 10.0, (Double)rand()/RAND_MAX, Timeline1D::Point::SYMMETRIC);
+            tl->add((Double)rand()/RAND_MAX * 10.0, (Double)rand()/RAND_MAX, MATH::Timeline1D::Point::SYMMETRIC);
         tl->setAutoDerivative();
 
         auto tlv = new Timeline1DView(tl, this);

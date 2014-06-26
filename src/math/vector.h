@@ -14,6 +14,7 @@
 #include "math/constants.h"
 
 namespace MO {
+namespace MATH {
 
 /** Returns a point on a unit sphere (radius = 1.0). <br>
     Given a point P = <0,1,0>, and v = rotation around z, and u = rotation around y <br>
@@ -33,7 +34,7 @@ namespace MO {
         return P;
     }
 
-
+} // namespace MATH
 } // namespace MO
 
 #endif // MOSRC_MATH_VECTOR_H

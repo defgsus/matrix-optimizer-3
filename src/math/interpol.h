@@ -10,6 +10,7 @@
 #define MOSRC_MATH_INTERPOL_H
 
 namespace MO {
+namespace MATH {
 
 /** Put the value of @p x between [0,1]. <br/>
     a linear fade between 0 and 1 happens for @p x in the range [@p edge0,@p egde1]. <br/>
@@ -57,6 +58,7 @@ inline F interpol_6(F t, F ym2, F ym1, F y, F y1, F y2, F y3)
               + t *((y1-y)*(F)50.0+(ym1-y2)*(F)25.0+(y3-ym2)*(F)5.0)))));
 }
 
+} // namespace MATH
 } // namespace MO
 
 #endif // MOSRC_MATH_INTERPOL_H

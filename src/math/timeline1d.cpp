@@ -18,6 +18,7 @@
 #include "math/interpol.h"
 
 namespace MO {
+namespace MATH {
 
 const char *Timeline1D::Point::getName(Point::Type type)
 {
@@ -734,4 +735,5 @@ void Timeline1D::getMinMax(Double tStart, Double tEnd, Double& minimal, Double& 
 
 }
 
+} // namespace MATH
 } // namespace MO

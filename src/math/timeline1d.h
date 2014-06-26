@@ -22,7 +22,7 @@
 class QDataStream;
 
 namespace MO {
-
+namespace MATH {
 
 /**	a super-duper timeline component mapping seconds to values.
 
@@ -331,6 +331,7 @@ inline bool Timeline1D::hasAutoDerivative(Point::Type type)
 }
 
 
+} // namespace MATH
 } // namespace MO
 
 #endif // MOSRC_MATH_TIMELINE1D_H

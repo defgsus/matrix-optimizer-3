@@ -51,7 +51,7 @@ public:
 
     // ---------- ctor -------------
 
-    explicit Timeline1DView(Timeline1D * timeline = 0, QWidget *parent = 0);
+    explicit Timeline1DView(MATH::Timeline1D * timeline = 0, QWidget *parent = 0);
 
     // ---------- getter -----------
 
@@ -60,7 +60,7 @@ public:
     // ----------- assignment ------
 
     /** Assigns a new (or no) Timeline1D */
-    void setTimeline(Timeline1D * timeline = 0);
+    void setTimeline(MATH::Timeline1D * timeline = 0);
 
     /** Sets the options for the background grid as or-wise combination of PAINTER::Grid::Option */
     void setGridOptions(int options);
@@ -124,13 +124,13 @@ protected:
     struct DragPoint_
     {
         bool valid;
-        Timeline1D::Point
+        MATH::Timeline1D::Point
             oldp,
             newp;
-        Timeline1D::TpList::iterator
+        MATH::Timeline1D::TpList::iterator
             it;
         DragPoint_() { }
-        DragPoint_(const Timeline1D::TpList::iterator& it) : valid(true), oldp(it->second), newp(it->second), it(it) { }
+        DragPoint_(const MATH::Timeline1D::TpList::iterator& it) : valid(true), oldp(it->second), newp(it->second), it(it) { }
     };
 
     void paintEvent(QPaintEvent *);
@@ -143,12 +143,12 @@ protected:
     void wheelEvent(QWheelEvent *);
 
     void clearHover_();
-    void setHover_(const Timeline1D::Point&);
+    void setHover_(const MATH::Timeline1D::Point&);
     bool isHover_() const;
-    Timeline1D::TpList::iterator hoverPoint_();
+    MATH::Timeline1D::TpList::iterator hoverPoint_();
 
     void clearSelect_();
-    void addSelect_(const Timeline1D::Point&, bool do_swap = false);
+    void addSelect_(const MATH::Timeline1D::Point&, bool do_swap = false);
     void addSelect_(const QRect& rect, bool do_swap = false);
     void selectAll_();
     void selectDirection_(int dir);
@@ -156,14 +156,14 @@ protected:
     bool isSelected_() const { return !selectHashSet_.empty(); }
 
     /** Returns the screen rect for a given point */
-    QRect handleRect_(const Timeline1D::Point&, RectStyle_ rs);
-    void updateAroundPoint_(const Timeline1D::Point&);
-    void updateDerivatives_(Timeline1D::TpList::iterator it, int leftRight = 1);
+    QRect handleRect_(const MATH::Timeline1D::Point&, RectStyle_ rs);
+    void updateAroundPoint_(const MATH::Timeline1D::Point&);
+    void updateDerivatives_(MATH::Timeline1D::TpList::iterator it, int leftRight = 1);
 
     void changeScale_(int screenX, int screenY, Double factorX, Double factorY);
     void fitToView_(Double tmin, Double tmax, bool fitX, bool fitY, int marginInPixels);
 
-    void changePointType_(Timeline1D::Point::Type t);
+    void changePointType_(MATH::Timeline1D::Point::Type t);
     void moveSelected_(Double dx, Double dy);
     void addPoint_(Double t, Double v);
 
@@ -176,7 +176,7 @@ protected:
 
     // ____________ MEMBER _____________
 
-    Timeline1D * tl_;
+    MATH::Timeline1D * tl_;
 
     UTIL::ViewSpace space_;
 
@@ -198,11 +198,11 @@ protected:
 
     // ---- interaction ----
 
-    Timeline1D::TpHash
+    MATH::Timeline1D::TpHash
         hoverHash_,
         hoverCurveHash_;
 
-    QSet<Timeline1D::TpHash>
+    QSet<MATH::Timeline1D::TpHash>
         selectHashSet_;
 
     QVector<DragPoint_>

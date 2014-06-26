@@ -48,9 +48,9 @@ void ProjectorSetupView::calcDomeVerts_(MO::Float rad, MO::Float arc)
     for (int i=0; i<360; i+=10)
     {
         MO::Vec3
-            v1 = rad * MO::pointOnSphere((MO::Float)i/360, (MO::Float)j/360),
-            v2 = rad * MO::pointOnSphere((MO::Float)(i+10)/360, (MO::Float)j/360),
-            v3 = rad * MO::pointOnSphere((MO::Float)i/360, (MO::Float)(j-10)/360);
+            v1 = rad * MATH::pointOnSphere((MO::Float)i/360, (MO::Float)j/360),
+            v2 = rad * MATH::pointOnSphere((MO::Float)(i+10)/360, (MO::Float)j/360),
+            v3 = rad * MATH::pointOnSphere((MO::Float)i/360, (MO::Float)(j-10)/360);
 
         domevert_.push_back(v1[0]);
         domevert_.push_back(v1[1]);

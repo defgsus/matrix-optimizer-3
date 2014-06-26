@@ -31,7 +31,8 @@ SOURCES += \
     src/gui/painter/grid.cpp \
     src/gui/ruler.cpp \
     src/io/io.cpp \
-    src/tests/testio.cpp
+    src/tests/testio.cpp \
+    src/gui/timeline1drulerview.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -57,7 +58,8 @@ HEADERS += \
     src/io/log.h \
     src/io/error.h \
     src/tests/testio.h \
-    src/io/streamoperators_qt.h
+    src/io/streamoperators_qt.h \
+    src/gui/timeline1drulerview.h
 
 FORMS += \
         src/gui/mainwindow.ui \

@@ -1,6 +1,6 @@
 /** @file
 
-    @brief widget for Timeline1D
+    @brief widget for MATH::Timeline1D
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
 
@@ -21,7 +21,7 @@
 namespace MO {
 namespace GUI {
 
-Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
+Timeline1DView::Timeline1DView(MATH::Timeline1D * tl, QWidget *parent)
     :   QWidget                 (parent),
         tl_                     (tl),
         gridPainter_            (new PAINTER::Grid(this)),
@@ -36,8 +36,8 @@ Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
         modifierMultiSelect_    (Qt::CTRL),
         modifierMoveVert_       (Qt::CTRL),
 
-        hoverHash_              (Timeline1D::InvalidHash),
-        hoverCurveHash_         (Timeline1D::InvalidHash),
+        hoverHash_              (MATH::Timeline1D::InvalidHash),
+        hoverCurveHash_         (MATH::Timeline1D::InvalidHash),
         action_                 (A_NOTHING)
 {
     space_.setScaleX(10);
@@ -49,7 +49,7 @@ Timeline1DView::Timeline1DView(Timeline1D * tl, QWidget *parent)
     setFocusPolicy(Qt::StrongFocus);
 }
 
-void Timeline1DView::setTimeline(Timeline1D *timeline)
+void Timeline1DView::setTimeline(MATH::Timeline1D *timeline)
 {
     tl_ = timeline;
 
@@ -194,7 +194,7 @@ void Timeline1DView::fitToView_(Double tmin, Double tmax, bool fitX, bool fitY, 
     update();
 }
 
-QRect Timeline1DView::handleRect_(const Timeline1D::Point& p, RectStyle_ rs)
+QRect Timeline1DView::handleRect_(const MATH::Timeline1D::Point& p, RectStyle_ rs)
 {
     int r = handleRadius_;
 
@@ -213,7 +213,7 @@ QRect Timeline1DView::handleRect_(const Timeline1D::Point& p, RectStyle_ rs)
 
 }
 
-void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
+void Timeline1DView::updateAroundPoint_(const MATH::Timeline1D::Point &p)
 {
     if (!tl_)
         return;
@@ -229,7 +229,7 @@ void Timeline1DView::updateAroundPoint_(const Timeline1D::Point &p)
     int expand_left = 2,
         expand_right = 2;
 
-    if (p.type == Timeline1D::Point::SPLINE6)
+    if (p.type == MATH::Timeline1D::Point::SPLINE6)
     {
         expand_left = expand_right = 3;
     }
@@ -352,7 +352,7 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
 void Timeline1DView::clearHover_()
 {
     auto wasHash = hoverHash_;
-    hoverHash_ = Timeline1D::InvalidHash;
+    hoverHash_ = MATH::Timeline1D::InvalidHash;
 
     // remove old flag
     if (wasHash != hoverHash_)
@@ -363,9 +363,9 @@ void Timeline1DView::clearHover_()
     }
 }
 
-void Timeline1DView::setHover_(const Timeline1D::Point & p)
+void Timeline1DView::setHover_(const MATH::Timeline1D::Point & p)
 {
-    auto hash = Timeline1D::hash(p.t);
+    auto hash = MATH::Timeline1D::hash(p.t);
 
     if (hash == hoverHash_)
         return;
@@ -384,13 +384,13 @@ void Timeline1DView::setHover_(const Timeline1D::Point & p)
 
 bool Timeline1DView::isHover_() const
 {
-    return hoverHash_ != Timeline1D::InvalidHash;
+    return hoverHash_ != MATH::Timeline1D::InvalidHash;
 }
 
-Timeline1D::TpList::iterator Timeline1DView::hoverPoint_()
+MATH::Timeline1D::TpList::iterator Timeline1DView::hoverPoint_()
 {
     if (!tl_)
-        return Timeline1D::TpList::iterator();
+        return MATH::Timeline1D::TpList::iterator();
 
     return tl_->getData().lower_bound(hoverHash_);
 }
@@ -418,9 +418,9 @@ void Timeline1DView::clearSelect_()
     selectHashSet_.clear();
 }
 
-void Timeline1DView::addSelect_(const Timeline1D::Point & p, bool do_swap)
+void Timeline1DView::addSelect_(const MATH::Timeline1D::Point & p, bool do_swap)
 {
-    auto hash = Timeline1D::hash(p.t);
+    auto hash = MATH::Timeline1D::hash(p.t);
 
     if (selectHashSet_.contains(hash))
     {
@@ -609,7 +609,7 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
 
     if (options_ & O_EditAll)
     {
-        hoverCurveHash_ = Timeline1D::InvalidHash;
+        hoverCurveHash_ = MATH::Timeline1D::InvalidHash;
 
         auto oldHoverHash = hoverHash_;
 
@@ -709,7 +709,7 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
 
     // ---- click on curve ----
 
-    if (hoverCurveHash_ != Timeline1D::InvalidHash)
+    if (hoverCurveHash_ != MATH::Timeline1D::InvalidHash)
     {
         addPoint_(screen2time(e->x()), screen2value(e->y()));
         e->accept();
@@ -942,7 +942,7 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         return;
 
     // only move vertically?
-    if (fabs(dx) < Timeline1D::timeQuantum())
+    if (fabs(dx) < MATH::Timeline1D::timeQuantum())
     {
         for (auto &p : dragPoints_)
         {
@@ -1042,11 +1042,11 @@ void Timeline1DView::slotPointContextMenu_()
 
     // point type submenu
     QMenu * pointpop = new QMenu(pop);
-    for (int i=1; i<Timeline1D::Point::MAX; ++i)
+    for (int i=1; i<MATH::Timeline1D::Point::MAX; ++i)
     {
-        Timeline1D::Point::Type type = (Timeline1D::Point::Type)i;
+        MATH::Timeline1D::Point::Type type = (MATH::Timeline1D::Point::Type)i;
 
-        a = new QAction(Timeline1D::Point::getName(type), pointpop);
+        a = new QAction(MATH::Timeline1D::Point::getName(type), pointpop);
         pointpop->addAction(a);
         a->setCheckable(true);
         a->setChecked(pointIt->second.type == type);
@@ -1221,7 +1221,7 @@ void Timeline1DView::slotEmptyContextMenu_()
     pop->exec(QCursor::pos());
 }
 
-void Timeline1DView::changePointType_(Timeline1D::Point::Type t)
+void Timeline1DView::changePointType_(MATH::Timeline1D::Point::Type t)
 {
     if (!tl_ || !(options_ & O_ChangePointType))
         return;
@@ -1262,7 +1262,7 @@ void Timeline1DView::addPoint_(Double t, Double v)
     clearSelect_();
     addSelect_(*p);
     setHover_(*p);
-    hoverCurveHash_ = Timeline1D::InvalidHash;
+    hoverCurveHash_ = MATH::Timeline1D::InvalidHash;
 
     setCursor(Qt::OpenHandCursor);
 
@@ -1270,7 +1270,7 @@ void Timeline1DView::addPoint_(Double t, Double v)
     updateAroundPoint_(*p);
 }
 
-void Timeline1DView::updateDerivatives_(Timeline1D::TpList::iterator p, int lr)
+void Timeline1DView::updateDerivatives_(MATH::Timeline1D::TpList::iterator p, int lr)
 {
     if (!tl_)
         return;
@@ -1280,7 +1280,7 @@ void Timeline1DView::updateDerivatives_(Timeline1D::TpList::iterator p, int lr)
 
     while (it != tl_->getData().end() && (i++) <= lr)
     {
-        if (Timeline1D::hasAutoDerivative(it->second.type))
+        if (MATH::Timeline1D::hasAutoDerivative(it->second.type))
             tl_->setAutoDerivative(it);
 
         if (it == tl_->getData().begin())
@@ -1293,7 +1293,7 @@ void Timeline1DView::updateDerivatives_(Timeline1D::TpList::iterator p, int lr)
 
     while (it != tl_->getData().end() && (i++) <= lr)
     {
-        if (Timeline1D::hasAutoDerivative(it->second.type))
+        if (MATH::Timeline1D::hasAutoDerivative(it->second.type))
             tl_->setAutoDerivative(it);
         ++it;
     }
