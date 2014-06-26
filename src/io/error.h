@@ -13,6 +13,8 @@
 #include <exception>
 #include <sstream>
 
+#include "io/streamoperators_qt.h"
+
 namespace MO {
 
 class Exception : public std::exception

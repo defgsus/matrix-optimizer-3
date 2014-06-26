@@ -12,21 +12,13 @@
 
 #include <QString>
 #include "io/console.h"
-
+#include "io/streamoperators_qt.h"
 
 #define MO_DEBUG(stream_arg__) \
     { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
 
 #define MO_DEBUGF(stream_arg__) \
     { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
-
-/** Enables std::ostream << QString */
-template <typename T>
-std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QString& s)
-{
-    o << s.toStdString();
-    return o;
-}
 
 
 #endif // MOSRC_IO_LOG_H

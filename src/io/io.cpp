@@ -17,7 +17,7 @@
 #include "error.h"
 
 namespace MO {
-
+namespace IO {
 
 Io::Io()
     :   xmlw_   (0),
@@ -386,4 +386,5 @@ void testIo()
 
 */
 
+} // namespace IO
 } // namespace MO

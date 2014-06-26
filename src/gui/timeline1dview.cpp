@@ -395,6 +395,14 @@ Timeline1D::TpList::iterator Timeline1DView::hoverPoint_()
     return tl_->getData().lower_bound(hoverHash_);
 }
 
+void Timeline1DView::unselect()
+{
+    clearSelect_();
+    clearHover_();
+    action_ = A_NOTHING;
+    update();
+}
+
 void Timeline1DView::clearSelect_()
 {
     if (!isSelected_())

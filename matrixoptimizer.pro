@@ -30,7 +30,8 @@ SOURCES += \
     src/audio/audiosource.cpp \
     src/gui/painter/grid.cpp \
     src/gui/ruler.cpp \
-    src/io/io.cpp
+    src/io/io.cpp \
+    src/tests/testio.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -54,7 +55,9 @@ HEADERS += \
     src/gui/ruler.h \
     src/io/io.h \
     src/io/log.h \
-    src/io/error.h
+    src/io/error.h \
+    src/tests/testio.h \
+    src/io/streamoperators_qt.h
 
 FORMS += \
         src/gui/mainwindow.ui \

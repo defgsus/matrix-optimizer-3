@@ -7,9 +7,13 @@
     @version 2011/11/16 created (grabed together from kepler project)
     @version 2014/04/24 grabed from libmag
 */
-#include <cmath> // for fabs()
-//#include <QDebug>
 
+#include <cmath> // for fabs()
+
+#include <QDataStream>
+#include <QFile>
+
+#include "io/error.h"
 #include "math/timeline1d.h"
 #include "math/interpol.h"
 
@@ -47,6 +51,14 @@ const char *Timeline1D::Point::getPersistentName(Point::Type type)
         case Timeline1D::Point::SPLINE4:     return "spline4"; break;
         case Timeline1D::Point::SPLINE6:     return "spline6"; break;
     }
+}
+
+Timeline1D::Point::Type Timeline1D::Point::getTypeForPersistentName(const QString& name)
+{
+    for (int i=DEFAULT; i<MAX; ++i)
+        if (name == getPersistentName((Type)i))
+            return (Type)i;
+    return LINEAR;
 }
 
 
@@ -545,77 +557,99 @@ void Timeline1D::shiftTime(Double secOff)
 }
 
 
-
-
-
-
-bool Timeline1D::saveFile(const char *filename)
+void Timeline1D::serialize(QDataStream & stream)
 {
-    FILE *f = fopen( filename, "w" );
-    if (!f) return false;
-
-    saveFile(f);
-
-    fclose(f);
-    return true;
-}
-
-void Timeline1D::saveFile(FILE *f)
-{
-    fprintf(f, "timeline1d { ");
     // version
-    fprintf(f, "1 ");
-    // nr of points
-    fprintf(f, "%ld ", data_.size() );
-    // list
-    for (TpList::iterator i=data_.begin(); i!=data_.end(); i++)
+    stream << QString("timeline");
+    stream << (qint32)1;
+
+    // write type enums
+    stream << (quint8)Point::MAX;
+    for (quint8 i=0; i<Point::MAX; ++i)
     {
-        fprintf(f, "%d %g %g ", i->second.type, i->second.t, i->second.val);
+        stream << QString(Point::getPersistentName((Point::Type)i));
     }
-    fprintf(f, "} ");
-}
-
-bool Timeline1D::loadFile(const char *filename)
-{
-    FILE *f = fopen( filename, "r" );
-
-    if (!f)	return false;
-
-    bool result = loadFile(f);
-
-    fclose(f);
-
-    return result;
-}
-
-bool Timeline1D::loadFile(FILE *f)
-{
-    int e = fscanf(f, "timeline1d { ");
-
-    // version
-    int ver;
-    e = fscanf(f, "%d", &ver);
-    if (e!=1) return false;
 
     // number of points
-    int nr;
-    e = fscanf(f, "%d ", &nr );
-    if (e!=1) return false;
+    stream << (quint64)data_.size();
+
+    // write all points
+    stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
+    for (auto &i : data_)
+    {
+        stream << (quint8)i.second.type << i.second.t << i.second.val << i.second.d1;
+    }
+}
+
+void Timeline1D::deserialize(QDataStream & stream)
+{
+    // check version
+    QString head;
+    stream >> head;
+    if (head != "timeline")
+        MO_IO_ERROR(VERSION_MISMATCH, "expected 'timeline' header, but got '" << head << "'");
+    qint32 ver;
+    stream >> ver;
+    if (ver > 1)
+        MO_IO_ERROR(VERSION_MISMATCH, "unknown timeline version " << ver);
+
+    // get type enums
+    quint8 numEnums;
+    stream >> numEnums;
+
+    std::map<quint8, Point::Type> enumMap;
+    for (quint8 i=0; i<numEnums; ++i)
+    {
+        QString name;
+        stream >> name;
+        enumMap.insert(std::make_pair(i, Point::getTypeForPersistentName(name)));
+    }
+
+    // read points
+    quint64 num;
+    stream >> num;
 
     clear();
 
-    int typ;
-    Double t,val;
-    for (int i=0; i<nr; i++)
+    for (quint64 i=0; i<num; ++i)
     {
-        e = fscanf(f, "%d %lg %lg ", &typ, &t, &val);
-        if (e!=3) return false;
-        add(t, val, (Timeline1D::Point::Type)typ);
-    }
-    e = fscanf(f, "} ");
+        quint8 e;
+        Point p;
+        stream >> e >> p.t >> p.val >> p.d1;
+        p.type = enumMap[e];
 
-    return true;
+        // directly insert to avoid calculating derivatives
+        cur_ = &data_[hash(p.t)];
+        *cur_ = p;
+    }
 }
+
+
+void Timeline1D::saveFile(const QString &filename)
+{
+    QFile f(filename);
+    if (!f.open(QIODevice::WriteOnly))
+        MO_IO_ERROR(WRITE, "Timeline1D can't open file for writing '" << filename << "'");
+    QDataStream stream(&f);
+
+    serialize(stream);
+
+    f.close();
+}
+
+
+void Timeline1D::loadFile(const QString &filename)
+{
+    QFile f(filename);
+    if (!f.open(QIODevice::ReadOnly))
+        MO_IO_ERROR(READ, "Timeline1D can't open file for reading '" << filename << "'");
+    QDataStream stream(&f);
+
+    deserialize(stream);
+
+    f.close();
+}
+
 
 
 

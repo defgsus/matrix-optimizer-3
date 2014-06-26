@@ -15,7 +15,11 @@
 #include <map>
 #include <vector>
 
+#include <QString>
+
 #include "types/float.h"
+
+class QDataStream;
 
 namespace MO {
 
@@ -72,6 +76,10 @@ class Timeline1D
             these names <b>must never change</b>!! */
         static const char *getPersistentName(Type type);
 
+        /** Returns the type for the given persistent name,
+            or LINEAR if unknown. */
+        static Type getTypeForPersistentName(const QString& persistent_name);
+
         Double
             /** time of the que-point in seconds */
             t,
@@ -111,6 +119,20 @@ class Timeline1D
 
     /** default destructor, wipes out everything */
     virtual ~Timeline1D();
+
+    // ----------- io ----------------
+
+    /** Writes timeline to binary format. */
+    void serialize(QDataStream&);
+
+    /** Creates timeline from binary format. */
+    void deserialize(QDataStream&);
+
+    /** Stores the timeline to a binary file */
+    void saveFile(const QString& filename);
+
+    /** Reads a timeline from a binary file */
+    void loadFile(const QString& filename);
 
     // ---------- get ----------------
 
@@ -248,16 +270,6 @@ class Timeline1D
         for (TpList::iterator i=data_.begin(); i != data_.end(); i++)
             out << i->first << ":\t" << i->second.t << ", " << i->second.val << "\n";
     }
-
-    /** stores the timeline to a text-file */
-    bool saveFile(const char *filename);
-    /** stores the timeline to a text-stream */
-    void saveFile(FILE *f);
-
-    /** reads a timeline from a text-file */
-    bool loadFile(const char *filename);
-    /** reads a timeline from a text-stream */
-    bool loadFile(FILE *f);
 
 
     private: // --------------- private area ---------------------

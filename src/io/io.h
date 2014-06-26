@@ -1,6 +1,6 @@
 /** @file io.h
 
-    @brief Serializer and deserializer
+    @brief Text/XML Serializer and deserializer
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
 
@@ -10,6 +10,7 @@
 #ifndef MOSCR_IO_IO_H
 #define MOSCR_IO_IO_H
 
+#include <string>
 #include <vector>
 
 #include <QString>
@@ -18,6 +19,24 @@ class QXmlStreamWriter;
 class QXmlStreamReader;
 
 namespace MO {
+namespace IO {
+
+template <class T>
+struct PairStruct
+{
+    PairStruct(const QString& key, const T value)
+        :   key(key), value(value) { }
+
+    QString key;
+    T value;
+};
+
+template <class T>
+PairStruct<T> Pair(const QString& key, const T value)
+{
+    return PairStruct<T>(key, value);
+}
+
 
 /** @brief serializer and deserializer
     <p>The backend is QXmlStream, so this is actually
@@ -26,6 +45,8 @@ namespace MO {
 class Io
 {
 public:
+
+    // ------------------ ctor ----------------------
 
     Io();
     ~Io();
@@ -72,6 +93,8 @@ public:
 
     // ----------------- data write -----------------
 
+    void write(const QString& key, const char * v) { write(key, QString(v)); }
+    void write(const QString& key, const std::string& v) { write(key, QString::fromStdString(v)); }
     void write(const QString& key, const QString& v);
     void write(const QString& key, bool v);
     void write(const QString& key, int v);
@@ -80,6 +103,9 @@ public:
     void write(const QString& key, long unsigned int v);
     void write(const QString& key, float);
     void write(const QString& key, double);
+
+    template <class T>
+    Io& operator << (const PairStruct<T>& p) { write(p.key, p.value); return *this; }
 
     // ----------------- data read ------------------
 
@@ -118,6 +144,10 @@ private:
     QString data_;
 };
 
+// -------------------- pair stream -------------------
+
+
+} // namespace IO
 } // namespace MO
 
 #endif // MOSRC_IO_IO_H

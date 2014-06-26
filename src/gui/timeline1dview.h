@@ -90,6 +90,10 @@ public slots:
     /** Fits the selected curve into view */
     void fitSelectionToView(bool fitX = true, bool fitY = true, int marginInPixels = 10);
 
+    /** Clear any selections previously made.
+        This should be called when a timeline was loaded. */
+    void unselect();
+
 protected slots:
 
     void slotPointContextMenu_();

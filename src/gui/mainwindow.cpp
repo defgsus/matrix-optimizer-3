@@ -77,6 +77,29 @@ MainWindow::MainWindow(QWidget *parent) :
 
         rulerX->setViewSpace(rulerX->viewSpace(), true);
 #endif
+
+    // ---------- io -----------
+
+    QAction * a;
+
+    a = new QAction(tr("save timeline"), this);
+    menuBar()->addAction(a);
+    a->setShortcut(Qt::CTRL + Qt::Key_S);
+    connect(a, &QAction::triggered, [=]()
+    {
+        tl->saveFile("./timeline.bin");
+    });
+
+    a = new QAction(tr("load timeline"), this);
+    menuBar()->addAction(a);
+    a->setShortcut(Qt::CTRL + Qt::Key_L);
+    connect(a, &QAction::triggered, [=]()
+    {
+        tl->loadFile("./timeline.bin");
+        tlv->unselect();
+    });
+
+
 }
 
 MainWindow::~MainWindow()
