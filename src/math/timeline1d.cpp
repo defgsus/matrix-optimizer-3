@@ -10,9 +10,9 @@
 
 #include <cmath> // for fabs()
 
-#include <QDataStream>
 #include <QFile>
 
+#include "io/datastream.h"
 #include "io/error.h"
 #include "math/timeline1d.h"
 #include "math/interpol.h"
@@ -580,11 +580,10 @@ void Timeline1D::shiftTime(Double secOff)
 }
 
 
-void Timeline1D::serialize(QDataStream & stream)
+void Timeline1D::serialize(IO::DataStream & stream)
 {
     // version
-    stream << QString("timeline");
-    stream << (qint32)1;
+    stream.writeHeader("timeline", 1);
 
     // write type enums
     stream << (quint8)Point::MAX;
@@ -597,26 +596,17 @@ void Timeline1D::serialize(QDataStream & stream)
     stream << (quint64)data_.size();
 
     // write all points
-
-    stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
-
     for (auto &i : data_)
     {
         stream << (quint8)i.second.type << i.second.t << i.second.val << i.second.d1;
     }
 }
 
-void Timeline1D::deserialize(QDataStream & stream)
+void Timeline1D::deserialize(IO::DataStream & stream)
 {
     // check version
-    QString head;
-    stream >> head;
-    if (head != "timeline")
-        MO_IO_ERROR(VERSION_MISMATCH, "expected 'timeline' header, but got '" << head << "'");
-    qint32 ver;
-    stream >> ver;
-    if (ver > 1)
-        MO_IO_ERROR(VERSION_MISMATCH, "unknown timeline version " << ver);
+    //auto ver =
+    stream.readHeader("timeline", 1);
 
     // get type enums
     quint8 numEnums;
@@ -635,8 +625,6 @@ void Timeline1D::deserialize(QDataStream & stream)
     stream >> num;
 
     clear();
-
-    stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
 
     for (quint64 i=0; i<num; ++i)
     {
@@ -657,7 +645,7 @@ void Timeline1D::saveFile(const QString &filename)
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly))
         MO_IO_ERROR(WRITE, "Timeline1D can't open file for writing '" << filename << "'");
-    QDataStream stream(&f);
+    IO::DataStream stream(&f);
 
     serialize(stream);
 
@@ -670,7 +658,7 @@ void Timeline1D::loadFile(const QString &filename)
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly))
         MO_IO_ERROR(READ, "Timeline1D can't open file for reading '" << filename << "'");
-    QDataStream stream(&f);
+    IO::DataStream stream(&f);
 
     deserialize(stream);
 

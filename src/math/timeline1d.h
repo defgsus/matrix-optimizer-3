@@ -19,9 +19,8 @@
 
 #include "types/float.h"
 
-class QDataStream;
-
 namespace MO {
+namespace IO { class DataStream; }
 namespace MATH {
 
 /**	a super-duper timeline component mapping seconds to values.
@@ -128,10 +127,10 @@ class Timeline1D
     // ----------- io ----------------
 
     /** Writes timeline to binary format. */
-    void serialize(QDataStream&);
+    void serialize(IO::DataStream&);
 
     /** Creates timeline from binary format. */
-    void deserialize(QDataStream&);
+    void deserialize(IO::DataStream&);
 
     /** Stores the timeline to a binary file */
     void saveFile(const QString& filename);

@@ -13,6 +13,7 @@
 #include "types/float.h"
 
 namespace MO {
+namespace IO { class DataStream; }
 namespace GUI {
 namespace UTIL {
 
@@ -24,8 +25,8 @@ public:
 
     // -------------- io ----------------
 
-    void serialize(QDataStream& stream);
-    void deserialize(QDataStream& stream);
+    void serialize(IO::DataStream& stream);
+    void deserialize(IO::DataStream& stream);
 
     // ------------ getter --------------
 

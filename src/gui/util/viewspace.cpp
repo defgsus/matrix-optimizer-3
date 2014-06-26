@@ -7,10 +7,9 @@
     <p>created 6/26/2014</p>
 */
 
-#include <QDataStream>
-
 #include "viewspace.h"
 #include "io/error.h"
+#include "io/datastream.h"
 
 namespace MO {
 namespace GUI {
@@ -200,33 +199,20 @@ void ViewSpace::zoom(Double scaleX, Double scaleY, Double tx, Double ty)
 }
 
 
-void ViewSpace::serialize(QDataStream &stream)
+void ViewSpace::serialize(IO::DataStream &stream)
 {
-    // version
-    stream << QString("viewspace");
-    stream << (qint32)1;
+    stream.writeHeader("viewspace", 1);
 
-    stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
     stream << x_ << y_ << sx_ << sy_
            << minx_ << miny_ << maxx_ << maxy_
            << doMinx_ << doMiny_ << doMaxx_ << doMaxy_
            << doLimitByChangingScale_;
 }
 
-void ViewSpace::deserialize(QDataStream &stream)
+void ViewSpace::deserialize(IO::DataStream &stream)
 {
-    // check version
-    QString head;
-    stream >> head;
-    if (head != "timeline")
-        MO_IO_ERROR(VERSION_MISMATCH, "expected 'viewspace' header, but got '" << head << "'");
+    stream.readHeader("viewspace", 1);
 
-    qint32 ver;
-    stream >> ver;
-    if (ver > 1)
-        MO_IO_ERROR(VERSION_MISMATCH, "unknown viewspace version " << ver);
-
-    stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
     stream >> x_ >> y_ >> sx_ >> sy_
             >> minx_ >> miny_ >> maxx_ >> maxy_
             >> doMinx_ >> doMiny_ >> doMaxx_ >> doMaxy_

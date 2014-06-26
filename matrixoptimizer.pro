@@ -33,7 +33,8 @@ SOURCES += \
     src/gui/timeline1drulerview.cpp \
     src/gui/util/viewspace.cpp \
     src/io/xmlstream.cpp \
-    src/tests/testxmlstream.cpp
+    src/tests/testxmlstream.cpp \
+    src/io/datastream.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -60,7 +61,8 @@ HEADERS += \
     src/io/streamoperators_qt.h \
     src/gui/timeline1drulerview.h \
     src/io/xmlstream.h \
-    src/tests/testxmlstream.h
+    src/tests/testxmlstream.h \
+    src/io/datastream.h
 
 FORMS += \
         src/gui/mainwindow.ui \

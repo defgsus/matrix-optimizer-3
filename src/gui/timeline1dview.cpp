@@ -16,7 +16,6 @@
 #include <QMenu>
 #include <QMessageBox>
 
-#include <QDataStream>
 #include <QByteArray>
 #include <QClipboard>
 #include <QApplication>
@@ -25,6 +24,7 @@
 #include "timeline1dview.h"
 #include "painter/grid.h"
 #include "io/error.h"
+#include "io/datastream.h"
 
 namespace MO {
 namespace GUI {
@@ -1379,7 +1379,7 @@ void Timeline1DView::copyAll()
         return;
 
     QByteArray bytes;
-    QDataStream stream(&bytes, QIODevice::WriteOnly);
+    IO::DataStream stream(&bytes, QIODevice::WriteOnly);
 
     tl_->serialize(stream);
 
@@ -1395,7 +1395,7 @@ void Timeline1DView::copySelection()
         return;
 
     QByteArray bytes;
-    QDataStream stream(&bytes, QIODevice::WriteOnly);
+    IO::DataStream stream(&bytes, QIODevice::WriteOnly);
 
     // make a copy
     MATH::Timeline1D tl(*tl_);
@@ -1430,7 +1430,7 @@ void Timeline1DView::paste()
             QApplication::clipboard()->mimeData()->data(
                     ctype == C_WHOLE? "mo/timeline" : "mo/timeline-sel");
 
-        QDataStream stream(&bytes, QIODevice::ReadOnly);
+        IO::DataStream stream(&bytes, QIODevice::ReadOnly);
 
         // create a temp timeline with the data
         MATH::Timeline1D tl;
