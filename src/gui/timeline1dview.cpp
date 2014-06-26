@@ -1060,7 +1060,7 @@ void Timeline1DView::slotPointContextMenu_()
 
     // --- single point popup ---
 
-    if (!isSelected())
+    if (selectHashSet_.size() < 2)
     {
         if (options_ & O_ChangePointType)
         {
@@ -1074,7 +1074,9 @@ void Timeline1DView::slotPointContextMenu_()
             pop->addAction(a);
             connect(a, &QAction::triggered, [=]()
             {
-                tl_->remove(pointIt->second.t);
+                const Double t = pointIt->second.t;
+                tl_->remove(t);
+                selectHashSet_.remove(MATH::Timeline1D::hash(t));
                 update();
             });
         }
@@ -1097,6 +1099,9 @@ void Timeline1DView::slotPointContextMenu_()
             {
                 for (auto h : selectHashSet_)
                     tl_->remove(h);
+
+                selectHashSet_.clear();
+
                 update();
             });
         }

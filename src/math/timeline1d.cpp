@@ -575,7 +575,9 @@ void Timeline1D::serialize(QDataStream & stream)
     stream << (quint64)data_.size();
 
     // write all points
+
     stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
+
     for (auto &i : data_)
     {
         stream << (quint8)i.second.type << i.second.t << i.second.val << i.second.d1;
@@ -611,6 +613,8 @@ void Timeline1D::deserialize(QDataStream & stream)
     stream >> num;
 
     clear();
+
+    stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
 
     for (quint64 i=0; i<num; ++i)
     {

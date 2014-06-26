@@ -32,7 +32,8 @@ SOURCES += \
     src/gui/ruler.cpp \
     src/io/io.cpp \
     src/tests/testio.cpp \
-    src/gui/timeline1drulerview.cpp
+    src/gui/timeline1drulerview.cpp \
+    src/gui/util/viewspace.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \

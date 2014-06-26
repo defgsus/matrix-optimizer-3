@@ -56,8 +56,7 @@ public:
 
     void setOptions(int options) { options_ = options; }
 
-    template <typename F>
-    void setViewSpace(const UTIL::ViewSpaceT<F>& viewspace) { viewspace_ = viewspace; }
+    void setViewSpace(const UTIL::ViewSpace& viewspace) { viewspace_ = viewspace; }
 
     // ----------- draw action --------------
 
