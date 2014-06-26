@@ -720,10 +720,15 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
 
     if (hoverCurveHash_ != MATH::Timeline1D::InvalidHash)
     {
-        addPoint_(screen2time(e->x()), screen2value(e->y()));
-        e->accept();
+        if (e->button() == Qt::LeftButton)
+        {
+            addPoint_(screen2time(e->x()), screen2value(e->y()));
+            e->accept();
+            // do not return but go on to click-on-point (start dragging)
+        }
+        else
+            return;
 
-        // do not return but go on to click-on-point (start dragging)
     }
 
     // ---- click on point ----
@@ -1107,6 +1112,8 @@ void Timeline1DView::slotPointContextMenu_()
             {
                 for (auto h : selectHashSet_)
                     tl_->remove(h);
+
+                tl_->setAutoDerivative();
 
                 selectHashSet_.clear();
 

@@ -143,7 +143,10 @@ void Grid::paint(QPainter &p, const QRect &rect)
             {
                 p.setPen(textPen_);
                 const int fh = p.fontMetrics().height() * 0.8;
+                // determine start offset of text
                 int hs = (int)(x0/spacing) % 2;
+                if (x0>=0)
+                    hs = (hs + 1) % 2;
                 for (Double x = x0-spacing; x<x1+spacing; x += spacing)
                 {
                     const Double qx = MATH::quant(x,spacing);

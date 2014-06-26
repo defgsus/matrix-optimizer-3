@@ -175,8 +175,8 @@ class Timeline1D
     TpList::iterator find(Double t)
     {
         const TpHash h = hash(t);
-        TpList::iterator i = data_.find(h);
-        // must check left and right because of rounding errors
+        auto i = data_.find(h);
+        // must check left and right because of rounding
         if (i==data_.end())
             i = data_.find(h+1);
         if (i==data_.end())
@@ -250,9 +250,9 @@ class Timeline1D
     }
 
     /** enable or disable lower limit */
-    void setLowerLimit(bool doLimit) { lowerLimit_ = doLimit; }
+    void enableLowerLimit(bool doLimit) { lowerLimit_ = doLimit; }
     /** enable or disable upper limit */
-    void setUpperLimit(bool doLimit) { upperLimit_ = doLimit; }
+    void enableUpperLimit(bool doLimit) { upperLimit_ = doLimit; }
 
     /** automatically set the derivative for point 'i' */
     void setAutoDerivative(TpList::iterator &i);

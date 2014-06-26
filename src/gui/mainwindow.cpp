@@ -43,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
         //tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
 
         auto tl2 = new MATH::Timeline1D;
+        tl2->setLimit(0,1);
 
         auto tlv2 = new Timeline1DRulerView(tl2, this);
         l->addWidget(tlv2);
