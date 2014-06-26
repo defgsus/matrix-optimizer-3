@@ -85,17 +85,18 @@ int Timeline1DView::value2screen(Double val) const
 void Timeline1DView::changeScale_(int scrx, int scry, Double fx, Double fy)
 {
     if (!(options_ & O_ZoomViewX))
-        fx = 0;
+        fx = 1;
     if (!(options_ & O_ZoomViewY))
-        fy = 0;
+        fy = 1;
 
-    const Double
-        tx = (Double)scrx / width(),
-        ty = 1.0 - (Double)scry / height();
-
-    if (fx || fy)
+    if ((fx!=1) || (fy!=1))
     {
+        const Double
+            tx = (Double)scrx / width(),
+            ty = 1.0 - (Double)scry / height();
+
         space_.zoom(fx, fy, tx, ty);
+
         emit viewSpaceChanged(space_);
     }
 }
@@ -125,7 +126,7 @@ void Timeline1DView::fitToView(bool fitX, bool fitY, int marginInPixels)
 
 void Timeline1DView::fitSelectionToView(bool fitX, bool fitY, int marginInPixels)
 {
-    if (!tl_ || !isSelected_()) return;
+    if (!tl_ || !isSelected()) return;
 
     // find min/max time of selection
     Double tmin = 0.0, tmax = 0.0;
@@ -405,7 +406,7 @@ void Timeline1DView::unselect()
 
 void Timeline1DView::clearSelect_()
 {
-    if (!isSelected_())
+    if (!isSelected())
         return;
 
     // remove old flags
@@ -1059,7 +1060,7 @@ void Timeline1DView::slotPointContextMenu_()
 
     // --- single point popup ---
 
-    if (!isSelected_())
+    if (!isSelected())
     {
         if (options_ & O_ChangePointType)
         {
@@ -1120,17 +1121,15 @@ void Timeline1DView::slotEmptyContextMenu_()
     QMenu * pop = new QMenu(this);
     connect(pop, SIGNAL(triggered(QAction*)), pop, SLOT(deleteLater()));
 
-    if (isSelected_())
+    if (isSelected())
     {
-        if (options_ & O_EditAll)
+
+        a = new QAction(tr("unselect"), pop);
+        pop->addAction(a);
+        connect(a, &QAction::triggered, [=]()
         {
-            a = new QAction(tr("unselect"), pop);
-            pop->addAction(a);
-            connect(a, &QAction::triggered, [=]()
-            {
-                clearSelect_();
-            });
-        }
+            clearSelect_();
+        });
     }
 
     if (options_ & O_EditAll)
@@ -1181,14 +1180,14 @@ void Timeline1DView::slotEmptyContextMenu_()
             connect(a, &QAction::triggered, [=]() { fitToView(false, true); } );
         }
 
-        if (options_ & O_ZoomView)
+        if ((options_ & O_ZoomView) == O_ZoomView)
         {
             a = new QAction(tr("fit to view"), pop);
             pop->addAction(a);
             connect(a, &QAction::triggered, [=]() { fitToView(true, true); } );
         }
 
-        if (isSelected_())
+        if (isSelected())
         {
             if (options_ & O_ZoomViewX)
             {
@@ -1226,7 +1225,7 @@ void Timeline1DView::changePointType_(MATH::Timeline1D::Point::Type t)
     if (!tl_ || !(options_ & O_ChangePointType))
         return;
 
-    if (isSelected_())
+    if (isSelected())
     {
         for (auto &h : selectHashSet_)
         {

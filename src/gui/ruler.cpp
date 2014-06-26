@@ -149,6 +149,15 @@ void Ruler::mouseReleaseEvent(QMouseEvent * )
     action_ = A_NOTHING;
 }
 
+void Ruler::mouseDoubleClickEvent(QMouseEvent * e)
+{
+    if (e->button() == Qt::LeftButton)
+    {
+        emit fitRequest();
+        e->accept();
+        return;
+    }
+}
 
 QCursor Ruler::defaultCursor_() const
 {

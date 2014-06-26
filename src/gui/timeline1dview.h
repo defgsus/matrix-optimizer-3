@@ -41,7 +41,9 @@ public:
 
         O_MoveView = O_MoveViewX | O_MoveViewY,
         O_ZoomView = O_ZoomViewX | O_ZoomViewY,
-        O_ChangeViewAll = O_MoveViewX | O_MoveViewY | O_ZoomViewX | O_ZoomViewY,
+        O_ChangeViewX = O_MoveViewX | O_ZoomViewX,
+        O_ChangeViewY = O_MoveViewY | O_ZoomViewY,
+        O_ChangeViewAll = O_ChangeViewX | O_ChangeViewY,
 
         O_MovePoints = O_MovePointsX | O_MovePointsY,
         O_EditAll = O_MovePoints | O_AddRemovePoints | O_ChangePointType,
@@ -56,6 +58,9 @@ public:
     // ---------- getter -----------
 
     int options() const { return options_; }
+
+    /** is anyone selected? */
+    bool isSelected() const { return !selectHashSet_.empty(); }
 
     // ----------- assignment ------
 
@@ -154,8 +159,6 @@ protected:
     void addSelect_(const QRect& rect, bool do_swap = false);
     void selectAll_();
     void selectDirection_(int dir);
-    /** is anyone selected? */
-    bool isSelected_() const { return !selectHashSet_.empty(); }
 
     /** Returns the screen rect for a given point */
     QRect handleRect_(const MATH::Timeline1D::Point&, RectStyle_ rs);

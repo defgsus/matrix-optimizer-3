@@ -42,19 +42,45 @@ Timeline1DRulerView::Timeline1DRulerView(MATH::Timeline1D *timeline, QWidget *pa
 
     timelineView_->setGridOptions(Ruler::O_DrawX | Ruler::O_DrawY);
 
+    // connect rulers to timeline and vice versa
+
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), timelineView_, SLOT(setViewSpace(UTIL::ViewSpace)));
     connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerX_, SLOT(setViewSpace(UTIL::ViewSpace)));
 
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), timelineView_, SLOT(setViewSpace(UTIL::ViewSpace)));
     connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerY_, SLOT(setViewSpace(UTIL::ViewSpace)));
 
+    // connect rulers to each other
+
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerY_, SLOT(setViewSpace(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerX_, SLOT(setViewSpace(UTIL::ViewSpace)));
 
-    // pass viewSpaceChanged to this class' signal
+    // pass viewSpaceChanged to this classes signal
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
+
+    // connect fit-request from ruler to timeline's fit-to-view
+    connect(rulerX_, &Ruler::fitRequest, [=]()
+    {
+        if (timelineView_->options() & Timeline1DView::O_ZoomViewX)
+        {
+            if (timelineView_->isSelected())
+                timelineView_->fitSelectionToView(true, false);
+            else
+                timelineView_->fitToView(true, false);
+        }
+    });
+    connect(rulerY_, &Ruler::fitRequest, [=]()
+    {
+        if (timelineView_->options() & Timeline1DView::O_ZoomViewY)
+        {
+            if (timelineView_->isSelected())
+                timelineView_->fitSelectionToView(false, true);
+            else
+                timelineView_->fitToView(false, true);
+        }
+    });
 
     // update rulers
     timelineView_->setViewSpace(timelineView_->viewSpace(), true);

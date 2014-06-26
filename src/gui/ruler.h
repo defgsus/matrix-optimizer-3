@@ -58,6 +58,9 @@ signals:
     /** Send when the viewspace has changed */
     void viewSpaceChanged(const UTIL::ViewSpace&);
 
+    /** Send for a double-click */
+    void fitRequest();
+
 public slots:
 
     void setViewSpace(const UTIL::ViewSpace&, bool send_signal = false);
@@ -70,6 +73,7 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
+    void mouseDoubleClickEvent(QMouseEvent *);
 
     QCursor defaultCursor_() const;
 

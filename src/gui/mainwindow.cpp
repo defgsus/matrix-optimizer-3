@@ -39,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
         auto tlv = new Timeline1DRulerView(tl, this);
         l->addWidget(tlv);
-        tlv->setOptions(Timeline1DView::O_MoveViewX);
+        tlv->setOptions(Timeline1DView::O_ChangeViewX | Timeline1DView::O_ChangePointType);
         //tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
 
     // ---------- io -----------
