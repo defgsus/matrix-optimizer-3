@@ -79,6 +79,28 @@ Timeline1D::~Timeline1D()
 }
 
 
+Timeline1D::Timeline1D(const Timeline1D &other)
+    :   data_   (other.data_),
+        cur_    (0),
+        lowerLimit_(other.lowerLimit_),
+        upperLimit_(other.upperLimit_),
+        lmin_   (other.lmin_),
+        lmax_   (other.lmax_)
+{
+
+}
+
+const Timeline1D& Timeline1D::operator = (const Timeline1D& other)
+{
+    data_ = other.data_;
+    cur_ = 0;
+    lowerLimit_ = other.lowerLimit_;
+    upperLimit_ = other.upperLimit_;
+    lmin_ = other.lmin_;
+    lmax_ = other.lmax_;
+
+    return *this;
+}
 
 Double Timeline1D::get(Double time)
 {

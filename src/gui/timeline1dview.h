@@ -62,6 +62,8 @@ public:
     /** is anyone selected? */
     bool isSelected() const { return !selectHashSet_.empty(); }
 
+    static bool isTimelineInClipboard();
+
     // ----------- assignment ------
 
     /** Assigns a new (or no) Timeline1D */
@@ -100,6 +102,9 @@ public slots:
     /** Clear any selections previously made.
         This should be called when a timeline was loaded. */
     void unselect();
+
+    void copyAll();
+    void paste();
 
 protected slots:
 

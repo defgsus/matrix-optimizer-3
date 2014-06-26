@@ -14,9 +14,17 @@
 #include <QMouseEvent>
 #include <QAction>
 #include <QMenu>
+#include <QMessageBox>
+
+#include <QDataStream>
+#include <QByteArray>
+#include <QClipboard>
+#include <QApplication>
+#include <QMimeData>
 
 #include "timeline1dview.h"
 #include "painter/grid.h"
+#include "io/error.h"
 
 namespace MO {
 namespace GUI {
@@ -1146,6 +1154,7 @@ void Timeline1DView::slotEmptyContextMenu_()
             selectAll_();
         });
 
+        // --- selection subpop ---
         QMenu * selectpop = new QMenu(pop);
         pop->addMenu(selectpop);
         selectpop->setTitle(tr("add to selection"));
@@ -1162,6 +1171,18 @@ void Timeline1DView::slotEmptyContextMenu_()
         a = new QAction(tr("all points below"), selectpop);
         selectpop->addAction(a);
         connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::DownArrow); });
+
+
+        pop->addSeparator();
+
+        a = new QAction(tr("copy timeline"), pop);
+        pop->addAction(a);
+        connect(a, SIGNAL(triggered()), this, SLOT(copyAll()));
+
+        a = new QAction(tr("paste timeline"), pop);
+        a->setEnabled(isTimelineInClipboard());
+        pop->addAction(a);
+        connect(a, SIGNAL(triggered()), this, SLOT(paste()));
 
     }
 
@@ -1303,6 +1324,52 @@ void Timeline1DView::updateDerivatives_(MATH::Timeline1D::TpList::iterator p, in
     }
 }
 
+void Timeline1DView::copyAll()
+{
+    if (!tl_)
+        return;
+
+    QByteArray bytes;
+    QDataStream stream(&bytes, QIODevice::WriteOnly);
+
+    tl_->serialize(stream);
+
+    auto data = new QMimeData();
+    data->setData("mo/timeline", bytes);
+
+    QApplication::clipboard()->setMimeData(data);
+}
+
+bool Timeline1DView::isTimelineInClipboard()
+{
+    return QApplication::clipboard()->mimeData()->formats().contains("mo/timeline");
+}
+
+void Timeline1DView::paste()
+{
+    if (!tl_)
+        return;
+
+    if (isTimelineInClipboard())
+    {
+        QByteArray bytes =
+            QApplication::clipboard()->mimeData()->data("mo/timeline");
+
+        QDataStream stream(&bytes, QIODevice::ReadOnly);
+
+        MATH::Timeline1D tl;
+        try
+        {
+            tl.deserialize(stream);
+            *tl_ = tl;
+            update();
+        }
+        catch (Exception& e)
+        {
+            QMessageBox::warning(this, "!", tr("Error pasting timeline data\n%1").arg(e.what()));
+        }
+    }
+}
 
 } // namespace GUI
 } // namespace MO

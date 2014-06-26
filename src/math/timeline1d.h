@@ -120,6 +120,11 @@ class Timeline1D
     /** default destructor, wipes out everything */
     virtual ~Timeline1D();
 
+    // ------ copy assignment --------
+
+    Timeline1D(const Timeline1D& other);
+    const Timeline1D& operator = (const Timeline1D& other);
+
     // ----------- io ----------------
 
     /** Writes timeline to binary format. */

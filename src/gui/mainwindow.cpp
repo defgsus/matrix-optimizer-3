@@ -42,6 +42,12 @@ MainWindow::MainWindow(QWidget *parent) :
         //tlv->setOptions(Timeline1DView::O_ChangeViewX | Timeline1DView::O_MovePoints);
         //tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
 
+        auto tl2 = new MATH::Timeline1D;
+
+        auto tlv2 = new Timeline1DRulerView(tl2, this);
+        l->addWidget(tlv2);
+
+
     // ---------- io -----------
 
     QAction * a;
