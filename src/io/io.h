@@ -30,53 +30,62 @@ public:
     Io();
     ~Io();
 
-    // -------------- file io -----------------------
+    // ------------------- io -----------------------
 
-    bool save(const QString& filename);
-    bool load(const QString& filename);
+    void save(const QString& filename);
+    void load(const QString& filename);
+
+    /** Returns the current data stream */
+    const QString data() const { return data_; }
 
     // --------------- streaming --------------------
 
-    bool startWriting();
-    bool stopWriting();
-    bool writeable();
+    void startWriting();
+    void stopWriting();
+    bool isWriteable();
 
-    bool startReading();
-    bool stopReading();
-    bool readable();
+    void startReading();
+    void stopReading();
+    bool isReadable();
 
     // ------------------ sections ------------------
 
-    /** Create a new (sub-)section. WRITE */
-    bool newSection(const QString& name);
+    /** WRITE, Create a new (sub-)section. */
+    void newSection(const QString& name);
 
-    /** Ends the current sub-section and goes to containing section. WRITE */
-    bool endSection();
+    /** WRITE, Ends the current sub-section and goes to containing section. */
+    void endSection();
 
-    /** Returns if the current section matches @p name. READ/WRITE */
+    /** READ/WRITE, Returns if the current section matches @p name. */
     bool isSection(const QString& name) const;
 
-    /** Returns name of the current section. READ/WRITE */
+    /** READ/WRITE, Returns name of the current section. */
     const QString& section() const;
 
-    /** open next sub-section. READ */
+    /** READ, open next sub-section.
+        Returns true when a new subsection was found, false otherwise. */
     bool nextSubSection();
 
-    /** leave current (sub-)section. READ */
-    bool leaveSection();
+    /** READ, Leaves current (sub-)section.
+        If there is no higher section, this does nothing. */
+    void leaveSection();
 
     // ----------------- data write -----------------
 
-    bool write(const QString& key, const QString& v);
-    bool write(const QString& key, bool v);
-    bool write(const QString& key, int v);
-    bool write(const QString& key, unsigned int v);
-    bool write(const QString& key, long int v);
-    bool write(const QString& key, long unsigned int v);
-    bool write(const QString& key, float);
-    bool write(const QString& key, double);
+    void write(const QString& key, const QString& v);
+    void write(const QString& key, bool v);
+    void write(const QString& key, int v);
+    void write(const QString& key, unsigned int v);
+    void write(const QString& key, long int v);
+    void write(const QString& key, long unsigned int v);
+    void write(const QString& key, float);
+    void write(const QString& key, double);
 
     // ----------------- data read ------------------
+
+    /** @{ */
+    /** Reads the contents for the given key.
+        If the key is not found, the default value will be used and false is returned. */
 
     bool read(const QString& key, QString& v, const QString& def = "") const;
     bool read(const QString& key, bool& v, bool def = false) const;
@@ -86,6 +95,8 @@ public:
     bool read(const QString& key, long unsigned int& v, long unsigned int def = 0) const;
     bool read(const QString& key, float& v, float def = 0) const;
     bool read(const QString& key, double& v, double def = 0) const;
+
+    /** @} */
 
     QString readString(const QString& key, const QString& def = "") const { QString v; read(key, v, def); return v; }
     bool readBool(const QString& key, bool def = false) const { bool v; read(key, v, def); return v; }

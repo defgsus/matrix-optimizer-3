@@ -15,31 +15,42 @@
 
 namespace MO {
 
-class BasicException : public std::exception
+class Exception : public std::exception
 {
 public:
-    BasicException() { }
 
-    virtual const char * what() const throw() { return text.c_str(); }
+    enum
+    {
+        UNKNOWN,
+        READ,
+        WRITE,
+        VERSION_MISMATCH,
+
+    };
+
+    Exception(int cause = UNKNOWN) throw() : cause_(cause) { }
+    ~Exception() throw() { }
+
+    virtual const char * what() const throw() { return text_.c_str(); }
+    int cause() const throw() { return cause_; }
 
     template <class T>
-    BasicException& operator << (const T& value)
-    { std::stringstream s; s << value; text += s.str(); return *this; }
+    Exception& operator << (const T& value)
+    { std::stringstream s; s << value; text_ += s.str(); return *this; }
 
-    std::string text;
+protected:
+
+    int cause_;
+    std::string text_;
 };
 
-class IoException : public BasicException
-{
-
-};
 
 
 #define MO_ERROR(text__) \
-{ throw ::MO::BasicException() << text__; }
+{ throw ::MO::Exception() << text__; }
 
-#define MO_IO_ERROR(text__) \
-{ throw ::MO::BasicException() << text__; }
+#define MO_IO_ERROR(cause__, text__) \
+{ throw ::MO::Exception(::MO::Exception::cause__) << text__; }
 
 } // namespace MO
 

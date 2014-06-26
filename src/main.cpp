@@ -26,10 +26,20 @@ int main(int argc, char *argv[])
     try
     {
         //throw MO::BasicException() << "hallo";
-        //MO_IO_ERROR("w " << &w);
+        //throw MO::IoException() << "hallo";
+        //MO_IO_ERROR(VERSION_MISMATCH, "w " << &w);
         return a.exec();
     }
-    //catch (std::exception& e)
+    /*catch (MO::IoException& e)
+    {
+        std::cout << "IoException '" << e.what() << "'" << std::endl;
+        throw;
+    }*/
+    catch (MO::Exception& e)
+    {
+        std::cout << "Exception '" << e.what() << "'" << std::endl;
+        throw;
+    }
     catch (std::exception& e)
     {
         std::cout << "std::exception '" << e.what() << "'" << std::endl;

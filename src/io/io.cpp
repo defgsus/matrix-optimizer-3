@@ -37,46 +37,42 @@ Io::~Io()
 
 // -------------- file io -----------------------
 
-bool Io::save(const QString& filename)
+void Io::save(const QString& filename)
 {
     MO_DEBUGF("Io::save("<<filename<<")");
 
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        MO_IO_ERROR("Io could not save '" << filename << "'");
-        return false;
+        MO_IO_ERROR(WRITE, "Io could not save '" << filename << "'");
     }
 
     QTextStream out(&f);
     out << data_;
 
     f.close();
-    return true;
 }
 
-bool Io::load(const QString& filename)
+void Io::load(const QString& filename)
 {
     MO_DEBUGF("Io::load("<<filename<<")");
 
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        MO_IO_ERROR("Io could not load '" << filename << "'");
-        return false;
+        MO_IO_ERROR(READ, "Io could not load '" << filename << "'");
     }
 
     QTextStream in(&f);
     data_ = in.readAll();
 
     f.close();
-    return true;
 }
 
 
 // -------------------- io ----------------------
 
-bool Io::startWriting()
+void Io::startWriting()
 {
     MO_DEBUGF("Io::startWriting()");
 
@@ -87,14 +83,14 @@ bool Io::startWriting()
     xmlw_->setAutoFormatting(true);
     xmlw_->writeStartDocument();
 
-    return newSection("mo");
+    newSection("mo-io");
 }
 
-bool Io::stopWriting()
+void Io::stopWriting()
 {
     MO_DEBUGF("Io::stopWriting()");
 
-    if (!xmlw_) return false;
+    if (!xmlw_) return;
 
     xmlw_->writeEndElement();
     xmlw_->writeEndDocument();
@@ -105,60 +101,67 @@ bool Io::stopWriting()
     cur_section_ = "";
 
     qDebug() << data_ << "\n";
-    return true;
 }
 
-bool Io::writeable() { return xmlw_; }
+bool Io::isWriteable() { return xmlw_ != 0; }
 
-bool Io::startReading()
+void Io::startReading()
 {
     MO_DEBUGF("Io::startReading()");
 
     if (xmlr_) delete xmlr_;
+
     xmlr_ = new QXmlStreamReader(data_);
+
     if (!(xmlr_->readNextStartElement() &&
-          xmlr_->name() == "csmod-io"))
-        return false;
-    cur_section_ = "csmod-io";
+          xmlr_->name() == "mo-io"))
+        MO_IO_ERROR(VERSION_MISMATCH, "Io::startReading() on unknown stream")
+                ;
+    cur_section_ = "mo-io";
+
     section_stack_.clear();
-    return true;
 }
 
-bool Io::stopReading()
+void Io::stopReading()
 {
     MO_DEBUGF("Io::stopReading()");
 
-    if (!xmlr_) return false;
+    if (!xmlr_) return;
+
     delete xmlr_;
     xmlr_ = 0;
-    return true;
 }
 
-bool Io::readable() { return xmlr_; }
+bool Io::isReadable() { return xmlr_ != 0; }
 
 // ------------------ sections ------------------
 
-bool Io::newSection(const QString& name)
+void Io::newSection(const QString& name)
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::newSection('"<<name<<"') on unitialized stream");
+
     xmlw_->writeStartElement(name);
+
     section_stack_.push_back(cur_section_);
     cur_section_ = name;
-    return true;
 }
 
-bool Io::endSection()
+
+void Io::endSection()
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::endSection() on unitialized stream");
+
     xmlw_->writeEndElement();
+
     // get previous section
     if (!section_stack_.empty())
     {
         cur_section_ = section_stack_.back();
         section_stack_.pop_back();
     }
-    else cur_section_ = "";
-    return true;
+        else cur_section_ = "";
 }
 
 bool Io::isSection(const QString& name) const
@@ -173,85 +176,103 @@ const QString& Io::section() const
 
 bool Io::nextSubSection()
 {
-    if (!xmlr_) return false;
+    if (!xmlr_)
+        MO_IO_ERROR(READ, "Io::nextSubSection() on non-readable stream");
+
     cur_section_ = "";
     //qDebug() << ":: " << xmlr_->name().toString() << "\n";
-    if (!xmlr_->readNextStartElement()) return false;
+
+    if (!xmlr_->readNextStartElement())
+        return false;
+
     cur_section_ = xmlr_->name().toString();
     return true;
 }
 
-bool Io::leaveSection()
+void Io::leaveSection()
 {
+    if (!xmlr_)
+        MO_IO_ERROR(READ, "Io::leaveSection() on non-readable stream");
+
     if (!xmlr_->isEndElement())
         xmlr_->skipCurrentElement();
+
     cur_section_ = xmlr_->name().toString();
-    return true;
+
 }
 
 // ----------------- data write -----------------
 
-bool Io::write(const QString& key, const QString& v)
+void Io::write(const QString& key, const QString& v)
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
     xmlw_->writeAttribute(key, v);
-    return true;
 }
 
-bool Io::write(const QString& key, bool v)
+void Io::write(const QString& key, bool v)
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
     xmlw_->writeAttribute(key, QString::number(v));
-    return true;
 }
 
-bool Io::write(const QString& key, int v)
+void Io::write(const QString& key, int v)
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
     xmlw_->writeAttribute(key, QString::number(v));
-    return true;
 }
 
-bool Io::write(const QString& key, unsigned int v)
+void Io::write(const QString& key, unsigned int v)
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
     xmlw_->writeAttribute(key, QString::number(v));
-    return true;
 }
 
-bool Io::write(const QString& key, long int v)
+void Io::write(const QString& key, long int v)
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
     xmlw_->writeAttribute(key, QString::number(v));
-    return true;
 }
 
-bool Io::write(const QString& key, long unsigned int v)
+void Io::write(const QString& key, long unsigned int v)
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
     xmlw_->writeAttribute(key, QString::number(v));
-    return true;
 }
 
-bool Io::write(const QString& key, float v)
+void Io::write(const QString& key, float v)
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
     xmlw_->writeAttribute(key, QString::number(v));
-    return true;
 }
 
-bool Io::write(const QString& key, double v)
+void Io::write(const QString& key, double v)
 {
-    if (!xmlw_) return false;
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
     xmlw_->writeAttribute(key, QString::number(v));
-    return true;
 }
 
 // ----------------- data read ------------------
 
 #define MO_IO_CHECK_ATTRIBUTE(key__, value__, default__) \
-    if ((!xmlr_) || \
-        (!xmlr_->attributes().hasAttribute(key__))) \
+    if (!xmlr_) \
+        MO_IO_ERROR(READ, "Io::read('"<<key<<"') on non-readable stream"); \
+    if (!xmlr_->attributes().hasAttribute(key__)) \
     { \
         value__ = default__; \
         return false; \
