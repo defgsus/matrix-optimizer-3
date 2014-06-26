@@ -7,6 +7,7 @@
     <p>created 6/26/2014</p>
 */
 
+#include <QDebug>
 #include <QLayout>
 
 #include "timeline1drulerview.h"
@@ -25,13 +26,21 @@ Timeline1DRulerView::Timeline1DRulerView(MATH::Timeline1D *timeline, QWidget *pa
         layout_         (new QGridLayout(this))
 
 {
-    rulerX_->setFixedHeight(40);
+    layout_->setMargin(1);
+    layout_->setContentsMargins(1,1,1,1);
+    layout_->setSpacing(2);
+
+    layout_->addWidget(timelineView_, 1, 1);
     layout_->addWidget(rulerX_, 0, 1);
+    layout_->addWidget(rulerY_, 1, 0);
+
+    rulerX_->setFixedHeight(40);
     rulerX_->setOptions(Ruler::O_DragX | Ruler::O_DrawX | Ruler::O_DrawTextX | Ruler::O_ZoomX);
 
     rulerY_->setFixedWidth(60);
-    layout_->addWidget(rulerY_, 1, 0);
     rulerY_->setOptions(Ruler::O_DragY | Ruler::O_DrawY | Ruler::O_DrawTextY | Ruler::O_ZoomY);
+
+    timelineView_->setGridOptions(Ruler::O_DrawX | Ruler::O_DrawY);
 
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), timelineView_, SLOT(setViewSpace(UTIL::ViewSpace)));
     connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerX_, SLOT(setViewSpace(UTIL::ViewSpace)));
@@ -42,8 +51,62 @@ Timeline1DRulerView::Timeline1DRulerView(MATH::Timeline1D *timeline, QWidget *pa
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerY_, SLOT(setViewSpace(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerX_, SLOT(setViewSpace(UTIL::ViewSpace)));
 
-    rulerX_->setViewSpace(rulerX_->viewSpace(), true);
+    // pass viewSpaceChanged to this class' signal
+    connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
+    connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
+    connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
 
+    // update rulers
+    timelineView_->setViewSpace(timelineView_->viewSpace(), true);
+}
+
+void Timeline1DRulerView::setTimeline(MATH::Timeline1D *timeline)
+{
+    timelineView_->setTimeline(timeline);
+}
+
+void Timeline1DRulerView::setGridOptions(int options)
+{
+    timelineView_->setGridOptions(options);
+}
+
+void Timeline1DRulerView::setOptions(int options)
+{
+    timelineView_->setOptions(options);
+
+    // adjust rulers
+    rulerX_->setOptions(
+                (Ruler::O_DragX * ((options & Timeline1DView::O_MoveViewX) != 0))
+            |   (Ruler::O_ZoomX * ((options & Timeline1DView::O_ZoomViewX) != 0))
+                // keep all other options
+            |   ((~(Ruler::O_DragX | Ruler::O_ZoomX)) & rulerX_->options())
+                         );
+
+    rulerY_->setOptions(
+                (Ruler::O_DragY * ((options & Timeline1DView::O_MoveViewY) != 0))
+            |   (Ruler::O_ZoomY * ((options & Timeline1DView::O_ZoomViewY) != 0))
+            |   ((~(Ruler::O_DragY | Ruler::O_ZoomY)) & rulerY_->options())
+                         );
+}
+
+void Timeline1DRulerView::setViewSpace(const UTIL::ViewSpace & v, bool send_signal)
+{
+    timelineView_->setViewSpace(v, send_signal);
+}
+
+void Timeline1DRulerView::fitToView(bool fitX, bool fitY, int marginInPixels)
+{
+    timelineView_->fitToView(fitX, fitY, marginInPixels);
+}
+
+void Timeline1DRulerView::fitSelectionToView(bool fitX, bool fitY, int marginInPixels)
+{
+    timelineView_->fitSelectionToView(fitX, fitY, marginInPixels);
+}
+
+void Timeline1DRulerView::unselect()
+{
+    timelineView_->unselect();
 }
 
 

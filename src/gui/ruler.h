@@ -35,7 +35,11 @@ public:
         O_ZoomY = 128,
 
         O_DrawAll = O_DrawX | O_DrawY | O_DrawTextX | O_DrawTextY,
+
         O_DragAll = O_DragX | O_DragY,
+        O_ZoomAll = O_ZoomX | O_ZoomY,
+        O_ChangeViewAll = O_DragAll | O_ZoomAll,
+
         O_EnableAll = O_DrawAll | O_DrawAll
     };
 
@@ -66,6 +70,8 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
+
+    QCursor defaultCursor_() const;
 
 private:
 

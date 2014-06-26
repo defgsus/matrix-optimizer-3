@@ -67,6 +67,8 @@ public:
 
     // --------- conversion screen/time/value --------
 
+    const UTIL::ViewSpace viewSpace() const { return space_; }
+
     Double screen2time(Double x) const;
     Double screen2value(Double y) const;
     int time2screen(Double time) const;

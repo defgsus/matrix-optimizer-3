@@ -28,7 +28,6 @@ Ruler::Ruler(QWidget *parent) :
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
 
-    setCursor(Qt::OpenHandCursor);
     setMouseTracking(true);
 
     // update grid painter
@@ -55,6 +54,8 @@ void Ruler::setOptions(int options)
     |   (PAINTER::Grid::O_DrawTextX * ((options_ & O_DrawTextX) != 0))
     |   (PAINTER::Grid::O_DrawTextY * ((options_ & O_DrawTextY) != 0))
     );
+
+    setCursor(defaultCursor_());
 
     if (changed)
         update();
@@ -144,10 +145,18 @@ void Ruler::mouseMoveEvent(QMouseEvent * e)
 
 void Ruler::mouseReleaseEvent(QMouseEvent * )
 {
-    setCursor(Qt::OpenHandCursor);
+    setCursor(defaultCursor_());
     action_ = A_NOTHING;
 }
 
+
+QCursor Ruler::defaultCursor_() const
+{
+    if (options_ & O_ChangeViewAll)
+        return Qt::OpenHandCursor;
+    else
+        return Qt::ArrowCursor;
+}
 
 
 } // namespace GUI

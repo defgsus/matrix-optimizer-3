@@ -12,6 +12,8 @@
 
 #include <QWidget>
 
+#include "gui/util/viewspace.h"
+
 class QGridLayout;
 
 namespace MO {
@@ -33,9 +35,36 @@ public:
     Ruler * rulerX() { return rulerX_; }
     Ruler * rulerY() { return rulerY_; }
 
+    // ----------- assignment ------
+
+    /** Assigns a new (or no) Timeline1D */
+    void setTimeline(MATH::Timeline1D * timeline = 0);
+
+    /** Sets the options for the background grid as or-wise combination of PAINTER::Grid::Option */
+    void setGridOptions(int options);
+
 signals:
 
+    /** Send when viewspace was changed by user */
+    void viewSpaceChanged(const UTIL::ViewSpace&);
+
 public slots:
+
+    /** Sets option flags as defined in Timeline1DView::Option */
+    void setOptions(int options);
+
+    /** Sets a new viewspace for the timeline */
+    void setViewSpace(const UTIL::ViewSpace &, bool send_signal = false);
+
+    /** Fits the whole curve into view */
+    void fitToView(bool fitX = true, bool fitY = true, int marginInPixels = 10);
+
+    /** Fits the selected curve into view */
+    void fitSelectionToView(bool fitX = true, bool fitY = true, int marginInPixels = 10);
+
+    /** Clear any selections previously made.
+        This should be called when a timeline was loaded. */
+    void unselect();
 
 protected:
 
