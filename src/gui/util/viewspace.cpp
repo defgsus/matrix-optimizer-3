@@ -25,6 +25,7 @@ ViewSpace::ViewSpace()
       miny_(0),
       maxx_(0),
       maxy_(0),
+      doLimitByChangingScale_(false),
       doMinx_(false),
       doMiny_(false),
       doMaxx_(false),
@@ -105,6 +106,13 @@ void ViewSpace::setMaxY(Double maxy)
 
 void ViewSpace::applyLimits_()
 {
+    // extend
+    if (!doLimitByChangingScale_)
+    {
+        if (doMaxx_) x_ = std::min(x_, maxx_ - sx_);
+        if (doMaxy_) y_ = std::min(y_, maxy_ - sy_);
+    }
+
     // top/left
     if (doMinx_) x_ = std::max(x_, minx_);
     if (doMiny_) y_ = std::max(y_, miny_);
@@ -112,11 +120,15 @@ void ViewSpace::applyLimits_()
     if (doMaxx_) x_ = std::min(x_, maxx_);
     if (doMaxy_) y_ = std::min(y_, maxy_);
 
-    if (doMaxx_ && x_ + sx_ > maxx_)
-        sx_ = std::max((Double)0.0001, maxx_ - x_);
+    // extend
+    if (doLimitByChangingScale_)
+    {
+        if (doMaxx_ && x_ + sx_ > maxx_)
+            sx_ = std::max((Double)0.0001, maxx_ - x_);
 
-    if (doMaxy_ && y_ + sy_ > maxy_)
-        sy_ = std::max((Double)0.0001, maxy_ - y_);
+        if (doMaxy_ && y_ + sy_ > maxy_)
+            sy_ = std::max((Double)0.0001, maxy_ - y_);
+    }
 }
 
 
@@ -195,7 +207,10 @@ void ViewSpace::serialize(QDataStream &stream)
     stream << (qint32)1;
 
     stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
-    stream << x_ << y_ << sx_ << sy_;
+    stream << x_ << y_ << sx_ << sy_
+           << minx_ << miny_ << maxx_ << maxy_
+           << doMinx_ << doMiny_ << doMaxx_ << doMaxy_
+           << doLimitByChangingScale_;
 }
 
 void ViewSpace::deserialize(QDataStream &stream)
@@ -212,7 +227,10 @@ void ViewSpace::deserialize(QDataStream &stream)
         MO_IO_ERROR(VERSION_MISMATCH, "unknown viewspace version " << ver);
 
     stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
-    stream >> x_ >> y_ >> sx_ >> sy_;
+    stream >> x_ >> y_ >> sx_ >> sy_
+            >> minx_ >> miny_ >> maxx_ >> maxy_
+            >> doMinx_ >> doMiny_ >> doMaxx_ >> doMaxy_
+            >> doLimitByChangingScale_;
 }
 
 

@@ -9,22 +9,22 @@
 
 #include <iostream>
 
-#include "testio.h"
-#include "io/io.h"
+#include "testxmlstream.h"
+#include "io/xmlstream.h"
 
 
-TestIo::TestIo()
+TestXmlStream::TestXmlStream()
 {
 }
 
 
-int TestIo::run()
+int TestXmlStream::run()
 {
     try
     {
         using namespace MO::IO;
 
-        Io io;
+        XmlStream io;
 
         io.startWriting();
 

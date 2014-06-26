@@ -10,10 +10,10 @@
 #ifndef MOSRC_TESTS_TESTIO_H
 #define MOSRC_TESTS_TESTIO_H
 
-class TestIo
+class TestXmlStream
 {
 public:
-    TestIo();
+    TestXmlStream();
 
     int run();
 };

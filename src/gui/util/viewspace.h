@@ -89,6 +89,7 @@ private:
         maxy_;
 
     bool
+        doLimitByChangingScale_,
         doMinx_,
         doMiny_,
         doMaxx_,

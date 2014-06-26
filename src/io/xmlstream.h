@@ -7,8 +7,8 @@
     <p>created 6/25/2014</p>
 */
 
-#ifndef MOSCR_IO_IO_H
-#define MOSCR_IO_IO_H
+#ifndef MOSCR_IO_XMLSTREAM_H
+#define MOSCR_IO_XMLSTREAM_H
 
 #include <string>
 #include <vector>
@@ -42,14 +42,14 @@ PairStruct<T> Pair(const QString& key, const T value)
     <p>The backend is QXmlStream, so this is actually
     a convenience wrapper around it.</p>
 */
-class Io
+class XmlStream
 {
 public:
 
     // ------------------ ctor ----------------------
 
-    Io();
-    ~Io();
+    XmlStream();
+    ~XmlStream();
 
     // ------------------- io -----------------------
 
@@ -105,7 +105,7 @@ public:
     void write(const QString& key, double);
 
     template <class T>
-    Io& operator << (const PairStruct<T>& p) { write(p.key, p.value); return *this; }
+    XmlStream& operator << (const PairStruct<T>& p) { write(p.key, p.value); return *this; }
 
     // ----------------- data read ------------------
 
@@ -150,4 +150,4 @@ private:
 } // namespace IO
 } // namespace MO
 
-#endif // MOSRC_IO_IO_H
+#endif // MOSRC_IO_XMLSTREAM_H
