@@ -13,6 +13,7 @@
 #include <QMainWindow>
 
 namespace MO {
+class ObjectTreeModel;
 namespace GUI {
 
 class MainWindow : public QMainWindow
@@ -27,6 +28,9 @@ private:
 
     void createWidgets_();
     void createMainMenu_();
+    void createObjects_();
+
+    ObjectTreeModel * objModel_;
 };
 
 } // namespace GUI

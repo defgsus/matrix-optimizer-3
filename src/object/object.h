@@ -10,9 +10,8 @@
 #ifndef MOSRC_OBJECT_OBJECT_H
 #define MOSRC_OBJECT_OBJECT_H
 
-#include <vector>
-
 #include <QObject>
+#include <QList>
 
 namespace MO {
 
@@ -42,11 +41,19 @@ public:
     /** Returns the parent Object, or NULL */
     Object * parentObject() const { return parentObject_; }
 
+    /** Returns the root object of this hierarchy, which may
+        be the object itself. */
+    const Object * rootObject() const;
+          Object * rootObject();
+
     /** Installs the object in the parent object's childlist */
     void setParentObject(Object * parent);
 
-    /** Return a string that is unique among the childs of this object */
+    /** Returns a string that is unique among the childs of this object */
     QString getUniqueId(QString id);
+
+    /** Read-access to the list of childs */
+    const QList<Object*> childObjects() const { return childObjects_; }
 
     /** Returns the children with the given id, or NULL */
     Object * getChild(const QString& id, bool recursive = false);
@@ -69,7 +76,7 @@ private:
     // ----------- tree ----------------------
 
     Object * parentObject_;
-    std::vector<Object*> childObjects_;
+    QList<Object*> childObjects_;
 };
 
 } // namespace MO

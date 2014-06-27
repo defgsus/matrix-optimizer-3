@@ -44,6 +44,16 @@ void Object::setName(const QString & n)
 
 // ------------- tree stuff ------------------------
 
+const Object * Object::rootObject() const
+{
+    return parentObject_ ? parentObject_->rootObject() : this;
+}
+
+Object * Object::rootObject()
+{
+    return parentObject_ ? parentObject_->rootObject() : this;
+}
+
 void Object::setParentObject(Object *parent)
 {
     MO_ASSERT(parent, "no parent given for Object");
@@ -64,12 +74,14 @@ void Object::setParentObject(Object *parent)
 
 void Object::takeChild_(Object *child)
 {
+    childObjects_.removeOne(child);
+    /*
     for (auto i=childObjects_.begin(); i!=childObjects_.end(); ++i)
     if (*i == child)
     {
         childObjects_.erase(i);
         return;
-    }
+    }*/
 }
 
 QString Object::getUniqueId(QString id)

@@ -12,6 +12,7 @@
 #include <QAction>
 #include <QMenu>
 #include <QMenuBar>
+#include <QTreeView>
 
 #include "mainwindow.h"
 #include "projectorsetupwidget.h"
@@ -21,6 +22,8 @@
 #include "math/timeline1d.h"
 #include "gui/painter/grid.h"
 #include "gui/qobjectinspector.h"
+#include "model/objecttreemodel.h"
+#include "object/object.h"
 
 namespace MO {
 namespace GUI {
@@ -42,34 +45,43 @@ void MainWindow::createWidgets_()
 
     setCentralWidget(new QWidget(this));
 
-    auto l = new QVBoxLayout(centralWidget());
+    auto l0 = new QHBoxLayout(centralWidget());
 
-        //auto v = new ProjectorSetupWidget(centralWidget());
-        //l->addWidget(v);
+        auto treev = new QTreeView(this);
+        l0->addWidget(treev);
 
-        auto tl = new MATH::Timeline1D;
-        for (int i=0; i<200; ++i)
-            tl->add((Double)rand()/RAND_MAX * 10.0, (Double)rand()/RAND_MAX, MATH::Timeline1D::Point::SYMMETRIC);
-        tl->setAutoDerivative();
+        objModel_ = new ObjectTreeModel(0, this);
+        treev->setModel(objModel_);
 
-        auto tlv = new Timeline1DRulerView(tl, this);
-        tlv->setObjectName("timeline01");
-        l->addWidget(tlv);
-        //tlv->setOptions(Timeline1DView::O_ChangeViewX | Timeline1DView::O_MovePoints);
-        //tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
-        auto space = tlv->viewSpace();
-        space.setMinX(0);
-        space.setMinY(0);
-        space.setMaxX(10);
-        space.setMaxY(1);
-        tlv->setViewSpace(space, true);
+        auto l = new QVBoxLayout();
+        l0->addLayout(l);
 
-        auto tl2 = new MATH::Timeline1D;
-        tl2->setLimit(0,1);
+            //auto v = new ProjectorSetupWidget(centralWidget());
+            //l->addWidget(v);
 
-        auto tlv2 = new Timeline1DRulerView(tl2, this);
-        tlv2->setObjectName("timeline02");
-        l->addWidget(tlv2);
+            auto tl = new MATH::Timeline1D;
+            for (int i=0; i<200; ++i)
+                tl->add((Double)rand()/RAND_MAX * 10.0, (Double)rand()/RAND_MAX, MATH::Timeline1D::Point::SYMMETRIC);
+            tl->setAutoDerivative();
+
+            auto tlv = new Timeline1DRulerView(tl, this);
+            tlv->setObjectName("timeline01");
+            l->addWidget(tlv);
+            //tlv->setOptions(Timeline1DView::O_ChangeViewX | Timeline1DView::O_MovePoints);
+            //tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
+            auto space = tlv->viewSpace();
+            space.setMinX(0);
+            space.setMinY(0);
+            space.setMaxX(10);
+            space.setMaxY(1);
+            tlv->setViewSpace(space, true);
+
+            auto tl2 = new MATH::Timeline1D;
+            tl2->setLimit(0,1);
+
+            auto tlv2 = new Timeline1DRulerView(tl2, this);
+            tlv2->setObjectName("timeline02");
+            l->addWidget(tlv2);
 
     // --------- io ----------
 
@@ -115,6 +127,16 @@ void MainWindow::createMainMenu_()
         });
 
 }
+
+
+void MainWindow::createObjects_()
+{
+    Object * scene = new Object("Scene", this);
+
+
+    objModel_->setRootObject(scene);
+}
+
 
 
 } // namespace GUI

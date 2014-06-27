@@ -14,17 +14,16 @@
 
     <pre>
     QObject
-        Parameter
-            FloatParameter
-        ParameterGroup
-        Track
-            FloatTrack
-            EventTrack
-        Sequence
-            FloatSequence
-            EventSequence
-        SequenceGroup
         Object
+            Parameter (active, pos, rotation, audio, etc.)
+            ParameterGroup
+            Track
+                FloatTrack
+                EventTrack
+            Sequence
+                SequenceGroup
+                FloatSequence
+                EventSequence
             PositionalObject
                 SoundSource
                 GraphicalObject
@@ -45,6 +44,30 @@
 
     @endcode
 
+    <pre>
+
+    Scene
+        Camera
+            Active
+                EventTrack
+            Rotation
+                FloatTrack
+                FloatTrack
+            Position
+                FloatTrack
+                FloatTrack
+                FloatTrack
+            Microphone
+                Rotation
+            Microphone
+                Rotation
+        Sphere
+            Position
+            SoundSource
+                FloatTrack
+
+
+    </pre>
 */
 
 

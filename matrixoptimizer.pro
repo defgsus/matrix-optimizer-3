@@ -38,7 +38,8 @@ SOURCES += \
     src/model/qobjecttreemodel.cpp \
     src/gui/qobjectinspector.cpp \
     src/object/object.cpp \
-    src/tool/stringmanip.cpp
+    src/tool/stringmanip.cpp \
+    src/model/objecttreemodel.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -71,7 +72,8 @@ HEADERS += \
     src/gui/qobjectinspector.h \
     src/doc.h \
     src/object/object.h \
-    src/tool/stringmanip.h
+    src/tool/stringmanip.h \
+    src/model/objecttreemodel.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui
