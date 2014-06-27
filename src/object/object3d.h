@@ -24,6 +24,8 @@ public:
 
     // ------------------- getter -------------------
 
+    bool is3d() const { return true; }
+
     /** Returns the transformation matrix of this object */
     const Mat4& transformation() const { return transformation_; }
 

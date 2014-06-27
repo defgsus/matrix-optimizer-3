@@ -44,7 +44,8 @@ SOURCES += \
     src/io/application.cpp \
     src/object/parameter.cpp \
     src/object/object3d.cpp \
-    src/object/soundsource.cpp
+    src/object/soundsource.cpp \
+    src/object/microphone.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -83,7 +84,11 @@ HEADERS += \
     src/io/application.h \
     src/object/parameter.h \
     src/object/object3d.h \
-    src/object/soundsource.h
+    src/object/soundsource.h \
+    src/object/microphone.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui
+
+RESOURCES += \
+    icons.qrc

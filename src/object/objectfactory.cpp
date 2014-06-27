@@ -14,6 +14,8 @@
 
 #include "object.h"
 #include "parameter.h"
+#include "soundsource.h"
+#include "microphone.h"
 
 namespace MO {
 
@@ -34,7 +36,16 @@ ObjectFactory& ObjectFactory::instance()
 
 Object * ObjectFactory::createObject(const QString &className)
 {
-    Object * obj = new Parameter();
+    Object * obj;
+
+    //if (className == "Object3d")
+    //    obj = new Object3d();
+    if (className == "Microphone")
+        obj = new Microphone();
+    else if (className == "SoundSource")
+        obj = new SoundSource();
+    else
+        obj = new Parameter();
 
     // prepare object
     obj->idName_ = obj->className();

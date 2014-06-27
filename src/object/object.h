@@ -54,6 +54,12 @@ public:
     /** User defined name of the object */
     const QString& name() const { return name_; }
 
+    virtual bool is3d() const { return false; }
+    virtual bool isSoundSource() const { return false; }
+    virtual bool isMicrophone() const { return false; }
+    virtual bool isCamera() const { return false; }
+    virtual bool isParameter() const { return false; }
+
     // --------------- setter -------------------
 
     /** Set the user-name for the object */

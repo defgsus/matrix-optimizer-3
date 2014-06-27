@@ -13,7 +13,7 @@ namespace MO {
 
 
 SoundSource::SoundSource(QObject *parent) :
-    Object(parent)
+    Object3d(parent)
 {
 }
 

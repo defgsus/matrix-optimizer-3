@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file alias="obj_3d.png">assets/icon/obj_3d.png</file>
+        <file alias="obj_microphone.png">assets/icon/obj_microphone.png</file>
+        <file alias="obj_parameter.png">assets/icon/obj_parameter.png</file>
+        <file alias="obj_soundsource.png">assets/icon/obj_soundsource.png</file>
+        <file alias="obj_none.png">assets/icon/obj_none.png</file>
+    </qresource>
+</RCC>

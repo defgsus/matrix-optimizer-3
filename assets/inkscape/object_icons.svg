@@ -25,8 +25,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="208.35618"
-     inkscape:cy="988.24232"
+     inkscape:cx="124.46452"
+     inkscape:cy="916.81375"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -200,6 +200,30 @@
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccc"
        inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-6"
+       width="68.188736"
+       height="68.188736"
+       x="133.26782"
+       y="-93.737228"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_none.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#000000;stroke-width:3.4000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:13.60000038"
+       id="path3938"
+       sodipodi:cx="56.25"
+       sodipodi:cy="165.39789"
+       sodipodi:rx="4.8214288"
+       sodipodi:ry="4.8214288"
+       d="m 61.071429,165.39789 a 4.8214288,4.8214288 0 1 1 -9.642858,0 4.8214288,4.8214288 0 1 1 9.642858,0 z"
+       transform="translate(3.5714286,2.5)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_none.png"
        inkscape:export-xdpi="164.57001"
        inkscape:export-ydpi="164.57001" />
   </g>

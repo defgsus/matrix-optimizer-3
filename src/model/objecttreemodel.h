@@ -12,6 +12,7 @@
 
 #include <QAbstractItemModel>
 #include <QStringList>
+#include <QIcon>
 
 namespace MO {
 
@@ -27,6 +28,8 @@ public:
     Object * rootObject() const { return rootObject_; }
 
     Object * itemForIndex(const QModelIndex& index) const;
+
+    static const QIcon& iconForObject(const Object *);
 
     // --- interface impl. ---
 

@@ -131,6 +131,12 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         // text alignment
         if (role == Qt::TextAlignmentRole)
             return (int)(Qt::AlignLeft | Qt::AlignVCenter);
+
+        // icons
+        if (role == Qt::DecorationRole && index.column() == 0)
+        {
+            return iconForObject(obj);
+        }
         /*
         if (role == Qt::BackgroundRole)
         {
@@ -190,5 +196,24 @@ bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, i
 
     return false;
 }
+
+
+const QIcon& ObjectTreeModel::iconForObject(const Object * o)
+{
+    static QIcon iconNone(":/icon/obj_none.png");
+    static QIcon icon3d(":/icon/obj_3d.png");
+    static QIcon iconParameter(":/icon/obj_parameter.png");
+    static QIcon iconSoundSource(":/icon/obj_soundsource.png");
+    static QIcon iconMicrophone(":/icon/obj_microphone.png");
+
+    if (o->isMicrophone()) return iconMicrophone;
+    if (o->isSoundSource()) return iconSoundSource;
+    if (o->is3d()) return icon3d;
+    if (o->isParameter()) return iconParameter;
+
+    return iconNone;
+
+}
+
 
 } // namespace MO
