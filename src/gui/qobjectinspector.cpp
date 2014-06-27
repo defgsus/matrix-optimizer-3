@@ -20,14 +20,16 @@ namespace GUI {
 QObjectInspector::QObjectInspector(QObject * rootObject, QWidget *parent) :
     QMainWindow(parent)
 {
-    setMinimumSize(600,400);
+    setMinimumSize(700,400);
 
     model_ = new QObjectTreeModel(0, this);
     setRootObject(rootObject);
 
     treeView_ = new QTreeView(this);
     treeView_->setModel(model_);
-    treeView_->setColumnWidth(0, 380);
+    treeView_->setColumnWidth(0, 300);
+    treeView_->setColumnWidth(1, 200);
+    treeView_->setColumnWidth(2, 200);
     setCentralWidget(treeView_);
 }
 

@@ -11,6 +11,11 @@
 #include <QColor>
 #include <QBrush>
 
+// for objectTitle()
+#include <QWidget>
+#include <QAction>
+#include <QMenu>
+
 #include "qobjecttreemodel.h"
 #include "io/error.h"
 
@@ -21,8 +26,9 @@ QObjectTreeModel::QObjectTreeModel(QObject * rootObject, QObject *parent) :
     rootObject_       (rootObject)
 {
     headerNames_
-            << "Class"
-            << "Name";
+            << "class"
+            << "object name"
+            << "text/title";
 }
 
 void QObjectTreeModel::setRootObject(QObject *rootObject)
@@ -52,7 +58,8 @@ QModelIndex QObjectTreeModel::index(int row, int column, const QModelIndex &pare
 {
     // sanity check
     if (!rootObject_ || row < 0 || column < 0 || column >= headerNames_.size()
-            || (parent.isValid() && column != 0))
+            //|| (parent.isValid() && column != 0)
+            )
         return QModelIndex();
 
     QObject * obj = itemForIndex(parent);
@@ -66,12 +73,12 @@ QModelIndex QObjectTreeModel::index(int row, int column, const QModelIndex &pare
     return QModelIndex();
 }
 
-QModelIndex QObjectTreeModel::parent(const QModelIndex &index) const
+QModelIndex QObjectTreeModel::parent(const QModelIndex &child) const
 {
-    if (!index.isValid() || !rootObject_)
+    if (!child.isValid() || !rootObject_)
         return QModelIndex();
 
-    if (QObject * obj = itemForIndex(index))
+    if (QObject * obj = itemForIndex(child))
     {
         // find parent object
         QObject * parent = obj->parent();
@@ -124,7 +131,7 @@ QVariant QObjectTreeModel::data(const QModelIndex &index, int role) const
             {
                 case 0: return obj->metaObject()->className();
                 case 1: return obj->objectName();
-                //case 2: return QString::number(obj->metaObject()->classInfoCount());
+                case 2: return objectTitle(obj);
                 default: MO_LOGIC_ERROR("no DisplayRole defined for column " << index.column());
             }
         }
@@ -134,10 +141,13 @@ QVariant QObjectTreeModel::data(const QModelIndex &index, int role) const
             return (index.column() == 0)?
                         (int)(Qt::AlignLeft | Qt::AlignVCenter)
                     :   (int)(Qt::AlignRight | Qt::AlignVCenter);
-
-        /*if (role == Qt::BackgroundRole)
+        /*
+        if (role == Qt::BackgroundRole)
         {
-            return QBrush(Qt::gray);
+            if (index.column() == 2)
+                return QBrush(Qt::gray);
+            if (index.column() == 1)
+                return QBrush(Qt::green);
         }*/
     }
 
@@ -168,5 +178,20 @@ QVariant QObjectTreeModel::headerData(int section, Qt::Orientation orientation, 
     return QVariant();
 }
 
+
+
+QString QObjectTreeModel::objectTitle(QObject * o)
+{
+    if (auto w = qobject_cast<QAction*>(o))
+        return w->text();
+    if (auto w = qobject_cast<QMenu*>(o))
+        return w->title();
+
+    if (auto w = qobject_cast<QWidget*>(o))
+        return w->windowTitle();
+
+
+    return QString();
+}
 
 } // namespace MO

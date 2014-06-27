@@ -53,6 +53,7 @@ void MainWindow::createWidgets_()
         tl->setAutoDerivative();
 
         auto tlv = new Timeline1DRulerView(tl, this);
+        tlv->setObjectName("timeline01");
         l->addWidget(tlv);
         //tlv->setOptions(Timeline1DView::O_ChangeViewX | Timeline1DView::O_MovePoints);
         //tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
@@ -67,6 +68,7 @@ void MainWindow::createWidgets_()
         tl2->setLimit(0,1);
 
         auto tlv2 = new Timeline1DRulerView(tl2, this);
+        tlv2->setObjectName("timeline02");
         l->addWidget(tlv2);
 
     // --------- io ----------
