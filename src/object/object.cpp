@@ -7,6 +7,8 @@
     <p>created 6/27/2014</p>
 */
 
+#include <QDebug>
+
 #include "object.h"
 #include "tool/stringmanip.h"
 #include "io/error.h"
@@ -54,9 +56,13 @@ Object * Object::rootObject()
     return parentObject_ ? parentObject_->rootObject() : this;
 }
 
-void Object::setParentObject(Object *parent)
+void Object::setParentObject(Object *parent, int index)
 {
     MO_ASSERT(parent, "no parent given for Object");
+    MO_ASSERT(parent != parentObject_, "trying to add same object to parent");
+
+    if (parent == parentObject_)
+        return;
 
     // install in QObject tree (handle memory)
     setParent(parent);
@@ -67,9 +73,36 @@ void Object::setParentObject(Object *parent)
         parentObject_->takeChild_(this);
     }
 
+    // assign
     parentObject_ = parent;
+
     // adjust idname
     idName_ = parentObject_->getUniqueId(idName_);
+
+    // and add to child list
+    parentObject_->addChildObject_(this, index);
+}
+
+Object * Object::addObject(Object * o, int index)
+{
+    MO_ASSERT(o, "trying to add a NULL child");
+    MO_ASSERT(!childObjects_.contains(o), "duplicate addChild for '" << o->idName());
+
+    o->setParentObject(this, index);
+
+    return o;
+}
+
+Object * Object::addChildObject_(Object * o, int index)
+{
+    MO_ASSERT(o, "trying to add a NULL child");
+
+    if (index < 0)
+        childObjects_.append(o);
+    else
+        childObjects_.insert(index, o);
+
+    return o;
 }
 
 void Object::takeChild_(Object *child)
@@ -86,7 +119,7 @@ void Object::takeChild_(Object *child)
 
 QString Object::getUniqueId(QString id)
 {
-    while (getChild(id))
+    while (getChildObject(id))
     {
         increase_id_number(id, 1);
     }
@@ -94,7 +127,7 @@ QString Object::getUniqueId(QString id)
     return id;
 }
 
-Object * Object::getChild(const QString &id, bool recursive)
+Object * Object::getChildObject(const QString &id, bool recursive)
 {
     for (auto i : childObjects_)
         if (i->idName() == id)
@@ -102,11 +135,10 @@ Object * Object::getChild(const QString &id, bool recursive)
 
     if (recursive)
         for (auto i : childObjects_)
-            if (Object * o = i->getChild(id, recursive))
+            if (Object * o = i->getChildObject(id, recursive))
                 return o;
 
     return 0;
 }
-
 
 } // namespace MO

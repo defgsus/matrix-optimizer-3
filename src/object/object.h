@@ -46,8 +46,10 @@ public:
     const Object * rootObject() const;
           Object * rootObject();
 
-    /** Installs the object in the parent object's childlist */
-    void setParentObject(Object * parent);
+    /** Installs the object in the parent object's childlist.
+        If @p insert_index is >= 0, the object will be
+        inserted before the indexed object (e.g. 0 = start, 1 = before second).*/
+    void setParentObject(Object * parent, int insert_index = -1);
 
     /** Returns a string that is unique among the childs of this object */
     QString getUniqueId(QString id);
@@ -56,7 +58,14 @@ public:
     const QList<Object*> childObjects() const { return childObjects_; }
 
     /** Returns the children with the given id, or NULL */
-    Object * getChild(const QString& id, bool recursive = false);
+    Object * getChildObject(const QString& id, bool recursive = false);
+
+    /** Adds the object to the list of childs.
+        The object is (re-)parented to this object.
+        If @p insert_index is >= 0, the object will be
+        inserted before the indexed object (e.g. 0 = start, 1 = before second ..).
+        @returns The added object. */
+    Object * addObject(Object * object, int insert_index = -1);
 
 signals:
 
@@ -68,6 +77,9 @@ private:
 
     /** Removes the child from the child list, nothing else. */
     void takeChild_(Object * child);
+
+    /** Only adds the object to child list. */
+    Object * addChildObject_(Object * object, int insert_index = -1);
 
     // ------------ properties ---------------
 

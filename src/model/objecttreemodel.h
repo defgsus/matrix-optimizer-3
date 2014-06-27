@@ -39,6 +39,8 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 
+    virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
+
 signals:
 
 public slots:

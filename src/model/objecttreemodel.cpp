@@ -57,9 +57,9 @@ QModelIndex ObjectTreeModel::index(int row, int column, const QModelIndex &paren
     Object * obj = itemForIndex(parent);
     MO_ASSERT(obj, "no object for index <"<<parent.row()<<","<<parent.column()<<">");
 
-    if (row < obj->children().size())
+    if (row < obj->childObjects().size())
     {
-        return createIndex(row, column, obj->children()[row]);
+        return createIndex(row, column, obj->childObjects()[row]);
     }
 
     return QModelIndex();
@@ -96,7 +96,7 @@ int ObjectTreeModel::rowCount(const QModelIndex &parent) const
         return 0;
 
     if (Object * obj = itemForIndex(parent))
-        return obj->children().size();
+        return obj->childObjects().size();
 
     return 0;
 }
@@ -130,9 +130,7 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
 
         // text alignment
         if (role == Qt::TextAlignmentRole)
-            return (index.column() == 0)?
-                        (int)(Qt::AlignLeft | Qt::AlignVCenter)
-                    :   (int)(Qt::AlignRight | Qt::AlignVCenter);
+            return (int)(Qt::AlignLeft | Qt::AlignVCenter);
         /*
         if (role == Qt::BackgroundRole)
         {
@@ -153,6 +151,9 @@ Qt::ItemFlags ObjectTreeModel::flags(const QModelIndex &index) const
     if (rootObject_ && index.isValid())
     {
         flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+
+        if (index.column() == 0)
+            flag |= Qt::ItemIsEditable;
     }
     return flag;
 }
@@ -171,5 +172,23 @@ QVariant ObjectTreeModel::headerData(int section, Qt::Orientation orientation, i
 }
 
 
+bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!rootObject_ || !index.isValid() || index.column() < 0
+            || index.column() >= headerNames_.size())
+        return false;
+
+    if (Object * obj = itemForIndex(index))
+    {
+        // return text
+        if (role == Qt::EditRole && index.column() == 0)
+        {
+            obj->setName(value.toString());
+            return true;
+        }
+    }
+
+    return false;
+}
 
 } // namespace MO

@@ -31,8 +31,11 @@ namespace GUI {
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
+    setWindowTitle(tr("Matrix Optimizer 3.0"));
+
     createWidgets_();
     createMainMenu_();
+    createObjects_();
 }
 
 MainWindow::~MainWindow()
@@ -41,7 +44,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::createWidgets_()
 {
-    setMinimumSize(600,400);
+    setMinimumSize(800,400);
 
     setCentralWidget(new QWidget(this));
 
@@ -133,6 +136,18 @@ void MainWindow::createObjects_()
 {
     Object * scene = new Object("Scene", this);
 
+    auto cam = scene->addObject(new Object("Camera"));
+    scene->addObject(new Object("Geometry"));
+    scene->addObject(new Object("Geometry"));
+    scene->addObject(new Object("Geometry"));
+    auto snd = scene->addObject(new Object("SoundSource"), 1);
+
+    cam->addObject(new Object("Rotation"));
+    cam->addObject(new Object("Position"));
+    auto mic = cam->addObject(new Object("Microphone"));
+    mic->addObject(new Object("Rotation"));
+
+    mic->setParentObject(snd);
 
     objModel_->setRootObject(scene);
 }
