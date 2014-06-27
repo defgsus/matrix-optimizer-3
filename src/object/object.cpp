@@ -12,6 +12,7 @@
 #include "object.h"
 #include "tool/stringmanip.h"
 #include "io/error.h"
+#include "io/datastream.h"
 
 namespace MO {
 
@@ -33,6 +34,24 @@ Object::Object(const QString &className, QObject *parent) :
     }
 }
 
+// --------------------- io ------------------------
+
+void Object::serializeTree(IO::DataStream & io)
+{
+    // default object header
+    io.writeHeader("object", 1);
+
+    // default object info
+    io << className() << idName() << name();
+
+    // write actual derived object
+    serialize(io);
+
+    // write childs
+    io << (qint32)childObjects_.size();
+    for (auto o : childObjects_)
+        o->serializeTree(io);
+}
 
 
 // ------------------ setter -----------------------

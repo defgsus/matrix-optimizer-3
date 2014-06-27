@@ -14,12 +14,20 @@
 #include <QList>
 
 namespace MO {
+namespace IO { class DataStream; }
 
 class Object : public QObject
 {
     Q_OBJECT
 public:
     explicit Object(const QString& className, QObject *parent = 0);
+
+    // ----------------- io ---------------------
+
+    void serializeTree(IO::DataStream&);
+
+    virtual void serialize(IO::DataStream&) { }
+    virtual void deserialize(IO::DataStream&) { }
 
     // --------------- getter -------------------
 
