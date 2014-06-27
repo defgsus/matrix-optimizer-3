@@ -20,16 +20,22 @@ namespace IO { class DataStream; }
 class ObjectFactory : public QObject
 {
     Q_OBJECT
-public:
-    explicit ObjectFactory(QObject *parent = 0);
 
-    /** Creates the desired object for className, or return NULL */
+    ObjectFactory();
+public:
+
+    static ObjectFactory& instance();
+
+    /** Creates the desired object for className, or returns NULL */
     Object * createObject(const QString& className);
 
 signals:
 
 public slots:
 
+private:
+
+    static ObjectFactory * instance_;
 };
 
 } // namespace MO

@@ -9,19 +9,30 @@
 
 #include "objectfactory.h"
 #include "object.h"
+#include "io/datastream.h"
+#include "io/error.h"
+#include "io/application.h"
 
 namespace MO {
 
+ObjectFactory * ObjectFactory::instance_ = 0;
 
-ObjectFactory::ObjectFactory(QObject *parent) :
-    QObject(parent)
+ObjectFactory::ObjectFactory() :
+    QObject(application)
 {
 }
 
+ObjectFactory& ObjectFactory::instance()
+{
+    if (!instance_)
+        instance_ = new ObjectFactory();
+    return *instance_;
+}
 
 Object * ObjectFactory::createObject(const QString &className)
 {
     return new Object(className);
 }
+
 
 } // namespace MO

@@ -25,6 +25,7 @@ public:
     // ----------------- io ---------------------
 
     void serializeTree(IO::DataStream&);
+    static Object * deserializeTree(IO::DataStream&);
 
     virtual void serialize(IO::DataStream&) { }
     virtual void deserialize(IO::DataStream&) { }

@@ -10,6 +10,7 @@
 #include <QDebug>
 
 #include "object.h"
+#include "objectfactory.h"
 #include "tool/stringmanip.h"
 #include "io/error.h"
 #include "io/datastream.h"
@@ -38,8 +39,8 @@ Object::Object(const QString &className, QObject *parent) :
 
 void Object::serializeTree(IO::DataStream & io)
 {
-    // default object header
-    io.writeHeader("object", 1);
+    // default header
+    io.writeHeader("object-tree", 1);
 
     // default object info
     io << className() << idName() << name();
@@ -52,6 +53,31 @@ void Object::serializeTree(IO::DataStream & io)
     for (auto o : childObjects_)
         o->serializeTree(io);
 }
+
+Object * Object::deserializeTree(IO::DataStream & io)
+{
+    io.readHeader("object-tree", 1);
+
+    QString className, idName, name;
+    io >> className >> idName >> name;
+
+    Object * o = ObjectFactory::instance().createObject(className);
+
+    /** @todo How to skip unknown objects in stream??? */
+    if (!o) MO_IO_ERROR(READ, "unknown object class '" << className << "'in stream");
+
+    quint32 numChilds;
+    io >> numChilds;
+    for (quint32 i=0; i<numChilds; ++i)
+    {
+        Object * child = deserializeTree(io);
+        if (child)
+            o->addObject(child);
+    }
+
+    return o;
+}
+
 
 
 // ------------------ setter -----------------------

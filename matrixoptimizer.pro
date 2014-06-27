@@ -40,7 +40,8 @@ SOURCES += \
     src/object/object.cpp \
     src/tool/stringmanip.cpp \
     src/model/objecttreemodel.cpp \
-    src/object/objectfactory.cpp
+    src/object/objectfactory.cpp \
+    src/io/application.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -75,7 +76,8 @@ HEADERS += \
     src/object/object.h \
     src/tool/stringmanip.h \
     src/model/objecttreemodel.h \
-    src/object/objectfactory.h
+    src/object/objectfactory.h \
+    src/io/application.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui
