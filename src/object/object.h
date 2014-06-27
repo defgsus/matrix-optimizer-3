@@ -41,7 +41,7 @@ public:
     // --------------- getter -------------------
 
     /** Name of the object class, for creating objects at runtime. MUST NOT CHANGE! */
-    virtual const char * className() const = 0;
+    virtual const QString& className() const = 0;
     /** Unique id of the object within it's parent's childlist */
     const QString& idName() const { return idName_; }
     /** User defined name of the object */

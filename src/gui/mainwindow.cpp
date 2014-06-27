@@ -143,7 +143,8 @@ void MainWindow::createObjects_()
     scene->addObject(new Parameter("Geometry"));
     scene->addObject(new Parameter("Geometry"));
     scene->addObject(new Parameter("Geometry"));
-    auto snd = scene->addObject(new Parameter("SoundSource"), 1);
+    //auto snd =
+    scene->addObject(new Parameter("SoundSource"), 1);
 
     cam->addObject(new Parameter("Rotation"));
     cam->addObject(new Parameter("Position"));
@@ -151,7 +152,7 @@ void MainWindow::createObjects_()
     mic->addObject(new Parameter("Rotation"));
 
     //mic->setParentObject(snd);
-    snd->addObject(mic);
+    //snd->addObject(mic);
 
     QByteArray bytes;
     {

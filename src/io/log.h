@@ -20,5 +20,7 @@
 #define MO_DEBUGF(stream_arg__) \
     { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
 
+#define MO_DEBUG_IO(stream_arg__) \
+    { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
 
 #endif // MOSRC_IO_LOG_H

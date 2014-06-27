@@ -14,6 +14,8 @@
 #include "tool/stringmanip.h"
 #include "io/error.h"
 #include "io/datastream.h"
+#include "io/log.h"
+
 
 namespace MO {
 
@@ -38,6 +40,8 @@ Object::Object(const QString &idName, QObject *parent) :
 
 void Object::serializeTree(IO::DataStream & io)
 {
+    MO_DEBUG_IO("Object('"<<idName()<<"')::serializeTree()");
+
     // default header
     io.writeHeader("object-tree", 1);
 
@@ -55,16 +59,30 @@ void Object::serializeTree(IO::DataStream & io)
 
 Object * Object::deserializeTree(IO::DataStream & io)
 {
+    MO_DEBUG_IO("Object::deserializeTree()");
+
+    // read default header
     io.readHeader("object-tree", 1);
 
+    // read default object info
     QString className, idName, name;
     io >> className >> idName >> name;
 
+    // create this object
+    MO_DEBUG_IO("creating object '" << className << '"');
     Object * o = ObjectFactory::instance().createObject(className);
 
     /** @todo How to skip unknown objects in stream??? */
     if (!o) MO_IO_ERROR(READ, "unknown object class '" << className << "'in stream");
 
+    // set default object info
+    o->idName_ = idName;
+    o->name_ = name;
+
+    // read derived object data
+    o->deserialize(io);
+
+    // iterate over childs
     quint32 numChilds;
     io >> numChilds;
     for (quint32 i=0; i<numChilds; ++i)

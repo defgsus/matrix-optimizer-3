@@ -21,7 +21,7 @@ class Parameter : public Object
 public:
     explicit Parameter(const QString& idName, QObject *parent = 0);
 
-    virtual const char * className() const { return "Parameter"; }
+    virtual const QString& className() const { static QString s("Parameter"); return s; }
 
 signals:
 
