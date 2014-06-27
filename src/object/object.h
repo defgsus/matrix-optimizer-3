@@ -37,7 +37,13 @@ public:
     void setName(const QString&);
 
 
-    // ------------- children -------------------
+    // ------------- tree stuff -----------------
+
+    /** Returns the parent Object, or NULL */
+    Object * parentObject() const { return parentObject_; }
+
+    /** Installs the object in the parent object's childlist */
+    void setParentObject(Object * parent);
 
     /** Return a string that is unique among the childs of this object */
     QString getUniqueId(QString id);
@@ -53,8 +59,16 @@ public slots:
 
 private:
 
+    /** Removes the child from the child list, nothing else. */
+    void takeChild_(Object * child);
+
+    // ------------ properties ---------------
+
     QString className_, idName_, name_;
 
+    // ----------- tree ----------------------
+
+    Object * parentObject_;
     std::vector<Object*> childObjects_;
 };
 
