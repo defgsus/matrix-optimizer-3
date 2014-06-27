@@ -162,7 +162,7 @@ void Object::takeChild_(Object *child)
     }*/
 }
 
-QString Object::getUniqueId(QString id)
+QString Object::getUniqueId(QString id) const
 {
     while (getChildObject(id))
     {
@@ -172,7 +172,7 @@ QString Object::getUniqueId(QString id)
     return id;
 }
 
-Object * Object::getChildObject(const QString &id, bool recursive)
+Object * Object::getChildObject(const QString &id, bool recursive) const
 {
     for (auto i : childObjects_)
         if (i->idName() == id)

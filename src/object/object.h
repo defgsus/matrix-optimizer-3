@@ -20,14 +20,22 @@ class Object : public QObject
 {
     Q_OBJECT
 public:
+    /** Constructs a new object with className(), idName() and name() set to @p className.
+        If @p parent is also an Object, this object will be installed in the
+        parent's child list via setParentObject(). */
     explicit Object(const QString& className, QObject *parent = 0);
 
     // ----------------- io ---------------------
 
+    /** Serializes the whole tree including this object. */
     void serializeTree(IO::DataStream&);
+    /** Creates a parent-less object containing the whole tree as
+        previously created by serializeTree. */
     static Object * deserializeTree(IO::DataStream&);
 
+    /** Override to store custom data */
     virtual void serialize(IO::DataStream&) { }
+    /** Override to restore custom data */
     virtual void deserialize(IO::DataStream&) { }
 
     // --------------- getter -------------------
@@ -55,24 +63,29 @@ public:
     const Object * rootObject() const;
           Object * rootObject();
 
-    /** Installs the object in the parent object's childlist.
-        If @p insert_index is >= 0, the object will be
-        inserted before the indexed object (e.g. 0 = start, 1 = before second).*/
-    void setParentObject(Object * parent, int insert_index = -1);
-
     /** Returns a string that is unique among the childs of this object */
-    QString getUniqueId(QString id);
+    QString getUniqueId(QString id) const;
 
     /** Read-access to the list of childs */
     const QList<Object*> childObjects() const { return childObjects_; }
 
     /** Returns the children with the given id, or NULL */
-    Object * getChildObject(const QString& id, bool recursive = false);
+    Object * getChildObject(const QString& id, bool recursive = false) const;
+
+    /** Installs the object in the parent object's childlist.
+        If @p insert_index is >= 0, the object will be
+        inserted before the indexed object (e.g. 0 = start, 1 = before second).
+        This call is equivalent to calling parent->addObject(this).
+        The object will be removed from the previous parent's child list.
+        The idName() will be adjusted if needed. */
+    void setParentObject(Object * parent, int insert_index = -1);
 
     /** Adds the object to the list of childs.
         The object is (re-)parented to this object.
         If @p insert_index is >= 0, the object will be
         inserted before the indexed object (e.g. 0 = start, 1 = before second ..).
+        The object will be removed from the previous parent's child list.
+        The idName() will be adjusted if needed.
         @returns The added object. */
     Object * addObject(Object * object, int insert_index = -1);
 
@@ -87,7 +100,7 @@ private:
     /** Removes the child from the child list, nothing else. */
     void takeChild_(Object * child);
 
-    /** Only adds the object to child list. */
+    /** Adds the object to child list, nothing else */
     Object * addChildObject_(Object * object, int insert_index = -1);
 
     // ------------ properties ---------------

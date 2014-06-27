@@ -24,6 +24,7 @@
 #include "gui/qobjectinspector.h"
 #include "model/objecttreemodel.h"
 #include "object/object.h"
+#include "io/datastream.h"
 
 namespace MO {
 namespace GUI {
@@ -147,7 +148,19 @@ void MainWindow::createObjects_()
     auto mic = cam->addObject(new Object("Microphone"));
     mic->addObject(new Object("Rotation"));
 
-    mic->setParentObject(snd);
+    //mic->setParentObject(snd);
+    snd->addObject(mic);
+
+    QByteArray bytes;
+    {
+        IO::DataStream io(&bytes, QIODevice::WriteOnly);
+        cam->serializeTree(io);
+    }
+    {
+        IO::DataStream io(&bytes, QIODevice::ReadOnly);
+        auto obj = Object::deserializeTree(io);
+        scene->addObject(obj);
+    }
 
     objModel_->setRootObject(scene);
 }

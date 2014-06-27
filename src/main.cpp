@@ -15,13 +15,13 @@
 #include "gui/qobjectinspector.h"
 
 //#include "tests/testtimeline.h"
-//#include "tests/testio.h"
+//#include "tests/testxmlstream.h"
 
 
 int main(int argc, char *argv[])
 {
     //MO::TestTimeline t; return t.run();
-    //TestIo t; return t.run();
+    //TestXmlStream t; return t.run();
 
     MO::application = new MO::Application(argc, argv);
 
@@ -31,12 +31,13 @@ int main(int argc, char *argv[])
     //MO::GUI::QObjectInspector oi(&w);
     //oi.show();
 
+    int ret;
     try
     {
         //throw MO::BasicException() << "hallo";
         //throw MO::IoException() << "hallo";
         //MO_IO_ERROR(VERSION_MISMATCH, "w " << &w);
-        return MO::application->exec();
+        ret = MO::application->exec();
     }
     /*catch (MO::IoException& e)
     {
@@ -54,6 +55,9 @@ int main(int argc, char *argv[])
         throw;
     }
 
-    std::cerr << "good bye." << std::endl;
     delete MO::application;
+
+    std::cout << "good bye" << std::endl;
+
+    return ret;
 }
