@@ -13,6 +13,7 @@
 #include <iostream>
 #include <qglobal.h> // for Q_OS_.. flags
 
+namespace MO {
 
 // --------------- colored console output ----------
 
@@ -28,6 +29,8 @@
     */
     struct streamColor
     {
+        static bool enabled;
+
         static streamColor Default;
         static streamColor Debug;
         static streamColor Warning;
@@ -75,7 +78,7 @@
 
 
 
-
+} // namespace MO
 
 
 #endif // CONSOLE_H

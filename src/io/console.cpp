@@ -7,6 +7,10 @@
 
 #include "console.h"
 
+namespace MO {
+
+bool streamColor::enabled = false;
+
 #ifdef Q_OS_UNIX
 
     streamColor streamColor::Default = streamColor(9);
@@ -16,7 +20,8 @@
 
     std::ostream& operator<<(std::ostream& os, const streamColor& cs)
     {
-        os << "\33[3" << cs.col << ";49m";
+        if (streamColor::enabled)
+            os << "\33[3" << cs.col << ";49m";
         return os;
     }
 
@@ -34,10 +39,12 @@
 
     std::ostream& operator<<(std::ostream& os, const streamColor& cs)
     {
-        SetConsoleTextAttribute(streamColor::hConsole, cs.col);
+        if (streamColor::enabled)
+            SetConsoleTextAttribute(streamColor::hConsole, cs.col);
         return os;
     }
 
 #endif // Q_OS_WIN
 
 
+} // namespace MO

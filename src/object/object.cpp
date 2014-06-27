@@ -44,8 +44,19 @@ void Object::serializeTree(IO::DataStream & io)
     // default object info
     io << className() << idName() << name();
 
+    // keep position to go back later
+    const qint64 startPos = io.device()->pos();
+    // write temp skip marker
+    io << (qint64)0;
+
     // write actual derived object
     serialize(io);
+
+    const qint64 endPos = io.device()->pos();
+    // write length of object
+    io.device()->seek(startPos);
+    io << (qint64)(endPos - startPos - sizeof(qint64));
+    io.device()->seek(endPos);
 
     // write childs
     io << (qint32)childObjects_.size();
@@ -64,23 +75,35 @@ Object * Object::deserializeTree(IO::DataStream & io)
     QString className, idName, name;
     io >> className >> idName >> name;
 
-    // create this object
-    MO_DEBUG_IO("creating object '" << className << '"');
-    Object * o = ObjectFactory::instance().createObject(className);
+    qint64 objLength;
+    io >> objLength;
 
-    /** @todo How to skip unknown objects in stream??? */
-    if (!o) MO_IO_ERROR(READ, "unknown object class '" << className << "'in stream");
+    // create this object
+    MO_DEBUG_IO("creating object '" << className << "'");
+    Object * o = 0;//ObjectFactory::instance().createObject(className);
+
+    if (o)
+    {
+        // read derived object data
+        o->deserialize(io);
+    }
+    // skip object if class not found
+    else
+    {
+        MO_IO_WARNING(VERSION_MISMATCH, "unknown object class '" << className << "' in stream");
+        io.device()->seek(io.device()->pos() + objLength);
+
+        o = ObjectFactory::createDummy();
+    }
 
     // set default object info
     o->idName_ = idName;
     o->name_ = name;
 
-    // read derived object data
-    o->deserialize(io);
-
     // iterate over childs
     quint32 numChilds;
     io >> numChilds;
+
     for (quint32 i=0; i<numChilds; ++i)
     {
         Object * child = deserializeTree(io);
@@ -177,6 +200,12 @@ void Object::takeChild_(Object *child)
 
 QString Object::getUniqueId(QString id) const
 {
+    MO_ASSERT(!id.isEmpty(), "unset object id detected, class='"
+              << className() << "', name='" << name() << "'");
+
+    if (id.isEmpty())
+        id = "empty";
+
     while (getChildObject(id))
     {
         increase_id_number(id, 1);

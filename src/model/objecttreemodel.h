@@ -13,6 +13,7 @@
 #include <QAbstractItemModel>
 #include <QStringList>
 #include <QIcon>
+#include <QFont>
 
 namespace MO {
 
@@ -53,6 +54,8 @@ private:
     Object * rootObject_;
 
     QStringList headerNames_;
+
+    QFont boldFont_;
 };
 
 } // namespace MO

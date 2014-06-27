@@ -13,9 +13,11 @@
 #include "io/application.h"
 
 #include "object.h"
+#include "dummy.h"
 #include "parameter.h"
 #include "soundsource.h"
 #include "microphone.h"
+#include "camera.h"
 
 namespace MO {
 
@@ -38,9 +40,9 @@ Object * ObjectFactory::createObject(const QString &className)
 {
     Object * obj;
 
-    //if (className == "Object3d")
-    //    obj = new Object3d();
-    if (className == "Microphone")
+    if (className == "Camera")
+        obj = new Camera();
+    else if (className == "Microphone")
         obj = new Microphone();
     else if (className == "SoundSource")
         obj = new SoundSource();
@@ -54,5 +56,9 @@ Object * ObjectFactory::createObject(const QString &className)
     return obj;
 }
 
+Object * ObjectFactory::createDummy()
+{
+    return new Dummy();
+}
 
 } // namespace MO

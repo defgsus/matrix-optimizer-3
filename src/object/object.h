@@ -37,7 +37,9 @@ public:
     /** Serializes the whole tree including this object. */
     void serializeTree(IO::DataStream&);
     /** Creates a parent-less object containing the whole tree as
-        previously created by serializeTree. */
+        previously created by serializeTree.
+        On data or io errors, an IO::IoException will be thrown.
+        Unknown objects will be replaced by the Dummy object. */
     static Object * deserializeTree(IO::DataStream&);
 
     /** Override to store custom data */
@@ -53,6 +55,8 @@ public:
     const QString& idName() const { return idName_; }
     /** User defined name of the object */
     const QString& name() const { return name_; }
+
+    virtual bool isValid() const { return true; }
 
     virtual bool is3d() const { return false; }
     virtual bool isSoundSource() const { return false; }

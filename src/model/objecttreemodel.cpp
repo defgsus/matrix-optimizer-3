@@ -21,6 +21,8 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
             << "name"
             << "class"
             << "id";
+
+    boldFont_.setBold(true);
 }
 
 void ObjectTreeModel::setRootObject(Object *rootObject)
@@ -132,11 +134,26 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         if (role == Qt::TextAlignmentRole)
             return (int)(Qt::AlignLeft | Qt::AlignVCenter);
 
-        // icons
+        // color
+        if (role == Qt::TextColorRole)
+        {
+            if (!obj->isValid())
+                return QColor(Qt::red);
+        }
+
+        // font
+        if (role == Qt::FontRole)
+        {
+            if (index.column() == 0)
+                return boldFont_;
+        }
+
+        // icon
         if (role == Qt::DecorationRole && index.column() == 0)
         {
             return iconForObject(obj);
         }
+
         /*
         if (role == Qt::BackgroundRole)
         {
@@ -205,7 +222,9 @@ const QIcon& ObjectTreeModel::iconForObject(const Object * o)
     static QIcon iconParameter(":/icon/obj_parameter.png");
     static QIcon iconSoundSource(":/icon/obj_soundsource.png");
     static QIcon iconMicrophone(":/icon/obj_microphone.png");
+    static QIcon iconCamera(":/icon/obj_camera.png");
 
+    if (o->isCamera()) return iconCamera;
     if (o->isMicrophone()) return iconMicrophone;
     if (o->isSoundSource()) return iconSoundSource;
     if (o->is3d()) return icon3d;

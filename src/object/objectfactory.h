@@ -29,6 +29,8 @@ public:
     /** Creates the desired object for className, or returns NULL */
     static Object * createObject(const QString& className);
 
+    static Object * createDummy();
+
 signals:
 
 public slots:

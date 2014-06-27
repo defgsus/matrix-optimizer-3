@@ -95,6 +95,16 @@ if (!(cond__)) \
         << "\n" << text__; \
 }
 
+
+
+
+
+#define MO_IO_WARNING(cause__, text__) \
+{ std::cerr << "IO-WARNING: " << text__ << std::endl; }
+
+
+
+
 } // namespace MO
 
 
