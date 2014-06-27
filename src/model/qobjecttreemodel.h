@@ -7,8 +7,8 @@
     <p>created 6/27/2014</p>
 */
 
-#ifndef QOBJECTTREEMODEL_H
-#define QOBJECTTREEMODEL_H
+#ifndef MOSRC_MODEL_QOBJECTTREEMODEL_H
+#define MOSRC_MODEL_QOBJECTTREEMODEL_H
 
 #include <QAbstractItemModel>
 #include <QStringList>
@@ -52,4 +52,4 @@ private:
 
 } // namespace MO
 
-#endif // QOBJECTTREEMODEL_H
+#endif // MOSRC_MODEL_QOBJECTTREEMODEL_H

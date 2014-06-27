@@ -7,8 +7,8 @@
     <p>created 6/27/2014</p>
 */
 
-#ifndef QOBJECTINSPECTOR_H
-#define QOBJECTINSPECTOR_H
+#ifndef MOSRC_GUI_QOBJECTINSPECTOR_H
+#define MOSRC_GUI_QOBJECTINSPECTOR_H
 
 #include <QMainWindow>
 
@@ -39,4 +39,4 @@ protected:
 } // namespace GUI
 } // namespace MO
 
-#endif // QOBJECTINSPECTOR_H
+#endif // MOSRC_GUI_QOBJECTINSPECTOR_H

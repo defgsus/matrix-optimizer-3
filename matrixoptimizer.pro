@@ -36,7 +36,9 @@ SOURCES += \
     src/tests/testxmlstream.cpp \
     src/io/datastream.cpp \
     src/model/qobjecttreemodel.cpp \
-    src/gui/qobjectinspector.cpp
+    src/gui/qobjectinspector.cpp \
+    src/object/object.cpp \
+    src/tool/stringmanip.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -66,7 +68,10 @@ HEADERS += \
     src/tests/testxmlstream.h \
     src/io/datastream.h \
     src/model/qobjecttreemodel.h \
-    src/gui/qobjectinspector.h
+    src/gui/qobjectinspector.h \
+    src/doc.h \
+    src/object/object.h \
+    src/tool/stringmanip.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui
