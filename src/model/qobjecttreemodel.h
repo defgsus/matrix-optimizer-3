@@ -13,6 +13,8 @@
 #include <QAbstractItemModel>
 #include <QStringList>
 
+namespace MO {
+
 class QObjectTreeModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -47,5 +49,7 @@ private:
 
     QStringList headerNames_;
 };
+
+} // namespace MO
 
 #endif // QOBJECTTREEMODEL_H

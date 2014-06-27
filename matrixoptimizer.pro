@@ -35,7 +35,8 @@ SOURCES += \
     src/io/xmlstream.cpp \
     src/tests/testxmlstream.cpp \
     src/io/datastream.cpp \
-    src/model/qobjecttreemodel.cpp
+    src/model/qobjecttreemodel.cpp \
+    src/gui/qobjectinspector.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -64,7 +65,8 @@ HEADERS += \
     src/io/xmlstream.h \
     src/tests/testxmlstream.h \
     src/io/datastream.h \
-    src/model/qobjecttreemodel.h
+    src/model/qobjecttreemodel.h \
+    src/gui/qobjectinspector.h
 
 FORMS += \
         src/gui/mainwindow.ui \

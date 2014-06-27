@@ -7,14 +7,20 @@
     <p>created 6/27/2014</p>
 */
 
+#include <QDebug>
+
 #include "qobjecttreemodel.h"
+
+namespace MO {
 
 QObjectTreeModel::QObjectTreeModel(QObject * rootObject, QObject *parent) :
     QAbstractItemModel(parent),
-    rootObject_     (rootObject)
+    rootObject_       (rootObject)
 {
     headerNames_.append(tr("Class"));
     headerNames_.append(tr("Name"));
+
+    addObject_(rootObject_);
 }
 
 void QObjectTreeModel::setRootObject(QObject *rootObject)
@@ -30,18 +36,22 @@ void QObjectTreeModel::setRootObject(QObject *rootObject)
 
 QModelIndex QObjectTreeModel::addObject_(QObject * o)
 {
+    qDebug() << o->metaObject()->className();
     return createIndex(0, 0, (void*)o);
 }
 
 QObject * QObjectTreeModel::itemForIndex(const QModelIndex &index) const
 {
+    //qDebug() << "ifo " << index.row() << index.column();
     if (index.isValid())
     {
         if (auto o = static_cast<QObject*>(index.internalPointer()))
+        {
             return o;
+        }
     }
-
-    return 0;//rootObject_;
+    // invalid index means root object (??)
+    return rootObject_;
 }
 
 
@@ -53,7 +63,9 @@ QModelIndex QObjectTreeModel::index(int row, int column, const QModelIndex &pare
         return QModelIndex();
 
     QObject * obj = itemForIndex(parent);
-    Q_ASSERT(obj);
+    //Q_ASSERT(obj);
+    if (!obj)
+        return QModelIndex();
 
     if (row < obj->children().size())
     {
@@ -87,11 +99,12 @@ QModelIndex QObjectTreeModel::parent(const QModelIndex &child) const
 
 int QObjectTreeModel::rowCount(const QModelIndex &parent) const
 {
-    if (parent.isValid() && rootObject_)
-    {
-        if (QObject * obj = itemForIndex(parent))
-            return obj->children().size();
-    }
+    if (!rootObject_)
+        return 0;
+
+    if (QObject * obj = itemForIndex(parent))
+        return obj->children().size();
+
     return 0;
 }
 
@@ -143,3 +156,6 @@ QVariant QObjectTreeModel::headerData(int section, Qt::Orientation orientation, 
 
     return QVariant();
 }
+
+
+} // namespace MO

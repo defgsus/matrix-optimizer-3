@@ -13,6 +13,7 @@
 
 #include "io/error.h"
 #include "gui/mainwindow.h"
+#include "gui/qobjectinspector.h"
 
 //#include "tests/testtimeline.h"
 //#include "tests/testio.h"
@@ -52,8 +53,12 @@ int main(int argc, char *argv[])
     //TestIo t; return t.run();
 
     MoApplication a(argc, argv);
+
     MO::GUI::MainWindow w;
     w.show();
+
+    MO::GUI::QObjectInspector oi(&w);
+    oi.show();
 
     try
     {
