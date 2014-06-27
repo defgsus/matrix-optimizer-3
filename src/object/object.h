@@ -20,10 +20,10 @@ class Object : public QObject
 {
     Q_OBJECT
 public:
-    /** Constructs a new object with className(), idName() and name() set to @p className.
+    /** Constructs a new object with idName() and name() set to @p idName.
         If @p parent is also an Object, this object will be installed in the
         parent's child list via setParentObject(). */
-    explicit Object(const QString& className, QObject *parent = 0);
+    explicit Object(const QString& idName, QObject *parent = 0);
 
     // ----------------- io ---------------------
 
@@ -41,7 +41,7 @@ public:
     // --------------- getter -------------------
 
     /** Name of the object class, for creating objects at runtime. MUST NOT CHANGE! */
-    const QString& className() const { return className_; }
+    virtual const char * className() const = 0;
     /** Unique id of the object within it's parent's childlist */
     const QString& idName() const { return idName_; }
     /** User defined name of the object */
@@ -105,7 +105,7 @@ private:
 
     // ------------ properties ---------------
 
-    QString className_, idName_, name_;
+    QString idName_, name_;
 
     // ----------- tree ----------------------
 

@@ -23,8 +23,10 @@
 #include "gui/painter/grid.h"
 #include "gui/qobjectinspector.h"
 #include "model/objecttreemodel.h"
-#include "object/object.h"
 #include "io/datastream.h"
+
+#include "object/object.h"
+#include "object/parameter.h"
 
 namespace MO {
 namespace GUI {
@@ -135,18 +137,18 @@ void MainWindow::createMainMenu_()
 
 void MainWindow::createObjects_()
 {
-    Object * scene = new Object("Scene", this);
+    Parameter * scene = new Parameter("Scene", this);
 
-    auto cam = scene->addObject(new Object("Camera"));
-    scene->addObject(new Object("Geometry"));
-    scene->addObject(new Object("Geometry"));
-    scene->addObject(new Object("Geometry"));
-    auto snd = scene->addObject(new Object("SoundSource"), 1);
+    auto cam = scene->addObject(new Parameter("Camera"));
+    scene->addObject(new Parameter("Geometry"));
+    scene->addObject(new Parameter("Geometry"));
+    scene->addObject(new Parameter("Geometry"));
+    auto snd = scene->addObject(new Parameter("SoundSource"), 1);
 
-    cam->addObject(new Object("Rotation"));
-    cam->addObject(new Object("Position"));
-    auto mic = cam->addObject(new Object("Microphone"));
-    mic->addObject(new Object("Rotation"));
+    cam->addObject(new Parameter("Rotation"));
+    cam->addObject(new Parameter("Position"));
+    auto mic = cam->addObject(new Parameter("Microphone"));
+    mic->addObject(new Parameter("Rotation"));
 
     //mic->setParentObject(snd);
     snd->addObject(mic);

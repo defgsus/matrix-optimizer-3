@@ -8,10 +8,12 @@
 */
 
 #include "objectfactory.h"
-#include "object.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/application.h"
+
+#include "object.h"
+#include "parameter.h"
 
 namespace MO {
 
@@ -31,7 +33,7 @@ ObjectFactory& ObjectFactory::instance()
 
 Object * ObjectFactory::createObject(const QString &className)
 {
-    return new Object(className);
+    return new Parameter(className);
 }
 
 
