@@ -44,7 +44,8 @@ void XmlStream::save(const QString& filename)
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        MO_IO_ERROR(WRITE, "Io could not save '" << filename << "'");
+        MO_IO_ERROR(WRITE, "Io could not save '" << filename << "'\n"
+                        << f.errorString());
     }
 
     QTextStream out(&f);
@@ -60,7 +61,8 @@ void XmlStream::load(const QString& filename)
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        MO_IO_ERROR(READ, "Io could not load '" << filename << "'");
+        MO_IO_ERROR(READ, "Io could not load '" << filename << "'\n"
+                        << f.errorString());
     }
 
     QTextStream in(&f);

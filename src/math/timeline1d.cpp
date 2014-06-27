@@ -644,7 +644,8 @@ void Timeline1D::saveFile(const QString &filename)
 {
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly))
-        MO_IO_ERROR(WRITE, "Timeline1D can't open file for writing '" << filename << "'");
+        MO_IO_ERROR(WRITE, "Timeline1D can't open file for writing '" << filename << "'\n"
+                        << f.errorString());
     IO::DataStream stream(&f);
 
     serialize(stream);
@@ -657,10 +658,18 @@ void Timeline1D::loadFile(const QString &filename)
 {
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly))
-        MO_IO_ERROR(READ, "Timeline1D can't open file for reading '" << filename << "'");
+        MO_IO_ERROR(READ, "Timeline1D can't open file for reading '" << filename << "'\n"
+                            << f.errorString());
     IO::DataStream stream(&f);
 
-    deserialize(stream);
+    try
+    {
+        deserialize(stream);
+    }
+    catch (Exception e)
+    {
+        throw e << "\nfrom file '" << filename << "'";
+    }
 
     f.close();
 }

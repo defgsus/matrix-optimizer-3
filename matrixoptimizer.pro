@@ -34,7 +34,8 @@ SOURCES += \
     src/gui/util/viewspace.cpp \
     src/io/xmlstream.cpp \
     src/tests/testxmlstream.cpp \
-    src/io/datastream.cpp
+    src/io/datastream.cpp \
+    src/model/qobjecttreemodel.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -62,7 +63,8 @@ HEADERS += \
     src/gui/timeline1drulerview.h \
     src/io/xmlstream.h \
     src/tests/testxmlstream.h \
-    src/io/datastream.h
+    src/io/datastream.h \
+    src/model/qobjecttreemodel.h
 
 FORMS += \
         src/gui/mainwindow.ui \
