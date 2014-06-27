@@ -27,7 +27,7 @@ public:
     static ObjectFactory& instance();
 
     /** Creates the desired object for className, or returns NULL */
-    Object * createObject(const QString& className);
+    static Object * createObject(const QString& className);
 
 signals:
 

@@ -28,12 +28,19 @@ ObjectFactory& ObjectFactory::instance()
 {
     if (!instance_)
         instance_ = new ObjectFactory();
+
     return *instance_;
 }
 
 Object * ObjectFactory::createObject(const QString &className)
 {
-    return new Parameter(className);
+    Object * obj = new Parameter();
+
+    // prepare object
+    obj->idName_ = obj->className();
+    obj->name_ = className;
+
+    return obj;
 }
 
 

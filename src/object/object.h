@@ -19,11 +19,18 @@ namespace IO { class DataStream; }
 class Object : public QObject
 {
     Q_OBJECT
-public:
-    /** Constructs a new object with idName() and name() set to @p idName.
+
+    friend class ObjectFactory;
+
+protected:
+
+    /** Constructs a new object.
         If @p parent is also an Object, this object will be installed in the
-        parent's child list via setParentObject(). */
-    explicit Object(const QString& idName, QObject *parent = 0);
+        parent's child list via setParentObject().
+        @note Only ObjectFactory can create Objects. */
+    explicit Object(QObject *parent = 0);
+
+public:
 
     // ----------------- io ---------------------
 

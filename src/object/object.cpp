@@ -21,15 +21,11 @@ namespace MO {
 
 
 
-Object::Object(const QString &idName, QObject *parent) :
+Object::Object(QObject *parent) :
     QObject         (parent),
-    idName_         (idName),
-    name_           (idName),
     parentObject_   (0)
 {
-    MO_ASSERT(idName.size(), "no idname given for Object");
-
-    // tie in Object hierarchy
+    // tie into Object hierarchy
     if (auto o = dynamic_cast<Object*>(parent))
     {
         setParentObject(o);

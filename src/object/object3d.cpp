@@ -13,8 +13,8 @@ namespace MO {
 
 
 
-Object3d::Object3d(const QString &idName, QObject *parent) :
-    Object(idName, parent)
+Object3d::Object3d(QObject *parent) :
+    Object(parent)
 {
 }
 

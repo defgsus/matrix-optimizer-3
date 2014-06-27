@@ -20,7 +20,7 @@ class Object3d : public Object
 {
     Q_OBJECT
 public:
-    explicit Object3d(const QString& idName, QObject *parent = 0);
+    explicit Object3d(QObject *parent = 0);
 
     // ------------------- getter -------------------
 

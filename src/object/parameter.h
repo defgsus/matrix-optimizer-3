@@ -19,7 +19,7 @@ class Parameter : public Object
 {
     Q_OBJECT
 public:
-    explicit Parameter(const QString& idName, QObject *parent = 0);
+    explicit Parameter(QObject *parent = 0);
 
     virtual const QString& className() const { static QString s("Parameter"); return s; }
 

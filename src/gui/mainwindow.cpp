@@ -26,7 +26,7 @@
 #include "io/datastream.h"
 
 #include "object/object.h"
-#include "object/parameter.h"
+#include "object/objectfactory.h"
 
 namespace MO {
 namespace GUI {
@@ -137,19 +137,20 @@ void MainWindow::createMainMenu_()
 
 void MainWindow::createObjects_()
 {
-    Parameter * scene = new Parameter("Scene", this);
+    auto * scene = ObjectFactory::createObject("Scene");
+    scene->setParent(this);
 
-    auto cam = scene->addObject(new Parameter("Camera"));
-    scene->addObject(new Parameter("Geometry"));
-    scene->addObject(new Parameter("Geometry"));
-    scene->addObject(new Parameter("Geometry"));
+    auto cam = scene->addObject(ObjectFactory::createObject("Camera"));
+    scene->addObject(ObjectFactory::createObject("Geometry"));
+    scene->addObject(ObjectFactory::createObject("Geometry"));
+    scene->addObject(ObjectFactory::createObject("Geometry"));
     //auto snd =
-    scene->addObject(new Parameter("SoundSource"), 1);
+    scene->addObject(ObjectFactory::createObject("SoundSource"), 1);
 
-    cam->addObject(new Parameter("Rotation"));
-    cam->addObject(new Parameter("Position"));
-    auto mic = cam->addObject(new Parameter("Microphone"));
-    mic->addObject(new Parameter("Rotation"));
+    cam->addObject(ObjectFactory::createObject("Rotation"));
+    cam->addObject(ObjectFactory::createObject("Position"));
+    auto mic = cam->addObject(ObjectFactory::createObject("Microphone"));
+    mic->addObject(ObjectFactory::createObject("Rotation"));
 
     //mic->setParentObject(snd);
     //snd->addObject(mic);

@@ -11,8 +11,8 @@
 
 namespace MO {
 
-Parameter::Parameter(const QString &idName, QObject *parent) :
-    Object(idName, parent)
+Parameter::Parameter(QObject *parent) :
+    Object(parent)
 {
 }
 
