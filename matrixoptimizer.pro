@@ -69,5 +69,4 @@ HEADERS += \
     src/gui/qobjectinspector.h
 
 FORMS += \
-        src/gui/mainwindow.ui \
     src/gui/projectorsetupwidget.ui

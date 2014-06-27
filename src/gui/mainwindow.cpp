@@ -6,26 +6,41 @@
 
     <p>created 2014/04/21</p>
 */
-#include <QLayout>
 
+#include <QDebug>
+#include <QLayout>
+#include <QAction>
+#include <QMenu>
+#include <QMenuBar>
 
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include "projectorsetupwidget.h"
 #include "timeline1dview.h"
 #include "timeline1drulerview.h"
 #include "ruler.h"
 #include "math/timeline1d.h"
 #include "gui/painter/grid.h"
+#include "gui/qobjectinspector.h"
 
 namespace MO {
 namespace GUI {
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    QMainWindow(parent)
 {
-    ui->setupUi(this);
+    createWidgets_();
+    createMainMenu_();
+}
+
+MainWindow::~MainWindow()
+{
+}
+
+void MainWindow::createWidgets_()
+{
+    setMinimumSize(600,400);
+
+    setCentralWidget(new QWidget(this));
 
     auto l = new QVBoxLayout(centralWidget());
 
@@ -54,35 +69,51 @@ MainWindow::MainWindow(QWidget *parent) :
         auto tlv2 = new Timeline1DRulerView(tl2, this);
         l->addWidget(tlv2);
 
+    // --------- io ----------
 
-    // ---------- io -----------
-
+    QMenu * m;
     QAction * a;
 
-    a = new QAction(tr("save timeline"), this);
-    menuBar()->addAction(a);
-    a->setShortcut(Qt::CTRL + Qt::Key_S);
-    connect(a, &QAction::triggered, [=]()
-    {
-        tl->saveFile("./timeline.bin");
-    });
+    m = new QMenu(tr("Timeline"), menuBar());
+    menuBar()->addMenu(m);
 
-    a = new QAction(tr("load timeline"), this);
-    menuBar()->addAction(a);
-    a->setShortcut(Qt::CTRL + Qt::Key_L);
-    connect(a, &QAction::triggered, [=]()
-    {
-        tl->loadFile("./timeline.bin");
-        tlv->unselect();
-    });
+        a = new QAction(tr("save timeline"), m);
+        m->addAction(a);
+        a->setShortcut(Qt::CTRL + Qt::Key_S);
+        connect(a, &QAction::triggered, [=]()
+        {
+            tl->saveFile("./timeline.bin");
+        });
 
+        a = new QAction(tr("load timeline"), m);
+        m->addAction(a);
+        a->setShortcut(Qt::CTRL + Qt::Key_L);
+        connect(a, &QAction::triggered, [=]()
+        {
+            tl->loadFile("./timeline.bin");
+            tlv->unselect();
+        });
 
 }
 
-MainWindow::~MainWindow()
+
+void MainWindow::createMainMenu_()
 {
-    delete ui;
+    QMenu * m;
+    QAction * a;
+
+    m = new QMenu(tr("Debug"), menuBar());
+    menuBar()->addMenu(m);
+
+        a = new QAction(tr("QObject inspector"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            (new QObjectInspector(this, this))->show();
+        });
+
 }
+
 
 } // namespace GUI
 } // namespace MO

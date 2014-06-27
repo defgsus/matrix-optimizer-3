@@ -57,8 +57,8 @@ int main(int argc, char *argv[])
     MO::GUI::MainWindow w;
     w.show();
 
-    MO::GUI::QObjectInspector oi(&w);
-    oi.show();
+    //MO::GUI::QObjectInspector oi(&w);
+    //oi.show();
 
     try
     {

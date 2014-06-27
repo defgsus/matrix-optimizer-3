@@ -12,10 +12,6 @@
 
 #include <QMainWindow>
 
-namespace Ui {
-class MainWindow;
-}
-
 namespace MO {
 namespace GUI {
 
@@ -28,7 +24,9 @@ public:
     ~MainWindow();
 
 private:
-    Ui::MainWindow *ui;
+
+    void createWidgets_();
+    void createMainMenu_();
 };
 
 } // namespace GUI

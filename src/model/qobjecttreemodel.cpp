@@ -12,6 +12,7 @@
 #include <QBrush>
 
 #include "qobjecttreemodel.h"
+#include "io/error.h"
 
 namespace MO {
 
@@ -21,8 +22,7 @@ QObjectTreeModel::QObjectTreeModel(QObject * rootObject, QObject *parent) :
 {
     headerNames_
             << "Class"
-            << "Name"
-            << "info count";
+            << "Name";
 }
 
 void QObjectTreeModel::setRootObject(QObject *rootObject)
@@ -56,9 +56,7 @@ QModelIndex QObjectTreeModel::index(int row, int column, const QModelIndex &pare
         return QModelIndex();
 
     QObject * obj = itemForIndex(parent);
-    //Q_ASSERT(obj);
-    if (!obj)
-        return QModelIndex();
+    MO_ASSERT(obj, "no object for index <"<<parent.row()<<","<<parent.column()<<">");
 
     if (row < obj->children().size())
     {
@@ -126,8 +124,8 @@ QVariant QObjectTreeModel::data(const QModelIndex &index, int role) const
             {
                 case 0: return obj->metaObject()->className();
                 case 1: return obj->objectName();
-                case 2: return QString::number(obj->metaObject()->classInfoCount());
-                default: Q_ASSERT(false);
+                //case 2: return QString::number(obj->metaObject()->classInfoCount());
+                default: MO_LOGIC_ERROR("no DisplayRole defined for column " << index.column());
             }
         }
 
