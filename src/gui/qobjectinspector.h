@@ -28,6 +28,8 @@ signals:
 
 public slots:
 
+    void setRootObject(QObject * rootObject);
+
 protected:
 
     QObjectTreeModel * model_;

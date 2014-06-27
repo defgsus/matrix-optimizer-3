@@ -22,14 +22,23 @@ QObjectInspector::QObjectInspector(QObject * rootObject, QWidget *parent) :
 {
     setMinimumSize(600,400);
 
-    model_ = new QObjectTreeModel(rootObject, this);
-    //model_->setRootObject(this);//qobject_cast<QObject*>(QApplication::desktop()));
+    model_ = new QObjectTreeModel(0, this);
+    setRootObject(rootObject);
 
     treeView_ = new QTreeView(this);
     treeView_->setModel(model_);
-    treeView_->setColumnWidth(0, 400);
+    treeView_->setColumnWidth(0, 380);
     setCentralWidget(treeView_);
 }
+
+void QObjectInspector::setRootObject(QObject *rootObject)
+{
+    model_->setRootObject(rootObject);
+
+    setWindowTitle(tr("QObject inspector [%1]")
+                   .arg(rootObject? rootObject->metaObject()->className() : "-") );
+}
+
 
 } // namespace GUI
 } // namespace MO

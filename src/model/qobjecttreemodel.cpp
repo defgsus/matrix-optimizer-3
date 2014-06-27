@@ -8,6 +8,8 @@
 */
 
 #include <QDebug>
+#include <QColor>
+#include <QBrush>
 
 #include "qobjecttreemodel.h"
 
@@ -17,10 +19,10 @@ QObjectTreeModel::QObjectTreeModel(QObject * rootObject, QObject *parent) :
     QAbstractItemModel(parent),
     rootObject_       (rootObject)
 {
-    headerNames_.append(tr("Class"));
-    headerNames_.append(tr("Name"));
-
-    addObject_(rootObject_);
+    headerNames_
+            << "Class"
+            << "Name"
+            << "info count";
 }
 
 void QObjectTreeModel::setRootObject(QObject *rootObject)
@@ -29,20 +31,11 @@ void QObjectTreeModel::setRootObject(QObject *rootObject)
 
     rootObject_ = rootObject;
 
-    addObject_(rootObject_);
-
     endResetModel();
-}
-
-QModelIndex QObjectTreeModel::addObject_(QObject * o)
-{
-    qDebug() << o->metaObject()->className();
-    return createIndex(0, 0, (void*)o);
 }
 
 QObject * QObjectTreeModel::itemForIndex(const QModelIndex &index) const
 {
-    //qDebug() << "ifo " << index.row() << index.column();
     if (index.isValid())
     {
         if (auto o = static_cast<QObject*>(index.internalPointer()))
@@ -75,23 +68,26 @@ QModelIndex QObjectTreeModel::index(int row, int column, const QModelIndex &pare
     return QModelIndex();
 }
 
-QModelIndex QObjectTreeModel::parent(const QModelIndex &child) const
+QModelIndex QObjectTreeModel::parent(const QModelIndex &index) const
 {
-    if (!child.isValid() || !rootObject_)
+    if (!index.isValid() || !rootObject_)
         return QModelIndex();
 
-    if (QObject * obj = itemForIndex(child))
+    if (QObject * obj = itemForIndex(index))
     {
-        if (obj == rootObject_)
-            return QModelIndex();
-
+        // find parent object
         QObject * parent = obj->parent();
-        if (!parent)
+        if (!parent || parent == rootObject_)
             return QModelIndex();
 
-        const int row = parent->children().indexOf(obj);
-        if (row >= 0)
-            return createIndex(row, 0, (void*)parent);
+        // get grandparent object
+        if (QObject * pparent = parent->parent())
+        {
+            // find index of child
+            const int row = pparent->children().indexOf(parent);
+            if (row >= 0)
+                return createIndex(row, 0, (void*)parent);
+        }
     }
 
     return QModelIndex();
@@ -130,19 +126,36 @@ QVariant QObjectTreeModel::data(const QModelIndex &index, int role) const
             {
                 case 0: return obj->metaObject()->className();
                 case 1: return obj->objectName();
+                case 2: return QString::number(obj->metaObject()->classInfoCount());
                 default: Q_ASSERT(false);
             }
         }
 
+        // text alignment
         if (role == Qt::TextAlignmentRole)
             return (index.column() == 0)?
                         (int)(Qt::AlignLeft | Qt::AlignVCenter)
                     :   (int)(Qt::AlignRight | Qt::AlignVCenter);
+
+        /*if (role == Qt::BackgroundRole)
+        {
+            return QBrush(Qt::gray);
+        }*/
     }
 
     return QVariant();
 }
 
+Qt::ItemFlags QObjectTreeModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags flag = QAbstractItemModel::flags(index);
+
+    if (rootObject_ && index.isValid())
+    {
+        flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+    }
+    return flag;
+}
 
 QVariant QObjectTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
