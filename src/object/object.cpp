@@ -34,7 +34,7 @@ Object::Object(QObject *parent) :
 
 // --------------------- io ------------------------
 
-void Object::serializeTree(IO::DataStream & io)
+void Object::serializeTree(IO::DataStream & io) const
 {
     MO_DEBUG_IO("Object('"<<idName()<<"')::serializeTree()");
 

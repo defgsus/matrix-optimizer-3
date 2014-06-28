@@ -7,7 +7,10 @@
     <p>created 6/27/2014</p>
 */
 
+#include <QDebug>
+
 #include "objecttreemodel.h"
+#include "objecttreemimedata.h"
 #include "io/error.h"
 #include "object/object.h"
 
@@ -23,6 +26,25 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
             << "id";
 
     boldFont_.setBold(true);
+}
+
+const QIcon& ObjectTreeModel::iconForObject(const Object * o)
+{
+    static QIcon iconNone(":/icon/obj_none.png");
+    static QIcon icon3d(":/icon/obj_3d.png");
+    static QIcon iconParameter(":/icon/obj_parameter.png");
+    static QIcon iconSoundSource(":/icon/obj_soundsource.png");
+    static QIcon iconMicrophone(":/icon/obj_microphone.png");
+    static QIcon iconCamera(":/icon/obj_camera.png");
+
+    if (o->isCamera()) return iconCamera;
+    if (o->isMicrophone()) return iconMicrophone;
+    if (o->isSoundSource()) return iconSoundSource;
+    if (o->is3d()) return icon3d;
+    if (o->isParameter()) return iconParameter;
+
+    return iconNone;
+
 }
 
 void ObjectTreeModel::setRootObject(Object *rootObject)
@@ -176,7 +198,8 @@ Qt::ItemFlags ObjectTreeModel::flags(const QModelIndex &index) const
         flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 
         if (index.column() == 0)
-            flag |= Qt::ItemIsEditable;
+            flag |= Qt::ItemIsEditable
+                    | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
     }
     return flag;
 }
@@ -214,25 +237,67 @@ bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, i
     return false;
 }
 
+// ---------------------------- DRAG/DROP ---------------------------------
 
-const QIcon& ObjectTreeModel::iconForObject(const Object * o)
+Qt::DropActions ObjectTreeModel::supportedDragActions() const
 {
-    static QIcon iconNone(":/icon/obj_none.png");
-    static QIcon icon3d(":/icon/obj_3d.png");
-    static QIcon iconParameter(":/icon/obj_parameter.png");
-    static QIcon iconSoundSource(":/icon/obj_soundsource.png");
-    static QIcon iconMicrophone(":/icon/obj_microphone.png");
-    static QIcon iconCamera(":/icon/obj_camera.png");
-
-    if (o->isCamera()) return iconCamera;
-    if (o->isMicrophone()) return iconMicrophone;
-    if (o->isSoundSource()) return iconSoundSource;
-    if (o->is3d()) return icon3d;
-    if (o->isParameter()) return iconParameter;
-
-    return iconNone;
-
+    return Qt::MoveAction | Qt::CopyAction;
 }
 
+Qt::DropActions ObjectTreeModel::supportedDropActions() const
+{
+    return Qt::MoveAction | Qt::CopyAction;
+}
+
+QStringList ObjectTreeModel::mimeTypes() const
+{
+    return ObjectTreeMimeData().formats();
+}
+
+QMimeData * ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
+{
+    if (indexes.count() != 1)
+        return 0;
+
+    if (Object * obj = itemForIndex(indexes.at(0)))
+    {
+        auto data = new ObjectTreeMimeData();
+        data->setObjectTree(obj);
+        return data;
+    }
+
+    return 0;
+}
+
+bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
+                                   int row, int column, const QModelIndex &parent)
+{
+    //qDebug() << "index " << action << row << column << parent.row() << parent.column();
+
+    if (action == Qt::IgnoreAction)
+        return true;
+
+    if (!(action == Qt::MoveAction ||
+          action == Qt::CopyAction) || column > 0)
+        return false;
+
+    if (auto objdata = qobject_cast<const ObjectTreeMimeData*>(data))
+    if (Object * obj = itemForIndex(parent))
+    {
+        if (row == -1)
+            row = parent.isValid() ? parent.row()
+                                   : rootObject_->childObjects().count();
+
+        Object * copy = objdata->getObjectTree();
+        if (copy)
+        {
+            beginInsertRows(parent, row, row);
+            obj->addObject(copy, row);
+            endInsertRows();
+        }
+        return true;
+    }
+    return false;
+}
 
 } // namespace MO

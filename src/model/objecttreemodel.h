@@ -43,7 +43,16 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 
+    // -- editing --
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
+
+    // -- drag/drop --
+    virtual QStringList mimeTypes() const;
+    virtual QMimeData * mimeData(const QModelIndexList &indexes) const;
+    virtual Qt::DropActions supportedDropActions() const;
+    virtual Qt::DropActions supportedDragActions() const;
+    virtual bool dropMimeData(const QMimeData *data, Qt::DropAction action,
+                              int row, int column, const QModelIndex &parent);
 
 signals:
 

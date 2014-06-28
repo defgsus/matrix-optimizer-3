@@ -47,7 +47,9 @@ SOURCES += \
     src/object/soundsource.cpp \
     src/object/microphone.cpp \
     src/object/camera.cpp \
-    src/object/dummy.cpp
+    src/object/dummy.cpp \
+    src/gui/objecttreeview.cpp \
+    src/model/objecttreemimedata.cpp
 
 HEADERS += \
         src/gui/mainwindow.h \
@@ -89,7 +91,9 @@ HEADERS += \
     src/object/soundsource.h \
     src/object/microphone.h \
     src/object/camera.h \
-    src/object/dummy.h
+    src/object/dummy.h \
+    src/gui/objecttreeview.h \
+    src/model/objecttreemimedata.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

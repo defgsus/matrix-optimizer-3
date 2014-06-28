@@ -22,6 +22,7 @@
 #include "math/timeline1d.h"
 #include "gui/painter/grid.h"
 #include "gui/qobjectinspector.h"
+#include "gui/objecttreeview.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 
@@ -53,7 +54,7 @@ void MainWindow::createWidgets_()
 
     auto l0 = new QHBoxLayout(centralWidget());
 
-        auto treev = new QTreeView(this);
+        auto treev = new ObjectTreeView(this);
         l0->addWidget(treev);
 
         objModel_ = new ObjectTreeModel(0, this);

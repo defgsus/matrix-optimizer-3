@@ -14,7 +14,8 @@ namespace MO {
 
 
 Object3d::Object3d(QObject *parent) :
-    Object(parent)
+    Object(parent),
+    transformation_(1.0)
 {
 }
 

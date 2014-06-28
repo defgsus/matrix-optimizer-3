@@ -35,7 +35,7 @@ public:
     // ----------------- io ---------------------
 
     /** Serializes the whole tree including this object. */
-    void serializeTree(IO::DataStream&);
+    void serializeTree(IO::DataStream&) const;
     /** Creates a parent-less object containing the whole tree as
         previously created by serializeTree.
         On data or io errors, an IO::IoException will be thrown.
@@ -43,7 +43,7 @@ public:
     static Object * deserializeTree(IO::DataStream&);
 
     /** Override to store custom data */
-    virtual void serialize(IO::DataStream&) { }
+    virtual void serialize(IO::DataStream&) const { }
     /** Override to restore custom data */
     virtual void deserialize(IO::DataStream&) { }
 
