@@ -14,13 +14,29 @@
 #include "io/console.h"
 #include "io/streamoperators_qt.h"
 
-#define MO_DEBUG(stream_arg__) \
-    { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
 
-#define MO_DEBUGF(stream_arg__) \
-    { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
+#if (1)
+#   define MO_DEBUG(stream_arg__) \
+        { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
+#else
+#   define MO_DEBUG(unused__)
+#endif
 
-#define MO_DEBUG_IO(stream_arg__) \
-    { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
+#if (0)
+#   define MO_DEBUGF(stream_arg__) \
+        { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
+#else
+#   define MO_DEBUGF(unused__)
+#endif
+
+#if (0)
+#   define MO_DEBUG_IO(stream_arg__) \
+        { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
+#else
+#   define MO_DEBUG_IO(unused__)
+#endif
+
+
+
 
 #endif // MOSRC_IO_LOG_H

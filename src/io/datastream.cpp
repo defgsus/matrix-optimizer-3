@@ -46,6 +46,11 @@ void DataStream::setDefaultSettings()
 void DataStream::writeHeader(const QString& id, qint32 version)
 {
     *this << id << version;
+
+    // once in a while check stream for errors
+    if (status() != Ok)
+        MO_IO_ERROR(WRITE, "error writing header '"<<id<<"' to stream.\n"
+                    "QIODevice error: '"<<device()->errorString()<<"'");
 }
 
 qint32 DataStream::readHeader(const QString& id, qint32 version)
@@ -59,6 +64,11 @@ qint32 DataStream::readHeader(const QString& id, qint32 version)
     *this >> ver;
     if (ver > version)
         MO_IO_ERROR(VERSION_MISMATCH, "unknown " << id << " version " << ver);
+
+    // once in a while check stream for errors
+    if (status() != Ok)
+        MO_IO_ERROR(READ, "error reading header for '" << id << "' from stream.\n"
+                    "QIODevice error: '"<<device()->errorString()<<"'");
 
     return ver;
 }

@@ -52,6 +52,11 @@ void Object::serializeTree(IO::DataStream & io)
     // write actual derived object
     serialize(io);
 
+    // once in a while check stream for errors
+    if (io.status() != QDataStream::Ok)
+        MO_IO_ERROR(WRITE, "error serializing object '"<<idName()<<"'.\n"
+                    "QIODevice error: '"<<io.device()->errorString()<<"'");
+
     const qint64 endPos = io.device()->pos();
     // write length of object
     io.device()->seek(startPos);
@@ -80,12 +85,17 @@ Object * Object::deserializeTree(IO::DataStream & io)
 
     // create this object
     MO_DEBUG_IO("creating object '" << className << "'");
-    Object * o = 0;//ObjectFactory::instance().createObject(className);
+    Object * o = ObjectFactory::instance().createObject(className);
 
     if (o)
     {
         // read derived object data
         o->deserialize(io);
+
+        // once in a while check stream for errors
+        if (io.status() != QDataStream::Ok)
+            MO_IO_ERROR(WRITE, "error deserializing object '"<<idName<<"'.\n"
+                        "QIODevice error: '"<<io.device()->errorString()<<"'");
     }
     // skip object if class not found
     else
