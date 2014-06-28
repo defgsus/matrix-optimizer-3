@@ -11,6 +11,7 @@
 #define MOSRC_OBJECT_OBJECTTREEMIMEDATA_H
 
 #include <QMimeData>
+#include <QModelIndex>
 
 namespace MO {
 
@@ -22,16 +23,22 @@ class ObjectTreeMimeData : public QMimeData
 public:
     explicit ObjectTreeMimeData();
 
+    static const QString& mimeType();
+
     virtual QStringList formats() const;
 
     void setObjectTree(const Object * o);
     Object * getObjectTree() const;
+
+    void setModelIndex(const QModelIndex & index) { index_ = index; }
+    const QModelIndex& getModelIndex() const { return index_; }
 
 protected:
 
     void setObjectTreeData_(const QByteArray&);
     QByteArray getObjectTreeData_() const;
 
+    QModelIndex index_;
 };
 
 } // namespace MO

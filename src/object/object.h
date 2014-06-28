@@ -87,6 +87,9 @@ public:
         If @p ignore is not NULL, this object will be ignored for comparsion. */
     QString getUniqueId(QString id, Object * ignore = 0) const;
 
+    /** Returns number of direct childs or number of all sub-childs. */
+    int numChildren(bool recursive = false) const;
+
     /** Read-access to the list of childs */
     const QList<Object*> childObjects() const { return childObjects_; }
 
@@ -111,6 +114,9 @@ public:
         @returns The added object. */
     Object * addObject(Object * object, int insert_index = -1);
 
+    /** Deletes the child from the list of children, if found. */
+    void deleteObject(Object * child);
+
 signals:
 
 public slots:
@@ -120,7 +126,7 @@ public slots:
 private:
 
     /** Removes the child from the child list, nothing else. */
-    void takeChild_(Object * child);
+    bool takeChild_(Object * child);
 
     /** Adds the object to child list, nothing else */
     Object * addChildObject_(Object * object, int insert_index = -1);

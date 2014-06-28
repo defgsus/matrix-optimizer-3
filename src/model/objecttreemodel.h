@@ -58,6 +58,10 @@ signals:
 
 public slots:
 
+    // ---- custom editing ----
+
+    virtual void deleteObject(const QModelIndex&);
+
 private:
 
     Object * rootObject_;

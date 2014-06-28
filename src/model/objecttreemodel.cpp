@@ -262,6 +262,7 @@ QMimeData * ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
     if (Object * obj = itemForIndex(indexes.at(0)))
     {
         auto data = new ObjectTreeMimeData();
+        data->setModelIndex(indexes.at(0));
         data->setObjectTree(obj);
         return data;
     }
@@ -288,9 +289,34 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
             row = parent.isValid() ? parent.row()
                                    : rootObject_->childObjects().count();
 
+        // deserialize object
         Object * copy = objdata->getObjectTree();
+
+        // only act when this worked
         if (copy)
         {
+            // delete previous tree
+            if (action == Qt::MoveAction)
+            {
+                const QModelIndex& fromIndex = objdata->getModelIndex();
+                const QModelIndex fromParentIndex =
+                                    ObjectTreeModel::parent(fromIndex);
+                if (Object * fromObj = itemForIndex(fromIndex))
+                {
+                    //if (Object * newp = itemForIndex(parent))
+                    beginMoveColumns(fromParentIndex,
+                                     fromIndex.row(), fromIndex.row(),
+                                     parent, row);
+                    qDebug() << "move" << fromObj->idName()
+                             << fromIndex.row() << "->"
+                             << obj->idName() << row;
+                    obj->addObject(fromObj, row);
+                    endMoveColumns();
+                    return true;
+                }
+            }
+
+            // insert it
             beginInsertRows(parent, row, row);
             obj->addObject(copy, row);
             endInsertRows();
@@ -299,5 +325,21 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
     }
     return false;
 }
+
+
+// ------------------- custom editing ----------------------
+
+void ObjectTreeModel::deleteObject(const QModelIndex & index)
+{
+    auto parentIndex = parent(index);
+    if (auto parentObject = itemForIndex(parentIndex))
+    {
+        beginRemoveRows(parentIndex, index.row(), index.row());
+        parentObject->deleteObject(itemForIndex(index));
+        endRemoveRows();
+    }
+}
+
+
 
 } // namespace MO

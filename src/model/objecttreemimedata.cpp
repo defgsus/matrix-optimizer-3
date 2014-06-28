@@ -25,6 +25,10 @@ ObjectTreeMimeData::ObjectTreeMimeData() :
     //setParent(parent);
 }
 
+const QString& ObjectTreeMimeData::mimeType()
+{
+    return objMimeType;
+}
 
 QStringList ObjectTreeMimeData::formats() const
 {

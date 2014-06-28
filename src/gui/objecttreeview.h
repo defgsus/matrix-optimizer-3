@@ -26,6 +26,10 @@ signals:
 
 public slots:
 
+protected:
+
+    void mousePressEvent(QMouseEvent *);
+
 };
 
 } // namespace GUI

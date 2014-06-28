@@ -147,6 +147,17 @@ Object * Object::rootObject()
     return parentObject_ ? parentObject_->rootObject() : this;
 }
 
+int Object::numChildren(bool recursive) const
+{
+    if (!recursive)
+        return childObjects().size();
+
+    int n = childObjects().size();
+    for (auto o : childObjects_)
+        n += o->numChildren(true);
+    return n;
+}
+
 bool Object::hasParentObject(Object *o) const
 {
     if (!parentObject_)
@@ -158,11 +169,11 @@ bool Object::hasParentObject(Object *o) const
 void Object::setParentObject(Object *parent, int index)
 {
     MO_ASSERT(parent, "no parent given for Object");
-    MO_ASSERT(!hasParentObject(parent), "trying to add object to it's already parent hierarchy");
+    MO_ASSERT(parentObject_ != parent, "trying to add object to same parent");
     MO_ASSERT(!hasParentObject(this), "trying to add object to it's own hierarchy");
 
     // silently ignore in release mode
-    if (hasParentObject(parent) || hasParentObject(this))
+    if (parent == parentObject_ || hasParentObject(this))
         return;
 
     // install in QObject tree (handle memory)
@@ -206,9 +217,18 @@ Object * Object::addChildObject_(Object * o, int index)
     return o;
 }
 
-void Object::takeChild_(Object *child)
+void Object::deleteObject(Object * child)
 {
-    childObjects_.removeOne(child);
+    if (takeChild_(child))
+    {
+        //child->setParent(0);
+        //delete child;
+    }
+}
+
+bool Object::takeChild_(Object *child)
+{
+    return childObjects_.removeOne(child);
 }
 
 QString Object::getUniqueId(QString id, Object * ignore) const
