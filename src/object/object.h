@@ -51,7 +51,7 @@ public:
 
     /** Name of the object class, for creating objects at runtime. MUST NOT CHANGE! */
     virtual const QString& className() const = 0;
-    /** Unique id of the object within it's parent's childlist */
+    /** Tree-unique id of the object. */
     const QString& idName() const { return idName_; }
     /** User defined name of the object */
     const QString& name() const { return name_; }
@@ -75,19 +75,24 @@ public:
     /** Returns the parent Object, or NULL */
     Object * parentObject() const { return parentObject_; }
 
+    /** See if this object has a parent object @p o. */
+    bool hasParentObject(Object * o) const;
+
     /** Returns the root object of this hierarchy, which may
         be the object itself. */
     const Object * rootObject() const;
           Object * rootObject();
 
-    /** Returns a string that is unique among the childs of this object */
-    QString getUniqueId(QString id) const;
+    /** Returns a string that is unique among the whole tree hierarchy.
+        If @p ignore is not NULL, this object will be ignored for comparsion. */
+    QString getUniqueId(QString id, Object * ignore = 0) const;
 
     /** Read-access to the list of childs */
     const QList<Object*> childObjects() const { return childObjects_; }
 
-    /** Returns the children with the given id, or NULL */
-    Object * getChildObject(const QString& id, bool recursive = false) const;
+    /** Returns the children with the given id, or NULL.
+        If @p ignore is not NULL, this object will be ignored by search. */
+    Object * findChildObject(const QString& id, bool recursive = false, Object * ignore = 0) const;
 
     /** Installs the object in the parent object's childlist.
         If @p insert_index is >= 0, the object will be
@@ -119,6 +124,10 @@ private:
 
     /** Adds the object to child list, nothing else */
     Object * addChildObject_(Object * object, int insert_index = -1);
+
+    /** Makes all id's in the tree unique regarding the tree of @p root.
+        The tree in @p root can be an actual parent of the object or not. */
+    void makeUniqueIds_(Object * root);
 
     // ------------ properties ---------------
 

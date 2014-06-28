@@ -18,6 +18,7 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
 {
     setDragEnabled(true);
     setDragDropMode(DragDrop);
+    setDefaultDropAction(Qt::CopyAction);
 }
 
 

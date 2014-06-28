@@ -27,8 +27,10 @@ public:
     void setObjectTree(const Object * o);
     Object * getObjectTree() const;
 
-    void setObjectTreeData(const QByteArray&);
-    QByteArray getObjectTreeData() const;
+protected:
+
+    void setObjectTreeData_(const QByteArray&);
+    QByteArray getObjectTreeData_() const;
 
 };
 

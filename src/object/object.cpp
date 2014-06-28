@@ -147,12 +147,22 @@ Object * Object::rootObject()
     return parentObject_ ? parentObject_->rootObject() : this;
 }
 
+bool Object::hasParentObject(Object *o) const
+{
+    if (!parentObject_)
+        return false;
+
+    return parentObject_ == o? true : parentObject_->hasParentObject(o);
+}
+
 void Object::setParentObject(Object *parent, int index)
 {
     MO_ASSERT(parent, "no parent given for Object");
-    MO_ASSERT(parent != parentObject_, "trying to add same object to parent");
+    MO_ASSERT(!hasParentObject(parent), "trying to add object to it's already parent hierarchy");
+    MO_ASSERT(!hasParentObject(this), "trying to add object to it's own hierarchy");
 
-    if (parent == parentObject_)
+    // silently ignore in release mode
+    if (hasParentObject(parent) || hasParentObject(this))
         return;
 
     // install in QObject tree (handle memory)
@@ -167,11 +177,11 @@ void Object::setParentObject(Object *parent, int index)
     // assign
     parentObject_ = parent;
 
-    // adjust idname
-    idName_ = parentObject_->getUniqueId(idName_);
-
     // and add to child list
     parentObject_->addChildObject_(this, index);
+
+    // adjust idnames in new tree
+    makeUniqueIds_(rootObject());
 }
 
 Object * Object::addObject(Object * o, int index)
@@ -199,24 +209,19 @@ Object * Object::addChildObject_(Object * o, int index)
 void Object::takeChild_(Object *child)
 {
     childObjects_.removeOne(child);
-    /*
-    for (auto i=childObjects_.begin(); i!=childObjects_.end(); ++i)
-    if (*i == child)
-    {
-        childObjects_.erase(i);
-        return;
-    }*/
 }
 
-QString Object::getUniqueId(QString id) const
+QString Object::getUniqueId(QString id, Object * ignore) const
 {
     MO_ASSERT(!id.isEmpty(), "unset object id detected, class='"
               << className() << "', name='" << name() << "'");
 
+    // create an id if necessary
     if (id.isEmpty())
-        id = "empty";
+        id = className().isEmpty()? "Object" : className();
 
-    while (getChildObject(id))
+    auto root = rootObject();
+    while (root->findChildObject(id, true, ignore))
     {
         increase_id_number(id, 1);
     }
@@ -224,15 +229,23 @@ QString Object::getUniqueId(QString id) const
     return id;
 }
 
-Object * Object::getChildObject(const QString &id, bool recursive) const
+void Object::makeUniqueIds_(Object * root)
 {
-    for (auto i : childObjects_)
-        if (i->idName() == id)
-            return i;
+    idName_ = root->getUniqueId(idName_, this);
+
+    for (auto o : childObjects_)
+        o->makeUniqueIds_(root);
+}
+
+Object * Object::findChildObject(const QString &id, bool recursive, Object * ignore) const
+{
+    for (auto o : childObjects_)
+        if (o != ignore && o->idName() == id)
+            return o;
 
     if (recursive)
         for (auto i : childObjects_)
-            if (Object * o = i->getChildObject(id, recursive))
+            if (Object * o = i->findChildObject(id, recursive, ignore))
                 return o;
 
     return 0;

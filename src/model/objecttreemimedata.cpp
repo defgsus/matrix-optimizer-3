@@ -32,12 +32,12 @@ QStringList ObjectTreeMimeData::formats() const
 }
 
 
-void ObjectTreeMimeData::setObjectTreeData(const QByteArray & bytes)
+void ObjectTreeMimeData::setObjectTreeData_(const QByteArray & bytes)
 {
     setData(objMimeType, qCompress(bytes, 9));
 }
 
-QByteArray ObjectTreeMimeData::getObjectTreeData() const
+QByteArray ObjectTreeMimeData::getObjectTreeData_() const
 {
     return qUncompress(data(objMimeType));
 }
@@ -47,12 +47,12 @@ void ObjectTreeMimeData::setObjectTree(const Object * obj)
     QByteArray a;
     IO::DataStream io(&a, QIODevice::WriteOnly);
     obj->serializeTree(io);
-    setObjectTreeData(a);
+    setObjectTreeData_(a);
 }
 
 Object * ObjectTreeMimeData::getObjectTree() const
 {
-    QByteArray a = getObjectTreeData();
+    QByteArray a = getObjectTreeData_();
     IO::DataStream io(a);
     return Object::deserializeTree(io);
 }
