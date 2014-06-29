@@ -53,7 +53,7 @@ void ObjectGl::initGl_()
     initGl();
 }
 
-void ObjectGl::renderGl_()
+void ObjectGl::renderGl_(Double time)
 {
     if (!glContext_)
         MO_GL_ERROR("no context defined for object '" << idName() << "'");
@@ -63,7 +63,7 @@ void ObjectGl::renderGl_()
     if (!glFunctionsInitialized_)
         MO_GL_ERROR("opengl functions not initialized for object '" << idName() << "'");
 
-    renderGl();
+    renderGl(time);
 }
 
 

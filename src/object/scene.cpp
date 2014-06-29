@@ -68,7 +68,7 @@ void Scene::setGlContext(GL::Context *context)
 
 }
 
-void Scene::renderScene()
+void Scene::renderScene(Double time)
 {
     MO_ASSERT(glContext_, "renderScene() without context");
 
@@ -80,7 +80,7 @@ void Scene::renderScene()
         if (o->needsInitGl())
             o->initGl_();
 
-        o->renderGl_();
+        o->renderGl_(time);
     }
 }
 

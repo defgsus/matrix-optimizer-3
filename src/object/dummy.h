@@ -26,6 +26,7 @@ public:
     const QString& className() const { static QString s(MO_OBJECTCLASSNAME_DUMMY); return s; }
 
     bool isValid() const { return false; }
+    virtual Type type() const { return T_OBJECT; }
 
 signals:
 

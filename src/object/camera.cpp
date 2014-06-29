@@ -31,7 +31,7 @@ void Camera::initGl()
 }
 
 
-void Camera::renderGl()
+void Camera::renderGl(Double )
 {
 }
 

@@ -24,6 +24,7 @@ public:
 
     MO_OBJECT_CLONE(Transformation)
 
+    virtual Type type() const { return T_TRANSFORMATION; }
     virtual bool isTransformation() const { return true; }
 
     virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_TRANSFORMATION); return s; }

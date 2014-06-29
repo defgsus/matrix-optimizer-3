@@ -60,6 +60,23 @@ class Object : public QObject
 
 public:
 
+    // -------------- types ------------------
+
+    enum Type
+    {
+        T_NONE,
+        T_OBJECT,
+        T_PARAMETER,
+        T_TRANSFORMATION,
+        T_SCENE,
+        T_MICROPHONE,
+        T_CAMERA,
+        T_SOUNDSOURCE
+    };
+
+
+    // -------------- ctor -------------------
+
     /** Constructs a new object.
         If @p parent is also an Object, this object will be installed in the
         parent's child list via setParentObject() or addObject() */
@@ -97,6 +114,7 @@ public:
 
     virtual bool isValid() const { return true; }
 
+    virtual Type type() const { return T_NONE; }
     virtual bool isScene() const { return false; }
     virtual bool isGl() const { return false; }
     virtual bool isTransformation() const { return false; }
@@ -171,6 +189,9 @@ public:
 
     /** Returns the correct index to insert as specific object type. */
     int getInsertIndex(Object * object, int insert_index = -1) const;
+
+    /** Returns true if an Object of @p type can be a children of this Object. */
+    virtual bool canHaveChildren(Type type) const;
 
     /** Deletes the child from the list of children, if found. */
     void deleteObject(Object * child);

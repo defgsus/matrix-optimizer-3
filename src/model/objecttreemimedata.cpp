@@ -53,6 +53,7 @@ void ObjectTreeMimeData::setObjectTree(const Object * obj)
     IO::DataStream io(&a, QIODevice::WriteOnly);
     obj->serializeTree(io);
     setObjectTreeData_(a);
+    type_ = obj->type();
 }
 
 Object * ObjectTreeMimeData::getObjectTree() const

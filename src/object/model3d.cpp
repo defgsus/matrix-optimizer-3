@@ -26,7 +26,7 @@ void Model3d::initGl()
 
 }
 
-void Model3d::renderGl()
+void Model3d::renderGl(Double time)
 {
     glClearColor(0,0.5,0.5,1);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -34,7 +34,7 @@ void Model3d::renderGl()
     glColor3f(1,0,0);
     glBegin(GL_QUADS);
         glVertex2f(0,0);
-        glVertex2f(10,0);
+        glVertex2f(10+sin(time),0);
         glVertex2f(10,10);
         glVertex2f(0,10);
     glEnd();

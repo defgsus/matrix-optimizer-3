@@ -14,9 +14,9 @@
 #include <QMimeData>
 #include <QModelIndex>
 
-namespace MO {
+#include "object/object.h"
 
-class Object;
+namespace MO {
 
 class ObjectTreeMimeData : public QMimeData
 {
@@ -31,6 +31,8 @@ public:
     void setObjectTree(const Object * o);
     Object * getObjectTree() const;
 
+    Object::Type getObjectType() const { return type_; }
+
     void setModelIndex(const QModelIndex & index) { index_ = index; }
     const QModelIndex& getModelIndex() const { return index_; }
 
@@ -40,6 +42,7 @@ protected:
     QByteArray getObjectTreeData_() const;
 
     QModelIndex index_;
+    Object::Type type_;
 };
 
 } // namespace MO

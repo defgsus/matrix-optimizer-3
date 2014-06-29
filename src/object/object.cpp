@@ -185,9 +185,11 @@ bool Object::hasParentObject(Object *o) const
 
 void Object::setParentObject(Object *parent, int index)
 {
-    MO_ASSERT(parent, "no parent given for Object");
+    MO_ASSERT(parent, "NULL parent given for Object");
     MO_ASSERT(parentObject_ != parent, "trying to add object to same parent");
     MO_ASSERT(!hasParentObject(this), "trying to add object to it's own hierarchy");
+    MO_ASSERT(parent->canHaveChildren(type()), "invalid child '" << idName() << "' "
+                              "for object '" << parent->idName() << "'");
 
     // silently ignore in release mode
     if (parent == parentObject_ || hasParentObject(this))
@@ -315,5 +317,17 @@ Object * Object::findChildObject(const QString &id, bool recursive, Object * ign
 
     return 0;
 }
+
+bool Object::canHaveChildren(Type t) const
+{
+    if (type() == T_TRANSFORMATION)
+        return t == T_PARAMETER;
+
+    if (type() == T_SCENE)
+        return t != T_TRANSFORMATION;
+
+    return true;
+}
+
 
 } // namespace MO

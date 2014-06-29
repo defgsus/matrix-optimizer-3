@@ -127,28 +127,42 @@ void ObjectTreeView::createEditActions_(Object * obj)
         if (application->clipboard()->mimeData()->formats().contains(
                     ObjectTreeMimeData::mimeType()))
         {
-            editActions_.append(a = new QAction(tr("Paste before object"), this));
-            connect(a, &QAction::triggered, [=]()
+            Object::Type pasteType = static_cast<const ObjectTreeMimeData*>(
+                        application->clipboard()->mimeData())->getObjectType();
+
+            const Object * parentObj = obj->parentObject();
+            if (parentObj)
             {
-                omodel->dropMimeData(
-                    application->clipboard()->mimeData(), Qt::CopyAction,
-                    currentIndex().row(), 0,
-                    omodel->parent(currentIndex()));
-            });
-            editActions_.append(a = new QAction(tr("Paste after object"), this));
-            connect(a, &QAction::triggered, [=]()
-            {
-                omodel->dropMimeData(
-                    application->clipboard()->mimeData(), Qt::CopyAction,
-                    currentIndex().row()+1, 0,
-                    omodel->parent(currentIndex()));
-            });
+                // paste before
+                editActions_.append(a = new QAction(tr("Paste before object"), this));
+                a->setEnabled(parentObj->canHaveChildren(pasteType));
+                connect(a, &QAction::triggered, [=]()
+                {
+                    omodel->dropMimeData(
+                        application->clipboard()->mimeData(), Qt::CopyAction,
+                        currentIndex().row(), 0,
+                        omodel->parent(currentIndex()));
+                });
+
+                // paste after
+                editActions_.append(a = new QAction(tr("Paste after object"), this));
+                a->setEnabled(parentObj->canHaveChildren(pasteType));
+                connect(a, &QAction::triggered, [=]()
+                {
+                    omodel->dropMimeData(
+                        application->clipboard()->mimeData(), Qt::CopyAction,
+                        currentIndex().row()+1, 0,
+                        omodel->parent(currentIndex()));
+                });
+            }
+            // paste as child
             editActions_.append(a = new QAction(tr("Paste as children"), this));
+            a->setEnabled(obj->canHaveChildren(pasteType));
             connect(a, &QAction::triggered, [=]()
             {
                 omodel->dropMimeData(
                     application->clipboard()->mimeData(), Qt::CopyAction,
-                    1000000, 0,
+                    1000000 /* append */, 0,
                     currentIndex());
             });
         }

@@ -28,6 +28,7 @@ public:
 
     explicit ObjectGl(QObject *parent = 0);
 
+    virtual Type type() const { return T_OBJECT; }
     bool isGl() const { return true; }
 
     /** Returns the current GL::Context */
@@ -38,7 +39,7 @@ public:
     bool needsInitGl() const { return needsInitGl_; }
 
     virtual void initGl() = 0;
-    virtual void renderGl() = 0;
+    virtual void renderGl(Double time) = 0;
 
 signals:
 
@@ -50,7 +51,7 @@ private:
     void setGlContext_(GL::Context *);
 
     void initGl_();
-    void renderGl_();
+    void renderGl_(Double time);
 
     GL::Context * glContext_;
     bool glFunctionsInitialized_,

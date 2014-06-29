@@ -25,10 +25,11 @@ public:
 
     virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_CAMERA); return s; }
 
+    virtual Type type() const { return T_CAMERA; }
     virtual bool isCamera() const { return true; }
 
     virtual void initGl();
-    virtual void renderGl();
+    virtual void renderGl(Double time);
 
     /** Returns projection matrix */
     const Mat4& projection() const { return projection_; }

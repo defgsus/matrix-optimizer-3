@@ -27,6 +27,7 @@ public:
 
     const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SCENE); return s; }
 
+    virtual Type type() const { return T_SCENE; }
     bool isScene() const { return true; }
 
     // ------------- child objects -------------
@@ -48,7 +49,7 @@ public slots:
     void setGlContext(MO::GL::Context * context);
 
     /** Render the whole scene on the current context */
-    void renderScene();
+    void renderScene(Double time = 0.0);
 
 private:
 

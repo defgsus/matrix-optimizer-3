@@ -18,6 +18,10 @@ Transformation::Transformation(QObject *parent) :
     Object(parent)
 {
     setName("Transformation");
+#if 0
+    rotX_ = createFloatParameter("rotx", "rotation x", 0);
+    rotX_.getValue(time);
+#endif
 }
 
 
