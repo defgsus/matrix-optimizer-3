@@ -242,12 +242,20 @@ bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, i
 
 Qt::DropActions ObjectTreeModel::supportedDragActions() const
 {
+#ifdef MO_DISABLE_OBJECT_TREE_DRAG
+    return 0;
+#else
     return Qt::MoveAction | Qt::CopyAction;
+#endif
 }
 
 Qt::DropActions ObjectTreeModel::supportedDropActions() const
 {
+#ifdef MO_DISABLE_OBJECT_TREE_DRAG
+    return 0;
+#else
     return Qt::MoveAction | Qt::CopyAction;
+#endif
 }
 
 QStringList ObjectTreeModel::mimeTypes() const

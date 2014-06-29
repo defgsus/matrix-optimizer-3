@@ -156,7 +156,7 @@ const Scene * Object::sceneObject() const
 
 Scene * Object::sceneObject()
 {
-    return qobject_cast<Scene*>(rootObject());
+    return 0;//qobject_cast<Scene*>(rootObject());
 }
 
 int Object::numChildren(bool recursive) const
@@ -205,6 +205,10 @@ void Object::setParentObject(Object *parent, int index)
 
     // adjust idnames in new tree
     makeUniqueIds_(rootObject());
+
+    // tell Scene
+    if (Scene * scene = sceneObject())
+        scene->treeChanged();
 }
 
 Object * Object::addObject(Object * o, int index)
@@ -231,11 +235,11 @@ Object * Object::addChildObject_(Object * o, int index)
 
 void Object::deleteObject(Object * child)
 {
-    if (takeChild_(child))
-    {
-        //child->setParent(0);
-        //delete child;
-    }
+    takeChild_(child);
+
+    // tell Scene
+    if (Scene * scene = sceneObject())
+        scene->treeChanged();
 }
 
 bool Object::takeChild_(Object *child)

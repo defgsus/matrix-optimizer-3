@@ -29,6 +29,9 @@ public:
 protected:
     void closeEvent(QCloseEvent *);
 
+private slots:
+    void setEditActions_(const QObject * sender, QList<QAction*> actions);
+
 private:
 
     void createWidgets_();
@@ -39,6 +42,8 @@ private:
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
+
+    QMenu * editMenu_;
 };
 
 } // namespace GUI

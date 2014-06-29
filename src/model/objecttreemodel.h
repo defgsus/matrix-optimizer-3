@@ -6,6 +6,10 @@
     <p>All rights reserved</p>
 
     <p>created 6/27/2014</p>
+
+    <p>debug-switches:<br/>
+    MO_DISABLE_OBJECT_TREE_DRAG : to disable object drag/drop (for optirun bug)
+    </p>
 */
 
 #ifndef MOSRC_MODEL_OBJECTTREEMODEL_H

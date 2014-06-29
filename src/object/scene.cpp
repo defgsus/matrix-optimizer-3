@@ -22,6 +22,12 @@ Scene::Scene(QObject *parent) :
 
 
 
+void Scene::treeChanged()
+{
+    findObjects_();
+
+    setGlContext(glContext_);
+}
 
 void Scene::findObjects_()
 {

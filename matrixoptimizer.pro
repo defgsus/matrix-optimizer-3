@@ -12,6 +12,9 @@ TEMPLATE = app
 QMAKE_CXXFLAGS += --std=c++0x
 QMAKE_CXXFLAGS_RELEASE += -O2 -DNDEBUG
 
+# for optirun bug
+DEFINES += MO_DISABLE_OBJECT_TREE_DRAG
+
 ##################### libs ############################
 
 unix: { LIBS += -lX11 }

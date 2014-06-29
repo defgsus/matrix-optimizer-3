@@ -39,12 +39,12 @@ QStringList ObjectTreeMimeData::formats() const
 
 void ObjectTreeMimeData::setObjectTreeData_(const QByteArray & bytes)
 {
-    setData(objMimeType, qCompress(bytes, 9));
+    setData(objMimeType, bytes);
 }
 
 QByteArray ObjectTreeMimeData::getObjectTreeData_() const
 {
-    return qUncompress(data(objMimeType));
+    return (data(objMimeType));
 }
 
 void ObjectTreeMimeData::setObjectTree(const Object * obj)

@@ -42,8 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     setWindowTitle(tr("Matrix Optimizer 3.0"));
 
-    createWidgets_();
     createMainMenu_();
+    createWidgets_();
     createObjects_();
 }
 
@@ -64,6 +64,8 @@ void MainWindow::createWidgets_()
 
         objModel_ = new ObjectTreeModel(0, this);
         treev->setModel(objModel_);
+        connect(treev, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
+                SLOT(setEditActions_(const QObject*,QList<QAction*>)));
 
         auto l = new QVBoxLayout();
         l0->addLayout(l);
@@ -128,6 +130,9 @@ void MainWindow::createMainMenu_()
     QMenu * m;
     QAction * a;
 
+    m = editMenu_ = new QMenu(tr("Edit"), menuBar());
+    menuBar()->addMenu(m);
+
     m = new QMenu(tr("Debug"), menuBar());
     menuBar()->addMenu(m);
 
@@ -143,10 +148,11 @@ void MainWindow::createMainMenu_()
 
 void MainWindow::createObjects_()
 {
+    /*
     glManager_ = new GL::Manager(this);
     glWindow_ = glManager_->createGlWindow();
     glWindow_->show();
-
+    */
     auto scene = ObjectFactory::createSceneObject();
     scene->setParent(this);
 
@@ -189,11 +195,16 @@ void MainWindow::closeEvent(QCloseEvent * e)
 
     if (e->isAccepted())
     {
-        if (glWindow_)
-            delete glWindow_;
+
     }
 }
 
+
+void MainWindow::setEditActions_(const QObject *, QList<QAction *> actions)
+{
+    editMenu_->clear();
+    editMenu_->addActions(actions);
+}
 
 } // namespace GUI
 } // namespace MO

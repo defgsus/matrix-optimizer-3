@@ -37,6 +37,9 @@ signals:
 
 public slots:
 
+    /** Tells the Scene to update it's info about the tree */
+    void treeChanged();
+
     // ------------- open gl -------------------
 
     /** Sets the opengl Context for all objects in the scene. */

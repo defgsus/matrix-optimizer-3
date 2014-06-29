@@ -12,8 +12,11 @@
 #define MOSRC_GUI_OBJECTTREEVIEW_H
 
 #include <QTreeView>
+#include <QList>
 
+class QMenu;
 namespace MO {
+class Object;
 namespace GUI {
 
 
@@ -25,7 +28,7 @@ public:
 
 signals:
 
-    void editMenuChanged(const QList<QAction*>&);
+    void editActionsChanged(const QObject * sender, const QList<QAction*>&);
 
 public slots:
 
@@ -33,6 +36,9 @@ protected:
 
     void mousePressEvent(QMouseEvent *);
 
+    void createEditActions_(Object* = 0);
+
+    QList<QAction*> editActions_;
 };
 
 } // namespace GUI
