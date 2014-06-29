@@ -78,12 +78,24 @@ public:
     IoException& operator << (const T& value) { addToStream(value); return *this; }
 };
 
+class GlException : public Exception
+{
+public:
+    GlException(int cause = UNKNOWN) throw() : Exception(cause) { }
+    ~GlException() throw() { }
+
+    template <class T>
+    GlException& operator << (const T& value) { addToStream(value); return *this; }
+};
 
 #define MO_ERROR(text__) \
 { throw ::MO::Exception() << text__; }
 
 #define MO_IO_ERROR(cause__, text__) \
 { throw ::MO::IoException(::MO::Exception::cause__) << text__; }
+
+#define MO_GL_ERROR(text__) \
+{ throw ::MO::GlException() << text__; }
 
 #define MO_LOGIC_ERROR(text__) \
 { throw ::MO::LogicException(::MO::Exception::LOGIC) << text__; }

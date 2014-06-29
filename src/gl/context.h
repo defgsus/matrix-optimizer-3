@@ -13,6 +13,8 @@
 
 #include <QOpenGLContext>
 
+class QOpenGLFunctions;
+
 namespace MO {
 namespace GL {
 
@@ -23,6 +25,10 @@ public:
     explicit Context(QObject * parent);
     ~Context();
 
+    //QOpenGLFunctions * glFuncions() const { return glFunctions_; }
+
+private:
+    //QOpenGLFunctions * glFunctions_;
 };
 
 

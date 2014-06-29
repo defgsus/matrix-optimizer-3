@@ -8,12 +8,14 @@
     <p>created 6/28/2014</p>
 */
 
+#include <QDebug>
 #include <QShowEvent>
 #include <QOpenGLFramebufferObject>
+#include <QOpenGLFunctions_1_2>
 
 #include "window.h"
 #include "context.h"
-
+#include "io/error.h"
 
 namespace MO {
 namespace GL {
@@ -24,7 +26,13 @@ Window::Window(QScreen * targetScreen)
         frameBuffer_  (0),
         isFullScreen_ (false)
 {
+    setTitle("OpenGL");
 
+    setSurfaceType(QSurface::OpenGLSurface);
+    QSurfaceFormat format;
+    format.setMajorVersion(1);
+    format.setMinorVersion(2);
+    setFormat(format);
 }
 
 
@@ -54,6 +62,12 @@ void Window::showEvent(QShowEvent * e)
         setVisibility(FullScreen);
 }
 
+void Window::exposeEvent(QExposeEvent *)
+{
+    if (isExposed())
+        render_();
+}
+
 bool Window::event(QEvent * e)
 {
     if (e->type() == QEvent::UpdateRequest)
@@ -66,11 +80,44 @@ bool Window::event(QEvent * e)
 
 void Window::render_()
 {
+    qDebug() << "render";
     if (!isExposed() || !context_)
         return;
 
-    context_->makeCurrent(this);
+    bool needsInit = false;
 
+    if (!context_->isValid())
+    {
+        context_->setFormat(requestedFormat());
+        if (!context_->create())
+            MO_GL_ERROR("could not create context");
+
+        needsInit = true;
+    }
+
+    if (!context_->makeCurrent(this))
+        MO_GL_ERROR("could not make context current")
+
+    auto gl = context_->versionFunctions<QOpenGLFunctions_1_2>();
+    if (!gl)
+        MO_GL_ERROR("could not receive QOpenGLFunctions object");
+
+    if (needsInit)
+    {
+        gl->initializeOpenGLFunctions();
+        GLint vmaj, vmin;
+        gl->glGetIntegerv(GL_MAJOR_VERSION, &vmaj);
+        gl->glGetIntegerv(GL_MINOR_VERSION, &vmin);
+        qDebug() << "vendor:  " << QString((const char*)gl->glGetString(GL_VENDOR))
+                 << "\nversion: " << vmaj << "." << vmin;
+    }
+
+    gl->glViewport(0, 0, width(), height());
+
+    gl->glClearColor(0,0,0,1);
+    gl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    qDebug() << gl->glGetError();
+    //gl->glBegin();
     //frameBuffer_->texture();
 
     context_->swapBuffers(this);

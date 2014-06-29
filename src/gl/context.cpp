@@ -8,7 +8,9 @@
     <p>created 6/28/2014</p>
 */
 
+#include <QOpenGLFunctions>
 #include <QOpenGLFramebufferObject>
+
 #include "context.h"
 
 namespace MO {
@@ -17,7 +19,10 @@ namespace GL {
 Context::Context(QObject *parent)
     :   QOpenGLContext(parent)
 {
-
+    QOpenGLVersionProfile profile;
+    /*profile.setVersion(1, 2);
+    glFunctions_ = functions()*/
+    //QAbstractOpenGLFunctions
 }
 
 Context::~Context()

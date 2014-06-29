@@ -36,6 +36,7 @@ public:
 protected:
     /** For paint event */
     bool event(QEvent *);
+    void exposeEvent(QExposeEvent *);
     /** To set Visibility(FullScreen) */
     void showEvent(QShowEvent *);
 
