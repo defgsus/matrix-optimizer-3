@@ -25,14 +25,15 @@ Scene::Scene(QObject *parent) :
 void Scene::findObjects_()
 {
     cameras_ = findChildObjects<Camera>();
+    glObjects_ = findChildObjects<ObjectGl>();
 }
 
 void Scene::initGlChilds_()
 {
-    for (auto c : cameras_)
+    /*for (auto o : glObjects_)
     {
 
-    }
+    }*/
 }
 
 
@@ -40,7 +41,10 @@ void Scene::initGlChilds_()
 
 void Scene::setGlContext(GL::Context *context)
 {
+    glContext_ = context;
 
+    for (auto o : glObjects_)
+        o->setGlContext(glContext_);
 }
 
 

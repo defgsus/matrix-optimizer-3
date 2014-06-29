@@ -10,11 +10,11 @@
 #ifndef MOSRC_OBJECT_CAMERA_H
 #define MOSRC_OBJECT_CAMERA_H
 
-#include "object3d.h"
+#include "objectgl.h"
 
 namespace MO {
 
-class Camera : public Object3d
+class Camera : public ObjectGl
 {
     Q_OBJECT
 public:

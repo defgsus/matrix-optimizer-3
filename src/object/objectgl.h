@@ -13,6 +13,7 @@
 #include "object3d.h"
 
 namespace MO {
+namespace GL { class Context; }
 
 class ObjectGl : public Object3d
 {
@@ -22,10 +23,17 @@ public:
 
     bool isGl() const { return true; }
 
+    void setGlContext(GL::Context *);
+    GL::Context * glContext() { return glContext_; }
+    const GL::Context * glContext() const { return glContext_; }
+
 signals:
 
 public slots:
 
+private:
+
+    GL::Context * glContext_;
 };
 
 } // namespace MO

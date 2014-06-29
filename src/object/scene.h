@@ -52,11 +52,12 @@ private:
 
     // ---------- opengl -----------------------
 
-    QList<GL::Context*> glContexts_;
+    GL::Context * glContext_;
 
     // ----------- special objects -------------
 
     QList<Camera*> cameras_;
+    QList<ObjectGl*> glObjects_;
 };
 
 } // namespace MO

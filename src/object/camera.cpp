@@ -14,7 +14,7 @@ namespace MO {
 
 
 Camera::Camera(QObject *parent) :
-    Object3d(parent)
+    ObjectGl(parent)
 {
 }
 

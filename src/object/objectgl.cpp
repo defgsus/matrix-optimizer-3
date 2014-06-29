@@ -13,9 +13,15 @@ namespace MO {
 
 
 ObjectGl::ObjectGl(QObject *parent)
-    :   Object3d(parent)
+    :   Object3d    (parent),
+        glContext_  (0)
 {
 }
 
+
+void ObjectGl::setGlContext(GL::Context * c)
+{
+    glContext_ = c;
+}
 
 } // namespace MO

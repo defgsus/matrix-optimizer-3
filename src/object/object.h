@@ -20,6 +20,7 @@ class Camera;
 class Microphone;
 class SoundSource;
 class Parameter;
+class ObjectGl;
 
 
 class Object : public QObject
