@@ -3,6 +3,7 @@
     @brief Projector/projection settings
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 2014/04/21</p>
 */

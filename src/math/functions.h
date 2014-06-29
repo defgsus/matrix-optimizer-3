@@ -3,6 +3,7 @@
     @brief generic math functions
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 6/24/2014</p>
 */

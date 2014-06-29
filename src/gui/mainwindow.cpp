@@ -3,6 +3,7 @@
     @brief mainwindow
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 2014/04/21</p>
 */
@@ -13,6 +14,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QTreeView>
+#include <QCloseEvent>
 
 #include "mainwindow.h"
 #include "projectorsetupwidget.h"
@@ -25,9 +27,12 @@
 #include "gui/objecttreeview.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
+#include "gl/manager.h"
+#include "gl/window.h"
 
-#include "object/object.h"
 #include "object/objectfactory.h"
+#include "object/object.h"
+#include "object/scene.h"
 
 namespace MO {
 namespace GUI {
@@ -138,8 +143,14 @@ void MainWindow::createMainMenu_()
 
 void MainWindow::createObjects_()
 {
-    auto * scene = ObjectFactory::createObject("Scene");
+    glManager_ = new GL::Manager(this);
+    glWindow_ = glManager_->createGlWindow();
+    glWindow_->show();
+
+    auto scene = ObjectFactory::createSceneObject();
     scene->setParent(this);
+
+    scene->setGlContext(glWindow_->context());
 
     auto cam = scene->addObject(ObjectFactory::createObject("Camera"));
     scene->addObject(ObjectFactory::createObject("Geometry"));
@@ -170,6 +181,18 @@ void MainWindow::createObjects_()
     objModel_->setRootObject(scene);
 }
 
+
+
+void MainWindow::closeEvent(QCloseEvent * e)
+{
+    QMainWindow::closeEvent(e);
+
+    if (e->isAccepted())
+    {
+        if (glWindow_)
+            delete glWindow_;
+    }
+}
 
 
 } // namespace GUI

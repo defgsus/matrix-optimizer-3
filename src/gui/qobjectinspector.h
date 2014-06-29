@@ -3,6 +3,7 @@
     @brief Display of QObject hierarchy
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 6/27/2014</p>
 */

@@ -3,6 +3,7 @@
     @brief default output window
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 6/28/2014</p>
 */
@@ -11,6 +12,8 @@
 #define MOSRC_GL_WINDOW_H
 
 #include <QWindow>
+
+class QOpenGLFramebufferObject;
 
 namespace MO {
 namespace GL {
@@ -28,7 +31,7 @@ public:
 
     Context * context() const { return context_; }
     void setContext(Context*);
-
+    void setFramebuffer(QOpenGLFramebufferObject * frameBuffer);
 
 protected:
     /** For paint event */
@@ -41,6 +44,7 @@ private:
     void render_();
 
     Context * context_;
+    QOpenGLFramebufferObject * frameBuffer_;
 
     bool isFullScreen_;
          //updatePending_;

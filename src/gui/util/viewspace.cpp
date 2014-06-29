@@ -3,6 +3,7 @@
     @brief view space with offset and scale
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 6/26/2014</p>
 */

@@ -3,6 +3,7 @@
     @brief Timeline1D testing
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 4/28/2014</p>
 */

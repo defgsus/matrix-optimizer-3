@@ -53,7 +53,9 @@ SOURCES += \
     src/gl/window.cpp \
     src/gl/context.cpp \
     src/object/scene.cpp \
-    src/object/objectgl.cpp
+    src/object/objectgl.cpp \
+    src/gl/manager.cpp \
+    src/gl/model.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -101,7 +103,9 @@ HEADERS += \
     src/gl/window.h \
     src/gl/context.h \
     src/object/scene.h \
-    src/object/objectgl.h
+    src/object/objectgl.h \
+    src/gl/manager.h \
+    src/gl/model.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

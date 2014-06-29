@@ -3,6 +3,7 @@
     @brief factory for MO::Object classes
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 6/27/2014</p>
 */
@@ -15,6 +16,8 @@
 namespace MO {
 
 class Object;
+class Scene;
+
 namespace IO { class DataStream; }
 
 class ObjectFactory : public QObject
@@ -28,6 +31,8 @@ public:
 
     /** Creates the desired object for className, or returns NULL */
     static Object * createObject(const QString& className);
+    /** Returns a new scene object, or NULL */
+    static Scene * createSceneObject();
 
     static Object * createDummy();
 

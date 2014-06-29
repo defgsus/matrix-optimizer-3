@@ -3,11 +3,13 @@
     @brief
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 6/28/2014</p>
 */
 
 #include <QShowEvent>
+#include <QOpenGLFramebufferObject>
 
 #include "window.h"
 #include "context.h"
@@ -19,6 +21,7 @@ namespace GL {
 Window::Window(QScreen * targetScreen)
     :   QWindow       (targetScreen),
         context_      (0),
+        frameBuffer_  (0),
         isFullScreen_ (false)
 {
 
@@ -28,6 +31,7 @@ Window::Window(QScreen * targetScreen)
 void Window::setFullScreen(bool fs)
 {
     isFullScreen_ = fs;
+
     if (fs && isVisible())
         setVisibility(FullScreen);
 }
@@ -37,6 +41,10 @@ void Window::setContext(Context * c)
     context_ = c;
 }
 
+void Window::setFramebuffer(QOpenGLFramebufferObject *frameBuffer)
+{
+    frameBuffer_ = frameBuffer;
+}
 
 void Window::showEvent(QShowEvent * e)
 {
@@ -62,6 +70,8 @@ void Window::render_()
         return;
 
     context_->makeCurrent(this);
+
+    //frameBuffer_->texture();
 
     context_->swapBuffers(this);
 }

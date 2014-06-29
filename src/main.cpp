@@ -3,6 +3,7 @@
     @brief main.cpp
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 2014/04/21</p>
 */
@@ -28,10 +29,6 @@ int main(int argc, char *argv[])
 
     MO::GUI::MainWindow w;
     w.show();
-
-    MO::GL::Window glwin;
-    glwin.setFullScreen(true);
-    glwin.show();
 
     //MO::GUI::QObjectInspector oi(&w);
     //oi.show();

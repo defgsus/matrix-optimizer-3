@@ -3,6 +3,7 @@
     @brief factory for MO::Object classes
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
 
     <p>created 6/27/2014</p>
 */
@@ -18,6 +19,7 @@
 #include "soundsource.h"
 #include "microphone.h"
 #include "camera.h"
+#include "scene.h"
 
 namespace MO {
 
@@ -40,7 +42,9 @@ Object * ObjectFactory::createObject(const QString &className)
 {
     Object * obj;
 
-    if (className == "Camera")
+    if (className == "Scene")
+        obj = new Scene();
+    else if (className == "Camera")
         obj = new Camera();
     else if (className == "Microphone")
         obj = new Microphone();
@@ -54,6 +58,13 @@ Object * ObjectFactory::createObject(const QString &className)
     obj->name_ = className;
 
     return obj;
+}
+
+Scene * ObjectFactory::createSceneObject()
+{
+    Scene * s = qobject_cast<Scene*>(createObject("Scene"));
+    MO_ASSERT(s, "could not create Scene object");
+    return s;
 }
 
 Object * ObjectFactory::createDummy()
