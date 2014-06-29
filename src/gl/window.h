@@ -13,7 +13,11 @@
 
 #include <QWindow>
 
+#define MO_OPENGL_FUNCTION_CLASS QOpenGLFunctions_2_0
+#include <QOpenGLFunctions_2_0>
+
 class QOpenGLFramebufferObject;
+class MO_OPENGL_FUNCTION_CLASS;
 
 namespace MO {
 namespace GL {
@@ -25,30 +29,34 @@ class Window : public QWindow
     Q_OBJECT
 public:
     explicit Window(QScreen * targetScreen = 0);
-
-    bool isFullScreen() const { return isFullScreen_; }
-    void setFullScreen(bool fs);
+    ~Window();
 
     Context * context() const { return context_; }
-    void setContext(Context*);
-    void setFramebuffer(QOpenGLFramebufferObject * frameBuffer);
+//    void setFramebuffer(QOpenGLFramebufferObject * frameBuffer);
+
+signals:
+
+    /** This will signal a creation of a new Context */
+    void contextCreated(Context *);
+
+public slots:
+
+    void renderNow();
+    void renderLater();
 
 protected:
-    /** For paint event */
     bool event(QEvent *);
     void exposeEvent(QExposeEvent *);
-    /** To set Visibility(FullScreen) */
-    void showEvent(QShowEvent *);
 
 private:
 
     void render_();
 
+    MO_OPENGL_FUNCTION_CLASS * gl_;
     Context * context_;
-    QOpenGLFramebufferObject * frameBuffer_;
+//    QOpenGLFramebufferObject * frameBuffer_;
 
-    bool isFullScreen_;
-         //updatePending_;
+    bool updatePending_;
 };
 
 

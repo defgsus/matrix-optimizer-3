@@ -9,114 +9,127 @@
 */
 
 #include <QDebug>
+#include <QCoreApplication>
 #include <QShowEvent>
 #include <QOpenGLFramebufferObject>
-#include <QOpenGLFunctions_1_2>
 
 #include "window.h"
 #include "context.h"
 #include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GL {
 
 Window::Window(QScreen * targetScreen)
     :   QWindow       (targetScreen),
+        gl_           (0),
         context_      (0),
-        frameBuffer_  (0),
-        isFullScreen_ (false)
+        updatePending_(0)
 {
+    MO_DEBUG_GL("Window::Window()");
+
     setTitle("OpenGL");
 
     setSurfaceType(QSurface::OpenGLSurface);
+
     QSurfaceFormat format;
-    format.setMajorVersion(1);
-    format.setMinorVersion(2);
+    format.setSamples(16);
     setFormat(format);
 }
 
-
-void Window::setFullScreen(bool fs)
+Window::~Window()
 {
-    isFullScreen_ = fs;
-
-    if (fs && isVisible())
-        setVisibility(FullScreen);
+    MO_DEBUG_GL("Window::~Window()");
 }
 
-void Window::setContext(Context * c)
-{
-    context_ = c;
-}
-
+/*
 void Window::setFramebuffer(QOpenGLFramebufferObject *frameBuffer)
 {
     frameBuffer_ = frameBuffer;
 }
-
-void Window::showEvent(QShowEvent * e)
-{
-    QWindow::showEvent(e);
-
-    if (isFullScreen_)
-        setVisibility(FullScreen);
-}
+*/
 
 void Window::exposeEvent(QExposeEvent *)
 {
     if (isExposed())
-        render_();
+        renderNow();
 }
 
 bool Window::event(QEvent * e)
 {
     if (e->type() == QEvent::UpdateRequest)
     {
-        render_();
+        updatePending_ = false;
+        renderNow();
         return true;
     }
     return QWindow::event(e);
 }
 
-void Window::render_()
+void Window::renderLater()
 {
-    qDebug() << "render";
-    if (!isExposed() || !context_)
+    if (!updatePending_)
+    {
+        updatePending_ = true;
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
+    }
+}
+
+void Window::renderNow()
+{
+    MO_DEBUG_GL("Window::renderNow()");
+
+    if (!isExposed())
         return;
 
     bool needsInit = false;
 
-    if (!context_->isValid())
+    if (!context_)
     {
+        MO_DEBUG_GL("creating context in window");
+
+        context_ = new MO::GL::Context(this);
         context_->setFormat(requestedFormat());
         if (!context_->create())
             MO_GL_ERROR("could not create context");
+
+        emit contextCreated(context_);
 
         needsInit = true;
     }
 
     if (!context_->makeCurrent(this))
-        MO_GL_ERROR("could not make context current")
+        MO_GL_ERROR("could not make context current");
 
-    auto gl = context_->versionFunctions<QOpenGLFunctions_1_2>();
-    if (!gl)
-        MO_GL_ERROR("could not receive QOpenGLFunctions object");
+    if (!gl_)
+    {
+        MO_DEBUG_GL("requesting openGL functions");
+        gl_ = context_->versionFunctions<MO_OPENGL_FUNCTION_CLASS>();
+        if (!gl_)
+            MO_GL_ERROR("could not receive QOpenGLFunctions object");
+
+        MO_DEBUG_GL("initializing openGL functions");
+
+        if (!gl_->initializeOpenGLFunctions())
+            MO_GL_ERROR("could not initialize openGL functions");
+    }
 
     if (needsInit)
     {
-        gl->initializeOpenGLFunctions();
         GLint vmaj, vmin;
-        gl->glGetIntegerv(GL_MAJOR_VERSION, &vmaj);
-        gl->glGetIntegerv(GL_MINOR_VERSION, &vmin);
-        qDebug() << "vendor:  " << QString((const char*)gl->glGetString(GL_VENDOR))
+        gl_->glGetIntegerv(GL_MAJOR_VERSION, &vmaj);
+        gl_->glGetIntegerv(GL_MINOR_VERSION, &vmin);
+        qDebug() << "vendor:  " << QString((const char*)gl_->glGetString(GL_VENDOR))
                  << "\nversion: " << vmaj << "." << vmin;
     }
 
-    gl->glViewport(0, 0, width(), height());
+    const qreal retinaScale = devicePixelRatio();
+    gl_->glViewport(0, 0, width() * retinaScale, height() * retinaScale);
 
-    gl->glClearColor(0,0,0,1);
-    gl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    qDebug() << gl->glGetError();
+    gl_->glClearColor(0,0.5,0.5,1);
+    gl_->glClear(GL_COLOR_BUFFER_BIT);// | GL_DEPTH_BUFFER_BIT);
+    qDebug() << gl_->glGetError();
     //gl->glBegin();
     //frameBuffer_->texture();
 
@@ -189,6 +202,70 @@ void OpenGLWindow::renderNow()
 
     if (needsInitialize) {
         initializeOpenGLFunctions();
+        initialize();
+    }
+
+    render();
+
+    m_context->swapBuffers(this);
+
+    if (m_animating)
+        renderLater();
+}
+
+
+
+
+void OpenGLWindow2::renderLater()
+{
+    if (!m_update_pending) {
+        m_update_pending = true;
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
+    }
+}
+
+bool OpenGLWindow2::event(QEvent *event)
+{
+    switch (event->type()) {
+    case QEvent::UpdateRequest:
+        m_update_pending = false;
+        renderNow();
+        return true;
+    default:
+        return QWindow::event(event);
+    }
+}
+
+void OpenGLWindow2::exposeEvent(QExposeEvent *event)
+{
+    Q_UNUSED(event);
+
+    if (isExposed())
+        renderNow();
+}
+//! [3]
+
+//! [4]
+void OpenGLWindow2::renderNow()
+{
+    if (!isExposed())
+        return;
+
+    bool needsInitialize = false;
+
+    if (!m_context) {
+        m_context = new QOpenGLContext(this);
+        m_context->setFormat(requestedFormat());
+        m_context->create();
+
+        needsInitialize = true;
+    }
+
+    m_context->makeCurrent(this);
+
+    if (needsInitialize)
+    {
+        //initializeOpenGLFunctions();
         initialize();
     }
 

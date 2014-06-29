@@ -11,12 +11,13 @@
 #include <QDebug>
 
 #include "object.h"
-#include "objectfactory.h"
 #include "tool/stringmanip.h"
 #include "io/error.h"
 #include "io/datastream.h"
 #include "io/log.h"
 
+#include "objectfactory.h"
+#include "scene.h"
 
 namespace MO {
 
@@ -146,6 +147,16 @@ const Object * Object::rootObject() const
 Object * Object::rootObject()
 {
     return parentObject_ ? parentObject_->rootObject() : this;
+}
+
+const Scene * Object::sceneObject() const
+{
+    return qobject_cast<const Scene*>(rootObject());
+}
+
+Scene * Object::sceneObject()
+{
+    return qobject_cast<Scene*>(rootObject());
 }
 
 int Object::numChildren(bool recursive) const

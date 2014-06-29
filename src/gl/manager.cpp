@@ -23,10 +23,8 @@ Manager::Manager(QObject *parent) :
 
 Window * Manager::createGlWindow()
 {
-    auto c = new Context(this);
     auto w = new Window();
-    w->setContext(c);
-
+    connect(w, SIGNAL(contextCreated(Context*)), SIGNAL(contextCreated(Context*)));
     return w;
 }
 

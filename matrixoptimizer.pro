@@ -12,6 +12,10 @@ TEMPLATE = app
 QMAKE_CXXFLAGS += --std=c++0x
 QMAKE_CXXFLAGS_RELEASE += -O2 -DNDEBUG
 
+##################### libs ############################
+
+unix: { LIBS += -lX11 }
+
 ###################### files ##########################
 
 INCLUDEPATH += src
@@ -55,7 +59,8 @@ SOURCES += \
     src/object/scene.cpp \
     src/object/objectgl.cpp \
     src/gl/manager.cpp \
-    src/gl/model.cpp
+    src/gl/model.cpp \
+    src/io/init.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -105,7 +110,8 @@ HEADERS += \
     src/object/scene.h \
     src/object/objectgl.h \
     src/gl/manager.h \
-    src/gl/model.h
+    src/gl/model.h \
+    src/io/init.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

@@ -37,6 +37,13 @@
 #   define MO_DEBUG_IO(unused__)
 #endif
 
+#if (1)
+#   define MO_DEBUG_GL(stream_arg__) \
+        { std::cerr << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
+#else
+#   define MO_DEBUG(unused__)
+#endif
+
 
 
 

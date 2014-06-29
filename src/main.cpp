@@ -8,13 +8,14 @@
     <p>created 2014/04/21</p>
 */
 
+#include <qglobal.h>
+
 #include <iostream>
 
+#include "io/init.h"
 #include "io/error.h"
 #include "io/application.h"
 #include "gui/mainwindow.h"
-#include "gui/qobjectinspector.h"
-#include "gl/window.h"
 
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
@@ -22,8 +23,11 @@
 
 int main(int argc, char *argv[])
 {
+    MO::startOfProgram();
+
     //MO::TestTimeline t; return t.run();
     //TestXmlStream t; return t.run();
+
 
     MO::application = new MO::Application(argc, argv);
 

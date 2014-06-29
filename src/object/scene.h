@@ -33,11 +33,14 @@ public:
 
     // ------------- open gl -------------------
 
-    void setGlContext(GL::Context * context);
-
 signals:
 
 public slots:
+
+    // ------------- open gl -------------------
+
+    /** Sets the opengl Context for all objects in the scene. */
+    void setGlContext(GL::Context * context);
 
 private:
 

@@ -25,11 +25,18 @@ class Manager : public QObject
 public:
     explicit Manager(QObject *parent = 0);
 
+    // ---------------- opengl ---------------------
 
+    /** Creates an OpenGL Window.
+        When the window is shown, it's Context will be created
+        and Manager::contextCreated() will be emitted. */
     Window * createGlWindow();
 
 
 signals:
+
+    /** This will signal the creation of a new Context */
+    void contextCreated(Context *);
 
 public slots:
 

@@ -150,7 +150,7 @@ void MainWindow::createObjects_()
     auto scene = ObjectFactory::createSceneObject();
     scene->setParent(this);
 
-    scene->setGlContext(glWindow_->context());
+    //scene->setGlContext(glWindow_->context());
 
     auto cam = scene->addObject(ObjectFactory::createObject("Camera"));
     scene->addObject(ObjectFactory::createObject("Geometry"));

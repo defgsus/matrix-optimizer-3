@@ -17,6 +17,7 @@
 namespace MO {
 namespace IO { class DataStream; }
 
+class Scene;
 class Camera;
 class Microphone;
 class SoundSource;
@@ -92,6 +93,10 @@ public:
         be the object itself. */
     const Object * rootObject() const;
           Object * rootObject();
+
+    /** Returns the Scene object, or NULL */
+    const Scene * sceneObject() const;
+          Scene * sceneObject();
 
     /** Returns a string that is unique among the whole tree hierarchy.
         If @p ignore is not NULL, this object will be ignored for comparsion. */
