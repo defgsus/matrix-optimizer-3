@@ -18,14 +18,19 @@
 
 #include "objectfactory.h"
 #include "scene.h"
+#include "transformation.h"
 
 namespace MO {
 
-
+bool registerObject_(Object * obj)
+{
+    return ObjectFactory::registerObject(obj);
+}
 
 Object::Object(QObject *parent) :
     QObject         (parent),
-    parentObject_   (0)
+    parentObject_   (0),
+    transformation_ (1.0)
 {
     // tie into Object hierarchy
     if (auto o = dynamic_cast<Object*>(parent))
@@ -209,6 +214,30 @@ void Object::setParentObject(Object *parent, int index)
     // tell Scene
     if (Scene * scene = sceneObject())
         scene->treeChanged();
+}
+
+int Object::getInsertIndex(Object *object, int insert_index) const
+{
+    if (childObjects_.empty())
+        return 0;
+
+    const int lastTrans = indexOfLastChild<Transformation>();
+
+    if (insert_index == -1)
+        insert_index = childObjects_.size();
+
+    if (object->isTransformation())
+    {
+        return (insert_index>=lastTrans) ?
+                    indexOfLastChild<Transformation>(insert_index) + 1
+                  : insert_index;
+    }
+    else
+    {
+        return (insert_index <= lastTrans)?
+                    lastTrans + 1
+                  : std::min((int)childObjects_.size(), insert_index);
+    }
 }
 
 Object * Object::addObject(Object * o, int index)

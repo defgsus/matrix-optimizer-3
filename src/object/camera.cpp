@@ -7,33 +7,32 @@
 
     <p>created 6/28/2014</p>
 */
-#include <QDebug>
+
 #include "camera.h"
+#include "gl/context.h"
 
 namespace MO {
 
-
+MO_REGISTER_OBJECT(Camera)
 
 Camera::Camera(QObject *parent) :
     ObjectGl(parent)
 {
+    setName("Camera");
+    projection_ = glm::perspective(63.f, (float)1.0, 0.1f, 1000.0f);
 }
 
 
-
-void Camera::render()
+void Camera::initGl()
 {
-    qDebug() << "cam render";
-    glClearColor(0,0.5,0.5,1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    projection_ = glm::perspective(63.f, (float)
+        glContext()->size().width()/glContext()->size().height(),
+        0.1f, 1000.0f);
+}
 
-    glColor3f(1,0,0);
-    glBegin(GL_QUADS);
-        glVertex2f(0,0);
-        glVertex2f(10,0);
-        glVertex2f(10,10);
-        glVertex2f(0,10);
-    glEnd();
+
+void Camera::renderGl()
+{
 }
 
 } // namespace MO

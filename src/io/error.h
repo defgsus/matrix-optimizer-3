@@ -109,8 +109,8 @@ if (!(cond__)) \
 }
 
 
-
-
+#define MO_WARNING(text__) \
+{ std::cerr << "WARNING: " << text__ << std::endl; }
 
 #define MO_IO_WARNING(cause__, text__) \
 { std::cerr << "IO-WARNING: " << text__ << std::endl; }

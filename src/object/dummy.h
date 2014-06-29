@@ -21,7 +21,9 @@ class Dummy : public Object
 public:
     explicit Dummy(QObject *parent = 0);
 
-    const QString& className() const { static QString s("Dummy"); return s; }
+    MO_OBJECT_CLONE(Dummy)
+
+    const QString& className() const { static QString s(MO_OBJECTCLASSNAME_DUMMY); return s; }
 
     bool isValid() const { return false; }
 

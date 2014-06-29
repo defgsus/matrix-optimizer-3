@@ -50,7 +50,6 @@ SOURCES += \
     src/object/objectfactory.cpp \
     src/io/application.cpp \
     src/object/parameter.cpp \
-    src/object/object3d.cpp \
     src/object/soundsource.cpp \
     src/object/microphone.cpp \
     src/object/camera.cpp \
@@ -63,7 +62,9 @@ SOURCES += \
     src/object/objectgl.cpp \
     src/gl/manager.cpp \
     src/gl/model.cpp \
-    src/io/init.cpp
+    src/io/init.cpp \
+    src/object/model3d.cpp \
+    src/object/transformation.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -101,7 +102,6 @@ HEADERS += \
     src/object/objectfactory.h \
     src/io/application.h \
     src/object/parameter.h \
-    src/object/object3d.h \
     src/object/soundsource.h \
     src/object/microphone.h \
     src/object/camera.h \
@@ -115,7 +115,9 @@ HEADERS += \
     src/gl/manager.h \
     src/gl/model.h \
     src/io/init.h \
-    src/gl/openglfunctions.h
+    src/gl/openglfunctions.h \
+    src/object/model3d.h \
+    src/object/transformation.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

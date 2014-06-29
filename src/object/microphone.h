@@ -11,7 +11,7 @@
 #ifndef MOSRC_OBJECT_MICROPHONE_H
 #define MOSRC_OBJECT_MICROPHONE_H
 
-#include "object3d.h"
+#include "object.h"
 
 namespace MO {
 
@@ -21,7 +21,9 @@ class Microphone : public Object
 public:
     explicit Microphone(QObject *parent = 0);
 
-    virtual const QString& className() const { static QString s("Microphone"); return s; }
+    MO_OBJECT_CLONE(Microphone)
+
+    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_MICROPHONE); return s; }
 
     virtual bool isMicrophone() const { return true; }
 

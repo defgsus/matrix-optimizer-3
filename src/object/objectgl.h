@@ -11,13 +11,13 @@
 #ifndef MOSRC_OBJECT_OBJECTGL_H
 #define MOSRC_OBJECT_OBJECTGL_H
 
-#include "object3d.h"
+#include "object.h"
 #include "gl/openglfunctions.h"
 
 namespace MO {
 namespace GL { class Context; }
 
-class ObjectGl : public Object3d,
+class ObjectGl : public Object,
                  protected MO_QOPENGL_FUNCTIONS_CLASS
 {
     Q_OBJECT
@@ -35,7 +35,10 @@ public:
     /** Returns the current GL::Context */
     const GL::Context * glContext() const { return glContext_; }
 
-    virtual void render() = 0;
+    bool needsInitGl() const { return needsInitGl_; }
+
+    virtual void initGl() = 0;
+    virtual void renderGl() = 0;
 
 signals:
 
@@ -46,10 +49,12 @@ private:
     /** Sets the OpenGL Context */
     void setGlContext_(GL::Context *);
 
-    void render_();
+    void initGl_();
+    void renderGl_();
 
     GL::Context * glContext_;
-    bool glFunctionsInitialized_;
+    bool glFunctionsInitialized_,
+         needsInitGl_;
 };
 
 } // namespace MO

@@ -160,17 +160,17 @@ void MainWindow::createObjects_()
     connect(glManager_, SIGNAL(renderRequest()), scene, SLOT(renderScene()));
     connect(glManager_, SIGNAL(contextCreated(MO::GL::Context*)), scene, SLOT(setGlContext(MO::GL::Context*)));
 
-    auto cam = scene->addObject(ObjectFactory::createObject("Camera"));
-    scene->addObject(ObjectFactory::createObject("Geometry"));
-    scene->addObject(ObjectFactory::createObject("Geometry"));
-    scene->addObject(ObjectFactory::createObject("Geometry"));
-    //auto snd =
-    scene->addObject(ObjectFactory::createObject("SoundSource"), 1);
-
-    cam->addObject(ObjectFactory::createObject("Rotation"));
-    cam->addObject(ObjectFactory::createObject("Position"));
-    auto mic = cam->addObject(ObjectFactory::createObject("Microphone"));
-    mic->addObject(ObjectFactory::createObject("Rotation"));
+    auto cam = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_CAMERA));
+        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
+        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
+        auto mic = cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MICROPHONE));
+            mic->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
+    auto model = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MODEL3D));
+        model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
+        model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
+        auto snd = model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_SOUNDSOURCE));
+            snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
+            snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
 
     //mic->setParentObject(snd);
     //snd->addObject(mic);

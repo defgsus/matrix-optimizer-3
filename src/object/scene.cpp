@@ -16,11 +16,13 @@
 
 namespace MO {
 
+MO_REGISTER_OBJECT(Scene)
 
 Scene::Scene(QObject *parent) :
     Object      (parent),
     glContext_  (0)
 {
+    setName("Scene");
 }
 
 
@@ -60,8 +62,10 @@ void Scene::setGlContext(GL::Context *context)
 
     glContext_ = context;
 
+    MO_DEBUG_GL("setting gl context for objects");
     for (auto o : glObjects_)
         o->setGlContext_(glContext_);
+
 }
 
 void Scene::renderScene()
@@ -72,7 +76,12 @@ void Scene::renderScene()
         return;
 
     for (auto o : glObjects_)
-        o->render_();
+    {
+        if (o->needsInitGl())
+            o->initGl_();
+
+        o->renderGl_();
+    }
 }
 
 

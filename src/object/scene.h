@@ -23,7 +23,9 @@ class Scene : public Object
 public:
     explicit Scene(QObject *parent = 0);
 
-    const QString& className() const { static QString s("Scene"); return s; }
+    MO_OBJECT_CLONE(Scene)
+
+    const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SCENE); return s; }
 
     bool isScene() const { return true; }
 

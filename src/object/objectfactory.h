@@ -11,6 +11,9 @@
 #ifndef MOSRC_OBJECT_OBJECTFACTORY_H
 #define MOSRC_OBJECT_OBJECTFACTORY_H
 
+#include <map>
+#include <memory>
+
 #include <QObject>
 
 namespace MO {
@@ -29,6 +32,8 @@ public:
 
     static ObjectFactory& instance();
 
+    static bool registerObject(Object *);
+
     /** Creates the desired object for className, or returns NULL */
     static Object * createObject(const QString& className);
     /** Returns a new scene object, or NULL */
@@ -43,6 +48,8 @@ public slots:
 private:
 
     static ObjectFactory * instance_;
+
+    std::map<QString, std::shared_ptr<Object>> objectMap_;
 };
 
 } // namespace MO

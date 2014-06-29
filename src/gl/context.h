@@ -12,6 +12,8 @@
 #define MOSRC_GL_GL_H
 
 #include <QOpenGLContext>
+#include <QSize>
+
 
 class QOpenGLFunctions;
 
@@ -25,10 +27,15 @@ public:
     explicit Context(QObject * parent);
     ~Context();
 
+    const QSize& size() const { return size_; }
+    void setSize(const QSize& size) { size_ = size; }
+
     //QOpenGLFunctions * glFuncions() const { return glFunctions_; }
 
 private:
     //QOpenGLFunctions * glFunctions_;
+
+    QSize size_;
 };
 
 

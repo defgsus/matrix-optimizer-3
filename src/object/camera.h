@@ -21,16 +21,25 @@ class Camera : public ObjectGl
 public:
     explicit Camera(QObject *parent = 0);
 
-    virtual const QString& className() const { static QString s("Camera"); return s; }
+    MO_OBJECT_CLONE(Camera)
+
+    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_CAMERA); return s; }
 
     virtual bool isCamera() const { return true; }
 
-    virtual void render();
+    virtual void initGl();
+    virtual void renderGl();
+
+    /** Returns projection matrix */
+    const Mat4& projection() const { return projection_; }
 
 signals:
 
 public slots:
 
+private:
+
+    Mat4 projection_;
 };
 
 } // namespace MO

@@ -12,10 +12,12 @@
 
 namespace MO {
 
+MO_REGISTER_OBJECT(SoundSource)
 
 SoundSource::SoundSource(QObject *parent) :
-    Object3d(parent)
+    Object(parent)
 {
+    setName("Soundsource");
 }
 
 

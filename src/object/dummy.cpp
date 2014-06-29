@@ -12,10 +12,12 @@
 
 namespace MO {
 
+MO_REGISTER_OBJECT(Dummy)
 
 Dummy::Dummy(QObject *parent) :
     Object(parent)
 {
+    setName("Dummy");
 }
 
 

@@ -12,6 +12,8 @@
 
 namespace MO {
 
+MO_REGISTER_OBJECT(Parameter)
+
 Parameter::Parameter(QObject *parent) :
     Object(parent)
 {

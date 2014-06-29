@@ -11,6 +11,7 @@
 #include "objectfactory.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "io/application.h"
 
 #include "object.h"
@@ -20,6 +21,7 @@
 #include "microphone.h"
 #include "camera.h"
 #include "scene.h"
+#include "model3d.h"
 
 namespace MO {
 
@@ -38,31 +40,59 @@ ObjectFactory& ObjectFactory::instance()
     return *instance_;
 }
 
+bool ObjectFactory::registerObject(Object * obj)
+{
+    if (instance().objectMap_.find(obj->className())
+            != instance().objectMap_.end())
+    {
+        MO_ASSERT(false, "duplicate object class name registered '" << obj->className() << "'");
+        return false;
+    }
+
+    instance().objectMap_.insert(
+        std::make_pair(obj->className(), std::shared_ptr<Object>(obj))
+        );
+
+    MO_DEBUG("registered object '" << obj->className() << "'");
+
+    return true;
+}
+
 Object * ObjectFactory::createObject(const QString &className)
 {
-    Object * obj;
+    auto it = instance().objectMap_.find(className);
+    if (it == instance().objectMap_.end())
+    {
+        MO_ASSERT(false, "request for unknown object class '" << className <<"'");
+        return 0;
+    }
 
-    if (className == "Scene")
+    Object * obj = it->second->cloneClass();
+    /*
+    if (className == MO_OBJECTCLASSNAME_SCENE)
         obj = new Scene();
-    else if (className == "Camera")
+    else if (className == MO_OBJECTCLASSNAME_CAMERA)
         obj = new Camera();
-    else if (className == "Microphone")
+    else if (className == MO_OBJECTCLASSNAME_MICROPHONE)
         obj = new Microphone();
-    else if (className == "SoundSource")
+    else if (className == MO_OBJECTCLASSNAME_SOUNDSOURCE)
         obj = new SoundSource();
+    else if (className == MO_OBJECTCLASSNAME_MODEL3D)
+        obj = new Model3d();
     else
         obj = new Parameter();
-
+    */
     // prepare object
     obj->idName_ = obj->className();
-    obj->name_ = className;
+    if (obj->name_.isEmpty())
+        obj->name_ = className;
 
     return obj;
 }
 
 Scene * ObjectFactory::createSceneObject()
 {
-    Scene * s = qobject_cast<Scene*>(createObject("Scene"));
+    Scene * s = qobject_cast<Scene*>(createObject(MO_OBJECTCLASSNAME_SCENE));
     MO_ASSERT(s, "could not create Scene object");
     return s;
 }

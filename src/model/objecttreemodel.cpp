@@ -27,6 +27,9 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
             << "id";
 
     boldFont_.setBold(true);
+    colorDefault_ = Qt::black;
+    colorInvalid_ = Qt::red;
+    colorTransformation_ = QColor(0,120,0);
 }
 
 const QIcon& ObjectTreeModel::iconForObject(const Object * o)
@@ -37,11 +40,13 @@ const QIcon& ObjectTreeModel::iconForObject(const Object * o)
     static QIcon iconSoundSource(":/icon/obj_soundsource.png");
     static QIcon iconMicrophone(":/icon/obj_microphone.png");
     static QIcon iconCamera(":/icon/obj_camera.png");
+    static QIcon iconTransformation(":/icon/obj_transformation.png");
 
+    if (o->isTransformation()) return iconTransformation;
     if (o->isCamera()) return iconCamera;
     if (o->isMicrophone()) return iconMicrophone;
     if (o->isSoundSource()) return iconSoundSource;
-    if (o->is3d()) return icon3d;
+    if (o->isGl()) return icon3d;
     if (o->isParameter()) return iconParameter;
 
     return iconNone;
@@ -161,7 +166,10 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         if (role == Qt::TextColorRole)
         {
             if (!obj->isValid())
-                return QColor(Qt::red);
+                return colorInvalid_;
+            if (obj->isTransformation())
+                return colorTransformation_;
+            return colorDefault_;
         }
 
         // font
@@ -304,6 +312,10 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
         // only act when this worked
         if (copy)
         {
+            qDebug() << "was" << row;
+            row = obj->getInsertIndex(copy, row);
+            qDebug() << "is" << row;
+
             // delete previous tree
             if (action == Qt::MoveAction)
             {

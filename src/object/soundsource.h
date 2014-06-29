@@ -11,19 +11,21 @@
 #ifndef MOSRC_OBJECT_SOUNDSOURCE_H
 #define MOSRC_OBJECT_SOUNDSOURCE_H
 
-#include "object3d.h"
+#include "object.h"
 
 namespace MO {
 
-class SoundSource : public Object3d
+class SoundSource : public Object
 {
     Q_OBJECT
 public:
     explicit SoundSource(QObject *parent = 0);
 
+    MO_OBJECT_CLONE(SoundSource)
+
     virtual bool isSoundSource() const { return true; }
 
-    virtual const QString& className() const { static QString s("SoundSource"); return s; }
+    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SOUNDSOURCE); return s; }
 
 
 signals:

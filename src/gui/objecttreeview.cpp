@@ -148,7 +148,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
             {
                 omodel->dropMimeData(
                     application->clipboard()->mimeData(), Qt::CopyAction,
-                    currentIndex().row(), 0,
+                    1000000, 0,
                     currentIndex());
             });
         }

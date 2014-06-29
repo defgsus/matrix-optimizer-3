@@ -14,6 +14,8 @@
 #include <QObject>
 #include <QList>
 
+#include "types/vector.h"
+
 namespace MO {
 namespace IO { class DataStream; }
 
@@ -23,28 +25,55 @@ class Microphone;
 class SoundSource;
 class Parameter;
 class ObjectGl;
+class Model3d;
+class Transformation;
+
+// PERSISTENT class names
+#ifndef MO_OBJECTCLASSNAMES_DEFINED
+    #define MO_OBJECTCLASSNAMES_DEFINED
+    #define MO_OBJECTCLASSNAME_DUMMY "_dummy"
+    #define MO_OBJECTCLASSNAME_SCENE "_scene"
+    #define MO_OBJECTCLASSNAME_CAMERA "_camera"
+    #define MO_OBJECTCLASSNAME_MICROPHONE "_microphone"
+    #define MO_OBJECTCLASSNAME_SOUNDSOURCE "_soundsource"
+    #define MO_OBJECTCLASSNAME_MODEL3D "_model3d"
+    #define MO_OBJECTCLASSNAME_PARAMETER "_parameter"
+    #define MO_OBJECTCLASSNAME_TRANSFORMATION "_transformation"
+#endif
+
+#define MO_REGISTER_OBJECT(class__) \
+    namespace { \
+        bool success_register_object_##class__ = \
+            ::MO::registerObject_(new class__); \
+    }
+
+#define MO_OBJECT_CLONE(class__) \
+    virtual class__ * cloneClass() const { return new class__(); }
 
 
 class Object : public QObject
 {
     Q_OBJECT
 
+    // to set idName_
     friend class ObjectFactory;
 
-protected:
+public:
 
     /** Constructs a new object.
         If @p parent is also an Object, this object will be installed in the
-        parent's child list via setParentObject().
-        @note Only ObjectFactory can create Objects. */
+        parent's child list via setParentObject() or addObject() */
     explicit Object(QObject *parent = 0);
 
-public:
+    /** Creates a new instance of the class.
+        In derived classes this can be defined via the MO_OBJECT_CLONE() macro. */
+    virtual Object * cloneClass() const = 0;
 
     // ----------------- io ---------------------
 
     /** Serializes the whole tree including this object. */
     void serializeTree(IO::DataStream&) const;
+
     /** Creates a parent-less object containing the whole tree as
         previously created by serializeTree.
         On data or io errors, an IO::IoException will be thrown.
@@ -58,7 +87,8 @@ public:
 
     // --------------- getter -------------------
 
-    /** Name of the object class, for creating objects at runtime. MUST NOT CHANGE! */
+    /** Name of the object class, for creating objects at runtime.
+        MUST NOT CHANGE for compatibility with saved files! */
     virtual const QString& className() const = 0;
     /** Tree-unique id of the object. */
     const QString& idName() const { return idName_; }
@@ -68,8 +98,8 @@ public:
     virtual bool isValid() const { return true; }
 
     virtual bool isScene() const { return false; }
-    virtual bool is3d() const { return false; }
     virtual bool isGl() const { return false; }
+    virtual bool isTransformation() const { return false; }
     virtual bool isSoundSource() const { return false; }
     virtual bool isMicrophone() const { return false; }
     virtual bool isCamera() const { return false; }
@@ -118,6 +148,10 @@ public:
     template <class T>
     QList<T*> findChildObjects(const QString& id = QString(), bool recursive = false, Object * ignore = 0) const;
 
+    /** Returns the index of the last child object of type @p T */
+    template <class T>
+    int indexOfLastChild(int last = -1) const;
+
     /** Installs the object in the parent object's childlist.
         If @p insert_index is >= 0, the object will be
         inserted before the indexed object (e.g. 0 = start, 1 = before second).
@@ -135,8 +169,23 @@ public:
         @returns The added object. */
     Object * addObject(Object * object, int insert_index = -1);
 
+    /** Returns the correct index to insert as specific object type. */
+    int getInsertIndex(Object * object, int insert_index = -1) const;
+
     /** Deletes the child from the list of children, if found. */
     void deleteObject(Object * child);
+
+
+    // --------------- 3d --------------------------
+
+    /** Returns the transformation matrix of this object */
+    const Mat4& transformation() const { return transformation_; }
+
+    /** Returns the position of this object */
+    Vec3 position() const
+        { return Vec3(transformation_[3][0], transformation_[3][1], transformation_[3][2]); }
+
+
 
 signals:
 
@@ -145,6 +194,11 @@ public slots:
     // _____________ PRIVATE AREA __________________
 
 private:
+
+    // disable copy
+    Object(const Object&);
+    void operator=(const Object&);
+
 
     /** Removes the child from the child list, nothing else. */
     bool takeChild_(Object * child);
@@ -164,9 +218,13 @@ private:
 
     Object * parentObject_;
     QList<Object*> childObjects_;
+
+    // ----------- position ------------------
+
+    Mat4 transformation_;
 };
 
-
+extern bool registerObject_(Object *);
 
 // ---------------------- template impl -------------------
 
@@ -188,7 +246,23 @@ QList<T*> Object::findChildObjects(const QString& id, bool recursive, Object * i
     return list;
 }
 
+template <class T>
+int Object::indexOfLastChild(int last) const
+{
+    if (childObjects_.empty())
+        return -1;
 
+    if (last < 0 || last >= childObjects_.size())
+        last = childObjects_.size() - 1;
+
+    for (int i = last; i>=0; --i)
+    {
+        if (qobject_cast<T*>(childObjects_[i]))
+            return i;
+    }
+
+    return -1;
+}
 
 
 } // namespace MO

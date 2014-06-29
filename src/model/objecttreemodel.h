@@ -74,6 +74,10 @@ private:
     QStringList headerNames_;
 
     QFont boldFont_;
+    QColor
+        colorDefault_,
+        colorTransformation_,
+        colorInvalid_;
 };
 
 } // namespace MO

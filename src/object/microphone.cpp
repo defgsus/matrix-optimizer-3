@@ -12,10 +12,12 @@
 
 namespace MO {
 
+MO_REGISTER_OBJECT(Microphone)
 
 Microphone::Microphone(QObject *parent) :
     Object(parent)
 {
+    setName("Microphone");
 }
 
 
