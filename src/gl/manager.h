@@ -24,6 +24,7 @@ class Manager : public QObject
     Q_OBJECT
 public:
     explicit Manager(QObject *parent = 0);
+    ~Manager();
 
     // ---------------- opengl ---------------------
 
@@ -36,10 +37,20 @@ public:
 signals:
 
     /** This will signal the creation of a new Context */
-    void contextCreated(Context *);
+    void contextCreated(MO::GL::Context *);
+
+    /** Context is current, please render. */
+    void renderRequest();
 
 public slots:
 
+private slots:
+
+    void onContextCreated_(MO::GL::Context *);
+
+private:
+
+    Window * window_;
 };
 
 } // namespace GL

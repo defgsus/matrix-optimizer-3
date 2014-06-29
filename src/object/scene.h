@@ -43,7 +43,10 @@ public slots:
     // ------------- open gl -------------------
 
     /** Sets the opengl Context for all objects in the scene. */
-    void setGlContext(GL::Context * context);
+    void setGlContext(MO::GL::Context * context);
+
+    /** Render the whole scene on the current context */
+    void renderScene();
 
 private:
 

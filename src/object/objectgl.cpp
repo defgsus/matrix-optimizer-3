@@ -9,20 +9,44 @@
 */
 
 #include "objectgl.h"
+#include "io/error.h"
+#include "gl/context.h"
 
 namespace MO {
 
 
 ObjectGl::ObjectGl(QObject *parent)
     :   Object3d    (parent),
-        glContext_  (0)
+        glContext_  (0),
+        glFunctionsInitialized_(false)
 {
 }
 
 
-void ObjectGl::setGlContext(GL::Context * c)
+void ObjectGl::setGlContext_(GL::Context * c)
 {
+    if (c != glContext_)
+        glFunctionsInitialized_ = false;
+
     glContext_ = c;
 }
+
+void ObjectGl::render_()
+{
+    if (!glContext_)
+        MO_GL_ERROR("no context defined for object '" << idName() << "'");
+    if (!glContext_->isValid())
+        MO_GL_ERROR("context not initialized for object '" << idName() << "'");
+
+    if (!glFunctionsInitialized_)
+    {
+        bool r = initializeOpenGLFunctions();
+        if (!r)
+            MO_GL_ERROR("could not initialize opengl functions for object '" << idName() << "'");
+    }
+
+    render();
+}
+
 
 } // namespace MO

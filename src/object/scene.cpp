@@ -11,12 +11,15 @@
 #include "scene.h"
 
 #include "camera.h"
+#include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 
 
 Scene::Scene(QObject *parent) :
-    Object(parent)
+    Object      (parent),
+    glContext_  (0)
 {
 }
 
@@ -26,13 +29,18 @@ void Scene::treeChanged()
 {
     findObjects_();
 
-    setGlContext(glContext_);
+    if (glContext_)
+        setGlContext(glContext_);
 }
 
 void Scene::findObjects_()
 {
     cameras_ = findChildObjects<Camera>();
     glObjects_ = findChildObjects<ObjectGl>();
+
+    MO_DEBUG("Scene: " << cameras_.size() << " cameras, "
+             << glObjects_.size() << " gl-objects"
+             );
 }
 
 void Scene::initGlChilds_()
@@ -48,12 +56,24 @@ void Scene::initGlChilds_()
 
 void Scene::setGlContext(GL::Context *context)
 {
+    MO_DEBUG_GL("Scene::setGlContext(" << context << ")");
+
     glContext_ = context;
 
     for (auto o : glObjects_)
-        o->setGlContext(glContext_);
+        o->setGlContext_(glContext_);
 }
 
+void Scene::renderScene()
+{
+    MO_ASSERT(glContext_, "renderScene() without context");
+
+    if (!glContext_)
+        return;
+
+    for (auto o : glObjects_)
+        o->render_();
+}
 
 
 } // namespace MO

@@ -23,7 +23,6 @@ namespace GL {
 
 Window::Window(QScreen * targetScreen)
     :   QWindow       (targetScreen),
-        gl_           (0),
         context_      (0),
         updatePending_(0)
 {
@@ -83,7 +82,7 @@ void Window::renderNow()
     if (!isExposed())
         return;
 
-    bool needsInit = false;
+    //bool needsInit = false;
 
     if (!context_)
     {
@@ -96,12 +95,14 @@ void Window::renderNow()
 
         emit contextCreated(context_);
 
-        needsInit = true;
+        //needsInit = true;
     }
 
     if (!context_->makeCurrent(this))
         MO_GL_ERROR("could not make context current");
 
+    emit renderRequest();
+#if (0)
     if (!gl_)
     {
         MO_DEBUG_GL("requesting openGL functions");
@@ -132,6 +133,7 @@ void Window::renderNow()
     qDebug() << gl_->glGetError();
     //gl->glBegin();
     //frameBuffer_->texture();
+#endif
 
     context_->swapBuffers(this);
 }

@@ -156,7 +156,7 @@ const Scene * Object::sceneObject() const
 
 Scene * Object::sceneObject()
 {
-    return 0;//qobject_cast<Scene*>(rootObject());
+    return qobject_cast<Scene*>(rootObject());
 }
 
 int Object::numChildren(bool recursive) const

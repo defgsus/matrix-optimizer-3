@@ -114,7 +114,8 @@ HEADERS += \
     src/object/objectgl.h \
     src/gl/manager.h \
     src/gl/model.h \
-    src/io/init.h
+    src/io/init.h \
+    src/gl/openglfunctions.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

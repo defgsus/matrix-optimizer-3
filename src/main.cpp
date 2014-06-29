@@ -31,8 +31,8 @@ int main(int argc, char *argv[])
 
     MO::application = new MO::Application(argc, argv);
 
-    MO::GUI::MainWindow w;
-    w.show();
+    auto mainwin = new MO::GUI::MainWindow;
+    mainwin->show();
 
     //MO::GUI::QObjectInspector oi(&w);
     //oi.show();

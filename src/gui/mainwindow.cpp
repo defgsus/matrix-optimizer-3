@@ -42,6 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     setWindowTitle(tr("Matrix Optimizer 3.0"));
 
+    setAttribute(Qt::WA_DeleteOnClose, true);
+
     createMainMenu_();
     createWidgets_();
     createObjects_();
@@ -148,15 +150,15 @@ void MainWindow::createMainMenu_()
 
 void MainWindow::createObjects_()
 {
-    /*
     glManager_ = new GL::Manager(this);
     glWindow_ = glManager_->createGlWindow();
     glWindow_->show();
-    */
+
     auto scene = ObjectFactory::createSceneObject();
     scene->setParent(this);
 
-    //scene->setGlContext(glWindow_->context());
+    connect(glManager_, SIGNAL(renderRequest()), scene, SLOT(renderScene()));
+    connect(glManager_, SIGNAL(contextCreated(MO::GL::Context*)), scene, SLOT(setGlContext(MO::GL::Context*)));
 
     auto cam = scene->addObject(ObjectFactory::createObject("Camera"));
     scene->addObject(ObjectFactory::createObject("Geometry"));
@@ -172,7 +174,7 @@ void MainWindow::createObjects_()
 
     //mic->setParentObject(snd);
     //snd->addObject(mic);
-
+/*
     QByteArray bytes;
     {
         IO::DataStream io(&bytes, QIODevice::WriteOnly);
@@ -183,7 +185,7 @@ void MainWindow::createObjects_()
         auto obj = Object::deserializeTree(io);
         scene->addObject(obj);
     }
-
+*/
     objModel_->setRootObject(scene);
 }
 
@@ -192,11 +194,12 @@ void MainWindow::createObjects_()
 void MainWindow::closeEvent(QCloseEvent * e)
 {
     QMainWindow::closeEvent(e);
-
+/*
     if (e->isAccepted())
     {
 
     }
+*/
 }
 
 

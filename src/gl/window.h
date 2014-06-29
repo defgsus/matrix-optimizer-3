@@ -13,11 +13,7 @@
 
 #include <QWindow>
 
-#define MO_OPENGL_FUNCTION_CLASS QOpenGLFunctions_2_0
-#include <QOpenGLFunctions_2_0>
-
 class QOpenGLFramebufferObject;
-class MO_OPENGL_FUNCTION_CLASS;
 
 namespace MO {
 namespace GL {
@@ -37,7 +33,10 @@ public:
 signals:
 
     /** This will signal a creation of a new Context */
-    void contextCreated(Context *);
+    void contextCreated(MO::GL::Context *);
+
+    /** Context is current, please render */
+    void renderRequest();
 
 public slots:
 
@@ -52,7 +51,6 @@ private:
 
     void render_();
 
-    MO_OPENGL_FUNCTION_CLASS * gl_;
     Context * context_;
 //    QOpenGLFramebufferObject * frameBuffer_;
 

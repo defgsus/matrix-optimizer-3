@@ -25,6 +25,8 @@ public:
 
     virtual bool isCamera() const { return true; }
 
+    virtual void render();
+
 signals:
 
 public slots:
