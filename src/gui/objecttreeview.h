@@ -24,6 +24,8 @@ public:
 
 signals:
 
+    void editMenuChanged(const QList<QAction*>&);
+
 public slots:
 
 protected:

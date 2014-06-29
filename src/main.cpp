@@ -13,6 +13,7 @@
 #include "io/application.h"
 #include "gui/mainwindow.h"
 #include "gui/qobjectinspector.h"
+#include "gl/window.h"
 
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
@@ -27,6 +28,10 @@ int main(int argc, char *argv[])
 
     MO::GUI::MainWindow w;
     w.show();
+
+    MO::GL::Window glwin;
+    glwin.setFullScreen(true);
+    glwin.show();
 
     //MO::GUI::QObjectInspector oi(&w);
     //oi.show();

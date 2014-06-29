@@ -1,0 +1,64 @@
+/** @file scene.h
+
+    @brief Scene container/controller
+
+    <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+
+    <p>created 6/28/2014</p>
+*/
+
+#ifndef MOSRC_OBJECT_SCENE_H
+#define MOSRC_OBJECT_SCENE_H
+
+#include "object.h"
+
+
+namespace MO {
+namespace GL { class Context; }
+
+class Scene : public Object
+{
+    Q_OBJECT
+public:
+    explicit Scene(QObject *parent = 0);
+
+    const QString& className() const { static QString s("Scene"); return s; }
+
+    bool isScene() const { return true; }
+
+    // ------------- child objects -------------
+
+    const QList<Camera*> cameras() const { return cameras_; }
+
+    // ------------- open gl -------------------
+
+    void setGlContext(GL::Context * context);
+
+signals:
+
+public slots:
+
+private:
+
+    // ------------ object collection ----------
+
+    /** Collects all special child objects */
+    void findObjects_();
+
+    // ---------- opengl -----------------------
+
+    /** Initializes all opengl childs */
+    void initGlChilds_();
+
+    // ---------- opengl -----------------------
+
+    QList<GL::Context*> glContexts_;
+
+    // ----------- special objects -------------
+
+    QList<Camera*> cameras_;
+};
+
+} // namespace MO
+
+#endif // MOSRC_OBJECT_SCENE_H

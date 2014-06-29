@@ -65,6 +65,19 @@
             Position
             SoundSource
                 FloatTrack
+    </pre>
+
+    <pre>
+
+    Scene
+        Context
+        Sphere
+            QOpenGLFunctions
+        Camera
+            QOpenGLFunctions
+            FrameBuffer
+
+
 
 
     </pre>

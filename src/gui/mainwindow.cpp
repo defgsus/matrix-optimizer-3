@@ -145,7 +145,7 @@ void MainWindow::createObjects_()
     scene->addObject(ObjectFactory::createObject("Geometry"));
     scene->addObject(ObjectFactory::createObject("Geometry"));
     scene->addObject(ObjectFactory::createObject("Geometry"));
-    auto snd =
+    //auto snd =
     scene->addObject(ObjectFactory::createObject("SoundSource"), 1);
 
     cam->addObject(ObjectFactory::createObject("Rotation"));

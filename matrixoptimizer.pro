@@ -17,8 +17,8 @@ QMAKE_CXXFLAGS_RELEASE += -O2 -DNDEBUG
 INCLUDEPATH += src
 
 SOURCES += \
-        src/main.cpp \
-        src/gui/mainwindow.cpp \
+    src/main.cpp \
+    src/gui/mainwindow.cpp \
     src/gui/projectorsetupwidget.cpp \
     src/projection/projector.cpp \
     src/gui/basic3dview.cpp \
@@ -49,10 +49,14 @@ SOURCES += \
     src/object/camera.cpp \
     src/object/dummy.cpp \
     src/gui/objecttreeview.cpp \
-    src/model/objecttreemimedata.cpp
+    src/model/objecttreemimedata.cpp \
+    src/gl/window.cpp \
+    src/gl/context.cpp \
+    src/object/scene.cpp \
+    src/object/objectgl.cpp
 
 HEADERS += \
-        src/gui/mainwindow.h \
+    src/gui/mainwindow.h \
     src/gui/projectorsetupwidget.h \
     src/types/vector.h \
     src/projection/projector.h \
@@ -93,7 +97,11 @@ HEADERS += \
     src/object/camera.h \
     src/object/dummy.h \
     src/gui/objecttreeview.h \
-    src/model/objecttreemimedata.h
+    src/model/objecttreemimedata.h \
+    src/gl/window.h \
+    src/gl/context.h \
+    src/object/scene.h \
+    src/object/objectgl.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

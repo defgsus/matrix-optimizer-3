@@ -16,6 +16,12 @@
 namespace MO {
 namespace IO { class DataStream; }
 
+class Camera;
+class Microphone;
+class SoundSource;
+class Parameter;
+
+
 class Object : public QObject
 {
     Q_OBJECT
@@ -58,7 +64,9 @@ public:
 
     virtual bool isValid() const { return true; }
 
+    virtual bool isScene() const { return false; }
     virtual bool is3d() const { return false; }
+    virtual bool isGl() const { return false; }
     virtual bool isSoundSource() const { return false; }
     virtual bool isMicrophone() const { return false; }
     virtual bool isCamera() const { return false; }
@@ -96,6 +104,12 @@ public:
     /** Returns the children with the given id, or NULL.
         If @p ignore is not NULL, this object will be ignored by search. */
     Object * findChildObject(const QString& id, bool recursive = false, Object * ignore = 0) const;
+
+    /** Returns the children of type @p T with the given id, or NULL.
+        if @p id is empty, all objects of type T will be returned.
+        If @p ignore is not NULL, this object will be ignored by search. */
+    template <class T>
+    QList<T*> findChildObjects(const QString& id = QString(), bool recursive = false, Object * ignore = 0) const;
 
     /** Installs the object in the parent object's childlist.
         If @p insert_index is >= 0, the object will be
@@ -144,6 +158,31 @@ private:
     Object * parentObject_;
     QList<Object*> childObjects_;
 };
+
+
+
+// ---------------------- template impl -------------------
+
+template <class T>
+QList<T*> Object::findChildObjects(const QString& id, bool recursive, Object * ignore) const
+{
+    QList<T*> list;
+
+    for (auto o : childObjects_)
+        if (o != ignore
+            && (qobject_cast<T*>(o))
+            && (id.isEmpty() || o->idName() == id))
+                list.append(static_cast<T*>(o));
+
+    if (recursive)
+        for (auto i : childObjects_)
+            list.append(i->findChildObjects<T>(id, recursive, ignore));
+
+    return list;
+}
+
+
+
 
 } // namespace MO
 
