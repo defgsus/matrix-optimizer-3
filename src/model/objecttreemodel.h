@@ -35,8 +35,6 @@ public:
 
     Object * itemForIndex(const QModelIndex& index) const;
 
-    static const QIcon& iconForObject(const Object *);
-
     // --- interface impl. ---
 
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
@@ -65,7 +63,9 @@ public slots:
 
     // ---- custom editing ----
 
-    virtual void deleteObject(const QModelIndex&);
+    void deleteObject(const QModelIndex&);
+
+    bool addObject(const QModelIndex& parent, int indexInChild, Object * obj);
 
 private:
 

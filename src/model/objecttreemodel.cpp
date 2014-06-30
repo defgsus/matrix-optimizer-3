@@ -8,14 +8,15 @@
     <p>created 6/27/2014</p>
 */
 
-#include <QDebug>
+//#include <QDebug>
 
 #include "objecttreemodel.h"
 #include "objecttreemimedata.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "object/object.h"
-#include "object/translation.h"
-#include "object/axisrotation.h"
+#include "object/objectfactory.h"
+
 
 namespace MO {
 
@@ -34,33 +35,7 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
     colorTransformation_ = QColor(0,120,0);
 }
 
-const QIcon& ObjectTreeModel::iconForObject(const Object * o)
-{
-    static QIcon iconNone(":/icon/obj_none.png");
-    static QIcon icon3d(":/icon/obj_3d.png");
-    static QIcon iconParameter(":/icon/obj_parameter.png");
-    static QIcon iconSoundSource(":/icon/obj_soundsource.png");
-    static QIcon iconMicrophone(":/icon/obj_microphone.png");
-    static QIcon iconCamera(":/icon/obj_camera.png");
-    static QIcon iconTranslation(":/icon/obj_translation.png");
-    static QIcon iconRotation(":/icon/obj_rotation.png");
 
-    if (o->isTransformation())
-    {
-        if (qobject_cast<const Translation*>(o))
-            return iconTranslation;
-        if (qobject_cast<const AxisRotation*>(o))
-            return iconRotation;
-    }
-    if (o->isCamera()) return iconCamera;
-    if (o->isMicrophone()) return iconMicrophone;
-    if (o->isSoundSource()) return iconSoundSource;
-    if (o->isGl()) return icon3d;
-    if (o->isParameter()) return iconParameter;
-
-    return iconNone;
-
-}
 
 void ObjectTreeModel::setRootObject(Object *rootObject)
 {
@@ -192,7 +167,7 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         // icon
         if (role == Qt::DecorationRole && index.column() == 0)
         {
-            return iconForObject(obj);
+            return ObjectFactory::iconForObject(obj);
         }
 
         /*
@@ -340,9 +315,9 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                     beginMoveColumns(fromParentIndex,
                                      fromIndex.row(), fromIndex.row(),
                                      parent, row);
-                    qDebug() << "move" << fromObj->idName()
-                             << fromIndex.row() << "->"
-                             << obj->idName() << row;
+                    MO_DEBUG_TREE("move " << fromObj->idName()
+                                  << " " << fromIndex.row() << " -> "
+                                  << obj->idName() << " " << row);
                     obj->addObject(fromObj, row);
                     endMoveColumns();
                     return true;
@@ -373,6 +348,22 @@ void ObjectTreeModel::deleteObject(const QModelIndex & index)
     }
 }
 
+bool ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, Object * obj)
+{
+    if (Object * parentObject = itemForIndex(parentIndex))
+    {
+        // adjust index
+        if (row<0)
+            row = 1000000;
+        row = parentObject->getInsertIndex(obj, row);
 
+        beginInsertRows(parentIndex, row+1, row+1);
+        parentObject->addObject(obj, row);
+        endInsertRows();
+
+        return true;
+    }
+    return false;
+}
 
 } // namespace MO

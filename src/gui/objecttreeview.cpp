@@ -1,6 +1,6 @@
 /** @file objecttreeeditor.cpp
 
-    @brief
+    @brief QTreeView suitable for MO::ObjectTreeModel
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -8,6 +8,7 @@
     <p>created 6/28/2014</p>
 */
 
+#include <QDebug>
 #include <QAction>
 #include <QMouseEvent>
 #include <QMenu>
@@ -19,6 +20,7 @@
 #include "model/objecttreemodel.h"
 #include "model/objecttreemimedata.h"
 #include "object/object.h"
+#include "object/objectfactory.h"
 #include "io/application.h"
 
 namespace MO {
@@ -87,7 +89,11 @@ void ObjectTreeView::createEditActions_(Object * obj)
 {
     for (auto a : editActions_)
         if (!actions().contains(a))
+        {
+            if (a->menu())
+                a->menu()->deleteLater();
             a->deleteLater();
+        }
     editActions_.clear();
 
     // click on object?
@@ -130,6 +136,8 @@ void ObjectTreeView::createEditActions_(Object * obj)
             connect(a, &QAction::triggered, [=](){ omodel->deleteObject(currentIndex()); });
         }
 
+        Object * parentObj = obj->parentObject();
+
         // paste
         if (application->clipboard()->mimeData()->formats().contains(
                     ObjectTreeMimeData::mimeType()))
@@ -137,7 +145,6 @@ void ObjectTreeView::createEditActions_(Object * obj)
             Object::Type pasteType = static_cast<const ObjectTreeMimeData*>(
                         application->clipboard()->mimeData())->getObjectType();
 
-            const Object * parentObj = obj->parentObject();
             if (parentObj)
             {
                 // paste before
@@ -162,6 +169,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
                         omodel->parent(currentIndex()));
                 });
             }
+
             // paste as child
             editActions_.append(a = new QAction(tr("Paste as children"), this));
             a->setEnabled(obj->canHaveChildren(pasteType));
@@ -173,6 +181,55 @@ void ObjectTreeView::createEditActions_(Object * obj)
                     currentIndex());
             });
         }
+
+        editActions_.append(a = new QAction(this));
+        a->setSeparator(true);
+
+        // new sibling
+        if (parentObj)
+        {
+            const QList<const Object*>
+                    plist(ObjectFactory::possibleChildObjects(parentObj));
+            if (!plist.isEmpty())
+            {
+                QModelIndex parentIndex = omodel->parent(currentIndex());
+
+                editActions_.append(a = new QAction(tr("New object"), this));
+                QMenu * menu = new QMenu(this);
+                a->setMenu(menu);
+                for (auto o : plist)
+                {
+                    menu->addAction(a = new QAction(o->name(), this));
+                    connect(a, &QAction::triggered, [=]()
+                    {
+                        Object * newo = ObjectFactory::createObject(o->className());
+                        if (!omodel->addObject(parentIndex, currentIndex().row()+1, newo))
+                            delete newo;
+                    });
+                }
+            }
+        }
+
+        // new children
+        const QList<const Object*>
+                clist(ObjectFactory::possibleChildObjects(obj));
+        if (!clist.isEmpty())
+        {
+            editActions_.append(a = new QAction(tr("New child object"), this));
+            QMenu * menu = new QMenu(this);
+            a->setMenu(menu);
+            for (auto o : clist)
+            {
+                menu->addAction(a = new QAction(o->name(), this));
+                connect(a, &QAction::triggered, [=]()
+                {
+                    Object * newo = ObjectFactory::createObject(o->className());
+                    if (!omodel->addObject(currentIndex(), -1, newo))
+                        delete newo;
+                });
+            }
+        }
+
 
         editActions_.append(a = new QAction(this));
         a->setSeparator(true);

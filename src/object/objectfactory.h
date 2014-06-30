@@ -16,6 +16,8 @@
 
 #include <QObject>
 
+class QIcon;
+
 namespace MO {
 
 class Object;
@@ -23,23 +25,41 @@ class Scene;
 
 namespace IO { class DataStream; }
 
+/** Singleton class to create all objects */
 class ObjectFactory : public QObject
 {
     Q_OBJECT
-
+    /** Private constructor */
     ObjectFactory();
 public:
 
+    /** Access to singleton instance */
     static ObjectFactory& instance();
 
+    // ----------- object creation ----------------
+
+    /** Registers the object to make it available by createObject() */
     static bool registerObject(Object *);
 
     /** Creates the desired object for className, or returns NULL */
     static Object * createObject(const QString& className, bool createParameters = true);
-    /** Returns a new scene object, or NULL */
+
+    /** Returns a new Scene object */
     static Scene * createSceneObject();
 
+    /** Creates a dummy object (for skipping unknown objects in deserializer) */
     static Object * createDummy();
+
+    // ----------- object infos -------------------
+
+    /** Returns an icon for the object type */
+    static const QIcon& iconForObject(const Object *);
+
+    /** Returns a list of objects, possible to add to given object @p parent */
+    static QList<const Object*> possibleChildObjects(const Object * parent);
+
+    /** Returns true of the object can have children at all. */
+    static bool canHaveChildObjects(const Object * parent);
 
 signals:
 

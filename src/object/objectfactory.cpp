@@ -8,6 +8,8 @@
     <p>created 6/27/2014</p>
 */
 
+#include <QIcon>
+
 #include "objectfactory.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -16,12 +18,9 @@
 
 #include "object.h"
 #include "dummy.h"
-#include "parameter.h"
-#include "soundsource.h"
-#include "microphone.h"
-#include "camera.h"
+#include "object/translation.h"
+#include "object/axisrotation.h"
 #include "scene.h"
-#include "model3d.h"
 
 namespace MO {
 
@@ -38,6 +37,34 @@ ObjectFactory& ObjectFactory::instance()
         instance_ = new ObjectFactory();
 
     return *instance_;
+}
+
+const QIcon& ObjectFactory::iconForObject(const Object * o)
+{
+    static QIcon iconNone(":/icon/obj_none.png");
+    static QIcon icon3d(":/icon/obj_3d.png");
+    static QIcon iconParameter(":/icon/obj_parameter.png");
+    static QIcon iconSoundSource(":/icon/obj_soundsource.png");
+    static QIcon iconMicrophone(":/icon/obj_microphone.png");
+    static QIcon iconCamera(":/icon/obj_camera.png");
+    static QIcon iconTranslation(":/icon/obj_translation.png");
+    static QIcon iconRotation(":/icon/obj_rotation.png");
+
+    if (o->isTransformation())
+    {
+        if (qobject_cast<const Translation*>(o))
+            return iconTranslation;
+        if (qobject_cast<const AxisRotation*>(o))
+            return iconRotation;
+    }
+    if (o->isCamera()) return iconCamera;
+    if (o->isMicrophone()) return iconMicrophone;
+    if (o->isSoundSource()) return iconSoundSource;
+    if (o->isGl()) return icon3d;
+    if (o->isParameter()) return iconParameter;
+
+    return iconNone;
+
 }
 
 bool ObjectFactory::registerObject(Object * obj)
@@ -89,7 +116,38 @@ Scene * ObjectFactory::createSceneObject()
 
 Object * ObjectFactory::createDummy()
 {
-    return new Dummy();
+    Object * dummy = createObject(MO_OBJECTCLASSNAME_DUMMY);
+    MO_ASSERT(dummy, "could not create Dummy object");
+    return dummy;
 }
+
+QList<const Object*> ObjectFactory::possibleChildObjects(const Object * parent)
+{
+    QList<const Object*> list;
+
+    for (auto &i : instance().objectMap_)
+    {
+        Object * o = i.second.get();
+
+        if (parent->canHaveChildren(o->type()))
+            list.append(o);
+    }
+
+    return list;
+}
+
+bool ObjectFactory::canHaveChildObjects(const Object * parent)
+{
+    for (auto &i : instance().objectMap_)
+    {
+        Object * o = i.second.get();
+
+        if (parent->canHaveChildren(o->type()))
+            return true;
+    }
+
+    return false;
+}
+
 
 } // namespace MO
