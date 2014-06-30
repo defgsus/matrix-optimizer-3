@@ -15,6 +15,8 @@
 #include <QMenuBar>
 #include <QTreeView>
 #include <QCloseEvent>
+#include <QTime>
+#include <QMessageBox>
 
 #include "mainwindow.h"
 #include "projectorsetupwidget.h"
@@ -157,6 +159,9 @@ void MainWindow::createMainMenu_()
             (new QObjectInspector(this, this))->show();
         });
 
+
+        m->addAction(a = new QAction(tr("Test transformation speed"), m));
+        connect(a, SIGNAL(triggered()), SLOT(testSceneTransform_()));
 }
 
 
@@ -166,7 +171,7 @@ void MainWindow::createObjects_()
     glWindow_ = glManager_->createGlWindow();
     glWindow_->show();
 
-    auto scene = ObjectFactory::createSceneObject();
+    auto scene = scene_ = ObjectFactory::createSceneObject();
     scene->setParent(this);
 
     connect(glManager_, SIGNAL(renderRequest()), scene, SLOT(renderScene()));
@@ -224,6 +229,31 @@ void MainWindow::setEditActions_(const QObject *, QList<QAction *> actions)
     editMenu_->clear();
     editMenu_->addActions(actions);
 }
+
+void MainWindow::testSceneTransform_()
+{
+    const int num = 10000;
+    QTime t;
+
+    t.start();
+    for (int i = 0; i < num; ++i)
+    {
+        scene_->calculateSceneTransform(0, (Double)i);
+    }
+    Double elapsed = (Double)t.elapsed() / 1000.0;
+
+    QMessageBox::information(this, tr("Scene transformation test"),
+        tr("Calculating %1 frames of transformation took %2 seconds.\n"
+           "This is %3 milli-seconds per frame\n"
+           "and %4 frames per second.")
+                             .arg(num)
+                             .arg(elapsed)
+                             .arg((elapsed*1000)/num)
+                             .arg((Double)num/elapsed)
+           );
+}
+
+
 
 } // namespace GUI
 } // namespace MO

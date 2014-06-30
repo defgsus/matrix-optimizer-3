@@ -17,11 +17,10 @@ void increase_id_number(QString& str, int init)
 {
     if (str.isEmpty()) return;
 
-    // find last digit
+    // is last character digit?
     int end = str.length()-1;
-    while (end && !str.at(end).isDigit()) --end;
 
-    // no number found
+    // no number yet
     if (!str.at(end).isDigit())
     {
         if (init<0) return;

@@ -115,24 +115,7 @@ void Scene::renderScene(Double time)
         if (o->needsInitGl(0))
             o->initGl_(0);
 
-    // apply camera transform
-    Mat4 camt(1.0);
-    cameras_[0]->calculateTransformation(camt, time);
-    setTransformation(0, glm::inverse(camt));
-
-    // calculate transformations
-    for (auto &o : posObjects_)
-    {
-        // get parent transformation
-        Mat4 matrix(o->parentObject()->transformation(0));
-        // apply object's transformation
-        o->calculateTransformation(matrix, time);
-        // write back
-        o->setTransformation(0, matrix);
-    }
-
-    // start camera frame
-    cameras_[0]->startGlFrame(0, time);
+    calculateSceneTransform(0, time);
 
     // render all opengl objects
     for (auto o : glObjects_)
@@ -141,5 +124,29 @@ void Scene::renderScene(Double time)
     }
 }
 
+void Scene::calculateSceneTransform(int thread, Double time)
+{
+    if (!cameras_.size())
+        return;
+
+    // apply camera transform
+    Mat4 camt(1.0);
+    cameras_[thread]->calculateTransformation(camt, time);
+    setTransformation(thread, glm::inverse(camt));
+
+    // calculate transformations
+    for (auto &o : posObjects_)
+    {
+        // get parent transformation
+        Mat4 matrix(o->parentObject()->transformation(thread));
+        // apply object's transformation
+        o->calculateTransformation(matrix, time);
+        // write back
+        o->setTransformation(thread, matrix);
+    }
+
+    // start camera frame
+    cameras_[0]->startGlFrame(thread, time);
+}
 
 } // namespace MO

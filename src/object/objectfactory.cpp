@@ -53,7 +53,7 @@ bool ObjectFactory::registerObject(Object * obj)
         std::make_pair(obj->className(), std::shared_ptr<Object>(obj))
         );
 
-    MO_DEBUG("registered object '" << obj->className() << "'");
+//    MO_DEBUG("registered object '" << obj->className() << "'");
 
     return true;
 }

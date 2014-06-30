@@ -31,11 +31,14 @@ Window::Window(QScreen * targetScreen)
 
     setTitle("OpenGL");
 
+    setWidth(512);
+    setHeight(512);
+
     setSurfaceType(QSurface::OpenGLSurface);
 
-    QSurfaceFormat format;
+    /*QSurfaceFormat format;
     format.setSamples(16);
-    setFormat(format);
+    setFormat(format);*/
 }
 
 Window::~Window()

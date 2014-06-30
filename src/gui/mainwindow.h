@@ -15,6 +15,7 @@
 
 namespace MO {
 class ObjectTreeModel;
+class Scene;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
@@ -33,6 +34,7 @@ protected:
 
 private slots:
     void setEditActions_(const QObject * sender, QList<QAction*> actions);
+    void testSceneTransform_();
 
 private:
 
@@ -41,6 +43,7 @@ private:
     void createObjects_();
 
     ObjectTreeModel * objModel_;
+    Scene * scene_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;

@@ -8,7 +8,7 @@
     <p>created 6/27/2014</p>
 */
 
-//#include <QDebug>
+#include <QDebug>
 
 #include "object.h"
 #include "tool/stringmanip.h"
@@ -314,6 +314,7 @@ void Object::makeUniqueIds_(Object * root)
 
 Object * Object::findChildObject(const QString &id, bool recursive, Object * ignore) const
 {
+    qDebug() << idName() << "findChildObject" << id;
     for (auto o : childObjects_)
         if (o != ignore && o->idName() == id)
             return o;

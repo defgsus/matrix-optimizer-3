@@ -20,6 +20,8 @@
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
 
+//#include "tool/stringmanip.h"
+//#include "io/streamoperators_qt.h"
 
 int main(int argc, char *argv[])
 {
@@ -27,8 +29,13 @@ int main(int argc, char *argv[])
 
     //MO::TestTimeline t; return t.run();
     //TestXmlStream t; return t.run();
-
-
+    /*QString id("model399844975d99");
+    MO::increase_id_number(id, 1);
+    std::cout << id << std::endl;
+    MO::increase_id_number(id, 1);
+    std::cout << id << std::endl;
+    return 0;
+    */
     MO::application = new MO::Application(argc, argv);
 
     auto mainwin = new MO::GUI::MainWindow;

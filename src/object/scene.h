@@ -36,6 +36,10 @@ public:
 
     // ------------- open gl -------------------
 
+    /** Calculates all transformation of all scene objects.
+        @note Scene must be up-to-date with the tree! */
+    void calculateSceneTransform(int thread, Double time);
+
 signals:
 
     /** Scene should be rerendered */

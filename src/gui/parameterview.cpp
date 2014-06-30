@@ -36,13 +36,13 @@ void ParameterView::setObject(Object *object)
 {
     object_ = object;
 
-    parameters_.clear();
     if (auto p = qobject_cast<Parameter*>(object))
     {
+        parameters_.clear();
         parameters_.append(p);
     }
-    //else
-    //    parameters_ = object_->findChildObjects<Parameter>();
+    else
+        parameters_ = object_->findChildObjects<Parameter>();
 
     createWidgets_();
 }
