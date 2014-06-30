@@ -31,14 +31,15 @@ public:
 
     virtual void createParameters();
 
+    virtual void applyTransform(Mat4& matrix, Double time) const;
+
 signals:
 
 public slots:
 
 protected:
 
-    ParameterFloat * posX_, * posY_, * posZ_,
-                   * rotX_, * rotY_, * rotZ_;
+    ParameterFloat * angle_, * x_, * y_, * z_;
 };
 
 } // namespace MO

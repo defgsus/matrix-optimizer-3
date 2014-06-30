@@ -25,6 +25,8 @@ public:
 
     const QString& className() const { static QString s(MO_OBJECTCLASSNAME_PARAMETER_FLOAT); return s; }
 
+    QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
+
     virtual void serialize(IO::DataStream &) const;
     virtual void deserialize(IO::DataStream &);
 

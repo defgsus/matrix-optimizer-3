@@ -23,11 +23,18 @@ Transformation::Transformation(QObject *parent) :
 
 void Transformation::createParameters()
 {
-    rotX_ = createFloatParameter("rotx", "rotation x", 0);
-    rotY_ = createFloatParameter("roty", "rotation y", 0);
-    rotZ_ = createFloatParameter("rotz", "rotation z", 0);
+    angle_ = createFloatParameter("rotx", "angle", 0);
+    x_ = createFloatParameter("axis_x", "axis x", 1);
+    y_ = createFloatParameter("axis_y", "axis y", 0);
+    z_ = createFloatParameter("axis_z", "axis z", 0);
 }
 
+void Transformation::applyTransform(Mat4 &matrix, Double time) const
+{
+    matrix = glm::rotate(matrix,
+                (Mat4::value_type)angle_->value(time),
+                Vec3(x_->value(time), y_->value(time), z_->value(time)));
+}
 
 } // namespace MO
 

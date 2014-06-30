@@ -114,6 +114,8 @@ public:
     const QString& idName() const { return idName_; }
     /** User defined name of the object */
     const QString& name() const { return name_; }
+    /** Override to add some additional information. */
+    virtual QString infoName() const { return name_; }
 
     virtual bool isValid() const { return true; }
 

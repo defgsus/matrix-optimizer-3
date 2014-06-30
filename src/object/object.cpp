@@ -370,6 +370,7 @@ ParameterFloat * Object::createFloatParameter(
 
     param->setName(name);
     param->setDefaultValue(defaultValue);
+    param->setValue(defaultValue);
 
     return param;
 }

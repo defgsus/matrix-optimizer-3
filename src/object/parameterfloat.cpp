@@ -19,7 +19,8 @@ ParameterFloat::ParameterFloat(QObject *parent)
     :   Parameter(parent),
         defaultValue_   (0.0),
         minValue_       (-10000000000),
-        maxValue_       (10000000000)
+        maxValue_       (10000000000),
+        value_          (0.0)
 {
     setName("Float");
 }

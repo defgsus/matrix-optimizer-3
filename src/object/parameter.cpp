@@ -8,7 +8,7 @@
     <p>created 6/27/2014</p>
 */
 
-#include <QDebug>
+//#include <QDebug>
 
 #include "parameter.h"
 #include "io/datastream.h"
@@ -37,7 +37,6 @@ void Parameter::deserialize(IO::DataStream &io)
     QString id;
     io >> id;
     setParameterId(id);
-    qDebug() << "----- " << id;
 }
 
 } // namespace MO
