@@ -360,11 +360,16 @@ void Object::childrenChanged_()
     // collect special sub-objects
     collectTransformationObjects_();
 
-    // derived code
+    // notify derived classes
     childrenChanged();
 }
 
 // ------------------------- 3d -----------------------
+
+void Object::clearTransformation()
+{
+    transformation_ = Mat4(1.0);
+}
 
 void Object::collectTransformationObjects_()
 {

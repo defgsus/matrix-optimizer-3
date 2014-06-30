@@ -95,11 +95,17 @@ void Scene::renderScene(Double time)
         if (o->needsInitGl())
             o->initGl_();
 
+    // apply camera transform
+    Mat4 camt(1.0);
+    cameras_[0]->calculateTransformation(camt, time);
+    setTransformation(glm::inverse(camt));
+
     // calculate transformations
     for (auto &o : posObjects_)
     {
         o.matrix = o.object->parentObject()->transformation();
         o.object->calculateTransformation(o.matrix, time);
+        // XXX transformation must be independent of object!!!
         o.object->setTransformation(o.matrix);
     }
 
