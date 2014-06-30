@@ -14,6 +14,8 @@
 #include "objecttreemimedata.h"
 #include "io/error.h"
 #include "object/object.h"
+#include "object/translation.h"
+#include "object/axisrotation.h"
 
 namespace MO {
 
@@ -40,9 +42,16 @@ const QIcon& ObjectTreeModel::iconForObject(const Object * o)
     static QIcon iconSoundSource(":/icon/obj_soundsource.png");
     static QIcon iconMicrophone(":/icon/obj_microphone.png");
     static QIcon iconCamera(":/icon/obj_camera.png");
-    static QIcon iconTransformation(":/icon/obj_transformation.png");
+    static QIcon iconTranslation(":/icon/obj_translation.png");
+    static QIcon iconRotation(":/icon/obj_rotation.png");
 
-    if (o->isTransformation()) return iconTransformation;
+    if (o->isTransformation())
+    {
+        if (qobject_cast<const Translation*>(o))
+            return iconTranslation;
+        if (qobject_cast<const AxisRotation*>(o))
+            return iconRotation;
+    }
     if (o->isCamera()) return iconCamera;
     if (o->isMicrophone()) return iconMicrophone;
     if (o->isSoundSource()) return iconSoundSource;

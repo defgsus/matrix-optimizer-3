@@ -6,6 +6,7 @@
         <file alias="obj_soundsource.png">assets/icon/obj_soundsource.png</file>
         <file alias="obj_none.png">assets/icon/obj_none.png</file>
         <file alias="obj_camera.png">assets/icon/obj_camera.png</file>
-        <file alias="obj_transformation.png">assets/icon/obj_transformation.png</file>
+        <file alias="obj_rotation.png">assets/icon/obj_transformation.png</file>
+        <file alias="obj_translation.png">assets/icon/obj_translation.png</file>
     </qresource>
 </RCC>
