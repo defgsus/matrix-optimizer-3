@@ -167,7 +167,8 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         {
             if (!obj->isValid())
                 return colorInvalid_;
-            if (obj->isTransformation())
+            if (obj->isTransformation() ||
+                (obj->parentObject() && obj->parentObject()->isTransformation()))
                 return colorTransformation_;
             return colorDefault_;
         }
@@ -309,12 +310,11 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
         // deserialize object
         Object * copy = objdata->getObjectTree();
 
-        // only act when this worked
+        // only act when it worked
         if (copy)
         {
-            qDebug() << "was" << row;
+            // rearrange if necessary
             row = obj->getInsertIndex(copy, row);
-            qDebug() << "is" << row;
 
             // delete previous tree
             if (action == Qt::MoveAction)

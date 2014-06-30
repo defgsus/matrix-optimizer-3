@@ -29,9 +29,19 @@ public:
 
     virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_PARAMETER); return s; }
 
+    virtual void serialize(IO::DataStream &) const;
+    virtual void deserialize(IO::DataStream &);
+
+    const QString& parameterId() const { return parameterId_; }
+    void setParameterId(const QString& id) { parameterId_ = id; }
+
 signals:
 
 public slots:
+
+private:
+
+    QString parameterId_;
 
 };
 

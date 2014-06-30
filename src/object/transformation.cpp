@@ -9,6 +9,7 @@
 */
 
 #include "transformation.h"
+#include "parameterfloat.h"
 
 namespace MO {
 
@@ -18,10 +19,13 @@ Transformation::Transformation(QObject *parent) :
     Object(parent)
 {
     setName("Transformation");
-#if 0
+}
+
+void Transformation::createParameters()
+{
     rotX_ = createFloatParameter("rotx", "rotation x", 0);
-    rotX_.getValue(time);
-#endif
+    rotY_ = createFloatParameter("rotx", "rotation x", 0);
+    rotZ_ = createFloatParameter("rotx", "rotation x", 0);
 }
 
 

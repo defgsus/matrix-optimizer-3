@@ -24,6 +24,7 @@ class Camera;
 class Microphone;
 class SoundSource;
 class Parameter;
+class ParameterFloat;
 class ObjectGl;
 class Model3d;
 class Transformation;
@@ -38,6 +39,7 @@ class Transformation;
     #define MO_OBJECTCLASSNAME_SOUNDSOURCE "_soundsource"
     #define MO_OBJECTCLASSNAME_MODEL3D "_model3d"
     #define MO_OBJECTCLASSNAME_PARAMETER "_parameter"
+    #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT "_parameter_float"
     #define MO_OBJECTCLASSNAME_TRANSFORMATION "_transformation"
 #endif
 
@@ -67,6 +69,7 @@ public:
         T_NONE,
         T_OBJECT,
         T_PARAMETER,
+        T_PARAMETER_FLOAT,
         T_TRANSFORMATION,
         T_SCENE,
         T_MICROPHONE,
@@ -196,6 +199,15 @@ public:
     /** Deletes the child from the list of children, if found. */
     void deleteObject(Object * child);
 
+    // --------------- parameter -------------------
+
+    /** Override to create all parameters for your object */
+    virtual void createParameters() { }
+
+    /** Creates the desired parameter,
+        or returns an already created parameter object. */
+    ParameterFloat * createFloatParameter(
+                const QString& id, const QString& name, Double defaultValue);
 
     // --------------- 3d --------------------------
 

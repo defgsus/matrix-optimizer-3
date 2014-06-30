@@ -68,24 +68,13 @@ Object * ObjectFactory::createObject(const QString &className)
     }
 
     Object * obj = it->second->cloneClass();
-    /*
-    if (className == MO_OBJECTCLASSNAME_SCENE)
-        obj = new Scene();
-    else if (className == MO_OBJECTCLASSNAME_CAMERA)
-        obj = new Camera();
-    else if (className == MO_OBJECTCLASSNAME_MICROPHONE)
-        obj = new Microphone();
-    else if (className == MO_OBJECTCLASSNAME_SOUNDSOURCE)
-        obj = new SoundSource();
-    else if (className == MO_OBJECTCLASSNAME_MODEL3D)
-        obj = new Model3d();
-    else
-        obj = new Parameter();
-    */
+
     // prepare object
     obj->idName_ = obj->className();
     if (obj->name_.isEmpty())
         obj->name_ = className;
+
+    obj->createParameters();
 
     return obj;
 }

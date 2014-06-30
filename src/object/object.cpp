@@ -19,6 +19,7 @@
 #include "objectfactory.h"
 #include "scene.h"
 #include "transformation.h"
+#include "parameterfloat.h"
 
 namespace MO {
 
@@ -127,6 +128,8 @@ Object * Object::deserializeTree(IO::DataStream & io)
         if (child)
             o->addObject(child);
     }
+
+    o->createParameters();
 
     return o;
 }
@@ -328,6 +331,47 @@ bool Object::canHaveChildren(Type t) const
 
     return true;
 }
+
+
+
+// ---------------------- parameter --------------------------
+
+ParameterFloat * Object::createFloatParameter(
+        const QString& id, const QString& name, Double defaultValue)
+{
+    qDebug() << "createFloatParam" << id;
+    ParameterFloat * param = 0;
+
+    // see if already there
+    for (auto o : childObjects_)
+    if (auto p = qobject_cast<ParameterFloat*>(o))
+    {
+        if (p->parameterId() == id)
+        {
+            param = p;
+            break;
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = static_cast<ParameterFloat*>(
+                    ObjectFactory::createObject(MO_OBJECTCLASSNAME_PARAMETER_FLOAT) );
+        MO_ASSERT(param, "could not create float parameter");
+
+        addObject(param);
+
+        param->idName_ = "p_" + id;
+        param->setParameterId(id);
+    }
+
+    param->setName(name);
+    param->setDefaultValue(defaultValue);
+
+    return param;
+}
+
 
 
 } // namespace MO

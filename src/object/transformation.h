@@ -29,10 +29,16 @@ public:
 
     virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_TRANSFORMATION); return s; }
 
+    virtual void createParameters();
+
 signals:
 
 public slots:
 
+protected:
+
+    ParameterFloat * posX_, * posY_, * posZ_,
+                   * rotX_, * rotY_, * rotZ_;
 };
 
 } // namespace MO
