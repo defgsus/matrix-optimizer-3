@@ -176,16 +176,17 @@ void MainWindow::createObjects_()
 
 
     auto cam = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_CAMERA));
-        //cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
-        //cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
+        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
+        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
         auto mic = cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MICROPHONE));
             mic->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
     auto model = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MODEL3D));
         model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
+        model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
         model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
         auto snd = model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_SOUNDSOURCE));
             snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
-            snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
+            snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
 
     //mic->setParentObject(snd);
     //snd->addObject(mic);

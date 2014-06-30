@@ -38,9 +38,9 @@ class Transformation;
     #define MO_OBJECTCLASSNAME_MICROPHONE "_microphone"
     #define MO_OBJECTCLASSNAME_SOUNDSOURCE "_soundsource"
     #define MO_OBJECTCLASSNAME_MODEL3D "_model3d"
-//    #define MO_OBJECTCLASSNAME_PARAMETER "_parameter"
     #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT "_parameter_float"
     #define MO_OBJECTCLASSNAME_AXISROTATION "_axis_rotation"
+    #define MO_OBJECTCLASSNAME_TRANSLATION "_translation"
 #endif
 
 #define MO_REGISTER_OBJECT(class__) \
