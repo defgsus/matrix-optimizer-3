@@ -73,6 +73,9 @@ private:
     /** Collects all special child objects */
     void findObjects_();
 
+    /** Tell all objects how much threads we got */
+    void updateNumberThreads_();
+
     // ---------- opengl -----------------------
 
     /** Initializes all opengl childs */
@@ -84,9 +87,15 @@ private:
 
     // ----------- special objects -------------
 
+    QList<Object*> allObjects_;
     QList<PositionalObject_> posObjects_;
     QList<Camera*> cameras_;
     QList<ObjectGl*> glObjects_;
+
+    // ---------- properties -------------------
+
+    int numThreads_;
+
 };
 
 } // namespace MO

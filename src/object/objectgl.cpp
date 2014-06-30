@@ -8,6 +8,8 @@
     <p>created 6/29/2014</p>
 */
 
+//#include <QDebug>
+
 #include "objectgl.h"
 #include "io/error.h"
 #include "gl/context.h"
@@ -17,30 +19,35 @@ namespace MO {
 
 ObjectGl::ObjectGl(QObject *parent)
     :   Object      (parent),
-        glContext_  (0),
-        glFunctionsInitialized_(false),
-        needsInitGl_(true)
+        glFunctionsInitialized_(false)
 {
 }
 
-
-void ObjectGl::setGlContext_(GL::Context * c)
+void ObjectGl::setNumberThreads(int num)
 {
-    if (c != glContext_)
+    Object::setNumberThreads(num);
+
+    glContext_.resize(num);
+    needsInitGl_.resize(num);
+}
+
+void ObjectGl::setGlContext_(int thread, GL::Context * c)
+{
+    if (c != glContext_[thread])
     {
-        glFunctionsInitialized_ = false;
-        needsInitGl_ = true;
+        //glFunctionsInitialized_ = false;
+        needsInitGl_[thread] = true;
     }
 
-    glContext_ = c;
+    glContext_[thread] = c;
 }
 
-void ObjectGl::initGl_()
+void ObjectGl::initGl_(int thread)
 {
-    if (!glContext_)
-        MO_GL_ERROR("no context defined for object '" << idName() << "'");
-    if (!glContext_->isValid())
-        MO_GL_ERROR("context not initialized for object '" << idName() << "'");
+    if (!glContext_[thread])
+        MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
+    if (!glContext_[thread]->isValid())
+        MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
 
     if (!glFunctionsInitialized_)
     {
@@ -50,20 +57,20 @@ void ObjectGl::initGl_()
         glFunctionsInitialized_ = true;
     }
 
-    initGl();
+    initGl(thread);
 }
 
-void ObjectGl::renderGl_(Double time)
+void ObjectGl::renderGl_(int thread, Double time)
 {
-    if (!glContext_)
-        MO_GL_ERROR("no context defined for object '" << idName() << "'");
-    if (!glContext_->isValid())
-        MO_GL_ERROR("context not initialized for object '" << idName() << "'");
+    if (!glContext_[thread])
+        MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
+    if (!glContext_[thread]->isValid())
+        MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
 
     if (!glFunctionsInitialized_)
         MO_GL_ERROR("opengl functions not initialized for object '" << idName() << "'");
 
-    renderGl(time);
+    renderGl(thread, time);
 }
 
 

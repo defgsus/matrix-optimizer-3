@@ -8,6 +8,8 @@
     <p>created 6/28/2014</p>
 */
 
+//#include <QDebug>
+
 #include "camera.h"
 #include "gl/context.h"
 
@@ -19,37 +21,42 @@ Camera::Camera(QObject *parent) :
     ObjectGl(parent)
 {
     setName("Camera");
-    projection_ = glm::perspective(63.f, (float)1.0, 0.1f, 1000.0f);
 }
 
-
-void Camera::initGl()
+void Camera::setNumberThreads(int num)
 {
-    projection_ = glm::perspective(63.f, (float)
-        glContext()->size().width()/glContext()->size().height(),
+    ObjectGl::setNumberThreads(num);
+
+    projection_.resize(num);
+}
+
+void Camera::initGl(int thread)
+{
+    projection_[thread] = glm::perspective(63.f, (float)
+        glContext(thread)->size().width()/glContext(thread)->size().height(),
         0.1f, 1000.0f);
 }
 
 
-void Camera::renderGl(Double )
+void Camera::renderGl(int , Double )
 {
 }
 
-void Camera::startGlFrame(Double )
+void Camera::startGlFrame(int thread, Double )
 {
-    glViewport(0, 0, glContext()->size().width(), glContext()->size().height());
+    glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height());
 
     glClearColor(0,0.2,0.2,1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    setProjectionMatrix();
+    setProjectionMatrix(thread);
 }
 
-void Camera::setProjectionMatrix()
+void Camera::setProjectionMatrix(int thread)
 {
     // XXX this is a hack
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(&projection_[0][0]);
+    glLoadMatrixf(&projection_[thread][0][0]);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }

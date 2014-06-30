@@ -21,12 +21,12 @@ Model3d::Model3d(QObject * parent)
 }
 
 
-void Model3d::initGl()
+void Model3d::initGl(int thread)
 {
 
 }
 
-void Model3d::renderGl(Double )
+void Model3d::renderGl(int thread, Double )
 {
     /*
     glColor3f(1,0,0);
@@ -38,7 +38,7 @@ void Model3d::renderGl(Double )
     glEnd();
     */
 
-    glLoadMatrixf(&transformation()[0][0]);
+    glLoadMatrixf(&transformation(thread)[0][0]);
 
     glColor3f(1,1,1);
     glBegin(GL_LINES);

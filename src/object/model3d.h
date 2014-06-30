@@ -26,8 +26,8 @@ public:
 
     const QString& className() const { static QString s(MO_OBJECTCLASSNAME_MODEL3D); return s; }
 
-    virtual void initGl();
-    virtual void renderGl(Double time);
+    virtual void initGl(int thread);
+    virtual void renderGl(int, Double time);
 
 signals:
 

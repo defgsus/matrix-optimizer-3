@@ -21,7 +21,8 @@ MO_REGISTER_OBJECT(Scene)
 
 Scene::Scene(QObject *parent) :
     Object      (parent),
-    glContext_  (0)
+    glContext_  (0),
+    numThreads_ (1)
 {
     setName("Scene");
 }
@@ -38,6 +39,9 @@ void Scene::treeChanged()
 
 void Scene::findObjects_()
 {
+    //MO_DEBUG("Scene::findObjects_()");
+
+    allObjects_ = findChildObjects<Object>(QString(), true);
     cameras_ = findChildObjects<Camera>(QString(), true);
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
 
@@ -61,6 +65,20 @@ void Scene::initGlChilds_()
     }*/
 }
 
+void Scene::updateNumberThreads_()
+{
+    //MO_DEBUG("Scene::updateNumberThreads_() ");
+
+    // update scene as well!
+    if (numberThreads() != numThreads_)
+        setNumberThreads(numThreads_);
+
+    // update all objects
+    for (auto o : allObjects_)
+        if (o->numberThreads() != numThreads_)
+            o->setNumberThreads(numThreads_);
+}
+
 // -------------------- parameter ----------------------------
 
 void Scene::setParameterValue(ParameterFloat *p, Double v)
@@ -77,9 +95,11 @@ void Scene::setGlContext(GL::Context *context)
 
     glContext_ = context;
 
+    updateNumberThreads_();
+
     MO_DEBUG_GL("setting gl context for objects");
     for (auto o : glObjects_)
-        o->setGlContext_(glContext_);
+        o->setGlContext_(0, glContext_);
 
 }
 
@@ -90,32 +110,33 @@ void Scene::renderScene(Double time)
     if (!glContext_ || cameras_.empty())
         return;
 
+    updateNumberThreads_();
+
     // initialize gl resources
     for (auto o : glObjects_)
-        if (o->needsInitGl())
-            o->initGl_();
+        if (o->needsInitGl(0))
+            o->initGl_(0);
 
     // apply camera transform
     Mat4 camt(1.0);
     cameras_[0]->calculateTransformation(camt, time);
-    setTransformation(glm::inverse(camt));
+    setTransformation(0, glm::inverse(camt));
 
     // calculate transformations
     for (auto &o : posObjects_)
     {
-        o.matrix = o.object->parentObject()->transformation();
+        o.matrix = o.object->parentObject()->transformation(0);
         o.object->calculateTransformation(o.matrix, time);
-        // XXX transformation must be independent of object!!!
-        o.object->setTransformation(o.matrix);
+        o.object->setTransformation(0, o.matrix);
     }
 
     // start camera frame
-    cameras_[0]->startGlFrame(time);
+    cameras_[0]->startGlFrame(0, time);
 
     // render all opengl objects
     for (auto o : glObjects_)
     {
-        o->renderGl_(time);
+        o->renderGl_(0, time);
     }
 }
 

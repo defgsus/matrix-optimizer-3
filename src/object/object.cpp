@@ -30,8 +30,7 @@ bool registerObject_(Object * obj)
 
 Object::Object(QObject *parent) :
     QObject         (parent),
-    parentObject_   (0),
-    transformation_ (1.0)
+    parentObject_   (0)
 {
     // tie into Object hierarchy
     if (auto o = dynamic_cast<Object*>(parent))
@@ -364,11 +363,25 @@ void Object::childrenChanged_()
     childrenChanged();
 }
 
+void Object::setNumberThreads(int num)
+{
+    transformation_.resize(num);
+}
+
+void Object::setNumberThreadsRecursive_(int threads)
+{
+    setNumberThreads(threads);
+
+    for (auto o : childObjects_)
+        o->setNumberThreadsRecursive_(threads);
+}
+
+
 // ------------------------- 3d -----------------------
 
-void Object::clearTransformation()
+void Object::clearTransformation(int thread)
 {
-    transformation_ = Mat4(1.0);
+    transformation_[thread] = Mat4(1.0);
 }
 
 void Object::collectTransformationObjects_()

@@ -28,24 +28,26 @@ public:
     virtual Type type() const { return T_CAMERA; }
     virtual bool isCamera() const { return true; }
 
-    virtual void initGl();
-    virtual void renderGl(Double time);
+    virtual void initGl(int thread);
+    virtual void renderGl(int thread, Double time);
+
+    virtual void setNumberThreads(int num);
 
     /** Returns projection matrix */
-    const Mat4& projection() const { return projection_; }
+    const Mat4& projection(int thread) const { return projection_[thread]; }
 
     /** Starts rendering an openGL frame */
-    void startGlFrame(Double time);
+    void startGlFrame(int thread, Double time);
 
     // XXX only trying here
-    void setProjectionMatrix();
+    void setProjectionMatrix(int thread);
 signals:
 
 public slots:
 
 private:
 
-    Mat4 projection_;
+    std::vector<Mat4> projection_;
 };
 
 } // namespace MO

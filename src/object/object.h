@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_OBJECT_H
 #define MOSRC_OBJECT_OBJECT_H
 
+#include <vector>
+
 #include <QObject>
 #include <QList>
 
@@ -212,6 +214,15 @@ public:
     /** Called when the children list has changed */
     virtual void childrenChanged() { }
 
+    /** Sets the number of threads that will run on this object and
+        the whole tree. Any mutable values of the object must be present
+        @p num times!
+        Always call the ancestor implementation in your derived function! */
+    virtual void setNumberThreads(int num);
+
+    /** Returns the number of threads, this object is assigned to */
+    int numberThreads() const { return transformation_.size(); }
+
     // --------------- parameter -------------------
 
     /** Override to create all parameters for your object */
@@ -225,16 +236,17 @@ public:
     // --------------- 3d --------------------------
 
     /** Initialize transformation matrix */
-    void clearTransformation();
+    void clearTransformation(int thread);
 
     /** Returns the transformation matrix of this object */
-    const Mat4& transformation() const { return transformation_; }
+    const Mat4& transformation(int thread) const { return transformation_[thread]; }
 
     /** Returns the position of this object */
-    Vec3 position() const
-        { return Vec3(transformation_[3][0], transformation_[3][1], transformation_[3][2]); }
+    Vec3 position(int thread) const
+        { return Vec3(transformation_[thread][3][0], transformation_[thread][3][1],
+                    transformation_[thread][3][2]); }
 
-    void setTransformation(const Mat4& mat) { transformation_ = mat; }
+    void setTransformation(int thread, const Mat4& mat) { transformation_[thread] = mat; }
 
     /** Apply all transformation of this object to the given matrix. */
     void calculateTransformation(Mat4& matrix, Double time) const;
@@ -271,6 +283,8 @@ private:
     /** Fills the transformationChilds() array */
     void collectTransformationObjects_();
 
+    void setNumberThreadsRecursive_(int threads);
+
     // ------------ properties ---------------
 
     QString idName_, name_;
@@ -283,7 +297,7 @@ private:
 
     // ----------- position ------------------
 
-    Mat4 transformation_;
+    std::vector<Mat4> transformation_;
 };
 
 extern bool registerObject_(Object *);

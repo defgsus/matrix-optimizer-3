@@ -31,15 +31,17 @@ public:
     virtual Type type() const { return T_OBJECT; }
     bool isGl() const { return true; }
 
-    /** Returns the current GL::Context */
-    GL::Context * glContext() { return glContext_; }
-    /** Returns the current GL::Context */
-    const GL::Context * glContext() const { return glContext_; }
+    virtual void setNumberThreads(int num);
 
-    bool needsInitGl() const { return needsInitGl_; }
+    /** Returns the current GL::Context */
+    GL::Context * glContext(int thread) { return glContext_[thread]; }
+    /** Returns the current GL::Context */
+    const GL::Context * glContext(int thread) const { return glContext_[thread]; }
 
-    virtual void initGl() = 0;
-    virtual void renderGl(Double time) = 0;
+    bool needsInitGl(int thread) const { return needsInitGl_[thread]; }
+
+    virtual void initGl(int thread) = 0;
+    virtual void renderGl(int thread, Double time) = 0;
 
 signals:
 
@@ -48,14 +50,14 @@ public slots:
 private:
 
     /** Sets the OpenGL Context */
-    void setGlContext_(GL::Context *);
+    void setGlContext_(int thread, GL::Context *);
 
-    void initGl_();
-    void renderGl_(Double time);
+    void initGl_(int thread);
+    void renderGl_(int thread, Double time);
 
-    GL::Context * glContext_;
-    bool glFunctionsInitialized_,
-         needsInitGl_;
+    std::vector<GL::Context*> glContext_;
+    bool glFunctionsInitialized_;
+    std::vector<int> needsInitGl_;
 };
 
 } // namespace MO
