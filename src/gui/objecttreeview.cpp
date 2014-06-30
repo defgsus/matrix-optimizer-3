@@ -59,6 +59,10 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
         ObjectTreeModel * omodel = qobject_cast<ObjectTreeModel*>(model());
         Object * obj = omodel->itemForIndex(currentIndex());
         createEditActions_(obj);
+        if (obj)
+        {
+            emit objectSelected(obj);
+        }
     });
 }
 

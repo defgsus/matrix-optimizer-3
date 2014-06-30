@@ -12,8 +12,14 @@
 #define PARAMETERVIEW_H
 
 #include <QWidget>
+#include <QList>
+#include <QMap>
 
+class QLabel;
+class QVBoxLayout;
 namespace MO {
+class Object;
+class Parameter;
 namespace GUI {
 
 
@@ -27,6 +33,19 @@ signals:
 
 public slots:
 
+    void setObject(MO::Object * object);
+
+private:
+
+    void createWidgets_();
+    QWidget * createWidget_(Parameter *);
+    void clearWidgets_();
+
+    Object * object_;
+    QList<Parameter*> parameters_;
+    QMap<QString, QWidget*> widgets_;
+
+    QVBoxLayout * layout_;
 };
 
 } // namespace GUI

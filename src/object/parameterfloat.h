@@ -34,6 +34,7 @@ public:
     Double minValue() const { return minValue_; }
     Double maxValue() const { return maxValue_; }
     Double value(Double time) const;
+    Double baseValue() const { return value_; }
 
     void setDefaultValue(Double v) { defaultValue_ = v; }
     void setMinValue(Double v) { minValue_ = v; }

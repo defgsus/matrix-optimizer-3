@@ -18,6 +18,8 @@ class ObjectTreeModel;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
+class ParameterView;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -44,6 +46,7 @@ private:
     GL::Window * glWindow_;
 
     QMenu * editMenu_;
+    ParameterView * paramView_;
 };
 
 } // namespace GUI

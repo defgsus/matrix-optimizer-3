@@ -25,6 +25,7 @@
 #include "gui/painter/grid.h"
 #include "gui/qobjectinspector.h"
 #include "gui/objecttreeview.h"
+#include "gui/parameterview.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
@@ -61,16 +62,27 @@ void MainWindow::createWidgets_()
 
     auto l0 = new QHBoxLayout(centralWidget());
 
-        auto treev = new ObjectTreeView(this);
-        l0->addWidget(treev);
+        auto lv = new QVBoxLayout();
+        l0->addLayout(lv);
 
-        objModel_ = new ObjectTreeModel(0, this);
-        treev->setModel(objModel_);
-        connect(treev, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
-                SLOT(setEditActions_(const QObject*,QList<QAction*>)));
+            // object tree view
+            auto treev = new ObjectTreeView(this);
+            lv->addWidget(treev);
 
-        auto l = new QVBoxLayout();
-        l0->addLayout(l);
+            objModel_ = new ObjectTreeModel(0, this);
+            treev->setModel(objModel_);
+            connect(treev, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
+                    SLOT(setEditActions_(const QObject*,QList<QAction*>)));
+
+            // object editor
+            paramView_ = new ParameterView(this);
+            lv->addWidget(paramView_);
+
+            connect(treev, SIGNAL(objectSelected(MO::Object*)), paramView_, SLOT(setObject(MO::Object*)));
+
+
+        lv = new QVBoxLayout();
+        l0->addLayout(lv);
 
             //auto v = new ProjectorSetupWidget(centralWidget());
             //l->addWidget(v);
@@ -82,7 +94,7 @@ void MainWindow::createWidgets_()
 
             auto tlv = new Timeline1DRulerView(tl, this);
             tlv->setObjectName("timeline01");
-            l->addWidget(tlv);
+            lv->addWidget(tlv);
             //tlv->setOptions(Timeline1DView::O_ChangeViewX | Timeline1DView::O_MovePoints);
             //tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
             auto space = tlv->viewSpace();
@@ -97,7 +109,7 @@ void MainWindow::createWidgets_()
 
             auto tlv2 = new Timeline1DRulerView(tl2, this);
             tlv2->setObjectName("timeline02");
-            l->addWidget(tlv2);
+            lv->addWidget(tlv2);
 
     // --------- io ----------
 

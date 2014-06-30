@@ -29,6 +29,7 @@ public:
 signals:
 
     void editActionsChanged(const QObject * sender, const QList<QAction*>&);
+    void objectSelected(MO::Object * object);
 
 public slots:
 
