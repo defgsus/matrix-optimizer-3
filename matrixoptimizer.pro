@@ -65,7 +65,8 @@ SOURCES += \
     src/io/init.cpp \
     src/object/model3d.cpp \
     src/object/transformation.cpp \
-    src/object/parameterfloat.cpp
+    src/object/parameterfloat.cpp \
+    src/gui/parameterview.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -119,7 +120,8 @@ HEADERS += \
     src/gl/openglfunctions.h \
     src/object/model3d.h \
     src/object/transformation.h \
-    src/object/parameterfloat.h
+    src/object/parameterfloat.h \
+    src/gui/parameterview.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

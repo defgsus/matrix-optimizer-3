@@ -82,10 +82,12 @@ void Scene::renderScene(Double time)
     if (!glContext_ || cameras_.empty())
         return;
 
+    // initialize gl resources
     for (auto o : glObjects_)
         if (o->needsInitGl())
             o->initGl_();
 
+    // calculate transformations
     for (auto &o : posObjects_)
     {
         o.matrix = o.object->parentObject()->transformation();
@@ -93,8 +95,10 @@ void Scene::renderScene(Double time)
         o.object->setTransformation(o.matrix);
     }
 
-    cameras_[0]->setProjectionMatrix();
+    // start camera frame
+    cameras_[0]->startGlFrame(time);
 
+    // render all opengl objects
     for (auto o : glObjects_)
     {
         o->renderGl_(time);

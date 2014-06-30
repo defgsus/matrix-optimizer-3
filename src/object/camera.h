@@ -34,6 +34,9 @@ public:
     /** Returns projection matrix */
     const Mat4& projection() const { return projection_; }
 
+    /** Starts rendering an openGL frame */
+    void startGlFrame(Double time);
+
     // XXX only trying here
     void setProjectionMatrix();
 signals:

@@ -35,19 +35,23 @@ void Camera::renderGl(Double )
 {
 }
 
-void Camera::setProjectionMatrix()
+void Camera::startGlFrame(Double )
 {
-    // XXX this is a hack
     glViewport(0, 0, glContext()->size().width(), glContext()->size().height());
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(&projection_[0][0]);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
 
     glClearColor(0,0.2,0.2,1);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    setProjectionMatrix();
+}
+
+void Camera::setProjectionMatrix()
+{
+    // XXX this is a hack
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(&projection_[0][0]);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 } // namespace MO
