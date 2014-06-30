@@ -56,7 +56,7 @@
 #   define MO_DEBUG_GL(unused__) { }
 #endif
 
-#if (1)
+#if (0)
 #   define MO_DEBUG_TREE(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_TREE(unused__) { }

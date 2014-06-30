@@ -47,9 +47,9 @@ int main(int argc, char *argv[])
     int ret;
     try
     {
-        //throw MO::BasicException() << "hallo";
+        //throw MO::Exception() << "hallo";
         //throw MO::IoException() << "hallo";
-        //MO_IO_ERROR(VERSION_MISMATCH, "w " << &w);
+        //MO_IO_ERROR(VERSION_MISMATCH, "win " << mainwin);
         ret = MO::application->exec();
     }
     /*catch (MO::IoException& e)

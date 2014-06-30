@@ -48,7 +48,8 @@ public:
     };
 
     Exception(int cause = UNKNOWN) throw() : cause_(cause)
-        { text_ + "[" + applicationTimeString().toStdString() + "] "; }
+        { text_ = "[" + applicationTimeString().toStdString() + "] "; }
+
     virtual ~Exception() throw() { }
 
     virtual const char * what() const throw() { return text_.c_str(); }
