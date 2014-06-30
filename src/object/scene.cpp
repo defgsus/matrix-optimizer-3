@@ -45,10 +45,12 @@ void Scene::findObjects_()
     cameras_ = findChildObjects<Camera>(QString(), true);
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
 
-    auto objs = findChildObjects(T_REAL_OBJECTS, true);
-    posObjects_.clear();
-    for (auto o : objs)
-        posObjects_.append(PositionalObject_(o));
+    // not all objects need there transformation calculated
+    // these are the ones that do
+    posObjects_ = findChildObjects(T_REAL_OBJECTS, true);
+
+    // tell all object how much thread data they need
+    updateNumberThreads_();
 
 #if (0)
     MO_DEBUG("Scene: " << cameras_.size() << " cameras, "
@@ -95,8 +97,6 @@ void Scene::setGlContext(GL::Context *context)
 
     glContext_ = context;
 
-    updateNumberThreads_();
-
     MO_DEBUG_GL("setting gl context for objects");
     for (auto o : glObjects_)
         o->setGlContext_(0, glContext_);
@@ -109,8 +109,6 @@ void Scene::renderScene(Double time)
 
     if (!glContext_ || cameras_.empty())
         return;
-
-    updateNumberThreads_();
 
     // initialize gl resources
     for (auto o : glObjects_)
@@ -125,9 +123,12 @@ void Scene::renderScene(Double time)
     // calculate transformations
     for (auto &o : posObjects_)
     {
-        o.matrix = o.object->parentObject()->transformation(0);
-        o.object->calculateTransformation(o.matrix, time);
-        o.object->setTransformation(0, o.matrix);
+        // get parent transformation
+        Mat4 matrix(o->parentObject()->transformation(0));
+        // apply object's transformation
+        o->calculateTransformation(matrix, time);
+        // write back
+        o->setTransformation(0, matrix);
     }
 
     // start camera frame

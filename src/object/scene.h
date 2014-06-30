@@ -60,14 +60,6 @@ public slots:
 
 private:
 
-    struct PositionalObject_
-    {
-        Object * object;
-        Mat4 matrix;
-        PositionalObject_(Object * o)
-            : object(o), matrix(1.0) { }
-    };
-
     // ------------ object collection ----------
 
     /** Collects all special child objects */
@@ -88,7 +80,7 @@ private:
     // ----------- special objects -------------
 
     QList<Object*> allObjects_;
-    QList<PositionalObject_> posObjects_;
+    QList<Object*> posObjects_;
     QList<Camera*> cameras_;
     QList<ObjectGl*> glObjects_;
 
