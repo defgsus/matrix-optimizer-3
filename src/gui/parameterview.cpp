@@ -15,6 +15,7 @@
 
 #include "parameterview.h"
 #include "object/object.h"
+#include "object/scene.h"
 #include "object/parameterfloat.h"
 #include "io/error.h"
 
@@ -91,6 +92,23 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         spin->setValue(pf->baseValue());
         spin->setMinimum(pf->minValue());
         spin->setMaximum(pf->maxValue());
+        spin->setMaximumWidth(120);
+        connect(spin, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=]()
+        {
+            QObject * scene = p->sceneObject();
+            MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
+            if (!scene) return;
+            // threadsafe send new parameter value
+            bool r =
+                metaObject()->invokeMethod(scene,
+                                           "setParameterValue",
+                                           Qt::QueuedConnection,
+                                           Q_ARG(MO::ParameterFloat*, pf),
+                                           Q_ARG(Double, spin->value())
+                                           );
+            MO_ASSERT(r, "could not invoke Scene::setParameterValue");
+            Q_UNUSED(r);
+        });
     }
     else
         MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");

@@ -12,6 +12,7 @@
 #define MOSRC_TYPES_FLOAT_H
 
 #include <qglobal.h> // for Q_STATIC_ASSERT
+#include <qmetatype.h>
 
 namespace MO {
 
@@ -33,7 +34,6 @@ namespace MO {
 
     Q_STATIC_ASSERT(sizeof(F32) == 4);
     Q_STATIC_ASSERT(sizeof(F64) == 8);
-
 
 } // namespace MO
 

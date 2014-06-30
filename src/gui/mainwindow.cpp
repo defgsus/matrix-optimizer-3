@@ -172,6 +172,9 @@ void MainWindow::createObjects_()
     connect(glManager_, SIGNAL(renderRequest()), scene, SLOT(renderScene()));
     connect(glManager_, SIGNAL(contextCreated(MO::GL::Context*)), scene, SLOT(setGlContext(MO::GL::Context*)));
 
+    connect(scene, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
+
+
     auto cam = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_CAMERA));
         //cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
         //cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));

@@ -19,6 +19,9 @@ class ParameterFloat : public Parameter
 {
     Q_OBJECT
 public:
+
+    static Double infinity;
+
     explicit ParameterFloat(QObject *parent = 0);
 
     MO_OBJECT_CLONE(ParameterFloat)
@@ -54,5 +57,6 @@ private:
 };
 
 } // namespace MO
+
 
 #endif // PARAMETERFLOAT_H

@@ -38,10 +38,17 @@ public:
 
 signals:
 
+    /** Scene should be rerendered */
+    void renderRequest();
+
 public slots:
 
     /** Tells the Scene to update it's info about the tree */
     void treeChanged();
+
+    // ------------- parameter -----------------
+
+    void setParameterValue(MO::ParameterFloat *, Double value);
 
     // ------------- open gl -------------------
 

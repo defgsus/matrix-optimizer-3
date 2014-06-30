@@ -11,15 +11,20 @@
 #include "parameterfloat.h"
 #include "io/datastream.h"
 
+Q_DECLARE_METATYPE(MO::ParameterFloat*);
+namespace { static int register_param = qMetaTypeId<MO::ParameterFloat*>(); }
+
 namespace MO {
 
 MO_REGISTER_OBJECT(ParameterFloat)
 
+Double ParameterFloat::infinity = 1e100;
+
 ParameterFloat::ParameterFloat(QObject *parent)
     :   Parameter(parent),
         defaultValue_   (0.0),
-        minValue_       (-10000000000),
-        maxValue_       (10000000000),
+        minValue_       (-infinity),
+        maxValue_       (+infinity),
         value_          (0.0)
 {
     setName("Float");

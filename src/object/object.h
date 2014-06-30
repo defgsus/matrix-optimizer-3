@@ -45,7 +45,7 @@ class Transformation;
 
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
-        bool success_register_object_##class__ = \
+        static bool success_register_object_##class__ = \
             ::MO::registerObject_(new class__); \
     }
 

@@ -66,7 +66,8 @@ SOURCES += \
     src/object/model3d.cpp \
     src/object/transformation.cpp \
     src/object/parameterfloat.cpp \
-    src/gui/parameterview.cpp
+    src/gui/parameterview.cpp \
+    src/types/float.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \

@@ -13,6 +13,7 @@
 #include "camera.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "object/parameterfloat.h"
 
 namespace MO {
 
@@ -60,6 +61,13 @@ void Scene::initGlChilds_()
     }*/
 }
 
+// -------------------- parameter ----------------------------
+
+void Scene::setParameterValue(ParameterFloat *p, Double v)
+{
+    p->setValue(v);
+    emit renderRequest();
+}
 
 // ----------------------- open gl ---------------------------
 
