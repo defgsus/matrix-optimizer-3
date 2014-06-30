@@ -15,6 +15,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 
+//#include <glm/gtx/simd_vec4.hpp>
+//#include <glm/gtx/simd_mat4.hpp>
+
 #include "types/float.h"
 
 namespace MO {
@@ -27,6 +30,7 @@ namespace MO {
 
     typedef glm::detail::tmat3x3<Float> Mat3;
     typedef glm::detail::tmat4x4<Float> Mat4;
+    //typedef glm::simdMat4 Mat4;
 
     typedef glm::detail::tvec2<Double> DVec2;
     typedef glm::detail::tvec3<Double> DVec3;

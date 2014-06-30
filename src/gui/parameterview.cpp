@@ -89,9 +89,9 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     {
         QDoubleSpinBox * spin = new QDoubleSpinBox(w);
         l->addWidget(spin);
-        spin->setValue(pf->baseValue());
         spin->setMinimum(pf->minValue());
         spin->setMaximum(pf->maxValue());
+        spin->setValue(pf->baseValue());
         spin->setMaximumWidth(120);
         connect(spin, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=]()
         {

@@ -8,7 +8,7 @@
     <p>created 6/27/2014</p>
 */
 
-#include <QDebug>
+//#include <QDebug>
 
 #include "object.h"
 #include "tool/stringmanip.h"
@@ -77,6 +77,11 @@ void Object::serializeTree(IO::DataStream & io) const
 }
 
 Object * Object::deserializeTree(IO::DataStream & io)
+{
+    return deserializeTree_(io);
+}
+
+Object * Object::deserializeTree_(IO::DataStream & io)
 {
     MO_DEBUG_IO("Object::deserializeTree()");
 
@@ -188,6 +193,9 @@ bool Object::hasParentObject(Object *o) const
 void Object::setParentObject(Object *parent, int index)
 {
     MO_ASSERT(parent, "NULL parent given for Object");
+
+    MO_DEBUG_TREE("Object("<<idName()<<")::SetParentObject("<<parent->idName()<<")");
+
     MO_ASSERT(parentObject_ != parent, "trying to add object to same parent");
     MO_ASSERT(!hasParentObject(this), "trying to add object to it's own hierarchy");
     MO_ASSERT(parent->canHaveChildren(type()), "invalid child '" << idName() << "' "
@@ -314,7 +322,6 @@ void Object::makeUniqueIds_(Object * root)
 
 Object * Object::findChildObject(const QString &id, bool recursive, Object * ignore) const
 {
-    qDebug() << idName() << "findChildObject" << id;
     for (auto o : childObjects_)
         if (o != ignore && o->idName() == id)
             return o;

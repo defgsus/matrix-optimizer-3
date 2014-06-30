@@ -21,7 +21,7 @@ Model3d::Model3d(QObject * parent)
 }
 
 
-void Model3d::initGl(int thread)
+void Model3d::initGl(int /*thread*/)
 {
 
 }

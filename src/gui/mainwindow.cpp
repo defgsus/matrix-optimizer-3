@@ -232,24 +232,32 @@ void MainWindow::setEditActions_(const QObject *, QList<QAction *> actions)
 
 void MainWindow::testSceneTransform_()
 {
-    const int num = 10000;
     QTime t;
 
+    int num = 10000000;
+    int i = 0;
+    int e = 0;
+
     t.start();
-    for (int i = 0; i < num; ++i)
+    for (; i < num && e <= 1000; ++i)
     {
-        scene_->calculateSceneTransform(0, (Double)i);
+        for (int j=0; j<1000; ++j, ++i)
+            scene_->calculateSceneTransform(0, 0.01 * i);
+
+        e = t.elapsed();
     }
-    Double elapsed = (Double)t.elapsed() / 1000.0;
+    num = i;
+    const Double elapsed = (Double)e / 1000.0;
 
     QMessageBox::information(this, tr("Scene transformation test"),
-        tr("Calculating %1 frames of transformation took %2 seconds.\n"
+        tr("Calculating %1 frames of transformation\n"
+           "which took %2 seconds.\n"
            "This is %3 milli-seconds per frame\n"
            "and %4 frames per second.")
                              .arg(num)
                              .arg(elapsed)
                              .arg((elapsed*1000)/num)
-                             .arg((Double)num/elapsed)
+                             .arg((int)((Double)num/elapsed))
            );
 }
 

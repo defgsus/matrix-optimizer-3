@@ -69,7 +69,8 @@ SOURCES += \
     src/gui/parameterview.cpp \
     src/types/float.cpp \
     src/object/axisrotation.cpp \
-    src/object/translation.cpp
+    src/object/translation.cpp \
+    src/io/applicationtime.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -126,7 +127,8 @@ HEADERS += \
     src/object/parameterfloat.h \
     src/gui/parameterview.h \
     src/object/axisrotation.h \
-    src/object/translation.h
+    src/object/translation.h \
+    src/io/applicationtime.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

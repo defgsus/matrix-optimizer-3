@@ -266,6 +266,8 @@ private:
     Object(const Object&);
     void operator=(const Object&);
 
+    /** Implementation of deserializeTree() */
+    static Object * deserializeTree_(IO::DataStream&);
 
     /** Removes the child from the child list, nothing else. */
     bool takeChild_(Object * child);

@@ -15,6 +15,15 @@
 #include <sstream>
 
 #include "io/streamoperators_qt.h"
+#include "io/applicationtime.h"
+
+#ifndef NDEBUG
+/** Enables MO_ASSERT() */
+#   define MO_ENABLE_ASSERT
+#endif
+
+#define MO_ENABLE_WARNING
+
 
 namespace MO {
 
@@ -38,7 +47,8 @@ public:
         VERSION_MISMATCH
     };
 
-    Exception(int cause = UNKNOWN) throw() : cause_(cause) { }
+    Exception(int cause = UNKNOWN) throw() : cause_(cause)
+        { text_ + "[" + applicationTimeString().toStdString() + "] "; }
     virtual ~Exception() throw() { }
 
     virtual const char * what() const throw() { return text_.c_str(); }
@@ -88,6 +98,8 @@ public:
     GlException& operator << (const T& value) { addToStream(value); return *this; }
 };
 
+// ---------------------- error -----------------------------
+
 #define MO_ERROR(text__) \
 { throw ::MO::Exception() << text__; }
 
@@ -100,23 +112,37 @@ public:
 #define MO_LOGIC_ERROR(text__) \
 { throw ::MO::LogicException(::MO::Exception::LOGIC) << text__; }
 
-#define MO_ASSERT(cond__, text__) \
-if (!(cond__)) \
-{ \
-    throw ::MO::Exception(::MO::Exception::ASSERT) \
-        << "assertion in " << __FILE__ << ":" << __LINE__ \
-        << "\n" << text__; \
-}
+
+// ----------------------- warning -------------------------
+
+#ifdef MO_ENABLE_WARNING
+#   define MO_WARNING_IMPL_(text__) \
+        { std::cerr << "[" << ::MO::applicationTimeString() << "] " << text__ << std::endl; }
+#else
+#   define MO_WARNING_IMPL(unused__) { }
+#endif
 
 
 #define MO_WARNING(text__) \
-{ std::cerr << "WARNING: " << text__ << std::endl; }
+    MO_WARNING_IMPL_("WARNING: " << text__)
 
 #define MO_IO_WARNING(cause__, text__) \
-{ std::cerr << "IO-WARNING: " << text__ << std::endl; }
+    MO_WARNING_IMPL_("IO-WARNING: " << text__)
 
 
+// ----------------------- assert ---------------------------
 
+#ifdef MO_ENABLE_ASSERT
+    #define MO_ASSERT(cond__, text__) \
+    if (!(cond__)) \
+    { \
+        throw ::MO::Exception(::MO::Exception::ASSERT) \
+            << "assertion in " << __FILE__ << ":" << __LINE__ \
+            << "\n" << text__; \
+    }
+#else
+    #define MO_ASSERT(unused__, unused___) { }
+#endif
 
 } // namespace MO
 

@@ -31,15 +31,23 @@ Scene::Scene(QObject *parent) :
 
 void Scene::treeChanged()
 {
+    MO_DEBUG_TREE("Scene::treeChanged()");
+
     findObjects_();
 
     if (glContext_)
+    {
+        // update infos for new objects
         setGlContext(glContext_);
+
+        // update image
+        emit renderRequest();
+    }
 }
 
 void Scene::findObjects_()
 {
-    //MO_DEBUG("Scene::findObjects_()");
+    //MO_DEBUG_TREE("Scene::findObjects_()");
 
     allObjects_ = findChildObjects<Object>(QString(), true);
     cameras_ = findChildObjects<Camera>(QString(), true);
@@ -117,6 +125,9 @@ void Scene::renderScene(Double time)
 
     calculateSceneTransform(0, time);
 
+    // start camera frame
+    cameras_[0]->startGlFrame(0, time);
+
     // render all opengl objects
     for (auto o : glObjects_)
     {
@@ -145,8 +156,6 @@ void Scene::calculateSceneTransform(int thread, Double time)
         o->setTransformation(thread, matrix);
     }
 
-    // start camera frame
-    cameras_[0]->startGlFrame(thread, time);
 }
 
 } // namespace MO
