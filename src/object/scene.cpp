@@ -40,9 +40,11 @@ void Scene::findObjects_()
     cameras_ = findChildObjects<Camera>();
     glObjects_ = findChildObjects<ObjectGl>();
 
+#if (0)
     MO_DEBUG("Scene: " << cameras_.size() << " cameras, "
              << glObjects_.size() << " gl-objects"
              );
+#endif
 }
 
 void Scene::initGlChilds_()

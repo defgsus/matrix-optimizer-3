@@ -102,26 +102,29 @@ void ObjectTreeView::createEditActions_(Object * obj)
         QFont font; font.setBold(true);
         a->setFont(font);
 
-        // copy
-        editActions_.append(a = new QAction(tr("Copy"), this));
-        connect(a, &QAction::triggered, [=]()
+        if (!obj->isParameter())
         {
-            application->clipboard()->setMimeData(
-                        omodel->mimeData(QModelIndexList() << currentIndex()));
-        });
+            // copy
+            editActions_.append(a = new QAction(tr("Copy"), this));
+            connect(a, &QAction::triggered, [=]()
+            {
+                application->clipboard()->setMimeData(
+                            omodel->mimeData(QModelIndexList() << currentIndex()));
+            });
 
-        // cut
-        editActions_.append(a = new QAction(tr("Cut"), this));
-        connect(a, &QAction::triggered, [=]()
-        {
-            application->clipboard()->setMimeData(
-                        omodel->mimeData(QModelIndexList() << currentIndex()));
-            omodel->deleteObject(currentIndex());
-        });
+            // cut
+            editActions_.append(a = new QAction(tr("Cut"), this));
+            connect(a, &QAction::triggered, [=]()
+            {
+                application->clipboard()->setMimeData(
+                            omodel->mimeData(QModelIndexList() << currentIndex()));
+                omodel->deleteObject(currentIndex());
+            });
 
-        // delete
-        editActions_.append(a = new QAction(tr("Delete"), this));
-        connect(a, &QAction::triggered, [=](){ omodel->deleteObject(currentIndex()); });
+            // delete
+            editActions_.append(a = new QAction(tr("Delete"), this));
+            connect(a, &QAction::triggered, [=](){ omodel->deleteObject(currentIndex()); });
+        }
 
         // paste
         if (application->clipboard()->mimeData()->formats().contains(

@@ -24,8 +24,8 @@ Transformation::Transformation(QObject *parent) :
 void Transformation::createParameters()
 {
     rotX_ = createFloatParameter("rotx", "rotation x", 0);
-    rotY_ = createFloatParameter("rotx", "rotation x", 0);
-    rotZ_ = createFloatParameter("rotx", "rotation x", 0);
+    rotY_ = createFloatParameter("roty", "rotation y", 0);
+    rotZ_ = createFloatParameter("rotz", "rotation z", 0);
 }
 
 

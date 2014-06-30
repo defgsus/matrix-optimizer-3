@@ -279,6 +279,9 @@ QMimeData * ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
 
     if (Object * obj = itemForIndex(indexes.at(0)))
     {
+        if (obj->isParameter())
+            return 0;
+
         auto data = new ObjectTreeMimeData();
         data->setModelIndex(indexes.at(0));
         data->setObjectTree(obj);

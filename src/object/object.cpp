@@ -8,7 +8,7 @@
     <p>created 6/27/2014</p>
 */
 
-#include <QDebug>
+//#include <QDebug>
 
 #include "object.h"
 #include "tool/stringmanip.h"
@@ -93,7 +93,7 @@ Object * Object::deserializeTree(IO::DataStream & io)
 
     // create this object
     MO_DEBUG_IO("creating object '" << className << "'");
-    Object * o = ObjectFactory::instance().createObject(className);
+    Object * o = ObjectFactory::instance().createObject(className, false);
 
     if (o)
     {
@@ -323,6 +323,9 @@ Object * Object::findChildObject(const QString &id, bool recursive, Object * ign
 
 bool Object::canHaveChildren(Type t) const
 {
+    if (type() == T_PARAMETER)
+        return false;
+
     if (type() == T_TRANSFORMATION)
         return t == T_PARAMETER;
 
@@ -339,7 +342,6 @@ bool Object::canHaveChildren(Type t) const
 ParameterFloat * Object::createFloatParameter(
         const QString& id, const QString& name, Double defaultValue)
 {
-    qDebug() << "createFloatParam" << id;
     ParameterFloat * param = 0;
 
     // see if already there

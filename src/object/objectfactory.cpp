@@ -58,7 +58,7 @@ bool ObjectFactory::registerObject(Object * obj)
     return true;
 }
 
-Object * ObjectFactory::createObject(const QString &className)
+Object * ObjectFactory::createObject(const QString &className, bool createParameters)
 {
     auto it = instance().objectMap_.find(className);
     if (it == instance().objectMap_.end())
@@ -74,7 +74,8 @@ Object * ObjectFactory::createObject(const QString &className)
     if (obj->name_.isEmpty())
         obj->name_ = className;
 
-    obj->createParameters();
+    if (createParameters)
+        obj->createParameters();
 
     return obj;
 }
