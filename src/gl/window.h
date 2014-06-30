@@ -20,6 +20,13 @@ namespace GL {
 
 class Context;
 
+/** OpenGL output window.
+
+    This window creates an OpenGL context and sends it off
+    to MO::GL::Manager when it first gets shown.
+
+    It can be made fullscreen with F11 (or ALT+F).
+*/
 class Window : public QWindow
 {
     Q_OBJECT
