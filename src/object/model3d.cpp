@@ -26,17 +26,34 @@ void Model3d::initGl()
 
 }
 
-void Model3d::renderGl(Double time)
+void Model3d::renderGl(Double )
 {
-    glClearColor(0,0.5,0.5,1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
+    /*
     glColor3f(1,0,0);
     glBegin(GL_QUADS);
         glVertex2f(0,0);
         glVertex2f(10+sin(time),0);
         glVertex2f(10,10);
         glVertex2f(0,10);
+    glEnd();
+    */
+
+    glLoadMatrixf(&transformation()[0][0]);
+
+    glColor3f(1,1,1);
+    glBegin(GL_LINES);
+        for (int i=-10; i<=10; ++i)
+        {
+            glVertex3f(i,0,-10);
+            glVertex3f(i,0,10);
+            glVertex3f(-10,0,i);
+            glVertex3f(10,0,i);
+
+            glVertex3f(-10,i,-10);
+            glVertex3f(10,i,-10);
+            glVertex3f(i,-10,-10);
+            glVertex3f(i,10,-10);
+        }
     glEnd();
 }
 

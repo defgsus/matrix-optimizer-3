@@ -23,13 +23,13 @@ Transformation::Transformation(QObject *parent) :
 
 void Transformation::createParameters()
 {
-    angle_ = createFloatParameter("rotx", "angle", 0);
+    angle_ = createFloatParameter("rotx", "angle", 15);
     x_ = createFloatParameter("axis_x", "axis x", 1);
     y_ = createFloatParameter("axis_y", "axis y", 0);
     z_ = createFloatParameter("axis_z", "axis z", 0);
 }
 
-void Transformation::applyTransform(Mat4 &matrix, Double time) const
+void Transformation::applyTransformation(Mat4 &matrix, Double time) const
 {
     matrix = glm::rotate(matrix,
                 (Mat4::value_type)angle_->value(time),

@@ -219,6 +219,9 @@ void Object::setParentObject(Object *parent, int index)
     // tell Scene
     if (Scene * scene = sceneObject())
         scene->treeChanged();
+
+    // tell parent object
+    parentObject_->childrenChanged_();
 }
 
 int Object::getInsertIndex(Object *object, int insert_index) const
@@ -274,6 +277,9 @@ void Object::deleteObject(Object * child)
     // tell Scene
     if (Scene * scene = sceneObject())
         scene->treeChanged();
+
+    // tell this object
+    childrenChanged_();
 }
 
 bool Object::takeChild_(Object *child)
@@ -321,6 +327,20 @@ Object * Object::findChildObject(const QString &id, bool recursive, Object * ign
     return 0;
 }
 
+QList<Object*> Object::findChildObjects(int typeFlags, bool recursive) const
+{
+    QList<Object*> list;
+    for (auto o : childObjects_)
+        if (o->type() & typeFlags)
+            list.append(o);
+
+    if (recursive)
+        for (auto o : childObjects_)
+            list.append( o->findChildObjects(typeFlags, true) );
+
+    return list;
+}
+
 bool Object::canHaveChildren(Type t) const
 {
     if (type() == T_PARAMETER)
@@ -335,7 +355,31 @@ bool Object::canHaveChildren(Type t) const
     return true;
 }
 
+void Object::childrenChanged_()
+{
+    // collect special sub-objects
+    collectTransformationObjects_();
 
+    // derived code
+    childrenChanged();
+}
+
+// ------------------------- 3d -----------------------
+
+void Object::collectTransformationObjects_()
+{
+    transformationObjects_.clear();
+
+    for (auto o : childObjects_)
+        if (auto t = qobject_cast<Transformation*>(o))
+            transformationObjects_.append(t);
+}
+
+void Object::calculateTransformation(Mat4 &matrix, Double time) const
+{
+    for (auto t : transformationObjects_)
+        t->applyTransformation(matrix, time);
+}
 
 // ---------------------- parameter --------------------------
 
@@ -364,13 +408,15 @@ ParameterFloat * Object::createFloatParameter(
 
         addObject(param);
 
+        // first time init
         param->idName_ = "p_" + id;
         param->setParameterId(id);
+        param->setValue(defaultValue);
     }
 
+    // override potentially previous
     param->setName(name);
     param->setDefaultValue(defaultValue);
-    param->setValue(defaultValue);
 
     return param;
 }

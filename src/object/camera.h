@@ -34,6 +34,8 @@ public:
     /** Returns projection matrix */
     const Mat4& projection() const { return projection_; }
 
+    // XXX only trying here
+    void setProjectionMatrix();
 signals:
 
 public slots:

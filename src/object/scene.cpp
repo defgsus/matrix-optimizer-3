@@ -37,8 +37,13 @@ void Scene::treeChanged()
 
 void Scene::findObjects_()
 {
-    cameras_ = findChildObjects<Camera>();
-    glObjects_ = findChildObjects<ObjectGl>();
+    cameras_ = findChildObjects<Camera>(QString(), true);
+    glObjects_ = findChildObjects<ObjectGl>(QString(), true);
+
+    auto objs = findChildObjects(T_REAL_OBJECTS, true);
+    posObjects_.clear();
+    for (auto o : objs)
+        posObjects_.append(PositionalObject_(o));
 
 #if (0)
     MO_DEBUG("Scene: " << cameras_.size() << " cameras, "
@@ -74,14 +79,24 @@ void Scene::renderScene(Double time)
 {
     MO_ASSERT(glContext_, "renderScene() without context");
 
-    if (!glContext_)
+    if (!glContext_ || cameras_.empty())
         return;
 
     for (auto o : glObjects_)
-    {
         if (o->needsInitGl())
             o->initGl_();
 
+    for (auto &o : posObjects_)
+    {
+        o.matrix = o.object->parentObject()->transformation();
+        o.object->calculateTransformation(o.matrix, time);
+        o.object->setTransformation(o.matrix);
+    }
+
+    cameras_[0]->setProjectionMatrix();
+
+    for (auto o : glObjects_)
+    {
         o->renderGl_(time);
     }
 }

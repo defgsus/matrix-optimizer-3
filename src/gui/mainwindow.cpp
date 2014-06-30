@@ -161,8 +161,8 @@ void MainWindow::createObjects_()
     connect(glManager_, SIGNAL(contextCreated(MO::GL::Context*)), scene, SLOT(setGlContext(MO::GL::Context*)));
 
     auto cam = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_CAMERA));
-        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
-        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
+        //cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
+        //cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
         auto mic = cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MICROPHONE));
             mic->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSFORMATION));
     auto model = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MODEL3D));

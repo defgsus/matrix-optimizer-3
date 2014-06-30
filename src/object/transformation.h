@@ -31,7 +31,7 @@ public:
 
     virtual void createParameters();
 
-    virtual void applyTransform(Mat4& matrix, Double time) const;
+    virtual void applyTransformation(Mat4& matrix, Double time) const;
 
 signals:
 

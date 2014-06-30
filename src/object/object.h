@@ -66,15 +66,19 @@ public:
 
     enum Type
     {
-        T_NONE,
-        T_OBJECT,
-        T_PARAMETER,
-        T_PARAMETER_FLOAT,
-        T_TRANSFORMATION,
-        T_SCENE,
-        T_MICROPHONE,
-        T_CAMERA,
-        T_SOUNDSOURCE
+        T_NONE = 0,
+        T_OBJECT = 1,
+        T_PARAMETER = 2,
+        T_PARAMETER_FLOAT = 4,
+        T_TRANSFORMATION = 8,
+        T_SCENE = 16,
+        T_MICROPHONE = 32,
+        T_CAMERA = 64,
+        T_SOUNDSOURCE = 128
+    };
+    enum Types
+    {
+        T_REAL_OBJECTS = T_OBJECT | T_MICROPHONE | T_SOUNDSOURCE | T_CAMERA
     };
 
 
@@ -165,6 +169,10 @@ public:
         If @p ignore is not NULL, this object will be ignored by search. */
     Object * findChildObject(const QString& id, bool recursive = false, Object * ignore = 0) const;
 
+    /** Returns a list of all objects that match one of the flags in @p typeFlags,
+        where typeFlags is an or-combination of Object::Type enums. */
+    QList<Object*> findChildObjects(int typeFlags, bool recursive = false) const;
+
     /** Returns the children of type @p T with the given id, or NULL.
         if @p id is empty, all objects of type T will be returned.
         If @p ignore is not NULL, this object will be ignored by search. */
@@ -201,6 +209,9 @@ public:
     /** Deletes the child from the list of children, if found. */
     void deleteObject(Object * child);
 
+    /** Called when the children list has changed */
+    virtual void childrenChanged() { }
+
     // --------------- parameter -------------------
 
     /** Override to create all parameters for your object */
@@ -220,7 +231,13 @@ public:
     Vec3 position() const
         { return Vec3(transformation_[3][0], transformation_[3][1], transformation_[3][2]); }
 
+    void setTransformation(const Mat4& mat) { transformation_ = mat; }
 
+    /** Apply all transformation of this object to the given matrix. */
+    void calculateTransformation(Mat4& matrix, Double time) const;
+
+    /** List of all direct transformation childs */
+    const QList<Transformation*> transformationObjects() const { return transformationObjects_; }
 
 signals:
 
@@ -245,6 +262,12 @@ private:
         The tree in @p root can be an actual parent of the object or not. */
     void makeUniqueIds_(Object * root);
 
+    /** Called on changes to the child list */
+    void childrenChanged_();
+
+    /** Fills the transformationChilds() array */
+    void collectTransformationObjects_();
+
     // ------------ properties ---------------
 
     QString idName_, name_;
@@ -253,6 +276,7 @@ private:
 
     Object * parentObject_;
     QList<Object*> childObjects_;
+    QList<Transformation*> transformationObjects_;
 
     // ----------- position ------------------
 

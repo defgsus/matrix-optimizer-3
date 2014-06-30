@@ -93,8 +93,6 @@ void Window::renderNow()
         if (!context_->create())
             MO_GL_ERROR("could not create context");
 
-        context_->setSize(size());
-
         emit contextCreated(context_);
 
         //needsInit = true;
@@ -102,6 +100,8 @@ void Window::renderNow()
 
     if (!context_->makeCurrent(this))
         MO_GL_ERROR("could not make context current");
+
+    context_->setSize(size());
 
     emit renderRequest();
 
