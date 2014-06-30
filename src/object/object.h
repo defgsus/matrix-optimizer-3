@@ -40,7 +40,7 @@ class Transformation;
     #define MO_OBJECTCLASSNAME_MODEL3D "_model3d"
 //    #define MO_OBJECTCLASSNAME_PARAMETER "_parameter"
     #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT "_parameter_float"
-    #define MO_OBJECTCLASSNAME_TRANSFORMATION "_transformation"
+    #define MO_OBJECTCLASSNAME_AXISROTATION "_axis_rotation"
 #endif
 
 #define MO_REGISTER_OBJECT(class__) \

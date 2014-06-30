@@ -67,7 +67,8 @@ SOURCES += \
     src/object/transformation.cpp \
     src/object/parameterfloat.cpp \
     src/gui/parameterview.cpp \
-    src/types/float.cpp
+    src/types/float.cpp \
+    src/object/axisrotation.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -122,7 +123,8 @@ HEADERS += \
     src/object/model3d.h \
     src/object/transformation.h \
     src/object/parameterfloat.h \
-    src/gui/parameterview.h
+    src/gui/parameterview.h \
+    src/object/axisrotation.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

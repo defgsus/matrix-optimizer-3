@@ -1,6 +1,6 @@
 /** @file transformation.h
 
-    @brief object transformation class
+    @brief abstract object transformation class
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -22,24 +22,15 @@ class Transformation : public Object
 public:
     explicit Transformation(QObject *parent = 0);
 
-    MO_OBJECT_CLONE(Transformation)
-
     virtual Type type() const { return T_TRANSFORMATION; }
     virtual bool isTransformation() const { return true; }
 
-    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_TRANSFORMATION); return s; }
-
-    virtual void createParameters();
-
-    virtual void applyTransformation(Mat4& matrix, Double time) const;
+    virtual void applyTransformation(Mat4& matrix, Double time) const = 0;
 
 signals:
 
 public slots:
 
-protected:
-
-    ParameterFloat * angle_, * x_, * y_, * z_;
 };
 
 } // namespace MO
