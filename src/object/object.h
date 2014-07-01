@@ -245,6 +245,10 @@ public:
     /** Returns the number of threads, this object is assigned to */
     int numberThreads() const { return transformation_.size(); }
 
+    // --------------- modulators ------------------
+
+    virtual void collectModulators() { };
+
     // --------------- parameter -------------------
 
     /** Override to create all parameters for your object */

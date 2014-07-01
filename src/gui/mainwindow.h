@@ -40,6 +40,9 @@ private slots:
     void testSceneTransform_();
 
     void objectSelected(MO::Object*);
+
+    void start();
+    void stop();
 private:
 
     void createWidgets_();

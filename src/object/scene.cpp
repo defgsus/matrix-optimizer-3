@@ -8,6 +8,8 @@
     <p>created 6/28/2014</p>
 */
 
+//#include <QDebug>
+
 #include "scene.h"
 
 #include "camera.h"
@@ -22,9 +24,14 @@ MO_REGISTER_OBJECT(Scene)
 Scene::Scene(QObject *parent) :
     Object      (parent),
     glContext_  (0),
-    numThreads_ (1)
+    numThreads_ (1),
+    sceneTime_  (0)
 {
     setName("Scene");
+
+    timer_.setInterval(1000 / 30);
+    timer_.setSingleShot(false);
+    connect(&timer_, SIGNAL(timeout()), this, SLOT(timerUpdate_()));
 }
 
 
@@ -60,6 +67,9 @@ void Scene::findObjects_()
     // tell all object how much thread data they need
     updateNumberThreads_();
 
+    // collect all modulators for each object
+    updateModulators_();
+
 #if (0)
     MO_DEBUG("Scene: " << cameras_.size() << " cameras, "
              << glObjects_.size() << " gl-objects"
@@ -87,6 +97,16 @@ void Scene::updateNumberThreads_()
     for (auto o : allObjects_)
         if (o->numberThreads() != numThreads_)
             o->setNumberThreads(numThreads_);
+}
+
+void Scene::updateModulators_()
+{
+    // update scene as well!
+    collectModulators();
+
+    // update all objects
+    for (auto o : allObjects_)
+        o->collectModulators();
 }
 
 // -------------------- parameter ----------------------------
@@ -139,10 +159,14 @@ void Scene::setGlContext(GL::Context *context)
 
 void Scene::renderScene(Double time)
 {
+    //qDebug() << "Scene::renderScene("<<time<<")";
+
     MO_ASSERT(glContext_, "renderScene() without context");
 
     if (!glContext_ || cameras_.empty())
         return;
+
+    time = sceneTime_;
 
     // initialize gl resources
     for (auto o : glObjects_)
@@ -182,6 +206,26 @@ void Scene::calculateSceneTransform(int thread, Double time)
         o->setTransformation(thread, matrix);
     }
 
+}
+
+
+void Scene::start()
+{
+    timer_.start();
+}
+
+void Scene::stop()
+{
+    if (timer_.isActive())
+        timer_.stop();
+    else
+        setSceneTime(0);
+}
+
+void Scene::timerUpdate_()
+{
+    sceneTime_ += (Double)timer_.interval()/1000;
+    emit renderRequest();
 }
 
 } // namespace MO

@@ -163,6 +163,23 @@ void MainWindow::createMainMenu_()
     m = editMenu_ = new QMenu(tr("Edit"), menuBar());
     menuBar()->addMenu(m);
 
+    m = new QMenu(tr("Render"), menuBar());
+    menuBar()->addMenu(m);
+
+    QActionGroup * ag = new QActionGroup(menuBar());
+    m->addAction(a = new QAction(tr("Start"), menuBar()));
+    ag->addAction(a);
+    a->setShortcut(Qt::Key_F7);
+    a->setCheckable(true);
+    connect(a, SIGNAL(triggered()), this, SLOT(start()));
+
+    m->addAction(a = new QAction(tr("Stop"), menuBar()));
+    ag->addAction(a);
+    a->setShortcut(Qt::Key_F8);
+    a->setCheckable(true);
+    a->setChecked(true);
+    connect(a, SIGNAL(triggered()), this, SLOT(stop()));
+
     m = new QMenu(tr("Debug"), menuBar());
     menuBar()->addMenu(m);
 
@@ -294,7 +311,15 @@ void MainWindow::testSceneTransform_()
            );
 }
 
+void MainWindow::start()
+{
+    scene_->start();
+}
 
+void MainWindow::stop()
+{
+    scene_->stop();
+}
 
 } // namespace GUI
 } // namespace MO

@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_SCENE_H
 #define MOSRC_OBJECT_SCENE_H
 
+#include <QTimer>
+
 #include "object.h"
 
 
@@ -39,6 +41,10 @@ public:
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
     void calculateSceneTransform(int thread, Double time);
+
+    // --------------- runtime -----------------
+
+    Double sceneTime() const { return sceneTime_; }
 
 signals:
 
@@ -69,9 +75,18 @@ public slots:
     /** Sets the opengl Context for all objects in the scene. */
     void setGlContext(MO::GL::Context * context);
 
+    // XXX all hacky right now
+
     /** Render the whole scene on the current context */
     void renderScene(Double time = 0.0);
 
+    void setSceneTime(Double time) { sceneTime_ = time; emit renderRequest(); }
+
+    void start();
+    void stop();
+
+private slots:
+    void timerUpdate_();
 private:
 
     // ------------ object collection ----------
@@ -81,6 +96,8 @@ private:
 
     /** Tell all objects how much threads we got */
     void updateNumberThreads_();
+
+    void updateModulators_();
 
     // ---------- opengl -----------------------
 
@@ -102,6 +119,11 @@ private:
 
     int numThreads_;
 
+    // ------------ runtime --------------------
+
+    QTimer timer_;
+
+    Double sceneTime_;
 };
 
 } // namespace MO

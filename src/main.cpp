@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
     delete MO::application;
 
-    std::cout << "good bye" << std::endl;
+    std::cout << "bis später" << std::endl;
 
     return ret;
 }

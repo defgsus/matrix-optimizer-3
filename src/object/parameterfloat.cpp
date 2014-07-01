@@ -10,6 +10,8 @@
 
 #include "parameterfloat.h"
 #include "io/datastream.h"
+#include "object/sequencefloat.h"
+#include "io/error.h"
 
 Q_DECLARE_METATYPE(MO::ParameterFloat*);
 namespace { static int register_param = qMetaTypeId<MO::ParameterFloat*>(); }
@@ -49,11 +51,43 @@ void ParameterFloat::deserialize(IO::DataStream &io)
     io >> defaultValue_ >> minValue_ >> maxValue_ >> value_;
 }
 
-Double ParameterFloat::value(Double ) const
+
+
+void ParameterFloat::addModulation(const QString &idName)
 {
-    return value_;
+    modulatorIds_.insert(idName);
 }
 
+void ParameterFloat::removeModulation(const QString &idName)
+{
+    modulatorIds_.remove(idName);
+}
+
+Double ParameterFloat::getModulation(Double time) const
+{
+    Double m = 0;
+
+    for (auto s : modulators_)
+        m += s->value(time);
+
+    return m;
+}
+
+void ParameterFloat::collectModulators()
+{
+    modulators_.clear();
+
+    Object * root = rootObject();
+
+    for (auto id : modulatorIds_)
+    {
+        Object * o = root->findChildObject(id, true);
+        if (auto s = qobject_cast<SequenceFloat*>(o))
+            modulators_.append(s);
+        else
+            MO_WARNING("'" << idName() << "' could not find modulator '" << id << "'");
+    }
+}
 
 
 } // namespace MO
