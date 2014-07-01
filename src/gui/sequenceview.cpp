@@ -10,6 +10,8 @@
 
 #include <QGridLayout>
 #include <QDoubleSpinBox>
+#include <QScrollArea>
+#include <QLabel>
 
 #include "sequenceview.h"
 #include "ruler.h"
@@ -22,20 +24,23 @@ SequenceView::SequenceView(QWidget *parent) :
     QWidget(parent),
     grid_           (new QGridLayout(this)),
     rulerX_         (new Ruler(this)),
-    rulerY_         (new Ruler(this))
+    rulerY_         (new Ruler(this)),
+    settings_       (0)
 
 {
     grid_->setMargin(1);
     grid_->setContentsMargins(1,1,1,1);
     grid_->setSpacing(2);
+    // make sequence the biggest component
+    grid_->setColumnStretch(2, 10);
 
     //grid_->addWidget(timelineView_, 1, 1);
-    grid_->addWidget(rulerX_, 0, 1);
-    grid_->addWidget(rulerY_, 1, 0);
+    grid_->addWidget(rulerX_, 0, 2);
+    grid_->addWidget(rulerY_, 1, 1);
 
     // set ruler properties
 
-    rulerX_->setFixedHeight(40);
+    rulerX_->setFixedHeight(34);
     rulerX_->setOptions(Ruler::O_DragX | Ruler::O_DrawX | Ruler::O_DrawTextX | Ruler::O_ZoomX);
 
     rulerY_->setFixedWidth(60);
@@ -57,6 +62,20 @@ SequenceView::SequenceView(QWidget *parent) :
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     //connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
+
+    // ---- container for settings ----
+
+    settings_ = new QScrollArea(this);
+    settings_->setMinimumWidth(200);
+    grid_->addWidget(settings_, 0, 0, 2, 1);
+
+    auto w = new QWidget(settings_);
+    settings_->setWidget(w);
+
+    settingsLayout_ = new QVBoxLayout(w);
+    settingsLayout_->setSizeConstraint(QLayout::SetMinAndMaxSize);
+
+    createDefaultSettings_();
 
     // connect fit-request from ruler to timeline's fit-to-view
     /*connect(rulerX_, &Ruler::fitRequest, [=]()
@@ -96,8 +115,24 @@ void SequenceView::updateViewSpace_(const UTIL::ViewSpace & v)
 
 void SequenceView::setSequenceWidget_(QWidget * w)
 {
-    grid_->addWidget(1, 1);
+    grid_->addWidget(w, 1, 2);
 }
+
+void SequenceView::createDefaultSettings_()
+{
+
+        for (int i=0; i<10; ++i)
+        {
+            auto lh = new QHBoxLayout();
+            settingsLayout_->addLayout(lh);
+            auto l = new QLabel(settings_);
+            l->setText("hello");
+            lh->addWidget(l);
+            auto s = new QDoubleSpinBox(settings_);
+            lh->addWidget(s);
+        }
+}
+
 
 } // namespace GUI
 } // namespace MO

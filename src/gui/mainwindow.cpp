@@ -28,6 +28,7 @@
 #include "gui/qobjectinspector.h"
 #include "gui/objecttreeview.h"
 #include "gui/objectview.h"
+#include "gui/sequencefloatview.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
@@ -106,12 +107,17 @@ void MainWindow::createWidgets_()
             space.setMaxY(1);
             tlv->setViewSpace(space, true);
 
+            /*
             auto tl2 = new MATH::Timeline1D;
             tl2->setLimit(0,1);
 
             auto tlv2 = new Timeline1DRulerView(tl2, this);
             tlv2->setObjectName("timeline02");
             lv->addWidget(tlv2);
+            */
+
+            auto seqfloat = new SequenceFloatView(this);
+            lv->addWidget(seqfloat);
 
     // --------- io ----------
 

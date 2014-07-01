@@ -14,6 +14,8 @@
 #include <QWidget>
 
 class QGridLayout;
+class QVBoxLayout;
+class QScrollArea;
 
 namespace MO {
 namespace GUI {
@@ -48,8 +50,12 @@ protected:
 
 private:
 
+    void createDefaultSettings_();
+
     QGridLayout * grid_;
+    QVBoxLayout * settingsLayout_;
     Ruler * rulerX_, * rulerY_;
+    QScrollArea * settings_;
 };
 
 
