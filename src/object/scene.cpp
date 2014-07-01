@@ -97,6 +97,18 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
     emit renderRequest();
 }
 
+// --------------------- sequence ----------------------------
+
+void Scene::beginSequenceChange(Sequence *)
+{
+
+}
+
+void Scene::endSequenceChange()
+{
+
+}
+
 // ----------------------- open gl ---------------------------
 
 void Scene::setGlContext(GL::Context *context)

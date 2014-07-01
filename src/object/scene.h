@@ -54,6 +54,11 @@ public slots:
 
     void setParameterValue(MO::ParameterFloat *, Double value);
 
+    // ------------- sequences -----------------
+
+    void beginSequenceChange(MO::Sequence *);
+    void endSequenceChange();
+
     // ------------- open gl -------------------
 
     /** Sets the opengl Context for all objects in the scene. */

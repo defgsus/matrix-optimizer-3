@@ -29,10 +29,10 @@ public:
     // ------------- settings -------------------
 
     /** Start time in seconds */
-    Double startTime() const { return startTime_; }
+    Double start() const { return start_; }
 
     /** End time in seconds */
-    Double endTime() const { return startTime_ + length_; }
+    Double end() const { return start_ + length_; }
 
     /** Length in seconds */
     Double length() const { return length_; }
@@ -46,6 +46,13 @@ public:
     /** Loop end time (local) in seconds */
     Double loopEnd() const { return loopStart_ + loopLength_ ; }
 
+    void setStart(Double t) { start_ = t; }
+    void setEnd(Double t) { length_ = t - start_; }
+    void setLength(Double t) { length_ = t; }
+
+    void setLoopStart(Double t) { loopStart_ = t; }
+    void setLoopEnd(Double t) { loopLength_ = t - loopStart_; }
+    void setLoopLength(Double t) { loopLength_ = t; }
 
 signals:
 
@@ -53,7 +60,7 @@ public slots:
 
 private:
 
-    Double startTime_,
+    Double start_,
            length_,
            loopStart_,
            loopLength_;

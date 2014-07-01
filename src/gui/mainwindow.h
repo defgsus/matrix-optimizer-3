@@ -16,10 +16,12 @@
 namespace MO {
 class ObjectTreeModel;
 class Scene;
+class Object;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
 class ObjectView;
+class SequenceFloatView;
 
 class MainWindow : public QMainWindow
 {
@@ -36,6 +38,7 @@ private slots:
     void setEditActions_(const QObject * sender, QList<QAction*> actions);
     void testSceneTransform_();
 
+    void objectSelected(MO::Object*);
 private:
 
     void createWidgets_();
@@ -50,6 +53,8 @@ private:
 
     QMenu * editMenu_;
     ObjectView * objectView_;
+
+    SequenceFloatView * seqFloatView_;
 };
 
 } // namespace GUI

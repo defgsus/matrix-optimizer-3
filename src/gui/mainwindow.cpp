@@ -37,12 +37,14 @@
 #include "object/objectfactory.h"
 #include "object/object.h"
 #include "object/scene.h"
+#include "object/sequencefloat.h"
 
 namespace MO {
 namespace GUI {
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent)
+    QMainWindow     (parent),
+    seqFloatView_   (0)
 {
     setWindowTitle(tr("Matrix Optimizer 3.0"));
 
@@ -59,8 +61,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::createWidgets_()
 {
-    setMinimumSize(800,400);
-
     setCentralWidget(new QWidget(this));
     centralWidget()->setObjectName("_centralwidget");
 
@@ -83,7 +83,7 @@ void MainWindow::createWidgets_()
             objectView_ = new ObjectView(this);
             lv->addWidget(objectView_);
 
-            connect(treev, SIGNAL(objectSelected(MO::Object*)), objectView_, SLOT(setObject(MO::Object*)));
+            connect(treev, SIGNAL(objectSelected(MO::Object*)), SLOT(objectSelected(MO::Object*)));
 
         l0->setStretchFactor(lv, -1);
 
@@ -119,8 +119,10 @@ void MainWindow::createWidgets_()
             lv->addWidget(tlv2);
             */
 
-            auto seqfloat = new SequenceFloatView(this);
-            lv->addWidget(seqfloat);
+            seqFloatView_ = new SequenceFloatView(this);
+            seqFloatView_->setVisible(false);
+            lv->addWidget(seqFloatView_);
+
 
     // --------- io ----------
 
@@ -146,6 +148,8 @@ void MainWindow::createWidgets_()
             tl->loadFile("./timeline.bin");
             tlv->unselect();
         });
+
+    setMinimumSize(800,400);
 
 }
 
@@ -232,6 +236,20 @@ void MainWindow::closeEvent(QCloseEvent * e)
 */
 }
 
+void MainWindow::objectSelected(Object * o)
+{
+    objectView_->setObject(o);
+
+    if (o && o->type() == Object::T_SEQUENCE_FLOAT)
+    {
+        seqFloatView_->setSequence(static_cast<SequenceFloat*>(o));
+        if (!seqFloatView_->isVisible())
+            seqFloatView_->setVisible(true);
+    }
+    else
+        seqFloatView_->setVisible(false);
+
+}
 
 void MainWindow::setEditActions_(const QObject *, QList<QAction *> actions)
 {

@@ -16,7 +16,9 @@
 
 #include "sequenceview.h"
 #include "ruler.h"
-
+#include "object/scene.h"
+#include "object/sequence.h"
+#include "io/error.h"
 
 namespace MO {
 namespace GUI {
@@ -77,8 +79,6 @@ SequenceView::SequenceView(QWidget *parent) :
 
     settingsLayout_ = new QVBoxLayout(w);
     settingsLayout_->setSizeConstraint(QLayout::SetMinAndMaxSize);
-
-    createDefaultSettingsWidgets_();
 
     // connect fit-request from ruler to timeline's fit-to-view
     /*connect(rulerX_, &Ruler::fitRequest, [=]()
@@ -192,11 +192,25 @@ void SequenceView::createDefaultSettingsWidgets_()
 {
     clearDefaultSettingsWidgets_();
 
-    for (int i=0; i<3; ++i)
+    if (!baseSequence_)
+        return;
+
+    QDoubleSpinBox * spin;
+
+    Scene * scene = baseSequence_->sceneObject();
+    MO_ASSERT(scene, "no scene for Sequence in SequenceView");
+
+    QWidget * w = newDefaultSetting_(tr("start time"));
+    w->layout()->addWidget(spin = new QDoubleSpinBox(w));
+    spin->setMinimum(0);
+    spin->setMaximum(60*60 * 99);
+    spin->setValue(baseSequence_->start());
+    connect(spin, static_cast<void(QDoubleSpinBox::*)(Double)>(&QDoubleSpinBox::valueChanged), [=](Double v)
     {
-        QWidget * w = newDefaultSetting_(QString("hello").repeated(1+(i%3)));
-        w->layout()->addWidget(new QDoubleSpinBox(w));
-    }
+        scene->beginSequenceChange(baseSequence_);
+        baseSequence_->setStart(v);
+        scene->endSequenceChange();
+    });
 
     // hline below
     auto f = new QFrame(this);

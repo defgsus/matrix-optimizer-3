@@ -30,6 +30,9 @@ class ParameterFloat;
 class ObjectGl;
 class Model3d;
 class Transformation;
+class Sequences;
+class Sequence;
+class SequenceFloat;
 
 // PERSISTENT class names
 #ifndef MO_OBJECTCLASSNAMES_DEFINED

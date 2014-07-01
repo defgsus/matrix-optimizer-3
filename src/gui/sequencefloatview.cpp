@@ -28,8 +28,8 @@ SequenceFloatView::SequenceFloatView(QWidget *parent) :
     sequence_       (0),
     timeline_       (0)
 {
-    createTimeline_();
-    setSequenceWidget_(timeline_);
+    //createTimeline_();
+    //setSequenceWidget_(timeline_);
 }
 
 void SequenceFloatView::createTimeline_()

@@ -15,7 +15,7 @@ namespace MO {
 
 Sequence::Sequence(QObject *parent) :
     Object      (parent),
-    startTime_  (0.0),
+    start_  (0.0),
     length_     (60.0),
     loopStart_  (0.0),
     loopLength_ (length_)
@@ -27,14 +27,14 @@ void Sequence::serialize(IO::DataStream &io) const
 {
     io.writeHeader("seq", 1);
 
-    io << startTime_ << length_ << loopStart_ << loopLength_;
+    io << start_ << length_ << loopStart_ << loopLength_;
 }
 
 void Sequence::deserialize(IO::DataStream &io)
 {
     io.readHeader("seq", 1);
 
-    io >> startTime_ >> length_ >> loopStart_ >> loopLength_;
+    io >> start_ >> length_ >> loopStart_ >> loopLength_;
 }
 
 } // namespace MO
