@@ -77,7 +77,8 @@ SOURCES += \
     src/object/sequencefloat.cpp \
     src/gui/sequenceview.cpp \
     src/gui/sequencefloatview.cpp \
-    src/gui/doublespinbox.cpp
+    src/gui/doublespinbox.cpp \
+    src/gui/painter/valuecurve.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -142,7 +143,8 @@ HEADERS += \
     src/object/sequencefloat.h \
     src/gui/sequenceview.h \
     src/gui/sequencefloatview.h \
-    src/gui/doublespinbox.h
+    src/gui/doublespinbox.h \
+    src/gui/painter/valuecurve.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui
