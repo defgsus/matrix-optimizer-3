@@ -46,16 +46,21 @@ public:
     /** Loop end time (local) in seconds */
     Double loopEnd() const { return loopStart_ + loopLength_ ; }
 
-    void setStart(Double t) { start_ = t; }
-    void setEnd(Double t) { length_ = t - start_; }
-    void setLength(Double t) { length_ = t; }
+    void setStart(Double t) { start_ = t; emit timeChanged(this); }
+    void setEnd(Double t) { length_ = t - start_; emit timeChanged(this); }
+    void setLength(Double t) { length_ = t; emit timeChanged(this); }
 
-    void setLoopStart(Double t) { loopStart_ = t; }
-    void setLoopEnd(Double t) { loopLength_ = t - loopStart_; }
-    void setLoopLength(Double t) { loopLength_ = t; }
+    void setLoopStart(Double t) { loopStart_ = t; emit timeChanged(this); }
+    void setLoopEnd(Double t) { loopLength_ = t - loopStart_; emit timeChanged(this); }
+    void setLoopLength(Double t) { loopLength_ = t; emit timeChanged(this); }
 
 signals:
-
+    void timeChanged(MO::Sequence *);
+    /*
+    void startChanged(Double t);
+    void endChanged(Double t);
+    void lengthChanged(Double t);
+    */
 public slots:
 
 private:

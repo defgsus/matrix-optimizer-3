@@ -49,6 +49,7 @@ protected slots:
     /** updates the Rulers to the viewspace. */
     void updateViewSpace_(const UTIL::ViewSpace&);
 
+    void sequenceTimeChanged(MO::Sequence *);
 protected:
 
     /** Sets the sequence and creates the default settings */
@@ -80,6 +81,8 @@ private:
 
     QList<QWidget*> defaultSettingsWidgets_,
                     customSettingsWidgets_;
+
+    bool ignoreTimeChange_;
 };
 
 
