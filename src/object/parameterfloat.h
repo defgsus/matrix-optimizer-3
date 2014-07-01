@@ -20,6 +20,7 @@ class ParameterFloat : public Parameter
     Q_OBJECT
 public:
 
+    /** Use to set unbounded limits */
     static Double infinity;
 
     explicit ParameterFloat(QObject *parent = 0);
@@ -44,6 +45,10 @@ public:
     void setMinValue(Double v) { minValue_ = v; }
     void setMaxValue(Double v) { maxValue_ = v; }
     void setValue(Double v) { value_ = v; }
+
+    void setNoMinValue() { minValue_ = infinity; }
+    void setNoMaxValue() { maxValue_ = infinity; }
+    void setUnlimited() { minValue_ = maxValue_ = infinity; }
 
 signals:
 

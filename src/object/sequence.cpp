@@ -1,6 +1,6 @@
 /** @file sequence.cpp
 
-    @brief Sequence class
+    @brief Abstract sequence class
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>

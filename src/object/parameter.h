@@ -1,6 +1,6 @@
 /** @file parameter.h
 
-    @brief General purpose parameter for use in Object
+    @brief Abstract general purpose parameter for use in Object
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
