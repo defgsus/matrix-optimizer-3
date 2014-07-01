@@ -85,7 +85,7 @@ void ObjectTreeView::mousePressEvent(QMouseEvent * e)
     }
 }
 
-bool sortObjecListLessThan(const Object * o1, const Object * o2)
+bool sortObjectListLessThan(const Object * o1, const Object * o2)
 {
     return o1->isTransformation() && !o2->isTransformation();
 }
@@ -198,7 +198,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
             if (!plist.isEmpty())
             {
                 // make transformations first
-                qStableSort(plist.begin(), plist.end(), sortObjecListLessThan);
+                qStableSort(plist.begin(), plist.end(), sortObjectListLessThan);
 
                 QModelIndex parentIndex = omodel->parent(currentIndex());
 
@@ -230,7 +230,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
         if (!clist.isEmpty())
         {
             // make transformations first
-            qStableSort(clist.begin(), clist.end(), sortObjecListLessThan);
+            qStableSort(clist.begin(), clist.end(), sortObjectListLessThan);
 
             editActions_.append(a = new QAction(tr("New child object"), this));
             QMenu * menu = new QMenu(this);

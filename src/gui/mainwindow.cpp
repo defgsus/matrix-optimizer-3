@@ -27,7 +27,7 @@
 #include "gui/painter/grid.h"
 #include "gui/qobjectinspector.h"
 #include "gui/objecttreeview.h"
-#include "gui/parameterview.h"
+#include "gui/objectview.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
@@ -77,10 +77,10 @@ void MainWindow::createWidgets_()
                     SLOT(setEditActions_(const QObject*,QList<QAction*>)));
 
             // object editor
-            paramView_ = new ParameterView(this);
-            lv->addWidget(paramView_);
+            objectView_ = new ObjectView(this);
+            lv->addWidget(objectView_);
 
-            connect(treev, SIGNAL(objectSelected(MO::Object*)), paramView_, SLOT(setObject(MO::Object*)));
+            connect(treev, SIGNAL(objectSelected(MO::Object*)), objectView_, SLOT(setObject(MO::Object*)));
 
 
         lv = new QVBoxLayout();

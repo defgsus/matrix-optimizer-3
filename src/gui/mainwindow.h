@@ -19,7 +19,7 @@ class Scene;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
-class ParameterView;
+class ObjectView;
 
 class MainWindow : public QMainWindow
 {
@@ -49,7 +49,7 @@ private:
     GL::Window * glWindow_;
 
     QMenu * editMenu_;
-    ParameterView * paramView_;
+    ObjectView * objectView_;
 };
 
 } // namespace GUI
