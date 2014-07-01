@@ -20,6 +20,7 @@ class Object;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
+class QObjectInspector;
 class ObjectView;
 class SequenceFloatView;
 
@@ -55,6 +56,8 @@ private:
     ObjectView * objectView_;
 
     SequenceFloatView * seqFloatView_;
+
+    QObjectInspector * qobjectView_;
 };
 
 } // namespace GUI

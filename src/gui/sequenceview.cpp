@@ -7,9 +7,8 @@
 
     <p>created 7/1/2014</p>
 */
-#include <QDebug>
+//#include <QDebug>
 #include <QGridLayout>
-#include <QDoubleSpinBox>
 #include <QScrollArea>
 #include <QLabel>
 #include <QFrame>
@@ -19,6 +18,8 @@
 #include "object/scene.h"
 #include "object/sequence.h"
 #include "io/error.h"
+#include "doublespinbox.h"
+
 
 namespace MO {
 namespace GUI {
@@ -30,7 +31,7 @@ SequenceView::SequenceView(QWidget *parent) :
     rulerX_         (new Ruler(this)),
     rulerY_         (new Ruler(this)),
     settings_       (0),
-    ignoreTimeChange_(false)
+    defaultSettingsAvailable_(false)
 {
     grid_->setMargin(1);
     grid_->setContentsMargins(1,1,1,1);
@@ -111,6 +112,14 @@ SequenceView::SequenceView(QWidget *parent) :
 void SequenceView::setSequence_(Sequence * s)
 {
     bool different = baseSequence_ != s;
+
+    // remove old connection !!
+    if (baseSequence_)
+    {
+        disconnect(baseSequence_, SIGNAL(timeChanged(MO::Sequence*)),
+                   this, SLOT(sequenceTimeChanged(MO::Sequence*)));
+    }
+
     baseSequence_ = s;
 
     if (different)
@@ -118,7 +127,11 @@ void SequenceView::setSequence_(Sequence * s)
         if (!baseSequence_)
             clearDefaultSettingsWidgets_();
         else
+        {
             createDefaultSettingsWidgets_();
+            connect(baseSequence_, SIGNAL(timeChanged(MO::Sequence*)),
+                       SLOT(sequenceTimeChanged(MO::Sequence*)));
+        }
     }
 }
 
@@ -182,6 +195,8 @@ void SequenceView::addSettingsWidget_(QWidget * w)
 
 void SequenceView::clearDefaultSettingsWidgets_()
 {
+    defaultSettingsAvailable_ = false;
+
     for (auto w : defaultSettingsWidgets_)
         w->deleteLater();
 
@@ -196,50 +211,31 @@ void SequenceView::createDefaultSettingsWidgets_()
         return;
 
     QWidget * w;
-    QDoubleSpinBox * spin;
 
     Scene * scene = baseSequence_->sceneObject();
     MO_ASSERT(scene, "no scene for Sequence in SequenceView");
 
-    /*
-    QWidget * w = newDefaultSetting_(tr("start time"));
-    w->layout()->addWidget(spin = new QDoubleSpinBox(w));
-    spin->setMinimum(0);
-    spin->setMaximum(60*60 * 99);
-    spin->setValue(baseSequence_->start());
-    connect(spin, static_cast<void(QDoubleSpinBox::*)(Double)>(&QDoubleSpinBox::valueChanged), [=](Double v)
-    {
-        scene->beginSequenceChange(baseSequence_);
-        baseSequence_->setStart(v);
-        scene->endSequenceChange();
-    });*/
 
-
-#define MO__SCENE_PARAM(getter__, setter__, desc__)         \
+#define MO__SCENE_PARAM(spin__, getter__, setter__, desc__) \
     w = newDefaultSetting_(desc__);                         \
-    w->layout()->addWidget(spin = new QDoubleSpinBox(w));   \
-    spin->setMinimum(0);                                    \
-    spin->setMaximum(60*60 * 99);                           \
-    spin->setValue(baseSequence_->getter__());              \
-    connect(spin,                                           \
-        static_cast<void(QDoubleSpinBox::*)(Double)>        \
-            (&QDoubleSpinBox::valueChanged), [=](Double v)  \
+    w->layout()->addWidget(spin__ = new DoubleSpinBox(w));  \
+    spin__->setMinimum(0);                                  \
+    spin__->setMaximum(60*60 * 1000);                       \
+    spin__->setValue(baseSequence_->getter__());            \
+    connect(spin__,                                         \
+               &DoubleSpinBox::valueChanged, [=](Double v)  \
     {                                                       \
         scene->beginSequenceChange(baseSequence_);          \
-        ignoreTimeChange_ = true;                           \
         baseSequence_->setter__(v);                         \
         scene->endSequenceChange();                         \
-    });                                                     \
-    connect(baseSequence_,                                  \
-        SIGNAL(timeChanged(MO::Sequence*)),                 \
-        SLOT(sequenceTimeChanged(MO::Sequence*)));
+    });
 
-    MO__SCENE_PARAM(start, setStart, tr("start time"));
-    MO__SCENE_PARAM(length, setLength, tr("length"));
-    MO__SCENE_PARAM(end, setEnd, tr("end time"));
-    MO__SCENE_PARAM(start, setStart, tr("loop start"));
-    MO__SCENE_PARAM(length, setLength, tr("loop length"));
-    MO__SCENE_PARAM(end, setEnd, tr("loop end"));
+    MO__SCENE_PARAM(spinStart_, start, setStart, tr("start time"));
+    MO__SCENE_PARAM(spinLength_, length, setLength, tr("length"));
+    MO__SCENE_PARAM(spinEnd_, end, setEnd, tr("end time"));
+    MO__SCENE_PARAM(spinLoopStart_, loopStart, setLoopStart, tr("loop start"));
+    MO__SCENE_PARAM(spinLoopLength_, loopLength, setLoopLength, tr("loop length"));
+    MO__SCENE_PARAM(spinLoopEnd_, loopEnd, setLoopEnd, tr("loop end"));
 
 #undef MO__SCENE_PARAM
 
@@ -248,19 +244,24 @@ void SequenceView::createDefaultSettingsWidgets_()
     f->setFrameShape(QFrame::HLine);
     settingsLayout_->addWidget(f);
     defaultSettingsWidgets_.append(f);
+
+    defaultSettingsAvailable_ = true;
 }
 
 void SequenceView::sequenceTimeChanged(Sequence * s)
 {
-    if (ignoreTimeChange_)
-    {
-        qDebug() << "ignore";
-        ignoreTimeChange_ = false;
+//    qDebug() << "seqchanged " << s << baseSequence_ << defaultSettingsAvailable_;
+    if (!defaultSettingsAvailable_ || !baseSequence_
+        || s != baseSequence_)
         return;
-    }
+//    qDebug() << "updating";
+    spinStart_->setValue( baseSequence_->start() );
+    spinLength_->setValue( baseSequence_->length() );
+    spinEnd_->setValue( baseSequence_->end() );
+    spinLoopStart_->setValue( baseSequence_->loopStart() );
+    spinLoopLength_->setValue( baseSequence_->loopLength() );
+    spinLoopEnd_->setValue( baseSequence_->loopEnd() );
 
-    if (s == baseSequence_)
-        createDefaultSettingsWidgets_();
 }
 
 } // namespace GUI

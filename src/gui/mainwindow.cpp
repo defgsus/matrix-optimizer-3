@@ -44,7 +44,8 @@ namespace GUI {
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow     (parent),
-    seqFloatView_   (0)
+    seqFloatView_   (0),
+    qobjectView_    (0)
 {
     setWindowTitle(tr("Matrix Optimizer 3.0"));
 
@@ -169,7 +170,10 @@ void MainWindow::createMainMenu_()
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            (new QObjectInspector(this, this))->show();
+            if (!qobjectView_)
+                qobjectView_ = new QObjectInspector(this, this);
+            qobjectView_->setRootObject(this);
+            qobjectView_->show();
         });
 
 
@@ -196,6 +200,8 @@ void MainWindow::createObjects_()
     auto cam = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_CAMERA));
         cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
         cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
+        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_SEQUENCE_FLOAT));
+        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_SEQUENCE_FLOAT));
         auto mic = cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MICROPHONE));
             mic->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
     auto model = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MODEL3D));

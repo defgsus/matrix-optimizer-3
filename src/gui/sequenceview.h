@@ -23,6 +23,7 @@ namespace GUI {
 namespace UTIL { class ViewSpace; }
 
 class Ruler;
+class DoubleSpinBox;
 
 class SequenceView : public QWidget
 {
@@ -50,9 +51,10 @@ protected slots:
     void updateViewSpace_(const UTIL::ViewSpace&);
 
     void sequenceTimeChanged(MO::Sequence *);
+
 protected:
 
-    /** Sets the sequence and creates the default settings */
+    /** Sets the sequence and creates the default settings. */
     void setSequence_(MO::Sequence *);
 
     /** Sets the widget that displays the sequence data. */
@@ -82,7 +84,10 @@ private:
     QList<QWidget*> defaultSettingsWidgets_,
                     customSettingsWidgets_;
 
-    bool ignoreTimeChange_;
+    DoubleSpinBox * spinStart_, * spinLength_, * spinEnd_,
+        * spinLoopStart_, * spinLoopLength_, * spinLoopEnd_;
+
+    bool defaultSettingsAvailable_;
 };
 
 
