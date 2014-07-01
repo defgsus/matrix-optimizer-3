@@ -71,7 +71,8 @@ SOURCES += \
     src/object/axisrotation.cpp \
     src/object/translation.cpp \
     src/io/applicationtime.cpp \
-    src/gui/objectview.cpp
+    src/gui/objectview.cpp \
+    src/object/sequence.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -130,7 +131,8 @@ HEADERS += \
     src/object/axisrotation.h \
     src/object/translation.h \
     src/io/applicationtime.h \
-    src/gui/objectview.h
+    src/gui/objectview.h \
+    src/object/sequence.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

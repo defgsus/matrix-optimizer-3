@@ -37,12 +37,13 @@ class Transformation;
     #define MO_OBJECTCLASSNAME_DUMMY "_dummy"
     #define MO_OBJECTCLASSNAME_SCENE "_scene"
     #define MO_OBJECTCLASSNAME_CAMERA "_camera"
-    #define MO_OBJECTCLASSNAME_MICROPHONE "_microphone"
-    #define MO_OBJECTCLASSNAME_SOUNDSOURCE "_soundsource"
-    #define MO_OBJECTCLASSNAME_MODEL3D "_model3d"
-    #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT "_parameter_float"
-    #define MO_OBJECTCLASSNAME_AXISROTATION "_axis_rotation"
-    #define MO_OBJECTCLASSNAME_TRANSLATION "_translation"
+    #define MO_OBJECTCLASSNAME_MICROPHONE "_micro"
+    #define MO_OBJECTCLASSNAME_SOUNDSOURCE "_sound"
+    #define MO_OBJECTCLASSNAME_MODEL3D "_model"
+    #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT "_paramf"
+    #define MO_OBJECTCLASSNAME_AXISROTATION "_axisrot"
+    #define MO_OBJECTCLASSNAME_TRANSLATION "_pos"
+    #define MO_OBJECTCLASSNAME_SEQUENCE "_seq"
 #endif
 
 #define MO_REGISTER_OBJECT(class__) \
@@ -76,7 +77,8 @@ public:
         T_SCENE = 16,
         T_MICROPHONE = 32,
         T_CAMERA = 64,
-        T_SOUNDSOURCE = 128
+        T_SOUNDSOURCE = 128,
+        T_SEQUENCE = 256
     };
     enum Types
     {
@@ -136,6 +138,7 @@ public:
     virtual bool isMicrophone() const { return false; }
     virtual bool isCamera() const { return false; }
     virtual bool isParameter() const { return false; }
+    virtual bool isSequence() const { return false; }
 
     // --------------- setter -------------------
 
