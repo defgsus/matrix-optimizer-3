@@ -99,14 +99,28 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
 
 // --------------------- sequence ----------------------------
 
-void Scene::beginSequenceChange(Sequence *)
+void Scene::beginSequenceChange(Sequence * s)
 {
-
+    MO_DEBUG_PARAM("Scene::beginSequenceChange(" << s << ")");
+    s = s;
 }
 
 void Scene::endSequenceChange()
 {
+    MO_DEBUG_PARAM("Scene::endSequenceChange()");
+}
 
+// --------------------- objects -----------------------------
+
+void Scene::beginObjectChange(Object * o)
+{
+    MO_DEBUG_PARAM("Scene::beginObjectChange(" << o << ")");
+    o = o;
+}
+
+void Scene::endObjectChange()
+{
+    MO_DEBUG_PARAM("Scene::endObjectChange()");
 }
 
 // ----------------------- open gl ---------------------------

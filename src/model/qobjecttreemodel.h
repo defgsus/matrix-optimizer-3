@@ -28,7 +28,7 @@ public:
     QObject * itemForIndex(const QModelIndex& index) const;
 
     static QString objectTitle(QObject *);
-
+    static QString objectRect(QObject *);
     // --- interface impl. ---
 
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;

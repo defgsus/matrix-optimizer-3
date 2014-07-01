@@ -12,10 +12,12 @@
 #include <QColor>
 #include <QBrush>
 
-// for objectTitle()
+// for object properties
 #include <QWidget>
 #include <QAction>
 #include <QMenu>
+#include <QLabel>
+#include <QLayout>
 
 #include "qobjecttreemodel.h"
 #include "io/error.h"
@@ -29,7 +31,8 @@ QObjectTreeModel::QObjectTreeModel(QObject * rootObject, QObject *parent) :
     headerNames_
             << "class"
             << "object name"
-            << "text/title";
+            << "text/title"
+            << "rect";
 }
 
 void QObjectTreeModel::setRootObject(QObject *rootObject)
@@ -133,6 +136,7 @@ QVariant QObjectTreeModel::data(const QModelIndex &index, int role) const
                 case 0: return obj->metaObject()->className();
                 case 1: return obj->objectName();
                 case 2: return objectTitle(obj);
+                case 3: return objectRect(obj);
                 default: MO_LOGIC_ERROR("no DisplayRole defined for column " << index.column());
             }
         }
@@ -187,6 +191,8 @@ QString QObjectTreeModel::objectTitle(QObject * o)
         return w->text();
     if (auto w = qobject_cast<QMenu*>(o))
         return w->title();
+    if (auto w = qobject_cast<QLabel*>(o))
+        return w->text();
 
     if (auto w = qobject_cast<QWidget*>(o))
         return w->windowTitle();
@@ -194,5 +200,19 @@ QString QObjectTreeModel::objectTitle(QObject * o)
 
     return QString();
 }
+
+QString QObjectTreeModel::objectRect(QObject * o)
+{
+    QRect r;
+    if (auto w = qobject_cast<QWidget*>(o))
+        r = w->rect();
+    else if (auto w = qobject_cast<QLayout*>(o))
+        r = w->geometry();
+    else
+        return QString();
+
+    return QString("%1,%2 %3x%4").arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+}
+
 
 } // namespace MO

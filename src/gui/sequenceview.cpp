@@ -7,7 +7,7 @@
 
     <p>created 7/1/2014</p>
 */
-//#include <QDebug>
+
 #include <QGridLayout>
 #include <QScrollArea>
 #include <QLabel>
@@ -19,7 +19,7 @@
 #include "object/sequence.h"
 #include "io/error.h"
 #include "doublespinbox.h"
-
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -76,10 +76,12 @@ SequenceView::SequenceView(QWidget *parent) :
     grid_->addWidget(settings_, 0, 0, 2, 1);
 
     auto w = new QWidget(settings_);
+    w->setObjectName("_settings");
+    w->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     settings_->setWidget(w);
 
     settingsLayout_ = new QVBoxLayout(w);
-    settingsLayout_->setSizeConstraint(QLayout::SetMinAndMaxSize);
+    settingsLayout_->setSizeConstraint(QLayout::SetMinimumSize);
 
     // connect fit-request from ruler to timeline's fit-to-view
     /*connect(rulerX_, &Ruler::fitRequest, [=]()
@@ -182,7 +184,10 @@ QWidget * SequenceView::newDefaultSetting_(const QString & name)
 void SequenceView::clearSettingsWidgets_()
 {
     for (auto w : customSettingsWidgets_)
+    {
+        w->setVisible(false);
         w->deleteLater();
+    }
 
     customSettingsWidgets_.clear();
 }
@@ -198,7 +203,11 @@ void SequenceView::clearDefaultSettingsWidgets_()
     defaultSettingsAvailable_ = false;
 
     for (auto w : defaultSettingsWidgets_)
+    {
+        // XXX should resize/minimize scrollarea viewport instead
+        w->setVisible(false);
         w->deleteLater();
+    }
 
     defaultSettingsWidgets_.clear();
 }
@@ -250,11 +259,15 @@ void SequenceView::createDefaultSettingsWidgets_()
 
 void SequenceView::sequenceTimeChanged(Sequence * s)
 {
-//    qDebug() << "seqchanged " << s << baseSequence_ << defaultSettingsAvailable_;
+    MO_DEBUG_PARAM("SequenceView::sequenceTimeChanged(" << s
+                   << ") baseSequence_=" << baseSequence_
+                   << " defaultSettingsAvailable_=" << defaultSettingsAvailable_);
     if (!defaultSettingsAvailable_ || !baseSequence_
         || s != baseSequence_)
         return;
-//    qDebug() << "updating";
+
+    MO_DEBUG_PARAM("updating widgets");
+
     spinStart_->setValue( baseSequence_->start() );
     spinLength_->setValue( baseSequence_->length() );
     spinEnd_->setValue( baseSequence_->end() );

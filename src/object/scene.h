@@ -59,6 +59,11 @@ public slots:
     void beginSequenceChange(MO::Sequence *);
     void endSequenceChange();
 
+    // ---------- objects in general -----------
+
+    void beginObjectChange(MO::Object *);
+    void endObjectChange();
+
     // ------------- open gl -------------------
 
     /** Sets the opengl Context for all objects in the scene. */

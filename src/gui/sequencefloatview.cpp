@@ -18,6 +18,9 @@
 #include "ruler.h"
 #include "math/timeline1d.h"
 #include "object/sequencefloat.h"
+#include "object/scene.h"
+#include "io/error.h"
+#include "ruler.h"
 
 namespace MO {
 namespace GUI {
@@ -26,10 +29,10 @@ namespace GUI {
 SequenceFloatView::SequenceFloatView(QWidget *parent) :
     SequenceView    (parent),
     sequence_       (0),
-    timeline_       (0)
+    timeline_       (0),
+    emptyRuler_     (0)
 {
-    //createTimeline_();
-    //setSequenceWidget_(timeline_);
+    updateSequence_();
 }
 
 void SequenceFloatView::createTimeline_()
@@ -37,15 +40,21 @@ void SequenceFloatView::createTimeline_()
     if (timeline_)
         return;
 
-    auto tl = new MATH::Timeline1D;
-    for (int i=0; i<20; ++i)
-        tl->add((Double)rand()/RAND_MAX * 10.0, (Double)rand()/RAND_MAX, MATH::Timeline1D::Point::SYMMETRIC);
-    tl->setAutoDerivative();
-
-    timeline_ = new Timeline1DView(tl, this);
+    timeline_ = new Timeline1DView(0, this);
     timeline_->setGridOptions(Ruler::O_DrawX | Ruler::O_DrawY);
 
     connect(timeline_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), SLOT(updateViewSpace_(UTIL::ViewSpace)));
+}
+
+void SequenceFloatView::createEmptyRuler_()
+{
+    if (emptyRuler_)
+        return;
+
+    emptyRuler_ = new Ruler(this);
+    emptyRuler_->setOptions(Ruler::O_DrawX | Ruler::O_DrawY);
+
+    connect(emptyRuler_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), SLOT(updateViewSpace_(UTIL::ViewSpace)));
 }
 
 void SequenceFloatView::setSequence(SequenceFloat * s)
@@ -57,6 +66,8 @@ void SequenceFloatView::setSequence(SequenceFloat * s)
 
     if (different)
     {
+        updateSequence_();
+
         if (!sequence_)
             clearSettingsWidgets_();
         else
@@ -64,9 +75,32 @@ void SequenceFloatView::setSequence(SequenceFloat * s)
     }
 }
 
+void SequenceFloatView::updateSequence_()
+{
+    if (!sequence_)
+    {
+        createEmptyRuler_();
+        setSequenceWidget_(emptyRuler_);
+        return;
+    }
+
+    if (sequence_->mode() == SequenceFloat::ST_TIMELINE)
+    {
+        MO_ASSERT(sequence_->timeline(), "No timeline in SequenceFloat with timeline mode");
+
+        createTimeline_();
+        timeline_->setTimeline(sequence_->timeline());
+        setSequenceWidget_(timeline_);
+    }
+}
+
 void SequenceFloatView::setViewSpace(const UTIL::ViewSpace & v)
 {
-    timeline_->setViewSpace(v);
+    if (timeline_)
+        timeline_->setViewSpace(v);
+    if (emptyRuler_)
+        emptyRuler_->setViewSpace(v);
+
     updateViewSpace_(v);
 }
 
@@ -74,16 +108,30 @@ void SequenceFloatView::createSettingsWidgets_()
 {
     clearSettingsWidgets_();
 
+    Scene * scene = sequence_->sceneObject();
+    MO_ASSERT(scene, "no scene for Sequence in SequenceFloatView");
+
 
     auto w = newSetting(tr("Mode"));
     auto mode = new QComboBox(this);
     w->layout()->addWidget(mode);
-    mode->addItem(tr("Oscillator"), QVariant(0));
-    mode->addItem(tr("Equation"), QVariant(0));
-    mode->addItem(tr("Timeline"), QVariant(0));
+    for (int i=0; i<SequenceFloat::ST_MAX; ++i)
+    {
+        mode->addItem(SequenceFloat::sequenceTypeName[i]);
+    }
+    mode->setCurrentIndex(sequence_->mode());
+    connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+    [=](int index)
+    {
+        scene->beginObjectChange(sequence_);
+        sequence_->setMode((SequenceFloat::SequenceType)index);
+        scene->endObjectChange();
+    });
 
     addSettingsWidget_(w);
 }
+
+
 
 } // namespace GUI
 } // namespace MO

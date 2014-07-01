@@ -19,7 +19,7 @@ namespace GUI {
 DoubleSpinBox::DoubleSpinBox(QWidget *parent) :
     QWidget(parent),
     ignoreSignal_(false)
-{
+{    
     auto l = new QVBoxLayout(this);
     l->setMargin(0);
     l->setSizeConstraint(QLayout::SetMinAndMaxSize);
