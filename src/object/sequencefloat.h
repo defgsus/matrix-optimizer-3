@@ -29,9 +29,9 @@ public:
         ST_CONSTANT,
         ST_TIMELINE,
         ST_OSCILLATOR,
-        ST_EQUATION,
-        ST_MAX
+        ST_EQUATION
     };
+    const static int ST_MAX = ST_EQUATION + 1;
 
     /** PERSITANT ids of the sequence types */
     static QStringList sequenceTypeId;
@@ -62,6 +62,8 @@ public:
 
     MATH::Timeline1D * timeline() { return timeline_; }
     const MATH::Timeline1D * timeline() const { return timeline_; }
+
+    Double value(Double time) const;
 
 signals:
 

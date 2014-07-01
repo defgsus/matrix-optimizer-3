@@ -98,4 +98,18 @@ void SequenceFloat::setMode(SequenceType m)
     }
 }
 
+Double SequenceFloat::value(Double time) const
+{
+    switch (mode_)
+    {
+        case ST_OSCILLATOR: return sin(time);
+        case ST_CONSTANT: return 0;
+        case ST_EQUATION: return 0;
+        case ST_TIMELINE: return timeline_->get(time);
+        default: return 0;
+    }
+}
+
+
+
 } // namespace MO

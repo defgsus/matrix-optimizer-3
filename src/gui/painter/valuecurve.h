@@ -26,10 +26,10 @@ namespace GUI {
 namespace PAINTER {
 
 /** Derive from this class to input f(x) data to ValueCurve painter */
-class CurveData
+class ValueCurveData
 {
 public:
-    virtual ~CurveData() { }
+    virtual ~ValueCurveData() { }
 
     virtual Double value(Double time) const = 0;
 };
@@ -45,12 +45,12 @@ public:
 
     // -------------- getter ----------------
 
-    const CurveData * curveData() const { return data_; }
+    const ValueCurveData * curveData() const { return data_; }
 
     // -------------- setter ----------------
 
     /** Set the curve data. Ownership stays with the caller. */
-    void setCurveData(const CurveData * data) { data_ = data; }
+    void setCurveData(const ValueCurveData * data) { data_ = data; }
 
     /** Sets the viewspace for the whole painter area given to paint() */
     void setViewSpace(const UTIL::ViewSpace& viewspace) { viewspace_ = viewspace; }
@@ -65,7 +65,7 @@ public:
 
 protected:
 
-    const CurveData * data_;
+    const ValueCurveData * data_;
 
     UTIL::ViewSpace viewspace_;
 

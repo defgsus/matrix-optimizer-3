@@ -21,7 +21,7 @@
 namespace MO {
 namespace GUI {
 
-namespace PAINTER { class Grid; class ValueCurve; class CurveData; }
+namespace PAINTER { class Grid; class ValueCurve; class ValueCurveData; }
 
 class Timeline1DView : public QWidget
 {
@@ -202,7 +202,7 @@ protected:
 
     PAINTER::Grid * gridPainter_;
     PAINTER::ValueCurve * valuePainter_;
-    PAINTER::CurveData * valuePainterData_;
+    PAINTER::ValueCurveData * valuePainterData_;
 
     // ---- config ----
 

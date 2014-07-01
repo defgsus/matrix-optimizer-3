@@ -42,7 +42,7 @@ public:
 
     // -------------- setter ----------------
 
-    void setSequence(const Sequence *);
+    void setSequence(const Sequence * s) { sequence_ = s; }
 
     /** Sets the viewspace for the whole painter area given to paint() */
     void setViewSpace(const UTIL::ViewSpace& viewspace) { viewspace_ = viewspace; }

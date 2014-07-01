@@ -31,7 +31,7 @@
 namespace MO {
 namespace GUI {
 
-class TimelineCurveData : public PAINTER::CurveData
+class TimelineCurveData : public PAINTER::ValueCurveData
 {
 public:
     MATH::Timeline1D * timeline;

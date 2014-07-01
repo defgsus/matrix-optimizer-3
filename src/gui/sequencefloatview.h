@@ -18,7 +18,7 @@ class SequenceFloat;
 namespace GUI {
 
 class Timeline1DView;
-class Ruler;
+class GeneralSequenceFloatView;
 
 class SequenceFloatView : public SequenceView
 {
@@ -41,7 +41,7 @@ private:
 
     /** Creates a Timeline1DView if not already there. */
     void createTimeline_();
-    void createEmptyRuler_();
+    void createSequenceView_();
 
     /** Creates another sequence widget if needed */
     void updateSequence_();
@@ -51,7 +51,7 @@ private:
     SequenceFloat * sequence_;
 
     Timeline1DView * timeline_;
-    Ruler * emptyRuler_;
+    GeneralSequenceFloatView * seqView_;
 };
 
 
