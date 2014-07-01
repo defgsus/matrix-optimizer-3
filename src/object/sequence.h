@@ -36,5 +36,4 @@ public slots:
 
 } // namespace MO
 
-
 #endif // MOSRC_OBJECT_SEQUENCE_H

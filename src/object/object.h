@@ -34,16 +34,17 @@ class Transformation;
 // PERSISTENT class names
 #ifndef MO_OBJECTCLASSNAMES_DEFINED
     #define MO_OBJECTCLASSNAMES_DEFINED
-    #define MO_OBJECTCLASSNAME_DUMMY "_dummy"
-    #define MO_OBJECTCLASSNAME_SCENE "_scene"
-    #define MO_OBJECTCLASSNAME_CAMERA "_camera"
-    #define MO_OBJECTCLASSNAME_MICROPHONE "_micro"
-    #define MO_OBJECTCLASSNAME_SOUNDSOURCE "_sound"
-    #define MO_OBJECTCLASSNAME_MODEL3D "_model"
-    #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT "_paramf"
-    #define MO_OBJECTCLASSNAME_AXISROTATION "_axisrot"
-    #define MO_OBJECTCLASSNAME_TRANSLATION "_pos"
-    #define MO_OBJECTCLASSNAME_SEQUENCE "_seq"
+    #define MO_OBJECTCLASSNAME_DUMMY            "_dummy"
+    #define MO_OBJECTCLASSNAME_SCENE            "_scene"
+    #define MO_OBJECTCLASSNAME_CAMERA           "_cam"
+    #define MO_OBJECTCLASSNAME_MICROPHONE       "_mic"
+    #define MO_OBJECTCLASSNAME_SOUNDSOURCE      "_sound"
+    #define MO_OBJECTCLASSNAME_MODEL3D          "_model"
+    #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT  "_parf"
+    #define MO_OBJECTCLASSNAME_AXISROTATION     "_arot"
+    #define MO_OBJECTCLASSNAME_TRANSLATION      "_pos"
+    #define MO_OBJECTCLASSNAME_SEQUENCE         "_seq"
+    #define MO_OBJECTCLASSNAME_SEQUENCES        "_seqs"
 #endif
 
 #define MO_REGISTER_OBJECT(class__) \
@@ -55,7 +56,9 @@ class Transformation;
 #define MO_OBJECT_CLONE(class__) \
     virtual class__ * cloneClass() const { return new class__(); }
 
+/** Abstract base of all Objects in MO.
 
+*/
 class Object : public QObject
 {
     Q_OBJECT
@@ -69,16 +72,17 @@ public:
 
     enum Type
     {
-        T_NONE = 0,
-        T_OBJECT = 1,
-        T_PARAMETER = 2,
-        T_PARAMETER_FLOAT = 4,
-        T_TRANSFORMATION = 8,
-        T_SCENE = 16,
-        T_MICROPHONE = 32,
-        T_CAMERA = 64,
-        T_SOUNDSOURCE = 128,
-        T_SEQUENCE = 256
+        T_NONE              = 0,
+        T_OBJECT            = 1,
+        T_PARAMETER         = 1<<1,
+        T_PARAMETER_FLOAT   = 1<<2,
+        T_TRANSFORMATION    = 1<<3,
+        T_SCENE             = 1<<4,
+        T_MICROPHONE        = 1<<5,
+        T_CAMERA            = 1<<6,
+        T_SOUNDSOURCE       = 1<<7,
+        T_SEQUENCE          = 1<<8,
+        T_SEQUENCES         = 1<<9
     };
     enum Types
     {
@@ -90,11 +94,18 @@ public:
 
     /** Constructs a new object.
         If @p parent is also an Object, this object will be installed in the
-        parent's child list via setParentObject() or addObject() */
+        parent's child list via setParentObject() or addObject().
+        @note The @p parent parameter follows more QObject's style and is not really
+        used here.
+        @note More important: Never construct an object yourself, it will not suffice.
+        Always use ObjectFactory::createObject().
+        */
     explicit Object(QObject *parent = 0);
 
     /** Creates a new instance of the class.
-        In derived classes this can be defined via the MO_OBJECT_CLONE() macro. */
+        In derived classes this can be defined via the MO_OBJECT_CLONE() macro.
+        @note Never call cloneClass() yourself, it will not suffice.
+        Always use ObjectFactory::createObject(). */
     virtual Object * cloneClass() const = 0;
 
     // ----------------- io ---------------------
@@ -105,7 +116,8 @@ public:
     /** Creates a parent-less object containing the whole tree as
         previously created by serializeTree.
         On data or io errors, an IO::IoException will be thrown.
-        Unknown objects will be replaced by the Dummy object. */
+        Unknown objects will be replaced by the Dummy object.
+        The constructed object can be added to a parent afterwards. */
     static Object * deserializeTree(IO::DataStream&);
 
     /** Override to store custom data */
@@ -291,7 +303,7 @@ private:
     /** Fills the transformationChilds() array */
     void collectTransformationObjects_();
 
-    void setNumberThreadsRecursive_(int threads);
+    //void setNumberThreadsRecursive_(int threads);
 
     // ------------ properties ---------------
 

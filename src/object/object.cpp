@@ -367,6 +367,12 @@ QList<Object*> Object::findChildObjects(int typeFlags, bool recursive) const
 
 bool Object::canHaveChildren(Type t) const
 {
+    if (type() == T_SEQUENCE)
+        return t == T_PARAMETER;
+
+    if (type() == T_SEQUENCES)
+        return t == T_SEQUENCES || t == T_SEQUENCE;
+
     if (type() == T_PARAMETER)
         return false;
 
@@ -392,14 +398,14 @@ void Object::setNumberThreads(int num)
 {
     transformation_.resize(num);
 }
-
+/*
 void Object::setNumberThreadsRecursive_(int threads)
 {
     setNumberThreads(threads);
 
     for (auto o : childObjects_)
         o->setNumberThreadsRecursive_(threads);
-}
+}*/
 
 
 // ------------------------- 3d -----------------------

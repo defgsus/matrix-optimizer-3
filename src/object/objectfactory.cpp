@@ -111,6 +111,10 @@ Scene * ObjectFactory::createSceneObject()
 {
     Scene * s = qobject_cast<Scene*>(createObject(MO_OBJECTCLASSNAME_SCENE));
     MO_ASSERT(s, "could not create Scene object");
+    /*Object * sg = createObject(MO_OBJECTCLASSNAME_SEQUENCES);
+    MO_ASSERT(sg, "could not create SequenceGroup object");
+    s->addObject(sg);
+    */
     return s;
 }
 
