@@ -21,7 +21,7 @@
 namespace MO {
 namespace GUI {
 
-namespace PAINTER { class Grid; }
+namespace PAINTER { class Grid; class ValueCurve; class CurveData; }
 
 class Timeline1DView : public QWidget
 {
@@ -62,6 +62,7 @@ public:
     // ---------- ctor -------------
 
     explicit Timeline1DView(MATH::Timeline1D * timeline = 0, QWidget *parent = 0);
+    ~Timeline1DView();
 
     // ---------- getter -----------
 
@@ -200,13 +201,14 @@ protected:
     UTIL::ViewSpace space_;
 
     PAINTER::Grid * gridPainter_;
+    PAINTER::ValueCurve * valuePainter_;
+    PAINTER::CurveData * valuePainterData_;
 
     // ---- config ----
 
     int options_;
 
-    int overPaint_,
-        handleRadius_,
+    int handleRadius_,
         handleRadiusHovered_,
         handleRadiusSelected_;
     Double

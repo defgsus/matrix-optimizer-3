@@ -24,19 +24,31 @@
 
 #include "timeline1dview.h"
 #include "painter/grid.h"
+#include "painter/valuecurve.h"
 #include "io/error.h"
 #include "io/datastream.h"
 
 namespace MO {
 namespace GUI {
 
+class TimelineCurveData : public PAINTER::CurveData
+{
+public:
+    MATH::Timeline1D * timeline;
+    virtual Double value(Double time) const { return timeline->get(time); }
+};
+
+
+
+
 Timeline1DView::Timeline1DView(MATH::Timeline1D * tl, QWidget *parent)
     :   QWidget                 (parent),
         tl_                     (tl),
         gridPainter_            (new PAINTER::Grid(this)),
+        valuePainter_           (new PAINTER::ValueCurve(this)),
+        valuePainterData_       (new TimelineCurveData),
 
         options_                (O_EnableAll),
-        overPaint_              (4),
         handleRadius_           (5),
         handleRadiusHovered_    (handleRadius_*1.2),
         handleRadiusSelected_   (handleRadiusHovered_*1.4),
@@ -56,6 +68,13 @@ Timeline1DView::Timeline1DView(MATH::Timeline1D * tl, QWidget *parent)
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
+
+    valuePainter_->setCurveData(valuePainterData_);
+}
+
+Timeline1DView::~Timeline1DView()
+{
+    delete valuePainterData_;
 }
 
 void Timeline1DView::setTimeline(MATH::Timeline1D *timeline)
@@ -297,27 +316,14 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
 
     // -- curve --
 
-    overPaint_ = std::max(1, overPaint_);
-
-    const int i0 = e->rect().left() - 1,
-              i1 = e->rect().right() + 2,
-              im = (i1 - i0) * overPaint_;
-
-    p.setPen(QPen(QColor(0,255,0)));
-    p.setBrush(Qt::NoBrush);
-
-    int y0=0, x0=0, y;
-    for (int i=0; i<=im; ++i)
-    {
-        Double x = i0 + (Double)i / overPaint_;
-        y = value2screen( tl_->get(screen2time(x)) );
-        if (i!=0)
-            p.drawLine(x0, y0, x, y);
-        x0 = x;
-        y0 = y;
-    }
+    static_cast<TimelineCurveData*>(valuePainterData_)->timeline = tl_;
+    valuePainter_->setViewSpace(viewSpace());
+    valuePainter_->paint(p, e->rect());
 
     // -- handles --
+
+    const int i0 = e->rect().left() - 1,
+              i1 = e->rect().right() + 2;
 
     p.setPen(Qt::NoPen);
     p.setBrush(QBrush(QColor(255,255,0,200)));
