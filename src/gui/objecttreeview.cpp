@@ -213,7 +213,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
                         menu->addSeparator();
                         addSep = false;
                     }
-                    menu->addAction(a = new QAction(o->name(), this));
+                    menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
                     connect(a, &QAction::triggered, [=]()
                     {
                         Object * newo = ObjectFactory::createObject(o->className());
@@ -243,7 +243,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
                     menu->addSeparator();
                     addSep = false;
                 }
-                menu->addAction(a = new QAction(o->name(), this));
+                menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
                 connect(a, &QAction::triggered, [=]()
                 {
                     Object * newo = ObjectFactory::createObject(o->className());
