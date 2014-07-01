@@ -21,6 +21,7 @@
 #include "model/objecttreemimedata.h"
 #include "object/object.h"
 #include "object/objectfactory.h"
+#include "object/parameterfloat.h"
 #include "io/application.h"
 
 namespace MO {
@@ -265,10 +266,28 @@ void ObjectTreeView::createEditActions_(Object * obj)
             }
         }
 
+        if (obj->type() == Object::T_PARAMETER_FLOAT)
+        {
+            editActions_.append(a = new QAction(this));
+            a->setSeparator(true);
+
+            editActions_.append(a = new QAction(tr("Add modulation"), this));
+            connect(a, &QAction::triggered, [=]()
+            {
+                Object * seq = ObjectFactory::createObject(MO_OBJECTCLASSNAME_SEQUENCE_FLOAT);
+                if (!omodel->addObject(currentIndex(), -1, seq))
+                    delete seq;
+                else
+                {
+                    static_cast<ParameterFloat*>(obj)->addModulation(seq->idName());
+                }
+            });
+        }
 
         editActions_.append(a = new QAction(this));
         a->setSeparator(true);
-    }
+
+    } // click on object
 
     // add default actions
     editActions_.append(actions());

@@ -10,11 +10,15 @@
 
 #include "parameterfloat.h"
 #include "io/datastream.h"
-#include "object/sequencefloat.h"
 #include "io/error.h"
+#include "object/sequencefloat.h"
+#include "object/scene.h"
+
+
 
 Q_DECLARE_METATYPE(MO::ParameterFloat*);
 namespace { static int register_param = qMetaTypeId<MO::ParameterFloat*>(); }
+
 
 namespace MO {
 
@@ -40,6 +44,9 @@ void ParameterFloat::serialize(IO::DataStream &io) const
     io.writeHeader("param_float", 1);
 
     io << defaultValue_ << minValue_ << maxValue_ << value_;
+
+    // modulations
+    io << modulatorIds_;
 }
 
 void ParameterFloat::deserialize(IO::DataStream &io)
@@ -49,6 +56,8 @@ void ParameterFloat::deserialize(IO::DataStream &io)
     io.readHeader("param_float", 1);
 
     io >> defaultValue_ >> minValue_ >> maxValue_ >> value_;
+
+    io >> modulatorIds_;
 }
 
 
@@ -56,11 +65,17 @@ void ParameterFloat::deserialize(IO::DataStream &io)
 void ParameterFloat::addModulation(const QString &idName)
 {
     modulatorIds_.insert(idName);
+    // hacky
+    Scene * s = sceneObject();
+    if (s) s->treeChanged();
 }
 
 void ParameterFloat::removeModulation(const QString &idName)
 {
     modulatorIds_.remove(idName);
+    // hacky
+    Scene * s = sceneObject();
+    if (s) s->treeChanged();
 }
 
 Double ParameterFloat::getModulation(Double time) const
