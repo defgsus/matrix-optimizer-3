@@ -121,6 +121,7 @@ Object * ObjectFactory::createDummy()
     return dummy;
 }
 
+
 QList<const Object*> ObjectFactory::possibleChildObjects(const Object * parent)
 {
     QList<const Object*> list;
@@ -128,6 +129,9 @@ QList<const Object*> ObjectFactory::possibleChildObjects(const Object * parent)
     for (auto &i : instance().objectMap_)
     {
         Object * o = i.second.get();
+
+        if (!o->isValid() || o->isScene())
+            continue;
 
         if (parent->canHaveChildren(o->type()))
             list.append(o);
@@ -141,6 +145,9 @@ bool ObjectFactory::canHaveChildObjects(const Object * parent)
     for (auto &i : instance().objectMap_)
     {
         Object * o = i.second.get();
+
+        if (!o->isValid() || o->isScene())
+            continue;
 
         if (parent->canHaveChildren(o->type()))
             return true;

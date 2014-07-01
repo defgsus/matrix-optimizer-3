@@ -85,6 +85,11 @@ void ObjectTreeView::mousePressEvent(QMouseEvent * e)
     }
 }
 
+bool sortObjecListLessThan(const Object * o1, const Object * o2)
+{
+    return o1->isTransformation() && !o2->isTransformation();
+}
+
 void ObjectTreeView::createEditActions_(Object * obj)
 {
     for (auto a : editActions_)
@@ -188,17 +193,26 @@ void ObjectTreeView::createEditActions_(Object * obj)
         // new sibling
         if (parentObj)
         {
-            const QList<const Object*>
+            QList<const Object*>
                     plist(ObjectFactory::possibleChildObjects(parentObj));
             if (!plist.isEmpty())
             {
+                // make transformations first
+                qStableSort(plist.begin(), plist.end(), sortObjecListLessThan);
+
                 QModelIndex parentIndex = omodel->parent(currentIndex());
 
                 editActions_.append(a = new QAction(tr("New object"), this));
                 QMenu * menu = new QMenu(this);
                 a->setMenu(menu);
+                bool addSep = true;
                 for (auto o : plist)
                 {
+                    if (addSep && !o->isTransformation())
+                    {
+                        menu->addSeparator();
+                        addSep = false;
+                    }
                     menu->addAction(a = new QAction(o->name(), this));
                     connect(a, &QAction::triggered, [=]()
                     {
@@ -211,15 +225,24 @@ void ObjectTreeView::createEditActions_(Object * obj)
         }
 
         // new children
-        const QList<const Object*>
+        QList<const Object*>
                 clist(ObjectFactory::possibleChildObjects(obj));
         if (!clist.isEmpty())
         {
+            // make transformations first
+            qStableSort(clist.begin(), clist.end(), sortObjecListLessThan);
+
             editActions_.append(a = new QAction(tr("New child object"), this));
             QMenu * menu = new QMenu(this);
             a->setMenu(menu);
+            bool addSep = true;
             for (auto o : clist)
             {
+                if (addSep && !o->isTransformation())
+                {
+                    menu->addSeparator();
+                    addSep = false;
+                }
                 menu->addAction(a = new QAction(o->name(), this));
                 connect(a, &QAction::triggered, [=]()
                 {

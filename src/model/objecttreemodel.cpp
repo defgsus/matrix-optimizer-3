@@ -135,7 +135,7 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         {
             switch (index.column())
             {
-                case 0: return obj->infoName();
+                case 0: return (role == Qt::DisplayRole)? obj->infoName() : obj->name();
                 case 1: return obj->className();
                 case 2: return obj->idName();
                 default: MO_LOGIC_ERROR("no DisplayRole defined for column " << index.column());
