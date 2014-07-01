@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QDoubleSpinBox>
 #include <QFrame>
+#include <QToolButton>
 
 #include "parameterview.h"
 #include "object/object.h"
@@ -27,7 +28,7 @@ ParameterView::ParameterView(QWidget *parent) :
     object_ (0)
 {
     layout_ = new QVBoxLayout(this);
-    layout_->setMargin(1);
+    layout_->setMargin(0);
 }
 
 
@@ -35,6 +36,12 @@ ParameterView::ParameterView(QWidget *parent) :
 void ParameterView::setObject(Object *object)
 {
     object_ = object;
+
+    if (!object_)
+    {
+        clearWidgets_();
+        return;
+    }
 
     if (auto p = qobject_cast<Parameter*>(object))
     {
@@ -77,16 +84,23 @@ void ParameterView::createWidgets_()
 QWidget * ParameterView::createWidget_(Parameter * p)
 {
     QFrame * w = new QFrame(this);
-    w->setFrameStyle(QFrame::Box);
+    w->setFrameStyle(QFrame::Panel);
+    w->setFrameShadow(QFrame::Sunken);
 
     QHBoxLayout * l = new QHBoxLayout(w);
-    l->setMargin(1);
+    l->setMargin(0);
 
     QLabel * label = new QLabel(p->name(), w);
     l->addWidget(label);
 
+    // --- float parameter ---
     if (ParameterFloat * pf = qobject_cast<ParameterFloat*>(p))
     {
+        QToolButton * but = new QToolButton(w);
+        l->addWidget(but);
+        but->setText("0");
+        but->setToolTip(tr("Set to default value (%1)").arg(pf->defaultValue()));
+
         QDoubleSpinBox * spin = new QDoubleSpinBox(w);
         l->addWidget(spin);
         spin->setMinimum(pf->minValue());
@@ -109,6 +123,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             MO_ASSERT(r, "could not invoke Scene::setParameterValue");
             Q_UNUSED(r);
         });
+
+        connect(but, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue()); });
     }
     else
         MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");

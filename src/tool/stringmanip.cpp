@@ -43,4 +43,16 @@ void increase_id_number(QString& str, int init)
     str.replace(start, end-start+1, QString::number(value));
 }
 
+
+
+QString fit_in_length(const QString &str, int len)
+{
+    if (str.length() <= len)
+        return str;
+
+    return str.left(len-3) + "...";
+}
+
+
+
 } // namespace MO

@@ -22,6 +22,8 @@ namespace MO {
 void increase_id_number(QString& str, int init = -1);
 
 
+QString fit_in_length(const QString& str, int max_length);
+
 } // namespace MO
 
 #endif // MOSRC_TOOL_STRINGMANIP_H

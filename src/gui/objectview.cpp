@@ -17,6 +17,7 @@
 #include "parameterview.h"
 #include "object/object.h"
 #include "object/objectfactory.h"
+#include "tool/stringmanip.h"
 
 namespace MO {
 namespace GUI {
@@ -49,7 +50,10 @@ void ObjectView::setObject(Object * object)
     if (object_)
     {
         icon_->setIcon(ObjectFactory::iconForObject(object_));
-        label_->setText(object_->name());
+        label_->setText(QString("<html><b>%1</b><br/>%2/%1</html>")
+                        .arg(object_->name())
+                        .arg(fit_in_length(object_->namePath(), 36))
+                        );
     }
     else
     {

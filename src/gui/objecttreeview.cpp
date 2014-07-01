@@ -134,11 +134,16 @@ void ObjectTreeView::createEditActions_(Object * obj)
                 application->clipboard()->setMimeData(
                             omodel->mimeData(QModelIndexList() << currentIndex()));
                 omodel->deleteObject(currentIndex());
+                emit objectSelected(0);
             });
 
             // delete
             editActions_.append(a = new QAction(tr("Delete"), this));
-            connect(a, &QAction::triggered, [=](){ omodel->deleteObject(currentIndex()); });
+            connect(a, &QAction::triggered, [=]()
+            {
+                omodel->deleteObject(currentIndex());
+                emit objectSelected(0);
+            });
         }
 
         Object * parentObj = obj->parentObject();

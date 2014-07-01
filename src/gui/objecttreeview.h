@@ -28,7 +28,11 @@ public:
 
 signals:
 
+    /** Sends a list of actions for the edit menu. */
     void editActionsChanged(const QObject * sender, const QList<QAction*>&);
+
+    /** Emitted when an object was selected.
+        When a selected object was deleted, @p object will be NULL. */
     void objectSelected(MO::Object * object);
 
 public slots:

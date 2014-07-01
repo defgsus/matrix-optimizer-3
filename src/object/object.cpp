@@ -138,6 +138,23 @@ Object * Object::deserializeTree_(IO::DataStream & io)
     return o;
 }
 
+// ---------------- getter -------------------------
+
+QString Object::namePath() const
+{
+    Object * p = parentObject();
+    if (!p)
+        return "/";
+
+    QString path;
+    while (p)
+    {
+        path.prepend("/" + p->name());
+        p = p->parentObject();
+    }
+
+    return path;
+}
 
 
 // ------------------ setter -----------------------

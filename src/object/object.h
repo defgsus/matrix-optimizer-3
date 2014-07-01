@@ -123,6 +123,9 @@ public:
     /** Override to add some additional information. */
     virtual QString infoName() const { return name_; }
 
+    /** Return the path up to this object */
+    QString namePath() const;
+
     virtual bool isValid() const { return true; }
 
     virtual Type type() const { return T_NONE; }
