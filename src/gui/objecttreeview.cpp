@@ -30,20 +30,27 @@ namespace GUI {
 ObjectTreeView::ObjectTreeView(QWidget *parent) :
     QTreeView(parent)
 {
-    setDragEnabled(true);
 #ifdef MO_DISABLE_OBJECT_TREE_DRAG
     setDragDropMode(NoDragDrop);
 #else
+    setDragEnabled(true);
     setDragDropMode(DragDrop);
     setDefaultDropAction(Qt::MoveAction);
 #endif
 
+    setHeaderHidden(true);
+
     // default actions
     QAction * a;
 
-    a = new QAction(tr("Expand all"), this);
+    a = new QAction(tr("Expand objects"), this);
     addAction(a);
     a->setShortcut(Qt::ALT + Qt::Key_E);
+    connect(a, SIGNAL(triggered()), SLOT(expandObjectsOnly()));
+
+    a = new QAction(tr("Expand all"), this);
+    addAction(a);
+    a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_E);
     connect(a, SIGNAL(triggered()), SLOT(expandAll()));
 
     a = new QAction(tr("Collapse all"), this);
@@ -85,7 +92,7 @@ void ObjectTreeView::mousePressEvent(QMouseEvent * e)
     }
 }
 
-bool sortObjectListLessThan(const Object * o1, const Object * o2)
+bool sortObjectList_TransformFirst(const Object * o1, const Object * o2)
 {
     return o1->isTransformation() && !o2->isTransformation();
 }
@@ -203,7 +210,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
             if (!plist.isEmpty())
             {
                 // make transformations first
-                qStableSort(plist.begin(), plist.end(), sortObjectListLessThan);
+                qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
 
                 QModelIndex parentIndex = omodel->parent(currentIndex());
 
@@ -235,7 +242,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
         if (!clist.isEmpty())
         {
             // make transformations first
-            qStableSort(clist.begin(), clist.end(), sortObjectListLessThan);
+            qStableSort(clist.begin(), clist.end(), sortObjectList_TransformFirst);
 
             editActions_.append(a = new QAction(tr("New child object"), this));
             QMenu * menu = new QMenu(this);
@@ -267,6 +274,28 @@ void ObjectTreeView::createEditActions_(Object * obj)
     editActions_.append(actions());
 
     emit editActionsChanged(this, editActions_);
+}
+
+
+void ObjectTreeView::expandObjectsOnly()
+{
+    if (!model())
+        return;
+
+    expandObjectOnly_(QModelIndex());
+}
+
+void ObjectTreeView::expandObjectOnly_(const QModelIndex & index)
+{
+    Object * obj = static_cast<ObjectTreeModel*>(model())->itemForIndex(index);
+    if (obj && obj->type() != Object::T_TRANSFORMATION)
+    {
+        setExpanded(index, true);
+        for (int i=0; i<model()->rowCount(index); ++i)
+        {
+            expandObjectOnly_(model()->index(i, 0, index));
+        }
+    }
 }
 
 

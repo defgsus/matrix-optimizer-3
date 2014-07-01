@@ -37,12 +37,14 @@ signals:
 
 public slots:
 
+    void expandObjectsOnly();
+
 protected:
 
     void mousePressEvent(QMouseEvent *);
 
     void createEditActions_(Object* = 0);
-
+    void expandObjectOnly_(const QModelIndex& );
     QList<QAction*> editActions_;
 };
 

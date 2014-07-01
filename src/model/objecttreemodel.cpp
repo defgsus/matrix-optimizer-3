@@ -26,8 +26,9 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
 {
     headerNames_
             << "name"
-            << "class"
-            << "id";
+            //<< "class"
+            //<< "id"
+            ;
 
     boldFont_.setBold(true);
     colorDefault_ = Qt::black;
