@@ -55,7 +55,7 @@ void Scene::findObjects_()
 
     // not all objects need there transformation calculated
     // these are the ones that do
-    posObjects_ = findChildObjects(T_REAL_OBJECTS, true);
+    posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
 
     // tell all object how much thread data they need
     updateNumberThreads_();

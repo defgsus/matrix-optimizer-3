@@ -23,10 +23,9 @@ public:
 
     MO_OBJECT_CLONE(Sequences)
 
-    const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SEQUENCES); return s; }
+    const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SEQUENCEGROUP); return s; }
 
-    bool isSequences() const { return true; }
-    virtual Type type() const { return T_SEQUENCES; }
+    virtual Type type() const { return T_SEQUENCEGROUP; }
 
 signals:
 

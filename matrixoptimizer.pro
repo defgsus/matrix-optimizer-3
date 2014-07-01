@@ -73,7 +73,8 @@ SOURCES += \
     src/io/applicationtime.cpp \
     src/gui/objectview.cpp \
     src/object/sequence.cpp \
-    src/object/sequences.cpp
+    src/object/sequences.cpp \
+    src/object/sequencefloat.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -134,7 +135,8 @@ HEADERS += \
     src/io/applicationtime.h \
     src/gui/objectview.h \
     src/object/sequence.h \
-    src/object/sequences.h
+    src/object/sequences.h \
+    src/object/sequencefloat.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

@@ -22,12 +22,7 @@ class Parameter : public Object
 public:
     explicit Parameter(QObject *parent = 0);
 
-//    MO_OBJECT_CLONE(Parameter)
-
-    virtual Type type() const { return T_PARAMETER; }
     virtual bool isParameter() const { return true; }
-
-//    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_PARAMETER); return s; }
 
     virtual void serialize(IO::DataStream &) const;
     virtual void deserialize(IO::DataStream &);

@@ -21,16 +21,42 @@ class Sequence : public Object
 public:
     explicit Sequence(QObject *parent = 0);
 
-    MO_OBJECT_CLONE(Sequence)
-
-    const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SEQUENCE); return s; }
-
     bool isSequence() const { return true; }
-    virtual Type type() const { return T_SEQUENCE; }
+
+    virtual void serialize(IO::DataStream &) const;
+    virtual void deserialize(IO::DataStream &);
+
+    // ------------- settings -------------------
+
+    /** Start time in seconds */
+    Double startTime() const { return startTime_; }
+
+    /** End time in seconds */
+    Double endTime() const { return startTime_ + length_; }
+
+    /** Length in seconds */
+    Double length() const { return length_; }
+
+    /** Loop start time (local) in seconds */
+    Double loopStart() const { return loopStart_; }
+
+    /** Loop length in seconds */
+    Double loopLength() const { return loopLength_ ; }
+
+    /** Loop end time (local) in seconds */
+    Double loopEnd() const { return loopStart_ + loopLength_ ; }
+
 
 signals:
 
 public slots:
+
+private:
+
+    Double startTime_,
+           length_,
+           loopStart_,
+           loopLength_;
 
 };
 

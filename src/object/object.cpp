@@ -367,17 +367,17 @@ QList<Object*> Object::findChildObjects(int typeFlags, bool recursive) const
 
 bool Object::canHaveChildren(Type t) const
 {
-    if (type() == T_SEQUENCE)
-        return t == T_PARAMETER;
+    if (type() & TG_SEQUENCE)
+        return t & TG_PARAMETER;
 
-    if (type() == T_SEQUENCES)
-        return t == T_SEQUENCES || t == T_SEQUENCE;
+    if (type() == T_SEQUENCEGROUP)
+        return t == T_SEQUENCEGROUP || (t & TG_SEQUENCE);
 
-    if (type() == T_PARAMETER)
+    if (type() & TG_PARAMETER)
         return false;
 
     if (type() == T_TRANSFORMATION)
-        return t == T_PARAMETER;
+        return t & TG_PARAMETER;
 
     if (type() == T_SCENE)
         return t != T_TRANSFORMATION;

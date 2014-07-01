@@ -43,8 +43,8 @@ class Transformation;
     #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT  "_parf"
     #define MO_OBJECTCLASSNAME_AXISROTATION     "_arot"
     #define MO_OBJECTCLASSNAME_TRANSLATION      "_pos"
-    #define MO_OBJECTCLASSNAME_SEQUENCE         "_seq"
-    #define MO_OBJECTCLASSNAME_SEQUENCES        "_seqs"
+    #define MO_OBJECTCLASSNAME_SEQUENCEGROUP    "_seqgroup"
+    #define MO_OBJECTCLASSNAME_SEQUENCE_FLOAT   "_seqf"
 #endif
 
 #define MO_REGISTER_OBJECT(class__) \
@@ -74,19 +74,20 @@ public:
     {
         T_NONE              = 0,
         T_OBJECT            = 1,
-        T_PARAMETER         = 1<<1,
         T_PARAMETER_FLOAT   = 1<<2,
         T_TRANSFORMATION    = 1<<3,
         T_SCENE             = 1<<4,
         T_MICROPHONE        = 1<<5,
         T_CAMERA            = 1<<6,
         T_SOUNDSOURCE       = 1<<7,
-        T_SEQUENCE          = 1<<8,
-        T_SEQUENCES         = 1<<9
+        T_SEQUENCEGROUP     = 1<<8,
+        T_SEQUENCE_FLOAT    = 1<<9,
     };
-    enum Types
+    enum TypeGroups
     {
-        T_REAL_OBJECTS = T_OBJECT | T_MICROPHONE | T_SOUNDSOURCE | T_CAMERA
+        TG_PARAMETER        = T_PARAMETER_FLOAT,
+        TG_REAL_OBJECT      = T_OBJECT | T_MICROPHONE | T_SOUNDSOURCE | T_CAMERA,
+        TG_SEQUENCE         = T_SEQUENCE_FLOAT
     };
 
 
