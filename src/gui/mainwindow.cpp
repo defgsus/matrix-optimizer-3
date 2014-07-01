@@ -62,6 +62,7 @@ void MainWindow::createWidgets_()
     setMinimumSize(800,400);
 
     setCentralWidget(new QWidget(this));
+    centralWidget()->setObjectName("_centralwidget");
 
     auto l0 = new QHBoxLayout(centralWidget());
 
@@ -71,6 +72,7 @@ void MainWindow::createWidgets_()
             // object tree view
             auto treev = new ObjectTreeView(this);
             lv->addWidget(treev);
+            setMinimumWidth(320);
 
             objModel_ = new ObjectTreeModel(0, this);
             treev->setModel(objModel_);
@@ -83,6 +85,7 @@ void MainWindow::createWidgets_()
 
             connect(treev, SIGNAL(objectSelected(MO::Object*)), objectView_, SLOT(setObject(MO::Object*)));
 
+        l0->setStretchFactor(lv, -1);
 
         lv = new QVBoxLayout();
         l0->addLayout(lv);

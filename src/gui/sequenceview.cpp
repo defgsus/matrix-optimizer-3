@@ -12,6 +12,7 @@
 #include <QDoubleSpinBox>
 #include <QScrollArea>
 #include <QLabel>
+#include <QFrame>
 
 #include "sequenceview.h"
 #include "ruler.h"
@@ -21,7 +22,8 @@ namespace MO {
 namespace GUI {
 
 SequenceView::SequenceView(QWidget *parent) :
-    QWidget(parent),
+    QWidget         (parent),
+    baseSequence_   (0),
     grid_           (new QGridLayout(this)),
     rulerX_         (new Ruler(this)),
     rulerY_         (new Ruler(this)),
@@ -59,6 +61,7 @@ SequenceView::SequenceView(QWidget *parent) :
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerX_, SLOT(setViewSpace(UTIL::ViewSpace)));
 
     // pass viewSpaceChanged to this classes signal
+
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     //connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
@@ -75,7 +78,7 @@ SequenceView::SequenceView(QWidget *parent) :
     settingsLayout_ = new QVBoxLayout(w);
     settingsLayout_->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
-    createDefaultSettings_();
+    createDefaultSettingsWidgets_();
 
     // connect fit-request from ruler to timeline's fit-to-view
     /*connect(rulerX_, &Ruler::fitRequest, [=]()
@@ -105,6 +108,19 @@ SequenceView::SequenceView(QWidget *parent) :
 
 }
 
+void SequenceView::setSequence_(Sequence * s)
+{
+    bool different = baseSequence_ != s;
+    baseSequence_ = s;
+
+    if (different)
+    {
+        if (!baseSequence_)
+            clearDefaultSettingsWidgets_();
+        else
+            createDefaultSettingsWidgets_();
+    }
+}
 
 void SequenceView::updateViewSpace_(const UTIL::ViewSpace & v)
 {
@@ -118,19 +134,75 @@ void SequenceView::setSequenceWidget_(QWidget * w)
     grid_->addWidget(w, 1, 2);
 }
 
-void SequenceView::createDefaultSettings_()
-{
 
-        for (int i=0; i<10; ++i)
-        {
-            auto lh = new QHBoxLayout();
-            settingsLayout_->addLayout(lh);
-            auto l = new QLabel(settings_);
-            l->setText("hello");
-            lh->addWidget(l);
-            auto s = new QDoubleSpinBox(settings_);
-            lh->addWidget(s);
-        }
+QWidget * SequenceView::newContainer_(const QString& name)
+{
+    auto w = new QWidget(this);
+    w->setObjectName("_" + name);
+
+    auto l = new QHBoxLayout(w);
+    l->setMargin(0);
+
+    l->addWidget(new QLabel(name, w));
+
+    return w;
+}
+
+QWidget * SequenceView::newSetting(const QString & name)
+{
+    auto w = newContainer_(name);
+    addSettingsWidget_(w);
+
+    return w;
+}
+
+QWidget * SequenceView::newDefaultSetting_(const QString & name)
+{
+    auto w = newContainer_(name);
+    settingsLayout_->addWidget(w);
+    defaultSettingsWidgets_.append(w);
+
+    return w;
+}
+
+
+void SequenceView::clearSettingsWidgets_()
+{
+    for (auto w : customSettingsWidgets_)
+        w->deleteLater();
+
+    customSettingsWidgets_.clear();
+}
+
+void SequenceView::addSettingsWidget_(QWidget * w)
+{
+    settingsLayout_->addWidget(w);
+    customSettingsWidgets_.append(w);
+}
+
+void SequenceView::clearDefaultSettingsWidgets_()
+{
+    for (auto w : defaultSettingsWidgets_)
+        w->deleteLater();
+
+    defaultSettingsWidgets_.clear();
+}
+
+void SequenceView::createDefaultSettingsWidgets_()
+{
+    clearDefaultSettingsWidgets_();
+
+    for (int i=0; i<3; ++i)
+    {
+        QWidget * w = newDefaultSetting_(QString("hello").repeated(1+(i%3)));
+        w->layout()->addWidget(new QDoubleSpinBox(w));
+    }
+
+    // hline below
+    auto f = new QFrame(this);
+    f->setFrameShape(QFrame::HLine);
+    settingsLayout_->addWidget(f);
+    defaultSettingsWidgets_.append(f);
 }
 
 

@@ -14,6 +14,7 @@
 #include "sequenceview.h"
 
 namespace MO {
+class SequenceFloat;
 namespace GUI {
 
 class Timeline1DView;
@@ -31,9 +32,21 @@ public slots:
     /** Sets the ViewSpace for the shown sequence */
     void setViewSpace(const UTIL::ViewSpace&);
 
+    void setSequence(MO::SequenceFloat *);
+
 private:
 
+    void createSettingsWidgets_();
+
+    /** Creates a Timeline1DView if not already there. */
+    void createTimeline_();
+
+    // -------------- MMMEMBER ---------------
+
+    SequenceFloat * sequence_;
+
     Timeline1DView * timeline_;
+
 };
 
 

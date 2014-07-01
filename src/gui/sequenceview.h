@@ -18,6 +18,7 @@ class QVBoxLayout;
 class QScrollArea;
 
 namespace MO {
+class Sequence;
 namespace GUI {
 namespace UTIL { class ViewSpace; }
 
@@ -28,6 +29,10 @@ class SequenceView : public QWidget
     Q_OBJECT
 public:
     explicit SequenceView(QWidget *parent = 0);
+
+    /** Creates a new setting widget container.
+        Add your stuff to the returned widget's layout. */
+    QWidget * newSetting(const QString & name);
 
 signals:
 
@@ -46,16 +51,35 @@ protected slots:
 
 protected:
 
+    /** Sets the sequence and creates the default settings */
+    void setSequence_(MO::Sequence *);
+
+    /** Sets the widget that displays the sequence data. */
     void setSequenceWidget_(QWidget *);
+
+    /** Clear all settings widgets */
+    void clearSettingsWidgets_();
+
+    /** Adds a custom widget to the settings. @see newSetting() */
+    void addSettingsWidget_(QWidget *);
 
 private:
 
-    void createDefaultSettings_();
+    QWidget * newContainer_(const QString&);
+    QWidget * newDefaultSetting_(const QString & name);
+
+    void clearDefaultSettingsWidgets_();
+    void createDefaultSettingsWidgets_();
+
+    Sequence * baseSequence_;
 
     QGridLayout * grid_;
     QVBoxLayout * settingsLayout_;
     Ruler * rulerX_, * rulerY_;
     QScrollArea * settings_;
+
+    QList<QWidget*> defaultSettingsWidgets_,
+                    customSettingsWidgets_;
 };
 
 
