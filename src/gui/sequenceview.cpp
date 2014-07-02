@@ -7,7 +7,7 @@
 
     <p>created 7/1/2014</p>
 */
-
+#include <QDebug>
 #include <QGridLayout>
 #include <QScrollArea>
 #include <QLabel>
@@ -73,7 +73,7 @@ SequenceView::SequenceView(QWidget *parent) :
     // ---- container for settings ----
 
     settings_ = new QScrollArea(this);
-    settings_->setMinimumWidth(200);
+    settings_->setMinimumWidth(240);
     grid_->addWidget(settings_, 0, 0, 2, 1);
 
     auto w = new QWidget(settings_);
@@ -186,9 +186,14 @@ void SequenceView::clearSettingsWidgets_()
 {
     for (auto w : customSettingsWidgets_)
     {
+        // to shrink the scrollarea viewport
         w->setVisible(false);
         w->deleteLater();
     }
+
+    // squeeze container
+    settings_->widget()->layout()->activate();
+    settings_->widget()->setGeometry(QRect(0,0,1,1));
 
     customSettingsWidgets_.clear();
 }
@@ -205,10 +210,14 @@ void SequenceView::clearDefaultSettingsWidgets_()
 
     for (auto w : defaultSettingsWidgets_)
     {
-        // XXX should resize/minimize scrollarea viewport instead
+        // to shrink the scrollarea viewport
         w->setVisible(false);
         w->deleteLater();
     }
+
+    // squeeze container
+    settings_->widget()->layout()->activate();
+    settings_->widget()->setGeometry(QRect(0,0,1,1));
 
     defaultSettingsWidgets_.clear();
 }
@@ -227,11 +236,12 @@ void SequenceView::createDefaultSettingsWidgets_()
 
 #define MO__SCENE_PARAM_ONCHANGE
 
-#define MO__SCENE_PARAM(spin__, getter__, setter__, desc__) \
+#define MO__SCENE_PARAM(spin__, getter__, setter__, min__, desc__) \
     w = newDefaultSetting_(desc__);                         \
     w->layout()->addWidget(spin__ = new DoubleSpinBox(w));  \
-    spin__->setMinimum(0);                                  \
-    spin__->setMaximum(60*60 * 1000);                       \
+    spin__->setMinimum(min__);                              \
+    spin__->setMaximum(MO_MAX_TIME);                        \
+    spin__->setDecimals(4);                                 \
     spin__->setValue(baseSequence_->getter__());            \
     connect(spin__,                                         \
                &DoubleSpinBox::valueChanged, [=](Double v)  \
@@ -254,18 +264,19 @@ void SequenceView::createDefaultSettingsWidgets_()
         MO__SCENE_PARAM_ONCHANGE;                           \
     });
 
-    MO__SCENE_PARAM(spinStart_, start, setStart, tr("start time"));
-    MO__SCENE_PARAM(spinLength_, length, setLength, tr("length"));
-    MO__SCENE_PARAM(spinEnd_, end, setEnd, tr("end time"));
+    MO__SCENE_PARAM(spinStart_, start, setStart, 0, tr("start time"));
+    MO__SCENE_PARAM(spinLength_, length, setLength, Sequence::minimumLength(), tr("length"));
+    MO__SCENE_PARAM(spinEnd_, end, setEnd, 0, tr("end time"));
 //#undef MO__SCENE_PARAM_ONCHANGE
 //#define MO__SCENE_PARAM_ONCHANGE sequenceTimeChanged(baseSequence_);
-    MO__SCENE_PARAM(spinSpeed_, speed, setSpeed, tr("speed"));
+    MO__SCENE_PARAM(spinTimeOffset_, timeOffset, setTimeOffset, -MO_MAX_TIME, tr("time offset"));
+    MO__SCENE_PARAM(spinSpeed_, speed, setSpeed, Sequence::minimumSpeed(), tr("speed"));
     MO__SCENE_PARAM_CB(cbLooping_, looping, setLooping, tr("looping"));
-    MO__SCENE_PARAM(spinLoopStart_, loopStart, setLoopStart, tr("loop start"));
+    MO__SCENE_PARAM(spinLoopStart_, loopStart, setLoopStart, 0, tr("loop start"));
     wLoopStart_ = w;
-    MO__SCENE_PARAM(spinLoopLength_, loopLength, setLoopLength, tr("loop length"));
+    MO__SCENE_PARAM(spinLoopLength_, loopLength, setLoopLength, Sequence::minimumLength(), tr("loop length"));
     wLoopLength_ = w;
-    MO__SCENE_PARAM(spinLoopEnd_, loopEnd, setLoopEnd, tr("loop end"));
+    MO__SCENE_PARAM(spinLoopEnd_, loopEnd, setLoopEnd, 0, tr("loop end"));
     wLoopEnd_ = w;
 
     bool loop = baseSequence_->looping();
@@ -303,14 +314,21 @@ void SequenceView::sequenceTimeChanged(Sequence * s)
     spinLoopStart_->setValue( baseSequence_->loopStart() );
     spinLoopLength_->setValue( baseSequence_->loopLength() );
     spinLoopEnd_->setValue( baseSequence_->loopEnd() );
+    spinTimeOffset_->setValue( baseSequence_->timeOffset() );
     spinSpeed_->setValue( baseSequence_->speed() );
     // XXX this would cause infinite recursion but
     // QCheckBox only emits when value actually changes
+    // XXX Probably we don't need it here anyway since
+    // looping does not change from outside the editor yet
     cbLooping_->setChecked( baseSequence_->looping() );
 
     wLoopStart_->setVisible( baseSequence_->looping() );
     wLoopEnd_->setVisible( baseSequence_->looping() );
     wLoopLength_->setVisible( baseSequence_->looping() );
+
+    // squeeze container
+    settings_->widget()->layout()->activate();
+    settings_->widget()->setGeometry(QRect(0,0,1,1));
 
     update();
 }

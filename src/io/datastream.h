@@ -12,6 +12,7 @@
 #define MOSRC_IO_DATASTREAM_H
 
 #include <QDataStream>
+#include <QStringList>
 
 namespace MO {
 namespace IO {
@@ -41,9 +42,35 @@ public:
         @returns the read version number. */
     qint32 readHeader(const QString& expected_id, qint32 expected_max_version);
 
+    /** Reads a QString and returns the enum if it's found in @p enumIds.
+        If not, false is returned and @p enumerator is set to @p defaultEnum. */
+    template <typename ENUM>
+    bool readEnum(ENUM & enumumerator, ENUM defaultEnum, const QStringList& enumIds);
+
     /* NOTE: We can't have any new members here,
      * QDataStream does not have a virtual destructor. */
 };
+
+
+
+template <typename ENUM>
+bool DataStream::readEnum(ENUM & enumerator, ENUM defaultEnum, const QStringList& enumIds)
+{
+    QString id;
+    *this >> id;
+
+    const int index = enumIds.indexOf(id);
+    if (index >= 0)
+    {
+        enumerator = (ENUM)index;
+        return true;
+    }
+    else
+    {
+        enumerator = defaultEnum;
+        return false;
+    }
+}
 
 } // namespace IO
 } // namespace MO

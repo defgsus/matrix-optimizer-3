@@ -21,8 +21,6 @@ class Sequence : public Object
     Q_OBJECT
 public:
 
-    const static Double minimumSpeed;
-
     explicit Sequence(QObject *parent = 0);
 
     bool isSequence() const { return true; }
@@ -31,6 +29,9 @@ public:
     virtual void deserialize(IO::DataStream &);
 
     // -------------- getter -------------------
+
+    static Double minimumSpeed() { return 0.001; }
+    static Double minimumLength() { return 0.005; }
 
     /** Start time in seconds */
     Double start() const { return start_; }
@@ -53,6 +54,9 @@ public:
     /** Loop end time (local) in seconds */
     Double loopEnd() const { return (loopStart_ + loopLength_) / speed_; }
 
+    /** Offset into the sequence data (local) in seconds. */
+    Double timeOffset() const { return timeOffset_; }
+
     /** Sequence internal speed */
     Double speed() const { return speed_; }
 
@@ -60,22 +64,34 @@ public:
 
     void setStart(Double t, bool send_signal = true)
         { start_ = t; if (send_signal) emit timeChanged(this); }
+
     void setEnd(Double t, bool send_signal = true)
-        { length_ = (t - start_) * speed_; if (send_signal) emit timeChanged(this); }
+        { length_ = std::max(minimumLength(), (t - start_) * speed_);
+          if (send_signal) emit timeChanged(this); }
+
     void setLength(Double t, bool send_signal = true)
-        { length_ = t; if (send_signal) emit timeChanged(this); }
+        { length_ = std::max(minimumLength(), t); if (send_signal) emit timeChanged(this); }
 
     void setLooping(bool doit, bool send_signal = true)
         { looping_ = doit; if (send_signal) emit timeChanged(this); }
+
     void setLoopStart(Double t, bool send_signal = true)
         { loopStart_ = t; if (send_signal) emit timeChanged(this); }
+
     void setLoopEnd(Double t, bool send_signal = true)
-        { loopLength_ = (t - loopStart_) * speed_; if (send_signal) emit timeChanged(this); }
+        { loopLength_ = std::max(minimumLength(), (t - loopStart_) * speed_);
+          if (send_signal) emit timeChanged(this); }
+
     void setLoopLength(Double t, bool send_signal = true)
-        { loopLength_ = t; if (send_signal) emit timeChanged(this); }
+        { loopLength_ = std::max(minimumLength(), t);
+          if (send_signal) emit timeChanged(this); }
+
+    void setTimeOffset(Double t, bool send_signal = true)
+        { timeOffset_ = t; if (send_signal) emit timeChanged(this); }
 
     void setSpeed(Double t, bool send_signal = true)
-        { speed_ = (t >= minimumSpeed) ? t : minimumSpeed; if (send_signal) emit timeChanged(this); }
+        { speed_ = (t >= minimumSpeed()) ? t : minimumSpeed();
+          if (send_signal) emit timeChanged(this); }
 
     /** Translates global time to sequence-local time */
     Double getSequenceTime(Double time) const;
@@ -93,13 +109,14 @@ private:
            length_,
            loopStart_,
            loopLength_,
+           timeOffset_,
            speed_;
     bool   looping_;
 };
 
 inline Double Sequence::getSequenceTime(Double time) const
 {
-    time = (time - start_) * speed_;
+    time = (time - start_) * speed_ + timeOffset_;
 
     if (looping_ && time > loopStart_)
 

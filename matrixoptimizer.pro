@@ -80,7 +80,9 @@ SOURCES += \
     src/gui/doublespinbox.cpp \
     src/gui/painter/valuecurve.cpp \
     src/gui/painter/sequenceoverpaint.cpp \
-    src/gui/generalsequencefloatview.cpp
+    src/gui/generalsequencefloatview.cpp \
+    src/math/waveform.cpp \
+    src/math/noiseperlin.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -148,7 +150,10 @@ HEADERS += \
     src/gui/doublespinbox.h \
     src/gui/painter/valuecurve.h \
     src/gui/painter/sequenceoverpaint.h \
-    src/gui/generalsequencefloatview.h
+    src/gui/generalsequencefloatview.h \
+    src/math/waveform.h \
+    src/math/random.h \
+    src/math/noiseperlin.h
 
 FORMS += \
     src/gui/projectorsetupwidget.ui

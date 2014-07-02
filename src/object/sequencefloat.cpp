@@ -12,6 +12,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "math/timeline1d.h"
+#include "math/waveform.h"
 
 namespace MO {
 
@@ -25,7 +26,15 @@ QStringList SequenceFloat::sequenceTypeName =
 
 SequenceFloat::SequenceFloat(QObject *parent)
     :   Sequence    (parent),
-        timeline_   (0)
+
+        timeline_   (0),
+        offset_     (0.0),
+        amplitude_  (1.0),
+
+        frequency_  (1.0),
+        phase_      (0.0),
+        pulseWidth_ (0.5),
+        oscMode_    (MATH::Waveform::T_SINE)
 {
     setName("SequenceFloat");
     setMode(ST_CONSTANT);
@@ -36,10 +45,11 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 {
     io.writeHeader("seqf", 1);
 
-    io << sequenceTypeId[mode_];
+    io << sequenceTypeId[mode_] << offset_ << amplitude_
+       << frequency_ << phase_ << pulseWidth_;
 
-    // contains osc
-    io << (quint8)0;
+    // osc mode
+    io << MATH::Waveform::typeIds[oscMode_];
 
     // timeline
     io << (quint8)(timeline_ != 0);
@@ -51,24 +61,18 @@ void SequenceFloat::deserialize(IO::DataStream &io)
 {
     io.readHeader("seqf", 1);
 
-    QString modeStr;
-    io >> modeStr;
+    if (!io.readEnum(mode_, ST_CONSTANT, sequenceTypeId))
+        MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
 
-    if (!sequenceTypeId.contains(modeStr))
-    {
-        MO_IO_WARNING(READ, "SequenceFloat type '" << modeStr << "' not known");
-        mode_ = ST_OSCILLATOR;
-    }
-    else
-        mode_ = (SequenceType)sequenceTypeId.indexOf(modeStr);
-
-
+    io >> offset_ >> amplitude_
+       >> frequency_ >> phase_ >> pulseWidth_;
 
     // oscillator
-    quint8 have;
-    io >> have;
+    if (!io.readEnum(oscMode_, MATH::Waveform::T_SINE, MATH::Waveform::typeIds))
+        MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': oscillator mode not known");
 
     // timeline
+    quint8 have;
     io >> have;
     if (have)
     {
@@ -104,11 +108,14 @@ Double SequenceFloat::value(Double time) const
 
     switch (mode_)
     {
-        case ST_OSCILLATOR: return sin(time);
-        case ST_CONSTANT: return 0;
-        case ST_EQUATION: return 0;
-        case ST_TIMELINE: return timeline_->get(time);
-        default: return 0;
+        case ST_OSCILLATOR: return offset_ + amplitude_
+                * MATH::Waveform::waveform(time, oscMode_, pulseWidth_);
+
+        case ST_EQUATION: return offset_ + amplitude_ * 0.0;
+
+        case ST_TIMELINE: return offset_ + amplitude_ * timeline_->get(time);
+
+        default: return offset_;
     }
 }
 

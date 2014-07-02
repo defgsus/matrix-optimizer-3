@@ -87,7 +87,7 @@ private:
 
     DoubleSpinBox * spinStart_, * spinLength_, * spinEnd_,
         * spinLoopStart_, * spinLoopLength_, * spinLoopEnd_,
-        * spinSpeed_;
+        * spinTimeOffset_, * spinSpeed_;
     QWidget * wLoopStart_, * wLoopLength_, * wLoopEnd_;
 
     QCheckBox * cbLooping_;

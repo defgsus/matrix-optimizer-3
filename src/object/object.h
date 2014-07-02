@@ -18,6 +18,9 @@
 
 #include "types/vector.h"
 
+/** Maximum time in seconds (for widgets mainly) */
+#define MO_MAX_TIME (60 * 60 * 1000)
+
 namespace MO {
 namespace IO { class DataStream; }
 
