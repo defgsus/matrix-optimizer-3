@@ -17,6 +17,8 @@
 #include <QCloseEvent>
 #include <QTime>
 #include <QMessageBox>
+#include <QFileDialog>
+
 
 #include "mainwindow.h"
 #include "projectorsetupwidget.h"
@@ -33,6 +35,8 @@
 #include "io/datastream.h"
 #include "gl/manager.h"
 #include "gl/window.h"
+#include "io/error.h"
+
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -44,6 +48,8 @@ namespace GUI {
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow     (parent),
+    scene_          (0),
+    objectModel_    (0),
     seqFloatView_   (0),
     qobjectView_    (0)
 {
@@ -71,12 +77,12 @@ void MainWindow::createWidgets_()
         l0->addLayout(lv);
 
             // object tree view
-            auto treev = new ObjectTreeView(this);
+            auto treev = objectTreeView_ = new ObjectTreeView(this);
             lv->addWidget(treev);
             setMinimumWidth(320);
 
-            objModel_ = new ObjectTreeModel(0, this);
-            treev->setModel(objModel_);
+            objectModel_ = new ObjectTreeModel(0, this);
+            treev->setModel(objectModel_);
             connect(treev, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
                     SLOT(setEditActions_(const QObject*,QList<QAction*>)));
 
@@ -160,9 +166,22 @@ void MainWindow::createMainMenu_()
     QMenu * m;
     QAction * a;
 
-    m = editMenu_ = new QMenu(tr("Edit"), menuBar());
+    // ######### FILE MENU #########
+    m = editMenu_ = new QMenu(tr("File"), menuBar());
     menuBar()->addMenu(m);
 
+    m->addAction(a = new QAction(tr("Save scene"), menuBar()));
+    connect(a, SIGNAL(triggered()), this, SLOT(saveScene()));
+
+    m->addAction(a = new QAction(tr("Load scene"), menuBar()));
+    connect(a, SIGNAL(triggered()), this, SLOT(loadScene()));
+
+    // ######### EDIT MENU #########
+    m = editMenu_ = new QMenu(tr("Edit"), menuBar());
+    menuBar()->addMenu(m);
+    // will be updated from child widgets
+
+    // ######### RENDER MENU #########
     m = new QMenu(tr("Render"), menuBar());
     menuBar()->addMenu(m);
 
@@ -180,6 +199,7 @@ void MainWindow::createMainMenu_()
     a->setChecked(true);
     connect(a, SIGNAL(triggered()), this, SLOT(stop()));
 
+    // ######### DEBUG MENU #########
     m = new QMenu(tr("Debug"), menuBar());
     menuBar()->addMenu(m);
 
@@ -198,6 +218,34 @@ void MainWindow::createMainMenu_()
         connect(a, SIGNAL(triggered()), SLOT(testSceneTransform_()));
 }
 
+void MainWindow::setSceneObject(Scene * s)
+{
+    MO_ASSERT(s, "MainWindow::setSceneObject() with NULL scene");
+
+    if (scene_)
+        scene_->deleteLater();
+
+    scene_ = s;
+
+    // manage memory
+    scene_->setParent(this);
+
+    MO_ASSERT(glManager_ && glWindow_, "");
+
+    // connect to render window
+    connect(glManager_, SIGNAL(renderRequest()), scene_, SLOT(renderScene()));
+    connect(glManager_, SIGNAL(contextCreated(MO::GL::Context*)),
+                scene_, SLOT(setGlContext(MO::GL::Context*)));
+
+    connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
+
+    // update widgets
+
+    objectModel_->setRootObject(scene_);
+    objectView_->setObject(0);
+    seqFloatView_->setSequence(0);
+}
+
 
 void MainWindow::createObjects_()
 {
@@ -205,14 +253,7 @@ void MainWindow::createObjects_()
     glWindow_ = glManager_->createGlWindow();
     glWindow_->show();
 
-    auto scene = scene_ = ObjectFactory::createSceneObject();
-    scene->setParent(this);
-
-    connect(glManager_, SIGNAL(renderRequest()), scene, SLOT(renderScene()));
-    connect(glManager_, SIGNAL(contextCreated(MO::GL::Context*)), scene, SLOT(setGlContext(MO::GL::Context*)));
-
-    connect(scene, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
-
+    auto scene = ObjectFactory::createSceneObject();
 
     auto cam = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_CAMERA));
         cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
@@ -229,21 +270,7 @@ void MainWindow::createObjects_()
             snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
             snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
 
-    //mic->setParentObject(snd);
-    //snd->addObject(mic);
-/*
-    QByteArray bytes;
-    {
-        IO::DataStream io(&bytes, QIODevice::WriteOnly);
-        cam->serializeTree(io);
-    }
-    {
-        IO::DataStream io(&bytes, QIODevice::ReadOnly);
-        auto obj = Object::deserializeTree(io);
-        scene->addObject(obj);
-    }
-*/
-    objModel_->setRootObject(scene);
+    setSceneObject(scene);
 }
 
 
@@ -319,6 +346,33 @@ void MainWindow::start()
 void MainWindow::stop()
 {
     scene_->stop();
+}
+
+
+void MainWindow::saveScene()
+{
+    if (!scene_)
+        return;
+
+    QString fn = QFileDialog::getSaveFileName(this, tr("Save Scene"),
+                                              "./", "MatrixOptimizer (*.mo3)");
+    if (fn.isEmpty())
+        return;
+
+    ObjectFactory::saveScene(fn, scene_);
+}
+
+void MainWindow::loadScene()
+{
+    QString fn = QFileDialog::getOpenFileName(this, tr("Load Scene"),
+                                              "./", "MatrixOptimizer (*.mo3)");
+    if (fn.isEmpty())
+        return;
+
+    Scene * scene = ObjectFactory::loadScene(fn);
+
+    if (scene)
+        setSceneObject(scene);
 }
 
 } // namespace GUI

@@ -121,6 +121,7 @@ void SequenceFloat::setMode(SequenceType m)
 
             equation_->variables().add("PI", PI);
             equation_->variables().add("TWO_PI", TWO_PI);
+            equation_->variables().add("TAU", TWO_PI);
             equation_->variables().add("HALF_PI", HALF_PI);
             equation_->variables().add("E", 2.71828182845904523536);
             equation_->variables().add("PHI", (1.0 + sqrt(5.0)) / 2.0);

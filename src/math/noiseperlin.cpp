@@ -13,7 +13,8 @@
 #include <cmath>
 
 #include "noiseperlin.h"
-#include "random.h"
+//#include "random.h"
+#include <random>
 
 namespace MO {
 namespace MATH {
@@ -57,21 +58,23 @@ void NoisePerlin::init_()
 
 void NoisePerlin::seed(unsigned int seed)
 {
-    Random<unsigned int, Double> rnd(seed);
+    //Random<unsigned int, Double> rnd(seed);
+    std::mt19937 rnd(seed);
+    //srand(seed);
 
     int i, j, k;
 
     for (i = 0 ; i < B ; i++) {
         p[i] = i;
 
-        g1[i] = (Double)((rnd.rand() % (B + B)) - B) / B;
+        g1[i] = (Double)(((int)rnd() % (B + B)) - B) / B;
 
         for (j = 0 ; j < 2 ; j++)
-            g2[i*2+j] = (Double)((rnd.rand() % (B + B)) - B) / B;
+            g2[i*2+j] = (Double)(((int)rnd() % (B + B)) - B) / B;
         normalize2_(&g2[i*2]);
 
         for (j = 0 ; j < 3 ; j++)
-            g3[i*3+j] = (Double)((rnd.rand() % (B + B)) - B) / B;
+            g3[i*3+j] = (Double)(((int)rnd() % (B + B)) - B) / B;
         normalize3_(&g3[i*3]);
     }
 

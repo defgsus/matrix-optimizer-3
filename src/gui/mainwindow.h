@@ -22,6 +22,7 @@ namespace GUI {
 
 class QObjectInspector;
 class ObjectView;
+class ObjectTreeView;
 class SequenceFloatView;
 
 class MainWindow : public QMainWindow
@@ -43,20 +44,26 @@ private slots:
 
     void start();
     void stop();
+
+    void saveScene();
+    void loadScene();
+
+    void setSceneObject(Scene *);
 private:
 
     void createWidgets_();
     void createMainMenu_();
     void createObjects_();
 
-    ObjectTreeModel * objModel_;
     Scene * scene_;
+    ObjectTreeModel * objectModel_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
 
     QMenu * editMenu_;
     ObjectView * objectView_;
+    ObjectTreeView * objectTreeView_;
 
     SequenceFloatView * seqFloatView_;
 

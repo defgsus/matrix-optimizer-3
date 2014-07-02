@@ -61,6 +61,17 @@ public:
     /** Returns true of the object can have children at all. */
     static bool canHaveChildObjects(const Object * parent);
 
+    // ------------- file io ----------------------
+
+    /** Stores the complete Scene object to disk.
+        On IO errors, an IoException will be thrown. */
+    static void saveScene(const QString& filename, const Scene*);
+
+    /** Tries to load a scene from disk and returns a the object tree.
+        If the saved object was no Scene, NULL is returned.
+        On other IO errors an IoException will be thrown. */
+    static Scene * loadScene(const QString& filename);
+
 signals:
 
 public slots:

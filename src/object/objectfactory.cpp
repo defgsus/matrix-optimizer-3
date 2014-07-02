@@ -9,6 +9,7 @@
 */
 
 #include <QIcon>
+#include <QFile>
 
 #include "objectfactory.h"
 #include "io/datastream.h"
@@ -160,5 +161,57 @@ bool ObjectFactory::canHaveChildObjects(const Object * parent)
     return false;
 }
 
+
+void ObjectFactory::saveScene(const QString &fn, const Scene * scene)
+{
+    QFile file(fn);
+
+    if (!file.open(QFile::WriteOnly))
+        MO_IO_ERROR(WRITE, "could not create scene file '" << fn << "'\n"
+                    << file.errorString());
+
+    IO::DataStream io(&file);
+
+    io.writeHeader("matrix-optimizer-scene", 1);
+
+    scene->serializeTree(io);
+}
+
+Scene * ObjectFactory::loadScene(const QString &fn)
+{
+    QFile file(fn);
+
+    if (!file.open(QFile::ReadOnly))
+        MO_IO_ERROR(READ, "could not open scene file '" << fn << "'\n"
+                    << file.errorString());
+
+    IO::DataStream io(&file);
+
+    try
+    {
+        io.readHeader("matrix-optimizer-scene", 1);
+    }
+    catch (IoException &e)
+    {
+        MO_IO_WARNING(VERSION_MISMATCH, "error reading scene file '" << fn << "'\n"
+                      << e.what());
+        return 0;
+    }
+
+    Object * o = Object::deserializeTree(io);
+
+    if (Scene * scene = qobject_cast<Scene*>(o))
+    {
+        return scene;
+    }
+    else
+    {
+        MO_IO_WARNING(VERSION_MISMATCH, "no Scene in file '" << fn << "'");
+        if (o)
+            delete o;
+        return 0;
+    }
+
+}
 
 } // namespace MO
