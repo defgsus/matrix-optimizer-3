@@ -16,7 +16,7 @@
 #include "sequence.h"
 #include "math/waveform.h"
 
-
+namespace PPP_NAMESPACE { class Parser; }
 namespace MO {
 namespace MATH { class Timeline1D; }
 
@@ -43,6 +43,7 @@ public:
     // -------------- ctor --------------
 
     explicit SequenceFloat(QObject *parent = 0);
+    ~SequenceFloat();
 
     MO_OBJECT_CLONE(SequenceFloat)
 
@@ -75,6 +76,8 @@ public:
     /** Returns the pulsewidth of the oscillator [0,1] */
     Double pulseWidth() const { return pulseWidth_; }
 
+    const QString& equationText() const { return equationText_; }
+
     // ------------ setter --------------
 
     void setMode(SequenceType);
@@ -88,10 +91,14 @@ public:
     void setPhase(Double p) { phase_ = p; }
     void setPulseWidth(Double pw) { pulseWidth_ = MATH::Waveform::limitPulseWidth(pw); }
 
+    void setEquationText(const QString&);
+
     // ------------ values --------------
 
     MATH::Timeline1D * timeline() { return timeline_; }
     const MATH::Timeline1D * timeline() const { return timeline_; }
+    PPP_NAMESPACE::Parser * equation() { return equation_; }
+    const PPP_NAMESPACE::Parser * equation() const { return equation_; }
 
     Double value(Double time) const;
 
@@ -103,6 +110,7 @@ private:
 
     SequenceType mode_;
     MATH::Timeline1D * timeline_;
+    PPP_NAMESPACE::Parser * equation_;
 
     double offset_,
            amplitude_,
@@ -112,6 +120,11 @@ private:
            pulseWidth_;
 
     MATH::Waveform::Type oscMode_;
+
+    // -----
+
+    QString equationText_;
+    mutable Double equationTime_;
 };
 
 } // namespace MO

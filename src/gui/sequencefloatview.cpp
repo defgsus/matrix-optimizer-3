@@ -11,6 +11,7 @@
 #include <QComboBox>
 #include <QLayout>
 #include <QLabel>
+#include <QPlainTextEdit>
 
 #include "sequencefloatview.h"
 #include "timeline1dview.h"
@@ -227,7 +228,22 @@ void SequenceFloatView::createSettingsWidgets_()
         updateSequence_();
     });
 
+    // equation
+    w = wEqu_ = newSetting(tr("equation"));
+    auto text = new QPlainTextEdit(this);
+    w->layout()->addWidget(text);
+    text->setPlainText(sequence_->equationText());
+    connect(text, &QPlainTextEdit::textChanged,
+    [=]()
+    {
+        scene->beginObjectChange(sequence_);
+        sequence_->setEquationText(text->toPlainText());
+        updateSequence_();
+        scene->endObjectChange();
+    });
+
     updateWidgets_();
+
 
     addSettingsWidget_(w);
 }
@@ -238,12 +254,14 @@ void SequenceFloatView::updateWidgets_()
         return;
 
     bool isOsc = sequence_ && sequence_->mode() == SequenceFloat::ST_OSCILLATOR,
-         isPW = isOsc && MATH::Waveform::supportsPulseWidth( sequence_->oscillatorMode() );
+         isPW = isOsc && MATH::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
+         isEqu = sequence_ && sequence_->mode() == SequenceFloat::ST_EQUATION;
 
     wOscMode_->setVisible(isOsc);
-    wFreq_->setVisible(isOsc);
-    wPhase_->setVisible(isOsc);
+    wFreq_->setVisible(isOsc || isEqu);
+    wPhase_->setVisible(isOsc || isEqu);
     wPW_->setVisible(isPW);
+    wEqu_->setVisible(isEqu);
 
     squeezeView_();
 }

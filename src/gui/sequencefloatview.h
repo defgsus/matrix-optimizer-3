@@ -56,7 +56,8 @@ private:
     Timeline1DView * timeline_;
     GeneralSequenceFloatView * seqView_;
 
-    QWidget * wOscMode_, * wFreq_, * wPhase_, * wPW_;
+    QWidget * wOscMode_, * wFreq_, * wPhase_, * wPW_,
+            * wEqu_;
 };
 
 

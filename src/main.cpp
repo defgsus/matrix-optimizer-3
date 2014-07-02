@@ -23,11 +23,13 @@
 
 //#include "tool/stringmanip.h"
 //#include "io/streamoperators_qt.h"
+//#include "math/funcparser/parser.h"
 
 int main(int argc, char *argv[])
 {
     MO::startOfProgram();
 
+    //return PPP_NAMESPACE::test_parser_();
     //MO::TestTimeline t; return t.run();
     //TestXmlStream t; return t.run();
     /*QString id("model399844975d99");

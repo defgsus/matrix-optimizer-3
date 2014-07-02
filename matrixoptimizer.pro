@@ -82,7 +82,8 @@ SOURCES += \
     src/gui/painter/sequenceoverpaint.cpp \
     src/gui/generalsequencefloatview.cpp \
     src/math/waveform.cpp \
-    src/math/noiseperlin.cpp
+    src/math/noiseperlin.cpp \
+    src/math/funcparser/parser.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -153,10 +154,28 @@ HEADERS += \
     src/gui/generalsequencefloatview.h \
     src/math/waveform.h \
     src/math/random.h \
-    src/math/noiseperlin.h
+    src/math/noiseperlin.h \
+    src/math/funcparser/functions.h \
+    src/math/funcparser/parser.h \
+    src/math/funcparser/parser_defines.h \
+    src/math/funcparser/parser_program.h
+
+BISON_FILES = \
+    src/math/funcparser/grammar.y
 
 FORMS += \
     src/gui/projectorsetupwidget.ui
 
 RESOURCES += \
     icons.qrc
+
+OTHER_FILES += $$BISON_FILES
+
+####################### BISON PARSER #######################
+
+#BISON_BIN = bison
+
+#bison_comp.input = BISON_FILES
+##bison_comp.output = ./${QMAKE_FILE_BASE}.cc
+#bison_comp.commands = $$BISON_BIN ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.cc --defines=./${QMAKE_FILE_BASE}.hh
+#QMAKE_EXTRA_COMPILERS += bison_comp
