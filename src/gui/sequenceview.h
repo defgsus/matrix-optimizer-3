@@ -85,7 +85,8 @@ private:
     QVBoxLayout * settingsLayout_;
     Ruler * rulerX_, * rulerY_;
     QScrollArea * settings_;
-
+    QWidget * defaultSettingsContainer_,
+            * customSettingsContainer_;
     QList<QWidget*> defaultSettingsWidgets_,
                     customSettingsWidgets_;
 

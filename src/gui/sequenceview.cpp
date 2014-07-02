@@ -74,7 +74,8 @@ SequenceView::SequenceView(QWidget *parent) :
     // ---- container for settings ----
 
     settings_ = new QScrollArea(this);
-    settings_->setMinimumWidth(240);
+    // XXX this value should be estimated!!
+    settings_->setMinimumWidth(250);
     grid_->addWidget(settings_, 0, 0, 2, 1);
 
     auto w = new QWidget(settings_);
@@ -84,6 +85,16 @@ SequenceView::SequenceView(QWidget *parent) :
 
     settingsLayout_ = new QVBoxLayout(w);
     settingsLayout_->setSizeConstraint(QLayout::SetMinAndMaxSize);
+
+    customSettingsContainer_ = new QWidget(settings_);
+    customSettingsContainer_->setObjectName("_custom_settings");
+    settingsLayout_->addWidget(customSettingsContainer_);
+    (new QVBoxLayout(customSettingsContainer_))->setMargin(0);
+
+    defaultSettingsContainer_ = new QWidget(settings_);
+    defaultSettingsContainer_->setObjectName("_default_settings");
+    settingsLayout_->addWidget(defaultSettingsContainer_);
+    (new QVBoxLayout(defaultSettingsContainer_))->setMargin(0);
 
     // connect fit-request from ruler to timeline's fit-to-view
     /*connect(rulerX_, &Ruler::fitRequest, [=]()
@@ -176,7 +187,7 @@ QWidget * SequenceView::newSetting(const QString & name)
 QWidget * SequenceView::newDefaultSetting_(const QString & name)
 {
     auto w = newContainer_(name);
-    settingsLayout_->addWidget(w);
+    defaultSettingsContainer_->layout()->addWidget(w);
     defaultSettingsWidgets_.append(w);
 
     return w;
@@ -199,7 +210,7 @@ void SequenceView::clearSettingsWidgets_()
 
 void SequenceView::addSettingsWidget_(QWidget * w)
 {
-    settingsLayout_->addWidget(w);
+    customSettingsContainer_->layout()->addWidget(w);
     customSettingsWidgets_.append(w);
 }
 
@@ -230,6 +241,12 @@ void SequenceView::createDefaultSettingsWidgets_()
 
     Scene * scene = baseSequence_->sceneObject();
     MO_ASSERT(scene, "no scene for Sequence in SequenceView");
+
+    // hline
+    auto f = new QFrame(this);
+    f->setFrameShape(QFrame::HLine);
+    defaultSettingsContainer_->layout()->addWidget(f);
+    defaultSettingsWidgets_.append(f);
 
 #define MO__SCENE_PARAM_ONCHANGE
 
@@ -285,11 +302,6 @@ void SequenceView::createDefaultSettingsWidgets_()
 #undef MO__SCENE_PARAM_CB
 #undef MO__SCENE_PARAM_ONCHANGE
 
-    // hline below
-    auto f = new QFrame(this);
-    f->setFrameShape(QFrame::HLine);
-    settingsLayout_->addWidget(f);
-    defaultSettingsWidgets_.append(f);
 
     defaultSettingsAvailable_ = true;
 }
@@ -332,6 +344,8 @@ void SequenceView::squeezeView_()
     const int h = settings_->verticalScrollBar()->sliderPosition();
 
     // squeeze container
+    defaultSettingsContainer_->layout()->activate();
+    customSettingsContainer_->layout()->activate();
     settings_->widget()->layout()->activate();
     settings_->widget()->setGeometry(QRect(0,0,1,1));
 
