@@ -211,7 +211,10 @@ QString QObjectTreeModel::objectRect(QObject * o)
     else
         return QString();
 
-    return QString("%1,%2 %3x%4").arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+    if (r.x() == 0 && r.y() == 0)
+        return QString("%1x%2").arg(r.width()).arg(r.height());
+    else
+        return QString("%1,%2 %3x%4").arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
 }
 
 

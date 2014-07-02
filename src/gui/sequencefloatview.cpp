@@ -86,7 +86,7 @@ void SequenceFloatView::updateSequence_()
         createTimeline_();
         timeline_->setTimeline(sequence_->timeline());
         setSequenceWidget_(timeline_);
-        if (seqView_)
+        if (seqView_ && seqView_->isVisible())
             seqView_->setVisible(false);
         timeline_->setVisible(true);
     }
@@ -95,7 +95,7 @@ void SequenceFloatView::updateSequence_()
         createSequenceView_();
         seqView_->setSequence(sequence_);
         setSequenceWidget_(seqView_);
-        if (timeline_)
+        if (timeline_ && timeline_->isVisible())
             timeline_->setVisible(false);
         seqView_->setVisible(true);
     }
@@ -157,9 +157,23 @@ void SequenceFloatView::createSettingsWidgets_()
         updateSequence_();
     });
 
+    // offset
+    w = newSetting(tr("offset"));
+    auto spin = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(-1e8, 1e8);
+    spin->setValue(sequence_->offset());
+    spin->setSingleStep(0.1);
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [=](Double val)
+    {
+        sequence_->setOffset(val);
+        updateSequence_();
+    });
+
     // amplitude
     w = newSetting(tr("amplitude"));
-    auto spin = new DoubleSpinBox(this);
+    spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setRange(-1e8, 1e8);
     spin->setValue(sequence_->amplitude());

@@ -49,10 +49,14 @@ void ObjectView::setObject(Object * object)
 
     if (object_)
     {
+        QString shortPath = fontMetrics().elidedText(
+                    object_->namePath(), Qt::ElideMiddle,
+                    // XXX what is a good value here?
+                    width()-150);
         icon_->setIcon(ObjectFactory::iconForObject(object_));
         label_->setText(QString("<html><b>%1</b><br/>%2/%1</html>")
                         .arg(object_->name())
-                        .arg(fit_in_length(object_->namePath(), 36))
+                        .arg(shortPath)
                         );
     }
     else

@@ -338,7 +338,7 @@ void SequenceView::squeezeView_()
     settings_->ensureWidgetVisible(settings_->widget()->focusWidget());
 
     // little hack to update the viewport to the slider position
-    // (it won't do it without
+    // (it won't do it without)
     settings_->verticalScrollBar()->setSliderPosition(h-1);
     settings_->verticalScrollBar()->setSliderPosition(h);
 }
