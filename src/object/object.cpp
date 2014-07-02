@@ -41,12 +41,33 @@ Object::Object(QObject *parent) :
 
 // --------------------- io ------------------------
 
+QByteArray Object::serializeTreeCompressed() const
+{
+    QByteArray data;
+
+    IO::DataStream io(&data, QIODevice::WriteOnly);
+
+    serializeTree(io);
+
+    return qCompress(data, 9);
+}
+
+Object * Object::deserializeTreeCompressed(const QByteArray & cdata)
+{
+    QByteArray data = qUncompress(cdata);
+    if (data.isEmpty())
+        MO_IO_ERROR(READ, "could not uncompress object data");
+
+    IO::DataStream io(data);
+    return deserializeTree(io);
+}
+
 void Object::serializeTree(IO::DataStream & io) const
 {
     MO_DEBUG_IO("Object('"<<idName()<<"')::serializeTree()");
 
     // default header
-    io.writeHeader("object-tree", 1);
+    io.writeHeader("mo-tree", 1);
 
     // default object info
     io << className() << idName() << name();
@@ -86,7 +107,7 @@ Object * Object::deserializeTree_(IO::DataStream & io)
     MO_DEBUG_IO("Object::deserializeTree()");
 
     // read default header
-    io.readHeader("object-tree", 1);
+    io.readHeader("mo-tree", 1);
 
     // read default object info
     QString className, idName, name;

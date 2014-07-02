@@ -11,8 +11,8 @@
 #ifndef MOSRC_OBJECT_OBJECT_H
 #define MOSRC_OBJECT_OBJECT_H
 
-#include <vector>
 
+#include <QByteArray>
 #include <QObject>
 #include <QList>
 
@@ -126,6 +126,13 @@ public:
         Unknown objects will be replaced by the Dummy object.
         The constructed object can be added to a parent afterwards. */
     static Object * deserializeTree(IO::DataStream&);
+
+    /** Serializes the whole tree including this object and
+        returns the zipped data. */
+    QByteArray serializeTreeCompressed() const;
+
+    /** Same as deserializeTree() but for zipped data. */
+    static Object * deserializeTreeCompressed(const QByteArray&);
 
     /** Override to store custom data */
     virtual void serialize(IO::DataStream&) const { }

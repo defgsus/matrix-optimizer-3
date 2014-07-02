@@ -78,6 +78,8 @@ public slots:
 
 private:
 
+    const static bool useCompression_ = true;
+
     static ObjectFactory * instance_;
 
     std::map<QString, std::shared_ptr<Object>> objectMap_;

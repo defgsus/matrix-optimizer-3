@@ -8,6 +8,7 @@
     <p>created 6/27/2014</p>
 */
 
+#include <QDebug>
 #include <QIcon>
 #include <QFile>
 
@@ -24,6 +25,9 @@
 #include "scene.h"
 
 namespace MO {
+
+static QString MO_SCENEFILE_HEADER( "matrix-optimizer-scene" );
+static int     MO_SCENEFILE_VERSION( 1 );
 
 ObjectFactory * ObjectFactory::instance_ = 0;
 
@@ -172,9 +176,17 @@ void ObjectFactory::saveScene(const QString &fn, const Scene * scene)
 
     IO::DataStream io(&file);
 
-    io.writeHeader("matrix-optimizer-scene", 1);
+    io.writeHeader(MO_SCENEFILE_HEADER, MO_SCENEFILE_VERSION);
 
-    scene->serializeTree(io);
+    io << (quint8)useCompression_;
+
+    if (!useCompression_)
+        scene->serializeTree(io);
+    else
+    {
+        QByteArray data = scene->serializeTreeCompressed();
+        io << data;
+    }
 }
 
 Scene * ObjectFactory::loadScene(const QString &fn)
@@ -189,16 +201,29 @@ Scene * ObjectFactory::loadScene(const QString &fn)
 
     try
     {
-        io.readHeader("matrix-optimizer-scene", 1);
+        io.readHeader(MO_SCENEFILE_HEADER, MO_SCENEFILE_VERSION);
     }
     catch (IoException &e)
     {
-        MO_IO_WARNING(VERSION_MISMATCH, "error reading scene file '" << fn << "'\n"
+        MO_IO_WARNING(VERSION_MISMATCH,
+                      "error reading scene file '" << fn << "'\n"
                       << e.what());
         return 0;
     }
 
-    Object * o = Object::deserializeTree(io);
+    quint8 compressed;
+    io >> compressed;
+
+    Object * o;
+
+    if (!compressed)
+        o = Object::deserializeTree(io);
+    else
+    {
+        QByteArray data;
+        io >> data;
+        o = Object::deserializeTreeCompressed(data);
+    }
 
     if (Scene * scene = qobject_cast<Scene*>(o))
     {
