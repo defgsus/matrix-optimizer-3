@@ -45,8 +45,6 @@ void ParameterFloat::serialize(IO::DataStream &io) const
 
     io << defaultValue_ << minValue_ << maxValue_ << value_;
 
-    // modulations
-    io << modulatorIds_;
 }
 
 void ParameterFloat::deserialize(IO::DataStream &io)
@@ -56,29 +54,10 @@ void ParameterFloat::deserialize(IO::DataStream &io)
     io.readHeader("param_float", 1);
 
     io >> defaultValue_ >> minValue_ >> maxValue_ >> value_;
-
-    io >> modulatorIds_;
 }
 
 
-
-void ParameterFloat::addModulation(const QString &idName)
-{
-    modulatorIds_.insert(idName);
-    // hacky
-    Scene * s = sceneObject();
-    if (s) s->treeChanged();
-}
-
-void ParameterFloat::removeModulation(const QString &idName)
-{
-    modulatorIds_.remove(idName);
-    // hacky
-    Scene * s = sceneObject();
-    if (s) s->treeChanged();
-}
-
-Double ParameterFloat::getModulation(Double time) const
+Double ParameterFloat::getModulationValue(Double time) const
 {
     Double m = 0;
 
@@ -94,13 +73,14 @@ void ParameterFloat::collectModulators()
 
     Object * root = rootObject();
 
-    for (auto id : modulatorIds_)
+    for (auto id : getModulators())
     {
         Object * o = root->findChildObject(id, true);
         if (auto s = qobject_cast<SequenceFloat*>(o))
             modulators_.append(s);
         else
-            MO_WARNING("'" << idName() << "' could not find modulator '" << id << "'");
+            MO_WARNING("parameter '" << idName()
+                       << "' could not find modulator '" << id << "'");
     }
 }
 

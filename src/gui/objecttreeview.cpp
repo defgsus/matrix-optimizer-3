@@ -300,7 +300,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
                 else
                 {
                     setFocusIndex(idx);
-                    static_cast<ParameterFloat*>(obj)->addModulation(seq->idName());
+                    static_cast<ParameterFloat*>(obj)->addModulator(seq->idName());
                 }
             });
         }

@@ -132,7 +132,7 @@ void MainWindow::createWidgets_()
 
 
     // --------- io ----------
-
+/*
     QMenu * m;
     QAction * a;
 
@@ -155,7 +155,7 @@ void MainWindow::createWidgets_()
             tl->loadFile("./timeline.bin");
             tlv->unselect();
         });
-
+*/
     setMinimumSize(800,400);
 
 }
@@ -242,11 +242,15 @@ void MainWindow::setSceneObject(Scene * s)
 
     connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
 
+    scene_->setGlContext(glWindow_->context());
+
     // update widgets
 
     objectModel_->setRootObject(scene_);
     objectView_->setObject(0);
     seqFloatView_->setSequence(0);
+
+    glWindow_->renderLater();
 }
 
 

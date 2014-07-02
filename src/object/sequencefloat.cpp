@@ -142,15 +142,18 @@ Double SequenceFloat::value(Double time) const
 {
     time = getSequenceTime(time);
 
+    const Double phaseMult = 1.0 / 360.0;
+
     switch (mode_)
     {
         case ST_OSCILLATOR: return offset_ + amplitude_
-                * MATH::Waveform::waveform(time * frequency_ + phase_, oscMode_, pulseWidth_);
+                * MATH::Waveform::waveform(
+                        time * frequency_ + phase_ * phaseMult, oscMode_, pulseWidth_);
 
         case ST_EQUATION:
             MO_ASSERT(equation_, "SequenceFloat::value() without equation");
             // XXX NOT THREADSAFE :(
-            equationTime_ = time * frequency_ + phase_;
+            equationTime_ = time * frequency_ + phase_ * phaseMult;
             return offset_ + amplitude_ * equation_->eval();
 
         case ST_TIMELINE: return offset_ + amplitude_ * timeline_->get(time);

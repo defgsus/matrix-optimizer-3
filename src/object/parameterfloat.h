@@ -11,8 +11,6 @@
 #ifndef PARAMETERFLOAT_H
 #define PARAMETERFLOAT_H
 
-#include <QSet>
-
 #include "parameter.h"
 
 namespace MO {
@@ -40,7 +38,7 @@ public:
     Double defaultValue() const { return defaultValue_; }
     Double minValue() const { return minValue_; }
     Double maxValue() const { return maxValue_; }
-    Double value(Double time) const { return value_ + getModulation(time); }
+    Double value(Double time) const { return value_ + getModulationValue(time); }
     Double baseValue() const { return value_; }
 
     void setDefaultValue(Double v) { defaultValue_ = v; }
@@ -54,14 +52,8 @@ public:
 
     // --------- modulation -----------
 
-    /** Adds a SequenceFloat as modulator. */
-    void addModulation(const QString& idName);
-
-    /** Removes the SequenceFloat from modulators */
-    void removeModulation(const QString& idName);
-
     /** Receives modulation value at time */
-    Double getModulation(Double time) const;
+    Double getModulationValue(Double time) const;
 
     void collectModulators();
 
@@ -76,7 +68,6 @@ private:
            maxValue_,
            value_;
 
-    QSet<QString> modulatorIds_;
     QList<SequenceFloat*> modulators_;
 };
 

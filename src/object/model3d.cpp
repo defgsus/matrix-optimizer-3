@@ -48,11 +48,12 @@ void Model3d::renderGl(int thread, Double )
             glVertex3f(i,0,10);
             glVertex3f(-10,0,i);
             glVertex3f(10,0,i);
-
+/*
             glVertex3f(-10,i,-10);
             glVertex3f(10,i,-10);
             glVertex3f(i,-10,-10);
             glVertex3f(i,10,-10);
+*/
         }
     glEnd();
 }

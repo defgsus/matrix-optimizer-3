@@ -83,7 +83,8 @@ SOURCES += \
     src/gui/generalsequencefloatview.cpp \
     src/math/waveform.cpp \
     src/math/noiseperlin.cpp \
-    src/math/funcparser/parser.cpp
+    src/math/funcparser/parser.cpp \
+    src/object/scale.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -158,7 +159,8 @@ HEADERS += \
     src/math/funcparser/functions.h \
     src/math/funcparser/parser.h \
     src/math/funcparser/parser_defines.h \
-    src/math/funcparser/parser_program.h
+    src/math/funcparser/parser_program.h \
+    src/object/scale.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

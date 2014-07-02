@@ -113,6 +113,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
             if (!scene) return;
             // threadsafe send new parameter value
+            // XXX only testing syntax here,
+            //     Scene will probably have to handle more threads
             bool r =
                 metaObject()->invokeMethod(scene,
                                            "setParameterValue",

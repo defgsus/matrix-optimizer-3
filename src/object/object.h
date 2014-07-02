@@ -49,6 +49,7 @@ class SequenceFloat;
     #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT  "_parf"
     #define MO_OBJECTCLASSNAME_AXISROTATION     "_arot"
     #define MO_OBJECTCLASSNAME_TRANSLATION      "_pos"
+    #define MO_OBJECTCLASSNAME_SCALE            "_scale"
     #define MO_OBJECTCLASSNAME_SEQUENCEGROUP    "_seqgroup"
     #define MO_OBJECTCLASSNAME_SEQUENCE_FLOAT   "_seqf"
 #endif
