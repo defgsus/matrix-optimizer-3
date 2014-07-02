@@ -170,11 +170,14 @@ void MainWindow::createMainMenu_()
     m = editMenu_ = new QMenu(tr("File"), menuBar());
     menuBar()->addMenu(m);
 
-    m->addAction(a = new QAction(tr("Save scene"), menuBar()));
-    connect(a, SIGNAL(triggered()), this, SLOT(saveScene()));
-
     m->addAction(a = new QAction(tr("Load scene"), menuBar()));
     connect(a, SIGNAL(triggered()), this, SLOT(loadScene()));
+
+    m->addAction(a = new QAction(tr("Save scene as"), menuBar()));
+    connect(a, SIGNAL(triggered()), this, SLOT(saveScene()));
+
+    m->addAction(a = new QAction(tr("New scene"), menuBar()));
+    connect(a, SIGNAL(triggered()), this, SLOT(newScene()));
 
     // ######### EDIT MENU #########
     m = editMenu_ = new QMenu(tr("Edit"), menuBar());
@@ -253,6 +256,8 @@ void MainWindow::createObjects_()
     glWindow_ = glManager_->createGlWindow();
     glWindow_->show();
 
+    newScene();
+    /*
     auto scene = ObjectFactory::createSceneObject();
 
     auto cam = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_CAMERA));
@@ -271,6 +276,7 @@ void MainWindow::createObjects_()
             snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
 
     setSceneObject(scene);
+    */
 }
 
 
@@ -348,6 +354,10 @@ void MainWindow::stop()
     scene_->stop();
 }
 
+void MainWindow::newScene()
+{
+    setSceneObject( ObjectFactory::createSceneObject() );
+}
 
 void MainWindow::saveScene()
 {

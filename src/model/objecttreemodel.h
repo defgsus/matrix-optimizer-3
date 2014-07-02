@@ -32,7 +32,7 @@ public:
 
     void setRootObject(Object * rootObject);
     Object * rootObject() const { return rootObject_; }
-
+    QModelIndex rootIndex() const;
     Object * itemForIndex(const QModelIndex& index) const;
 
     // --- interface impl. ---
@@ -65,7 +65,7 @@ public slots:
 
     void deleteObject(const QModelIndex&);
 
-    bool addObject(const QModelIndex& parent, int indexInChild, Object * obj);
+    QModelIndex addObject(const QModelIndex& parent, int indexInChild, Object * obj);
 
 private:
 

@@ -40,6 +40,7 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
 #endif
 
     setHeaderHidden(true);
+    setRootIsDecorated(true);
 
     // default actions
     QAction * a;
@@ -87,6 +88,10 @@ void ObjectTreeView::mousePressEvent(QMouseEvent * e)
         QMenu * popup = new QMenu(this);
         connect(popup, SIGNAL(triggered(QAction*)), popup, SLOT(deleteLater()));
 
+        // on empty scene
+        if (model()->rowCount() == 0)
+            createEditActions_();
+
         popup->addActions(editActions_);
 
         popup->popup(QCursor::pos());
@@ -100,6 +105,7 @@ bool sortObjectList_TransformFirst(const Object * o1, const Object * o2)
 
 void ObjectTreeView::createEditActions_(Object * obj)
 {
+    // remove old actions
     for (auto a : editActions_)
         if (!actions().contains(a))
         {
@@ -107,13 +113,20 @@ void ObjectTreeView::createEditActions_(Object * obj)
                 a->menu()->deleteLater();
             a->deleteLater();
         }
+
     editActions_.clear();
 
-    // click on object?
+    ObjectTreeModel * omodel = qobject_cast<ObjectTreeModel*>(model());
+    if (!omodel)
+        return;
+
+    Object * scene = omodel->rootObject();
+    if (!scene)
+        return;
+
+    // object selected?
     if (currentIndex().column() == 0 && obj)
     {
-        ObjectTreeModel * omodel = qobject_cast<ObjectTreeModel*>(model());
-
         int numChilds = obj->numChildren(true);
         QAction * a;
 
@@ -230,8 +243,11 @@ void ObjectTreeView::createEditActions_(Object * obj)
                     connect(a, &QAction::triggered, [=]()
                     {
                         Object * newo = ObjectFactory::createObject(o->className());
-                        if (!omodel->addObject(parentIndex, currentIndex().row()+1, newo))
+                        QModelIndex idx = omodel->addObject(parentIndex, currentIndex().row()+1, newo);
+                        if (!idx.isValid())
                             delete newo;
+                        else
+                            setFocusIndex(idx);
                     });
                 }
             }
@@ -260,8 +276,11 @@ void ObjectTreeView::createEditActions_(Object * obj)
                 connect(a, &QAction::triggered, [=]()
                 {
                     Object * newo = ObjectFactory::createObject(o->className());
-                    if (!omodel->addObject(currentIndex(), -1, newo))
+                    QModelIndex idx = omodel->addObject(currentIndex(), -1, newo);
+                    if (!idx.isValid())
                         delete newo;
+                    else
+                        setFocusIndex(idx);
                 });
             }
         }
@@ -275,10 +294,12 @@ void ObjectTreeView::createEditActions_(Object * obj)
             connect(a, &QAction::triggered, [=]()
             {
                 Object * seq = ObjectFactory::createObject(MO_OBJECTCLASSNAME_SEQUENCE_FLOAT);
-                if (!omodel->addObject(currentIndex(), -1, seq))
+                QModelIndex idx = omodel->addObject(currentIndex(), -1, seq);
+                if (!idx.isValid())
                     delete seq;
                 else
                 {
+                    setFocusIndex(idx);
                     static_cast<ParameterFloat*>(obj)->addModulation(seq->idName());
                 }
             });
@@ -287,12 +308,71 @@ void ObjectTreeView::createEditActions_(Object * obj)
         editActions_.append(a = new QAction(this));
         a->setSeparator(true);
 
-    } // click on object
+    } // object selected?
+    else
+    {
+        QAction * a;
+
+        // new object below scene
+        QModelIndex sceneIndex = omodel->rootIndex();
+        QList<const Object*> plist(ObjectFactory::possibleChildObjects(scene));
+        if (sceneIndex.isValid() &&
+                !plist.isEmpty())
+        {
+            // make transformations first
+            qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
+
+            editActions_.append(a = new QAction(tr("New object"), this));
+            QMenu * menu = new QMenu(this);
+            a->setMenu(menu);
+            bool addSep = true;
+            for (auto o : plist)
+            {
+                if (addSep && !o->isTransformation())
+                {
+                    menu->addSeparator();
+                    addSep = false;
+                }
+                menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
+                connect(a, &QAction::triggered, [=]()
+                {
+                    Object * newo = ObjectFactory::createObject(o->className());
+                    QModelIndex idx = omodel->addObject(sceneIndex, 0, newo);
+                    if (!idx.isValid())
+                        delete newo;
+                    // XXX hack because of lacking update
+                    else { expandAll(); setFocusIndex(idx); }
+                });
+            }
+        }
+
+        editActions_.append(a = new QAction(this));
+        a->setSeparator(true);
+
+    } // no object selected
+
 
     // add default actions
     editActions_.append(actions());
 
     emit editActionsChanged(this, editActions_);
+}
+
+
+void ObjectTreeView::setFocusIndex(const QModelIndex & idx)
+{
+//    qDebug() << idx.row() << idx.column() << idx.data();
+    scrollTo(idx);
+    setCurrentIndex(idx);
+
+    if (auto omodel = qobject_cast<ObjectTreeModel*>(model()))
+    {
+        if (Object * obj = omodel->itemForIndex(currentIndex()))
+        {
+            createEditActions_(obj);
+            emit objectSelected(obj);
+        }
+    }
 }
 
 

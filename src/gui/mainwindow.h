@@ -47,6 +47,7 @@ private slots:
 
     void saveScene();
     void loadScene();
+    void newScene();
 
     void setSceneObject(Scene *);
 private:

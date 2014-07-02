@@ -39,6 +39,7 @@ public slots:
 
     void expandObjectsOnly();
 
+    void setFocusIndex(const QModelIndex&);
 protected:
 
     void mousePressEvent(QMouseEvent *);

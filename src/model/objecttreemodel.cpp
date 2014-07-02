@@ -8,7 +8,7 @@
     <p>created 6/27/2014</p>
 */
 
-//#include <QDebug>
+#include <QDebug>
 
 #include "objecttreemodel.h"
 #include "objecttreemimedata.h"
@@ -60,6 +60,12 @@ Object * ObjectTreeModel::itemForIndex(const QModelIndex &index) const
     return rootObject_;
 }
 
+QModelIndex ObjectTreeModel::rootIndex() const
+{
+    if (!rootObject_)
+        return QModelIndex();
+    return createIndex(0,0, rootObject_);
+}
 
 QModelIndex ObjectTreeModel::index(int row, int column, const QModelIndex &parent) const
 {
@@ -349,7 +355,7 @@ void ObjectTreeModel::deleteObject(const QModelIndex & index)
     }
 }
 
-bool ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, Object * obj)
+QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, Object * obj)
 {
     if (Object * parentObject = itemForIndex(parentIndex))
     {
@@ -362,9 +368,9 @@ bool ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, Object 
         parentObject->addObject(obj, row);
         endInsertRows();
 
-        return true;
+        return createIndex(row, 0, obj);
     }
-    return false;
+    return QModelIndex();
 }
 
 } // namespace MO
