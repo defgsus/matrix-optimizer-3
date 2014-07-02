@@ -55,6 +55,10 @@ protected slots:
 
 protected:
 
+    /** This resizes the scrollarea viewport to minimum.
+        Call this after changes to setting widgets visibilty. */
+    void squeezeView_();
+
     /** Sets the sequence and creates the default settings. */
     void setSequence_(MO::Sequence *);
 

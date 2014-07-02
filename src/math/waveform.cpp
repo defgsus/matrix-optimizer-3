@@ -29,7 +29,15 @@ const QStringList Waveform::typeNames =
     "Sine", "Cosine", "Ramp", "Sawtooth", "Triangle", "Square", "Noise"
 };
 
-Double Waveform::waveform(Double t, Type type, Double )
+bool Waveform::supportsPulseWidth(Type t)
+{
+    return t == T_RAMP
+        || t == T_SAW
+        || t == T_TRIANGLE
+        || t == T_SQUARE;
+}
+
+Double Waveform::waveform(Double t, Type type)
 {
     Double p;
 
@@ -38,7 +46,7 @@ Double Waveform::waveform(Double t, Type type, Double )
         case T_SINE:
             return std::sin( t * TWO_PI );
 
-    case T_COSINE:
+        case T_COSINE:
             return std::cos( t * TWO_PI );
 
         case T_RAMP:
@@ -64,6 +72,42 @@ Double Waveform::waveform(Double t, Type type, Double )
 }
 
 
+Double Waveform::waveform(Double t, Type type, Double pw)
+{
+    Double p;
+
+    switch (type)
+    {
+        case T_SINE:
+            return std::sin( t * TWO_PI );
+
+        case T_COSINE:
+            return std::cos( t * TWO_PI );
+
+        case T_RAMP:
+            // TODO
+            return moduloSigned( t, 1.0 );
+
+        case T_SAW:
+            // TODO
+            return -1.0 + 2.0 * moduloSigned( t, 1.0 );
+
+        case T_TRIANGLE:
+            // TODO
+            p = moduloSigned(t, 1.0);
+            return (p<0.5)? p * 4.0 - 1.0 : (1.0-p) * 4.0 - 1.0;
+
+        case T_SQUARE:
+            return (moduloSigned( t, 1.0 ) >= pw) ? 1.0 : -1.0 ;
+
+        case T_NOISE:
+            return noise_.noise(t);
+
+        default:
+            return 0.0;
+    }
+
+}
 
 
 

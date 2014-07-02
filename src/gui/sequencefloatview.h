@@ -46,12 +46,17 @@ private:
     /** Creates another sequence widget if needed */
     void updateSequence_();
 
+    /** Sets settings widgets visibility */
+    void updateWidgets_();
+
     // -------------- MMMEMBER ---------------
 
     SequenceFloat * sequence_;
 
     Timeline1DView * timeline_;
     GeneralSequenceFloatView * seqView_;
+
+    QWidget * wOscMode_, * wFreq_, * wPhase_, * wPW_;
 };
 
 

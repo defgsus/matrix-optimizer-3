@@ -68,15 +68,25 @@ public:
     /** Returns the amplitude, applied before the constant offset */
     Double amplitude() const { return amplitude_; }
 
+    /** Returns the frequency of the oscillator in Hertz. */
+    Double frequency() const { return frequency_; }
+    /** Returns the phase of the oscillator [0,1] */
+    Double phase() const { return phase_; }
+    /** Returns the pulsewidth of the oscillator [0,1] */
+    Double pulseWidth() const { return pulseWidth_; }
+
     // ------------ setter --------------
 
     void setMode(SequenceType);
 
-    void setOscillatorMode(MATH::Waveform::Type);
+    void setOscillatorMode(MATH::Waveform::Type mode) { oscMode_ = mode; }
 
     void setOffset(Double o) { offset_ = o; }
-
     void setAmplitude(Double a) { amplitude_ = a; }
+
+    void setFrequency(Double f) { frequency_ = f; }
+    void setPhase(Double p) { phase_ = p; }
+    void setPulseWidth(Double pw) { pulseWidth_ = MATH::Waveform::limitPulseWidth(pw); }
 
     // ------------ values --------------
 

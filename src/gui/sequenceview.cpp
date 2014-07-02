@@ -13,6 +13,7 @@
 #include <QLabel>
 #include <QFrame>
 #include <QCheckBox>
+#include <QScrollBar>
 
 #include "sequenceview.h"
 #include "ruler.h"
@@ -82,7 +83,7 @@ SequenceView::SequenceView(QWidget *parent) :
     settings_->setWidget(w);
 
     settingsLayout_ = new QVBoxLayout(w);
-    settingsLayout_->setSizeConstraint(QLayout::SetMinimumSize);
+    settingsLayout_->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
     // connect fit-request from ruler to timeline's fit-to-view
     /*connect(rulerX_, &Ruler::fitRequest, [=]()
@@ -191,9 +192,7 @@ void SequenceView::clearSettingsWidgets_()
         w->deleteLater();
     }
 
-    // squeeze container
-    settings_->widget()->layout()->activate();
-    settings_->widget()->setGeometry(QRect(0,0,1,1));
+    squeezeView_();
 
     customSettingsWidgets_.clear();
 }
@@ -215,9 +214,7 @@ void SequenceView::clearDefaultSettingsWidgets_()
         w->deleteLater();
     }
 
-    // squeeze container
-    settings_->widget()->layout()->activate();
-    settings_->widget()->setGeometry(QRect(0,0,1,1));
+    squeezeView_();
 
     defaultSettingsWidgets_.clear();
 }
@@ -326,11 +323,24 @@ void SequenceView::sequenceTimeChanged(Sequence * s)
     wLoopEnd_->setVisible( baseSequence_->looping() );
     wLoopLength_->setVisible( baseSequence_->looping() );
 
+    squeezeView_();
+    update();
+}
+
+void SequenceView::squeezeView_()
+{
+    const int h = settings_->verticalScrollBar()->sliderPosition();
+
     // squeeze container
     settings_->widget()->layout()->activate();
     settings_->widget()->setGeometry(QRect(0,0,1,1));
 
-    update();
+    settings_->ensureWidgetVisible(settings_->widget()->focusWidget());
+
+    // little hack to update the viewport to the slider position
+    // (it won't do it without
+    settings_->verticalScrollBar()->setSliderPosition(h-1);
+    settings_->verticalScrollBar()->setSliderPosition(h);
 }
 
 } // namespace GUI

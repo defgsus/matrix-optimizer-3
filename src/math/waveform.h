@@ -36,7 +36,7 @@ class Waveform
         T_NOISE
     };
     /** Number of waveform types Waveform::Type */
-    const static int WT_MAX_TYPES = T_NOISE + 1;
+    const static int T_MAX_TYPES = T_NOISE + 1;
 
     /** PERSISTENT ids for each Type enum. */
     const static QStringList typeIds;
@@ -44,7 +44,21 @@ class Waveform
     /** Friendly names for each Type enum. */
     const static QStringList typeNames;
 
+    static Double minPulseWidth() { return 0.00001; }
+    static Double maxPulseWidth() { return 0.99999; }
+
+    /** Limits the pulsewidth if nescessary. */
+    static Double limitPulseWidth(Double pw)
+        { return std::max(minPulseWidth(), std::min(maxPulseWidth(), pw )); }
+
+    /** Returns true if the specified type supports the pulsewidth setting */
+    static bool supportsPulseWidth(Type);
+
     /** Returns the f(x) for the specified time and type. */
+    static Double waveform(Double time, Type type);
+
+    /** Returns the f(x) for the specified time and type.
+        @note pulseWidth must be between minPulseWidth() and maxPulseWidth() ! */
     static Double waveform(Double time, Type type, Double pulseWidth = 0.5);
 
 private:

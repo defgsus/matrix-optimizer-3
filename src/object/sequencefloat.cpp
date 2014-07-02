@@ -109,7 +109,7 @@ Double SequenceFloat::value(Double time) const
     switch (mode_)
     {
         case ST_OSCILLATOR: return offset_ + amplitude_
-                * MATH::Waveform::waveform(time, oscMode_, pulseWidth_);
+                * MATH::Waveform::waveform(time * frequency_ + phase_, oscMode_, pulseWidth_);
 
         case ST_EQUATION: return offset_ + amplitude_ * 0.0;
 
