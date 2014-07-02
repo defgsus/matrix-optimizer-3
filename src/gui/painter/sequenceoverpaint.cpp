@@ -23,7 +23,7 @@ SequenceOverpaint::SequenceOverpaint(QObject *parent) :
     sequence_   (0)
 {
     penLoop_ = QPen(QColor(255,255,100,100));
-    brushOutside_ = QBrush(QColor(0,0,0,50));
+    brushOutside_ = QBrush(QColor(0,0,0,150));
 }
 
 void SequenceOverpaint::paint(QPainter & p)

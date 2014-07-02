@@ -12,6 +12,7 @@
 #include <QScrollArea>
 #include <QLabel>
 #include <QFrame>
+#include <QCheckBox>
 
 #include "sequenceview.h"
 #include "ruler.h"
@@ -224,6 +225,7 @@ void SequenceView::createDefaultSettingsWidgets_()
     Scene * scene = baseSequence_->sceneObject();
     MO_ASSERT(scene, "no scene for Sequence in SequenceView");
 
+#define MO__SCENE_PARAM_ONCHANGE
 
 #define MO__SCENE_PARAM(spin__, getter__, setter__, desc__) \
     w = newDefaultSetting_(desc__);                         \
@@ -237,16 +239,43 @@ void SequenceView::createDefaultSettingsWidgets_()
         scene->beginSequenceChange(baseSequence_);          \
         baseSequence_->setter__(v);                         \
         scene->endSequenceChange();                         \
+        MO__SCENE_PARAM_ONCHANGE;                           \
+    });
+
+#define MO__SCENE_PARAM_CB(cb__, getter__, setter__, desc__)\
+    w = newDefaultSetting_(desc__);                         \
+    w->layout()->addWidget(cb__ = new QCheckBox(w));        \
+    cb__->setChecked(baseSequence_->getter__());            \
+    connect(cb__, &QCheckBox::stateChanged, [=](int v)      \
+    {                                                       \
+        scene->beginSequenceChange(baseSequence_);          \
+        baseSequence_->setter__(v == Qt::Checked);          \
+        scene->endSequenceChange();                         \
+        MO__SCENE_PARAM_ONCHANGE;                           \
     });
 
     MO__SCENE_PARAM(spinStart_, start, setStart, tr("start time"));
     MO__SCENE_PARAM(spinLength_, length, setLength, tr("length"));
     MO__SCENE_PARAM(spinEnd_, end, setEnd, tr("end time"));
+//#undef MO__SCENE_PARAM_ONCHANGE
+//#define MO__SCENE_PARAM_ONCHANGE sequenceTimeChanged(baseSequence_);
+    MO__SCENE_PARAM(spinSpeed_, speed, setSpeed, tr("speed"));
+    MO__SCENE_PARAM_CB(cbLooping_, looping, setLooping, tr("looping"));
     MO__SCENE_PARAM(spinLoopStart_, loopStart, setLoopStart, tr("loop start"));
+    wLoopStart_ = w;
     MO__SCENE_PARAM(spinLoopLength_, loopLength, setLoopLength, tr("loop length"));
+    wLoopLength_ = w;
     MO__SCENE_PARAM(spinLoopEnd_, loopEnd, setLoopEnd, tr("loop end"));
+    wLoopEnd_ = w;
+
+    bool loop = baseSequence_->looping();
+    wLoopStart_->setVisible(loop);
+    wLoopEnd_->setVisible(loop);
+    wLoopLength_->setVisible(loop);
 
 #undef MO__SCENE_PARAM
+#undef MO__SCENE_PARAM_CB
+#undef MO__SCENE_PARAM_ONCHANGE
 
     // hline below
     auto f = new QFrame(this);
@@ -274,7 +303,16 @@ void SequenceView::sequenceTimeChanged(Sequence * s)
     spinLoopStart_->setValue( baseSequence_->loopStart() );
     spinLoopLength_->setValue( baseSequence_->loopLength() );
     spinLoopEnd_->setValue( baseSequence_->loopEnd() );
+    spinSpeed_->setValue( baseSequence_->speed() );
+    // XXX this would cause infinite recursion but
+    // QCheckBox only emits when value actually changes
+    cbLooping_->setChecked( baseSequence_->looping() );
 
+    wLoopStart_->setVisible( baseSequence_->looping() );
+    wLoopEnd_->setVisible( baseSequence_->looping() );
+    wLoopLength_->setVisible( baseSequence_->looping() );
+
+    update();
 }
 
 } // namespace GUI

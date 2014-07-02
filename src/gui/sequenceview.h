@@ -16,6 +16,7 @@
 class QGridLayout;
 class QVBoxLayout;
 class QScrollArea;
+class QCheckBox;
 
 namespace MO {
 class Sequence;
@@ -85,7 +86,11 @@ private:
                     customSettingsWidgets_;
 
     DoubleSpinBox * spinStart_, * spinLength_, * spinEnd_,
-        * spinLoopStart_, * spinLoopLength_, * spinLoopEnd_;
+        * spinLoopStart_, * spinLoopLength_, * spinLoopEnd_,
+        * spinSpeed_;
+    QWidget * wLoopStart_, * wLoopLength_, * wLoopEnd_;
+
+    QCheckBox * cbLooping_;
 
     bool defaultSettingsAvailable_;
 };

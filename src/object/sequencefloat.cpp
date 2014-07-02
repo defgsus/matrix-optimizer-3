@@ -100,6 +100,8 @@ void SequenceFloat::setMode(SequenceType m)
 
 Double SequenceFloat::value(Double time) const
 {
+    time = getSequenceTime(time);
+
     switch (mode_)
     {
         case ST_OSCILLATOR: return sin(time);

@@ -16,11 +16,31 @@
 namespace MO {
 namespace MATH {
 
+/** Quantizes @p value to the given @p steps.
+    @p Float can be an integer as well. */
 template <typename Float>
 Float quant(Float value, Float steps)
 {
     return std::floor(value / steps) * steps;
 }
+
+/** Returns A modulo B for floating point numbers */
+template <typename Float>
+Float modulo(Float A, Float B)
+{
+    return std::fmod(A, B);
+}
+
+/** Returns sign-corrected A modulo B for floating point numbers */
+template <typename Float>
+Float moduloSigned(Float A, Float B)
+{
+    if (A >= 0)
+        return std::fmod(A, B);
+    else
+        return B - std::fmod(-A, B);
+}
+
 
 } // namespace MATH
 } // namespace MO
