@@ -9,6 +9,7 @@
 */
 
 #include "dummy.h"
+#include "io/datastream.h"
 
 namespace MO {
 
@@ -18,6 +19,18 @@ Dummy::Dummy(QObject *parent) :
     Object(parent)
 {
     setName("Dummy");
+}
+
+void Dummy::serialize(IO::DataStream & io) const
+{
+    Object::serialize(io);
+    io.writeHeader("dummy", 1);
+}
+
+void Dummy::deserialize(IO::DataStream & io)
+{
+    Object::deserialize(io);
+    io.readHeader("dummy", 1);
 }
 
 

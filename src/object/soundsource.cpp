@@ -9,6 +9,8 @@
 */
 
 #include "soundsource.h"
+#include "io/datastream.h"
+
 
 namespace MO {
 
@@ -20,6 +22,17 @@ SoundSource::SoundSource(QObject *parent) :
     setName("Soundsource");
 }
 
+void SoundSource::serialize(IO::DataStream & io) const
+{
+    Object::serialize(io);
+    io.writeHeader("snd", 1);
+}
+
+void SoundSource::deserialize(IO::DataStream & io)
+{
+    Object::deserialize(io);
+    io.readHeader("snd", 1);
+}
 
 
 } // namespace MO

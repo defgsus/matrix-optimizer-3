@@ -10,6 +10,8 @@
 
 #include "translation.h"
 #include "parameterfloat.h"
+#include "io/datastream.h"
+
 
 namespace MO {
 
@@ -19,6 +21,18 @@ Translation::Translation(QObject *parent) :
     Transformation(parent)
 {
     setName("Translation");
+}
+
+void Translation::serialize(IO::DataStream & io) const
+{
+    Transformation::serialize(io);
+    io.writeHeader("trans", 1);
+}
+
+void Translation::deserialize(IO::DataStream & io)
+{
+    Transformation::deserialize(io);
+    io.readHeader("trans", 1);
 }
 
 void Translation::createParameters()

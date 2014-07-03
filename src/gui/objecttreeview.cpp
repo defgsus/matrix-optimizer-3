@@ -138,16 +138,17 @@ void ObjectTreeView::createEditActions_(Object * obj)
         QFont font; font.setBold(true);
         a->setFont(font);
 
-        if (!obj->isParameter())
-        {
-            // copy
-            editActions_.append(a = new QAction(tr("Copy"), this));
-            connect(a, &QAction::triggered, [=]()
-            {
-                application->clipboard()->setMimeData(
-                            omodel->mimeData(QModelIndexList() << currentIndex()));
-            });
 
+        // copy
+        editActions_.append(a = new QAction(tr("Copy"), this));
+        connect(a, &QAction::triggered, [=]()
+        {
+            application->clipboard()->setMimeData(
+                        omodel->mimeData(QModelIndexList() << currentIndex()));
+        });
+
+        if (obj->canBeDeleted())
+        {
             // cut
             editActions_.append(a = new QAction(tr("Cut"), this));
             connect(a, &QAction::triggered, [=]()

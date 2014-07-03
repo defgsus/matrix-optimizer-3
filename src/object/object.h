@@ -37,6 +37,9 @@ class Sequences;
 class Sequence;
 class SequenceFloat;
 
+class Setting;
+class SettingFloat;
+
 // PERSISTENT class names
 #ifndef MO_OBJECTCLASSNAMES_DEFINED
     #define MO_OBJECTCLASSNAMES_DEFINED
@@ -135,10 +138,18 @@ public:
     /** Same as deserializeTree() but for zipped data. */
     static Object * deserializeTreeCompressed(const QByteArray&);
 
-    /** Override to store custom data */
-    virtual void serialize(IO::DataStream&) const { }
-    /** Override to restore custom data */
-    virtual void deserialize(IO::DataStream&) { }
+    /** Override to store custom data.
+        @note Always call the ancestor class serialize() function
+        in your derived code!
+        @note Always provide the serialize()/deserialize() methods for your classes,
+        even if you do not have stuff to store yet and use
+        IO::DataStream::writeHeader() to write your specific object version.
+        Adding the serialize function later will definitely break old saved files! */
+    virtual void serialize(IO::DataStream&) const;
+
+    /** Override to restore custom data.
+        @note See notes for serialize() function. */
+    virtual void deserialize(IO::DataStream&);
 
     // --------------- getter -------------------
 
@@ -180,6 +191,9 @@ public:
 
     /** See if this object has a parent object @p o. */
     bool hasParentObject(Object * o) const;
+
+    /** Returns true when the object can be deleted by the ObjectTreeView */
+    bool canBeDeleted() const { return canBeDeleted_; }
 
     /** Returns the root object of this hierarchy, which may
         be the object itself. */
@@ -327,6 +341,8 @@ private:
     // ------------ properties ---------------
 
     QString idName_, name_;
+
+    bool canBeDeleted_;
 
     // ----------- tree ----------------------
 

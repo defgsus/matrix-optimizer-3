@@ -9,6 +9,8 @@
 */
 
 #include "sequences.h"
+#include "io/datastream.h"
+
 
 namespace MO {
 
@@ -18,6 +20,19 @@ Sequences::Sequences(QObject *parent) :
     Object(parent)
 {
     setName("SequenceGroup");
+}
+
+
+void Sequences::serialize(IO::DataStream & io) const
+{
+    Object::serialize(io);
+    io.writeHeader("seqs", 1);
+}
+
+void Sequences::deserialize(IO::DataStream & io)
+{
+    Object::deserialize(io);
+    io.readHeader("seqs", 1);
 }
 
 

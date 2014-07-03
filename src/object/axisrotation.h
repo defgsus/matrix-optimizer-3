@@ -27,6 +27,9 @@ public:
 
     virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_AXISROTATION); return s; }
 
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
+
     virtual void createParameters();
 
     virtual void applyTransformation(Mat4& matrix, Double time) const;

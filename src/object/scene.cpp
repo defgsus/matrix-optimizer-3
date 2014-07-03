@@ -16,6 +16,8 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "object/parameterfloat.h"
+#include "io/datastream.h"
+
 
 namespace MO {
 
@@ -34,6 +36,17 @@ Scene::Scene(QObject *parent) :
     connect(&timer_, SIGNAL(timeout()), this, SLOT(timerUpdate_()));
 }
 
+void Scene::serialize(IO::DataStream & io) const
+{
+    Object::serialize(io);
+    io.writeHeader("scene", 1);
+}
+
+void Scene::deserialize(IO::DataStream & io)
+{
+    Object::deserialize(io);
+    io.readHeader("scene", 1);
+}
 
 
 void Scene::treeChanged()

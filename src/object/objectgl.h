@@ -31,6 +31,9 @@ public:
     virtual Type type() const { return T_OBJECT; }
     bool isGl() const { return true; }
 
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
+
     virtual void setNumberThreads(int num);
 
     /** Returns the current GL::Context */

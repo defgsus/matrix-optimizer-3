@@ -25,6 +25,9 @@ public:
 
     virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_MICROPHONE); return s; }
 
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
+
     virtual Type type() const { return T_MICROPHONE; }
     virtual bool isMicrophone() const { return true; }
 

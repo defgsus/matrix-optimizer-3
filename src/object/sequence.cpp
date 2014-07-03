@@ -28,6 +28,8 @@ Sequence::Sequence(QObject *parent) :
 
 void Sequence::serialize(IO::DataStream &io) const
 {
+    Object::serialize(io);
+
     io.writeHeader("seq", 1);
 
     io << start_ << length_ << loopStart_ << loopLength_
@@ -36,6 +38,8 @@ void Sequence::serialize(IO::DataStream &io) const
 
 void Sequence::deserialize(IO::DataStream &io)
 {
+    Object::deserialize(io);
+
     io.readHeader("seq", 1);
 
     qint8 looping;

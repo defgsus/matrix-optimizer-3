@@ -26,6 +26,9 @@ public:
 
     const QString& className() const { static QString s(MO_OBJECTCLASSNAME_MODEL3D); return s; }
 
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
+
     virtual void initGl(int thread);
     virtual void renderGl(int, Double time);
 

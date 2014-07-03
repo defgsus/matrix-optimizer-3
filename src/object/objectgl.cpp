@@ -13,6 +13,8 @@
 #include "objectgl.h"
 #include "io/error.h"
 #include "gl/context.h"
+#include "io/datastream.h"
+
 
 namespace MO {
 
@@ -22,6 +24,19 @@ ObjectGl::ObjectGl(QObject *parent)
         glFunctionsInitialized_(false)
 {
 }
+
+void ObjectGl::serialize(IO::DataStream & io) const
+{
+    Object::serialize(io);
+    io.writeHeader("ogl", 1);
+}
+
+void ObjectGl::deserialize(IO::DataStream & io)
+{
+    Object::deserialize(io);
+    io.readHeader("ogl", 1);
+}
+
 
 void ObjectGl::setNumberThreads(int num)
 {

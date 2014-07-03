@@ -9,6 +9,7 @@
 */
 
 #include "microphone.h"
+#include "io/datastream.h"
 
 namespace MO {
 
@@ -18,6 +19,18 @@ Microphone::Microphone(QObject *parent) :
     Object(parent)
 {
     setName("Microphone");
+}
+
+void Microphone::serialize(IO::DataStream & io) const
+{
+    Object::serialize(io);
+    io.writeHeader("mic", 1);
+}
+
+void Microphone::deserialize(IO::DataStream & io)
+{
+    Object::deserialize(io);
+    io.readHeader("mic", 1);
 }
 
 

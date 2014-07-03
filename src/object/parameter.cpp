@@ -21,7 +21,9 @@ Parameter::Parameter(QObject *parent) :
 
 void Parameter::serialize(IO::DataStream &io) const
 {
-    io.writeHeader("param", 1);
+    Object::serialize(io);
+
+    io.writeHeader("par", 1);
 
     io << parameterId();
 
@@ -31,7 +33,9 @@ void Parameter::serialize(IO::DataStream &io) const
 
 void Parameter::deserialize(IO::DataStream &io)
 {
-    io.readHeader("param", 1);
+    Object::deserialize(io);
+
+    io.readHeader("par", 1);
 
     QString id;
     io >> id;

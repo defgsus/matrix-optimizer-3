@@ -30,6 +30,7 @@ bool registerObject_(Object * obj)
 
 Object::Object(QObject *parent) :
     QObject         (parent),
+    canBeDeleted_   (true),
     parentObject_   (0)
 {
     // tie into Object hierarchy
@@ -77,7 +78,7 @@ void Object::serializeTree(IO::DataStream & io) const
     // write temp skip marker
     io << (qint64)0;
 
-    // write actual derived object
+    // write actual object data
     serialize(io);
 
     // once in a while check stream for errors
@@ -122,7 +123,7 @@ Object * Object::deserializeTree_(IO::DataStream & io)
 
     if (o)
     {
-        // read derived object data
+        // read actual object data
         o->deserialize(io);
 
         // once in a while check stream for errors
@@ -158,6 +159,21 @@ Object * Object::deserializeTree_(IO::DataStream & io)
 
     return o;
 }
+
+void Object::serialize(IO::DataStream & io) const
+{
+    io.writeHeader("obj", 1);
+
+    io << canBeDeleted_;
+}
+
+void Object::deserialize(IO::DataStream & io)
+{
+    io.readHeader("obj", 1);
+
+    io >> canBeDeleted_;
+}
+
 
 // ---------------- getter -------------------------
 
@@ -271,6 +287,8 @@ void Object::setParentObject(Object *parent, int index)
 
 int Object::getInsertIndex(Object *object, int insert_index) const
 {
+    MO_DEBUG_TREE("Object::getInsertIndex('" << object->idName() << "', " << insert_index << ")");
+
     if (childObjects_.empty())
         return 0;
 
@@ -281,7 +299,7 @@ int Object::getInsertIndex(Object *object, int insert_index) const
 
     if (object->isTransformation())
     {
-        return (insert_index>=lastTrans) ?
+        return (insert_index > lastTrans) ?
                     indexOfLastChild<Transformation>(insert_index) + 1
                   : insert_index;
     }
@@ -463,12 +481,21 @@ ParameterFloat * Object::createFloatParameter(
 
     // see if already there
     for (auto o : childObjects_)
-    if (auto p = qobject_cast<ParameterFloat*>(o))
+    if (auto generalParam = qobject_cast<Parameter*>(o))
     {
-        if (p->parameterId() == id)
+        if (generalParam->parameterId() == id)
         {
-            param = p;
-            break;
+            if (auto p = qobject_cast<ParameterFloat*>(generalParam))
+            {
+                param = p;
+                break;
+            }
+            else
+            {
+                MO_ASSERT(false, "object '" << idName() << "' requested float "
+                          "parameter '" << id << "' "
+                          "which is already present as parameter of another type.");
+            }
         }
     }
 
@@ -485,6 +512,8 @@ ParameterFloat * Object::createFloatParameter(
         param->idName_ = "p_" + id;
         param->setParameterId(id);
         param->setValue(defaultValue);
+        // don't delete specifically created parameters
+        param->canBeDeleted_ = false;
     }
 
     // override potentially previous

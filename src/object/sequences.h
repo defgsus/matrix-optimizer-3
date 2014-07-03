@@ -27,6 +27,9 @@ public:
 
     virtual Type type() const { return T_SEQUENCEGROUP; }
 
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
+
 signals:
 
 public slots:

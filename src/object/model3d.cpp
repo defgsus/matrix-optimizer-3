@@ -9,6 +9,8 @@
 */
 
 #include "model3d.h"
+#include "io/datastream.h"
+
 
 namespace MO {
 
@@ -18,6 +20,18 @@ Model3d::Model3d(QObject * parent)
     :   ObjectGl(parent)
 {
     setName("Model3D");
+}
+
+void Model3d::serialize(IO::DataStream & io) const
+{
+    ObjectGl::serialize(io);
+    io.writeHeader("m3d", 1);
+}
+
+void Model3d::deserialize(IO::DataStream & io)
+{
+    ObjectGl::deserialize(io);
+    io.readHeader("m3d", 1);
 }
 
 

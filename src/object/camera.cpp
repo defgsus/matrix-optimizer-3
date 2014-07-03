@@ -12,6 +12,8 @@
 
 #include "camera.h"
 #include "gl/context.h"
+#include "io/datastream.h"
+
 
 namespace MO {
 
@@ -22,6 +24,19 @@ Camera::Camera(QObject *parent) :
 {
     setName("Camera");
 }
+
+void Camera::serialize(IO::DataStream & io) const
+{
+    ObjectGl::serialize(io);
+    io.writeHeader("cam", 1);
+}
+
+void Camera::deserialize(IO::DataStream & io)
+{
+    ObjectGl::deserialize(io);
+    io.readHeader("cam", 1);
+}
+
 
 void Camera::setNumberThreads(int num)
 {

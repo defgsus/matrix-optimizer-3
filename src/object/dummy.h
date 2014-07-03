@@ -25,6 +25,9 @@ public:
 
     const QString& className() const { static QString s(MO_OBJECTCLASSNAME_DUMMY); return s; }
 
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
+
     bool isValid() const { return false; }
     virtual Type type() const { return T_OBJECT; }
 

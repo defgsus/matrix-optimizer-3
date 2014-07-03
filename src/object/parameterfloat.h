@@ -30,10 +30,10 @@ public:
     Type type() const { return T_PARAMETER_FLOAT; }
     const QString& className() const { static QString s(MO_OBJECTCLASSNAME_PARAMETER_FLOAT); return s; }
 
-    QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
 
-    virtual void serialize(IO::DataStream &) const;
-    virtual void deserialize(IO::DataStream &);
+    QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
 
     Double defaultValue() const { return defaultValue_; }
     Double minValue() const { return minValue_; }

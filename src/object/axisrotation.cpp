@@ -10,6 +10,8 @@
 
 #include "axisrotation.h"
 #include "parameterfloat.h"
+#include "io/datastream.h"
+
 
 namespace MO {
 
@@ -20,6 +22,19 @@ AxisRotation::AxisRotation(QObject *parent) :
 {
     setName("AxisRotation");
 }
+
+void AxisRotation::serialize(IO::DataStream & io) const
+{
+    Transformation::serialize(io);
+    io.writeHeader("arot", 1);
+}
+
+void AxisRotation::deserialize(IO::DataStream & io)
+{
+    Transformation::deserialize(io);
+    io.readHeader("arot", 1);
+}
+
 
 void AxisRotation::createParameters()
 {

@@ -27,6 +27,9 @@ public:
 
     virtual void applyTransformation(Mat4& matrix, Double time) const = 0;
 
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
+
 signals:
 
 public slots:

@@ -10,6 +10,8 @@
 
 #include "scale.h"
 #include "parameterfloat.h"
+#include "io/datastream.h"
+
 
 namespace MO {
 
@@ -21,17 +23,45 @@ Scale::Scale(QObject *parent) :
     setName("Scale");
 }
 
-void Scale::createParameters()
+void Scale::serialize(IO::DataStream & io) const
 {
-    x_ = createFloatParameter("pos_x", "x", 1);
-    y_ = createFloatParameter("pos_y", "y", 1);
-    z_ = createFloatParameter("pos_z", "z", 1);
+    Transformation::serialize(io);
+    io.writeHeader("scale", 1);
 }
 
+void Scale::deserialize(IO::DataStream & io)
+{
+    Transformation::deserialize(io);
+    io.readHeader("scale", 1);
+}
+
+
+void Scale::createParameters()
+{
+    all_ = createFloatParameter("scale_all", "scale", 1);
+    x_ = createFloatParameter("scale_x", "x", 1);
+    y_ = createFloatParameter("scale_y", "y", 1);
+    z_ = createFloatParameter("scale_z", "z", 1);
+
+    //useXYZ_ = createSetting("usexyz", "individual scale", false);
+}
+/*
+void Scale::settingChanged(Setting * s)
+{
+    if (s == useXYZ_)
+    {
+        bool xyz = useXYZ_->value();
+        x_->setEnabled(xyz);
+        y_->setEnabled(xyz);
+        z_->setEnabled(xyz);
+    }
+}
+*/
 void Scale::applyTransformation(Mat4 &matrix, Double time) const
 {
+    const float all = all_->value(time);
     matrix = glm::scale(matrix,
-                 Vec3(x_->value(time), y_->value(time), z_->value(time)));
+                 Vec3(x_->value(time) * all, y_->value(time) * all, z_->value(time) * all));
 }
 
 

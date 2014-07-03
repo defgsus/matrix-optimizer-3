@@ -13,6 +13,8 @@
 #include "io/error.h"
 #include "object/sequencefloat.h"
 #include "object/scene.h"
+#include "io/datastream.h"
+
 
 
 
@@ -41,7 +43,7 @@ void ParameterFloat::serialize(IO::DataStream &io) const
 {
     Parameter::serialize(io);
 
-    io.writeHeader("param_float", 1);
+    io.writeHeader("parf", 1);
 
     io << defaultValue_ << minValue_ << maxValue_ << value_;
 
@@ -51,7 +53,7 @@ void ParameterFloat::deserialize(IO::DataStream &io)
 {
     Parameter::deserialize(io);
 
-    io.readHeader("param_float", 1);
+    io.readHeader("parf", 1);
 
     io >> defaultValue_ >> minValue_ >> maxValue_ >> value_;
 }

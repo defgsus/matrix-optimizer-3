@@ -26,6 +26,9 @@ public:
 
     virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SCALE); return s; }
 
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
+
     virtual void createParameters();
 
     virtual void applyTransformation(Mat4& matrix, Double time) const;
@@ -36,7 +39,7 @@ public slots:
 
 protected:
 
-    ParameterFloat * x_, * y_, * z_;
+    ParameterFloat * all_, * x_, * y_, * z_;
 };
 
 } // namespace MO

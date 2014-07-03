@@ -58,6 +58,8 @@ SequenceFloat::~SequenceFloat()
 
 void SequenceFloat::serialize(IO::DataStream &io) const
 {
+    Sequence::serialize(io);
+
     io.writeHeader("seqf", 1);
 
     io << sequenceTypeId[mode_] << offset_ << amplitude_
@@ -74,6 +76,8 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 
 void SequenceFloat::deserialize(IO::DataStream &io)
 {
+    Sequence::deserialize(io);
+
     io.readHeader("seqf", 1);
 
     if (!io.readEnum(mode_, ST_CONSTANT, sequenceTypeId))

@@ -28,6 +28,8 @@ public:
 
     virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SOUNDSOURCE); return s; }
 
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
 
 signals:
 
