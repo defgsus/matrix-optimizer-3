@@ -42,19 +42,10 @@ public:
 
     // -------------- ctor --------------
 
-    explicit SequenceFloat(QObject *parent = 0);
+    MO_OBJECT_CONSTRUCTOR(SequenceFloat);
     ~SequenceFloat();
 
-    MO_OBJECT_CLONE(SequenceFloat)
-
-    const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SEQUENCE_FLOAT); return s; }
-
     virtual Type type() const { return T_SEQUENCE_FLOAT; }
-
-    // --------- io ---------------------
-
-    virtual void serialize(IO::DataStream &) const;
-    virtual void deserialize(IO::DataStream &);
 
     // ------------ getter --------------
 

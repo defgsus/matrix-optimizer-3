@@ -20,15 +20,12 @@ class Transformation : public Object
 {
     Q_OBJECT
 public:
-    explicit Transformation(QObject *parent = 0);
+    MO_ABSTRACT_OBJECT_CONSTRUCTOR(Transformation)
 
     virtual Type type() const { return T_TRANSFORMATION; }
     virtual bool isTransformation() const { return true; }
 
     virtual void applyTransformation(Mat4& matrix, Double time) const = 0;
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
 
 signals:
 

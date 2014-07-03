@@ -22,12 +22,9 @@ class Parameter : public Object
 {
     Q_OBJECT
 public:
-    explicit Parameter(QObject *parent = 0);
+    MO_ABSTRACT_OBJECT_CONSTRUCTOR(Parameter)
 
     virtual bool isParameter() const { return true; }
-
-    virtual void serialize(IO::DataStream &) const;
-    virtual void deserialize(IO::DataStream &);
 
     const QString& parameterId() const { return parameterId_; }
     void setParameterId(const QString& id) { parameterId_ = id; }

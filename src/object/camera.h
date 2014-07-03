@@ -19,14 +19,7 @@ class Camera : public ObjectGl
 {
     Q_OBJECT
 public:
-    explicit Camera(QObject *parent = 0);
-
-    MO_OBJECT_CLONE(Camera)
-
-    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_CAMERA); return s; }
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
+    MO_OBJECT_CONSTRUCTOR(Camera);
 
     virtual Type type() const { return T_CAMERA; }
     virtual bool isCamera() const { return true; }

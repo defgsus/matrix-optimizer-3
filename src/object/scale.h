@@ -20,14 +20,7 @@ class Scale : public Transformation
 {
     Q_OBJECT
 public:
-    explicit Scale(QObject *parent = 0);
-
-    MO_OBJECT_CLONE(Scale)
-
-    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SCALE); return s; }
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
+    MO_OBJECT_CONSTRUCTOR(Scale);
 
     virtual void createParameters();
 

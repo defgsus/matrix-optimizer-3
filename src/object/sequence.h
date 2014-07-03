@@ -20,13 +20,9 @@ class Sequence : public Object
 {
     Q_OBJECT
 public:
-
-    explicit Sequence(QObject *parent = 0);
+    MO_ABSTRACT_OBJECT_CONSTRUCTOR(Sequence)
 
     bool isSequence() const { return true; }
-
-    virtual void serialize(IO::DataStream &) const;
-    virtual void deserialize(IO::DataStream &);
 
     // -------------- getter -------------------
 

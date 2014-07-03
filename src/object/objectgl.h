@@ -26,13 +26,10 @@ class ObjectGl : public Object,
 
 public:
 
-    explicit ObjectGl(QObject *parent = 0);
+    MO_ABSTRACT_OBJECT_CONSTRUCTOR(ObjectGl)
 
     virtual Type type() const { return T_OBJECT; }
     bool isGl() const { return true; }
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
 
     virtual void setNumberThreads(int num);
 

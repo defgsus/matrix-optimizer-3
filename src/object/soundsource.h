@@ -19,17 +19,10 @@ class SoundSource : public Object
 {
     Q_OBJECT
 public:
-    explicit SoundSource(QObject *parent = 0);
-
-    MO_OBJECT_CLONE(SoundSource)
+    MO_OBJECT_CONSTRUCTOR(SoundSource);
 
     virtual Type type() const { return T_SOUNDSOURCE; }
     virtual bool isSoundSource() const { return true; }
-
-    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SOUNDSOURCE); return s; }
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
 
 signals:
 

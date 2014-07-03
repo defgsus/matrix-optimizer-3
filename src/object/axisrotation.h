@@ -21,14 +21,7 @@ class AxisRotation : public Transformation
 {
     Q_OBJECT
 public:
-    explicit AxisRotation(QObject *parent = 0);
-
-    MO_OBJECT_CLONE(AxisRotation)
-
-    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_AXISROTATION); return s; }
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
+    MO_OBJECT_CONSTRUCTOR(AxisRotation);
 
     virtual void createParameters();
 

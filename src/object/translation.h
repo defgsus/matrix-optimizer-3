@@ -20,18 +20,11 @@ class Translation : public Transformation
 {
     Q_OBJECT
 public:
-    explicit Translation(QObject *parent = 0);
-
-    MO_OBJECT_CLONE(Translation)
-
-    virtual const QString& className() const { static QString s(MO_OBJECTCLASSNAME_TRANSLATION); return s; }
+    MO_OBJECT_CONSTRUCTOR(Translation);
 
     virtual void createParameters();
 
     virtual void applyTransformation(Mat4& matrix, Double time) const;
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
 
 signals:
 

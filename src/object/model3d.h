@@ -20,14 +20,7 @@ class Model3d : public ObjectGl
 {
     Q_OBJECT
 public:
-    explicit Model3d(QObject *parent = 0);
-
-    MO_OBJECT_CLONE(Model3d)
-
-    const QString& className() const { static QString s(MO_OBJECTCLASSNAME_MODEL3D); return s; }
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
+    MO_OBJECT_CONSTRUCTOR(Model3d);
 
     virtual void initGl(int thread);
     virtual void renderGl(int, Double time);

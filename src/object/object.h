@@ -66,6 +66,19 @@ class SettingFloat;
 #define MO_OBJECT_CLONE(class__) \
     virtual class__ * cloneClass() const { return new class__(); }
 
+#define MO_OBJECT_CONSTRUCTOR(Class__) \
+    explicit Class__(QObject *parent = 0); \
+    MO_OBJECT_CLONE(Class__) \
+    virtual const QString& className() const { static QString s(#Class__); return s; } \
+    virtual void serialize(IO::DataStream &) const; \
+    virtual void deserialize(IO::DataStream &);
+
+#define MO_ABSTRACT_OBJECT_CONSTRUCTOR(Class__) \
+    explicit Class__(QObject *parent = 0); \
+    virtual void serialize(IO::DataStream &) const; \
+    virtual void deserialize(IO::DataStream &);
+
+
 /** Abstract base of all Objects in MO.
 
 */

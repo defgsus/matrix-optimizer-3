@@ -23,14 +23,7 @@ class Scene : public Object
 {
     Q_OBJECT
 public:
-    explicit Scene(QObject *parent = 0);
-
-    MO_OBJECT_CLONE(Scene)
-
-    const QString& className() const { static QString s(MO_OBJECTCLASSNAME_SCENE); return s; }
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
+    MO_OBJECT_CONSTRUCTOR(Scene);
 
     virtual Type type() const { return T_SCENE; }
     bool isScene() const { return true; }
