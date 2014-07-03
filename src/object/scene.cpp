@@ -29,7 +29,7 @@ Scene::Scene(QObject *parent) :
 {
     setName("Scene");
 
-    timer_.setInterval(1000 / 30);
+    timer_.setInterval(1000 / 60);
     timer_.setSingleShot(false);
     connect(&timer_, SIGNAL(timeout()), this, SLOT(timerUpdate_()));
 }
