@@ -23,15 +23,9 @@ public:
     /** Use to set unbounded limits */
     static Double infinity;
 
-    explicit ParameterFloat(QObject *parent = 0);
-
-    MO_OBJECT_CLONE(ParameterFloat)
+    MO_OBJECT_CONSTRUCTOR(ParameterFloat);
 
     Type type() const { return T_PARAMETER_FLOAT; }
-    const QString& className() const { static QString s(MO_OBJECTCLASSNAME_PARAMETER_FLOAT); return s; }
-
-    virtual void serialize(IO::DataStream&) const;
-    virtual void deserialize(IO::DataStream&);
 
     QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
 

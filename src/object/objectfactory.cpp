@@ -114,7 +114,7 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
 
 Scene * ObjectFactory::createSceneObject()
 {
-    Scene * s = qobject_cast<Scene*>(createObject(MO_OBJECTCLASSNAME_SCENE));
+    Scene * s = qobject_cast<Scene*>(createObject("Scene"));
     MO_ASSERT(s, "could not create Scene object");
     /*Object * sg = createObject(MO_OBJECTCLASSNAME_SEQUENCES);
     MO_ASSERT(sg, "could not create SequenceGroup object");
@@ -125,7 +125,7 @@ Scene * ObjectFactory::createSceneObject()
 
 Object * ObjectFactory::createDummy()
 {
-    Object * dummy = createObject(MO_OBJECTCLASSNAME_DUMMY);
+    Object * dummy = createObject("Dummy");
     MO_ASSERT(dummy, "could not create Dummy object");
     return dummy;
 }

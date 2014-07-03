@@ -294,7 +294,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
             editActions_.append(a = new QAction(tr("Add modulation"), this));
             connect(a, &QAction::triggered, [=]()
             {
-                Object * seq = ObjectFactory::createObject(MO_OBJECTCLASSNAME_SEQUENCE_FLOAT);
+                Object * seq = ObjectFactory::createObject("SequenceFloat");
                 QModelIndex idx = omodel->addObject(currentIndex(), -1, seq);
                 if (!idx.isValid())
                     delete seq;

@@ -503,7 +503,7 @@ ParameterFloat * Object::createFloatParameter(
     if (!param)
     {
         param = static_cast<ParameterFloat*>(
-                    ObjectFactory::createObject(MO_OBJECTCLASSNAME_PARAMETER_FLOAT) );
+                    ObjectFactory::createObject("ParameterFloat") );
         MO_ASSERT(param, "could not create float parameter");
 
         addObject(param);

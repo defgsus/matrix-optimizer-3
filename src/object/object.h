@@ -39,7 +39,7 @@ class SequenceFloat;
 
 class Setting;
 class SettingFloat;
-
+/*
 // PERSISTENT class names
 #ifndef MO_OBJECTCLASSNAMES_DEFINED
     #define MO_OBJECTCLASSNAMES_DEFINED
@@ -56,7 +56,7 @@ class SettingFloat;
     #define MO_OBJECTCLASSNAME_SEQUENCEGROUP    "_seqgroup"
     #define MO_OBJECTCLASSNAME_SEQUENCE_FLOAT   "_seqf"
 #endif
-
+*/
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
         static bool success_register_object_##class__ = \
