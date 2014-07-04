@@ -19,12 +19,18 @@
 #include "trackview.h"
 #include "widget/sequencewidget.h"
 #include "object/sequencefloat.h"
+#include "object/track.h"
+#include "io/error.h"
+
 
 namespace MO {
 namespace GUI {
 
 TrackView::TrackView(QWidget *parent) :
-    QWidget(parent)
+    QWidget (parent),
+    scene_  (0),
+
+    defaultTrackHeight_     (30)
 {
     setMinimumSize(320,240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -34,23 +40,7 @@ TrackView::TrackView(QWidget *parent) :
     setPalette(p);
     setAutoFillBackground(true);
 
-    createItems_();
 }
-
-
-void TrackView::createItems_()
-{
-    SequenceFloat * s;
-    for (int i=0; i<30; ++i)
-    {
-        sequenceWidgets_.append(
-                    new SequenceWidget(s = new SequenceFloat(this), this)
-                    );
-        s->setStart((Double)rand()/RAND_MAX * 60);
-        s->setLength((Double)rand()/RAND_MAX * 60);
-    }
-}
-
 
 void TrackView::setViewSpace(const UTIL::ViewSpace & s)
 {
@@ -72,6 +62,80 @@ void TrackView::updateViewSpace_()
         ++k;
     }
 }
+
+void TrackView::setScene(Scene * scene)
+{
+    scene_ = scene;
+
+    if (scene_ == 0)
+    {
+        clearTracks();
+        return;
+    }
+}
+
+void TrackView::clearTracks()
+{
+    tracks_.clear();
+
+    for (auto s : sequenceWidgets_)
+        s->deleteLater();
+
+    sequenceWidgets_.clear();
+}
+
+
+void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
+{
+    // removed previous content
+    clearTracks();
+    if (tracks.empty())
+        return;
+
+    // determine scene
+    if (!scene_)
+    {
+        setScene(tracks[0]->sceneObject());
+    }
+
+    MO_ASSERT(scene_, "Scene not set in TrackView::setTracks()");
+
+    tracks_ = tracks;
+
+    if (send_signal)
+        emit tracksChanged();
+
+    /*
+    // create track heights
+    for (auto t : tracks_)
+    {
+        if (!trackHeights_.contains(t->idName()))
+            trackHeights_.insert(t->idName(), defaultTrackHeight_);
+    }
+    */
+    createSequenceWidgets_();
+}
+
+int TrackView::trackHeight(Track * t) const
+{
+    return trackHeights_.value(t->idName(), defaultTrackHeight_);
+}
+
+void TrackView::createSequenceWidgets_()
+{
+    SequenceFloat * s;
+    for (int i=0; i<30; ++i)
+    {
+        sequenceWidgets_.append(
+                    new SequenceWidget(s = new SequenceFloat(this), this)
+                    );
+        s->setStart((Double)rand()/RAND_MAX * 60);
+        s->setLength((Double)rand()/RAND_MAX * 60);
+    }
+}
+
+
+
 
 
 

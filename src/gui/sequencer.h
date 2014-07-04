@@ -14,10 +14,12 @@
 #include <QWidget>
 
 class QGridLayout;
+class QScrollBar;
 
 namespace MO {
 namespace GUI {
 
+class TrackHeader;
 class TrackView;
 class Ruler;
 
@@ -35,8 +37,10 @@ private:
 
     void createWidgets_();
 
-    Ruler * rulerSec_, * rulerFps_;
+    TrackHeader * trackHeader_;
     TrackView * trackView_;
+    Ruler * rulerSec_, * rulerFps_;
+    QScrollBar * vScroll_;
 
     QGridLayout * gridLayout_;
 };

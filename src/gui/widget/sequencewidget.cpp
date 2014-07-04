@@ -29,7 +29,7 @@ void SequenceWidget::setSequence(Sequence * seq)
     sequence_  = seq;
 
     QPalette p(palette());
-    p.setColor(QPalette::Background, QColor(80,120,80));
+    p.setColor(QPalette::Window, QColor(80,120+rand()%40,80));
     setPalette(p);
 }
 

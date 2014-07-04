@@ -9,8 +9,10 @@
 */
 
 #include <QGridLayout>
+#include <QScrollBar>
 
 #include "sequencer.h"
+#include "trackheader.h"
 #include "trackview.h"
 #include "ruler.h"
 
@@ -31,19 +33,29 @@ void Sequencer::createWidgets_()
     gridLayout_ = new QGridLayout(this);
     gridLayout_->setMargin(2);
 
+        // ruler seconds
         rulerSec_ = new Ruler(this);
         gridLayout_->addWidget(rulerSec_, 0, 1);
         rulerSec_->setOptions(Ruler::O_EnableAllX);
         rulerSec_->setFixedHeight(36);
 
-        trackView_ = new TrackView(this);
-        gridLayout_->addWidget(trackView_, 1, 1);
-
+        // ruler fps
         rulerFps_ = new Ruler(this);
         gridLayout_->addWidget(rulerFps_, 2, 1);
         rulerFps_->setOptions(Ruler::O_EnableAllX);
         rulerFps_->setFixedHeight(36);
 
+        // track header
+        trackHeader_ = new TrackHeader(this);
+        gridLayout_->addWidget(trackHeader_, 1, 0);
+
+        // track view
+        trackView_ = new TrackView(this);
+        gridLayout_->addWidget(trackView_, 1, 1);
+
+        // vertical scrollbar
+        vScroll_ = new QScrollBar(Qt::Vertical, this);
+        gridLayout_->addWidget(vScroll_, 1, 2);
 
     // --- connections ---
 

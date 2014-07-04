@@ -54,6 +54,7 @@ protected slots:
     void sequenceTimeChanged(MO::Sequence *);
 
 protected:
+    void resizeEvent(QResizeEvent *);
 
     /** This resizes the scrollarea viewport to minimum.
         Call this after changes to setting widgets visibilty. */

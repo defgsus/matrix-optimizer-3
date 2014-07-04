@@ -124,6 +124,13 @@ SequenceView::SequenceView(QWidget *parent) :
 
 }
 
+void SequenceView::resizeEvent(QResizeEvent * e)
+{
+    QWidget::resizeEvent(e);
+    // XXX does not work!
+    updateViewSpace_(rulerX_->viewSpace());
+}
+
 void SequenceView::setSequence_(Sequence * s)
 {
     bool different = baseSequence_ != s;
