@@ -23,6 +23,7 @@ class ViewSpace
 public:
 
     ViewSpace();
+    ViewSpace(Double scaleX, Double scaleY);
 
     // -------------- io ----------------
 

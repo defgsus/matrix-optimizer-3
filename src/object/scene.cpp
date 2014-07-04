@@ -15,8 +15,10 @@
 #include "camera.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "object/parameterfloat.h"
 #include "io/datastream.h"
+#include "object/objectfactory.h"
+#include "object/parameterfloat.h"
+#include "object/track.h"
 
 
 namespace MO {
@@ -130,7 +132,18 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
     emit renderRequest();
 }
 
+// --------------------- tracks ------------------------------
+
 // --------------------- sequence ----------------------------
+
+SequenceFloat * Scene::createFloatSequence(Track * track)
+{
+    MO_DEBUG_TREE("Scene::createFloatSequence() for track '" << track->idName() << "'");
+
+    auto * seq = ObjectFactory::createSequenceFloat();
+    track->addObject((Object*)seq);
+    return seq;
+}
 
 void Scene::beginSequenceChange(Sequence * s)
 {

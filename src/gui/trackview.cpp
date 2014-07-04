@@ -8,19 +8,18 @@
     <p>created 7/3/2014</p>
 */
 
-#include <QDebug>
-/*
-#include <QGraphicsScene>
-#include <QGraphicsRectItem>
-#include <QGraphicsTextItem>
-*/
+//#include <QDebug>
 #include <QPalette>
+#include <QMouseEvent>
+#include <QMenu>
+
 
 #include "trackview.h"
 #include "trackheader.h"
 #include "widget/sequencewidget.h"
 #include "object/sequencefloat.h"
 #include "object/track.h"
+#include "object/scene.h"
 #include "io/error.h"
 
 
@@ -31,6 +30,8 @@ TrackView::TrackView(QWidget *parent) :
     QWidget         (parent),
     scene_          (0),
     header_         (0),
+
+    selTrack_       (0),
 
     defaultTrackHeight_     (30),
     trackYSpacing_          (2)
@@ -50,10 +51,10 @@ void TrackView::setViewSpace(const UTIL::ViewSpace & s)
 {
     space_ = s;
 
-    updateViewSpace_();
+    updateWidgetsViewSpace_();
 }
 
-void TrackView::updateViewSpace_()
+void TrackView::updateWidgetsViewSpace_()
 {
     const int trackHeight_ = 30;
     int k=0;
@@ -114,7 +115,10 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
 
     calcTrackY_();
 
-    createSequenceWidgets_();
+    for (auto t : tracks_)
+        createSequenceWidgets_(t);
+
+    updateWidgetsViewSpace_();
 
     header_->setTracks(tracks);
 }
@@ -142,8 +146,16 @@ int TrackView::trackY(Track * t) const
     return trackY_.value(t, 0);
 }
 
-void TrackView::createSequenceWidgets_()
+void TrackView::createSequenceWidgets_(Track * t)
 {
+    MO_ASSERT(t, "TrackView::createSequenceWidgets() with NULL Track");
+
+    if (!trackY_.contains(t))
+    {
+        MO_WARNING("TrackView::createSequenceWidgets() for unknown Track '" << t->idName() << "' requested.");
+        return;
+    }
+    /*
     SequenceFloat * s;
     for (int i=0; i<30; ++i)
     {
@@ -153,11 +165,86 @@ void TrackView::createSequenceWidgets_()
         s->setStart((Double)rand()/RAND_MAX * 60);
         s->setLength((Double)rand()/RAND_MAX * 60);
     }
+    */
+}
+
+void TrackView::updateTrack(Track * t)
+{
+    MO_ASSERT(t, "TrackView::updateTrack() with NULL Track");
+
+    if (!trackY_.contains(t))
+    {
+        MO_WARNING("TrackView::updateTrack() for unknown Track '" << t->idName() << "' requested.");
+        return;
+    }
+
 }
 
 
+void TrackView::mousePressEvent(QMouseEvent * e)
+{
+    QWidget::mousePressEvent(e);
+
+    if (e->isAccepted())
+        return;
+
+    // --- clicked on track ---
+
+    selTrack_ = trackForY(e->y());
+
+    createEditActions_();
+
+    if (selTrack_)
+    {
+        // right-click on track
+        if (e->button() == Qt::RightButton)
+        {
+            QMenu * popup = new QMenu(this);
+            popup->addActions(editActions_);
+
+            popup->popup(QCursor::pos());
+        }
+    }
+}
+
+Track * TrackView::trackForY(int y) const
+{
+    for (auto i = trackY_.begin(); i != trackY_.end(); ++i)
+    {
+        if (y >= i.value() && y <= i.value() + trackHeight(i.key()))
+            return i.key();
+    }
+
+    return 0;
+}
 
 
+void TrackView::createEditActions_()
+{
+    // remove old actions
+    for (auto a : editActions_)
+        if (!actions().contains(a))
+        {
+            if (a->menu())
+                a->menu()->deleteLater();
+            a->deleteLater();
+        }
+
+    editActions_.clear();
+
+    QAction * a;
+    //QMenu * m;
+
+    // actions for a track
+    if (selTrack_)
+    {
+        editActions_.append( a = new QAction(tr("New sequence"), this) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            scene_->createFloatSequence(selTrack_);
+        });
+    }
+}
 
 
 } // namespace GUI

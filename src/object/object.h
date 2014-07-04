@@ -33,6 +33,7 @@ class ParameterFloat;
 class ObjectGl;
 class Model3d;
 class Transformation;
+class Track;
 class Sequences;
 class Sequence;
 class SequenceFloat;

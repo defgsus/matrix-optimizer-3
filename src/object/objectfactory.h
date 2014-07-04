@@ -22,6 +22,7 @@ namespace MO {
 
 class Object;
 class Scene;
+class SequenceFloat;
 
 namespace IO { class DataStream; }
 
@@ -46,6 +47,9 @@ public:
 
     /** Returns a new Scene object */
     static Scene * createSceneObject();
+
+    /** Returns a new float sequence */
+    static SequenceFloat * createSequenceFloat();
 
     /** Creates a dummy object (for skipping unknown objects in deserializer) */
     static Object * createDummy();

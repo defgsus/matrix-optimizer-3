@@ -234,6 +234,8 @@ void MainWindow::setSceneObject(Scene * s)
     objectView_->setObject(0);
     seqFloatView_->setSequence(0);
 
+    sequencer_->setTracks(scene_);
+
     glWindow_->renderLater();
 }
 
@@ -244,7 +246,9 @@ void MainWindow::createObjects_()
     glWindow_ = glManager_->createGlWindow();
     glWindow_->show();
 
-    newScene();
+    //newScene();
+    setSceneObject(ObjectFactory::loadScene("./tracktest.mo3"));
+
     /*
     auto scene = ObjectFactory::createSceneObject();
 

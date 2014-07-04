@@ -56,7 +56,11 @@ public slots:
 
     void setParameterValue(MO::ParameterFloat *, Double value);
 
+    // --------------- tracks ------------------
+
     // ------------- sequences -----------------
+
+    SequenceFloat * createFloatSequence(MO::Track * track);
 
     void beginSequenceChange(MO::Sequence *);
     void endSequenceChange();

@@ -33,6 +33,23 @@ ViewSpace::ViewSpace()
 {
 }
 
+ViewSpace::ViewSpace(Double scaleX, double scaleY)
+    : x_(0),
+      y_(0),
+      sx_(scaleX),
+      sy_(scaleY),
+      minx_(0),
+      miny_(0),
+      maxx_(0),
+      maxy_(0),
+      doLimitByChangingScale_(false),
+      doMinx_(false),
+      doMiny_(false),
+      doMaxx_(false),
+      doMaxy_(false)
+{
+}
+
 
 void ViewSpace::setX(Double x)
 {

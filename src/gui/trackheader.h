@@ -39,7 +39,7 @@ public slots:
 
 private:
 
-    void updateWidgets_();
+    void updateWidgetsViewSpace_();
 
     TrackView * trackView_;
 

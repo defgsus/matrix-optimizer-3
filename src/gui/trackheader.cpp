@@ -50,11 +50,11 @@ void TrackHeader::setTracks(const QList<Track *> &tracks)
          widgets_.append( w = new TrackHeaderWidget(t, this) );
     }
 
-    updateWidgets_();
+    updateWidgetsViewSpace_();
 }
 
 
-void TrackHeader::updateWidgets_()
+void TrackHeader::updateWidgetsViewSpace_()
 {
     for (auto w : widgets_)
     {

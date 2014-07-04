@@ -15,6 +15,7 @@
 #include "trackheader.h"
 #include "trackview.h"
 #include "ruler.h"
+#include "object/track.h"
 
 namespace MO {
 namespace GUI {
@@ -70,6 +71,12 @@ void Sequencer::createWidgets_()
             trackView_, SLOT(setViewSpace(UTIL::ViewSpace)));
     connect(rulerFps_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
             trackView_, SLOT(setViewSpace(UTIL::ViewSpace)));
+
+    // initialize viewspace
+    UTIL::ViewSpace init(60, 1);
+    init.setMinX(0);
+    init.setMinY(0);
+    rulerSec_->setViewSpace(init, true);
 }
 
 void Sequencer::clearTracks()
@@ -81,6 +88,14 @@ void Sequencer::setTracks(const QList<Track *> &tracks)
 {
     trackView_->setTracks(tracks);
 }
+
+void Sequencer::setTracks(Object * o, bool recursive)
+{
+    setTracks( o->findChildObjects<Track>(QString(), recursive) );
+}
+
+
+
 
 
 } // namespace GUI

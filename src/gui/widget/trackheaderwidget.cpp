@@ -25,12 +25,19 @@ TrackHeaderWidget::TrackHeaderWidget(Track *track, QWidget *parent) :
 {
     MO_ASSERT(track, "No Track given for TrackHeaderWidget");
 
+    setAutoFillBackground(true);
+    QPalette p(palette());
+    p.setColor(QPalette::Window, QColor(60,60,60));
+    p.setColor(QPalette::Foreground, Qt::white);
+    setPalette(p);
+
     setToolTip(track->namePath());
 
     layout_ = new QHBoxLayout(this);
 
     auto label = new QLabel(track->name(), this);
     layout_->addWidget(label);
+
 }
 
 

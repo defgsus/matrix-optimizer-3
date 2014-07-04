@@ -17,7 +17,7 @@
 
 #include "util/viewspace.h"
 
-class QGraphicsScene;
+class QAction;
 
 namespace MO {
 class Track;
@@ -46,6 +46,9 @@ signals:
     /** Emitted when the number or height of tracks changed */
     void tracksChanged();
 
+    /** Emitted when a track was selected */
+    void trackSelected(Track *);
+
 public slots:
 
     void setViewSpace(const UTIL::ViewSpace&);
@@ -58,11 +61,22 @@ public slots:
         Previous content will be removed. */
     void setTracks(const QList<Track*>& tracks, bool send_signal = false);
 
+    /** Updates the view for the given Track */
+    void updateTrack(Track *);
+
+protected:
+
+    void mousePressEvent(QMouseEvent * );
+
 private:
 
-    void createSequenceWidgets_();
-    void updateViewSpace_();
+    void createSequenceWidgets_(Track *);
+    void updateWidgetsViewSpace_();
     void calcTrackY_();
+    void createEditActions_();
+
+    /** Returns track for screen y position, or NULL */
+    Track * trackForY(int y) const;
 
 
     UTIL::ViewSpace space_;
@@ -75,6 +89,9 @@ private:
     QList<SequenceWidget*> sequenceWidgets_;
     QHash<QString, int> trackHeights_;
     QHash<Track*, int> trackY_;
+
+    Track * selTrack_;
+    QList<QAction*> editActions_;
 
     // ---- config ----
 
