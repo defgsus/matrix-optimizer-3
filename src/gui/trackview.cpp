@@ -37,16 +37,19 @@ TrackView::TrackView(QWidget *parent) :
     offsetY_                (0),
     maxHeight_              (0),
 
+    action_                 (A_NOTHING_),
     selTrack_               (0),
     nextFocusSequence_      (0),
     currentTime_            (0),
-    dragSequence_           (0),
+    hoverWidget_            (0),
 
     defaultTrackHeight_     (30),
-    trackSpacing_           (2)
+    trackSpacing_           (2),
+    modifierMultiSelect_    (Qt::CTRL)
 {
     setMinimumSize(320,240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setMouseTracking(true);
 
     QPalette p(palette());
     p.setColor(QPalette::Window, QColor(50,50,50));
@@ -87,6 +90,14 @@ void TrackView::paintEvent(QPaintEvent * )
         p.drawLine(0, y, width(), y);
     }
 
+    if (action_ == A_SELECT_FRAME_)
+    {
+        p.setPen(QColor(255,255,255));
+        p.setBrush(Qt::NoBrush);
+        p.drawRect(selectRect_);
+    }
+
+    /*
     // when moving sequences
     if (dragSequence_ && dragEndTrack_ && dragStartTrack_ != dragEndTrack_)
     {
@@ -99,6 +110,7 @@ void TrackView::paintEvent(QPaintEvent * )
         p.setPen(QPen(QColor(255,255,255,150)));
         p.drawRect(x, y, w, h);
     }
+    */
 }
 
 SequenceWidget * TrackView::widgetForSequence_(Sequence * seq) const
@@ -137,6 +149,7 @@ void TrackView::clearTracks()
         s->deleteLater();
 
     sequenceWidgets_.clear();
+    selectedWidgets_.clear();
 
     header_->clearTracks();
 }
@@ -207,25 +220,31 @@ void TrackView::createSequenceWidgets_(Track * t)
     }
 
     // delete the previous widgets for this track
-    QList<SequenceWidget*> newlist;
+    decltype(sequenceWidgets_) newlist;
     for (auto w : sequenceWidgets_)
     {
         if (w->track() == t)
+        {
             w->deleteLater();
+            selectedWidgets_.removeOne(w);
+        }
         else
-            newlist.append(w);
+            newlist.insert(w);
     }
     sequenceWidgets_ = newlist;
+    hoverWidget_ = 0;
 
     // create SequenceWidgets
     for (Sequence * seq : t->sequences())
     {
         // create the widget
         auto w = new SequenceWidget(t, seq, this);
-        sequenceWidgets_.append( w );
+        sequenceWidgets_.insert( w );
 
         // initialize
         w->setVisible(true);
+        connect(w, SIGNAL(hovered(SequenceWidget*,bool)),
+                this, SLOT(widgetHovered_(SequenceWidget*,bool)));
         connect(seq, SIGNAL(timeChanged(MO::Sequence*)),
                 this, SLOT(sequenceTimeChanged(MO::Sequence*)));
 
@@ -253,34 +272,59 @@ void TrackView::updateTrack(Track * t)
     updateWidgetsViewSpace_();
 }
 
+void TrackView::widgetHovered_(SequenceWidget * w, bool on)
+{
+    if (action_ == A_NOTHING_)
+        hoverWidget_ = on? w : 0;
+}
+
 
 void TrackView::mousePressEvent(QMouseEvent * e)
 {
-    /*QWidget::mousePressEvent(e);
-
-    if (e->isAccepted())
-        return;
-    */
+    bool multisel = (e->modifiers() & modifierMultiSelect_);
 
     // --- clicked on sequence ---
 
-    if (SequenceWidget * seqw = qobject_cast<SequenceWidget*>(childAt(e->pos())))
+    if (hoverWidget_)
     {
+        // leftclick on sequence
         if (e->button() == Qt::LeftButton)
         {
-            dragSequence_ = seqw->sequence();
-            dragStartPos_ = e->pos();
-            dragStartTime_ = space_.mapXTo((Double)e->x()/width());
-            dragStartSeqTime_ = dragSequence_->start();
-            dragStartTrack_ = dragEndTrack_ = seqw->track();
+            // change select state
+
+            if (multisel)
+                selectSequenceWidget_(hoverWidget_, FLIP_);
+            else
+            {
+                if (!hoverWidget_->selected())
+                {
+                    clearSelection_();
+                    selectSequenceWidget_(hoverWidget_, SELECT_);
+                }
+            }
+
+            // --- start drag pos ---
+
+            if (isSelected_())
+            {
+                action_ = A_DRAG_POS_;
+                dragStartPos_ = e->pos();
+                dragStartTime_ = space_.mapXTo((Double)e->x()/width());
+                dragStartTrack_ = hoverWidget_->track();
+                dragStartTimes_.clear();
+                for (auto w : selectedWidgets_)
+                    dragStartTimes_.append(w->sequence()->start());
+            }
 
             e->accept();
             return;
         }
     }
 
-
     // --- clicked on track ---
+
+    if (!multisel)
+        clearSelection_();
 
     selTrack_ = trackForY(e->y());
     currentTime_ = space_.mapXTo((Double)e->x() / width());
@@ -301,10 +345,54 @@ void TrackView::mousePressEvent(QMouseEvent * e)
             return;
         }
     }
+
+    // --- start selection frame ---
+
+    if (e->button() == Qt::LeftButton)
+    {
+        action_ = A_SELECT_FRAME_;
+        dragStartPos_ = e->pos();
+        selectRect_ = QRect(dragStartPos_, QSize(1,1));
+    }
 }
 
 void TrackView::mouseMoveEvent(QMouseEvent * e)
 {
+    if (action_ == A_NOTHING_)
+        return;
+
+    Double timeX = space_.mapXTo((Double)e->x() / width()),
+           deltaTime = timeX - dragStartTime_;
+
+    // ---- drag sequence position ----
+
+    if (action_ == A_DRAG_POS_)
+    {
+        for (int i=0; i<selectedWidgets_.size(); ++i)
+        {
+            Double newstart = std::max((Double)0, dragStartTimes_[i] + deltaTime);
+            selectedWidgets_[i]->sequence()->setStart(newstart);
+        }
+        scrollView_(e->pos());
+
+        e->accept();
+        return;
+    }
+
+    // --- selection frame ---
+
+    if (action_ == A_SELECT_FRAME_)
+    {
+        QRect r(selectRect_);
+        selectRect_.setLeft(std::min(dragStartPos_.x(), e->pos().x()));
+        selectRect_.setRight(std::max(dragStartPos_.x(), e->pos().x()));
+        selectRect_.setTop(std::min(dragStartPos_.y(), e->pos().y()));
+        selectRect_.setBottom(std::max(dragStartPos_.y(), e->pos().y()));
+        update(r.adjusted(-1,-1,1,1));
+        update(selectRect_.adjusted(-1,-1,1,1));
+    }
+
+/*
     if (dragSequence_)
     {
         Double x = space_.mapXTo((Double)e->x() / width()),
@@ -323,31 +411,80 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
             update();
         }
 
-        // shift x viewspace
-        int scrOffset = 0;
-        if (e->x() > width())
-            scrOffset = std::min(10, e->x() - width());
-        else if (e->x() < 0)
-            scrOffset = std::max(-10, e->x());
+        e->accept();
+        return;
+    }
+*/
+}
 
-        if (scrOffset)
-        {
-            Double delta = space_.mapXDistanceTo((Double)scrOffset/width());
-            space_.addX(delta * 1.2);
-            updateWidgetsViewSpace_();
-            emit viewSpaceChanged(space_);
-        }
+void TrackView::mouseReleaseEvent(QMouseEvent * e)
+{
+    bool multisel = (e->modifiers() & modifierMultiSelect_);
 
-        // TODO shift y viewspace
+    if (action_ == A_SELECT_FRAME_)
+    {
+        action_ = A_NOTHING_;
+        update(selectRect_.adjusted(-1,-1,1,1));
+
+        selectSequenceWidgets_(selectRect_, multisel? FLIP_ : SELECT_);
 
         e->accept();
         return;
     }
+
+    action_ = A_NOTHING_;
 }
 
-void TrackView::mouseReleaseEvent(QMouseEvent *)
+void TrackView::scrollView_(const QPoint& p)
 {
-    dragSequence_ = 0;
+    // shift x viewspace
+    int scrOffset = 0;
+    if (p.x() > width())
+        scrOffset = std::min(10, p.x() - width());
+    else if (p.x() < 0)
+        scrOffset = std::max(-10, p.x());
+
+    if (scrOffset)
+    {
+        Double delta = space_.mapXDistanceTo((Double)scrOffset/width());
+        space_.addX(delta * 1.2);
+        updateWidgetsViewSpace_();
+        emit viewSpaceChanged(space_);
+    }
+
+    // TODO shift y viewspace
+}
+
+void TrackView::selectSequenceWidget_(SequenceWidget * w, SelectState_ s)
+{
+    if (w->selected() && (s == UNSELECT_ || s == FLIP_))
+    {
+        w->setSelected(false);
+        selectedWidgets_.removeOne(w);
+    }
+    else
+    if (!w->selected() && (s == SELECT_ || s == FLIP_))
+    {
+        w->setSelected(true);
+        selectedWidgets_.append(w);
+    }
+}
+
+void TrackView::selectSequenceWidgets_(const QRect & r, SelectState_ s)
+{
+    for (auto w : sequenceWidgets_)
+    {
+        if (r.intersects(w->geometry()))
+            selectSequenceWidget_(w, s);
+    }
+}
+
+void TrackView::clearSelection_()
+{
+    for (auto w : selectedWidgets_)
+        w->setSelected(false);
+
+    selectedWidgets_.clear();
 }
 
 void TrackView::sequenceTimeChanged(Sequence * seq)

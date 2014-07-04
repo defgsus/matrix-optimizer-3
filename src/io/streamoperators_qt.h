@@ -12,12 +12,25 @@
 #define MOSRC_IO_STREAMOPERATORS_QT_H
 
 #include <QString>
+#include <QObject>
 
 /** std::ostream << QString */
 template <typename T>
 std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QString& s)
 {
     o << s.toStdString();
+    return o;
+}
+
+
+/** std::ostream << QObject* */
+template <typename T>
+std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QObject * obj)
+{
+    if (obj)
+        o << obj->metaObject()->className() << "(" << (void*)obj << ")";
+    else
+        o << "QObject(0x0)";
     return o;
 }
 

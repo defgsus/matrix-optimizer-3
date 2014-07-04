@@ -38,18 +38,19 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
     curvePainter_(0),
     curveData_   (0),
     action_     (A_NOTHING),
-    hovered_    (false)
+    hovered_    (false),
+    selected_   (false)
 {
     MO_DEBUG_GUI("SequenceWidget::SequenceWidget(" << track << ", " << seq << ", " << parent << ")");
 
-    setFocusPolicy(Qt::ClickFocus);
+    //setFocusPolicy(Qt::ClickFocus);
     //setMouseTracking(true);
 
     colorBody_ = QColor(80, 120, 80);
-    colorBodySel_ = QColor(120, 140, 100);
+    colorBodySel_ = colorBody_.lighter(150);
 
     colorOutline_ = QColor(0,0,0);
-    colorOutlineSel_ = QColor(160,160,160);
+    colorOutlineSel_ = colorBody_.lighter(200);
 
     // prepare a float curve painter
     if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(seq))
@@ -69,15 +70,25 @@ SequenceWidget::~SequenceWidget()
         delete curveData_;
 }
 
+void SequenceWidget::setSelected(bool enable)
+{
+    if (selected_ != enable)
+        update();
+
+    selected_ = enable;
+}
+
 void SequenceWidget::enterEvent(QEvent *)
 {
     hovered_ = true;
+    emit hovered(this, true);
     update();
 }
 
 void SequenceWidget::leaveEvent(QEvent *)
 {
     hovered_ = false;
+    emit hovered(this, false);
     update();
 }
 
@@ -88,8 +99,8 @@ void SequenceWidget::paintEvent(QPaintEvent * e)
     // --- body ---
 
     QColor
-        outline = hasFocus()? colorOutlineSel_ : colorOutline_,
-            body = hasFocus()? colorBodySel_ : colorBody_;
+        outline = selected_? colorOutlineSel_ : colorOutline_,
+            body = selected_? colorBodySel_ : colorBody_;
 
     if (hovered_)
     {
@@ -98,7 +109,7 @@ void SequenceWidget::paintEvent(QPaintEvent * e)
     }
 
     QPen outpen = QPen(outline);
-    outpen.setWidth(hasFocus()? 3 : 1);
+    outpen.setWidth(selected_? 3 : 1);
 
     p.setPen(outpen);
     p.setBrush(QBrush(body));
@@ -116,6 +127,8 @@ void SequenceWidget::paintEvent(QPaintEvent * e)
         curvePainter_->paint(p, e->rect());
     }
 }
+
+
 
 #if (0)
 void SequenceWidget::mousePressEvent(QMouseEvent * e)

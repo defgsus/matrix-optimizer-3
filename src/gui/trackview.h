@@ -14,6 +14,7 @@
 #include <QWidget>
 #include <QList>
 #include <QHash>
+#include <QSet>
 
 #include "util/viewspace.h"
 
@@ -77,8 +78,13 @@ public slots:
     /** Updates the view for the given Track */
     void updateTrack(Track *);
 
-    /** update from sequences */
+    /** Update from sequences */
     void sequenceTimeChanged(MO::Sequence *);
+
+protected slots:
+
+    /** Signal from sequence widgets */
+    void widgetHovered_(SequenceWidget *, bool);
 
 protected:
 
@@ -90,12 +96,33 @@ protected:
 
 private:
 
+    enum SelectState_
+    {
+        SELECT_,
+        UNSELECT_,
+        FLIP_
+    };
+
+    enum Action_
+    {
+        A_NOTHING_,
+        A_DRAG_POS_,
+        A_SELECT_FRAME_
+    };
+
     //void deleteSequenceWidgets_(Track *);
     void createSequenceWidgets_(Track *);
     void updateWidgetsViewSpace_();
     void updateWidgetViewSpace_(SequenceWidget *);
+    /** Adjusts the viewspace when @p mousePos is outside of view */
+    void scrollView_(const QPoint& mousePos);
     void calcTrackY_();
     void createEditActions_();
+
+    void selectSequenceWidget_(SequenceWidget *, SelectState_);
+    void selectSequenceWidgets_(const QRect&, SelectState_);
+    void clearSelection_();
+    bool isSelected_() const { return !selectedWidgets_.empty(); }
 
     SequenceWidget * widgetForSequence_(Sequence *) const;
 
@@ -111,27 +138,35 @@ private:
 
     TrackHeader * header_;
 
-    QList<SequenceWidget*> sequenceWidgets_;
+    QSet<SequenceWidget*> sequenceWidgets_;
     QHash<QString, int> trackHeights_;
     QHash<Track*, int> trackY_;
     int offsetY_, maxHeight_;
 
-    Track * selTrack_;
     QList<QAction*> editActions_;
+
+    Action_ action_;
+    Track * selTrack_;
     /** createSequenceWidgets() will focus the widget containing this sequence */
     Sequence * nextFocusSequence_;
     Double currentTime_;
 
+    SequenceWidget* hoverWidget_;
+    QList<SequenceWidget*> selectedWidgets_;
+
     QPoint dragStartPos_;
-    Double dragStartTime_, dragStartSeqTime_;
-    /** Sequence to be dragged around */
-    Sequence * dragSequence_;
+    Double dragStartTime_;
     Track * dragStartTrack_, * dragEndTrack_;
+    QList<int> dragStartTimes_;
+
+    QRect selectRect_;
 
     // ---- config ----
 
     int defaultTrackHeight_,
         trackSpacing_;
+
+    int modifierMultiSelect_;
 };
 
 } // namespace GUI

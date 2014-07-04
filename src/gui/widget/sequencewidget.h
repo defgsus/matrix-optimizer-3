@@ -33,10 +33,15 @@ public:
     Sequence * sequence() const { return sequence_; }
     Track * track() const { return track_; }
 
+    bool selected() const { return selected_; }
+
 signals:
+
+    void hovered(SequenceWidget*, bool);
 
 public slots:
 
+    void setSelected(bool enable);
 
 protected:
 
@@ -63,7 +68,7 @@ private:
     PAINTER::ValueCurveData * curveData_;
 
     Action_ action_;
-    bool hovered_;
+    bool hovered_, selected_;
     QPoint mouseClickPos_;
 
     // ---- config ----
