@@ -77,7 +77,6 @@ SOURCES += \
     src/object/sequencefloat.cpp \
     src/gui/sequenceview.cpp \
     src/gui/sequencefloatview.cpp \
-    src/gui/doublespinbox.cpp \
     src/gui/painter/valuecurve.cpp \
     src/gui/painter/sequenceoverpaint.cpp \
     src/gui/generalsequencefloatview.cpp \
@@ -90,7 +89,8 @@ SOURCES += \
     src/gui/sequencer.cpp \
     src/gui/widget/sequencewidget.cpp \
     src/gui/trackheader.cpp \
-    src/gui/widget/trackheaderwidget.cpp
+    src/gui/widget/trackheaderwidget.cpp \
+    src/gui/widget/doublespinbox.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -155,7 +155,6 @@ HEADERS += \
     src/object/sequencefloat.h \
     src/gui/sequenceview.h \
     src/gui/sequencefloatview.h \
-    src/gui/doublespinbox.h \
     src/gui/painter/valuecurve.h \
     src/gui/painter/sequenceoverpaint.h \
     src/gui/generalsequencefloatview.h \
@@ -172,7 +171,8 @@ HEADERS += \
     src/gui/sequencer.h \
     src/gui/widget/sequencewidget.h \
     src/gui/trackheader.h \
-    src/gui/widget/trackheaderwidget.h
+    src/gui/widget/trackheaderwidget.h \
+    src/gui/widget/doublespinbox.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

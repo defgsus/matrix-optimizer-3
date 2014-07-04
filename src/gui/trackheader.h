@@ -17,7 +17,9 @@
 namespace MO {
 class Track;
 namespace GUI {
+
 class TrackView;
+class TrackHeaderWidget;
 
 class TrackHeader : public QWidget
 {
@@ -36,9 +38,13 @@ public slots:
     void setTracks(const QList<Track*>& tracks);
 
 private:
+
+    void updateWidgets_();
+
     TrackView * trackView_;
 
     QList<Track*> tracks_;
+    QList<TrackHeaderWidget*> widgets_;
 };
 
 

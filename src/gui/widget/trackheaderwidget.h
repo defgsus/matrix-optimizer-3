@@ -26,6 +26,8 @@ class TrackHeaderWidget : public QWidget
 public:
     explicit TrackHeaderWidget(Track * track, QWidget *parent = 0);
 
+    Track * track() const { return track_; }
+
 signals:
 
 public slots:

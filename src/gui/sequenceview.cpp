@@ -20,7 +20,7 @@
 #include "object/scene.h"
 #include "object/sequence.h"
 #include "io/error.h"
-#include "doublespinbox.h"
+#include "widget/doublespinbox.h"
 #include "io/log.h"
 
 namespace MO {

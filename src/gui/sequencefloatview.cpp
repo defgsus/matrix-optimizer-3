@@ -22,7 +22,7 @@
 #include "io/error.h"
 #include "generalsequencefloatview.h"
 #include "math/waveform.h"
-#include "doublespinbox.h"
+#include "widget/doublespinbox.h"
 
 namespace MO {
 namespace GUI {

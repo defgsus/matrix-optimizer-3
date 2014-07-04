@@ -72,6 +72,15 @@ void Sequencer::createWidgets_()
             trackView_, SLOT(setViewSpace(UTIL::ViewSpace)));
 }
 
+void Sequencer::clearTracks()
+{
+    trackView_->clearTracks();
+}
+
+void Sequencer::setTracks(const QList<Track *> &tracks)
+{
+    trackView_->setTracks(tracks);
+}
 
 
 } // namespace GUI

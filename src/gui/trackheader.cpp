@@ -11,7 +11,7 @@
 #include "trackheader.h"
 #include "trackview.h"
 #include "io/error.h"
-
+#include "widget/trackheaderwidget.h"
 
 namespace MO {
 namespace GUI {
@@ -33,6 +33,9 @@ TrackHeader::TrackHeader(TrackView * trackView, QWidget *parent) :
 void TrackHeader::clearTracks()
 {
     tracks_.clear();
+    for (auto w : widgets_)
+        w->deleteLater();
+    widgets_.clear();
 }
 
 void TrackHeader::setTracks(const QList<Track *> &tracks)
@@ -41,9 +44,27 @@ void TrackHeader::setTracks(const QList<Track *> &tracks)
 
     tracks_ = tracks;
 
+    TrackHeaderWidget * w;
     for (auto t : tracks)
+    {
+         widgets_.append( w = new TrackHeaderWidget(t, this) );
+    }
+
+    updateWidgets_();
 }
 
+
+void TrackHeader::updateWidgets_()
+{
+    for (auto w : widgets_)
+    {
+        const int h = trackView_->trackHeight(w->track()),
+                  y = trackView_->trackY(w->track());
+
+        w->setFixedHeight(h);
+        w->move(0, y);
+    }
+}
 
 } // namespace GUI
 } // namespace MO

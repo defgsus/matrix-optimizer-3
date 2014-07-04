@@ -87,6 +87,8 @@ void TrackView::clearTracks()
         s->deleteLater();
 
     sequenceWidgets_.clear();
+
+    header_->clearTracks();
 }
 
 
@@ -113,6 +115,8 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
     calcTrackY_();
 
     createSequenceWidgets_();
+
+    header_->setTracks(tracks);
 }
 
 void TrackView::calcTrackY_()

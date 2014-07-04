@@ -17,6 +17,7 @@ class QGridLayout;
 class QScrollBar;
 
 namespace MO {
+class Track;
 namespace GUI {
 
 class TrackHeader;
@@ -32,6 +33,12 @@ public:
 signals:
 
 public slots:
+
+    /** Remove everything from this view. */
+    void clearTracks();
+    /** Insert the list of tracks and their sequences into the view.
+        Previous content will be removed. */
+    void setTracks(const QList<Track*>& tracks);
 
 private:
 
