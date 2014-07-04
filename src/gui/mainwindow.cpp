@@ -100,18 +100,25 @@ void MainWindow::createWidgets_()
         lv = new QVBoxLayout();
         l0->addLayout(lv);
 
-            //auto sa = new QScrollArea(this);
-            //lv->addWidget(sa);
+            // sequencer
             sequencer_ = new Sequencer(this);
             lv->addWidget(sequencer_);
-            //sa->setWidget(trackView_);
-            //trackView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
+            connect(sequencer_, &Sequencer::sequenceSelected, [this](Sequence * seq)
+            {
+                objectSelected(seq);
+                //if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(seq))
+                //    seqFloatView_->setSequence(seqf);
+            });
 
             // SequenceFloat view
             seqFloatView_ = new SequenceFloatView(this);
             seqFloatView_->setVisible(false);
             lv->addWidget(seqFloatView_);
+
+    // ------------ connections --------------
+
+
+
 
 
     // --------- io ----------

@@ -169,12 +169,13 @@ void Scene::moveSequence(Sequence *seq, Track *from, Track *to)
 void Scene::beginSequenceChange(Sequence * s)
 {
     MO_DEBUG_PARAM("Scene::beginSequenceChange(" << s << ")");
-    s = s;
+    changedSequence_ = s;
 }
 
 void Scene::endSequenceChange()
 {
     MO_DEBUG_PARAM("Scene::endSequenceChange()");
+    emit sequenceChanged(changedSequence_);
 }
 
 // --------------------- objects -----------------------------
@@ -182,12 +183,13 @@ void Scene::endSequenceChange()
 void Scene::beginObjectChange(Object * o)
 {
     MO_DEBUG_PARAM("Scene::beginObjectChange(" << o << ")");
-    o = o;
+    changedObject_ = o;
 }
 
 void Scene::endObjectChange()
 {
     MO_DEBUG_PARAM("Scene::endObjectChange()");
+    emit objectChanged(changedObject_);
 }
 
 // ----------------------- open gl ---------------------------

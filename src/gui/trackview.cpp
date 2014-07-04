@@ -78,6 +78,20 @@ void TrackView::setVerticalOffset(int y)
     }
 }
 
+QPointF TrackView::screenToView(const QPoint &screen) const
+{
+    return QPointF(
+                space_.mapXTo((Double)screen.x() / width()),
+                screen.y() + offsetY_);
+}
+
+QPoint TrackView::viewToScreen(const QPointF &view) const
+{
+    return QPoint(
+                space_.mapXFrom(view.x()) * width(),
+                view.y() - offsetY_);
+}
+
 void TrackView::paintEvent(QPaintEvent * )
 {
     QPainter p(this);
@@ -129,7 +143,7 @@ void TrackView::updateWidgetsViewSpace_()
     }
 }
 
-void TrackView::updateWidgetViewSpace_(SequenceWidget * s)
+bool TrackView::updateWidgetViewSpace_(SequenceWidget * s)
 {
     const int h = trackHeight(s->track()),
               y = trackY(s->track());
@@ -137,7 +151,12 @@ void TrackView::updateWidgetViewSpace_(SequenceWidget * s)
 
     r.setLeft(space_.mapXFrom(s->sequence()->start()) * width());
     r.setRight(space_.mapXFrom(s->sequence()->end()) * width());
-    s->setGeometry(r);
+    if (r != s->geometry())
+    {
+        s->setGeometry(r);
+        return true;
+    }
+    return false;
 }
 
 void TrackView::clearTracks()
@@ -163,7 +182,15 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
         return;
 
     // determine scene
-    scene_ = tracks[0]->sceneObject();
+    Scene * scene = tracks[0]->sceneObject();
+    if (scene != scene_)
+    {
+        connect(scene, SIGNAL(objectChanged(MO::Object*)),
+                this, SLOT(objectChanged(MO::Object*)));
+        connect(scene, SIGNAL(sequenceChanged(MO::Sequence*)),
+                this, SLOT(sequenceChanged(MO::Sequence*)));
+    }
+    scene_ = scene;
 
     MO_ASSERT(scene_, "Scene not set in TrackView::setTracks()");
 
@@ -245,8 +272,8 @@ void TrackView::createSequenceWidgets_(Track * t)
         w->setVisible(true);
         connect(w, SIGNAL(hovered(SequenceWidget*,bool)),
                 this, SLOT(widgetHovered_(SequenceWidget*,bool)));
-        connect(seq, SIGNAL(timeChanged(MO::Sequence*)),
-                this, SLOT(sequenceTimeChanged(MO::Sequence*)));
+        //connect(seq, SIGNAL(timeChanged(MO::Sequence*)),
+        //        this, SLOT(sequenceTimeChanged(MO::Sequence*)));
 
         // set the focus
         if (seq == nextFocusSequence_)
@@ -278,6 +305,17 @@ void TrackView::widgetHovered_(SequenceWidget * w, bool on)
         hoverWidget_ = on? w : 0;
 }
 
+void TrackView::mouseDoubleClickEvent(QMouseEvent * e)
+{
+    // doubleclick on sequence
+    if (hoverWidget_ && e->button() == Qt::LeftButton)
+    {
+        emit sequenceSelected(hoverWidget_->sequence());
+
+        e->accept();
+        return;
+    }
+}
 
 void TrackView::mousePressEvent(QMouseEvent * e)
 {
@@ -308,7 +346,7 @@ void TrackView::mousePressEvent(QMouseEvent * e)
             if (isSelected_())
             {
                 action_ = A_DRAG_POS_;
-                dragStartPos_ = e->pos();
+                //dragStartPos_ = e->pos();
                 dragStartTime_ = space_.mapXTo((Double)e->x()/width());
                 dragStartTrack_ = hoverWidget_->track();
                 dragStartTimes_.clear();
@@ -351,7 +389,7 @@ void TrackView::mousePressEvent(QMouseEvent * e)
     if (e->button() == Qt::LeftButton)
     {
         action_ = A_SELECT_FRAME_;
-        dragStartPos_ = e->pos();
+        dragStartPosV_ = screenToView(e->pos());
         selectRect_ = QRect(dragStartPos_, QSize(1,1));
     }
 }
@@ -373,7 +411,8 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
             Double newstart = std::max((Double)0, dragStartTimes_[i] + deltaTime);
             selectedWidgets_[i]->sequence()->setStart(newstart);
         }
-        scrollView_(e->pos());
+
+        autoScrollView_(e->pos());
 
         e->accept();
         return;
@@ -383,13 +422,17 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
 
     if (action_ == A_SELECT_FRAME_)
     {
+        QPoint ds(viewToScreen(dragStartPosV_));
         QRect r(selectRect_);
-        selectRect_.setLeft(std::min(dragStartPos_.x(), e->pos().x()));
-        selectRect_.setRight(std::max(dragStartPos_.x(), e->pos().x()));
-        selectRect_.setTop(std::min(dragStartPos_.y(), e->pos().y()));
-        selectRect_.setBottom(std::max(dragStartPos_.y(), e->pos().y()));
+        selectRect_.setLeft(std::min(ds.x(), e->pos().x()));
+        selectRect_.setRight(std::max(ds.x(), e->pos().x()));
+        selectRect_.setTop(std::min(ds.y(), e->pos().y()));
+        selectRect_.setBottom(std::max(ds.y(), e->pos().y()));
+
         update(r.adjusted(-1,-1,1,1));
         update(selectRect_.adjusted(-1,-1,1,1));
+
+        autoScrollView_(e->pos());
     }
 
 /*
@@ -435,7 +478,7 @@ void TrackView::mouseReleaseEvent(QMouseEvent * e)
     action_ = A_NOTHING_;
 }
 
-void TrackView::scrollView_(const QPoint& p)
+void TrackView::autoScrollView_(const QPoint& p)
 {
     // shift x viewspace
     int scrOffset = 0;
@@ -487,10 +530,26 @@ void TrackView::clearSelection_()
     selectedWidgets_.clear();
 }
 
-void TrackView::sequenceTimeChanged(Sequence * seq)
+/*void TrackView::sequenceTimeChanged(Sequence * )
 {
     if (SequenceWidget * s = widgetForSequence_(seq))
         updateWidgetViewSpace_(s);
+}*/
+
+void TrackView::sequenceChanged(Sequence * seq)
+{
+    if (SequenceWidget * s = widgetForSequence_(seq))
+    {
+        if (!updateWidgetViewSpace_(s))
+            s->update();
+    }
+}
+
+void TrackView::objectChanged(Object * obj)
+{
+    if (auto seq = qobject_cast<Sequence*>(obj))
+        if (auto w = widgetForSequence_(seq))
+            w->update();
 }
 
 Track * TrackView::trackForY(int y) const

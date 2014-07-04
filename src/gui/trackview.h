@@ -21,6 +21,7 @@
 class QAction;
 
 namespace MO {
+class Object;
 class Track;
 class Scene;
 class Sequence;
@@ -51,6 +52,9 @@ public:
     /** Returns number of tracks displayed. */
     int numTracks() const { return tracks_.size(); }
 
+    QPointF screenToView(const QPoint& screen) const;
+    QPoint viewToScreen(const QPointF& view) const;
+
 signals:
 
     void viewSpaceChanged(const UTIL::ViewSpace&);
@@ -60,6 +64,9 @@ signals:
 
     /** Emitted when a track was selected */
     void trackSelected(Track *);
+
+    /** Emitted when a sequence was double-clicked */
+    void sequenceSelected(Sequence *);
 
 public slots:
 
@@ -79,7 +86,13 @@ public slots:
     void updateTrack(Track *);
 
     /** Update from sequences */
-    void sequenceTimeChanged(MO::Sequence *);
+    //void sequenceTimeChanged(MO::Sequence *);
+
+    /** Update from Scene */
+    void sequenceChanged(MO::Sequence *);
+
+    /** Update from Scene */
+    void objectChanged(MO::Object *);
 
 protected slots:
 
@@ -88,6 +101,7 @@ protected slots:
 
 protected:
 
+    void mouseDoubleClickEvent(QMouseEvent *);
     void mousePressEvent(QMouseEvent * );
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
@@ -110,13 +124,14 @@ private:
         A_SELECT_FRAME_
     };
 
+    void updateWidgetsViewSpace_();
+    bool updateWidgetViewSpace_(SequenceWidget *);
+    /** Adjusts the viewspace when @p mousePos is outside of view */
+    void autoScrollView_(const QPoint& mousePos);
+    void calcTrackY_();
+
     //void deleteSequenceWidgets_(Track *);
     void createSequenceWidgets_(Track *);
-    void updateWidgetsViewSpace_();
-    void updateWidgetViewSpace_(SequenceWidget *);
-    /** Adjusts the viewspace when @p mousePos is outside of view */
-    void scrollView_(const QPoint& mousePos);
-    void calcTrackY_();
     void createEditActions_();
 
     void selectSequenceWidget_(SequenceWidget *, SelectState_);
@@ -155,6 +170,7 @@ private:
     QList<SequenceWidget*> selectedWidgets_;
 
     QPoint dragStartPos_;
+    QPointF dragStartPosV_;
     Double dragStartTime_;
     Track * dragStartTrack_, * dragEndTrack_;
     QList<int> dragStartTimes_;

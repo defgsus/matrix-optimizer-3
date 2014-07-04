@@ -19,6 +19,7 @@ class QScrollBar;
 namespace MO {
 class Track;
 class Object;
+class Sequence;
 namespace GUI {
 
 class TrackHeader;
@@ -32,6 +33,9 @@ public:
     explicit Sequencer(QWidget *parent = 0);
 
 signals:
+
+    /** Emitted when a sequence was double-clicked */
+    void sequenceSelected(Sequence *);
 
 public slots:
 

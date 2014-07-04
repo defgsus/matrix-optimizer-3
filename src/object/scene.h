@@ -47,6 +47,12 @@ signals:
     /** Scene should be rerendered */
     void renderRequest();
 
+    /** Emitted after settings in an object have changed. */
+    void objectChanged(MO::Object *);
+
+    /** Some setting in the Sequence has changed. */
+    void sequenceChanged(MO::Sequence *);
+
 public slots:
 
     /** Tells the Scene to update it's info about the tree */
@@ -122,6 +128,11 @@ private:
     // ---------- properties -------------------
 
     int numThreads_;
+
+    // ------------ threadstuff ----------------
+
+    Object * changedObject_;
+    Sequence * changedSequence_;
 
     // ------------ runtime --------------------
 

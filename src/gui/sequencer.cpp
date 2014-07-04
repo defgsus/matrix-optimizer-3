@@ -51,6 +51,8 @@ void Sequencer::createWidgets_()
         // track view
         trackView_ = new TrackView(this);
         gridLayout_->addWidget(trackView_, 1, 1);
+        connect(trackView_, SIGNAL(sequenceSelected(Sequence*)),
+                this, SIGNAL(sequenceSelected(Sequence*)));
 
         // track header
         trackHeader_ = trackView_->trackHeader();

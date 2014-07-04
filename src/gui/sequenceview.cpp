@@ -256,8 +256,6 @@ void SequenceView::createDefaultSettingsWidgets_()
     defaultSettingsContainer_->layout()->addWidget(f);
     defaultSettingsWidgets_.append(f);
 
-#define MO__SCENE_PARAM_ONCHANGE
-
 #define MO__SCENE_PARAM(spin__, getter__, setter__, min__, desc__) \
     w = newDefaultSetting_(desc__);                         \
     w->layout()->addWidget(spin__ = new DoubleSpinBox(w));  \
@@ -271,7 +269,6 @@ void SequenceView::createDefaultSettingsWidgets_()
         scene->beginSequenceChange(baseSequence_);          \
         baseSequence_->setter__(v);                         \
         scene->endSequenceChange();                         \
-        MO__SCENE_PARAM_ONCHANGE;                           \
     });
 
 #define MO__SCENE_PARAM_CB(cb__, getter__, setter__, desc__)\
@@ -283,14 +280,11 @@ void SequenceView::createDefaultSettingsWidgets_()
         scene->beginSequenceChange(baseSequence_);          \
         baseSequence_->setter__(v == Qt::Checked);          \
         scene->endSequenceChange();                         \
-        MO__SCENE_PARAM_ONCHANGE;                           \
     });
 
     MO__SCENE_PARAM(spinStart_, start, setStart, 0, tr("start time"));
     MO__SCENE_PARAM(spinLength_, length, setLength, Sequence::minimumLength(), tr("length"));
     MO__SCENE_PARAM(spinEnd_, end, setEnd, 0, tr("end time"));
-//#undef MO__SCENE_PARAM_ONCHANGE
-//#define MO__SCENE_PARAM_ONCHANGE sequenceTimeChanged(baseSequence_);
     MO__SCENE_PARAM(spinTimeOffset_, timeOffset, setTimeOffset, -MO_MAX_TIME, tr("time offset"));
     MO__SCENE_PARAM(spinSpeed_, speed, setSpeed, Sequence::minimumSpeed(), tr("speed"));
     MO__SCENE_PARAM_CB(cbLooping_, looping, setLooping, tr("looping"));

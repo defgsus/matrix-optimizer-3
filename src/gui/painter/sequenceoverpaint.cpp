@@ -37,8 +37,9 @@ void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
 
     if (sequence_)
     {
-        int left = viewspace_.mapXFrom(sequence_->start()) * p.window().width(),
-            right = viewspace_.mapXFrom(sequence_->end()) * p.window().width();
+        int left = viewspace_.mapXFrom(sequence_->timeOffset()) * p.window().width(),
+            right = viewspace_.mapXFrom(sequence_->timeOffset()
+                                        + sequence_->length()) * p.window().width();
 
         if (left > rect.left() || right < rect.right())
         {
