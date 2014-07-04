@@ -538,6 +538,8 @@ void TrackView::clearSelection_()
 
 void TrackView::sequenceChanged(Sequence * seq)
 {
+    // This slot signals either changes in time
+    // or changes to the containing data
     if (SequenceWidget * s = widgetForSequence_(seq))
     {
         if (!updateWidgetViewSpace_(s))

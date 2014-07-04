@@ -141,6 +141,39 @@ private:
     Double sceneTime_;
 };
 
+
+class ScopedObjectChange
+{
+    Scene * scene_;
+public:
+    ScopedObjectChange(Scene * scene, Object * object)
+        :   scene_(scene)
+    {
+        scene_->beginObjectChange(object);
+    }
+
+    ~ScopedObjectChange() { scene_->endObjectChange(); }
+};
+
+
+class ScopedSequenceChange
+{
+    Scene * scene_;
+public:
+    ScopedSequenceChange(Scene * scene, Sequence * sequence)
+        :   scene_(scene)
+    {
+        scene_->beginSequenceChange(sequence);
+    }
+
+    ~ScopedSequenceChange() { scene_->endSequenceChange(); }
+};
+
+
+
+
+
+
 } // namespace MO
 
 #endif // MOSRC_OBJECT_SCENE_H

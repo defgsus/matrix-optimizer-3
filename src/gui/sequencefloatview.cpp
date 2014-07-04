@@ -132,11 +132,12 @@ void SequenceFloatView::createSettingsWidgets_()
     }
     mode->setCurrentIndex(sequence_->mode());
     connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-    [=](int index)
+    [this, scene](int index)
     {
-        scene->beginObjectChange(sequence_);
-        sequence_->setMode((SequenceFloat::SequenceType)index);
-        scene->endObjectChange();
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setMode((SequenceFloat::SequenceType)index);
+        }
         updateSequence_();
     });
 
@@ -150,11 +151,12 @@ void SequenceFloatView::createSettingsWidgets_()
     }
     mode->setCurrentIndex(sequence_->oscillatorMode());
     connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-    [=](int index)
+    [this, scene](int index)
     {
-        //scene->beginObjectChange(sequence_);
-        sequence_->setOscillatorMode((MATH::Waveform::Type)index);
-        //scene->endObjectChange();
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setOscillatorMode((MATH::Waveform::Type)index);
+        }
         updateSequence_();
     });
 
@@ -166,9 +168,12 @@ void SequenceFloatView::createSettingsWidgets_()
     spin->setValue(sequence_->offset());
     spin->setSingleStep(0.1);
     connect(spin, &DoubleSpinBox::valueChanged,
-    [=](Double val)
+    [this, scene](Double val)
     {
-        sequence_->setOffset(val);
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setOffset(val);
+        }
         updateSequence_();
     });
 
@@ -180,9 +185,12 @@ void SequenceFloatView::createSettingsWidgets_()
     spin->setValue(sequence_->amplitude());
     spin->setSingleStep(0.1);
     connect(spin, &DoubleSpinBox::valueChanged,
-    [=](Double val)
+    [this, scene](Double val)
     {
-        sequence_->setAmplitude(val);
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setAmplitude(val);
+        }
         updateSequence_();
     });
 
@@ -194,9 +202,12 @@ void SequenceFloatView::createSettingsWidgets_()
     spin->setSingleStep(0.1);
     spin->setValue(sequence_->frequency());
     connect(spin, &DoubleSpinBox::valueChanged,
-    [=](Double val)
+    [this, scene](Double val)
     {
-        sequence_->setFrequency(val);
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setFrequency(val);
+        }
         updateSequence_();
     });
 
@@ -208,9 +219,12 @@ void SequenceFloatView::createSettingsWidgets_()
     spin->setSingleStep(0.05);
     spin->setValue(sequence_->phase());
     connect(spin, &DoubleSpinBox::valueChanged,
-    [=](Double val)
+    [this, scene](Double val)
     {
-        sequence_->setPhase(val);
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setPhase(val);
+        }
         updateSequence_();
     });
 
@@ -222,9 +236,12 @@ void SequenceFloatView::createSettingsWidgets_()
     spin->setSingleStep(0.025);
     spin->setValue(sequence_->pulseWidth());
     connect(spin, &DoubleSpinBox::valueChanged,
-    [=](Double val)
+    [this, scene](Double val)
     {
-        sequence_->setPulseWidth(val);
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setPulseWidth(val);
+        }
         updateSequence_();
     });
 
@@ -234,12 +251,13 @@ void SequenceFloatView::createSettingsWidgets_()
     w->layout()->addWidget(text);
     text->setPlainText(sequence_->equationText());
     connect(text, &QPlainTextEdit::textChanged,
-    [=]()
+    [this, scene, text]()
     {
-        scene->beginObjectChange(sequence_);
-        sequence_->setEquationText(text->toPlainText());
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setEquationText(text->toPlainText());
+        }
         updateSequence_();
-        scene->endObjectChange();
     });
 
     updateWidgets_();

@@ -264,22 +264,21 @@ void SequenceView::createDefaultSettingsWidgets_()
     spin__->setDecimals(4);                                 \
     spin__->setValue(baseSequence_->getter__());            \
     connect(spin__,                                         \
-               &DoubleSpinBox::valueChanged, [=](Double v)  \
+     &DoubleSpinBox::valueChanged, [this, scene](Double v)  \
     {                                                       \
-        scene->beginSequenceChange(baseSequence_);          \
+        ScopedSequenceChange lock(scene, baseSequence_);    \
         baseSequence_->setter__(v);                         \
-        scene->endSequenceChange();                         \
     });
 
 #define MO__SCENE_PARAM_CB(cb__, getter__, setter__, desc__)\
     w = newDefaultSetting_(desc__);                         \
     w->layout()->addWidget(cb__ = new QCheckBox(w));        \
     cb__->setChecked(baseSequence_->getter__());            \
-    connect(cb__, &QCheckBox::stateChanged, [=](int v)      \
+    connect(cb__,                                           \
+     &QCheckBox::stateChanged, [this, scene](int v)         \
     {                                                       \
-        scene->beginSequenceChange(baseSequence_);          \
+        ScopedSequenceChange lock(scene, baseSequence_);    \
         baseSequence_->setter__(v == Qt::Checked);          \
-        scene->endSequenceChange();                         \
     });
 
     MO__SCENE_PARAM(spinStart_, start, setStart, 0, tr("start time"));
