@@ -23,8 +23,8 @@ ViewSpace::ViewSpace()
       sy_(1),
       minx_(0),
       miny_(0),
-      maxx_(0),
-      maxy_(0),
+      maxx_(1),
+      maxy_(1),
       doLimitByChangingScale_(false),
       doMinx_(false),
       doMiny_(false),
@@ -40,8 +40,8 @@ ViewSpace::ViewSpace(Double scaleX, double scaleY)
       sy_(scaleY),
       minx_(0),
       miny_(0),
-      maxx_(0),
-      maxy_(0),
+      maxx_(1),
+      maxy_(1),
       doLimitByChangingScale_(false),
       doMinx_(false),
       doMiny_(false),
@@ -50,6 +50,22 @@ ViewSpace::ViewSpace(Double scaleX, double scaleY)
 {
 }
 
+ViewSpace::ViewSpace(Double x, Double y, Double scaleX, double scaleY)
+    : x_(x),
+      y_(y),
+      sx_(scaleX),
+      sy_(scaleY),
+      minx_(0),
+      miny_(0),
+      maxx_(1),
+      maxy_(1),
+      doLimitByChangingScale_(false),
+      doMinx_(false),
+      doMiny_(false),
+      doMaxx_(false),
+      doMaxy_(false)
+{
+}
 
 void ViewSpace::setX(Double x)
 {

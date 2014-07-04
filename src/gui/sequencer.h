@@ -44,6 +44,10 @@ public slots:
     /** Convenience function to insert all tracks of the object. */
     void setTracks(Object *, bool recursive = true);
 
+protected:
+
+    void resizeEvent(QResizeEvent *);
+
 private:
 
     void createWidgets_();

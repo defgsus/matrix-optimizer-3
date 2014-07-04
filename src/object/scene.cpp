@@ -136,11 +136,12 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
 
 // --------------------- sequence ----------------------------
 
-SequenceFloat * Scene::createFloatSequence(Track * track)
+SequenceFloat * Scene::createFloatSequence(Track * track, Double time)
 {
-    MO_DEBUG_TREE("Scene::createFloatSequence() for track '" << track->idName() << "'");
+    MO_DEBUG_TREE("Scene::createFloatSequence('" << track->idName() << "', " << time << ")");
 
     auto * seq = ObjectFactory::createSequenceFloat();
+    seq->setStart(time);
     // place the sequence somewhere
     track->addObject(seq);
     // add it to track

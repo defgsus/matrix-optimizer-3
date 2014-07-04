@@ -60,7 +60,7 @@ public slots:
 
     // ------------- sequences -----------------
 
-    SequenceFloat * createFloatSequence(MO::Track * track);
+    SequenceFloat * createFloatSequence(MO::Track * track, Double time = 0.0);
 
     void beginSequenceChange(MO::Sequence *);
     void endSequenceChange();

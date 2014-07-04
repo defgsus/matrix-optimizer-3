@@ -22,6 +22,7 @@ class QAction;
 namespace MO {
 class Track;
 class Scene;
+class Sequence;
 namespace GUI {
 
 class TrackHeader;
@@ -42,6 +43,8 @@ public:
     /** Returns the y position of the track */
     int trackY(Track *) const;
 signals:
+
+    void viewSpaceChanged(const UTIL::ViewSpace&);
 
     /** Emitted when the number or height of tracks changed */
     void tracksChanged();
@@ -64,17 +67,26 @@ public slots:
     /** Updates the view for the given Track */
     void updateTrack(Track *);
 
+    void sequenceTimeChanged(MO::Sequence *);
+
 protected:
 
     void mousePressEvent(QMouseEvent * );
+    void mouseMoveEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+
+    void paintEvent(QPaintEvent *);
 
 private:
 
     //void deleteSequenceWidgets_(Track *);
     void createSequenceWidgets_(Track *);
     void updateWidgetsViewSpace_();
+    void updateWidgetViewSpace_(SequenceWidget *);
     void calcTrackY_();
     void createEditActions_();
+
+    SequenceWidget * widgetForSequence_(Sequence *) const;
 
     /** Returns track for screen y position, or NULL */
     Track * trackForY(int y) const;
@@ -93,11 +105,19 @@ private:
 
     Track * selTrack_;
     QList<QAction*> editActions_;
+    /** createSequenceWidgets() will focus the widget containing this sequence */
+    Sequence * nextFocusSequence_;
+    Double currentTime_;
+
+    QPoint dragStartPos_;
+    Double dragStartTime_, dragStartSeqTime_;
+    /** Sequence to be dragged around */
+    Sequence * dragSequence_;
 
     // ---- config ----
 
     int defaultTrackHeight_,
-        trackYSpacing_;
+        trackSpacing_;
 };
 
 } // namespace GUI

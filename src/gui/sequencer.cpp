@@ -72,11 +72,25 @@ void Sequencer::createWidgets_()
     connect(rulerFps_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
             trackView_, SLOT(setViewSpace(UTIL::ViewSpace)));
 
+    // connect trackview to rulers
+    connect(trackView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+            rulerFps_, SLOT(setViewSpace(UTIL::ViewSpace)));
+    connect(trackView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+            rulerSec_, SLOT(setViewSpace(UTIL::ViewSpace)));
+
+
     // initialize viewspace
     UTIL::ViewSpace init(60, 1);
     init.setMinX(0);
     init.setMinY(0);
     rulerSec_->setViewSpace(init, true);
+}
+
+void Sequencer::resizeEvent(QResizeEvent * e)
+{
+    QWidget::resizeEvent(e);
+
+    rulerFps_->setViewSpace(rulerFps_->viewSpace(), true);
 }
 
 void Sequencer::clearTracks()

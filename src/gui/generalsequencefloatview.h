@@ -29,7 +29,7 @@ class GeneralSequenceFloatView : public QWidget
     Q_OBJECT
 public:
     explicit GeneralSequenceFloatView(QWidget *parent = 0);
-
+    ~GeneralSequenceFloatView();
 
     // --------- getter --------
 

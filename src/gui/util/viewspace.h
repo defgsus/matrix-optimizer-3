@@ -24,6 +24,7 @@ public:
 
     ViewSpace();
     ViewSpace(Double scaleX, Double scaleY);
+    ViewSpace(Double x, Double y, Double scaleX, Double scaleY);
 
     // -------------- io ----------------
 

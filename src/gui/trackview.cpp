@@ -13,6 +13,7 @@
 #include <QPalette>
 #include <QMouseEvent>
 #include <QMenu>
+#include <QPainter>
 
 
 #include "trackview.h"
@@ -33,10 +34,13 @@ TrackView::TrackView(QWidget *parent) :
     scene_          (0),
     header_         (0),
 
-    selTrack_       (0),
+    selTrack_               (0),
+    nextFocusSequence_      (0),
+    currentTime_            (0),
+    dragSequence_           (0),
 
     defaultTrackHeight_     (30),
-    trackYSpacing_          (2)
+    trackSpacing_          (2)
 {
     setMinimumSize(320,240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -56,19 +60,58 @@ void TrackView::setViewSpace(const UTIL::ViewSpace & s)
     updateWidgetsViewSpace_();
 }
 
+void TrackView::paintEvent(QPaintEvent * e)
+{
+    QPainter p(this);
+
+    // background
+#if (1)
+    p.setPen(QColor(70,70,70));
+    for (auto t : tracks_)
+    {
+        const int y = trackY(t) + trackHeight(t) + trackSpacing_ / 2;
+        p.drawLine(0, y, width(), y);
+    }
+#else
+    p.setPen(Qt::NoPen);
+    p.setBrush(QBrush(QColor(50,50,50).darker(120)));
+    int k=1;
+    for (auto t : tracks_)
+    {
+        if (k & 1)
+            p.drawRect(0, trackY(t), width(), trackHeight(t));
+        ++k;
+    }
+#endif
+
+    QWidget::paintEvent(e);
+}
+
+SequenceWidget * TrackView::widgetForSequence_(Sequence * seq) const
+{
+    for (auto s : sequenceWidgets_)
+        if (s->sequence() == seq)
+            return s;
+    return 0;
+}
+
 void TrackView::updateWidgetsViewSpace_()
 {
     for (auto s : sequenceWidgets_)
     {
-        const int h = trackHeight(s->track()),
-                  y = trackY(s->track());
-        QRect r(0, y, 10, h);
-
-        r.setLeft(space_.mapXFrom(s->sequence()->start()) * width());
-        r.setRight(space_.mapXFrom(s->sequence()->end()) * width());
-        s->setGeometry(r);
+        updateWidgetViewSpace_(s);
     }
+}
 
+void TrackView::updateWidgetViewSpace_(SequenceWidget * s)
+{
+    const int h = trackHeight(s->track()),
+              y = trackY(s->track());
+    QRect r(0, y, 10, h);
+
+    r.setLeft(space_.mapXFrom(s->sequence()->start()) * width());
+    r.setRight(space_.mapXFrom(s->sequence()->end()) * width());
+    s->setGeometry(r);
 }
 
 void TrackView::setScene(Scene * scene)
@@ -134,7 +177,7 @@ void TrackView::calcTrackY_()
     {
         const int h = trackHeight(t);
         trackY_.insert(t, y);
-        y += h + trackYSpacing_;
+        y += h + trackSpacing_;
     }
 }
 
@@ -161,11 +204,23 @@ void TrackView::createSequenceWidgets_(Track * t)
         return;
     }
 
-    for (auto seq : t->sequences())
+    for (Sequence * seq : t->sequences())
     {
+        // create the widget
         auto w = new SequenceWidget(t, seq, this);
-        w->setVisible(true);
         sequenceWidgets_.append( w );
+
+        // initialize
+        w->setVisible(true);
+        connect(seq, SIGNAL(timeChanged(MO::Sequence*)),
+                this, SLOT(sequenceTimeChanged(MO::Sequence*)));
+
+        // set the focus
+        if (seq == nextFocusSequence_)
+        {
+            w->setFocus();
+            nextFocusSequence_ = 0;
+        }
     }
 }
 
@@ -187,14 +242,33 @@ void TrackView::updateTrack(Track * t)
 
 void TrackView::mousePressEvent(QMouseEvent * e)
 {
-    QWidget::mousePressEvent(e);
+    /*QWidget::mousePressEvent(e);
 
     if (e->isAccepted())
         return;
+    */
+
+    // --- clicked on sequence ---
+
+    if (SequenceWidget * seqw = qobject_cast<SequenceWidget*>(childAt(e->pos())))
+    {
+        if (e->button() == Qt::LeftButton)
+        {
+            dragSequence_ = seqw->sequence();
+            dragStartPos_ = e->pos();
+            dragStartTime_ = space_.mapXTo((Double)e->x()/width());
+            dragStartSeqTime_ = dragSequence_->start();
+
+            e->accept();
+            return;
+        }
+    }
+
 
     // --- clicked on track ---
 
     selTrack_ = trackForY(e->y());
+    currentTime_ = space_.mapXTo((Double)e->x() / width());
 
     createEditActions_();
 
@@ -207,8 +281,54 @@ void TrackView::mousePressEvent(QMouseEvent * e)
             popup->addActions(editActions_);
 
             popup->popup(QCursor::pos());
+
+            e->accept();
+            return;
         }
     }
+}
+
+void TrackView::mouseMoveEvent(QMouseEvent * e)
+{
+    if (dragSequence_)
+    {
+        Double x = space_.mapXTo((Double)e->x() / width()),
+              dx = x - dragStartTime_;
+
+        // ---- drag sequence position ----
+
+        Double newstart = std::max((Double)0, dragStartSeqTime_ + dx);
+        dragSequence_->setStart(newstart);
+
+        // shift viewspace
+        int scrOffset = 0;
+        if (e->x() > width())
+            scrOffset = std::min(10, e->x() - width());
+        else if (e->x() < 0)
+            scrOffset = std::max(-10, e->x());
+
+        if (scrOffset)
+        {
+            Double delta = space_.mapXDistanceTo((Double)scrOffset/width());
+            space_.addX(delta * 1.2);
+            updateWidgetsViewSpace_();
+            emit viewSpaceChanged(space_);
+        }
+
+        e->accept();
+        return;
+    }
+}
+
+void TrackView::mouseReleaseEvent(QMouseEvent *)
+{
+    dragSequence_ = 0;
+}
+
+void TrackView::sequenceTimeChanged(Sequence * seq)
+{
+    if (SequenceWidget * s = widgetForSequence_(seq))
+        updateWidgetViewSpace_(s);
 }
 
 Track * TrackView::trackForY(int y) const
@@ -243,9 +363,10 @@ void TrackView::createEditActions_()
     if (selTrack_)
     {
         editActions_.append( a = new QAction(tr("New sequence"), this) );
-        connect(a, &QAction::triggered, [=]()
+        connect(a, &QAction::triggered, [this]()
         {
-            scene_->createFloatSequence(selTrack_);
+            nextFocusSequence_ =
+                scene_->createFloatSequence(selTrack_, currentTime_);
             updateTrack(selTrack_);
         });
     }

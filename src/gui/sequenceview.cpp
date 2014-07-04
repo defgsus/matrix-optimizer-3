@@ -122,13 +122,14 @@ SequenceView::SequenceView(QWidget *parent) :
     timelineView_->setViewSpace(timelineView_->viewSpace(), true);
     */
 
+    rulerX_->setViewSpace( UTIL::ViewSpace(0, -1, 60, 2) );
 }
 
 void SequenceView::resizeEvent(QResizeEvent * e)
 {
     QWidget::resizeEvent(e);
-    // XXX does not work!
-    updateViewSpace_(rulerX_->viewSpace());
+
+    rulerX_->setViewSpace( rulerX_->viewSpace(), true);
 }
 
 void SequenceView::setSequence_(Sequence * s)

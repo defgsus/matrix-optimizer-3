@@ -21,13 +21,14 @@
 namespace MO {
 namespace GUI {
 
-class SequenceCurveData : public PAINTER::ValueCurveData
-{
-public:
-    const SequenceFloat * sequence;
-    Double value(Double time) const { return sequence->value(time); }
-};
-
+namespace {
+    class SequenceCurveData : public PAINTER::ValueCurveData
+    {
+    public:
+        const SequenceFloat * sequence;
+        Double value(Double time) const { return sequence->value(time); }
+    };
+}
 
 
 GeneralSequenceFloatView::GeneralSequenceFloatView(QWidget *parent) :
@@ -40,6 +41,11 @@ GeneralSequenceFloatView::GeneralSequenceFloatView(QWidget *parent) :
 
     brushBack_      (QColor(50,50,50))
 {
+}
+
+GeneralSequenceFloatView::~GeneralSequenceFloatView()
+{
+    delete curveData_;
 }
 
 int GeneralSequenceFloatView::gridOptions() const
