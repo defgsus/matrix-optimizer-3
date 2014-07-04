@@ -9,73 +9,46 @@
 */
 
 #include <QDebug>
-
+/*
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
 #include <QGraphicsTextItem>
+*/
+#include <QPalette>
 
 #include "trackview.h"
+#include "widget/sequencewidget.h"
+#include "object/sequencefloat.h"
 
 namespace MO {
 namespace GUI {
 
 TrackView::TrackView(QWidget *parent) :
-    QGraphicsView(parent)
-    //QWidget(parent)
+    QWidget(parent)
 {
     setMinimumSize(320,240);
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setTransformationAnchor(QGraphicsView::NoAnchor);
-    setAlignment(0);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    /*
     QPalette p(palette());
     p.setColor(QPalette::Background, QColor(50,50,50));
     setPalette(p);
     setAutoFillBackground(true);
-    */
-    scene_ = new QGraphicsScene(this);
-    scene_->setBackgroundBrush(QBrush(QColor(150,150,150)));
-
-    setScene(scene_);
 
     createItems_();
-
 }
 
 
-QGraphicsRectItem * seq;
-
 void TrackView::createItems_()
 {
-    /*
-    auto r = scene_->addRect(10,10,50000,20,QPen(), QBrush(QColor(100,120,100)));
-    auto t = scene_->addText("blabla");
-    t->setParentItem(r);
-    */
-    seq = scene_->addRect(50,40,50,20, QPen(), QBrush(QColor(100,120,100)));
-
-    scene_->addLine(0,0, 0,300);
-    scene_->addLine(100,0, 100,300);
-/*
-    QPalette p(palette());
-    p.setColor(QPalette::Background, QColor(80,120,80));
-
-    auto w = new QWidget(this);
-    w->setGeometry(10,10,5000,19);
-    w->setAutoFillBackground(true);
-    w->setPalette(p);
-
-    w = new QWidget(this);
-    w->setGeometry(10,30,5000,19);
-    w->setAutoFillBackground(true);
-    w->setPalette(p);
-
-    w = new QWidget(this);
-    w->setGeometry(10,50,100,19);
-    w->setAutoFillBackground(true);
-    w->setPalette(p);
-*/
+    SequenceFloat * s;
+    for (int i=0; i<30; ++i)
+    {
+        sequenceWidgets_.append(
+                    new SequenceWidget(s = new SequenceFloat(this), this)
+                    );
+        s->setStart((Double)rand()/RAND_MAX * 60);
+        s->setLength((Double)rand()/RAND_MAX * 60);
+    }
 }
 
 
@@ -83,26 +56,24 @@ void TrackView::setViewSpace(const UTIL::ViewSpace & s)
 {
     space_ = s;
 
-    QRectF r(seq->rect());
-    r.setLeft(space_.mapXFrom(0) * width());
-    r.setRight(space_.mapXFrom(1) * width());
-    seq->setRect(r);
-
-    //QTransform t;
-    //t.scale(1.0 / space_.scaleX(), 1);
-    //t.translate(-space_.x() * width(), 0);
-    //setTransform(t);
-    /*
-    QRectF r = sceneRect();
-    qDebug() << r;
-    r.moveLeft(r.left() + space_.x());//space_.x());
-    qDebug() << r;
-    setSceneRect(r);
-    */
-    //setSceneRect(QRectF(space_.x() * width(), sceneRect().top(),
-    //            width() / space_.scaleX(), sceneRect().height()));
-    //qDebug() << sceneRect();
+    updateViewSpace_();
 }
+
+void TrackView::updateViewSpace_()
+{
+    const int trackHeight_ = 30;
+    int k=0;
+    for (auto s : sequenceWidgets_)
+    {
+        QRect r(0, k * trackHeight_, 10, trackHeight_ - 1);
+        r.setLeft(space_.mapXFrom(s->sequence()->start()) * width());
+        r.setRight(space_.mapXFrom(s->sequence()->end()) * width());
+        s->setGeometry(r);
+        ++k;
+    }
+}
+
+
 
 } // namespace GUI
 } // namespace MO

@@ -11,8 +11,8 @@
 #ifndef MOSRC_GUI_TRACKVIEW_H
 #define MOSRC_GUI_TRACKVIEW_H
 
-#include <QGraphicsView>
-//#include <QWidget>
+#include <QWidget>
+#include <QList>
 
 #include "util/viewspace.h"
 
@@ -21,9 +21,9 @@ class QGraphicsScene;
 namespace MO {
 namespace GUI {
 
+class SequenceWidget;
 
-class TrackView : public //QWidget
-                        QGraphicsView
+class TrackView : public QWidget
 {
     Q_OBJECT
 public:
@@ -38,10 +38,11 @@ public slots:
 private:
 
     void createItems_();
-
-    QGraphicsScene * scene_;
+    void updateViewSpace_();
 
     UTIL::ViewSpace space_;
+
+    QList<SequenceWidget*> sequenceWidgets_;
 };
 
 } // namespace GUI
