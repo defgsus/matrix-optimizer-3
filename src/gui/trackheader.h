@@ -12,21 +12,33 @@
 #define MOSRC_GUI_TRACKHEADER_H
 
 #include <QWidget>
+#include <QList>
 
 namespace MO {
 class Track;
 namespace GUI {
+class TrackView;
 
 class TrackHeader : public QWidget
 {
     Q_OBJECT
 public:
-    explicit TrackHeader(QWidget *parent = 0);
+    explicit TrackHeader(TrackView * trackView, QWidget *parent = 0);
 
 signals:
 
 public slots:
 
+    /** Remove everything from this view. */
+    void clearTracks();
+    /** Insert the list of tracks into the view.
+        Previous content will be removed. */
+    void setTracks(const QList<Track*>& tracks);
+
+private:
+    TrackView * trackView_;
+
+    QList<Track*> tracks_;
 };
 
 

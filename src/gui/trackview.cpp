@@ -17,6 +17,7 @@
 #include <QPalette>
 
 #include "trackview.h"
+#include "trackheader.h"
 #include "widget/sequencewidget.h"
 #include "object/sequencefloat.h"
 #include "object/track.h"
@@ -27,19 +28,22 @@ namespace MO {
 namespace GUI {
 
 TrackView::TrackView(QWidget *parent) :
-    QWidget (parent),
-    scene_  (0),
+    QWidget         (parent),
+    scene_          (0),
+    header_         (0),
 
-    defaultTrackHeight_     (30)
+    defaultTrackHeight_     (30),
+    trackYSpacing_          (2)
 {
     setMinimumSize(320,240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     QPalette p(palette());
-    p.setColor(QPalette::Background, QColor(50,50,50));
+    p.setColor(QPalette::Window, QColor(50,50,50));
     setPalette(p);
     setAutoFillBackground(true);
 
+    header_ = new TrackHeader(this, this);
 }
 
 void TrackView::setViewSpace(const UTIL::ViewSpace & s)
@@ -77,6 +81,7 @@ void TrackView::setScene(Scene * scene)
 void TrackView::clearTracks()
 {
     tracks_.clear();
+    trackY_.clear();
 
     for (auto s : sequenceWidgets_)
         s->deleteLater();
@@ -105,20 +110,32 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
     if (send_signal)
         emit tracksChanged();
 
-    /*
-    // create track heights
-    for (auto t : tracks_)
-    {
-        if (!trackHeights_.contains(t->idName()))
-            trackHeights_.insert(t->idName(), defaultTrackHeight_);
-    }
-    */
+    calcTrackY_();
+
     createSequenceWidgets_();
 }
+
+void TrackView::calcTrackY_()
+{
+    // set track positions
+    int y = 0;
+    for (auto t : tracks_)
+    {
+        const int h = trackHeight(t);
+        trackY_.insert(t, y);
+        y += h + trackYSpacing_;
+    }
+}
+
 
 int TrackView::trackHeight(Track * t) const
 {
     return trackHeights_.value(t->idName(), defaultTrackHeight_);
+}
+
+int TrackView::trackY(Track * t) const
+{
+    return trackY_.value(t, 0);
 }
 
 void TrackView::createSequenceWidgets_()

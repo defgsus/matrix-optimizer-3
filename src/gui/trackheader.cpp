@@ -9,22 +9,40 @@
 */
 
 #include "trackheader.h"
+#include "trackview.h"
+#include "io/error.h"
+
 
 namespace MO {
 namespace GUI {
 
-TrackHeader::TrackHeader(QWidget *parent) :
-    QWidget(parent)
+TrackHeader::TrackHeader(TrackView * trackView, QWidget *parent) :
+    QWidget     (parent),
+    trackView_  (trackView)
 {
-    setMinimumSize(100,240);
+    MO_ASSERT(trackView_, "TrackView not set for TrackHeader");
+
+    setMinimumSize(100, trackView_->minimumHeight());
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 
-    QPalette p(palette());
-    p.setColor(QPalette::Background, QColor(50,50,50));
-    setPalette(p);
     setAutoFillBackground(true);
+
+    setPalette(trackView_->palette());
 }
 
+void TrackHeader::clearTracks()
+{
+    tracks_.clear();
+}
+
+void TrackHeader::setTracks(const QList<Track *> &tracks)
+{
+    clearTracks();
+
+    tracks_ = tracks;
+
+    for (auto t : tracks)
+}
 
 
 } // namespace GUI

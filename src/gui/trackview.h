@@ -24,6 +24,7 @@ class Track;
 class Scene;
 namespace GUI {
 
+class TrackHeader;
 class SequenceWidget;
 
 class TrackView : public QWidget
@@ -32,9 +33,14 @@ class TrackView : public QWidget
 public:
     explicit TrackView(QWidget *parent = 0);
 
+    /** Returns the header view associated with this view. */
+    TrackHeader * trackHeader() const { return header_; }
+
     /** Returns height of particular track */
     int trackHeight(Track *) const;
 
+    /** Returns the y position of the track */
+    int trackY(Track *) const;
 signals:
 
     /** Emitted when the number or height of tracks changed */
@@ -56,19 +62,24 @@ private:
 
     void createSequenceWidgets_();
     void updateViewSpace_();
-
+    void calcTrackY_();
 
 
     UTIL::ViewSpace space_;
 
     Scene * scene_;
     QList<Track*> tracks_;
+
+    TrackHeader * header_;
+
     QList<SequenceWidget*> sequenceWidgets_;
     QHash<QString, int> trackHeights_;
+    QHash<Track*, int> trackY_;
 
     // ---- config ----
 
-    int defaultTrackHeight_;
+    int defaultTrackHeight_,
+        trackYSpacing_;
 };
 
 } // namespace GUI

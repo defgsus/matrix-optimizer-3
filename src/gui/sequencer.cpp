@@ -45,13 +45,13 @@ void Sequencer::createWidgets_()
         rulerFps_->setOptions(Ruler::O_EnableAllX);
         rulerFps_->setFixedHeight(36);
 
-        // track header
-        trackHeader_ = new TrackHeader(this);
-        gridLayout_->addWidget(trackHeader_, 1, 0);
-
         // track view
         trackView_ = new TrackView(this);
         gridLayout_->addWidget(trackView_, 1, 1);
+
+        // track header
+        trackHeader_ = trackView_->trackHeader();
+        gridLayout_->addWidget(trackHeader_, 1, 0);
 
         // vertical scrollbar
         vScroll_ = new QScrollBar(Qt::Vertical, this);

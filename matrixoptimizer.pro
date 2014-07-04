@@ -89,7 +89,8 @@ SOURCES += \
     src/gui/trackview.cpp \
     src/gui/sequencer.cpp \
     src/gui/widget/sequencewidget.cpp \
-    src/gui/trackheader.cpp
+    src/gui/trackheader.cpp \
+    src/gui/widget/trackheaderwidget.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -170,7 +171,8 @@ HEADERS += \
     src/gui/trackview.h \
     src/gui/sequencer.h \
     src/gui/widget/sequencewidget.h \
-    src/gui/trackheader.h
+    src/gui/trackheader.h \
+    src/gui/widget/trackheaderwidget.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
