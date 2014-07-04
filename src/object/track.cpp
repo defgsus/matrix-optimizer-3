@@ -10,6 +10,8 @@
 
 #include "track.h"
 #include "io/datastream.h"
+#include "io/error.h"
+#include "sequence.h"
 
 namespace MO {
 
@@ -24,13 +26,59 @@ Track::Track(QObject *parent) :
 void Track::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
-    io.writeHeader("Track", 1);
+    io.writeHeader("Track", 2);
+
+    io << sequenceIds_;
 }
 
 void Track::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
-    io.readHeader("Track", 1);
+    int ver = io.readHeader("Track", 2);
+
+    if (ver >= 2)
+        io >> sequenceIds_;
+}
+
+
+void Track::addSequence(Sequence * s)
+{
+    MO_ASSERT(s, "trying to add NULL Sequence to track '" << idName() << "'");
+    MO_ASSERT(!sequenceIds_.contains(s->idName()), "Track::addSequence() duplicate sequence '"
+              << s->idName() << "' on track '" << idName() << "'");
+
+    sequenceIds_.append(s->idName());
+}
+
+void Track::removeSequence(Sequence * s)
+{
+    MO_ASSERT(s, "trying to remove NULL Sequence from track '" << idName() << "'");
+
+    sequenceIds_.removeOne(s->idName());
+    // tell sequence
+    s->removeFromTrack(this);
+}
+
+void Track::collectModulators()
+{
+    sequences_.clear();
+
+    Object * root = rootObject();
+
+    for (auto const &id : sequenceIds_)
+    {
+        Object * o = root->findChildObject(id, true);
+
+        if (auto s = qobject_cast<Sequence*>(o))
+        {
+            sequences_.append(s);
+            // tell the sequence
+            s->addToTrack(this);
+        }
+        else
+            MO_WARNING("track '" << idName()
+                       << "' could not find sequence '" << id << "'");
+    }
 }
 
 

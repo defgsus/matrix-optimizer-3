@@ -70,6 +70,7 @@ protected:
 
 private:
 
+    //void deleteSequenceWidgets_(Track *);
     void createSequenceWidgets_(Track *);
     void updateWidgetsViewSpace_();
     void calcTrackY_();

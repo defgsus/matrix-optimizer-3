@@ -8,7 +8,8 @@
     <p>created 7/3/2014</p>
 */
 
-//#include <QDebug>
+#include <QDebug>
+
 #include <QPalette>
 #include <QMouseEvent>
 #include <QMenu>
@@ -21,6 +22,7 @@
 #include "object/track.h"
 #include "object/scene.h"
 #include "io/error.h"
+#include "io/log.h"
 
 
 namespace MO {
@@ -56,16 +58,17 @@ void TrackView::setViewSpace(const UTIL::ViewSpace & s)
 
 void TrackView::updateWidgetsViewSpace_()
 {
-    const int trackHeight_ = 30;
-    int k=0;
     for (auto s : sequenceWidgets_)
     {
-        QRect r(0, k * trackHeight_, 10, trackHeight_ - 1);
+        const int h = trackHeight(s->track()),
+                  y = trackY(s->track());
+        QRect r(0, y, 10, h);
+
         r.setLeft(space_.mapXFrom(s->sequence()->start()) * width());
         r.setRight(space_.mapXFrom(s->sequence()->end()) * width());
         s->setGeometry(r);
-        ++k;
     }
+
 }
 
 void TrackView::setScene(Scene * scene)
@@ -148,6 +151,8 @@ int TrackView::trackY(Track * t) const
 
 void TrackView::createSequenceWidgets_(Track * t)
 {
+    MO_DEBUG_GUI("TrackView::createSequenceWidgets(" << t << ")");
+
     MO_ASSERT(t, "TrackView::createSequenceWidgets() with NULL Track");
 
     if (!trackY_.contains(t))
@@ -155,17 +160,13 @@ void TrackView::createSequenceWidgets_(Track * t)
         MO_WARNING("TrackView::createSequenceWidgets() for unknown Track '" << t->idName() << "' requested.");
         return;
     }
-    /*
-    SequenceFloat * s;
-    for (int i=0; i<30; ++i)
+
+    for (auto seq : t->sequences())
     {
-        sequenceWidgets_.append(
-                    new SequenceWidget(s = new SequenceFloat(this), this)
-                    );
-        s->setStart((Double)rand()/RAND_MAX * 60);
-        s->setLength((Double)rand()/RAND_MAX * 60);
+        auto w = new SequenceWidget(t, seq, this);
+        w->setVisible(true);
+        sequenceWidgets_.append( w );
     }
-    */
 }
 
 void TrackView::updateTrack(Track * t)
@@ -178,6 +179,9 @@ void TrackView::updateTrack(Track * t)
         return;
     }
 
+    createSequenceWidgets_(t);
+
+    updateWidgetsViewSpace_();
 }
 
 
@@ -242,6 +246,7 @@ void TrackView::createEditActions_()
         connect(a, &QAction::triggered, [=]()
         {
             scene_->createFloatSequence(selTrack_);
+            updateTrack(selTrack_);
         });
     }
 }

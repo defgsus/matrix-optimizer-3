@@ -69,5 +69,10 @@
 #   define MO_DEBUG_PARAM(unused__) { }
 #endif
 
+#if (1)
+#   define MO_DEBUG_GUI(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
+#else
+#   define MO_DEBUG_GUI(unused__) { }
+#endif
 
 #endif // MOSRC_IO_LOG_H

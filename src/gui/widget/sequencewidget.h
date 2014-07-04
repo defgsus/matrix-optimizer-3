@@ -14,6 +14,7 @@
 #include <QWidget>
 
 namespace MO {
+class Track;
 class Sequence;
 namespace GUI {
 namespace UTIL { class ViewSpace; }
@@ -22,20 +23,24 @@ class SequenceWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SequenceWidget(Sequence * = 0, QWidget *parent = 0);
+    explicit SequenceWidget(Track *, Sequence *, QWidget *parent = 0);
 
     Sequence * sequence() const { return sequence_; }
+    Track * track() const { return track_; }
 
 signals:
 
 public slots:
 
-    void setSequence(Sequence *);
-    //void adjustGeometry(const ViewSpace&);
+protected:
+
+    void paintEvent(QPaintEvent *);
 
 private:
 
+    Track * track_;
     Sequence * sequence_;
+
 };
 
 

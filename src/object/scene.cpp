@@ -19,7 +19,7 @@
 #include "object/objectfactory.h"
 #include "object/parameterfloat.h"
 #include "object/track.h"
-
+#include "object/sequencefloat.h"
 
 namespace MO {
 
@@ -141,7 +141,12 @@ SequenceFloat * Scene::createFloatSequence(Track * track)
     MO_DEBUG_TREE("Scene::createFloatSequence() for track '" << track->idName() << "'");
 
     auto * seq = ObjectFactory::createSequenceFloat();
-    track->addObject((Object*)seq);
+    // place the sequence somewhere
+    track->addObject(seq);
+    // add it to track
+    track->addSequence(seq);
+    // notify everyone
+    treeChanged();
     return seq;
 }
 

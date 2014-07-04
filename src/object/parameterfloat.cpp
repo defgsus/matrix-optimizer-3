@@ -75,7 +75,7 @@ void ParameterFloat::collectModulators()
 
     Object * root = rootObject();
 
-    for (auto id : getModulators())
+    for (auto const &id : getModulators())
     {
         Object * o = root->findChildObject(id, true);
         if (auto s = qobject_cast<SequenceFloat*>(o))

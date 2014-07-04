@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_SEQUENCE_H
 #define MOSRC_OBJECT_SEQUENCE_H
 
+#include <QList>
+
 #include "object.h"
 #include "math/functions.h"
 
@@ -23,6 +25,17 @@ public:
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(Sequence)
 
     bool isSequence() const { return true; }
+
+    // -------------- tracks -------------------
+
+    /** List of tracks, this sequence is on */
+    QList<Track*> tracks() const { return tracks_; }
+
+    /** Only changes the tracks_ list.
+        Tracks are responsible for knowing their Sequences
+        and for telling them! */
+    void addToTrack(Track * t);
+    void removeFromTrack(Track * t);
 
     // -------------- getter -------------------
 
@@ -108,7 +121,11 @@ private:
            timeOffset_,
            speed_;
     bool   looping_;
+
+    /** List of tracks, this sequence is on */
+    QList<Track*> tracks_;
 };
+
 
 inline Double Sequence::getSequenceTime(Double time) const
 {

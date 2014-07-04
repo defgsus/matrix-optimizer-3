@@ -9,32 +9,31 @@
 */
 
 #include "sequencewidget.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
 
-SequenceWidget::SequenceWidget(Sequence * seq, QWidget *parent) :
-    QWidget(parent),
+SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
+    QWidget     (parent),
+    track_      (track),
     sequence_   (seq)
 {
+    MO_DEBUG_GUI("SequenceWidget::SequenceWidget(" << track << ", " << seq << ", " << parent << ")");
+
     setAutoFillBackground(true);
-
-    if (seq)
-        setSequence(seq);
-}
-
-
-void SequenceWidget::setSequence(Sequence * seq)
-{
-    sequence_  = seq;
 
     QPalette p(palette());
     p.setColor(QPalette::Window, QColor(80,120+rand()%40,80));
     setPalette(p);
+
 }
 
 
-
+void SequenceWidget::paintEvent(QPaintEvent * e)
+{
+    QWidget::paintEvent(e);
+}
 
 } // namespace GUI
 } // namespace MO

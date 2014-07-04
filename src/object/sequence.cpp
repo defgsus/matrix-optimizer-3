@@ -48,4 +48,15 @@ void Sequence::deserialize(IO::DataStream &io)
     looping_ = looping;
 }
 
+void Sequence::addToTrack(Track *t)
+{
+    if (!tracks_.contains(t))
+        tracks_.append(t);
+}
+
+void Sequence::removeFromTrack(Track *t)
+{
+    tracks_.removeOne(t);
+}
+
 } // namespace MO
