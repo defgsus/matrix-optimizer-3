@@ -47,6 +47,11 @@ public slots:
 protected:
 
     void resizeEvent(QResizeEvent *);
+    void wheelEvent(QWheelEvent *);
+
+protected slots:
+
+    void updateVScroll_();
 
 private:
 

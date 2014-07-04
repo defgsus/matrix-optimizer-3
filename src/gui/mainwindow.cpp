@@ -247,7 +247,7 @@ void MainWindow::createObjects_()
     glWindow_->show();
 
     //newScene();
-    setSceneObject(ObjectFactory::loadScene("./tracktest.mo3"));
+    setSceneObject(ObjectFactory::loadScene("./tracktest2.mo3"));
 
     /*
     auto scene = ObjectFactory::createSceneObject();

@@ -37,11 +37,19 @@ public:
     /** Returns the header view associated with this view. */
     TrackHeader * trackHeader() const { return header_; }
 
+    /** Returns the actual height of all tracks
+        which can be different from the widget's height */
+    int realHeight() const { return maxHeight_; }
+
     /** Returns height of particular track */
     int trackHeight(Track *) const;
 
     /** Returns the y position of the track */
     int trackY(Track *) const;
+
+    /** Returns number of tracks displayed. */
+    int numTracks() const { return tracks_.size(); }
+
 signals:
 
     void viewSpaceChanged(const UTIL::ViewSpace&);
@@ -54,9 +62,11 @@ signals:
 
 public slots:
 
+    /** Sets the horizontal view space of the widget */
     void setViewSpace(const UTIL::ViewSpace&);
 
-    void setScene(Scene *);
+    /** Sets the vertical offset into the view */
+    void setVerticalOffset(int);
 
     /** Remove everything from this view. */
     void clearTracks();
@@ -67,6 +77,7 @@ public slots:
     /** Updates the view for the given Track */
     void updateTrack(Track *);
 
+    /** update from sequences */
     void sequenceTimeChanged(MO::Sequence *);
 
 protected:
@@ -102,6 +113,7 @@ private:
     QList<SequenceWidget*> sequenceWidgets_;
     QHash<QString, int> trackHeights_;
     QHash<Track*, int> trackY_;
+    int offsetY_, maxHeight_;
 
     Track * selTrack_;
     QList<QAction*> editActions_;

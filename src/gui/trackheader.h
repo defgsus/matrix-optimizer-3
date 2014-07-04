@@ -31,8 +31,12 @@ signals:
 
 public slots:
 
+    /** Sets the vertical offset into the view */
+    void setVerticalOffset(int);
+
     /** Remove everything from this view. */
     void clearTracks();
+
     /** Insert the list of tracks into the view.
         Previous content will be removed. */
     void setTracks(const QList<Track*>& tracks);
@@ -45,6 +49,8 @@ private:
 
     QList<Track*> tracks_;
     QList<TrackHeaderWidget*> widgets_;
+
+    int offsetY_;
 };
 
 

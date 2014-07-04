@@ -18,7 +18,8 @@ namespace GUI {
 
 TrackHeader::TrackHeader(TrackView * trackView, QWidget *parent) :
     QWidget     (parent),
-    trackView_  (trackView)
+    trackView_  (trackView),
+    offsetY_    (0)
 {
     MO_ASSERT(trackView_, "TrackView not set for TrackHeader");
 
@@ -29,6 +30,18 @@ TrackHeader::TrackHeader(TrackView * trackView, QWidget *parent) :
 
     setPalette(trackView_->palette());
 }
+
+void TrackHeader::setVerticalOffset(int y)
+{
+    bool changed = (offsetY_ != y);
+    offsetY_ = y;
+    if (changed)
+    {
+        updateWidgetsViewSpace_();
+        update();
+    }
+}
+
 
 void TrackHeader::clearTracks()
 {
@@ -59,7 +72,7 @@ void TrackHeader::updateWidgetsViewSpace_()
     for (auto w : widgets_)
     {
         const int h = trackView_->trackHeight(w->track()),
-                  y = trackView_->trackY(w->track());
+                  y = trackView_->trackY(w->track()) - offsetY_;
 
         w->setFixedHeight(h);
         w->move(0, y);

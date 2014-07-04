@@ -10,6 +10,8 @@
 
 #include <QGridLayout>
 #include <QScrollBar>
+#include <QWheelEvent>
+
 
 #include "sequencer.h"
 #include "trackheader.h"
@@ -78,19 +80,41 @@ void Sequencer::createWidgets_()
     connect(trackView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
             rulerSec_, SLOT(setViewSpace(UTIL::ViewSpace)));
 
+    // connect scrollbar
+    connect(trackView_, SIGNAL(tracksChanged()), this, SLOT(updateVScroll_()));
+    connect(vScroll_, &QScrollBar::valueChanged, [this](int v)
+    {
+        trackView_->setVerticalOffset(v);
+    });
 
     // initialize viewspace
     UTIL::ViewSpace init(60, 1);
     init.setMinX(0);
-    init.setMinY(0);
     rulerSec_->setViewSpace(init, true);
+
+    updateVScroll_();
+}
+
+void Sequencer::updateVScroll_()
+{
+    vScroll_->setMaximum(std::max(0, trackView_->realHeight() - trackView_->height()));
+    vScroll_->setSingleStep(vScroll_->maximum() / std::max(1, trackView_->numTracks()));
 }
 
 void Sequencer::resizeEvent(QResizeEvent * e)
 {
     QWidget::resizeEvent(e);
 
+    updateVScroll_();
     rulerFps_->setViewSpace(rulerFps_->viewSpace(), true);
+}
+
+void Sequencer::wheelEvent(QWheelEvent * e)
+{
+    if (e->delta() < 0)
+        vScroll_->triggerAction(QScrollBar::SliderSingleStepAdd);
+    else
+        vScroll_->triggerAction(QScrollBar::SliderSingleStepSub);
 }
 
 void Sequencer::clearTracks()

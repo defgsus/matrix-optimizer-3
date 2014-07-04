@@ -34,13 +34,16 @@ TrackView::TrackView(QWidget *parent) :
     scene_          (0),
     header_         (0),
 
+    offsetY_                (0),
+    maxHeight_              (0),
+
     selTrack_               (0),
     nextFocusSequence_      (0),
     currentTime_            (0),
     dragSequence_           (0),
 
     defaultTrackHeight_     (30),
-    trackSpacing_          (2)
+    trackSpacing_           (2)
 {
     setMinimumSize(320,240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -60,6 +63,18 @@ void TrackView::setViewSpace(const UTIL::ViewSpace & s)
     updateWidgetsViewSpace_();
 }
 
+void TrackView::setVerticalOffset(int y)
+{
+    bool changed = (offsetY_ != y);
+    offsetY_ = y;
+    if (changed)
+    {
+        updateWidgetsViewSpace_();
+        header_->setVerticalOffset(offsetY_);
+        update();
+    }
+}
+
 void TrackView::paintEvent(QPaintEvent * e)
 {
     QPainter p(this);
@@ -69,7 +84,8 @@ void TrackView::paintEvent(QPaintEvent * e)
     p.setPen(QColor(70,70,70));
     for (auto t : tracks_)
     {
-        const int y = trackY(t) + trackHeight(t) + trackSpacing_ / 2;
+        const int y = trackY(t) + trackHeight(t) + trackSpacing_ / 2
+                    - offsetY_;
         p.drawLine(0, y, width(), y);
     }
 #else
@@ -106,23 +122,12 @@ void TrackView::updateWidgetsViewSpace_()
 void TrackView::updateWidgetViewSpace_(SequenceWidget * s)
 {
     const int h = trackHeight(s->track()),
-              y = trackY(s->track());
+              y = trackY(s->track()) - offsetY_;
     QRect r(0, y, 10, h);
 
     r.setLeft(space_.mapXFrom(s->sequence()->start()) * width());
     r.setRight(space_.mapXFrom(s->sequence()->end()) * width());
     s->setGeometry(r);
-}
-
-void TrackView::setScene(Scene * scene)
-{
-    scene_ = scene;
-
-    if (scene_ == 0)
-    {
-        clearTracks();
-        return;
-    }
 }
 
 void TrackView::clearTracks()
@@ -147,17 +152,11 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
         return;
 
     // determine scene
-    if (!scene_)
-    {
-        setScene(tracks[0]->sceneObject());
-    }
+    scene_ = tracks[0]->sceneObject();
 
     MO_ASSERT(scene_, "Scene not set in TrackView::setTracks()");
 
     tracks_ = tracks;
-
-    if (send_signal)
-        emit tracksChanged();
 
     calcTrackY_();
 
@@ -165,6 +164,9 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
         createSequenceWidgets_(t);
 
     updateWidgetsViewSpace_();
+
+    if (send_signal)
+        emit tracksChanged();
 
     header_->setTracks(tracks);
 }
@@ -179,6 +181,8 @@ void TrackView::calcTrackY_()
         trackY_.insert(t, y);
         y += h + trackSpacing_;
     }
+
+    maxHeight_ = y;
 }
 
 
