@@ -75,32 +75,30 @@ void TrackView::setVerticalOffset(int y)
     }
 }
 
-void TrackView::paintEvent(QPaintEvent * e)
+void TrackView::paintEvent(QPaintEvent * )
 {
     QPainter p(this);
 
     // background
-#if (1)
     p.setPen(QColor(70,70,70));
     for (auto t : tracks_)
     {
-        const int y = trackY(t) + trackHeight(t) + trackSpacing_ / 2
-                    - offsetY_;
+        const int y = trackY(t) + trackHeight(t) + trackSpacing_ / 2;
         p.drawLine(0, y, width(), y);
     }
-#else
-    p.setPen(Qt::NoPen);
-    p.setBrush(QBrush(QColor(50,50,50).darker(120)));
-    int k=1;
-    for (auto t : tracks_)
-    {
-        if (k & 1)
-            p.drawRect(0, trackY(t), width(), trackHeight(t));
-        ++k;
-    }
-#endif
 
-    QWidget::paintEvent(e);
+    // when moving sequences
+    if (dragSequence_ && dragEndTrack_ && dragStartTrack_ != dragEndTrack_)
+    {
+        int y = trackY(dragEndTrack_) - 2,
+            h = trackHeight(dragEndTrack_) + 4,
+            x = space_.mapXFrom(dragSequence_->start()) * width(),
+            w = space_.mapXDistanceFrom(dragSequence_->length()) * width();
+
+        p.setBrush(QBrush(QColor(255,255,255,30)));
+        p.setPen(QPen(QColor(255,255,255,150)));
+        p.drawRect(x, y, w, h);
+    }
 }
 
 SequenceWidget * TrackView::widgetForSequence_(Sequence * seq) const
@@ -122,7 +120,7 @@ void TrackView::updateWidgetsViewSpace_()
 void TrackView::updateWidgetViewSpace_(SequenceWidget * s)
 {
     const int h = trackHeight(s->track()),
-              y = trackY(s->track()) - offsetY_;
+              y = trackY(s->track());
     QRect r(0, y, 10, h);
 
     r.setLeft(space_.mapXFrom(s->sequence()->start()) * width());
@@ -193,7 +191,7 @@ int TrackView::trackHeight(Track * t) const
 
 int TrackView::trackY(Track * t) const
 {
-    return trackY_.value(t, 0);
+    return trackY_.value(t, 0) - offsetY_;
 }
 
 void TrackView::createSequenceWidgets_(Track * t)
@@ -208,6 +206,18 @@ void TrackView::createSequenceWidgets_(Track * t)
         return;
     }
 
+    // delete the previous widgets for this track
+    QList<SequenceWidget*> newlist;
+    for (auto w : sequenceWidgets_)
+    {
+        if (w->track() == t)
+            w->deleteLater();
+        else
+            newlist.append(w);
+    }
+    sequenceWidgets_ = newlist;
+
+    // create SequenceWidgets
     for (Sequence * seq : t->sequences())
     {
         // create the widget
@@ -262,6 +272,7 @@ void TrackView::mousePressEvent(QMouseEvent * e)
             dragStartPos_ = e->pos();
             dragStartTime_ = space_.mapXTo((Double)e->x()/width());
             dragStartSeqTime_ = dragSequence_->start();
+            dragStartTrack_ = dragEndTrack_ = seqw->track();
 
             e->accept();
             return;
@@ -304,7 +315,15 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
         Double newstart = std::max((Double)0, dragStartSeqTime_ + dx);
         dragSequence_->setStart(newstart);
 
-        // shift viewspace
+        // deterimine new-track
+        auto dragEndTrack = trackForY(e->y());
+        if (dragEndTrack != dragEndTrack_ || dragEndTrack != dragStartTrack_)
+        {
+            dragEndTrack_ = dragEndTrack;
+            update();
+        }
+
+        // shift x viewspace
         int scrOffset = 0;
         if (e->x() > width())
             scrOffset = std::min(10, e->x() - width());
@@ -318,6 +337,8 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
             updateWidgetsViewSpace_();
             emit viewSpaceChanged(space_);
         }
+
+        // TODO shift y viewspace
 
         e->accept();
         return;
@@ -337,6 +358,8 @@ void TrackView::sequenceTimeChanged(Sequence * seq)
 
 Track * TrackView::trackForY(int y) const
 {
+    y -= offsetY_;
+
     for (auto i = trackY_.begin(); i != trackY_.end(); ++i)
     {
         if (y >= i.value() && y <= i.value() + trackHeight(i.key()))
@@ -346,6 +369,10 @@ Track * TrackView::trackForY(int y) const
     return 0;
 }
 
+QRect TrackView::trackRect_(Track * t) const
+{
+    return QRect(0, trackY(t), width(), trackHeight(t));
+}
 
 void TrackView::createEditActions_()
 {

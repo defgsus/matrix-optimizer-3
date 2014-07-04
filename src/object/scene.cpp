@@ -51,7 +51,7 @@ void Scene::deserialize(IO::DataStream & io)
 }
 
 
-void Scene::treeChanged()
+void Scene::tellTreeChanged()
 {
     MO_DEBUG_TREE("Scene::treeChanged()");
 
@@ -147,8 +147,23 @@ SequenceFloat * Scene::createFloatSequence(Track * track, Double time)
     // add it to track
     track->addSequence(seq);
     // notify everyone
-    treeChanged();
+    tellTreeChanged();
     return seq;
+}
+
+void Scene::moveSequence(Sequence *seq, Track *from, Track *to)
+{
+    MO_DEBUG_TREE("Scene::moveSequence('" << seq->idName() << "', '" << from->idName() << "', '"
+                  << to->idName() << "'");
+    if (seq->tracks().contains(to))
+    {
+        MO_WARNING("duplicated move sequence '" << seq->idName() << "' to track '"
+                   << to->idName() << "'");
+    }
+
+    from->removeSequence(seq);
+    to->addSequence(seq);
+    tellTreeChanged();
 }
 
 void Scene::beginSequenceChange(Sequence * s)

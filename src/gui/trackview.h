@@ -101,7 +101,8 @@ private:
 
     /** Returns track for screen y position, or NULL */
     Track * trackForY(int y) const;
-
+    /** Whole track rectangle */
+    QRect trackRect_(Track *) const;
 
     UTIL::ViewSpace space_;
 
@@ -125,6 +126,7 @@ private:
     Double dragStartTime_, dragStartSeqTime_;
     /** Sequence to be dragged around */
     Sequence * dragSequence_;
+    Track * dragStartTrack_, * dragEndTrack_;
 
     // ---- config ----
 

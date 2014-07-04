@@ -50,7 +50,7 @@ void Parameter::addModulator(const QString &idName)
     modulatorIds_.insert(idName);
     // hacky
     Scene * s = sceneObject();
-    if (s) s->treeChanged();
+    if (s) s->tellTreeChanged();
 }
 
 void Parameter::removeModulator(const QString &idName)
@@ -58,7 +58,7 @@ void Parameter::removeModulator(const QString &idName)
     modulatorIds_.remove(idName);
     // hacky
     Scene * s = sceneObject();
-    if (s) s->treeChanged();
+    if (s) s->tellTreeChanged();
 }
 
 } // namespace MO

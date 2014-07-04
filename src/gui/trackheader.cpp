@@ -72,7 +72,7 @@ void TrackHeader::updateWidgetsViewSpace_()
     for (auto w : widgets_)
     {
         const int h = trackView_->trackHeight(w->track()),
-                  y = trackView_->trackY(w->track()) - offsetY_;
+                  y = trackView_->trackY(w->track());
 
         w->setFixedHeight(h);
         w->move(0, y);

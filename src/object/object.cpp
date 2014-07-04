@@ -279,7 +279,7 @@ void Object::setParentObject(Object *parent, int index)
 
     // tell Scene
     if (Scene * scene = sceneObject())
-        scene->treeChanged();
+        scene->tellTreeChanged();
 
     // tell parent object
     parentObject_->childrenChanged_();
@@ -339,7 +339,7 @@ void Object::deleteObject(Object * child)
 
     // tell Scene
     if (Scene * scene = sceneObject())
-        scene->treeChanged();
+        scene->tellTreeChanged();
 
     // tell this object
     childrenChanged_();
