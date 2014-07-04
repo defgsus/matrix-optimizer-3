@@ -18,7 +18,7 @@
 #include <QTime>
 #include <QMessageBox>
 #include <QFileDialog>
-
+#include <QScrollArea>
 
 #include "mainwindow.h"
 #include "projectorsetupwidget.h"
@@ -31,6 +31,7 @@
 #include "gui/objecttreeview.h"
 #include "gui/objectview.h"
 #include "gui/sequencefloatview.h"
+#include "gui/sequencer.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
@@ -77,55 +78,37 @@ void MainWindow::createWidgets_()
         l0->addLayout(lv);
 
             // object tree view
-            auto treev = objectTreeView_ = new ObjectTreeView(this);
-            lv->addWidget(treev);
-            setMinimumWidth(320);
+            objectTreeView_ = new ObjectTreeView(this);
+            lv->addWidget(objectTreeView_);
+            objectTreeView_->setMinimumWidth(200);
+            objectTreeView_->setMaximumWidth(450);
 
             objectModel_ = new ObjectTreeModel(0, this);
-            treev->setModel(objectModel_);
-            connect(treev, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
+            objectTreeView_->setModel(objectModel_);
+            connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
                     SLOT(setEditActions_(const QObject*,QList<QAction*>)));
 
             // object editor
             objectView_ = new ObjectView(this);
             lv->addWidget(objectView_);
 
-            connect(treev, SIGNAL(objectSelected(MO::Object*)), SLOT(objectSelected(MO::Object*)));
+            connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
+                    SLOT(objectSelected(MO::Object*)));
 
         l0->setStretchFactor(lv, -1);
 
         lv = new QVBoxLayout();
         l0->addLayout(lv);
 
-            //auto v = new ProjectorSetupWidget(centralWidget());
-            //l->addWidget(v);
+            //auto sa = new QScrollArea(this);
+            //lv->addWidget(sa);
+            sequencer_ = new Sequencer(this);
+            lv->addWidget(sequencer_);
+            //sa->setWidget(trackView_);
+            //trackView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-            auto tl = new MATH::Timeline1D;
-            for (int i=0; i<200; ++i)
-                tl->add((Double)rand()/RAND_MAX * 10.0, (Double)rand()/RAND_MAX, MATH::Timeline1D::Point::SYMMETRIC);
-            tl->setAutoDerivative();
 
-            auto tlv = new Timeline1DRulerView(tl, this);
-            tlv->setObjectName("timeline01");
-            lv->addWidget(tlv);
-            //tlv->setOptions(Timeline1DView::O_ChangeViewX | Timeline1DView::O_MovePoints);
-            //tlv->setGridOptions(PAINTER::Grid::O_DrawX | PAINTER::Grid::O_DrawY);
-            auto space = tlv->viewSpace();
-            space.setMinX(0);
-            space.setMinY(0);
-            space.setMaxX(10);
-            space.setMaxY(1);
-            tlv->setViewSpace(space, true);
-
-            /*
-            auto tl2 = new MATH::Timeline1D;
-            tl2->setLimit(0,1);
-
-            auto tlv2 = new Timeline1DRulerView(tl2, this);
-            tlv2->setObjectName("timeline02");
-            lv->addWidget(tlv2);
-            */
-
+            // SequenceFloat view
             seqFloatView_ = new SequenceFloatView(this);
             seqFloatView_->setVisible(false);
             lv->addWidget(seqFloatView_);
@@ -242,7 +225,8 @@ void MainWindow::setSceneObject(Scene * s)
 
     connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
 
-    scene_->setGlContext(glWindow_->context());
+    if (glWindow_->context())
+        scene_->setGlContext(glWindow_->context());
 
     // update widgets
 

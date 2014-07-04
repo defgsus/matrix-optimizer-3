@@ -57,6 +57,7 @@ class SettingFloat;
     #define MO_OBJECTCLASSNAME_SEQUENCE_FLOAT   "_seqf"
 #endif
 */
+
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
         static bool success_register_object_##class__ = \
@@ -105,6 +106,7 @@ public:
         T_SOUNDSOURCE       = 1<<7,
         T_SEQUENCEGROUP     = 1<<8,
         T_SEQUENCE_FLOAT    = 1<<9,
+        T_TRACK             = 1<<10
     };
     enum TypeGroups
     {

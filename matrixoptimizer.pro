@@ -84,7 +84,10 @@ SOURCES += \
     src/math/waveform.cpp \
     src/math/noiseperlin.cpp \
     src/math/funcparser/parser.cpp \
-    src/object/scale.cpp
+    src/object/scale.cpp \
+    src/object/track.cpp \
+    src/gui/trackview.cpp \
+    src/gui/sequencer.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -160,7 +163,10 @@ HEADERS += \
     src/math/funcparser/parser.h \
     src/math/funcparser/parser_defines.h \
     src/math/funcparser/parser_program.h \
-    src/object/scale.h
+    src/object/scale.h \
+    src/object/track.h \
+    src/gui/trackview.h \
+    src/gui/sequencer.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

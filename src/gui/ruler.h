@@ -41,6 +41,8 @@ public:
         O_ZoomAll = O_ZoomX | O_ZoomY,
         O_ChangeViewAll = O_DragAll | O_ZoomAll,
 
+        O_EnableAllX = Ruler::O_DrawX | Ruler::O_DrawTextX | Ruler::O_DragX | Ruler::O_ZoomX,
+        O_EnableAllY = Ruler::O_DrawY | Ruler::O_DrawTextY | Ruler::O_DragY | Ruler::O_ZoomY,
         O_EnableAll = O_DrawAll | O_DrawAll
     };
 

@@ -44,6 +44,8 @@ Window::Window(QScreen * targetScreen)
 Window::~Window()
 {
     MO_DEBUG_GL("Window::~Window()");
+//    if (context_)
+//        context_->doneCurrent();
 }
 
 /*

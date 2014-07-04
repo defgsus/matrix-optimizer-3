@@ -406,8 +406,11 @@ QList<Object*> Object::findChildObjects(int typeFlags, bool recursive) const
 
 bool Object::canHaveChildren(Type t) const
 {
-    if (t & TG_SEQUENCE)
+    if (t & TG_SEQUENCE || t == T_TRACK)
         return true;
+
+    if (type() == T_TRACK)
+        return t & TG_SEQUENCE;
 
     if (type() & TG_SEQUENCE)
         return t & TG_PARAMETER;
