@@ -257,9 +257,9 @@ void SequenceView::createDefaultSettingsWidgets_()
 #define MO__SCENE_PARAM(spin__, getter__, setter__, min__, desc__) \
     w = newDefaultSetting_(desc__);                         \
     w->layout()->addWidget(spin__ = new DoubleSpinBox(w));  \
+    spin__->setDecimals(4);                                 \
     spin__->setMinimum(min__);                              \
     spin__->setMaximum(MO_MAX_TIME);                        \
-    spin__->setDecimals(4);                                 \
     spin__->setValue(baseSequence_->getter__());            \
     connect(spin__,                                         \
      &DoubleSpinBox::valueChanged, [this, scene](Double v)  \

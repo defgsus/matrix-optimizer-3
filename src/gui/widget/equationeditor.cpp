@@ -89,8 +89,8 @@ void EquationEditor::setParser(const PPP_NAMESPACE::Parser * parser )
 
     // extract name lists
 
-    // XXX highlighter doesn't like special chars atm.
-    const QRegExp filter("^[a-z,A-Z]*$");
+    // XXX highlighter currently doesn't like operator chars
+    const QRegExp filter("^[a-z,A-Z,_]*$");
 
     std::vector<std::string> vec = parser_->functions().functionNames();
     QStringList funcNames;

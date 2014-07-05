@@ -166,6 +166,7 @@ void SequenceFloatView::createSettingsWidgets_()
     w = newSetting(tr("offset"));
     auto spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
+    spin->setDecimals(4);
     spin->setRange(-1e8, 1e8);
     spin->setValue(sequence_->offset());
     spin->setSingleStep(0.1);
@@ -183,6 +184,7 @@ void SequenceFloatView::createSettingsWidgets_()
     w = newSetting(tr("amplitude"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
+    spin->setDecimals(4);
     spin->setRange(-1e8, 1e8);
     spin->setValue(sequence_->amplitude());
     spin->setSingleStep(0.1);
@@ -200,6 +202,7 @@ void SequenceFloatView::createSettingsWidgets_()
     w = wFreq_ = newSetting(tr("frequency"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
+    spin->setDecimals(4);
     spin->setRange(-1e8, 1e8);
     spin->setSingleStep(0.1);
     spin->setValue(sequence_->frequency());
@@ -217,8 +220,9 @@ void SequenceFloatView::createSettingsWidgets_()
     w = wPhase_ = newSetting(tr("phase"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
+    spin->setDecimals(4);
     spin->setRange(-1e8, 1e8);
-    spin->setSingleStep(0.05);
+    spin->setSingleStep(5);
     spin->setValue(sequence_->phase());
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](Double val)
@@ -234,6 +238,7 @@ void SequenceFloatView::createSettingsWidgets_()
     w = wPW_ = newSetting(tr("pulsewidth"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
+    spin->setDecimals(4);
     spin->setRange(MATH::Waveform::minPulseWidth(), MATH::Waveform::maxPulseWidth());
     spin->setSingleStep(0.025);
     spin->setValue(sequence_->pulseWidth());
