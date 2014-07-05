@@ -25,6 +25,8 @@ signals:
 
 public slots:
 
+    void updateStyle();
+
 protected:
 
     virtual bool notify(QObject * o, QEvent * e);

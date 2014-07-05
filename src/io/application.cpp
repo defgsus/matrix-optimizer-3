@@ -19,7 +19,9 @@ Application * application;
 
 Application::Application(int& argc, char** args)
     :   QApplication(argc, args)
-{ }
+{
+    //updateStyle();
+}
 
 bool Application::notify(QObject * o, QEvent * e)
 {
@@ -42,5 +44,21 @@ bool Application::notify(QObject * o, QEvent * e)
     return false;
 }
 
+
+void Application::updateStyle()
+{
+    setStyleSheet(
+                "* { background-color: #202020; color: #a0a0a0; "
+                "    border: 1px solid #404040; "
+                "    selection-background-color: #505060; "
+                "    selection-color: #ffffff } "
+                "*:hover { background-color: #242424 } "
+                "*:pressed { background-color: #121212 } "
+                "QLabel { border: 0px } "
+                "* { show-decoration-selected: 0 } "
+                "QAbstractItemView { background-color: #808080 } "
+                "QAbstractItemView:hover { background-color: #868686 } "
+                );
+}
 
 } // namespace MO
