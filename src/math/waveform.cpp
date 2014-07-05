@@ -31,9 +31,9 @@ const QStringList Waveform::typeNames =
 
 bool Waveform::supportsPulseWidth(Type t)
 {
-    return t == T_RAMP
-        || t == T_SAW
-        || t == T_TRIANGLE
+    return //t == T_RAMP
+        //|| t == T_SAW
+           t == T_TRIANGLE
         || t == T_SQUARE;
 }
 
@@ -85,11 +85,9 @@ Double Waveform::waveform(Double t, Type type, Double pw)
             return std::cos( t * TWO_PI );
 
         case T_RAMP:
-            // TODO
             return moduloSigned( t, 1.0 );
 
         case T_SAW:
-            // TODO
             return -1.0 + 2.0 * moduloSigned( t, 1.0 );
 
         case T_TRIANGLE:

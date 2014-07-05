@@ -40,7 +40,7 @@ SequenceFloat::SequenceFloat(QObject *parent)
         pulseWidth_ (0.5),
         oscMode_    (MATH::Waveform::T_SINE),
 
-        doEquationFreq_(true),
+        doUseFreq_  (false),
         equationText_("sin(x*TWO_PI)")
 
 {
@@ -75,7 +75,7 @@ void SequenceFloat::serialize(IO::DataStream &io) const
         timeline_->serialize(io);
 
     // equation (v2)
-    io << equationText_ << doEquationFreq_;
+    io << equationText_ << doUseFreq_;
 }
 
 void SequenceFloat::deserialize(IO::DataStream &io)
@@ -106,7 +106,7 @@ void SequenceFloat::deserialize(IO::DataStream &io)
 
     // equation (v2)
     if (ver >= 2)
-        io >> equationText_ >> doEquationFreq_;
+        io >> equationText_ >> doUseFreq_;
 }
 
 
@@ -160,21 +160,21 @@ Double SequenceFloat::value(Double time) const
 {
     time = getSequenceTime(time);
 
-    const Double phaseMult = 1.0 / 360.0;
+    if (mode_ == ST_OSCILLATOR || doUseFreq_)
+    {
+        const Double phaseMult = 1.0 / 360.0;
+        time = time * frequency_ + phase_ * phaseMult;
+    }
 
     switch (mode_)
     {
         case ST_OSCILLATOR: return offset_ + amplitude_
-                * MATH::Waveform::waveform(
-                        time * frequency_ + phase_ * phaseMult, oscMode_, pulseWidth_);
+                * MATH::Waveform::waveform(time, oscMode_, pulseWidth_);
 
         case ST_EQUATION:
             MO_ASSERT(equation_, "SequenceFloat::value() without equation");
             // XXX NOT THREADSAFE :(
-            if (doEquationFreq_)
-                equationTime_ = time * frequency_ + phase_ * phaseMult;
-            else
-                equationTime_ = time;
+            equationTime_ = time;
             equationFreq_ = frequency_;
             equationPhase_ = phase_;
             equationPW_ = pulseWidth_;

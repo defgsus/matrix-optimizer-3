@@ -263,19 +263,20 @@ void SequenceFloatView::createSettingsWidgets_()
         updateSequence_();
     });
 
-    // equation with frequency
-    w = wEquFreq_ = newSetting(tr("use frequency"));
-    w->setToolTip(tr("This selects whether the time 'x' in the equation "
-                     "should be modified by frequency and phase."));
+    // always use frequency
+    w = wUseFreq_ = newSetting(tr("use frequency"));
+    w->setToolTip(tr("This selects whether the function time "
+                     "should be modified by frequency and phase, "
+                     "as in oscillator mode."));
     auto cb = new QCheckBox(this);
     w->layout()->addWidget(cb);
-    cb->setChecked(sequence_->equationWithFreq());
+    cb->setChecked(sequence_->useFrequency());
     connect(cb, &QCheckBox::stateChanged,
     [this, scene, cb]()
     {
         {
             ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setEquationWithFreq(cb->isChecked());
+            sequence_->setUseFrequency(cb->isChecked());
         }
         updateSequence_();
     });
@@ -293,14 +294,16 @@ void SequenceFloatView::updateWidgets_()
 
     bool isOsc = sequence_ && sequence_->mode() == SequenceFloat::ST_OSCILLATOR,
          isPW = isOsc && MATH::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
-         isEqu = sequence_ && sequence_->mode() == SequenceFloat::ST_EQUATION;
+         isEqu = sequence_ && sequence_->mode() == SequenceFloat::ST_EQUATION,
+         isTL = sequence_ && sequence_->mode() == SequenceFloat::ST_TIMELINE,
+         useFreq = sequence_ && sequence_->useFrequency();
 
     wOscMode_->setVisible(isOsc);
-    wFreq_->setVisible(isOsc || isEqu);
-    wPhase_->setVisible(isOsc || isEqu);
+    wFreq_->setVisible(isOsc || isEqu || useFreq);
+    wPhase_->setVisible(isOsc || isEqu || useFreq);
     wPW_->setVisible(isPW || isEqu);
     wEqu_->setVisible(isEqu);
-    wEquFreq_->setVisible(isEqu);
+    wUseFreq_->setVisible(isEqu || isTL);
     if (isEqu && wEquEdit_->assignedParser() != sequence_->equation())
         wEquEdit_->setParser(sequence_->equation());
 
