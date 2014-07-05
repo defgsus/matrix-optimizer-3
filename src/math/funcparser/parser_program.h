@@ -239,6 +239,7 @@ namespace PPP_NAMESPACE
 				return expr[which]->params[0];
 
 			assert(0 && "Expression::get_pfloat() type[which] unknown");
+            return 0;
 		}
 
 		// ----------- member ------------

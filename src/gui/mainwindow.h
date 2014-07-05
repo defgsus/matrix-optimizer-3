@@ -50,6 +50,7 @@ private slots:
     void saveScene();
     void loadScene();
     void newScene();
+    void createDebugScene_();
 
     void setSceneObject(Scene *);
 private:

@@ -33,6 +33,7 @@
 #include "gui/sequencefloatview.h"
 #include "gui/sequencer.h"
 #include "model/objecttreemodel.h"
+#include "model/objecttreesortproxy.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
 #include "gl/window.h"
@@ -84,7 +85,13 @@ void MainWindow::createWidgets_()
             objectTreeView_->setMaximumWidth(450);
 
             objectModel_ = new ObjectTreeModel(0, this);
-            objectTreeView_->setModel(objectModel_);
+
+            auto objectSortModel = new ObjectTreeSortProxy(this);
+            objectSortModel->setSourceModel(objectModel_);
+            //objectSortModel->
+
+            objectTreeView_->setModel(objectSortModel);
+            //objectTreeView_->setModel(objectModel_);
             connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
                     SLOT(setEditActions_(const QObject*,QList<QAction*>)));
 
@@ -209,6 +216,10 @@ void MainWindow::createMainMenu_()
 
         m->addAction(a = new QAction(tr("Test transformation speed"), m));
         connect(a, SIGNAL(triggered()), SLOT(testSceneTransform_()));
+
+        m->addAction(a = new QAction(tr("Create Debug Scene"), m));
+        connect(a, SIGNAL(triggered()), SLOT(createDebugScene_()));
+
 }
 
 void MainWindow::setSceneObject(Scene * s)
@@ -237,6 +248,7 @@ void MainWindow::setSceneObject(Scene * s)
 
     // update widgets
 
+    objectTreeView_->setScene(scene_);
     objectModel_->setRootObject(scene_);
     objectView_->setObject(0);
     seqFloatView_->setSequence(0);
@@ -254,28 +266,42 @@ void MainWindow::createObjects_()
     glWindow_->show();
 
     //newScene();
-    setSceneObject(ObjectFactory::loadScene("./tracktest2.mo3"));
+    try {
+        setSceneObject(ObjectFactory::loadScene("./tracktest2.mo3"));
+    }
+    catch (IoException& e)
+    {
+        MO_WARNING(e.what());
+    }
+}
 
-    /*
+void MainWindow::createDebugScene_()
+{
     auto scene = ObjectFactory::createSceneObject();
 
-    auto cam = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_CAMERA));
-        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
-        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
-        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_SEQUENCE_FLOAT));
-        cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_SEQUENCE_FLOAT));
-        auto mic = cam->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MICROPHONE));
-            mic->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
-    auto model = scene->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_MODEL3D));
-        model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
-        model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
-        model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
-        auto snd = model->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_SOUNDSOURCE));
-            snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_AXISROTATION));
-            snd->addObject(ObjectFactory::createObject(MO_OBJECTCLASSNAME_TRANSLATION));
+    auto cam = scene->addObject(ObjectFactory::createObject("Camera"));
+        cam->addObject(ObjectFactory::createObject("Translation"));
+        cam->addObject(ObjectFactory::createObject("AxisRotation"));
+        cam->addObject(ObjectFactory::createObject("SequenceFloat"));
+        cam->addObject(ObjectFactory::createObject("SequenceFloat"));
+        for (int i=0; i<21; ++i)
+        {
+            auto mic = cam->addObject(ObjectFactory::createObject("Microphone"));
+                mic->addObject(ObjectFactory::createObject("AxisRotation"));
+                mic->addObject(ObjectFactory::createObject("Translation"));
+        }
+
+    for (int i=0; i<20; ++i)
+    {
+        auto model = scene->addObject(ObjectFactory::createObject("Model3d"));
+            model->addObject(ObjectFactory::createObject("Translation"));
+            model->addObject(ObjectFactory::createObject("AxisRotation"));
+            auto snd = model->addObject(ObjectFactory::createObject("SoundSource"));
+                snd->addObject(ObjectFactory::createObject("AxisRotation"));
+                snd->addObject(ObjectFactory::createObject("Translation"));
+    }
 
     setSceneObject(scene);
-    */
 }
 
 

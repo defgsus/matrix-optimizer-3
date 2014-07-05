@@ -17,6 +17,7 @@
 class QMenu;
 namespace MO {
 class Object;
+class Scene;
 namespace GUI {
 
 
@@ -25,6 +26,8 @@ class ObjectTreeView : public QTreeView
     Q_OBJECT
 public:
     explicit ObjectTreeView(QWidget *parent = 0);
+
+    void setScene(Scene * scene) { scene_ = scene; }
 
 signals:
 
@@ -45,8 +48,12 @@ protected:
     void mousePressEvent(QMouseEvent *);
 
     void createEditActions_(Object* = 0);
+    void createFirstObjectActions_();
+
     void expandObjectOnly_(const QModelIndex& );
     QList<QAction*> editActions_;
+
+    Scene * scene_;
 };
 
 } // namespace GUI

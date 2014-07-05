@@ -64,7 +64,7 @@ QModelIndex ObjectTreeModel::rootIndex() const
 {
     if (!rootObject_)
         return QModelIndex();
-    return createIndex(0,0, rootObject_);
+    return createIndex(0,0, (void*)rootObject_);
 }
 
 QModelIndex ObjectTreeModel::index(int row, int column, const QModelIndex &parent) const
@@ -80,7 +80,8 @@ QModelIndex ObjectTreeModel::index(int row, int column, const QModelIndex &paren
 
     if (row < obj->childObjects().size())
     {
-        return createIndex(row, column, obj->childObjects()[row]);
+        return createIndex(row, column, (void*)obj->childObjects()[row]);
+
     }
 
     return QModelIndex();
@@ -93,6 +94,7 @@ QModelIndex ObjectTreeModel::parent(const QModelIndex &child) const
 
     if (Object * obj = itemForIndex(child))
     {
+
         // find parent object
         Object * parent = obj->parentObject();
         if (!parent || parent == rootObject_)
@@ -142,11 +144,20 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         {
             switch (index.column())
             {
-                case 0: return (role == Qt::DisplayRole)? obj->infoName() : obj->name();
+                case 0: return role == Qt::DisplayRole? obj->infoName() : obj->name();
+                        //QString::number(index.internalId(), 16);
                 case 1: return obj->className();
                 case 2: return obj->idName();
                 default: MO_LOGIC_ERROR("no DisplayRole defined for column " << index.column());
             }
+        }
+
+        // object itself
+        if (role == ObjectRole)
+        {
+            QVariant v;
+            v.setValue(obj);
+            return v;
         }
 
         // text alignment
@@ -368,7 +379,7 @@ QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, 
         parentObject->addObject(obj, row);
         endInsertRows();
 
-        return createIndex(row, 0, obj);
+        return createIndex(row, 0, (void*)obj);
     }
     return QModelIndex();
 }

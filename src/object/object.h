@@ -414,4 +414,6 @@ int Object::indexOfLastChild(int last) const
 
 } // namespace MO
 
+Q_DECLARE_METATYPE(MO::Object*)
+
 #endif // MOSRC_OBJECT_OBJECT_H

@@ -24,6 +24,11 @@ namespace MO {
 
 class Object;
 
+enum
+{
+    ObjectRole = Qt::UserRole + 1
+};
+
 class ObjectTreeModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -33,8 +38,9 @@ public:
     void setRootObject(Object * rootObject);
     Object * rootObject() const { return rootObject_; }
     QModelIndex rootIndex() const;
+private:
     Object * itemForIndex(const QModelIndex& index) const;
-
+public:
     // --- interface impl. ---
 
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
