@@ -40,7 +40,8 @@ SequenceFloat::SequenceFloat(QObject *parent)
         pulseWidth_ (0.5),
         oscMode_    (MATH::Waveform::T_SINE),
 
-        equationText_("sin(x)")
+        doEquationFreq_(true),
+        equationText_("sin(x*TWO_PI)")
 
 {
     setName("SequenceFloat");
@@ -60,7 +61,7 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 {
     Sequence::serialize(io);
 
-    io.writeHeader("seqf", 1);
+    io.writeHeader("seqf", 2);
 
     io << sequenceTypeId[mode_] << offset_ << amplitude_
        << frequency_ << phase_ << pulseWidth_;
@@ -72,13 +73,16 @@ void SequenceFloat::serialize(IO::DataStream &io) const
     io << (quint8)(timeline_ != 0);
     if (timeline_)
         timeline_->serialize(io);
+
+    // equation (v2)
+    io << equationText_ << doEquationFreq_;
 }
 
 void SequenceFloat::deserialize(IO::DataStream &io)
 {
     Sequence::deserialize(io);
 
-    io.readHeader("seqf", 1);
+    int ver = io.readHeader("seqf", 2);
 
     if (!io.readEnum(mode_, ST_CONSTANT, sequenceTypeId))
         MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
@@ -99,6 +103,10 @@ void SequenceFloat::deserialize(IO::DataStream &io)
             timeline_ = new MATH::Timeline1D;
         timeline_->deserialize(io);
     }
+
+    // equation (v2)
+    if (ver >= 2)
+        io >> equationText_ >> doEquationFreq_;
 }
 
 
@@ -122,6 +130,12 @@ void SequenceFloat::setMode(SequenceType m)
             equation_ = new PPP_NAMESPACE::Parser;
             equation_->variables().add("x", &equationTime_);
             equation_->variables().add("time", &equationTime_);
+            equation_->variables().add("f", &equationFreq_);
+            equation_->variables().add("freq", &equationFreq_);
+            equation_->variables().add("p", &equationPhase_);
+            equation_->variables().add("phase", &equationPhase_);
+            equation_->variables().add("pw", &equationPW_);
+            equation_->variables().add("pulsewidth", &equationPW_);
 
             equation_->variables().add("PI", PI);
             equation_->variables().add("TWO_PI", TWO_PI);
@@ -157,7 +171,13 @@ Double SequenceFloat::value(Double time) const
         case ST_EQUATION:
             MO_ASSERT(equation_, "SequenceFloat::value() without equation");
             // XXX NOT THREADSAFE :(
-            equationTime_ = time * frequency_ + phase_ * phaseMult;
+            if (doEquationFreq_)
+                equationTime_ = time * frequency_ + phase_ * phaseMult;
+            else
+                equationTime_ = time;
+            equationFreq_ = frequency_;
+            equationPhase_ = phase_;
+            equationPW_ = pulseWidth_;
             return offset_ + amplitude_ * equation_->eval();
 
         case ST_TIMELINE: return offset_ + amplitude_ * timeline_->get(time);

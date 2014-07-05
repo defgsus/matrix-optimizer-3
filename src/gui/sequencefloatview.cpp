@@ -11,6 +11,7 @@
 #include <QComboBox>
 #include <QLayout>
 #include <QLabel>
+#include <QCheckBox>
 
 #include "sequencefloatview.h"
 #include "timeline1dview.h"
@@ -262,10 +263,27 @@ void SequenceFloatView::createSettingsWidgets_()
         updateSequence_();
     });
 
-    updateWidgets_();
+    // equation with frequency
+    w = wEquFreq_ = newSetting(tr("use frequency"));
+    w->setToolTip(tr("This selects whether the time 'x' in the equation "
+                     "should be modified by frequency and phase."));
+    auto cb = new QCheckBox(this);
+    w->layout()->addWidget(cb);
+    cb->setChecked(sequence_->equationWithFreq());
+    connect(cb, &QCheckBox::stateChanged,
+    [this, scene, cb]()
+    {
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setEquationWithFreq(cb->isChecked());
+        }
+        updateSequence_();
+    });
 
 
     addSettingsWidget_(w);
+
+    updateWidgets_();
 }
 
 void SequenceFloatView::updateWidgets_()
@@ -280,9 +298,10 @@ void SequenceFloatView::updateWidgets_()
     wOscMode_->setVisible(isOsc);
     wFreq_->setVisible(isOsc || isEqu);
     wPhase_->setVisible(isOsc || isEqu);
-    wPW_->setVisible(isPW);
+    wPW_->setVisible(isPW || isEqu);
     wEqu_->setVisible(isEqu);
-    if (wEquEdit_->assignedParser() != sequence_->equation())
+    wEquFreq_->setVisible(isEqu);
+    if (isEqu && wEquEdit_->assignedParser() != sequence_->equation())
         wEquEdit_->setParser(sequence_->equation());
 
     squeezeView_();

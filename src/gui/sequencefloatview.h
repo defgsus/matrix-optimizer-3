@@ -58,7 +58,7 @@ private:
     GeneralSequenceFloatView * seqView_;
 
     QWidget * wOscMode_, * wFreq_, * wPhase_, * wPW_,
-            * wEqu_;
+            * wEqu_, * wEquFreq_;
     EquationEditor * wEquEdit_;
 };
 

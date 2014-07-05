@@ -68,6 +68,7 @@ public:
     Double pulseWidth() const { return pulseWidth_; }
 
     const QString& equationText() const { return equationText_; }
+    bool equationWithFreq() const { return doEquationFreq_; }
 
     // ------------ setter --------------
 
@@ -83,6 +84,7 @@ public:
     void setPulseWidth(Double pw) { pulseWidth_ = MATH::Waveform::limitPulseWidth(pw); }
 
     void setEquationText(const QString&);
+    void setEquationWithFreq(bool enable) { doEquationFreq_ = enable; }
 
     // ------------ values --------------
 
@@ -112,10 +114,15 @@ private:
 
     MATH::Waveform::Type oscMode_;
 
-    // -----
+    // ----- equation stuff -----
 
+    bool doEquationFreq_;
     QString equationText_;
-    mutable Double equationTime_;
+    mutable Double
+        equationTime_,
+        equationFreq_,
+        equationPhase_,
+        equationPW_;
 };
 
 } // namespace MO

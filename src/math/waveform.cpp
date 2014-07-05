@@ -60,7 +60,7 @@ Double Waveform::waveform(Double t, Type type)
             return (p<0.5)? p * 4.0 - 1.0 : (1.0-p) * 4.0 - 1.0;
 
         case T_SQUARE:
-            return (moduloSigned( t, 1.0 ) >= 0.5) ? 1.0 : -1.0 ;
+            return (moduloSigned( t, 1.0 ) >= 0.5) ? -1.0 : 1.0 ;
 
         case T_NOISE:
             return noise_.noise(t);
@@ -93,12 +93,11 @@ Double Waveform::waveform(Double t, Type type, Double pw)
             return -1.0 + 2.0 * moduloSigned( t, 1.0 );
 
         case T_TRIANGLE:
-            // TODO
             p = moduloSigned(t, 1.0);
-            return (p<0.5)? p * 4.0 - 1.0 : (1.0-p) * 4.0 - 1.0;
+            return (p<pw)? p * 2.0/pw - 1.0 : (1.0-p) * 2.0/(1.0-pw) - 1.0;
 
         case T_SQUARE:
-            return (moduloSigned( t, 1.0 ) >= pw) ? 1.0 : -1.0 ;
+            return (moduloSigned( t, 1.0 ) >= pw) ? -1.0 : 1.0 ;
 
         case T_NOISE:
             return noise_.noise(t);
