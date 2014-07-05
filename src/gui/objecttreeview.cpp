@@ -50,6 +50,12 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
     // default actions
     QAction * a;
 
+    createTypeActions_();
+
+    a = new QAction(tr("Show/hide objects"), this);
+    addAction(a);
+    a->setMenu(showTypeMenu_);
+
     a = new QAction(tr("Expand objects"), this);
     addAction(a);
     a->setShortcut(Qt::ALT + Qt::Key_E);
@@ -81,13 +87,11 @@ void ObjectTreeView::setObjectModel(ObjectTreeModel *objectModel)
 {
     omodel_ = objectModel;
 
-    //setModel(omodel_);
     filter_->setSourceModel(omodel_);
     setModel(filter_);
+    setSortingEnabled(true);
 
     modelChanged_();
-
-    setSortingEnabled(true);
 
     connect(omodel_, SIGNAL(modelReset()), SLOT(modelChanged_()));
 }
@@ -139,6 +143,40 @@ bool sortObjectList_TransformFirst(const Object * o1, const Object * o2)
 {
     return o1->isTransformation() && !o2->isTransformation();
 }
+
+
+void ObjectTreeView::createTypeActions_()
+{
+    showTypeMenu_ = new QMenu(tr("Show/hide objects"), this);
+    QAction * a;
+
+#define MO__TYPE_ACTION(type__, typename__) \
+    showTypeMenu_->addAction(a = new QAction(typename__, this)); \
+    a->setData(QVariant((int)(type__))); \
+    a->setCheckable(true); \
+    a->setChecked(true);
+
+    MO__TYPE_ACTION(Object::T_OBJECT, tr("Objects"));
+    MO__TYPE_ACTION(Object::T_CAMERA, tr("Cameras"));
+    MO__TYPE_ACTION(Object::T_MICROPHONE, tr("Microphones"));
+    MO__TYPE_ACTION(Object::T_SOUNDSOURCE, tr("Soundsources"));
+    MO__TYPE_ACTION(Object::T_TRANSFORMATION, tr("Transformations"));
+    MO__TYPE_ACTION(Object::TG_PARAMETER, tr("Parameters"));
+    MO__TYPE_ACTION(Object::T_TRACK, tr("Tracks"));
+    MO__TYPE_ACTION(Object::TG_SEQUENCE | Object::T_SEQUENCEGROUP, tr("Sequences"));
+
+#undef MO__TYPE_ACTION
+
+    connect(showTypeMenu_, &QMenu::triggered, [=]()
+    {
+        int flags = 0;
+        for (auto a : showTypeMenu_->actions())
+            if (a->isChecked())
+                flags |= a->data().toInt();
+        filter_->setObjectTypes(flags);
+    });
+}
+
 
 void ObjectTreeView::createEditActions_(Object * obj)
 {
@@ -436,7 +474,7 @@ void ObjectTreeView::expandObjectOnly_(const QModelIndex & index)
 
 bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
 {
-    MO_DEBUG("ObjectTreeView::addObject_(parent("
+    MO_DEBUG_TREE("ObjectTreeView::addObject_(parent("
              << parent.row() << ", " << parent.column() << "), "
              << row << ", " << obj << ")");
 
@@ -454,18 +492,7 @@ bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
             QModelIndex idx = omodel_->addObject(orgidx, row, obj);
 
             setFocusIndex(filter_->mapFromSource(idx));
-            //omodel_->indexForObject(parentObject, parent2, row2);
-            //QModelIndex idx = omodel_->addObject()
-            /*
-            qDebug() << "parent " << parent;
-            QModelIndex mapped = filter_->mapToSource(parent);
-            qDebug() << "mapped " << mapped;
-            QModelIndex idx = omodel_->addObject(mapped, row, obj);
-            qDebug() << "idx    " << idx;
-            mapped = filter_->mapFromSource(idx);
-            qDebug() << "back   " << mapped;
-            */
-            //setFocusIndex(idx);//model()->index(row, 0, parent));
+
             return true;
         }
         delete obj;

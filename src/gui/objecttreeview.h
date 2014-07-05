@@ -57,7 +57,7 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void currentChanged(const QModelIndex &current, const QModelIndex &previous);
 
-
+    void createTypeActions_();
     void createEditActions_(Object* = 0);
     void createFirstObjectActions_();
     void createClipboardActions_(Object *);
@@ -70,6 +70,8 @@ protected:
 
 
     QList<QAction*> editActions_;
+
+    QMenu * showTypeMenu_;
 
     ObjectTreeModel * omodel_;
     ObjectTreeSortProxy * filter_;

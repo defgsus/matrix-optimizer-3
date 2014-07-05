@@ -113,7 +113,9 @@ public:
     {
         TG_PARAMETER        = T_PARAMETER_FLOAT,
         TG_REAL_OBJECT      = T_OBJECT | T_MICROPHONE | T_SOUNDSOURCE | T_CAMERA,
-        TG_SEQUENCE         = T_SEQUENCE_FLOAT
+        TG_SEQUENCE         = T_SEQUENCE_FLOAT,
+
+        TG_ALL = 0xffffffff
     };
 
 

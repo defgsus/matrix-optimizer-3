@@ -324,7 +324,7 @@ QMimeData * ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
 bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                                    int row, int column, const QModelIndex &parent)
 {
-    MO_DEBUG("ObjectTreeModel::dropMimeData(" << data << ", act(" << action
+    MO_DEBUG_TREE("ObjectTreeModel::dropMimeData(" << data << ", act(" << action
              << "), " << row << ", " << column << ", parent("
              << parent.row() << ", " << parent.column() << "))");
 
@@ -398,7 +398,7 @@ void ObjectTreeModel::deleteObject(const QModelIndex & index)
 
 QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, Object * obj)
 {
-    MO_DEBUG("ObjectTreeModel::addObject_(parent("
+    MO_DEBUG_TREE("ObjectTreeModel::addObject_(parent("
              << parentIndex.row() << ", " << parentIndex.column() << "), "
              << row << ", " << obj << ")");
 

@@ -1,6 +1,6 @@
 /** @file objecttreesortproxy.h
 
-    @brief
+    @brief custom filter and sorted for ObjectTreeModel
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -27,9 +27,14 @@ signals:
 
 public slots:
 
+    void setObjectTypes(int flags);
+
 protected:
 
-    //virtual bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
+    virtual bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
+    virtual bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
+
+    int objectTypes_;
 };
 
 } // namespace MO
