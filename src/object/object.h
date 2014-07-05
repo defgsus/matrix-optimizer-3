@@ -266,7 +266,7 @@ public:
     Object * addObject(Object * object, int insert_index = -1);
 
     /** Returns the correct index to insert as specific object type. */
-    int getInsertIndex(Object * object, int insert_index = -1) const;
+    //int getInsertIndex(Object * object, int insert_index = -1) const;
 
     /** Returns true if an Object of @p type can be a children of this Object. */
     virtual bool canHaveChildren(Type type) const;

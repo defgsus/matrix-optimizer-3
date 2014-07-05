@@ -33,7 +33,6 @@
 #include "gui/sequencefloatview.h"
 #include "gui/sequencer.h"
 #include "model/objecttreemodel.h"
-#include "model/objecttreesortproxy.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
 #include "gl/window.h"
@@ -51,7 +50,7 @@ namespace GUI {
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow     (parent),
     scene_          (0),
-    objectModel_    (0),
+    objectTreeModel_    (0),
     seqFloatView_   (0),
     qobjectView_    (0)
 {
@@ -83,17 +82,11 @@ void MainWindow::createWidgets_()
             lv->addWidget(objectTreeView_);
             objectTreeView_->setMinimumWidth(200);
             objectTreeView_->setMaximumWidth(450);
-
-            objectModel_ = new ObjectTreeModel(0, this);
-
-            auto objectSortModel = new ObjectTreeSortProxy(this);
-            objectSortModel->setSourceModel(objectModel_);
-            //objectSortModel->
-
-            objectTreeView_->setModel(objectSortModel);
-            //objectTreeView_->setModel(objectModel_);
             connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
                     SLOT(setEditActions_(const QObject*,QList<QAction*>)));
+
+            objectTreeModel_ = new ObjectTreeModel(0, this);
+            objectTreeView_->setObjectModel(objectTreeModel_);
 
             // object editor
             objectView_ = new ObjectView(this);
@@ -220,11 +213,14 @@ void MainWindow::createMainMenu_()
         m->addAction(a = new QAction(tr("Create Debug Scene"), m));
         connect(a, SIGNAL(triggered()), SLOT(createDebugScene_()));
 
+        m->addAction(a = new QAction(tr("Reset ObjectTreeModel"), m));
+        connect(a, SIGNAL(triggered()), SLOT(resetTreeModel_()));
 }
 
 void MainWindow::setSceneObject(Scene * s)
 {
     MO_ASSERT(s, "MainWindow::setSceneObject() with NULL scene");
+    MO_ASSERT(s != scene_, "MainWindow::setSceneObject() with same scene");
 
     if (scene_)
         scene_->deleteLater();
@@ -248,8 +244,7 @@ void MainWindow::setSceneObject(Scene * s)
 
     // update widgets
 
-    objectTreeView_->setScene(scene_);
-    objectModel_->setRootObject(scene_);
+    objectTreeModel_->setRootObject(scene_);
     objectView_->setObject(0);
     seqFloatView_->setSequence(0);
 
@@ -273,6 +268,11 @@ void MainWindow::createObjects_()
     {
         MO_WARNING(e.what());
     }
+}
+
+void MainWindow::resetTreeModel_()
+{
+    objectTreeModel_->setRootObject(scene_);
 }
 
 void MainWindow::createDebugScene_()

@@ -51,6 +51,7 @@ private slots:
     void loadScene();
     void newScene();
     void createDebugScene_();
+    void resetTreeModel_();
 
     void setSceneObject(Scene *);
 private:
@@ -60,7 +61,7 @@ private:
     void createObjects_();
 
     Scene * scene_;
-    ObjectTreeModel * objectModel_;
+    ObjectTreeModel * objectTreeModel_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;

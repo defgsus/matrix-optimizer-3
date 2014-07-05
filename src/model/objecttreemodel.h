@@ -38,9 +38,10 @@ public:
     void setRootObject(Object * rootObject);
     Object * rootObject() const { return rootObject_; }
     QModelIndex rootIndex() const;
-private:
-    Object * itemForIndex(const QModelIndex& index) const;
-public:
+    Object * objectForIndex(const QModelIndex& index) const;
+//    void indexForObject(const Object * obj, QModelIndex &parent, int &row) const;
+    QModelIndex indexForObject(const Object * obj) const;
+
     // --- interface impl. ---
 
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
@@ -54,7 +55,6 @@ public:
 
     // -- editing --
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
-    virtual bool insertRows(int row, int count, const QModelIndex &parent);
 
     // -- drag/drop --
     virtual QStringList mimeTypes() const;

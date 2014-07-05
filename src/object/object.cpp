@@ -285,6 +285,7 @@ void Object::setParentObject(Object *parent, int index)
     parentObject_->childrenChanged_();
 }
 
+/*
 int Object::getInsertIndex(Object *object, int insert_index) const
 {
     MO_DEBUG_TREE("Object::getInsertIndex('" << object->idName() << "', " << insert_index << ")");
@@ -310,6 +311,7 @@ int Object::getInsertIndex(Object *object, int insert_index) const
                   : std::min((int)childObjects_.size(), insert_index);
     }
 }
+*/
 
 Object * Object::addObject(Object * o, int index)
 {

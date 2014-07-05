@@ -47,7 +47,7 @@ void ObjectTreeModel::setRootObject(Object *rootObject)
     endResetModel();
 }
 
-Object * ObjectTreeModel::itemForIndex(const QModelIndex &index) const
+Object * ObjectTreeModel::objectForIndex(const QModelIndex &index) const
 {
     if (index.isValid())
     {
@@ -59,6 +59,31 @@ Object * ObjectTreeModel::itemForIndex(const QModelIndex &index) const
     // invalid index means root object (??)
     return rootObject_;
 }
+/*
+void ObjectTreeModel::indexForObject(const Object *obj, QModelIndex& parent, int& row) const
+{
+    if (obj == rootObject_)
+    {
+        parent = QModelIndex();
+        row = -1;
+    }
+
+    parent = createIndex(0, 0, obj->parentObject());
+    row = obj->parentObject()->childObjects().indexOf((Object*)obj);
+}
+*/
+QModelIndex ObjectTreeModel::indexForObject(const Object *obj) const
+{
+    if (obj == rootObject_)
+    {
+        return QModelIndex();//createIndex(-1,-1,(void*)rootObject_);
+    }
+
+    const Object * parent = obj->parentObject();
+    const int idx = parent->childObjects().indexOf((Object*)obj);
+    return createIndex(idx, 0, (void*)obj);
+}
+
 
 QModelIndex ObjectTreeModel::rootIndex() const
 {
@@ -75,7 +100,7 @@ QModelIndex ObjectTreeModel::index(int row, int column, const QModelIndex &paren
             )
         return QModelIndex();
 
-    Object * obj = itemForIndex(parent);
+    Object * obj = objectForIndex(parent);
     MO_ASSERT(obj, "no object for index <"<<parent.row()<<","<<parent.column()<<">");
 
     if (row < obj->childObjects().size())
@@ -92,7 +117,7 @@ QModelIndex ObjectTreeModel::parent(const QModelIndex &child) const
     if (!child.isValid() || !rootObject_)
         return QModelIndex();
 
-    if (Object * obj = itemForIndex(child))
+    if (Object * obj = objectForIndex(child))
     {
 
         // find parent object
@@ -118,7 +143,7 @@ int ObjectTreeModel::rowCount(const QModelIndex &parent) const
     if (!rootObject_)
         return 0;
 
-    if (Object * obj = itemForIndex(parent))
+    if (Object * obj = objectForIndex(parent))
         return obj->childObjects().size();
 
     return 0;
@@ -137,7 +162,7 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
             || index.column() >= headerNames_.size())
         return QVariant();
 
-    if (Object * obj = itemForIndex(index))
+    if (Object * obj = objectForIndex(index))
     {
         // return text
         if (role == Qt::DisplayRole || role == Qt::EditRole)
@@ -238,9 +263,9 @@ bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, i
             || index.column() >= headerNames_.size())
         return false;
 
-    if (Object * obj = itemForIndex(index))
+    if (Object * obj = objectForIndex(index))
     {
-        // return text
+        // set name
         if (role == Qt::EditRole && index.column() == 0)
         {
             obj->setName(value.toString());
@@ -251,12 +276,6 @@ bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, i
     return false;
 }
 
-bool ObjectTreeModel::insertRows(int row, int count, const QModelIndex &parent)
-{
-    beginInsertRows(parent, row, row + count);
-    endInsertRows();
-    return true;
-}
 
 // ---------------------------- DRAG/DROP ---------------------------------
 
@@ -288,7 +307,7 @@ QMimeData * ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
     if (indexes.count() != 1)
         return 0;
 
-    if (Object * obj = itemForIndex(indexes.at(0)))
+    if (Object * obj = objectForIndex(indexes.at(0)))
     {
         if (obj->isParameter())
             return 0;
@@ -305,7 +324,9 @@ QMimeData * ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
 bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                                    int row, int column, const QModelIndex &parent)
 {
-    //qDebug() << "index " << action << row << column << parent.row() << parent.column();
+    MO_DEBUG("ObjectTreeModel::dropMimeData(" << data << ", act(" << action
+             << "), " << row << ", " << column << ", parent("
+             << parent.row() << ", " << parent.column() << "))");
 
     if (action == Qt::IgnoreAction)
         return true;
@@ -315,11 +336,11 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
         return false;
 
     if (auto objdata = qobject_cast<const ObjectTreeMimeData*>(data))
-    if (Object * obj = itemForIndex(parent))
+    if (Object * obj = objectForIndex(parent))
     {
         if (row == -1)
             row = parent.isValid() ? parent.row()
-                                   : rootObject_->childObjects().count();
+                                   : rootObject_->numChildren();
 
         // deserialize object
         Object * copy = objdata->getObjectTree();
@@ -328,7 +349,7 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
         if (copy)
         {
             // rearrange if necessary
-            row = obj->getInsertIndex(copy, row);
+            //row = obj->getInsertIndex(copy, row);
 
             // delete previous tree
             if (action == Qt::MoveAction)
@@ -336,7 +357,7 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                 const QModelIndex& fromIndex = objdata->getModelIndex();
                 const QModelIndex fromParentIndex =
                                     ObjectTreeModel::parent(fromIndex);
-                if (Object * fromObj = itemForIndex(fromIndex))
+                if (Object * fromObj = objectForIndex(fromIndex))
                 {
                     //if (Object * newp = itemForIndex(parent))
                     beginMoveColumns(fromParentIndex,
@@ -367,24 +388,28 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 void ObjectTreeModel::deleteObject(const QModelIndex & index)
 {
     auto parentIndex = parent(index);
-    if (auto parentObject = itemForIndex(parentIndex))
+    if (auto parentObject = objectForIndex(parentIndex))
     {
         beginRemoveRows(parentIndex, index.row(), index.row());
-        parentObject->deleteObject(itemForIndex(index));
+        parentObject->deleteObject(objectForIndex(index));
         endRemoveRows();
     }
 }
 
 QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, Object * obj)
 {
-    if (Object * parentObject = itemForIndex(parentIndex))
+    MO_DEBUG("ObjectTreeModel::addObject_(parent("
+             << parentIndex.row() << ", " << parentIndex.column() << "), "
+             << row << ", " << obj << ")");
+
+    if (Object * parentObject = objectForIndex(parentIndex))
     {
         // adjust index
         if (row<0)
-            row = 1000000;
-        row = parentObject->getInsertIndex(obj, row);
+            row = parentObject->numChildren();
+        //row = parentObject->getInsertIndex(obj, row);
 
-        beginInsertRows(parentIndex, row+1, row+1);
+        beginInsertRows(parentIndex, row, row);
         parentObject->addObject(obj, row);
         endInsertRows();
 

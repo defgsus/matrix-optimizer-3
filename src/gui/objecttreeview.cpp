@@ -19,20 +19,22 @@
 #include "objecttreeview.h"
 #include "model/objecttreemodel.h"
 #include "model/objecttreemimedata.h"
+#include "model/objecttreesortproxy.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
 #include "object/parameterfloat.h"
 #include "io/application.h"
 #include "io/error.h"
-
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
 
 
 ObjectTreeView::ObjectTreeView(QWidget *parent) :
-    QTreeView(parent)
+    QTreeView   (parent),
+    filter_     (new ObjectTreeSortProxy(this))
 {
 #ifdef MO_DISABLE_OBJECT_TREE_DRAG
     setDragDropMode(NoDragDrop);
@@ -63,8 +65,38 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
     a->setShortcut(Qt::ALT + Qt::Key_C);
     connect(a, SIGNAL(triggered()), SLOT(collapseAll()));
 
+    a = new QAction(tr("RESET MODEL"), this);
+    addAction(a);
+    connect(a, &QAction::triggered, [=]()
+    {
+        QAbstractItemModel * m(model());
+        setModel(0);
+        setModel(m);
+    });
+
     createEditActions_();
 }
+
+void ObjectTreeView::setObjectModel(ObjectTreeModel *objectModel)
+{
+    omodel_ = objectModel;
+
+    //setModel(omodel_);
+    filter_->setSourceModel(omodel_);
+    setModel(filter_);
+
+    modelChanged_();
+
+    setSortingEnabled(true);
+
+    connect(omodel_, SIGNAL(modelReset()), SLOT(modelChanged_()));
+}
+
+void ObjectTreeView::modelChanged_()
+{
+    scene_ = qobject_cast<Scene*>(omodel_->rootObject());
+}
+
 
 void ObjectTreeView::currentChanged(
         const QModelIndex &current, const QModelIndex &/*previous*/)
@@ -121,15 +153,15 @@ void ObjectTreeView::createEditActions_(Object * obj)
 
     editActions_.clear();
 
-    if (!model())
+    if (!model() || !scene_)
         return;
 
-    MO_ASSERT(scene_, "No Scene object given for ObjectTreeView with model");
+    //MO_ASSERT(scene_, "No Scene object given for ObjectTreeView with model");
 
     QAction * a;
 
     // object selected?
-    if (currentIndex().column() == 0 && obj)
+    if (currentIndex().row()>=0 && obj)
     {
         int numChilds = obj->numChildren(true);
 
@@ -173,7 +205,7 @@ void ObjectTreeView::createFirstObjectActions_()
     QAction * a;
 
     // new object below scene
-    //QModelIndex sceneIndex = model()->index(0,0,QModelIndex());
+    QModelIndex sceneIndex = model()->index(0,0,QModelIndex());
 
     QList<const Object*> plist(ObjectFactory::possibleChildObjects(scene_));
 
@@ -183,7 +215,7 @@ void ObjectTreeView::createFirstObjectActions_()
         // make transformations first
         qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
 
-        editActions_.append(a = new QAction(tr("New object"), this));
+        editActions_.append(a = new QAction(tr("New first object"), this));
         QMenu * menu = new QMenu(this);
         a->setMenu(menu);
         bool addSep = true;
@@ -198,9 +230,9 @@ void ObjectTreeView::createFirstObjectActions_()
             connect(a, &QAction::triggered, [=]()
             {
                 Object * newo = ObjectFactory::createObject(o->className());
-                //if (addObject_(sceneIndex, 0, newo))
+                addObject_(sceneIndex, scene_->numChildren(), newo);
                     // XXX hack because of lacking update
-                //    expandAll();
+                    //expandAll();
             });
         }
     }
@@ -404,6 +436,10 @@ void ObjectTreeView::expandObjectOnly_(const QModelIndex & index)
 
 bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
 {
+    MO_DEBUG("ObjectTreeView::addObject_(parent("
+             << parent.row() << ", " << parent.column() << "), "
+             << row << ", " << obj << ")");
+
     //if (parent.isValid())
     {
         Object * parentObject = model()->data(parent, ObjectRole).value<Object*>();
@@ -414,14 +450,22 @@ bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
             if (row < 0)
                 row = parentObject->numChildren();
 
-            parentObject->addObject(obj, row);
+            QModelIndex orgidx = omodel_->indexForObject(parentObject);
+            QModelIndex idx = omodel_->addObject(orgidx, row, obj);
 
-            if (!model()->insertRow(row, parent))
-                MO_WARNING("couldn't insert at " << row);
-
-            //model()->endInsertRows();
-
-            setFocusIndex(model()->index(row, 0, parent));
+            setFocusIndex(filter_->mapFromSource(idx));
+            //omodel_->indexForObject(parentObject, parent2, row2);
+            //QModelIndex idx = omodel_->addObject()
+            /*
+            qDebug() << "parent " << parent;
+            QModelIndex mapped = filter_->mapToSource(parent);
+            qDebug() << "mapped " << mapped;
+            QModelIndex idx = omodel_->addObject(mapped, row, obj);
+            qDebug() << "idx    " << idx;
+            mapped = filter_->mapFromSource(idx);
+            qDebug() << "back   " << mapped;
+            */
+            //setFocusIndex(idx);//model()->index(row, 0, parent));
             return true;
         }
         delete obj;

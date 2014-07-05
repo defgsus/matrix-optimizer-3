@@ -18,6 +18,8 @@ class QMenu;
 namespace MO {
 class Object;
 class Scene;
+class ObjectTreeModel;
+class ObjectTreeSortProxy;
 namespace GUI {
 
 
@@ -27,7 +29,7 @@ class ObjectTreeView : public QTreeView
 public:
     explicit ObjectTreeView(QWidget *parent = 0);
 
-    void setScene(Scene * scene) { scene_ = scene; }
+    void setObjectModel(ObjectTreeModel * objectModel);
 
 signals:
 
@@ -43,7 +45,14 @@ public slots:
     void expandObjectsOnly();
 
     void setFocusIndex(const QModelIndex&);
+
+protected slots:
+
+    void modelChanged_();
+
 protected:
+
+    void setModel(QAbstractItemModel * m) { QTreeView::setModel(m); }
 
     void mousePressEvent(QMouseEvent *);
     void currentChanged(const QModelIndex &current, const QModelIndex &previous);
@@ -62,6 +71,8 @@ protected:
 
     QList<QAction*> editActions_;
 
+    ObjectTreeModel * omodel_;
+    ObjectTreeSortProxy * filter_;
     Scene * scene_;
 };
 
