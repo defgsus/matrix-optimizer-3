@@ -409,7 +409,9 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
         for (int i=0; i<selectedWidgets_.size(); ++i)
         {
             Double newstart = std::max((Double)0, dragStartTimes_[i] + deltaTime);
-            selectedWidgets_[i]->sequence()->setStart(newstart);
+            Sequence * seq = selectedWidgets_[i]->sequence();
+            ScopedSequenceChange lock(scene_, seq);
+            seq->setStart(newstart);
         }
 
         autoScrollView_(e->pos());
@@ -596,6 +598,7 @@ void TrackView::createEditActions_()
         {
             nextFocusSequence_ =
                 scene_->createFloatSequence(selTrack_, currentTime_);
+            emit sequenceSelected(nextFocusSequence_);
             updateTrack(selTrack_);
         });
     }

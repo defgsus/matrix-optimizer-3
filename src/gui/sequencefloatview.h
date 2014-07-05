@@ -19,6 +19,7 @@ namespace GUI {
 
 class Timeline1DView;
 class GeneralSequenceFloatView;
+class EquationEditor;
 
 class SequenceFloatView : public SequenceView
 {
@@ -58,6 +59,7 @@ private:
 
     QWidget * wOscMode_, * wFreq_, * wPhase_, * wPW_,
             * wEqu_;
+    EquationEditor * wEquEdit_;
 };
 
 

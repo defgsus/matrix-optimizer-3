@@ -40,6 +40,8 @@ public:
 
     const Sequence * sequence() const { return sequence_; }
 
+    QRect playBarRect(const QRect& widget) const;
+
     // -------------- setter ----------------
 
     void setSequence(const Sequence * s) { sequence_ = s; }

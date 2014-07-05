@@ -48,12 +48,10 @@ SequenceView::SequenceView(QWidget *parent) :
     // set ruler properties
 
     rulerX_->setFixedHeight(34);
-    rulerX_->setOptions(Ruler::O_DragX | Ruler::O_DrawX | Ruler::O_DrawTextX | Ruler::O_ZoomX);
+    rulerX_->setOptions(Ruler::O_EnableAllX);
 
     rulerY_->setFixedWidth(60);
-    rulerY_->setOptions(Ruler::O_DragY | Ruler::O_DrawY | Ruler::O_DrawTextY | Ruler::O_ZoomY);
-
-    //timelineView_->setGridOptions(Ruler::O_DrawX | Ruler::O_DrawY);
+    rulerY_->setOptions(Ruler::O_EnableAllY);
 
     // connect rulers to class
 
@@ -289,7 +287,8 @@ void SequenceView::createDefaultSettingsWidgets_()
     MO__SCENE_PARAM_CB(cbLooping_, looping, setLooping, tr("looping"));
     MO__SCENE_PARAM(spinLoopStart_, loopStart, setLoopStart, 0, tr("loop start"));
     wLoopStart_ = w;
-    MO__SCENE_PARAM(spinLoopLength_, loopLength, setLoopLength, Sequence::minimumLength(), tr("loop length"));
+    MO__SCENE_PARAM(spinLoopLength_, loopLength, setLoopLength,
+                    Sequence::minimumLength(), tr("loop length"));
     wLoopLength_ = w;
     MO__SCENE_PARAM(spinLoopEnd_, loopEnd, setLoopEnd, 0, tr("loop end"));
     wLoopEnd_ = w;

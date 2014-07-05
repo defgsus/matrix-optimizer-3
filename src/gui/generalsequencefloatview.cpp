@@ -26,7 +26,8 @@ namespace {
     {
     public:
         const SequenceFloat * sequence;
-        Double value(Double time) const { return sequence->value(time); }
+        Double value(Double time) const
+            { return sequence->value(sequence->start() + time); }
     };
 }
 

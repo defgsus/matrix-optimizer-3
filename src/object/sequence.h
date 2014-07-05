@@ -103,7 +103,7 @@ public:
           if (send_signal) emit timeChanged(this); }
 
     /** Translates global time to sequence-local time */
-    Double getSequenceTime(Double time) const;
+    Double getSequenceTime(Double global_time) const;
 
 signals:
 
@@ -131,9 +131,9 @@ inline Double Sequence::getSequenceTime(Double time) const
 {
     time = (time - start_) * speed_ + timeOffset_;
 
-    if (looping_ && time > loopStart_)
+    if (looping_ && time > loopStart_ + loopLength_)
 
-        return loopStart_ + MATH::moduloSigned(time - loopStart_, loopLength_);
+        return MATH::moduloSigned(time - loopStart_, loopLength_);
 
     else
 

@@ -90,7 +90,9 @@ SOURCES += \
     src/gui/widget/sequencewidget.cpp \
     src/gui/trackheader.cpp \
     src/gui/widget/trackheaderwidget.cpp \
-    src/gui/widget/doublespinbox.cpp
+    src/gui/widget/doublespinbox.cpp \
+    src/gui/widget/equationeditor.cpp \
+    src/tool/syntaxhighlighter.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -172,7 +174,9 @@ HEADERS += \
     src/gui/widget/sequencewidget.h \
     src/gui/trackheader.h \
     src/gui/widget/trackheaderwidget.h \
-    src/gui/widget/doublespinbox.h
+    src/gui/widget/doublespinbox.h \
+    src/gui/widget/equationeditor.h \
+    src/tool/syntaxhighlighter.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

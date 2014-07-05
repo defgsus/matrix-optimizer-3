@@ -138,7 +138,7 @@ void SequenceFloat::setMode(SequenceType m)
 void SequenceFloat::setEquationText(const QString & t)
 {
     MO_ASSERT(equation_, "setEquationText without equation");
-    if (!equation_->parse(t.toStdString().c_str()))
+    if (!equation_->parse(t.toStdString()))
         MO_WARNING("parsing failed");
 }
 

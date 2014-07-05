@@ -11,7 +11,6 @@
 #include <QComboBox>
 #include <QLayout>
 #include <QLabel>
-#include <QPlainTextEdit>
 
 #include "sequencefloatview.h"
 #include "timeline1dview.h"
@@ -23,6 +22,8 @@
 #include "generalsequencefloatview.h"
 #include "math/waveform.h"
 #include "widget/doublespinbox.h"
+#include "widget/equationeditor.h"
+
 
 namespace MO {
 namespace GUI {
@@ -247,10 +248,11 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // equation
     w = wEqu_ = newSetting(tr("equation"));
-    auto text = new QPlainTextEdit(this);
+    auto text = wEquEdit_ = new EquationEditor(this);
     w->layout()->addWidget(text);
     text->setPlainText(sequence_->equationText());
-    connect(text, &QPlainTextEdit::textChanged,
+    text->setParser(sequence_->equation());
+    connect(text, &EquationEditor::equationChanged,
     [this, scene, text]()
     {
         {
@@ -280,6 +282,8 @@ void SequenceFloatView::updateWidgets_()
     wPhase_->setVisible(isOsc || isEqu);
     wPW_->setVisible(isPW);
     wEqu_->setVisible(isEqu);
+    if (wEquEdit_->assignedParser() != sequence_->equation())
+        wEquEdit_->setParser(sequence_->equation());
 
     squeezeView_();
 }

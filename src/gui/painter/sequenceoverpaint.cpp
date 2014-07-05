@@ -12,7 +12,7 @@
 
 #include "sequenceoverpaint.h"
 #include "object/sequence.h"
-
+#include "object/scene.h"
 
 namespace MO {
 namespace GUI {
@@ -26,6 +26,16 @@ SequenceOverpaint::SequenceOverpaint(QObject *parent) :
     brushOutside_ = QBrush(QColor(0,0,0,150));
 }
 
+QRect SequenceOverpaint::playBarRect(const QRect& widget) const
+{
+    if (const Scene * scene = sequence_->sceneObject())
+    {
+        int x = viewspace_.mapXFrom(scene->sceneTime()) * widget.width();
+        return QRect(x,0,x,widget.height());
+    }
+    return QRect();
+}
+
 void SequenceOverpaint::paint(QPainter & p)
 {
     paint(p, p.window());
@@ -33,13 +43,12 @@ void SequenceOverpaint::paint(QPainter & p)
 
 void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
 {
-    // -- outside --
-
     if (sequence_)
     {
-        int left = viewspace_.mapXFrom(sequence_->timeOffset()) * p.window().width(),
-            right = viewspace_.mapXFrom(sequence_->timeOffset()
-                                        + sequence_->length()) * p.window().width();
+        // -- outside --
+
+        int left = viewspace_.mapXFrom(0.0) * p.window().width(),
+            right = viewspace_.mapXFrom(sequence_->length()) * p.window().width();
 
         if (left > rect.left() || right < rect.right())
         {
@@ -53,6 +62,15 @@ void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
             if (right < rect.right())
                 p.drawRect(right, rect.top(),
                            rect.right() - right, rect.height());
+        }
+
+        // -- playbar --
+
+        if (const Scene * scene = sequence_->sceneObject())
+        {
+            int x = viewspace_.mapXFrom(scene->sceneTime()) * p.window().width();
+            p.setPen(QColor(100,255,100,100));
+            p.drawLine(x, rect.top(), x, rect.bottom());
         }
     }
 }

@@ -97,6 +97,8 @@ namespace PPP_NAMESPACE {
 		const Variable * variable(const std::string& name) const;
 
 		void clear() { map_.clear(); }
+
+        std::vector<std::string> variableNames() const;
 	};
 
 
@@ -142,6 +144,8 @@ namespace PPP_NAMESPACE {
 
 		public:
 
+        void clear() { map_.clear(); }
+
 		/** add a function */
 		bool add(Function::Type type, int num_param, const std::string& name, FuncPtr func_ptr);
 
@@ -168,7 +172,8 @@ namespace PPP_NAMESPACE {
 		/** check if there exists a function that matches the given number of parameters. */
 		bool match_params(const std::string& name, int num_params) const;
 
-		void clear() { map_.clear(); }
+        std::vector<std::string> functionNames() const;
+
 	};
 
 
@@ -204,7 +209,7 @@ namespace PPP_NAMESPACE {
 		/** returns true when ready to eval() */
 		bool ok() const { return ok_; }
 
-		bool parse(const char * str);
+        bool parse(const std::string &str);
 
 		/** (re-)calculate and return result */
 		Float eval();

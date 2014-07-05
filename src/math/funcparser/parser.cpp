@@ -1,3 +1,5 @@
+#include <set>
+
 #include "parser.h"
 
 #include "grammar.parser.cc"
@@ -112,9 +114,31 @@ const Variable * Variables::variable(const std::string& name) const
 	return (i == map_.end())? 0 : &(i->second);
 }
 
+std::vector<std::string> Variables::variableNames() const
+{
+    std::vector<std::string> vec;
+    for (auto &i : map_)
+        vec.push_back(i.second.name());
+
+    return vec;
+}
+
 
 
 // -------------------------- Functions ----------------------------
+
+std::vector<std::string> Functions::functionNames() const
+{
+    std::set<std::string> set;
+    for (auto &i : map_)
+        set.insert(i.second.name());
+
+    std::vector<std::string> vec;
+    for (auto &i : set)
+        vec.push_back(i);
+
+    return vec;
+}
 
 bool Functions::add(Function::Type type, int num_param, const std::string& name, FuncPtr func_ptr)
 {
@@ -208,6 +232,7 @@ bool Functions::match_params(const std::string& name, int num_params) const
 
 struct Parser::Detail
 {
+    std::string str;
 	/* YYPARSE_PARAM */
 	ParseParam param;
 };
@@ -236,11 +261,12 @@ Parser::~Parser()
 
 
 
-bool Parser::parse(const char * str)
+bool Parser::parse(const std::string& str)
 {
+    d_->str = str;
 	d_->param.prog->clear();
 
-	d_->param.inp = str;
+    d_->param.inp = d_->str.c_str();
 	d_->param.inp_pos = 0;
 	d_->param.vars = &var_;
 	d_->param.funcs = &funcs_;
