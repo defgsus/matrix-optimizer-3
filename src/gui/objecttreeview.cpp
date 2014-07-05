@@ -64,19 +64,19 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
     connect(a, SIGNAL(triggered()), SLOT(collapseAll()));
 
     createEditActions_();
+}
 
-    // --- on item selection ---
+void ObjectTreeView::currentChanged(
+        const QModelIndex &current, const QModelIndex &/*previous*/)
+{
+    Object * obj = model()->data(current, ObjectRole).value<Object*>();
 
-    // TODO need keyboard item change as well
-    connect(this, &QTreeView::pressed, [this]()
-    {
-        Object * obj = model()->data(currentIndex(), ObjectRole).value<Object*>();
-        createEditActions_(obj);
-        if (obj)
-        {
-            emit objectSelected(obj);
-        }
-    });
+    // create actions with or without object
+    createEditActions_(obj);
+
+    // notify mainwindow
+    if (obj)
+        emit objectSelected(obj);
 }
 
 
@@ -96,7 +96,6 @@ void ObjectTreeView::mousePressEvent(QMouseEvent * e)
         // on empty scene
         if (model()->rowCount() == 0)
             createEditActions_();
-        qDebug() << "mp " << editActions_;
 
         popup->addActions(editActions_);
         if (!popup->isEmpty())
@@ -142,176 +141,12 @@ void ObjectTreeView::createEditActions_(Object * obj)
         QFont font; font.setBold(true);
         a->setFont(font);
 
-
-        // copy
-        editActions_.append(a = new QAction(tr("Copy"), this));
-        connect(a, &QAction::triggered, [=]()
-        {
-            application->clipboard()->setMimeData(
-                        model()->mimeData(QModelIndexList() << currentIndex()));
-        });
-
-        if (obj->canBeDeleted())
-        {
-            // cut
-            editActions_.append(a = new QAction(tr("Cut"), this));
-            connect(a, &QAction::triggered, [=]()
-            {
-                application->clipboard()->setMimeData(
-                            model()->mimeData(QModelIndexList() << currentIndex()));
-                // YYY omodel->deleteObject(currentIndex());
-                emit objectSelected(0);
-            });
-
-            // delete
-            editActions_.append(a = new QAction(tr("Delete"), this));
-            connect(a, &QAction::triggered, [=]()
-            {
-                // YYY omodel->deleteObject(currentIndex());
-                emit objectSelected(0);
-            });
-        }
-
-        Object * parentObj = obj->parentObject();
-
-        // paste
-        if (application->clipboard()->mimeData()->formats().contains(
-                    ObjectTreeMimeData::mimeType()))
-        {
-            Object::Type pasteType = static_cast<const ObjectTreeMimeData*>(
-                        application->clipboard()->mimeData())->getObjectType();
-
-            if (parentObj)
-            {
-                // paste before
-                editActions_.append(a = new QAction(tr("Paste before object"), this));
-                a->setEnabled(parentObj->canHaveChildren(pasteType));
-                connect(a, &QAction::triggered, [=]()
-                {
-                    model()->dropMimeData(
-                        application->clipboard()->mimeData(), Qt::CopyAction,
-                        currentIndex().row(), 0,
-                        model()->parent(currentIndex()));
-                });
-
-                // paste after
-                editActions_.append(a = new QAction(tr("Paste after object"), this));
-                a->setEnabled(parentObj->canHaveChildren(pasteType));
-                connect(a, &QAction::triggered, [=]()
-                {
-                    model()->dropMimeData(
-                        application->clipboard()->mimeData(), Qt::CopyAction,
-                        currentIndex().row()+1, 0,
-                        model()->parent(currentIndex()));
-                });
-            }
-
-            // paste as child
-            editActions_.append(a = new QAction(tr("Paste as children"), this));
-            a->setEnabled(obj->canHaveChildren(pasteType));
-            connect(a, &QAction::triggered, [=]()
-            {
-                model()->dropMimeData(
-                    application->clipboard()->mimeData(), Qt::CopyAction,
-                    1000000 /* append */, 0,
-                    currentIndex());
-            });
-        }
+        createClipboardActions_(obj);
 
         editActions_.append(a = new QAction(this));
         a->setSeparator(true);
 
-        // new sibling
-        if (parentObj)
-        {
-            QList<const Object*>
-                    plist(ObjectFactory::possibleChildObjects(parentObj));
-            if (!plist.isEmpty())
-            {
-                // make transformations first
-                qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
-
-                QModelIndex parentIndex = model()->parent(currentIndex());
-
-                editActions_.append(a = new QAction(tr("New object"), this));
-                QMenu * menu = new QMenu(this);
-                a->setMenu(menu);
-                bool addSep = true;
-                for (auto o : plist)
-                {
-                    if (addSep && !o->isTransformation())
-                    {
-                        menu->addSeparator();
-                        addSep = false;
-                    }
-                    menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
-                    connect(a, &QAction::triggered, [=]()
-                    {
-                        Object * newo = ObjectFactory::createObject(o->className());
-                        /* YYY QModelIndex idx = model->addObject(parentIndex, currentIndex().row()+1, newo);
-                        if (!idx.isValid())
-                            delete newo;
-                        else
-                            setFocusIndex(idx);
-                            */
-                    });
-                }
-            }
-        }
-
-        // new children
-        QList<const Object*>
-                clist(ObjectFactory::possibleChildObjects(obj));
-        if (!clist.isEmpty())
-        {
-            // make transformations first
-            qStableSort(clist.begin(), clist.end(), sortObjectList_TransformFirst);
-
-            editActions_.append(a = new QAction(tr("New child object"), this));
-            QMenu * menu = new QMenu(this);
-            a->setMenu(menu);
-            bool addSep = true;
-            for (auto o : clist)
-            {
-                if (addSep && !o->isTransformation())
-                {
-                    menu->addSeparator();
-                    addSep = false;
-                }
-                menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
-                connect(a, &QAction::triggered, [=]()
-                {
-                    Object * newo = ObjectFactory::createObject(o->className());
-                    /* YYY QModelIndex idx = omodel->addObject(currentIndex(), -1, newo);
-                    if (!idx.isValid())
-                        delete newo;
-                    else
-                        setFocusIndex(idx);
-                    */
-                });
-            }
-        }
-
-        if (obj->type() == Object::T_PARAMETER_FLOAT)
-        {
-            editActions_.append(a = new QAction(this));
-            a->setSeparator(true);
-
-            editActions_.append(a = new QAction(tr("Add modulation"), this));
-            connect(a, &QAction::triggered, [=]()
-            {
-                Object * seq = ObjectFactory::createObject("SequenceFloat");
-                /* YYY QModelIndex idx = omodel->addObject(currentIndex(), -1, seq);
-                if (!idx.isValid())
-                    delete seq;
-                else
-                {
-                    setFocusIndex(idx);
-                    static_cast<ParameterFloat*>(obj)->addModulator(seq->idName());
-                }
-                */
-            });
-        }
+        createNewObjectActions_(obj);
 
         editActions_.append(a = new QAction(this));
         a->setSeparator(true);
@@ -363,14 +198,171 @@ void ObjectTreeView::createFirstObjectActions_()
             connect(a, &QAction::triggered, [=]()
             {
                 Object * newo = ObjectFactory::createObject(o->className());
-                /* YYY QModelIndex idx = omodel->addObject(sceneIndex, 0, newo);
-                if (!idx.isValid())
-                    delete newo;
-                // XXX hack because of lacking update
-                else { expandAll(); setFocusIndex(idx); }
-                */
+                //if (addObject_(sceneIndex, 0, newo))
+                    // XXX hack because of lacking update
+                //    expandAll();
             });
         }
+    }
+}
+
+void ObjectTreeView::createClipboardActions_(Object * obj)
+{
+    QAction * a;
+
+    // copy
+    editActions_.append(a = new QAction(tr("Copy"), this));
+    connect(a, &QAction::triggered, [=]()
+    {
+        application->clipboard()->setMimeData(
+                    model()->mimeData(QModelIndexList() << currentIndex()));
+    });
+
+    if (obj->canBeDeleted())
+    {
+        // cut
+        editActions_.append(a = new QAction(tr("Cut"), this));
+        connect(a, &QAction::triggered, [=]()
+        {
+            application->clipboard()->setMimeData(
+                        model()->mimeData(QModelIndexList() << currentIndex()));
+            // YYY omodel->deleteObject(currentIndex());
+            emit objectSelected(0);
+        });
+
+        // delete
+        editActions_.append(a = new QAction(tr("Delete"), this));
+        connect(a, &QAction::triggered, [=]()
+        {
+            // YYY omodel->deleteObject(currentIndex());
+            emit objectSelected(0);
+        });
+    }
+
+    Object * parentObj = obj->parentObject();
+
+    // paste
+    if (application->clipboard()->mimeData()->formats().contains(
+                ObjectTreeMimeData::mimeType()))
+    {
+        Object::Type pasteType = static_cast<const ObjectTreeMimeData*>(
+                    application->clipboard()->mimeData())->getObjectType();
+
+        if (parentObj)
+        {
+            // paste before
+            editActions_.append(a = new QAction(tr("Paste before object"), this));
+            a->setEnabled(parentObj->canHaveChildren(pasteType));
+            connect(a, &QAction::triggered, [=]()
+            {
+                model()->dropMimeData(
+                    application->clipboard()->mimeData(), Qt::CopyAction,
+                    currentIndex().row(), 0,
+                    model()->parent(currentIndex()));
+            });
+
+            // paste after
+            editActions_.append(a = new QAction(tr("Paste after object"), this));
+            a->setEnabled(parentObj->canHaveChildren(pasteType));
+            connect(a, &QAction::triggered, [=]()
+            {
+                model()->dropMimeData(
+                    application->clipboard()->mimeData(), Qt::CopyAction,
+                    currentIndex().row()+1, 0,
+                    model()->parent(currentIndex()));
+            });
+        }
+
+        // paste as child
+        editActions_.append(a = new QAction(tr("Paste as children"), this));
+        a->setEnabled(obj->canHaveChildren(pasteType));
+        connect(a, &QAction::triggered, [=]()
+        {
+            model()->dropMimeData(
+                application->clipboard()->mimeData(), Qt::CopyAction,
+                obj->numChildren() /* append */, 0,
+                currentIndex());
+        });
+    }
+}
+
+void ObjectTreeView::createNewObjectActions_(Object * obj)
+{
+    QAction * a;
+
+    Object * parentObj = obj->parentObject();
+
+    // new sibling
+    if (parentObj)
+    {
+        QList<const Object*> plist(ObjectFactory::possibleChildObjects(parentObj));
+        if (!plist.isEmpty())
+        {
+            // make transformations first
+            qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
+
+            QModelIndex parentIndex = model()->parent(currentIndex());
+
+            editActions_.append(a = new QAction(tr("New object"), this));
+            QMenu * menu = new QMenu(this);
+            a->setMenu(menu);
+            bool addSep = true;
+            for (auto o : plist)
+            {
+                if (addSep && !o->isTransformation())
+                {
+                    menu->addSeparator();
+                    addSep = false;
+                }
+                menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
+                connect(a, &QAction::triggered, [=]()
+                {
+                    Object * newo = ObjectFactory::createObject(o->className());
+                    addObject_(parentIndex, currentIndex().row()+1, newo);
+                });
+            }
+        }
+    }
+
+    // new children
+    QList<const Object*> clist(ObjectFactory::possibleChildObjects(obj));
+    if (!clist.isEmpty())
+    {
+        // make transformations first
+        qStableSort(clist.begin(), clist.end(), sortObjectList_TransformFirst);
+
+        editActions_.append(a = new QAction(tr("New child object"), this));
+        QMenu * menu = new QMenu(this);
+        a->setMenu(menu);
+        bool addSep = true;
+        for (auto o : clist)
+        {
+            if (addSep && !o->isTransformation())
+            {
+                menu->addSeparator();
+                addSep = false;
+            }
+            menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
+            connect(a, &QAction::triggered, [=]()
+            {
+                Object * newo = ObjectFactory::createObject(o->className());
+                addObject_(currentIndex(), -1, newo);
+            });
+        }
+    }
+
+    if (obj->type() == Object::T_PARAMETER_FLOAT)
+    {
+        editActions_.append(a = new QAction(this));
+        a->setSeparator(true);
+
+        editActions_.append(a = new QAction(tr("Add modulation"), this));
+        connect(a, &QAction::triggered, [=]()
+        {
+            Object * seq = ObjectFactory::createObject("SequenceFloat");
+            if (addObject_(currentIndex(), -1, seq))
+                static_cast<ParameterFloat*>(obj)->addModulator(seq->idName());
+        });
     }
 }
 
@@ -407,6 +399,38 @@ void ObjectTreeView::expandObjectOnly_(const QModelIndex & index)
             expandObjectOnly_(model()->index(i, 0, index));
         }
     }
+}
+
+
+bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
+{
+    //if (parent.isValid())
+    {
+        Object * parentObject = model()->data(parent, ObjectRole).value<Object*>();
+        if (!parentObject)
+            parentObject = scene_;
+        if (parentObject)
+        {
+            if (row < 0)
+                row = parentObject->numChildren();
+
+            parentObject->addObject(obj, row);
+
+            if (!model()->insertRow(row, parent))
+                MO_WARNING("couldn't insert at " << row);
+
+            //model()->endInsertRows();
+
+            setFocusIndex(model()->index(row, 0, parent));
+            return true;
+        }
+        delete obj;
+
+        MO_ASSERT(false, "modelindex has no assigned object");
+    }
+    MO_ASSERT(false, "can't add object to invalid index");
+
+    return false;
 }
 
 

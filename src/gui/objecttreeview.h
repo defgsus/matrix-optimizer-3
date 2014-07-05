@@ -46,11 +46,20 @@ public slots:
 protected:
 
     void mousePressEvent(QMouseEvent *);
+    void currentChanged(const QModelIndex &current, const QModelIndex &previous);
+
 
     void createEditActions_(Object* = 0);
     void createFirstObjectActions_();
+    void createClipboardActions_(Object *);
+    void createNewObjectActions_(Object *);
 
     void expandObjectOnly_(const QModelIndex& );
+
+    /** highlevel do-it-all function for adding objects in the tree. */
+    bool addObject_(const QModelIndex& parent, int row, Object * obj);
+
+
     QList<QAction*> editActions_;
 
     Scene * scene_;

@@ -54,6 +54,7 @@ public:
 
     // -- editing --
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
+    virtual bool insertRows(int row, int count, const QModelIndex &parent);
 
     // -- drag/drop --
     virtual QStringList mimeTypes() const;

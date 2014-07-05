@@ -230,6 +230,8 @@ QVariant ObjectTreeModel::headerData(int section, Qt::Orientation orientation, i
 }
 
 
+// ----------------------------- editing -----------------------------
+
 bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (!rootObject_ || !index.isValid() || index.column() < 0
@@ -247,6 +249,13 @@ bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, i
     }
 
     return false;
+}
+
+bool ObjectTreeModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+    beginInsertRows(parent, row, row + count);
+    endInsertRows();
+    return true;
 }
 
 // ---------------------------- DRAG/DROP ---------------------------------
