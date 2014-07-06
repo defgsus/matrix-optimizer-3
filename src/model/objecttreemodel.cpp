@@ -383,6 +383,16 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 }
 
 
+
+void ObjectTreeModel::objectAdded(Object * obj)
+{
+    QModelIndex idx = indexForObject(obj);
+    QModelIndex parentIdx = parent(idx);
+    int row = obj->parentObject()->childObjects().indexOf(obj);
+    //beginInsertRows(parentIdx, row, row);
+    //endInsertRows();
+}
+
 // ------------------- custom editing ----------------------
 
 bool ObjectTreeModel::deleteObject(const QModelIndex & index)

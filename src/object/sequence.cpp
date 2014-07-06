@@ -10,6 +10,8 @@
 
 #include "sequence.h"
 #include "io/datastream.h"
+#include "io/error.h"
+#include "track.h"
 
 namespace MO {
 
@@ -21,7 +23,8 @@ Sequence::Sequence(QObject *parent) :
     loopLength_ (length_),
     timeOffset_ (0.0),
     speed_      (1.0),
-    looping_    (false)
+    looping_    (false),
+    track_      (0)
 {
     setName("Sequence");
 }
@@ -50,13 +53,20 @@ void Sequence::deserialize(IO::DataStream &io)
 
 void Sequence::addToTrack(Track *t)
 {
-    if (!tracks_.contains(t))
-        tracks_.append(t);
+    /*
+    MO_ASSERT(!track_, "trying to set track '" << t->idName() << "', but sequence '"
+              << idName() << "' already has a track '"
+              << track_->idName() << "' assigned");
+    */
+    track_ = t;
 }
 
 void Sequence::removeFromTrack(Track *t)
 {
-    tracks_.removeOne(t);
+    MO_ASSERT(track_ == t, "trying to remove sequence '" << idName() << "' from track '"
+              << t->idName() << "' but assigned track is " << track_);
+
+    track_ = 0;
 }
 
 } // namespace MO

@@ -127,14 +127,14 @@ void Sequencer::clearTracks()
 
 void Sequencer::setTracks(const QList<Track *> &tracks)
 {
-    MO_DEBUG("Sequencer::setTracks(tracks.size()=" << tracks.size() << ")");
+    MO_DEBUG_GUI("Sequencer::setTracks(tracks.size()=" << tracks.size() << ")");
 
     trackView_->setTracks(tracks);
 }
 
 void Sequencer::setTracks(Object * o, bool recursive)
 {
-    MO_DEBUG("Sequencer::setTracks(" << o << ", " << recursive << ")");
+    MO_DEBUG_GUI("Sequencer::setTracks(" << o << ", " << recursive << ")");
 
     setTracks( o->findChildObjects<Track>(QString(), recursive) );
 }

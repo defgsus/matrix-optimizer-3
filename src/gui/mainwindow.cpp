@@ -238,10 +238,14 @@ void MainWindow::setSceneObject(Scene * s)
                 scene_, SLOT(setGlContext(MO::GL::Context*)));
 
     connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
-    connect(scene_, SIGNAL(treeChanged()), this, SLOT(treeChanged()));
 
     if (glWindow_->context())
         scene_->setGlContext(glWindow_->context());
+
+    // scene changes
+    connect(scene_, SIGNAL(treeChanged()), this, SLOT(treeChanged()));
+    connect(scene_, SIGNAL(objectAdded(MO::Object*)),
+            objectTreeModel_, SLOT(objectAdded(MO::Object*)));
 
     // update widgets
 

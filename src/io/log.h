@@ -62,6 +62,13 @@
 #   define MO_DEBUG_TREE(unused__) { }
 #endif
 
+// modulator stuff
+#if (1)
+#   define MO_DEBUG_MOD(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
+#else
+#   define MO_DEBUG_MOD(unused__) { }
+#endif
+
 // for parameter updates between gui/scene
 #if (0)
 #   define MO_DEBUG_PARAM(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)

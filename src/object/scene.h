@@ -32,6 +32,12 @@ public:
 
     const QList<Camera*> cameras() const { return cameras_; }
 
+    /** Tells the Scene to update it's info about the tree */
+    void tellTreeChanged();
+
+    /** Tells the Scene to emit the objectAdded() signal */
+    void tellObjectAdded(Object *);
+
     // ------------- open gl -------------------
 
     /** Calculates all transformation of all scene objects.
@@ -56,10 +62,10 @@ signals:
     /** *Currently* emitted when something in the tree has changed. */
     void treeChanged();
 
-public slots:
+    /** Emitted when the given object was added to the scene. */
+    void objectAdded(MO::Object *);
 
-    /** Tells the Scene to update it's info about the tree */
-    void tellTreeChanged();
+public slots:
 
     // ------------- parameter -----------------
 

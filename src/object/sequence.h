@@ -28,10 +28,10 @@ public:
 
     // -------------- tracks -------------------
 
-    /** List of tracks, this sequence is on */
-    QList<Track*> tracks() const { return tracks_; }
+    /** The track, this sequence is on */
+    Track * track() const { return track_; }
 
-    /** Only changes the tracks_ list.
+    /** Only changes the track() property.
         Tracks are responsible for knowing their Sequences
         and for telling them! */
     void addToTrack(Track * t);
@@ -122,8 +122,8 @@ private:
            speed_;
     bool   looping_;
 
-    /** List of tracks, this sequence is on */
-    QList<Track*> tracks_;
+    /** The track, this sequence is on */
+    Track* track_;
 };
 
 

@@ -68,6 +68,10 @@ signals:
 
 public slots:
 
+    // ---- act upon changes ---
+
+    void objectAdded(MO::Object *);
+
     // ---- custom editing ----
 
     bool deleteObject(const QModelIndex&);

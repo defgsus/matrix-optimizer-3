@@ -53,10 +53,15 @@ void ObjectView::setObject(Object * object)
                     object_->namePath(), Qt::ElideMiddle,
                     // XXX what is a good value here?
                     width()-150);
+        QString shortIdPath = fontMetrics().elidedText(
+                    object_->idNamePath(), Qt::ElideMiddle,
+                    width()-150);
         icon_->setIcon(ObjectFactory::iconForObject(object_));
-        label_->setText(QString("<html><b>%1</b><br/>%2/%1</html>")
+        label_->setText(QString("<html><b>%1</b><br/>%2/%1<br/>%3/%4</html>")
                         .arg(object_->name())
                         .arg(shortPath)
+                        .arg(shortIdPath)
+                        .arg(object_->idName())
                         );
     }
     else

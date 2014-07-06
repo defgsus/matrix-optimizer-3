@@ -69,6 +69,13 @@ void Scene::tellTreeChanged()
     }
 }
 
+void Scene::tellObjectAdded(Object * obj)
+{
+    MO_DEBUG_TREE("Scene::tellObectAdded('" << obj->idName() << "')");
+    emit objectAdded(obj);
+}
+
+
 void Scene::findObjects_()
 {
     //MO_DEBUG_TREE("Scene::findObjects_()");
@@ -157,12 +164,12 @@ void Scene::moveSequence(Sequence *seq, Track *from, Track *to)
 {
     MO_DEBUG_TREE("Scene::moveSequence('" << seq->idName() << "', '" << from->idName() << "', '"
                   << to->idName() << "'");
-    if (seq->tracks().contains(to))
+    if (seq->track() == to)
     {
         MO_WARNING("duplicated move sequence '" << seq->idName() << "' to track '"
                    << to->idName() << "'");
+        return;
     }
-
     from->removeSequence(seq);
     to->addSequence(seq);
     tellTreeChanged();

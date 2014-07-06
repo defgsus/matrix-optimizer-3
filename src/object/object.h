@@ -187,6 +187,9 @@ public:
     /** Return the path up to this object */
     QString namePath() const;
 
+    /** Return the id path up to this object */
+    QString idNamePath() const;
+
     virtual bool isValid() const { return true; }
 
     virtual Type type() const { return T_NONE; }

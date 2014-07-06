@@ -193,6 +193,22 @@ QString Object::namePath() const
     return path;
 }
 
+QString Object::idNamePath() const
+{
+    Object * p = parentObject();
+    if (!p)
+        return "/";
+
+    QString path;
+    while (p)
+    {
+        path.prepend("/" + p->idName());
+        p = p->parentObject();
+    }
+
+    return path;
+}
+
 
 // ------------------ setter -----------------------
 
@@ -279,7 +295,10 @@ void Object::setParentObject(Object *parent, int index)
 
     // tell Scene
     if (Scene * scene = sceneObject())
+    {
         scene->tellTreeChanged();
+        scene->tellObjectAdded(this);
+    }
 
     // tell parent object
     parentObject_->childrenChanged_();

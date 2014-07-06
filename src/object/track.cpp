@@ -8,10 +8,14 @@
     <p>created 7/3/2014</p>
 */
 
+#include <QDebug>
+
 #include "track.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "sequence.h"
+#include "io/log.h"
+
 
 namespace MO {
 
@@ -42,6 +46,8 @@ void Track::deserialize(IO::DataStream & io)
 
 void Track::addSequence(Sequence * s)
 {
+    MO_DEBUG_MOD("Track("<<idName()<<")::addSequence(" << s->idName() << ")");
+
     MO_ASSERT(s, "trying to add NULL Sequence to track '" << idName() << "'");
     MO_ASSERT(!sequenceIds_.contains(s->idName()), "Track::addSequence() duplicate sequence '"
               << s->idName() << "' on track '" << idName() << "'");
@@ -51,6 +57,8 @@ void Track::addSequence(Sequence * s)
 
 void Track::removeSequence(Sequence * s)
 {
+    MO_DEBUG_MOD("Track("<<idName()<<")::removeSequence(" << s->idName() << ")");
+
     MO_ASSERT(s, "trying to remove NULL Sequence from track '" << idName() << "'");
 
     sequenceIds_.removeOne(s->idName());

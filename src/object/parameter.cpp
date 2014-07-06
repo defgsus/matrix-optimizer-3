@@ -11,6 +11,8 @@
 #include "parameter.h"
 #include "scene.h"
 #include "io/datastream.h"
+#include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -47,6 +49,13 @@ void Parameter::deserialize(IO::DataStream &io)
 
 void Parameter::addModulator(const QString &idName)
 {
+    MO_DEBUG_MOD("Parameter("<<this->idName()<<")::addModulator(" << idName << ")");
+
+    if (modulatorIds_.contains(idName))
+    {
+        MO_WARNING("trying to add duplicate parameter modulator '" << idName << "'");
+        return;
+    }
     modulatorIds_.insert(idName);
     // hacky
     Scene * s = sceneObject();
@@ -55,6 +64,13 @@ void Parameter::addModulator(const QString &idName)
 
 void Parameter::removeModulator(const QString &idName)
 {
+    MO_DEBUG_MOD("Parameter("<<this->idName()<<")::removeModulator(" << idName << ")");
+
+    if (!modulatorIds_.contains(idName))
+    {
+        MO_WARNING("trying to remove unknown parameter modulator '" << idName << "'");
+        return;
+    }
     modulatorIds_.remove(idName);
     // hacky
     Scene * s = sceneObject();
