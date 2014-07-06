@@ -10,6 +10,9 @@
 
 #include <iostream>
 
+#include <QPalette>
+#include <QWidget>
+
 #include "io/application.h"
 #include "io/error.h"
 
@@ -60,5 +63,17 @@ void Application::updateStyle()
                 "QAbstractItemView:hover { background-color: #868686 } "
                 );
 }
+
+void Application::setPaletteFor(QWidget * w)
+{
+    QPalette p(w->palette());
+
+   // p.setColor(QPalette::Background, QColor(30,30,30));
+
+    w->setPalette(p);
+}
+
+
+
 
 } // namespace MO

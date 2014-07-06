@@ -48,37 +48,7 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
     setRootIsDecorated(true);
 
     // default actions
-    QAction * a;
-
-    createTypeActions_();
-
-    a = new QAction(tr("Show/hide objects"), this);
-    addAction(a);
-    a->setMenu(showTypeMenu_);
-
-    a = new QAction(tr("Expand objects"), this);
-    addAction(a);
-    a->setShortcut(Qt::ALT + Qt::Key_E);
-    connect(a, SIGNAL(triggered()), SLOT(expandObjectsOnly()));
-
-    a = new QAction(tr("Expand all"), this);
-    addAction(a);
-    a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_E);
-    connect(a, SIGNAL(triggered()), SLOT(expandAll()));
-
-    a = new QAction(tr("Collapse all"), this);
-    addAction(a);
-    a->setShortcut(Qt::ALT + Qt::Key_C);
-    connect(a, SIGNAL(triggered()), SLOT(collapseAll()));
-
-    a = new QAction(tr("RESET MODEL"), this);
-    addAction(a);
-    connect(a, &QAction::triggered, [=]()
-    {
-        QAbstractItemModel * m(model());
-        setModel(0);
-        setModel(m);
-    });
+    createDefaultActions_();
 
     createEditActions_();
 }
@@ -144,6 +114,44 @@ bool sortObjectList_TransformFirst(const Object * o1, const Object * o2)
     return o1->isTransformation() && !o2->isTransformation();
 }
 
+
+void ObjectTreeView::createDefaultActions_()
+{
+    createTypeActions_();
+
+    QAction * a;
+
+    a = new QAction(tr("Show/hide objects"), this);
+    addAction(a);
+    a->setMenu(showTypeMenu_);
+
+    editActions_.append(a = new QAction(this));
+    a->setSeparator(true);
+
+    a = new QAction(tr("Expand objects"), this);
+    addAction(a);
+    a->setShortcut(Qt::ALT + Qt::Key_E);
+    connect(a, SIGNAL(triggered()), SLOT(expandObjectsOnly()));
+
+    a = new QAction(tr("Expand all"), this);
+    addAction(a);
+    a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_E);
+    connect(a, SIGNAL(triggered()), SLOT(expandAll()));
+
+    a = new QAction(tr("Collapse all"), this);
+    addAction(a);
+    a->setShortcut(Qt::ALT + Qt::Key_C);
+    connect(a, SIGNAL(triggered()), SLOT(collapseAll()));
+
+    a = new QAction(tr("RESET MODEL"), this);
+    addAction(a);
+    connect(a, &QAction::triggered, [=]()
+    {
+        QAbstractItemModel * m(model());
+        setModel(0);
+        setModel(m);
+    });
+}
 
 void ObjectTreeView::createTypeActions_()
 {

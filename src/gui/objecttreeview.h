@@ -57,6 +57,7 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void currentChanged(const QModelIndex &current, const QModelIndex &previous);
 
+    void createDefaultActions_();
     void createTypeActions_();
     void createEditActions_(Object* = 0);
     void createFirstObjectActions_();

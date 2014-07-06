@@ -44,6 +44,9 @@ int main(int argc, char *argv[])
     auto mainwin = new MO::GUI::MainWindow;
     mainwin->show();
 
+    MO::application->setPaletteFor(mainwin);
+
+
     // center mainwindow
     QRect r = MO::application->desktop()->screenGeometry(mainwin->pos());
     mainwin->setGeometry(

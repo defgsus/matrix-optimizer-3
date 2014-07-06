@@ -26,7 +26,7 @@ signals:
 public slots:
 
     void updateStyle();
-
+    void setPaletteFor(QWidget*);
 protected:
 
     virtual bool notify(QObject * o, QEvent * e);
