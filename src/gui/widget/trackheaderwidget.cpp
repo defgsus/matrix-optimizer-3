@@ -35,7 +35,7 @@ TrackHeaderWidget::TrackHeaderWidget(Track *track, QWidget *parent) :
 
     layout_ = new QHBoxLayout(this);
 
-    auto label = new QLabel(track->name(), this);
+    auto label = new QLabel(track->name().isEmpty()? "*unnamed*" : track->name(), this);
     layout_->addWidget(label);
 
 }

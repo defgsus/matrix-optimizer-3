@@ -15,12 +15,11 @@
 
 namespace MO {
 
-MO_REGISTER_OBJECT(Track)
+//MO_REGISTER_OBJECT(Track)
 
 Track::Track(QObject *parent) :
     Object(parent)
 {
-    setName("Track");
 }
 
 void Track::serialize(IO::DataStream & io) const
@@ -61,7 +60,7 @@ void Track::removeSequence(Sequence * s)
 
 void Track::collectModulators()
 {
-    sequences_.clear();
+    baseSequences_.clear();
 
     Object * root = rootObject();
 
@@ -71,7 +70,7 @@ void Track::collectModulators()
 
         if (auto s = qobject_cast<Sequence*>(o))
         {
-            sequences_.append(s);
+            baseSequences_.append(s);
             // tell the sequence
             s->addToTrack(this);
         }

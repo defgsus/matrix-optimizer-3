@@ -34,6 +34,7 @@ class ObjectGl;
 class Model3d;
 class Transformation;
 class Track;
+class TrackFloat;
 class Sequences;
 class Sequence;
 class SequenceFloat;
@@ -107,12 +108,14 @@ public:
         T_SOUNDSOURCE       = 1<<7,
         T_SEQUENCEGROUP     = 1<<8,
         T_SEQUENCE_FLOAT    = 1<<9,
-        T_TRACK             = 1<<10
+        T_TRACK_FLOAT       = 1<<10,
+        T_DUMMY             = 1<<11
     };
     enum TypeGroups
     {
         TG_PARAMETER        = T_PARAMETER_FLOAT,
         TG_REAL_OBJECT      = T_OBJECT | T_MICROPHONE | T_SOUNDSOURCE | T_CAMERA,
+        TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
 
         TG_ALL = 0xffffffff

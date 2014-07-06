@@ -70,7 +70,7 @@ public slots:
 
     // ---- custom editing ----
 
-    void deleteObject(const QModelIndex&);
+    bool deleteObject(const QModelIndex&);
 
     QModelIndex addObject(const QModelIndex& parent, int indexInChild, Object * obj);
 

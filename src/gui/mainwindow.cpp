@@ -238,6 +238,7 @@ void MainWindow::setSceneObject(Scene * s)
                 scene_, SLOT(setGlContext(MO::GL::Context*)));
 
     connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
+    connect(scene_, SIGNAL(treeChanged()), this, SLOT(treeChanged()));
 
     if (glWindow_->context())
         scene_->setGlContext(glWindow_->context());
@@ -260,9 +261,10 @@ void MainWindow::createObjects_()
     glWindow_ = glManager_->createGlWindow();
     glWindow_->show();
 
-    //newScene();
+
     try {
-        setSceneObject(ObjectFactory::loadScene("./tracktest2.mo3"));
+        newScene();
+        //setSceneObject(ObjectFactory::loadScene("./tracktest2.mo3"));
     }
     catch (IoException& e)
     {
@@ -319,8 +321,14 @@ void MainWindow::closeEvent(QCloseEvent * e)
 
 void MainWindow::objectSelected(Object * o)
 {
+    // update object editor
     objectView_->setObject(o);
 
+    // update sequencer
+    // XXX
+    //sequencer_->setTracks(scene_);
+
+    // update sequence editor
     if (o && o->type() == Object::T_SEQUENCE_FLOAT)
     {
         seqFloatView_->setSequence(static_cast<SequenceFloat*>(o));
@@ -329,7 +337,11 @@ void MainWindow::objectSelected(Object * o)
     }
     else
         seqFloatView_->setVisible(false);
+}
 
+void MainWindow::treeChanged()
+{
+    sequencer_->setTracks(scene_);
 }
 
 void MainWindow::setEditActions_(const QObject *, QList<QAction *> actions)

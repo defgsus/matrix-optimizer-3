@@ -62,7 +62,7 @@ private:
            maxValue_,
            value_;
 
-    QList<SequenceFloat*> modulators_;
+    QList<TrackFloat*> modulators_;
 };
 
 } // namespace MO

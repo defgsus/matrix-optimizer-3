@@ -125,7 +125,7 @@ void ObjectTreeView::createDefaultActions_()
     addAction(a);
     a->setMenu(showTypeMenu_);
 
-    editActions_.append(a = new QAction(this));
+    addAction(a = new QAction(this));
     a->setSeparator(true);
 
     a = new QAction(tr("Expand objects"), this);
@@ -142,6 +142,15 @@ void ObjectTreeView::createDefaultActions_()
     addAction(a);
     a->setShortcut(Qt::ALT + Qt::Key_C);
     connect(a, SIGNAL(triggered()), SLOT(collapseAll()));
+
+    a = new QAction(tr("sorted"), this);
+    addAction(a);
+    a->setCheckable(true);
+    a->setChecked(true);
+    connect(a, &QAction::triggered, [=](bool checked)
+    {
+        setSortingEnabled(checked);
+    });
 
     a = new QAction(tr("RESET MODEL"), this);
     addAction(a);
@@ -170,7 +179,7 @@ void ObjectTreeView::createTypeActions_()
     MO__TYPE_ACTION(Object::T_SOUNDSOURCE, tr("Soundsources"));
     MO__TYPE_ACTION(Object::T_TRANSFORMATION, tr("Transformations"));
     MO__TYPE_ACTION(Object::TG_PARAMETER, tr("Parameters"));
-    MO__TYPE_ACTION(Object::T_TRACK, tr("Tracks"));
+    MO__TYPE_ACTION(Object::TG_TRACK, tr("Tracks"));
     MO__TYPE_ACTION(Object::TG_SEQUENCE | Object::T_SEQUENCEGROUP, tr("Sequences"));
 
 #undef MO__TYPE_ACTION
@@ -261,7 +270,7 @@ void ObjectTreeView::createFirstObjectActions_()
         // make transformations first
         qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
 
-        editActions_.append(a = new QAction(tr("New first object"), this));
+        editActions_.append(a = new QAction(tr("New object"), this));
         QMenu * menu = new QMenu(this);
         a->setMenu(menu);
         bool addSep = true;
@@ -304,16 +313,16 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         {
             application->clipboard()->setMimeData(
                         model()->mimeData(QModelIndexList() << currentIndex()));
-            // YYY omodel->deleteObject(currentIndex());
-            emit objectSelected(0);
+            if (deleteObject_(currentIndex()))
+                emit objectSelected(0);
         });
 
         // delete
         editActions_.append(a = new QAction(tr("Delete"), this));
         connect(a, &QAction::triggered, [=]()
         {
-            // YYY omodel->deleteObject(currentIndex());
-            emit objectSelected(0);
+            if (deleteObject_(currentIndex()))
+                emit objectSelected(0);
         });
     }
 
@@ -437,9 +446,9 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
         editActions_.append(a = new QAction(tr("Add modulation"), this));
         connect(a, &QAction::triggered, [=]()
         {
-            Object * seq = ObjectFactory::createObject("SequenceFloat");
-            if (addObject_(currentIndex(), -1, seq))
-                static_cast<ParameterFloat*>(obj)->addModulator(seq->idName());
+            Object * track = ObjectFactory::createObject("TrackFloat");
+            if (addObject_(currentIndex(), -1, track))
+                static_cast<ParameterFloat*>(obj)->addModulator(track->idName());
         });
     }
 }
@@ -508,6 +517,29 @@ bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
         MO_ASSERT(false, "modelindex has no assigned object");
     }
     MO_ASSERT(false, "can't add object to invalid index");
+
+    return false;
+}
+
+
+bool ObjectTreeView::deleteObject_(const QModelIndex &index)
+{
+    MO_DEBUG_TREE("ObjectTreeView::addObject_(index("
+             << parent.row() << ", " << parent.column() << "))");
+
+    if (index.isValid())
+    {
+        Object * object = model()->data(index, ObjectRole).value<Object*>();
+        if (object)
+        {
+            QModelIndex orgidx = omodel_->indexForObject(object);
+            return omodel_->deleteObject(orgidx);
+
+            //setFocusIndex(filter_->mapFromSource(idx));
+        }
+        MO_ASSERT(false, "delete-modelindex has no assigned object");
+    }
+    MO_ASSERT(false, "can't delete object with invalid index");
 
     return false;
 }

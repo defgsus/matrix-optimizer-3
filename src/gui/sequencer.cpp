@@ -18,6 +18,7 @@
 #include "trackview.h"
 #include "ruler.h"
 #include "object/track.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -126,11 +127,15 @@ void Sequencer::clearTracks()
 
 void Sequencer::setTracks(const QList<Track *> &tracks)
 {
+    MO_DEBUG("Sequencer::setTracks(tracks.size()=" << tracks.size() << ")");
+
     trackView_->setTracks(tracks);
 }
 
 void Sequencer::setTracks(Object * o, bool recursive)
 {
+    MO_DEBUG("Sequencer::setTracks(" << o << ", " << recursive << ")");
+
     setTracks( o->findChildObjects<Track>(QString(), recursive) );
 }
 

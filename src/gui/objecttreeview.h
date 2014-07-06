@@ -68,7 +68,7 @@ protected:
 
     /** highlevel do-it-all function for adding objects in the tree. */
     bool addObject_(const QModelIndex& parent, int row, Object * obj);
-
+    bool deleteObject_(const QModelIndex&);
 
     QList<QAction*> editActions_;
 

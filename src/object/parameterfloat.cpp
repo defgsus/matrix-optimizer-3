@@ -11,7 +11,7 @@
 #include "parameterfloat.h"
 #include "io/datastream.h"
 #include "io/error.h"
-#include "object/sequencefloat.h"
+#include "object/trackfloat.h"
 #include "object/scene.h"
 #include "io/datastream.h"
 
@@ -63,8 +63,8 @@ Double ParameterFloat::getModulationValue(Double time) const
 {
     Double m = 0;
 
-    for (auto s : modulators_)
-        m += s->value(time);
+    for (auto t : modulators_)
+        m += t->value(time);
 
     return m;
 }
@@ -78,7 +78,7 @@ void ParameterFloat::collectModulators()
     for (auto const &id : getModulators())
     {
         Object * o = root->findChildObject(id, true);
-        if (auto s = qobject_cast<SequenceFloat*>(o))
+        if (auto s = qobject_cast<TrackFloat*>(o))
             modulators_.append(s);
         else
             MO_WARNING("parameter '" << idName()

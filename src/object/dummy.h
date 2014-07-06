@@ -22,7 +22,7 @@ public:
     MO_OBJECT_CONSTRUCTOR(Dummy);
 
     bool isValid() const { return false; }
-    virtual Type type() const { return T_OBJECT; }
+    virtual Type type() const { return T_DUMMY; }
 
 signals:
 

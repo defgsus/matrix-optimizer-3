@@ -43,6 +43,7 @@ private slots:
     void testSceneTransform_();
 
     void objectSelected(MO::Object*);
+    void treeChanged();
 
     void start();
     void stop();

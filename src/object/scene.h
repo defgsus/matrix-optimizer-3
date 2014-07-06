@@ -53,6 +53,9 @@ signals:
     /** Some setting in the Sequence has changed. */
     void sequenceChanged(MO::Sequence *);
 
+    /** *Currently* emitted when something in the tree has changed. */
+    void treeChanged();
+
 public slots:
 
     /** Tells the Scene to update it's info about the tree */

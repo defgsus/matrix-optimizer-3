@@ -29,10 +29,12 @@ public:
     const QString& parameterId() const { return parameterId_; }
     void setParameterId(const QString& id) { parameterId_ = id; }
 
-    /** Adds an Object as modulator. */
+    /** Adds an Object to the list of modulator.
+        Modulators will be collected by
+        collectModulators() in the derived class */
     virtual void addModulator(const QString& idName);
 
-    /** Removes the SequenceFloat from modulators */
+    /** Removes the Object from the list of modulators */
     virtual void removeModulator(const QString& idName);
 
     /** Returns list of all modulator ids */

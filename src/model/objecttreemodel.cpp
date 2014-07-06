@@ -385,7 +385,7 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
 // ------------------- custom editing ----------------------
 
-void ObjectTreeModel::deleteObject(const QModelIndex & index)
+bool ObjectTreeModel::deleteObject(const QModelIndex & index)
 {
     auto parentIndex = parent(index);
     if (auto parentObject = objectForIndex(parentIndex))
@@ -393,7 +393,9 @@ void ObjectTreeModel::deleteObject(const QModelIndex & index)
         beginRemoveRows(parentIndex, index.row(), index.row());
         parentObject->deleteObject(objectForIndex(index));
         endRemoveRows();
+        return true;
     }
+    return false;
 }
 
 QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, Object * obj)

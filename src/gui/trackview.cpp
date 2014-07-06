@@ -170,6 +170,8 @@ void TrackView::clearTracks()
     sequenceWidgets_.clear();
     selectedWidgets_.clear();
 
+    offsetY_ = 0;
+
     header_->clearTracks();
 }
 
@@ -202,6 +204,7 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
         createSequenceWidgets_(t);
 
     updateWidgetsViewSpace_();
+    update();
 
     if (send_signal)
         emit tracksChanged();

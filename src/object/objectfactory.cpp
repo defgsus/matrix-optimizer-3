@@ -95,7 +95,7 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
     auto it = instance().objectMap_.find(className);
     if (it == instance().objectMap_.end())
     {
-        MO_ASSERT(false, "request for unknown object class '" << className <<"'");
+        MO_WARNING("request for unknown object class '" << className <<"'");
         return 0;
     }
 

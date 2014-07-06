@@ -21,15 +21,13 @@ class Track : public Object
 {
     Q_OBJECT
 public:
-    MO_OBJECT_CONSTRUCTOR(Track);
-
-    virtual Type type() const { return T_TRACK; }
+    MO_ABSTRACT_OBJECT_CONSTRUCTOR(Track);
 
     /** Returns the idName()s of the sequences that belong to this track. */
     const QStringList& sequenceIds() const { return sequenceIds_; }
 
     /** Pointers to all sequences on this track. */
-    const QList<Sequence*>& sequences() const { return sequences_; }
+    const QList<Sequence*>& sequences() const { return baseSequences_; }
 
     virtual void addSequence(Sequence *);
     virtual void removeSequence(Sequence *);
@@ -46,7 +44,7 @@ private:
     QStringList sequenceIds_;
 
     /** sequences on this track. */
-    QList<Sequence *> sequences_;
+    QList<Sequence *> baseSequences_;
 };
 
 } // namespace MO

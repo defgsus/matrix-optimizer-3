@@ -53,9 +53,11 @@ void Scene::deserialize(IO::DataStream & io)
 
 void Scene::tellTreeChanged()
 {
-    MO_DEBUG_TREE("Scene::treeChanged()");
+    MO_DEBUG_TREE("Scene::tellTreeChanged()");
 
     findObjects_();
+
+    emit treeChanged();
 
     if (glContext_)
     {

@@ -93,7 +93,8 @@ SOURCES += \
     src/gui/widget/doublespinbox.cpp \
     src/gui/widget/equationeditor.cpp \
     src/tool/syntaxhighlighter.cpp \
-    src/model/objecttreesortproxy.cpp
+    src/model/objecttreesortproxy.cpp \
+    src/object/trackfloat.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -178,7 +179,8 @@ HEADERS += \
     src/gui/widget/doublespinbox.h \
     src/gui/widget/equationeditor.h \
     src/tool/syntaxhighlighter.h \
-    src/model/objecttreesortproxy.h
+    src/model/objecttreesortproxy.h \
+    src/object/trackfloat.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
