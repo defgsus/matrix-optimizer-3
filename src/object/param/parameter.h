@@ -8,13 +8,13 @@
     <p>created 6/27/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_PARAMETER_H
-#define MOSRC_OBJECT_PARAMETER_H
+#ifndef MOSRC_OBJECT_PARAM_PARAMETER_H
+#define MOSRC_OBJECT_PARAM_PARAMETER_H
 
 #include <QString>
 #include <QList>
 
-#include "object_fwd.h"
+#include "object/object_fwd.h"
 
 namespace MO {
 
@@ -66,4 +66,4 @@ private:
 } // namespace MO
 
 
-#endif // MOSRC_OBJECT_PARAMETER_H
+#endif // MOSRC_OBJECT_PARAM_PARAMETER_H

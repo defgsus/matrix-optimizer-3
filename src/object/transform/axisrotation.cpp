@@ -9,7 +9,7 @@
 */
 
 #include "axisrotation.h"
-#include "parameterfloat.h"
+#include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 
 
@@ -38,10 +38,10 @@ void AxisRotation::deserialize(IO::DataStream & io)
 
 void AxisRotation::createParameters()
 {
-    angle_ = createFloatParameter("rotx", "angle", 0);
-    x_ = createFloatParameter("axis_x", "axis x", 1);
-    y_ = createFloatParameter("axis_y", "axis y", 0);
-    z_ = createFloatParameter("axis_z", "axis z", 0);
+    angle_ = createFloatParameter("a", "angle", 0);
+    x_ = createFloatParameter("x", "axis x", 1);
+    y_ = createFloatParameter("y", "axis y", 0);
+    z_ = createFloatParameter("z", "axis z", 0);
 }
 
 void AxisRotation::applyTransformation(Mat4 &matrix, Double time) const

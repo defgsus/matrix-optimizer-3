@@ -17,7 +17,7 @@
 #include "io/log.h"
 #include "io/datastream.h"
 #include "object/objectfactory.h"
-#include "object/parameterfloat.h"
+#include "object/param/parameterfloat.h"
 #include "object/track.h"
 #include "object/sequencefloat.h"
 #include "model/objecttreemodel.h"

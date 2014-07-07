@@ -15,7 +15,7 @@
 
 
 
-
+// make ParameterFloat useable in QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(MO::ParameterFloat*);
 namespace { static int register_param = qMetaTypeId<MO::ParameterFloat*>(); }
 

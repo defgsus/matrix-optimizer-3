@@ -9,7 +9,7 @@
 */
 
 #include "translation.h"
-#include "parameterfloat.h"
+#include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 
 
@@ -37,9 +37,9 @@ void Translation::deserialize(IO::DataStream & io)
 
 void Translation::createParameters()
 {
-    x_ = createFloatParameter("pos_x", "x", 0);
-    y_ = createFloatParameter("pos_y", "y", 0);
-    z_ = createFloatParameter("pos_z", "z", 0);
+    x_ = createFloatParameter("x", "x", 0);
+    y_ = createFloatParameter("y", "y", 0);
+    z_ = createFloatParameter("z", "z", 0);
 }
 
 void Translation::applyTransformation(Mat4 &matrix, Double time) const

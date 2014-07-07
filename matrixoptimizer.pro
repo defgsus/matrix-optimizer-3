@@ -49,7 +49,6 @@ SOURCES += \
     src/model/objecttreemodel.cpp \
     src/object/objectfactory.cpp \
     src/io/application.cpp \
-    src/object/parameter.cpp \
     src/object/soundsource.cpp \
     src/object/microphone.cpp \
     src/object/camera.cpp \
@@ -64,12 +63,8 @@ SOURCES += \
     src/gl/model.cpp \
     src/io/init.cpp \
     src/object/model3d.cpp \
-    src/object/transformation.cpp \
-    src/object/parameterfloat.cpp \
     src/gui/parameterview.cpp \
     src/types/float.cpp \
-    src/object/axisrotation.cpp \
-    src/object/translation.cpp \
     src/io/applicationtime.cpp \
     src/gui/objectview.cpp \
     src/object/sequence.cpp \
@@ -83,7 +78,6 @@ SOURCES += \
     src/math/waveform.cpp \
     src/math/noiseperlin.cpp \
     src/math/funcparser/parser.cpp \
-    src/object/scale.cpp \
     src/object/track.cpp \
     src/gui/trackview.cpp \
     src/gui/sequencer.cpp \
@@ -94,7 +88,13 @@ SOURCES += \
     src/gui/widget/equationeditor.cpp \
     src/tool/syntaxhighlighter.cpp \
     src/model/objecttreesortproxy.cpp \
-    src/object/trackfloat.cpp
+    src/object/trackfloat.cpp \
+    src/object/transform/axisrotation.cpp \
+    src/object/transform/transformation.cpp \
+    src/object/transform/translation.cpp \
+    src/object/transform/scale.cpp \
+    src/object/param/parameter.cpp \
+    src/object/param/parameterfloat.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -131,7 +131,6 @@ HEADERS += \
     src/model/objecttreemodel.h \
     src/object/objectfactory.h \
     src/io/application.h \
-    src/object/parameter.h \
     src/object/soundsource.h \
     src/object/microphone.h \
     src/object/camera.h \
@@ -147,11 +146,7 @@ HEADERS += \
     src/io/init.h \
     src/gl/openglfunctions.h \
     src/object/model3d.h \
-    src/object/transformation.h \
-    src/object/parameterfloat.h \
     src/gui/parameterview.h \
-    src/object/axisrotation.h \
-    src/object/translation.h \
     src/io/applicationtime.h \
     src/gui/objectview.h \
     src/object/sequence.h \
@@ -169,7 +164,6 @@ HEADERS += \
     src/math/funcparser/parser.h \
     src/math/funcparser/parser_defines.h \
     src/math/funcparser/parser_program.h \
-    src/object/scale.h \
     src/object/track.h \
     src/gui/trackview.h \
     src/gui/sequencer.h \
@@ -181,7 +175,13 @@ HEADERS += \
     src/tool/syntaxhighlighter.h \
     src/model/objecttreesortproxy.h \
     src/object/trackfloat.h \
-    src/object/object_fwd.h
+    src/object/object_fwd.h \
+    src/object/transform/axisrotation.h \
+    src/object/transform/translation.h \
+    src/object/transform/transformation.h \
+    src/object/transform/scale.h \
+    src/object/param/parameter.h \
+    src/object/param/parameterfloat.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

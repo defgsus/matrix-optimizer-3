@@ -20,8 +20,8 @@
 
 #include "object.h"
 #include "dummy.h"
-#include "object/translation.h"
-#include "object/axisrotation.h"
+#include "object/transform/translation.h"
+#include "object/transform/axisrotation.h"
 #include "scene.h"
 
 namespace MO {

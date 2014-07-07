@@ -9,7 +9,7 @@
 */
 
 #include "parameter.h"
-#include "scene.h"
+#include "object/scene.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"

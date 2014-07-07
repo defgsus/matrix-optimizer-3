@@ -18,8 +18,8 @@
 
 #include "objectfactory.h"
 #include "scene.h"
-#include "transformation.h"
-#include "parameterfloat.h"
+#include "transform/transformation.h"
+#include "param/parameterfloat.h"
 
 namespace MO {
 

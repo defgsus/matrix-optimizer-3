@@ -23,7 +23,7 @@
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
-#include "object/parameterfloat.h"
+#include "object/param/parameterfloat.h"
 #include "io/application.h"
 #include "io/error.h"
 #include "io/log.h"

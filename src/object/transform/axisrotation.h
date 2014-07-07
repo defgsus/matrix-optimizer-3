@@ -8,8 +8,8 @@
     <p>created 6/30/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_AXISROTATION_H
-#define MOSRC_OBJECT_AXISROTATION_H
+#ifndef MOSRC_OBJECT_TRANSFORM_AXISROTATION_H
+#define MOSRC_OBJECT_TRANSFORM_AXISROTATION_H
 
 
 #include "transformation.h"
@@ -38,4 +38,4 @@ protected:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_AXISROTATION_H
+#endif // MOSRC_OBJECT_TRANSFORM_AXISROTATION_H

@@ -8,8 +8,8 @@
     <p>created 7/2/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_SCALE_H
-#define MOSRC_OBJECT_SCALE_H
+#ifndef MOSRC_OBJECT_TRANSFORM_SCALE_H
+#define MOSRC_OBJECT_TRANSFORM_SCALE_H
 
 #include "transformation.h"
 
@@ -37,4 +37,4 @@ protected:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_SCALE_H
+#endif // MOSRC_OBJECT_TRANSFORM_SCALE_H

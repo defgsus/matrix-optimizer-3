@@ -8,8 +8,8 @@
     <p>created 6/30/2014</p>
 */
 
-#ifndef PARAMETERFLOAT_H
-#define PARAMETERFLOAT_H
+#ifndef MOSRC_OBJECT_PARAM_PARAMETERFLOAT_H
+#define MOSRC_OBJECT_PARAM_PARAMETERFLOAT_H
 
 #include "parameter.h"
 #include "types/float.h"
@@ -65,4 +65,4 @@ private:
 } // namespace MO
 
 
-#endif // PARAMETERFLOAT_H
+#endif // MOSRC_OBJECT_PARAM_PARAMETERFLOAT_H

@@ -8,8 +8,8 @@
     <p>created 6/30/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_TRANSLATION_H
-#define MOSRC_OBJECT_TRANSLATION_H
+#ifndef MOSRC_OBJECT_TRANSFORM_TRANSLATION_H
+#define MOSRC_OBJECT_TRANSFORM_TRANSLATION_H
 
 #include "transformation.h"
 
@@ -37,4 +37,4 @@ protected:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_TRANSLATION_H
+#endif // MOSRC_OBJECT_TRANSFORM_TRANSLATION_H

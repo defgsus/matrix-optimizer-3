@@ -17,7 +17,7 @@
 #include "parameterview.h"
 #include "object/object.h"
 #include "object/scene.h"
-#include "object/parameterfloat.h"
+#include "object/param/parameterfloat.h"
 #include "io/error.h"
 
 namespace MO {

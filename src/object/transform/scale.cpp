@@ -9,7 +9,7 @@
 */
 
 #include "scale.h"
-#include "parameterfloat.h"
+#include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 
 
@@ -38,10 +38,10 @@ void Scale::deserialize(IO::DataStream & io)
 
 void Scale::createParameters()
 {
-    all_ = createFloatParameter("scale_all", "scale", 1);
-    x_ = createFloatParameter("scale_x", "x", 1);
-    y_ = createFloatParameter("scale_y", "y", 1);
-    z_ = createFloatParameter("scale_z", "z", 1);
+    all_ = createFloatParameter("all", "scale", 1);
+    x_ = createFloatParameter("x", "x", 1);
+    y_ = createFloatParameter("y", "y", 1);
+    z_ = createFloatParameter("z", "z", 1);
 
     //useXYZ_ = createSetting("usexyz", "individual scale", false);
 }

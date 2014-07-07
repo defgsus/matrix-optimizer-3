@@ -8,10 +8,10 @@
     <p>created 6/29/2014</p>
 */
 
-#ifndef TRANSFORMATION_H
-#define TRANSFORMATION_H
+#ifndef MOSRC_OBJECT_TRANSFORM_TRANSFORMATION_H
+#define MOSRC_OBJECT_TRANSFORM_TRANSFORMATION_H
 
-#include "object.h"
+#include "object/object.h"
 
 namespace MO {
 
@@ -35,4 +35,4 @@ public slots:
 
 } // namespace MO
 
-#endif // TRANSFORMATION_H
+#endif // MOSRC_OBJECT_TRANSFORM_TRANSFORMATION_H
