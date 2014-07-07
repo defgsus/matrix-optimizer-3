@@ -337,50 +337,67 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
           action == Qt::CopyAction) || column > 0)
         return false;
 
-    if (auto objdata = qobject_cast<const ObjectTreeMimeData*>(data))
-    if (Object * obj = objectForIndex(parent))
+    if (!data->formats().contains(ObjectTreeMimeData::mimeType()))
     {
-        if (row == -1)
-            row = parent.isValid() ? parent.row()
-                                   : rootObject_->numChildren();
-
-        // deserialize object
-        Object * copy = objdata->getObjectTree();
-
-        // only act when it worked
-        if (copy)
-        {
-            // rearrange if necessary
-            //row = obj->getInsertIndex(copy, row);
-
-            // delete previous tree
-            if (action == Qt::MoveAction)
-            {
-                const QModelIndex& fromIndex = objdata->getModelIndex();
-                const QModelIndex fromParentIndex =
-                                    ObjectTreeModel::parent(fromIndex);
-                if (Object * fromObj = objectForIndex(fromIndex))
-                {
-                    //if (Object * newp = itemForIndex(parent))
-                    beginMoveColumns(fromParentIndex,
-                                     fromIndex.row(), fromIndex.row(),
-                                     parent, row);
-                    MO_DEBUG_TREE("move " << fromObj->idName()
-                                  << " " << fromIndex.row() << " -> "
-                                  << obj->idName() << " " << row);
-                    obj->addObject(fromObj, row);
-                    endMoveColumns();
-                    return true;
-                }
-            }
-
-            // insert it
-            beginInsertRows(parent, row, row);
-            obj->addObject(copy, row);
-            endInsertRows();
-        }
-        return true;
+        MO_WARNING("mimedata is invalid");
+        return false;
     }
+
+    // NOTE: dynamic_cast or qobject_cast won't work between
+    // application boundaries, e.g. after quit or pasting into
+    // a different instance. But static_cast seems to do it alright.
+    if (auto objdata = static_cast<const ObjectTreeMimeData*>(data))
+    {
+        if (Object * obj = objectForIndex(parent))
+        {
+            if (row == -1)
+                row = parent.isValid() ? parent.row()
+                                       : rootObject_->numChildren();
+
+            // deserialize object
+            Object * copy = objdata->getObjectTree();
+
+            // only act when it worked
+            if (copy)
+            {
+                // rearrange if necessary
+                //row = obj->getInsertIndex(copy, row);
+
+                // delete previous tree
+                if (action == Qt::MoveAction)
+                {
+                    const QModelIndex& fromIndex = objdata->getModelIndex();
+                    const QModelIndex fromParentIndex =
+                                        ObjectTreeModel::parent(fromIndex);
+                    if (Object * fromObj = objectForIndex(fromIndex))
+                    {
+                        //if (Object * newp = itemForIndex(parent))
+                        beginMoveColumns(fromParentIndex,
+                                         fromIndex.row(), fromIndex.row(),
+                                         parent, row);
+                        MO_DEBUG_TREE("move " << fromObj->idName()
+                                      << " " << fromIndex.row() << " -> "
+                                      << obj->idName() << " " << row);
+                        obj->addObject(fromObj, row);
+                        endMoveColumns();
+                        return true;
+                    }
+                }
+
+                // insert it
+                beginInsertRows(parent, row, row);
+                obj->addObject(copy, row);
+                endInsertRows();
+
+                return true;
+            }
+            MO_WARNING("Could not deserialize object tree from mime-data");
+            return false;
+        }
+        MO_WARNING("Object for drop index not found");
+        return false;
+    }
+    MO_WARNING("mimedata is invalid");
     return false;
 }
 

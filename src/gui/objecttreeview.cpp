@@ -346,6 +346,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
                     application->clipboard()->mimeData(), Qt::CopyAction,
                     currentIndex().row(), 0,
                     model()->parent(currentIndex()));
+                setFocusIndex(currentIndex());
             });
 
             // paste after
@@ -357,6 +358,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
                     application->clipboard()->mimeData(), Qt::CopyAction,
                     currentIndex().row()+1, 0,
                     model()->parent(currentIndex()));
+                setFocusIndex(obj->parentObject(), currentIndex().row()+1);
             });
         }
 
@@ -369,6 +371,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
                 application->clipboard()->mimeData(), Qt::CopyAction,
                 obj->numChildren() /* append */, 0,
                 currentIndex());
+            setFocusIndex(obj, obj->numChildren()-1);
         });
     }
 }
@@ -465,6 +468,20 @@ void ObjectTreeView::setFocusIndex(const QModelIndex & idx)
     {
         createEditActions_(obj);
         emit objectSelected(obj);
+    }
+}
+
+void ObjectTreeView::setFocusIndex(const Object *object)
+{
+    setFocusIndex(filter_->mapFromSource(omodel_->indexForObject(object)));
+}
+
+void ObjectTreeView::setFocusIndex(const Object *parent, int childRow)
+{
+    if (childRow >= 0 && childRow < parent->childObjects().size())
+    {
+        QModelIndex idx = omodel_->indexForObject(parent->childObjects()[childRow]);
+        setFocusIndex(filter_->mapFromSource(idx));
     }
 }
 

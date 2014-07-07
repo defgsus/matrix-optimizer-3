@@ -45,6 +45,8 @@ public slots:
     void expandObjectsOnly();
 
     void setFocusIndex(const QModelIndex&);
+    void setFocusIndex(const Object * object);
+    void setFocusIndex(const Object * parent, int childRow);
 
 protected slots:
 

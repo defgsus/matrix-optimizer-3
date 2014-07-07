@@ -27,7 +27,6 @@ ObjectTreeSortProxy::ObjectTreeSortProxy(QObject *parent) :
 
 bool ObjectTreeSortProxy::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
-    qDebug() << left << right;
     Object * l = static_cast<Object*>(left.internalPointer()),
            * r = static_cast<Object*>(right.internalPointer());
 
@@ -40,8 +39,7 @@ bool ObjectTreeSortProxy::lessThan(const QModelIndex &left, const QModelIndex &r
 void ObjectTreeSortProxy::setObjectTypes(int flags)
 {
     objectTypes_ = flags;
-    setFilterRole(filterRole()+1);
-    setFilterRole(filterRole()-1);
+    invalidateFilter();
 }
 
 bool ObjectTreeSortProxy::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
