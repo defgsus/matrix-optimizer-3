@@ -23,6 +23,8 @@ class Track : public Object
 public:
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(Track);
 
+    bool isTrack() const { return true; }
+
     /** Returns the idName()s of the sequences that belong to this track. */
     const QStringList& sequenceIds() const { return sequenceIds_; }
 

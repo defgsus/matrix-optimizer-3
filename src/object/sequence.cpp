@@ -51,6 +51,15 @@ void Sequence::deserialize(IO::DataStream &io)
     looping_ = looping;
 }
 
+QString Sequence::infoName() const
+{
+    if (track_)
+        return name() + " (on " + track_->name() + ")";
+    else
+        return name();
+}
+
+
 void Sequence::addToTrack(Track *t)
 {
     /*

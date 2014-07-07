@@ -20,7 +20,7 @@ MO_REGISTER_OBJECT(AxisRotation)
 AxisRotation::AxisRotation(QObject *parent) :
     Transformation(parent)
 {
-    setName("AxisRotation");
+    setName("Rotation");
 }
 
 void AxisRotation::serialize(IO::DataStream & io) const

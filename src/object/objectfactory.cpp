@@ -22,6 +22,7 @@
 #include "dummy.h"
 #include "transform/translation.h"
 #include "transform/axisrotation.h"
+#include "transform/scale.h"
 #include "scene.h"
 #include "trackfloat.h"
 #include "sequencefloat.h"
@@ -56,6 +57,8 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     static QIcon iconCamera(":/icon/obj_camera.png");
     static QIcon iconTranslation(":/icon/obj_translation.png");
     static QIcon iconRotation(":/icon/obj_rotation.png");
+    static QIcon iconScale(":/icon/obj_scale.png");
+    static QIcon iconTrack(":/icon/obj_track.png");
 
     if (o->isTransformation())
     {
@@ -63,7 +66,10 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
             return iconTranslation;
         if (qobject_cast<const AxisRotation*>(o))
             return iconRotation;
+        if (qobject_cast<const Scale*>(o))
+            return iconScale;
     }
+    if (o->isTrack()) return iconTrack;
     if (o->type() & Object::TG_FLOAT) return iconParameter;
     if (o->isCamera()) return iconCamera;
     if (o->isMicrophone()) return iconMicrophone;

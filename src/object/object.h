@@ -184,6 +184,7 @@ public:
     virtual bool isMicrophone() const { return false; }
     virtual bool isCamera() const { return false; }
     virtual bool isParameter() const { return false; }
+    virtual bool isTrack() const { return false; }
     virtual bool isSequence() const { return false; }
 
     // --------------- setter -------------------

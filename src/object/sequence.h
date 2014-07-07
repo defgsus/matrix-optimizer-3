@@ -26,6 +26,8 @@ public:
 
     bool isSequence() const { return true; }
 
+    virtual QString infoName() const;
+
     // -------------- tracks -------------------
 
     /** The track, this sequence is on */

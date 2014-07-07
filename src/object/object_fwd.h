@@ -25,6 +25,8 @@ namespace MO {
     class ObjectGl;
     class Model3d;
     class Transformation;
+    class Rotation;
+    class Scale;
     class Track;
     class TrackFloat;
     class Sequences;
