@@ -8,6 +8,10 @@
     <p>created 7/4/2014</p>
 */
 
+#include <QDebug>
+#include <QPainter>
+#include <QPaintEvent>
+
 #include "trackheader.h"
 #include "trackview.h"
 #include "io/error.h"
@@ -61,9 +65,11 @@ void TrackHeader::setTracks(const QList<Track *> &tracks)
     for (auto t : tracks)
     {
          widgets_.append( w = new TrackHeaderWidget(t, this) );
+         w->setVisible(true);
     }
 
     updateWidgetsViewSpace_();
+    update();
 }
 
 
@@ -77,6 +83,21 @@ void TrackHeader::updateWidgetsViewSpace_()
         w->setFixedHeight(h);
         w->move(0, y);
     }
+}
+
+void TrackHeader::paintEvent(QPaintEvent * )
+{
+    QPainter p(this);
+
+    p.setPen(QColor(80,80,80));
+    for (auto t : tracks_)
+    {
+        const int y = trackView_->trackY(t)
+                        + trackView_->trackHeight(t)
+                        + trackView_->trackSpacing() / 2;
+        p.drawLine(0, y, width(), y);
+    }
+
 }
 
 } // namespace GUI

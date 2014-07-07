@@ -41,6 +41,9 @@ public slots:
         Previous content will be removed. */
     void setTracks(const QList<Track*>& tracks);
 
+protected:
+    void paintEvent(QPaintEvent *);
+
 private:
 
     void updateWidgetsViewSpace_();

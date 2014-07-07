@@ -62,6 +62,7 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
         if (qobject_cast<const AxisRotation*>(o))
             return iconRotation;
     }
+    if (o->type() & Object::TG_FLOAT) return iconParameter;
     if (o->isCamera()) return iconCamera;
     if (o->isMicrophone()) return iconMicrophone;
     if (o->isSoundSource()) return iconSoundSource;

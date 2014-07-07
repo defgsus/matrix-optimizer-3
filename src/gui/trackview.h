@@ -49,6 +49,8 @@ public:
     /** Returns the y position of the track */
     int trackY(Track *) const;
 
+    int trackSpacing() const { return trackSpacing_; }
+
     /** Returns number of tracks displayed. */
     int numTracks() const { return tracks_.size(); }
 

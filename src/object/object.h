@@ -100,6 +100,8 @@ public:
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
 
+        TG_FLOAT            = T_TRACK_FLOAT | T_SEQUENCE_FLOAT,
+
         TG_ALL = 0xffffffff
     };
 
