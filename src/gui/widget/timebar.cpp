@@ -9,6 +9,8 @@
 */
 
 #include <QMouseEvent>
+#include <QPaintEvent>
+#include <QPainter>
 
 #include "timebar.h"
 #include "gui/util/viewspace.h"
@@ -21,13 +23,13 @@ namespace GUI {
 TimeBar::TimeBar(QWidget *parent) :
     QWidget (parent),
     time_   (0.0),
+    minTime_(-1.0e100),
+    maxTime_(1.0e100),
     offset_ (0.0)
 {
     setFixedWidth(3);
-    setAutoFillBackground(true);
-    QPalette p(palette());
-    p.setColor(QPalette::Window, QColor(0,255,255, 100));
-    setPalette(p);
+
+    brushBar_ = QBrush(QColor(0,255,255,100));
 
     if (parent)
         setContainingRect( parent->rect() );
@@ -67,14 +69,7 @@ void TimeBar::update_()
 {
     const int x = space_.mapXFrom(time_) * rect_.width();
 
-    if (x < 0 || x > rect_.width())
-        setVisible(false);
-    else
-    {
-        move(x - 1 + rect_.x(), rect_.y());
-        if (!isVisible())
-            setVisible(true);
-    }
+    move(x - 1 + rect_.x(), rect_.y());
 }
 
 
@@ -95,9 +90,9 @@ void TimeBar::mouseMoveEvent(QMouseEvent * e)
         const QPoint g = mapToGlobal( e->pos() );
         const int delta = g.x() - dragStart_.x();
 
-        const Double newTime = std::max((Double)0,
+        const Double newTime = std::min(maxTime_, std::max(minTime_,
                 timeStart_ +
-                space_.mapXDistanceTo((Double)delta/rect_.width()) );
+                space_.mapXDistanceTo((Double)delta/rect_.width()) ));
 
         //setTime(newTime);
 
@@ -105,6 +100,18 @@ void TimeBar::mouseMoveEvent(QMouseEvent * e)
     }
 }
 
+void TimeBar::paintEvent(QPaintEvent * e)
+{
+    // draw only if inside the contained-rect
+    if (geometry().left() >= rect_.x() - 1
+            && geometry().right() <= rect_.right() + 1)
+    {
+        QPainter p(this);
+        p.setPen(Qt::NoPen);
+        p.setBrush(brushBar_);
+        p.drawRect(e->rect());
+    }
+}
 
 } // namespace GUI
 } // namespace MO

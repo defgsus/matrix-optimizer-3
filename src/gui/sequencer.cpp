@@ -67,6 +67,7 @@ void Sequencer::createWidgets_()
 
         // play bar
         playBar_ = new TimeBar(this);
+        playBar_->setMinimumTime(0.0);
 
     // --- connections ---
 
@@ -104,6 +105,9 @@ void Sequencer::createWidgets_()
             playBar_, SLOT(setViewspace(UTIL::ViewSpace)));
     // connect timebar to outside
     connect(playBar_, SIGNAL(timeChanged(Double)),
+            this, SIGNAL(sceneTimeChanged(Double)));
+    // connect ruler click to scene time
+    connect(rulerSec_, SIGNAL(doubleClicked(Double)),
             this, SIGNAL(sceneTimeChanged(Double)));
 
 

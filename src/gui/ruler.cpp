@@ -93,6 +93,13 @@ void Ruler::mousePressEvent(QMouseEvent * e)
         action_ = A_DRAG_SPACE;
         return;
     }
+
+    if (e->button() == Qt::LeftButton)
+    {
+        emit fitRequest();
+        e->accept();
+        return;
+    }
 }
 
 void Ruler::mouseMoveEvent(QMouseEvent * e)
@@ -154,7 +161,11 @@ void Ruler::mouseDoubleClickEvent(QMouseEvent * e)
 {
     if (e->button() == Qt::LeftButton)
     {
-        emit fitRequest();
+        const Double time =
+                    (options_ & O_EnableAllX)?
+                        space_.mapXTo((Double)e->x()/width())
+                      : space_.mapYTo((Double)e->y()/height());
+        emit doubleClicked(time);
         e->accept();
         return;
     }

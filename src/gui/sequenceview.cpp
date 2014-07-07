@@ -55,20 +55,20 @@ SequenceView::SequenceView(QWidget *parent) :
     rulerY_->setOptions(Ruler::O_EnableAllY);
 
     // connect rulers to class
-
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), SLOT(setViewSpace(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), SLOT(setViewSpace(UTIL::ViewSpace)));
 
     // connect rulers to each other
-
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerY_, SLOT(setViewSpace(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerX_, SLOT(setViewSpace(UTIL::ViewSpace)));
 
     // pass viewSpaceChanged to this classes signal
-
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     //connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
+
+    // connect ruler click to scene time
+    connect(rulerX_, SIGNAL(doubleClicked(Double)), this, SLOT(rulerXClicked_(Double)));
 
     // playbar
     playBar_ = new TimeBar(this);
@@ -190,6 +190,16 @@ void SequenceView::setSequenceWidget_(QWidget * w)
     playBar_->raise();
 }
 
+void SequenceView::rulerXClicked_(Double time)
+{
+    if (baseSequence_)
+        time += baseSequence_->start();
+
+    emit sceneTimeChanged(time);
+}
+
+
+// --------------------- settings widgets ---------------------------
 
 QWidget * SequenceView::newContainer_(const QString& name)
 {
@@ -339,6 +349,7 @@ void SequenceView::sequenceTimeChanged_(Sequence * s)
         return;
 
     playBar_->setTimeOffset(-baseSequence_->start());
+    playBar_->setMinimumTime(-baseSequence_->start());
 
     MO_DEBUG_PARAM("updating widgets");
 

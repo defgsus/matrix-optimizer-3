@@ -19,6 +19,7 @@
 #include "object/scene.h"
 #include "object/param/parameterfloat.h"
 #include "io/error.h"
+#include "model/objecttreemodel.h"
 
 namespace MO {
 namespace GUI {
@@ -77,6 +78,9 @@ void ParameterView::createWidgets_()
 
 QWidget * ParameterView::createWidget_(Parameter * p)
 {
+    ObjectTreeModel * model = p->object()->sceneObject()->model();
+    MO_ASSERT(model, "No model assign for Parameter");
+
     QFrame * w = new QFrame(this);
     w->setFrameStyle(QFrame::Panel);
     w->setFrameShadow(QFrame::Sunken);
@@ -87,10 +91,17 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     QLabel * label = new QLabel(p->name(), w);
     l->addWidget(label);
 
+    QToolButton * but, * bmod, * breset;
+
     // --- float parameter ---
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(p))
     {
-        QToolButton * but = new QToolButton(w);
+        but = bmod = new QToolButton(w);
+        l->addWidget(but);
+        but->setText("M");
+        but->setToolTip(tr("Create modulation Track"));
+
+        but = breset = new QToolButton(w);
         l->addWidget(but);
         but->setText("0");
         but->setToolTip(tr("Set to default value (%1)").arg(pf->defaultValue()));
@@ -120,7 +131,11 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             Q_UNUSED(r);
         });
 
-        connect(but, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue()); });
+        connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue()); });
+        connect(bmod, &QToolButton::pressed, [=]()
+        {
+            model->createFloatTrack(pf);
+        });
     }
     else
         MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");

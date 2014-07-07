@@ -18,6 +18,7 @@
 #include "object/objectfactory.h"
 #include "object/trackfloat.h"
 #include "object/sequencefloat.h"
+#include "object/param/parameterfloat.h"
 
 namespace MO {
 
@@ -423,15 +424,38 @@ QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, 
     return QModelIndex();
 }
 
+TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
+{
+    MO_DEBUG_TREE("ObjectTreeModel::createFloatTrack('" << param->idName() << ")");
+
+    Object * obj = param->object();
+
+    QString name = obj->name() + "." + param->name();
+
+    if (!(obj->type() & Object::TG_REAL_OBJECT)
+        && obj->parentObject())
+            name.prepend(obj->parentObject()->name() + ".");
+
+    auto track = ObjectFactory::createTrackFloat(name);
+
+    // place the track somewhere
+    addObject(indexForObject(obj), -1, track);
+
+    // modulate parameter
+    param->addModulator(track->idName());
+    param->collectModulators();
+
+    return track;
+}
 
 SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double time)
 {
-    MO_DEBUG_TREE("Scene::createFloatSequence('" << track->idName() << "', " << time << ")");
+    MO_DEBUG_TREE("ObjectTreeModel::createFloatSequence('" << track->idName() << "', " << time << ")");
 
     QModelIndex trackIdx = indexForObject(track);
 
     // creat sequence
-    auto * seq = ObjectFactory::createSequenceFloat();
+    auto seq = ObjectFactory::createSequenceFloat();
     seq->setStart(time);
 
     // place the sequence somewhere

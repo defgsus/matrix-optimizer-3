@@ -61,7 +61,11 @@ signals:
     /** Send when the viewspace has changed */
     void viewSpaceChanged(const UTIL::ViewSpace&);
 
-    /** Send for a double-click */
+    /** Send for a double-click.
+        If any option regarding X is enabled, @p value will be the x value,
+        else it will be the y value. */
+    void doubleClicked(Double value);
+
     void fitRequest();
 
 public slots:

@@ -20,9 +20,11 @@
 
 #include "object.h"
 #include "dummy.h"
-#include "object/transform/translation.h"
-#include "object/transform/axisrotation.h"
+#include "transform/translation.h"
+#include "transform/axisrotation.h"
 #include "scene.h"
+#include "trackfloat.h"
+#include "sequencefloat.h"
 
 namespace MO {
 
@@ -115,7 +117,7 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
 
 Scene * ObjectFactory::createSceneObject()
 {
-    Scene * s = (Scene*)(createObject("Scene"));
+    Scene * s = qobject_cast<Scene*>(createObject("Scene"));
     MO_ASSERT(s, "could not create Scene object");
     /*Object * sg = createObject(MO_OBJECTCLASSNAME_SEQUENCES);
     MO_ASSERT(sg, "could not create SequenceGroup object");
@@ -124,6 +126,27 @@ Scene * ObjectFactory::createSceneObject()
     return s;
 }
 
+TrackFloat * ObjectFactory::createTrackFloat(const QString &name)
+{
+    TrackFloat * t = qobject_cast<TrackFloat*>(createObject("TrackFloat"));
+    MO_ASSERT(t, "could not create TrackFloat object");
+
+    if (!name.isEmpty())
+        t->name_ = t->idName_ = name;
+
+    return t;
+}
+
+SequenceFloat * ObjectFactory::createSequenceFloat(const QString& name)
+{
+    SequenceFloat * seq = qobject_cast<SequenceFloat*>(createObject("SequenceFloat"));
+    MO_ASSERT(seq, "could not create SequenceFloat object");
+    if (!name.isEmpty())
+        seq->name_ = seq->idName_ = name;
+    return seq;
+}
+
+
 Object * ObjectFactory::createDummy()
 {
     Object * dummy = createObject("Dummy");
@@ -131,12 +154,6 @@ Object * ObjectFactory::createDummy()
     return dummy;
 }
 
-SequenceFloat * ObjectFactory::createSequenceFloat()
-{
-    SequenceFloat * seq = (SequenceFloat*)createObject("SequenceFloat");
-    MO_ASSERT(seq, "could not create SequenceFloat object");
-    return seq;
-}
 
 QList<const Object*> ObjectFactory::possibleChildObjects(const Object * parent)
 {

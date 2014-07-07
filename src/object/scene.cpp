@@ -80,6 +80,7 @@ void Scene::tellObjectAdded(Object * obj)
 {
     MO_DEBUG_TREE("Scene::tellObectAdded('" << obj->idName() << "')");
     emit objectAdded(obj);
+    render_();
 }
 
 
@@ -107,13 +108,19 @@ void Scene::findObjects_()
              );
 #endif
 }
-
+/*
 void Scene::initGlChilds_()
 {
-    /*for (auto o : glObjects_)
+    for (auto o : glObjects_)
     {
 
-    }*/
+    }
+}
+*/
+void Scene::render_()
+{
+    if (!timer_.isActive())
+        emit renderRequest();
 }
 
 void Scene::updateNumberThreads_()
@@ -145,28 +152,13 @@ void Scene::updateModulators_()
 void Scene::setParameterValue(ParameterFloat *p, Double v)
 {
     p->setValue(v);
-    emit renderRequest();
+    render_();
 }
 
 // --------------------- tracks ------------------------------
 
 // --------------------- sequence ----------------------------
-/*
-SequenceFloat * Scene::createFloatSequence(Track * track, Double time)
-{
-    MO_DEBUG_TREE("Scene::createFloatSequence('" << track->idName() << "', " << time << ")");
 
-    auto * seq = ObjectFactory::createSequenceFloat();
-    seq->setStart(time);
-    // place the sequence somewhere
-    track->addObject(seq);
-    // add it to track
-    track->addSequence(seq);
-    // notify everyone
-    tellTreeChanged();
-    return seq;
-}
-*/
 void Scene::moveSequence(Sequence *seq, Track *from, Track *to)
 {
     MO_DEBUG_TREE("Scene::moveSequence('" << seq->idName() << "', '" << from->idName() << "', '"
@@ -192,6 +184,7 @@ void Scene::endSequenceChange()
 {
     MO_DEBUG_PARAM("Scene::endSequenceChange()");
     emit sequenceChanged(changedSequence_);
+    render_();
 }
 
 // --------------------- objects -----------------------------
@@ -206,6 +199,7 @@ void Scene::endObjectChange()
 {
     MO_DEBUG_PARAM("Scene::endObjectChange()");
     emit objectChanged(changedObject_);
+    render_();
 }
 
 // ----------------------- open gl ---------------------------
@@ -271,6 +265,17 @@ void Scene::calculateSceneTransform(int thread, Double time)
         o->setTransformation(thread, matrix);
     }
 
+}
+
+
+// ---------------------- runtime --------------------------
+
+void Scene::setSceneTime(Double time, bool send_signal)
+{
+    sceneTime_ = time;
+    if (send_signal)
+        emit sceneTimeChanged(sceneTime_);
+    render_();
 }
 
 

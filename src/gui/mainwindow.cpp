@@ -276,8 +276,8 @@ void MainWindow::createObjects_()
 
 
     try {
-        newScene();
-        //setSceneObject(ObjectFactory::loadScene("./tracktest2.mo3"));
+        //newScene();
+        setSceneObject(ObjectFactory::loadScene("./test.mo3"));
     }
     catch (IoException& e)
     {

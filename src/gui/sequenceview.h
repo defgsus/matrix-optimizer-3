@@ -61,6 +61,7 @@ protected slots:
 
     void sequenceTimeChanged_(MO::Sequence *);
 
+    void rulerXClicked_(Double);
 protected:
     void resizeEvent(QResizeEvent *);
 

@@ -16,13 +16,11 @@
 
 #include <QObject>
 
+#include "object/object_fwd.h"
+
 class QIcon;
 
 namespace MO {
-
-class Object;
-class Scene;
-class SequenceFloat;
 
 namespace IO { class DataStream; }
 
@@ -49,7 +47,10 @@ public:
     static Scene * createSceneObject();
 
     /** Returns a new float sequence */
-    static SequenceFloat * createSequenceFloat();
+    static SequenceFloat * createSequenceFloat(const QString& name = QString());
+
+    /** Returns a new float track */
+    static TrackFloat * createTrackFloat(const QString& name = QString());
 
     /** Creates a dummy object (for skipping unknown objects in deserializer) */
     static Object * createDummy();

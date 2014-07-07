@@ -12,6 +12,7 @@
 #define MOSRC_GUI_WIDGET_TIMEBAR_H
 
 #include <QWidget>
+#include <QBrush>
 
 #include "types/float.h"
 #include "gui/util/viewspace.h"
@@ -39,18 +40,26 @@ public slots:
 
     void setTimeOffset(Double offset);
 
+    void setMinimumTime(Double time) { minTime_ = time; }
+    void setMaximumTime(Double time) { maxTime_ = time; }
 protected:
 
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
 
+    void paintEvent(QPaintEvent *);
+
     void update_();
 
-    Double time_, offset_;
+    Double time_, minTime_, maxTime_, offset_;
     UTIL::ViewSpace space_;
     QRect rect_;
     QPoint dragStart_;
     Double timeStart_;
+
+    // --- config ---
+
+    QBrush brushBar_;
 };
 
 } // namespace GUI

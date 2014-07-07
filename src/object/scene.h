@@ -103,9 +103,7 @@ public slots:
 
     // ------------- runtime -------------------
 
-    void setSceneTime(Double time, bool send_signal = true)
-        { sceneTime_ = time; emit renderRequest();
-          if (send_signal) emit sceneTimeChanged(sceneTime_); }
+    void setSceneTime(Double time, bool send_signal = true);
 
     // ------------- open gl -------------------
 
@@ -136,8 +134,11 @@ private:
 
     // ---------- opengl -----------------------
 
-    /** Initializes all opengl childs */
-    void initGlChilds_();
+    /* Initializes all opengl childs */
+    //void initGlChilds_();
+
+    /** Emits renderRequest if scene is not already running. */
+    void render_();
 
     // -------------- model --------------------
 

@@ -78,6 +78,8 @@ public slots:
 
     QModelIndex addObject(const QModelIndex& parent, int indexInChild, Object * obj);
 
+    TrackFloat * createFloatTrack(ParameterFloat * parameter);
+
     SequenceFloat * createFloatSequence(TrackFloat * track, Double time);
 
 private:
