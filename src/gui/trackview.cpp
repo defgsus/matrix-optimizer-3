@@ -17,6 +17,7 @@
 
 
 #include "trackview.h"
+#include "trackviewoverpaint.h"
 #include "trackheader.h"
 #include "widget/sequencewidget.h"
 #include "object/sequencefloat.h"
@@ -58,6 +59,7 @@ TrackView::TrackView(QWidget *parent) :
     setAutoFillBackground(true);
 
     header_ = new TrackHeader(this, this);
+    overpaint_ = new TrackViewOverpaint(this, this);
 }
 
 void TrackView::setViewSpace(const UTIL::ViewSpace & s)
@@ -93,6 +95,11 @@ QPoint TrackView::viewToScreen(const QPointF &view) const
                 view.y() - offsetY_);
 }
 
+void TrackView::resizeEvent(QResizeEvent *)
+{
+    overpaint_->setGeometry(rect());
+}
+
 void TrackView::paintEvent(QPaintEvent * )
 {
     QPainter p(this);
@@ -103,13 +110,6 @@ void TrackView::paintEvent(QPaintEvent * )
     {
         const int y = trackY(t) + trackHeight(t) + trackSpacing_ / 2;
         p.drawLine(0, y, width(), y);
-    }
-
-    if (action_ == A_SELECT_FRAME_)
-    {
-        p.setPen(QColor(255,255,255));
-        p.setBrush(Qt::NoBrush);
-        p.drawRect(selectRect_);
     }
 
     /*
@@ -287,6 +287,9 @@ void TrackView::createSequenceWidgets_(Track * t)
             emit sequenceSelected(seq);
         }
     }
+
+    // needs to be on top
+    overpaint_->raise();
 }
 
 void TrackView::updateTrack(Track * t)

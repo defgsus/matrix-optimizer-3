@@ -27,12 +27,14 @@ class Scene;
 class Sequence;
 namespace GUI {
 
+class TrackViewOverpaint;
 class TrackHeader;
 class SequenceWidget;
 
 class TrackView : public QWidget
 {
     Q_OBJECT
+    friend class TrackViewOverpaint;
 public:
     explicit TrackView(QWidget *parent = 0);
 
@@ -108,6 +110,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
 
+    void resizeEvent(QResizeEvent *);
     void paintEvent(QPaintEvent *);
 
 private:
@@ -153,6 +156,7 @@ private:
     Scene * scene_;
     QList<Track*> tracks_;
 
+    TrackViewOverpaint * overpaint_;
     TrackHeader * header_;
 
     QSet<SequenceWidget*> sequenceWidgets_;

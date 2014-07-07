@@ -14,10 +14,11 @@
 #include <QLabel>
 
 #include "objectview.h"
+#include "tool/stringmanip.h"
 #include "parameterview.h"
 #include "object/object.h"
 #include "object/objectfactory.h"
-#include "tool/stringmanip.h"
+#include "object/trackfloat.h"
 
 namespace MO {
 namespace GUI {
@@ -39,6 +40,9 @@ ObjectView::ObjectView(QWidget *parent) :
             label_ = new QLabel(this);
             lh->addWidget(label_);
 
+        label2_ = new QLabel(this);
+        layout_->addWidget(label2_);
+
         paramView_ = new ParameterView(this);
         layout_->addWidget(paramView_);
 }
@@ -56,6 +60,7 @@ void ObjectView::setObject(Object * object)
         QString shortIdPath = fontMetrics().elidedText(
                     object_->idNamePath(), Qt::ElideMiddle,
                     width()-150);
+
         icon_->setIcon(ObjectFactory::iconForObject(object_));
         label_->setText(QString("<html><b>%1</b><br/>%2/%1<br/>%3/%4</html>")
                         .arg(object_->name())
@@ -63,11 +68,23 @@ void ObjectView::setObject(Object * object)
                         .arg(shortIdPath)
                         .arg(object_->idName())
                         );
+
+        // additional info
+        QString info;
+
+        if (TrackFloat * track = qobject_cast<TrackFloat*>(object_))
+        {
+            for (auto &s : track->sequenceIds())
+                info += s + "\n";
+        }
+
+        label2_->setText(info);
     }
     else
     {
         icon_->setIcon(QIcon());
         label_->setText(QString());
+        label2_->setText(QString());
     }
 
     paramView_->setObject(object_);

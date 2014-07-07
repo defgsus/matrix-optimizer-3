@@ -28,7 +28,7 @@ TrackHeaderWidget::TrackHeaderWidget(Track *track, QWidget *parent) :
 
     setAutoFillBackground(true);
     QPalette p(palette());
-    p.setColor(QPalette::Window, QColor(60,160,60));
+    p.setColor(QPalette::Window, QColor(60,60,60));
     p.setColor(QPalette::Foreground, Qt::white);
     setPalette(p);
 

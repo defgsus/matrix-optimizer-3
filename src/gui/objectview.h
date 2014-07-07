@@ -44,7 +44,8 @@ private:
     ParameterView * paramView_;
     QVBoxLayout * layout_;
     QToolButton * icon_;
-    QLabel * label_;
+    QLabel * label_, *label2_;
+
 };
 
 } // namespace GUI

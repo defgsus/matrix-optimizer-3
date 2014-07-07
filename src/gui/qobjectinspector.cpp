@@ -21,7 +21,7 @@ namespace GUI {
 QObjectInspector::QObjectInspector(QObject * rootObject, QWidget *parent) :
     QMainWindow(parent)
 {
-    setMinimumSize(700,400);
+    setMinimumSize(900,400);
 
     model_ = new QObjectTreeModel(0, this);
     setRootObject(rootObject);

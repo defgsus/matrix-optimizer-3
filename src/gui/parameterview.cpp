@@ -79,7 +79,7 @@ void ParameterView::createWidgets_()
 QWidget * ParameterView::createWidget_(Parameter * p)
 {
     ObjectTreeModel * model = p->object()->sceneObject()->model();
-    MO_ASSERT(model, "No model assign for Parameter");
+    MO_ASSERT(model, "No model assigned for Parameter");
 
     QFrame * w = new QFrame(this);
     w->setFrameStyle(QFrame::Panel);
