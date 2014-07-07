@@ -24,15 +24,17 @@ class ObjectTreeMimeData : public QMimeData
 public:
     explicit ObjectTreeMimeData();
 
-    static const QString& mimeType();
+    static const QString objectMimeType;
+    static const QString typeMimeType;
 
     virtual QStringList formats() const;
 
     void setObjectTree(const Object * o);
     Object * getObjectTree() const;
 
-    Object::Type getObjectType() const { return type_; }
+    Object::Type getObjectType() const;
 
+    // for drag/drop
     void setModelIndex(const QModelIndex & index) { index_ = index; }
     const QModelIndex& getModelIndex() const { return index_; }
 
@@ -42,7 +44,6 @@ protected:
     QByteArray getObjectTreeData_() const;
 
     QModelIndex index_;
-    Object::Type type_;
 };
 
 } // namespace MO

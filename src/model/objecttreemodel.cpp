@@ -337,7 +337,7 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
           action == Qt::CopyAction) || column > 0)
         return false;
 
-    if (!data->formats().contains(ObjectTreeMimeData::mimeType()))
+    if (!data->formats().contains(ObjectTreeMimeData::objectMimeType))
     {
         MO_WARNING("mimedata is invalid");
         return false;

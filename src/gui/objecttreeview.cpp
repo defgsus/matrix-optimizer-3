@@ -238,7 +238,8 @@ void ObjectTreeView::createEditActions_(Object * obj)
         editActions_.append(a = new QAction(this));
         a->setSeparator(true);
 
-    } // object selected?
+    }
+    // no object selected
     else
     {
         createFirstObjectActions_();
@@ -286,8 +287,6 @@ void ObjectTreeView::createFirstObjectActions_()
             {
                 Object * newo = ObjectFactory::createObject(o->className());
                 addObject_(sceneIndex, scene_->numChildren(), newo);
-                    // XXX hack because of lacking update
-                    //expandAll();
             });
         }
     }
@@ -332,7 +331,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
 
     // paste
     if (application->clipboard()->mimeData()->formats().contains(
-                ObjectTreeMimeData::mimeType()))
+                ObjectTreeMimeData::objectMimeType))
     {
         Object::Type pasteType = static_cast<const ObjectTreeMimeData*>(
                     application->clipboard()->mimeData())->getObjectType();

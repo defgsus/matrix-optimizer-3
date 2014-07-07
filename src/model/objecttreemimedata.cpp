@@ -16,35 +16,38 @@
 
 namespace MO {
 
-namespace {
-static const QString objMimeType = "matrixoptimizer/object-tree";
-}
+const QString ObjectTreeMimeData::objectMimeType = "matrixoptimizer/object-tree";
+const QString ObjectTreeMimeData::typeMimeType = "matrixoptimizer/object-type";
+
 
 ObjectTreeMimeData::ObjectTreeMimeData() :
-    QMimeData()
+    QMimeData   ()
 {
     //setParent(parent);
 }
 
-const QString& ObjectTreeMimeData::mimeType()
-{
-    return objMimeType;
-}
-
 QStringList ObjectTreeMimeData::formats() const
 {
-    return QStringList() << objMimeType;
+    return QStringList() << objectMimeType << typeMimeType;
 }
 
 
 void ObjectTreeMimeData::setObjectTreeData_(const QByteArray & bytes)
 {
-    setData(objMimeType, bytes);
+    setData(objectMimeType, bytes);
 }
 
 QByteArray ObjectTreeMimeData::getObjectTreeData_() const
 {
-    return (data(objMimeType));
+    return (data(objectMimeType));
+}
+
+Object::Type ObjectTreeMimeData::getObjectType() const
+{
+    QByteArray a = data(typeMimeType);
+    if (a.isEmpty())
+        return (Object::Type)(-1);
+    return (Object::Type)(a.toInt());
 }
 
 void ObjectTreeMimeData::setObjectTree(const Object * obj)
@@ -53,7 +56,11 @@ void ObjectTreeMimeData::setObjectTree(const Object * obj)
     IO::DataStream io(&a, QIODevice::WriteOnly);
     obj->serializeTree(io);
     setObjectTreeData_(a);
-    type_ = obj->type();
+
+    // store type
+    a.clear();
+    a.append(QString::number(obj->type()));
+    setData(typeMimeType, a);
 }
 
 Object * ObjectTreeMimeData::getObjectTree() const
