@@ -144,15 +144,6 @@ void ObjectTreeView::createDefaultActions_()
     a->setShortcut(Qt::ALT + Qt::Key_C);
     connect(a, SIGNAL(triggered()), SLOT(collapseAll()));
 
-    a = new QAction(tr("sorted"), this);
-    addAction(a);
-    a->setCheckable(true);
-    a->setChecked(true);
-    connect(a, &QAction::triggered, [=](bool checked)
-    {
-        setSortingEnabled(checked);
-    });
-
     a = new QAction(tr("RESET MODEL"), this);
     addAction(a);
     connect(a, &QAction::triggered, [=]()
@@ -171,6 +162,7 @@ void ObjectTreeView::createTypeActions_()
 #define MO__TYPE_ACTION(type__, typename__) \
     showTypeMenu_->addAction(a = new QAction(typename__, this)); \
     a->setData(QVariant((int)(type__))); \
+    a->setIcon(ObjectFactory::iconForObject(type__)); \
     a->setCheckable(true); \
     a->setChecked(true);
 

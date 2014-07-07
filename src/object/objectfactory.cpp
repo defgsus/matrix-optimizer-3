@@ -29,8 +29,12 @@
 
 namespace MO {
 
-static QString MO_SCENEFILE_HEADER( "matrix-optimizer-scene" );
-static int     MO_SCENEFILE_VERSION( 1 );
+namespace {
+
+    static QString MO_SCENEFILE_HEADER( "matrix-optimizer-scene" );
+    static int     MO_SCENEFILE_VERSION( 1 );
+
+}
 
 ObjectFactory * ObjectFactory::instance_ = 0;
 
@@ -78,8 +82,35 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     if (o->isParameter()) return iconParameter;
 
     return iconNone;
-
 }
+
+const QIcon& ObjectFactory::iconForObject(int type)
+{
+    static QIcon iconNone(":/icon/obj_none.png");
+    static QIcon icon3d(":/icon/obj_3d.png");
+    static QIcon iconParameter(":/icon/obj_parameter.png");
+    static QIcon iconSoundSource(":/icon/obj_soundsource.png");
+    static QIcon iconMicrophone(":/icon/obj_microphone.png");
+    static QIcon iconCamera(":/icon/obj_camera.png");
+    static QIcon iconTranslation(":/icon/obj_translation.png");
+    static QIcon iconRotation(":/icon/obj_rotation.png");
+    static QIcon iconScale(":/icon/obj_scale.png");
+    static QIcon iconTrack(":/icon/obj_track.png");
+
+    switch (type)
+    {
+        case Object::T_OBJECT: return icon3d;
+        case Object::T_TRANSFORMATION: return iconTranslation;
+        case Object::T_MICROPHONE: return iconMicrophone;
+        case Object::T_CAMERA: return iconCamera;
+        case Object::T_SOUNDSOURCE: return iconSoundSource;
+    }
+    if (type & Object::TG_TRACK) return iconTrack;
+    if (type & Object::TG_FLOAT) return iconParameter;
+
+    return iconNone;
+}
+
 
 bool ObjectFactory::registerObject(Object * obj)
 {
