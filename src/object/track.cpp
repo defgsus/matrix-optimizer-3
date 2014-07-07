@@ -68,6 +68,8 @@ void Track::removeSequence(Sequence * s)
 
 void Track::collectModulators()
 {
+    MO_DEBUG_MOD("Track("<<idName()<<")::collectModulators()");
+
     baseSequences_.clear();
 
     Object * root = rootObject();

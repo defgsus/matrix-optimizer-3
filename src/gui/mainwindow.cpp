@@ -244,12 +244,11 @@ void MainWindow::setSceneObject(Scene * s)
 
     // scene changes
     connect(scene_, SIGNAL(treeChanged()), this, SLOT(treeChanged()));
-    connect(scene_, SIGNAL(objectAdded(MO::Object*)),
-            objectTreeModel_, SLOT(objectAdded(MO::Object*)));
 
     // update widgets
 
-    objectTreeModel_->setRootObject(scene_);
+    scene_->setObjectModel(objectTreeModel_);
+
     objectView_->setObject(0);
     seqFloatView_->setSequence(0);
 

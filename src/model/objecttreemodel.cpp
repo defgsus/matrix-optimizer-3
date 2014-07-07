@@ -16,7 +16,8 @@
 #include "io/log.h"
 #include "object/object.h"
 #include "object/objectfactory.h"
-
+#include "object/trackfloat.h"
+#include "object/sequencefloat.h"
 
 namespace MO {
 
@@ -384,14 +385,6 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
 
 
-void ObjectTreeModel::objectAdded(Object * obj)
-{
-    QModelIndex idx = indexForObject(obj);
-    QModelIndex parentIdx = parent(idx);
-    int row = obj->parentObject()->childObjects().indexOf(obj);
-    //beginInsertRows(parentIdx, row, row);
-    //endInsertRows();
-}
 
 // ------------------- custom editing ----------------------
 
@@ -428,6 +421,27 @@ QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, 
         return createIndex(row, 0, (void*)obj);
     }
     return QModelIndex();
+}
+
+
+SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double time)
+{
+    MO_DEBUG_TREE("Scene::createFloatSequence('" << track->idName() << "', " << time << ")");
+
+    QModelIndex trackIdx = indexForObject(track);
+
+    // creat sequence
+    auto * seq = ObjectFactory::createSequenceFloat();
+    seq->setStart(time);
+
+    // place the sequence somewhere
+    addObject(trackIdx, -1, seq);
+
+    // add it to track
+    track->addSequence(seq);
+    track->collectModulators();
+
+    return seq;
 }
 
 } // namespace MO

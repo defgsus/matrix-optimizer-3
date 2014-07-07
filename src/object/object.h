@@ -17,6 +17,7 @@
 #include <QList>
 
 #include "types/vector.h"
+#include "object_fwd.h"
 
 /** Maximum time in seconds (for widgets mainly) */
 #define MO_MAX_TIME (60 * 60 * 1000)
@@ -24,23 +25,6 @@
 namespace MO {
 namespace IO { class DataStream; }
 
-class Scene;
-class Camera;
-class Microphone;
-class SoundSource;
-class Parameter;
-class ParameterFloat;
-class ObjectGl;
-class Model3d;
-class Transformation;
-class Track;
-class TrackFloat;
-class Sequences;
-class Sequence;
-class SequenceFloat;
-
-class Setting;
-class SettingFloat;
 /*
 // PERSISTENT class names
 #ifndef MO_OBJECTCLASSNAMES_DEFINED

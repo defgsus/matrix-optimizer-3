@@ -180,7 +180,8 @@ HEADERS += \
     src/gui/widget/equationeditor.h \
     src/tool/syntaxhighlighter.h \
     src/model/objecttreesortproxy.h \
-    src/object/trackfloat.h
+    src/object/trackfloat.h \
+    src/object/object_fwd.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

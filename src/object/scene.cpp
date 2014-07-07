@@ -20,6 +20,7 @@
 #include "object/parameterfloat.h"
 #include "object/track.h"
 #include "object/sequencefloat.h"
+#include "model/objecttreemodel.h"
 
 namespace MO {
 
@@ -27,6 +28,7 @@ MO_REGISTER_OBJECT(Scene)
 
 Scene::Scene(QObject *parent) :
     Object      (parent),
+    model_      (0),
     glContext_  (0),
     numThreads_ (1),
     sceneTime_  (0)
@@ -50,6 +52,11 @@ void Scene::deserialize(IO::DataStream & io)
     io.readHeader("scene", 1);
 }
 
+void Scene::setObjectModel(ObjectTreeModel * model)
+{
+    model_ = model;
+    model_->setRootObject(this);
+}
 
 void Scene::tellTreeChanged()
 {
@@ -144,7 +151,7 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
 // --------------------- tracks ------------------------------
 
 // --------------------- sequence ----------------------------
-
+/*
 SequenceFloat * Scene::createFloatSequence(Track * track, Double time)
 {
     MO_DEBUG_TREE("Scene::createFloatSequence('" << track->idName() << "', " << time << ")");
@@ -159,7 +166,7 @@ SequenceFloat * Scene::createFloatSequence(Track * track, Double time)
     tellTreeChanged();
     return seq;
 }
-
+*/
 void Scene::moveSequence(Sequence *seq, Track *from, Track *to)
 {
     MO_DEBUG_TREE("Scene::moveSequence('" << seq->idName() << "', '" << from->idName() << "', '"

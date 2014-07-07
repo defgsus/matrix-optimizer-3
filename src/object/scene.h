@@ -19,6 +19,8 @@
 namespace MO {
 namespace GL { class Context; }
 
+class ObjectTreeModel;
+
 class Scene : public Object
 {
     Q_OBJECT
@@ -27,6 +29,13 @@ public:
 
     virtual Type type() const { return T_SCENE; }
     bool isScene() const { return true; }
+
+    // ------------- object model --------------
+
+    /** Sets the model to edit the scene. */
+    void setObjectModel(ObjectTreeModel *);
+    /** Returns the model that is assigned to this scene. */
+    ObjectTreeModel * model() const { return model_; }
 
     // ------------- child objects -------------
 
@@ -75,7 +84,7 @@ public slots:
 
     // ------------- sequences -----------------
 
-    SequenceFloat * createFloatSequence(MO::Track * track, Double time = 0.0);
+    //SequenceFloat * createFloatSequence(MO::Track * track, Double time = 0.0);
 
     /** Moves the Sequence @seq from Track @p from to different Track @p to.
         The sequence will be removed from the previous track. */
@@ -122,6 +131,10 @@ private:
 
     /** Initializes all opengl childs */
     void initGlChilds_();
+
+    // -------------- model --------------------
+
+    ObjectTreeModel * model_;
 
     // ---------- opengl -----------------------
 

@@ -20,8 +20,9 @@
 #include "trackheader.h"
 #include "widget/sequencewidget.h"
 #include "object/sequencefloat.h"
-#include "object/track.h"
+#include "object/trackfloat.h"
 #include "object/scene.h"
+#include "model/objecttreemodel.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -283,6 +284,7 @@ void TrackView::createSequenceWidgets_(Track * t)
         {
             w->setFocus();
             nextFocusSequence_ = 0;
+            emit sequenceSelected(seq);
         }
     }
 }
@@ -599,10 +601,12 @@ void TrackView::createEditActions_()
         editActions_.append( a = new QAction(tr("New sequence"), this) );
         connect(a, &QAction::triggered, [this]()
         {
-            nextFocusSequence_ =
-                scene_->createFloatSequence(selTrack_, currentTime_);
-            emit sequenceSelected(nextFocusSequence_);
-            updateTrack(selTrack_);
+            if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
+            {
+                nextFocusSequence_ =
+                    scene_->model()->createFloatSequence(trackf, currentTime_);
+                updateTrack(selTrack_);
+            }
         });
     }
 }

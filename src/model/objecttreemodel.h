@@ -20,9 +20,10 @@
 #include <QIcon>
 #include <QFont>
 
-namespace MO {
+#include "types/float.h"
+#include "object/object_fwd.h"
 
-class Object;
+namespace MO {
 
 enum
 {
@@ -70,13 +71,14 @@ public slots:
 
     // ---- act upon changes ---
 
-    void objectAdded(MO::Object *);
 
     // ---- custom editing ----
 
     bool deleteObject(const QModelIndex&);
 
     QModelIndex addObject(const QModelIndex& parent, int indexInChild, Object * obj);
+
+    SequenceFloat * createFloatSequence(TrackFloat * track, Double time);
 
 private:
 
