@@ -178,7 +178,6 @@ void ObjectTreeView::createTypeActions_()
     MO__TYPE_ACTION(Object::T_MICROPHONE, tr("Microphones"));
     MO__TYPE_ACTION(Object::T_SOUNDSOURCE, tr("Soundsources"));
     MO__TYPE_ACTION(Object::T_TRANSFORMATION, tr("Transformations"));
-    MO__TYPE_ACTION(Object::TG_PARAMETER, tr("Parameters"));
     MO__TYPE_ACTION(Object::TG_TRACK, tr("Tracks"));
     MO__TYPE_ACTION(Object::TG_SEQUENCE | Object::T_SEQUENCEGROUP, tr("Sequences"));
 
@@ -438,6 +437,7 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
         }
     }
 
+    /* YYY
     if (obj->type() == Object::T_PARAMETER_FLOAT)
     {
         editActions_.append(a = new QAction(this));
@@ -451,6 +451,7 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
                 static_cast<ParameterFloat*>(obj)->addModulator(track->idName());
         });
     }
+    */
 }
 
 void ObjectTreeView::setFocusIndex(const QModelIndex & idx)

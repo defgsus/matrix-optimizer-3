@@ -12,8 +12,6 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "object/trackfloat.h"
-#include "object/scene.h"
-#include "io/datastream.h"
 
 
 
@@ -24,18 +22,15 @@ namespace { static int register_param = qMetaTypeId<MO::ParameterFloat*>(); }
 
 namespace MO {
 
-MO_REGISTER_OBJECT(ParameterFloat)
-
 Double ParameterFloat::infinity = 1e100;
 
-ParameterFloat::ParameterFloat(QObject *parent)
-    :   Parameter(parent),
+ParameterFloat::ParameterFloat(Object * object, const QString& id, const QString& name)
+    :   Parameter(object, id, name),
         defaultValue_   (0.0),
         minValue_       (-infinity),
         maxValue_       (+infinity),
         value_          (0.0)
 {
-    setName("Float");
 }
 
 
@@ -73,9 +68,9 @@ void ParameterFloat::collectModulators()
 {
     modulators_.clear();
 
-    Object * root = rootObject();
+    Object * root = object()->rootObject();
 
-    for (auto const &id : getModulators())
+    for (auto const &id : modulatorIds())
     {
         Object * o = root->findChildObject(id, true);
         if (auto s = qobject_cast<TrackFloat*>(o))

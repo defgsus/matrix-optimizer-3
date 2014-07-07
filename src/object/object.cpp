@@ -65,7 +65,7 @@ Object * Object::deserializeTreeCompressed(const QByteArray & cdata)
 
 void Object::serializeTree(IO::DataStream & io) const
 {
-    MO_DEBUG_IO("Object('"<<idName()<<"')::serializeTree()");
+    MO_DEBUG_IO("Object('"<<idName()<<"')::serializeTree_()");
 
     // default header
     io.writeHeader("mo-tree", 1);
@@ -73,10 +73,8 @@ void Object::serializeTree(IO::DataStream & io) const
     // default object info
     io << className() << idName() << name();
 
-    // keep position to go back later
-    const qint64 startPos = io.device()->pos();
-    // write temp skip marker
-    io << (qint64)0;
+    // keep position to skip unknown objects
+    const qint64 startPos = io.beginSkip();
 
     // write actual object data
     serialize(io);
@@ -86,11 +84,10 @@ void Object::serializeTree(IO::DataStream & io) const
         MO_IO_ERROR(WRITE, "error serializing object '"<<idName()<<"'.\n"
                     "QIODevice error: '"<<io.device()->errorString()<<"'");
 
-    const qint64 endPos = io.device()->pos();
-    // write length of object
-    io.device()->seek(startPos);
-    io << (qint64)(endPos - startPos - sizeof(qint64));
-    io.device()->seek(endPos);
+    // write parameters
+    serializeParameters_(io, this);
+
+    io.endSkip(startPos);
 
     // write childs
     io << (qint32)childObjects_.size();
@@ -105,7 +102,7 @@ Object * Object::deserializeTree(IO::DataStream & io)
 
 Object * Object::deserializeTree_(IO::DataStream & io)
 {
-    MO_DEBUG_IO("Object::deserializeTree()");
+    MO_DEBUG_IO("Object::deserializeTree_()");
 
     // read default header
     io.readHeader("mo-tree", 1);
@@ -130,12 +127,16 @@ Object * Object::deserializeTree_(IO::DataStream & io)
         if (io.status() != QDataStream::Ok)
             MO_IO_ERROR(WRITE, "error deserializing object '"<<idName<<"'.\n"
                         "QIODevice error: '"<<io.device()->errorString()<<"'");
+
+        // read parameters
+        o->createParameters();
+        deserializeParameters_(io, o);
     }
     // skip object if class not found
     else
     {
         MO_IO_WARNING(VERSION_MISMATCH, "unknown object class '" << className << "' in stream");
-        io.device()->seek(io.device()->pos() + objLength);
+        io.skip(objLength);
 
         o = ObjectFactory::createDummy();
     }
@@ -155,8 +156,6 @@ Object * Object::deserializeTree_(IO::DataStream & io)
             o->addObject(child);
     }
 
-    o->createParameters();
-
     return o;
 }
 
@@ -174,6 +173,51 @@ void Object::deserialize(IO::DataStream & io)
     io >> canBeDeleted_;
 }
 
+void Object::serializeParameters_(IO::DataStream & io, const Object * o)
+{
+    // write parameters
+    io.writeHeader("params", 1);
+
+    io << (qint32)o->parameters_.size();
+
+    for (auto p : o->parameters_)
+    {
+        io << p->idName();
+
+        auto pos = io.beginSkip();
+        p->serialize(io);
+        io.endSkip(pos);
+    }
+}
+
+void Object::deserializeParameters_(IO::DataStream & io, Object * o)
+{
+    // read parameters
+    io.readHeader("params", 1);
+
+    qint32 num;
+    io >> num;
+
+    for (int i=0; i<num; ++i)
+    {
+        QString id;
+        io >> id;
+
+        // length for skipping
+        qint64 length;
+        io >> length;
+
+        Parameter * p = o->findParameter(id);
+        if (!p)
+        {
+            MO_IO_WARNING(READ, "skipping unknown parameter '" << id << "' "
+                                "in input stream.");
+            io.skip(length);
+        }
+        else
+            p->deserialize(io);
+    }
+}
 
 // ---------------- getter -------------------------
 
@@ -436,17 +480,8 @@ bool Object::canHaveChildren(Type t) const
     if (type() & TG_TRACK)
         return t & TG_SEQUENCE;
 
-    if (type() & TG_SEQUENCE)
-        return t & TG_PARAMETER;
-
     if (type() == T_SEQUENCEGROUP)
         return t == T_SEQUENCEGROUP || (t & TG_SEQUENCE);
-
-    if (type() & TG_PARAMETER)
-        return false;
-
-    if (type() == T_TRANSFORMATION)
-        return t & TG_PARAMETER;
 
     if (type() == T_SCENE)
         return t != T_TRANSFORMATION;
@@ -501,46 +536,43 @@ void Object::calculateTransformation(Mat4 &matrix, Double time) const
 
 // ---------------------- parameter --------------------------
 
+Parameter * Object::findParameter(const QString &id)
+{
+    for (auto p : parameters_)
+        if (p->idName() == id)
+            return p;
+    return 0;
+}
+
 ParameterFloat * Object::createFloatParameter(
         const QString& id, const QString& name, Double defaultValue)
 {
     ParameterFloat * param = 0;
 
     // see if already there
-    for (auto o : childObjects_)
-    if (auto generalParam = qobject_cast<Parameter*>(o))
+
+    if (auto p = findParameter(id))
     {
-        if (generalParam->parameterId() == id)
+        if (auto pf = dynamic_cast<ParameterFloat*>(p))
         {
-            if (auto p = qobject_cast<ParameterFloat*>(generalParam))
-            {
-                param = p;
-                break;
-            }
-            else
-            {
-                MO_ASSERT(false, "object '" << idName() << "' requested float "
-                          "parameter '" << id << "' "
-                          "which is already present as parameter of another type.");
-            }
+            param = pf;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested float "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of another type.");
         }
     }
 
     // create new
     if (!param)
     {
-        param = static_cast<ParameterFloat*>(
-                    ObjectFactory::createObject("ParameterFloat") );
-        MO_ASSERT(param, "could not create float parameter");
-
-        addObject(param);
+        param = new ParameterFloat(this, id, name);
+        parameters_.append(param);
 
         // first time init
-        param->idName_ = "p_" + id;
-        param->setParameterId(id);
         param->setValue(defaultValue);
-        // don't delete specifically created parameters
-        param->canBeDeleted_ = false;
     }
 
     // override potentially previous

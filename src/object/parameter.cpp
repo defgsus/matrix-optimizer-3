@@ -16,18 +16,18 @@
 
 namespace MO {
 
-Parameter::Parameter(QObject *parent) :
-    Object(parent)
+Parameter::Parameter(Object * object, const QString& id, const QString& name) :
+    object_     (object),
+    idName_     (id),
+    name_       (name)
 {
 }
 
 void Parameter::serialize(IO::DataStream &io) const
 {
-    Object::serialize(io);
-
     io.writeHeader("par", 1);
 
-    io << parameterId();
+    io << idName_ << name_;
 
     // modulations
     io << modulatorIds_;
@@ -35,13 +35,9 @@ void Parameter::serialize(IO::DataStream &io) const
 
 void Parameter::deserialize(IO::DataStream &io)
 {
-    Object::deserialize(io);
-
     io.readHeader("par", 1);
 
-    QString id;
-    io >> id;
-    setParameterId(id);
+    io >> idName_ >> name_;
 
     io >> modulatorIds_;
 }
@@ -56,10 +52,7 @@ void Parameter::addModulator(const QString &idName)
         MO_WARNING("trying to add duplicate parameter modulator '" << idName << "'");
         return;
     }
-    modulatorIds_.insert(idName);
-    // hacky
-    Scene * s = sceneObject();
-    if (s) s->tellTreeChanged();
+    modulatorIds_.append(idName);
 }
 
 void Parameter::removeModulator(const QString &idName)
@@ -71,10 +64,7 @@ void Parameter::removeModulator(const QString &idName)
         MO_WARNING("trying to remove unknown parameter modulator '" << idName << "'");
         return;
     }
-    modulatorIds_.remove(idName);
-    // hacky
-    Scene * s = sceneObject();
-    if (s) s->tellTreeChanged();
+    modulatorIds_.removeOne(idName);
 }
 
 } // namespace MO

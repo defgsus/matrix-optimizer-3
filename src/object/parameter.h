@@ -11,25 +11,40 @@
 #ifndef MOSRC_OBJECT_PARAMETER_H
 #define MOSRC_OBJECT_PARAMETER_H
 
-#include <QSet>
+#include <QString>
+#include <QList>
 
-#include "object.h"
+#include "object_fwd.h"
 
 namespace MO {
 
 
-class Parameter : public Object
+class Parameter
 {
-    Q_OBJECT
+
 public:
-    MO_ABSTRACT_OBJECT_CONSTRUCTOR(Parameter)
+    Parameter(Object * object, const QString& idName, const QString& name);
 
-    virtual bool isParameter() const { return true; }
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
 
-    const QString& parameterId() const { return parameterId_; }
-    void setParameterId(const QString& id) { parameterId_ = id; }
+    // --------------- getter -------------------
 
-    /** Adds an Object to the list of modulator.
+    /** Parent object */
+    Object * object() const { return object_; }
+
+    const QString& idName() const { return idName_; }
+    const QString& name() const { return name_; }
+    /** Returns list of all modulator ids */
+    const QList<QString>& modulatorIds() const { return modulatorIds_; }
+
+    // -------------- setter --------------------
+
+    void setName(const QString& name) { name_ = name; }
+
+    // ------------ modulators ------------------
+
+    /** Adds an Object to the list of modulators.
         Modulators will be collected by
         collectModulators() in the derived class */
     virtual void addModulator(const QString& idName);
@@ -37,18 +52,15 @@ public:
     /** Removes the Object from the list of modulators */
     virtual void removeModulator(const QString& idName);
 
-    /** Returns list of all modulator ids */
-    virtual const QSet<QString>& getModulators() const { return modulatorIds_; }
-
-signals:
-
-public slots:
+    virtual void collectModulators() = 0;
 
 private:
 
-    QString parameterId_;
+    Object * object_;
 
-    QSet<QString> modulatorIds_;
+    QString idName_, name_;
+
+    QList<QString> modulatorIds_;
 };
 
 } // namespace MO

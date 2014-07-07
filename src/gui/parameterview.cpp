@@ -43,13 +43,7 @@ void ParameterView::setObject(Object *object)
         return;
     }
 
-    if (auto p = qobject_cast<Parameter*>(object))
-    {
-        parameters_.clear();
-        parameters_.append(p);
-    }
-    else
-        parameters_ = object_->findChildObjects<Parameter>();
+    parameters_ = object_->parameters();
 
     createWidgets_();
 }
@@ -94,7 +88,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     l->addWidget(label);
 
     // --- float parameter ---
-    if (ParameterFloat * pf = qobject_cast<ParameterFloat*>(p))
+    if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(p))
     {
         QToolButton * but = new QToolButton(w);
         l->addWidget(but);
@@ -109,7 +103,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         spin->setMaximumWidth(120);
         connect(spin, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=]()
         {
-            QObject * scene = p->sceneObject();
+            QObject * scene = p->object()->sceneObject();
             MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
             if (!scene) return;
             // threadsafe send new parameter value

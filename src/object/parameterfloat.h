@@ -12,22 +12,23 @@
 #define PARAMETERFLOAT_H
 
 #include "parameter.h"
+#include "types/float.h"
 
 namespace MO {
 
 class ParameterFloat : public Parameter
 {
-    Q_OBJECT
 public:
 
     /** Use to set unbounded limits */
     static Double infinity;
 
-    MO_OBJECT_CONSTRUCTOR(ParameterFloat);
+    ParameterFloat(Object * object, const QString& idName, const QString& name);
 
-    Type type() const { return T_PARAMETER_FLOAT; }
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
 
-    QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
+    //QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
 
     Double defaultValue() const { return defaultValue_; }
     Double minValue() const { return minValue_; }
@@ -50,10 +51,6 @@ public:
     Double getModulationValue(Double time) const;
 
     void collectModulators();
-
-signals:
-
-public slots:
 
 private:
 

@@ -32,6 +32,18 @@ public:
         floatingPointPrecision to double. */
     void setDefaultSettings();
 
+    /** Begins a skip section.
+        The current file position is saved and a temp marker is written. */
+    qint64 beginSkip();
+
+    /** Ends a skip section.
+        The length of the skip section is written at the position where
+        beginSkip() was called. */
+    void endSkip(qint64 begin_pos);
+
+    /** Skips the given number of bytes. */
+    void skip(qint64 length);
+
     /** Writes the string and the version number to the stream. */
     void writeHeader(const QString& id, qint32 version);
 

@@ -44,6 +44,33 @@ void DataStream::setDefaultSettings()
     setFloatingPointPrecision(DoublePrecision);
 }
 
+
+qint64 DataStream::beginSkip()
+{
+    // keep position to go back later
+    const qint64 pos = device()->pos();
+    // write temp skip marker
+    (*this) << (qint64)0;
+    return pos;
+
+}
+
+void DataStream::endSkip(qint64 startPos)
+{
+    const qint64 endPos = device()->pos();
+
+    // write length of object
+    device()->seek(startPos);
+    (*this) << (qint64)(endPos - startPos - sizeof(qint64));
+    // come back
+    device()->seek(endPos);
+}
+
+void DataStream::skip(qint64 length)
+{
+    device()->seek( device()->pos() + length );
+}
+
 void DataStream::writeHeader(const QString& id, qint32 version)
 {
     *this << id << version;

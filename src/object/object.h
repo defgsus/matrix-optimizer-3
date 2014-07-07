@@ -84,7 +84,6 @@ public:
     {
         T_NONE              = 0,
         T_OBJECT            = 1,
-        T_PARAMETER_FLOAT   = 1<<2,
         T_TRANSFORMATION    = 1<<3,
         T_SCENE             = 1<<4,
         T_MICROPHONE        = 1<<5,
@@ -97,7 +96,6 @@ public:
     };
     enum TypeGroups
     {
-        TG_PARAMETER        = T_PARAMETER_FLOAT,
         TG_REAL_OBJECT      = T_OBJECT | T_MICROPHONE | T_SOUNDSOURCE | T_CAMERA,
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
@@ -284,6 +282,12 @@ public:
 
     // --------------- parameter -------------------
 
+    /** Returns the list of parameters for this object */
+    const QList<Parameter*>& parameters() const { return parameters_; }
+
+    /** Returns the parameter with the given id, or NULL. */
+    Parameter * findParameter(const QString& id);
+
     /** Override to create all parameters for your object */
     virtual void createParameters() { }
 
@@ -346,6 +350,15 @@ private:
 
     //void setNumberThreadsRecursive_(int threads);
 
+    // ---------- parameter s-----------------
+
+    /** Writes all parameters to the stream */
+    static void serializeParameters_(IO::DataStream&, const Object *);
+    /** Reads all parameters from stream.
+        @note The parameters MUST be created before! */
+    static void deserializeParameters_(IO::DataStream&, Object*);
+
+
     // ------------ properties ---------------
 
     QString idName_, name_;
@@ -357,6 +370,10 @@ private:
     Object * parentObject_;
     QList<Object*> childObjects_;
     QList<Transformation*> transformationObjects_;
+
+    // ----------- parameter -----------------
+
+    QList<Parameter*> parameters_;
 
     // ----------- position ------------------
 
