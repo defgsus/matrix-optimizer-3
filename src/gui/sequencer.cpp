@@ -19,6 +19,8 @@
 #include "ruler.h"
 #include "object/track.h"
 #include "io/log.h"
+#include "widget/timebar.h"
+
 
 namespace MO {
 namespace GUI {
@@ -63,6 +65,9 @@ void Sequencer::createWidgets_()
         vScroll_ = new QScrollBar(Qt::Vertical, this);
         gridLayout_->addWidget(vScroll_, 1, 2);
 
+        // play bar
+        playBar_ = new TimeBar(this);
+
     // --- connections ---
 
     // connect rulers to each other
@@ -90,12 +95,29 @@ void Sequencer::createWidgets_()
         trackView_->setVerticalOffset(v);
     });
 
+    // connect views to timebar
+    connect(rulerSec_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+            playBar_, SLOT(setViewspace(UTIL::ViewSpace)));
+    connect(rulerFps_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+            playBar_, SLOT(setViewspace(UTIL::ViewSpace)));
+    connect(trackView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+            playBar_, SLOT(setViewspace(UTIL::ViewSpace)));
+    // connect timebar to outside
+    connect(playBar_, SIGNAL(timeChanged(Double)),
+            this, SIGNAL(sceneTimeChanged(Double)));
+
+
     // initialize viewspace
     UTIL::ViewSpace init(60, 1);
     init.setMinX(0);
     rulerSec_->setViewSpace(init, true);
 
     updateVScroll_();
+}
+
+void Sequencer::setSceneTime(Double time)
+{
+    playBar_->setTime(time);
 }
 
 void Sequencer::updateVScroll_()
@@ -110,6 +132,11 @@ void Sequencer::resizeEvent(QResizeEvent * e)
 
     updateVScroll_();
     rulerFps_->setViewSpace(rulerFps_->viewSpace(), true);
+
+    playBar_->setContainingRect(
+                QRect(rulerSec_->pos(),
+                QSize(rulerSec_->width(), gridLayout_->geometry().height()))
+                );
 }
 
 void Sequencer::wheelEvent(QWheelEvent * e)

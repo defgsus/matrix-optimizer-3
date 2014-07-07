@@ -21,6 +21,7 @@
 #include "object/sequence.h"
 #include "io/error.h"
 #include "widget/doublespinbox.h"
+#include "widget/timebar.h"
 #include "io/log.h"
 
 namespace MO {
@@ -68,6 +69,11 @@ SequenceView::SequenceView(QWidget *parent) :
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
     //connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
+
+    // playbar
+    playBar_ = new TimeBar(this);
+    connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), playBar_, SLOT(setViewspace(UTIL::ViewSpace)));
+    connect(playBar_, SIGNAL(timeChanged(Double)), this, SIGNAL(sceneTimeChanged(Double)));
 
     // ---- container for settings ----
 
@@ -121,6 +127,13 @@ SequenceView::SequenceView(QWidget *parent) :
     */
 
     rulerX_->setViewSpace( UTIL::ViewSpace(0, -1, 60, 2) );
+
+    setSceneTime(0);
+}
+
+void SequenceView::setSceneTime(Double time)
+{
+    playBar_->setTime(time);
 }
 
 void SequenceView::resizeEvent(QResizeEvent * e)
@@ -128,6 +141,10 @@ void SequenceView::resizeEvent(QResizeEvent * e)
     QWidget::resizeEvent(e);
 
     rulerX_->setViewSpace( rulerX_->viewSpace(), true);
+
+    playBar_->setContainingRect(
+        QRect(rulerX_->pos(), QSize(rulerX_->width(), grid_->geometry().height()))
+                );
 }
 
 void SequenceView::setSequence_(Sequence * s)
@@ -138,7 +155,7 @@ void SequenceView::setSequence_(Sequence * s)
     if (baseSequence_)
     {
         disconnect(baseSequence_, SIGNAL(timeChanged(MO::Sequence*)),
-                   this, SLOT(sequenceTimeChanged(MO::Sequence*)));
+                   this, SLOT(sequenceTimeChanged_(MO::Sequence*)));
     }
 
     baseSequence_ = s;
@@ -151,7 +168,9 @@ void SequenceView::setSequence_(Sequence * s)
         {
             createDefaultSettingsWidgets_();
             connect(baseSequence_, SIGNAL(timeChanged(MO::Sequence*)),
-                       SLOT(sequenceTimeChanged(MO::Sequence*)));
+                       SLOT(sequenceTimeChanged_(MO::Sequence*)));
+
+            playBar_->setTimeOffset(-baseSequence_->start());
         }
     }
 }
@@ -160,12 +179,15 @@ void SequenceView::updateViewSpace_(const UTIL::ViewSpace & v)
 {
     rulerX_->setViewSpace(v);
     rulerY_->setViewSpace(v);
+    playBar_->setViewspace(v);
 }
 
 
 void SequenceView::setSequenceWidget_(QWidget * w)
 {
     grid_->addWidget(w, 1, 2);
+
+    playBar_->raise();
 }
 
 
@@ -306,14 +328,17 @@ void SequenceView::createDefaultSettingsWidgets_()
     defaultSettingsAvailable_ = true;
 }
 
-void SequenceView::sequenceTimeChanged(Sequence * s)
+void SequenceView::sequenceTimeChanged_(Sequence * s)
 {
     MO_DEBUG_PARAM("SequenceView::sequenceTimeChanged(" << s
                    << ") baseSequence_=" << baseSequence_
                    << " defaultSettingsAvailable_=" << defaultSettingsAvailable_);
+
     if (!defaultSettingsAvailable_ || !baseSequence_
         || s != baseSequence_)
         return;
+
+    playBar_->setTimeOffset(-baseSequence_->start());
 
     MO_DEBUG_PARAM("updating widgets");
 

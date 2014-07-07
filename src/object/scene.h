@@ -62,6 +62,9 @@ signals:
     /** Scene should be rerendered */
     void renderRequest();
 
+    /** Emitted whenever the scene time changed */
+    void sceneTimeChanged(Double);
+
     /** Emitted after settings in an object have changed. */
     void objectChanged(MO::Object *);
 
@@ -98,6 +101,12 @@ public slots:
     void beginObjectChange(MO::Object *);
     void endObjectChange();
 
+    // ------------- runtime -------------------
+
+    void setSceneTime(Double time, bool send_signal = true)
+        { sceneTime_ = time; emit renderRequest();
+          if (send_signal) emit sceneTimeChanged(sceneTime_); }
+
     // ------------- open gl -------------------
 
     /** Sets the opengl Context for all objects in the scene. */
@@ -107,8 +116,6 @@ public slots:
 
     /** Render the whole scene on the current context */
     void renderScene(Double time = 0.0);
-
-    void setSceneTime(Double time) { sceneTime_ = time; emit renderRequest(); }
 
     void start();
     void stop();

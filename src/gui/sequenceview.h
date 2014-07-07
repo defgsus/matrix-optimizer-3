@@ -12,6 +12,7 @@
 #define MOSRC_GUI_SEQUENCEVIEW_H
 
 #include <QWidget>
+#include "types/float.h"
 
 class QGridLayout;
 class QVBoxLayout;
@@ -25,6 +26,7 @@ namespace UTIL { class ViewSpace; }
 
 class Ruler;
 class DoubleSpinBox;
+class TimeBar;
 
 class SequenceView : public QWidget
 {
@@ -41,17 +43,23 @@ signals:
     /** Emitted when the viewspace was changed by user. */
     void viewSpaceChanged(const UTIL::ViewSpace&);
 
+    /** User dragged the time bar */
+    void sceneTimeChanged(Double);
+
 public slots:
 
     /** Sets the ViewSpace for the shown sequence */
     virtual void setViewSpace(const UTIL::ViewSpace&) = 0;
+
+    /** Tells me that the scene time has changed */
+    void setSceneTime(Double);
 
 protected slots:
 
     /** updates the Rulers to the viewspace. */
     void updateViewSpace_(const UTIL::ViewSpace&);
 
-    void sequenceTimeChanged(MO::Sequence *);
+    void sequenceTimeChanged_(MO::Sequence *);
 
 protected:
     void resizeEvent(QResizeEvent *);
@@ -85,6 +93,8 @@ private:
     QGridLayout * grid_;
     QVBoxLayout * settingsLayout_;
     Ruler * rulerX_, * rulerY_;
+    TimeBar * playBar_;
+
     QScrollArea * settings_;
     QWidget * defaultSettingsContainer_,
             * customSettingsContainer_;

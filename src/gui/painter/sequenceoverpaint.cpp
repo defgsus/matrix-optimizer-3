@@ -65,13 +65,14 @@ void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
         }
 
         // -- playbar --
-
+        /*
         if (const Scene * scene = sequence_->sceneObject())
         {
-            int x = viewspace_.mapXFrom(scene->sceneTime()) * p.window().width();
+            int x = viewspace_.mapXFrom(scene->sceneTime()
+                                        - sequence_->start()) * p.window().width();
             p.setPen(QColor(100,255,100,100));
             p.drawLine(x, rect.top(), x, rect.bottom());
-        }
+        }*/
     }
 }
 

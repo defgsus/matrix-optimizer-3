@@ -13,6 +13,8 @@
 
 #include <QWidget>
 
+#include "types/float.h"
+
 class QGridLayout;
 class QScrollBar;
 
@@ -25,6 +27,7 @@ namespace GUI {
 class TrackHeader;
 class TrackView;
 class Ruler;
+class TimeBar;
 
 class Sequencer : public QWidget
 {
@@ -37,7 +40,13 @@ signals:
     /** Emitted when a sequence was double-clicked */
     void sequenceSelected(Sequence *);
 
+    /** User dragged the time bar */
+    void sceneTimeChanged(Double);
+
 public slots:
+
+    /** Tells me that the scene time has changed */
+    void setSceneTime(Double);
 
     /** Remove everything from this view. */
     void clearTracks();
@@ -65,6 +74,7 @@ private:
     TrackView * trackView_;
     Ruler * rulerSec_, * rulerFps_;
     QScrollBar * vScroll_;
+    TimeBar * playBar_;
 
     QGridLayout * gridLayout_;
 };

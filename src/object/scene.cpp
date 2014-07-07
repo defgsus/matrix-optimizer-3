@@ -290,6 +290,7 @@ void Scene::stop()
 void Scene::timerUpdate_()
 {
     sceneTime_ += (Double)timer_.interval()/1000;
+    emit sceneTimeChanged(sceneTime_);
     emit renderRequest();
 }
 

@@ -115,6 +115,7 @@ void MainWindow::createWidgets_()
             seqFloatView_->setVisible(false);
             lv->addWidget(seqFloatView_);
 
+
     // ------------ connections --------------
 
 
@@ -242,12 +243,21 @@ void MainWindow::setSceneObject(Scene * s)
     if (glWindow_->context())
         scene_->setGlContext(glWindow_->context());
 
+    connect(seqFloatView_, SIGNAL(sceneTimeChanged(Double)),
+            scene_, SLOT(setSceneTime(Double)));
+    connect(sequencer_, SIGNAL(sceneTimeChanged(Double)),
+            scene_, SLOT(setSceneTime(Double)));
+
     // scene changes
     connect(scene_, SIGNAL(treeChanged()), this, SLOT(treeChanged()));
 
     // update widgets
 
     scene_->setObjectModel(objectTreeModel_);
+    connect(scene_, SIGNAL(sceneTimeChanged(Double)),
+            seqFloatView_, SLOT(setSceneTime(Double)));
+    connect(scene_, SIGNAL(sceneTimeChanged(Double)),
+            sequencer_, SLOT(setSceneTime(Double)));
 
     objectView_->setObject(0);
     seqFloatView_->setSequence(0);

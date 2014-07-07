@@ -114,6 +114,7 @@ public slots:
 
 private:
 
+    // XXX These should be Parameters
     Double start_,
            length_,
            loopStart_,
