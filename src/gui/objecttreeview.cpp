@@ -59,7 +59,7 @@ void ObjectTreeView::setObjectModel(ObjectTreeModel *objectModel)
 
     filter_->setSourceModel(omodel_);
     setModel(filter_);
-    setSortingEnabled(true);
+    sortByColumn(0, Qt::AscendingOrder);
 
     modelChanged_();
 
@@ -109,6 +109,7 @@ void ObjectTreeView::mousePressEvent(QMouseEvent * e)
     }
 }
 
+// for sorting the insert-object list
 bool sortObjectList_TransformFirst(const Object * o1, const Object * o2)
 {
     return o1->isTransformation() && !o2->isTransformation();
@@ -269,7 +270,7 @@ void ObjectTreeView::createFirstObjectActions_()
         // make transformations first
         qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
 
-        editActions_.append(a = new QAction(tr("New object"), this));
+        editActions_.append(a = new QAction(tr("Create object"), this));
         QMenu * menu = new QMenu(this);
         a->setMenu(menu);
         bool addSep = true;
@@ -389,7 +390,7 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
 
             QModelIndex parentIndex = model()->parent(currentIndex());
 
-            editActions_.append(a = new QAction(tr("New object"), this));
+            editActions_.append(a = new QAction(tr("New sibling object"), this));
             QMenu * menu = new QMenu(this);
             a->setMenu(menu);
             bool addSep = true;

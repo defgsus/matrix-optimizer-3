@@ -60,6 +60,11 @@ TrackView::TrackView(QWidget *parent) :
 
     header_ = new TrackHeader(this, this);
     overpaint_ = new TrackViewOverpaint(this, this);
+
+    penSelectFrame_ = QPen(Qt::white);
+    penSelectFrame_.setStyle(Qt::DashLine);
+    penFramedWidget_ = QPen(QColor(200,200,200));
+    penFramedWidget_.setStyle(Qt::DotLine);
 }
 
 void TrackView::setViewSpace(const UTIL::ViewSpace & s)
@@ -372,7 +377,7 @@ void TrackView::mousePressEvent(QMouseEvent * e)
     if (!multisel)
         clearSelection_();
 
-    selTrack_ = trackForY(e->y());
+    selTrack_ = trackForY_(e->y());
     currentTime_ = space_.mapXTo((Double)e->x() / width());
 
     createEditActions_();
@@ -439,8 +444,20 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
         selectRect_.setTop(std::min(ds.y(), e->pos().y()));
         selectRect_.setBottom(std::max(ds.y(), e->pos().y()));
 
-        update(r.adjusted(-1,-1,1,1));
-        update(selectRect_.adjusted(-1,-1,1,1));
+        update(updateRect_(r, penSelectFrame_));
+        update(updateRect_(selectRect_, penSelectFrame_));
+
+        // check the widgets touched by selection frame
+        for (auto w : framedWidgets_)
+            if (!selectRect_.intersects(w->geometry()))
+                update(updateRect_(w->geometry(), penFramedWidget_));
+        framedWidgets_.clear();
+        for (auto w : sequenceWidgets_)
+        if (selectRect_.intersects(w->geometry()))
+        {
+            framedWidgets_.append(w);
+            update(updateRect_(w->geometry(), penFramedWidget_));
+        }
 
         autoScrollView_(e->pos());
     }
@@ -477,7 +494,10 @@ void TrackView::mouseReleaseEvent(QMouseEvent * e)
     if (action_ == A_SELECT_FRAME_)
     {
         action_ = A_NOTHING_;
-        update(selectRect_.adjusted(-1,-1,1,1));
+        update(updateRect_(selectRect_, penSelectFrame_));
+
+        for (auto w : framedWidgets_)
+            update(updateRect_(w->geometry(), penFramedWidget_));
 
         selectSequenceWidgets_(selectRect_, multisel? FLIP_ : SELECT_);
 
@@ -564,7 +584,7 @@ void TrackView::objectChanged(Object * obj)
             w->update();
 }
 
-Track * TrackView::trackForY(int y) const
+Track * TrackView::trackForY_(int y) const
 {
     y -= offsetY_;
 
@@ -580,6 +600,12 @@ Track * TrackView::trackForY(int y) const
 QRect TrackView::trackRect_(Track * t) const
 {
     return QRect(0, trackY(t), width(), trackHeight(t));
+}
+
+QRect TrackView::updateRect_(const QRect &rect, const QPen &pen)
+{
+    const int w = pen.width() / 2;
+    return rect.adjusted(-w,-w,w+1,w+1);
 }
 
 void TrackView::createEditActions_()

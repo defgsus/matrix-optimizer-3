@@ -13,6 +13,7 @@
 
 #include "trackviewoverpaint.h"
 #include "trackview.h"
+#include "widget/sequencewidget.h"
 
 namespace MO {
 namespace GUI {
@@ -30,11 +31,17 @@ void TrackViewOverpaint::paintEvent(QPaintEvent * )
 
     if (trackView_->action_ == TrackView::A_SELECT_FRAME_)
     {
-        p.setPen(QColor(255,255,255));
         p.setBrush(Qt::NoBrush);
+
+        // framed widgets
+        p.setPen(trackView_->penFramedWidget_);
+        for (auto w : trackView_->framedWidgets_)
+            p.drawRect(w->geometry());
+
+        // selection frame
+        p.setPen(trackView_->penSelectFrame_);
         p.drawRect(trackView_->selectRect_);
     }
-
 }
 
 } // namespace GUI

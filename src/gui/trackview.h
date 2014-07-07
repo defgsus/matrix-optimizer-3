@@ -12,6 +12,7 @@
 #define MOSRC_GUI_TRACKVIEW_H
 
 #include <QWidget>
+#include <QPen>
 #include <QList>
 #include <QHash>
 #include <QSet>
@@ -147,9 +148,12 @@ private:
     SequenceWidget * widgetForSequence_(Sequence *) const;
 
     /** Returns track for screen y position, or NULL */
-    Track * trackForY(int y) const;
+    Track * trackForY_(int y) const;
     /** Whole track rectangle */
     QRect trackRect_(Track *) const;
+
+    /** Returns the rectangle including the pen-width */
+    QRect updateRect_(const QRect& rect, const QPen& pen);
 
     UTIL::ViewSpace space_;
 
@@ -173,7 +177,9 @@ private:
     Double currentTime_;
 
     SequenceWidget* hoverWidget_;
-    QList<SequenceWidget*> selectedWidgets_;
+    QList<SequenceWidget*>
+        selectedWidgets_,
+        framedWidgets_;
 
     QPoint dragStartPos_;
     QPointF dragStartPosV_;
@@ -189,6 +195,9 @@ private:
         trackSpacing_;
 
     int modifierMultiSelect_;
+
+    QPen penSelectFrame_,
+         penFramedWidget_;
 };
 
 } // namespace GUI

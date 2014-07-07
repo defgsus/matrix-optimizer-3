@@ -8,7 +8,7 @@
     <p>created 7/5/2014</p>
 */
 
-//#include <QDebug>
+#include <QDebug>
 
 #include "objecttreesortproxy.h"
 #include "objecttreemodel.h"
@@ -27,13 +27,14 @@ ObjectTreeSortProxy::ObjectTreeSortProxy(QObject *parent) :
 
 bool ObjectTreeSortProxy::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
+    qDebug() << left << right;
     Object * l = static_cast<Object*>(left.internalPointer()),
            * r = static_cast<Object*>(right.internalPointer());
 
-    return !(
+    return
         // transformations on top
         (l->isTransformation() && !r->isTransformation())
-        );
+        ;
 }
 
 void ObjectTreeSortProxy::setObjectTypes(int flags)
