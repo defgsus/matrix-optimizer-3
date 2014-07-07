@@ -30,10 +30,18 @@ bool ObjectTreeSortProxy::lessThan(const QModelIndex &left, const QModelIndex &r
     Object * l = static_cast<Object*>(left.internalPointer()),
            * r = static_cast<Object*>(right.internalPointer());
 
-    return
-        // transformations on top
-        (l->isTransformation() && !r->isTransformation())
-        ;
+    // keep original order
+    const bool idxless = left.row() < right.row();
+
+    // but sort for types (transformations on top)
+    const bool less =
+            (l->isTransformation() && r->isTransformation() && idxless)
+            || (l->isTransformation() && !r->isTransformation())
+            || (!l->isTransformation() && !r->isTransformation() && idxless);
+
+//    qDebug() << left << right;
+//    qDebug() << l << (less? "<" : ">") << r;
+    return less;
 }
 
 void ObjectTreeSortProxy::setObjectTypes(int flags)

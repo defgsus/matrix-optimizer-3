@@ -303,6 +303,8 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
     {
         application->clipboard()->setMimeData(
                     model()->mimeData(QModelIndexList() << currentIndex()));
+        // update clipboard actions
+        createEditActions_(obj);
     });
 
     if (obj->canBeDeleted())
@@ -342,11 +344,11 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
             a->setEnabled(parentObj->canHaveChildren(pasteType));
             connect(a, &QAction::triggered, [=]()
             {
-                model()->dropMimeData(
+                if (model()->dropMimeData(
                     application->clipboard()->mimeData(), Qt::CopyAction,
                     currentIndex().row(), 0,
-                    model()->parent(currentIndex()));
-                setFocusIndex(currentIndex());
+                    model()->parent(currentIndex())))
+                setFocusIndex(filter_->mapFromSource(omodel_->lastDropIndex()));
             });
 
             // paste after
@@ -354,11 +356,11 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
             a->setEnabled(parentObj->canHaveChildren(pasteType));
             connect(a, &QAction::triggered, [=]()
             {
-                model()->dropMimeData(
+                if (model()->dropMimeData(
                     application->clipboard()->mimeData(), Qt::CopyAction,
                     currentIndex().row()+1, 0,
-                    model()->parent(currentIndex()));
-                setFocusIndex(obj->parentObject(), currentIndex().row()+1);
+                    model()->parent(currentIndex())))
+                setFocusIndex(filter_->mapFromSource(omodel_->lastDropIndex()));
             });
         }
 
@@ -367,11 +369,11 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         a->setEnabled(obj->canHaveChildren(pasteType));
         connect(a, &QAction::triggered, [=]()
         {
-            model()->dropMimeData(
+            if (model()->dropMimeData(
                 application->clipboard()->mimeData(), Qt::CopyAction,
                 obj->numChildren() /* append */, 0,
-                currentIndex());
-            setFocusIndex(obj, obj->numChildren()-1);
+                currentIndex()))
+            setFocusIndex(filter_->mapFromSource(omodel_->lastDropIndex()));
         });
     }
 }

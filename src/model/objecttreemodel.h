@@ -43,6 +43,9 @@ public:
 //    void indexForObject(const Object * obj, QModelIndex &parent, int &row) const;
     QModelIndex indexForObject(const Object * obj) const;
 
+    /** Returns index of last dropped object */
+    QModelIndex lastDropIndex() const { return lastDropIndex_; }
+
     // --- interface impl. ---
 
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
@@ -86,7 +89,11 @@ private:
 
     Object * rootObject_;
 
+    QModelIndex lastDropIndex_;
+
     QStringList headerNames_;
+
+    // ----- config -----
 
     QFont boldFont_;
     QColor

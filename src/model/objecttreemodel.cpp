@@ -380,6 +380,7 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                                       << obj->idName() << " " << row);
                         obj->addObject(fromObj, row);
                         endMoveColumns();
+                        lastDropIndex_ = createIndex(row, 0, copy);
                         return true;
                     }
                 }
@@ -388,6 +389,8 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                 beginInsertRows(parent, row, row);
                 obj->addObject(copy, row);
                 endInsertRows();
+
+                lastDropIndex_ = createIndex(row, 0, copy);
 
                 return true;
             }
