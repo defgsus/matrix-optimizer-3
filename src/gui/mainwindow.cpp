@@ -350,6 +350,9 @@ void MainWindow::objectSelected(Object * o)
     }
     else
         seqFloatView_->setVisible(false);
+
+    // update tree view
+    objectTreeView_->setFocusIndex(o);
 }
 
 void MainWindow::treeChanged()

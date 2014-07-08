@@ -181,7 +181,7 @@ void SequenceFloatView::createSettingsWidgets_()
     });
 
     // amplitude
-    w = newSetting(tr("amplitude"));
+    w = wAmp_ = newSetting(tr("amplitude"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setDecimals(4);
@@ -314,13 +314,15 @@ void SequenceFloatView::updateWidgets_()
     if (!wFreq_)
         return;
 
-    bool isOsc = sequence_ && sequence_->mode() == SequenceFloat::ST_OSCILLATOR,
+    bool isConst = sequence_ && sequence_->mode() != SequenceFloat::ST_CONSTANT,
+         isOsc = sequence_ && sequence_->mode() == SequenceFloat::ST_OSCILLATOR,
          isPW = isOsc && MATH::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
          isEqu = sequence_ && sequence_->mode() == SequenceFloat::ST_EQUATION,
          isTL = sequence_ && sequence_->mode() == SequenceFloat::ST_TIMELINE,
          useFreq = sequence_ && sequence_->useFrequency();
 
     wOscMode_->setVisible(isOsc);
+    wAmp_->setVisible(!isConst);
     wFreq_->setVisible(isOsc || isEqu || useFreq);
     wPhase_->setVisible(isOsc || isEqu || useFreq);
     wPhaseDeg_->setVisible(isOsc || isEqu || useFreq);

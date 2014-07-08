@@ -31,6 +31,7 @@ public:
 
 signals:
 
+
 public slots:
 
     void setObject(MO::Object * object);

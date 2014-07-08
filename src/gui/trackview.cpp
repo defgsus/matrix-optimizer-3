@@ -47,7 +47,8 @@ TrackView::TrackView(QWidget *parent) :
 
     defaultTrackHeight_     (30),
     trackSpacing_           (2),
-    modifierMultiSelect_    (Qt::CTRL)
+    modifierMultiSelect_    (Qt::CTRL),
+    selectSequenceOnSingleClick_(true)
 {
     setMinimumSize(320,240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -344,6 +345,7 @@ void TrackView::widgetHovered_(SequenceWidget * w, bool on)
 void TrackView::mouseDoubleClickEvent(QMouseEvent * e)
 {
     // doubleclick on sequence
+    if (!selectSequenceOnSingleClick_)
     if (hoverWidget_ && e->button() == Qt::LeftButton)
     {
         emit sequenceSelected(hoverWidget_->sequence());
@@ -375,6 +377,12 @@ void TrackView::mousePressEvent(QMouseEvent * e)
                     clearSelection_();
                     selectSequenceWidget_(hoverWidget_, SELECT_);
                 }
+            }
+
+            // emit selected-signal
+            if (selectSequenceOnSingleClick_)
+            {
+                emit sequenceSelected(hoverWidget_->sequence());
             }
 
             // --- start drag pos ---

@@ -197,6 +197,8 @@ private:
 
     int modifierMultiSelect_;
 
+    bool selectSequenceOnSingleClick_;
+
     QPen penSelectFrame_,
          penFramedWidget_;
 };

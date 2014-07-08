@@ -466,7 +466,11 @@ void ObjectTreeView::setFocusIndex(const QModelIndex & idx)
 
 void ObjectTreeView::setFocusIndex(const Object *object)
 {
-    setFocusIndex(filter_->mapFromSource(omodel_->indexForObject(object)));
+    const QModelIndex oidx = omodel_->indexForObject(object);
+    if (!oidx.isValid()) return;
+    const QModelIndex idx = filter_->mapFromSource(oidx);
+    if (!idx.isValid() || idx == currentIndex()) return;
+    setFocusIndex(idx);
 }
 
 void ObjectTreeView::setFocusIndex(const Object *parent, int childRow)

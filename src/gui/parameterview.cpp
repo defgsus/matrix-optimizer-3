@@ -98,7 +98,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     {
         but = bmod = new QToolButton(w);
         l->addWidget(but);
-        but->setText(pf->modulatorIds().isEmpty()? "m" : "M");
+        but->setText(pf->modulatorIds().isEmpty()? "*" : "M");
         but->setToolTip(tr("Create modulation Track"));
 
         but = breset = new QToolButton(w);
