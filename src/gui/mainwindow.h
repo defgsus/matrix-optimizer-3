@@ -25,6 +25,7 @@ class ObjectView;
 class ObjectTreeView;
 class SequenceFloatView;
 class Sequencer;
+class Spacer;
 
 
 class MainWindow : public QMainWindow
@@ -73,6 +74,8 @@ private:
 
     Sequencer * sequencer_;
     SequenceFloatView * seqFloatView_;
+
+    Spacer * spacer_;
 
     QObjectInspector * qobjectView_;
 };

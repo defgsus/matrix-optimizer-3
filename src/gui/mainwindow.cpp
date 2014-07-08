@@ -32,12 +32,12 @@
 #include "gui/objectview.h"
 #include "gui/sequencefloatview.h"
 #include "gui/sequencer.h"
+#include "gui/widget/spacer.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
 #include "gl/window.h"
 #include "io/error.h"
-
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -100,6 +100,12 @@ void MainWindow::createWidgets_()
         lv = new QVBoxLayout();
         l0->addLayout(lv);
 
+            spacer_ = new Spacer(Qt::Vertical, this);
+            lv->addWidget(spacer_);
+
+        lv = new QVBoxLayout();
+        l0->addLayout(lv);
+
             // sequencer
             sequencer_ = new Sequencer(this);
             lv->addWidget(sequencer_);
@@ -115,6 +121,8 @@ void MainWindow::createWidgets_()
             seqFloatView_->setVisible(false);
             lv->addWidget(seqFloatView_);
 
+
+    spacer_->setWidgets(objectTreeView_, sequencer_);
 
     // ------------ connections --------------
 

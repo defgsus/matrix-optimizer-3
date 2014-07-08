@@ -96,7 +96,8 @@ SOURCES += \
     src/object/param/parameter.cpp \
     src/object/param/parameterfloat.cpp \
     src/gui/widget/timebar.cpp \
-    src/gui/trackviewoverpaint.cpp
+    src/gui/trackviewoverpaint.cpp \
+    src/gui/widget/spacer.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -185,7 +186,8 @@ HEADERS += \
     src/object/param/parameter.h \
     src/object/param/parameterfloat.h \
     src/gui/widget/timebar.h \
-    src/gui/trackviewoverpaint.h
+    src/gui/trackviewoverpaint.h \
+    src/gui/widget/spacer.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

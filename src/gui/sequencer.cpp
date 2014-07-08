@@ -20,6 +20,7 @@
 #include "object/track.h"
 #include "io/log.h"
 #include "widget/timebar.h"
+#include "widget/spacer.h"
 
 
 namespace MO {
@@ -37,23 +38,24 @@ Sequencer::Sequencer(QWidget *parent) :
 void Sequencer::createWidgets_()
 {
     gridLayout_ = new QGridLayout(this);
-    gridLayout_->setMargin(2);
+    gridLayout_->setMargin(0);
+    //gridLayout_->setContentsMargins(1,2,1,2);
 
         // ruler seconds
         rulerSec_ = new Ruler(this);
-        gridLayout_->addWidget(rulerSec_, 0, 1);
+        gridLayout_->addWidget(rulerSec_, 0, 2);
         rulerSec_->setOptions(Ruler::O_EnableAllX);
         rulerSec_->setFixedHeight(36);
 
         // ruler fps
         rulerFps_ = new Ruler(this);
-        gridLayout_->addWidget(rulerFps_, 2, 1);
+        gridLayout_->addWidget(rulerFps_, 2, 2);
         rulerFps_->setOptions(Ruler::O_EnableAllX);
         rulerFps_->setFixedHeight(36);
 
         // track view
         trackView_ = new TrackView(this);
-        gridLayout_->addWidget(trackView_, 1, 1);
+        gridLayout_->addWidget(trackView_, 1, 2);
         connect(trackView_, SIGNAL(sequenceSelected(Sequence*)),
                 this, SIGNAL(sequenceSelected(Sequence*)));
 
@@ -63,7 +65,12 @@ void Sequencer::createWidgets_()
 
         // vertical scrollbar
         vScroll_ = new QScrollBar(Qt::Vertical, this);
-        gridLayout_->addWidget(vScroll_, 1, 2);
+        gridLayout_->addWidget(vScroll_, 1, 3);
+
+        // spacer
+        spacer_ = new Spacer(Qt::Vertical, this);
+        gridLayout_->addWidget(spacer_, 1, 1);
+        spacer_->setWidgets(trackHeader_, trackView_);
 
         // play bar
         playBar_ = new TimeBar(this);
@@ -110,6 +117,8 @@ void Sequencer::createWidgets_()
     connect(rulerSec_, SIGNAL(doubleClicked(Double)),
             this, SIGNAL(sceneTimeChanged(Double)));
 
+    // spacer to playbar-update
+    connect(spacer_, SIGNAL(dragged()), this, SLOT(updatePlaybar_()));
 
     // initialize viewspace
     UTIL::ViewSpace init(60, 1);
@@ -137,10 +146,16 @@ void Sequencer::resizeEvent(QResizeEvent * e)
     updateVScroll_();
     rulerFps_->setViewSpace(rulerFps_->viewSpace(), true);
 
+    updatePlaybar_();
+}
+
+void Sequencer::updatePlaybar_()
+{
     playBar_->setContainingRect(
                 QRect(rulerSec_->pos(),
                 QSize(rulerSec_->width(), gridLayout_->geometry().height()))
                 );
+    playBar_->raise();
 }
 
 void Sequencer::wheelEvent(QWheelEvent * e)

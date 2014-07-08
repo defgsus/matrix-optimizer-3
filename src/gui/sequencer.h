@@ -28,6 +28,7 @@ class TrackHeader;
 class TrackView;
 class Ruler;
 class TimeBar;
+class Spacer;
 
 class Sequencer : public QWidget
 {
@@ -65,7 +66,7 @@ protected:
 protected slots:
 
     void updateVScroll_();
-
+    void updatePlaybar_();
 private:
 
     void createWidgets_();
@@ -74,6 +75,7 @@ private:
     TrackView * trackView_;
     Ruler * rulerSec_, * rulerFps_;
     QScrollBar * vScroll_;
+    Spacer * spacer_;
     TimeBar * playBar_;
 
     QGridLayout * gridLayout_;
