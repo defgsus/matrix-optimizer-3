@@ -479,7 +479,7 @@ SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double t
     if (name.contains("."))
     {
         int i = name.lastIndexOf(".");
-        if (i < name.length()-2)
+        if (i < name.length()-1)
             name = name.mid(i+1);
     }
 

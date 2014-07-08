@@ -71,6 +71,7 @@ public:
 
     const QString& equationText() const { return equationText_; }
     bool useFrequency() const { return doUseFreq_; }
+    bool phaseInDegree() const { return doPhaseDegree_; }
 
     // ------------ setter --------------
 
@@ -86,7 +87,9 @@ public:
     void setPulseWidth(Double pw) { pulseWidth_->setValue(MATH::Waveform::limitPulseWidth(pw)); }
 
     void setEquationText(const QString&);
+
     void setUseFrequency(bool enable) { doUseFreq_ = enable; }
+    void setPhaseInDegree(bool enable);
 
     // ------------ values --------------
 
@@ -117,7 +120,9 @@ private:
 
     MATH::Waveform::Type oscMode_;
 
-    bool doUseFreq_;
+    bool doUseFreq_,
+         doPhaseDegree_;
+    Double phaseMult_;
 
     // ----- equation stuff -----
 

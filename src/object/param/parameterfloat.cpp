@@ -67,9 +67,12 @@ Double ParameterFloat::getModulationValue(Double time) const
 
 void ParameterFloat::collectModulators()
 {
+    modulators_.clear();
+    if (modulatorIds().isEmpty())
+        return;
+
     MO_DEBUG_MOD("ParameterFloat("<<idName()<<")::collectModulators()");
 
-    modulators_.clear();
 
     Object * root = object()->rootObject();
 
@@ -83,7 +86,7 @@ void ParameterFloat::collectModulators()
                        << "' could not find modulator '" << id << "'");
     }
 
-    MO_DEBUG_MOD("ParameterFloat("<<idName()<<") found " << modulators_.size() << " modulators");
+    MO_DEBUG_MOD("ParameterFloat("<<idName()<<") found " << modulators_.size() << " modulator(s)");
 }
 
 

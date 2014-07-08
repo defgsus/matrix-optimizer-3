@@ -163,7 +163,7 @@ void SequenceFloatView::createSettingsWidgets_()
     });
 
     // offset
-    w = newSetting(tr("offset"));
+    w = newSetting(tr("value\noffset"));
     auto spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setDecimals(4);
@@ -269,11 +269,28 @@ void SequenceFloatView::createSettingsWidgets_()
     });
 
     // always use frequency
+    w = wPhaseDeg_ = newSetting(tr("phase in degree"));
+    w->setToolTip(tr("Selects whether phase is given in "
+                     "degree [0,360] or in unit range [0,1]"));
+    auto cb = new QCheckBox(this);
+    w->layout()->addWidget(cb);
+    cb->setChecked(sequence_->phaseInDegree());
+    connect(cb, &QCheckBox::stateChanged,
+    [this, scene, cb]()
+    {
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setPhaseInDegree(cb->isChecked());
+        }
+        updateSequence_();
+    });
+
+    // always use frequency
     w = wUseFreq_ = newSetting(tr("use frequency"));
     w->setToolTip(tr("This selects whether the function time "
                      "should be modified by frequency and phase, "
                      "as in oscillator mode."));
-    auto cb = new QCheckBox(this);
+    cb = new QCheckBox(this);
     w->layout()->addWidget(cb);
     cb->setChecked(sequence_->useFrequency());
     connect(cb, &QCheckBox::stateChanged,
@@ -306,6 +323,7 @@ void SequenceFloatView::updateWidgets_()
     wOscMode_->setVisible(isOsc);
     wFreq_->setVisible(isOsc || isEqu || useFreq);
     wPhase_->setVisible(isOsc || isEqu || useFreq);
+    wPhaseDeg_->setVisible(isOsc || isEqu || useFreq);
     wPW_->setVisible(isPW || isEqu);
     wEqu_->setVisible(isEqu);
     wUseFreq_->setVisible(isEqu || isTL);

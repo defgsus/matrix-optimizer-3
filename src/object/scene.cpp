@@ -141,10 +141,17 @@ void Scene::updateModulators_()
 {
     // update scene as well!
     collectModulators();
+    for (auto p : parameters())
+        p->collectModulators();
 
     // update all objects
     for (auto o : allObjects_)
+    {
         o->collectModulators();
+        // check parameters as well
+        for (auto p : o->parameters())
+            p->collectModulators();
+    }
 }
 
 // -------------------- parameter ----------------------------

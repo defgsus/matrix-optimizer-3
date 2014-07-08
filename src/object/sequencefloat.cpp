@@ -35,6 +35,8 @@ SequenceFloat::SequenceFloat(QObject *parent)
         oscMode_    (MATH::Waveform::T_SINE),
 
         doUseFreq_  (false),
+        doPhaseDegree_(false),
+        phaseMult_  (1.0),
         equationText_("sin(x*TWO_PI)")
 
 {
@@ -110,6 +112,11 @@ void SequenceFloat::deserialize(IO::DataStream &io)
         io >> equationText_ >> doUseFreq_;
 }
 
+void SequenceFloat::setPhaseInDegree(bool enable)
+{
+    doPhaseDegree_ = enable;
+    phaseMult_ = enable? 1.0 / 360.0 : 1.0;
+}
 
 void SequenceFloat::setMode(SequenceType m)
 {
@@ -157,35 +164,34 @@ void SequenceFloat::setEquationText(const QString & t)
         MO_WARNING("parsing failed");
 }
 
-Double SequenceFloat::value(Double time) const
+Double SequenceFloat::value(Double gtime) const
 {
-    const Double phaseMult = 1.0 / 360.0;
-
-    time = getSequenceTime(time);
+    Double time = getSequenceTime(gtime);
 
     if (mode_ == ST_OSCILLATOR || doUseFreq_)
     {
-        time = time * frequency_->value(time) + phase_->value(time) * phaseMult;
+        time = time * frequency_->value(gtime) + phase_->value(gtime) * phaseMult_;
     }
 
     switch (mode_)
     {
-        case ST_OSCILLATOR: return offset_->value(time) + amplitude_->value(time)
+        case ST_OSCILLATOR: return offset_->value(gtime) + amplitude_->value(gtime)
                 * MATH::Waveform::waveform(time, oscMode_,
-                        MATH::Waveform::limitPulseWidth(pulseWidth_->value(time)));
+                        MATH::Waveform::limitPulseWidth(pulseWidth_->value(gtime)));
 
         case ST_EQUATION:
             MO_ASSERT(equation_, "SequenceFloat::value() without equation");
             // XXX NOT THREADSAFE :(
             equationTime_ = time;
-            equationFreq_ = frequency_->value(time);
-            equationPhase_ = phase_->value(time) * phaseMult;
-            equationPW_ = MATH::Waveform::limitPulseWidth(pulseWidth_->value(time));
-            return offset_->value(time) + amplitude_->value(time) * equation_->eval();
+            equationFreq_ = frequency_->value(gtime);
+            equationPhase_ = phase_->value(gtime) * phaseMult_;
+            equationPW_ = MATH::Waveform::limitPulseWidth(pulseWidth_->value(gtime));
+            return offset_->value(gtime) + amplitude_->value(gtime) * equation_->eval();
 
-        case ST_TIMELINE: return offset_->value(time) + amplitude_->value(time) * timeline_->get(time);
+        case ST_TIMELINE: return offset_->value(gtime)
+                                + amplitude_->value(gtime) * timeline_->get(time);
 
-        default: return offset_->value(time);
+        default: return offset_->value(gtime);
     }
 }
 
