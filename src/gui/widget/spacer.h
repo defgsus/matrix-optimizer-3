@@ -14,6 +14,8 @@
 #include <QWidget>
 #include <QRect>
 
+class QStyleOptionButton;
+
 namespace MO {
 namespace GUI {
 
@@ -23,6 +25,7 @@ class Spacer : public QWidget
     Q_OBJECT
 public:
     explicit Spacer(Qt::Orientation, QWidget *parent = 0);
+    ~Spacer();
 
     void setOrientation(Qt::Orientation);
     void setSpacerWidth(int);
@@ -39,6 +42,8 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *);
     virtual void mouseReleaseEvent(QMouseEvent *);
 
+    virtual void paintEvent(QPaintEvent *);
+
     Qt::Orientation orientation_;
 
     QWidget * left_, * right_;
@@ -49,6 +54,8 @@ protected:
     bool dragging_;
     QPoint dragStart_;
     QRect dragStartRect_;
+
+    QStyleOptionButton * option_;
 };
 
 } // namespace GUI

@@ -39,7 +39,8 @@ void Sequencer::createWidgets_()
 {
     gridLayout_ = new QGridLayout(this);
     gridLayout_->setMargin(0);
-    //gridLayout_->setContentsMargins(1,2,1,2);
+    gridLayout_->setHorizontalSpacing(1);
+    gridLayout_->setVerticalSpacing(1);
 
         // ruler seconds
         rulerSec_ = new Ruler(this);
@@ -69,7 +70,7 @@ void Sequencer::createWidgets_()
 
         // spacer
         spacer_ = new Spacer(Qt::Vertical, this);
-        gridLayout_->addWidget(spacer_, 1, 1);
+        gridLayout_->addWidget(spacer_, 0, 1, 3, 1);
         spacer_->setWidgets(trackHeader_, trackView_);
 
         // play bar

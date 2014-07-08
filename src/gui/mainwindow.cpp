@@ -73,15 +73,24 @@ void MainWindow::createWidgets_()
     centralWidget()->setObjectName("_centralwidget");
 
     auto l0 = new QHBoxLayout(centralWidget());
+    l0->setMargin(0);
+    l0->setSpacing(1);
 
-        auto lv = new QVBoxLayout();
-        l0->addLayout(lv);
+        auto leftContainer = new QWidget(this);
+        l0->addWidget(leftContainer);
+        leftContainer->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+        leftContainer->setMinimumWidth(240);
+
+        auto lv = new QVBoxLayout(leftContainer);
+        lv->setMargin(0);
+        lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
             // object tree view
             objectTreeView_ = new ObjectTreeView(this);
             lv->addWidget(objectTreeView_);
-            objectTreeView_->setMinimumWidth(200);
-            objectTreeView_->setMaximumWidth(450);
+            objectTreeView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+            objectTreeView_->setMinimumWidth(240);
+            //objectTreeView_->setMaximumWidth(450);
             connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
                     SLOT(setEditActions_(const QObject*,QList<QAction*>)));
 
@@ -91,11 +100,13 @@ void MainWindow::createWidgets_()
             // object editor
             objectView_ = new ObjectView(this);
             lv->addWidget(objectView_);
+            objectView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+            objectView_->setMinimumWidth(240);
 
             connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
                     SLOT(objectSelected(MO::Object*)));
 
-        l0->setStretchFactor(lv, -1);
+        //l0->setStretchFactor(lv, -1);
 
         lv = new QVBoxLayout();
         l0->addLayout(lv);
@@ -112,8 +123,6 @@ void MainWindow::createWidgets_()
             connect(sequencer_, &Sequencer::sequenceSelected, [this](Sequence * seq)
             {
                 objectSelected(seq);
-                //if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(seq))
-                //    seqFloatView_->setSequence(seqf);
             });
 
             // SequenceFloat view
@@ -122,7 +131,7 @@ void MainWindow::createWidgets_()
             lv->addWidget(seqFloatView_);
 
 
-    spacer_->setWidgets(objectTreeView_, sequencer_);
+    spacer_->setWidgets(leftContainer, sequencer_);
 
     // ------------ connections --------------
 
@@ -155,7 +164,7 @@ void MainWindow::createWidgets_()
             tlv->unselect();
         });
 */
-    setMinimumSize(800,400);
+    setMinimumSize(800,500);
 
 }
 

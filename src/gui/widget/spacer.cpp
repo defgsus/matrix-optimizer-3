@@ -9,6 +9,8 @@
 */
 #include <QDebug>
 #include <QMouseEvent>
+#include <QPainter>
+#include <QStyleOptionButton>
 
 #include "spacer.h"
 
@@ -19,16 +21,23 @@ Spacer::Spacer(Qt::Orientation o, QWidget *parent) :
     QWidget (parent),
     left_   (0),
     right_  (0),
-    width_  (3),
+    width_  (6),
     adjustLeft_(true),
     dragging_(false)
 {
-    setOrientation(o);
+    option_ = new QStyleOptionButton();
 
+    setOrientation(o);
+    /*
     setAutoFillBackground(true);
     QPalette p(palette());
-    p.setColor(QPalette::Window, QColor(90,90,90));
-    setPalette(p);
+    p.setColor(QPalette::Window, p.color(QPalette::Window).lighter(110));
+    setPalette(p);*/
+}
+
+Spacer::~Spacer()
+{
+    delete option_;
 }
 
 void Spacer::setOrientation(Qt::Orientation o)
@@ -85,6 +94,8 @@ void Spacer::mousePressEvent(QMouseEvent * e)
         dragStart_ = mapToGlobal(e->pos());
         dragStartRect_ = adjustLeft_? left_->rect() : right_->rect();
 
+        update();
+
         e->accept();
     }
 }
@@ -126,8 +137,16 @@ void Spacer::mouseMoveEvent(QMouseEvent * e)
 void Spacer::mouseReleaseEvent(QMouseEvent * )
 {
     dragging_ = false;
+    update();
 }
 
+void Spacer::paintEvent(QPaintEvent * )
+{
+    QPainter p(this);
+    option_->rect = rect();
+    option_->state = dragging_? QStyle::State_Sunken : QStyle::State_Raised;
+    style()->drawControl(QStyle::CE_PushButton, option_, &p, this);
+}
 
 
 } // namespace GUI
