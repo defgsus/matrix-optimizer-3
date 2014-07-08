@@ -153,8 +153,11 @@ void Sequencer::updatePlaybar_()
 {
     playBar_->setContainingRect(
                 QRect(rulerSec_->pos(),
-                QSize(rulerSec_->width(), gridLayout_->geometry().height()))
+                    QSize(rulerSec_->width(),
+                          // gridLayout_->geometry().height() is sometimes zero during resize!
+                          rulerFps_->geometry().bottom() - rulerSec_->geometry().top()))
                 );
+    // just to be sure
     playBar_->raise();
 }
 

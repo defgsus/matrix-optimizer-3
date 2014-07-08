@@ -104,6 +104,7 @@ QPoint TrackView::viewToScreen(const QPointF &view) const
 void TrackView::resizeEvent(QResizeEvent *)
 {
     overpaint_->setGeometry(rect());
+    updateWidgetsViewSpace_();
 }
 
 void TrackView::paintEvent(QPaintEvent * )
