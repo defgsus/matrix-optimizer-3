@@ -19,9 +19,6 @@ Sequence::Sequence(QObject *parent) :
     Object      (parent),
     start_      (0.0),
     length_     (60.0),
-    loopStart_  (0.0),
-    loopLength_ (length_),
-    timeOffset_ (0.0),
     speed_      (1.0),
     looping_    (false),
     track_      (0)
@@ -35,8 +32,7 @@ void Sequence::serialize(IO::DataStream &io) const
 
     io.writeHeader("seq", 1);
 
-    io << start_ << length_ << loopStart_ << loopLength_
-       << timeOffset_ << speed_ << (qint8)looping_;
+    io << start_ << length_ << speed_ << (qint8)looping_;
 }
 
 void Sequence::deserialize(IO::DataStream &io)
@@ -46,8 +42,7 @@ void Sequence::deserialize(IO::DataStream &io)
     io.readHeader("seq", 1);
 
     qint8 looping;
-    io >> start_ >> length_ >> loopStart_ >> loopLength_
-       >> timeOffset_ >> speed_ >> looping;
+    io >> start_ >> length_ >> speed_ >> looping;
     looping_ = looping;
 }
 
@@ -62,6 +57,13 @@ QString Sequence::infoName() const
 Track * Sequence::track() const
 {
     return qobject_cast<Track*>(parentObject());
+}
+
+void Sequence::createParameters()
+{
+    loopStart_ = createFloatParameter("loop_start", "loop start", 0.0);
+    loopLength_ = createFloatParameter("loop_len", "loop length", 1.0);
+    timeOffset_ = createFloatParameter("time_offset", "time offset", 0.0);
 }
 
 

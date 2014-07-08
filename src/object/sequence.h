@@ -15,6 +15,7 @@
 
 #include "object.h"
 #include "math/functions.h"
+#include "param/parameterfloat.h"
 
 namespace MO {
 
@@ -27,6 +28,8 @@ public:
     bool isSequence() const { return true; }
 
     virtual QString infoName() const;
+
+    virtual void createParameters();
 
     // -------------- tracks -------------------
 
@@ -51,16 +54,16 @@ public:
     bool looping() const { return looping_; }
 
     /** Loop start time (local) in seconds */
-    Double loopStart() const { return loopStart_; }
+    Double loopStart() const { return loopStart_->baseValue(); }
 
     /** Loop length in seconds */
-    Double loopLength() const { return loopLength_; }
+    Double loopLength() const { return loopLength_->baseValue(); }
 
     /** Loop end time (local) in seconds */
-    Double loopEnd() const { return (loopStart_ + loopLength_) / speed_; }
+    Double loopEnd() const { return (loopStart_->baseValue() + loopLength_->baseValue()) / speed_; }
 
     /** Offset into the sequence data (local) in seconds. */
-    Double timeOffset() const { return timeOffset_; }
+    Double timeOffset() const { return timeOffset_->baseValue(); }
 
     /** Sequence internal speed */
     Double speed() const { return speed_; }
@@ -81,18 +84,18 @@ public:
         { looping_ = doit; if (send_signal) emit timeChanged(this); }
 
     void setLoopStart(Double t, bool send_signal = true)
-        { loopStart_ = t; if (send_signal) emit timeChanged(this); }
+        { loopStart_->setValue(t); if (send_signal) emit timeChanged(this); }
 
     void setLoopEnd(Double t, bool send_signal = true)
-        { loopLength_ = std::max(minimumLength(), (t - loopStart_) * speed_);
+        { loopLength_->setValue(std::max(minimumLength(), (t - loopStart_->baseValue()) * speed_));
           if (send_signal) emit timeChanged(this); }
 
     void setLoopLength(Double t, bool send_signal = true)
-        { loopLength_ = std::max(minimumLength(), t);
+        { loopLength_->setValue( std::max(minimumLength(), t) );
           if (send_signal) emit timeChanged(this); }
 
     void setTimeOffset(Double t, bool send_signal = true)
-        { timeOffset_ = t; if (send_signal) emit timeChanged(this); }
+        { timeOffset_->setValue(t); if (send_signal) emit timeChanged(this); }
 
     void setSpeed(Double t, bool send_signal = true)
         { speed_ = (t >= minimumSpeed()) ? t : minimumSpeed();
@@ -110,14 +113,15 @@ public slots:
 
 private:
 
-    // XXX These should be Parameters
     Double start_,
            length_,
-           loopStart_,
-           loopLength_,
-           timeOffset_,
            speed_;
     bool   looping_;
+
+    ParameterFloat
+        * loopStart_,
+        * loopLength_,
+        * timeOffset_;
 
     /** The track, this sequence is on */
     Track* track_;
@@ -126,15 +130,20 @@ private:
 
 inline Double Sequence::getSequenceTime(Double time) const
 {
-    time = (time - start_) * speed_ + timeOffset_;
+    time = (time - start_) * speed_;
+    time += timeOffset_->value(time);
 
-    if (looping_ && time > loopStart_ + loopLength_)
+    if (looping_)
+    {
+        const Double
+                ls = loopStart_->value(time),
+                ll = std::max(loopLength_->value(time), minimumLength());
 
-        return MATH::moduloSigned(time - loopStart_, loopLength_);
+        if (time > ls + ll)
+            return MATH::moduloSigned(time - ls, ll);
+    }
 
-    else
-
-        return time;
+    return time;
 }
 
 } // namespace MO
