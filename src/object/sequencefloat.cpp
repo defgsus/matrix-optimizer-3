@@ -32,12 +32,6 @@ SequenceFloat::SequenceFloat(QObject *parent)
         timeline_   (0),
         equation_   (0),
 
-        offset_     (0.0),
-        amplitude_  (1.0),
-
-        frequency_  (1.0),
-        phase_      (0.0),
-        pulseWidth_ (0.5),
         oscMode_    (MATH::Waveform::T_SINE),
 
         doUseFreq_  (false),
@@ -57,14 +51,24 @@ SequenceFloat::~SequenceFloat()
         delete equation_;
 }
 
+void SequenceFloat::createParameters()
+{
+    Sequence::createParameters();
+
+    offset_ = createFloatParameter("value_offset", "value offset", 0.0);
+    amplitude_ = createFloatParameter("amp", "amplitude", 1.0);
+    frequency_ = createFloatParameter("freq", "frequency", 1.0);
+    phase_ = createFloatParameter("phase", "phase", 0.0);
+    pulseWidth_ = createFloatParameter("pulsewidth", "pulse width", 0.5);
+}
+
 void SequenceFloat::serialize(IO::DataStream &io) const
 {
     Sequence::serialize(io);
 
     io.writeHeader("seqf", 2);
 
-    io << sequenceTypeId[mode_] << offset_ << amplitude_
-       << frequency_ << phase_ << pulseWidth_;
+    io << sequenceTypeId[mode_];
 
     // osc mode
     io << MATH::Waveform::typeIds[oscMode_];
@@ -86,9 +90,6 @@ void SequenceFloat::deserialize(IO::DataStream &io)
 
     if (!io.readEnum(mode_, ST_CONSTANT, sequenceTypeId))
         MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
-
-    io >> offset_ >> amplitude_
-       >> frequency_ >> phase_ >> pulseWidth_;
 
     // oscillator
     if (!io.readEnum(oscMode_, MATH::Waveform::T_SINE, MATH::Waveform::typeIds))
@@ -158,31 +159,33 @@ void SequenceFloat::setEquationText(const QString & t)
 
 Double SequenceFloat::value(Double time) const
 {
+    const Double phaseMult = 1.0 / 360.0;
+
     time = getSequenceTime(time);
 
     if (mode_ == ST_OSCILLATOR || doUseFreq_)
     {
-        const Double phaseMult = 1.0 / 360.0;
-        time = time * frequency_ + phase_ * phaseMult;
+        time = time * frequency_->value(time) + phase_->value(time) * phaseMult;
     }
 
     switch (mode_)
     {
-        case ST_OSCILLATOR: return offset_ + amplitude_
-                * MATH::Waveform::waveform(time, oscMode_, pulseWidth_);
+        case ST_OSCILLATOR: return offset_->value(time) + amplitude_->value(time)
+                * MATH::Waveform::waveform(time, oscMode_,
+                        MATH::Waveform::limitPulseWidth(pulseWidth_->value(time)));
 
         case ST_EQUATION:
             MO_ASSERT(equation_, "SequenceFloat::value() without equation");
             // XXX NOT THREADSAFE :(
             equationTime_ = time;
-            equationFreq_ = frequency_;
-            equationPhase_ = phase_;
-            equationPW_ = pulseWidth_;
-            return offset_ + amplitude_ * equation_->eval();
+            equationFreq_ = frequency_->value(time);
+            equationPhase_ = phase_->value(time) * phaseMult;
+            equationPW_ = MATH::Waveform::limitPulseWidth(pulseWidth_->value(time));
+            return offset_->value(time) + amplitude_->value(time) * equation_->eval();
 
-        case ST_TIMELINE: return offset_ + amplitude_ * timeline_->get(time);
+        case ST_TIMELINE: return offset_->value(time) + amplitude_->value(time) * timeline_->get(time);
 
-        default: return offset_;
+        default: return offset_->value(time);
     }
 }
 

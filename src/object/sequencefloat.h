@@ -47,6 +47,8 @@ public:
 
     virtual Type type() const { return T_SEQUENCE_FLOAT; }
 
+    virtual void createParameters();
+
     // ------------ getter --------------
 
     /** The sequence mode - one of the SequenceType enums */
@@ -55,17 +57,17 @@ public:
     MATH::Waveform::Type oscillatorMode() const { return oscMode_; }
 
     /** Returns the constant offset added to the output */
-    Double offset() const { return offset_; }
+    Double offset() const { return offset_->baseValue(); }
 
     /** Returns the amplitude, applied before the constant offset */
-    Double amplitude() const { return amplitude_; }
+    Double amplitude() const { return amplitude_->baseValue(); }
 
     /** Returns the frequency of the oscillator in Hertz. */
-    Double frequency() const { return frequency_; }
+    Double frequency() const { return frequency_->baseValue(); }
     /** Returns the phase of the oscillator [0,1] */
-    Double phase() const { return phase_; }
+    Double phase() const { return phase_->baseValue(); }
     /** Returns the pulsewidth of the oscillator [0,1] */
-    Double pulseWidth() const { return pulseWidth_; }
+    Double pulseWidth() const { return pulseWidth_->baseValue(); }
 
     const QString& equationText() const { return equationText_; }
     bool useFrequency() const { return doUseFreq_; }
@@ -76,12 +78,12 @@ public:
 
     void setOscillatorMode(MATH::Waveform::Type mode) { oscMode_ = mode; }
 
-    void setOffset(Double o) { offset_ = o; }
-    void setAmplitude(Double a) { amplitude_ = a; }
+    void setOffset(Double o) { offset_->setValue(o); }
+    void setAmplitude(Double a) { amplitude_->setValue(a); }
 
-    void setFrequency(Double f) { frequency_ = f; }
-    void setPhase(Double p) { phase_ = p; }
-    void setPulseWidth(Double pw) { pulseWidth_ = MATH::Waveform::limitPulseWidth(pw); }
+    void setFrequency(Double f) { frequency_->setValue(f); }
+    void setPhase(Double p) { phase_->setValue(p); }
+    void setPulseWidth(Double pw) { pulseWidth_->setValue(MATH::Waveform::limitPulseWidth(pw)); }
 
     void setEquationText(const QString&);
     void setUseFrequency(bool enable) { doUseFreq_ = enable; }
@@ -105,12 +107,13 @@ private:
     MATH::Timeline1D * timeline_;
     PPP_NAMESPACE::Parser * equation_;
 
-    double offset_,
-           amplitude_,
+    ParameterFloat
+        * offset_,
+        * amplitude_,
 
-           frequency_,
-           phase_,
-           pulseWidth_;
+        * frequency_,
+        * phase_,
+        * pulseWidth_;
 
     MATH::Waveform::Type oscMode_;
 
