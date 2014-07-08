@@ -10,7 +10,7 @@
 
 #include "trackfloat.h"
 #include "io/datastream.h"
-#include "io/error.h"
+#include "io/log.h"
 #include "sequencefloat.h"
 
 namespace MO {
@@ -50,13 +50,9 @@ Double TrackFloat::value(Double time) const
 
 void TrackFloat::collectModulators()
 {
-    Track::collectModulators();
+    MO_DEBUG_MOD("TrackFloat::collectModulators()");
 
-    sequences_.clear();
-
-    for (auto s : sequences())
-        if (auto sf = qobject_cast<SequenceFloat*>(s))
-            sequences_.append(sf);
+    sequences_ = findChildObjects<SequenceFloat>();
 }
 
 } // namespace MO

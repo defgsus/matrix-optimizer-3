@@ -30,14 +30,8 @@ public:
 
     // -------------- tracks -------------------
 
-    /** The track, this sequence is on */
-    Track * track() const { return track_; }
-
-    /** Only changes the track() property.
-        Tracks are responsible for knowing their Sequences
-        and for telling them! */
-    void addToTrack(Track * t);
-    void removeFromTrack(Track * t);
+    /** The track, this sequence is on (actually the parent) */
+    Track * track() const;
 
     // -------------- getter -------------------
 

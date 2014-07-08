@@ -72,11 +72,11 @@ void ObjectView::setObject(Object * object)
         // additional info
         QString info;
 
-        if (TrackFloat * track = qobject_cast<TrackFloat*>(object_))
+        /*if (TrackFloat * track = qobject_cast<TrackFloat*>(object_))
         {
             for (auto &s : track->sequenceIds())
                 info += s + "\n";
-        }
+        }*/
 
         label2_->setText(info);
     }

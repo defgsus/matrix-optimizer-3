@@ -158,7 +158,7 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
 // --------------------- tracks ------------------------------
 
 // --------------------- sequence ----------------------------
-
+/*
 void Scene::moveSequence(Sequence *seq, Track *from, Track *to)
 {
     MO_DEBUG_TREE("Scene::moveSequence('" << seq->idName() << "', '" << from->idName() << "', '"
@@ -169,11 +169,9 @@ void Scene::moveSequence(Sequence *seq, Track *from, Track *to)
                    << to->idName() << "'");
         return;
     }
-    from->removeSequence(seq);
-    to->addSequence(seq);
-    tellTreeChanged();
+    seq->setParentObject(to);
 }
-
+*/
 void Scene::beginSequenceChange(Sequence * s)
 {
     MO_DEBUG_PARAM("Scene::beginSequenceChange(" << s << ")");

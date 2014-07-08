@@ -25,28 +25,12 @@ public:
 
     bool isTrack() const { return true; }
 
-    /** Returns the idName()s of the sequences that belong to this track. */
-    const QStringList& sequenceIds() const { return sequenceIds_; }
-
-    /** Pointers to all sequences on this track. */
-    const QList<Sequence*>& sequences() const { return baseSequences_; }
-
-    virtual void addSequence(Sequence *);
-    virtual void removeSequence(Sequence *);
-
-    virtual void collectModulators();
-
 signals:
 
 public slots:
 
 private:
 
-    /** Ids of all sequences on this track */
-    QStringList sequenceIds_;
-
-    /** sequences on this track. */
-    QList<Sequence *> baseSequences_;
 };
 
 } // namespace MO

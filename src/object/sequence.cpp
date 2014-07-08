@@ -59,23 +59,10 @@ QString Sequence::infoName() const
         return name();
 }
 
-
-void Sequence::addToTrack(Track *t)
+Track * Sequence::track() const
 {
-    /*
-    MO_ASSERT(!track_, "trying to set track '" << t->idName() << "', but sequence '"
-              << idName() << "' already has a track '"
-              << track_->idName() << "' assigned");
-    */
-    track_ = t;
+    return qobject_cast<Track*>(parentObject());
 }
 
-void Sequence::removeFromTrack(Track *t)
-{
-    MO_ASSERT(track_ == t, "trying to remove sequence '" << idName() << "' from track '"
-              << t->idName() << "' but assigned track is " << track_);
-
-    track_ = 0;
-}
 
 } // namespace MO

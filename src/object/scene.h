@@ -89,9 +89,9 @@ public slots:
 
     //SequenceFloat * createFloatSequence(MO::Track * track, Double time = 0.0);
 
-    /** Moves the Sequence @seq from Track @p from to different Track @p to.
+    /* Moves the Sequence @seq from Track @p from to different Track @p to.
         The sequence will be removed from the previous track. */
-    void moveSequence(MO::Sequence * seq, MO::Track * from, MO::Track * to);
+    //void moveSequence(MO::Sequence * seq, MO::Track * from, MO::Track * to);
 
     void beginSequenceChange(MO::Sequence *);
     void endSequenceChange();

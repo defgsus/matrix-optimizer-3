@@ -479,11 +479,10 @@ SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double t
     auto seq = ObjectFactory::createSequenceFloat();
     seq->setStart(time);
 
-    // place the sequence somewhere
+    // place the sequence on the track
     addObject(trackIdx, -1, seq);
 
     // add it to track
-    track->addSequence(seq);
     track->collectModulators();
 
     return seq;

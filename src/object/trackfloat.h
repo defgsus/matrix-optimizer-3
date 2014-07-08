@@ -25,7 +25,7 @@ public:
     virtual Type type() const { return T_TRACK_FLOAT; }
 
     /** Pointers to all float sequences on this track. */
-    const QList<SequenceFloat*>& floatSequences() const { return sequences_; }
+    const QList<SequenceFloat*>& sequences() const { return sequences_; }
 
     virtual void collectModulators();
 

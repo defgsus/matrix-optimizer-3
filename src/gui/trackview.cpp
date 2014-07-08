@@ -270,8 +270,11 @@ void TrackView::createSequenceWidgets_(Track * t)
     sequenceWidgets_ = newlist;
     hoverWidget_ = 0;
 
+    // all sequences on track
+    QList<Sequence*> seqs = t->findChildObjects<Sequence>();
+
     // create SequenceWidgets
-    for (Sequence * seq : t->sequences())
+    for (Sequence * seq : seqs)
     {
         // create the widget
         auto w = new SequenceWidget(t, seq, this);
