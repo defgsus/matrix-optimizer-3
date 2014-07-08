@@ -488,13 +488,14 @@ void ObjectTreeView::expandObjectsOnly()
     if (!model())
         return;
 
-    expandObjectOnly_(QModelIndex());
+    expandObjectOnly_(filter_->mapFromSource(omodel_->rootIndex()));
 }
 
 void ObjectTreeView::expandObjectOnly_(const QModelIndex & index)
 {
     Object * obj = model()->data(index, ObjectRole).value<Object*>();
-    if (obj && obj->type() != Object::T_TRANSFORMATION)
+
+    if (obj && obj->type() & Object::TG_REAL_OBJECT)
     {
         setExpanded(index, true);
         for (int i=0; i<model()->rowCount(index); ++i)

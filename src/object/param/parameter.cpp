@@ -19,7 +19,8 @@ namespace MO {
 Parameter::Parameter(Object * object, const QString& id, const QString& name) :
     object_     (object),
     idName_     (id),
-    name_       (name)
+    name_       (name),
+    isEditable_ (true)
 {
 }
 

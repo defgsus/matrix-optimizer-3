@@ -544,8 +544,7 @@ Parameter * Object::findParameter(const QString &id)
     return 0;
 }
 
-ParameterFloat * Object::createFloatParameter(
-        const QString& id, const QString& name, Double defaultValue)
+ParameterFloat * Object::createFloatParameter(const QString& id, const QString& name, Double defaultValue, bool editable)
 {
     ParameterFloat * param = 0;
 
@@ -578,6 +577,7 @@ ParameterFloat * Object::createFloatParameter(
     // override potentially previous
     param->setName(name);
     param->setDefaultValue(defaultValue);
+    param->setEditable(editable);
 
     return param;
 }

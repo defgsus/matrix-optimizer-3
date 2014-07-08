@@ -102,6 +102,8 @@ public:
 
         TG_FLOAT            = T_TRACK_FLOAT | T_SEQUENCE_FLOAT,
 
+        TG_MODULATION       = TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP,
+
         TG_ALL = 0xffffffff
     };
 
@@ -300,7 +302,7 @@ public:
     /** Creates the desired parameter,
         or returns an already created parameter object. */
     ParameterFloat * createFloatParameter(
-                const QString& id, const QString& name, Double defaultValue);
+                const QString& id, const QString& name, Double defaultValue, bool editable = true);
 
     // --------------- 3d --------------------------
 

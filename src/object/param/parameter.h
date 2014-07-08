@@ -38,9 +38,13 @@ public:
     /** Returns list of all modulator ids */
     const QList<QString>& modulatorIds() const { return modulatorIds_; }
 
+    bool isEditable() const { return isEditable_; }
+
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }
+
+    void setEditable(bool enable) { isEditable_ = enable; }
 
     // ------------ modulators ------------------
 
@@ -62,7 +66,10 @@ private:
 
     QString idName_, name_;
 
+    bool isEditable_;
+
     QList<QString> modulatorIds_;
+
 };
 
 } // namespace MO

@@ -105,6 +105,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         l->addWidget(but);
         but->setText("0");
         but->setToolTip(tr("Set to default value (%1)").arg(pf->defaultValue()));
+        but->setEnabled(pf->isEditable());
 
         QDoubleSpinBox * spin = new QDoubleSpinBox(w);
         l->addWidget(spin);
@@ -112,6 +113,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         spin->setMaximum(pf->maxValue());
         spin->setValue(pf->baseValue());
         spin->setMaximumWidth(120);
+        spin->setEnabled(pf->isEditable());
         connect(spin, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=]()
         {
             QObject * scene = p->object()->sceneObject();

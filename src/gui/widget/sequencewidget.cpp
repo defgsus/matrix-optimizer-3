@@ -38,6 +38,7 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
     sequence_   (seq),
     curvePainter_(0),
     curveData_   (0),
+    nameText_   (seq->name()),
     action_     (A_NOTHING),
     hovered_    (false),
     selected_   (false)
@@ -52,6 +53,8 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
 
     colorOutline_ = QColor(0,0,0);
     colorOutlineSel_ = colorBody_.lighter(200);
+
+    penText_ = QPen(QColor(255,255,255));
 
     // prepare a float curve painter
     if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(seq))
@@ -77,6 +80,11 @@ void SequenceWidget::setSelected(bool enable)
         update();
 
     selected_ = enable;
+}
+
+void SequenceWidget::updateName()
+{
+    nameText_.setText(sequence_->name());
 }
 
 void SequenceWidget::enterEvent(QEvent *)
@@ -127,6 +135,11 @@ void SequenceWidget::paintEvent(QPaintEvent * e)
             ));
         curvePainter_->paint(p, e->rect());
     }
+
+    // --- name ---
+
+    p.setPen(penText_);
+    p.drawStaticText(2, 2, nameText_);
 }
 
 

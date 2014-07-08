@@ -66,6 +66,12 @@ void TrackHeader::setTracks(const QList<Track *> &tracks)
     {
          widgets_.append( w = new TrackHeaderWidget(t, this) );
          w->setVisible(true);
+         connect(w, &TrackHeaderWidget::heightChange, [=](int h)
+         {
+            trackView_->setTrackHeight(t, h);
+            updateWidgetsViewSpace_();
+            update();
+         });
     }
 
     updateWidgetsViewSpace_();

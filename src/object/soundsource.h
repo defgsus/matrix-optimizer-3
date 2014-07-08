@@ -24,10 +24,15 @@ public:
     virtual Type type() const { return T_SOUNDSOURCE; }
     virtual bool isSoundSource() const { return true; }
 
+    virtual void createParameters();
+
 signals:
 
 public slots:
 
+private:
+
+    ParameterFloat * audioTrack_;
 };
 
 } // namespace MO

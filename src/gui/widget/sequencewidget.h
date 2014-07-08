@@ -15,6 +15,8 @@
 #include <QPen>
 #include <QBrush>
 #include <QPoint>
+#include <QStaticText>
+
 
 namespace MO {
 class Track;
@@ -45,6 +47,8 @@ public slots:
 
     void setSelected(bool enable);
 
+    void updateName();
+
 protected:
 
     void paintEvent(QPaintEvent *);
@@ -70,6 +74,10 @@ private:
     PAINTER::ValueCurve * curvePainter_;
     PAINTER::ValueCurveData * curveData_;
 
+    QStaticText nameText_;
+
+    // ---- interaction ----
+
     Action_ action_;
     bool hovered_, selected_;
     QPoint mouseClickPos_;
@@ -81,6 +89,8 @@ private:
         colorOutlineSel_,
         colorBody_,
         colorBodySel_;
+
+    QPen penText_;
 };
 
 

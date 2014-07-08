@@ -35,7 +35,9 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
     boldFont_.setBold(true);
     colorDefault_ = Qt::black;
     colorInvalid_ = Qt::red;
-    colorTransformation_ = QColor(0,120,0);
+    colorTransformation_ = QColor(0,60,120);
+    colorTrack_ = QColor(90,90,90);
+    colorSequence_ = QColor(0,120,0);
 }
 
 
@@ -196,16 +198,20 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         {
             if (!obj->isValid())
                 return colorInvalid_;
-            if (obj->isTransformation() ||
-                (obj->parentObject() && obj->parentObject()->isTransformation()))
+            if (obj->isTransformation())
+                //|| (obj->parentObject() && obj->parentObject()->isTransformation()))
                 return colorTransformation_;
+            if (obj->isTrack())
+                return colorTrack_;
+            if (obj->isSequence())
+                return colorSequence_;
             return colorDefault_;
         }
 
         // font
         if (role == Qt::FontRole)
         {
-            if (index.column() == 0)
+            if (!(obj->type() & Object::TG_MODULATION))
                 return boldFont_;
         }
 

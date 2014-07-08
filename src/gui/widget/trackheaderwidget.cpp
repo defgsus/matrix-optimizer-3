@@ -11,6 +11,8 @@
 #include <QDebug>
 #include <QLayout>
 #include <QLabel>
+#include <QMouseEvent>
+
 
 #include "trackheaderwidget.h"
 #include "io/error.h"
@@ -21,8 +23,9 @@ namespace GUI {
 
 
 TrackHeaderWidget::TrackHeaderWidget(Track *track, QWidget *parent) :
-    QWidget (parent),
-    track_  (track)
+    QWidget     (parent),
+    track_      (track),
+    dragging_   (false)
 {
     MO_ASSERT(track, "No Track given for TrackHeaderWidget");
 
@@ -32,12 +35,48 @@ TrackHeaderWidget::TrackHeaderWidget(Track *track, QWidget *parent) :
     p.setColor(QPalette::Foreground, Qt::white);
     setPalette(p);
 
+    setMouseTracking(true);
+
     setToolTip(track->namePath());
 
     layout_ = new QHBoxLayout(this);
 
     auto label = new QLabel(track->name().isEmpty()? "*unnamed*" : track->name(), this);
     layout_->addWidget(label);
+}
+
+
+void TrackHeaderWidget::mousePressEvent(QMouseEvent * e)
+{
+    if (onEdge_ && e->button() == Qt::LeftButton)
+    {
+        dragging_ = true;
+        dragStart_ = e->pos();
+        dragStartHeight_ = height();
+
+        e->accept();
+    }
+}
+
+void TrackHeaderWidget::mouseMoveEvent(QMouseEvent * e)
+{
+    if (!dragging_)
+    {
+        onEdge_ = e->y() >= height() - 2;
+        setCursor(onEdge_? Qt::SplitVCursor : Qt::ArrowCursor);
+    }
+    else
+    {
+        int newHeight = dragStartHeight_ + e->y() - dragStart_.y();
+        emit heightChange(std::max(10, newHeight));
+        e->accept();
+    }
+}
+
+void TrackHeaderWidget::mouseReleaseEvent(QMouseEvent * e)
+{
+    dragging_ = false;
+    mouseMoveEvent(e);
 }
 
 

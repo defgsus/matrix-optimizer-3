@@ -30,13 +30,25 @@ public:
 
 signals:
 
+    void heightChange(int);
+
 public slots:
 
 protected:
 
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+
     Track * track_;
 
     QHBoxLayout * layout_;
+
+    // ---- interaction ----
+
+    QPoint dragStart_;
+    int dragStartHeight_;
+    bool dragging_, onEdge_;
 };
 
 

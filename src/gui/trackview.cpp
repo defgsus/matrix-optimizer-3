@@ -240,6 +240,16 @@ int TrackView::trackHeight(Track * t) const
     return trackHeights_.value(t->idName(), defaultTrackHeight_);
 }
 
+void TrackView::setTrackHeight(Track * t, int h)
+{
+    trackHeights_.insert(t->idName(), h);
+
+    calcTrackY_();
+    updateWidgetsViewSpace_();
+    update();
+    emit tracksChanged();
+}
+
 int TrackView::trackY(Track * t) const
 {
     return trackY_.value(t, 0) - offsetY_;
@@ -622,6 +632,7 @@ void TrackView::objectChanged(Object * obj)
         if (auto w = widgetForSequence_(seq))
         {
             w->update();
+            w->updateName();
             for (auto w2 : w->influencedWidgets())
                 w2->update();
         }

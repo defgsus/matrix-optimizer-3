@@ -99,6 +99,8 @@ private:
     QColor
         colorDefault_,
         colorTransformation_,
+        colorTrack_,
+        colorSequence_,
         colorInvalid_;
 };
 

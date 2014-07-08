@@ -81,6 +81,9 @@ public slots:
     /** Sets the vertical offset into the view */
     void setVerticalOffset(int);
 
+    /** Sets a new height for the particular track. */
+    void setTrackHeight(Track *, int);
+
     /** Remove everything from this view. */
     void clearTracks();
     /** Insert the list of tracks and their sequences into the view.

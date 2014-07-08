@@ -34,5 +34,11 @@ void SoundSource::deserialize(IO::DataStream & io)
     io.readHeader("snd", 1);
 }
 
+void SoundSource::createParameters()
+{
+    Object::createParameters();
+
+    audioTrack_ = createFloatParameter("audio_track", "audio", 0.0, false);
+}
 
 } // namespace MO
