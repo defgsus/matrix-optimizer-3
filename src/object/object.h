@@ -283,6 +283,9 @@ public:
 
     virtual void collectModulators() { };
 
+    /** Returns a list of objects that modulate this object. */
+    virtual QList<Object*> getModulatingObjects() const;
+
     // --------------- parameter -------------------
 
     /** Returns the list of parameters for this object */

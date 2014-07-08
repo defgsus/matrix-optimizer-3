@@ -89,5 +89,18 @@ void ParameterFloat::collectModulators()
     MO_DEBUG_MOD("ParameterFloat("<<idName()<<") found " << modulators_.size() << " modulator(s)");
 }
 
+QList<Object*> ParameterFloat::getModulatingObjects() const
+{
+    QList<Object*> list;
+
+    for (auto m : modulators_)
+        list.append(m);
+
+    for (auto m : modulators_)
+        list.append(m->getModulatingObjects());
+
+    return list;
+}
+
 
 } // namespace MO

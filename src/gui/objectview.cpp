@@ -71,7 +71,11 @@ void ObjectView::setObject(Object * object)
 
         // additional info
         QString info;
-
+        /*
+        QList<Object*> mods = object_->getModulatingObjects();
+        for (auto m : mods)
+            info += m->idName() + " ";
+        */
         /*if (TrackFloat * track = qobject_cast<TrackFloat*>(object_))
         {
             for (auto &s : track->sequenceIds())

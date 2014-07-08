@@ -98,7 +98,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     {
         but = bmod = new QToolButton(w);
         l->addWidget(but);
-        but->setText("M");
+        but->setText(pf->modulatorIds().isEmpty()? "m" : "M");
         but->setToolTip(tr("Create modulation Track"));
 
         but = breset = new QToolButton(w);
@@ -135,6 +135,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         connect(bmod, &QToolButton::pressed, [=]()
         {
             model->createFloatTrack(pf);
+            bmod->setText("M");
         });
     }
     else

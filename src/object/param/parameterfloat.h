@@ -52,6 +52,10 @@ public:
 
     void collectModulators();
 
+    const QList<TrackFloat*>& modulators() const { return modulators_; }
+
+    virtual QList<Object*> getModulatingObjects() const;
+
 private:
 
     Double defaultValue_,

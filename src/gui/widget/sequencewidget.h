@@ -35,6 +35,8 @@ public:
 
     bool selected() const { return selected_; }
 
+    QList<SequenceWidget*>& influencedWidgets() { return influencedWidgets_; }
+
 signals:
 
     void hovered(SequenceWidget*, bool);
@@ -63,6 +65,7 @@ private:
 
     Track * track_;
     Sequence * sequence_;
+    QList<SequenceWidget*> influencedWidgets_;
 
     PAINTER::ValueCurve * curvePainter_;
     PAINTER::ValueCurveData * curveData_;

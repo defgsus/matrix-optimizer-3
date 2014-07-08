@@ -55,4 +55,17 @@ void TrackFloat::collectModulators()
     sequences_ = findChildObjects<SequenceFloat>();
 }
 
+QList<Object*> TrackFloat::getModulatingObjects() const
+{
+    QList<Object*> list(Object::getModulatingObjects());
+
+    for (auto s : sequences_)
+        list.append(s);
+
+    for (auto s : sequences_)
+        list.append(s->getModulatingObjects());
+
+    return list;
+}
+
 } // namespace MO

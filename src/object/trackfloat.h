@@ -29,6 +29,8 @@ public:
 
     virtual void collectModulators();
 
+    virtual QList<Object*> getModulatingObjects() const;
+
     Double value(Double time) const;
 
 signals:

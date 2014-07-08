@@ -54,6 +54,8 @@ public:
 
     virtual void collectModulators() = 0;
 
+    virtual QList<Object*> getModulatingObjects() const = 0;
+
 private:
 
     Object * object_;

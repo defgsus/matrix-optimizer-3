@@ -209,6 +209,7 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
     for (auto t : tracks_)
         createSequenceWidgets_(t);
 
+    assignModulatingWidgets_();
     updateWidgetsViewSpace_();
     update();
 
@@ -298,6 +299,25 @@ void TrackView::createSequenceWidgets_(Track * t)
 
     // needs to be on top
     overpaint_->raise();
+}
+
+void TrackView::assignModulatingWidgets_()
+{
+    for (auto w : sequenceWidgets_)
+        w->influencedWidgets().clear();
+
+    for (auto w : sequenceWidgets_)
+    {
+        // find objects that influence 'w'
+        QList<Object*> mods = w->sequence()->getModulatingObjects();
+        for (auto m : mods)
+            // if it's a sequence ..
+            if (auto seq = qobject_cast<Sequence*>(m))
+                // .. and in this view ..
+                if (auto sw = widgetForSequence_(seq))
+                    // .. then tell it that 'w' needs an update when it changes
+                    sw->influencedWidgets().append(w);
+    }
 }
 
 void TrackView::updateTrack(Track * t)
@@ -575,8 +595,16 @@ void TrackView::sequenceChanged(Sequence * seq)
     // or changes to the containing data
     if (SequenceWidget * s = widgetForSequence_(seq))
     {
+        // if time didn't change
         if (!updateWidgetViewSpace_(s))
+            // then content must have changed
             s->update();
+
+        // go through all influenced widgets
+        // if 's' is a modulator
+        for (auto w : s->influencedWidgets())
+            if (!updateWidgetViewSpace_(w))
+                w->update();
     }
 }
 
@@ -584,7 +612,11 @@ void TrackView::objectChanged(Object * obj)
 {
     if (auto seq = qobject_cast<Sequence*>(obj))
         if (auto w = widgetForSequence_(seq))
+        {
             w->update();
+            for (auto w2 : w->influencedWidgets())
+                w2->update();
+        }
 }
 
 Track * TrackView::trackForY_(int y) const
@@ -638,6 +670,7 @@ void TrackView::createEditActions_()
                 nextFocusSequence_ =
                     scene_->model()->createFloatSequence(trackf, currentTime_);
                 updateTrack(selTrack_);
+                assignModulatingWidgets_();
             }
         });
     }

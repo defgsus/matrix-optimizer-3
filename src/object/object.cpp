@@ -583,5 +583,20 @@ ParameterFloat * Object::createFloatParameter(
 }
 
 
+// -------------------- modulators ---------------------
+
+QList<Object*> Object::getModulatingObjects() const
+{
+    QList<Object*> list;
+
+    for (auto p : parameters())
+    {
+        list.append(p->getModulatingObjects());
+    }
+
+    return list;
+}
+
+
 
 } // namespace MO

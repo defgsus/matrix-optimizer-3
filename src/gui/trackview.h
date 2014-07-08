@@ -138,6 +138,7 @@ private:
 
     //void deleteSequenceWidgets_(Track *);
     void createSequenceWidgets_(Track *);
+    void assignModulatingWidgets_();
     void createEditActions_();
 
     void selectSequenceWidget_(SequenceWidget *, SelectState_);
