@@ -453,7 +453,8 @@ TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
     // construct name
     QString name = obj->name() + "." + param->name();
     // if the parent is not a "real object" then use the grandparent as well
-    if (!(obj->type() & Object::TG_REAL_OBJECT)
+    if (!( (obj->type() & Object::TG_REAL_OBJECT)
+           || (obj->type() & Object::TG_SEQUENCE))
         && obj->parentObject())
             name.prepend(obj->parentObject()->name() + ".");
 
@@ -473,16 +474,25 @@ SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double t
 {
     MO_DEBUG_TREE("ObjectTreeModel::createFloatSequence('" << track->idName() << "', " << time << ")");
 
+    // get a good name
+    QString name = track->name();
+    if (name.contains("."))
+    {
+        int i = name.lastIndexOf(".");
+        if (i < name.length()-2)
+            name = name.mid(i+1);
+    }
+
     QModelIndex trackIdx = indexForObject(track);
 
     // creat sequence
-    auto seq = ObjectFactory::createSequenceFloat();
+    auto seq = ObjectFactory::createSequenceFloat(name);
+
+    // set properties
     seq->setStart(time);
 
     // place the sequence on the track
     addObject(trackIdx, -1, seq);
-
-    // add it to track
     track->collectModulators();
 
     return seq;

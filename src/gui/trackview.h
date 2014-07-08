@@ -185,7 +185,7 @@ private:
     QPointF dragStartPosV_;
     Double dragStartTime_;
     Track * dragStartTrack_, * dragEndTrack_;
-    QList<int> dragStartTimes_;
+    QList<Double> dragStartTimes_;
 
     QRect selectRect_;
 

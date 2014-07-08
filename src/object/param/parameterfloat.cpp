@@ -11,6 +11,7 @@
 #include "parameterfloat.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "object/trackfloat.h"
 
 
@@ -66,6 +67,8 @@ Double ParameterFloat::getModulationValue(Double time) const
 
 void ParameterFloat::collectModulators()
 {
+    MO_DEBUG_MOD("ParameterFloat("<<idName()<<")::collectModulators()");
+
     modulators_.clear();
 
     Object * root = object()->rootObject();
@@ -79,6 +82,8 @@ void ParameterFloat::collectModulators()
             MO_WARNING("parameter '" << idName()
                        << "' could not find modulator '" << id << "'");
     }
+
+    MO_DEBUG_MOD("ParameterFloat("<<idName()<<") found " << modulators_.size() << " modulators");
 }
 
 
