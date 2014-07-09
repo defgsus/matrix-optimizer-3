@@ -40,6 +40,7 @@ TrackHeaderWidget::TrackHeaderWidget(Track *track, QWidget *parent) :
     setToolTip(track->namePath());
 
     layout_ = new QHBoxLayout(this);
+    layout_->setMargin(2);
 
     auto label = new QLabel(track->name().isEmpty()? "*unnamed*" : track->name(), this);
     layout_->addWidget(label);
