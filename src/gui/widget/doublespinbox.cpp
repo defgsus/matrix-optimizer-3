@@ -19,7 +19,9 @@ namespace GUI {
 DoubleSpinBox::DoubleSpinBox(QWidget *parent) :
     QWidget(parent),
     ignoreSignal_(false)
-{    
+{
+    setStatusTip(tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons"));
+
     auto l = new QVBoxLayout(this);
     l->setMargin(0);
     l->setSizeConstraint(QLayout::SetMinAndMaxSize);

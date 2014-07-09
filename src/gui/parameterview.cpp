@@ -96,6 +96,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
     QLabel * label = new QLabel(p->name(), w);
     l->addWidget(label);
+    label->setStatusTip(tr("The name of the parameter"));
 
     QToolButton * but, * bmod, * breset;
 
@@ -105,12 +106,15 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         but = bmod = new QToolButton(w);
         l->addWidget(but);
         but->setIcon(pf->modulatorIds().isEmpty()? iconModulateOff : iconModulateOn);
-        but->setToolTip(tr("Create modulation Track"));
+        but->setToolTip(tr("Create modulation track"));
+        but->setStatusTip(tr("Creates a new modulation track for the given parameter"));
 
         but = breset = new QToolButton(w);
         l->addWidget(but);
         but->setText("0");
         but->setToolTip(tr("Set to default value (%1)").arg(pf->defaultValue()));
+        but->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")
+                          .arg(pf->defaultValue()));
         but->setEnabled(pf->isEditable());
 
         int fs = breset->contentsRect().height() - 4;
@@ -123,6 +127,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         spin->setValue(pf->baseValue());
         spin->setMaximumWidth(120);
         spin->setEnabled(pf->isEditable());
+        spin->setStatusTip(tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons"));
         connect(spin, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=]()
         {
             QObject * scene = p->object()->sceneObject();

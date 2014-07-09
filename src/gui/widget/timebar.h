@@ -26,6 +26,8 @@ class TimeBar : public QWidget
 public:
     explicit TimeBar(QWidget *parent = 0);
 
+    bool isInContainingRect() const;
+
 signals:
 
     void timeChanged(Double time);
@@ -46,6 +48,7 @@ protected:
 
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
 
     void paintEvent(QPaintEvent *);
 
@@ -56,6 +59,7 @@ protected:
     QRect rect_;
     QPoint dragStart_;
     Double timeStart_;
+    bool dragging_;
 
     // --- config ---
 

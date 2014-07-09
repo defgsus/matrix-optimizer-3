@@ -126,6 +126,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // sequence mode
     auto w = newSetting(tr("sequence"));
+    w->setStatusTip(tr("Selects the type of the sequence function"));
     auto mode = new QComboBox(this);
     w->layout()->addWidget(mode);
     for (int i=0; i<SequenceFloat::ST_MAX; ++i)
@@ -145,6 +146,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // oscillator mode
     w = wOscMode_ = newSetting(tr("oscillator"));
+    w->setStatusTip(tr("Selects the type of oscillator waveform"));
     mode = new QComboBox(this);
     w->layout()->addWidget(mode);
     for (int i=0; i<MATH::Waveform::T_MAX_TYPES; ++i)
@@ -164,6 +166,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // offset
     w = newSetting(tr("value\noffset"));
+    w->setStatusTip(tr("This value is always added to the output of the sequence"));
     auto spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setDecimals(4);
@@ -182,6 +185,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // amplitude
     w = wAmp_ = newSetting(tr("amplitude"));
+    w->setStatusTip(tr("The output of the sequence is multiplied by this value"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setDecimals(4);
@@ -200,6 +204,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // frequency
     w = wFreq_ = newSetting(tr("frequency"));
+    w->setStatusTip(tr("The frequency of the function in hertz (periods per second)"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setDecimals(4);
@@ -218,6 +223,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // phase
     w = wPhase_ = newSetting(tr("phase"));
+    w->setStatusTip(tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setDecimals(4);
@@ -236,6 +242,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // pulseWidth
     w = wPW_ = newSetting(tr("pulsewidth"));
+    w->setStatusTip(tr("Pulsewidth of the waveform, describes the width of the positive edge"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setDecimals(4);
@@ -254,6 +261,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // equation
     w = wEqu_ = newSetting(tr("equation"));
+    w->setStatusTip(tr("The equation text can be a mix of functions, variables, numbers and operators"));
     auto text = wEquEdit_ = new EquationEditor(this);
     w->layout()->addWidget(text);
     text->setPlainText(sequence_->equationText());
@@ -270,7 +278,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // always use frequency
     w = wPhaseDeg_ = newSetting(tr("phase in degree"));
-    w->setToolTip(tr("Selects whether phase is given in "
+    w->setStatusTip(tr("Selects whether phase is given in "
                      "degree [0,360] or in unit range [0,1]"));
     auto cb = new QCheckBox(this);
     w->layout()->addWidget(cb);
@@ -287,7 +295,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // always use frequency
     w = wUseFreq_ = newSetting(tr("use frequency"));
-    w->setToolTip(tr("This selects whether the function time "
+    w->setStatusTip(tr("Selects whether the function time "
                      "should be modified by frequency and phase, "
                      "as in oscillator mode."));
     cb = new QCheckBox(this);

@@ -7,7 +7,7 @@
 
     <p>created 7/7/2014</p>
 */
-
+#include <QDebug>
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
@@ -25,7 +25,8 @@ TimeBar::TimeBar(QWidget *parent) :
     time_   (0.0),
     minTime_(-1.0e100),
     maxTime_(1.0e100),
-    offset_ (0.0)
+    offset_ (0.0),
+    dragging_(false)
 {
     setFixedWidth(3);
 
@@ -44,6 +45,12 @@ void TimeBar::setContainingRect(const QRect &containing_rect)
         rect_.setWidth(1);
     setFixedHeight(rect_.height());
     update_();
+}
+
+bool TimeBar::isInContainingRect() const
+{
+    return geometry().x() >= rect_.left()
+            && geometry().x() <= rect_.right();
 }
 
 void TimeBar::setViewspace(const UTIL::ViewSpace &space)
@@ -70,6 +77,9 @@ void TimeBar::update_()
     const int x = space_.mapXFrom(time_) * rect_.width();
 
     move(x - 1 + rect_.x(), rect_.y());
+
+    if (!isVisible() && isInContainingRect())
+        setVisible(true);
 }
 
 
@@ -77,6 +87,7 @@ void TimeBar::mousePressEvent(QMouseEvent * e)
 {
     if (e->button() == Qt::LeftButton)
     {
+        dragging_ = true;
         timeStart_ = time_;
         dragStart_ = mapToGlobal( e->pos() );
         e->accept();
@@ -85,7 +96,7 @@ void TimeBar::mousePressEvent(QMouseEvent * e)
 
 void TimeBar::mouseMoveEvent(QMouseEvent * e)
 {
-    if (e->buttons() & Qt::LeftButton)
+    if (dragging_)
     {
         const QPoint g = mapToGlobal( e->pos() );
         const int delta = g.x() - dragStart_.x();
@@ -97,7 +108,21 @@ void TimeBar::mouseMoveEvent(QMouseEvent * e)
         //setTime(newTime);
 
         emit timeChanged(newTime - offset_);
+
+        e->accept();
     }
+}
+
+void TimeBar::mouseReleaseEvent(QMouseEvent * e)
+{
+    if (dragging_)
+    {
+        dragging_ = false;
+        e->accept();
+    }
+
+    if (!isInContainingRect())
+        setVisible(false);
 }
 
 void TimeBar::paintEvent(QPaintEvent * e)

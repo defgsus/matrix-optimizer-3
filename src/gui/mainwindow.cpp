@@ -19,6 +19,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QScrollArea>
+#include <QStatusBar>
 
 #include "mainwindow.h"
 #include "projectorsetupwidget.h"
@@ -71,6 +72,8 @@ void MainWindow::createWidgets_()
 {
     setCentralWidget(new QWidget(this));
     centralWidget()->setObjectName("_centralwidget");
+
+    setStatusBar(new QStatusBar(this));
 
     auto l0 = new QHBoxLayout(centralWidget());
     l0->setMargin(0);

@@ -36,6 +36,8 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
     QTreeView   (parent),
     filter_     (new ObjectTreeSortProxy(this))
 {
+    setStatusTip(tr("Scene tree: right-click to open context menu"));
+
 #ifdef MO_DISABLE_OBJECT_TREE_DRAG
     setDragDropMode(NoDragDrop);
 #else
@@ -124,6 +126,7 @@ void ObjectTreeView::createDefaultActions_()
 
     a = new QAction(tr("Show/hide objects"), this);
     addAction(a);
+    a->setStatusTip(tr("Selects the groups of objects that are visible"));
     a->setMenu(showTypeMenu_);
 
     addAction(a = new QAction(this));
@@ -131,20 +134,24 @@ void ObjectTreeView::createDefaultActions_()
 
     a = new QAction(tr("Expand objects"), this);
     addAction(a);
+    a->setStatusTip(tr("Expands all real objects, no transformations, tracks or sequences"));
     a->setShortcut(Qt::ALT + Qt::Key_E);
     connect(a, SIGNAL(triggered()), SLOT(expandObjectsOnly()));
 
     a = new QAction(tr("Expand all"), this);
     addAction(a);
+    a->setStatusTip(tr("Expands all objects regardless of their type"));
     a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_E);
     connect(a, SIGNAL(triggered()), SLOT(expandAll()));
 
     a = new QAction(tr("Collapse all"), this);
     addAction(a);
+    a->setStatusTip(tr("Closes all nodes in the tree"));
     a->setShortcut(Qt::ALT + Qt::Key_C);
     connect(a, SIGNAL(triggered()), SLOT(collapseAll()));
 
     a = new QAction(tr("RESET MODEL"), this);
+    a->setStatusTip(tr("For debugging purposes"));
     addAction(a);
     connect(a, &QAction::triggered, [=]()
     {
@@ -265,6 +272,7 @@ void ObjectTreeView::createFirstObjectActions_()
 
         editActions_.append(a = new QAction(tr("Create object"), this));
         QMenu * menu = new QMenu(this);
+        a->setStatusTip(tr("Insertes a new object into the scene"));
         a->setMenu(menu);
         bool addSep = true;
         for (auto o : plist)
@@ -290,6 +298,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
 
     // copy
     editActions_.append(a = new QAction(tr("Copy"), this));
+    a->setStatusTip(tr("Copies the selected object and all it's children to the clipboard"));
     connect(a, &QAction::triggered, [=]()
     {
         application->clipboard()->setMimeData(
@@ -302,6 +311,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
     {
         // cut
         editActions_.append(a = new QAction(tr("Cut"), this));
+        a->setStatusTip(tr("Moves the selected object and all it's children to the clipboard"));
         connect(a, &QAction::triggered, [=]()
         {
             application->clipboard()->setMimeData(
@@ -314,6 +324,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
 
         // delete
         editActions_.append(a = new QAction(tr("Delete"), this));
+        a->setStatusTip(tr("Deletes the selected object and all of it's children"));
         connect(a, &QAction::triggered, [=]()
         {
             if (deleteObject_(currentIndex()))
@@ -334,6 +345,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         {
             // paste before
             editActions_.append(a = new QAction(tr("Paste before object"), this));
+            a->setStatusTip(tr("Pastes the objects from the clipboard above the selected object"));
             a->setEnabled(parentObj->canHaveChildren(pasteType));
             connect(a, &QAction::triggered, [=]()
             {
@@ -346,6 +358,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
 
             // paste after
             editActions_.append(a = new QAction(tr("Paste after object"), this));
+            a->setStatusTip(tr("Pastes the objects from the clipboard below the selected object"));
             a->setEnabled(parentObj->canHaveChildren(pasteType));
             connect(a, &QAction::triggered, [=]()
             {
@@ -359,6 +372,8 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
 
         // paste as child
         editActions_.append(a = new QAction(tr("Paste as children"), this));
+        a->setStatusTip(tr("Pastes the objects from the clipboard to the end of the "
+                           "selected object's children list"));
         a->setEnabled(obj->canHaveChildren(pasteType));
         connect(a, &QAction::triggered, [=]()
         {
@@ -389,6 +404,7 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
             QModelIndex parentIndex = model()->parent(currentIndex());
 
             editActions_.append(a = new QAction(tr("New sibling object"), this));
+            a->setStatusTip(tr("Creates a new object below the selected object"));
             QMenu * menu = new QMenu(this);
             a->setMenu(menu);
             bool addSep = true;
@@ -417,6 +433,7 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
         qStableSort(clist.begin(), clist.end(), sortObjectList_TransformFirst);
 
         editActions_.append(a = new QAction(tr("New child object"), this));
+        a->setStatusTip(tr("Creates a new object as children of the selected object"));
         QMenu * menu = new QMenu(this);
         a->setMenu(menu);
         bool addSep = true;

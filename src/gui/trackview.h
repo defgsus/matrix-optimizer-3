@@ -205,12 +205,16 @@ private:
 
     QRect selectRect_;
 
+    QString statusSeqNormal,
+            statusSeqLeftEdge;
+
     // ---- config ----
 
     int defaultTrackHeight_,
         trackSpacing_;
 
-    int modifierMultiSelect_,
+    Qt::Modifier
+        modifierMultiSelect_,
         modifierDragWithOffset_;
 
     bool selectSequenceOnSingleClick_;

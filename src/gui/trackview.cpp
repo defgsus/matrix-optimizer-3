@@ -29,6 +29,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "io/application.h"
+#include "tool/enumnames.h"
 
 namespace MO {
 namespace GUI {
@@ -54,6 +55,21 @@ TrackView::TrackView(QWidget *parent) :
     modifierDragWithOffset_ (Qt::CTRL),
     selectSequenceOnSingleClick_(true)
 {
+    setStatusTip(tr("Track View: right-click for context menu / "
+                    "left-click for selection frame "
+                    "(%1 to flip selection)").arg(enumName(modifierMultiSelect_)));
+
+    statusSeqNormal =
+            tr("Sequence: right-click for context menu / "
+               "left-click + drag to move / "
+               "drag edges to change length, "
+               "hold %1 to keep contents in place")
+            .arg(enumName(modifierDragWithOffset_));
+    // XXX does not update
+    statusSeqLeftEdge =
+            tr("drag to change start, hold %1 to keep contents in place")
+                        .arg(enumName(modifierDragWithOffset_));
+
     setMinimumSize(320,240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMouseTracking(true);
@@ -303,6 +319,8 @@ void TrackView::createSequenceWidgets_(Track * t)
         auto w = new SequenceWidget(t, seq, this);
         sequenceWidgets_.insert( w );
 
+        w->setStatusTip(statusSeqNormal);
+
         // initialize
         w->setVisible(true);
         connect(w, SIGNAL(hovered(SequenceWidget*,bool)),
@@ -456,6 +474,7 @@ void TrackView::mousePressEvent(QMouseEvent * e)
                         dragStartOffsets_.clear();
                         for (auto w : selectedWidgets_)
                             dragStartOffsets_.append(w->sequence()->timeOffset());
+                        hoverWidget_->setStatusTip(statusSeqLeftEdge);
                     }
                     else
 
@@ -660,6 +679,9 @@ void TrackView::mouseReleaseEvent(QMouseEvent * e)
 {
     bool multisel = (e->modifiers() & modifierMultiSelect_);
 
+    if (hoverWidget_)
+        hoverWidget_->setStatusTip(statusSeqNormal);
+
     if (action_ == A_SELECT_FRAME_)
     {
         update(updateRect_(selectRect_, penSelectFrame_));
@@ -829,6 +851,7 @@ void TrackView::createEditActions_()
 
         // copy
         a = editActions_.addAction(tr("Copy"), this);
+        a->setStatusTip(tr("Copies the selected sequence to the clipboard"));
         connect(a, &QAction::triggered, [this, seq]()
         {
             auto data = new ObjectTreeMimeData();
@@ -840,6 +863,7 @@ void TrackView::createEditActions_()
 
         // cut
         a = editActions_.addAction(tr("Cut"), this);
+        a->setStatusTip(tr("Moves the selected sequence to the clipboard"));
         a->setEnabled(seq->canBeDeleted());
         connect(a, &QAction::triggered, [this, seq]()
         {
@@ -852,6 +876,7 @@ void TrackView::createEditActions_()
 
         // delete
         a = editActions_.addAction(tr("Delete"), this);
+        a->setStatusTip(tr("Deletes the selected sequence"));
         a->setEnabled(seq->canBeDeleted());
         connect(a, &QAction::triggered, [this, seq]()
         {
@@ -873,6 +898,7 @@ void TrackView::createEditActions_()
 
         // copy
         a = editActions_.addAction(tr("Copy"), this);
+        a->setStatusTip(tr("Copies all selected sequences to the clipboard"));
         connect(a, &QAction::triggered, [this]()
         {
             QList<Object*> seqs;
@@ -891,6 +917,7 @@ void TrackView::createEditActions_()
 
         // cut
         a = editActions_.addAction(tr("Cut"), this);
+        a->setStatusTip(tr("Moves all selected sequences to the clipboard"));
         connect(a, &QAction::triggered, [this]()
         {
             QList<Object*> seqs;
@@ -915,6 +942,7 @@ void TrackView::createEditActions_()
 
         // delete
         a = editActions_.addAction(tr("Delete"), this);
+        a->setStatusTip(tr("Delete all selected sequences"));
         connect(a, &QAction::triggered, [this]()
         {
             QList<Object*> seqs;
@@ -935,6 +963,7 @@ void TrackView::createEditActions_()
     if (selTrack_)
     {
         a = editActions_.addAction(tr("New sequence"), this);
+        a->setStatusTip(tr("Creates a new sequence at the current time"));
         connect(a, &QAction::triggered, [this]()
         {
             if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
@@ -960,15 +989,18 @@ void TrackView::createEditActions_()
                 if (data->getNumObjects() == 1)
                 {
                     a = editActions_.addAction(tr("Paste on %1").arg(selTrack_->name()), this);
+                    a->setStatusTip(tr("Pastes the sequence from the clipboard to the selected track"));
                     connect(a, &QAction::triggered, [this](){ paste_(); });
                 }
                 // paste all
                 else
                 {
                     a = editActions_.addAction(tr("Paste all"), this);
+                    a->setStatusTip(tr("Pastes all sequences from the clipboard, starting at the selected track"));
                     connect(a, &QAction::triggered, [this](){ paste_(); });
 
                     a = editActions_.addAction(tr("Paste all on %1").arg(selTrack_->name()), this);
+                    a->setStatusTip(tr("Pastes all sequences from the clipboard after each other on the selected track"));
                     connect(a, &QAction::triggered, [this](){ paste_(true); });
                 }
             }

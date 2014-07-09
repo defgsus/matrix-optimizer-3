@@ -98,7 +98,8 @@ SOURCES += \
     src/gui/widget/timebar.cpp \
     src/gui/trackviewoverpaint.cpp \
     src/gui/widget/spacer.cpp \
-    src/tool/actionlist.cpp
+    src/tool/actionlist.cpp \
+    src/tool/enumnames.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -189,7 +190,8 @@ HEADERS += \
     src/gui/widget/timebar.h \
     src/gui/trackviewoverpaint.h \
     src/gui/widget/spacer.h \
-    src/tool/actionlist.h
+    src/tool/actionlist.h \
+    src/tool/enumnames.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

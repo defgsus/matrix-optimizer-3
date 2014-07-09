@@ -286,8 +286,9 @@ void SequenceView::createDefaultSettingsWidgets_()
     defaultSettingsContainer_->layout()->addWidget(f);
     defaultSettingsWidgets_.append(f);
 
-#define MO__SCENE_PARAM(spin__, getter__, setter__, min__, desc__) \
+#define MO__SCENE_PARAM(spin__, getter__, setter__, min__, desc__, status__) \
     w = newDefaultSetting_(desc__);                         \
+    w->setStatusTip(status__);                              \
     w->layout()->addWidget(spin__ = new DoubleSpinBox(w));  \
     spin__->setDecimals(4);                                 \
     spin__->setMinimum(min__);                              \
@@ -300,8 +301,9 @@ void SequenceView::createDefaultSettingsWidgets_()
         baseSequence_->setter__(v);                         \
     });
 
-#define MO__SCENE_PARAM_CB(cb__, getter__, setter__, desc__)\
+#define MO__SCENE_PARAM_CB(cb__, getter__, setter__, desc__, status__)\
     w = newDefaultSetting_(desc__);                         \
+    w->setStatusTip(status__);                              \
     w->layout()->addWidget(cb__ = new QCheckBox(w));        \
     cb__->setChecked(baseSequence_->getter__());            \
     connect(cb__,                                           \
@@ -311,18 +313,28 @@ void SequenceView::createDefaultSettingsWidgets_()
         baseSequence_->setter__(v == Qt::Checked);          \
     });
 
-    MO__SCENE_PARAM(spinStart_, start, setStart, 0, tr("start time"));
-    MO__SCENE_PARAM(spinLength_, length, setLength, Sequence::minimumLength(), tr("length"));
-    MO__SCENE_PARAM(spinEnd_, end, setEnd, 0, tr("end time"));
-    MO__SCENE_PARAM(spinTimeOffset_, timeOffset, setTimeOffset, -MO_MAX_TIME, tr("time offset"));
-    MO__SCENE_PARAM(spinSpeed_, speed, setSpeed, Sequence::minimumSpeed(), tr("speed"));
-    MO__SCENE_PARAM_CB(cbLooping_, looping, setLooping, tr("looping"));
-    MO__SCENE_PARAM(spinLoopStart_, loopStart, setLoopStart, 0, tr("loop start"));
+    MO__SCENE_PARAM(spinStart_, start, setStart, 0, tr("start time"),
+                    tr("Global start of the sequence in seconds."));
+    MO__SCENE_PARAM(spinLength_, length, setLength, Sequence::minimumLength(), tr("length"),
+                    tr("Length of the sequence in seconds"));
+    MO__SCENE_PARAM(spinEnd_, end, setEnd, 0, tr("end time"),
+                    tr("Gobal end time of the sequences in seconds"));
+    MO__SCENE_PARAM(spinTimeOffset_, timeOffset, setTimeOffset, -MO_MAX_TIME, tr("time offset"),
+                    tr("Time offset into the sequence data in seconds"));
+    MO__SCENE_PARAM(spinSpeed_, speed, setSpeed, Sequence::minimumSpeed(), tr("speed"),
+                    tr("Speed multiplier for the whole sequence, e.g. 2.0 is double speed, 0.5 is half speed"));
+    MO__SCENE_PARAM_CB(cbLooping_, looping, setLooping, tr("looping"),
+                    tr("Selects wether the contents of the sequence should be looped between "
+                       "'loop start' and 'loop end'"));
+    MO__SCENE_PARAM(spinLoopStart_, loopStart, setLoopStart, 0, tr("loop start"),
+                    tr("Local start of loop in seconds"));
     wLoopStart_ = w;
     MO__SCENE_PARAM(spinLoopLength_, loopLength, setLoopLength,
-                    Sequence::minimumLength(), tr("loop length"));
+                    Sequence::minimumLength(), tr("loop length"),
+                    tr("Local length of loop in seconds"));
     wLoopLength_ = w;
-    MO__SCENE_PARAM(spinLoopEnd_, loopEnd, setLoopEnd, 0, tr("loop end"));
+    MO__SCENE_PARAM(spinLoopEnd_, loopEnd, setLoopEnd, 0, tr("loop end"),
+                    tr("Local end time of loop in seconds."));
     wLoopEnd_ = w;
 
     bool loop = baseSequence_->looping();
