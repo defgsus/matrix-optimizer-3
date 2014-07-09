@@ -55,20 +55,35 @@ void ObjectView::setObject(Object * object)
 
     if (object_)
     {
-        QString shortPath = fontMetrics().elidedText(
-                    object_->namePath(), Qt::ElideMiddle,
-                    // XXX what is a good value here?
-                    width()-150);
-        QString shortIdPath = fontMetrics().elidedText(
-                    object_->idNamePath(), Qt::ElideMiddle,
-                    width()-150);
-
         icon_->setIcon(ObjectFactory::iconForObject(object_));
-        label_->setText(QString("<html><b>%1</b><br/>%2/%1<br/>%3/%4</html>")
-                        .arg(object_->name())
+    }
+    else
+    {
+        icon_->setIcon(QIcon());
+    }
+
+    updateNameLabel_();
+
+    paramView_->setObject(object_);
+}
+
+void ObjectView::updateNameLabel_()
+{
+    if (object_)
+    {
+        // XXX what is a good value here?
+        int maxWidth = width() - icon_->width() - 30;
+        QString shortName = fontMetrics().elidedText(
+                    object_->name(), Qt::ElideMiddle, maxWidth);
+        QString shortPath = fontMetrics().elidedText(
+                    object_->namePath() + object_->name(), Qt::ElideMiddle, maxWidth);
+        QString shortIdPath = fontMetrics().elidedText(
+                    object_->idNamePath() + object_->idName(), Qt::ElideMiddle, maxWidth);
+
+        label_->setText(QString("<html><b>%1</b><br/>%2<br/>%3</html>")
+                        .arg(shortName)
                         .arg(shortPath)
                         .arg(shortIdPath)
-                        .arg(object_->idName())
                         );
 
         // additional info
@@ -88,14 +103,16 @@ void ObjectView::setObject(Object * object)
     }
     else
     {
-        icon_->setIcon(QIcon());
         label_->setText(QString());
         label2_->setText(QString());
     }
-
-    paramView_->setObject(object_);
 }
 
+void ObjectView::resizeEvent(QResizeEvent *)
+{
+    if (object_)
+        updateNameLabel_();
+}
 
 } // namespace GUI
 } // namespace MO

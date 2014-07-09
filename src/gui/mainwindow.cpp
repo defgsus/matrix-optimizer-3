@@ -79,12 +79,12 @@ void MainWindow::createWidgets_()
         auto leftContainer = new QWidget(this);
         l0->addWidget(leftContainer);
         leftContainer->setObjectName("_left_container");
-        leftContainer->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+        leftContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
         leftContainer->setMinimumWidth(240);
 
         auto lv = new QVBoxLayout(leftContainer);
         lv->setMargin(0);
-        lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
+        //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
             // object tree view
             objectTreeView_ = new ObjectTreeView(this);

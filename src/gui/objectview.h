@@ -40,7 +40,13 @@ public slots:
         Can be NULL to disable it. */
     void setObject(MO::Object *);
 
+protected:
+
+    void resizeEvent(QResizeEvent *);
+
 private:
+
+    void updateNameLabel_();
 
     Object * object_;
 
