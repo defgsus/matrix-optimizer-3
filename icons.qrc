@@ -10,5 +10,7 @@
         <file alias="obj_translation.png">assets/icon/obj_translation.png</file>
         <file alias="obj_scale.png">assets/icon/obj_scale.png</file>
         <file alias="obj_track.png">assets/icon/obj_track.png</file>
+        <file alias="modulate_off.png">assets/icon/modulate_off.png</file>
+        <file alias="modulate_on.png">assets/icon/modulate_on.png</file>
     </qresource>
 </RCC>

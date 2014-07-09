@@ -81,6 +81,9 @@ void ParameterView::createWidgets_()
 
 QWidget * ParameterView::createWidget_(Parameter * p)
 {
+    static QIcon iconModulateOn(":/icon/modulate_on.png");
+    static QIcon iconModulateOff(":/icon/modulate_off.png");
+
     ObjectTreeModel * model = p->object()->sceneObject()->model();
     MO_ASSERT(model, "No model assigned for Parameter");
 
@@ -101,7 +104,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     {
         but = bmod = new QToolButton(w);
         l->addWidget(but);
-        but->setText(pf->modulatorIds().isEmpty()? "*" : "M");
+        but->setIcon(pf->modulatorIds().isEmpty()? iconModulateOff : iconModulateOn);
         but->setToolTip(tr("Create modulation Track"));
 
         but = breset = new QToolButton(w);
@@ -109,6 +112,9 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         but->setText("0");
         but->setToolTip(tr("Set to default value (%1)").arg(pf->defaultValue()));
         but->setEnabled(pf->isEditable());
+
+        int fs = breset->contentsRect().height() - 4;
+        bmod->setFixedSize(fs, fs);
 
         QDoubleSpinBox * spin = new QDoubleSpinBox(w);
         l->addWidget(spin);
@@ -141,7 +147,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         {
             if (Object * o = model->createFloatTrack(pf))
             {
-                bmod->setText("M");
+                bmod->setIcon(iconModulateOn);
                 if (doChangeToCreatedTrack_)
                     emit objectSelected(o);
             }
