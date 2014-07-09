@@ -14,7 +14,7 @@
 #include <QMouseEvent>
 #include <QMenu>
 #include <QPainter>
-
+#include <QClipboard>
 
 #include "trackview.h"
 #include "trackviewoverpaint.h"
@@ -24,9 +24,10 @@
 #include "object/trackfloat.h"
 #include "object/scene.h"
 #include "model/objecttreemodel.h"
+#include "model/objecttreemimedata.h"
 #include "io/error.h"
 #include "io/log.h"
-
+#include "io/application.h"
 
 namespace MO {
 namespace GUI {
@@ -34,6 +35,7 @@ namespace GUI {
 TrackView::TrackView(QWidget *parent) :
     QWidget         (parent),
     scene_          (0),
+    omodel_         (0),
     header_         (0),
 
     offsetY_                (0),
@@ -66,6 +68,7 @@ TrackView::TrackView(QWidget *parent) :
     penSelectFrame_.setStyle(Qt::DashLine);
     penFramedWidget_ = QPen(QColor(200,200,200));
     penFramedWidget_.setStyle(Qt::DotLine);
+    penCurrentTime_ = QPen(QColor(255,255,255,60));
 }
 
 void TrackView::setViewSpace(const UTIL::ViewSpace & s)
@@ -145,6 +148,8 @@ SequenceWidget * TrackView::widgetForSequence_(Sequence * seq) const
 
 void TrackView::updateWidgetsViewSpace_()
 {
+    setCurrentTime_(currentTime_);
+
     for (auto s : sequenceWidgets_)
     {
         updateWidgetViewSpace_(s);
@@ -177,6 +182,7 @@ void TrackView::clearTracks()
 
     sequenceWidgets_.clear();
     selectedWidgets_.clear();
+    framedWidgets_.clear();
 
     offsetY_ = 0;
 
@@ -201,6 +207,7 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
                 this, SLOT(sequenceChanged(MO::Sequence*)));
     }
     scene_ = scene;
+    omodel_ = scene->model();
 
     MO_ASSERT(scene_, "Scene not set in TrackView::setTracks()");
 
@@ -347,6 +354,19 @@ void TrackView::updateTrack(Track * t)
     updateWidgetsViewSpace_();
 }
 
+void TrackView::setCurrentTime_(Double t)
+{
+    currentTime_ = t;
+
+    const int
+            w = penCurrentTime_.width(),
+            x = space_.mapXFrom(currentTime_) * width();
+
+    update(oldCurrentRect_);
+    oldCurrentRect_ = QRect(x-w/2,0, w,height());
+    update(oldCurrentRect_);
+}
+
 void TrackView::widgetHovered_(SequenceWidget * w, bool on)
 {
     if (action_ == A_NOTHING_)
@@ -374,8 +394,7 @@ void TrackView::mousePressEvent(QMouseEvent * e)
 
     if (hoverWidget_)
     {
-        // leftclick on sequence
-        if (e->button() == Qt::LeftButton)
+        if (e->button() == Qt::LeftButton || e->button() == Qt::RightButton)
         {
             // change select state
 
@@ -396,22 +415,42 @@ void TrackView::mousePressEvent(QMouseEvent * e)
                 emit sequenceSelected(hoverWidget_->sequence());
             }
 
-            // --- start drag pos ---
-
-            if (isSelected_())
+            // leftclick on sequence
+            if (e->button() == Qt::LeftButton)
             {
-                action_ = A_DRAG_POS_;
-                //dragStartPos_ = e->pos();
-                dragStartTime_ = space_.mapXTo((Double)e->x()/width());
-                dragStartTrack_ = hoverWidget_->track();
-                dragStartTimes_.clear();
-                for (auto w : selectedWidgets_)
-                    dragStartTimes_.append(w->sequence()->start());
+
+                // --- start drag pos ---
+
+                if (isSelected_())
+                {
+                    action_ = A_DRAG_POS_;
+                    //dragStartPos_ = e->pos();
+                    dragStartTime_ = space_.mapXTo((Double)e->x()/width());
+                    dragStartTrack_ = hoverWidget_->track();
+                    dragStartTimes_.clear();
+                    for (auto w : selectedWidgets_)
+                        dragStartTimes_.append(w->sequence()->start());
+                }
+
+                e->accept();
+                return;
             }
 
-            e->accept();
-            return;
+            // --- right-click on sequence ---
+            if (e->button() == Qt::RightButton)
+            {
+                createEditActions_();
+
+                QMenu * popup = new QMenu(this);
+                popup->addActions(editActions_);
+
+                popup->popup(QCursor::pos());
+
+                e->accept();
+                return;
+            }
         }
+
     }
 
     // --- clicked on track ---
@@ -420,15 +459,15 @@ void TrackView::mousePressEvent(QMouseEvent * e)
         clearSelection_();
 
     selTrack_ = trackForY_(e->y());
-    currentTime_ = space_.mapXTo((Double)e->x() / width());
-
-    createEditActions_();
+    setCurrentTime_( space_.mapXTo((Double)e->x() / width()) );
 
     if (selTrack_)
     {
         // right-click on track
         if (e->button() == Qt::RightButton)
         {
+            createEditActions_();
+
             QMenu * popup = new QMenu(this);
             popup->addActions(editActions_);
 
@@ -445,7 +484,8 @@ void TrackView::mousePressEvent(QMouseEvent * e)
     {
         action_ = A_SELECT_FRAME_;
         dragStartPosV_ = screenToView(e->pos());
-        selectRect_ = QRect(dragStartPos_, QSize(1,1));
+        selectRect_ = QRect(dragStartPos_, QSize(0,0));
+        framedWidgets_.clear();
     }
 }
 
@@ -457,7 +497,7 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
     Double timeX = space_.mapXTo((Double)e->x() / width()),
            deltaTime = timeX - dragStartTime_;
 
-    // ---- drag sequence position ----
+    // ---- drag sequence(s) position ----
 
     if (action_ == A_DRAG_POS_)
     {
@@ -470,6 +510,9 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
         }
 
         autoScrollView_(e->pos());
+
+        if (hoverWidget_)
+            setCurrentTime_(hoverWidget_->sequence()->start());
 
         e->accept();
         return;
@@ -535,13 +578,15 @@ void TrackView::mouseReleaseEvent(QMouseEvent * e)
 
     if (action_ == A_SELECT_FRAME_)
     {
-        action_ = A_NOTHING_;
         update(updateRect_(selectRect_, penSelectFrame_));
 
         for (auto w : framedWidgets_)
             update(updateRect_(w->geometry(), penFramedWidget_));
 
         selectSequenceWidgets_(selectRect_, multisel? FLIP_ : SELECT_);
+
+        action_ = A_NOTHING_;
+        framedWidgets_.clear();
 
         e->accept();
         return;
@@ -587,6 +632,9 @@ void TrackView::selectSequenceWidget_(SequenceWidget * w, SelectState_ s)
 
 void TrackView::selectSequenceWidgets_(const QRect & r, SelectState_ s)
 {
+    if (r.size().isNull())
+        return;
+
     for (auto w : sequenceWidgets_)
     {
         if (r.intersects(w->geometry()))
@@ -663,6 +711,11 @@ QRect TrackView::updateRect_(const QRect &rect, const QPen &pen)
     return rect.adjusted(-w,-w,w+1,w+1);
 }
 
+int TrackView::trackIndex_(Track * t)
+{
+    return tracks_.indexOf(t);
+}
+
 void TrackView::createEditActions_()
 {
     // remove old actions
@@ -679,10 +732,125 @@ void TrackView::createEditActions_()
     QAction * a;
     //QMenu * m;
 
-    // actions for a track
+    // ---------- actions for a single sequence ---------------
+
+    if (hoverWidget_ && selectedWidgets_.size() < 2)
+    {
+        Sequence * seq = hoverWidget_->sequence();
+
+        // title
+        editActions_.addTitle(seq->name(), this);
+
+        editActions_.addSeparator(this);
+
+        // copy
+        a = editActions_.addAction(tr("Copy"), this);
+        connect(a, &QAction::triggered, [this, seq]()
+        {
+            auto data = new ObjectTreeMimeData();
+            data->storeObjectTree(seq);
+            application->clipboard()->setMimeData(data);
+            // update clipboard actions
+//            createEditActions_();
+        });
+
+        // cut
+        a = editActions_.addAction(tr("Cut"), this);
+        a->setEnabled(seq->canBeDeleted());
+        connect(a, &QAction::triggered, [this, seq]()
+        {
+            auto data = new ObjectTreeMimeData();
+            data->storeObjectTree(seq);
+            application->clipboard()->setMimeData(data);
+            if (deleteObject_(seq))
+                emit sequenceSelected(0);
+        });
+
+        // delete
+        a = editActions_.addAction(tr("Delete"), this);
+        a->setEnabled(seq->canBeDeleted());
+        connect(a, &QAction::triggered, [this, seq]()
+        {
+            if (deleteObject_(seq))
+                emit sequenceSelected(0);
+        });
+
+    }
+    else
+
+    // ---------- multi-sequence actions -----------
+
+    if (hoverWidget_ && selectedWidgets_.size() > 1)
+    {
+        // title
+        editActions_.addTitle(tr("%1 sequences").arg(selectedWidgets_.size()), this);
+
+        editActions_.addSeparator(this);
+
+        // copy
+        a = editActions_.addAction(tr("Copy"), this);
+        connect(a, &QAction::triggered, [this]()
+        {
+            QList<Object*> seqs;
+            QList<int> order;
+            for (auto w : selectedWidgets_)
+            {
+                seqs.append(w->sequence());
+                order.append(trackIndex_(w->sequence()->track()));
+            }
+
+            auto data = new ObjectTreeMimeData();
+            data->storeObjectTrees(seqs);
+            data->storeOrder(order);
+            application->clipboard()->setMimeData(data);
+        });
+
+        // cut
+        a = editActions_.addAction(tr("Cut"), this);
+        connect(a, &QAction::triggered, [this]()
+        {
+            QList<Object*> seqs;
+            QList<int> order;
+            for (auto w : selectedWidgets_)
+            {
+                seqs.append(w->sequence());
+                order.append(trackIndex_(w->sequence()->track()));
+            }
+
+            auto data = new ObjectTreeMimeData();
+            data->storeObjectTrees(seqs);
+            data->storeOrder(order);
+            application->clipboard()->setMimeData(data);
+
+            emit sequenceSelected(0);
+            for (auto s : seqs)
+                if (s->canBeDeleted())
+                    deleteObject_(s);
+
+        });
+
+        // delete
+        a = editActions_.addAction(tr("Delete"), this);
+        connect(a, &QAction::triggered, [this]()
+        {
+            QList<Object*> seqs;
+            for (auto w : selectedWidgets_)
+                seqs.append(w->sequence());
+
+            emit sequenceSelected(0);
+            for (auto s : seqs)
+                if (s->canBeDeleted())
+                    deleteObject_(s);
+        });
+
+    }
+    else
+
+    // -------------- actions for a track ------------------
+
     if (selTrack_)
     {
-        editActions_.append( a = new QAction(tr("New sequence"), this) );
+        a = editActions_.addAction(tr("New sequence"), this);
         connect(a, &QAction::triggered, [this]()
         {
             if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
@@ -693,9 +861,161 @@ void TrackView::createEditActions_()
                 assignModulatingWidgets_();
             }
         });
+
+        editActions_.addSeparator(this);
+
+        // paste
+        if (application->clipboard()->mimeData()->formats().contains(
+                    ObjectTreeMimeData::objectMimeType))
+        {
+            const ObjectTreeMimeData * data
+                    = qobject_cast<const ObjectTreeMimeData*>(application->clipboard()->mimeData());
+            if (data)
+            {
+                // paste single
+                if (data->getNumObjects() == 1)
+                {
+                    a = editActions_.addAction(tr("Paste on %1").arg(selTrack_->name()), this);
+                    connect(a, &QAction::triggered, [this](){ paste_(); });
+                }
+                // paste all
+                else
+                {
+                    if (data->hasOrder())
+                    {
+                        a = editActions_.addAction(tr("Paste all").arg(selTrack_->name()), this);
+                        connect(a, &QAction::triggered, [this](){ paste_(); });
+                    }
+
+                    a = editActions_.addAction(tr("Paste all on %1").arg(selTrack_->name()), this);
+                    connect(a, &QAction::triggered, [this](){ paste_(true); });
+                }
+            }
+        }
+
     }
 }
 
+bool TrackView::deleteObject_(Object * o)
+{
+    if (!omodel_) return false;
+    QModelIndex idx = omodel_->indexForObject(o);
+    return omodel_->deleteObject(idx);
+}
+
+bool TrackView::paste_(bool single_track)
+{
+    if (!omodel_ || !selTrack_)
+        return false;
+
+    const ObjectTreeMimeData * data = qobject_cast<const ObjectTreeMimeData*>
+            (application->clipboard()->mimeData());
+    if (!data)
+        return false;
+
+    clearSelection_();
+
+    // single sequence
+    if (data->getNumObjects() == 1)
+    {
+        Object * o = data->getObjectTree();
+        if (Sequence * s = qobject_cast<Sequence*>(o))
+        {
+            s->setStart(currentTime_);
+            nextFocusSequence_ = s;
+            if (omodel_->addObject(selTrack_, s))
+                return true;
+        }
+        nextFocusSequence_ = 0;
+        delete o;
+        return false;
+    }
+    // multi sequences
+    else
+    {
+        QList<Object*> objs = data->getObjectTrees();
+
+        // all on same track
+        if (single_track)
+        {
+            Double time = currentTime_;
+            for (auto o : objs)
+            if (Sequence * s = qobject_cast<Sequence*>(o))
+            {
+                s->setStart(time);
+                if (!omodel_->addObject(selTrack_, s))
+                    delete s;
+                else
+                {
+                    time = s->end();
+                }
+            }
+            // select
+            for (auto o : objs)
+                if (Sequence * s = qobject_cast<Sequence*>(o))
+                    if (auto w = widgetForSequence_(s))
+                        selectSequenceWidget_(w, SELECT_);
+
+            return true;
+        }
+        else
+        {
+            QList<int> order = data->getOrder();
+            if (order.size() == objs.size())
+            {
+                // get first track
+                int mint = order[0];
+                for (auto i : order)
+                    mint = std::min(mint, i);
+
+                int selt = trackIndex_(selTrack_);
+
+                // get left-most start time
+                Double start = -1;
+                for (auto o : objs)
+                    if (Sequence * s = qobject_cast<Sequence*>(o))
+                        if (start < 0 || s->start() < start)
+                            start = s->start();
+
+                if (start >= 0)
+                {
+                    for (int i = 0; i<objs.size(); ++i)
+                    if (Sequence * s = qobject_cast<Sequence*>(objs[i]))
+                    {
+                        s->setStart(currentTime_ + s->start() - start);
+                        // find track
+                        int tracknum = selt + order[i] - mint;
+                        MO_DEBUG("pasting '" << s->idName() << "' at "
+                                 << tracknum << ":" << s->start());
+                        // out of tracks?
+                        if (tracknum >= tracks_.size()
+                            // add
+                            || !omodel_->addObject(tracks_[tracknum], s))
+                                delete s;
+                    }
+                    // select
+                    for (auto o : objs)
+                        if (Sequence * s = qobject_cast<Sequence*>(o))
+                            if (auto w = widgetForSequence_(s))
+                                selectSequenceWidget_(w, SELECT_);
+
+                    return true;
+                }
+                else
+                    MO_WARNING("no sequences found in clipboard with '"
+                               << objs.size() << " objects. ");
+            }
+            else
+                MO_WARNING("order size (" << order.size() << ") does not match "
+                           "number of sequences (" << objs.size() << ")");
+
+            for (auto o : objs)
+                delete o;
+        }
+    }
+
+    return false;
+}
 
 } // namespace GUI
 } // namespace MO

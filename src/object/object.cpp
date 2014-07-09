@@ -424,6 +424,9 @@ QString Object::getUniqueId(QString id, Object * ignore) const
     if (id.isEmpty())
         id = className().isEmpty()? "Object" : className();
 
+    // replace white char with _
+    id.replace(QRegExp("\\s\\s*"), "_");
+
     auto root = rootObject();
     while (root->findChildObject(id, true, ignore))
     {

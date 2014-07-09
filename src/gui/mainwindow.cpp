@@ -78,6 +78,7 @@ void MainWindow::createWidgets_()
 
         auto leftContainer = new QWidget(this);
         l0->addWidget(leftContainer);
+        leftContainer->setObjectName("_left_container");
         leftContainer->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
         leftContainer->setMinimumWidth(240);
 

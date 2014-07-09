@@ -28,11 +28,16 @@ TrackViewOverpaint::TrackViewOverpaint(TrackView * trackView, QWidget *parent) :
 void TrackViewOverpaint::paintEvent(QPaintEvent * )
 {
     QPainter p(this);
+    p.setBrush(Qt::NoBrush);
 
+    // current time
+    p.setPen(trackView_->penCurrentTime_);
+    int x = trackView_->space_.mapXFrom(trackView_->currentTime_) * width();
+    p.drawLine(x, 0, x, height());
+
+    // frame selection
     if (trackView_->action_ == TrackView::A_SELECT_FRAME_)
     {
-        p.setBrush(Qt::NoBrush);
-
         // framed widgets
         p.setPen(trackView_->penFramedWidget_);
         for (auto w : trackView_->framedWidgets_)

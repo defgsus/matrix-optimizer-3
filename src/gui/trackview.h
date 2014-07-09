@@ -18,14 +18,12 @@
 #include <QSet>
 
 #include "util/viewspace.h"
+#include "object/object_fwd.h"
+#include "tool/actionlist.h"
 
 class QAction;
 
 namespace MO {
-class Object;
-class Track;
-class Scene;
-class Sequence;
 namespace GUI {
 
 class TrackViewOverpaint;
@@ -138,6 +136,7 @@ private:
     /** Adjusts the viewspace when @p mousePos is outside of view */
     void autoScrollView_(const QPoint& mousePos);
     void calcTrackY_();
+    void setCurrentTime_(Double);
 
     //void deleteSequenceWidgets_(Track *);
     void createSequenceWidgets_(Track *);
@@ -159,9 +158,20 @@ private:
     /** Returns the rectangle including the pen-width */
     QRect updateRect_(const QRect& rect, const QPen& pen);
 
+    /** Returns index number for track, or -1 */
+    int trackIndex_(Track *);
+
+    // editing
+    bool deleteObject_(Object * seq);
+    bool paste_(bool single_track = false);
+
+
+    // _______________ MEMBER _________________
+
     UTIL::ViewSpace space_;
 
     Scene * scene_;
+    ObjectTreeModel * omodel_;
     QList<Track*> tracks_;
 
     TrackViewOverpaint * overpaint_;
@@ -172,14 +182,14 @@ private:
     QHash<Track*, int> trackY_;
     int offsetY_, maxHeight_;
 
-    QList<QAction*> editActions_;
+    ActionList editActions_;
 
     Action_ action_;
     Track * selTrack_;
     /** createSequenceWidgets() will focus the widget containing this sequence */
     Sequence * nextFocusSequence_;
     Double currentTime_;
-
+    QRect oldCurrentRect_;
     SequenceWidget* hoverWidget_;
     QList<SequenceWidget*>
         selectedWidgets_,
@@ -203,7 +213,8 @@ private:
     bool selectSequenceOnSingleClick_;
 
     QPen penSelectFrame_,
-         penFramedWidget_;
+         penFramedWidget_,
+         penCurrentTime_;
 };
 
 } // namespace GUI

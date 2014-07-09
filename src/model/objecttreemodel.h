@@ -79,7 +79,11 @@ public slots:
 
     bool deleteObject(const QModelIndex&);
 
-    QModelIndex addObject(const QModelIndex& parent, int indexInChild, Object * obj);
+    /** Adds the object to @p parent. @p childIndex can be -1 to append. */
+    QModelIndex addObject(const QModelIndex& parent, int childIndex, Object * obj);
+
+    /** Adds the object to @p parent. @p childIndex can be -1 to append. */
+    bool addObject(Object * parent, Object * obj, int childIndex = -1);
 
     TrackFloat * createFloatTrack(ParameterFloat * parameter);
 

@@ -308,6 +308,8 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
                         model()->mimeData(QModelIndexList() << currentIndex()));
             if (deleteObject_(currentIndex()))
                 emit objectSelected(0);
+            // update clipboard actions
+            createEditActions_(obj);
         });
 
         // delete
@@ -466,6 +468,8 @@ void ObjectTreeView::setFocusIndex(const QModelIndex & idx)
 
 void ObjectTreeView::setFocusIndex(const Object *object)
 {
+    if (!object)
+        return;
     const QModelIndex oidx = omodel_->indexForObject(object);
     if (!oidx.isValid()) return;
     const QModelIndex idx = filter_->mapFromSource(oidx);

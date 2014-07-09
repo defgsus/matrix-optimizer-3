@@ -322,7 +322,7 @@ QMimeData * ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
 
         auto data = new ObjectTreeMimeData();
         data->setModelIndex(indexes.at(0));
-        data->setObjectTree(obj);
+        data->storeObjectTree(obj);
         return data;
     }
 
@@ -430,7 +430,7 @@ bool ObjectTreeModel::deleteObject(const QModelIndex & index)
 
 QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, Object * obj)
 {
-    MO_DEBUG_TREE("ObjectTreeModel::addObject_(parent("
+    MO_DEBUG_TREE("ObjectTreeModel::addObject(parent("
              << parentIndex.row() << ", " << parentIndex.column() << "), "
              << row << ", " << obj << ")");
 
@@ -448,6 +448,24 @@ QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, 
         return createIndex(row, 0, (void*)obj);
     }
     return QModelIndex();
+}
+
+bool ObjectTreeModel::addObject(Object *parent, Object * obj, int index)
+{
+    MO_DEBUG_TREE("ObjectTreeModel::addObject('" << parent->idName() << "', "
+                  << index << ", " << obj << ")");
+
+    // adjust index
+    if (index<0)
+        index = parent->numChildren();
+
+    QModelIndex parentIndex = indexForObject(parent);
+
+    beginInsertRows(parentIndex, index, index);
+    parent->addObject(obj, index);
+    endInsertRows();
+
+    return true;
 }
 
 TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)

@@ -36,6 +36,9 @@ namespace MO {
     class Setting;
     class SettingFloat;
 
+    class ObjectTreeModel;
+    class ObjectTreeMimeData;
+
 } // namespace MO
 
 #endif // OBJECT_FWD_H
