@@ -17,12 +17,12 @@
 #include <QPoint>
 #include <QStaticText>
 
+#include "gui/util/viewspace.h"
 
 namespace MO {
 class Track;
 class Sequence;
 namespace GUI {
-namespace UTIL { class ViewSpace; }
 namespace PAINTER { class ValueCurve; class ValueCurveData; }
 
 class SequenceWidget : public QWidget
@@ -36,6 +36,8 @@ public:
     Track * track() const { return track_; }
 
     bool selected() const { return selected_; }
+    bool onLeftEdge() const { return onLeft_; }
+    bool onRightEdge() const { return onRight_; }
 
     QList<SequenceWidget*>& influencedWidgets() { return influencedWidgets_; }
 
@@ -50,22 +52,14 @@ public slots:
     void updateName();
 
 protected:
-
+    void resizeEvent(QResizeEvent *);
     void paintEvent(QPaintEvent *);
     void enterEvent(QEvent *);
     void leaveEvent(QEvent *);
-    /*
-    void mousePressEvent(QMouseEvent *);
-    void mouseMoveEvent(QMouseEvent *);
-    void mouseReleaseEvent(QMouseEvent *);
-    */
-private:
 
-    enum Action_
-    {
-        A_NOTHING,
-        A_DRAG_POS
-    };
+    void mouseMoveEvent(QMouseEvent *);
+
+private:
 
     Track * track_;
     Sequence * sequence_;
@@ -73,16 +67,18 @@ private:
 
     PAINTER::ValueCurve * curvePainter_;
     PAINTER::ValueCurveData * curveData_;
+    UTIL::ViewSpace space_;
 
     QStaticText nameText_;
 
     // ---- interaction ----
 
-    Action_ action_;
-    bool hovered_, selected_;
+    bool hovered_, selected_, onLeft_, onRight_;
     QPoint mouseClickPos_;
 
     // ---- config ----
+
+    int edgeWidth_;
 
     QColor
         colorOutline_,
@@ -90,7 +86,9 @@ private:
         colorBody_,
         colorBodySel_;
 
-    QPen penText_;
+    QPen penText_,
+         penStart_,
+         penLoop_;
 };
 
 

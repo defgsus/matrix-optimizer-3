@@ -15,6 +15,7 @@
 
 #include "sequencewidget.h"
 #include "io/log.h"
+#include "io/error.h"
 #include "gui/painter/valuecurve.h"
 #include "object/sequencefloat.h"
 
@@ -38,15 +39,17 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
     sequence_   (seq),
     curvePainter_(0),
     curveData_   (0),
-    nameText_   (seq->name()),
-    action_     (A_NOTHING),
     hovered_    (false),
-    selected_   (false)
+    selected_   (false),
+    onLeft_     (false),
+    onRight_    (false),
+    edgeWidth_  (4)
 {
     MO_DEBUG_GUI("SequenceWidget::SequenceWidget(" << track << ", " << seq << ", " << parent << ")");
 
-    //setFocusPolicy(Qt::ClickFocus);
-    //setMouseTracking(true);
+    MO_ASSERT(track && seq, "No Sequence or Track given for SequenceWidget");
+
+    setMouseTracking(true);
 
     colorBody_ = QColor(80, 120, 80);
     colorBodySel_ = colorBody_.lighter(150);
@@ -55,6 +58,8 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
     colorOutlineSel_ = colorBody_.lighter(200);
 
     penText_ = QPen(QColor(255,255,255));
+    penStart_ = QPen(QColor(255,255,255,50));
+    penLoop_ = QPen(penStart_);
 
     // prepare a float curve painter
     if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(seq))
@@ -66,6 +71,8 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
         curveData_ = data;
         curvePainter_->setCurveData(curveData_);
     }
+
+    updateName();
 }
 
 SequenceWidget::~SequenceWidget()
@@ -87,6 +94,13 @@ void SequenceWidget::updateName()
     nameText_.setText(sequence_->name());
 }
 
+void SequenceWidget::resizeEvent(QResizeEvent *)
+{
+    space_ = UTIL::ViewSpace(
+                0.0, -1.0, sequence_->length(), 2.0
+                );
+}
+
 void SequenceWidget::enterEvent(QEvent *)
 {
     hovered_ = true;
@@ -96,7 +110,7 @@ void SequenceWidget::enterEvent(QEvent *)
 
 void SequenceWidget::leaveEvent(QEvent *)
 {
-    hovered_ = false;
+    hovered_ = onLeft_ = onRight_ = false;
     emit hovered(this, false);
     update();
 }
@@ -130,10 +144,17 @@ void SequenceWidget::paintEvent(QPaintEvent * e)
 
     if (curvePainter_)
     {
-        curvePainter_->setViewSpace( UTIL::ViewSpace(
-            0.0, -1.0, sequence_->length(), 2.0
-            ));
+        curvePainter_->setViewSpace( space_ );
         curvePainter_->paint(p, e->rect());
+    }
+
+    // --- time offset ---
+
+    int x = space_.mapXFrom(-sequence_->timeOffset()) * width();
+    if (x>e->rect().left() && x<=e->rect().right())
+    {
+        p.setPen(penStart_);
+        p.drawLine(x, e->rect().top(), x, e->rect().bottom());
     }
 
     // --- name ---
@@ -144,39 +165,17 @@ void SequenceWidget::paintEvent(QPaintEvent * e)
 
 
 
-#if (0)
-void SequenceWidget::mousePressEvent(QMouseEvent * e)
-{
-//    emit clicked(this, e->button());
-//    e->accept();
-
-    if (e->button() == Qt::LeftButton)
-    {
-        action_ = A_DRAG_POS;
-        mouseClickPos_ = e->pos();
-
-        e->accept();
-        return;
-    }
-*/
-}
-
 void SequenceWidget::mouseMoveEvent(QMouseEvent * e)
 {
-    if (action_ == A_DRAG_POS)
-    {
-        QPoint delta = mouseClickPos_ - e->pos();
+    onLeft_ = (e->x() <= edgeWidth_);
+    onRight_ = (e->x() >= width() - edgeWidth_ - 1);
 
-        e->accept();
-        return;
-    }
+    setCursor((onLeft_ || onRight_)
+              ? Qt::SplitHCursor
+              : Qt::ArrowCursor
+                );
+    e->ignore();
 }
-
-void SequenceWidget::mouseReleaseEvent(QMouseEvent * )
-{
-    action_ = A_NOTHING;
-}
-#endif
 
 } // namespace GUI
 } // namespace MO

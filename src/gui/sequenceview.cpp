@@ -152,7 +152,7 @@ void SequenceView::setSequence_(Sequence * s)
     bool different = baseSequence_ != s;
 
     // remove old connection !!
-    if (baseSequence_)
+    if (different && baseSequence_)
     {
         disconnect(baseSequence_, SIGNAL(timeChanged(MO::Sequence*)),
                    this, SLOT(sequenceTimeChanged_(MO::Sequence*)));
@@ -168,7 +168,7 @@ void SequenceView::setSequence_(Sequence * s)
         {
             createDefaultSettingsWidgets_();
             connect(baseSequence_, SIGNAL(timeChanged(MO::Sequence*)),
-                       SLOT(sequenceTimeChanged_(MO::Sequence*)));
+                    this, SLOT(sequenceTimeChanged_(MO::Sequence*)));
 
             playBar_->setTimeOffset(-baseSequence_->start());
         }
@@ -350,8 +350,6 @@ void SequenceView::sequenceTimeChanged_(Sequence * s)
 
     playBar_->setTimeOffset(-baseSequence_->start());
     playBar_->setMinimumTime(-baseSequence_->start());
-
-    MO_DEBUG_PARAM("updating widgets");
 
     spinStart_->setValue( baseSequence_->start() );
     spinLength_->setValue( baseSequence_->length() );

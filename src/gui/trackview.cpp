@@ -56,6 +56,7 @@ TrackView::TrackView(QWidget *parent) :
     setMinimumSize(320,240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMouseTracking(true);
+    setCursor(Qt::CrossCursor);
 
     QPalette p(palette());
     p.setColor(QPalette::Window, QColor(50,50,50));
@@ -393,6 +394,11 @@ void TrackView::mousePressEvent(QMouseEvent * e)
 
     // --- clicked on sequence ---
 
+    // !! a popup eats the hoverWidget_
+    QWidget * w = childAt(e->pos());
+    if (SequenceWidget * sw = qobject_cast<SequenceWidget*>(w))
+        hoverWidget_ = sw;
+
     if (hoverWidget_)
     {
         if (e->button() == Qt::LeftButton || e->button() == Qt::RightButton)
@@ -419,18 +425,42 @@ void TrackView::mousePressEvent(QMouseEvent * e)
             // leftclick on sequence
             if (e->button() == Qt::LeftButton)
             {
-
-                // --- start drag pos ---
-
                 if (isSelected_())
                 {
-                    action_ = A_DRAG_POS_;
-                    //dragStartPos_ = e->pos();
                     dragStartTime_ = space_.mapXTo((Double)e->x()/width());
                     dragStartTrack_ = hoverWidget_->track();
                     dragStartTimes_.clear();
+                    dragStartLengths_.clear();
                     for (auto w : selectedWidgets_)
+                    {
                         dragStartTimes_.append(w->sequence()->start());
+                        dragStartLengths_.append(w->sequence()->length());
+                    }
+
+                    // --- start drag right ---
+
+                    if (hoverWidget_->onRightEdge())
+                    {
+                        action_ = A_DRAG_RIGHT_;
+                    }
+                    else
+
+                    // --- start drag left ---
+
+                    if (hoverWidget_->onLeftEdge())
+                    {
+                        action_ = A_DRAG_LEFT_;
+                        dragStartOffsets_.clear();
+                        for (auto w : selectedWidgets_)
+                            dragStartOffsets_.append(w->sequence()->timeOffset());
+                    }
+                    else
+
+                    // --- start drag pos ---
+
+                    {
+                        action_ = A_DRAG_POS_;
+                    }
                 }
 
                 e->accept();
@@ -451,7 +481,6 @@ void TrackView::mousePressEvent(QMouseEvent * e)
                 return;
             }
         }
-
     }
 
     // --- clicked on track ---
@@ -514,6 +543,55 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
 
         if (hoverWidget_)
             setCurrentTime_(hoverWidget_->sequence()->start());
+
+        e->accept();
+        return;
+    }
+
+    // ---- drag sequence(s) left edge ----
+
+    if (action_ == A_DRAG_LEFT_)
+    {
+        for (int i=0; i<selectedWidgets_.size(); ++i)
+        {
+            Sequence * seq = selectedWidgets_[i]->sequence();
+            Double newstart = std::max((Double)0, std::min(seq->end() - Sequence::minimumLength(),
+                                                           dragStartTimes_[i] + deltaTime));
+            Double change = dragStartTimes_[i] - newstart;
+            Double newlength = std::max(Sequence::minimumLength(), dragStartLengths_[i] + change );
+            Double newOffset = dragStartOffsets_[i] - change;
+            ScopedSequenceChange lock(scene_, seq);
+            seq->setStart(newstart);
+            seq->setTimeOffset(newOffset);
+            seq->setLength(newlength);
+        }
+
+        autoScrollView_(e->pos());
+
+        if (hoverWidget_)
+            setCurrentTime_(hoverWidget_->sequence()->start());
+
+        e->accept();
+        return;
+    }
+
+    // ---- drag sequence(s) right edge ----
+
+    if (action_ == A_DRAG_RIGHT_)
+    {
+        for (int i=0; i<selectedWidgets_.size(); ++i)
+        {
+            Sequence * seq = selectedWidgets_[i]->sequence();
+            Double newlength = std::max(Sequence::minimumLength(),
+                                        dragStartLengths_[i] + deltaTime );
+            ScopedSequenceChange lock(scene_, seq);
+            seq->setLength(newlength);
+        }
+
+        autoScrollView_(e->pos());
+
+        if (hoverWidget_)
+            setCurrentTime_(hoverWidget_->sequence()->end());
 
         e->accept();
         return;

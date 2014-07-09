@@ -128,7 +128,9 @@ private:
     {
         A_NOTHING_,
         A_DRAG_POS_,
-        A_SELECT_FRAME_
+        A_SELECT_FRAME_,
+        A_DRAG_LEFT_,
+        A_DRAG_RIGHT_
     };
 
     void updateWidgetsViewSpace_();
@@ -199,7 +201,7 @@ private:
     QPointF dragStartPosV_;
     Double dragStartTime_;
     Track * dragStartTrack_, * dragEndTrack_;
-    QList<Double> dragStartTimes_;
+    QList<Double> dragStartTimes_, dragStartOffsets_, dragStartLengths_;
 
     QRect selectRect_;
 
