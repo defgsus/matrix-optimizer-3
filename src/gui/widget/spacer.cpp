@@ -25,6 +25,8 @@ Spacer::Spacer(Qt::Orientation o, QWidget *parent) :
     adjustLeft_(true),
     dragging_(false)
 {
+    setStatusTip(tr("Left-click and drag to change the size of the neighbouring views"));
+
     option_ = new QStyleOptionButton();
 
     setOrientation(o);

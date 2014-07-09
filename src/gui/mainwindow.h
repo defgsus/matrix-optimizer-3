@@ -75,7 +75,7 @@ private:
     Sequencer * sequencer_;
     SequenceFloatView * seqFloatView_;
 
-    Spacer * spacer_;
+    Spacer * spacer_, * spacer2_;
 
     QObjectInspector * qobjectView_;
 };

@@ -70,7 +70,7 @@ TrackView::TrackView(QWidget *parent) :
             tr("drag to change start, hold %1 to keep contents in place")
                         .arg(enumName(modifierDragWithOffset_));
 
-    setMinimumSize(320,240);
+    setMinimumSize(320,40);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMouseTracking(true);
     setCursor(Qt::CrossCursor);

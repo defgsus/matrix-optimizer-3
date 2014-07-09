@@ -125,11 +125,15 @@ void MainWindow::createWidgets_()
 
             // sequencer
             sequencer_ = new Sequencer(this);
+            sequencer_->setMinimumHeight(300);
             lv->addWidget(sequencer_);
             connect(sequencer_, &Sequencer::sequenceSelected, [this](Sequence * seq)
             {
                 objectSelected(seq);
             });
+
+            //spacer2_ = new Spacer(Qt::Horizontal, this);
+            //lv->addWidget(spacer2_);
 
             // SequenceFloat view
             seqFloatView_ = new SequenceFloatView(this);
@@ -138,6 +142,7 @@ void MainWindow::createWidgets_()
 
 
     spacer_->setWidgets(leftContainer, sequencer_);
+    //spacer2_->setWidgets(sequencer_, seqFloatView_);
 
     // ------------ connections --------------
 

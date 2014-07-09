@@ -28,6 +28,8 @@ TimeBar::TimeBar(QWidget *parent) :
     offset_ (0.0),
     dragging_(false)
 {
+    setStatusTip("Drag left and right to change time");
+
     setFixedWidth(3);
 
     brushBar_ = QBrush(QColor(0,255,255,100));
