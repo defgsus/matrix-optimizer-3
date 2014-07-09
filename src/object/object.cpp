@@ -304,6 +304,36 @@ bool Object::hasParentObject(Object *o) const
     return parentObject_ == o? true : parentObject_->hasParentObject(o);
 }
 
+bool Object::saveToAdd(Object *o, QString &error) const
+{
+    if (!o)
+    {
+        error = tr("Object is NULL");
+        return false;
+    }
+
+    if (!canHaveChildren(o->type()))
+    {
+        error = tr("'%1' can not have a child of this type").arg(idName());
+        return false;
+    }
+
+    // test for modulation loops
+    QList<Object*> mods = o->getFutureModulatingObjects(sceneObject());
+    MO_DEBUG("--- " << mods.size() << " modulators for " << o->idName());
+    for (auto m : mods)
+        MO_DEBUG(m->idName());
+    if (mods.contains((Object*)this))
+    {
+        error = tr("Adding '%1' as a child to '%2' would cause an infinite "
+                   "modulation loop!").arg(o->idName()).arg(idName());
+        return false;
+    }
+
+    return true;
+}
+
+
 void Object::setParentObject(Object *parent, int index)
 {
     MO_ASSERT(parent, "NULL parent given for Object");
@@ -600,6 +630,17 @@ QList<Object*> Object::getModulatingObjects() const
     return list;
 }
 
+QList<Object*> Object::getFutureModulatingObjects(const Scene *scene) const
+{
+    QList<Object*> list;
+
+    for (auto p : parameters())
+    {
+        list.append(p->getFutureModulatingObjects(scene));
+    }
+
+    return list;
+}
 
 
 } // namespace MO

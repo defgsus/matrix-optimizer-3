@@ -13,7 +13,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "object/trackfloat.h"
-
+#include "object/scene.h"
 
 
 // make ParameterFloat useable in QMetaObject::invokeMethod
@@ -102,5 +102,22 @@ QList<Object*> ParameterFloat::getModulatingObjects() const
     return list;
 }
 
+QList<Object*> ParameterFloat::getFutureModulatingObjects(const Scene *scene) const
+{
+    QList<Object*> mods, list;
+
+    for (const auto &m : modulatorIds())
+    {
+        if (Object * o = scene->findChildObject(m, true))
+            mods.append(o);
+    }
+
+    list = mods;
+
+    for (auto m : mods)
+        list.append(m->getModulatingObjects());
+
+    return list;
+}
 
 } // namespace MO

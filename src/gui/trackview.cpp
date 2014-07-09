@@ -15,6 +15,7 @@
 #include <QMenu>
 #include <QPainter>
 #include <QClipboard>
+#include <QMessageBox>
 
 #include "trackview.h"
 #include "trackviewoverpaint.h"
@@ -881,11 +882,8 @@ void TrackView::createEditActions_()
                 // paste all
                 else
                 {
-                    if (data->hasOrder())
-                    {
-                        a = editActions_.addAction(tr("Paste all").arg(selTrack_->name()), this);
-                        connect(a, &QAction::triggered, [this](){ paste_(); });
-                    }
+                    a = editActions_.addAction(tr("Paste all").arg(selTrack_->name()), this);
+                    connect(a, &QAction::triggered, [this](){ paste_(); });
 
                     a = editActions_.addAction(tr("Paste all on %1").arg(selTrack_->name()), this);
                     connect(a, &QAction::triggered, [this](){ paste_(true); });
@@ -915,16 +913,23 @@ bool TrackView::paste_(bool single_track)
 
     clearSelection_();
 
+    QString error;
+
     // single sequence
     if (data->getNumObjects() == 1)
     {
         Object * o = data->getObjectTree();
         if (Sequence * s = qobject_cast<Sequence*>(o))
         {
-            s->setStart(currentTime_);
-            nextFocusSequence_ = s;
-            if (omodel_->addObject(selTrack_, s))
-                return true;
+            if (selTrack_->saveToAdd(s, error))
+            {
+                s->setStart(currentTime_);
+                nextFocusSequence_ = s;
+                if (omodel_->addObject(selTrack_, s))
+                    return true;
+            }
+            else
+                QMessageBox::warning(this, tr("Can't paste"), error);
         }
         nextFocusSequence_ = 0;
         delete o;
@@ -960,10 +965,20 @@ bool TrackView::paste_(bool single_track)
         }
         else
         {
-            QList<int> order = data->getOrder();
+            // get order
+            QList<int> order;
+            if (data->hasOrder())
+                order = data->getOrder();
+            else
+            {
+                // make some up
+                for (auto i=0; i<objs.size(); ++i)
+                    order.append(i);
+            }
+
             if (order.size() == objs.size())
             {
-                // get first track
+                // get first track in order
                 int mint = order[0];
                 for (auto i : order)
                     mint = std::min(mint, i);
@@ -985,8 +1000,8 @@ bool TrackView::paste_(bool single_track)
                         s->setStart(currentTime_ + s->start() - start);
                         // find track
                         int tracknum = selt + order[i] - mint;
-                        MO_DEBUG("pasting '" << s->idName() << "' at "
-                                 << tracknum << ":" << s->start());
+                        //MO_DEBUG("pasting '" << s->idName() << "' at "
+                        //         << tracknum << ":" << s->start());
                         // out of tracks?
                         if (tracknum >= tracks_.size()
                             // add

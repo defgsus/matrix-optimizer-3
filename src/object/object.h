@@ -206,6 +206,9 @@ public:
     /** Returns true when the object can be deleted by the ObjectTreeView */
     bool canBeDeleted() const { return canBeDeleted_; }
 
+    /** Test if object @p o can be added to this object. */
+    bool saveToAdd(Object * o, QString& error) const;
+
     /** Returns the root object of this hierarchy, which may
         be the object itself. */
     const Object * rootObject() const;
@@ -287,6 +290,10 @@ public:
 
     /** Returns a list of objects that modulate this object. */
     virtual QList<Object*> getModulatingObjects() const;
+
+    /** Returns a list of objects that will modulate this object
+        when it gets added to the scene. */
+    virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
 
     // --------------- parameter -------------------
 

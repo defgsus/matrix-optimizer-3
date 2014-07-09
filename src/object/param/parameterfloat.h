@@ -55,6 +55,7 @@ public:
     const QList<TrackFloat*>& modulators() const { return modulators_; }
 
     virtual QList<Object*> getModulatingObjects() const;
+    virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
 
 private:
 

@@ -59,6 +59,7 @@ public:
     virtual void collectModulators() = 0;
 
     virtual QList<Object*> getModulatingObjects() const = 0;
+    virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const = 0;
 
 private:
 

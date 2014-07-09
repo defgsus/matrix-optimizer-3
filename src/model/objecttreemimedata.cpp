@@ -7,7 +7,7 @@
 
     <p>created 6/28/2014</p>
 */
-#include <QDebug>
+//#include <QDebug>
 #include <QStringList>
 
 #include "objecttreemimedata.h"
@@ -176,7 +176,7 @@ Object * ObjectTreeMimeData::getObjectTree() const
     io >> num;
     if (num < 1)
         MO_IO_ERROR(READ, "No objects stored in clipboard");
-    qDebug() << num;
+
     // return first
     return Object::deserializeTree(io);
 }
