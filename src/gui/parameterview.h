@@ -31,6 +31,8 @@ public:
 
 signals:
 
+    /** When creating a modulator track */
+    void objectSelected(MO::Object *);
 
 public slots:
 
@@ -47,6 +49,10 @@ private:
     QMap<QString, QWidget*> widgets_;
 
     QVBoxLayout * layout_;
+
+    // ------ config ------
+
+    bool doChangeToCreatedTrack_;
 };
 
 } // namespace GUI

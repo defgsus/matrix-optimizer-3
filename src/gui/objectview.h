@@ -31,6 +31,9 @@ public:
 
 signals:
 
+    /** When a modulation track was created */
+    void objectSelected(MO::Object*);
+
 public slots:
 
     /** Sets the object for the view.

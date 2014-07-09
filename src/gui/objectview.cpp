@@ -45,6 +45,8 @@ ObjectView::ObjectView(QWidget *parent) :
 
         paramView_ = new ParameterView(this);
         layout_->addWidget(paramView_);
+        connect(paramView_, SIGNAL(objectSelected(MO::Object*)),
+                this, SIGNAL(objectSelected(MO::Object*)));
 }
 
 void ObjectView::setObject(Object * object)

@@ -315,6 +315,8 @@ void TrackView::createSequenceWidgets_(Track * t)
         {
             w->setFocus();
             nextFocusSequence_ = 0;
+            clearSelection_();
+            selectSequenceWidget_(w, SELECT_);
             emit sequenceSelected(seq);
         }
     }

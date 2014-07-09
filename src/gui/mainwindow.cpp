@@ -94,7 +94,10 @@ void MainWindow::createWidgets_()
             //objectTreeView_->setMaximumWidth(450);
             connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
                     SLOT(setEditActions_(const QObject*,QList<QAction*>)));
+            connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
+                    SLOT(objectSelected(MO::Object*)));
 
+            // object tree model
             objectTreeModel_ = new ObjectTreeModel(0, this);
             objectTreeView_->setObjectModel(objectTreeModel_);
 
@@ -103,9 +106,8 @@ void MainWindow::createWidgets_()
             lv->addWidget(objectView_);
             objectView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
             objectView_->setMinimumWidth(240);
-
-            connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
-                    SLOT(objectSelected(MO::Object*)));
+            connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
+                                        this, SLOT(objectSelected(MO::Object*)));
 
         //l0->setStretchFactor(lv, -1);
 

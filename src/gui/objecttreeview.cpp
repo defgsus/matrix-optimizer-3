@@ -470,10 +470,23 @@ void ObjectTreeView::setFocusIndex(const Object *object)
 {
     if (!object)
         return;
-    const QModelIndex oidx = omodel_->indexForObject(object);
+    // find index in original model
+    QModelIndex oidx = omodel_->indexForObject(object);
     if (!oidx.isValid()) return;
-    const QModelIndex idx = filter_->mapFromSource(oidx);
-    if (!idx.isValid() || idx == currentIndex()) return;
+    // find filtered index
+    QModelIndex idx = filter_->mapFromSource(oidx);
+
+    // maybe filtered out? then try parent
+    while (!idx.isValid())
+    {
+        object = object->parentObject();
+        if (!object) return;
+        oidx = omodel_->indexForObject(object);
+        if (!oidx.isValid()) return;
+        idx = filter_->mapFromSource(oidx);
+    }
+
+    if (idx == currentIndex()) return;
     setFocusIndex(idx);
 }
 

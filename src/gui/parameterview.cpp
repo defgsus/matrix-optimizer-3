@@ -17,6 +17,7 @@
 #include "parameterview.h"
 #include "object/object.h"
 #include "object/scene.h"
+#include "object/trackfloat.h"
 #include "object/param/parameterfloat.h"
 #include "io/error.h"
 #include "model/objecttreemodel.h"
@@ -26,7 +27,9 @@ namespace GUI {
 
 ParameterView::ParameterView(QWidget *parent) :
     QWidget (parent),
-    object_ (0)
+    object_ (0),
+
+    doChangeToCreatedTrack_    (false)
 {
     layout_ = new QVBoxLayout(this);
     layout_->setMargin(0);
@@ -136,8 +139,12 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue()); });
         connect(bmod, &QToolButton::pressed, [=]()
         {
-            model->createFloatTrack(pf);
-            bmod->setText("M");
+            if (Object * o = model->createFloatTrack(pf))
+            {
+                bmod->setText("M");
+                if (doChangeToCreatedTrack_)
+                    emit objectSelected(o);
+            }
         });
     }
     else
