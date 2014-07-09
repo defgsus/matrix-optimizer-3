@@ -504,18 +504,32 @@ QList<Object*> Object::findChildObjects(int typeFlags, bool recursive) const
 
 bool Object::canHaveChildren(Type t) const
 {
+    // dummy can contain/be added to everything
     if (t == T_DUMMY || type() == T_DUMMY)
         return true;
 
-    if (t & TG_SEQUENCE || t & TG_TRACK)
-        return true;
+    // sequences belong on tracks or sequencegroups only
+    // with matching type
+    if (t & TG_SEQUENCE)
+        return
+            type() == T_SEQUENCEGROUP
+            || (t == T_SEQUENCE_FLOAT && type() == T_TRACK_FLOAT);
 
+    // sequencegroups belong on tracks
+    if (t == T_SEQUENCEGROUP)
+        return  (type() & TG_TRACK)
+                // or themselfes
+                || type() == T_SEQUENCEGROUP;
+
+    // tracks contain nothing else but sequences
     if (type() & TG_TRACK)
-        return t & TG_SEQUENCE;
+        return false;
 
-    if (type() == T_SEQUENCEGROUP)
-        return t == T_SEQUENCEGROUP || (t & TG_SEQUENCE);
+    // sequence contains nothing
+    if (type() & TG_SEQUENCE)
+        return false;
 
+    // scene can hold anything else, except transformations
     if (type() == T_SCENE)
         return t != T_TRANSFORMATION;
 

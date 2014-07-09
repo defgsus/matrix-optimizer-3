@@ -482,9 +482,16 @@ TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
         && obj->parentObject())
             name.prepend(obj->parentObject()->name() + ".");
 
-    auto track = ObjectFactory::createTrackFloat(name);
+    // find a place for the modulation track
+    while (obj && !obj->canHaveChildren(Object::T_TRACK_FLOAT))
+    {
+        obj = obj->parentObject();
+    }
+    MO_ASSERT(obj, "Could not find an object to create a float track in.");
 
-    // place the track somewhere
+    // create track
+    auto track = ObjectFactory::createTrackFloat(name);
+    // add to parent
     addObject(indexForObject(obj), -1, track);
 
     // modulate parameter

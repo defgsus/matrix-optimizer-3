@@ -210,7 +210,8 @@ private:
     int defaultTrackHeight_,
         trackSpacing_;
 
-    int modifierMultiSelect_;
+    int modifierMultiSelect_,
+        modifierDragWithOffset_;
 
     bool selectSequenceOnSingleClick_;
 

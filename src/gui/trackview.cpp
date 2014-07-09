@@ -51,6 +51,7 @@ TrackView::TrackView(QWidget *parent) :
     defaultTrackHeight_     (30),
     trackSpacing_           (2),
     modifierMultiSelect_    (Qt::CTRL),
+    modifierDragWithOffset_ (Qt::CTRL),
     selectSequenceOnSingleClick_(true)
 {
     setMinimumSize(320,240);
@@ -559,7 +560,9 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
                                                            dragStartTimes_[i] + deltaTime));
             Double change = dragStartTimes_[i] - newstart;
             Double newlength = std::max(Sequence::minimumLength(), dragStartLengths_[i] + change );
-            Double newOffset = dragStartOffsets_[i] - change;
+            Double newOffset = dragStartOffsets_[i];
+            if (e->modifiers() & modifierDragWithOffset_)
+                newOffset -= change;
             ScopedSequenceChange lock(scene_, seq);
             seq->setStart(newstart);
             seq->setTimeOffset(newOffset);
