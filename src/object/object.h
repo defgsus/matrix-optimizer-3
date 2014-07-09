@@ -207,7 +207,7 @@ public:
     bool canBeDeleted() const { return canBeDeleted_; }
 
     /** Test if object @p o can be added to this object. */
-    bool saveToAdd(Object * o, QString& error) const;
+    bool isSaveToAdd(Object * o, QString& error) const;
 
     /** Returns the root object of this hierarchy, which may
         be the object itself. */

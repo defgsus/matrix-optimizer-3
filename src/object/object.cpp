@@ -304,7 +304,7 @@ bool Object::hasParentObject(Object *o) const
     return parentObject_ == o? true : parentObject_->hasParentObject(o);
 }
 
-bool Object::saveToAdd(Object *o, QString &error) const
+bool Object::isSaveToAdd(Object *o, QString &error) const
 {
     if (!o)
     {

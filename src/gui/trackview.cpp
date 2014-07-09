@@ -882,7 +882,7 @@ void TrackView::createEditActions_()
                 // paste all
                 else
                 {
-                    a = editActions_.addAction(tr("Paste all").arg(selTrack_->name()), this);
+                    a = editActions_.addAction(tr("Paste all"), this);
                     connect(a, &QAction::triggered, [this](){ paste_(); });
 
                     a = editActions_.addAction(tr("Paste all on %1").arg(selTrack_->name()), this);
@@ -921,7 +921,7 @@ bool TrackView::paste_(bool single_track)
         Object * o = data->getObjectTree();
         if (Sequence * s = qobject_cast<Sequence*>(o))
         {
-            if (selTrack_->saveToAdd(s, error))
+            if (selTrack_->isSaveToAdd(s, error))
             {
                 s->setStart(currentTime_);
                 nextFocusSequence_ = s;
@@ -929,7 +929,7 @@ bool TrackView::paste_(bool single_track)
                     return true;
             }
             else
-                QMessageBox::warning(this, tr("Can't paste"), error);
+                QMessageBox::warning(this, tr("Can not paste"), error);
         }
         nextFocusSequence_ = 0;
         delete o;
@@ -938,28 +938,42 @@ bool TrackView::paste_(bool single_track)
     // multi sequences
     else
     {
+        QString errors;
+
         QList<Object*> objs = data->getObjectTrees();
 
         // all on same track
         if (single_track)
         {
             Double time = currentTime_;
-            for (auto o : objs)
-            if (Sequence * s = qobject_cast<Sequence*>(o))
+            for (int i=0; i<objs.size(); ++i)
+            if (Sequence * s = qobject_cast<Sequence*>(objs[i]))
             {
-                s->setStart(time);
-                if (!omodel_->addObject(selTrack_, s))
-                    delete s;
+                if (!selTrack_->isSaveToAdd(s, error))
+                {
+                    errors += error + "\n";
+                }
                 else
                 {
-                    time = s->end();
+                    s->setStart(time);
+                    if (omodel_->addObject(selTrack_, s))
+                    {
+                        time = s->end();
+                        continue;
+                    }
                 }
+                delete s;
+                objs[i] = 0;
             }
+
             // select
             for (auto o : objs)
                 if (Sequence * s = qobject_cast<Sequence*>(o))
                     if (auto w = widgetForSequence_(s))
                         selectSequenceWidget_(w, SELECT_);
+
+            if (!errors.isEmpty())
+                QMessageBox::warning(this, tr("Can not paste"), errors);
 
             return true;
         }
@@ -1003,16 +1017,30 @@ bool TrackView::paste_(bool single_track)
                         //MO_DEBUG("pasting '" << s->idName() << "' at "
                         //         << tracknum << ":" << s->start());
                         // out of tracks?
-                        if (tracknum >= tracks_.size()
+                        if (tracknum < tracks_.size())
+                        {
+                            if (!tracks_[tracknum]->isSaveToAdd(s, error))
+                            {
+                                errors += error + "\n";
+                            }
+                            else
                             // add
-                            || !omodel_->addObject(tracks_[tracknum], s))
-                                delete s;
+                            if (omodel_->addObject(tracks_[tracknum], s))
+                                continue;
+                        }
+                            else MO_WARNING("skipping sequence '" << s->name() << "' "
+                                            "because there is no track left");
+                        delete s;
+                        objs[i] = 0;
                     }
                     // select
                     for (auto o : objs)
                         if (Sequence * s = qobject_cast<Sequence*>(o))
                             if (auto w = widgetForSequence_(s))
                                 selectSequenceWidget_(w, SELECT_);
+
+                    if (!errors.isEmpty())
+                        QMessageBox::warning(this, tr("Can not paste"), errors);
 
                     return true;
                 }
