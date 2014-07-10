@@ -508,6 +508,13 @@ bool Object::canHaveChildren(Type t) const
     if (t == T_DUMMY || type() == T_DUMMY)
         return true;
 
+    // transformations are child-less
+    if (type() == T_TRANSFORMATION)
+        return false;
+
+    if (type() == T_TRANSFORMATION_MIX)
+        return t == T_TRANSFORMATION;
+
     // sequences belong on tracks or sequencegroups only
     // with matching type
     if (t & TG_SEQUENCE)

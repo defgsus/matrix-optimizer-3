@@ -102,7 +102,8 @@ SOURCES += \
     src/tool/enumnames.cpp \
     src/object/transform/look.cpp \
     src/object/transform/lookat.cpp \
-    src/object/transform/shear.cpp
+    src/object/transform/shear.cpp \
+    src/object/transform/mix.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -197,7 +198,8 @@ HEADERS += \
     src/tool/enumnames.h \
     src/object/transform/look.h \
     src/object/transform/lookat.h \
-    src/object/transform/shear.h
+    src/object/transform/shear.h \
+    src/object/transform/mix.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

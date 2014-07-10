@@ -12,8 +12,6 @@
 #include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 
-// XXX NOT WORKING YET
-
 namespace MO {
 
 MO_REGISTER_OBJECT(Shear)

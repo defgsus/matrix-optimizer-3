@@ -84,7 +84,8 @@ public:
     {
         T_NONE              = 0,
         T_OBJECT            = 1,
-        T_TRANSFORMATION    = 1<<3,
+        T_TRANSFORMATION    = 1<<2,
+        T_TRANSFORMATION_MIX= 1<<3,
         T_SCENE             = 1<<4,
         T_MICROPHONE        = 1<<5,
         T_CAMERA            = 1<<6,
@@ -103,6 +104,8 @@ public:
         TG_FLOAT            = T_TRACK_FLOAT | T_SEQUENCE_FLOAT,
 
         TG_MODULATION       = TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP,
+
+        TG_TRANSFORMATION   = T_TRANSFORMATION | T_TRANSFORMATION_MIX,
 
         TG_ALL = 0xffffffff
     };
