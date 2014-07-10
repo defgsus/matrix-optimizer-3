@@ -12,9 +12,9 @@
 #define MOSRC_GUI_SEQUENCEFLOATVIEW_H
 
 #include "sequenceview.h"
+#include "object/object_fwd.h"
 
 namespace MO {
-class SequenceFloat;
 namespace GUI {
 
 class Timeline1DView;

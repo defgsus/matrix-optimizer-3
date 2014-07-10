@@ -192,6 +192,22 @@ void Scene::endSequenceChange()
     render_();
 }
 
+void Scene::beginTimelineChange(Object * o)
+{
+    MO_DEBUG_PARAM("Scene::beginTimelineChange(" << o << ")");
+    changedTimelineObject_ = o;
+}
+
+void Scene::endTimelineChange()
+{
+    MO_DEBUG_PARAM("Scene::endTimelineChange()");
+
+    if (Sequence * s = qobject_cast<Sequence*>(changedTimelineObject_))
+        emit sequenceChanged(s);
+
+    render_();
+}
+
 // --------------------- objects -----------------------------
 
 void Scene::beginObjectChange(Object * o)

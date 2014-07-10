@@ -90,6 +90,7 @@ void Timeline1DView::setGridOptions(int options)
     update();
 }
 
+
 Double Timeline1DView::screen2time(Double x) const
 {
     return space_.mapXTo(x / width());
@@ -598,7 +599,10 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         if (e->modifiers() & modifierMoveVert_)
             dx = 0;
 
-        moveSelected_(dx, dy);
+        {
+            Locker_ lock(this);
+            moveSelected_(dx, dy);
+        }
 
         e->accept();
         return;
@@ -682,8 +686,8 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
                 if (dist_scr <= 2+abs(dx))
                 {
                     setCursor(Qt::CrossCursor);
-                    e->accept();
                     hoverCurveHash_ = it->first;
+                    e->accept();
                     return;
                 }
             }
@@ -729,6 +733,7 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
     {
         if (e->button() == Qt::LeftButton)
         {
+            Locker_ lock(this);
             addPoint_(screen2time(e->x()), screen2value(e->y()));
             e->accept();
             // do not return but go on to click-on-point (start dragging)
@@ -838,7 +843,10 @@ void Timeline1DView::mouseDoubleClickEvent(QMouseEvent * e)
     {
         if (options_ & O_AddRemovePoints)
         {
-            addPoint_(screen2time(e->x()), screen2value(e->y()));
+            {
+                Locker_ lock(this);
+                addPoint_(screen2time(e->x()), screen2value(e->y()));
+            }
             // go to drag action imidiately
             mousePressEvent(e);
             return;
@@ -1073,7 +1081,10 @@ void Timeline1DView::slotPointContextMenu_()
         a->setChecked(pointIt->second.type == type);
         connect(a, &QAction::triggered, [=]()
         {
-            changePointType_(type);
+            {
+                Locker_ lock(this);
+                changePointType_(type);
+            }
             update();
         });
     }
@@ -1095,7 +1106,10 @@ void Timeline1DView::slotPointContextMenu_()
             connect(a, &QAction::triggered, [=]()
             {
                 const Double t = pointIt->second.t;
-                tl_->remove(t);
+                {
+                    Locker_ lock(this);
+                    tl_->remove(t);
+                }
                 selectHashSet_.remove(MATH::Timeline1D::hash(t));
                 update();
             });
@@ -1117,11 +1131,13 @@ void Timeline1DView::slotPointContextMenu_()
             pop->addAction(a);
             connect(a, &QAction::triggered, [=]()
             {
-                for (auto h : selectHashSet_)
-                    tl_->remove(h);
+                {
+                    Locker_ lock(this);
+                    for (auto h : selectHashSet_)
+                        tl_->remove(h);
 
-                tl_->setAutoDerivative();
-
+                    tl_->setAutoDerivative();
+                }
                 selectHashSet_.clear();
 
                 update();
@@ -1464,19 +1480,23 @@ void Timeline1DView::paste()
                     insertVal = screen2value(popupClick_.y()) - clipVal;
 
             clearSelect_();
-            for (auto &i : tl.getData())
             {
-                auto p =
-                    tl_->add(limitX_(i.second.t + insertTime),
-                             limitY_(i.second.val + insertVal),
-                             i.second.type);
-                if (p)
-                    addSelect_(*p);
+                Locker_ lock(this);
+                for (auto &i : tl.getData())
+                {
+                    auto p =
+                        tl_->add(limitX_(i.second.t + insertTime),
+                                 limitY_(i.second.val + insertVal),
+                                 i.second.type);
+                    if (p)
+                        addSelect_(*p);
+                }
             }
         }
         // whole timeline
         else
         {
+            Locker_ lock(this);
             *tl_ = tl;
         }
 

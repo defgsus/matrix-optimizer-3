@@ -11,6 +11,8 @@
 #ifndef MOSRC_GUI_TIMELINE1DVIEW_H
 #define MOSRC_GUI_TIMELINE1DVIEW_H
 
+#include <functional>
+
 #include <QWidget>
 #include <QSet>
 #include <QVector>
@@ -26,6 +28,7 @@ namespace PAINTER { class Grid; class ValueCurve; class ValueCurveData; }
 class Timeline1DView : public QWidget
 {
     Q_OBJECT
+
 public:
 
     enum Option
@@ -80,6 +83,11 @@ public:
 
     /** Sets the options for the background grid as or-wise combination of PAINTER::Grid::Option */
     void setGridOptions(int options);
+
+    /** Assigns locking/unlocking functions to the editor.
+        Any change to the timeline data will be locked here. */
+    void setLockFunctions(std::function<void()> lock,
+                          std::function<void()> unlock) { lock_ = lock; unlock_ = unlock; }
 
     // --------- conversion screen/time/value --------
 
@@ -155,6 +163,14 @@ protected:
         DragPoint_(const MATH::Timeline1D::TpList::iterator& it) : valid(true), oldp(it->second), newp(it->second), it(it) { }
     };
 
+    class Locker_
+    {
+        Timeline1DView * v;
+    public:
+        Locker_(Timeline1DView * v) : v(v) { if (v->lock_) v->lock_(); }
+        ~Locker_() { if (v->unlock_) v->unlock_(); }
+    };
+
     void paintEvent(QPaintEvent *);
     void keyPressEvent(QKeyEvent *);
     void keyReleaseEvent(QKeyEvent *);
@@ -203,6 +219,8 @@ protected:
     PAINTER::Grid * gridPainter_;
     PAINTER::ValueCurve * valuePainter_;
     PAINTER::ValueCurveData * valuePainterData_;
+
+    std::function<void()> lock_, unlock_;
 
     // ---- config ----
 

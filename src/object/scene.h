@@ -57,6 +57,17 @@ public:
 
     Double sceneTime() const { return sceneTime_; }
 
+    // ------------- locking and updates -------
+
+    void beginSequenceChange(MO::Sequence *);
+    void endSequenceChange();
+
+    void beginTimelineChange(MO::Object *);
+    void endTimelineChange();
+
+    void beginObjectChange(MO::Object *);
+    void endObjectChange();
+
 signals:
 
     /** Scene should be rerendered */
@@ -92,14 +103,6 @@ public slots:
     /* Moves the Sequence @seq from Track @p from to different Track @p to.
         The sequence will be removed from the previous track. */
     //void moveSequence(MO::Sequence * seq, MO::Track * from, MO::Track * to);
-
-    void beginSequenceChange(MO::Sequence *);
-    void endSequenceChange();
-
-    // ---------- objects in general -----------
-
-    void beginObjectChange(MO::Object *);
-    void endObjectChange();
 
     // ------------- runtime -------------------
 
@@ -161,7 +164,7 @@ private:
 
     // ------------ threadstuff ----------------
 
-    Object * changedObject_;
+    Object * changedObject_, * changedTimelineObject_;
     Sequence * changedSequence_;
 
     // ------------ runtime --------------------

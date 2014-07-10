@@ -49,6 +49,10 @@ void SequenceFloatView::createTimeline_()
     timeline_->setGridOptions(Ruler::O_DrawX | Ruler::O_DrawY);
 
     connect(timeline_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), SLOT(updateViewSpace_(UTIL::ViewSpace)));
+
+    timeline_->setLockFunctions(
+                [this](){ sequence_->sceneObject()->beginTimelineChange(sequence_); },
+                [this](){ sequence_->sceneObject()->endTimelineChange(); } );
 }
 
 void SequenceFloatView::createSequenceView_()
