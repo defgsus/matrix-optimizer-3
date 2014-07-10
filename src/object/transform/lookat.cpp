@@ -40,7 +40,7 @@ void LookAt::createParameters()
 {
     x_ = createFloatParameter("x", "look-at x", 0);
     y_ = createFloatParameter("y", "look-at y", 0);
-    z_ = createFloatParameter("z", "look-at z", -1);
+    z_ = createFloatParameter("z", "look-at z", 0);
     upX_ = createFloatParameter("upx", "up x", 0);
     upY_ = createFloatParameter("upy", "up y", 1);
     upZ_ = createFloatParameter("upz", "up z", 0);
@@ -49,9 +49,10 @@ void LookAt::createParameters()
 
 void LookAt::applyTransformation(Mat4 &matrix, Double time) const
 {
+    // extract position
     Vec3 pos = Vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
 
-    // forward vector
+    // forward vector (look-at minus position)
     Vec3 f = glm::normalize(Vec3(x_->value(time), y_->value(time), z_->value(time)) - pos);
     // up vector
     Vec3 u = glm::normalize(Vec3(upX_->value(time), upY_->value(time), upZ_->value(time)));
