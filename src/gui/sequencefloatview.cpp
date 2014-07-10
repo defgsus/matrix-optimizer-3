@@ -326,7 +326,7 @@ void SequenceFloatView::updateWidgets_()
     if (!wFreq_)
         return;
 
-    bool isConst = sequence_ && sequence_->mode() != SequenceFloat::ST_CONSTANT,
+    bool isConst = sequence_ && sequence_->mode() == SequenceFloat::ST_CONSTANT,
          isOsc = sequence_ && sequence_->mode() == SequenceFloat::ST_OSCILLATOR,
          isPW = isOsc && MATH::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
          isEqu = sequence_ && sequence_->mode() == SequenceFloat::ST_EQUATION,

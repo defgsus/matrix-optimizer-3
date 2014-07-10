@@ -99,7 +99,9 @@ SOURCES += \
     src/gui/trackviewoverpaint.cpp \
     src/gui/widget/spacer.cpp \
     src/tool/actionlist.cpp \
-    src/tool/enumnames.cpp
+    src/tool/enumnames.cpp \
+    src/object/transform/look.cpp \
+    src/object/transform/lookat.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -191,7 +193,9 @@ HEADERS += \
     src/gui/trackviewoverpaint.h \
     src/gui/widget/spacer.h \
     src/tool/actionlist.h \
-    src/tool/enumnames.h
+    src/tool/enumnames.h \
+    src/object/transform/look.h \
+    src/object/transform/lookat.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

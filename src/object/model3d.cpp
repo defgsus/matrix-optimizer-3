@@ -54,21 +54,24 @@ void Model3d::renderGl(int thread, Double )
 
     glLoadMatrixf(&transformation(thread)[0][0]);
 
-    glColor3f(1,1,1);
     glBegin(GL_LINES);
+        glColor3f(1,1,1);
         for (int i=-10; i<=10; ++i)
         {
             glVertex3f(i,0,-10);
             glVertex3f(i,0,10);
             glVertex3f(-10,0,i);
             glVertex3f(10,0,i);
-/*
-            glVertex3f(-10,i,-10);
-            glVertex3f(10,i,-10);
-            glVertex3f(i,-10,-10);
-            glVertex3f(i,10,-10);
-*/
         }
+        glColor3f(1,0,0);
+        glVertex3f(0, 0.1, 0);
+        glVertex3f(10, 0.1, 0);
+        glColor3f(0,1,0);
+        glVertex3f(0, 0.1, 0);
+        glVertex3f(0, 10.1, 0);
+        glColor3f(0,0,1);
+        glVertex3f(0, 0.1, 0);
+        glVertex3f(0, 0.1, 10);
     glEnd();
 }
 

@@ -39,7 +39,6 @@ namespace MO {
     typedef glm::detail::tmat3x3<Double> DMat3;
     typedef glm::detail::tmat4x4<Double> DMat4;
 
-} // namespace MO
 
 
 // ------------ iostream bindings ---------------
@@ -92,5 +91,7 @@ std::ostream& operator << (std::ostream& s, const glm::detail::tmat4x4<F>& m)
     }
     return s;
 }
+
+} // namespace MO
 
 #endif // MOSRC_TYPES_VECTOR_H
