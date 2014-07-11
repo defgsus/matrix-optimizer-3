@@ -7,6 +7,7 @@
 
     <p>created 2014/04/24</p>
 */
+#include "io/memory.h"
 
 #include <QPaintEvent>
 #include <QPainter>
@@ -1207,6 +1208,8 @@ void Timeline1DView::slotPointContextMenu_()
 
 void Timeline1DView::slotEmptyContextMenu_()
 {
+    // XXX Mhh, action's statusTips are not displayed in mainwindow!
+
     if (!tl_)
         return;
 
@@ -1358,7 +1361,7 @@ void Timeline1DView::slotEmptyContextMenu_()
 
     popupClick_ = mapFromGlobal(QCursor::pos());
 
-    pop->exec(QCursor::pos());
+    pop->popup(QCursor::pos());
 }
 
 void Timeline1DView::changePointType_(MATH::Timeline1D::Point::Type t)

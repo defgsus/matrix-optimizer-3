@@ -11,7 +11,6 @@
 #ifndef MOSRC_OBJECT_OBJECT_H
 #define MOSRC_OBJECT_OBJECT_H
 
-
 #include <QByteArray>
 #include <QObject>
 #include <QList>
@@ -122,6 +121,8 @@ public:
         Always use ObjectFactory::createObject().
         */
     explicit Object(QObject *parent = 0);
+
+    ~Object();
 
     /** Creates a new instance of the class.
         In derived classes this can be defined via the MO_OBJECT_CLONE() macro.

@@ -7,6 +7,8 @@
 
     <p>created 7/1/2014</p>
 */
+#include "io/memory.h"
+
 #include <QDebug>
 #include <QGridLayout>
 #include <QScrollArea>

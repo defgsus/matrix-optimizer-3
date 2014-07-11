@@ -12,6 +12,7 @@
 #define MOSRC_IO_MOAPPLICATION_H
 
 #include <QApplication>
+#include <QMainWindow>
 
 namespace MO {
 
@@ -20,6 +21,9 @@ class Application : public QApplication
     Q_OBJECT
 public:
     explicit Application(int& argc, char** args);
+
+    QMainWindow * mainWindow() const { return mainWindow_; }
+    void setMainWindow(QMainWindow * win) { mainWindow_ = win; }
 
 signals:
 
@@ -30,6 +34,8 @@ public slots:
 protected:
 
     virtual bool notify(QObject * o, QEvent * e);
+
+    QMainWindow * mainWindow_;
 };
 
 extern Application * application;

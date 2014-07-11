@@ -7,6 +7,7 @@
 
     <p>created 7/4/2014</p>
 */
+#include "io/memory.h"
 
 #include <QDebug>
 #include <QPainter>

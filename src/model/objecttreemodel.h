@@ -65,6 +65,8 @@ public:
     virtual QMimeData * mimeData(const QModelIndexList &indexes) const;
     virtual Qt::DropActions supportedDropActions() const;
     virtual Qt::DropActions supportedDragActions() const;
+    /** Pastes the tree from the clipboard at the given location.
+        Errors will throw a MO::Exception */
     virtual bool dropMimeData(const QMimeData *data, Qt::DropAction action,
                               int row, int column, const QModelIndex &parent);
 

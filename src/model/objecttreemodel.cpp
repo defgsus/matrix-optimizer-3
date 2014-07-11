@@ -7,6 +7,7 @@
 
     <p>created 6/27/2014</p>
 */
+#include "io/memory.h"
 
 #include <QDebug>
 
@@ -351,7 +352,9 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
     // NOTE: dynamic_cast or qobject_cast won't work between
     // application boundaries, e.g. after quit or pasting into
-    // a different instance. But static_cast seems to do it alright.
+    // a different instance. But static_cast works alright.
+    // It's important though to not rely on class members of ObjectTreeMimeData
+    // but to manage everything over QMimeData::data()
     if (auto objdata = static_cast<const ObjectTreeMimeData*>(data))
     {
         if (Object * obj = objectForIndex(parent))
@@ -366,9 +369,6 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
             // only act when it worked
             if (copy)
             {
-                // rearrange if necessary
-                //row = obj->getInsertIndex(copy, row);
-
                 // delete previous tree
                 if (action == Qt::MoveAction)
                 {

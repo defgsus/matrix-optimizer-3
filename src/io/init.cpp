@@ -7,6 +7,7 @@
 
     <p>created 6/29/2014</p>
 */
+#include "io/memory.h"
 
 #include <QtGlobal>
 

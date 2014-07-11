@@ -7,6 +7,7 @@
 
     <p>created 7/3/2014</p>
 */
+#include "io/memory.h"
 
 #include <QDebug>
 
@@ -857,8 +858,6 @@ void TrackView::createEditActions_()
             auto data = new ObjectTreeMimeData();
             data->storeObjectTree(seq);
             application->clipboard()->setMimeData(data);
-            // update clipboard actions
-//            createEditActions_();
         });
 
         // cut
@@ -1005,7 +1004,6 @@ void TrackView::createEditActions_()
                 }
             }
         }
-
     }
 }
 

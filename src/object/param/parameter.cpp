@@ -7,6 +7,7 @@
 
     <p>created 6/27/2014</p>
 */
+#include "io/memory.h"
 
 #include "parameter.h"
 #include "object/scene.h"

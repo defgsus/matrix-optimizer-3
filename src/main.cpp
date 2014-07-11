@@ -8,6 +8,8 @@
     <p>created 2014/04/21</p>
 */
 
+#include "io/memory.h"
+
 #include <qglobal.h>
 #include <QDesktopWidget>
 
@@ -42,6 +44,7 @@ int main(int argc, char *argv[])
     MO::application = new MO::Application(argc, argv);
 
     auto mainwin = new MO::GUI::MainWindow;
+    MO::application->setMainWindow(mainwin);
     mainwin->show();
 
     MO::application->setPaletteFor(mainwin);
@@ -83,7 +86,12 @@ int main(int argc, char *argv[])
 
     delete MO::application;
 
-    std::cout << "bis später" << std::endl;
+    std::cout
+#if (0)
+        << "peak memory: " << MO::Memory::peak()
+        << ", lost = " << MO::Memory::lost() << "\n"
+#endif
+        << "bis später" << std::endl;
 
     return ret;
 }

@@ -24,6 +24,7 @@ class Parameter
 
 public:
     Parameter(Object * object, const QString& idName, const QString& name);
+    virtual ~Parameter() { }
 
     virtual void serialize(IO::DataStream&) const;
     virtual void deserialize(IO::DataStream&);

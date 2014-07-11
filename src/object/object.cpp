@@ -7,6 +7,7 @@
 
     <p>created 6/27/2014</p>
 */
+#include "io/memory.h"
 
 //#include <QDebug>
 
@@ -34,10 +35,16 @@ Object::Object(QObject *parent) :
     parentObject_   (0)
 {
     // tie into Object hierarchy
-    if (auto o = dynamic_cast<Object*>(parent))
+    if (auto o = qobject_cast<Object*>(parent))
     {
         setParentObject(o);
     }
+}
+
+Object::~Object()
+{
+    for (auto p : parameters_)
+        delete p;
 }
 
 // --------------------- io ------------------------
@@ -120,17 +127,36 @@ Object * Object::deserializeTree_(IO::DataStream & io)
 
     if (o)
     {
-        // read actual object data
-        o->deserialize(io);
+        try
+        {
+            // read actual object data
+            o->deserialize(io);
+        }
+        catch (Exception e)
+        {
+            delete o;
+            throw e << "\nobject creation failed";
+        }
 
         // once in a while check stream for errors
         if (io.status() != QDataStream::Ok)
-            MO_IO_ERROR(WRITE, "error deserializing object '"<<idName<<"'.\n"
+        {
+            delete o;
+            MO_IO_ERROR(READ, "error deserializing object '"<<idName<<"'.\n"
                         "QIODevice error: '"<<io.device()->errorString()<<"'");
+        }
 
         // read parameters
         o->createParameters();
-        deserializeParameters_(io, o);
+        try
+        {
+            deserializeParameters_(io, o);
+        }
+        catch (Exception e)
+        {
+            delete o;
+            throw e << "\nCould not read parameters";
+        }
     }
     // skip object if class not found
     else
