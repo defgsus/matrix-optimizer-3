@@ -38,12 +38,16 @@ void Look::deserialize(IO::DataStream & io)
 
 void Look::createParameters()
 {
-    x_ = createFloatParameter("x", "look x", 0);
-    y_ = createFloatParameter("y", "look y", 0);
-    z_ = createFloatParameter("z", "look z", -1);
-    upX_ = createFloatParameter("upx", "up x", 0);
-    upY_ = createFloatParameter("upy", "up y", 1);
-    upZ_ = createFloatParameter("upz", "up z", 0);
+    Transformation::createParameters();
+
+    const QString lookTip = tr("unit vector describing the look axis (internally normalized)"),
+                  upTip = tr("unit vector describing the up-axis (internally normalized)");
+    x_ = createFloatParameter("x", "look x", lookTip, 0);
+    y_ = createFloatParameter("y", "look y", lookTip, 0);
+    z_ = createFloatParameter("z", "look z", lookTip, 0);
+    upX_ = createFloatParameter("upx", "up x", upTip, 0);
+    upY_ = createFloatParameter("upy", "up y", upTip, 1);
+    upZ_ = createFloatParameter("upz", "up z", upTip, 0);
 }
 
 

@@ -38,10 +38,12 @@ void Scale::deserialize(IO::DataStream & io)
 
 void Scale::createParameters()
 {
-    all_ = createFloatParameter("all", "scale", 1);
-    x_ = createFloatParameter("x", "x", 1);
-    y_ = createFloatParameter("y", "y", 1);
-    z_ = createFloatParameter("z", "z", 1);
+    Transformation::createParameters();
+
+    all_ = createFloatParameter("all", "scale", tr("Scale/multiplier for the whole"), 1, 0.1);
+    x_ = createFloatParameter("x", "x", tr("Additional scale for the x axis"), 1, 0.1);
+    y_ = createFloatParameter("y", "y", tr("Additional scale for the y axis"), 1, 0.1);
+    z_ = createFloatParameter("z", "z", tr("Additional scale for the z axis"), 1, 0.1);
 
     //useXYZ_ = createSetting("usexyz", "individual scale", false);
 }

@@ -57,11 +57,21 @@ void SequenceFloat::createParameters()
 {
     Sequence::createParameters();
 
-    offset_ = createFloatParameter("value_offset", "value offset", 0.0);
-    amplitude_ = createFloatParameter("amp", "amplitude", 1.0);
-    frequency_ = createFloatParameter("freq", "frequency", 1.0);
-    phase_ = createFloatParameter("phase", "phase", 0.0);
-    pulseWidth_ = createFloatParameter("pulsewidth", "pulse width", 0.5);
+    offset_ = createFloatParameter("value_offset", "value offset",
+                                   tr("This value is always added to the output of the sequence"),
+                                   0.0);
+    amplitude_ = createFloatParameter("amp", "amplitude",
+                                      tr("The output of the sequence is multiplied by this value"),
+                                      1.0);
+    frequency_ = createFloatParameter("freq", "frequency",
+                                      tr("The frequency of the function in hertz (periods per second)"),
+                                      1.0);
+    phase_ = createFloatParameter("phase", "phase",
+                                  tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
+                                  0.0);
+    pulseWidth_ = createFloatParameter("pulsewidth", "pulse width",
+                                       tr("Pulsewidth of the waveform, describes the width of the positive edge"),
+                                       0.5);
 }
 
 void SequenceFloat::serialize(IO::DataStream &io) const

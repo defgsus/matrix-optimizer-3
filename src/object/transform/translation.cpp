@@ -37,9 +37,11 @@ void Translation::deserialize(IO::DataStream & io)
 
 void Translation::createParameters()
 {
-    x_ = createFloatParameter("x", "x", 0);
-    y_ = createFloatParameter("y", "y", 0);
-    z_ = createFloatParameter("z", "z", 0);
+    Transformation::createParameters();
+
+    x_ = createFloatParameter("x", "x", tr("Offset on the x axis"), 0);
+    y_ = createFloatParameter("y", "y", tr("Offset on the y axis"), 0);
+    z_ = createFloatParameter("z", "z", tr("Offset on the z axis"), 0);
 }
 
 void Translation::applyTransformation(Mat4 &matrix, Double time) const

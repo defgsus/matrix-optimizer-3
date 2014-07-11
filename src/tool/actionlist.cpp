@@ -42,6 +42,9 @@ QAction * ActionList::addAction(const QIcon& icon, const QString& name, QObject 
 
 QAction * ActionList::addSeparator(QObject * parent)
 {
+    if (!isEmpty() && back()->isSeparator())
+        return back();
+
     QAction * a = new QAction(parent);
     a->setSeparator(true);
     append(a);

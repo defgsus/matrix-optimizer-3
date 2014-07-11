@@ -327,7 +327,7 @@ void SequenceView::createDefaultSettingsWidgets_()
                     tr("Selects wether the contents of the sequence should be looped between "
                        "'loop start' and 'loop end'"));
     MO__SCENE_PARAM(spinLoopStart_, loopStart, setLoopStart, 0, tr("loop start"),
-                    tr("Local start of loop in seconds"));
+                    tr("Local start time of loop in seconds"));
     wLoopStart_ = w;
     MO__SCENE_PARAM(spinLoopLength_, loopLength, setLoopLength,
                     Sequence::minimumLength(), tr("loop length"),

@@ -38,10 +38,14 @@ void AxisRotation::deserialize(IO::DataStream & io)
 
 void AxisRotation::createParameters()
 {
-    angle_ = createFloatParameter("a", "angle", 0);
-    x_ = createFloatParameter("x", "axis x", 1);
-    y_ = createFloatParameter("y", "axis y", 0);
-    z_ = createFloatParameter("z", "axis z", 0);
+    Transformation::createParameters();
+
+    const QString axisTip = tr("Unit vector describing the axis to rotate around (internally normalized)");
+    angle_ = createFloatParameter("a", "angle",
+                                  tr("The rotation in degree"), 0);
+    x_ = createFloatParameter("x", "axis x", axisTip, 1);
+    y_ = createFloatParameter("y", "axis y", axisTip, 0);
+    z_ = createFloatParameter("z", "axis z", axisTip, 0);
 }
 
 void AxisRotation::applyTransformation(Mat4 &matrix, Double time) const

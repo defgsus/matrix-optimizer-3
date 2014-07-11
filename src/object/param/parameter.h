@@ -35,6 +35,8 @@ public:
 
     const QString& idName() const { return idName_; }
     const QString& name() const { return name_; }
+    const QString& statusTip() const { return statusTip_; }
+
     /** Returns list of all modulator ids */
     const QList<QString>& modulatorIds() const { return modulatorIds_; }
 
@@ -43,7 +45,7 @@ public:
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }
-
+    void setStatusTip(const QString& tip) { statusTip_ = tip; }
     void setEditable(bool enable) { isEditable_ = enable; }
 
     // ------------ modulators ------------------
@@ -65,7 +67,7 @@ private:
 
     Object * object_;
 
-    QString idName_, name_;
+    QString idName_, name_, statusTip_;
 
     bool isEditable_;
 

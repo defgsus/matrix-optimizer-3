@@ -310,9 +310,21 @@ public:
     virtual void createParameters() { }
 
     /** Creates the desired parameter,
-        or returns an already created parameter object. */
+        or returns an already created parameter object.
+        When the Parameter was present before, all it's settings are still overwritten.
+        If @p statusTip is empty, a default string will be set in the edit views. */
     ParameterFloat * createFloatParameter(
-                const QString& id, const QString& name, Double defaultValue, bool editable = true);
+                const QString& id, const QString& name, const QString& statusTip,
+                Double defaultValue, Double minValue, Double maxValue, Double smallStep,
+                bool editable = true);
+
+    ParameterFloat * createFloatParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                Double defaultValue, bool editable = true);
+
+    ParameterFloat * createFloatParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                Double defaultValue, Double smallStep, bool editable = true);
 
     // --------------- 3d --------------------------
 

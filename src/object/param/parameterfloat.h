@@ -33,12 +33,16 @@ public:
     Double defaultValue() const { return defaultValue_; }
     Double minValue() const { return minValue_; }
     Double maxValue() const { return maxValue_; }
+    Double smallStep() const { return smallStep_; }
+
     Double value(Double time) const { return value_ + getModulationValue(time); }
     Double baseValue() const { return value_; }
 
     void setDefaultValue(Double v) { defaultValue_ = v; }
     void setMinValue(Double v) { minValue_ = v; }
     void setMaxValue(Double v) { maxValue_ = v; }
+    void setSmallStep(Double v) { smallStep_ = v; }
+
     void setValue(Double v) { value_ = v; }
 
     void setNoMinValue() { minValue_ = infinity; }
@@ -62,6 +66,7 @@ private:
     Double defaultValue_,
            minValue_,
            maxValue_,
+           smallStep_,
            value_;
 
     QList<TrackFloat*> modulators_;

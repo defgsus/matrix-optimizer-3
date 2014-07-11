@@ -61,9 +61,17 @@ Track * Sequence::track() const
 
 void Sequence::createParameters()
 {
-    loopStart_ = createFloatParameter("loop_start", "loop start", 0.0);
-    loopLength_ = createFloatParameter("loop_len", "loop length", 1.0);
-    timeOffset_ = createFloatParameter("time_offset", "time offset", 0.0);
+    Object::createParameters();
+
+    loopStart_ = createFloatParameter("loop_start", "loop start",
+                                      tr("Local start time of the loop in seconds"),
+                                      0.0);
+    loopLength_ = createFloatParameter("loop_len", "loop length",
+                                       tr("Length of loop in seconds"),
+                                       1.0);
+    timeOffset_ = createFloatParameter("time_offset", "time offset",
+                                       tr("Time offset into the sequence data in seconds"),
+                                       0.0);
 }
 
 

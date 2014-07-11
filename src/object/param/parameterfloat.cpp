@@ -30,6 +30,7 @@ ParameterFloat::ParameterFloat(Object * object, const QString& id, const QString
         defaultValue_   (0.0),
         minValue_       (-infinity),
         maxValue_       (+infinity),
+        smallStep_      (1.0),
         value_          (0.0)
 {
 }

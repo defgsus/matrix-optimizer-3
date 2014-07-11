@@ -63,6 +63,7 @@ void ParameterView::clearWidgets_()
 void ParameterView::createWidgets_()
 {
     clearWidgets_();
+    prevEditWidget_ = 0;
 
     for (auto p : parameters_)
     {
@@ -96,7 +97,9 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
     QLabel * label = new QLabel(p->name(), w);
     l->addWidget(label);
-    label->setStatusTip(tr("The name of the parameter"));
+    label->setStatusTip(p->statusTip().isEmpty()
+                        ? tr("The name of the parameter")
+                        : p->statusTip());
 
     QToolButton * but, * bmod, * breset;
 
@@ -124,10 +127,19 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         l->addWidget(spin);
         spin->setMinimum(pf->minValue());
         spin->setMaximum(pf->maxValue());
+        spin->setDecimals(4);
+        spin->setSingleStep(pf->smallStep());
         spin->setValue(pf->baseValue());
         spin->setMaximumWidth(120);
         spin->setEnabled(pf->isEditable());
-        spin->setStatusTip(tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons"));
+        spin->setStatusTip(pf->statusTip().isEmpty()
+                           ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")
+                           : pf->statusTip());
+
+        if (prevEditWidget_)
+            setTabOrder(prevEditWidget_, spin);
+        prevEditWidget_ = spin;
+
         connect(spin, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=]()
         {
             QObject * scene = p->object()->sceneObject();

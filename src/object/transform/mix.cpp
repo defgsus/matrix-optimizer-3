@@ -37,7 +37,11 @@ void Mix::deserialize(IO::DataStream & io)
 
 void Mix::createParameters()
 {
-    m_ = createFloatParameter("mix", "mix", 0);
+    Transformation::createParameters();
+
+    m_ = createFloatParameter("mix", "mix",
+                              tr("The contained transformations will be mixed-in by this value, range 0-1")
+                              , 1, 0, 1, 0.05);
 }
 
 void Mix::childrenChanged()
@@ -47,9 +51,11 @@ void Mix::childrenChanged()
 
 void Mix::applyTransformation(Mat4 &matrix, Double time) const
 {
-    const Double
-            m = std::min((Double)1, std::max((Double)0, m_->value(time) )),
-            m1 = 1.0 - m;
+    const Double m = m_->value(time);
+
+    // don't touch matrix at all
+    if (m <= 0)
+        return;
 
     Mat4 trans(matrix);
 
@@ -57,8 +63,13 @@ void Mix::applyTransformation(Mat4 &matrix, Double time) const
     for (auto t : transformations_)
         t->applyTransformation(trans, time);
 
-    // mix resulting matrix
-    matrix = m1 * matrix + m * trans;
+    if (m >= 1.0)
+
+        matrix = trans;
+
+    else
+        // mix resulting matrix
+        matrix = (1 - m) * matrix + m * trans;
 }
 
 

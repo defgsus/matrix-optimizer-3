@@ -47,6 +47,7 @@ private:
     Object * object_;
     QList<Parameter*> parameters_;
     QMap<QString, QWidget*> widgets_;
+    QWidget * prevEditWidget_;
 
     QVBoxLayout * layout_;
 

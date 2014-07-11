@@ -598,7 +598,27 @@ Parameter * Object::findParameter(const QString &id)
     return 0;
 }
 
-ParameterFloat * Object::createFloatParameter(const QString& id, const QString& name, Double defaultValue, bool editable)
+ParameterFloat * Object::createFloatParameter(
+        const QString& id, const QString& name, const QString& statusTip,
+        Double defaultValue, bool editable)
+{
+    return createFloatParameter(id, name, statusTip, defaultValue,
+                                -ParameterFloat::infinity, ParameterFloat::infinity,
+                                1.0, editable);
+}
+
+ParameterFloat * Object::createFloatParameter(
+        const QString& id, const QString& name, const QString &statusTip,
+        Double defaultValue, Double smallStep, bool editable)
+{
+    return createFloatParameter(id, name, statusTip, defaultValue,
+                                -ParameterFloat::infinity, ParameterFloat::infinity,
+                                smallStep, editable);
+}
+
+ParameterFloat * Object::createFloatParameter(
+        const QString& id, const QString& name, const QString& statusTip,
+        Double defaultValue, Double minValue, Double maxValue, Double smallStep, bool editable)
 {
     ParameterFloat * param = 0;
 
@@ -630,7 +650,11 @@ ParameterFloat * Object::createFloatParameter(const QString& id, const QString& 
 
     // override potentially previous
     param->setName(name);
-    param->setDefaultValue(defaultValue);
+    param->setDefaultValue(std::min(maxValue, std::max(minValue, defaultValue )));
+    param->setMinValue(minValue);
+    param->setMaxValue(maxValue);
+    param->setSmallStep(smallStep);
+    param->setStatusTip(statusTip);
     param->setEditable(editable);
 
     return param;
