@@ -46,6 +46,8 @@ signals:
     /** User dragged the time bar */
     void sceneTimeChanged(Double);
 
+    void statusTipChanged(const QString&);
+
 public slots:
 
     /** Sets the ViewSpace for the shown sequence */

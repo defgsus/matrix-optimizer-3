@@ -103,6 +103,8 @@ signals:
     /** Send when viewspace was changed by user */
     void viewSpaceChanged(const UTIL::ViewSpace&);
 
+    void statusTipChanged(const QString&);
+
 public slots:
 
     void setOptions(int options);
@@ -180,6 +182,9 @@ protected:
     void mouseReleaseEvent(QMouseEvent *);
     void wheelEvent(QWheelEvent *);
 
+    /** Sets statusTip property and emits statusTipChanged() */
+    void setStatusTip_(const QString&);
+
     void clearHover_();
     void setHover_(const MATH::Timeline1D::Point&);
     bool isHover_() const;
@@ -231,7 +236,8 @@ protected:
         handleRadiusSelected_;
     Double
         zoomChange_;
-    int modifierSelectFrame_,
+    Qt::Modifier
+        modifierSelectFrame_,
         modifierMultiSelect_,
         modifierMoveVert_;
 

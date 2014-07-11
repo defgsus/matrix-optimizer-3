@@ -139,6 +139,8 @@ void MainWindow::createWidgets_()
             seqFloatView_ = new SequenceFloatView(this);
             seqFloatView_->setVisible(false);
             lv->addWidget(seqFloatView_);
+            connect(seqFloatView_, SIGNAL(statusTipChanged(QString)),
+                    statusBar(), SLOT(showMessage(QString)));
 
 
     spacer_->setWidgets(leftContainer, sequencer_);

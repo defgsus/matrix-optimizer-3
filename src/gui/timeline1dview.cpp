@@ -27,6 +27,7 @@
 #include "painter/valuecurve.h"
 #include "io/error.h"
 #include "io/datastream.h"
+#include "tool/enumnames.h"
 
 namespace MO {
 namespace GUI {
@@ -75,6 +76,12 @@ Timeline1DView::Timeline1DView(MATH::Timeline1D * tl, QWidget *parent)
 Timeline1DView::~Timeline1DView()
 {
     delete valuePainterData_;
+}
+
+void Timeline1DView::setStatusTip_(const QString & tip)
+{
+    setStatusTip(tip);
+    emit statusTipChanged(tip);
 }
 
 void Timeline1DView::setTimeline(MATH::Timeline1D *timeline)
@@ -652,6 +659,16 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
 
                 setCursor(Qt::OpenHandCursor);
 
+                QString tip;
+                if (options_ & O_EditAll)
+                    tip = tr("Left-click to select (hold %1 for multi-select) / ")
+                            .arg(enumName(modifierMultiSelect_));
+                if (options_ & O_MovePoints)
+                    tip += tr("Left-click & drag to move point(s) / ");
+                if (options_ & O_EditAll)
+                    tip += tr("Right-click for context menu");
+                setStatusTip_(tip);
+
                 e->accept();
                 return;
             }
@@ -687,6 +704,7 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
                 {
                     setCursor(Qt::CrossCursor);
                     hoverCurveHash_ = it->first;
+                    setStatusTip_(tr("Left-click to add a new point"));
                     e->accept();
                     return;
                 }
@@ -695,6 +713,16 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
     }
 
     // ---- hover over empty space -----
+
+    QString tip;
+    if (options_ & O_MoveView)
+        tip = tr("Left-click & drag to change position / ");
+    if (options_ & O_EditAll)
+        tip += tr("%1 + Left-click for selection frame / ")
+                .arg(enumName(modifierSelectFrame_));
+    if (options_ & O_AddRemovePoints)
+        tip += tr("Double-click to add point / ");
+    setStatusTip_(tip + tr("Right-click for context menu"));
 
     // --- start selection frame ---
     if ((e->modifiers() & modifierSelectFrame_)
@@ -767,6 +795,8 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
                 action_ = A_DRAG_SELECTED;
                 dragStart_ = e->pos();
                 setCursor(Qt::ClosedHandCursor);
+                setStatusTip_(tr("Drag to move, hold %1 to move only vertically")
+                              .arg(enumName(modifierMoveVert_)));
 
                 // copy the points to drag set
                 dragPoints_.clear();
@@ -873,6 +903,9 @@ void Timeline1DView::mouseReleaseEvent(QMouseEvent * e)
         setCursor(Qt::OpenHandCursor);
 
     action_ = A_NOTHING;
+
+    // update status tips
+    mouseMoveEvent(e);
 }
 
 
@@ -1097,11 +1130,14 @@ void Timeline1DView::slotPointContextMenu_()
         {
             pop->addMenu(pointpop);
             pointpop->setTitle(tr("change point type"));
+            pointpop->setStatusTip(tr("Changes the interpolation type between the selected "
+                                      "and the next point"));
         }
 
         if (options_ & O_AddRemovePoints)
         {
             a = new QAction(tr("delete point"), pop);
+            a->setStatusTip(tr("Deletes the selected point"));
             pop->addAction(a);
             connect(a, &QAction::triggered, [=]()
             {
@@ -1123,11 +1159,13 @@ void Timeline1DView::slotPointContextMenu_()
         {
             pop->addMenu(pointpop);
             pointpop->setTitle(tr("change points type"));
+            pointpop->setStatusTip(tr("Changes the interpolation type for all selected points"));
         }
 
         if (options_ & O_AddRemovePoints)
         {
             a = new QAction(tr("delete points"), pop);
+            a->setStatusTip(tr("Deletes all selected points"));
             pop->addAction(a);
             connect(a, &QAction::triggered, [=]()
             {
@@ -1151,6 +1189,7 @@ void Timeline1DView::slotPointContextMenu_()
             pop->addSeparator();
 
         a = new QAction(tr("copy selection"), pop);
+        a->setStatusTip(tr("Copies the selected points to the clipboard"));
         pop->addAction(a);
         connect(a, SIGNAL(triggered()), this, SLOT(copySelection()));
     }
@@ -1181,6 +1220,7 @@ void Timeline1DView::slotEmptyContextMenu_()
     {
 
         a = new QAction(tr("unselect"), pop);
+        a->setStatusTip(tr("Clears the current selection"));
         pop->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
@@ -1191,6 +1231,7 @@ void Timeline1DView::slotEmptyContextMenu_()
     if (options_ & O_EditAll)
     {
         a = new QAction(tr("select all"), pop);
+        a->setStatusTip(tr("Selects all points in the timeline"));
         pop->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
@@ -1201,17 +1242,22 @@ void Timeline1DView::slotEmptyContextMenu_()
         QMenu * selectpop = new QMenu(pop);
         pop->addMenu(selectpop);
         selectpop->setTitle(tr("add to selection"));
+        selectpop->setStatusTip(tr("Selects points according to their positions and values"));
 
         a = new QAction(tr("all points left"), selectpop);
+        a->setStatusTip(tr("Selects all points left of the chosen position"));
         selectpop->addAction(a);
         connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::LeftArrow); });
         a = new QAction(tr("all points right"), selectpop);
+        a->setStatusTip(tr("Selects all points right of the chosen position"));
         selectpop->addAction(a);
         connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::RightArrow); });
         a = new QAction(tr("all points above"), selectpop);
+        a->setStatusTip(tr("Selects all points above the chosen position"));
         selectpop->addAction(a);
         connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::UpArrow); });
         a = new QAction(tr("all points below"), selectpop);
+        a->setStatusTip(tr("Selects all points below the chosen position"));
         selectpop->addAction(a);
         connect(a, &QAction::triggered, [=]() { selectDirection_(Qt::DownArrow); });
 
@@ -1221,6 +1267,7 @@ void Timeline1DView::slotEmptyContextMenu_()
         if (!tl_->empty())
         {
             a = new QAction(tr("copy timeline"), pop);
+            a->setStatusTip(tr("Copies the whole timeline to the clipboard"));
             pop->addAction(a);
             connect(a, SIGNAL(triggered()), this, SLOT(copyAll()));
         }
@@ -1228,6 +1275,7 @@ void Timeline1DView::slotEmptyContextMenu_()
         if (isSelected())
         {
             a = new QAction(tr("copy selection"), pop);
+            a->setStatusTip(tr("Copies the selected points to the clipboard"));
             pop->addAction(a);
             connect(a, SIGNAL(triggered()), this, SLOT(copySelection()));
         }
@@ -1236,6 +1284,9 @@ void Timeline1DView::slotEmptyContextMenu_()
         if (ctype != C_NONE)
         {
             a = new QAction(ctype == C_SELECTION? tr("paste selection here") : tr("paste timeline"), pop);
+            a->setStatusTip(ctype == C_SELECTION?
+                                tr("Pastes the points from clipboard points at the chosen position")
+                              : tr("Replaces the current timeline with the timeline in the clipboard"));
             pop->addAction(a);
             connect(a, SIGNAL(triggered()), this, SLOT(paste()));
         }
@@ -1250,6 +1301,7 @@ void Timeline1DView::slotEmptyContextMenu_()
         if (options_ & O_ZoomViewX)
         {
             a = new QAction(tr("fit time to view"), pop);
+            a->setStatusTip(tr("Changes the x-scale of the view so that all points are visible"));
             pop->addAction(a);
             connect(a, &QAction::triggered, [=]() { fitToView(true, false); } );
         }
@@ -1257,6 +1309,7 @@ void Timeline1DView::slotEmptyContextMenu_()
         if (options_ & O_ZoomViewY)
         {
             a = new QAction(tr("fit values to view"), pop);
+            a->setStatusTip(tr("Changes the y-scale of the view so that all points are visible"));
             pop->addAction(a);
             connect(a, &QAction::triggered, [=]() { fitToView(false, true); } );
         }
@@ -1264,6 +1317,7 @@ void Timeline1DView::slotEmptyContextMenu_()
         if ((options_ & O_ZoomView) == O_ZoomView)
         {
             a = new QAction(tr("fit to view"), pop);
+            a->setStatusTip(tr("Changes the scale of the view so that all points are visible"));
             pop->addAction(a);
             connect(a, &QAction::triggered, [=]() { fitToView(true, true); } );
         }
@@ -1273,6 +1327,7 @@ void Timeline1DView::slotEmptyContextMenu_()
             if (options_ & O_ZoomViewX)
             {
                 a = new QAction(tr("fit selection time to view"), pop);
+                a->setStatusTip(tr("Changes the x-scale of the view so that all selected points are visible"));
                 pop->addAction(a);
                 connect(a, &QAction::triggered, [=]() { fitSelectionToView(true, false); } );
             }
@@ -1280,6 +1335,7 @@ void Timeline1DView::slotEmptyContextMenu_()
             if (options_ & O_ZoomViewY)
             {
                 a = new QAction(tr("fit selection value to view"), pop);
+                a->setStatusTip(tr("Changes the y-scale of the view so that all selected points are visible"));
                 pop->addAction(a);
                 connect(a, &QAction::triggered, [=]() { fitSelectionToView(false, true); } );
             }
@@ -1287,6 +1343,7 @@ void Timeline1DView::slotEmptyContextMenu_()
             if (options_ & O_ZoomView)
             {
                 a = new QAction(tr("fit selection to view"), pop);
+                a->setStatusTip(tr("Changes the scale of the view so that all selected points are visible"));
                 pop->addAction(a);
                 connect(a, &QAction::triggered, [=]() { fitSelectionToView(true, true); } );
             }
