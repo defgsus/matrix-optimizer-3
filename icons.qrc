@@ -12,5 +12,8 @@
         <file alias="obj_track.png">assets/icon/obj_track.png</file>
         <file alias="modulate_off.png">assets/icon/modulate_off.png</file>
         <file alias="modulate_on.png">assets/icon/modulate_on.png</file>
+        <file alias="above.png">assets/icon/above.png</file>
+        <file alias="below.png">assets/icon/below.png</file>
+        <file alias="child.png">assets/icon/child.png</file>
     </qresource>
 </RCC>

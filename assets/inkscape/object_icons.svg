@@ -125,8 +125,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="251.32509"
-     inkscape:cy="792.40706"
+     inkscape:cx="165.6108"
+     inkscape:cy="687.04991"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -597,5 +597,108 @@
        id="path3928"
        d="m 320.35715,319.86219 0.35714,15.71428 24.64286,-0.35714 0,10.35714 15.71428,-18.57143 -15.71428,-17.5 0,10.35714 z"
        style="fill:url(#linearGradient3936);stroke:#000000;stroke-width:1.89999998000000003;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;fill-opacity:1" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-1"
+       width="68.188736"
+       height="68.188736"
+       x="372.91064"
+       y="-88.737228"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/above.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.70000005;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       d="m 54.838043,382.20581 0,24.50762"
+       id="path3776-1"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/above.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:2.9000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       d="m 45,391.07646 9.642857,-9.64285 10,10.35714"
+       id="path3965"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/above.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-1-7"
+       width="68.188736"
+       height="68.188736"
+       x="373.26779"
+       y="-168.73723"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/below.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.70000005;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       d="m 134.85153,430.9841 -0.0473,-24.50757"
+       id="path3776-1-5"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/below.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001"
+       inkscape:transform-center-x="-0.006455"
+       inkscape:transform-center-y="11.956768" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:2.9000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       d="m 144.67244,422.09448 -9.62423,9.66144 -10.01997,-10.33782"
+       id="path3965-0"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/below.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001"
+       inkscape:transform-center-y="19.813463"
+       inkscape:transform-center-x="-0.028915" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-1-7-3"
+       width="68.188736"
+       height="68.188736"
+       x="373.12497"
+       y="-259.30865"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.70000005;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       d="m 248.31733,414.7661 -24.50732,-0.12022"
+       id="path3776-1-5-2"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001"
+       inkscape:transform-center-x="-11.956535"
+       inkscape:transform-center-y="0.075273" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:2.9000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       d="m 239.49504,404.88465 9.59543,9.69005 -10.40606,9.94907"
+       id="path3965-0-5"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001"
+       inkscape:transform-center-y="0.073493"
+       inkscape:transform-center-x="-19.780305" />
+    <path
+       inkscape:transform-center-y="-11.956592"
+       inkscape:transform-center-x="0.06606"
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+       sodipodi:nodetypes="cc"
+       inkscape:connector-curvature="0"
+       id="path4015"
+       d="m 225.02777,391.84918 0.16947,24.50703"
+       style="fill:none;stroke:#000000;stroke-width:3.70000005;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
   </g>
 </svg>

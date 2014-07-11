@@ -347,6 +347,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
             // paste before
             editActions_.append(a = new QAction(tr("Paste before object"), this));
             a->setStatusTip(tr("Pastes the objects from the clipboard above the selected object"));
+            a->setIcon(QIcon(":/icon/above.png"));
             a->setEnabled(parentObj->canHaveChildren(pasteType));
             connect(a, &QAction::triggered, [=]()
             {
@@ -361,6 +362,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
             editActions_.append(a = new QAction(tr("Paste after object"), this));
             a->setStatusTip(tr("Pastes the objects from the clipboard below the selected object"));
             a->setEnabled(parentObj->canHaveChildren(pasteType));
+            a->setIcon(QIcon(":/icon/below.png"));
             connect(a, &QAction::triggered, [=]()
             {
                 if (model()->dropMimeData(
@@ -375,6 +377,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         editActions_.append(a = new QAction(tr("Paste as children"), this));
         a->setStatusTip(tr("Pastes the objects from the clipboard to the end of the "
                            "selected object's children list"));
+        a->setIcon(QIcon(":/icon/child.png"));
         a->setEnabled(obj->canHaveChildren(pasteType));
         connect(a, &QAction::triggered, [=]()
         {
@@ -406,6 +409,7 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
 
             editActions_.append(a = new QAction(tr("New sibling object"), this));
             a->setStatusTip(tr("Creates a new object below the selected object"));
+            a->setIcon(QIcon(":/icon/below.png"));
             QMenu * menu = new QMenu(this);
             a->setMenu(menu);
             bool addSep = true;
@@ -435,6 +439,7 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
 
         editActions_.append(a = new QAction(tr("New child object"), this));
         a->setStatusTip(tr("Creates a new object as children of the selected object"));
+        a->setIcon(QIcon(":/icon/child.png"));
         QMenu * menu = new QMenu(this);
         a->setMenu(menu);
         bool addSep = true;
