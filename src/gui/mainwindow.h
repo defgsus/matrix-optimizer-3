@@ -13,10 +13,12 @@
 
 #include <QMainWindow>
 
+#include "object/object_fwd.h"
+
+class QLabel;
+class QTimer;
+
 namespace MO {
-class ObjectTreeModel;
-class Scene;
-class Object;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
@@ -42,6 +44,7 @@ protected:
 private slots:
     void setEditActions_(const QObject * sender, QList<QAction*> actions);
     void testSceneTransform_();
+    void updateSystemInfo_();
 
     void objectSelected(MO::Object*);
     void treeChanged();
@@ -78,6 +81,9 @@ private:
     Spacer * spacer_, * spacer2_;
 
     QObjectInspector * qobjectView_;
+
+    QTimer * sysInfoTimer_;
+    QLabel * sysInfoLabel_;
 };
 
 } // namespace GUI

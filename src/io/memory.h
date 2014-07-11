@@ -8,10 +8,22 @@
     <p>created 7/11/2014</p>
 */
 
-#if (0)
-
 #ifndef MOSRC_IO_MEMORY_H
 #define MOSRC_IO_MEMORY_H
+
+namespace MO
+{
+    class Memory
+    {
+    public:
+
+        static unsigned long int allocated();
+
+    };
+
+} // namespace MO
+
+#if (0)
 
 #include <new>
 
@@ -48,6 +60,8 @@ namespace MO
 
 } // namespace MO
 
-#endif // MOSRC_IO_MEMORY_H
-
 #endif
+
+
+
+#endif // MOSRC_IO_MEMORY_H

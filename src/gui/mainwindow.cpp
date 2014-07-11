@@ -7,7 +7,7 @@
 
     <p>created 2014/04/21</p>
 */
-#include "io/memory.h"
+
 
 #include <QDebug>
 #include <QLayout>
@@ -21,6 +21,9 @@
 #include <QFileDialog>
 #include <QScrollArea>
 #include <QStatusBar>
+#include <QTimer>
+#include <QLabel>
+
 
 #include "mainwindow.h"
 #include "projectorsetupwidget.h"
@@ -40,6 +43,7 @@
 #include "gl/manager.h"
 #include "gl/window.h"
 #include "io/error.h"
+#include "io/memory.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -52,7 +56,7 @@ namespace GUI {
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow     (parent),
     scene_          (0),
-    objectTreeModel_    (0),
+    objectTreeModel_(0),
     seqFloatView_   (0),
     qobjectView_    (0)
 {
@@ -74,8 +78,11 @@ void MainWindow::createWidgets_()
     setCentralWidget(new QWidget(this));
     centralWidget()->setObjectName("_centralwidget");
 
+    // status bar
     setStatusBar(new QStatusBar(this));
+    statusBar()->addPermanentWidget(sysInfoLabel_ = new QLabel(statusBar()));
 
+    // main layout
     auto l0 = new QHBoxLayout(centralWidget());
     l0->setMargin(0);
     l0->setSpacing(1);
@@ -238,7 +245,6 @@ void MainWindow::createMainMenu_()
             qobjectView_->show();
         });
 
-
         m->addAction(a = new QAction(tr("Test transformation speed"), m));
         connect(a, SIGNAL(triggered()), SLOT(testSceneTransform_()));
 
@@ -296,6 +302,8 @@ void MainWindow::setSceneObject(Scene * s)
     sequencer_->setTracks(scene_);
 
     glWindow_->renderLater();
+
+    updateSystemInfo_();
 }
 
 
@@ -314,6 +322,14 @@ void MainWindow::createObjects_()
     {
         MO_WARNING(e.what());
     }
+
+    // sysinfo at some interval
+    sysInfoTimer_ = new QTimer(this);
+    sysInfoTimer_->setInterval(5000);
+    connect(sysInfoTimer_, SIGNAL(timeout()), this, SLOT(updateSystemInfo_()));
+    sysInfoTimer_->start();
+
+    updateSystemInfo_();
 }
 
 void MainWindow::resetTreeModel_()
@@ -426,6 +442,12 @@ void MainWindow::testSceneTransform_()
                              .arg((elapsed*1000)/num)
                              .arg((int)((Double)num/elapsed))
            );
+}
+
+void MainWindow::updateSystemInfo_()
+{
+    auto mem = Memory::allocated();
+    sysInfoLabel_->setText(tr("%1mb").arg(mem/1024/1024));
 }
 
 void MainWindow::start()
