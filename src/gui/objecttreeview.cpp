@@ -233,6 +233,11 @@ void ObjectTreeView::createEditActions_(Object * obj)
         editActions_.append(a = new QAction(this));
         a->setSeparator(true);
 
+        createMoveActions_(obj);
+
+        editActions_.append(a = new QAction(this));
+        a->setSeparator(true);
+
         createNewObjectActions_(obj);
 
         editActions_.append(a = new QAction(this));
@@ -475,6 +480,41 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
     }
     */
 }
+
+void ObjectTreeView::createMoveActions_(Object * obj)
+{
+    if (!obj->parentObject())
+        return;
+
+    Object * parent = obj->parentObject();
+    const int row = parent->childObjects().indexOf(obj);
+
+    QAction * a;
+
+    // move up
+    if (row > 0)
+    {
+        editActions_.append(a = new QAction(tr("Move up"), this));
+        a->setStatusTip(tr("Moves the selected object before the previous object"));
+        a->setShortcut(Qt::CTRL + Qt::Key_Up);
+        connect(a, &QAction::triggered, [=]()
+        {
+            setFocusIndex( filter_->mapFromSource( omodel_->moveUp(obj) ) );
+        });
+    }
+    if (row < parent->numChildren() - 1)
+    {
+        editActions_.append(a = new QAction(tr("Move down"), this));
+        a->setStatusTip(tr("Moves the selected object below the next object"));
+        a->setShortcut(Qt::CTRL + Qt::Key_Down);
+        connect(a, &QAction::triggered, [=]()
+        {
+            setFocusIndex( filter_->mapFromSource( omodel_->moveUp(obj) ) );
+        });
+    }
+
+}
+
 
 void ObjectTreeView::setFocusIndex(const QModelIndex & idx)
 {

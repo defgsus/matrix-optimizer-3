@@ -468,6 +468,46 @@ bool ObjectTreeModel::addObject(Object *parent, Object * obj, int index)
     return true;
 }
 
+QModelIndex ObjectTreeModel::swapChildren(Object *parent, int from, int to)
+{
+    MO_DEBUG_TREE("ObjectTreeModel::swapChildren(" << parent->idName()
+                  << ", " << from << ", " << to << ")");
+
+    if (from < 0 || from >= parent->numChildren()
+        || to < 0 || to >= parent->numChildren())
+        return QModelIndex();
+
+//    QModelIndex idx = indexForObject(parent);
+
+    parent->swapChildren(from, to);
+
+    QModelIndex
+            fromIdx = createIndex(from, 0, parent->childObjects()[from]),
+            toIdx = createIndex(to, 0, parent->childObjects()[to]);
+
+    emit dataChanged(fromIdx, toIdx);
+
+    return toIdx;
+}
+
+QModelIndex ObjectTreeModel::moveUp(Object * object)
+{
+    QModelIndex idx = indexForObject(object);
+    if (idx.row() < 1)
+        return idx;
+    return
+        swapChildren(object->parentObject(), idx.row(), idx.row() - 1);
+}
+
+QModelIndex ObjectTreeModel::moveDown(Object * object)
+{
+    QModelIndex idx = indexForObject(object);
+    if (idx.row() >= object->parentObject()->numChildren() - 1)
+        return idx;
+    return
+        swapChildren(object->parentObject(), idx.row(), idx.row() + 1);
+}
+
 TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
 {
     MO_DEBUG_TREE("ObjectTreeModel::createFloatTrack('" << param->idName() << ")");

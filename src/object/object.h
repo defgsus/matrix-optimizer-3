@@ -24,24 +24,6 @@
 namespace MO {
 namespace IO { class DataStream; }
 
-/*
-// PERSISTENT class names
-#ifndef MO_OBJECTCLASSNAMES_DEFINED
-    #define MO_OBJECTCLASSNAMES_DEFINED
-    #define MO_OBJECTCLASSNAME_DUMMY            "_dummy"
-    #define MO_OBJECTCLASSNAME_SCENE            "_scene"
-    #define MO_OBJECTCLASSNAME_CAMERA           "_cam"
-    #define MO_OBJECTCLASSNAME_MICROPHONE       "_mic"
-    #define MO_OBJECTCLASSNAME_SOUNDSOURCE      "_sound"
-    #define MO_OBJECTCLASSNAME_MODEL3D          "_model"
-    #define MO_OBJECTCLASSNAME_PARAMETER_FLOAT  "_parf"
-    #define MO_OBJECTCLASSNAME_AXISROTATION     "_arot"
-    #define MO_OBJECTCLASSNAME_TRANSLATION      "_pos"
-    #define MO_OBJECTCLASSNAME_SCALE            "_scale"
-    #define MO_OBJECTCLASSNAME_SEQUENCEGROUP    "_seqgroup"
-    #define MO_OBJECTCLASSNAME_SEQUENCE_FLOAT   "_seqf"
-#endif
-*/
 
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
@@ -49,12 +31,9 @@ namespace IO { class DataStream; }
             ::MO::registerObject_(new class__); \
     }
 
-#define MO_OBJECT_CLONE(class__) \
-    virtual class__ * cloneClass() const { return new class__(); }
-
 #define MO_OBJECT_CONSTRUCTOR(Class__) \
     explicit Class__(QObject *parent = 0); \
-    MO_OBJECT_CLONE(Class__) \
+    virtual Class__ * cloneClass() const { return new Class__(); } \
     virtual const QString& className() const { static QString s(#Class__); return s; } \
     virtual void serialize(IO::DataStream &) const; \
     virtual void deserialize(IO::DataStream &);
@@ -65,7 +44,7 @@ namespace IO { class DataStream; }
     virtual void deserialize(IO::DataStream &);
 
 
-/** Abstract base of all Objects in MO.
+/** Abstract base of all Objects in MO
 
 */
 class Object : public QObject
@@ -229,6 +208,9 @@ public:
     /** Returns number of direct childs or number of all sub-childs. */
     int numChildren(bool recursive = false) const;
 
+    /** Returns true if an Object of @p type can be a children of this Object. */
+    virtual bool canHaveChildren(Type type) const;
+
     /** Read-access to the list of childs */
     const QList<Object*> childObjects() const { return childObjects_; }
 
@@ -267,11 +249,11 @@ public:
         @returns The added object. */
     Object * addObject(Object * object, int insert_index = -1);
 
+    /** Exchange the two child object given by the indices. */
+    void swapChildren(int from, int to);
+
     /** Returns the correct index to insert as specific object type. */
     //int getInsertIndex(Object * object, int insert_index = -1) const;
-
-    /** Returns true if an Object of @p type can be a children of this Object. */
-    virtual bool canHaveChildren(Type type) const;
 
     /** Deletes the child from the list of children, if found. */
     void deleteObject(Object * child);

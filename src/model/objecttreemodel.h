@@ -87,6 +87,12 @@ public slots:
     /** Adds the object to @p parent. @p childIndex can be -1 to append. */
     bool addObject(Object * parent, Object * obj, int childIndex = -1);
 
+    /** Exchanges the two children given by the indices @p from and @p to */
+    QModelIndex swapChildren(Object * parent, int from, int to);
+
+    QModelIndex moveUp(Object * object);
+    QModelIndex moveDown(Object * object);
+
     TrackFloat * createFloatTrack(ParameterFloat * parameter);
 
     SequenceFloat * createFloatSequence(TrackFloat * track, Double time);

@@ -65,6 +65,7 @@ protected:
     void createFirstObjectActions_();
     void createClipboardActions_(Object *);
     void createNewObjectActions_(Object *);
+    void createMoveActions_(Object *);
 
     void expandObjectOnly_(const QModelIndex& );
 

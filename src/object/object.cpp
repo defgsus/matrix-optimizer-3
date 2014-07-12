@@ -471,6 +471,14 @@ bool Object::takeChild_(Object *child)
     return childObjects_.removeOne(child);
 }
 
+void Object::swapChildren(int from, int to)
+{
+    if (from >= 0 && from < numChildren()
+        && to >= 0 && to < numChildren())
+
+    childObjects_.swap(from, to);
+}
+
 QString Object::getUniqueId(QString id, Object * ignore) const
 {
     MO_ASSERT(!id.isEmpty(), "unset object id detected, class='"
