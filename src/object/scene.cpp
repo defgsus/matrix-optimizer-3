@@ -73,7 +73,7 @@ void Scene::tellTreeChanged()
         setGlContext(glContext_);
 
         // update image
-        emit renderRequest();
+        render_();
     }
 }
 

@@ -34,6 +34,8 @@ signals:
     /** When a modulation track was created */
     void objectSelected(MO::Object*);
 
+    void statusTipChanged(const QString&);
+
 public slots:
 
     /** Sets the object for the view.

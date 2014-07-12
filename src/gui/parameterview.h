@@ -34,6 +34,8 @@ signals:
     /** When creating a modulator track */
     void objectSelected(MO::Object *);
 
+    void statusTipChanged(const QString&);
+
 public slots:
 
     void setObject(MO::Object * object);

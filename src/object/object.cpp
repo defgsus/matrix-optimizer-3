@@ -486,6 +486,8 @@ void Object::swapChildren(int from, int to)
         && to >= 0 && to < numChildren())
 
     childObjects_.swap(from, to);
+
+    childrenChanged_();
 }
 
 QString Object::getUniqueId(QString id, Object * ignore) const
@@ -644,6 +646,7 @@ Parameter * Object::findParameter(const QString &id)
 void Object::createParameters()
 {
     const static QString
+            strTip(tr("Defines the scope in which the object and all of it's children are active")),
             strOff(tr("Object is inactive")),
             strOn(tr("Object is always active")),
             strPrev(tr("Object is only active in the preview modes and will not be rendered")),
@@ -657,7 +660,7 @@ void Object::createParameters()
 
     paramActiveScope_ =
     createSelectParameter("_activescope", tr("activity scope"),
-                         tr("Sets the scope in which the object and all of it's children are active"),
+                         strTip,
                          { "off", "on", "prev", "ren", "prev1", "prev2", "prev3",
                            "prev1r", "prev2r", "prev3r" },
                          { tr("off"), tr("on"), tr("preview"), tr("render"),

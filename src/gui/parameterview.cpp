@@ -15,6 +15,7 @@
 #include <QFrame>
 #include <QToolButton>
 #include <QComboBox>
+#include <QAbstractItemView>
 
 #include "parameterview.h"
 #include "object/object.h"
@@ -112,14 +113,12 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         but = bmod = new QToolButton(w);
         l->addWidget(but);
         but->setIcon(pf->modulatorIds().isEmpty()? iconModulateOff : iconModulateOn);
-        but->setToolTip(tr("Create modulation track"));
         but->setStatusTip(tr("Creates a new modulation track for the given parameter"));
         but->setEnabled(pf->isModulateable());
 
         but = breset = new QToolButton(w);
         l->addWidget(but);
         but->setText("0");
-        but->setToolTip(tr("Set to default value (%1)").arg(pf->defaultValue()));
         but->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")
                           .arg(pf->defaultValue()));
         but->setEnabled(pf->isEditable());
@@ -182,14 +181,12 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         but = bmod = new QToolButton(w);
         l->addWidget(but);
         but->setIcon(ps->modulatorIds().isEmpty()? iconModulateOff : iconModulateOn);
-        but->setToolTip(tr("Create modulation track"));
         but->setStatusTip(tr("Creates a new modulation track for the given parameter"));
         but->setEnabled(ps->isModulateable());
 
         but = breset = new QToolButton(w);
         l->addWidget(but);
         but->setText("0");
-        but->setToolTip(tr("Set to default value (%1)").arg(ps->defaultValueName()));
         but->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")
                           .arg(ps->defaultValueName()));
         but->setEnabled(ps->isEditable());
@@ -206,17 +203,24 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         for (auto & name : ps->valueNames())
             combo->addItem(name);
 
+        // set index and statustip
         combo->setCurrentIndex(ps->valueList().indexOf(ps->baseValue()));
-        combo->setStatusTip(ps->statusTip());
+        if (combo->currentIndex() >= 0 && combo->currentIndex() < ps->statusTips().size())
+            combo->setStatusTip(ps->statusTips().at(combo->currentIndex()));
 
         if (prevEditWidget_)
             setTabOrder(prevEditWidget_, combo);
         prevEditWidget_ = combo;
 
-        connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=]()
+        connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=](int idx)
         {
-            if (combo->currentIndex()<0 || combo->currentIndex() >= ps->valueList().size())
+            if (idx<0 || idx >= ps->valueList().size())
                 return;
+            // update statustip of combobox
+            if (idx >= 0 && idx < ps->statusTips().size())
+                combo->setStatusTip(ps->statusTips().at(idx));
+
+            // get value
             int value = ps->valueList().at(combo->currentIndex());
 
             QObject * scene = p->object()->sceneObject();
@@ -231,6 +235,16 @@ QWidget * ParameterView::createWidget_(Parameter * p)
                                            );
             MO_ASSERT(r, "could not invoke Scene::setParameterValue");
             Q_UNUSED(r);
+        });
+
+        connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::highlighted), [=](int idx)
+        {
+            if (idx >= 0 && idx < ps->statusTips().size())
+            {
+                combo->view()->setStatusTip(ps->statusTips().at(idx));
+                // need to emit explicity for statusbar to update
+                emit statusTipChanged(combo->view()->statusTip());
+            }
         });
 
         connect(breset, &QToolButton::pressed, [=]()

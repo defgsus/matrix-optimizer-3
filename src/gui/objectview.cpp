@@ -48,6 +48,8 @@ ObjectView::ObjectView(QWidget *parent) :
         layout_->addWidget(paramView_);
         connect(paramView_, SIGNAL(objectSelected(MO::Object*)),
                 this, SIGNAL(objectSelected(MO::Object*)));
+        connect(paramView_, SIGNAL(statusTipChanged(QString)),
+                this, SIGNAL(statusTipChanged(QString)));
 }
 
 void ObjectView::setObject(Object * object)

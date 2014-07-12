@@ -119,6 +119,8 @@ void MainWindow::createWidgets_()
             //objectView_->setMinimumWidth(240);
             connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
                                         this, SLOT(objectSelected(MO::Object*)));
+            connect(objectView_, SIGNAL(statusTipChanged(QString)),
+                    statusBar(), SLOT(showMessage(QString)));
 
         //l0->setStretchFactor(lv, -1);
 
