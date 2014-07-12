@@ -61,7 +61,8 @@ public:
     enum Type
     {
         T_NONE              = 0,
-        T_OBJECT            = 1,
+        T_OBJECT            = 1<<0,
+        T_GROUP             = 1<<1,
         T_TRANSFORMATION    = 1<<2,
         T_TRANSFORMATION_MIX= 1<<3,
         T_SCENE             = 1<<4,
@@ -75,7 +76,7 @@ public:
     };
     enum TypeGroups
     {
-        TG_REAL_OBJECT      = T_OBJECT | T_MICROPHONE | T_SOUNDSOURCE | T_CAMERA,
+        TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE | T_CAMERA,
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
 
@@ -182,14 +183,24 @@ public:
     virtual bool isTrack() const { return false; }
     virtual bool isSequence() const { return false; }
 
-    /** Returns the activity scope for the object */
+    /** Returns the user-set activity scope for the object */
     ActivityScope activityScope() const;
+
+    /** Returns the currently set scope for the tree */
+    ActivityScope currentActivityScope() const { return currentActivityScope_; }
+
+    /** Returns if the object is active at the given time */
+    bool active(Double time) const;
 
     // --------------- setter -------------------
 
     /** Set the user-name for the object */
     void setName(const QString&);
 
+    /** Recursively sets the activity scope for the whole tree.
+        This will tell the objects, which scope is active and
+        will be reflected in their active() method. */
+    void setCurrentActivityScope(ActivityScope scope);
 
     // ------------- tree stuff -----------------
 
@@ -306,6 +317,10 @@ public:
         Always call the ancestor classes createParameters() in your derived function! */
     virtual void createParameters();
 
+    /** Called when a parameter has changed it's value (from the gui).
+        Be sure to call the ancestor class implementation in your derived method! */
+    virtual void parameterChanged(Parameter * p);
+
     /** Creates the desired parameter,
         or returns an already created parameter object.
         When the Parameter was present before, all it's settings are still overwritten.
@@ -353,7 +368,7 @@ public:
 
     void setTransformation(int thread, const Mat4& mat) { transformation_[thread] = mat; }
 
-    /** Apply all transformation of this object to the given matrix. */
+    /** Apply all transformations of this object to the given matrix. */
     void calculateTransformation(Mat4& matrix, Double time) const;
 
     /** List of all direct transformation childs */
@@ -417,13 +432,18 @@ private:
 
     QList<Parameter*> parameters_;
 
+    // --------- default parameters ----------
+
+    ParameterSelect * paramActiveScope_;
+
+    // ------------ runtime ------------------
+
+    ActivityScope currentActivityScope_;
+
     // ----------- position ------------------
 
     std::vector<Mat4> transformation_;
 
-    // --------- default parameters ----------
-
-    ParameterSelect * paramActiveScope_;
 };
 
 extern bool registerObject_(Object *);

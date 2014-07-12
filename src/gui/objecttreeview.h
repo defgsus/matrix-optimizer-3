@@ -14,6 +14,8 @@
 #include <QTreeView>
 #include <QList>
 
+#include "tool/actionlist.h"
+
 class QMenu;
 namespace MO {
 class Object;
@@ -70,7 +72,7 @@ protected:
     /** Creates a menu with all possibly child objects for @p parent.
         Each action has the Object::className() in it's data QVariant.
         If no child objects are possible, NULL is returned! */
-    QMenu * createObjectsMenu_(Object * parent);
+    QMenu * createObjectsMenu_(Object * parent, bool with_shortcuts = false);
 
     void expandObjectsByType_(const QModelIndex& indexInOriginalModel, int typeflags);
 
@@ -78,7 +80,7 @@ protected:
     bool addObject_(const QModelIndex& parent, int row, Object * obj);
     bool deleteObject_(const QModelIndex&);
 
-    QList<QAction*> editActions_;
+    ActionList editActions_;
 
     QMenu * showTypeMenu_;
 

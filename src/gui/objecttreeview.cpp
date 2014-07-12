@@ -174,7 +174,9 @@ void ObjectTreeView::createTypeActions_()
     a->setCheckable(true); \
     a->setChecked(true);
 
-    MO__TYPE_ACTION(Object::T_OBJECT, tr("Objects"));
+    MO__TYPE_ACTION(Object::TG_REAL_OBJECT
+                    & ~(Object::T_CAMERA | Object::T_MICROPHONE | Object::T_SOUNDSOURCE),
+                    tr("Objects"));
     MO__TYPE_ACTION(Object::T_CAMERA, tr("Cameras"));
     MO__TYPE_ACTION(Object::T_MICROPHONE, tr("Microphones"));
     MO__TYPE_ACTION(Object::T_SOUNDSOURCE, tr("Soundsources"));
@@ -213,8 +215,6 @@ void ObjectTreeView::createEditActions_(Object * obj)
 
     //MO_ASSERT(scene_, "No Scene object given for ObjectTreeView with model");
 
-    QAction * a;
-
     // object selected?
     if (currentIndex().row()>=0 && obj)
     {
@@ -224,24 +224,19 @@ void ObjectTreeView::createEditActions_(Object * obj)
         QString title(obj->name());
         if (numChilds)
             title += tr(" (%1 children)").arg(numChilds);
-        editActions_.append(a = new QAction(title, this));
-        QFont font; font.setBold(true);
-        a->setFont(font);
+        editActions_.addTitle(title, this);
 
-        createClipboardActions_(obj);
+            createClipboardActions_(obj);
 
-        editActions_.append(a = new QAction(this));
-        a->setSeparator(true);
+        editActions_.addSeparator(this);
 
-        createMoveActions_(obj);
+            createMoveActions_(obj);
 
-        editActions_.append(a = new QAction(this));
-        a->setSeparator(true);
+        editActions_.addSeparator(this);
 
-        createNewObjectActions_(obj);
+            createNewObjectActions_(obj);
 
-        editActions_.append(a = new QAction(this));
-        a->setSeparator(true);
+        editActions_.addSeparator(this);
 
     }
     // no object selected
@@ -249,8 +244,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
     {
         createFirstObjectActions_();
 
-        editActions_.append(a = new QAction(this));
-        a->setSeparator(true);
+        editActions_.addSeparator(this);
 
     } // no object selected
 
@@ -261,7 +255,7 @@ void ObjectTreeView::createEditActions_(Object * obj)
     emit editActionsChanged(this, editActions_);
 }
 
-QMenu * ObjectTreeView::createObjectsMenu_(Object *parent)
+QMenu * ObjectTreeView::createObjectsMenu_(Object *parent, bool with_shortcuts)
 {
     QList<const Object*> list(ObjectFactory::possibleChildObjects(parent));
     if (list.empty())
@@ -282,6 +276,15 @@ QMenu * ObjectTreeView::createObjectsMenu_(Object *parent)
 
         QAction * a = new QAction(ObjectFactory::iconForObject(o), o->name(), this);
         a->setData(o->className());
+        if (with_shortcuts)
+        {
+            if (o->className() == "AxisRotate")
+                a->setShortcut(Qt::ALT + Qt::Key_R);
+            if (o->className() == "Translate")
+                a->setShortcut(Qt::ALT + Qt::Key_T);
+            if (o->className() == "Scale")
+                a->setShortcut(Qt::ALT + Qt::Key_S);
+        }
         menu->addAction(a);
     }
 
@@ -292,13 +295,12 @@ void ObjectTreeView::createFirstObjectActions_()
 {
     QAction * a;
 
-    QMenu * menu = createObjectsMenu_(scene_);
+    QMenu * menu = createObjectsMenu_(scene_, true);
 
     if (menu)
     {
-        editActions_.append(a = new QAction(tr("Create object"), this));
+        a = editActions_.addAction(QIcon(":/icon/new.png"), tr("Create object"), this);
         a->setStatusTip(tr("Inserts a new object into the scene"));
-        a->setIcon(QIcon(":/icon/new.png"));
         a->setMenu(menu);
 
         connect(menu, &QMenu::triggered, [this](QAction* a)
@@ -314,7 +316,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
     QAction * a;
 
     // copy
-    editActions_.append(a = new QAction(tr("Copy"), this));
+    a = editActions_.addAction(tr("Copy"), this);
     a->setStatusTip(tr("Copies the selected object and all it's children to the clipboard"));
     connect(a, &QAction::triggered, [=]()
     {
@@ -327,7 +329,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
     if (obj->canBeDeleted())
     {
         // cut
-        editActions_.append(a = new QAction(tr("Cut"), this));
+        a = editActions_.addAction(tr("Cut"), this);
         a->setStatusTip(tr("Moves the selected object and all it's children to the clipboard"));
         connect(a, &QAction::triggered, [=]()
         {
@@ -340,7 +342,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         });
 
         // delete
-        editActions_.append(a = new QAction(tr("Delete"), this));
+        a = editActions_.addAction(tr("Delete"), this);
         a->setStatusTip(tr("Deletes the selected object and all of it's children"));
         connect(a, &QAction::triggered, [=]()
         {
@@ -361,9 +363,8 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         if (parentObj)
         {
             // paste before
-            editActions_.append(a = new QAction(tr("Paste before object"), this));
+            a = editActions_.addAction(QIcon(":/icon/above.png"), tr("Paste before object"), this);
             a->setStatusTip(tr("Pastes the objects from the clipboard above the selected object"));
-            a->setIcon(QIcon(":/icon/above.png"));
             a->setEnabled(parentObj->canHaveChildren(pasteType));
             connect(a, &QAction::triggered, [=]()
             {
@@ -375,10 +376,9 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
             });
 
             // paste after
-            editActions_.append(a = new QAction(tr("Paste after object"), this));
+            a = editActions_.addAction(QIcon(":/icon/below.png"), tr("Paste after object"), this);
             a->setStatusTip(tr("Pastes the objects from the clipboard below the selected object"));
             a->setEnabled(parentObj->canHaveChildren(pasteType));
-            a->setIcon(QIcon(":/icon/below.png"));
             connect(a, &QAction::triggered, [=]()
             {
                 if (model()->dropMimeData(
@@ -390,10 +390,9 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         }
 
         // paste as child
-        editActions_.append(a = new QAction(tr("Paste as children"), this));
+        a = editActions_.addAction(QIcon(":/icon/child.png"), tr("Paste as children"), this);
         a->setStatusTip(tr("Pastes the objects from the clipboard to the end of the "
                            "selected object's children list"));
-        a->setIcon(QIcon(":/icon/child.png"));
         a->setEnabled(obj->canHaveChildren(pasteType));
         connect(a, &QAction::triggered, [=]()
         {
@@ -418,15 +417,14 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
         QMenu * menu = createObjectsMenu_(parentObj);
         if (menu)
         {
-            QModelIndex parentIndex = model()->parent(currentIndex());
+            QModelIndex parentIndex = currentIndex().parent();
 
             // new sibling above
-            editActions_.append(a = new QAction(tr("New object above"), this));
+            a = editActions_.addAction(QIcon(":/icon/new_above.png"), tr("New object above"), this);
             a->setStatusTip(tr("Creates a new object above the selected object"));
-            a->setIcon(QIcon(":/icon/new_above.png"));
             a->setMenu(menu);
 
-            connect(menu, &QMenu::triggered, [this, &parentIndex](QAction * a)
+            connect(menu, &QMenu::triggered, [this, parentIndex](QAction * a)
             {
                 Object * newo = ObjectFactory::createObject(a->data().toString());
                 addObject_(parentIndex, currentIndex().row(), newo);
@@ -434,18 +432,17 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
         }
 
         // new sibling below
-        menu = createObjectsMenu_(parentObj);
+        menu = createObjectsMenu_(parentObj, true);
         if (menu)
         {
-            QModelIndex parentIndex = model()->parent(currentIndex());
+            QModelIndex parentIndex = currentIndex().parent();
 
             // new sibling above
-            editActions_.append(a = new QAction(tr("New object below"), this));
+            a = editActions_.addAction(QIcon(":/icon/new_below.png"), tr("New object below"), this);
             a->setStatusTip(tr("Creates a new object below the selected object"));
-            a->setIcon(QIcon(":/icon/new_below.png"));
             a->setMenu(menu);
 
-            connect(menu, &QMenu::triggered, [this, &parentIndex](QAction * a)
+            connect(menu, &QMenu::triggered, [this, parentIndex](QAction * a)
             {
                 Object * newo = ObjectFactory::createObject(a->data().toString());
                 addObject_(parentIndex, currentIndex().row() + 1, newo);
@@ -457,9 +454,8 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
     QMenu * menu = createObjectsMenu_(obj);
     if (menu)
     {
-        editActions_.append(a = new QAction(tr("New child object"), this));
+        a = editActions_.addAction(QIcon(":/icon/new_child.png"), tr("New child object"), this);
         a->setStatusTip(tr("Creates a new object as children of the selected object"));
-        a->setIcon(QIcon(":/icon/new_child.png"));
         a->setMenu(menu);
 
         connect(menu, &QMenu::triggered, [this](QAction * a)
@@ -484,10 +480,9 @@ void ObjectTreeView::createMoveActions_(Object * obj)
     // move up
     if (row > 0)
     {
-        editActions_.append(a = new QAction(tr("Move up"), this));
+        a = editActions_.addAction(QIcon(":/icon/above.png"), tr("Move up"), this);
         a->setStatusTip(tr("Moves the selected object before the previous object"));
         a->setShortcut(Qt::CTRL + Qt::Key_Up);
-        a->setIcon(QIcon(":/icon/above.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->moveUp(obj) ) );
@@ -496,10 +491,9 @@ void ObjectTreeView::createMoveActions_(Object * obj)
     // move down
     if (row < parent->numChildren() - 1)
     {
-        editActions_.append(a = new QAction(tr("Move down"), this));
+        a = editActions_.addAction(QIcon(":/icon/below.png"), tr("Move down"), this);
         a->setStatusTip(tr("Moves the selected object below the next object"));
         a->setShortcut(Qt::CTRL + Qt::Key_Down);
-        a->setIcon(QIcon(":/icon/below.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->moveDown(obj) ) );
@@ -510,10 +504,9 @@ void ObjectTreeView::createMoveActions_(Object * obj)
         parent->parentObject()->canHaveChildren(obj->type()))
     {
 
-        editActions_.append(a = new QAction(tr("Promote"), this));
+        a = editActions_.addAction(QIcon(":/icon/left.png"), tr("Promote"), this);
         a->setStatusTip(tr("Moves the selected object one level up in the tree"));
         a->setShortcut(Qt::CTRL + Qt::Key_Left);
-        a->setIcon(QIcon(":/icon/left.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->promote(obj) ) );
@@ -523,10 +516,9 @@ void ObjectTreeView::createMoveActions_(Object * obj)
     if (row > 0 && parent->childObjects().at(row-1)->canHaveChildren(obj->type()))
     {
 
-        editActions_.append(a = new QAction(tr("Demote"), this));
+        a = editActions_.addAction(QIcon(":/icon/right.png"), tr("Demote"), this);
         a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling above"));
         a->setShortcut(Qt::CTRL + Qt::Key_Right);
-        a->setIcon(QIcon(":/icon/right.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );
@@ -535,10 +527,9 @@ void ObjectTreeView::createMoveActions_(Object * obj)
     else if (row == 0 && parent->numChildren()>1
              && parent->childObjects().at(1)->canHaveChildren(obj->type()))
     {
-        editActions_.append(a = new QAction(tr("Demote"), this));
+        a = editActions_.addAction(QIcon(":/icon/right.png"), tr("Demote"), this);
         a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling below"));
         a->setShortcut(Qt::CTRL + Qt::Key_Right);
-        a->setIcon(QIcon(":/icon/right.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );

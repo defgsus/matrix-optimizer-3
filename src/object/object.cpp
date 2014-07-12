@@ -31,10 +31,11 @@ bool registerObject_(Object * obj)
 }
 
 Object::Object(QObject *parent) :
-    QObject         (parent),
-    canBeDeleted_   (true),
-    parentObject_   (0),
-    paramActiveScope_(0)
+    QObject                 (parent),
+    canBeDeleted_           (true),
+    parentObject_           (0),
+    paramActiveScope_       (0),
+    currentActivityScope_   (AS_ON)
 {
     // tie into Object hierarchy
     if (auto o = qobject_cast<Object*>(parent))
@@ -289,6 +290,11 @@ Object::ActivityScope Object::activityScope() const
         return AS_ON;
 }
 
+bool Object::active(Double /*time*/) const
+{
+    return activityScope() & currentActivityScope_;
+}
+
 // ------------------ setter -----------------------
 
 void Object::setName(const QString & n)
@@ -296,7 +302,13 @@ void Object::setName(const QString & n)
     name_ = n;
 }
 
+void Object::setCurrentActivityScope(ActivityScope scope)
+{
+    currentActivityScope_ = scope;
 
+    for (auto o : childObjects_)
+        o->setCurrentActivityScope(scope);
+}
 
 // ------------- tree stuff ------------------------
 
@@ -585,7 +597,7 @@ bool Object::canHaveChildren(Type t) const
 
     // scene can hold anything else, except transformations
     if (type() == T_SCENE)
-        return !(t & T_TRANSFORMATION);
+        return !(t & TG_TRANSFORMATION);
 
     return true;
 }
@@ -632,7 +644,8 @@ void Object::collectTransformationObjects_()
 void Object::calculateTransformation(Mat4 &matrix, Double time) const
 {
     for (auto t : transformationObjects_)
-        t->applyTransformation(matrix, time);
+        if (t->active(time))
+            t->applyTransformation(matrix, time);
 }
 
 // ---------------------- parameter --------------------------
@@ -675,6 +688,15 @@ void Object::createParameters()
                            AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
                          AS_ON, true, false );
 }
+
+void Object::parameterChanged(Parameter *p)
+{
+    MO_DEBUG_PARAM("Object::parameterChanged('" << p->idName() << "')");
+
+
+}
+
+
 
 ParameterFloat * Object::createFloatParameter(
         const QString& id, const QString& name, const QString& statusTip,

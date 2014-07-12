@@ -78,8 +78,26 @@
             QOpenGLFunctions
             FrameBuffer
 
+    </pre>
 
+    <pre>
+    // ------ updates ------
 
+    // editing
+    - Object::addObject / Object::setParentObject
+    - Object::deleteObject
+    - Object::swapChildren
+
+    // locks
+    - Scene::beginObjectChange ?
+    - Scene::beginTreeChange
+    - Scene::beginSequenceChange
+
+    // signals to gui
+    - Scene::objectChanged ?
+    - Scene::objectAdded
+    - Scene::treeChanged
+    - Scene::sequenceChanged
 
     </pre>
 */

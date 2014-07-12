@@ -110,6 +110,9 @@ public slots:
 
     // ------------- runtime -------------------
 
+    /** Sets the scope for enabling all the objects */
+    void setSceneActivityScope(ActivityScope scope) { setCurrentActivityScope(scope); render_(); }
+
     void setSceneTime(Double time, bool send_signal = true);
 
     // ------------- open gl -------------------

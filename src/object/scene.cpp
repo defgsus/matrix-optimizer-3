@@ -173,12 +173,14 @@ void Scene::updateModulators_()
 void Scene::setParameterValue(ParameterFloat *p, Double v)
 {
     p->setValue(v);
+    p->object()->parameterChanged(p);
     render_();
 }
 
 void Scene::setParameterValue(ParameterSelect *p, int v)
 {
     p->setValue(v);
+    p->object()->parameterChanged(p);
     render_();
 }
 
@@ -282,7 +284,7 @@ void Scene::renderScene(Double time)
 
     // initialize gl resources
     for (auto o : glObjects_)
-        if (o->needsInitGl(0))
+        if (o->needsInitGl(0) && o->active(time))
             o->initGl_(0);
 
     calculateSceneTransform(0, time);
@@ -292,6 +294,7 @@ void Scene::renderScene(Double time)
 
     // render all opengl objects
     for (auto o : glObjects_)
+    if (o->active(time))
     {
         o->renderGl_(0, time);
     }
@@ -305,12 +308,15 @@ void Scene::calculateSceneTransform(int thread, Double time)
     // get camera transform
     Mat4 camt(1.0);
     for (auto o : cameraPaths_[0])
-        o->calculateTransformation(camt, time);
+        if (o->active(time))
+            o->calculateTransformation(camt, time);
+
     // set the initial camera space for all objects in scene
     setTransformation(thread, glm::inverse(camt));
 
     // calculate transformations
     for (auto &o : posObjects_)
+    if (o->active(time))
     {
         // get parent transformation
         Mat4 matrix(o->parentObject()->transformation(thread));

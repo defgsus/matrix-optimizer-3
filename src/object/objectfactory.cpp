@@ -71,6 +71,8 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     static QIcon iconLook(":/icon/obj_look.png");
     static QIcon iconLookAt(":/icon/obj_lookat.png");
     static QIcon iconMix(":/icon/obj_mix.png");
+    static QIcon iconGroup(":/icon/obj_group.png");
+
 
     if (o->isTransformation())
     {
@@ -89,6 +91,7 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
         if (qobject_cast<const Mix*>(o))
             return iconMix;
     }
+    if (o->type() & Object::T_GROUP) return iconGroup;
     if (o->isTrack()) return iconTrack;
     if (o->type() & Object::TG_FLOAT) return iconParameter;
     if (o->isCamera()) return iconCamera;

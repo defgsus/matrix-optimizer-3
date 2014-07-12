@@ -15,7 +15,7 @@
         <file alias="above.png">assets/icon/above.png</file>
         <file alias="below.png">assets/icon/below.png</file>
         <file alias="child.png">assets/icon/child.png</file>
-        <file alias="right,png">assets/icon/right.png</file>
+        <file alias="right.png">assets/icon/right.png</file>
         <file alias="left.png">assets/icon/left.png</file>
         <file alias="obj_group.png">assets/icon/obj_group.png</file>
         <file alias="obj_mix.png">assets/icon/obj_mix.png</file>

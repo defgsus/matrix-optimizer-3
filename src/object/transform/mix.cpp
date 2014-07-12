@@ -61,7 +61,8 @@ void Mix::applyTransformation(Mat4 &matrix, Double time) const
 
     // apply child transforms
     for (auto t : transformations_)
-        t->applyTransformation(trans, time);
+        if (t->active(time))
+            t->applyTransformation(trans, time);
 
     if (m >= 1.0)
 
