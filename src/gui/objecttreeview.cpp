@@ -276,9 +276,11 @@ void ObjectTreeView::createFirstObjectActions_()
         // make transformations first
         qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
 
-        editActions_.append(a = new QAction(tr("Create object"), this));
         QMenu * menu = new QMenu(this);
+
+        editActions_.append(a = new QAction(tr("Create object"), this));
         a->setStatusTip(tr("Insertes a new object into the scene"));
+        a->setIcon(QIcon(":/icon/new.png"));
         a->setMenu(menu);
         bool addSep = true;
         for (auto o : plist)
@@ -401,7 +403,6 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
 
     Object * parentObj = obj->parentObject();
 
-    // new sibling
     if (parentObj)
     {
         QList<const Object*> plist(ObjectFactory::possibleChildObjects(parentObj));
@@ -412,12 +413,35 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
 
             QModelIndex parentIndex = model()->parent(currentIndex());
 
-            editActions_.append(a = new QAction(tr("New sibling object"), this));
-            a->setStatusTip(tr("Creates a new object below the selected object"));
-            a->setIcon(QIcon(":/icon/below.png"));
+            // new sibling above
+            editActions_.append(a = new QAction(tr("New object above"), this));
+            a->setStatusTip(tr("Creates a new object above the selected object"));
+            a->setIcon(QIcon(":/icon/new_above.png"));
             QMenu * menu = new QMenu(this);
             a->setMenu(menu);
             bool addSep = true;
+            for (auto o : plist)
+            {
+                if (addSep && !o->isTransformation())
+                {
+                    menu->addSeparator();
+                    addSep = false;
+                }
+                menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
+                connect(a, &QAction::triggered, [=]()
+                {
+                    Object * newo = ObjectFactory::createObject(o->className());
+                    addObject_(parentIndex, currentIndex().row(), newo);
+                });
+            }
+
+            // new sibling below
+            editActions_.append(a = new QAction(tr("New object below"), this));
+            a->setStatusTip(tr("Creates a new object below the selected object"));
+            a->setIcon(QIcon(":/icon/new_below.png"));
+            menu = new QMenu(this);
+            a->setMenu(menu);
+            addSep = true;
             for (auto o : plist)
             {
                 if (addSep && !o->isTransformation())
@@ -444,7 +468,7 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
 
         editActions_.append(a = new QAction(tr("New child object"), this));
         a->setStatusTip(tr("Creates a new object as children of the selected object"));
-        a->setIcon(QIcon(":/icon/child.png"));
+        a->setIcon(QIcon(":/icon/new_child.png"));
         QMenu * menu = new QMenu(this);
         a->setMenu(menu);
         bool addSep = true;
@@ -497,6 +521,7 @@ void ObjectTreeView::createMoveActions_(Object * obj)
         editActions_.append(a = new QAction(tr("Move up"), this));
         a->setStatusTip(tr("Moves the selected object before the previous object"));
         a->setShortcut(Qt::CTRL + Qt::Key_Up);
+        a->setIcon(QIcon(":/icon/above.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->moveUp(obj) ) );
@@ -508,6 +533,7 @@ void ObjectTreeView::createMoveActions_(Object * obj)
         editActions_.append(a = new QAction(tr("Move down"), this));
         a->setStatusTip(tr("Moves the selected object below the next object"));
         a->setShortcut(Qt::CTRL + Qt::Key_Down);
+        a->setIcon(QIcon(":/icon/below.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->moveDown(obj) ) );
@@ -521,6 +547,7 @@ void ObjectTreeView::createMoveActions_(Object * obj)
         editActions_.append(a = new QAction(tr("Promote"), this));
         a->setStatusTip(tr("Moves the selected object one level up in the tree"));
         a->setShortcut(Qt::CTRL + Qt::Key_Left);
+        a->setIcon(QIcon(":/icon/left.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->promote(obj) ) );
@@ -533,6 +560,7 @@ void ObjectTreeView::createMoveActions_(Object * obj)
         editActions_.append(a = new QAction(tr("Demote"), this));
         a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling above"));
         a->setShortcut(Qt::CTRL + Qt::Key_Right);
+        a->setIcon(QIcon(":/icon/right.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );
@@ -544,6 +572,7 @@ void ObjectTreeView::createMoveActions_(Object * obj)
         editActions_.append(a = new QAction(tr("Demote"), this));
         a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling below"));
         a->setShortcut(Qt::CTRL + Qt::Key_Right);
+        a->setIcon(QIcon(":/icon/right.png"));
         connect(a, &QAction::triggered, [=]()
         {
             setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );

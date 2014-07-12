@@ -15,5 +15,16 @@
         <file alias="above.png">assets/icon/above.png</file>
         <file alias="below.png">assets/icon/below.png</file>
         <file alias="child.png">assets/icon/child.png</file>
+        <file alias="right,png">assets/icon/right.png</file>
+        <file alias="left.png">assets/icon/left.png</file>
+        <file alias="obj_group.png">assets/icon/obj_group.png</file>
+        <file alias="obj_mix.png">assets/icon/obj_mix.png</file>
+        <file alias="obj_shear.png">assets/icon/obj_shear.png</file>
+        <file alias="obj_lookat.png">assets/icon/obj_lookat.png</file>
+        <file alias="obj_look.png">assets/icon/obj_look.png</file>
+        <file alias="new.png">assets/icon/new.png</file>
+        <file alias="new_child.png">assets/icon/new_child.png</file>
+        <file alias="new_below.png">assets/icon/new_below.png</file>
+        <file alias="new_above.png">assets/icon/new_above.png</file>
     </qresource>
 </RCC>

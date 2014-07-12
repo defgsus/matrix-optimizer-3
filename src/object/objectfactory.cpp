@@ -23,6 +23,10 @@
 #include "transform/translation.h"
 #include "transform/axisrotation.h"
 #include "transform/scale.h"
+#include "transform/shear.h"
+#include "transform/look.h"
+#include "transform/lookat.h"
+#include "transform/mix.h"
 #include "scene.h"
 #include "trackfloat.h"
 #include "sequencefloat.h"
@@ -59,10 +63,14 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     static QIcon iconSoundSource(":/icon/obj_soundsource.png");
     static QIcon iconMicrophone(":/icon/obj_microphone.png");
     static QIcon iconCamera(":/icon/obj_camera.png");
+    static QIcon iconTrack(":/icon/obj_track.png");
     static QIcon iconTranslation(":/icon/obj_translation.png");
     static QIcon iconRotation(":/icon/obj_rotation.png");
     static QIcon iconScale(":/icon/obj_scale.png");
-    static QIcon iconTrack(":/icon/obj_track.png");
+    static QIcon iconShear(":/icon/obj_shear.png");
+    static QIcon iconLook(":/icon/obj_look.png");
+    static QIcon iconLookAt(":/icon/obj_lookat.png");
+    static QIcon iconMix(":/icon/obj_mix.png");
 
     if (o->isTransformation())
     {
@@ -72,6 +80,14 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
             return iconRotation;
         if (qobject_cast<const Scale*>(o))
             return iconScale;
+        if (qobject_cast<const Shear*>(o))
+            return iconShear;
+        if (qobject_cast<const Look*>(o))
+            return iconLook;
+        if (qobject_cast<const LookAt*>(o))
+            return iconLookAt;
+        if (qobject_cast<const Mix*>(o))
+            return iconMix;
     }
     if (o->isTrack()) return iconTrack;
     if (o->type() & Object::TG_FLOAT) return iconParameter;

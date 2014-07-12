@@ -28,6 +28,10 @@ namespace MO {
     class Transformation;
     class Rotation;
     class Scale;
+    class Shear;
+    class Look;
+    class LookAt;
+    class Mix;
     class Track;
     class TrackFloat;
     class Sequences;
