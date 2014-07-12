@@ -26,9 +26,12 @@
 //#include "tool/stringmanip.h"
 //#include "io/streamoperators_qt.h"
 //#include "math/funcparser/parser.h"
+//#include "io/log.h"
 
 int main(int argc, char *argv[])
 {
+    //void * ptr = new float;  MO_DEBUG(ptr);
+
     MO::startOfProgram();
 
     //return PPP_NAMESPACE::test_parser_();

@@ -20,6 +20,8 @@
 #include "object/trackfloat.h"
 #include "object/sequencefloat.h"
 #include "object/param/parameterfloat.h"
+#include "object/scene.h"
+
 
 namespace MO {
 
@@ -417,12 +419,29 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
 bool ObjectTreeModel::deleteObject(const QModelIndex & index)
 {
+    MO_DEBUG_TREE("ObjectTreeModel::deleteObject(" << index << ")");
+
+    auto object = objectForIndex(index);
+    if (!object)
+        return false;
     auto parentIndex = parent(index);
     if (auto parentObject = objectForIndex(parentIndex))
     {
-        beginRemoveRows(parentIndex, index.row(), index.row());
-        parentObject->deleteObject(objectForIndex(index));
-        endRemoveRows();
+        if (Scene * scene = parentObject->sceneObject())
+        {
+            beginRemoveRows(parentIndex, index.row(), index.row());
+            {
+                ScopedTreeChange lock(scene, parentObject);
+                parentObject->deleteObject(object);
+            }
+            endRemoveRows();
+        }
+        else
+        {
+            beginRemoveRows(parentIndex, index.row(), index.row());
+            parentObject->deleteObject(object);
+            endRemoveRows();
+        }
         return true;
     }
     return false;
@@ -430,19 +449,25 @@ bool ObjectTreeModel::deleteObject(const QModelIndex & index)
 
 QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, Object * obj)
 {
-    MO_DEBUG_TREE("ObjectTreeModel::addObject(parent("
-             << parentIndex.row() << ", " << parentIndex.column() << "), "
-             << row << ", " << obj << ")");
+    MO_DEBUG_TREE("ObjectTreeModel::addObject(" << parentIndex
+            << ", " << row << ", " << obj << ")");
 
     if (Object * parentObject = objectForIndex(parentIndex))
     {
         // adjust index
         if (row<0)
             row = parentObject->numChildren();
-        //row = parentObject->getInsertIndex(obj, row);
 
         beginInsertRows(parentIndex, row, row);
-        parentObject->addObject(obj, row);
+
+        if (Scene * scene = parentObject->sceneObject())
+        {
+            ScopedTreeChange lock(scene, parentObject);
+            parentObject->addObject(obj, row);
+        }
+        else
+            parentObject->addObject(obj, row);
+
         endInsertRows();
 
         return createIndex(row, 0, (void*)obj);
@@ -462,7 +487,15 @@ bool ObjectTreeModel::addObject(Object *parent, Object * obj, int index)
     QModelIndex parentIndex = indexForObject(parent);
 
     beginInsertRows(parentIndex, index, index);
-    parent->addObject(obj, index);
+
+    if (Scene * scene = parent->sceneObject())
+    {
+        ScopedTreeChange lock(scene, parent);
+        parent->addObject(obj, index);
+    }
+    else
+        parent->addObject(obj, index);
+
     endInsertRows();
 
     return true;
@@ -474,20 +507,28 @@ QModelIndex ObjectTreeModel::swapChildren(Object *parent, int from, int to)
                   << ", " << from << ", " << to << ")");
 
     if (from < 0 || from >= parent->numChildren()
-        || to < 0 || to >= parent->numChildren())
+        || to < 0 || to >= parent->numChildren()
+        || from == to)
         return QModelIndex();
 
-//    QModelIndex idx = indexForObject(parent);
+    QModelIndex parentIdx = indexForObject(parent);
 
-    parent->swapChildren(from, to);
+    if (to < from)
+        beginMoveRows(parentIdx, from, from, parentIdx, to);
+    else
+        beginMoveRows(parentIdx, to, to, parentIdx, from);
 
-    QModelIndex
-            fromIdx = createIndex(from, 0, parent->childObjects()[from]),
-            toIdx = createIndex(to, 0, parent->childObjects()[to]);
+    if (Scene * scene = parent->sceneObject())
+    {
+        ScopedTreeChange lock(scene, parent);
+        parent->swapChildren(from, to);
+    }
+    else
+        parent->swapChildren(from, to);
 
-    emit dataChanged(fromIdx, toIdx);
+    endMoveRows();
 
-    return toIdx;
+    return createIndex(to, 0, parent->childObjects()[to]);
 }
 
 QModelIndex ObjectTreeModel::moveUp(Object * object)
@@ -535,8 +576,17 @@ TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
     addObject(indexForObject(obj), -1, track);
 
     // modulate parameter
-    param->addModulator(track->idName());
-    param->collectModulators();
+    if (param->object() && param->object()->sceneObject())
+    {
+        ScopedObjectChange lock(param->object()->sceneObject(), param->object());
+        param->addModulator(track->idName());
+        param->collectModulators();
+    }
+    else
+    {
+        param->addModulator(track->idName());
+        param->collectModulators();
+    }
 
     return track;
 }
@@ -564,7 +614,6 @@ SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double t
 
     // place the sequence on the track
     addObject(trackIdx, -1, seq);
-    track->collectModulators();
 
     return seq;
 }

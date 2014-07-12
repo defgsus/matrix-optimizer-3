@@ -57,7 +57,7 @@ public:
 
     Double sceneTime() const { return sceneTime_; }
 
-    // ------------- locking and updates -------
+    // --------- locking and updates -----------
 
     void beginSequenceChange(MO::Sequence *);
     void endSequenceChange();
@@ -67,6 +67,9 @@ public:
 
     void beginObjectChange(MO::Object *);
     void endObjectChange();
+
+    void beginTreeChange(MO::Object *);
+    void endTreeChange();
 
 signals:
 
@@ -164,7 +167,8 @@ private:
 
     // ------------ threadstuff ----------------
 
-    Object * changedObject_, * changedTimelineObject_;
+    Object * changedObject_, * changedTimelineObject_,
+            * changedTreeObject_;
     Sequence * changedSequence_;
 
     // ------------ runtime --------------------
@@ -188,6 +192,18 @@ public:
     ~ScopedObjectChange() { scene_->endObjectChange(); }
 };
 
+class ScopedTreeChange
+{
+    Scene * scene_;
+public:
+    ScopedTreeChange(Scene * scene, Object * object)
+        :   scene_(scene)
+    {
+        scene_->beginTreeChange(object);
+    }
+
+    ~ScopedTreeChange() { scene_->endTreeChange(); }
+};
 
 class ScopedSequenceChange
 {

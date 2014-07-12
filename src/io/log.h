@@ -26,7 +26,8 @@
 #ifdef MO_ENABLE_DEBUG
     #define MO_DEBUG_IMPL_(stream_arg__) \
         { std::cerr << "[" << ::MO::applicationTimeString() << "] " \
-            << streamColor::Debug << stream_arg__ << streamColor::Default << std::endl; }
+            << ::MO::streamColor::Debug << stream_arg__ \
+            << ::MO::streamColor::Default << std::endl; }
 #else
     #define MO_DEBUG_IMPL_(unused__) { }
 #endif

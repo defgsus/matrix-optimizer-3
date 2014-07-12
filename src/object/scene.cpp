@@ -223,6 +223,18 @@ void Scene::endObjectChange()
     render_();
 }
 
+void Scene::beginTreeChange(Object * o)
+{
+    MO_DEBUG_TREE("Scene::beginTreeChange(" << o << ")");
+    changedTreeObject_ = o;
+}
+
+void Scene::endTreeChange()
+{
+    MO_DEBUG_TREE("Scene::endTreeChange()");
+    render_();
+}
+
 // ----------------------- open gl ---------------------------
 
 void Scene::setGlContext(GL::Context *context)

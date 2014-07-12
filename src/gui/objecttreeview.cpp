@@ -502,6 +502,7 @@ void ObjectTreeView::createMoveActions_(Object * obj)
             setFocusIndex( filter_->mapFromSource( omodel_->moveUp(obj) ) );
         });
     }
+    // move down
     if (row < parent->numChildren() - 1)
     {
         editActions_.append(a = new QAction(tr("Move down"), this));
@@ -509,7 +510,7 @@ void ObjectTreeView::createMoveActions_(Object * obj)
         a->setShortcut(Qt::CTRL + Qt::Key_Down);
         connect(a, &QAction::triggered, [=]()
         {
-            setFocusIndex( filter_->mapFromSource( omodel_->moveUp(obj) ) );
+            setFocusIndex( filter_->mapFromSource( omodel_->moveDown(obj) ) );
         });
     }
 
