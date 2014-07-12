@@ -40,13 +40,13 @@ public:
     // ------------- child objects -------------
 
     const QList<Camera*> cameras() const { return cameras_; }
-
+#if (0)
     /** Tells the Scene to update it's info about the tree */
     void tellTreeChanged();
 
     /** Tells the Scene to emit the objectAdded() signal */
     void tellObjectAdded(Object *);
-
+#endif
     // ------------- open gl -------------------
 
     /** Calculates all transformation of all scene objects.
@@ -92,6 +92,14 @@ signals:
     void objectAdded(MO::Object *);
 
 public slots:
+
+    // --------------- tree --------------------
+
+    // these are all locked
+
+    void addObject(Object * parent, Object * newChild, int insert_index = -1);
+    void deleteObject(Object * object);
+    void swapChildren(Object * parent, int from, int to);
 
     // ------------- parameter -----------------
 

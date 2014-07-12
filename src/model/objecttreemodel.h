@@ -34,10 +34,12 @@ class ObjectTreeModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-    explicit ObjectTreeModel(Object * rootObject = 0, QObject *parent = 0);
+    explicit ObjectTreeModel(Scene * scene = 0, QObject *parent = 0);
 
-    void setRootObject(Object * rootObject);
-    Object * rootObject() const { return rootObject_; }
+    void setSceneObject(Scene * scene);
+    Object * rootObject() const;
+    Scene * sceneObject() const { return scene_; }
+
     QModelIndex rootIndex() const;
     Object * objectForIndex(const QModelIndex& index) const;
 //    void indexForObject(const Object * obj, QModelIndex &parent, int &row) const;
@@ -101,7 +103,7 @@ public slots:
 
 private:
 
-    Object * rootObject_;
+    Scene * scene_;
 
     QModelIndex lastDropIndex_;
 

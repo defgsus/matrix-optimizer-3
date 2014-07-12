@@ -53,7 +53,8 @@ class Object : public QObject
 
     // to set idName_
     friend class ObjectFactory;
-
+    // to edit the tree
+    friend class Scene;
 public:
 
     // -------------- types ------------------
@@ -213,7 +214,9 @@ public:
     /** Returns true when the object can be deleted by the ObjectTreeView */
     bool canBeDeleted() const { return canBeDeleted_; }
 
-    /** Test if object @p o can be added to this object. */
+    /** Test if object @p o can be added to this object.
+        This checks for type compatibility as well as for
+        potential loops in the modulation path. */
     bool isSaveToAdd(Object * o, QString& error) const;
 
     /** Returns the root object of this hierarchy, which may
@@ -221,7 +224,7 @@ public:
     const Object * rootObject() const;
           Object * rootObject();
 
-    /** Returns the Scene object, or NULL */
+    /** Returns the Scene object (also for the scene itself), or NULL */
     const Scene * sceneObject() const;
           Scene * sceneObject();
 
@@ -256,13 +259,20 @@ public:
     template <class T>
     int indexOfLastChild(int last = -1) const;
 
-    /** Installs the object in the parent object's childlist.
-        If @p insert_index is >= 0, the object will be
-        inserted before the indexed object (e.g. 0 = start, 1 = before second).
-        This call is equivalent to calling parent->addObject(this).
-        The object will be removed from the previous parent's child list.
-        The idName() will be adjusted if needed. */
-    void setParentObject(Object * parent, int insert_index = -1);
+    /** Called when the children list has changed */
+    virtual void childrenChanged() { }
+
+    /** Returns the number of threads, this object is assigned to */
+    int numberThreads() const { return transformation_.size(); }
+
+    /** Sets the number of threads that will run on this object and
+        the whole tree. Any mutable values of the object must be present
+        @p num times!
+        Always call the ancestor implementation in your derived function! */
+    virtual void setNumberThreads(int num);
+
+    // ---------- only callable by scene -----------------
+private:
 
     /** Adds the object to the list of childs.
         The object is (re-)parented to this object.
@@ -271,29 +281,24 @@ public:
         The object will be removed from the previous parent's child list.
         The idName() will be adjusted if needed.
         @returns The added object. */
-    Object * addObject(Object * object, int insert_index = -1);
+    Object * addObject_(Object * object, int insert_index = -1);
+
+    /** Installs the object in the parent object's childlist.
+        If @p insert_index is >= 0, the object will be
+        inserted before the indexed object (e.g. 0 = start, 1 = before second).
+        This call is equivalent to calling parent->addObject(this).
+        This object will be removed from the previous parent's child list.
+        The idName() will be adjusted if needed. */
+    void setParentObject_(Object * parent, int insert_index = -1);
 
     /** Exchange the two child object given by the indices. */
-    void swapChildren(int from, int to);
+    void swapChildren_(int from, int to);
 
-    /** Returns the correct index to insert as specific object type. */
-    //int getInsertIndex(Object * object, int insert_index = -1) const;
+    /** Deletes the child from the list of children, if found,
+        and deletes the object itself. Nothing more. */
+    void deleteObject_(Object * child);
 
-    /** Deletes the child from the list of children, if found. */
-    void deleteObject(Object * child);
-
-    /** Called when the children list has changed */
-    virtual void childrenChanged() { }
-
-    /** Sets the number of threads that will run on this object and
-        the whole tree. Any mutable values of the object must be present
-        @p num times!
-        Always call the ancestor implementation in your derived function! */
-    virtual void setNumberThreads(int num);
-
-    /** Returns the number of threads, this object is assigned to */
-    int numberThreads() const { return transformation_.size(); }
-
+public:
     // --------------- modulators ------------------
 
     virtual void collectModulators() { };
@@ -321,6 +326,7 @@ public:
         Be sure to call the ancestor class implementation in your derived method! */
     virtual void parameterChanged(Parameter * p);
 
+protected:
     /** Creates the desired parameter,
         or returns an already created parameter object.
         When the Parameter was present before, all it's settings are still overwritten.
@@ -353,6 +359,7 @@ public:
                 const QList<int>& valueList,
                 int defaultValue, bool editable = true, bool modulateable = true);
 
+public:
     // --------------- 3d --------------------------
 
     /** Initialize transformation matrix */

@@ -87,6 +87,7 @@
     - Object::addObject / Object::setParentObject
     - Object::deleteObject
     - Object::swapChildren
+    - Scene::setParameterValue
 
     // locks
     - Scene::beginObjectChange ?

@@ -56,9 +56,10 @@ void Scene::deserialize(IO::DataStream & io)
 void Scene::setObjectModel(ObjectTreeModel * model)
 {
     model_ = model;
-    model_->setRootObject(this);
+    model_->setSceneObject(this);
 }
 
+#if (0)
 void Scene::tellTreeChanged()
 {
     MO_DEBUG_TREE("Scene::tellTreeChanged()");
@@ -83,7 +84,7 @@ void Scene::tellObjectAdded(Object * obj)
     emit objectAdded(obj);
     render_();
 }
-
+#endif
 
 void Scene::findObjects_()
 {
@@ -167,6 +168,28 @@ void Scene::updateModulators_()
             p->collectModulators();
     }
 }
+
+
+// ----------------------- tree ------------------------------
+
+void Scene::addObject(Object *parent, Object *newChild, int insert_index)
+{
+    parent->addChildObject_(newChild, insert_index);
+}
+
+void Scene::deleteObject(Object *object)
+{
+    MO_ASSERT(object->parentObject(), "Scene::deleteObject("<<object<<") without parent");
+    Object * p = object->parentObject();
+    p->deleteObject_(object);
+}
+
+void Scene::swapChildren(Object *parent, int from, int to)
+{
+    parent->swapChildren_(from, to);
+}
+
+
 
 // -------------------- parameter ----------------------------
 

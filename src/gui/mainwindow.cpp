@@ -337,14 +337,15 @@ void MainWindow::createObjects_()
 
 void MainWindow::resetTreeModel_()
 {
-    objectTreeModel_->setRootObject(scene_);
+    objectTreeModel_->setSceneObject(scene_);
 }
 
 void MainWindow::createDebugScene_()
 {
+    /*
     auto scene = ObjectFactory::createSceneObject();
 
-    auto cam = scene->addObject(ObjectFactory::createObject("Camera"));
+    auto cam = scene->addObject(scene, ObjectFactory::createObject("Camera"));
         cam->addObject(ObjectFactory::createObject("Translation"));
         cam->addObject(ObjectFactory::createObject("AxisRotation"));
         cam->addObject(ObjectFactory::createObject("SequenceFloat"));
@@ -367,6 +368,7 @@ void MainWindow::createDebugScene_()
     }
 
     setSceneObject(scene);
+    */
 }
 
 

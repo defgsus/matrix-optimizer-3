@@ -25,9 +25,9 @@
 
 namespace MO {
 
-ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
+ObjectTreeModel::ObjectTreeModel(Scene * scene, QObject *parent) :
     QAbstractItemModel(parent),
-    rootObject_       (rootObject)
+    scene_            (scene)
 {
     headerNames_
             << "name"
@@ -45,13 +45,18 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
 
 
 
-void ObjectTreeModel::setRootObject(Object *rootObject)
+void ObjectTreeModel::setSceneObject(Scene *scene)
 {
     beginResetModel();
 
-    rootObject_ = rootObject;
+    scene_ = scene;
 
     endResetModel();
+}
+
+Object * ObjectTreeModel::rootObject() const
+{
+    return scene_;
 }
 
 Object * ObjectTreeModel::objectForIndex(const QModelIndex &index) const
@@ -64,7 +69,7 @@ Object * ObjectTreeModel::objectForIndex(const QModelIndex &index) const
         }
     }
     // invalid index means root object (??)
-    return rootObject_;
+    return scene_;
 }
 /*
 void ObjectTreeModel::indexForObject(const Object *obj, QModelIndex& parent, int& row) const
@@ -81,7 +86,7 @@ void ObjectTreeModel::indexForObject(const Object *obj, QModelIndex& parent, int
 */
 QModelIndex ObjectTreeModel::indexForObject(const Object *obj) const
 {
-    if (obj == rootObject_)
+    if (obj == scene_)
     {
         return QModelIndex();//createIndex(-1,-1,(void*)rootObject_);
     }
@@ -94,15 +99,15 @@ QModelIndex ObjectTreeModel::indexForObject(const Object *obj) const
 
 QModelIndex ObjectTreeModel::rootIndex() const
 {
-    if (!rootObject_)
+    if (!scene_)
         return QModelIndex();
-    return createIndex(0,0, (void*)rootObject_);
+    return createIndex(0,0, (void*)scene_);
 }
 
 QModelIndex ObjectTreeModel::index(int row, int column, const QModelIndex &parent) const
 {
     // sanity check
-    if (!rootObject_ || row < 0 || column < 0 || column >= headerNames_.size()
+    if (!scene_ || row < 0 || column < 0 || column >= headerNames_.size()
             //|| (parent.isValid() && column != 0)
             )
         return QModelIndex();
@@ -121,7 +126,7 @@ QModelIndex ObjectTreeModel::index(int row, int column, const QModelIndex &paren
 
 QModelIndex ObjectTreeModel::parent(const QModelIndex &child) const
 {
-    if (!child.isValid() || !rootObject_)
+    if (!child.isValid() || !scene_)
         return QModelIndex();
 
     if (Object * obj = objectForIndex(child))
@@ -129,7 +134,7 @@ QModelIndex ObjectTreeModel::parent(const QModelIndex &child) const
 
         // find parent object
         Object * parent = obj->parentObject();
-        if (!parent || parent == rootObject_)
+        if (!parent || parent == scene_)
             return QModelIndex();
 
         // get grandparent object
@@ -147,7 +152,7 @@ QModelIndex ObjectTreeModel::parent(const QModelIndex &child) const
 
 int ObjectTreeModel::rowCount(const QModelIndex &parent) const
 {
-    if (!rootObject_)
+    if (!scene_)
         return 0;
 
     if (Object * obj = objectForIndex(parent))
@@ -165,7 +170,7 @@ int ObjectTreeModel::columnCount(const QModelIndex &parent) const
 
 QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
 {
-    if (!rootObject_ || !index.isValid() || index.column() < 0
+    if (!scene_ || !index.isValid() || index.column() < 0
             || index.column() >= headerNames_.size())
         return QVariant();
 
@@ -241,7 +246,7 @@ Qt::ItemFlags ObjectTreeModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flag = QAbstractItemModel::flags(index);
 
-    if (rootObject_ && index.isValid())
+    if (scene_ && index.isValid())
     {
         flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 
@@ -270,7 +275,7 @@ QVariant ObjectTreeModel::headerData(int section, Qt::Orientation orientation, i
 
 bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (!rootObject_ || !index.isValid() || index.column() < 0
+    if (!scene_ || !index.isValid() || index.column() < 0
             || index.column() >= headerNames_.size())
         return false;
 
@@ -342,6 +347,9 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
     if (action == Qt::IgnoreAction)
         return true;
 
+    MO_ASSERT(scene_, "can't edit");
+    if (!scene_) return false;
+
     if (!(action == Qt::MoveAction ||
           action == Qt::CopyAction) || column > 0)
         return false;
@@ -363,7 +371,7 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
         {
             if (row == -1)
                 row = parent.isValid() ? parent.row()
-                                       : rootObject_->numChildren();
+                                       : scene_->numChildren();
 
             // deserialize object
             Object * copy = objdata->getObjectTree();
@@ -383,16 +391,11 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                         beginMoveColumns(fromParentIndex,
                                          fromIndex.row(), fromIndex.row(),
                                          parent, row);
+
                         MO_DEBUG_TREE("move " << fromObj->idName()
                                       << " " << fromIndex.row() << " -> "
                                       << obj->idName() << " " << row);
-                        if (Scene * scene = obj->sceneObject())
-                        {
-                            ScopedTreeChange lock(scene, obj);
-                            obj->addObject(fromObj, row);
-                        }
-                        else
-                            obj->addObject(fromObj, row);
+                        scene_->addObject(obj, fromObj, row);
 
                         endMoveColumns();
                         lastDropIndex_ = createIndex(row, 0, copy);
@@ -402,13 +405,7 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
                 // insert it
                 beginInsertRows(parent, row, row);
-                if (Scene * scene = obj->sceneObject())
-                {
-                    ScopedTreeChange lock(scene, obj);
-                    obj->addObject(copy, row);
-                }
-                else
-                    obj->addObject(copy, row);
+                scene_->addObject(obj, copy, row);
                 endInsertRows();
 
                 lastDropIndex_ = createIndex(row, 0, copy);
@@ -434,27 +431,20 @@ bool ObjectTreeModel::deleteObject(const QModelIndex & index)
 {
     MO_DEBUG_TREE("ObjectTreeModel::deleteObject(" << index << ")");
 
+    MO_ASSERT(scene_, "can't edit");
+    if (!scene_) return false;
+
     auto object = objectForIndex(index);
     if (!object)
         return false;
     auto parentIndex = parent(index);
-    if (auto parentObject = objectForIndex(parentIndex))
+    if (objectForIndex(parentIndex))
     {
-        if (Scene * scene = parentObject->sceneObject())
-        {
-            beginRemoveRows(parentIndex, index.row(), index.row());
-            {
-                ScopedTreeChange lock(scene, parentObject);
-                parentObject->deleteObject(object);
-            }
-            endRemoveRows();
-        }
-        else
-        {
-            beginRemoveRows(parentIndex, index.row(), index.row());
-            parentObject->deleteObject(object);
-            endRemoveRows();
-        }
+        beginRemoveRows(parentIndex, index.row(), index.row());
+
+        scene_->deleteObject(object);
+
+        endRemoveRows();
         return true;
     }
     return false;
@@ -465,6 +455,8 @@ QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, 
     MO_DEBUG_TREE("ObjectTreeModel::addObject(" << parentIndex
             << ", " << row << ", " << obj << ")");
 
+    MO_ASSERT(scene_, "can't edit");
+
     if (Object * parentObject = objectForIndex(parentIndex))
     {
         // adjust index
@@ -473,13 +465,7 @@ QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, 
 
         beginInsertRows(parentIndex, row, row);
 
-        if (Scene * scene = parentObject->sceneObject())
-        {
-            ScopedTreeChange lock(scene, parentObject);
-            parentObject->addObject(obj, row);
-        }
-        else
-            parentObject->addObject(obj, row);
+        scene_->addObject(parentObject, obj, row);
 
         endInsertRows();
 
@@ -493,6 +479,9 @@ bool ObjectTreeModel::addObject(Object *parent, Object * obj, int index)
     MO_DEBUG_TREE("ObjectTreeModel::addObject('" << parent->idName() << "', "
                   << index << ", " << obj << ")");
 
+    MO_ASSERT(scene_, "can't edit");
+    if (!scene_) return false;
+
     // adjust index
     if (index<0)
         index = parent->numChildren();
@@ -501,13 +490,7 @@ bool ObjectTreeModel::addObject(Object *parent, Object * obj, int index)
 
     beginInsertRows(parentIndex, index, index);
 
-    if (Scene * scene = parent->sceneObject())
-    {
-        ScopedTreeChange lock(scene, parent);
-        parent->addObject(obj, index);
-    }
-    else
-        parent->addObject(obj, index);
+    scene_->addObject(parent, obj, index);
 
     endInsertRows();
 
@@ -518,6 +501,8 @@ QModelIndex ObjectTreeModel::swapChildren(Object *parent, int from, int to)
 {
     MO_DEBUG_TREE("ObjectTreeModel::swapChildren(" << parent->idName()
                   << ", " << from << ", " << to << ")");
+
+    MO_ASSERT(scene_, "can't edit");
 
     if (from < 0 || from >= parent->numChildren()
         || to < 0 || to >= parent->numChildren()
@@ -531,13 +516,7 @@ QModelIndex ObjectTreeModel::swapChildren(Object *parent, int from, int to)
     else
         beginMoveRows(parentIdx, to, to, parentIdx, from);
 
-    if (Scene * scene = parent->sceneObject())
-    {
-        ScopedTreeChange lock(scene, parent);
-        parent->swapChildren(from, to);
-    }
-    else
-        parent->swapChildren(from, to);
+    scene_->swapChildren(parent, from, to);
 
     endMoveRows();
 
@@ -566,6 +545,8 @@ QModelIndex ObjectTreeModel::promote(Object *object)
 {
     MO_DEBUG_TREE("ObjectTreeModel::promote(" << object->idName() << ")");
 
+    MO_ASSERT(scene_, "can't edit");
+
     QModelIndex idx = indexForObject(object);
     if (!idx.isValid())
         return idx;
@@ -587,13 +568,9 @@ QModelIndex ObjectTreeModel::promote(Object *object)
 
     // execute
     beginMoveRows(parentIdx, fromRow, fromRow, grandParentIdx, toRow);
-    if (Scene * scene = grandParent->sceneObject())
-    {
-        ScopedTreeChange lock(scene, grandParent);
-        grandParent->addObject(object, toRow);
-    }
-    else
-        grandParent->addObject(object, toRow);
+
+    scene_->addObject(grandParent, object, toRow);
+
     endMoveRows();
 
     return indexForObject(object);
@@ -602,6 +579,8 @@ QModelIndex ObjectTreeModel::promote(Object *object)
 QModelIndex ObjectTreeModel::demote(Object *object)
 {
     MO_DEBUG_TREE("ObjectTreeModel::demote(" << object->idName() << ")");
+
+    MO_ASSERT(scene_, "can't edit");
 
     QModelIndex idx = indexForObject(object);
     if (!idx.isValid())
@@ -635,13 +614,9 @@ QModelIndex ObjectTreeModel::demote(Object *object)
 
     // execute
     beginMoveRows(fromIdx, fromRow, fromRow, toIdx, toRow);
-    if (Scene * scene = parent->sceneObject())
-    {
-        ScopedTreeChange lock(scene, parent);
-        toObject->addObject(object, toRow);
-    }
-    else
-        toObject->addObject(object, toRow);
+
+    scene_->addObject(toObject, object, toRow);
+
     endMoveRows();
 
     return indexForObject(object);
@@ -650,9 +625,12 @@ QModelIndex ObjectTreeModel::demote(Object *object)
 
 TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
 {
-    MO_DEBUG_TREE("ObjectTreeModel::createFloatTrack('" << param->idName() << ")");
+    MO_DEBUG_TREE("ObjectTreeModel::createFloatTrack('" << param->idName() << "')");
+
+    MO_ASSERT(scene_, "can't edit");
 
     Object * obj = param->object();
+    MO_ASSERT(obj, "missing object for parameter '" << param->idName() << "'");
 
     // construct name
     QString name = obj->name() + "." + param->name();
@@ -671,18 +649,13 @@ TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
 
     // create track
     auto track = ObjectFactory::createTrackFloat(name);
+
     // add to parent
     addObject(indexForObject(obj), -1, track);
 
     // modulate parameter
-    if (param->object() && param->object()->sceneObject())
     {
-        ScopedObjectChange lock(param->object()->sceneObject(), param->object());
-        param->addModulator(track->idName());
-        param->collectModulators();
-    }
-    else
-    {
+        ScopedObjectChange lock(scene_, param->object());
         param->addModulator(track->idName());
         param->collectModulators();
     }
@@ -693,6 +666,8 @@ TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
 SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double time)
 {
     MO_DEBUG_TREE("ObjectTreeModel::createFloatSequence('" << track->idName() << "', " << time << ")");
+
+    MO_ASSERT(scene_, "can't edit");
 
     // get a good name
     QString name = track->name();

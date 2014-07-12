@@ -40,7 +40,7 @@ Object::Object(QObject *parent) :
     // tie into Object hierarchy
     if (auto o = qobject_cast<Object*>(parent))
     {
-        setParentObject(o);
+        setParentObject_(o);
     }
 }
 
@@ -181,8 +181,8 @@ Object * Object::deserializeTree_(IO::DataStream & io)
     for (quint32 i=0; i<numChilds; ++i)
     {
         Object * child = deserializeTree(io);
-        if (child)
-            o->addObject(child);
+        MO_ASSERT(child, "duh?");
+        o->addObject_(child);
     }
 
     return o;
@@ -381,7 +381,7 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
 }
 
 
-void Object::setParentObject(Object *parent, int index)
+void Object::setParentObject_(Object *parent, int index)
 {
     MO_ASSERT(parent, "NULL parent given for Object");
 
@@ -414,51 +414,15 @@ void Object::setParentObject(Object *parent, int index)
     // adjust idnames in new tree
     makeUniqueIds_(rootObject());
 
-    // tell Scene
-    if (Scene * scene = sceneObject())
-    {
-        scene->tellTreeChanged();
-        scene->tellObjectAdded(this);
-    }
-
-    // tell parent object
-    parentObject_->childrenChanged_();
 }
 
-/*
-int Object::getInsertIndex(Object *object, int insert_index) const
-{
-    MO_DEBUG_TREE("Object::getInsertIndex('" << object->idName() << "', " << insert_index << ")");
 
-    if (childObjects_.empty())
-        return 0;
-
-    const int lastTrans = indexOfLastChild<Transformation>();
-
-    if (insert_index == -1)
-        insert_index = childObjects_.size();
-
-    if (object->isTransformation())
-    {
-        return (insert_index > lastTrans) ?
-                    indexOfLastChild<Transformation>(insert_index) + 1
-                  : insert_index;
-    }
-    else
-    {
-        return (insert_index <= lastTrans)?
-                    lastTrans + 1
-                  : std::min((int)childObjects_.size(), insert_index);
-    }
-}
-*/
-
-Object * Object::addObject(Object * o, int index)
+Object * Object::addObject_(Object * o, int index)
 {
     MO_ASSERT(o, "trying to add a NULL child");
     MO_ASSERT(!childObjects_.contains(o), "duplicate addChild for '" << o->idName());
 
-    o->setParentObject(this, index);
+    o->setParentObject_(this, index);
 
     return o;
 }
@@ -475,16 +439,13 @@ Object * Object::addChildObject_(Object * o, int index)
     return o;
 }
 
-void Object::deleteObject(Object * child)
+void Object::deleteObject_(Object * child)
 {
-    takeChild_(child);
-
-    // tell Scene
-    if (Scene * scene = sceneObject())
-        scene->tellTreeChanged();
-
-    // tell this object
-    childrenChanged_();
+    if (takeChild_(child))
+    {
+        child->setParent(0);
+        delete child;
+    }
 }
 
 bool Object::takeChild_(Object *child)
@@ -492,14 +453,12 @@ bool Object::takeChild_(Object *child)
     return childObjects_.removeOne(child);
 }
 
-void Object::swapChildren(int from, int to)
+void Object::swapChildren_(int from, int to)
 {
     if (from >= 0 && from < numChildren()
         && to >= 0 && to < numChildren())
 
     childObjects_.swap(from, to);
-
-    childrenChanged_();
 }
 
 QString Object::getUniqueId(QString id, Object * ignore) const
