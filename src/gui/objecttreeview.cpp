@@ -137,7 +137,7 @@ void ObjectTreeView::createDefaultActions_()
     addAction(a);
     a->setStatusTip(tr("Expands all real objects, no transformations, tracks or sequences"));
     a->setShortcut(Qt::ALT + Qt::Key_E);
-    connect(a, SIGNAL(triggered()), SLOT(expandObjectsOnly()));
+    connect(a, &QAction::triggered, [this](){ expandObjectsByType(Object::TG_REAL_OBJECT); });
 
     a = new QAction(tr("Expand all"), this);
     addAction(a);
@@ -261,42 +261,51 @@ void ObjectTreeView::createEditActions_(Object * obj)
     emit editActionsChanged(this, editActions_);
 }
 
+QMenu * ObjectTreeView::createObjectsMenu_(Object *parent)
+{
+    QList<const Object*> list(ObjectFactory::possibleChildObjects(parent));
+    if (list.empty())
+        return 0;
+
+    // make transformations first
+    qStableSort(list.begin(), list.end(), sortObjectList_TransformFirst);
+
+    QMenu * menu = new QMenu(this);
+    bool addSep = true;
+    for (auto o : list)
+    {
+        if (addSep && !o->isTransformation())
+        {
+            menu->addSeparator();
+            addSep = false;
+        }
+
+        QAction * a = new QAction(ObjectFactory::iconForObject(o), o->name(), this);
+        a->setData(o->className());
+        menu->addAction(a);
+    }
+
+    return menu;
+}
+
 void ObjectTreeView::createFirstObjectActions_()
 {
     QAction * a;
 
-    // new object below scene
-    QModelIndex sceneIndex = model()->index(0,0,QModelIndex());
+    QMenu * menu = createObjectsMenu_(scene_);
 
-    QList<const Object*> plist(ObjectFactory::possibleChildObjects(scene_));
-
-    if (//sceneIndex.isValid() &&
-            !plist.isEmpty())
+    if (menu)
     {
-        // make transformations first
-        qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
-
-        QMenu * menu = new QMenu(this);
-
         editActions_.append(a = new QAction(tr("Create object"), this));
-        a->setStatusTip(tr("Insertes a new object into the scene"));
+        a->setStatusTip(tr("Inserts a new object into the scene"));
         a->setIcon(QIcon(":/icon/new.png"));
         a->setMenu(menu);
-        bool addSep = true;
-        for (auto o : plist)
+
+        connect(menu, &QMenu::triggered, [this](QAction* a)
         {
-            if (addSep && !o->isTransformation())
-            {
-                menu->addSeparator();
-                addSep = false;
-            }
-            menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
-            connect(a, &QAction::triggered, [=]()
-            {
-                Object * newo = ObjectFactory::createObject(o->className());
-                addObject_(sceneIndex, scene_->numChildren(), newo);
-            });
-        }
+            Object * newo = ObjectFactory::createObject(a->data().toString());
+            addObject_(rootIndex(), scene_->numChildren(), newo);
+        });
     }
 }
 
@@ -405,104 +414,61 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
 
     if (parentObj)
     {
-        QList<const Object*> plist(ObjectFactory::possibleChildObjects(parentObj));
-        if (!plist.isEmpty())
+        // new sibling above
+        QMenu * menu = createObjectsMenu_(parentObj);
+        if (menu)
         {
-            // make transformations first
-            qStableSort(plist.begin(), plist.end(), sortObjectList_TransformFirst);
-
             QModelIndex parentIndex = model()->parent(currentIndex());
 
             // new sibling above
             editActions_.append(a = new QAction(tr("New object above"), this));
             a->setStatusTip(tr("Creates a new object above the selected object"));
             a->setIcon(QIcon(":/icon/new_above.png"));
-            QMenu * menu = new QMenu(this);
             a->setMenu(menu);
-            bool addSep = true;
-            for (auto o : plist)
-            {
-                if (addSep && !o->isTransformation())
-                {
-                    menu->addSeparator();
-                    addSep = false;
-                }
-                menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
-                connect(a, &QAction::triggered, [=]()
-                {
-                    Object * newo = ObjectFactory::createObject(o->className());
-                    addObject_(parentIndex, currentIndex().row(), newo);
-                });
-            }
 
-            // new sibling below
+            connect(menu, &QMenu::triggered, [this, &parentIndex](QAction * a)
+            {
+                Object * newo = ObjectFactory::createObject(a->data().toString());
+                addObject_(parentIndex, currentIndex().row(), newo);
+            });
+        }
+
+        // new sibling below
+        menu = createObjectsMenu_(parentObj);
+        if (menu)
+        {
+            QModelIndex parentIndex = model()->parent(currentIndex());
+
+            // new sibling above
             editActions_.append(a = new QAction(tr("New object below"), this));
             a->setStatusTip(tr("Creates a new object below the selected object"));
             a->setIcon(QIcon(":/icon/new_below.png"));
-            menu = new QMenu(this);
             a->setMenu(menu);
-            addSep = true;
-            for (auto o : plist)
-            {
-                if (addSep && !o->isTransformation())
-                {
-                    menu->addSeparator();
-                    addSep = false;
-                }
-                menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
-                connect(a, &QAction::triggered, [=]()
-                {
-                    Object * newo = ObjectFactory::createObject(o->className());
-                    addObject_(parentIndex, currentIndex().row()+1, newo);
-                });
-            }
-        }
-    }
 
-    // new children
-    QList<const Object*> clist(ObjectFactory::possibleChildObjects(obj));
-    if (!clist.isEmpty())
-    {
-        // make transformations first
-        qStableSort(clist.begin(), clist.end(), sortObjectList_TransformFirst);
-
-        editActions_.append(a = new QAction(tr("New child object"), this));
-        a->setStatusTip(tr("Creates a new object as children of the selected object"));
-        a->setIcon(QIcon(":/icon/new_child.png"));
-        QMenu * menu = new QMenu(this);
-        a->setMenu(menu);
-        bool addSep = true;
-        for (auto o : clist)
-        {
-            if (addSep && !o->isTransformation())
+            connect(menu, &QMenu::triggered, [this, &parentIndex](QAction * a)
             {
-                menu->addSeparator();
-                addSep = false;
-            }
-            menu->addAction(a = new QAction(ObjectFactory::iconForObject(o), o->name(), this));
-            connect(a, &QAction::triggered, [=]()
-            {
-                Object * newo = ObjectFactory::createObject(o->className());
-                addObject_(currentIndex(), -1, newo);
+                Object * newo = ObjectFactory::createObject(a->data().toString());
+                addObject_(parentIndex, currentIndex().row() + 1, newo);
             });
         }
     }
 
-    /* YYY
-    if (obj->type() == Object::T_PARAMETER_FLOAT)
+    // new children
+    QMenu * menu = createObjectsMenu_(obj);
+    if (menu)
     {
-        editActions_.append(a = new QAction(this));
-        a->setSeparator(true);
+        editActions_.append(a = new QAction(tr("New child object"), this));
+        a->setStatusTip(tr("Creates a new object as children of the selected object"));
+        a->setIcon(QIcon(":/icon/new_child.png"));
+        a->setMenu(menu);
 
-        editActions_.append(a = new QAction(tr("Add modulation"), this));
-        connect(a, &QAction::triggered, [=]()
+        connect(menu, &QMenu::triggered, [this](QAction * a)
         {
-            Object * track = ObjectFactory::createObject("TrackFloat");
-            if (addObject_(currentIndex(), -1, track))
-                static_cast<ParameterFloat*>(obj)->addModulator(track->idName());
+            Object * newo = ObjectFactory::createObject(a->data().toString());
+            addObject_(currentIndex(), -1, newo);
         });
     }
-    */
+
 }
 
 void ObjectTreeView::createMoveActions_(Object * obj)
@@ -629,24 +595,32 @@ void ObjectTreeView::setFocusIndex(const Object *parent, int childRow)
 }
 
 
-void ObjectTreeView::expandObjectsOnly()
+void ObjectTreeView::expandObjectsByType(int typeflags)
 {
     if (!model())
         return;
 
-    expandObjectOnly_(filter_->mapFromSource(omodel_->rootIndex()));
+    // NOTE: omodel_->rootIndex() is the scene object
+    // but the filter makes it the first object below root!
+    // So we need to work with omodel indices
+    QModelIndex idx = omodel_->rootIndex();
+
+    expandObjectsByType_(idx, typeflags | Object::T_SCENE);
 }
 
-void ObjectTreeView::expandObjectOnly_(const QModelIndex & index)
+void ObjectTreeView::expandObjectsByType_(const QModelIndex & index, int typeflags)
 {
-    Object * obj = model()->data(index, ObjectRole).value<Object*>();
+    Object * obj = omodel_->objectForIndex(index);
 
-    if (obj && obj->type() & Object::TG_REAL_OBJECT)
+    if (obj && (obj->type() & typeflags))
     {
-        setExpanded(index, true);
-        for (int i=0; i<model()->rowCount(index); ++i)
+        QModelIndex idx = filter_->mapFromSource(index);
+        if (idx.isValid())
+            setExpanded(idx, true);
+        // traverse children
+        for (int i=0; i<omodel_->rowCount(index); ++i)
         {
-            expandObjectOnly_(model()->index(i, 0, index));
+            expandObjectsByType_(index.child(i, 0), typeflags);
         }
     }
 }
@@ -654,9 +628,8 @@ void ObjectTreeView::expandObjectOnly_(const QModelIndex & index)
 
 bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
 {
-    MO_DEBUG_TREE("ObjectTreeView::addObject_(parent("
-             << parent.row() << ", " << parent.column() << "), "
-             << row << ", " << obj << ")");
+    MO_DEBUG_TREE("ObjectTreeView::addObject_("
+             << parent << ", " << row << ", " << obj << ")");
 
     //if (parent.isValid())
     {
@@ -687,8 +660,7 @@ bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
 
 bool ObjectTreeView::deleteObject_(const QModelIndex &index)
 {
-    MO_DEBUG_TREE("ObjectTreeView::addObject_(index("
-             << parent.row() << ", " << parent.column() << "))");
+    MO_DEBUG_TREE("ObjectTreeView::deleteObject_(" << index << ")");
 
     if (index.isValid())
     {

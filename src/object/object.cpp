@@ -557,8 +557,10 @@ bool Object::canHaveChildren(Type t) const
     if (type() == T_TRANSFORMATION)
         return false;
 
+    // except for the transformation mix class
+    // which holds itself and transformations
     if (type() == T_TRANSFORMATION_MIX)
-        return t == T_TRANSFORMATION;
+        return t & TG_TRANSFORMATION;
 
     // sequences belong on tracks or sequencegroups only
     // with matching type
@@ -583,7 +585,7 @@ bool Object::canHaveChildren(Type t) const
 
     // scene can hold anything else, except transformations
     if (type() == T_SCENE)
-        return t != T_TRANSFORMATION;
+        return !(t & T_TRANSFORMATION);
 
     return true;
 }

@@ -42,7 +42,7 @@ signals:
 
 public slots:
 
-    void expandObjectsOnly();
+    void expandObjectsByType(int typeflags);
 
     void setFocusIndex(const QModelIndex&);
     void setFocusIndex(const Object * object);
@@ -67,7 +67,12 @@ protected:
     void createNewObjectActions_(Object *);
     void createMoveActions_(Object *);
 
-    void expandObjectOnly_(const QModelIndex& );
+    /** Creates a menu with all possibly child objects for @p parent.
+        Each action has the Object::className() in it's data QVariant.
+        If no child objects are possible, NULL is returned! */
+    QMenu * createObjectsMenu_(Object * parent);
+
+    void expandObjectsByType_(const QModelIndex& indexInOriginalModel, int typeflags);
 
     /** highlevel do-it-all function for adding objects in the tree. */
     bool addObject_(const QModelIndex& parent, int row, Object * obj);
