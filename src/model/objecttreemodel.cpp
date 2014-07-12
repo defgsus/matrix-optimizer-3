@@ -599,6 +599,55 @@ QModelIndex ObjectTreeModel::promote(Object *object)
     return indexForObject(object);
 }
 
+QModelIndex ObjectTreeModel::demote(Object *object)
+{
+    MO_DEBUG_TREE("ObjectTreeModel::demote(" << object->idName() << ")");
+
+    QModelIndex idx = indexForObject(object);
+    if (!idx.isValid())
+        return idx;
+
+    Object * parent = object->parentObject();
+    if (!parent)
+        return idx;
+
+    Object * toObject;
+    int toRow;
+    int fromRow = parent->childObjects().indexOf(object);
+
+    // add to below's childlist?
+    if (fromRow == 0)
+    {
+        if (parent->numChildren() < 2)
+            return idx;
+        toObject = parent->childObjects()[1];
+        toRow = 0;
+    }
+    // add to above's childlist?
+    else
+    {
+        toObject = parent->childObjects()[fromRow-1];
+        toRow = toObject->numChildren();
+    }
+
+    QModelIndex fromIdx = indexForObject(parent),
+                toIdx = indexForObject(toObject);
+
+    // execute
+    beginMoveRows(fromIdx, fromRow, fromRow, toIdx, toRow);
+    if (Scene * scene = parent->sceneObject())
+    {
+        ScopedTreeChange lock(scene, parent);
+        toObject->addObject(object, toRow);
+    }
+    else
+        toObject->addObject(object, toRow);
+    endMoveRows();
+
+    return indexForObject(object);
+}
+
+
 TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
 {
     MO_DEBUG_TREE("ObjectTreeModel::createFloatTrack('" << param->idName() << ")");

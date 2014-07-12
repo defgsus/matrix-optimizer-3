@@ -526,6 +526,29 @@ void ObjectTreeView::createMoveActions_(Object * obj)
             setFocusIndex( filter_->mapFromSource( omodel_->promote(obj) ) );
         });
     }
+    // demote
+    if (row > 0 && parent->childObjects().at(row-1)->canHaveChildren(obj->type()))
+    {
+
+        editActions_.append(a = new QAction(tr("Demote"), this));
+        a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling above"));
+        a->setShortcut(Qt::CTRL + Qt::Key_Right);
+        connect(a, &QAction::triggered, [=]()
+        {
+            setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );
+        });
+    }
+    else if (row == 0 & parent->numChildren()>1
+             && parent->childObjects().at(1)->canHaveChildren(obj->type()))
+    {
+        editActions_.append(a = new QAction(tr("Demote"), this));
+        a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling below"));
+        a->setShortcut(Qt::CTRL + Qt::Key_Right);
+        connect(a, &QAction::triggered, [=]()
+        {
+            setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );
+        });
+    }
 
 }
 
