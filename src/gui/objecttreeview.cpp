@@ -513,6 +513,19 @@ void ObjectTreeView::createMoveActions_(Object * obj)
             setFocusIndex( filter_->mapFromSource( omodel_->moveDown(obj) ) );
         });
     }
+    // promote
+    if (parent->parentObject() &&
+        parent->parentObject()->canHaveChildren(obj->type()))
+    {
+
+        editActions_.append(a = new QAction(tr("Promote"), this));
+        a->setStatusTip(tr("Moves the selected object one level up in the tree"));
+        a->setShortcut(Qt::CTRL + Qt::Key_Left);
+        connect(a, &QAction::triggered, [=]()
+        {
+            setFocusIndex( filter_->mapFromSource( omodel_->promote(obj) ) );
+        });
+    }
 
 }
 

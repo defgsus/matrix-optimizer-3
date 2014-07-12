@@ -386,7 +386,14 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                         MO_DEBUG_TREE("move " << fromObj->idName()
                                       << " " << fromIndex.row() << " -> "
                                       << obj->idName() << " " << row);
-                        obj->addObject(fromObj, row);
+                        if (Scene * scene = obj->sceneObject())
+                        {
+                            ScopedTreeChange lock(scene, obj);
+                            obj->addObject(fromObj, row);
+                        }
+                        else
+                            obj->addObject(fromObj, row);
+
                         endMoveColumns();
                         lastDropIndex_ = createIndex(row, 0, copy);
                         return true;
@@ -395,7 +402,13 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
                 // insert it
                 beginInsertRows(parent, row, row);
-                obj->addObject(copy, row);
+                if (Scene * scene = obj->sceneObject())
+                {
+                    ScopedTreeChange lock(scene, obj);
+                    obj->addObject(copy, row);
+                }
+                else
+                    obj->addObject(copy, row);
                 endInsertRows();
 
                 lastDropIndex_ = createIndex(row, 0, copy);
@@ -547,6 +560,43 @@ QModelIndex ObjectTreeModel::moveDown(Object * object)
         return idx;
     return
         swapChildren(object->parentObject(), idx.row(), idx.row() + 1);
+}
+
+QModelIndex ObjectTreeModel::promote(Object *object)
+{
+    MO_DEBUG_TREE("ObjectTreeModel::promote(" << object->idName() << ")");
+
+    QModelIndex idx = indexForObject(object);
+    if (!idx.isValid())
+        return idx;
+
+    // can't go up
+    if (!object->parentObject() || object->parentObject() == rootObject())
+        return idx;
+
+    // move from parent's child to grandparent's child
+    Object * parent = object->parentObject();
+    Object * grandParent = parent->parentObject();
+    if (!grandParent)
+        return idx;
+
+    QModelIndex parentIdx = indexForObject(parent),
+                grandParentIdx = indexForObject(grandParent);
+    int fromRow = parent->childObjects().indexOf(object),
+        toRow = grandParent->childObjects().indexOf(parent) + 1;
+
+    // execute
+    beginMoveRows(parentIdx, fromRow, fromRow, grandParentIdx, toRow);
+    if (Scene * scene = grandParent->sceneObject())
+    {
+        ScopedTreeChange lock(scene, grandParent);
+        grandParent->addObject(object, toRow);
+    }
+    else
+        grandParent->addObject(object, toRow);
+    endMoveRows();
+
+    return indexForObject(object);
 }
 
 TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
