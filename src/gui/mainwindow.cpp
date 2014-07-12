@@ -288,7 +288,9 @@ void MainWindow::setSceneObject(Scene * s)
             scene_, SLOT(setSceneTime(Double)));
 
     // scene changes
-    connect(scene_, SIGNAL(treeChanged()), this, SLOT(treeChanged()));
+    connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(treeChanged()));
+    connect(scene_, SIGNAL(objectDeleted(MO::Object*)), this, SLOT(treeChanged()));
+    connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(treeChanged()));
 
     // update widgets
 

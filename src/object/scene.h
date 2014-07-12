@@ -24,6 +24,10 @@ class ObjectTreeModel;
 class Scene : public Object
 {
     Q_OBJECT
+
+    // for updateTree_()
+    friend Object;
+
 public:
     MO_OBJECT_CONSTRUCTOR(Scene);
 
@@ -67,9 +71,10 @@ public:
 
     void beginObjectChange(MO::Object *);
     void endObjectChange();
-
+#if (0)
     void beginTreeChange(MO::Object *);
     void endTreeChange();
+#endif
 
 signals:
 
@@ -85,11 +90,18 @@ signals:
     /** Some setting in the Sequence has changed. */
     void sequenceChanged(MO::Sequence *);
 
-    /** *Currently* emitted when something in the tree has changed. */
-    void treeChanged();
+    /* *Currently* emitted when something in the tree has changed.
+    void treeChanged();*/
 
     /** Emitted when the given object was added to the scene. */
     void objectAdded(MO::Object *);
+
+    /** Emitted when the object was deleted.
+        The object pointer will not point to a valid object anymore. */
+    void objectDeleted(MO::Object *);
+
+    /** Emitted after swapChildren() */
+    void childrenSwapped(MO::Object *, int from, int to);
 
 public slots:
 
@@ -142,9 +154,13 @@ private:
 
     // ------------ object collection ----------
 
+    /** Does everything to update the tree */
+    void updateTree_();
+
     /** Collects all special child objects */
     void findObjects_();
 
+    void updateChildrenChanged_();
     /** Tell all objects how much threads we got */
     void updateNumberThreads_();
 
@@ -205,6 +221,7 @@ public:
     ~ScopedObjectChange() { scene_->endObjectChange(); }
 };
 
+#if (0)
 class ScopedTreeChange
 {
     Scene * scene_;
@@ -217,6 +234,7 @@ public:
 
     ~ScopedTreeChange() { scene_->endTreeChange(); }
 };
+#endif
 
 class ScopedSequenceChange
 {

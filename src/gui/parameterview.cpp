@@ -89,6 +89,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     static QIcon iconModulateOn(":/icon/modulate_on.png");
     static QIcon iconModulateOff(":/icon/modulate_off.png");
 
+    MO_ASSERT(p->object(), "no object assigned to parameter");
+    MO_ASSERT(p->object()->sceneObject(), "no scene assigned to parameter object");
     ObjectTreeModel * model = p->object()->sceneObject()->model();
     MO_ASSERT(model, "No model assigned for Parameter");
 

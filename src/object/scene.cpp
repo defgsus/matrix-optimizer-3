@@ -88,11 +88,17 @@ void Scene::tellObjectAdded(Object * obj)
 
 void Scene::findObjects_()
 {
-    //MO_DEBUG_TREE("Scene::findObjects_()");
+    MO_DEBUG_TREE("Scene::findObjects_()");
 
     allObjects_ = findChildObjects<Object>(QString(), true);
+    allObjects_.prepend(this);
     cameras_ = findChildObjects<Camera>(QString(), true);
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
+
+
+    for (auto o : allObjects_)
+        MO_DEBUG_TREE("object: " << o << ", parent: " << o->parentObject());
+
 
     // not all objects need there transformation calculated
     // these are the ones that do
@@ -110,12 +116,6 @@ void Scene::findObjects_()
             o = o->parentObject();
         }
     }
-
-    // tell all objects how much thread data they need
-    updateNumberThreads_();
-
-    // collect all modulators for each object
-    updateModulators_();
 
 #if (0)
     MO_DEBUG("Scene: " << cameras_.size() << " cameras, "
@@ -138,15 +138,82 @@ void Scene::render_()
         emit renderRequest();
 }
 
+
+
+// ----------------------- tree ------------------------------
+
+void Scene::addObject(Object *parent, Object *newChild, int insert_index)
+{
+    MO_DEBUG_TREE("Scene::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
+
+    parent->addObject_(newChild, insert_index);
+    parent->childrenChanged_();
+    updateTree_();
+    emit objectAdded(newChild);
+    render_();
+}
+
+void Scene::deleteObject(Object *object)
+{
+    MO_DEBUG_TREE("Scene::deleteObject(" << object << ")");
+
+    MO_ASSERT(object->parentObject(), "Scene::deleteObject("<<object<<") without parent");
+    Object * parent = object->parentObject();
+    parent->deleteObject_(object);
+    parent->childrenChanged_();
+    updateTree_();
+    emit objectDeleted(object);
+    render_();
+}
+
+void Scene::swapChildren(Object *parent, int from, int to)
+{
+    MO_DEBUG_TREE("Scene::swapChildren(" << parent << ", " << from << ", " << to << ")");
+
+    parent->swapChildren_(from, to);
+    parent->childrenChanged_();
+    updateTree_();
+    emit childrenSwapped(parent, from, to);
+    render_();
+}
+
+
+void Scene::updateTree_()
+{
+    MO_DEBUG_TREE("Scene::updateTree_()");
+
+    findObjects_();
+
+    updateChildrenChanged_();
+
+    // tell all objects how much thread data they need
+    updateNumberThreads_();
+
+    // collect all modulators for each object
+    updateModulators_();
+
+    if (glContext_)
+    {
+        // update infos for new objects
+        setGlContext(glContext_);
+
+        // update image
+        render_();
+    }
+}
+void Scene::updateChildrenChanged_()
+{
+    MO_DEBUG_TREE("Scene::updateChildrenChanged_() ");
+
+    for (auto o : allObjects_)
+        if (o->childrenHaveChanged_)
+            o->childrenChanged_();
+}
+
 void Scene::updateNumberThreads_()
 {
-    //MO_DEBUG("Scene::updateNumberThreads_() ");
+    MO_DEBUG_TREE("Scene::updateNumberThreads_() numThreads_ == " << numThreads_);
 
-    // update scene as well!
-    if (numberThreads() != numThreads_)
-        setNumberThreads(numThreads_);
-
-    // update all objects
     for (auto o : allObjects_)
         if (o->numberThreads() != numThreads_)
             o->setNumberThreads(numThreads_);
@@ -154,12 +221,8 @@ void Scene::updateNumberThreads_()
 
 void Scene::updateModulators_()
 {
-    // update scene as well!
-    collectModulators();
-    for (auto p : parameters())
-        p->collectModulators();
+    MO_DEBUG_TREE("Scene::updateModulators_()");
 
-    // update all objects
     for (auto o : allObjects_)
     {
         o->collectModulators();
@@ -168,27 +231,6 @@ void Scene::updateModulators_()
             p->collectModulators();
     }
 }
-
-
-// ----------------------- tree ------------------------------
-
-void Scene::addObject(Object *parent, Object *newChild, int insert_index)
-{
-    parent->addChildObject_(newChild, insert_index);
-}
-
-void Scene::deleteObject(Object *object)
-{
-    MO_ASSERT(object->parentObject(), "Scene::deleteObject("<<object<<") without parent");
-    Object * p = object->parentObject();
-    p->deleteObject_(object);
-}
-
-void Scene::swapChildren(Object *parent, int from, int to)
-{
-    parent->swapChildren_(from, to);
-}
-
 
 
 // -------------------- parameter ----------------------------
@@ -268,6 +310,7 @@ void Scene::endObjectChange()
     render_();
 }
 
+#if (0)
 void Scene::beginTreeChange(Object * o)
 {
     MO_DEBUG_TREE("Scene::beginTreeChange(" << o << ")");
@@ -279,6 +322,7 @@ void Scene::endTreeChange()
     MO_DEBUG_TREE("Scene::endTreeChange()");
     render_();
 }
+#endif
 
 // ----------------------- open gl ---------------------------
 

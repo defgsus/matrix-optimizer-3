@@ -400,7 +400,7 @@ private:
     bool takeChild_(Object * child);
 
     /** Adds the object to child list, nothing else */
-    Object * addChildObject_(Object * object, int insert_index = -1);
+    Object * addChildObjectHelper_(Object * object, int insert_index = -1);
 
     /** Makes all id's in the tree unique regarding the tree of @p root.
         The tree in @p root can be an actual parent of the object or not. */
@@ -434,6 +434,7 @@ private:
     Object * parentObject_;
     QList<Object*> childObjects_;
     QList<Transformation*> transformationObjects_;
+    bool childrenHaveChanged_;
 
     // ----------- parameter -----------------
 

@@ -34,6 +34,7 @@ Object::Object(QObject *parent) :
     QObject                 (parent),
     canBeDeleted_           (true),
     parentObject_           (0),
+    childrenHaveChanged_    (false),
     paramActiveScope_       (0),
     currentActivityScope_   (AS_ON)
 {
@@ -107,7 +108,12 @@ void Object::serializeTree(IO::DataStream & io) const
 
 Object * Object::deserializeTree(IO::DataStream & io)
 {
-    return deserializeTree_(io);
+    Object * obj = deserializeTree_(io);
+
+    if (Scene * scene = qobject_cast<Scene*>(obj))
+        scene->updateTree_();
+
+    return obj;
 }
 
 Object * Object::deserializeTree_(IO::DataStream & io)
@@ -409,7 +415,7 @@ void Object::setParentObject_(Object *parent, int index)
     parentObject_ = parent;
 
     // and add to child list
-    parentObject_->addChildObject_(this, index);
+    parentObject_->addChildObjectHelper_(this, index);
 
     // adjust idnames in new tree
     makeUniqueIds_(rootObject());
@@ -424,10 +430,11 @@ Object * Object::addObject_(Object * o, int index)
 
     o->setParentObject_(this, index);
 
+    childrenHaveChanged_ = true;
     return o;
 }
 
-Object * Object::addChildObject_(Object * o, int index)
+Object * Object::addChildObjectHelper_(Object * o, int index)
 {
     MO_ASSERT(o, "trying to add a NULL child");
 
@@ -436,6 +443,7 @@ Object * Object::addChildObject_(Object * o, int index)
     else
         childObjects_.insert(index, o);
 
+    childrenHaveChanged_ = true;
     return o;
 }
 
@@ -445,12 +453,17 @@ void Object::deleteObject_(Object * child)
     {
         child->setParent(0);
         delete child;
+        childrenHaveChanged_ = true;
     }
 }
 
 bool Object::takeChild_(Object *child)
 {
-    return childObjects_.removeOne(child);
+    if (childObjects_.removeOne(child))
+    {
+        return childrenHaveChanged_ = true;
+    }
+    return false;
 }
 
 void Object::swapChildren_(int from, int to)
@@ -459,6 +472,7 @@ void Object::swapChildren_(int from, int to)
         && to >= 0 && to < numChildren())
 
     childObjects_.swap(from, to);
+    childrenHaveChanged_ = true;
 }
 
 QString Object::getUniqueId(QString id, Object * ignore) const
@@ -563,15 +577,20 @@ bool Object::canHaveChildren(Type t) const
 
 void Object::childrenChanged_()
 {
+    MO_DEBUG_TREE("Object('" << idName() << "')::childrenChanged_()");
+
     // collect special sub-objects
     collectTransformationObjects_();
 
     // notify derived classes
     childrenChanged();
+
+    childrenHaveChanged_ = false;
 }
 
 void Object::setNumberThreads(int num)
 {
+    MO_DEBUG_TREE("Object('" << idName() << "')::setNumberThreads(" << num << ")");
     transformation_.resize(num);
 }
 /*
@@ -648,7 +667,7 @@ void Object::createParameters()
                          AS_ON, true, false );
 }
 
-void Object::parameterChanged(Parameter *p)
+void Object::parameterChanged(Parameter *)
 {
     MO_DEBUG_PARAM("Object::parameterChanged('" << p->idName() << "')");
 

@@ -634,7 +634,7 @@ TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
 
     // construct name
     QString name = obj->name() + "." + param->name();
-    // if the parent is not a "real object" then use the grandparent as well
+    // if the parent is not a "real object" then use the grandparent's name as well
     if (!( (obj->type() & Object::TG_REAL_OBJECT)
            || (obj->type() & Object::TG_SEQUENCE))
         && obj->parentObject())
