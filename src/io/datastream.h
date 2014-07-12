@@ -54,10 +54,17 @@ public:
         @returns the read version number. */
     qint32 readHeader(const QString& expected_id, qint32 expected_max_version);
 
-    /** Reads a QString and returns the enum if it's found in @p enumIds.
+    /** Reads a QString and returns the index if it's found in @p enumIds.
         If not, false is returned and @p enumerator is set to @p defaultEnum. */
     template <typename ENUM>
     bool readEnum(ENUM & enumumerator, ENUM defaultEnum, const QStringList& enumIds);
+
+    /** Reads a QString and returns the value from @p enumValues,
+        if the string was found in @p enumIds.
+        If not, false is returned and @p enumerator is set to @p defaultEnum. */
+    template <typename ENUM>
+    bool readEnum(ENUM & enumumerator, ENUM defaultEnum,
+                  const QStringList& enumIds, const QList<ENUM>& enumValues);
 
     /* NOTE: We can't have any new members here,
      * QDataStream does not have a virtual destructor. */
@@ -75,6 +82,27 @@ bool DataStream::readEnum(ENUM & enumerator, ENUM defaultEnum, const QStringList
     if (index >= 0)
     {
         enumerator = (ENUM)index;
+        return true;
+    }
+    else
+    {
+        enumerator = defaultEnum;
+        return false;
+    }
+}
+
+
+template <typename ENUM>
+bool DataStream::readEnum(ENUM & enumerator, ENUM defaultEnum,
+                          const QStringList& enumIds, const QList<ENUM>& enumValues)
+{
+    QString id;
+    *this >> id;
+
+    const int index = enumIds.indexOf(id);
+    if (index >= 0 && index < enumValues.size())
+    {
+        enumerator = (ENUM)enumValues.at(index);
         return true;
     }
     else

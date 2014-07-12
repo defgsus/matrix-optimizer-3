@@ -28,6 +28,8 @@ public:
     virtual void serialize(IO::DataStream&) const;
     virtual void deserialize(IO::DataStream&);
 
+    const QString& typeName() const { static QString s("select"); return s; }
+
     //QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
 
     Double defaultValue() const { return defaultValue_; }

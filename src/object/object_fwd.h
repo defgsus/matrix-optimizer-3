@@ -22,6 +22,7 @@ namespace MO {
     class SoundSource;
     class Parameter;
     class ParameterFloat;
+    class ParameterSelect;
     class ObjectGl;
     class Model3d;
     class Transformation;

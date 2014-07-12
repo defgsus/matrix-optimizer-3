@@ -18,6 +18,7 @@
 #include "io/datastream.h"
 #include "object/objectfactory.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterselect.h"
 #include "object/track.h"
 #include "object/sequencefloat.h"
 #include "model/objecttreemodel.h"
@@ -170,6 +171,12 @@ void Scene::updateModulators_()
 // -------------------- parameter ----------------------------
 
 void Scene::setParameterValue(ParameterFloat *p, Double v)
+{
+    p->setValue(v);
+    render_();
+}
+
+void Scene::setParameterValue(ParameterSelect *p, int v)
 {
     p->setValue(v);
     render_();

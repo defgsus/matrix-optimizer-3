@@ -43,7 +43,7 @@ void ParameterFloat::serialize(IO::DataStream &io) const
 
     io.writeHeader("parf", 1);
 
-    io << defaultValue_ << minValue_ << maxValue_ << value_;
+    io << value_;
 
 }
 
@@ -53,7 +53,7 @@ void ParameterFloat::deserialize(IO::DataStream &io)
 
     io.readHeader("parf", 1);
 
-    io >> defaultValue_ >> minValue_ >> maxValue_ >> value_;
+    io >> value_;
 }
 
 

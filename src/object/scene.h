@@ -96,6 +96,7 @@ public slots:
     // ------------- parameter -----------------
 
     void setParameterValue(MO::ParameterFloat *, Double value);
+    void setParameterValue(MO::ParameterSelect *, int value);
 
     // --------------- tracks ------------------
 

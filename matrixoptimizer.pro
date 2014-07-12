@@ -104,7 +104,8 @@ SOURCES += \
     src/object/transform/lookat.cpp \
     src/object/transform/shear.cpp \
     src/object/transform/mix.cpp \
-    src/io/memory.cpp
+    src/io/memory.cpp \
+    src/object/param/parameterselect.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -201,7 +202,8 @@ HEADERS += \
     src/object/transform/lookat.h \
     src/object/transform/shear.h \
     src/object/transform/mix.h \
-    src/io/memory.h
+    src/io/memory.h \
+    src/object/param/parameterselect.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

@@ -314,13 +314,14 @@ void MainWindow::createObjects_()
     glWindow_->show();
 
 
-    try {
-        //newScene();
+    try
+    {
         setSceneObject(ObjectFactory::loadScene("./test.mo3"));
     }
     catch (IoException& e)
     {
         MO_WARNING(e.what());
+        newScene();
     }
 
     // sysinfo at some interval

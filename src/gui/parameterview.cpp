@@ -14,12 +14,14 @@
 #include <QDoubleSpinBox>
 #include <QFrame>
 #include <QToolButton>
+#include <QComboBox>
 
 #include "parameterview.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/trackfloat.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterselect.h"
 #include "io/error.h"
 #include "model/objecttreemodel.h"
 
@@ -102,7 +104,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
                         ? tr("The name of the parameter")
                         : p->statusTip());
 
-    QToolButton * but, * bmod, * breset;
+    QToolButton * but, * bmod = 0, * breset;
 
     // --- float parameter ---
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(p))
@@ -112,6 +114,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         but->setIcon(pf->modulatorIds().isEmpty()? iconModulateOff : iconModulateOn);
         but->setToolTip(tr("Create modulation track"));
         but->setStatusTip(tr("Creates a new modulation track for the given parameter"));
+        but->setEnabled(pf->isModulateable());
 
         but = breset = new QToolButton(w);
         l->addWidget(but);
@@ -161,6 +164,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         });
 
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue()); });
+        if (pf->isModulateable())
         connect(bmod, &QToolButton::pressed, [=]()
         {
             if (Object * o = model->createFloatTrack(pf))
@@ -172,7 +176,82 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         });
     }
     else
-        MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");
+    // --- select parameter ---
+    if (ParameterSelect * ps = dynamic_cast<ParameterSelect*>(p))
+    {
+        but = bmod = new QToolButton(w);
+        l->addWidget(but);
+        but->setIcon(ps->modulatorIds().isEmpty()? iconModulateOff : iconModulateOn);
+        but->setToolTip(tr("Create modulation track"));
+        but->setStatusTip(tr("Creates a new modulation track for the given parameter"));
+        but->setEnabled(ps->isModulateable());
+
+        but = breset = new QToolButton(w);
+        l->addWidget(but);
+        but->setText("0");
+        but->setToolTip(tr("Set to default value (%1)").arg(ps->defaultValueName()));
+        but->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")
+                          .arg(ps->defaultValueName()));
+        but->setEnabled(ps->isEditable());
+
+        int fs = breset->contentsRect().height() - 4;
+        bmod->setFixedSize(fs, fs);
+
+        QComboBox * combo = new QComboBox(w);
+        l->addWidget(combo);
+
+        combo->setEnabled(ps->isEditable());
+
+        // fill combobox with value names
+        for (auto & name : ps->valueNames())
+            combo->addItem(name);
+
+        combo->setCurrentIndex(ps->valueList().indexOf(ps->baseValue()));
+        combo->setStatusTip(ps->statusTip());
+
+        if (prevEditWidget_)
+            setTabOrder(prevEditWidget_, combo);
+        prevEditWidget_ = combo;
+
+        connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=]()
+        {
+            if (combo->currentIndex()<0 || combo->currentIndex() >= ps->valueList().size())
+                return;
+            int value = ps->valueList().at(combo->currentIndex());
+
+            QObject * scene = p->object()->sceneObject();
+            MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
+            if (!scene) return;
+            bool r =
+                metaObject()->invokeMethod(scene,
+                                           "setParameterValue",
+                                           Qt::QueuedConnection,
+                                           Q_ARG(MO::ParameterSelect*, ps),
+                                           Q_ARG(int, value)
+                                           );
+            MO_ASSERT(r, "could not invoke Scene::setParameterValue");
+            Q_UNUSED(r);
+        });
+
+        connect(breset, &QToolButton::pressed, [=]()
+        {
+            combo->setCurrentIndex(ps->valueList().indexOf(ps->defaultValue()));
+        });
+        if (ps->isModulateable())
+        connect(bmod, &QToolButton::pressed, [=]()
+        {
+            /*
+            if (Object * o = model->createFloatTrack(pf))
+            {
+                bmod->setIcon(iconModulateOn);
+                if (doChangeToCreatedTrack_)
+                    emit objectSelected(o);
+            }
+            */
+        });
+    }
+    else
+    MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");
 
     return w;
 }

@@ -24,13 +24,13 @@ Track::Track(QObject *parent) :
 void Track::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
-    io.writeHeader("Track", 1);
+    io.writeHeader("track", 1);
 }
 
 void Track::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
-    io.readHeader("Track", 1);
+    io.readHeader("track", 1);
 }
 
 

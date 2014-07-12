@@ -21,6 +21,7 @@
 #include "scene.h"
 #include "transform/transformation.h"
 #include "param/parameterfloat.h"
+#include "param/parameterselect.h"
 
 namespace MO {
 
@@ -32,7 +33,8 @@ bool registerObject_(Object * obj)
 Object::Object(QObject *parent) :
     QObject         (parent),
     canBeDeleted_   (true),
-    parentObject_   (0)
+    parentObject_   (0),
+    paramActiveScope_(0)
 {
     // tie into Object hierarchy
     if (auto o = qobject_cast<Object*>(parent))
@@ -279,6 +281,13 @@ QString Object::idNamePath() const
     return path;
 }
 
+Object::ActivityScope Object::activityScope() const
+{
+    if (paramActiveScope_)
+        return (ActivityScope)paramActiveScope_->baseValue();
+    else
+        return AS_ON;
+}
 
 // ------------------ setter -----------------------
 
@@ -632,27 +641,58 @@ Parameter * Object::findParameter(const QString &id)
     return 0;
 }
 
+void Object::createParameters()
+{
+    const static QString
+            strOff(tr("Object is inactive")),
+            strOn(tr("Object is always active")),
+            strPrev(tr("Object is only active in the preview modes and will not be rendered")),
+            strPrev1(tr("Object is only active in preview mode 1 and will not be rendered")),
+            strPrev2(tr("Object is only active in preview mode 2 and will not be rendered")),
+            strPrev3(tr("Object is only active in preview mode 3 and will not be rendered")),
+            strPrev1r(tr("Object is only active in preview mode 1 and when rendering")),
+            strPrev2r(tr("Object is only active in preview mode 2 and when rendering")),
+            strPrev3r(tr("Object is only active in preview mode 3 and when rendering")),
+            strRend(tr("Object is only active when rendering"));
+
+    paramActiveScope_ =
+    createSelectParameter("_activescope", tr("activity scope"),
+                         tr("Sets the scope in which the object and all of it's children are active"),
+                         { "off", "on", "prev", "ren", "prev1", "prev2", "prev3",
+                           "prev1r", "prev2r", "prev3r" },
+                         { tr("off"), tr("on"), tr("preview"), tr("render"),
+                           tr("preview 1"), tr("preview 2"), tr("preview 3"),
+                           tr("preview 1 + render"), tr("preview 2 + render"), tr("preview 3 + render") },
+                         { strOff, strOn, strPrev, strRend, strPrev1, strPrev2, strPrev3,
+                           strPrev1r, strPrev2r, strPrev3r },
+                         { AS_OFF, AS_ON, AS_PREVIEW, AS_RENDER,
+                           AS_PREVIEW_1, AS_PREVIEW_2, AS_PREVIEW_3,
+                           AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
+                         AS_ON, true, false );
+}
+
 ParameterFloat * Object::createFloatParameter(
         const QString& id, const QString& name, const QString& statusTip,
-        Double defaultValue, bool editable)
+        Double defaultValue, bool editable, bool modulateable)
 {
     return createFloatParameter(id, name, statusTip, defaultValue,
                                 -ParameterFloat::infinity, ParameterFloat::infinity,
-                                1.0, editable);
+                                1.0, editable, modulateable);
 }
 
 ParameterFloat * Object::createFloatParameter(
         const QString& id, const QString& name, const QString &statusTip,
-        Double defaultValue, Double smallStep, bool editable)
+        Double defaultValue, Double smallStep, bool editable, bool modulateable)
 {
     return createFloatParameter(id, name, statusTip, defaultValue,
                                 -ParameterFloat::infinity, ParameterFloat::infinity,
-                                smallStep, editable);
+                                smallStep, editable, modulateable);
 }
 
 ParameterFloat * Object::createFloatParameter(
         const QString& id, const QString& name, const QString& statusTip,
-        Double defaultValue, Double minValue, Double maxValue, Double smallStep, bool editable)
+        Double defaultValue, Double minValue, Double maxValue, Double smallStep,
+        bool editable, bool modulateable)
 {
     ParameterFloat * param = 0;
 
@@ -668,7 +708,7 @@ ParameterFloat * Object::createFloatParameter(
         {
             MO_ASSERT(false, "object '" << idName() << "' requested float "
                       "parameter '" << id << "' "
-                      "which is already present as parameter of another type.");
+                      "which is already present as parameter of type " << p->typeName());
         }
     }
 
@@ -684,6 +724,7 @@ ParameterFloat * Object::createFloatParameter(
 
     // override potentially previous
     param->setName(name);
+    param->setModulateable(modulateable);
     param->setDefaultValue(std::min(maxValue, std::max(minValue, defaultValue )));
     param->setMinValue(minValue);
     param->setMaxValue(maxValue);
@@ -693,6 +734,68 @@ ParameterFloat * Object::createFloatParameter(
 
     return param;
 }
+
+ParameterSelect * Object::createSelectParameter(
+            const QString& id, const QString& name, const QString& statusTip,
+            const QStringList& valueIds, const QStringList& valueNames, const QList<int> &valueList,
+            int defaultValue, bool editable, bool modulateable)
+{
+    return createSelectParameter(id, name, statusTip,
+                                 valueIds, valueNames, QStringList(), valueList,
+                                 defaultValue, editable, modulateable);
+}
+
+ParameterSelect * Object::createSelectParameter(
+            const QString& id, const QString& name, const QString& statusTip,
+            const QStringList& valueIds, const QStringList& valueNames, const QStringList& statusTips,
+            const QList<int> &valueList,
+            int defaultValue, bool editable, bool modulateable)
+{
+    ParameterSelect * param = 0;
+
+    // see if already there
+
+    if (auto p = findParameter(id))
+    {
+        if (auto ps = dynamic_cast<ParameterSelect*>(p))
+        {
+            param = ps;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested float "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterSelect(this, id, name);
+        parameters_.append(param);
+
+        // first time init
+        param->setValueList(valueList);
+        param->setValueIds(valueIds);
+        param->setValueNames(valueNames);
+        param->setValue(defaultValue);
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setModulateable(modulateable);
+    param->setStatusTip(statusTip);
+    param->setEditable(editable);
+    param->setValueList(valueList);
+    param->setValueIds(valueIds);
+    param->setValueNames(valueNames);
+    param->setStatusTips(statusTips);
+    param->setDefaultValue(defaultValue);
+
+    return param;
+}
+
 
 
 // -------------------- modulators ---------------------

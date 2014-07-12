@@ -21,7 +21,8 @@ Parameter::Parameter(Object * object, const QString& id, const QString& name) :
     object_     (object),
     idName_     (id),
     name_       (name),
-    isEditable_ (true)
+    isEditable_ (false),
+    isModulateable_(false)
 {
 }
 
@@ -29,7 +30,7 @@ void Parameter::serialize(IO::DataStream &io) const
 {
     io.writeHeader("par", 1);
 
-    io << idName_ << name_;
+    io << idName_;
 
     // modulations
     io << modulatorIds_;
@@ -39,7 +40,7 @@ void Parameter::deserialize(IO::DataStream &io)
 {
     io.readHeader("par", 1);
 
-    io >> idName_ >> name_;
+    io >> idName_;
 
     io >> modulatorIds_;
 }

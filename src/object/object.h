@@ -88,6 +88,16 @@ public:
         TG_ALL = 0xffffffff
     };
 
+    enum ActivityScope
+    {
+        AS_OFF          = 0,
+        AS_PREVIEW_1    = 1<<0,
+        AS_PREVIEW_2    = 1<<1,
+        AS_PREVIEW_3    = 1<<2,
+        AS_RENDER       = 1<<3,
+        AS_PREVIEW      = AS_PREVIEW_1 | AS_PREVIEW_2 | AS_PREVIEW_3,
+        AS_ON           = AS_PREVIEW | AS_RENDER,
+    };
 
     // -------------- ctor -------------------
 
@@ -171,6 +181,9 @@ public:
     virtual bool isParameter() const { return false; }
     virtual bool isTrack() const { return false; }
     virtual bool isSequence() const { return false; }
+
+    /** Returns the activity scope for the object */
+    ActivityScope activityScope() const;
 
     // --------------- setter -------------------
 
@@ -289,8 +302,9 @@ public:
     /** Returns the parameter with the given id, or NULL. */
     Parameter * findParameter(const QString& id);
 
-    /** Override to create all parameters for your object */
-    virtual void createParameters() { }
+    /** Override to create all parameters for your object.
+        Always call the ancestor classes createParameters() in your derived function! */
+    virtual void createParameters();
 
     /** Creates the desired parameter,
         or returns an already created parameter object.
@@ -299,15 +313,30 @@ public:
     ParameterFloat * createFloatParameter(
                 const QString& id, const QString& name, const QString& statusTip,
                 Double defaultValue, Double minValue, Double maxValue, Double smallStep,
-                bool editable = true);
+                bool editable = true, bool modulateable = true);
 
     ParameterFloat * createFloatParameter(
                 const QString& id, const QString& name, const QString& statusTip,
-                Double defaultValue, bool editable = true);
+                Double defaultValue, bool editable = true, bool modulateable = true);
 
     ParameterFloat * createFloatParameter(
                 const QString& id, const QString& name, const QString& statusTip,
-                Double defaultValue, Double smallStep, bool editable = true);
+                Double defaultValue, Double smallStep,
+                bool editable = true, bool modulateable = true);
+
+
+    ParameterSelect * createSelectParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                const QStringList& valueIds, const QStringList& valueNames,
+                const QList<int>& valueList,
+                int defaultValue, bool editable = true, bool modulateable = true);
+
+    ParameterSelect * createSelectParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                const QStringList& valueIds, const QStringList& valueNames,
+                const QStringList& statusTips,
+                const QList<int>& valueList,
+                int defaultValue, bool editable = true, bool modulateable = true);
 
     // --------------- 3d --------------------------
 
@@ -391,6 +420,10 @@ private:
     // ----------- position ------------------
 
     std::vector<Mat4> transformation_;
+
+    // --------- default parameters ----------
+
+    ParameterSelect * paramActiveScope_;
 };
 
 extern bool registerObject_(Object *);

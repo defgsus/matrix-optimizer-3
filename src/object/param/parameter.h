@@ -29,6 +29,8 @@ public:
     virtual void serialize(IO::DataStream&) const;
     virtual void deserialize(IO::DataStream&);
 
+    virtual const QString& typeName() const = 0;
+
     // --------------- getter -------------------
 
     /** Parent object */
@@ -42,12 +44,14 @@ public:
     const QList<QString>& modulatorIds() const { return modulatorIds_; }
 
     bool isEditable() const { return isEditable_; }
+    bool isModulateable() const { return isModulateable_; }
 
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }
     void setStatusTip(const QString& tip) { statusTip_ = tip; }
     void setEditable(bool enable) { isEditable_ = enable; }
+    void setModulateable(bool enable) { isModulateable_ = enable; }
 
     // ------------ modulators ------------------
 
@@ -70,7 +74,7 @@ private:
 
     QString idName_, name_, statusTip_;
 
-    bool isEditable_;
+    bool isEditable_, isModulateable_;
 
     QList<QString> modulatorIds_;
 
