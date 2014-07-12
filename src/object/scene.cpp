@@ -96,7 +96,20 @@ void Scene::findObjects_()
     // these are the ones that do
     posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
 
-    // tell all object how much thread data they need
+    // get the path until each camera
+    cameraPaths_.clear();
+    for (auto cam : cameras_)
+    {
+        cameraPaths_.append(QList<Object*>());
+        Object * o = cam;
+        while (o && o != this)
+        {
+            cameraPaths_.back().prepend(o);
+            o = o->parentObject();
+        }
+    }
+
+    // tell all objects how much thread data they need
     updateNumberThreads_();
 
     // collect all modulators for each object
@@ -282,9 +295,11 @@ void Scene::calculateSceneTransform(int thread, Double time)
     if (!cameras_.size())
         return;
 
-    // apply camera transform
+    // get camera transform
     Mat4 camt(1.0);
-    cameras_[thread]->calculateTransformation(camt, time);
+    for (auto o : cameraPaths_[0])
+        o->calculateTransformation(camt, time);
+    // set the initial camera space for all objects in scene
     setTransformation(thread, glm::inverse(camt));
 
     // calculate transformations

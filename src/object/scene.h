@@ -159,6 +159,7 @@ private:
     QList<Object*> allObjects_;
     QList<Object*> posObjects_;
     QList<Camera*> cameras_;
+    QList<QList<Object*>> cameraPaths_;
     QList<ObjectGl*> glObjects_;
 
     // ---------- properties -------------------
