@@ -55,8 +55,10 @@ private slots:
     void saveScene();
     void loadScene();
     void newScene();
+
     void createDebugScene_();
     void resetTreeModel_();
+    void runTestThread_();
 
     void setSceneObject(Scene *);
 private:

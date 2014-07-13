@@ -15,6 +15,7 @@
 
 #include "object.h"
 
+class QSemaphore;
 
 namespace MO {
 namespace GL { class Context; }
@@ -26,10 +27,11 @@ class Scene : public Object
     Q_OBJECT
 
     // for updateTree_()
-    friend Object;
-
+    friend class Object;
+    friend class ScopedSceneLock;
 public:
     MO_OBJECT_CONSTRUCTOR(Scene);
+    ~Scene();
 
     virtual Type type() const { return T_SCENE; }
     bool isScene() const { return true; }
@@ -166,6 +168,14 @@ private:
 
     void updateModulators_();
 
+    // ----------- runtime ---------------------
+
+    void lock_(int num = -1);
+    void unlock_(int num = -1);
+
+    /** unlocked version */
+    void calculateSceneTransform_(int thread, Double time);
+
     // ---------- opengl -----------------------
 
     /* Initializes all opengl childs */
@@ -202,6 +212,7 @@ private:
 
     // ------------ runtime --------------------
 
+    QSemaphore * semaphore_;
     QTimer timer_;
 
     Double sceneTime_;

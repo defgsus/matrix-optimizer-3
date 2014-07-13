@@ -33,51 +33,60 @@
 #endif
 
 
-#if (1)
+#if (1) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG
 #   define MO_DEBUG(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG(unused__) { }
 #endif
 
-#if (0)
+#if (0) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUGF
 #   define MO_DEBUGF(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUGF(unused__) { }
 #endif
 
-#if (0)
+#if (0) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_IO
 #   define MO_DEBUG_IO(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_IO(unused__) { }
 #endif
 
-#if (0)
+#if (0) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_GL
 #   define MO_DEBUG_GL(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_GL(unused__) { }
 #endif
 
-#if (1)
+// tree changes and updates
+#if (1) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_TREE
 #   define MO_DEBUG_TREE(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_TREE(unused__) { }
 #endif
 
 // modulator stuff
-#if (1)
+#if (1) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_MOD
 #   define MO_DEBUG_MOD(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_MOD(unused__) { }
 #endif
 
 // for parameter updates between gui/scene
-#if (0)
+#if (0) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_PARAM
 #   define MO_DEBUG_PARAM(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_PARAM(unused__) { }
 #endif
 
-#if (0)
+#if (0) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_GUI
 #   define MO_DEBUG_GUI(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_GUI(unused__) { }

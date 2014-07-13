@@ -23,7 +23,7 @@
 #include <QStatusBar>
 #include <QTimer>
 #include <QLabel>
-
+#include <QThread>
 
 #include "mainwindow.h"
 #include "projectorsetupwidget.h"
@@ -52,6 +52,47 @@
 
 namespace MO {
 namespace GUI {
+
+
+class TestThread : public QThread
+{
+public:
+    TestThread(Scene * scene, QObject * parent)
+        :   QThread(parent),
+          scene_  (scene)
+    {
+
+    }
+
+    Double time() const { return time_; }
+
+    void stop() { stop_ = true; }
+
+    void run()
+    {
+        time_ = 0.0;
+        while (!stop_)
+        {
+            scene_->calculateSceneTransform(1, time_);
+            time_ += 1.0 / 44100.0;
+        }
+    }
+private:
+    Scene * scene_;
+    volatile bool stop_;
+    Double time_;
+};
+
+
+
+
+
+
+
+
+
+
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow     (parent),
@@ -255,6 +296,9 @@ void MainWindow::createMainMenu_()
 
         m->addAction(a = new QAction(tr("Reset ObjectTreeModel"), m));
         connect(a, SIGNAL(triggered()), SLOT(resetTreeModel_()));
+
+        m->addAction(a = new QAction(tr("Start test thread"), m));
+        connect(a, SIGNAL(triggered()), SLOT(runTestThread_()));
 }
 
 void MainWindow::setSceneObject(Scene * s)
@@ -449,6 +493,12 @@ void MainWindow::testSceneTransform_()
                              .arg((elapsed*1000)/num)
                              .arg((int)((Double)num/elapsed))
            );
+}
+
+void MainWindow::runTestThread_()
+{
+    TestThread * thread = new TestThread(scene_, this);
+    thread->start();
 }
 
 void MainWindow::updateSystemInfo_()

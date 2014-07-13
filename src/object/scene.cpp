@@ -9,6 +9,7 @@
 */
 
 //#include <QDebug>
+#include <QSemaphore>
 
 #include "scene.h"
 
@@ -25,20 +26,46 @@
 
 namespace MO {
 
+class ScopedSceneLock
+{
+    Scene * scene_;
+    int num_;
+public:
+    ScopedSceneLock(Scene * scene, int num = -1)
+        :   scene_  (scene),
+            num_    (num)
+    {
+        scene_->lock_(num_);
+    }
+
+    ~ScopedSceneLock() { scene_->unlock_(num_); }
+};
+
+
 MO_REGISTER_OBJECT(Scene)
 
 Scene::Scene(QObject *parent) :
     Object      (parent),
     model_      (0),
     glContext_  (0),
-    numThreads_ (1),
+    numThreads_ (2),
     sceneTime_  (0)
 {
     setName("Scene");
 
+    semaphore_ = new QSemaphore(numThreads_);
+
     timer_.setInterval(1000 / 60);
     timer_.setSingleShot(false);
     connect(&timer_, SIGNAL(timeout()), this, SLOT(timerUpdate_()));
+}
+
+Scene::~Scene()
+{
+    stop();
+
+    if (semaphore_)
+        delete semaphore_;
 }
 
 void Scene::serialize(IO::DataStream & io) const
@@ -95,10 +122,10 @@ void Scene::findObjects_()
     cameras_ = findChildObjects<Camera>(QString(), true);
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
 
-
+#ifdef MO_DO_DEBUG_TREE
     for (auto o : allObjects_)
         MO_DEBUG_TREE("object: " << o << ", parent: " << o->parentObject());
-
+#endif
 
     // not all objects need there transformation calculated
     // these are the ones that do
@@ -146,9 +173,12 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
 {
     MO_DEBUG_TREE("Scene::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
 
-    parent->addObject_(newChild, insert_index);
-    parent->childrenChanged_();
-    updateTree_();
+    {
+        ScopedSceneLock lock(this);
+        parent->addObject_(newChild, insert_index);
+        parent->childrenChanged_();
+        updateTree_();
+    }
     emit objectAdded(newChild);
     render_();
 }
@@ -158,10 +188,13 @@ void Scene::deleteObject(Object *object)
     MO_DEBUG_TREE("Scene::deleteObject(" << object << ")");
 
     MO_ASSERT(object->parentObject(), "Scene::deleteObject("<<object<<") without parent");
-    Object * parent = object->parentObject();
-    parent->deleteObject_(object);
-    parent->childrenChanged_();
-    updateTree_();
+    {
+        ScopedSceneLock lock(this);
+        Object * parent = object->parentObject();
+        parent->deleteObject_(object);
+        parent->childrenChanged_();
+        updateTree_();
+    }
     emit objectDeleted(object);
     render_();
 }
@@ -170,9 +203,12 @@ void Scene::swapChildren(Object *parent, int from, int to)
 {
     MO_DEBUG_TREE("Scene::swapChildren(" << parent << ", " << from << ", " << to << ")");
 
-    parent->swapChildren_(from, to);
-    parent->childrenChanged_();
-    updateTree_();
+    {
+        ScopedSceneLock lock(this);
+        parent->swapChildren_(from, to);
+        parent->childrenChanged_();
+        updateTree_();
+    }
     emit childrenSwapped(parent, from, to);
     render_();
 }
@@ -237,15 +273,21 @@ void Scene::updateModulators_()
 
 void Scene::setParameterValue(ParameterFloat *p, Double v)
 {
-    p->setValue(v);
-    p->object()->parameterChanged(p);
+    {
+        ScopedSceneLock lock(this);
+        p->setValue(v);
+        p->object()->parameterChanged(p);
+    }
     render_();
 }
 
 void Scene::setParameterValue(ParameterSelect *p, int v)
 {
-    p->setValue(v);
-    p->object()->parameterChanged(p);
+    {
+        ScopedSceneLock lock(this);
+        p->setValue(v);
+        p->object()->parameterChanged(p);
+    }
     render_();
 }
 
@@ -269,12 +311,14 @@ void Scene::moveSequence(Sequence *seq, Track *from, Track *to)
 void Scene::beginSequenceChange(Sequence * s)
 {
     MO_DEBUG_PARAM("Scene::beginSequenceChange(" << s << ")");
+    lock_();
     changedSequence_ = s;
 }
 
 void Scene::endSequenceChange()
 {
     MO_DEBUG_PARAM("Scene::endSequenceChange()");
+    unlock_();
     emit sequenceChanged(changedSequence_);
     render_();
 }
@@ -282,13 +326,14 @@ void Scene::endSequenceChange()
 void Scene::beginTimelineChange(Object * o)
 {
     MO_DEBUG_PARAM("Scene::beginTimelineChange(" << o << ")");
+    lock_();
     changedTimelineObject_ = o;
 }
 
 void Scene::endTimelineChange()
 {
     MO_DEBUG_PARAM("Scene::endTimelineChange()");
-
+    unlock_();
     if (Sequence * s = qobject_cast<Sequence*>(changedTimelineObject_))
         emit sequenceChanged(s);
 
@@ -300,12 +345,14 @@ void Scene::endTimelineChange()
 void Scene::beginObjectChange(Object * o)
 {
     MO_DEBUG_PARAM("Scene::beginObjectChange(" << o << ")");
+    lock_();
     changedObject_ = o;
 }
 
 void Scene::endObjectChange()
 {
     MO_DEBUG_PARAM("Scene::endObjectChange()");
+    unlock_();
     emit objectChanged(changedObject_);
     render_();
 }
@@ -349,25 +396,35 @@ void Scene::renderScene(Double time)
 
     time = sceneTime_;
 
-    // initialize gl resources
-    for (auto o : glObjects_)
-        if (o->needsInitGl(0) && o->active(time))
-            o->initGl_(0);
-
-    calculateSceneTransform(0, time);
-
-    // start camera frame
-    cameras_[0]->startGlFrame(0, time);
-
-    // render all opengl objects
-    for (auto o : glObjects_)
-    if (o->active(time))
     {
-        o->renderGl_(0, time);
+        ScopedSceneLock lock(this, 1);
+
+        // initialize gl resources
+        for (auto o : glObjects_)
+            if (o->needsInitGl(0) && o->active(time))
+                o->initGl_(0);
+
+        calculateSceneTransform(0, time);
+
+        // start camera frame
+        cameras_[0]->startGlFrame(0, time);
+
+        // render all opengl objects
+        for (auto o : glObjects_)
+        if (o->active(time))
+        {
+            o->renderGl_(0, time);
+        }
     }
 }
 
 void Scene::calculateSceneTransform(int thread, Double time)
+{
+    ScopedSceneLock lock(this, 1);
+    calculateSceneTransform_(thread, time);
+}
+
+void Scene::calculateSceneTransform_(int thread, Double time)
 {
     if (!cameras_.size())
         return;
@@ -397,6 +454,16 @@ void Scene::calculateSceneTransform(int thread, Double time)
 
 
 // ---------------------- runtime --------------------------
+
+void Scene::lock_(int num)
+{
+    semaphore_->acquire(num>0? num : numThreads_);
+}
+
+void Scene::unlock_(int num)
+{
+    semaphore_->release(num>0? num : numThreads_);
+}
 
 void Scene::setSceneTime(Double time, bool send_signal)
 {
