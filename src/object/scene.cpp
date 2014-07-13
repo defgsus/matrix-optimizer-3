@@ -86,32 +86,6 @@ void Scene::setObjectModel(ObjectTreeModel * model)
     model_->setSceneObject(this);
 }
 
-#if (0)
-void Scene::tellTreeChanged()
-{
-    MO_DEBUG_TREE("Scene::tellTreeChanged()");
-
-    findObjects_();
-
-    emit treeChanged();
-
-    if (glContext_)
-    {
-        // update infos for new objects
-        setGlContext(glContext_);
-
-        // update image
-        render_();
-    }
-}
-
-void Scene::tellObjectAdded(Object * obj)
-{
-    MO_DEBUG_TREE("Scene::tellObectAdded('" << obj->idName() << "')");
-    emit objectAdded(obj);
-    render_();
-}
-#endif
 
 void Scene::findObjects_()
 {
@@ -357,19 +331,21 @@ void Scene::endObjectChange()
     render_();
 }
 
-#if (0)
-void Scene::beginTreeChange(Object * o)
+
+
+// ------------------------ audio ----------------------------
+
+void Scene::calculateAudioBlock(SamplePos samplePos, SamplePos blockLength, int thread)
 {
-    MO_DEBUG_TREE("Scene::beginTreeChange(" << o << ")");
-    changedTreeObject_ = o;
+    ScopedSceneLock lock(this, 1);
+
+    blockLength += samplePos;
+    for (; samplePos<blockLength; ++samplePos)
+    {
+        calculateSceneTransform_(thread, (1.0 / 44100.0) * samplePos);
+    }
 }
 
-void Scene::endTreeChange()
-{
-    MO_DEBUG_TREE("Scene::endTreeChange()");
-    render_();
-}
-#endif
 
 // ----------------------- open gl ---------------------------
 

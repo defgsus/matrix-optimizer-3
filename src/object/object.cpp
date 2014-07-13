@@ -373,9 +373,13 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
 
     // test for modulation loops
     QList<Object*> mods = o->getFutureModulatingObjects(sceneObject());
-    MO_DEBUG("--- " << mods.size() << " modulators for " << o->idName());
+
+#ifdef MO_DO_DEBUG_MOD
+    MO_DEBUG_MOD("--- " << mods.size() << " modulators for " << o->idName());
     for (auto m : mods)
-        MO_DEBUG(m->idName());
+        MO_DEBUG_MOD(m->idName());
+#endif
+
     if (mods.contains((Object*)this))
     {
         error = tr("Adding '%1' as a child to '%2' would cause an infinite "

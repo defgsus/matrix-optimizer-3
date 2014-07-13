@@ -29,6 +29,7 @@ class SequenceFloatView;
 class Sequencer;
 class Spacer;
 
+class TestThread;
 
 class MainWindow : public QMainWindow
 {
@@ -86,6 +87,8 @@ private:
 
     QTimer * sysInfoTimer_;
     QLabel * sysInfoLabel_;
+
+    TestThread * testThread_;
 };
 
 } // namespace GUI

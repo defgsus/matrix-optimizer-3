@@ -46,13 +46,7 @@ public:
     // ------------- child objects -------------
 
     const QList<Camera*> cameras() const { return cameras_; }
-#if (0)
-    /** Tells the Scene to update it's info about the tree */
-    void tellTreeChanged();
 
-    /** Tells the Scene to emit the objectAdded() signal */
-    void tellObjectAdded(Object *);
-#endif
     // ------------- open gl -------------------
 
     /** Calculates all transformation of all scene objects.
@@ -71,12 +65,9 @@ public:
     void beginTimelineChange(MO::Object *);
     void endTimelineChange();
 
+    /** Actually for changing parameters */
     void beginObjectChange(MO::Object *);
     void endObjectChange();
-#if (0)
-    void beginTreeChange(MO::Object *);
-    void endTreeChange();
-#endif
 
 signals:
 
@@ -91,9 +82,6 @@ signals:
 
     /** Some setting in the Sequence has changed. */
     void sequenceChanged(MO::Sequence *);
-
-    /* *Currently* emitted when something in the tree has changed.
-    void treeChanged();*/
 
     /** Emitted when the given object was added to the scene. */
     void objectAdded(MO::Object *);
@@ -136,6 +124,10 @@ public slots:
     void setSceneActivityScope(ActivityScope scope) { setCurrentActivityScope(scope); render_(); }
 
     void setSceneTime(Double time, bool send_signal = true);
+
+    // -------------- audio --------------------
+
+    void calculateAudioBlock(SamplePos samplePos, SamplePos blockLength, int thread);
 
     // ------------- open gl -------------------
 
@@ -219,6 +211,7 @@ private:
 };
 
 
+/* XXX right now only used for adding floattracks to a parameter */
 class ScopedObjectChange
 {
     Scene * scene_;
@@ -232,20 +225,6 @@ public:
     ~ScopedObjectChange() { scene_->endObjectChange(); }
 };
 
-#if (0)
-class ScopedTreeChange
-{
-    Scene * scene_;
-public:
-    ScopedTreeChange(Scene * scene, Object * object)
-        :   scene_(scene)
-    {
-        scene_->beginTreeChange(object);
-    }
-
-    ~ScopedTreeChange() { scene_->endTreeChange(); }
-};
-#endif
 
 class ScopedSequenceChange
 {

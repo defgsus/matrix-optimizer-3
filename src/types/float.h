@@ -35,6 +35,12 @@ namespace MO {
     Q_STATIC_ASSERT(sizeof(F32) == 4);
     Q_STATIC_ASSERT(sizeof(F64) == 8);
 
+    /** Sample position */
+    typedef long unsigned int SamplePos;
+
+    /** An audio sample */
+    typedef F32 Sample;
+
 } // namespace MO
 
 #endif // MOSRC_TYPES_FLOAT_H

@@ -59,28 +59,36 @@ class TestThread : public QThread
 public:
     TestThread(Scene * scene, QObject * parent)
         :   QThread(parent),
-          scene_  (scene)
+          scene_  (scene),
+          stop_   (false)
     {
 
     }
 
-    Double time() const { return time_; }
+    Double time() const { return (1.0 / 44100.0) * samplePos_; }
 
-    void stop() { stop_ = true; }
+    void stop() { stop_ = true; wait(); }
 
     void run()
     {
-        time_ = 0.0;
+        samplePos_ = 0;
+        blockLength_ = 128;
         while (!stop_)
         {
-            scene_->calculateSceneTransform(1, time_);
-            time_ += 1.0 / 44100.0;
+            scene_->calculateAudioBlock(samplePos_, blockLength_, 1);
+            samplePos_ += blockLength_;
+
+        #ifndef NDEBUG
+            // leave some room when in debug mode
+            usleep(1000);
+        #endif
         }
     }
+
 private:
     Scene * scene_;
     volatile bool stop_;
-    Double time_;
+    SamplePos samplePos_, blockLength_;
 };
 
 
@@ -99,7 +107,8 @@ MainWindow::MainWindow(QWidget *parent) :
     scene_          (0),
     objectTreeModel_(0),
     seqFloatView_   (0),
-    qobjectView_    (0)
+    qobjectView_    (0),
+    testThread_     (0)
 {
     setWindowTitle(tr("Matrix Optimizer 3.0"));
 
@@ -112,6 +121,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    if (testThread_)
+        testThread_->stop();
 }
 
 void MainWindow::createWidgets_()
@@ -297,7 +308,8 @@ void MainWindow::createMainMenu_()
         m->addAction(a = new QAction(tr("Reset ObjectTreeModel"), m));
         connect(a, SIGNAL(triggered()), SLOT(resetTreeModel_()));
 
-        m->addAction(a = new QAction(tr("Start test thread"), m));
+        m->addAction(a = new QAction(tr("Run test thread"), m));
+        a->setCheckable(true);
         connect(a, SIGNAL(triggered()), SLOT(runTestThread_()));
 }
 
@@ -422,6 +434,7 @@ void MainWindow::createDebugScene_()
 void MainWindow::closeEvent(QCloseEvent * e)
 {
     QMainWindow::closeEvent(e);
+
 /*
     if (e->isAccepted())
     {
@@ -497,14 +510,36 @@ void MainWindow::testSceneTransform_()
 
 void MainWindow::runTestThread_()
 {
-    TestThread * thread = new TestThread(scene_, this);
-    thread->start();
+    if (!testThread_)
+    {
+        testThread_ = new TestThread(scene_, this);
+        testThread_->start();
+    }
+    else
+    {
+        testThread_->stop();
+        testThread_->deleteLater();
+        testThread_ = 0;
+    }
 }
 
 void MainWindow::updateSystemInfo_()
 {
-    auto mem = Memory::allocated();
-    sysInfoLabel_->setText(tr("%1mb").arg(mem/1024/1024));
+    QString info = tr("%1mb").arg(Memory::allocated()/1024/1024);
+
+    if (testThread_)
+    {
+        static Double lastTime = 0.0;
+        Double
+            time = testThread_->time(),
+            delta = time - lastTime,
+            realtime = delta / (0.001*sysInfoTimer_->interval());
+        lastTime = time;
+
+        info.append(" " + tr("%1s %2x").arg(time).arg(realtime));
+    }
+
+    sysInfoLabel_->setText(info);
 }
 
 void MainWindow::start()

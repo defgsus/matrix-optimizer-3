@@ -120,6 +120,9 @@ void SequenceFloat::deserialize(IO::DataStream &io)
     // equation (v2)
     if (ver >= 2)
         io >> equationText_ >> doUseFreq_;
+
+    // create needed objects
+    setMode(mode_);
 }
 
 void SequenceFloat::setPhaseInDegree(bool enable)
@@ -170,7 +173,8 @@ void SequenceFloat::setMode(SequenceType m)
 void SequenceFloat::setEquationText(const QString & t)
 {
     MO_ASSERT(equation_, "setEquationText without equation");
-    if (!equation_->parse(t.toStdString()))
+    equationText_ = t;
+    if (!equation_->parse(equationText_.toStdString()))
         MO_WARNING("parsing failed");
 }
 
