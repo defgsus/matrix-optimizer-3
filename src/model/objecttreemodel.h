@@ -91,9 +91,11 @@ public slots:
 
     /** Exchanges the two children given by the indices @p from and @p to */
     QModelIndex swapChildren(Object * parent, int from, int to);
+    QModelIndex swapChildren(Object * from, Object * to);
 
-    QModelIndex moveUp(Object * object);
-    QModelIndex moveDown(Object * object);
+    // not really useable when having a filterproxy in between
+    //QModelIndex moveUp(Object * object);
+    //QModelIndex moveDown(Object * object);
     QModelIndex promote(Object * object);
     QModelIndex demote(Object * object);
 

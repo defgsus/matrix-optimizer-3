@@ -497,6 +497,33 @@ bool ObjectTreeModel::addObject(Object *parent, Object * obj, int index)
     return true;
 }
 
+QModelIndex ObjectTreeModel::swapChildren(Object * from, Object * to)
+{
+    MO_DEBUG_TREE("ObjectTreeModel::swapChildren(" <<
+                  << from->idName() << ", " << to->idName() << ")");
+
+    MO_ASSERT(scene_, "can't edit");
+
+
+    if (from == to || from->parentObject() != to->parentObject())
+        return QModelIndex();
+
+    QModelIndex parentIdx = indexForObject(from->parentObject());
+    int fromRow = from->parentObject()->childObjects().indexOf(from),
+        toRow = from->parentObject()->childObjects().indexOf(to);
+
+    if (toRow < fromRow)
+        beginMoveRows(parentIdx, fromRow, fromRow, parentIdx, toRow);
+    else
+        beginMoveRows(parentIdx, toRow, toRow, parentIdx, fromRow);
+
+    scene_->swapChildren(from->parentObject(), fromRow, toRow);
+
+    endMoveRows();
+
+    return createIndex(toRow, 0, to);
+}
+
 QModelIndex ObjectTreeModel::swapChildren(Object *parent, int from, int to)
 {
     MO_DEBUG_TREE("ObjectTreeModel::swapChildren(" << parent->idName()
@@ -522,7 +549,7 @@ QModelIndex ObjectTreeModel::swapChildren(Object *parent, int from, int to)
 
     return createIndex(to, 0, parent->childObjects()[to]);
 }
-
+/*
 QModelIndex ObjectTreeModel::moveUp(Object * object)
 {
     QModelIndex idx = indexForObject(object);
@@ -540,7 +567,7 @@ QModelIndex ObjectTreeModel::moveDown(Object * object)
     return
         swapChildren(object->parentObject(), idx.row(), idx.row() + 1);
 }
-
+*/
 QModelIndex ObjectTreeModel::promote(Object *object)
 {
     MO_DEBUG_TREE("ObjectTreeModel::promote(" << object->idName() << ")");

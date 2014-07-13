@@ -62,7 +62,7 @@
 #endif
 
 // tree changes and updates
-#if (1) && defined(MO_ENABLE_DEBUG)
+#if (0) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_TREE
 #   define MO_DEBUG_TREE(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
@@ -70,7 +70,7 @@
 #endif
 
 // modulator stuff
-#if (1) && defined(MO_ENABLE_DEBUG)
+#if (0) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_MOD
 #   define MO_DEBUG_MOD(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else

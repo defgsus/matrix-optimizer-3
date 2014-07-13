@@ -473,31 +473,45 @@ void ObjectTreeView::createMoveActions_(Object * obj)
         return;
 
     Object * parent = obj->parentObject();
-    const int row = parent->childObjects().indexOf(obj);
+    //const int row = parent->childObjects().indexOf(obj);
+    QModelIndex curIdx = currentIndex();
+    int row = curIdx.row();
 
     QAction * a;
 
     // move up
     if (row > 0)
     {
-        a = editActions_.addAction(QIcon(":/icon/above.png"), tr("Move up"), this);
-        a->setStatusTip(tr("Moves the selected object before the previous object"));
-        a->setShortcut(Qt::CTRL + Qt::Key_Up);
-        connect(a, &QAction::triggered, [=]()
+        Object * above = curIdx.sibling(row-1, 0).data(ObjectRole).value<Object*>();
+        if (!sortObjectList_TransformFirst(above, obj))
         {
-            setFocusIndex( filter_->mapFromSource( omodel_->moveUp(obj) ) );
-        });
+            a = editActions_.addAction(QIcon(":/icon/above.png"), tr("Move up"), this);
+            a->setStatusTip(tr("Moves the selected object before the previous object"));
+            a->setShortcut(Qt::CTRL + Qt::Key_Up);
+            connect(a, &QAction::triggered, [=]()
+            {
+                omodel_->swapChildren(obj, above);
+                setFocusIndex( obj );
+                createEditActions_(obj);
+            });
+        }
     }
     // move down
-    if (row < parent->numChildren() - 1)
+    if (row < model()->rowCount(curIdx.parent()) - 1)
     {
-        a = editActions_.addAction(QIcon(":/icon/below.png"), tr("Move down"), this);
-        a->setStatusTip(tr("Moves the selected object below the next object"));
-        a->setShortcut(Qt::CTRL + Qt::Key_Down);
-        connect(a, &QAction::triggered, [=]()
+        Object * below = curIdx.sibling(row+1, 0).data(ObjectRole).value<Object*>();
+        if (!sortObjectList_TransformFirst(obj, below))
         {
-            setFocusIndex( filter_->mapFromSource( omodel_->moveDown(obj) ) );
-        });
+            a = editActions_.addAction(QIcon(":/icon/below.png"), tr("Move down"), this);
+            a->setStatusTip(tr("Moves the selected object below the next object"));
+            a->setShortcut(Qt::CTRL + Qt::Key_Down);
+            connect(a, &QAction::triggered, [=]()
+            {
+                omodel_->swapChildren(obj, below);
+                setFocusIndex( obj );
+                createEditActions_(obj);
+            });
+        }
     }
     // promote
     if (parent->parentObject() &&

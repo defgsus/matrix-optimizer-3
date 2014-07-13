@@ -376,7 +376,7 @@ void MainWindow::createObjects_()
 
     try
     {
-        setSceneObject(ObjectFactory::loadScene("./test.mo3"));
+        setSceneObject(ObjectFactory::loadScene("./dreh.mo3"));
     }
     catch (IoException& e)
     {
