@@ -267,6 +267,18 @@ void Scene::setParameterValue(ParameterSelect *p, int v)
     render_();
 }
 
+void Scene::addModulator(Parameter *p, const QString &idName)
+{
+    {
+        ScopedSceneLock lock(this);
+        p->addModulator(idName);
+        p->collectModulators();
+        p->object()->onParameterChanged(p);
+    }
+    emit parameterChanged(p);
+    render_();
+}
+
 void Scene::removeModulator(Parameter *p, const QString &idName)
 {
     {

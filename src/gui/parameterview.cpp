@@ -306,7 +306,7 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
 
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(param))
     {
-        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create float track"), menu) );
+        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
         connect(a, &QAction::triggered, [=]()
         {
             if (Object * o = model->createFloatTrack(pf))
@@ -317,34 +317,55 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
             }
         });
 
-        if (param->modulatorIds().size())
-        {
-            QMenu * removeMenu = ObjectMenu::createRemoveModulationMenu(param, menu);
-            a = menu->addMenu(removeMenu);
-            a->setText(tr("Remove modulation"));
-            connect(removeMenu, &QMenu::triggered, [=](QAction* a)
-            {
-                scene->removeModulator(param, a->data().toString());
-                updateModulatorButton_(param, button);
-            });
-        }
+        addRemoveModMenu_(menu, param, button);
 
-        QMenu * linkmenu = ObjectMenu::createObjectMenu(scene, Object::T_TRACK_FLOAT, menu);
-        a = menu->addMenu(linkmenu);
+        QMenu * linkMenu = ObjectMenu::createObjectMenu(scene, Object::T_TRACK_FLOAT, menu);
+        a = menu->addMenu(linkMenu);
         a->setText(tr("Choose existing track"));
         a->setIcon(QIcon(":/icon/obj_track.png"));
+        connect(linkMenu, &QMenu::triggered, [=](QAction* a)
+        {
+            scene->addModulator(param, a->data().toString());
+            updateModulatorButton_(param, button);
+        });
     }
     else
-        MO_ASSERT(false, "No modulation possible for requested parameter '" << param->idName() << "'");
+        MO_ASSERT(false, "No modulation menu implemented for requested parameter '" << param->idName() << "'");
 
     if (menu->isEmpty())
         return;
 
+    connect(menu, &QMenu::aboutToHide, [=](){ updateModulatorButton_(param, button); });
     menu->popup(button->mapToGlobal(QPoint(0,0)));
 
     //delete menu;
 }
 
+void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param, QToolButton * button)
+{
+    if (param->modulatorIds().size() == 1)
+    {
+        QAction * a = new QAction(tr("Remove modulation"), menu);
+        connect(a, &QAction::triggered, [=]()
+        {
+            param->object()->sceneObject()->removeModulator(param, param->modulatorIds().at(0));
+            updateModulatorButton_(param, button);
+        });
+        menu->addAction(a);
+    }
+    else
+    if (param->modulatorIds().size() > 1)
+    {
+        QMenu * rem = ObjectMenu::createRemoveModulationMenu(param, menu);
+        QAction * a = menu->addMenu(rem);
+        a->setText(tr("Remove modulation"));
+        connect(rem, &QMenu::triggered, [=](QAction* a)
+        {
+            param->object()->sceneObject()->removeModulator(param, a->data().toString());
+            updateModulatorButton_(param, button);
+        });
+    }
+}
 
 } // namespace GUI
 } // namespace MO

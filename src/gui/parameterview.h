@@ -15,6 +15,7 @@
 #include <QList>
 #include <QMap>
 
+class QMenu;
 class QLabel;
 class QVBoxLayout;
 class QToolButton;
@@ -54,6 +55,7 @@ private:
 
     void updateModulatorButton_(Parameter *, QToolButton *);
     void openModulationPopup_(Parameter *, QToolButton *);
+    void addRemoveModMenu_(QMenu *, Parameter *, QToolButton *button);
 
     Object * object_;
     QList<Parameter*> parameters_;
