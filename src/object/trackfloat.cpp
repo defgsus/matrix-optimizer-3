@@ -40,8 +40,9 @@ Double TrackFloat::value(Double time) const
     Double v = 0.0;
     for (auto s : sequences_)
     {
-        if (time >= s->start() && time <= s->end())
-            v += s->value(time);
+        if (time >= s->start() && time <= s->end()
+                && s->active(time))
+                    v += s->value(time);
     }
 
     return v;

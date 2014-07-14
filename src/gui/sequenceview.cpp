@@ -152,6 +152,8 @@ void SequenceView::resizeEvent(QResizeEvent * e)
 
 void SequenceView::setSequence_(Sequence * s)
 {
+    MO_DEBUG("SequenceView::setSequence(" << s << ") baseSequence_ = " << baseSequence_);
+
     bool different = baseSequence_ != s;
 
     // remove old connection !!

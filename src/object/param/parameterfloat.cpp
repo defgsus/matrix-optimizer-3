@@ -62,7 +62,8 @@ Double ParameterFloat::getModulationValue(Double time) const
     Double m = 0;
 
     for (auto t : modulators_)
-        m += t->value(time);
+        if (t->active(time))
+            m += t->value(time);
 
     return m;
 }

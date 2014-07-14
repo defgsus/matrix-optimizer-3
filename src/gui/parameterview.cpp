@@ -298,8 +298,12 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
             }
         });
 
+        menu->addSeparator();
+
         // remove modulation
         addRemoveModMenu_(menu, param);
+
+        menu->addSeparator();
 
         // link to existing modulator
         addLinkModMenu_(menu, param, Object::T_TRACK_FLOAT);
@@ -319,9 +323,11 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
 
 void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
 {
+    /*
     if (param->modulatorIds().size() == 1)
     {
-        QAction * a = new QAction(tr("Remove modulation"), menu);
+        QAction * a = new QAction(tr("Remove"), menu);
+        a->setStatusTip(tr("Removes the modulator from this parameter"));
         connect(a, &QAction::triggered, [=]()
         {
             param->object()->sceneObject()->removeModulator(param, param->modulatorIds().at(0));
@@ -329,14 +335,27 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
         menu->addAction(a);
     }
     else
-    if (param->modulatorIds().size() > 1)
+    */
+    if (param->modulatorIds().size() > 0)
     {
         QMenu * rem = ObjectMenu::createRemoveModulationMenu(param, menu);
         QAction * a = menu->addMenu(rem);
         a->setText(tr("Remove modulation"));
+        a->setStatusTip(tr("Removes individual modulators from this parameter"));
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
             param->object()->sceneObject()->removeModulator(param, a->data().toString());
+        });
+    }
+    if (param->modulatorIds().size() > 1)
+    {
+        QAction * a = new QAction(tr("Remove all modulations (%1)")
+                                  .arg(param->modulatorIds().size()), menu);
+        a->setStatusTip(tr("Removes all modulators from this parameter"));
+        menu->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            param->object()->sceneObject()->removeAllModulators(param);
         });
     }
 }

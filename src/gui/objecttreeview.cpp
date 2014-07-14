@@ -326,6 +326,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
     // copy
     a = editActions_.addAction(tr("Copy"), this);
     a->setStatusTip(tr("Copies the selected object and all it's children to the clipboard"));
+    a->setShortcut(Qt::CTRL + Qt::Key_C);
     connect(a, &QAction::triggered, [=]()
     {
         application->clipboard()->setMimeData(
@@ -339,6 +340,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         // cut
         a = editActions_.addAction(tr("Cut"), this);
         a->setStatusTip(tr("Moves the selected object and all it's children to the clipboard"));
+        a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_C);
         connect(a, &QAction::triggered, [=]()
         {
             application->clipboard()->setMimeData(
@@ -352,6 +354,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         // delete
         a = editActions_.addAction(tr("Delete"), this);
         a->setStatusTip(tr("Deletes the selected object and all of it's children"));
+        a->setShortcut(Qt::CTRL + Qt::Key_Delete);
         connect(a, &QAction::triggered, [=]()
         {
             if (deleteObject_(currentIndex()))
@@ -386,6 +389,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
             // paste after
             a = editActions_.addAction(QIcon(":/icon/below.png"), tr("Paste after object"), this);
             a->setStatusTip(tr("Pastes the objects from the clipboard below the selected object"));
+            a->setShortcut(Qt::CTRL + Qt::Key_V);
             a->setEnabled(parentObj->canHaveChildren(pasteType));
             connect(a, &QAction::triggered, [=]()
             {
@@ -401,6 +405,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         a = editActions_.addAction(QIcon(":/icon/child.png"), tr("Paste as children"), this);
         a->setStatusTip(tr("Pastes the objects from the clipboard to the end of the "
                            "selected object's children list"));
+        a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_V);
         a->setEnabled(obj->canHaveChildren(pasteType));
         connect(a, &QAction::triggered, [=]()
         {

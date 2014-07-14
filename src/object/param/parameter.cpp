@@ -70,4 +70,9 @@ void Parameter::removeModulator(const QString &idName)
     modulatorIds_.removeOne(idName);
 }
 
+void Parameter::removeAllModulators()
+{
+    modulatorIds_.clear();
+}
+
 } // namespace MO

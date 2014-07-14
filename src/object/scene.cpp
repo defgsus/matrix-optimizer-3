@@ -291,6 +291,18 @@ void Scene::removeModulator(Parameter *p, const QString &idName)
     render_();
 }
 
+void Scene::removeAllModulators(Parameter *p)
+{
+    {
+        ScopedSceneLock lock(this);
+        p->removeAllModulators();
+        p->collectModulators();
+        p->object()->onParameterChanged(p);
+    }
+    emit parameterChanged(p);
+    render_();
+}
+
 // --------------------- tracks ------------------------------
 
 // --------------------- sequence ----------------------------

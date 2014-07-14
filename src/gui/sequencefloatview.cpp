@@ -21,6 +21,7 @@
 #include "object/sequencefloat.h"
 #include "object/scene.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "generalsequencefloatview.h"
 #include "math/waveform.h"
 #include "widget/doublespinbox.h"
@@ -72,6 +73,8 @@ void SequenceFloatView::createSequenceView_()
 
 void SequenceFloatView::setSequence(SequenceFloat * s)
 {
+    MO_DEBUG("SequenceFloatView::setSequence(" << s << ") sequence_ = " << sequence_);
+
     bool different = sequence_ != s;
     sequence_ = s;
 

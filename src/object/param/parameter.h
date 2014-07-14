@@ -63,6 +63,11 @@ public:
     /** Removes the Object from the list of modulators */
     virtual void removeModulator(const QString& idName);
 
+    /** Removes all modulators */
+    virtual void removeAllModulators();
+
+    /** Overload this to collect the actual objects associated to the
+        modulatorIds(). */
     virtual void collectModulators() = 0;
 
     virtual QList<Object*> getModulatingObjects() const = 0;
