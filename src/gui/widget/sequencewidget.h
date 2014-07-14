@@ -49,6 +49,7 @@ public slots:
 
     void setSelected(bool enable);
 
+    void updateValueRange();
     void updateName();
 
 protected:
@@ -68,6 +69,7 @@ private:
     PAINTER::ValueCurve * curvePainter_;
     PAINTER::ValueCurveData * curveData_;
     UTIL::ViewSpace space_;
+    Double minValue_, maxValue_;
 
     QStaticText nameText_;
 

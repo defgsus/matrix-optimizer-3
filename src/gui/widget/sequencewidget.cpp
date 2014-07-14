@@ -39,6 +39,8 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
     sequence_   (seq),
     curvePainter_(0),
     curveData_   (0),
+    minValue_   (-1.0),
+    maxValue_   (1.0),
     hovered_    (false),
     selected_   (false),
     onLeft_     (false),
@@ -72,6 +74,7 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
         curvePainter_->setCurveData(curveData_);
     }
 
+    updateValueRange();
     updateName();
 }
 
@@ -94,10 +97,22 @@ void SequenceWidget::updateName()
     nameText_.setText(sequence_->name());
 }
 
+void SequenceWidget::updateValueRange()
+{
+    if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(sequence_))
+    {
+        seqf->getMinMaxValue(0.0, seqf->length(), minValue_, maxValue_);
+        space_ = UTIL::ViewSpace(
+                    0.0, minValue_, sequence_->length(), maxValue_ - minValue_
+                    );
+    }
+
+}
+
 void SequenceWidget::resizeEvent(QResizeEvent *)
 {
     space_ = UTIL::ViewSpace(
-                0.0, -1.0, sequence_->length(), 2.0
+                0.0, minValue_, sequence_->length(), maxValue_ - minValue_
                 );
 }
 

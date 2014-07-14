@@ -58,6 +58,7 @@ protected:
 
     void setModel(QAbstractItemModel * m) { QTreeView::setModel(m); }
 
+    void resizeEvent(QResizeEvent *event);
     void mousePressEvent(QMouseEvent *);
     void currentChanged(const QModelIndex &current, const QModelIndex &previous);
 

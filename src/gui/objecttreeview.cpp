@@ -89,6 +89,14 @@ void ObjectTreeView::currentChanged(
 }
 
 
+void ObjectTreeView::resizeEvent(QResizeEvent *event)
+{
+    QTreeView::resizeEvent(event);
+
+    QModelIndex idx = currentIndex();
+    if (idx.isValid())
+        scrollTo(idx);
+}
 
 void ObjectTreeView::mousePressEvent(QMouseEvent * e)
 {

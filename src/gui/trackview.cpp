@@ -559,7 +559,7 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
             Double newstart = std::max((Double)0, dragStartTimes_[i] + deltaTime);
             Sequence * seq = selectedWidgets_[i]->sequence();
             ScopedSequenceChange lock(scene_, seq);
-            seq->setStart(newstart);
+                seq->setStart(newstart);
         }
 
         autoScrollView_(e->pos());
@@ -586,9 +586,9 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
             if (e->modifiers() & modifierDragWithOffset_)
                 newOffset -= change;
             ScopedSequenceChange lock(scene_, seq);
-            seq->setStart(newstart);
-            seq->setTimeOffset(newOffset);
-            seq->setLength(newlength);
+                seq->setStart(newstart);
+                seq->setTimeOffset(newOffset);
+                seq->setLength(newlength);
         }
 
         autoScrollView_(e->pos());
@@ -771,14 +771,20 @@ void TrackView::sequenceChanged(Sequence * seq)
     {
         // if time didn't change
         if (!updateWidgetViewSpace_(s))
-            // then content must have changed
+        // then content must have changed
+        {
+            s->updateValueRange();
             s->update();
+        }
 
         // go through all influenced widgets
         // if 's' is a modulator
         for (auto w : s->influencedWidgets())
-            if (!updateWidgetViewSpace_(w))
-                w->update();
+        if (!updateWidgetViewSpace_(w))
+        {
+            w->updateValueRange();
+            w->update();
+        }
     }
 }
 

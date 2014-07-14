@@ -73,6 +73,10 @@ public:
     bool useFrequency() const { return doUseFreq_; }
     bool phaseInDegree() const { return doPhaseDegree_; }
 
+    /** Returns the minimum and maximum values across the time range (local) */
+    void getMinMaxValue(Double localStart, Double localEnd,
+                        Double& minValue, Double& maxValue) const;
+
     // ------------ setter --------------
 
     void setMode(SequenceType);

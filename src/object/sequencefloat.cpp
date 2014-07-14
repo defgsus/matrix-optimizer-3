@@ -8,6 +8,8 @@
     <p>created 7/1/2014</p>
 */
 
+#include <random>
+
 #include "sequencefloat.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -209,6 +211,32 @@ Double SequenceFloat::value(Double gtime) const
     }
 }
 
+
+void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
+                    Double& minValue, Double& maxValue) const
+{
+    const Double
+        len = localEnd - localStart,
+        step = std::max(0.1, len / 5000.0);
+
+    Double time = localStart;
+
+    minValue = maxValue = value(time + start());
+
+    std::mt19937 rnd(12345);
+
+    while (time < localEnd)
+    {
+        minValue = std::min(minValue, value(time + start()));
+        maxValue = std::max(maxValue, value(time + start()));
+
+        time += step * (1.0 + (Double)rnd()/rnd.max());
+    }
+
+    // minimum size
+    if (maxValue - minValue < 0.1)
+        maxValue += 0.1;
+}
 
 
 } // namespace MO
