@@ -193,6 +193,9 @@ public:
     /** Returns if the object is active at the given time */
     bool active(Double time) const;
 
+    /** Returns if the object fits the currently set activity scope */
+    bool activeAtAll() const;
+
     // --------------- setter -------------------
 
     /** Set the user-name for the object */

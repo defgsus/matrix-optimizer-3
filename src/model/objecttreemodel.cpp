@@ -37,6 +37,7 @@ ObjectTreeModel::ObjectTreeModel(Scene * scene, QObject *parent) :
 
     boldFont_.setBold(true);
     colorDefault_ = Qt::black;
+    colorInactive_ = QColor(190,190,190);
     colorInvalid_ = Qt::red;
     colorTransformation_ = QColor(0,60,120);
     colorTrack_ = QColor(90,90,90);
@@ -181,8 +182,11 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         {
             switch (index.column())
             {
-                case 0: return role == Qt::DisplayRole? obj->infoName() : obj->name();
-                        //QString::number(index.internalId(), 16);
+                case 0:
+                {
+                    QString name = role == Qt::DisplayRole? obj->infoName() : obj->name();
+                    return obj->activeAtAll()? name : "(" + name + ")";
+                }        //QString::number(index.internalId(), 16);
                 case 1: return obj->className();
                 case 2: return obj->idName();
                 default: MO_LOGIC_ERROR("no DisplayRole defined for column " << index.column());
@@ -204,15 +208,19 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         // color
         if (role == Qt::TextColorRole)
         {
-            if (!obj->isValid())
+            if (!obj->activeAtAll())
+                return colorInactive_;
+            else if (!obj->isValid())
                 return colorInvalid_;
-            if (obj->isTransformation())
+
+            else if (obj->isTransformation())
                 //|| (obj->parentObject() && obj->parentObject()->isTransformation()))
                 return colorTransformation_;
-            if (obj->isTrack())
+            else if (obj->isTrack())
                 return colorTrack_;
-            if (obj->isSequence())
+            else if (obj->isSequence())
                 return colorSequence_;
+
             return colorDefault_;
         }
 

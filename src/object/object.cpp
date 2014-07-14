@@ -301,6 +301,11 @@ bool Object::active(Double /*time*/) const
     return activityScope() & currentActivityScope_;
 }
 
+bool Object::activeAtAll() const
+{
+    return activityScope() & currentActivityScope_;
+}
+
 // ------------------ setter -----------------------
 
 void Object::setName(const QString & n)

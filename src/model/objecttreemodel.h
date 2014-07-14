@@ -116,6 +116,7 @@ private:
     QFont boldFont_;
     QColor
         colorDefault_,
+        colorInactive_,
         colorTransformation_,
         colorTrack_,
         colorSequence_,
