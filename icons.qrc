@@ -26,5 +26,6 @@
         <file alias="new_child.png">assets/icon/new_child.png</file>
         <file alias="new_below.png">assets/icon/new_below.png</file>
         <file alias="new_above.png">assets/icon/new_above.png</file>
+        <file alias="delete.png">assets/icon/delete.png</file>
     </qresource>
 </RCC>

@@ -342,6 +342,7 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
         QAction * a = menu->addMenu(rem);
         a->setText(tr("Remove modulation"));
         a->setStatusTip(tr("Removes individual modulators from this parameter"));
+        a->setIcon(QIcon(":/icon/delete.png"));
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
             param->object()->sceneObject()->removeModulator(param, a->data().toString());
@@ -352,6 +353,7 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
         QAction * a = new QAction(tr("Remove all modulations (%1)")
                                   .arg(param->modulatorIds().size()), menu);
         a->setStatusTip(tr("Removes all modulators from this parameter"));
+        a->setIcon(QIcon(":/icon/delete.png"));
         menu->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {

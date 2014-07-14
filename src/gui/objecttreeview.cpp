@@ -355,6 +355,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         a = editActions_.addAction(tr("Delete"), this);
         a->setStatusTip(tr("Deletes the selected object and all of it's children"));
         a->setShortcut(Qt::CTRL + Qt::Key_Delete);
+        a->setIcon(QIcon(":/icon/delete.png"));
         connect(a, &QAction::triggered, [=]()
         {
             if (deleteObject_(currentIndex()))

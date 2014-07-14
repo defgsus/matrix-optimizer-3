@@ -125,8 +125,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="182.12892"
-     inkscape:cy="595.10554"
+     inkscape:cx="584.84561"
+     inkscape:cy="720.7602"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -1134,7 +1134,7 @@
        sodipodi:nodetypes="cccccccc"
        inkscape:connector-curvature="0"
        id="path4257"
-       d="m 46.071436,244.1479 0.35714,15.71428 24.64286,-0.35714 0,10.35714 15.71428,-18.57143 -15.71428,-17.5 0,10.35714 z"
+       d="m 46.071436,248.1479 0.35714,15.71428 24.64286,-0.35714 0,10.35714 15.71428,-18.57143 -15.71428,-17.5 0,10.35714 z"
        style="fill:none;stroke:#000000;stroke-width:1.89999998;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
     <path
        sodipodi:type="star"
@@ -1199,5 +1199,34 @@
        inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/new.png"
        inkscape:export-xdpi="164.57001"
        inkscape:export-ydpi="164.57001" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-70"
+       width="68.188736"
+       height="68.188736"
+       x="368.62497"
+       y="-543.73718"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/delete.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:none;stroke:#c80000;stroke-width:7.821;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:13.60000038000000089"
+       d="m 490.42532,422.87097 39.83559,-40.15174"
+       id="path3780-1"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/delete.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/delete.png"
+       sodipodi:nodetypes="cc"
+       inkscape:connector-curvature="0"
+       id="path4318"
+       d="M 530.26091,422.87097 490.42532,382.71923"
+       style="fill:none;stroke:#c80000;stroke-width:7.821;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:13.60000038000000089" />
   </g>
 </svg>
