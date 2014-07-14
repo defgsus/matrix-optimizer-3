@@ -17,6 +17,8 @@
 
 class QLabel;
 class QVBoxLayout;
+class QToolButton;
+
 namespace MO {
 class Object;
 class Parameter;
@@ -49,6 +51,9 @@ private:
     void createWidgets_();
     QWidget * createWidget_(Parameter *);
     void clearWidgets_();
+
+    void updateModulatorButton_(Parameter *, QToolButton *);
+    void openModulationPopup_(Parameter *, QToolButton *);
 
     Object * object_;
     QList<Parameter*> parameters_;

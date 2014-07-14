@@ -7,7 +7,7 @@
 
     <p>created 6/30/2014</p>
 */
-
+#include <QDebug>
 
 #include <QLayout>
 #include <QLabel>
@@ -16,6 +16,7 @@
 #include <QToolButton>
 #include <QComboBox>
 #include <QAbstractItemView>
+#include <QMenu>
 
 #include "parameterview.h"
 #include "object/object.h"
@@ -25,6 +26,8 @@
 #include "object/param/parameterselect.h"
 #include "io/error.h"
 #include "model/objecttreemodel.h"
+#include "util/objectmenu.h"
+
 
 namespace MO {
 namespace GUI {
@@ -84,11 +87,27 @@ void ParameterView::createWidgets_()
     }
 }
 
-QWidget * ParameterView::createWidget_(Parameter * p)
+void ParameterView::updateModulatorButton_(Parameter * p, QToolButton * b)
 {
     static QIcon iconModulateOn(":/icon/modulate_on.png");
     static QIcon iconModulateOff(":/icon/modulate_off.png");
 
+    b->setEnabled(p->isModulateable());
+
+    if (p->modulatorIds().size())
+    {
+        b->setDown(true);
+        b->setIcon(iconModulateOn);
+    }
+    else
+    {
+        b->setDown(false);
+        b->setIcon(iconModulateOff);
+    }
+}
+
+QWidget * ParameterView::createWidget_(Parameter * p)
+{
     MO_ASSERT(p->object(), "no object assigned to parameter");
     MO_ASSERT(p->object()->sceneObject(), "no scene assigned to parameter object");
     ObjectTreeModel * model = p->object()->sceneObject()->model();
@@ -114,9 +133,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     {
         but = bmod = new QToolButton(w);
         l->addWidget(but);
-        but->setIcon(pf->modulatorIds().isEmpty()? iconModulateOff : iconModulateOn);
         but->setStatusTip(tr("Creates a new modulation track for the given parameter"));
-        but->setEnabled(pf->isModulateable());
+        updateModulatorButton_(p, bmod);
 
         but = breset = new QToolButton(w);
         l->addWidget(but);
@@ -168,12 +186,14 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         if (pf->isModulateable())
         connect(bmod, &QToolButton::pressed, [=]()
         {
+            openModulationPopup_(p, bmod);
+            /*
             if (Object * o = model->createFloatTrack(pf))
             {
                 bmod->setIcon(iconModulateOn);
                 if (doChangeToCreatedTrack_)
                     emit objectSelected(o);
-            }
+            }*/
         });
     }
     else
@@ -182,9 +202,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     {
         but = bmod = new QToolButton(w);
         l->addWidget(but);
-        but->setIcon(ps->modulatorIds().isEmpty()? iconModulateOff : iconModulateOn);
         but->setStatusTip(tr("Creates a new modulation track for the given parameter"));
-        but->setEnabled(ps->isModulateable());
+        updateModulatorButton_(p, bmod);
 
         but = breset = new QToolButton(w);
         l->addWidget(but);
@@ -271,6 +290,59 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");
 
     return w;
+}
+
+void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button)
+{
+    Object * object = param->object();
+    MO_ASSERT(object, "No Object for edit Parameter");
+    Scene * scene = object->sceneObject();
+    MO_ASSERT(scene, "No Scene for object in Parameter");
+    ObjectTreeModel * model = scene->model();
+    MO_ASSERT(model, "No model assigned for Parameter");
+
+    QMenu * menu = new QMenu(this);
+    QAction * a;
+
+    if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(param))
+    {
+        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create float track"), menu) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            if (Object * o = model->createFloatTrack(pf))
+            {
+                updateModulatorButton_(param, button);
+                if (doChangeToCreatedTrack_)
+                    emit objectSelected(o);
+            }
+        });
+
+        if (param->modulatorIds().size())
+        {
+            QMenu * removeMenu = ObjectMenu::createRemoveModulationMenu(param, menu);
+            a = menu->addMenu(removeMenu);
+            a->setText(tr("Remove modulation"));
+            connect(removeMenu, &QMenu::triggered, [=](QAction* a)
+            {
+                scene->removeModulator(param, a->data().toString());
+                updateModulatorButton_(param, button);
+            });
+        }
+
+        QMenu * linkmenu = ObjectMenu::createObjectMenu(scene, Object::T_TRACK_FLOAT, menu);
+        a = menu->addMenu(linkmenu);
+        a->setText(tr("Choose existing track"));
+        a->setIcon(QIcon(":/icon/obj_track.png"));
+    }
+    else
+        MO_ASSERT(false, "No modulation possible for requested parameter '" << param->idName() << "'");
+
+    if (menu->isEmpty())
+        return;
+
+    menu->popup(button->mapToGlobal(QPoint(0,0)));
+
+    //delete menu;
 }
 
 

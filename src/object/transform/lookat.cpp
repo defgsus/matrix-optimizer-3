@@ -43,16 +43,29 @@ void LookAt::createParameters()
 
     const QString lookTip = tr("Global position to look at"),
                   upTip = tr("unit vector describing the up-axis (internally normalized)");
+
     lookMode_ = createSelectParameter("lookmode", "look-at mode",
-                                      tr("Selects if the look-at point is local or global"),
-                                      { "local", "global" },
-                                      { tr("local"), tr("global") },
-    { tr("The look-at point is part of the transformation stack before the look-at transformation"),
-      tr("The look-at point is global (world coordinates)") },
-                                      { LM_LOCAL, LM_GLOBAL },
-                                      LM_LOCAL,
-                                      true, false
-                                      );
+        tr("Selects if the look-at point is local or global"),
+        { "local", "global" },
+        { tr("local"), tr("global") },
+        { tr("The look-at point is part of the transformation stack before the look-at transformation"),
+          tr("The look-at point is global (world coordinates)") },
+        { LM_LOCAL, LM_GLOBAL },
+        LM_LOCAL,
+        true, false
+        );
+
+    upMode_ = createSelectParameter("upmode", "up mode",
+        tr("Selects if the up-axis is local or global"),
+        { "local", "global" },
+        { tr("local"), tr("global") },
+        { tr("The up-axis point is part of the transformation stack before the look-at transformation"),
+          tr("The up-axis point is global (world coordinates)") },
+        { LM_LOCAL, LM_GLOBAL },
+        LM_LOCAL,
+        true, false
+        );
+
     x_ = createFloatParameter("x", "look-at x", lookTip, 0);
     y_ = createFloatParameter("y", "look-at y", lookTip, 0);
     z_ = createFloatParameter("z", "look-at z", lookTip, 0);
@@ -65,13 +78,28 @@ void LookAt::createParameters()
 void LookAt::applyTransformation(Mat4 &matrix, Double time) const
 {
     Vec3 lookAt = Vec3(x_->value(time), y_->value(time), z_->value(time));
+    Vec3 up = Vec3(upX_->value(time), upY_->value(time), upZ_->value(time));
 
-    if (lookMode_->baseValue() == LM_GLOBAL)
+    bool glook = lookMode_->baseValue() == LM_GLOBAL,
+         gup = upMode_->baseValue() == LM_GLOBAL;
+
+    if (glook || gup)
     {
-        Vec4 lookAt4 = glm::inverse(matrix) * Vec4(lookAt[0], lookAt[1], lookAt[2], 1.0);
-        lookAt[0] = lookAt4[0];
-        lookAt[1] = lookAt4[1];
-        lookAt[2] = lookAt4[2];
+        Mat4 imatrix = glm::inverse(matrix);
+        if (glook)
+        {
+            Vec4 v4 = imatrix * Vec4(lookAt[0], lookAt[1], lookAt[2], 1.0);
+            lookAt[0] = v4[0];
+            lookAt[1] = v4[1];
+            lookAt[2] = v4[2];
+        }
+        if (gup)
+        {
+            Vec4 v4 = imatrix * Vec4(up[0], up[1], up[2], 0.0);
+            up[0] = v4[0];
+            up[1] = v4[1];
+            up[2] = v4[2];
+        }
     }
 
     // extract current position
@@ -80,7 +108,7 @@ void LookAt::applyTransformation(Mat4 &matrix, Double time) const
     // forward vector (look-at minus position)
     Vec3 f = glm::normalize(lookAt - pos);
     // up vector
-    Vec3 u = glm::normalize(Vec3(upX_->value(time), upY_->value(time), upZ_->value(time)));
+    Vec3 u = glm::normalize(up);
     // right vector
     Vec3 s = glm::normalize(glm::cross(f, u));
     // rebuild up to avoid distortion

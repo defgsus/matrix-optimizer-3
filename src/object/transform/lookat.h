@@ -43,7 +43,7 @@ protected:
     ParameterFloat
         * x_, * y_, * z_,
         * upX_, * upY_, * upZ_;
-    ParameterSelect * lookMode_;
+    ParameterSelect * lookMode_, * upMode_;
 };
 
 } // namespace MO
