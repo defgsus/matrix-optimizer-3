@@ -128,23 +128,30 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
     QToolButton * but, * bmod = 0, * breset;
 
+
+    // modulate button
+    bmod = new QToolButton(w);
+    l->addWidget(bmod);
+    bmod->setStatusTip(tr("Creates a new modulation track for the given parameter"));
+    updateModulatorButton_(p, bmod);
+    if (p->isModulateable())
+        connect(bmod, &QToolButton::pressed,
+            [=]() { openModulationPopup_(p, bmod); });
+
+    // reset-to-default button
+    but = breset = new QToolButton(w);
+    l->addWidget(but);
+    but->setText("0");
+    but->setEnabled(p->isEditable());
+    QString defaultValueName;
+
+    int fs = breset->contentsRect().height() - 4;
+    bmod->setFixedSize(fs, fs);
+
     // --- float parameter ---
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(p))
     {
-        but = bmod = new QToolButton(w);
-        l->addWidget(but);
-        but->setStatusTip(tr("Creates a new modulation track for the given parameter"));
-        updateModulatorButton_(p, bmod);
-
-        but = breset = new QToolButton(w);
-        l->addWidget(but);
-        but->setText("0");
-        but->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")
-                          .arg(pf->defaultValue()));
-        but->setEnabled(pf->isEditable());
-
-        int fs = breset->contentsRect().height() - 4;
-        bmod->setFixedSize(fs, fs);
+        defaultValueName = QString::number(pf->defaultValue());
 
         QDoubleSpinBox * spin = new QDoubleSpinBox(w);
         l->addWidget(spin);
@@ -183,37 +190,12 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         });
 
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue()); });
-        if (pf->isModulateable())
-        connect(bmod, &QToolButton::pressed, [=]()
-        {
-            openModulationPopup_(p, bmod);
-            /*
-            if (Object * o = model->createFloatTrack(pf))
-            {
-                bmod->setIcon(iconModulateOn);
-                if (doChangeToCreatedTrack_)
-                    emit objectSelected(o);
-            }*/
-        });
     }
     else
     // --- select parameter ---
     if (ParameterSelect * ps = dynamic_cast<ParameterSelect*>(p))
     {
-        but = bmod = new QToolButton(w);
-        l->addWidget(but);
-        but->setStatusTip(tr("Creates a new modulation track for the given parameter"));
-        updateModulatorButton_(p, bmod);
-
-        but = breset = new QToolButton(w);
-        l->addWidget(but);
-        but->setText("0");
-        but->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")
-                          .arg(ps->defaultValueName()));
-        but->setEnabled(ps->isEditable());
-
-        int fs = breset->contentsRect().height() - 4;
-        bmod->setFixedSize(fs, fs);
+        defaultValueName = ps->defaultValueName();
 
         QComboBox * combo = new QComboBox(w);
         l->addWidget(combo);
@@ -259,6 +241,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             scene->setParameterValue(ps, value);
         });
 
+        // statustips from combobox items
         connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::highlighted), [=](int idx)
         {
             if (idx >= 0 && idx < ps->statusTips().size())
@@ -269,25 +252,20 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             }
         });
 
+        // reset to default
         connect(breset, &QToolButton::pressed, [=]()
         {
             combo->setCurrentIndex(ps->valueList().indexOf(ps->defaultValue()));
         });
-        if (ps->isModulateable())
-        connect(bmod, &QToolButton::pressed, [=]()
-        {
-            /*
-            if (Object * o = model->createFloatTrack(pf))
-            {
-                bmod->setIcon(iconModulateOn);
-                if (doChangeToCreatedTrack_)
-                    emit objectSelected(o);
-            }
-            */
-        });
     }
     else
     MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");
+
+    if (defaultValueName.isEmpty())
+        breset->setEnabled(false);
+    else
+        breset->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")
+                      .arg(defaultValueName));
 
     return w;
 }
@@ -302,46 +280,44 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
     MO_ASSERT(model, "No model assigned for Parameter");
 
     QMenu * menu = new QMenu(this);
+    menu->setAttribute(Qt::WA_DeleteOnClose);
     QAction * a;
+
+    // --- parameter float ---
 
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(param))
     {
+        // create modulation
         menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
         connect(a, &QAction::triggered, [=]()
         {
             if (Object * o = model->createFloatTrack(pf))
             {
-                updateModulatorButton_(param, button);
                 if (doChangeToCreatedTrack_)
                     emit objectSelected(o);
             }
         });
 
-        addRemoveModMenu_(menu, param, button);
+        // remove modulation
+        addRemoveModMenu_(menu, param);
 
-        QMenu * linkMenu = ObjectMenu::createObjectMenu(scene, Object::T_TRACK_FLOAT, menu);
-        a = menu->addMenu(linkMenu);
-        a->setText(tr("Choose existing track"));
-        a->setIcon(QIcon(":/icon/obj_track.png"));
-        connect(linkMenu, &QMenu::triggered, [=](QAction* a)
-        {
-            scene->addModulator(param, a->data().toString());
-            updateModulatorButton_(param, button);
-        });
+        // link to existing modulator
+        addLinkModMenu_(menu, param, Object::T_TRACK_FLOAT);
     }
     else
         MO_ASSERT(false, "No modulation menu implemented for requested parameter '" << param->idName() << "'");
 
     if (menu->isEmpty())
+    {
+        menu->deleteLater();
         return;
+    }
 
-    connect(menu, &QMenu::aboutToHide, [=](){ updateModulatorButton_(param, button); });
+    connect(menu, &QMenu::destroyed, [=](){ updateModulatorButton_(param, button); });
     menu->popup(button->mapToGlobal(QPoint(0,0)));
-
-    //delete menu;
 }
 
-void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param, QToolButton * button)
+void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
 {
     if (param->modulatorIds().size() == 1)
     {
@@ -349,7 +325,6 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param, QToolButt
         connect(a, &QAction::triggered, [=]()
         {
             param->object()->sceneObject()->removeModulator(param, param->modulatorIds().at(0));
-            updateModulatorButton_(param, button);
         });
         menu->addAction(a);
     }
@@ -362,9 +337,30 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param, QToolButt
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
             param->object()->sceneObject()->removeModulator(param, a->data().toString());
-            updateModulatorButton_(param, button);
         });
     }
+}
+
+void ParameterView::addLinkModMenu_(
+        QMenu * menu, Parameter * param, int objectTypeFlags)
+{
+    Scene * scene = param->object()->sceneObject();
+
+    QMenu * linkMenu = ObjectMenu::createObjectMenu(scene, objectTypeFlags, menu);
+    if (linkMenu->isEmpty())
+    {
+        linkMenu->deleteLater();
+        return;
+    }
+
+    QAction * a = menu->addMenu(linkMenu);
+    a->setText(tr("Choose existing track"));
+    a->setIcon(QIcon(":/icon/obj_track.png"));
+    connect(linkMenu, &QMenu::triggered, [=](QAction* a)
+    {
+        scene->addModulator(param, a->data().toString());
+    });
+
 }
 
 } // namespace GUI

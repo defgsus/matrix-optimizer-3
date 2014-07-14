@@ -55,7 +55,8 @@ private:
 
     void updateModulatorButton_(Parameter *, QToolButton *);
     void openModulationPopup_(Parameter *, QToolButton *);
-    void addRemoveModMenu_(QMenu *, Parameter *, QToolButton *button);
+    void addRemoveModMenu_(QMenu *, Parameter *);
+    void addLinkModMenu_(QMenu *, Parameter *, int objectTypeFlags);
 
     Object * object_;
     QList<Parameter*> parameters_;
