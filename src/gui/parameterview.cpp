@@ -224,11 +224,10 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
             // get value
             int value = ps->valueList().at(combo->currentIndex());
-
-            QObject * scene = p->object()->sceneObject();
+            Scene * scene = p->object()->sceneObject();
             MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
             if (!scene) return;
-            bool r =
+            /*bool r =
                 metaObject()->invokeMethod(scene,
                                            "setParameterValue",
                                            Qt::QueuedConnection,
@@ -237,6 +236,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
                                            );
             MO_ASSERT(r, "could not invoke Scene::setParameterValue");
             Q_UNUSED(r);
+            */
+            scene->setParameterValue(ps, value);
         });
 
         connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::highlighted), [=](int idx)

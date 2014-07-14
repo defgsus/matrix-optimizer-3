@@ -77,6 +77,9 @@ signals:
     /** Emitted whenever the scene time changed */
     void sceneTimeChanged(Double);
 
+    /** A parameter has been changed (with Scene::setParameter..) */
+    void parameterChanged(MO::Parameter*);
+
     /** Emitted after settings in an object have changed. */
     void objectChanged(MO::Object *);
 

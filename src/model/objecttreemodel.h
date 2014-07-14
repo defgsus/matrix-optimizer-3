@@ -113,7 +113,7 @@ private:
 
     // ----- config -----
 
-    QFont boldFont_;
+    QFont boldFont_, italicFont_, boldItalicFont_;
     QColor
         colorDefault_,
         colorInactive_,

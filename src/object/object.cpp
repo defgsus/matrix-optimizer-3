@@ -36,6 +36,7 @@ Object::Object(QObject *parent) :
     parentObject_           (0),
     childrenHaveChanged_    (false),
     paramActiveScope_       (0),
+    parentActivityScope_    (AS_ON),
     currentActivityScope_   (AS_ON)
 {
     // tie into Object hierarchy
@@ -291,9 +292,23 @@ QString Object::idNamePath() const
 Object::ActivityScope Object::activityScope() const
 {
     if (paramActiveScope_)
-        return (ActivityScope)paramActiveScope_->baseValue();
+        return (ActivityScope)(
+                    paramActiveScope_->baseValue() & parentActivityScope_);
     else
-        return AS_ON;
+        return parentActivityScope_;
+}
+
+void Object::passDownActivityScope_(ActivityScope parent_scope)
+{
+    ActivityScope scope = parent_scope;
+    if (paramActiveScope_)
+        scope = (ActivityScope)(scope & paramActiveScope_->baseValue());
+
+    for (auto c : childObjects_)
+    {
+        c->parentActivityScope_ = scope;
+        c->passDownActivityScope_(scope);
+    }
 }
 
 bool Object::active(Double /*time*/) const
@@ -594,6 +609,8 @@ void Object::childrenChanged_()
     // notify derived classes
     childrenChanged();
 
+    passDownActivityScope_(activityScope());
+
     childrenHaveChanged_ = false;
 }
 
@@ -676,10 +693,13 @@ void Object::createParameters()
                          AS_ON, true, false );
 }
 
-void Object::parameterChanged(Parameter *)
+void Object::onParameterChanged(Parameter * p)
 {
     MO_DEBUG_PARAM("Object::parameterChanged('" << p->idName() << "')");
 
+    // activity scope changed
+    if (p == paramActiveScope_)
+        passDownActivityScope_(activityScope());
 
 }
 

@@ -35,7 +35,12 @@ ObjectTreeModel::ObjectTreeModel(Scene * scene, QObject *parent) :
             //<< "id"
             ;
 
+    //boldFont_ = italicFont_ = boldItalicFont_;
     boldFont_.setBold(true);
+    italicFont_.setItalic(true);
+    boldItalicFont_.setBold(true);
+    boldItalicFont_.setItalic(true);
+
     colorDefault_ = Qt::black;
     colorInactive_ = QColor(190,190,190);
     colorInvalid_ = Qt::red;
@@ -185,8 +190,10 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
                 case 0:
                 {
                     QString name = role == Qt::DisplayRole? obj->infoName() : obj->name();
-                    return obj->activeAtAll()? name : "(" + name + ")";
-                }        //QString::number(index.internalId(), 16);
+                    //return obj->activeAtAll()? name : "(" + name + ")";
+                    //QString::number(index.internalId(), 16);
+                    return name;
+                }
                 case 1: return obj->className();
                 case 2: return obj->idName();
                 default: MO_LOGIC_ERROR("no DisplayRole defined for column " << index.column());
@@ -227,7 +234,13 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         // font
         if (role == Qt::FontRole)
         {
-            if (!(obj->type() & Object::TG_MODULATION))
+            bool bold = !(obj->type() & Object::TG_MODULATION);
+            bool italic = !(obj->activeAtAll());
+            if (bold && italic)
+                return boldItalicFont_;
+            else if (italic)
+                return italicFont_;
+            else if (bold)
                 return boldFont_;
         }
 

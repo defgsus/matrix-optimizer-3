@@ -50,6 +50,8 @@ ObjectView::ObjectView(QWidget *parent) :
                 this, SIGNAL(objectSelected(MO::Object*)));
         connect(paramView_, SIGNAL(statusTipChanged(QString)),
                 this, SIGNAL(statusTipChanged(QString)));
+        connect(paramView_, SIGNAL(objectActivityChanged(MO::Object*)),
+                this, SIGNAL(objectActivityChanged(MO::Object*)));
 }
 
 void ObjectView::setObject(Object * object)

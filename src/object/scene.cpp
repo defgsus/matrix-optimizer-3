@@ -250,8 +250,9 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
     {
         ScopedSceneLock lock(this);
         p->setValue(v);
-        p->object()->parameterChanged(p);
+        p->object()->onParameterChanged(p);
     }
+    emit parameterChanged(p);
     render_();
 }
 
@@ -260,8 +261,9 @@ void Scene::setParameterValue(ParameterSelect *p, int v)
     {
         ScopedSceneLock lock(this);
         p->setValue(v);
-        p->object()->parameterChanged(p);
+        p->object()->onParameterChanged(p);
     }
+    emit parameterChanged(p);
     render_();
 }
 

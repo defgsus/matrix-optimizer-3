@@ -34,6 +34,10 @@ signals:
     /** When creating a modulator track */
     void objectSelected(MO::Object *);
 
+    /** Emitted when the ActivityScope of an object has changed */
+    void objectActivityChanged(MO::Object*);
+
+    /** Emitted when statusbar should update */
     void statusTipChanged(const QString&);
 
 public slots:

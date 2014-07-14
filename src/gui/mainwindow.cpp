@@ -173,7 +173,6 @@ void MainWindow::createWidgets_()
                                         this, SLOT(objectSelected(MO::Object*)));
             connect(objectView_, SIGNAL(statusTipChanged(QString)),
                     statusBar(), SLOT(showMessage(QString)));
-
         //l0->setStretchFactor(lv, -1);
 
         lv = new QVBoxLayout();
@@ -347,6 +346,8 @@ void MainWindow::setSceneObject(Scene * s)
     connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(treeChanged()));
     connect(scene_, SIGNAL(objectDeleted(MO::Object*)), this, SLOT(treeChanged()));
     connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(treeChanged()));
+    connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
+            objectTreeView_, SLOT(columnMoved()/* force update */));
 
     // update widgets
 

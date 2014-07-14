@@ -327,7 +327,7 @@ public:
 
     /** Called when a parameter has changed it's value (from the gui).
         Be sure to call the ancestor class implementation in your derived method! */
-    virtual void parameterChanged(Parameter * p);
+    virtual void onParameterChanged(Parameter * p);
 
 protected:
     /** Creates the desired parameter,
@@ -425,6 +425,7 @@ private:
         @note The parameters MUST be created before! */
     static void deserializeParameters_(IO::DataStream&, Object*);
 
+    void passDownActivityScope_(ActivityScope parent_scope);
 
     // ------------ properties ---------------
 
@@ -449,7 +450,11 @@ private:
 
     // ------------ runtime ------------------
 
-    ActivityScope currentActivityScope_;
+    ActivityScope
+    /** activity scope passed down from parents */
+        parentActivityScope_,
+    /** current requested activity scope */
+        currentActivityScope_;
 
     // ----------- position ------------------
 
