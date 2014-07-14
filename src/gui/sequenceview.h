@@ -20,6 +20,7 @@ class QScrollArea;
 class QCheckBox;
 
 namespace MO {
+class Scene;
 class Sequence;
 namespace GUI {
 namespace UTIL { class ViewSpace; }
@@ -33,6 +34,9 @@ class SequenceView : public QWidget
     Q_OBJECT
 public:
     explicit SequenceView(QWidget *parent = 0);
+
+    void setScene(Scene * scene);
+    Scene * scene() const { return scene_; }
 
     /** Creates a new setting widget container.
         Add your stuff to the returned widget's layout. */
@@ -64,6 +68,7 @@ protected slots:
     void sequenceTimeChanged_(MO::Sequence *);
 
     void rulerXClicked_(Double);
+
 protected:
     void resizeEvent(QResizeEvent *);
 
@@ -92,6 +97,7 @@ private:
     void createDefaultSettingsWidgets_();
 
     Sequence * baseSequence_;
+    Scene * scene_;
 
     QGridLayout * grid_;
     QVBoxLayout * settingsLayout_;

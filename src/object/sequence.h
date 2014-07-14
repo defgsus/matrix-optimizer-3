@@ -70,44 +70,37 @@ public:
 
     // --------------- setter ---------------------
 
-    void setStart(Double t, bool send_signal = true)
-        { start_ = t; if (send_signal) emit timeChanged(this); }
+    void setStart(Double t)
+        { start_ = t; }
 
-    void setEnd(Double t, bool send_signal = true)
-        { length_ = std::max(minimumLength(), (t - start_) * speed_);
-          if (send_signal) emit timeChanged(this); }
+    void setEnd(Double t)
+        { length_ = std::max(minimumLength(), (t - start_) * speed_); }
 
-    void setLength(Double t, bool send_signal = true)
-        { length_ = std::max(minimumLength(), t); if (send_signal) emit timeChanged(this); }
+    void setLength(Double t)
+        { length_ = std::max(minimumLength(), t); }
 
-    void setLooping(bool doit, bool send_signal = true)
-        { looping_ = doit; if (send_signal) emit timeChanged(this); }
+    void setLooping(bool doit)
+        { looping_ = doit; }
 
-    void setLoopStart(Double t, bool send_signal = true)
-        { loopStart_->setValue(t); if (send_signal) emit timeChanged(this); }
+    void setLoopStart(Double t)
+        { loopStart_->setValue(t); }
 
-    void setLoopEnd(Double t, bool send_signal = true)
-        { loopLength_->setValue(std::max(minimumLength(), (t - loopStart_->baseValue()) * speed_));
-          if (send_signal) emit timeChanged(this); }
+    void setLoopEnd(Double t)
+        { loopLength_->setValue(std::max(minimumLength(), (t - loopStart_->baseValue()) * speed_)); }
 
-    void setLoopLength(Double t, bool send_signal = true)
-        { loopLength_->setValue( std::max(minimumLength(), t) );
-          if (send_signal) emit timeChanged(this); }
+    void setLoopLength(Double t)
+        { loopLength_->setValue( std::max(minimumLength(), t) ); }
 
-    void setTimeOffset(Double t, bool send_signal = true)
-        { timeOffset_->setValue(t); if (send_signal) emit timeChanged(this); }
+    void setTimeOffset(Double t)
+        { timeOffset_->setValue(t); }
 
-    void setSpeed(Double t, bool send_signal = true)
-        { speed_ = (t >= minimumSpeed()) ? t : minimumSpeed();
-          if (send_signal) emit timeChanged(this); }
+    void setSpeed(Double t)
+        { speed_ = (t >= minimumSpeed()) ? t : minimumSpeed(); }
 
     /** Translates global time to sequence-local time */
     Double getSequenceTime(Double global_time) const;
 
 signals:
-
-    /** Emitted, when any of the time or loop settings changed */
-    void timeChanged(MO::Sequence *);
 
 public slots:
 

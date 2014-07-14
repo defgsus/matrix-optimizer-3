@@ -358,6 +358,8 @@ void MainWindow::setSceneObject(Scene * s)
             sequencer_, SLOT(setSceneTime(Double)));
 
     objectView_->setObject(0);
+
+    seqFloatView_->setScene(scene_);
     seqFloatView_->setSequence(0);
 
     sequencer_->setTracks(scene_);

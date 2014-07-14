@@ -73,7 +73,7 @@ void SequenceFloatView::createSequenceView_()
 
 void SequenceFloatView::setSequence(SequenceFloat * s)
 {
-    MO_DEBUG("SequenceFloatView::setSequence(" << s << ") sequence_ = " << sequence_);
+    MO_DEBUG_GUI("SequenceFloatView::setSequence(" << s << ") sequence_ = " << sequence_);
 
     bool different = sequence_ != s;
     sequence_ = s;

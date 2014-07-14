@@ -326,8 +326,6 @@ void TrackView::createSequenceWidgets_(Track * t)
         w->setVisible(true);
         connect(w, SIGNAL(hovered(SequenceWidget*,bool)),
                 this, SLOT(widgetHovered_(SequenceWidget*,bool)));
-        //connect(seq, SIGNAL(timeChanged(MO::Sequence*)),
-        //        this, SLOT(sequenceTimeChanged(MO::Sequence*)));
 
         // set the focus
         if (seq == nextFocusSequence_)

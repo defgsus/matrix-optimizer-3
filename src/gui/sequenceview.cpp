@@ -134,6 +134,13 @@ SequenceView::SequenceView(QWidget *parent) :
     setSceneTime(0);
 }
 
+void SequenceView::setScene(Scene *scene)
+{
+    scene_ = scene;
+    connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)),
+            this, SLOT(sequenceTimeChanged_(MO::Sequence*)));
+}
+
 void SequenceView::setSceneTime(Double time)
 {
     playBar_->setTime(time);
@@ -152,16 +159,9 @@ void SequenceView::resizeEvent(QResizeEvent * e)
 
 void SequenceView::setSequence_(Sequence * s)
 {
-    MO_DEBUG("SequenceView::setSequence(" << s << ") baseSequence_ = " << baseSequence_);
+    MO_DEBUG_GUI("SequenceView::setSequence(" << s << ") baseSequence_ = " << baseSequence_);
 
     bool different = baseSequence_ != s;
-
-    // remove old connection !!
-    if (different && baseSequence_)
-    {
-        disconnect(baseSequence_, SIGNAL(timeChanged(MO::Sequence*)),
-                   this, SLOT(sequenceTimeChanged_(MO::Sequence*)));
-    }
 
     baseSequence_ = s;
 
@@ -172,9 +172,6 @@ void SequenceView::setSequence_(Sequence * s)
         else
         {
             createDefaultSettingsWidgets_();
-            connect(baseSequence_, SIGNAL(timeChanged(MO::Sequence*)),
-                    this, SLOT(sequenceTimeChanged_(MO::Sequence*)));
-
             playBar_->setTimeOffset(-baseSequence_->start());
         }
     }
