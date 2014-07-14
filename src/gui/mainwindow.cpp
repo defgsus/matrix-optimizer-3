@@ -54,6 +54,10 @@ namespace MO {
 namespace GUI {
 
 
+static QString windowTitleString("Matrix Optimizer 3.0");
+
+
+
 class TestThread : public QThread
 {
 public:
@@ -108,15 +112,19 @@ MainWindow::MainWindow(QWidget *parent) :
     objectTreeModel_(0),
     seqFloatView_   (0),
     qobjectView_    (0),
-    testThread_     (0)
+    testThread_     (0),
+
+    currentSceneDirectory_("./"),
+    statusMessageTimeout_(1000)
 {
-    setWindowTitle(tr("Matrix Optimizer 3.0"));
 
     setAttribute(Qt::WA_DeleteOnClose, true);
 
     createMainMenu_();
     createWidgets_();
     createObjects_();
+
+    updateWindowTitle_();
 }
 
 MainWindow::~MainWindow()
@@ -252,19 +260,28 @@ void MainWindow::createMainMenu_()
     m = editMenu_ = new QMenu(tr("File"), menuBar());
     menuBar()->addMenu(m);
 
+    m->addAction(a = new QAction(tr("New scene"), menuBar()));
+    connect(a, SIGNAL(triggered()), this, SLOT(newScene()));
+
+    m->addSeparator();
+
     m->addAction(a = new QAction(tr("Load scene"), menuBar()));
     connect(a, SIGNAL(triggered()), this, SLOT(loadScene()));
 
-    m->addAction(a = new QAction(tr("Save scene as"), menuBar()));
+    m->addAction(a = actionSaveScene_ = new QAction(tr("Save scene"), menuBar()));
+    a->setShortcut(Qt::CTRL + Qt::Key_S);
     connect(a, SIGNAL(triggered()), this, SLOT(saveScene()));
 
-    m->addAction(a = new QAction(tr("New scene"), menuBar()));
-    connect(a, SIGNAL(triggered()), this, SLOT(newScene()));
+    m->addAction(a = new QAction(tr("Save scene as ..."), menuBar()));
+    a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
+    connect(a, SIGNAL(triggered()), this, SLOT(saveSceneAs()));
+
 
     // ######### EDIT MENU #########
     m = editMenu_ = new QMenu(tr("Edit"), menuBar());
     menuBar()->addMenu(m);
     // will be updated from child widgets
+
 
     // ######### RENDER MENU #########
     m = new QMenu(tr("Render"), menuBar());
@@ -379,8 +396,8 @@ void MainWindow::createObjects_()
 
     try
     {
-        setSceneObject(ObjectFactory::loadScene("./lookat.mo3"));
-        //setSceneObject(ObjectFactory::loadScene("./dreh.mo3"));
+        loadScene_("./lookat.mo3");
+        loadScene_("./dreh.mo3");
     }
     catch (IoException& e)
     {
@@ -546,6 +563,21 @@ void MainWindow::updateSystemInfo_()
     sysInfoLabel_->setText(info);
 }
 
+void MainWindow::updateWindowTitle_()
+{
+    QString t;
+
+    if (!sceneFilename_.isEmpty())
+        t = QFileInfo(sceneFilename_).fileName() + " - ";
+
+    setWindowTitle(t + windowTitleString);
+}
+
+void MainWindow::updateWidgetsActivity_()
+{
+    actionSaveScene_->setEnabled( !sceneFilename_.isEmpty() );
+}
+
 void MainWindow::start()
 {
     scene_->start();
@@ -559,6 +591,52 @@ void MainWindow::stop()
 void MainWindow::newScene()
 {
     setSceneObject( ObjectFactory::createSceneObject() );
+    sceneFilename_.clear();
+    updateWindowTitle_();
+    updateWidgetsActivity_();
+}
+
+QString MainWindow::getSceneSaveFilename_()
+{
+    while (true)
+    {
+        QString fn = QFileDialog::getSaveFileName(
+                    this,
+                    tr("Save Scene"),
+                    currentSceneDirectory_,
+                    "MatrixOptimizer .mo3 (*.mo3)",
+                    0,
+                    QFileDialog::DontConfirmOverwrite);
+
+        // cancelled
+        if (fn.isEmpty())
+            return QString();
+
+        // remember the directory
+        currentSceneDirectory_ = QDir(fn).absolutePath();
+
+        // complete filename
+        if (!fn.endsWith(".mo3"))
+            fn.append(".mo3");
+
+        // check existence
+        if (!QFile::exists(fn))
+            return fn;
+
+        // ask for overwrite
+        QMessageBox::StandardButton res =
+        QMessageBox::question(this, tr("File already exists"),
+                              tr("The file %1 already exists.\n"
+                                 "Do you want to replace it?").arg(fn)
+                              , QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+                              QMessageBox::No);
+
+        if (res == QMessageBox::Yes)
+            return fn;
+
+        if (res == QMessageBox::Cancel)
+            return QString();
+    }
 }
 
 void MainWindow::saveScene()
@@ -566,25 +644,67 @@ void MainWindow::saveScene()
     if (!scene_)
         return;
 
-    QString fn = QFileDialog::getSaveFileName(this, tr("Save Scene"),
-                                              "./", "MatrixOptimizer (*.mo3)");
+    QString fn = sceneFilename_;
+
     if (fn.isEmpty())
+        fn = getSceneSaveFilename_();
+
+    saveScene_(fn);
+}
+
+void MainWindow::saveSceneAs()
+{
+    if (!scene_)
         return;
 
-    ObjectFactory::saveScene(fn, scene_);
+    QString fn = getSceneSaveFilename_();
+
+    saveScene_(fn);
 }
+
 
 void MainWindow::loadScene()
 {
-    QString fn = QFileDialog::getOpenFileName(this, tr("Load Scene"),
-                                              "./", "MatrixOptimizer (*.mo3)");
-    if (fn.isEmpty())
-        return;
+    QString fn = QFileDialog::getOpenFileName(
+                this,
+                tr("Load Scene"),
+                currentSceneDirectory_,
+                "MatrixOptimizer mo3 (*.mo3)");
 
-    Scene * scene = ObjectFactory::loadScene(fn);
+    if (!fn.isEmpty())
+        currentSceneDirectory_ = QDir(fn).absolutePath();
 
-    if (scene)
-        setSceneObject(scene);
+    loadScene_(fn);
+}
+
+void MainWindow::loadScene_(const QString &fn)
+{
+    if (!fn.isEmpty())
+    {
+        setSceneObject(ObjectFactory::loadScene(fn));
+
+        statusBar()->showMessage(tr("Opened %1").arg(fn), statusMessageTimeout_);
+        sceneFilename_ = fn;
+        updateWindowTitle_();
+        updateWidgetsActivity_();
+    }
+    else
+        statusBar()->showMessage(tr("loading cancelled"), statusMessageTimeout_);
+}
+
+void MainWindow::saveScene_(const QString &fn)
+{
+    if (!fn.isEmpty())
+    {
+        ObjectFactory::saveScene(fn, scene_);
+
+        statusBar()->showMessage(tr("Saved %1").arg(fn), statusMessageTimeout_);
+        sceneFilename_ = fn;
+        updateWindowTitle_();
+        updateWidgetsActivity_();
+    }
+    else
+        statusBar()->showMessage(tr("saving cancelled"), statusMessageTimeout_);
 }
 
 } // namespace GUI

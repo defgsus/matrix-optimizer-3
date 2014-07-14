@@ -132,7 +132,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     // modulate button
     bmod = new QToolButton(w);
     l->addWidget(bmod);
-    bmod->setStatusTip(tr("Creates a new modulation track for the given parameter"));
+    bmod->setStatusTip(tr("Click to open the context menu for modulating the parameter"));
     updateModulatorButton_(p, bmod);
     if (p->isModulateable())
         connect(bmod, &QToolButton::pressed,

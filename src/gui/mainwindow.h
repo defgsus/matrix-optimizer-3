@@ -54,6 +54,7 @@ private slots:
     void stop();
 
     void saveScene();
+    void saveSceneAs();
     void loadScene();
     void newScene();
 
@@ -62,11 +63,18 @@ private slots:
     void runTestThread_();
 
     void setSceneObject(Scene *);
+
+    void updateWidgetsActivity_();
 private:
 
     void createWidgets_();
     void createMainMenu_();
     void createObjects_();
+
+    void updateWindowTitle_();
+    QString getSceneSaveFilename_();
+    void saveScene_(const QString& fn);
+    void loadScene_(const QString& fn);
 
     Scene * scene_;
     ObjectTreeModel * objectTreeModel_;
@@ -89,6 +97,17 @@ private:
     QLabel * sysInfoLabel_;
 
     TestThread * testThread_;
+
+    QAction * actionSaveScene_;
+
+    QString
+        sceneFilename_;
+
+    // ---------- config -----------
+
+    QString currentSceneDirectory_;
+
+    int statusMessageTimeout_;
 };
 
 } // namespace GUI
