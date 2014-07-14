@@ -20,6 +20,14 @@ class LookAt : public Transformation
 {
     Q_OBJECT
 public:
+
+    enum LookMode
+    {
+        LM_LOCAL,
+        LM_GLOBAL
+    };
+
+
     MO_OBJECT_CONSTRUCTOR(LookAt);
 
     virtual void createParameters();
@@ -35,6 +43,7 @@ protected:
     ParameterFloat
         * x_, * y_, * z_,
         * upX_, * upY_, * upZ_;
+    ParameterSelect * lookMode_;
 };
 
 } // namespace MO

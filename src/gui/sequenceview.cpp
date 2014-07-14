@@ -63,6 +63,7 @@ SequenceView::SequenceView(QWidget *parent) :
     // connect rulers to each other
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerY_, SLOT(setViewSpace(UTIL::ViewSpace)));
     connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerX_, SLOT(setViewSpace(UTIL::ViewSpace)));
+    //connect(rulerY_, SIGNAL(fitRequest()),
 
     // pass viewSpaceChanged to this classes signal
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));

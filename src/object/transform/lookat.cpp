@@ -10,6 +10,7 @@
 
 #include "lookat.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterselect.h"
 #include "io/datastream.h"
 #include "io/log.h"
 
@@ -42,6 +43,16 @@ void LookAt::createParameters()
 
     const QString lookTip = tr("Global position to look at"),
                   upTip = tr("unit vector describing the up-axis (internally normalized)");
+    lookMode_ = createSelectParameter("lookmode", "look-at mode",
+                                      tr("Selects if the look-at point is local or global"),
+                                      { "local", "global" },
+                                      { tr("local"), tr("global") },
+    { tr("The look-at point is part of the transformation stack before the look-at transformation"),
+      tr("The look-at point is global (world coordinates)") },
+                                      { LM_LOCAL, LM_GLOBAL },
+                                      LM_LOCAL,
+                                      true, false
+                                      );
     x_ = createFloatParameter("x", "look-at x", lookTip, 0);
     y_ = createFloatParameter("y", "look-at y", lookTip, 0);
     z_ = createFloatParameter("z", "look-at z", lookTip, 0);
@@ -53,23 +64,33 @@ void LookAt::createParameters()
 
 void LookAt::applyTransformation(Mat4 &matrix, Double time) const
 {
-    // extract position
+    Vec3 lookAt = Vec3(x_->value(time), y_->value(time), z_->value(time));
+
+    if (lookMode_->baseValue() == LM_GLOBAL)
+    {
+        Vec4 lookAt4 = glm::inverse(matrix) * Vec4(lookAt[0], lookAt[1], lookAt[2], 1.0);
+        lookAt[0] = lookAt4[0];
+        lookAt[1] = lookAt4[1];
+        lookAt[2] = lookAt4[2];
+    }
+
+    // extract current position
     Vec3 pos = Vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
 
     // forward vector (look-at minus position)
-    Vec3 f = glm::normalize(Vec3(x_->value(time), y_->value(time), z_->value(time)) - pos);
+    Vec3 f = glm::normalize(lookAt - pos);
     // up vector
     Vec3 u = glm::normalize(Vec3(upX_->value(time), upY_->value(time), upZ_->value(time)));
     // right vector
-    Vec3 s = glm::normalize(glm::cross(u, f));
+    Vec3 s = glm::normalize(glm::cross(f, u));
     // rebuild up to avoid distortion
-    u = glm::cross(f, s);
+    u = glm::cross(s, f);
 
     Mat4 lookm(1);
 
-    lookm[0][0] =-s.x;
-    lookm[0][1] =-s.y;
-    lookm[0][2] =-s.z;
+    lookm[0][0] = s.x;
+    lookm[0][1] = s.y;
+    lookm[0][2] = s.z;
     lookm[1][0] = u.x;
     lookm[1][1] = u.y;
     lookm[1][2] = u.z;
