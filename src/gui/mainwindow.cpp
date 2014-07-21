@@ -44,6 +44,7 @@
 #include "gl/window.h"
 #include "io/error.h"
 #include "io/memory.h"
+#include "io/settings.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -114,7 +115,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qobjectView_    (0),
     testThread_     (0),
 
-    currentSceneDirectory_("./"),
+    currentSceneDirectory_(settings->getValue("Directory/scene").toString()),
     statusMessageTimeout_(1000)
 {
 
@@ -396,8 +397,13 @@ void MainWindow::createObjects_()
 
     try
     {
-        loadScene_("./lookat.mo3");
-        loadScene_("./dreh.mo3");
+        QString fn = settings->getValue("File/scene").toString();
+        if (!fn.isEmpty())
+            loadScene_(fn);
+        else
+            newScene();
+        //loadScene_("./lookat.mo3");
+        //loadScene_("./dreh.mo3");
     }
     catch (IoException& e)
     {
@@ -592,6 +598,7 @@ void MainWindow::newScene()
 {
     setSceneObject( ObjectFactory::createSceneObject() );
     sceneFilename_.clear();
+    settings->setValue("File/scene", "");
     updateWindowTitle_();
     updateWidgetsActivity_();
 }
@@ -672,7 +679,10 @@ void MainWindow::loadScene()
                 "MatrixOptimizer mo3 (*.mo3)");
 
     if (!fn.isEmpty())
+    {
         currentSceneDirectory_ = QDir(fn).absolutePath();
+        settings->setValue("Directory/scene", currentSceneDirectory_);
+    }
 
     loadScene_(fn);
 }
@@ -685,6 +695,7 @@ void MainWindow::loadScene_(const QString &fn)
 
         statusBar()->showMessage(tr("Opened %1").arg(fn), statusMessageTimeout_);
         sceneFilename_ = fn;
+        settings->setValue("File/scene", sceneFilename_);
         updateWindowTitle_();
         updateWidgetsActivity_();
     }
@@ -700,6 +711,7 @@ void MainWindow::saveScene_(const QString &fn)
 
         statusBar()->showMessage(tr("Saved %1").arg(fn), statusMessageTimeout_);
         sceneFilename_ = fn;
+        settings->setValue("File/scene", sceneFilename_);
         updateWindowTitle_();
         updateWidgetsActivity_();
     }

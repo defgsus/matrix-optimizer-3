@@ -298,15 +298,14 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
             }
         });
 
+        // link to existing modulator
+        addLinkModMenu_(menu, param, Object::T_TRACK_FLOAT);
+
         menu->addSeparator();
 
         // remove modulation
         addRemoveModMenu_(menu, param);
 
-        menu->addSeparator();
-
-        // link to existing modulator
-        addLinkModMenu_(menu, param, Object::T_TRACK_FLOAT);
     }
     else
         MO_ASSERT(false, "No modulation menu implemented for requested parameter '" << param->idName() << "'");

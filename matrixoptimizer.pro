@@ -107,7 +107,8 @@ SOURCES += \
     src/io/memory.cpp \
     src/object/param/parameterselect.cpp \
     src/object/group.cpp \
-    src/gui/util/objectmenu.cpp
+    src/gui/util/objectmenu.cpp \
+    src/io/settings.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -207,7 +208,8 @@ HEADERS += \
     src/io/memory.h \
     src/object/param/parameterselect.h \
     src/object/group.h \
-    src/gui/util/objectmenu.h
+    src/gui/util/objectmenu.h \
+    src/io/settings.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

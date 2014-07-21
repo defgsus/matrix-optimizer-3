@@ -18,6 +18,7 @@
 #include "io/init.h"
 #include "io/error.h"
 #include "io/application.h"
+#include "io/settings.h"
 #include "gui/mainwindow.h"
 
 //#include "tests/testtimeline.h"
@@ -45,6 +46,7 @@ int main(int argc, char *argv[])
     return 0;
     */
     MO::application = new MO::Application(argc, argv);
+    MO::settings = new MO::Settings(MO::application);
 
     auto mainwin = new MO::GUI::MainWindow;
     MO::application->setMainWindow(mainwin);
