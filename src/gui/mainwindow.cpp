@@ -167,10 +167,12 @@ void MainWindow::createWidgets_()
             connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
                     SLOT(setEditActions_(const QObject*,QList<QAction*>)));
             connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
-                    SLOT(objectSelected(MO::Object*)));
+                    SLOT(objectSelected_(MO::Object*)));
 
             // object tree model
             objectTreeModel_ = new ObjectTreeModel(0, this);
+            connect(objectTreeModel_, SIGNAL(sceneChanged()),
+                    this, SLOT(sceneChanged_()));
             objectTreeView_->setObjectModel(objectTreeModel_);
 
             // object editor
@@ -179,7 +181,7 @@ void MainWindow::createWidgets_()
             objectView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
             //objectView_->setMinimumWidth(240);
             connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
-                                        this, SLOT(objectSelected(MO::Object*)));
+                                        this, SLOT(objectSelected_(MO::Object*)));
             connect(objectView_, SIGNAL(statusTipChanged(QString)),
                     statusBar(), SLOT(showMessage(QString)));
         //l0->setStretchFactor(lv, -1);
@@ -199,7 +201,7 @@ void MainWindow::createWidgets_()
             lv->addWidget(sequencer_);
             connect(sequencer_, &Sequencer::sequenceSelected, [this](Sequence * seq)
             {
-                objectSelected(seq);
+                objectSelected_(seq);
             });
 
             //spacer2_ = new Spacer(Qt::Horizontal, this);
@@ -361,9 +363,11 @@ void MainWindow::setSceneObject(Scene * s)
             scene_, SLOT(setSceneTime(Double)));
 
     // scene changes
-    connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(treeChanged()));
-    connect(scene_, SIGNAL(objectDeleted(MO::Object*)), this, SLOT(treeChanged()));
-    connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(treeChanged()));
+    connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(treeChanged_()));
+    connect(scene_, SIGNAL(objectDeleted(MO::Object*)), this, SLOT(treeChanged_()));
+    connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(treeChanged_()));
+    connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(sceneChanged_()));
+    connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(sceneChanged_()));
     connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
             objectTreeView_, SLOT(columnMoved()/* force update */));
 
@@ -460,17 +464,15 @@ void MainWindow::createDebugScene_()
 
 void MainWindow::closeEvent(QCloseEvent * e)
 {
-    QMainWindow::closeEvent(e);
-
-/*
-    if (e->isAccepted())
+    if (okayToChangeScene_())
     {
-
+        e->accept();
     }
-*/
+    else
+        e->ignore();
 }
 
-void MainWindow::objectSelected(Object * o)
+void MainWindow::objectSelected_(Object * o)
 {
     // update object editor
     objectView_->setObject(o);
@@ -493,9 +495,18 @@ void MainWindow::objectSelected(Object * o)
     objectTreeView_->setFocusIndex(o);
 }
 
-void MainWindow::treeChanged()
+void MainWindow::treeChanged_()
 {
     sequencer_->setTracks(scene_);
+}
+
+void MainWindow::sceneChanged_()
+{
+    if (!sceneNotSaved_)
+    {
+        sceneNotSaved_ = true;
+        updateWindowTitle_();
+    }
 }
 
 void MainWindow::setEditActions_(const QObject *, QList<QAction *> actions)
@@ -573,15 +584,20 @@ void MainWindow::updateWindowTitle_()
 {
     QString t;
 
-    if (!sceneFilename_.isEmpty())
-        t = QFileInfo(sceneFilename_).fileName() + " - ";
+    if (sceneNotSaved_)
+        t = "* ";
+
+    if (!currentSceneFilename_.isEmpty())
+    {
+        t += QFileInfo(currentSceneFilename_).fileName() + " - ";
+    }
 
     setWindowTitle(t + windowTitleString);
 }
 
 void MainWindow::updateWidgetsActivity_()
 {
-    actionSaveScene_->setEnabled( !sceneFilename_.isEmpty() );
+    actionSaveScene_->setEnabled( !currentSceneFilename_.isEmpty() );
 }
 
 void MainWindow::start()
@@ -596,11 +612,39 @@ void MainWindow::stop()
 
 void MainWindow::newScene()
 {
+    if (!okayToChangeScene_())
+        return;
+
     setSceneObject( ObjectFactory::createSceneObject() );
-    sceneFilename_.clear();
+    currentSceneFilename_.clear();
     settings->setValue("File/scene", "");
+    sceneNotSaved_ = false;
     updateWindowTitle_();
     updateWidgetsActivity_();
+}
+
+bool MainWindow::okayToChangeScene_()
+{
+    if (!sceneNotSaved_)
+        return true;
+
+    QMessageBox::StandardButton res =
+    QMessageBox::question(this, tr("Project not saved"),
+                          tr("The current project has not been saved\n"
+                             "Do you want to save it?\n(%1)")
+                          .arg(currentSceneFilename_.isEmpty()?
+                                   tr("choose filename")
+                                 : currentSceneFilename_)
+                          , QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+                          QMessageBox::Yes);
+
+    if (res == QMessageBox::Cancel)
+        return false;
+
+    if (res == QMessageBox::No)
+        return true;
+
+    return saveScene();
 }
 
 QString MainWindow::getSceneSaveFilename_()
@@ -646,17 +690,17 @@ QString MainWindow::getSceneSaveFilename_()
     }
 }
 
-void MainWindow::saveScene()
+bool MainWindow::saveScene()
 {
     if (!scene_)
-        return;
+        return false;
 
-    QString fn = sceneFilename_;
+    QString fn = currentSceneFilename_;
 
     if (fn.isEmpty())
         fn = getSceneSaveFilename_();
 
-    saveScene_(fn);
+    return saveScene_(fn);
 }
 
 void MainWindow::saveSceneAs()
@@ -672,6 +716,9 @@ void MainWindow::saveSceneAs()
 
 void MainWindow::loadScene()
 {
+    if (!okayToChangeScene_())
+        return;
+
     QString fn = QFileDialog::getOpenFileName(
                 this,
                 tr("Load Scene"),
@@ -694,8 +741,9 @@ void MainWindow::loadScene_(const QString &fn)
         setSceneObject(ObjectFactory::loadScene(fn));
 
         statusBar()->showMessage(tr("Opened %1").arg(fn), statusMessageTimeout_);
-        sceneFilename_ = fn;
-        settings->setValue("File/scene", sceneFilename_);
+        currentSceneFilename_ = fn;
+        settings->setValue("File/scene", currentSceneFilename_);
+        sceneNotSaved_ = false;
         updateWindowTitle_();
         updateWidgetsActivity_();
     }
@@ -703,20 +751,23 @@ void MainWindow::loadScene_(const QString &fn)
         statusBar()->showMessage(tr("loading cancelled"), statusMessageTimeout_);
 }
 
-void MainWindow::saveScene_(const QString &fn)
+bool MainWindow::saveScene_(const QString &fn)
 {
     if (!fn.isEmpty())
     {
         ObjectFactory::saveScene(fn, scene_);
 
         statusBar()->showMessage(tr("Saved %1").arg(fn), statusMessageTimeout_);
-        sceneFilename_ = fn;
-        settings->setValue("File/scene", sceneFilename_);
+        currentSceneFilename_ = fn;
+        settings->setValue("File/scene", currentSceneFilename_);
+        sceneNotSaved_ = false;
         updateWindowTitle_();
         updateWidgetsActivity_();
+        return true;
     }
-    else
-        statusBar()->showMessage(tr("saving cancelled"), statusMessageTimeout_);
+
+    statusBar()->showMessage(tr("saving cancelled"), statusMessageTimeout_);
+    return false;
 }
 
 } // namespace GUI

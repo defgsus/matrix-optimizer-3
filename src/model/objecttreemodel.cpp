@@ -420,6 +420,8 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
                         endMoveColumns();
                         lastDropIndex_ = createIndex(row, 0, copy);
+
+                        emit sceneChanged();
                         return true;
                     }
                 }
@@ -431,6 +433,7 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
                 lastDropIndex_ = createIndex(row, 0, copy);
 
+                emit sceneChanged();
                 return true;
             }
             MO_WARNING("Could not deserialize object tree from mime-data");
@@ -458,6 +461,7 @@ bool ObjectTreeModel::deleteObject(const QModelIndex & index)
     auto object = objectForIndex(index);
     if (!object)
         return false;
+
     auto parentIndex = parent(index);
     if (objectForIndex(parentIndex))
     {
@@ -466,6 +470,8 @@ bool ObjectTreeModel::deleteObject(const QModelIndex & index)
         scene_->deleteObject(object);
 
         endRemoveRows();
+
+        emit sceneChanged();
         return true;
     }
     return false;
@@ -490,6 +496,7 @@ QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, 
 
         endInsertRows();
 
+        emit sceneChanged();
         return createIndex(row, 0, (void*)obj);
     }
     return QModelIndex();
@@ -515,6 +522,7 @@ bool ObjectTreeModel::addObject(Object *parent, Object * obj, int index)
 
     endInsertRows();
 
+    emit sceneChanged();
     return true;
 }
 
@@ -542,6 +550,7 @@ QModelIndex ObjectTreeModel::swapChildren(Object * from, Object * to)
 
     endMoveRows();
 
+    emit sceneChanged();
     return createIndex(toRow, 0, to);
 }
 
@@ -568,6 +577,7 @@ QModelIndex ObjectTreeModel::swapChildren(Object *parent, int from, int to)
 
     endMoveRows();
 
+    emit sceneChanged();
     return createIndex(to, 0, parent->childObjects()[to]);
 }
 /*
@@ -621,6 +631,7 @@ QModelIndex ObjectTreeModel::promote(Object *object)
 
     endMoveRows();
 
+    emit sceneChanged();
     return indexForObject(object);
 }
 
@@ -667,6 +678,7 @@ QModelIndex ObjectTreeModel::demote(Object *object)
 
     endMoveRows();
 
+    emit sceneChanged();
     return indexForObject(object);
 }
 

@@ -42,21 +42,26 @@ public:
 protected:
     void closeEvent(QCloseEvent *);
 
+public slots:
+    void start();
+    void stop();
+
+    bool saveScene();
+    void saveSceneAs();
+    void loadScene();
+    void newScene();
+
 private slots:
     void setEditActions_(const QObject * sender, QList<QAction*> actions);
     void testSceneTransform_();
     void updateSystemInfo_();
 
-    void objectSelected(MO::Object*);
-    void treeChanged();
+    void objectSelected_(MO::Object*);
+    void treeChanged_();
+    /** To trigger sceneNotSaved_ */
+    void sceneChanged_();
 
-    void start();
-    void stop();
-
-    void saveScene();
-    void saveSceneAs();
-    void loadScene();
-    void newScene();
+    bool okayToChangeScene_();
 
     void createDebugScene_();
     void resetTreeModel_();
@@ -73,7 +78,7 @@ private:
 
     void updateWindowTitle_();
     QString getSceneSaveFilename_();
-    void saveScene_(const QString& fn);
+    bool saveScene_(const QString& fn);
     void loadScene_(const QString& fn);
 
     Scene * scene_;
@@ -100,12 +105,13 @@ private:
 
     QAction * actionSaveScene_;
 
-    QString
-        sceneFilename_;
+    bool sceneNotSaved_;
 
     // ---------- config -----------
 
-    QString currentSceneDirectory_;
+    QString
+        currentSceneFilename_,
+        currentSceneDirectory_;
 
     int statusMessageTimeout_;
 };

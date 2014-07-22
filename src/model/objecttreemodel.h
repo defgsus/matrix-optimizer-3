@@ -74,6 +74,9 @@ public:
 
 signals:
 
+    /** Something has been edited */
+    void sceneChanged();
+
 public slots:
 
     // ---- act upon changes ---
