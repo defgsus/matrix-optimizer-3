@@ -44,7 +44,9 @@ public:
         /** IO write error */
         WRITE,
         /** IO expected something else */
-        VERSION_MISMATCH
+        VERSION_MISMATCH,
+        /** Some third party error */
+        API
     };
 
     Exception(int cause = UNKNOWN) throw() : cause_(cause)
@@ -99,6 +101,16 @@ public:
     GlException& operator << (const T& value) { addToStream(value); return *this; }
 };
 
+class AudioException : public Exception
+{
+public:
+    AudioException(int cause = UNKNOWN) throw() : Exception(cause) { }
+    ~AudioException() throw() { }
+
+    template <class T>
+    AudioException& operator << (const T& value) { addToStream(value); return *this; }
+};
+
 // ---------------------- error -----------------------------
 
 #define MO_ERROR(text__) \
@@ -113,6 +125,8 @@ public:
 #define MO_LOGIC_ERROR(text__) \
 { throw ::MO::LogicException(::MO::Exception::LOGIC) << text__; }
 
+#define MO_AUDIO_ERROR(cause__, text__) \
+{ throw ::MO::AudioException(::MO::Exception::cause__) << text__; }
 
 // ----------------------- warning -------------------------
 

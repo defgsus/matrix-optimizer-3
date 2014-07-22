@@ -75,6 +75,9 @@ signals:
     /** Emitted when a sequence was double-clicked */
     void sequenceSelected(Sequence *);
 
+    /** Tells Sequencer to adjust the scrollbar */
+    void scrollTo(int y);
+
 public slots:
 
     /** Sets the horizontal view space of the widget */

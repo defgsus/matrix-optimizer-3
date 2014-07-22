@@ -73,6 +73,7 @@ protected slots:
 
     void updateVScroll_();
     void updatePlaybar_();
+    void onSequenceSelected_(Sequence *);
 private:
 
     void createWidgets_();

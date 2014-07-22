@@ -129,7 +129,13 @@ void TrackView::resizeEvent(QResizeEvent *)
 {
     overpaint_->setGeometry(rect());
     updateWidgetsViewSpace_();
+
     // XXX need to focus (scrollbar) on selected sequences!!
+    if (!selectedWidgets_.isEmpty())
+    {
+        const int y = trackHeight(selectedWidgets_[0]->track());
+        emit scrollTo(y);
+    }
 }
 
 void TrackView::paintEvent(QPaintEvent * )

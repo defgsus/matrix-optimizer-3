@@ -19,6 +19,7 @@
 #include "trackview.h"
 #include "ruler.h"
 #include "object/track.h"
+#include "object/sequence.h"
 #include "io/log.h"
 #include "widget/timebar.h"
 #include "widget/spacer.h"
@@ -59,7 +60,7 @@ void Sequencer::createWidgets_()
         trackView_ = new TrackView(this);
         gridLayout_->addWidget(trackView_, 1, 2);
         connect(trackView_, SIGNAL(sequenceSelected(Sequence*)),
-                this, SIGNAL(sequenceSelected(Sequence*)));
+                this, SLOT(onSequenceSelected_(Sequence*)));
 
         // track header
         trackHeader_ = trackView_->trackHeader();
@@ -103,6 +104,10 @@ void Sequencer::createWidgets_()
     connect(vScroll_, &QScrollBar::valueChanged, [this](int v)
     {
         trackView_->setVerticalOffset(v);
+    });
+    connect(trackView_, &TrackView::scrollTo, [this](int y)
+    {
+        vScroll_->setSliderPosition(y);
     });
 
     // connect views to timebar
@@ -171,6 +176,15 @@ void Sequencer::updatePlaybar_()
                 );
     // just to be sure
     playBar_->raise();
+}
+
+void Sequencer::onSequenceSelected_(Sequence * seq)
+{
+    // XXX not working yet
+    //vScroll_->setSliderPosition(
+    //            trackView_->trackY(seq->track()) );
+
+    emit sequenceSelected(seq);
 }
 
 void Sequencer::wheelEvent(QWheelEvent * e)

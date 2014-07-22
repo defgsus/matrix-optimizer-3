@@ -173,11 +173,16 @@ void SequenceFloatView::setViewSpace(const UTIL::ViewSpace & v)
 
     if (timeline_)// && timeline_->isVisible())
     {
-        MO_ASSERT(sequence_, "");
-        // timeline's viewspace is special
-        UTIL::ViewSpace s(v);
-        s.mapToSequence(sequence_);
-        timeline_->setViewSpace(s, v);
+        //MO_ASSERT(sequence_, "Timeline1DView without sequence");
+        if (sequence_)
+        {
+            // timeline's viewspace is special
+            UTIL::ViewSpace s(v);
+            s.mapToSequence(sequence_);
+            timeline_->setViewSpace(s, v);
+        }
+        else
+            timeline_->setViewSpace(v);
     }
 
     // save the current viewspace

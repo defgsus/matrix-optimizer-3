@@ -17,7 +17,7 @@ DEFINES += MO_DISABLE_OBJECT_TREE_DRAG
 
 ##################### libs ############################
 
-unix: { LIBS += -lX11 }
+unix: { LIBS += -lX11 -lportaudio }
 
 ###################### files ##########################
 
@@ -109,7 +109,9 @@ SOURCES += \
     src/object/group.cpp \
     src/gui/util/objectmenu.cpp \
     src/io/settings.cpp \
-    src/gui/util/scenesettings.cpp
+    src/gui/util/scenesettings.cpp \
+    src/audio/audiodevices.cpp \
+    src/audio/audiodevice.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -211,7 +213,11 @@ HEADERS += \
     src/object/group.h \
     src/gui/util/objectmenu.h \
     src/io/settings.h \
-    src/gui/util/scenesettings.h
+    src/gui/util/scenesettings.h \
+    src/audio/configuration.h \
+    src/types/int.h \
+    src/audio/audiodevices.h \
+    src/audio/audiodevice.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
