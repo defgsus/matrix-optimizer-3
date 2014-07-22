@@ -87,16 +87,9 @@ void ParameterView::createWidgets_()
 
     for (auto p : parameters_)
     {
-        if (widgets_.contains(p->idName()))
-        {
-            //updateWidget
-        }
-        else
-        {
-            QWidget * w = createWidget_(p);
-            widgets_.insert(p->idName(), w);
-            layout_->addWidget(w);
-        }
+        QWidget * w = createWidget_(p);
+        widgets_.insert(p->idName(), w);
+        layout_->addWidget(w);
     }
 }
 

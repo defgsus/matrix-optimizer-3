@@ -12,7 +12,9 @@
 #define MOSRC_GUI_SEQUENCEVIEW_H
 
 #include <QWidget>
+
 #include "types/float.h"
+#include "object/object_fwd.h"
 
 class QGridLayout;
 class QVBoxLayout;
@@ -20,8 +22,6 @@ class QScrollArea;
 class QCheckBox;
 
 namespace MO {
-class Scene;
-class Sequence;
 namespace GUI {
 namespace UTIL { class ViewSpace; }
 
@@ -65,7 +65,8 @@ protected slots:
     /** updates the Rulers to the viewspace. */
     void updateViewSpace_(const UTIL::ViewSpace&);
 
-    void sequenceTimeChanged_(MO::Sequence *);
+    void onSequenceChanged_(MO::Sequence *);
+    void onParameterChanged_(MO::Parameter *);
 
     void rulerXClicked_(Double);
 

@@ -136,9 +136,14 @@ SequenceView::SequenceView(QWidget *parent) :
 
 void SequenceView::setScene(Scene *scene)
 {
-    scene_ = scene;
-    connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)),
-            this, SLOT(sequenceTimeChanged_(MO::Sequence*)));
+    if (scene_ != scene)
+    {
+        scene_ = scene;
+        connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)),
+                this, SLOT(onSequenceChanged_(MO::Sequence*)));
+        connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
+                this, SLOT(onParameterChanged_(MO::Parameter*)));
+    }
 }
 
 void SequenceView::setSceneTime(Double time)
@@ -369,7 +374,13 @@ void SequenceView::createDefaultSettingsWidgets_()
     defaultSettingsAvailable_ = true;
 }
 
-void SequenceView::sequenceTimeChanged_(Sequence * s)
+void SequenceView::onParameterChanged_(Parameter * p)
+{
+    if (p->object() == baseSequence_)
+        onSequenceChanged_(baseSequence_);
+}
+
+void SequenceView::onSequenceChanged_(Sequence * s)
 {
     MO_DEBUG_PARAM("SequenceView::sequenceTimeChanged(" << s
                    << ") baseSequence_=" << baseSequence_
