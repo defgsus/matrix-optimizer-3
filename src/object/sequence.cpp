@@ -20,7 +20,7 @@ Sequence::Sequence(QObject *parent) :
     start_      (0.0),
     length_     (60.0),
     speed_      (1.0),
-    looping_    (false),
+    isLooping_    (false),
     track_      (0)
 {
     setName("Sequence");
@@ -32,7 +32,7 @@ void Sequence::serialize(IO::DataStream &io) const
 
     io.writeHeader("seq", 1);
 
-    io << start_ << length_ << speed_ << (qint8)looping_;
+    io << start_ << length_ << speed_ << (qint8)isLooping_;
 }
 
 void Sequence::deserialize(IO::DataStream &io)
@@ -43,7 +43,7 @@ void Sequence::deserialize(IO::DataStream &io)
 
     qint8 looping;
     io >> start_ >> length_ >> speed_ >> looping;
-    looping_ = looping;
+    isLooping_ = looping;
 }
 
 QString Sequence::infoName() const

@@ -88,6 +88,9 @@ protected:
     /** Adds a custom widget to the settings. @see newSetting() */
     void addSettingsWidget_(QWidget *);
 
+    /** Called when something in the sequence has changed. */
+    virtual void updateSequence_() = 0;
+
 private:
 
     QWidget * newContainer_(const QString&);

@@ -40,6 +40,22 @@ public:
     /** friendly names of the sequence types */
     static QStringList sequenceTypeName;
 
+
+    enum LoopOverlapMode
+    {
+        LOT_OFF,
+        LOT_BEGIN,
+        LOT_END
+    };
+    const static int LOT_MAX = LOT_END + 1;
+
+    /** PERSITANT ids of the sequence types */
+    static QStringList loopOverlapModeId;
+    /** friendly names of the sequence types */
+    static QStringList loopOverlapModeName;
+
+
+
     // -------------- ctor --------------
 
     MO_OBJECT_CONSTRUCTOR(SequenceFloat);
@@ -69,6 +85,12 @@ public:
     /** Returns the pulsewidth of the oscillator [0,1] */
     Double pulseWidth() const { return pulseWidth_->baseValue(); }
 
+    /** Wheter the loop start/end are overlapping. */
+    LoopOverlapMode loopOverlapMode() const { return loopOverlapMode_; }
+
+    /** Overlapping time of loop in seconds */
+    Double loopOverlap() const { return loopOverlap_->baseValue(); }
+
     const QString& equationText() const { return equationText_; }
     bool useFrequency() const { return doUseFreq_; }
     bool phaseInDegree() const { return doPhaseDegree_; }
@@ -90,6 +112,12 @@ public:
     void setPhase(Double p) { phase_->setValue(p); }
     void setPulseWidth(Double pw) { pulseWidth_->setValue(MATH::Waveform::limitPulseWidth(pw)); }
 
+    void setLoopOverlap(Double t)
+        { loopOverlap_->setValue( std::max(minimumLength(), t) ); }
+
+    void setLoopOverlapMode(LoopOverlapMode mode)
+        { loopOverlapMode_ = mode; }
+
     void setEquationText(const QString&);
 
     void setUseFrequency(bool enable) { doUseFreq_ = enable; }
@@ -110,6 +138,8 @@ public slots:
 
 private:
 
+    Double value_(Double gtime, Double time) const;
+
     SequenceType mode_;
     MATH::Timeline1D * timeline_;
     PPP_NAMESPACE::Parser * equation_;
@@ -120,12 +150,16 @@ private:
 
         * frequency_,
         * phase_,
-        * pulseWidth_;
+        * pulseWidth_,
+
+        * loopOverlap_;
 
     MATH::Waveform::Type oscMode_;
+    LoopOverlapMode loopOverlapMode_;
 
     bool doUseFreq_,
          doPhaseDegree_;
+
     Double phaseMult_;
 
     // ----- equation stuff -----

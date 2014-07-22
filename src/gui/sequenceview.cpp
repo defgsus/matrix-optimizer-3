@@ -400,6 +400,8 @@ void SequenceView::sequenceTimeChanged_(Sequence * s)
     wLoopEnd_->setVisible( baseSequence_->looping() );
     wLoopLength_->setVisible( baseSequence_->looping() );
 
+    updateSequence_();
+
     squeezeView_();
     update();
 }

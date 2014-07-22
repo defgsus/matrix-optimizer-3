@@ -28,6 +28,13 @@ QStringList SequenceFloat::sequenceTypeId =
 QStringList SequenceFloat::sequenceTypeName =
 { "Constant", "Timeline", "Oscillator", "Equation" };
 
+QStringList SequenceFloat::loopOverlapModeId =
+{ "o", "b", "e" };
+
+QStringList SequenceFloat::loopOverlapModeName =
+{ "off", "begin", "end" };
+
+
 SequenceFloat::SequenceFloat(QObject *parent)
     :   Sequence    (parent),
 
@@ -35,9 +42,11 @@ SequenceFloat::SequenceFloat(QObject *parent)
         equation_   (0),
 
         oscMode_    (MATH::Waveform::T_SINE),
+        loopOverlapMode_(LOT_OFF),
 
         doUseFreq_  (false),
         doPhaseDegree_(false),
+
         phaseMult_  (1.0),
         equationText_("sin(x*TWO_PI)")
 
@@ -63,7 +72,7 @@ void SequenceFloat::createParameters()
                                    tr("This value is always added to the output of the sequence"),
                                    0.0);
     amplitude_ = createFloatParameter("amp", "amplitude",
-                                      tr("The output of the sequence is multiplied by this value"),
+                                      tr("The output of the sequence (before the offset) is multiplied by this value"),
                                       1.0);
     frequency_ = createFloatParameter("freq", "frequency",
                                       tr("The frequency of the function in hertz (periods per second)"),
@@ -74,13 +83,16 @@ void SequenceFloat::createParameters()
     pulseWidth_ = createFloatParameter("pulsewidth", "pulse width",
                                        tr("Pulsewidth of the waveform, describes the width of the positive edge"),
                                        0.5);
+    loopOverlap_ = createFloatParameter("loopoverlap", "loop overlap",
+                                       tr("Overlap of the loop window for smooth transitions (seconds)"),
+                                       0.1);
 }
 
 void SequenceFloat::serialize(IO::DataStream &io) const
 {
     Sequence::serialize(io);
 
-    io.writeHeader("seqf", 2);
+    io.writeHeader("seqf", 3);
 
     io << sequenceTypeId[mode_];
 
@@ -94,13 +106,16 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 
     // equation (v2)
     io << equationText_ << doUseFreq_;
+
+    // loop overlap (v3)
+    io << loopOverlapModeId[loopOverlapMode_];
 }
 
 void SequenceFloat::deserialize(IO::DataStream &io)
 {
     Sequence::deserialize(io);
 
-    int ver = io.readHeader("seqf", 2);
+    int ver = io.readHeader("seqf", 3);
 
     if (!io.readEnum(mode_, ST_CONSTANT, sequenceTypeId))
         MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
@@ -122,6 +137,13 @@ void SequenceFloat::deserialize(IO::DataStream &io)
     // equation (v2)
     if (ver >= 2)
         io >> equationText_ >> doUseFreq_;
+
+    // loopoverlap (v3)
+    if (ver >= 3)
+    {
+        if (!io.readEnum(loopOverlapMode_, LOT_OFF, loopOverlapModeId))
+            MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': loop overlap mode unknown");
+    }
 
     // create needed objects
     setMode(mode_);
@@ -182,8 +204,53 @@ void SequenceFloat::setEquationText(const QString & t)
 
 Double SequenceFloat::value(Double gtime) const
 {
-    Double time = getSequenceTime(gtime);
+    if (loopOverlapMode_ == LOT_OFF)
+    {
+        const Double time = getSequenceTime(gtime);
+        return value_(gtime, time);
+    }
 
+    Double lStart, lLength;
+    Double time = getSequenceTime(gtime, lStart, lLength);
+
+    if (time < lStart)
+        return value_(gtime, time);
+
+    Double overlap = std::max(minimumLength(), loopOverlap_->value(time));
+
+    if (loopOverlapMode_ == LOT_BEGIN)
+    {
+        if (time > overlap)
+            return value_(gtime, time);
+
+        const Double
+                v = value_(gtime, time),
+                v0 = value_(gtime, time + lLength),
+                t = time / overlap,
+                ts = t * t * (3.0 - 2.0 * t);
+
+        return (1.0 - ts) * v0 + ts * v;
+    }
+    else if (loopOverlapMode_ == LOT_END)
+    {
+        if (time < lLength - overlap)
+            return value_(gtime, time);
+
+        const Double
+                v = value_(gtime, time),
+                v0 = value_(gtime, time - lLength),
+                t = (lLength - time) / overlap,
+                ts = t * t * (3.0 - 2.0 * t);
+
+        return (1.0 - ts) * v0 + ts * v;
+    }
+
+    MO_ASSERT(false, "unhandled loopOverlapMode " << loopOverlapMode_);
+    return 0.0;
+}
+
+Double SequenceFloat::value_(Double gtime, Double time) const
+{
     if (mode_ == ST_OSCILLATOR || doUseFreq_)
     {
         time = time * frequency_->value(gtime) + phase_->value(gtime) * phaseMult_;

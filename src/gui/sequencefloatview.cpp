@@ -152,11 +152,8 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
     [this, scene](int index)
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setMode((SequenceFloat::SequenceType)index);
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setMode((SequenceFloat::SequenceType)index);
     });
 
     // oscillator mode
@@ -172,11 +169,8 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
     [this, scene](int index)
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setOscillatorMode((MATH::Waveform::Type)index);
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setOscillatorMode((MATH::Waveform::Type)index);
     });
 
     // offset
@@ -191,11 +185,8 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](Double val)
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setOffset(val);
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setOffset(val);
     });
 
     // amplitude
@@ -210,11 +201,8 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](Double val)
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setAmplitude(val);
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setAmplitude(val);
     });
 
     // frequency
@@ -229,11 +217,8 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](Double val)
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setFrequency(val);
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setFrequency(val);
     });
 
     // phase
@@ -248,11 +233,8 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](Double val)
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setPhase(val);
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setPhase(val);
     });
 
     // pulseWidth
@@ -267,11 +249,8 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](Double val)
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setPulseWidth(val);
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setPulseWidth(val);
     });
 
     // equation
@@ -284,11 +263,8 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(text, &EquationEditor::equationChanged,
     [this, scene, text]()
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setEquationText(text->toPlainText());
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setEquationText(text->toPlainText());
     });
 
     // always use frequency
@@ -301,11 +277,8 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(cb, &QCheckBox::stateChanged,
     [this, scene, cb]()
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setPhaseInDegree(cb->isChecked());
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setPhaseInDegree(cb->isChecked());
     });
 
     // always use frequency
@@ -319,13 +292,42 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(cb, &QCheckBox::stateChanged,
     [this, scene, cb]()
     {
-        {
-            ScopedSequenceChange lock(scene, sequence_);
-            sequence_->setUseFrequency(cb->isChecked());
-        }
-        updateSequence_();
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setUseFrequency(cb->isChecked());
     });
 
+    // enable loop overlap
+    w = wLoopOverlapping_ = newSetting(tr("loop overlapping"));
+    w->setStatusTip(tr("Selects the type of loop overlapping"));
+    mode = new QComboBox(this);
+    w->layout()->addWidget(mode);
+    for (int i=0; i<SequenceFloat::LOT_MAX; ++i)
+    {
+        mode->addItem(SequenceFloat::loopOverlapModeName[i]);
+    }
+    mode->setCurrentIndex(sequence_->loopOverlapMode());
+    connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+    [this, scene](int index)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setLoopOverlapMode((SequenceFloat::LoopOverlapMode)index);
+    });
+
+    // pulseWidth
+    w = wLoopOverlap_ = newSetting(tr("Loop overlap"));
+    w->setStatusTip(tr("Overlap of the loop window for smooth transitions (seconds)"));
+    spin = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setDecimals(4);
+    spin->setMinimum(Sequence::minimumLength());
+    spin->setSingleStep(0.1);
+    spin->setValue(sequence_->loopOverlap());
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](Double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setLoopOverlap(val);
+    });
 
     addSettingsWidget_(w);
 
@@ -342,7 +344,9 @@ void SequenceFloatView::updateWidgets_()
          isPW = isOsc && MATH::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
          isEqu = sequence_ && sequence_->mode() == SequenceFloat::ST_EQUATION,
          isTL = sequence_ && sequence_->mode() == SequenceFloat::ST_TIMELINE,
-         useFreq = sequence_ && sequence_->useFrequency();
+         useFreq = sequence_ && sequence_->useFrequency(),
+         isLoop = sequence_ && sequence_->looping(),
+         isLoopOverlap = sequence_ && (sequence_->loopOverlapMode() != SequenceFloat::LOT_OFF);
 
     wOscMode_->setVisible(isOsc);
     wAmp_->setVisible(!isConst);
@@ -352,10 +356,11 @@ void SequenceFloatView::updateWidgets_()
     wPW_->setVisible(isPW || isEqu);
     wEqu_->setVisible(isEqu);
     wUseFreq_->setVisible(isEqu || isTL);
+    wLoopOverlapping_->setVisible(isLoop);
+    wLoopOverlap_->setVisible(isLoop && isLoopOverlap);
     if (isEqu && wEquEdit_->assignedParser() != sequence_->equation())
         wEquEdit_->setParser(sequence_->equation());
 
-    squeezeView_();
 }
 
 } // namespace GUI
