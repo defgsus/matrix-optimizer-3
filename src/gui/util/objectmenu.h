@@ -11,6 +11,8 @@
 #ifndef MOSRC_GUI_UTIL_OBJECTMENU_H
 #define MOSRC_GUI_UTIL_OBJECTMENU_H
 
+#include <QStringList>
+
 #include "object/object_fwd.h"
 
 class QWidget;
@@ -28,7 +30,13 @@ public:
         The QAction::data() contains the Object::idName(). */
     static QMenu * createObjectMenu(Object * root, int objectTypeFlags, QWidget *parent = 0);
 
+    /** Creates a menu with all modulators for the given Parameter.
+        The QAction::data() contains the Object::idName(). */
     static QMenu * createRemoveModulationMenu(Parameter *, QWidget * parent = 0);
+
+    /** Sets the enabled state of each menu action matching one of the @p ids to
+        @p enable */
+    static void setEnabled(QMenu * menu, const QStringList& ids, bool enable);
 
 private:
 

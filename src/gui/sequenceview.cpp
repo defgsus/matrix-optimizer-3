@@ -173,6 +173,8 @@ void SequenceView::setSequence_(Sequence * s)
         {
             createDefaultSettingsWidgets_();
             playBar_->setTimeOffset(-baseSequence_->start());
+            // update playbar viewspace
+            updateViewSpace_(rulerX_->viewSpace());
         }
     }
 }
@@ -181,7 +183,14 @@ void SequenceView::updateViewSpace_(const UTIL::ViewSpace & v)
 {
     rulerX_->setViewSpace(v);
     rulerY_->setViewSpace(v);
-    playBar_->setViewspace(v);
+    if (!baseSequence_)
+        playBar_->setViewspace(v);
+    else
+    {
+        UTIL::ViewSpace vs(v);
+        vs.setScaleX(vs.scaleX() / baseSequence_->speed());
+        playBar_->setViewspace(vs);
+    }
 }
 
 
@@ -288,6 +297,8 @@ void SequenceView::createDefaultSettingsWidgets_()
     defaultSettingsContainer_->layout()->addWidget(f);
     defaultSettingsWidgets_.append(f);
 
+#define MO__SCENE_PARAM_UPDATE
+
 #define MO__SCENE_PARAM(spin__, getter__, setter__, min__, desc__, status__) \
     w = newDefaultSetting_(desc__);                         \
     w->setStatusTip(status__);                              \
@@ -301,6 +312,7 @@ void SequenceView::createDefaultSettingsWidgets_()
     {                                                       \
         ScopedSequenceChange lock(scene, baseSequence_);    \
         baseSequence_->setter__(v);                         \
+        MO__SCENE_PARAM_UPDATE                              \
     });
 
 #define MO__SCENE_PARAM_CB(cb__, getter__, setter__, desc__, status__)\
@@ -313,6 +325,7 @@ void SequenceView::createDefaultSettingsWidgets_()
     {                                                       \
         ScopedSequenceChange lock(scene, baseSequence_);    \
         baseSequence_->setter__(v == Qt::Checked);          \
+        MO__SCENE_PARAM_UPDATE                              \
     });
 
     MO__SCENE_PARAM(spinStart_, start, setStart, 0, tr("start time"),
@@ -323,8 +336,12 @@ void SequenceView::createDefaultSettingsWidgets_()
                     tr("Gobal end time of the sequences in seconds"));
     MO__SCENE_PARAM(spinTimeOffset_, timeOffset, setTimeOffset, -MO_MAX_TIME, tr("time offset"),
                     tr("Time offset into the sequence data in seconds"));
+#undef MO__SCENE_PARAM_UPDATE
+#define MO__SCENE_PARAM_UPDATE updateViewSpace_(rulerX_->viewSpace());
     MO__SCENE_PARAM(spinSpeed_, speed, setSpeed, Sequence::minimumSpeed(), tr("speed"),
                     tr("Speed multiplier for the whole sequence, e.g. 2.0 is double speed, 0.5 is half speed"));
+#undef MO__SCENE_PARAM_UPDATE
+#define MO__SCENE_PARAM_UPDATE
     MO__SCENE_PARAM_CB(cbLooping_, looping, setLooping, tr("looping"),
                     tr("Selects wether the contents of the sequence should be looped between "
                        "'loop start' and 'loop end'"));

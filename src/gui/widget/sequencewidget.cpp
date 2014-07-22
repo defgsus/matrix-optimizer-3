@@ -29,7 +29,7 @@ namespace {
     public:
         const SequenceFloat * sequence;
         Double value(Double time) const
-            { return sequence->value(sequence->start() + time); }
+            { return sequence->value(/*sequence->start() +*/ time); }
     };
 }
 
@@ -101,18 +101,21 @@ void SequenceWidget::updateValueRange()
 {
     if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(sequence_))
     {
-        seqf->getMinMaxValue(0.0, seqf->length(), minValue_, maxValue_);
-        space_ = UTIL::ViewSpace(
-                    0.0, minValue_, sequence_->length(), maxValue_ - minValue_
-                    );
+        seqf->getMinMaxValue(0.0, seqf->end() - seqf->start(), minValue_, maxValue_);
+        updateViewSpace();
     }
-
 }
 
 void SequenceWidget::resizeEvent(QResizeEvent *)
 {
+    updateViewSpace();
+}
+
+void SequenceWidget::updateViewSpace()
+{
     space_ = UTIL::ViewSpace(
-                0.0, minValue_, sequence_->length(), maxValue_ - minValue_
+                sequence_->start(), minValue_,
+                sequence_->end() - sequence_->start(), maxValue_ - minValue_
                 );
 }
 
@@ -165,7 +168,7 @@ void SequenceWidget::paintEvent(QPaintEvent * e)
 
     // --- time offset ---
 
-    int x = space_.mapXFrom(-sequence_->timeOffset()) * width();
+    int x = space_.mapXFrom(sequence_->start() - sequence_->timeOffset() / sequence_->speed()) * width();
     if (x>e->rect().left() && x<=e->rect().right())
     {
         p.setPen(penStart_);

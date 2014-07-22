@@ -36,11 +36,9 @@ QMenu * ObjectMenu::createObjectMenu(Object *root, int objectTypeFlags, QWidget 
     return menu;
 }
 
-
 void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int objectTypeFlags)
 {
-    // add all children
-
+    // add all children ...
     for (auto c : root->childObjects())
     {
         const QList<Object*> list =
@@ -48,6 +46,8 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
 
         const bool match = (c->type() & objectTypeFlags);
 
+        // ... when they themself or one of their childs
+        // are of the requested type
         if (list.isEmpty() && !match)
             continue;
 
@@ -101,6 +101,22 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
 
     return menu;
 }
+
+
+
+void ObjectMenu::setEnabled(QMenu *menu, const QStringList& ids, bool enable)
+{
+    for (QAction * a : menu->actions())
+    {
+        if (ids.contains(a->data().toString()))
+            a->setEnabled(enable);
+
+        // go through child menus
+        if (a->menu())
+            setEnabled(a->menu(), ids, enable);
+    }
+}
+
 
 
 } // namespace GUI

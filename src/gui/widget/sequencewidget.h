@@ -41,6 +41,8 @@ public:
 
     QList<SequenceWidget*>& influencedWidgets() { return influencedWidgets_; }
 
+    void updateViewSpace();
+
 signals:
 
     void hovered(SequenceWidget*, bool);

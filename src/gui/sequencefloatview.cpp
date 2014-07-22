@@ -85,7 +85,11 @@ void SequenceFloatView::setSequence(SequenceFloat * s)
         updateSequence_();
 
         if (!sequence_)
+        {
             clearSettingsWidgets_();
+            // test for presence of all widgets
+            wFreq_ = 0;
+        }
         else
             createSettingsWidgets_();
     }

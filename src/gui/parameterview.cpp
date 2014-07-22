@@ -373,6 +373,9 @@ void ParameterView::addLinkModMenu_(
         return;
     }
 
+    // disable the entries that are already modulators
+    ObjectMenu::setEnabled(linkMenu, param->modulatorIds(), false);
+
     QAction * a = menu->addMenu(linkMenu);
     a->setText(tr("Choose existing track"));
     a->setIcon(QIcon(":/icon/obj_track.png"));

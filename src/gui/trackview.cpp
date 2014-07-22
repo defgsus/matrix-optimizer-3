@@ -141,21 +141,6 @@ void TrackView::paintEvent(QPaintEvent * )
         const int y = trackY(t) + trackHeight(t) + trackSpacing_ / 2;
         p.drawLine(0, y, width(), y);
     }
-
-    /*
-    // when moving sequences
-    if (dragSequence_ && dragEndTrack_ && dragStartTrack_ != dragEndTrack_)
-    {
-        int y = trackY(dragEndTrack_) - 2,
-            h = trackHeight(dragEndTrack_) + 4,
-            x = space_.mapXFrom(dragSequence_->start()) * width(),
-            w = space_.mapXDistanceFrom(dragSequence_->length()) * width();
-
-        p.setBrush(QBrush(QColor(255,255,255,30)));
-        p.setPen(QPen(QColor(255,255,255,150)));
-        p.drawRect(x, y, w, h);
-    }
-    */
 }
 
 SequenceWidget * TrackView::widgetForSequence_(Sequence * seq) const
@@ -187,6 +172,7 @@ bool TrackView::updateWidgetViewSpace_(SequenceWidget * s)
     if (r != s->geometry())
     {
         s->setGeometry(r);
+        s->updateViewSpace();
         return true;
     }
     return false;
@@ -577,8 +563,8 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
         {
             Sequence * seq = selectedWidgets_[i]->sequence();
             Double newstart = std::max((Double)0, std::min(seq->end() - Sequence::minimumLength(),
-                                                           dragStartTimes_[i] + deltaTime));
-            Double change = dragStartTimes_[i] - newstart;
+                                    dragStartTimes_[i] + deltaTime));
+            Double change = (dragStartTimes_[i] - newstart) * seq->speed();
             Double newlength = std::max(Sequence::minimumLength(), dragStartLengths_[i] + change );
             Double newOffset = dragStartOffsets_[i];
             if (e->modifiers() & modifierDragWithOffset_)
@@ -606,7 +592,7 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
         {
             Sequence * seq = selectedWidgets_[i]->sequence();
             Double newlength = std::max(Sequence::minimumLength(),
-                                        dragStartLengths_[i] + deltaTime );
+                                        dragStartLengths_[i] + deltaTime * seq->speed() );
             ScopedSequenceChange lock(scene_, seq);
             seq->setLength(newlength);
         }
