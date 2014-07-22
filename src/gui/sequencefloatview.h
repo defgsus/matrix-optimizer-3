@@ -59,7 +59,7 @@ private:
 
     QWidget * wOscMode_, * wAmp_, * wFreq_, * wPhase_, * wPW_,
             * wEqu_, * wUseFreq_, * wPhaseDeg_,
-            * wLoopOverlapping_, * wLoopOverlap_;
+            * wLoopOverlapping_, * wLoopOverlap_, * wLoopOverlapOffset_;
     EquationEditor * wEquEdit_;
 };
 

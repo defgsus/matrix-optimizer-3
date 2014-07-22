@@ -91,6 +91,9 @@ public:
     /** Overlapping time of loop in seconds */
     Double loopOverlap() const { return loopOverlap_->baseValue(); }
 
+    /** A value that is added to the blended value in the transition window */
+    Double loopOverlapOffset() const { return loopOverlapOffset_->baseValue(); }
+
     const QString& equationText() const { return equationText_; }
     bool useFrequency() const { return doUseFreq_; }
     bool phaseInDegree() const { return doPhaseDegree_; }
@@ -114,6 +117,8 @@ public:
 
     void setLoopOverlap(Double t)
         { loopOverlap_->setValue( std::max(minimumLength(), t) ); }
+    void setLoopOverlapOffset(Double v)
+        { loopOverlapOffset_->setValue( v ); }
 
     void setLoopOverlapMode(LoopOverlapMode mode)
         { loopOverlapMode_ = mode; }
@@ -152,7 +157,8 @@ private:
         * phase_,
         * pulseWidth_,
 
-        * loopOverlap_;
+        * loopOverlap_,
+        * loopOverlapOffset_;
 
     MATH::Waveform::Type oscMode_;
     LoopOverlapMode loopOverlapMode_;

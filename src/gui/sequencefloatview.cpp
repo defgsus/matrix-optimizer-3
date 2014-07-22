@@ -178,7 +178,7 @@ void SequenceFloatView::createSettingsWidgets_()
     w->setStatusTip(tr("This value is always added to the output of the sequence"));
     auto spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
-    spin->setDecimals(4);
+    spin->setDecimals(5);
     spin->setRange(-1e8, 1e8);
     spin->setValue(sequence_->offset());
     spin->setSingleStep(0.1);
@@ -194,7 +194,7 @@ void SequenceFloatView::createSettingsWidgets_()
     w->setStatusTip(tr("The output of the sequence is multiplied by this value"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
-    spin->setDecimals(4);
+    spin->setDecimals(5);
     spin->setRange(-1e8, 1e8);
     spin->setValue(sequence_->amplitude());
     spin->setSingleStep(0.1);
@@ -210,7 +210,7 @@ void SequenceFloatView::createSettingsWidgets_()
     w->setStatusTip(tr("The frequency of the function in hertz (periods per second)"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
-    spin->setDecimals(4);
+    spin->setDecimals(5);
     spin->setRange(-1e8, 1e8);
     spin->setSingleStep(0.1);
     spin->setValue(sequence_->frequency());
@@ -226,7 +226,7 @@ void SequenceFloatView::createSettingsWidgets_()
     w->setStatusTip(tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
-    spin->setDecimals(4);
+    spin->setDecimals(5);
     spin->setRange(-1e8, 1e8);
     spin->setSingleStep(5);
     spin->setValue(sequence_->phase());
@@ -242,7 +242,7 @@ void SequenceFloatView::createSettingsWidgets_()
     w->setStatusTip(tr("Pulsewidth of the waveform, describes the width of the positive edge"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
-    spin->setDecimals(4);
+    spin->setDecimals(5);
     spin->setRange(MATH::Waveform::minPulseWidth(), MATH::Waveform::maxPulseWidth());
     spin->setSingleStep(0.025);
     spin->setValue(sequence_->pulseWidth());
@@ -313,8 +313,8 @@ void SequenceFloatView::createSettingsWidgets_()
         sequence_->setLoopOverlapMode((SequenceFloat::LoopOverlapMode)index);
     });
 
-    // pulseWidth
-    w = wLoopOverlap_ = newSetting(tr("Loop overlap"));
+    // overlap length
+    w = wLoopOverlap_ = newSetting(tr("loop overlap"));
     w->setStatusTip(tr("Overlap of the loop window for smooth transitions (seconds)"));
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
@@ -327,6 +327,22 @@ void SequenceFloatView::createSettingsWidgets_()
     {
         ScopedSequenceChange lock(scene, sequence_);
         sequence_->setLoopOverlap(val);
+    });
+
+    // overlap value offset
+    w = wLoopOverlapOffset_ = newSetting(tr("overlap offset"));
+    w->setStatusTip(tr("A value that is added to the blended value in the transition window"));
+    spin = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(-1e8, 1e8);
+    spin->setDecimals(4);
+    spin->setSingleStep(1);
+    spin->setValue(sequence_->loopOverlapOffset());
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](Double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setLoopOverlapOffset(val);
     });
 
     addSettingsWidget_(w);
@@ -346,7 +362,7 @@ void SequenceFloatView::updateWidgets_()
          isTL = sequence_ && sequence_->mode() == SequenceFloat::ST_TIMELINE,
          useFreq = sequence_ && sequence_->useFrequency(),
          isLoop = sequence_ && sequence_->looping(),
-         isLoopOverlap = sequence_ && (sequence_->loopOverlapMode() != SequenceFloat::LOT_OFF);
+         isLoopOverlap = isLoop && sequence_->loopOverlapMode() != SequenceFloat::LOT_OFF;
 
     wOscMode_->setVisible(isOsc);
     wAmp_->setVisible(!isConst);
@@ -357,7 +373,8 @@ void SequenceFloatView::updateWidgets_()
     wEqu_->setVisible(isEqu);
     wUseFreq_->setVisible(isEqu || isTL);
     wLoopOverlapping_->setVisible(isLoop);
-    wLoopOverlap_->setVisible(isLoop && isLoopOverlap);
+    wLoopOverlap_->setVisible(isLoopOverlap);
+    wLoopOverlapOffset_->setVisible(isLoopOverlap);
     if (isEqu && wEquEdit_->assignedParser() != sequence_->equation())
         wEquEdit_->setParser(sequence_->equation());
 

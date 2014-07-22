@@ -102,8 +102,8 @@ public:
 
     /** Translates global time to sequence-local time (with loop) */
     Double getSequenceTime(Double global_time) const;
-    /** Translates global time to sequence-local time and returnd the current looplength */
-    Double getSequenceTime(Double global_time, Double& loopStart, Double& loopLength) const;
+    /** Translates global time to sequence-local time and returnd the current loop settings */
+    Double getSequenceTime(Double global_time, Double& loopStart, Double& loopLength, bool& isInLoop) const;
 
 signals:
 
@@ -138,13 +138,13 @@ inline Double Sequence::getSequenceTime(Double time) const
                 ll = std::max(loopLength_->value(time), minimumLength());
 
         if (time > ls + ll)
-            return MATH::moduloSigned(time - ls, ll);
+            return MATH::moduloSigned(time - ls, ll) + ls;
     }
 
     return time;
 }
 
-inline Double Sequence::getSequenceTime(Double time, Double& lStart, Double& lLength) const
+inline Double Sequence::getSequenceTime(Double time, Double& lStart, Double& lLength, bool& isInLoop) const
 {
     time = (time - start_) * speed_;
     time += timeOffset_->value(time);
@@ -154,11 +154,15 @@ inline Double Sequence::getSequenceTime(Double time, Double& lStart, Double& lLe
         lStart = loopStart_->value(time);
         lLength = std::max(loopLength_->value(time), minimumLength());
 
+        isInLoop = time >= lStart;
 
         if (time > lStart + lLength)
-            return MATH::moduloSigned(time - lStart, lLength);
+        {
+            return MATH::moduloSigned(time - lStart, lLength) + lStart;
+        }
     }
 
+    isInLoop = false;
     return time;
 }
 

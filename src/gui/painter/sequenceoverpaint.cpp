@@ -23,6 +23,8 @@ SequenceOverpaint::SequenceOverpaint(QObject *parent) :
     sequence_   (0)
 {
     penLoop_ = QPen(QColor(255,255,100,100));
+    penLoop_.setStyle(Qt::DashLine);
+    penLoop_.setWidth(2);
     brushOutside_ = QBrush(QColor(0,0,0,150));
 }
 
@@ -64,15 +66,16 @@ void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
                            rect.right() - right + 1, rect.height());
         }
 
-        // -- playbar --
-        /*
-        if (const Scene * scene = sequence_->sceneObject())
+        // -- loop --
+        if (sequence_->looping())
         {
-            int x = viewspace_.mapXFrom(scene->sceneTime()
-                                        - sequence_->start()) * p.window().width();
-            p.setPen(QColor(100,255,100,100));
+            p.setPen(penLoop_);
+
+            int x = viewspace_.mapXFrom(sequence_->loopStart() / sequence_->speed()) * p.window().width();
             p.drawLine(x, rect.top(), x, rect.bottom());
-        }*/
+            x = viewspace_.mapXFrom(sequence_->loopEnd()) * p.window().width();
+            p.drawLine(x, rect.top(), x, rect.bottom());
+        }
     }
 }
 

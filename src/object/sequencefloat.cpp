@@ -86,6 +86,9 @@ void SequenceFloat::createParameters()
     loopOverlap_ = createFloatParameter("loopoverlap", "loop overlap",
                                        tr("Overlap of the loop window for smooth transitions (seconds)"),
                                        0.1);
+    loopOverlapOffset_ = createFloatParameter("loopoverlapofs", "overlap value offset",
+                                       tr("A value that is added to the blended value in the transition window"),
+                                       0.0);
 }
 
 void SequenceFloat::serialize(IO::DataStream &io) const
@@ -210,36 +213,40 @@ Double SequenceFloat::value(Double gtime) const
         return value_(gtime, time);
     }
 
+    bool inLoop;
     Double lStart, lLength;
-    Double time = getSequenceTime(gtime, lStart, lLength);
+    Double time = getSequenceTime(gtime, lStart, lLength, inLoop);
 
-    if (time < lStart)
+    // XXX strange inLoop comes to late
+    if (!inLoop && loopOverlapMode_ == LOT_BEGIN)
         return value_(gtime, time);
 
-    Double overlap = std::max(minimumLength(), loopOverlap_->value(time));
+    Double overlap = std::max(minimumLength(), loopOverlap_->value(gtime));
 
     if (loopOverlapMode_ == LOT_BEGIN)
     {
-        if (time > overlap)
+        if ((time - lStart) > overlap)
             return value_(gtime, time);
 
         const Double
                 v = value_(gtime, time),
-                v0 = value_(gtime, time + lLength),
-                t = time / overlap,
+                v0 = value_(gtime, time + lLength)
+                    + loopOverlapOffset_->value(gtime) * amplitude_->value(time),
+                t = (time - lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
         return (1.0 - ts) * v0 + ts * v;
     }
     else if (loopOverlapMode_ == LOT_END)
     {
-        if (time < lLength - overlap)
+        if ((time - lStart) < lLength - overlap)
             return value_(gtime, time);
 
         const Double
                 v = value_(gtime, time),
-                v0 = value_(gtime, time - lLength),
-                t = (lLength - time) / overlap,
+                v0 = value_(gtime, time - lLength)
+                    + loopOverlapOffset_->value(gtime) * amplitude_->value(time),
+                t = (lLength - time + lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
         return (1.0 - ts) * v0 + ts * v;
