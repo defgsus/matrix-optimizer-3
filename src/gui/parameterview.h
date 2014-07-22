@@ -15,15 +15,18 @@
 #include <QList>
 #include <QMap>
 
+#include "object/object_fwd.h"
+
 class QMenu;
 class QLabel;
 class QVBoxLayout;
 class QToolButton;
+class QComboBox;
 
 namespace MO {
-class Object;
-class Parameter;
 namespace GUI {
+
+class DoubleSpinBox;
 
 
 class ParameterView : public QWidget
@@ -47,20 +50,30 @@ public slots:
 
     void setObject(MO::Object * object);
 
+private slots:
+
+    void updateWidgetValue_(MO::Parameter * );
+    void onSequenceChanged(MO::Sequence *);
+
 private:
 
     void createWidgets_();
     QWidget * createWidget_(Parameter *);
     void clearWidgets_();
+    /** update values of parameter widgets */
+    void updateWidgetValues_();
 
     void updateModulatorButton_(Parameter *, QToolButton *);
     void openModulationPopup_(Parameter *, QToolButton *);
     void addRemoveModMenu_(QMenu *, Parameter *);
     void addLinkModMenu_(QMenu *, Parameter *, int objectTypeFlags);
 
+    Scene * scene_;
     Object * object_;
     QList<Parameter*> parameters_;
     QMap<QString, QWidget*> widgets_;
+    QList<DoubleSpinBox*> spins_;
+    QList<QComboBox*> combos_;
     QWidget * prevEditWidget_;
 
     QVBoxLayout * layout_;

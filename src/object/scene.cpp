@@ -253,6 +253,8 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
         p->object()->onParameterChanged(p);
     }
     emit parameterChanged(p);
+    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
+        emit sequenceChanged(seq);
     render_();
 }
 
@@ -264,6 +266,8 @@ void Scene::setParameterValue(ParameterSelect *p, int v)
         p->object()->onParameterChanged(p);
     }
     emit parameterChanged(p);
+    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
+        emit sequenceChanged(seq);
     render_();
 }
 

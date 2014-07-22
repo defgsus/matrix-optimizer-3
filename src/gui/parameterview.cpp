@@ -7,11 +7,9 @@
 
     <p>created 6/30/2014</p>
 */
-#include <QDebug>
 
 #include <QLayout>
 #include <QLabel>
-#include <QDoubleSpinBox>
 #include <QFrame>
 #include <QToolButton>
 #include <QComboBox>
@@ -22,18 +20,21 @@
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/trackfloat.h"
+#include "object/sequence.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "model/objecttreemodel.h"
 #include "util/objectmenu.h"
-
+#include "widget/doublespinbox.h"
 
 namespace MO {
 namespace GUI {
 
 ParameterView::ParameterView(QWidget *parent) :
     QWidget (parent),
+    scene_  (0),
     object_ (0),
 
     doChangeToCreatedTrack_    (false)
@@ -54,6 +55,16 @@ void ParameterView::setObject(Object *object)
         return;
     }
 
+    Scene * scene = object_->sceneObject();
+    if (scene != scene_)
+    {
+        scene_ = scene;
+        connect(scene, SIGNAL(parameterChanged(MO::Parameter*)),
+                this, SLOT(updateWidgetValue_(MO::Parameter*)));
+        connect(scene, SIGNAL(sequenceChanged(MO::Sequence*)),
+                this, SLOT(onSequenceChanged(MO::Sequence*)));
+    }
+
     parameters_ = object_->parameters();
 
     createWidgets_();
@@ -65,6 +76,8 @@ void ParameterView::clearWidgets_()
         i->deleteLater();
 
     widgets_.clear();
+    spins_.clear();
+    combos_.clear();
 }
 
 void ParameterView::createWidgets_()
@@ -114,6 +127,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     MO_ASSERT(model, "No model assigned for Parameter");
 
     QFrame * w = new QFrame(this);
+    w->setObjectName("_" + p->idName());
     w->setFrameStyle(QFrame::Panel);
     w->setFrameShadow(QFrame::Sunken);
 
@@ -153,8 +167,12 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     {
         defaultValueName = QString::number(pf->defaultValue());
 
-        QDoubleSpinBox * spin = new QDoubleSpinBox(w);
+        DoubleSpinBox * spin = new DoubleSpinBox(w);
         l->addWidget(spin);
+        spins_.append(spin);
+        // important for update
+        spin->setObjectName(p->idName());
+
         spin->setMinimum(pf->minValue());
         spin->setMaximum(pf->maxValue());
         spin->setDecimals(4);
@@ -170,14 +188,14 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             setTabOrder(prevEditWidget_, spin);
         prevEditWidget_ = spin;
 
-        connect(spin, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=]()
+        connect(spin, static_cast<void(DoubleSpinBox::*)(double)>(&DoubleSpinBox::valueChanged), [=]()
         {
             QObject * scene = p->object()->sceneObject();
             MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
             if (!scene) return;
             // threadsafe send new parameter value
             // XXX only testing syntax here,
-            //     Scene will probably have to handle more threads
+            //     Scene will have to handle more threads
             bool r =
                 metaObject()->invokeMethod(scene,
                                            "setParameterValue",
@@ -199,6 +217,9 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
         QComboBox * combo = new QComboBox(w);
         l->addWidget(combo);
+        combos_.append(combo);
+        // important for update
+        combo->setObjectName(p->idName());
 
         combo->setEnabled(ps->isEditable());
 
@@ -385,6 +406,53 @@ void ParameterView::addLinkModMenu_(
     });
 
 }
+
+void ParameterView::onSequenceChanged(Sequence * seq)
+{
+    if (seq == object_)
+        updateWidgetValues_();
+}
+
+void ParameterView::updateWidgetValues_()
+{
+    for (auto p : parameters_)
+    {
+        updateWidgetValue_(p);
+    }
+}
+
+void ParameterView::updateWidgetValue_(Parameter * p)
+{
+    //MO_DEBUG_GUI("ParameterView::updateWidgetValue_(" << p << ")");
+
+    if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(p))
+    {
+        for (DoubleSpinBox * spin : spins_)
+        {
+            if (spin->objectName() == pf->idName())
+                spin->setValue(pf->baseValue());
+        }
+    }
+    else
+    if (ParameterSelect * ps = dynamic_cast<ParameterSelect*>(p))
+    {
+        for (QComboBox * combo : combos_)
+        {
+            if (combo->objectName() == ps->idName())
+            {
+                int idx = ps->valueList().indexOf(ps->baseValue());
+                if (combo->currentIndex() != idx)
+                {
+                    combo->setCurrentIndex(idx);
+                    // update statustip
+                    if (combo->currentIndex() >= 0 && combo->currentIndex() < ps->statusTips().size())
+                        combo->setStatusTip(ps->statusTips().at(combo->currentIndex()));
+                }
+            }
+        }
+    }
+}
+
 
 } // namespace GUI
 } // namespace MO

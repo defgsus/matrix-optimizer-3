@@ -134,6 +134,8 @@ void SequenceFloatView::setViewSpace(const UTIL::ViewSpace & v)
 
 void SequenceFloatView::createSettingsWidgets_()
 {
+    MO_DEBUG_GUI("SequenceFloatView::createSettingsWidgets_()");
+
     clearSettingsWidgets_();
 
     Scene * scene = sequence_->sceneObject();
