@@ -201,6 +201,7 @@ void MainWindow::createWidgets_()
 
             // sequencer
             sequencer_ = new Sequencer(this);
+            sequencer_->setSceneSettings(sceneSettings_);
             sequencer_->setMinimumHeight(300);
             lv->addWidget(sequencer_);
             connect(sequencer_, &Sequencer::sequenceSelected, [this](Sequence * seq)
@@ -349,6 +350,9 @@ void MainWindow::setSceneObject(Scene * s)
 
     // manage memory
     scene_->setParent(this);
+
+    // clear scene widget settings
+    sceneSettings_->clear();
 
     MO_ASSERT(glManager_ && glWindow_, "");
 

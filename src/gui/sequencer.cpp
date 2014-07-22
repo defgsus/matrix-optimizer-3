@@ -130,6 +130,16 @@ void Sequencer::createWidgets_()
     updateVScroll_();
 }
 
+void Sequencer::setSceneSettings(SceneSettings *s)
+{
+    trackView_->setSceneSettings(s);
+}
+
+SceneSettings * Sequencer::sceneSettings() const
+{
+    return trackView_->sceneSettings();
+}
+
 void Sequencer::setSceneTime(Double time)
 {
     playBar_->setTime(time);

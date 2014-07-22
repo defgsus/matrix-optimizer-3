@@ -31,6 +31,8 @@
 #include "io/log.h"
 #include "io/application.h"
 #include "tool/enumnames.h"
+#include "util/scenesettings.h"
+
 
 namespace MO {
 namespace GUI {
@@ -50,7 +52,6 @@ TrackView::TrackView(QWidget *parent) :
     currentTime_            (0),
     hoverWidget_            (0),
 
-    defaultTrackHeight_     (30),
     trackSpacing_           (2),
     modifierMultiSelect_    (Qt::CTRL),
     modifierDragWithOffset_ (Qt::CTRL),
@@ -198,6 +199,8 @@ void TrackView::clearTracks()
 
 void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
 {
+    MO_ASSERT(sceneSettings_, "TrackView::setTracks() without SceneSettings");
+
     // removed previous content
     clearTracks();
     if (tracks.empty())
@@ -253,12 +256,12 @@ void TrackView::calcTrackY_()
 
 int TrackView::trackHeight(Track * t) const
 {
-    return trackHeights_.value(t->idName(), defaultTrackHeight_);
+    return sceneSettings_->getTrackHeight(t);
 }
 
 void TrackView::setTrackHeight(Track * t, int h)
 {
-    trackHeights_.insert(t->idName(), h);
+    sceneSettings_->setTrackHeight(t, h);
 
     calcTrackY_();
     updateWidgetsViewSpace_();

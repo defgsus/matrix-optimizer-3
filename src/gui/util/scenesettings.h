@@ -12,7 +12,7 @@
 #define MOSRC_GUI_UTIL_SCENESETTINGS_H
 
 #include <QObject>
-#include <QMap>
+#include <QHash>
 #include <QString>
 
 #include "object/object_fwd.h"
@@ -28,12 +28,23 @@ class SceneSettings : public QObject
 public:
     SceneSettings(QObject * parent = 0);
 
+    /** Clear everything */
+    void clear();
+
     void setViewSpace(const Object *obj, const UTIL::ViewSpace &viewspace);
     UTIL::ViewSpace getViewSpace(const Object * obj);
 
+    void setTrackHeight(const Track *, int);
+    int getTrackHeight(const Track *) const;
+
 private:
 
-    QMap<QString, UTIL::ViewSpace> viewSpaces_;
+    QHash<QString, UTIL::ViewSpace> viewSpaces_;
+    QHash<QString, int> trackHeights_;
+
+    // ---- config ----
+
+    int defaultTrackHeight_;
 
 };
 

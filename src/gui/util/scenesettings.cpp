@@ -9,6 +9,7 @@
 */
 
 #include "scenesettings.h"
+#include "object/track.h"
 #include "object/sequence.h"
 #include "object/sequencefloat.h"
 
@@ -17,8 +18,15 @@ namespace GUI {
 
 
 SceneSettings::SceneSettings(QObject *parent)
-    :   QObject(parent)
+    :   QObject(parent),
+      defaultTrackHeight_     (30)
+
 {
+}
+
+void SceneSettings::clear()
+{
+    viewSpaces_.clear();
 }
 
 
@@ -53,6 +61,21 @@ UTIL::ViewSpace SceneSettings::getViewSpace(const Object *obj)
     }
 
     return space;
+}
+
+
+void SceneSettings::setTrackHeight(const Track * track, int h)
+{
+    trackHeights_.insert(track->idName(), h);
+}
+
+int SceneSettings::getTrackHeight(const Track * track) const
+{
+    auto i = trackHeights_.find(track->idName());
+    if (i == trackHeights_.end())
+        return defaultTrackHeight_;
+
+    return i.value();
 }
 
 

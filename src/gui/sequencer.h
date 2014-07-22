@@ -29,12 +29,17 @@ class TrackView;
 class Ruler;
 class TimeBar;
 class Spacer;
+class SceneSettings;
+
 
 class Sequencer : public QWidget
 {
     Q_OBJECT
 public:
     explicit Sequencer(QWidget *parent = 0);
+
+    void setSceneSettings(SceneSettings * s);
+    SceneSettings * sceneSettings() const;
 
 signals:
 

@@ -29,6 +29,7 @@ namespace GUI {
 class TrackViewOverpaint;
 class TrackHeader;
 class SequenceWidget;
+class SceneSettings;
 
 class TrackView : public QWidget
 {
@@ -36,6 +37,9 @@ class TrackView : public QWidget
     friend class TrackViewOverpaint;
 public:
     explicit TrackView(QWidget *parent = 0);
+
+    void setSceneSettings(SceneSettings * s) { sceneSettings_ = s; }
+    SceneSettings * sceneSettings() const { return sceneSettings_; }
 
     /** Returns the header view associated with this view. */
     TrackHeader * trackHeader() const { return header_; }
@@ -174,13 +178,13 @@ private:
 
     Scene * scene_;
     ObjectTreeModel * omodel_;
+    SceneSettings * sceneSettings_;
     QList<Track*> tracks_;
 
     TrackViewOverpaint * overpaint_;
     TrackHeader * header_;
 
     QSet<SequenceWidget*> sequenceWidgets_;
-    QHash<QString, int> trackHeights_;
     QHash<Track*, int> trackY_;
     int offsetY_, maxHeight_;
 
