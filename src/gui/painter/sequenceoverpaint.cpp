@@ -48,7 +48,7 @@ void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
         // -- outside --
 
         int left = viewspace_.mapXFrom(0.0) * p.window().width(),
-            right = viewspace_.mapXFrom(sequence_->length()) * p.window().width();
+            right = viewspace_.mapXFrom(sequence_->length() / sequence_->speed()) * p.window().width();
 
         if (left > rect.left() || right < rect.right())
         {
@@ -59,9 +59,9 @@ void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
                 p.drawRect(rect.left(), rect.top(),
                            left - rect.left(), rect.height());
 
-            if (right < rect.right())
+            if (right <= rect.right())
                 p.drawRect(right, rect.top(),
-                           rect.right() - right, rect.height());
+                           rect.right() - right + 1, rect.height());
         }
 
         // -- playbar --

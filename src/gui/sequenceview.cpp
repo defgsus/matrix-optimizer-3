@@ -183,14 +183,14 @@ void SequenceView::updateViewSpace_(const UTIL::ViewSpace & v)
 {
     rulerX_->setViewSpace(v);
     rulerY_->setViewSpace(v);
-    if (!baseSequence_)
+    //if (!baseSequence_)
         playBar_->setViewspace(v);
-    else
+    /*else
     {
         UTIL::ViewSpace vs(v);
         vs.setScaleX(vs.scaleX() / baseSequence_->speed());
         playBar_->setViewspace(vs);
-    }
+    }*/
 }
 
 
