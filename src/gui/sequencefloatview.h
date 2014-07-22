@@ -16,6 +16,7 @@
 
 namespace MO {
 namespace GUI {
+namespace PAINTER { class ValueCurveData; }
 
 class Timeline1DView;
 class GeneralSequenceFloatView;
@@ -26,6 +27,7 @@ class SequenceFloatView : public SequenceView
     Q_OBJECT
 public:
     explicit SequenceFloatView(QWidget *parent = 0);
+    ~SequenceFloatView();
 
 signals:
 
@@ -35,6 +37,10 @@ public slots:
     void setViewSpace(const UTIL::ViewSpace&);
 
     void setSequence(MO::SequenceFloat *);
+
+private slots:
+
+    void updateViewSpaceTl_(const UTIL::ViewSpace&);
 
 private:
 
@@ -56,6 +62,9 @@ private:
 
     Timeline1DView * timeline_;
     GeneralSequenceFloatView * seqView_;
+    /** For timeline_ */
+    PAINTER::ValueCurveData * sequenceCurveData_;
+
 
     QWidget * wOscMode_, * wAmp_, * wFreq_, * wPhase_, * wPW_,
             * wEqu_, * wUseFreq_, * wPhaseDeg_,

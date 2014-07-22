@@ -14,6 +14,7 @@
 #include "types/float.h"
 
 namespace MO {
+class Sequence;
 namespace IO { class DataStream; }
 namespace GUI {
 namespace UTIL {
@@ -77,6 +78,11 @@ public:
 
     Double mapYDistanceTo(Double y) const;
     Double mapYDistanceFrom(Double y) const;
+
+    /** Adjusts the current ViewSpace to match the sequence settings */
+    void mapToSequence(const Sequence *);
+
+    void mapFromSequence(const Sequence *);
 
 private:
 

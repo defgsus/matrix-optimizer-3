@@ -26,6 +26,7 @@
 #include "timeline1dview.h"
 #include "painter/grid.h"
 #include "painter/valuecurve.h"
+#include "painter/sequenceoverpaint.h"
 #include "io/error.h"
 #include "io/datastream.h"
 #include "tool/enumnames.h"
@@ -49,6 +50,8 @@ Timeline1DView::Timeline1DView(MATH::Timeline1D * tl, QWidget *parent)
         gridPainter_            (new PAINTER::Grid(this)),
         valuePainter_           (new PAINTER::ValueCurve(this)),
         valuePainterData_       (new TimelineCurveData),
+        sequenceCurvePainter_   (0),
+        sequenceOverpaint_      (0),
 
         options_                (O_EnableAll),
         handleRadius_           (5),
@@ -149,7 +152,17 @@ void Timeline1DView::setOptions(int options)
 
 void Timeline1DView::setViewSpace(const UTIL::ViewSpace &v, bool send)
 {
-    space_ = v;
+    space_ = ospace_ = v;
+    if (send)
+        emit viewSpaceChanged(space_);
+    update();
+}
+
+void Timeline1DView::setViewSpace(const UTIL::ViewSpace &timelineSpace,
+                                  const UTIL::ViewSpace &overpainterSpace, bool send)
+{
+    space_ = timelineSpace;
+    ospace_ = overpainterSpace;
     if (send)
         emit viewSpaceChanged(space_);
     update();
@@ -323,6 +336,14 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
     if (!tl_)
         return;
 
+    // -- sequence curve --
+
+    if (sequenceCurvePainter_)
+    {
+        sequenceCurvePainter_->setViewSpace(ospace_);
+        sequenceCurvePainter_->paint(p, e->rect());
+    }
+
     // -- curve --
 
     static_cast<TimelineCurveData*>(valuePainterData_)->timeline = tl_;
@@ -362,6 +383,14 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
             p.drawRect(handleRect_(it->second, RS_SELECTED));
             p.setPen(Qt::NoPen);
         }
+    }
+
+    // ---- sequence overpaint ------
+
+    if (sequenceOverpaint_)
+    {
+        sequenceOverpaint_->setViewSpace(ospace_);
+        sequenceOverpaint_->paint(p, e->rect());
     }
 
     // ------ selection frame -------

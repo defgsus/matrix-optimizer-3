@@ -23,7 +23,7 @@
 namespace MO {
 namespace GUI {
 
-namespace PAINTER { class Grid; class ValueCurve; class ValueCurveData; }
+namespace PAINTER { class Grid; class ValueCurve; class ValueCurveData; class SequenceOverpaint; }
 
 class Timeline1DView : public QWidget
 {
@@ -76,10 +76,18 @@ public:
 
     static ClipboardType isTimelineInClipboard();
 
+    /** Returns the installed sequence overpainter, or NULL */
+    PAINTER::SequenceOverpaint * sequenceOverpaint() const { return sequenceOverpaint_; }
+    PAINTER::ValueCurve * sequenceCurvePainter() const { return sequenceCurvePainter_; }
+
     // ----------- assignment ------
 
     /** Assigns a new (or no) Timeline1D */
     void setTimeline(MATH::Timeline1D * timeline = 0);
+
+    /** Assigns a sequencer overpainter for timelines in sequences */
+    void setSequenceOverpaint(PAINTER::SequenceOverpaint * s) { sequenceOverpaint_ = s; }
+    void setSequenceCurvePainter(PAINTER::ValueCurve * v) { sequenceCurvePainter_ = v; }
 
     /** Sets the options for the background grid as or-wise combination of PAINTER::Grid::Option */
     void setGridOptions(int options);
@@ -111,6 +119,10 @@ public slots:
 
     /** Sets a new viewspace for the timeline */
     void setViewSpace(const UTIL::ViewSpace &, bool send_signal = false);
+
+    /** Sets new viewspaces for the timeline and the overpainter and sequence-curve. */
+    void setViewSpace(const UTIL::ViewSpace &timelineSpace,
+                      const UTIL::ViewSpace &overpainterSpace, bool send_signal = false);
 
     /** Fits the whole curve into view */
     void fitToView(bool fitX = true, bool fitY = true, int marginInPixels = 10);
@@ -219,11 +231,13 @@ protected:
 
     MATH::Timeline1D * tl_;
 
-    UTIL::ViewSpace space_;
+    UTIL::ViewSpace space_, ospace_;
 
     PAINTER::Grid * gridPainter_;
     PAINTER::ValueCurve * valuePainter_;
     PAINTER::ValueCurveData * valuePainterData_;
+    PAINTER::ValueCurve * sequenceCurvePainter_;
+    PAINTER::SequenceOverpaint * sequenceOverpaint_;
 
     std::function<void()> lock_, unlock_;
 

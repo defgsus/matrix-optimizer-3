@@ -155,12 +155,17 @@ void SequenceView::setSceneTime(Double time)
     playBar_->setTime(time);
 }
 
+const UTIL::ViewSpace& SequenceView::viewSpace() const
+{
+    return rulerX_->viewSpace();
+}
+
 void SequenceView::resizeEvent(QResizeEvent * e)
 {
     QWidget::resizeEvent(e);
 
     // update viewspace
-    rulerX_->setViewSpace( rulerX_->viewSpace(), true);
+    rulerX_->setViewSpace( viewSpace(), true);
 
     playBar_->setContainingRect(
         QRect(rulerX_->pos(), QSize(rulerX_->width(), grid_->geometry().height()))

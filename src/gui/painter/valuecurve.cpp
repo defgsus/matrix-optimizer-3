@@ -27,6 +27,14 @@ ValueCurve::ValueCurve(QObject *parent) :
 {
 }
 
+void ValueCurve::setAlpha(int alpha)
+{
+    QColor c = pen_.color();
+    c.setAlpha(alpha);
+    pen_.setColor(c);
+}
+
+
 
 void ValueCurve::paint(QPainter & p)
 {

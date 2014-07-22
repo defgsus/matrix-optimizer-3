@@ -11,6 +11,7 @@
 #include "viewspace.h"
 #include "io/error.h"
 #include "io/datastream.h"
+#include "object/sequence.h"
 
 namespace MO {
 namespace GUI {
@@ -205,6 +206,21 @@ Double ViewSpace::mapYDistanceTo(Double y) const
 Double ViewSpace::mapYDistanceFrom(Double y) const
 {
     return y / sy_;
+}
+
+
+void ViewSpace::mapToSequence(const Sequence * seq)
+{
+    x_ *= seq->speed();
+    x_ += seq->timeOffset();
+    sx_ *= seq->speed();
+}
+
+void ViewSpace::mapFromSequence(const Sequence * seq)
+{
+    sx_ /= seq->speed();
+    x_ -= seq->timeOffset();
+    x_ /= seq->speed();
 }
 
 

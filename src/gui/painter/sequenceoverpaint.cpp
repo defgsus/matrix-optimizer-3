@@ -66,14 +66,19 @@ void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
                            rect.right() - right + 1, rect.height());
         }
 
-        // -- loop --
+        // -- loop indicators --
+
         if (sequence_->looping())
         {
             p.setPen(penLoop_);
 
-            int x = viewspace_.mapXFrom(sequence_->loopStart() / sequence_->speed()) * p.window().width();
+            Double t = (sequence_->loopStart() - sequence_->timeOffset()) / sequence_->speed();
+            int x = viewspace_.mapXFrom(t) * p.window().width();
             p.drawLine(x, rect.top(), x, rect.bottom());
-            x = viewspace_.mapXFrom(sequence_->loopEnd()) * p.window().width();
+
+            t = (sequence_->loopStart() + sequence_->loopLength() - sequence_->timeOffset())
+                    / sequence_->speed();
+            x = viewspace_.mapXFrom(t) * p.window().width();
             p.drawLine(x, rect.top(), x, rect.bottom());
         }
     }

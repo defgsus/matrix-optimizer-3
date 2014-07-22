@@ -42,6 +42,9 @@ public:
     void setSceneSettings(SceneSettings * s) { sceneSettings_ = s; }
     SceneSettings * sceneSettings() const { return sceneSettings_; }
 
+    /** Returns current viewspace. */
+    const UTIL::ViewSpace& viewSpace() const;
+
     /** Creates a new setting widget container.
         Add your stuff to the returned widget's layout. */
     QWidget * newSetting(const QString & name);

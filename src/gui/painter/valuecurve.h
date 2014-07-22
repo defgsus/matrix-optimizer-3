@@ -47,6 +47,12 @@ public:
 
     const ValueCurveData * curveData() const { return data_; }
 
+    /** Returns the currently set pen for the curve */
+    QPen pen() const { return pen_; }
+
+    /** Returns the number of samples per pixel */
+    int overpaint() const { return overPaint_; }
+
     // -------------- setter ----------------
 
     /** Set the curve data. Ownership stays with the caller. */
@@ -54,6 +60,14 @@ public:
 
     /** Sets the viewspace for the whole painter area given to paint() */
     void setViewSpace(const UTIL::ViewSpace& viewspace) { viewspace_ = viewspace; }
+
+    void setPen(QPen& pen) { pen_ = pen; }
+
+    /** Sets the alpha channel of the Pen. */
+    void setAlpha(int alpha);
+
+    /** Sets the number of samples per pixel */
+    void setOverpaint(int num) { overPaint_ = num; }
 
     // ----------- draw action --------------
 

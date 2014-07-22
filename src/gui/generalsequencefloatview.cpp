@@ -92,7 +92,6 @@ void GeneralSequenceFloatView::paintEvent(QPaintEvent * e)
     p.setBrush(brushBack_);
     p.drawRect(e->rect());
 
-
     grid_->setViewSpace(space_);
     grid_->paint(p, e->rect());
 
