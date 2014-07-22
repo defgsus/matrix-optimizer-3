@@ -44,6 +44,7 @@
 #include "gl/manager.h"
 #include "gl/window.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "io/memory.h"
 #include "io/settings.h"
 
@@ -117,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent) :
     testThread_     (0),
 
     currentSceneDirectory_(settings->getValue("Directory/scene").toString()),
-    statusMessageTimeout_(1000)
+    statusMessageTimeout_(1000 * 5)
 {
 
     setAttribute(Qt::WA_DeleteOnClose, true);
@@ -338,7 +339,7 @@ void MainWindow::createMainMenu_()
         connect(a, SIGNAL(triggered()), SLOT(runTestThread_()));
 }
 
-void MainWindow::setSceneObject(Scene * s)
+void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
 {
     MO_ASSERT(s, "MainWindow::setSceneObject() with NULL scene");
     MO_ASSERT(s != scene_, "MainWindow::setSceneObject() with same scene");
@@ -351,8 +352,11 @@ void MainWindow::setSceneObject(Scene * s)
     // manage memory
     scene_->setParent(this);
 
-    // clear scene widget settings
-    sceneSettings_->clear();
+    // clear or init scene widget settings
+    if (!set)
+        sceneSettings_->clear();
+    else
+        *sceneSettings_ = *set;
 
     MO_ASSERT(glManager_ && glWindow_, "");
 
@@ -747,7 +751,33 @@ void MainWindow::loadScene_(const QString &fn)
 {
     if (!fn.isEmpty())
     {
-        setSceneObject(ObjectFactory::loadScene(fn));
+        // read scene file
+        Scene * scene;
+        try
+        {
+            scene = ObjectFactory::loadScene(fn);
+        }
+        catch (Exception&)
+        {
+            statusBar()->showMessage(tr("Could not open project '%1'").arg(fn));
+            return;
+        }
+
+        // read gui settings
+        SceneSettings sceneSettings;
+        try
+        {
+            QString guifn = sceneSettings.getSettingsFileName(fn);
+            if (QFileInfo(guifn).exists())
+            {
+                sceneSettings.loadFile(guifn);
+            }
+            else
+                MO_DEBUG("No scene-settings " << guifn);
+        }
+        catch (Exception & e) { }
+
+        setSceneObject(scene, &sceneSettings);
 
         statusBar()->showMessage(tr("Opened %1").arg(fn), statusMessageTimeout_);
         currentSceneFilename_ = fn;
@@ -764,7 +794,18 @@ bool MainWindow::saveScene_(const QString &fn)
 {
     if (!fn.isEmpty())
     {
-        ObjectFactory::saveScene(fn, scene_);
+        try
+        {
+            // actually save the scene
+            ObjectFactory::saveScene(fn, scene_);
+            // save the gui settings for the scene
+            sceneSettings_->saveFile(sceneSettings_->getSettingsFileName(fn));
+        }
+        catch (Exception&)
+        {
+            statusBar()->showMessage("SAVING FAILED!");
+            return false;
+        }
 
         statusBar()->showMessage(tr("Saved %1").arg(fn), statusMessageTimeout_);
         currentSceneFilename_ = fn;

@@ -19,6 +19,7 @@
 #include "viewspace.h"
 
 namespace MO {
+namespace IO { class DataStream; }
 namespace GUI {
 
 
@@ -26,7 +27,17 @@ class SceneSettings : public QObject
 {
     Q_OBJECT
 public:
-    SceneSettings(QObject * parent = 0);
+    explicit SceneSettings(QObject * parent = 0);
+    SceneSettings(const SceneSettings& other);
+    SceneSettings& operator=(const SceneSettings& other);
+
+
+    void serialize(IO::DataStream& io) const;
+    void deserialize(IO::DataStream& io);
+
+    QString getSettingsFileName(const QString& sceneFilename) const;
+    void saveFile(const QString& filename) const;
+    void loadFile(const QString& filename);
 
     /** Clear everything */
     void clear();
@@ -44,6 +55,7 @@ private:
 
     // ---- config ----
 
+    bool useCompression_;
     int defaultTrackHeight_;
 
 };

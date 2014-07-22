@@ -233,7 +233,7 @@ void ViewSpace::zoom(Double scaleX, Double scaleY, Double tx, Double ty)
 }
 
 
-void ViewSpace::serialize(IO::DataStream &stream)
+void ViewSpace::serialize(IO::DataStream &stream) const
 {
     stream.writeHeader("viewspace", 1);
 
@@ -245,12 +245,19 @@ void ViewSpace::serialize(IO::DataStream &stream)
 
 void ViewSpace::deserialize(IO::DataStream &stream)
 {
+    ViewSpace temp;
+
     stream.readHeader("viewspace", 1);
 
-    stream >> x_ >> y_ >> sx_ >> sy_
-            >> minx_ >> miny_ >> maxx_ >> maxy_
-            >> doMinx_ >> doMiny_ >> doMaxx_ >> doMaxy_
-            >> doLimitByChangingScale_;
+    stream >> temp.x_ >> temp.y_ >> temp.sx_ >> temp.sy_
+            >> temp.minx_ >> temp.miny_ >> temp.maxx_ >> temp.maxy_
+            >> temp.doMinx_ >> temp.doMiny_ >> temp.doMaxx_ >> temp.doMaxy_
+            >> temp.doLimitByChangingScale_;
+
+    if (stream.status() != QDataStream::Ok)
+        MO_IO_ERROR(READ, "error deserializing a ViewSpace");
+
+    *this = temp;
 }
 
 

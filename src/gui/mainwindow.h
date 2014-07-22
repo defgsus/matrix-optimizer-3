@@ -68,7 +68,7 @@ private slots:
     void resetTreeModel_();
     void runTestThread_();
 
-    void setSceneObject(Scene *);
+    void setSceneObject(Scene *, const SceneSettings * = 0);
 
     void updateWidgetsActivity_();
 private:

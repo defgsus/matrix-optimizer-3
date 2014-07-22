@@ -28,7 +28,7 @@ public:
 
     // -------------- io ----------------
 
-    void serialize(IO::DataStream& stream);
+    void serialize(IO::DataStream& stream) const;
     void deserialize(IO::DataStream& stream);
 
     // ------------ getter --------------
@@ -99,7 +99,6 @@ private:
         doMaxx_,
         doMaxy_;
 };
-
 
 
 } // namespace UTIL
