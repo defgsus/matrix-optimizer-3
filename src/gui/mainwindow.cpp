@@ -38,6 +38,7 @@
 #include "gui/sequencefloatview.h"
 #include "gui/sequencer.h"
 #include "gui/widget/spacer.h"
+#include "gui/util/scenesettings.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
@@ -139,6 +140,9 @@ void MainWindow::createWidgets_()
     setCentralWidget(new QWidget(this));
     centralWidget()->setObjectName("_centralwidget");
 
+    // scene settings class
+    sceneSettings_ = new SceneSettings(this);
+
     // status bar
     setStatusBar(new QStatusBar(this));
     statusBar()->addPermanentWidget(sysInfoLabel_ = new QLabel(statusBar()));
@@ -210,6 +214,7 @@ void MainWindow::createWidgets_()
             // SequenceFloat view
             seqFloatView_ = new SequenceFloatView(this);
             seqFloatView_->setVisible(false);
+            seqFloatView_->setSceneSettings(sceneSettings_);
             lv->addWidget(seqFloatView_);
             connect(seqFloatView_, SIGNAL(statusTipChanged(QString)),
                     statusBar(), SLOT(showMessage(QString)));

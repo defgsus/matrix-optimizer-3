@@ -171,7 +171,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         spin->setDecimals(4);
         spin->setSingleStep(pf->smallStep());
         spin->setValue(pf->baseValue());
-        spin->setMaximumWidth(120);
+        spin->spinBox()->setMaximumWidth(120);
         spin->setEnabled(pf->isEditable());
         spin->setStatusTip(pf->statusTip().isEmpty()
                            ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")

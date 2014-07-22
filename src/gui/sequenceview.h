@@ -28,6 +28,7 @@ namespace UTIL { class ViewSpace; }
 class Ruler;
 class DoubleSpinBox;
 class TimeBar;
+class SceneSettings;
 
 class SequenceView : public QWidget
 {
@@ -37,6 +38,9 @@ public:
 
     void setScene(Scene * scene);
     Scene * scene() const { return scene_; }
+
+    void setSceneSettings(SceneSettings * s) { sceneSettings_ = s; }
+    SceneSettings * sceneSettings() const { return sceneSettings_; }
 
     /** Creates a new setting widget container.
         Add your stuff to the returned widget's layout. */
@@ -102,6 +106,8 @@ private:
 
     Sequence * baseSequence_;
     Scene * scene_;
+
+    SceneSettings * sceneSettings_;
 
     QGridLayout * grid_;
     QVBoxLayout * settingsLayout_;

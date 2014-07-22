@@ -24,7 +24,8 @@ DoubleSpinBox::DoubleSpinBox(QWidget *parent) :
 
     auto l = new QVBoxLayout(this);
     l->setMargin(0);
-    l->setSizeConstraint(QLayout::SetMinAndMaxSize);
+    //l->setSizeConstraint(QLayout::SetMinAndMaxSize);
+    l->setSizeConstraint(QLayout::SetMaximumSize);
 
     spin_ = new QDoubleSpinBox(this);
     l->addWidget(spin_);

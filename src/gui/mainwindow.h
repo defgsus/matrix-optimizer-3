@@ -28,6 +28,7 @@ class ObjectTreeView;
 class SequenceFloatView;
 class Sequencer;
 class Spacer;
+class SceneSettings;
 
 class TestThread;
 
@@ -90,6 +91,8 @@ private:
     QMenu * editMenu_;
     ObjectView * objectView_;
     ObjectTreeView * objectTreeView_;
+
+    SceneSettings * sceneSettings_;
 
     Sequencer * sequencer_;
     SequenceFloatView * seqFloatView_;

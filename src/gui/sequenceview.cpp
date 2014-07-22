@@ -24,6 +24,7 @@
 #include "io/error.h"
 #include "widget/doublespinbox.h"
 #include "widget/timebar.h"
+#include "util/scenesettings.h"
 #include "io/log.h"
 
 namespace MO {
@@ -32,6 +33,8 @@ namespace GUI {
 SequenceView::SequenceView(QWidget *parent) :
     QWidget         (parent),
     baseSequence_   (0),
+    scene_          (0),
+    sceneSettings_  (0),
     grid_           (new QGridLayout(this)),
     rulerX_         (new Ruler(this)),
     rulerY_         (new Ruler(this)),
@@ -57,8 +60,8 @@ SequenceView::SequenceView(QWidget *parent) :
     rulerY_->setOptions(Ruler::O_EnableAllY);
 
     // connect rulers to class
-    connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), SLOT(setViewSpace(UTIL::ViewSpace)));
-    connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), SLOT(setViewSpace(UTIL::ViewSpace)));
+    connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SLOT(setViewSpace(UTIL::ViewSpace)));
+    connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SLOT(setViewSpace(UTIL::ViewSpace)));
 
     // connect rulers to each other
     connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), rulerY_, SLOT(setViewSpace(UTIL::ViewSpace)));
@@ -82,7 +85,7 @@ SequenceView::SequenceView(QWidget *parent) :
 
     settings_ = new QScrollArea(this);
     // XXX this value should be estimated!!
-    settings_->setMinimumWidth(250);
+    settings_->setMinimumWidth(270);
     grid_->addWidget(settings_, 0, 0, 2, 1);
 
     auto w = new QWidget(settings_);
@@ -129,6 +132,7 @@ SequenceView::SequenceView(QWidget *parent) :
     timelineView_->setViewSpace(timelineView_->viewSpace(), true);
     */
 
+    // initialize some viewspace
     rulerX_->setViewSpace( UTIL::ViewSpace(0, -1, 60, 2) );
 
     setSceneTime(0);
@@ -155,6 +159,7 @@ void SequenceView::resizeEvent(QResizeEvent * e)
 {
     QWidget::resizeEvent(e);
 
+    // update viewspace
     rulerX_->setViewSpace( rulerX_->viewSpace(), true);
 
     playBar_->setContainingRect(
@@ -165,6 +170,8 @@ void SequenceView::resizeEvent(QResizeEvent * e)
 void SequenceView::setSequence_(Sequence * s)
 {
     MO_DEBUG_GUI("SequenceView::setSequence(" << s << ") baseSequence_ = " << baseSequence_);
+
+    MO_ASSERT(sceneSettings_, "SequenceView::setSequence() without SceneSettings");
 
     bool different = baseSequence_ != s;
 
@@ -178,8 +185,8 @@ void SequenceView::setSequence_(Sequence * s)
         {
             createDefaultSettingsWidgets_();
             playBar_->setTimeOffset(-baseSequence_->start());
-            // update playbar viewspace
-            updateViewSpace_(rulerX_->viewSpace());
+            // get viewspace from previous settings
+            setViewSpace(sceneSettings_->getViewSpace(baseSequence_));
         }
     }
 }

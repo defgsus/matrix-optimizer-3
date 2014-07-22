@@ -22,6 +22,8 @@ class DoubleSpinBox : public QWidget
 public:
     explicit DoubleSpinBox(QWidget *parent = 0);
 
+    QDoubleSpinBox * spinBox() const { return spin_; }
+
     void setMinimum(double min) { spin_->setMinimum(min); }
     void setMaximum(double max) { spin_->setMaximum(max); }
     void setRange(double minimum, double maximum) { spin_->setRange(minimum, maximum); }

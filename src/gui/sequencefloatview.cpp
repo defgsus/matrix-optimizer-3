@@ -26,6 +26,7 @@
 #include "math/waveform.h"
 #include "widget/doublespinbox.h"
 #include "widget/equationeditor.h"
+#include "util/scenesettings.h"
 
 
 namespace MO {
@@ -128,6 +129,9 @@ void SequenceFloatView::setViewSpace(const UTIL::ViewSpace & v)
         timeline_->setViewSpace(v);
     if (seqView_)
         seqView_->setViewSpace(v);
+
+    // save the current viewspace
+    sceneSettings()->setViewSpace(sequence_, v);
 
     updateViewSpace_(v);
 }
