@@ -208,9 +208,11 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
     if (scene != scene_)
     {
         connect(scene, SIGNAL(objectChanged(MO::Object*)),
-                this, SLOT(objectChanged(MO::Object*)));
+                this, SLOT(onObjectChanged_(MO::Object*)));
         connect(scene, SIGNAL(sequenceChanged(MO::Sequence*)),
-                this, SLOT(sequenceChanged(MO::Sequence*)));
+                this, SLOT(onSequenceChanged_(MO::Sequence*)));
+        connect(scene, SIGNAL(parameterChanged(MO::Parameter*)),
+                this, SLOT(onParameterChanged_(MO::Parameter*)));
     }
     scene_ = scene;
     omodel_ = scene->model();
@@ -747,7 +749,13 @@ void TrackView::clearSelection_()
         updateWidgetViewSpace_(s);
 }*/
 
-void TrackView::sequenceChanged(Sequence * seq)
+void TrackView::onParameterChanged_(Parameter * p)
+{
+    if (auto seq = qobject_cast<Sequence*>(p->object()))
+        onSequenceChanged_(seq);
+}
+
+void TrackView::onSequenceChanged_(Sequence * seq)
 {
     // This slot signals either changes in time
     // or changes to the containing data
@@ -772,7 +780,7 @@ void TrackView::sequenceChanged(Sequence * seq)
     }
 }
 
-void TrackView::objectChanged(Object * obj)
+void TrackView::onObjectChanged_(Object * obj)
 {
     if (auto seq = qobject_cast<Sequence*>(obj))
         if (auto w = widgetForSequence_(seq))

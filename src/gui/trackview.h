@@ -94,16 +94,16 @@ public slots:
     /** Update from sequences */
     //void sequenceTimeChanged(MO::Sequence *);
 
-    /** Update from Scene */
-    void sequenceChanged(MO::Sequence *);
-
-    /** Update from Scene */
-    void objectChanged(MO::Object *);
-
 protected slots:
 
     /** Signal from sequence widgets */
     void widgetHovered_(SequenceWidget *, bool);
+
+    void onParameterChanged_(MO::Parameter *);
+    /** Update from Scene */
+    void onSequenceChanged_(MO::Sequence *);
+    /** Update from Scene */
+    void onObjectChanged_(MO::Object *);
 
 protected:
 
