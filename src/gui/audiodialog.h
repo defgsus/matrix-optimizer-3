@@ -15,6 +15,8 @@
 
 class QComboBox;
 class QToolButton;
+class QSpinBox;
+class QTimer;
 
 namespace MO {
 namespace AUDIO { class AudioDevices; class AudioDevice; }
@@ -38,23 +40,32 @@ public slots:
 
 private slots:
     void toggleTesttone_();
-    void fillDeviceBox_();
+    void apiSelected_();
     void deviceSelected_();
+    void setDefaultSamplerate_();
+    void setDefaultBuffersize_();
 
 private:
 
+    void fillDeviceBox_();
     void checkDevices_();
-    void startTone();
-    void stopTone();
+    void startTone_();
+    void stopTone_();
+
+    void storeConfig_();
 
     AUDIO::AudioDevices * devices_;
     AUDIO::AudioDevice * device_;
 
     QComboBox *apiBox_, *deviceBox_;
+    QSpinBox *sampleRate_, *bufferSize_;
     QToolButton * testButt_;
+    QPushButton * okButt_;
+    QTimer * timer_;
 
     int freq_, vol_;
-    float phase_;
+    float realfreq_, phase_, env_;
+    bool doEnv_;
 };
 
 } // namespace GUI

@@ -12,13 +12,17 @@
 #include <QComboBox>
 #include <QMessageBox>
 #include <QToolButton>
+#include <QPushButton>
 #include <QSpinBox>
+#include <QLabel>
+#include <QTimer>
 
 #include "audiodialog.h"
 #include "audio/audiodevices.h"
 #include "audio/audiodevice.h"
 #include "io/error.h"
 #include "math/constants.h"
+#include "io/settings.h"
 
 namespace MO {
 namespace GUI {
@@ -29,7 +33,9 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
       device_   (0),
       freq_     (437),
       vol_      (20),
-      phase_    (0.f)
+      realfreq_ (freq_),
+      phase_    (0.f),
+      doEnv_    (false)
 {
     setObjectName("_AudioDialog");
     setWindowTitle(tr("audio settings"));
@@ -44,16 +50,54 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
         apiBox_ = new QComboBox(this);
         l0->addWidget(apiBox_);
         connect(apiBox_, SIGNAL(currentIndexChanged(int)),
-                this, SLOT(fillDeviceBox_()));
+                this, SLOT(apiSelected_()));
 
         deviceBox_ = new QComboBox(this);
         l0->addWidget(deviceBox_);
         connect(deviceBox_, SIGNAL(currentIndexChanged(int)),
                 this, SLOT(deviceSelected_()));
 
+        // buffersize
+        auto lh = new QHBoxLayout();
+        l0->addLayout(lh);
+
+            auto label = new QLabel(tr("buffer size"), this);
+            lh->addWidget(label);
+
+            bufferSize_ = new QSpinBox(this);
+            lh->addWidget(bufferSize_);
+            bufferSize_->setRange(8, 4096*8);
+            bufferSize_->setValue(settings->getValue("Audio/buffersize").toInt());
+
+            auto but = new QToolButton(this);
+            lh->addWidget(but);
+            but->setText("D");
+            but->setToolTip(tr("Set default value"));
+            connect(but, SIGNAL(clicked()), this, SLOT(setDefaultBuffersize_()));
+
+        // samplerate
+        lh = new QHBoxLayout();
+        l0->addLayout(lh);
+
+            label = new QLabel(tr("samplerate"), this);
+            lh->addWidget(label);
+
+            sampleRate_ = new QSpinBox(this);
+            lh->addWidget(sampleRate_);
+            sampleRate_->setRange(8, 256000);
+            sampleRate_->setValue(settings->getValue("Audio/samplerate").toInt());
+
+            but = new QToolButton(this);
+            lh->addWidget(but);
+            but->setText("D");
+            but->setToolTip(tr("Set default value"));
+            connect(but, SIGNAL(clicked()), this, SLOT(setDefaultSamplerate_()));
+
         // --- test tone ---
 
-        auto lh = new QHBoxLayout();
+        l0->addStretch(1);
+
+        lh = new QHBoxLayout();
         l0->addLayout(lh);
 
             testButt_ = new QToolButton(this);
@@ -63,14 +107,25 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
             testButt_->setToolTip(tr("Test tone"));
             testButt_->setCheckable(true);
             testButt_->setEnabled(false);
+            testButt_->setAutoFillBackground(true);
             connect(testButt_, SIGNAL(toggled(bool)),
                     this, SLOT(toggleTesttone_()));
+
+            but = new QToolButton(this);
+            lh->addWidget(but);
+            but->setText("#");
+            but->setToolTip(tr("Envelope"));
+            but->setCheckable(true);
+            connect(but, &QToolButton::toggled, [=]()
+            {
+                doEnv_ = but->isChecked();
+            });
 
             auto freqSpin = new QSpinBox(this);
             lh->addWidget(freqSpin);
             freqSpin->setRange(1, 44000);
             freqSpin->setValue(freq_);
-            freqSpin->setSuffix(tr(" hz"));
+            freqSpin->setSuffix(" " + tr("hz"));
             connect(freqSpin, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), [=]()
             {
                 freq_ = freqSpin->value();
@@ -80,12 +135,45 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
             lh->addWidget(volSpin);
             volSpin->setRange(1,100);
             volSpin->setValue(vol_);
-            connect(freqSpin, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), [=]()
+            volSpin->setSuffix(" " + tr("%"));
+            connect(volSpin, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), [=]()
             {
                 vol_ = volSpin->value();
             });
 
+        // -- ok / cancel --
+
         l0->addStretch(1);
+
+        lh = new QHBoxLayout();
+        l0->addLayout(lh);
+
+            okButt_ = new QPushButton(this);
+            lh->addWidget(okButt_);
+            okButt_->setText(tr("Accept"));
+            connect(okButt_, &QPushButton::pressed, [=]()
+            {
+                storeConfig_();
+                close();
+            });
+
+            auto cancelButt = new QPushButton(this);
+            lh->addWidget(cancelButt);
+            cancelButt->setText(tr("Cancel"));
+            connect(cancelButt, SIGNAL(pressed()), this, SLOT(close()));
+
+
+
+    // blink timer
+
+    timer_ = new QTimer(this);
+    timer_->setInterval(1000 / 60);
+    connect(timer_, &QTimer::timeout, [=]()
+    {
+        QPalette p(testButt_->palette());
+        p.setColor(QPalette::Button, QColor(50, env_ * 255, 50));
+        testButt_->setPalette(p);
+    });
 
     checkDevices_();
 }
@@ -118,12 +206,17 @@ void AudioDialog::checkDevices_()
         return;
     }
 
+    QString api = settings->getValue("Audio/api").toString();
+
     // fill api box
     for (uint i=0; i<devices_->numApis(); ++i)
     {
         auto inf = devices_->getApiInfo(i);
         apiBox_->addItem(inf->name, QVariant(i));
+        if (inf->name == api)
+            apiBox_->setCurrentIndex(i + 1);
     }
+
 
     fillDeviceBox_();
 }
@@ -131,6 +224,8 @@ void AudioDialog::checkDevices_()
 
 void AudioDialog::fillDeviceBox_()
 {
+    QString dev = settings->getValue("Audio/device").toString();
+
     deviceBox_->clear();
     deviceBox_->addItem(tr("None"), QVariant(-1));
 
@@ -149,13 +244,49 @@ void AudioDialog::fillDeviceBox_()
                             .arg(inf->numInputChannels)
                             .arg(inf->numOutputChannels)
                             .arg(inf->name), QVariant(i));
+
+        if (inf->name == dev)
+            deviceBox_->setCurrentIndex(i + 1);
+    }
+}
+
+void AudioDialog::apiSelected_()
+{
+    fillDeviceBox_();
+}
+
+void AudioDialog::deviceSelected_()
+{
+    int idx = selectedDeviceIndex();
+    bool works = idx >= 0 && devices_->getDeviceInfo(idx)->numOutputChannels;
+    testButt_->setEnabled( works );
+    okButt_->setEnabled( works );
+    if (works)
+    {
+        if (!settings->contains("Audio/samplerate"))
+            sampleRate_->setValue(devices_->getDeviceInfo(idx)->defaultSampleRate);
+        if (!settings->contains("Audio/buffersize"))
+            bufferSize_->setValue(devices_->getDeviceInfo(idx)->defaultBufferLength);
+    }
+}
+
+void AudioDialog::setDefaultSamplerate_()
+{
+    int idx = selectedDeviceIndex();
+    if (idx >= 0)
+    {
+        sampleRate_->setValue(devices_->getDeviceInfo(idx)->defaultSampleRate);
     }
 }
 
 
-void AudioDialog::deviceSelected_()
+void AudioDialog::setDefaultBuffersize_()
 {
-    testButt_->setEnabled( deviceBox_->currentIndex() > 0);
+    int idx = selectedDeviceIndex();
+    if (idx >= 0)
+    {
+        bufferSize_->setValue(devices_->getDeviceInfo(idx)->defaultBufferLength);
+    }
 }
 
 int AudioDialog::selectedDeviceIndex() const
@@ -167,17 +298,29 @@ int AudioDialog::selectedDeviceIndex() const
     return deviceBox_->itemData(idx).toInt();
 }
 
+void AudioDialog::storeConfig_()
+{
+    int idx = apiBox_->currentIndex();
+    settings->setValue("Audio/api", idx < 1? "None" : devices_->getApiInfo(idx-1)->name );
+    idx = deviceBox_->currentIndex();
+    settings->setValue("Audio/device", idx < 1? "None" : devices_->getDeviceInfo(idx-1)->name );
+    settings->setValue("Audio/samplerate", sampleRate_->value());
+    settings->setValue("Audio/buffersize", bufferSize_->value());
+}
+
+
+
 void AudioDialog::toggleTesttone_()
 {
     if (testButt_->isChecked())
     {
-        startTone();
+        startTone_();
     }
     else
-        stopTone();
+        stopTone_();
 }
 
-void AudioDialog::startTone()
+void AudioDialog::startTone_()
 {
     if (!device_)
         device_ = new AUDIO::AudioDevice();
@@ -196,20 +339,32 @@ void AudioDialog::startTone()
     AUDIO::Configuration conf;
     conf.setNumChannelsIn(0);
     conf.setNumChannelsOut(inf->numOutputChannels);
-    conf.setBufferSize(inf->defaultBufferLength);
-    conf.setSampleRate(inf->defaultSampleRate);
+    conf.setBufferSize(bufferSize_->value());
+    conf.setSampleRate(sampleRate_->value());
 
+    env_ = 0.f;
 
     device_->setCallback([=](const F32*, F32* out)
     {
         for (uint i=0; i<conf.bufferSize(); ++i)
         {
-            F32 sam = 0.01f * vol_ * sin(phase_ * TWO_PI * freq_);
+            F32 sam = 0.01f * vol_ * sin(phase_ * TWO_PI);
+
+            if (doEnv_)
+            {
+                sam *= env_;
+                if (env_ < 0.001f)
+                    env_ = 1.f;
+                else
+                    env_ *= (1.f - conf.sampleRateInv() * 10.f);
+            }
 
             for (uint j=0; j<conf.numChannelsOut(); ++j)
                 *out++ = sam;
 
-            phase_ += 1.f / conf.sampleRate();
+            realfreq_ += conf.sampleRateInv() * 100.f * (freq_ - realfreq_);
+
+            phase_ += conf.sampleRateInv() * realfreq_;
             if (phase_ > 1.f)
                 phase_ -= 2.f;
             else if (phase_ < -1.f)
@@ -228,6 +383,7 @@ void AudioDialog::startTone()
                              .arg(inf->name)
                              .arg(e.what())
                              );
+        testButt_->setChecked(false);
         return;
     }
 
@@ -235,6 +391,7 @@ void AudioDialog::startTone()
     try
     {
         device_->start();
+        timer_->start();
     }
     catch (AudioException& e)
     {
@@ -243,13 +400,16 @@ void AudioDialog::startTone()
                              .arg(inf->name)
                              .arg(e.what())
                              );
+        device_->close();
+        testButt_->setChecked(false);
         return;
     }
 }
 
 
-void AudioDialog::stopTone()
+void AudioDialog::stopTone_()
 {
+    timer_->stop();
     if (device_)
     {
         device_->stop();

@@ -30,6 +30,11 @@ void Settings::createDefaultValues_()
 {
     defaultValues_["Directory/scene"] = "./";
     defaultValues_["File/scene"] = "";
+
+    defaultValues_["Audio/api"] = "";
+    defaultValues_["Audio/device"] = "";
+    defaultValues_["Audio/samplerate"] = 44100;
+    defaultValues_["Audio/buffersize"] = 128;
 }
 
 QVariant Settings::getValue(const QString &key)

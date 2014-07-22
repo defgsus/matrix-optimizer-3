@@ -119,6 +119,15 @@ public:
 
     // --------- initialisation ----------
 
+    /** Returns true when audio-settings are already made. */
+    bool isAudioConfigured() const;
+
+    /** Initializes a device/stream from the stored settings.
+        Returns true when this worked.
+        Returns false otherwise or if no settings are made yet.
+        Shows an error dialog on api failure. */
+    bool initFromSettings();
+
     /** Initializes a device/stream.
         @p deviceIndex is the host-os device number as returned by CSMOD::AudioDevices.
         @p numInputChannels and @p numOutputChannels is the number of channels requested

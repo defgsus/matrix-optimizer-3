@@ -10,10 +10,14 @@
 
 #include <portaudio.h>
 
+#include <QMessageBox>
+
 #include "audiodevice.h"
+#include "audiodevices.h"
 #include "io/log.h"
 #include "io/error.h"
-#include "audiodevices.h"
+#include "io/settings.h"
+
 
 #define MO_CHECKPA(command__, text__) \
     { PaError err__ = (command__); if (err__ != paNoError) \
@@ -207,7 +211,7 @@ void AudioDevice::init(uint deviceIndex,
 
 void AudioDevice::close()
 {
-    MO_DEBUGF("AudioDevice::close()");
+    MO_DEBUG_AUDIO("AudioDevice::close()");
 
     // no error reporting nescessary, i think
     if (!ok_) return;
@@ -259,7 +263,79 @@ void AudioDevice::stop()
     play_ = false;
 }
 
+bool AudioDevice::isAudioConfigured() const
+{
+    return !settings->getValue("Audio/device").toString().isEmpty();
+}
 
+bool AudioDevice::initFromSettings()
+{
+    MO_DEBUG_AUDIO("AudioDevice::initFromSettings()");
+
+    // check config
+
+    QString deviceName = settings->getValue("Audio/device").toString();
+    if (deviceName.isEmpty())
+        return false;
+
+    // get device list
+
+    AudioDevices devs;
+    try
+    {
+        devs.checkDevices();
+    }
+    catch (AudioException& e)
+    {
+        QMessageBox::warning(0, QWidget::tr("Error"),
+                             QWidget::tr("Failed to initialize audio devices\n%1").arg(e.what())
+                             );
+        return false;
+    }
+
+    // find configured device
+
+    int idx = -1;
+    for (uint i=0; i<devs.numDevices(); ++i)
+    {
+        if (devs.getDeviceInfo(i)->name == deviceName)
+        {
+            idx = i;
+            break;
+        }
+    }
+
+    if (idx < 0)
+    {
+        QMessageBox::warning(0, QWidget::tr("Error"),
+                             QWidget::tr("The configured device could not be found\n'%1'")
+                             .arg(deviceName)
+                             );
+        return false;
+    }
+
+    // get the other settings
+    uint sampleRate = settings->getValue("Audio/samplerate").toInt();
+    uint bufferSize = settings->getValue("Audio/buffersize").toInt();
+
+    // initialize
+
+    try
+    {
+        init(idx, 0, devs.getDeviceInfo(idx)->numOutputChannels, sampleRate, bufferSize);
+    }
+    catch (AudioException& e)
+    {
+        QMessageBox::warning(0, QWidget::tr("Error"),
+                             QWidget::tr("Failed to init audio device '%1'\n%2")
+                             .arg(deviceName)
+                             .arg(e.what())
+                             );
+        return false;
+    }
+
+    return true;
+}
 
 
 
