@@ -81,6 +81,7 @@ bool AudioDevices::checkDevices()
 
         DeviceInfo inf;
         inf.name = pa->name;
+        inf.apiIndex = pa->hostApi;
         inf.numInputChannels = pa->maxInputChannels;
         inf.numOutputChannels = pa->maxOutputChannels;
         inf.defaultSampleRate = pa->defaultSampleRate;
@@ -96,12 +97,12 @@ bool AudioDevices::checkDevices()
     return numDevices_ != 0;
 }
 
-size_t AudioDevices::numDevices() const
+uint AudioDevices::numDevices() const
 {
     return numDevices_;
 }
 
-const AudioDevices::DeviceInfo * AudioDevices::getDeviceInfo(size_t index) const
+const AudioDevices::DeviceInfo * AudioDevices::getDeviceInfo(uint index) const
 {
     if (index < dev_infos_.size())
         return &dev_infos_[index];
@@ -109,12 +110,12 @@ const AudioDevices::DeviceInfo * AudioDevices::getDeviceInfo(size_t index) const
     return 0;
 }
 
-size_t AudioDevices::numApis() const
+uint AudioDevices::numApis() const
 {
     return numApis_;
 }
 
-const AudioDevices::ApiInfo * AudioDevices::getApiInfo(size_t index) const
+const AudioDevices::ApiInfo * AudioDevices::getApiInfo(uint index) const
 {
     if (index < api_infos_.size())
         return &api_infos_[index];
@@ -125,7 +126,7 @@ const AudioDevices::ApiInfo * AudioDevices::getApiInfo(size_t index) const
 void AudioDevices::dump_info(std::ostream &out) const
 {
     out << "audio APIs:\n";
-    for (size_t i=0; i<numApis_; ++i)
+    for (uint i=0; i<numApis_; ++i)
     {
         out << "index    " << i << "\n"
             << "name     " << api_infos_[i].name << "\n"
@@ -134,7 +135,7 @@ void AudioDevices::dump_info(std::ostream &out) const
 
     out << "\naudio devices:\n";
 
-    for (size_t i=0; i<numDevices_; ++i)
+    for (uint i=0; i<numDevices_; ++i)
     {
         out << "index    " << i << "\n"
             << "name     " << dev_infos_[i].name << "\n"

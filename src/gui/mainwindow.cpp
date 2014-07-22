@@ -39,6 +39,7 @@
 #include "gui/sequencer.h"
 #include "gui/widget/spacer.h"
 #include "gui/util/scenesettings.h"
+#include "gui/audiodialog.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
@@ -310,6 +311,20 @@ void MainWindow::createMainMenu_()
     a->setCheckable(true);
     a->setChecked(true);
     connect(a, SIGNAL(triggered()), this, SLOT(stop()));
+
+
+    // ######### OPTIONS MENU #########
+    m = new QMenu(tr("Options"), menuBar());
+    menuBar()->addMenu(m);
+
+        a = new QAction(tr("Audio settings"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            AudioDialog diag;
+            diag.exec();
+        });
+
 
     // ######### DEBUG MENU #########
     m = new QMenu(tr("Debug"), menuBar());

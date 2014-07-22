@@ -40,7 +40,8 @@ class AudioDevices
     struct DeviceInfo
     {
         QString name;
-        uint numInputChannels,
+        uint apiIndex,
+             numInputChannels,
              numOutputChannels,
              defaultSampleRate,
              defaultBufferLength;
@@ -56,11 +57,11 @@ class AudioDevices
     /** call this once */
     bool checkDevices();
 
-    size_t numApis() const;
-    size_t numDevices() const;
+    uint numApis() const;
+    uint numDevices() const;
 
-    const ApiInfo * getApiInfo(size_t index) const;
-    const DeviceInfo * getDeviceInfo(size_t index) const;
+    const ApiInfo * getApiInfo(uint index) const;
+    const DeviceInfo * getDeviceInfo(uint index) const;
 
     void dump_info(std::ostream& = std::cout) const;
 

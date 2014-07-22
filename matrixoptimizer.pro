@@ -13,7 +13,7 @@ QMAKE_CXXFLAGS += --std=c++0x
 QMAKE_CXXFLAGS_RELEASE += -O2 -DNDEBUG
 
 # for optirun bug
-DEFINES += MO_DISABLE_OBJECT_TREE_DRAG
+unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
 
@@ -111,7 +111,8 @@ SOURCES += \
     src/io/settings.cpp \
     src/gui/util/scenesettings.cpp \
     src/audio/audiodevices.cpp \
-    src/audio/audiodevice.cpp
+    src/audio/audiodevice.cpp \
+    src/gui/audiodialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -217,7 +218,8 @@ HEADERS += \
     src/audio/configuration.h \
     src/types/int.h \
     src/audio/audiodevices.h \
-    src/audio/audiodevice.h
+    src/audio/audiodevice.h \
+    src/gui/audiodialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
