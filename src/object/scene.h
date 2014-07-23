@@ -15,7 +15,7 @@
 
 #include "object.h"
 
-class QSemaphore;
+class QReadWriteLock;
 
 namespace MO {
 namespace GL { class Context; }
@@ -28,7 +28,9 @@ class Scene : public Object
 
     // for updateTree_()
     friend class Object;
-    friend class ScopedSceneLock;
+    friend class ScopedSceneLockRead;
+    friend class ScopedSceneLockWrite;
+
 public:
     MO_OBJECT_CONSTRUCTOR(Scene);
     ~Scene();
@@ -133,6 +135,7 @@ public slots:
 
     // -------------- audio --------------------
 
+    /** XXX only for debugging */
     void calculateAudioBlock(SamplePos samplePos, SamplePos blockLength, int thread);
 
     // ------------- open gl -------------------
@@ -168,8 +171,9 @@ private:
 
     // ----------- runtime ---------------------
 
-    void lock_(int num = -1);
-    void unlock_(int num = -1);
+    void lockRead_();
+    void lockWrite_();
+    void unlock_();
 
     /** unlocked version */
     void calculateSceneTransform_(int thread, Double time);
@@ -210,7 +214,7 @@ private:
 
     // ------------ runtime --------------------
 
-    QSemaphore * semaphore_;
+    QReadWriteLock * readWriteLock_;
     QTimer timer_;
 
     Double sceneTime_;

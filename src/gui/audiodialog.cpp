@@ -201,7 +201,7 @@ void AudioDialog::checkDevices_()
     catch (AudioException& e)
     {
         QMessageBox::warning(this, tr("Error"),
-                             tr("Failed to initialize audio devices\n%1").arg(e.what())
+                             tr("Failed to initialize audio devices.\n%1").arg(e.what())
                              );
         return;
     }
@@ -379,7 +379,7 @@ void AudioDialog::startTone_()
     catch (AudioException& e)
     {
         QMessageBox::warning(this, tr("Error"),
-                             tr("Failed to init audio device '%1'\n%2")
+                             tr("Failed to init audio device '%1'.\n%2")
                              .arg(inf->name)
                              .arg(e.what())
                              );
@@ -396,7 +396,7 @@ void AudioDialog::startTone_()
     catch (AudioException& e)
     {
         QMessageBox::warning(this, tr("Error"),
-                             tr("Failed to start audio device '%1'\n%2")
+                             tr("Failed to start audio device '%1'.\n%2")
                              .arg(inf->name)
                              .arg(e.what())
                              );

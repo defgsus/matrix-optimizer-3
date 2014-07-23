@@ -9,7 +9,7 @@
 */
 
 //#include <QDebug>
-#include <QSemaphore>
+#include <QReadWriteLock>
 
 #include "scene.h"
 
@@ -26,19 +26,28 @@
 
 namespace MO {
 
-class ScopedSceneLock
+class ScopedSceneLockRead
 {
     Scene * scene_;
-    int num_;
 public:
-    ScopedSceneLock(Scene * scene, int num = -1)
-        :   scene_  (scene),
-            num_    (num)
+    ScopedSceneLockRead(Scene * scene) : scene_(scene)
     {
-        scene_->lock_(num_);
+        scene_->lockRead_();
     }
 
-    ~ScopedSceneLock() { scene_->unlock_(num_); }
+    ~ScopedSceneLockRead() { scene_->unlock_(); }
+};
+
+class ScopedSceneLockWrite
+{
+    Scene * scene_;
+public:
+    ScopedSceneLockWrite(Scene * scene) : scene_(scene)
+    {
+        scene_->lockWrite_();
+    }
+
+    ~ScopedSceneLockWrite() { scene_->unlock_(); }
 };
 
 
@@ -53,7 +62,7 @@ Scene::Scene(QObject *parent) :
 {
     setName("Scene");
 
-    semaphore_ = new QSemaphore(numThreads_);
+    readWriteLock_ = new QReadWriteLock();
 
     timer_.setInterval(1000 / 60);
     timer_.setSingleShot(false);
@@ -64,8 +73,7 @@ Scene::~Scene()
 {
     stop();
 
-    if (semaphore_)
-        delete semaphore_;
+    delete readWriteLock_;
 }
 
 void Scene::serialize(IO::DataStream & io) const
@@ -148,7 +156,7 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
     MO_DEBUG_TREE("Scene::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
 
     {
-        ScopedSceneLock lock(this);
+        ScopedSceneLockWrite lock(this);
         parent->addObject_(newChild, insert_index);
         parent->childrenChanged_();
         updateTree_();
@@ -163,7 +171,7 @@ void Scene::deleteObject(Object *object)
 
     MO_ASSERT(object->parentObject(), "Scene::deleteObject("<<object<<") without parent");
     {
-        ScopedSceneLock lock(this);
+        ScopedSceneLockWrite lock(this);
         Object * parent = object->parentObject();
         parent->deleteObject_(object);
         parent->childrenChanged_();
@@ -178,7 +186,7 @@ void Scene::swapChildren(Object *parent, int from, int to)
     MO_DEBUG_TREE("Scene::swapChildren(" << parent << ", " << from << ", " << to << ")");
 
     {
-        ScopedSceneLock lock(this);
+        ScopedSceneLockWrite lock(this);
         parent->swapChildren_(from, to);
         parent->childrenChanged_();
         updateTree_();
@@ -248,7 +256,7 @@ void Scene::updateModulators_()
 void Scene::setParameterValue(ParameterFloat *p, Double v)
 {
     {
-        ScopedSceneLock lock(this);
+        ScopedSceneLockWrite lock(this);
         p->setValue(v);
         p->object()->onParameterChanged(p);
     }
@@ -261,7 +269,7 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
 void Scene::setParameterValue(ParameterSelect *p, int v)
 {
     {
-        ScopedSceneLock lock(this);
+        ScopedSceneLockWrite lock(this);
         p->setValue(v);
         p->object()->onParameterChanged(p);
     }
@@ -274,7 +282,7 @@ void Scene::setParameterValue(ParameterSelect *p, int v)
 void Scene::addModulator(Parameter *p, const QString &idName)
 {
     {
-        ScopedSceneLock lock(this);
+        ScopedSceneLockWrite lock(this);
         p->addModulator(idName);
         p->collectModulators();
         p->object()->onParameterChanged(p);
@@ -286,7 +294,7 @@ void Scene::addModulator(Parameter *p, const QString &idName)
 void Scene::removeModulator(Parameter *p, const QString &idName)
 {
     {
-        ScopedSceneLock lock(this);
+        ScopedSceneLockWrite lock(this);
         p->removeModulator(idName);
         p->collectModulators();
         p->object()->onParameterChanged(p);
@@ -298,7 +306,7 @@ void Scene::removeModulator(Parameter *p, const QString &idName)
 void Scene::removeAllModulators(Parameter *p)
 {
     {
-        ScopedSceneLock lock(this);
+        ScopedSceneLockWrite lock(this);
         p->removeAllModulators();
         p->collectModulators();
         p->object()->onParameterChanged(p);
@@ -327,7 +335,7 @@ void Scene::moveSequence(Sequence *seq, Track *from, Track *to)
 void Scene::beginSequenceChange(Sequence * s)
 {
     MO_DEBUG_PARAM("Scene::beginSequenceChange(" << s << ")");
-    lock_();
+    lockWrite_();
     changedSequence_ = s;
 }
 
@@ -342,7 +350,7 @@ void Scene::endSequenceChange()
 void Scene::beginTimelineChange(Object * o)
 {
     MO_DEBUG_PARAM("Scene::beginTimelineChange(" << o << ")");
-    lock_();
+    lockWrite_();
     changedTimelineObject_ = o;
 }
 
@@ -361,7 +369,7 @@ void Scene::endTimelineChange()
 void Scene::beginObjectChange(Object * o)
 {
     MO_DEBUG_PARAM("Scene::beginObjectChange(" << o << ")");
-    lock_();
+    lockWrite_();
     changedObject_ = o;
 }
 
@@ -379,7 +387,7 @@ void Scene::endObjectChange()
 
 void Scene::calculateAudioBlock(SamplePos samplePos, SamplePos blockLength, int thread)
 {
-    ScopedSceneLock lock(this, 1);
+    ScopedSceneLockRead lock(this);
 
     blockLength += samplePos;
     for (; samplePos<blockLength; ++samplePos)
@@ -415,7 +423,9 @@ void Scene::renderScene(Double time)
     time = sceneTime_;
 
     {
-        ScopedSceneLock lock(this, 1);
+        // read-lock is sufficient because we
+        // modify only thread-local storage
+        ScopedSceneLockRead lock(this);
 
         // initialize gl resources
         for (auto o : glObjects_)
@@ -438,7 +448,7 @@ void Scene::renderScene(Double time)
 
 void Scene::calculateSceneTransform(int thread, Double time)
 {
-    ScopedSceneLock lock(this, 1);
+    ScopedSceneLockRead lock(this);
     calculateSceneTransform_(thread, time);
 }
 
@@ -473,14 +483,19 @@ void Scene::calculateSceneTransform_(int thread, Double time)
 
 // ---------------------- runtime --------------------------
 
-void Scene::lock_(int num)
+void Scene::lockRead_()
 {
-    semaphore_->acquire(num>0? num : numThreads_);
+    readWriteLock_->lockForRead();
 }
 
-void Scene::unlock_(int num)
+void Scene::lockWrite_()
 {
-    semaphore_->release(num>0? num : numThreads_);
+    readWriteLock_->lockForWrite();
+}
+
+void Scene::unlock_()
+{
+    readWriteLock_->unlock();
 }
 
 void Scene::setSceneTime(Double time, bool send_signal)
