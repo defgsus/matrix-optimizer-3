@@ -22,8 +22,8 @@ class Model3d : public ObjectGl
 public:
     MO_OBJECT_CONSTRUCTOR(Model3d);
 
-    virtual void initGl(int thread);
-    virtual void renderGl(int, Double time);
+    virtual void initGl(uint thread);
+    virtual void renderGl(uint, Double time);
 
 signals:
 

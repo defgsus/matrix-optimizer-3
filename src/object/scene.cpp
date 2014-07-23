@@ -57,7 +57,7 @@ Scene::Scene(QObject *parent) :
     Object      (parent),
     model_      (0),
     glContext_  (0),
-    numThreads_ (2),
+    numberSceneThreads_ (2),
     sceneTime_  (0)
 {
     setName("Scene");
@@ -67,6 +67,10 @@ Scene::Scene(QObject *parent) :
     timer_.setInterval(1000 / 60);
     timer_.setSingleShot(false);
     connect(&timer_, SIGNAL(timeout()), this, SLOT(timerUpdate_()));
+
+    sceneBufferSize_.resize(numberSceneThreads_);
+    sceneBufferSize_[0] = 1;
+    sceneBufferSize_[1] = 32;
 }
 
 Scene::~Scene()
@@ -206,6 +210,7 @@ void Scene::updateTree_()
 
     // tell all objects how much thread data they need
     updateNumberThreads_();
+    updateBufferSize_();
 
     // collect all modulators for each object
     updateModulators_();
@@ -230,11 +235,33 @@ void Scene::updateChildrenChanged_()
 
 void Scene::updateNumberThreads_()
 {
-    MO_DEBUG_TREE("Scene::updateNumberThreads_() numThreads_ == " << numThreads_);
+    MO_DEBUG_TREE("Scene::updateNumberThreads_() numThreads_ == " << numberSceneThreads_);
+
+    if (numberThreads() != numberSceneThreads_)
+        setNumberThreads(numberSceneThreads_);
 
     for (auto o : allObjects_)
-        if (o->numberThreads() != numThreads_)
-            o->setNumberThreads(numThreads_);
+        if (o->numberThreads() != numberSceneThreads_)
+            o->setNumberThreads(numberSceneThreads_);
+}
+
+
+void Scene::updateBufferSize_()
+{
+    MO_DEBUG_TREE("Scene::updateBufferSize_() numThreads_ == " << numberSceneThreads_);
+
+    for (uint i=0; i<numberSceneThreads_; ++i)
+        if (bufferSize(i) != sceneBufferSize_[i])
+            setBufferSize(sceneBufferSize_[i], i);
+
+    for (auto o : allObjects_)
+    {
+        for (uint i=0; i<numberSceneThreads_; ++i)
+        {
+            if (o->bufferSize(i) != sceneBufferSize_[i])
+                o->setBufferSize(sceneBufferSize_[i], i);
+        }
+    }
 }
 
 void Scene::updateModulators_()
@@ -392,7 +419,7 @@ void Scene::calculateAudioBlock(SamplePos samplePos, SamplePos blockLength, int 
     blockLength += samplePos;
     for (; samplePos<blockLength; ++samplePos)
     {
-        calculateSceneTransform_(thread, (1.0 / 44100.0) * samplePos);
+        calculateSceneTransform_(thread, 0, (1.0 / 44100.0) * samplePos);
     }
 }
 
@@ -432,7 +459,7 @@ void Scene::renderScene(Double time)
             if (o->needsInitGl(0) && o->active(time))
                 o->initGl_(0);
 
-        calculateSceneTransform(0, time);
+        calculateSceneTransform(0, 0, time);
 
         // start camera frame
         cameras_[0]->startGlFrame(0, time);
@@ -446,13 +473,13 @@ void Scene::renderScene(Double time)
     }
 }
 
-void Scene::calculateSceneTransform(int thread, Double time)
+void Scene::calculateSceneTransform(uint thread, uint sample, Double time)
 {
     ScopedSceneLockRead lock(this);
-    calculateSceneTransform_(thread, time);
+    calculateSceneTransform_(thread, sample, time);
 }
 
-void Scene::calculateSceneTransform_(int thread, Double time)
+void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
 {
     if (!cameras_.size())
         return;
@@ -464,18 +491,18 @@ void Scene::calculateSceneTransform_(int thread, Double time)
             o->calculateTransformation(camt, time);
 
     // set the initial camera space for all objects in scene
-    setTransformation(thread, glm::inverse(camt));
+    setTransformation(thread, sample, glm::inverse(camt));
 
     // calculate transformations
     for (auto &o : posObjects_)
     if (o->active(time))
     {
         // get parent transformation
-        Mat4 matrix(o->parentObject()->transformation(thread));
+        Mat4 matrix(o->parentObject()->transformation(thread, sample));
         // apply object's transformation
         o->calculateTransformation(matrix, time);
         // write back
-        o->setTransformation(thread, matrix);
+        o->setTransformation(thread, sample, matrix);
     }
 
 }

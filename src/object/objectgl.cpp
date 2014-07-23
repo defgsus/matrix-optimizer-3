@@ -12,6 +12,7 @@
 
 #include "objectgl.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "gl/context.h"
 #include "io/datastream.h"
 
@@ -38,16 +39,22 @@ void ObjectGl::deserialize(IO::DataStream & io)
 }
 
 
-void ObjectGl::setNumberThreads(int num)
+void ObjectGl::setNumberThreads(uint num)
 {
+    MO_DEBUG("ObjectGl::setNumberThreads(" << num << ")");
+
     Object::setNumberThreads(num);
 
     glContext_.resize(num);
     needsInitGl_.resize(num);
 }
 
-void ObjectGl::setGlContext_(int thread, GL::Context * c)
+void ObjectGl::setGlContext_(uint thread, GL::Context * c)
 {
+    MO_ASSERT(thread < glContext_.size(),
+              "setGlContext_(" << thread << ", " << c << ") but "
+              "glContext_.size() == " << glContext_.size());
+
     if (c != glContext_[thread])
     {
         //glFunctionsInitialized_ = false;
@@ -57,7 +64,7 @@ void ObjectGl::setGlContext_(int thread, GL::Context * c)
     glContext_[thread] = c;
 }
 
-void ObjectGl::initGl_(int thread)
+void ObjectGl::initGl_(uint thread)
 {
     if (!glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
@@ -75,7 +82,7 @@ void ObjectGl::initGl_(int thread)
     initGl(thread);
 }
 
-void ObjectGl::renderGl_(int thread, Double time)
+void ObjectGl::renderGl_(uint thread, Double time)
 {
     if (!glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");

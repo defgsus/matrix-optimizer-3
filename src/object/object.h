@@ -11,10 +11,13 @@
 #ifndef MOSRC_OBJECT_OBJECT_H
 #define MOSRC_OBJECT_OBJECT_H
 
+#include <vector>
+
 #include <QByteArray>
 #include <QObject>
 #include <QList>
 
+#include "types/int.h"
 #include "types/vector.h"
 #include "object_fwd.h"
 
@@ -265,15 +268,18 @@ public:
     /** Called when the children list has changed */
     virtual void childrenChanged() { }
 
-    /** Returns the number of threads, this object is assigned to */
-    int numberThreads() const { return transformation_.size(); }
+    /** Returns the number of threads, this object is assigned for */
+    uint numberThreads() const { return numberThreads_; }
 
-    /** Sets the number of threads that will run on this object and
-        the whole tree. Any mutable values of the object must be present
-        @p num times!
+    /** Sets the number of threads that will run on this object.
+        Any mutable values of the object must be present @p num times! */
+    virtual void setNumberThreads(uint num);
+#if (0)
+    /** Sets the thread and dsp-block storage for the object.
+        Override this to change the number of mutable values in your object.
         Always call the ancestor implementation in your derived function! */
-    virtual void setNumberThreads(int num);
-
+    virtual void setThreadStorage(int threads, int blockSize);
+#endif
     // ---------- only callable by scene -----------------
 private:
 
@@ -363,13 +369,25 @@ protected:
                 int defaultValue, bool editable = true, bool modulateable = true);
 
     // ------------------- audio ------------------
+public:
+    /** Returns the set audio block size for each thread. */
+    uint bufferSize(uint thread) const { return bufferSize_[thread]; }
+
+protected:
+
+    /** Sets the audio block size for this object and the given thread.
+        This function is only called <b>after</b> setNumberThreads().
+        Override to make your per-thread-storage of dsp blocks.
+        Be sure to call the ancestor class implementation in your derived method!
+    */
+    virtual void setBufferSize(uint bufferSize, uint thread);
 
     /** Override to create all audio sources for your object.
         Be sure to call the ancestor class implementation in your derived method! */
     virtual void createAudioSources() { };
 
     /** Perform all necessary audio calculation and fill the AUDIO::AudioSource class(es). */
-    virtual void sampleStep(Double time, int thread) { Q_UNUSED(time); Q_UNUSED(thread); };
+    virtual void sampleStep(Double time, uint thread) { Q_UNUSED(time); Q_UNUSED(thread); };
 
     /** Creates and returns a new audio source installed to this object.
         The id is not really important, only for display purposes. */
@@ -379,17 +397,19 @@ public:
     // --------------- 3d --------------------------
 
     /** Initialize transformation matrix */
-    void clearTransformation(int thread);
+    void clearTransformation(uint thread, uint sample);
 
     /** Returns the transformation matrix of this object */
-    const Mat4& transformation(int thread) const { return transformation_[thread]; }
+    const Mat4& transformation(uint thread, uint sample) const
+        { return transformation_[thread][sample]; }
 
     /** Returns the position of this object */
-    Vec3 position(int thread) const
-        { return Vec3(transformation_[thread][3][0], transformation_[thread][3][1],
-                    transformation_[thread][3][2]); }
+    Vec3 position(uint thread, uint sample) const
+        { return Vec3(transformation_[thread][sample][3][0],
+                      transformation_[thread][sample][3][1],
+                      transformation_[thread][sample][3][2]); }
 
-    void setTransformation(int thread, const Mat4& mat) { transformation_[thread] = mat; }
+    void setTransformation(int thread, int sample, const Mat4& mat) { transformation_[thread][sample] = mat; }
 
     /** Apply all transformations of this object to the given matrix. */
     void calculateTransformation(Mat4& matrix, Double time) const;
@@ -453,6 +473,11 @@ private:
     QList<Transformation*> transformationObjects_;
     bool childrenHaveChanged_;
 
+    // ---------- threads and blocksize ------
+
+    uint numberThreads_;
+    std::vector<uint> bufferSize_;
+
     // ----------- parameter -----------------
 
     QList<Parameter*> parameters_;
@@ -475,7 +500,7 @@ private:
 
     // ----------- position ------------------
 
-    std::vector<Mat4> transformation_;
+    std::vector<std::vector<Mat4>> transformation_;
 
 };
 

@@ -53,7 +53,7 @@ public:
 
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
-    void calculateSceneTransform(int thread, Double time);
+    void calculateSceneTransform(uint thread, uint sample, Double time);
 
     // --------------- runtime -----------------
 
@@ -166,6 +166,8 @@ private:
     void updateChildrenChanged_();
     /** Tell all objects how much threads we got */
     void updateNumberThreads_();
+    /** Tell the objects the buffersize for each thread */
+    void updateBufferSize_();
 
     void updateModulators_();
 
@@ -176,7 +178,7 @@ private:
     void unlock_();
 
     /** unlocked version */
-    void calculateSceneTransform_(int thread, Double time);
+    void calculateSceneTransform_(uint thread, uint sample, Double time);
 
     // ---------- opengl -----------------------
 
@@ -204,7 +206,8 @@ private:
 
     // ---------- properties -------------------
 
-    int numThreads_;
+    uint numberSceneThreads_;
+    std::vector<uint> sceneBufferSize_;
 
     // ------------ threadstuff ----------------
 

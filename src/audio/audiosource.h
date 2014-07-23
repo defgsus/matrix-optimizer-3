@@ -41,31 +41,36 @@ public:
     Object * object() const { return object_; }
 
     /** Returns the number of threads runnable on this audio source */
-    int threads() const { return transformation_.size(); }
+    uint numberThreads() const { return numberThreads_; }
 
     /** Returns the set transformation for the given thread */
-    const Mat4& transformation(int thread) const { return transformation_[thread]; }
+    const Mat4& transformation(uint thread, uint sample) const { return transformation_[thread][sample]; }
 
-    F32 getSample(int thread) const { return sample_[thread]; }
+    F32 getSample(uint thread, uint sample) const { return sample_[thread][sample]; }
 
     // ---------- setter -------------
 
-    void setNumberThreads(int num);
+    void setNumberThreads(uint num);
+    void setBufferSize(uint samples, uint thread);
 
-    void setTransformation(const Mat4& t, int thread) { transformation_[thread] = t; }
+    void setTransformation(const Mat4& t, uint thread, uint sample) { transformation_[thread][sample] = t; }
 
-    void setSample(F32 sample, int thread) { sample_[thread] = sample; }
+    void setSample(F32 audio, uint thread, uint sample) { sample_[thread][sample] = audio; }
 
-    //void setBufferSize(uint samples) { buffer_.resize(samples); }
 
 private:
 
     Object * object_;
     QString idName_;
 
-    std::vector<F32> sample_;
+    uint numberThreads_;
+    std::vector<uint> bufferSize_;
 
-    std::vector<Mat4> transformation_;
+    /** [thread][bufferSize[thread]] */
+    std::vector<std::vector<F32>> sample_;
+
+    /** [thread][bufferSize[thread]] */
+    std::vector<std::vector<Mat4>> transformation_;
 };
 
 

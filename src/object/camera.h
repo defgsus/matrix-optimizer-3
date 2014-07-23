@@ -21,29 +21,30 @@ class Camera : public ObjectGl
 public:
     MO_OBJECT_CONSTRUCTOR(Camera);
 
-    virtual Type type() const { return T_CAMERA; }
-    virtual bool isCamera() const { return true; }
+    virtual Type type() const override { return T_CAMERA; }
+    virtual bool isCamera() const override { return true; }
 
-    virtual void initGl(int thread);
-    virtual void renderGl(int thread, Double time);
+    virtual void initGl(uint thread) override;
+    virtual void renderGl(uint thread, Double time) override;
 
-    virtual void setNumberThreads(int num);
+    virtual void setNumberThreads(uint num) override;
+    virtual void setBufferSize(uint bufferSize, uint thread) override;
 
     /** Returns projection matrix */
-    const Mat4& projection(int thread) const { return projection_[thread]; }
+    const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }
 
     /** Starts rendering an openGL frame */
-    void startGlFrame(int thread, Double time);
+    void startGlFrame(uint thread, Double time);
 
     // XXX only trying here
-    void setProjectionMatrix(int thread);
+    void setProjectionMatrix(uint thread, uint sample);
 signals:
 
 public slots:
 
 private:
 
-    std::vector<Mat4> projection_;
+    std::vector<std::vector<Mat4>> projection_;
 };
 
 } // namespace MO

@@ -38,40 +38,48 @@ void Camera::deserialize(IO::DataStream & io)
 }
 
 
-void Camera::setNumberThreads(int num)
+void Camera::setNumberThreads(uint num)
 {
     ObjectGl::setNumberThreads(num);
 
     projection_.resize(num);
 }
 
-void Camera::initGl(int thread)
+void Camera::setBufferSize(uint bufferSize, uint thread)
 {
-    projection_[thread] = glm::perspective(63.f, (float)
-        glContext(thread)->size().width()/glContext(thread)->size().height(),
-        0.1f, 1000.0f);
+    ObjectGl::setBufferSize(bufferSize, thread);
+
+    projection_[thread].resize(bufferSize);
+}
+
+void Camera::initGl(uint thread)
+{
+    projection_[thread][0]
+        = glm::perspective(63.f,
+                (float)glContext(thread)->size().width()/glContext(thread)->size().height(),
+                0.1f, 1000.0f);
 }
 
 
-void Camera::renderGl(int , Double )
+void Camera::renderGl(uint , Double )
 {
 }
 
-void Camera::startGlFrame(int thread, Double )
+void Camera::startGlFrame(uint thread, Double )
 {
     glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height());
 
     glClearColor(0,0.2,0.2,1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    setProjectionMatrix(thread);
+    setProjectionMatrix(thread, 0);
 }
 
-void Camera::setProjectionMatrix(int thread)
+void Camera::setProjectionMatrix(uint thread, uint sample)
 {
     // XXX this is a hack
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(&projection_[thread][0][0]);
+    glLoadMatrixf(&projection_[thread][sample][0][0]);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }

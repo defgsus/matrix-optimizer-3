@@ -32,17 +32,17 @@ public:
     virtual Type type() const { return T_OBJECT; }
     bool isGl() const { return true; }
 
-    virtual void setNumberThreads(int num);
+    virtual void setNumberThreads(uint num) override;
 
     /** Returns the current GL::Context */
-    GL::Context * glContext(int thread) { return glContext_[thread]; }
+    GL::Context * glContext(uint thread) { return glContext_[thread]; }
     /** Returns the current GL::Context */
-    const GL::Context * glContext(int thread) const { return glContext_[thread]; }
+    const GL::Context * glContext(uint thread) const { return glContext_[thread]; }
 
-    bool needsInitGl(int thread) const { return needsInitGl_[thread]; }
+    bool needsInitGl(uint thread) const { return needsInitGl_[thread]; }
 
-    virtual void initGl(int thread) = 0;
-    virtual void renderGl(int thread, Double time) = 0;
+    virtual void initGl(uint thread) = 0;
+    virtual void renderGl(uint thread, Double time) = 0;
 
 signals:
 
@@ -51,10 +51,10 @@ public slots:
 private:
 
     /** Sets the OpenGL Context */
-    void setGlContext_(int thread, GL::Context *);
+    void setGlContext_(uint thread, GL::Context *);
 
-    void initGl_(int thread);
-    void renderGl_(int thread, Double time);
+    void initGl_(uint thread);
+    void renderGl_(uint thread, Double time);
 
     std::vector<GL::Context*> glContext_;
     bool glFunctionsInitialized_;

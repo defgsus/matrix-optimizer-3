@@ -22,16 +22,24 @@ AudioSource::AudioSource(const QString& id, Object *parent)
 }
 
 
-void AudioSource::setNumberThreads(int num)
+void AudioSource::setNumberThreads(uint num)
 {
     transformation_.resize(num);
     sample_.resize(num);
+    bufferSize_.resize(num);
+}
 
-    for (auto t : transformation_)
+void AudioSource::setBufferSize(uint samples, uint thread)
+{
+    transformation_[thread].resize(samples);
+    sample_[thread].resize(samples);
+
+    for (auto &t : transformation_[thread])
         t = Mat4(1.0);
 
-    for (auto &s : sample_)
+    for (auto &s : sample_[thread])
         s = 0.f;
+
 }
 
 

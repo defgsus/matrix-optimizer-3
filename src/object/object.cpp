@@ -36,6 +36,8 @@ Object::Object(QObject *parent) :
     canBeDeleted_           (true),
     parentObject_           (0),
     childrenHaveChanged_    (false),
+    numberThreads_          (1),
+    bufferSize_             (1),
     paramActiveScope_       (0),
     parentActivityScope_    (AS_ON),
     currentActivityScope_   (AS_ON)
@@ -618,24 +620,23 @@ void Object::childrenChanged_()
     childrenHaveChanged_ = false;
 }
 
-void Object::setNumberThreads(int num)
+void Object::setNumberThreads(uint num)
 {
     MO_DEBUG_TREE("Object('" << idName() << "')::setNumberThreads(" << num << ")");
 
     transformation_.resize(num);
+    bufferSize_.resize(num);
 
     for (auto a : audioSources_)
         a->setNumberThreads(num);
 }
 
-//void Object::set
-
 
 // ------------------------- 3d -----------------------
 
-void Object::clearTransformation(int thread)
+void Object::clearTransformation(uint thread, uint sample)
 {
-    transformation_[thread] = Mat4(1.0);
+    transformation_[thread][sample] = Mat4(1.0);
 }
 
 void Object::collectTransformationObjects_()
@@ -834,6 +835,15 @@ ParameterSelect * Object::createSelectParameter(
 
 
 // ----------------- audio sources ---------------------
+
+void Object::setBufferSize(uint bufferSize, uint thread)
+{
+    bufferSize_[thread] = bufferSize;
+    transformation_[thread].resize(bufferSize);
+
+    for (auto a : audioSources_)
+        a->setBufferSize(bufferSize, thread);
+}
 
 AUDIO::AudioSource * Object::createAudioSource(const QString& id)
 {

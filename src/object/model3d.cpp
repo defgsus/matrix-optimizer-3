@@ -35,12 +35,12 @@ void Model3d::deserialize(IO::DataStream & io)
 }
 
 
-void Model3d::initGl(int /*thread*/)
+void Model3d::initGl(uint /*thread*/)
 {
 
 }
 
-void Model3d::renderGl(int thread, Double )
+void Model3d::renderGl(uint thread, Double )
 {
     /*
     glColor3f(1,0,0);
@@ -52,7 +52,7 @@ void Model3d::renderGl(int thread, Double )
     glEnd();
     */
 
-    glLoadMatrixf(&transformation(thread)[0][0]);
+    glLoadMatrixf(&transformation(thread, 0)[0][0]);
 
     glBegin(GL_LINES);
         glColor3f(1,1,1);

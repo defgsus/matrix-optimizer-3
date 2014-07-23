@@ -555,7 +555,7 @@ void MainWindow::testSceneTransform_()
     for (; i < num && e <= 1000; ++i)
     {
         for (int j=0; j<1000; ++j, ++i)
-            scene_->calculateSceneTransform(0, 0.01 * i);
+            scene_->calculateSceneTransform(0, 0, 0.01 * i);
 
         e = t.elapsed();
     }

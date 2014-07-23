@@ -28,7 +28,7 @@ public:
 
     virtual void createAudioSources();
 
-    virtual void sampleStep(Double time, int thread);
+    virtual void sampleStep(Double time, uint thread);
 signals:
 
 public slots:
