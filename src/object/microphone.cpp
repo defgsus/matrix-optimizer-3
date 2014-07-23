@@ -10,6 +10,8 @@
 
 #include "microphone.h"
 #include "io/datastream.h"
+#include "io/error.h"
+#include "audio/audiosource.h"
 
 namespace MO {
 
@@ -32,6 +34,22 @@ void Microphone::deserialize(IO::DataStream & io)
     Object::deserialize(io);
     io.readHeader("mic", 1);
 }
+
+
+
+void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, uint thread) const
+{
+    const uint size = bufferSize(thread);
+    MO_ASSERT(size == src->bufferSize(thread), "unmatched buffer size");
+
+    for (uint i=0; i<size; ++i)
+    {
+        F32 sam = src->getSample(thread, i);
+
+        *buffer++ = sam * 0.3;
+    }
+}
+
 
 
 } // namespace MO

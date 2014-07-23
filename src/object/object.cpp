@@ -39,6 +39,8 @@ Object::Object(QObject *parent) :
     numberThreads_          (1),
     bufferSize_             (1),
     paramActiveScope_       (0),
+    sampleRate_             (44100),
+    sampleRateInv_          (1.0/44100.0),
     parentActivityScope_    (AS_ON),
     currentActivityScope_   (AS_ON)
 {
@@ -843,6 +845,12 @@ void Object::setBufferSize(uint bufferSize, uint thread)
 
     for (auto a : audioSources_)
         a->setBufferSize(bufferSize, thread);
+}
+
+void Object::setSampleRate(uint samplerate)
+{
+    sampleRate_ = std::max((uint)1, samplerate);
+    sampleRateInv_ = 1.0 / sampleRate_;
 }
 
 AUDIO::AudioSource * Object::createAudioSource(const QString& id)

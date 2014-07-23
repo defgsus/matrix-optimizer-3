@@ -43,10 +43,17 @@ public:
     /** Returns the number of threads runnable on this audio source */
     uint numberThreads() const { return numberThreads_; }
 
+    /** Returns the audio block size for the given thread. */
+    uint bufferSize(uint thread) const { return bufferSize_[thread]; }
+
     /** Returns the set transformation for the given thread */
     const Mat4& transformation(uint thread, uint sample) const { return transformation_[thread][sample]; }
 
+    /** Returns the sample for the given thread at the given sample position in the block */
     F32 getSample(uint thread, uint sample) const { return sample_[thread][sample]; }
+
+    /** Returns a const pointer to bufferSize(thead) number of samples */
+    const F32* getSample(uint thread) const { return &sample_[thread][0]; }
 
     // ---------- setter -------------
 
@@ -54,9 +61,13 @@ public:
     void setBufferSize(uint samples, uint thread);
 
     void setTransformation(const Mat4& t, uint thread, uint sample) { transformation_[thread][sample] = t; }
+    void setTransformation(const Mat4* transformationBlock, uint thread);
 
     void setSample(F32 audio, uint thread, uint sample) { sample_[thread][sample] = audio; }
+    void setSample(F32 * audioBlock, uint thread);
 
+    /** Returns a pointer to bufferSize(thead) number of samples for read/write. */
+    F32* getSamples(uint thread) { return &sample_[thread][0]; }
 
 private:
 

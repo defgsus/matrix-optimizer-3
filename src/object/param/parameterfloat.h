@@ -40,6 +40,12 @@ public:
     Double value(Double time) const { return value_ + getModulationValue(time); }
     Double baseValue() const { return value_; }
 
+    /** Writes @p number values starting at @p time into the pointer */
+    void getValues(Double time, Double timeIncrement, uint number, Double * ptr) const;
+
+    /** Writes @p number values starting at @p time into the pointer */
+    void getValues(Double time, Double timeIncrement, uint number, F32 * ptr) const;
+
     void setDefaultValue(Double v) { defaultValue_ = v; }
     void setMinValue(Double v) { minValue_ = v; }
     void setMaxValue(Double v) { maxValue_ = v; }

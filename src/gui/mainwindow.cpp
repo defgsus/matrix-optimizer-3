@@ -80,11 +80,10 @@ public:
     void run()
     {
         samplePos_ = 0;
-        blockLength_ = 128;
         while (!stop_)
         {
-            scene_->calculateAudioBlock(samplePos_, blockLength_, 1);
-            samplePos_ += blockLength_;
+            scene_->calculateAudioBlock(samplePos_, 1);
+            samplePos_ += scene_->bufferSize(1);
 
         #ifndef NDEBUG
             // leave some room when in debug mode
@@ -96,7 +95,7 @@ public:
 private:
     Scene * scene_;
     volatile bool stop_;
-    SamplePos samplePos_, blockLength_;
+    SamplePos samplePos_;
 };
 
 
@@ -321,6 +320,7 @@ void MainWindow::createMainMenu_()
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
+            scene_->closeAudio();
             AudioDialog diag;
             diag.exec();
         });
@@ -638,6 +638,36 @@ void MainWindow::stop()
     scene_->stop();
 }
 
+/*
+void MainWindow::openAudio_()
+{
+    if (audioDevice_->isAudioConfigured())
+        audioDevice_->initFromSettings();
+
+    audioDevice_->setCallback([=](const F32*, F32 * out)
+    {
+//        scene_->calculateAudioBlock();
+    });
+}
+
+void MainWindow::closeAudio_()
+{
+    audioDevice_->close();
+}
+
+void MainWindow::startAudio_()
+{
+    audioDevice_->start();
+}
+
+void MainWindow::stopAudio_()
+{
+    audioDevice_->stop();
+}
+*/
+
+
+
 void MainWindow::newScene()
 {
     if (!okayToChangeScene_())
@@ -834,6 +864,8 @@ bool MainWindow::saveScene_(const QString &fn)
     statusBar()->showMessage(tr("saving cancelled"), statusMessageTimeout_);
     return false;
 }
+
+
 
 } // namespace GUI
 } // namespace MO

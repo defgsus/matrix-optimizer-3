@@ -33,6 +33,12 @@ public:
 
     Double value(Double time) const;
 
+    /** Writes @p number values starting at @p time into the pointer */
+    void getValues(Double time, Double timeIncrement, uint number, Double * ptr) const;
+
+    /** Writes @p number values starting at @p time into the pointer */
+    void getValues(Double time, Double timeIncrement, uint number, F32 * ptr) const;
+
 signals:
 
 public slots:

@@ -81,6 +81,12 @@ private:
     QString getSceneSaveFilename_();
     bool saveScene_(const QString& fn);
     void loadScene_(const QString& fn);
+    /*
+    void openAudio_();
+    void closeAudio_();
+    void startAudio_();
+    void stopAudio_();
+    */
 
     Scene * scene_;
     ObjectTreeModel * objectTreeModel_;

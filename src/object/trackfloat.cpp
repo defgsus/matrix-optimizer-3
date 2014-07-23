@@ -48,6 +48,23 @@ Double TrackFloat::value(Double time) const
     return v;
 }
 
+void TrackFloat::getValues(Double time, Double timeIncrement, uint number, Double *ptr) const
+{
+    for (uint i=0; i<number; ++i)
+    {
+        *ptr++ = value(time);
+        time += timeIncrement;
+    }
+}
+
+void TrackFloat::getValues(Double time, Double timeIncrement, uint number, F32 *ptr) const
+{
+    for (uint i=0; i<number; ++i)
+    {
+        *ptr++ = value(time);
+        time += timeIncrement;
+    }
+}
 
 void TrackFloat::collectModulators()
 {

@@ -29,10 +29,10 @@ public:
 
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(ObjectGl)
 
-    virtual Type type() const { return T_OBJECT; }
-    bool isGl() const { return true; }
+    virtual Type type() const Q_DECL_OVERRIDE { return T_OBJECT; }
+    bool isGl() const Q_DECL_OVERRIDE { return true; }
 
-    virtual void setNumberThreads(uint num) override;
+    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     /** Returns the current GL::Context */
     GL::Context * glContext(uint thread) { return glContext_[thread]; }

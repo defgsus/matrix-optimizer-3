@@ -51,10 +51,14 @@ void SoundSource::createAudioSources()
     audio_ = createAudioSource();
 }
 
-void SoundSource::sampleStep(Double time, uint thread)
+void SoundSource::performAudioBlock(Double time, uint thread)
 {
-    audio_->setTransformation(transformation(thread, 0), thread, 0);
-    audio_->setSample(audioTrack_->value(time), thread, 0);
+    // copy the block of transformations
+    audio_->setTransformation(transformations(thread), thread);
+
+    // copy the samples from the audiotrack
+    audioTrack_->getValues(time, sampleRateInv(), bufferSize(thread),
+                           audio_->getSamples(thread));
 }
 
 

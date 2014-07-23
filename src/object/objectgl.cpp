@@ -41,7 +41,7 @@ void ObjectGl::deserialize(IO::DataStream & io)
 
 void ObjectGl::setNumberThreads(uint num)
 {
-    MO_DEBUG("ObjectGl::setNumberThreads(" << num << ")");
+    MO_DEBUG_TREE("ObjectGl::setNumberThreads(" << num << ")");
 
     Object::setNumberThreads(num);
 

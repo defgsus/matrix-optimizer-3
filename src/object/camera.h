@@ -21,14 +21,14 @@ class Camera : public ObjectGl
 public:
     MO_OBJECT_CONSTRUCTOR(Camera);
 
-    virtual Type type() const override { return T_CAMERA; }
-    virtual bool isCamera() const override { return true; }
+    virtual Type type() const Q_DECL_OVERRIDE { return T_CAMERA; }
+    virtual bool isCamera() const Q_DECL_OVERRIDE { return true; }
 
-    virtual void initGl(uint thread) override;
-    virtual void renderGl(uint thread, Double time) override;
+    virtual void initGl(uint thread) Q_DECL_OVERRIDE;
+    virtual void renderGl(uint thread, Double time) Q_DECL_OVERRIDE;
 
-    virtual void setNumberThreads(uint num) override;
-    virtual void setBufferSize(uint bufferSize, uint thread) override;
+    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
+    virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
     /** Returns projection matrix */
     const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }

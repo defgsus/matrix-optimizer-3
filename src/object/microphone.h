@@ -21,8 +21,11 @@ class Microphone : public Object
 public:
     MO_OBJECT_CONSTRUCTOR(Microphone);
 
-    virtual Type type() const { return T_MICROPHONE; }
-    virtual bool isMicrophone() const { return true; }
+    virtual Type type() const Q_DECL_OVERRIDE { return T_MICROPHONE; }
+    virtual bool isMicrophone() const Q_DECL_OVERRIDE { return true; }
+
+    /** Spatially sample the audio source and add the result to buffer */
+    void sampleAudioSource(const AUDIO::AudioSource* src, F32* buffer, uint thread) const;
 
 signals:
 

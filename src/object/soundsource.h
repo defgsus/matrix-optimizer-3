@@ -21,14 +21,14 @@ class SoundSource : public Object
 public:
     MO_OBJECT_CONSTRUCTOR(SoundSource);
 
-    virtual Type type() const { return T_SOUNDSOURCE; }
-    virtual bool isSoundSource() const { return true; }
+    virtual Type type() const Q_DECL_OVERRIDE { return T_SOUNDSOURCE; }
+    virtual bool isSoundSource() const Q_DECL_OVERRIDE { return true; }
 
-    virtual void createParameters();
+    virtual void createParameters() Q_DECL_OVERRIDE;
 
-    virtual void createAudioSources();
+    virtual void createAudioSources() Q_DECL_OVERRIDE;
 
-    virtual void sampleStep(Double time, uint thread);
+    virtual void performAudioBlock(Double time, uint thread) Q_DECL_OVERRIDE;
 signals:
 
 public slots:

@@ -18,6 +18,7 @@
 class QReadWriteLock;
 
 namespace MO {
+namespace AUDIO { class AudioDevice; }
 namespace GL { class Context; }
 
 class ObjectTreeModel;
@@ -59,6 +60,12 @@ public:
 
     Double sceneTime() const { return sceneTime_; }
 
+    bool isPlayback() const { return isPlayback_; }
+
+    bool isAudioInitialized() const;
+
+    const AUDIO::AudioDevice * audioDevice() const { return audioDevice_; }
+
     // --------- locking and updates -----------
 
     void beginSequenceChange(MO::Sequence *);
@@ -75,6 +82,9 @@ signals:
 
     /** Scene should be rerendered */
     void renderRequest();
+
+    void playbackStarted();
+    void playbackStopped();
 
     /** Emitted whenever the scene time changed */
     void sceneTimeChanged(Double);
@@ -135,8 +145,16 @@ public slots:
 
     // -------------- audio --------------------
 
-    /** XXX only for debugging */
-    void calculateAudioBlock(SamplePos samplePos, SamplePos blockLength, int thread);
+    /** Performs one audio block calculation of the whole scene. */
+    void calculateAudioBlock(SamplePos samplePos, uint thread);
+
+    /** Returns a pointer to the audio block previously calculated by calculateAudioBlock().
+        The format in the returned pointer is [microphone][buffersize]. */
+    const F32* getMicrophonesOutput(uint thread) const { return &audioOutput_[thread][0]; }
+
+    /** Returns the final audio output previously calculated by calculateAudioBlock() in @p buffer.
+        The format of buffer is [buffersize][channel]. */
+    void getAudioOutput(uint numChannels, uint thread, F32 * buffer) const;
 
     // ------------- open gl -------------------
 
@@ -148,8 +166,13 @@ public slots:
     /** Render the whole scene on the current context */
     void renderScene(Double time = 0.0);
 
+    /** Start realtime playback */
     void start();
+    /** Stop realtime playback */
     void stop();
+
+    /** Closes the audio device stream */
+    void closeAudio();
 
 private slots:
     void timerUpdate_();
@@ -168,6 +191,11 @@ private:
     void updateNumberThreads_();
     /** Tell the objects the buffersize for each thread */
     void updateBufferSize_();
+    /** Tell the objects the samplerate */
+    void updateSampleRate_();
+
+    /** Initializes the audio buffers needed to render the tree */
+    void updateAudioBuffers_();
 
     void updateModulators_();
 
@@ -179,6 +207,9 @@ private:
 
     /** unlocked version */
     void calculateSceneTransform_(uint thread, uint sample, Double time);
+
+    void initAudioDevice_();
+    void audioCallback_(const F32 *, F32 *);
 
     // ---------- opengl -----------------------
 
@@ -203,11 +234,14 @@ private:
     QList<Camera*> cameras_;
     QList<QList<Object*>> cameraPaths_;
     QList<ObjectGl*> glObjects_;
+    QList<Object*> audioObjects_;
+    QList<Microphone*> microphones_;
 
     // ---------- properties -------------------
 
-    uint numberSceneThreads_;
+    uint sceneNumberThreads_;
     std::vector<uint> sceneBufferSize_;
+    uint sceneSampleRate_;
 
     // ------------ threadstuff ----------------
 
@@ -215,12 +249,22 @@ private:
             * changedTreeObject_;
     Sequence * changedSequence_;
 
+    // ----------- audio ----------------------
+
+    AUDIO::AudioDevice * audioDevice_;
+
+    /** [thread] [microphones][bufferSize] */
+    std::vector<std::vector<F32>> audioOutput_;
+
     // ------------ runtime --------------------
 
     QReadWriteLock * readWriteLock_;
-    QTimer timer_;
+    //QTimer timer_;
+
+    bool isPlayback_;
 
     Double sceneTime_;
+    SamplePos samplePos_;
 };
 
 

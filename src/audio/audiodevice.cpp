@@ -265,7 +265,8 @@ void AudioDevice::stop()
 
 bool AudioDevice::isAudioConfigured() const
 {
-    return !settings->getValue("Audio/device").toString().isEmpty();
+    const QString name = settings->getValue("Audio/device").toString();
+    return !(name.isEmpty() || name == "None");
 }
 
 bool AudioDevice::initFromSettings()

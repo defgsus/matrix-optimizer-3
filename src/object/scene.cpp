@@ -22,7 +22,9 @@
 #include "object/param/parameterselect.h"
 #include "object/track.h"
 #include "object/sequencefloat.h"
+#include "object/microphone.h"
 #include "model/objecttreemodel.h"
+#include "audio/audiodevice.h"
 
 namespace MO {
 
@@ -54,21 +56,25 @@ public:
 MO_REGISTER_OBJECT(Scene)
 
 Scene::Scene(QObject *parent) :
-    Object      (parent),
-    model_      (0),
-    glContext_  (0),
-    numberSceneThreads_ (2),
-    sceneTime_  (0)
+    Object              (parent),
+    model_              (0),
+    glContext_          (0),
+    sceneNumberThreads_ (2),
+    sceneSampleRate_    (44100),
+    audioDevice_        (new AUDIO::AudioDevice()),
+    isPlayback_         (false),
+    sceneTime_          (0),
+    samplePos_          (0)
 {
     setName("Scene");
 
     readWriteLock_ = new QReadWriteLock();
-
+/*
     timer_.setInterval(1000 / 60);
     timer_.setSingleShot(false);
     connect(&timer_, SIGNAL(timeout()), this, SLOT(timerUpdate_()));
-
-    sceneBufferSize_.resize(numberSceneThreads_);
+*/
+    sceneBufferSize_.resize(sceneNumberThreads_);
     sceneBufferSize_[0] = 1;
     sceneBufferSize_[1] = 32;
 }
@@ -76,7 +82,7 @@ Scene::Scene(QObject *parent) :
 Scene::~Scene()
 {
     stop();
-
+    delete audioDevice_;
     delete readWriteLock_;
 }
 
@@ -103,19 +109,28 @@ void Scene::findObjects_()
 {
     MO_DEBUG_TREE("Scene::findObjects_()");
 
+    // all objects including scene
     allObjects_ = findChildObjects<Object>(QString(), true);
     allObjects_.prepend(this);
+    // all cameras
     cameras_ = findChildObjects<Camera>(QString(), true);
+    // all objects that need to be rendered
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
+    // not all objects need there transformation calculated
+    // these are the ones that do
+    posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
+    // all objects with audio sources
+    audioObjects_.clear();
+    for (auto o : allObjects_)
+        if (!o->audioSources().isEmpty())
+            audioObjects_.append(o);
+    // all microphones
+    microphones_ = findChildObjects<Microphone>(QString(), true);
 
 #ifdef MO_DO_DEBUG_TREE
     for (auto o : allObjects_)
         MO_DEBUG_TREE("object: " << o << ", parent: " << o->parentObject());
 #endif
-
-    // not all objects need there transformation calculated
-    // these are the ones that do
-    posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
 
     // get the path until each camera
     cameraPaths_.clear();
@@ -132,10 +147,12 @@ void Scene::findObjects_()
 
 #if (0)
     MO_DEBUG("Scene: " << cameras_.size() << " cameras, "
-             << glObjects_.size() << " gl-objects"
+             << glObjects_.size() << " gl-objects, "
+             << audioObjects_.size() << " audio-objects"
              );
 #endif
 }
+
 /*
 void Scene::initGlChilds_()
 {
@@ -145,9 +162,10 @@ void Scene::initGlChilds_()
     }
 }
 */
+
 void Scene::render_()
 {
-    if (!timer_.isActive())
+    if (!isPlayback())
         emit renderRequest();
 }
 
@@ -206,11 +224,16 @@ void Scene::updateTree_()
 
     findObjects_();
 
+    // tell all objects if there children have changed
     updateChildrenChanged_();
 
     // tell all objects how much thread data they need
     updateNumberThreads_();
     updateBufferSize_();
+    updateSampleRate_();
+
+    // get buffers for microphones
+    updateAudioBuffers_();
 
     // collect all modulators for each object
     updateModulators_();
@@ -235,32 +258,45 @@ void Scene::updateChildrenChanged_()
 
 void Scene::updateNumberThreads_()
 {
-    MO_DEBUG_TREE("Scene::updateNumberThreads_() numThreads_ == " << numberSceneThreads_);
+    MO_DEBUG_TREE("Scene::updateNumberThreads_() numThreads_ == " << sceneNumberThreads_);
 
-    if (numberThreads() != numberSceneThreads_)
-        setNumberThreads(numberSceneThreads_);
+    if (numberThreads() != sceneNumberThreads_)
+        setNumberThreads(sceneNumberThreads_);
 
     for (auto o : allObjects_)
-        if (o->numberThreads() != numberSceneThreads_)
-            o->setNumberThreads(numberSceneThreads_);
+        if (o->numberThreads() != sceneNumberThreads_)
+            o->setNumberThreads(sceneNumberThreads_);
 }
 
 
 void Scene::updateBufferSize_()
 {
-    MO_DEBUG_TREE("Scene::updateBufferSize_() numThreads_ == " << numberSceneThreads_);
+    MO_DEBUG_TREE("Scene::updateBufferSize_() numThreads_ == " << sceneNumberThreads_);
 
-    for (uint i=0; i<numberSceneThreads_; ++i)
+    for (uint i=0; i<sceneNumberThreads_; ++i)
         if (bufferSize(i) != sceneBufferSize_[i])
             setBufferSize(sceneBufferSize_[i], i);
 
     for (auto o : allObjects_)
     {
-        for (uint i=0; i<numberSceneThreads_; ++i)
+        for (uint i=0; i<sceneNumberThreads_; ++i)
         {
             if (o->bufferSize(i) != sceneBufferSize_[i])
                 o->setBufferSize(sceneBufferSize_[i], i);
         }
+    }
+}
+
+void Scene::updateAudioBuffers_()
+{
+    audioOutput_.resize(numberThreads());
+
+    for (uint i=0; i<numberThreads(); ++i)
+    {
+        audioOutput_[i].resize(bufferSize(i) * microphones_.size());
+
+        for (auto &s : audioOutput_[i])
+            s = 0.f;
     }
 }
 
@@ -274,6 +310,19 @@ void Scene::updateModulators_()
         // check parameters as well
         for (auto p : o->parameters())
             p->collectModulators();
+    }
+}
+
+
+void Scene::updateSampleRate_()
+{
+    MO_DEBUG_AUDIO("Scene::updateSampleRate_()");
+
+    setSampleRate(sceneSampleRate_);
+
+    for (auto o : allObjects_)
+    {
+        o->setSampleRate(sceneSampleRate_);
     }
 }
 
@@ -412,17 +461,64 @@ void Scene::endObjectChange()
 
 // ------------------------ audio ----------------------------
 
-void Scene::calculateAudioBlock(SamplePos samplePos, SamplePos blockLength, int thread)
+void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
 {
     ScopedSceneLockRead lock(this);
 
-    blockLength += samplePos;
-    for (; samplePos<blockLength; ++samplePos)
+    const uint size = bufferSize(thread);
+
+    const Double time = sampleRateInv() * samplePos;
+    Double rtime = time;
+
+    // calculate one block of transformations
+    // XXX needs only be done for audioobjects and microphones
+    for (uint i = 0; i<size; ++i)
     {
-        calculateSceneTransform_(thread, 0, (1.0 / 44100.0) * samplePos);
+        calculateSceneTransform_(thread, i, rtime);
+        rtime += sampleRateInv();
+    }
+
+    // calculate audio objects
+    for (auto o : audioObjects_)
+        o->performAudioBlock(time, thread);
+
+    for (int i = 0; i<microphones_.size(); ++i)
+    {
+        auto mic = microphones_[i];
+
+        // clear audio buffer
+        F32 * buffer = &audioOutput_[thread][i * size];
+        memset(buffer, 0, sizeof(F32) * size);
+
+        // for each object
+        for (auto o : audioObjects_)
+            // for each source in object
+            for (auto src : o->audioSources())
+                // add to microphone 'membrane'
+                mic->sampleAudioSource(src, buffer, thread);
     }
 }
 
+void Scene::getAudioOutput(uint numChannels, uint thread, F32 *buffer) const
+{
+    const uint size = bufferSize(thread);
+
+    // clear buffer
+    memset(buffer, 0, sizeof(F32) * size * numChannels);
+
+    // rearange the audioOutput buffer
+
+    const F32* src = &audioOutput_[thread][0];
+
+    const uint chan = std::min(numChannels, (uint)microphones_.size());
+    for (uint b = 0; b < size; ++b)
+    {
+        for (uint c = 0; c < chan; ++c)
+        {
+            *buffer++ = src[c * size + b];
+        }
+    }
+}
 
 // ----------------------- open gl ---------------------------
 
@@ -528,30 +624,91 @@ void Scene::unlock_()
 void Scene::setSceneTime(Double time, bool send_signal)
 {
     sceneTime_ = time;
+    samplePos_ = time * sampleRate();
     if (send_signal)
         emit sceneTimeChanged(sceneTime_);
     render_();
 }
 
+bool Scene::isAudioInitialized() const
+{
+    return audioDevice_->ok();
+}
+
+void Scene::initAudioDevice_()
+{
+    if (audioDevice_->isAudioConfigured())
+    {
+        audioDevice_->initFromSettings();
+
+        using namespace std::placeholders;
+        audioDevice_->setCallback(std::bind(
+            &Scene::audioCallback_, this, _1, _2));
+    }
+}
+
+void Scene::closeAudio()
+{
+    if (isPlayback())
+        stop();
+
+    if (isAudioInitialized())
+        audioDevice_->close();
+}
+
+void Scene::audioCallback_(const F32 *, F32 * out)
+{
+    calculateAudioBlock(samplePos_, 1);
+    getAudioOutput(audioDevice_->numOutputChannels(), 1, out);
+
+    // update scene time
+    SamplePos pos = samplePos_ + audioDevice_->bufferSize();
+    setSceneTime(sampleRateInv() * pos);
+}
 
 void Scene::start()
 {
-    timer_.start();
+    if (!isAudioInitialized())
+        initAudioDevice_();
+
+    if (isAudioInitialized())
+    {
+        isPlayback_ = true;
+        audioDevice_->start();
+
+        emit playbackStarted();
+    }
 }
 
 void Scene::stop()
 {
+    if (isPlayback())
+    {
+        isPlayback_ = false;
+        if (isAudioInitialized())
+            audioDevice_->stop();
+
+        emit playbackStopped();
+    }
+    else
+    {
+        setSceneTime(0);
+    }
+    /*
     if (timer_.isActive())
         timer_.stop();
     else
         setSceneTime(0);
+    */
 }
 
 void Scene::timerUpdate_()
 {
+    /*
     sceneTime_ += (Double)timer_.interval()/1000;
     emit sceneTimeChanged(sceneTime_);
     emit renderRequest();
+    */
 }
 
 } // namespace MO

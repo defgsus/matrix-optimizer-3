@@ -123,4 +123,24 @@ QList<Object*> ParameterFloat::getFutureModulatingObjects(const Scene *scene) co
     return list;
 }
 
+
+void ParameterFloat::getValues(Double time, Double timeIncrement, uint number, Double *ptr) const
+{
+    for (uint i=0; i<number; ++i)
+    {
+        *ptr++ = value(time);
+        time += timeIncrement;
+    }
+}
+
+
+void ParameterFloat::getValues(Double time, Double timeIncrement, uint number, F32 *ptr) const
+{
+    for (uint i=0; i<number; ++i)
+    {
+        *ptr++ = value(time);
+        time += timeIncrement;
+    }
+}
+
 } // namespace MO

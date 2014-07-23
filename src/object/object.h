@@ -36,15 +36,15 @@ namespace IO { class DataStream; }
 
 #define MO_OBJECT_CONSTRUCTOR(Class__) \
     explicit Class__(QObject *parent = 0); \
-    virtual Class__ * cloneClass() const { return new Class__(); } \
-    virtual const QString& className() const { static QString s(#Class__); return s; } \
-    virtual void serialize(IO::DataStream &) const; \
-    virtual void deserialize(IO::DataStream &);
+    virtual Class__ * cloneClass() const Q_DECL_OVERRIDE { return new Class__(); } \
+    virtual const QString& className() const Q_DECL_OVERRIDE { static QString s(#Class__); return s; } \
+    virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
+    virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 #define MO_ABSTRACT_OBJECT_CONSTRUCTOR(Class__) \
     explicit Class__(QObject *parent = 0); \
-    virtual void serialize(IO::DataStream &) const; \
-    virtual void deserialize(IO::DataStream &);
+    virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
+    virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 
 /** Abstract base of all Objects in MO
@@ -373,25 +373,44 @@ public:
     /** Returns the set audio block size for each thread. */
     uint bufferSize(uint thread) const { return bufferSize_[thread]; }
 
+    /** Returns the set sample rate in samples per second. */
+    uint sampleRate() const { return sampleRate_; }
+
+    /** Returns the reciprocal of the set sample rate, e.g. 1.0 / sampleRate() */
+    Double sampleRateInv() const { return sampleRateInv_; }
+
 protected:
 
     /** Sets the audio block size for this object and the given thread.
         This function is only called <b>after</b> setNumberThreads().
         Override to make your per-thread-storage of dsp blocks.
-        Be sure to call the ancestor class implementation in your derived method!
+        @note Be sure to call the ancestor class implementation in your derived method!
     */
     virtual void setBufferSize(uint bufferSize, uint thread);
 
+    /** Sets the samplerate for the object.
+        Override to initialize coefficients or stuff that depends on the samplerate.
+        @note Be sure to call the ancestor class implementation in your derived method!
+        */
+    virtual void setSampleRate(uint samplerate);
+
     /** Override to create all audio sources for your object.
-        Be sure to call the ancestor class implementation in your derived method! */
+        @note Be sure to call the ancestor class implementation in your derived method! */
     virtual void createAudioSources() { };
 
-    /** Perform all necessary audio calculation and fill the AUDIO::AudioSource class(es). */
-    virtual void sampleStep(Double time, uint thread) { Q_UNUSED(time); Q_UNUSED(thread); };
+    /** Returns the audio sources of this object. */
+    const QList<AUDIO::AudioSource*>& audioSources() const { return audioSources_; }
 
     /** Creates and returns a new audio source installed to this object.
         The id is not really important, only for display purposes. */
     AUDIO::AudioSource * createAudioSource(const QString& id = QString("audio"));
+
+    /** Perform all necessary audio calculations and fill the AUDIO::AudioSource class(es).
+        The block is given by bufferSize(thread).
+        The object transformation is calculated for the whole buffer size
+        before the call of this function.
+        */
+    virtual void performAudioBlock(Double time, uint thread) { Q_UNUSED(time); Q_UNUSED(thread); };
 
 public:
     // --------------- 3d --------------------------
@@ -402,6 +421,10 @@ public:
     /** Returns the transformation matrix of this object */
     const Mat4& transformation(uint thread, uint sample) const
         { return transformation_[thread][sample]; }
+
+    /** Returns a pointer to bufferSize(thread) number of matrices */
+    const Mat4* transformations(uint thread) const
+        { return &transformation_[thread][0]; }
 
     /** Returns the position of this object */
     Vec3 position(uint thread, uint sample) const
@@ -486,9 +509,12 @@ private:
 
     ParameterSelect * paramActiveScope_;
 
-    // -------- audio sources ----------------
+    // ------------ audio --------------------
 
     QList<AUDIO::AudioSource*> audioSources_;
+
+    uint sampleRate_;
+    Double sampleRateInv_;
 
     // ------------ runtime ------------------
 
