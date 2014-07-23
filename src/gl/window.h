@@ -49,6 +49,8 @@ public slots:
 
     void renderNow();
     void renderLater();
+    void startAnimation() { animating_ = true; renderLater(); }
+    void stopAnimation() { animating_ = false; }
 
 protected:
     bool event(QEvent *);
@@ -62,6 +64,8 @@ private:
 //    QOpenGLFramebufferObject * frameBuffer_;
 
     bool updatePending_;
+
+    bool animating_;
 };
 
 

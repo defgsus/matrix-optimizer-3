@@ -8,6 +8,8 @@
     <p>created 6/28/2014</p>
 */
 
+#include <math.h>
+
 #include "microphone.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -44,9 +46,20 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
 
     for (uint i=0; i<size; ++i)
     {
-        F32 sam = src->getSample(thread, i);
+        const Mat4&
+                mmic = transformation(thread, i),
+                msnd = src->transformation(thread, i);
 
-        *buffer++ = sam * 0.3;
+        const F32 origsam = src->getSample(thread, i);
+
+        // direction towards sound
+        F32 dx = msnd[3][0] - mmic[3][0],
+            dy = msnd[3][1] - mmic[3][1],
+            dz = msnd[3][2] - mmic[3][2];
+
+        const F32 dist = std::sqrt(dx*dx + dy*dy + dz*dz);
+
+        *buffer++ = origsam / (1.0 + dist);
     }
 }
 

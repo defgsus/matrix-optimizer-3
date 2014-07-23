@@ -25,7 +25,8 @@ namespace GL {
 Window::Window(QScreen * targetScreen)
     :   QWindow       (targetScreen),
         context_      (0),
-        updatePending_(0)
+        updatePending_(false),
+        animating_    (false)
 {
     MO_DEBUG_GL("Window::Window()");
 
@@ -161,6 +162,10 @@ void Window::renderNow()
 #endif
 
     context_->swapBuffers(this);
+
+    // call again :)
+    if (animating_)
+        renderLater();
 }
 
 

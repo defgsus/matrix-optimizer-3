@@ -384,6 +384,10 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
 
     if (glWindow_->context())
         scene_->setGlContext(glWindow_->context());
+    connect(scene_, SIGNAL(playbackStarted()),
+            glWindow_, SLOT(startAnimation()));
+    connect(scene_, SIGNAL(playbackStopped()),
+            glWindow_, SLOT(stopAnimation()));
 
     connect(seqFloatView_, SIGNAL(sceneTimeChanged(Double)),
             scene_, SLOT(setSceneTime(Double)));
