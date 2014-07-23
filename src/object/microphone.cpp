@@ -13,6 +13,7 @@
 #include "microphone.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "audio/audiosource.h"
 
 namespace MO {
@@ -58,18 +59,48 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
             dy = msnd[3][1] - mmic[3][1],
             dz = msnd[3][2] - mmic[3][2];
 
+        // distance to sound
         const F32 dist = std::sqrt(dx*dx + dy*dy + dz*dz);
 
-        // amplitude from distance
-        const F32 ampDist = 1.f / (1.f + dist);
+        if (dist == 0.f)
+            *buffer++ = src->getSample(thread, i);
+        else
+        {
 
-        // delaytime from distance
-        const F32 delaySam = dist / 330.f * sampleRate();
+            // amplitude from distance
+            const F32 ampDist = 1.f / (1.f + dist);
 
-        // delayed sample
-        const F32 sam = src->getDelaySample(thread, i, delaySam);
+            // delaytime from distance
+            const F32 delaySam = dist / 330.f * sampleRate();
 
-        *buffer++ = sam * ampDist;
+            // delayed sample
+            const F32 sam = src->getDelaySample(thread, i, delaySam);
+
+            // normalize direction
+            dx /= dist;
+            dy /= dist;
+            dz /= dist;
+
+            // get direction of microphone
+            F32
+                mx =  mmic[0][2],
+                my =  mmic[1][2],
+                mz = -mmic[2][2];
+
+            // normalize
+            const F32 mdirmag = std::sqrt(mx*mx + my*my + mz*mz);
+            mx /= mdirmag;
+            my /= mdirmag;
+            mz /= mdirmag;
+
+            // direction factor
+            const F32 mdot = 0.5f + 0.5f * (dx * mx + dy * my + dz * mz);
+
+            // amplitude from direction
+            const F32 ampDir = std::pow(mdot, 3.f);
+
+            *buffer++ = sam * ampDist * ampDir;
+        }
     }
 }
 

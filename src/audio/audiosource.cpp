@@ -122,11 +122,7 @@ F32 AudioSource::getDelaySample(uint thread, uint sample, F32 delayPos) const
                             src[(dpos + 2) & mask],
                             src[(dpos + 3) & mask]
                             );
-/*
-    MO_ASSERT(history_[thread].size() > readpos, "delaytime exceeded, "
-              "is " << history_[thread].size() << ", requested "
-              << readpos);
-*/
+
 }
 
 

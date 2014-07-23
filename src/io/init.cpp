@@ -12,7 +12,7 @@
 #include <QtGlobal>
 
 #ifdef Q_OS_LINUX
-#include    <X11/Xlib.h>
+#   include <X11/Xlib.h>
 #endif
 
 #include "init.h"

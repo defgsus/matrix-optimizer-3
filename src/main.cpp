@@ -28,12 +28,19 @@
 //#include "io/streamoperators_qt.h"
 //#include "math/funcparser/parser.h"
 //#include "io/log.h"
+#include "types/vector.h"
 
 int main(int argc, char *argv[])
 {
     //void * ptr = new float;  MO_DEBUG(ptr);
 
-    MO::startOfProgram();
+    /*
+    MO::Mat4 mat(1.0);
+    std::cout << mat << std::endl;
+    mat = glm::rotate(mat, 90.f, MO::Vec3(0,0,1));
+    std::cout << mat << std::endl;
+    return 0;
+    */
 
     //return PPP_NAMESPACE::test_parser_();
     //MO::TestTimeline t; return t.run();
@@ -45,6 +52,9 @@ int main(int argc, char *argv[])
     std::cout << id << std::endl;
     return 0;
     */
+
+    MO::startOfProgram();
+
     MO::application = new MO::Application(argc, argv);
     MO::settings = new MO::Settings(MO::application);
 

@@ -94,4 +94,5 @@ std::ostream& operator << (std::ostream& s, const glm::detail::tmat4x4<F>& m)
 
 } // namespace MO
 
+
 #endif // MOSRC_TYPES_VECTOR_H
