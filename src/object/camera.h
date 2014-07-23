@@ -25,7 +25,7 @@ public:
     virtual bool isCamera() const Q_DECL_OVERRIDE { return true; }
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(uint thread, Double time) Q_DECL_OVERRIDE;
+    virtual void renderGl(const Mat4&, uint, Double) Q_DECL_OVERRIDE { };
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
     virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;

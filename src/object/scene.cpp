@@ -591,11 +591,13 @@ void Scene::renderScene(Double time)
         // start camera frame
         cameras_[0]->startGlFrame(0, time);
 
+        Mat4 cammatrix = glm::inverse(cameras_[0]->transformation(0, 0));
+
         // render all opengl objects
         for (auto o : glObjects_)
         if (o->active(time))
         {
-            o->renderGl_(0, time);
+            o->renderGl_(cammatrix, 0, time);
         }
     }
 }
@@ -612,13 +614,16 @@ void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
         return;
 
     // get camera transform
+    /*
     Mat4 camt(1.0);
     for (auto o : cameraPaths_[0])
         if (o->active(time))
             o->calculateTransformation(camt, time);
+    */
 
     // set the initial camera space for all objects in scene
-    setTransformation(thread, sample, glm::inverse(camt));
+    //setTransformation(thread, sample, glm::inverse(camt));
+    setTransformation(thread, sample, Mat4(1.0));
 
     // calculate transformations
     for (auto &o : posObjects_)

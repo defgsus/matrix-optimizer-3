@@ -40,7 +40,7 @@ void Model3d::initGl(uint /*thread*/)
 
 }
 
-void Model3d::renderGl(uint thread, Double )
+void Model3d::renderGl(const Mat4& camMatrix, uint thread, Double )
 {
     /*
     glColor3f(1,0,0);
@@ -52,7 +52,8 @@ void Model3d::renderGl(uint thread, Double )
     glEnd();
     */
 
-    glLoadMatrixf(&transformation(thread, 0)[0][0]);
+    Mat4 mat = camMatrix * transformation(thread, 0);
+    glLoadMatrixf(&mat[0][0]);
 
     glBegin(GL_LINES);
         glColor3f(1,1,1);

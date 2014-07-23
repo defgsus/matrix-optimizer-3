@@ -61,10 +61,6 @@ void Camera::initGl(uint thread)
 }
 
 
-void Camera::renderGl(uint , Double )
-{
-}
-
 void Camera::startGlFrame(uint thread, Double )
 {
     glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height());

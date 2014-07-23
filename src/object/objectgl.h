@@ -42,7 +42,7 @@ public:
     bool needsInitGl(uint thread) const { return needsInitGl_[thread]; }
 
     virtual void initGl(uint thread) = 0;
-    virtual void renderGl(uint thread, Double time) = 0;
+    virtual void renderGl(const Mat4& cameraMatrix, uint thread, Double time) = 0;
 
 signals:
 
@@ -54,7 +54,7 @@ private:
     void setGlContext_(uint thread, GL::Context *);
 
     void initGl_(uint thread);
-    void renderGl_(uint thread, Double time);
+    void renderGl_(const Mat4& cameraMatrix, uint thread, Double time);
 
     std::vector<GL::Context*> glContext_;
     bool glFunctionsInitialized_;

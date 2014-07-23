@@ -22,8 +22,8 @@ class Model3d : public ObjectGl
 public:
     MO_OBJECT_CONSTRUCTOR(Model3d);
 
-    virtual void initGl(uint thread);
-    virtual void renderGl(uint, Double time);
+    virtual void initGl(uint thread) Q_DECL_OVERRIDE;
+    virtual void renderGl(const Mat4 &camMatrix, uint, Double time) Q_DECL_OVERRIDE;
 
 signals:
 
