@@ -22,6 +22,7 @@
 #include "transform/transformation.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "audio/audiosource.h"
 
 namespace MO {
 
@@ -50,6 +51,9 @@ Object::~Object()
 {
     for (auto p : parameters_)
         delete p;
+
+    for (auto a : audioSources_)
+        delete a;
 }
 
 // --------------------- io ------------------------
@@ -617,16 +621,14 @@ void Object::childrenChanged_()
 void Object::setNumberThreads(int num)
 {
     MO_DEBUG_TREE("Object('" << idName() << "')::setNumberThreads(" << num << ")");
-    transformation_.resize(num);
-}
-/*
-void Object::setNumberThreadsRecursive_(int threads)
-{
-    setNumberThreads(threads);
 
-    for (auto o : childObjects_)
-        o->setNumberThreadsRecursive_(threads);
-}*/
+    transformation_.resize(num);
+
+    for (auto a : audioSources_)
+        a->setNumberThreads(num);
+}
+
+//void Object::set
 
 
 // ------------------------- 3d -----------------------
@@ -830,6 +832,17 @@ ParameterSelect * Object::createSelectParameter(
     return param;
 }
 
+
+// ----------------- audio sources ---------------------
+
+AUDIO::AudioSource * Object::createAudioSource(const QString& id)
+{
+    auto a = new AUDIO::AudioSource(id, this);
+
+    audioSources_.append(a);
+
+    return a;
+}
 
 
 // -------------------- modulators ---------------------

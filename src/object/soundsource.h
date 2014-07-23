@@ -26,6 +26,9 @@ public:
 
     virtual void createParameters();
 
+    virtual void createAudioSources();
+
+    virtual void sampleStep(Double time, int thread);
 signals:
 
 public slots:
@@ -33,6 +36,8 @@ public slots:
 private:
 
     ParameterFloat * audioTrack_;
+
+    AUDIO::AudioSource * audio_;
 };
 
 } // namespace MO

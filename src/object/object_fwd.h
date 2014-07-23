@@ -14,6 +14,7 @@
 namespace MO {
 
     namespace IO { class DataStream; }
+    namespace AUDIO { class AudioSource; }
 
     class Object;
     class Scene;

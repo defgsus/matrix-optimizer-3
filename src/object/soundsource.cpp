@@ -10,7 +10,8 @@
 
 #include "soundsource.h"
 #include "io/datastream.h"
-
+#include "audio/audiosource.h"
+#include "param/parameterfloat.h"
 
 namespace MO {
 
@@ -42,5 +43,19 @@ void SoundSource::createParameters()
                                        tr("The audio signal of the sound source"),
                                        0.0, false);
 }
+
+void SoundSource::createAudioSources()
+{
+    Object::createAudioSources();
+
+    audio_ = createAudioSource();
+}
+
+void SoundSource::sampleStep(Double time, int thread)
+{
+    audio_->setTransformation(transformation(thread), thread);
+    audio_->setSample(audioTrack_->value(time), thread);
+}
+
 
 } // namespace MO

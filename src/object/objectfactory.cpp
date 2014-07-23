@@ -158,15 +158,19 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
         return 0;
     }
 
+    // create the class
     Object * obj = it->second->cloneClass();
 
-    // prepare object
+    // --- prepare object ---
+
     obj->idName_ = obj->className();
     if (obj->name_.isEmpty())
         obj->name_ = className;
 
     if (createParameters)
         obj->createParameters();
+
+    obj->createAudioSources();
 
     return obj;
 }
@@ -175,10 +179,6 @@ Scene * ObjectFactory::createSceneObject()
 {
     Scene * s = qobject_cast<Scene*>(createObject("Scene"));
     MO_ASSERT(s, "could not create Scene object");
-    /*Object * sg = createObject(MO_OBJECTCLASSNAME_SEQUENCES);
-    MO_ASSERT(sg, "could not create SequenceGroup object");
-    s->addObject(sg);
-    */
     return s;
 }
 

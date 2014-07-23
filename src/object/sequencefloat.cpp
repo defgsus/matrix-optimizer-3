@@ -205,7 +205,7 @@ void SequenceFloat::setMode(SequenceType m)
             equation_->variables().add("E", 2.71828182845904523536);
             equation_->variables().add("PHI", (1.0 + sqrt(5.0)) / 2.0);
 
-            equation_->parse(equationText_.toStdString().c_str());
+            equation_->parse(equationText_.toStdString());
         }
     }
 }
@@ -230,7 +230,7 @@ Double SequenceFloat::value(Double gtime) const
     Double lStart, lLength;
     Double time = getSequenceTime(gtime, lStart, lLength, inLoop);
 
-    // XXX strange inLoop comes to late
+    // XXX strange: inLoop comes to late, e.g. after the loop end
     if (!inLoop && loopOverlapMode_ == LOT_BEGIN)
         return value_(gtime, time);
 

@@ -362,6 +362,19 @@ protected:
                 const QList<int>& valueList,
                 int defaultValue, bool editable = true, bool modulateable = true);
 
+    // ------------------- audio ------------------
+
+    /** Override to create all audio sources for your object.
+        Be sure to call the ancestor class implementation in your derived method! */
+    virtual void createAudioSources() { };
+
+    /** Perform all necessary audio calculation and fill the AUDIO::AudioSource class(es). */
+    virtual void sampleStep(Double time, int thread) { Q_UNUSED(time); Q_UNUSED(thread); };
+
+    /** Creates and returns a new audio source installed to this object.
+        The id is not really important, only for display purposes. */
+    AUDIO::AudioSource * createAudioSource(const QString& id = QString("audio"));
+
 public:
     // --------------- 3d --------------------------
 
@@ -448,6 +461,10 @@ private:
 
     ParameterSelect * paramActiveScope_;
 
+    // -------- audio sources ----------------
+
+    QList<AUDIO::AudioSource*> audioSources_;
+
     // ------------ runtime ------------------
 
     ActivityScope
@@ -462,7 +479,13 @@ private:
 
 };
 
+/** Installs the object in ObjectFactory.
+    But use MO_REGISTER_OBJECT to do the job */
 extern bool registerObject_(Object *);
+
+
+
+
 
 // ---------------------- template impl -------------------
 
