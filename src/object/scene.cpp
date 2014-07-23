@@ -137,19 +137,6 @@ void Scene::findObjects_()
         MO_DEBUG_TREE("object: " << o << ", parent: " << o->parentObject());
 #endif
 
-    // get the path until each camera
-    cameraPaths_.clear();
-    for (auto cam : cameras_)
-    {
-        cameraPaths_.append(QList<Object*>());
-        Object * o = cam;
-        while (o && o != this)
-        {
-            cameraPaths_.back().prepend(o);
-            o = o->parentObject();
-        }
-    }
-
 #if (0)
     MO_DEBUG("Scene: " << cameras_.size() << " cameras, "
              << glObjects_.size() << " gl-objects, "
@@ -610,20 +597,8 @@ void Scene::calculateSceneTransform(uint thread, uint sample, Double time)
 
 void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
 {
-    if (!cameras_.size())
-        return;
-
-    // get camera transform
-    /*
-    Mat4 camt(1.0);
-    for (auto o : cameraPaths_[0])
-        if (o->active(time))
-            o->calculateTransformation(camt, time);
-    */
-
-    // set the initial camera space for all objects in scene
-    //setTransformation(thread, sample, glm::inverse(camt));
-    setTransformation(thread, sample, Mat4(1.0));
+    // set the initial matrix for all objects in scene
+    clearTransformation(thread, sample);
 
     // calculate transformations
     for (auto &o : posObjects_)

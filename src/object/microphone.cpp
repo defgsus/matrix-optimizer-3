@@ -63,7 +63,7 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
         const F32 dist = std::sqrt(dx*dx + dy*dy + dz*dz);
 
         if (dist == 0.f)
-            *buffer++ = src->getSample(thread, i);
+            *buffer++ += src->getSample(thread, i);
         else
         {
 
@@ -100,7 +100,7 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
             // amplitude from direction
             const F32 ampDir = std::pow(mdot, 3.f);
 
-            *buffer++ = sam * ampDist * ampDir;
+            *buffer++ += sam * ampDist * ampDir;
         }
     }
 }

@@ -72,7 +72,7 @@ void ObjectInfoDialog::setObject(Object * o)
         s << "<p>" << tr("applied transformation at %1").arg(curTime)
           << ":<br/>" << matrix2Html(mat) << "</p>";
     }
-    else
+    else if (o->type() & Object::TG_REAL_OBJECT)
         s << "<p>" << tr("current transformation") << ":<br/>"
           << matrix2Html(o->transformation(0, 0)) << "</p>";
 
