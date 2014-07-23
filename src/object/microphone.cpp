@@ -82,6 +82,7 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
             dz /= dist;
 
             // get direction of microphone
+            // (suppose microphone originally points at <0,0,-1>)
             F32
                 mx =  mmic[0][2],
                 my =  mmic[1][2],

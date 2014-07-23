@@ -116,8 +116,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 {
     MO_ASSERT(p->object(), "no object assigned to parameter");
     MO_ASSERT(p->object()->sceneObject(), "no scene assigned to parameter object");
-    ObjectTreeModel * model = p->object()->sceneObject()->model();
-    MO_ASSERT(model, "No model assigned for Parameter");
+    //ObjectTreeModel * model = p->object()->sceneObject()->model();
+    //MO_ASSERT(model, "No model assigned for Parameter");
 
     QFrame * w = new QFrame(this);
     w->setObjectName("_" + p->idName());

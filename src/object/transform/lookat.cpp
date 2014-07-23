@@ -68,7 +68,7 @@ void LookAt::createParameters()
 
     x_ = createFloatParameter("x", "look-at x", lookTip, 0);
     y_ = createFloatParameter("y", "look-at y", lookTip, 0);
-    z_ = createFloatParameter("z", "look-at z", lookTip, 0);
+    z_ = createFloatParameter("z", "look-at z", lookTip, -1);
     upX_ = createFloatParameter("upx", "up x", upTip, 0);
     upY_ = createFloatParameter("upy", "up y", upTip, 1);
     upZ_ = createFloatParameter("upz", "up z", upTip, 0);

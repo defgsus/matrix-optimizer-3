@@ -46,6 +46,10 @@ public slots:
         Can be NULL to disable it. */
     void setObject(MO::Object *);
 
+protected slots:
+
+    void infoPopup_();
+
 protected:
 
     void resizeEvent(QResizeEvent *);

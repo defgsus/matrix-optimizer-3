@@ -112,7 +112,8 @@ SOURCES += \
     src/gui/util/scenesettings.cpp \
     src/audio/audiodevices.cpp \
     src/audio/audiodevice.cpp \
-    src/gui/audiodialog.cpp
+    src/gui/audiodialog.cpp \
+    src/gui/objectinfodialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -219,7 +220,8 @@ HEADERS += \
     src/types/int.h \
     src/audio/audiodevices.h \
     src/audio/audiodevice.h \
-    src/gui/audiodialog.h
+    src/gui/audiodialog.h \
+    src/gui/objectinfodialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

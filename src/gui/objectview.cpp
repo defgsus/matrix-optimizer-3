@@ -13,6 +13,8 @@
 #include <QToolButton>
 #include <QLayout>
 #include <QLabel>
+#include <QDialog>
+
 
 #include "objectview.h"
 #include "tool/stringmanip.h"
@@ -20,6 +22,7 @@
 #include "object/object.h"
 #include "object/objectfactory.h"
 #include "object/trackfloat.h"
+#include "objectinfodialog.h"
 
 namespace MO {
 namespace GUI {
@@ -37,6 +40,7 @@ ObjectView::ObjectView(QWidget *parent) :
             icon_ = new QToolButton(this);
             lh->addWidget(icon_);
             icon_->setToolButtonStyle(Qt::ToolButtonIconOnly);
+            connect(icon_, SIGNAL(clicked()), this, SLOT(infoPopup_()));
 
             label_ = new QLabel(this);
             lh->addWidget(label_);
@@ -117,6 +121,18 @@ void ObjectView::resizeEvent(QResizeEvent *)
 {
     if (object_)
         updateNameLabel_();
+}
+
+void ObjectView::infoPopup_()
+{
+    if (!object_)
+        return;
+
+    ObjectInfoDialog diag;
+
+    diag.setObject(object_);
+
+    diag.exec();
 }
 
 } // namespace GUI
