@@ -626,6 +626,8 @@ void Object::setNumberThreads(uint num)
 {
     MO_DEBUG_TREE("Object('" << idName() << "')::setNumberThreads(" << num << ")");
 
+    numberThreads_ = num;
+
     transformation_.resize(num);
     bufferSize_.resize(num);
 

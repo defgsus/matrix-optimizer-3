@@ -31,6 +31,8 @@ void AudioSource::setNumberThreads(uint num)
 
 void AudioSource::setBufferSize(uint samples, uint thread)
 {
+    bufferSize_[thread] = samples;
+
     transformation_[thread].resize(samples);
     sample_[thread].resize(samples);
 

@@ -258,7 +258,7 @@ void Scene::updateChildrenChanged_()
 
 void Scene::updateNumberThreads_()
 {
-    MO_DEBUG_TREE("Scene::updateNumberThreads_() numThreads_ == " << sceneNumberThreads_);
+    MO_DEBUG_TREE("Scene::updateNumberThreads_() sceneNumberThreads_ == " << sceneNumberThreads_);
 
     if (numberThreads() != sceneNumberThreads_)
         setNumberThreads(sceneNumberThreads_);
@@ -271,11 +271,16 @@ void Scene::updateNumberThreads_()
 
 void Scene::updateBufferSize_()
 {
-    MO_DEBUG_TREE("Scene::updateBufferSize_() numThreads_ == " << sceneNumberThreads_);
+    MO_DEBUG_AUDIO("Scene::updateBufferSize_() numberThreads() == " << numberThreads());
 
     for (uint i=0; i<sceneNumberThreads_; ++i)
         if (bufferSize(i) != sceneBufferSize_[i])
             setBufferSize(sceneBufferSize_[i], i);
+
+#ifdef MO_DO_DEBUG_AUDIO
+    for (uint i=0; i<sceneNumberThreads_; ++i)
+        MO_DEBUG_AUDIO("bufferSize("<<i<<") == " << bufferSize(i));
+#endif
 
     for (auto o : allObjects_)
     {
@@ -289,14 +294,18 @@ void Scene::updateBufferSize_()
 
 void Scene::updateAudioBuffers_()
 {
+    MO_DEBUG_AUDIO("Scene::updateAudioBuffers_() numberThreads() == " << numberThreads());
+
     audioOutput_.resize(numberThreads());
 
     for (uint i=0; i<numberThreads(); ++i)
     {
         audioOutput_[i].resize(bufferSize(i) * microphones_.size());
 
-        for (auto &s : audioOutput_[i])
-            s = 0.f;
+        memset(&audioOutput_[i][0], 0, sizeof(F32) * bufferSize(i) * microphones_.size());
+
+        MO_DEBUG_AUDIO("audioOutput_[" << i << "].size() == "
+                       << audioOutput_[i].size());
     }
 }
 
@@ -517,6 +526,9 @@ void Scene::getAudioOutput(uint numChannels, uint thread, F32 *buffer) const
         {
             *buffer++ = src[c * size + b];
         }
+
+        // skip unused channels
+        buffer += (numChannels - chan);
     }
 }
 
@@ -639,7 +651,15 @@ void Scene::initAudioDevice_()
 {
     if (audioDevice_->isAudioConfigured())
     {
-        audioDevice_->initFromSettings();
+        if (!audioDevice_->initFromSettings())
+            return;
+
+        sceneSampleRate_ = audioDevice_->sampleRate();
+        sceneBufferSize_[1] = audioDevice_->bufferSize();
+
+        updateBufferSize_();
+        updateSampleRate_();
+        updateAudioBuffers_();
 
         using namespace std::placeholders;
         audioDevice_->setCallback(std::bind(
@@ -668,6 +688,8 @@ void Scene::audioCallback_(const F32 *, F32 * out)
 
 void Scene::start()
 {
+    ScopedSceneLockWrite lock(this);
+
     if (!isAudioInitialized())
         initAudioDevice_();
 
