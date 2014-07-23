@@ -187,12 +187,14 @@ private:
     void findObjects_();
 
     void updateChildrenChanged_();
-    /** Tell all objects how much threads we got */
+    /** Tells all objects how much threads we got */
     void updateNumberThreads_();
-    /** Tell the objects the buffersize for each thread */
+    /** Tells the objects the buffersize for each thread */
     void updateBufferSize_();
-    /** Tell the objects the samplerate */
+    /** Tells the objects the samplerate */
     void updateSampleRate_();
+    /** Tells the objects' audio sources the delay size for each thread */
+    void updateDelaySize_();
 
     /** Initializes the audio buffers needed to render the tree */
     void updateAudioBuffers_();
@@ -240,7 +242,9 @@ private:
     // ---------- properties -------------------
 
     uint sceneNumberThreads_;
-    std::vector<uint> sceneBufferSize_;
+    std::vector<uint>
+        sceneBufferSize_,
+        sceneDelaySize_;
     uint sceneSampleRate_;
 
     // ------------ threadstuff ----------------

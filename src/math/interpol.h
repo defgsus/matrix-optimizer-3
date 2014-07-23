@@ -5,7 +5,9 @@
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 2014/04/24</p>
+    <p>created 2012/03/02 and updated 2014/04/24</p>
+
+    <p>credits: mathematicians and musicdsp.org fans worldwide</p>
 */
 #ifndef MOSRC_MATH_INTERPOL_H
 #define MOSRC_MATH_INTERPOL_H

@@ -25,6 +25,7 @@
 #include "object/microphone.h"
 #include "model/objecttreemodel.h"
 #include "audio/audiodevice.h"
+#include "audio/audiosource.h"
 
 namespace MO {
 
@@ -77,6 +78,10 @@ Scene::Scene(QObject *parent) :
     sceneBufferSize_.resize(sceneNumberThreads_);
     sceneBufferSize_[0] = 1;
     sceneBufferSize_[1] = 32;
+
+    sceneDelaySize_.resize(sceneNumberThreads_);
+    sceneDelaySize_[0] = 0;
+    sceneDelaySize_[1] = 1<<16;
 }
 
 Scene::~Scene()
@@ -231,6 +236,7 @@ void Scene::updateTree_()
     updateNumberThreads_();
     updateBufferSize_();
     updateSampleRate_();
+    updateDelaySize_();
 
     // get buffers for microphones
     updateAudioBuffers_();
@@ -290,6 +296,14 @@ void Scene::updateBufferSize_()
                 o->setBufferSize(sceneBufferSize_[i], i);
         }
     }
+}
+
+void Scene::updateDelaySize_()
+{
+    for (auto o : audioObjects_)
+        for (auto a : o->audioSources())
+            for (uint i=0; i<numberThreads(); ++i)
+                a->setDelaySize(sceneDelaySize_[i], i);
 }
 
 void Scene::updateAudioBuffers_()
@@ -489,7 +503,12 @@ void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
 
     // calculate audio objects
     for (auto o : audioObjects_)
+    {
         o->performAudioBlock(time, thread);
+        // fill delay lines
+        for (auto a : o->audioSources())
+            a->pushDelay(thread);
+    }
 
     for (int i = 0; i<microphones_.size(); ++i)
     {

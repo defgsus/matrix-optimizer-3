@@ -46,6 +46,9 @@ public:
     /** Returns the audio block size for the given thread. */
     uint bufferSize(uint thread) const { return bufferSize_[thread]; }
 
+    /** Returns the length of the delay in samples for the given thread */
+    uint delaySize(uint thread) const { return history_[thread].size(); }
+
     /** Returns the set transformation for the given thread */
     const Mat4& transformation(uint thread, uint sample) const { return transformation_[thread][sample]; }
 
@@ -55,10 +58,16 @@ public:
     /** Returns a const pointer to bufferSize(thead) number of samples */
     const F32* getSample(uint thread) const { return &sample_[thread][0]; }
 
+    /** Returns a sample from the history */
+    F32 getDelaySample(uint thread, uint sample, F32 delayPos) const;
+
     // ---------- setter -------------
 
     void setNumberThreads(uint num);
     void setBufferSize(uint samples, uint thread);
+    /** Sets the delaysize for the given thread.
+        @note Must be a power of two! */
+    void setDelaySize(uint samples, uint thread);
 
     void setTransformation(const Mat4& t, uint thread, uint sample) { transformation_[thread][sample] = t; }
     void setTransformation(const Mat4* transformationBlock, uint thread);
@@ -69,6 +78,9 @@ public:
     /** Returns a pointer to bufferSize(thead) number of samples for read/write. */
     F32* getSamples(uint thread) { return &sample_[thread][0]; }
 
+    /** Writes the current sampleblock to the delay history */
+    void pushDelay(uint thread);
+
 private:
 
     Object * object_;
@@ -77,10 +89,14 @@ private:
     uint numberThreads_;
     std::vector<uint> bufferSize_;
 
-    /** [thread][bufferSize[thread]] */
+    /** [thread][bufferSize] */
     std::vector<std::vector<F32>> sample_;
 
-    /** [thread][bufferSize[thread]] */
+    /** [thread][delaylength] */
+    std::vector<std::vector<F32>> history_;
+    std::vector<uint> historyPos_;
+
+    /** [thread][bufferSize] */
     std::vector<std::vector<Mat4>> transformation_;
 };
 

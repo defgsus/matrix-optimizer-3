@@ -42,6 +42,7 @@ void Microphone::deserialize(IO::DataStream & io)
 void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, uint thread) const
 {
     const uint size = bufferSize(thread);
+
     MO_ASSERT(size == src->bufferSize(thread), "unmatched buffer size");
 
     for (uint i=0; i<size; ++i)
@@ -50,7 +51,7 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
                 mmic = transformation(thread, i),
                 msnd = src->transformation(thread, i);
 
-        const F32 origsam = src->getSample(thread, i);
+        //const F32 origsam = src->getSample(thread, i);
 
         // direction towards sound
         F32 dx = msnd[3][0] - mmic[3][0],
@@ -59,7 +60,16 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
 
         const F32 dist = std::sqrt(dx*dx + dy*dy + dz*dz);
 
-        *buffer++ = origsam / (1.0 + dist);
+        // amplitude from distance
+        const F32 ampDist = 1.f / (1.f + dist);
+
+        // delaytime from distance
+        const F32 delaySam = dist / 330.f * sampleRate();
+
+        // delayed sample
+        const F32 sam = src->getDelaySample(thread, i, delaySam);
+
+        *buffer++ = sam * ampDist;
     }
 }
 
