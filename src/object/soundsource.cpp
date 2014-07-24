@@ -66,7 +66,7 @@ void SoundSource::performAudioBlock(SamplePos pos, uint thread)
     {
         const int sec = (pos + i) / sampleRate();
         const int sam = (pos + i) % sampleRate();
-        audio_->setSample(0.5*sin((sam)*6.28*437.0), thread, i);
+        audio_->setSample(0.5*sin((sec + sam * sampleRateInv())*6.28*437.0), thread, i);
     }
     */
 }

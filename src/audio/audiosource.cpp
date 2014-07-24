@@ -51,6 +51,8 @@ void AudioSource::setBufferSize(uint samples, uint thread)
 
 void AudioSource::setDelaySize(uint samples, uint thread)
 {
+    samples = nextPowerOfTwo(samples);
+
     history_[thread].resize(samples);
     historyPos_[thread] = 0;
 
@@ -109,7 +111,7 @@ F32 AudioSource::getDelaySample(uint thread, uint sample, F32 delayPos) const
     const uint pos = delayPos;
     const uint dpos = hpos - pos;
 
-#if (1)
+#if (0)
     // no interpolation
     return src[(dpos) & mask];
 #else
