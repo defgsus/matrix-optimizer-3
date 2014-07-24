@@ -113,7 +113,8 @@ SOURCES += \
     src/audio/audiodevices.cpp \
     src/audio/audiodevice.cpp \
     src/gui/audiodialog.cpp \
-    src/gui/objectinfodialog.cpp
+    src/gui/objectinfodialog.cpp \
+    src/gui/splashscreen.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -221,7 +222,8 @@ HEADERS += \
     src/audio/audiodevices.h \
     src/audio/audiodevice.h \
     src/gui/audiodialog.h \
-    src/gui/objectinfodialog.h
+    src/gui/objectinfodialog.h \
+    src/gui/splashscreen.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
@@ -230,7 +232,8 @@ FORMS += \
     src/gui/projectorsetupwidget.ui
 
 RESOURCES += \
-    icons.qrc
+    icons.qrc \
+    images.qrc
 
 OTHER_FILES += $$BISON_FILES
 

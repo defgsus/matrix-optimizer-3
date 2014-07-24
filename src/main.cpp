@@ -20,6 +20,7 @@
 #include "io/application.h"
 #include "io/settings.h"
 #include "gui/mainwindow.h"
+#include "gui/splashscreen.h"
 
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
@@ -58,9 +59,15 @@ int main(int argc, char *argv[])
     MO::application = new MO::Application(argc, argv);
     MO::settings = new MO::Settings(MO::application);
 
+    auto splash = new MO::GUI::SplashScreen();
+    splash->show();
+
     auto mainwin = new MO::GUI::MainWindow;
     MO::application->setMainWindow(mainwin);
+
     mainwin->show();
+
+    splash->raise();
 
     MO::application->setPaletteFor(mainwin);
 
