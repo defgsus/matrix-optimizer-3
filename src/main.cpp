@@ -58,15 +58,19 @@ int main(int argc, char *argv[])
     MO::application = new MO::Application(argc, argv);
     MO::settings = new MO::Settings(MO::application);
 
+#ifdef NDEBUG
     auto splash = new MO::GUI::SplashScreen();
     splash->show();
+#endif
 
     auto mainwin = new MO::GUI::MainWindow;
     MO::application->setMainWindow(mainwin);
 
     mainwin->show();
 
+#ifdef NDEBUG
     splash->raise();
+#endif
 
     MO::application->setPaletteFor(mainwin);
 

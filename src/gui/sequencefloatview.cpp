@@ -24,12 +24,13 @@
 #include "io/log.h"
 #include "generalsequencefloatview.h"
 #include "math/waveform.h"
+#include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
 #include "widget/equationeditor.h"
 #include "util/scenesettings.h"
 #include "painter/valuecurve.h"
 #include "painter/sequenceoverpaint.h"
-
+#include "audio/wavetablegenerator.h"
 
 namespace MO {
 namespace GUI {
@@ -298,11 +299,11 @@ void SequenceFloatView::createSettingsWidgets_()
     // phase
     w = wPhase_ = newSetting(tr("phase"));
     w->setStatusTip(tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"));
-    spin = new DoubleSpinBox(this);
+    spin = phaseSpin_ = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setDecimals(5);
     spin->setRange(-1e8, 1e8);
-    spin->setSingleStep(5);
+    spin->setSingleStep(sequence_->phaseInDegree()? 5 : 5.0 / 360.0);
     spin->setValue(sequence_->phase());
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](Double val)
@@ -341,7 +342,7 @@ void SequenceFloatView::createSettingsWidgets_()
         sequence_->setEquationText(text->toPlainText());
     });
 
-    // always use frequency
+    // phase in degree?
     w = wPhaseDeg_ = newSetting(tr("phase in degree"));
     w->setStatusTip(tr("Selects whether phase is given in "
                      "degree [0,360] or in unit range [0,1]"));
@@ -351,8 +352,11 @@ void SequenceFloatView::createSettingsWidgets_()
     connect(cb, &QCheckBox::stateChanged,
     [this, scene, cb]()
     {
-        ScopedSequenceChange lock(scene, sequence_);
-        sequence_->setPhaseInDegree(cb->isChecked());
+        {
+            ScopedSequenceChange lock(scene, sequence_);
+            sequence_->setPhaseInDegree(cb->isChecked());
+        }
+        phaseSpin_->setSingleStep(sequence_->phaseInDegree()? 5 : 5.0 / 360.0);
     });
 
     // always use frequency
@@ -369,6 +373,25 @@ void SequenceFloatView::createSettingsWidgets_()
         ScopedSequenceChange lock(scene, sequence_);
         sequence_->setUseFrequency(cb->isChecked());
     });
+
+    // wavetable-generator base octave
+    w = newSetting(tr("base octave"));
+    w->setStatusTip(tr("The fundamental frequency of the lowest voice"));
+    auto ispin = new SpinBox(this);
+    w->layout()->addWidget(ispin);
+    ispin->setRange(1, 1024);
+    ispin->setSingleStep(1);
+    ispin->setValue(sequence_->wavetableGenerator()->baseOctave());
+    connect(ispin, &SpinBox::valueChanged,
+    [this, scene](int val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->wavetableGenerator()->setBaseOctave(val);
+        sequence_->updateWavetable();
+    });
+
+
+
 
     // enable loop overlap
     w = wLoopOverlapping_ = newSetting(tr("loop overlapping"));
@@ -431,6 +454,7 @@ void SequenceFloatView::updateWidgets_()
 
     bool isConst = sequence_ && sequence_->mode() == SequenceFloat::ST_CONSTANT,
          isOsc = sequence_ && sequence_->mode() == SequenceFloat::ST_OSCILLATOR,
+         isWT =  sequence_ && sequence_->mode() == SequenceFloat::ST_WAVETABLE_GEN,
          isPW = isOsc && MATH::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
          isEqu = sequence_ && sequence_->mode() == SequenceFloat::ST_EQUATION,
          isTL = sequence_ && sequence_->mode() == SequenceFloat::ST_TIMELINE,
@@ -440,9 +464,9 @@ void SequenceFloatView::updateWidgets_()
 
     wOscMode_->setVisible(isOsc);
     wAmp_->setVisible(!isConst);
-    wFreq_->setVisible(isOsc || isEqu || useFreq);
-    wPhase_->setVisible(isOsc || isEqu || useFreq);
-    wPhaseDeg_->setVisible(isOsc || isEqu || useFreq);
+    wFreq_->setVisible(isOsc || isWT || isEqu || useFreq);
+    wPhase_->setVisible(isOsc || isWT || isEqu || useFreq);
+    wPhaseDeg_->setVisible(isOsc || isWT || isEqu || useFreq);
     wPW_->setVisible(isPW || isEqu);
     wEqu_->setVisible(isEqu);
     wUseFreq_->setVisible(isEqu || isTL);

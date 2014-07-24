@@ -37,19 +37,21 @@ QStringList SequenceFloat::loopOverlapModeName =
 
 
 SequenceFloat::SequenceFloat(QObject *parent)
-    :   Sequence    (parent),
+    :   Sequence        (parent),
 
-        timeline_   (0),
-        equation_   (0),
+        timeline_       (0),
+        wavetable_      (0),
+        wavetableGen_   (0),
+        equation_       (0),
 
-        oscMode_    (MATH::Waveform::T_SINE),
+        oscMode_        (MATH::Waveform::T_SINE),
         loopOverlapMode_(LOT_OFF),
 
-        doUseFreq_  (false),
-        doPhaseDegree_(false),
+        doUseFreq_      (false),
+        doPhaseDegree_  (false),
 
-        phaseMult_  (1.0),
-        equationText_("sin(x*TWO_PI)")
+        phaseMult_      (1.0),
+        equationText_   ("sin(x*TWO_PI)")
 
 {
     setName("SequenceFloat");
@@ -184,7 +186,9 @@ void SequenceFloat::setMode(SequenceType m)
     {
         if (!wavetable_)
             wavetable_ = new AUDIO::Wavetable<Double>();
-        updateWavetable_();
+        if (!wavetableGen_)
+            wavetableGen_ = new AUDIO::WavetableGenerator();
+        updateWavetable();
     }
     else if (mode_ == ST_TIMELINE)
     {
@@ -278,7 +282,7 @@ Double SequenceFloat::value(Double gtime) const
 
 Double SequenceFloat::value_(Double gtime, Double time) const
 {
-    if (mode_ == ST_OSCILLATOR || doUseFreq_)
+    if (mode_ == ST_OSCILLATOR || mode_ == ST_WAVETABLE_GEN || doUseFreq_)
     {
         time = time * frequency_->value(gtime) + phase_->value(gtime) * phaseMult_;
     }
@@ -337,12 +341,11 @@ void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
         maxValue += 0.1;
 }
 
-void SequenceFloat::updateWavetable_()
+void SequenceFloat::updateWavetable()
 {
-    MO_ASSERT(wavetable_, "updateWavetable_() without wavetable");
+    MO_ASSERT(wavetable_ && wavetableGen_, "updateWavetable_() without wavetable");
 
-    AUDIO::WavetableGenerator g;
-    g.getWavetable(wavetable_);
+    wavetableGen_->getWavetable(wavetable_);
 }
 
 

@@ -115,7 +115,8 @@ SOURCES += \
     src/gui/audiodialog.cpp \
     src/gui/objectinfodialog.cpp \
     src/gui/splashscreen.cpp \
-    src/audio/wavetablegenerator.cpp
+    src/audio/wavetablegenerator.cpp \
+    src/gui/widget/spinbox.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -226,7 +227,8 @@ HEADERS += \
     src/gui/objectinfodialog.h \
     src/gui/splashscreen.h \
     src/audio/wavetable.h \
-    src/audio/wavetablegenerator.h
+    src/audio/wavetablegenerator.h \
+    src/gui/widget/spinbox.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

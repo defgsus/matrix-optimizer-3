@@ -70,6 +70,8 @@ private:
             * wEqu_, * wUseFreq_, * wPhaseDeg_,
             * wLoopOverlapping_, * wLoopOverlap_, * wLoopOverlapOffset_;
     EquationEditor * wEquEdit_;
+
+    DoubleSpinBox * phaseSpin_;
 };
 
 

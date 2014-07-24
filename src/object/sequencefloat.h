@@ -19,7 +19,7 @@
 namespace PPP_NAMESPACE { class Parser; }
 namespace MO {
 namespace MATH { class Timeline1D; }
-namespace AUDIO { template <typename F> class Wavetable; }
+namespace AUDIO { template <typename F> class Wavetable; class WavetableGenerator; }
 
 class SequenceFloat : public Sequence
 {
@@ -103,6 +103,9 @@ public:
     void getMinMaxValue(Double localStart, Double localEnd,
                         Double& minValue, Double& maxValue) const;
 
+    /** Returns access to the wavetable generator, or NULL if not initialized */
+    AUDIO::WavetableGenerator * wavetableGenerator() const { return wavetableGen_; }
+
     // ------------ setter --------------
 
     void setMode(SequenceType);
@@ -129,6 +132,10 @@ public:
     void setUseFrequency(bool enable) { doUseFreq_ = enable; }
     void setPhaseInDegree(bool enable);
 
+    /** Updates the internal wavetable from the WavetableGenerator settings.
+        @note mode() MUST be ST_WAVETABLE_GEN */
+    void updateWavetable();
+
     // ------------ values --------------
 
     MATH::Timeline1D * timeline() { return timeline_; }
@@ -144,14 +151,14 @@ public slots:
 
 private:
 
-    void updateWavetable_();
-
     Double value_(Double gtime, Double time) const;
 
     SequenceType mode_;
     MATH::Timeline1D * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
+    AUDIO::WavetableGenerator * wavetableGen_;
     PPP_NAMESPACE::Parser * equation_;
+
 
     ParameterFloat
         * offset_,

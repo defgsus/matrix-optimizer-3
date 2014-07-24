@@ -32,17 +32,51 @@ public:
     template <typename F>
     Wavetable<F> * getWavetable() const;
 
+    uint size() const { return size_; }
+    uint numPartials() const { return numPartials_; }
+    uint baseOctave() const { return baseOctave_; }
+    uint octaveStep() const { return octaveStep_; }
+    Double amplitudeMultiplier() const { return amplitudeMult_; }
+    Double basePhase() const { return basePhase_; }
+    Double phaseShift() const { return phaseShift_; }
+
     // ---------- setter ---------------
 
+    /** Sets the size of the wavetable, which will be matched to the next power of two. */
+    void setSize(uint size) { size_ = size; }
+
+    /** Sets the number of voices */
+    void setNumPartials(uint num) { numPartials_ = num; }
+
+    /** Sets the base octave */
+    void setBaseOctave(uint oct);
+
+    /** Sets the number of octaves that will be added for each partial voice */
+    void setOctaveStep(uint step) { octaveStep_ = step; }
+
+    /** Sets the multiplier for the amplitude for each partial voice */
+    void setAmplitudeMultiplier(Double mult) { amplitudeMult_ = mult; }
+
+    /** Sets the base phase [0,360] */
+    void setBasePhase(Double phase);
+
+    /** Sets the value to be added to the phase for each partial note [0,360] */
+    void setPhaseShift(Double shift);
 
 private:
 
-    uint size_;
-    uint numPartials_;
-    uint baseOctave_;
-    uint octaveStep_;
-    Double amplitudeMult_;
-    Double freqFac_;
+    uint
+        size_,
+        numPartials_,
+        baseOctave_,
+        octaveStep_;
+    Double
+        basePhase_,
+        phaseShift_,
+        amplitudeMult_,
+        freqFac_,
+        phaseFac_,
+        phaseShiftFac_;
 };
 
 // -------------- template implementation -------------------
@@ -62,7 +96,8 @@ void WavetableGenerator::getWavetable(Wavetable<F> * w) const
     w->clearData();
 
     uint oct = baseOctave_;
-    Double amp = F(1);
+    Double amp = F(1),
+           phase = phaseFac_;
 
     for (uint j=0; j<numPartials_; ++j)
     {
@@ -71,12 +106,15 @@ void WavetableGenerator::getWavetable(Wavetable<F> * w) const
         for (uint i=0; i<size_; ++i)
         {
             F t = F(i) / size_;
-            w->data()[i] += std::sin(t * fac);
+            w->data()[i] += std::sin(t * fac + phase);
         }
 
-        oct *= octaveStep_;
+        oct += octaveStep_;
         amp *= amplitudeMult_;
+        phase += phaseShiftFac_;
     }
+
+    w->normalize();
 }
 
 
