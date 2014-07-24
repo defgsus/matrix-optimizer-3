@@ -19,7 +19,7 @@
 namespace PPP_NAMESPACE { class Parser; }
 namespace MO {
 namespace MATH { class Timeline1D; }
-
+namespace AUDIO { template <typename F> class Wavetable; }
 
 class SequenceFloat : public Sequence
 {
@@ -31,6 +31,7 @@ public:
         ST_CONSTANT,
         ST_TIMELINE,
         ST_OSCILLATOR,
+        ST_WAVETABLE_GEN,
         ST_EQUATION
     };
     const static int ST_MAX = ST_EQUATION + 1;
@@ -143,10 +144,13 @@ public slots:
 
 private:
 
+    void updateWavetable_();
+
     Double value_(Double gtime, Double time) const;
 
     SequenceType mode_;
     MATH::Timeline1D * timeline_;
+    AUDIO::Wavetable<Double> * wavetable_;
     PPP_NAMESPACE::Parser * equation_;
 
     ParameterFloat

@@ -51,6 +51,15 @@ public:
         @p ptr is expected to point at size() consecutive entries of type F */
     void setData(const F * ptr);
 
+    /** Returns a writeable pointer to size() consecutive numbers of type F */
+    F * data() { return &data_[0]; }
+
+    /** Sets all data to zero */
+    void clearData();
+
+    /** Puts everything in the range of [-1,1] */
+    void normalize();
+
 private:
     std::vector<F> data_;
     uint mask_;
@@ -66,12 +75,34 @@ void Wavetable<F>::setSize(uint size)
 }
 
 template <typename F>
-F Wavetable<F>::value(F t)
+void Wavetable<F>::clearData()
+{
+    for (auto &d : data_)
+        d = F(0);
+}
+
+
+template <typename F>
+void Wavetable<F>::normalize()
+{
+    F amp = F(0);
+    for (auto &d : data_)
+        amp = std::max(amp, std::abs(d));
+
+    if (amp != F(0))
+        for (auto &d : data_)
+            d /= amp;
+}
+
+
+template <typename F>
+F Wavetable<F>::value(F t) const
 {
     t = MATH::moduloSigned(t, F(1)) * size();
+
     const uint pos = t;
     const F frac = F(1) - (t - pos);
-    const uint dpos = pos + size_;
+    const uint dpos = pos + data_.size();
 
     return MATH::interpol_6(frac,
                             data_[(dpos-2) & mask_],

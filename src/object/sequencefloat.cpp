@@ -17,16 +17,17 @@
 #include "math/waveform.h"
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
+#include "audio/wavetablegenerator.h"
 
 namespace MO {
 
 MO_REGISTER_OBJECT(SequenceFloat)
 
 QStringList SequenceFloat::sequenceTypeId =
-{ "c", "tl", "osc", "eq" };
+{ "c", "tl", "osc", "spec", "eq" };
 
 QStringList SequenceFloat::sequenceTypeName =
-{ "Constant", "Timeline", "Oscillator", "Equation" };
+{ "Constant", "Timeline", "Oscillator", "Spectral Osc.", "Equation" };
 
 QStringList SequenceFloat::loopOverlapModeId =
 { "o", "b", "e" };
@@ -179,6 +180,12 @@ void SequenceFloat::setMode(SequenceType m)
     {
 
     }
+    else if (mode_ == ST_WAVETABLE_GEN)
+    {
+        if (!wavetable_)
+            wavetable_ = new AUDIO::Wavetable<Double>();
+        updateWavetable_();
+    }
     else if (mode_ == ST_TIMELINE)
     {
         if (!timeline_)
@@ -282,6 +289,11 @@ Double SequenceFloat::value_(Double gtime, Double time) const
                 * MATH::Waveform::waveform(time, oscMode_,
                         MATH::Waveform::limitPulseWidth(pulseWidth_->value(gtime)));
 
+        case ST_WAVETABLE_GEN:
+            MO_ASSERT(wavetable_, "SequenceFloat::value() without wavetable");
+            return offset_->value(gtime) + amplitude_->value(gtime)
+                * wavetable_->value(time);
+
         case ST_EQUATION:
             MO_ASSERT(equation_, "SequenceFloat::value() without equation");
             // XXX NOT THREADSAFE :(
@@ -323,6 +335,14 @@ void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
     // minimum size
     if (maxValue - minValue < 0.1)
         maxValue += 0.1;
+}
+
+void SequenceFloat::updateWavetable_()
+{
+    MO_ASSERT(wavetable_, "updateWavetable_() without wavetable");
+
+    AUDIO::WavetableGenerator g;
+    g.getWavetable(wavetable_);
 }
 
 
