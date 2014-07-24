@@ -410,7 +410,7 @@ protected:
         The object transformation is calculated for the whole buffer size
         before the call of this function.
         */
-    virtual void performAudioBlock(Double time, uint thread) { Q_UNUSED(time); Q_UNUSED(thread); };
+    virtual void performAudioBlock(SamplePos pos, uint thread) { Q_UNUSED(pos); Q_UNUSED(thread); };
 
 public:
     // --------------- 3d --------------------------

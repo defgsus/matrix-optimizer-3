@@ -46,6 +46,9 @@ public:
     /** Writes @p number values starting at @p time into the pointer */
     void getValues(Double time, Double timeIncrement, uint number, F32 * ptr) const;
 
+    /** Writes @p number values starting at @p pos into the pointer */
+    void getValues(SamplePos pos, Double sampleRateInv, uint number, F32 * ptr) const;
+
     void setDefaultValue(Double v) { defaultValue_ = v; }
     void setMinValue(Double v) { minValue_ = v; }
     void setMaxValue(Double v) { maxValue_ = v; }

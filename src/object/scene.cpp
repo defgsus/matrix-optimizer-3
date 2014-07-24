@@ -491,7 +491,7 @@ void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
     // calculate audio objects
     for (auto o : audioObjects_)
     {
-        o->performAudioBlock(time, thread);
+        o->performAudioBlock(samplePos, thread);
         // fill delay lines
         for (auto a : o->audioSources())
             a->pushDelay(thread);

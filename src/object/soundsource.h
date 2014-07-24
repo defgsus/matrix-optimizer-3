@@ -28,7 +28,7 @@ public:
 
     virtual void createAudioSources() Q_DECL_OVERRIDE;
 
-    virtual void performAudioBlock(Double time, uint thread) Q_DECL_OVERRIDE;
+    virtual void performAudioBlock(SamplePos pos, uint thread) Q_DECL_OVERRIDE;
 signals:
 
 public slots:

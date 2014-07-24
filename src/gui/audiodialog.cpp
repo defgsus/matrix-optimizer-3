@@ -346,6 +346,7 @@ void AudioDialog::startTone_()
 
     device_->setCallback([=](const F32*, F32* out)
     {
+#if (0)
         for (uint i=0; i<conf.bufferSize(); ++i)
         {
             F32 sam = 0.01f * vol_ * sin(phase_ * TWO_PI);
@@ -370,6 +371,31 @@ void AudioDialog::startTone_()
             else if (phase_ < -1.f)
                 phase_ += 2.f;
         }
+#else
+        static SamplePos pos = 0;
+
+        for (uint i=0; i<conf.bufferSize(); ++i)
+        {
+            Double phase = (Double)(pos + i) * conf.sampleRateInv() * realfreq_;
+
+            F32 sam = 0.01f * vol_ * sin(phase * TWO_PI);
+
+            if (doEnv_)
+            {
+                sam *= env_;
+                if (env_ < 0.001f)
+                    env_ = 1.f;
+                else
+                    env_ *= (1.f - conf.sampleRateInv() * 10.f);
+            }
+
+            for (uint j=0; j<conf.numChannelsOut(); ++j)
+                *out++ = sam;
+
+            realfreq_ += conf.sampleRateInv() * 100.f * (freq_ - realfreq_);
+        }
+        pos += conf.bufferSize();
+#endif
     });
 
     try

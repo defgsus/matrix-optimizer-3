@@ -51,14 +51,24 @@ void SoundSource::createAudioSources()
     audio_ = createAudioSource();
 }
 
-void SoundSource::performAudioBlock(Double time, uint thread)
+void SoundSource::performAudioBlock(SamplePos pos, uint thread)
 {
     // copy the block of transformations
     audio_->setTransformation(transformations(thread), thread);
 
     // copy the samples from the audiotrack
-    audioTrack_->getValues(time, sampleRateInv(), bufferSize(thread),
+
+    audioTrack_->getValues(pos, sampleRateInv(), bufferSize(thread),
                            audio_->getSamples(thread));
+
+    /*
+    for (uint i=0; i<bufferSize(thread); ++i)
+    {
+        const int sec = (pos + i) / sampleRate();
+        const int sam = (pos + i) % sampleRate();
+        audio_->setSample(0.5*sin((sam)*6.28*437.0), thread, i);
+    }
+    */
 }
 
 

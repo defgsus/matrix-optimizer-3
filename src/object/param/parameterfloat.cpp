@@ -143,4 +143,12 @@ void ParameterFloat::getValues(Double time, Double timeIncrement, uint number, F
     }
 }
 
+void ParameterFloat::getValues(SamplePos pos, Double sampleRateInv, uint number, F32 *ptr) const
+{
+    for (uint i=0; i<number; ++i, ++pos)
+    {
+        *ptr++ = value(sampleRateInv * pos);
+    }
+}
+
 } // namespace MO
