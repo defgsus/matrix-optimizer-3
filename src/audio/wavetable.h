@@ -101,7 +101,7 @@ F Wavetable<F>::value(F t) const
     t = MATH::moduloSigned(t, F(1)) * size();
 
     const uint pos = t;
-    const F frac = (t - pos);
+    const F frac = F(1) - (t - pos);
     const uint dpos = pos + data_.size();
 
     return MATH::interpol_6(frac,

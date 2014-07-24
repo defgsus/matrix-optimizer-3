@@ -106,6 +106,9 @@ public:
     /** Returns access to the wavetable generator, or NULL if not initialized */
     AUDIO::WavetableGenerator * wavetableGenerator() const { return wavetableGen_; }
 
+    /** Returns access to the wavetable, or NULL if not initialized */
+    AUDIO::Wavetable<Double> * wavetable() const { return wavetable_; }
+
     // ------------ setter --------------
 
     void setMode(SequenceType);

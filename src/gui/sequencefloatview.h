@@ -14,6 +14,8 @@
 #include "sequenceview.h"
 #include "object/object_fwd.h"
 
+class QComboBox;
+
 namespace MO {
 namespace GUI {
 namespace PAINTER { class ValueCurveData; }
@@ -78,6 +80,7 @@ private:
     DoubleSpinBox * phaseSpin_,
             * wgAmp_, * wgPhase_, * wgPhaseShift_;
     SpinBox * wgOctave_, * wgOctaveStep_, * wgPartials_;
+    QComboBox * wgSize_;
 };
 
 

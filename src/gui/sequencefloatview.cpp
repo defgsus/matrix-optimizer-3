@@ -374,6 +374,30 @@ void SequenceFloatView::createSettingsWidgets_()
         sequence_->setUseFrequency(cb->isChecked());
     });
 
+    // wavetable-generator size
+    w = wWgSize_ = newSetting(tr("wavetable size"));
+    w->setStatusTip(tr("The size in samples of the wavetable"));
+    auto combo = wgSize_ = new QComboBox(this);
+    w->layout()->addWidget(combo);
+    for (int i=4; i<20; ++i)
+        combo->addItem(QString::number(1<<i));
+    if (sequence_->wavetableGenerator())
+    {
+        for (int i=0; i<combo->count(); ++i)
+            if (combo->itemText(i).toUInt() ==
+                    sequence_->wavetableGenerator()->size())
+            { combo->setCurrentIndex(i); break; }
+    }
+    connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+    [this, scene, combo]()
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->wavetableGenerator()->setSize(
+                    combo->itemText(combo->currentIndex()).toUInt() );
+        sequence_->updateWavetable();
+    });
+
+
     // wavetable-generator partial voices
     w = wWgPartials_ = newSetting(tr("partial voices"));
     w->setStatusTip(tr("The number of partial voices or overtones, including the base voice"));
@@ -390,6 +414,7 @@ void SequenceFloatView::createSettingsWidgets_()
         sequence_->wavetableGenerator()->setNumPartials(val);
         sequence_->updateWavetable();
     });
+
 
     // wavetable-generator base octave
     w = wWgOctave_ = newSetting(tr("base octave"));
@@ -566,14 +591,14 @@ void SequenceFloatView::updateWidgets_()
     wWgPartials_->setVisible(isWT);
     wWgOctave_->setVisible(isWT);
     wWgOctaveStep_->setVisible(isWT);
-    //wWgSize_->setVisible(isWT);
+    wWgSize_->setVisible(isWT);
     wWgAmp_->setVisible(isWT);
     wWgPhase_->setVisible(isWT);
     wWgPhaseShift_->setVisible(isWT);
 
     // update values because WavetableGenerator might not have
     // been present on creation of the widgets
-    if (isWT && sequence_->wavetableGenerator())
+    if (isWT && sequence_->wavetableGenerator() && sequence_->wavetable())
     {
         wgPartials_->setValue(sequence_->wavetableGenerator()->numPartials());
         wgOctave_->setValue(sequence_->wavetableGenerator()->baseOctave());
@@ -581,6 +606,10 @@ void SequenceFloatView::updateWidgets_()
         wgAmp_->setValue(sequence_->wavetableGenerator()->amplitudeMultiplier());
         wgPhase_->setValue(sequence_->wavetableGenerator()->basePhase());
         wgPhaseShift_->setValue(sequence_->wavetableGenerator()->phaseShift());
+        for (int i=0; i<wgSize_->count(); ++i)
+            if (wgSize_->itemText(i).toUInt() ==
+                    sequence_->wavetableGenerator()->size())
+            { wgSize_->setCurrentIndex(i); break; }
     }
 }
 

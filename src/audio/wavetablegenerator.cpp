@@ -10,18 +10,20 @@
 
 #include "wavetablegenerator.h"
 #include "math/constants.h"
+#include "io/datastream.h"
 
 namespace MO {
 namespace AUDIO {
 
 WavetableGenerator::WavetableGenerator()
     : size_         (1<<15),
-      numPartials_  (4),
+      numPartials_  (1),
       baseOctave_   (1),
       octaveStep_   (1),
       basePhase_    (0.0),
       phaseShift_   (0.0),
       amplitudeMult_(0.5),
+
       freqFac_      (TWO_PI),
       phaseFac_     (0.0),
       phaseShiftFac_(0.0)
@@ -29,6 +31,21 @@ WavetableGenerator::WavetableGenerator()
 
 }
 
+void WavetableGenerator::serialize(IO::DataStream & io) const
+{
+    io.writeHeader("wtgen", 1);
+
+    io << size_ << numPartials_ << baseOctave_ << octaveStep_
+       << basePhase_ << phaseShift_ << amplitudeMult_;
+}
+
+void WavetableGenerator::deserialize(IO::DataStream & io)
+{
+    io.readHeader("wtgen", 1);
+
+    io >> size_ >> numPartials_ >> baseOctave_ >> octaveStep_
+       >> basePhase_ >> phaseShift_ >> amplitudeMult_;
+}
 
 void WavetableGenerator::setBaseOctave(uint oct)
 {

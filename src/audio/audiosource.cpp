@@ -107,12 +107,13 @@ F32 AudioSource::getDelaySample(uint thread, uint sample, F32 delayPos) const
         *src = &history_[thread][0];
 
     const uint pos = delayPos;
-    const F32 fade = 1.f - (delayPos - pos);
-
     const uint dpos = hpos - pos;
 
+#if (1)
     // no interpolation
-    //return src[(d) & mask];
+    return src[(dpos) & mask];
+#else
+    const F32 fade = 1.f - (delayPos - pos);
 
     return MATH::interpol_6(fade,
                             src[(dpos - 2) & mask],
@@ -122,7 +123,7 @@ F32 AudioSource::getDelaySample(uint thread, uint sample, F32 delayPos) const
                             src[(dpos + 2) & mask],
                             src[(dpos + 3) & mask]
                             );
-
+#endif
 }
 
 

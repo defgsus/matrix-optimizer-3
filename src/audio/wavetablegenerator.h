@@ -15,12 +15,18 @@
 #include "types/float.h"
 
 namespace MO {
+namespace IO { class DataStream; }
 namespace AUDIO {
 
 class WavetableGenerator
 {
 public:
     WavetableGenerator();
+
+    /** Store settings */
+    void serialize(IO::DataStream&) const;
+    /** Restore settings */
+    void deserialize(IO::DataStream&);
 
     // ----------- getter --------------
 

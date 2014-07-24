@@ -72,8 +72,11 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
             const F32 delaySam = dist / 330.f * sampleRate();
 
             // delayed sample
+#if (1)
             const F32 sam = src->getDelaySample(thread, i, delaySam);
-
+#else
+            const F32 sam = src->getSample(thread, i);
+#endif
             // normalize direction
             dx /= dist;
             dy /= dist;

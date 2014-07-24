@@ -63,6 +63,12 @@ SequenceFloat::~SequenceFloat()
     if (timeline_)
         delete timeline_;
 
+    if (wavetable_)
+        delete wavetable_;
+
+    if (wavetableGen_)
+        delete wavetableGen_;
+
     if (equation_)
         delete equation_;
 }
@@ -111,7 +117,7 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 {
     Sequence::serialize(io);
 
-    io.writeHeader("seqf", 3);
+    io.writeHeader("seqf", 4);
 
     io << sequenceTypeId[mode_];
 
@@ -128,13 +134,18 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 
     // loop overlap (v3)
     io << loopOverlapModeId[loopOverlapMode_];
+
+    // wavetablegen (v4)
+    io << (qint8)(wavetableGen_ != 0);
+    if (wavetableGen_)
+        wavetableGen_->serialize(io);
 }
 
 void SequenceFloat::deserialize(IO::DataStream &io)
 {
     Sequence::deserialize(io);
 
-    int ver = io.readHeader("seqf", 3);
+    int ver = io.readHeader("seqf", 4);
 
     if (!io.readEnum(mode_, ST_CONSTANT, sequenceTypeId))
         MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
@@ -164,6 +175,19 @@ void SequenceFloat::deserialize(IO::DataStream &io)
             MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': loop overlap mode unknown");
     }
 
+    // wavetable generator
+    if (ver >= 4)
+    {
+        qint8 isWg;
+        io >> isWg;
+        if (isWg)
+        {
+            if (!wavetableGen_)
+                wavetableGen_ = new AUDIO::WavetableGenerator();
+            wavetableGen_->deserialize(io);
+        }
+    }
+
     // create needed objects
     setMode(mode_);
 }
@@ -178,11 +202,8 @@ void SequenceFloat::setMode(SequenceType m)
 {
     mode_ = m;
 
-    if (mode_ == ST_OSCILLATOR)
-    {
 
-    }
-    else if (mode_ == ST_WAVETABLE_GEN)
+    if (mode_ == ST_WAVETABLE_GEN)
     {
         if (!wavetable_)
             wavetable_ = new AUDIO::Wavetable<Double>();
@@ -190,12 +211,20 @@ void SequenceFloat::setMode(SequenceType m)
             wavetableGen_ = new AUDIO::WavetableGenerator();
         updateWavetable();
     }
-    else if (mode_ == ST_TIMELINE)
+    else
+    {
+        if (wavetable_)
+            delete wavetable_;
+        wavetable_ = 0;
+    }
+
+    if (mode_ == ST_TIMELINE)
     {
         if (!timeline_)
             timeline_ = new MATH::Timeline1D;
     }
-    else if (mode_ == ST_EQUATION)
+
+    if (mode_ == ST_EQUATION)
     {
         if (!equation_)
         {
@@ -218,6 +247,12 @@ void SequenceFloat::setMode(SequenceType m)
 
             equation_->parse(equationText_.toStdString());
         }
+    }
+    else
+    {
+        if (equation_)
+            delete equation_;
+        equation_ = 0;
     }
 }
 
