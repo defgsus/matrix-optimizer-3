@@ -106,7 +106,7 @@ void WavetableGenerator::getWavetable(Wavetable<F> * w) const
         for (uint i=0; i<size_; ++i)
         {
             F t = F(i) / size_;
-            w->data()[i] += std::sin(t * fac + phase);
+            w->data()[i] += amp * std::sin(t * fac + phase);
         }
 
         oct += octaveStep_;

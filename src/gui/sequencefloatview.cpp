@@ -374,14 +374,32 @@ void SequenceFloatView::createSettingsWidgets_()
         sequence_->setUseFrequency(cb->isChecked());
     });
 
-    // wavetable-generator base octave
-    w = newSetting(tr("base octave"));
-    w->setStatusTip(tr("The fundamental frequency of the lowest voice"));
-    auto ispin = new SpinBox(this);
+    // wavetable-generator partial voices
+    w = wWgPartials_ = newSetting(tr("partial voices"));
+    w->setStatusTip(tr("The number of partial voices or overtones, including the base voice"));
+    auto ispin = wgPartials_ = new SpinBox(this);
     w->layout()->addWidget(ispin);
     ispin->setRange(1, 1024);
     ispin->setSingleStep(1);
-    ispin->setValue(sequence_->wavetableGenerator()->baseOctave());
+    ispin->setValue(sequence_->wavetableGenerator()?
+                        sequence_->wavetableGenerator()->numPartials() : 1);
+    connect(ispin, &SpinBox::valueChanged,
+    [this, scene](int val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->wavetableGenerator()->setNumPartials(val);
+        sequence_->updateWavetable();
+    });
+
+    // wavetable-generator base octave
+    w = wWgOctave_ = newSetting(tr("base octave"));
+    w->setStatusTip(tr("The fundamental frequency of the lowest voice"));
+    ispin = wgOctave_ = new SpinBox(this);
+    w->layout()->addWidget(ispin);
+    ispin->setRange(1, 1024);
+    ispin->setSingleStep(1);
+    ispin->setValue(sequence_->wavetableGenerator()?
+                        sequence_->wavetableGenerator()->baseOctave() : 1);
     connect(ispin, &SpinBox::valueChanged,
     [this, scene](int val)
     {
@@ -390,7 +408,76 @@ void SequenceFloatView::createSettingsWidgets_()
         sequence_->updateWavetable();
     });
 
+    // wavetable-generator octave step
+    w = wWgOctaveStep_ = newSetting(tr("octave step"));
+    w->setStatusTip(tr("The step in octaves to the next partial voice"));
+    ispin = wgOctaveStep_ = new SpinBox(this);
+    w->layout()->addWidget(ispin);
+    ispin->setRange(1, 1024);
+    ispin->setSingleStep(1);
+    ispin->setValue(sequence_->wavetableGenerator()?
+                        sequence_->wavetableGenerator()->octaveStep() : 1);
+    connect(ispin, &SpinBox::valueChanged,
+    [this, scene](int val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->wavetableGenerator()->setOctaveStep(val);
+        sequence_->updateWavetable();
+    });
 
+    // wavetable-generator amplitude mult
+    w = wWgAmp_ = newSetting(tr("amplitude mul."));
+    w->setStatusTip(tr("Multiplier for the amplitude after each partial voice"));
+    spin = wgAmp_ = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(0.0, 1000.0);
+    spin->setSingleStep(0.05);
+    spin->setDecimals(5);
+    spin->setValue(sequence_->wavetableGenerator()?
+                        sequence_->wavetableGenerator()->amplitudeMultiplier() : 0.5);
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->wavetableGenerator()->setAmplitudeMultiplier(val);
+        sequence_->updateWavetable();
+    });
+
+    // wavetable-generator base phase
+    w = wWgPhase_ = newSetting(tr("base phase"));
+    w->setStatusTip(tr("Phase of the fundamental voice in degree [0,360]"));
+    spin = wgPhase_ = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(-360.0, 360.0);
+    spin->setSingleStep(5);
+    spin->setDecimals(5);
+    spin->setValue(sequence_->wavetableGenerator()?
+                        sequence_->wavetableGenerator()->basePhase() : 0.5);
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->wavetableGenerator()->setBasePhase(val);
+        sequence_->updateWavetable();
+    });
+
+    // wavetable-generator phase shift
+    w = wWgPhaseShift_ = newSetting(tr("phase shift"));
+    w->setStatusTip(tr("Shift of phase per partial voice in degree [0,360]"));
+    spin = wgPhaseShift_ = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(-360.0, 360.0);
+    spin->setSingleStep(5);
+    spin->setDecimals(5);
+    spin->setValue(sequence_->wavetableGenerator()?
+                        sequence_->wavetableGenerator()->phaseShift() : 0.5);
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->wavetableGenerator()->setPhaseShift(val);
+        sequence_->updateWavetable();
+    });
 
 
     // enable loop overlap
@@ -476,6 +563,25 @@ void SequenceFloatView::updateWidgets_()
     if (isEqu && wEquEdit_->assignedParser() != sequence_->equation())
         wEquEdit_->setParser(sequence_->equation());
 
+    wWgPartials_->setVisible(isWT);
+    wWgOctave_->setVisible(isWT);
+    wWgOctaveStep_->setVisible(isWT);
+    //wWgSize_->setVisible(isWT);
+    wWgAmp_->setVisible(isWT);
+    wWgPhase_->setVisible(isWT);
+    wWgPhaseShift_->setVisible(isWT);
+
+    // update values because WavetableGenerator might not have
+    // been present on creation of the widgets
+    if (isWT && sequence_->wavetableGenerator())
+    {
+        wgPartials_->setValue(sequence_->wavetableGenerator()->numPartials());
+        wgOctave_->setValue(sequence_->wavetableGenerator()->baseOctave());
+        wgOctaveStep_->setValue(sequence_->wavetableGenerator()->octaveStep());
+        wgAmp_->setValue(sequence_->wavetableGenerator()->amplitudeMultiplier());
+        wgPhase_->setValue(sequence_->wavetableGenerator()->basePhase());
+        wgPhaseShift_->setValue(sequence_->wavetableGenerator()->phaseShift());
+    }
 }
 
 } // namespace GUI

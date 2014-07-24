@@ -21,6 +21,8 @@ namespace PAINTER { class ValueCurveData; }
 class Timeline1DView;
 class GeneralSequenceFloatView;
 class EquationEditor;
+class DoubleSpinBox;
+class SpinBox;
 
 class SequenceFloatView : public SequenceView
 {
@@ -68,10 +70,14 @@ private:
 
     QWidget * wOscMode_, * wAmp_, * wFreq_, * wPhase_, * wPW_,
             * wEqu_, * wUseFreq_, * wPhaseDeg_,
-            * wLoopOverlapping_, * wLoopOverlap_, * wLoopOverlapOffset_;
+            * wLoopOverlapping_, * wLoopOverlap_, * wLoopOverlapOffset_,
+            * wWgOctave_, * wWgOctaveStep_, * wWgPartials_, * wWgSize_,
+            * wWgAmp_, * wWgPhase_, * wWgPhaseShift_;
     EquationEditor * wEquEdit_;
 
-    DoubleSpinBox * phaseSpin_;
+    DoubleSpinBox * phaseSpin_,
+            * wgAmp_, * wgPhase_, * wgPhaseShift_;
+    SpinBox * wgOctave_, * wgOctaveStep_, * wgPartials_;
 };
 
 
