@@ -1,7 +1,23 @@
 
+---- files ----
+
+* project-files manager
+* collect files
+    * open/save zipped projects with files
+
+
 ----- GUI -----
 
 * fix positioning in ObjectTreeView (below/above... need to account for the sorted proxymodel)
+
+    --- TrackView / Sequencer ---
+
+    * scroll to selection on resize
+    * highlight selected track
+    * fix issue with track-select (sometimes not working)
+
+* application settings dialog
+    * especially colors, fonts, pens and brushes
 
 ---- Objects ----
 
@@ -11,6 +27,22 @@
     Basically, Microphones can be anywhere, but when they are part of a camera,
     they need to be faded in/out with the Camera.
     Also there should be a preset and uniform parameter edit for multiple Microphones
+
+* maybe make ParameterFloat work with equations
+
+* maybe ParameterFloat as modulator
+    (would be nice to have e.g. a frequency value to control the frequency of a lot of sequences
+    without creating a track/sequence for it)
+
+* concept for copy/paste of objects that are modulated
+    (maybe: when pasting modulated objects, open a dialog for selection of which
+    modulators should be reused or recreated)
+
+---- threading -----
+
+* make equation threadsafe
+* preserve a thread-storage for the gui (displaying of sequences and such)
+* generally conceptualize thread-storage
 
 ---- OpenGL -----
 
@@ -23,3 +55,9 @@
 
 * concept anyway
 * scene and scene-changes passing to clients
+
+---- timeline ----
+
+* adjustable derivatives
+* display time/value
+* numerically edit time/value
