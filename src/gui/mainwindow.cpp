@@ -239,37 +239,8 @@ void MainWindow::createWidgets_()
     spacer_->setWidgets(leftContainer, sequencer_);
     //spacer2_->setWidgets(sequencer_, seqFloatView_);
 
-    // ------------ connections --------------
 
 
-
-
-
-    // --------- io ----------
-/*
-    QMenu * m;
-    QAction * a;
-
-    m = new QMenu(tr("Timeline"), menuBar());
-    menuBar()->addMenu(m);
-
-        a = new QAction(tr("save timeline"), m);
-        m->addAction(a);
-        a->setShortcut(Qt::CTRL + Qt::Key_S);
-        connect(a, &QAction::triggered, [=]()
-        {
-            tl->saveFile("./timeline.bin");
-        });
-
-        a = new QAction(tr("load timeline"), m);
-        m->addAction(a);
-        a->setShortcut(Qt::CTRL + Qt::Key_L);
-        connect(a, &QAction::triggered, [=]()
-        {
-            tl->loadFile("./timeline.bin");
-            tlv->unselect();
-        });
-*/
     setMinimumSize(800,500);
 
 }

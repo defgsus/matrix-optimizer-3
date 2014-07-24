@@ -235,7 +235,8 @@ RESOURCES += \
     icons.qrc \
     images.qrc
 
-OTHER_FILES += $$BISON_FILES
+OTHER_FILES += $$BISON_FILES \
+    TODO.txt
 
 ####################### BISON PARSER #######################
 
