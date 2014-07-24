@@ -13,6 +13,9 @@
 
 #include <QSettings>
 
+class QWindow;
+class QMainWindow;
+
 namespace MO {
 
 class Settings : public QSettings
@@ -22,6 +25,22 @@ public:
     explicit Settings(QObject *parent = 0);
 
     QVariant getValue(const QString& key);
+
+#if (0)
+    /** Stores the geometry provided the QWidget::objectName() is set */
+    void saveGeometry(QMainWindow *);
+    /** Restores the geometry provided the QWidget::objectName() is set */
+    void restoreGeometry(QMainWindow *);
+#endif
+    /** Stores the geometry provided the QWidget::objectName() is set */
+    void saveGeometry(QWindow *);
+    /** Restores the geometry provided the QWidget::objectName() is set */
+    bool restoreGeometry(QWindow *);
+
+    /** Stores the geometry provided the QWidget::objectName() is set */
+    void saveGeometry(QWidget *);
+    /** Restores the geometry provided the QWidget::objectName() is set */
+    bool restoreGeometry(QWidget *);
 
 signals:
 

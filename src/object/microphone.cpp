@@ -52,8 +52,6 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
                 mmic = transformation(thread, i),
                 msnd = src->transformation(thread, i);
 
-        //const F32 origsam = src->getSample(thread, i);
-
         // direction towards sound
         F32 dx = msnd[3][0] - mmic[3][0],
             dy = msnd[3][1] - mmic[3][1],

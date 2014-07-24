@@ -24,6 +24,7 @@
 #include <QTimer>
 #include <QLabel>
 #include <QThread>
+#include <QDesktopWidget>
 
 #include "mainwindow.h"
 #include "projectorsetupwidget.h"
@@ -48,6 +49,7 @@
 #include "io/log.h"
 #include "io/memory.h"
 #include "io/settings.h"
+#include "io/application.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -120,12 +122,23 @@ MainWindow::MainWindow(QWidget *parent) :
     currentSceneDirectory_(settings->getValue("Directory/scene").toString()),
     statusMessageTimeout_(1000 * 5)
 {
+    setObjectName("_MainWindow");
 
     setAttribute(Qt::WA_DeleteOnClose, true);
 
     createMainMenu_();
     createWidgets_();
     createObjects_();
+
+    // read previous geometry
+    if (!restoreAllGeometry_())
+    {
+        // center window
+        QRect r = application->desktop()->screenGeometry(pos());
+        setGeometry((r.width() - width())/2,
+                    (r.height() - height())/2,
+                     width(), height());
+    }
 
     updateWindowTitle_();
 }
@@ -430,7 +443,6 @@ void MainWindow::createObjects_()
     glWindow_ = glManager_->createGlWindow();
     glWindow_->show();
 
-
     try
     {
         QString fn = settings->getValue("File/scene").toString();
@@ -499,10 +511,28 @@ void MainWindow::closeEvent(QCloseEvent * e)
     if (okayToChangeScene_())
     {
         e->accept();
+
+        saveAllGeometry_();
     }
     else
         e->ignore();
 }
+
+void MainWindow::saveAllGeometry_()
+{
+    settings->saveGeometry(this);
+    if (glWindow_)
+        settings->saveGeometry(glWindow_);
+}
+
+bool MainWindow::restoreAllGeometry_()
+{
+    bool r = settings->restoreGeometry(this);
+    if (glWindow_)
+        settings->restoreGeometry(glWindow_);
+    return r;
+}
+
 
 void MainWindow::objectSelected_(Object * o)
 {

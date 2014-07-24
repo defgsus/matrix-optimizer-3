@@ -8,6 +8,9 @@
     <p>created 7/14/2014</p>
 */
 
+#include <QMainWindow>
+#include <QWindow>
+
 #include "settings.h"
 #include "io/error.h"
 
@@ -60,6 +63,55 @@ QVariant Settings::getValue(const QString &key)
 
     return QVariant();
 }
+/*
+void Settings::saveGeometry(QMainWindow * win)
+{
+    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QMainWindow");
+    setValue("Geometry/" + win->objectName(), win->saveState());
+}
 
+void Settings::restoreGeometry(QMainWindow * win)
+{
+    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QMainWindow");
+    const QString key = "Geometry/" + win->objectName();
+    if (contains(key))
+        win->restoreState( getValue(key).toByteArray() );
+}
+*/
+void Settings::saveGeometry(QWindow * win)
+{
+    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QWindow");
+    setValue("Geometry/" + win->objectName(), win->geometry());
+}
+
+bool Settings::restoreGeometry(QWindow * win)
+{
+    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QWindow");
+    const QString key = "Geometry/" + win->objectName();
+    if (contains(key))
+    {
+        win->setGeometry( getValue(key).value<QRect>() );
+        return true;
+    }
+    return false;
+}
+
+void Settings::saveGeometry(QWidget * win)
+{
+    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QWidget");
+    setValue("Geometry/" + win->objectName(), win->saveGeometry());
+}
+
+bool Settings::restoreGeometry(QWidget * win)
+{
+    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QWidget");
+    const QString key = "Geometry/" + win->objectName();
+    if (contains(key))
+    {
+        win->restoreGeometry( getValue(key).toByteArray() );
+        return true;
+    }
+    return false;
+}
 
 } // namespace MO

@@ -64,14 +64,6 @@ int main(int argc, char *argv[])
 
     MO::application->setPaletteFor(mainwin);
 
-
-    // center mainwindow
-    QRect r = MO::application->desktop()->screenGeometry(mainwin->pos());
-    mainwin->setGeometry(
-                (r.width()-mainwin->width())/2,
-                (r.height()-mainwin->height())/2,
-                mainwin->width(), mainwin->height());
-
     //MO::GUI::QObjectInspector oi(&w);
     //oi.show();
 

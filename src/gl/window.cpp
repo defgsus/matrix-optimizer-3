@@ -30,6 +30,7 @@ Window::Window(QScreen * targetScreen)
 {
     MO_DEBUG_GL("Window::Window()");
 
+    setObjectName("_GlWindow");
     setTitle("OpenGL");
 
     setWidth(512);

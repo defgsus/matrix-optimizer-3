@@ -71,6 +71,9 @@ private slots:
     void setSceneObject(Scene *, const SceneSettings * = 0);
 
     void updateWidgetsActivity_();
+
+    void saveAllGeometry_();
+    bool restoreAllGeometry_();
 private:
 
     void createWidgets_();
