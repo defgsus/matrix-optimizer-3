@@ -54,19 +54,31 @@
          stdDeviation="6.795743"
          inkscape:collect="always" />
     </filter>
+    <filter
+       inkscape:collect="always"
+       id="filter5732"
+       x="-0.013523212"
+       width="1.0270464"
+       y="-0.10653705"
+       height="1.2130741">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="4.9248531"
+         id="feGaussianBlur5734" />
+    </filter>
   </defs>
   <sodipodi:namedview
      id="base"
-     pagecolor="#ffffff"
+     pagecolor="#848484"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0"
+     inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
      inkscape:cx="384.93046"
      inkscape:cy="190.0777"
      inkscape:document-units="px"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer4"
      showgrid="false"
      inkscape:window-width="1600"
      inkscape:window-height="851"
@@ -137,6 +149,52 @@
            inkscape:connector-curvature="0"
            sodipodi:nodetypes="sccccccsccsss" />
       </g>
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="fontglow">
+    <g
+       id="g5008-4"
+       transform="translate(2.1015513,-791.99156)"
+       style="stroke:#6bf8ff;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none;filter:url(#filter5732);opacity:0.53982301">
+      <text
+         sodipodi:linespacing="125%"
+         id="text4328-3"
+         y="955.40814"
+         x="115.18121"
+         style="font-size:99.95207976999999744px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#6bf8ff;font-family:Sans;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;stroke:#6bf8ff;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none"
+           y="955.40814"
+           x="115.18121"
+           id="tspan4330-8"
+           sodipodi:role="line">Matrix Optimizer III</tspan></text>
+      <text
+         transform="matrix(0,1,-1,0,0,0)"
+         sodipodi:linespacing="125%"
+         id="text4993-3"
+         y="-910.55713"
+         x="860.20172"
+         style="font-size:106.51174927000000991px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#6bf8ff;font-family:Sans;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none"
+         xml:space="preserve"><tspan
+           y="-910.55713"
+           x="860.20172"
+           id="tspan4995-2"
+           sodipodi:role="line">I</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-size:106.51174927000000991px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#6bf8ff;font-family:Sans;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none"
+         x="949.09521"
+         y="-910.55713"
+         id="text4997-2"
+         sodipodi:linespacing="125%"
+         transform="matrix(0,1,-1,0,0,0)"><tspan
+           sodipodi:role="line"
+           id="tspan4999-1"
+           x="949.09521"
+           y="-910.55713">I</tspan></text>
     </g>
   </g>
   <g

@@ -125,6 +125,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setObjectName("_MainWindow");
 
     setAttribute(Qt::WA_DeleteOnClose, true);
+    setWindowIcon(QIcon(":/icon/mo.png"));
 
     createMainMenu_();
     createWidgets_();
