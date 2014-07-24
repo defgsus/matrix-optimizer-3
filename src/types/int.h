@@ -17,6 +17,20 @@ namespace MO {
     typedef unsigned int uint;
 
 
+    namespace Private
+    {
+        template <typename I>
+        constexpr I nextPowerOfTwo_(I num, I bit)
+        {
+            return num > I(1)<<bit ? nextPowerOfTwo_(num, I(bit + 1)) : I(1<<bit);
+        }
+    } // namespace Private
+
+    /** Returns the next power of two for the given integer.
+        Type overflows are not handled, and generally return zero or negative numbers. */
+    template <typename I>
+    constexpr I nextPowerOfTwo(I in) { return Private::nextPowerOfTwo_(in, (I)0); }
+
 } // namespace MO
 
 #endif // MOSRC_TYPES_INT_H

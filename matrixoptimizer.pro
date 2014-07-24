@@ -223,7 +223,8 @@ HEADERS += \
     src/audio/audiodevice.h \
     src/gui/audiodialog.h \
     src/gui/objectinfodialog.h \
-    src/gui/splashscreen.h
+    src/gui/splashscreen.h \
+    src/audio/wavetable.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

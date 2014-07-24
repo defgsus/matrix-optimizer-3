@@ -46,7 +46,8 @@
 
 ---- OpenGL -----
 
-* Shaders and text objects
+* Shaders
+    * text objects and #include support
 * concept and implementation of a generic Model container and a Model renderer
 
 * multi-projection

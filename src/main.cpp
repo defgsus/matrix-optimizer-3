@@ -29,7 +29,6 @@
 //#include "io/streamoperators_qt.h"
 //#include "math/funcparser/parser.h"
 //#include "io/log.h"
-#include "types/vector.h"
 
 int main(int argc, char *argv[])
 {
