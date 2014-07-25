@@ -373,6 +373,88 @@ void SequenceFloatView::createSettingsWidgets_()
         sequence_->setUseFrequency(cb->isChecked());
     });
 
+
+    // spectral-osc partial voices
+    w = wSpecNum_ = newSetting(tr("partial voices"));
+    w->setStatusTip(tr("The number of partial voices or overtones, including the base voice"));
+    spin = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(1, 64);
+    spin->setSingleStep(0.1);
+    spin->setDecimals(5);
+    spin->setValue(sequence_->specNumPartials());
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](Double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setSpecNumPartials(val);
+    });
+
+    // spectral-osc octave step
+    w = wSpecOct_ = newSetting(tr("octave step"));
+    w->setStatusTip(tr("The step in octaves to the next partial voice"));
+    spin = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(-128, 128);
+    spin->setSingleStep(0.1);
+    spin->setDecimals(5);
+    spin->setValue(sequence_->specOctaveStep());
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](Double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setSpecOctaveStep(val);
+    });
+
+    // spectral-osc amplitude mult
+    w = wSpecAmp_ = newSetting(tr("amplitude mul."));
+    w->setStatusTip(tr("Multiplier for the amplitude after each partial voice"));
+    spin = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(0, 100);
+    spin->setSingleStep(0.05);
+    spin->setDecimals(5);
+    spin->setValue(sequence_->specAmplitudeMultiplier());
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](Double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setSpecAmplitudeMultiplier(val);
+    });
+
+    // spectral-osc base phase
+    w = wSpecPhase_ = newSetting(tr("base phase"));
+    w->setStatusTip(tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"));
+    spin = specPhaseSpin_ = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(-360, 360);
+    spin->setDecimals(5);
+    spin->setValue(sequence_->specPhase());
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](Double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setSpecPhase(val);
+    });
+
+    // spectral-osc phase shift
+    w = wSpecPhaseShift_ = newSetting(tr("phase shift"));
+    w->setStatusTip(tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"));
+    spin = specPhaseShiftSpin_ = new DoubleSpinBox(this);
+    w->layout()->addWidget(spin);
+    spin->setRange(-360, 360);
+    spin->setDecimals(5);
+    spin->setValue(sequence_->specPhaseShift());
+    connect(spin, &DoubleSpinBox::valueChanged,
+    [this, scene](Double val)
+    {
+        ScopedSequenceChange lock(scene, sequence_);
+        sequence_->setSpecPhaseShift(val);
+    });
+
+
+
+
     // wavetable-generator size
     w = wWgSize_ = newSetting(tr("wavetable size"));
     w->setStatusTip(tr("The size in samples of the wavetable"));
@@ -454,7 +536,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // wavetable-generator base phase
     w = wWgPhase_ = newSetting(tr("base phase"));
-    w->setStatusTip(tr("Phase of the fundamental voice in degree [0,360]"));
+    w->setStatusTip(tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"));
     spin = wgPhase_ = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setRange(-360.0, 360.0);
@@ -471,7 +553,7 @@ void SequenceFloatView::createSettingsWidgets_()
 
     // wavetable-generator phase shift
     w = wWgPhaseShift_ = newSetting(tr("phase shift"));
-    w->setStatusTip(tr("Shift of phase per partial voice in degree [0,360]"));
+    w->setStatusTip(tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"));
     spin = wgPhaseShift_ = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setRange(-360.0, 360.0);
@@ -549,22 +631,29 @@ void SequenceFloatView::updateWidgets_()
 
     bool isConst = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_CONSTANT,
          isOsc = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_OSCILLATOR,
-         isWT =  sequence_ && sequence_->sequenceType() == SequenceFloat::ST_WAVETABLE_GEN,
+         isSpec = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_SPECTRAL_OSC,
+         isWT = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_SPECTRAL_WT,
          isPW = isOsc && AUDIO::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
          isEqu = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_EQUATION,
          isTL = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_TIMELINE,
+         isFreq = sequence_ && (sequence_->sequenceType() & SequenceFloat::STG_FREQUENCY),
          useFreq = sequence_ && sequence_->useFrequency(),
          isLoop = sequence_ && sequence_->looping(),
          isLoopOverlap = isLoop && sequence_->loopOverlapMode() != SequenceFloat::LOT_OFF;
 
     wOscMode_->setVisible(isOsc);
     wAmp_->setVisible(!isConst);
-    wFreq_->setVisible(isOsc || isWT || isEqu || useFreq);
-    wPhase_->setVisible(isOsc || isWT || isEqu || useFreq);
-    wPhaseDeg_->setVisible(isOsc || isWT || isEqu || useFreq);
+    wFreq_->setVisible(isFreq || useFreq);
+    wPhase_->setVisible(isFreq || useFreq);
+    wPhaseDeg_->setVisible(isFreq || useFreq);
     wPW_->setVisible(isPW || isEqu);
     wEqu_->setVisible(isEqu);
     wUseFreq_->setVisible(isEqu || isTL);
+    wSpecAmp_->setVisible(isSpec);
+    wSpecNum_->setVisible(isSpec);
+    wSpecOct_->setVisible(isSpec);
+    wSpecPhase_->setVisible(isSpec);
+    wSpecPhaseShift_->setVisible(isSpec);
     wLoopOverlapping_->setVisible(isLoop);
     wLoopOverlap_->setVisible(isLoopOverlap);
     wLoopOverlapOffset_->setVisible(isLoopOverlap);
@@ -602,11 +691,13 @@ void SequenceFloatView::updatePhaseMode_()
 {
     const bool deg = sequence_ && sequence_->phaseInDegree();
     phaseSpin_->setSingleStep(deg? 5 : 5.0 / 360.0);
+    specPhaseSpin_->setSingleStep(deg? 5 : 5.0 / 360.0);
+    specPhaseShiftSpin_->setSingleStep(deg? 5 : 5.0 / 360.0);
     wgPhase_->setSingleStep(deg? 5 : 5.0 / 360.0);
     wgPhaseShift_->setSingleStep(deg? 5 : 5.0 / 360.0);
 
     if (sequence_ && sequence_->wavetableGenerator()
-            && sequence_->sequenceType() == SequenceFloat::ST_WAVETABLE_GEN)
+            && sequence_->sequenceType() == SequenceFloat::ST_SPECTRAL_WT)
     {
         ScopedSequenceChange lock(sequence_->sceneObject(), sequence_);
 

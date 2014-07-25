@@ -77,11 +77,12 @@ private:
     QWidget * wOscMode_, * wAmp_, * wFreq_, * wPhase_, * wPW_,
             * wEqu_, * wUseFreq_, * wPhaseDeg_,
             * wLoopOverlapping_, * wLoopOverlap_, * wLoopOverlapOffset_,
+            * wSpecNum_, * wSpecOct_, * wSpecAmp_, * wSpecPhase_, * wSpecPhaseShift_,
             * wWgOctave_, * wWgOctaveStep_, * wWgPartials_, * wWgSize_,
             * wWgAmp_, * wWgPhase_, * wWgPhaseShift_;
     EquationEditor * wEquEdit_;
 
-    DoubleSpinBox * phaseSpin_,
+    DoubleSpinBox * phaseSpin_, * specPhaseSpin_, * specPhaseShiftSpin_,
             * wgAmp_, * wgPhase_, * wgPhaseShift_;
     SpinBox * wgOctave_, * wgOctaveStep_, * wgPartials_;
     QComboBox * wgSize_;

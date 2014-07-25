@@ -108,13 +108,37 @@ Double Waveform::waveform(Double t, Type type, Double pw)
 
 
 
-Double Waveform::spectralWave(Double time,
-                       Double numPartials,
-                       Double octaveStep,
-                       Double phaseShift,
-                       Double amplitudeMult)
+Double Waveform::spectralWave(
+                        Double time,
+                        Double numPartials,
+                        Double octaveStep,
+                        Double phase,
+                        Double phaseShift,
+                        Double amplitudeMult)
 {
-    return 0.0;
+    time = TWO_PI * time;
+    phase *= TWO_PI;
+    phaseShift *= TWO_PI;
+
+    Double sam = 0.0,
+           amp = 1.0,
+           oct = 1.0;
+
+    int num = numPartials;
+    for (int i=0; i<num; ++i)
+    {
+        sam += amp * std::sin(time * oct + phase);
+
+        phase += phaseShift;
+        amp *= amplitudeMult;
+        oct += octaveStep;
+    }
+
+    Double f = numPartials - num;
+    if (f>0.0)
+        sam += f * amp * std::sin(time * oct + phase);
+
+    return sam;
 }
 
 } // namespace AUDIO

@@ -24,10 +24,11 @@ namespace MO {
 MO_REGISTER_OBJECT(SequenceFloat)
 
 QStringList SequenceFloat::sequenceTypeId =
-{ "c", "tl", "osc", "spec", "eq" };
+{ "c", "tl", "osc", "spec", "specwt", "eq" };
 
 QStringList SequenceFloat::sequenceTypeName =
-{ "Constant", "Timeline", "Oscillator", "Spectral WT", "Equation" };
+{ "Constant", "Timeline", "Oscillator",
+  "Spectral Osc.", "Spectral WT", "Equation" };
 
 QStringList SequenceFloat::loopOverlapModeId =
 { "o", "b", "e" };
@@ -78,38 +79,69 @@ void SequenceFloat::createParameters()
     Sequence::createParameters();
 
     offset_ = createFloatParameter("value_offset", "value offset",
-                                   tr("This value is always added to the output of the sequence"),
-                                   0.0);
+               tr("This value is always added to the output of the sequence"),
+               0.0);
     offset_->setEditable(false);
 
     amplitude_ = createFloatParameter("amp", "amplitude",
-                                      tr("The output of the sequence (before the offset) is multiplied by this value"),
-                                      1.0);
+              tr("The output of the sequence (before the offset) is multiplied by this value"),
+              1.0);
     amplitude_->setEditable(false);
 
     frequency_ = createFloatParameter("freq", "frequency",
-                                      tr("The frequency of the function in hertz (periods per second)"),
-                                      1.0);
+              tr("The frequency of the function in hertz (periods per second)"),
+              1.0);
     frequency_->setEditable(false);
 
     phase_ = createFloatParameter("phase", "phase",
-                                  tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
-                                  0.0);
+              tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
+              0.0);
     phase_->setEditable(false);
 
     pulseWidth_ = createFloatParameter("pulsewidth", "pulse width",
-                                       tr("Pulsewidth of the waveform, describes the width of the positive edge"),
-                                       0.5);
+               tr("Pulsewidth of the waveform, describes the width of the positive edge"),
+               0.5);
     pulseWidth_->setEditable(false);
 
+    // ---- spectral osc -----
+
+    specNum_ = createFloatParameter("specnum", "partial voices",
+               tr("Number of partial voices of the spectral oscillator. Does not have to be an integer"),
+               1.0);
+    specNum_->setEditable(false);
+    specNum_->setMinValue(1.0);
+    specNum_->setMaxValue(64.0);
+
+    specOct_ = createFloatParameter("specoct", "octave step",
+               tr("The step in octaves between each partial voice"),
+               1.0);
+    specOct_->setEditable(false);
+
+    specAmp_ = createFloatParameter("specamp", "amplitude mul.",
+               tr("Multiplier for the amplitude after each partial voice"),
+               0.5);
+    specAmp_->setEditable(false);
+
+    specPhase_ = createFloatParameter("specphase", "base phase",
+               tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
+               0.0);
+    specPhase_->setEditable(false);
+
+    specPhaseShift_ = createFloatParameter("specphaseshift", "phase shift",
+               tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"),
+               0.0);
+    specPhaseShift_->setEditable(false);
+
+    // ----- loop overlap ------
+
     loopOverlap_ = createFloatParameter("loopoverlap", "loop overlap",
-                                       tr("Overlap of the loop window for smooth transitions (seconds)"),
-                                       0.1);
+               tr("Overlap of the loop window for smooth transitions (seconds)"),
+               0.1);
     loopOverlap_->setEditable(false);
 
     loopOverlapOffset_ = createFloatParameter("loopoverlapofs", "overlap value offset",
-                                       tr("A value that is added to the blended value in the transition window"),
-                                       0.0);
+               tr("A value that is added to the blended value in the transition window"),
+               0.0);
     loopOverlapOffset_->setEditable(false);
 }
 
@@ -203,7 +235,7 @@ void SequenceFloat::setMode(SequenceType m)
     mode_ = m;
 
 
-    if (mode_ == ST_WAVETABLE_GEN)
+    if (mode_ == ST_SPECTRAL_WT)
     {
         if (!wavetable_)
             wavetable_ = new AUDIO::Wavetable<Double>();
@@ -324,11 +356,23 @@ Double SequenceFloat::value_(Double gtime, Double time) const
 
     switch (mode_)
     {
-        case ST_OSCILLATOR: return offset_->value(gtime) + amplitude_->value(gtime)
+        case ST_OSCILLATOR:
+            return offset_->value(gtime) + amplitude_->value(gtime)
                 * AUDIO::Waveform::waveform(time, oscMode_,
                         AUDIO::Waveform::limitPulseWidth(pulseWidth_->value(gtime)));
 
-        case ST_WAVETABLE_GEN:
+        case ST_SPECTRAL_OSC:
+            return offset_->value(gtime) + amplitude_->value(gtime)
+                * AUDIO::Waveform::spectralWave(time,
+                                    specNum_->value(gtime),
+                                    specOct_->value(gtime),
+                                    specPhase_->value(gtime) * phaseMult_,
+                                    specPhaseShift_->value(gtime) * phaseMult_,
+                                    specAmp_->value(gtime)
+                        );
+
+
+        case ST_SPECTRAL_WT:
             MO_ASSERT(wavetable_, "SequenceFloat::value() without wavetable");
             return offset_->value(gtime) + amplitude_->value(gtime)
                 * wavetable_->value(time);

@@ -31,7 +31,8 @@ public:
         ST_CONSTANT,
         ST_TIMELINE,
         ST_OSCILLATOR,
-        ST_WAVETABLE_GEN,
+        ST_SPECTRAL_OSC,
+        ST_SPECTRAL_WT,
         ST_EQUATION
     };
     const static int ST_MAX = ST_EQUATION + 1;
@@ -44,7 +45,7 @@ public:
     enum SequenceTypeGroups
     {
         /** All types that use frequency/phase */
-        STG_FREQUENCY = ST_OSCILLATOR | ST_WAVETABLE_GEN
+        STG_FREQUENCY = ST_OSCILLATOR | ST_SPECTRAL_OSC | ST_SPECTRAL_WT
     };
 
 
@@ -95,6 +96,12 @@ public:
     /** Returns either 1 or 1/360, depending on the phaseInDegree mode. */
     Double phaseMultiplier() const { return phaseMult_; }
 
+    Double specNumPartials() const { return specNum_->baseValue(); }
+    Double specOctaveStep() const { return specOct_->baseValue(); }
+    Double specAmplitudeMultiplier() const { return specAmp_->baseValue(); }
+    Double specPhase() const { return specPhase_->baseValue(); }
+    Double specPhaseShift() const { return specPhaseShift_->baseValue(); }
+
     /** Wheter the loop start/end are overlapping. */
     LoopOverlapMode loopOverlapMode() const { return loopOverlapMode_; }
 
@@ -131,6 +138,12 @@ public:
     void setPhase(Double p) { phase_->setValue(p); }
     void setPulseWidth(Double pw) { pulseWidth_->setValue(AUDIO::Waveform::limitPulseWidth(pw)); }
 
+    void setSpecNumPartials(Double num) { specNum_->setValue(num); }
+    void setSpecOctaveStep(Double step) { specOct_->setValue(step); }
+    void setSpecAmplitudeMultiplier(Double mul) { specAmp_->setValue(mul); }
+    void setSpecPhase(Double p) { specPhase_->setValue(p); }
+    void setSpecPhaseShift(Double p) { specPhaseShift_->setValue(p); }
+
     void setLoopOverlap(Double t)
         { loopOverlap_->setValue( std::max(minimumLength(), t) ); }
     void setLoopOverlapOffset(Double v)
@@ -145,7 +158,7 @@ public:
     void setPhaseInDegree(bool enable);
 
     /** Updates the internal wavetable from the WavetableGenerator settings.
-        @note mode() MUST be ST_WAVETABLE_GEN */
+        @note mode() MUST be ST_SPECTRAL_WT */
     void updateWavetable();
 
     // ------------ values --------------
@@ -179,6 +192,12 @@ private:
         * frequency_,
         * phase_,
         * pulseWidth_,
+
+        * specNum_,
+        * specOct_,
+        * specPhase_,
+        * specPhaseShift_,
+        * specAmp_,
 
         * loopOverlap_,
         * loopOverlapOffset_;

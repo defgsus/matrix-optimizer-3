@@ -65,6 +65,7 @@ class Waveform
     static Double spectralWave(Double time,
                                Double numPartials,
                                Double octaveStep,
+                               Double basePhase,
                                Double phaseShift,
                                Double amplitudeMult);
 private:
