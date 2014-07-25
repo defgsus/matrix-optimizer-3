@@ -641,6 +641,15 @@ void Scene::setSceneTime(Double time, bool send_signal)
     render_();
 }
 
+void Scene::setSceneTime(SamplePos pos, bool send_signal)
+{
+    sceneTime_ = pos * sampleRateInv();
+    samplePos_ = pos;
+    if (send_signal)
+        emit sceneTimeChanged(sceneTime_);
+    render_();
+}
+
 bool Scene::isAudioInitialized() const
 {
     return audioDevice_->ok();
@@ -677,12 +686,14 @@ void Scene::closeAudio()
 
 void Scene::audioCallback_(const F32 *, F32 * out)
 {
+    MO_ASSERT(audioDevice_->bufferSize() == bufferSize(1),
+              "buffer-size mismatch");
+
     calculateAudioBlock(samplePos_, 1);
     getAudioOutput(audioDevice_->numOutputChannels(), 1, out);
 
     // update scene time
-    SamplePos pos = samplePos_ + audioDevice_->bufferSize();
-    setSceneTime(sampleRateInv() * pos);
+    setSceneTime(samplePos_ + bufferSize(1));
 }
 
 void Scene::start()
@@ -713,7 +724,7 @@ void Scene::stop()
     }
     else
     {
-        setSceneTime(0);
+        setSceneTime(0.0);
     }
     /*
     if (timer_.isActive())

@@ -12,6 +12,8 @@
 #include "io/datastream.h"
 #include "audio/audiosource.h"
 #include "param/parameterfloat.h"
+#include "io/log.h"
+
 
 namespace MO {
 
@@ -61,6 +63,7 @@ void SoundSource::performAudioBlock(SamplePos pos, uint thread)
     audioTrack_->getValues(pos, sampleRateInv(), bufferSize(thread),
                            audio_->getSamples(thread));
 
+
     /*
     for (uint i=0; i<bufferSize(thread); ++i)
     {
@@ -68,6 +71,13 @@ void SoundSource::performAudioBlock(SamplePos pos, uint thread)
         const int sam = (pos + i) % sampleRate();
         audio_->setSample(0.5*sin((sec + sam * sampleRateInv())*6.28*437.0), thread, i);
     }
+    */
+
+    /*
+    static SamplePos lastpos = 0;
+    if (pos - lastpos != bufferSize(thread))
+        MO_DEBUG("error " << lastpos << " - " << pos << " = " << (pos - lastpos));
+    lastpos = pos;
     */
 }
 

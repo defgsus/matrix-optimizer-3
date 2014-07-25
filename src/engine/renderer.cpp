@@ -56,7 +56,7 @@ bool Renderer::prepareRendering()
 
 void Renderer::run()
 {
-    MO_DEBUG_RENDER("Renderer started for '" << path_ << "'");
+    MO_DEBUG_RENDER("Renderer::run()");
 
     MO_ASSERT(scene_, "no scene to render");
     MO_ASSERT(!path_.isEmpty(), "no path given to render");
@@ -68,6 +68,13 @@ void Renderer::run()
             numChannels = scene_->microphones().size(),
             sampleRate = scene_->sampleRate(),
             bufferSize = scene_->bufferSize(thread);
+
+    MO_DEBUG_RENDER("Renderer settings:\n"
+                    "path        : " << path_ << "\n"
+                    "channels    : " << numChannels << "\n"
+                    "samplerate  : " << sampleRate << "\n"
+                    "buffer size : " << bufferSize << "\n");
+
 
     MO_DEBUG_RENDER("Opening wave files for writing");
 

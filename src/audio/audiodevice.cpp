@@ -52,12 +52,16 @@ inline int mo_audio_callback_(AudioDevice * dev, const void * in, void * out)
 static int mo_pa_callback(
         const void    * inputBuffer,
         void          * outputBuffer,
-        unsigned long /*framesPerBuffer*/,
+        unsigned long framesPerBuffer,
         const PaStreamCallbackTimeInfo* /*timeInfo*/,
         PaStreamCallbackFlags /*statusFlags*/,
         void * userData )
 {
     auto dev = static_cast<AudioDevice*>(userData);
+
+    MO_ASSERT(dev, "userdata missing in audio-callback");
+    MO_ASSERT(framesPerBuffer == dev->bufferSize(), "buffer size mismatch from audio-callback");
+    Q_UNUSED(framesPerBuffer);
 
     return mo_audio_callback_(dev, inputBuffer, outputBuffer);
 }

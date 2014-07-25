@@ -143,6 +143,7 @@ public slots:
     void setSceneActivityScope(ActivityScope scope) { setCurrentActivityScope(scope); render_(); }
 
     void setSceneTime(Double time, bool send_signal = true);
+    void setSceneTime(SamplePos pos, bool send_signal = true);
 
     // -------------- audio --------------------
 
