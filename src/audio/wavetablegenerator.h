@@ -63,10 +63,10 @@ public:
     /** Sets the multiplier for the amplitude for each partial voice */
     void setAmplitudeMultiplier(Double mult) { amplitudeMult_ = mult; }
 
-    /** Sets the base phase [0,360] */
+    /** Sets the base phase [0,1] */
     void setBasePhase(Double phase);
 
-    /** Sets the value to be added to the phase for each partial note [0,360] */
+    /** Sets the value to be added to the phase for each partial note [0,1] */
     void setPhaseShift(Double shift);
 
 private:

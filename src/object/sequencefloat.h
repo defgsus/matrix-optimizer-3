@@ -75,7 +75,7 @@ public:
     // ------------ getter --------------
 
     /** The sequence mode - one of the SequenceType enums */
-    SequenceType mode() const { return mode_; }
+    SequenceType sequenceType() const { return mode_; }
 
     AUDIO::Waveform::Type oscillatorMode() const { return oscMode_; }
 
@@ -91,6 +91,9 @@ public:
     Double phase() const { return phase_->baseValue(); }
     /** Returns the pulsewidth of the oscillator [0,1] */
     Double pulseWidth() const { return pulseWidth_->baseValue(); }
+
+    /** Returns either 1 or 1/360, depending on the phaseInDegree mode. */
+    Double phaseMultiplier() const { return phaseMult_; }
 
     /** Wheter the loop start/end are overlapping. */
     LoopOverlapMode loopOverlapMode() const { return loopOverlapMode_; }

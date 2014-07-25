@@ -132,7 +132,7 @@ void SequenceFloatView::updateSequence_()
 {
     // XXX This is called quite often!!
 
-    if (sequence_ && sequence_->mode() == SequenceFloat::ST_TIMELINE)
+    if (sequence_ && sequence_->sequenceType() == SequenceFloat::ST_TIMELINE)
     {
         MO_ASSERT(sequence_->timeline(), "No timeline in SequenceFloat with timeline mode");
 
@@ -223,7 +223,7 @@ void SequenceFloatView::createSettingsWidgets_()
     {
         mode->addItem(SequenceFloat::sequenceTypeName[i]);
     }
-    mode->setCurrentIndex(sequence_->mode());
+    mode->setCurrentIndex(sequence_->sequenceType());
     connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
     [this, scene](int index)
     {
@@ -303,7 +303,6 @@ void SequenceFloatView::createSettingsWidgets_()
     w->layout()->addWidget(spin);
     spin->setDecimals(5);
     spin->setRange(-1e8, 1e8);
-    spin->setSingleStep(sequence_->phaseInDegree()? 5 : 5.0 / 360.0);
     spin->setValue(sequence_->phase());
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](Double val)
@@ -356,7 +355,7 @@ void SequenceFloatView::createSettingsWidgets_()
             ScopedSequenceChange lock(scene, sequence_);
             sequence_->setPhaseInDegree(cb->isChecked());
         }
-        phaseSpin_->setSingleStep(sequence_->phaseInDegree()? 5 : 5.0 / 360.0);
+        updatePhaseMode_();
     });
 
     // always use frequency
@@ -465,7 +464,8 @@ void SequenceFloatView::createSettingsWidgets_()
     [this, scene](double val)
     {
         ScopedSequenceChange lock(scene, sequence_);
-        sequence_->wavetableGenerator()->setBasePhase(val);
+        sequence_->wavetableGenerator()->setBasePhase(
+                    sequence_->phaseMultiplier() * val);
         sequence_->updateWavetable();
     });
 
@@ -481,7 +481,8 @@ void SequenceFloatView::createSettingsWidgets_()
     [this, scene](double val)
     {
         ScopedSequenceChange lock(scene, sequence_);
-        sequence_->wavetableGenerator()->setPhaseShift(val);
+        sequence_->wavetableGenerator()->setPhaseShift(
+                    sequence_->phaseMultiplier() * val);
         sequence_->updateWavetable();
     });
 
@@ -538,6 +539,7 @@ void SequenceFloatView::createSettingsWidgets_()
     addSettingsWidget_(w);
 
     updateWidgets_();
+    updatePhaseMode_();
 }
 
 void SequenceFloatView::updateWidgets_()
@@ -545,12 +547,12 @@ void SequenceFloatView::updateWidgets_()
     if (!wFreq_)
         return;
 
-    bool isConst = sequence_ && sequence_->mode() == SequenceFloat::ST_CONSTANT,
-         isOsc = sequence_ && sequence_->mode() == SequenceFloat::ST_OSCILLATOR,
-         isWT =  sequence_ && sequence_->mode() == SequenceFloat::ST_WAVETABLE_GEN,
+    bool isConst = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_CONSTANT,
+         isOsc = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_OSCILLATOR,
+         isWT =  sequence_ && sequence_->sequenceType() == SequenceFloat::ST_WAVETABLE_GEN,
          isPW = isOsc && AUDIO::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
-         isEqu = sequence_ && sequence_->mode() == SequenceFloat::ST_EQUATION,
-         isTL = sequence_ && sequence_->mode() == SequenceFloat::ST_TIMELINE,
+         isEqu = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_EQUATION,
+         isTL = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_TIMELINE,
          useFreq = sequence_ && sequence_->useFrequency(),
          isLoop = sequence_ && sequence_->looping(),
          isLoopOverlap = isLoop && sequence_->loopOverlapMode() != SequenceFloat::LOT_OFF;
@@ -585,12 +587,34 @@ void SequenceFloatView::updateWidgets_()
         wgOctave_->setValue(sequence_->wavetableGenerator()->baseOctave());
         wgOctaveStep_->setValue(sequence_->wavetableGenerator()->octaveStep());
         wgAmp_->setValue(sequence_->wavetableGenerator()->amplitudeMultiplier());
-        wgPhase_->setValue(sequence_->wavetableGenerator()->basePhase());
-        wgPhaseShift_->setValue(sequence_->wavetableGenerator()->phaseShift());
+        wgPhase_->setValue(sequence_->wavetableGenerator()->basePhase()
+                           / sequence_->phaseMultiplier());
+        wgPhaseShift_->setValue(sequence_->wavetableGenerator()->phaseShift()
+                                / sequence_->phaseMultiplier());
         for (int i=0; i<wgSize_->count(); ++i)
             if (wgSize_->itemText(i).toUInt() ==
                     sequence_->wavetableGenerator()->size())
             { wgSize_->setCurrentIndex(i); break; }
+    }
+}
+
+void SequenceFloatView::updatePhaseMode_()
+{
+    const bool deg = sequence_ && sequence_->phaseInDegree();
+    phaseSpin_->setSingleStep(deg? 5 : 5.0 / 360.0);
+    wgPhase_->setSingleStep(deg? 5 : 5.0 / 360.0);
+    wgPhaseShift_->setSingleStep(deg? 5 : 5.0 / 360.0);
+
+    if (sequence_ && sequence_->wavetableGenerator()
+            && sequence_->sequenceType() == SequenceFloat::ST_WAVETABLE_GEN)
+    {
+        ScopedSequenceChange lock(sequence_->sceneObject(), sequence_);
+
+        sequence_->wavetableGenerator()->setBasePhase(
+                    sequence_->phaseMultiplier() * wgPhase_->value());
+        sequence_->wavetableGenerator()->setPhaseShift(
+                    sequence_->phaseMultiplier() * wgPhaseShift_->value());
+        sequence_->updateWavetable();
     }
 }
 

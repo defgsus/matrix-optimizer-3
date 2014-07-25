@@ -56,13 +56,13 @@ void WavetableGenerator::setBaseOctave(uint oct)
 void WavetableGenerator::setBasePhase(Double phase)
 {
     basePhase_ = phase;
-    phaseFac_ = TWO_PI * phase / 360.0;
+    phaseFac_ = TWO_PI * phase;
 }
 
 void WavetableGenerator::setPhaseShift(Double shift)
 {
     phaseShift_ = shift;
-    phaseShiftFac_ = TWO_PI * shift / 360.0;
+    phaseShiftFac_ = TWO_PI * shift;
 }
 
 

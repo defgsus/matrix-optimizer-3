@@ -60,6 +60,10 @@ private:
     /** Sets settings widgets visibility */
     void updateWidgets_();
 
+    /** Updates the spinboxes' smallStep value
+        and the wavegenerator settings */
+    void updatePhaseMode_();
+
     // -------------- MMMEMBER ---------------
 
     SequenceFloat * sequence_;
