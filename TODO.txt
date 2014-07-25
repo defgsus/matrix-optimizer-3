@@ -19,6 +19,12 @@
 * application settings dialog
     * especially colors, fonts, pens and brushes
 
+* SequenceFloatView: fix difference in update of phaseInDegree between oscillators and wavetable
+
+---- math ----
+
+* fix negative time issue in Spectral Oscillator mode
+
 ---- Objects ----
 
 * fade between different Cameras
