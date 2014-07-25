@@ -23,7 +23,7 @@ class ObjectGl : public Object,
     Q_OBJECT
 
     // for gl context handling
-    friend Scene;
+    friend class Scene;
 
 public:
 

@@ -47,7 +47,7 @@ namespace MO {
 #endif // Q_OS_UNIX
 
 
-#if Q_OS_WIN
+#ifdef Q_OS_WIN
 
     #include <windows.h>
 
@@ -61,6 +61,8 @@ namespace MO {
     */
     struct streamColor
     {
+        static bool enabled;
+
         static streamColor Default;
         static streamColor Debug;
         static streamColor Warning;
@@ -73,7 +75,7 @@ namespace MO {
         streamColor(int col) : col(col) { };
     };
 
-    std::ostream& operator<<(std::ostream& os, const ColorStream& cs);
+    std::ostream& operator<<(std::ostream& os, const streamColor& cs);
 
 #endif // Q_OS_WIN
 

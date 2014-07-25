@@ -32,7 +32,7 @@ bool streamColor::enabled = false;
 
 #ifdef Q_OS_WIN
 
-    HANDLE ColorStream::hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE streamColor::hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
     streamColor streamColor::Default = streamColor(7);
     streamColor streamColor::Debug = streamColor(6);
