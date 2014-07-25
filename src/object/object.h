@@ -31,7 +31,7 @@ namespace IO { class DataStream; }
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
         static bool success_register_object_##class__ = \
-            ::MO::registerObject_(new class__); \
+            ::MO::registerObject_( new class__((QObject*)0) ); \
     }
 
 #define MO_OBJECT_CONSTRUCTOR(Class__) \
