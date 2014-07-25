@@ -52,6 +52,8 @@ public slots:
     void loadScene();
     void newScene();
 
+    void renderToDisk();
+
 private slots:
     void setEditActions_(const QObject * sender, QList<QAction*> actions);
     void testSceneTransform_();

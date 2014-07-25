@@ -50,6 +50,7 @@
 #include "io/memory.h"
 #include "io/settings.h"
 #include "io/application.h"
+#include "engine/renderer.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -296,6 +297,9 @@ void MainWindow::createMainMenu_()
     a->setChecked(true);
     connect(a, SIGNAL(triggered()), this, SLOT(stop()));
 
+    m->addAction(a = new QAction(tr("Render to disk"), menuBar()));
+    ag->addAction(a);
+    connect(a, SIGNAL(triggered()), this, SLOT(renderToDisk()));
 
     // ######### OPTIONS MENU #########
     m = new QMenu(tr("Options"), menuBar());
@@ -871,6 +875,26 @@ bool MainWindow::saveScene_(const QString &fn)
     return false;
 }
 
+
+void MainWindow::renderToDisk()
+{
+    auto ren = new Renderer(this);
+
+    ren->setScene(scene_);
+    ren->setOutputPath("/home/defgsus/prog/qt_project/mo/matrixoptimizer/render");
+
+    if (!ren->prepareRendering())
+    {
+        QMessageBox::critical(this, tr("Render to disk"),
+                              tr("Sorry, but rendering to disk failed"));
+        ren->deleteLater();
+        return;
+    }
+
+    connect(ren, SIGNAL(finished()), ren, SLOT(deleteLater()));
+
+    ren->start();
+}
 
 
 } // namespace GUI

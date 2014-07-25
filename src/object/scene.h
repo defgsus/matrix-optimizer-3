@@ -49,6 +49,7 @@ public:
     // ------------- child objects -------------
 
     const QList<Camera*> cameras() const { return cameras_; }
+    const QList<Microphone*> microphones() const { return microphones_; }
 
     // ------------- open gl -------------------
 

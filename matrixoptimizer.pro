@@ -17,7 +17,7 @@ unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
 
-unix: { LIBS += -lX11 -lportaudio }
+unix: { LIBS += -lX11 -lportaudio -lsndfile }
 
 ###################### files ##########################
 
@@ -116,7 +116,8 @@ SOURCES += \
     src/gui/objectinfodialog.cpp \
     src/gui/splashscreen.cpp \
     src/audio/wavetablegenerator.cpp \
-    src/gui/widget/spinbox.cpp
+    src/gui/widget/spinbox.cpp \
+    src/engine/renderer.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -228,7 +229,8 @@ HEADERS += \
     src/gui/splashscreen.h \
     src/audio/wavetable.h \
     src/audio/wavetablegenerator.h \
-    src/gui/widget/spinbox.h
+    src/gui/widget/spinbox.h \
+    src/engine/renderer.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
