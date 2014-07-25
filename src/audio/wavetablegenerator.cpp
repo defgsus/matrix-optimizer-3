@@ -16,7 +16,7 @@ namespace MO {
 namespace AUDIO {
 
 WavetableGenerator::WavetableGenerator()
-    : size_         (1<<15),
+    : size_         (1<<13),
       numPartials_  (1),
       baseOctave_   (1),
       octaveStep_   (1),

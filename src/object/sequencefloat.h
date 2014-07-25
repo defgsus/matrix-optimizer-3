@@ -41,6 +41,12 @@ public:
     /** friendly names of the sequence types */
     static QStringList sequenceTypeName;
 
+    enum SequenceTypeGroups
+    {
+        /** All types that use frequency/phase */
+        STG_FREQUENCY = ST_OSCILLATOR | ST_WAVETABLE_GEN
+    };
+
 
     enum LoopOverlapMode
     {

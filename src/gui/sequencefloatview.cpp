@@ -381,19 +381,12 @@ void SequenceFloatView::createSettingsWidgets_()
     w->layout()->addWidget(combo);
     for (int i=4; i<20; ++i)
         combo->addItem(QString::number(1<<i));
-    if (sequence_->wavetableGenerator())
-    {
-        for (int i=0; i<combo->count(); ++i)
-            if (combo->itemText(i).toUInt() ==
-                    sequence_->wavetableGenerator()->size())
-            { combo->setCurrentIndex(i); break; }
-    }
-    connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-    [this, scene, combo]()
+    connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+    [this, scene, combo](int idx)
     {
         ScopedSequenceChange lock(scene, sequence_);
         sequence_->wavetableGenerator()->setSize(
-                    combo->itemText(combo->currentIndex()).toUInt() );
+                        combo->itemText(idx).toUInt() );
         sequence_->updateWavetable();
     });
 
@@ -405,8 +398,6 @@ void SequenceFloatView::createSettingsWidgets_()
     w->layout()->addWidget(ispin);
     ispin->setRange(1, 1024);
     ispin->setSingleStep(1);
-    ispin->setValue(sequence_->wavetableGenerator()?
-                        sequence_->wavetableGenerator()->numPartials() : 1);
     connect(ispin, &SpinBox::valueChanged,
     [this, scene](int val)
     {
@@ -423,8 +414,6 @@ void SequenceFloatView::createSettingsWidgets_()
     w->layout()->addWidget(ispin);
     ispin->setRange(1, 1024);
     ispin->setSingleStep(1);
-    ispin->setValue(sequence_->wavetableGenerator()?
-                        sequence_->wavetableGenerator()->baseOctave() : 1);
     connect(ispin, &SpinBox::valueChanged,
     [this, scene](int val)
     {
@@ -440,8 +429,6 @@ void SequenceFloatView::createSettingsWidgets_()
     w->layout()->addWidget(ispin);
     ispin->setRange(1, 1024);
     ispin->setSingleStep(1);
-    ispin->setValue(sequence_->wavetableGenerator()?
-                        sequence_->wavetableGenerator()->octaveStep() : 1);
     connect(ispin, &SpinBox::valueChanged,
     [this, scene](int val)
     {
@@ -458,8 +445,6 @@ void SequenceFloatView::createSettingsWidgets_()
     spin->setRange(0.0, 1000.0);
     spin->setSingleStep(0.05);
     spin->setDecimals(5);
-    spin->setValue(sequence_->wavetableGenerator()?
-                        sequence_->wavetableGenerator()->amplitudeMultiplier() : 0.5);
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](double val)
     {
@@ -476,8 +461,6 @@ void SequenceFloatView::createSettingsWidgets_()
     spin->setRange(-360.0, 360.0);
     spin->setSingleStep(5);
     spin->setDecimals(5);
-    spin->setValue(sequence_->wavetableGenerator()?
-                        sequence_->wavetableGenerator()->basePhase() : 0.5);
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](double val)
     {
@@ -494,8 +477,6 @@ void SequenceFloatView::createSettingsWidgets_()
     spin->setRange(-360.0, 360.0);
     spin->setSingleStep(5);
     spin->setDecimals(5);
-    spin->setValue(sequence_->wavetableGenerator()?
-                        sequence_->wavetableGenerator()->phaseShift() : 0.5);
     connect(spin, &DoubleSpinBox::valueChanged,
     [this, scene](double val)
     {

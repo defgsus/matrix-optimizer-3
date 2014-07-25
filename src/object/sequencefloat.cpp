@@ -27,7 +27,7 @@ QStringList SequenceFloat::sequenceTypeId =
 { "c", "tl", "osc", "spec", "eq" };
 
 QStringList SequenceFloat::sequenceTypeName =
-{ "Constant", "Timeline", "Oscillator", "Spectral Osc.", "Equation" };
+{ "Constant", "Timeline", "Oscillator", "Spectral WT", "Equation" };
 
 QStringList SequenceFloat::loopOverlapModeId =
 { "o", "b", "e" };
@@ -317,7 +317,7 @@ Double SequenceFloat::value(Double gtime) const
 
 Double SequenceFloat::value_(Double gtime, Double time) const
 {
-    if (mode_ == ST_OSCILLATOR || mode_ == ST_WAVETABLE_GEN || doUseFreq_)
+    if ((mode_ & STG_FREQUENCY) || doUseFreq_)
     {
         time = time * frequency_->value(gtime) + phase_->value(gtime) * phaseMult_;
     }
@@ -378,7 +378,7 @@ void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
 
 void SequenceFloat::updateWavetable()
 {
-    MO_ASSERT(wavetable_ && wavetableGen_, "updateWavetable_() without wavetable");
+    MO_ASSERT(wavetable_ && wavetableGen_, "updateWavetable() without wavetable");
 
     wavetableGen_->getWavetable(wavetable_);
 }
