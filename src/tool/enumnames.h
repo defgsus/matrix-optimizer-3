@@ -11,7 +11,7 @@
 #ifndef MOSRC_TOOL_ENUMNAMES_H
 #define MOSRC_TOOL_ENUMNAMES_H
 
-#include <QtCore>
+#include <Qt>
 #include <QString>
 
 namespace MO {

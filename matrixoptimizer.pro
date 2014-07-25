@@ -19,6 +19,8 @@ unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 unix: { LIBS += -lX11 -lportaudio -lsndfile }
 
+win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
+
 ###################### files ##########################
 
 INCLUDEPATH += src
