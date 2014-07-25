@@ -77,7 +77,6 @@ SOURCES += \
     src/gui/painter/valuecurve.cpp \
     src/gui/painter/sequenceoverpaint.cpp \
     src/gui/generalsequencefloatview.cpp \
-    src/math/waveform.cpp \
     src/math/noiseperlin.cpp \
     src/math/funcparser/parser.cpp \
     src/object/track.cpp \
@@ -119,7 +118,8 @@ SOURCES += \
     src/gui/splashscreen.cpp \
     src/audio/wavetablegenerator.cpp \
     src/gui/widget/spinbox.cpp \
-    src/engine/renderer.cpp
+    src/engine/renderer.cpp \
+    src/audio/waveform.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -182,7 +182,6 @@ HEADERS += \
     src/gui/painter/valuecurve.h \
     src/gui/painter/sequenceoverpaint.h \
     src/gui/generalsequencefloatview.h \
-    src/math/waveform.h \
     src/math/random.h \
     src/math/noiseperlin.h \
     src/math/funcparser/functions.h \
@@ -232,7 +231,8 @@ HEADERS += \
     src/audio/wavetable.h \
     src/audio/wavetablegenerator.h \
     src/gui/widget/spinbox.h \
-    src/engine/renderer.h
+    src/engine/renderer.h \
+    src/audio/waveform.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

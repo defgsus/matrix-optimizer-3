@@ -14,7 +14,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "math/timeline1d.h"
-#include "math/waveform.h"
+#include "audio/waveform.h"
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
 #include "audio/wavetablegenerator.h"
@@ -44,7 +44,7 @@ SequenceFloat::SequenceFloat(QObject *parent)
         wavetableGen_   (0),
         equation_       (0),
 
-        oscMode_        (MATH::Waveform::T_SINE),
+        oscMode_        (AUDIO::Waveform::T_SINE),
         loopOverlapMode_(LOT_OFF),
 
         doUseFreq_      (false),
@@ -122,7 +122,7 @@ void SequenceFloat::serialize(IO::DataStream &io) const
     io << sequenceTypeId[mode_];
 
     // osc mode
-    io << MATH::Waveform::typeIds[oscMode_];
+    io << AUDIO::Waveform::typeIds[oscMode_];
 
     // timeline
     io << (quint8)(timeline_ != 0);
@@ -151,7 +151,7 @@ void SequenceFloat::deserialize(IO::DataStream &io)
         MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
 
     // oscillator
-    if (!io.readEnum(oscMode_, MATH::Waveform::T_SINE, MATH::Waveform::typeIds))
+    if (!io.readEnum(oscMode_, AUDIO::Waveform::T_SINE, AUDIO::Waveform::typeIds))
         MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': oscillator mode not known");
 
     // timeline
@@ -325,8 +325,8 @@ Double SequenceFloat::value_(Double gtime, Double time) const
     switch (mode_)
     {
         case ST_OSCILLATOR: return offset_->value(gtime) + amplitude_->value(gtime)
-                * MATH::Waveform::waveform(time, oscMode_,
-                        MATH::Waveform::limitPulseWidth(pulseWidth_->value(gtime)));
+                * AUDIO::Waveform::waveform(time, oscMode_,
+                        AUDIO::Waveform::limitPulseWidth(pulseWidth_->value(gtime)));
 
         case ST_WAVETABLE_GEN:
             MO_ASSERT(wavetable_, "SequenceFloat::value() without wavetable");
@@ -339,7 +339,7 @@ Double SequenceFloat::value_(Double gtime, Double time) const
             equationTime_ = time;
             equationFreq_ = frequency_->value(gtime);
             equationPhase_ = phase_->value(gtime) * phaseMult_;
-            equationPW_ = MATH::Waveform::limitPulseWidth(pulseWidth_->value(gtime));
+            equationPW_ = AUDIO::Waveform::limitPulseWidth(pulseWidth_->value(gtime));
             return offset_->value(gtime) + amplitude_->value(gtime) * equation_->eval();
 
         case ST_TIMELINE: return offset_->value(gtime)

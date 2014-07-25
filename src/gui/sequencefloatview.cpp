@@ -23,7 +23,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "generalsequencefloatview.h"
-#include "math/waveform.h"
+#include "audio/waveform.h"
 #include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
 #include "widget/equationeditor.h"
@@ -236,16 +236,16 @@ void SequenceFloatView::createSettingsWidgets_()
     w->setStatusTip(tr("Selects the type of oscillator waveform"));
     mode = new QComboBox(this);
     w->layout()->addWidget(mode);
-    for (int i=0; i<MATH::Waveform::T_MAX_TYPES; ++i)
+    for (int i=0; i<AUDIO::Waveform::T_MAX_TYPES; ++i)
     {
-        mode->addItem(MATH::Waveform::typeNames[i]);
+        mode->addItem(AUDIO::Waveform::typeNames[i]);
     }
     mode->setCurrentIndex(sequence_->oscillatorMode());
     connect(mode, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
     [this, scene](int index)
     {
         ScopedSequenceChange lock(scene, sequence_);
-        sequence_->setOscillatorMode((MATH::Waveform::Type)index);
+        sequence_->setOscillatorMode((AUDIO::Waveform::Type)index);
     });
 
     // offset
@@ -318,7 +318,7 @@ void SequenceFloatView::createSettingsWidgets_()
     spin = new DoubleSpinBox(this);
     w->layout()->addWidget(spin);
     spin->setDecimals(5);
-    spin->setRange(MATH::Waveform::minPulseWidth(), MATH::Waveform::maxPulseWidth());
+    spin->setRange(AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth());
     spin->setSingleStep(0.025);
     spin->setValue(sequence_->pulseWidth());
     connect(spin, &DoubleSpinBox::valueChanged,
@@ -548,7 +548,7 @@ void SequenceFloatView::updateWidgets_()
     bool isConst = sequence_ && sequence_->mode() == SequenceFloat::ST_CONSTANT,
          isOsc = sequence_ && sequence_->mode() == SequenceFloat::ST_OSCILLATOR,
          isWT =  sequence_ && sequence_->mode() == SequenceFloat::ST_WAVETABLE_GEN,
-         isPW = isOsc && MATH::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
+         isPW = isOsc && AUDIO::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
          isEqu = sequence_ && sequence_->mode() == SequenceFloat::ST_EQUATION,
          isTL = sequence_ && sequence_->mode() == SequenceFloat::ST_TIMELINE,
          useFreq = sequence_ && sequence_->useFrequency(),

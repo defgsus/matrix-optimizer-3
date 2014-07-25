@@ -14,7 +14,7 @@
 #include <QStringList>
 
 #include "sequence.h"
-#include "math/waveform.h"
+#include "audio/waveform.h"
 
 namespace PPP_NAMESPACE { class Parser; }
 namespace MO {
@@ -77,7 +77,7 @@ public:
     /** The sequence mode - one of the SequenceType enums */
     SequenceType mode() const { return mode_; }
 
-    MATH::Waveform::Type oscillatorMode() const { return oscMode_; }
+    AUDIO::Waveform::Type oscillatorMode() const { return oscMode_; }
 
     /** Returns the constant offset added to the output */
     Double offset() const { return offset_->baseValue(); }
@@ -119,14 +119,14 @@ public:
 
     void setMode(SequenceType);
 
-    void setOscillatorMode(MATH::Waveform::Type mode) { oscMode_ = mode; }
+    void setOscillatorMode(AUDIO::Waveform::Type mode) { oscMode_ = mode; }
 
     void setOffset(Double o) { offset_->setValue(o); }
     void setAmplitude(Double a) { amplitude_->setValue(a); }
 
     void setFrequency(Double f) { frequency_->setValue(f); }
     void setPhase(Double p) { phase_->setValue(p); }
-    void setPulseWidth(Double pw) { pulseWidth_->setValue(MATH::Waveform::limitPulseWidth(pw)); }
+    void setPulseWidth(Double pw) { pulseWidth_->setValue(AUDIO::Waveform::limitPulseWidth(pw)); }
 
     void setLoopOverlap(Double t)
         { loopOverlap_->setValue( std::max(minimumLength(), t) ); }
@@ -180,7 +180,7 @@ private:
         * loopOverlap_,
         * loopOverlapOffset_;
 
-    MATH::Waveform::Type oscMode_;
+    AUDIO::Waveform::Type oscMode_;
     LoopOverlapMode loopOverlapMode_;
 
     bool doUseFreq_,

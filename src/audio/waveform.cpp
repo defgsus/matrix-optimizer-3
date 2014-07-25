@@ -9,14 +9,14 @@
 */
 
 #include "waveform.h"
-#include "functions.h"
-#include "constants.h"
-#include "noiseperlin.h"
+#include "math/functions.h"
+#include "math/constants.h"
+#include "math/noiseperlin.h"
 
 namespace MO {
-namespace MATH {
+namespace AUDIO {
 
-NoisePerlin Waveform::noise_;
+MATH::NoisePerlin Waveform::noise_;
 
 
 const QStringList Waveform::typeIds =
@@ -50,17 +50,17 @@ Double Waveform::waveform(Double t, Type type)
             return std::cos( t * TWO_PI );
 
         case T_RAMP:
-            return moduloSigned( t, 1.0 );
+            return MATH::moduloSigned( t, 1.0 );
 
         case T_SAW:
-            return -1.0 + 2.0 * moduloSigned( t, 1.0 );
+            return -1.0 + 2.0 * MATH::moduloSigned( t, 1.0 );
 
         case T_TRIANGLE:
-            p = moduloSigned(t, 1.0);
+            p = MATH::moduloSigned(t, 1.0);
             return (p<0.5)? p * 4.0 - 1.0 : (1.0-p) * 4.0 - 1.0;
 
         case T_SQUARE:
-            return (moduloSigned( t, 1.0 ) >= 0.5) ? -1.0 : 1.0 ;
+            return (MATH::moduloSigned( t, 1.0 ) >= 0.5) ? -1.0 : 1.0 ;
 
         case T_NOISE:
             return noise_.noise(t);
@@ -85,17 +85,17 @@ Double Waveform::waveform(Double t, Type type, Double pw)
             return std::cos( t * TWO_PI );
 
         case T_RAMP:
-            return moduloSigned( t, 1.0 );
+            return MATH::moduloSigned( t, 1.0 );
 
         case T_SAW:
-            return -1.0 + 2.0 * moduloSigned( t, 1.0 );
+            return -1.0 + 2.0 * MATH::moduloSigned( t, 1.0 );
 
         case T_TRIANGLE:
-            p = moduloSigned(t, 1.0);
+            p = MATH::moduloSigned(t, 1.0);
             return (p<pw)? p * 2.0/pw - 1.0 : (1.0-p) * 2.0/(1.0-pw) - 1.0;
 
         case T_SQUARE:
-            return (moduloSigned( t, 1.0 ) >= pw) ? -1.0 : 1.0 ;
+            return (MATH::moduloSigned( t, 1.0 ) >= pw) ? -1.0 : 1.0 ;
 
         case T_NOISE:
             return noise_.noise(t);
@@ -108,5 +108,14 @@ Double Waveform::waveform(Double t, Type type, Double pw)
 
 
 
-} // namespace MATH
+Double Waveform::spectralWave(Double time,
+                       Double numPartials,
+                       Double octaveStep,
+                       Double phaseShift,
+                       Double amplitudeMult)
+{
+    return 0.0;
+}
+
+} // namespace AUDIO
 } // namespace MO

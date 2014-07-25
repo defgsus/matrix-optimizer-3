@@ -16,9 +16,8 @@
 #include "types/float.h"
 
 namespace MO {
-namespace MATH {
-
-class NoisePerlin;
+namespace MATH { class NoisePerlin; }
+namespace AUDIO {
 
 class Waveform
 {
@@ -58,19 +57,26 @@ class Waveform
     static Double waveform(Double time, Type type);
 
     /** Returns the f(x) for the specified time and type.
-        @note pulseWidth must be between minPulseWidth() and maxPulseWidth() ! */
+        @p pulseWidth is only used by types that support it.
+        @note pulseWidth must be between minPulseWidth() and maxPulseWidth() !
+        @see supportsPulseWidth() */
     static Double waveform(Double time, Type type, Double pulseWidth = 0.5);
 
+    static Double spectralWave(Double time,
+                               Double numPartials,
+                               Double octaveStep,
+                               Double phaseShift,
+                               Double amplitudeMult);
 private:
     /** noise class user for noise waveform */
-    static NoisePerlin noise_;
+    static MATH::NoisePerlin noise_;
 
 };
 
 
 
 
-} // namespace MATH
+} // namespace AUDIO
 } // namespace MO
 
 #endif // MOSRC_MATH_WAVEFORM_H
