@@ -29,6 +29,8 @@ signals:
 
 public slots:
 
+private:
+    GL::Drawable * draw_;
 };
 
 } // namespace MO

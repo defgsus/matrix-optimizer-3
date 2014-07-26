@@ -9,7 +9,8 @@ TEMPLATE = app
 
 ##################### flags ###########################
 
-QMAKE_CXXFLAGS += --std=c++0x
+CONFIG += c++11
+
 QMAKE_CXXFLAGS_RELEASE += -O2 -DNDEBUG
 
 # for optirun bug
@@ -62,7 +63,6 @@ SOURCES += \
     src/object/scene.cpp \
     src/object/objectgl.cpp \
     src/gl/manager.cpp \
-    src/gl/model.cpp \
     src/io/init.cpp \
     src/object/model3d.cpp \
     src/gui/parameterview.cpp \
@@ -119,7 +119,11 @@ SOURCES += \
     src/audio/wavetablegenerator.cpp \
     src/gui/widget/spinbox.cpp \
     src/engine/renderer.cpp \
-    src/audio/waveform.cpp
+    src/audio/waveform.cpp \
+    src/gl/geometry.cpp \
+    src/gl/geometryfactory.cpp \
+    src/gl/drawable.cpp \
+    src/gl/openglfunctions.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -167,7 +171,6 @@ HEADERS += \
     src/object/scene.h \
     src/object/objectgl.h \
     src/gl/manager.h \
-    src/gl/model.h \
     src/io/init.h \
     src/gl/openglfunctions.h \
     src/object/model3d.h \
@@ -232,7 +235,10 @@ HEADERS += \
     src/audio/wavetablegenerator.h \
     src/gui/widget/spinbox.h \
     src/engine/renderer.h \
-    src/audio/waveform.h
+    src/audio/waveform.h \
+    src/gl/geometry.h \
+    src/gl/geometryfactory.h \
+    src/gl/drawable.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

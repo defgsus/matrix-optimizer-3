@@ -1,6 +1,6 @@
 /** @file model.h
 
-    @brief
+    @brief Geometry container
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -8,18 +8,18 @@
     <p>created 6/29/2014</p>
 */
 
-#ifndef MOSRC_GL_MODEL_H
-#define MOSRC_GL_MODEL_H
+#ifndef MOSRC_GL_GEOMETRY_H
+#define MOSRC_GL_GEOMETRY_H
 
 #include "openglfunctions.h"
 #include "types/vector.h"
 
-// XXX no,no,no this shouldn't be done in a hurry...
-
 namespace MO {
 namespace GL {
 
-class Model //: protected MO_QOPENGL_FUNCTIONS_CLASS
+/** XXX This is not very generic
+    - but let's get started and see later.. */
+class Geometry
 {
 public:
 
@@ -41,18 +41,34 @@ public:
 
     // -------- ctor ---------
 
-    Model();
+    Geometry();
 
     // ------- query ---------
 
     /** Returns number of vertices in the Model */
-    int numVertices() const { return vertex_.size() / 3; }
+    unsigned int numVertices() const { return vertex_.size() / 3; }
 
     /** Returns number of triangles in the Model */
-    int numTriangles() const { return index_.size() / 3; }
+    unsigned int numTriangles() const { return triIndex_.size() / 3; }
 
-    /** Returns if a vertex array object has been initialized for this model. */
-    //bool isVAO() const { return isVAO_; }
+    /** Returns a pointer to numVertices() * 3 coordinates */
+    const VertexType * vertices() const { return &vertex_[0]; }
+    /** Returns a pointer to numVertices() * 3 coordinates */
+    const NormalType * normals() const { return &normal_[0]; }
+    /** Returns a pointer to numVertices() * 4 entries */
+    const ColorType * colors() const { return &color_[0]; }
+    /** Returns a pointer to numVertices() * 2 coordinates */
+    const TextureCoordType * textureCoords() const { return &texcoord_[0]; }
+    /** Returns a pointer to numTriangles() * 3 indices */
+    const IndexType * triangleIndices() const { return &triIndex_[0]; }
+
+    int numVertexBytes() const { return numVertices() * 3 * sizeof(VertexType); }
+    int numNormalBytes() const { return numVertices() * 3 * sizeof(NormalType); }
+    int numColorBytes() const { return numVertices() * 4 * sizeof(ColorType); }
+    int numTextureCoordBytes() const { return numVertices() * 2 * sizeof(TextureCoordType); }
+    int numTriangleIndexBytes() const { return numTriangles() * 3 * sizeof(IndexType); }
+
+    const VertexType * triangle(IndexType triangeleIndex, IndexType cornerIndex) const;
 
     // --------- state -----------------------
 
@@ -103,50 +119,15 @@ public:
         After this call, every triangle will have it's unique vertices. */
     void unGroupVertices();
 
-    // ------------- opengl / drawing ---------------
-
-    /** See if the OpenGL functions have been initialized. */
-    bool isGlInitialized() const { return isGlFuncInitialized_; }
-
-    /** @{ */
-    /** All these functions need to be called from within an opengl context! */
-
-    /** Must be called once to initialize the OpenGLFunctions of this class. */
-    bool initGl() { return isGlFuncInitialized_ = initQtGl_(); }
-
-    /** Release existing opengl resources.
-        Call this before deleting the model. */
-    void releaseGl();
-
-    /** Transmits the vertex attribute locations from the shader.
-        This needs to be called for Model to create it's vertex array object */
-    //void setShaderLocations(const ShaderLocations&);
-
-    /** Draws the vertex array object.
-        @note This needs a shader working with the vertex attributes. */
-    virtual void draw() = 0;
-
-    /** Draws the model through oldschool opengl arrays */
-    //void drawOldschool();
-
-    /** @} */
-
 protected:
-
-    virtual bool initQtGl_() = 0;
 
     std::vector<VertexType>       vertex_;
     std::vector<NormalType>       normal_;
     std::vector<ColorType>        color_;
     std::vector<TextureCoordType> texcoord_;
-    std::vector<IndexType>        index_;
+    std::vector<IndexType>        triIndex_;
 
 private:
-
-    /** Creates the vertexArrayObject from the initialized data. */
-    //void createVAO_();
-
-    bool isGlFuncInitialized_;
 
     ColorType
         curR_, curG_, curB_, curA_;
@@ -155,17 +136,9 @@ private:
     TextureCoordType
         curU_, curV_;
 
-#if (0)
-    ShaderLocations attribs_;
-
-    /** vertex array object */
-    GLuint buffers_[4], vao_;
-    bool isVAO_;
-#endif
-
 };
 
 } // namespace GL
 } // namespace MO
 
-#endif // MOSRC_GL_MODEL_H
+#endif // MOSRC_GL_GEOMETRY_H

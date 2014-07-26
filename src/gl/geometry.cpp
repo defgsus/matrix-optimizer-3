@@ -1,6 +1,6 @@
 /** @file model.cpp
 
-    @brief
+    @brief Geometry container
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -8,13 +8,13 @@
     <p>created 6/29/2014</p>
 */
 
-#include "model.h"
+#include "geometry.h"
 
 namespace MO {
 namespace GL {
 
-Model::Model()
-    :   isGlFuncInitialized_(false),
+Geometry::Geometry()
+    :
         curR_   (.5f),
         curG_   (.5f),
         curB_   (.5f),
@@ -27,16 +27,16 @@ Model::Model()
 {
 }
 
-void Model::clear()
+void Geometry::clear()
 {
     vertex_.clear();
     normal_.clear();
     color_.clear();
     texcoord_.clear();
-    index_.clear();
+    triIndex_.clear();
 }
 
-Model::IndexType Model::addVertex(
+Geometry::IndexType Geometry::addVertex(
                 VertexType x, VertexType y, VertexType z,
                 NormalType nx, NormalType ny, NormalType nz,
                 ColorType r, ColorType g, ColorType b, ColorType a,
@@ -61,15 +61,20 @@ Model::IndexType Model::addVertex(
     return numVertices() - 1;
 }
 
-void Model::addTriangle(IndexType p1, IndexType p2, IndexType p3)
+void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
 {
-    index_.push_back(p1);
-    index_.push_back(p2);
-    index_.push_back(p3);
+    triIndex_.push_back(p1);
+    triIndex_.push_back(p2);
+    triIndex_.push_back(p3);
 }
 
+const Geometry::VertexType * Geometry::triangle(
+        IndexType triangleIndex, IndexType cornerIndex) const
+{
+    return &vertex_[triIndex_[triangleIndex * 3 + cornerIndex] * 3];
+}
 
-void Model::calculateTriangleNormals()
+void Geometry::calculateTriangleNormals()
 {
     // first clear the normal array
     normal_.resize(vertex_.size());
@@ -81,13 +86,13 @@ void Model::calculateTriangleNormals()
     std::vector<size_t> nr_adds(numVertices());
 
     // for each triangle
-    for (size_t i=0; i<index_.size()/3; ++i)
+    for (size_t i=0; i<triIndex_.size()/3; ++i)
     {
         // index of each triangle corner
         size_t
-            v1 = index_[i*3],
-            v2 = index_[i*3+1],
-            v3 = index_[i*3+2];
+            v1 = triIndex_[i*3],
+            v2 = triIndex_[i*3+1],
+            v3 = triIndex_[i*3+2];
         // vector of each triangle corner
         Vec3
             p1 = Vec3(vertex_[v1*3], vertex_[v1*3+1], vertex_[v1*3+2]),
@@ -123,19 +128,19 @@ void Model::calculateTriangleNormals()
 
 }
 
-void Model::unGroupVertices()
+void Geometry::unGroupVertices()
 {
     // backup data
     auto vertex = vertex_;
     auto normal = normal_;
     auto color = color_;
     auto texcoord = texcoord_;
-    auto index = index_;
+    auto index = triIndex_;
 
     vertex_.clear();
     normal_.clear();
     color_.clear();
-    index_.clear();
+    triIndex_.clear();
     texcoord_.clear();
 
     // for each previous triangle ..

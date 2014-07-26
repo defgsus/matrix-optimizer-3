@@ -15,7 +15,7 @@
 #include "gl/openglfunctions.h"
 
 namespace MO {
-namespace GL { class Context; }
+namespace GL { class Context; class Drawable; }
 
 class ObjectGl : public Object,
                  protected MO_QOPENGL_FUNCTIONS_CLASS

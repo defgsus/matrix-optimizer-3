@@ -10,7 +10,8 @@
 
 #include "model3d.h"
 #include "io/datastream.h"
-
+#include "gl/drawable.h"
+#include "gl/geometryfactory.h"
 
 namespace MO {
 
@@ -37,7 +38,9 @@ void Model3d::deserialize(IO::DataStream & io)
 
 void Model3d::initGl(uint /*thread*/)
 {
-
+    draw_ = new GL::Drawable(this);
+    GL::GeometryFactory::createCube(draw_->geometry(), 2);
+    //draw_->createOpenGl();
 }
 
 void Model3d::renderGl(const Mat4& camMatrix, uint thread, Double )
@@ -55,6 +58,10 @@ void Model3d::renderGl(const Mat4& camMatrix, uint thread, Double )
     Mat4 mat = camMatrix * transformation(thread, 0);
     glLoadMatrixf(&mat[0][0]);
 
+    glColor3f(1,1,0);
+    draw_->render();//Immidiate();
+
+#if (1)
     glBegin(GL_LINES);
         glColor3f(1,1,1);
         for (int i=-10; i<=10; ++i)
@@ -74,6 +81,7 @@ void Model3d::renderGl(const Mat4& camMatrix, uint thread, Double )
         glVertex3f(0, 0.1, 0);
         glVertex3f(0, 0.1, 10);
     glEnd();
+#endif
 }
 
 
