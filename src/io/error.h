@@ -122,6 +122,14 @@ public:
 #define MO_GL_ERROR(text__) \
 { throw ::MO::GlException() << text__; }
 
+#define MO_GL_ERROR_COND(reportType__, text__)  \
+{                                               \
+    if (reportType__ == ::MO::GL::ER_IGNORE)    \
+        MO_GL_WARNING(text__)                   \
+    else if (reportType__ == ::MO::GL::ER_THROW)\
+        throw ::MO::GlException() << text__;    \
+}
+
 #define MO_LOGIC_ERROR(text__) \
 { throw ::MO::LogicException(::MO::Exception::LOGIC) << text__; }
 

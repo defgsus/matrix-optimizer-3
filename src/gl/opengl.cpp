@@ -102,5 +102,25 @@ const char * glErrorName(GLenum error)
     }
 }
 
+GLuint typeSize(GLenum t)
+{
+    switch (t)
+    {
+        case GL_INT:
+        case GL_UNSIGNED_INT: return sizeof(GLint);
+        case GL_SHORT:
+        case GL_UNSIGNED_SHORT: return sizeof(GLshort);
+        case GL_BYTE:
+        case GL_UNSIGNED_BYTE: return sizeof(GLbyte);
+        case GL_FLOAT: return sizeof(GLfloat);
+        case GL_DOUBLE: return sizeof(GLdouble);
+        case GL_2_BYTES: return 2*sizeof(GLbyte);
+        case GL_3_BYTES: return 3*sizeof(GLbyte);
+        case GL_4_BYTES: return 4*sizeof(GLbyte);
+        default: return 0;
+    }
+}
+
+
 } // namespace GL
 } // namespace MO

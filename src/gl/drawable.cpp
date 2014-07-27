@@ -147,6 +147,17 @@ void Drawable::createVAO_()
     MO_ASSERT_GL( glBindVertexArray(vao_),
                   "Could not bind vertex array object for Drawable");
 
+    // create index buffer
+
+    MO_ASSERT_GL( glGenBuffers(1, &triIndexBuffer_),
+                  "Could not create tri index buffer for Drawable");
+
+    MO_ASSERT_GL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triIndexBuffer_), "" );
+    MO_ASSERT_GL( glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    geometry_->numTriangleIndexBytes(),
+                    geometry_->triangleIndices(), GL_STATIC_DRAW), "" );
+    MO_ASSERT(attribPos_ != invalidGl, "No position attribute in shader");
+
     // create vertex buffer
 
     MO_ASSERT_GL( glGenBuffers(1, &vertexBuffer_),
@@ -159,31 +170,13 @@ void Drawable::createVAO_()
     MO_ASSERT_GL( glEnableVertexAttribArray(attribPos_), "" );
     MO_ASSERT_GL( glVertexAttribPointer(attribPos_, 3, Geometry::VertexEnum, GL_FALSE, 0, NULL), "" );
 
-    MO_ASSERT_GL( glBindBuffer(GL_ARRAY_BUFFER, 0), "" );
 
-    /*
-    vertexBuffer_ = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
 
-    if (!vertexBuffer_->create())
-        MO_GL_ERROR("Could not create vertex buffer for Drawable");
-    vertexBuffer_->setUsagePattern(QOpenGLBuffer::StaticDraw);
-    if (!vertexBuffer_->bind())
-        MO_GL_ERROR("Could not bind vertex buffer for Drawable");
 
-    vertexBuffer_->allocate(geometry_->vertices(), geometry_->numVertexBytes());
+    // disable bindings
 
-    // create triangle index buffer
-
-    triIndexBuffer_ = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
-
-    if (!triIndexBuffer_->create())
-        MO_GL_ERROR("Could not create triangle index buffer for Drawable");
-    triIndexBuffer_->setUsagePattern(QOpenGLBuffer::StaticDraw);
-    if (!triIndexBuffer_->bind())
-        MO_GL_ERROR("Could not bind vertex buffer for Drawable");
-
-    triIndexBuffer_->allocate(geometry_->triangleIndices(), geometry_->numTriangleIndexBytes());
-    */
+    MO_CHECK_GL( glBindBuffer(GL_ARRAY_BUFFER, 0) );
+    MO_CHECK_GL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     MO_CHECK_GL( glBindVertexArray(0) );
 
@@ -247,6 +240,8 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
 
     MO_CHECK_GL( glBindVertexArray(vao_) );
 
+    MO_ASSERT_GL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triIndexBuffer_), "" );
+
 /*    MO_ASSERT_GL( glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_), "" );
     MO_ASSERT_GL( glEnableVertexAttribArray(attribPos_), "" );
     MO_ASSERT_GL( glVertexAttribPointer(
@@ -255,7 +250,7 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
 */
     MO_DEBUG_GL( "glDrawElements" );
     MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
-                        Geometry::IndexEnum, geometry_->triangleIndices()) );
+                        Geometry::IndexEnum, 0) );//geometry_->triangleIndices()) );
 
     MO_CHECK_GL( glBindVertexArray(0) );
 

@@ -127,7 +127,8 @@ SOURCES += \
     src/gl/drawable.cpp \
     src/gl/shader.cpp \
     src/gl/shadersource.cpp \
-    src/gl/opengl.cpp
+    src/gl/opengl.cpp \
+    src/gl/vertexarrayobject.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -245,7 +246,8 @@ HEADERS += \
     src/gl/shader.h \
     src/gl/shadersource.h \
     src/gl/cameraspace.h \
-    src/gl/opengl.h
+    src/gl/opengl.h \
+    src/gl/vertexarrayobject.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

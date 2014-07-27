@@ -31,7 +31,7 @@ GLEWContext * glewGetContext();
 
 #endif
 
-
+// TODO: remove from release version
 
 /** Executes the command and calls glGetError() and
     prints the error, if any. */
@@ -46,6 +46,53 @@ GLEWContext * glewGetContext();
             << #command__                       \
             << " in " << __FILE__               \
             << ": " << __LINE__ << "\n";        \
+    }                                           \
+}
+
+// TODO: remove __FILE__ and __LINE__ from release version
+
+/** Executes the command and calls glGetError().
+    On an error, report__ (of type MO::GL::ErrorReporting)
+    will define what happens. */
+#define MO_CHECK_GL_COND(report__, command__)   \
+{                                               \
+    command__;                                  \
+    if (GLenum err__ = glGetError())            \
+    {                                           \
+        std::stringstream s__;                  \
+        s__ << "opengl error "                  \
+            << ::MO::GL::glErrorName(err__)     \
+            << " for command "                  \
+            << #command__                       \
+            << " in " << __FILE__               \
+            << ": " << __LINE__ << "\n";        \
+        if (report__ == ::MO::GL::ER_IGNORE)    \
+            std::cerr << s__; else              \
+        if (report__ == ::MO::GL::ER_IGNORE)    \
+            MO_GL_ERROR(s__);                   \
+    }                                           \
+}
+
+/** Executes the command, calls glGetError() and returns
+    the error in ret__.
+    On an error, report__ (of type MO::GL::ErrorReporting)
+    will define what happens. */
+#define MO_CHECK_GL_RET_COND(report__, command__, ret__) \
+{                                               \
+    command__;                                  \
+    if ((ret__ = glGetError()))                 \
+    {                                           \
+        std::stringstream s__;                  \
+        s__ << "opengl error "                  \
+            << ::MO::GL::glErrorName(ret__)     \
+            << " for command "                  \
+            << #command__                       \
+            << " in " << __FILE__               \
+            << ": " << __LINE__ << "\n";        \
+        if (report__ == ::MO::GL::ER_IGNORE)    \
+            std::cerr << s__; else              \
+        if (report__ == ::MO::GL::ER_IGNORE)    \
+            MO_GL_ERROR(s__);                   \
     }                                           \
 }
 
@@ -69,12 +116,23 @@ GLEWContext * glewGetContext();
 namespace MO {
 namespace GL {
 
+    /** Used to flag invalid GLuint names */
+    const GLuint invalidGl = -1;
+
+    enum ErrorReporting
+    {
+        ER_IGNORE,
+        ER_THROW
+    };
+
     /** Need to be called, once a context is ready */
     void moInitGl();
 
+    /** Returns the readable name of the error */
     const char * glErrorName(GLenum error);
 
-    const GLuint invalidGl = -1;
+    /** Returns the size in bytes of an openGL type enum (like GL_FLOAT) */
+    GLuint typeSize(GLenum);
 
 } // namespace GL
 } // namespace MO
