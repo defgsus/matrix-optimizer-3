@@ -23,7 +23,7 @@ public:
     MO_OBJECT_CONSTRUCTOR(Model3d);
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const Mat4 &camMatrix, uint, Double time) Q_DECL_OVERRIDE;
+    virtual void renderGl(const GL::CameraSpace &cam, uint, Double time) Q_DECL_OVERRIDE;
 
 signals:
 

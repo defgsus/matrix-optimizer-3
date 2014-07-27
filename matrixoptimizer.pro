@@ -124,7 +124,8 @@ SOURCES += \
     src/gl/geometryfactory.cpp \
     src/gl/drawable.cpp \
     src/gl/openglfunctions.cpp \
-    src/gl/shader.cpp
+    src/gl/shader.cpp \
+    src/gl/shadersource.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -240,7 +241,9 @@ HEADERS += \
     src/gl/geometry.h \
     src/gl/geometryfactory.h \
     src/gl/drawable.h \
-    src/gl/shader.h
+    src/gl/shader.h \
+    src/gl/shadersource.h \
+    src/gl/cameraspace.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

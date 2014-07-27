@@ -66,6 +66,8 @@ void ObjectGl::setGlContext_(uint thread, GL::Context * c)
 
 void ObjectGl::initGl_(uint thread)
 {
+    MO_DEBUG_GL("ObjectGl('" << idName() << "')::initGl_(" << thread << ")");
+
     if (!glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
     if (!glContext_[thread]->isValid())
@@ -80,9 +82,11 @@ void ObjectGl::initGl_(uint thread)
     }
 
     initGl(thread);
+
+    needsInitGl_[thread] = false;
 }
 
-void ObjectGl::renderGl_(const Mat4 &cameraMatrix, uint thread, Double time)
+void ObjectGl::renderGl_(const GL::CameraSpace &camera, uint thread, Double time)
 {
     if (!glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
@@ -92,7 +96,7 @@ void ObjectGl::renderGl_(const Mat4 &cameraMatrix, uint thread, Double time)
     if (!glFunctionsInitialized_)
         MO_GL_ERROR("opengl functions not initialized for object '" << idName() << "'");
 
-    renderGl(cameraMatrix, thread, time);
+    renderGl(camera, thread, time);
 }
 
 

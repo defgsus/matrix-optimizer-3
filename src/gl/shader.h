@@ -1,11 +1,12 @@
 /** @file shader.h
 
-    @brief
+    @brief GLSL shader wrapper
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 7/27/2014</p>
+    <p>created about 6/2014 as part of github.com/defgsus/scheeder</p>
+    <p>reworked for MO3 7/27/2014</p>
 */
 
 #ifndef MOSRC_GL_SHADER_H
@@ -19,6 +20,8 @@
 
 namespace MO {
 namespace GL {
+
+class ShaderSource;
 
 /** Container for a GLSL uniform. */
 class Uniform
@@ -104,8 +107,7 @@ private:
 };
 
 
-class Shader
-    :   protected MO_QOPENGL_FUNCTIONS_CLASS
+class Shader : protected MO_QOPENGL_FUNCTIONS_CLASS
 {
 public:
 
@@ -135,10 +137,22 @@ public:
     size_t numUniforms() const { return uniforms_.size(); }
 
     /** Returns a pointer to a uniform attached to this shader.
-        The public members of the Uniform struct can be manipulated.
+        The public members of the Uniform class can be manipulated.
         Can be called after succesful compilation.
         @p index must be < numUniforms() */
-    Uniform * getUniform(size_t index) { return uniforms_[index].get(); }
+    Uniform * getUniform(size_t index);
+
+    /** Returns the program index in OpenGL space after successful compilation. */
+    GLuint programId() const { return prog_; }
+
+    /** Returns the list of all attached uniforms.
+        The public members of the Uniform classes can be manipulated.
+        Can be called after succesful compilation. */
+    const QList<Uniform*> getUniforms() const { return uniformList_; }
+
+    /** Returns a pointer to the Uniform with the given name, or NULL.
+        Can be called after succesful compilation. */
+    Uniform * getUniform(const QString& name);
 
     /** Returns the number of used attributes of this shader.
         Can be called after succesful compilation. */
@@ -147,9 +161,21 @@ public:
     /** Returns a pointer to an Attribute attached to this shader.
         Can be called after succesful compilation.
         @p index must be < numUniforms() */
-    Attribute * getAttribute(size_t index) { return attribs_[index].get(); }
+    const Attribute * getAttribute(size_t index) const;
+
+    /** Returns a pointer to the Attribute with the given name, or NULL.
+        Can be called after succesful compilation. */
+    const Attribute *getAttribute(const QString& name) const;
+
+    /** Returns the list of all attached attributes.
+        Can be called after succesful compilation. */
+    const QList<const Attribute*> getAttributes() const { return attributeList_; }
 
     // ---------- source/compiler ------------
+
+    /** Sets all the source code from the ShaderSource class,
+        if the entries (e.g. vertex, fragment, ...) are not empty. */
+    void setSource(const ShaderSource *);
 
     /** Sets the source for the vertex shader. Previous content will be overwritten. */
     void setVertexSource(const QString& text);
@@ -201,7 +227,7 @@ private:
             fragSource_,
             log_;
 
-    GLenum shader_;
+    GLuint prog_;
 
     bool sourceChanged_, ready_, activated_;
 
@@ -211,6 +237,9 @@ private:
 
     std::vector<std::shared_ptr<Attribute>>
         attribs_;
+
+    QList<Uniform*> uniformList_;
+    QList<const Attribute*> attributeList_;
 
     // --- attributes ---
 

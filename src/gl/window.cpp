@@ -100,7 +100,7 @@ void Window::renderLater()
 
 void Window::renderNow()
 {
-    MO_DEBUG_GL("Window::renderNow()");
+    //MO_DEBUG_GL("Window::renderNow()");
 
     if (!isExposed())
         return;

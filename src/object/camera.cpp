@@ -13,7 +13,7 @@
 #include "camera.h"
 #include "gl/context.h"
 #include "io/datastream.h"
-
+#include "gl/cameraspace.h"
 
 namespace MO {
 
@@ -60,6 +60,10 @@ void Camera::initGl(uint thread)
                 0.1f, 1000.0f);
 }
 
+void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, uint sample) const
+{
+    cam.setProjectionMatrix(projection_[thread][sample]);
+}
 
 void Camera::startGlFrame(uint thread, Double )
 {

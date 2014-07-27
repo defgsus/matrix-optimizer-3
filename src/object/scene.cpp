@@ -26,6 +26,7 @@
 #include "model/objecttreemodel.h"
 #include "audio/audiodevice.h"
 #include "audio/audiosource.h"
+#include "gl/cameraspace.h"
 
 namespace MO {
 
@@ -582,13 +583,15 @@ void Scene::renderScene(Double time)
         // start camera frame
         cameras_[0]->startGlFrame(0, time);
 
-        Mat4 cammatrix = glm::inverse(cameras_[0]->transformation(0, 0));
+        GL::CameraSpace camSpace;
+        cameras_[0]->initCameraSpace(camSpace, 0, 0);
+        camSpace.setViewMatrix( glm::inverse(cameras_[0]->transformation(0, 0)) );
 
         // render all opengl objects
         for (auto o : glObjects_)
         if (o->active(time))
         {
-            o->renderGl_(cammatrix, 0, time);
+            o->renderGl_(camSpace, 0, time);
         }
     }
 }

@@ -12,6 +12,7 @@
 #define MOSRC_GL_DRAWABLE_H
 
 #include "openglfunctions.h"
+#include "types/vector.h"
 
 class QOpenGLVertexArrayObject;
 class QOpenGLBuffer;
@@ -22,6 +23,8 @@ namespace GL {
 class Geometry;
 class Context;
 class Shader;
+class ShaderSource;
+class Uniform;
 
 class Drawable
 {
@@ -34,12 +37,26 @@ public:
     /** Returns access to the geometry class of the Drawable. */
     Geometry * geometry();
 
+    /** Returns access to the shader source of the Drawable. */
+    ShaderSource * shaderSource();
+
+    /** Returns access to the shader of the Drawable. */
+    Shader * shader();
+
     // ------------- setter ------------------
 
     /** Sets the geometry to draw.
         The ownership of the Geometry class is taken and
         the previous class is deleted. */
     void setGeometry(Geometry * g);
+
+    /** Sets the shader source.
+        The ownership is taken and the previous class is deleted. */
+    void setShaderSource(ShaderSource * s);
+
+    /** Sets the shader object.
+        The ownership is taken and the previous class is deleted. */
+    void setShader(Shader * s);
 
     // ------------ opengl -------------------
 
@@ -52,28 +69,31 @@ public:
     void releaseOpenGl();
 
     void render();
+    void renderShader(const Mat4& proj, const Mat4& view);
     void renderArrays();
-    void renderImmidiate();
+    void renderImmediate();
+    void renderImmediateShader(const Mat4& proj, const Mat4& view);
 
 private:
 
+    void compileShader_();
     void createVAO_();
 
     MO_QOPENGL_FUNCTIONS_CLASS * gl_;
     Geometry * geometry_;
-
+    ShaderSource * shaderSource_;
     Shader * shader_;
 
     GLuint
         vao_,
         vertexBuffer_,
         triIndexBuffer_;
-    /*
-    QOpenGLVertexArrayObject * vao_;
-    QOpenGLBuffer
-        * vertexBuffer_,
-        * triIndexBuffer_;
-    */
+
+    GLuint
+        uniformProj_,
+        uniformView_,
+        attribPos_;
+
 };
 
 } // namespace GL

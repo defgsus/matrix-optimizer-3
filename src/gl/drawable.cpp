@@ -17,6 +17,8 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "geometry.h"
+#include "shadersource.h"
+#include "shader.h"
 
 namespace MO {
 namespace GL {
@@ -26,6 +28,7 @@ namespace GL {
 Drawable::Drawable(MO_QOPENGL_FUNCTIONS_CLASS * functions)
     : gl_               (functions),
       geometry_         (0),
+      shaderSource_     (0),
       shader_           (0),
       vao_              (invalidGl),
       vertexBuffer_     (invalidGl),
@@ -35,8 +38,9 @@ Drawable::Drawable(MO_QOPENGL_FUNCTIONS_CLASS * functions)
 
 Drawable::~Drawable()
 {
-    //delete vertexBuffer_;
-    //delete triIndexBuffer_;
+    delete shader_;
+    delete shaderSource_;
+    delete geometry_;
 }
 
 Geometry * Drawable::geometry()
@@ -46,10 +50,36 @@ Geometry * Drawable::geometry()
     return geometry_;
 }
 
+ShaderSource * Drawable::shaderSource()
+{
+    if (!shaderSource_)
+        shaderSource_ = new ShaderSource();
+    return shaderSource_;
+}
+
+Shader * Drawable::shader()
+{
+    if (!shader_)
+        shader_ = new Shader();
+    return shader_;
+}
+
 void Drawable::setGeometry(Geometry * g)
 {
     delete geometry_;
     geometry_ = g;
+}
+
+void Drawable::setShaderSource(ShaderSource *s)
+{
+    delete shaderSource_;
+    shaderSource_ = s;
+}
+
+void Drawable::setShader(Shader *s)
+{
+    delete shader_;
+    shader_ = s;
 }
 
 
@@ -57,13 +87,53 @@ void Drawable::createOpenGl()
 {
     MO_ASSERT(geometry_, "no geometry provided to Drawable::createOpenGl()");
 
+    compileShader_();
     createVAO_();
+}
+
+void Drawable::compileShader_()
+{
+    MO_DEBUG_GL("Drawable::compileShader_()");
+
+    MO_ASSERT(shaderSource_, "Drawable::compileShader_() without ShaderSource");
+    MO_ASSERT(!shaderSource_->isEmpty(), "Drawable::compileShader_() with empty ShaderSource");
+
+    if (!shader_)
+        shader_ = new Shader();
+
+    shader_->setSource(shaderSource_);
+    if (!shader_->compile())
+        MO_GL_WARNING("Compilation of Shader failed\n"
+                      << shader_->log())
+    else
+        MO_DEBUG("shader compiled");
+
+    // --- get variable locations ---
+
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameProjection()))
+        uniformProj_ = u->location();
+    else
+        uniformProj_ = invalidGl;
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameView()))
+        uniformView_ = u->location();
+    else
+        uniformView_ = invalidGl;
+
+    if (auto a = shader_->getAttribute(shaderSource_->attribNamePosition()))
+        attribPos_ = a->location();
+    else
+        attribPos_ = invalidGl;
+
 }
 
 void Drawable::createVAO_()
 {
+    MO_DEBUG_GL("Drawable::createVAO_()");
+
     MO_ASSERT(vao_==invalidGl && vertexBuffer_==invalidGl,
               "Drawable::createVAO_() duplicate call");
+
+    MO_ASSERT(shader_, "Drawable::createVAO_() without shader");
 
 #if (1)
     // create vertex array object
@@ -86,7 +156,8 @@ void Drawable::createVAO_()
     MO_ASSERT_GL( gl_->glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_), "" );
     MO_ASSERT_GL( gl_->glBufferData(GL_ARRAY_BUFFER,
                     geometry_->numVertexBytes(), geometry_->vertices(), GL_STATIC_DRAW), "" );
-    //MO_ASSERT_GL( gl_->glEnableVertexAttribArray(attribs_.position) );
+    MO_ASSERT(attribPos_ != invalidGl, "No position attribute in shader");
+    MO_ASSERT_GL( gl_->glEnableVertexAttribArray(attribPos_), "" );
     MO_ASSERT_GL( gl_->glVertexPointer(3, Geometry::VertexEnum, 0, NULL), "" );
 
     /*
@@ -121,6 +192,14 @@ void Drawable::createVAO_()
 
 void Drawable::releaseOpenGl()
 {
+    if (shader_)
+        shader_->releaseGL();
+
+    if (vao_ != invalidGl)
+        MO_CHECK_GL( gl_->glDeleteVertexArrays(1, &vao_) );
+    vao_ = invalidGl;
+
+
     /*
     if (vertexBuffer_)
     {
@@ -142,17 +221,39 @@ void Drawable::releaseOpenGl()
 void Drawable::render()
 {
     MO_ASSERT(gl_, "Drawable::render() without QOpenGLFunctions");
-    MO_ASSERT(vao_ != invalidGl, "no vertex array opbject specified in Drawable::render()");
+    MO_ASSERT(vao_ != invalidGl, "no vertex array object specified in Drawable::render()");
 
     MO_CHECK_GL( gl_->glBindVertexArray(vao_) );
 
-    MO_CHECK_GL(gl_->glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
+    MO_CHECK_GL( gl_->glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
                         Geometry::IndexEnum, geometry_->triangleIndices()) );
 
     MO_CHECK_GL( gl_->glBindVertexArray(0) );
 
     //vertexBuffer_->bind();
     //triIndexBuffer_->bind();
+}
+
+
+void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
+{
+    MO_ASSERT(gl_, "Drawable::renderShader() without QOpenGLFunctions");
+    MO_ASSERT(vao_ != invalidGl, "no vertex array object specified in Drawable::render()");
+    MO_ASSERT(uniformProj_ != invalidGl, "");
+    MO_ASSERT(uniformView_ != invalidGl, "");
+
+    shader_->activate();
+    MO_CHECK_GL( gl_->glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
+    MO_CHECK_GL( gl_->glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
+
+    MO_CHECK_GL( gl_->glBindVertexArray(vao_) );
+
+    MO_CHECK_GL( gl_->glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
+                        Geometry::IndexEnum, geometry_->triangleIndices()) );
+
+    MO_CHECK_GL( gl_->glBindVertexArray(0) );
+
+    shader_->deactivate();
 }
 
 void Drawable::renderArrays()
@@ -170,7 +271,7 @@ void Drawable::renderArrays()
     MO_CHECK_GL(gl_->glDisableClientState(GL_VERTEX_ARRAY) );
 }
 
-void Drawable::renderImmidiate()
+void Drawable::renderImmediate()
 {
     MO_ASSERT(gl_, "Drawable::renderImmidiate() without QOpenGLFunctions");
     MO_ASSERT(geometry_, "no Geometry specified in Drawable::renderImmidiate()");
@@ -185,6 +286,32 @@ void Drawable::renderImmidiate()
         }
     }
     MO_CHECK_GL( glEnd() );
+}
+
+void Drawable::renderImmediateShader(const Mat4& proj, const Mat4& view)
+{
+    MO_ASSERT(gl_, "Drawable::renderImmidiate() without QOpenGLFunctions");
+    MO_ASSERT(geometry_, "no Geometry specified in Drawable::renderImmidiate()");
+    MO_ASSERT(uniformProj_ != invalidGl, "");
+    MO_ASSERT(uniformView_ != invalidGl, "");
+    MO_ASSERT(attribPos_ != invalidGl, "");
+
+    shader_->activate();
+    MO_CHECK_GL( gl_->glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
+    MO_CHECK_GL( gl_->glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
+
+    glBegin(GL_TRIANGLES);
+    for (uint t = 0; t<geometry_->numTriangles(); ++t)
+    {
+        for (int j=0; j<3; ++j)
+        {
+            auto v = geometry_->triangle(t, j);
+            gl_->glVertexAttrib3f(attribPos_, v[0], v[1], v[2]);
+        }
+    }
+    MO_CHECK_GL( glEnd() );
+
+    shader_->deactivate();
 }
 
 } //namespace GL

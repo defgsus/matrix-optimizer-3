@@ -25,7 +25,7 @@ public:
     virtual bool isCamera() const Q_DECL_OVERRIDE { return true; }
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const Mat4&, uint, Double) Q_DECL_OVERRIDE { };
+    virtual void renderGl(const GL::CameraSpace&, uint, Double) Q_DECL_OVERRIDE { };
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
     virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
@@ -35,6 +35,10 @@ public:
 
     /** Starts rendering an openGL frame */
     void startGlFrame(uint thread, Double time);
+
+    /** Initialize camera space (with projection)
+        XXX only trying here.. */
+    void initCameraSpace(GL::CameraSpace& cam, uint thread, uint sample) const;
 
     // XXX only trying here
     void setProjectionMatrix(uint thread, uint sample);
