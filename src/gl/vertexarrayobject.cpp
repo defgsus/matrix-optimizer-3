@@ -55,19 +55,24 @@ bool VertexArrayObject::create()
     return true;
 }
 
-bool VertexArrayObject::release()
+void VertexArrayObject::release()
 {
     if (!isCreated())
-    {
         MO_GL_ERROR_COND(rep_, "release on uninitialized vertex array object");
-        return false;
+
+    MO_CHECK_GL( glDeleteVertexArrays(1, &vao_) );
+
+    for (auto &b : buffers_)
+        MO_CHECK_GL( glDeleteBuffers(1, &b.id) );
+    buffers_.clear();
+
+    if (elementBuffer_)
+    {
+        MO_CHECK_GL( glDeleteBuffers(1, &elementBuffer_->id) );
+        delete elementBuffer_;
+        elementBuffer_ = 0;
     }
 
-    GLenum e;
-    MO_CHECK_GL_RET_COND(rep_, glDeleteVertexArrays(1, &vao_), e );
-    if (e) return false;
-
-    return true;
 }
 
 
@@ -212,8 +217,8 @@ bool VertexArrayObject::drawElements(
     MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_->id), e);
     if (e) { MO_CHECK_GL(glBindVertexArray(0)); return false; }
 
-    MO_DEBUG("glDrawElements("<<primitiveType<<", "<<numberVertices<<", "<<elementBuffer_->valueType
-             <<", "<<reinterpret_cast<void*>(offset)<<")");
+    //MO_DEBUG("glDrawElements("<<primitiveType<<", "<<numberVertices<<", "<<elementBuffer_->valueType
+    //         <<", "<<reinterpret_cast<void*>(offset)<<")");
     MO_CHECK_GL_RET_COND(rep_, glDrawElements(
                                 primitiveType,
                                 numberVertices,

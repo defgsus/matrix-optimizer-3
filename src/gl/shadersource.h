@@ -32,6 +32,7 @@ public:
     const QString& uniformNameProjection() const { return unProj_; }
     const QString& uniformNameView() const { return unView_; }
     const QString& attribNamePosition() const { return anPos_; }
+    const QString& attribNameColor() const { return anCol_; }
 
     // --------- setter ---------------
 
@@ -39,10 +40,12 @@ public:
     void setFragmentSource(const QString& s) { frag_ = s; }
 
     void setAttributeNamePosition(const QString& s) { anPos_ = s; }
+    void setAttributeNameColor(const QString& s) { anCol_ = s; }
 
 private:
     QString vert_, frag_,
-        unProj_, unView_, anPos_;
+        unProj_, unView_,
+        anPos_, anCol_;
 };
 
 } // namespace GL

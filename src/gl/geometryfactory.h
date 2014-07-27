@@ -25,6 +25,8 @@ public:
     static void createCube(Geometry *, float side_length);
     static void createBox(Geometry *,
             float side_length_x, float side_length_y, float side_length_z);
+
+    static void createGrid(Geometry *, int size, bool with_coordinate_system);
 };
 
 

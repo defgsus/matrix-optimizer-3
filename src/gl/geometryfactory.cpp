@@ -78,5 +78,36 @@ void GeometryFactory::createBox(
 }
 
 
+void GeometryFactory::createGrid(Geometry * g, int size, bool coords)
+{
+    for (int i=-size; i<=size; ++i)
+    {
+        auto p1 = g->addVertex(i,0,-size),
+             p2 = g->addVertex(i,0,size);
+        g->addLine(p1, p2);
+        p1 = g->addVertex(-size,0,i);
+        p2 = g->addVertex(size,0,i);
+        g->addLine(p1, p2);
+    }
+
+    if (!coords)
+        return;
+
+    g->setColor(1,0,0, 1);
+    auto p1 = g->addVertex(0, 0.01, 0),
+         p2 = g->addVertex(size, 0.01, 0);
+    g->addLine(p1, p2);
+
+    g->setColor(0,1,0, 1);
+    p1 = g->addVertex(0, 0.01, 0);
+    p2 = g->addVertex(0, size, 0);
+    g->addLine(p1, p2);
+
+    g->setColor(0,0,1, 1);
+    p1 = g->addVertex(0, 0.01, 0);
+    p2 = g->addVertex(0, 0, size);
+    g->addLine(p1, p2);
+}
+
 } // namespace GL
 } // namespace MO

@@ -51,6 +51,9 @@ public:
     /** Returns number of triangles in the Model */
     unsigned int numTriangles() const { return triIndex_.size() / 3; }
 
+    /** Returns number of lines in the Model */
+    unsigned int numLines() const { return lineIndex_.size() / 2; }
+
     /** Returns a pointer to numVertices() * 3 coordinates */
     const VertexType * vertices() const { return &vertex_[0]; }
     /** Returns a pointer to numVertices() * 3 coordinates */
@@ -61,14 +64,18 @@ public:
     const TextureCoordType * textureCoords() const { return &texcoord_[0]; }
     /** Returns a pointer to numTriangles() * 3 indices */
     const IndexType * triangleIndices() const { return &triIndex_[0]; }
+    /** Returns a pointer to numTriangles() * 3 indices */
+    const IndexType * lineIndices() const { return &lineIndex_[0]; }
 
     int numVertexBytes() const { return vertex_.size() * sizeof(VertexType); }
     int numNormalBytes() const { return normal_.size() * sizeof(NormalType); }
     int numColorBytes() const { return color_.size() * sizeof(ColorType); }
     int numTextureCoordBytes() const { return texcoord_.size() * sizeof(TextureCoordType); }
     int numTriangleIndexBytes() const { return triIndex_.size() * sizeof(IndexType); }
+    int numLineIndexBytes() const { return lineIndex_.size() * sizeof(IndexType); }
 
     const VertexType * triangle(IndexType triangeleIndex, IndexType cornerIndex) const;
+    const VertexType * line(IndexType lineIndex, IndexType endIndex) const;
 
     // --------- state -----------------------
 
@@ -109,6 +116,9 @@ public:
     /** Connects three previously created indices to form a triangle. */
     void addTriangle(IndexType p1, IndexType p2, IndexType p3);
 
+    /** Connects two previously created indices to form a line */
+    void addLine(IndexType p1, IndexType p2);
+
     // ------- convenience functions -------
 
     /** Automatically calculates all normals for each triangle.
@@ -125,7 +135,7 @@ protected:
     std::vector<NormalType>       normal_;
     std::vector<ColorType>        color_;
     std::vector<TextureCoordType> texcoord_;
-    std::vector<IndexType>        triIndex_;
+    std::vector<IndexType>        triIndex_, lineIndex_;
 
 private:
 

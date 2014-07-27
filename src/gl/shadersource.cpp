@@ -16,7 +16,8 @@ namespace GL {
 ShaderSource::ShaderSource()
     : unProj_   ("u_projection"),
       unView_   ("u_view"),
-      anPos_    ("a_pos")
+      anPos_    ("a_position"),
+      anCol_    ("a_color")
 {
 }
 

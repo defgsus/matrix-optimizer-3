@@ -44,21 +44,21 @@ void Model3d::initGl(uint /*thread*/)
             "#version 130\n"
             "// vertex attributes\n"
             "//in vec3 a_normal;\n"
-            "//in vec4 a_color;\n"
+            "in vec4 a_color;\n"
             "in vec4 a_position;\n"
             "// shader uniforms (application specific)\n"
             "uniform mat4 u_projection;\n"
             "uniform mat4 u_view;\n"
             "// output of vertex shader\n"
             "//out vec3 v_normal;\n"
-            "//out vec4 v_color;\n"
+            "out vec4 v_color;\n"
             "out vec3 v_pos;\n"
             "\n"
             "void main()\n"
             "{\n"
             "\t// pass attributes to fragment shader\n"
             "\t//v_normal = a_normal;\n"
-            "\t//v_color = a_color;\n"
+            "\tv_color = a_color;\n"
             "\tv_pos = a_position.xyz;\n"
             "\t// set final vertex position\n"
             "\tgl_Position = u_projection * u_view * a_position;\n"
@@ -68,7 +68,7 @@ void Model3d::initGl(uint /*thread*/)
             "#version 130\n"
             "// input from vertex shader\n"
             "//in vec3 v_normal;\n"
-            "//in vec4 v_color;\n"
+            "in vec4 v_color;\n"
             "in vec3 v_pos;\n"
             "// shader uniforms (user)\n"
             "uniform vec3 u_light_pos;\n"
@@ -80,7 +80,7 @@ void Model3d::initGl(uint /*thread*/)
             "void main()\n"
             "{\n"
             "\t// 'ambient color' or base color\n"
-            "\t//vec3 ambcol = v_color.xyz;\n"
+            "\tvec3 ambcol = v_color.xyz;\n"
             "\t// normal to light source\n"
             "\t//vec3 light_normal = normalize( u_light_pos - v_pos );\n"
             "\t// dot-product of light normal and vertex normal gives linear light influence\n"
@@ -90,12 +90,12 @@ void Model3d::initGl(uint /*thread*/)
             "\t// adding the light to the base color\n"
             "\t//vec3 col = ambcol + lighting * u_light_color;\n"
             "\t// typical output of a fragment shader\n"
-            "\t//color = vec4(clamp(col, 0.0, 1.0), 1.0);\n"
-            "\tcolor = vec4(1.0, 0.5, 0.0, 1.0);\n"
+            "\tcolor = vec4(clamp(ambcol, 0.0, 1.0), 1.0);\n"
+            "\t//color = vec4(1.0, 0.5, 0.0, 1.0);\n"
             "}\n";
 
     draw_ = new GL::Drawable();
-    GL::GeometryFactory::createCube(draw_->geometry(), 2);
+    GL::GeometryFactory::createGrid(draw_->geometry(), 10, true);
     draw_->shaderSource()->setAttributeNamePosition("a_position");
     draw_->shaderSource()->setFragmentSource(fragment_source);
     draw_->shaderSource()->setVertextSource(vertex_source);
@@ -121,7 +121,7 @@ void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
     //draw_->renderAttribArrays();
     draw_->renderShader(cam.projectionMatrix(), mat);
 
-#if (1)
+#if (0)
     glBegin(GL_LINES);
         glColor3f(1,1,1);
         for (int i=-10; i<=10; ++i)

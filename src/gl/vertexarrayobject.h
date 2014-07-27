@@ -37,8 +37,8 @@ public:
 
     /** Creates a vertex array object */
     bool create();
-    /** Releases the vertex array object */
-    bool release();
+    /** Releases the vertex array object and all buffers */
+    void release();
 
     /** Binds the vertex array object (not needed for the draw methods) */
     bool bind();

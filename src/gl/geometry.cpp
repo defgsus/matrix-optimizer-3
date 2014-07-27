@@ -15,9 +15,9 @@ namespace GL {
 
 Geometry::Geometry()
     :
-        curR_   (.5f),
-        curG_   (.5f),
-        curB_   (.5f),
+        curR_   (1.f),
+        curG_   (1.f),
+        curB_   (1.f),
         curA_   (1.f),
         curNx_  (0.f),
         curNy_  (0.f),
@@ -68,10 +68,22 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
     triIndex_.push_back(p3);
 }
 
+void Geometry::addLine(IndexType p1, IndexType p2)
+{
+    lineIndex_.push_back(p1);
+    lineIndex_.push_back(p2);
+}
+
 const Geometry::VertexType * Geometry::triangle(
         IndexType triangleIndex, IndexType cornerIndex) const
 {
     return &vertex_[triIndex_[triangleIndex * 3 + cornerIndex] * 3];
+}
+
+const Geometry::VertexType * Geometry::line(
+        IndexType lineIndex, IndexType endIndex) const
+{
+    return &vertex_[lineIndex_[lineIndex * 2 + endIndex] * 3];
 }
 
 void Geometry::calculateTriangleNormals()

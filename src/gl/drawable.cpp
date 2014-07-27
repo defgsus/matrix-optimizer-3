@@ -121,6 +121,10 @@ void Drawable::compileShader_()
         attribPos_ = a->location();
     else
         attribPos_ = invalidGl;
+    if (auto a = shader_->getAttribute(shaderSource_->attribNameColor()))
+        attribColor_ = a->location();
+    else
+        attribColor_ = invalidGl;
 
 }
 
@@ -132,75 +136,33 @@ void Drawable::createVAO_()
 
     MO_ASSERT(shader_, "Drawable::createVAO_() without shader");
     MO_ASSERT(attribPos_ != invalidGl, "No position attribute in shader");
+    MO_ASSERT(attribColor_ != invalidGl, "No color attribute in shader");
 
     vao_ = new VertexArrayObject(ER_THROW);
 
     vao_->create();
     vao_->bind();
 
-    vao_->createIndexBuffer(geometry_->IndexEnum,
-                            geometry_->numTriangles() * 3,
-                            geometry_->triangleIndices());
-    //MO_DEBUG("glBufferDat*("<<GL_ELEMENT_ARRAY_BUFFER<<", "
-    //         <<geometry_->numTriangleIndexBytes()<<", "
-    //         <<geometry_->triangleIndices()<<", "<<GL_STATIC_DRAW<<")");
+    if (geometry_->numTriangles())
+        vao_->createIndexBuffer(geometry_->IndexEnum,
+                                geometry_->numTriangles() * 3,
+                                geometry_->triangleIndices());
+    else
+        vao_->createIndexBuffer(geometry_->IndexEnum,
+                                geometry_->numLines() * 2,
+                                geometry_->lineIndices());
 
     vao_->createAttribBuffer(attribPos_,
                              geometry_->VertexEnum, 3,
                              geometry_->numVertexBytes(),
                              geometry_->vertices());
-    //MO_DEBUG("glVertexAttribPointe*("<<attribPos_<<", "<<3<<", "<<
-    //         Geometry::VertexEnum<<", "<<GL_FALSE<<", "<<0<<", "<<0<<")");
+    vao_->createAttribBuffer(attribColor_,
+                             geometry_->ColorEnum, 4,
+                             geometry_->numColorBytes(),
+                             geometry_->colors());
 
     vao_->unbind();
 
-#if (0)
-    // create vertex array object
-#ifdef Q_OS_APPLE
-    MO_ASSERT_GL( glGenVertexArraysAPPLE(1, &vao1_),
-                 "Could not create vertex array object for Drawable");
-#else
-    MO_ASSERT_GL( glGenVertexArrays(1, &vao1_),
-                  "Could not create vertex array object for Drawable");
-#endif
-
-    MO_ASSERT_GL( glBindVertexArray(vao1_),
-                  "Could not bind vertex array object for Drawable");
-
-    // create index buffer
-
-    MO_ASSERT_GL( glGenBuffers(1, &triIndexBuffer_),
-                  "Could not create tri index buffer for Drawable");
-
-    MO_ASSERT_GL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triIndexBuffer_), "" );
-    MO_ASSERT_GL( glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    geometry_->numTriangleIndexBytes(),
-                    geometry_->triangleIndices(), GL_STATIC_DRAW), "" );
-    MO_ASSERT(attribPos_ != invalidGl, "No position attribute in shader");
-
-    // create vertex buffer
-
-    MO_ASSERT_GL( glGenBuffers(1, &vertexBuffer_),
-                  "Could not create vertex buffer for Drawable");
-
-    MO_ASSERT_GL( glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_), "" );
-    MO_ASSERT_GL( glBufferData(GL_ARRAY_BUFFER,
-                    geometry_->numVertexBytes(), geometry_->vertices(), GL_STATIC_DRAW), "" );
-    MO_ASSERT(attribPos_ != invalidGl, "No position attribute in shader");
-    MO_ASSERT_GL( glEnableVertexAttribArray(attribPos_), "" );
-    MO_ASSERT_GL( glVertexAttribPointer(attribPos_, 3, Geometry::VertexEnum, GL_FALSE, 0, NULL), "" );
-
-
-
-
-    // disable bindings
-
-    MO_CHECK_GL( glBindBuffer(GL_ARRAY_BUFFER, 0) );
-    MO_CHECK_GL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-    MO_CHECK_GL( glBindVertexArray(0) );
-
-#endif
 
 }
 
@@ -215,23 +177,6 @@ void Drawable::releaseOpenGl()
         delete vao_;
     }
     vao_ = 0;
-
-
-    /*
-    if (vertexBuffer_)
-    {
-        vertexBuffer_->release();
-        delete vertexBuffer_;
-        vertexBuffer_ = 0;
-    }
-
-    if (triIndexBuffer_)
-    {
-        triIndexBuffer_->release();
-        delete triIndexBuffer_;
-        triIndexBuffer_ = 0;
-    }
-    */
 }
 
 
@@ -239,17 +184,10 @@ void Drawable::render()
 {
     MO_ASSERT(vao_, "no vertex array object specified in Drawable::render()");
 
-    vao_->bind();
-    /*
-    MO_CHECK_GL( glBindVertexArray(vao_) );
-
-    MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
-                        Geometry::IndexEnum, geometry_->triangleIndices()) );
-
-    MO_CHECK_GL( glBindVertexArray(0) );
-    */
-    //vertexBuffer_->bind();
-    //triIndexBuffer_->bind();
+    if (geometry_->numTriangles())
+        vao_->drawElements(GL_TRIANGLES);
+    else
+        vao_->drawElements(GL_LINES);
 }
 
 
@@ -263,63 +201,14 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
     MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
     MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
 
-    /*vao_->bind();
-    MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
-                        Geometry::IndexEnum, geometry_->triangleIndices()) );
-    vao_->unbind();
-*/
-    vao_->drawElements(GL_TRIANGLES);
-    //MO_DEBUG("glDrawElement*("<<GL_TRIANGLES<<", "<<(geometry_->numTriangles()*3)
-    //         <<", "<<Geometry::IndexEnum<<", "<<0<<")");
-
-
-/*    MO_ASSERT_GL( glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_), "" );
-    MO_ASSERT_GL( glEnableVertexAttribArray(attribPos_), "" );
-    MO_ASSERT_GL( glVertexAttribPointer(
-                      attribPos_, 3, Geometry::VertexEnum, GL_FALSE, 0,
-                      NULL), "" );
-*/
-/*    MO_CHECK_GL( glBindVertexArray(vao1_) );
-
-    MO_ASSERT_GL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triIndexBuffer_), "" );
-
-    MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
-                        Geometry::IndexEnum, 0) );//geometry_->triangleIndices()) );
-
-    MO_CHECK_GL( glBindVertexArray(0) );
-*/
+    if (geometry_->numTriangles())
+        vao_->drawElements(GL_TRIANGLES);
+    else
+        vao_->drawElements(GL_LINES);
 
     shader_->deactivate();
 }
 
-void Drawable::renderArrays()
-{
-    MO_ASSERT(geometry_, "no Geometry specified in Drawable::render()");
-
-    MO_CHECK_GL(glEnableClientState(GL_VERTEX_ARRAY) );
-
-    MO_CHECK_GL(glVertexPointer(3, Geometry::VertexEnum, 0, geometry_->vertices()) );
-
-    MO_CHECK_GL(glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
-                        Geometry::IndexEnum, geometry_->triangleIndices()) );
-
-    MO_CHECK_GL(glDisableClientState(GL_VERTEX_ARRAY) );
-}
-
-void Drawable::renderAttribArrays()
-{
-    MO_ASSERT(geometry_, "no Geometry specified in Drawable::render()");
-
-    MO_CHECK_GL(glEnableClientState(GL_VERTEX_ARRAY) );
-
-    MO_CHECK_GL(glVertexAttribPointer(
-                    attribPos_, 3, Geometry::VertexEnum, GL_FALSE, 0, geometry_->vertices()) );
-
-    MO_CHECK_GL(glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
-                        Geometry::IndexEnum, geometry_->triangleIndices()) );
-
-    MO_CHECK_GL(glDisableClientState(GL_VERTEX_ARRAY) );
-}
 
 void Drawable::renderImmediate()
 {
