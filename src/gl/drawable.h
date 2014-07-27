@@ -11,11 +11,8 @@
 #ifndef MOSRC_GL_DRAWABLE_H
 #define MOSRC_GL_DRAWABLE_H
 
-#include "openglfunctions.h"
+#include "opengl.h"
 #include "types/vector.h"
-
-class QOpenGLVertexArrayObject;
-class QOpenGLBuffer;
 
 namespace MO {
 namespace GL {
@@ -29,7 +26,7 @@ class Uniform;
 class Drawable
 {
 public:
-    Drawable(MO_QOPENGL_FUNCTIONS_CLASS * functions = 0);
+    Drawable();
     ~Drawable();
 
     // ------------- getter ------------------
@@ -79,7 +76,6 @@ private:
     void compileShader_();
     void createVAO_();
 
-    MO_QOPENGL_FUNCTIONS_CLASS * gl_;
     Geometry * geometry_;
     ShaderSource * shaderSource_;
     Shader * shader_;

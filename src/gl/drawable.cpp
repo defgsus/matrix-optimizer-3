@@ -25,9 +25,8 @@ namespace GL {
 
 
 
-Drawable::Drawable(MO_QOPENGL_FUNCTIONS_CLASS * functions)
-    : gl_               (functions),
-      geometry_         (0),
+Drawable::Drawable()
+    : geometry_         (0),
       shaderSource_     (0),
       shader_           (0),
       vao_              (invalidGl),
@@ -138,27 +137,27 @@ void Drawable::createVAO_()
 #if (1)
     // create vertex array object
 #ifdef Q_OS_APPLE
-    MO_ASSERT_GL( gl_, glGenVertexArraysAPPLE(1, &vao_),
+    MO_ASSERT_GL( glGenVertexArraysAPPLE(1, &vao_),
                  "Could not create vertex array object for Drawable");
 #else
-    MO_ASSERT_GL( gl_->glGenVertexArrays(1, &vao_),
+    MO_ASSERT_GL( glGenVertexArrays(1, &vao_),
                   "Could not create vertex array object for Drawable");
 #endif
 
-    MO_ASSERT_GL( gl_->glBindVertexArray(vao_),
+    MO_ASSERT_GL( glBindVertexArray(vao_),
                   "Could not bind vertex array object for Drawable");
 
     // create vertex buffer
 
-    MO_ASSERT_GL( gl_->glGenBuffers(1, &vertexBuffer_),
+    MO_ASSERT_GL( glGenBuffers(1, &vertexBuffer_),
                   "Could not create vertex buffer for Drawable");
 
-    MO_ASSERT_GL( gl_->glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_), "" );
-    MO_ASSERT_GL( gl_->glBufferData(GL_ARRAY_BUFFER,
+    MO_ASSERT_GL( glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_), "" );
+    MO_ASSERT_GL( glBufferData(GL_ARRAY_BUFFER,
                     geometry_->numVertexBytes(), geometry_->vertices(), GL_STATIC_DRAW), "" );
     MO_ASSERT(attribPos_ != invalidGl, "No position attribute in shader");
-    MO_ASSERT_GL( gl_->glEnableVertexAttribArray(attribPos_), "" );
-    MO_ASSERT_GL( gl_->glVertexPointer(3, Geometry::VertexEnum, 0, NULL), "" );
+    MO_ASSERT_GL( glEnableVertexAttribArray(attribPos_), "" );
+    MO_ASSERT_GL( glVertexPointer(3, Geometry::VertexEnum, 0, NULL), "" );
 
     /*
     vertexBuffer_ = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
@@ -184,7 +183,7 @@ void Drawable::createVAO_()
     triIndexBuffer_->allocate(geometry_->triangleIndices(), geometry_->numTriangleIndexBytes());
     */
 
-    MO_CHECK_GL( gl_->glBindVertexArray(0) );
+    MO_CHECK_GL( glBindVertexArray(0) );
 
 #endif
 
@@ -196,7 +195,7 @@ void Drawable::releaseOpenGl()
         shader_->releaseGL();
 
     if (vao_ != invalidGl)
-        MO_CHECK_GL( gl_->glDeleteVertexArrays(1, &vao_) );
+        MO_CHECK_GL( glDeleteVertexArrays(1, &vao_) );
     vao_ = invalidGl;
 
 
@@ -220,15 +219,14 @@ void Drawable::releaseOpenGl()
 
 void Drawable::render()
 {
-    MO_ASSERT(gl_, "Drawable::render() without QOpenGLFunctions");
     MO_ASSERT(vao_ != invalidGl, "no vertex array object specified in Drawable::render()");
 
-    MO_CHECK_GL( gl_->glBindVertexArray(vao_) );
+    MO_CHECK_GL( glBindVertexArray(vao_) );
 
-    MO_CHECK_GL( gl_->glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
+    MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
                         Geometry::IndexEnum, geometry_->triangleIndices()) );
 
-    MO_CHECK_GL( gl_->glBindVertexArray(0) );
+    MO_CHECK_GL( glBindVertexArray(0) );
 
     //vertexBuffer_->bind();
     //triIndexBuffer_->bind();
@@ -237,43 +235,40 @@ void Drawable::render()
 
 void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
 {
-    MO_ASSERT(gl_, "Drawable::renderShader() without QOpenGLFunctions");
     MO_ASSERT(vao_ != invalidGl, "no vertex array object specified in Drawable::render()");
     MO_ASSERT(uniformProj_ != invalidGl, "");
     MO_ASSERT(uniformView_ != invalidGl, "");
 
     shader_->activate();
-    MO_CHECK_GL( gl_->glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
-    MO_CHECK_GL( gl_->glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
+    MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
+    MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
 
-    MO_CHECK_GL( gl_->glBindVertexArray(vao_) );
+    MO_CHECK_GL( glBindVertexArray(vao_) );
 
-    MO_CHECK_GL( gl_->glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
+    MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
                         Geometry::IndexEnum, geometry_->triangleIndices()) );
 
-    MO_CHECK_GL( gl_->glBindVertexArray(0) );
+    MO_CHECK_GL( glBindVertexArray(0) );
 
     shader_->deactivate();
 }
 
 void Drawable::renderArrays()
 {
-    MO_ASSERT(gl_, "Drawable::render() without QOpenGLFunctions");
     MO_ASSERT(geometry_, "no Geometry specified in Drawable::render()");
 
-    MO_CHECK_GL(gl_->glEnableClientState(GL_VERTEX_ARRAY) );
+    MO_CHECK_GL(glEnableClientState(GL_VERTEX_ARRAY) );
 
-    MO_CHECK_GL(gl_->glVertexPointer(3, Geometry::VertexEnum, 0, geometry_->vertices()) );
+    MO_CHECK_GL(glVertexPointer(3, Geometry::VertexEnum, 0, geometry_->vertices()) );
 
-    MO_CHECK_GL(gl_->glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
+    MO_CHECK_GL(glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
                         Geometry::IndexEnum, geometry_->triangleIndices()) );
 
-    MO_CHECK_GL(gl_->glDisableClientState(GL_VERTEX_ARRAY) );
+    MO_CHECK_GL(glDisableClientState(GL_VERTEX_ARRAY) );
 }
 
 void Drawable::renderImmediate()
 {
-    MO_ASSERT(gl_, "Drawable::renderImmidiate() without QOpenGLFunctions");
     MO_ASSERT(geometry_, "no Geometry specified in Drawable::renderImmidiate()");
 
     glBegin(GL_TRIANGLES);
@@ -290,15 +285,14 @@ void Drawable::renderImmediate()
 
 void Drawable::renderImmediateShader(const Mat4& proj, const Mat4& view)
 {
-    MO_ASSERT(gl_, "Drawable::renderImmidiate() without QOpenGLFunctions");
     MO_ASSERT(geometry_, "no Geometry specified in Drawable::renderImmidiate()");
     MO_ASSERT(uniformProj_ != invalidGl, "");
     MO_ASSERT(uniformView_ != invalidGl, "");
     MO_ASSERT(attribPos_ != invalidGl, "");
 
     shader_->activate();
-    MO_CHECK_GL( gl_->glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
-    MO_CHECK_GL( gl_->glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
+    MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
+    MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
 
     glBegin(GL_TRIANGLES);
     for (uint t = 0; t<geometry_->numTriangles(); ++t)
@@ -306,7 +300,7 @@ void Drawable::renderImmediateShader(const Mat4& proj, const Mat4& view)
         for (int j=0; j<3; ++j)
         {
             auto v = geometry_->triangle(t, j);
-            gl_->glVertexAttrib3f(attribPos_, v[0], v[1], v[2]);
+            glVertexAttrib3f(attribPos_, v[0], v[1], v[2]);
         }
     }
     MO_CHECK_GL( glEnd() );

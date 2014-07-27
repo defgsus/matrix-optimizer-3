@@ -11,7 +11,7 @@
 #ifndef MOSRC_GL_GEOMETRY_H
 #define MOSRC_GL_GEOMETRY_H
 
-#include "openglfunctions.h"
+#include "opengl.h"
 #include "types/vector.h"
 
 namespace MO {

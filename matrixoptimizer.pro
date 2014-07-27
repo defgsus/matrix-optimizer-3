@@ -13,12 +13,14 @@ CONFIG += c++11
 
 QMAKE_CXXFLAGS_RELEASE += -O2 -DNDEBUG
 
+#DEFINES += GLEW_MX
+
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
 
-unix: { LIBS += -lX11 -lportaudio -lsndfile }
+unix: { LIBS += -lGLEW -lGLU -lGL -lX11 -lportaudio -lsndfile }
 
 win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 
@@ -123,9 +125,9 @@ SOURCES += \
     src/gl/geometry.cpp \
     src/gl/geometryfactory.cpp \
     src/gl/drawable.cpp \
-    src/gl/openglfunctions.cpp \
     src/gl/shader.cpp \
-    src/gl/shadersource.cpp
+    src/gl/shadersource.cpp \
+    src/gl/opengl.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -174,7 +176,6 @@ HEADERS += \
     src/object/objectgl.h \
     src/gl/manager.h \
     src/io/init.h \
-    src/gl/openglfunctions.h \
     src/object/model3d.h \
     src/gui/parameterview.h \
     src/io/applicationtime.h \
@@ -243,7 +244,8 @@ HEADERS += \
     src/gl/drawable.h \
     src/gl/shader.h \
     src/gl/shadersource.h \
-    src/gl/cameraspace.h
+    src/gl/cameraspace.h \
+    src/gl/opengl.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

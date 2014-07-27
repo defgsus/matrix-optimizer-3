@@ -30,10 +30,7 @@ public:
     const QSize& size() const { return size_; }
     void setSize(const QSize& size) { size_ = size; }
 
-    //QOpenGLFunctions * glFuncions() const { return glFunctions_; }
-
 private:
-    //QOpenGLFunctions * glFunctions_;
 
     QSize size_;
 };

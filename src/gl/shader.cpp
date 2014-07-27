@@ -56,8 +56,7 @@ Shader::Shader()
     :   prog_             (-1),
         sourceChanged_      (false),
         ready_              (false),
-        activated_          (false),
-        isGlFuncInitialized_(false)
+        activated_          (false)
 {
     MO_DEBUG_GL("Shader::Shader()");
 }
@@ -124,12 +123,6 @@ const Attribute * Shader::getAttribute(const QString &name) const
 
 bool Shader::compile()
 {
-    if (!isGlFuncInitialized_)
-    {
-        initializeOpenGLFunctions();
-        isGlFuncInitialized_ = true;
-    }
-
     // init state
     ready_ = false;
     sourceChanged_ = false;

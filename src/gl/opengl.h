@@ -1,22 +1,36 @@
-/** @file openglfunctions.h
+/** @file opengl.h
 
-    @brief includes QOpenGLFunctions_x_x
+    @brief Basic opengl include (uses GLEWMX)
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 6/29/2014</p>
+    <p>created 7/27/2014</p>
 */
 
-#ifndef MOSRC_GL_OPENGLFUNCTIONS_H
-#define MOSRC_GL_OPENGLFUNCTIONS_H
+#ifndef MOSRC_GL_OPENGL_H
+#define MOSRC_GL_OPENGL_H
 
 #include <iostream>
 
-#define MO_QOPENGL_FUNCTIONS_CLASS QOpenGLFunctions_3_0
-#include <QOpenGLFunctions_3_0>
+#include <Qt>
+
+#ifdef Q_OS_UNIX
+#   include <GL/glew.h>
+#   include <GL/gl.h>
+#endif
 
 #include "io/error.h"
+
+
+#ifdef GLEW_MX
+
+/** needed for GLEW MX support */
+GLEWContext * glewGetContext();
+
+#endif
+
+
 
 /** Executes the command and calls glGetError() and
     prints the error, if any. */

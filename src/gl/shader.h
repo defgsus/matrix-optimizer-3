@@ -16,7 +16,8 @@
 #include <memory>
 
 #include <QString>
-#include "openglfunctions.h"
+
+#include "opengl.h"
 
 namespace MO {
 namespace GL {
@@ -107,7 +108,7 @@ private:
 };
 
 
-class Shader : protected MO_QOPENGL_FUNCTIONS_CLASS
+class Shader
 {
 public:
 
@@ -231,21 +232,19 @@ private:
 
     bool sourceChanged_, ready_, activated_;
 
+    // --- uniforms ---
+
     std::vector<std::shared_ptr<Uniform>>
         uniforms_,
         oldUniforms_;
 
-    std::vector<std::shared_ptr<Attribute>>
-        attribs_;
-
     QList<Uniform*> uniformList_;
-    QList<const Attribute*> attributeList_;
 
     // --- attributes ---
 
-    // YYY ShaderLocations attribs_;
-
-    bool isGlFuncInitialized_;
+    std::vector<std::shared_ptr<Attribute>>
+        attribs_;
+    QList<const Attribute*> attributeList_;
 };
 
 

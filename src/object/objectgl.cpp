@@ -21,8 +21,7 @@ namespace MO {
 
 
 ObjectGl::ObjectGl(QObject *parent)
-    :   Object      (parent),
-        glFunctionsInitialized_(false)
+    :   Object      (parent)
 {
 }
 
@@ -57,7 +56,6 @@ void ObjectGl::setGlContext_(uint thread, GL::Context * c)
 
     if (c != glContext_[thread])
     {
-        //glFunctionsInitialized_ = false;
         needsInitGl_[thread] = true;
     }
 
@@ -73,14 +71,6 @@ void ObjectGl::initGl_(uint thread)
     if (!glContext_[thread]->isValid())
         MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
 
-    if (!glFunctionsInitialized_)
-    {
-        bool r = initializeOpenGLFunctions();
-        if (!r)
-            MO_GL_ERROR("could not initialize opengl functions for object '" << idName() << "'");
-        glFunctionsInitialized_ = true;
-    }
-
     initGl(thread);
 
     needsInitGl_[thread] = false;
@@ -92,9 +82,6 @@ void ObjectGl::renderGl_(const GL::CameraSpace &camera, uint thread, Double time
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
     if (!glContext_[thread]->isValid())
         MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
-
-    if (!glFunctionsInitialized_)
-        MO_GL_ERROR("opengl functions not initialized for object '" << idName() << "'");
 
     renderGl(camera, thread, time);
 }

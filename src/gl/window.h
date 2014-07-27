@@ -13,8 +13,6 @@
 
 #include <QWindow>
 
-class QOpenGLFramebufferObject;
-
 namespace MO {
 namespace GL {
 
@@ -61,7 +59,6 @@ private:
     void render_();
 
     Context * context_;
-//    QOpenGLFramebufferObject * frameBuffer_;
 
     bool updatePending_;
 

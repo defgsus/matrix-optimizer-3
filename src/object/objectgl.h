@@ -12,13 +12,12 @@
 #define MOSRC_OBJECT_OBJECTGL_H
 
 #include "object.h"
-#include "gl/openglfunctions.h"
+#include "gl/opengl.h"
 
 namespace MO {
 namespace GL { class Context; class Drawable; }
 
-class ObjectGl : public Object,
-                 protected MO_QOPENGL_FUNCTIONS_CLASS
+class ObjectGl : public Object
 {
     Q_OBJECT
 
@@ -57,7 +56,6 @@ private:
     void renderGl_(const GL::CameraSpace& camera, uint thread, Double time);
 
     std::vector<GL::Context*> glContext_;
-    bool glFunctionsInitialized_;
     std::vector<int> needsInitGl_;
 };
 

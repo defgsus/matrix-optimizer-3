@@ -94,7 +94,7 @@ void Model3d::initGl(uint /*thread*/)
             "\tcolor = vec4(1.0, 0.5, 0.0, 1.0);\n"
             "}\n";
 
-    draw_ = new GL::Drawable(this);
+    draw_ = new GL::Drawable();
     GL::GeometryFactory::createCube(draw_->geometry(), 2);
     draw_->shaderSource()->setAttributeNamePosition("a_position");
     draw_->shaderSource()->setFragmentSource(fragment_source);
