@@ -8,10 +8,12 @@
     <p>created 6/28/2014</p>
 */
 
+#include "opengl.h"
+
 #include <QDebug>
 #include <QApplication>
 #include <QShowEvent>
-#include <QOpenGLFramebufferObject>
+#include <QOpenGLContext>
 #include <QKeyEvent>
 
 #include "window.h"
@@ -112,8 +114,8 @@ void Window::renderNow()
         MO_DEBUG_GL("creating context in window");
 
         context_ = new MO::GL::Context(this);
-        context_->setFormat(requestedFormat());
-        if (!context_->create())
+        context_->qcontext()->setFormat(requestedFormat());
+        if (!context_->qcontext()->create())
             MO_GL_ERROR("could not create context");
 
         emit contextCreated(context_);
@@ -121,10 +123,12 @@ void Window::renderNow()
         //needsInit = true;
     }
 
-    if (!context_->makeCurrent(this))
+    if (!context_->qcontext()->makeCurrent(this))
         MO_GL_ERROR("could not make context current");
 
     context_->setSize(size());
+
+    moInitGl();
 
     emit renderRequest();
 
@@ -162,7 +166,7 @@ void Window::renderNow()
     //frameBuffer_->texture();
 #endif
 
-    context_->swapBuffers(this);
+    context_->qcontext()->swapBuffers(this);
 
     // call again :)
     if (animating_)

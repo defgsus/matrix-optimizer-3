@@ -1,4 +1,4 @@
-/** @file gl.h
+/** @file context.h
 
     @brief
 
@@ -8,35 +8,39 @@
     <p>created 6/28/2014</p>
 */
 
-#ifndef MOSRC_GL_GL_H
-#define MOSRC_GL_GL_H
+#ifndef MOSRC_GL_CONTEXT_H
+#define MOSRC_GL_CONTEXT_H
 
-#include <QOpenGLContext>
+#include <QObject>
 #include <QSize>
 
-
-class QOpenGLFunctions;
+class QOpenGLContext;
 
 namespace MO {
 namespace GL {
 
-class Context : public QOpenGLContext
+class Context : public QObject
 {
     Q_OBJECT
 public:
     explicit Context(QObject * parent);
     ~Context();
 
+    QOpenGLContext * qcontext() const { return qcontext_; }
+
     const QSize& size() const { return size_; }
     void setSize(const QSize& size) { size_ = size; }
+
+    bool isValid() const;
 
 private:
 
     QSize size_;
+    QOpenGLContext * qcontext_;
 };
 
 
 } // namespace GL
 } // namespace MO
 
-#endif // MOSRC_GL_GL_H
+#endif // MOSRC_GL_CONTEXT_H

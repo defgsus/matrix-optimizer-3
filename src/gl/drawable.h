@@ -68,6 +68,7 @@ public:
     void render();
     void renderShader(const Mat4& proj, const Mat4& view);
     void renderArrays();
+    void renderAttribArrays();
     void renderImmediate();
     void renderImmediateShader(const Mat4& proj, const Mat4& view);
 

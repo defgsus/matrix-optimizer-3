@@ -62,11 +62,11 @@ public:
     /** Returns a pointer to numTriangles() * 3 indices */
     const IndexType * triangleIndices() const { return &triIndex_[0]; }
 
-    int numVertexBytes() const { return numVertices() * 3 * sizeof(VertexType); }
-    int numNormalBytes() const { return numVertices() * 3 * sizeof(NormalType); }
-    int numColorBytes() const { return numVertices() * 4 * sizeof(ColorType); }
-    int numTextureCoordBytes() const { return numVertices() * 2 * sizeof(TextureCoordType); }
-    int numTriangleIndexBytes() const { return numTriangles() * 3 * sizeof(IndexType); }
+    int numVertexBytes() const { return vertex_.size() * sizeof(VertexType); }
+    int numNormalBytes() const { return normal_.size() * sizeof(NormalType); }
+    int numColorBytes() const { return color_.size() * sizeof(ColorType); }
+    int numTextureCoordBytes() const { return texcoord_.size() * sizeof(TextureCoordType); }
+    int numTriangleIndexBytes() const { return triIndex_.size() * sizeof(IndexType); }
 
     const VertexType * triangle(IndexType triangeleIndex, IndexType cornerIndex) const;
 

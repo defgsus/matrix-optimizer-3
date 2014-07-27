@@ -157,7 +157,9 @@ void Drawable::createVAO_()
                     geometry_->numVertexBytes(), geometry_->vertices(), GL_STATIC_DRAW), "" );
     MO_ASSERT(attribPos_ != invalidGl, "No position attribute in shader");
     MO_ASSERT_GL( glEnableVertexAttribArray(attribPos_), "" );
-    MO_ASSERT_GL( glVertexPointer(3, Geometry::VertexEnum, 0, NULL), "" );
+    MO_ASSERT_GL( glVertexAttribPointer(attribPos_, 3, Geometry::VertexEnum, GL_FALSE, 0, NULL), "" );
+
+    MO_ASSERT_GL( glBindBuffer(GL_ARRAY_BUFFER, 0), "" );
 
     /*
     vertexBuffer_ = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
@@ -245,6 +247,13 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
 
     MO_CHECK_GL( glBindVertexArray(vao_) );
 
+/*    MO_ASSERT_GL( glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_), "" );
+    MO_ASSERT_GL( glEnableVertexAttribArray(attribPos_), "" );
+    MO_ASSERT_GL( glVertexAttribPointer(
+                      attribPos_, 3, Geometry::VertexEnum, GL_FALSE, 0,
+                      NULL), "" );
+*/
+    MO_DEBUG_GL( "glDrawElements" );
     MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
                         Geometry::IndexEnum, geometry_->triangleIndices()) );
 
@@ -260,6 +269,21 @@ void Drawable::renderArrays()
     MO_CHECK_GL(glEnableClientState(GL_VERTEX_ARRAY) );
 
     MO_CHECK_GL(glVertexPointer(3, Geometry::VertexEnum, 0, geometry_->vertices()) );
+
+    MO_CHECK_GL(glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
+                        Geometry::IndexEnum, geometry_->triangleIndices()) );
+
+    MO_CHECK_GL(glDisableClientState(GL_VERTEX_ARRAY) );
+}
+
+void Drawable::renderAttribArrays()
+{
+    MO_ASSERT(geometry_, "no Geometry specified in Drawable::render()");
+
+    MO_CHECK_GL(glEnableClientState(GL_VERTEX_ARRAY) );
+
+    MO_CHECK_GL(glVertexAttribPointer(
+                    attribPos_, 3, Geometry::VertexEnum, GL_FALSE, 0, geometry_->vertices()) );
 
     MO_CHECK_GL(glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
                         Geometry::IndexEnum, geometry_->triangleIndices()) );

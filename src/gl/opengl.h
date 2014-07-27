@@ -17,8 +17,9 @@
 
 #ifdef Q_OS_UNIX
 #   include <GL/glew.h>
-#   include <GL/gl.h>
 #endif
+
+#include "context.h"
 
 #include "io/error.h"
 
@@ -67,6 +68,9 @@ GLEWContext * glewGetContext();
 
 namespace MO {
 namespace GL {
+
+    /** Need to be called, once a context is ready */
+    void moInitGl();
 
     const char * glErrorName(GLenum error);
 

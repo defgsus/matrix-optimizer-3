@@ -118,6 +118,7 @@ void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
     glLoadMatrixf(&mat[0][0]);
 
     glColor3f(1,1,0);
+    //draw_->renderAttribArrays();
     draw_->renderShader(cam.projectionMatrix(), mat);
 
 #if (1)

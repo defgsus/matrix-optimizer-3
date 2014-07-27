@@ -61,6 +61,32 @@ GLEWContext * glewGetContext()
 namespace MO {
 namespace GL {
 
+void moInitGl()
+{
+    static bool init = false;
+    if (!init)
+    {
+        MO_DEBUG_GL("Initializing GLEW (single-threaded)");
+
+        GLenum err = glewInit();
+        if (err != GLEW_OK)
+        {
+            QString str;
+            if (err == GLEW_ERROR_NO_GL_VERSION)
+                str = "missing GL version";
+            else if (err == GLEW_ERROR_GL_VERSION_10_ONLY)
+                str = "Need at least OpenGL 1.1";
+            else if (err == GLEW_ERROR_GLX_VERSION_11_ONLY)
+                str = "Need at least GLX 1.2";
+            else str = "Unknown error";
+
+            MO_GL_ERROR("Could not initialize GLEW\n" << str);
+        }
+        init = true;
+    }
+}
+
+
 const char * glErrorName(GLenum error)
 {
     switch (error)
