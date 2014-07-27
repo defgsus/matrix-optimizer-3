@@ -17,11 +17,7 @@
 namespace MO {
 namespace GL {
 
-class Geometry;
-class Context;
-class Shader;
-class ShaderSource;
-class Uniform;
+
 
 class Drawable
 {
@@ -81,12 +77,12 @@ private:
     ShaderSource * shaderSource_;
     Shader * shader_;
 
-    GLuint
-        vao_,
-        vertexBuffer_,
-        triIndexBuffer_;
+    VertexArrayObject * vao_;
 
     GLuint
+        vao1_,
+        triIndexBuffer_,
+        vertexBuffer_,
         uniformProj_,
         uniformView_,
         attribPos_;

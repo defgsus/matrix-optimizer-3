@@ -10,6 +10,7 @@
 
 #include "vertexarrayobject.h"
 #include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GL {
@@ -72,10 +73,16 @@ bool VertexArrayObject::release()
 
 GLuint VertexArrayObject::createAttribBuffer(
         GLuint location, GLenum valueType, GLint numberCoordinates,
-        GLuint sizeInBytes, void * ptr,
+        GLuint sizeInBytes, const void * ptr,
         GLenum storageType, GLint stride, GLboolean normalized)
 {
     GLuint buf = invalidGl;
+
+    if (!isCreated())
+    {
+        MO_GL_ERROR_COND(rep_, "createAttribBuffer() on uninitialized vertex array object");
+        return buf;
+    }
 
     GLenum e;
 
@@ -83,21 +90,20 @@ GLuint VertexArrayObject::createAttribBuffer(
     if (e) return invalidGl;
 
     MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ARRAY_BUFFER, buf), e);
-    if (e) { MO_CHECK_GL(glDeleteBuffers(1, &buf)); return invalidGl; }
+    if (e) goto fail;
 
     MO_CHECK_GL_RET_COND(rep_, glBufferData(GL_ARRAY_BUFFER,
                     sizeInBytes, ptr, storageType), e);
-    if (e) { MO_CHECK_GL(glDeleteBuffers(1, &buf));
-             MO_CHECK_GL(glBindBuffer(GL_ARRAY_BUFFER, 0)); return invalidGl; }
+    if (e) goto fail;
 
-    MO_CHECK_GL_RET_COND(rep_, glEnableVertexAttribArray(buf), e);
-    if (e) { MO_CHECK_GL(glDeleteBuffers(1, &buf));
-             MO_CHECK_GL(glBindBuffer(GL_ARRAY_BUFFER, 0)); return invalidGl; }
+    MO_CHECK_GL_RET_COND(rep_, glEnableVertexAttribArray(location), e);
+    if (e) goto fail;
 
+    //MO_DEBUG("glVertexAttribPointer("<<location<<", "<<numberCoordinates
+    //         <<", "<<valueType<<", "<<(int)normalized<<", "<<stride<<", "<<0<<")");
     MO_CHECK_GL_RET_COND(rep_, glVertexAttribPointer(
             location, numberCoordinates, valueType, normalized, stride, NULL), e);
-    if (e) { MO_CHECK_GL(glDeleteBuffers(1, &buf));
-             MO_CHECK_GL(glBindBuffer(GL_ARRAY_BUFFER, 0)); return invalidGl; }
+    if (e) goto fail;
 
     // keep track
     Buffer_ b;
@@ -106,16 +112,26 @@ GLuint VertexArrayObject::createAttribBuffer(
     buffers_.push_back(b);
 
     return buf;
+
+fail:
+    MO_CHECK_GL(glDeleteBuffers(1, &buf));
+    return invalidGl;
 }
 
 
 
 GLuint VertexArrayObject::createIndexBuffer(
         GLenum valueType,
-        GLuint numberVertices, void * ptr,
+        GLuint numberVertices, const void * ptr,
         GLenum storageType)
 {
     GLuint buf = invalidGl;
+
+    if (!isCreated())
+    {
+        MO_GL_ERROR_COND(rep_, "createIndexBuffer() on uninitialized vertex array object");
+        return buf;
+    }
 
     GLenum e;
 
@@ -123,27 +139,34 @@ GLuint VertexArrayObject::createIndexBuffer(
     if (e) return invalidGl;
 
     MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf), e);
-    if (e) { MO_CHECK_GL(glDeleteBuffers(1, &buf)); return invalidGl; }
+    if (e) goto fail;
 
+    //MO_DEBUG("glBufferData("<<GL_ELEMENT_ARRAY_BUFFER
+    //         <<", "<<(numberVertices * typeSize(valueType))
+    //         <<", "<<ptr<<", "<<storageType<<")");
     MO_CHECK_GL_RET_COND(rep_, glBufferData(GL_ELEMENT_ARRAY_BUFFER,
         numberVertices * typeSize(valueType), ptr, storageType), e);
-    if (e) { MO_CHECK_GL(glDeleteBuffers(1, &buf));
-             MO_CHECK_GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)); return invalidGl; }
+    if (e) goto fail;
 
     // delete previous
     if (elementBuffer_)
     {
         MO_CHECK_GL( glDeleteBuffers(1, &elementBuffer_->id) );
     }
+    else elementBuffer_ = new Buffer_;
 
     // keep track
-    elementBuffer_ = new Buffer_;
     elementBuffer_->id = buf;
     elementBuffer_->target = GL_ELEMENT_ARRAY_BUFFER;
     elementBuffer_->valueType = valueType;
     elementBuffer_->numVertices = numberVertices;
 
     return buf;
+
+fail:
+    MO_CHECK_GL(glDeleteBuffers(1, &buf));
+    return invalidGl;
+
 }
 
 bool VertexArrayObject::bind()
@@ -189,8 +212,11 @@ bool VertexArrayObject::drawElements(
     MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_->id), e);
     if (e) { MO_CHECK_GL(glBindVertexArray(0)); return false; }
 
+    MO_DEBUG("glDrawElements("<<primitiveType<<", "<<numberVertices<<", "<<elementBuffer_->valueType
+             <<", "<<reinterpret_cast<void*>(offset)<<")");
     MO_CHECK_GL_RET_COND(rep_, glDrawElements(
-                                primitiveType, numberVertices,
+                                primitiveType,
+                                numberVertices,
                                 elementBuffer_->valueType,
                                 reinterpret_cast<void*>(offset)), e);
 

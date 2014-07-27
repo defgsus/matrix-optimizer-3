@@ -19,6 +19,7 @@
 #include "geometry.h"
 #include "shadersource.h"
 #include "shader.h"
+#include "vertexarrayobject.h"
 
 namespace MO {
 namespace GL {
@@ -29,9 +30,7 @@ Drawable::Drawable()
     : geometry_         (0),
       shaderSource_     (0),
       shader_           (0),
-      vao_              (invalidGl),
-      vertexBuffer_     (invalidGl),
-      triIndexBuffer_   (invalidGl)
+      vao_              (0)
 {
 }
 
@@ -129,22 +128,43 @@ void Drawable::createVAO_()
 {
     MO_DEBUG_GL("Drawable::createVAO_()");
 
-    MO_ASSERT(vao_==invalidGl && vertexBuffer_==invalidGl,
-              "Drawable::createVAO_() duplicate call");
+    MO_ASSERT(!vao_, "Drawable::createVAO_() duplicate call");
 
     MO_ASSERT(shader_, "Drawable::createVAO_() without shader");
+    MO_ASSERT(attribPos_ != invalidGl, "No position attribute in shader");
 
-#if (1)
+    vao_ = new VertexArrayObject(ER_THROW);
+
+    vao_->create();
+    vao_->bind();
+
+    vao_->createIndexBuffer(geometry_->IndexEnum,
+                            geometry_->numTriangles() * 3,
+                            geometry_->triangleIndices());
+    //MO_DEBUG("glBufferDat*("<<GL_ELEMENT_ARRAY_BUFFER<<", "
+    //         <<geometry_->numTriangleIndexBytes()<<", "
+    //         <<geometry_->triangleIndices()<<", "<<GL_STATIC_DRAW<<")");
+
+    vao_->createAttribBuffer(attribPos_,
+                             geometry_->VertexEnum, 3,
+                             geometry_->numVertexBytes(),
+                             geometry_->vertices());
+    //MO_DEBUG("glVertexAttribPointe*("<<attribPos_<<", "<<3<<", "<<
+    //         Geometry::VertexEnum<<", "<<GL_FALSE<<", "<<0<<", "<<0<<")");
+
+    vao_->unbind();
+
+#if (0)
     // create vertex array object
 #ifdef Q_OS_APPLE
-    MO_ASSERT_GL( glGenVertexArraysAPPLE(1, &vao_),
+    MO_ASSERT_GL( glGenVertexArraysAPPLE(1, &vao1_),
                  "Could not create vertex array object for Drawable");
 #else
-    MO_ASSERT_GL( glGenVertexArrays(1, &vao_),
+    MO_ASSERT_GL( glGenVertexArrays(1, &vao1_),
                   "Could not create vertex array object for Drawable");
 #endif
 
-    MO_ASSERT_GL( glBindVertexArray(vao_),
+    MO_ASSERT_GL( glBindVertexArray(vao1_),
                   "Could not bind vertex array object for Drawable");
 
     // create index buffer
@@ -189,9 +209,12 @@ void Drawable::releaseOpenGl()
     if (shader_)
         shader_->releaseGL();
 
-    if (vao_ != invalidGl)
-        MO_CHECK_GL( glDeleteVertexArrays(1, &vao_) );
-    vao_ = invalidGl;
+    if (!vao_)
+    {
+        vao_->release();
+        delete vao_;
+    }
+    vao_ = 0;
 
 
     /*
@@ -214,15 +237,17 @@ void Drawable::releaseOpenGl()
 
 void Drawable::render()
 {
-    MO_ASSERT(vao_ != invalidGl, "no vertex array object specified in Drawable::render()");
+    MO_ASSERT(vao_, "no vertex array object specified in Drawable::render()");
 
+    vao_->bind();
+    /*
     MO_CHECK_GL( glBindVertexArray(vao_) );
 
     MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
                         Geometry::IndexEnum, geometry_->triangleIndices()) );
 
     MO_CHECK_GL( glBindVertexArray(0) );
-
+    */
     //vertexBuffer_->bind();
     //triIndexBuffer_->bind();
 }
@@ -230,7 +255,7 @@ void Drawable::render()
 
 void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
 {
-    MO_ASSERT(vao_ != invalidGl, "no vertex array object specified in Drawable::render()");
+    MO_ASSERT(vao_, "no vertex array object specified in Drawable::render()");
     MO_ASSERT(uniformProj_ != invalidGl, "");
     MO_ASSERT(uniformView_ != invalidGl, "");
 
@@ -238,9 +263,15 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
     MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
     MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
 
-    MO_CHECK_GL( glBindVertexArray(vao_) );
+    /*vao_->bind();
+    MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
+                        Geometry::IndexEnum, geometry_->triangleIndices()) );
+    vao_->unbind();
+*/
+    vao_->drawElements(GL_TRIANGLES);
+    //MO_DEBUG("glDrawElement*("<<GL_TRIANGLES<<", "<<(geometry_->numTriangles()*3)
+    //         <<", "<<Geometry::IndexEnum<<", "<<0<<")");
 
-    MO_ASSERT_GL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triIndexBuffer_), "" );
 
 /*    MO_ASSERT_GL( glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_), "" );
     MO_ASSERT_GL( glEnableVertexAttribArray(attribPos_), "" );
@@ -248,11 +279,15 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
                       attribPos_, 3, Geometry::VertexEnum, GL_FALSE, 0,
                       NULL), "" );
 */
-    MO_DEBUG_GL( "glDrawElements" );
+/*    MO_CHECK_GL( glBindVertexArray(vao1_) );
+
+    MO_ASSERT_GL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triIndexBuffer_), "" );
+
     MO_CHECK_GL( glDrawElements(GL_TRIANGLES, geometry_->numTriangles() * 3,
                         Geometry::IndexEnum, 0) );//geometry_->triangleIndices()) );
 
     MO_CHECK_GL( glBindVertexArray(0) );
+*/
 
     shader_->deactivate();
 }

@@ -90,9 +90,9 @@ GLEWContext * glewGetContext();
             << " in " << __FILE__               \
             << ": " << __LINE__ << "\n";        \
         if (report__ == ::MO::GL::ER_IGNORE)    \
-            std::cerr << s__; else              \
+            std::cerr << s__.str(); else        \
         if (report__ == ::MO::GL::ER_IGNORE)    \
-            MO_GL_ERROR(s__);                   \
+            MO_GL_ERROR(s__.str());             \
     }                                           \
 }
 
@@ -124,6 +124,19 @@ namespace GL {
         ER_IGNORE,
         ER_THROW
     };
+
+    // some forwards
+    class CameraSpace;
+    class Context;
+    class Drawable;
+    class Geometry;
+    class GeometryFactory;
+    class Manager;
+    class Shader;
+    class ShaderSource;
+    class Uniform;
+    class VertexArrayObject;
+    class Window;
 
     /** Need to be called, once a context is ready */
     void moInitGl();
