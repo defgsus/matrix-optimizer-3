@@ -1,0 +1,227 @@
+/** @file shader.h
+
+    @brief
+
+    <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
+
+    <p>created 7/27/2014</p>
+*/
+
+#ifndef MOSRC_GL_SHADER_H
+#define MOSRC_GL_SHADER_H
+
+#include <vector>
+#include <memory>
+
+#include <QString>
+#include "openglfunctions.h"
+
+namespace MO {
+namespace GL {
+
+/** Container for a GLSL uniform. */
+class Uniform
+{
+public:
+
+    // ------- public member ---------
+
+    union
+    {
+        /** A vector of floats,
+            for types GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3 and GL_FLOAT_VEC4. */
+        GLfloat floats[4];
+
+        /** A vector of ints,
+            for types GL_INT, GL_INT_VEC2, GL_INT_VEC3 and GL_INT_VEC4 */
+        GLint ints[4];
+    };
+
+    // ----- getter -----
+
+    /** Name as in the shader source */
+    const QString& name() const { return name_; }
+    /** Type of the uniform (as OpenGL enum) */
+    GLenum type() const { return type_; }
+    /** Number of instances (for arrays) */
+    GLint size() const { return size_; }
+    /** Uniform location, to send the stuff over */
+    GLint location() const { return location_; }
+
+    friend class Shader;
+    friend void privateUniformDeleter(Uniform*);
+
+    // ----------- private area -----------
+private:
+
+    /** Constructor (initializes all to zero) */
+    Uniform();
+    /** Private destructor to avoid stupid things. */
+    ~Uniform() { }
+
+    void copyValuesFrom_(Uniform*);
+
+    QString name_;
+    GLenum type_;
+    GLint size_;
+    GLint location_;
+
+};
+
+
+/** Container for a GLSL attribute. */
+class Attribute
+{
+public:
+
+    // ----- getter -----
+
+    /** Name as in the shader source */
+    const QString& name() const { return name_; }
+    /** Type of the uniform (as OpenGL enum) */
+    GLenum type() const { return type_; }
+    /** Number of instances (for arrays) */
+    GLint size() const { return size_; }
+    /** Attribute location, to send the stuff over */
+    GLint location() const { return location_; }
+
+    friend class Shader;
+    friend void privateAttributeDeleter(Attribute*);
+
+    // ----------- private area -----------
+private:
+
+    /** Constructor (initializes all to zero) */
+    Attribute();
+    /** Private destructor to avoid stupid things. */
+    ~Attribute() { }
+
+    QString name_;
+    GLenum type_;
+    GLint size_;
+    GLint location_;
+};
+
+
+class Shader
+    :   protected MO_QOPENGL_FUNCTIONS_CLASS
+{
+public:
+
+    // ---------------- ctor -----------------
+
+    Shader();
+    ~Shader();
+
+    // ----------- query ---------------------
+
+    /** Return the log from the last compilation */
+    const QString& log() const { return log_; }
+
+    /** Has the source changed and shader needs recompilation? */
+    bool sourceChanged() const { return sourceChanged_; }
+
+    /** Is the shader ready to use? */
+    bool ready() const { return ready_; }
+
+    /** Returns if the shader has been activated.
+        @note If, after activation, activate() or deactivate() is called on a
+        different shader, this value will not reflect the GPU state! */
+    bool activated() const { return activated_; }
+
+    /** Returns the number of used uniforms of this shader.
+        Can be called after succesful compilation. */
+    size_t numUniforms() const { return uniforms_.size(); }
+
+    /** Returns a pointer to a uniform attached to this shader.
+        The public members of the Uniform struct can be manipulated.
+        Can be called after succesful compilation.
+        @p index must be < numUniforms() */
+    Uniform * getUniform(size_t index) { return uniforms_[index].get(); }
+
+    /** Returns the number of used attributes of this shader.
+        Can be called after succesful compilation. */
+    size_t numAttributes() const { return attribs_.size(); }
+
+    /** Returns a pointer to an Attribute attached to this shader.
+        Can be called after succesful compilation.
+        @p index must be < numUniforms() */
+    Attribute * getAttribute(size_t index) { return attribs_[index].get(); }
+
+    // ---------- source/compiler ------------
+
+    /** Sets the source for the vertex shader. Previous content will be overwritten. */
+    void setVertexSource(const QString& text);
+
+    /** Sets the source for the fragment shader. Previous content will be overwritten. */
+    void setFragmentSource(const QString& text);
+
+    /** Tries to compile the shader.
+        Any previous program will be destroyed but the values of uniforms are kept.
+        @returns true on success, also sets ready() to true. */
+    bool compile();
+
+    // ------------ usage --------------------
+
+    /** Activates the shader. Subsequent OpenGL calls will
+        be affected by the shader's workings. */
+    void activate();
+
+    /** Turns the shader off. */
+    void deactivate();
+
+    /** Sets the GPU-value of the uniform to the contents provided by
+        the @p uniform parameter.
+        @note The shader must be activated. */
+    void sendUniform(const Uniform * uniform);
+
+    /** Sends all uniform values to the GPU.
+        @note The shader must be activated. */
+    void sendUniforms();
+
+    /** Releases GPU resources. */
+    void releaseGL();
+
+private:
+
+    /** Gets the standardized attributes and uniforms. */
+    void getSpecialLocations_();
+
+    /** Gets all used uniforms and populates the uniforms_ list */
+    void getUniforms_();
+
+    /** Gets all used attributes and populates the attribs_ list */
+    void getAttributes_();
+
+    /** Compiles one of the vertex/fragment shaders and attaches to current programObject */
+    bool compileShader_(GLenum type, const QString& typeName, const QString& source);
+
+    QString vertSource_,
+            fragSource_,
+            log_;
+
+    GLenum shader_;
+
+    bool sourceChanged_, ready_, activated_;
+
+    std::vector<std::shared_ptr<Uniform>>
+        uniforms_,
+        oldUniforms_;
+
+    std::vector<std::shared_ptr<Attribute>>
+        attribs_;
+
+    // --- attributes ---
+
+    // YYY ShaderLocations attribs_;
+
+    bool isGlFuncInitialized_;
+};
+
+
+} // namespace GL
+} // namespace MO
+
+
+#endif // MOSRC_GL_SHADER_H

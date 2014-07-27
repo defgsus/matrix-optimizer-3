@@ -13,6 +13,7 @@
 
 #include "openglfunctions.h"
 
+class QOpenGLVertexArrayObject;
 class QOpenGLBuffer;
 
 namespace MO {
@@ -20,6 +21,7 @@ namespace GL {
 
 class Geometry;
 class Context;
+class Shader;
 
 class Drawable
 {
@@ -50,15 +52,28 @@ public:
     void releaseOpenGl();
 
     void render();
+    void renderArrays();
     void renderImmidiate();
+
 private:
+
+    void createVAO_();
 
     MO_QOPENGL_FUNCTIONS_CLASS * gl_;
     Geometry * geometry_;
 
+    Shader * shader_;
+
+    GLuint
+        vao_,
+        vertexBuffer_,
+        triIndexBuffer_;
+    /*
+    QOpenGLVertexArrayObject * vao_;
     QOpenGLBuffer
         * vertexBuffer_,
         * triIndexBuffer_;
+    */
 };
 
 } // namespace GL

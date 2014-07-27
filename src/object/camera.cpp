@@ -63,21 +63,23 @@ void Camera::initGl(uint thread)
 
 void Camera::startGlFrame(uint thread, Double )
 {
-    glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height());
+    MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
 
-    glClearColor(0,0.2,0.2,1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    MO_CHECK_GL( glClearColor(0,0.2,0.2,1) );
+    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
-    setProjectionMatrix(thread, 0);
+    MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
+
+    MO_CHECK_GL( setProjectionMatrix(thread, 0) );
 }
 
 void Camera::setProjectionMatrix(uint thread, uint sample)
 {
     // XXX this is a hack
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(&projection_[thread][sample][0][0]);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    MO_CHECK_GL( glMatrixMode(GL_PROJECTION) );
+    MO_CHECK_GL( glLoadMatrixf(&projection_[thread][sample][0][0]) );
+    MO_CHECK_GL( glMatrixMode(GL_MODELVIEW) );
+    MO_CHECK_GL( glLoadIdentity() );
 }
 
 } // namespace MO

@@ -144,6 +144,8 @@ public:
 #define MO_IO_WARNING(cause__, text__) \
     MO_WARNING_IMPL_("IO-WARNING: " << text__)
 
+#define MO_GL_WARNING(text__) \
+    MO_WARNING_IMPL_("OPENGL-WARNING: " << text__)
 
 // ----------------------- assert ---------------------------
 

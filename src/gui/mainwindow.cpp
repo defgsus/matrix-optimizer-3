@@ -345,6 +345,8 @@ void MainWindow::createMainMenu_()
 
 void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
 {
+    MO_DEBUG_GUI("MainWindow::setSceneObject(" << s << ")");
+
     MO_ASSERT(s, "MainWindow::setSceneObject() with NULL scene");
     MO_ASSERT(s != scene_, "MainWindow::setSceneObject() with same scene");
 

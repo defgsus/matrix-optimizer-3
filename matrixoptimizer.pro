@@ -123,7 +123,8 @@ SOURCES += \
     src/gl/geometry.cpp \
     src/gl/geometryfactory.cpp \
     src/gl/drawable.cpp \
-    src/gl/openglfunctions.cpp
+    src/gl/openglfunctions.cpp \
+    src/gl/shader.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -238,7 +239,8 @@ HEADERS += \
     src/audio/waveform.h \
     src/gl/geometry.h \
     src/gl/geometryfactory.h \
-    src/gl/drawable.h
+    src/gl/drawable.h \
+    src/gl/shader.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

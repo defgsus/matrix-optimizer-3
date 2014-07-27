@@ -67,6 +67,8 @@ Scene::Scene(QObject *parent) :
     sceneTime_          (0),
     samplePos_          (0)
 {
+    MO_DEBUG("Scene::Scene()");
+
     setName("Scene");
 
     readWriteLock_ = new QReadWriteLock();
@@ -86,6 +88,8 @@ Scene::Scene(QObject *parent) :
 
 Scene::~Scene()
 {
+    MO_DEBUG("Scene::~Scene()");
+
     stop();
     delete audioDevice_;
     delete readWriteLock_;

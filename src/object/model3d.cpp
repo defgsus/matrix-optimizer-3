@@ -40,7 +40,7 @@ void Model3d::initGl(uint /*thread*/)
 {
     draw_ = new GL::Drawable(this);
     GL::GeometryFactory::createCube(draw_->geometry(), 2);
-    //draw_->createOpenGl();
+    draw_->createOpenGl();
 }
 
 void Model3d::renderGl(const Mat4& camMatrix, uint thread, Double )
@@ -59,7 +59,7 @@ void Model3d::renderGl(const Mat4& camMatrix, uint thread, Double )
     glLoadMatrixf(&mat[0][0]);
 
     glColor3f(1,1,0);
-    draw_->render();//Immidiate();
+    draw_->render();
 
 #if (1)
     glBegin(GL_LINES);
