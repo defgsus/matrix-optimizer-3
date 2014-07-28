@@ -30,7 +30,8 @@ double expectDouble(const QString& s, int& x)
     if (!skipWS(s, x))
         MO_IO_ERROR(PARSE, "expected float, found end of line");
 
-    if (s.at(x).isNumber() || s.at(x) == '-' || s.at(x) == '.')
+    if (s.at(x).isNumber() || s.at(x) == '-' || s.at(x) == '.'
+            || s.at(x) == 'e')
     {
         int x2 = x;
         ++x;
@@ -141,8 +142,7 @@ void Geometry::loadOBJ(const QString &filename)
             x = 0;
 
             // skip beginning whitespace
-            while (x < s.length() && s.at(x).isSpace()) ++x;
-            if (x == s.length())
+            if (!skipWS(s, x))
                 continue;
 
             // skip comment
@@ -219,6 +219,8 @@ void Geometry::loadOBJ(const QString &filename)
                     continue;
                 }
 
+                // read third face vertex
+
                 expectFaceCorner(s, x, v3, t3, n3);
 
                 if (v3 < 0) v3 = vertices.size() / 3 - v3;
@@ -237,8 +239,8 @@ void Geometry::loadOBJ(const QString &filename)
     }
     catch (IoException & e)
     {
-        e << "\non reading .obj file '" << filename << "'\n"
-          << "at " << line << ":" << (x + 1);
+        e << "\non parsing .obj file '" << filename << "'"
+          << "\nat " << line << ":" << (x + 1);
         throw e;
     }
 }

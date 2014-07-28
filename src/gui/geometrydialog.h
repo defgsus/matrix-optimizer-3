@@ -17,9 +17,12 @@
 class QComboBox;
 class QCheckBox;
 class QLabel;
+class QLineEdit;
+class QToolButton;
 
 namespace MO {
 namespace GUI {
+namespace UTIL { class GeometryCreator; }
 
 class SpinBox;
 class DoubleSpinBox;
@@ -40,6 +43,10 @@ protected slots:
 
     void updateGeometry_();
     void updateFromWidgets_();
+    void loadModelFile_();
+
+    void creationFailed_(const QString&);
+    void creationFinished_();
 
 protected:
     //void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
@@ -48,9 +55,12 @@ protected:
 
     GeometryWidget * geoWidget_;
     GL::GeometryFactorySettings * settings_;
-    //bool geomChanged_;
+    UTIL::GeometryCreator * creator_;
+    bool updateGeometryLater_;
 
     QLabel * labelInfo_, *labelSeg_;
+    QLineEdit * editFilename_;
+    QToolButton * butLoadModelFile_;
     QComboBox * comboType_;
     QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbCalcNormals_,
             *cbTess_, *cbNorm_, *cbRemove_;

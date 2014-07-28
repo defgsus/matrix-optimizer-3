@@ -57,6 +57,7 @@ class GeometryFactorySettings
 public:
     enum Type
     {
+        T_FILE,
         T_QUAD,
         T_TETRAHEDRON,
         T_BOX,
@@ -76,6 +77,7 @@ public:
     // ---- public member ----
 
     Type type;
+    QString filename;
     bool calcNormals, asTriangles, convertToLines, sharedVertices, tesselate,
         normalizeVertices, removeRandomly;
     float colorR, colorG, colorB, colorA;

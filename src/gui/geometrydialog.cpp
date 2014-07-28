@@ -12,6 +12,10 @@
 #include <QComboBox>
 #include <QLabel>
 #include <QCheckBox>
+#include <QLineEdit>
+#include <QToolButton>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include "geometrydialog.h"
 #include "gl/geometry.h"
@@ -20,14 +24,17 @@
 #include "widget/doublespinbox.h"
 #include "widget/spinbox.h"
 #include "tool/stringmanip.h"
+#include "util/geometrycreator.h"
+
 
 namespace MO {
 namespace GUI {
 
 GeometryDialog::GeometryDialog(QWidget *parent, Qt::WindowFlags flags) :
     QDialog         (parent, flags),
-    settings_       (new GL::GeometryFactorySettings())
-    //geomChanged_    (false)
+    settings_       (new GL::GeometryFactorySettings()),
+    creator_        (0),
+    updateGeometryLater_(false)
 {
     setObjectName("_GeometryWidget");
     setWindowTitle(tr("geomtry editor"));
@@ -74,6 +81,20 @@ void GeometryDialog::createWidgets_()
                     this, SLOT(updateFromWidgets_()));
 
             auto lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                // filename
+                editFilename_ = new QLineEdit(this);
+                lh2->addWidget(editFilename_);
+                editFilename_->setText(settings_->filename);
+                editFilename_->setReadOnly(true);
+
+                butLoadModelFile_ = new QToolButton(this);
+                lh2->addWidget(butLoadModelFile_);
+                butLoadModelFile_->setText("...");
+                connect(butLoadModelFile_, SIGNAL(clicked()), this, SLOT(loadModelFile_()));
+
+            lh2 = new QHBoxLayout();
             lv->addLayout(lh2);
 
                 // create triangles
@@ -242,22 +263,41 @@ void GeometryDialog::createWidgets_()
             labelInfo_ = new QLabel(this);
             lv->addWidget(labelInfo_);
 }
-/*
-void GeometryDialog::paintEvent(QPaintEvent * e)
-{
-    QDialog::paintEvent(e);
 
-    if (geomChanged_)
-    {
-        geomChanged_ = false;
-        //updateGeometry_();
-    }
-}
-*/
 void GeometryDialog::updateGeometry_()
 {
-    auto g = new GL::Geometry();
-    GL::GeometryFactory::createFromSettings(g, settings_);
+    if (creator_)
+    {
+        updateGeometryLater_ = true;
+        return;
+    }
+
+    updateGeometryLater_ = false;
+
+    creator_ = new UTIL::GeometryCreator(this);
+    creator_->setSettings(*settings_);
+
+    connect(creator_, SIGNAL(failed(QString)),
+            this, SLOT(creationFailed_(QString)));
+    connect(creator_, SIGNAL(finished()), this, SLOT(creationFinished_()));
+
+    creator_->start();
+}
+
+void GeometryDialog::creationFailed_(const QString & text)
+{
+    QMessageBox::critical(this, tr("Geometry creation"),
+                          tr("Error creating geometry\n%1").arg(text));
+    creator_->deleteLater();
+    creator_ = 0;
+    if (updateGeometryLater_)
+        updateGeometry_();
+}
+
+void GeometryDialog::creationFinished_()
+{
+    auto g = creator_->takeGeometry();
+
     geoWidget_->setGeometry(g);
 
     labelInfo_->setText(tr("vertices: %1\ntriangles: %2\nlines: %3\nmemory: %4")
@@ -265,6 +305,11 @@ void GeometryDialog::updateGeometry_()
                         .arg(g->numTriangles())
                         .arg(g->numLines())
                         .arg(byte_to_string(g->memory())));
+
+    creator_->deleteLater();
+    creator_ = 0;
+    if (updateGeometryLater_)
+        updateGeometry_();
 }
 
 void GeometryDialog::updateFromWidgets_()
@@ -275,6 +320,7 @@ void GeometryDialog::updateFromWidgets_()
     settings_->type = (GL::GeometryFactorySettings::Type)
                         comboType_->itemData(comboType_->currentIndex()).toInt();
 
+    settings_->filename = editFilename_->text();
     settings_->calcNormals = cbCalcNormals_->isChecked();
     settings_->asTriangles = cbTriangles_->isChecked();
     settings_->convertToLines = cbConvertToLines_->isChecked();
@@ -296,7 +342,11 @@ void GeometryDialog::updateFromWidgets_()
     // update widgets visibility
 
     const bool
+            isFile = settings_->type ==
+                    GL::GeometryFactorySettings::T_FILE,
             canTriangle = (settings_->type !=
+                            GL::GeometryFactorySettings::T_GRID_XZ
+                            && settings_->type !=
                             GL::GeometryFactorySettings::T_GRID),
             hasTriangle = (canTriangle && settings_->asTriangles),
             hasSegments = (settings_->type ==
@@ -308,11 +358,14 @@ void GeometryDialog::updateFromWidgets_()
             has3Segments = (hasSegments && settings_->type ==
                             GL::GeometryFactorySettings::T_GRID);
 
-    cbTriangles_->setVisible( canTriangle );
+    cbTriangles_->setVisible( canTriangle && !isFile);
 
     cbCalcNormals_->setVisible( hasTriangle && !settings_->convertToLines );
     cbConvertToLines_->setVisible( hasTriangle );
     spinTess_->setVisible( settings_->tesselate );
+
+    editFilename_->setVisible(isFile);
+    butLoadModelFile_->setVisible(isFile);
 
     labelSeg_->setVisible( hasSegments );
     spinSegX_->setVisible( hasSegments );
@@ -323,6 +376,18 @@ void GeometryDialog::updateFromWidgets_()
     spinRemoveSeed_->setVisible( cbRemove_->isChecked() );
 
     updateGeometry_();
+}
+
+void GeometryDialog::loadModelFile_()
+{
+    QString filename =
+    QFileDialog::getOpenFileName(this, tr("Load .obj model"),
+                                 "./", "Wavefront OBJ { *.obj }, All files { * }");
+    if (filename.isEmpty())
+        return;
+
+    editFilename_->setText(filename);
+    updateFromWidgets_();
 }
 
 } // namespace GUI

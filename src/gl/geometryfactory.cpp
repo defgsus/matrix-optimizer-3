@@ -597,9 +597,13 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
 
     switch (set->type)
     {
+    case GeometryFactorySettings::T_FILE:
+        if (!set->filename.isEmpty())
+            g->loadOBJ(set->filename);
+    break;
+
     case GeometryFactorySettings::T_QUAD:
-        //createQuad(g, 1.f, 1.f, set->asTriangles);
-        g->loadOBJ(":/model/camera.obj");
+        createQuad(g, 1.f, 1.f, set->asTriangles);
     break;
 
     case GeometryFactorySettings::T_BOX:
@@ -675,12 +679,13 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
 
 const QStringList GeometryFactorySettings::typeIds =
 {
-    "quad", "tetra", "hexa", "octa", "icosa", "dodeca",
+    "file", "quad", "tetra", "hexa", "octa", "icosa", "dodeca",
     "gridxz", "grid", "uvsphere"
 };
 
 const QStringList GeometryFactorySettings::typeNames =
 {
+    QObject::tr("file"),
     QObject::tr("quad"),
     QObject::tr("tetrahedron"),
     QObject::tr("hexahedron (cube)"),

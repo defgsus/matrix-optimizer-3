@@ -132,7 +132,8 @@ SOURCES += \
     src/gui/widget/basic3dwidget.cpp \
     src/gui/widget/geometrywidget.cpp \
     src/gui/geometrydialog.cpp \
-    src/gl/geometry_io_obj.cpp
+    src/gl/geometry_io_obj.cpp \
+    src/gui/util/geometrycreator.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -256,7 +257,8 @@ HEADERS += \
     src/gui/widget/geometrywidget.h \
     src/gl/opengl_fwd.h \
     src/gui/geometrydialog.h \
-    src/math/hash.h
+    src/math/hash.h \
+    src/gui/util/geometrycreator.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
