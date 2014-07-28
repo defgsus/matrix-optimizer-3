@@ -128,7 +128,9 @@ SOURCES += \
     src/gl/shader.cpp \
     src/gl/shadersource.cpp \
     src/gl/opengl.cpp \
-    src/gl/vertexarrayobject.cpp
+    src/gl/vertexarrayobject.cpp \
+    src/gui/widget/basic3dwidget.cpp \
+    src/gui/widget/geometrywidget.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -247,7 +249,10 @@ HEADERS += \
     src/gl/shadersource.h \
     src/gl/cameraspace.h \
     src/gl/opengl.h \
-    src/gl/vertexarrayobject.h
+    src/gl/vertexarrayobject.h \
+    src/gui/widget/basic3dwidget.h \
+    src/gui/widget/geometrywidget.h \
+    src/gl/opengl_fwd.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
@@ -257,10 +262,13 @@ FORMS += \
 
 RESOURCES += \
     icons.qrc \
-    images.qrc
+    images.qrc \
+    shaders.qrc
 
 OTHER_FILES += $$BISON_FILES \
-    TODO.txt
+    TODO.txt \
+    assets/shader/default.vert \
+    assets/shader/default.frag
 
 ####################### BISON PARSER #######################
 

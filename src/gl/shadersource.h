@@ -33,6 +33,8 @@ public:
     const QString& uniformNameView() const { return unView_; }
     const QString& attribNamePosition() const { return anPos_; }
     const QString& attribNameColor() const { return anCol_; }
+    const QString& attribNameNormal() const { return anNorm_; }
+    const QString& attribNameTexCoord() const { return anTexCoord_; }
 
     // --------- setter ---------------
 
@@ -42,10 +44,12 @@ public:
     void setAttributeNamePosition(const QString& s) { anPos_ = s; }
     void setAttributeNameColor(const QString& s) { anCol_ = s; }
 
+    void setDefaultSource();
+
 private:
     QString vert_, frag_,
         unProj_, unView_,
-        anPos_, anCol_;
+        anPos_, anCol_, anNorm_, anTexCoord_;
 };
 
 } // namespace GL

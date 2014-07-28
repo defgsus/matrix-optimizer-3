@@ -9,6 +9,9 @@
 */
 
 #include "geometry.h"
+#include "shadersource.h"
+#include "shader.h"
+#include "vertexarrayobject.h"
 
 namespace MO {
 namespace GL {
@@ -77,13 +80,15 @@ void Geometry::addLine(IndexType p1, IndexType p2)
 const Geometry::VertexType * Geometry::triangle(
         IndexType triangleIndex, IndexType cornerIndex) const
 {
-    return &vertex_[triIndex_[triangleIndex * 3 + cornerIndex] * 3];
+    return &vertex_[triIndex_[triangleIndex * numTriangleIndexComponents() + cornerIndex]
+            * numVertexComponents()];
 }
 
 const Geometry::VertexType * Geometry::line(
         IndexType lineIndex, IndexType endIndex) const
 {
-    return &vertex_[lineIndex_[lineIndex * 2 + endIndex] * 3];
+    return &vertex_[lineIndex_[lineIndex * numLineIndexComponents() + endIndex]
+            * numVertexComponents()];
 }
 
 void Geometry::calculateTriangleNormals()
@@ -94,11 +99,11 @@ void Geometry::calculateTriangleNormals()
         normal_[i] = 0;
 
     // an array to memorize the number of
-    // adjacent vertices for each vertex
+    // adjacent triangles for each vertex
     std::vector<size_t> nr_adds(numVertices());
 
     // for each triangle
-    for (size_t i=0; i<triIndex_.size()/3; ++i)
+    for (size_t i=0; i<numTriangles(); ++i)
     {
         // index of each triangle corner
         size_t
@@ -156,7 +161,7 @@ void Geometry::unGroupVertices()
     texcoord_.clear();
 
     // for each previous triangle ..
-    for (uint i=0; i<index.size()/3; ++i)
+    for (uint i=0; i<numTriangles(); ++i)
     {
         IndexType
             i1 = index[i*3],
@@ -183,6 +188,58 @@ void Geometry::unGroupVertices()
     // recalculate the normals
     // to show difference between shared and un-shared vertices
     calculateTriangleNormals();
+}
+
+
+void Geometry::getVertexArrayObject(VertexArrayObject * vao, Shader * s, bool triangles)
+{
+    if (vao->isCreated())
+        vao->release();
+
+    vao->create();
+    vao->bind();
+
+    if (!s->getAttribute(s->source()->attribNamePosition()))
+        MO_GL_ERROR("No position attribute in shader");
+
+    // --- position ---
+    if (auto a = s->getAttribute(s->source()->attribNamePosition()))
+    {
+        vao->createAttribBuffer(a->location(),
+                                vertexEnum, numVertexComponents(),
+                                numVertexBytes(),
+                                vertices());
+    }
+
+    // --- color ---
+    if (auto a = s->getAttribute(s->source()->attribNameColor()))
+    {
+        vao->createAttribBuffer(a->location(),
+                                colorEnum, numColorComponents(),
+                                numColorBytes(),
+                                colors());
+    }
+
+    // --- normal ---
+    if (auto a = s->getAttribute(s->source()->attribNameNormal()))
+    {
+        vao->createAttribBuffer(a->location(),
+                                normalEnum, numNormalComponents(),
+                                numNormalBytes(),
+                                normals());
+    }
+
+    // --- indices ---
+    if (triangles)
+        vao->createIndexBuffer(indexEnum,
+                               numTriangles() * numTriangleIndexComponents(),
+                               triangleIndices());
+    else
+        vao->createIndexBuffer(indexEnum,
+                               numLines() * numLineIndexComponents(),
+                               lineIndices());
+
+    vao->unbind();
 }
 
 

@@ -10,8 +10,6 @@
 #include <QPainter>
 #include <QMouseEvent>
 
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include "basic3dview.h"
 
 namespace MO {
@@ -79,7 +77,7 @@ void Basic3DView::resizeGL(int w, int h)
     glViewport(0,0,w,h);
 
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(glm::value_ptr(projectionMatrix_));
+    glLoadMatrixf(&projectionMatrix_[0][0]);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
@@ -87,7 +85,7 @@ void Basic3DView::resizeGL(int w, int h)
 
 void Basic3DView::paintGL()
 {
-    glLoadMatrixf(glm::value_ptr(transformationMatrix()));
+    glLoadMatrixf(&transformationMatrix()[0][0]);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

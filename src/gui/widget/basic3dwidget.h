@@ -1,14 +1,18 @@
-/** @file
+/** @file basic3dwidget.h
 
     @brief prototype for a view into an opengl scene
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 2014/04/23</p>
+    <p>created 7/28/2014</p>
 */
-#ifndef MOSRC_GUI_BASIC3DVIEW_H
-#define MOSRC_GUI_BASIC3DVIEW_H
+
+#ifndef MOSRC_GUI_WIDGET_BASIC3DWIDGET_H
+#define MOSRC_GUI_WIDGET_BASIC3DWIDGET_H
+
+// to include glew before gl.h
+#include "gl/opengl.h"
 
 #include <QGLWidget>
 
@@ -17,11 +21,11 @@
 namespace MO {
 namespace GUI {
 
-class Basic3DView : public QGLWidget
+class Basic3DWidget : public QGLWidget
 {
     Q_OBJECT
 public:
-    explicit Basic3DView(QWidget *parent = 0);
+    explicit Basic3DWidget(QWidget *parent = 0);
 
     const Mat4& projectionMatrix() const { return projectionMatrix_; }
     Mat4 transformationMatrix() const;
@@ -43,11 +47,6 @@ protected:
 
     /** Sets the viewport and the projection matrix */
     void resizeGL(int w, int h);
-    /** Clears buffer and applies the transformation matrix */
-    void paintGL();
-
-    /** Draws coordinate system */
-    void drawCoords_(int len);
 
 private:
 
@@ -62,4 +61,4 @@ private:
 } // namespace GUI
 } // namespace MO
 
-#endif // MOSRC_GUI_BASIC3DVIEW_H
+#endif // MOSRC_GUI_WIDGET_BASIC3DWIDGET_H

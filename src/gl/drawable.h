@@ -36,6 +36,9 @@ public:
     /** Returns access to the shader of the Drawable. */
     Shader * shader();
 
+    /** Returns true when the Drawable is ready to render */
+    bool isReady() const;
+
     // ------------- setter ------------------
 
     /** Sets the geometry to draw.
@@ -64,7 +67,6 @@ public:
     void render();
     void renderShader(const Mat4& proj, const Mat4& view);
     void renderImmediate();
-    void renderImmediateShader(const Mat4& proj, const Mat4& view);
 
 private:
 
@@ -78,13 +80,8 @@ private:
     VertexArrayObject * vao_;
 
     GLuint
-        vao1_,
-        triIndexBuffer_,
-        vertexBuffer_,
         uniformProj_,
-        uniformView_,
-        attribPos_,
-        attribColor_;
+        uniformView_;
 
 };
 

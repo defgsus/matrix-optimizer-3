@@ -53,7 +53,8 @@ void Uniform::copyValuesFrom_(Uniform * u)
 
 
 Shader::Shader()
-    :   prog_             (-1),
+    :   source_             (new ShaderSource()),
+        prog_               (-1),
         sourceChanged_      (false),
         ready_              (false),
         activated_          (false)
@@ -74,22 +75,7 @@ void Shader::setSource(const ShaderSource * s)
     if (s->isEmpty())
         MO_GL_WARNING("Shader::setSource() with empty ShaderSource");
 
-    if (!s->fragmentSource().isEmpty())
-        setFragmentSource(s->fragmentSource());
-
-    if (!s->vertexSource().isEmpty())
-        setVertexSource(s->vertexSource());
-}
-
-void Shader::setVertexSource(const QString &text)
-{
-    vertSource_ = text;
-    sourceChanged_ = true;
-}
-
-void Shader::setFragmentSource(const QString &text)
-{
-    fragSource_ = text;
+    *source_ = *s;
     sourceChanged_ = true;
 }
 
@@ -146,11 +132,11 @@ bool Shader::compile()
     }
 
     // compile the vertex shader
-    if (!compileShader_(GL_VERTEX_SHADER, "vertex shader", vertSource_))
+    if (!compileShader_(GL_VERTEX_SHADER, "vertex shader", source_->vertexSource()))
         return false;
 
     // compile the fragment shader
-    if (!compileShader_(GL_FRAGMENT_SHADER, "fragment shader", fragSource_))
+    if (!compileShader_(GL_FRAGMENT_SHADER, "fragment shader", source_->fragmentSource()))
         return false;
 
     // link program object

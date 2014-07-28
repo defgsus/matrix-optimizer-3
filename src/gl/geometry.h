@@ -33,11 +33,11 @@ public:
 
     // ------ enums ----------
 
-    static const GLenum VertexEnum       = GL_FLOAT;
-    static const GLenum NormalEnum       = GL_FLOAT;
-    static const GLenum ColorEnum        = GL_FLOAT;
-    static const GLenum TextureCoordEnum = GL_FLOAT;
-    static const GLenum IndexEnum        = GL_UNSIGNED_INT;
+    static const GLenum vertexEnum       = GL_FLOAT;
+    static const GLenum normalEnum       = GL_FLOAT;
+    static const GLenum colorEnum        = GL_FLOAT;
+    static const GLenum textureCoordEnum = GL_FLOAT;
+    static const GLenum indexEnum        = GL_UNSIGNED_INT;
 
     // -------- ctor ---------
 
@@ -45,14 +45,21 @@ public:
 
     // ------- query ---------
 
+    unsigned int numVertexComponents() const { return 3; }
+    unsigned int numNormalComponents() const { return 3; }
+    unsigned int numColorComponents() const { return 4; }
+    unsigned int numTextureCoordComponents() const { return 2; }
+    unsigned int numTriangleIndexComponents() const { return 3; }
+    unsigned int numLineIndexComponents() const { return 2; }
+
     /** Returns number of vertices in the Model */
-    unsigned int numVertices() const { return vertex_.size() / 3; }
+    unsigned int numVertices() const { return vertex_.size() / numVertexComponents(); }
 
     /** Returns number of triangles in the Model */
-    unsigned int numTriangles() const { return triIndex_.size() / 3; }
+    unsigned int numTriangles() const { return triIndex_.size() / numTriangleIndexComponents(); }
 
     /** Returns number of lines in the Model */
-    unsigned int numLines() const { return lineIndex_.size() / 2; }
+    unsigned int numLines() const { return lineIndex_.size() / numLineIndexComponents(); }
 
     /** Returns a pointer to numVertices() * 3 coordinates */
     const VertexType * vertices() const { return &vertex_[0]; }
@@ -128,6 +135,14 @@ public:
     /** Makes every vertex in the model unique.
         After this call, every triangle will have it's unique vertices. */
     void unGroupVertices();
+
+    // ------------- opengl -----------------
+
+    /** Fills the vertex array object with the data from the geometry.
+        The shader provides the locations of the vertex attributes.
+        The Shader must be compiled.
+        The VAO will be released if it was created previously. */
+    void getVertexArrayObject(VertexArrayObject *, Shader *, bool triangles = true);
 
 protected:
 

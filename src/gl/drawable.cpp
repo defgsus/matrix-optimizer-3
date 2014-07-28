@@ -62,6 +62,11 @@ Shader * Drawable::shader()
     return shader_;
 }
 
+bool Drawable::isReady() const
+{
+    return geometry_ && vao_ && vao_->isCreated() && shader_ && shader_->ready();
+}
+
 void Drawable::setGeometry(Geometry * g)
 {
     delete geometry_;
@@ -117,15 +122,6 @@ void Drawable::compileShader_()
     else
         uniformView_ = invalidGl;
 
-    if (auto a = shader_->getAttribute(shaderSource_->attribNamePosition()))
-        attribPos_ = a->location();
-    else
-        attribPos_ = invalidGl;
-    if (auto a = shader_->getAttribute(shaderSource_->attribNameColor()))
-        attribColor_ = a->location();
-    else
-        attribColor_ = invalidGl;
-
 }
 
 void Drawable::createVAO_()
@@ -135,34 +131,10 @@ void Drawable::createVAO_()
     MO_ASSERT(!vao_, "Drawable::createVAO_() duplicate call");
 
     MO_ASSERT(shader_, "Drawable::createVAO_() without shader");
-    MO_ASSERT(attribPos_ != invalidGl, "No position attribute in shader");
-    MO_ASSERT(attribColor_ != invalidGl, "No color attribute in shader");
 
     vao_ = new VertexArrayObject(ER_THROW);
 
-    vao_->create();
-    vao_->bind();
-
-    if (geometry_->numTriangles())
-        vao_->createIndexBuffer(geometry_->IndexEnum,
-                                geometry_->numTriangles() * 3,
-                                geometry_->triangleIndices());
-    else
-        vao_->createIndexBuffer(geometry_->IndexEnum,
-                                geometry_->numLines() * 2,
-                                geometry_->lineIndices());
-
-    vao_->createAttribBuffer(attribPos_,
-                             geometry_->VertexEnum, 3,
-                             geometry_->numVertexBytes(),
-                             geometry_->vertices());
-    vao_->createAttribBuffer(attribColor_,
-                             geometry_->ColorEnum, 4,
-                             geometry_->numColorBytes(),
-                             geometry_->colors());
-
-    vao_->unbind();
-
+    geometry_->getVertexArrayObject(vao_, shader_, geometry_->numTriangles() != 0);
 
 }
 
@@ -224,31 +196,6 @@ void Drawable::renderImmediate()
         }
     }
     MO_CHECK_GL( glEnd() );
-}
-
-void Drawable::renderImmediateShader(const Mat4& proj, const Mat4& view)
-{
-    MO_ASSERT(geometry_, "no Geometry specified in Drawable::renderImmidiate()");
-    MO_ASSERT(uniformProj_ != invalidGl, "");
-    MO_ASSERT(uniformView_ != invalidGl, "");
-    MO_ASSERT(attribPos_ != invalidGl, "");
-
-    shader_->activate();
-    MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
-    MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
-
-    glBegin(GL_TRIANGLES);
-    for (uint t = 0; t<geometry_->numTriangles(); ++t)
-    {
-        for (int j=0; j<3; ++j)
-        {
-            auto v = geometry_->triangle(t, j);
-            glVertexAttrib3f(attribPos_, v[0], v[1], v[2]);
-        }
-    }
-    MO_CHECK_GL( glEnd() );
-
-    shader_->deactivate();
 }
 
 } //namespace GL

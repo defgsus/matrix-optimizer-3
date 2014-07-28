@@ -19,8 +19,10 @@
 #   include <GL/glew.h>
 #endif
 
+// to avoid qt glew warnings
 #include "context.h"
 
+#include "opengl_fwd.h"
 #include "io/error.h"
 
 
@@ -118,25 +120,6 @@ namespace GL {
 
     /** Used to flag invalid GLuint names */
     const GLuint invalidGl = -1;
-
-    enum ErrorReporting
-    {
-        ER_IGNORE,
-        ER_THROW
-    };
-
-    // some forwards
-    class CameraSpace;
-    class Context;
-    class Drawable;
-    class Geometry;
-    class GeometryFactory;
-    class Manager;
-    class Shader;
-    class ShaderSource;
-    class Uniform;
-    class VertexArrayObject;
-    class Window;
 
     /** Need to be called, once a context is ready */
     void moInitGl();

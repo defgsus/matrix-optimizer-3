@@ -133,6 +133,9 @@ public:
         different shader, this value will not reflect the GPU state! */
     bool activated() const { return activated_; }
 
+    /** Returns the internal source object */
+    const ShaderSource * source() const { return source_; }
+
     /** Returns the number of used uniforms of this shader.
         Can be called after succesful compilation. */
     size_t numUniforms() const { return uniforms_.size(); }
@@ -175,14 +178,10 @@ public:
     // ---------- source/compiler ------------
 
     /** Sets all the source code from the ShaderSource class,
-        if the entries (e.g. vertex, fragment, ...) are not empty. */
+        Previous contents will be overwritten.
+        The attribute names of the ShaderSource object are expected
+        to match the ones in the source. */
     void setSource(const ShaderSource *);
-
-    /** Sets the source for the vertex shader. Previous content will be overwritten. */
-    void setVertexSource(const QString& text);
-
-    /** Sets the source for the fragment shader. Previous content will be overwritten. */
-    void setFragmentSource(const QString& text);
 
     /** Tries to compile the shader.
         Any previous program will be destroyed but the values of uniforms are kept.
@@ -224,9 +223,9 @@ private:
     /** Compiles one of the vertex/fragment shaders and attaches to current programObject */
     bool compileShader_(GLenum type, const QString& typeName, const QString& source);
 
-    QString vertSource_,
-            fragSource_,
-            log_;
+    ShaderSource * source_;
+
+    QString log_;
 
     GLuint prog_;
 
