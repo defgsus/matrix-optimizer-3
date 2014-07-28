@@ -91,9 +91,9 @@ public:
 
     /** Returns the point of the vertex */
     Vec3 getVertex(IndexType vertexIndex) const;
-    /*Vec3 getColor(IndexType vertexIndex) const;
+    Vec4 getColor(IndexType vertexIndex) const;
     Vec3 getNormal(IndexType vertexIndex) const;
-    Vec3 getTexCoord(IndexType vertexIndex) const;*/
+    Vec2 getTexCoord(IndexType vertexIndex) const;
 
     const VertexType * triangle(IndexType triangeleIndex, IndexType cornerIndex) const;
     const VertexType * line(IndexType lineIndex, IndexType endIndex) const;

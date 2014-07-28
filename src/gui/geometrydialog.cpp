@@ -37,7 +37,7 @@ GeometryDialog::GeometryDialog(QWidget *parent, Qt::WindowFlags flags) :
     updateGeometryLater_(false)
 {
     setObjectName("_GeometryWidget");
-    setWindowTitle(tr("geomtry editor"));
+    setWindowTitle(tr("geometry editor"));
 
     setMinimumSize(800,400);
 
