@@ -41,6 +41,7 @@
 #include "gui/widget/spacer.h"
 #include "gui/util/scenesettings.h"
 #include "gui/audiodialog.h"
+#include "gui/geometrydialog.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "gl/manager.h"
@@ -341,6 +342,25 @@ void MainWindow::createMainMenu_()
         m->addAction(a = new QAction(tr("Run test thread"), m));
         a->setCheckable(true);
         connect(a, SIGNAL(triggered()), SLOT(runTestThread_()));
+
+        a = new QAction(tr("Geometry dialog"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            GeometryDialog * diag = new GeometryDialog(this);
+            connect(diag, SIGNAL(finished(int)), diag, SLOT(deleteLater()));
+            diag->show();
+        });
+
+        a = new QAction(tr("Projector dialog"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto pv = new ProjectorSetupWidget();
+            pv->setAttribute(Qt::WA_DeleteOnClose, true);
+            pv->show();
+        });
+
 }
 
 void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)

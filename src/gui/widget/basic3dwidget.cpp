@@ -71,11 +71,17 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
     }
 }
 
+
+void Basic3DWidget::initializeGL()
+{
+    emit glInitialized();
+}
+
 void Basic3DWidget::resizeGL(int w, int h)
 {
     projectionMatrix_ = glm::perspective(63.f, (float)w/h, 0.1f, 1000.0f);
 
-    glViewport(0,0,w,h);
+    MO_CHECK_GL( glViewport(0,0,w,h) );
 }
 
 

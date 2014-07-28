@@ -98,8 +98,14 @@ void Drawable::compileShader_()
 {
     MO_DEBUG_GL("Drawable::compileShader_()");
 
-    MO_ASSERT(shaderSource_, "Drawable::compileShader_() without ShaderSource");
-    MO_ASSERT(!shaderSource_->isEmpty(), "Drawable::compileShader_() with empty ShaderSource");
+    //MO_ASSERT(shaderSource_, "Drawable::compileShader_() without ShaderSource");
+    //MO_ASSERT(!shaderSource_->isEmpty(), "Drawable::compileShader_() with empty ShaderSource");
+
+    if (!shaderSource_)
+        shaderSource_ = new ShaderSource();
+
+    if (shaderSource_->isEmpty())
+        shaderSource_->setDefaultSource();
 
     if (!shader_)
         shader_ = new Shader();
@@ -128,11 +134,12 @@ void Drawable::createVAO_()
 {
     MO_DEBUG_GL("Drawable::createVAO_()");
 
-    MO_ASSERT(!vao_, "Drawable::createVAO_() duplicate call");
+    //MO_ASSERT(!vao_, "Drawable::createVAO_() duplicate call");
 
     MO_ASSERT(shader_, "Drawable::createVAO_() without shader");
 
-    vao_ = new VertexArrayObject(ER_THROW);
+    if (!vao_)
+        vao_ = new VertexArrayObject(ER_THROW);
 
     geometry_->getVertexArrayObject(vao_, shader_, geometry_->numTriangles() != 0);
 
@@ -140,6 +147,8 @@ void Drawable::createVAO_()
 
 void Drawable::releaseOpenGl()
 {
+    MO_DEBUG_GL("Drawable::releaseGl()");
+
     if (shader_)
         shader_->releaseGL();
 

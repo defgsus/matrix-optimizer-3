@@ -32,6 +32,8 @@ public:
 
 signals:
 
+    void glInitialized();
+
 public slots:
 
     void viewInit(Float distanceZ = 10.f);
@@ -43,10 +45,10 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
 
-    //void initializeGL();
+    void initializeGL() Q_DECL_OVERRIDE;
 
     /** Sets the viewport and the projection matrix */
-    void resizeGL(int w, int h);
+    void resizeGL(int w, int h) Q_DECL_OVERRIDE;
 
 private:
 

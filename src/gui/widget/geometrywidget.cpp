@@ -21,33 +21,36 @@ GeometryWidget::GeometryWidget(QWidget *parent) :
     Basic3DWidget   (parent),
     drawable_       (new GL::Drawable())
 {
+    setMinimumSize(128, 128);
 
 }
 
 GeometryWidget::~GeometryWidget()
 {
+    if (drawable_->isReady())
+        drawable_->releaseOpenGl();
     delete drawable_;
 }
-
+/*
 void GeometryWidget::initializeGL()
 {
-    drawable_->createOpenGl();
-}
 
+}
+*/
 void GeometryWidget::setGeometry(GL::Geometry * g)
 {
     drawable_->setGeometry(g);
+    drawable_->createOpenGl();
+    updateGL();
 }
 
 void GeometryWidget::paintGL()
 {
-    glClearColor(0.1, 0.2, 0.3, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    MO_CHECK_GL( glClearColor(0.1, 0.2, 0.3, 1.0) );
+    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
 
-    if (!drawable_->isReady())
-        return;
-
-    drawable_->renderShader(projectionMatrix(), transformationMatrix());
+    if (drawable_->isReady())
+        drawable_->renderShader(projectionMatrix(), transformationMatrix());
 }
 
 

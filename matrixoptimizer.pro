@@ -130,7 +130,8 @@ SOURCES += \
     src/gl/opengl.cpp \
     src/gl/vertexarrayobject.cpp \
     src/gui/widget/basic3dwidget.cpp \
-    src/gui/widget/geometrywidget.cpp
+    src/gui/widget/geometrywidget.cpp \
+    src/gui/geometrydialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -252,7 +253,8 @@ HEADERS += \
     src/gl/vertexarrayobject.h \
     src/gui/widget/basic3dwidget.h \
     src/gui/widget/geometrywidget.h \
-    src/gl/opengl_fwd.h
+    src/gl/opengl_fwd.h \
+    src/gui/geometrydialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

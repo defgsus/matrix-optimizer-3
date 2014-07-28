@@ -9,8 +9,6 @@
 */
 
 
-#include <glm/gtx/polar_coordinates.hpp>
-
 #include "math/vector.h"
 #include "projectorsetupview.h"
 
