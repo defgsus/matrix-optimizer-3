@@ -8,6 +8,8 @@
     <p>created 6/29/2014</p>
 */
 
+#include <random>
+
 #include <QSet>
 
 #include "geometry.h"
@@ -15,6 +17,7 @@
 #include "shader.h"
 #include "vertexarrayobject.h"
 #include "math/hash.h"
+#include "math/noiseperlin.h"
 
 namespace MO {
 namespace GL {
@@ -236,22 +239,28 @@ void Geometry::convertToLines()
                   t2 = triIndex_[i*3+1],
                   t3 = triIndex_[i*3+2];
 
-        const
-        Hash h1 = MATH::getHashUnordered<Hash>(t1, t2),
-             h2 = MATH::getHashUnordered<Hash>(t1, t3),
-             h3 = MATH::getHashUnordered<Hash>(t2, t3);
+        const Hash
+                h1  = Hash(t1) | (Hash(t2) << 32),
+                h1i = Hash(t2) | (Hash(t1) << 32),
+                h2  = Hash(t1) | (Hash(t3) << 32),
+                h2i = Hash(t3) | (Hash(t1) << 32),
+                h3  = Hash(t2) | (Hash(t3) << 32),
+                h3i = Hash(t3) | (Hash(t2) << 32);
+        //Hash h1 = MATH::getHashUnordered<Hash>(t1, t2),
+        //     h2 = MATH::getHashUnordered<Hash>(t1, t3),
+        //     h3 = MATH::getHashUnordered<Hash>(t2, t3);
 
-        if (!hash.contains(h1))
+        if (!hash.contains(h1) && !hash.contains(h1i))
         {
             addLine(t1, t2);
             hash.insert(h1);
         }
-        if (!hash.contains(h2))
+        if (!hash.contains(h2) && !hash.contains(h2i))
         {
             addLine(t1, t3);
             hash.insert(h2);
         }
-        if (!hash.contains(h3))
+        if (!hash.contains(h3) && !hash.contains(h3i))
         {
             addLine(t2, t3);
             hash.insert(h3);
@@ -285,8 +294,39 @@ void Geometry::tesselate(uint level)
     // XXX TODO: vertex reuse and color/texcoord handling
 
     if (!numTriangles())
-        return;
+    {
+        Geometry tess;
 
+        level = std::pow(2,level);
+
+        for (uint i=0; i<numLines(); ++i)
+        {
+            const IndexType
+                    t1 = lineIndex_[i*2],
+                    t2 = lineIndex_[i*2+1];
+
+            const Vec3
+                    p1 = getVertex(t1),
+                    p2 = getVertex(t2);
+
+            std::vector<IndexType> n;
+            n.push_back(tess.addVertex(p1[0], p1[1], p1[2]));
+            for (uint l = 0; l<level; ++l)
+            {
+                Vec3 p12 = p1 + (p2 - p1) * (float(l+1) / (level+1));
+                n.push_back(tess.addVertex(p12[0], p12[1], p12[2]));
+            }
+            n.push_back(tess.addVertex(p2[0], p2[1], p2[2]));
+
+            for (uint l = 1; l<n.size(); ++l)
+                tess.addLine(n[l-1], n[l]);
+        }
+
+        *this = tess;
+    }
+
+    else
+    // tesselate triangles
     for (uint l = 0; l<level; ++l)
     {
         Geometry tess;
@@ -323,6 +363,68 @@ void Geometry::tesselate(uint level)
         *this = tess;
     }
 }
+
+void Geometry::removePrimitivesRandomly(float probability, int seed)
+{
+    std::mt19937 rnd(seed);
+
+    if (numTriangles())
+    {
+        std::vector<IndexType> index;
+
+        for (uint i=0; i<triIndex_.size(); i += 3)
+        {
+            if ((float)rnd() / rnd.max() >= probability)
+            {
+                index.push_back(triIndex_[i]);
+                index.push_back(triIndex_[i+1]);
+                index.push_back(triIndex_[i+2]);
+            }
+        }
+
+        triIndex_ = index;
+    }
+    else
+    {
+        std::vector<IndexType> index;
+
+        for (uint i=0; i<lineIndex_.size(); i += 2)
+        {
+            if ((float)rnd() / rnd.max() >= probability)
+            {
+                index.push_back(lineIndex_[i]);
+                index.push_back(lineIndex_[i+1]);
+            }
+        }
+
+        lineIndex_ = index;
+    }
+}
+
+void Geometry::transformWithNoise(
+        VertexType modX, VertexType modY, VertexType modZ,
+        VertexType scaleX, VertexType scaleY, VertexType scaleZ,
+        int seedX, int seedY, int seedZ)
+{
+    MATH::NoisePerlin nx(seedX), ny(seedY), nz(seedZ);
+
+    for (uint i=0; i<vertex_.size(); i+=numVertexComponents())
+    {
+        VertexType
+                x = vertex_[i] * scaleX,
+                y = vertex_[i+1] * scaleY,
+                z = vertex_[i+2] * scaleZ;
+
+        vertex_[i] += modX * nx.noise(x);
+        vertex_[i+1] += modY * nx.noise(y);
+        vertex_[i+2] += modZ * nx.noise(z);
+    }
+}
+
+
+
+
+
 
 
 

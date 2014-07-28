@@ -45,6 +45,8 @@ public:
         WRITE,
         /** IO expected something else */
         VERSION_MISMATCH,
+        /** parser expected something not found */
+        PARSE,
         /** Some third party error */
         API
     };

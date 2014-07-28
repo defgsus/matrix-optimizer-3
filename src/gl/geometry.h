@@ -43,6 +43,11 @@ public:
 
     Geometry();
 
+    // -------- file io ------
+
+    /** Throws IoException on errors */
+    void loadOBJ(const QString& filename);
+
     // ------- query ---------
 
     unsigned int numVertexComponents() const { return 3; }
@@ -148,6 +153,19 @@ public:
 
     /** Normalize all vertices */
     void normalizeSphere(VertexType scale = 1);
+
+    /** Removes triangles or lines with a probability [0,1] */
+    void removePrimitivesRandomly(float probability, int seed);
+
+    void transformWithNoise(VertexType modX, VertexType modY, VertexType modZ,
+                            VertexType scaleX, VertexType scaleY, VertexType scaleZ,
+                            int seedX, int seedY, int seedZ);
+
+    /* Applies the equation to the each vertex.
+        Variables are x, y, z and index.
+        XXX would be really nice! but we need a function for x,y,z
+        or variable assignment in equation. */
+    //void transformWithEquation(const QString& equation);
 
     // ------- convenience functions -------
 

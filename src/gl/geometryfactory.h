@@ -45,7 +45,9 @@ public:
     static void createIcosahedron(Geometry *, float scale, bool asTriangles = true);
     static void createDodecahedron(Geometry *, float scale, bool asTriangles = true);
 
-    static void createGrid(Geometry *, int sizeU, int sizeV, bool with_coordinate_system);
+    static void createGridXZ(Geometry *, int sizeX, int sizeZ, bool with_coordinate_system);
+    static void createGrid(Geometry *, int sizeX, int sizeY, int sizeZ);
+
 };
 
 
@@ -61,6 +63,7 @@ public:
         T_OCTAHEDRON,
         T_ICOSAHEDRON,
         T_DODECAHEDRON,
+        T_GRID_XZ,
         T_GRID,
         T_UV_SPHERE
     };
@@ -73,10 +76,11 @@ public:
     // ---- public member ----
 
     Type type;
-    bool asTriangles, convertToLines, sharedVertices, tesselate, normalizeVertices;
+    bool calcNormals, asTriangles, convertToLines, sharedVertices, tesselate,
+        normalizeVertices, removeRandomly;
     float colorR, colorG, colorB, colorA;
-    float scale, scaleX, scaleY, scaleZ;
-    uint gridSize, segmentsU, segmentsV, tessLevel;
+    float scale, scaleX, scaleY, scaleZ, removeProb;
+    uint gridSize, segmentsX, segmentsY, segmentsZ, tessLevel, removeSeed;
 
     bool withCoords;
 

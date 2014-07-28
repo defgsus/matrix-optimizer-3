@@ -134,18 +134,18 @@ void GeometryFactory::createBox(
 }
 
 
-void GeometryFactory::createGrid(Geometry * g, int sizeU, int sizeV, bool coords)
+void GeometryFactory::createGridXZ(Geometry * g, int sizeX, int sizeY, bool coords)
 {
-    for (int i=-sizeU; i<=sizeU; ++i)
+    for (int i=-sizeX; i<=sizeX; ++i)
     {
-        auto p1 = g->addVertex(i,0,-sizeV),
-             p2 = g->addVertex(i,0,sizeV);
+        auto p1 = g->addVertex(i,0,-sizeY),
+             p2 = g->addVertex(i,0,sizeY);
         g->addLine(p1, p2);
     }
-    for (int i=-sizeV; i<=sizeV; ++i)
+    for (int i=-sizeY; i<=sizeY; ++i)
     {
-        auto p1 = g->addVertex(-sizeU,0,i),
-             p2 = g->addVertex(sizeU,0,i);
+        auto p1 = g->addVertex(-sizeX,0,i),
+             p2 = g->addVertex( sizeX,0,i);
         g->addLine(p1, p2);
     }
 
@@ -154,18 +154,43 @@ void GeometryFactory::createGrid(Geometry * g, int sizeU, int sizeV, bool coords
 
     g->setColor(1,0,0, 1);
     auto p1 = g->addVertex(0, 0.01, 0),
-         p2 = g->addVertex(sizeU, 0.01, 0);
+         p2 = g->addVertex(sizeX, 0.01, 0);
     g->addLine(p1, p2);
 
     g->setColor(0,1,0, 1);
     p1 = g->addVertex(0, 0.01, 0);
-    p2 = g->addVertex(0, std::min(sizeU, sizeV), 0);
+    p2 = g->addVertex(0, std::min(sizeX, sizeY), 0);
     g->addLine(p1, p2);
 
     g->setColor(0,0,1, 1);
     p1 = g->addVertex(0, 0.01, 0);
-    p2 = g->addVertex(0, 0, sizeV);
+    p2 = g->addVertex(0, 0, sizeY);
     g->addLine(p1, p2);
+}
+
+void GeometryFactory::createGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
+{
+    const Geometry::IndexType start = g->numVertices();
+
+    const float
+            ox = (float)sizeX / 2,
+            oy = (float)sizeY / 2,
+            oz = (float)sizeZ / 2;
+
+    for (int z=0; z<sizeZ; ++z)
+    for (int y=0; y<sizeY; ++y)
+    for (int x=0; x<sizeX; ++x)
+    {
+        g->addVertex(x-ox, y-oy, z-oz);
+    }
+
+    //for (int z=0; z<sizeZ; ++z)
+    for (int y=0; y<sizeX; ++y)
+    for (int x=1; x<sizeX; ++x)
+    {
+        int p = start + y * sizeX + x;
+        g->addLine(p - 1, p);
+    }
 }
 
 void GeometryFactory::createUVSphere(
@@ -573,20 +598,25 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
     switch (set->type)
     {
     case GeometryFactorySettings::T_QUAD:
-        createQuad(g, 1.f, 1.f, set->asTriangles);
+        //createQuad(g, 1.f, 1.f, set->asTriangles);
+        g->loadOBJ(":/model/camera.obj");
     break;
 
     case GeometryFactorySettings::T_BOX:
         createCube(g, 1.f, set->asTriangles);
     break;
 
+    case GeometryFactorySettings::T_GRID_XZ:
+        createGridXZ(g, set->segmentsX, set->segmentsY, set->withCoords);
+    break;
+
     case GeometryFactorySettings::T_GRID:
-        createGrid(g, set->segmentsU, set->segmentsV, set->withCoords);
+        createGrid(g, set->segmentsX, set->segmentsY, set->segmentsZ);
     break;
 
     case GeometryFactorySettings::T_UV_SPHERE:
-        createUVSphere(g, 1.f, std::max((uint)3, set->segmentsU),
-                               std::max((uint)2, set->segmentsV), set->asTriangles);
+        createUVSphere(g, 1.f, std::max((uint)3, set->segmentsX),
+                               std::max((uint)2, set->segmentsY), set->asTriangles);
     break;
 
     case GeometryFactorySettings::T_TETRAHEDRON:
@@ -622,10 +652,12 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
 
     if (set->convertToLines)
         g->convertToLines();
-    else
-    {
+
+    if (set->removeRandomly)
+        g->removePrimitivesRandomly(set->removeProb, set->removeSeed);
+
+    if (g->numTriangles() && set->calcNormals)
         g->calculateTriangleNormals();
-    }
 }
 
 
@@ -644,7 +676,7 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
 const QStringList GeometryFactorySettings::typeIds =
 {
     "quad", "tetra", "hexa", "octa", "icosa", "dodeca",
-    "grid", "uvsphere"
+    "gridxz", "grid", "uvsphere"
 };
 
 const QStringList GeometryFactorySettings::typeNames =
@@ -655,17 +687,20 @@ const QStringList GeometryFactorySettings::typeNames =
     QObject::tr("octahedron"),
     QObject::tr("icosahedron"),
     QObject::tr("dodecahedron"),
+    QObject::tr("grid xz"),
     QObject::tr("grid"),
     QObject::tr("uv-sphere")
 };
 
 GeometryFactorySettings::GeometryFactorySettings()
     : type          (T_BOX),
+      calcNormals   (true),
       asTriangles   (true),
       convertToLines(false),
       sharedVertices(true),
       tesselate     (false),
       normalizeVertices(false),
+      removeRandomly(false),
       colorR        (0.5f),
       colorG        (0.5f),
       colorB        (0.5f),
@@ -674,10 +709,13 @@ GeometryFactorySettings::GeometryFactorySettings()
       scaleX        (1.f),
       scaleY        (1.f),
       scaleZ        (1.f),
+      removeProb    (0.01f),
       gridSize      (1),
-      segmentsU     (10),
-      segmentsV     (10),
+      segmentsX     (10),
+      segmentsY     (10),
+      segmentsZ     (1),
       tessLevel     (1),
+      removeSeed    (1),
       withCoords    (true)
 {
 

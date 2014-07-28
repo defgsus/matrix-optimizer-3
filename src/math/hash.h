@@ -77,18 +77,10 @@ I getHash(I1 x, I1 y, I1 z, I1 w)
 template <typename I, typename I1>
 I getHashUnordered(I1 x, I1 y)
 {
-    return  getHash<I1>(x, y) ^ getHash<I1>(y, x);
+    return    (I)(x * hash_traits<I>::prime1)
+            ^ (I)(y * hash_traits<I>::prime1);
 }
 
-/** Returns a hash value of type I for the three components of type I1.
-    Order of components does not matter. */
-template <typename I, typename I1>
-I getHashUnordered(I1 x, I1 y, I1 z)
-{
-    return  getHash<I1>(x, y, z) ^ getHash<I1>(x, z, y) ^
-            getHash<I1>(y, x, z) ^ getHash<I1>(y, z, x) ^
-            getHash<I1>(z, x, y) ^ getHash<I1>(z, y, x);
-}
 
 /** Returns a hash value of type I for the two components */
 template <typename I>

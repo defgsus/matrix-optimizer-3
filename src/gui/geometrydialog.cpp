@@ -97,11 +97,20 @@ void GeometryDialog::createWidgets_()
             connect(cbSharedVert_, SIGNAL(stateChanged(int)),
                     this, SLOT(updateFromWidgets_()));
 
-            cbNorm_ = new QCheckBox(tr("normalize coordinates"), this);
-            lv->addWidget(cbNorm_);
-            cbNorm_->setChecked(settings_->normalizeVertices);
-            connect(cbNorm_, SIGNAL(stateChanged(int)),
-                    this, SLOT(updateFromWidgets_()));
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                cbCalcNormals_ = new QCheckBox(tr("calculate normals"), this);
+                lh2->addWidget(cbCalcNormals_);
+                cbCalcNormals_->setChecked(settings_->calcNormals);
+                connect(cbCalcNormals_, SIGNAL(stateChanged(int)),
+                        this, SLOT(updateFromWidgets_()));
+
+                cbNorm_ = new QCheckBox(tr("normalize coordinates"), this);
+                lh2->addWidget(cbNorm_);
+                cbNorm_->setChecked(settings_->normalizeVertices);
+                connect(cbNorm_, SIGNAL(stateChanged(int)),
+                        this, SLOT(updateFromWidgets_()));
 
             // scale
             auto l = new QLabel(tr("scale"), this);
@@ -158,20 +167,28 @@ void GeometryDialog::createWidgets_()
             lh2 = new QHBoxLayout();
             lv->addLayout(lh2);
 
-                spinSegU_ = new SpinBox(this);
-                lh2->addWidget(spinSegU_);
-                spinSegU_->setStatusTip("Number of segments (U)");
-                spinSegU_->setRange(1, 10000);
-                spinSegU_->setValue(settings_->segmentsU);
-                connect(spinSegU_, SIGNAL(valueChanged(int)),
+                spinSegX_ = new SpinBox(this);
+                lh2->addWidget(spinSegX_);
+                spinSegX_->setStatusTip("Number of segments (X)");
+                spinSegX_->setRange(1, 10000);
+                spinSegX_->setValue(settings_->segmentsX);
+                connect(spinSegX_, SIGNAL(valueChanged(int)),
                         this, SLOT(updateFromWidgets_()));
 
-                spinSegV_ = new SpinBox(this);
-                lh2->addWidget(spinSegV_);
-                spinSegV_->setStatusTip("Number of segments (V)");
-                spinSegV_->setRange(1, 10000);
-                spinSegV_->setValue(settings_->segmentsV);
-                connect(spinSegV_, SIGNAL(valueChanged(int)),
+                spinSegY_ = new SpinBox(this);
+                lh2->addWidget(spinSegY_);
+                spinSegY_->setStatusTip("Number of segments (Y)");
+                spinSegY_->setRange(1, 10000);
+                spinSegY_->setValue(settings_->segmentsY);
+                connect(spinSegY_, SIGNAL(valueChanged(int)),
+                        this, SLOT(updateFromWidgets_()));
+
+                spinSegZ_ = new SpinBox(this);
+                lh2->addWidget(spinSegZ_);
+                spinSegZ_->setStatusTip("Number of segments (Z)");
+                spinSegZ_->setRange(0, 10000);
+                spinSegZ_->setValue(settings_->segmentsZ);
+                connect(spinSegZ_, SIGNAL(valueChanged(int)),
                         this, SLOT(updateFromWidgets_()));
 
             // tesselation
@@ -192,6 +209,33 @@ void GeometryDialog::createWidgets_()
                 connect(spinTess_, SIGNAL(valueChanged(int)),
                         this, SLOT(updateFromWidgets_()));
 
+                // remove randomly
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    cbRemove_ = new QCheckBox(tr("randomly\nremove primitives"), this);
+                    lh2->addWidget(cbRemove_);
+                    cbTess_->setChecked(settings_->removeRandomly);
+                    connect(cbRemove_, SIGNAL(toggled(bool)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinRemoveProb_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinRemoveProb_);
+                    spinRemoveProb_->setStatusTip("Probability for removing points");
+                    spinRemoveProb_->setDecimals(5);
+                    spinRemoveProb_->setSingleStep(0.005);
+                    spinRemoveProb_->setRange(0.0, 1.0);
+                    spinRemoveProb_->setValue(settings_->removeProb);
+                    connect(spinRemoveProb_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinRemoveSeed_ = new SpinBox(this);
+                    lh2->addWidget(spinRemoveSeed_);
+                    spinRemoveSeed_->setStatusTip("Random seed for removing primitives");
+                    spinRemoveSeed_->setRange(0, 10000000);
+                    spinRemoveSeed_->setValue(settings_->removeSeed);
+                    connect(spinRemoveSeed_, SIGNAL(valueChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
 
             lv->addStretch(1);
 
@@ -231,6 +275,7 @@ void GeometryDialog::updateFromWidgets_()
     settings_->type = (GL::GeometryFactorySettings::Type)
                         comboType_->itemData(comboType_->currentIndex()).toInt();
 
+    settings_->calcNormals = cbCalcNormals_->isChecked();
     settings_->asTriangles = cbTriangles_->isChecked();
     settings_->convertToLines = cbConvertToLines_->isChecked();
     settings_->sharedVertices = cbSharedVert_->isChecked();
@@ -239,10 +284,14 @@ void GeometryDialog::updateFromWidgets_()
     settings_->scaleX = spinSX_->value();
     settings_->scaleY = spinSY_->value();
     settings_->scaleZ = spinSZ_->value();
-    settings_->segmentsU = spinSegU_->value();
-    settings_->segmentsV = spinSegV_->value();
+    settings_->segmentsX = spinSegX_->value();
+    settings_->segmentsY = spinSegY_->value();
+    settings_->segmentsZ = spinSegZ_->value();
     settings_->tesselate = cbTess_->isChecked();
     settings_->tessLevel = spinTess_->value();
+    settings_->removeRandomly = cbRemove_->isChecked();
+    settings_->removeProb = spinRemoveProb_->value();
+    settings_->removeSeed = spinRemoveSeed_->value();
 
     // update widgets visibility
 
@@ -253,17 +302,25 @@ void GeometryDialog::updateFromWidgets_()
             hasSegments = (settings_->type ==
                             GL::GeometryFactorySettings::T_UV_SPHERE
                            || settings_->type ==
+                            GL::GeometryFactorySettings::T_GRID_XZ
+                           || settings_->type ==
+                            GL::GeometryFactorySettings::T_GRID),
+            has3Segments = (hasSegments && settings_->type ==
                             GL::GeometryFactorySettings::T_GRID);
 
     cbTriangles_->setVisible( canTriangle );
 
+    cbCalcNormals_->setVisible( hasTriangle && !settings_->convertToLines );
     cbConvertToLines_->setVisible( hasTriangle );
-    cbTess_->setVisible( hasTriangle );
-    spinTess_->setVisible( hasTriangle && cbTess_->isChecked() );
+    spinTess_->setVisible( settings_->tesselate );
 
     labelSeg_->setVisible( hasSegments );
-    spinSegU_->setVisible( hasSegments );
-    spinSegV_->setVisible( hasSegments );
+    spinSegX_->setVisible( hasSegments );
+    spinSegY_->setVisible( hasSegments );
+    spinSegZ_->setVisible( has3Segments );
+
+    spinRemoveProb_->setVisible( cbRemove_->isChecked() );
+    spinRemoveSeed_->setVisible( cbRemove_->isChecked() );
 
     updateGeometry_();
 }

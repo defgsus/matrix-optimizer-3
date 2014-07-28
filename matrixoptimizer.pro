@@ -131,7 +131,8 @@ SOURCES += \
     src/gl/vertexarrayobject.cpp \
     src/gui/widget/basic3dwidget.cpp \
     src/gui/widget/geometrywidget.cpp \
-    src/gui/geometrydialog.cpp
+    src/gui/geometrydialog.cpp \
+    src/gl/geometry_io_obj.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -266,12 +267,14 @@ FORMS += \
 RESOURCES += \
     icons.qrc \
     images.qrc \
-    shaders.qrc
+    shaders.qrc \
+    models.qrc
 
 OTHER_FILES += $$BISON_FILES \
     TODO.txt \
     assets/shader/default.vert \
-    assets/shader/default.frag
+    assets/shader/default.frag \
+    assets/model/camera.obj_
 
 ####################### BISON PARSER #######################
 

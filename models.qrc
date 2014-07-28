@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/model">
+        <file alias="camera.obj">assets/model/camera.obj_</file>
+    </qresource>
+</RCC>

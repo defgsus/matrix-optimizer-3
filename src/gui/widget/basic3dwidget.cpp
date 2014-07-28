@@ -76,7 +76,7 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 
     if (e->buttons() & Qt::RightButton)
     {
-        distanceZ_ -= 0.05 * dy;
+        distanceZ_ += 0.04 * dy;
         updateGL();
     }
 }
