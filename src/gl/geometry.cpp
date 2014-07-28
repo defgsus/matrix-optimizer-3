@@ -8,10 +8,13 @@
     <p>created 6/29/2014</p>
 */
 
+#include <QSet>
+
 #include "geometry.h"
 #include "shadersource.h"
 #include "shader.h"
 #include "vertexarrayobject.h"
+#include "math/hash.h"
 
 namespace MO {
 namespace GL {
@@ -91,6 +94,18 @@ const Geometry::VertexType * Geometry::line(
             * numVertexComponents()];
 }
 
+void Geometry::scale(VertexType x, VertexType y, VertexType z)
+{
+    for (uint i=0; i<numVertices(); ++i)
+    {
+        vertex_[i*numVertexComponents()] *= x;
+        vertex_[i*numVertexComponents()+1] *= y;
+        vertex_[i*numVertexComponents()+2] *= z;
+    }
+}
+
+
+
 void Geometry::calculateTriangleNormals()
 {
     // first clear the normal array
@@ -161,7 +176,7 @@ void Geometry::unGroupVertices()
     texcoord_.clear();
 
     // for each previous triangle ..
-    for (uint i=0; i<numTriangles(); ++i)
+    for (uint i=0; i<index.size() / 3; ++i)
     {
         IndexType
             i1 = index[i*3],
@@ -185,9 +200,48 @@ void Geometry::unGroupVertices()
         addTriangle(t1, t2, t3);
     }
 
-    // recalculate the normals
-    // to show difference between shared and un-shared vertices
-    calculateTriangleNormals();
+}
+
+void Geometry::convertToLines()
+{
+    if (!numTriangles())
+        return;
+
+    lineIndex_.clear();
+
+    // test for already-connected
+    typedef long unsigned int Hash;
+    QSet<Hash> hash;
+
+    for (uint i=0; i<numTriangles(); ++i)
+    {
+        const IndexType
+                  t1 = triIndex_[i*3],
+                  t2 = triIndex_[i*3+1],
+                  t3 = triIndex_[i*3+2];
+
+        Hash h1 = MATH::getHash<Hash>(t1, t2),
+             h2 = MATH::getHash<Hash>(t1, t3),
+             h3 = MATH::getHash<Hash>(t2, t3);
+
+        if (!hash.contains(h1))
+        {
+            addLine(t1, t2);
+            hash.insert(h1);
+        }
+        if (!hash.contains(h2))
+        {
+            addLine(t1, t3);
+            hash.insert(h2);
+        }
+        if (!hash.contains(h3))
+        {
+            addLine(t2, t3);
+            hash.insert(h3);
+        }
+    }
+
+    triIndex_.clear();
 }
 
 
@@ -241,6 +295,8 @@ void Geometry::getVertexArrayObject(VertexArrayObject * vao, Shader * s, bool tr
 
     vao->unbind();
 }
+
+
 
 
 } // namespace GL

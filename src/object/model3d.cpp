@@ -43,7 +43,7 @@ void Model3d::initGl(uint /*thread*/)
 
 
     draw_ = new GL::Drawable();
-    GL::GeometryFactory::createGrid(draw_->geometry(), 10, true);
+    GL::GeometryFactory::createGrid(draw_->geometry(), 10, 10, true);
     draw_->shaderSource()->setDefaultSource();
     draw_->createOpenGl();
 }

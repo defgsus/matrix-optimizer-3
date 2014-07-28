@@ -61,6 +61,7 @@ void VertexArrayObject::release()
         MO_GL_ERROR_COND(rep_, "release on uninitialized vertex array object");
 
     MO_CHECK_GL( glDeleteVertexArrays(1, &vao_) );
+    vao_ = invalidGl;
 
     for (auto &b : buffers_)
         MO_CHECK_GL( glDeleteBuffers(1, &b.id) );

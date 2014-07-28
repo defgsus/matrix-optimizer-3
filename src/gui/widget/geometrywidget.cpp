@@ -47,7 +47,7 @@ void GeometryWidget::setGeometry(GL::Geometry * g)
 void GeometryWidget::paintGL()
 {
     MO_CHECK_GL( glClearColor(0.1, 0.2, 0.3, 1.0) );
-    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
+    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
     if (drawable_->isReady())
         drawable_->renderShader(projectionMatrix(), transformationMatrix());

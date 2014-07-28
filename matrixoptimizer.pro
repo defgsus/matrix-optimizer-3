@@ -254,7 +254,8 @@ HEADERS += \
     src/gui/widget/basic3dwidget.h \
     src/gui/widget/geometrywidget.h \
     src/gl/opengl_fwd.h \
-    src/gui/geometrydialog.h
+    src/gui/geometrydialog.h \
+    src/math/hash.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

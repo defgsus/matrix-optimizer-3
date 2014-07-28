@@ -126,6 +126,11 @@ public:
     /** Connects two previously created indices to form a line */
     void addLine(IndexType p1, IndexType p2);
 
+    // --------- manipulation --------------
+
+    /** Scale all geometry */
+    void scale(VertexType x, VertexType y, VertexType z);
+
     // ------- convenience functions -------
 
     /** Automatically calculates all normals for each triangle.
@@ -135,6 +140,9 @@ public:
     /** Makes every vertex in the model unique.
         After this call, every triangle will have it's unique vertices. */
     void unGroupVertices();
+
+    /** Converts all triangles to lines */
+    void convertToLines();
 
     // ------------- opengl -----------------
 

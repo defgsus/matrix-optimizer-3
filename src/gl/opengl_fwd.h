@@ -27,6 +27,7 @@ namespace GL {
     class Drawable;
     class Geometry;
     class GeometryFactory;
+    class GeometryFactorySettings;
     class Manager;
     class Shader;
     class ShaderSource;

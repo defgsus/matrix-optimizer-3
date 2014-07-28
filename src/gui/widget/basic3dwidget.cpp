@@ -19,6 +19,10 @@ namespace GUI {
 Basic3DWidget::Basic3DWidget(QWidget *parent) :
     QGLWidget(parent)
 {
+    QGLFormat f(format());
+    f.setDepth(true);
+    setFormat(f);
+
     viewInit();
 }
 
@@ -69,11 +73,19 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
         viewRotateX(dy);
         viewRotateY(dx);
     }
+
+    if (e->buttons() & Qt::RightButton)
+    {
+        distanceZ_ -= 0.05 * dy;
+        updateGL();
+    }
 }
 
 
 void Basic3DWidget::initializeGL()
 {
+    MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
+
     emit glInitialized();
 }
 
