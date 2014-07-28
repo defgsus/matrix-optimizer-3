@@ -50,11 +50,11 @@ protected:
     GL::GeometryFactorySettings * settings_;
     //bool geomChanged_;
 
-    QLabel * labelInfo_;
+    QLabel * labelInfo_, *labelSeg_;
     QComboBox * comboType_;
-    QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_;
+    QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbTess_;
     DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_;
-    SpinBox * spinSegU_, *spinSegV_;
+    SpinBox * spinSegU_, *spinSegV_, *spinTess_;
 };
 
 

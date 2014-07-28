@@ -72,19 +72,22 @@ void GeometryDialog::createWidgets_()
             connect(comboType_, SIGNAL(currentIndexChanged(QString)),
                     this, SLOT(updateFromWidgets_()));
 
-            // create triangles
-            cbTriangles_ = new QCheckBox(tr("create triangles"), this);
-            lv->addWidget(cbTriangles_);
-            cbTriangles_->setChecked(settings_->asTriangles);
-            connect(cbTriangles_, SIGNAL(stateChanged(int)),
-                    this, SLOT(updateFromWidgets_()));
+            auto lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
 
-            // shared vertices
-            cbConvertToLines_ = new QCheckBox(tr("convert to lines"), this);
-            lv->addWidget(cbConvertToLines_);
-            cbConvertToLines_->setChecked(settings_->convertToLines);
-            connect(cbConvertToLines_, SIGNAL(stateChanged(int)),
-                    this, SLOT(updateFromWidgets_()));
+                // create triangles
+                cbTriangles_ = new QCheckBox(tr("create triangles"), this);
+                lh2->addWidget(cbTriangles_);
+                cbTriangles_->setChecked(settings_->asTriangles);
+                connect(cbTriangles_, SIGNAL(stateChanged(int)),
+                        this, SLOT(updateFromWidgets_()));
+
+                // convert to lines
+                cbConvertToLines_ = new QCheckBox(tr("convert to lines"), this);
+                lh2->addWidget(cbConvertToLines_);
+                cbConvertToLines_->setChecked(settings_->convertToLines);
+                connect(cbConvertToLines_, SIGNAL(stateChanged(int)),
+                        this, SLOT(updateFromWidgets_()));
 
             // shared vertices
             cbSharedVert_ = new QCheckBox(tr("shared vertices"), this);
@@ -107,7 +110,7 @@ void GeometryDialog::createWidgets_()
             connect(spinS_, SIGNAL(valueChanged(double)),
                     this, SLOT(updateFromWidgets_()));
 
-            auto lh2 = new QHBoxLayout();
+            lh2 = new QHBoxLayout();
             lv->addLayout(lh2);
 
                 spinSX_ = new DoubleSpinBox(this);
@@ -142,8 +145,8 @@ void GeometryDialog::createWidgets_()
 
 
             // segments
-            l = new QLabel(tr("segments"), this);
-            lv->addWidget(l);
+            labelSeg_ = new QLabel(tr("segments"), this);
+            lv->addWidget(labelSeg_);
 
             lh2 = new QHBoxLayout();
             lv->addLayout(lh2);
@@ -163,6 +166,25 @@ void GeometryDialog::createWidgets_()
                 spinSegV_->setValue(settings_->segmentsV);
                 connect(spinSegV_, SIGNAL(valueChanged(int)),
                         this, SLOT(updateFromWidgets_()));
+
+            // tesselation
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                cbTess_ = new QCheckBox(tr("tesselate"), this);
+                lh2->addWidget(cbTess_);
+                cbTess_->setChecked(settings_->tesselate);
+                connect(cbTess_, SIGNAL(toggled(bool)),
+                        this, SLOT(updateFromWidgets_()));
+
+                spinTess_ = new SpinBox(this);
+                lh2->addWidget(spinTess_);
+                spinTess_->setStatusTip("Level of tesselation");
+                spinTess_->setRange(1, 10);
+                spinTess_->setValue(settings_->tessLevel);
+                connect(spinTess_, SIGNAL(valueChanged(int)),
+                        this, SLOT(updateFromWidgets_()));
+
 
             lv->addStretch(1);
 
@@ -210,6 +232,8 @@ void GeometryDialog::updateFromWidgets_()
     settings_->scaleZ = spinSZ_->value();
     settings_->segmentsU = spinSegU_->value();
     settings_->segmentsV = spinSegV_->value();
+    settings_->tesselate = cbTess_->isChecked();
+    settings_->tessLevel = spinTess_->value();
 
     // update widgets visibility
 
@@ -223,7 +247,12 @@ void GeometryDialog::updateFromWidgets_()
                             GL::GeometryFactorySettings::T_GRID);
 
     cbTriangles_->setVisible( canTriangle );
+
     cbConvertToLines_->setVisible( hasTriangle );
+    cbTess_->setVisible( hasTriangle );
+    spinTess_->setVisible( hasTriangle );
+
+    labelSeg_->setVisible( hasSegments );
     spinSegU_->setVisible( hasSegments );
     spinSegV_->setVisible( hasSegments );
 

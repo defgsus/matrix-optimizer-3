@@ -81,6 +81,12 @@ public:
     int numTriangleIndexBytes() const { return triIndex_.size() * sizeof(IndexType); }
     int numLineIndexBytes() const { return lineIndex_.size() * sizeof(IndexType); }
 
+    /** Returns the point of the vertex */
+    Vec3 getVertex(IndexType vertexIndex) const;
+    /*Vec3 getColor(IndexType vertexIndex) const;
+    Vec3 getNormal(IndexType vertexIndex) const;
+    Vec3 getTexCoord(IndexType vertexIndex) const;*/
+
     const VertexType * triangle(IndexType triangeleIndex, IndexType cornerIndex) const;
     const VertexType * line(IndexType lineIndex, IndexType endIndex) const;
 
@@ -131,6 +137,15 @@ public:
     /** Scale all geometry */
     void scale(VertexType x, VertexType y, VertexType z);
 
+    /** Converts all triangles to lines */
+    void convertToLines();
+
+    /** Split all triangles into smaller ones. */
+    void tesselate(uint level = 1);
+
+    /** Normalize all vertices */
+    void normalizeSphere(VertexType scale = 1);
+
     // ------- convenience functions -------
 
     /** Automatically calculates all normals for each triangle.
@@ -140,9 +155,6 @@ public:
     /** Makes every vertex in the model unique.
         After this call, every triangle will have it's unique vertices. */
     void unGroupVertices();
-
-    /** Converts all triangles to lines */
-    void convertToLines();
 
     // ------------- opengl -----------------
 

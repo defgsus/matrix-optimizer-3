@@ -80,6 +80,11 @@ void Geometry::addLine(IndexType p1, IndexType p2)
     lineIndex_.push_back(p2);
 }
 
+Vec3 Geometry::getVertex(const IndexType i) const
+{
+    return Vec3(vertex_[i*3], vertex_[i*3+1], vertex_[i*3+2]);
+}
+
 const Geometry::VertexType * Geometry::triangle(
         IndexType triangleIndex, IndexType cornerIndex) const
 {
@@ -244,6 +249,70 @@ void Geometry::convertToLines()
 
     triIndex_.clear();
 }
+
+void Geometry::normalizeSphere(VertexType scale)
+{
+    for (uint i=0; i<numVertices(); ++i)
+    {
+        const VertexType
+            v1 = vertex_[i*3],
+            v2 = vertex_[i*3+1],
+            v3 = vertex_[i*3+2],
+            mag = std::sqrt(v1*v1 + v2*v2 + v3*v3) / scale;
+
+        if (mag>0)
+        {
+            vertex_[i*3] /= mag;
+            vertex_[i*3+1] /= mag;
+            vertex_[i*3+2] /= mag;
+        }
+    }
+}
+
+void Geometry::tesselate(uint level)
+{
+    // XXX TODO: vertex reuse and color/texcoord handling
+
+    if (!numTriangles())
+        return;
+
+    for (uint l = 0; l<level; ++l)
+    {
+        Geometry tess;
+
+        for (uint i=0; i<numTriangles(); ++i)
+        {
+            const IndexType
+                    t1 = triIndex_[i*3],
+                    t2 = triIndex_[i*3+1],
+                    t3 = triIndex_[i*3+2];
+
+            const Vec3
+                    p1 = getVertex(t1),
+                    p2 = getVertex(t2),
+                    p3 = getVertex(t3),
+                    p12 = 0.5f * (p1 + p2),
+                    p13 = 0.5f * (p1 + p3),
+                    p23 = 0.5f * (p2 + p3);
+
+            const IndexType
+                    n1 = tess.addVertex(p1[0], p1[1], p1[2]),
+                    n2 = tess.addVertex(p2[0], p2[1], p2[2]),
+                    n3 = tess.addVertex(p3[0], p3[1], p3[2]),
+                    n12 = tess.addVertex(p12[0], p12[1], p12[2]),
+                    n13 = tess.addVertex(p13[0], p13[1], p13[2]),
+                    n23 = tess.addVertex(p23[0], p23[1], p23[2]);
+
+            tess.addTriangle(n1, n12, n13);
+            tess.addTriangle(n12, n2, n23);
+            tess.addTriangle(n12, n23, n13);
+            tess.addTriangle(n13, n23, n3);
+        }
+
+        *this = tess;
+    }
+}
+
 
 
 void Geometry::getVertexArrayObject(VertexArrayObject * vao, Shader * s, bool triangles)

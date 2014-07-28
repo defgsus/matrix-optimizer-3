@@ -73,11 +73,13 @@ public:
     // ---- public member ----
 
     Type type;
-    bool asTriangles, convertToLines, sharedVertices;
+    bool asTriangles, convertToLines, sharedVertices, tesselate;
     float colorR, colorG, colorB, colorA;
     float scale, scaleX, scaleY, scaleZ;
-    uint gridSize, segmentsU, segmentsV;
+    uint gridSize, segmentsU, segmentsV, tessLevel;
+
     bool withCoords;
+
 };
 
 

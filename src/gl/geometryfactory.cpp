@@ -611,13 +611,18 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
              set->scale * set->scaleY,
              set->scale * set->scaleZ);
 
+    if (set->tesselate)
+        g->tesselate(set->tessLevel);
+
     if (!set->sharedVertices)
         g->unGroupVertices();
 
     if (set->convertToLines)
         g->convertToLines();
     else
+    {
         g->calculateTriangleNormals();
+    }
 }
 
 
@@ -656,6 +661,7 @@ GeometryFactorySettings::GeometryFactorySettings()
       asTriangles   (true),
       convertToLines(false),
       sharedVertices(true),
+      tesselate     (false),
       colorR        (0.5f),
       colorG        (0.5f),
       colorB        (0.5f),
@@ -667,6 +673,7 @@ GeometryFactorySettings::GeometryFactorySettings()
       gridSize      (1),
       segmentsU     (10),
       segmentsV     (10),
+      tessLevel     (1),
       withCoords    (true)
 {
 
