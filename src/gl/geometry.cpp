@@ -201,39 +201,67 @@ void Geometry::unGroupVertices()
     auto normal = normal_;
     auto color = color_;
     auto texcoord = texcoord_;
-    auto index = triIndex_;
 
     vertex_.clear();
     normal_.clear();
     color_.clear();
-    triIndex_.clear();
     texcoord_.clear();
 
-    // for each previous triangle ..
-    for (uint i=0; i<index.size() / 3; ++i)
+    if (numTriangles())
     {
-        IndexType
-            i1 = index[i*3],
-            i2 = index[i*3+1],
-            i3 = index[i*3+2],
+        auto index = triIndex_;
+        triIndex_.clear();
 
-            t1 = addVertex(vertex[i1*3], vertex[i1*3+1], vertex[i1*3+2],
-                           normal[i1*3], normal[i1*3+1], normal[i1*3+2],
-                           color[i1*4], color[i1*4+1], color[i1*4+2], color[i1*4+3],
-                           texcoord[i1*2], texcoord[i1*2+1]),
-            t2 = addVertex(vertex[i2*3], vertex[i2*3+1], vertex[i2*3+2],
-                           normal[i2*3], normal[i2*3+1], normal[i2*3+2],
-                           color[i2*4], color[i2*4+1], color[i2*4+2], color[i2*4+3],
-                           texcoord[i2*2], texcoord[i2*2+1]),
-            t3 = addVertex(vertex[i3*3], vertex[i3*3+1], vertex[i3*3+2],
-                           normal[i3*3], normal[i3*3+1], normal[i3*3+2],
-                           color[i3*4], color[i3*4+1], color[i3*4+2], color[i3*4+3],
-                           texcoord[i3*2], texcoord[i3*2+1]);
+        // for each previous triangle ..
+        for (uint i=0; i<index.size() / 3; ++i)
+        {
+            IndexType
+                i1 = index[i*3],
+                i2 = index[i*3+1],
+                i3 = index[i*3+2],
 
-        // .. create a new unique triangle
-        addTriangle(t1, t2, t3);
+                t1 = addVertex(vertex[i1*3], vertex[i1*3+1], vertex[i1*3+2],
+                               normal[i1*3], normal[i1*3+1], normal[i1*3+2],
+                               color[i1*4], color[i1*4+1], color[i1*4+2], color[i1*4+3],
+                               texcoord[i1*2], texcoord[i1*2+1]),
+                t2 = addVertex(vertex[i2*3], vertex[i2*3+1], vertex[i2*3+2],
+                               normal[i2*3], normal[i2*3+1], normal[i2*3+2],
+                               color[i2*4], color[i2*4+1], color[i2*4+2], color[i2*4+3],
+                               texcoord[i2*2], texcoord[i2*2+1]),
+                t3 = addVertex(vertex[i3*3], vertex[i3*3+1], vertex[i3*3+2],
+                               normal[i3*3], normal[i3*3+1], normal[i3*3+2],
+                               color[i3*4], color[i3*4+1], color[i3*4+2], color[i3*4+3],
+                               texcoord[i3*2], texcoord[i3*2+1]);
+
+            // .. create a new unique triangle
+            addTriangle(t1, t2, t3);
+        }
     }
+    else
+    {
+        auto index = lineIndex_;
+        lineIndex_.clear();
 
+        // for each previous line ..
+        for (uint i=0; i<index.size() / 2; ++i)
+        {
+            IndexType
+                i1 = index[i*2],
+                i2 = index[i*2+1],
+
+                t1 = addVertex(vertex[i1*3], vertex[i1*3+1], vertex[i1*3+2],
+                               normal[i1*3], normal[i1*3+1], normal[i1*3+2],
+                               color[i1*4], color[i1*4+1], color[i1*4+2], color[i1*4+3],
+                               texcoord[i1*2], texcoord[i1*2+1]),
+                t2 = addVertex(vertex[i2*3], vertex[i2*3+1], vertex[i2*3+2],
+                               normal[i2*3], normal[i2*3+1], normal[i2*3+2],
+                               color[i2*4], color[i2*4+1], color[i2*4+2], color[i2*4+3],
+                               texcoord[i2*2], texcoord[i2*2+1]);
+
+            // .. create a new unique triangle
+            addLine(t1, t2);
+        }
+    }
 }
 
 void Geometry::convertToLines()
