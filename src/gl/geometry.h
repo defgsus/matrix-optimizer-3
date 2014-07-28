@@ -81,6 +81,9 @@ public:
     int numTriangleIndexBytes() const { return triIndex_.size() * sizeof(IndexType); }
     int numLineIndexBytes() const { return lineIndex_.size() * sizeof(IndexType); }
 
+    /** Returns memory usage in bytes */
+    long unsigned int memory() const;
+
     /** Returns the point of the vertex */
     Vec3 getVertex(IndexType vertexIndex) const;
     /*Vec3 getColor(IndexType vertexIndex) const;

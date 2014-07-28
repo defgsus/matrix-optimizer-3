@@ -19,6 +19,7 @@
 #include "widget/geometrywidget.h"
 #include "widget/doublespinbox.h"
 #include "widget/spinbox.h"
+#include "tool/stringmanip.h"
 
 namespace MO {
 namespace GUI {
@@ -94,6 +95,12 @@ void GeometryDialog::createWidgets_()
             lv->addWidget(cbSharedVert_);
             cbSharedVert_->setChecked(settings_->sharedVertices);
             connect(cbSharedVert_, SIGNAL(stateChanged(int)),
+                    this, SLOT(updateFromWidgets_()));
+
+            cbNorm_ = new QCheckBox(tr("normalize coordinates"), this);
+            lv->addWidget(cbNorm_);
+            cbNorm_->setChecked(settings_->normalizeVertices);
+            connect(cbNorm_, SIGNAL(stateChanged(int)),
                     this, SLOT(updateFromWidgets_()));
 
             // scale
@@ -209,10 +216,11 @@ void GeometryDialog::updateGeometry_()
     GL::GeometryFactory::createFromSettings(g, settings_);
     geoWidget_->setGeometry(g);
 
-    labelInfo_->setText(tr("vertices: %1\ntriangles: %2\nlines: %3")
+    labelInfo_->setText(tr("vertices: %1\ntriangles: %2\nlines: %3\nmemory: %4")
                         .arg(g->numVertices())
                         .arg(g->numTriangles())
-                        .arg(g->numLines()));
+                        .arg(g->numLines())
+                        .arg(byte_to_string(g->memory())));
 }
 
 void GeometryDialog::updateFromWidgets_()
@@ -226,6 +234,7 @@ void GeometryDialog::updateFromWidgets_()
     settings_->asTriangles = cbTriangles_->isChecked();
     settings_->convertToLines = cbConvertToLines_->isChecked();
     settings_->sharedVertices = cbSharedVert_->isChecked();
+    settings_->normalizeVertices = cbNorm_->isChecked();
     settings_->scale = spinS_->value();
     settings_->scaleX = spinSX_->value();
     settings_->scaleY = spinSY_->value();
@@ -250,7 +259,7 @@ void GeometryDialog::updateFromWidgets_()
 
     cbConvertToLines_->setVisible( hasTriangle );
     cbTess_->setVisible( hasTriangle );
-    spinTess_->setVisible( hasTriangle );
+    spinTess_->setVisible( hasTriangle && cbTess_->isChecked() );
 
     labelSeg_->setVisible( hasSegments );
     spinSegU_->setVisible( hasSegments );

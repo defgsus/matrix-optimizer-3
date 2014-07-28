@@ -607,12 +607,15 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
 
     }
 
+    if (set->tesselate)
+        g->tesselate(set->tessLevel);
+
+    if (set->normalizeVertices)
+        g->normalizeSphere();
+
     g->scale(set->scale * set->scaleX,
              set->scale * set->scaleY,
              set->scale * set->scaleZ);
-
-    if (set->tesselate)
-        g->tesselate(set->tessLevel);
 
     if (!set->sharedVertices)
         g->unGroupVertices();
@@ -662,6 +665,7 @@ GeometryFactorySettings::GeometryFactorySettings()
       convertToLines(false),
       sharedVertices(true),
       tesselate     (false),
+      normalizeVertices(false),
       colorR        (0.5f),
       colorG        (0.5f),
       colorB        (0.5f),

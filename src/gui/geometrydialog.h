@@ -52,7 +52,7 @@ protected:
 
     QLabel * labelInfo_, *labelSeg_;
     QComboBox * comboType_;
-    QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbTess_;
+    QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbTess_, *cbNorm_;
     DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_;
     SpinBox * spinSegU_, *spinSegV_, *spinTess_;
 };

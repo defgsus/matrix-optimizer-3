@@ -33,6 +33,16 @@ Geometry::Geometry()
 {
 }
 
+long unsigned int Geometry::memory() const
+{
+    return numVertexBytes()
+            + numNormalBytes()
+            + numColorBytes()
+            + numTextureCoordBytes()
+            + numTriangleIndexBytes()
+            + numLineIndexBytes();
+}
+
 void Geometry::clear()
 {
     vertex_.clear();
@@ -79,6 +89,7 @@ void Geometry::addLine(IndexType p1, IndexType p2)
     lineIndex_.push_back(p1);
     lineIndex_.push_back(p2);
 }
+
 
 Vec3 Geometry::getVertex(const IndexType i) const
 {

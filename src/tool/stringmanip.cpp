@@ -55,4 +55,25 @@ QString fit_in_length(const QString &str, int len)
 
 
 
+QString byte_to_string(unsigned long int byte)
+{
+    if (byte <= 1024)
+        return QString("%1b").arg(byte);
+    byte /= 1024;
+    if (byte <= 1024)
+        return QString("%1kb").arg(byte);
+    byte /= 1024;
+    if (byte <= 1024)
+        return QString("%1mb").arg(byte);
+    byte /= 1024;
+    if (byte <= 1024)
+        return QString("%1gb").arg(byte);
+    byte /= 1024;
+    if (byte <= 1024)
+        return QString("%1tb").arg(byte);
+    byte /= 1024;
+    return QString("%1pb").arg(byte);
+}
+
+
 } // namespace MO

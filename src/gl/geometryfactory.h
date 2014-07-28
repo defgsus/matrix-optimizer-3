@@ -73,7 +73,7 @@ public:
     // ---- public member ----
 
     Type type;
-    bool asTriangles, convertToLines, sharedVertices, tesselate;
+    bool asTriangles, convertToLines, sharedVertices, tesselate, normalizeVertices;
     float colorR, colorG, colorB, colorA;
     float scale, scaleX, scaleY, scaleZ;
     uint gridSize, segmentsU, segmentsV, tessLevel;
