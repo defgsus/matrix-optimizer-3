@@ -40,6 +40,9 @@ public:
                                bool asTriangles = true);
     static void createUVSphereLines(Geometry *, float rad, uint segu, uint segv);
 
+    static void createOctahedron(Geometry *, float scale, bool asTriangles = true);
+    static void createIcosahedron(Geometry *, float scale, bool asTriangles = true);
+
     static void createGrid(Geometry *, int sizeU, int sizeV, bool with_coordinate_system);
 };
 
@@ -52,6 +55,8 @@ public:
     {
         T_QUAD,
         T_BOX,
+        T_OCTAHEDRON,
+        T_ICOSAHEDRON,
         T_GRID,
         T_UV_SPHERE
     };

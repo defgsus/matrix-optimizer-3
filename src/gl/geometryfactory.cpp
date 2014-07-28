@@ -281,11 +281,132 @@ void GeometryFactory::createUVSphereLines(
     }
 }
 
+void GeometryFactory::createOctahedron(Geometry * g, float scale, bool asTriangles)
+{
+    const float
+        a = 0.5f * scale / std::sqrt(2.f * std::sqrt(2.f)),
+        b = 0.5f * scale;
+
+    const int p0 = g->addVertex( 0,  b,  0);
+    const int p1 = g->addVertex(-a,  0,  a);
+    const int p2 = g->addVertex( a,  0,  a);
+    const int p3 = g->addVertex( a,  0, -a);
+    const int p4 = g->addVertex(-a,  0, -a);
+    const int p5 = g->addVertex( 0, -b,  0);
+
+    if (asTriangles)
+    {
+        g->addTriangle( p0,p1,p2 );
+        g->addTriangle( p0,p2,p3 );
+        g->addTriangle( p0,p3,p4 );
+        g->addTriangle( p0,p4,p1 );
+        g->addTriangle( p5,p2,p1 );
+        g->addTriangle( p5,p3,p2 );
+        g->addTriangle( p5,p4,p3 );
+        g->addTriangle( p5,p1,p4 );
+    }
+    else
+    {
+        g->addLine( p0,p1 );
+        g->addLine( p0,p2 );
+        g->addLine( p0,p3 );
+        g->addLine( p0,p4 );
+        g->addLine( p1,p2 );
+        g->addLine( p1,p4 );
+        g->addLine( p1,p5 );
+        g->addLine( p2,p3 );
+        g->addLine( p2,p5 );
+        g->addLine( p3,p4 );
+        g->addLine( p3,p5 );
+        g->addLine( p4,p5 );
+    }
+}
+
+void GeometryFactory::createIcosahedron(Geometry * g, float scale, bool asTriangles)
+{
+    const float
+        a = 0.5f * scale,
+        b = scale / (1.f + std::sqrt(5.f));
+
+    const int p0  = g->addVertex(  0,  b, -a );
+    const int p1  = g->addVertex(  b,  a,  0 );
+    const int p2  = g->addVertex( -b,  a,  0 );
+    const int p3  = g->addVertex(  0,  b,  a );
+    const int p4  = g->addVertex(  0, -b,  a );
+    const int p5  = g->addVertex( -a,  0,  b );
+    const int p6  = g->addVertex(  0, -b, -a );
+    const int p7  = g->addVertex(  a,  0, -b );
+    const int p8  = g->addVertex(  a,  0,  b );
+    const int p9  = g->addVertex( -a,  0, -b );
+    const int p10 = g->addVertex(  b, -a,  0 );
+    const int p11 = g->addVertex( -b, -a,  0 );
+
+    if (asTriangles)
+    {
+        g->addTriangle( p0, p1, p2 );
+        g->addTriangle( p3, p2, p1 );
+        g->addTriangle( p3, p4, p5 );
+        g->addTriangle( p3, p8, p4 );
+        g->addTriangle( p0, p6, p7 );
+        g->addTriangle( p0, p9, p6 );
+        g->addTriangle( p4, p10, p11 );
+        g->addTriangle( p6, p11, p10 );
+        g->addTriangle( p2, p5, p9 );
+        g->addTriangle( p11, p9, p5 );
+        g->addTriangle( p1, p7, p8 );
+        g->addTriangle( p10, p8, p7 );
+        g->addTriangle( p3, p5, p2 );
+        g->addTriangle( p3, p1, p8 );
+        g->addTriangle( p0, p2, p9 );
+        g->addTriangle( p0, p7, p1 );
+        g->addTriangle( p6, p9, p11 );
+        g->addTriangle( p6, p10, p7 );
+        g->addTriangle( p4, p11, p5 );
+        g->addTriangle( p4, p8, p10 );
+    }
+    else
+    {
+        g->addLine( p0, p1 );
+        g->addLine( p0, p2 );
+        g->addLine( p0, p6 );
+        g->addLine( p0, p7 );
+        g->addLine( p0, p9 );
+        g->addLine( p1, p2 );
+        g->addLine( p1, p3 );
+        g->addLine( p1, p7 );
+        g->addLine( p1, p8 );
+        g->addLine( p2, p3 );
+        g->addLine( p2, p5 );
+        g->addLine( p2, p9 );
+        g->addLine( p3, p4 );
+        g->addLine( p3, p5 );
+        g->addLine( p3, p8 );
+        g->addLine( p4, p5 );
+        g->addLine( p4, p8 );
+        g->addLine( p4, p10 );
+        g->addLine( p4, p11 );
+        g->addLine( p5, p9 );
+        g->addLine( p5, p11 );
+        g->addLine( p6, p7 );
+        g->addLine( p6, p9 );
+        g->addLine( p6, p10 );
+        g->addLine( p6, p11 );
+        g->addLine( p7, p8 );
+        g->addLine( p7, p10 );
+        g->addLine( p8, p10 );
+        g->addLine( p9, p11 );
+        g->addLine( p10, p11 );
+    }
+}
+
+
+
+
 
 
 void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySettings * set)
 {
-    g->setColor(set->colorR, set->colorG, set->colorB, set->colorA);
+    g->setColor(set->colorR, set->colorG, set->colorB, set->colorA * 0.5);
 
     switch (set->type)
     {
@@ -305,6 +426,15 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
         createUVSphere(g, 1.f, std::max((uint)3, set->segmentsU),
                                std::max((uint)2, set->segmentsV), set->asTriangles);
     break;
+
+    case GeometryFactorySettings::T_OCTAHEDRON:
+        createOctahedron(g, 1.f, set->asTriangles);
+    break;
+
+    case GeometryFactorySettings::T_ICOSAHEDRON:
+        createIcosahedron(g, 1.f, set->asTriangles);
+    break;
+
     }
 
     g->scale(set->scale * set->scaleX,
@@ -321,18 +451,29 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
 }
 
 
+
+
+
+
+
+
+
+
+
 // ------------------------ factorysettings -------------------------
 
 
 const QStringList GeometryFactorySettings::typeIds =
 {
-    "quad", "box", "grid", "sphere"
+    "quad", "box", "octahedron", "icosahedron", "grid", "sphere"
 };
 
 const QStringList GeometryFactorySettings::typeNames =
 {
     QObject::tr("quad"),
     QObject::tr("box"),
+    QObject::tr("octahedron"),
+    QObject::tr("icosahedron"),
     QObject::tr("grid"),
     QObject::tr("uv-sphere")
 };

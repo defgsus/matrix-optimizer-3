@@ -48,6 +48,9 @@ void GeometryWidget::paintGL()
 {
     MO_CHECK_GL( glClearColor(0.1, 0.2, 0.3, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+    // XXX not working
+    MO_CHECK_GL( glEnable(GL_BLEND) );
+    MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
     if (drawable_->isReady())
         drawable_->renderShader(projectionMatrix(), transformationMatrix());

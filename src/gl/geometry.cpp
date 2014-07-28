@@ -220,9 +220,10 @@ void Geometry::convertToLines()
                   t2 = triIndex_[i*3+1],
                   t3 = triIndex_[i*3+2];
 
-        Hash h1 = MATH::getHash<Hash>(t1, t2),
-             h2 = MATH::getHash<Hash>(t1, t3),
-             h3 = MATH::getHash<Hash>(t2, t3);
+        const
+        Hash h1 = MATH::getHashUnordered<Hash>(t1, t2),
+             h2 = MATH::getHashUnordered<Hash>(t1, t3),
+             h3 = MATH::getHashUnordered<Hash>(t2, t3);
 
         if (!hash.contains(h1))
         {

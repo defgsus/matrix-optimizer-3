@@ -72,6 +72,15 @@ I getHash(I1 x, I1 y, I1 z, I1 w)
 
 
 
+/** Returns a hash value of type I for the two components of type I1.
+    Order of components does not matter. */
+template <typename I, typename I1>
+I getHashUnordered(I1 x, I1 y)
+{
+    return  getHash<I1>(x, y) ^ getHash<I1>(y, x);
+}
+
+
 /** Returns a hash value of type I for the two components */
 template <typename I>
 I getHash(I x, I y)
