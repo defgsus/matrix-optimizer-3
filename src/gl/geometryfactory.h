@@ -40,8 +40,10 @@ public:
                                bool asTriangles = true);
     static void createUVSphereLines(Geometry *, float rad, uint segu, uint segv);
 
+    static void createTetrahedron(Geometry *, float scale, bool asTriangles = true);
     static void createOctahedron(Geometry *, float scale, bool asTriangles = true);
     static void createIcosahedron(Geometry *, float scale, bool asTriangles = true);
+    static void createDodecahedron(Geometry *, float scale, bool asTriangles = true);
 
     static void createGrid(Geometry *, int sizeU, int sizeV, bool with_coordinate_system);
 };
@@ -54,9 +56,11 @@ public:
     enum Type
     {
         T_QUAD,
+        T_TETRAHEDRON,
         T_BOX,
         T_OCTAHEDRON,
         T_ICOSAHEDRON,
+        T_DODECAHEDRON,
         T_GRID,
         T_UV_SPHERE
     };

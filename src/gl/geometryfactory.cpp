@@ -9,10 +9,12 @@
 */
 
 #include <QObject>
+#include <QHash>
 
 #include "geometryfactory.h"
 #include "geometry.h"
 #include "math/vector.h"
+#include "math/hash.h"
 
 namespace MO {
 namespace GL {
@@ -399,6 +401,166 @@ void GeometryFactory::createIcosahedron(Geometry * g, float scale, bool asTriang
     }
 }
 
+void GeometryFactory::createTetrahedron(Geometry * g, float scale, bool asTriangles)
+{
+    const float a = 0.5f * scale;
+
+    const int p0 = g->addVertex( -a,  a,  a );
+    const int p1 = g->addVertex(  a,  a, -a );
+    const int p2 = g->addVertex( -a, -a, -a );
+    const int p3 = g->addVertex(  a, -a,  a );
+
+    if (asTriangles)
+    {
+        g->addTriangle( p0,p2,p1 );
+        g->addTriangle( p0,p1,p3 );
+        g->addTriangle( p0,p3,p2 );
+        g->addTriangle( p1,p2,p3 );
+    }
+    else
+    {
+        g->addLine( p0,p1 );
+        g->addLine( p0,p2 );
+        g->addLine( p0,p3 );
+        g->addLine( p1,p2 );
+        g->addLine( p1,p3 );
+        g->addLine( p2,p3 );
+    }
+}
+
+void GeometryFactory::createDodecahedron(Geometry * g, float scale, bool asTriangles)
+{
+    const float
+        phi = (1.f + std::sqrt(5.f)) / 2.f,
+        a = 0.5f * scale,
+        b = 0.5f / phi,
+        c = 0.5f * (2.f - phi);
+
+    std::vector<float> pos = { 0.f, a, -a, b, -b, c, -c };
+    enum Pindex
+    {
+        p_0, p_a, p_ma, p_b, p_mb, p_c, p_mc
+    };
+
+    QHash<int, Geometry::IndexType> hash;
+    std::vector<Geometry::IndexType> idx;
+
+    #define MO__ADDPOINT(x, y, z)                                   \
+    {                                                               \
+        const int h = MATH::getHash<int>(x, y, z);                  \
+        auto i = hash.find(h);                                      \
+        if (i == hash.end())                                        \
+        {                                                           \
+            auto index = g->addVertex( pos[x], pos[y], pos[z] );    \
+            idx.push_back(index);                                   \
+            hash.insert(h, index);                                  \
+        }                                                           \
+        else                                                        \
+            idx.push_back( i.value() );                             \
+    }
+
+    #define MO__PENT(x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4,x5,y5,z5) \
+        MO__ADDPOINT( x1,y1,z1 ); \
+        MO__ADDPOINT( x2,y2,z2 ); \
+        MO__ADDPOINT( x3,y3,z3 ); \
+        MO__ADDPOINT( x4,y4,z4 ); \
+        MO__ADDPOINT( x5,y5,z5 );
+
+    MO__PENT(
+     p_c,p_0,p_a,
+     p_mc,p_0,p_a,
+     p_mb,p_b,p_b,
+     p_0,p_a,p_c,
+     p_b,p_b,p_b);
+    MO__PENT(
+     p_mc,p_0,p_a,
+     p_c,p_0,p_a,
+     p_b,p_mb,p_b,
+     p_0,p_ma,p_c,
+     p_mb,p_mb,p_b);
+    MO__PENT(
+     p_c,p_0,p_ma,
+     p_mc,p_0,p_ma,
+     p_mb,p_mb,p_mb,
+     p_0,p_ma,p_mc,
+     p_b,p_mb,p_mb);
+    MO__PENT(
+     p_mc,p_0,p_ma,
+     p_c,p_0,p_ma,
+     p_b,p_b,p_mb,
+     p_0,p_a,p_mc,
+     p_mb,p_b,p_mb);
+    MO__PENT(
+     p_0,p_a,p_mc,
+     p_0,p_a,p_c,
+     p_b,p_b,p_b,
+     p_a,p_c,p_0,
+     p_b,p_b,p_mb);
+    MO__PENT(
+     p_0,p_a,p_c,
+     p_0,p_a,p_mc,
+     p_mb,p_b,p_mb,
+     p_ma,p_c,p_0,
+     p_mb,p_b,p_b);
+    MO__PENT(
+     p_0,p_ma,p_mc,
+     p_0,p_ma,p_c,
+     p_mb,p_mb,p_b,
+     p_ma,p_mc,p_0,
+     p_mb,p_mb,p_mb);
+    MO__PENT(
+     p_0,p_ma,p_c,
+     p_0,p_ma,p_mc,
+     p_b,p_mb,p_mb,
+     p_a,p_mc,p_0,
+     p_b,p_mb,p_b);
+    MO__PENT(
+     p_a,p_c,p_0,
+     p_a,p_mc,p_0,
+     p_b,p_mb,p_b,
+     p_c,p_0,p_a,
+     p_b,p_b,p_b);
+    MO__PENT(
+     p_a,p_mc,p_0,
+     p_a,p_c,p_0,
+     p_b,p_b,p_mb,
+     p_c,p_0,p_ma,
+     p_b,p_mb,p_mb);
+    MO__PENT(
+     p_ma,p_c,p_0,
+     p_ma,p_mc,p_0,
+     p_mb,p_mb,p_mb,
+     p_mc,p_0,p_ma,
+     p_mb,p_b,p_mb);
+    MO__PENT(
+     p_ma,p_mc,p_0,
+     p_ma,p_c,p_0,
+     p_mb,p_b,p_b,
+     p_mc,p_0,p_a,
+     p_mb,p_mb,p_b);
+
+    #undef MO__PENT
+    #undef MO__ADDPOINT
+
+    if (asTriangles)
+        for (unsigned int i=0; i<idx.size(); i+=5)
+        {
+            g->addTriangle( idx[i+0], idx[i+1], idx[i+4]);
+            g->addTriangle( idx[i+1], idx[i+2], idx[i+4]);
+            g->addTriangle( idx[i+4], idx[i+2], idx[i+3]);
+        }
+    else
+        for (unsigned int i=0; i<idx.size(); i+=5)
+        {
+            g->addLine( idx[i+0], idx[i+1] );
+            g->addLine( idx[i+1], idx[i+2] );
+            g->addLine( idx[i+2], idx[i+3] );
+            g->addLine( idx[i+3], idx[i+4] );
+            g->addLine( idx[i+4], idx[i+0] );
+        }
+
+}
+
 
 
 
@@ -427,12 +589,20 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
                                std::max((uint)2, set->segmentsV), set->asTriangles);
     break;
 
+    case GeometryFactorySettings::T_TETRAHEDRON:
+        createTetrahedron(g, 1.f, set->asTriangles);
+    break;
+
     case GeometryFactorySettings::T_OCTAHEDRON:
         createOctahedron(g, 1.f, set->asTriangles);
     break;
 
     case GeometryFactorySettings::T_ICOSAHEDRON:
         createIcosahedron(g, 1.f, set->asTriangles);
+    break;
+
+    case GeometryFactorySettings::T_DODECAHEDRON:
+        createDodecahedron(g, 1.f, set->asTriangles);
     break;
 
     }
@@ -465,15 +635,18 @@ void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySett
 
 const QStringList GeometryFactorySettings::typeIds =
 {
-    "quad", "box", "octahedron", "icosahedron", "grid", "sphere"
+    "quad", "tetra", "hexa", "octa", "icosa", "dodeca",
+    "grid", "uvsphere"
 };
 
 const QStringList GeometryFactorySettings::typeNames =
 {
     QObject::tr("quad"),
-    QObject::tr("box"),
+    QObject::tr("tetrahedron"),
+    QObject::tr("hexahedron (cube)"),
     QObject::tr("octahedron"),
     QObject::tr("icosahedron"),
+    QObject::tr("dodecahedron"),
     QObject::tr("grid"),
     QObject::tr("uv-sphere")
 };
