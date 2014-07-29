@@ -7,7 +7,7 @@
 
     <p>created 7/28/2014</p>
 */
-
+#if (0)
 #include <QFile>
 #include <QTextStream>
 
@@ -77,7 +77,7 @@ void expectChar(const QString& s, int& x, QChar c)
 /** Returns vertex, texcoord and normal indices in i1, i2 and i3.
     If texcoord or normal indices are not present, 0 is returned for each.
     Indices might also be negative, meaning relative! */
-void expectFaceCorner(const QString& s, int& x, int& i1, int& i2, int &i3)
+void expectFaceVertex(const QString& s, int& x, int& i1, int& i2, int &i3)
 {
     i1 = expectUInt(s, x);
 
@@ -189,8 +189,8 @@ void Geometry::loadOBJ(const QString &filename)
                     t1, t2, t3,
                     n1, n2, n3;
 
-                expectFaceCorner(s, x, v1, t1, n1);
-                expectFaceCorner(s, x, v2, t2, n2);
+                expectFaceVertex(s, x, v1, t1, n1);
+                expectFaceVertex(s, x, v2, t2, n2);
 
                 // check for relative indices
                 if (v1 < 0) v1 = vertices.size() / 3 - v1;
@@ -221,7 +221,7 @@ void Geometry::loadOBJ(const QString &filename)
 
                 // read third face vertex
 
-                expectFaceCorner(s, x, v3, t3, n3);
+                expectFaceVertex(s, x, v3, t3, n3);
 
                 if (v3 < 0) v3 = vertices.size() / 3 - v3;
                 if (t3 < 0) t3 = texCoords.size() / 2 - t3;
@@ -249,3 +249,4 @@ void Geometry::loadOBJ(const QString &filename)
 } // namespace GEOM
 } // namespace MO
 
+#endif

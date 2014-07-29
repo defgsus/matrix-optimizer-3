@@ -11,6 +11,7 @@
 #include "geometrycreator.h"
 #include "geom/geometry.h"
 #include "geom/geometryfactory.h"
+#include "geom/objloader.h"
 
 namespace MO {
 namespace GUI {
@@ -19,7 +20,8 @@ namespace UTIL {
 GeometryCreator::GeometryCreator(QObject *parent) :
     QThread     (parent),
     geometry_   (0),
-    settings_   (new GEOM::GeometryFactorySettings())
+    settings_   (new GEOM::GeometryFactorySettings()),
+    loader_     (0)
 {
 }
 
@@ -45,9 +47,13 @@ void GeometryCreator::run()
 {
     auto g = new GEOM::Geometry();
 
+    // create a file loader if nescessary
+    if (settings_->type == GEOM::GeometryFactorySettings::T_FILE)
+        loader_ = new GEOM::ObjLoader();
+
     try
     {
-        GEOM::GeometryFactory::createFromSettings(g, settings_);
+        GEOM::GeometryFactory::createFromSettings(g, settings_, loader_);
     }
     catch (Exception & e)
     {
@@ -55,6 +61,9 @@ void GeometryCreator::run()
 
         delete g;
     }
+
+    delete loader_;
+    loader_ = 0;
 
     delete geometry_;
     geometry_ = g;

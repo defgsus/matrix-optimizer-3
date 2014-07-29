@@ -46,6 +46,7 @@ protected:
 
     GEOM::Geometry * geometry_;
     GEOM::GeometryFactorySettings * settings_;
+    GEOM::ObjLoader * loader_;
 };
 
 

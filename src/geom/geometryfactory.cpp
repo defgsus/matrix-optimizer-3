@@ -13,6 +13,7 @@
 
 #include "geometryfactory.h"
 #include "geometry.h"
+#include "objloader.h"
 #include "math/vector.h"
 #include "math/hash.h"
 
@@ -591,15 +592,20 @@ void GeometryFactory::createDodecahedron(Geometry * g, float scale, bool asTrian
 
 
 
-void GeometryFactory::createFromSettings(Geometry * g, const GeometryFactorySettings * set)
+void GeometryFactory::createFromSettings(Geometry * g,
+                                         const GeometryFactorySettings * set,
+                                         ObjLoader * loader_)
 {
     g->setColor(set->colorR, set->colorG, set->colorB, set->colorA * 0.5);
 
     switch (set->type)
     {
     case GeometryFactorySettings::T_FILE:
-        if (!set->filename.isEmpty())
-            g->loadOBJ(set->filename);
+        if (!set->filename.isEmpty() && loader_)
+        {
+            loader_->loadFile(set->filename);
+            loader_->getGeometry(g);
+        }
     break;
 
     case GeometryFactorySettings::T_QUAD:

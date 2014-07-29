@@ -46,7 +46,7 @@ public:
     // -------- file io ------
 
     /** Throws IoException on errors */
-    void loadOBJ(const QString& filename);
+//    void loadOBJ(const QString& filename);
 
     // ------- query ---------
 

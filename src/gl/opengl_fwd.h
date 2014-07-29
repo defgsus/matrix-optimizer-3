@@ -37,6 +37,7 @@ namespace GL {
         class Geometry;
         class GeometryFactory;
         class GeometryFactorySettings;
+        class ObjLoader;
     } // namespace GEOM
 } // namespace MO
 

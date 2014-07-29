@@ -21,12 +21,15 @@ namespace GEOM {
 
 class Geometry;
 class GeometryFactorySettings;
+class ObjLoader;
 
 class GeometryFactory
 {
 public:
 
-    static void createFromSettings(Geometry *, const GeometryFactorySettings*);
+    // --------------------- static functions ------------------
+
+    static void createFromSettings(Geometry *, const GeometryFactorySettings *, ObjLoader *);
 
     static void createQuad(Geometry *, float side_length_x, float side_length_y,
                            bool asTriangles = true);
