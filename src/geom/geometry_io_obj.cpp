@@ -16,7 +16,7 @@
 #include "io/log.h"
 
 namespace MO {
-namespace GL {
+namespace GEOM {
 
 /** skips whitespace, returns TRUE when string is not ended */
 bool skipWS(const QString& s, int& x)
@@ -246,6 +246,6 @@ void Geometry::loadOBJ(const QString &filename)
 }
 
 
-} // namespace GL
+} // namespace GEOM
 } // namespace MO
 

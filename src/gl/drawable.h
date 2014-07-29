@@ -28,7 +28,7 @@ public:
     // ------------- getter ------------------
 
     /** Returns access to the geometry class of the Drawable. */
-    Geometry * geometry();
+    GEOM::Geometry * geometry();
 
     /** Returns access to the shader source of the Drawable. */
     ShaderSource * shaderSource();
@@ -44,7 +44,7 @@ public:
     /** Sets the geometry to draw.
         The ownership of the Geometry class is taken and
         the previous class is deleted. */
-    void setGeometry(Geometry * g);
+    void setGeometry(GEOM::Geometry * g);
 
     /** Sets the shader source.
         The ownership is taken and the previous class is deleted. */
@@ -73,9 +73,11 @@ private:
     void compileShader_();
     void createVAO_();
 
-    Geometry * geometry_;
+    GEOM::Geometry * geometry_;
     ShaderSource * shaderSource_;
     Shader * shader_;
+
+    bool doRecompile_;
 
     VertexArrayObject * vao_;
 

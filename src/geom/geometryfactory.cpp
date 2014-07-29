@@ -17,7 +17,7 @@
 #include "math/hash.h"
 
 namespace MO {
-namespace GL {
+namespace GEOM {
 
 
 void GeometryFactory::createCube(Geometry * g, float sl, bool asTriangles)
@@ -729,5 +729,5 @@ GeometryFactorySettings::GeometryFactorySettings()
 
 
 
-} // namespace GL
+} // namespace GEOM
 } // namespace MO

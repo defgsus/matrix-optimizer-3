@@ -16,7 +16,7 @@
 #include "drawable.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "geometry.h"
+#include "geom/geometry.h"
 #include "shadersource.h"
 #include "shader.h"
 #include "vertexarrayobject.h"
@@ -30,6 +30,7 @@ Drawable::Drawable()
     : geometry_         (0),
       shaderSource_     (0),
       shader_           (0),
+      doRecompile_      (true),
       vao_              (0)
 {
 }
@@ -41,10 +42,10 @@ Drawable::~Drawable()
     delete geometry_;
 }
 
-Geometry * Drawable::geometry()
+GEOM::Geometry * Drawable::geometry()
 {
     if (!geometry_)
-        geometry_ = new Geometry();
+        geometry_ = new GEOM::Geometry();
     return geometry_;
 }
 
@@ -67,7 +68,7 @@ bool Drawable::isReady() const
     return geometry_ && vao_ && vao_->isCreated() && shader_ && shader_->ready();
 }
 
-void Drawable::setGeometry(Geometry * g)
+void Drawable::setGeometry(GEOM::Geometry * g)
 {
     delete geometry_;
     geometry_ = g;
@@ -77,12 +78,14 @@ void Drawable::setShaderSource(ShaderSource *s)
 {
     delete shaderSource_;
     shaderSource_ = s;
+    doRecompile_ = true;
 }
 
 void Drawable::setShader(Shader *s)
 {
     delete shader_;
     shader_ = s;
+    doRecompile_ = true;
 }
 
 
@@ -105,10 +108,19 @@ void Drawable::compileShader_()
         shaderSource_ = new ShaderSource();
 
     if (shaderSource_->isEmpty())
+    {
         shaderSource_->setDefaultSource();
+        doRecompile_ = true;
+    }
 
     if (!shader_)
+    {
         shader_ = new Shader();
+        doRecompile_ = true;
+    }
+
+    if (!doRecompile_)
+        return;
 
     shader_->setSource(shaderSource_);
     if (!shader_->compile())
@@ -116,6 +128,8 @@ void Drawable::compileShader_()
                       << shader_->log())
     else
         MO_DEBUG("shader compiled");
+
+    doRecompile_ = false;
 
     // --- get variable locations ---
 

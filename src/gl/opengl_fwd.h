@@ -25,9 +25,6 @@ namespace GL {
     class CameraSpace;
     class Context;
     class Drawable;
-    class Geometry;
-    class GeometryFactory;
-    class GeometryFactorySettings;
     class Manager;
     class Shader;
     class ShaderSource;
@@ -36,6 +33,11 @@ namespace GL {
     class Window;
 
 } // namespace GL
+    namespace GEOM {
+        class Geometry;
+        class GeometryFactory;
+        class GeometryFactorySettings;
+    } // namespace GEOM
 } // namespace MO
 
 #endif // MOSRC_GL_OPENGL_FWD_H

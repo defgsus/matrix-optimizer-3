@@ -13,14 +13,14 @@
 #include <QSet>
 
 #include "geometry.h"
-#include "shadersource.h"
-#include "shader.h"
-#include "vertexarrayobject.h"
+#include "gl/shadersource.h"
+#include "gl/shader.h"
+#include "gl/vertexarrayobject.h"
 #include "math/hash.h"
 #include "math/noiseperlin.h"
 
 namespace MO {
-namespace GL {
+namespace GEOM {
 
 Geometry::Geometry()
     :
@@ -493,7 +493,7 @@ void Geometry::transformWithNoise(
 
 
 
-void Geometry::getVertexArrayObject(VertexArrayObject * vao, Shader * s, bool triangles)
+void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s, bool triangles)
 {
     if (vao->isCreated())
         vao->release();
@@ -547,5 +547,5 @@ void Geometry::getVertexArrayObject(VertexArrayObject * vao, Shader * s, bool tr
 
 
 
-} // namespace GL
+} // namespace GEOM
 } // namespace MO

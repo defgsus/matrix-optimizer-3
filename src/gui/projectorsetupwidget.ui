@@ -221,7 +221,7 @@
             <item>
              <widget class="QDoubleSpinBox" name="doubleSpinBox_6">
               <property name="suffix">
-               <string/>
+               <string> m</string>
               </property>
               <property name="decimals">
                <number>4</number>

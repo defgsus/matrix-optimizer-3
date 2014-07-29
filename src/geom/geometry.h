@@ -8,14 +8,14 @@
     <p>created 6/29/2014</p>
 */
 
-#ifndef MOSRC_GL_GEOMETRY_H
-#define MOSRC_GL_GEOMETRY_H
+#ifndef MOSRC_GEOM_GEOMETRY_H
+#define MOSRC_GEOM_GEOMETRY_H
 
-#include "opengl.h"
+#include "gl/opengl.h"
 #include "types/vector.h"
 
 namespace MO {
-namespace GL {
+namespace GEOM {
 
 /** XXX This is not very generic
     - but let's get started and see later.. */
@@ -183,7 +183,7 @@ public:
         The shader provides the locations of the vertex attributes.
         The Shader must be compiled.
         The VAO will be released if it was created previously. */
-    void getVertexArrayObject(VertexArrayObject *, Shader *, bool triangles = true);
+    void getVertexArrayObject(GL::VertexArrayObject *, GL::Shader *, bool triangles = true);
 
 protected:
 
@@ -204,7 +204,7 @@ private:
 
 };
 
-} // namespace GL
+} // namespace GEOM
 } // namespace MO
 
 #endif // MOSRC_GL_GEOMETRY_H

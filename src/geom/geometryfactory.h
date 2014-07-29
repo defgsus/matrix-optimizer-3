@@ -8,8 +8,8 @@
     <p>created 7/26/2014</p>
 */
 
-#ifndef MOSRC_GL_GEOMETRYFACTORY_H
-#define MOSRC_GL_GEOMETRYFACTORY_H
+#ifndef MOSRC_GEOM_GEOMETRYFACTORY_H
+#define MOSRC_GEOM_GEOMETRYFACTORY_H
 
 #include <QStringList>
 
@@ -17,7 +17,7 @@
 
 namespace MO {
 namespace IO { class DataStream; }
-namespace GL {
+namespace GEOM {
 
 class Geometry;
 class GeometryFactorySettings;
@@ -89,8 +89,8 @@ public:
 };
 
 
-} // namespace GL
+} // namespace GEOM
 } // namespace MO
 
 
-#endif // MOSRC_GL_GEOMETRYFACTORY_H
+#endif // MOSRC_GEOM_GEOMETRYFACTORY_H

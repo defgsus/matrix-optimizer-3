@@ -122,8 +122,6 @@ SOURCES += \
     src/gui/widget/spinbox.cpp \
     src/engine/renderer.cpp \
     src/audio/waveform.cpp \
-    src/gl/geometry.cpp \
-    src/gl/geometryfactory.cpp \
     src/gl/drawable.cpp \
     src/gl/shader.cpp \
     src/gl/shadersource.cpp \
@@ -132,8 +130,11 @@ SOURCES += \
     src/gui/widget/basic3dwidget.cpp \
     src/gui/widget/geometrywidget.cpp \
     src/gui/geometrydialog.cpp \
-    src/gl/geometry_io_obj.cpp \
-    src/gui/util/geometrycreator.cpp
+    src/gui/util/geometrycreator.cpp \
+    src/geom/objloader.cpp \
+    src/geom/geometry.cpp \
+    src/geom/geometry_io_obj.cpp \
+    src/geom/geometryfactory.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -245,8 +246,6 @@ HEADERS += \
     src/gui/widget/spinbox.h \
     src/engine/renderer.h \
     src/audio/waveform.h \
-    src/gl/geometry.h \
-    src/gl/geometryfactory.h \
     src/gl/drawable.h \
     src/gl/shader.h \
     src/gl/shadersource.h \
@@ -258,7 +257,10 @@ HEADERS += \
     src/gl/opengl_fwd.h \
     src/gui/geometrydialog.h \
     src/math/hash.h \
-    src/gui/util/geometrycreator.h
+    src/gui/util/geometrycreator.h \
+    src/geom/objloader.h \
+    src/geom/geometry.h \
+    src/geom/geometryfactory.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

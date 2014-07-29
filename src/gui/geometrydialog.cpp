@@ -18,8 +18,8 @@
 #include <QMessageBox>
 
 #include "geometrydialog.h"
-#include "gl/geometry.h"
-#include "gl/geometryfactory.h"
+#include "geom/geometry.h"
+#include "geom/geometryfactory.h"
 #include "widget/geometrywidget.h"
 #include "widget/doublespinbox.h"
 #include "widget/spinbox.h"
@@ -32,7 +32,7 @@ namespace GUI {
 
 GeometryDialog::GeometryDialog(QWidget *parent, Qt::WindowFlags flags) :
     QDialog         (parent, flags),
-    settings_       (new GL::GeometryFactorySettings()),
+    settings_       (new GEOM::GeometryFactorySettings()),
     creator_        (0),
     updateGeometryLater_(false)
 {
@@ -73,7 +73,7 @@ void GeometryDialog::createWidgets_()
             for (uint i=0; i<settings_->numTypes; ++i)
             {
                 comboType_->addItem(settings_->typeNames[i], i);
-                if (settings_->type == (GL::GeometryFactorySettings::Type)i)
+                if (settings_->type == (GEOM::GeometryFactorySettings::Type)i)
                     comboType_->setCurrentIndex(i);
             }
 
@@ -317,7 +317,7 @@ void GeometryDialog::updateFromWidgets_()
     // update settings
 
     if (comboType_->currentIndex() >= 0)
-    settings_->type = (GL::GeometryFactorySettings::Type)
+    settings_->type = (GEOM::GeometryFactorySettings::Type)
                         comboType_->itemData(comboType_->currentIndex()).toInt();
 
     settings_->filename = editFilename_->text();
@@ -343,20 +343,20 @@ void GeometryDialog::updateFromWidgets_()
 
     const bool
             isFile = settings_->type ==
-                    GL::GeometryFactorySettings::T_FILE,
+                    GEOM::GeometryFactorySettings::T_FILE,
             canTriangle = (settings_->type !=
-                            GL::GeometryFactorySettings::T_GRID_XZ
+                            GEOM::GeometryFactorySettings::T_GRID_XZ
                             && settings_->type !=
-                            GL::GeometryFactorySettings::T_GRID),
+                            GEOM::GeometryFactorySettings::T_GRID),
             hasTriangle = (canTriangle && settings_->asTriangles),
             hasSegments = (settings_->type ==
-                            GL::GeometryFactorySettings::T_UV_SPHERE
+                            GEOM::GeometryFactorySettings::T_UV_SPHERE
                            || settings_->type ==
-                            GL::GeometryFactorySettings::T_GRID_XZ
+                            GEOM::GeometryFactorySettings::T_GRID_XZ
                            || settings_->type ==
-                            GL::GeometryFactorySettings::T_GRID),
+                            GEOM::GeometryFactorySettings::T_GRID),
             has3Segments = (hasSegments && settings_->type ==
-                            GL::GeometryFactorySettings::T_GRID);
+                            GEOM::GeometryFactorySettings::T_GRID);
 
     cbTriangles_->setVisible( canTriangle && !isFile);
 

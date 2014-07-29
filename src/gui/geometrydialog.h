@@ -54,7 +54,7 @@ protected:
     void createWidgets_();
 
     GeometryWidget * geoWidget_;
-    GL::GeometryFactorySettings * settings_;
+    GEOM::GeometryFactorySettings * settings_;
     UTIL::GeometryCreator * creator_;
     bool updateGeometryLater_;
 

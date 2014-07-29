@@ -9,8 +9,8 @@
 */
 
 #include "geometrycreator.h"
-#include "gl/geometry.h"
-#include "gl/geometryfactory.h"
+#include "geom/geometry.h"
+#include "geom/geometryfactory.h"
 
 namespace MO {
 namespace GUI {
@@ -19,7 +19,7 @@ namespace UTIL {
 GeometryCreator::GeometryCreator(QObject *parent) :
     QThread     (parent),
     geometry_   (0),
-    settings_   (new GL::GeometryFactorySettings())
+    settings_   (new GEOM::GeometryFactorySettings())
 {
 }
 
@@ -29,12 +29,12 @@ GeometryCreator::~GeometryCreator()
     delete settings_;
 }
 
-void GeometryCreator::setSettings(const GL::GeometryFactorySettings & s)
+void GeometryCreator::setSettings(const GEOM::GeometryFactorySettings & s)
 {
     *settings_ = s;
 }
 
-GL::Geometry * GeometryCreator::takeGeometry()
+GEOM::Geometry * GeometryCreator::takeGeometry()
 {
     auto g = geometry_;
     geometry_ = 0;
@@ -43,11 +43,11 @@ GL::Geometry * GeometryCreator::takeGeometry()
 
 void GeometryCreator::run()
 {
-    auto g = new GL::Geometry();
+    auto g = new GEOM::Geometry();
 
     try
     {
-        GL::GeometryFactory::createFromSettings(g, settings_);
+        GEOM::GeometryFactory::createFromSettings(g, settings_);
     }
     catch (Exception & e)
     {

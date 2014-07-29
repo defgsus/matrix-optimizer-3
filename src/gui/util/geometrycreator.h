@@ -29,7 +29,7 @@ public:
 
     /** After finished() was emitted, the Geometry
         can be taken here. */
-    GL::Geometry * takeGeometry();
+    GEOM::Geometry * takeGeometry();
 
 signals:
 
@@ -38,14 +38,14 @@ signals:
 
 public slots:
 
-    void setSettings(const GL::GeometryFactorySettings&);
+    void setSettings(const GEOM::GeometryFactorySettings&);
 
 protected:
 
     void run() Q_DECL_OVERRIDE;
 
-    GL::Geometry * geometry_;
-    GL::GeometryFactorySettings * settings_;
+    GEOM::Geometry * geometry_;
+    GEOM::GeometryFactorySettings * settings_;
 };
 
 

@@ -11,7 +11,7 @@
 #include "model3d.h"
 #include "io/datastream.h"
 #include "gl/drawable.h"
-#include "gl/geometryfactory.h"
+#include "geom/geometryfactory.h"
 #include "gl/shadersource.h"
 #include "gl/cameraspace.h"
 
@@ -43,7 +43,7 @@ void Model3d::initGl(uint /*thread*/)
 
 
     draw_ = new GL::Drawable();
-    GL::GeometryFactory::createGridXZ(draw_->geometry(), 10, 10, true);
+    GEOM::GeometryFactory::createGridXZ(draw_->geometry(), 10, 10, true);
     draw_->shaderSource()->setDefaultSource();
     draw_->createOpenGl();
 }

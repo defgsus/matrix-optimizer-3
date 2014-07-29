@@ -10,8 +10,8 @@
 
 #include "geometrywidget.h"
 #include "gl/vertexarrayobject.h"
-#include "gl/geometry.h"
 #include "gl/drawable.h"
+#include "geom/geometry.h"
 
 namespace MO {
 namespace GUI {
@@ -37,7 +37,7 @@ void GeometryWidget::initializeGL()
 
 }
 */
-void GeometryWidget::setGeometry(GL::Geometry * g)
+void GeometryWidget::setGeometry(GEOM::Geometry * g)
 {
     drawable_->setGeometry(g);
     drawable_->createOpenGl();
