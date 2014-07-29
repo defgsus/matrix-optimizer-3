@@ -175,8 +175,8 @@ bool ObjLoader::readFaceVertex_(const QString & s, int &x, Vertex & vertex, bool
     else
     {
         // skip ws and see if number follows
-        if (!skipWS(s, x) &&
-            !(s.at(x).isNumber() || s.at(x) == '-'))
+        if (!(skipWS(s, x) &&
+              (s.at(x).isNumber() || s.at(x) == '-')))
             return false;
 
         expectFaceVertex(s, x, v, t, n);
@@ -314,6 +314,10 @@ void ObjLoader::getGeometry(Geometry * g) const
 
     // XXX implement shared vertices, pehw...
 
+    const float defNormal[] = { 0, 1, 0 };
+    const float defTex[] = { 0, 0, 0 };
+    const float defColor[] = { 0.5, 0.5, 0.5, 1.0 };
+
     const uint numTriangles = triangle_.size() / 3;
     for (uint i = 0; i<numTriangles; ++i)
     {
@@ -323,13 +327,14 @@ void ObjLoader::getGeometry(Geometry * g) const
         {
             const Vertex& vert = triangle_[i*3+j];
             const float
-                    *v = &vertex_[vert.v * vertexComponents],
-                    *n = &normal_[vert.n * normalComponents],
-                    *t = &texCoord_[vert.t * texCoordComponents];
+                    *v = &vertex_[(vert.v-1) * vertexComponents],
+                    *n = vert.n ? &normal_[(vert.n-1) * normalComponents] : defNormal,
+                    *t = vert.t ? &texCoord_[(vert.t-1) * texCoordComponents] : defTex,
+                    *c = defColor;
 
             g->addVertex(v[0], v[1], v[2],
                          n[0], n[1], n[2],
-                         0.5, 0.5, 0.5, 1.0,
+                         c[0], c[1], c[2], c[3],
                          t[0], t[1]);
         }
 
