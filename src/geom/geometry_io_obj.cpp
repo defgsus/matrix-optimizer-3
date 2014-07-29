@@ -109,7 +109,8 @@ void expectFaceVertex(const QString& s, int& x, int& i1, int& i2, int &i3)
 }
 
 
-/* https://en.wikipedia.org/wiki/Wavefront_.obj_file
+/* http://www.martinreddy.net/gfx/3d/OBJ.spec
+ * https://en.wikipedia.org/wiki/Wavefront_.obj_file
  * http://www.fileformat.info/format/wavefrontobj/egff.htm */
 void Geometry::loadOBJ(const QString &filename)
 {

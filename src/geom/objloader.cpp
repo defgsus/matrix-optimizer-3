@@ -10,6 +10,8 @@
 
 #include <QFile>
 #include <QTextStream>
+#include <QFileInfo>
+#include <QDir>
 
 #include "objloader.h"
 #include "io/log.h"
@@ -17,8 +19,22 @@
 #include "geometry.h"
 
 
+/** XXX to write info during parsing into the logger */
+#define MO_OBJ_LOG(textstream__) MO_DEBUG(textstream__)
+#define MO_OBJ_LOG_LN(textstream__) MO_DEBUG("[" << line << ":" << x << "] " << textstream__)
+
 namespace MO {
 namespace GEOM {
+
+/* some nice format docs:
+    .obj
+    http://www.martinreddy.net/gfx/3d/OBJ.spec
+    https://en.wikipedia.org/wiki/Wavefront_.obj_file
+    http://www.fileformat.info/format/wavefrontobj/egff.htm
+
+    .mtl
+    http://paulbourke.net/dataformats/mtl/
+*/
 
 
 ObjLoader::ObjLoader()
@@ -27,11 +43,13 @@ ObjLoader::ObjLoader()
 
 void ObjLoader::clear()
 {
+    material_.clear();
+    materialUse_.clear();
+
     triangle_.clear();
     vertex_.clear();
     normal_.clear();
     texCoord_.clear();
-    //color_.clear();
 }
 
 void ObjLoader::loadFile(const QString &filename)
@@ -100,7 +118,7 @@ namespace {
         return default_;
     }
 
-    uint expectInt(const QString& s, int& x)
+    int expectInt(const QString& s, int& x)
     {
         if (!skipWS(s, x))
             MO_IO_ERROR(PARSE, "expected index, found end of line");
@@ -115,6 +133,72 @@ namespace {
         }
         MO_IO_ERROR(PARSE, "expected index, found '"
                     << s.right(s.length() - x) << "'");
+    }
+
+    QString expectName(const QString& s, int& x)
+    {
+        if (!skipWS(s, x))
+            MO_IO_ERROR(PARSE, "expected identifier, found end of line");
+
+        if (!s.at(x).isSpace())
+        {
+            int x2 = x;
+            ++x;
+            while (x < s.length() && !(s.at(x).isSpace()))
+                    ++x;
+            return s.mid(x2, x - x2);
+        }
+        MO_IO_ERROR(PARSE, "expected identifier, found '"
+                    << s.right(s.length() - x) << "'");
+    }
+
+    /** Returns empty string if nothing found */
+    QString readName(const QString& s, int& x)
+    {
+        if (!skipWS(s, x)) return QString();
+
+        if (!s.at(x).isSpace())
+        {
+            int x2 = x;
+            ++x;
+            while (x < s.length() && !(s.at(x).isSpace()))
+                    ++x;
+            return s.mid(x2, x - x2);
+        }
+        return QString();
+    }
+
+    /** Also handles material names that include spaces.
+        @note Name must end with .mtl */
+    QString readMaterialName(const QString& s, int& x, bool expect)
+    {
+        if (!skipWS(s, x))
+        {
+            if (expect)
+                MO_IO_ERROR(PARSE, "expected material lib name, found end of line");
+            return QString();
+        }
+
+        if (!s.at(x).isSpace())
+        {
+            int x2 = s.indexOf(".mtl", x, Qt::CaseInsensitive);
+            if (x2 < 0)
+            {
+                if (expect)
+                    MO_IO_ERROR(PARSE, "expected material lib name, found '"
+                            << s.right(s.length() - x) << "'");
+                return QString();
+            }
+
+            x2 += 4;
+            QString n = s.mid(x, x2 - x);
+            x = x2;
+            return n;
+        }
+        if (expect)
+            MO_IO_ERROR(PARSE, "expected material lib name, found '"
+                    << s.right(s.length() - x) << "'");
+        return QString();
     }
 
     void expectChar(const QString& s, int& x, QChar c)
@@ -199,6 +283,8 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
 
     clear();
 
+    Material * curMaterial = 0;
+
     try
     {
         while (!stream.atEnd())
@@ -214,9 +300,56 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
             if (!skipWS(s, x))
                 continue;
 
-            // skip comment
-            if (s.at(x) == '#')
+            // skip comments and empty lines
+            if (s.isEmpty() || s.at(x) == '#')
                 continue;
+
+            // load material library
+            if (s.startsWith("mtllib "))
+            {
+                if (filename_.isEmpty())
+                {
+                    MO_OBJ_LOG_LN("ignoring material lib statement when loading from memory.");
+                    continue;
+                }
+                x += 6;
+                QString name = readMaterialName(s, x, true);
+
+/*  Note: The original spec (www.martinreddy.net/gfx/3d/OBJ.spec)
+    allows for multiple names but that breaks .obj files
+    of users that like spaces in filenames :(
+    So we require all material libs to have the .mtl extension! */
+
+                while (!name.isEmpty())
+                {
+                    // get full path
+                    QString path = QFileInfo(filename_).absolutePath();
+                    if (!path.endsWith(QDir::separator())
+                    && !name.startsWith(QDir::separator()))
+                        path += QDir::separator();
+
+                    // load library
+                    path += name;
+                    if (loadMaterialLib_(path))
+                        MO_OBJ_LOG_LN("loaded material lib '" << path << "'");
+
+                    // check for additional file arguments
+                    name = readMaterialName(s, x, false);
+                }
+            }
+
+            // use material
+            if (s.startsWith("usemtl "))
+            {
+                x += 6;
+                QString name = expectName(s, x);
+                if (!material_.contains(name))
+                {
+                    MO_OBJ_LOG_LN("Material '" << name << "' not defined");
+                    continue;
+                }
+                curMaterial = &material_[name];
+            }
 
             // vertex data
             if (s.startsWith("v "))
@@ -258,13 +391,20 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
                 x += 2;
                 Vertex v1, v2, v3, v4;
 
+                // XXX
+                // parsing could be speed-up here,
+                // noting that a statement like
+                // f 1/1/1 2/2/2 3//3
+                // is illegal
+                // so once the check has been performed
+                // for the first vertex, the others
+                // could be read without checks
+
                 readFaceVertex_(s, x, v1, true);
-                // no 2nd vertex? (skip point primitives)
-                if (!readFaceVertex_(s, x, v2, false))
-                    continue;
-                // XXX no 3rd vertex? (skip line primitives for now)
-                if (!readFaceVertex_(s, x, v3, false))
-                    continue;
+                readFaceVertex_(s, x, v2, true);
+                readFaceVertex_(s, x, v3, true);
+                v1.mat = v2.mat = v3.mat = curMaterial;
+
                 // no 4th vertex? (store triangle)
                 if (!readFaceVertex_(s, x, v4, false))
                 {
@@ -273,6 +413,7 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
                     triangle_.push_back(v3);
                     continue;
                 }
+                v4.mat = curMaterial;
 
                 // else store quad
                 triangle_.push_back(v1);
@@ -287,6 +428,8 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
     // on parsing error
     catch (IoException & e)
     {
+        filename_ = "";
+
         // add information
         e << "\non parsing .obj ";
         if (!filename_.isEmpty())
@@ -299,7 +442,136 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
         // and rethrow
         throw e;
     }
+
+    filename_ = "";
 }
+
+
+void ObjLoader::initMaterial_(Material & m) const
+{
+    m.alpha = 1.0;
+    m.a_r = m.a_g = m.a_b = 0.5;
+    m.d_r = m.d_g = m.d_b = 0.5;
+    m.s_r = m.s_g = m.s_b = 1.0;
+}
+
+bool ObjLoader::loadMaterialLib_(const QString &filename)
+{
+    MO_DEBUG_IO("ObjLoader::loadMaterialLib_(" << filename << ")");
+
+    QFile f(filename);
+    if (!f.open(QIODevice::ReadOnly))
+    {
+        MO_OBJ_LOG("Could not load material lib '" << filename << "'");
+        return false;
+    }
+
+    const QByteArray a = f.readAll();
+    QTextStream stream(a);
+
+    int line = 0, x = 0;
+
+    Material * material = 0;
+
+    try
+    {
+        while (!stream.atEnd())
+        {
+            const QString s = stream.readLine();
+            if (s.isNull())
+                break;
+
+            ++line;
+            x = 0;
+
+            // skip comments and empty lines
+            if (s.isEmpty() || s.at(x) == '#')
+                continue;
+
+            // new material
+            if (s.startsWith("newmtl "))
+            {
+                x += 6;
+                // create material
+                QString name = expectName(s, x);
+                material = &material_[name];
+                material->name = name;
+                initMaterial_(*material);
+            }
+            else if (!material)
+                MO_IO_ERROR(PARSE, "material statement without material");
+
+
+            // ambient color
+            if (s.startsWith("Ka "))
+            {
+                x += 3;
+                // ignore spectral and xyz modes
+                if (!(x < s.length() &&
+                      (s.at(x).isNumber() || s.at(x) == '.' || s.at(x) == '-')))
+                        continue;
+                material->a_r = expectDouble(s, x);
+                material->a_g = readDouble(s, x, material->a_r);
+                material->a_b = readDouble(s, x, material->a_r);
+            }
+
+            // diffuse color
+            if (s.startsWith("Kd "))
+            {
+                x += 3;
+                // ignore spectral and xyz modes
+                if (!(x < s.length() &&
+                      (s.at(x).isNumber() || s.at(x) == '.' || s.at(x) == '-')))
+                        continue;
+                material->d_r = expectDouble(s, x);
+                material->d_g = readDouble(s, x, material->d_r);
+                material->d_b = readDouble(s, x, material->d_r);
+            }
+
+            // specular color
+            if (s.startsWith("Ks "))
+            {
+                x += 3;
+                // ignore spectral and xyz modes
+                if (!(x < s.length() &&
+                      (s.at(x).isNumber() || s.at(x) == '.' || s.at(x) == '-')))
+                        continue;
+                material->s_r = expectDouble(s, x);
+                material->s_g = readDouble(s, x, material->s_r);
+                material->s_b = readDouble(s, x, material->s_r);
+            }
+
+            // transparency
+            if (s.startsWith("d ") || s.startsWith("Kt "))
+            {
+                x += 2;
+                // ignore -halo mode
+                if (!(x < s.length() &&
+                      (s.at(x).isNumber() || s.at(x) == '.' || s.at(x) == '-')))
+                        continue;
+                material->alpha = expectDouble(s, x);
+            }
+
+        }
+    }
+    catch (IoException & e)
+    {
+        // add information
+        e << "\non parsing .mtl '" << filename << "'"
+             "\nat " << line << ":" << (x + 1);
+
+        // and rethrow
+        throw e;
+    }
+
+    return true;
+}
+
+
+
+
+
+
 
 
 bool ObjLoader::isEmpty() const
@@ -312,11 +584,11 @@ void ObjLoader::getGeometry(Geometry * g) const
     if (isEmpty())
         return;
 
-    // XXX implement shared vertices, pehw...
+    // XXX implement shared vertices, phew...
 
-    const float defNormal[] = { 0, 1, 0 };
-    const float defTex[] = { 0, 0, 0 };
-    const float defColor[] = { 0.5, 0.5, 0.5, 1.0 };
+    const Float defNormal[] = { 0, 1, 0 };
+    const Float defTex[] = { 0, 0, 0 };
+    const Float defColor[] = { 0.5, 0.5, 0.0, 1.0 };
 
     const uint numTriangles = triangle_.size() / 3;
     for (uint i = 0; i<numTriangles; ++i)
@@ -326,22 +598,26 @@ void ObjLoader::getGeometry(Geometry * g) const
         for (uint j=0; j<3; ++j)
         {
             const Vertex& vert = triangle_[i*3+j];
-            const float
+            const Float
                     *v = &vertex_[(vert.v-1) * vertexComponents],
                     *n = vert.n ? &normal_[(vert.n-1) * normalComponents] : defNormal,
-                    *t = vert.t ? &texCoord_[(vert.t-1) * texCoordComponents] : defTex,
-                    *c = defColor;
+                    *t = vert.t ? &texCoord_[(vert.t-1) * texCoordComponents] : defTex;
 
-            g->addVertex(v[0], v[1], v[2],
-                         n[0], n[1], n[2],
-                         c[0], c[1], c[2], c[3],
-                         t[0], t[1]);
+            if (vert.mat == 0)
+                g->addVertex(v[0], v[1], v[2],
+                             n[0], n[1], n[2],
+                             defColor[0], defColor[1], defColor[2], defColor[3],
+                             t[0], t[1]);
+            else
+                g->addVertex(v[0], v[1], v[2],
+                             n[0], n[1], n[2],
+                             vert.mat->a_r, vert.mat->a_g, vert.mat->a_g, vert.mat->alpha,
+                             t[0], t[1]);
         }
 
         g->addTriangle(cur, cur + 1, cur + 2);
     }
 }
-
 
 
 

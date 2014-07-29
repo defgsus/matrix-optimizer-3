@@ -13,6 +13,8 @@
 
 #include <vector>
 
+#include <QMap>
+
 #include <QString>
 #include <QByteArray>
 
@@ -28,9 +30,19 @@ public:
     typedef unsigned int UInt;
     typedef float Float;
 
+    struct Material
+    {
+        QString name;
+        Float a_r, a_g, a_b,
+              d_r, d_g, d_b,
+              s_r, s_g, s_b,
+              alpha;
+    };
+
     struct Vertex
     {
         UInt v, t, n;
+        Material * mat;
     };
 
     static const int vertexComponents = 4;
@@ -47,7 +59,8 @@ public:
     void loadFile(const QString& filename);
 
     /** Loads the text content in @p a into internal data.
-        @throws IoExpection on parsing errors */
+        @throws IoExpection on parsing errors.
+        @note library files will not be loaded if loadFile() was not used. */
     void loadFromMemory(const QByteArray& a);
 
     // -------------- getter ------------------
@@ -63,6 +76,10 @@ private:
 
     bool readFaceVertex_(const QString&, int& x, Vertex&, bool expect) const;
 
+    bool loadMaterialLib_(const QString& filename);
+
+    void initMaterial_(Material& ) const;
+
     QString filename_;
 
     std::vector<Float>
@@ -70,6 +87,8 @@ private:
 
     std::vector<Vertex> triangle_;
 
+    QMap<QString, Material> material_;
+    QMap<UInt, QString> materialUse_;
 };
 
 } // namespace GEOM

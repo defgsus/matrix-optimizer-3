@@ -60,6 +60,7 @@ void GeometryCreator::run()
         emit failed(e.what());
 
         delete g;
+        g = 0;
     }
 
     delete loader_;
