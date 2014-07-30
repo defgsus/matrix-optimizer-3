@@ -68,6 +68,9 @@ public:
     /** Returns wheter the ObjLoader contains valid vertex data */
     bool isEmpty() const;
 
+    /** Returns the textual log of the loading process */
+    const QString& getLog() const { return log_; }
+
     /** Load the data into the Geometry container. */
     void getGeometry(Geometry *) const;
 
@@ -80,7 +83,10 @@ private:
 
     void initMaterial_(Material& ) const;
 
-    QString filename_;
+    QString filename_,
+            log_;
+
+    volatile int progress_;
 
     std::vector<Float>
         vertex_, texCoord_, normal_;

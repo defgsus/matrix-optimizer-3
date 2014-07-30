@@ -18,10 +18,24 @@
 #include "io/error.h"
 #include "geometry.h"
 
+/** Writes the textstream to the internal log.
+    @note Only useable within the ObjLoader class. */
+#define MO_OBJ_LOG_IMPL_(textstream__)  \
+{                                       \
+    std::stringstream s__;              \
+    s__ << textstream__ << std::endl;   \
+    log_ += QString::fromStdString(     \
+            s__.str());                 \
+    MO_DEBUG_IO(s__.str());             \
+}
 
-/** XXX to write info during parsing into the logger */
-#define MO_OBJ_LOG(textstream__) MO_DEBUG(textstream__)
-#define MO_OBJ_LOG_LN(textstream__) MO_DEBUG("[" << line << ":" << x << "] " << textstream__)
+/** Writes info during parsing into the logger */
+#define MO_OBJ_LOG(textstream__) MO_OBJ_LOG_IMPL_(textstream__)
+
+/** Writes info (with text position) during parsing into the logger.
+    @note 'line' and 'x' are supposed to be defined. */
+#define MO_OBJ_LOG_LN(textstream__) \
+    MO_OBJ_LOG_IMPL_("[" << line << ":" << x << "] " << textstream__)
 
 namespace MO {
 namespace GEOM {
@@ -43,6 +57,8 @@ ObjLoader::ObjLoader()
 
 void ObjLoader::clear()
 {
+    log_.clear();
+
     material_.clear();
     materialUse_.clear();
 
@@ -440,6 +456,8 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
             e << " in memory";
 
         e << "\nat " << line << ":" << (x + 1);
+
+        MO_OBJ_LOG("ERROR: " << e.what());
 
         // and rethrow
         throw e;
