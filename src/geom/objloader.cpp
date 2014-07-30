@@ -416,6 +416,8 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
                 v4.mat = curMaterial;
 
                 // else store quad
+                //MO_OBJ_LOG_LN("add quad " << v1.v << ", " << v2.v << ", " << v3.v << ", " << v4.v
+                //              << " with material " << (v1.mat? v1.mat->name : "-"));
                 triangle_.push_back(v1);
                 triangle_.push_back(v2);
                 triangle_.push_back(v3);
@@ -513,6 +515,8 @@ bool ObjLoader::loadMaterialLib_(const QString &filename)
                 material->a_r = expectDouble(s, x);
                 material->a_g = readDouble(s, x, material->a_r);
                 material->a_b = readDouble(s, x, material->a_r);
+                //MO_OBJ_LOG_LN("read material '" << material->name << "' ambient color "
+                //           << material->a_r << ", " << material->a_g << ", " << material->a_b);
             }
 
             // diffuse color
@@ -611,7 +615,7 @@ void ObjLoader::getGeometry(Geometry * g) const
             else
                 g->addVertex(v[0], v[1], v[2],
                              n[0], n[1], n[2],
-                             vert.mat->a_r, vert.mat->a_g, vert.mat->a_g, vert.mat->alpha,
+                             vert.mat->a_r, vert.mat->a_g, vert.mat->a_b, vert.mat->alpha,
                              t[0], t[1]);
         }
 

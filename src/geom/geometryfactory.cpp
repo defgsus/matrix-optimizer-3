@@ -657,7 +657,9 @@ void GeometryFactory::createFromSettings(Geometry * g,
              set->scale * set->scaleY,
              set->scale * set->scaleZ);
 
-    if (!set->sharedVertices)
+    if (!set->sharedVertices
+            // XXX remove when ObjLoader supports vertex sharing
+            && !set->type == GeometryFactorySettings::T_FILE)
         g->unGroupVertices();
 
     if (set->convertToLines)

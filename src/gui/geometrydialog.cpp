@@ -366,6 +366,7 @@ void GeometryDialog::updateFromWidgets_()
 
     editFilename_->setVisible(isFile);
     butLoadModelFile_->setVisible(isFile);
+    cbSharedVert_->setVisible( !isFile ); // XXX remove when ObjLoader supports vertex sharing
 
     labelSeg_->setVisible( hasSegments );
     spinSegX_->setVisible( hasSegments );
