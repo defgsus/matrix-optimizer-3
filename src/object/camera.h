@@ -24,11 +24,13 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_CAMERA; }
     virtual bool isCamera() const Q_DECL_OVERRIDE { return true; }
 
+    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
+    virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
+
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::CameraSpace&, uint, Double) Q_DECL_OVERRIDE { };
 
-    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
-    virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
+    virtual GL::FrameBufferObject * getFrameBuffer(uint thread) const { return fbo_[thread]; }
 
     /** Returns projection matrix */
     const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }
@@ -41,7 +43,7 @@ public:
     void initCameraSpace(GL::CameraSpace& cam, uint thread, uint sample) const;
 
     // XXX only trying here
-    void setProjectionMatrix(uint thread, uint sample);
+    //void setProjectionMatrix(uint thread, uint sample);
 signals:
 
 public slots:
@@ -49,6 +51,7 @@ public slots:
 private:
 
     std::vector<std::vector<Mat4>> projection_;
+    std::vector<GL::FrameBufferObject*> fbo_;
 };
 
 } // namespace MO

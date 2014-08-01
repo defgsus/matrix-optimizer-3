@@ -25,7 +25,7 @@ class Basic3DWidget : public QGLWidget
 {
     Q_OBJECT
 public:
-    explicit Basic3DWidget(QWidget *parent = 0);
+    explicit Basic3DWidget(bool framebuffered, QWidget *parent = 0);
 
     const Mat4& projectionMatrix() const { return projectionMatrix_; }
     Mat4 transformationMatrix() const;
@@ -51,6 +51,8 @@ protected:
     void resizeGL(int w, int h) Q_DECL_OVERRIDE;
 
 private:
+
+    bool framebuffered_;
 
     Mat4
         projectionMatrix_,

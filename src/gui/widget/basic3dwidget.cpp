@@ -16,12 +16,17 @@
 namespace MO {
 namespace GUI {
 
-Basic3DWidget::Basic3DWidget(QWidget *parent) :
-    QGLWidget(parent)
+
+Basic3DWidget::Basic3DWidget(bool framebuffered, QWidget *parent) :
+    QGLWidget       (parent),
+    framebuffered_  (framebuffered)
 {
-    QGLFormat f(format());
-    f.setDepth(true);
-    setFormat(f);
+    if (!framebuffered)
+    {
+        QGLFormat f(format());
+        f.setDepth(true);
+        setFormat(f);
+    }
 
     viewInit();
 }

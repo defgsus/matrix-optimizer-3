@@ -557,9 +557,9 @@ void Scene::setGlContext(GL::Context *context)
 
 }
 
-void Scene::renderScene(Double time)
+void Scene::renderScene(Double time, uint thread)
 {
-    //qDebug() << "Scene::renderScene("<<time<<")";
+    //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
 
     MO_ASSERT(glContext_, "renderScene() without context");
 
@@ -575,23 +575,23 @@ void Scene::renderScene(Double time)
 
         // initialize gl resources
         for (auto o : glObjects_)
-            if (o->needsInitGl(0) && o->active(time))
-                o->initGl_(0);
+            if (o->needsInitGl(thread) && o->active(time))
+                o->initGl_(thread);
 
-        calculateSceneTransform(0, 0, time);
+        calculateSceneTransform(thread, 0, time);
 
         // start camera frame
-        cameras_[0]->startGlFrame(0, time);
+        cameras_[0]->startGlFrame(thread, time);
 
         GL::CameraSpace camSpace;
-        cameras_[0]->initCameraSpace(camSpace, 0, 0);
-        camSpace.setViewMatrix( glm::inverse(cameras_[0]->transformation(0, 0)) );
+        cameras_[0]->initCameraSpace(camSpace, thread, 0);
+        camSpace.setViewMatrix( glm::inverse(cameras_[0]->transformation(thread, 0)) );
 
         // render all opengl objects
         for (auto o : glObjects_)
         if (o->active(time))
         {
-            o->renderGl_(camSpace, 0, time);
+            o->renderGl_(camSpace, thread, time);
         }
     }
 }

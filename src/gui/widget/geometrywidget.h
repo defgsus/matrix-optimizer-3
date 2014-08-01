@@ -22,7 +22,7 @@ class GeometryWidget : public Basic3DWidget
 {
     Q_OBJECT
 public:
-    explicit GeometryWidget(QWidget *parent = 0);
+    explicit GeometryWidget(bool framebuffered, QWidget *parent = 0);
     ~GeometryWidget();
 
 signals:

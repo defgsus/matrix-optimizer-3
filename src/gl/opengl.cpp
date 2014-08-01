@@ -87,7 +87,7 @@ void moInitGl()
 }
 
 
-const char * glErrorName(GLenum error)
+const char * errorName(GLenum error)
 {
     switch (error)
     {
@@ -97,7 +97,7 @@ const char * glErrorName(GLenum error)
         case GL_OUT_OF_MEMORY: return "GL_OUT_OF_MEMORY";
         case GL_STACK_UNDERFLOW: return "GL_STACK_UNDERFLOW";
         case GL_STACK_OVERFLOW: return "GL_STACK_OVERFLOW";
-        //case GL_INVALID_FRAMEBUFFER_OPERATION: return "GL_INVALID_FRAMEBUFFER_OPERATION";
+        case GL_INVALID_FRAMEBUFFER_OPERATION: return "GL_INVALID_FRAMEBUFFER_OPERATION";
         default: return "UNKNOWN_ERROR";
     }
 }
@@ -118,6 +118,43 @@ GLuint typeSize(GLenum t)
         case GL_3_BYTES: return 3*sizeof(GLbyte);
         case GL_4_BYTES: return 4*sizeof(GLbyte);
         default: return 0;
+    }
+}
+
+
+GLuint channelSize(GLenum channel_format)
+{
+    switch (channel_format)
+    {
+        case GL_RED:
+        case GL_GREEN:
+        case GL_BLUE:
+        case GL_LUMINANCE:
+        case GL_ALPHA: 		return 1;
+
+        case GL_LUMINANCE_ALPHA: return 2;
+
+        case GL_RGB:
+        case GL_R3_G3_B2:
+        case GL_RGB4:
+        case GL_RGB5:
+        case GL_RGB8:
+        case GL_RGB10:
+        case GL_RGB12:
+        case GL_RGB16:		return 3;
+
+        case GL_RGBA:
+        case GL_RGBA2:
+        case GL_RGBA4:
+        case GL_RGB5_A1:
+        case GL_RGBA8:
+        case GL_RGB10_A2:
+        case GL_RGBA12:
+        case GL_RGBA16:
+        case GL_RGBA32F:	return 4;
+
+        default:
+            return 0;
     }
 }
 

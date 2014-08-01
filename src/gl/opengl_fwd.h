@@ -25,9 +25,11 @@ namespace GL {
     class CameraSpace;
     class Context;
     class Drawable;
+    class FrameBufferObject;
     class Manager;
     class Shader;
     class ShaderSource;
+    class Texture;
     class Uniform;
     class VertexArrayObject;
     class Window;

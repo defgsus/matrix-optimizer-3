@@ -17,8 +17,8 @@ namespace MO {
 namespace GUI {
 
 
-GeometryWidget::GeometryWidget(QWidget *parent) :
-    Basic3DWidget   (parent),
+GeometryWidget::GeometryWidget(bool framebuffered, QWidget *parent) :
+    Basic3DWidget   (framebuffered, parent),
     drawable_       (new GL::Drawable())
 {
     setMinimumSize(128, 128);

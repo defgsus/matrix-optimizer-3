@@ -164,7 +164,7 @@ public:
     if (!(cond__)) \
     { \
         throw ::MO::Exception(::MO::Exception::ASSERT) \
-            << "assertion in " << __FILE__ << ":" << __LINE__ \
+            << "assertion '" << #cond__ << "' in " << __FILE__ << ":" << __LINE__ \
             << "\n" << text__; \
     }
 #else

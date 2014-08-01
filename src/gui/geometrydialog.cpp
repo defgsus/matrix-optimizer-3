@@ -56,7 +56,7 @@ void GeometryDialog::createWidgets_()
     auto lh = new QHBoxLayout(this);
 
 
-        geoWidget_ = new GeometryWidget(this);
+        geoWidget_ = new GeometryWidget(true, this);
         lh->addWidget(geoWidget_);
         geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));

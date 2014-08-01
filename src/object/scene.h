@@ -166,7 +166,7 @@ public slots:
     // XXX all hacky right now
 
     /** Render the whole scene on the current context */
-    void renderScene(Double time = 0.0);
+    void renderScene(Double time = 0.0, uint thread = 0);
 
     /** Start realtime playback */
     void start();

@@ -189,10 +189,11 @@ void Drawable::render()
 void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
 {
     MO_ASSERT(vao_, "no vertex array object specified in Drawable::render()");
-    MO_ASSERT(uniformProj_ != invalidGl, "");
+    //MO_ASSERT(uniformProj_ != invalidGl, "");
     MO_ASSERT(uniformView_ != invalidGl, "");
 
     shader_->activate();
+    if (uniformProj_ != invalidGl)
     MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
     MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
 

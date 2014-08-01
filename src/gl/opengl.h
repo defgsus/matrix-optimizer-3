@@ -43,7 +43,7 @@ GLEWContext * glewGetContext();
     if (GLenum err__ = glGetError())            \
     {                                           \
         std::cerr << "opengl error "            \
-            << ::MO::GL::glErrorName(err__)     \
+            << ::MO::GL::errorName(err__)       \
             << " for command "                  \
             << #command__                       \
             << " in " << __FILE__               \
@@ -63,7 +63,7 @@ GLEWContext * glewGetContext();
     {                                           \
         std::stringstream s__;                  \
         s__ << "opengl error "                  \
-            << ::MO::GL::glErrorName(err__)     \
+            << ::MO::GL::errorName(err__)       \
             << " for command "                  \
             << #command__                       \
             << " in " << __FILE__               \
@@ -86,7 +86,7 @@ GLEWContext * glewGetContext();
     {                                           \
         std::stringstream s__;                  \
         s__ << "opengl error "                  \
-            << ::MO::GL::glErrorName(ret__)     \
+            << ::MO::GL::errorName(ret__)       \
             << " for command "                  \
             << #command__                       \
             << " in " << __FILE__               \
@@ -107,7 +107,7 @@ GLEWContext * glewGetContext();
     if (GLenum err__ = glGetError())            \
     {                                           \
         MO_GL_ERROR(text__ << "\n(opengl error "\
-            << ::MO::GL::glErrorName(err__)     \
+            << ::MO::GL::errorName(err__)       \
             << " for command "                  \
             << #command__                       \
             << " in " << __FILE__               \
@@ -125,10 +125,15 @@ namespace GL {
     void moInitGl();
 
     /** Returns the readable name of the error */
-    const char * glErrorName(GLenum error);
+    const char * errorName(GLenum error);
 
     /** Returns the size in bytes of an openGL type enum (like GL_FLOAT) */
     GLuint typeSize(GLenum);
+
+    /** Returns the number of channels for a given
+        enum like GL_RED, GL_RGB, or GL_RGBA...
+        returns 0, if type is not known! */
+    GLuint channelSize(GLenum channel_format);
 
 } // namespace GL
 } // namespace MO
