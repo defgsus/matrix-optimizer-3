@@ -16,11 +16,9 @@
 #include "gl/cameraspace.h"
 #include "gl/framebufferobject.h"
 #include "io/log.h"
-#include "gl/drawable.h"
-#include "gl/shader.h"
-#include "gl/shadersource.h"
-#include "geom/geometryfactory.h"
 #include "gl/texture.h"
+#include "gl/screenquad.h"
+#include "scene.h"
 
 namespace MO {
 
@@ -68,24 +66,24 @@ void Camera::initGl(uint thread)
                 (float)glContext(thread)->size().width()/glContext(thread)->size().height(),
                 0.1f, 1000.0f);
 
+    // screen-quad
+    screenQuad_[thread] = new GL::ScreenQuad(GL::ER_THROW);
+    screenQuad_[thread]->create();
+
     // create framebuffer
 
+    Scene * scene = sceneObject();
+    MO_ASSERT(scene, "Camera::initGl() without scene object");
+
     fbo_[thread] = new GL::FrameBufferObject(
-                1024,
-                1024,//glContext(thread)->size().height(),
-                GL_RGBA, GL_FLOAT, GL::ER_THROW);
+                fbWidth_ = scene->frameBufferWidth(),
+                fbHeight_ = scene->frameBufferHeight(),
+                scene->frameBufferFormat(),
+                GL_FLOAT,
+                GL::ER_THROW);
     fbo_[thread]->create();
     fbo_[thread]->unbind();
 
-    // screen-quad
-    GL::Drawable * d = new GL::Drawable();
-    screenQuad_[thread] = d;
-    GEOM::GeometryFactory::createQuad(d->geometry(), 2, 2);
-    GL::ShaderSource * src = new GL::ShaderSource();
-    src->loadVertexSource(":/shader/framebufferdraw.vert");
-    src->loadFragmentSource(":/shader/framebufferdraw.frag");
-    d->setShaderSource(src);
-    d->createOpenGl();
 }
 
 void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, uint sample) const
@@ -97,7 +95,7 @@ void Camera::startGlFrame(uint thread, Double )
 {
     fbo_[thread]->bind();
     //MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
-    MO_CHECK_GL( glViewport(0, 0, 1024, 1024) );
+    MO_CHECK_GL( glViewport(0, 0, fbWidth_, fbHeight_) );
 
     MO_CHECK_GL( glClearColor(0,0.2,0.2,1) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
@@ -114,12 +112,8 @@ void Camera::finishGlFrame(uint thread, Double)
 
 void Camera::drawFramebuffer(uint thread, Double )
 {
-    int w = glContext(thread)->size().width(),
-        h = glContext(thread)->size().height();
     fbo_[thread]->colorTexture()->bind();
-    Mat4 trans = h<w? glm::scale(Mat4(1.0), Vec3((float)h/w, 1, 1))
-                    : glm::scale(Mat4(1.0), Vec3(1, (float)w/h, 1));
-    screenQuad_[thread]->renderShader(Mat4(1.0), trans);
+    screenQuad_[thread]->draw(fbWidth_, fbHeight_);
 }
 
 

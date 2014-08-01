@@ -14,12 +14,12 @@
 #include <QTimer>
 
 #include "object.h"
+#include "gl/opengl_fwd.h"
 
 class QReadWriteLock;
 
 namespace MO {
 namespace AUDIO { class AudioDevice; }
-namespace GL { class Context; }
 
 class ObjectTreeModel;
 
@@ -52,6 +52,10 @@ public:
     const QList<Microphone*> microphones() const { return microphones_; }
 
     // ------------- open gl -------------------
+
+    uint frameBufferWidth() const { return fbWidth_; }
+    uint frameBufferHeight() const { return fbHeight_; }
+    uint frameBufferFormat() const { return fbFormat_; }
 
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
@@ -203,6 +207,9 @@ private:
 
     void updateModulators_();
 
+    /** Creates the framebuffer object */
+    void createGl_();
+
     // ----------- runtime ---------------------
 
     void lockRead_();
@@ -230,6 +237,11 @@ private:
     // ---------- opengl -----------------------
 
     GL::Context * glContext_;
+
+    uint fbWidth_, fbHeight_, fbFormat_;
+
+    GL::FrameBufferObject * fboFinal_;
+    GL::ScreenQuad * screenQuad_;
 
     // ----------- special objects -------------
 

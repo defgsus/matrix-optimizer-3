@@ -30,7 +30,7 @@ public:
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::CameraSpace&, uint, Double) Q_DECL_OVERRIDE { };
 
-    virtual GL::FrameBufferObject * getFrameBuffer(uint thread) const { return fbo_[thread]; }
+    GL::FrameBufferObject * getFrameBuffer(uint thread) const { return fbo_[thread]; }
 
     /** Returns projection matrix */
     const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }
@@ -57,10 +57,12 @@ public slots:
 
 private:
 
+    uint fbWidth_, fbHeight_;
+
     std::vector<std::vector<Mat4>> projection_;
     std::vector<GL::FrameBufferObject*> fbo_;
 
-    std::vector<GL::Drawable*> screenQuad_;
+    std::vector<GL::ScreenQuad*> screenQuad_;
 };
 
 } // namespace MO

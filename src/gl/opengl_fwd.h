@@ -27,6 +27,7 @@ namespace GL {
     class Drawable;
     class FrameBufferObject;
     class Manager;
+    class ScreenQuad;
     class Shader;
     class ShaderSource;
     class Texture;

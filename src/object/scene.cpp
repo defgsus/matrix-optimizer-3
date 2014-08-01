@@ -27,6 +27,9 @@
 #include "audio/audiodevice.h"
 #include "audio/audiosource.h"
 #include "gl/cameraspace.h"
+#include "gl/framebufferobject.h"
+#include "gl/screenquad.h"
+#include "gl/texture.h"
 
 namespace MO {
 
@@ -61,6 +64,10 @@ Scene::Scene(QObject *parent) :
     Object              (parent),
     model_              (0),
     glContext_          (0),
+    fbWidth_            (512),
+    fbHeight_           (512),
+    fbFormat_           (GL_RGBA32F),
+    fboFinal_           (0),
     sceneNumberThreads_ (2),
     sceneSampleRate_    (44100),
     audioDevice_        (new AUDIO::AudioDevice()),
@@ -554,7 +561,20 @@ void Scene::setGlContext(GL::Context *context)
     MO_DEBUG_GL("setting gl context for objects");
     for (auto o : glObjects_)
         o->setGlContext_(0, glContext_);
+}
 
+void Scene::createGl_()
+{
+    MO_DEBUG_GL("Scene::createGl_()");
+
+    fboFinal_ = new GL::FrameBufferObject(
+                fbWidth_, fbHeight_, fbFormat_, GL_FLOAT, GL::ER_THROW);
+    fboFinal_->create();
+    fboFinal_->unbind();
+
+    // create screen quad
+    screenQuad_ = new GL::ScreenQuad(GL::ER_THROW);
+    screenQuad_->create();
 }
 
 void Scene::renderScene(Double time, uint thread)
@@ -572,6 +592,9 @@ void Scene::renderScene(Double time, uint thread)
         // read-lock is sufficient because we
         // modify only thread-local storage
         ScopedSceneLockRead lock(this);
+
+        if (!fboFinal_)
+            createGl_();
 
         // initialize gl resources
         for (auto o : glObjects_)
@@ -595,9 +618,16 @@ void Scene::renderScene(Double time, uint thread)
         }
 
         cameras_[0]->finishGlFrame(thread, time);
-
-        cameras_[0]->drawFramebuffer(thread, time);
     }
+
+    // mix camera frames
+    fboFinal_->bind();
+    cameras_[0]->drawFramebuffer(thread, time);
+    fboFinal_->unbind();
+
+    fboFinal_->colorTexture()->bind();
+    screenQuad_->draw(glContext_->size().width(), glContext_->size().height());
+    fboFinal_->colorTexture()->unbind();
 }
 
 void Scene::calculateSceneTransform(uint thread, uint sample, Double time)
