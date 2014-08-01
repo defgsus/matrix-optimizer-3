@@ -113,6 +113,8 @@ void Texture::releaseTexture_()
 
     if (uploaded_)
         memory_used_ -= memory_;
+
+    uploaded_ = false;
 }
 
 
@@ -146,6 +148,10 @@ void Texture::texParameter(GLenum param, GLenum value) const
 
 bool Texture::create()
 {
+    // delete previous
+    if (handle_ != invalidGl)
+        releaseTexture_();
+
     handle_ = genTexture_();
     if (handle_ == invalidGl)
         return false;

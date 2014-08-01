@@ -38,6 +38,9 @@ public:
     /** Returns the associated color texture */
     const Texture * colorTexture() const { return colorTex_; }
 
+    uint width() const;
+    uint height() const;
+
     // ------------- setter ----------------------
 
     // ------------ opengl interface -------------
@@ -51,6 +54,9 @@ public:
 
     /** Downloads the color texture from the device. */
     bool downloadColorTexture(void * ptr);
+
+    /** Convenience function sets opengl viewport to (0,0, width, height) */
+    void setViewport() const;
 
 private:
 

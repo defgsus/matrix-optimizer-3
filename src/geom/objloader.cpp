@@ -446,8 +446,6 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
     // on parsing error
     catch (IoException & e)
     {
-        filename_ = "";
-
         // add information
         e << "\non parsing .obj ";
         if (!filename_.isEmpty())
@@ -458,6 +456,8 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
         e << "\nat " << line << ":" << (x + 1);
 
         MO_OBJ_LOG("ERROR: " << e.what());
+
+        filename_ = "";
 
         // and rethrow
         throw e;

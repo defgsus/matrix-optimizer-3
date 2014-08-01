@@ -57,8 +57,6 @@ public slots:
 
 private:
 
-    uint fbWidth_, fbHeight_;
-
     std::vector<std::vector<Mat4>> projection_;
     std::vector<GL::FrameBufferObject*> fbo_;
 

@@ -42,7 +42,20 @@ FrameBufferObject::~FrameBufferObject()
 }
 
 
+uint FrameBufferObject::width() const
+{
+    return colorTex_->width();
+}
 
+uint FrameBufferObject::height() const
+{
+    return colorTex_->height();
+}
+
+void FrameBufferObject::setViewport() const
+{
+    MO_CHECK_GL_COND(rep_, glViewport(0,0, width(), height()) );
+}
 
 
 bool FrameBufferObject::bind()
@@ -116,7 +129,7 @@ bool FrameBufferObject::create()
             GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_), err );
     if (err) return false;
 
-    MO_CHECK_GL_COND(rep_, glViewport(0, 0, colorTex_->width(), colorTex_->height()) );
+    MO_CHECK_GL_COND(rep_, glViewport(0, 0, width(), height()) );
     MO_CHECK_GL_COND(rep_, glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
     return true;

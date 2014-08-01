@@ -76,8 +76,8 @@ void Camera::initGl(uint thread)
     MO_ASSERT(scene, "Camera::initGl() without scene object");
 
     fbo_[thread] = new GL::FrameBufferObject(
-                fbWidth_ = scene->frameBufferWidth(),
-                fbHeight_ = scene->frameBufferHeight(),
+                scene->frameBufferWidth(),
+                scene->frameBufferHeight(),
                 scene->frameBufferFormat(),
                 GL_FLOAT,
                 GL::ER_THROW);
@@ -93,9 +93,10 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, uint sample) con
 
 void Camera::startGlFrame(uint thread, Double )
 {
-    fbo_[thread]->bind();
-    //MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
-    MO_CHECK_GL( glViewport(0, 0, fbWidth_, fbHeight_) );
+    GL::FrameBufferObject * fbo = fbo_[thread];
+    fbo->bind();
+
+    MO_CHECK_GL( glViewport(0, 0, fbo->width(), fbo->height()) );
 
     MO_CHECK_GL( glClearColor(0,0.2,0.2,1) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
@@ -107,13 +108,16 @@ void Camera::startGlFrame(uint thread, Double )
 void Camera::finishGlFrame(uint thread, Double)
 {
     fbo_[thread]->unbind();
-    MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
+    //MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
 }
 
 void Camera::drawFramebuffer(uint thread, Double )
 {
-    fbo_[thread]->colorTexture()->bind();
-    screenQuad_[thread]->draw(fbWidth_, fbHeight_);
+    GL::FrameBufferObject * fbo = fbo_[thread];
+
+    fbo->colorTexture()->bind();
+    screenQuad_[thread]->draw(fbo->width(), fbo->height());
+    fbo->colorTexture()->unbind();
 }
 
 

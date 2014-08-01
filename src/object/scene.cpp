@@ -66,7 +66,7 @@ Scene::Scene(QObject *parent) :
     glContext_          (0),
     fbWidth_            (512),
     fbHeight_           (512),
-    fbFormat_           (GL_RGBA32F),
+    fbFormat_           (GL_RGBA),
     fboFinal_           (0),
     sceneNumberThreads_ (2),
     sceneSampleRate_    (44100),
@@ -622,12 +622,20 @@ void Scene::renderScene(Double time, uint thread)
 
     // mix camera frames
     fboFinal_->bind();
+    fboFinal_->setViewport();
+    MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
+    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     cameras_[0]->drawFramebuffer(thread, time);
     fboFinal_->unbind();
 
+    // draw to screen
     fboFinal_->colorTexture()->bind();
+    MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
+    MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
+    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     screenQuad_->draw(glContext_->size().width(), glContext_->size().height());
     fboFinal_->colorTexture()->unbind();
+
 }
 
 void Scene::calculateSceneTransform(uint thread, uint sample, Double time)
