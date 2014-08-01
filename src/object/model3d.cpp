@@ -44,7 +44,7 @@ void Model3d::initGl(uint /*thread*/)
 
     draw_ = new GL::Drawable();
     GEOM::GeometryFactory::createGridXZ(draw_->geometry(), 10, 10, true);
-    draw_->shaderSource()->setDefaultSource();
+    draw_->shaderSource()->loadDefaultSource();
     draw_->createOpenGl();
 }
 

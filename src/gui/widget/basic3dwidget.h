@@ -60,6 +60,8 @@ private:
     Float distanceZ_;
 
     QPoint lastMousePos_;
+
+    GL::FrameBufferObject * fbo_;
 };
 
 } // namespace GUI

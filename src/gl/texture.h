@@ -48,27 +48,6 @@ public:
     /** Returns the assigned pointer. */
     void * pointer() const { return ptr_; }
 
-    // -------------- assignment ------------------
-
-    /** @{ */
-    /** assign() defines the piece of data that Texture should work
-        with. the data is not uploaded nor bound, only the
-        descriptors are initialized. */
-
-    /** assign 2d, explicit format, input_format, type */
-    void assign(GLsizei width, GLsizei height,
-                GLenum format, GLenum input_format,
-                GLenum type,
-                void* ptr_to_data);
-
-    /** assign 2d, explicit format and input_format, type */
-    void assign(GLsizei width, GLsizei height,
-                GLenum format,
-                GLenum type,
-                void* ptr_to_data)
-    { assign(width, height, format, format, type, ptr_to_data); }
-
-    /** @} */ // assign
 
     // -------- openGL interface ---------------
 
@@ -81,8 +60,26 @@ public:
     /** Convenience function for glTexParameteri(target, param, value) */
     void texParameter(GLenum param, GLenum value) const;
 
-    /** Creates the texture on the device.
-        <br><b>Texture must be bound()</b> */
+    /** @{ */
+    /** create() (re-)defines the piece of data that Texture should work with.
+        The data is created or uploaded depending if @p ptr_to_data is not NULL. */
+
+    /** assign 2d, explicit format, input_format, type */
+    bool create(GLsizei width, GLsizei height,
+                GLenum format, GLenum input_format,
+                GLenum type,
+                void* ptr_to_data);
+
+    /** assign 2d, explicit format and input_format, type */
+    bool create(GLsizei width, GLsizei height,
+                GLenum format,
+                GLenum type,
+                void* ptr_to_data)
+    { return create(width, height, format, format, type, ptr_to_data); }
+
+    /** @} */ // create
+
+    /** Creates the texture on the device as defined in constructor. */
     bool create();
 
     /** Uploads the data specified previously.

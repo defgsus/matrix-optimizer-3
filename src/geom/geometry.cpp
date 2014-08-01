@@ -531,6 +531,15 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
                                 normals());
     }
 
+    // --- texcoord ---
+    if (auto a = s->getAttribute(s->source()->attribNameTexCoord()))
+    {
+        vao->createAttribBuffer(a->location(),
+                                textureCoordEnum, numTextureCoordComponents(),
+                                numTextureCoordBytes(),
+                                textureCoords());
+    }
+
     // --- indices ---
     if (triangles)
         vao->createIndexBuffer(indexEnum,

@@ -282,7 +282,9 @@ OTHER_FILES += $$BISON_FILES \
     TODO.txt \
     assets/shader/default.vert \
     assets/shader/default.frag \
-    assets/model/camera.obj_
+    assets/model/camera.obj_ \
+    assets/shader/framebufferdraw.vert \
+    assets/shader/framebufferdraw.frag
 
 ####################### BISON PARSER #######################
 

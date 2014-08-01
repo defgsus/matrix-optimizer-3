@@ -593,6 +593,10 @@ void Scene::renderScene(Double time, uint thread)
         {
             o->renderGl_(camSpace, thread, time);
         }
+
+        cameras_[0]->finishGlFrame(thread, time);
+
+        cameras_[0]->drawFramebuffer(thread, time);
     }
 }
 

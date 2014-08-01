@@ -36,14 +36,22 @@ Texture::Texture(ErrorReporting report)
 Texture::Texture(GLsizei width, GLsizei height,
                  GLenum format, GLenum input_format,
                  GLenum type, void *ptr_to_data,
-                 ErrorReporting reporting)
-    : Texture(reporting)
+                 ErrorReporting report)
+    : rep_          (report),
+      ptr_			(ptr_to_data),
+      uploaded_		(false),
+      width_		(width),
+      height_		(height),
+      memory_ 		(0),
+      handle_		(invalidGl),
+      target_		(GL_TEXTURE_2D),
+      format_		(format),
+      input_format_	(input_format),
+      type_			(type)
 {
     MO_DEBUG_GL("Texture::Texture(" << width << ", " << height
                 << ", " << format << ", " << input_format << ", "
                 << ", " << type << ", " << ptr_to_data << ")");
-
-    assign(width, height, format, input_format, type, ptr_to_data);
 }
 
 
@@ -56,12 +64,12 @@ Texture::~Texture()
 }
 
 
-void Texture::assign(GLsizei width, GLsizei height,
+bool Texture::create(GLsizei width, GLsizei height,
                 GLenum format, GLenum input_format,
                 GLenum type,
                 void* ptr_to_data)
 {
-    MO_DEBUG_GL("Texture::assign(" << width << ", " << height
+    MO_DEBUG_GL("Texture::create(" << width << ", " << height
                 << ", " << format << ", " << input_format << ", "
                 << ", " << type << ", " << ptr_to_data << ")");
 
@@ -76,9 +84,12 @@ void Texture::assign(GLsizei width, GLsizei height,
     input_format_ = input_format;
     type_ = type;
     ptr_ = ptr_to_data;
+
+    if (!bind())
+        return false;
+
+    return upload_(ptr_, 0);
 }
-
-
 
 
 
@@ -86,9 +97,10 @@ GLuint Texture::genTexture_() const
 {
     GLuint tex;
 
-    MO_CHECK_GL_COND( rep_, glGenTextures(1, &tex) );
+    GLenum err;
+    MO_CHECK_GL_RET_COND( rep_, glGenTextures(1, &tex), err );
 
-    return tex;
+    return err ? invalidGl : tex;
 }
 
 void Texture::releaseTexture_()
@@ -134,14 +146,21 @@ void Texture::texParameter(GLenum param, GLenum value) const
 
 bool Texture::create()
 {
-    return upload_((void*)0, 0);
+    handle_ = genTexture_();
+    if (handle_ == invalidGl)
+        return false;
+
+    if (!bind())
+        return false;
+
+    return upload_(ptr_, 0);
 }
+
 
 bool Texture::upload(GLint mipmap_level)
 {
     return upload_(ptr_, mipmap_level);
 }
-
 
 bool Texture::upload(void * ptr, GLint mipmap_level)
 {

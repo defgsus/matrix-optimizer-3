@@ -12,6 +12,8 @@
 
 #include "shadersource.h"
 #include "io/log.h"
+#include "io/error.h"
+
 namespace MO {
 namespace GL {
 
@@ -25,18 +27,31 @@ ShaderSource::ShaderSource()
 {
 }
 
-void ShaderSource::setDefaultSource()
+void ShaderSource::loadFragmentSource(const QString &filename)
 {
-    {
-        QFile f(":/shader/default.vert");
-        f.open(QIODevice::ReadOnly);
-        vert_ = f.readAll();
-    }
-    {
-        QFile f(":/shader/default.frag");
-        f.open(QIODevice::ReadOnly);
-        frag_ = f.readAll();
-    }
+    QFile f(filename);
+    if (!f.open(QIODevice::ReadOnly))
+        MO_IO_ERROR(READ, "Could not load fragment source from '" << filename << "'\n"
+                    << f.errorString());
+
+    frag_ = f.readAll();
+}
+
+
+void ShaderSource::loadVertexSource(const QString &filename)
+{
+    QFile f(filename);
+    if (!f.open(QIODevice::ReadOnly))
+        MO_IO_ERROR(READ, "Could not load vertex source from '" << filename << "'\n"
+                    << f.errorString());
+
+    vert_ = f.readAll();
+}
+
+void ShaderSource::loadDefaultSource()
+{
+    loadVertexSource(":/shader/default.vert");
+    loadFragmentSource(":/shader/default.frag");
 }
 
 

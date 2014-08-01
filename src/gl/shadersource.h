@@ -44,7 +44,12 @@ public:
     void setAttributeNamePosition(const QString& s) { anPos_ = s; }
     void setAttributeNameColor(const QString& s) { anCol_ = s; }
 
-    void setDefaultSource();
+    // ------------- files ------------
+
+    void loadVertexSource(const QString& filename);
+    void loadFragmentSource(const QString& filename);
+
+    void loadDefaultSource();
 
 private:
     QString vert_, frag_,

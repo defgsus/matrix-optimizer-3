@@ -90,7 +90,7 @@ bool FrameBufferObject::create()
 
     if (!colorTex_->isCreated())
     {
-        colorTex_->upload();
+        colorTex_->create();
     }
 
     GLenum err;

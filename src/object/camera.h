@@ -35,8 +35,11 @@ public:
     /** Returns projection matrix */
     const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }
 
-    /** Starts rendering an openGL frame */
+    /** Starts rendering an openGL frame for this camera. */
     void startGlFrame(uint thread, Double time);
+
+    /** Finishes rendering an openGl frame for this camera. */
+    void finishGlFrame(uint thread, Double time);
 
     /** Initialize camera space (with projection)
         XXX only trying here.. */
@@ -44,6 +47,10 @@ public:
 
     // XXX only trying here
     //void setProjectionMatrix(uint thread, uint sample);
+
+    /** Draws the contents of the framebuffer on a [-1,1] quad. */
+    void drawFramebuffer(uint thread, Double time);
+
 signals:
 
 public slots:
@@ -52,6 +59,8 @@ private:
 
     std::vector<std::vector<Mat4>> projection_;
     std::vector<GL::FrameBufferObject*> fbo_;
+
+    std::vector<GL::Drawable*> screenQuad_;
 };
 
 } // namespace MO

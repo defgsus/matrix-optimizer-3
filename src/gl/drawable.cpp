@@ -109,7 +109,7 @@ void Drawable::compileShader_()
 
     if (shaderSource_->isEmpty())
     {
-        shaderSource_->setDefaultSource();
+        shaderSource_->loadDefaultSource();
         doRecompile_ = true;
     }
 

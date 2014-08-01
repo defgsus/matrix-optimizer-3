@@ -12,6 +12,7 @@
 #include <QMouseEvent>
 
 #include "basic3dwidget.h"
+#include "gl/framebufferobject.h"
 
 namespace MO {
 namespace GUI {
@@ -89,6 +90,12 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 
 void Basic3DWidget::initializeGL()
 {
+    if (framebuffered_)
+    {
+        fbo_ = new GL::FrameBufferObject(512, 512, GL_RGBA, GL_FLOAT, GL::ER_THROW);
+        fbo_->create();
+    }
+
     MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
 
     emit glInitialized();
