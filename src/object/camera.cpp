@@ -78,7 +78,7 @@ void Camera::initGl(uint thread)
                 0.1f, 1000.0f);
 
     // screen-quad
-    screenQuad_[thread] = new GL::ScreenQuad("camera_quad", GL::ER_THROW);
+    screenQuad_[thread] = new GL::ScreenQuad(idName() + "_quad", GL::ER_THROW);
     screenQuad_[thread]->create(
                 ":/shader/framebuffercamera.vert",
                 ":/shader/framebuffercamera.frag");
@@ -133,6 +133,8 @@ void Camera::drawFramebuffer(uint thread, Double time)
     uColor_->floats[3] = cameraMix_->value(time);
 
     fbo->colorTexture()->bind();
+    MO_CHECK_GL( glEnable(GL_BLEND) );
+    MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
     screenQuad_[thread]->draw(fbo->width(), fbo->height());
     fbo->colorTexture()->unbind();
 }

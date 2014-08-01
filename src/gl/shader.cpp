@@ -365,6 +365,17 @@ void Shader::sendUniform(const Uniform * u)
     case GL_INT:
         MO_CHECK_GL( glUniform1i(u->location_, u->ints[0]) );
     break;
+
+    case GL_INT_VEC2:
+        MO_CHECK_GL( glUniform2i(u->location_, u->ints[0], u->ints[1]) );
+    break;
+    case GL_INT_VEC3:
+        MO_CHECK_GL( glUniform3i(u->location_, u->ints[0], u->ints[1], u->ints[2]) );
+    break;
+    case GL_INT_VEC4:
+        MO_CHECK_GL( glUniform4i(u->location_, u->ints[0], u->ints[1], u->ints[2], u->ints[3]) );
+    break;
+
     case GL_FLOAT:
         MO_CHECK_GL( glUniform1f(u->location_, u->floats[0]) );
     break;
@@ -372,14 +383,17 @@ void Shader::sendUniform(const Uniform * u)
         MO_CHECK_GL( glUniform2f(u->location_, u->floats[0], u->floats[1]) );
     break;
     case GL_FLOAT_VEC3:
-//        qDebug() << activated_ << u->location_ << u->floats[0] << u->floats[1] << u->floats[2];
         MO_CHECK_GL( glUniform3f(u->location_, u->floats[0], u->floats[1], u->floats[2]) );
     break;
     case GL_FLOAT_VEC4:
+        //MO_DEBUG_GL(activated_ << "," << u->location_ << "," << u->floats[0] << ","
+        //                << u->floats[1] << "," << u->floats[2] << "," << u->floats[3]);
         MO_CHECK_GL( glUniform4f(u->location_, u->floats[0], u->floats[1], u->floats[2], u->floats[3]) );
     break;
+
     default:
-        MO_GL_WARNING("unsupported uniform type '" << u->type_ << "' in Shader(" << name_ << ")");
+        //MO_GL_WARNING("unhandled uniform type '" << u->type_ << "' in Shader(" << name_ << ")");
+        break;
     }
 }
 

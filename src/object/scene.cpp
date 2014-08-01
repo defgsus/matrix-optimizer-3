@@ -604,6 +604,7 @@ void Scene::renderScene(Double time, uint thread)
         calculateSceneTransform(thread, 0, time);
 
         for (auto camera : cameras_)
+        if (camera->active(time))
         {
             // start camera frame
             camera->startGlFrame(thread, time);
@@ -629,7 +630,9 @@ void Scene::renderScene(Double time, uint thread)
     MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
-    cameras_[0]->drawFramebuffer(thread, time);
+    for (auto camera : cameras_)
+        if (camera->active(time))
+            camera->drawFramebuffer(thread, time);
     fboFinal_->unbind();
 
     // draw to screen
