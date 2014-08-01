@@ -568,7 +568,7 @@ void Scene::createGl_()
     MO_DEBUG_GL("Scene::createGl_()");
 
     fboFinal_ = new GL::FrameBufferObject(
-                fbWidth_, fbHeight_, fbFormat_, GL_FLOAT, GL::ER_THROW);
+                fbWidth_, fbHeight_, fbFormat_, GL_FLOAT, false, GL::ER_THROW);
     fboFinal_->create();
     fboFinal_->unbind();
 

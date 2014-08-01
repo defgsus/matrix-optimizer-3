@@ -30,7 +30,8 @@ Shader * ScreenQuad::shader() const
     return quad_ ? quad_->shader() : 0;
 }
 
-bool ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile)
+bool ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile,
+                        const QString& defines)
 {
     // XXX add error reporting to Drawable and Shader
 
@@ -41,6 +42,8 @@ bool ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile)
     GL::ShaderSource * src = new GL::ShaderSource();
     src->loadVertexSource(vertexFile);
     src->loadFragmentSource(fragmentFile);
+    if (!defines.isEmpty())
+        src->addDefine(defines);
     quad_->setShaderSource(src);
     quad_->createOpenGl();
     return true;

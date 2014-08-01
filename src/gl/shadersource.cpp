@@ -54,6 +54,49 @@ void ShaderSource::loadDefaultSource()
     loadFragmentSource(":/shader/default.frag");
 }
 
+void ShaderSource::addDefine(const QString &defineCommand)
+{
+    addDefine_(vert_, defineCommand);
+    addDefine_(frag_, defineCommand);
+
+    MO_DEBUG(frag_);
+}
+
+
+void ShaderSource::addDefine_(QString &src, const QString &def_line) const
+{
+    QString line = def_line;
+    if (!line.endsWith("\n"))
+        line.append("\n");
+
+    // look for other defines
+    int i = src.lastIndexOf("#define");
+    if (i>=0)
+    {
+        src.insert(src.indexOf("\n", i) + 1, line);
+        return;
+    }
+
+    // look for extensions
+    i = src.lastIndexOf("#extension");
+    if (i>=0)
+    {
+        src.insert(src.indexOf("\n", i) + 1, line);
+        return;
+    }
+
+    // look for version
+    i = src.lastIndexOf("#version");
+    if (i>=0)
+    {
+        src.insert(src.indexOf("\n", i) + 1, line);
+        return;
+    }
+
+    // insert at beginning
+    src.prepend(line);
+}
+
 
 } // namespace GL
 } // namespace MO

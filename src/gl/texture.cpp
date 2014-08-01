@@ -66,6 +66,36 @@ Texture::Texture(GLsizei width, GLsizei height,
                 << ", " << type << ", " << ptr_to_data << ")");
 }
 
+Texture::Texture(GLsizei width, GLsizei height,
+                 GLenum format, GLenum input_format,
+                 GLenum type,
+                 void * ptr_px, void * ptr_nx,
+                 void * ptr_py, void * ptr_ny,
+                 void * ptr_pz, void * ptr_nz,
+                 ErrorReporting report)
+    : rep_          (report),
+      ptr_			(0),
+      ptr_px_       (ptr_px),
+      ptr_nx_       (ptr_nx),
+      ptr_py_       (ptr_py),
+      ptr_ny_       (ptr_ny),
+      ptr_pz_       (ptr_pz),
+      ptr_nz_       (ptr_nz),
+      uploaded_		(false),
+      width_		(width),
+      height_		(height),
+      memory_ 		(0),
+      handle_		(invalidGl),
+      target_		(GL_TEXTURE_CUBE_MAP),
+      format_		(format),
+      input_format_	(input_format),
+      type_			(type)
+{
+    MO_DEBUG_GL("Texture::Texture(" << width << ", " << height
+                << ", " << format << ", " << input_format
+                << ", " << type << ", " << ptr_px << ", " << ptr_nx << ", "
+                << ptr_py << ", " << ptr_ny << ", " << ptr_pz << ", " << ptr_nz << ")");
+}
 
 Texture::~Texture()
 {
@@ -82,7 +112,7 @@ bool Texture::create(GLsizei width, GLsizei height,
                 void* ptr_to_data)
 {
     MO_DEBUG_GL("Texture::create(" << width << ", " << height
-                << ", " << format << ", " << input_format << ", "
+                << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_to_data << ")");
 
     releaseTexture_();
@@ -118,7 +148,7 @@ bool Texture::create(GLsizei width, GLsizei height,
                 void * ptr_pz, void * ptr_nz)
 {
     MO_DEBUG_GL("Texture::create(" << width << ", " << height
-                << ", " << format << ", " << input_format << ", "
+                << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_px << ", " << ptr_nx << ", "
                 << ptr_py << ", " << ptr_ny << ", " << ptr_pz << ", " << ptr_nz << ")");
 
@@ -214,7 +244,17 @@ bool Texture::create()
     if (!bind())
         return false;
 
-    return upload_(ptr_, 0);
+    if (target_ != GL_TEXTURE_CUBE_MAP)
+        return upload_(ptr_, 0);
+    else
+    {
+        if (!upload_(ptr_px_, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_X)) return false;
+        if (!upload_(ptr_nx_, 0, GL_TEXTURE_CUBE_MAP_NEGATIVE_X)) return false;
+        if (!upload_(ptr_py_, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_Y)) return false;
+        if (!upload_(ptr_ny_, 0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y)) return false;
+        if (!upload_(ptr_pz_, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_Z)) return false;
+        return upload_(ptr_nz_, 0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+    }
 }
 
 

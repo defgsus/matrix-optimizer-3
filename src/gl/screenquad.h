@@ -25,8 +25,14 @@ class ScreenQuad
 public:
     ScreenQuad(const QString& name, ErrorReporting reporting);
 
-    bool create(const QString& vertexFile = ":/shader/framebufferdraw.vert",
-                const QString& fragmentFile = ":/shader/framebufferdraw.frag");
+    bool create(const QString& defines = QString())
+        { return create(":/shader/framebufferdraw.vert", ":/shader/framebufferdraw.frag",
+                        defines); }
+
+    bool create(const QString& vertexFile,
+                const QString& fragmentFile,
+                const QString& defines = QString());
+
     void release();
 
     bool draw(uint w, uint h);

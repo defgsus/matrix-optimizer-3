@@ -18,17 +18,24 @@ namespace GL {
 
 
 
-FrameBufferObject::FrameBufferObject(
-            GLsizei width, GLsizei height,
-            GLenum format, GLenum type,
+FrameBufferObject::FrameBufferObject(GLsizei width, GLsizei height,
+            GLenum format, GLenum type, bool cubemap,
             ErrorReporting report)
     : rep_          (report),
-      colorTex_     (new Texture(width, height, format, format, type, 0, report)),
+      colorTex_     (0),
       fbo_          (invalidGl),
-      rbo_          (invalidGl)
+      rbo_          (invalidGl),
+      cubemap_      (cubemap)
 {
     MO_DEBUG_GL("FrameBufferObject::FrameBufferObject("
                 << width << ", " << height << ", " << format << ", " << type << ")");
+
+    if (!cubemap_)
+        colorTex_ = new Texture(width, height, format, format, type, 0, report);
+    else
+    {
+        colorTex_ = new Texture(width, height, format, format, type, 0, 0, 0, 0, 0, 0, report);
+    }
 }
 
 FrameBufferObject::~FrameBufferObject()
@@ -113,8 +120,9 @@ bool FrameBufferObject::create()
     if (err) return false;
 
     // attach color texture
+    GLenum target = cubemap_? GL_TEXTURE_CUBE_MAP_POSITIVE_X : GL_TEXTURE_2D;
     MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
-            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex_->handle(), 0), err );
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, colorTex_->handle(), 0), err );
     if (err) return false;
 
     // for depth testing

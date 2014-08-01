@@ -95,6 +95,7 @@ void Camera::initGl(uint thread)
                 scene->frameBufferHeight(),
                 scene->frameBufferFormat(),
                 GL_FLOAT,
+                false,
                 GL::ER_THROW);
     fbo_[thread]->create();
     fbo_[thread]->unbind();

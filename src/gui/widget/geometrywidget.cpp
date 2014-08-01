@@ -44,7 +44,7 @@ void GeometryWidget::setGeometry(GEOM::Geometry * g)
     updateGL();
 }
 
-void GeometryWidget::drawGL()
+void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
 {
     MO_CHECK_GL( glClearColor(0.1, 0.2, 0.3, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
@@ -53,7 +53,7 @@ void GeometryWidget::drawGL()
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
     if (drawable_->isReady())
-        drawable_->renderShader(projectionMatrix(), transformationMatrix());
+        drawable_->renderShader(projection, transformation);
 }
 
 

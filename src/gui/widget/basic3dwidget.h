@@ -31,7 +31,7 @@ public:
     {
         RM_DIRECT,
         RM_FRAMEBUFFER,
-        RM_FULLDOME_5CAM
+        RM_FULLDOME_CUBE
     };
 
     explicit Basic3DWidget(RenderMode mode, QWidget *parent = 0);
@@ -63,7 +63,7 @@ protected:
 
     void paintGL() Q_DECL_OVERRIDE Q_DECL_FINAL;
 
-    virtual void drawGL() = 0;
+    virtual void drawGL(const Mat4& projection, const Mat4& transformation) = 0;
 
 private:
 

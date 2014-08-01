@@ -29,6 +29,16 @@ public:
                 void* ptr_to_data,
                 ErrorReporting reporting = ER_THROW);
 
+    /** cubemap, explicit format, input_format, type */
+    explicit Texture(
+                GLsizei width, GLsizei height,
+                GLenum format, GLenum input_format,
+                GLenum type,
+                void * ptr_px, void * ptr_nx,
+                void * ptr_py, void * ptr_ny,
+                void * ptr_pz, void * ptr_nz,
+                ErrorReporting reporting = ER_THROW);
+
     virtual ~Texture();
 
     // --------------- getter ---------------------

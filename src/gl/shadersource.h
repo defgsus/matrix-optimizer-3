@@ -51,7 +51,17 @@ public:
 
     void loadDefaultSource();
 
+    // ---------- manipulation --------
+
+    /** Adds a define to all sources.
+        Defines are added after all #version, #extension and other #define lines.
+        An #undef can also be added that way. */
+    void addDefine(const QString& defineCommand);
+
 private:
+
+    void addDefine_(QString& src, const QString& def_line) const;
+
     QString vert_, frag_,
         unProj_, unView_,
         anPos_, anCol_, anNorm_, anTexCoord_;

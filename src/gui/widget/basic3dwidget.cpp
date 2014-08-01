@@ -94,12 +94,16 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 
 void Basic3DWidget::initializeGL()
 {
-    if (renderMode_ == RM_FULLDOME_5CAM || renderMode_ == RM_FRAMEBUFFER)
+    if (renderMode_ == RM_FULLDOME_CUBE || renderMode_ == RM_FRAMEBUFFER)
     {
         screenQuad_ = new GL::ScreenQuad("basic3dwidget", GL::ER_THROW);
-        screenQuad_->create();
+        screenQuad_->create(
+                    renderMode_ == RM_FULLDOME_CUBE ?
+                        "#define MO_FULLDOME_CUBE" : "");
 
-        fbo_ = new GL::FrameBufferObject(512, 512, GL_RGBA, GL_FLOAT, GL::ER_THROW);
+        fbo_ = new GL::FrameBufferObject(512, 512, GL_RGBA, GL_FLOAT,
+                                         (renderMode_ == RM_FULLDOME_CUBE),
+                                         GL::ER_THROW);
         fbo_->create();
         fbo_->unbind();
     }
@@ -119,7 +123,7 @@ void Basic3DWidget::resizeGL(int w, int h)
                 glm::perspective(angle, (float)fbo_->width()/fbo_->height(), 0.1f, 1000.0f);
     }
     else
-    if (renderMode_ == RM_FULLDOME_5CAM)
+    if (renderMode_ == RM_FULLDOME_CUBE)
     {
         projectionMatrix_ =
                 glm::perspective(90.f, (float)fbo_->width()/fbo_->height(), 0.1f, 1000.0f);
@@ -135,7 +139,7 @@ void Basic3DWidget::paintGL()
 {
     if (renderMode_ == RM_DIRECT)
     {
-        drawGL();
+        drawGL(projectionMatrix(), transformationMatrix());
         return;
     }
 
@@ -146,7 +150,7 @@ void Basic3DWidget::paintGL()
 
         MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
 
-        drawGL();
+        drawGL(projectionMatrix(), transformationMatrix());
 
         fbo_->unbind();
 
@@ -161,10 +165,28 @@ void Basic3DWidget::paintGL()
 
     }
 
-    if (renderMode_ == RM_FULLDOME_5CAM)
+    if (renderMode_ == RM_FULLDOME_CUBE)
     {
         // ARB_seamless_cube_map
         MO_CHECK_GL( glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS) );
+
+        fbo_->bind();
+        fbo_->setViewport();
+
+        MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
+
+        drawGL(projectionMatrix(), transformationMatrix());
+
+        fbo_->unbind();
+
+        // draw to screen
+        MO_CHECK_GL( glViewport(0,0,width(), height()) );
+        MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
+        MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
+        MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
+        fbo_->colorTexture()->bind();
+        screenQuad_->draw(width(), height());
+        fbo_->colorTexture()->unbind();
     }
 }
 

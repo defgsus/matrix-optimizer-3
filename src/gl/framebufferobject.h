@@ -26,7 +26,8 @@ public:
     explicit FrameBufferObject(
             GLsizei width, GLsizei height,
             GLenum format, GLenum type,
-            ErrorReporting reporting = ER_IGNORE);
+            bool cubemap,
+            ErrorReporting reporting = ER_THROW);
 
     ~FrameBufferObject();
 
@@ -68,6 +69,8 @@ private:
     Texture * colorTex_;
 
     GLuint fbo_, rbo_;
+
+    bool cubemap_;
 };
 
 
