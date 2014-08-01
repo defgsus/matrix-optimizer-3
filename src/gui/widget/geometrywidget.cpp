@@ -17,8 +17,8 @@ namespace MO {
 namespace GUI {
 
 
-GeometryWidget::GeometryWidget(bool framebuffered, QWidget *parent) :
-    Basic3DWidget   (framebuffered, parent),
+GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
+    Basic3DWidget   (mode, parent),
     drawable_       (new GL::Drawable("geomwidget"))
 {
     setMinimumSize(128, 128);
@@ -44,11 +44,11 @@ void GeometryWidget::setGeometry(GEOM::Geometry * g)
     updateGL();
 }
 
-void GeometryWidget::paintGL()
+void GeometryWidget::drawGL()
 {
     MO_CHECK_GL( glClearColor(0.1, 0.2, 0.3, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
-    // XXX not working
+    // XXX not working in RM_DIRECT
     MO_CHECK_GL( glEnable(GL_BLEND) );
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 

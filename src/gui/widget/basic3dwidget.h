@@ -21,11 +21,22 @@
 namespace MO {
 namespace GUI {
 
+/** Override drawGL() to draw your stuff! */
 class Basic3DWidget : public QGLWidget
 {
     Q_OBJECT
 public:
-    explicit Basic3DWidget(bool framebuffered, QWidget *parent = 0);
+
+    enum RenderMode
+    {
+        RM_DIRECT,
+        RM_FRAMEBUFFER,
+        RM_FULLDOME_5CAM
+    };
+
+    explicit Basic3DWidget(RenderMode mode, QWidget *parent = 0);
+
+    RenderMode renderMode() const { return renderMode_; }
 
     const Mat4& projectionMatrix() const { return projectionMatrix_; }
     Mat4 transformationMatrix() const;
@@ -50,9 +61,13 @@ protected:
     /** Sets the viewport and the projection matrix */
     void resizeGL(int w, int h) Q_DECL_OVERRIDE;
 
+    void paintGL() Q_DECL_OVERRIDE Q_DECL_FINAL;
+
+    virtual void drawGL() = 0;
+
 private:
 
-    bool framebuffered_;
+    RenderMode renderMode_;
 
     Mat4
         projectionMatrix_,
@@ -62,6 +77,7 @@ private:
     QPoint lastMousePos_;
 
     GL::FrameBufferObject * fbo_;
+    GL::ScreenQuad * screenQuad_;
 };
 
 } // namespace GUI

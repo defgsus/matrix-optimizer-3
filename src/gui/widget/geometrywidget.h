@@ -22,7 +22,8 @@ class GeometryWidget : public Basic3DWidget
 {
     Q_OBJECT
 public:
-    explicit GeometryWidget(bool framebuffered, QWidget *parent = 0);
+
+    explicit GeometryWidget(RenderMode mode, QWidget *parent = 0);
     ~GeometryWidget();
 
 signals:
@@ -34,7 +35,7 @@ public slots:
 protected:
 
     //void initializeGL() Q_DECL_OVERRIDE;
-    void paintGL() Q_DECL_OVERRIDE;
+    void drawGL() Q_DECL_OVERRIDE;
 
     GL::Drawable * drawable_;
 };

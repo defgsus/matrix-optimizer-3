@@ -13,16 +13,20 @@
 
 #include "basic3dwidget.h"
 #include "gl/framebufferobject.h"
+#include "gl/texture.h"
+#include "gl/screenquad.h"
 
 namespace MO {
 namespace GUI {
 
 
-Basic3DWidget::Basic3DWidget(bool framebuffered, QWidget *parent) :
+Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     QGLWidget       (parent),
-    framebuffered_  (framebuffered)
+    renderMode_     (mode),
+    fbo_            (0),
+    screenQuad_     (0)
 {
-    if (!framebuffered)
+    if (mode == RM_DIRECT)
     {
         QGLFormat f(format());
         f.setDepth(true);
@@ -90,10 +94,14 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 
 void Basic3DWidget::initializeGL()
 {
-    if (framebuffered_)
+    if (renderMode_ == RM_FULLDOME_5CAM || renderMode_ == RM_FRAMEBUFFER)
     {
+        screenQuad_ = new GL::ScreenQuad("basic3dwidget", GL::ER_THROW);
+        screenQuad_->create();
+
         fbo_ = new GL::FrameBufferObject(512, 512, GL_RGBA, GL_FLOAT, GL::ER_THROW);
         fbo_->create();
+        fbo_->unbind();
     }
 
     MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
@@ -103,11 +111,56 @@ void Basic3DWidget::initializeGL()
 
 void Basic3DWidget::resizeGL(int w, int h)
 {
-    projectionMatrix_ = glm::perspective(63.f, (float)w/h, 0.1f, 1000.0f);
+    float angle = 63;
 
-    MO_CHECK_GL( glViewport(0,0,w,h) );
+    if (renderMode_ == RM_FRAMEBUFFER)
+    {
+        projectionMatrix_ =
+                glm::perspective(angle, (float)fbo_->width()/fbo_->height(), 0.1f, 1000.0f);
+    }
+    else
+    if (renderMode_ == RM_FULLDOME_5CAM)
+    {
+        projectionMatrix_ =
+                glm::perspective(90.f, (float)fbo_->width()/fbo_->height(), 0.1f, 1000.0f);
+    }
+    else
+    {
+        projectionMatrix_ = glm::perspective(angle, (float)w/h, 0.1f, 1000.0f);
+        MO_CHECK_GL( glViewport(0,0,w,h) );
+    }
 }
 
+void Basic3DWidget::paintGL()
+{
+    if (renderMode_ == RM_DIRECT)
+    {
+        drawGL();
+        return;
+    }
+
+    if (renderMode_ == RM_FRAMEBUFFER)
+    {
+        fbo_->bind();
+        fbo_->setViewport();
+
+        MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
+
+        drawGL();
+
+        fbo_->unbind();
+
+        // draw to screen
+        MO_CHECK_GL( glViewport(0,0,width(), height()) );
+        MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
+        MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
+        MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
+        fbo_->colorTexture()->bind();
+        screenQuad_->draw(width(), height());
+        fbo_->colorTexture()->unbind();
+
+    }
+}
 
 } // namespace GUI
 } // namespace MO
