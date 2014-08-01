@@ -130,6 +130,8 @@ void Window::renderNow()
 
     moInitGl();
 
+    MO_CHECK_GL( glViewport(0,0, width(), height()) );
+
     emit renderRequest();
 
 

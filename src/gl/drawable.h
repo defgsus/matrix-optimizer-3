@@ -65,6 +65,7 @@ public:
     void releaseOpenGl();
 
     void render();
+    void renderShader();
     void renderShader(const Mat4& proj, const Mat4& view);
     void renderImmediate();
 

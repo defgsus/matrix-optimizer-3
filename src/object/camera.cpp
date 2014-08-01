@@ -80,7 +80,7 @@ void Camera::initGl(uint thread)
     // screen-quad
     GL::Drawable * d = new GL::Drawable();
     screenQuad_[thread] = d;
-    GEOM::GeometryFactory::createQuad(d->geometry(), 1, 1);
+    GEOM::GeometryFactory::createQuad(d->geometry(), 2, 2);
     GL::ShaderSource * src = new GL::ShaderSource();
     src->loadVertexSource(":/shader/framebufferdraw.vert");
     src->loadFragmentSource(":/shader/framebufferdraw.frag");
@@ -109,12 +109,17 @@ void Camera::startGlFrame(uint thread, Double )
 void Camera::finishGlFrame(uint thread, Double)
 {
     fbo_[thread]->unbind();
+    MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
 }
 
 void Camera::drawFramebuffer(uint thread, Double )
 {
+    int w = glContext(thread)->size().width(),
+        h = glContext(thread)->size().height();
     fbo_[thread]->colorTexture()->bind();
-    screenQuad_[thread]->renderShader(Mat4(1.0), Mat4(1.0));
+    Mat4 trans = h<w? glm::scale(Mat4(1.0), Vec3((float)h/w, 1, 1))
+                    : glm::scale(Mat4(1.0), Vec3(1, (float)w/h, 1));
+    screenQuad_[thread]->renderShader(Mat4(1.0), trans);
 }
 
 

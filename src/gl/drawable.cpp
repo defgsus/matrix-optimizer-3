@@ -205,6 +205,20 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
     shader_->deactivate();
 }
 
+void Drawable::renderShader()
+{
+    MO_ASSERT(vao_, "no vertex array object specified in Drawable::render()");
+
+    shader_->activate();
+
+    if (geometry_->numTriangles())
+        vao_->drawElements(GL_TRIANGLES);
+    else
+        vao_->drawElements(GL_LINES);
+
+    shader_->deactivate();
+}
+
 
 void Drawable::renderImmediate()
 {
