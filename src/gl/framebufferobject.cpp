@@ -120,7 +120,7 @@ bool FrameBufferObject::create()
     if (err) return false;
 
     // attach color texture
-    GLenum target = cubemap_? GL_TEXTURE_CUBE_MAP_POSITIVE_X : GL_TEXTURE_2D;
+    GLenum target = cubemap_? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : GL_TEXTURE_2D;
     MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
             GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, colorTex_->handle(), 0), err );
     if (err) return false;
@@ -141,6 +141,29 @@ bool FrameBufferObject::create()
     MO_CHECK_GL_COND(rep_, glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
     return true;
+}
+
+bool FrameBufferObject::attachCubeTexture(GLenum target)
+{
+    if (!cubemap_)
+    {
+        if (rep_ == ER_THROW)
+            MO_GL_ERROR("FrameBufferObject::attachCubeTexture() for non-cube texture");
+        return false;
+    }
+
+    if (!colorTex_ || !colorTex_->isAllocated())
+    {
+        if (rep_ == ER_THROW)
+            MO_GL_ERROR("FrameBufferObject::attachCubeTexture() on uninitialized cube-map");
+        return false;
+    }
+
+    GLenum err;
+    MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, colorTex_->handle(), 0), err );
+    return !err;
+
 }
 
 bool FrameBufferObject::downloadColorTexture(void *ptr)

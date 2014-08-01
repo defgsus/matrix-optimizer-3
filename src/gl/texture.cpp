@@ -399,7 +399,8 @@ bool Texture::upload_(void * ptr, GLint mipmap_level, GLenum cube_target)
     texParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     texParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    bool repeat = false;
+    // XXX needs to be true for TEXTURE_CUBE_MAP
+    bool repeat = true;
     texParameter(GL_TEXTURE_WRAP_S, (repeat)? GL_REPEAT : GL_CLAMP );
     texParameter(GL_TEXTURE_WRAP_T, (repeat)? GL_REPEAT : GL_CLAMP );
 

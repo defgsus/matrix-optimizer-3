@@ -175,13 +175,28 @@ void Basic3DWidget::paintGL()
 
         MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
 
+        Mat4 rpx = glm::rotate(Mat4(1.0), -90.f, Vec3(0,1,0));
+        Mat4 rnx = glm::rotate(Mat4(1.0), 90.f, Vec3(0,1,0));
+        Mat4 rpy = glm::rotate(glm::rotate(Mat4(1.0), -90.f, Vec3(1,0,0)), 180.f, Vec3(0,0,1));
+        Mat4 rny = glm::rotate(glm::rotate(Mat4(1.0), 90.f, Vec3(1,0,0)), 180.f, Vec3(0,0,1));;
+
+        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
         drawGL(projectionMatrix(), transformationMatrix());
+        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+        drawGL(projectionMatrix(), rpx * transformationMatrix());
+        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
+        drawGL(projectionMatrix(), rnx * transformationMatrix());
+        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
+        drawGL(projectionMatrix(), rpy * transformationMatrix());
+        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
+        drawGL(projectionMatrix(), rny * transformationMatrix());
+
 
         fbo_->unbind();
 
         // draw to screen
         MO_CHECK_GL( glViewport(0,0,width(), height()) );
-        MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
+        MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
         MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
         MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
         fbo_->colorTexture()->bind();

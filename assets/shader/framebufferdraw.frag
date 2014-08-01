@@ -16,8 +16,11 @@ void main(void)
 {
 #ifndef MO_FULLDOME_CUBE
     gl_FragColor = texture2D(tex_framebuffer, v_texCoord.xy);
-#else
 
+#else
+    // cube to fulldome
+
+    // normalized screen coords
     vec2 scr = v_texCoord.xy * 2.0 - 1.0;
 
     float
@@ -33,9 +36,10 @@ void main(void)
                 sin(theta) * sin(phi),
                 -cos(theta));
 
-    gl_FragColor = dist > 1.0 ?
+    gl_FragColor = //texture(tex_framebuffer, vec3(scr, -1.0));
+            dist > 1.0 ?
                 vec4(1.0, 0., 0., 1.)
-              : textureCube(tex_framebuffer, lookup);
+              : texture(tex_framebuffer, lookup);
 
 #endif
 }

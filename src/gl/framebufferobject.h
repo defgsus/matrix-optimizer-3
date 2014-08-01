@@ -53,7 +53,14 @@ public:
         as previously defined. */
     bool create();
 
-    /** Downloads the color texture from the device. */
+    /** Attach one of the cubemap textures to the colorbuffer.
+        @p target is of type GL_TEXTURE_CUBE_MAP_[POSITIVE|NEGATIVE]_[X|Y|Z].
+        Prior, create() must have been successfully called and
+        the framebuffer object must be in cubemap mode. */
+    bool attachCubeTexture(GLenum target);
+
+    /** Downloads the color texture from the device.
+        NOT available for cubemap textures. */
     bool downloadColorTexture(void * ptr);
 
     /** Convenience function sets opengl viewport to (0,0, width, height) */
