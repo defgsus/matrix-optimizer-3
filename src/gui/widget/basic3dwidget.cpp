@@ -160,6 +160,12 @@ void Basic3DWidget::paintGL()
         fbo_->colorTexture()->unbind();
 
     }
+
+    if (renderMode_ == RM_FULLDOME_5CAM)
+    {
+        // ARB_seamless_cube_map
+        MO_CHECK_GL( glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS) );
+    }
 }
 
 } // namespace GUI

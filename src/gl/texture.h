@@ -19,7 +19,7 @@ namespace GL {
 class Texture
 {
 public:
-    explicit Texture(ErrorReporting reporting = ER_IGNORE);
+    explicit Texture(ErrorReporting reporting = ER_THROW);
 
     /** 2d, explicit format, input_format, type */
     explicit Texture(
@@ -27,7 +27,7 @@ public:
                 GLenum format, GLenum input_format,
                 GLenum type,
                 void* ptr_to_data,
-                ErrorReporting reporting = ER_IGNORE);
+                ErrorReporting reporting = ER_THROW);
 
     virtual ~Texture();
 
@@ -64,18 +64,26 @@ public:
     /** create() (re-)defines the piece of data that Texture should work with.
         The data is created or uploaded depending if @p ptr_to_data is not NULL. */
 
-    /** assign 2d, explicit format, input_format, type */
+    /** create 2d, explicit format, input_format, type */
     bool create(GLsizei width, GLsizei height,
                 GLenum format, GLenum input_format,
                 GLenum type,
                 void* ptr_to_data);
 
-    /** assign 2d, explicit format and input_format, type */
+    /** create 2d, explicit format and input_format, type */
     bool create(GLsizei width, GLsizei height,
                 GLenum format,
                 GLenum type,
                 void* ptr_to_data)
     { return create(width, height, format, format, type, ptr_to_data); }
+
+    /** create cube, explicit format, input_format, type */
+    bool create(GLsizei width, GLsizei height,
+                GLenum format, GLenum input_format,
+                GLenum type,
+                void * ptr_px, void * ptr_nx,
+                void * ptr_py, void * ptr_ny,
+                void * ptr_pz, void * ptr_nz);
 
     /** @} */ // create
 
@@ -83,13 +91,14 @@ public:
     bool create();
 
     /** Uploads the data specified previously.
-        <br>if ptr_to_data in constructor was NULL,
+        <br>if ptr_to_data in constructor or create() was NULL,
         the call is equivalent to create().
         <br><b>Texture must be bound()</b>
         */
     bool upload(GLint mipmap_level = 0);
 
     /** Uploads the data specified by ptr_to_data.
+        For cube-maps, all textures will be uploaded from the same source.
         <br><b>Texture must be bound()</b>
         */
     bool upload(void * ptr_to_data, GLint mipmap_level = 0);
@@ -99,7 +108,7 @@ public:
         Eventually, the pointer must be non-zero and capable of storing the required memory.
         <br><b>Texture must be bound()</b>
         */
-    bool download(void * ptr_to_data = 0) const;
+    bool download(void * ptr_to_data = 0, GLuint mipmap_level = 0) const;
 
     /** free the device data and release handle */
     void release();
@@ -119,11 +128,14 @@ private:
     void releaseTexture_();
 
     /** Creates or uploads the texture */
-    bool upload_(void * ptr, GLint mipmap_level);
+    bool upload_(void * ptr, GLint mipmap_level, GLenum cube_target = 0);
+    /** Downloads to ptr (must be non-NULL) */
+    bool download_(void * ptr, GLuint mipmap, GLenum target) const;
 
     void
-    /** pointer to data */
-        *ptr_;
+    /** pointer to data for 1d/2d */
+        *ptr_,
+        *ptr_px_, *ptr_nx_, *ptr_py_, *ptr_ny_, *ptr_pz_, *ptr_nz_;
     bool
     /** already uploaded? */
         uploaded_;
