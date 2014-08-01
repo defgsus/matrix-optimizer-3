@@ -18,7 +18,9 @@
 #include "io/log.h"
 #include "gl/texture.h"
 #include "gl/screenquad.h"
+#include "gl/shader.h"
 #include "scene.h"
+#include "param/parameterfloat.h"
 
 namespace MO {
 
@@ -42,6 +44,15 @@ void Camera::deserialize(IO::DataStream & io)
     io.readHeader("cam", 1);
 }
 
+void Camera::createParameters()
+{
+    ObjectGl::createParameters();
+
+    cameraMix_ = createFloatParameter("cammix", tr("Camera mix"),
+                                      tr("Defines the volume and visibility of the camera [0,1]"),
+                                      1.f,
+                                      0.f, 1.f, 0.05f);
+}
 
 void Camera::setNumberThreads(uint num)
 {
@@ -67,8 +78,12 @@ void Camera::initGl(uint thread)
                 0.1f, 1000.0f);
 
     // screen-quad
-    screenQuad_[thread] = new GL::ScreenQuad(GL::ER_THROW);
-    screenQuad_[thread]->create();
+    screenQuad_[thread] = new GL::ScreenQuad("camera_quad", GL::ER_THROW);
+    screenQuad_[thread]->create(
+                ":/shader/framebuffercamera.vert",
+                ":/shader/framebuffercamera.frag");
+    uColor_ = screenQuad_[thread]->shader()->getUniform("u_color", true);
+    uColor_->setFloats(1,1,1,1);
 
     // create framebuffer
 
@@ -111,9 +126,11 @@ void Camera::finishGlFrame(uint thread, Double)
     //MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
 }
 
-void Camera::drawFramebuffer(uint thread, Double )
+void Camera::drawFramebuffer(uint thread, Double time)
 {
     GL::FrameBufferObject * fbo = fbo_[thread];
+
+    uColor_->floats[3] = cameraMix_->value(time);
 
     fbo->colorTexture()->bind();
     screenQuad_[thread]->draw(fbo->width(), fbo->height());

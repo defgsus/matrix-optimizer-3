@@ -26,17 +26,21 @@ namespace GL {
 
 
 
-Drawable::Drawable()
-    : geometry_         (0),
+Drawable::Drawable(const QString &name)
+    : name_             (name.isEmpty()? "unnamed" : name),
+      geometry_         (0),
       shaderSource_     (0),
       shader_           (0),
       doRecompile_      (true),
       vao_              (0)
 {
+    MO_DEBUG_GL("Drawable(" << name_ << ")::Drawable()");
 }
 
 Drawable::~Drawable()
 {
+    MO_DEBUG_GL("Drawable(" << name_ << ")::~Drawable()");
+
     delete shader_;
     delete shaderSource_;
     delete geometry_;
@@ -59,7 +63,7 @@ ShaderSource * Drawable::shaderSource()
 Shader * Drawable::shader()
 {
     if (!shader_)
-        shader_ = new Shader();
+        shader_ = new Shader(name_);
     return shader_;
 }
 
@@ -91,7 +95,7 @@ void Drawable::setShader(Shader *s)
 
 void Drawable::createOpenGl()
 {
-    MO_ASSERT(geometry_, "no geometry provided to Drawable::createOpenGl()");
+    MO_ASSERT(geometry_, "no geometry provided to Drawable(" << name_ << ")::createOpenGl()");
 
     compileShader_();
     createVAO_();
@@ -99,7 +103,7 @@ void Drawable::createOpenGl()
 
 void Drawable::compileShader_()
 {
-    MO_DEBUG_GL("Drawable::compileShader_()");
+    MO_DEBUG_GL("Drawable(" << name_ << ")::compileShader_()");
 
     //MO_ASSERT(shaderSource_, "Drawable::compileShader_() without ShaderSource");
     //MO_ASSERT(!shaderSource_->isEmpty(), "Drawable::compileShader_() with empty ShaderSource");
@@ -115,7 +119,7 @@ void Drawable::compileShader_()
 
     if (!shader_)
     {
-        shader_ = new Shader();
+        shader_ = new Shader(name_);
         doRecompile_ = true;
     }
 
@@ -124,7 +128,7 @@ void Drawable::compileShader_()
 
     shader_->setSource(shaderSource_);
     if (!shader_->compile())
-        MO_GL_WARNING("Compilation of Shader failed\n"
+        MO_GL_WARNING("Compilation of Shader failed in Drawable(" << name_ << ")\n"
                       << shader_->log())
     else
         MO_DEBUG("shader compiled");
@@ -146,11 +150,11 @@ void Drawable::compileShader_()
 
 void Drawable::createVAO_()
 {
-    MO_DEBUG_GL("Drawable::createVAO_()");
+    MO_DEBUG_GL("Drawable(" << name_ << ")::createVAO_()");
 
     //MO_ASSERT(!vao_, "Drawable::createVAO_() duplicate call");
 
-    MO_ASSERT(shader_, "Drawable::createVAO_() without shader");
+    MO_ASSERT(shader_, "Drawable(" << name_ << ")::createVAO_() without shader");
 
     if (!vao_)
         vao_ = new VertexArrayObject(ER_THROW);
@@ -161,7 +165,7 @@ void Drawable::createVAO_()
 
 void Drawable::releaseOpenGl()
 {
-    MO_DEBUG_GL("Drawable::releaseGl()");
+    MO_DEBUG_GL("Drawable(" << name_ << ")::releaseGl()");
 
     if (shader_)
         shader_->releaseGL();
@@ -177,7 +181,7 @@ void Drawable::releaseOpenGl()
 
 void Drawable::render()
 {
-    MO_ASSERT(vao_, "no vertex array object specified in Drawable::render()");
+    MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
 
     if (geometry_->numTriangles())
         vao_->drawElements(GL_TRIANGLES);
@@ -188,11 +192,14 @@ void Drawable::render()
 
 void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
 {
-    MO_ASSERT(vao_, "no vertex array object specified in Drawable::render()");
+    MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
     //MO_ASSERT(uniformProj_ != invalidGl, "");
     MO_ASSERT(uniformView_ != invalidGl, "");
 
     shader_->activate();
+
+    shader_->sendUniforms();
+
     if (uniformProj_ != invalidGl)
     MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
     MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
@@ -207,9 +214,11 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
 
 void Drawable::renderShader()
 {
-    MO_ASSERT(vao_, "no vertex array object specified in Drawable::render()");
+    MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
 
     shader_->activate();
+
+    shader_->sendUniforms();
 
     if (geometry_->numTriangles())
         vao_->drawElements(GL_TRIANGLES);
@@ -222,7 +231,7 @@ void Drawable::renderShader()
 
 void Drawable::renderImmediate()
 {
-    MO_ASSERT(geometry_, "no Geometry specified in Drawable::renderImmidiate()");
+    MO_ASSERT(geometry_, "no Geometry specified in Drawable(" << name_ << ")::renderImmidiate()");
 
     glBegin(GL_TRIANGLES);
     for (uint t = 0; t<geometry_->numTriangles(); ++t)

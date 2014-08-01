@@ -4,5 +4,7 @@
         <file alias="default.vert">assets/shader/default.vert</file>
         <file alias="framebufferdraw.frag">assets/shader/framebufferdraw.frag</file>
         <file alias="framebufferdraw.vert">assets/shader/framebufferdraw.vert</file>
+        <file alias="framebuffercamera.frag">assets/shader/framebuffercamera.frag</file>
+        <file alias="framebuffercamera.vert">assets/shader/framebuffercamera.vert</file>
     </qresource>
 </RCC>

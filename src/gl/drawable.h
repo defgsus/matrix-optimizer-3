@@ -22,7 +22,8 @@ namespace GL {
 class Drawable
 {
 public:
-    Drawable();
+    /** @p name is for debugging purposes mainly */
+    Drawable(const QString& name);
     ~Drawable();
 
     // ------------- getter ------------------
@@ -73,6 +74,8 @@ private:
 
     void compileShader_();
     void createVAO_();
+
+    QString name_;
 
     GEOM::Geometry * geometry_;
     ShaderSource * shaderSource_;

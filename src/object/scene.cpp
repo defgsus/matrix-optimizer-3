@@ -573,7 +573,7 @@ void Scene::createGl_()
     fboFinal_->unbind();
 
     // create screen quad
-    screenQuad_ = new GL::ScreenQuad(GL::ER_THROW);
+    screenQuad_ = new GL::ScreenQuad("scene_quad", GL::ER_THROW);
     screenQuad_->create();
 }
 
@@ -603,28 +603,32 @@ void Scene::renderScene(Double time, uint thread)
 
         calculateSceneTransform(thread, 0, time);
 
-        // start camera frame
-        cameras_[0]->startGlFrame(thread, time);
-
-        GL::CameraSpace camSpace;
-        cameras_[0]->initCameraSpace(camSpace, thread, 0);
-        camSpace.setViewMatrix( glm::inverse(cameras_[0]->transformation(thread, 0)) );
-
-        // render all opengl objects
-        for (auto o : glObjects_)
-        if (o->active(time))
+        for (auto camera : cameras_)
         {
-            o->renderGl_(camSpace, thread, time);
-        }
+            // start camera frame
+            camera->startGlFrame(thread, time);
 
-        cameras_[0]->finishGlFrame(thread, time);
+            GL::CameraSpace camSpace;
+            camera->initCameraSpace(camSpace, thread, 0);
+            camSpace.setViewMatrix( glm::inverse(camera->transformation(thread, 0)) );
+
+            // render all opengl objects
+            for (auto o : glObjects_)
+            if (o->active(time))
+            {
+                o->renderGl_(camSpace, thread, time);
+            }
+
+            camera->finishGlFrame(thread, time);
+        }
     }
 
     // mix camera frames
     fboFinal_->bind();
     fboFinal_->setViewport();
     MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
-    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
+    MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
     cameras_[0]->drawFramebuffer(thread, time);
     fboFinal_->unbind();
 
@@ -632,7 +636,7 @@ void Scene::renderScene(Double time, uint thread)
     fboFinal_->colorTexture()->bind();
     MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
-    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     screenQuad_->draw(glContext_->size().width(), glContext_->size().height());
     fboFinal_->colorTexture()->unbind();
 

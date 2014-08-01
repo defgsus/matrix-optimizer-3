@@ -11,6 +11,8 @@
 #ifndef MOSRC_GL_SCREENQUAD_H
 #define MOSRC_GL_SCREENQUAD_H
 
+#include <QString>
+
 #include "gl/opengl_fwd.h"
 #include "types/int.h"
 
@@ -21,16 +23,25 @@ namespace GL {
 class ScreenQuad
 {
 public:
-    ScreenQuad(ErrorReporting reporting);
+    ScreenQuad(const QString& name, ErrorReporting reporting);
 
-    bool create();
+    bool create(const QString& vertexFile = ":/shader/framebufferdraw.vert",
+                const QString& fragmentFile = ":/shader/framebufferdraw.frag");
     void release();
 
     bool draw(uint w, uint h);
 
+    // ----------- getter -----------
+
+    /** Returns the Drawable, or NULL if not created */
+    Drawable * drawable() const { return quad_; }
+    /** Returns the Shader for the Drawable, or NULL if not created. */
+    Shader * shader() const;
+
 private:
+    QString name_;
     ErrorReporting rep_;
-    GL::Drawable * quad_;
+    Drawable * quad_;
 };
 
 

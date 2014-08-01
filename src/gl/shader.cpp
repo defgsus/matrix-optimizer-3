@@ -52,19 +52,20 @@ void Uniform::copyValuesFrom_(Uniform * u)
 }
 
 
-Shader::Shader()
-    :   source_             (new ShaderSource()),
-        prog_               (-1),
-        sourceChanged_      (false),
-        ready_              (false),
-        activated_          (false)
+Shader::Shader(const QString &name)
+    : source_             (new ShaderSource()),
+      name_               (name.isEmpty()? "unnamed" : name),
+      prog_               (-1),
+      sourceChanged_      (false),
+      ready_              (false),
+      activated_          (false)
 {
-    MO_DEBUG_GL("Shader::Shader()");
+    MO_DEBUG_GL("Shader::Shader('" << name << "')");
 }
 
 Shader::~Shader()
 {
-    MO_DEBUG_GL("Shader::~Shader()");
+    MO_DEBUG_GL("Shader(" << name_ << ")::~Shader()");
 
     if (ready())
         MO_WARNING("delete of shader object with bound resources!");
@@ -73,7 +74,7 @@ Shader::~Shader()
 void Shader::setSource(const ShaderSource * s)
 {
     if (s->isEmpty())
-        MO_GL_WARNING("Shader::setSource() with empty ShaderSource");
+        MO_GL_WARNING("Shader(" << name_ << ")::setSource() with empty ShaderSource");
 
     *source_ = *s;
     sourceChanged_ = true;
@@ -85,17 +86,21 @@ Uniform * Shader::getUniform(size_t index)
     return uniforms_[index].get();
 }
 
-Uniform * Shader::getUniform(const QString &name)
+Uniform * Shader::getUniform(const QString &name, bool expect)
 {
     for (auto u : uniformList_)
         if (u->name() == name)
             return u;
+
+    if (expect)
+        MO_GL_ERROR("Uniform '" << name << "' expected but not found in Shader(" << name_ << ")");
+
     return 0;
 }
 
 const Attribute * Shader::getAttribute(size_t index) const
 {
-    MO_ASSERT(index < attribs_.size(), "attribute index out of range");
+    MO_ASSERT(index < attribs_.size(), "attribute index out of range in Shader(" << name_ << ")");
     return attribs_[index].get();
 }
 
@@ -306,7 +311,7 @@ void Shader::getUniforms_()
     }
 
 #ifdef MO_DO_DEBUG_GL
-    MO_DEBUG_GL("uniforms:");
+    MO_DEBUG_GL("Shader(" << name_ << ") uniforms:");
     for (auto u : uniformList_)
         MO_DEBUG_GL(u->location() << "\t " << u->name());
 #endif
@@ -346,7 +351,7 @@ void Shader::getAttributes_()
 
 
 #ifdef MO_DO_DEBUG_GL
-    MO_DEBUG_GL("attributes:");
+    MO_DEBUG_GL("Shader(" << name_ << ") attributes:");
     for (auto a : attributeList_)
         MO_DEBUG_GL(a->location() << "\t " << a->name());
 #endif
@@ -374,7 +379,7 @@ void Shader::sendUniform(const Uniform * u)
         MO_CHECK_GL( glUniform4f(u->location_, u->floats[0], u->floats[1], u->floats[2], u->floats[3]) );
     break;
     default:
-        MO_GL_WARNING("unsupported uniform type '" << u->type_ << "'");
+        MO_GL_WARNING("unsupported uniform type '" << u->type_ << "' in Shader(" << name_ << ")");
     }
 }
 

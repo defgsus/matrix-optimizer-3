@@ -40,9 +40,7 @@ void Model3d::deserialize(IO::DataStream & io)
 
 void Model3d::initGl(uint /*thread*/)
 {
-
-
-    draw_ = new GL::Drawable();
+    draw_ = new GL::Drawable(idName());
     GEOM::GeometryFactory::createGridXZ(draw_->geometry(), 10, 10, true);
     draw_->shaderSource()->loadDefaultSource();
     draw_->createOpenGl();

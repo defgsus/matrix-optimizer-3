@@ -18,23 +18,29 @@ namespace MO {
 namespace GL {
 
 
-ScreenQuad::ScreenQuad(ErrorReporting reporting)
-    : rep_      (reporting),
+ScreenQuad::ScreenQuad(const QString &name, ErrorReporting reporting)
+    : name_     (name.isEmpty()? "quad" : name),
+      rep_      (reporting),
       quad_     (0)
 {
 }
 
-bool ScreenQuad::create()
+Shader * ScreenQuad::shader() const
+{
+    return quad_ ? quad_->shader() : 0;
+}
+
+bool ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile)
 {
     // XXX add error reporting to Drawable and Shader
 
     MO_ASSERT(!quad_, "ScreenQuad::create() duplicate call");
 
-    quad_ = new GL::Drawable();
+    quad_ = new GL::Drawable(name_);
     GEOM::GeometryFactory::createQuad(quad_->geometry(), 2, 2);
     GL::ShaderSource * src = new GL::ShaderSource();
-    src->loadVertexSource(":/shader/framebufferdraw.vert");
-    src->loadFragmentSource(":/shader/framebufferdraw.frag");
+    src->loadVertexSource(vertexFile);
+    src->loadFragmentSource(fragmentFile);
     quad_->setShaderSource(src);
     quad_->createOpenGl();
     return true;
@@ -45,6 +51,9 @@ void ScreenQuad::release()
     MO_ASSERT(quad_, "ScreenQuad::release() on uninitialized object");
 
     quad_->releaseOpenGl();
+
+    delete quad_;
+    quad_ = 0;
 }
 
 bool ScreenQuad::draw(uint w, uint h)

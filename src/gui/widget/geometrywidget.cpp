@@ -19,7 +19,7 @@ namespace GUI {
 
 GeometryWidget::GeometryWidget(bool framebuffered, QWidget *parent) :
     Basic3DWidget   (framebuffered, parent),
-    drawable_       (new GL::Drawable())
+    drawable_       (new GL::Drawable("geomwidget"))
 {
     setMinimumSize(128, 128);
 

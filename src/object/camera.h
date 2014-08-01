@@ -27,6 +27,8 @@ public:
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
     virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
+    virtual void createParameters() Q_DECL_OVERRIDE;
+
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::CameraSpace&, uint, Double) Q_DECL_OVERRIDE { };
 
@@ -61,6 +63,9 @@ private:
     std::vector<GL::FrameBufferObject*> fbo_;
 
     std::vector<GL::ScreenQuad*> screenQuad_;
+
+    ParameterFloat * cameraMix_;
+    GL::Uniform * uColor_;
 };
 
 } // namespace MO

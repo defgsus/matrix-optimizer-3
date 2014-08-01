@@ -53,6 +53,12 @@ public:
     /** Uniform location, to send the stuff over */
     GLint location() const { return location_; }
 
+    // ----- setter -----
+
+    void setFloats(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+    { floats[0] = x; floats[1] = y; floats[2] = z; floats[3] = w; }
+
+
     friend class Shader;
     friend void privateUniformDeleter(Uniform*);
 
@@ -114,7 +120,8 @@ public:
 
     // ---------------- ctor -----------------
 
-    Shader();
+    /** @p name is a user defined name, mainly for help with debugging */
+    Shader(const QString& name);
     ~Shader();
 
     // ----------- query ---------------------
@@ -155,8 +162,10 @@ public:
     const QList<Uniform*> getUniforms() const { return uniformList_; }
 
     /** Returns a pointer to the Uniform with the given name, or NULL.
-        Can be called after succesful compilation. */
-    Uniform * getUniform(const QString& name);
+        Can be called after succesful compilation.
+        If @p expect is true, an GlException will be thrown if the uniform
+        is not defined. */
+    Uniform * getUniform(const QString& name, bool expect = false);
 
     /** Returns the number of used attributes of this shader.
         Can be called after succesful compilation. */
@@ -225,7 +234,7 @@ private:
 
     ShaderSource * source_;
 
-    QString log_;
+    QString name_, log_;
 
     GLuint prog_;
 
