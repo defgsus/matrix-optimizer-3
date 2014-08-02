@@ -15,7 +15,7 @@
 #include "io/log.h"
 #include "gl/context.h"
 #include "io/datastream.h"
-
+#include "scene.h"
 
 namespace MO {
 
@@ -107,5 +107,23 @@ void ObjectGl::renderGl_(const GL::CameraSpace &camera, uint thread, Double time
     renderGl(camera, thread, time);
 }
 
+void ObjectGl::requestRender()
+{
+    Scene * scene = sceneObject();
+    if (!scene)
+        return;
+
+    scene->render();
+}
+
+void ObjectGl::requestReinitGl()
+{
+    for (uint i=0; i<numberThreads(); ++i)
+    {
+        needsInitGl_[i] = true;
+    }
+
+    requestRender();
+}
 
 } // namespace MO

@@ -180,6 +180,9 @@ public slots:
     /** Sets the opengl Context for all objects in the scene. */
     void setGlContext(MO::GL::Context * context);
 
+    /** Requests rendering of the scene. */
+    void render() { render_(); }
+
     // XXX all hacky right now
 
     /** Render the whole scene on the current context */

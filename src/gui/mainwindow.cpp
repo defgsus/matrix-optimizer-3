@@ -348,7 +348,7 @@ void MainWindow::createMainMenu_()
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            GeometryDialog * diag = new GeometryDialog(this);
+            GeometryDialog * diag = new GeometryDialog(0, this);
             connect(diag, SIGNAL(finished(int)), diag, SLOT(deleteLater()));
             diag->show();
         });

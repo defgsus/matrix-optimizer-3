@@ -16,6 +16,7 @@
 #include <QToolButton>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QPushButton>
 
 #include "geometrydialog.h"
 #include "geom/geometry.h"
@@ -30,7 +31,8 @@
 namespace MO {
 namespace GUI {
 
-GeometryDialog::GeometryDialog(QWidget *parent, Qt::WindowFlags flags) :
+GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
+                               QWidget *parent, Qt::WindowFlags flags) :
     QDialog         (parent, flags),
     settings_       (new GEOM::GeometryFactorySettings()),
     creator_        (0),
@@ -40,6 +42,9 @@ GeometryDialog::GeometryDialog(QWidget *parent, Qt::WindowFlags flags) :
     setWindowTitle(tr("geometry editor"));
 
     setMinimumSize(800,400);
+
+    if (set)
+        *settings_ = *set;
 
     createWidgets_();
 
@@ -54,7 +59,6 @@ GeometryDialog::~GeometryDialog()
 void GeometryDialog::createWidgets_()
 {
     auto lh = new QHBoxLayout(this);
-
 
         geoWidget_ = new GeometryWidget(GeometryWidget::RM_FULLDOME_CUBE, this);
         lh->addWidget(geoWidget_);
@@ -260,8 +264,22 @@ void GeometryDialog::createWidgets_()
 
             lv->addStretch(1);
 
+            // info label
             labelInfo_ = new QLabel(this);
             lv->addWidget(labelInfo_);
+
+            // OK/Cancel
+
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                auto but = new QPushButton(tr("Ok"), this);
+                lh2->addWidget(but);
+                connect(but, SIGNAL(clicked()), this, SLOT(accept()));
+
+                but = new QPushButton(tr("Cancel"), this);
+                lh2->addWidget(but);
+                connect(but, SIGNAL(clicked()), this, SLOT(reject()));
 }
 
 void GeometryDialog::updateGeometry_()
@@ -308,6 +326,7 @@ void GeometryDialog::creationFinished_()
 
     creator_->deleteLater();
     creator_ = 0;
+
     if (updateGeometryLater_)
         updateGeometry_();
 }

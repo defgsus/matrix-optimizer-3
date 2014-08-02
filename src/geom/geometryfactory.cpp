@@ -154,6 +154,8 @@ void GeometryFactory::createGridXZ(Geometry * g, int sizeX, int sizeY, bool coor
     if (!coords)
         return;
 
+    // coordinate system
+
     g->setColor(1,0,0, 1);
     auto p1 = g->addVertex(0, 0.01, 0),
          p2 = g->addVertex(sizeX, 0.01, 0);

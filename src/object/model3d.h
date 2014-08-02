@@ -26,12 +26,25 @@ public:
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::CameraSpace &cam, uint, Double time) Q_DECL_OVERRIDE;
 
+    /** Returns the current geometry settings. */
+    const GEOM::GeometryFactorySettings& geometrySettings() const { return *geomSettings_; }
+
+    /** Sets new geometry settings and creates the geometry on next render */
+    void setGeometrySettings(const GEOM::GeometryFactorySettings&);
+
 signals:
 
-public slots:
+private slots:
+
+    void geometryCreated_();
+    void geometryFailed_();
 
 private:
     GL::Drawable * draw_;
+    GEOM::GeometryCreator * creator_;
+    GEOM::GeometryFactorySettings * geomSettings_;
+
+    bool initDrawableRequest_;
 };
 
 } // namespace MO

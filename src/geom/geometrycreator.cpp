@@ -12,6 +12,7 @@
 #include "geom/geometry.h"
 #include "geom/geometryfactory.h"
 #include "geom/objloader.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GEOM {
@@ -44,6 +45,8 @@ Geometry * GeometryCreator::takeGeometry()
 
 void GeometryCreator::run()
 {
+    MO_DEBUG_GL("GeometryCreator::run()");
+
     auto g = new Geometry();
 
     // create a file loader if nescessary
@@ -67,6 +70,8 @@ void GeometryCreator::run()
 
     delete geometry_;
     geometry_ = g;
+
+    MO_DEBUG_GL("GeometryCreator::run() finished");
 }
 
 } // namespace GEOM

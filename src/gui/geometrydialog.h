@@ -31,12 +31,19 @@ class GeometryDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit GeometryDialog(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    explicit GeometryDialog(const GEOM::GeometryFactorySettings * = 0,
+                            QWidget *parent = 0, Qt::WindowFlags flags = 0);
     ~GeometryDialog();
+
+    /** Returns the settings as edited in the dialog */
+    const GEOM::GeometryFactorySettings& getGeometrySettings() const { return *settings_; }
 
 signals:
 
 public slots:
+
+    /* Sets the settings to display/edit */
+    //void setGeometrySettings(const GEOM::GeometryFactorySettings&);
 
 protected slots:
 

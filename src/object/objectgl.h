@@ -31,8 +31,6 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_OBJECT; }
     bool isGl() const Q_DECL_OVERRIDE { return true; }
 
-    bool isGlInitialized(uint thread) const { return isGlInitialized_[thread]; }
-
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     /** Returns the current GL::Context */
@@ -41,11 +39,18 @@ public:
     const GL::Context * glContext(uint thread) const { return glContext_[thread]; }
 
     bool needsInitGl(uint thread) const { return needsInitGl_[thread]; }
+    bool isGlInitialized(uint thread) const { return isGlInitialized_[thread]; }
 
     virtual void initGl(uint thread) = 0;
     virtual void releaseGl(uint thread) = 0;
 
     virtual void renderGl(const GL::CameraSpace& camera, uint thread, Double time) = 0;
+
+    /** Tell scene that this object wants to be painted */
+    void requestRender();
+
+    /** Requests a releaseGl() - initGl() sequence */
+    void requestReinitGl();
 
 signals:
 

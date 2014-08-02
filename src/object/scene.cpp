@@ -650,7 +650,11 @@ void Scene::renderScene(Double time, uint thread)
         // initialize object gl resources
         for (auto o : glObjects_)
             if (o->needsInitGl(thread) && o->active(time))
+            {
+                if (o->isGlInitialized(thread))
+                    o->releaseGl_(thread);
                 o->initGl_(thread);
+            }
 
         // position all objects
         calculateSceneTransform(thread, 0, time);

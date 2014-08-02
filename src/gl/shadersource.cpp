@@ -58,8 +58,6 @@ void ShaderSource::addDefine(const QString &defineCommand)
 {
     addDefine_(vert_, defineCommand);
     addDefine_(frag_, defineCommand);
-
-    MO_DEBUG(frag_);
 }
 
 

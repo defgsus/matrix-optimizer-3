@@ -67,6 +67,7 @@ protected:
     void createEditActions_(Object* = 0);
     void createFirstObjectActions_();
     void createClipboardActions_(Object *);
+    void createEditObjectActions_(Object *);
     void createNewObjectActions_(Object *);
     void createMoveActions_(Object *);
 

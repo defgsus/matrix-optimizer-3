@@ -14,13 +14,17 @@
 #include "geom/geometryfactory.h"
 #include "gl/shadersource.h"
 #include "gl/cameraspace.h"
+#include "geom/geometrycreator.h"
 
 namespace MO {
 
 MO_REGISTER_OBJECT(Model3d)
 
 Model3d::Model3d(QObject * parent)
-    :   ObjectGl(parent)
+    : ObjectGl      (parent),
+      creator_      (0),
+      geomSettings_ (new GEOM::GeometryFactorySettings),
+      initDrawableRequest_(false)
 {
     setName("Model3D");
 }
@@ -28,71 +32,81 @@ Model3d::Model3d(QObject * parent)
 void Model3d::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);
-    io.writeHeader("m3d", 1);
+    io.writeHeader("m3d", 2);
+
+    // v2
+    geomSettings_->serialize(io);
 }
 
 void Model3d::deserialize(IO::DataStream & io)
 {
     ObjectGl::deserialize(io);
-    io.readHeader("m3d", 1);
+    int ver = io.readHeader("m3d", 2);
+
+    if (ver >= 2)
+        geomSettings_->deserialize(io);
 }
 
 
 void Model3d::initGl(uint /*thread*/)
 {
     draw_ = new GL::Drawable(idName());
-    GEOM::GeometryFactory::createGridXZ(draw_->geometry(), 10, 10, true);
-    draw_->shaderSource()->loadDefaultSource();
-    draw_->createOpenGl();
+
+    creator_ = new GEOM::GeometryCreator(this);
+    connect(creator_, SIGNAL(finished()), this, SLOT(geometryCreated_()));
+    connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
+
+    creator_->setSettings(*geomSettings_);
+    creator_->start();
+
+    //GEOM::GeometryFactory::createGridXZ(draw_->geometry(), 10, 10, true);
+    //draw_->createOpenGl();
 }
 
 void Model3d::releaseGl(uint /*thread*/)
 {
-    draw_->releaseOpenGl();
+    if (draw_->isReady())
+        draw_->releaseOpenGl();
     delete draw_;
     draw_ = 0;
 }
 
+void Model3d::geometryCreated_()
+{
+    draw_->setGeometry(creator_->takeGeometry());
+    initDrawableRequest_ = true;
+    creator_->deleteLater();
+
+    requestRender();
+}
+
+void Model3d::geometryFailed_()
+{
+    creator_->deleteLater();
+}
+
+void Model3d::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
+{
+    *geomSettings_ = s;
+    requestReinitGl();
+}
+
 void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
 {
-    /*
-    glColor3f(1,0,0);
-    glBegin(GL_QUADS);
-        glVertex2f(0,0);
-        glVertex2f(10+sin(time),0);
-        glVertex2f(10,10);
-        glVertex2f(0,10);
-    glEnd();
-    */
-
     Mat4 mat = cam.viewMatrix() * transformation(thread, 0);
-    glLoadMatrixf(&mat[0][0]);
+//    glLoadMatrixf(&mat[0][0]);
 
-    glColor3f(1,1,0);
-    //draw_->renderAttribArrays();
-    draw_->renderShader(cam.projectionMatrix(), mat);
+    if (initDrawableRequest_)
+    {
+        initDrawableRequest_ = false;
+        draw_->createOpenGl();
+    }
 
-#if (0)
-    glBegin(GL_LINES);
-        glColor3f(1,1,1);
-        for (int i=-10; i<=10; ++i)
-        {
-            glVertex3f(i,0,-10);
-            glVertex3f(i,0,10);
-            glVertex3f(-10,0,i);
-            glVertex3f(10,0,i);
-        }
-        glColor3f(1,0,0);
-        glVertex3f(0, 0.1, 0);
-        glVertex3f(10, 0.1, 0);
-        glColor3f(0,1,0);
-        glVertex3f(0, 0.1, 0);
-        glVertex3f(0, 10.1, 0);
-        glColor3f(0,0,1);
-        glVertex3f(0, 0.1, 0);
-        glVertex3f(0, 0.1, 10);
-    glEnd();
-#endif
+    if (draw_->isReady())
+    {
+        //draw_->renderAttribArrays();
+        draw_->renderShader(cam.projectionMatrix(), mat);
+    }
 }
 
 

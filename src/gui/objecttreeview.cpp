@@ -23,11 +23,14 @@
 #include "model/objecttreesortproxy.h"
 #include "object/object.h"
 #include "object/scene.h"
+#include "object/model3d.h"
 #include "object/objectfactory.h"
 #include "object/param/parameterfloat.h"
 #include "io/application.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "geometrydialog.h"
+
 
 namespace MO {
 namespace GUI {
@@ -242,6 +245,10 @@ void ObjectTreeView::createEditActions_(Object * obj)
 
         editActions_.addSeparator(this);
 
+            createEditObjectActions_(obj);
+
+        editActions_.addSeparator(this);
+
             createNewObjectActions_(obj);
 
         editActions_.addSeparator(this);
@@ -415,6 +422,31 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
                 obj->numChildren() /* append */, 0,
                 currentIndex()))
             setFocusIndex(filter_->mapFromSource(omodel_->lastDropIndex()));
+        });
+    }
+}
+
+
+void ObjectTreeView::createEditObjectActions_(Object * obj)
+{
+    Scene * scene = obj->sceneObject();
+    MO_ASSERT(scene, "No scene object for edit-action object");
+
+    QAction * a;
+
+    if (Model3d * m = qobject_cast<Model3d*>(obj))
+    {
+        a = editActions_.addAction(tr("Edit model geometry"), this);
+        a->setStatusTip(tr("Opens a dialog for editing the model geometry"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            GeometryDialog diag(&m->geometrySettings());
+
+            if (diag.exec() == QDialog::Accepted)
+            {
+                ScopedObjectChange lock(scene, m);
+                m->setGeometrySettings(diag.getGeometrySettings());
+            }
         });
     }
 }
