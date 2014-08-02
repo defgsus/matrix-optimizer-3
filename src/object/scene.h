@@ -73,6 +73,8 @@ public:
 
     const AUDIO::AudioDevice * audioDevice() const { return audioDevice_; }
 
+    void setNumberThreads(uint num) Q_DECL_OVERRIDE;
+
     // --------- locking and updates -----------
 
     void beginSequenceChange(MO::Sequence *);
@@ -210,8 +212,8 @@ private:
     void updateModulators_();
 
     /** Creates the framebuffer object */
-    void createSceneGl_();
-    void releaseSceneGl_();
+    void createSceneGl_(uint thread);
+    void releaseSceneGl_(uint thread);
 
     // ----------- runtime ---------------------
 
@@ -244,8 +246,8 @@ private:
     uint fbWidth_, fbHeight_, fbFormat_,
         fbCmWidth_, fbCmHeight_;
 
-    GL::FrameBufferObject * fboFinal_;
-    GL::ScreenQuad * screenQuad_;
+    std::vector<GL::FrameBufferObject *> fboFinal_;
+    std::vector<GL::ScreenQuad *> screenQuad_;
 
     // ----------- special objects -------------
 

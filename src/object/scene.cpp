@@ -275,6 +275,13 @@ void Scene::updateNumberThreads_()
             o->setNumberThreads(sceneNumberThreads_);
 }
 
+void Scene::setNumberThreads(uint num)
+{
+    Object::setNumberThreads(num);
+
+    fboFinal_.resize(num);
+    screenQuad_.resize(num);
+}
 
 void Scene::updateBufferSize_()
 {
@@ -565,32 +572,32 @@ void Scene::setGlContext(GL::Context *context)
         o->setGlContext_(0, glContext_);
 }
 
-void Scene::createSceneGl_()
+void Scene::createSceneGl_(uint thread)
 {
-    MO_DEBUG_GL("Scene::createSceneGl_()");
+    MO_DEBUG_GL("Scene::createSceneGl_(" << thread << ")");
 
-    fboFinal_ = new GL::FrameBufferObject(
+    fboFinal_[thread] = new GL::FrameBufferObject(
                 fbWidth_, fbHeight_, fbFormat_, GL_FLOAT, false, GL::ER_THROW);
-    fboFinal_->create();
-    fboFinal_->unbind();
+    fboFinal_[thread]->create();
+    fboFinal_[thread]->unbind();
 
     // create screen quad
-    screenQuad_ = new GL::ScreenQuad("scene_quad", GL::ER_THROW);
-    screenQuad_->create();
+    screenQuad_[thread] = new GL::ScreenQuad("scene_quad", GL::ER_THROW);
+    screenQuad_[thread]->create();
 }
 
 
-void Scene::releaseSceneGl_()
+void Scene::releaseSceneGl_(uint thread)
 {
-    MO_DEBUG_GL("Scene::releaseSceneGl_()");
+    MO_DEBUG_GL("Scene::releaseSceneGl_(" << thread << ")");
 
-    fboFinal_->release();
-    delete fboFinal_;
-    fboFinal_ = 0;
+    fboFinal_[thread]->release();
+    delete fboFinal_[thread];
+    fboFinal_[thread] = 0;
 
-    screenQuad_->release();
-    delete screenQuad_;
-    screenQuad_ = 0;
+    screenQuad_[thread]->release();
+    delete screenQuad_[thread];
+    screenQuad_[thread] = 0;
 }
 
 void Scene::renderScene(Double time, uint thread)
@@ -609,8 +616,8 @@ void Scene::renderScene(Double time, uint thread)
         // modify only thread-local storage
         ScopedSceneLockRead lock(this);
 
-        if (!fboFinal_)
-            createSceneGl_();
+        if (!fboFinal_[thread])
+            createSceneGl_(thread);
 
         // initialize gl resources
         for (auto o : glObjects_)
@@ -650,23 +657,23 @@ void Scene::renderScene(Double time, uint thread)
     }
 
     // mix camera frames
-    fboFinal_->bind();
-    fboFinal_->setViewport();
+    fboFinal_[thread]->bind();
+    fboFinal_[thread]->setViewport();
     MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
     for (auto camera : cameras_)
         if (camera->active(time))
             camera->drawFramebuffer(thread, time);
-    fboFinal_->unbind();
+    fboFinal_[thread]->unbind();
 
     // draw to screen
-    fboFinal_->colorTexture()->bind();
+    fboFinal_[thread]->colorTexture()->bind();
     MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
-    screenQuad_->draw(glContext_->size().width(), glContext_->size().height());
-    fboFinal_->colorTexture()->unbind();
+    screenQuad_[thread]->draw(glContext_->size().width(), glContext_->size().height());
+    fboFinal_[thread]->colorTexture()->unbind();
 
 }
 
