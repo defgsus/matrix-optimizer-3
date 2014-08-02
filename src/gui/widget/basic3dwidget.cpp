@@ -15,8 +15,10 @@
 #include "gl/framebufferobject.h"
 #include "gl/texture.h"
 #include "gl/screenquad.h"
+#include "gl/drawable.h"
 #include "io/log.h"
 #include "math/cubemapmatrix.h"
+#include "geom/geometryfactory.h"
 
 namespace MO {
 namespace GUI {
@@ -26,7 +28,8 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     QGLWidget       (parent),
     renderMode_     (mode),
     fbo_            (0),
-    screenQuad_     (0)
+    screenQuad_     (0),
+    gridObject_     (0)
 {
     if (mode == RM_DIRECT)
     {
@@ -180,7 +183,7 @@ void Basic3DWidget::paintGL()
         const Mat4 viewm = transformationMatrix();
 
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
-        drawGL(projectionMatrix(), viewm);
+        drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeZ * viewm);
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X);
         drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveX * viewm);
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
@@ -204,6 +207,20 @@ void Basic3DWidget::paintGL()
         screenQuad_->draw(width(), height());
         fbo_->colorTexture()->unbind();
     }
+}
+
+void Basic3DWidget::drawGrid(const Mat4 &projection, const Mat4 &transformation)
+{
+    if (!gridObject_)
+    {
+        gridObject_ = new GL::Drawable("grid3d");
+        GEOM::GeometryFactory::createGridXZ(
+                    gridObject_->geometry(), 10, 10, true);
+        gridObject_->createOpenGl();
+    }
+
+    if (gridObject_->isReady())
+        gridObject_->renderShader(projection, transformation);
 }
 
 } // namespace GUI

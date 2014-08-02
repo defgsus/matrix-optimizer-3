@@ -21,13 +21,15 @@
 #include "gl/shader.h"
 #include "scene.h"
 #include "param/parameterfloat.h"
+#include "math/cubemapmatrix.h"
 
 namespace MO {
 
 MO_REGISTER_OBJECT(Camera)
 
 Camera::Camera(QObject *parent) :
-    ObjectGl(parent)
+    ObjectGl        (parent),
+    cubeMapped_     (true)
 {
     setName("Camera");
 }
@@ -72,31 +74,43 @@ void Camera::setBufferSize(uint bufferSize, uint thread)
 
 void Camera::initGl(uint thread)
 {
+    const Scene * scene = sceneObject();
+    MO_ASSERT(scene, "Camera::initGl() without scene object");
+
+    const int width = cubeMapped_?
+                          scene->frameBufferCubeMapWidth()
+                        : scene->frameBufferWidth();
+    const int height = cubeMapped_?
+                          scene->frameBufferCubeMapHeight()
+                        : scene->frameBufferHeight();
+
+    // projection matrix
+
     projection_[thread][0]
-        = glm::perspective(63.f,
-                (float)glContext(thread)->size().width()/glContext(thread)->size().height(),
+        = glm::perspective(cubeMapped_? 90.f : 63.f,
+                (float)width/height,
                 0.1f, 1000.0f);
 
     // screen-quad
+
     screenQuad_[thread] = new GL::ScreenQuad(idName() + "_quad", GL::ER_THROW);
     screenQuad_[thread]->create(
                 ":/shader/framebuffercamera.vert",
-                ":/shader/framebuffercamera.frag");
+                ":/shader/framebuffercamera.frag",
+                cubeMapped_? "#define MO_FULLDOME_CUBE" : "");
     uColor_ = screenQuad_[thread]->shader()->getUniform("u_color", true);
     uColor_->setFloats(1,1,1,1);
 
     // create framebuffer
 
-    Scene * scene = sceneObject();
-    MO_ASSERT(scene, "Camera::initGl() without scene object");
-
     fbo_[thread] = new GL::FrameBufferObject(
-                scene->frameBufferWidth(),
-                scene->frameBufferHeight(),
+                width,
+                height,
                 scene->frameBufferFormat(),
                 GL_FLOAT,
-                false,
+                cubeMapped_,
                 GL::ER_THROW);
+
     fbo_[thread]->create();
     fbo_[thread]->unbind();
 
@@ -107,10 +121,33 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, uint sample) con
     cam.setProjectionMatrix(projection_[thread][sample]);
 }
 
-void Camera::startGlFrame(uint thread, Double )
+uint Camera::numCubeTextures(uint , Double ) const
+{
+    return cubeMapped_? 6 : 1;
+}
+
+const Mat4& Camera::cubeMapMatrix(uint index) const
+{
+    return MATH::CubeMapMatrix::matrix(index);
+}
+
+void Camera::startGlFrame(uint thread, Double , uint cubeMapIndex)
 {
     GL::FrameBufferObject * fbo = fbo_[thread];
     fbo->bind();
+
+    if (cubeMapped_)
+    {
+        switch (cubeMapIndex)
+        {
+            case 0: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X); break;
+            case 1: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X); break;
+            case 2: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y); break;
+            case 3: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y); break;
+            case 4: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z); break;
+            default: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z); break;
+        }
+    }
 
     MO_CHECK_GL( glViewport(0, 0, fbo->width(), fbo->height()) );
 

@@ -52,6 +52,8 @@ void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
     MO_CHECK_GL( glEnable(GL_BLEND) );
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
+    drawGrid(projection, transformation);
+
     if (drawable_->isReady())
         drawable_->renderShader(projection, transformation);
 }

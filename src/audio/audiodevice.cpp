@@ -123,7 +123,7 @@ void AudioDevice::init(uint deviceIndex,
                        uint bufferSize)
 {
     MO_DEBUG_AUDIO("AudioDevice::init(" << deviceIndex << ", " << numInputChannels <<
-                 ", " << numOutputChannels << ", " << sampleRate << ", " << bufferSize);
+             ", " << numOutputChannels << ", " << sampleRate << ", " << bufferSize << ")");
 
     // init portaudio if not already done
     if (!AudioDevices::pa_initialized_)
@@ -136,7 +136,7 @@ void AudioDevice::init(uint deviceIndex,
     if (ok_) close();
 
     // get some info of device
-    auto painf = Pa_GetDeviceInfo(deviceId_);
+    auto painf = Pa_GetDeviceInfo(deviceIndex);
     if (!painf)
     {
         MO_AUDIO_ERROR(API, "can not get audio device info for device " << deviceId_);
@@ -180,7 +180,7 @@ void AudioDevice::init(uint deviceIndex,
 
     // ---- open stream ----
 
-    MO_DEBUG_AUDIO("opening audio stream"
+    MO_DEBUG("opening audio stream"
                    << "\ndevice     " << deviceIndex << " " << painf->name
                    << "\nsamplerate " << sampleRate
                    << "\nbuffersize " << bufferSize

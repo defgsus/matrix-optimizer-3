@@ -37,8 +37,12 @@ public:
     /** Returns projection matrix */
     const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }
 
+    uint numCubeTextures(uint thread, Double time) const;
+
+    const Mat4& cubeMapMatrix(uint index) const;
+
     /** Starts rendering an openGL frame for this camera. */
-    void startGlFrame(uint thread, Double time);
+    void startGlFrame(uint thread, Double time, uint cubeMapIndex = 0);
 
     /** Finishes rendering an openGl frame for this camera. */
     void finishGlFrame(uint thread, Double time);
@@ -66,6 +70,8 @@ private:
 
     ParameterFloat * cameraMix_;
     GL::Uniform * uColor_;
+
+    bool cubeMapped_;
 };
 
 } // namespace MO

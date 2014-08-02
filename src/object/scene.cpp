@@ -64,9 +64,11 @@ Scene::Scene(QObject *parent) :
     Object              (parent),
     model_              (0),
     glContext_          (0),
-    fbWidth_            (512),
-    fbHeight_           (512),
+    fbWidth_            (1024),
+    fbHeight_           (1024),
     fbFormat_           (GL_RGBA),
+    fbCmWidth_          (512),
+    fbCmHeight_         (512),
     fboFinal_           (0),
     sceneNumberThreads_ (2),
     sceneSampleRate_    (44100),
@@ -601,25 +603,34 @@ void Scene::renderScene(Double time, uint thread)
             if (o->needsInitGl(thread) && o->active(time))
                 o->initGl_(thread);
 
+        // position all objects
         calculateSceneTransform(thread, 0, time);
 
+        // render scene from each camera
         for (auto camera : cameras_)
         if (camera->active(time))
         {
-            // start camera frame
-            camera->startGlFrame(thread, time);
-
+            // get camera viewspace
             GL::CameraSpace camSpace;
             camera->initCameraSpace(camSpace, thread, 0);
-            camSpace.setViewMatrix( glm::inverse(camera->transformation(thread, 0)) );
+            const Mat4 viewm = glm::inverse(camera->transformation(thread, 0));
 
-            // render all opengl objects
-            for (auto o : glObjects_)
-            if (o->active(time))
+            // for each cubemap
+            const uint numCubeMaps = camera->numCubeTextures(thread, time);
+            for (uint i=0; i<numCubeMaps; ++i)
             {
-                o->renderGl_(camSpace, thread, time);
-            }
+                // start camera frame
+                camera->startGlFrame(thread, time, i);
 
+                camSpace.setViewMatrix( camera->cubeMapMatrix(i) * viewm );
+
+                // render all opengl objects
+                for (auto o : glObjects_)
+                if (o->active(time))
+                {
+                    o->renderGl_(camSpace, thread, time);
+                }
+            }
             camera->finishGlFrame(thread, time);
         }
     }

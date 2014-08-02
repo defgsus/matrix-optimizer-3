@@ -21,6 +21,8 @@ class CubeMapMatrix
 public:
     CubeMapMatrix();
 
+    static const Mat4& matrix(uint i);
+
     const static Mat4 positiveX;
     const static Mat4 negativeX;
     const static Mat4 positiveY;

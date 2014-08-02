@@ -56,6 +56,8 @@ public:
     uint frameBufferWidth() const { return fbWidth_; }
     uint frameBufferHeight() const { return fbHeight_; }
     uint frameBufferFormat() const { return fbFormat_; }
+    uint frameBufferCubeMapWidth() const { return fbCmWidth_; }
+    uint frameBufferCubeMapHeight() const { return fbCmHeight_; }
 
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
@@ -238,7 +240,8 @@ private:
 
     GL::Context * glContext_;
 
-    uint fbWidth_, fbHeight_, fbFormat_;
+    uint fbWidth_, fbHeight_, fbFormat_,
+        fbCmWidth_, fbCmHeight_;
 
     GL::FrameBufferObject * fboFinal_;
     GL::ScreenQuad * screenQuad_;

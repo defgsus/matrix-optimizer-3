@@ -65,6 +65,9 @@ protected:
 
     virtual void drawGL(const Mat4& projection, const Mat4& transformation) = 0;
 
+    /** Can be called by derived classes in their drawGL() routine. */
+    virtual void drawGrid(const Mat4& projection, const Mat4& transformation);
+
 private:
 
     RenderMode renderMode_;
@@ -78,6 +81,7 @@ private:
 
     GL::FrameBufferObject * fbo_;
     GL::ScreenQuad * screenQuad_;
+    GL::Drawable * gridObject_;
 };
 
 } // namespace GUI
