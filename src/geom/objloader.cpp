@@ -610,7 +610,7 @@ void ObjLoader::getGeometry(Geometry * g) const
 
     const Float defNormal[] = { 0, 1, 0 };
     const Float defTex[] = { 0, 0, 0 };
-    const Float defColor[] = { 0.5, 0.5, 0.0, 1.0 };
+    const Float defColor[] = { 0.5, 0.5, 0.5, 1.0 };
 
     const uint numTriangles = triangle_.size() / 3;
     for (uint i = 0; i<numTriangles; ++i)

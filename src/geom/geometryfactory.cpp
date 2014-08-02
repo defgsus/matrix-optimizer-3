@@ -371,26 +371,26 @@ void GeometryFactory::createIcosahedron(Geometry * g, float scale, bool asTriang
 
     if (asTriangles)
     {
-        g->addTriangle( p0, p1, p2 );
-        g->addTriangle( p3, p2, p1 );
-        g->addTriangle( p3, p4, p5 );
-        g->addTriangle( p3, p8, p4 );
-        g->addTriangle( p0, p6, p7 );
-        g->addTriangle( p0, p9, p6 );
-        g->addTriangle( p4, p10, p11 );
-        g->addTriangle( p6, p11, p10 );
-        g->addTriangle( p2, p5, p9 );
-        g->addTriangle( p11, p9, p5 );
-        g->addTriangle( p1, p7, p8 );
-        g->addTriangle( p10, p8, p7 );
-        g->addTriangle( p3, p5, p2 );
-        g->addTriangle( p3, p1, p8 );
-        g->addTriangle( p0, p2, p9 );
-        g->addTriangle( p0, p7, p1 );
-        g->addTriangle( p6, p9, p11 );
-        g->addTriangle( p6, p10, p7 );
-        g->addTriangle( p4, p11, p5 );
-        g->addTriangle( p4, p8, p10 );
+        g->addTriangle( p0, p2, p1 );
+        g->addTriangle( p3, p1, p2 );
+        g->addTriangle( p3, p5, p4 );
+        g->addTriangle( p3, p4, p8 );
+        g->addTriangle( p0, p7, p6 );
+        g->addTriangle( p0, p6, p9 );
+        g->addTriangle( p4, p11, p10 );
+        g->addTriangle( p6, p10, p11 );
+        g->addTriangle( p2, p9, p5 );
+        g->addTriangle( p11, p5, p9 );
+        g->addTriangle( p1, p8, p7 );
+        g->addTriangle( p10, p7, p8 );
+        g->addTriangle( p3, p2, p5 );
+        g->addTriangle( p3, p8, p1 );
+        g->addTriangle( p0, p9, p2 );
+        g->addTriangle( p0, p1, p7 );
+        g->addTriangle( p6, p11, p9 );
+        g->addTriangle( p6, p7, p10 );
+        g->addTriangle( p4, p5, p11 );
+        g->addTriangle( p4, p10, p8 );
     }
     else
     {
@@ -438,10 +438,10 @@ void GeometryFactory::createTetrahedron(Geometry * g, float scale, bool asTriang
 
     if (asTriangles)
     {
-        g->addTriangle( p0,p2,p1 );
-        g->addTriangle( p0,p1,p3 );
-        g->addTriangle( p0,p3,p2 );
-        g->addTriangle( p1,p2,p3 );
+        g->addTriangle( p0,p1,p2 );
+        g->addTriangle( p0,p3,p1 );
+        g->addTriangle( p0,p2,p3 );
+        g->addTriangle( p1,p3,p2 );
     }
     else
     {
@@ -456,6 +456,8 @@ void GeometryFactory::createTetrahedron(Geometry * g, float scale, bool asTriang
 
 void GeometryFactory::createDodecahedron(Geometry * g, float scale, bool asTriangles)
 {
+    // XXX Need to fix triangle winding order!
+
     const float
         phi = (1.f + std::sqrt(5.f)) / 2.f,
         a = 0.5f * scale,
