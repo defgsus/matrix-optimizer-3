@@ -123,6 +123,9 @@ public:
     /** free the device data and release handle */
     void release();
 
+    // ---------------- QImage ----------------
+
+    QImage getImage();
 
 private:
 
@@ -140,7 +143,7 @@ private:
     /** Creates or uploads the texture */
     bool upload_(void * ptr, GLint mipmap_level, GLenum cube_target = 0);
     /** Downloads to ptr (must be non-NULL) */
-    bool download_(void * ptr, GLuint mipmap, GLenum target) const;
+    bool download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) const;
 
     void
     /** pointer to data for 1d/2d */

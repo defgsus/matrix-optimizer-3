@@ -76,6 +76,17 @@ void ObjectGl::initGl_(uint thread)
     needsInitGl_[thread] = false;
 }
 
+
+void ObjectGl::releaseGl_(uint thread)
+{
+    MO_DEBUG_GL("ObjectGl('" << idName() << "')::releaseGl_(" << thread << ")");
+
+    if (!glContext_[thread])
+        MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
+
+    releaseGl(thread);
+}
+
 void ObjectGl::renderGl_(const GL::CameraSpace &camera, uint thread, Double time)
 {
     if (!glContext_[thread])

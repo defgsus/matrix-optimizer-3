@@ -41,6 +41,8 @@ public:
     bool needsInitGl(uint thread) const { return needsInitGl_[thread]; }
 
     virtual void initGl(uint thread) = 0;
+    virtual void releaseGl(uint thread) = 0;
+
     virtual void renderGl(const GL::CameraSpace& camera, uint thread, Double time) = 0;
 
 signals:
@@ -53,6 +55,7 @@ private:
     void setGlContext_(uint thread, GL::Context *);
 
     void initGl_(uint thread);
+    void releaseGl_(uint thread);
     void renderGl_(const GL::CameraSpace& camera, uint thread, Double time);
 
     std::vector<GL::Context*> glContext_;

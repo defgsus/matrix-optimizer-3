@@ -123,6 +123,17 @@ void Camera::initGl(uint thread)
 
 }
 
+void Camera::releaseGl(uint thread)
+{
+    screenQuad_[thread]->release();
+    delete screenQuad_[thread];
+    screenQuad_[thread] = 0;
+
+    fbo_[thread]->release();
+    delete fbo_[thread];
+    fbo_[thread] = 0;
+}
+
 void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, uint sample) const
 {
     cam.setProjectionMatrix(projection_[thread][sample]);

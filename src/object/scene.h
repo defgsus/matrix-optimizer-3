@@ -210,7 +210,8 @@ private:
     void updateModulators_();
 
     /** Creates the framebuffer object */
-    void createGl_();
+    void createSceneGl_();
+    void releaseSceneGl_();
 
     // ----------- runtime ---------------------
 

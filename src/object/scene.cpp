@@ -64,11 +64,11 @@ Scene::Scene(QObject *parent) :
     Object              (parent),
     model_              (0),
     glContext_          (0),
-    fbWidth_            (1024*4),
-    fbHeight_           (1024*4),
+    fbWidth_            (1024),
+    fbHeight_           (1024),
     fbFormat_           (GL_RGBA),
-    fbCmWidth_          (512*2),
-    fbCmHeight_         (512*2),
+    fbCmWidth_          (512),
+    fbCmHeight_         (512),
     fboFinal_           (0),
     sceneNumberThreads_ (2),
     sceneSampleRate_    (44100),
@@ -565,9 +565,9 @@ void Scene::setGlContext(GL::Context *context)
         o->setGlContext_(0, glContext_);
 }
 
-void Scene::createGl_()
+void Scene::createSceneGl_()
 {
-    MO_DEBUG_GL("Scene::createGl_()");
+    MO_DEBUG_GL("Scene::createSceneGl_()");
 
     fboFinal_ = new GL::FrameBufferObject(
                 fbWidth_, fbHeight_, fbFormat_, GL_FLOAT, false, GL::ER_THROW);
@@ -577,6 +577,20 @@ void Scene::createGl_()
     // create screen quad
     screenQuad_ = new GL::ScreenQuad("scene_quad", GL::ER_THROW);
     screenQuad_->create();
+}
+
+
+void Scene::releaseSceneGl_()
+{
+    MO_DEBUG_GL("Scene::releaseSceneGl_()");
+
+    fboFinal_->release();
+    delete fboFinal_;
+    fboFinal_ = 0;
+
+    screenQuad_->release();
+    delete screenQuad_;
+    screenQuad_ = 0;
 }
 
 void Scene::renderScene(Double time, uint thread)
@@ -596,7 +610,7 @@ void Scene::renderScene(Double time, uint thread)
         ScopedSceneLockRead lock(this);
 
         if (!fboFinal_)
-            createGl_();
+            createSceneGl_();
 
         // initialize gl resources
         for (auto o : glObjects_)

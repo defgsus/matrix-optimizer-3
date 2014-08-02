@@ -8,6 +8,8 @@
     <p>created 05/20/2012, pulled-in 8/1/2014</p>
 */
 
+#include <QImage>
+
 #include "texture.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -419,18 +421,18 @@ bool Texture::download(void * ptr, GLuint mipmap) const
     if (target_ != GL_TEXTURE_CUBE_MAP)
     {
         if (ptr) ptr = ptr_;
-        return download_(ptr, mipmap, target_);
+        return download_(ptr, mipmap, target_, type_);
     }
 
-    if (!download_(ptr_px_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_X)) return false;
-    if (!download_(ptr_nx_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_X)) return false;
-    if (!download_(ptr_py_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_Y)) return false;
-    if (!download_(ptr_ny_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y)) return false;
-    if (!download_(ptr_pz_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_Z)) return false;
-    return download_(ptr_nz_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+    if (!download_(ptr_px_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_X, type_)) return false;
+    if (!download_(ptr_nx_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, type_)) return false;
+    if (!download_(ptr_py_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, type_)) return false;
+    if (!download_(ptr_ny_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, type_)) return false;
+    if (!download_(ptr_pz_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, type_)) return false;
+    return download_(ptr_nz_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, type_);
 }
 
-bool Texture::download_(void * ptr, GLuint mipmap, GLenum target) const
+bool Texture::download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) const
 {
     MO_ASSERT(ptr, "download from texture to NULL");
 
@@ -443,7 +445,7 @@ bool Texture::download_(void * ptr, GLuint mipmap, GLenum target) const
             // color components
             input_format_,
             // format
-            type_,
+            type,
             // data
             ptr)
         , err);
@@ -466,6 +468,39 @@ QString Texture::info_str() const
 }
 */
 
+
+QImage Texture::getImage()
+{
+    QImage img(width(), height(), QImage::Format_RGB32);
+
+    std::vector<GLchar> buffer(width() * height() * 3);
+
+    GLint err;
+    MO_CHECK_GL_RET_COND( rep_,
+        glGetTexImage(
+            target_,
+            // mipmap level
+            0,
+            // color components
+            GL_RGB,
+            // format
+            GL_UNSIGNED_INT,
+            // data
+            &buffer[0])
+        , err);
+
+    if (err)
+        return QImage();
+
+    for (uint y=0; y<height(); ++y)
+    for (uint x=0; x<width(); ++x)
+    {
+        int col = *((int*)&buffer[(y*width()+x)*3]);
+        img.setPixel(x, y, col);
+    }
+
+    return img;
+}
 
 
 

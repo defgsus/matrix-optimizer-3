@@ -46,6 +46,13 @@ void Model3d::initGl(uint /*thread*/)
     draw_->createOpenGl();
 }
 
+void Model3d::releaseGl(uint /*thread*/)
+{
+    draw_->releaseOpenGl();
+    delete draw_;
+    draw_ = 0;
+}
+
 void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
 {
     /*

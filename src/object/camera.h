@@ -30,9 +30,12 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
+    virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::CameraSpace&, uint, Double) Q_DECL_OVERRIDE { };
 
-    GL::FrameBufferObject * getFrameBuffer(uint thread) const { return fbo_[thread]; }
+    // ---------- camera specific stuff -----------
+
+    //GL::FrameBufferObject * getFrameBuffer(uint thread) const { return fbo_[thread]; }
 
     /** Returns projection matrix */
     const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }
