@@ -137,7 +137,8 @@ SOURCES += \
     src/geom/geometryfactory.cpp \
     src/gl/texture.cpp \
     src/gl/framebufferobject.cpp \
-    src/gl/screenquad.cpp
+    src/gl/screenquad.cpp \
+    src/math/cubemapmatrix.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -266,7 +267,8 @@ HEADERS += \
     src/geom/geometryfactory.h \
     src/gl/texture.h \
     src/gl/framebufferobject.h \
-    src/gl/screenquad.h
+    src/gl/screenquad.h \
+    src/math/cubemapmatrix.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

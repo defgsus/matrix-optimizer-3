@@ -15,6 +15,8 @@
 #include "gl/framebufferobject.h"
 #include "gl/texture.h"
 #include "gl/screenquad.h"
+#include "io/log.h"
+#include "math/cubemapmatrix.h"
 
 namespace MO {
 namespace GUI {
@@ -126,7 +128,7 @@ void Basic3DWidget::resizeGL(int w, int h)
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
         projectionMatrix_ =
-                glm::perspective(90.f, (float)fbo_->width()/fbo_->height(), 0.1f, 1000.0f);
+                glm::perspective(90.f, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
     }
     else
     {
@@ -175,22 +177,21 @@ void Basic3DWidget::paintGL()
 
         MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
 
-        Mat4 rpx = glm::rotate(Mat4(1.0), -90.f, Vec3(0,1,0));
-        Mat4 rnx = glm::rotate(Mat4(1.0), 90.f, Vec3(0,1,0));
-        Mat4 rpy = glm::rotate(glm::rotate(Mat4(1.0), -90.f, Vec3(1,0,0)), 180.f, Vec3(0,0,1));
-        Mat4 rny = glm::rotate(glm::rotate(Mat4(1.0), 90.f, Vec3(1,0,0)), 180.f, Vec3(0,0,1));;
+        const Mat4 viewm = transformationMatrix();
 
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
-        drawGL(projectionMatrix(), transformationMatrix());
+        drawGL(projectionMatrix(), viewm);
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X);
-        drawGL(projectionMatrix(), rpx * transformationMatrix());
+        drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveX * viewm);
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
-        drawGL(projectionMatrix(), rnx * transformationMatrix());
+        drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeX * viewm);
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
-        drawGL(projectionMatrix(), rpy * transformationMatrix());
+        drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveY * viewm);
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
-        drawGL(projectionMatrix(), rny * transformationMatrix());
-
+        drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeY * viewm);
+        // XXX only needed for angle-of-view > ??
+        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
+        drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveZ * viewm);
 
         fbo_->unbind();
 

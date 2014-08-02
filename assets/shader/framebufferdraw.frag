@@ -10,7 +10,7 @@ uniform samplerCube tex_framebuffer;
 
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
-
+const float angle_of_view = 180.0;
 
 void main(void)
 {
@@ -27,7 +27,7 @@ void main(void)
             // distance from center
             dist = length(scr),
             // cartesian screen-space to spherical
-            theta = dist * HALF_PI,// * angle_of_view / 180.0,
+            theta = dist * HALF_PI * angle_of_view / 180.0,
             phi = atan(scr.y, scr.x);
 
     // spherical-to-cartesian
@@ -36,9 +36,9 @@ void main(void)
                 sin(theta) * sin(phi),
                 -cos(theta));
 
-    gl_FragColor = //texture(tex_framebuffer, vec3(scr, -1.0));
+    gl_FragColor =
             dist > 1.0 ?
-                vec4(1.0, 0., 0., 1.)
+                vec4(0., 0., 0., 1.)
               : texture(tex_framebuffer, lookup);
 
 #endif
