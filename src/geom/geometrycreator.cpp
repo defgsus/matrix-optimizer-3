@@ -14,13 +14,12 @@
 #include "geom/objloader.h"
 
 namespace MO {
-namespace GUI {
-namespace UTIL {
+namespace GEOM {
 
 GeometryCreator::GeometryCreator(QObject *parent) :
     QThread     (parent),
     geometry_   (0),
-    settings_   (new GEOM::GeometryFactorySettings()),
+    settings_   (new GeometryFactorySettings()),
     loader_     (0)
 {
 }
@@ -31,12 +30,12 @@ GeometryCreator::~GeometryCreator()
     delete settings_;
 }
 
-void GeometryCreator::setSettings(const GEOM::GeometryFactorySettings & s)
+void GeometryCreator::setSettings(const GeometryFactorySettings & s)
 {
     *settings_ = s;
 }
 
-GEOM::Geometry * GeometryCreator::takeGeometry()
+Geometry * GeometryCreator::takeGeometry()
 {
     auto g = geometry_;
     geometry_ = 0;
@@ -45,15 +44,15 @@ GEOM::Geometry * GeometryCreator::takeGeometry()
 
 void GeometryCreator::run()
 {
-    auto g = new GEOM::Geometry();
+    auto g = new Geometry();
 
     // create a file loader if nescessary
-    if (settings_->type == GEOM::GeometryFactorySettings::T_FILE)
-        loader_ = new GEOM::ObjLoader();
+    if (settings_->type == GeometryFactorySettings::T_FILE)
+        loader_ = new ObjLoader();
 
     try
     {
-        GEOM::GeometryFactory::createFromSettings(g, settings_, loader_);
+        GeometryFactory::createFromSettings(g, settings_, loader_);
     }
     catch (Exception & e)
     {
@@ -70,6 +69,5 @@ void GeometryCreator::run()
     geometry_ = g;
 }
 
-} // namespace UTIL
-} // namespace GUI
+} // namespace GEOM
 } // namespace MO

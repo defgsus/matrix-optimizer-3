@@ -16,6 +16,7 @@
 #include "objloader.h"
 #include "math/vector.h"
 #include "math/hash.h"
+#include "io/datastream.h"
 
 namespace MO {
 namespace GEOM {
@@ -736,8 +737,35 @@ GeometryFactorySettings::GeometryFactorySettings()
 
 }
 
+void GeometryFactorySettings::serialize(IO::DataStream & io) const
+{
+    io.writeHeader("geomfacset", 1);
 
+    io << typeIds[type];
 
+    io << calcNormals << asTriangles << convertToLines << sharedVertices
+        << tesselate << normalizeVertices << removeRandomly
+        << colorR << colorG << colorB << colorA
+        << scale << scaleX << scaleY << scaleZ
+        << removeProb << gridSize
+        << segmentsX << segmentsY << segmentsZ
+        << tessLevel << removeSeed << withCoords;
+}
+
+void GeometryFactorySettings::deserialize(IO::DataStream & io)
+{
+    io.readHeader("geomfacset", 1);
+
+    io.readEnum(type, T_BOX, typeIds);
+
+    io >> calcNormals >> asTriangles >> convertToLines >> sharedVertices
+        >> tesselate >> normalizeVertices >> removeRandomly
+        >> colorR >> colorG >> colorB >> colorA
+        >> scale >> scaleX >> scaleY >> scaleZ
+        >> removeProb >> gridSize
+        >> segmentsX >> segmentsY >> segmentsZ
+        >> tessLevel >> removeSeed >> withCoords;
+}
 
 } // namespace GEOM
 } // namespace MO

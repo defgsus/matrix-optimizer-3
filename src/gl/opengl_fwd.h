@@ -38,6 +38,7 @@ namespace GL {
 } // namespace GL
     namespace GEOM {
         class Geometry;
+        class GeometryCreator;
         class GeometryFactory;
         class GeometryFactorySettings;
         class ObjLoader;

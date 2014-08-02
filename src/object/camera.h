@@ -20,6 +20,7 @@ class Camera : public ObjectGl
     Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(Camera);
+    ~Camera();
 
     virtual Type type() const Q_DECL_OVERRIDE { return T_CAMERA; }
     virtual bool isCamera() const Q_DECL_OVERRIDE { return true; }

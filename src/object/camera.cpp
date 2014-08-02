@@ -34,6 +34,14 @@ Camera::Camera(QObject *parent) :
     setName("Camera");
 }
 
+Camera::~Camera()
+{
+    for (auto i : fbo_)
+        delete i;
+    for (auto i : screenQuad_)
+        delete i;
+}
+
 void Camera::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);
@@ -65,9 +73,16 @@ void Camera::setNumberThreads(uint num)
 {
     ObjectGl::setNumberThreads(num);
 
+    uint oldnum = fbo_.size();
     projection_.resize(num);
     fbo_.resize(num);
     screenQuad_.resize(num);
+
+    for (uint i=oldnum; i<num; ++i)
+    {
+        fbo_[i] = 0;
+        screenQuad_[i] = 0;
+    }
 }
 
 void Camera::setBufferSize(uint bufferSize, uint thread)

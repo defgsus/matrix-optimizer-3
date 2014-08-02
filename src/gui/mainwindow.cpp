@@ -52,6 +52,7 @@
 #include "io/settings.h"
 #include "io/application.h"
 #include "engine/renderer.h"
+#include "gl/texture.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -629,7 +630,9 @@ void MainWindow::runTestThread_()
 
 void MainWindow::updateSystemInfo_()
 {
-    QString info = tr("%1mb").arg(Memory::allocated()/1024/1024);
+    QString info = tr("%1mb/%2mb")
+            .arg(Memory::allocated()/1024/1024)
+            .arg(GL::Texture::memoryAll()/1024/1024);
 
     if (testThread_)
     {

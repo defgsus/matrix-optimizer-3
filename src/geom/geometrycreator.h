@@ -16,8 +16,7 @@
 #include "gl/opengl_fwd.h"
 
 namespace MO {
-namespace GUI {
-namespace UTIL {
+namespace GEOM {
 
 
 class GeometryCreator : public QThread
@@ -38,20 +37,19 @@ signals:
 
 public slots:
 
-    void setSettings(const GEOM::GeometryFactorySettings&);
+    void setSettings(const GeometryFactorySettings&);
 
 protected:
 
     void run() Q_DECL_OVERRIDE;
 
-    GEOM::Geometry * geometry_;
-    GEOM::GeometryFactorySettings * settings_;
-    GEOM::ObjLoader * loader_;
+    Geometry * geometry_;
+    GeometryFactorySettings * settings_;
+    ObjLoader * loader_;
 };
 
 
-} // namespace UTIL
-} // namespace GUI
+} // namespace GEOM
 } // namespace MO
 
 #endif // GEOMETRYCREATOR_H

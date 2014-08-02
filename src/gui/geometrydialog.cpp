@@ -24,7 +24,7 @@
 #include "widget/doublespinbox.h"
 #include "widget/spinbox.h"
 #include "tool/stringmanip.h"
-#include "util/geometrycreator.h"
+#include "geom/geometrycreator.h"
 
 
 namespace MO {
@@ -274,7 +274,7 @@ void GeometryDialog::updateGeometry_()
 
     updateGeometryLater_ = false;
 
-    creator_ = new UTIL::GeometryCreator(this);
+    creator_ = new GEOM::GeometryCreator(this);
     creator_->setSettings(*settings_);
 
     connect(creator_, SIGNAL(failed(QString)),

@@ -77,6 +77,9 @@ public:
 
     GeometryFactorySettings();
 
+    void serialize(IO::DataStream&) const;
+    void deserialize(IO::DataStream&);
+
     // ---- public member ----
 
     Type type;

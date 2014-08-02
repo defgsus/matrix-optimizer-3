@@ -22,7 +22,6 @@ class QToolButton;
 
 namespace MO {
 namespace GUI {
-namespace UTIL { class GeometryCreator; }
 
 class SpinBox;
 class DoubleSpinBox;
@@ -55,7 +54,7 @@ protected:
 
     GeometryWidget * geoWidget_;
     GEOM::GeometryFactorySettings * settings_;
-    UTIL::GeometryCreator * creator_;
+    GEOM::GeometryCreator * creator_;
     bool updateGeometryLater_;
 
     QLabel * labelInfo_, *labelSeg_;

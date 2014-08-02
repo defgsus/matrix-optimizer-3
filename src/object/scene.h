@@ -152,7 +152,7 @@ public slots:
     // ------------- runtime -------------------
 
     /** Call before deleting the scene.
-        OpenGL resources will be released a short while later.
+        OpenGL resources will be released a short while later from their particular thead.
         */
     void kill();
 

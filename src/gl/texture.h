@@ -48,6 +48,12 @@ public:
     /** Returns whether the texture is allocated on the device. */
     bool isAllocated() const { return uploaded_; }
 
+    /** Calculated memory of texture in bytes */
+    GLsizei memory() const { return memory_; }
+
+    /** Approximated memory usage of all textures */
+    static long int memoryAll() { return memory_used_; }
+
     uint width() const { return width_; }
     uint height() const { return height_; }
     GLenum format() const { return format_; }
