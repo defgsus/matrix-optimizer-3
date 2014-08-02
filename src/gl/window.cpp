@@ -15,6 +15,7 @@
 #include <QShowEvent>
 #include <QOpenGLContext>
 #include <QKeyEvent>
+#include <QTime>
 
 #include "window.h"
 #include "context.h"
@@ -28,12 +29,14 @@ Window::Window(QScreen * targetScreen)
     :   QWindow       (targetScreen),
         context_      (0),
         updatePending_(false),
-        animating_    (false)
+        animating_    (false),
+        messure_      (new QTime()),
+        fps_          (0.0)
 {
     MO_DEBUG_GL("Window::Window()");
 
     setObjectName("_GlWindow");
-    setTitle("OpenGL");
+    setTitle(tr("OpenGL"));
 
     setWidth(512);
     setHeight(512);
@@ -48,6 +51,7 @@ Window::Window(QScreen * targetScreen)
 Window::~Window()
 {
     MO_DEBUG_GL("Window::~Window()");
+    delete messure_;
 //    if (context_)
 //        context_->doneCurrent();
 }
@@ -135,40 +139,19 @@ void Window::renderNow()
     emit renderRequest();
 
 
-#if (0)
-    if (!gl_)
-    {
-        MO_DEBUG_GL("requesting openGL functions");
-        gl_ = context_->versionFunctions<MO_OPENGL_FUNCTION_CLASS>();
-        if (!gl_)
-            MO_GL_ERROR("could not receive QOpenGLFunctions object");
-
-        MO_DEBUG_GL("initializing openGL functions");
-
-        if (!gl_->initializeOpenGLFunctions())
-            MO_GL_ERROR("could not initialize openGL functions");
-    }
-
-    if (needsInit)
-    {
-        GLint vmaj, vmin;
-        gl_->glGetIntegerv(GL_MAJOR_VERSION, &vmaj);
-        gl_->glGetIntegerv(GL_MINOR_VERSION, &vmin);
-        qDebug() << "vendor:  " << QString((const char*)gl_->glGetString(GL_VENDOR))
-                 << "\nversion: " << vmaj << "." << vmin;
-    }
-
-    const qreal retinaScale = devicePixelRatio();
-    gl_->glViewport(0, 0, width() * retinaScale, height() * retinaScale);
-
-    gl_->glClearColor(0,0.5,0.5,1);
-    gl_->glClear(GL_COLOR_BUFFER_BIT);// | GL_DEPTH_BUFFER_BIT);
-    qDebug() << gl_->glGetError();
-    //gl->glBegin();
-    //frameBuffer_->texture();
-#endif
-
     context_->qcontext()->swapBuffers(this);
+
+    // messure time
+    if (animating_)
+    {
+        int e = messure_->elapsed();
+        messure_->start();
+
+        double fps = 1000.0 / std::max(1, e);
+        fps_ += 0.1 * (fps - fps_);
+        setTitle(tr("OpenGl %1 fps").arg((int)(fps_+0.5)));
+    }
+        else setTitle(tr("OpenGL"));
 
     // call again :)
     if (animating_)

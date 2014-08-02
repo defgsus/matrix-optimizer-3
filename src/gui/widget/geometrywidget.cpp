@@ -31,17 +31,11 @@ GeometryWidget::~GeometryWidget()
         drawable_->releaseOpenGl();
     delete drawable_;
 }
-/*
-void GeometryWidget::initializeGL()
-{
 
-}
-*/
 void GeometryWidget::setGeometry(GEOM::Geometry * g)
 {
     drawable_->setGeometry(g);
-    drawable_->createOpenGl();
-    updateGL();
+    update();
 }
 
 void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
@@ -53,6 +47,9 @@ void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
     drawGrid(projection, transformation);
+
+    if (!drawable_->isReady())
+        drawable_->createOpenGl();
 
     if (drawable_->isReady())
         drawable_->renderShader(projection, transformation);

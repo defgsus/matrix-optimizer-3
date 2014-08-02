@@ -2,7 +2,7 @@
 
 const float PI = 3.14159265358979;
 
-//#define MO_FULLDOME
+//#define MO_FULLDOME_BEND
 
 // vertex attributes
 in vec4 a_position;
@@ -56,7 +56,7 @@ vec4 mo_pos_to_fulldome_scr(in vec3 pos)
 
 vec4 mo_ftransform(in vec4 pos)
 {
-#ifndef MO_FULLDOME
+#ifndef MO_FULLDOME_BEND
     return u_projection * u_view * pos;
 #else
     return mo_pos_to_fulldome_scr((u_view * pos).xyz);

@@ -35,8 +35,11 @@ public:
     };
 
     explicit Basic3DWidget(RenderMode mode, QWidget *parent = 0);
+    ~Basic3DWidget();
 
     RenderMode renderMode() const { return renderMode_; }
+
+    bool isGlInitialized() const { return isGlInitialized_; }
 
     const Mat4& projectionMatrix() const { return projectionMatrix_; }
     Mat4 transformationMatrix() const;
@@ -44,6 +47,7 @@ public:
 signals:
 
     void glInitialized();
+    void glReleased();
 
 public slots:
 
@@ -53,16 +57,26 @@ public slots:
 
 protected:
 
-    void mousePressEvent(QMouseEvent *);
-    void mouseMoveEvent(QMouseEvent *);
+    virtual void mousePressEvent(QMouseEvent *);
+    virtual void mouseMoveEvent(QMouseEvent *);
+    virtual void closeEvent(QCloseEvent *);
 
-    void initializeGL() Q_DECL_OVERRIDE;
+    /** Override this to create resources-per-opengl-context.
+        @note call the base class implementation in your derived function! */
+    virtual void initializeGL() Q_DECL_OVERRIDE;
+
+    /** Override to release opengl resources.
+        @note call the base class implementation in your derived function! */
+    virtual void releaseGL();
 
     /** Sets the viewport and the projection matrix */
     void resizeGL(int w, int h) Q_DECL_OVERRIDE;
 
+    /** This is used by Basic3DWidget only.
+        Override drawGL() to implement drawing. */
     void paintGL() Q_DECL_OVERRIDE Q_DECL_FINAL;
 
+    /** Override to draw your stuff */
     virtual void drawGL(const Mat4& projection, const Mat4& transformation) = 0;
 
     /** Can be called by derived classes in their drawGL() routine. */
@@ -71,6 +85,9 @@ protected:
 private:
 
     RenderMode renderMode_;
+
+    bool isGlInitialized_,
+         closeRequest_;
 
     Mat4
         projectionMatrix_,

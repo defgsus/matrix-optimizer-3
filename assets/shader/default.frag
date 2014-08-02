@@ -1,14 +1,12 @@
 #version 130
 
-#define MO_FULLDOME
-
 // input from vertex shader
 in vec3 v_pos;
 in vec4 v_color;
 in vec3 v_normal;
 
 // lightsource
-const vec3 u_light_pos = vec3(1000.0, 2000.0, -500.0);
+const vec3 u_light_pos = vec3(1000.0, 2000.0, 500.0);
 const vec3 u_light_color = vec3(1.0, 1.0, 1.0);
 const float u_shinyness = 2.0;
 

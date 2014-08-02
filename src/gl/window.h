@@ -13,6 +13,8 @@
 
 #include <QWindow>
 
+class QTime;
+
 namespace MO {
 namespace GL {
 
@@ -34,6 +36,8 @@ public:
 
     Context * context() const { return context_; }
 //    void setFramebuffer(QOpenGLFramebufferObject * frameBuffer);
+
+    double messuredFps() const { return fps_; }
 
 signals:
 
@@ -63,6 +67,10 @@ private:
     bool updatePending_;
 
     bool animating_;
+
+    QTime * messure_;
+
+    double fps_;
 };
 
 

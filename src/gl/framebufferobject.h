@@ -53,6 +53,9 @@ public:
         as previously defined. */
     bool create();
 
+    /** Releases the opengl resources */
+    void release();
+
     /** Attach one of the cubemap textures to the colorbuffer.
         @p target is of type GL_TEXTURE_CUBE_MAP_[POSITIVE|NEGATIVE]_[X|Y|Z].
         Prior, create() must have been successfully called and

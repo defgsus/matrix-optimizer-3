@@ -72,6 +72,7 @@ public:
 
 private:
 
+    void checkGeometryChanged_();
     void compileShader_();
     void createVAO_();
 
@@ -81,7 +82,7 @@ private:
     ShaderSource * shaderSource_;
     Shader * shader_;
 
-    bool doRecompile_;
+    bool doRecompile_, geometryChanged_;
 
     VertexArrayObject * vao_;
 

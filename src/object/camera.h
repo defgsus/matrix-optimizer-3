@@ -68,8 +68,8 @@ private:
 
     std::vector<GL::ScreenQuad*> screenQuad_;
 
-    ParameterFloat * cameraMix_;
-    GL::Uniform * uColor_;
+    ParameterFloat * cameraMix_, *cameraAngle_;
+    GL::Uniform * uColor_, * uAngle_;
 
     bool cubeMapped_;
 };

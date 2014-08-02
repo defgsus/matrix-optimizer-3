@@ -10,6 +10,7 @@
 
 #include <QPainter>
 #include <QMouseEvent>
+#include <QCloseEvent>
 
 #include "basic3dwidget.h"
 #include "gl/framebufferobject.h"
@@ -27,10 +28,14 @@ namespace GUI {
 Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     QGLWidget       (parent),
     renderMode_     (mode),
+    isGlInitialized_(false),
+    closeRequest_   (false),
     fbo_            (0),
     screenQuad_     (0),
     gridObject_     (0)
 {
+    MO_DEBUG_GL("Basic3DWidget::Basic3DWidget()");
+
     if (mode == RM_DIRECT)
     {
         QGLFormat f(format());
@@ -39,6 +44,19 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     }
 
     viewInit();
+}
+
+Basic3DWidget::~Basic3DWidget()
+{
+    MO_DEBUG_GL("Basic3DWidget::~Basic3DWidget()");
+
+    // XXX This should always work when GUI has a single thread
+    if (isGlInitialized_)
+        releaseGL();
+
+    delete fbo_;
+    delete screenQuad_;
+    delete gridObject_;
 }
 
 void Basic3DWidget::viewInit(Float distanceZ)
@@ -96,9 +114,22 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
     }
 }
 
+void Basic3DWidget::closeEvent(QCloseEvent * e)
+{
+    if (isGlInitialized_)
+    {
+        e->ignore();
+        // pass shut-down function to paintGL
+        closeRequest_ = true;
+        update();
+    }
+    else QGLWidget::closeEvent(e);
+}
 
 void Basic3DWidget::initializeGL()
 {
+    MO_DEBUG_GL("Basic3DWidget::initializeGL()");
+
     if (renderMode_ == RM_FULLDOME_CUBE || renderMode_ == RM_FRAMEBUFFER)
     {
         screenQuad_ = new GL::ScreenQuad("basic3dwidget", GL::ER_THROW);
@@ -115,7 +146,39 @@ void Basic3DWidget::initializeGL()
 
     MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
 
+    isGlInitialized_ = true;
+
     emit glInitialized();
+}
+
+void Basic3DWidget::releaseGL()
+{
+    MO_DEBUG_GL("Basic3DWidget::releaseGL()");
+
+    if (fbo_)
+    {
+        fbo_->release();
+        delete fbo_;
+        fbo_ = 0;
+    }
+
+    if (screenQuad_)
+    {
+        screenQuad_->release();
+        delete screenQuad_;
+        screenQuad_ = 0;
+    }
+
+    if (gridObject_)
+    {
+        gridObject_->releaseOpenGl();
+        delete gridObject_;
+        gridObject_ = 0;
+    }
+
+    isGlInitialized_ = false;
+
+    emit glReleased();
 }
 
 void Basic3DWidget::resizeGL(int w, int h)
@@ -142,6 +205,13 @@ void Basic3DWidget::resizeGL(int w, int h)
 
 void Basic3DWidget::paintGL()
 {
+    if (closeRequest_)
+    {
+        releaseGL();
+        closeRequest_ = false;
+        return;
+    }
+
     if (renderMode_ == RM_DIRECT)
     {
         drawGL(projectionMatrix(), transformationMatrix());

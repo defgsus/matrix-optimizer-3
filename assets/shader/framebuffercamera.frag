@@ -9,10 +9,10 @@ uniform samplerCube tex_framebuffer;
 #endif
 
 uniform vec4 u_color;
+uniform float u_angle;
 
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
-const float angle_of_view = 180.0;
 
 void main(void)
 {
@@ -29,7 +29,7 @@ void main(void)
             // distance from center
             dist = length(scr),
             // cartesian screen-space to spherical
-            theta = dist * HALF_PI * angle_of_view / 180.0,
+            theta = dist * HALF_PI * u_angle / 180.0,
             phi = atan(scr.y, scr.x);
 
     // spherical-to-cartesian

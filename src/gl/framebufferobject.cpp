@@ -143,6 +143,11 @@ bool FrameBufferObject::create()
     return true;
 }
 
+void FrameBufferObject::release()
+{
+    release_();
+}
+
 bool FrameBufferObject::attachCubeTexture(GLenum target)
 {
     if (!cubemap_)

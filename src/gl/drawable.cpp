@@ -32,6 +32,7 @@ Drawable::Drawable(const QString &name)
       shaderSource_     (0),
       shader_           (0),
       doRecompile_      (true),
+      geometryChanged_  (false),
       vao_              (0)
 {
     MO_DEBUG_GL("Drawable(" << name_ << ")::Drawable()");
@@ -76,6 +77,7 @@ void Drawable::setGeometry(GEOM::Geometry * g)
 {
     delete geometry_;
     geometry_ = g;
+    geometryChanged_ = true;
 }
 
 void Drawable::setShaderSource(ShaderSource *s)
@@ -95,6 +97,8 @@ void Drawable::setShader(Shader *s)
 
 void Drawable::createOpenGl()
 {
+    MO_DEBUG_GL("Drawable(" << name_ << ")::createOpenGl()");
+
     MO_ASSERT(geometry_, "no geometry provided to Drawable(" << name_ << ")::createOpenGl()");
 
     compileShader_();
@@ -103,7 +107,7 @@ void Drawable::createOpenGl()
 
 void Drawable::compileShader_()
 {
-    MO_DEBUG_GL("Drawable(" << name_ << ")::compileShader_()");
+//    MO_DEBUG_GL("Drawable(" << name_ << ")::compileShader_()");
 
     //MO_ASSERT(shaderSource_, "Drawable::compileShader_() without ShaderSource");
     //MO_ASSERT(!shaderSource_->isEmpty(), "Drawable::compileShader_() with empty ShaderSource");
@@ -150,7 +154,7 @@ void Drawable::compileShader_()
 
 void Drawable::createVAO_()
 {
-    MO_DEBUG_GL("Drawable(" << name_ << ")::createVAO_()");
+//    MO_DEBUG_GL("Drawable(" << name_ << ")::createVAO_()");
 
     //MO_ASSERT(!vao_, "Drawable::createVAO_() duplicate call");
 
@@ -183,6 +187,8 @@ void Drawable::render()
 {
     MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
 
+    checkGeometryChanged_();
+
     if (geometry_->numTriangles())
         vao_->drawElements(GL_TRIANGLES);
     else
@@ -195,6 +201,8 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
     MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
     //MO_ASSERT(uniformProj_ != invalidGl, "");
     MO_ASSERT(uniformView_ != invalidGl, "");
+
+    checkGeometryChanged_();
 
     shader_->activate();
 
@@ -215,6 +223,8 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
 void Drawable::renderShader()
 {
     MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
+
+    checkGeometryChanged_();
 
     shader_->activate();
 
@@ -243,6 +253,15 @@ void Drawable::renderImmediate()
         }
     }
     MO_CHECK_GL( glEnd() );
+}
+
+void Drawable::checkGeometryChanged_()
+{
+    if (geometryChanged_)
+    {
+        createOpenGl();
+        geometryChanged_ = false;
+    }
 }
 
 } //namespace GL

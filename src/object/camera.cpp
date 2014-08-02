@@ -50,6 +50,11 @@ void Camera::createParameters()
 {
     ObjectGl::createParameters();
 
+    cameraAngle_ = createFloatParameter("camangle", tr("field of view"),
+                                        tr("Field-of-view specifies the openening angle in degree"),
+                                        180.f,
+                                        1.f, 360.f, 1.f);
+
     cameraMix_ = createFloatParameter("cammix", tr("Camera mix"),
                                       tr("Defines the volume and visibility of the camera [0,1]"),
                                       1.f,
@@ -98,8 +103,10 @@ void Camera::initGl(uint thread)
                 ":/shader/framebuffercamera.vert",
                 ":/shader/framebuffercamera.frag",
                 cubeMapped_? "#define MO_FULLDOME_CUBE" : "");
+    // uniforms
     uColor_ = screenQuad_[thread]->shader()->getUniform("u_color", true);
     uColor_->setFloats(1,1,1,1);
+    uAngle_ = screenQuad_[thread]->shader()->getUniform("u_angle", true);
 
     // create framebuffer
 
@@ -121,14 +128,27 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, uint sample) con
     cam.setProjectionMatrix(projection_[thread][sample]);
 }
 
-uint Camera::numCubeTextures(uint , Double ) const
+uint Camera::numCubeTextures(uint , Double time) const
 {
-    return cubeMapped_? 6 : 1;
+    if (!cubeMapped_)
+        return 1;
+
+    return (cameraAngle_->value(time) >= 250.f)
+               ? 6 : 5;
+
 }
 
 const Mat4& Camera::cubeMapMatrix(uint index) const
 {
-    return MATH::CubeMapMatrix::matrix(index);
+    switch (index)
+    {
+        case 0:  return MATH::CubeMapMatrix::positiveX; break;
+        case 1:  return MATH::CubeMapMatrix::negativeX; break;
+        case 2:  return MATH::CubeMapMatrix::positiveY; break;
+        case 3:  return MATH::CubeMapMatrix::negativeY; break;
+        case 4:  return MATH::CubeMapMatrix::negativeZ; break;
+        default: return MATH::CubeMapMatrix::positiveZ; break;
+    }
 }
 
 void Camera::startGlFrame(uint thread, Double , uint cubeMapIndex)
@@ -140,12 +160,12 @@ void Camera::startGlFrame(uint thread, Double , uint cubeMapIndex)
     {
         switch (cubeMapIndex)
         {
-            case 0: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X); break;
-            case 1: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X); break;
-            case 2: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y); break;
-            case 3: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y); break;
-            case 4: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z); break;
-            default: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z); break;
+            case 0:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X); break;
+            case 1:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X); break;
+            case 2:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y); break;
+            case 3:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y); break;
+            case 4:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z); break;
+            default: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z); break;
         }
     }
 
@@ -169,6 +189,7 @@ void Camera::drawFramebuffer(uint thread, Double time)
     GL::FrameBufferObject * fbo = fbo_[thread];
 
     uColor_->floats[3] = cameraMix_->value(time);
+    uAngle_->floats[0] = cameraAngle_->value(time);
 
     fbo->colorTexture()->bind();
     MO_CHECK_GL( glEnable(GL_BLEND) );
