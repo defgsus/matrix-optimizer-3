@@ -371,7 +371,10 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
     MO_ASSERT(s != scene_, "MainWindow::setSceneObject() with same scene");
 
     if (scene_)
+    {
+        scene_->kill();
         scene_->deleteLater();
+    }
 
     scene_ = s;
 
@@ -511,6 +514,9 @@ void MainWindow::closeEvent(QCloseEvent * e)
         e->accept();
 
         saveAllGeometry_();
+
+        if (scene_)
+            scene_->kill();
     }
     else
         e->ignore();

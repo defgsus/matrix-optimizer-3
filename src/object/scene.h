@@ -53,6 +53,7 @@ public:
 
     // ------------- open gl -------------------
 
+    // XXX These can be separate per thread!
     uint frameBufferWidth() const { return fbWidth_; }
     uint frameBufferHeight() const { return fbHeight_; }
     uint frameBufferFormat() const { return fbFormat_; }
@@ -89,7 +90,7 @@ public:
 
 signals:
 
-    /** Scene should be rerendered */
+    /** Scene should be re-rendered */
     void renderRequest();
 
     void playbackStarted();
@@ -97,6 +98,9 @@ signals:
 
     /** Emitted whenever the scene time changed */
     void sceneTimeChanged(Double);
+
+    /** openGL resources have been released for the given thread. */
+    void glReleased(uint thread);
 
     /** A parameter has been changed (with Scene::setParameter..) */
     void parameterChanged(MO::Parameter*);
@@ -146,6 +150,11 @@ public slots:
     //void moveSequence(MO::Sequence * seq, MO::Track * from, MO::Track * to);
 
     // ------------- runtime -------------------
+
+    /** Call before deleting the scene.
+        OpenGL resources will be released a short while later.
+        */
+    void kill();
 
     /** Sets the scope for enabling all the objects */
     void setSceneActivityScope(ActivityScope scope) { setCurrentActivityScope(scope); render_(); }
@@ -242,6 +251,8 @@ private:
     // ---------- opengl -----------------------
 
     GL::Context * glContext_;
+
+    std::vector<bool> releaseAllGlRequested_;
 
     uint fbWidth_, fbHeight_, fbFormat_,
         fbCmWidth_, fbCmHeight_;

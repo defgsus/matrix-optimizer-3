@@ -64,6 +64,7 @@ Scene::Scene(QObject *parent) :
     Object              (parent),
     model_              (0),
     glContext_          (0),
+    releaseAllGlRequested_(false),
     fbWidth_            (1024),
     fbHeight_           (1024),
     fbFormat_           (GL_RGBA),
@@ -101,6 +102,10 @@ Scene::~Scene()
     MO_DEBUG("Scene::~Scene()");
 
     stop();
+    for (auto i : fboFinal_)
+        delete i;
+    for (auto i : screenQuad_)
+        delete i;
     delete audioDevice_;
     delete readWriteLock_;
 }
@@ -279,8 +284,15 @@ void Scene::setNumberThreads(uint num)
 {
     Object::setNumberThreads(num);
 
+    uint oldnum = fboFinal_.size();
     fboFinal_.resize(num);
     screenQuad_.resize(num);
+
+    for (uint i=oldnum; i<num; ++i)
+    {
+        fboFinal_[i] = 0;
+        screenQuad_[i] = 0;
+    }
 }
 
 void Scene::updateBufferSize_()
@@ -616,10 +628,26 @@ void Scene::renderScene(Double time, uint thread)
         // modify only thread-local storage
         ScopedSceneLockRead lock(this);
 
+        // release all openGL resources
+        if (releaseAllGlRequested_[thread])
+        {
+            releaseSceneGl_(thread);
+
+            for (auto o : glObjects_)
+                if (o->isGlInitialized(thread))
+                    o->releaseGl_(thread);
+
+            releaseAllGlRequested_[thread] = false;
+
+            emit glReleased(thread);
+            return;
+        }
+
+        // initialize scene gl resources
         if (!fboFinal_[thread])
             createSceneGl_(thread);
 
-        // initialize gl resources
+        // initialize object gl resources
         for (auto o : glObjects_)
             if (o->needsInitGl(thread) && o->active(time))
                 o->initGl_(thread);
@@ -718,6 +746,17 @@ void Scene::lockWrite_()
 void Scene::unlock_()
 {
     readWriteLock_->unlock();
+}
+
+void Scene::kill()
+{
+    stop();
+
+    // release opengl resources later
+    for (uint i=0; i<numberThreads(); ++i)
+        releaseAllGlRequested_[i] = true;
+
+    render_();
 }
 
 void Scene::setSceneTime(Double time, bool send_signal)

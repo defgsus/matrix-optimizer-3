@@ -31,6 +31,8 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_OBJECT; }
     bool isGl() const Q_DECL_OVERRIDE { return true; }
 
+    bool isGlInitialized(uint thread) const { return isGlInitialized_[thread]; }
+
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     /** Returns the current GL::Context */
@@ -59,7 +61,7 @@ private:
     void renderGl_(const GL::CameraSpace& camera, uint thread, Double time);
 
     std::vector<GL::Context*> glContext_;
-    std::vector<int> needsInitGl_;
+    std::vector<int> needsInitGl_, isGlInitialized_;
 };
 
 } // namespace MO

@@ -44,8 +44,15 @@ void ObjectGl::setNumberThreads(uint num)
 
     Object::setNumberThreads(num);
 
+    uint oldnum = glContext_.size();
     glContext_.resize(num);
     needsInitGl_.resize(num);
+    isGlInitialized_.resize(num);
+
+    for (uint i=oldnum; i<num; ++i)
+    {
+        isGlInitialized_[i] = false;
+    }
 }
 
 void ObjectGl::setGlContext_(uint thread, GL::Context * c)
@@ -74,6 +81,7 @@ void ObjectGl::initGl_(uint thread)
     initGl(thread);
 
     needsInitGl_[thread] = false;
+    isGlInitialized_[thread] = true;
 }
 
 
@@ -85,6 +93,8 @@ void ObjectGl::releaseGl_(uint thread)
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
 
     releaseGl(thread);
+
+    isGlInitialized_[thread] = false;
 }
 
 void ObjectGl::renderGl_(const GL::CameraSpace &camera, uint thread, Double time)
