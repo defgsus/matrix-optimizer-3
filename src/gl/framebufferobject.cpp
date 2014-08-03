@@ -28,7 +28,8 @@ FrameBufferObject::FrameBufferObject(GLsizei width, GLsizei height,
       cubemap_      (cubemap)
 {
     MO_DEBUG_GL("FrameBufferObject::FrameBufferObject("
-                << width << ", " << height << ", " << format << ", " << type << ")");
+                << width << ", " << height << ", " << format << ", " << type <<
+                ", " << cubemap << ")");
 
     if (!cubemap_)
         colorTex_ = new Texture(width, height, format, format, type, 0, report);
@@ -103,14 +104,17 @@ bool FrameBufferObject::create()
     // check for size setting
     if (colorTex_->width() == 0 || colorTex_->height() == 0)
     {
-        if (rep_ == ER_THROW)
-            MO_GL_ERROR("No size given for frame buffer object creation");
+        MO_GL_ERROR_COND(rep_, "No size given for frame buffer object creation");
         return false;
     }
 
     if (!colorTex_->isCreated())
     {
-        colorTex_->create();
+        if (!colorTex_->create())
+        {
+            MO_GL_ERROR_COND(rep_, "could not create colorbuffer for framebuffer");
+            return false;
+        }
     }
 
     GLenum err;
@@ -152,15 +156,13 @@ bool FrameBufferObject::attachCubeTexture(GLenum target)
 {
     if (!cubemap_)
     {
-        if (rep_ == ER_THROW)
-            MO_GL_ERROR("FrameBufferObject::attachCubeTexture() for non-cube texture");
+        MO_GL_ERROR_COND(rep_, "FrameBufferObject::attachCubeTexture() for non-cube texture");
         return false;
     }
 
     if (!colorTex_ || !colorTex_->isAllocated())
     {
-        if (rep_ == ER_THROW)
-            MO_GL_ERROR("FrameBufferObject::attachCubeTexture() on uninitialized cube-map");
+        MO_GL_ERROR_COND(rep_, "FrameBufferObject::attachCubeTexture() on uninitialized cube-map");
         return false;
     }
 

@@ -33,6 +33,7 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     renderMode_     (mode),
     isGlInitialized_(false),
     closeRequest_   (false),
+    modeChangeRequest_(false),
     useFreeCamera_  (true),
     camera_         (new GEOM::FreeCamera()),
     fbo_            (0),
@@ -41,7 +42,7 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
 {
     MO_DEBUG_GL("Basic3DWidget::Basic3DWidget()");
 
-    if (mode == RM_DIRECT)
+    //if (mode == RM_DIRECT)
     {
         QGLFormat f(format());
         f.setDepth(true);
@@ -63,6 +64,16 @@ Basic3DWidget::~Basic3DWidget()
     delete fbo_;
     delete screenQuad_;
     delete gridObject_;
+}
+
+void Basic3DWidget::setRenderMode(RenderMode rm)
+{
+    if (rm == renderMode_)
+        return;
+
+    nextRenderMode_ = rm;
+    modeChangeRequest_ = true;
+    update();
 }
 
 void Basic3DWidget::viewInit(Float distanceZ)
@@ -175,6 +186,26 @@ void Basic3DWidget::initializeGL()
 {
     MO_DEBUG_GL("Basic3DWidget::initializeGL()");
 
+    createGLStuff_();
+
+    isGlInitialized_ = true;
+
+    emit glInitialized();
+}
+
+void Basic3DWidget::releaseGL()
+{
+    MO_DEBUG_GL("Basic3DWidget::releaseGL()");
+
+    releaseGLStuff_();
+
+    isGlInitialized_ = false;
+
+    emit glReleased();
+}
+
+void Basic3DWidget::createGLStuff_()
+{
     if (renderMode_ == RM_FULLDOME_CUBE || renderMode_ == RM_FRAMEBUFFER)
     {
         screenQuad_ = new GL::ScreenQuad("basic3dwidget", GL::ER_THROW);
@@ -190,16 +221,10 @@ void Basic3DWidget::initializeGL()
     }
 
     MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
-
-    isGlInitialized_ = true;
-
-    emit glInitialized();
 }
 
-void Basic3DWidget::releaseGL()
+void Basic3DWidget::releaseGLStuff_()
 {
-    MO_DEBUG_GL("Basic3DWidget::releaseGL()");
-
     if (fbo_)
     {
         fbo_->release();
@@ -220,10 +245,6 @@ void Basic3DWidget::releaseGL()
         delete gridObject_;
         gridObject_ = 0;
     }
-
-    isGlInitialized_ = false;
-
-    emit glReleased();
 }
 
 void Basic3DWidget::resizeGL(int w, int h)
@@ -250,6 +271,15 @@ void Basic3DWidget::resizeGL(int w, int h)
 
 void Basic3DWidget::paintGL()
 {
+    if (modeChangeRequest_)
+    {
+        modeChangeRequest_ = false;
+        releaseGLStuff_();
+        renderMode_ = nextRenderMode_;
+        createGLStuff_();
+        resizeGL(width(), height());
+    }
+
     if (closeRequest_)
     {
         releaseGL();
@@ -323,6 +353,7 @@ void Basic3DWidget::paintGL()
         fbo_->colorTexture()->unbind();
     }
 }
+
 
 void Basic3DWidget::drawGrid(const Mat4 &projection, const Mat4 &transformation)
 {

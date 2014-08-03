@@ -214,13 +214,16 @@ bool Texture::bind() const
     MO_CHECK_GL_RET_COND( rep_, glBindTexture(target_, handle_), err );
     if (err) return false;
 
-    MO_CHECK_GL_RET_COND( rep_, glEnable(target_), err );
+    if (target_ != GL_TEXTURE_CUBE_MAP)
+        MO_CHECK_GL_RET_COND( rep_, glEnable(target_), err );
+
     return !err;
 }
 
 void Texture::unbind() const
 {
-    MO_CHECK_GL_COND( rep_, glDisable(target_) );
+    if (target_ != GL_TEXTURE_CUBE_MAP)
+        MO_CHECK_GL_COND( rep_, glDisable(target_) );
 }
 
 void Texture::release()
@@ -235,6 +238,8 @@ void Texture::texParameter(GLenum param, GLenum value) const
 
 bool Texture::create()
 {
+    MO_DEBUG_GL("Texture::create()");
+
     // delete previous
     if (handle_ != invalidGl)
         releaseTexture_();

@@ -52,6 +52,8 @@ signals:
 
 public slots:
 
+    void setRenderMode(RenderMode);
+
     void viewInit(Float distanceZ = 10.f);
     void viewRotateX(Float degree);
     void viewRotateY(Float degree);
@@ -86,10 +88,14 @@ protected:
 
 private:
 
-    RenderMode renderMode_;
+    void createGLStuff_();
+    void releaseGLStuff_();
+
+    RenderMode renderMode_, nextRenderMode_;
 
     bool isGlInitialized_,
          closeRequest_,
+         modeChangeRequest_,
          useFreeCamera_;
 
     Mat4

@@ -41,7 +41,7 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     setObjectName("_GeometryWidget");
     setWindowTitle(tr("geometry editor"));
 
-    setMinimumSize(800,400);
+    setMinimumSize(960,400);
 
     if (set)
         *settings_ = *set;
@@ -63,18 +63,32 @@ void GeometryDialog::createWidgets_()
         auto lv = new QVBoxLayout();
         lh->addLayout(lv);
 
-            geoWidget_ = new GeometryWidget(GeometryWidget::RM_FULLDOME_CUBE, this);
+            // geometry widget
+            geoWidget_ = new GeometryWidget(GeometryWidget::RM_DIRECT, this);
             lv->addWidget(geoWidget_);
             geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
             connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
 
-            auto cb = new QCheckBox(tr("show coordinates"), this);
-            lv->addWidget(cb);
-            cb->setChecked(geoWidget_->isShowGrid());
-            connect(cb, &QCheckBox::stateChanged, [this](int state)
-            {
-                geoWidget_->setShowGrid(state == Qt::Checked);
-            });
+            // view settings
+            auto lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                comboView_ = new QComboBox(this);
+                lh2->addWidget(comboView_);
+                comboView_->setStatusTip(tr("Selects the projection type of the geometry window"));
+                comboView_->addItem(tr("perspective view"), GeometryWidget::RM_DIRECT);
+                comboView_->addItem(tr("fulldome cubemap"), GeometryWidget::RM_FULLDOME_CUBE);
+                comboView_->setCurrentIndex(0);
+                connect(comboView_, SIGNAL(currentIndexChanged(int)),
+                        this, SLOT(changeView_()));
+
+                auto cb = new QCheckBox(tr("show coordinates"), this);
+                lh2->addWidget(cb);
+                cb->setChecked(geoWidget_->isShowGrid());
+                connect(cb, &QCheckBox::stateChanged, [this](int state)
+                {
+                    geoWidget_->setShowGrid(state == Qt::Checked);
+                });
 
         lv = new QVBoxLayout();
         lh->addLayout(lv);
@@ -95,7 +109,7 @@ void GeometryDialog::createWidgets_()
             connect(comboType_, SIGNAL(currentIndexChanged(QString)),
                     this, SLOT(updateFromWidgets_()));
 
-            auto lh2 = new QHBoxLayout();
+            lh2 = new QHBoxLayout();
             lv->addLayout(lh2);
 
                 // filename
@@ -341,6 +355,28 @@ void GeometryDialog::createWidgets_()
                 connect(but, SIGNAL(clicked()), this, SLOT(reject()));
 }
 
+void GeometryDialog::changeView_()
+{
+    if (comboView_->currentIndex() < 0)
+        return;
+
+    GeometryWidget::RenderMode rm = (GeometryWidget::RenderMode)
+            comboView_->itemData(comboView_->currentIndex()).toInt();
+
+    geoWidget_->setRenderMode(rm);
+    /*
+    QLayout * l = geoWidget_->layout();
+    geoWidget_->setVisible(false);
+    geoWidget_->deleteLater();
+
+    // recreate
+    geoWidget_ = new GeometryWidget(rm, this);
+    l->addWidget(geoWidget_);
+    geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
+    */
+}
+
 void GeometryDialog::updateGeometry_()
 {
     if (creator_)
@@ -434,7 +470,7 @@ void GeometryDialog::updateFromWidgets_()
                             GEOM::GeometryFactorySettings::T_GRID_XZ
                             && settings_->type !=
                             GEOM::GeometryFactorySettings::T_GRID),
-            hasTriangle = (canTriangle && settings_->asTriangles),
+            hasTriangle = (canTriangle && (settings_->asTriangles || isFile)),
             has2Segments = (settings_->type ==
                             GEOM::GeometryFactorySettings::T_UV_SPHERE
                            || settings_->type ==

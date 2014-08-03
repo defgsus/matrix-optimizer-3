@@ -48,6 +48,7 @@ public slots:
 
 protected slots:
 
+    void changeView_();
     void updateGeometry_();
     void updateFromWidgets_();
     void loadModelFile_();
@@ -68,7 +69,7 @@ protected:
     QLabel * labelInfo_, *labelSeg_, *labelNormAmt_;
     QLineEdit * editFilename_;
     QToolButton * butLoadModelFile_;
-    QComboBox * comboType_;
+    QComboBox * comboView_, * comboType_;
     QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbCalcNormals_,
             *cbTess_, *cbNorm_, *cbRemove_, *cbTransformEqu_;
     DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_, *spinRemoveProb_,

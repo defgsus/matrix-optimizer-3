@@ -69,9 +69,9 @@ GLEWContext * glewGetContext();
             << " in " << __FILE__               \
             << ": " << __LINE__ << "\n";        \
         if (report__ == ::MO::GL::ER_IGNORE)    \
-            std::cerr << s__; else              \
-        if (report__ == ::MO::GL::ER_IGNORE)    \
-            MO_GL_ERROR(s__);                   \
+            std::cerr << s__.str(); else        \
+        if (report__ == ::MO::GL::ER_THROW)     \
+            MO_GL_ERROR(s__.str());             \
     }                                           \
 }
 
@@ -93,7 +93,7 @@ GLEWContext * glewGetContext();
             << ": " << __LINE__ << "\n";        \
         if (report__ == ::MO::GL::ER_IGNORE)    \
             std::cerr << s__.str(); else        \
-        if (report__ == ::MO::GL::ER_IGNORE)    \
+        if (report__ == ::MO::GL::ER_THROW)     \
             MO_GL_ERROR(s__.str());             \
     }                                           \
 }
