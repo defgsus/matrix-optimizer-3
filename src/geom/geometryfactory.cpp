@@ -138,6 +138,7 @@ void GeometryFactory::createBox(
 
 void GeometryFactory::createGridXZ(Geometry * g, int sizeX, int sizeY, bool coords)
 {
+    g->setColor(0.5, 0.5, 0.5, 0.5);
     for (int i=-sizeX; i<=sizeX; ++i)
     {
         auto p1 = g->addVertex(i,0,-sizeY),
@@ -156,20 +157,45 @@ void GeometryFactory::createGridXZ(Geometry * g, int sizeX, int sizeY, bool coor
 
     // coordinate system
 
+    const Float marker = 0.1;
+
     g->setColor(1,0,0, 1);
     auto p1 = g->addVertex(0, 0.01, 0),
          p2 = g->addVertex(sizeX, 0.01, 0);
     g->addLine(p1, p2);
+    for (int i=1; i<sizeX; ++i)
+    {
+        const int p =
+        g->addVertex(i, 0.01 - marker, 0);
+        g->addVertex(i, 0.01 + marker, 0);
+        g->addLine(p, p+1);
+    }
 
+    const int size = std::min(sizeX, sizeY);
     g->setColor(0,1,0, 1);
     p1 = g->addVertex(0, 0.01, 0);
-    p2 = g->addVertex(0, std::min(sizeX, sizeY), 0);
+    p2 = g->addVertex(0, size, 0);
     g->addLine(p1, p2);
+    for (int i=1; i<size; ++i)
+    {
+        const int p =
+        g->addVertex(-marker, i, 0);
+        g->addVertex( marker, i, 0);
+        g->addLine(p, p+1);
+    }
 
     g->setColor(0,0,1, 1);
     p1 = g->addVertex(0, 0.01, 0);
-    p2 = g->addVertex(0, 0, sizeY);
+    p2 = g->addVertex(0, 0.01, sizeY);
     g->addLine(p1, p2);
+    for (int i=1; i<sizeY; ++i)
+    {
+        const int p =
+        g->addVertex(-marker, 0.01, i);
+        g->addVertex( marker, 0.01, i);
+        g->addLine(p, p+1);
+    }
+
 }
 
 void GeometryFactory::createGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
@@ -177,9 +203,9 @@ void GeometryFactory::createGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
     const Geometry::IndexType start = g->numVertices();
 
     const float
-            ox = (float)sizeX / 2,
-            oy = (float)sizeY / 2,
-            oz = (float)sizeZ / 2;
+            ox = (float)sizeX / 2 - 0.5,
+            oy = (float)sizeY / 2 - 0.5,
+            oz = (float)sizeZ / 2 - 0.5;
 
     for (int z=0; z<sizeZ; ++z)
     for (int y=0; y<sizeY; ++y)
@@ -309,6 +335,103 @@ void GeometryFactory::createUVSphereLines(
     for (unsigned int u = 0; u<segu; ++u)
     {
         g->addLine(g->numVertices() - 1, rown + u);
+    }
+}
+
+void GeometryFactory::createCylinder(Geometry * g, float rad, float height,
+                                     uint segu, uint segv, bool open, bool asTriangles)
+{
+    segu = std::max((uint)3, segu);
+    segv = std::max((uint)2, segv);
+
+    uint start = g->numVertices();
+
+    // create cylinder vertices
+    for (uint y=0; y<segv; ++y)
+    {
+        const Float ty = (Float)y / (segv-1);
+
+        for (uint x=0; x<segu; ++x)
+        {
+            const Float tx = (Float)x / (segu-1);
+            const Float a = (Float)x / segu * TWO_PI;
+            g->setTexCoord(tx, ty);
+            g->addVertex(rad * sin(a), (ty-0.5) * height, rad * cos(a));
+        }
+    }
+
+    // create surface
+
+    height /= 2;
+
+    if (!asTriangles)
+    {
+        for (uint y=0; y<segv; ++y)
+        {
+            for (uint x=0; x<segu; ++x)
+            {
+                // connect to next column
+                g->addLine(start + y*segu + x,
+                           start + y*segu + (x+1) % segu);
+                // connect to row above
+                if (y>0)
+                    g->addLine(start + (y-1)*segu + x,
+                               start + y*segu + x);
+            }
+        }
+
+        // caps
+        if (!open)
+        {
+            // bottom cap
+            uint cap = g->numVertices();
+            g->setTexCoord(0,0);
+            g->addVertex(0, -height, 0);
+            for (uint x=0; x<segu; ++x)
+                g->addLine(cap, start + x);
+            // top cap
+            cap = g->numVertices();
+            g->setTexCoord(0,1);
+            g->addVertex(0, height, 0);
+            for (uint x=0; x<segu; ++x)
+                g->addLine(cap, start + (segv-1)*segu + x);
+        }
+    }
+    else
+    {
+        for (uint y=0; y<segv; ++y)
+        {
+            if (y<segv-1)
+            for (uint x=0; x<segu; ++x)
+            {
+                g->addTriangle(
+                            start + y*segu + x,
+                            start + y*segu + (x+1) % segu,
+                            start + (y+1)*segu + (x+1) % segu);
+                g->addTriangle(
+                            start + y*segu + x,
+                            start + (y+1)*segu + (x+1) % segu,
+                            start + (y+1)*segu + x);
+            }
+        }
+
+        // caps
+        if (!open)
+        {
+            // bottom cap
+            uint cap = g->numVertices();
+            g->setTexCoord(0,0);
+            g->addVertex(0, -height, 0);
+            for (uint x=0; x<segu; ++x)
+                g->addTriangle(cap, start + (x+1) % segu, start + x);
+            // top cap
+            cap = g->numVertices();
+            g->setTexCoord(0,1);
+            g->addVertex(0, height, 0);
+            for (uint x=0; x<segu; ++x)
+                g->addTriangle(cap, start + (segv-1)*segu + x,
+                                    start + (segv-1)*segu + (x+1) % segu);
+        }
     }
 }
 
@@ -650,6 +773,14 @@ void GeometryFactory::createFromSettings(Geometry * g,
         createDodecahedron(g, 1.f, set->asTriangles);
     break;
 
+    case GeometryFactorySettings::T_CYLINDER_CLOSED:
+        createCylinder(g, 1.f, 1.f, set->segmentsX, set->segmentsY, false, set->asTriangles);
+    break;
+
+    case GeometryFactorySettings::T_CYLINDER_OPEN:
+        createCylinder(g, 1.f, 1.f, set->segmentsX, set->segmentsY, true, set->asTriangles);
+    break;
+
     }
 
     if (set->tesselate)
@@ -695,7 +826,9 @@ void GeometryFactory::createFromSettings(Geometry * g,
 
 const QStringList GeometryFactorySettings::typeIds =
 {
-    "file", "quad", "tetra", "hexa", "octa", "icosa", "dodeca",
+    "file", "quad",
+    "tetra", "hexa", "octa", "icosa", "dodeca",
+    "cyl", "cylo",
     "gridxz", "grid", "uvsphere"
 };
 
@@ -708,6 +841,8 @@ const QStringList GeometryFactorySettings::typeNames =
     QObject::tr("octahedron"),
     QObject::tr("icosahedron"),
     QObject::tr("dodecahedron"),
+    QObject::tr("cylinder (closed)"),
+    QObject::tr("cylinder (open)"),
     QObject::tr("grid xz"),
     QObject::tr("grid"),
     QObject::tr("uv-sphere")

@@ -435,13 +435,17 @@ void GeometryDialog::updateFromWidgets_()
                             && settings_->type !=
                             GEOM::GeometryFactorySettings::T_GRID),
             hasTriangle = (canTriangle && settings_->asTriangles),
-            hasSegments = (settings_->type ==
+            has2Segments = (settings_->type ==
                             GEOM::GeometryFactorySettings::T_UV_SPHERE
                            || settings_->type ==
                             GEOM::GeometryFactorySettings::T_GRID_XZ
                            || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_GRID),
-            has3Segments = (hasSegments && settings_->type ==
+                            GEOM::GeometryFactorySettings::T_GRID
+                           || settings_->type ==
+                            GEOM::GeometryFactorySettings::T_CYLINDER_CLOSED
+                           || settings_->type ==
+                            GEOM::GeometryFactorySettings::T_CYLINDER_OPEN),
+            has3Segments = (has2Segments && settings_->type ==
                             GEOM::GeometryFactorySettings::T_GRID);
 
     cbTriangles_->setVisible( canTriangle && !isFile);
@@ -457,9 +461,9 @@ void GeometryDialog::updateFromWidgets_()
     butLoadModelFile_->setVisible(isFile);
     cbSharedVert_->setVisible( !isFile ); // XXX remove when ObjLoader supports vertex sharing
 
-    labelSeg_->setVisible( hasSegments );
-    spinSegX_->setVisible( hasSegments );
-    spinSegY_->setVisible( hasSegments );
+    labelSeg_->setVisible( has2Segments );
+    spinSegX_->setVisible( has2Segments );
+    spinSegY_->setVisible( has2Segments );
     spinSegZ_->setVisible( has3Segments );
 
     spinRemoveProb_->setVisible( cbRemove_->isChecked() );

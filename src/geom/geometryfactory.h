@@ -44,6 +44,9 @@ public:
                                bool asTriangles = true);
     static void createUVSphereLines(Geometry *, float rad, uint segu, uint segv);
 
+    static void createCylinder(Geometry *, float rad, float height, uint segu, uint segv, bool open,
+                               bool asTriangles);
+
     static void createTetrahedron(Geometry *, float scale, bool asTriangles = true);
     static void createOctahedron(Geometry *, float scale, bool asTriangles = true);
     static void createIcosahedron(Geometry *, float scale, bool asTriangles = true);
@@ -68,6 +71,8 @@ public:
         T_OCTAHEDRON,
         T_ICOSAHEDRON,
         T_DODECAHEDRON,
+        T_CYLINDER_CLOSED,
+        T_CYLINDER_OPEN,
         T_GRID_XZ,
         T_GRID,
         T_UV_SPHERE
