@@ -258,12 +258,18 @@ void SequenceFloat::deserialize(IO::DataStream &io)
 
 void SequenceFloat::setNumberThreads(uint num)
 {
+    Sequence::setNumberThreads(num);
+
+    uint oldnum = equation_.size();
     equation_.resize(num);
 
     // XXX not safe in all cases
     // (but right now setNumberThreads is only called once)
-    for (uint i=0; i<num; ++i)
+    for (uint i=oldnum; i<num; ++i)
         equation_[i] = 0;
+
+    // update/create equation objects
+    setMode(mode_);
 }
 
 void SequenceFloat::setPhaseInDegree(bool enable)
@@ -319,13 +325,13 @@ void SequenceFloat::setMode(SequenceType m)
 
 PPP_NAMESPACE::Parser * SequenceFloat::equation(uint thread)
 {
-    return equation_[thread]->equation;
+    return equation_[thread] ? equation_[thread]->equation : 0;
 }
 
 
 const PPP_NAMESPACE::Parser * SequenceFloat::equation(uint thread) const
 {
-    return equation_[thread]->equation;
+    return equation_[thread] ? equation_[thread]->equation : 0;
 }
 
 void SequenceFloat::setEquationText(const QString & t)
