@@ -254,7 +254,7 @@ void Basic3DWidget::resizeGL(int w, int h)
     if (renderMode_ == RM_FRAMEBUFFER)
     {
         projectionMatrix_ =
-                glm::perspective(angle, (float)fbo_->width()/fbo_->height(), 0.1f, 1000.0f);
+                glm::perspective(angle, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
     }
     else
     if (renderMode_ == RM_FULLDOME_CUBE)
@@ -263,10 +263,17 @@ void Basic3DWidget::resizeGL(int w, int h)
                 glm::perspective(90.f, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
     }
     else
+    if (renderMode_ == RM_DIRECT_ORTHO)
     {
-        projectionMatrix_ = glm::perspective(angle, (float)w/h, 0.1f, 1000.0f);
-        MO_CHECK_GL( glViewport(0,0,w,h) );
+        const float aspect = (float)w/h;
+        const float scale = 3.f;
+        projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale, 0.01f, 1000.f);
     }
+    else
+        projectionMatrix_ =
+                glm::perspective(angle, (float)w/h, 0.01f, 1000.0f);
+
+    MO_CHECK_GL( glViewport(0,0,w,h) );
 }
 
 void Basic3DWidget::paintGL()
@@ -287,7 +294,7 @@ void Basic3DWidget::paintGL()
         return;
     }
 
-    if (renderMode_ == RM_DIRECT)
+    if (renderMode_ == RM_DIRECT || renderMode_ == RM_DIRECT_ORTHO)
     {
         drawGL(projectionMatrix(), transformationMatrix());
         return;

@@ -191,8 +191,8 @@ void GeometryFactory::createGridXZ(Geometry * g, int sizeX, int sizeY, bool coor
     for (int i=1; i<sizeY; ++i)
     {
         const int p =
-        g->addVertex(-marker, 0.01, i);
-        g->addVertex( marker, 0.01, i);
+        g->addVertex(0, 0.01 - marker, i);
+        g->addVertex(0, 0.01 + marker, i);
         g->addLine(p, p+1);
     }
 

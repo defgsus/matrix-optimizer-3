@@ -76,9 +76,10 @@ void GeometryDialog::createWidgets_()
                 comboView_ = new QComboBox(this);
                 lh2->addWidget(comboView_);
                 comboView_->setStatusTip(tr("Selects the projection type of the geometry window"));
-                comboView_->addItem(tr("perspective view"), GeometryWidget::RM_DIRECT);
+                comboView_->addItem(tr("orthographic"), GeometryWidget::RM_DIRECT_ORTHO);
+                comboView_->addItem(tr("perspective"), GeometryWidget::RM_DIRECT);
                 comboView_->addItem(tr("fulldome cubemap"), GeometryWidget::RM_FULLDOME_CUBE);
-                comboView_->setCurrentIndex(0);
+                comboView_->setCurrentIndex(1);
                 connect(comboView_, SIGNAL(currentIndexChanged(int)),
                         this, SLOT(changeView_()));
 

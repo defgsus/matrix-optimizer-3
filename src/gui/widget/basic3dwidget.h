@@ -31,6 +31,7 @@ public:
     enum RenderMode
     {
         RM_DIRECT,
+        RM_DIRECT_ORTHO,
         RM_FRAMEBUFFER,
         RM_FULLDOME_CUBE
     };
