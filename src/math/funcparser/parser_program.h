@@ -75,6 +75,8 @@ namespace PPP_NAMESPACE
 		f.add(Function::FUNCTION,		1, "tanh",		math_func<Float>::tanh_1		);
 		f.add(Function::FUNCTION,		1, "atan",		math_func<Float>::atan_1		);
 		f.add(Function::FUNCTION,		2, "atan",		math_func<Float>::atan_2		);
+        f.add(Function::FUNCTION,		3, "rotate",	math_func<Float>::rotate_3		);
+        f.add(Function::FUNCTION,		3, "rotater",	math_func<Float>::rotater_3		);
 
 		f.add(Function::FUNCTION,		1, "beta",		math_func<Float>::beta_1		);
 		f.add(Function::FUNCTION,		2, "beta",		math_func<Float>::beta_2		);

@@ -9,6 +9,7 @@
 #define FUNCTIONS_H_DEFINED
 
 #include <cmath>
+#include "math/constants.h"
 
 namespace PPP_NAMESPACE {
 
@@ -85,6 +86,20 @@ struct math_func<double>
 	static void pow_2			(double ** v) { *v[0] = std::pow(*v[1], *v[2]); }
 	static void sqrt_1			(double ** v) { *v[0] = std::sqrt(*v[1]); }
 	static void root_2			(double ** v) { *v[0] = std::pow(*v[1], 1.0 / *v[2]); }
+
+    /** rotate(x,y,radians) */
+    static void rotater_3       (double ** v)
+    {
+        const double ca = cos(*v[3]), sa = sin(*v[3]);
+        *v[0] = *v[1] * ca - *v[2] * sa;
+    }
+
+    /** rotate(x,y,degree) */
+    static void rotate_3        (double ** v)
+    {
+        const double r = *v[3] / 180.0 * PI, ca = cos(r), sa = sin(r);
+        *v[0] = *v[1] * ca - *v[2] * sa;
+    }
 
 	// -------------------- geometric ----------------------------
 
