@@ -26,7 +26,7 @@
 #include "widget/spinbox.h"
 #include "tool/stringmanip.h"
 #include "geom/geometrycreator.h"
-
+#include "widget/equationeditor.h"
 
 namespace MO {
 namespace GUI {
@@ -252,34 +252,64 @@ void GeometryDialog::createWidgets_()
                 connect(spinTess_, SIGNAL(valueChanged(int)),
                         this, SLOT(updateFromWidgets_()));
 
-                // remove randomly
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
+            // remove randomly
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
 
-                    cbRemove_ = new QCheckBox(tr("randomly\nremove primitives"), this);
-                    lh2->addWidget(cbRemove_);
-                    cbRemove_->setChecked(settings_->removeRandomly);
-                    connect(cbRemove_, SIGNAL(toggled(bool)),
-                            this, SLOT(updateFromWidgets_()));
+                cbRemove_ = new QCheckBox(tr("randomly\nremove primitives"), this);
+                lh2->addWidget(cbRemove_);
+                cbRemove_->setChecked(settings_->removeRandomly);
+                connect(cbRemove_, SIGNAL(toggled(bool)),
+                        this, SLOT(updateFromWidgets_()));
 
-                    spinRemoveProb_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinRemoveProb_);
-                    spinRemoveProb_->setStatusTip("Probability for removing points");
-                    spinRemoveProb_->setDecimals(5);
-                    spinRemoveProb_->setSingleStep(0.005);
-                    spinRemoveProb_->setRange(0.0, 1.0);
-                    spinRemoveProb_->setValue(settings_->removeProb);
-                    connect(spinRemoveProb_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
+                spinRemoveProb_ = new DoubleSpinBox(this);
+                lh2->addWidget(spinRemoveProb_);
+                spinRemoveProb_->setStatusTip("Probability for removing points");
+                spinRemoveProb_->setDecimals(5);
+                spinRemoveProb_->setSingleStep(0.005);
+                spinRemoveProb_->setRange(0.0, 1.0);
+                spinRemoveProb_->setValue(settings_->removeProb);
+                connect(spinRemoveProb_, SIGNAL(valueChanged(double)),
+                        this, SLOT(updateFromWidgets_()));
 
-                    spinRemoveSeed_ = new SpinBox(this);
-                    lh2->addWidget(spinRemoveSeed_);
-                    spinRemoveSeed_->setStatusTip("Random seed for removing primitives");
-                    spinRemoveSeed_->setRange(0, 10000000);
-                    spinRemoveSeed_->setValue(settings_->removeSeed);
-                    connect(spinRemoveSeed_, SIGNAL(valueChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
+                spinRemoveSeed_ = new SpinBox(this);
+                lh2->addWidget(spinRemoveSeed_);
+                spinRemoveSeed_->setStatusTip("Random seed for removing primitives");
+                spinRemoveSeed_->setRange(0, 10000000);
+                spinRemoveSeed_->setValue(settings_->removeSeed);
+                connect(spinRemoveSeed_, SIGNAL(valueChanged(int)),
+                        this, SLOT(updateFromWidgets_()));
 
+            // transform by equation
+
+            cbTransformEqu_ = new QCheckBox(tr("transform by equation"), this);
+            lv->addWidget(cbTransformEqu_);
+            cbTransformEqu_->setStatusTip(tr("Enables transformation of each vertex point "
+                                             "by a mathematical formula"));
+            cbTransformEqu_->setChecked(settings_->transformWithEquation);
+            connect(cbTransformEqu_, SIGNAL(toggled(bool)),
+                    this, SLOT(updateFromWidgets_()));
+
+            QStringList vars = { "x", "y", "z", "i" };
+            editEquX_ = new EquationEditor(this);
+            lv->addWidget(editEquX_);
+            editEquX_->addVariables(vars);
+            editEquX_->setPlainText(settings_->equationX);
+            connect(editEquX_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+            editEquY_ = new EquationEditor(this);
+            lv->addWidget(editEquY_);
+            editEquY_->addVariables(vars);
+            editEquY_->setPlainText(settings_->equationY);
+            connect(editEquY_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+            editEquZ_ = new EquationEditor(this);
+            lv->addWidget(editEquZ_);
+            editEquZ_->addVariables(vars);
+            editEquZ_->setPlainText(settings_->equationZ);
+            connect(editEquZ_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+            // -----------------
             lv->addStretch(1);
 
             // info label
@@ -376,6 +406,13 @@ void GeometryDialog::updateFromWidgets_()
     settings_->removeRandomly = cbRemove_->isChecked();
     settings_->removeProb = spinRemoveProb_->value();
     settings_->removeSeed = spinRemoveSeed_->value();
+    settings_->transformWithEquation = cbTransformEqu_->isChecked();
+    if (editEquX_->isOk())
+        settings_->equationX = editEquX_->toPlainText();
+    if (editEquY_->isOk())
+        settings_->equationY = editEquY_->toPlainText();
+    if (editEquZ_->isOk())
+        settings_->equationZ = editEquZ_->toPlainText();
 
     // update widgets visibility
 
@@ -416,6 +453,10 @@ void GeometryDialog::updateFromWidgets_()
 
     spinRemoveProb_->setVisible( cbRemove_->isChecked() );
     spinRemoveSeed_->setVisible( cbRemove_->isChecked() );
+
+    editEquX_->setVisible( settings_->transformWithEquation );
+    editEquY_->setVisible( settings_->transformWithEquation );
+    editEquZ_->setVisible( settings_->transformWithEquation );
 
     updateGeometry_();
 }

@@ -26,6 +26,7 @@ namespace GUI {
 class SpinBox;
 class DoubleSpinBox;
 class GeometryWidget;
+class EquationEditor;
 
 class GeometryDialog : public QDialog
 {
@@ -69,10 +70,11 @@ protected:
     QToolButton * butLoadModelFile_;
     QComboBox * comboType_;
     QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbCalcNormals_,
-            *cbTess_, *cbNorm_, *cbRemove_;
+            *cbTess_, *cbNorm_, *cbRemove_, *cbTransformEqu_;
     DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_, *spinRemoveProb_,
                 *spinNormAmt_;
     SpinBox * spinSegX_, *spinSegY_, *spinSegZ_, *spinTess_, *spinRemoveSeed_;
+    EquationEditor *editEquX_, *editEquY_, *editEquZ_;
 };
 
 

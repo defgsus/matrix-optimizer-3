@@ -1,6 +1,7 @@
 #include <set>
 
 #include "parser.h"
+#include "math/constants.h"
 
 #include "grammar.parser.cc"
 
@@ -81,7 +82,15 @@ Variable::~Variable()
 }
 
 
-
+Variables::Variables()
+{
+    add("PI", PI);
+    add("TWO_PI", TWO_PI);
+    add("TAU", TWO_PI);
+    add("HALF_PI", HALF_PI);
+    add("E", 2.71828182845904523536);
+    add("PHI", (1.0 + sqrt(5.0)) / 2.0);
+}
 
 bool Variables::add(const std::string& name, Float value)
 {
@@ -304,11 +313,9 @@ int test_parser_()
 	Parser p;
 
 	Float x = 23.0, y = 42.0;
-	const Float PI = 3.14159265;
 
 	p.variables().add("x", &x);
 	p.variables().add("y", &y);
-	p.variables().add("PI", PI);
 
 	#define PPP_COMPARE_2(cexpression__, expression__) \
 	{	\

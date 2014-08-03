@@ -84,9 +84,9 @@ public:
     // ---- public member ----
 
     Type type;
-    QString filename;
+    QString filename, equationX, equationY, equationZ;
     bool calcNormals, asTriangles, convertToLines, sharedVertices, tesselate,
-        normalizeVertices, removeRandomly;
+        normalizeVertices, removeRandomly, transformWithEquation;
     Float colorR, colorG, colorB, colorA;
     Float scale, scaleX, scaleY, scaleZ, removeProb, normalization;
     uint gridSize, segmentsX, segmentsY, segmentsZ, tessLevel, removeSeed;

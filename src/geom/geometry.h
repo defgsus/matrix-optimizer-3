@@ -163,10 +163,10 @@ public:
                             int seedX, int seedY, int seedZ);
 
     /* Applies the equation to the each vertex.
-        Variables are x, y, z and index.
-        XXX would be really nice! but we need a function for x,y,z
-        or variable assignment in equation. */
-    //void transformWithEquation(const QString& equation);
+        Variables are x, y, z and i (for vertex index). */
+    bool transformWithEquation(const QString& equationX,
+                               const QString& equationY,
+                               const QString& equationZ);
 
     // ------- convenience functions -------
 

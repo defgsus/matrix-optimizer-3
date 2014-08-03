@@ -84,6 +84,9 @@ namespace PPP_NAMESPACE {
 
 		public:
 
+        /** Creates some default constants */
+        Variables();
+
 		/** add a non-owning variable */
 		bool add(const std::string& name, Float * value);
 

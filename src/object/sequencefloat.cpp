@@ -35,13 +35,6 @@ public:
         equation->variables().add("phase", &phase);
         equation->variables().add("pw", &pw);
         equation->variables().add("pulsewidth", &pw);
-
-        equation->variables().add("PI", PI);
-        equation->variables().add("TWO_PI", TWO_PI);
-        equation->variables().add("TAU", TWO_PI);
-        equation->variables().add("HALF_PI", HALF_PI);
-        equation->variables().add("E", 2.71828182845904523536);
-        equation->variables().add("PHI", (1.0 + sqrt(5.0)) / 2.0);
     }
 
     ~SeqEquation() { delete equation; }

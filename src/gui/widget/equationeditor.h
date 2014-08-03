@@ -31,7 +31,8 @@ public:
 
     const PPP_NAMESPACE::Parser * assignedParser() const { return extParser_; }
 
-    bool ok() const { return ok_; }
+    /** Returns wheter the current text is a valid expression */
+    bool isOk() const { return ok_; }
 
 signals:
 
@@ -43,8 +44,13 @@ public slots:
 
     /** Assigns the Parser class to the editor for syntax highlighting.
         The given parser will not be modified but instead the namespace
-        is copied to an internal parser object. */
+        is copied to an internal parser object.
+        All previous content will be lost. */
     void setParser(const PPP_NAMESPACE::Parser * parser);
+
+    /** Adds the variable names to the internal parser.
+        All variables will be initialized to 0 */
+    void addVariables(const QStringList& variables);
 
 protected slots:
 
@@ -59,7 +65,8 @@ protected:
 
 private:
 
-    void setOkState_(bool ok);
+    void createCompleter_();
+    void setOkState_(bool isOk);
     void performCompletion_(const QString &word);
 
     SyntaxHighlighter * highlighter_;

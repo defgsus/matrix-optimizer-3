@@ -87,6 +87,22 @@ void EquationEditor::setParser(const PPP_NAMESPACE::Parser * parser )
     parser_->variables() = parser->variables();
     parser_->functions() = parser->functions();
 
+    createCompleter_();
+}
+
+void EquationEditor::addVariables(const QStringList &variables)
+{
+    if (!parser_)
+        parser_ = new PPP_NAMESPACE::Parser();
+
+    for (auto &v : variables)
+        parser_->variables().add(v.toStdString(), (PPP_NAMESPACE::Float)0);
+
+    createCompleter_();
+}
+
+void EquationEditor::createCompleter_()
+{
     // extract name lists
 
     // XXX highlighter currently doesn't like operator chars
@@ -111,7 +127,6 @@ void EquationEditor::setParser(const PPP_NAMESPACE::Parser * parser )
 
     // update highlighter
     highlighter_->setNames(varNames, funcNames);
-
 
     // create completer
 

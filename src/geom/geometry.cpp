@@ -18,6 +18,8 @@
 #include "gl/vertexarrayobject.h"
 #include "math/hash.h"
 #include "math/noiseperlin.h"
+#include "math/funcparser/parser.h"
+#include "math/constants.h"
 
 namespace MO {
 namespace GEOM {
@@ -337,6 +339,48 @@ void Geometry::normalizeSphere(VertexType scale, VertexType normalization)
         }
     }
 }
+
+bool Geometry::transformWithEquation(const QString &equationX,
+                                     const QString &equationY,
+                                     const QString &equationZ)
+{
+    Double vx, vy, vz, vindex;
+
+    std::vector<PPP_NAMESPACE::Parser> equ(3);
+    for (uint i=0; i<3; ++i)
+    {
+        equ[i].variables().add("x", &vx);
+        equ[i].variables().add("y", &vy);
+        equ[i].variables().add("z", &vz);
+        equ[i].variables().add("i", &vindex);
+    }
+
+    if (!equ[0].parse(equationX.toStdString()))
+        return false;
+    if (!equ[1].parse(equationY.toStdString()))
+        return false;
+    if (!equ[2].parse(equationZ.toStdString()))
+        return false;
+
+    for (uint i=0; i<numVertices(); ++i)
+    {
+        // copy input variables
+        VertexType * v = &vertex_[i * numVertexComponents()];
+        vx = v[0];
+        vy = v[1];
+        vz = v[2];
+        vindex = i;
+
+        // assign result from equation
+        v[0] = equ[0].eval();
+        v[1] = equ[1].eval();
+        v[2] = equ[2].eval();
+    }
+
+    return true;
+}
+
+
 
 void Geometry::tesselate(uint level)
 {
