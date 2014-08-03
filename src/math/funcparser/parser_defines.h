@@ -8,14 +8,26 @@
 #ifndef PARSER_DEFINES_H_INCLUDED
 #define PARSER_DEFINES_H_INCLUDED
 
+#include <functional>
+
+#define PPP_DOUBLE
+#define PPP_USE_NDIV_TABLE
+#define PPP_USE_DIVISORS_TABLE
+
 namespace PPP_NAMESPACE
 {
 	class Variables;
 	class Functions;
 
 	typedef double Float;
+    typedef long long Int;
+    struct cast
+    {
+        static Int toInt (const Float& f) { return static_cast<Int>(f); }
+    };
 
-	typedef void (*FuncPtr)(Float**);
+    typedef std::function<void(Float**)> FuncPtr;
+    typedef std::function<void(FuncPtr, FuncPtr, Float**)> LambdaFuncPtr;
 
 } // namespace PPP_NAMESPACE
 

@@ -8,226 +8,289 @@
 #ifndef PARSER_H_INCLUDED
 #define PARSER_H_INCLUDED
 
-/*#ifndef PPP_TYPE
-#	error need to define PPP_TYPE
-#endif*/
-/*
-#ifndef PPP_NAMESPACE
-#	define PPP_NAMESPACE PPP
-#	error need to define PPP_NAMESPACE
-#endif
-*/
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
+#include <sstream>
 
 #include "parser_defines.h"
 
 namespace PPP_NAMESPACE {
 
-	/** basic variable type */
-	class Variable
-	{
-		public:
+    class Program;
 
-		const std::string& name() const { return name_; }
+    /** basic variable type */
+    class Variable
+    {
+        friend class Program;
+        friend class Variables;
 
-		Float value() const { return *value_; }
+        public:
 
-		Float * value_ptr() { return value_; }
+        const std::string& name() const { return name_; }
 
-		bool isConst() const { return const_; }
+        Float value() const { return *value_; }
 
-		/* the following stuff is for handyness and to
-			manage ownership and stuff */
+        long long int valueAsInt() const;
 
-		/* default constructor */
-//		Variable();
+        Float * value_ptr() { return value_; }
 
-		/** constructor for non-owning float */
-		Variable(const std::string &name_, Float *value_);
+        bool isConst() const { return const_ && !temp_; }
+        bool isTemp() const { return temp_; }
 
-		/** constructor for own allocated float */
-		Variable(const std::string &name_, Float value_);
+        /* the following stuff is for handyness and to
+            manage ownership and stuff */
 
-		/** copy constructor.
-			if 'var' own's it's float, this Variable will own it's own float */
-		Variable(const Variable& var);
+        /** constructor for non-owning float */
+        Variable(const std::string &name_, Float *value_);
 
-		/** copies settings.
-			if 'var' own's it's float, this Variable will own it's own float */
-		Variable& operator=(const Variable& var);
+        /** constructor for own allocated float */
+        Variable(const std::string &name_, Float value_);
 
-		/** destructor to release the float when owned */
-		~Variable();
+        /** copy constructor.
+            if 'var' owns it's float, this Variable will own it's own float */
+        Variable(const Variable& var);
 
-	private:
+        /** copies settings.
+            if 'var' owns it's float, this Variable will own it's own float */
+        Variable& operator=(const Variable& var);
 
-		/** name, f.e. "x" */
-		std::string name_;
+        /** destructor to release the float when owned */
+        ~Variable();
 
-		/** pointer to the float value */
-		Float *value_;
+    private:
 
-		/** tells if Variable is responsible for the pointed-to float */
-		bool owner_,
-		/** is this variable constant (can it be substituted by a float).
-			by default owner are const */
-			const_;
-	};
+        /** name, f.e. "x" */
+        std::string name_;
+
+        /** pointer to the float value */
+        Float *value_;
+
+        /** tells if Variable is responsible for the pointed-to float */
+        bool owner_,
+        /** is this variable constant (can it be substituted by a float).
+            by default owner are const, except temporaries */
+            const_,
+        /** this is a temporary? the Program will create and delete them as needed. */
+            temp_;
+        /** temporary is belonging to this program when not 0 */
+        Program * prog_local_;
+    };
 
 
-	class Variables
-	{
-		typedef std::map<std::string, Variable> Map;
-		Map map_;
 
-		public:
+    class Variables
+    {
+        friend class Parser;
+        friend class Program;
 
-        /** Creates some default constants */
+        typedef std::map<std::string, Variable*> Map;
+        Map map_;
+
+        /** creates and returns a temp, or returns the variable that exists.
+            if prog != 0, the variable is constructed for prog only. */
+        Variable * add_temp_(const std::string& name, Float value, Program * prog = 0);
+        /** return the local variable of program, or NULL if there is no local. */
+        Variable * variable_(const std::string& name, Program * prog);
+
+        void clear_temps_();
+
+        public:
+
+        /** Creates some default variables */
         Variables();
 
-		/** add a non-owning variable */
-		bool add(const std::string& name, Float * value);
+        ~Variables() { clear(); }
 
-		/** add an owning variable */
-		bool add(const std::string& name, Float value);
+        /** add a non-owning variable */
+        bool add(const std::string& name, Float * value);
 
-		/** return the installed variable or NULL */
-		Variable * variable(const std::string& name);
+        /** add an owning variable */
+        bool add(const std::string& name, Float value);
 
-		/** return the installed variable or NULL */
-		const Variable * variable(const std::string& name) const;
+        /** return the installed variable or NULL */
+        Variable * variable(const std::string& name);
 
-		void clear() { map_.clear(); }
+        /** return the installed variable or NULL */
+        const Variable * variable(const std::string& name) const;
+
+        void clear();
+
+        /** add all variables that match the paramaters to 'vec'. */
+        bool getVariables(std::vector<Variable*>& vec, bool temp);
 
         std::vector<std::string> variableNames() const;
-	};
+    };
 
 
-	class Function
-	{
-		public:
-
-		enum Type
-		{
-			FUNCTION,
-			UNARY_LEFT_OP,
-			UNARY_RIGHT_OP,
-			BINARY_OP
-		};
-
-		Function(const std::string& name, FuncPtr func_ptr, int nparam, Type type)
-			:	name_(name), nparam_(nparam), func_(func_ptr), type_(type)
-		{ }
-
-		const std::string& name() const { return name_; }
-
-		int num_param() const { return nparam_; }
-
-		FuncPtr func() const { return func_; }
-
-		Type type() const { return type_; }
-
-		private:
-
-		std::string name_;
-		int nparam_;
-		FuncPtr func_;
-		Type type_;
-	};
 
 
-	class Functions
-	{
-		typedef std::multimap<std::string, Function> Map;
-		typedef std::pair<Map::iterator, Map::iterator> iterator_pair;
-		typedef std::pair<Map::const_iterator, Map::const_iterator> const_iterator_pair;
-		Map map_;
+    class Function
+    {
+        friend class Functions;
+        friend class Expression;
+        friend class Program;
 
-		public:
+        public:
 
-        void clear() { map_.clear(); }
+        enum Type
+        {
+            FUNCTION,
+            UNARY_LEFT_OP,
+            UNARY_RIGHT_OP,
+            BINARY_OP,
+            LAMBDA
+        };
 
-		/** add a function */
-		bool add(Function::Type type, int num_param, const std::string& name, FuncPtr func_ptr);
+        Function(const std::string& name, FuncPtr func_ptr, int nparam, Type type)
+            :	name_(name), nparam_(nparam), func_(func_ptr), lambda_func_(0), type_(type), temp_(false)
+        { }
 
-		/** return the installed function or NULL.
-			num_params may be negative which returns the first name match
-			regardless of number of parameters. */
-		Function * function(const std::string& name, int num_params);
+        Function(const std::string& name, LambdaFuncPtr lambda_func, int nparam)
+            :	name_(name), nparam_(nparam), func_(0), lambda_func_(lambda_func), type_(LAMBDA), temp_(false)
+        { }
 
-		/** return the installed function or NULL.
-			num_params may be negative which returns the first name match
-			regardless of number of parameters. */
-		const Function * function(const std::string& name, int num_params) const;
+        const std::string& name() const { return name_; }
 
-		/** return the installed function of specific type or NULL.
-			num_params may be negative which returns the first name match
-			regardless of number of parameters. */
-		Function * function(const std::string& name, Function::Type type, int num_params);
+        int num_param() const { return nparam_; }
 
-		/** return the installed function of specific type or NULL.
-			num_params may be negative which returns the first name match
-			regardless of number of parameters. */
-		const Function * function(const std::string& name, Function::Type type, int num_params) const;
+        FuncPtr func() const { return func_; }
 
-		/** check if there exists a function that matches the given number of parameters. */
-		bool match_params(const std::string& name, int num_params) const;
+        Type type() const { return type_; }
 
+        bool isTemp() const { return temp_; }
+
+        bool is_lambda() const { return lambda_func_ != 0; }
+
+        private:
+
+        std::string name_;
+        int nparam_;
+        FuncPtr func_;
+        LambdaFuncPtr lambda_func_;
+        Type type_;
+        bool temp_;
+    };
+
+
+
+    class Functions
+    {
+        friend class Program;
+
+        typedef std::multimap<std::string, Function*> Map;
+        typedef std::pair<Map::iterator, Map::iterator> iterator_pair;
+        typedef std::pair<Map::const_iterator, Map::const_iterator> const_iterator_pair;
+        Map map_;
+
+        public:
+
+        ~Functions() { clear(); }
+
+        /** add a function */
+        Function * add(Function::Type type, int num_param, const std::string& name, FuncPtr func_ptr);
+
+        /** add a lambda function in the form of: <br/>
+            lambda_func( exec_func, combine_func, params**) */
+        Function * add(int num_param, const std::string& name, LambdaFuncPtr lambda_func);
+        //				FuncPtr lambda_func, FuncPtr exec_func, FuncPtr combine_func);
+
+        /** return the installed function or NULL.
+            num_params may be negative which returns the first name match
+            regardless of number of parameters. */
+        Function * function(const std::string& name, int num_params);
+
+        /** return the installed function or NULL.
+            num_params may be negative which returns the first name match
+            regardless of number of parameters. */
+        const Function * function(const std::string& name, int num_params) const;
+
+        /** return the installed function of specific type or NULL.
+            num_params may be negative which returns the first name match
+            regardless of number of parameters. */
+        Function * function(const std::string& name, Function::Type type, int num_params);
+
+        /** return the installed function of specific type or NULL.
+            num_params may be negative which returns the first name match
+            regardless of number of parameters. */
+        const Function * function(const std::string& name, Function::Type type, int num_params) const;
+
+        /** check if there exists a function that matches the given number of parameters. */
+        bool match_params(const std::string& name, int num_params) const;
+
+        void clear();
+
+        // --------------- info ----------------
+
+        void print(std::ostream& out = std::cout) const;
+        std::string string() const { std::stringstream s; print(s); return s.str(); }
+
+        /** Returns all (unique) function names to the vector of strings */
         std::vector<std::string> functionNames() const;
 
-	};
+        private:
+
+        void clear_temps_();
+    };
 
 
-	class Parser
-	{
-		struct Detail;
 
-		public:
+    class Parser
+    {
+        struct Detail;
 
-		typedef double Float;
+        public:
 
-		// ---------- ctor -------------
+        // ---------- ctor -------------
 
-		Parser();
-		~Parser();
-
-
-		// -------- variables -------------
-
-		Variables & variables() { return var_; }
-
-		const Variables & variables() const { return var_; }
-
-		// --------- functions ------------
-
-		Functions & functions() { return funcs_; }
-
-		const Functions & functions() const { return funcs_; }
+        Parser();
+        ~Parser();
 
 
-		// ---------- run --------------
+        // -------- variables -------------
 
-		/** returns true when ready to eval() */
-		bool ok() const { return ok_; }
+        Variables & variables() { return var_; }
 
-        bool parse(const std::string &str);
+        const Variables & variables() const { return var_; }
 
-		/** (re-)calculate and return result */
-		Float eval();
+        // --------- functions ------------
 
-		// __________ OUT ______________
-		private:
+        Functions & functions() { return funcs_; }
 
-		Detail * d_;
+        const Functions & functions() const { return funcs_; }
 
-		bool ok_;
 
-		Variables var_;
+        // ---------- run --------------
 
-		Functions funcs_;
-	};
+        /** returns true when ready to eval() */
+        bool ok() const { return ok_; }
+
+        bool parse(const std::string& str);
+
+        /** (re-)calculate and return result */
+        Float eval();
+
+        // -------- info ---------------
+
+        /** internal representation back to human readable */
+        std::string syntax() const;
+
+        std::string dot_graph() const;
+
+        bool save_dot_graph(const std::string& filename) const;
+
+        // __________ OUT ______________
+        private:
+
+        Detail * d_;
+
+        bool ok_;
+
+        Variables var_;
+
+        Functions funcs_;
+    };
 
 
 	/** test Parser and return errors */
