@@ -67,8 +67,15 @@ namespace PPP_NAMESPACE
         f.add(Function::BINARY_OP,		2, "/",			math_func<Float>::div_2			);
         f.add(Function::BINARY_OP,		2, "^",			math_func<Float>::pow_2			);
         f.add(Function::BINARY_OP,		2, "%",			math_func<Float>::mod_2			);
+
+        f.add(Function::BINARY_OP,		2, "+=",		math_func<Float>::add_1			);
+        f.add(Function::BINARY_OP,		2, "-=",		math_func<Float>::sub_1			);
+        f.add(Function::BINARY_OP,		2, "*=",		math_func<Float>::mul_1			);
+        f.add(Function::BINARY_OP,		2, "/=",		math_func<Float>::div_1			);
+
+
         f.add(Function::UNARY_LEFT_OP,	1, "-",			math_func<Float>::neg_assign_1	);
-//		f.add(Function::UNARY_RIGHT_OP,	1, "!",			math_func<Float>::factorial_1	);
+        f.add(Function::UNARY_RIGHT_OP,	1, "!",			math_func<Float>::factorial_1	);
 
         f.add(Function::BINARY_OP,		2, "&",			math_func<Float>::and_2			);
         f.add(Function::BINARY_OP,		2, "|",			math_func<Float>::or_2			);
@@ -117,6 +124,9 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		4, "mag",		math_func<Float>::mag_4			);
         f.add(Function::FUNCTION,		4, "dist",		math_func<Float>::dist_4		);
 
+        f.add(Function::FUNCTION,		3, "rotate",	math_func<Float>::rotate_3		);
+        f.add(Function::FUNCTION,		3, "rotater",	math_func<Float>::rotater_3		);
+
         f.add(Function::FUNCTION,		1, "exp",		math_func<Float>::exp_1			);
         f.add(Function::FUNCTION,		1, "ln",		math_func<Float>::ln_1			);
         f.add(Function::FUNCTION,		2, "logistic",	math_func<Float>::logistic_1	);
@@ -127,10 +137,19 @@ namespace PPP_NAMESPACE
 
         f.add(Function::FUNCTION,		2, "pow",		math_func<Float>::pow_2			);
         f.add(Function::FUNCTION,		1, "sqrt",		math_func<Float>::sqrt_1		);
-
         f.add(Function::FUNCTION,		2, "root",		math_func<Float>::root_2		);
 
+        f.add(Function::FUNCTION,		1, "ramp",		math_func<Float>::ramp_1		);
+        f.add(Function::FUNCTION,		1, "saw",		math_func<Float>::saw_1         );
+        f.add(Function::FUNCTION,		1, "square",	math_func<Float>::square_1		);
+        f.add(Function::FUNCTION,		2, "square",	math_func<Float>::square_2		);
+        f.add(Function::FUNCTION,		1, "tri",		math_func<Float>::tri_1         );
+        f.add(Function::FUNCTION,		2, "tri",		math_func<Float>::tri_2         );
+
         f.add(Function::FUNCTION,		0, "rnd",		math_func<Float>::rnd_0			);
+        f.add(Function::FUNCTION,		1, "noise",		math_func<Float>::noise_1		);
+        f.add(Function::FUNCTION,		2, "noise",		math_func<Float>::noise_2		);
+        f.add(Function::FUNCTION,		3, "noise",		math_func<Float>::noise_3		);
 
         f.add(Function::FUNCTION,		1, "fac",		math_func<Float>::factorial_1	);
         f.add(Function::FUNCTION,		1, "fib",		math_func<Float>::fibonacci_1	);

@@ -9,6 +9,8 @@
 #define FUNCTIONS_H_DEFINED
 
 #include "parser_defines.h"
+#include "math/functions.h"
+#include "math/noiseperlin.h"
 
 namespace PPP_NAMESPACE {
 
@@ -326,13 +328,13 @@ struct generic_int
 
 
 
-
-
+static MO::MATH::NoisePerlin noise_;
 
 #ifdef PPP_DOUBLE
 template <>
 struct math_func<double>
 {
+
     // ---------------------- logic  -----------------------------
 
     static void assign_1		(double ** v) { *v[0] = *v[1]; }
@@ -364,6 +366,11 @@ struct math_func<double>
     static void sub_2			(double ** v) { *v[0] = *v[1] - *v[2]; }
     static void mul_2			(double ** v) { *v[0] = *v[1] * *v[2]; }
     static void div_2			(double ** v) { *v[0] = *v[1] / *v[2]; }
+
+    static void add_1			(double ** v) { *v[0] += *v[1]; }
+    static void sub_1			(double ** v) { *v[0] -= *v[1]; }
+    static void mul_1			(double ** v) { *v[0] *= *v[1]; }
+    static void div_1			(double ** v) { *v[0] /= *v[1]; }
 
     static void equal_2			(double ** v) { *v[0] = *v[1] == *v[2]; }
     static void not_equal_2		(double ** v) { *v[0] = *v[1] != *v[2]; }
@@ -440,29 +447,39 @@ struct math_func<double>
     // ----------------- oscillator ------------------------------
 
     static void ramp_1			(double ** v)
-        { *v[0] = (*v[1]>=0.f) ? fmodf(*v[1], 1.f) : (1.f - fmodf(-*v[1], 1.f)); }
+        { *v[0] = MO::MATH::moduloSigned( *v[1], 1.0 ); }
+
+    static void saw_1			(double ** v)
+        { *v[0] = -1.0 + 2.0 * MO::MATH::moduloSigned( *v[1], 1.0 ); }
 
     static void square_1		(double ** v)
-        { *v[0] = (*v[1]>=0.) ?
-            (-1. + 2. * floor(fmodf(*v[1], 1.) + 0.5))
-            : (1. - 2. * floor(fmodf(-*v[1], 1.) + 0.5)); }
+        { *v[0] = (MO::MATH::moduloSigned( *v[1], 1.0 ) >= 0.5) ? -1.0 : 1.0 ; }
 
     static void tri_1			(double ** v)
     {
         double p;
-        p = (*v[1]>=0.) ?	fmodf(*v[1] + 0.25, 1.) : (1. - fmodf(-*v[1] + 0.75, 1.));
+        p = MO::MATH::moduloSigned(*v[1], 1.0);
         *v[0] = (p<0.5) ? (p * 4. - 1.) : (3. - p * 4.);
     }
 
-    static void saw_1			(double ** v)
-    { *v[0] = (*v[1]>=0.) ?
-        (-1. + 2. * fmodf(*v[1], 1.))
-            : (1. - 2. * fmodf(-*v[1], 1.)); }
+    // with pulsewidth
+    static void square_2		(double ** v)
+        { *v[0] = (MO::MATH::moduloSigned( *v[1], 1.0 ) >= *v[2]) ? -1.0 : 1.0 ; }
 
+    static void tri_2			(double ** v)
+    {
+        double p;
+        p = MO::MATH::moduloSigned(*v[1], 1.0);
+        *v[0] = (p<*v[2])? p * 2.0/ *v[2] - 1.0 : (1.0-p) * 2.0/(1.0-*v[2]) - 1.0;
+    }
 
     // -------------- random ------------------------------------
 
     static void rnd_0			(double ** v) { *v[0] = (double)std::rand() / RAND_MAX; }
+
+    static void noise_1         (double ** v) { *v[0] = noise_.noise(*v[1]); }
+    static void noise_2         (double ** v) { *v[0] = noise_.noise(*v[1], *v[2]); }
+    static void noise_3         (double ** v) { *v[0] = noise_.noise(*v[1], *v[2], *v[3]); }
 
     // -------------- fractal ----------------------------------
 
