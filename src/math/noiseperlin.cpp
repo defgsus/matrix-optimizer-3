@@ -58,13 +58,12 @@ void NoisePerlin::init_()
 
 void NoisePerlin::seed(unsigned int seed)
 {
-    //Random<unsigned int, Double> rnd(seed);
     std::mt19937 rnd(seed);
-    //srand(seed);
 
     int i, j, k;
 
-    for (i = 0 ; i < B ; i++) {
+    for (i = 0 ; i < B ; i++)
+    {
         p[i] = i;
 
         g1[i] = (Double)(((int)rnd() % (B + B)) - B) / B;
@@ -78,10 +77,11 @@ void NoisePerlin::seed(unsigned int seed)
         normalize3_(&g3[i*3]);
     }
 
+    // shuffle indices
     while (--i)
     {
         k = p[i];
-        p[i] = p[j = rand() % B];
+        p[i] = p[j = rnd() % B];
         p[j] = k;
     }
 
@@ -96,7 +96,7 @@ void NoisePerlin::seed(unsigned int seed)
     }
 }
 
-void NoisePerlin::normalize2_(Double v[2])
+void NoisePerlin::normalize2_(Double v[2]) const
 {
     Double s;
 
@@ -105,7 +105,7 @@ void NoisePerlin::normalize2_(Double v[2])
     v[1] = v[1] / s;
 }
 
-void NoisePerlin::normalize3_(Double v[3])
+void NoisePerlin::normalize3_(Double v[3]) const
 {
     Double s;
 

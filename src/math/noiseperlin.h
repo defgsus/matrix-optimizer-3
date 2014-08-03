@@ -27,7 +27,7 @@ class NoisePerlin
 public:
 
     /** constructor with optional seed. <br>
-        seed can be later set with seed() */
+        seed can be later (re-)set with seed() */
     NoisePerlin(unsigned int seed = 1007);
     ~NoisePerlin();
 
@@ -51,13 +51,13 @@ private:
 
     void init_();
 
-    Double curve_(Double t) { return t * t * (3.0 - 2.0 * t); }
-    Double lerp_(Double t, Double a, Double b) { return a + t * (b - a); }
+    Double curve_(Double t) const { return t * t * (3.0 - 2.0 * t); }
+    Double lerp_(Double t, Double a, Double b) const { return a + t * (b - a); }
 
-    void normalize2_(Double v[2]);
-    void normalize3_(Double v[3]);
+    void normalize2_(Double v[2]) const;
+    void normalize3_(Double v[3]) const;
 
-    void prepare_(Double arg, Double& t, int& b0, int& b1, Double& r0, Double& r1)
+    void prepare_(Double arg, Double& t, int& b0, int& b1, Double& r0, Double& r1) const
     {
         t = arg + N;
         b0 = ((int)t) & BM;

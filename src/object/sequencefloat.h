@@ -37,7 +37,7 @@ public:
     };
     const static int ST_MAX = ST_EQUATION + 1;
 
-    /** PERSITANT ids of the sequence types */
+    /** PERSISTENT ids of the sequence types */
     static QStringList sequenceTypeId;
     /** friendly names of the sequence types */
     static QStringList sequenceTypeName;
