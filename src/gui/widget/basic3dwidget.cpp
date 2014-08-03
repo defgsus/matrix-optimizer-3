@@ -307,7 +307,7 @@ void Basic3DWidget::paintGL()
         drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveY * viewm);
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
         drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeY * viewm);
-        // XXX only needed for angle-of-view > ??
+        // XXX only needed for angle-of-view >= 250
         fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
         drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveZ * viewm);
 

@@ -19,7 +19,8 @@ namespace GUI {
 
 GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     Basic3DWidget   (mode, parent),
-    drawable_       (new GL::Drawable("geomwidget"))
+    drawable_       (new GL::Drawable("geomwidget")),
+    showGrid_       (false)
 {
     setMinimumSize(128, 128);
 
@@ -46,7 +47,8 @@ void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
     MO_CHECK_GL( glEnable(GL_BLEND) );
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
-    drawGrid(projection, transformation);
+    if (showGrid_)
+        drawGrid(projection, transformation);
 
     if (!drawable_->isReady())
         drawable_->createOpenGl();

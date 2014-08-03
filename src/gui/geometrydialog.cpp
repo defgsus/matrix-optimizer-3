@@ -60,12 +60,23 @@ void GeometryDialog::createWidgets_()
 {
     auto lh = new QHBoxLayout(this);
 
-        geoWidget_ = new GeometryWidget(GeometryWidget::RM_FULLDOME_CUBE, this);
-        lh->addWidget(geoWidget_);
-        geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
-
         auto lv = new QVBoxLayout();
+        lh->addLayout(lv);
+
+            geoWidget_ = new GeometryWidget(GeometryWidget::RM_FULLDOME_CUBE, this);
+            lv->addWidget(geoWidget_);
+            geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+            connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
+
+            auto cb = new QCheckBox(tr("show coordinates"), this);
+            lv->addWidget(cb);
+            cb->setChecked(geoWidget_->isShowGrid());
+            connect(cb, &QCheckBox::stateChanged, [this](int state)
+            {
+                geoWidget_->setShowGrid(state == Qt::Checked);
+            });
+
+        lv = new QVBoxLayout();
         lh->addLayout(lv);
 
             // geometry type

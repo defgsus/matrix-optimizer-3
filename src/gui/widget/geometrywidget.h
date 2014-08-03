@@ -26,17 +26,23 @@ public:
     explicit GeometryWidget(RenderMode mode, QWidget *parent = 0);
     ~GeometryWidget();
 
+    bool isShowGrid() const { return showGrid_; }
+
 signals:
 
 public slots:
 
     void setGeometry(GEOM::Geometry *);
 
+    void setShowGrid(bool enable) { showGrid_ = enable; update(); }
+
 protected:
 
     void drawGL(const Mat4 &projection, const Mat4 &transformation) Q_DECL_OVERRIDE;
 
     GL::Drawable * drawable_;
+
+    bool showGrid_;
 };
 
 
