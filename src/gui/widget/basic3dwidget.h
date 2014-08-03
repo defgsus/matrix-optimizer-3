@@ -19,6 +19,7 @@
 #include "types/vector.h"
 
 namespace MO {
+namespace GEOM { class FreeCamera; }
 namespace GUI {
 
 /** Override drawGL() to draw your stuff! */
@@ -59,6 +60,7 @@ protected:
 
     virtual void mousePressEvent(QMouseEvent *);
     virtual void mouseMoveEvent(QMouseEvent *);
+    virtual void wheelEvent(QWheelEvent *);
     virtual void closeEvent(QCloseEvent *);
 
     /** Override this to create resources-per-opengl-context.
@@ -87,7 +89,8 @@ private:
     RenderMode renderMode_;
 
     bool isGlInitialized_,
-         closeRequest_;
+         closeRequest_,
+         useFreeCamera_;
 
     Mat4
         projectionMatrix_,
@@ -96,6 +99,7 @@ private:
 
     QPoint lastMousePos_;
 
+    GEOM::FreeCamera * camera_;
     GL::FrameBufferObject * fbo_;
     GL::ScreenQuad * screenQuad_;
     GL::Drawable * gridObject_;

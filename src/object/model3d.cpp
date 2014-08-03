@@ -24,7 +24,7 @@ Model3d::Model3d(QObject * parent)
     : ObjectGl      (parent),
       creator_      (0),
       geomSettings_ (new GEOM::GeometryFactorySettings),
-      initDrawableRequest_(false)
+      nextGeometry_ (0)
 {
     setName("Model3D");
 }
@@ -73,8 +73,7 @@ void Model3d::releaseGl(uint /*thread*/)
 
 void Model3d::geometryCreated_()
 {
-    draw_->setGeometry(creator_->takeGeometry());
-    initDrawableRequest_ = true;
+    nextGeometry_ = creator_->takeGeometry();
     creator_->deleteLater();
 
     requestRender();
@@ -96,10 +95,11 @@ void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
     Mat4 mat = cam.viewMatrix() * transformation(thread, 0);
 //    glLoadMatrixf(&mat[0][0]);
 
-    if (initDrawableRequest_)
+    if (nextGeometry_)
     {
-        initDrawableRequest_ = false;
+        draw_->setGeometry(nextGeometry_);
         draw_->createOpenGl();
+        nextGeometry_ = 0;
     }
 
     if (draw_->isReady())

@@ -31,6 +31,8 @@ const Mat4& CubeMapMatrix::matrix(uint i)
     }
 }
 
+const Mat4 CubeMapMatrix::identity = Mat4(1.0);
+
 const Mat4 CubeMapMatrix::positiveX = Mat4(0,0,-1,0, 0,-1,0,0, -1,0,0,0, 0,0,0,1);
 
 const Mat4 CubeMapMatrix::negativeX = Mat4(0,0,1,0, 0,-1,0,0, 1,0,0,0, 0,0,0,1);

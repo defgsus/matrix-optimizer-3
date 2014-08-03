@@ -436,7 +436,7 @@ void ObjectTreeView::createEditObjectActions_(Object * obj)
 
     if (Model3d * m = qobject_cast<Model3d*>(obj))
     {
-        a = editActions_.addAction(tr("Edit model geometry"), this);
+        a = editActions_.addAction(QIcon(":/icon/obj_3d.png"), tr("Edit model geometry"), this);
         a->setStatusTip(tr("Opens a dialog for editing the model geometry"));
         connect(a, &QAction::triggered, [=]()
         {

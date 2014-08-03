@@ -21,6 +21,7 @@
 #include "gl/shader.h"
 #include "scene.h"
 #include "param/parameterfloat.h"
+#include "param/parameterselect.h"
 #include "math/cubemapmatrix.h"
 
 namespace MO {
@@ -29,7 +30,7 @@ MO_REGISTER_OBJECT(Camera)
 
 Camera::Camera(QObject *parent) :
     ObjectGl        (parent),
-    cubeMapped_     (true)
+    renderMode_     (RM_FULLDOME_CUBE)
 {
     setName("Camera");
 }
@@ -58,6 +59,15 @@ void Camera::createParameters()
 {
     ObjectGl::createParameters();
 
+    cameraMode_ = createSelectParameter("cammode", tr("render mode"),
+                                        tr("Selects the display/render mode for this camera"),
+    { "persp", "fdcube" },
+    { tr("perspective"), tr("fulldome cube") },
+    { tr("Perspective projection for flat screens"),
+      tr("Fulldome projection by means of 5 (or 6) cameras") },
+    { RM_PERSP, RM_FULLDOME_CUBE }, RM_FULLDOME_CUBE,
+                                        true, false
+                                        );
     cameraAngle_ = createFloatParameter("camangle", tr("field of view"),
                                         tr("Field-of-view specifies the openening angle in degree"),
                                         180.f,
@@ -69,12 +79,21 @@ void Camera::createParameters()
                                       0.f, 1.f, 0.05f);
 }
 
+void Camera::onParameterChanged(Parameter * p)
+{
+    if (p == cameraMode_)
+    {
+        renderMode_ = (RenderMode)cameraMode_->baseValue();
+        requestReinitGl();
+    }
+}
+
 void Camera::setNumberThreads(uint num)
 {
     ObjectGl::setNumberThreads(num);
 
     uint oldnum = fbo_.size();
-    projection_.resize(num);
+    //projection_.resize(num);
     fbo_.resize(num);
     screenQuad_.resize(num);
 
@@ -89,7 +108,7 @@ void Camera::setBufferSize(uint bufferSize, uint thread)
 {
     ObjectGl::setBufferSize(bufferSize, thread);
 
-    projection_[thread].resize(bufferSize);
+    //projection_[thread].resize(bufferSize);
 }
 
 void Camera::initGl(uint thread)
@@ -97,19 +116,24 @@ void Camera::initGl(uint thread)
     const Scene * scene = sceneObject();
     MO_ASSERT(scene, "Camera::initGl() without scene object");
 
-    const int width = cubeMapped_?
+    bool cubeMapped = renderMode_ == RM_FULLDOME_CUBE;
+
+    const int width = cubeMapped?
                           scene->frameBufferCubeMapWidth()
                         : scene->frameBufferWidth();
-    const int height = cubeMapped_?
+    const int height = cubeMapped?
                           scene->frameBufferCubeMapHeight()
                         : scene->frameBufferHeight();
 
     // projection matrix
 
+    aspectRatio_ = (Float)width/std::max(1, height);
+    /*
     projection_[thread][0]
-        = glm::perspective(cubeMapped_? 90.f : 63.f,
+        = glm::perspective(cubeMapped? 90.f : 63.f,
                 (float)width/height,
                 0.1f, 1000.0f);
+    */
 
     // screen-quad
 
@@ -117,11 +141,12 @@ void Camera::initGl(uint thread)
     screenQuad_[thread]->create(
                 ":/shader/framebuffercamera.vert",
                 ":/shader/framebuffercamera.frag",
-                cubeMapped_? "#define MO_FULLDOME_CUBE" : "");
+                cubeMapped? "#define MO_FULLDOME_CUBE" : "");
     // uniforms
     uColor_ = screenQuad_[thread]->shader()->getUniform("u_color", true);
     uColor_->setFloats(1,1,1,1);
-    uAngle_ = screenQuad_[thread]->shader()->getUniform("u_angle", true);
+    if (cubeMapped)
+        uAngle_ = screenQuad_[thread]->shader()->getUniform("u_angle", true);
 
     // create framebuffer
 
@@ -130,7 +155,7 @@ void Camera::initGl(uint thread)
                 height,
                 scene->frameBufferFormat(),
                 GL_FLOAT,
-                cubeMapped_,
+                cubeMapped,
                 GL::ER_THROW);
 
     fbo_[thread]->create();
@@ -149,14 +174,22 @@ void Camera::releaseGl(uint thread)
     fbo_[thread] = 0;
 }
 
-void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, uint sample) const
+void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) const
 {
-    cam.setProjectionMatrix(projection_[thread][sample]);
+    Float angle = 90.f;
+    if (renderMode_ == RM_PERSP)
+        angle = std::min((Float)179, cameraAngle_->value(time));
+
+    cam.setProjectionMatrix(
+                glm::perspective(angle,
+                                aspectRatio_,
+                                0.01f, 1000.0f)
+                );
 }
 
 uint Camera::numCubeTextures(uint , Double time) const
 {
-    if (!cubeMapped_)
+    if (renderMode_ != RM_FULLDOME_CUBE)
         return 1;
 
     return (cameraAngle_->value(time) >= 250.f)
@@ -166,6 +199,9 @@ uint Camera::numCubeTextures(uint , Double time) const
 
 const Mat4& Camera::cubeMapMatrix(uint index) const
 {
+    if (renderMode_ != RM_FULLDOME_CUBE)
+        return MATH::CubeMapMatrix::identity;
+
     switch (index)
     {
         case 0:  return MATH::CubeMapMatrix::positiveX; break;
@@ -182,7 +218,7 @@ void Camera::startGlFrame(uint thread, Double , uint cubeMapIndex)
     GL::FrameBufferObject * fbo = fbo_[thread];
     fbo->bind();
 
-    if (cubeMapped_)
+    if (renderMode_ == RM_FULLDOME_CUBE)
     {
         switch (cubeMapIndex)
         {
@@ -215,7 +251,8 @@ void Camera::drawFramebuffer(uint thread, Double time)
     GL::FrameBufferObject * fbo = fbo_[thread];
 
     uColor_->floats[3] = cameraMix_->value(time);
-    uAngle_->floats[0] = cameraAngle_->value(time);
+    if (renderMode_ == RM_FULLDOME_CUBE)
+        uAngle_->floats[0] = cameraAngle_->value(time);
 
     fbo->colorTexture()->bind();
     MO_CHECK_GL( glEnable(GL_BLEND) );

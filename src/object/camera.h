@@ -19,6 +19,13 @@ class Camera : public ObjectGl
 {
     Q_OBJECT
 public:
+    enum RenderMode
+    {
+        RM_PERSP,
+        RM_FULLDOME_CUBE
+    };
+
+
     MO_OBJECT_CONSTRUCTOR(Camera);
     ~Camera();
 
@@ -29,6 +36,7 @@ public:
     virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
@@ -36,10 +44,13 @@ public:
 
     // ---------- camera specific stuff -----------
 
+    /** Returns the mode of rendering */
+    RenderMode renderMode() const { return renderMode_; }
+
     //GL::FrameBufferObject * getFrameBuffer(uint thread) const { return fbo_[thread]; }
 
     /** Returns projection matrix */
-    const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }
+    //const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }
 
     uint numCubeTextures(uint thread, Double time) const;
 
@@ -53,7 +64,7 @@ public:
 
     /** Initialize camera space (with projection)
         XXX only trying here.. */
-    void initCameraSpace(GL::CameraSpace& cam, uint thread, uint sample) const;
+    void initCameraSpace(GL::CameraSpace& cam, uint thread, Double time) const;
 
     // XXX only trying here
     //void setProjectionMatrix(uint thread, uint sample);
@@ -67,15 +78,17 @@ public slots:
 
 private:
 
-    std::vector<std::vector<Mat4>> projection_;
+    //std::vector<std::vector<Mat4>> projection_;
     std::vector<GL::FrameBufferObject*> fbo_;
 
     std::vector<GL::ScreenQuad*> screenQuad_;
 
     ParameterFloat * cameraMix_, *cameraAngle_;
+    ParameterSelect * cameraMode_;
     GL::Uniform * uColor_, * uAngle_;
 
-    bool cubeMapped_;
+    Float aspectRatio_;
+    RenderMode renderMode_;
 };
 
 } // namespace MO

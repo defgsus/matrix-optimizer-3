@@ -11,6 +11,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QCloseEvent>
+#include <QWheelEvent>
 
 #include "basic3dwidget.h"
 #include "gl/framebufferobject.h"
@@ -20,6 +21,8 @@
 #include "io/log.h"
 #include "math/cubemapmatrix.h"
 #include "geom/geometryfactory.h"
+#include "geom/freecamera.h"
+
 
 namespace MO {
 namespace GUI {
@@ -30,6 +33,8 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     renderMode_     (mode),
     isGlInitialized_(false),
     closeRequest_   (false),
+    useFreeCamera_  (true),
+    camera_         (new GEOM::FreeCamera()),
     fbo_            (0),
     screenQuad_     (0),
     gridObject_     (0)
@@ -54,6 +59,7 @@ Basic3DWidget::~Basic3DWidget()
     if (isGlInitialized_)
         releaseGL();
 
+    delete camera_;
     delete fbo_;
     delete screenQuad_;
     delete gridObject_;
@@ -63,7 +69,8 @@ void Basic3DWidget::viewInit(Float distanceZ)
 {
     distanceZ_ = distanceZ;
     rotationMatrix_ = Mat4();
-    updateGL();
+    camera_->moveTo(Vec3(0,0,-distanceZ));
+    update();
 }
 
 void Basic3DWidget::viewRotateX(Float d)
@@ -86,8 +93,13 @@ void Basic3DWidget::viewRotateY(Float d)
 
 Mat4 Basic3DWidget::transformationMatrix() const
 {
-    Mat4 m = glm::translate(Mat4(), Vec3(0,0,-distanceZ_));
-    return m * rotationMatrix_;
+    if (useFreeCamera_)
+        return camera_->getMatrix();
+    else
+    {
+        Mat4 m = glm::translate(Mat4(), Vec3(0,0,-distanceZ_));
+        return m * rotationMatrix_;
+    }
 }
 
 void Basic3DWidget::mousePressEvent(QMouseEvent * e)
@@ -97,21 +109,54 @@ void Basic3DWidget::mousePressEvent(QMouseEvent * e)
 
 void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 {
+    Float fac = e->modifiers() & Qt::SHIFT ?
+                10.f : 1.f;
+
     int dx = lastMousePos_.x() - e->x(),
         dy = lastMousePos_.y() - e->y();
     lastMousePos_ = e->pos();
 
     if (e->buttons() & Qt::LeftButton)
     {
-        viewRotateX(dy);
-        viewRotateY(dx);
+        if (!useFreeCamera_)
+        {
+            viewRotateX(dy);
+            viewRotateY(dx);
+        }
+        else
+        {
+            //camera_->rotateX(dy);
+            //camera_->rotateY(dx);
+            camera_->moveX(-0.03*fac*dx);
+            camera_->moveY( 0.03*fac*dy);
+            update();
+        }
     }
 
     if (e->buttons() & Qt::RightButton)
     {
-        distanceZ_ += 0.04 * dy;
+        if (!useFreeCamera_)
+        {
+            distanceZ_ += 0.04 * fac * dy;
+        }
+        else
+        {
+            camera_->rotateX(-dy * fac);
+            camera_->rotateY(-dx * fac);
+            //camera_->moveZ(-0.03 * dy);
+        }
         update();
     }
+}
+
+void Basic3DWidget::wheelEvent(QWheelEvent * e)
+{
+    Float fac = e->modifiers() & Qt::SHIFT ?
+                10.f : 1.f;
+
+    Float d = std::max(-1, std::min(1, e->delta() ));
+    camera_->moveZ(-0.3 * d * fac);
+    update();
 }
 
 void Basic3DWidget::closeEvent(QCloseEvent * e)

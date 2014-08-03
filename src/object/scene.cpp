@@ -665,7 +665,7 @@ void Scene::renderScene(Double time, uint thread)
         {
             // get camera viewspace
             GL::CameraSpace camSpace;
-            camera->initCameraSpace(camSpace, thread, 0);
+            camera->initCameraSpace(camSpace, thread, time);
             const Mat4 viewm = glm::inverse(camera->transformation(thread, 0));
 
             // for each cubemap

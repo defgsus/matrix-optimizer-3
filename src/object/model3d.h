@@ -43,8 +43,7 @@ private:
     GL::Drawable * draw_;
     GEOM::GeometryCreator * creator_;
     GEOM::GeometryFactorySettings * geomSettings_;
-
-    bool initDrawableRequest_;
+    GEOM::Geometry * nextGeometry_;
 };
 
 } // namespace MO
