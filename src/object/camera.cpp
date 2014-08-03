@@ -93,7 +93,7 @@ void Camera::setNumberThreads(uint num)
     ObjectGl::setNumberThreads(num);
 
     uint oldnum = fbo_.size();
-    //projection_.resize(num);
+
     fbo_.resize(num);
     screenQuad_.resize(num);
 
@@ -107,8 +107,6 @@ void Camera::setNumberThreads(uint num)
 void Camera::setBufferSize(uint bufferSize, uint thread)
 {
     ObjectGl::setBufferSize(bufferSize, thread);
-
-    //projection_[thread].resize(bufferSize);
 }
 
 void Camera::initGl(uint thread)
@@ -128,12 +126,6 @@ void Camera::initGl(uint thread)
     // projection matrix
 
     aspectRatio_ = (Float)width/std::max(1, height);
-    /*
-    projection_[thread][0]
-        = glm::perspective(cubeMapped? 90.f : 63.f,
-                (float)width/height,
-                0.1f, 1000.0f);
-    */
 
     // screen-quad
 
@@ -174,11 +166,11 @@ void Camera::releaseGl(uint thread)
     fbo_[thread] = 0;
 }
 
-void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) const
+void Camera::initCameraSpace(GL::CameraSpace &cam, uint /*thread*/, Double time) const
 {
     Float angle = 90.f;
     if (renderMode_ == RM_PERSP)
-        angle = std::min((Float)179, cameraAngle_->value(time));
+        angle = std::min((Double)179, cameraAngle_->value(time));
 
     cam.setProjectionMatrix(
                 glm::perspective(angle,

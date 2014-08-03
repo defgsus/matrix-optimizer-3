@@ -49,25 +49,22 @@ public:
 
     //GL::FrameBufferObject * getFrameBuffer(uint thread) const { return fbo_[thread]; }
 
-    /** Returns projection matrix */
-    //const Mat4& projection(uint thread, uint sample) const { return projection_[thread][sample]; }
-
+    /** Returns number of cubemap textures needed. */
     uint numCubeTextures(uint thread, Double time) const;
 
-    const Mat4& cubeMapMatrix(uint index) const;
-
-    /** Starts rendering an openGL frame for this camera. */
+    /** Starts rendering an openGl frame for this camera.
+        Binds the framebuffer and clears it. */
     void startGlFrame(uint thread, Double time, uint cubeMapIndex = 0);
 
-    /** Finishes rendering an openGl frame for this camera. */
+    /** Finishes rendering an openGl frame for this camera.
+        Only unbinds the framebuffer right now. */
     void finishGlFrame(uint thread, Double time);
 
-    /** Initialize camera space (with projection)
-        XXX only trying here.. */
+    /** Initialize camera space with projection matrix */
     void initCameraSpace(GL::CameraSpace& cam, uint thread, Double time) const;
 
-    // XXX only trying here
-    //void setProjectionMatrix(uint thread, uint sample);
+    /** Returns the view transformation for each cubemap texture */
+    const Mat4& cubeMapMatrix(uint index) const;
 
     /** Draws the contents of the framebuffer on a [-1,1] quad. */
     void drawFramebuffer(uint thread, Double time);
