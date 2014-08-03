@@ -47,6 +47,10 @@ public:
     static void createCylinder(Geometry *, float rad, float height, uint segu, uint segv, bool open,
                                bool asTriangles);
 
+    static void createTorus(Geometry *, float rad_outer, float rad_inner, uint segu, uint segv,
+                            bool asTriangles);
+
+
     static void createTetrahedron(Geometry *, float scale, bool asTriangles = true);
     static void createOctahedron(Geometry *, float scale, bool asTriangles = true);
     static void createIcosahedron(Geometry *, float scale, bool asTriangles = true);
@@ -73,6 +77,7 @@ public:
         T_DODECAHEDRON,
         T_CYLINDER_CLOSED,
         T_CYLINDER_OPEN,
+        T_TORUS,
         T_GRID_XZ,
         T_GRID,
         T_UV_SPHERE
@@ -93,7 +98,7 @@ public:
     bool calcNormals, asTriangles, convertToLines, sharedVertices, tesselate,
         normalizeVertices, removeRandomly, transformWithEquation;
     Float colorR, colorG, colorB, colorA;
-    Float scale, scaleX, scaleY, scaleZ, removeProb, normalization;
+    Float scale, scaleX, scaleY, scaleZ, removeProb, normalization, smallRadius;
     uint gridSize, segmentsX, segmentsY, segmentsZ, tessLevel, removeSeed;
 
     bool withCoords;

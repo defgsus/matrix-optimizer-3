@@ -228,6 +228,21 @@ void GeometryDialog::createWidgets_()
                 connect(spinSZ_, SIGNAL(valueChanged(double)),
                         this, SLOT(updateFromWidgets_()));
 
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                labelSmallRadius_ = new QLabel(tr("small radius"), this);
+                lh2->addWidget(labelSmallRadius_);
+
+                spinSmallRadius_ = new DoubleSpinBox(this);
+                lh2->addWidget(spinSmallRadius_);
+                spinSmallRadius_->setStatusTip("Smaller radius");
+                spinSmallRadius_->setDecimals(5);
+                spinSmallRadius_->setSingleStep(0.02);
+                spinSmallRadius_->setRange(0.0001, 100000);
+                spinSmallRadius_->setValue(settings_->smallRadius);
+                connect(spinSmallRadius_, SIGNAL(valueChanged(double)),
+                        this, SLOT(updateFromWidgets_()));
 
             // segments
             labelSeg_ = new QLabel(tr("segments"), this);
@@ -446,6 +461,7 @@ void GeometryDialog::updateFromWidgets_()
     settings_->scaleX = spinSX_->value();
     settings_->scaleY = spinSY_->value();
     settings_->scaleZ = spinSZ_->value();
+    settings_->smallRadius = spinSmallRadius_->value();
     settings_->segmentsX = spinSegX_->value();
     settings_->segmentsY = spinSegY_->value();
     settings_->segmentsZ = spinSegZ_->value();
@@ -481,9 +497,13 @@ void GeometryDialog::updateFromWidgets_()
                            || settings_->type ==
                             GEOM::GeometryFactorySettings::T_CYLINDER_CLOSED
                            || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_CYLINDER_OPEN),
+                            GEOM::GeometryFactorySettings::T_CYLINDER_OPEN
+                           || settings_->type ==
+                            GEOM::GeometryFactorySettings::T_TORUS),
             has3Segments = (has2Segments && settings_->type ==
-                            GEOM::GeometryFactorySettings::T_GRID);
+                            GEOM::GeometryFactorySettings::T_GRID),
+            hasSmallRadius = (settings_->type ==
+                            GEOM::GeometryFactorySettings::T_TORUS);
 
     cbTriangles_->setVisible( canTriangle && !isFile);
 
@@ -502,6 +522,9 @@ void GeometryDialog::updateFromWidgets_()
     spinSegX_->setVisible( has2Segments );
     spinSegY_->setVisible( has2Segments );
     spinSegZ_->setVisible( has3Segments );
+
+    labelSmallRadius_->setVisible( hasSmallRadius );
+    spinSmallRadius_->setVisible( hasSmallRadius );
 
     spinRemoveProb_->setVisible( cbRemove_->isChecked() );
     spinRemoveSeed_->setVisible( cbRemove_->isChecked() );

@@ -8,6 +8,8 @@
     <p>created 7/26/2014</p>
 */
 
+#include <glm/gtx/rotate_vector.hpp>
+
 #include <QObject>
 #include <QHash>
 
@@ -435,6 +437,75 @@ void GeometryFactory::createCylinder(Geometry * g, float rad, float height,
     }
 }
 
+
+
+void GeometryFactory::createTorus(Geometry * g, float rad_out, float rad_in,
+                                     uint segu, uint segv, bool asTriangles)
+{
+    segu = std::max((uint)3, segu);
+    segv = std::max((uint)3, segv);
+
+    uint start = g->numVertices();
+
+    // create torus vertices
+    for (uint y=0; y<segv; ++y)
+    {
+        const Float ty = (Float)y / (segv-1);
+        const Float ang = (Float)y / segv * 360.f;
+
+        for (uint x=0; x<segu; ++x)
+        {
+            const Float tx = (Float)x / (segu-1);
+            const Float a = (Float)x / segu * TWO_PI;
+
+            const Vec3 v = glm::rotateY(
+                        Vec3(rad_out + rad_in*sin(a), rad_in*cos(a), 0),
+                        ang);
+
+            g->setTexCoord(tx, ty);
+            g->addVertex(v[0], v[1], v[2]);
+        }
+    }
+
+    // create surface
+
+    if (!asTriangles)
+    {
+        for (uint y=0; y<segv; ++y)
+        {
+            for (uint x=0; x<segu; ++x)
+            {
+                // connect to next column
+                g->addLine(start + y*segu + x,
+                           start + y*segu + (x+1) % segu);
+                // connect to next row
+                g->addLine(start + y*segu + x,
+                           start + ((y+1)%segv)*segu + x);
+            }
+        }
+
+    }
+    else
+    {
+        for (uint y=0; y<segv; ++y)
+        {
+            for (uint x=0; x<segu; ++x)
+            {
+                g->addTriangle(
+                            start + y*segu + x,
+                            start + y*segu + (x+1) % segu,
+                            start + ((y+1)%segv)*segu + (x+1) % segu);
+                g->addTriangle(
+                            start + y*segu + x,
+                            start + ((y+1)%segv)*segu + (x+1) % segu,
+                            start + ((y+1)%segv)*segu + x);
+            }
+        }
+
+    }
+}
+
+
 void GeometryFactory::createOctahedron(Geometry * g, float scale, bool asTriangles)
 {
     const float
@@ -781,6 +852,10 @@ void GeometryFactory::createFromSettings(Geometry * g,
         createCylinder(g, 1.f, 1.f, set->segmentsX, set->segmentsY, true, set->asTriangles);
     break;
 
+    case GeometryFactorySettings::T_TORUS:
+        createTorus(g, 1.f, set->smallRadius, set->segmentsX, set->segmentsY, set->asTriangles);
+    break;
+
     }
 
     if (set->tesselate)
@@ -828,7 +903,7 @@ const QStringList GeometryFactorySettings::typeIds =
 {
     "file", "quad",
     "tetra", "hexa", "octa", "icosa", "dodeca",
-    "cyl", "cylo",
+    "cyl", "cylo", "torus",
     "gridxz", "grid", "uvsphere"
 };
 
@@ -843,6 +918,7 @@ const QStringList GeometryFactorySettings::typeNames =
     QObject::tr("dodecahedron"),
     QObject::tr("cylinder (closed)"),
     QObject::tr("cylinder (open)"),
+    QObject::tr("torus"),
     QObject::tr("grid xz"),
     QObject::tr("grid"),
     QObject::tr("uv-sphere")
@@ -871,6 +947,7 @@ GeometryFactorySettings::GeometryFactorySettings()
       scaleZ        (1.f),
       removeProb    (0.1f),
       normalization (1.f),
+      smallRadius   (0.2f),
       gridSize      (1),
       segmentsX     (10),
       segmentsY     (10),
@@ -884,7 +961,7 @@ GeometryFactorySettings::GeometryFactorySettings()
 
 void GeometryFactorySettings::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("geomfacset", 3);
+    io.writeHeader("geomfacset", 4);
 
     io << typeIds[type];
 
@@ -901,11 +978,14 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
 
     // v3
     io << transformWithEquation << equationX << equationY << equationZ;
+
+    // v4
+    io << smallRadius;
 }
 
 void GeometryFactorySettings::deserialize(IO::DataStream & io)
 {
-    int ver = io.readHeader("geomfacset", 3);
+    int ver = io.readHeader("geomfacset", 4);
 
     io.readEnum(type, T_BOX, typeIds);
 
@@ -922,6 +1002,9 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
 
     if (ver >= 3)
         io >> transformWithEquation >> equationX >> equationY >> equationZ;
+
+    if (ver >= 4)
+        io >> smallRadius;
 }
 
 } // namespace GEOM
