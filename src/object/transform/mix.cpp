@@ -49,9 +49,9 @@ void Mix::childrenChanged()
     transformations_ = findChildObjects<Transformation>();
 }
 
-void Mix::applyTransformation(Mat4 &matrix, Double time) const
+void Mix::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
-    const Double m = m_->value(time);
+    const Double m = m_->value(time, thread);
 
     // don't touch matrix at all
     if (m <= 0)
@@ -61,8 +61,8 @@ void Mix::applyTransformation(Mat4 &matrix, Double time) const
 
     // apply child transforms
     for (auto t : transformations_)
-        if (t->active(time))
-            t->applyTransformation(trans, time);
+        if (t->active(time, thread))
+            t->applyTransformation(trans, time, thread);
 
     if (m >= 1.0)
 

@@ -183,7 +183,7 @@ UTIL::ViewSpace SceneSettings::getViewSpace(const Object *obj)
     if (const SequenceFloat * seqf = qobject_cast<const SequenceFloat*>(obj))
     {
         Double minv, maxv;
-        seqf->getMinMaxValue(0, seqf->length(), minv, maxv);
+        seqf->getMinMaxValue(0, seqf->length(), minv, maxv, MO_GUI_THREAD);
         space.setY(minv);
         space.setScaleY(maxv-minv);
     }

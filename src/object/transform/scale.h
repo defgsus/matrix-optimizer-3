@@ -22,9 +22,10 @@ class Scale : public Transformation
 public:
     MO_OBJECT_CONSTRUCTOR(Scale);
 
-    virtual void createParameters();
+    virtual void createParameters() Q_DECL_OVERRIDE;
 
-    virtual void applyTransformation(Mat4& matrix, Double time) const;
+    virtual void applyTransformation(Mat4& matrix, Double time, uint thread) const
+                                                            Q_DECL_OVERRIDE;
 
 signals:
 

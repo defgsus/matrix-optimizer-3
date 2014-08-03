@@ -24,6 +24,8 @@
 /** Maximum time in seconds (for widgets mainly) */
 #define MO_MAX_TIME (60 * 60 * 1000)
 
+#define MO_GUI_THREAD (0)
+
 namespace MO {
 namespace IO { class DataStream; }
 
@@ -194,7 +196,7 @@ public:
     ActivityScope currentActivityScope() const { return currentActivityScope_; }
 
     /** Returns if the object is active at the given time */
-    bool active(Double time) const;
+    bool active(Double time, uint thread) const;
 
     /** Returns if the object fits the currently set activity scope */
     bool activeAtAll() const;
@@ -435,7 +437,7 @@ public:
     void setTransformation(int thread, int sample, const Mat4& mat) { transformation_[thread][sample] = mat; }
 
     /** Apply all transformations of this object to the given matrix. */
-    void calculateTransformation(Mat4& matrix, Double time) const;
+    void calculateTransformation(Mat4& matrix, Double time, uint thread) const;
 
     /** List of all direct transformation childs */
     const QList<Transformation*> transformationObjects() const { return transformationObjects_; }

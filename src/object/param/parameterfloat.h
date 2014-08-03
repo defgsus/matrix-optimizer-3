@@ -28,26 +28,30 @@ public:
     virtual void serialize(IO::DataStream&) const;
     virtual void deserialize(IO::DataStream&);
 
-    const QString& typeName() const { static QString s("select"); return s; }
+    const QString& typeName() const { static QString s("float"); return s; }
 
     //QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
+
+    // ---------------- getter -----------------
 
     Double defaultValue() const { return defaultValue_; }
     Double minValue() const { return minValue_; }
     Double maxValue() const { return maxValue_; }
     Double smallStep() const { return smallStep_; }
 
-    Double value(Double time) const { return value_ + getModulationValue(time); }
+    Double value(Double time, uint thread) const { return value_ + getModulationValue(time, thread); }
     Double baseValue() const { return value_; }
 
     /** Writes @p number values starting at @p time into the pointer */
-    void getValues(Double time, Double timeIncrement, uint number, Double * ptr) const;
+    void getValues(Double time, uint thread, Double timeIncrement, uint number, Double * ptr) const;
 
     /** Writes @p number values starting at @p time into the pointer */
-    void getValues(Double time, Double timeIncrement, uint number, F32 * ptr) const;
+    void getValues(Double time, uint thread, Double timeIncrement, uint number, F32 * ptr) const;
 
     /** Writes @p number values starting at @p pos into the pointer */
-    void getValues(SamplePos pos, Double sampleRateInv, uint number, F32 * ptr) const;
+    void getValues(SamplePos pos, uint thread, Double sampleRateInv, uint number, F32 * ptr) const;
+
+    // ---------------- setter -----------------
 
     void setDefaultValue(Double v) { defaultValue_ = v; }
     void setMinValue(Double v) { minValue_ = v; }
@@ -63,7 +67,7 @@ public:
     // --------- modulation -----------
 
     /** Receives modulation value at time */
-    Double getModulationValue(Double time) const;
+    Double getModulationValue(Double time, uint thread) const;
 
     void collectModulators();
 

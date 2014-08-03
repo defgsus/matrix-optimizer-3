@@ -48,11 +48,13 @@ void AxisRotation::createParameters()
     z_ = createFloatParameter("z", "axis z", axisTip, 0);
 }
 
-void AxisRotation::applyTransformation(Mat4 &matrix, Double time) const
+void AxisRotation::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
     matrix = glm::rotate(matrix,
-                (Mat4::value_type)angle_->value(time),
-                 Vec3(x_->value(time), y_->value(time), z_->value(time)));
+                (Mat4::value_type)angle_->value(time, thread),
+                 Vec3(x_->value(time, thread),
+                      y_->value(time, thread),
+                      z_->value(time, thread)));
 }
 
 

@@ -71,7 +71,9 @@ public:
 
     virtual Type type() const { return T_SEQUENCE_FLOAT; }
 
-    virtual void createParameters();
+    virtual void createParameters() Q_DECL_OVERRIDE;
+
+    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     // ------------ getter --------------
 
@@ -117,7 +119,7 @@ public:
 
     /** Returns the minimum and maximum values across the time range (local) */
     void getMinMaxValue(Double localStart, Double localEnd,
-                        Double& minValue, Double& maxValue) const;
+                        Double& minValue, Double& maxValue, uint thread) const;
 
     /** Returns access to the wavetable generator, or NULL if not initialized */
     AUDIO::WavetableGenerator * wavetableGenerator() const { return wavetableGen_; }
@@ -165,10 +167,10 @@ public:
 
     MATH::Timeline1D * timeline() { return timeline_; }
     const MATH::Timeline1D * timeline() const { return timeline_; }
-    PPP_NAMESPACE::Parser * equation() { return equation_; }
-    const PPP_NAMESPACE::Parser * equation() const { return equation_; }
+    PPP_NAMESPACE::Parser * equation(uint thread);
+    const PPP_NAMESPACE::Parser * equation(uint thread) const;
 
-    Double value(Double time) const;
+    Double value(Double time, uint thread) const;
 
 signals:
 
@@ -176,14 +178,15 @@ public slots:
 
 private:
 
-    Double value_(Double gtime, Double time) const;
+    Double value_(Double gtime, Double time, uint thread) const;
 
     SequenceType mode_;
     MATH::Timeline1D * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
     AUDIO::WavetableGenerator * wavetableGen_;
-    PPP_NAMESPACE::Parser * equation_;
 
+    class SeqEquation;
+    std::vector<SeqEquation *> equation_;
 
     ParameterFloat
         * offset_,
@@ -213,11 +216,7 @@ private:
     // ----- equation stuff -----
 
     QString equationText_;
-    mutable Double
-        equationTime_,
-        equationFreq_,
-        equationPhase_,
-        equationPW_;
+
 };
 
 } // namespace MO

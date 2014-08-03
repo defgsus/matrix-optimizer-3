@@ -35,33 +35,33 @@ void TrackFloat::deserialize(IO::DataStream & io)
     io.readHeader("trkf", 1);
 }
 
-Double TrackFloat::value(Double time) const
+Double TrackFloat::value(Double time, uint thread) const
 {
     Double v = 0.0;
     for (auto s : sequences_)
     {
         if (time >= s->start() && time <= s->end()
-                && s->active(time))
-                    v += s->value(time);
+                && s->active(time, thread))
+                    v += s->value(time, thread);
     }
 
     return v;
 }
 
-void TrackFloat::getValues(Double time, Double timeIncrement, uint number, Double *ptr) const
+void TrackFloat::getValues(Double time, uint thread, Double timeIncrement, uint number, Double *ptr) const
 {
     for (uint i=0; i<number; ++i)
     {
-        *ptr++ = value(time);
+        *ptr++ = value(time, thread);
         time += timeIncrement;
     }
 }
 
-void TrackFloat::getValues(Double time, Double timeIncrement, uint number, F32 *ptr) const
+void TrackFloat::getValues(Double time, uint thread, Double timeIncrement, uint number, F32 *ptr) const
 {
     for (uint i=0; i<number; ++i)
     {
-        *ptr++ = value(time);
+        *ptr++ = value(time, thread);
         time += timeIncrement;
     }
 }

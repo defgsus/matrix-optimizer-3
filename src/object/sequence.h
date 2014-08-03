@@ -55,18 +55,18 @@ public:
 
     /** Loop start time (local) in seconds */
     Double loopStart() const { return loopStart_->baseValue(); }
-    Double loopStart(Double time) const { return loopStart_->value(time); }
+    Double loopStart(Double time, uint thread) const { return loopStart_->value(time, thread); }
 
     /** Loop length in seconds */
     Double loopLength() const { return loopLength_->baseValue(); }
-    Double loopLength(Double time) const { return loopLength_->value(time); }
+    Double loopLength(Double time, uint thread) const { return loopLength_->value(time, thread); }
 
     /** Loop end time (local) in seconds */
     Double loopEnd() const { return (loopStart_->baseValue() + loopLength_->baseValue()) / speed_; }
 
     /** Offset into the sequence data (local) in seconds. */
     Double timeOffset() const { return timeOffset_->baseValue(); }
-    Double timeOffset(Double time) const { return timeOffset_->value(time); }
+    Double timeOffset(Double time, uint thread) const { return timeOffset_->value(time, thread); }
 
     /** Sequence internal speed */
     Double speed() const { return speed_; }
@@ -101,9 +101,10 @@ public:
         { speed_ = (t >= minimumSpeed()) ? t : minimumSpeed(); }
 
     /** Translates global time to sequence-local time (with loop) */
-    Double getSequenceTime(Double global_time) const;
+    Double getSequenceTime(Double global_time, uint thread) const;
     /** Translates global time to sequence-local time and returnd the current loop settings */
-    Double getSequenceTime(Double global_time, Double& loopStart, Double& loopLength, bool& isInLoop) const;
+    Double getSequenceTime(Double global_time, uint thread,
+                           Double& loopStart, Double& loopLength, bool& isInLoop) const;
 
 signals:
 
@@ -126,16 +127,16 @@ private:
 };
 
 
-inline Double Sequence::getSequenceTime(Double time) const
+inline Double Sequence::getSequenceTime(Double time, uint thread) const
 {
     time = (time - start_) * speed_;
-    time += timeOffset_->value(time);
+    time += timeOffset_->value(time, thread);
 
     if (isLooping_)
     {
         const Double
-                ls = loopStart_->value(time),
-                ll = std::max(loopLength_->value(time), minimumLength());
+                ls = loopStart_->value(time, thread),
+                ll = std::max(loopLength_->value(time, thread), minimumLength());
 
         if (time > ls + ll)
             return MATH::moduloSigned(time - ls, ll) + ls;
@@ -144,15 +145,16 @@ inline Double Sequence::getSequenceTime(Double time) const
     return time;
 }
 
-inline Double Sequence::getSequenceTime(Double time, Double& lStart, Double& lLength, bool& isInLoop) const
+inline Double Sequence::getSequenceTime(Double time, uint thread,
+                                        Double& lStart, Double& lLength, bool& isInLoop) const
 {
     time = (time - start_) * speed_;
-    time += timeOffset_->value(time);
+    time += timeOffset_->value(time, thread);
 
     if (isLooping_)
     {
-        lStart = loopStart_->value(time);
-        lLength = std::max(loopLength_->value(time), minimumLength());
+        lStart = loopStart_->value(time, thread);
+        lLength = std::max(loopLength_->value(time, thread), minimumLength());
 
         isInLoop = time >= lStart;
 

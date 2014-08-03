@@ -57,13 +57,13 @@ void ParameterFloat::deserialize(IO::DataStream &io)
 }
 
 
-Double ParameterFloat::getModulationValue(Double time) const
+Double ParameterFloat::getModulationValue(Double time, uint thread) const
 {
     Double m = 0;
 
     for (auto t : modulators_)
-        if (t->active(time))
-            m += t->value(time);
+        if (t->active(time, thread))
+            m += t->value(time, thread);
 
     return m;
 }
@@ -124,30 +124,30 @@ QList<Object*> ParameterFloat::getFutureModulatingObjects(const Scene *scene) co
 }
 
 
-void ParameterFloat::getValues(Double time, Double timeIncrement, uint number, Double *ptr) const
+void ParameterFloat::getValues(Double time, uint thread, Double timeIncrement, uint number, Double *ptr) const
 {
     for (uint i=0; i<number; ++i)
     {
-        *ptr++ = value(time);
+        *ptr++ = value(time, thread);
         time += timeIncrement;
     }
 }
 
 
-void ParameterFloat::getValues(Double time, Double timeIncrement, uint number, F32 *ptr) const
+void ParameterFloat::getValues(Double time, uint thread, Double timeIncrement, uint number, F32 *ptr) const
 {
     for (uint i=0; i<number; ++i)
     {
-        *ptr++ = value(time);
+        *ptr++ = value(time, thread);
         time += timeIncrement;
     }
 }
 
-void ParameterFloat::getValues(SamplePos pos, Double sampleRateInv, uint number, F32 *ptr) const
+void ParameterFloat::getValues(SamplePos pos, uint thread, Double sampleRateInv, uint number, F32 *ptr) const
 {
     for (uint i=0; i<number; ++i, ++pos)
     {
-        *ptr++ = value(sampleRateInv * pos);
+        *ptr++ = value(sampleRateInv * pos, thread);
     }
 }
 

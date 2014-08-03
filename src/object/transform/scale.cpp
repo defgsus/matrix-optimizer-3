@@ -59,11 +59,13 @@ void Scale::settingChanged(Setting * s)
     }
 }
 */
-void Scale::applyTransformation(Mat4 &matrix, Double time) const
+void Scale::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
-    const float all = all_->value(time);
+    const float all = all_->value(time, thread);
     matrix = glm::scale(matrix,
-                 Vec3(x_->value(time) * all, y_->value(time) * all, z_->value(time) * all));
+                 Vec3(x_->value(time, thread) * all,
+                      y_->value(time, thread) * all,
+                      z_->value(time, thread) * all));
 }
 
 

@@ -319,8 +319,9 @@ void Object::passDownActivityScope_(ActivityScope parent_scope)
     }
 }
 
-bool Object::active(Double /*time*/) const
+bool Object::active(Double /*time*/, uint /*thread*/) const
 {
+    // XXX active parameter not there yet
     return activityScope() & currentActivityScope_;
 }
 
@@ -652,11 +653,11 @@ void Object::collectTransformationObjects_()
             transformationObjects_.append(t);
 }
 
-void Object::calculateTransformation(Mat4 &matrix, Double time) const
+void Object::calculateTransformation(Mat4 &matrix, Double time, uint thread) const
 {
     for (auto t : transformationObjects_)
-        if (t->active(time))
-            t->applyTransformation(matrix, time);
+        if (t->active(time, thread))
+            t->applyTransformation(matrix, time, thread);
 }
 
 // ---------------------- parameter --------------------------

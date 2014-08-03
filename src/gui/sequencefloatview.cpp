@@ -41,7 +41,7 @@ namespace {
     public:
         const SequenceFloat * sequence;
         Double value(Double time) const
-            { return sequence->value(sequence->start() + time); }
+            { return sequence->value(sequence->start() + time, MO_GUI_THREAD); }
     };
 }
 
@@ -333,7 +333,7 @@ void SequenceFloatView::createSettingsWidgets_()
     auto text = wEquEdit_ = new EquationEditor(this);
     w->layout()->addWidget(text);
     text->setPlainText(sequence_->equationText());
-    text->setParser(sequence_->equation());
+    text->setParser(sequence_->equation(MO_GUI_THREAD));
     connect(text, &EquationEditor::equationChanged,
     [this, scene, text]()
     {
@@ -657,8 +657,8 @@ void SequenceFloatView::updateWidgets_()
     wLoopOverlapping_->setVisible(isLoop);
     wLoopOverlap_->setVisible(isLoopOverlap);
     wLoopOverlapOffset_->setVisible(isLoopOverlap);
-    if (isEqu && wEquEdit_->assignedParser() != sequence_->equation())
-        wEquEdit_->setParser(sequence_->equation());
+    if (isEqu && wEquEdit_->assignedParser() != sequence_->equation(MO_GUI_THREAD))
+        wEquEdit_->setParser(sequence_->equation(MO_GUI_THREAD));
 
     wWgPartials_->setVisible(isWT);
     wWgOctave_->setVisible(isWT);

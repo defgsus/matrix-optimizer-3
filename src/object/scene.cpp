@@ -649,7 +649,7 @@ void Scene::renderScene(Double time, uint thread)
 
         // initialize object gl resources
         for (auto o : glObjects_)
-            if (o->needsInitGl(thread) && o->active(time))
+            if (o->needsInitGl(thread) && o->active(time, thread))
             {
                 if (o->isGlInitialized(thread))
                     o->releaseGl_(thread);
@@ -661,7 +661,7 @@ void Scene::renderScene(Double time, uint thread)
 
         // render scene from each camera
         for (auto camera : cameras_)
-        if (camera->active(time))
+        if (camera->active(time, thread))
         {
             // get camera viewspace
             GL::CameraSpace camSpace;
@@ -679,7 +679,7 @@ void Scene::renderScene(Double time, uint thread)
 
                 // render all opengl objects
                 for (auto o : glObjects_)
-                if (o->active(time))
+                if (o->active(time, thread))
                 {
                     o->renderGl_(camSpace, thread, time);
                 }
@@ -695,7 +695,7 @@ void Scene::renderScene(Double time, uint thread)
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
     for (auto camera : cameras_)
-        if (camera->active(time))
+        if (camera->active(time, thread))
             camera->drawFramebuffer(thread, time);
     fboFinal_[thread]->unbind();
 
@@ -722,12 +722,12 @@ void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
 
     // calculate transformations
     for (auto &o : posObjects_)
-    if (o->active(time))
+    if (o->active(time, thread))
     {
         // get parent transformation
         Mat4 matrix(o->parentObject()->transformation(thread, sample));
         // apply object's transformation
-        o->calculateTransformation(matrix, time);
+        o->calculateTransformation(matrix, time, thread);
         // write back
         o->setTransformation(thread, sample, matrix);
     }

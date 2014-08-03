@@ -166,11 +166,11 @@ void Camera::releaseGl(uint thread)
     fbo_[thread] = 0;
 }
 
-void Camera::initCameraSpace(GL::CameraSpace &cam, uint /*thread*/, Double time) const
+void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) const
 {
     Float angle = 90.f;
     if (renderMode_ == RM_PERSP)
-        angle = std::min((Double)179, cameraAngle_->value(time));
+        angle = std::min((Double)179, cameraAngle_->value(time, thread));
 
     cam.setProjectionMatrix(
                 glm::perspective(angle,
@@ -179,12 +179,12 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint /*thread*/, Double time)
                 );
 }
 
-uint Camera::numCubeTextures(uint , Double time) const
+uint Camera::numCubeTextures(uint thread, Double time) const
 {
     if (renderMode_ != RM_FULLDOME_CUBE)
         return 1;
 
-    return (cameraAngle_->value(time) >= 250.f)
+    return (cameraAngle_->value(time, thread) >= 250.f)
                ? 6 : 5;
 
 }
@@ -242,9 +242,9 @@ void Camera::drawFramebuffer(uint thread, Double time)
 {
     GL::FrameBufferObject * fbo = fbo_[thread];
 
-    uColor_->floats[3] = cameraMix_->value(time);
+    uColor_->floats[3] = cameraMix_->value(time, thread);
     if (renderMode_ == RM_FULLDOME_CUBE)
-        uAngle_->floats[0] = cameraAngle_->value(time);
+        uAngle_->floats[0] = cameraAngle_->value(time, thread);
 
     fbo->colorTexture()->bind();
     MO_CHECK_GL( glEnable(GL_BLEND) );

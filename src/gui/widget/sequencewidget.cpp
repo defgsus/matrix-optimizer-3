@@ -29,7 +29,7 @@ namespace {
     public:
         const SequenceFloat * sequence;
         Double value(Double time) const
-            { return sequence->value(/*sequence->start() +*/ time); }
+            { return sequence->value(/*sequence->start() +*/ time, MO_GUI_THREAD); }
     };
 }
 
@@ -101,7 +101,8 @@ void SequenceWidget::updateValueRange()
 {
     if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(sequence_))
     {
-        seqf->getMinMaxValue(0.0, seqf->end() - seqf->start(), minValue_, maxValue_);
+        seqf->getMinMaxValue(0.0, seqf->end() - seqf->start(), minValue_, maxValue_,
+                             MO_GUI_THREAD);
         updateViewSpace();
     }
 }

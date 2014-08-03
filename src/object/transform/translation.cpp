@@ -44,10 +44,10 @@ void Translation::createParameters()
     z_ = createFloatParameter("z", "z", tr("Offset on the z axis"), 0);
 }
 
-void Translation::applyTransformation(Mat4 &matrix, Double time) const
+void Translation::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
     matrix = glm::translate(matrix,
-                 Vec3(x_->value(time), y_->value(time), z_->value(time)));
+                 Vec3(x_->value(time,thread), y_->value(time,thread), z_->value(time,thread)));
 }
 
 
