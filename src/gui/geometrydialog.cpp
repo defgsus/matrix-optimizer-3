@@ -122,6 +122,7 @@ void GeometryDialog::createWidgets_()
             connect(cbSharedVert_, SIGNAL(stateChanged(int)),
                     this, SLOT(updateFromWidgets_()));
 
+            // normals and normalization
             lh2 = new QHBoxLayout();
             lv->addLayout(lh2);
 
@@ -135,6 +136,23 @@ void GeometryDialog::createWidgets_()
                 lh2->addWidget(cbNorm_);
                 cbNorm_->setChecked(settings_->normalizeVertices);
                 connect(cbNorm_, SIGNAL(stateChanged(int)),
+                        this, SLOT(updateFromWidgets_()));
+
+            // normalization amount
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                labelNormAmt_ = new QLabel(tr("normalization"), this);
+                lh2->addWidget(labelNormAmt_);
+
+                spinNormAmt_ = new DoubleSpinBox(this);
+                lh2->addWidget(spinNormAmt_);
+                spinNormAmt_->setStatusTip("Amount of normalization between 0 and 1");
+                spinNormAmt_->setDecimals(5);
+                spinNormAmt_->setSingleStep(0.02);
+                spinNormAmt_->setRange(0.0, 1);
+                spinNormAmt_->setValue(settings_->normalization);
+                connect(spinNormAmt_, SIGNAL(valueChanged(double)),
                         this, SLOT(updateFromWidgets_()));
 
             // scale
@@ -240,7 +258,7 @@ void GeometryDialog::createWidgets_()
 
                     cbRemove_ = new QCheckBox(tr("randomly\nremove primitives"), this);
                     lh2->addWidget(cbRemove_);
-                    cbTess_->setChecked(settings_->removeRandomly);
+                    cbRemove_->setChecked(settings_->removeRandomly);
                     connect(cbRemove_, SIGNAL(toggled(bool)),
                             this, SLOT(updateFromWidgets_()));
 
@@ -345,6 +363,7 @@ void GeometryDialog::updateFromWidgets_()
     settings_->convertToLines = cbConvertToLines_->isChecked();
     settings_->sharedVertices = cbSharedVert_->isChecked();
     settings_->normalizeVertices = cbNorm_->isChecked();
+    settings_->normalization = spinNormAmt_->value();
     settings_->scale = spinS_->value();
     settings_->scaleX = spinSX_->value();
     settings_->scaleY = spinSY_->value();
@@ -382,6 +401,9 @@ void GeometryDialog::updateFromWidgets_()
     cbCalcNormals_->setVisible( hasTriangle && !settings_->convertToLines );
     cbConvertToLines_->setVisible( hasTriangle );
     spinTess_->setVisible( settings_->tesselate );
+
+    labelNormAmt_->setVisible( settings_->normalizeVertices );
+    spinNormAmt_->setVisible( settings_->normalizeVertices );
 
     editFilename_->setVisible(isFile);
     butLoadModelFile_->setVisible(isFile);

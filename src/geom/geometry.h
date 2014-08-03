@@ -151,8 +151,9 @@ public:
     /** Split all triangles into smaller ones. */
     void tesselate(uint level = 1);
 
-    /** Normalize all vertices */
-    void normalizeSphere(VertexType scale = 1);
+    /** Normalize all vertex positions.
+        @p normalization is the amount of normalization [0,1] */
+    void normalizeSphere(VertexType scale = 1, VertexType normalization = 1.0);
 
     /** Removes triangles or lines with a probability [0,1] */
     void removePrimitivesRandomly(float probability, int seed);

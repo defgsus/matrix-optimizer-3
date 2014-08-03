@@ -313,7 +313,7 @@ void Geometry::convertToLines()
     triIndex_.clear();
 }
 
-void Geometry::normalizeSphere(VertexType scale)
+void Geometry::normalizeSphere(VertexType scale, VertexType normalization)
 {
     for (uint i=0; i<numVertices(); ++i)
     {
@@ -323,11 +323,17 @@ void Geometry::normalizeSphere(VertexType scale)
             v3 = vertex_[i*3+2],
             mag = std::sqrt(v1*v1 + v2*v2 + v3*v3) / scale;
 
-        if (mag>0)
+        if (mag>0 && normalization >= 1)
         {
             vertex_[i*3] /= mag;
             vertex_[i*3+1] /= mag;
             vertex_[i*3+2] /= mag;
+        }
+        else
+        {
+            vertex_[i*3] += normalization * (vertex_[i*3] / mag - vertex_[i*3]);
+            vertex_[i*3+1] += normalization * (vertex_[i*3+1] / mag - vertex_[i*3+1]);
+            vertex_[i*3+2] += normalization * (vertex_[i*3+2] / mag - vertex_[i*3+2]);
         }
     }
 }

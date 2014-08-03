@@ -656,7 +656,7 @@ void GeometryFactory::createFromSettings(Geometry * g,
         g->tesselate(set->tessLevel);
 
     if (set->normalizeVertices)
-        g->normalizeSphere();
+        g->normalizeSphere(1, set->normalization);
 
     g->scale(set->scale * set->scaleX,
              set->scale * set->scaleY,
@@ -727,7 +727,8 @@ GeometryFactorySettings::GeometryFactorySettings()
       scaleX        (1.f),
       scaleY        (1.f),
       scaleZ        (1.f),
-      removeProb    (0.01f),
+      removeProb    (0.1f),
+      normalization (1.f),
       gridSize      (1),
       segmentsX     (10),
       segmentsY     (10),
@@ -741,7 +742,7 @@ GeometryFactorySettings::GeometryFactorySettings()
 
 void GeometryFactorySettings::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("geomfacset", 1);
+    io.writeHeader("geomfacset", 2);
 
     io << typeIds[type];
 
@@ -752,11 +753,14 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
         << removeProb << gridSize
         << segmentsX << segmentsY << segmentsZ
         << tessLevel << removeSeed << withCoords;
+
+    // v2
+    io << normalization;
 }
 
 void GeometryFactorySettings::deserialize(IO::DataStream & io)
 {
-    io.readHeader("geomfacset", 1);
+    int ver = io.readHeader("geomfacset", 2);
 
     io.readEnum(type, T_BOX, typeIds);
 
@@ -767,6 +771,9 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         >> removeProb >> gridSize
         >> segmentsX >> segmentsY >> segmentsZ
         >> tessLevel >> removeSeed >> withCoords;
+
+    if (ver >= 2)
+    io >> normalization;
 }
 
 } // namespace GEOM

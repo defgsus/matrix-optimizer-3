@@ -14,6 +14,7 @@
 #include <QStringList>
 
 #include "types/int.h"
+#include "types/float.h"
 
 namespace MO {
 namespace IO { class DataStream; }
@@ -86,8 +87,8 @@ public:
     QString filename;
     bool calcNormals, asTriangles, convertToLines, sharedVertices, tesselate,
         normalizeVertices, removeRandomly;
-    float colorR, colorG, colorB, colorA;
-    float scale, scaleX, scaleY, scaleZ, removeProb;
+    Float colorR, colorG, colorB, colorA;
+    Float scale, scaleX, scaleY, scaleZ, removeProb, normalization;
     uint gridSize, segmentsX, segmentsY, segmentsZ, tessLevel, removeSeed;
 
     bool withCoords;

@@ -64,13 +64,14 @@ protected:
     GEOM::GeometryCreator * creator_;
     bool updateGeometryLater_;
 
-    QLabel * labelInfo_, *labelSeg_;
+    QLabel * labelInfo_, *labelSeg_, *labelNormAmt_;
     QLineEdit * editFilename_;
     QToolButton * butLoadModelFile_;
     QComboBox * comboType_;
     QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbCalcNormals_,
             *cbTess_, *cbNorm_, *cbRemove_;
-    DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_, *spinRemoveProb_;
+    DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_, *spinRemoveProb_,
+                *spinNormAmt_;
     SpinBox * spinSegX_, *spinSegY_, *spinSegZ_, *spinTess_, *spinRemoveSeed_;
 };
 
