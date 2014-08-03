@@ -51,6 +51,8 @@ void ObjectGl::setNumberThreads(uint num)
 
     for (uint i=oldnum; i<num; ++i)
     {
+        glContext_[i] = 0;
+        needsInitGl_[i] = true;
         isGlInitialized_[i] = false;
     }
 }

@@ -31,22 +31,22 @@ public:
     /** Creates an OpenGL Window.
         When the window is shown, it's Context will be created
         and Manager::contextCreated() will be emitted. */
-    Window * createGlWindow();
+    Window * createGlWindow(uint thread);
 
 
 signals:
 
     /** This will signal the creation of a new Context */
-    void contextCreated(MO::GL::Context *);
+    void contextCreated(uint thread, MO::GL::Context *);
 
     /** Context is current, please render. */
-    void renderRequest();
+    void renderRequest(uint thread);
 
 public slots:
 
 private slots:
 
-    void onContextCreated_(MO::GL::Context *);
+    void onContextCreated_(uint thread, MO::GL::Context *);
 
 private:
 

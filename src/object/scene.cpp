@@ -71,7 +71,7 @@ Scene::Scene(QObject *parent) :
     fbCmWidth_          (512),
     fbCmHeight_         (512),
     fboFinal_           (0),
-    sceneNumberThreads_ (2),
+    sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
     audioDevice_        (new AUDIO::AudioDevice()),
     isPlayback_         (false),
@@ -89,12 +89,14 @@ Scene::Scene(QObject *parent) :
     connect(&timer_, SIGNAL(timeout()), this, SLOT(timerUpdate_()));
 */
     sceneBufferSize_.resize(sceneNumberThreads_);
-    sceneBufferSize_[0] = 1;
-    sceneBufferSize_[1] = 32;
+    sceneBufferSize_[MO_GUI_THREAD] =
+    sceneBufferSize_[MO_GFX_THREAD] = 1;
+    sceneBufferSize_[MO_AUDIO_THREAD] = 32;
 
     sceneDelaySize_.resize(sceneNumberThreads_);
-    sceneDelaySize_[0] = 0;
-    sceneDelaySize_[1] = 1<<16;
+    sceneDelaySize_[MO_GUI_THREAD] =
+    sceneDelaySize_[MO_GFX_THREAD] = 0;
+    sceneDelaySize_[MO_AUDIO_THREAD] = nextPowerOfTwo(48000);
 }
 
 Scene::~Scene()
@@ -253,7 +255,8 @@ void Scene::updateTree_()
     if (glContext_)
     {
         // update infos for new objects
-        setGlContext(glContext_);
+        // XXX This should be iteratively for all glContext_s
+        setGlContext(MO_GFX_THREAD, glContext_);
 
         // update image
         render_();
@@ -573,15 +576,15 @@ void Scene::getAudioOutput(uint numChannels, uint thread, F32 *buffer) const
 
 // ----------------------- open gl ---------------------------
 
-void Scene::setGlContext(GL::Context *context)
+void Scene::setGlContext(uint thread, GL::Context *context)
 {
-    MO_DEBUG_GL("Scene::setGlContext(" << context << ")");
+    MO_DEBUG_GL("Scene::setGlContext(" << thread << ", " << context << ")");
 
     glContext_ = context;
 
     MO_DEBUG_GL("setting gl context for objects");
     for (auto o : glObjects_)
-        o->setGlContext_(0, glContext_);
+        o->setGlContext_(thread, glContext_);
 }
 
 void Scene::createSceneGl_(uint thread)
@@ -612,7 +615,7 @@ void Scene::releaseSceneGl_(uint thread)
     screenQuad_[thread] = 0;
 }
 
-void Scene::renderScene(Double time, uint thread)
+void Scene::renderScene(uint thread)
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
 
@@ -621,7 +624,7 @@ void Scene::renderScene(Double time, uint thread)
     if (!glContext_ || cameras_.empty())
         return;
 
-    time = sceneTime_;
+    Double time = sceneTime_;
 
     {
         // read-lock is sufficient because we
@@ -756,7 +759,7 @@ void Scene::kill()
 {
     stop();
 
-    // release opengl resources later
+    // release opengl resources later in their thread
     for (uint i=0; i<numberThreads(); ++i)
         releaseAllGlRequested_[i] = true;
 
@@ -794,7 +797,7 @@ void Scene::initAudioDevice_()
             return;
 
         sceneSampleRate_ = audioDevice_->sampleRate();
-        sceneBufferSize_[1] = audioDevice_->bufferSize();
+        sceneBufferSize_[MO_AUDIO_THREAD] = audioDevice_->bufferSize();
 
         updateBufferSize_();
         updateSampleRate_();
@@ -817,14 +820,14 @@ void Scene::closeAudio()
 
 void Scene::audioCallback_(const F32 *, F32 * out)
 {
-    MO_ASSERT(audioDevice_->bufferSize() == bufferSize(1),
+    MO_ASSERT(audioDevice_->bufferSize() == bufferSize(MO_AUDIO_THREAD),
               "buffer-size mismatch");
 
-    calculateAudioBlock(samplePos_, 1);
-    getAudioOutput(audioDevice_->numOutputChannels(), 1, out);
+    calculateAudioBlock(samplePos_, MO_AUDIO_THREAD);
+    getAudioOutput(audioDevice_->numOutputChannels(), MO_AUDIO_THREAD, out);
 
     // update scene time
-    setSceneTime(samplePos_ + bufferSize(1));
+    setSceneTime(samplePos_ + bufferSize(MO_AUDIO_THREAD));
 }
 
 void Scene::start()

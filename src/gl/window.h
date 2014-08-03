@@ -34,24 +34,34 @@ public:
     explicit Window(QScreen * targetScreen = 0);
     ~Window();
 
+    /** Returns the opengl context associated to this window */
     Context * context() const { return context_; }
-//    void setFramebuffer(QOpenGLFramebufferObject * frameBuffer);
 
+    /** Returns the messured fps (valid when animating) */
     double messuredFps() const { return fps_; }
+
+    /** Sets the thread identifier for this window/context */
+    void setThread(uint thread) { thread_ = thread; }
+    /** Returns the thread identifier for this window/context */
+    uint threadId() const { return thread_; }
 
 signals:
 
     /** This will signal a creation of a new Context */
-    void contextCreated(MO::GL::Context *);
+    void contextCreated(uint thread, MO::GL::Context *);
 
     /** Context is current, please render */
-    void renderRequest();
+    void renderRequest(uint thread);
 
 public slots:
 
+    /** Immediately render on current thread */
     void renderNow();
+    /** Puts a render request into the event-loop */
     void renderLater();
+    /** Starts consecutively rendering */
     void startAnimation() { animating_ = true; renderLater(); }
+    /** Stops rendering consecutively */
     void stopAnimation() { animating_ = false; }
 
 protected:
@@ -64,9 +74,10 @@ private:
 
     Context * context_;
 
-    bool updatePending_;
+    uint thread_;
 
-    bool animating_;
+    bool updatePending_,
+        animating_;
 
     QTime * messure_;
 

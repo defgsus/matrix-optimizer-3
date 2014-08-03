@@ -24,7 +24,14 @@
 /** Maximum time in seconds (for widgets mainly) */
 #define MO_MAX_TIME (60 * 60 * 1000)
 
+/** The thread for gui-elements, e.g. drawing sequence content and such. */
 #define MO_GUI_THREAD (0)
+/** The one gfx thread. In theory, there are many more possible.
+    Most of the framework supports that already. */
+#define MO_GFX_THREAD (1)
+/** The one audio thread. Again, many more are possible, probably for splitting the
+    tree and doing calculations in parallel. */
+#define MO_AUDIO_THREAD (2)
 
 namespace MO {
 namespace IO { class DataStream; }

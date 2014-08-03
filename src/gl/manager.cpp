@@ -31,23 +31,24 @@ Manager::~Manager()
         window_->close();
 }
 
-Window * Manager::createGlWindow()
+Window * Manager::createGlWindow(uint thread)
 {
     if (!window_)
     {
         window_ = new Window();
-        connect(window_, SIGNAL(contextCreated(MO::GL::Context*)),
-                            SLOT(onContextCreated_(MO::GL::Context*)));
-        connect(window_, SIGNAL(renderRequest()), SIGNAL(renderRequest()));
+        window_->setThread(thread);
+        connect(window_, SIGNAL(contextCreated(uint, MO::GL::Context*)),
+                            SLOT(onContextCreated_(uint, MO::GL::Context*)));
+        connect(window_, SIGNAL(renderRequest(uint)), SIGNAL(renderRequest(uint)));
     }
     return window_;
 }
 
-void Manager::onContextCreated_(Context * context)
+void Manager::onContextCreated_(uint thread, Context * context)
 {
-    MO_DEBUG_GL("Manager::onContextCreated_(" << context << ")");
+    MO_DEBUG_GL("Manager::onContextCreated_(" << thread << ", " << context << ")");
 
-    emit contextCreated(context);
+    emit contextCreated(thread, context);
 }
 
 } // namespace GL

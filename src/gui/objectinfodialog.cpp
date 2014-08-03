@@ -68,7 +68,7 @@ void ObjectInfoDialog::setObject(Object * o)
     if (Transformation * tran = qobject_cast<Transformation*>(o))
     {
         Mat4 mat(1.0);
-        tran->applyTransformation(mat, curTime, MO_GUI_THREAD);
+        tran->applyTransformation(mat, curTime, MO_GFX_THREAD);
         s << "<p>" << tr("applied transformation at %1").arg(curTime)
           << ":<br/>" << matrix2Html(mat) << "</p>";
     }

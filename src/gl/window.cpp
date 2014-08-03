@@ -26,12 +26,13 @@ namespace MO {
 namespace GL {
 
 Window::Window(QScreen * targetScreen)
-    :   QWindow       (targetScreen),
-        context_      (0),
-        updatePending_(false),
-        animating_    (false),
-        messure_      (new QTime()),
-        fps_          (0.0)
+    : QWindow       (targetScreen),
+      context_      (0),
+      thread_       (0),
+      updatePending_(false),
+      animating_    (false),
+      messure_      (new QTime()),
+      fps_          (0.0)
 {
     MO_DEBUG_GL("Window::Window()");
 
@@ -56,12 +57,6 @@ Window::~Window()
 //        context_->doneCurrent();
 }
 
-/*
-void Window::setFramebuffer(QOpenGLFramebufferObject *frameBuffer)
-{
-    frameBuffer_ = frameBuffer;
-}
-*/
 
 void Window::exposeEvent(QExposeEvent *)
 {
@@ -122,7 +117,7 @@ void Window::renderNow()
         if (!context_->qcontext()->create())
             MO_GL_ERROR("could not create context");
 
-        emit contextCreated(context_);
+        emit contextCreated(thread_, context_);
 
         //needsInit = true;
     }
@@ -136,7 +131,7 @@ void Window::renderNow()
 
     MO_CHECK_GL( glViewport(0,0, width(), height()) );
 
-    emit renderRequest();
+    emit renderRequest(thread_);
 
 
     context_->qcontext()->swapBuffers(this);
