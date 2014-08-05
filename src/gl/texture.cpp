@@ -11,6 +11,7 @@
 #include <QImage>
 
 #include "texture.h"
+#include "img/image.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -64,7 +65,7 @@ Texture::Texture(GLsizei width, GLsizei height,
       type_			(type)
 {
     MO_DEBUG_GL("Texture::Texture(" << width << ", " << height
-                << ", " << format << ", " << input_format << ", "
+                << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_to_data << ")");
 }
 
@@ -214,16 +215,19 @@ bool Texture::bind() const
     MO_CHECK_GL_RET_COND( rep_, glBindTexture(target_, handle_), err );
     if (err) return false;
 
+    /*
     if (target_ != GL_TEXTURE_CUBE_MAP)
         MO_CHECK_GL_RET_COND( rep_, glEnable(target_), err );
+    */
 
     return !err;
 }
 
 void Texture::unbind() const
 {
-    if (target_ != GL_TEXTURE_CUBE_MAP)
+    /*if (target_ != GL_TEXTURE_CUBE_MAP)
         MO_CHECK_GL_COND( rep_, glDisable(target_) );
+    */
 }
 
 void Texture::release()
@@ -295,7 +299,7 @@ bool Texture::upload(void * ptr, GLint mipmap_level)
     };
 }
 
-bool Texture::upload_(void * ptr, GLint mipmap_level, GLenum cube_target)
+bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 {
     MO_DEBUG_GL("Texture::upload_(" << ptr << ", " << mipmap_level
                 << ", " << cube_target << ")");
@@ -511,9 +515,12 @@ QImage Texture::getImage()
 
 // ------------------------ static ----------------------------
 
-Texture * Texture::createFromImage(const QImage & img, GLenum gpu_format, ErrorReporting rep)
+
+Texture * Texture::createFromImage(const Image & img, GLenum gpu_format, ErrorReporting rep)
 {
-    if (img.isNull())
+    MO_DEBUG_GL("Texture::createFromImage(" << img << ", " << gpu_format << ")");
+
+    if (img.isEmpty())
     {
         MO_GL_ERROR_COND(rep, "createFromImage() with NULL image");
         return 0;
@@ -527,35 +534,88 @@ Texture * Texture::createFromImage(const QImage & img, GLenum gpu_format, ErrorR
 
     // determine texture format from image format
 
-    GLenum type;
-    if (img.format() == QImage::Format_Mono)
-        type = GL_LUMINANCE;
-    else if (img.format() == QImage::Format_RGB32)
-        type = GL_RGB;
-    else if (img.format() == QImage::Format_ARGB32)
-        type = GL_RGBA;
-    else
-    {
-        MO_GL_ERROR_COND(rep, "createFromImage() unsupported image format " << img.format());
-        return 0;
-    }
+    GLenum format = img.glEnumForFormat();
 
     // create and bind
 
-    Texture * tex = new Texture(img.width(), img.height(), gpu_format, type, GL_UNSIGNED_BYTE, 0, rep);
+    Texture * tex = new Texture(
+                img.width(), img.height(),
+                gpu_format, format, img.glEnumForType(), 0, rep);
 
-    // XXX resource leak on exception
+    // XXX resource leak on error/exception
 
     if (!tex->create())
         return 0;
 
-    if (!tex->bind())
+    // upload image data
+
+    tex->upload_(img.data(), 0);
+
+    return tex;
+}
+
+
+Texture * Texture::createFromImage(const QImage & input_img, GLenum gpu_format, ErrorReporting rep)
+{
+    Image img;
+    if (!img.createFrom(input_img))
+    {
+        MO_GL_ERROR_COND(rep, "could not convert QImage to Image");
+        return 0;
+    }
+    return createFromImage(img, gpu_format, rep);
+
+    /*
+    QImage img_conv;
+    const QImage * img = &input_img;
+
+    MO_DEBUG_GL("Texture::createFromImage(" << &img << ", " << gpu_format << ")");
+
+    if (img->isNull())
+    {
+        MO_GL_ERROR_COND(rep, "createFromImage() with NULL image");
+        return 0;
+    }
+
+    if (img->width() == 0 || img->height() == 0 )
+    {
+        MO_GL_ERROR_COND(rep, "createFromImage() with empty image");
+        return 0;
+    }
+
+    // determine texture format from image format
+
+    GLenum type;
+    if (img->format() == QImage::Format_Mono)
+        type = GL_LUMINANCE;
+    else if (img->format() == QImage::Format_RGB32)
+        type = GL_RGBA;
+    //else if (img.format() == QImage::Format_ARGB32)
+    //    type = GL_RGBA;
+    else
+    {
+        img_conv = img->convertToFormat(QImage::Format_RGB32);
+        type = GL_RGBA;
+        img = &img_conv;
+        //MO_GL_ERROR_COND(rep, "createFromImage() unsupported image format " << img.format());
+        //return 0;
+    }
+
+    // create and bind
+
+    Texture * tex = new Texture(
+                img->width(), img->height(),
+                gpu_format, type, GL_UNSIGNED_BYTE, 0, rep);
+
+    // XXX resource leak on error/exception
+
+    if (!tex->create())
         return 0;
 
     // upload image data
 
     GLenum err;
-    for (int y=0; y<img.height(); ++y)
+    for (int y=0; y<img->height(); ++y)
     {
         MO_CHECK_GL_RET_COND(rep,
             glTexSubImage2D(
@@ -566,16 +626,16 @@ Texture * Texture::createFromImage(const QImage & img, GLenum gpu_format, ErrorR
                 // xoffset
                 0,
                 // yoffset
-                y,
+                img->height() - y - 1,
                 // width
-                img.width(),
+                img->width(),
                 // height
-                img.height(),
+                1,
                 // input format
-                type,
+                GL_ABGR_EXT,
                 // input data type
                 GL_UNSIGNED_BYTE,
-                img.constScanLine(y)
+                img->constScanLine(y)
                 ),
             err);
         if (err) return 0;
@@ -587,6 +647,7 @@ Texture * Texture::createFromImage(const QImage & img, GLenum gpu_format, ErrorR
     memory_used_ += tex->memory();
 
     return tex;
+    */
 }
 
 

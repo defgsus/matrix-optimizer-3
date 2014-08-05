@@ -13,6 +13,9 @@
 
 
 namespace MO {
+
+    class Image;
+
 namespace GL {
 
     enum ErrorReporting

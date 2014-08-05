@@ -67,7 +67,8 @@ protected:
     virtual void closeEvent(QCloseEvent *);
 
     /** Override this to create resources-per-opengl-context.
-        @note call the base class implementation in your derived function! */
+        @note call the base class implementation in your derived function!
+        @note Don't let exceptions propagate out of your derived function. */
     virtual void initializeGL() Q_DECL_OVERRIDE;
 
     /** Override to release opengl resources.

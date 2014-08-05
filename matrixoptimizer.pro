@@ -139,7 +139,8 @@ SOURCES += \
     src/gl/screenquad.cpp \
     src/math/cubemapmatrix.cpp \
     src/geom/geometrycreator.cpp \
-    src/geom/freecamera.cpp
+    src/geom/freecamera.cpp \
+    src/img/image.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -270,7 +271,8 @@ HEADERS += \
     src/gl/screenquad.h \
     src/math/cubemapmatrix.h \
     src/geom/geometrycreator.h \
-    src/geom/freecamera.h
+    src/geom/freecamera.h \
+    src/img/image.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

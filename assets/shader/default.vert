@@ -8,6 +8,7 @@ const float PI = 3.14159265358979;
 in vec4 a_position;
 in vec4 a_color;
 in vec3 a_normal;
+in vec2 a_texCoord;
 
 // shader uniforms
 uniform mat4 u_projection;
@@ -17,6 +18,7 @@ uniform mat4 u_view;
 out vec3 v_pos;
 out vec4 v_color;
 out vec3 v_normal;
+out vec2 v_texCoord;
 
 // returns spherical coordinate (x,y + depth in z)
 vec3 mo_pos_to_fulldome(in vec3 pos)
@@ -69,6 +71,7 @@ void main()
     v_pos = a_position.xyz;
     v_color = a_color;
     v_normal = a_normal;
+    v_texCoord = a_texCoord;
 
     // set final vertex position
     gl_Position = mo_ftransform(a_position);

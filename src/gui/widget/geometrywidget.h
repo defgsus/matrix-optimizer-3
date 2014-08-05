@@ -38,9 +38,12 @@ public slots:
 
 protected:
 
+    void initializeGL() Q_DECL_OVERRIDE;
+
     void drawGL(const Mat4 &projection, const Mat4 &transformation) Q_DECL_OVERRIDE;
 
     GL::Drawable * drawable_;
+    GL::Texture * tex_;
 
     bool showGrid_;
 };

@@ -795,7 +795,7 @@ void GeometryFactory::createFromSettings(Geometry * g,
                                          const GeometryFactorySettings * set,
                                          ObjLoader * loader_)
 {
-    g->setColor(set->colorR, set->colorG, set->colorB, set->colorA * 0.5);
+    g->setColor(set->colorR, set->colorG, set->colorB, set->colorA);
 
     switch (set->type)
     {

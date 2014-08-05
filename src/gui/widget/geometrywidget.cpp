@@ -12,6 +12,7 @@
 #include "gl/vertexarrayobject.h"
 #include "gl/drawable.h"
 #include "geom/geometry.h"
+#include "gl/texture.h"
 
 namespace MO {
 namespace GUI {
@@ -20,6 +21,7 @@ namespace GUI {
 GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     Basic3DWidget   (mode, parent),
     drawable_       (new GL::Drawable("geomwidget")),
+    tex_            (0),
     showGrid_       (false)
 {
     setMinimumSize(128, 128);
@@ -37,6 +39,15 @@ void GeometryWidget::setGeometry(GEOM::Geometry * g)
 {
     drawable_->setGeometry(g);
     update();
+}
+
+void GeometryWidget::initializeGL()
+{
+    Basic3DWidget::initializeGL();
+
+    tex_ = GL::Texture::createFromImage(
+                QImage(":/img/banner.png"),
+                GL_RGB, GL::ER_IGNORE);
 }
 
 void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)

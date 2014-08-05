@@ -48,6 +48,11 @@ public:
     /** Creates a new Texture from an image.
         Returns NULL on fail, or throws exception.
         OpenGL context must be present of course. */
+    static Texture * createFromImage(const Image&, GLenum gpu_format, ErrorReporting = ER_THROW);
+
+    /** Creates a new Texture from an image.
+        Returns NULL on fail, or throws exception.
+        OpenGL context must be present of course. */
     static Texture * createFromImage(const QImage&, GLenum gpu_format, ErrorReporting = ER_THROW);
 
     // --------------- getter ---------------------
@@ -156,7 +161,7 @@ private:
     void releaseTexture_();
 
     /** Creates or uploads the texture */
-    bool upload_(void * ptr, GLint mipmap_level, GLenum cube_target = 0);
+    bool upload_(const void * ptr, GLint mipmap_level, GLenum cube_target = 0);
     /** Downloads to ptr (must be non-NULL) */
     bool download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) const;
 
