@@ -509,5 +509,86 @@ QImage Texture::getImage()
 
 
 
+// ------------------------ static ----------------------------
+
+Texture * Texture::createFromImage(const QImage & img, GLenum gpu_format, ErrorReporting rep)
+{
+    if (img.isNull())
+    {
+        MO_GL_ERROR_COND(rep, "createFromImage() with NULL image");
+        return 0;
+    }
+
+    if (img.width() == 0 || img.height() == 0 )
+    {
+        MO_GL_ERROR_COND(rep, "createFromImage() with empty image");
+        return 0;
+    }
+
+    // determine texture format from image format
+
+    GLenum type;
+    if (img.format() == QImage::Format_Mono)
+        type = GL_LUMINANCE;
+    else if (img.format() == QImage::Format_RGB32)
+        type = GL_RGB;
+    else if (img.format() == QImage::Format_ARGB32)
+        type = GL_RGBA;
+    else
+    {
+        MO_GL_ERROR_COND(rep, "createFromImage() unsupported image format " << img.format());
+        return 0;
+    }
+
+    // create and bind
+
+    Texture * tex = new Texture(img.width(), img.height(), gpu_format, type, GL_UNSIGNED_BYTE, 0, rep);
+
+    // XXX resource leak on exception
+
+    if (!tex->create())
+        return 0;
+
+    if (!tex->bind())
+        return 0;
+
+    // upload image data
+
+    GLenum err;
+    for (int y=0; y<img.height(); ++y)
+    {
+        MO_CHECK_GL_RET_COND(rep,
+            glTexSubImage2D(
+                // target
+                GL_TEXTURE_2D,
+                // mipmap level
+                0,
+                // xoffset
+                0,
+                // yoffset
+                y,
+                // width
+                img.width(),
+                // height
+                img.height(),
+                // input format
+                type,
+                // input data type
+                GL_UNSIGNED_BYTE,
+                img.constScanLine(y)
+                ),
+            err);
+        if (err) return 0;
+    }
+
+    if (!tex->bind())
+        return 0;
+
+    memory_used_ += tex->memory();
+
+    return tex;
+}
+
+
 } // namespace GL
 } // namespace MO

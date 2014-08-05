@@ -13,6 +13,8 @@
 
 #include "gl/opengl.h"
 
+class QImage;
+
 namespace MO {
 namespace GL {
 
@@ -40,6 +42,13 @@ public:
                 ErrorReporting reporting = ER_THROW);
 
     virtual ~Texture();
+
+    // -------------- static ----------------------
+
+    /** Creates a new Texture from an image.
+        Returns NULL on fail, or throws exception.
+        OpenGL context must be present of course. */
+    static Texture * createFromImage(const QImage&, GLenum gpu_format, ErrorReporting = ER_THROW);
 
     // --------------- getter ---------------------
 
