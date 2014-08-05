@@ -1,6 +1,6 @@
 /** @file modulator.cpp
 
-    @brief
+    @brief Abstract modulator class
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -10,6 +10,14 @@
 
 #include "modulator.h"
 
-Modulator::Modulator()
+namespace MO {
+
+
+Modulator::Modulator(const QString &id, Object *parent)
+    : parent_       (parent),
+      modulatorId_  (id)
 {
 }
+
+
+} // namespace MO
