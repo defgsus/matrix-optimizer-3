@@ -24,12 +24,12 @@ namespace MO {
 namespace GEOM {
 
 
-void GeometryFactory::createCube(Geometry * g, float sl, bool asTriangles)
+void GeometryFactory::createCube(Geometry * g, Float sl, bool asTriangles)
 {
     return createBox(g, sl, sl, sl, asTriangles);
 }
 
-void GeometryFactory::createQuad(Geometry * g, float sx, float sy, bool asTriangles)
+void GeometryFactory::createQuad(Geometry * g, Float sx, Float sy, bool asTriangles)
 {
     sx *= 0.5f;
     sy *= 0.5f;
@@ -58,10 +58,10 @@ void GeometryFactory::createQuad(Geometry * g, float sx, float sy, bool asTriang
 }
 
 void GeometryFactory::createBox(
-        Geometry * g, float side_length_x, float side_length_y, float side_length_z,
+        Geometry * g, Float side_length_x, Float side_length_y, Float side_length_z,
         bool asTriangles)
 {
-    float
+    Float
         sx = side_length_x * 0.5f,
         sy = side_length_y * 0.5f,
         sz = side_length_z * 0.5f;
@@ -204,10 +204,10 @@ void GeometryFactory::createGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
 {
     const Geometry::IndexType start = g->numVertices();
 
-    const float
-            ox = (float)sizeX / 2 - 0.5,
-            oy = (float)sizeY / 2 - 0.5,
-            oz = (float)sizeZ / 2 - 0.5;
+    const Float
+            ox = (Float)sizeX / 2 - 0.5,
+            oy = (Float)sizeY / 2 - 0.5,
+            oz = (Float)sizeZ / 2 - 0.5;
 
     for (int z=0; z<sizeZ; ++z)
     for (int y=0; y<sizeY; ++y)
@@ -226,7 +226,7 @@ void GeometryFactory::createGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
 }
 
 void GeometryFactory::createUVSphere(
-        Geometry * g, float rad, uint segu, uint segv, bool asTriangles)
+        Geometry * g, Float rad, uint segu, uint segv, bool asTriangles)
 {
     if (!asTriangles)
     {
@@ -246,9 +246,9 @@ void GeometryFactory::createUVSphere(
         // body vertices
         for (unsigned int u = 0; u<segu; ++u)
         {
-            Vec3 p = MATH::pointOnSphere((float)u / segu, (float)v / segv);
+            Vec3 p = MATH::pointOnSphere((Float)u / segu, (Float)v / segv);
 
-            g->setTexCoord((float)u / segu, (float)v / segv);
+            g->setTexCoord((Float)(u+1) / (segu+1), 1.f - (Float)(v+1) / (segv+1));
             g->addVertex(p.x * rad, p.y * rad, p.z * rad);
         }
 
@@ -291,10 +291,9 @@ void GeometryFactory::createUVSphere(
 }
 
 void GeometryFactory::createUVSphereLines(
-        Geometry * g, float rad, uint segu, uint segv)
+        Geometry * g, Float rad, uint segu, uint segv)
 {
     // top point
-    g->setTexCoord(0,1);
     g->addVertex(0, rad, 0);
 
     for (uint v = 1; v<segv; ++v)
@@ -305,7 +304,7 @@ void GeometryFactory::createUVSphereLines(
         // body vertices
         for (unsigned int u = 0; u<segu; ++u)
         {
-            Vec3 p = MATH::pointOnSphere((float)u / segu, (float)v / segv);
+            Vec3 p = MATH::pointOnSphere((Float)u / segu, (Float)v / segv);
             g->addVertex(p.x * rad, p.y * rad, p.z * rad);
         }
 
@@ -330,7 +329,6 @@ void GeometryFactory::createUVSphereLines(
     int rown = g->numVertices() - segu;
 
     // bottom point
-    g->setTexCoord(0,0);
     g->addVertex(0, -rad, 0);
 
     // connect to bottom point
@@ -340,7 +338,7 @@ void GeometryFactory::createUVSphereLines(
     }
 }
 
-void GeometryFactory::createCylinder(Geometry * g, float rad, float height,
+void GeometryFactory::createCylinder(Geometry * g, Float rad, Float height,
                                      uint segu, uint segv, bool open, bool asTriangles)
 {
     segu = std::max((uint)3, segu);
@@ -439,7 +437,7 @@ void GeometryFactory::createCylinder(Geometry * g, float rad, float height,
 
 
 
-void GeometryFactory::createTorus(Geometry * g, float rad_out, float rad_in,
+void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
                                      uint segu, uint segv, bool asTriangles)
 {
     segu = std::max((uint)3, segu);
@@ -506,9 +504,9 @@ void GeometryFactory::createTorus(Geometry * g, float rad_out, float rad_in,
 }
 
 
-void GeometryFactory::createOctahedron(Geometry * g, float scale, bool asTriangles)
+void GeometryFactory::createOctahedron(Geometry * g, Float scale, bool asTriangles)
 {
-    const float
+    const Float
         a = 0.5f * scale / std::sqrt(2.f * std::sqrt(2.f)),
         b = 0.5f * scale;
 
@@ -547,9 +545,9 @@ void GeometryFactory::createOctahedron(Geometry * g, float scale, bool asTriangl
     }
 }
 
-void GeometryFactory::createIcosahedron(Geometry * g, float scale, bool asTriangles)
+void GeometryFactory::createIcosahedron(Geometry * g, Float scale, bool asTriangles)
 {
-    const float
+    const Float
         a = 0.5f * scale,
         b = scale / (1.f + std::sqrt(5.f));
 
@@ -624,9 +622,9 @@ void GeometryFactory::createIcosahedron(Geometry * g, float scale, bool asTriang
     }
 }
 
-void GeometryFactory::createTetrahedron(Geometry * g, float scale, bool asTriangles)
+void GeometryFactory::createTetrahedron(Geometry * g, Float scale, bool asTriangles)
 {
-    const float a = 0.5f * scale;
+    const Float a = 0.5f * scale;
 
     const int p0 = g->addVertex( -a,  a,  a );
     const int p1 = g->addVertex(  a,  a, -a );
@@ -651,17 +649,17 @@ void GeometryFactory::createTetrahedron(Geometry * g, float scale, bool asTriang
     }
 }
 
-void GeometryFactory::createDodecahedron(Geometry * g, float scale, bool asTriangles)
+void GeometryFactory::createDodecahedron(Geometry * g, Float scale, bool asTriangles)
 {
     // XXX Need to fix triangle winding order!
 
-    const float
+    const Float
         phi = (1.f + std::sqrt(5.f)) / 2.f,
         a = 0.5f * scale,
         b = 0.5f / phi,
         c = 0.5f * (2.f - phi);
 
-    std::vector<float> pos = { 0.f, a, -a, b, -b, c, -c };
+    std::vector<Float> pos = { 0.f, a, -a, b, -b, c, -c };
     enum Pindex
     {
         p_0, p_a, p_ma, p_b, p_mb, p_c, p_mc

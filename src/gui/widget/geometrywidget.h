@@ -27,6 +27,7 @@ public:
     ~GeometryWidget();
 
     bool isShowGrid() const { return showGrid_; }
+    bool isShowTexture() const { return showTexture_; }
 
 signals:
 
@@ -35,17 +36,16 @@ public slots:
     void setGeometry(GEOM::Geometry *);
 
     void setShowGrid(bool enable) { showGrid_ = enable; update(); }
+    void setShowTexture(bool enable) { showTexture_ = enable; update(); }
 
 protected:
-
-    void initializeGL() Q_DECL_OVERRIDE;
 
     void drawGL(const Mat4 &projection, const Mat4 &transformation) Q_DECL_OVERRIDE;
 
     GL::Drawable * drawable_;
     GL::Texture * tex_;
 
-    bool showGrid_;
+    bool showGrid_, showTexture_;
 };
 
 

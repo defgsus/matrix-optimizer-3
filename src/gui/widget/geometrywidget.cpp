@@ -11,6 +11,7 @@
 #include "geometrywidget.h"
 #include "gl/vertexarrayobject.h"
 #include "gl/drawable.h"
+#include "gl/shadersource.h"
 #include "geom/geometry.h"
 #include "gl/texture.h"
 
@@ -22,7 +23,8 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     Basic3DWidget   (mode, parent),
     drawable_       (new GL::Drawable("geomwidget")),
     tex_            (0),
-    showGrid_       (false)
+    showGrid_       (false),
+    showTexture_    (false)
 {
     setMinimumSize(128, 128);
 
@@ -41,14 +43,6 @@ void GeometryWidget::setGeometry(GEOM::Geometry * g)
     update();
 }
 
-void GeometryWidget::initializeGL()
-{
-    Basic3DWidget::initializeGL();
-
-    tex_ = GL::Texture::createFromImage(
-                QImage(":/img/banner.png"),
-                GL_RGB, GL::ER_IGNORE);
-}
 
 void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
 {
@@ -58,11 +52,42 @@ void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
     MO_CHECK_GL( glEnable(GL_BLEND) );
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
+    bool recompile = false;
+
+    if (showTexture_)
+    {
+        if (!tex_)
+        {
+            tex_ = GL::Texture::createFromImage(
+                    QImage(":/img/banner.png"),
+                    GL_RGB, GL::ER_IGNORE);
+            recompile = true;
+        }
+    }
+    else
+    if (tex_)
+    {
+        tex_->release();
+        delete tex_;
+        tex_ = 0;
+        recompile = true;
+    }
+
     if (showGrid_)
         drawGrid(projection, transformation);
 
+    if (recompile && drawable_->isReady())
+        drawable_->releaseOpenGl();
+
     if (!drawable_->isReady())
+    {
+        GL::ShaderSource * src = new GL::ShaderSource();
+        src->loadDefaultSource();
+        if (tex_)
+            src->addDefine("#define MO_ENABLE_TEXTURE");
+        drawable_->setShaderSource(src);
         drawable_->createOpenGl();
+    }
 
     if (drawable_->isReady())
         drawable_->renderShader(projection, transformation);

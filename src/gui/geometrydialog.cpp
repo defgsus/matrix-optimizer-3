@@ -91,6 +91,14 @@ void GeometryDialog::createWidgets_()
                     geoWidget_->setShowGrid(state == Qt::Checked);
                 });
 
+                cb = new QCheckBox(tr("textured"), this);
+                lh2->addWidget(cb);
+                cb->setChecked(geoWidget_->isShowTexture());
+                connect(cb, &QCheckBox::stateChanged, [this](int state)
+                {
+                    geoWidget_->setShowTexture(state == Qt::Checked);
+                });
+
         lv = new QVBoxLayout();
         lh->addLayout(lv);
 

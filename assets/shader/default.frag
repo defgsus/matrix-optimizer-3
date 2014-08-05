@@ -6,12 +6,17 @@ in vec4 v_color;
 in vec3 v_normal;
 in vec2 v_texCoord;
 
+#ifdef MO_ENABLE_TEXTURE
 uniform sampler2D tex_0;
+#endif
 
 vec4 mo_ambient_color()
 {
-    return v_color *
-            texture2D(tex_0, v_texCoord);
+    return v_color
+#ifdef MO_ENABLE_TEXTURE
+            * texture2D(tex_0, v_texCoord)
+#endif
+            ;
 }
 
 vec4 getLightColor(in vec3 light_pos, in vec3 color, in float shinyness)

@@ -32,29 +32,29 @@ public:
 
     static void createFromSettings(Geometry *, const GeometryFactorySettings *, ObjLoader *);
 
-    static void createQuad(Geometry *, float side_length_x, float side_length_y,
+    static void createQuad(Geometry *, Float side_length_x, Float side_length_y,
                            bool asTriangles = true);
 
-    static void createCube(Geometry *, float side_length, bool asTriangles = true);
+    static void createCube(Geometry *, Float side_length, bool asTriangles = true);
     static void createBox(Geometry *,
-            float side_length_x, float side_length_y, float side_length_z,
+            Float side_length_x, Float side_length_y, Float side_length_z,
                           bool asTriangles = true);
 
-    static void createUVSphere(Geometry *, float rad, uint segu, uint segv,
+    static void createUVSphere(Geometry *, Float rad, uint segu, uint segv,
                                bool asTriangles = true);
-    static void createUVSphereLines(Geometry *, float rad, uint segu, uint segv);
+    static void createUVSphereLines(Geometry *, Float rad, uint segu, uint segv);
 
-    static void createCylinder(Geometry *, float rad, float height, uint segu, uint segv, bool open,
+    static void createCylinder(Geometry *, Float rad, Float height, uint segu, uint segv, bool open,
                                bool asTriangles);
 
-    static void createTorus(Geometry *, float rad_outer, float rad_inner, uint segu, uint segv,
+    static void createTorus(Geometry *, Float rad_outer, Float rad_inner, uint segu, uint segv,
                             bool asTriangles);
 
 
-    static void createTetrahedron(Geometry *, float scale, bool asTriangles = true);
-    static void createOctahedron(Geometry *, float scale, bool asTriangles = true);
-    static void createIcosahedron(Geometry *, float scale, bool asTriangles = true);
-    static void createDodecahedron(Geometry *, float scale, bool asTriangles = true);
+    static void createTetrahedron(Geometry *, Float scale, bool asTriangles = true);
+    static void createOctahedron(Geometry *, Float scale, bool asTriangles = true);
+    static void createIcosahedron(Geometry *, Float scale, bool asTriangles = true);
+    static void createDodecahedron(Geometry *, Float scale, bool asTriangles = true);
 
     static void createGridXZ(Geometry *, int sizeX, int sizeZ, bool with_coordinate_system);
     static void createGrid(Geometry *, int sizeX, int sizeY, int sizeZ);
