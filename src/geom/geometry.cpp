@@ -372,9 +372,14 @@ bool Geometry::transformWithEquation(const QString &equationX,
         vindex = i;
 
         // assign result from equation
-        v[0] = equ[0].eval();
-        v[1] = equ[1].eval();
-        v[2] = equ[2].eval();
+        if (equationX != "x")
+            v[0] = equ[0].eval();
+        if (equationY != "y")
+            v[1] = equ[1].eval();
+        if (equationZ != "z")
+            v[2] = equ[2].eval();
+
+        progress_ = (i * 100) / numVertices();
     }
 
     return true;
@@ -413,6 +418,8 @@ void Geometry::tesselate(uint level)
 
             for (uint l = 1; l<n.size(); ++l)
                 tess.addLine(n[l-1], n[l]);
+
+            progress_ = (i * 100) / numLines();
         }
 
         *this = tess;
@@ -445,6 +452,7 @@ void Geometry::tesselate(uint level)
                     pn12 = 0.5f * (pn1 + pn2),
                     pn13 = 0.5f * (pn1 + pn3),
                     pn23 = 0.5f * (pn2 + pn3);
+
             const Vec4
                     pc1 = getColor(t1),
                     pc2 = getColor(t2),
@@ -452,6 +460,7 @@ void Geometry::tesselate(uint level)
                     pc12 = 0.5f * (pc1 + pc2),
                     pc13 = 0.5f * (pc1 + pc3),
                     pc23 = 0.5f * (pc2 + pc3);
+
             const Vec2
                     pt1 = getTexCoord(t1),
                     pt2 = getTexCoord(t2),
@@ -474,6 +483,9 @@ void Geometry::tesselate(uint level)
             tess.addTriangle(n12, n23, n13);
             tess.addTriangle(n13, n23, n3);
         }
+
+        // XXX hmm...
+        //progress_ = ???
 
         *this = tess;
     }

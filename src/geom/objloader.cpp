@@ -52,6 +52,8 @@ namespace GEOM {
 
 
 ObjLoader::ObjLoader()
+    :   progress_   (0),
+        isLoading_  (false)
 {
 }
 
@@ -292,6 +294,8 @@ bool ObjLoader::readFaceVertex_(const QString & s, int &x, Vertex & vertex, bool
 
 void ObjLoader::loadFromMemory(const QByteArray &bytes)
 {
+    isLoading_ = true;
+
     QTextStream stream(bytes);
 
     // current line and column
@@ -301,6 +305,7 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
 
     Material * curMaterial = 0;
 
+    qint64 position = 0;
     try
     {
         while (!stream.atEnd())
@@ -308,6 +313,9 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
             const QString s = stream.readLine();
             if (s.isNull())
                 break;
+
+            position += s.size();
+            progress_ = (position * 100) / bytes.size();
 
             line++;
             x = 0;
@@ -444,7 +452,7 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
         }
     }
     // on parsing error
-    catch (IoException & e)
+    catch (Exception & e)
     {
         // add information
         e << "\non parsing .obj ";
@@ -458,12 +466,34 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
         MO_OBJ_LOG("ERROR: " << e.what());
 
         filename_ = "";
+        isLoading_ = false;
 
         // and rethrow
         throw e;
     }
+    catch (std::exception & e)
+    {
+        MO_OBJ_LOG("ERROR: " << e.what());
+
+        filename_ = "";
+        isLoading_ = false;
+
+        // and rethrow
+        throw e;
+    }
+    catch (...)
+    {
+        MO_OBJ_LOG("unknown exception");
+
+        filename_ = "";
+        isLoading_ = false;
+
+        // and rethrow
+        throw;
+    }
 
     filename_ = "";
+    isLoading_ = false;
 }
 
 

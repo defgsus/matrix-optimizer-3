@@ -50,6 +50,9 @@ public:
 
     // ------- query ---------
 
+    /** Returns the progress during certain intense functions [0,100] */
+    int progress() const { return progress_; }
+
     unsigned int numVertexComponents() const { return 3; }
     unsigned int numNormalComponents() const { return 3; }
     unsigned int numColorComponents() const { return 4; }
@@ -203,6 +206,7 @@ private:
     TextureCoordType
         curU_, curV_;
 
+    volatile int progress_;
 };
 
 } // namespace GEOM

@@ -19,6 +19,8 @@ class QCheckBox;
 class QLabel;
 class QLineEdit;
 class QToolButton;
+class QStatusBar;
+class QProgressBar;
 
 namespace MO {
 namespace GUI {
@@ -57,11 +59,13 @@ protected slots:
     void deletePreset_();
     void presetSelected_();
 
+    void creatorProgress_(int);
     void creationFailed_(const QString&);
     void creationFinished_();
 
 protected:
     //void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
+    bool event(QEvent *);
 
     void createWidgets_();
     void updateWidgets_();
@@ -74,6 +78,8 @@ protected:
     bool updateGeometryLater_,
          ignoreUpdate_;
 
+    QStatusBar * statusBar_;
+    QProgressBar * progressBar_;
     QLabel * labelInfo_, *labelSeg_, *labelNormAmt_, *labelSmallRadius_;
     QLineEdit * editFilename_;
     QToolButton *butSavePreset_, *butSavePresetAs_, *butDeletePreset_,

@@ -17,6 +17,9 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QStatusBar>
+#include <QStatusTipEvent>
+#include <QProgressBar>
 
 #include "geometrydialog.h"
 #include "geom/geometry.h"
@@ -60,355 +63,377 @@ GeometryDialog::~GeometryDialog()
     delete settings_;
 }
 
+bool GeometryDialog::event(QEvent * e)
+{
+    if (QStatusTipEvent * tip = dynamic_cast<QStatusTipEvent*>(e))
+    {
+        statusBar_->showMessage(tip->tip());
+    }
+    return QDialog::event(e);
+}
+
 void GeometryDialog::createWidgets_()
 {
-    auto lh = new QHBoxLayout(this);
+    auto lv0 = new QVBoxLayout(this);
+    lv0->setMargin(0);
 
-        auto lv = new QVBoxLayout();
-        lh->addLayout(lv);
+        auto lh = new QHBoxLayout();
+        lv0->addLayout(lh);
 
-            // geometry widget
-            geoWidget_ = new GeometryWidget(GeometryWidget::RM_DIRECT, this);
-            lv->addWidget(geoWidget_);
-            geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-            connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
+            auto lv = new QVBoxLayout();
+            lh->addLayout(lv);
 
-            // view settings
-            auto lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
+                // geometry widget
+                geoWidget_ = new GeometryWidget(GeometryWidget::RM_DIRECT, this);
+                lv->addWidget(geoWidget_);
+                geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+                connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
 
-                comboView_ = new QComboBox(this);
-                lh2->addWidget(comboView_);
-                comboView_->setStatusTip(tr("Selects the projection type of the geometry window"));
-                comboView_->addItem(tr("orthographic"), GeometryWidget::RM_DIRECT_ORTHO);
-                comboView_->addItem(tr("perspective"), GeometryWidget::RM_DIRECT);
-                comboView_->addItem(tr("fulldome cubemap"), GeometryWidget::RM_FULLDOME_CUBE);
-                comboView_->setCurrentIndex(1);
-                connect(comboView_, SIGNAL(currentIndexChanged(int)),
-                        this, SLOT(changeView_()));
+                // view settings
+                auto lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
 
-                auto cb = new QCheckBox(tr("show coordinates"), this);
-                lh2->addWidget(cb);
-                cb->setChecked(geoWidget_->isShowGrid());
-                connect(cb, &QCheckBox::stateChanged, [this](int state)
+                    comboView_ = new QComboBox(this);
+                    lh2->addWidget(comboView_);
+                    comboView_->setStatusTip(tr("Selects the projection type of the geometry window"));
+                    comboView_->addItem(tr("orthographic"), GeometryWidget::RM_DIRECT_ORTHO);
+                    comboView_->addItem(tr("perspective"), GeometryWidget::RM_DIRECT);
+                    comboView_->addItem(tr("fulldome cubemap"), GeometryWidget::RM_FULLDOME_CUBE);
+                    comboView_->setCurrentIndex(1);
+                    connect(comboView_, SIGNAL(currentIndexChanged(int)),
+                            this, SLOT(changeView_()));
+
+                    auto cb = new QCheckBox(tr("show coordinates"), this);
+                    lh2->addWidget(cb);
+                    cb->setChecked(geoWidget_->isShowGrid());
+                    connect(cb, &QCheckBox::stateChanged, [this](int state)
+                    {
+                        geoWidget_->setShowGrid(state == Qt::Checked);
+                    });
+
+                    cb = new QCheckBox(tr("textured"), this);
+                    lh2->addWidget(cb);
+                    cb->setChecked(geoWidget_->isShowTexture());
+                    connect(cb, &QCheckBox::stateChanged, [this](int state)
+                    {
+                        geoWidget_->setShowTexture(state == Qt::Checked);
+                    });
+
+            lv = new QVBoxLayout();
+            lh->addLayout(lv);
+
+                // preset dialog
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    comboPreset_ = new QComboBox(this);
+                    lh2->addWidget(comboPreset_);
+                    connect(comboPreset_, SIGNAL(currentIndexChanged(int)),
+                            this, SLOT(presetSelected_()));
+
+                    butSavePreset_ = new QToolButton(this);
+                    lh2->addWidget(butSavePreset_);
+                    butSavePreset_->setText("S");
+                    connect(butSavePreset_, SIGNAL(clicked()),
+                            this, SLOT(savePreset_()));
+
+                    butSavePresetAs_ = new QToolButton(this);
+                    lh2->addWidget(butSavePresetAs_);
+                    butSavePresetAs_->setText("...");
+                    connect(butSavePresetAs_, SIGNAL(clicked()),
+                            this, SLOT(savePresetAs_()));
+
+                    butDeletePreset_ = new QToolButton(this);
+                    lh2->addWidget(butDeletePreset_);
+                    butDeletePreset_->setIcon(QIcon(":/icon/delete.png"));
+                    connect(butDeletePreset_, SIGNAL(clicked()),
+                            this, SLOT(deletePreset_()));
+
+                // geometry type
+
+                comboType_ = new QComboBox(this);
+                lv->addWidget(comboType_);
+                comboType_->setStatusTip("Selects the type of geometry");
+
+                for (uint i=0; i<settings_->numTypes; ++i)
                 {
-                    geoWidget_->setShowGrid(state == Qt::Checked);
-                });
+                    comboType_->addItem(settings_->typeNames[i], i);
+                    if (settings_->type == (GEOM::GeometryFactorySettings::Type)i)
+                        comboType_->setCurrentIndex(i);
+                }
 
-                cb = new QCheckBox(tr("textured"), this);
-                lh2->addWidget(cb);
-                cb->setChecked(geoWidget_->isShowTexture());
-                connect(cb, &QCheckBox::stateChanged, [this](int state)
-                {
-                    geoWidget_->setShowTexture(state == Qt::Checked);
-                });
-
-        lv = new QVBoxLayout();
-        lh->addLayout(lv);
-
-            // preset dialog
-
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
-
-                comboPreset_ = new QComboBox(this);
-                lh2->addWidget(comboPreset_);
-                connect(comboPreset_, SIGNAL(currentIndexChanged(int)),
-                        this, SLOT(presetSelected_()));
-
-                butSavePreset_ = new QToolButton(this);
-                lh2->addWidget(butSavePreset_);
-                butSavePreset_->setText("S");
-                connect(butSavePreset_, SIGNAL(clicked()),
-                        this, SLOT(savePreset_()));
-
-                butSavePresetAs_ = new QToolButton(this);
-                lh2->addWidget(butSavePresetAs_);
-                butSavePresetAs_->setText("...");
-                connect(butSavePresetAs_, SIGNAL(clicked()),
-                        this, SLOT(savePresetAs_()));
-
-                butDeletePreset_ = new QToolButton(this);
-                lh2->addWidget(butDeletePreset_);
-                butDeletePreset_->setIcon(QIcon(":/icon/delete.png"));
-                connect(butDeletePreset_, SIGNAL(clicked()),
-                        this, SLOT(deletePreset_()));
-
-            // geometry type
-
-            comboType_ = new QComboBox(this);
-            lv->addWidget(comboType_);
-            comboType_->setStatusTip("Selects the type of geometry");
-
-            for (uint i=0; i<settings_->numTypes; ++i)
-            {
-                comboType_->addItem(settings_->typeNames[i], i);
-                if (settings_->type == (GEOM::GeometryFactorySettings::Type)i)
-                    comboType_->setCurrentIndex(i);
-            }
-
-            connect(comboType_, SIGNAL(currentIndexChanged(QString)),
-                    this, SLOT(updateFromWidgets_()));
-
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
-
-                // filename
-                editFilename_ = new QLineEdit(this);
-                lh2->addWidget(editFilename_);
-                editFilename_->setText(settings_->filename);
-                editFilename_->setReadOnly(true);
-
-                butLoadModelFile_ = new QToolButton(this);
-                lh2->addWidget(butLoadModelFile_);
-                butLoadModelFile_->setText("...");
-                connect(butLoadModelFile_, SIGNAL(clicked()), this, SLOT(loadModelFile_()));
-
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
-
-                // create triangles
-                cbTriangles_ = new QCheckBox(tr("create triangles"), this);
-                lh2->addWidget(cbTriangles_);
-                cbTriangles_->setChecked(settings_->asTriangles);
-                connect(cbTriangles_, SIGNAL(stateChanged(int)),
+                connect(comboType_, SIGNAL(currentIndexChanged(QString)),
                         this, SLOT(updateFromWidgets_()));
 
-                // convert to lines
-                cbConvertToLines_ = new QCheckBox(tr("convert to lines"), this);
-                lh2->addWidget(cbConvertToLines_);
-                cbConvertToLines_->setChecked(settings_->convertToLines);
-                connect(cbConvertToLines_, SIGNAL(stateChanged(int)),
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    // filename
+                    editFilename_ = new QLineEdit(this);
+                    lh2->addWidget(editFilename_);
+                    editFilename_->setText(settings_->filename);
+                    editFilename_->setReadOnly(true);
+
+                    butLoadModelFile_ = new QToolButton(this);
+                    lh2->addWidget(butLoadModelFile_);
+                    butLoadModelFile_->setText("...");
+                    connect(butLoadModelFile_, SIGNAL(clicked()), this, SLOT(loadModelFile_()));
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    // create triangles
+                    cbTriangles_ = new QCheckBox(tr("create triangles"), this);
+                    lh2->addWidget(cbTriangles_);
+                    cbTriangles_->setChecked(settings_->asTriangles);
+                    connect(cbTriangles_, SIGNAL(stateChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    // convert to lines
+                    cbConvertToLines_ = new QCheckBox(tr("convert to lines"), this);
+                    lh2->addWidget(cbConvertToLines_);
+                    cbConvertToLines_->setChecked(settings_->convertToLines);
+                    connect(cbConvertToLines_, SIGNAL(stateChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+
+                // shared vertices
+                cbSharedVert_ = new QCheckBox(tr("shared vertices"), this);
+                lv->addWidget(cbSharedVert_);
+                cbSharedVert_->setChecked(settings_->sharedVertices);
+                connect(cbSharedVert_, SIGNAL(stateChanged(int)),
                         this, SLOT(updateFromWidgets_()));
 
-            // shared vertices
-            cbSharedVert_ = new QCheckBox(tr("shared vertices"), this);
-            lv->addWidget(cbSharedVert_);
-            cbSharedVert_->setChecked(settings_->sharedVertices);
-            connect(cbSharedVert_, SIGNAL(stateChanged(int)),
-                    this, SLOT(updateFromWidgets_()));
+                // normals and normalization
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
 
-            // normals and normalization
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
+                    cbCalcNormals_ = new QCheckBox(tr("calculate normals"), this);
+                    lh2->addWidget(cbCalcNormals_);
+                    cbCalcNormals_->setChecked(settings_->calcNormals);
+                    connect(cbCalcNormals_, SIGNAL(stateChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
 
-                cbCalcNormals_ = new QCheckBox(tr("calculate normals"), this);
-                lh2->addWidget(cbCalcNormals_);
-                cbCalcNormals_->setChecked(settings_->calcNormals);
-                connect(cbCalcNormals_, SIGNAL(stateChanged(int)),
+                    cbNorm_ = new QCheckBox(tr("normalize coordinates"), this);
+                    lh2->addWidget(cbNorm_);
+                    cbNorm_->setChecked(settings_->normalizeVertices);
+                    connect(cbNorm_, SIGNAL(stateChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+
+                // normalization amount
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    labelNormAmt_ = new QLabel(tr("normalization"), this);
+                    lh2->addWidget(labelNormAmt_);
+
+                    spinNormAmt_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinNormAmt_);
+                    spinNormAmt_->setStatusTip("Amount of normalization between 0 and 1");
+                    spinNormAmt_->setDecimals(5);
+                    spinNormAmt_->setSingleStep(0.02);
+                    spinNormAmt_->setRange(0.0, 1);
+                    spinNormAmt_->setValue(settings_->normalization);
+                    connect(spinNormAmt_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                // scale
+                auto l = new QLabel(tr("scale"), this);
+                lv->addWidget(l);
+
+                spinS_ = new DoubleSpinBox(this);
+                lv->addWidget(spinS_);
+                spinS_->setStatusTip("Overall scale of the model");
+                spinS_->setDecimals(5);
+                spinS_->setSingleStep(0.1);
+                spinS_->setRange(0.0001, 1000000);
+                spinS_->setValue(settings_->scale);
+                connect(spinS_, SIGNAL(valueChanged(double)),
                         this, SLOT(updateFromWidgets_()));
 
-                cbNorm_ = new QCheckBox(tr("normalize coordinates"), this);
-                lh2->addWidget(cbNorm_);
-                cbNorm_->setChecked(settings_->normalizeVertices);
-                connect(cbNorm_, SIGNAL(stateChanged(int)),
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    spinSX_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinSX_);
+                    spinSX_->setStatusTip("X-scale of the model");
+                    spinSX_->setDecimals(5);
+                    spinSX_->setSingleStep(0.1);
+                    spinSX_->setRange(0.0001, 1000000);
+                    spinSX_->setValue(settings_->scaleX);
+                    connect(spinSX_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinSY_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinSY_);
+                    spinSY_->setStatusTip("Y-scale of the model");
+                    spinSY_->setDecimals(5);
+                    spinSY_->setSingleStep(0.1);
+                    spinSY_->setRange(0.0001, 1000000);
+                    spinSY_->setValue(settings_->scaleY);
+                    connect(spinSY_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinSZ_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinSZ_);
+                    spinSZ_->setStatusTip("Z-scale of the model");
+                    spinSZ_->setDecimals(5);
+                    spinSZ_->setSingleStep(0.1);
+                    spinSZ_->setRange(0.0001, 1000000);
+                    spinSZ_->setValue(settings_->scaleZ);
+                    connect(spinSZ_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    labelSmallRadius_ = new QLabel(tr("small radius"), this);
+                    lh2->addWidget(labelSmallRadius_);
+
+                    spinSmallRadius_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinSmallRadius_);
+                    spinSmallRadius_->setStatusTip("Smaller radius");
+                    spinSmallRadius_->setDecimals(5);
+                    spinSmallRadius_->setSingleStep(0.02);
+                    spinSmallRadius_->setRange(0.0001, 100000);
+                    spinSmallRadius_->setValue(settings_->smallRadius);
+                    connect(spinSmallRadius_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                // segments
+                labelSeg_ = new QLabel(tr("segments"), this);
+                lv->addWidget(labelSeg_);
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    spinSegX_ = new SpinBox(this);
+                    lh2->addWidget(spinSegX_);
+                    spinSegX_->setStatusTip("Number of segments (X)");
+                    spinSegX_->setRange(1, 10000);
+                    spinSegX_->setValue(settings_->segmentsX);
+                    connect(spinSegX_, SIGNAL(valueChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinSegY_ = new SpinBox(this);
+                    lh2->addWidget(spinSegY_);
+                    spinSegY_->setStatusTip("Number of segments (Y)");
+                    spinSegY_->setRange(1, 10000);
+                    spinSegY_->setValue(settings_->segmentsY);
+                    connect(spinSegY_, SIGNAL(valueChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinSegZ_ = new SpinBox(this);
+                    lh2->addWidget(spinSegZ_);
+                    spinSegZ_->setStatusTip("Number of segments (Z)");
+                    spinSegZ_->setRange(0, 10000);
+                    spinSegZ_->setValue(settings_->segmentsZ);
+                    connect(spinSegZ_, SIGNAL(valueChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+
+                // tesselation
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    cbTess_ = new QCheckBox(tr("tesselate"), this);
+                    lh2->addWidget(cbTess_);
+                    cbTess_->setChecked(settings_->tesselate);
+                    connect(cbTess_, SIGNAL(toggled(bool)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinTess_ = new SpinBox(this);
+                    lh2->addWidget(spinTess_);
+                    spinTess_->setStatusTip("Level of tesselation");
+                    spinTess_->setRange(1, 10);
+                    spinTess_->setValue(settings_->tessLevel);
+                    connect(spinTess_, SIGNAL(valueChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+
+                // remove randomly
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    cbRemove_ = new QCheckBox(tr("randomly\nremove primitives"), this);
+                    lh2->addWidget(cbRemove_);
+                    cbRemove_->setChecked(settings_->removeRandomly);
+                    connect(cbRemove_, SIGNAL(toggled(bool)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinRemoveProb_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinRemoveProb_);
+                    spinRemoveProb_->setStatusTip("Probability for removing points");
+                    spinRemoveProb_->setDecimals(5);
+                    spinRemoveProb_->setSingleStep(0.005);
+                    spinRemoveProb_->setRange(0.0, 1.0);
+                    spinRemoveProb_->setValue(settings_->removeProb);
+                    connect(spinRemoveProb_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinRemoveSeed_ = new SpinBox(this);
+                    lh2->addWidget(spinRemoveSeed_);
+                    spinRemoveSeed_->setStatusTip("Random seed for removing primitives");
+                    spinRemoveSeed_->setRange(0, 10000000);
+                    spinRemoveSeed_->setValue(settings_->removeSeed);
+                    connect(spinRemoveSeed_, SIGNAL(valueChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+
+                // transform by equation
+
+                cbTransformEqu_ = new QCheckBox(tr("transform by equation"), this);
+                lv->addWidget(cbTransformEqu_);
+                cbTransformEqu_->setStatusTip(tr("Enables transformation of each vertex point "
+                                                 "by a mathematical formula"));
+                cbTransformEqu_->setChecked(settings_->transformWithEquation);
+                connect(cbTransformEqu_, SIGNAL(toggled(bool)),
                         this, SLOT(updateFromWidgets_()));
 
-            // normalization amount
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
+                QStringList vars = { "x", "y", "z", "i" };
+                editEquX_ = new EquationEditor(this);
+                lv->addWidget(editEquX_);
+                editEquX_->addVariables(vars);
+                editEquX_->setPlainText(settings_->equationX);
+                connect(editEquX_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
-                labelNormAmt_ = new QLabel(tr("normalization"), this);
-                lh2->addWidget(labelNormAmt_);
+                editEquY_ = new EquationEditor(this);
+                lv->addWidget(editEquY_);
+                editEquY_->addVariables(vars);
+                editEquY_->setPlainText(settings_->equationY);
+                connect(editEquY_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
-                spinNormAmt_ = new DoubleSpinBox(this);
-                lh2->addWidget(spinNormAmt_);
-                spinNormAmt_->setStatusTip("Amount of normalization between 0 and 1");
-                spinNormAmt_->setDecimals(5);
-                spinNormAmt_->setSingleStep(0.02);
-                spinNormAmt_->setRange(0.0, 1);
-                spinNormAmt_->setValue(settings_->normalization);
-                connect(spinNormAmt_, SIGNAL(valueChanged(double)),
-                        this, SLOT(updateFromWidgets_()));
+                editEquZ_ = new EquationEditor(this);
+                lv->addWidget(editEquZ_);
+                editEquZ_->addVariables(vars);
+                editEquZ_->setPlainText(settings_->equationZ);
+                connect(editEquZ_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
-            // scale
-            auto l = new QLabel(tr("scale"), this);
-            lv->addWidget(l);
+                // -----------------
+                lv->addStretch(1);
 
-            spinS_ = new DoubleSpinBox(this);
-            lv->addWidget(spinS_);
-            spinS_->setStatusTip("Overall scale of the model");
-            spinS_->setDecimals(5);
-            spinS_->setSingleStep(0.1);
-            spinS_->setRange(0.0001, 1000000);
-            spinS_->setValue(settings_->scale);
-            connect(spinS_, SIGNAL(valueChanged(double)),
-                    this, SLOT(updateFromWidgets_()));
+                // info label
+                labelInfo_ = new QLabel(this);
+                lv->addWidget(labelInfo_);
 
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
+                // OK/Cancel
 
-                spinSX_ = new DoubleSpinBox(this);
-                lh2->addWidget(spinSX_);
-                spinSX_->setStatusTip("X-scale of the model");
-                spinSX_->setDecimals(5);
-                spinSX_->setSingleStep(0.1);
-                spinSX_->setRange(0.0001, 1000000);
-                spinSX_->setValue(settings_->scaleX);
-                connect(spinSX_, SIGNAL(valueChanged(double)),
-                        this, SLOT(updateFromWidgets_()));
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
 
-                spinSY_ = new DoubleSpinBox(this);
-                lh2->addWidget(spinSY_);
-                spinSY_->setStatusTip("Y-scale of the model");
-                spinSY_->setDecimals(5);
-                spinSY_->setSingleStep(0.1);
-                spinSY_->setRange(0.0001, 1000000);
-                spinSY_->setValue(settings_->scaleY);
-                connect(spinSY_, SIGNAL(valueChanged(double)),
-                        this, SLOT(updateFromWidgets_()));
+                    auto but = new QPushButton(tr("Ok"), this);
+                    lh2->addWidget(but);
+                    connect(but, SIGNAL(clicked()), this, SLOT(accept()));
 
-                spinSZ_ = new DoubleSpinBox(this);
-                lh2->addWidget(spinSZ_);
-                spinSZ_->setStatusTip("Z-scale of the model");
-                spinSZ_->setDecimals(5);
-                spinSZ_->setSingleStep(0.1);
-                spinSZ_->setRange(0.0001, 1000000);
-                spinSZ_->setValue(settings_->scaleZ);
-                connect(spinSZ_, SIGNAL(valueChanged(double)),
-                        this, SLOT(updateFromWidgets_()));
+                    but = new QPushButton(tr("Cancel"), this);
+                    lh2->addWidget(but);
+                    connect(but, SIGNAL(clicked()), this, SLOT(reject()));
 
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
+        statusBar_ = new QStatusBar(this);
+        lv0->addWidget(statusBar_);
 
-                labelSmallRadius_ = new QLabel(tr("small radius"), this);
-                lh2->addWidget(labelSmallRadius_);
-
-                spinSmallRadius_ = new DoubleSpinBox(this);
-                lh2->addWidget(spinSmallRadius_);
-                spinSmallRadius_->setStatusTip("Smaller radius");
-                spinSmallRadius_->setDecimals(5);
-                spinSmallRadius_->setSingleStep(0.02);
-                spinSmallRadius_->setRange(0.0001, 100000);
-                spinSmallRadius_->setValue(settings_->smallRadius);
-                connect(spinSmallRadius_, SIGNAL(valueChanged(double)),
-                        this, SLOT(updateFromWidgets_()));
-
-            // segments
-            labelSeg_ = new QLabel(tr("segments"), this);
-            lv->addWidget(labelSeg_);
-
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
-
-                spinSegX_ = new SpinBox(this);
-                lh2->addWidget(spinSegX_);
-                spinSegX_->setStatusTip("Number of segments (X)");
-                spinSegX_->setRange(1, 10000);
-                spinSegX_->setValue(settings_->segmentsX);
-                connect(spinSegX_, SIGNAL(valueChanged(int)),
-                        this, SLOT(updateFromWidgets_()));
-
-                spinSegY_ = new SpinBox(this);
-                lh2->addWidget(spinSegY_);
-                spinSegY_->setStatusTip("Number of segments (Y)");
-                spinSegY_->setRange(1, 10000);
-                spinSegY_->setValue(settings_->segmentsY);
-                connect(spinSegY_, SIGNAL(valueChanged(int)),
-                        this, SLOT(updateFromWidgets_()));
-
-                spinSegZ_ = new SpinBox(this);
-                lh2->addWidget(spinSegZ_);
-                spinSegZ_->setStatusTip("Number of segments (Z)");
-                spinSegZ_->setRange(0, 10000);
-                spinSegZ_->setValue(settings_->segmentsZ);
-                connect(spinSegZ_, SIGNAL(valueChanged(int)),
-                        this, SLOT(updateFromWidgets_()));
-
-            // tesselation
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
-
-                cbTess_ = new QCheckBox(tr("tesselate"), this);
-                lh2->addWidget(cbTess_);
-                cbTess_->setChecked(settings_->tesselate);
-                connect(cbTess_, SIGNAL(toggled(bool)),
-                        this, SLOT(updateFromWidgets_()));
-
-                spinTess_ = new SpinBox(this);
-                lh2->addWidget(spinTess_);
-                spinTess_->setStatusTip("Level of tesselation");
-                spinTess_->setRange(1, 10);
-                spinTess_->setValue(settings_->tessLevel);
-                connect(spinTess_, SIGNAL(valueChanged(int)),
-                        this, SLOT(updateFromWidgets_()));
-
-            // remove randomly
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
-
-                cbRemove_ = new QCheckBox(tr("randomly\nremove primitives"), this);
-                lh2->addWidget(cbRemove_);
-                cbRemove_->setChecked(settings_->removeRandomly);
-                connect(cbRemove_, SIGNAL(toggled(bool)),
-                        this, SLOT(updateFromWidgets_()));
-
-                spinRemoveProb_ = new DoubleSpinBox(this);
-                lh2->addWidget(spinRemoveProb_);
-                spinRemoveProb_->setStatusTip("Probability for removing points");
-                spinRemoveProb_->setDecimals(5);
-                spinRemoveProb_->setSingleStep(0.005);
-                spinRemoveProb_->setRange(0.0, 1.0);
-                spinRemoveProb_->setValue(settings_->removeProb);
-                connect(spinRemoveProb_, SIGNAL(valueChanged(double)),
-                        this, SLOT(updateFromWidgets_()));
-
-                spinRemoveSeed_ = new SpinBox(this);
-                lh2->addWidget(spinRemoveSeed_);
-                spinRemoveSeed_->setStatusTip("Random seed for removing primitives");
-                spinRemoveSeed_->setRange(0, 10000000);
-                spinRemoveSeed_->setValue(settings_->removeSeed);
-                connect(spinRemoveSeed_, SIGNAL(valueChanged(int)),
-                        this, SLOT(updateFromWidgets_()));
-
-            // transform by equation
-
-            cbTransformEqu_ = new QCheckBox(tr("transform by equation"), this);
-            lv->addWidget(cbTransformEqu_);
-            cbTransformEqu_->setStatusTip(tr("Enables transformation of each vertex point "
-                                             "by a mathematical formula"));
-            cbTransformEqu_->setChecked(settings_->transformWithEquation);
-            connect(cbTransformEqu_, SIGNAL(toggled(bool)),
-                    this, SLOT(updateFromWidgets_()));
-
-            QStringList vars = { "x", "y", "z", "i" };
-            editEquX_ = new EquationEditor(this);
-            lv->addWidget(editEquX_);
-            editEquX_->addVariables(vars);
-            editEquX_->setPlainText(settings_->equationX);
-            connect(editEquX_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-            editEquY_ = new EquationEditor(this);
-            lv->addWidget(editEquY_);
-            editEquY_->addVariables(vars);
-            editEquY_->setPlainText(settings_->equationY);
-            connect(editEquY_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-            editEquZ_ = new EquationEditor(this);
-            lv->addWidget(editEquZ_);
-            editEquZ_->addVariables(vars);
-            editEquZ_->setPlainText(settings_->equationZ);
-            connect(editEquZ_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-            // -----------------
-            lv->addStretch(1);
-
-            // info label
-            labelInfo_ = new QLabel(this);
-            lv->addWidget(labelInfo_);
-
-            // OK/Cancel
-
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
-
-                auto but = new QPushButton(tr("Ok"), this);
-                lh2->addWidget(but);
-                connect(but, SIGNAL(clicked()), this, SLOT(accept()));
-
-                but = new QPushButton(tr("Cancel"), this);
-                lh2->addWidget(but);
-                connect(but, SIGNAL(clicked()), this, SLOT(reject()));
+        progressBar_ = new QProgressBar(this);
+        progressBar_->setOrientation(Qt::Horizontal);
+        progressBar_->setRange(0,100);
+        progressBar_->setVisible(false);
+        statusBar_->addPermanentWidget(progressBar_);
 }
 
 void GeometryDialog::changeView_()
@@ -449,8 +474,16 @@ void GeometryDialog::updateGeometry_()
     connect(creator_, SIGNAL(failed(QString)),
             this, SLOT(creationFailed_(QString)));
     connect(creator_, SIGNAL(finished()), this, SLOT(creationFinished_()));
+    connect(creator_, SIGNAL(progress(int)),
+            this, SLOT(creatorProgress_(int)));
 
+    progressBar_->setVisible(true);
     creator_->start();
+}
+
+void GeometryDialog::creatorProgress_(int p)
+{
+    progressBar_->setValue(p);
 }
 
 void GeometryDialog::creationFailed_(const QString & text)
@@ -459,6 +492,7 @@ void GeometryDialog::creationFailed_(const QString & text)
                           tr("Error creating geometry\n%1").arg(text));
     creator_->deleteLater();
     creator_ = 0;
+    progressBar_->setVisible(false);
     if (updateGeometryLater_)
         updateGeometry_();
 }
@@ -469,6 +503,7 @@ void GeometryDialog::creationFinished_()
 
     geoWidget_->setGeometry(g);
 
+    progressBar_->setVisible(false);
     labelInfo_->setText(tr("vertices: %1\ntriangles: %2\nlines: %3\nmemory: %4")
                         .arg(g->numVertices())
                         .arg(g->numTriangles())

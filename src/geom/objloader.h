@@ -65,8 +65,11 @@ public:
 
     // -------------- getter ------------------
 
-    /** Returns wheter the ObjLoader contains valid vertex data */
+    /** Returns whether the ObjLoader contains valid vertex data */
     bool isEmpty() const;
+
+    /** Returns whether the ObjLoader is currently parsing an .obj */
+    bool isLoading() const { return isLoading_; }
 
     /** Returns the textual log of the loading process */
     const QString& getLog() const { return log_; }
@@ -74,6 +77,8 @@ public:
     /** Load the data into the Geometry container. */
     void getGeometry(Geometry *) const;
 
+    /** Returns the progress during loading [0,100] */
+    int progress() const { return progress_; }
 
 private:
 
@@ -87,6 +92,7 @@ private:
             log_;
 
     volatile int progress_;
+    volatile bool isLoading_;
 
     std::vector<Float>
         vertex_, texCoord_, normal_;

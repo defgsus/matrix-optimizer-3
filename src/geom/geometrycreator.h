@@ -15,6 +15,9 @@
 
 #include "gl/opengl_fwd.h"
 
+class QTimer;
+class QMutex;
+
 namespace MO {
 namespace GEOM {
 
@@ -32,20 +35,31 @@ public:
 
 signals:
 
-    /** There was an error create the Geometry */
+    /** Returns progress of processing in percent */
+    void progress(int);
+
+    /** There was an error creating the Geometry */
     void failed(const QString&);
 
 public slots:
 
     void setSettings(const GeometryFactorySettings&);
 
+protected slots:
+
+    void onTimer_();
+
 protected:
 
     void run() Q_DECL_OVERRIDE;
 
-    Geometry * geometry_;
+
+    Geometry * geometry_, * curGeometry_;
     GeometryFactorySettings * settings_;
     ObjLoader * loader_;
+    QTimer * timer_;
+    /** Mutex around settings_ and geometry_ */
+    QMutex * mutex_;
 };
 
 
