@@ -1,6 +1,6 @@
 /** @file settings.cpp
 
-    @brief
+    @brief Application settings
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -13,6 +13,7 @@
 
 #include "settings.h"
 #include "io/error.h"
+#include "io/files.h"
 
 namespace MO {
 
@@ -31,7 +32,9 @@ Settings::Settings(QObject *parent) :
 
 void Settings::createDefaultValues_()
 {
-    defaultValues_["Directory/scene"] = "./";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_GEOMETRY_SETTINGS]]
+                                = "./data/geometry_presets";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_SCENE]] = "./data/scene";
     defaultValues_["File/scene"] = "";
 
     defaultValues_["Audio/api"] = "";
@@ -53,13 +56,12 @@ QVariant Settings::getValue(const QString &key)
 
     auto i = defaultValues_.find(key);
 
-    MO_ASSERT(i != defaultValues_.end(), "unknown setting '"
-              << key << "'");
-
     if (i != defaultValues_.end())
         return i.value();
 
     // not found
+
+    MO_WARNING("unknown setting '" << key << "' requested");
 
     return QVariant();
 }

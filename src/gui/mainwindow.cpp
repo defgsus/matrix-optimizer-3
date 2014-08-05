@@ -44,6 +44,7 @@
 #include "gui/geometrydialog.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
+#include "io/files.h"
 #include "gl/manager.h"
 #include "gl/window.h"
 #include "io/error.h"
@@ -122,7 +123,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qobjectView_    (0),
     testThread_     (0),
 
-    currentSceneDirectory_(settings->getValue("Directory/scene").toString()),
+    currentSceneDirectory_(IO::Files::directory(IO::FT_SCENE)),
     statusMessageTimeout_(1000 * 5)
 {
     setObjectName("_MainWindow");
@@ -716,7 +717,7 @@ void MainWindow::newScene()
 
     setSceneObject( ObjectFactory::createSceneObject() );
     currentSceneFilename_.clear();
-    settings->setValue("File/scene", "");
+    IO::Files::setFilename(IO::FT_SCENE, "");
     sceneNotSaved_ = false;
     updateWindowTitle_();
     updateWidgetsActivity_();
@@ -824,12 +825,6 @@ void MainWindow::loadScene()
                 currentSceneDirectory_,
                 "MatrixOptimizer mo3 (*.mo3)");
 
-    if (!fn.isEmpty())
-    {
-        currentSceneDirectory_ = QDir(fn).absolutePath();
-        settings->setValue("Directory/scene", currentSceneDirectory_);
-    }
-
     loadScene_(fn);
 }
 
@@ -859,7 +854,7 @@ void MainWindow::loadScene_(const QString &fn)
                 sceneSettings.loadFile(guifn);
             }
             else
-                MO_DEBUG("No scene-settings " << guifn);
+                MO_DEBUG_IO("No scene-settings " << guifn);
         }
         catch (Exception & e) { }
 
@@ -867,7 +862,9 @@ void MainWindow::loadScene_(const QString &fn)
 
         statusBar()->showMessage(tr("Opened %1").arg(fn), statusMessageTimeout_);
         currentSceneFilename_ = fn;
-        settings->setValue("File/scene", currentSceneFilename_);
+        currentSceneDirectory_ = QFileInfo(fn).absolutePath();
+        IO::Files::setFilename(IO::FT_SCENE, currentSceneFilename_);
+        IO::Files::setDirectory(IO::FT_SCENE, currentSceneDirectory_);
         sceneNotSaved_ = false;
         updateWindowTitle_();
         updateWidgetsActivity_();
@@ -895,7 +892,9 @@ bool MainWindow::saveScene_(const QString &fn)
 
         statusBar()->showMessage(tr("Saved %1").arg(fn), statusMessageTimeout_);
         currentSceneFilename_ = fn;
-        settings->setValue("File/scene", currentSceneFilename_);
+        currentSceneDirectory_ = QFileInfo(fn).absolutePath();
+        IO::Files::setFilename(IO::FT_SCENE, currentSceneFilename_);
+        IO::Files::setDirectory(IO::FT_SCENE, currentSceneDirectory_);
         sceneNotSaved_ = false;
         updateWindowTitle_();
         updateWidgetsActivity_();

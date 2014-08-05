@@ -390,13 +390,14 @@ Double SequenceFloat::value(Double gtime, uint thread) const
         return (1.0 - ts) * v0 + ts * v;
     }
 
-    MO_ASSERT(false, "unhandled loopOverlapMode " << loopOverlapMode_);
+    MO_ASSERT(false, "unhandled loopOverlapMode " << loopOverlapMode_
+                     << " in SequenceFloat '" << idNamePath() << "'");
     return 0.0;
 }
 
 Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
 {
-    if ((mode_ & STG_FREQUENCY) || doUseFreq_)
+    if (typeUsesFrequency() || doUseFreq_)
     {
         time = time * frequency_->value(gtime, thread)
                 + phase_->value(gtime, thread) * phaseMult_;
@@ -437,7 +438,7 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
                 return offset_->value(gtime, thread)
                     + amplitude_->value(gtime, thread) * equation_[thread]->equation->eval()
                 ,
-                "\nin (thread=" << thread << ") call from SequenceFloat '"
+                "in (thread=" << thread << ") call from SequenceFloat '"
                         << name() << "' (" << idNamePath() << ")"
             );
 

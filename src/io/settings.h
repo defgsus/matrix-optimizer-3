@@ -1,6 +1,6 @@
 /** @file settings.h
 
-    @brief
+    @brief Application settings
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>

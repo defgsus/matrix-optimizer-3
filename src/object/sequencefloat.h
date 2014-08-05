@@ -42,12 +42,13 @@ public:
     /** friendly names of the sequence types */
     static QStringList sequenceTypeName;
 
-    enum SequenceTypeGroups
+    static bool typeUsesFrequency(SequenceType t)
     {
-        /** All types that use frequency/phase */
-        STG_FREQUENCY = ST_OSCILLATOR | ST_SPECTRAL_OSC | ST_SPECTRAL_WT
-    };
+        return t == ST_OSCILLATOR || t == ST_SPECTRAL_OSC
+                || t == ST_SPECTRAL_WT;
+    }
 
+    bool typeUsesFrequency() const { return typeUsesFrequency(mode_); }
 
     enum LoopOverlapMode
     {

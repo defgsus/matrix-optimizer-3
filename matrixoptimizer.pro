@@ -140,7 +140,8 @@ SOURCES += \
     src/math/cubemapmatrix.cpp \
     src/geom/geometrycreator.cpp \
     src/geom/freecamera.cpp \
-    src/img/image.cpp
+    src/img/image.cpp \
+    src/io/files.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -272,7 +273,8 @@ HEADERS += \
     src/math/cubemapmatrix.h \
     src/geom/geometrycreator.h \
     src/geom/freecamera.h \
-    src/img/image.h
+    src/img/image.h \
+    src/io/files.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

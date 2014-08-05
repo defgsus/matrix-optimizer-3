@@ -44,7 +44,7 @@ signals:
 public slots:
 
     /* Sets the settings to display/edit */
-    //void setGeometrySettings(const GEOM::GeometryFactorySettings&);
+    void setGeometrySettings(const GEOM::GeometryFactorySettings&);
 
 protected slots:
 
@@ -52,6 +52,10 @@ protected slots:
     void updateGeometry_();
     void updateFromWidgets_();
     void loadModelFile_();
+    void savePreset_();
+    void savePresetAs_();
+    void deletePreset_();
+    void presetSelected_();
 
     void creationFailed_(const QString&);
     void creationFinished_();
@@ -60,16 +64,21 @@ protected:
     //void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
 
     void createWidgets_();
+    void updateWidgets_();
+    void updatePresetList_(const QString& selectFilename = QString());
+    void updatePresetButtons_();
 
     GeometryWidget * geoWidget_;
     GEOM::GeometryFactorySettings * settings_;
     GEOM::GeometryCreator * creator_;
-    bool updateGeometryLater_;
+    bool updateGeometryLater_,
+         ignoreUpdate_;
 
     QLabel * labelInfo_, *labelSeg_, *labelNormAmt_, *labelSmallRadius_;
     QLineEdit * editFilename_;
-    QToolButton * butLoadModelFile_;
-    QComboBox * comboView_, * comboType_;
+    QToolButton *butSavePreset_, *butSavePresetAs_, *butDeletePreset_,
+                *butLoadModelFile_;
+    QComboBox * comboPreset_, * comboView_, * comboType_;
     QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbCalcNormals_,
             *cbTess_, *cbNorm_, *cbRemove_, *cbTransformEqu_;
     DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_, *spinRemoveProb_,

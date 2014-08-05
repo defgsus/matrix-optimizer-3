@@ -12,6 +12,7 @@
 
 #include <QObject>
 #include <QHash>
+#include <QFile>
 
 #include "geometryfactory.h"
 #include "geometry.h"
@@ -1003,6 +1004,36 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
 
     if (ver >= 4)
         io >> smallRadius;
+}
+
+void GeometryFactorySettings::saveFile(const QString &filename) const
+{
+    QFile f(filename);
+    if (!f.open(QIODevice::WriteOnly))
+        MO_IO_ERROR(WRITE, "Could not create geometry-settings file '" << filename
+                    << "'\n" << f.errorString());
+
+    IO::DataStream stream(&f);
+
+    MO_EXTEND_EXCEPTION(
+        serialize(stream),
+        "on writing geometry-settings file '" << filename << "'"
+        );
+}
+
+
+void GeometryFactorySettings::loadFile(const QString &filename)
+{
+    QFile f(filename);
+    if (!f.open(QIODevice::ReadOnly))
+        MO_IO_ERROR(WRITE, "Could not open geometry-settings file '" << filename
+                    << "'\n" << f.errorString());
+
+    IO::DataStream stream(&f);
+    MO_EXTEND_EXCEPTION(
+        deserialize(stream),
+        "on reading geometry-settings file '" << filename << "'"
+        );
 }
 
 } // namespace GEOM

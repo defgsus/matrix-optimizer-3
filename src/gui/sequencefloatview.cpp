@@ -636,7 +636,7 @@ void SequenceFloatView::updateWidgets_()
          isPW = isOsc && AUDIO::Waveform::supportsPulseWidth( sequence_->oscillatorMode() ),
          isEqu = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_EQUATION,
          isTL = sequence_ && sequence_->sequenceType() == SequenceFloat::ST_TIMELINE,
-         isFreq = sequence_ && (sequence_->sequenceType() & SequenceFloat::STG_FREQUENCY),
+         isFreq = sequence_ && (sequence_->typeUsesFrequency()),
          useFreq = sequence_ && sequence_->useFrequency(),
          isLoop = sequence_ && sequence_->looping(),
          isLoopOverlap = isLoop && sequence_->loopOverlapMode() != SequenceFloat::LOT_OFF;

@@ -427,7 +427,6 @@ bool Parser::parse(const std::string& str)
     d_->param.prog->clear();
     var_.clear_temps_();
 
-    std::cerr << "[[[" << str << "]]]" << std::endl;
     d_->param.inp = str_.c_str();
     d_->param.inp_pos = 0;
     d_->param.vars = &var_;
@@ -445,17 +444,18 @@ bool Parser::parse(const std::string& str)
 
     if (!ok_)
     {
-        std::cerr << "parsing failed...\n";
+        PPP_PROG_DEBUG( "parsing failed..." );
         /* IMPortant to clear the gathered expressions */
         d_->param.prog->clear();
         return false;
-    } else
-    PPP_PROG_DEBUG("parsing finished\n");
+    }
+    else
+        PPP_PROG_DEBUG("parsing finished\n");
 
     PPP_PROG_DEBUG( "--- after parsing:");
     PPP_PROG_DEBUG( d_->param.prog->string() )
     ok_ = d_->param.prog->compile();
-    if (!ok_) { std::cerr << "compilation failed.\n"; }
+    if (!ok_) { PPP_PROG_DEBUG( "compilation failed." ); }
         else { PPP_PROG_DEBUG("compiled."); }
 
     PPP_PROG_DEBUG( "--- after compilation:\n" << d_->param.prog->string() )
@@ -474,7 +474,7 @@ Float Parser::eval()
 
     MO_EXTEND_EXCEPTION(
         return d_->param.prog->eval() ,
-        "\nfailed in Parser, equation text = '" << d_->param.inp << "'"
+        "failed in Parser, equation text = '" << d_->param.inp << "'"
     );
 
 }

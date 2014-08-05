@@ -88,8 +88,14 @@ public:
 
     GeometryFactorySettings();
 
+    // ---------- io ---------
+
     void serialize(IO::DataStream&) const;
     void deserialize(IO::DataStream&);
+
+    void saveFile(const QString& filename) const;
+    void loadFile(const QString& filename);
+
 
     // ---- public member ----
 

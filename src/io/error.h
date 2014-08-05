@@ -12,6 +12,7 @@
 #define MOSRC_IO_ERROR_H
 
 #include <exception>
+#include <iostream>
 #include <sstream>
 
 #include "io/streamoperators_qt.h"
@@ -122,7 +123,7 @@ public:
 
 #ifdef MO_EXTENDED_EXCEPTIONS
 #   define MO_EXTEND_EXCEPTION(command__, text__) \
-        try { command__; } catch (::MO::Exception * e__) { throw *e__ << text__; }
+        try { command__; } catch (::MO::Exception * e__) { throw *e__ << "\n" << text__; }
 #else
 #   define MO_EXTEND_EXCEPTION(command__, unused__) command__;
 #endif

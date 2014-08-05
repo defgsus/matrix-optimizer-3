@@ -27,6 +27,7 @@
 #include "tool/stringmanip.h"
 #include "geom/geometrycreator.h"
 #include "widget/equationeditor.h"
+#include "io/files.h"
 
 namespace MO {
 namespace GUI {
@@ -36,7 +37,8 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     QDialog         (parent, flags),
     settings_       (new GEOM::GeometryFactorySettings()),
     creator_        (0),
-    updateGeometryLater_(false)
+    updateGeometryLater_(false),
+    ignoreUpdate_   (false)
 {
     setObjectName("_GeometryWidget");
     setWindowTitle(tr("geometry editor"));
@@ -47,6 +49,8 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
         *settings_ = *set;
 
     createWidgets_();
+
+    updatePresetList_();
 
 //    geomChanged_ = true;
 }
@@ -101,6 +105,34 @@ void GeometryDialog::createWidgets_()
 
         lv = new QVBoxLayout();
         lh->addLayout(lv);
+
+            // preset dialog
+
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                comboPreset_ = new QComboBox(this);
+                lh2->addWidget(comboPreset_);
+                connect(comboPreset_, SIGNAL(currentIndexChanged(int)),
+                        this, SLOT(presetSelected_()));
+
+                butSavePreset_ = new QToolButton(this);
+                lh2->addWidget(butSavePreset_);
+                butSavePreset_->setText("S");
+                connect(butSavePreset_, SIGNAL(clicked()),
+                        this, SLOT(savePreset_()));
+
+                butSavePresetAs_ = new QToolButton(this);
+                lh2->addWidget(butSavePresetAs_);
+                butSavePresetAs_->setText("...");
+                connect(butSavePresetAs_, SIGNAL(clicked()),
+                        this, SLOT(savePresetAs_()));
+
+                butDeletePreset_ = new QToolButton(this);
+                lh2->addWidget(butDeletePreset_);
+                butDeletePreset_->setIcon(QIcon(":/icon/delete.png"));
+                connect(butDeletePreset_, SIGNAL(clicked()),
+                        this, SLOT(deletePreset_()));
 
             // geometry type
 
@@ -452,6 +484,9 @@ void GeometryDialog::creationFinished_()
 
 void GeometryDialog::updateFromWidgets_()
 {
+    if (ignoreUpdate_)
+        return;
+
     // update settings
 
     if (comboType_->currentIndex() >= 0)
@@ -544,17 +579,164 @@ void GeometryDialog::updateFromWidgets_()
     updateGeometry_();
 }
 
+void GeometryDialog::updateWidgets_()
+{
+    ignoreUpdate_ = true;
+
+    for (uint i=0; i<settings_->numTypes; ++i)
+    {
+        comboType_->addItem(settings_->typeNames[i], i);
+        if (settings_->type == (GEOM::GeometryFactorySettings::Type)i)
+            comboType_->setCurrentIndex(i);
+    }
+    editFilename_->setText(settings_->filename);
+    cbTriangles_->setChecked(settings_->asTriangles);
+    cbConvertToLines_->setChecked(settings_->convertToLines);
+    cbSharedVert_->setChecked(settings_->sharedVertices);
+    cbCalcNormals_->setChecked(settings_->calcNormals);
+    cbNorm_->setChecked(settings_->normalizeVertices);
+    spinNormAmt_->setValue(settings_->normalization);
+    spinS_->setValue(settings_->scale);
+    spinSX_->setValue(settings_->scaleX);
+    spinSY_->setValue(settings_->scaleY);
+    spinSZ_->setValue(settings_->scaleZ);
+    spinSmallRadius_->setValue(settings_->smallRadius);
+    spinSegX_->setValue(settings_->segmentsX);
+    spinSegY_->setValue(settings_->segmentsY);
+    spinSegZ_->setValue(settings_->segmentsZ);
+    cbTess_->setChecked(settings_->tesselate);
+    spinTess_->setValue(settings_->tessLevel);
+    cbRemove_->setChecked(settings_->removeRandomly);
+    spinRemoveProb_->setValue(settings_->removeProb);
+    spinRemoveSeed_->setValue(settings_->removeSeed);
+    cbTransformEqu_->setChecked(settings_->transformWithEquation);
+
+    editEquX_->setPlainText(settings_->equationX);
+    editEquY_->setPlainText(settings_->equationY);
+    editEquZ_->setPlainText(settings_->equationZ);
+
+    ignoreUpdate_ = false;
+}
+
 void GeometryDialog::loadModelFile_()
 {
     QString filename =
-    QFileDialog::getOpenFileName(this, tr("Load .obj model"),
-                                 "./", "Wavefront OBJ { *.obj }, All files { * }");
+        IO::Files::getOpenFileName(IO::FT_MODEL, this);
+
     if (filename.isEmpty())
         return;
 
     editFilename_->setText(filename);
     updateFromWidgets_();
 }
+
+void GeometryDialog::updatePresetList_(const QString &selectFilename)
+{
+    ignoreUpdate_ = true;
+
+    comboPreset_->clear();
+
+    // search directory for preset files
+
+    const QString path = IO::Files::directory(IO::FT_GEOMETRY_SETTINGS);
+    QDir dir(path);
+    QStringList filters;
+    for (auto &ext : IO::fileTypeExtensions[IO::FT_GEOMETRY_SETTINGS])
+        filters << ("*." + ext);
+    QStringList names =
+        dir.entryList(
+                filters,
+                QDir::Files | QDir::Readable | QDir::NoDotAndDotDot,
+                QDir::Name | QDir::IgnoreCase | QDir::LocaleAware
+                );
+
+    // fill combo-box
+    comboPreset_->addItem("-");
+
+    int sel = -1;
+    for (auto &n : names)
+    {
+        if (selectFilename == n)
+            sel = comboPreset_->count();
+        QString display = n;
+        display.replace("."+IO::fileTypeExtensions[IO::FT_GEOMETRY_SETTINGS][0], "");
+        comboPreset_->addItem(display, path + QDir::separator() + n);
+    }
+
+    // select desired
+    if (sel>=0)
+        comboPreset_->setCurrentIndex(sel);
+
+    updatePresetButtons_();
+
+    ignoreUpdate_ = false;
+}
+
+void GeometryDialog::updatePresetButtons_()
+{
+    const bool isPreset = comboPreset_->currentIndex() > 0;
+    butSavePreset_->setEnabled( isPreset );
+    butDeletePreset_->setEnabled( isPreset );
+}
+
+void GeometryDialog::savePreset_()
+{
+    int index = comboPreset_->currentIndex();
+    if (index < 1)
+        return;
+
+    settings_->saveFile(comboPreset_->itemData(index).toString());
+}
+
+
+void GeometryDialog::savePresetAs_()
+{
+    QString filename =
+            IO::Files::getSaveFileName(IO::FT_GEOMETRY_SETTINGS, this);
+
+    if (filename.isEmpty())
+        return;
+
+    settings_->saveFile(filename);
+
+    updatePresetList_(filename);
+}
+
+void GeometryDialog::deletePreset_()
+{
+
+}
+
+void GeometryDialog::presetSelected_()
+{
+    if (ignoreUpdate_)
+        return;
+
+    updatePresetButtons_();
+
+    const int index = comboPreset_->currentIndex();
+    if (index < 0)
+        return;
+
+    const QString filename = comboPreset_->itemData(index).toString();
+
+    GEOM::GeometryFactorySettings set;
+
+    if (!filename.isEmpty())
+        set.loadFile(filename);
+
+    setGeometrySettings(set);
+}
+
+void GeometryDialog::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
+{
+    *settings_ = s;
+
+    updateWidgets_();
+
+    updateGeometry_();
+}
+
 
 } // namespace GUI
 } // namespace MO
