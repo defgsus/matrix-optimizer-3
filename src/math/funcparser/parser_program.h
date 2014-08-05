@@ -178,8 +178,16 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		2, "nextdiv",	math_func<Float>::nextdiv_2		);
         f.add(Function::FUNCTION,		2, "gcd",		math_func<Float>::gcd_2			);
         f.add(Function::FUNCTION,		3, "cong",		math_func<Float>::congruent_3	);
-
         f.add(Function::FUNCTION,		1, "digits",	math_func<Float>::digits_1		);
+
+        f.add(Function::FUNCTION,		1, "ndiv_s",	math_func<Float>::s_numdiv_1	);
+        f.add(Function::FUNCTION,		2, "divisor_s", math_func<Float>::s_divisor_2	);
+        f.add(Function::FUNCTION,		1, "sumdiv_s",	math_func<Float>::s_sumdiv_1	);
+        f.add(Function::FUNCTION,		1, "proddiv_s",	math_func<Float>::s_proddiv_1	);
+        f.add(Function::FUNCTION,		2, "nextdiv_s",	math_func<Float>::s_nextdiv_2	);
+        f.add(Function::FUNCTION,		2, "gcd_s",		math_func<Float>::s_gcd_2		);
+        f.add(Function::FUNCTION,		3, "cong_s",	math_func<Float>::s_congruent_3	);
+        f.add(Function::FUNCTION,		1, "digits_s",	math_func<Float>::s_digits_1	);
 
 
 //        f.add(Function::FUNCTION,		2, "digcount",	math_func<Float>::digit_count_2	);

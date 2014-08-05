@@ -41,6 +41,12 @@ Float moduloSigned(Float A, Float B)
         return B - std::fmod(-A, B);
 }
 
+/** Returns fractional part of float x */
+template <typename F>
+F frac(F x)
+{
+    return x - std::floor(x);
+}
 
 } // namespace MATH
 } // namespace MO

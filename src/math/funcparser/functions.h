@@ -11,6 +11,7 @@
 #include "parser_defines.h"
 #include "math/functions.h"
 #include "math/noiseperlin.h"
+#include "math/interpol.h"
 
 namespace PPP_NAMESPACE {
 
@@ -257,6 +258,21 @@ struct generic_int
     static I congruent(I a, I b, I m)
     {
         return PPP_SAVE_MOD(b-a, m) == 0;
+    }
+
+    static I factorial(I n)
+    {
+        Int r = 1;
+        for (Int i=2; i<=n; ++i)
+            r *= i;
+        return r;
+    }
+
+    static I num_digits(I n, I base = 10)
+    {
+        I d = 1;
+        while (n >= base) { ++d; n /= base; };
+        return d;
     }
 
     static I ulam_spiral(I x, I y)
@@ -673,10 +689,7 @@ struct math_func<double>
 
     static void factorial_1			(double ** v)
     {
-        Int f = 1, k = *v[1];
-        for (Int i=2; i<=k; ++i)
-            f *= i;
-        *v[0] = f;
+        *v[0] = generic_int<Int>::factorial( *v[1] );
     }
 
     static void fibonacci_1		(double ** v)
@@ -698,6 +711,82 @@ struct math_func<double>
     {
         *v[0] = generic_int<Int>::tri_spiral(*v[1], *v[2]);
     }
+
+    // ------------ smoothed number theory --------------
+
+    static void s_numdiv_1			(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(*v[1]),
+                    (double)generic_int<Int>::num_div( std::abs((Int)*v[1]) ),
+                    (double)generic_int<Int>::num_div( std::abs((Int)*v[1] + 1) ));
+    }
+
+    static void s_divisor_2			(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+            MO::MATH::frac(*v[1]),
+            (double)generic_int<Int>::divisor( std::abs((Int)*v[1]), std::abs((Int)*v[2]) ),
+            (double)generic_int<Int>::divisor( std::abs((Int)*v[1]+1), std::abs((Int)*v[2]) ));
+    }
+
+    static void s_sumdiv_1			(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(*v[1]),
+                    (double)generic_int<Int>::sum_div( std::abs((Int)*v[1]) ),
+                    (double)generic_int<Int>::sum_div( std::abs((Int)*v[1] + 1) ));
+    }
+
+    static void s_proddiv_1			(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(*v[1]),
+                    (double)generic_int<Int>::prod_div( std::abs((Int)*v[1]) ),
+                    (double)generic_int<Int>::prod_div( std::abs((Int)*v[1] + 1) ));
+    }
+
+    static void s_nextdiv_2			(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(*v[1]),
+                    (double)generic_int<Int>::next_div( *v[1], *v[2] ),
+                    (double)generic_int<Int>::next_div( *v[1] + 1, *v[2] ) );
+    }
+
+    static void s_gcd_2				(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(*v[1]),
+                    (double)generic_int<Int>::gcd( *v[1], *v[2] ),
+                    (double)generic_int<Int>::gcd( *v[1] + 1, *v[2] ) );
+    }
+
+    static void s_congruent_3			(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(*v[1]),
+                    (double)generic_int<Int>::congruent( *v[1], *v[2], *v[3] ),
+                    (double)generic_int<Int>::congruent( *v[1] + 1, *v[2], *v[3] ) );
+    }
+
+    static void s_factorial_1			(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(*v[1]),
+                    (double)generic_int<Int>::factorial( *v[1] ),
+                    (double)generic_int<Int>::factorial( *v[1] + 1 ));
+    }
+
+    static void s_digits_1      		(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(*v[1]),
+                    (double)generic_int<Int>::num_digits( *v[1] ),
+                    (double)generic_int<Int>::num_digits( *v[1] + 1 ));
+    }
+
+    // ------------- float number theory ----------------
 
     static void zeta_1			(double ** v)
     {
@@ -721,9 +810,7 @@ struct math_func<double>
 
     static void digits_1 		(double ** v)
     {
-        *v[0] = 1.0;
-        long int number = *v[1];
-        while (number >= 10) { ++*v[0]; number /= 10; };
+        *v[0] = generic_int<Int>::num_digits( *v[1] );
     }
 
     static void harmo_2			(double ** v)

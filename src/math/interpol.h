@@ -44,6 +44,22 @@ inline F smootherstep(F edge0, F edge1, F x)
     return x * x * x * (x * (x * (F)6 - (F)15) + (F)10);
 }
 
+
+/** Interpolate linearily between y and y1, by t [0,1] */
+template <typename F>
+inline F interpol_linear(F t, F y, F y1)
+{
+    return y + t * (y1 - y);
+}
+
+/** Interpolate smoothly between y and y1, by t [0,1] */
+template <typename F>
+inline F interpol_smooth(F t, F y, F y1)
+{
+    t = t * t * ((F)3 - (F)2 * t);
+    return y + t * (y1 - y);
+}
+
 /** 6-point interpolation. <br>
     from somewhere in musicdsp.org <br>
 
