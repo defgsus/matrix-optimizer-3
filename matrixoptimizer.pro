@@ -141,7 +141,8 @@ SOURCES += \
     src/geom/geometrycreator.cpp \
     src/geom/freecamera.cpp \
     src/img/image.cpp \
-    src/io/files.cpp
+    src/io/files.cpp \
+    src/engine/modulator.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -274,7 +275,8 @@ HEADERS += \
     src/geom/geometrycreator.h \
     src/geom/freecamera.h \
     src/img/image.h \
-    src/io/files.h
+    src/io/files.h \
+    src/engine/modulator.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

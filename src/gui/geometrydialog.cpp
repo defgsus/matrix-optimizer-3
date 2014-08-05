@@ -547,7 +547,7 @@ void GeometryDialog::creationFinished_()
     geoWidget_->setGeometry(g);
 
     progressBar_->setVisible(false);
-    labelInfo_->setText(tr("vertices: %1\ntriangles: %2\nlines: %3\nmemory: %4")
+    labelInfo_->setText(tr("%1 vertices, %2 triangles, %3 lines, memory: %4")
                         .arg(g->numVertices())
                         .arg(g->numTriangles())
                         .arg(g->numLines())
