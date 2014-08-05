@@ -863,16 +863,9 @@ void GeometryFactory::createFromSettings(Geometry * g,
     if (set->normalizeVertices)
         g->normalizeSphere(1, set->normalization);
 
-    if (set->transformWithEquation)
-        g->transformWithEquation(set->equationX, set->equationY, set->equationZ);
-
-    g->scale(set->scale * set->scaleX,
-             set->scale * set->scaleY,
-             set->scale * set->scaleZ);
-
     if (!set->sharedVertices
             // XXX remove when ObjLoader supports vertex sharing
-            && !set->type == GeometryFactorySettings::T_FILE)
+            && set->type != GeometryFactorySettings::T_FILE)
         g->unGroupVertices();
 
     if (set->convertToLines)
@@ -881,8 +874,22 @@ void GeometryFactory::createFromSettings(Geometry * g,
     if (set->removeRandomly)
         g->removePrimitivesRandomly(set->removeProb, set->removeSeed);
 
+    if (set->transformWithEquation)
+        g->transformWithEquation(set->equationX, set->equationY, set->equationZ);
+
+    if (g->numTriangles() && set->calcNormalsBeforePrimitiveEquation)
+        g->calculateTriangleNormals();
+
+    if (set->transformPrimitivesWithEquation)
+        g->transformPrimitivesWithEquation(set->pEquationX, set->pEquationY, set->pEquationZ);
+
+    g->scale(set->scale * set->scaleX,
+             set->scale * set->scaleY,
+             set->scale * set->scaleZ);
+
     if (g->numTriangles() && set->calcNormals)
         g->calculateTriangleNormals();
+
 }
 
 
@@ -928,6 +935,9 @@ GeometryFactorySettings::GeometryFactorySettings()
       equationX     ("x"),
       equationY     ("y"),
       equationZ     ("z"),
+      pEquationX    ("x"),
+      pEquationY    ("y"),
+      pEquationZ    ("z"),
       calcNormals   (true),
       asTriangles   (true),
       convertToLines(false),
@@ -936,6 +946,8 @@ GeometryFactorySettings::GeometryFactorySettings()
       normalizeVertices(false),
       removeRandomly(false),
       transformWithEquation(false),
+      transformPrimitivesWithEquation(false),
+      calcNormalsBeforePrimitiveEquation(false),
       colorR        (0.5f),
       colorG        (0.5f),
       colorB        (0.5f),
@@ -960,7 +972,7 @@ GeometryFactorySettings::GeometryFactorySettings()
 
 void GeometryFactorySettings::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("geomfacset", 4);
+    io.writeHeader("geomfacset", 5);
 
     io << typeIds[type];
 
@@ -980,11 +992,15 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
 
     // v4
     io << smallRadius;
+
+    // v5
+    io << transformPrimitivesWithEquation << calcNormalsBeforePrimitiveEquation
+       << pEquationX << pEquationY << pEquationZ;
 }
 
 void GeometryFactorySettings::deserialize(IO::DataStream & io)
 {
-    int ver = io.readHeader("geomfacset", 4);
+    int ver = io.readHeader("geomfacset", 5);
 
     io.readEnum(type, T_BOX, typeIds);
 
@@ -1004,6 +1020,11 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
 
     if (ver >= 4)
         io >> smallRadius;
+
+    if (ver >= 5)
+        io >> transformPrimitivesWithEquation >> calcNormalsBeforePrimitiveEquation
+           >> pEquationX >> pEquationY >> pEquationZ;
+
 }
 
 void GeometryFactorySettings::saveFile(const QString &filename) const

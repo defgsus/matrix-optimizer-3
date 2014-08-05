@@ -406,6 +406,49 @@ void GeometryDialog::createWidgets_()
                 editEquZ_->setPlainText(settings_->equationZ);
                 connect(editEquZ_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
+                // transform primitives by equation
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    cbTransformPrimEqu_ = new QCheckBox(tr("transform primitives by equation"), this);
+                    lh2->addWidget(cbTransformPrimEqu_);
+                    cbTransformPrimEqu_->setStatusTip(tr("Enables transformation of each vertex point "
+                                                     "of each primitive by a mathematical formula"));
+                    cbTransformPrimEqu_->setChecked(settings_->transformPrimitivesWithEquation);
+                    connect(cbTransformPrimEqu_, SIGNAL(toggled(bool)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    cbCalcNormalsBeforePrimEqu_ = new QCheckBox(tr("calculate normals"), this);
+                    lh2->addWidget(cbCalcNormalsBeforePrimEqu_);
+                    cbCalcNormalsBeforePrimEqu_->setStatusTip(tr("Enables calculation of normals before "
+                                                         "the application of the primitive equations"));
+                    cbCalcNormalsBeforePrimEqu_->setChecked(settings_->transformPrimitivesWithEquation);
+                    connect(cbCalcNormalsBeforePrimEqu_, SIGNAL(toggled(bool)),
+                            this, SLOT(updateFromWidgets_()));
+
+                vars = {
+                    "x", "y", "z", "nx", "ny", "nz", "i", "p",
+                    "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3",
+                    "nx1", "ny1", "nz1", "nx2", "ny2", "nz2", "nx3", "ny3", "nz3" };
+                editPEquX_ = new EquationEditor(this);
+                lv->addWidget(editPEquX_);
+                editPEquX_->addVariables(vars);
+                editPEquX_->setPlainText(settings_->pEquationX);
+                connect(editPEquX_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+                editPEquY_ = new EquationEditor(this);
+                lv->addWidget(editPEquY_);
+                editPEquY_->addVariables(vars);
+                editPEquY_->setPlainText(settings_->pEquationY);
+                connect(editPEquY_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+                editPEquZ_ = new EquationEditor(this);
+                lv->addWidget(editPEquZ_);
+                editPEquZ_->addVariables(vars);
+                editPEquZ_->setPlainText(settings_->pEquationZ);
+                connect(editPEquZ_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
                 // -----------------
                 lv->addStretch(1);
 
@@ -549,12 +592,20 @@ void GeometryDialog::updateFromWidgets_()
     settings_->removeProb = spinRemoveProb_->value();
     settings_->removeSeed = spinRemoveSeed_->value();
     settings_->transformWithEquation = cbTransformEqu_->isChecked();
+    settings_->transformPrimitivesWithEquation = cbTransformPrimEqu_->isChecked();
+    settings_->calcNormalsBeforePrimitiveEquation = cbCalcNormalsBeforePrimEqu_->isChecked();
     if (editEquX_->isOk())
         settings_->equationX = editEquX_->toPlainText();
     if (editEquY_->isOk())
         settings_->equationY = editEquY_->toPlainText();
     if (editEquZ_->isOk())
         settings_->equationZ = editEquZ_->toPlainText();
+    if (editPEquX_->isOk())
+        settings_->pEquationX = editPEquX_->toPlainText();
+    if (editPEquY_->isOk())
+        settings_->pEquationY = editPEquY_->toPlainText();
+    if (editPEquZ_->isOk())
+        settings_->pEquationZ = editPEquZ_->toPlainText();
 
     // update widgets visibility
 
@@ -586,6 +637,8 @@ void GeometryDialog::updateFromWidgets_()
     cbTriangles_->setVisible( canTriangle && !isFile);
 
     cbCalcNormals_->setVisible( hasTriangle && !settings_->convertToLines );
+    cbCalcNormalsBeforePrimEqu_->setVisible(
+                hasTriangle && settings_->transformPrimitivesWithEquation );
     cbConvertToLines_->setVisible( hasTriangle );
     spinTess_->setVisible( settings_->tesselate );
 
@@ -610,6 +663,10 @@ void GeometryDialog::updateFromWidgets_()
     editEquX_->setVisible( settings_->transformWithEquation );
     editEquY_->setVisible( settings_->transformWithEquation );
     editEquZ_->setVisible( settings_->transformWithEquation );
+
+    editPEquX_->setVisible( settings_->transformPrimitivesWithEquation );
+    editPEquY_->setVisible( settings_->transformPrimitivesWithEquation );
+    editPEquZ_->setVisible( settings_->transformPrimitivesWithEquation );
 
     updateGeometry_();
 }
@@ -645,10 +702,15 @@ void GeometryDialog::updateWidgets_()
     spinRemoveProb_->setValue(settings_->removeProb);
     spinRemoveSeed_->setValue(settings_->removeSeed);
     cbTransformEqu_->setChecked(settings_->transformWithEquation);
+    cbTransformPrimEqu_->setChecked(settings_->transformPrimitivesWithEquation);
+    cbCalcNormalsBeforePrimEqu_->setChecked(settings_->calcNormalsBeforePrimitiveEquation);
 
     editEquX_->setPlainText(settings_->equationX);
     editEquY_->setPlainText(settings_->equationY);
     editEquZ_->setPlainText(settings_->equationZ);
+    editPEquX_->setPlainText(settings_->pEquationX);
+    editPEquY_->setPlainText(settings_->pEquationY);
+    editPEquZ_->setPlainText(settings_->pEquationZ);
 
     ignoreUpdate_ = false;
 }

@@ -165,9 +165,19 @@ public:
                             VertexType scaleX, VertexType scaleY, VertexType scaleZ,
                             int seedX, int seedY, int seedZ);
 
-    /* Applies the equation to the each vertex.
+    /** Applies the equation to the each vertex.
         Variables are x, y, z and i (for vertex index). */
     bool transformWithEquation(const QString& equationX,
+                               const QString& equationY,
+                               const QString& equationZ);
+
+    /** Applies the equation to the each vertex of each primitive.
+        Variables are x, y, z (position), nx, ny, nz (normal),
+        x1, y1, z1, x2, y2, z2, x3, y3, z3 (position of each primitive vertex),
+        nx1, ny1, nz1, nx2, ny2, nz2, nx3, ny3, nz3 (normal of each primitive vertex),
+        i (primitive index) and p (for index of vertex in primitive). */
+    bool transformPrimitivesWithEquation(
+                               const QString& equationX,
                                const QString& equationY,
                                const QString& equationZ);
 

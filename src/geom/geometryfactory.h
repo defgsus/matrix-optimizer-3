@@ -100,9 +100,11 @@ public:
     // ---- public member ----
 
     Type type;
-    QString filename, equationX, equationY, equationZ;
+    QString filename, equationX, equationY, equationZ,
+                     pEquationX, pEquationY, pEquationZ;
     bool calcNormals, asTriangles, convertToLines, sharedVertices, tesselate,
-        normalizeVertices, removeRandomly, transformWithEquation;
+        normalizeVertices, removeRandomly, transformWithEquation,
+                    transformPrimitivesWithEquation, calcNormalsBeforePrimitiveEquation;
     Float colorR, colorG, colorB, colorA;
     Float scale, scaleX, scaleY, scaleZ, removeProb, normalization, smallRadius;
     uint gridSize, segmentsX, segmentsY, segmentsZ, tessLevel, removeSeed;

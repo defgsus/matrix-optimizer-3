@@ -385,6 +385,156 @@ bool Geometry::transformWithEquation(const QString &equationX,
     return true;
 }
 
+bool Geometry::transformPrimitivesWithEquation(
+                    const QString &equationX,
+                    const QString &equationY,
+                    const QString &equationZ)
+{
+    Double vx, vy, vz, vnx, vny, vnz,
+           vpx[3], vpy[3], vpz[3],
+           vpnx[3], vpny[3], vpnz[3],
+           vp, vi;
+
+    std::vector<PPP_NAMESPACE::Parser> equ(3);
+    for (uint i=0; i<3; ++i)
+    {
+        equ[i].variables().add("x", &vx);
+        equ[i].variables().add("y", &vy);
+        equ[i].variables().add("z", &vz);
+        equ[i].variables().add("nx", &vnx);
+        equ[i].variables().add("ny", &vny);
+        equ[i].variables().add("nz", &vnz);
+        equ[i].variables().add("x1", &vpx[0]);
+        equ[i].variables().add("y1", &vpy[0]);
+        equ[i].variables().add("z1", &vpz[0]);
+        equ[i].variables().add("x2", &vpx[1]);
+        equ[i].variables().add("y2", &vpy[1]);
+        equ[i].variables().add("z2", &vpz[1]);
+        equ[i].variables().add("x3", &vpx[2]);
+        equ[i].variables().add("y3", &vpy[2]);
+        equ[i].variables().add("z3", &vpz[2]);
+        equ[i].variables().add("nx1", &vpnx[0]);
+        equ[i].variables().add("ny1", &vpny[0]);
+        equ[i].variables().add("nz1", &vpnz[0]);
+        equ[i].variables().add("nx2", &vpnx[1]);
+        equ[i].variables().add("ny2", &vpny[1]);
+        equ[i].variables().add("nz2", &vpnz[1]);
+        equ[i].variables().add("nx3", &vpnx[2]);
+        equ[i].variables().add("ny3", &vpny[2]);
+        equ[i].variables().add("nz3", &vpnz[2]);
+        equ[i].variables().add("i", &vi);
+        equ[i].variables().add("p", &vp);
+    }
+
+    if (!equ[0].parse(equationX.toStdString()))
+        return false;
+    if (!equ[1].parse(equationY.toStdString()))
+        return false;
+    if (!equ[2].parse(equationZ.toStdString()))
+        return false;
+
+    if (!numTriangles())
+    for (uint i=0; i<numLines(); ++i)
+    {
+        // get vertex indices
+        int i1 = lineIndex_[i*2],
+            i2 = lineIndex_[i*2+1];
+
+        // copy primitive input variables
+              VertexType * vert[] = { &vertex_[i1 * numVertexComponents()],
+                                      &vertex_[i2 * numVertexComponents()] };
+        const NormalType * norm[] = { &normal_[i1 * numNormalComponents()],
+                                      &normal_[i2 * numNormalComponents()] };
+
+        vi = i;
+        for (int j=0; j<2; ++j)
+        {
+            vpx[j] = vert[j][0];
+            vpy[j] = vert[j][1];
+            vpz[j] = vert[j][2];
+            vpnx[j] = norm[j][0];
+            vpny[j] = norm[j][1];
+            vpnz[j] = norm[j][2];
+        }
+
+        // execute per primitive vertex
+        for (int j=0; j<2; ++j)
+        {
+            // copy 'current' variables
+            vp = j;
+            vx = vpx[j];
+            vy = vpy[j];
+            vz = vpz[j];
+            vnx = vpnx[j];
+            vny = vpny[j];
+            vnz = vpnz[j];
+
+            // assign result from equation
+            if (equationX != "x")
+                vert[j][0] = equ[0].eval();
+            if (equationY != "y")
+                vert[j][1] = equ[1].eval();
+            if (equationZ != "z")
+                vert[j][2] = equ[2].eval();
+        }
+
+        progress_ = (i * 100) / numLines();
+    }
+
+    else // triangles
+    for (uint i=0; i<numTriangles(); ++i)
+    {
+        // get vertex indices
+        int i1 = triIndex_[i*3],
+            i2 = triIndex_[i*3+1],
+            i3 = triIndex_[i*3+2];
+
+        // copy primitive input variables
+              VertexType * vert[] = { &vertex_[i1 * numVertexComponents()],
+                                      &vertex_[i2 * numVertexComponents()],
+                                      &vertex_[i3 * numVertexComponents()] };
+        const NormalType * norm[] = { &normal_[i1 * numNormalComponents()],
+                                      &normal_[i2 * numNormalComponents()],
+                                      &normal_[i3 * numVertexComponents()] };
+
+        vi = i;
+        for (int j=0; j<3; ++j)
+        {
+            vpx[j] = vert[j][0];
+            vpy[j] = vert[j][1];
+            vpz[j] = vert[j][2];
+            vpnx[j] = norm[j][0];
+            vpny[j] = norm[j][1];
+            vpnz[j] = norm[j][2];
+        }
+
+        // execute per primitive vertex
+        for (int j=0; j<3; ++j)
+        {
+            // copy 'current' variables
+            vp = j;
+            vx = vpx[j];
+            vy = vpy[j];
+            vz = vpz[j];
+            vnx = vpnx[j];
+            vny = vpny[j];
+            vnz = vpnz[j];
+
+            // assign result from equation
+            if (equationX != "x")
+                vert[j][0] = equ[0].eval();
+            if (equationY != "y")
+                vert[j][1] = equ[1].eval();
+            if (equationZ != "z")
+                vert[j][2] = equ[2].eval();
+        }
+
+        progress_ = (i * 100) / numVertices();
+    }
+
+
+    return true;
+}
 
 
 void Geometry::tesselate(uint level)
