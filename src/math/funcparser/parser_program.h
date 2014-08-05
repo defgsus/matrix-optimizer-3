@@ -16,6 +16,7 @@
 #include "functions.h"
 #include "grammar.parser.h"
 #include "parser.h"
+#include "io/error.h"
 
 // qt specific debugging
 #if 1
@@ -368,18 +369,21 @@ namespace PPP_NAMESPACE
         /** execute the assigned function */
         void exec()
         {
-            assert(do_execute && "call of Expression::exec() while !do_execute");
-            assert(func && "call of Expression::exec() without function pointer");
+            MO_ASSERT(do_execute, "call of Expression::exec() while !do_execute");
+            MO_ASSERT(func, "call of Expression::exec() without function");
 
             if (func->is_lambda())
             {
-                assert(func->lambda_func_ && "call of Expression::exec() with P_LAMBDA without function ptr");
-                assert(lambda[1] && lambda[1]->func_ && "call of Expression::exec() with P_LAMBDA without function ptr");
-                assert(lambda[2] && lambda[2]->func_ && "call of Expression::exec() with P_LAMBDA without function ptr");
+                MO_ASSERT(func->lambda_func_, "call of Expression::exec() with P_LAMBDA without function ptr");
+                MO_ASSERT(lambda[1] && lambda[1]->func_, "call of Expression::exec() with P_LAMBDA without function ptr");
+                MO_ASSERT(lambda[2] && lambda[2]->func_, "call of Expression::exec() with P_LAMBDA without function ptr");
                 func->lambda_func_( lambda[1]->func_, lambda[2]->func_, &params[0] );
             }
             else
-                func->func()(&params[0]);
+            {
+                MO_ASSERT(func->func_ != 0, "call of Expression::exec() without function pointer");
+                func->func_(&params[0]);
+            }
 
             if (is_condition)
             {
@@ -464,7 +468,7 @@ namespace PPP_NAMESPACE
         /** return pointer to Float of each input parameter (which>0) */
         Float * get_pfloat(int which)
         {
-            assert(which <= num_params && "Expression::get_pfloat() which out of range");
+            MO_ASSERT(which <= num_params, "Expression::get_pfloat() which out of range");
 
             if (type[which] == P_VARIABLE)
                 return var[which]? var[which]->value_ptr() : 0;
@@ -477,11 +481,11 @@ namespace PPP_NAMESPACE
             else
             if (type[which] == P_LAMBDA)
             {
-                assert(0 && "Expression::get_pfloat() called for lambda type");
+                MO_ASSERT(0, "Expression::get_pfloat() called for lambda type");
                 return 0;
             }
 
-            assert(0 && "Expression::get_pfloat() type[which] unknown");
+            MO_ASSERT(0, "Expression::get_pfloat() type["<<which<<"] unknown");
             return 000;
         }
 

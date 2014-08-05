@@ -101,7 +101,13 @@ namespace PPP_NAMESPACE {
         /** Creates some default variables */
         Variables();
 
+        /** Ignores temporaries in other! */
+        Variables(const Variables& other) { copyFrom(other); }
+
         ~Variables() { clear(); }
+
+        /** Ignores temporaries in other! */
+        Variables& operator = (const Variables& other) { copyFrom(other); return *this; }
 
         /** add a non-owning variable */
         bool add(const std::string& name, Float * value);
@@ -116,6 +122,9 @@ namespace PPP_NAMESPACE {
         const Variable * variable(const std::string& name) const;
 
         void clear();
+
+        /** Ignores temporaries in other! */
+        void copyFrom(const Variables& other);
 
         /** add all variables that match the paramaters to 'vec'. */
         bool getVariables(std::vector<Variable*>& vec, bool temp);
@@ -186,7 +195,12 @@ namespace PPP_NAMESPACE {
 
         public:
 
+        Functions() { }
+        Functions(const Functions& other) { copyFrom(other); }
+
         ~Functions() { clear(); }
+
+        Functions& operator = (const Functions& other) { copyFrom(other); return *this; }
 
         /** add a function */
         Function * add(Function::Type type, int num_param, const std::string& name, FuncPtr func_ptr);
@@ -220,6 +234,8 @@ namespace PPP_NAMESPACE {
         bool match_params(const std::string& name, int num_params) const;
 
         void clear();
+
+        void copyFrom(const Functions& other);
 
         // --------------- info ----------------
 
@@ -259,7 +275,6 @@ namespace PPP_NAMESPACE {
         Functions & functions() { return funcs_; }
 
         const Functions & functions() const { return funcs_; }
-
 
         // ---------- run --------------
 

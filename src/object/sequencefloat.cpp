@@ -330,11 +330,14 @@ const PPP_NAMESPACE::Parser * SequenceFloat::equation(uint thread) const
 void SequenceFloat::setEquationText(const QString & t)
 {
     equationText_ = t;
+    const std::string text = equationText_.toStdString();
     for (auto e : equation_)
     {
-        MO_ASSERT(e, "setEquationText without equation");
-        if (!e->equation->parse(equationText_.toStdString()))
-            MO_WARNING("parsing failed");
+        MO_ASSERT(e, "setEquationText without equation "
+                     "in SequenceFloat " << idNamePath() << " (text = '" << t << "')");
+        if (!e->equation->parse(text))
+            MO_WARNING("parsing failed for equation in SequenceFloat '" << idName() << "'"
+                       " (text = '" << t << "')");
     }
 }
 
@@ -423,14 +426,20 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
                 * wavetable_->value(time);
 
         case ST_EQUATION:
-            MO_ASSERT(equation_[thread], "SequenceFloat::value() without equation");
+            MO_ASSERT(equation_[thread], "SequenceFloat::value() without equation "
+                                         "(thread=" << thread << ")");
             equation_[thread]->time = time;
             equation_[thread]->freq = frequency_->value(gtime, thread);
             equation_[thread]->phase = phase_->value(gtime, thread) * phaseMult_;
             equation_[thread]->pw = AUDIO::Waveform::limitPulseWidth(
                                         pulseWidth_->value(gtime, thread));
-            return offset_->value(gtime, thread)
-                    + amplitude_->value(gtime, thread) * equation_[thread]->equation->eval();
+            MO_EXTEND_EXCEPTION(
+                return offset_->value(gtime, thread)
+                    + amplitude_->value(gtime, thread) * equation_[thread]->equation->eval()
+                ,
+                "\nin (thread=" << thread << ") call from SequenceFloat '"
+                        << name() << "' (" << idNamePath() << ")"
+            );
 
         case ST_TIMELINE: return offset_->value(gtime, thread)
                                 + amplitude_->value(gtime, thread)

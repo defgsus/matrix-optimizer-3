@@ -11,8 +11,12 @@
 #include <functional>
 
 #define PPP_DOUBLE
-#define PPP_USE_NDIV_TABLE
-#define PPP_USE_DIVISORS_TABLE
+
+// use tables in release mode (takes a while to compile)
+#ifdef NDEBUG
+#   define PPP_USE_NDIV_TABLE
+#   define PPP_USE_DIVISORS_TABLE
+#endif
 
 namespace PPP_NAMESPACE
 {

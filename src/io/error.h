@@ -24,6 +24,11 @@
 
 #define MO_ENABLE_WARNING
 
+/** *currently* adds a lot of infos to exceptions by means
+    of many catch/rethrow on different levels. */
+#define MO_EXTENDED_EXCEPTIONS
+
+
 
 namespace MO {
 
@@ -112,6 +117,15 @@ public:
     template <class T>
     AudioException& operator << (const T& value) { addToStream(value); return *this; }
 };
+
+// --------------- exception extension ----------------------
+
+#ifdef MO_EXTENDED_EXCEPTIONS
+#   define MO_EXTEND_EXCEPTION(command__, text__) \
+        try { command__; } catch (::MO::Exception * e__) { throw *e__ << text__; }
+#else
+#   define MO_EXTEND_EXCEPTION(command__, unused__) command__;
+#endif
 
 // ---------------------- error -----------------------------
 

@@ -209,10 +209,36 @@ std::vector<std::string> Variables::variableNames() const
     return vec;
 }
 
+void Variables::copyFrom(const Variables &other)
+{
+    clear();
 
+    for (Map::const_iterator i = other.map_.begin(); i != other.map_.end(); ++i)
+    if (!i->second->temp_)
+    {
+        if (i->second->owner_)
+            add(i->second->name_, i->second->value_);
+        else
+            add(i->second->name_, *i->second->value_);
+    }
+}
 
 
 // -------------------------- Functions ----------------------------
+
+void Functions::copyFrom(const Functions &other)
+{
+    clear();
+    for (Map::const_iterator f = other.map_.begin(); f != other.map_.end(); ++f)
+    {
+        if (f->second->type() == Function::LAMBDA)
+            add(f->second->num_param(),
+                       f->second->name(), f->second->lambda_func_);
+        else
+            add(f->second->type(), f->second->num_param(),
+                   f->second->name(), f->second->func_);
+    }
+}
 
 void Functions::print(std::ostream& out) const
 {
@@ -388,7 +414,6 @@ Parser::~Parser()
 }
 
 
-
 // -------------- variables ----------------
 
 
@@ -402,6 +427,7 @@ bool Parser::parse(const std::string& str)
     d_->param.prog->clear();
     var_.clear_temps_();
 
+    std::cerr << "[[[" << str << "]]]" << std::endl;
     d_->param.inp = str_.c_str();
     d_->param.inp_pos = 0;
     d_->param.vars = &var_;
@@ -446,7 +472,11 @@ Float Parser::eval()
 
     d_->param.prog->clearCallCount();
 
-    return d_->param.prog->eval();
+    MO_EXTEND_EXCEPTION(
+        return d_->param.prog->eval() ,
+        "\nfailed in Parser, equation text = '" << d_->param.inp << "'"
+    );
+
 }
 
 
