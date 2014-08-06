@@ -85,11 +85,14 @@ public:
         T_SEQUENCEGROUP     = 1<<8,
         T_SEQUENCE_FLOAT    = 1<<9,
         T_TRACK_FLOAT       = 1<<10,
-        T_DUMMY             = 1<<11
+        T_DUMMY             = 1<<11,
+        T_LIGHTSOURCE       = 1<<12
     };
     enum TypeGroups
     {
-        TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE | T_CAMERA,
+        /** Objects that have a definite position */
+        TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE
+                                | T_CAMERA | T_LIGHTSOURCE,
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
 
@@ -195,6 +198,7 @@ public:
     virtual bool isParameter() const { return false; }
     virtual bool isTrack() const { return false; }
     virtual bool isSequence() const { return false; }
+    virtual bool isLightSource() const { return false; }
 
     /** Returns the user-set activity scope for the object */
     ActivityScope activityScope() const;

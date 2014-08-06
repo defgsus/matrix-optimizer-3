@@ -147,7 +147,8 @@ SOURCES += \
     src/gui/widget/modulatorwidget.cpp \
     src/gui/modulatordialog.cpp \
     src/io/currentthread.cpp \
-    src/img/imagegenerator.cpp
+    src/img/imagegenerator.cpp \
+    src/object/lightsource.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -286,7 +287,8 @@ HEADERS += \
     src/gui/widget/modulatorwidget.h \
     src/gui/modulatordialog.h \
     src/io/currentthread.h \
-    src/img/imagegenerator.h
+    src/img/imagegenerator.h \
+    src/object/lightsource.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
