@@ -21,6 +21,10 @@
 namespace MO {
 namespace GEOM {
 
+int GeometryCreator::instanceCounter_ = 0;
+
+namespace { static QMutex instanceCounterMutex_; }
+
 GeometryCreator::GeometryCreator(QObject *parent) :
     QThread     (parent),
     geometry_   (0),
@@ -64,6 +68,14 @@ Geometry * GeometryCreator::takeGeometry()
 
 void GeometryCreator::run()
 {
+    // count thread instance and set theadname
+    int instanceCounter;
+    {
+        QMutexLocker lock(&instanceCounterMutex_);
+        instanceCounter = ++instanceCounter_;
+    }
+    setCurrentThreadName(QString("GEOM%1").arg(instanceCounter));
+
     MO_DEBUG_GL("GeometryCreator::run()");
 
     GeometryFactorySettings settings;

@@ -85,11 +85,13 @@ public:
 
     void run()
     {
+        setCurrentThreadName("AUDIOTEST");
+
         samplePos_ = 0;
         while (!stop_)
         {
-            scene_->calculateAudioBlock(samplePos_, 1);
-            samplePos_ += scene_->bufferSize(1);
+            scene_->calculateAudioBlock(samplePos_, MO_AUDIO_THREAD);
+            samplePos_ += scene_->bufferSize(MO_AUDIO_THREAD);
 
         #ifndef NDEBUG
             // leave some room when in debug mode
@@ -265,6 +267,7 @@ void MainWindow::createMainMenu_()
     m->addSeparator();
 
     m->addAction(a = new QAction(tr("Load scene"), menuBar()));
+    a->setShortcut(Qt::CTRL + Qt::Key_L);
     connect(a, SIGNAL(triggered()), this, SLOT(loadScene()));
 
     m->addAction(a = actionSaveScene_ = new QAction(tr("Save scene"), menuBar()));
@@ -670,6 +673,11 @@ void MainWindow::updateWidgetsActivity_()
     actionSaveScene_->setEnabled( !currentSceneFilename_.isEmpty() );
 }
 
+bool MainWindow::isPlayback() const
+{
+    return scene_->isPlayback();
+}
+
 void MainWindow::start()
 {
     scene_->start();
@@ -680,38 +688,14 @@ void MainWindow::stop()
     scene_->stop();
 }
 
-/*
-void MainWindow::openAudio_()
-{
-    if (audioDevice_->isAudioConfigured())
-        audioDevice_->initFromSettings();
-
-    audioDevice_->setCallback([=](const F32*, F32 * out)
-    {
-//        scene_->calculateAudioBlock();
-    });
-}
-
-void MainWindow::closeAudio_()
-{
-    audioDevice_->close();
-}
-
-void MainWindow::startAudio_()
-{
-    audioDevice_->start();
-}
-
-void MainWindow::stopAudio_()
-{
-    audioDevice_->stop();
-}
-*/
 
 
 
 void MainWindow::newScene()
 {
+    if (isPlayback())
+        stop();
+
     if (!okayToChangeScene_())
         return;
 
@@ -725,6 +709,9 @@ void MainWindow::newScene()
 
 bool MainWindow::okayToChangeScene_()
 {
+    if (isPlayback())
+        stop();
+
     if (!sceneNotSaved_)
         return true;
 
@@ -749,6 +736,9 @@ bool MainWindow::okayToChangeScene_()
 
 QString MainWindow::getSceneSaveFilename_()
 {
+    if (isPlayback())
+        stop();
+
     while (true)
     {
         QString fn = QFileDialog::getSaveFileName(
@@ -816,13 +806,16 @@ void MainWindow::saveSceneAs()
 
 void MainWindow::loadScene()
 {
+    if (isPlayback())
+        stop();
+
     if (!okayToChangeScene_())
         return;
 
     QString fn = QFileDialog::getOpenFileName(
                 this,
                 tr("Load Scene"),
-                currentSceneDirectory_,
+                currentSceneFilename_,
                 "MatrixOptimizer mo3 (*.mo3)");
 
     loadScene_(fn);

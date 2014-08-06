@@ -145,7 +145,8 @@ SOURCES += \
     src/object/param/modulator.cpp \
     src/object/param/modulatorfloat.cpp \
     src/gui/widget/modulatorwidget.cpp \
-    src/gui/modulatordialog.cpp
+    src/gui/modulatordialog.cpp \
+    src/io/currentthread.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -282,7 +283,8 @@ HEADERS += \
     src/object/param/modulator.h \
     src/object/param/modulatorfloat.h \
     src/gui/widget/modulatorwidget.h \
-    src/gui/modulatordialog.h
+    src/gui/modulatordialog.h \
+    src/io/currentthread.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

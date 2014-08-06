@@ -53,6 +53,7 @@ protected:
 
     void run() Q_DECL_OVERRIDE;
 
+    static int instanceCounter_;
 
     Geometry * geometry_, * curGeometry_;
     GeometryFactorySettings * settings_;

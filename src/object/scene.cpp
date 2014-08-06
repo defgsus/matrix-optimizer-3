@@ -626,6 +626,7 @@ void Scene::renderScene(uint thread)
 
     Double time = sceneTime_;
 
+    try
     {
         // read-lock is sufficient because we
         // modify only thread-local storage
@@ -689,6 +690,10 @@ void Scene::renderScene(uint thread)
             }
             camera->finishGlFrame(thread, time);
         }
+    }
+    catch (Exception * e)
+    {
+        throw *e << "in Scene::renderScene(" << thread << ")";
     }
 
     // mix camera frames
@@ -806,6 +811,8 @@ void Scene::initAudioDevice_()
         using namespace std::placeholders;
         audioDevice_->setCallback(std::bind(
             &Scene::audioCallback_, this, _1, _2));
+
+        isFirstAudioCallback_ = true;
     }
 }
 
@@ -820,6 +827,11 @@ void Scene::closeAudio()
 
 void Scene::audioCallback_(const F32 *, F32 * out)
 {
+    if (isFirstAudioCallback_)
+    {
+        setCurrentThreadName("AUDIO");
+        isFirstAudioCallback_ = false;
+    }
     MO_ASSERT(audioDevice_->bufferSize() == bufferSize(MO_AUDIO_THREAD),
               "buffer-size mismatch");
 

@@ -121,7 +121,7 @@ public:
     // ---------------- ctor -----------------
 
     /** @p name is a user defined name, mainly for help with debugging */
-    Shader(const QString& name);
+    Shader(const QString& name, ErrorReporting report = ER_THROW);
     ~Shader();
 
     // ----------- query ---------------------
@@ -231,6 +231,8 @@ private:
 
     /** Compiles one of the vertex/fragment shaders and attaches to current programObject */
     bool compileShader_(GLenum type, const QString& typeName, const QString& source);
+
+    ErrorReporting rep_;
 
     ShaderSource * source_;
 

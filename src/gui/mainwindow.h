@@ -40,6 +40,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    bool isPlayback() const;
+
 protected:
     void closeEvent(QCloseEvent *);
 

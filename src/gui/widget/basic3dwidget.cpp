@@ -184,9 +184,14 @@ void Basic3DWidget::closeEvent(QCloseEvent * e)
 
 void Basic3DWidget::initializeGL()
 {
+    makeCurrent();
+
     MO_DEBUG_GL("Basic3DWidget::initializeGL()");
 
-    createGLStuff_();
+    MO_EXTEND_EXCEPTION(
+        createGLStuff_(),
+        "in Basic3DWidget " << this
+        );
 
     isGlInitialized_ = true;
 
@@ -195,9 +200,14 @@ void Basic3DWidget::initializeGL()
 
 void Basic3DWidget::releaseGL()
 {
+    makeCurrent();
+
     MO_DEBUG_GL("Basic3DWidget::releaseGL()");
 
-    releaseGLStuff_();
+    MO_EXTEND_EXCEPTION(
+        releaseGLStuff_(),
+        "in Basic3DWidget " << this
+        );
 
     isGlInitialized_ = false;
 
@@ -278,6 +288,8 @@ void Basic3DWidget::resizeGL(int w, int h)
 
 void Basic3DWidget::paintGL()
 {
+    makeCurrent();
+
     if (modeChangeRequest_)
     {
         modeChangeRequest_ = false;
@@ -296,7 +308,10 @@ void Basic3DWidget::paintGL()
 
     if (renderMode_ == RM_DIRECT || renderMode_ == RM_DIRECT_ORTHO)
     {
-        drawGL(projectionMatrix(), transformationMatrix());
+        MO_EXTEND_EXCEPTION(
+            drawGL(projectionMatrix(), transformationMatrix()),
+            "in Basic3DWidget " << this
+            );
         return;
     }
 
@@ -307,7 +322,10 @@ void Basic3DWidget::paintGL()
 
         MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
 
-        drawGL(projectionMatrix(), transformationMatrix());
+        MO_EXTEND_EXCEPTION(
+            drawGL(projectionMatrix(), transformationMatrix()),
+            "in Basic3DWidget " << this
+            );
 
         fbo_->unbind();
 
@@ -334,19 +352,23 @@ void Basic3DWidget::paintGL()
 
         const Mat4 viewm = transformationMatrix();
 
-        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
-        drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeZ * viewm);
-        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X);
-        drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveX * viewm);
-        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
-        drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeX * viewm);
-        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
-        drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveY * viewm);
-        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
-        drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeY * viewm);
-        // XXX only needed for angle-of-view >= 250
-        fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
-        drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveZ * viewm);
+        MO_EXTEND_EXCEPTION(
+            fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+            drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeZ * viewm);
+            fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+            drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveX * viewm);
+            fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
+            drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeX * viewm);
+            fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
+            drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveY * viewm);
+            fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
+            drawGL(projectionMatrix(), MATH::CubeMapMatrix::negativeY * viewm);
+            // XXX only needed for angle-of-view >= 250
+            fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
+            drawGL(projectionMatrix(), MATH::CubeMapMatrix::positiveZ * viewm);
+            ,
+            "in Basic3DWidget " << this
+            );
 
         fbo_->unbind();
 

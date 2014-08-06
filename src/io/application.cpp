@@ -17,6 +17,10 @@
 #include "io/application.h"
 #include "io/error.h"
 
+
+#define MO_APP_EXCEPTIONS_ABORT //abort();
+
+
 namespace MO {
 
 Application * application;
@@ -33,17 +37,40 @@ bool Application::notify(QObject * o, QEvent * e)
     {
         return QApplication::notify(o, e);
     }
+    catch (MO::AudioException& e)
+    {
+        std::cout << "AudioException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_EXCEPTIONS_ABORT
+    }
+    catch (MO::LogicException& e)
+    {
+        std::cout << "LogicException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_EXCEPTIONS_ABORT
+    }
+    catch (MO::IoException& e)
+    {
+        std::cout << "IoException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_EXCEPTIONS_ABORT
+    }
+    catch (MO::GlException& e)
+    {
+        std::cout << "GlException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_EXCEPTIONS_ABORT
+    }
     catch (MO::Exception& e)
     {
         std::cout << "Exception in notify [" << e.what() << "]" << std::endl;
+        MO_APP_EXCEPTIONS_ABORT
     }
     catch (std::exception& e)
     {
         std::cout << "std::exception in notify [" << e.what() << "]" << std::endl;
+        MO_APP_EXCEPTIONS_ABORT
     }
     catch (...)
     {
         std::cout << "unrecognized exception in notify" << std::endl;
+        MO_APP_EXCEPTIONS_ABORT
     }
     return false;
 }

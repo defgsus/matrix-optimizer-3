@@ -33,6 +33,4 @@ QString applicationTimeString()
     return QString::number(applicationTime());
 }
 
-
-
 }

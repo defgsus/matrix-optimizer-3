@@ -17,6 +17,7 @@
 
 #include "io/streamoperators_qt.h"
 #include "io/applicationtime.h"
+#include "io/currentthread.h"
 
 #ifndef NDEBUG
 /** Enables MO_ASSERT() */
@@ -58,7 +59,8 @@ public:
     };
 
     Exception(int cause = UNKNOWN) throw() : cause_(cause)
-        { text_ = "[" + applicationTimeString().toStdString() + "] "; }
+        { text_ = "[" + currentThreadName().toStdString()
+                + "/" + applicationTimeString().toStdString() + "] "; }
 
     virtual ~Exception() throw() { }
 

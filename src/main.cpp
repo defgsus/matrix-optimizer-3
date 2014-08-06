@@ -32,6 +32,8 @@
 
 int main(int argc, char *argv[])
 {
+    MO::setCurrentThreadName("GUI");
+
     //void * ptr = new float;  MO_DEBUG(ptr);
 
     /*

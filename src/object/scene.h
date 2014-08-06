@@ -293,6 +293,8 @@ private:
     /** [thread] [microphones][bufferSize] */
     std::vector<std::vector<F32>> audioOutput_;
 
+    bool isFirstAudioCallback_;
+
     // ------------ runtime --------------------
 
     QReadWriteLock * readWriteLock_;

@@ -15,6 +15,7 @@
 #include "io/console.h"
 #include "io/streamoperators_qt.h"
 #include "io/applicationtime.h"
+#include "io/currentthread.h"
 
 
 #ifndef NDEBUG
@@ -24,9 +25,10 @@
 
 
 #ifdef MO_ENABLE_DEBUG
-    #define MO_DEBUG_IMPL_(stream_arg__) \
-        { std::cerr << "[" << ::MO::applicationTimeString() << "] " \
-            << ::MO::streamColor::Debug << stream_arg__ \
+    #define MO_DEBUG_IMPL_(stream_arg__)                    \
+        { std::cerr << "[" << ::MO::currentThreadName()     \
+            << "/" << ::MO::applicationTimeString() << "] " \
+            << ::MO::streamColor::Debug << stream_arg__     \
             << ::MO::streamColor::Default << std::endl; }
 #else
     #define MO_DEBUG_IMPL_(unused__) { }

@@ -32,6 +32,7 @@ Model3d::Model3d(QObject * parent)
 void Model3d::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);
+
     io.writeHeader("m3d", 2);
 
     // v2
@@ -41,6 +42,7 @@ void Model3d::serialize(IO::DataStream & io) const
 void Model3d::deserialize(IO::DataStream & io)
 {
     ObjectGl::deserialize(io);
+
     int ver = io.readHeader("m3d", 2);
 
     if (ver >= 2)
@@ -67,14 +69,19 @@ void Model3d::releaseGl(uint /*thread*/)
 {
     if (draw_->isReady())
         draw_->releaseOpenGl();
+
     delete draw_;
     draw_ = 0;
+
+    delete creator_;
+    creator_ = 0;
 }
 
 void Model3d::geometryCreated_()
 {
     nextGeometry_ = creator_->takeGeometry();
     creator_->deleteLater();
+    creator_ = 0;
 
     requestRender();
 }
