@@ -76,6 +76,7 @@ namespace PPP_NAMESPACE
 
 
         f.add(Function::UNARY_LEFT_OP,	1, "-",			math_func<Float>::neg_assign_1	);
+        f.add(Function::UNARY_LEFT_OP,	1, "+",			math_func<Float>::assign_1	    );
         f.add(Function::UNARY_RIGHT_OP,	1, "!",			math_func<Float>::factorial_1	);
 
         f.add(Function::BINARY_OP,		2, "&",			math_func<Float>::and_2			);
@@ -102,6 +103,9 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		2, "min",		math_func<Float>::min_2			);
         f.add(Function::FUNCTION,		2, "max",		math_func<Float>::max_2			);
         f.add(Function::FUNCTION,		3, "clamp",		math_func<Float>::clamp_3		);
+        f.add(Function::FUNCTION,		2, "quant",		math_func<Float>::quant_2		);
+        f.add(Function::FUNCTION,		2, "mod",		math_func<Float>::mod_2			);
+        f.add(Function::FUNCTION,		2, "smod",		math_func<Float>::smod_2		);
 
         f.add(Function::FUNCTION,		1, "sin",		math_func<Float>::sin_1			);
         f.add(Function::FUNCTION,		1, "sinh",		math_func<Float>::sinh_1		);
@@ -109,11 +113,23 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		1, "cos",		math_func<Float>::cos_1			);
         f.add(Function::FUNCTION,		1, "cosh",		math_func<Float>::cosh_1		);
         f.add(Function::FUNCTION,		1, "acos",		math_func<Float>::acos_1		);
-        f.add(Function::FUNCTION,		1, "sinc",		math_func<Float>::sinc_1		);
         f.add(Function::FUNCTION,		1, "tan",		math_func<Float>::tan_1			);
         f.add(Function::FUNCTION,		1, "tanh",		math_func<Float>::tanh_1		);
         f.add(Function::FUNCTION,		1, "atan",		math_func<Float>::atan_1		);
         f.add(Function::FUNCTION,		2, "atan",		math_func<Float>::atan_2		);
+        f.add(Function::FUNCTION,		1, "sinc",		math_func<Float>::sinc_1		);
+
+        f.add(Function::FUNCTION,		1, "exp",		math_func<Float>::exp_1			);
+        f.add(Function::FUNCTION,		1, "ln",		math_func<Float>::ln_1			);
+        f.add(Function::FUNCTION,		2, "logistic",	math_func<Float>::logistic_1	);
+        f.add(Function::FUNCTION,		2, "pow",		math_func<Float>::pow_2			);
+        f.add(Function::FUNCTION,		1, "sqrt",		math_func<Float>::sqrt_1		);
+        f.add(Function::FUNCTION,		2, "root",		math_func<Float>::root_2		);
+
+        f.add(Function::FUNCTION,		3, "smstep",    math_func<Float>::smoothstep_3  );
+        f.add(Function::FUNCTION,		3, "smstep2",   math_func<Float>::smootherstep_3);
+        f.add(Function::FUNCTION,       2, "smladder",  math_func<Float>::smoothladder_2);
+        f.add(Function::FUNCTION,       2, "smladder2", math_func<Float>::smootherladder_2);
 
         f.add(Function::FUNCTION,		1, "beta",		math_func<Float>::beta_1		);
         f.add(Function::FUNCTION,		2, "beta",		math_func<Float>::beta_2		);
@@ -127,18 +143,6 @@ namespace PPP_NAMESPACE
 
         f.add(Function::FUNCTION,		3, "rotate",	math_func<Float>::rotate_3		);
         f.add(Function::FUNCTION,		3, "rotater",	math_func<Float>::rotater_3		);
-
-        f.add(Function::FUNCTION,		1, "exp",		math_func<Float>::exp_1			);
-        f.add(Function::FUNCTION,		1, "ln",		math_func<Float>::ln_1			);
-        f.add(Function::FUNCTION,		2, "logistic",	math_func<Float>::logistic_1	);
-
-
-        f.add(Function::FUNCTION,		2, "mod",		math_func<Float>::mod_2			);
-        f.add(Function::FUNCTION,		2, "smod",		math_func<Float>::smod_2		);
-
-        f.add(Function::FUNCTION,		2, "pow",		math_func<Float>::pow_2			);
-        f.add(Function::FUNCTION,		1, "sqrt",		math_func<Float>::sqrt_1		);
-        f.add(Function::FUNCTION,		2, "root",		math_func<Float>::root_2		);
 
         f.add(Function::FUNCTION,		1, "ramp",		math_func<Float>::ramp_1		);
         f.add(Function::FUNCTION,		1, "saw",		math_func<Float>::saw_1         );
@@ -188,7 +192,6 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		2, "gcd_s",		math_func<Float>::s_gcd_2		);
         f.add(Function::FUNCTION,		3, "cong_s",	math_func<Float>::s_congruent_3	);
         f.add(Function::FUNCTION,		1, "digits_s",	math_func<Float>::s_digits_1	);
-
 
 //        f.add(Function::FUNCTION,		2, "digcount",	math_func<Float>::digit_count_2	);
 //        f.add(Function::FUNCTION,		2, "digfreq",	math_func<Float>::digit_freq_2	);

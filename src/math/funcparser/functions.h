@@ -429,6 +429,19 @@ struct math_func<double>
     static void sqrt_1			(double ** v) { *v[0] = std::sqrt(*v[1]); }
     static void root_2			(double ** v) { *v[0] = std::pow(*v[1], 1.0 / *v[2]); }
 
+    // -------------------- common gfx ---------------------------
+
+    static void smoothstep_3    (double ** v) { *v[0] = MO::MATH::smoothstep(*v[1], *v[2], *v[3]); }
+    static void smootherstep_3  (double ** v) { *v[0] = MO::MATH::smootherstep(*v[1], *v[2], *v[3]); }
+
+    static void smoothladder_2  (double ** v)
+    { *v[0] = MO::MATH::quant(*v[1], *v[2]) + *v[2] * MO::MATH::smoothstep(0.0, *v[2],
+                MO::MATH::modulo(*v[1], *v[2])); }
+    static void smootherladder_2(double ** v)
+    { *v[0] = MO::MATH::quant(*v[1], *v[2]) + *v[2] * MO::MATH::smootherstep(0.0, *v[2],
+                MO::MATH::modulo(*v[1], *v[2])); }
+    //quant(x,f)+f*smstep(0,f,x%f)
+
     // -------------------- geometric ----------------------------
 
     static void beta_1			(double ** v) { double a = 1.0 - *v[1] * *v[1];
