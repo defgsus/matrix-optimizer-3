@@ -17,7 +17,7 @@
 namespace MO {
 namespace GL {
 
-
+class LightSettings;
 
 class Drawable
 {
@@ -67,7 +67,7 @@ public:
 
     void render();
     void renderShader();
-    void renderShader(const Mat4& proj, const Mat4& view);
+    void renderShader(const Mat4& proj, const Mat4& view, const LightSettings* = 0);
     void renderImmediate();
 
 private:
@@ -88,7 +88,9 @@ private:
 
     GLuint
         uniformProj_,
-        uniformView_;
+        uniformView_,
+        uniformLightPos_,
+        uniformLightColor_;
 
 };
 

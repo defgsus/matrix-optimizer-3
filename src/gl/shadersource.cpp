@@ -18,12 +18,14 @@ namespace MO {
 namespace GL {
 
 ShaderSource::ShaderSource()
-    : unProj_   ("u_projection"),
-      unView_   ("u_view"),
-      anPos_    ("a_position"),
-      anCol_    ("a_color"),
-      anNorm_   ("a_normal"),
-      anTexCoord_("a_texCoord")
+    : unProj_       ("u_projection"),
+      unView_       ("u_view"),
+      unLightPos_   ("u_light_pos[0]"),
+      unLightColor_ ("u_light_color[0]"),
+      anPos_        ("a_position"),
+      anCol_        ("a_color"),
+      anNorm_       ("a_normal"),
+      anTexCoord_   ("a_texCoord")
 {
 }
 

@@ -12,6 +12,7 @@
 #define MOSRC_GL_CAMERASPACE_H
 
 #include <types/vector.h>
+#include "lightsettings.h"
 
 namespace MO {
 namespace GL {
@@ -19,14 +20,15 @@ namespace GL {
 class CameraSpace
 {
 public:
-    CameraSpace()
-        :   proj_(1.0), view_(1.0)
+    CameraSpace(const LightSettings& lights)
+        :   proj_(1.0), view_(1.0), lights_(lights)
     { }
 
     // ------ getter ------------
 
     const Mat4& projectionMatrix() const { return proj_; }
     const Mat4& viewMatrix() const { return view_; }
+    const LightSettings& lights() const { return lights_; }
 
     // ------- setter -----------
 
@@ -36,6 +38,7 @@ public:
 private:
 
     Mat4 proj_, view_;
+    const LightSettings & lights_;
 };
 
 } // namespace GL

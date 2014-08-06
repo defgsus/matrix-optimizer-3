@@ -15,6 +15,7 @@
 
 #include "object.h"
 #include "gl/opengl_fwd.h"
+#include "gl/lightsettings.h"
 
 class QReadWriteLock;
 
@@ -23,27 +24,6 @@ namespace AUDIO { class AudioDevice; }
 
 class ObjectTreeModel;
 
-/** Contains all lightsources in scene read to send to shader */
-class LightSettings
-{
-public:
-
-    /** Returns the number of light sources */
-    uint count() const { return positions_.size(); }
-
-    /** Returns count() sequential x,y,z pairs */
-    const Float * positions() const { return &positions_[0]; }
-
-    /** Returns count() sequential r,g,b pairs */
-    const Float * colors() const { return &colors_[0]; }
-
-private:
-    friend class Scene;
-
-    void resize_(uint num) { positions_.resize(num); colors_.resize(num); }
-
-    std::vector<Float> positions_, colors_;
-};
 
 
 /** Handles tree managment, locking, rendering and audio processing */
@@ -209,7 +189,7 @@ public slots:
 
     /** Returns the lighting settings for the scene.
         This may only be valid during rendering in objects! */
-    const LightSettings& lightSettings(uint thread) const { return lightSettings_[thread]; }
+    const GL::LightSettings& lightSettings(uint thread) const { return lightSettings_[thread]; }
 
     /** Render the whole scene on the current context */
     void renderScene(uint thread);
@@ -291,7 +271,7 @@ private:
 
     std::vector<GL::FrameBufferObject *> fboFinal_;
     std::vector<GL::ScreenQuad *> screenQuad_;
-    std::vector<LightSettings> lightSettings_;
+    std::vector<GL::LightSettings> lightSettings_;
 
     // ----------- special objects -------------
 

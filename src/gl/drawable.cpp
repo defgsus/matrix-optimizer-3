@@ -20,6 +20,7 @@
 #include "shadersource.h"
 #include "shader.h"
 #include "vertexarrayobject.h"
+#include "lightsettings.h"
 
 namespace MO {
 namespace GL {
@@ -145,11 +146,24 @@ void Drawable::compileShader_()
         uniformProj_ = u->location();
     else
         uniformProj_ = invalidGl;
+
     if (auto u = shader_->getUniform(shaderSource_->uniformNameView()))
         uniformView_ = u->location();
     else
         uniformView_ = invalidGl;
 
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightPos()))
+        uniformLightPos_ = u->location();
+    else
+        uniformLightPos_ = invalidGl;
+
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightColor()))
+        uniformLightColor_ = u->location();
+    else
+        uniformLightColor_ = invalidGl;
+
+    if (uniformLightPos_ != invalidGl)
+        MO_DEBUG_GL("--------------");
 }
 
 void Drawable::createVAO_()
@@ -196,7 +210,7 @@ void Drawable::render()
 }
 
 
-void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
+void Drawable::renderShader(const Mat4 &proj, const Mat4 &view, const LightSettings * lights)
 {
     MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
     //MO_ASSERT(uniformProj_ != invalidGl, "");
@@ -211,6 +225,14 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view)
     if (uniformProj_ != invalidGl)
     MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
     MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
+
+    if (lights && lights->count())
+    {
+        if (uniformLightPos_ != invalidGl)
+            MO_CHECK_GL( glUniform3fv(uniformLightPos_, lights->count(), lights->positions()) );
+        if (uniformLightColor_ != invalidGl)
+            MO_CHECK_GL( glUniform3fv(uniformLightColor_, lights->count(), lights->colors()) );
+    }
 
     if (geometry_->numTriangles())
         vao_->drawElements(GL_TRIANGLES);

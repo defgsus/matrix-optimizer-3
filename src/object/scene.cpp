@@ -676,7 +676,7 @@ void Scene::renderScene(uint thread)
         if (camera->active(time, thread))
         {
             // get camera viewspace
-            GL::CameraSpace camSpace;
+            GL::CameraSpace camSpace(lightSettings(thread));
             camera->initCameraSpace(camSpace, thread, time);
             const Mat4 viewm = glm::inverse(camera->transformation(thread, 0));
 
@@ -731,7 +731,7 @@ void Scene::updateLightSettings_(uint thread, Double time)
     MO_ASSERT(thread < lightSettings_.size(), "thread " << thread << " for "
               "LightSettings out-of-range (" << lightSettings_.size() << ")");
 
-    LightSettings * l = &lightSettings_[thread];
+    GL::LightSettings * l = &lightSettings_[thread];
 
     // resize if necessary
     if ((int)l->count() != lightSources_.size())

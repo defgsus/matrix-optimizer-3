@@ -31,6 +31,9 @@ public:
 
     const QString& uniformNameProjection() const { return unProj_; }
     const QString& uniformNameView() const { return unView_; }
+    const QString& uniformNameLightPos() const { return unLightPos_; }
+    const QString& uniformNameLightColor() const { return unLightColor_; }
+
     const QString& attribNamePosition() const { return anPos_; }
     const QString& attribNameColor() const { return anCol_; }
     const QString& attribNameNormal() const { return anNorm_; }
@@ -63,7 +66,7 @@ private:
     void addDefine_(QString& src, const QString& def_line) const;
 
     QString vert_, frag_,
-        unProj_, unView_,
+        unProj_, unView_, unLightPos_, unLightColor_,
         anPos_, anCol_, anNorm_, anTexCoord_;
 };
 

@@ -288,7 +288,8 @@ HEADERS += \
     src/gui/modulatordialog.h \
     src/io/currentthread.h \
     src/img/imagegenerator.h \
-    src/object/lightsource.h
+    src/object/lightsource.h \
+    src/gl/lightsettings.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

@@ -112,7 +112,7 @@ void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
     if (draw_->isReady())
     {
         //draw_->renderAttribArrays();
-        draw_->renderShader(cam.projectionMatrix(), mat);
+        draw_->renderShader(cam.projectionMatrix(), mat, &cam.lights());
     }
 }
 
