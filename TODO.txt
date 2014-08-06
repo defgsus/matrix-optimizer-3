@@ -14,7 +14,7 @@
 
     * scroll to selection on resize
     * highlight selected track
-    * fix issue with track-select (sometimes not working)
+    * BUG: fix issue with track-select (sometimes not working)
 
 * application settings dialog
     * especially colors, fonts, pens and brushes
@@ -24,10 +24,12 @@
 ---- math ----
 
 * fix negative time issue in Spectral Oscillator mode
+* BUG fix microphone transformation (not working correctly, when e.g. a sound is attached to
+    microphone and the microphone rotates around)
 
 ---- Objects ----
 
-* fade between different Cameras
+- OK fade between different Cameras
 
 * find concept for Microphones as part of Camera
     Basically, Microphones can be anywhere, but when they are part of a camera,
@@ -54,7 +56,8 @@
 
 * Shaders
     * text objects and #include support
-* concept and implementation of a generic Model container and a Model renderer
+
+- OK concept and implementation of a generic Model container and a Model renderer
 
 * multi-projection
 
