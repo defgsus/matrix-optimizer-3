@@ -67,6 +67,7 @@ private:
     void openModulationPopup_(Parameter *, QToolButton *);
     void addRemoveModMenu_(QMenu *, Parameter *);
     void addLinkModMenu_(QMenu *, Parameter *, int objectTypeFlags);
+    void addEditModMenu_(QMenu *, Parameter *);
 
     Scene * scene_;
     Object * object_;

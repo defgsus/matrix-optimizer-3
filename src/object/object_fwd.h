@@ -40,6 +40,9 @@ namespace MO {
     class Sequence;
     class SequenceFloat;
 
+    class Modulator;
+    class ModulatorFloat;
+
     class Setting;
     class SettingFloat;
 

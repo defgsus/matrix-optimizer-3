@@ -15,7 +15,7 @@
 #include "io/log.h"
 #include "object/trackfloat.h"
 #include "object/scene.h"
-
+#include "modulatorfloat.h"
 
 // make ParameterFloat useable in QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(MO::ParameterFloat*);
@@ -59,51 +59,58 @@ void ParameterFloat::deserialize(IO::DataStream &io)
 
 Double ParameterFloat::getModulationValue(Double time, uint thread) const
 {
-    Double m = 0;
+    Double mod = 0;
 
-    for (auto t : modulators_)
-        if (t->active(time, thread))
-            m += t->value(time, thread);
+    for (auto m : modulators())
+        mod += static_cast<ModulatorFloat*>(m)->value(time, thread);
+
+    return mod;
+}
+
+
+
+Modulator * ParameterFloat::getModulator(const QString& id)
+{
+    Modulator * m = findModulator(id);
+    if (m)
+        return m;
+
+    m = new ModulatorFloat(idName(), id, object());
+    addModulator_(m);
 
     return m;
 }
 
 void ParameterFloat::collectModulators()
 {
-    modulators_.clear();
-    if (modulatorIds().isEmpty())
+    if (modulators().isEmpty())
         return;
 
     MO_DEBUG_MOD("ParameterFloat("<<idName()<<")::collectModulators()");
 
-
     Object * root = object()->rootObject();
 
-    for (auto const &id : modulatorIds())
+    uint k = 0;
+    for (auto m : modulators())
     {
-        Object * o = root->findChildObject(id, true);
-        if (auto s = qobject_cast<TrackFloat*>(o))
-            modulators_.append(s);
+        Object * o = root->findChildObject(m->modulatorId(), true);
+
+        if (m->canBeModulator(o))
+        {
+            m->setModulator(o);
+            ++k;
+        }
         else
+        {
             MO_WARNING("parameter '" << idName()
-                       << "' could not find modulator '" << id << "'");
+                       << "' could not find modulator '" << m->modulatorId() << "'");
+        }
     }
 
-    MO_DEBUG_MOD("ParameterFloat("<<idName()<<") found " << modulators_.size() << " modulator(s)");
+    MO_DEBUG_MOD("ParameterFloat("<<idName()<<") found " << k << " of "
+                 << modulators().size() << " modulator(s)");
 }
 
-QList<Object*> ParameterFloat::getModulatingObjects() const
-{
-    QList<Object*> list;
-
-    for (auto m : modulators_)
-        list.append(m);
-
-    for (auto m : modulators_)
-        list.append(m->getModulatingObjects());
-
-    return list;
-}
 
 QList<Object*> ParameterFloat::getFutureModulatingObjects(const Scene *scene) const
 {

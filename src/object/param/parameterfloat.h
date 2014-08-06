@@ -69,12 +69,12 @@ public:
     /** Receives modulation value at time */
     Double getModulationValue(Double time, uint thread) const;
 
-    void collectModulators();
+    virtual Modulator * getModulator(const QString &modulatorId) Q_DECL_OVERRIDE;
 
-    const QList<TrackFloat*>& modulators() const { return modulators_; }
+    void collectModulators() Q_DECL_OVERRIDE;
 
-    virtual QList<Object*> getModulatingObjects() const;
-    virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
+    virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const
+                                                            Q_DECL_OVERRIDE;
 
 private:
 
@@ -84,7 +84,6 @@ private:
            smallStep_,
            value_;
 
-    QList<TrackFloat*> modulators_;
 };
 
 } // namespace MO

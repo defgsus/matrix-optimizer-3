@@ -174,7 +174,7 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 {
     Sequence::serialize(io);
 
-    io.writeHeader("seqf", 4);
+    io.writeHeader("seqf", 5);
 
     io << sequenceTypeId[mode_];
 
@@ -189,6 +189,9 @@ void SequenceFloat::serialize(IO::DataStream &io) const
     // equation (v2)
     io << equationText_ << doUseFreq_;
 
+    // v5
+    io << doPhaseDegree_;
+
     // loop overlap (v3)
     io << loopOverlapModeId[loopOverlapMode_];
 
@@ -196,13 +199,14 @@ void SequenceFloat::serialize(IO::DataStream &io) const
     io << (qint8)(wavetableGen_ != 0);
     if (wavetableGen_)
         wavetableGen_->serialize(io);
+
 }
 
 void SequenceFloat::deserialize(IO::DataStream &io)
 {
     Sequence::deserialize(io);
 
-    int ver = io.readHeader("seqf", 4);
+    int ver = io.readHeader("seqf", 5);
 
     if (!io.readEnum(mode_, ST_CONSTANT, sequenceTypeId))
         MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
@@ -224,6 +228,12 @@ void SequenceFloat::deserialize(IO::DataStream &io)
     // equation (v2)
     if (ver >= 2)
         io >> equationText_ >> doUseFreq_;
+
+    if (ver >= 5)
+    {
+        io >> doPhaseDegree_;
+        setPhaseInDegree(doPhaseDegree_);
+    }
 
     // loopoverlap (v3)
     if (ver >= 3)

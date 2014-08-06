@@ -10,14 +10,18 @@
 
 #include "modulator.h"
 #include "io/datastream.h"
+#include "io/log.h"
+#include "object/object.h"
 
 namespace MO {
 
 
-Modulator::Modulator(const QString &id, Object *parent)
+Modulator::Modulator(const QString &name, const QString &id, Object *parent)
     : parent_       (parent),
+      name_         (name),
       modulatorId_  (id)
 {
+    MO_DEBUG_MOD("Modulator::Modulator(" << id << ", " << parent << ")");
 }
 
 
@@ -35,5 +39,14 @@ void Modulator::deserialize(IO::DataStream & io)
     io >> modulatorId_;
 }
 
+void Modulator::setModulator(Object * object)
+{
+    MO_DEBUG("Modulator('" << (parent_? parent_->idName() : "") << "')::setModulator('"
+             << (object? object->idName() : "") << "')");
+
+    modulator_ = object;
+
+    modulatorChanged_();
+}
 
 } // namespace MO

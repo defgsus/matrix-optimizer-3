@@ -18,6 +18,8 @@
 #include "object/param/parameter.h"
 #include "object/param/parameterfloat.h"
 #include "object/trackfloat.h"
+#include "object/param/modulatorfloat.h"
+#include "io/error.h"
 
 namespace MO {
 namespace GUI {
@@ -82,9 +84,11 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
     {
         for (auto m : pf->modulators())
         {
-            QAction * a = new QAction(iconTrack, m->name(), menu);
-            a->setData(m->idName());
-            a->setToolTip(m->namePath());
+            Object * mo = m->modulator();
+            MO_ASSERT(mo, "no object assigned to modulator of '" << pf->idName() << "'");
+            QAction * a = new QAction(iconTrack, mo->name(), menu);
+            a->setData(mo->idName());
+            a->setToolTip(mo->namePath());
             a->setStatusTip(a->toolTip());
             menu->addAction(a);
         }

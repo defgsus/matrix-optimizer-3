@@ -24,7 +24,7 @@ class Parameter
 
 public:
     Parameter(Object * object, const QString& idName, const QString& name);
-    virtual ~Parameter() { }
+    virtual ~Parameter();
 
     virtual void serialize(IO::DataStream&) const;
     virtual void deserialize(IO::DataStream&);
@@ -40,9 +40,6 @@ public:
     const QString& name() const { return name_; }
     const QString& statusTip() const { return statusTip_; }
 
-    /** Returns list of all modulator ids */
-    const QList<QString>& modulatorIds() const { return modulatorIds_; }
-
     bool isEditable() const { return isEditable_; }
     bool isModulateable() const { return isModulateable_; }
 
@@ -55,25 +52,51 @@ public:
 
     // ------------ modulators ------------------
 
+    /** Returns list of all modulator ids */
+    QStringList modulatorIds() const;
+
     /** Adds an Object to the list of modulators.
         Modulators will be collected by
         collectModulators() in the derived class */
-    virtual void addModulator(const QString& idName);
+    Modulator * addModulator(const QString& idName);
 
-    /** Removes the Object from the list of modulators */
-    virtual void removeModulator(const QString& idName);
+    /** Removes the Object from the list of modulators and
+        deletes it. */
+    void removeModulator(const QString& idName);
 
-    /** Removes all modulators */
-    virtual void removeAllModulators();
+    /** Removes all modulators IDs */
+    void removeAllModulators();
 
     /** Overload this to collect the actual objects associated to the
         modulatorIds(). */
     virtual void collectModulators() = 0;
 
-    virtual QList<Object*> getModulatingObjects() const = 0;
+    /** Returns a modulator for the given id.
+        The Modulator is created or reused. */
+    virtual Modulator * getModulator(const QString& modulatorId) = 0;
+
+    /** Returns the Modulator for the given id, or NULL */
+    Modulator * findModulator(const QString& modulatorId) const;
+
+    /** Returns all modulators (valid after collectModulators) */
+    const QList<Modulator*>& modulators() const { return modulators_; }
+
+    /** Returns a list of all modulator objects (valid after collectModulators()) */
+    QList<Object*> getModulatingObjects() const;
+
+    /** Returns the list of objects that will be modulating objects when
+        this object gets added to @p scene. */
     virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const = 0;
 
+protected:
+
+    /** Adds the modulator to the list */
+    void addModulator_(Modulator *);
+
 private:
+
+    /** Removes all modulators (IDs stay untouched) */
+    void clearModulators_();
 
     Object * object_;
 
@@ -81,7 +104,9 @@ private:
 
     bool isEditable_, isModulateable_;
 
-    QList<QString> modulatorIds_;
+    //QList<QString> modulatorIds_;
+
+    QList<Modulator*> modulators_;
 
 };
 

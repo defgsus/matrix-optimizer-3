@@ -23,11 +23,15 @@
 #include "object/sequence.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
+#include "object/param/modulator.h"
 #include "io/error.h"
 #include "io/log.h"
 #include "model/objecttreemodel.h"
 #include "util/objectmenu.h"
 #include "widget/doublespinbox.h"
+#include "modulatordialog.h"
+
+Q_DECLARE_METATYPE(MO::Modulator*)
 
 namespace MO {
 namespace GUI {
@@ -317,6 +321,11 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
 
         menu->addSeparator();
 
+        // edit modulations
+        addEditModMenu_(menu, param);
+
+        menu->addSeparator();
+
         // remove modulation
         addRemoveModMenu_(menu, param);
 
@@ -372,6 +381,31 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
         {
             param->object()->sceneObject()->removeAllModulators(param);
         });
+    }
+}
+
+void ParameterView::addEditModMenu_(QMenu * menu, Parameter * param)
+{
+    if (param->modulators().size() > 0)
+    {
+        QMenu * edit = new QMenu(menu);
+        QAction * a = menu->addMenu(edit);
+        a->setText("Edit modulations");
+        a->setStatusTip("Modifies modulation parameters");
+
+        for (auto m : param->modulators())
+        {
+            MO_ASSERT(m->modulator(), "no assigned modulation object in Modulator");
+
+            edit->addAction(a = new QAction(m->name(), edit));
+            a->setData(QVariant::fromValue(m));
+            connect(a, &QAction::triggered, [this, param, m]()
+            {
+                ModulatorDialog diag(this);
+                diag.setModulators(param->modulators(), m);
+                diag.exec();
+            });
+        }
     }
 }
 

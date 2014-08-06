@@ -58,12 +58,17 @@ public:
 
     // --------- modulation -----------
 
+    // XXX
     void collectModulators() { }
 
-    virtual QList<Object*> getModulatingObjects() const { return QList<Object*>(); }
-    virtual QList<Object*> getFutureModulatingObjects(const Scene *) const { return QList<Object*>(); }
+    // XXX
+    virtual Modulator * getModulator(const QString &/*modulatorId*/) Q_DECL_OVERRIDE { return 0; };
 
-    /** Receives modulation value at time */
+    virtual QList<Object*> getFutureModulatingObjects(const Scene *) const
+                                        Q_DECL_OVERRIDE { return QList<Object*>(); }
+
+    // XXX
+    /* Receives modulation value at time */
     //int getModulationValue(Double time) const;
     //const QList<TrackFloat*>& modulators() const { return modulators_; }
 

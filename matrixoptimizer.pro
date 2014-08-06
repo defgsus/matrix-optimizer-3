@@ -142,8 +142,10 @@ SOURCES += \
     src/geom/freecamera.cpp \
     src/img/image.cpp \
     src/io/files.cpp \
-    src/engine/modulator.cpp \
-    src/engine/modulatorfloat.cpp
+    src/object/param/modulator.cpp \
+    src/object/param/modulatorfloat.cpp \
+    src/gui/widget/modulatorwidget.cpp \
+    src/gui/modulatordialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -277,8 +279,10 @@ HEADERS += \
     src/geom/freecamera.h \
     src/img/image.h \
     src/io/files.h \
-    src/engine/modulator.h \
-    src/engine/modulatorfloat.h
+    src/object/param/modulator.h \
+    src/object/param/modulatorfloat.h \
+    src/gui/widget/modulatorwidget.h \
+    src/gui/modulatordialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

@@ -8,8 +8,8 @@
     <p>created 8/6/2014</p>
 */
 
-#ifndef MOSRC_ENGINE_MODULATORFLOAT_H
-#define MOSRC_ENGINE_MODULATORFLOAT_H
+#ifndef MOSRC_OBJECT_PARAM_MODULATORFLOAT_H
+#define MOSRC_OBJECT_PARAM_MODULATORFLOAT_H
 
 #include "modulator.h"
 #include "types/float.h"
@@ -30,7 +30,7 @@ public:
 
     /** Construct a modulator coming form object @p modulatorId
         and belonging to @p parent */
-    ModulatorFloat(const QString& modulatorId, Object * parent = 0);
+    ModulatorFloat(const QString& name, const QString& modulatorId, Object * parent = 0);
 
     // --------------- io ----------------
 
@@ -39,9 +39,15 @@ public:
 
     // ------------- getter --------------
 
+    /** Returns if the object can be the modulating object */
+    virtual bool canBeModulator(const Object *) const Q_DECL_OVERRIDE;
+
     /** Returns the type of the assigned modulator object.
         Valid after Modulator::setModulator() */
     SourceType sourceType() const { return sourceType_; }
+
+    bool hasAmplitude() const { return sourceType_ == ST_SEQUENCE_FLOAT || sourceType_ == ST_TRACK_FLOAT; }
+    bool hasTimeOffset() const { return sourceType_ == ST_SEQUENCE_FLOAT || sourceType_ == ST_TRACK_FLOAT; }
 
     /** Returns the modulation-value at given time */
     Double value(Double time, uint thread) const;
@@ -51,6 +57,11 @@ public:
 
     /** Returns the time offset to apply when reading from tracks or sequences. */
     Double timeOffset() const { return timeOffset_; }
+
+    // ------------- setter ----------------
+
+    void setAmplitude(Double amp) { amplitude_ = amp; }
+    void setTimeOffset(Double off) { timeOffset_ = off; }
 
 protected:
 
@@ -65,4 +76,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_ENGINE_MODULATORFLOAT_H
+#endif // MOSRC_OBJECT_PARAM_MODULATORFLOAT_H

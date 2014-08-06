@@ -14,6 +14,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "modulator.h"
 
 namespace MO {
 
@@ -26,53 +27,137 @@ Parameter::Parameter(Object * object, const QString& id, const QString& name) :
 {
 }
 
+Parameter::~Parameter()
+{
+    clearModulators_();
+}
+
 void Parameter::serialize(IO::DataStream &io) const
 {
-    io.writeHeader("par", 1);
+    io.writeHeader("par", 2);
 
     io << idName_;
 
-    // modulations
-    io << modulatorIds_;
+    // v2
+    io << (qint32)modulators_.size();
+    for (auto m : modulators_)
+    {
+        io << m->modulatorId();
+        m->serialize(io);
+    }
 }
 
 void Parameter::deserialize(IO::DataStream &io)
 {
-    io.readHeader("par", 1);
+    int ver = io.readHeader("par", 2);
 
     io >> idName_;
 
-    io >> modulatorIds_;
+    if (ver <= 1)
+    {
+        QStringList ids;
+        io >> ids;
+        for (auto &id : ids)
+            addModulator(id);
+    }
+
+    if (ver >= 2)
+    {
+        qint32 num;
+        io >> num;
+        for (qint32 i=0; i<num; ++i)
+        {
+            QString id;
+            io >> id;
+            Modulator * m = getModulator(id);
+            m->deserialize(io);
+        }
+    }
 }
 
+QStringList Parameter::modulatorIds() const
+{
+    QStringList list;
+    for (auto m : modulators_)
+        list << m->modulatorId();
+    return list;
+}
 
-void Parameter::addModulator(const QString &idName)
+Modulator * Parameter::addModulator(const QString &idName)
 {
     MO_DEBUG_MOD("Parameter("<<this->idName()<<")::addModulator(" << idName << ")");
 
-    if (modulatorIds_.contains(idName))
+    if (Modulator * m = findModulator(idName))
     {
         MO_WARNING("trying to add duplicate parameter modulator '" << idName << "'");
-        return;
+        return m;
     }
-    modulatorIds_.append(idName);
+
+    return getModulator(idName);
 }
 
 void Parameter::removeModulator(const QString &idName)
 {
     MO_DEBUG_MOD("Parameter("<<this->idName()<<")::removeModulator(" << idName << ")");
 
-    if (!modulatorIds_.contains(idName))
+    if (!findModulator(idName))
     {
         MO_WARNING("trying to remove unknown parameter modulator '" << idName << "'");
         return;
     }
-    modulatorIds_.removeOne(idName);
+
+    auto mods = modulators_;
+    modulators_.clear();
+    for (auto m : mods)
+    {
+        if (m->modulatorId() != idName)
+            modulators_.append(m);
+        else
+            delete m;
+    }
 }
 
 void Parameter::removeAllModulators()
 {
-    modulatorIds_.clear();
+    clearModulators_();
+}
+
+void Parameter::addModulator_(Modulator * m)
+{
+    MO_ASSERT(!findModulator(m->modulatorId()), "duplicate modulator added");
+    modulators_.append(m);
+}
+
+void Parameter::clearModulators_()
+{
+    for (auto m : modulators_)
+        delete m;
+
+    modulators_.clear();
+}
+
+Modulator * Parameter::findModulator(const QString& id) const
+{
+    for (auto m : modulators_)
+        if (m->modulatorId() == id)
+            return m;
+
+    return 0;
+}
+
+QList<Object*> Parameter::getModulatingObjects() const
+{
+    QList<Object*> list;
+
+    for (auto m : modulators_)
+        if (m->modulator())
+            list.append(m->modulator());
+
+    for (auto m : modulators_)
+        if (m->modulator())
+            list.append(m->modulator()->getModulatingObjects());
+
+    return list;
 }
 
 } // namespace MO

@@ -18,9 +18,12 @@
 namespace MO {
 
 
-ModulatorFloat::ModulatorFloat(const QString &modulatorId, Object *parent)
-    : Modulator     (modulatorId, parent),
-      sourceType_   (ST_NONE)
+ModulatorFloat::ModulatorFloat(
+        const QString &name, const QString &modulatorId, Object *parent)
+    : Modulator     (name, modulatorId, parent),
+      sourceType_   (ST_NONE),
+      amplitude_    (1.0),
+      timeOffset_   (0.0)
 {
 }
 
@@ -42,6 +45,12 @@ void ModulatorFloat::deserialize(IO::DataStream & io)
     io >> amplitude_ >> timeOffset_;
 }
 
+bool ModulatorFloat::canBeModulator(const Object * o) const
+{
+    return qobject_cast<const TrackFloat*>(o)
+        || qobject_cast<const SequenceFloat*>(o);
+}
+
 void ModulatorFloat::modulatorChanged_()
 {
     if (modulator() == 0)
@@ -55,13 +64,15 @@ void ModulatorFloat::modulatorChanged_()
     else
     {
         sourceType_ = ST_NONE;
-        MO_LOGIC_ERROR("illegal assignment of modulator '" << modulator()->idName()
+        MO_ASSERT(false, "illegal assignment of modulator '" << modulator()->idName()
                        << "' to ModulatorFloat");
     }
 }
 
 Double ModulatorFloat::value(Double time, uint thread) const
 {
+    time += timeOffset_;
+
     if (!modulator() || !modulator()->active(time, thread))
         return 0.0;
 
@@ -69,11 +80,11 @@ Double ModulatorFloat::value(Double time, uint thread) const
     {
         case ST_TRACK_FLOAT:
             return amplitude_ *
-                    static_cast<TrackFloat*>(modulator())->value(time + timeOffset_, thread);
+                    static_cast<TrackFloat*>(modulator())->value(time, thread);
 
         case ST_SEQUENCE_FLOAT:
             return amplitude_ *
-                    static_cast<SequenceFloat*>(modulator())->value(time + timeOffset_, thread);
+                    static_cast<SequenceFloat*>(modulator())->value(time, thread);
 
         case ST_NONE:
             return 0.0;

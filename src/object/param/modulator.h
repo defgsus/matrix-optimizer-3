@@ -8,8 +8,8 @@
     <p>created 8/6/2014</p>
 */
 
-#ifndef MOSRC_ENGINE_MODULATOR_H
-#define MOSRC_ENGINE_MODULATOR_H
+#ifndef MOSRC_OBJECT_PARAM_MODULATOR_H
+#define MOSRC_OBJECT_PARAM_MODULATOR_H
 
 #include <QString>
 
@@ -24,7 +24,8 @@ public:
 
     /** Construct a modulator coming form object @p modulatorId
         and belonging to @p parent */
-    Modulator(const QString& modulatorId, Object * parent = 0);
+    Modulator(const QString& name, const QString& modulatorId, Object * parent = 0);
+    virtual ~Modulator() { }
 
     // --------------- io ----------------
 
@@ -38,6 +39,10 @@ public:
 
     // ------------- getter --------------
 
+    /** Returns the name of the modulator
+        (typically the name of the Parameter that is modulated) */
+    const QString& name() const { return name_; }
+
     /** Returns parent object */
     Object * parent() const { return parent_; }
 
@@ -47,9 +52,12 @@ public:
     /** Returns the modulating object */
     Object * modulator() const { return modulator_; }
 
+    /** Returns if the object can be the modulating object */
+    virtual bool canBeModulator(const Object *) const = 0;
+
     // ------------- setter --------------
 
-    void setModulator(Object * object) { modulator_ = object; modulatorChanged_(); }
+    void setModulator(Object * object);
 
 protected:
 
@@ -60,9 +68,12 @@ private:
 
     Object * parent_, * modulator_;
 
-    QString modulatorId_;
+    QString name_, modulatorId_;
 };
+
 
 } // namespace MO
 
-#endif // MOSRC_ENGINE_MODULATOR_H
+
+
+#endif // MOSRC_OBJECT_PARAM_MODULATOR_H
