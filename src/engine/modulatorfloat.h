@@ -12,11 +12,9 @@
 #define MOSRC_ENGINE_MODULATORFLOAT_H
 
 #include "modulator.h"
+#include "types/float.h"
 
 namespace MO {
-namespace IO { class DataStream; }
-
-class Object;
 
 class ModulatorFloat : public Modulator
 {
@@ -25,6 +23,8 @@ public:
     /** Type of source */
     enum SourceType
     {
+        ST_NONE,
+        ST_SEQUENCE_FLOAT,
         ST_TRACK_FLOAT
     };
 
@@ -39,12 +39,28 @@ public:
 
     // ------------- getter --------------
 
-    Object * parent() const { return parent_; }
+    /** Returns the type of the assigned modulator object.
+        Valid after Modulator::setModulator() */
+    SourceType sourceType() const { return sourceType_; }
 
+    /** Returns the modulation-value at given time */
+    Double value(Double time, uint thread) const;
+
+    /** Returns the amplitude of the modulation value */
+    Double amplitude() const { return amplitude_; }
+
+    /** Returns the time offset to apply when reading from tracks or sequences. */
+    Double timeOffset() const { return timeOffset_; }
+
+protected:
+
+    virtual void modulatorChanged_() Q_DECL_OVERRIDE;
 
 private:
 
-    Object * parent_, * modulator_;
+    SourceType sourceType_;
+
+    Double amplitude_, timeOffset_;
 };
 
 } // namespace MO

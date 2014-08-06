@@ -9,6 +9,7 @@
 */
 
 #include "modulator.h"
+#include "io/datastream.h"
 
 namespace MO {
 
@@ -17,6 +18,21 @@ Modulator::Modulator(const QString &id, Object *parent)
     : parent_       (parent),
       modulatorId_  (id)
 {
+}
+
+
+void Modulator::serialize(IO::DataStream & io) const
+{
+    io.writeHeader("mod", 1);
+
+    io << modulatorId_;
+}
+
+void Modulator::deserialize(IO::DataStream & io)
+{
+    io.readHeader("mod", 1);
+
+    io >> modulatorId_;
 }
 
 

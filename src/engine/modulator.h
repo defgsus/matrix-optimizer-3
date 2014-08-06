@@ -28,20 +28,37 @@ public:
 
     // --------------- io ----------------
 
-    virtual void serialize(IO::DataStream &) const = 0;
-    virtual void deserialize(IO::DataStream &) = 0;
+    /** Stores the settings to the stream.
+        Always call the ancestor function in your derived function! */
+    virtual void serialize(IO::DataStream &) const;
+
+    /** Restores the settings from the stream.
+        Always call the ancestor function in your derived function! */
+    virtual void deserialize(IO::DataStream &);
 
     // ------------- getter --------------
 
     /** Returns parent object */
     Object * parent() const { return parent_; }
 
-    /** Returns the idName of the modulating object */
+    /** Returns the set idName for finding the modulating object */
     const QString& modulatorId() const { return modulatorId_; }
+
+    /** Returns the modulating object */
+    Object * modulator() const { return modulator_; }
+
+    // ------------- setter --------------
+
+    void setModulator(Object * object) { modulator_ = object; modulatorChanged_(); }
+
+protected:
+
+    /** Called when the modulating object has been set. */
+    virtual void modulatorChanged_() = 0;
 
 private:
 
-    Object * parent_;
+    Object * parent_, * modulator_;
 
     QString modulatorId_;
 };
