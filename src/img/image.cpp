@@ -39,22 +39,24 @@ uint Image::pixelSizeInBytes() const
 {
     switch (format_)
     {
-        default: return 0;
         case F_MONO_8: return 1;
         case F_RGB_24: return 3;
         case F_RGBA_32: return 4;
     }
+    MO_ASSERT(false, "unknown image format");
+    return 0;
 }
 
 uint Image::glEnumForFormat() const
 {
     switch (format_)
     {
-        default: return GL_NONE;
         case F_MONO_8: return GL_LUMINANCE;
         case F_RGB_24: return GL_RGB;
         case F_RGBA_32: return GL_RGBA;
     }
+    MO_ASSERT(false, "unknown image format");
+    return GL_NONE;
 }
 
 uint Image::glEnumForType() const
@@ -78,6 +80,48 @@ void Image::resize_()
     data_.resize(sizeInBytes());
 }
 
+const Image::Color * Image::pixel(uint x, uint y) const
+{
+    switch (format_)
+    {
+        case F_MONO_8:  return &data_[y * width_ + x];
+        case F_RGB_24:  return &data_[(y * width_ + x) * 3];
+        case F_RGBA_32: return &data_[(y * width_ + x) * 4];
+    }
+    MO_ASSERT(false, "unknown image format");
+    return 0;
+}
+
+Image::Color * Image::pixel(uint x, uint y)
+{
+    switch (format_)
+    {
+        case F_MONO_8:  return &data_[y * width_ + x];
+        case F_RGB_24:  return &data_[(y * width_ + x) * 3];
+        case F_RGBA_32: return &data_[(y * width_ + x) * 4];
+    }
+    MO_ASSERT(false, "unknown image format");
+    return 0;
+}
+
+Image::Color Image::average(uint x, uint y) const
+{
+    switch (format_)
+    {
+        case F_MONO_8: return *pixel(x, y);
+        case F_RGBA_32:
+        case F_RGB_24:
+        {
+            auto pix = pixel(x, y);
+            return ((int)pix[0] + (int)pix[1] + (int)pix[2])/3;
+        }
+    }
+    return 0;
+}
+
+
+
+
 bool Image::loadImage(const QString &filename)
 {
     QImage img(filename);
@@ -96,10 +140,10 @@ bool Image::createFrom(const QImage & img)
         case QImage::Format_Mono:
         {
             resize(img.width(), img.height(), F_MONO_8);
-            unsigned char * dst = &data_[0];
+            Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
             {
-                const unsigned char * src =
+                const Color * src =
                         img.constScanLine(img.height() - y - 1);
                 int shift = 7;
                 for (int x=0; x<img.width(); ++x)
@@ -119,10 +163,10 @@ bool Image::createFrom(const QImage & img)
         case QImage::Format_MonoLSB:
         {
             resize(img.width(), img.height(), F_MONO_8);
-            unsigned char * dst = &data_[0];
+            Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
             {
-                const unsigned char * src =
+                const Color * src =
                         img.constScanLine(img.height() - y - 1);
                 int shift = 0;
                 for (int x=0; x<img.width(); ++x)
@@ -142,10 +186,10 @@ bool Image::createFrom(const QImage & img)
         case QImage::Format_RGB32:
         {
             resize(img.width(), img.height(), F_RGB_24);
-            unsigned char * dst = &data_[0];
+            Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
             {
-                const unsigned char * src =
+                const Color * src =
                         img.constScanLine(img.height() - y - 1);
                 for (int x=0; x<img.width(); ++x)
                 {
@@ -161,10 +205,10 @@ bool Image::createFrom(const QImage & img)
         case QImage::Format_Indexed8:
         {
             resize(img.width(), img.height(), F_RGBA_32);
-            unsigned char * dst = &data_[0];
+            Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
             {
-                const unsigned char * src = img.constScanLine(img.height() - y - 1);
+                const Color * src = img.constScanLine(img.height() - y - 1);
                 for (int x=0; x<img.width(); ++x)
                 {
                     const QRgb rgb = img.color(*src);
@@ -181,7 +225,7 @@ bool Image::createFrom(const QImage & img)
         case QImage::Format_RGB16:
         {
             resize(img.width(), img.height(), F_RGB_24);
-            unsigned char * dst = &data_[0];
+            Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
             {
                 const u_int16_t * src = reinterpret_cast<const u_int16_t*>(
@@ -201,10 +245,10 @@ bool Image::createFrom(const QImage & img)
         case QImage::Format_ARGB32:
         {
             resize(img.width(), img.height(), F_RGBA_32);
-            unsigned char * dst = &data_[0];
+            Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
             {
-                const unsigned char * src =
+                const Color * src =
                         img.constScanLine(img.height() - y - 1);
                 for (int x=0; x<img.width(); ++x)
                 {

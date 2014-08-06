@@ -469,7 +469,7 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
         isLoading_ = false;
 
         // and rethrow
-        throw e;
+        throw;
     }
     catch (std::exception & e)
     {
@@ -479,7 +479,7 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
         isLoading_ = false;
 
         // and rethrow
-        throw e;
+        throw;
     }
     catch (...)
     {
@@ -613,7 +613,7 @@ bool ObjLoader::loadMaterialLib_(const QString &filename)
              "\nat " << line << ":" << (x + 1);
 
         // and rethrow
-        throw e;
+        throw;
     }
 
     return true;

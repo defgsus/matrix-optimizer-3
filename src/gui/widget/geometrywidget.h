@@ -43,9 +43,9 @@ protected:
     void drawGL(const Mat4 &projection, const Mat4 &transformation) Q_DECL_OVERRIDE;
 
     GL::Drawable * drawable_;
-    GL::Texture * tex_;
+    GL::Texture * tex_, * texNorm_;
 
-    bool showGrid_, showTexture_;
+    bool showGrid_, showTexture_, showNormalMap_;
 };
 
 

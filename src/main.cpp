@@ -16,9 +16,9 @@
 #include <iostream>
 
 #include "io/init.h"
-#include "io/error.h"
 #include "io/application.h"
 #include "io/settings.h"
+#include "io/currentthread.h"
 #include "gui/mainwindow.h"
 #include "gui/splashscreen.h"
 
@@ -79,29 +79,7 @@ int main(int argc, char *argv[])
     //MO::GUI::QObjectInspector oi(&w);
     //oi.show();
 
-    int ret;
-    try
-    {
-        //throw MO::Exception() << "hallo";
-        //throw MO::IoException() << "hallo";
-        //MO_IO_ERROR(VERSION_MISMATCH, "win " << mainwin);
-        ret = MO::application->exec();
-    }
-    /*catch (MO::IoException& e)
-    {
-        std::cout << "IoException '" << e.what() << "'" << std::endl;
-        throw;
-    }*/
-    catch (MO::Exception& e)
-    {
-        std::cout << "Exception '" << e.what() << "'" << std::endl;
-        throw;
-    }
-    catch (std::exception& e)
-    {
-        std::cout << "std::exception '" << e.what() << "'" << std::endl;
-        throw;
-    }
+    int ret = MO::application->exec();
 
     delete MO::application;
 

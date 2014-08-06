@@ -877,9 +877,9 @@ bool MainWindow::saveScene_(const QString &fn)
             // save the gui settings for the scene
             sceneSettings_->saveFile(sceneSettings_->getSettingsFileName(fn));
         }
-        catch (Exception&)
+        catch (const Exception & e)
         {
-            statusBar()->showMessage("SAVING FAILED!");
+            statusBar()->showMessage(tr("SAVING FAILED! %1").arg(e.what()));
             return false;
         }
 

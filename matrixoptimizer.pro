@@ -13,14 +13,14 @@ CONFIG += c++11
 
 QMAKE_CXXFLAGS_RELEASE += -O2 -DNDEBUG
 
-#DEFINES += GLEW_MX
+DEFINES += GLEW_MX
 
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
 
-unix: { LIBS += -lGLEW -lGLU -lGL -lX11 -lportaudio -lsndfile }
+unix: { LIBS += -lGLEWmx -lGLU -lGL -lX11 -lportaudio -lsndfile }
 
 win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 
@@ -146,7 +146,8 @@ SOURCES += \
     src/object/param/modulatorfloat.cpp \
     src/gui/widget/modulatorwidget.cpp \
     src/gui/modulatordialog.cpp \
-    src/io/currentthread.cpp
+    src/io/currentthread.cpp \
+    src/img/imagegenerator.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -284,7 +285,8 @@ HEADERS += \
     src/object/param/modulatorfloat.h \
     src/gui/widget/modulatorwidget.h \
     src/gui/modulatordialog.h \
-    src/io/currentthread.h
+    src/io/currentthread.h \
+    src/img/imagegenerator.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

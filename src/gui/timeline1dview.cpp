@@ -1550,7 +1550,7 @@ void Timeline1DView::paste()
         {
             tl.deserialize(stream);
         }
-        catch (Exception& e)
+        catch (const Exception& e)
         {
             QMessageBox::warning(this, "!", tr("Error pasting timeline data\n%1").arg(e.what()));
             return;

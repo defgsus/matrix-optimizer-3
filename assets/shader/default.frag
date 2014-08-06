@@ -1,5 +1,10 @@
 #version 130
 
+/* defines
+ * MO_ENABLE_TEXTURE
+ * MO_ENABLE_NORMALMAP
+ */
+
 // input from vertex shader
 in vec3 v_pos;
 in vec4 v_color;
@@ -8,6 +13,11 @@ in vec2 v_texCoord;
 
 #ifdef MO_ENABLE_TEXTURE
 uniform sampler2D tex_0;
+#endif
+
+#ifdef MO_ENABLE_NORMALMAP
+uniform sampler2D tex_norm_0;
+vec3 normalmap = texture2D(tex_norm_0, v_texCoord).xyz * 2.0 - 1.0;
 #endif
 
 vec4 mo_ambient_color()
@@ -19,12 +29,22 @@ vec4 mo_ambient_color()
             ;
 }
 
+vec3 mo_normal()
+{
+    return v_normal
+#ifdef MO_ENABLE_NORMALMAP
+            * normalmap
+#endif
+            ;
+}
+
+
 vec4 getLightColor(in vec3 light_pos, in vec3 color, in float shinyness)
 {
     // normal to light source
     vec3 light_normal = normalize( light_pos - v_pos );
     // dot-product of light normal and vertex normal gives linear light influence
-    float d = max(0.0, dot(v_normal, light_normal) );
+    float d = max(0.0, dot(mo_normal(), light_normal) );
     // shaping the linear light influence
     float lighting = pow(d, 1.0 + shinyness);
 

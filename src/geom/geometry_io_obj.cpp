@@ -242,7 +242,7 @@ void Geometry::loadOBJ(const QString &filename)
     {
         e << "\non parsing .obj file '" << filename << "'"
           << "\nat " << line << ":" << (x + 1);
-        throw e;
+        throw;
     }
 }
 

@@ -2,4 +2,7 @@
     <qresource prefix="/img">
         <file alias="banner.png">assets/img/banner.png</file>
     </qresource>
+    <qresource prefix="/normalmap">
+        <file alias="01.png">assets/img/normalmap01.png</file>
+    </qresource>
 </RCC>

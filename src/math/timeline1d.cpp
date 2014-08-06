@@ -666,9 +666,10 @@ void Timeline1D::loadFile(const QString &filename)
     {
         deserialize(stream);
     }
-    catch (Exception e)
+    catch (Exception & e)
     {
-        throw e << "\nfrom file '" << filename << "'";
+        e << "\nfrom file '" << filename << "'";
+        throw;
     }
 
     f.close();

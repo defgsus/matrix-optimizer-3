@@ -691,9 +691,10 @@ void Scene::renderScene(uint thread)
             camera->finishGlFrame(thread, time);
         }
     }
-    catch (Exception * e)
+    catch (Exception & e)
     {
-        throw *e << "in Scene::renderScene(" << thread << ")";
+        e << "in Scene::renderScene(" << thread << ")";
+        throw;
     }
 
     // mix camera frames

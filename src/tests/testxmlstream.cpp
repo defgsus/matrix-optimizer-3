@@ -71,6 +71,7 @@ int TestXmlStream::run()
     }
     catch (...)
     {
+        std::cout << "error";
         throw;
     }
 

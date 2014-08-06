@@ -8,6 +8,8 @@
     <p>created 6/29/2014</p>
 */
 
+#include <QThread>
+
 #include "manager.h"
 #include "window.h"
 #include "context.h"
@@ -36,6 +38,9 @@ Window * Manager::createGlWindow(uint thread)
     if (!window_)
     {
         window_ = new Window();
+        //QThread * thrd = new QThread(this);
+        //thrd->start();
+        //window_->moveToThread(thrd);
         window_->setThread(thread);
         connect(window_, SIGNAL(contextCreated(uint, MO::GL::Context*)),
                             SLOT(onContextCreated_(uint, MO::GL::Context*)));

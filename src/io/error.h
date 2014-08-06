@@ -124,8 +124,9 @@ public:
 // --------------- exception extension ----------------------
 
 #ifdef MO_EXTENDED_EXCEPTIONS
-#   define MO_EXTEND_EXCEPTION(command__, text__) \
-        try { command__; } catch (::MO::Exception * e__) { throw *e__ << "\n" << text__; }
+#   define MO_EXTEND_EXCEPTION(command__, text__)                       \
+        try { command__; }                                              \
+        catch (::MO::Exception & e__) { e__ << "\n" << text__; throw; }
 #else
 #   define MO_EXTEND_EXCEPTION(command__, unused__) command__;
 #endif

@@ -283,7 +283,7 @@ Scene * ObjectFactory::loadScene(const QString &fn)
     {
         io.readHeader(MO_SCENEFILE_HEADER, MO_SCENEFILE_VERSION);
     }
-    catch (IoException &e)
+    catch (const IoException &e)
     {
         MO_IO_WARNING(VERSION_MISMATCH,
                       "error reading scene file '" << fn << "'\n"

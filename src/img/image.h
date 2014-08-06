@@ -26,6 +26,8 @@ class Image
 {
 public:
 
+    typedef unsigned char Color;
+
     enum Format
     {
         F_MONO_8,
@@ -43,28 +45,46 @@ public:
 
     // -------------- getter -------------------
 
+    /** Returns maximum color */
+    static Color max() { return 255; }
+
     bool isEmpty() const { return width_ == 0 || height_ == 0; }
 
     uint width() const { return width_; }
     uint height() const { return height_; }
     Format format() const { return format_; }
 
+    /** Returns a opengl enum like GL_LUMINANCE or GL_RGB */
     uint glEnumForFormat() const;
+    /** Returns the opengl enum for the data type (GL_UNSIGNED_BYTE) */
     uint glEnumForType() const;
 
     uint pixelSizeInBytes() const;
     uint sizeInBytes() const { return width_ * height_ * pixelSizeInBytes(); }
 
+    // ------------- pixel getter --------------
+
     /** Get pointer to consecutive data (top-left pixel) */
-    const unsigned char * data() const { return &data_[0]; }
+    const Color * data() const { return &data_[0]; }
+
+    /** Returns read access to the given pixel */
+    const Color * pixel(uint x, uint y) const;
+
+    /** Returns write access to the given pixel */
+    Color * pixel(uint x, uint y);
+
+    /** Returns the average brightness at given position */
+    Color average(uint x, uint y) const;
 
     // ------------- setter --------------------
 
     /** Resizes the image (leaves contents as-is) */
     void resize(uint width, uint height, Format format);
 
+    /** Loads an image (via QImage) */
     bool loadImage(const QString& filename);
 
+    /** Creates an image from QImage (most formats are handled) */
     bool createFrom(const QImage&);
 
 private:
@@ -74,7 +94,7 @@ private:
     uint width_, height_;
     Format format_;
 
-    std::vector<unsigned char> data_;
+    std::vector<Color> data_;
 };
 
 template <typename T>

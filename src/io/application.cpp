@@ -37,32 +37,32 @@ bool Application::notify(QObject * o, QEvent * e)
     {
         return QApplication::notify(o, e);
     }
-    catch (MO::AudioException& e)
+    catch (const MO::AudioException& e)
     {
         std::cout << "AudioException in notify [" << e.what() << "]" << std::endl;
         MO_APP_EXCEPTIONS_ABORT
     }
-    catch (MO::LogicException& e)
+    catch (const MO::LogicException& e)
     {
         std::cout << "LogicException in notify [" << e.what() << "]" << std::endl;
         MO_APP_EXCEPTIONS_ABORT
     }
-    catch (MO::IoException& e)
+    catch (const MO::IoException& e)
     {
         std::cout << "IoException in notify [" << e.what() << "]" << std::endl;
         MO_APP_EXCEPTIONS_ABORT
     }
-    catch (MO::GlException& e)
+    catch (const MO::GlException& e)
     {
         std::cout << "GlException in notify [" << e.what() << "]" << std::endl;
         MO_APP_EXCEPTIONS_ABORT
     }
-    catch (MO::Exception& e)
+    catch (const MO::Exception& e)
     {
         std::cout << "Exception in notify [" << e.what() << "]" << std::endl;
         MO_APP_EXCEPTIONS_ABORT
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         std::cout << "std::exception in notify [" << e.what() << "]" << std::endl;
         MO_APP_EXCEPTIONS_ABORT

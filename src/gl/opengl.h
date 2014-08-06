@@ -62,7 +62,7 @@ GLEWContext * glewGetContext();
     if (GLenum err__ = glGetError())            \
     {                                           \
         std::stringstream s__;                  \
-        s__ << "opengl error "                  \
+        s__ << "OPENGL ERROR "                  \
             << ::MO::GL::errorName(err__)       \
             << " for command "                  \
             << #command__                       \

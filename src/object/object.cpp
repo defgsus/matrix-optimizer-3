@@ -150,10 +150,11 @@ Object * Object::deserializeTree_(IO::DataStream & io)
             // read actual object data
             o->deserialize(io);
         }
-        catch (Exception e)
+        catch (Exception& e)
         {
             delete o;
-            throw e << "\nobject creation failed";
+            e << "\nobject creation failed for class '" << className << "'";
+            throw;
         }
 
         // once in a while check stream for errors
@@ -170,10 +171,11 @@ Object * Object::deserializeTree_(IO::DataStream & io)
         {
             deserializeParameters_(io, o);
         }
-        catch (Exception e)
+        catch (Exception& e)
         {
             delete o;
-            throw e << "\nCould not read parameters";
+            e << "\nCould not read parameters for object '" << idName << "'";
+            throw;
         }
     }
     // skip object if class not found

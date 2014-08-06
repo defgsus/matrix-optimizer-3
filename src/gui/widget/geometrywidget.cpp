@@ -12,8 +12,11 @@
 #include "gl/vertexarrayobject.h"
 #include "gl/drawable.h"
 #include "gl/shadersource.h"
+#include "gl/shader.h"
 #include "geom/geometry.h"
 #include "gl/texture.h"
+#include "img/image.h"
+#include "img/imagegenerator.h"
 
 namespace MO {
 namespace GUI {
@@ -23,8 +26,10 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     Basic3DWidget   (mode, parent),
     drawable_       (new GL::Drawable("geomwidget")),
     tex_            (0),
+    texNorm_        (0),
     showGrid_       (false),
-    showTexture_    (false)
+    showTexture_    (false),
+    showNormalMap_  (true)
 {
     setMinimumSize(128, 128);
 
@@ -58,6 +63,7 @@ void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
     {
         if (!tex_)
         {
+            MO_CHECK_GL(glActiveTexture(GL_TEXTURE0));
             tex_ = GL::Texture::createFromImage(
                     QImage(":/img/banner.png"),
                     GL_RGB, GL::ER_IGNORE);
@@ -73,6 +79,30 @@ void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
         recompile = true;
     }
 
+
+    if (showNormalMap_)
+    {
+        if (!texNorm_)
+        {
+            Image img, norm;
+            img.loadImage(":/normalmap/01.png");
+            ImageGenerator::createNormalmap(&norm, &img);
+            MO_CHECK_GL(glActiveTexture(GL_TEXTURE0 + 1));
+            texNorm_ = GL::Texture::createFromImage(
+                        norm, GL_RGB, GL::ER_IGNORE);
+            MO_CHECK_GL(glActiveTexture(GL_TEXTURE0));
+            recompile = true;
+        }
+    }
+    else
+    if (texNorm_)
+    {
+        texNorm_->release();
+        delete texNorm_;
+        texNorm_ = 0;
+        recompile = true;
+    }
+
     if (showGrid_)
         drawGrid(projection, transformation);
 
@@ -81,12 +111,25 @@ void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
 
     if (!drawable_->isReady())
     {
+        // set source (and flags)
         GL::ShaderSource * src = new GL::ShaderSource();
         src->loadDefaultSource();
         if (tex_)
             src->addDefine("#define MO_ENABLE_TEXTURE");
+        if (texNorm_)
+            src->addDefine("#define MO_ENABLE_NORMALMAP");
         drawable_->setShaderSource(src);
+
+        // compile
         drawable_->createOpenGl();
+
+        // bind normal texture slot
+        if (texNorm_)
+        {
+            GL::Uniform * u = drawable_->shader()->getUniform("tex_norm_0");
+            if (u)
+                u->ints[0] = 1;
+        }
     }
 
     if (drawable_->isReady())
