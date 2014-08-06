@@ -29,7 +29,7 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     texNorm_        (0),
     showGrid_       (false),
     showTexture_    (false),
-    showNormalMap_  (true)
+    showNormalMap_  (false)
 {
     setMinimumSize(128, 128);
 

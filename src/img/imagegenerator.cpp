@@ -28,9 +28,9 @@ void ImageGenerator::createNormalmap(Image *dst, const Image *src, Float height)
                 height));
 
         auto dstp = dst->pixel(x, y);
-        *dstp++ = n[0] * Image::max();
-        *dstp++ = n[1] * Image::max();
-        *dstp   = n[2] * Image::max();
+        *dstp++ = (n[0]*0.5f+0.5f) * Image::max();
+        *dstp++ = (n[1]*0.5f+0.5f) * Image::max();
+        *dstp   = (n[2]*0.5f+0.5f) * Image::max();
     }
 }
 

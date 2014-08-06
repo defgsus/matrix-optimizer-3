@@ -119,6 +119,14 @@ void GeometryDialog::createWidgets_()
                         geoWidget_->setShowTexture(state == Qt::Checked);
                     });
 
+                    cb = new QCheckBox(tr("bumpmapped"), this);
+                    lh2->addWidget(cb);
+                    cb->setChecked(geoWidget_->isShowNormalMap());
+                    connect(cb, &QCheckBox::stateChanged, [this](int state)
+                    {
+                        geoWidget_->setShowNormalMap(state == Qt::Checked);
+                    });
+
             lv = new QVBoxLayout();
             lh->addLayout(lv);
 

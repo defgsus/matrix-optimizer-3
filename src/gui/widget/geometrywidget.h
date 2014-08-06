@@ -28,7 +28,7 @@ public:
 
     bool isShowGrid() const { return showGrid_; }
     bool isShowTexture() const { return showTexture_; }
-
+    bool isShowNormalMap() const { return showNormalMap_; }
 signals:
 
 public slots:
@@ -37,6 +37,7 @@ public slots:
 
     void setShowGrid(bool enable) { showGrid_ = enable; update(); }
     void setShowTexture(bool enable) { showTexture_ = enable; update(); }
+    void setShowNormalMap(bool enable) { showNormalMap_ = enable; update(); }
 
 protected:
 
