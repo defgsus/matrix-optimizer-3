@@ -23,6 +23,7 @@
 #include "object/track.h"
 #include "object/sequencefloat.h"
 #include "object/microphone.h"
+#include "object/lightsource.h"
 #include "model/objecttreemodel.h"
 #include "audio/audiodevice.h"
 #include "audio/audiosource.h"
@@ -140,6 +141,8 @@ void Scene::findObjects_()
     allObjects_.prepend(this);
     // all cameras
     cameras_ = findChildObjects<Camera>(QString(), true);
+    // all light sources
+    lightSources_ = findChildObjects<LightSource>(QString(), true);
     // all objects that need to be rendered
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
     // not all objects need there transformation calculated
@@ -290,11 +293,13 @@ void Scene::setNumberThreads(uint num)
     uint oldnum = fboFinal_.size();
     fboFinal_.resize(num);
     screenQuad_.resize(num);
+    lightSettings_.resize(num);
 
     for (uint i=oldnum; i<num; ++i)
     {
         fboFinal_[i] = 0;
         screenQuad_[i] = 0;
+        lightSettings_[i].resize_(0); // just to be sure
     }
 }
 
@@ -663,6 +668,9 @@ void Scene::renderScene(uint thread)
         // position all objects
         calculateSceneTransform(thread, 0, time);
 
+        // update lighting settings
+        updateLightSettings_(thread, time);
+
         // render scene from each camera
         for (auto camera : cameras_)
         if (camera->active(time, thread))
@@ -716,6 +724,31 @@ void Scene::renderScene(uint thread)
     screenQuad_[thread]->draw(glContext_->size().width(), glContext_->size().height());
     fboFinal_[thread]->colorTexture()->unbind();
 
+}
+
+void Scene::updateLightSettings_(uint thread, Double time)
+{
+    MO_ASSERT(thread < lightSettings_.size(), "thread " << thread << " for "
+              "LightSettings out-of-range (" << lightSettings_.size() << ")");
+
+    LightSettings * l = &lightSettings_[thread];
+
+    // resize if necessary
+    if ((int)l->count() != lightSources_.size())
+        l->resize_(lightSources_.size());
+
+    // fill vectors
+    for (uint i=0; i<l->count(); ++i)
+    {
+        const Vec3 pos = lightSources_[i]->position(thread, 0);
+        l->positions_[i*3] = pos[0];
+        l->positions_[i*3+1] = pos[1];
+        l->positions_[i*3+2] = pos[2];
+        const Vec3 col = lightSources_[i]->lightColor(thread, time);
+        l->colors_[i*3] = col[0];
+        l->colors_[i*3+1] = col[1];
+        l->colors_[i*3+2] = col[2];
+    }
 }
 
 void Scene::calculateSceneTransform(uint thread, uint sample, Double time)

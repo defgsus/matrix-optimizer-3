@@ -26,6 +26,9 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
+    /** Returns the color at given time */
+    Vec3 lightColor(uint thread, Double time) const;
+
 signals:
 
 public slots:

@@ -20,6 +20,7 @@ namespace MO {
     class Object;
     class Scene;
     class Camera;
+    class LightSource;
     class Microphone;
     class SoundSource;
     class Parameter;

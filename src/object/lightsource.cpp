@@ -44,4 +44,10 @@ void LightSource::createParameters()
     b_ = createFloatParameter("blue", "blue", tr("Blue amount of light color"), 1.0, 0.1);
 }
 
+Vec3 LightSource::lightColor(uint thread, Double time) const
+{
+    return Vec3(r_->value(time, thread), g_->value(time, thread), b_->value(time, thread));
+}
+
+
 } // namespace MO
