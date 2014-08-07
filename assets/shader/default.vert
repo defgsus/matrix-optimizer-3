@@ -30,17 +30,24 @@ uniform vec3 u_light_color[MO_NUM_LIGHTS];
 // --- output of vertex shader ---
 
 out vec3 v_pos;
+out vec3 v_pos_eye;
 out vec4 v_color;
 out vec2 v_texCoord;
 out vec3 v_light_dir[MO_NUM_LIGHTS];
+out mat3 v_normal_matrix;
 
 
 /** Returns the matrix for the vertex normal */
 mat3 mo_light_matrix()
 {
-    vec3 tangent =  vec3(-a_normal.z, -a_normal.y,  a_normal.x);
-    vec3 binormal = vec3(-a_normal.x,  a_normal.z, -a_normal.y);
-    return mat3(tangent, -binormal, a_normal);
+    vec3 norm =
+            //vnorm;
+            a_normal;
+            //(transpose(inverse(u_view)) * vec4(a_normal, 0.)).xyz;
+
+    vec3 tangent =  vec3(-norm.z, -norm.y,  norm.x);
+    vec3 binormal = vec3(-norm.x,  norm.z, -norm.y);
+    return mat3(tangent, -binormal, norm);
 }
 
 
@@ -94,14 +101,9 @@ void main()
 {
     // pass attributes to fragment shader
     v_pos = a_position.xyz;
+    v_pos_eye = (u_view * a_position).xyz;
     v_color = a_color;
     v_texCoord = a_texCoord;
-
-    // pass light-directions to fragment shader
-    mat3 lightmat = mo_light_matrix();
-
-    for (int i=0; i<MO_NUM_LIGHTS; ++i)
-        v_light_dir[i] = lightmat * normalize(u_light_pos[i] - v_pos);
 
     /*
     v_light_dir[0] = lightmat * normalize(vec3(1000., 2000., 800.) - v_pos);
@@ -111,4 +113,17 @@ void main()
 
     // set final vertex position
     gl_Position = mo_ftransform(a_position);
+
+
+    // pass light-directions to fragment shader
+
+    v_normal_matrix = mat3(u_view);//transpose(inverse(mat3(u_view)));
+
+    mat3 lightmat = mo_light_matrix();
+
+    for (int i=0; i<MO_NUM_LIGHTS; ++i)
+    {
+        //vec3 light_pos = (u_view * vec4(u_light_pos[i], 1.)).xyz;
+        v_light_dir[i] = lightmat * normalize(u_light_pos[i] - v_pos);
+    }
 }

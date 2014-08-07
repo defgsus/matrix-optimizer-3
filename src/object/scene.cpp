@@ -680,6 +680,8 @@ void Scene::renderScene(uint thread)
             camera->initCameraSpace(camSpace, thread, time);
             const Mat4 viewm = glm::inverse(camera->transformation(thread, 0));
 
+            camSpace.setOrgViewMatrix(viewm);
+
             // for each cubemap
             const uint numCubeMaps = camera->numCubeTextures(thread, time);
             for (uint i=0; i<numCubeMaps; ++i)

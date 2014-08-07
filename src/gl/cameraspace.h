@@ -28,16 +28,18 @@ public:
 
     const Mat4& projectionMatrix() const { return proj_; }
     const Mat4& viewMatrix() const { return view_; }
+    const Mat4& orgViewMatrix() const { return orgView_; }
     const LightSettings& lights() const { return lights_; }
 
     // ------- setter -----------
 
     void setProjectionMatrix(const Mat4& m) { proj_ = m; }
     void setViewMatrix(const Mat4& m) { view_ = m; }
+    void setOrgViewMatrix(const Mat4& m) { orgView_ = m; }
 
 private:
 
-    Mat4 proj_, view_;
+    Mat4 proj_, view_, orgView_;
     const LightSettings & lights_;
 };
 

@@ -20,6 +20,7 @@ namespace GL {
 ShaderSource::ShaderSource()
     : unProj_       ("u_projection"),
       unView_       ("u_view"),
+      unOrgView_    ("u_orgView"),
       unLightPos_   ("u_light_pos[0]"),
       unLightColor_ ("u_light_color[0]"),
       anPos_        ("a_position"),
@@ -52,8 +53,13 @@ void ShaderSource::loadVertexSource(const QString &filename)
 
 void ShaderSource::loadDefaultSource()
 {
+#if 1
+    loadVertexSource(":/shader/test.vert");
+    loadFragmentSource(":/shader/test.frag");
+#else
     loadVertexSource(":/shader/default.vert");
     loadFragmentSource(":/shader/default.frag");
+#endif
 }
 
 void ShaderSource::addDefine(const QString &defineCommand)

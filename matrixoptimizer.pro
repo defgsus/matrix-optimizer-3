@@ -311,7 +311,9 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/framebufferdraw.vert \
     assets/shader/framebufferdraw.frag \
     assets/shader/framebuffercamera.vert \
-    assets/shader/framebuffercamera.frag
+    assets/shader/framebuffercamera.frag \
+    assets/shader/test.vert \
+    assets/shader/test.frag
 
 ####################### BISON PARSER #######################
 

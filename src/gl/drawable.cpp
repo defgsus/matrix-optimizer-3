@@ -152,6 +152,11 @@ void Drawable::compileShader_()
     else
         uniformView_ = invalidGl;
 
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameOrgView()))
+        uniformOrgView_ = u->location();
+    else
+        uniformOrgView_ = invalidGl;
+
     if (auto u = shader_->getUniform(shaderSource_->uniformNameLightPos()))
         uniformLightPos_ = u->location();
     else
@@ -210,7 +215,8 @@ void Drawable::render()
 }
 
 
-void Drawable::renderShader(const Mat4 &proj, const Mat4 &view, const LightSettings * lights)
+void Drawable::renderShader(const Mat4 &proj, const Mat4 &view,
+                            const Mat4 * orgView, const LightSettings * lights)
 {
     MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
     //MO_ASSERT(uniformProj_ != invalidGl, "");
@@ -223,8 +229,11 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view, const LightSetti
     shader_->sendUniforms();
 
     if (uniformProj_ != invalidGl)
-    MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
+        MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
     MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
+
+    if (orgView && uniformOrgView_ != invalidGl)
+        MO_CHECK_GL( glUniformMatrix4fv(uniformOrgView_, 1, GL_FALSE, &(*orgView)[0][0]) );
 
     if (lights && lights->count())
     {

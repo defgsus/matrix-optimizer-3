@@ -12,7 +12,7 @@ in vec3 v_pos;
 in vec4 v_color;
 in vec2 v_texCoord;
 in vec3 v_light_dir[MO_NUM_LIGHTS];
-
+in mat3 v_normal_matrix;
 
 // --- uniforms ---
 
@@ -63,7 +63,7 @@ vec4 mo_light_color()
     vec4 c = vec4(0., 0., 0., 0.);
 
     for (int i=0; i<MO_NUM_LIGHTS; ++i)
-        c += getLightColor(v_light_dir[i], u_light_color[i], 2.0);
+        c += getLightColor(v_light_dir[i], u_light_color[i], 4.0);
 
     return c;
 }
