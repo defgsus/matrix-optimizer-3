@@ -102,7 +102,7 @@ public:
     Type type;
     QString filename, equationX, equationY, equationZ,
                      pEquationX, pEquationY, pEquationZ;
-    bool calcNormals, asTriangles, convertToLines, sharedVertices, tesselate,
+    bool calcNormals, invertNormals, asTriangles, convertToLines, sharedVertices, tesselate,
         normalizeVertices, removeRandomly, transformWithEquation,
                     transformPrimitivesWithEquation, calcNormalsBeforePrimitiveEquation;
     Float colorR, colorG, colorB, colorA;

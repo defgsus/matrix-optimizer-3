@@ -65,6 +65,9 @@ public:
         @note Must be called for the same current opengl context as createOpenGl() */
     void releaseOpenGl();
 
+    /** Sets the ambient color (through uniform) */
+    void setAmbientColor(Float r, Float g, Float b, Float a = 1.0);
+
     void render();
     void renderShader();
 
@@ -97,6 +100,8 @@ private:
         uniformTransform_,
         uniformLightPos_,
         uniformLightColor_;
+
+    Uniform * uniColor_;
 
 };
 

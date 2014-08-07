@@ -15,6 +15,7 @@
 #include "gl/shadersource.h"
 #include "gl/cameraspace.h"
 #include "geom/geometrycreator.h"
+#include "param/parameterfloat.h"
 
 namespace MO {
 
@@ -49,6 +50,13 @@ void Model3d::deserialize(IO::DataStream & io)
         geomSettings_->deserialize(io);
 }
 
+void Model3d::createParameters()
+{
+    cr_ = createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
+    cg_ = createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
+    cb_ = createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
+    ca_ = createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
+}
 
 void Model3d::initGl(uint /*thread*/)
 {
@@ -97,7 +105,7 @@ void Model3d::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
     requestReinitGl();
 }
 
-void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
+void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double time)
 {
     const Mat4& trans = transformation(thread, 0);
     const Mat4 mat = cam.viewMatrix() * trans;
@@ -112,6 +120,11 @@ void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
 
     if (draw_->isReady())
     {
+        draw_->setAmbientColor(
+                    cr_->value(time, thread),
+                    cg_->value(time, thread),
+                    cb_->value(time, thread),
+                    ca_->value(time, thread));
         //draw_->renderAttribArrays();
         draw_->renderShader(cam.projectionMatrix(), mat, trans, cam.lights());
     }

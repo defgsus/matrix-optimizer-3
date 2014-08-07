@@ -17,6 +17,7 @@ in vec3 v_light_dir[MO_NUM_LIGHTS];
 
 // --- uniforms ---
 
+uniform vec4 u_color;
 uniform vec3 u_light_color[MO_NUM_LIGHTS];
 
 #ifdef MO_ENABLE_TEXTURE
@@ -32,7 +33,7 @@ vec3 normalmap = texture2D(tex_norm_0, v_texCoord).xyz * 2.0 - 1.0;
 
 vec4 mo_ambient_color()
 {
-    return v_color
+    return u_color * v_color
 #ifdef MO_ENABLE_TEXTURE
             * texture2D(tex_0, v_texCoord)
 #endif

@@ -87,7 +87,8 @@ protected:
     QComboBox * comboPreset_, * comboView_, * comboType_;
     QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbCalcNormals_,
             *cbTess_, *cbNorm_, *cbRemove_, *cbTransformEqu_,
-            *cbTransformPrimEqu_, *cbCalcNormalsBeforePrimEqu_;
+            *cbTransformPrimEqu_, *cbCalcNormalsBeforePrimEqu_,
+            *cbInvNormals_;
     DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_, *spinRemoveProb_,
                 *spinNormAmt_, *spinSmallRadius_;
     SpinBox * spinSegX_, *spinSegY_, *spinSegZ_, *spinTess_, *spinRemoveSeed_;

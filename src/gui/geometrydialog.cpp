@@ -222,17 +222,23 @@ void GeometryDialog::createWidgets_()
                     connect(cbCalcNormals_, SIGNAL(stateChanged(int)),
                             this, SLOT(updateFromWidgets_()));
 
-                    cbNorm_ = new QCheckBox(tr("normalize coordinates"), this);
-                    lh2->addWidget(cbNorm_);
-                    cbNorm_->setChecked(settings_->normalizeVertices);
-                    connect(cbNorm_, SIGNAL(stateChanged(int)),
+                    cbInvNormals_ = new QCheckBox(tr("invert normals"), this);
+                    lh2->addWidget(cbInvNormals_);
+                    cbInvNormals_->setChecked(settings_->invertNormals);
+                    connect(cbInvNormals_, SIGNAL(stateChanged(int)),
                             this, SLOT(updateFromWidgets_()));
 
                 // normalization amount
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
-                    labelNormAmt_ = new QLabel(tr("normalization"), this);
+                    cbNorm_ = new QCheckBox(tr("normalize coordinates"), this);
+                    lh2->addWidget(cbNorm_);
+                    cbNorm_->setChecked(settings_->normalizeVertices);
+                    connect(cbNorm_, SIGNAL(stateChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    labelNormAmt_ = new QLabel(tr("amount"), this);
                     lh2->addWidget(labelNormAmt_);
 
                     spinNormAmt_ = new DoubleSpinBox(this);
@@ -581,6 +587,7 @@ void GeometryDialog::updateFromWidgets_()
 
     settings_->filename = editFilename_->text();
     settings_->calcNormals = cbCalcNormals_->isChecked();
+    settings_->invertNormals = cbInvNormals_->isChecked();
     settings_->asTriangles = cbTriangles_->isChecked();
     settings_->convertToLines = cbConvertToLines_->isChecked();
     settings_->sharedVertices = cbSharedVert_->isChecked();
@@ -645,6 +652,7 @@ void GeometryDialog::updateFromWidgets_()
     cbTriangles_->setVisible( canTriangle && !isFile);
 
     cbCalcNormals_->setVisible( hasTriangle && !settings_->convertToLines );
+    cbInvNormals_->setVisible( hasTriangle && !settings_->convertToLines );
     cbCalcNormalsBeforePrimEqu_->setVisible(
                 hasTriangle && settings_->transformPrimitivesWithEquation );
     cbConvertToLines_->setVisible( hasTriangle );
@@ -694,6 +702,7 @@ void GeometryDialog::updateWidgets_()
     cbConvertToLines_->setChecked(settings_->convertToLines);
     cbSharedVert_->setChecked(settings_->sharedVertices);
     cbCalcNormals_->setChecked(settings_->calcNormals);
+    cbInvNormals_->setChecked(settings_->invertNormals);
     cbNorm_->setChecked(settings_->normalizeVertices);
     spinNormAmt_->setValue(settings_->normalization);
     spinS_->setValue(settings_->scale);

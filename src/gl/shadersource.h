@@ -34,6 +34,7 @@ public:
     const QString& uniformNameTransformation() const { return unTrans_; }
     const QString& uniformNameLightPos() const { return unLightPos_; }
     const QString& uniformNameLightColor() const { return unLightColor_; }
+    const QString& uniformNameColor() const { return unColor_; }
 
     const QString& attribNamePosition() const { return anPos_; }
     const QString& attribNameColor() const { return anCol_; }
@@ -68,6 +69,7 @@ private:
 
     QString vert_, frag_,
         unProj_, unView_, unTrans_, unLightPos_, unLightColor_,
+        unColor_,
         anPos_, anCol_, anNorm_, anTexCoord_;
 };
 

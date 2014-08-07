@@ -890,6 +890,9 @@ void GeometryFactory::createFromSettings(Geometry * g,
     if (g->numTriangles() && set->calcNormals)
         g->calculateTriangleNormals();
 
+    if (set->invertNormals)
+        g->invertNormals();
+
 }
 
 
@@ -939,6 +942,7 @@ GeometryFactorySettings::GeometryFactorySettings()
       pEquationY    ("y"),
       pEquationZ    ("z"),
       calcNormals   (true),
+      invertNormals (false),
       asTriangles   (true),
       convertToLines(false),
       sharedVertices(true),
@@ -972,7 +976,7 @@ GeometryFactorySettings::GeometryFactorySettings()
 
 void GeometryFactorySettings::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("geomfacset", 5);
+    io.writeHeader("geomfacset", 6);
 
     io << typeIds[type];
 
@@ -983,6 +987,9 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
         << removeProb << gridSize
         << segmentsX << segmentsY << segmentsZ
         << tessLevel << removeSeed << withCoords;
+
+    // v6
+    io << invertNormals;
 
     // v2
     io << normalization;
@@ -1000,7 +1007,7 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
 
 void GeometryFactorySettings::deserialize(IO::DataStream & io)
 {
-    int ver = io.readHeader("geomfacset", 5);
+    int ver = io.readHeader("geomfacset", 6);
 
     io.readEnum(type, T_BOX, typeIds);
 
@@ -1011,6 +1018,9 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         >> removeProb >> gridSize
         >> segmentsX >> segmentsY >> segmentsZ
         >> tessLevel >> removeSeed >> withCoords;
+
+    if (ver >= 6)
+        io >> invertNormals;
 
     if (ver >= 2)
         io >> normalization;

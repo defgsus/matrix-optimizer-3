@@ -34,7 +34,8 @@ Drawable::Drawable(const QString &name)
       shader_           (0),
       doRecompile_      (true),
       geometryChanged_  (false),
-      vao_              (0)
+      vao_              (0),
+      uniColor_         (0)
 {
     MO_DEBUG_GL("Drawable(" << name_ << ")::Drawable()");
 }
@@ -142,6 +143,10 @@ void Drawable::compileShader_()
 
     // --- get variable locations ---
 
+    uniColor_ = shader_->getUniform(shaderSource_->uniformNameColor());
+    if (uniColor_)
+        uniColor_->setFloats(1,1,1,1);
+
     if (auto u = shader_->getUniform(shaderSource_->uniformNameProjection()))
         uniformProj_ = u->location();
     else
@@ -191,6 +196,8 @@ void Drawable::releaseOpenGl()
     if (shader_)
         shader_->releaseGL();
 
+    uniColor_ = 0;
+
     if (!vao_)
     {
         vao_->release();
@@ -199,6 +206,11 @@ void Drawable::releaseOpenGl()
     vao_ = 0;
 }
 
+void Drawable::setAmbientColor(Float r, Float g, Float b, Float a)
+{
+    if (uniColor_)
+        uniColor_->setFloats(r, g, b, a);
+}
 
 void Drawable::render()
 {

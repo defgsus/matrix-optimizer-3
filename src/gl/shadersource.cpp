@@ -23,6 +23,7 @@ ShaderSource::ShaderSource()
       unTrans_      ("u_transform"),
       unLightPos_   ("u_light_pos[0]"),
       unLightColor_ ("u_light_color[0]"),
+      unColor_      ("u_color"),
       anPos_        ("a_position"),
       anCol_        ("a_color"),
       anNorm_       ("a_normal"),

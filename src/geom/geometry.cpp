@@ -196,6 +196,14 @@ void Geometry::calculateTriangleNormals()
 
 }
 
+void Geometry::invertNormals()
+{
+    for (uint i=0; i<normal_.size(); ++i)
+    {
+        normal_[i] = -normal_[i];
+    }
+}
+
 void Geometry::unGroupVertices()
 {
     // backup data

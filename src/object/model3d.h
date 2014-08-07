@@ -26,6 +26,8 @@ public:
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::CameraSpace &cam, uint, Double time) Q_DECL_OVERRIDE;
 
+    virtual void createParameters() Q_DECL_OVERRIDE;
+
     /** Returns the current geometry settings. */
     const GEOM::GeometryFactorySettings& geometrySettings() const { return *geomSettings_; }
 
@@ -44,6 +46,8 @@ private:
     GEOM::GeometryCreator * creator_;
     GEOM::GeometryFactorySettings * geomSettings_;
     GEOM::Geometry * nextGeometry_;
+
+    ParameterFloat * cr_, *cg_, *cb_, *ca_;
 };
 
 } // namespace MO

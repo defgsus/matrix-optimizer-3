@@ -187,6 +187,9 @@ public:
         Normals that share multiple triangles will be averaged. */
     void calculateTriangleNormals();
 
+    /** Inverts all normals (pointing inwards) */
+    void invertNormals();
+
     /** Makes every vertex in the model unique.
         After this call, every triangle will have it's unique vertices. */
     void unGroupVertices();
