@@ -20,15 +20,20 @@ namespace GL {
 class CameraSpace
 {
 public:
+    // XXX LightSettings? - move CameraSpace and LightSettings to a RenderSettings class
     CameraSpace(const LightSettings& lights)
         :   proj_(1.0), view_(1.0), lights_(lights)
     { }
 
     // ------ getter ------------
 
+    /** The projection matrix. Typically rustum or orthographic */
     const Mat4& projectionMatrix() const { return proj_; }
+    /** The to-eye-space matrix (including the fulldome cubemap transform) */
     const Mat4& viewMatrix() const { return view_; }
+    /** The to-eye-space matrix (without fulldome cubemap transform) */
     const Mat4& orgViewMatrix() const { return orgView_; }
+    /** The lighting settings */
     const LightSettings& lights() const { return lights_; }
 
     // ------- setter -----------

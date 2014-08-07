@@ -299,7 +299,7 @@ void Scene::setNumberThreads(uint num)
     {
         fboFinal_[i] = 0;
         screenQuad_[i] = 0;
-        lightSettings_[i].resize_(0); // just to be sure
+        lightSettings_[i].resize(0); // just to be sure
     }
 }
 
@@ -737,19 +737,16 @@ void Scene::updateLightSettings_(uint thread, Double time)
 
     // resize if necessary
     if ((int)l->count() != lightSources_.size())
-        l->resize_(lightSources_.size());
+        l->resize(lightSources_.size());
 
     // fill vectors
     for (uint i=0; i<l->count(); ++i)
     {
         const Vec3 pos = lightSources_[i]->position(thread, 0);
-        l->positions_[i*3] = pos[0];
-        l->positions_[i*3+1] = pos[1];
-        l->positions_[i*3+2] = pos[2];
+        l->setPosition(i, pos[0], pos[1], pos[2]);
+
         const Vec3 col = lightSources_[i]->lightColor(thread, time);
-        l->colors_[i*3] = col[0];
-        l->colors_[i*3+1] = col[1];
-        l->colors_[i*3+2] = col[2];
+        l->setColor(i, col[0], col[1], col[2]);
     }
 }
 

@@ -8,11 +8,12 @@
  */
 
 // --- input from vertex shader ---
+
 in vec3 v_pos;
 in vec4 v_color;
 in vec2 v_texCoord;
 in vec3 v_light_dir[MO_NUM_LIGHTS];
-in mat3 v_normal_matrix;
+
 
 // --- uniforms ---
 
@@ -78,10 +79,7 @@ void main()
 
     // adding the light to the base color
     vec4 col = ambcol + mo_light_color();
-/*            + getLightColor(v_light_dir[0], vec3(1., 1., 1.), 1.5)
-            + getLightColor(v_light_dir[1], vec3(0.2, 0.5, 1.), 2.0)
-            + getLightColor(v_light_dir[2], vec3(1., .5, .2)*0.4, 3.0);
-*/
+
     // final color
     color = vec4(clamp(col, 0.0, 1.0));
 

@@ -33,17 +33,18 @@ uniform vec3 u_light_color[MO_NUM_LIGHTS];
 out vec4 v_color;
 
 
-#if (0)
+#if (1)
 void main()
 {
-    mat3 normal_matrix = transpose(inverse(mat3(u_view)));
+    mat3 normal_matrix = transpose(inverse(mat3(u_orgView)));
 
     vec3 norm_eye = normalize( normal_matrix * a_normal );
 
-    vec4 pos_eye = u_view * a_position;
+    vec4 pos_eye = u_orgView * a_position;
 
+    vec4 light = vec4(u_light_pos[0], 1.);
     vec4 light_eye = u_view * vec4(u_light_pos[0], 1.);
-    vec3 light_dir = normalize(vec3(light_eye - pos_eye));
+    vec3 light_dir = normalize(vec3(light - pos_eye));
 
     float l = pow(max(0., dot(light_dir, norm_eye)), 5.0);
 
@@ -68,7 +69,7 @@ void main()
     vec3 light = u_light_pos[0];
     vec3 light_eye = u_light_pos[0] - cam_pos;
     //vec3 light_dir = normalize(vec3(light_eye - pos_eye));
-    vec3 light_dir = normalize(light- pos_eye);
+    vec3 light_dir = normalize(light - pos_eye);
 
     float l = pow(max(0., dot(light_dir, norm_eye)), 5.0);
 

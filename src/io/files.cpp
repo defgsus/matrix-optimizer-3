@@ -130,7 +130,6 @@ QString Files::getSaveFileName(FileType ft, QWidget *parent, bool updateDirector
         || diag.selectedFiles().isEmpty())
         return QString();
 
-    MO_DEBUG("---------------" << diag.selectedNameFilter());
     /*
     // complete filename
     if (!fn.endsWith(".mo3"))

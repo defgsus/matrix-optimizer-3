@@ -152,10 +152,10 @@ void Drawable::compileShader_()
     else
         uniformView_ = invalidGl;
 
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameOrgView()))
-        uniformOrgView_ = u->location();
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameTransformation()))
+        uniformTransform_ = u->location();
     else
-        uniformOrgView_ = invalidGl;
+        uniformTransform_ = invalidGl;
 
     if (auto u = shader_->getUniform(shaderSource_->uniformNameLightPos()))
         uniformLightPos_ = u->location();
@@ -167,8 +167,6 @@ void Drawable::compileShader_()
     else
         uniformLightColor_ = invalidGl;
 
-    if (uniformLightPos_ != invalidGl)
-        MO_DEBUG_GL("--------------");
 }
 
 void Drawable::createVAO_()
@@ -232,8 +230,13 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view,
         MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
     MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
 
-    if (orgView && uniformOrgView_ != invalidGl)
-        MO_CHECK_GL( glUniformMatrix4fv(uniformOrgView_, 1, GL_FALSE, &(*orgView)[0][0]) );
+    if (uniformTransform_ != invalidGl)
+    {
+        if (orgView)
+            MO_CHECK_GL( glUniformMatrix4fv(uniformTransform_, 1, GL_FALSE, &(*orgView)[0][0]) )
+        else
+            MO_CHECK_GL( glUniformMatrix4fv(uniformTransform_, 1, GL_FALSE, &view[0][0]) );
+    }
 
     if (lights && lights->count())
     {

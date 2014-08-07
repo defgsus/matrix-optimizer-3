@@ -16,17 +16,20 @@
 #include "types/float.h"
 
 namespace MO {
-class Scene;
 namespace GL {
 
 
-/** Contains all lightsources in scene read to send to shader */
+/** Contains all lightsources in scene, ready to send to shader */
 class LightSettings
 {
 public:
 
+    LightSettings();
+
+    // --------------- getter ---------------
+
     /** Returns the number of light sources */
-    uint count() const { return positions_.size(); }
+    uint count() const { return count_; }
 
     /** Returns count() sequential x,y,z pairs */
     const Float * positions() const { return &positions_[0]; }
@@ -34,13 +37,20 @@ public:
     /** Returns count() sequential r,g,b pairs */
     const Float * colors() const { return &colors_[0]; }
 
-private:
-    friend class MO::Scene;
+    // --------------- setter ---------------
 
-    void resize_(uint num) { positions_.resize(num); colors_.resize(num); }
+    void resize(uint num);
+
+    void setPosition(uint index, Float x, Float y, Float z);
+    void setColor(uint index, Float r, Float g, Float b);
+
+private:
 
     std::vector<Float> positions_, colors_;
+
+    uint count_;
 };
+
 
 } // namespace GL
 } // namespace MO

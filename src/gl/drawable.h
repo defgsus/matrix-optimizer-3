@@ -67,7 +67,12 @@ public:
 
     void render();
     void renderShader();
-    void renderShader(const Mat4& proj, const Mat4& view, const Mat4 * orgView = 0, const LightSettings* = 0);
+
+    void renderShader(const Mat4& proj, const Mat4& viewtrans,
+                      const Mat4& trans, const LightSettings& lights)
+    { renderShader(proj, viewtrans, &trans, &lights); }
+
+    void renderShader(const Mat4& proj, const Mat4& view, const Mat4 * viewtrans = 0, const LightSettings* = 0);
     void renderImmediate();
 
 private:
@@ -89,7 +94,7 @@ private:
     GLuint
         uniformProj_,
         uniformView_,
-        uniformOrgView_,
+        uniformTransform_,
         uniformLightPos_,
         uniformLightColor_;
 

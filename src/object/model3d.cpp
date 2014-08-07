@@ -99,8 +99,8 @@ void Model3d::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 
 void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
 {
-    Mat4 mat = cam.viewMatrix() * transformation(thread, 0);
-    Mat4 orgmat = cam.orgViewMatrix() * transformation(thread, 0);
+    const Mat4& trans = transformation(thread, 0);
+    const Mat4 mat = cam.viewMatrix() * trans;
 //    glLoadMatrixf(&mat[0][0]);
 
     if (nextGeometry_)
@@ -113,7 +113,7 @@ void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double )
     if (draw_->isReady())
     {
         //draw_->renderAttribArrays();
-        draw_->renderShader(cam.projectionMatrix(), mat, &orgmat, &cam.lights());
+        draw_->renderShader(cam.projectionMatrix(), mat, trans, cam.lights());
     }
 }
 

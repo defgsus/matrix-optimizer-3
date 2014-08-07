@@ -148,7 +148,8 @@ SOURCES += \
     src/gui/modulatordialog.cpp \
     src/io/currentthread.cpp \
     src/img/imagegenerator.cpp \
-    src/object/lightsource.cpp
+    src/object/lightsource.cpp \
+    src/gl/lightsettings.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \

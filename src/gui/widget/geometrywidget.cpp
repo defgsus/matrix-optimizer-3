@@ -13,8 +13,9 @@
 #include "gl/drawable.h"
 #include "gl/shadersource.h"
 #include "gl/shader.h"
-#include "geom/geometry.h"
 #include "gl/texture.h"
+#include "gl/lightsettings.h"
+#include "geom/geometry.h"
 #include "img/image.h"
 #include "img/imagegenerator.h"
 
@@ -27,12 +28,20 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     drawable_       (new GL::Drawable("geomwidget")),
     tex_            (0),
     texNorm_        (0),
+    lights_         (new GL::LightSettings()),
     showGrid_       (false),
     showTexture_    (false),
     showNormalMap_  (false)
 {
     setMinimumSize(128, 128);
 
+    lights_->resize(3);
+    lights_->setPosition(0, 1000.f, 2000.f, 800.f);
+    lights_->setPosition(1, -2000.f, 1000.f, 1200.f);
+    lights_->setPosition(2, 2000.f, -500.f, 1500.f);
+    lights_->setColor(0, 1.f, 1.f, 1.f);
+    lights_->setColor(1, 0.2f, 0.5f, 1.f);
+    lights_->setColor(2, 0.5f, 0.25f, 0.1f);
 }
 
 GeometryWidget::~GeometryWidget()
@@ -40,6 +49,7 @@ GeometryWidget::~GeometryWidget()
     if (drawable_->isReady())
         drawable_->releaseOpenGl();
     delete drawable_;
+    delete lights_;
 }
 
 void GeometryWidget::setGeometry(GEOM::Geometry * g)
@@ -49,7 +59,7 @@ void GeometryWidget::setGeometry(GEOM::Geometry * g)
 }
 
 
-void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
+void GeometryWidget::drawGL(const Mat4& projection, const Mat4& view, const Mat4& transformation)
 {
     MO_CHECK_GL( glClearColor(0.1, 0.2, 0.3, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
@@ -104,7 +114,7 @@ void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
     }
 
     if (showGrid_)
-        drawGrid(projection, transformation);
+        drawGrid(projection, view);
 
     if (recompile && drawable_->isReady())
         drawable_->releaseOpenGl();
@@ -133,7 +143,7 @@ void GeometryWidget::drawGL(const Mat4 &projection, const Mat4 &transformation)
     }
 
     if (drawable_->isReady())
-        drawable_->renderShader(projection, transformation);
+        drawable_->renderShader(projection, view, transformation, *lights_);
 }
 
 

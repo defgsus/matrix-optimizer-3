@@ -44,7 +44,7 @@ public:
     bool isGlInitialized() const { return isGlInitialized_; }
 
     const Mat4& projectionMatrix() const { return projectionMatrix_; }
-    Mat4 transformationMatrix() const;
+    Mat4 viewMatrix() const;
 
 signals:
 
@@ -83,10 +83,10 @@ protected:
     void paintGL() Q_DECL_OVERRIDE Q_DECL_FINAL;
 
     /** Override to draw your stuff */
-    virtual void drawGL(const Mat4& projection, const Mat4& transformation) = 0;
+    virtual void drawGL(const Mat4& projection, const Mat4& viewtrans, const Mat4& trans) = 0;
 
     /** Can be called by derived classes in their drawGL() routine. */
-    virtual void drawGrid(const Mat4& projection, const Mat4& transformation);
+    virtual void drawGrid(const Mat4& projection, const Mat4& view);
 
 private:
 
