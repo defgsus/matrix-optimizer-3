@@ -13,13 +13,14 @@
 #include "io/error.h"
 #include "object/param/parameterfloat.h"
 #include "audio/tool/envelopefollower.h"
+#include "io/log.h"
 
 namespace MO {
 
 MO_REGISTER_OBJECT(EnvelopeUnit)
 
 EnvelopeUnit::EnvelopeUnit(QObject *parent) :
-    AudioUnit(0, 0, true, parent)
+    AudioUnit(-1, 0, false, parent)
 {
     setName("EnvelopeUnit");
 }
@@ -44,6 +45,7 @@ void EnvelopeUnit::deserialize(IO::DataStream & io)
 
 void EnvelopeUnit::createParameters()
 {
+    AudioUnit::createParameters();
     /*
     processModeParameter_ = createSelectParameter(
                         "processmode", tr("processing"),
@@ -57,12 +59,12 @@ void EnvelopeUnit::createParameters()
                         true, false);
     */
 
-    fadeIn_ = createFloatParameter("fadein", tr("follow speed up"),
+    fadeIn_ = createFloatParameter("fadein", tr("speed up"),
                                  tr("Sets the speed to follow rising signals in seconds."),
                                  0.01, 0.001);
     fadeIn_->setMinValue(0.00001);
 
-    fadeOut_ = createFloatParameter("fadeout", tr("follow speed down"),
+    fadeOut_ = createFloatParameter("fadeout", tr("speed down"),
                                  tr("Sets the speed to follow decaying signals in seconds."),
                                  0.01, 0.001);
     fadeOut_->setMinValue(0.00001);
@@ -119,7 +121,7 @@ void EnvelopeUnit::processAudioBlock(const F32 *input, Double time, uint thread)
             follower->updateCoefficients();
         }
 
-        follower->process(&input[i*bsize], bsize);
+        MO_DEBUG( "env: " << follower->process(&input[i*bsize], bsize) );
     }
 }
 

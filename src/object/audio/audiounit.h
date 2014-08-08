@@ -45,11 +45,13 @@ public:
                                      int maxChannelsIn = -1, int maxChannelsOut = -1,
                                      bool sameNumInputOutputChannels = true);
 
-    Type type() const Q_DECL_OVERRIDE { return T_AUDIO_UNIT; }
+    Type type() const Q_DECL_OVERRIDE Q_DECL_FINAL { return T_AUDIO_UNIT; }
 
-    bool isAudioUnit() const Q_DECL_OVERRIDE { return true; }
+    bool isAudioUnit() const Q_DECL_OVERRIDE Q_DECL_FINAL { return true; }
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+
+    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     // -------------- getter -----------------
 
@@ -65,9 +67,9 @@ public:
     bool numberInputOutputChannelsMustMatch() const { return sameNumberInputOutputChannels_; }
 
     /** Returns write access to the output buffer */
-    F32 * outputBuffer(uint thread) { return &outputBuffer_[thread][0]; }
+    F32 * outputBuffer(uint thread) { return &audioOutputBuffer_[thread][0]; }
     /** Returns read access to the output buffer */
-    const F32 * outputBuffer(uint thread) const { return &outputBuffer_[thread][0]; }
+    const F32 * outputBuffer(uint thread) const { return &audioOutputBuffer_[thread][0]; }
 
     // -------------- setter -----------------
 
@@ -86,8 +88,9 @@ public:
 
     /** Called for each block of audio data.
         The format of input and output is [channels][blockSize],
-        so each channel has sequential samples.
-        The output buffer is in outputBuffer() */
+        so each channel has it's sequential samples.
+        The output buffer is in outputBuffer().
+        @note This function is only called when processMode() == PM_ON */
     virtual void processAudioBlock(const F32* input, Double time, uint thread) = 0;
 
 protected:
@@ -113,7 +116,7 @@ private:
     bool sameNumberInputOutputChannels_;
 
     /** [thread] [channels][bufferSize] */
-    std::vector<std::vector<F32>> outputBuffer_;
+    std::vector<std::vector<F32>> audioOutputBuffer_;
 };
 
 } // namespace MO

@@ -37,7 +37,6 @@ void EnvelopeFollower::updateCoefficients()
 
     qIn_ = 8.f / std::max(8.f, fadeIn_ * sr_);
     qOut_ = 8.f / std::max(8.f, fadeOut_ * sr_);
-
 }
 
 F32 EnvelopeFollower::process(const F32 *input, uint inputStride, uint blockSize)
@@ -50,6 +49,8 @@ F32 EnvelopeFollower::process(const F32 *input, uint inputStride, uint blockSize
             env_ += qIn_ * (in - sam_);
         else
             env_ += qOut_ * (in - sam_);
+
+        sam_ = in;
     }
 
     return env_;

@@ -53,7 +53,15 @@ void AudioUnit::createParameters()
                           tr("Processing is off, no signals are passed through"),
                           tr("The unit does no processing and passes it's input data unchanged") },
                         { PM_ON, PM_OFF, PM_BYPASS },
+                        PM_ON,
                         true, false);
+}
+
+void AudioUnit::setNumberThreads(uint num)
+{
+    Object::setNumberThreads(num);
+
+    audioOutputBuffer_.resize(num);
 }
 
 AudioUnit::ProcessMode AudioUnit::processMode() const
@@ -101,7 +109,7 @@ void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut, uint thread)
 
 void AudioUnit::channelsChanged(uint thread)
 {
-    outputBuffer_[thread].resize(numberChannelsOut_ * bufferSize(thread));
+    audioOutputBuffer_[thread].resize(numberChannelsOut_ * bufferSize(thread));
 }
 
 void AudioUnit::processAudioBlock_(const F32 *input, Double time, uint thread)

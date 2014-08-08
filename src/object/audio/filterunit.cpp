@@ -20,7 +20,7 @@ namespace MO {
 MO_REGISTER_OBJECT(FilterUnit)
 
 FilterUnit::FilterUnit(QObject *parent) :
-    AudioUnit(0, 0, true, parent)
+    AudioUnit(-1, -1, true, parent)
 {
     setName("FilterUnit");
 }
@@ -45,6 +45,7 @@ void FilterUnit::deserialize(IO::DataStream & io)
 
 void FilterUnit::createParameters()
 {
+    AudioUnit::createParameters();
     /*
     processModeParameter_ = createSelectParameter(
                         "processmode", tr("processing"),

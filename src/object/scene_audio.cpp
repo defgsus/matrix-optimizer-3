@@ -74,10 +74,17 @@ void Scene::audioCallback_(const F32 * in, F32 * out)
     MO_ASSERT(audioDevice_->bufferSize() == bufferSize(MO_AUDIO_THREAD),
               "buffer-size mismatch");
 
+    // process audio input
     if (!topLevelAudioUnits_.empty())
+    {
         transformAudioInput_(in, MO_AUDIO_THREAD);
+        processAudioInput_(MO_AUDIO_THREAD);
+    }
 
+    // perform audio-process of whole scene tree
     calculateAudioBlock(samplePos_, MO_AUDIO_THREAD);
+
+    // rearrange the output buffer for the device
     getAudioOutput(audioDevice_->numOutputChannels(), MO_AUDIO_THREAD, out);
 
     // update scene time
