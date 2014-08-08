@@ -675,7 +675,7 @@ void MainWindow::updateWidgetsActivity_()
 
 bool MainWindow::isPlayback() const
 {
-    return scene_->isPlayback();
+    return scene_ && scene_->isPlayback();
 }
 
 void MainWindow::start()

@@ -151,7 +151,9 @@ SOURCES += \
     src/object/lightsource.cpp \
     src/gl/lightsettings.cpp \
     src/object/audio/audiounit.cpp \
-    src/object/audio/filterunit.cpp
+    src/object/audio/filterunit.cpp \
+    src/audio/multifilter.cpp \
+    src/object/scene_audio.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -294,7 +296,10 @@ HEADERS += \
     src/object/lightsource.h \
     src/gl/lightsettings.h \
     src/object/audio/audiounit.h \
-    src/object/audio/filterunit.h
+    src/object/audio/filterunit.h \
+    src/audio/multifilter.h \
+    src/audio/audio_fwd.h \
+    src/object/scenelock_p.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

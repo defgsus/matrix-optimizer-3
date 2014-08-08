@@ -43,7 +43,9 @@ public:
                                      int maxChannelsIn = -1, int maxChannelsOut = -1,
                                      bool sameNumInputOutputChannels = true);
 
-    bool isAudioUnit() const { return true; }
+    Type type() const Q_DECL_OVERRIDE { return T_AUDIO_UNIT; }
+
+    bool isAudioUnit() const Q_DECL_OVERRIDE { return true; }
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
@@ -70,7 +72,9 @@ public:
 
     //virtual void performAudioBlock(SamplePos pos, uint thread) Q_DECL_OVERRIDE;
 
-    /** Called for each block of audio data */
+    /** Called for each block of audio data.
+        The format of input and output is [channels][blockSize],
+        so each channel has sequential samples. */
     virtual void processAudioBlock(const F32* input, F32* output, Double time, uint thread) = 0;
 
 protected:

@@ -123,6 +123,7 @@ private:
         colorTransformation_,
         colorTrack_,
         colorSequence_,
+        colorAudioUnit_,
         colorInvalid_;
 };
 

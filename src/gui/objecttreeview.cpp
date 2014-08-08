@@ -194,6 +194,7 @@ void ObjectTreeView::createTypeActions_()
     MO__TYPE_ACTION(Object::T_TRANSFORMATION, tr("Transformations"));
     MO__TYPE_ACTION(Object::TG_TRACK, tr("Tracks"));
     MO__TYPE_ACTION(Object::TG_SEQUENCE | Object::T_SEQUENCEGROUP, tr("Sequences"));
+    MO__TYPE_ACTION(Object::T_AUDIO_UNIT, tr("Audio-units"));
 
 #undef MO__TYPE_ACTION
 
@@ -685,10 +686,13 @@ bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
     //if (parent.isValid())
     {
         Object * parentObject = model()->data(parent, ObjectRole).value<Object*>();
+
         if (!parentObject)
             parentObject = scene_;
+
         if (parentObject)
         {
+            // insert at end
             if (row < 0)
                 row = parentObject->numChildren();
 

@@ -80,6 +80,8 @@ public:
 
     void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
+    void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
+
     // --------- locking and updates -----------
 
     void beginSequenceChange(MO::Sequence *);
@@ -203,7 +205,7 @@ public slots:
     void closeAudio();
 
 private slots:
-    void timerUpdate_();
+
 private:
 
     // ------------ object collection ----------
@@ -282,6 +284,7 @@ private:
     QList<Object*> audioObjects_;
     QList<Microphone*> microphones_;
     QList<LightSource*> lightSources_;
+    QList<AudioUnit*> topLevelAudioUnits_;
 
     // ---------- properties -------------------
 

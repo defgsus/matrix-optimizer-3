@@ -54,9 +54,10 @@ public:
     // ---------------- setter -----------------
 
     void setDefaultValue(Double v) { defaultValue_ = v; }
+    void setSmallStep(Double v) { smallStep_ = v; }
     void setMinValue(Double v) { minValue_ = v; }
     void setMaxValue(Double v) { maxValue_ = v; }
-    void setSmallStep(Double v) { smallStep_ = v; }
+    void setRange(Double vmin, Double vmax) { minValue_ = vmin; maxValue_ = vmax; }
 
     void setValue(Double v) { value_ = v; }
 

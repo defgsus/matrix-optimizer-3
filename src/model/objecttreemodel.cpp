@@ -47,6 +47,7 @@ ObjectTreeModel::ObjectTreeModel(Scene * scene, QObject *parent) :
     colorTransformation_ = QColor(0,60,120);
     colorTrack_ = QColor(90,90,90);
     colorSequence_ = QColor(0,120,0);
+    colorAudioUnit_ = QColor(60,120,60);
 }
 
 
@@ -227,6 +228,8 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
                 return colorTrack_;
             else if (obj->isSequence())
                 return colorSequence_;
+            else if (obj->isAudioUnit())
+                return colorAudioUnit_;
 
             return colorDefault_;
         }
@@ -499,6 +502,8 @@ QModelIndex ObjectTreeModel::addObject(const QModelIndex &parentIndex, int row, 
         emit sceneChanged();
         return createIndex(row, 0, (void*)obj);
     }
+    MO_WARNING("Could not add object " << obj << " to model because "
+               "the index " << parentIndex << " did not point to an object");
     return QModelIndex();
 }
 

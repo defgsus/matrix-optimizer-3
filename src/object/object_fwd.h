@@ -23,11 +23,16 @@ namespace MO {
     class LightSource;
     class Microphone;
     class SoundSource;
+    class ObjectGl;
+    class Model3d;
+    class Sequences;
+    class Sequence;
+    class SequenceFloat;
+
     class Parameter;
     class ParameterFloat;
     class ParameterSelect;
-    class ObjectGl;
-    class Model3d;
+
     class Transformation;
     class Rotation;
     class Scale;
@@ -37,9 +42,9 @@ namespace MO {
     class Mix;
     class Track;
     class TrackFloat;
-    class Sequences;
-    class Sequence;
-    class SequenceFloat;
+
+    class AudioUnit;
+    class FilterUnit;
 
     class Modulator;
     class ModulatorFloat;

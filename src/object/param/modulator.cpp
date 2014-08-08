@@ -41,7 +41,7 @@ void Modulator::deserialize(IO::DataStream & io)
 
 void Modulator::setModulator(Object * object)
 {
-    MO_DEBUG("Modulator('" << (parent_? parent_->idName() : "") << "')::setModulator('"
+    MO_DEBUG_MOD("Modulator('" << (parent_? parent_->idName() : "") << "')::setModulator('"
              << (object? object->idName() : "") << "')");
 
     modulator_ = object;
