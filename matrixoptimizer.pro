@@ -150,8 +150,8 @@ SOURCES += \
     src/img/imagegenerator.cpp \
     src/object/lightsource.cpp \
     src/gl/lightsettings.cpp \
-    src/audio/unit/audiounit.cpp \
-    src/object/audio/audiounit.cpp
+    src/object/audio/audiounit.cpp \
+    src/object/audio/filterunit.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -293,8 +293,8 @@ HEADERS += \
     src/img/imagegenerator.h \
     src/object/lightsource.h \
     src/gl/lightsettings.h \
-    src/audio/unit/audiounit.h \
-    src/object/audio/audiounit.h
+    src/object/audio/audiounit.h \
+    src/object/audio/filterunit.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

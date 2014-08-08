@@ -11,14 +11,23 @@
 #include "audiounit.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "object/param/parameterselect.h"
 
 namespace MO {
 
 
-AudioUnit::AudioUnit(QObject *parent) :
-    Object(parent)
+AudioUnit::AudioUnit(int maxIn, int maxOut, bool sameNum, QObject *parent) :
+    Object                  (parent),
+    maximumChannelsIn_      (maxIn<0? MO_MAX_AUDIO_CHANNELS : maxIn),
+    maximumChannelsOut_     (maxOut<0? MO_MAX_AUDIO_CHANNELS : maxOut),
+    numberChannelsIn_       (0),
+    numberChannelsOut_      (0),
+    sameNumberInputOutputChannels_(sameNum)
 {
+    MO_DEBUG_AUDIO("AudioUnit::AudioUnit("
+                   << maximumChannelsIn_ << ", " << maximumChannelsOut_
+                   << ", " << parent << ")");
 }
 
 void AudioUnit::serialize(IO::DataStream & io) const
@@ -35,7 +44,7 @@ void AudioUnit::deserialize(IO::DataStream & io)
 
 void AudioUnit::createParameters()
 {
-    audioProcessing_ = createSelectParameter(
+    processModeParameter_ = createSelectParameter(
                         "processmode", tr("processing"),
                         tr("Sets the processing mode"),
                         { "on", "off", "bypass" },
@@ -49,8 +58,77 @@ void AudioUnit::createParameters()
 
 AudioUnit::ProcessMode AudioUnit::processMode() const
 {
-    MO_ASSERT(audioProcessing_, "AudioUnit::processMode without parameter");
-    return (ProcessMode)audioProcessing_->baseValue();
+    MO_ASSERT(processModeParameter_, "AudioUnit::processMode without parameter");
+    return processModeParameter_?
+                (ProcessMode)processModeParameter_->baseValue()
+              : PM_ON;
+}
+
+void AudioUnit::setNumChannelsIn(uint num)
+{
+    numberChannelsIn_ = num;
+    if (sameNumberInputOutputChannels_)
+        numberChannelsOut_ = num;
+
+    channelsChanged();
+}
+
+void AudioUnit::setNumChannelsOut(uint num)
+{
+    numberChannelsOut_ = num;
+    if (sameNumberInputOutputChannels_)
+        numberChannelsIn_ = num;
+
+    channelsChanged();
+}
+
+void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut)
+{
+    numberChannelsIn_ = numIn;
+    numberChannelsOut_ = sameNumberInputOutputChannels_? numIn : numOut;
+
+    channelsChanged();
+}
+
+void AudioUnit::processAudioBlock_(const F32 *input, F32 *output, Double time, uint thread)
+{
+    const auto mode = processMode();
+
+    if (mode == PM_OFF)
+        return;
+
+    if (mode == PM_BYPASS)
+    {
+        performBypass_(input, output, thread);
+    }
+    else
+        processAudioBlock(input, output, time, thread);
+}
+
+
+void AudioUnit::performBypass_(const F32 *input, F32 *output, uint thread)
+{
+    if (numChannelsOut() == 0)
+        return;
+
+    const uint bsize = bufferSize(thread) * sizeof(F32);
+
+    if (numChannelsIn() <= numChannelsOut())
+    {
+        // copy input data
+        memcpy(output, input, numChannelsIn() * bsize);
+
+        // clear remaining data
+        if (numChannelsIn() < numChannelsOut())
+            memset(output + numChannelsIn() * bsize,
+                   (numChannelsOut() - numChannelsIn()) * bsize,
+                   0);
+    }
+    else
+    {
+        // copy only so much input data
+        memcpy(output, input, numChannelsOut() * bsize);
+    }
 }
 
 } // namespace MO

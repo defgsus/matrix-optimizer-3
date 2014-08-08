@@ -55,6 +55,15 @@ namespace IO { class DataStream; }
     virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
+#define MO_ABSTRACT_OBJECT_CONSTRUCTOR_2(Class__, p1__, p2__) \
+    explicit Class__(p1__, p2__, QObject *parent = 0); \
+    virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
+    virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
+
+#define MO_ABSTRACT_OBJECT_CONSTRUCTOR_3(Class__, p1__, p2__, p3__) \
+    explicit Class__(p1__, p2__, p3__, QObject *parent = 0); \
+    virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
+    virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 /** Abstract base of all Objects in MO
 
