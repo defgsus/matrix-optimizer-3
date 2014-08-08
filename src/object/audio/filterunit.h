@@ -32,12 +32,11 @@ public:
     // --------------- processing ------------
 
     /** Called for each block of audio data */
-    virtual void processAudioBlock(const F32* input, F32* output, Double time, uint thread)
-                                                                                Q_DECL_OVERRIDE;
+    virtual void processAudioBlock(const F32* input, Double time, uint thread) Q_DECL_OVERRIDE;
 
 protected:
 
-    virtual void channelsChanged() Q_DECL_OVERRIDE;
+    virtual void channelsChanged(uint thread) Q_DECL_OVERRIDE;
 
 private:
 

@@ -136,7 +136,6 @@ void Scene::findObjects_()
     // toplevel audio units
     topLevelAudioUnits_ = findChildObjects<AudioUnit>(QString(), false);
 
-
 #ifdef MO_DO_DEBUG_TREE
     for (auto o : allObjects_)
         MO_DEBUG_TREE("object: " << o << ", parent: " << o->parentObject());

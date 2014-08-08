@@ -244,8 +244,21 @@ private:
     /** unlocked version */
     void calculateSceneTransform_(uint thread, uint sample, Double time);
 
+    // ------------ audio ----------------------
+
     void initAudioDevice_();
     void audioCallback_(const F32 *, F32 *);
+
+    void prepareAudioInputBuffer_(uint thread);
+    /** Sets the number of input channels for all (top-level) audioUnits
+        and adjusts their children accordingly. */
+    void updateAudioUnitChannels_(uint thread);
+
+    /** Transforms the channel-layout and fills internal buffer */
+    void transformAudioInput_(const F32 * in, uint thread);
+
+    /** Processes all top-level AudioUnits + their childs */
+    void processAudioInput_(uint thread);
 
     // ---------- opengl -----------------------
 
@@ -306,8 +319,11 @@ private:
 
     /** [thread] [microphones][bufferSize] */
     std::vector<std::vector<F32>> audioOutput_;
+    /** [channels][bufferSize] */
+    std::vector<F32> audioInput_;
 
     bool isFirstAudioCallback_;
+    uint numInputChannels_;
 
     // ------------ runtime --------------------
 

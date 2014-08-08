@@ -64,33 +64,47 @@ AudioUnit::ProcessMode AudioUnit::processMode() const
               : PM_ON;
 }
 
-void AudioUnit::setNumChannelsIn(uint num)
+void AudioUnit::setNumChannelsIn(uint num, uint thread)
 {
+    MO_DEBUG_AUDIO("AudioUnit::setNumChannelsIn("
+                   << num << ", " << thread << ")");
+
     numberChannelsIn_ = num;
     if (sameNumberInputOutputChannels_)
         numberChannelsOut_ = num;
 
-    channelsChanged();
+    channelsChanged(thread);
 }
 
-void AudioUnit::setNumChannelsOut(uint num)
+void AudioUnit::setNumChannelsOut(uint num, uint thread)
 {
+    MO_DEBUG_AUDIO("AudioUnit::setNumChannelsOut("
+                   << num << ", " << thread << ")");
+
     numberChannelsOut_ = num;
     if (sameNumberInputOutputChannels_)
         numberChannelsIn_ = num;
 
-    channelsChanged();
+    channelsChanged(thread);
 }
 
-void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut)
+void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut, uint thread)
 {
+    MO_DEBUG_AUDIO("AudioUnit::setNumChannelsInOut("
+                   << numIn << ", " << numOut << ", " << thread << ")");
+
     numberChannelsIn_ = numIn;
     numberChannelsOut_ = sameNumberInputOutputChannels_? numIn : numOut;
 
-    channelsChanged();
+    channelsChanged(thread);
 }
 
-void AudioUnit::processAudioBlock_(const F32 *input, F32 *output, Double time, uint thread)
+void AudioUnit::channelsChanged(uint thread)
+{
+    outputBuffer_[thread].resize(numberChannelsOut_ * bufferSize(thread));
+}
+
+void AudioUnit::processAudioBlock_(const F32 *input, Double time, uint thread)
 {
     const auto mode = processMode();
 
@@ -99,14 +113,14 @@ void AudioUnit::processAudioBlock_(const F32 *input, F32 *output, Double time, u
 
     if (mode == PM_BYPASS)
     {
-        performBypass_(input, output, thread);
+        performBypass_(input, outputBuffer(thread), thread);
     }
     else
-        processAudioBlock(input, output, time, thread);
+        processAudioBlock(input, time, thread);
 }
 
 
-void AudioUnit::performBypass_(const F32 *input, F32 *output, uint thread)
+void AudioUnit::performBypass_(const F32 *input, F32 *output, uint thread) const
 {
     if (numChannelsOut() == 0)
         return;

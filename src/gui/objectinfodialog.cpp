@@ -20,6 +20,7 @@
 #include "object/object.h"
 #include "object/transform/transformation.h"
 #include "object/scene.h"
+#include "object/audio/audiounit.h"
 
 namespace MO {
 namespace GUI {
@@ -29,6 +30,8 @@ namespace GUI {
 ObjectInfoDialog::ObjectInfoDialog(QWidget *parent, Qt::WindowFlags flags) :
     QDialog(parent, flags)
 {
+    setMinimumSize(400, 300);
+
     auto lv = new QVBoxLayout(this);
 
         label_ = new QLabel(this);
@@ -64,7 +67,8 @@ void ObjectInfoDialog::setObject(Object * o)
 
     s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>";
 
-    // matrix
+    // ---------- matrix ---------------
+
     if (Transformation * tran = qobject_cast<Transformation*>(o))
     {
         Mat4 mat(1.0);
@@ -75,6 +79,23 @@ void ObjectInfoDialog::setObject(Object * o)
     else if (o->type() & Object::TG_REAL_OBJECT)
         s << "<p>" << tr("current transformation") << ":<br/>"
           << matrix2Html(o->transformation(0, 0)) << "</p>";
+
+    // ---------- audio unit -----------
+
+    if (AudioUnit * au = qobject_cast<AudioUnit*>(o))
+    {
+        s << "<p>AudioUnit:<br/>channels: "
+          << au->numChannelsIn() << "/" << au->numChannelsOut()
+          << "<br/>max. channels: " << au->maxChannelsIn() << "/" << au->maxChannelsOut()
+          << "<br/>buffer size (per thread): ";
+        for (uint i=0; i<au->numberThreads(); ++i)
+        {
+            if (i > 0)
+                s << " / ";
+            s << au->bufferSize(i);
+        }
+        s  << "</p>";
+    }
 
     s << "</html>";
 

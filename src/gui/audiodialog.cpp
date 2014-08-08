@@ -337,7 +337,7 @@ void AudioDialog::startTone_()
     auto inf = devices_->getDeviceInfo(idx);
 
     AUDIO::Configuration conf;
-    conf.setNumChannelsIn(0);
+    conf.setNumChannelsIn(inf->numInputChannels);
     conf.setNumChannelsOut(inf->numOutputChannels);
     conf.setBufferSize(bufferSize_->value());
     conf.setSampleRate(sampleRate_->value());
@@ -346,7 +346,7 @@ void AudioDialog::startTone_()
 
     device_->setCallback([=](const F32*, F32* out)
     {
-#if (0)
+#if (1)
         for (uint i=0; i<conf.bufferSize(); ++i)
         {
             F32 sam = 0.01f * vol_ * sin(phase_ * TWO_PI);
@@ -372,6 +372,8 @@ void AudioDialog::startTone_()
                 phase_ += 2.f;
         }
 #else
+        // test for consistency of translation between SamplePos and Double
+
         static SamplePos pos = 0;
 
         for (uint i=0; i<conf.bufferSize(); ++i)

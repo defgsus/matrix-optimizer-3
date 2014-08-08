@@ -573,6 +573,14 @@ bool Object::canHaveChildren(Type t) const
     if (t == T_DUMMY || type() == T_DUMMY)
         return true;
 
+    // audio-units can contain only audio-units
+    if (type() == T_AUDIO_UNIT)
+        return t == T_AUDIO_UNIT;
+
+    // audio-units can be part of scene and any object
+    if (t == T_AUDIO_UNIT)
+        return type() == T_SCENE || (type() & TG_REAL_OBJECT);
+
     // transformations are child-less
     if (type() == T_TRANSFORMATION)
         return false;

@@ -70,7 +70,7 @@ void FilterUnit::createParameters()
 
 }
 
-void FilterUnit::channelsChanged()
+void FilterUnit::channelsChanged(uint thread)
 {
     createFilters_();
 }
@@ -94,7 +94,7 @@ void FilterUnit::createFilters_()
         filter_.push_back( new AUDIO::MultiFilter() );
 }
 
-void FilterUnit::processAudioBlock(const F32 *input, F32 *output, Double time, uint thread)
+void FilterUnit::processAudioBlock(const F32 *input, Double time, uint thread)
 {
     MO_ASSERT(thread < filter_.size(), "thread " << thread << " out of range for "
               "FilterUnit with " << filter_.size() << " threads");
@@ -118,7 +118,7 @@ void FilterUnit::processAudioBlock(const F32 *input, F32 *output, Double time, u
             filter->updateCoefficients();
         }
 
-        filter->process(&input[i*bsize], &output[i*bsize], bsize);
+        filter->process(&input[i*bsize], &outputBuffer(thread)[i*bsize], bsize);
     }
 }
 

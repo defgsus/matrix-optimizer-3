@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_AUDIO_AUDIOUNIT_H
 #define MOSRC_OBJECT_AUDIO_AUDIOUNIT_H
 
+#include <vector>
+
 #include <QStringList>
 
 #include "object/object.h"
@@ -62,11 +64,21 @@ public:
 
     bool numberInputOutputChannelsMustMatch() const { return sameNumberInputOutputChannels_; }
 
+    /** Returns write access to the output buffer */
+    F32 * outputBuffer(uint thread) { return &outputBuffer_[thread][0]; }
+    /** Returns read access to the output buffer */
+    const F32 * outputBuffer(uint thread) const { return &outputBuffer_[thread][0]; }
+
     // -------------- setter -----------------
 
-    void setNumChannelsIn(uint num);
-    void setNumChannelsOut(uint num);
-    void setNumChannelsInOut(uint numIn, uint numOut);
+    /** Sets the number of channels.
+        If numberInputOutputChannelsMustMatch() is true, the number of
+        output channels is set to the number of input channels!
+        The @p thread is only used for distinguishing the bufferSize, while
+        the number of channels is equal to all threads. */
+    void setNumChannelsInOut(uint numIn, uint numOut, uint thread);
+    void setNumChannelsIn(uint num, uint thread);
+    void setNumChannelsOut(uint num, uint thread);
 
     // ------------ processing ---------------
 
@@ -74,22 +86,24 @@ public:
 
     /** Called for each block of audio data.
         The format of input and output is [channels][blockSize],
-        so each channel has sequential samples. */
-    virtual void processAudioBlock(const F32* input, F32* output, Double time, uint thread) = 0;
+        so each channel has sequential samples.
+        The output buffer is in outputBuffer() */
+    virtual void processAudioBlock(const F32* input, Double time, uint thread) = 0;
 
 protected:
 
-    /** Called when the number of channels has changed. */
-    virtual void channelsChanged() = 0;
+    /** Called when the number of channels has changed.
+        Always call ancestor's implementation before your derived code. */
+    virtual void channelsChanged(uint thread);
 
     /** Puts @p input to @p output.
         The number of channels are considered and output is filled with zeros if
         input-channels < output-channels */
-    void performBypass_(const F32 * input, F32 * output, uint thread);
+    void performBypass_(const F32 * input, F32 *output, uint thread) const;
 
 private:
 
-    void processAudioBlock_(const F32* input, F32* output, Double time, uint thread);
+    void processAudioBlock_(const F32* input, Double time, uint thread);
 
     ParameterSelect * processModeParameter_;
 
@@ -97,6 +111,9 @@ private:
          numberChannelsIn_, numberChannelsOut_;
 
     bool sameNumberInputOutputChannels_;
+
+    /** [thread] [channels][bufferSize] */
+    std::vector<std::vector<F32>> outputBuffer_;
 };
 
 } // namespace MO

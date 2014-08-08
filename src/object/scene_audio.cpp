@@ -29,6 +29,8 @@ bool Scene::isAudioInitialized() const
 
 void Scene::initAudioDevice_()
 {
+    MO_DEBUG_AUDIO("Scene::initAudioDevice_()");
+
     if (audioDevice_->isAudioConfigured())
     {
         if (!audioDevice_->initFromSettings())
@@ -36,10 +38,13 @@ void Scene::initAudioDevice_()
 
         sceneSampleRate_ = audioDevice_->sampleRate();
         sceneBufferSize_[MO_AUDIO_THREAD] = audioDevice_->bufferSize();
+        numInputChannels_ = audioDevice_->numInputChannels();
 
         updateBufferSize_();
         updateSampleRate_();
         updateAudioBuffers_();
+        prepareAudioInputBuffer_(MO_AUDIO_THREAD);
+        updateAudioUnitChannels_(MO_AUDIO_THREAD);
 
         using namespace std::placeholders;
         audioDevice_->setCallback(std::bind(
@@ -58,15 +63,19 @@ void Scene::closeAudio()
         audioDevice_->close();
 }
 
-void Scene::audioCallback_(const F32 *, F32 * out)
+void Scene::audioCallback_(const F32 * in, F32 * out)
 {
     if (isFirstAudioCallback_)
     {
         setCurrentThreadName("AUDIO");
         isFirstAudioCallback_ = false;
     }
+
     MO_ASSERT(audioDevice_->bufferSize() == bufferSize(MO_AUDIO_THREAD),
               "buffer-size mismatch");
+
+    if (!topLevelAudioUnits_.empty())
+        transformAudioInput_(in, MO_AUDIO_THREAD);
 
     calculateAudioBlock(samplePos_, MO_AUDIO_THREAD);
     getAudioOutput(audioDevice_->numOutputChannels(), MO_AUDIO_THREAD, out);
@@ -83,9 +92,22 @@ void Scene::setBufferSize(uint bufferSize, uint thread)
     Object::setBufferSize(bufferSize, thread);
 }
 
+void Scene::prepareAudioInputBuffer_(uint thread)
+{
+    audioInput_.resize(numInputChannels_ * bufferSize(thread));
+}
+
+void Scene::updateAudioUnitChannels_(uint thread)
+{
+    MO_DEBUG_AUDIO("Scene::updateAudioUnitChannels_(" << thread << ") "
+                   "top-level units == " << topLevelAudioUnits_.size());
+
+    for (AudioUnit * au : topLevelAudioUnits_)
+        au->setNumChannelsIn(numInputChannels_, thread);
+}
 
 
-// ------------------ audio processing -------------------------
+// ------------------ audio out processing -------------------------
 
 
 void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
@@ -138,7 +160,7 @@ void Scene::getAudioOutput(uint numChannels, uint thread, F32 *buffer) const
     // clear buffer
     memset(buffer, 0, sizeof(F32) * size * numChannels);
 
-    // rearange the audioOutput buffer
+    // rearrange the audioOutput buffer
 
     const F32* src = &audioOutput_[thread][0];
 
@@ -155,5 +177,26 @@ void Scene::getAudioOutput(uint numChannels, uint thread, F32 *buffer) const
     }
 }
 
+
+
+
+// ------------------- audio in processing --------------------------
+
+void Scene::transformAudioInput_(const F32 *in, uint thread)
+{
+    const uint bsize = bufferSize(thread);
+
+    for (uint i=0; i<bsize; ++i)
+        for (uint c=0; c<numInputChannels_; ++c)
+            audioInput_[c * bsize + i] = *in++;
+}
+
+void Scene::processAudioInput_(uint thread)
+{
+    const uint bsize = bufferSize(thread);
+
+    for (AudioUnit * au : topLevelAudioUnits_)
+        au->processAudioBlock_(&audioInput_[numInputChannels_ * bsize], sceneTime_, thread);
+}
 
 } // namespace MO

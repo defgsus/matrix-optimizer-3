@@ -94,7 +94,7 @@
 #   define MO_DEBUG_GUI(unused__) { }
 #endif
 
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_AUDIO
 #   define MO_DEBUG_AUDIO(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else

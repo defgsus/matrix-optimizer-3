@@ -327,7 +327,9 @@ bool AudioDevice::initFromSettings()
 
     try
     {
-        init(idx, 0, devs.getDeviceInfo(idx)->numOutputChannels, sampleRate, bufferSize);
+        init(idx, devs.getDeviceInfo(idx)->numInputChannels,
+                  devs.getDeviceInfo(idx)->numOutputChannels,
+                  sampleRate, bufferSize);
     }
     catch (AudioException& e)
     {
