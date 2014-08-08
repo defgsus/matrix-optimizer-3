@@ -16,7 +16,10 @@ namespace AUDIO {
 
 class AudioDevice;
 class AudioDecices;
+class AudioSource;
 class Configuration;
+
+class EnvelopeFollower;
 class MultiFilter;
 class Waveform;
 template <typename F> class Wavetable;

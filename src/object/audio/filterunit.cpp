@@ -60,7 +60,7 @@ void FilterUnit::createParameters()
 
     freq_ = createFloatParameter("freq", tr("frequency"),
                                  tr("Controlls the filter frequency in Hertz"),
-                                 5000., 10.);
+                                 1000., 10.);
     freq_->setRange(0.0001, 100000.0);
 
     reso_ = createFloatParameter("reso", tr("resonance"),

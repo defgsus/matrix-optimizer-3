@@ -154,7 +154,8 @@ SOURCES += \
     src/audio/tool/envelopefollower.cpp \
     src/audio/tool/multifilter.cpp \
     src/audio/tool/waveform.cpp \
-    src/audio/tool/wavetablegenerator.cpp
+    src/audio/tool/wavetablegenerator.cpp \
+    src/object/audio/envelopeunit.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -301,7 +302,8 @@ HEADERS += \
     src/audio/tool/multifilter.h \
     src/audio/tool/waveform.h \
     src/audio/tool/wavetable.h \
-    src/audio/tool/wavetablegenerator.h
+    src/audio/tool/wavetablegenerator.h \
+    src/object/audio/envelopeunit.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
