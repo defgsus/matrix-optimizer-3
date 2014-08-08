@@ -703,7 +703,7 @@ void Scene::renderScene(uint thread)
     }
     catch (Exception & e)
     {
-        e << "in Scene::renderScene(" << thread << ")";
+        e << "\nin Scene::renderScene(" << thread << ")";
         throw;
     }
 
@@ -745,8 +745,8 @@ void Scene::updateLightSettings_(uint thread, Double time)
         const Vec3 pos = lightSources_[i]->position(thread, 0);
         l->setPosition(i, pos[0], pos[1], pos[2]);
 
-        const Vec3 col = lightSources_[i]->lightColor(thread, time);
-        l->setColor(i, col[0], col[1], col[2]);
+        const Vec4 col = lightSources_[i]->lightColor(thread, time);
+        l->setColor(i, col[0], col[1], col[2], col[3]);
     }
 }
 

@@ -114,6 +114,8 @@ void Drawable::compileShader_()
     //MO_ASSERT(shaderSource_, "Drawable::compileShader_() without ShaderSource");
     //MO_ASSERT(!shaderSource_->isEmpty(), "Drawable::compileShader_() with empty ShaderSource");
 
+    // --- setup source ---
+
     if (!shaderSource_)
         shaderSource_ = new ShaderSource();
 
@@ -123,6 +125,8 @@ void Drawable::compileShader_()
         doRecompile_ = true;
     }
 
+    // --- create shader class ---
+
     if (!shader_)
     {
         shader_ = new Shader(name_);
@@ -131,6 +135,8 @@ void Drawable::compileShader_()
 
     if (!doRecompile_)
         return;
+
+    // --- compile shader ---
 
     shader_->setSource(shaderSource_);
     if (!shader_->compile())
@@ -255,7 +261,7 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view,
         if (uniformLightPos_ != invalidGl)
             MO_CHECK_GL( glUniform3fv(uniformLightPos_, lights->count(), lights->positions()) );
         if (uniformLightColor_ != invalidGl)
-            MO_CHECK_GL( glUniform3fv(uniformLightColor_, lights->count(), lights->colors()) );
+            MO_CHECK_GL( glUniform4fv(uniformLightColor_, lights->count(), lights->colors()) );
     }
 
     if (geometry_->numTriangles())

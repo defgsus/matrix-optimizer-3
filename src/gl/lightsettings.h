@@ -34,7 +34,8 @@ public:
     /** Returns count() sequential x,y,z pairs */
     const Float * positions() const { return &positions_[0]; }
 
-    /** Returns count() sequential r,g,b pairs */
+    /** Returns count() sequential r,g,b,d pairs.
+        d is the distance attenuation factor. */
     const Float * colors() const { return &colors_[0]; }
 
     // --------------- setter ---------------
@@ -42,7 +43,7 @@ public:
     void resize(uint num);
 
     void setPosition(uint index, Float x, Float y, Float z);
-    void setColor(uint index, Float r, Float g, Float b);
+    void setColor(uint index, Float r, Float g, Float b, Float d = 0.0);
 
 private:
 

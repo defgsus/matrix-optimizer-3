@@ -18,7 +18,7 @@ in vec3 v_light_dir[MO_NUM_LIGHTS];
 // --- uniforms ---
 
 uniform vec4 u_color;
-uniform vec3 u_light_color[MO_NUM_LIGHTS];
+uniform vec4 u_light_color[MO_NUM_LIGHTS];
 
 #ifdef MO_ENABLE_TEXTURE
 uniform sampler2D tex_0;
@@ -50,14 +50,14 @@ vec3 mo_normal()
 }
 
 
-vec4 getLightColor(in vec3 light_normal, in vec3 color, in float shinyness)
+vec4 getLightColor(in vec3 light_normal, in vec4 color, in float shinyness)
 {
     // dot-product of light normal and vertex normal gives linear light influence
     float d = max(0.0, dot(mo_normal(), light_normal) );
     // shaping the linear light influence
     float lighting = pow(d, 1.0 + shinyness);
 
-    return vec4(lighting * color, 0.);
+    return vec4(lighting * color.xyz, 0.);
 }
 
 vec4 mo_light_color()

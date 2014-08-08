@@ -26,8 +26,9 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
-    /** Returns the color at given time */
-    Vec3 lightColor(uint thread, Double time) const;
+    /** Returns the color at given time.
+        The fourth component is the distance attenuation factor. */
+    Vec4 lightColor(uint thread, Double time) const;
 
 signals:
 
@@ -35,7 +36,7 @@ public slots:
 
 private:
 
-    ParameterFloat *r_, *g_, *b_;
+    ParameterFloat *r_, *g_, *b_, *dist_;
 
 };
 
