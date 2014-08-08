@@ -25,7 +25,7 @@ uniform mat4 u_projection;  // projection matrix
 uniform mat4 u_view;        // to-eye-space matrix
 uniform mat4 u_transform;   // transformation only
 uniform vec3 u_light_pos[MO_NUM_LIGHTS];
-uniform vec3 u_light_color[MO_NUM_LIGHTS];
+uniform vec4 u_light_color[MO_NUM_LIGHTS];
 
 
 // --- output of vertex shader ---
@@ -34,7 +34,8 @@ out vec3 v_pos;
 out vec3 v_pos_eye;
 out vec4 v_color;
 out vec2 v_texCoord;
-out vec3 v_light_dir[MO_NUM_LIGHTS];
+// w is distance attenuation
+out vec4 v_light_dir[MO_NUM_LIGHTS];
 
 
 /** Returns the matrix to multiply the light-direction normal */
@@ -112,6 +113,11 @@ void main()
 
     for (int i=0; i<MO_NUM_LIGHTS; ++i)
     {
-        v_light_dir[i] = lightmat * normalize(u_light_pos[i] - v_pos_eye);
+        vec3 lightvec = u_light_pos[i] - v_pos_eye;
+        float dist = length(lightvec);
+        // calculate influence from distance attenuation
+        float distatt = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
+
+        v_light_dir[i] = vec4(lightmat * (lightvec / dist), distatt);
     }
 }

@@ -44,7 +44,7 @@ void LightSource::createParameters()
     b_ = createFloatParameter("blue", tr("blue"), tr("Blue amount of light color"), 1.0, 0.1);
     dist_ = createFloatParameter("dist", tr("distance attenuation"),
                                  tr("Distance attenuation factor - "
-                                    "the higher the less light reaches distant places"), 0, 0.1);
+                                    "the higher, the less light reaches distant places"), 0, 0.1);
     dist_->setMinValue(0.0);
 }
 
@@ -53,7 +53,7 @@ Vec4 LightSource::lightColor(uint thread, Double time) const
     return Vec4(r_->value(time, thread),
                 g_->value(time, thread),
                 b_->value(time, thread),
-                dist_->value(time, thread));
+                dist_->value(time, thread) * 0.001);
 }
 
 

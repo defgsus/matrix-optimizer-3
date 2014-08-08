@@ -158,16 +158,19 @@ bool Shader::compile()
     }
 
     // print linker log
-    GLint blen = 0;
-    GLsizei slen = 0;
-    MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_INFO_LOG_LENGTH , &blen) );
-    if (blen > 1)
+    // (only works when linking succeeded)
+    if (linked)
     {
-        std::vector<GLchar> compiler_log(blen+1);
-        MO_CHECK_GL_COND(rep_, glGetProgramInfoLog(prog_, blen, &slen, &compiler_log[0]) );
-        log_ += "linker log:\n" + QString(&compiler_log[0]) + "\n";
+        GLint blen = 0;
+        GLsizei slen = 0;
+        MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_INFO_LOG_LENGTH , &blen) );
+        if (blen > 1)
+        {
+            std::vector<GLchar> compiler_log(blen+1);
+            MO_CHECK_GL_COND(rep_, glGetProgramInfoLog(prog_, blen, &slen, &compiler_log[0]) );
+            log_ += "linker log:\n" + QString(&compiler_log[0]) + "\n";
+        }
     }
-
 
     if (!linked)
         return false;
