@@ -13,7 +13,7 @@
 #include "io/error.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parameterfloat.h"
-#include "audio/multifilter.h"
+#include "audio/tool/multifilter.h"
 
 namespace MO {
 

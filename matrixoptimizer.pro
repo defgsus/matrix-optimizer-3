@@ -118,10 +118,8 @@ SOURCES += \
     src/gui/audiodialog.cpp \
     src/gui/objectinfodialog.cpp \
     src/gui/splashscreen.cpp \
-    src/audio/wavetablegenerator.cpp \
     src/gui/widget/spinbox.cpp \
     src/engine/renderer.cpp \
-    src/audio/waveform.cpp \
     src/gl/drawable.cpp \
     src/gl/shader.cpp \
     src/gl/shadersource.cpp \
@@ -152,9 +150,11 @@ SOURCES += \
     src/gl/lightsettings.cpp \
     src/object/audio/audiounit.cpp \
     src/object/audio/filterunit.cpp \
-    src/audio/multifilter.cpp \
     src/object/scene_audio.cpp \
-    src/audio/envelopefollower.cpp
+    src/audio/tool/envelopefollower.cpp \
+    src/audio/tool/multifilter.cpp \
+    src/audio/tool/waveform.cpp \
+    src/audio/tool/wavetablegenerator.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -261,11 +261,8 @@ HEADERS += \
     src/gui/audiodialog.h \
     src/gui/objectinfodialog.h \
     src/gui/splashscreen.h \
-    src/audio/wavetable.h \
-    src/audio/wavetablegenerator.h \
     src/gui/widget/spinbox.h \
     src/engine/renderer.h \
-    src/audio/waveform.h \
     src/gl/drawable.h \
     src/gl/shader.h \
     src/gl/shadersource.h \
@@ -298,10 +295,13 @@ HEADERS += \
     src/gl/lightsettings.h \
     src/object/audio/audiounit.h \
     src/object/audio/filterunit.h \
-    src/audio/multifilter.h \
     src/audio/audio_fwd.h \
     src/object/scenelock_p.h \
-    src/audio/envelopefollower.h
+    src/audio/tool/envelopefollower.h \
+    src/audio/tool/multifilter.h \
+    src/audio/tool/waveform.h \
+    src/audio/tool/wavetable.h \
+    src/audio/tool/wavetablegenerator.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

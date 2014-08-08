@@ -8,8 +8,8 @@
     <p>created 8/8/2014</p>
 */
 
-#ifndef MOSRC_AUDIO_ENVELOPEFOLLOWER_H
-#define MOSRC_AUDIO_ENVELOPEFOLLOWER_H
+#ifndef MOSRC_AUDIO_TOOL_ENVELOPEFOLLOWER_H
+#define MOSRC_AUDIO_TOOL_ENVELOPEFOLLOWER_H
 
 
 #include "types/int.h"
@@ -79,4 +79,4 @@ private:
 } // namespace AUDIO
 } // namespace MO
 
-#endif // MOSRC_AUDIO_ENVELOPEFOLLOWER_H
+#endif // MOSRC_AUDIO_TOOL_ENVELOPEFOLLOWER_H

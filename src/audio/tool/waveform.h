@@ -8,8 +8,8 @@
     <p>created 7/2/2014</p>
 */
 
-#ifndef MOSRC_MATH_WAVEFORM_H
-#define MOSRC_MATH_WAVEFORM_H
+#ifndef MOSRC_AUDIO_TOOL_WAVEFORM_H
+#define MOSRC_AUDIO_TOOL_WAVEFORM_H
 
 #include <QStringList>
 
@@ -80,4 +80,4 @@ private:
 } // namespace AUDIO
 } // namespace MO
 
-#endif // MOSRC_MATH_WAVEFORM_H
+#endif // MOSRC_AUDIO_TOOL_WAVEFORM_H

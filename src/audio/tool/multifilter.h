@@ -8,8 +8,8 @@
     <p>created 8/8/2014</p>
 */
 
-#ifndef MOSRC_AUDIO_MULTIFILTER_H
-#define MOSRC_AUDIO_MULTIFILTER_H
+#ifndef MOSRC_AUDIO_TOOL_MULTIFILTER_H
+#define MOSRC_AUDIO_TOOL_MULTIFILTER_H
 
 #include "types/int.h"
 #include "types/float.h"
@@ -74,4 +74,4 @@ private:
 } // namespace AUDIO
 } // namespace MO
 
-#endif // MOSRC_AUDIO_MULTIFILTER_H
+#endif // MOSRC_AUDIO_TOOL_MULTIFILTER_H

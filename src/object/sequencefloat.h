@@ -14,12 +14,12 @@
 #include <QStringList>
 
 #include "sequence.h"
-#include "audio/waveform.h"
+#include "audio/tool/waveform.h"
+#include "audio/audio_fwd.h"
 
 namespace PPP_NAMESPACE { class Parser; }
 namespace MO {
 namespace MATH { class Timeline1D; }
-namespace AUDIO { template <typename F> class Wavetable; class WavetableGenerator; }
 
 class SequenceFloat : public Sequence
 {

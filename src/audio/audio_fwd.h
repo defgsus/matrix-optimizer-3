@@ -19,7 +19,7 @@ class AudioDecices;
 class Configuration;
 class MultiFilter;
 class Waveform;
-class Wavetable;
+template <typename F> class Wavetable;
 class WavetableGenerator;
 
 } // namespace AUDIO

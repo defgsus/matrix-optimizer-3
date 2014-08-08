@@ -8,8 +8,8 @@
     <p>created 7/24/2014</p>
 */
 
-#ifndef MOSRC_AUDIO_WAVETABLE_H
-#define MOSRC_AUDIO_WAVETABLE_H
+#ifndef MOSRC_AUDIO_TOOL_WAVETABLE_H
+#define MOSRC_AUDIO_TOOL_WAVETABLE_H
 
 #include <vector>
 
@@ -119,4 +119,4 @@ F Wavetable<F>::value(F t) const
 } // namespace MO
 
 
-#endif // MOSRC_AUDIO_WAVETABLE_H
+#endif // MOSRC_AUDIO_TOOL_WAVETABLE_H

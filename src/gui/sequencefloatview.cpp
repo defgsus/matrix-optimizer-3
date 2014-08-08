@@ -23,14 +23,14 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "generalsequencefloatview.h"
-#include "audio/waveform.h"
+#include "audio/tool/waveform.h"
+#include "audio/tool/wavetablegenerator.h"
 #include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
 #include "widget/equationeditor.h"
 #include "util/scenesettings.h"
 #include "painter/valuecurve.h"
 #include "painter/sequenceoverpaint.h"
-#include "audio/wavetablegenerator.h"
 
 namespace MO {
 namespace GUI {

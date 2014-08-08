@@ -8,8 +8,8 @@
     <p>created 7/24/2014</p>
 */
 
-#ifndef MOSRC_AUDIO_WAVETABLEGENERATOR_H
-#define MOSRC_AUDIO_WAVETABLEGENERATOR_H
+#ifndef MOSRC_AUDIO_TOOL_WAVETABLEGENERATOR_H
+#define MOSRC_AUDIO_TOOL_WAVETABLEGENERATOR_H
 
 #include "wavetable.h"
 #include "types/float.h"
@@ -129,4 +129,4 @@ void WavetableGenerator::getWavetable(Wavetable<F> * w) const
 } // namespace MO
 
 
-#endif // MOSRC_AUDIO_WAVETABLEGENERATOR_H
+#endif // MOSRC_AUDIO_TOOL_WAVETABLEGENERATOR_H

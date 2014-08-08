@@ -14,10 +14,10 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "math/timeline1d.h"
-#include "audio/waveform.h"
+#include "audio/tool/waveform.h"
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
-#include "audio/wavetablegenerator.h"
+#include "audio/tool/wavetablegenerator.h"
 
 namespace MO {
 
