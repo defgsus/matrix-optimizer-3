@@ -16,6 +16,8 @@
 #include "object.h"
 #include "gl/opengl_fwd.h"
 #include "gl/lightsettings.h"
+#include "audio/audio_fwd.h"
+
 
 class QReadWriteLock;
 
@@ -68,6 +70,12 @@ public:
         @note Scene must be up-to-date with the tree! */
     void calculateSceneTransform(uint thread, uint sample, Double time);
 
+    // ----------- audio info ------------------
+
+    uint numberChannelsIn() const { return numInputChannels_; }
+    uint numberChannelsOut() const { return numOutputChannels_; }
+    const F32 * outputLevels() const { return &outputEnvelopes_[0]; }
+
     // --------------- runtime -----------------
 
     Double sceneTime() const { return sceneTime_; }
@@ -101,6 +109,15 @@ signals:
 
     void playbackStarted();
     void playbackStopped();
+
+    /** Emitted when the number of channels is set/changed */
+    void numberChannelsChanged(uint numIn, uint numOut);
+
+    /** Emitted when the number of (currently) microphones changed */
+    void numberOutputEnvelopesChanged(uint num);
+
+    /** This is send regularily during playback, representing the microphone levels */
+    void outputEnvelopeChanged(const F32 * levels);
 
     /** Emitted whenever the scene time changed */
     void sceneTimeChanged(Double);
@@ -228,7 +245,9 @@ private:
 
     /** Initializes the audio buffers needed to render the tree */
     void updateAudioBuffers_();
-
+    /** Creates EnvelopeFollower for one thread only!
+        AudioDevice must be initialized */
+    void allocateAudioOutputEnvelopes_(uint thread);
     void updateModulators_();
 
     /** Creates the framebuffer object */
@@ -249,6 +268,7 @@ private:
     void initAudioDevice_();
     void audioCallback_(const F32 *, F32 *);
 
+    /** Rearranges the input from audio api to internal buffer */
     void prepareAudioInputBuffer_(uint thread);
     /** Sets the number of input channels for all (top-level) audioUnits
         and adjusts their children accordingly. */
@@ -259,6 +279,9 @@ private:
 
     /** Processes all top-level AudioUnits + their childs */
     void processAudioInput_(uint thread);
+
+    /** Passes the internal audio output buffer to the envelope followers */
+    void updateOutputEnvelopes_(uint thread);
 
     // ---------- opengl -----------------------
 
@@ -323,7 +346,11 @@ private:
     std::vector<F32> audioInput_;
 
     bool isFirstAudioCallback_;
-    uint numInputChannels_;
+    uint numInputChannels_,
+         numOutputChannels_;
+
+    std::vector<AUDIO::EnvelopeFollower*> outputEnvelopeFollower_;
+    std::vector<F32> outputEnvelopes_;
 
     // ------------ runtime --------------------
 

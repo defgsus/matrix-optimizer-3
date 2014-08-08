@@ -29,6 +29,7 @@ EnvelopeWidget::EnvelopeWidget(QWidget *parent) :
 void EnvelopeWidget::setNumberChannels(uint num)
 {
     level_.resize(num);
+    numChannels_ = num;
 }
 
 void EnvelopeWidget::setLevel(uint index, F32 value)
@@ -55,13 +56,14 @@ void EnvelopeWidget::paintEvent(QPaintEvent *)
     p.setPen(Qt::NoPen);
     QBrush black = QBrush(QColor(0,0,0));
     QBrush white = QBrush(QColor(70,250,70));
+    QBrush red = QBrush(QColor(255,0,0));
 
     for (uint i=0; i<numChannels_; ++i)
     {
         float h = height() - 1 - level_[i] * height();
         p.setBrush(black);
         p.drawRect(QRect(i*w, 0, w-1, h));
-        p.setBrush(white);
+        p.setBrush(level_[i] >= 1 ? red : white);
         p.drawRect(QRect(i*w, h, w-1, height()-h));
     }
 

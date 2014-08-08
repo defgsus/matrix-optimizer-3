@@ -42,6 +42,7 @@
 #include "gui/util/scenesettings.h"
 #include "gui/audiodialog.h"
 #include "gui/geometrydialog.h"
+#include "gui/widget/envelopewidget.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -168,82 +169,90 @@ void MainWindow::createWidgets_()
     setStatusBar(new QStatusBar(this));
     statusBar()->addPermanentWidget(sysInfoLabel_ = new QLabel(statusBar()));
 
-    // main layout
-    auto l0 = new QHBoxLayout(centralWidget());
-    l0->setMargin(0);
-    l0->setSpacing(1);
+    // main-main layout
+    auto lv0 = new QVBoxLayout(centralWidget());
+    lv0->setMargin(0);
 
-        auto leftContainer = new QWidget(this);
-        l0->addWidget(leftContainer);
-        leftContainer->setObjectName("_left_container");
-        leftContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-        leftContainer->setMinimumWidth(270);
+        outEnvelope_ = new EnvelopeWidget(this);
+        lv0->addWidget(outEnvelope_);
 
-        auto lv = new QVBoxLayout(leftContainer);
-        lv->setMargin(0);
-        //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
+        // main layout
+        auto l0 = new QHBoxLayout();
+        lv0->addLayout(l0);
+        l0->setMargin(0);
+        l0->setSpacing(1);
 
-            // object tree view
-            objectTreeView_ = new ObjectTreeView(this);
-            lv->addWidget(objectTreeView_);
-            objectTreeView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
-            //objectTreeView_->setMinimumWidth(240);
-            //objectTreeView_->setMaximumWidth(450);
-            connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
-                    SLOT(setEditActions_(const QObject*,QList<QAction*>)));
-            connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
-                    SLOT(objectSelected_(MO::Object*)));
+            auto leftContainer = new QWidget(this);
+            l0->addWidget(leftContainer);
+            leftContainer->setObjectName("_left_container");
+            leftContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+            leftContainer->setMinimumWidth(270);
 
-            // object tree model
-            objectTreeModel_ = new ObjectTreeModel(0, this);
-            connect(objectTreeModel_, SIGNAL(sceneChanged()),
-                    this, SLOT(sceneChanged_()));
-            objectTreeView_->setObjectModel(objectTreeModel_);
+            auto lv = new QVBoxLayout(leftContainer);
+            lv->setMargin(0);
+            //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
-            // object editor
-            objectView_ = new ObjectView(this);
-            lv->addWidget(objectView_);
-            objectView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
-            //objectView_->setMinimumWidth(240);
-            connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
-                                        this, SLOT(objectSelected_(MO::Object*)));
-            connect(objectView_, SIGNAL(statusTipChanged(QString)),
-                    statusBar(), SLOT(showMessage(QString)));
-        //l0->setStretchFactor(lv, -1);
+                // object tree view
+                objectTreeView_ = new ObjectTreeView(this);
+                lv->addWidget(objectTreeView_);
+                objectTreeView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+                //objectTreeView_->setMinimumWidth(240);
+                //objectTreeView_->setMaximumWidth(450);
+                connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
+                        SLOT(setEditActions_(const QObject*,QList<QAction*>)));
+                connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
+                        SLOT(objectSelected_(MO::Object*)));
 
-        lv = new QVBoxLayout();
-        l0->addLayout(lv);
+                // object tree model
+                objectTreeModel_ = new ObjectTreeModel(0, this);
+                connect(objectTreeModel_, SIGNAL(sceneChanged()),
+                        this, SLOT(sceneChanged_()));
+                objectTreeView_->setObjectModel(objectTreeModel_);
 
-            spacer_ = new Spacer(Qt::Vertical, this);
-            lv->addWidget(spacer_);
+                // object editor
+                objectView_ = new ObjectView(this);
+                lv->addWidget(objectView_);
+                objectView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+                //objectView_->setMinimumWidth(240);
+                connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
+                                            this, SLOT(objectSelected_(MO::Object*)));
+                connect(objectView_, SIGNAL(statusTipChanged(QString)),
+                        statusBar(), SLOT(showMessage(QString)));
+            //l0->setStretchFactor(lv, -1);
 
-        lv = new QVBoxLayout();
-        l0->addLayout(lv);
+            lv = new QVBoxLayout();
+            l0->addLayout(lv);
 
-            // sequencer
-            sequencer_ = new Sequencer(this);
-            sequencer_->setSceneSettings(sceneSettings_);
-            sequencer_->setMinimumHeight(300);
-            lv->addWidget(sequencer_);
-            connect(sequencer_, &Sequencer::sequenceSelected, [this](Sequence * seq)
-            {
-                objectSelected_(seq);
-            });
+                spacer_ = new Spacer(Qt::Vertical, this);
+                lv->addWidget(spacer_);
 
-            //spacer2_ = new Spacer(Qt::Horizontal, this);
-            //lv->addWidget(spacer2_);
+            lv = new QVBoxLayout();
+            l0->addLayout(lv);
 
-            // SequenceFloat view
-            seqFloatView_ = new SequenceFloatView(this);
-            seqFloatView_->setVisible(false);
-            seqFloatView_->setSceneSettings(sceneSettings_);
-            lv->addWidget(seqFloatView_);
-            connect(seqFloatView_, SIGNAL(statusTipChanged(QString)),
-                    statusBar(), SLOT(showMessage(QString)));
+                // sequencer
+                sequencer_ = new Sequencer(this);
+                sequencer_->setSceneSettings(sceneSettings_);
+                sequencer_->setMinimumHeight(300);
+                lv->addWidget(sequencer_);
+                connect(sequencer_, &Sequencer::sequenceSelected, [this](Sequence * seq)
+                {
+                    objectSelected_(seq);
+                });
+
+                //spacer2_ = new Spacer(Qt::Horizontal, this);
+                //lv->addWidget(spacer2_);
+
+                // SequenceFloat view
+                seqFloatView_ = new SequenceFloatView(this);
+                seqFloatView_->setVisible(false);
+                seqFloatView_->setSceneSettings(sceneSettings_);
+                lv->addWidget(seqFloatView_);
+                connect(seqFloatView_, SIGNAL(statusTipChanged(QString)),
+                        statusBar(), SLOT(showMessage(QString)));
 
 
-    spacer_->setWidgets(leftContainer, sequencer_);
-    //spacer2_->setWidgets(sequencer_, seqFloatView_);
+        spacer_->setWidgets(leftContainer, sequencer_);
+        //spacer2_->setWidgets(sequencer_, seqFloatView_);
 
 
 
@@ -421,6 +430,10 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
     connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(sceneChanged_()));
     connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
             objectTreeView_, SLOT(columnMoved()/* force update */));
+    connect(scene_, SIGNAL(numberOutputEnvelopesChanged(uint)),
+            this, SLOT(updateNumberOutputEnvelopes_(uint)));
+    connect(scene_, SIGNAL(outputEnvelopeChanged(const F32*)),
+                    this, SLOT(updateOutputEnvelope_(const F32*)));
 
     // update widgets
 
@@ -688,6 +701,16 @@ void MainWindow::stop()
     scene_->stop();
 }
 
+void MainWindow::updateNumberOutputEnvelopes_(uint num)
+{
+    outEnvelope_->setNumberChannels(num);
+}
+
+void MainWindow::updateOutputEnvelope_(const F32 * l)
+{
+    outEnvelope_->setLevel(l);
+    outEnvelope_->update();
+}
 
 
 

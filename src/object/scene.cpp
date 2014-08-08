@@ -306,30 +306,6 @@ void Scene::updateBufferSize_()
     }
 }
 
-void Scene::updateDelaySize_()
-{
-    for (auto o : audioObjects_)
-        for (auto a : o->audioSources())
-            for (uint i=0; i<numberThreads(); ++i)
-                a->setDelaySize(sceneDelaySize_[i], i);
-}
-
-void Scene::updateAudioBuffers_()
-{
-    MO_DEBUG_AUDIO("Scene::updateAudioBuffers_() numberThreads() == " << numberThreads());
-
-    audioOutput_.resize(numberThreads());
-
-    for (uint i=0; i<numberThreads(); ++i)
-    {
-        audioOutput_[i].resize(bufferSize(i) * microphones_.size());
-
-        memset(&audioOutput_[i][0], 0, sizeof(F32) * bufferSize(i) * microphones_.size());
-
-        MO_DEBUG_AUDIO("audioOutput_[" << i << "].size() == "
-                       << audioOutput_[i].size());
-    }
-}
 
 void Scene::updateModulators_()
 {

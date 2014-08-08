@@ -14,6 +14,7 @@
 #include <QMainWindow>
 
 #include "object/object_fwd.h"
+#include "types/float.h"
 
 class QLabel;
 class QTimer;
@@ -29,6 +30,7 @@ class SequenceFloatView;
 class Sequencer;
 class Spacer;
 class SceneSettings;
+class EnvelopeWidget;
 
 class TestThread;
 
@@ -78,6 +80,10 @@ private slots:
 
     void saveAllGeometry_();
     bool restoreAllGeometry_();
+
+    void updateNumberOutputEnvelopes_(uint);
+    void updateOutputEnvelope_(const F32*);
+
 private:
 
     void createWidgets_();
@@ -109,6 +115,8 @@ private:
 
     Sequencer * sequencer_;
     SequenceFloatView * seqFloatView_;
+
+    EnvelopeWidget * outEnvelope_;
 
     Spacer * spacer_, * spacer2_;
 

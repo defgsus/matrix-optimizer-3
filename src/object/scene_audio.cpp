@@ -14,6 +14,7 @@
 #include "io/log.h"
 #include "audio/audiodevice.h"
 #include "audio/audiosource.h"
+#include "audio/tool/envelopefollower.h"
 #include "object/audio/audiounit.h"
 #include "object/microphone.h"
 
@@ -39,12 +40,16 @@ void Scene::initAudioDevice_()
         sceneSampleRate_ = audioDevice_->sampleRate();
         sceneBufferSize_[MO_AUDIO_THREAD] = audioDevice_->bufferSize();
         numInputChannels_ = audioDevice_->numInputChannels();
+        numOutputChannels_ = audioDevice_->numOutputChannels();
 
         updateBufferSize_();
         updateSampleRate_();
         updateAudioBuffers_();
         prepareAudioInputBuffer_(MO_AUDIO_THREAD);
         updateAudioUnitChannels_(MO_AUDIO_THREAD);
+        allocateAudioOutputEnvelopes_(MO_AUDIO_THREAD);
+
+        emit numberChannelsChanged(numInputChannels_, numOutputChannels_);
 
         using namespace std::placeholders;
         audioDevice_->setCallback(std::bind(
@@ -84,6 +89,9 @@ void Scene::audioCallback_(const F32 * in, F32 * out)
     // perform audio-process of whole scene tree
     calculateAudioBlock(samplePos_, MO_AUDIO_THREAD);
 
+    // update output envelopes
+    updateOutputEnvelopes_(MO_AUDIO_THREAD);
+
     // rearrange the output buffer for the device
     getAudioOutput(audioDevice_->numOutputChannels(), MO_AUDIO_THREAD, out);
 
@@ -113,6 +121,50 @@ void Scene::updateAudioUnitChannels_(uint thread)
         au->setNumChannelsIn(numInputChannels_, thread);
 }
 
+void Scene::updateDelaySize_()
+{
+    for (auto o : audioObjects_)
+        for (auto a : o->audioSources())
+            for (uint i=0; i<numberThreads(); ++i)
+                a->setDelaySize(sceneDelaySize_[i], i);
+}
+
+void Scene::updateAudioBuffers_()
+{
+    MO_DEBUG_AUDIO("Scene::updateAudioBuffers_() numberThreads() == " << numberThreads());
+
+    audioOutput_.resize(numberThreads());
+
+    for (uint i=0; i<numberThreads(); ++i)
+    {
+        audioOutput_[i].resize(bufferSize(i) * microphones_.size());
+
+        memset(&audioOutput_[i][0], 0, sizeof(F32) * bufferSize(i) * microphones_.size());
+
+        MO_DEBUG_AUDIO("audioOutput_[" << i << "].size() == "
+                       << audioOutput_[i].size());
+    }
+}
+
+void Scene::allocateAudioOutputEnvelopes_(uint /*thread*/)
+{
+    const uint num = microphones_.size();
+
+    outputEnvelopes_.resize(num);
+
+    for (auto e : outputEnvelopeFollower_)
+        delete e;
+
+    outputEnvelopeFollower_.clear();
+
+    for (uint i=0; i<num; ++i)
+    {
+        outputEnvelopeFollower_.push_back(
+                    new AUDIO::EnvelopeFollower() );
+    }
+
+    emit numberOutputEnvelopesChanged(num);
+}
 
 // ------------------ audio out processing -------------------------
 
@@ -158,6 +210,8 @@ void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
                 // add to microphone 'membrane'
                 mic->sampleAudioSource(src, buffer, thread);
     }
+
+
 }
 
 void Scene::getAudioOutput(uint numChannels, uint thread, F32 *buffer) const
@@ -185,7 +239,21 @@ void Scene::getAudioOutput(uint numChannels, uint thread, F32 *buffer) const
 }
 
 
+void Scene::updateOutputEnvelopes_(uint thread)
+{
+    const uint bsize = bufferSize(thread),
+               nummic = microphones_.size();
 
+    for (uint i = 0; i < nummic; ++i)
+    {
+        outputEnvelopes_[i] =
+            outputEnvelopeFollower_[i]->process(
+                    &audioOutput_[thread][i * nummic],
+                    bsize);
+    }
+
+    emit outputEnvelopeChanged(&outputEnvelopes_[0]);
+}
 
 // ------------------- audio in processing --------------------------
 
