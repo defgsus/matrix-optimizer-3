@@ -153,7 +153,8 @@ SOURCES += \
     src/object/audio/audiounit.cpp \
     src/object/audio/filterunit.cpp \
     src/audio/multifilter.cpp \
-    src/object/scene_audio.cpp
+    src/object/scene_audio.cpp \
+    src/audio/envelopefollower.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -299,7 +300,8 @@ HEADERS += \
     src/object/audio/filterunit.h \
     src/audio/multifilter.h \
     src/audio/audio_fwd.h \
-    src/object/scenelock_p.h
+    src/object/scenelock_p.h \
+    src/audio/envelopefollower.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

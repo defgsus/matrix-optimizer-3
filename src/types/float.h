@@ -11,8 +11,8 @@
 #ifndef MOSRC_TYPES_FLOAT_H
 #define MOSRC_TYPES_FLOAT_H
 
-#include <qglobal.h> // for Q_STATIC_ASSERT
-#include <qmetatype.h>
+#include <Qt> // for Q_STATIC_ASSERT
+#include <QMetaType>
 
 namespace MO {
 

@@ -19,7 +19,6 @@ MultiFilter::MultiFilter()
     : sr_       (44100),
       freq_     (1000),
       reso_     (0),
-      q1_       (0),
       s1_       (0)
 
 {
@@ -28,7 +27,7 @@ MultiFilter::MultiFilter()
 
 void MultiFilter::reset()
 {
-
+    s1_ = 0;
 }
 
 void MultiFilter::updateCoefficients()
