@@ -41,6 +41,8 @@ void Settings::createDefaultValues_()
     defaultValues_["Audio/device"] = "";
     defaultValues_["Audio/samplerate"] = 44100;
     defaultValues_["Audio/buffersize"] = 128;
+    defaultValues_["Audio/channelsIn"] = 2;
+    defaultValues_["Audio/channelsOut"] = 2;
 }
 
 QVariant Settings::getValue(const QString &key)

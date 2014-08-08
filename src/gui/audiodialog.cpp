@@ -93,6 +93,42 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
             but->setToolTip(tr("Set default value"));
             connect(but, SIGNAL(clicked()), this, SLOT(setDefaultSamplerate_()));
 
+        // channels in
+        lh = new QHBoxLayout();
+        l0->addLayout(lh);
+
+            label = new QLabel(tr("input channels"), this);
+            lh->addWidget(label);
+
+            numInputs_ = new QSpinBox(this);
+            lh->addWidget(numInputs_);
+            numInputs_->setRange(0, 256);
+            numInputs_->setValue(settings->getValue("Audio/channelsIn").toInt());
+
+            but = new QToolButton(this);
+            lh->addWidget(but);
+            but->setText("D");
+            but->setToolTip(tr("Set default value"));
+            connect(but, SIGNAL(clicked()), this, SLOT(setDefaultChannelsIn_()));
+
+        // channels out
+        lh = new QHBoxLayout();
+        l0->addLayout(lh);
+
+            label = new QLabel(tr("output channels"), this);
+            lh->addWidget(label);
+
+            numOutputs_ = new QSpinBox(this);
+            lh->addWidget(numOutputs_);
+            numOutputs_->setRange(1, 256);
+            numOutputs_->setValue(settings->getValue("Audio/channelsOut").toInt());
+
+            but = new QToolButton(this);
+            lh->addWidget(but);
+            but->setText("D");
+            but->setToolTip(tr("Set default value"));
+            connect(but, SIGNAL(clicked()), this, SLOT(setDefaultChannelsOut_()));
+
         // --- test tone ---
 
         l0->addStretch(1);
@@ -176,6 +212,7 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
     });
 
     checkDevices_();
+    setWidgetChannelLimits_();
 }
 
 AudioDialog::~AudioDialog()
@@ -267,7 +304,25 @@ void AudioDialog::deviceSelected_()
             sampleRate_->setValue(devices_->getDeviceInfo(idx)->defaultSampleRate);
         if (!settings->contains("Audio/buffersize"))
             bufferSize_->setValue(devices_->getDeviceInfo(idx)->defaultBufferLength);
+        if (!settings->contains("Audio/channelsIn"))
+            numInputs_->setValue(devices_->getDeviceInfo(idx)->numInputChannels);
+        if (!settings->contains("Audio/channelsOut"))
+            numOutputs_->setValue(devices_->getDeviceInfo(idx)->numOutputChannels);
     }
+    setWidgetChannelLimits_();
+}
+
+void AudioDialog::setWidgetChannelLimits_()
+{
+    int idx = selectedDeviceIndex();
+    if (idx < 0)
+    {
+        numInputs_->setMaximum(256);
+        numOutputs_->setMaximum(256);
+        return;
+    }
+    numInputs_->setMaximum(devices_->getDeviceInfo(idx)->numInputChannels);
+    numOutputs_->setMaximum(devices_->getDeviceInfo(idx)->numOutputChannels);
 }
 
 void AudioDialog::setDefaultSamplerate_()
@@ -289,6 +344,24 @@ void AudioDialog::setDefaultBuffersize_()
     }
 }
 
+void AudioDialog::setDefaultChannelsIn_()
+{
+    int idx = selectedDeviceIndex();
+    if (idx >= 0)
+    {
+        numInputs_->setValue(devices_->getDeviceInfo(idx)->numInputChannels);
+    }
+}
+
+void AudioDialog::setDefaultChannelsOut_()
+{
+    int idx = selectedDeviceIndex();
+    if (idx >= 0)
+    {
+        numOutputs_->setValue(devices_->getDeviceInfo(idx)->numOutputChannels);
+    }
+}
+
 int AudioDialog::selectedDeviceIndex() const
 {
     int idx = deviceBox_->currentIndex();
@@ -306,6 +379,8 @@ void AudioDialog::storeConfig_()
     settings->setValue("Audio/device", idx < 1? "None" : devices_->getDeviceInfo(idx-1)->name );
     settings->setValue("Audio/samplerate", sampleRate_->value());
     settings->setValue("Audio/buffersize", bufferSize_->value());
+    settings->setValue("Audio/channelsIn", numInputs_->value());
+    settings->setValue("Audio/channelsOut", numOutputs_->value());
 }
 
 
@@ -337,8 +412,8 @@ void AudioDialog::startTone_()
     auto inf = devices_->getDeviceInfo(idx);
 
     AUDIO::Configuration conf;
-    conf.setNumChannelsIn(inf->numInputChannels);
-    conf.setNumChannelsOut(inf->numOutputChannels);
+    conf.setNumChannelsIn(numInputs_->value());
+    conf.setNumChannelsOut(numOutputs_->value());
     conf.setBufferSize(bufferSize_->value());
     conf.setSampleRate(sampleRate_->value());
 

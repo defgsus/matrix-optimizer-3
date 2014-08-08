@@ -322,14 +322,14 @@ bool AudioDevice::initFromSettings()
     // get the other settings
     uint sampleRate = settings->getValue("Audio/samplerate").toInt();
     uint bufferSize = settings->getValue("Audio/buffersize").toInt();
+    uint numInputs = settings->getValue("Audio/channelsIn").toInt();
+    uint numOutputs = settings->getValue("Audio/channelsOut").toInt();
 
     // initialize
 
     try
     {
-        init(idx, devs.getDeviceInfo(idx)->numInputChannels,
-                  devs.getDeviceInfo(idx)->numOutputChannels,
-                  sampleRate, bufferSize);
+        init(idx, numInputs, numOutputs, sampleRate, bufferSize);
     }
     catch (AudioException& e)
     {

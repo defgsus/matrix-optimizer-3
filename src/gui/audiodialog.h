@@ -44,11 +44,14 @@ private slots:
     void deviceSelected_();
     void setDefaultSamplerate_();
     void setDefaultBuffersize_();
+    void setDefaultChannelsIn_();
+    void setDefaultChannelsOut_();
 
 private:
 
     void fillDeviceBox_();
     void checkDevices_();
+    void setWidgetChannelLimits_();
     void startTone_();
     void stopTone_();
 
@@ -58,7 +61,7 @@ private:
     AUDIO::AudioDevice * device_;
 
     QComboBox *apiBox_, *deviceBox_;
-    QSpinBox *sampleRate_, *bufferSize_;
+    QSpinBox *sampleRate_, *bufferSize_, *numInputs_, *numOutputs_;
     QToolButton * testButt_;
     QPushButton * okButt_;
     QTimer * timer_;
