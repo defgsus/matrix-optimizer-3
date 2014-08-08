@@ -11,8 +11,6 @@
 #ifndef MOSRC_OBJECT_TRACK_H
 #define MOSRC_OBJECT_TRACK_H
 
-#include <QStringList>
-
 #include "object.h"
 
 namespace MO {

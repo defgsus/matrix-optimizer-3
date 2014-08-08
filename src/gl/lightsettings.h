@@ -40,6 +40,7 @@ public:
 
     // --------------- setter ---------------
 
+    /** Reserves space for the @p num light sources */
     void resize(uint num);
 
     void setPosition(uint index, Float x, Float y, Float z);

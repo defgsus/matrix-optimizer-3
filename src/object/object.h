@@ -86,7 +86,8 @@ public:
         T_SEQUENCE_FLOAT    = 1<<9,
         T_TRACK_FLOAT       = 1<<10,
         T_DUMMY             = 1<<11,
-        T_LIGHTSOURCE       = 1<<12
+        T_LIGHTSOURCE       = 1<<12,
+        T_AUDIO_UNIT        = 1<<13
     };
     enum TypeGroups
     {
@@ -199,6 +200,7 @@ public:
     virtual bool isTrack() const { return false; }
     virtual bool isSequence() const { return false; }
     virtual bool isLightSource() const { return false; }
+    virtual bool isAudioUnit() const { return false; }
 
     /** Returns the user-set activity scope for the object */
     ActivityScope activityScope() const;

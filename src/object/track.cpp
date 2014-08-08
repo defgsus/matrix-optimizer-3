@@ -8,8 +8,6 @@
     <p>created 7/3/2014</p>
 */
 
-#include <QDebug>
-
 #include "track.h"
 #include "io/datastream.h"
 
