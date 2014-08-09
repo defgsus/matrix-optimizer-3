@@ -32,6 +32,7 @@
 #include "gl/framebufferobject.h"
 #include "gl/screenquad.h"
 #include "gl/texture.h"
+#include "tool/locklessqueue.h"
 
 namespace MO {
 
@@ -53,6 +54,8 @@ Scene::Scene(QObject *parent) :
     sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
     audioDevice_        (new AUDIO::AudioDevice()),
+    audioThread_        (0),
+    audioQueue_         (new LocklessQueue<F32*>()),
     isPlayback_         (false),
     sceneTime_          (0),
     samplePos_          (0)
@@ -89,6 +92,7 @@ Scene::~Scene()
         delete i;
     delete audioDevice_;
     delete readWriteLock_;
+    delete audioQueue_;
 }
 
 void Scene::serialize(IO::DataStream & io) const

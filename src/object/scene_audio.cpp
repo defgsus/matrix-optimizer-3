@@ -8,6 +8,8 @@
     <p>created 8/8/2014</p>
 */
 
+#include <QThread>
+
 #include "scene.h"
 #include "scenelock_p.h"
 #include "io/error.h"
@@ -19,6 +21,55 @@
 #include "object/microphone.h"
 
 namespace MO {
+
+// ------------------- audio worker thread -------------------------
+
+
+class AudioThread : public QThread
+{
+public:
+    AudioThread(Scene * scene, QObject * parent)
+        : QThread   (parent),
+          scene_    (scene),
+          stop_     (false)
+    {
+
+    }
+
+    void stop() { stop_ = true; wait(); }
+
+    void run()
+    {
+        setCurrentThreadName("AUDIO");
+
+        while (!stop_)
+        {
+            // calculate an audio block
+            scene_->calculateAudioBlock(scene_->samplePos_, MO_AUDIO_THREAD);
+
+            // advance scene time
+            scene_->setSceneTime(
+                        scene_->samplePos_ + scene_->bufferSize(MO_AUDIO_THREAD)
+                        );
+
+        #ifndef NDEBUG
+            // leave some room when in debug mode
+            usleep(1000);
+        #endif
+        }
+
+    }
+
+private:
+
+    Scene * scene_;
+
+    volatile bool stop_;
+};
+
+
+
+
 
 // ---------------------- device handling --------------------------
 
@@ -73,7 +124,7 @@ void Scene::audioCallback_(const F32 * in, F32 * out)
 {
     if (isFirstAudioCallback_)
     {
-        setCurrentThreadName("AUDIO");
+        setCurrentThreadName("AUDIO_API");
         isFirstAudioCallback_ = false;
     }
 

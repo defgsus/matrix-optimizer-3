@@ -18,15 +18,14 @@
 #include "gl/lightsettings.h"
 #include "audio/audio_fwd.h"
 
-
 class QReadWriteLock;
 
 namespace MO {
 namespace AUDIO { class AudioDevice; }
 
 class ObjectTreeModel;
-
-
+class AudioThread;
+template <typename T> class LocklessQueue;
 
 /** Handles tree managment, locking, rendering and audio processing */
 class Scene : public Object
@@ -37,6 +36,7 @@ class Scene : public Object
     friend class Object;
     friend class ScopedSceneLockRead;
     friend class ScopedSceneLockWrite;
+    friend class AudioThread;
 
 public:
     MO_OBJECT_CONSTRUCTOR(Scene);
@@ -339,6 +339,9 @@ private:
     // ----------- audio ----------------------
 
     AUDIO::AudioDevice * audioDevice_;
+
+    AudioThread * audioThread_;
+    LocklessQueue<F32*> * audioQueue_;
 
     /** [thread] [microphones][bufferSize] */
     std::vector<std::vector<F32>> audioOutput_;

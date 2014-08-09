@@ -307,7 +307,8 @@ HEADERS += \
     src/audio/tool/wavetablegenerator.h \
     src/object/audio/envelopeunit.h \
     src/gui/widget/envelopewidget.h \
-    src/gui/widget/transportwidget.h
+    src/gui/widget/transportwidget.h \
+    src/tool/locklessqueue.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
