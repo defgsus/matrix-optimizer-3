@@ -30,7 +30,7 @@ class SequenceFloatView;
 class Sequencer;
 class Spacer;
 class SceneSettings;
-class EnvelopeWidget;
+class TransportWidget;
 
 class TestThread;
 
@@ -116,7 +116,7 @@ private:
     Sequencer * sequencer_;
     SequenceFloatView * seqFloatView_;
 
-    EnvelopeWidget * outEnvelope_;
+    TransportWidget * transport_;
 
     Spacer * spacer_, * spacer2_;
 

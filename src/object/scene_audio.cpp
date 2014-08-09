@@ -46,8 +46,9 @@ void Scene::initAudioDevice_()
         updateSampleRate_();
         updateAudioBuffers_();
         prepareAudioInputBuffer_(MO_AUDIO_THREAD);
-        updateAudioUnitChannels_(MO_AUDIO_THREAD);
         allocateAudioOutputEnvelopes_(MO_AUDIO_THREAD);
+
+        updateAudioUnitChannels_(MO_AUDIO_THREAD);
 
         emit numberChannelsChanged(numInputChannels_, numOutputChannels_);
 
@@ -100,6 +101,48 @@ void Scene::audioCallback_(const F32 * in, F32 * out)
 }
 
 
+
+void Scene::start()
+{
+    ScopedSceneLockWrite lock(this);
+
+    if (!isAudioInitialized())
+        initAudioDevice_();
+
+    updateAudioUnitChannels_(MO_AUDIO_THREAD);
+
+    if (isAudioInitialized())
+    {
+        isPlayback_ = true;
+        audioDevice_->start();
+
+        emit playbackStarted();
+    }
+}
+
+void Scene::stop()
+{
+    if (isPlayback())
+    {
+        isPlayback_ = false;
+        if (isAudioInitialized())
+            audioDevice_->stop();
+
+        emit playbackStopped();
+    }
+    else
+    {
+        setSceneTime(0.0);
+    }
+    /*
+    if (timer_.isActive())
+        timer_.stop();
+    else
+        setSceneTime(0);
+    */
+}
+
+
 // ------------------- initialization --------------------------
 
 void Scene::setBufferSize(uint bufferSize, uint thread)
@@ -118,7 +161,8 @@ void Scene::updateAudioUnitChannels_(uint thread)
                    "top-level units == " << topLevelAudioUnits_.size());
 
     for (AudioUnit * au : topLevelAudioUnits_)
-        au->setNumChannelsIn(numInputChannels_, thread);
+        if (au->numChannelsIn() != numInputChannels_)
+            au->setNumChannelsIn(numInputChannels_, thread);
 }
 
 void Scene::updateDelaySize_()

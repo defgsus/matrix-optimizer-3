@@ -47,7 +47,7 @@ ObjectTreeModel::ObjectTreeModel(Scene * scene, QObject *parent) :
     colorTransformation_ = QColor(0,60,120);
     colorTrack_ = QColor(90,90,90);
     colorSequence_ = QColor(0,120,0);
-    colorAudioUnit_ = QColor(60,120,60);
+    colorAudioUnit_ = QColor(120,40,80);
 }
 
 

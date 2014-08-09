@@ -43,6 +43,7 @@
 #include "gui/audiodialog.h"
 #include "gui/geometrydialog.h"
 #include "gui/widget/envelopewidget.h"
+#include "gui/widget/transportwidget.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -173,8 +174,8 @@ void MainWindow::createWidgets_()
     auto lv0 = new QVBoxLayout(centralWidget());
     lv0->setMargin(0);
 
-        outEnvelope_ = new EnvelopeWidget(this);
-        lv0->addWidget(outEnvelope_);
+        transport_ = new TransportWidget(this);
+        lv0->addWidget(transport_);
 
         // main layout
         auto l0 = new QHBoxLayout();
@@ -703,13 +704,13 @@ void MainWindow::stop()
 
 void MainWindow::updateNumberOutputEnvelopes_(uint num)
 {
-    outEnvelope_->setNumberChannels(num);
+    transport_->envelopeWidget()->setNumberChannels(num);
 }
 
 void MainWindow::updateOutputEnvelope_(const F32 * l)
 {
-    outEnvelope_->setLevel(l);
-    outEnvelope_->update();
+    transport_->envelopeWidget()->setLevel(l);
+    transport_->envelopeWidget()->update();
 }
 
 

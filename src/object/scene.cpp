@@ -711,43 +711,5 @@ void Scene::setSceneTime(SamplePos pos, bool send_signal)
 }
 
 
-void Scene::start()
-{
-    ScopedSceneLockWrite lock(this);
-
-    if (!isAudioInitialized())
-        initAudioDevice_();
-
-    if (isAudioInitialized())
-    {
-        isPlayback_ = true;
-        audioDevice_->start();
-
-        emit playbackStarted();
-    }
-}
-
-void Scene::stop()
-{
-    if (isPlayback())
-    {
-        isPlayback_ = false;
-        if (isAudioInitialized())
-            audioDevice_->stop();
-
-        emit playbackStopped();
-    }
-    else
-    {
-        setSceneTime(0.0);
-    }
-    /*
-    if (timer_.isActive())
-        timer_.stop();
-    else
-        setSceneTime(0);
-    */
-}
-
 
 } // namespace MO

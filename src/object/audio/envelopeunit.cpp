@@ -81,6 +81,7 @@ void EnvelopeUnit::channelsChanged(uint thread)
 void EnvelopeUnit::setNumberThreads(uint num)
 {
     AudioUnit::setNumberThreads(num);
+
     createFollowers_();
 }
 
