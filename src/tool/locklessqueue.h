@@ -38,6 +38,7 @@ class LocklessQueue
     Node_ * first_;
     // shared
     std::atomic<Node_*> divider_, last_;
+    std::atomic<int> count_;
 
 public:
 
@@ -45,6 +46,7 @@ public:
     {
         // add dummy separator
         first_ = divider_ = last_ = new Node_( T() );
+        count_.store(0);
     }
 
     ~LocklessQueue()
@@ -58,13 +60,30 @@ public:
         }
     }
 
+    void reset()
+    {
+        // release the list
+        while( first_ != nullptr )
+        {
+            Node_ * tmp = first_;
+            first_ = tmp->next;
+            delete tmp;
+        }
+        // add dummy separator
+        first_ = divider_ = last_ = new Node_( T() );
+        count_.store(0);
+    }
+
+    int count() const { return count_.load(); }
+
     /** Pushes data on the queue */
     void produce(const T & t)
     {
         // add the new item
-        last_->next = new Node_(t);
+        (*last_).next = new Node_(t);
         // publish it
-        last_ = last_->next;
+        last_ = (*last_).next;
+        count_++;
         // trim unused nodes
         while( first_ != divider_ )
         {
@@ -81,9 +100,10 @@ public:
         if( divider_ != last_ )
         {
             // copy it back
-            result = divider_->next->value;
+            result = (*divider_).next->value;
             // publish that we took it
-            divider_ = divider_->next;
+            divider_ = (*divider_).next;
+            count_--;
             return true;
         }
         // report empty

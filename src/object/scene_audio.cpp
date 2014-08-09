@@ -19,6 +19,7 @@
 #include "audio/tool/envelopefollower.h"
 #include "object/audio/audiounit.h"
 #include "object/microphone.h"
+#include "tool/locklessqueue.h"
 
 namespace MO {
 
@@ -42,20 +43,49 @@ public:
     {
         setCurrentThreadName("AUDIO");
 
+        const uint
+                bufferLength = scene_->bufferSize(MO_AUDIO_THREAD),
+                numChannelsOut = scene_->numberChannelsOut(),
+                bufferSize = bufferLength * numChannelsOut,
+                numAhead = 400;
+        uint writepos = 0;
+
+        std::vector<F32> buffer(bufferSize * numAhead);
+        scene_->audioQueue_->reset();
+
         while (!stop_)
         {
-            // calculate an audio block
-            scene_->calculateAudioBlock(scene_->samplePos_, MO_AUDIO_THREAD);
+            //std::cerr << scene_->audioQueue_->count() << std::endl;
 
-            // advance scene time
-            scene_->setSceneTime(
-                        scene_->samplePos_ + scene_->bufferSize(MO_AUDIO_THREAD)
-                        );
+            if (scene_->audioQueue_->count() < 4)
+            {
 
-        #ifndef NDEBUG
-            // leave some room when in debug mode
-            usleep(1000);
-        #endif
+                // calculate an audio block
+                scene_->calculateAudioBlock(scene_->samplePos_, MO_AUDIO_THREAD);
+
+                // update output envelopes
+                //updateOutputEnvelopes_(MO_AUDIO_THREAD);
+
+                // write here
+                F32 * buf = &buffer[writepos];
+                writepos += bufferSize;
+                if (writepos >= buffer.size())
+                    writepos = 0;
+
+                // rearrange the output buffer for the device
+                scene_->getAudioOutput(numChannelsOut, MO_AUDIO_THREAD, buf);
+
+                // publish
+                scene_->audioQueue_->produce(buf);
+
+                // advance scene time
+                scene_->setSceneTime(scene_->samplePos_ + bufferLength);
+            }
+
+            #ifndef NDEBUG
+                // leave some room when in debug mode
+                usleep(1000);
+            #endif
         }
 
     }
@@ -128,9 +158,16 @@ void Scene::audioCallback_(const F32 * in, F32 * out)
         isFirstAudioCallback_ = false;
     }
 
-    MO_ASSERT(audioDevice_->bufferSize() == bufferSize(MO_AUDIO_THREAD),
-              "buffer-size mismatch");
+    //MO_ASSERT(audioDevice_->bufferSize() == bufferSize(MO_AUDIO_THREAD),
+    //          "buffer-size mismatch");
 
+    F32 * buf;
+    if (audioQueue_->consume(buf))
+        memcpy(out, buf, bufferSize(MO_AUDIO_THREAD) * numberChannelsOut() * sizeof(F32));
+    //else
+        //MO_WARNING("audio-out buffer underrun");
+
+    /*
     // process audio input
     if (!topLevelAudioUnits_.empty())
     {
@@ -149,6 +186,7 @@ void Scene::audioCallback_(const F32 * in, F32 * out)
 
     // update scene time
     setSceneTime(samplePos_ + bufferSize(MO_AUDIO_THREAD));
+    */
 }
 
 
@@ -165,6 +203,10 @@ void Scene::start()
     if (isAudioInitialized())
     {
         isPlayback_ = true;
+
+        audioThread_ = new AudioThread(this, this);
+        audioThread_->start();
+
         audioDevice_->start();
 
         emit playbackStarted();
@@ -185,6 +227,15 @@ void Scene::stop()
     {
         setSceneTime(0.0);
     }
+
+    if (audioThread_)
+    {
+        if (audioThread_->isRunning())
+            audioThread_->stop();
+        audioThread_->deleteLater();
+        audioThread_ = 0;
+    }
+
     /*
     if (timer_.isActive())
         timer_.stop();
