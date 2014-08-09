@@ -81,11 +81,19 @@ public:
     /** Resizes the image (leaves contents as-is) */
     void resize(uint width, uint height, Format format);
 
+    // ------------- io ------------------------
+
     /** Loads an image (via QImage) */
     bool loadImage(const QString& filename);
 
+    // ---------- QImage conversion ------------
+
     /** Creates an image from QImage (most formats are handled) */
     bool createFrom(const QImage&);
+
+    /** Creates a QImage from the contents of this image.
+        If @p qimage_format == 0, the format will be automatically defined. */
+    QImage toQImage() const;
 
 private:
 

@@ -5,4 +5,7 @@
     <qresource prefix="/normalmap">
         <file alias="01.png">assets/img/normalmap01.png</file>
     </qresource>
+    <qresource prefix="/texture">
+        <file alias="default_texture.png">assets/img/mo_def_texture.png</file>
+    </qresource>
 </RCC>

@@ -75,7 +75,7 @@ void GeometryWidget::drawGL(const Mat4& projection, const Mat4& view, const Mat4
         {
             MO_CHECK_GL(glActiveTexture(GL_TEXTURE0));
             tex_ = GL::Texture::createFromImage(
-                    QImage(":/img/banner.png"),
+                    QImage(":/texture/default_texture.png"),
                     GL_RGB, GL::ER_IGNORE);
             recompile = true;
         }
@@ -95,7 +95,7 @@ void GeometryWidget::drawGL(const Mat4& projection, const Mat4& view, const Mat4
         if (!texNorm_)
         {
             Image img, norm;
-            img.loadImage(":/normalmap/01.png");
+            img.loadImage(":/texture/default_texture.png");
             ImageGenerator::createNormalmap(&norm, &img);
             MO_CHECK_GL(glActiveTexture(GL_TEXTURE0 + 1));
             texNorm_ = GL::Texture::createFromImage(

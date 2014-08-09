@@ -189,14 +189,14 @@ bool Image::createFrom(const QImage & img)
             Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
             {
-                const Color * src =
-                        img.constScanLine(img.height() - y - 1);
+                const QRgb * src = reinterpret_cast<const QRgb*>(
+                        img.constScanLine(img.height() - y - 1));
                 for (int x=0; x<img.width(); ++x)
                 {
-                    *dst++ = src[2];
-                    *dst++ = src[1];
-                    *dst++ = src[0];
-                    src += 4;
+                    *dst++ = qRed(*src);
+                    *dst++ = qGreen(*src);
+                    *dst++ = qBlue(*src);
+                    ++src;
                 }
             }
         }
@@ -248,15 +248,15 @@ bool Image::createFrom(const QImage & img)
             Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
             {
-                const Color * src =
-                        img.constScanLine(img.height() - y - 1);
+                const QRgb * src = reinterpret_cast<const QRgb*>(
+                        img.constScanLine(img.height() - y - 1));
                 for (int x=0; x<img.width(); ++x)
                 {
-                    *dst++ = src[2];
-                    *dst++ = src[1];
-                    *dst++ = src[0];
-                    *dst++ = src[3];
-                    src += 4;
+                    *dst++ = qRed(*src);
+                    *dst++ = qGreen(*src);
+                    *dst++ = qBlue(*src);
+                    *dst++ = qAlpha(*src);
+                    ++src;
                 }
             }
         }
@@ -264,6 +264,75 @@ bool Image::createFrom(const QImage & img)
     }
 
     return true;
+}
+
+QImage Image::toQImage() const
+{
+    // determine format for QImage
+    switch (format_)
+    {
+        default: MO_ASSERT(false, "unknown Image format"); return QImage(); break;
+
+        case F_RGB_24:
+        {
+            QImage img(width_, height_, QImage::Format_RGB32);
+
+            const Color * src = &data_[0];
+            for (int y=0; y<img.height(); ++y)
+            {
+                QRgb * dst = reinterpret_cast<QRgb*>(
+                            img.scanLine(img.height() - y - 1));
+                for (int x=0; x<img.width(); ++x)
+                {
+                    *dst++ = qRgb(src[0], src[1], src[2]);
+                    src += 3;
+                }
+            }
+
+            return img;
+        }
+
+        case F_RGBA_32:
+        {
+            QImage img(width_, height_, QImage::Format_ARGB32);
+
+            const Color * src = &data_[0];
+            for (int y=0; y<img.height(); ++y)
+            {
+                QRgb * dst = reinterpret_cast<QRgb*>(
+                            img.scanLine(img.height() - y - 1));
+                for (int x=0; x<img.width(); ++x)
+                {
+                    *dst++ = qRgba(src[0], src[1], src[2], src[3]);
+                    src += 4;
+                }
+            }
+
+            return img;
+        }
+
+        // convert 8bit to paletted data
+        case F_MONO_8:
+        {
+            QImage img(width_, height_, QImage::Format_Indexed8);
+
+            img.setColorCount(256);
+            for (uint i=0; i<256; ++i)
+                img.setColor(i, qRgb(i,i,i));
+
+            const Color * src = &data_[0];
+            for (int y=0; y<img.height(); ++y)
+            {
+                uchar * dst = img.scanLine(img.height() - y - 1);
+                for (int x=0; x<img.width(); ++x)
+                {
+                    *dst++ = *src++;
+                }
+            }
+
+            return img;
+        }
+    }
 }
 
 } // namespace MO
