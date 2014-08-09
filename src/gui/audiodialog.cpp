@@ -20,9 +20,12 @@
 #include "audiodialog.h"
 #include "audio/audiodevices.h"
 #include "audio/audiodevice.h"
+#include "audio/tool/envelopefollower.h"
 #include "io/error.h"
 #include "math/constants.h"
 #include "io/settings.h"
+#include "widget/envelopewidget.h"
+
 
 namespace MO {
 namespace GUI {
@@ -176,6 +179,10 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
             {
                 vol_ = volSpin->value();
             });
+
+            envWidget_ = new EnvelopeWidget(this);
+            lh->addWidget(envWidget_);
+            envWidget_->setVisible(false);
 
         // -- ok / cancel --
 
@@ -417,10 +424,27 @@ void AudioDialog::startTone_()
     conf.setBufferSize(bufferSize_->value());
     conf.setSampleRate(sampleRate_->value());
 
+    // update envelop follower
+    for (auto e : envFollower_)
+        delete e;
+    envFollower_.clear();
+    for (uint i = 0; i<conf.numChannelsIn(); ++i)
+        envFollower_.push_back( new AUDIO::EnvelopeFollower() );
+    envWidget_->setNumberChannels(conf.numChannelsIn());
+
     env_ = 0.f;
 
-    device_->setCallback([=](const F32*, F32* out)
+    device_->setCallback([this, conf](const F32 * in, F32* out)
     {
+        // update input envelopes
+        for (uint i=0; i<conf.numChannelsIn(); ++i)
+        {
+            envWidget_->setLevel(i,
+                envFollower_[i]->process(&in[i], conf.numChannelsIn(),
+                                     conf.bufferSize())
+                                 );
+        }
+
 #if (1)
         for (uint i=0; i<conf.bufferSize(); ++i)
         {
@@ -495,6 +519,7 @@ void AudioDialog::startTone_()
     {
         device_->start();
         timer_->start();
+        envWidget_->setVisible(true);
     }
     catch (AudioException& e)
     {
@@ -515,6 +540,7 @@ void AudioDialog::stopTone_()
     timer_->stop();
     if (device_)
     {
+        envWidget_->setVisible(false);
         device_->stop();
         device_->close();
     }

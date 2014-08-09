@@ -52,6 +52,8 @@ void Model3d::deserialize(IO::DataStream & io)
 
 void Model3d::createParameters()
 {
+    ObjectGl::createParameters();
+
     cr_ = createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
     cg_ = createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
     cb_ = createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);

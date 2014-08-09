@@ -17,8 +17,8 @@ namespace AUDIO {
 
 EnvelopeFollower::EnvelopeFollower()
     : sr_       (44100),
-      fadeIn_   (0.05),
-      fadeOut_  (0.1),
+      fadeIn_   (0.02),
+      fadeOut_  (0.5),
       env_      (0)
 
 {

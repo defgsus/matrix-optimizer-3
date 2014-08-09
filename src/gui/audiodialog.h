@@ -11,7 +11,11 @@
 #ifndef MOSRC_GUI_AUDIODIALOG_H
 #define MOSRC_GUI_AUDIODIALOG_H
 
+#include <vector>
+
 #include <QDialog>
+
+#include "audio/audio_fwd.h"
 
 class QComboBox;
 class QToolButton;
@@ -22,6 +26,7 @@ namespace MO {
 namespace AUDIO { class AudioDevices; class AudioDevice; }
 namespace GUI {
 
+class EnvelopeWidget;
 
 class AudioDialog : public QDialog
 {
@@ -60,9 +65,12 @@ private:
     AUDIO::AudioDevices * devices_;
     AUDIO::AudioDevice * device_;
 
+    std::vector<AUDIO::EnvelopeFollower*> envFollower_;
+
     QComboBox *apiBox_, *deviceBox_;
     QSpinBox *sampleRate_, *bufferSize_, *numInputs_, *numOutputs_;
     QToolButton * testButt_;
+    EnvelopeWidget * envWidget_;
     QPushButton * okButt_;
     QTimer * timer_;
 

@@ -46,17 +46,21 @@ void EnvelopeWidget::setLevel(const F32 *levels)
 
 void EnvelopeWidget::paintEvent(QPaintEvent *)
 {
-    if (numChannels_ == 0)
-        return;
-
-    int w = width() / numChannels_;
-
     QPainter p(this);
 
     p.setPen(Qt::NoPen);
     QBrush black = QBrush(QColor(0,0,0));
     QBrush white = QBrush(QColor(70,250,70));
     QBrush red = QBrush(QColor(255,0,0));
+
+    if (numChannels_ == 0)
+    {
+        p.setBrush(black);
+        p.drawRect(rect());
+        return;
+    }
+
+    int w = width() / numChannels_;
 
     for (uint i=0; i<numChannels_; ++i)
     {

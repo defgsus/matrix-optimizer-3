@@ -66,7 +66,7 @@ void EnvelopeUnit::createParameters()
 
     fadeOut_ = createFloatParameter("fadeout", tr("speed down"),
                                  tr("Sets the speed to follow decaying signals in seconds."),
-                                 0.01, 0.001);
+                                 0.5, 0.001);
     fadeOut_->setMinValue(0.00001);
 
 }
@@ -122,6 +122,8 @@ void EnvelopeUnit::processAudioBlock(const F32 *input, Double time, uint thread)
         }
 
         follower->process(&input[i*bsize], bsize);
+
+        MO_DEBUG(QString(" ").repeated(follower->envelope()*50) + "*");
     }
 }
 

@@ -268,10 +268,10 @@ void Scene::transformAudioInput_(const F32 *in, uint thread)
 
 void Scene::processAudioInput_(uint thread)
 {
-    const uint bsize = bufferSize(thread);
+    //const uint bsize = bufferSize(thread);
 
     for (AudioUnit * au : topLevelAudioUnits_)
-        au->processAudioBlock_(&audioInput_[numInputChannels_ * bsize], sceneTime_, thread);
+        au->processAudioBlock_(&audioInput_[0], sceneTime_, thread);
 }
 
 } // namespace MO
