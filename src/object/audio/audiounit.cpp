@@ -143,8 +143,8 @@ void AudioUnit::performBypass_(const F32 *input, F32 *output, uint thread) const
         // clear remaining data
         if (numChannelsIn() < numChannelsOut())
             memset(output + numChannelsIn() * bsize,
-                   (numChannelsOut() - numChannelsIn()) * bsize,
-                   0);
+                   0, (numChannelsOut() - numChannelsIn()) * bsize
+                   );
     }
     else
     {

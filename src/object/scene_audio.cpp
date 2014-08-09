@@ -248,7 +248,7 @@ void Scene::updateOutputEnvelopes_(uint thread)
     {
         outputEnvelopes_[i] =
             outputEnvelopeFollower_[i]->process(
-                    &audioOutput_[thread][i * nummic],
+                    &audioOutput_[thread][i * bsize],
                     bsize);
     }
 

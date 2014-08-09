@@ -73,7 +73,7 @@ private:
     uint sr_;
     F32 fadeIn_, fadeOut_,
         qIn_, qOut_,
-        sam_, env_;
+        env_;
 };
 
 } // namespace AUDIO

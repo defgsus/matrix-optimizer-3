@@ -121,7 +121,7 @@ void EnvelopeUnit::processAudioBlock(const F32 *input, Double time, uint thread)
             follower->updateCoefficients();
         }
 
-        MO_DEBUG( "env: " << follower->process(&input[i*bsize], bsize) );
+        follower->process(&input[i*bsize], bsize);
     }
 }
 

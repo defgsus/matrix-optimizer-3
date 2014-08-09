@@ -19,7 +19,6 @@ EnvelopeFollower::EnvelopeFollower()
     : sr_       (44100),
       fadeIn_   (0.05),
       fadeOut_  (0.1),
-      sam_      (0),
       env_      (0)
 
 {
@@ -28,7 +27,7 @@ EnvelopeFollower::EnvelopeFollower()
 
 void EnvelopeFollower::reset()
 {
-    sam_ = env_ = 0;
+    env_ = 0;
 }
 
 void EnvelopeFollower::updateCoefficients()
@@ -45,12 +44,10 @@ F32 EnvelopeFollower::process(const F32 *input, uint inputStride, uint blockSize
     {
         const F32 in = std::abs(*input);
 
-        if (in >= sam_)
-            env_ += qIn_ * (in - sam_);
+        if (in >= env_)
+            env_ += qIn_ * (in - env_);
         else
-            env_ += qOut_ * (in - sam_);
-
-        sam_ = in;
+            env_ += qOut_ * (in - env_);
     }
 
     return env_;
