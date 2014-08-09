@@ -38,7 +38,7 @@ class LocklessQueue
     Node_ * first_;
     // shared
     std::atomic<Node_*> divider_, last_;
-    std::atomic<int> count_;
+    std::atomic<unsigned int> count_;
 
 public:
 
@@ -74,7 +74,7 @@ public:
         count_.store(0);
     }
 
-    int count() const { return count_.load(); }
+    unsigned int count() const { return count_.load(); }
 
     /** Pushes data on the queue */
     void produce(const T & t)

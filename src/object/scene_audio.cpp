@@ -47,7 +47,7 @@ public:
                 bufferLength = scene_->bufferSize(MO_AUDIO_THREAD),
                 numChannelsOut = scene_->numberChannelsOut(),
                 bufferSize = bufferLength * numChannelsOut,
-                numAhead = 400;
+                numAhead = 4;
         uint writepos = 0;
 
         std::vector<F32> buffer(bufferSize * numAhead);
@@ -57,14 +57,14 @@ public:
         {
             //std::cerr << scene_->audioQueue_->count() << std::endl;
 
-            if (scene_->audioQueue_->count() < 4)
+            if (scene_->audioQueue_->count() < numAhead)
             {
 
                 // calculate an audio block
                 scene_->calculateAudioBlock(scene_->samplePos_, MO_AUDIO_THREAD);
 
                 // update output envelopes
-                //updateOutputEnvelopes_(MO_AUDIO_THREAD);
+                scene_->updateOutputEnvelopes_(MO_AUDIO_THREAD);
 
                 // write here
                 F32 * buf = &buffer[writepos];
