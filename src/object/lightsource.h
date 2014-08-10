@@ -36,7 +36,7 @@ public slots:
 
 private:
 
-    ParameterFloat *r_, *g_, *b_, *dist_;
+    ParameterFloat *all_, *r_, *g_, *b_, *dist_;
 
 };
 

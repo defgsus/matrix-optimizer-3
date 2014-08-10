@@ -39,6 +39,7 @@ void LightSource::createParameters()
 {
     Object::createParameters();
 
+    all_ = createFloatParameter("all", tr("brightness"), tr("Amplifier for all colors"), 1.0, 0.1);
     r_ = createFloatParameter("red", tr("red"), tr("Red amount of light color"), 1.0, 0.1);
     g_ = createFloatParameter("green", tr("green"), tr("Green amount of light color"), 1.0, 0.1);
     b_ = createFloatParameter("blue", tr("blue"), tr("Blue amount of light color"), 1.0, 0.1);
@@ -50,9 +51,10 @@ void LightSource::createParameters()
 
 Vec4 LightSource::lightColor(uint thread, Double time) const
 {
-    return Vec4(r_->value(time, thread),
-                g_->value(time, thread),
-                b_->value(time, thread),
+    const Float all = all_->value(time, thread);
+    return Vec4(r_->value(time, thread) * all,
+                g_->value(time, thread) * all,
+                b_->value(time, thread) * all,
                 dist_->value(time, thread) * 0.001);
 }
 

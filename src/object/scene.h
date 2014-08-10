@@ -24,7 +24,8 @@ namespace MO {
 namespace AUDIO { class AudioDevice; }
 
 class ObjectTreeModel;
-class AudioThread;
+class AudioOutThread;
+class AudioInThread;
 template <typename T> class LocklessQueue;
 
 /** Handles tree managment, locking, rendering and audio processing */
@@ -36,8 +37,8 @@ class Scene : public Object
     friend class Object;
     friend class ScopedSceneLockRead;
     friend class ScopedSceneLockWrite;
-    friend class AudioThread;
-
+    friend class AudioOutThread;
+    friend class AudioInThread;
 public:
     MO_OBJECT_CONSTRUCTOR(Scene);
     ~Scene();
@@ -192,7 +193,7 @@ public slots:
 
     /** Returns a pointer to the audio block previously calculated by calculateAudioBlock().
         The format in the returned pointer is [microphone][buffersize]. */
-    const F32* getMicrophonesOutput(uint thread) const { return &audioOutput_[thread][0]; }
+    const F32* getMicrophonesOutput(uint thread) const { return &sceneAudioOutput_[thread][0]; }
 
     /** Returns the final audio output previously calculated by calculateAudioBlock() in @p buffer.
         The format of buffer is [buffersize][channel]. */
@@ -340,17 +341,24 @@ private:
 
     AUDIO::AudioDevice * audioDevice_;
 
-    AudioThread * audioThread_;
-    LocklessQueue<F32*> * audioQueue_;
+    AudioInThread * audioInThread_;
+    AudioOutThread * audioOutThread_;
+    LocklessQueue<const F32*> * audioInQueue_;
+    LocklessQueue<F32*> * audioOutQueue_;
 
     /** [thread] [microphones][bufferSize] */
-    std::vector<std::vector<F32>> audioOutput_;
+    std::vector<std::vector<F32>> sceneAudioOutput_;
     /** [channels][bufferSize] */
-    std::vector<F32> audioInput_;
+    std::vector<F32> sceneAudioInput_,
+    /** [numInputBuffers][bufferSize][channels] */
+        apiAudioInputBuffer_;
 
     bool isFirstAudioCallback_;
     uint numInputChannels_,
-         numOutputChannels_;
+         numOutputChannels_,
+    /** How much buffer-blocks to store of input */
+         numInputBuffers_,
+         curInputBuffer_;
 
     std::vector<AUDIO::EnvelopeFollower*> outputEnvelopeFollower_;
     std::vector<F32> outputEnvelopes_;

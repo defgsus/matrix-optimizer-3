@@ -54,8 +54,12 @@ Scene::Scene(QObject *parent) :
     sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
     audioDevice_        (new AUDIO::AudioDevice()),
-    audioThread_        (0),
-    audioQueue_         (new LocklessQueue<F32*>()),
+    audioInThread_      (0),
+    audioOutThread_     (0),
+    audioInQueue_       (new LocklessQueue<const F32*>()),
+    audioOutQueue_      (new LocklessQueue<F32*>()),
+    numInputBuffers_    (4),
+    curInputBuffer_     (0),
     isPlayback_         (false),
     sceneTime_          (0),
     samplePos_          (0)
@@ -65,11 +69,7 @@ Scene::Scene(QObject *parent) :
     setName("Scene");
 
     readWriteLock_ = new QReadWriteLock();
-/*
-    timer_.setInterval(1000 / 60);
-    timer_.setSingleShot(false);
-    connect(&timer_, SIGNAL(timeout()), this, SLOT(timerUpdate_()));
-*/
+
     sceneBufferSize_.resize(sceneNumberThreads_);
     sceneBufferSize_[MO_GUI_THREAD] =
     sceneBufferSize_[MO_GFX_THREAD] = 1;
@@ -78,7 +78,7 @@ Scene::Scene(QObject *parent) :
     sceneDelaySize_.resize(sceneNumberThreads_);
     sceneDelaySize_[MO_GUI_THREAD] =
     sceneDelaySize_[MO_GFX_THREAD] = 0;
-    sceneDelaySize_[MO_AUDIO_THREAD] = nextPowerOfTwo(48000);
+    sceneDelaySize_[MO_AUDIO_THREAD] = nextPowerOfTwo(96000);
 }
 
 Scene::~Scene()
@@ -92,7 +92,8 @@ Scene::~Scene()
         delete i;
     delete audioDevice_;
     delete readWriteLock_;
-    delete audioQueue_;
+    delete audioOutQueue_;
+    delete audioInQueue_;
 }
 
 void Scene::serialize(IO::DataStream & io) const

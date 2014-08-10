@@ -21,7 +21,8 @@ namespace GUI {
 
 EnvelopeWidget::EnvelopeWidget(QWidget *parent) :
     QWidget             (parent),
-    numChannels_        (0)
+    numChannels_        (0),
+    doAnimate_          (false)
 {
     setMinimumSize(120, 40);
 }
