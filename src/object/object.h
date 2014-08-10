@@ -96,7 +96,8 @@ public:
         T_TRACK_FLOAT       = 1<<10,
         T_DUMMY             = 1<<11,
         T_LIGHTSOURCE       = 1<<12,
-        T_AUDIO_UNIT        = 1<<13
+        T_AUDIO_UNIT        = 1<<13,
+        T_MODULATOR_OBJECT_FLOAT   = 1<<14
     };
     enum TypeGroups
     {
@@ -108,7 +109,8 @@ public:
 
         TG_FLOAT            = T_TRACK_FLOAT | T_SEQUENCE_FLOAT,
 
-        TG_MODULATION       = TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP,
+        TG_MODULATOR_OBJECT = T_MODULATOR_OBJECT_FLOAT,
+        TG_MODULATION       = TG_MODULATOR_OBJECT | TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP,
 
         TG_TRANSFORMATION   = T_TRANSFORMATION | T_TRANSFORMATION_MIX,
 
@@ -210,6 +212,7 @@ public:
     virtual bool isSequence() const { return false; }
     virtual bool isLightSource() const { return false; }
     virtual bool isAudioUnit() const { return false; }
+    virtual bool isModulatorObject() const { return false; }
 
     /** Returns the user-set activity scope for the object */
     ActivityScope activityScope() const;

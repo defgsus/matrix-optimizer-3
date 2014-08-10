@@ -1,6 +1,6 @@
 /** @file track.h
 
-    @brief
+    @brief Abstract Track object
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>

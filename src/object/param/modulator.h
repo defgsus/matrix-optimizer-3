@@ -18,11 +18,12 @@ namespace IO { class DataStream; }
 
 class Object;
 
+/** @brief Internal class to link to modulating objects. */
 class Modulator
 {
 public:
 
-    /** Construct a modulator coming form object @p modulatorId
+    /** Construct a modulator coming from object @p modulatorId
         and belonging to @p parent */
     Modulator(const QString& name, const QString& modulatorId, Object * parent = 0);
     virtual ~Modulator() { }
@@ -57,6 +58,8 @@ public:
 
     // ------------- setter --------------
 
+    /** Sets the modulating object (from where the modulation comes from).
+        @note Use canBeModulator() to see if the object fits the requirements. */
     void setModulator(Object * object);
 
 protected:

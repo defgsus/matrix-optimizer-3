@@ -11,6 +11,7 @@
 #include "modulator.h"
 #include "io/datastream.h"
 #include "io/log.h"
+#include "io/error.h"
 #include "object/object.h"
 
 namespace MO {
@@ -43,6 +44,9 @@ void Modulator::setModulator(Object * object)
 {
     MO_DEBUG_MOD("Modulator('" << (parent_? parent_->idName() : "") << "')::setModulator('"
              << (object? object->idName() : "") << "')");
+
+    MO_ASSERT(canBeModulator(object), "invalid modulating object '"
+              << object->idName() << "' given to Modulator('" << name_ << "')::setModulator()");
 
     modulator_ = object;
 
