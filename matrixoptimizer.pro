@@ -159,7 +159,8 @@ SOURCES += \
     src/gui/widget/envelopewidget.cpp \
     src/gui/widget/transportwidget.cpp \
     src/io/lockedoutput.cpp \
-    src/object/modulatorobject.cpp
+    src/object/modulatorobject.cpp \
+    src/object/modulatorobjectfloat.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -312,7 +313,8 @@ HEADERS += \
     src/gui/widget/transportwidget.h \
     src/tool/locklessqueue.h \
     src/io/lockedoutput.h \
-    src/object/modulatorobject.h
+    src/object/modulatorobject.h \
+    src/object/modulatorobjectfloat.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
