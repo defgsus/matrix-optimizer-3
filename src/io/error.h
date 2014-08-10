@@ -1,6 +1,6 @@
 /** @file error.h
 
-    @brief
+    @brief Exception classes and error macros
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>

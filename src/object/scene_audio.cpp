@@ -9,6 +9,7 @@
 */
 
 #include <QThread>
+#include <QTime>
 
 #include "scene.h"
 #include "scenelock_p.h"
@@ -41,6 +42,8 @@ public:
     void run()
     {
         setCurrentThreadName("AUDIO_IN");
+        MO_DEBUG_AUDIO("AudioInThread::run()");
+
         /*
         const uint
                 bufferLength = scene_->bufferSize(MO_AUDIO_THREAD),
@@ -50,22 +53,29 @@ public:
 
         scene_->audioInQueue_->reset();
 
+        const F32* buf;
+
+        // length of a buffer in microseconds
+        const unsigned long bufferTimeU =
+            1000000 * scene_->bufferSize(MO_AUDIO_THREAD) / scene_->sampleRate();
+
         while (!stop_)
         {
-            //std::cerr << scene_->audioQueue_->count() << std::endl;
-            const F32* buf;
             if (scene_->audioInQueue_->consume(buf))
             {
                 // process audio input
                 if (!scene_->topLevelAudioUnits_.empty())
                 {
+                    // transform api [bufferSize][channels] to [channels][bufferSize]
                     scene_->transformAudioInput_(buf, MO_AUDIO_THREAD);
+                    // do something with the input
                     scene_->processAudioInput_(MO_AUDIO_THREAD);
                 }
             }
-
+            else usleep(bufferTimeU);
         }
 
+        MO_DEBUG_AUDIO("AudioInThread::run() finished");
     }
 
 private:
@@ -97,6 +107,7 @@ public:
     void run()
     {
         setCurrentThreadName("AUDIO_OUT");
+        MO_DEBUG_AUDIO("AudioOutThread::run()");
 
         const uint
                 bufferLength = scene_->bufferSize(MO_AUDIO_THREAD),
@@ -107,6 +118,10 @@ public:
 
         std::vector<F32> buffer(bufferSize * numAhead);
         scene_->audioOutQueue_->reset();
+
+        // length of a buffer in microseconds
+        const unsigned long bufferTimeU =
+            1000000 * scene_->bufferSize(MO_AUDIO_THREAD) / scene_->sampleRate();
 
         while (!stop_)
         {
@@ -137,9 +152,11 @@ public:
                 // advance scene time
                 scene_->setSceneTime(scene_->samplePos_ + bufferLength);
             }
-
+            else
+                usleep(bufferTimeU);
         }
 
+        MO_DEBUG_AUDIO("AudioOutThread::run() finished");
     }
 
 private:
@@ -232,8 +249,11 @@ void Scene::audioCallback_(const F32 * in, F32 * out)
     F32 * buf;
     if (audioOutQueue_->consume(buf))
         memcpy(out, buf, bufferSize(MO_AUDIO_THREAD) * numberChannelsOut() * sizeof(F32));
-    //else
+    else
+    {
+        memset(out, 0, bufferSize(MO_AUDIO_THREAD) * numberChannelsOut() * sizeof(F32));
         //MO_WARNING("audio-out buffer underrun");
+    }
 
     /*
     // process audio input

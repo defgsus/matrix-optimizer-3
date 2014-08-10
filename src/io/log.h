@@ -12,6 +12,7 @@
 #define MOSRC_IO_LOG_H
 
 #include <QString>
+#include "io/lockedoutput.h"
 #include "io/console.h"
 #include "io/streamoperators_qt.h"
 #include "io/applicationtime.h"
@@ -26,10 +27,11 @@
 
 #ifdef MO_ENABLE_DEBUG
     #define MO_DEBUG_IMPL_(stream_arg__)                    \
-        { std::cerr << "[" << ::MO::currentThreadName()     \
+        MO_STREAM_OUT(std::cerr,                            \
+               "[" << ::MO::currentThreadName()             \
             << "/" << ::MO::applicationTimeString() << "] " \
             << ::MO::streamColor::Debug << stream_arg__     \
-            << ::MO::streamColor::Default << std::endl; }
+            << ::MO::streamColor::Default << std::endl)
 #else
     #define MO_DEBUG_IMPL_(unused__) { }
 #endif
@@ -56,7 +58,7 @@
 #   define MO_DEBUG_IO(unused__) { }
 #endif
 
-#if (1) && defined(MO_ENABLE_DEBUG)
+#if (0) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_GL
 #   define MO_DEBUG_GL(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else

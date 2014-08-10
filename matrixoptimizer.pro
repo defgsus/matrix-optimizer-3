@@ -157,7 +157,8 @@ SOURCES += \
     src/audio/tool/wavetablegenerator.cpp \
     src/object/audio/envelopeunit.cpp \
     src/gui/widget/envelopewidget.cpp \
-    src/gui/widget/transportwidget.cpp
+    src/gui/widget/transportwidget.cpp \
+    src/io/lockedoutput.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -308,7 +309,8 @@ HEADERS += \
     src/object/audio/envelopeunit.h \
     src/gui/widget/envelopewidget.h \
     src/gui/widget/transportwidget.h \
-    src/tool/locklessqueue.h
+    src/tool/locklessqueue.h \
+    src/io/lockedoutput.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

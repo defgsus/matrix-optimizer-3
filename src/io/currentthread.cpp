@@ -34,7 +34,9 @@ void setCurrentThreadName(const QString &name)
 {
     std::lock_guard<std::mutex> lock(mapLock_);
 
-    threadNames_.insert(std::make_pair(currentThreadId(), name));
+    // Note: Don't use the insert() method because
+    // we wan't to overwrite previous names (if thread get's reused)
+    threadNames_[currentThreadId()] = name;
 }
 
 QString currentThreadName()
