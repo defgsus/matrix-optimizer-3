@@ -173,12 +173,12 @@ public:
     static Object * deserializeTreeCompressed(const QByteArray&);
 
     /** Override to store custom data.
-        @note Always call the ancestor class serialize() function
-        in your derived code!
+        @note Always call the ancestor's serialize() function
+        before your derived code!
         @note Always provide the serialize()/deserialize() methods for your classes,
         even if you do not have stuff to store yet and use
         IO::DataStream::writeHeader() to write your specific object version.
-        Adding the serialize function later will definitely break old saved files! */
+        Adding the serialize function later will definitely break previously saved files! */
     virtual void serialize(IO::DataStream&) const;
 
     /** Override to restore custom data.
@@ -373,7 +373,26 @@ public:
         when it gets added to the scene. */
     virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
 
+    // --------------- outputs ---------------------
+
+    /** Call this to get createOutputs() to be called. */
+    void requestCreateOutputs();
+
+    /** Create your ModulatorObject classes here.
+        Use the createOutput...() functions! */
+    virtual void createOutputs() { };
+
+protected:
+
+    /** Creates a new (or reuses an existing) ModulatorObjectFloat as child
+        of this Object.
+        The @p id will be adjusted, so don't rely on it.
+        @note This function returns NULL, if another object with the same id
+        is found which is not of ModulatorObjectFloat class! */
+    ModulatorObjectFloat * createOutputFloat(const QString& id, const QString& name);
+
     // --------------- parameter -------------------
+public:
 
     /** Returns the list of parameters for this object */
     const QList<Parameter*>& parameters() const { return parameters_; }
@@ -449,7 +468,7 @@ protected:
     virtual void setSampleRate(uint samplerate);
 
     /** Override to create all audio sources for your object.
-        @note Be sure to call the ancestor class implementation in your derived method! */
+        @note Be sure to call the ancestor class implementation before your derived code! */
     virtual void createAudioSources() { };
 
     /** Returns the audio sources of this object. */

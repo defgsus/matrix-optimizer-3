@@ -18,7 +18,10 @@ namespace MO {
 MO_REGISTER_OBJECT(ModulatorObjectFloat)
 
 ModulatorObjectFloat::ModulatorObjectFloat(QObject *parent) :
-    ModulatorObject(parent)
+    ModulatorObject(parent),
+    valueParam_ (0),
+    timeStamp_  (0.0),
+    offset_     (0.0)
 {
     setName("ModulatorFloat");
 }
@@ -46,7 +49,20 @@ void ModulatorObjectFloat::createParameters()
 
 Double ModulatorObjectFloat::value(Double time, uint thread) const
 {
-    return valueParam_->value(time, thread);
+    return offset_ + valueParam_->value(time, thread);
 }
+
+void ModulatorObjectFloat::setValue(Double timeStamp, Double value)
+{
+    timeStamp_ = timeStamp;
+    offset_ = value;
+}
+
+/*
+Double ModulatorObjectFloat::getOffset_(Double time)
+{
+    Double fadeTime = 1.0 / 100.0;
+}
+*/
 
 } // namespace MO

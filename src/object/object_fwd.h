@@ -49,6 +49,9 @@ namespace MO {
     class Modulator;
     class ModulatorFloat;
 
+    class ModulatorObject;
+    class ModulatorObjectFloat;
+
     class Setting;
     class SettingFloat;
 

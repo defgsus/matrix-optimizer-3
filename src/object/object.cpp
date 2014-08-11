@@ -23,6 +23,7 @@
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "audio/audiosource.h"
+#include "modulatorobjectfloat.h"
 
 namespace MO {
 
@@ -628,6 +629,10 @@ bool Object::canHaveChildren(Type t) const
     if (t == T_DUMMY || type() == T_DUMMY)
         return true;
 
+    // XXX for now: ModulatorObjects can be anywhere
+    if (t & TG_MODULATOR_OBJECT)
+        return true;
+
     // audio-units can contain only audio-units
     if (type() == T_AUDIO_UNIT)
         return t == T_AUDIO_UNIT;
@@ -737,6 +742,51 @@ void Object::calculateTransformation(Mat4 &matrix, Double time, uint thread) con
         if (t->active(time, thread))
             t->applyTransformation(matrix, time, thread);
 }
+
+// -------------------- outputs ------------------------------
+
+void Object::requestCreateOutputs()
+{
+    Scene * scene = sceneObject();
+    if (!scene)
+        MO_WARNING("Object('" << idName() << "')::requestCreateOutputs() "
+                   "called without scene object");
+
+    scene->callCreateOutputs_(this);
+}
+
+ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const QString &name)
+{
+    QString id = idName() + "_" + given_id;
+
+    Object * o = findChildObject(id);
+
+    // construct new
+    if (!o)
+    {
+        ModulatorObjectFloat * mod = ObjectFactory::createModulatorObjectFloat();
+        mod->canBeDeleted_ = false;
+        mod->idName_ = id;
+        mod->name_ = name;
+        addObject_(mod);
+        return mod;
+    }
+
+    // see if already there
+    if (ModulatorObjectFloat * mod = qobject_cast<ModulatorObjectFloat*>(o))
+    {
+        mod->canBeDeleted_ = false;
+        mod->name_ = name;
+        return mod;
+    }
+
+    MO_ASSERT(false, "Object::createOutputFloat() called, object '" << id << "' found "
+              "but it's not of ModulatorObject class, instead: " << o);
+
+    return 0;
+}
+
+
 
 // ---------------------- parameter --------------------------
 

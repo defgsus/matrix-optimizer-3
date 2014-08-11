@@ -52,6 +52,9 @@ public:
     /** Returns a new float track */
     static TrackFloat * createTrackFloat(const QString& name = QString());
 
+    /** Returns a new float modulator object*/
+    static ModulatorObjectFloat * createModulatorObjectFloat(const QString& name = QString());
+
     /** Creates a dummy object (for skipping unknown objects in deserializer) */
     static Object * createDummy();
 

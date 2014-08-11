@@ -28,13 +28,21 @@ public:
 
     Double value(Double time, uint thread) const;
 
+    /** Sets the base-value.
+        This is an offset independent of the contained ParameterFloat */
+    void setValue(Double timeStamp, Double value);
+
 signals:
 
 public slots:
 
 private:
 
+    //Double getOffset_(Double time);
+
     ParameterFloat * valueParam_;
+
+    Double timeStamp_, offset_;
 };
 
 } // namespace MO

@@ -47,8 +47,8 @@ public:
         Valid after Modulator::setModulator() */
     SourceType sourceType() const { return sourceType_; }
 
-    bool hasAmplitude() const { return sourceType_ == ST_SEQUENCE_FLOAT || sourceType_ == ST_TRACK_FLOAT; }
-    bool hasTimeOffset() const { return sourceType_ == ST_SEQUENCE_FLOAT || sourceType_ == ST_TRACK_FLOAT; }
+    bool hasAmplitude() const;
+    bool hasTimeOffset() const;
 
     /** Returns the modulation-value at given time */
     Double value(Double time, uint thread) const;

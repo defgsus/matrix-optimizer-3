@@ -46,6 +46,8 @@ public:
     virtual Type type() const { return T_SCENE; }
     bool isScene() const { return true; }
 
+    // ################ PUBLIC INTERFACE ###################
+
     // ------------- object model --------------
 
     /** Sets the model to edit the scene. */
@@ -234,6 +236,9 @@ private:
 
     /** Does everything to update the tree */
     void updateTree_();
+
+    /** Request from object @p o to call it's createOutputs() method. */
+    void callCreateOutputs_(Object * o);
 
     /** Collects all special child objects */
     void findObjects_();

@@ -82,6 +82,11 @@ public:
     void setNumChannelsIn(uint num, uint thread);
     void setNumChannelsOut(uint num, uint thread);
 
+    // --------- output modulators -----------
+
+    // XXX w.i.p.
+    //virtual void createModulatorObjects() { };
+
     // ------------ processing ---------------
 
     //virtual void performAudioBlock(SamplePos pos, uint thread) Q_DECL_OVERRIDE;

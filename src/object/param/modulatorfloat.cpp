@@ -55,6 +55,21 @@ bool ModulatorFloat::canBeModulator(const Object * o) const
         || o->type() == Object::T_MODULATOR_OBJECT_FLOAT;
 }
 
+bool ModulatorFloat::hasAmplitude() const
+{
+    return     sourceType_ == ST_SEQUENCE_FLOAT
+            || sourceType_ == ST_TRACK_FLOAT
+            || sourceType_ == ST_MODULATOR_OBJECT_FLOAT;
+}
+
+bool ModulatorFloat::hasTimeOffset() const
+{
+    return     sourceType_ == ST_SEQUENCE_FLOAT
+            || sourceType_ == ST_TRACK_FLOAT
+            || sourceType_ == ST_MODULATOR_OBJECT_FLOAT;
+}
+
+
 void ModulatorFloat::modulatorChanged_()
 {
     if (modulator() == 0)

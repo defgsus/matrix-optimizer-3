@@ -12,6 +12,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "object/param/parameterfloat.h"
+#include "object/modulatorobjectfloat.h"
 #include "audio/tool/envelopefollower.h"
 #include "io/log.h"
 
@@ -96,12 +97,30 @@ void EnvelopeUnit::createFollowers_()
     const uint num = numChannelsIn() * numberThreads();
     for (uint i = 0; i<num; ++i)
         follower_.push_back( new AUDIO::EnvelopeFollower() );
+
+    // tell scene to create the output ModulatorObjects
+    requestCreateOutputs();
+}
+
+void EnvelopeUnit::createOutputs()
+{
+    outputs_.clear();
+    for (uint i=0; i<numChannelsIn(); ++i)
+    {
+        outputs_.push_back( createOutputFloat(
+                        QString("env%1_").arg(i+1),
+                        QString("env %1").arg(i+1)) );
+    }
 }
 
 void EnvelopeUnit::processAudioBlock(const F32 *input, Double time, uint thread)
 {
     MO_ASSERT(thread < follower_.size(), "thread " << thread << " out of range for "
               "EnvelopeUnit with " << follower_.size() << " threads");
+
+    MO_ASSERT(numChannelsIn() <= outputs_.size(),
+              "numChannelsIn (" << numChannelsIn() << ") and "
+              "outputs_.size (" << outputs_.size() << ") do not match.");
 
     const F32 fadeIn = fadeIn_->value(time, thread),
               fadeOut = fadeOut_->value(time, thread);
@@ -122,9 +141,11 @@ void EnvelopeUnit::processAudioBlock(const F32 *input, Double time, uint thread)
             follower->updateCoefficients();
         }
 
-        follower->process(&input[i*bsize], bsize);
+        outputs_[i]->setValue(time,
+                        follower->process(&input[i*bsize], bsize)
+                             );
 
-        MO_DEBUG(QString(" ").repeated(follower->envelope()*50) + "*");
+        //MO_DEBUG(QString(" ").repeated(follower->envelope()*50) + "*");
     }
 }
 

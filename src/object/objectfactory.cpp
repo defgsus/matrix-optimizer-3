@@ -30,6 +30,7 @@
 #include "scene.h"
 #include "trackfloat.h"
 #include "sequencefloat.h"
+#include "modulatorobjectfloat.h"
 
 namespace MO {
 
@@ -171,6 +172,7 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
         obj->createParameters();
 
     obj->createAudioSources();
+    obj->createOutputs();
 
     return obj;
 }
@@ -200,6 +202,18 @@ SequenceFloat * ObjectFactory::createSequenceFloat(const QString& name)
     if (!name.isEmpty())
         seq->name_ = seq->idName_ = name;
     return seq;
+}
+
+ModulatorObjectFloat * ObjectFactory::createModulatorObjectFloat(const QString &name)
+{
+    ModulatorObjectFloat * o =
+            qobject_cast<ModulatorObjectFloat*>(createObject("ModulatorObjectFloat"));
+    MO_ASSERT(o, "could not create ModulatorObjectFloat object");
+
+    if (!name.isEmpty())
+        o->name_ = o->idName_ = name;
+
+    return o;
 }
 
 

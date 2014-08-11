@@ -252,6 +252,12 @@ void Scene::tellObjectsAboutToDelete_(
         o->onObjectsAboutToDelete(deleted);
 }
 
+void Scene::callCreateOutputs_(Object *o)
+{
+    // XXX gui updates!
+    o->createOutputs();
+}
+
 void Scene::updateTree_()
 {
     MO_DEBUG_TREE("Scene::updateTree_()");

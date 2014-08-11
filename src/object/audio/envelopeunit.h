@@ -28,6 +28,10 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
+    // -------------- outputs ---------------
+
+    virtual void createOutputs() Q_DECL_OVERRIDE;
+
     // --------------- processing ------------
 
     /** Called for each block of audio data */
@@ -45,6 +49,8 @@ private:
 
     /** [numChannelsIn][numberThreads] */
     std::vector<AUDIO::EnvelopeFollower*> follower_;
+
+    std::vector<ModulatorObjectFloat*> outputs_;
 };
 
 } // namespace MO
