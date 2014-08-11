@@ -25,7 +25,8 @@ public:
     {
         ST_NONE,
         ST_SEQUENCE_FLOAT,
-        ST_TRACK_FLOAT
+        ST_TRACK_FLOAT,
+        ST_MODULATOR_OBJECT_FLOAT
     };
 
     /** Construct a modulator coming form object @p modulatorId

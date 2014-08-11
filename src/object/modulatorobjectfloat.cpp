@@ -11,7 +11,7 @@
 #include "modulatorobjectfloat.h"
 #include "io/datastream.h"
 #include "io/log.h"
-#include "sequencefloat.h"
+#include "param/parameterfloat.h"
 
 namespace MO {
 
@@ -35,9 +35,18 @@ void ModulatorObjectFloat::deserialize(IO::DataStream & io)
     io.readHeader("modobjf", 1);
 }
 
+void ModulatorObjectFloat::createParameters()
+{
+    ModulatorObject::createParameters();
+
+    valueParam_ = createFloatParameter("val", tr("value"),
+                                       tr("A float value - sent to all receivers of the modulator"),
+                                       0.0, 1.0);
+}
+
 Double ModulatorObjectFloat::value(Double time, uint thread) const
 {
-    return 0.0;
+    return valueParam_->value(time, thread);
 }
 
 } // namespace MO

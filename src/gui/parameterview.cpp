@@ -317,7 +317,8 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
         });
 
         // link to existing modulator
-        addLinkModMenu_(menu, param, Object::T_TRACK_FLOAT);
+        addLinkModMenu_(menu, param,
+            Object::T_TRACK_FLOAT | Object::T_MODULATOR_OBJECT_FLOAT);
 
         menu->addSeparator();
 

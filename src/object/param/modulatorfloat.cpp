@@ -9,10 +9,11 @@
 */
 
 #include "modulatorfloat.h"
-#include "object/trackfloat.h"
-#include "object/sequencefloat.h"
 #include "io/error.h"
 #include "io/datastream.h"
+#include "object/trackfloat.h"
+#include "object/sequencefloat.h"
+#include "object/modulatorobjectfloat.h"
 
 
 namespace MO {
@@ -47,8 +48,9 @@ void ModulatorFloat::deserialize(IO::DataStream & io)
 
 bool ModulatorFloat::canBeModulator(const Object * o) const
 {
-    return qobject_cast<const TrackFloat*>(o)
-        || qobject_cast<const SequenceFloat*>(o);
+    return o->type() == Object::T_TRACK_FLOAT
+        || o->type() == Object::T_SEQUENCE_FLOAT
+        || o->type() == Object::T_MODULATOR_OBJECT_FLOAT;
 }
 
 void ModulatorFloat::modulatorChanged_()
@@ -61,6 +63,9 @@ void ModulatorFloat::modulatorChanged_()
     else
     if (qobject_cast<SequenceFloat*>(modulator()))
         sourceType_ = ST_SEQUENCE_FLOAT;
+    else
+    if (qobject_cast<ModulatorObjectFloat*>(modulator()))
+        sourceType_ = ST_MODULATOR_OBJECT_FLOAT;
     else
     {
         sourceType_ = ST_NONE;
@@ -85,6 +90,10 @@ Double ModulatorFloat::value(Double time, uint thread) const
         case ST_SEQUENCE_FLOAT:
             return amplitude_ *
                     static_cast<SequenceFloat*>(modulator())->value(time, thread);
+
+        case ST_MODULATOR_OBJECT_FLOAT:
+            return amplitude_ *
+                    static_cast<ModulatorObjectFloat*>(modulator())->value(time, thread);
 
         case ST_NONE:
             return 0.0;

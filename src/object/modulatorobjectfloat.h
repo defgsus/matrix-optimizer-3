@@ -22,7 +22,9 @@ class ModulatorObjectFloat : public ModulatorObject
 public:
     MO_OBJECT_CONSTRUCTOR(ModulatorObjectFloat);
 
-    virtual Type type() const { return T_MODULATOR_OBJECT_FLOAT; }
+    virtual Type type() const Q_DECL_OVERRIDE { return T_MODULATOR_OBJECT_FLOAT; }
+
+    virtual void createParameters() Q_DECL_OVERRIDE;
 
     Double value(Double time, uint thread) const;
 
@@ -32,6 +34,7 @@ public slots:
 
 private:
 
+    ParameterFloat * valueParam_;
 };
 
 } // namespace MO
