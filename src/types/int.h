@@ -13,6 +13,9 @@
 
 namespace MO {
 
+    /** General int type, e.g. for ParameterInt */
+    typedef int Int;
+
     /** General unsigned int type */
     typedef unsigned int uint;
 
