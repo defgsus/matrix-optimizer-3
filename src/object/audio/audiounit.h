@@ -82,10 +82,18 @@ public:
     void setNumChannelsIn(uint num, uint thread);
     void setNumChannelsOut(uint num, uint thread);
 
-    // --------- output modulators -----------
+    // -------------- tree -------------------
 
-    // XXX w.i.p.
-    //virtual void createModulatorObjects() { };
+    /** Collects sub-audio units */
+    virtual void childrenChanged() Q_DECL_OVERRIDE;
+
+    const QList<AudioUnit*> subAudioUnits() const { return subAudioUnits_; }
+
+    /** Sets the number of input channels of all sub-units to the
+        number of output channels, recursively.
+        The @p thread is only used for distinguishing the bufferSize, while
+        the number of channels is equal to all threads. */
+    void updateSubUnitChannels(uint thread);
 
     // ------------ processing ---------------
 
@@ -111,7 +119,10 @@ protected:
 
 private:
 
-    void processAudioBlock_(const F32* input, Double time, uint thread);
+    /** Steps recusively through all childs as well! */
+    void processAudioBlock_(const F32* input, Double time, uint thread, bool recursive);
+
+    QList <AudioUnit*> subAudioUnits_;
 
     ParameterSelect * processModeParameter_;
 

@@ -248,6 +248,11 @@ void Scene::swapChildren(Object *parent, int from, int to)
         parent->swapChildren_(from, to);
         parent->childrenChanged_();
         updateTree_();
+
+        if (parent->childObjects()[from]->isAudioUnit()
+            || parent->childObjects()[to]->isAudioUnit())
+            updateAudioUnitChannels_(MO_AUDIO_THREAD);
+
     }
     emit childrenSwapped(parent, from, to);
     render_();

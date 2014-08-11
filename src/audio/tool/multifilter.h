@@ -11,6 +11,8 @@
 #ifndef MOSRC_AUDIO_TOOL_MULTIFILTER_H
 #define MOSRC_AUDIO_TOOL_MULTIFILTER_H
 
+#include <QStringList>
+
 #include "types/int.h"
 #include "types/float.h"
 
@@ -21,9 +23,24 @@ namespace AUDIO {
 class MultiFilter
 {
 public:
+
+    enum FilterType
+    {
+        T_FIRST_ORDER_LOW,
+        T_FIRST_ORDER_HIGH,
+        T_FIRST_ORDER_BAND
+    };
+
+    static const QStringList filterTypeIds;
+    static const QStringList filterTypeNames;
+    static const QStringList filterTypeStatusTips;
+    static const QList<int>  filterTypeEnums;
+
     MultiFilter();
 
     // ----------- setter ----------------
+
+    void setType(FilterType type) { type_ = type; }
 
     /** Sets the samplerate in hertz.
         Requires updateCoefficients() to be called. */
@@ -38,6 +55,8 @@ public:
     void setResonance(F32 reso) { reso_ = reso; }
 
     // ---------- getter ------------------
+
+    FilterType type() const { return type_; }
 
     uint sampleRate() const { return sr_; }
 
@@ -65,10 +84,12 @@ public:
 
 private:
 
+    FilterType type_;
+
     uint sr_;
     F32 freq_, reso_,
         q1_,
-        s1_;
+        s1_, s2_;
 };
 
 } // namespace AUDIO

@@ -1,14 +1,14 @@
-/** @file filterunit.cpp
+/** @file filterbankunit.cpp
 
-    @brief FilterUnit that filters input in specific modes
+    @brief Filterbank AudioUnit object
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 8/8/2014</p>
+    <p>created 8/11/2014</p>
 */
 
-#include "filterunit.h"
+#include "filterbankunit.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "object/param/parameterselect.h"
@@ -17,47 +17,35 @@
 
 namespace MO {
 
-MO_REGISTER_OBJECT(FilterUnit)
+MO_REGISTER_OBJECT(FilterBankUnit)
 
-FilterUnit::FilterUnit(QObject *parent) :
-    AudioUnit(-1, -1, true, parent)
+FilterBankUnit::FilterBankUnit(QObject *parent) :
+    AudioUnit(1, -1, false, parent)
 {
-    setName("FilterUnit");
+    setName("FilterBankUnit");
 }
 
-FilterUnit::~FilterUnit()
+FilterBankUnit::~FilterBankUnit()
 {
     for (auto f : filter_)
         delete f;
 }
 
-void FilterUnit::serialize(IO::DataStream & io) const
+void FilterBankUnit::serialize(IO::DataStream & io) const
 {
     AudioUnit::serialize(io);
-    io.writeHeader("aufilter", 1);
+    io.writeHeader("aufilterbank", 1);
 }
 
-void FilterUnit::deserialize(IO::DataStream & io)
+void FilterBankUnit::deserialize(IO::DataStream & io)
 {
     AudioUnit::deserialize(io);
-    io.readHeader("aufilter", 1);
+    io.readHeader("aufilterbank", 1);
 }
 
-void FilterUnit::createParameters()
+void FilterBankUnit::createParameters()
 {
     AudioUnit::createParameters();
-    /*
-    processModeParameter_ = createSelectParameter(
-                        "processmode", tr("processing"),
-                        tr("Sets the processing mode"),
-                        { "on", "off", "bypass" },
-                        { tr("on"), tr("off"), tr("bypass") },
-                        { tr("Processing is always on"),
-                          tr("Processing is off, no signals are passed through"),
-                          tr("The unit does no processing and passes it's input data unchanged") },
-                        { PM_ON, PM_OFF, PM_BYPASS },
-                        true, false);
-    */
 
     type_ = createSelectParameter("type", tr("filter type"),
                                   tr("Selectes the type of filter"),
@@ -67,10 +55,10 @@ void FilterUnit::createParameters()
                                   AUDIO::MultiFilter::filterTypeEnums,
                                   AUDIO::MultiFilter::T_FIRST_ORDER_LOW, true, false);
 
-    freq_ = createFloatParameter("freq", tr("frequency"),
+    baseFreq_ = createFloatParameter("freq", tr("frequency"),
                                  tr("Controls the filter frequency in Hertz"),
                                  1000., 10.);
-    freq_->setRange(0.0001, 100000.0);
+    baseFreq_->setRange(0.0001, 100000.0);
 
     reso_ = createFloatParameter("reso", tr("resonance"),
                                  tr("Controls the filter resonance - how much of the filter is fed-back to itself"),
@@ -79,20 +67,20 @@ void FilterUnit::createParameters()
 
 }
 
-void FilterUnit::channelsChanged(uint thread)
+void FilterBankUnit::channelsChanged(uint thread)
 {
     AudioUnit::channelsChanged(thread);
 
     createFilters_();
 }
 
-void FilterUnit::setNumberThreads(uint num)
+void FilterBankUnit::setNumberThreads(uint num)
 {
     AudioUnit::setNumberThreads(num);
     createFilters_();
 }
 
-void FilterUnit::createFilters_()
+void FilterBankUnit::createFilters_()
 {
     // clear old
     for (auto f : filter_)
@@ -100,23 +88,23 @@ void FilterUnit::createFilters_()
     filter_.clear();
 
     // create new
-    const uint num = numChannelsIn() * numberThreads();
+    const uint num = numChannelsOut() * numberThreads();
     for (uint i = 0; i<num; ++i)
         filter_.push_back( new AUDIO::MultiFilter() );
 }
 
-void FilterUnit::processAudioBlock(const F32 *input, Double time, uint thread)
+void FilterBankUnit::processAudioBlock(const F32 *input, Double time, uint thread)
 {
     MO_ASSERT(thread < filter_.size(), "thread " << thread << " out of range for "
-              "FilterUnit with " << filter_.size() << " threads");
+              "FilterBankUnit with " << filter_.size() << " threads");
 
-    const F32 freq = freq_->value(time, thread),
+    const F32 freq = baseFreq_->value(time, thread),
               reso = reso_->value(time, thread);
     const auto type = AUDIO::MultiFilter::FilterType(type_->baseValue());
 
     const uint bsize = bufferSize(thread);
 
-    for (uint i=0; i<numChannelsIn(); ++i)
+    for (uint i=0; i<numChannelsOut(); ++i)
     {
         AUDIO::MultiFilter * filter = filter_[i * numberThreads() + thread];
 
@@ -133,7 +121,8 @@ void FilterUnit::processAudioBlock(const F32 *input, Double time, uint thread)
             filter->updateCoefficients();
         }
 
-        filter->process(&input[i*bsize], &outputBuffer(thread)[i*bsize], bsize);
+        // one input, many outputs
+        filter->process(&input[0], &outputBuffer(thread)[i*bsize], bsize);
     }
 }
 

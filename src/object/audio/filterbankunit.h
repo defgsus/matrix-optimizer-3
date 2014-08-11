@@ -1,15 +1,15 @@
-/** @file filterunit.h
+/** @file filterbankunit.h
 
-    @brief AudioUnit that filters input in specific modes
+    @brief Filterbank AudioUnit object
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 8/8/2014</p>
+    <p>created 8/11/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_AUDIO_FILTERUNIT_H
-#define MOSRC_OBJECT_AUDIO_FILTERUNIT_H
+#ifndef MOSRC_OBJECT_AUDIO_FILTERBANKUNIT_H
+#define MOSRC_OBJECT_AUDIO_FILTERBANKUNIT_H
 
 #include "audiounit.h"
 #include "audio/audio_fwd.h"
@@ -17,13 +17,13 @@
 namespace MO {
 
 
-class FilterUnit : public AudioUnit
+class FilterBankUnit : public AudioUnit
 {
     Q_OBJECT
 
 public:
-    MO_OBJECT_CONSTRUCTOR(FilterUnit);
-    ~FilterUnit();
+    MO_OBJECT_CONSTRUCTOR(FilterBankUnit);
+    ~FilterBankUnit();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
@@ -43,12 +43,12 @@ private:
     void createFilters_();
 
     ParameterSelect * type_;
-    ParameterFloat * freq_, * reso_;
+    ParameterFloat * baseFreq_, *linearFreq_, *quadFreq_, * reso_;
 
-    /** [numChannelsIn][numberThreads] */
+    /** [numChannelsOut][numberThreads] */
     std::vector<AUDIO::MultiFilter*> filter_;
 };
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_AUDIO_FILTERUNIT_H
+#endif // MOSRC_OBJECT_AUDIO_FILTERBANKUNIT_H

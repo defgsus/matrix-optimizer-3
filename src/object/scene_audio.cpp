@@ -365,8 +365,12 @@ void Scene::updateAudioUnitChannels_(uint thread)
                    "top-level units == " << topLevelAudioUnits_.size());
 
     for (AudioUnit * au : topLevelAudioUnits_)
+    {
         if (au->numChannelsIn() != numInputChannels_)
             au->setNumChannelsIn(numInputChannels_, thread);
+
+        au->updateSubUnitChannels(thread);
+    }
 }
 
 void Scene::updateDelaySize_()
@@ -519,7 +523,7 @@ void Scene::processAudioInput_(uint thread)
     //const uint bsize = bufferSize(thread);
 
     for (AudioUnit * au : topLevelAudioUnits_)
-        au->processAudioBlock_(&sceneAudioInput_[0], sceneTime_, thread);
+        au->processAudioBlock_(&sceneAudioInput_[0], sceneTime_, thread, true);
 }
 
 } // namespace MO
