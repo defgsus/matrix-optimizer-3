@@ -15,13 +15,16 @@
 
 namespace MO {
 
-
+class Object;
 
 class ObjectTreeSortProxy : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
     explicit ObjectTreeSortProxy(QObject *parent = 0);
+
+    /** Returns a priority for each object type */
+    static int objectPriority(Object * o);
 
 signals:
 

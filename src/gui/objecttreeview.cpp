@@ -201,6 +201,7 @@ void ObjectTreeView::createTypeActions_()
     MO__TYPE_ACTION(Object::TG_TRACK, tr("Tracks"));
     MO__TYPE_ACTION(Object::TG_SEQUENCE | Object::T_SEQUENCEGROUP, tr("Sequences"));
     MO__TYPE_ACTION(Object::T_AUDIO_UNIT, tr("Audio-units"));
+    MO__TYPE_ACTION(Object::TG_MODULATOR_OBJECT, tr("Outputs"));
 
 #undef MO__TYPE_ACTION
 
@@ -573,43 +574,46 @@ void ObjectTreeView::createMoveActions_(Object * obj)
             });
         }
     }
-    // promote
-    if (parent->parentObject() &&
-        parent->parentObject()->canHaveChildren(obj->type()))
-    {
 
-        a = editActions_.addAction(QIcon(":/icon/left.png"), tr("Promote"), this);
-        a->setStatusTip(tr("Moves the selected object one level up in the tree"));
-        a->setShortcut(Qt::CTRL + Qt::Key_Left);
-        connect(a, &QAction::triggered, [=]()
-        {
-            setFocusIndex( filter_->mapFromSource( omodel_->promote(obj) ) );
-        });
-    }
-    // demote
-    if (row > 0 && parent->childObjects().at(row-1)->canHaveChildren(obj->type()))
+    if (obj->canBeDeleted())
     {
-
-        a = editActions_.addAction(QIcon(":/icon/right.png"), tr("Demote"), this);
-        a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling above"));
-        a->setShortcut(Qt::CTRL + Qt::Key_Right);
-        connect(a, &QAction::triggered, [=]()
+        // promote
+        if (parent->parentObject() &&
+            parent->parentObject()->canHaveChildren(obj->type()))
         {
-            setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );
-        });
-    }
-    else if (row == 0 && parent->numChildren()>1
-             && parent->childObjects().at(1)->canHaveChildren(obj->type()))
-    {
-        a = editActions_.addAction(QIcon(":/icon/right.png"), tr("Demote"), this);
-        a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling below"));
-        a->setShortcut(Qt::CTRL + Qt::Key_Right);
-        connect(a, &QAction::triggered, [=]()
-        {
-            setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );
-        });
-    }
 
+            a = editActions_.addAction(QIcon(":/icon/left.png"), tr("Promote"), this);
+            a->setStatusTip(tr("Moves the selected object one level up in the tree"));
+            a->setShortcut(Qt::CTRL + Qt::Key_Left);
+            connect(a, &QAction::triggered, [=]()
+            {
+                setFocusIndex( filter_->mapFromSource( omodel_->promote(obj) ) );
+            });
+        }
+        // demote
+        if (row > 0 && parent->childObjects().at(row-1)->canHaveChildren(obj->type()))
+        {
+
+            a = editActions_.addAction(QIcon(":/icon/right.png"), tr("Demote"), this);
+            a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling above"));
+            a->setShortcut(Qt::CTRL + Qt::Key_Right);
+            connect(a, &QAction::triggered, [=]()
+            {
+                setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );
+            });
+        }
+        else if (row == 0 && parent->numChildren()>1
+                 && parent->childObjects().at(1)->canHaveChildren(obj->type()))
+        {
+            a = editActions_.addAction(QIcon(":/icon/right.png"), tr("Demote"), this);
+            a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling below"));
+            a->setShortcut(Qt::CTRL + Qt::Key_Right);
+            connect(a, &QAction::triggered, [=]()
+            {
+                setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );
+            });
+        }
+    }
 }
 
 
