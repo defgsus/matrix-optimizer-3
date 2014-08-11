@@ -155,6 +155,9 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		1, "noise",		math_func<Float>::noise_1		);
         f.add(Function::FUNCTION,		2, "noise",		math_func<Float>::noise_2		);
         f.add(Function::FUNCTION,		3, "noise",		math_func<Float>::noise_3		);
+        f.add(Function::FUNCTION,		2, "noiseoct",	math_func<Float>::noiseoct_2	);
+        f.add(Function::FUNCTION,		3, "noiseoct",	math_func<Float>::noiseoct_3	);
+        f.add(Function::FUNCTION,		4, "noiseoct",	math_func<Float>::noiseoct_4	);
 
         f.add(Function::FUNCTION,		1, "fac",		math_func<Float>::factorial_1	);
         f.add(Function::FUNCTION,		1, "fib",		math_func<Float>::fibonacci_1	);

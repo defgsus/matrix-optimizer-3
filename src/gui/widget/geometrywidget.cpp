@@ -119,7 +119,8 @@ void GeometryWidget::drawGL(const Mat4& projection, const Mat4& view, const Mat4
     if (recompile && drawable_->isReady())
         drawable_->releaseOpenGl();
 
-    if (!drawable_->isReady())
+    // compile drawable when geometry is ready
+    if (!drawable_->isReady() && drawable_->geometry())
     {
         // set source (and flags)
         GL::ShaderSource * src = new GL::ShaderSource();

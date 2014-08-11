@@ -437,6 +437,7 @@ struct math_func<double>
     static void smoothladder_2  (double ** v)
     { *v[0] = MO::MATH::quant(*v[1], *v[2]) + *v[2] * MO::MATH::smoothstep(0.0, *v[2],
                 MO::MATH::modulo(*v[1], *v[2])); }
+
     static void smootherladder_2(double ** v)
     { *v[0] = MO::MATH::quant(*v[1], *v[2]) + *v[2] * MO::MATH::smootherstep(0.0, *v[2],
                 MO::MATH::modulo(*v[1], *v[2])); }
@@ -509,6 +510,12 @@ struct math_func<double>
     static void noise_1         (double ** v) { *v[0] = noise_.noise(*v[1]); }
     static void noise_2         (double ** v) { *v[0] = noise_.noise(*v[1], *v[2]); }
     static void noise_3         (double ** v) { *v[0] = noise_.noise(*v[1], *v[2], *v[3]); }
+    static void noiseoct_2      (double ** v)
+        { *v[0] = noise_.noiseoct(*v[1], std::min((uint)10, (uint)*v[2])); }
+    static void noiseoct_3      (double ** v)
+        { *v[0] = noise_.noiseoct(*v[1], *v[2], std::min((uint)10, (uint)*v[3])); }
+    static void noiseoct_4      (double ** v)
+        { *v[0] = noise_.noiseoct(*v[1], *v[2], *v[3], std::min((uint)10, (uint)*v[4])); }
 
     // -------------- fractal ----------------------------------
 

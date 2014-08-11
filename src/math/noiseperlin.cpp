@@ -109,7 +109,7 @@ void NoisePerlin::normalize3_(Double v[3]) const
 {
     Double s;
 
-    s = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    s = std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     v[0] = v[0] / s;
     v[1] = v[1] / s;
     v[2] = v[2] / s;
@@ -117,7 +117,7 @@ void NoisePerlin::normalize3_(Double v[3]) const
 
 
 
-Double NoisePerlin::noise(Double arg_x)
+Double NoisePerlin::noise(Double arg_x) const
 {
     int bx0, bx1;
     Double rx0, rx1, sx, t, u, v;
@@ -134,7 +134,7 @@ Double NoisePerlin::noise(Double arg_x)
 
 
 
-Double NoisePerlin::noise(Double arg_x, Double arg_y)
+Double NoisePerlin::noise(Double arg_x, Double arg_y) const
 {
     int bx0, bx1, by0, by1, b00, b10, b01, b11;
     Double rx0, rx1, ry0, ry1, *q, sx, sy, a, b, t, u, v;
@@ -166,7 +166,7 @@ Double NoisePerlin::noise(Double arg_x, Double arg_y)
 }
 
 
-Double NoisePerlin::noise(Double arg_x, Double arg_y, Double arg_z)
+Double NoisePerlin::noise(Double arg_x, Double arg_y, Double arg_z) const
 {
     int bx0, bx1, by0, by1, bz0, bz1, b00, b10, b01, b11;
     Double rx0, rx1, ry0, ry1, rz0, rz1, *q, sy, sz, a, b, c, d, t, u, v;
@@ -211,17 +211,57 @@ Double NoisePerlin::noise(Double arg_x, Double arg_y, Double arg_z)
     return lerp_(sz, c, d);
 }
 
+Double NoisePerlin::noiseoct(Double arg_x, uint oct) const
+{
+    Double n = 0.0, amp = 1.0;
+    for (uint i=0; i<oct; ++i)
+    {
+        n += noise(arg_x) * amp;
+        arg_x *= 2.0;
+        amp *= 0.5;
+    }
+    return n;
+}
 
 
-Double NoisePerlin::noisef(Double arg_x, Double arg_y, Double scale, int oct)
+Double NoisePerlin::noiseoct(Double arg_x, Double arg_y, uint oct) const
+{
+    Double n = 0.0, amp = 1.0;
+    for (uint i=0; i<oct; ++i)
+    {
+        n += noise(arg_x, arg_y) * amp;
+        arg_x *= 2.0;
+        arg_y *= 2.0;
+        amp *= 0.5;
+    }
+    return n;
+}
+
+Double NoisePerlin::noiseoct(Double arg_x, Double arg_y, Double arg_z, uint oct) const
+{
+    Double n = 0.0, amp = 1.0;
+    for (uint i=0; i<oct; ++i)
+    {
+        n += noise(arg_x, arg_y, arg_z) * amp;
+        arg_x *= 2.0;
+        arg_y *= 2.0;
+        arg_z *= 2.0;
+        amp *= 0.5;
+    }
+    return n;
+}
+
+
+Double NoisePerlin::noisef(Double arg_x, Double arg_y, Double scale, int oct) const
 {
     Double n = 0.0;
-    for (int i=0; i<oct; ++i)
+    for (int i=1; i<oct; ++i)
     {
         n = noise(arg_x, arg_y);
         arg_x += noise(n, arg_y) * scale;
         arg_y += noise(n, arg_x) * scale;
     }
+    n = noise(arg_x, arg_y);
     return n;
 }
 

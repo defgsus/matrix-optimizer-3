@@ -35,17 +35,26 @@ public:
     void seed(unsigned int seed);
 
     /** Returns the noise value for a given number */
-    Double noise(Double arg_x);
+    Double noise(Double arg_x) const;
 
     /** Returns the noise value for a 2d-vector */
-    Double noise(Double arg_x, Double arg_y);
+    Double noise(Double arg_x, Double arg_y) const;
 
     /** Returns the noise value for a 3d-vector */
-    Double noise(Double arg_x, Double arg_y, Double arg_z);
+    Double noise(Double arg_x, Double arg_y, Double arg_z) const;
+
+    /** Returns octaved noise (ocatve * 2, amplitude * 0.5) */
+    Double noiseoct(Double arg_x, uint oct) const;
+
+    /** Returns octaved noise (ocatve * 2, amplitude * 0.5) */
+    Double noiseoct(Double arg_x, Double arg_y, uint oct) const;
+
+    /** Returns octaved noise (ocatve * 2, amplitude * 0.5) */
+    Double noiseoct(Double arg_x, Double arg_y, Double arg_z, uint oct) const;
 
     /** Returns fractal noise.
         @todo make noisef() more general? */
-    Double noisef(Double arg_x, Double arg_y, Double scale, int oct);
+    Double noisef(Double arg_x, Double arg_y, Double scale, int oct) const;
 
 private:
 
