@@ -11,6 +11,8 @@
 #ifndef MOSRC_GEOM_GEOMETRY_H
 #define MOSRC_GEOM_GEOMETRY_H
 
+#include <map>
+
 #include "gl/opengl.h"
 #include "types/vector.h"
 
@@ -30,6 +32,8 @@ public:
     typedef GLfloat ColorType;
     typedef GLfloat TextureCoordType;
     typedef GLuint  IndexType;
+
+    static const IndexType invalidIndex = (IndexType)-1;
 
     // ------ enums ----------
 
@@ -131,8 +135,18 @@ public:
         { return addVertex(x,y,z, curNx_,curNy_,curNz_, curR_, curG_, curB_, curA_, curU_, curV_); }
 
     /** Adds a vertex (point) with normal and color.
+        If setSharedVertices() was enabled, the vertex might
+        be reused and not added.
         @returns the index of the vertex. */
     IndexType addVertex(VertexType x, VertexType y, VertexType z,
+                  NormalType nx, NormalType ny, NormalType nz,
+                  ColorType r, ColorType g, ColorType b, ColorType a,
+                  TextureCoordType u, TextureCoordType v);
+
+    /** Adds a vertex (point) with normal and color.
+        Does not check for setSharedVertices().
+        @returns the index of the vertex. */
+    IndexType addVertexAlways(VertexType x, VertexType y, VertexType z,
                   NormalType nx, NormalType ny, NormalType nz,
                   ColorType r, ColorType g, ColorType b, ColorType a,
                   TextureCoordType u, TextureCoordType v);
@@ -142,6 +156,24 @@ public:
 
     /** Connects two previously created indices to form a line */
     void addLine(IndexType p1, IndexType p2);
+
+    // ------- shared vertices -------------
+
+    /** Enables or disables shared vertices.
+        This mode is off by default.
+        When enabled, addVertex() will reuse existing vertices and
+        normals, colors, etc.. will be averaged.
+        @note This setting must be made prior to any call of addVertex() and
+        @p threshold must not changed afterwards.
+        @p threshold will be clipped to minimally 0.001 and vertex coordinates
+        can maximally be +/-8350 for the smallest threshold. */
+    void setSharedVertices(bool enable, VertexType threshold = 0.001);
+
+    /** Returns the vertex index for the given position.
+        If there is no vertex at the given position,
+        or setSharedVertices() was not enabled prior to adding vertices,
+        this call will return invalidIndex */
+    IndexType findVertex(VertexType x, VertexType y, VertexType z) const;
 
     // --------- manipulation --------------
 
@@ -181,8 +213,6 @@ public:
                                const QString& equationY,
                                const QString& equationZ);
 
-    // ------- convenience functions -------
-
     /** Automatically calculates all normals for each triangle.
         Normals that share multiple triangles will be averaged. */
     void calculateTriangleNormals();
@@ -191,9 +221,22 @@ public:
     void invertNormals();
 
     /** Makes every vertex in the model unique.
-        After this call, every triangle will have it's unique vertices. */
+        After this call, every triangle or line vertex will be unique. */
     void unGroupVertices();
+#if (0)
+    /** Makes vertices shared.
+        All vertices that are within @p range apart from each other become the
+        same vertex. */
+    void groupVertices(VertexType range = 0.01)
+        { Geometry tmp; groupVertices(tmp, range); *this = tmp; }
 
+    /** Makes vertices shared in the geometry object @p dst.
+        All vertices that are within @p range apart from each other become the
+        same vertex.
+        @note range will be maximally 0.001 and vertex coordinates
+        can maximally be +/-8350 for the smallest range. */
+    void groupVertices(Geometry& dst, VertexType range = 0.01) const;
+#endif
     // ------------- opengl -----------------
 
     /** Fills the vertex array object with the data from the geometry.
@@ -220,6 +263,22 @@ private:
         curU_, curV_;
 
     volatile int progress_;
+
+    // ------- vertex sharing ---------
+
+    typedef quint64 Key_;
+
+    struct MapStruct_
+    {
+        IndexType idx;
+        uint count;
+        MapStruct_(IndexType idx) : idx(idx), count(1) { }
+    };
+
+    std::map<Key_, MapStruct_> indexMap_;
+
+    bool sharedVertices_;
+    VertexType threshold_;
 };
 
 } // namespace GEOM

@@ -124,6 +124,7 @@ private:
         colorTrack_,
         colorSequence_,
         colorAudioUnit_,
+        colorModulatorObject_,
         colorInvalid_;
 };
 

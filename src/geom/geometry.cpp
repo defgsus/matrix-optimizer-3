@@ -24,6 +24,7 @@
 namespace MO {
 namespace GEOM {
 
+
 Geometry::Geometry()
     :
         curR_   (1.f),
@@ -34,7 +35,9 @@ Geometry::Geometry()
         curNy_  (0.f),
         curNz_  (1.f),
         curU_   (0.f),
-        curV_   (0.f)
+        curV_   (0.f),
+        sharedVertices_ (false),
+        threshold_      (0.001)
 {
 }
 
@@ -57,7 +60,76 @@ void Geometry::clear()
     triIndex_.clear();
 }
 
+void Geometry::setSharedVertices(bool enable, VertexType threshold)
+{
+    sharedVertices_ = enable;
+    threshold_ = std::max((VertexType)0.001, threshold);
+}
+
 Geometry::IndexType Geometry::addVertex(
+                VertexType x, VertexType y, VertexType z,
+                NormalType nx, NormalType ny, NormalType nz,
+                ColorType r, ColorType g, ColorType b, ColorType a,
+                TextureCoordType u, TextureCoordType v)
+{
+    if (!sharedVertices_)
+    {
+        return addVertexAlways(x,y,z,nx,ny,nz,r,g,b,a,u,v);
+    }
+
+#define MO__MAKE_KEY(x__, y__, z__)  \
+    (  (Key_((x__)/threshold_) & ((1<<23) - 1)) \
+    | ((Key_((y__)/threshold_) & ((1<<23) - 1)) << 24) \
+    | ((Key_((z__)/threshold_) & ((1<<23) - 1)) << 48) )
+
+    // find vertex in range
+    const Key_ key = MO__MAKE_KEY(x,y,z);
+    auto i = indexMap_.find(key);
+
+    // add new
+    if (i == indexMap_.end())
+    {
+        const IndexType idx = addVertexAlways(x,y,z,nx,ny,nz,r,g,b,a,u,v);
+        indexMap_.insert(std::make_pair(key, MapStruct_(idx)));
+        return idx;
+    }
+
+    // reuse
+    const IndexType idx = i->second.idx;
+    i->second.count++;
+    const float
+            m2 = 1.f / i->second.count,
+            m1 = 1.f - m2;
+
+    // average attributes
+    NormalType * norm = &normal_[idx * numNormalComponents()];
+    *norm = m1 * *norm + m2 * nx; ++norm;
+    *norm = m1 * *norm + m2 * ny; ++norm;
+    *norm = m1 * *norm + m2 * nz;
+
+    ColorType * col = &color_[idx * numColorComponents()];
+    *col = m1 * *col + m2 * r; ++col;
+    *col = m1 * *col + m2 * g; ++col;
+    *col = m1 * *col + m2 * b; ++col;
+    *col = m1 * *col + m2 * a;
+
+    TextureCoordType * tex = &texcoord_[idx * numTextureCoordComponents()];
+    *tex = m1 * *tex + m2 * u; ++tex;
+    *tex = m1 * *tex + m2 * v;
+
+    return idx;
+}
+
+Geometry::IndexType Geometry::findVertex(VertexType x, VertexType y, VertexType z) const
+{
+    const Key_ key = MO__MAKE_KEY(x,y,z);
+    auto i = indexMap_.find(key);
+    return i == indexMap_.end() ? invalidIndex : i->second.idx;
+#undef MO__MAKE_KEY
+}
+
+
+Geometry::IndexType Geometry::addVertexAlways(
                 VertexType x, VertexType y, VertexType z,
                 NormalType nx, NormalType ny, NormalType nz,
                 ColorType r, ColorType g, ColorType b, ColorType a,
@@ -216,6 +288,8 @@ void Geometry::unGroupVertices()
     normal_.clear();
     color_.clear();
     texcoord_.clear();
+    indexMap_.clear();
+    sharedVertices_ = false;
 
     if (numTriangles())
     {
@@ -552,6 +626,8 @@ void Geometry::tesselate(uint level)
     if (!numTriangles())
     {
         Geometry tess;
+        tess.sharedVertices_ = sharedVertices_;
+        tess.threshold_ = threshold_;
 
         level = std::pow(2,level);
 
@@ -588,6 +664,8 @@ void Geometry::tesselate(uint level)
     for (uint l = 0; l<level; ++l)
     {
         Geometry tess;
+        tess.sharedVertices_ = sharedVertices_;
+        tess.threshold_ = threshold_;
 
         for (uint i=0; i<numTriangles(); ++i)
         {
@@ -707,8 +785,19 @@ void Geometry::transformWithNoise(
 }
 
 
+#if (0)
+void Geometry::groupVertices(Geometry &dst, VertexType range) const
+{
+    range = std::max((VertexType)0.001, range);
+
+//#define MO__MAKE_KEY(x__, y__, z__)
+    ((Key)((x__)/range) | ((Key)((y__)/range) << 24) | ((Key)((z__)/range) << 48))
 
 
+
+//#undef MO__MAKE_KEY
+}
+#endif
 
 
 

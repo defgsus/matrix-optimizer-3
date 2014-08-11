@@ -48,6 +48,7 @@ ObjectTreeModel::ObjectTreeModel(Scene * scene, QObject *parent) :
     colorTrack_ = QColor(90,90,90);
     colorSequence_ = QColor(0,120,0);
     colorAudioUnit_ = QColor(120,40,80);
+    colorModulatorObject_ = QColor(0, 90, 90);
 }
 
 
@@ -230,6 +231,8 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
                 return colorSequence_;
             else if (obj->isAudioUnit())
                 return colorAudioUnit_;
+            else if (obj->isModulatorObject())
+                return colorModulatorObject_;
 
             return colorDefault_;
         }

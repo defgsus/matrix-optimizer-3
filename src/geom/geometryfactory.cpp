@@ -794,8 +794,13 @@ void GeometryFactory::createFromSettings(Geometry * g,
                                          const GeometryFactorySettings * set,
                                          ObjLoader * loader_)
 {
+    // shared vertices?
+    g->setSharedVertices(set->sharedVertices);
+
+    // initial color
     g->setColor(set->colorR, set->colorG, set->colorB, set->colorA);
 
+    // create mesh
     switch (set->type)
     {
     case GeometryFactorySettings::T_FILE:
@@ -857,6 +862,8 @@ void GeometryFactory::createFromSettings(Geometry * g,
 
     }
 
+    // --- modify ---
+
     if (set->tesselate)
         g->tesselate(set->tessLevel);
 
@@ -864,8 +871,8 @@ void GeometryFactory::createFromSettings(Geometry * g,
         g->normalizeSphere(1, set->normalization);
 
     if (!set->sharedVertices
-            // XXX remove when ObjLoader supports vertex sharing
-            && set->type != GeometryFactorySettings::T_FILE)
+            //&& set->type != GeometryFactorySettings::T_FILE
+            )
         g->unGroupVertices();
 
     if (set->convertToLines)

@@ -636,16 +636,15 @@ void ObjLoader::getGeometry(Geometry * g) const
     if (isEmpty())
         return;
 
-    // XXX implement shared vertices, phew...
-
     const Float defNormal[] = { 0, 1, 0 };
     const Float defTex[] = { 0, 0, 0 };
     const Float defColor[] = { 0.5, 0.5, 0.5, 1.0 };
 
+    Geometry::IndexType cur[3];
+
     const uint numTriangles = triangle_.size() / 3;
     for (uint i = 0; i<numTriangles; ++i)
     {
-        const Geometry::IndexType cur = g->numVertices();
 
         for (uint j=0; j<3; ++j)
         {
@@ -656,18 +655,18 @@ void ObjLoader::getGeometry(Geometry * g) const
                     *t = vert.t ? &texCoord_[(vert.t-1) * texCoordComponents] : defTex;
 
             if (vert.mat == 0)
-                g->addVertex(v[0], v[1], v[2],
-                             n[0], n[1], n[2],
-                             defColor[0], defColor[1], defColor[2], defColor[3],
-                             t[0], t[1]);
+                cur[j] = g->addVertex(v[0], v[1], v[2],
+                                      n[0], n[1], n[2],
+                                      defColor[0], defColor[1], defColor[2], defColor[3],
+                                      t[0], t[1]);
             else
-                g->addVertex(v[0], v[1], v[2],
-                             n[0], n[1], n[2],
-                             vert.mat->a_r, vert.mat->a_g, vert.mat->a_b, vert.mat->alpha,
-                             t[0], t[1]);
+                cur[j] = g->addVertex(v[0], v[1], v[2],
+                                      n[0], n[1], n[2],
+                                      vert.mat->a_r, vert.mat->a_g, vert.mat->a_b, vert.mat->alpha,
+                                      t[0], t[1]);
         }
 
-        g->addTriangle(cur, cur + 1, cur + 2);
+        g->addTriangle(cur[0], cur[1], cur[2]);
     }
 }
 
