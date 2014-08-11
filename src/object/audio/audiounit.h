@@ -64,6 +64,10 @@ public:
     uint numChannelsIn() const { return numberChannelsIn_; }
     uint numChannelsOut() const { return numberChannelsOut_; }
 
+    /** If this is different that numChannelsOut(), Scene::updateAudioUnitChannels_()
+        will change the output number */
+    uint numRequestedChannelsOut() const { return numberRequestedChannelsOut_; }
+
     bool numberInputOutputChannelsMustMatch() const { return sameNumberInputOutputChannels_; }
 
     /** Returns write access to the output buffer */
@@ -75,12 +79,10 @@ public:
 
     /** Sets the number of channels.
         If numberInputOutputChannelsMustMatch() is true, the number of
-        output channels is set to the number of input channels!
-        The @p thread is only used for distinguishing the bufferSize, while
-        the number of channels is equal to all threads. */
-    void setNumChannelsInOut(uint numIn, uint numOut, uint thread);
-    void setNumChannelsIn(uint num, uint thread);
-    void setNumChannelsOut(uint num, uint thread);
+        output channels is set to the number of input channels! */
+    void setNumChannelsInOut(uint numIn, uint numOut);
+    void setNumChannelsIn(uint num);
+    void setNumChannelsOut(uint num);
 
     // -------------- tree -------------------
 
@@ -90,10 +92,8 @@ public:
     const QList<AudioUnit*> subAudioUnits() const { return subAudioUnits_; }
 
     /** Sets the number of input channels of all sub-units to the
-        number of output channels, recursively.
-        The @p thread is only used for distinguishing the bufferSize, while
-        the number of channels is equal to all threads. */
-    void updateSubUnitChannels(uint thread);
+        number of output channels, recursively. */
+    void updateSubUnitChannels();
 
     // ------------ processing ---------------
 
@@ -108,9 +108,12 @@ public:
 
 protected:
 
+    /** Tells Scene to update the channel count */
+    void requestNumChannelsOut_(uint newNumber);
+
     /** Called when the number of channels has changed.
         Always call ancestor's implementation before your derived code. */
-    virtual void channelsChanged(uint thread);
+    virtual void channelsChanged();
 
     /** Puts @p input to @p output.
         The number of channels are considered and output is filled with zeros if
@@ -127,7 +130,8 @@ private:
     ParameterSelect * processModeParameter_;
 
     uint maximumChannelsIn_, maximumChannelsOut_,
-         numberChannelsIn_, numberChannelsOut_;
+         numberChannelsIn_, numberChannelsOut_,
+         numberRequestedChannelsOut_;
 
     bool sameNumberInputOutputChannels_;
 

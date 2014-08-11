@@ -74,7 +74,7 @@ Scene::Scene(QObject *parent) :
 
     setName("Scene");
 
-    readWriteLock_ = new QReadWriteLock();
+    readWriteLock_ = new QReadWriteLock(QReadWriteLock::Recursive);
 
     sceneBufferSize_.resize(sceneNumberThreads_);
     sceneBufferSize_[MO_GUI_THREAD] =
@@ -191,7 +191,7 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
         updateTree_();
 
         if (newChild->isAudioUnit())
-            updateAudioUnitChannels_(MO_AUDIO_THREAD);
+            updateAudioUnitChannels_();
     }
     emit objectAdded(newChild);
     render_();
@@ -252,7 +252,7 @@ void Scene::swapChildren(Object *parent, int from, int to)
 
         if (parent->childObjects()[from]->isAudioUnit()
             || parent->childObjects()[to]->isAudioUnit())
-            updateAudioUnitChannels_(MO_AUDIO_THREAD);
+            updateAudioUnitChannels_();
 
     }
     emit childrenSwapped(parent, from, to);

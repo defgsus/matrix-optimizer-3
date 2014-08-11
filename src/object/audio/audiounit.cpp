@@ -13,6 +13,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "object/param/parameterselect.h"
+#include "object/scene.h"
 
 namespace MO {
 
@@ -23,6 +24,7 @@ AudioUnit::AudioUnit(int maxIn, int maxOut, bool sameNum, QObject *parent) :
     maximumChannelsOut_     (maxOut<0? MO_MAX_AUDIO_CHANNELS : maxOut),
     numberChannelsIn_       (0),
     numberChannelsOut_      (0),
+    numberRequestedChannelsOut_ (0),
     sameNumberInputOutputChannels_(sameNum)
 {
     MO_DEBUG_AUDIO("AudioUnit::AudioUnit("
@@ -68,16 +70,19 @@ void AudioUnit::setNumberThreads(uint num)
 
 AudioUnit::ProcessMode AudioUnit::processMode() const
 {
-    MO_ASSERT(processModeParameter_, "AudioUnit::processMode without parameter");
+    MO_ASSERT(processModeParameter_,
+              "AudioUnit::processMode() queried but no parameter created yet");
+
     return processModeParameter_?
                 (ProcessMode)processModeParameter_->baseValue()
               : PM_ON;
 }
 
-void AudioUnit::setNumChannelsIn(uint num, uint thread)
+void AudioUnit::setNumChannelsIn(uint num)
 {
     MO_DEBUG_AUDIO("AudioUnit::setNumChannelsIn("
-                   << num << ", " << thread << ")");
+                   << num << ") "
+                   "requestedOut_ == " << numberRequestedChannelsOut_);
 
     const uint oldin = numberChannelsIn_,
                oldout = numberChannelsOut_;
@@ -86,14 +91,17 @@ void AudioUnit::setNumChannelsIn(uint num, uint thread)
     if (sameNumberInputOutputChannels_)
         numberChannelsOut_ = std::min(maximumChannelsOut_, num);
 
+    numberRequestedChannelsOut_ = numberChannelsOut_;
+
     if (oldin != numberChannelsIn_ || oldout != numberChannelsOut_)
-        channelsChanged(thread);
+        channelsChanged();
 }
 
-void AudioUnit::setNumChannelsOut(uint num, uint thread)
+void AudioUnit::setNumChannelsOut(uint num)
 {
     MO_DEBUG_AUDIO("AudioUnit::setNumChannelsOut("
-                   << num << ", " << thread << ")");
+                   << num << ") "
+                   "requestedOut_ == " << numberRequestedChannelsOut_);
 
     const uint oldin = numberChannelsIn_,
                oldout = numberChannelsOut_;
@@ -102,14 +110,17 @@ void AudioUnit::setNumChannelsOut(uint num, uint thread)
     if (sameNumberInputOutputChannels_)
         numberChannelsIn_ = std::min(maximumChannelsIn_, num);
 
+    numberRequestedChannelsOut_ = numberChannelsOut_;
+
     if (oldin != numberChannelsIn_ || oldout != numberChannelsOut_)
-        channelsChanged(thread);
+        channelsChanged();
 }
 
-void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut, uint thread)
+void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut)
 {
     MO_DEBUG_AUDIO("AudioUnit::setNumChannelsInOut("
-                   << numIn << ", " << numOut << ", " << thread << ")");
+                   << numIn << ", " << numOut << ") "
+                   "requestedOut_ == " << numberRequestedChannelsOut_);
 
     const uint oldin = numberChannelsIn_,
                oldout = numberChannelsOut_;
@@ -118,13 +129,16 @@ void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut, uint thread)
     numberChannelsOut_ = std::min(maximumChannelsOut_,
                 sameNumberInputOutputChannels_? numIn : numOut);
 
+    numberRequestedChannelsOut_ = numberChannelsOut_;
+
     if (oldin != numberChannelsIn_ || oldout != numberChannelsOut_)
-        channelsChanged(thread);
+        channelsChanged();
 }
 
-void AudioUnit::channelsChanged(uint thread)
+void AudioUnit::channelsChanged()
 {
-    audioOutputBuffer_[thread].resize(numberChannelsOut_ * bufferSize(thread));
+    for (uint i=0; i<audioOutputBuffer_.size(); ++i)
+        audioOutputBuffer_[i].resize(numberChannelsOut_ * bufferSize(i));
 }
 
 void AudioUnit::childrenChanged()
@@ -135,7 +149,7 @@ void AudioUnit::childrenChanged()
     subAudioUnits_ = findChildObjects<AudioUnit>();
 }
 
-void AudioUnit::updateSubUnitChannels(uint thread)
+void AudioUnit::updateSubUnitChannels()
 {
     // break if this is no pass-through unit
     if (numChannelsOut() < 1)
@@ -144,11 +158,34 @@ void AudioUnit::updateSubUnitChannels(uint thread)
     // update channel sizes of sub-units
     for (auto au : subAudioUnits_)
     {
-        if (au->numChannelsIn() != numChannelsOut())
-            au->setNumChannelsIn(numChannelsOut(), thread);
-        au->updateSubUnitChannels(thread);
+        if (au->numChannelsIn() != numChannelsOut()
+            || au->numRequestedChannelsOut() != au->numChannelsOut())
+            au->setNumChannelsInOut(numChannelsOut(),
+                                    au->numRequestedChannelsOut());
+
+        au->updateSubUnitChannels();
     }
 }
+
+void AudioUnit::requestNumChannelsOut_(uint newNumber)
+{
+    Scene * scene = sceneObject();
+    if (!scene)
+    {
+        setNumChannelsOut(newNumber);
+        updateSubUnitChannels();
+    }
+    else
+    {
+        numberRequestedChannelsOut_ = newNumber;
+        scene->updateAudioUnitChannels();
+    }
+}
+
+
+
+
+
 
 
 void AudioUnit::processAudioBlock_(const F32 *input, Double time, uint thread, bool recursive)

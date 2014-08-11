@@ -176,6 +176,12 @@ public slots:
         The sequence will be removed from the previous track. */
     //void moveSequence(MO::Sequence * seq, MO::Track * from, MO::Track * to);
 
+    // ------------- audiounits ----------------
+
+    /** Updates input/output channel sizes of all audiounits.
+        Locked version */
+    void updateAudioUnitChannels();
+
     // ------------- runtime -------------------
 
     /** Call before deleting the scene.
@@ -283,7 +289,7 @@ private:
     void prepareAudioInputBuffer_(uint thread);
     /** Sets the number of input channels for all (top-level) audioUnits
         and adjusts their children accordingly. */
-    void updateAudioUnitChannels_(uint thread);
+    void updateAudioUnitChannels_();
 
     /** Transforms the channel-layout and fills internal buffer */
     void transformAudioInput_(const F32 * in, uint thread);

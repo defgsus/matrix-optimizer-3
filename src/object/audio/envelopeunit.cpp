@@ -72,9 +72,9 @@ void EnvelopeUnit::createParameters()
 
 }
 
-void EnvelopeUnit::channelsChanged(uint thread)
+void EnvelopeUnit::channelsChanged()
 {
-    AudioUnit::channelsChanged(thread);
+    AudioUnit::channelsChanged();
 
     createFollowers_();
 }

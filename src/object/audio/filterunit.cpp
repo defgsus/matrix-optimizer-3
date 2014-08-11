@@ -79,9 +79,9 @@ void FilterUnit::createParameters()
 
 }
 
-void FilterUnit::channelsChanged(uint thread)
+void FilterUnit::channelsChanged()
 {
-    AudioUnit::channelsChanged(thread);
+    AudioUnit::channelsChanged();
 
     createFilters_();
 }

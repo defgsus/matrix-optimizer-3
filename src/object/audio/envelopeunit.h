@@ -39,7 +39,7 @@ public:
 
 protected:
 
-    virtual void channelsChanged(uint thread) Q_DECL_OVERRIDE;
+    virtual void channelsChanged() Q_DECL_OVERRIDE;
 
 private:
 

@@ -35,7 +35,8 @@ SpinBox::SpinBox(QWidget *parent) :
 
 void SpinBox::setValue(int v, bool send_signal)
 {
-    ignoreSignal_ = !send_signal && v != spin_->value();
+    ignoreSignal_ = !send_signal &&
+                v != spin_->value() && v >= spin_->minimum() && v <= spin_->maximum();
     spin_->setValue(v);
 }
 

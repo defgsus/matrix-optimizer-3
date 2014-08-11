@@ -11,6 +11,7 @@
 #include "filterbankunit.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
@@ -49,8 +50,10 @@ void FilterBankUnit::createParameters()
     AudioUnit::createParameters();
 
     numOut_ = createIntParameter("numout", tr("number outputs"),
-                                   tr("The number of individual filters in the filter bank"),
-                                   1, 1, true, false);
+                                 tr("The number of individual filters in the filter bank"),
+                                 numChannelsOut(),
+                                 1, MO_MAX_AUDIO_CHANNELS,
+                                 1, true, false);
 
     type_ = createSelectParameter("type", tr("filter type"),
                                   tr("Selectes the type of filter"),
@@ -72,9 +75,17 @@ void FilterBankUnit::createParameters()
 
 }
 
-void FilterBankUnit::channelsChanged(uint thread)
+void FilterBankUnit::onParameterChanged(Parameter *p)
 {
-    AudioUnit::channelsChanged(thread);
+    AudioUnit::onParameterChanged(p);
+
+    if (p == numOut_)
+        requestNumChannelsOut_(numOut_->baseValue());
+}
+
+void FilterBankUnit::channelsChanged()
+{
+    AudioUnit::channelsChanged();
 
     createFilters_();
 }
@@ -82,6 +93,7 @@ void FilterBankUnit::channelsChanged(uint thread)
 void FilterBankUnit::setNumberThreads(uint num)
 {
     AudioUnit::setNumberThreads(num);
+
     createFilters_();
 }
 
@@ -127,7 +139,7 @@ void FilterBankUnit::processAudioBlock(const F32 *input, Double time, uint threa
         }
 
         // one input, many outputs
-        filter->process(&input[0], &outputBuffer(thread)[i*bsize], bsize);
+        //filter->process(&input[0], &outputBuffer(thread)[i*bsize], bsize);
     }
 }
 

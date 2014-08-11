@@ -197,7 +197,7 @@ void Scene::initAudioDevice_()
         prepareAudioInputBuffer_(MO_AUDIO_THREAD);
         allocateAudioOutputEnvelopes_(MO_AUDIO_THREAD);
 
-        updateAudioUnitChannels_(MO_AUDIO_THREAD);
+        updateAudioUnitChannels_();
 
         emit numberChannelsChanged(numInputChannels_, numOutputChannels_);
 
@@ -286,7 +286,7 @@ void Scene::start()
     if (!isAudioInitialized())
         initAudioDevice_();
 
-    updateAudioUnitChannels_(MO_AUDIO_THREAD);
+    updateAudioUnitChannels_();
 
     if (isAudioInitialized())
     {
@@ -359,17 +359,26 @@ void Scene::prepareAudioInputBuffer_(uint thread)
                 numInputBuffers_ * bufferSize(thread) * numInputChannels_);
 }
 
-void Scene::updateAudioUnitChannels_(uint thread)
+void Scene::updateAudioUnitChannels()
 {
-    MO_DEBUG_AUDIO("Scene::updateAudioUnitChannels_(" << thread << ") "
+    ScopedSceneLockWrite lock(this);
+
+    updateAudioUnitChannels_();
+}
+
+void Scene::updateAudioUnitChannels_()
+{
+    MO_DEBUG_AUDIO("Scene::updateAudioUnitChannels_() "
                    "top-level units == " << topLevelAudioUnits_.size());
 
     for (AudioUnit * au : topLevelAudioUnits_)
     {
-        if (au->numChannelsIn() != numInputChannels_)
-            au->setNumChannelsIn(numInputChannels_, thread);
+        if (au->numChannelsIn() != numInputChannels_
+            || au->numRequestedChannelsOut() != au->numChannelsOut())
+            au->setNumChannelsInOut(numInputChannels_,
+                                 au->numRequestedChannelsOut());
 
-        au->updateSubUnitChannels(thread);
+        au->updateSubUnitChannels();
     }
 }
 

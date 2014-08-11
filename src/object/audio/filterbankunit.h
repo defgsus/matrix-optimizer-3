@@ -29,6 +29,8 @@ public:
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
+    virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
+
     // --------------- processing ------------
 
     /** Called for each block of audio data */
@@ -36,7 +38,7 @@ public:
 
 protected:
 
-    virtual void channelsChanged(uint thread) Q_DECL_OVERRIDE;
+    virtual void channelsChanged() Q_DECL_OVERRIDE;
 
 private:
 

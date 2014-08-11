@@ -35,7 +35,8 @@ DoubleSpinBox::DoubleSpinBox(QWidget *parent) :
 
 void DoubleSpinBox::setValue(double v, bool send_signal)
 {
-    ignoreSignal_ = !send_signal && v != spin_->value();
+    ignoreSignal_ = !send_signal &&
+            v != spin_->value() && v >= spin_->minimum() && v <= spin_->maximum();
     spin_->setValue(v);
 }
 
