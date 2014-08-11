@@ -87,7 +87,7 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
 
 QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *parent)
 {
-    QIcon iconTrack(QIcon(":/icon/obj_track.png"));
+    //static QIcon iconTrack(QIcon(":/icon/obj_track.png"));
 
     QMenu * menu = new QMenu(parent);
 
@@ -97,7 +97,7 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
         {
             Object * mo = m->modulator();
             MO_ASSERT(mo, "no object assigned to modulator of '" << pf->idName() << "'");
-            QAction * a = new QAction(iconTrack, mo->name(), menu);
+            QAction * a = new QAction(ObjectFactory::iconForObject(mo), mo->name(), menu);
             a->setData(mo->idName());
             a->setToolTip(mo->namePath());
             a->setStatusTip(a->toolTip());

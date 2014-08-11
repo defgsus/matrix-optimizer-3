@@ -284,9 +284,18 @@ public:
 
     /** Returns the children of type @p T with the given id, or NULL.
         if @p id is empty, all objects of type T will be returned.
-        If @p ignore is not NULL, this object will be ignored by search. */
+        If @p ignore is not NULL, this object will be ignored by search
+        (but it's child objects will be considered as well). */
     template <class T>
-    QList<T*> findChildObjects(const QString& id = QString(), bool recursive = false, Object * ignore = 0) const;
+    QList<T*> findChildObjects(
+            const QString& id = QString(), bool recursive = false, Object * ignore = 0) const;
+
+    /** Returns the children of type @p T with the given id, or NULL.
+        if @p id is empty, all objects of type T will be returned.
+        @p stopAt and all it's children will be ignored by the search. */
+    template <class T>
+    QList<T*> findChildObjectsStopAt(
+            const QString& id, bool recursive, Object * stopAt) const;
 
     /** Returns the index of the last child object of type @p T */
     template <class T>
@@ -294,6 +303,13 @@ public:
 
     /** Called when the children list has changed */
     virtual void childrenChanged() { }
+
+    /** Called when an object and it's subtree have been deleted.
+        The objects in @p list are still existing!
+        @note Call ancestor's implementation before your derived code!
+        Object's base implementation removes all modulators from parameters
+        that point to deleted objects. */
+    virtual void onObjectsAboutToDelete(const QList<const Object*>& list);
 
     /** Returns the number of threads, this object is assigned for */
     uint numberThreads() const { return numberThreads_; }
@@ -558,7 +574,7 @@ private:
 };
 
 /** Installs the object in ObjectFactory.
-    But use MO_REGISTER_OBJECT to do the job */
+    @note Prefere to use MO_REGISTER_OBJECT to do the job */
 extern bool registerObject_(Object *);
 
 
@@ -584,6 +600,27 @@ QList<T*> Object::findChildObjects(const QString& id, bool recursive, Object * i
 
     return list;
 }
+
+template <class T>
+QList<T*> Object::findChildObjectsStopAt(
+        const QString& id, bool recursive, Object * stopAt) const
+{
+    QList<T*> list;
+
+    for (auto o : childObjects_)
+        if (o != stopAt
+            && (qobject_cast<T*>(o))
+            && (id.isEmpty() || o->idName() == id))
+                list.append(static_cast<T*>(o));
+
+    if (recursive)
+        for (auto i : childObjects_)
+            if (i != stopAt)
+                list.append(i->findChildObjectsStopAt<T>(id, recursive, stopAt));
+
+    return list;
+}
+
 
 template <class T>
 int Object::indexOfLastChild(int last) const

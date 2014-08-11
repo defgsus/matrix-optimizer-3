@@ -633,6 +633,19 @@ void Object::childrenChanged_()
     childrenHaveChanged_ = false;
 }
 
+
+void Object::onObjectsAboutToDelete(const QList<const Object *> & list)
+{
+    for (Parameter * p : parameters_)
+    {
+        for (const Object * o : list)
+            if (p->findModulator(o->idName()))
+                p->removeModulator(o->idName());
+    }
+}
+
+
+
 void Object::setNumberThreads(uint num)
 {
     MO_DEBUG_TREE("Object('" << idName() << "')::setNumberThreads(" << num << ")");

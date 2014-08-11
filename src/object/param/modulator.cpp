@@ -44,9 +44,9 @@ void Modulator::setModulator(Object * object)
 {
     MO_DEBUG_MOD("Modulator('" << (parent_? parent_->idName() : "") << "')::setModulator('"
              << (object? object->idName() : "") << "')");
-
-    MO_ASSERT(canBeModulator(object), "invalid modulating object '"
-              << object->idName() << "' given to Modulator('" << name_ << "')::setModulator()");
+    if (object)
+        MO_ASSERT(canBeModulator(object), "invalid modulating object '"
+                  << object->idName() << "' given to Modulator('" << name_ << "')::setModulator()");
 
     modulator_ = object;
 

@@ -140,7 +140,7 @@ signals:
 
     /** Emitted when the object was deleted.
         The object pointer will not point to a valid object anymore. */
-    void objectDeleted(MO::Object *);
+    void objectDeleted(const MO::Object *);
 
     /** Emitted after swapChildren() */
     void childrenSwapped(MO::Object *, int from, int to);
@@ -227,6 +227,10 @@ private slots:
 private:
 
     // ------------ object collection ----------
+
+    /** Calls onObjectsDeleted() for every object in @p toTell. */
+    void tellObjectsAboutToDelete_(
+            const QList<Object*> & toTell, const QList<const Object*> & deleted);
 
     /** Does everything to update the tree */
     void updateTree_();

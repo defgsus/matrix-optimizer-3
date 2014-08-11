@@ -106,14 +106,14 @@ void Parameter::removeModulator(const QString &idName)
         return;
     }
 
-    auto mods = modulators_;
-    modulators_.clear();
-    for (auto m : mods)
+    for (auto m : modulators_)
     {
-        if (m->modulatorId() != idName)
-            modulators_.append(m);
-        else
+        if (m->modulatorId() == idName)
+        {
+            modulators_.removeOne(m);
             delete m;
+            break;
+        }
     }
 }
 

@@ -425,7 +425,7 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
 
     // scene changes
     connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(treeChanged_()));
-    connect(scene_, SIGNAL(objectDeleted(MO::Object*)), this, SLOT(treeChanged_()));
+    connect(scene_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(treeChanged_()));
     connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(treeChanged_()));
     connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(sceneChanged_()));
     connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(sceneChanged_()));

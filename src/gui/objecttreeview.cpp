@@ -394,20 +394,6 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
                     model()->parent(currentIndex())))
                 setFocusIndex(filter_->mapFromSource(omodel_->lastDropIndex()));
             });
-
-            // paste after
-            a = editActions_.addAction(QIcon(":/icon/below.png"), tr("Paste after object"), this);
-            a->setStatusTip(tr("Pastes the objects from the clipboard below the selected object"));
-            a->setShortcut(Qt::CTRL + Qt::Key_V);
-            a->setEnabled(parentObj->canHaveChildren(pasteType));
-            connect(a, &QAction::triggered, [=]()
-            {
-                if (model()->dropMimeData(
-                    application->clipboard()->mimeData(), Qt::CopyAction,
-                    currentIndex().row()+1, 0,
-                    model()->parent(currentIndex())))
-                setFocusIndex(filter_->mapFromSource(omodel_->lastDropIndex()));
-            });
         }
 
         // paste as child
@@ -424,6 +410,24 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
                 currentIndex()))
             setFocusIndex(filter_->mapFromSource(omodel_->lastDropIndex()));
         });
+
+        if (parentObj)
+        {
+            // paste after
+            a = editActions_.addAction(QIcon(":/icon/below.png"), tr("Paste after object"), this);
+            a->setStatusTip(tr("Pastes the objects from the clipboard below the selected object"));
+            a->setShortcut(Qt::CTRL + Qt::Key_V);
+            a->setEnabled(parentObj->canHaveChildren(pasteType));
+            connect(a, &QAction::triggered, [=]()
+            {
+                if (model()->dropMimeData(
+                    application->clipboard()->mimeData(), Qt::CopyAction,
+                    currentIndex().row()+1, 0,
+                    model()->parent(currentIndex())))
+                setFocusIndex(filter_->mapFromSource(omodel_->lastDropIndex()));
+            });
+        }
+
     }
 }
 
@@ -477,7 +481,25 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
                 addObject_(parentIndex, currentIndex().row(), newo);
             });
         }
+    }
 
+    // new children
+    QMenu * menu = createObjectsMenu_(obj);
+    if (menu)
+    {
+        a = editActions_.addAction(QIcon(":/icon/new_child.png"), tr("New child object"), this);
+        a->setStatusTip(tr("Creates a new object as children of the selected object"));
+        a->setMenu(menu);
+
+        connect(menu, &QMenu::triggered, [this](QAction * a)
+        {
+            Object * newo = ObjectFactory::createObject(a->data().toString());
+            addObject_(currentIndex(), -1, newo);
+        });
+    }
+
+    if (parentObj)
+    {
         // new sibling below
         menu = createObjectsMenu_(parentObj, true);
         if (menu)
@@ -495,21 +517,6 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
                 addObject_(parentIndex, currentIndex().row() + 1, newo);
             });
         }
-    }
-
-    // new children
-    QMenu * menu = createObjectsMenu_(obj);
-    if (menu)
-    {
-        a = editActions_.addAction(QIcon(":/icon/new_child.png"), tr("New child object"), this);
-        a->setStatusTip(tr("Creates a new object as children of the selected object"));
-        a->setMenu(menu);
-
-        connect(menu, &QMenu::triggered, [this](QAction * a)
-        {
-            Object * newo = ObjectFactory::createObject(a->data().toString());
-            addObject_(currentIndex(), -1, newo);
-        });
     }
 
 }

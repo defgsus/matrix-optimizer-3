@@ -95,13 +95,23 @@ void ParameterFloat::collectModulators()
     {
         Object * o = root->findChildObject(m->modulatorId(), true);
 
-        if (m->canBeModulator(o))
+        if (o)
         {
-            m->setModulator(o);
-            ++k;
+            if (m->canBeModulator(o))
+            {
+                m->setModulator(o);
+                ++k;
+            }
+            else
+            {
+                m->setModulator(0);
+                MO_WARNING("parameter '" << idName()
+                           << "' can not work with modulator '" << m->modulatorId() << "'");
+            }
         }
         else
         {
+            m->setModulator(0);
             MO_WARNING("parameter '" << idName()
                        << "' could not find modulator '" << m->modulatorId() << "'");
         }

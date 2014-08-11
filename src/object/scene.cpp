@@ -193,14 +193,41 @@ void Scene::deleteObject(Object *object)
     MO_DEBUG_TREE("Scene::deleteObject(" << object << ")");
 
     MO_ASSERT(object->parentObject(), "Scene::deleteObject("<<object<<") without parent");
+
+    QList<const Object*> dellist;
+
     {
         ScopedSceneLockWrite lock(this);
+
+        // get list of all objects that will be deleted
+        dellist = object->findChildObjects<const Object>(QString(), true);
+        dellist.prepend(object);
+
+        // get list of all remaining objects
+        QList<Object*> remainList = findChildObjectsStopAt<Object>(QString(), true, object);
+        remainList.prepend(this);
+
+        // tell everyone about deletions
+        tellObjectsAboutToDelete_(remainList, dellist);
+
+        // execute
         Object * parent = object->parentObject();
         parent->deleteObject_(object);
         parent->childrenChanged_();
+
+        // finally update tree
         updateTree_();
     }
+
+    // tell gui
     emit objectDeleted(object);
+
+    // XXX right now GUI does not listen to the specific
+    // object but rather updates everything.
+    // So rather not call this repeatedly.
+    //for (auto o : dellist)
+        //emit objectDeleted(o);
+
     render_();
 }
 
@@ -218,6 +245,12 @@ void Scene::swapChildren(Object *parent, int from, int to)
     render_();
 }
 
+void Scene::tellObjectsAboutToDelete_(
+        const QList<Object *>& toTell, const QList<const Object *>& deleted)
+{
+    for (auto o : toTell)
+        o->onObjectsAboutToDelete(deleted);
+}
 
 void Scene::updateTree_()
 {
