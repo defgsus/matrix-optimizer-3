@@ -44,6 +44,9 @@ signals:
 
 public slots:
 
+    /** Force update of whole model data */
+    void updateFromModel();
+
     void expandObjectsByType(int typeflags);
 
     void setFocusIndex(const QModelIndex&);

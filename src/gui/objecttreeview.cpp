@@ -77,6 +77,12 @@ void ObjectTreeView::modelChanged_()
     scene_ = qobject_cast<Scene*>(omodel_->rootObject());
 }
 
+void ObjectTreeView::updateFromModel()
+{
+    if (!scene_)
+        return;
+    rowsInserted(rootIndex(), 0, scene_->numChildren());
+}
 
 void ObjectTreeView::currentChanged(
         const QModelIndex &current, const QModelIndex &/*previous*/)

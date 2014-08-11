@@ -81,7 +81,6 @@ public slots:
 
     // ---- act upon changes ---
 
-
     // ---- custom editing ----
 
     bool deleteObject(const QModelIndex&);

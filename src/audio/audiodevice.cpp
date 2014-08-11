@@ -273,6 +273,11 @@ bool AudioDevice::isAudioConfigured() const
     return !(name.isEmpty() || name == "None");
 }
 
+uint AudioDevice::numConfiguredInputChannels() const
+{
+    return settings->value("Audio/channelsIn", 0).toInt();
+}
+
 bool AudioDevice::initFromSettings()
 {
     MO_DEBUG_AUDIO("AudioDevice::initFromSettings()");

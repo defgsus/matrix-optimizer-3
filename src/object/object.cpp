@@ -542,8 +542,6 @@ QString Object::getUniqueId(QString id, const QSet<QString> &existingNames, bool
 {
     MO_ASSERT(!id.isEmpty(), "unset object idName detected");
 
-    MO_DEBUG("GETUNIQUE: {" << id << "}");
-
     if (existed)
         *existed = false;
 
@@ -556,13 +554,11 @@ QString Object::getUniqueId(QString id, const QSet<QString> &existingNames, bool
 
     while (existingNames.contains(id))
     {
-        MO_DEBUG("clash: {" << id << "}");
         increase_id_number(id, 1);
         if (existed)
             *existed = true;
     }
 
-    MO_DEBUG("GETUNIQUE= {" << id << "}");
     return id;
 }
 
@@ -571,7 +567,7 @@ void Object::makeUniqueIds_(Object * root)
     // get all existing ids
     QSet<QString> existing = root->getChildIds(true);
     existing.insert(root->idName());
-    // ignore self
+    // ignore self when searching own tree
     if (root == rootObject())
         existing.remove(idName());
 

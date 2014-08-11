@@ -760,4 +760,5 @@ SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double t
     return seq;
 }
 
+
 } // namespace MO

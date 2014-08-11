@@ -427,6 +427,7 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
             scene_, SLOT(setSceneTime(Double)));
 
     // scene changes
+    // XXX all very unfinished right now
     connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(treeChanged_()));
     connect(scene_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(treeChanged_()));
     connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(treeChanged_()));
@@ -585,6 +586,7 @@ void MainWindow::objectSelected_(Object * o)
 
 void MainWindow::treeChanged_()
 {
+    objectTreeView_->updateFromModel();
     sequencer_->setTracks(scene_);
 }
 

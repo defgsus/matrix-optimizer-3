@@ -58,6 +58,11 @@ Scene::Scene(QObject *parent) :
     audioOutThread_     (0),
     audioInQueue_       (new LocklessQueue<const F32*>()),
     audioOutQueue_      (new LocklessQueue<F32*>()),
+    // set number input channels for AudioUnits to have some value
+    // XXX Device handling should be more global, so that we know
+    // for certain how many channels we're about to use.
+    numInputChannels_   (2),
+    numOutputChannels_  (0),
     numInputBuffers_    (4),
     curInputBuffer_     (0),
     isPlayback_         (false),
@@ -183,6 +188,9 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
         parent->addObject_(newChild, insert_index);
         parent->childrenChanged_();
         updateTree_();
+
+        if (newChild->isAudioUnit())
+            updateAudioUnitChannels_(MO_AUDIO_THREAD);
     }
     emit objectAdded(newChild);
     render_();
@@ -254,8 +262,15 @@ void Scene::tellObjectsAboutToDelete_(
 
 void Scene::callCreateOutputs_(Object *o)
 {
-    // XXX gui updates!
+    // keep list of childs
+    QList<Object*> list = o->childObjects();
+
     o->createOutputs();
+
+    // emit changes
+    for (auto c : o->childObjects())
+        if (!list.contains(c))
+            emit objectAdded(c);
 }
 
 void Scene::updateTree_()
