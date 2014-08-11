@@ -59,13 +59,10 @@ public:
     // --------- modulation -----------
 
     // XXX
-    void collectModulators() { }
-
-    // XXX
     virtual Modulator * getModulator(const QString &/*modulatorId*/) Q_DECL_OVERRIDE { return 0; };
 
-    virtual QList<Object*> getFutureModulatingObjects(const Scene *) const
-                                        Q_DECL_OVERRIDE { return QList<Object*>(); }
+    //virtual QList<Object*> getFutureModulatingObjects(const Scene *) const
+    //                                    Q_DECL_OVERRIDE { return QList<Object*>(); }
 
     // XXX
     /* Receives modulation value at time */

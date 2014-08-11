@@ -67,9 +67,8 @@ public:
     /** Removes all modulators IDs */
     void removeAllModulators();
 
-    /** Overload this to collect the actual objects associated to the
-        modulatorIds(). */
-    virtual void collectModulators() = 0;
+    /** Finds the actual objects associated to the modulatorIds(). */
+    void collectModulators();
 
     /** Returns a modulator for the given id.
         The Modulator is created or reused. */
@@ -86,7 +85,7 @@ public:
 
     /** Returns the list of objects that will be modulating objects when
         this object gets added to @p scene. */
-    virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const = 0;
+    QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
 
 protected:
 

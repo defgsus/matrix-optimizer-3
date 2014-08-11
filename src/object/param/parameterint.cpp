@@ -85,64 +85,6 @@ Modulator * ParameterInt::getModulator(const QString& id)
     return 0;
 }
 
-void ParameterInt::collectModulators()
-{
-    if (modulators().isEmpty())
-        return;
-
-    MO_DEBUG_MOD("ParameterInt("<<idName()<<")::collectModulators()");
-
-    Object * root = object()->rootObject();
-
-    uint k = 0;
-    for (auto m : modulators())
-    {
-        Object * o = root->findChildObject(m->modulatorId(), true);
-
-        if (o)
-        {
-            if (m->canBeModulator(o))
-            {
-                m->setModulator(o);
-                ++k;
-            }
-            else
-            {
-                m->setModulator(0);
-                MO_WARNING("parameter '" << idName()
-                           << "' can not work with modulator '" << m->modulatorId() << "'");
-            }
-        }
-        else
-        {
-            m->setModulator(0);
-            MO_WARNING("parameter '" << idName()
-                       << "' could not find modulator '" << m->modulatorId() << "'");
-        }
-    }
-
-    MO_DEBUG_MOD("ParameterInt("<<idName()<<") found " << k << " of "
-                 << modulators().size() << " modulator(s)");
-}
-
-
-QList<Object*> ParameterInt::getFutureModulatingObjects(const Scene *scene) const
-{
-    QList<Object*> mods, list;
-
-    for (const auto &m : modulatorIds())
-    {
-        if (Object * o = scene->findChildObject(m, true))
-            mods.append(o);
-    }
-
-    list = mods;
-
-    for (auto m : mods)
-        list.append(m->getModulatingObjects());
-
-    return list;
-}
 
 
 } // namespace MO
