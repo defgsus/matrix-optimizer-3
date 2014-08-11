@@ -59,6 +59,7 @@ public:
     // ------------- setter --------------
 
     /** Sets the modulating object (from where the modulation comes from).
+        Set to NULL to remove the modulator temporarily.
         @note Use canBeModulator() to see if the object fits the requirements. */
     void setModulator(Object * object);
 

@@ -510,20 +510,30 @@ void Object::swapChildren_(int from, int to)
     childrenHaveChanged_ = true;
 }
 
-QString Object::getUniqueId(QString id, Object * ignore) const
+QSet<QString> Object::getChildIds(bool recursive) const
 {
-    MO_ASSERT(!id.isEmpty(), "unset object id detected, class='"
-              << className() << "', name='" << name() << "'");
+    QList<Object*> list = findChildObjects(TG_ALL, recursive);
+
+    QSet<QString> ids;
+
+    for (auto o : list)
+        ids.insert(o->idName());
+
+    return ids;
+}
+
+QString Object::getUniqueId(QString id, const QSet<QString> &existingNames)
+{
+    MO_ASSERT(!id.isEmpty(), "unset object idName detected");
 
     // create an id if necessary
     if (id.isEmpty())
-        id = className().isEmpty()? "Object" : className();
+        id = "Object";
 
-    // replace white char with _
+    // replace white char with underscore
     id.replace(QRegExp("\\s\\s*"), "_");
 
-    auto root = rootObject();
-    while (root->findChildObject(id, true, ignore))
+    while (existingNames.contains(id))
     {
         increase_id_number(id, 1);
     }
@@ -533,10 +543,31 @@ QString Object::getUniqueId(QString id, Object * ignore) const
 
 void Object::makeUniqueIds_(Object * root)
 {
-    idName_ = root->getUniqueId(idName_, this);
+    // get all existing ids
+    QSet<QString> existing = root->getChildIds(true);
+    existing.insert(root->idName());
+    // ignore self
+    existing.remove(idName());
 
-    for (auto o : childObjects_)
-        o->makeUniqueIds_(root);
+    // call string version
+    makeUniqueIds_(existing);
+}
+
+void Object::makeUniqueIds_(QSet<QString> &existing)
+{
+    QString oldId = idName_;
+
+    // make this object's id unique
+    idName_ = getUniqueId(idName_, existing);
+
+    // add to existing ids
+    if (idName_ != oldId)
+        existing.insert(idName_);
+
+    // go through childs
+    if (oldId == idName_)
+        for (auto o : childObjects_)
+            o->makeUniqueIds_(existing);
 }
 
 Object * Object::findChildObject(const QString &id, bool recursive, Object * ignore) const

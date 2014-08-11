@@ -16,6 +16,7 @@
 #include <QByteArray>
 #include <QObject>
 #include <QList>
+#include <QSet>
 
 #include "types/int.h"
 #include "types/vector.h"
@@ -261,9 +262,10 @@ public:
     const Scene * sceneObject() const;
           Scene * sceneObject();
 
-    /** Returns a string that is unique among the whole tree hierarchy.
-        If @p ignore is not NULL, this object will be ignored for comparsion. */
-    QString getUniqueId(QString id, Object * ignore = 0) const;
+    /** Returns a string that is unique among the @p existingNames.
+        If a match is found, a counter is added to the idName.
+        Also, any whitespace is relpaced with underscores. */
+    static QString getUniqueId(QString id, const QSet<QString> &existingNames);
 
     /** Returns number of direct childs or number of all sub-childs. */
     int numChildren(bool recursive = false) const;
@@ -273,6 +275,9 @@ public:
 
     /** Read-access to the list of childs */
     const QList<Object*> childObjects() const { return childObjects_; }
+
+    /** Returns a set of all idNames */
+    QSet<QString> getChildIds(bool recursive) const;
 
     /** Returns the children with the given id, or NULL.
         If @p ignore is not NULL, this object will be ignored by search. */
@@ -504,9 +509,13 @@ private:
     /** Adds the object to child list, nothing else */
     Object * addChildObjectHelper_(Object * object, int insert_index = -1);
 
-    /** Makes all id's in the tree unique regarding the tree of @p root.
+    /** Makes all idNames in the tree unique regarding the tree of @p root.
         The tree in @p root can be an actual parent of the object or not. */
     void makeUniqueIds_(Object * root);
+
+    /** Makes all idNames in the tree unique regarding the @p existingNames.
+        @p existingNames will be modified with the changed idNames. */
+    void makeUniqueIds_(QSet<QString>& existingNames);
 
     /** Called on changes to the child list */
     void childrenChanged_();

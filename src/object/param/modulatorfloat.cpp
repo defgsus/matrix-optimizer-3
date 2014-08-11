@@ -48,6 +48,8 @@ void ModulatorFloat::deserialize(IO::DataStream & io)
 
 bool ModulatorFloat::canBeModulator(const Object * o) const
 {
+    MO_ASSERT(o, "ModulatorFloat::canBeModulator(NULL) called");
+
     return o->type() == Object::T_TRACK_FLOAT
         || o->type() == Object::T_SEQUENCE_FLOAT
         || o->type() == Object::T_MODULATOR_OBJECT_FLOAT;
