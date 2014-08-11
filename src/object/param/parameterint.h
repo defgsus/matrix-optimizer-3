@@ -29,7 +29,7 @@ public:
     virtual void serialize(IO::DataStream&) const;
     virtual void deserialize(IO::DataStream&);
 
-    const QString& typeName() const { static QString s("float"); return s; }
+    const QString& typeName() const { static QString s("int"); return s; }
 
     // ---------------- getter -----------------
 
@@ -61,11 +61,6 @@ public:
     Int getModulationValue(Double time, uint thread) const;
 
     virtual Modulator * getModulator(const QString &modulatorId) Q_DECL_OVERRIDE;
-
-    //void collectModulators() Q_DECL_OVERRIDE;
-
-    //virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const
-    //                                                        Q_DECL_OVERRIDE;
 
 private:
 

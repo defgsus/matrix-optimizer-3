@@ -428,6 +428,21 @@ protected:
                 bool editable = true, bool modulateable = true);
 
 
+    ParameterInt * createIntParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                Int defaultValue, Int minValue, Int maxValue, Int smallStep,
+                bool editable, bool modulateable);
+
+    ParameterInt * createIntParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                Int defaultValue, Int smallStep,
+                bool editable, bool modulateable);
+
+    ParameterInt * createIntParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                Int defaultValue, bool editable, bool modulateable);
+
+
     ParameterSelect * createSelectParameter(
                 const QString& id, const QString& name, const QString& statusTip,
                 const QStringList& valueIds, const QStringList& valueNames,

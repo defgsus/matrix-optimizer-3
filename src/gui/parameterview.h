@@ -26,6 +26,7 @@ class QComboBox;
 namespace MO {
 namespace GUI {
 
+class SpinBox;
 class DoubleSpinBox;
 
 
@@ -73,7 +74,8 @@ private:
     Object * object_;
     QList<Parameter*> parameters_;
     QMap<QString, QWidget*> widgets_;
-    QList<DoubleSpinBox*> spins_;
+    QList<SpinBox*> spins_;
+    QList<DoubleSpinBox*> dspins_;
     QList<QComboBox*> combos_;
     QWidget * prevEditWidget_;
 

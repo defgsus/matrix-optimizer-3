@@ -159,6 +159,7 @@ public slots:
 
     // ------------- parameter -----------------
 
+    void setParameterValue(MO::ParameterInt *, Int value);
     void setParameterValue(MO::ParameterFloat *, Double value);
     void setParameterValue(MO::ParameterSelect *, int value);
     void addModulator(MO::Parameter *, const QString& idName);

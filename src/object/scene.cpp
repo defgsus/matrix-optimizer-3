@@ -18,6 +18,7 @@
 #include "io/log.h"
 #include "io/datastream.h"
 #include "object/objectfactory.h"
+#include "object/param/parameterint.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "object/track.h"
@@ -399,6 +400,19 @@ void Scene::updateSampleRate_()
 
 
 // -------------------- parameter ----------------------------
+
+void Scene::setParameterValue(ParameterInt *p, Int v)
+{
+    {
+        ScopedSceneLockWrite lock(this);
+        p->setValue(v);
+        p->object()->onParameterChanged(p);
+    }
+    emit parameterChanged(p);
+    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
+        emit sequenceChanged(seq);
+    render_();
+}
 
 void Scene::setParameterValue(ParameterFloat *p, Double v)
 {

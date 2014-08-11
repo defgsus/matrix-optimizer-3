@@ -21,6 +21,7 @@
 #include "object/scene.h"
 #include "object/trackfloat.h"
 #include "object/sequence.h"
+#include "object/param/parameterint.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "object/param/modulator.h"
@@ -28,6 +29,7 @@
 #include "io/log.h"
 #include "model/objecttreemodel.h"
 #include "util/objectmenu.h"
+#include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
 #include "modulatordialog.h"
 
@@ -81,6 +83,7 @@ void ParameterView::clearWidgets_()
 
     widgets_.clear();
     spins_.clear();
+    dspins_.clear();
     combos_.clear();
 }
 
@@ -166,7 +169,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
         DoubleSpinBox * spin = new DoubleSpinBox(w);
         l->addWidget(spin);
-        spins_.append(spin);
+        dspins_.append(spin);
         // important for update
         spin->setObjectName(p->idName());
 
@@ -207,6 +210,44 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue()); });
     }
     else
+
+    // --- int parameter ---
+    if (ParameterInt * pi = dynamic_cast<ParameterInt*>(p))
+    {
+        defaultValueName = QString::number(pi->defaultValue());
+
+        SpinBox * spin = new SpinBox(w);
+        l->addWidget(spin);
+        spins_.append(spin);
+        // important for update
+        spin->setObjectName(p->idName());
+
+        spin->setMinimum(pi->minValue());
+        spin->setMaximum(pi->maxValue());
+        spin->setSingleStep(pi->smallStep());
+        spin->setValue(pi->baseValue());
+        spin->spinBox()->setMaximumWidth(120);
+        spin->setEnabled(pi->isEditable());
+        spin->setStatusTip(pi->statusTip().isEmpty()
+                           ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")
+                           : pi->statusTip());
+
+        if (prevEditWidget_)
+            setTabOrder(prevEditWidget_, spin);
+        prevEditWidget_ = spin;
+
+        connect(spin, &SpinBox::valueChanged, [=](int value)
+        {
+            Scene * scene = p->object()->sceneObject();
+            MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
+            if (!scene) return;
+            scene->setParameterValue(pi, value);
+        });
+
+        connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pi->defaultValue()); });
+    }
+    else
+
     // --- select parameter ---
     if (ParameterSelect * ps = dynamic_cast<ParameterSelect*>(p))
     {
@@ -453,9 +494,18 @@ void ParameterView::updateWidgetValue_(Parameter * p)
 {
     //MO_DEBUG_GUI("ParameterView::updateWidgetValue_(" << p << ")");
 
+    if (ParameterInt * pi = dynamic_cast<ParameterInt*>(p))
+    {
+        for (SpinBox * spin : spins_)
+        {
+            if (spin->objectName() == pi->idName())
+                spin->setValue(pi->baseValue());
+        }
+    }
+    else
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(p))
     {
-        for (DoubleSpinBox * spin : spins_)
+        for (DoubleSpinBox * spin : dspins_)
         {
             if (spin->objectName() == pf->idName())
                 spin->setValue(pf->baseValue());

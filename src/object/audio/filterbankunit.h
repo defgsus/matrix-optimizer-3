@@ -42,6 +42,7 @@ private:
 
     void createFilters_();
 
+    ParameterInt * numOut_;
     ParameterSelect * type_;
     ParameterFloat * baseFreq_, *linearFreq_, *quadFreq_, * reso_;
 

@@ -72,11 +72,6 @@ public:
 
     virtual Modulator * getModulator(const QString &modulatorId) Q_DECL_OVERRIDE;
 
-    //void collectModulators() Q_DECL_OVERRIDE;
-
-    //virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const
-    //                                                        Q_DECL_OVERRIDE;
-
 private:
 
     Double defaultValue_,

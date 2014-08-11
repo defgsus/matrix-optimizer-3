@@ -13,6 +13,7 @@
 #include "io/error.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterint.h"
 #include "audio/tool/multifilter.h"
 
 namespace MO {
@@ -46,6 +47,10 @@ void FilterBankUnit::deserialize(IO::DataStream & io)
 void FilterBankUnit::createParameters()
 {
     AudioUnit::createParameters();
+
+    numOut_ = createIntParameter("numout", tr("number outputs"),
+                                   tr("The number of individual filters in the filter bank"),
+                                   1, 1, true, false);
 
     type_ = createSelectParameter("type", tr("filter type"),
                                   tr("Selectes the type of filter"),

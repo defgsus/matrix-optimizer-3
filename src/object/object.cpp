@@ -20,6 +20,7 @@
 #include "objectfactory.h"
 #include "scene.h"
 #include "transform/transformation.h"
+#include "param/parameterint.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "audio/audiosource.h"
@@ -890,16 +891,87 @@ ParameterFloat * Object::createFloatParameter(
 
     // override potentially previous
     param->setName(name);
-    param->setModulateable(modulateable);
     param->setDefaultValue(std::min(maxValue, std::max(minValue, defaultValue )));
     param->setMinValue(minValue);
     param->setMaxValue(maxValue);
     param->setSmallStep(smallStep);
     param->setStatusTip(statusTip);
     param->setEditable(editable);
+    param->setModulateable(modulateable);
 
     return param;
 }
+
+
+
+
+ParameterInt * Object::createIntParameter(
+        const QString& id, const QString& name, const QString& statusTip,
+        Int defaultValue, bool editable, bool modulateable)
+{
+    return createIntParameter(id, name, statusTip, defaultValue,
+                                -ParameterInt::infinity, ParameterInt::infinity,
+                                1, editable, modulateable);
+}
+
+ParameterInt * Object::createIntParameter(
+        const QString& id, const QString& name, const QString &statusTip,
+        Int defaultValue, Int smallStep, bool editable, bool modulateable)
+{
+    return createIntParameter(id, name, statusTip, defaultValue,
+                                -ParameterInt::infinity, ParameterInt::infinity,
+                                smallStep, editable, modulateable);
+}
+
+ParameterInt * Object::createIntParameter(
+        const QString& id, const QString& name, const QString& statusTip,
+        Int defaultValue, Int minValue, Int maxValue, Int smallStep,
+        bool editable, bool modulateable)
+{
+    ParameterInt * param = 0;
+
+    // see if already there
+
+    if (auto p = findParameter(id))
+    {
+        if (auto pf = dynamic_cast<ParameterInt*>(p))
+        {
+            param = pf;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested int "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterInt(this, id, name);
+        parameters_.append(param);
+
+        // first time init
+        param->setValue(defaultValue);
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setDefaultValue(std::min(maxValue, std::max(minValue, defaultValue )));
+    param->setMinValue(minValue);
+    param->setMaxValue(maxValue);
+    param->setSmallStep(smallStep);
+    param->setStatusTip(statusTip);
+    param->setEditable(editable);
+    param->setModulateable(modulateable);
+
+    return param;
+}
+
+
+
+
 
 ParameterSelect * Object::createSelectParameter(
             const QString& id, const QString& name, const QString& statusTip,

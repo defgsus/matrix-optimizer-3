@@ -30,6 +30,7 @@ namespace MO {
     class SequenceFloat;
 
     class Parameter;
+    class ParameterInt;
     class ParameterFloat;
     class ParameterSelect;
 
