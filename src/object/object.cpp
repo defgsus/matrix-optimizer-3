@@ -265,6 +265,20 @@ void Object::deserializeParameters_(IO::DataStream & io, Object * o)
     }
 }
 
+
+// --------------- info ----------------------------
+
+void Object::dumpTreeIds(std::ostream &out, const std::string& prefix) const
+{
+    out << prefix << idName() << std::endl;
+
+    for (const Object * c : childObjects_)
+        c->dumpTreeIds(out, " " + prefix);
+}
+
+
+
+
 // ---------------- getter -------------------------
 
 QString Object::namePath() const
@@ -445,15 +459,16 @@ void Object::setParentObject_(Object *parent, int index)
     {
         parentObject_->takeChild_(this);
     }
+    parentObject_ = 0;
+
+    // adjust idnames in new subtree
+    makeUniqueIds_(parent->rootObject());
 
     // assign
     parentObject_ = parent;
 
     // and add to child list
     parentObject_->addChildObjectHelper_(this, index);
-
-    // adjust idnames in new tree
-    makeUniqueIds_(rootObject());
 
 }
 
@@ -522,9 +537,14 @@ QSet<QString> Object::getChildIds(bool recursive) const
     return ids;
 }
 
-QString Object::getUniqueId(QString id, const QSet<QString> &existingNames)
+QString Object::getUniqueId(QString id, const QSet<QString> &existingNames, bool * existed)
 {
     MO_ASSERT(!id.isEmpty(), "unset object idName detected");
+
+    MO_DEBUG("GETUNIQUE: {" << id << "}");
+
+    if (existed)
+        *existed = false;
 
     // create an id if necessary
     if (id.isEmpty())
@@ -535,9 +555,13 @@ QString Object::getUniqueId(QString id, const QSet<QString> &existingNames)
 
     while (existingNames.contains(id))
     {
+        MO_DEBUG("clash: {" << id << "}");
         increase_id_number(id, 1);
+        if (existed)
+            *existed = true;
     }
 
+    MO_DEBUG("GETUNIQUE= {" << id << "}");
     return id;
 }
 
@@ -547,7 +571,8 @@ void Object::makeUniqueIds_(Object * root)
     QSet<QString> existing = root->getChildIds(true);
     existing.insert(root->idName());
     // ignore self
-    existing.remove(idName());
+    if (root == rootObject())
+        existing.remove(idName());
 
     // call string version
     makeUniqueIds_(existing);
@@ -555,19 +580,18 @@ void Object::makeUniqueIds_(Object * root)
 
 void Object::makeUniqueIds_(QSet<QString> &existing)
 {
-    QString oldId = idName_;
+    bool changed = false;
 
     // make this object's id unique
-    idName_ = getUniqueId(idName_, existing);
+    idName_ = getUniqueId(idName_, existing, &changed);
 
     // add to existing ids
-    if (idName_ != oldId)
+    if (changed)
         existing.insert(idName_);
 
     // go through childs
-    if (oldId == idName_)
-        for (auto o : childObjects_)
-            o->makeUniqueIds_(existing);
+    for (auto o : childObjects_)
+        o->makeUniqueIds_(existing);
 }
 
 Object * Object::findChildObject(const QString &id, bool recursive, Object * ignore) const

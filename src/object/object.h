@@ -149,6 +149,10 @@ public:
         Always use ObjectFactory::createObject(). */
     virtual Object * cloneClass() const = 0;
 
+    // ---------------- info --------------------
+
+    void dumpTreeIds(std::ostream& out, const std::string &prefix = "") const;
+
     // ----------------- io ---------------------
 
     /** Serializes the whole tree including this object. */
@@ -264,8 +268,10 @@ public:
 
     /** Returns a string that is unique among the @p existingNames.
         If a match is found, a counter is added to the idName.
-        Also, any whitespace is relpaced with underscores. */
-    static QString getUniqueId(QString id, const QSet<QString> &existingNames);
+        Also, any whitespace is relpaced with underscores.
+        If @p existed != NULL, it will be set to true, if
+        the id needed to be changed. */
+    static QString getUniqueId(QString id, const QSet<QString> &existingNames, bool *existed = 0);
 
     /** Returns number of direct childs or number of all sub-childs. */
     int numChildren(bool recursive = false) const;

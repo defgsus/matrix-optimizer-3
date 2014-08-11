@@ -73,6 +73,7 @@ private slots:
     void createDebugScene_();
     void resetTreeModel_();
     void runTestThread_();
+    void dumpIdNames_();
 
     void setSceneObject(Scene *, const SceneSettings * = 0);
 

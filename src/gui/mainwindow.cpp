@@ -345,6 +345,9 @@ void MainWindow::createMainMenu_()
             qobjectView_->show();
         });
 
+        m->addAction(a = new QAction(tr("Dump id names"), m));
+        connect(a, SIGNAL(triggered()), SLOT(dumpIdNames_()));
+
         m->addAction(a = new QAction(tr("Test transformation speed"), m));
         connect(a, SIGNAL(triggered()), SLOT(testSceneTransform_()));
 
@@ -644,6 +647,20 @@ void MainWindow::runTestThread_()
         testThread_->deleteLater();
         testThread_ = 0;
     }
+}
+
+void MainWindow::dumpIdNames_()
+{
+    QSet<QString> ids = scene_->getChildIds(true);
+    ids.insert(scene_->idName());
+
+    std::set<QString> sorted;
+
+    for (auto & id : ids)
+        sorted.insert(id);
+
+    for (auto & id : sorted)
+        MO_STREAM_OUT(std::cout, "{" << id << "}" << std::endl);
 }
 
 void MainWindow::updateSystemInfo_()
