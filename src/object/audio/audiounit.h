@@ -52,6 +52,7 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
+    virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
     // -------------- getter -----------------
 
@@ -121,6 +122,8 @@ protected:
     void performBypass_(const F32 * input, F32 *output, uint thread) const;
 
 private:
+
+    void resizeAudioOutputBuffer_();
 
     /** Steps recusively through all childs as well! */
     void processAudioBlock_(const F32* input, Double time, uint thread, bool recursive);

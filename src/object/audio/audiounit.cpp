@@ -20,11 +20,11 @@ namespace MO {
 
 AudioUnit::AudioUnit(int maxIn, int maxOut, bool sameNum, QObject *parent) :
     Object                  (parent),
-    maximumChannelsIn_      (maxIn<0? MO_MAX_AUDIO_CHANNELS : maxIn),
+    maximumChannelsIn_      ( maxIn<0? MO_MAX_AUDIO_CHANNELS : maxIn),
     maximumChannelsOut_     (maxOut<0? MO_MAX_AUDIO_CHANNELS : maxOut),
-    numberChannelsIn_       (0),
-    numberChannelsOut_      (0),
-    numberRequestedChannelsOut_ (0),
+    numberChannelsIn_       ( maxIn==0? 0 : 1),
+    numberChannelsOut_      (maxOut==0? 0 : 1),
+    numberRequestedChannelsOut_ (numberChannelsOut_),
     sameNumberInputOutputChannels_(sameNum)
 {
     MO_DEBUG_AUDIO("AudioUnit::AudioUnit("
@@ -68,6 +68,13 @@ void AudioUnit::setNumberThreads(uint num)
     audioOutputBuffer_.resize(num);
 }
 
+void AudioUnit::setBufferSize(uint bufferSize, uint thread)
+{
+    Object::setBufferSize(bufferSize, thread);
+
+    resizeAudioOutputBuffer_();
+}
+
 AudioUnit::ProcessMode AudioUnit::processMode() const
 {
     MO_ASSERT(processModeParameter_,
@@ -80,7 +87,7 @@ AudioUnit::ProcessMode AudioUnit::processMode() const
 
 void AudioUnit::setNumChannelsIn(uint num)
 {
-    MO_DEBUG_AUDIO("AudioUnit::setNumChannelsIn("
+    MO_DEBUG_AUDIO("AudioUnit('" << idName() << "')::setNumChannelsIn("
                    << num << ") "
                    "requestedOut_ == " << numberRequestedChannelsOut_);
 
@@ -99,7 +106,7 @@ void AudioUnit::setNumChannelsIn(uint num)
 
 void AudioUnit::setNumChannelsOut(uint num)
 {
-    MO_DEBUG_AUDIO("AudioUnit::setNumChannelsOut("
+    MO_DEBUG_AUDIO("AudioUnit('" << idName() << "')::setNumChannelsOut("
                    << num << ") "
                    "requestedOut_ == " << numberRequestedChannelsOut_);
 
@@ -118,7 +125,7 @@ void AudioUnit::setNumChannelsOut(uint num)
 
 void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut)
 {
-    MO_DEBUG_AUDIO("AudioUnit::setNumChannelsInOut("
+    MO_DEBUG_AUDIO("AudioUnit('" << idName() << "')::setNumChannelsInOut("
                    << numIn << ", " << numOut << ") "
                    "requestedOut_ == " << numberRequestedChannelsOut_);
 
@@ -137,8 +144,22 @@ void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut)
 
 void AudioUnit::channelsChanged()
 {
+    resizeAudioOutputBuffer_();
+}
+
+
+void AudioUnit::resizeAudioOutputBuffer_()
+{
+    MO_DEBUG_AUDIO("AudioUnit('" << idName() << "')::resizeAudioOutputBuffer_() "
+                   "in/out == " << numberChannelsIn_ << "/" << numberChannelsOut_);
+
     for (uint i=0; i<audioOutputBuffer_.size(); ++i)
+    {
         audioOutputBuffer_[i].resize(numberChannelsOut_ * bufferSize(i));
+        MO_DEBUG_AUDIO("AudioUnit('" << idName() << "')::audioOutputBuffer_["
+                       << i << "].size() == " << audioOutputBuffer_[i].size()
+                       << ", bufferSize(" << i << ") == " << bufferSize(i));
+    }
 }
 
 void AudioUnit::childrenChanged()
@@ -169,6 +190,9 @@ void AudioUnit::updateSubUnitChannels()
 
 void AudioUnit::requestNumChannelsOut_(uint newNumber)
 {
+    numberRequestedChannelsOut_ = newNumber;
+
+    /*
     Scene * scene = sceneObject();
     if (!scene)
     {
@@ -179,7 +203,7 @@ void AudioUnit::requestNumChannelsOut_(uint newNumber)
     {
         numberRequestedChannelsOut_ = newNumber;
         scene->updateAudioUnitChannels();
-    }
+    }*/
 }
 
 
@@ -194,6 +218,12 @@ void AudioUnit::processAudioBlock_(const F32 *input, Double time, uint thread, b
 
     if (mode == PM_OFF)
         return;
+
+    MO_ASSERT(audioOutputBuffer_[thread].size() >=
+              numChannelsOut() * bufferSize(thread),
+              "AudioUnit::processAudioBlock_() audioOutputBuffer_ too small, "
+              "is " << audioOutputBuffer_[thread].size() << ", should be "
+              << (numChannelsOut() * bufferSize(thread)));
 
     if (mode == PM_BYPASS)
     {

@@ -45,7 +45,7 @@ private:
 
     void createFollowers_();
 
-    ParameterFloat * fadeIn_, * fadeOut_;
+    ParameterFloat * fadeIn_, * fadeOut_, * amplitude_;
 
     /** [numChannelsIn][numberThreads] */
     std::vector<AUDIO::EnvelopeFollower*> follower_;

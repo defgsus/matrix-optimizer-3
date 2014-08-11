@@ -47,26 +47,18 @@ void EnvelopeUnit::deserialize(IO::DataStream & io)
 void EnvelopeUnit::createParameters()
 {
     AudioUnit::createParameters();
-    /*
-    processModeParameter_ = createSelectParameter(
-                        "processmode", tr("processing"),
-                        tr("Sets the processing mode"),
-                        { "on", "off", "bypass" },
-                        { tr("on"), tr("off"), tr("bypass") },
-                        { tr("Processing is always on"),
-                          tr("Processing is off, no signals are passed through"),
-                          tr("The unit does no processing and passes it's input data unchanged") },
-                        { PM_ON, PM_OFF, PM_BYPASS },
-                        true, false);
-    */
 
-    fadeIn_ = createFloatParameter("fadein", tr("speed up"),
-                                 tr("Sets the speed to follow rising signals in seconds."),
+    amplitude_ = createFloatParameter("amp", tr("amplitude"),
+                                 tr("Multiplier for the generated envelope"),
+                                 1.0, 0.1);
+
+    fadeIn_ = createFloatParameter("fadein", tr("time up"),
+                                 tr("Sets the time to follow rising signals in seconds"),
                                  0.01, 0.001);
     fadeIn_->setMinValue(0.00001);
 
-    fadeOut_ = createFloatParameter("fadeout", tr("speed down"),
-                                 tr("Sets the speed to follow decaying signals in seconds."),
+    fadeOut_ = createFloatParameter("fadeout", tr("time down"),
+                                 tr("Sets the time to follow decaying signals in seconds"),
                                  0.5, 0.001);
     fadeOut_->setMinValue(0.00001);
 
@@ -123,7 +115,9 @@ void EnvelopeUnit::processAudioBlock(const F32 *input, Double time, uint thread)
               "outputs_.size (" << outputs_.size() << ") do not match.");
 
     const F32 fadeIn = fadeIn_->value(time, thread),
-              fadeOut = fadeOut_->value(time, thread);
+              fadeOut = fadeOut_->value(time, thread),
+              amp = amplitude_->value(time, thread);
+
     const uint bsize = bufferSize(thread);
 
     for (uint i=0; i<numChannelsIn(); ++i)
@@ -142,7 +136,7 @@ void EnvelopeUnit::processAudioBlock(const F32 *input, Double time, uint thread)
         }
 
         outputs_[i]->setValue(time,
-                        follower->process(&input[i*bsize], bsize)
+                        amp * follower->process(&input[i*bsize], bsize)
                              );
 
         //MO_DEBUG(QString(" ").repeated(follower->envelope()*50) + "*");

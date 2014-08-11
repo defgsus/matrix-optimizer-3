@@ -68,8 +68,12 @@ public:
                 {
                     // transform api [bufferSize][channels] to [channels][bufferSize]
                     scene_->transformAudioInput_(buf, MO_AUDIO_THREAD);
-                    // do something with the input
-                    scene_->processAudioInput_(MO_AUDIO_THREAD);
+
+                    {
+                        ScopedSceneLockRead lock(scene_);
+                        // process with AudioUnits
+                        scene_->processAudioInput_(MO_AUDIO_THREAD);
+                    }
                 }
             }
             else usleep(bufferTimeU);
@@ -130,7 +134,7 @@ public:
             if (scene_->audioOutQueue_->count() < numAhead)
             {
 
-                // calculate an audio block
+                // calculate an audio block (locked)
                 scene_->calculateAudioBlock(scene_->samplePos_, MO_AUDIO_THREAD);
 
                 // update output envelopes

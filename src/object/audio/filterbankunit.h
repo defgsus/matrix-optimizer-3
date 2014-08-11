@@ -46,7 +46,7 @@ private:
 
     ParameterInt * numOut_;
     ParameterSelect * type_;
-    ParameterFloat * baseFreq_, *linearFreq_, *quadFreq_, * reso_;
+    ParameterFloat * baseFreq_, *addFreq_, *mulFreq_, * reso_;
 
     /** [numChannelsOut][numberThreads] */
     std::vector<AUDIO::MultiFilter*> filter_;

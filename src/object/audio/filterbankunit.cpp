@@ -55,6 +55,8 @@ void FilterBankUnit::createParameters()
                                  1, MO_MAX_AUDIO_CHANNELS,
                                  1, true, false);
 
+    requestNumChannelsOut_(numOut_->baseValue());
+
     type_ = createSelectParameter("type", tr("filter type"),
                                   tr("Selectes the type of filter"),
                                   AUDIO::MultiFilter::filterTypeIds,
@@ -63,10 +65,20 @@ void FilterBankUnit::createParameters()
                                   AUDIO::MultiFilter::filterTypeEnums,
                                   AUDIO::MultiFilter::T_FIRST_ORDER_LOW, true, false);
 
-    baseFreq_ = createFloatParameter("freq", tr("frequency"),
-                                 tr("Controls the filter frequency in Hertz"),
-                                 1000., 10.);
+    baseFreq_ = createFloatParameter("freq", tr("base frequency"),
+                                 tr("Controls the filter base frequency (of the first output) in Hertz"),
+                                 200., 10.);
     baseFreq_->setRange(0.0001, 100000.0);
+
+    addFreq_ = createFloatParameter("freqadd", tr("add frequency"),
+                                 tr("Frequency to be added after each stage"),
+                                 0., 10.);
+    addFreq_->setRange(-100000.0, 100000.0);
+
+    mulFreq_ = createFloatParameter("freqmul", tr("multiply frequency"),
+                                 tr("Factor to multiply the frequency after each stage"),
+                                 2., 0.05);
+    mulFreq_->setRange(-1000.0, 1000.0);
 
     reso_ = createFloatParameter("reso", tr("resonance"),
                                  tr("Controls the filter resonance - how much of the filter is fed-back to itself"),
@@ -115,11 +127,15 @@ void FilterBankUnit::processAudioBlock(const F32 *input, Double time, uint threa
     MO_ASSERT(thread < filter_.size(), "thread " << thread << " out of range for "
               "FilterBankUnit with " << filter_.size() << " threads");
 
-    const F32 freq = baseFreq_->value(time, thread),
-              reso = reso_->value(time, thread);
+    const F32 basefreq = baseFreq_->value(time, thread),
+              reso = reso_->value(time, thread),
+              fadd = addFreq_->value(time, thread),
+              fmul = mulFreq_->value(time, thread);
     const auto type = AUDIO::MultiFilter::FilterType(type_->baseValue());
 
     const uint bsize = bufferSize(thread);
+
+    F32 freq = basefreq;
 
     for (uint i=0; i<numChannelsOut(); ++i)
     {
@@ -138,8 +154,11 @@ void FilterBankUnit::processAudioBlock(const F32 *input, Double time, uint threa
             filter->updateCoefficients();
         }
 
+        // move frequency forward
+        freq = std::max((F32)0.0001, (freq + fadd) * fmul);
+
         // one input, many outputs
-        //filter->process(&input[0], &outputBuffer(thread)[i*bsize], bsize);
+        filter->process(&input[0], &outputBuffer(thread)[i*bsize], bsize);
     }
 }
 
