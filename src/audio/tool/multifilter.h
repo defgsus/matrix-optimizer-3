@@ -43,7 +43,7 @@ public:
     static const QStringList filterTypeStatusTips;
     static const QList<int>  filterTypeEnums;
 
-    MultiFilter();
+    MultiFilter(bool dynamicAllocation = true);
     ~MultiFilter();
 
     // ----------- setter ----------------
@@ -100,12 +100,14 @@ public:
 
 private:
 
+    bool doReallocate_;
+
     FilterType type_;
 
     uint sr_, order_;
     F32 freq_, reso_,
-        q1_, s1_, s2_;
-    std::vector<F32> so1_, so2_;
+        q1_, q2_, s1_, s2_, p0_, p1_;
+    std::vector<F32> so1_, so2_, po0_, po1_;
 
     ChebychevFilter * cheby_;
 };

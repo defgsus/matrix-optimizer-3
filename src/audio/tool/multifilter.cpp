@@ -54,17 +54,16 @@ const QList<int> MultiFilter::filterTypeEnums =
   T_CHEBYCHEV_HIGH,
   T_CHEBYCHEV_BAND };
 
-MultiFilter::MultiFilter()
-    : type_     (T_FIRST_ORDER_LOW),
-      sr_       (44100),
-      order_    (1),
-      freq_     (1000),
-      reso_     (0),
-      s1_       (0),
-      s2_       (0),
-      cheby_    (0)
-
+MultiFilter::MultiFilter(bool alloc)
+    : doReallocate_ (alloc),
+      type_         (T_FIRST_ORDER_LOW),
+      sr_           (44100),
+      order_        (1),
+      freq_         (1000),
+      reso_         (0),
+      cheby_        (doReallocate_? 0 : new ChebychevFilter())
 {
+    reset();
     updateCoefficients();
 }
 
@@ -76,11 +75,18 @@ MultiFilter::~MultiFilter()
 
 void MultiFilter::reset()
 {
-    s1_ = s2_ = 0;
+    s1_ = s2_ = p0_ = p1_ = 0;
     for (auto & f : so1_)
         f = 0;
     for (auto & f : so2_)
         f = 0;
+    for (auto & f : po0_)
+        f = 0;
+    for (auto & f : po1_)
+        f = 0;
+
+    if (cheby_)
+        cheby_->reset();
 }
 
 void MultiFilter::updateCoefficients()
@@ -99,10 +105,17 @@ void MultiFilter::updateCoefficients()
             so2_.resize(order_);
             for (auto & f : so2_)
                 f = 0;
+            po0_.resize(order_);
+            for (auto & f : po0_)
+                f = 0;
+            po1_.resize(order_);
+            for (auto & f : po1_)
+                f = 0;
         case T_FIRST_ORDER_LOW:
         case T_FIRST_ORDER_HIGH:
         case T_FIRST_ORDER_BAND:
             q1_ = std::min(1.f, 2.f * freq_ / sr_);
+            q2_ = std::max(0.f, std::min(0.99999f, reso_));
         break;
 
         case T_CHEBYCHEV_LOW:
@@ -115,7 +128,8 @@ void MultiFilter::updateCoefficients()
         || type_ == T_CHEBYCHEV_HIGH
         || type_ == T_CHEBYCHEV_BAND)
     {
-        cheby_ = new ChebychevFilter();
+        if (!cheby_)
+            cheby_ = new ChebychevFilter();
         cheby_->setSampleRate(sr_);
         cheby_->setFrequency(freq_);
         cheby_->setResonance(reso_);
@@ -127,8 +141,9 @@ void MultiFilter::updateCoefficients()
             cheby_->setType(ChebychevFilter::T_BANDPASS);
         cheby_->updateCoefficients();
     }
-    else
+    else if (doReallocate_)
     {
+
         delete cheby_;
         cheby_ = 0;
     }
@@ -140,75 +155,169 @@ void MultiFilter::process(const F32 *input, uint inputStride,
     switch (type_)
     {
         case T_FIRST_ORDER_LOW:
-            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
-            {
-                *output = s1_ += q1_ * (*input - s1_);
-            }
+            // without resonance
+            if (!q2_)
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                {
+                    *output = s1_ += q1_ * (*input - s1_);
+                }
+            // with resonance
+            else
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                {
+                    p0_ = p1_;
+                    p1_ = s1_;
+                    *output = s1_ += q1_ * (*input - s1_)
+                                   + q2_ * (s1_ - p0_);
+                }
         break;
 
         case T_FIRST_ORDER_HIGH:
-            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
-            {
-                s1_ += q1_ * (*input - s1_);
-                // highpass == input minus lowpass
-                *output = *input - s1_;
-            }
+            if (!q2_)
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                {
+                    s1_ += q1_ * (*input - s1_);
+                    // highpass == input minus lowpass
+                    *output = *input - s1_;
+                }
+            else
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                {
+                    p0_ = p1_;
+                    p1_ = s1_;
+                    s1_ += q1_ * (*input - s1_)
+                         + q2_ * (s1_ - p0_);
+                    // highpass == input minus lowpass
+                    *output = *input - s1_;
+                }
         break;
 
         case T_FIRST_ORDER_BAND:
-            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
-            {
-                s1_ += q1_ * (*input - s1_);
-                // lowpass of highpass
-                s2_ += q1_ * ((*input - s1_) - s2_);
-                *output = s2_;
-            }
+            if (!q2_)
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                {
+                    s1_ += q1_ * (*input - s1_);
+                    // lowpass of highpass
+                    s2_ += q1_ * ((*input - s1_) - s2_);
+                    *output = s2_;
+                }
+            else
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                {
+                    s1_ += q1_ * (*input - s1_);
+                    // lowpass of highpass
+                    p0_ = p1_;
+                    p1_ = s2_;
+                    s2_ += q1_ * ((*input - s1_) - s2_)
+                         + q2_ * (s2_ - p0_);
+                    *output = s2_;
+                }
         break;
 
 
         case T_NTH_ORDER_LOW:
-            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
-            {
-                so1_[0] += q1_ * (*input - so1_[0]);
-
-                for (uint j=1; j<so1_.size(); ++j)
+            if (!q2_)
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
                 {
-                    so1_[j] += q1_ * (so1_[j-1] - so1_[j]);
+                    so1_[0] += q1_ * (*input - so1_[0]);
+
+                    for (uint j=1; j<so1_.size(); ++j)
+                    {
+                        so1_[j] += q1_ * (so1_[j-1] - so1_[j]);
+                    }
+                    *output = so1_[order_-1];
                 }
-                *output = so1_[order_-1];
-            }
+            else
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                {
+                    po0_[0] = po1_[0];
+                    po1_[0] = so1_[0];
+                    so1_[0] += q1_ * (*input - so1_[0])
+                             + q2_ * (so1_[0] - po0_[0]);
+
+                    for (uint j=1; j<so1_.size(); ++j)
+                    {
+                        po0_[j] = po1_[j];
+                        po1_[j] = so1_[j];
+                        so1_[j] += q1_ * (so1_[j-1] - so1_[j])
+                                 + q2_ * (so1_[j] - po0_[j]);
+                    }
+                    *output = so1_[order_-1];
+                }
         break;
 
         case T_NTH_ORDER_HIGH:
-            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
-            {
-                so1_[0] += q1_ * (*input - so1_[0]);
-                // highpass == input minus lowpass
-                F32 tmp = *input - so1_[0];
-
-                for (uint j=1; j<so1_.size(); ++j)
+            if (!q2_)
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
                 {
-                    so1_[j] += q1_ * (tmp - so1_[j]);
-                    tmp = so1_[j-1] - so1_[j];
+                    so1_[0] += q1_ * (*input - so1_[0]);
+                    // highpass == input minus lowpass
+                    F32 tmp = *input - so1_[0];
+
+                    for (uint j=1; j<so1_.size(); ++j)
+                    {
+                        so1_[j] += q1_ * (tmp - so1_[j]);
+                        tmp = so1_[j-1] - so1_[j];
+                    }
+                    *output = tmp;
                 }
-                *output = tmp;
-            }
+            else
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                {
+                    po0_[0] = po1_[0];
+                    po1_[0] = so1_[0];
+                    so1_[0] += q1_ * (*input - so1_[0])
+                             + q2_ * (so1_[0] - po0_[0]);
+                    // highpass == input minus lowpass
+                    F32 tmp = *input - so1_[0];
+
+                    for (uint j=1; j<so1_.size(); ++j)
+                    {
+                        po0_[j] = po1_[j];
+                        po1_[j] = so1_[j];
+                        so1_[j] += q1_ * (tmp - so1_[j])
+                                 + q2_ * (so1_[j] - po0_[j]);
+                        tmp = so1_[j-1] - so1_[j];
+                    }
+                    *output = tmp;
+                }
         break;
 
         case T_NTH_ORDER_BAND:
-            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
-            {
-                so1_[0] += q1_ * (*input - so1_[0]);
-                // lowpass of highpass
-                so2_[0] += q1_ * ((*input - so1_[0]) - so2_[0]);
-
-                for (uint j=1; j<so1_.size(); ++j)
+            if (!q2_)
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
                 {
-                    so1_[j] += q1_ * (so2_[j-1] - so1_[j]);
-                    so2_[j] += q1_ * ((so2_[j-1] - so1_[j]) - so2_[j]);
+                    so1_[0] += q1_ * (*input - so1_[0]);
+                    // lowpass of highpass
+                    so2_[0] += q1_ * ((*input - so1_[0]) - so2_[0]);
+
+                    for (uint j=1; j<so1_.size(); ++j)
+                    {
+                        so1_[j] += q1_ * (so2_[j-1] - so1_[j]);
+                        so2_[j] += q1_ * ((so2_[j-1] - so1_[j]) - so2_[j]);
+                    }
+                    *output = so2_[order_-1];
                 }
-                *output = so2_[order_-1];
-            }
+            else
+                for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                {
+                    so1_[0] += q1_ * (*input - so1_[0]);
+                    // lowpass of highpass
+                    po0_[0] = po1_[0];
+                    po1_[0] = so2_[0];
+                    so2_[0] += q1_ * ((*input - so1_[0]) - so2_[0])
+                             + q2_ * (so1_[0] - po0_[0]);
+
+                    for (uint j=1; j<so1_.size(); ++j)
+                    {
+                        so1_[j] += q1_ * (so2_[j-1] - so1_[j]);
+                        po0_[j] = po1_[j];
+                        po1_[j] = so2_[j];
+                        so2_[j] += q1_ * ((so2_[j-1] - so1_[j]) - so2_[j])
+                                 + q2_ * (so2_[j] - po0_[j]);
+                    }
+                    *output = so2_[order_-1];
+                }
         break;
 
         case T_CHEBYCHEV_LOW:
