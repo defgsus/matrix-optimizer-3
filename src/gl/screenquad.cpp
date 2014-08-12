@@ -63,7 +63,7 @@ bool ScreenQuad::draw(uint w, uint h)
 {
     Mat4 trans = h<w? glm::scale(Mat4(1.0), Vec3((float)h/w, 1, 1))
                     : glm::scale(Mat4(1.0), Vec3(1, (float)w/h, 1));
-    quad_->renderShader(Mat4(1.0), trans);
+    quad_->renderShader(Mat4(1.0), trans, trans, trans);
 
     return true;
 }

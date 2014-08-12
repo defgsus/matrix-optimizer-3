@@ -21,9 +21,10 @@ in vec2 a_texCoord;
 
 // --- shader uniforms ---
 
-uniform mat4 u_projection;  // projection matrix
-uniform mat4 u_view;        // to-eye-space matrix
-uniform mat4 u_transform;   // transformation only
+uniform mat4 u_projection;                  // projection matrix
+uniform mat4 u_cubeViewTransform;           // cube-map * view * transform
+uniform mat4 u_viewTransform;               // view * transform
+uniform mat4 u_transform;                   // transformation only
 uniform vec3 u_light_pos[MO_NUM_LIGHTS];
 uniform vec4 u_light_color[MO_NUM_LIGHTS];
 
@@ -32,6 +33,8 @@ uniform vec4 u_light_color[MO_NUM_LIGHTS];
 
 out vec3 v_pos;
 out vec3 v_pos_eye;
+out vec3 v_cam_dir;
+out vec3 v_normal;
 out vec4 v_color;
 out vec2 v_texCoord;
 // w is distance attenuation
@@ -88,7 +91,7 @@ vec4 mo_pos_to_fulldome_scr(in vec3 pos)
 vec4 mo_ftransform(in vec4 pos)
 {
 #ifndef MO_FULLDOME_BEND
-    return u_projection * u_view * pos;
+    return u_projection * u_cubeViewTransform * pos;
 #else
     return mo_pos_to_fulldome_scr((u_view * pos).xyz);
 #endif
@@ -100,6 +103,7 @@ void main()
     // pass attributes to fragment shader
     v_pos = a_position.xyz;
     v_pos_eye = (u_transform * a_position).xyz;
+    v_normal = a_normal;
     v_color = a_color;
     v_texCoord = a_texCoord;
 
@@ -120,4 +124,8 @@ void main()
 
         v_light_dir[i] = vec4(lightmat * (lightvec / dist), distatt);
     }
+
+    //v_cam_dir = lightmat * normalize(-v_pos);
+    v_cam_dir = normalize((u_transform * a_position).xyz);
+
 }

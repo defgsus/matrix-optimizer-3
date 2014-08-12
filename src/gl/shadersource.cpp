@@ -19,8 +19,9 @@ namespace GL {
 
 ShaderSource::ShaderSource()
     : unProj_       ("u_projection"),
-      unView_       ("u_view"),
-      unTrans_      ("u_transform"),
+      unCVT_        ("u_cubeViewTransform"),
+      unVT_         ("u_viewTransform"),
+      unT_          ("u_transform"),
       unLightPos_   ("u_light_pos[0]"),
       unLightColor_ ("u_light_color[0]"),
       unColor_      ("u_color"),

@@ -42,7 +42,10 @@ public slots:
 
 protected:
 
-    void drawGL(const Mat4 &projection, const Mat4& view, const Mat4 &transformation) Q_DECL_OVERRIDE;
+    void drawGL(const Mat4& projection,
+                const Mat4& cubeViewTrans,
+                const Mat4& viewTrans,
+                const Mat4& trans) Q_DECL_OVERRIDE;
 
     GL::Drawable * drawable_;
     GL::Texture * tex_, * texNorm_;

@@ -22,29 +22,29 @@ class CameraSpace
 public:
     // XXX LightSettings? - move CameraSpace and LightSettings to a RenderSettings class
     CameraSpace(const LightSettings& lights)
-        :   proj_(1.0), view_(1.0), lights_(lights)
+        :   proj_(1.0), cv_(1.0), v_(1.0), lights_(lights)
     { }
 
     // ------ getter ------------
 
     /** The projection matrix. Typically rustum or orthographic */
     const Mat4& projectionMatrix() const { return proj_; }
-    /** The to-eye-space matrix (including the fulldome cubemap transform) */
-    const Mat4& viewMatrix() const { return view_; }
-    /** The to-eye-space matrix (without fulldome cubemap transform) */
-    const Mat4& orgViewMatrix() const { return orgView_; }
+    /** The to-eye-space matrix (cubeview * view) */
+    const Mat4& cubeViewMatrix() const { return cv_; }
+    /** The to-eye-space matrix (view) */
+    const Mat4& viewMatrix() const { return v_; }
     /** The lighting settings */
     const LightSettings& lights() const { return lights_; }
 
     // ------- setter -----------
 
     void setProjectionMatrix(const Mat4& m) { proj_ = m; }
-    void setViewMatrix(const Mat4& m) { view_ = m; }
-    void setOrgViewMatrix(const Mat4& m) { orgView_ = m; }
+    void setCubeViewMatrix(const Mat4& m) { cv_ = m; }
+    void setViewMatrix(const Mat4& m) { v_ = m; }
 
 private:
 
-    Mat4 proj_, view_, orgView_;
+    Mat4 proj_, cv_, v_;
     const LightSettings & lights_;
 };
 

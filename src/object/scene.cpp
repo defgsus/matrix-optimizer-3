@@ -646,7 +646,7 @@ void Scene::renderScene(uint thread)
             camera->initCameraSpace(camSpace, thread, time);
             const Mat4 viewm = glm::inverse(camera->transformation(thread, 0));
 
-            camSpace.setOrgViewMatrix(viewm);
+            camSpace.setViewMatrix(viewm);
 
             // for each cubemap
             const uint numCubeMaps = camera->numCubeTextures(thread, time);
@@ -655,7 +655,7 @@ void Scene::renderScene(uint thread)
                 // start camera frame
                 camera->startGlFrame(thread, time, i);
 
-                camSpace.setViewMatrix( camera->cubeMapMatrix(i) * viewm );
+                camSpace.setCubeViewMatrix( camera->cubeMapMatrix(i) * viewm );
 
                 // render all opengl objects
                 for (auto o : glObjects_)

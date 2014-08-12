@@ -110,8 +110,8 @@ void Model3d::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double time)
 {
     const Mat4& trans = transformation(thread, 0);
-    const Mat4 mat = cam.viewMatrix() * trans;
-//    glLoadMatrixf(&mat[0][0]);
+    const Mat4  cubeViewTrans = cam.cubeViewMatrix() * trans;
+    const Mat4  viewTrans = cam.viewMatrix() * trans;
 
     if (nextGeometry_)
     {
@@ -128,7 +128,8 @@ void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double time)
                     cb_->value(time, thread),
                     ca_->value(time, thread));
         //draw_->renderAttribArrays();
-        draw_->renderShader(cam.projectionMatrix(), mat, trans, cam.lights());
+        draw_->renderShader(cam.projectionMatrix(),
+                            cubeViewTrans, viewTrans, trans, &cam.lights());
     }
 }
 

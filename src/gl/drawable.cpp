@@ -167,15 +167,21 @@ void Drawable::compileShader_()
     else
         uniformProj_ = invalidGl;
 
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameView()))
-        uniformView_ = u->location();
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameCubeViewTransformation()))
+        uniformCVT_ = u->location();
     else
-        uniformView_ = invalidGl;
+        uniformCVT_ = invalidGl;
+
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameViewTransformation()))
+        uniformVT_ = u->location();
+    else
+        uniformVT_ = invalidGl;
 
     if (auto u = shader_->getUniform(shaderSource_->uniformNameTransformation()))
-        uniformTransform_ = u->location();
+        uniformT_ = u->location();
     else
-        uniformTransform_ = invalidGl;
+        uniformT_ = invalidGl;
+
 
     if (auto u = shader_->getUniform(shaderSource_->uniformNameLightPos()))
         uniformLightPos_ = u->location();
@@ -240,12 +246,16 @@ void Drawable::render()
 }
 
 
-void Drawable::renderShader(const Mat4 &proj, const Mat4 &view,
-                            const Mat4 * orgView, const LightSettings * lights)
+void Drawable::renderShader(const Mat4 &proj,
+                            const Mat4 &cubeViewTrans,
+                            const Mat4 &viewTrans,
+                            const Mat4 &trans,
+                            const LightSettings * lights)
 {
     MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
     //MO_ASSERT(uniformProj_ != invalidGl, "");
-    MO_ASSERT(uniformView_ != invalidGl, "");
+    //MO_ASSERT(uniformVT_ != invalidGl, "no view transformation matrix in shader");
+    //MO_ASSERT(uniformT_ != invalidGl, "no transformation matrix in shader");
 
     checkGeometryChanged_();
 
@@ -255,15 +265,12 @@ void Drawable::renderShader(const Mat4 &proj, const Mat4 &view,
 
     if (uniformProj_ != invalidGl)
         MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
-    MO_CHECK_GL( glUniformMatrix4fv(uniformView_, 1, GL_FALSE, &view[0][0]) );
 
-    if (uniformTransform_ != invalidGl)
-    {
-        if (orgView)
-            MO_CHECK_GL( glUniformMatrix4fv(uniformTransform_, 1, GL_FALSE, &(*orgView)[0][0]) )
-        else
-            MO_CHECK_GL( glUniformMatrix4fv(uniformTransform_, 1, GL_FALSE, &view[0][0]) );
-    }
+    if (uniformCVT_ != invalidGl)
+        MO_CHECK_GL( glUniformMatrix4fv(uniformCVT_, 1, GL_FALSE, &cubeViewTrans[0][0]) );
+    MO_CHECK_GL( glUniformMatrix4fv(uniformVT_, 1, GL_FALSE, &viewTrans[0][0]) );
+    MO_CHECK_GL( glUniformMatrix4fv(uniformT_, 1, GL_FALSE, &trans[0][0]) );
+
 
     if (lights && lights->count())
     {

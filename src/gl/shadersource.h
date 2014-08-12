@@ -30,8 +30,10 @@ public:
     const QString& fragmentSource() const { return frag_; }
 
     const QString& uniformNameProjection() const { return unProj_; }
-    const QString& uniformNameView() const { return unView_; }
-    const QString& uniformNameTransformation() const { return unTrans_; }
+    const QString& uniformNameCubeViewTransformation() const { return unCVT_; }
+    const QString& uniformNameViewTransformation() const { return unVT_; }
+    const QString& uniformNameTransformation() const { return unT_; }
+
     const QString& uniformNameLightPos() const { return unLightPos_; }
     const QString& uniformNameLightColor() const { return unLightColor_; }
     const QString& uniformNameColor() const { return unColor_; }
@@ -68,7 +70,7 @@ private:
     void addDefine_(QString& src, const QString& def_line) const;
 
     QString vert_, frag_,
-        unProj_, unView_, unTrans_, unLightPos_, unLightColor_,
+        unProj_, unCVT_, unVT_, unT_, unLightPos_, unLightColor_,
         unColor_,
         anPos_, anCol_, anNorm_, anTexCoord_;
 };

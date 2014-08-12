@@ -59,7 +59,10 @@ void GeometryWidget::setGeometry(GEOM::Geometry * g)
 }
 
 
-void GeometryWidget::drawGL(const Mat4& projection, const Mat4& view, const Mat4& transformation)
+void GeometryWidget::drawGL(const Mat4& projection,
+                            const Mat4& cubeViewTrans,
+                            const Mat4& viewTrans,
+                            const Mat4& trans)
 {
     MO_CHECK_GL( glClearColor(0.1, 0.2, 0.3, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
@@ -114,7 +117,7 @@ void GeometryWidget::drawGL(const Mat4& projection, const Mat4& view, const Mat4
     }
 
     if (showGrid_)
-        drawGrid(projection, view);
+        drawGrid(projection, cubeViewTrans, viewTrans, trans);
 
     if (recompile && drawable_->isReady())
         drawable_->releaseOpenGl();
@@ -144,7 +147,7 @@ void GeometryWidget::drawGL(const Mat4& projection, const Mat4& view, const Mat4
     }
 
     if (drawable_->isReady())
-        drawable_->renderShader(projection, view, transformation, *lights_);
+        drawable_->renderShader(projection, cubeViewTrans, viewTrans, trans, lights_);
 }
 
 
