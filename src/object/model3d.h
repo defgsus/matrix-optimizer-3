@@ -1,6 +1,6 @@
 /** @file model3d.h
 
-    @brief
+    @brief Generic Drawable Object
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -8,8 +8,8 @@
     <p>created 6/29/2014</p>
 */
 
-#ifndef MODEL3D_H
-#define MODEL3D_H
+#ifndef MOSRC_OBJECT_MODEL3D_H
+#define MOSRC_OBJECT_MODEL3D_H
 
 
 #include "objectgl.h"
@@ -52,4 +52,4 @@ private:
 
 } // namespace MO
 
-#endif // MODEL3D_H
+#endif // MOSRC_OBJECT_MODEL3D_H

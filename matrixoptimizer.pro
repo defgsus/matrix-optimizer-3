@@ -163,7 +163,8 @@ SOURCES += \
     src/object/modulatorobjectfloat.cpp \
     src/object/audio/filterbankunit.cpp \
     src/object/param/parameterint.cpp \
-    src/audio/tool/chebychevfilter.cpp
+    src/audio/tool/chebychevfilter.cpp \
+    src/object/textureoverlay.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -320,7 +321,8 @@ HEADERS += \
     src/object/modulatorobjectfloat.h \
     src/object/audio/filterbankunit.h \
     src/object/param/parameterint.h \
-    src/audio/tool/chebychevfilter.h
+    src/audio/tool/chebychevfilter.h \
+    src/object/textureoverlay.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

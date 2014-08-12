@@ -1,6 +1,6 @@
 /** @file model3d.cpp
 
-    @brief
+    @brief Generic Drawable Object
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
