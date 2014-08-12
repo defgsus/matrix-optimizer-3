@@ -172,7 +172,7 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
         obj->createParameters();
 
     obj->createAudioSources();
-    obj->createOutputs();
+    //obj->createOutputs();
 
     return obj;
 }

@@ -474,6 +474,10 @@ void Object::setParentObject_(Object *parent, int index)
     // and add to child list
     parentObject_->addChildObjectHelper_(this, index);
 
+    // create any output objects
+    createOutputs();
+
+    // signal this object
     this->onParentChanged();
 }
 
@@ -757,6 +761,9 @@ void Object::requestCreateOutputs()
 
 ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const QString &name)
 {
+    MO_DEBUG("Object('" << idName() << "')::createOutputFloat('"
+             << given_id << "', '" << name << "')");
+
     QString id = idName() + "_" + given_id;
 
     Object * o = findChildObject(id);
@@ -769,6 +776,8 @@ ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const 
         mod->idName_ = id;
         mod->name_ = name;
         addObject_(mod);
+        MO_DEBUG("Object('" << idName() << "')::createOutputFloat() created new '"
+                 << mod->idName() << "'");
         return mod;
     }
 
@@ -777,6 +786,8 @@ ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const 
     {
         mod->canBeDeleted_ = false;
         mod->name_ = name;
+        MO_DEBUG("Object('" << idName() << "')::createOutputFloat() reusing '"
+                 << mod->idName() << "'");
         return mod;
     }
 
