@@ -874,8 +874,11 @@ void MainWindow::loadScene_(const QString &fn)
         {
             scene = ObjectFactory::loadScene(fn);
         }
-        catch (Exception&)
+        catch (Exception& e)
         {
+            QMessageBox::critical(this, tr("load scene failed"),
+                                  tr("Could not open project '%1'\n%2").arg(fn).arg(e.what()));
+
             statusBar()->showMessage(tr("Could not open project '%1'").arg(fn));
             return;
         }

@@ -96,6 +96,10 @@ public:
     /** Returns memory usage in bytes */
     long unsigned int memory() const;
 
+    /** Returns the shared-mode */
+    bool sharedVertices() const { return sharedVertices_; }
+    VertexType sharedVerticesThreshold() const { return threshold_; }
+
     /** Returns the point of the vertex */
     Vec3 getVertex(IndexType vertexIndex) const;
     Vec4 getColor(IndexType vertexIndex) const;
@@ -183,6 +187,17 @@ public:
     /** Converts all triangles to lines */
     void convertToLines();
 
+    /** Automatically calculates all normals for each triangle.
+        Normals that share multiple triangles will be averaged. */
+    void calculateTriangleNormals();
+
+    /** Inverts all normals (pointing inwards) */
+    void invertNormals();
+
+    /** Makes every vertex in the model unique.
+        After this call, every triangle or line vertex will be unique. */
+    void unGroupVertices();
+
     /** Split all triangles into smaller ones. */
     void tesselate(uint level = 1);
 
@@ -213,30 +228,9 @@ public:
                                const QString& equationY,
                                const QString& equationZ);
 
-    /** Automatically calculates all normals for each triangle.
-        Normals that share multiple triangles will be averaged. */
-    void calculateTriangleNormals();
+    /** Extrudes all triangles along their normals -> into @p geom. */
+    void extrudeTriangles(Geometry & geom, VertexType constant, VertexType factor) const;
 
-    /** Inverts all normals (pointing inwards) */
-    void invertNormals();
-
-    /** Makes every vertex in the model unique.
-        After this call, every triangle or line vertex will be unique. */
-    void unGroupVertices();
-#if (0)
-    /** Makes vertices shared.
-        All vertices that are within @p range apart from each other become the
-        same vertex. */
-    void groupVertices(VertexType range = 0.01)
-        { Geometry tmp; groupVertices(tmp, range); *this = tmp; }
-
-    /** Makes vertices shared in the geometry object @p dst.
-        All vertices that are within @p range apart from each other become the
-        same vertex.
-        @note range will be maximally 0.001 and vertex coordinates
-        can maximally be +/-8350 for the smallest range. */
-    void groupVertices(Geometry& dst, VertexType range = 0.01) const;
-#endif
     // ------------- opengl -----------------
 
     /** Fills the vertex array object with the data from the geometry.
@@ -245,15 +239,13 @@ public:
         The VAO will be released if it was created previously. */
     void getVertexArrayObject(GL::VertexArrayObject *, GL::Shader *, bool triangles = true);
 
-protected:
+private:
 
     std::vector<VertexType>       vertex_;
     std::vector<NormalType>       normal_;
     std::vector<ColorType>        color_;
     std::vector<TextureCoordType> texcoord_;
     std::vector<IndexType>        triIndex_, lineIndex_;
-
-private:
 
     ColorType
         curR_, curG_, curB_, curA_;

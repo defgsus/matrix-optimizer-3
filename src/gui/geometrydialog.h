@@ -88,9 +88,9 @@ protected:
     QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbCalcNormals_,
             *cbTess_, *cbNorm_, *cbRemove_, *cbTransformEqu_,
             *cbTransformPrimEqu_, *cbCalcNormalsBeforePrimEqu_,
-            *cbInvNormals_;
+            *cbInvNormals_, *cbExtrude_;
     DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_, *spinRemoveProb_,
-                *spinNormAmt_, *spinSmallRadius_;
+                *spinNormAmt_, *spinSmallRadius_, *spinExtrudeConstant_, *spinExtrudeFactor_;
     SpinBox * spinSegX_, *spinSegY_, *spinSegZ_, *spinTess_, *spinRemoveSeed_;
     EquationEditor *editEquX_, *editEquY_, *editEquZ_,
                     *editPEquX_, *editPEquY_, *editPEquZ_;

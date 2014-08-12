@@ -5,6 +5,9 @@
 * collect files
     * open/save zipped projects with files
 
+---- geometry ----
+
+* make GeometryFactory/Dialog accessible through simple building/modifications blocks, yah!!
 
 ----- GUI -----
 

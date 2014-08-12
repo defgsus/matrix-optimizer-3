@@ -463,6 +463,39 @@ void GeometryDialog::createWidgets_()
                 editPEquZ_->setPlainText(settings_->pEquationZ);
                 connect(editPEquZ_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
+                // --- extrude ---
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    cbExtrude_ = new QCheckBox(tr("extrude"), this);
+                    lh2->addWidget(cbExtrude_);
+                    cbExtrude_->setStatusTip(tr("Extrudes/shifts triangles along their normals"));
+                    cbExtrude_->setChecked(settings_->extrude);
+                    connect(cbExtrude_, SIGNAL(toggled(bool)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinExtrudeConstant_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinExtrudeConstant_);
+                    spinExtrudeConstant_->setStatusTip(tr("Extrudes triangles by a constant value"));
+                    spinExtrudeConstant_->setDecimals(5);
+                    spinExtrudeConstant_->setSingleStep(0.1);
+                    spinExtrudeConstant_->setRange(-1000000, 1000000);
+                    spinExtrudeConstant_->setValue(settings_->extrudeConstant);
+                    connect(spinExtrudeConstant_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinExtrudeFactor_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinExtrudeFactor_);
+                    spinExtrudeFactor_->setStatusTip(
+                                tr("Extrudes triangle vertices by a factor of their adjacent edges"));
+                    spinExtrudeFactor_->setDecimals(5);
+                    spinExtrudeFactor_->setSingleStep(0.1);
+                    spinExtrudeFactor_->setRange(-1000000, 1000000);
+                    spinExtrudeFactor_->setValue(settings_->extrudeFactor);
+                    connect(spinExtrudeFactor_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
                 // -----------------
                 lv->addStretch(1);
 
@@ -609,6 +642,9 @@ void GeometryDialog::updateFromWidgets_()
     settings_->transformWithEquation = cbTransformEqu_->isChecked();
     settings_->transformPrimitivesWithEquation = cbTransformPrimEqu_->isChecked();
     settings_->calcNormalsBeforePrimitiveEquation = cbCalcNormalsBeforePrimEqu_->isChecked();
+    settings_->extrude = cbExtrude_->isChecked();
+    settings_->extrudeConstant = spinExtrudeConstant_->value();
+    settings_->extrudeFactor = spinExtrudeFactor_->value();
     if (editEquX_->isOk())
         settings_->equationX = editEquX_->toPlainText();
     if (editEquY_->isOk())
@@ -676,6 +712,10 @@ void GeometryDialog::updateFromWidgets_()
     spinRemoveProb_->setVisible( cbRemove_->isChecked() );
     spinRemoveSeed_->setVisible( cbRemove_->isChecked() );
 
+    cbExtrude_->setVisible( hasTriangle );
+    spinExtrudeConstant_->setVisible( hasTriangle && settings_->extrude );
+    spinExtrudeFactor_->setVisible( hasTriangle && settings_->extrude );
+
     editEquX_->setVisible( settings_->transformWithEquation );
     editEquY_->setVisible( settings_->transformWithEquation );
     editEquZ_->setVisible( settings_->transformWithEquation );
@@ -722,6 +762,9 @@ void GeometryDialog::updateWidgets_()
     cbTransformEqu_->setChecked(settings_->transformWithEquation);
     cbTransformPrimEqu_->setChecked(settings_->transformPrimitivesWithEquation);
     cbCalcNormalsBeforePrimEqu_->setChecked(settings_->calcNormalsBeforePrimitiveEquation);
+    cbExtrude_->setChecked(settings_->extrude);
+    spinExtrudeConstant_->setValue(settings_->extrudeConstant);
+    spinExtrudeFactor_->setValue(settings_->extrudeFactor);
 
     editEquX_->setPlainText(settings_->equationX);
     editEquY_->setPlainText(settings_->equationY);

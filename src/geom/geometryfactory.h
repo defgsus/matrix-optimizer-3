@@ -104,9 +104,11 @@ public:
                      pEquationX, pEquationY, pEquationZ;
     bool calcNormals, invertNormals, asTriangles, convertToLines, sharedVertices, tesselate,
         normalizeVertices, removeRandomly, transformWithEquation,
-                    transformPrimitivesWithEquation, calcNormalsBeforePrimitiveEquation;
+        transformPrimitivesWithEquation, calcNormalsBeforePrimitiveEquation,
+        extrude;
     Float colorR, colorG, colorB, colorA;
-    Float scale, scaleX, scaleY, scaleZ, removeProb, normalization, smallRadius;
+    Float scale, scaleX, scaleY, scaleZ, removeProb, normalization, smallRadius,
+        extrudeConstant, extrudeFactor;
     uint gridSize, segmentsX, segmentsY, segmentsZ, tessLevel, removeSeed;
 
     bool withCoords;

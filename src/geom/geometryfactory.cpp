@@ -891,12 +891,6 @@ void GeometryFactory::createFromSettings(Geometry * g,
             )
         g->unGroupVertices();
 
-    if (set->convertToLines)
-        g->convertToLines();
-
-    if (set->removeRandomly)
-        g->removePrimitivesRandomly(set->removeProb, set->removeSeed);
-
     if (set->transformWithEquation)
         g->transformWithEquation(set->equationX, set->equationY, set->equationZ);
 
@@ -906,15 +900,34 @@ void GeometryFactory::createFromSettings(Geometry * g,
     if (set->transformPrimitivesWithEquation)
         g->transformPrimitivesWithEquation(set->pEquationX, set->pEquationY, set->pEquationZ);
 
-    g->scale(set->scale * set->scaleX,
-             set->scale * set->scaleY,
-             set->scale * set->scaleZ);
+    if (set->extrude && g->numTriangles())
+    {
+        if (g->numTriangles() && set->calcNormals)
+            g->calculateTriangleNormals();
+
+        Geometry geom;
+        geom.setSharedVertices(g->sharedVertices(), g->sharedVerticesThreshold());
+        g->extrudeTriangles(geom, set->extrudeConstant, set->extrudeFactor);
+        if (!set->sharedVertices)
+            geom.unGroupVertices();
+        *g = geom;
+    }
+
+    if (set->convertToLines)
+        g->convertToLines();
+
+    if (set->removeRandomly)
+        g->removePrimitivesRandomly(set->removeProb, set->removeSeed);
 
     if (g->numTriangles() && set->calcNormals)
         g->calculateTriangleNormals();
 
     if (set->invertNormals)
         g->invertNormals();
+
+    g->scale(set->scale * set->scaleX,
+             set->scale * set->scaleY,
+             set->scale * set->scaleZ);
 
 }
 
@@ -975,6 +988,7 @@ GeometryFactorySettings::GeometryFactorySettings()
       transformWithEquation(false),
       transformPrimitivesWithEquation(false),
       calcNormalsBeforePrimitiveEquation(false),
+      extrude       (false),
       colorR        (0.5f),
       colorG        (0.5f),
       colorB        (0.5f),
@@ -986,6 +1000,8 @@ GeometryFactorySettings::GeometryFactorySettings()
       removeProb    (0.1f),
       normalization (1.f),
       smallRadius   (0.2f),
+      extrudeConstant(1.f),
+      extrudeFactor (0.f),
       gridSize      (1),
       segmentsX     (10),
       segmentsY     (10),
@@ -999,7 +1015,7 @@ GeometryFactorySettings::GeometryFactorySettings()
 
 void GeometryFactorySettings::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("geomfacset", 6);
+    io.writeHeader("geomfacset", 7);
 
     io << typeIds[type];
 
@@ -1026,11 +1042,14 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
     // v5
     io << transformPrimitivesWithEquation << calcNormalsBeforePrimitiveEquation
        << pEquationX << pEquationY << pEquationZ;
+
+    // v6
+    io << extrude << extrudeConstant << extrudeFactor;
 }
 
 void GeometryFactorySettings::deserialize(IO::DataStream & io)
 {
-    int ver = io.readHeader("geomfacset", 6);
+    int ver = io.readHeader("geomfacset", 7);
 
     io.readEnum(type, T_BOX, typeIds);
 
@@ -1058,6 +1077,8 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         io >> transformPrimitivesWithEquation >> calcNormalsBeforePrimitiveEquation
            >> pEquationX >> pEquationY >> pEquationZ;
 
+    if (ver >= 7)
+        io >> extrude >> extrudeConstant >> extrudeFactor;
 }
 
 void GeometryFactorySettings::saveFile(const QString &filename) const

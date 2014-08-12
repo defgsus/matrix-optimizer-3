@@ -262,10 +262,10 @@ void Geometry::calculateTriangleNormals()
     // finally normalize the normals :)
     for (size_t i=0; i<normal_.size(); ++i)
     {
-        if (nr_adds[i/3])
-            normal_[i] /= nr_adds[i/3];
+        const size_t num = nr_adds[i/3];
+        if (num)
+            normal_[i] /= num;
     }
-
 }
 
 void Geometry::invertNormals()
@@ -618,13 +618,71 @@ bool Geometry::transformPrimitivesWithEquation(
     return true;
 }
 
+void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor) const
+{
+    for (uint i=0; i<numTriangles(); ++i)
+    {
+        const IndexType
+                t1 = triIndex_[i*3],
+                t2 = triIndex_[i*3+1],
+                t3 = triIndex_[i*3+2];
+
+        const Vec3
+                p1 = getVertex(t1),
+                p2 = getVertex(t2),
+                p3 = getVertex(t3),
+
+                pn1 = getNormal(t1),
+                pn2 = getNormal(t2),
+                pn3 = getNormal(t3);
+
+        const Float
+                dist12 = glm::distance(p1, p2),
+                dist13 = glm::distance(p1, p3),
+                dist23 = glm::distance(p2, p3);
+
+        const Vec3
+                // extruded points
+                pe1 = p1 + pn1 * (constant + factor * (dist12 + dist13)),
+                pe2 = p2 + pn2 * (constant + factor * (dist12 + dist23)),
+                pe3 = p3 + pn3 * (constant + factor * (dist13 + dist23));
+
+        const Vec4
+                pc1 = getColor(t1),
+                pc2 = getColor(t2),
+                pc3 = getColor(t3);
+
+        const Vec2
+                pt1 = getTexCoord(t1),
+                pt2 = getTexCoord(t2),
+                pt3 = getTexCoord(t3);
+
+        // create vertices in destination geom
+        const IndexType
+                d1 = geom.addVertex(p1[0], p1[1], p1[2], pn1[0], pn1[1], pn1[2], pc1[0], pc1[1], pc1[2], pc1[3], pt1[0], pt1[1]),
+                d2 = geom.addVertex(p2[0], p2[1], p2[2], pn2[0], pn2[1], pn2[2], pc2[0], pc2[1], pc2[2], pc2[3], pt2[0], pt2[1]),
+                d3 = geom.addVertex(p3[0], p3[1], p3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]),
+                d4 = geom.addVertex(pe1[0], pe1[1], pe1[2], pn1[0], pn1[1], pn1[2], pc1[0], pc1[1], pc1[2], pc1[3], pt1[0], pt1[1]),
+                d5 = geom.addVertex(pe2[0], pe2[1], pe2[2], pn2[0], pn2[1], pn2[2], pc2[0], pc2[1], pc2[2], pc2[3], pt2[0], pt2[1]),
+                d6 = geom.addVertex(pe3[0], pe3[1], pe3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]);
+
+        // create triangles in geom
+        geom.addTriangle(d4,d5,d6);
+        geom.addTriangle(d1,d2,d5);
+        geom.addTriangle(d1,d5,d4);
+        geom.addTriangle(d2,d3,d6);
+        geom.addTriangle(d2,d6,d5);
+        geom.addTriangle(d3,d1,d4);
+        geom.addTriangle(d3,d4,d6);
+    }
+}
 
 void Geometry::tesselate(uint level)
 {
-    // XXX TODO: vertex reuse and color/texcoord handling
-
     if (!numTriangles())
     {
+        // XXX TODO: color/texcoord handling
+
         Geometry tess;
         tess.sharedVertices_ = sharedVertices_;
         tess.threshold_ = threshold_;
