@@ -205,6 +205,10 @@ void GeometryFactory::createGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
 {
     const Geometry::IndexType start = g->numVertices();
 
+    sizeX = std::max(1, sizeX);
+    sizeY = std::max(1, sizeY);
+    sizeZ = std::max(1, sizeZ);
+
     const Float
             ox = (Float)sizeX / 2 - 0.5,
             oy = (Float)sizeY / 2 - 0.5,
@@ -217,13 +221,22 @@ void GeometryFactory::createGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
         g->addVertex(x-ox, y-oy, z-oz);
     }
 
-    //for (int z=0; z<sizeZ; ++z)
-    for (int y=0; y<sizeX; ++y)
-    for (int x=1; x<sizeX; ++x)
+#define MO__INDEX(x__, y__, z__) \
+    (start + ((z__) * sizeY + (y__)) * sizeX + (x__))
+
+    for (int z=0; z<sizeZ; ++z)
+    for (int y=0; y<sizeY; ++y)
+    for (int x=0; x<sizeX; ++x)
     {
-        int p = start + y * sizeX + x;
-        g->addLine(p - 1, p);
+        if (x>0)
+            g->addLine(MO__INDEX(x,y,z), MO__INDEX(x-1,y,z));
+        if (y>0)
+            g->addLine(MO__INDEX(x,y,z), MO__INDEX(x,y-1,z));
+        if (z>0)
+            g->addLine(MO__INDEX(x,y,z), MO__INDEX(x,y,z-1));
     }
+
+#undef MO__INDEX
 }
 
 void GeometryFactory::createUVSphere(
