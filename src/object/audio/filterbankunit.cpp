@@ -99,6 +99,13 @@ void FilterBankUnit::onParameterChanged(Parameter *p)
         requestNumChannelsOut_(numOut_->baseValue());
 }
 
+void FilterBankUnit::onParametersLoaded()
+{
+    AudioUnit::onParametersLoaded();
+
+    requestNumChannelsOut_(numOut_->baseValue());
+}
+
 void FilterBankUnit::channelsChanged()
 {
     AudioUnit::channelsChanged();

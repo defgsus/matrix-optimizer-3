@@ -312,6 +312,8 @@ public:
     template <class T>
     int indexOfLastChild(int last = -1) const;
 
+protected:
+
     /** Called when the children list has changed */
     virtual void childrenChanged() { }
 
@@ -321,6 +323,13 @@ public:
         Object's base implementation removes all modulators from parameters
         that point to deleted objects. */
     virtual void onObjectsAboutToDelete(const QList<const Object*>& list);
+
+    /** Called when the parent of this object has changed.
+        This happens when the object has been added to or moved in tree.
+        @note Call ancestor's implementation before your derived code! */
+    virtual void onParentChanged() { }
+
+public:
 
     /** Returns the number of threads, this object is assigned for */
     uint numberThreads() const { return numberThreads_; }
@@ -404,11 +413,19 @@ public:
         Always call the ancestor classes createParameters() in your derived function! */
     virtual void createParameters();
 
+protected:
+
     /** Called when a parameter has changed it's value (from the gui).
-        Be sure to call the ancestor class implementation in your derived method! */
+        Be sure to call the ancestor class implementation before your derived code! */
     virtual void onParameterChanged(Parameter * p);
 
-protected:
+    /** Called after all parameters of the object have been deserialized.
+        createParameters() has alreay been called here.
+        Be sure to call the ancestor class implementation before your derived code!
+        XXX Right now it's a bit unclear, what is possible here except from lazy requests. */
+    virtual void onParametersLoaded() { }
+
+
     /** Creates the desired parameter,
         or returns an already created parameter object.
         When the Parameter was present before, all it's settings are still overwritten.

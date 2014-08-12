@@ -264,8 +264,9 @@ void Object::deserializeParameters_(IO::DataStream & io, Object * o)
         }
         else
             p->deserialize(io);
-
     }
+
+    o->onParametersLoaded();
 }
 
 
@@ -473,6 +474,7 @@ void Object::setParentObject_(Object *parent, int index)
     // and add to child list
     parentObject_->addChildObjectHelper_(this, index);
 
+    this->onParentChanged();
 }
 
 

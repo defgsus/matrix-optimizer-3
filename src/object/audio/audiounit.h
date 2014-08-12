@@ -94,8 +94,15 @@ public:
 
     // -------------- tree -------------------
 
+protected:
+
     /** Collects sub-audio units */
     virtual void childrenChanged() Q_DECL_OVERRIDE;
+
+    /** Fullfills channel-out-resize request */
+    virtual void onParentChanged() Q_DECL_OVERRIDE;
+
+public:
 
     const QList<AudioUnit*> subAudioUnits() const { return subAudioUnits_; }
 

@@ -98,7 +98,7 @@ void AudioUnit::setNumChannelsIn(uint num)
     numberChannelsIn_ = std::min(maximumChannelsIn_, num);
 
     if (isRequestForChannelsOut_)
-        numberChannelsOut_ = std::min(numberRequestedChannelsOut_, num);
+        numberChannelsOut_ = std::min(maximumChannelsOut_, numberRequestedChannelsOut_);
     if (sameNumberInputOutputChannels_)
         numberChannelsOut_ = std::min(maximumChannelsOut_, num);
 
@@ -186,7 +186,6 @@ void AudioUnit::channelsChanged()
     resizeAudioOutputBuffer_();
 }
 
-
 void AudioUnit::resizeAudioOutputBuffer_()
 {
     MO_DEBUG_AUDIO("AudioUnit('" << idName() << "')::resizeAudioOutputBuffer_() "
@@ -207,6 +206,14 @@ void AudioUnit::childrenChanged()
 
     // always keep track of direct sub-units
     subAudioUnits_ = findChildObjects<AudioUnit>();
+}
+
+void AudioUnit::onParentChanged()
+{
+    Object::onParentChanged();
+
+    if (needsChannelChange())
+        changeNumberChannels(true);
 }
 
 void AudioUnit::updateSubUnitChannels()
@@ -231,6 +238,9 @@ void AudioUnit::requestNumChannelsOut_(uint newNumber)
     isRequestForChannelsOut_ = true;
     numberRequestedChannelsOut_ = newNumber;
 
+    if (Scene * scene = sceneObject())
+        scene->updateAudioUnitChannels();
+
     /*
     Scene * scene = sceneObject();
     if (!scene)
@@ -253,9 +263,6 @@ void AudioUnit::requestNumChannelsOut_(uint newNumber)
 
 void AudioUnit::processAudioBlock_(const F32 *input, Double time, uint thread, bool recursive)
 {
-    if (needsChannelChange())
-        changeNumberChannels(true);
-
     const auto mode = processMode();
 
     if (mode == PM_OFF)

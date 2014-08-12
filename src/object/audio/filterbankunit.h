@@ -30,6 +30,7 @@ public:
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
 
     // --------------- processing ------------
 
