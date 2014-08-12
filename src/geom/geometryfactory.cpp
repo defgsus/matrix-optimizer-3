@@ -201,7 +201,7 @@ void GeometryFactory::createGridXZ(Geometry * g, int sizeX, int sizeY, bool coor
 
 }
 
-void GeometryFactory::createGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
+void GeometryFactory::createLineGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
 {
     const Geometry::IndexType start = g->numVertices();
 
@@ -238,6 +238,9 @@ void GeometryFactory::createGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
 
 #undef MO__INDEX
 }
+
+
+
 
 void GeometryFactory::createUVSphere(
         Geometry * g, Float rad, uint segu, uint segv, bool asTriangles)
@@ -836,8 +839,8 @@ void GeometryFactory::createFromSettings(Geometry * g,
         createGridXZ(g, set->segmentsX, set->segmentsY, set->withCoords);
     break;
 
-    case GeometryFactorySettings::T_GRID:
-        createGrid(g, set->segmentsX, set->segmentsY, set->segmentsZ);
+    case GeometryFactorySettings::T_LINE_GRID:
+        createLineGrid(g, set->segmentsX, set->segmentsY, set->segmentsZ);
     break;
 
     case GeometryFactorySettings::T_UV_SPHERE:
@@ -932,8 +935,8 @@ const QStringList GeometryFactorySettings::typeIds =
 {
     "file", "quad",
     "tetra", "hexa", "octa", "icosa", "dodeca",
-    "cyl", "cylo", "torus",
-    "gridxz", "grid", "uvsphere"
+    "cyl", "cylo", "torus", "uvsphere",
+    "gridxz", "lgrid"
 };
 
 const QStringList GeometryFactorySettings::typeNames =
@@ -948,9 +951,9 @@ const QStringList GeometryFactorySettings::typeNames =
     QObject::tr("cylinder (closed)"),
     QObject::tr("cylinder (open)"),
     QObject::tr("torus"),
-    QObject::tr("grid xz"),
-    QObject::tr("grid"),
-    QObject::tr("uv-sphere")
+    QObject::tr("uv-sphere"),
+    QObject::tr("coordinate system"),
+    QObject::tr("line-grid")
 };
 
 GeometryFactorySettings::GeometryFactorySettings()

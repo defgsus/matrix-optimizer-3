@@ -57,7 +57,7 @@ public:
     static void createDodecahedron(Geometry *, Float scale, bool asTriangles = true);
 
     static void createGridXZ(Geometry *, int sizeX, int sizeZ, bool with_coordinate_system);
-    static void createGrid(Geometry *, int sizeX, int sizeY, int sizeZ);
+    static void createLineGrid(Geometry *, int sizeX, int sizeY, int sizeZ);
 
 };
 
@@ -78,11 +78,11 @@ public:
         T_CYLINDER_CLOSED,
         T_CYLINDER_OPEN,
         T_TORUS,
+        T_UV_SPHERE,
         T_GRID_XZ,
-        T_GRID,
-        T_UV_SPHERE
+        T_LINE_GRID
     };
-    static const uint numTypes = T_UV_SPHERE + 1;
+    static const uint numTypes = T_LINE_GRID + 1;
     static const QStringList typeIds;
     static const QStringList typeNames;
 

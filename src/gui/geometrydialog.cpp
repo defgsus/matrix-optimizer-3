@@ -630,14 +630,14 @@ void GeometryDialog::updateFromWidgets_()
             canTriangle = (settings_->type !=
                             GEOM::GeometryFactorySettings::T_GRID_XZ
                             && settings_->type !=
-                            GEOM::GeometryFactorySettings::T_GRID),
+                            GEOM::GeometryFactorySettings::T_LINE_GRID),
             hasTriangle = (canTriangle && (settings_->asTriangles || isFile)),
             has2Segments = (settings_->type ==
                             GEOM::GeometryFactorySettings::T_UV_SPHERE
                            || settings_->type ==
                             GEOM::GeometryFactorySettings::T_GRID_XZ
                            || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_GRID
+                            GEOM::GeometryFactorySettings::T_LINE_GRID
                            || settings_->type ==
                             GEOM::GeometryFactorySettings::T_CYLINDER_CLOSED
                            || settings_->type ==
@@ -645,7 +645,7 @@ void GeometryDialog::updateFromWidgets_()
                            || settings_->type ==
                             GEOM::GeometryFactorySettings::T_TORUS),
             has3Segments = (has2Segments && settings_->type ==
-                            GEOM::GeometryFactorySettings::T_GRID),
+                            GEOM::GeometryFactorySettings::T_LINE_GRID),
             hasSmallRadius = (settings_->type ==
                             GEOM::GeometryFactorySettings::T_TORUS);
 
@@ -691,6 +691,7 @@ void GeometryDialog::updateWidgets_()
 {
     ignoreUpdate_ = true;
 
+    comboType_->clear();
     for (uint i=0; i<settings_->numTypes; ++i)
     {
         comboType_->addItem(settings_->typeNames[i], i);
