@@ -13,6 +13,7 @@
 #include "gl/drawable.h"
 #include "geom/geometryfactory.h"
 #include "gl/shadersource.h"
+#include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
 #include "geom/geometrycreator.h"
 #include "param/parameterfloat.h"
@@ -107,11 +108,11 @@ void Model3d::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
     requestReinitGl();
 }
 
-void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double time)
+void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
     const Mat4& trans = transformation(thread, 0);
-    const Mat4  cubeViewTrans = cam.cubeViewMatrix() * trans;
-    const Mat4  viewTrans = cam.viewMatrix() * trans;
+    const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
+    const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
 
     if (nextGeometry_)
     {
@@ -128,8 +129,8 @@ void Model3d::renderGl(const GL::CameraSpace& cam, uint thread, Double time)
                     cb_->value(time, thread),
                     ca_->value(time, thread));
         //draw_->renderAttribArrays();
-        draw_->renderShader(cam.projectionMatrix(),
-                            cubeViewTrans, viewTrans, trans, &cam.lights());
+        draw_->renderShader(rs.cameraSpace().projectionMatrix(),
+                            cubeViewTrans, viewTrans, trans, &rs.lightSettings());
     }
 }
 

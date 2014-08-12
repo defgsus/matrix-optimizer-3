@@ -44,7 +44,7 @@ public:
     virtual void initGl(uint thread) = 0;
     virtual void releaseGl(uint thread) = 0;
 
-    virtual void renderGl(const GL::CameraSpace& camera, uint thread, Double time) = 0;
+    virtual void renderGl(const GL::RenderSettings& rs, uint thread, Double time) = 0;
 
     /** Tell scene that this object wants to be painted */
     void requestRender();
@@ -63,7 +63,7 @@ private:
 
     void initGl_(uint thread);
     void releaseGl_(uint thread);
-    void renderGl_(const GL::CameraSpace& camera, uint thread, Double time);
+    void renderGl_(const GL::RenderSettings& rs, uint thread, Double time);
 
     std::vector<GL::Context*> glContext_;
     std::vector<int> needsInitGl_, isGlInitialized_;

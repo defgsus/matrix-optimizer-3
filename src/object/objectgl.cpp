@@ -105,7 +105,7 @@ void ObjectGl::releaseGl_(uint thread)
     isGlInitialized_[thread] = false;
 }
 
-void ObjectGl::renderGl_(const GL::CameraSpace &camera, uint thread, Double time)
+void ObjectGl::renderGl_(const GL::RenderSettings &rs, uint thread, Double time)
 {
     if (!glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
@@ -113,7 +113,7 @@ void ObjectGl::renderGl_(const GL::CameraSpace &camera, uint thread, Double time
         MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
 
     MO_EXTEND_EXCEPTION(
-                renderGl(camera, thread, time),
+                renderGl(rs, thread, time),
                 "in ObjectGl '" << idName() << "', thread=" << thread
                 );
 

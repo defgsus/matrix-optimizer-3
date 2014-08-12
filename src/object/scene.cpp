@@ -33,6 +33,7 @@
 #include "gl/framebufferobject.h"
 #include "gl/screenquad.h"
 #include "gl/texture.h"
+#include "gl/rendersettings.h"
 #include "tool/locklessqueue.h"
 
 namespace MO {
@@ -637,12 +638,17 @@ void Scene::renderScene(uint thread)
         // update lighting settings
         updateLightSettings_(thread, time);
 
+        GL::RenderSettings renderSet;
+        GL::CameraSpace camSpace;
+
+        renderSet.setLightSettings(&lightSettings(thread));
+        renderSet.setCameraSpace(&camSpace);
+
         // render scene from each camera
         for (auto camera : cameras_)
         if (camera->active(time, thread))
         {
             // get camera viewspace
-            GL::CameraSpace camSpace(lightSettings(thread));
             camera->initCameraSpace(camSpace, thread, time);
             const Mat4 viewm = glm::inverse(camera->transformation(thread, 0));
 
@@ -661,7 +667,7 @@ void Scene::renderScene(uint thread)
                 for (auto o : glObjects_)
                 if (o->active(time, thread))
                 {
-                    o->renderGl_(camSpace, thread, time);
+                    o->renderGl_(renderSet, thread, time);
                 }
             }
             camera->finishGlFrame(thread, time);

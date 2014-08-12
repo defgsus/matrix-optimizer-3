@@ -23,7 +23,7 @@ namespace GL {
 class ScreenQuad
 {
 public:
-    ScreenQuad(const QString& name, ErrorReporting reporting);
+    ScreenQuad(const QString& name, ErrorReporting reporting = ER_THROW);
 
     bool create(const QString& defines = QString())
         { return create(":/shader/framebufferdraw.vert", ":/shader/framebufferdraw.frag",

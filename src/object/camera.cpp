@@ -170,7 +170,11 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 {
     Float angle = 90.f;
     if (renderMode_ == RM_PERSP)
+    {
         angle = std::min((Double)179, cameraAngle_->value(time, thread));
+        cam.setIsCubemap(false);
+    }
+    else cam.setIsCubemap(true);
 
     cam.setProjectionMatrix(
                 glm::perspective(angle,

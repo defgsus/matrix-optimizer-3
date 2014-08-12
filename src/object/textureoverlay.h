@@ -22,7 +22,7 @@ public:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const GL::CameraSpace &cam, uint, Double time) Q_DECL_OVERRIDE;
+    virtual void renderGl(const GL::RenderSettings &rs, uint, Double time) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
@@ -33,6 +33,9 @@ private slots:
 private:
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_;
+    GL::Texture * tex_;
+    GL::ScreenQuad * quad_;
+    GL::Uniform * u_color_;
 };
 
 } // namespace MO

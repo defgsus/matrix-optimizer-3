@@ -164,7 +164,8 @@ SOURCES += \
     src/object/audio/filterbankunit.cpp \
     src/object/param/parameterint.cpp \
     src/audio/tool/chebychevfilter.cpp \
-    src/object/textureoverlay.cpp
+    src/object/textureoverlay.cpp \
+    src/gl/rendersettings.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -322,7 +323,8 @@ HEADERS += \
     src/object/audio/filterbankunit.h \
     src/object/param/parameterint.h \
     src/audio/tool/chebychevfilter.h \
-    src/object/textureoverlay.h
+    src/object/textureoverlay.h \
+    src/gl/rendersettings.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
@@ -346,7 +348,9 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/framebuffercamera.vert \
     assets/shader/framebuffercamera.frag \
     assets/shader/test.vert \
-    assets/shader/test.frag
+    assets/shader/test.frag \
+    assets/shader/textureoverlay.vert \
+    assets/shader/textureoverlay.frag
 
 ####################### BISON PARSER #######################
 

@@ -24,7 +24,7 @@ public:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const GL::CameraSpace &cam, uint, Double time) Q_DECL_OVERRIDE;
+    virtual void renderGl(const GL::RenderSettings& rs, uint, Double time) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 

@@ -8,5 +8,7 @@
         <file alias="framebuffercamera.vert">assets/shader/framebuffercamera.vert</file>
         <file alias="test.frag">assets/shader/test.frag</file>
         <file alias="test.vert">assets/shader/test.vert</file>
+        <file alias="textureoverlay.frag">assets/shader/textureoverlay.frag</file>
+        <file alias="textureoverlay.vert">assets/shader/textureoverlay.vert</file>
     </qresource>
 </RCC>

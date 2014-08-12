@@ -25,7 +25,6 @@ namespace GL {
     };
 
     // some forwards
-    class CameraSpace;
     class Context;
     class Drawable;
     class FrameBufferObject;
@@ -37,6 +36,10 @@ namespace GL {
     class Uniform;
     class VertexArrayObject;
     class Window;
+
+    class CameraSpace;
+    class LightSettings;
+    class RenderSettings;
 
 } // namespace GL
     namespace GEOM {
