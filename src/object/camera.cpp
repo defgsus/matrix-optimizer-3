@@ -81,11 +81,19 @@ void Camera::createParameters()
 
 void Camera::onParameterChanged(Parameter * p)
 {
+    ObjectGl::onParameterChanged(p);
+
     if (p == cameraMode_)
     {
         renderMode_ = (RenderMode)cameraMode_->baseValue();
         requestReinitGl();
     }
+}
+
+void Camera::onParametersLoaded()
+{
+    ObjectGl::onParametersLoaded();
+    renderMode_ = (RenderMode)cameraMode_->baseValue();
 }
 
 void Camera::setNumberThreads(uint num)
@@ -168,6 +176,8 @@ void Camera::releaseGl(uint thread)
 
 void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) const
 {
+    cam.setSize(fbo_[thread]->width(), fbo_[thread]->height());
+
     Float angle = 90.f;
     if (renderMode_ == RM_PERSP)
     {
@@ -175,6 +185,8 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
         cam.setIsCubemap(false);
     }
     else cam.setIsCubemap(true);
+
+    cam.setFieldOfView(angle);
 
     cam.setProjectionMatrix(
                 glm::perspective(angle,

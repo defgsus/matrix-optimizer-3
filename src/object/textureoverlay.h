@@ -18,6 +18,13 @@ class TextureOverlay : public ObjectGl
 {
     Q_OBJECT
 public:
+
+    enum ProjectionType
+    {
+        PT_FLAT,
+        PT_EQUIRECT
+    };
+
     MO_OBJECT_CONSTRUCTOR(TextureOverlay);
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
@@ -26,16 +33,23 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
+    virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+
 signals:
 
 private slots:
 
 private:
 
-    ParameterFloat * cr_, *cg_, *cb_, *ca_;
+    ProjectionType ptype_, actualPtype_;
+
+    ParameterSelect * ptypeParam_;
+    ParameterFloat * cr_, *cg_, *cb_, *ca_, *pos_influence_;
     GL::Texture * tex_;
     GL::ScreenQuad * quad_;
-    GL::Uniform * u_color_;
+    GL::Uniform * u_color_,
+        *u_dir_matrix_, *u_cam_angle_, *u_sphere_offset_;
 };
 
 } // namespace MO

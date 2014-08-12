@@ -12,6 +12,7 @@
 #define MOSRC_GL_RENDERSETTINGS_H
 
 #include "gl/opengl_fwd.h"
+#include "types/int.h"
 
 namespace MO {
 namespace GL {
@@ -25,6 +26,7 @@ public:
 
     const CameraSpace & cameraSpace() const { return *camSpace_; }
     const LightSettings & lightSettings() const { return *lightSettings_; }
+
 
     // ----------- setter ---------------
 

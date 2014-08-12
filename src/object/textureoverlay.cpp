@@ -12,6 +12,7 @@
 #include "io/datastream.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
 #include "gl/shader.h"
 #include "gl/shadersource.h"
@@ -24,7 +25,9 @@ namespace MO {
 MO_REGISTER_OBJECT(TextureOverlay)
 
 TextureOverlay::TextureOverlay(QObject * parent)
-    : ObjectGl      (parent)
+    : ObjectGl      (parent),
+      ptype_        (PT_FLAT),
+      actualPtype_  (ptype_)
 {
     setName("TextureOverlay");
 }
@@ -47,14 +50,41 @@ void TextureOverlay::createParameters()
 {
     ObjectGl::createParameters();
 
-    cr_ = createFloatParameter("red", "red", tr("Red amount of color multiplier"), 1.0, 0.1);
+    ptypeParam_ = createSelectParameter("projtype", tr("projection"),
+        tr("Selects the type of projection for the texture overlay"),
+        { "flat", "equirect" },
+        { tr("flat on screen"), tr("equi-rect") },
+        { tr("Projects the texture as-is on screen"),
+          tr("Projects an equi-rectangular map as seen from inside") },
+        { PT_FLAT, PT_EQUIRECT },
+          ptype_, true, false);
+
+    cr_ = createFloatParameter("red", tr("red"), tr("Red amount of color multiplier"), 1.0, 0.1);
     cr_->setMinValue(0.0);
-    cg_ = createFloatParameter("green", "green", tr("Green amount of color multiplier"), 1.0, 0.1);
+    cg_ = createFloatParameter("green", tr("green"), tr("Green amount of color multiplier"), 1.0, 0.1);
     cg_->setMinValue(0.0);
-    cb_ = createFloatParameter("blue", "blue", tr("Blue amount of color multiplier"), 1.0, 0.1);
+    cb_ = createFloatParameter("blue", tr("blue"), tr("Blue amount of color multiplier"), 1.0, 0.1);
     cb_->setMinValue(0.0);
-    ca_ = createFloatParameter("alpha", "alpha", tr("Alpha amount of color multiplier"), 1.0, 0.1);
+    ca_ = createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of color multiplier"), 1.0, 0.1);
     ca_->setMinValue(0.0);
+    pos_influence_ = createFloatParameter("posinf", tr("position influence"),
+        tr("A multiplier for influencing the texture offset by the transformation position"),
+                                          0.0, 0.01);
+}
+
+void TextureOverlay::onParameterChanged(Parameter *p)
+{
+    ObjectGl::onParameterChanged(p);
+    if (p == ptypeParam_)
+    {
+        ptype_ = (ProjectionType)ptypeParam_->baseValue();
+        requestReinitGl();
+    }
+}
+
+void TextureOverlay::onParametersLoaded()
+{
+    ptype_ = (ProjectionType)ptypeParam_->baseValue();
 }
 
 void TextureOverlay::initGl(uint /*thread*/)
@@ -62,17 +92,33 @@ void TextureOverlay::initGl(uint /*thread*/)
     // --- texture ---
 
     Image img;
-    img.loadImage("/home/defgsus/prog/C/matrixoptimizer/data/graphic/kepler/bg_wood_03_polar.png");
+    //img.loadImage("/home/defgsus/prog/C/matrixoptimizer/data/graphic/kepler/bg_wood_03_polar.png");
+    img.loadImage(":/texture/mo_black.png");
     tex_ = GL::Texture::createFromImage(img, GL_RGBA);
 
     // --- shader and quad ---
 
     quad_ = new GL::ScreenQuad(idName());
 
-    quad_->create(":/shader/textureoverlay.vert", ":/shader/textureoverlay.frag");
+    QString defines;
+    if (ptype_ == PT_EQUIRECT)
+        defines += "#define MO_EQUIRECT";
+
+    quad_->create(":/shader/textureoverlay.vert",
+                  ":/shader/textureoverlay.frag",
+                  defines);
 
     // --- uniforms ---
     u_color_ = quad_->shader()->getUniform("u_color", true);
+
+    if (ptype_ == PT_EQUIRECT)
+    {
+        u_dir_matrix_ = quad_->shader()->getUniform("u_cvt", true);
+        u_cam_angle_ = quad_->shader()->getUniform("u_cam_angle", true);
+        u_sphere_offset_ = quad_->shader()->getUniform("u_sphere_offset", true);
+    }
+
+    actualPtype_ = ptype_;
 }
 
 void TextureOverlay::releaseGl(uint /*thread*/)
@@ -86,21 +132,38 @@ void TextureOverlay::releaseGl(uint /*thread*/)
 
 void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
-    /*
     const Mat4& trans = transformation(thread, 0);
-    const Mat4  cubeViewTrans = cam.cubeViewMatrix() * trans;
-    const Mat4  viewTrans = cam.viewMatrix() * trans;
-    */
+    const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
+    //const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
+
+    const Float posInf = -pos_influence_->value(time, thread);
 
     u_color_->setFloats(cr_->value(time, thread),
                         cg_->value(time, thread),
                         cb_->value(time, thread),
                         ca_->value(time, thread));
 
+    if (actualPtype_ == PT_EQUIRECT)
+    {
+        u_cam_angle_->floats[0] = rs.cameraSpace().isCubemap() ?
+                                    90.f : rs.cameraSpace().fieldOfView();
+
+        u_sphere_offset_->setFloats(
+                    cubeViewTrans[3][0] * posInf,
+                    cubeViewTrans[3][1] * posInf,
+                    cubeViewTrans[3][2] * posInf, 0);
+
+        quad_->shader()->activate();
+
+        //if (u_dir_matrix_)
+            MO_CHECK_GL( glUniformMatrix4fv(u_dir_matrix_->location(), 1, GL_FALSE,
+                                            &cubeViewTrans[0][0]) );
+    }
+
     tex_->bind();
 
     MO_CHECK_GL( glDepthMask(false) );
-    quad_->draw(glContext(thread)->size().width(), glContext(thread)->size().height());
+    quad_->draw(rs.cameraSpace().width(), rs.cameraSpace().height());
     MO_CHECK_GL( glDepthMask(true) );
 
 }

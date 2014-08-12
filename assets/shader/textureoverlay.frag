@@ -1,12 +1,15 @@
 #version 130
 
 in vec4 v_texCoord;
+in mat3 v_dir_matrix;
 
 // fragment output
 out vec4 color;
 
 uniform sampler2D u_tex;
 uniform vec4 u_color;
+uniform float u_cam_angle;
+uniform vec3 u_sphere_offset;
 
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
@@ -28,8 +31,11 @@ vec3 spherical(vec2 scr)
             phi = asin(scr.y / rad);
     }
 
+    // XXX
+    float angle = u_cam_angle - 11.0 * abs(scr.x)*abs(scr.y);
+
     float
-        theta = rad * 180.0 * PI / 360.0,
+        theta = rad * angle * HALF_PI / 180.0,
 
         cx = cos(phi),
         cy = cos(theta),
@@ -62,13 +68,16 @@ void main(void)
 {
     vec2 scr = v_texCoord.xy * 2.0 - 1.0;
 
-    //vec3 sphere = spherical(scr);
-    //vec2 cart = cartesian(sphere);
+#ifdef MO_EQUIRECT
+    vec3 sphere = (spherical(scr) + u_sphere_offset) * v_dir_matrix;
+    scr = cartesian(sphere);
 
     float ang = atan(scr.x, scr.y) / PI;
     float dist = length(scr.xy);
     vec2 uv = 1.0 - vec2(ang, dist);
-
+#else
+    vec2 uv = scr;
+#endif
     vec4 col = mo_texture(uv);
 
 
