@@ -1,6 +1,6 @@
 /** @file multifilter.cpp
 
-    @brief
+    @brief Multi-mode audio filter
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
