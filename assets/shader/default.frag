@@ -10,12 +10,18 @@
 // --- input from vertex shader ---
 
 in vec3 v_pos;
+in vec3 v_pos_world;
 in vec3 v_pos_eye;
 in vec3 v_cam_dir;
 in vec3 v_normal;
+in vec3 v_normal_eye;
 in vec4 v_color;
 in vec2 v_texCoord;
 in vec4 v_light_dir[MO_NUM_LIGHTS];
+
+// --- output to rasterizer ---
+
+out vec4 color;
 
 
 // --- uniforms ---
@@ -61,11 +67,12 @@ vec4 getLightColor(in vec3 light_normal, in vec4 color, in float shinyness, in i
     // shaping the linear light influence
     float diffuse = pow(d, 1.0 + shinyness);
 
-    vec3 halfvec = reflect( v_cam_dir, mo_normal() );
+    //vec3 halfvec = reflect( v_cam_dir, v_normal_eye );
+    //float spec = pow( max(0.0, dot(v_light_dir_eye[i], halfvec)), 10.0);
 
-    float spec = pow( max(0.0, dot(light_normal, halfvec)), 10.0);
-
-    return vec4(diffuse * color.xyz /*+ spec * (0.5+0.5*color.xyz)*/, 0.);
+    return vec4(diffuse * color.xyz, 0.0);
+    //return vec4(diffuse * color.xyz + spec * (0.5+0.5*color.xyz), 0.);
+    //return vec4(spec * (0.5+0.5*color.xyz), 0.);
 }
 
 vec4 mo_light_color()
@@ -78,8 +85,13 @@ vec4 mo_light_color()
     return c;
 }
 
-// output to rasterizer
-out vec4 color;
+vec4 mo_toon_color()
+{
+    float d = max(0.0, dot(-v_cam_dir, v_normal_eye));
+    float f = smoothstep(0.3,0.32,d);
+    return vec4(f, f, f, 1.0);
+}
+
 
 void main()
 {
@@ -89,6 +101,9 @@ void main()
     // adding the light to the base color
     vec4 col = ambcol + mo_light_color();
     //vec4 col = vec4(v_cam_dir, 1.0);
+    //vec4 col = vec4(mo_toon_color(), 1.0);
+
+    //col *= mo_toon_color();
 
     // final color
     color = vec4(clamp(col, 0.0, 1.0));

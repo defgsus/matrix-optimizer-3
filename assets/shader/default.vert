@@ -33,17 +33,19 @@ uniform vec4 u_light_color[MO_NUM_LIGHTS];
 
 out vec3 v_pos;
 out vec3 v_pos_eye;
+out vec3 v_pos_world;
 out vec3 v_cam_dir;
 out vec3 v_normal;
+out vec3 v_normal_eye;
 out vec4 v_color;
 out vec2 v_texCoord;
-// w is distance attenuation
-out vec4 v_light_dir[MO_NUM_LIGHTS];
-
+out vec4 v_light_dir[MO_NUM_LIGHTS];        // surface-towards light in normal-space
+                                            // w is distance attenuation
 
 /** Returns the matrix to multiply the light-direction normal */
 mat3 mo_light_matrix()
 {
+    // normal in world coordinates
     vec3 norm = transpose(inverse(mat3(u_transform))) * a_normal;
 
     vec3 tangent =  vec3(-norm.z, -norm.y,  norm.x);
@@ -51,6 +53,15 @@ mat3 mo_light_matrix()
     return mat3(tangent, -binormal, norm);
 }
 
+mat3 mo_light_matrix2()
+{
+    // normal in world coordinates
+    vec3 norm = transpose(inverse(mat3(u_viewTransform))) * a_normal;
+
+    vec3 tangent =  vec3(-norm.z, -norm.y,  norm.x);
+    vec3 binormal = vec3(-norm.x,  norm.z, -norm.y);
+    return mat3(tangent, -binormal, norm);
+}
 
 /** returns spherical coordinate (x,y + depth in z) */
 vec3 mo_pos_to_fulldome(in vec3 pos)
@@ -102,10 +113,13 @@ void main()
 {
     // pass attributes to fragment shader
     v_pos = a_position.xyz;
-    v_pos_eye = (u_transform * a_position).xyz;
+    v_pos_world = (u_transform * a_position).xyz;
+    v_pos_eye = (u_viewTransform * a_position).xyz;
     v_normal = a_normal;
+    v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
     v_color = a_color;
     v_texCoord = a_texCoord;
+    v_cam_dir = normalize(v_pos_eye);
 
     // set final vertex position
     gl_Position = mo_ftransform(a_position);
@@ -117,15 +131,12 @@ void main()
 
     for (int i=0; i<MO_NUM_LIGHTS; ++i)
     {
-        vec3 lightvec = u_light_pos[i] - v_pos_eye;
+        vec3 lightvec = u_light_pos[i] - v_pos_world;
         float dist = length(lightvec);
         // calculate influence from distance attenuation
         float distatt = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
 
         v_light_dir[i] = vec4(lightmat * (lightvec / dist), distatt);
     }
-
-    //v_cam_dir = lightmat * normalize(-v_pos);
-    v_cam_dir = normalize((u_transform * a_position).xyz);
 
 }
