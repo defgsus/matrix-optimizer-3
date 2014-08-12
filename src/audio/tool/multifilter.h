@@ -28,7 +28,10 @@ public:
     {
         T_FIRST_ORDER_LOW,
         T_FIRST_ORDER_HIGH,
-        T_FIRST_ORDER_BAND
+        T_FIRST_ORDER_BAND,
+        T_NTH_ORDER_LOW,
+        T_NTH_ORDER_HIGH,
+        T_NTH_ORDER_BAND
     };
 
     static const QStringList filterTypeIds;
@@ -40,7 +43,13 @@ public:
 
     // ----------- setter ----------------
 
+    /** Sets the type of the filter.
+        Requires updateCoefficients() to be called. */
     void setType(FilterType type) { type_ = type; }
+
+    /** Sets the order of the T_NTH_ORDER type filters.
+        Requires updateCoefficients() to be called. */
+    void setOrder(uint order) { order_ = std::max((uint)1, order); }
 
     /** Sets the samplerate in hertz.
         Requires updateCoefficients() to be called. */
@@ -57,6 +66,8 @@ public:
     // ---------- getter ------------------
 
     FilterType type() const { return type_; }
+
+    uint order() const { return order_; }
 
     uint sampleRate() const { return sr_; }
 
@@ -86,10 +97,10 @@ private:
 
     FilterType type_;
 
-    uint sr_;
+    uint sr_, order_;
     F32 freq_, reso_,
-        q1_,
-        s1_, s2_;
+        q1_, s1_, s2_;
+    std::vector<F32> so1_, so2_;
 };
 
 } // namespace AUDIO

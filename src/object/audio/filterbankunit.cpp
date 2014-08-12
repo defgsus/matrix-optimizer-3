@@ -65,6 +65,12 @@ void FilterBankUnit::createParameters()
                                   AUDIO::MultiFilter::filterTypeEnums,
                                   AUDIO::MultiFilter::T_FIRST_ORDER_LOW, true, false);
 
+    filterOrder_ = createIntParameter("forder", tr("filter order"),
+                                 tr("The order (sharpness) of the filter for the 'nth order' types"),
+                                 1,
+                                 1, 20,
+                                 1, true, false);
+
     baseFreq_ = createFloatParameter("freq", tr("base frequency"),
                                  tr("Controls the filter base frequency (of the first output) in Hertz"),
                                  200., 10.);
@@ -131,6 +137,8 @@ void FilterBankUnit::processAudioBlock(const F32 *input, Double time, uint threa
               reso = reso_->value(time, thread),
               fadd = addFreq_->value(time, thread),
               fmul = mulFreq_->value(time, thread);
+    const uint order = filterOrder_->value(time, thread);
+
     const auto type = AUDIO::MultiFilter::FilterType(type_->baseValue());
 
     const uint bsize = bufferSize(thread);
@@ -145,12 +153,14 @@ void FilterBankUnit::processAudioBlock(const F32 *input, Double time, uint threa
         if (freq != filter->frequency()
                 || reso != filter->resonance()
                 || sampleRate() != filter->sampleRate()
-                || type != filter->type())
+                || type != filter->type()
+                || order != filter->order())
         {
             filter->setFrequency(freq);
             filter->setResonance(reso);
             filter->setSampleRate(sampleRate());
             filter->setType(type);
+            filter->setOrder(order);
             filter->updateCoefficients();
         }
 
