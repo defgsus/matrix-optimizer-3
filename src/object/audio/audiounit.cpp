@@ -24,8 +24,9 @@ AudioUnit::AudioUnit(int maxIn, int maxOut, bool sameNum, QObject *parent) :
     maximumChannelsOut_     (maxOut<0? MO_MAX_AUDIO_CHANNELS : maxOut),
     numberChannelsIn_       ( maxIn==0? 0 : 1),
     numberChannelsOut_      (maxOut==0? 0 : 1),
-    numberRequestedChannelsOut_ (numberChannelsOut_),
-    sameNumberInputOutputChannels_(sameNum)
+    numberRequestedChannelsOut_ (0),
+    sameNumberInputOutputChannels_(sameNum),
+    isRequestForChannelsOut_    (false)
 {
     MO_DEBUG_AUDIO("AudioUnit::AudioUnit("
                    << maximumChannelsIn_ << ", " << maximumChannelsOut_
@@ -95,10 +96,15 @@ void AudioUnit::setNumChannelsIn(uint num)
                oldout = numberChannelsOut_;
 
     numberChannelsIn_ = std::min(maximumChannelsIn_, num);
+
+    if (isRequestForChannelsOut_)
+        numberChannelsOut_ = std::min(numberRequestedChannelsOut_, num);
     if (sameNumberInputOutputChannels_)
         numberChannelsOut_ = std::min(maximumChannelsOut_, num);
 
-    numberRequestedChannelsOut_ = numberChannelsOut_;
+    if (isRequestForChannelsOut_ &&
+        numberRequestedChannelsOut_ == numberChannelsOut_)
+        isRequestForChannelsOut_ = false;
 
     if (oldin != numberChannelsIn_ || oldout != numberChannelsOut_)
         channelsChanged();
@@ -113,11 +119,16 @@ void AudioUnit::setNumChannelsOut(uint num)
     const uint oldin = numberChannelsIn_,
                oldout = numberChannelsOut_;
 
+    if (isRequestForChannelsOut_)
+        num = numberRequestedChannelsOut_;
+
     numberChannelsOut_ = std::min(maximumChannelsOut_, num);
     if (sameNumberInputOutputChannels_)
         numberChannelsIn_ = std::min(maximumChannelsIn_, num);
 
-    numberRequestedChannelsOut_ = numberChannelsOut_;
+    if (isRequestForChannelsOut_ &&
+        numberRequestedChannelsOut_ == numberChannelsOut_)
+        isRequestForChannelsOut_ = false;
 
     if (oldin != numberChannelsIn_ || oldout != numberChannelsOut_)
         channelsChanged();
@@ -132,14 +143,42 @@ void AudioUnit::setNumChannelsInOut(uint numIn, uint numOut)
     const uint oldin = numberChannelsIn_,
                oldout = numberChannelsOut_;
 
+    if (isRequestForChannelsOut_)
+        numOut = numberRequestedChannelsOut_;
+
     numberChannelsIn_ = std::min(maximumChannelsIn_, numIn);
     numberChannelsOut_ = std::min(maximumChannelsOut_,
                 sameNumberInputOutputChannels_? numIn : numOut);
 
-    numberRequestedChannelsOut_ = numberChannelsOut_;
+    if (isRequestForChannelsOut_ &&
+        numberRequestedChannelsOut_ == numberChannelsOut_)
+        isRequestForChannelsOut_ = false;
 
     if (oldin != numberChannelsIn_ || oldout != numberChannelsOut_)
         channelsChanged();
+}
+
+void AudioUnit::changeNumberChannels(bool recursive)
+{
+    MO_DEBUG_AUDIO("AudioUnit('" << idName() << "')::changeNumberChannels()");
+
+    if (isRequestForChannelsOut_)
+    {
+        const uint oldout = numberChannelsOut_;
+
+        numberChannelsOut_ = std::min(maximumChannelsOut_, numberRequestedChannelsOut_);
+
+        if (numberChannelsOut_ == numberRequestedChannelsOut_)
+            isRequestForChannelsOut_ = false;
+
+        if (oldout != numberChannelsOut_)
+        {
+            channelsChanged();
+
+            if (recursive)
+                updateSubUnitChannels();
+        }
+    }
 }
 
 void AudioUnit::channelsChanged()
@@ -180,9 +219,8 @@ void AudioUnit::updateSubUnitChannels()
     for (auto au : subAudioUnits_)
     {
         if (au->numChannelsIn() != numChannelsOut()
-            || au->numRequestedChannelsOut() != au->numChannelsOut())
-            au->setNumChannelsInOut(numChannelsOut(),
-                                    au->numRequestedChannelsOut());
+                || au->needsChannelChange())
+            au->setNumChannelsIn(numChannelsOut());
 
         au->updateSubUnitChannels();
     }
@@ -190,6 +228,7 @@ void AudioUnit::updateSubUnitChannels()
 
 void AudioUnit::requestNumChannelsOut_(uint newNumber)
 {
+    isRequestForChannelsOut_ = true;
     numberRequestedChannelsOut_ = newNumber;
 
     /*
@@ -214,6 +253,9 @@ void AudioUnit::requestNumChannelsOut_(uint newNumber)
 
 void AudioUnit::processAudioBlock_(const F32 *input, Double time, uint thread, bool recursive)
 {
+    if (needsChannelChange())
+        changeNumberChannels(true);
+
     const auto mode = processMode();
 
     if (mode == PM_OFF)

@@ -264,6 +264,7 @@ void Object::deserializeParameters_(IO::DataStream & io, Object * o)
         }
         else
             p->deserialize(io);
+
     }
 }
 

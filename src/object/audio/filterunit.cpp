@@ -12,6 +12,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parameterint.h"
 #include "object/param/parameterfloat.h"
 #include "audio/tool/multifilter.h"
 
@@ -46,18 +47,6 @@ void FilterUnit::deserialize(IO::DataStream & io)
 void FilterUnit::createParameters()
 {
     AudioUnit::createParameters();
-    /*
-    processModeParameter_ = createSelectParameter(
-                        "processmode", tr("processing"),
-                        tr("Sets the processing mode"),
-                        { "on", "off", "bypass" },
-                        { tr("on"), tr("off"), tr("bypass") },
-                        { tr("Processing is always on"),
-                          tr("Processing is off, no signals are passed through"),
-                          tr("The unit does no processing and passes it's input data unchanged") },
-                        { PM_ON, PM_OFF, PM_BYPASS },
-                        true, false);
-    */
 
     type_ = createSelectParameter("type", tr("filter type"),
                                   tr("Selectes the type of filter"),
@@ -66,6 +55,12 @@ void FilterUnit::createParameters()
                                   AUDIO::MultiFilter::filterTypeStatusTips,
                                   AUDIO::MultiFilter::filterTypeEnums,
                                   AUDIO::MultiFilter::T_FIRST_ORDER_LOW, true, false);
+
+    filterOrder_ = createIntParameter("forder", tr("filter order"),
+                                 tr("The order (sharpness) of the filter for the 'nth order' types"),
+                                 1,
+                                 1, 20,
+                                 1, true, false);
 
     freq_ = createFloatParameter("freq", tr("frequency"),
                                  tr("Controls the filter frequency in Hertz"),
@@ -112,6 +107,8 @@ void FilterUnit::processAudioBlock(const F32 *input, Double time, uint thread)
 
     const F32 freq = freq_->value(time, thread),
               reso = reso_->value(time, thread);
+    const uint order = filterOrder_->value(time, thread);
+
     const auto type = AUDIO::MultiFilter::FilterType(type_->baseValue());
 
     const uint bsize = bufferSize(thread);
@@ -122,9 +119,10 @@ void FilterUnit::processAudioBlock(const F32 *input, Double time, uint thread)
 
         // adjust filter settings
         if (freq != filter->frequency()
-                || reso != filter->resonance()
-                || sampleRate() != filter->sampleRate()
-                || type != filter->type())
+            || reso != filter->resonance()
+            || sampleRate() != filter->sampleRate()
+            || type != filter->type()
+            || order != filter->order())
         {
             filter->setFrequency(freq);
             filter->setResonance(reso);

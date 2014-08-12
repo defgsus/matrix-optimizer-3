@@ -378,9 +378,8 @@ void Scene::updateAudioUnitChannels_()
     for (AudioUnit * au : topLevelAudioUnits_)
     {
         if (au->numChannelsIn() != numInputChannels_
-            || au->numRequestedChannelsOut() != au->numChannelsOut())
-            au->setNumChannelsInOut(numInputChannels_,
-                                 au->numRequestedChannelsOut());
+            || au->needsChannelChange())
+            au->setNumChannelsIn(numInputChannels_);
 
         au->updateSubUnitChannels();
     }

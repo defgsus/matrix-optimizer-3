@@ -65,8 +65,11 @@ public:
     uint numChannelsIn() const { return numberChannelsIn_; }
     uint numChannelsOut() const { return numberChannelsOut_; }
 
-    /** If this is different that numChannelsOut(), Scene::updateAudioUnitChannels_()
-        will change the output number */
+    /** Scene::updateAudioUnitChannels_() is triggered by this event */
+    bool needsChannelChange() { return isRequestForChannelsOut_; }
+
+    /** If needsChannelChange() is true, this tells the number of
+        requested output channels. */
     uint numRequestedChannelsOut() const { return numberRequestedChannelsOut_; }
 
     bool numberInputOutputChannelsMustMatch() const { return sameNumberInputOutputChannels_; }
@@ -80,10 +83,14 @@ public:
 
     /** Sets the number of channels.
         If numberInputOutputChannelsMustMatch() is true, the number of
-        output channels is set to the number of input channels! */
+        output channels is set to the number of input channels!
+        Also numRequestedChannelsOut() is respected if the change-flag is set. */
     void setNumChannelsInOut(uint numIn, uint numOut);
     void setNumChannelsIn(uint num);
     void setNumChannelsOut(uint num);
+    /** Fullfills the request if flagged. @see needsChannelChange()
+        If recursive is true, updateSubUnitChannels() will be called. */
+    void changeNumberChannels(bool recursive);
 
     // -------------- tree -------------------
 
@@ -136,7 +143,8 @@ private:
          numberChannelsIn_, numberChannelsOut_,
          numberRequestedChannelsOut_;
 
-    bool sameNumberInputOutputChannels_;
+    bool sameNumberInputOutputChannels_,
+         isRequestForChannelsOut_;
 
     /** [thread] [channels][bufferSize] */
     std::vector<std::vector<F32>> audioOutputBuffer_;

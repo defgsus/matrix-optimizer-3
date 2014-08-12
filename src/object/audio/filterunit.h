@@ -43,6 +43,7 @@ private:
     void createFilters_();
 
     ParameterSelect * type_;
+    ParameterInt * filterOrder_;
     ParameterFloat * freq_, * reso_;
 
     /** [numChannelsIn][numberThreads] */

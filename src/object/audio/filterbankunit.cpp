@@ -55,8 +55,6 @@ void FilterBankUnit::createParameters()
                                  1, MO_MAX_AUDIO_CHANNELS,
                                  1, true, false);
 
-    requestNumChannelsOut_(numOut_->baseValue());
-
     type_ = createSelectParameter("type", tr("filter type"),
                                   tr("Selectes the type of filter"),
                                   AUDIO::MultiFilter::filterTypeIds,
