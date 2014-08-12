@@ -19,6 +19,7 @@ class AudioDecices;
 class AudioSource;
 class Configuration;
 
+class ChebychevFilter;
 class EnvelopeFollower;
 class MultiFilter;
 class Waveform;

@@ -27,6 +27,13 @@ class ChebychevFilter
 {
 public:
 
+    enum FilterType
+    {
+        T_LOWPASS,
+        T_HIGHPASS,
+        T_BANDPASS
+    };
+
     ChebychevFilter();
 
     // ----------- setter ----------------
@@ -47,7 +54,7 @@ public:
     void setClipping(F32 clip) { clip_ = clip; }
 
     /** Sets highpass or lowpass mode. */
-    void setHighpass(bool enable) { highpass_ = enable; }
+    void setType(FilterType type) { type_ = type; }
 
     // ---------- getter ------------------
 
@@ -55,7 +62,7 @@ public:
     F32 frequency() const { return freq_; }
     F32 resonance() const { return reso_; }
     F32 clipping() const { return clip_; }
-    bool highpass() const { return highpass_; }
+    FilterType type() const { return type_; }
 
     // ---------- processing --------------
 
@@ -78,12 +85,14 @@ public:
 
 private:
 
+    FilterType type_;
+
     uint sr_;
-    bool highpass_;
     F32 freq_, reso_, clip_,
         a0_, a1_, a2_, a3_, a4_, a5_,
         b0_, b1_, b2_, b3_, b4_, b5_,
-        stage0_, stage1_, state0_, state1_, state2_, state3_;
+        stage0_, stage1_, state0_, state1_, state2_, state3_,
+        bstage0_, bstage1_, bstate0_, bstate1_, bstate2_, bstate3_;
 
 };
 

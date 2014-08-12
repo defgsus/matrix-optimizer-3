@@ -19,8 +19,8 @@ namespace AUDIO {
 
 
 ChebychevFilter::ChebychevFilter()
-    : sr_       (44100),
-      highpass_ (false),
+    : type_     (T_LOWPASS),
+      sr_       (44100),
       freq_     (1000),
       reso_     (0),
       clip_     (2)
@@ -33,7 +33,9 @@ ChebychevFilter::ChebychevFilter()
 void ChebychevFilter::reset()
 {
     stage0_ = stage1_ =
-    state0_ = state1_ = state2_ = state3_ = 0;
+    state0_ = state1_ = state2_ = state3_ =
+    bstage0_ = bstage1_ =
+    bstate0_ = bstate1_ = bstate2_ = bstate3_ = 0;
 }
 
 void ChebychevFilter::updateCoefficients()
@@ -76,7 +78,7 @@ void ChebychevFilter::process(const F32 *input, uint inputStride,
 {
 #define MO__CLIP(v__) std::max(-clip_,std::min(clip_, (v__) ))
 
-    if (!highpass_)
+    if (type_ == T_LOWPASS)
     {
         for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
         {
@@ -90,7 +92,7 @@ void ChebychevFilter::process(const F32 *input, uint inputStride,
             state3_ = MO__CLIP( b5_ * stage1_ + a5_ * *output );
         }
     }
-    else
+    else if (type_ == T_HIGHPASS)
     {
         for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
         {
@@ -105,6 +107,31 @@ void ChebychevFilter::process(const F32 *input, uint inputStride,
 
             // high pass == signal minus low pass
             *output = inp - stage0_;
+        }
+    }
+    else // bandpass
+    {
+        for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+        {
+            F32 inp = MO__CLIP( *input );
+
+            stage1_ = MO__CLIP( b0_ * inp + state0_ );
+            state0_ = MO__CLIP( b1_ * inp + a1_ * stage1_ + state1_ );
+            state1_ = MO__CLIP( b2_ * inp + a2_ * stage1_ );
+            stage0_ = MO__CLIP( b3_ * stage1_ + state2_ );
+            state2_ = MO__CLIP( b4_ * stage1_ + a4_ * stage0_ + state3_ );
+            state3_ = MO__CLIP( b5_ * stage1_ + a5_ * stage0_ );
+
+            // high pass == signal minus low pass
+            inp -= stage0_;
+
+            // now lowpass on top
+            bstage1_ = MO__CLIP( b0_ * inp + bstate0_ );
+            bstate0_ = MO__CLIP( b1_ * inp + a1_ * bstage1_ + bstate1_ );
+            bstate1_ = MO__CLIP( b2_ * inp + a2_ * bstage1_ );
+            *output  = MO__CLIP( b3_ * bstage1_ + bstate2_ );
+            bstate2_ = MO__CLIP( b4_ * bstage1_ + a4_ * *output + bstate3_ );
+            bstate3_ = MO__CLIP( b5_ * bstage1_ + a5_ * *output );
         }
     }
 

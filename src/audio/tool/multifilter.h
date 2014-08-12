@@ -19,6 +19,7 @@
 namespace MO {
 namespace AUDIO {
 
+class ChebychevFilter;
 
 class MultiFilter
 {
@@ -31,7 +32,10 @@ public:
         T_FIRST_ORDER_BAND,
         T_NTH_ORDER_LOW,
         T_NTH_ORDER_HIGH,
-        T_NTH_ORDER_BAND
+        T_NTH_ORDER_BAND,
+        T_CHEBYCHEV_LOW,
+        T_CHEBYCHEV_HIGH,
+        T_CHEBYCHEV_BAND,
     };
 
     static const QStringList filterTypeIds;
@@ -40,6 +44,7 @@ public:
     static const QList<int>  filterTypeEnums;
 
     MultiFilter();
+    ~MultiFilter();
 
     // ----------- setter ----------------
 
@@ -101,6 +106,8 @@ private:
     F32 freq_, reso_,
         q1_, s1_, s2_;
     std::vector<F32> so1_, so2_;
+
+    ChebychevFilter * cheby_;
 };
 
 } // namespace AUDIO
