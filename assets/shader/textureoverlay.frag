@@ -32,7 +32,7 @@ vec3 spherical(vec2 scr)
     }
 
     // XXX
-    float angle = u_cam_angle - 11.0 * abs(scr.x)*abs(scr.y);
+    float angle = u_cam_angle;// - 11.0 * abs(scr.x)*abs(scr.y);
 
     float
         theta = rad * angle * HALF_PI / 180.0,

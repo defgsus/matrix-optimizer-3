@@ -21,6 +21,7 @@
 #include "types/int.h"
 #include "types/vector.h"
 #include "object_fwd.h"
+#include "io/filetypes.h"
 
 /** Maximum time in seconds (for widgets mainly) */
 #define MO_MAX_TIME (60 * 60 * 1000)
@@ -472,6 +473,10 @@ protected:
                 const QStringList& statusTips,
                 const QList<int>& valueList,
                 int defaultValue, bool editable = true, bool modulateable = true);
+
+    ParameterFilename * createFilenameParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                IO::FileType fileType, const QString& defaultValue, bool editable);
 
     // ------------------- audio ------------------
 public:

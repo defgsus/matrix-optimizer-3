@@ -31,6 +31,7 @@ namespace MO {
 
     class Parameter;
     class ParameterInt;
+    class ParameterFilename;
     class ParameterFloat;
     class ParameterSelect;
 

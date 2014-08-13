@@ -20,32 +20,6 @@
 namespace MO {
 namespace IO {
 
-const QStringList fileTypeIds =
-{ "scene", "texture", "model", "geom-set" };
-
-const QStringList fileTypeNames =
-{ "Scene", "Texture", "Model", "Geometry settings" };
-
-const QList<QStringList> fileTypeExtensions =
-{ { "mo3" },
-  { "png", "jpg", "jpeg", "bmp" },
-  { "obj" },
-  { "mo3-geom" }
-};
-
-const QList<QStringList> fileTypeDialogFilters =
-{
-    { "scene files ( *.mo3 )" },
-    { "all image files ( *.png, *.jpg, *.bmp )" },
-    { "Wavefront OBJ ( *.obj )" },
-    { "geometry presets ( *.mo3-geom )" }
-};
-
-
-Files::Files()
-{
-}
-
 
 QString Files::directory(FileType ft)
 {

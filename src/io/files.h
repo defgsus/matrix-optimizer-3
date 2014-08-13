@@ -13,26 +13,15 @@
 
 #include <QStringList>
 
+#include "filetypes.h"
+
 namespace MO {
 namespace IO {
-
-enum FileType
-{
-    FT_SCENE,
-    FT_TEXTURE,
-    FT_MODEL,
-    FT_GEOMETRY_SETTINGS
-};
-
-extern const QStringList fileTypeIds;
-extern const QStringList fileTypeNames;
-extern const QList<QStringList> fileTypeExtensions;
-extern const QList<QStringList> fileTypeDialogFilters;
 
 class Files
 {
 public:
-    Files();
+    Files() { }
 
     /** Returns directory for given filetype */
     static QString directory(FileType);

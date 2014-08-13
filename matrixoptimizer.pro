@@ -165,7 +165,9 @@ SOURCES += \
     src/object/param/parameterint.cpp \
     src/audio/tool/chebychevfilter.cpp \
     src/object/textureoverlay.cpp \
-    src/gl/rendersettings.cpp
+    src/gl/rendersettings.cpp \
+    src/object/param/parameterfilename.cpp \
+    src/io/filetypes.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -324,7 +326,9 @@ HEADERS += \
     src/object/param/parameterint.h \
     src/audio/tool/chebychevfilter.h \
     src/object/textureoverlay.h \
-    src/gl/rendersettings.h
+    src/gl/rendersettings.h \
+    src/object/param/parameterfilename.h \
+    src/io/filetypes.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

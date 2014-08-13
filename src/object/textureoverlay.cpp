@@ -92,8 +92,9 @@ void TextureOverlay::initGl(uint /*thread*/)
     // --- texture ---
 
     Image img;
+    img.loadImage("/home/defgsus/pic/android/_second/Camera/PANO_20140717_144107.jpg");
     //img.loadImage("/home/defgsus/prog/C/matrixoptimizer/data/graphic/kepler/bg_wood_03_polar.png");
-    img.loadImage(":/texture/mo_black.png");
+    //img.loadImage(":/texture/mo_black.png");
     tex_ = GL::Texture::createFromImage(img, GL_RGBA);
 
     // --- shader and quad ---

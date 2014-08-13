@@ -23,6 +23,7 @@
 #include "param/parameterint.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "param/parameterfilename.h"
 #include "audio/audiosource.h"
 #include "modulatorobjectfloat.h"
 
@@ -1015,7 +1016,7 @@ ParameterSelect * Object::createSelectParameter(
         }
         else
         {
-            MO_ASSERT(false, "object '" << idName() << "' requested float "
+            MO_ASSERT(false, "object '" << idName() << "' requested select "
                       "parameter '" << id << "' "
                       "which is already present as parameter of type " << p->typeName());
         }
@@ -1043,6 +1044,49 @@ ParameterSelect * Object::createSelectParameter(
     param->setValueIds(valueIds);
     param->setValueNames(valueNames);
     param->setStatusTips(statusTips);
+    param->setDefaultValue(defaultValue);
+
+    return param;
+}
+
+
+ParameterFilename * Object::createFilenameParameter(
+            const QString& id, const QString& name, const QString& statusTip,
+            IO::FileType fileType, const QString& defaultValue, bool editable)
+{
+    ParameterFilename * param = 0;
+
+    // see if already there
+
+    if (auto p = findParameter(id))
+    {
+        if (auto ps = dynamic_cast<ParameterFilename*>(p))
+        {
+            param = ps;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested filename "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterFilename(this, id, name);
+        parameters_.append(param);
+
+        // first time init
+        param->setValue(defaultValue);
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setModulateable(false);
+    param->setEditable(editable);
+    param->setFileType(fileType);
     param->setDefaultValue(defaultValue);
 
     return param;
