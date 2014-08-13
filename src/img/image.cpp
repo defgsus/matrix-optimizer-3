@@ -24,6 +24,7 @@ Image::Image()
       height_       (0),
       format_       (F_RGB_24)
 {
+    MO_DEBUG_IMG("Image::Image()");
 }
 
 Image::Image(uint width, uint height, Format format)
@@ -31,6 +32,9 @@ Image::Image(uint width, uint height, Format format)
       height_       (height),
       format_       (format)
 {
+    MO_DEBUG_IMG("Image::Image(" << width << ", " << height << ", "
+                 << formatNames[format] << ")");
+
     resize_();
 }
 
@@ -74,7 +78,7 @@ void Image::resize(uint width, uint height, Format format)
 
 void Image::resize_()
 {
-    MO_DEBUG_GL("Image::resize_(" << width_ << ", " << height_ <<
+    MO_DEBUG_IMG("Image::resize_(" << width_ << ", " << height_ <<
                 ", " << formatNames[format_] << ")");
 
     data_.resize(sizeInBytes());
@@ -124,6 +128,8 @@ Image::Color Image::average(uint x, uint y) const
 
 bool Image::loadImage(const QString &filename)
 {
+    MO_DEBUG_IMG("Image::loadImage('" << filename << "')");
+
     QImage img(filename);
     if (img.isNull())
         return false;
@@ -133,12 +139,16 @@ bool Image::loadImage(const QString &filename)
 
 bool Image::createFrom(const QImage & img)
 {
+    MO_DEBUG_IMG("Image::createFrom(img) size=" << img.width() << "x" << img.height());
+
     switch (img.format())
     {
         default: return false;
 
         case QImage::Format_Mono:
         {
+            MO_DEBUG_IMG("Image::createFrom() QImage::Format_Mono -> Image::F_MONO_8");
+
             resize(img.width(), img.height(), F_MONO_8);
             Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
@@ -162,6 +172,8 @@ bool Image::createFrom(const QImage & img)
 
         case QImage::Format_MonoLSB:
         {
+            MO_DEBUG_IMG("Image::createFrom() QImage::Format_MonoLSB -> Image::F_MONO_8");
+
             resize(img.width(), img.height(), F_MONO_8);
             Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
@@ -185,6 +197,8 @@ bool Image::createFrom(const QImage & img)
 
         case QImage::Format_RGB32:
         {
+            MO_DEBUG_IMG("Image::createFrom() QImage::Format_RGB32 -> Image::F_RGB_24");
+            //MO_ASSERT(img.bytesPerLine() == img.width() * 4, "");
             resize(img.width(), img.height(), F_RGB_24);
             Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
@@ -204,6 +218,8 @@ bool Image::createFrom(const QImage & img)
 
         case QImage::Format_Indexed8:
         {
+            MO_DEBUG_IMG("Image::createFrom() QImage::Format_Indexed8 -> Image::F_RGBA_32");
+
             resize(img.width(), img.height(), F_RGBA_32);
             Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
@@ -224,6 +240,8 @@ bool Image::createFrom(const QImage & img)
 
         case QImage::Format_RGB16:
         {
+            MO_DEBUG_IMG("Image::createFrom() QImage::Format_RGB16 -> Image::F_RGB_24");
+
             resize(img.width(), img.height(), F_RGB_24);
             Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
@@ -242,8 +260,11 @@ bool Image::createFrom(const QImage & img)
         break;
 
         case QImage::Format_ARGB32_Premultiplied: // XXX not tested
+        MO_DEBUG_IMG("Image::createFrom() QImage::Format_ARGB32_Premultiplied -> Image::F_RGBA_32");
         case QImage::Format_ARGB32:
         {
+            MO_DEBUG_IMG("Image::createFrom() QImage::Format_ARGB32 -> Image::F_RGBA_32");
+
             resize(img.width(), img.height(), F_RGBA_32);
             Color * dst = &data_[0];
             for (int y=0; y<img.height(); ++y)
@@ -268,6 +289,8 @@ bool Image::createFrom(const QImage & img)
 
 QImage Image::toQImage() const
 {
+    MO_DEBUG_IMG("Image::toQImage()");
+
     // determine format for QImage
     switch (format_)
     {
@@ -275,6 +298,8 @@ QImage Image::toQImage() const
 
         case F_RGB_24:
         {
+            MO_DEBUG_IMG("Image::toQImage() F_RGB_24 -> QImage::Format_RGB32");
+
             QImage img(width_, height_, QImage::Format_RGB32);
 
             const Color * src = &data_[0];
@@ -294,6 +319,8 @@ QImage Image::toQImage() const
 
         case F_RGBA_32:
         {
+            MO_DEBUG_IMG("Image::toQImage() F_RGBA_32 -> QImage::Format_ARGB32");
+
             QImage img(width_, height_, QImage::Format_ARGB32);
 
             const Color * src = &data_[0];
@@ -314,6 +341,8 @@ QImage Image::toQImage() const
         // convert 8bit to paletted data
         case F_MONO_8:
         {
+            MO_DEBUG_IMG("Image::toQImage() F_MONO_8 -> QImage::Format_Indexed8");
+
             QImage img(width_, height_, QImage::Format_Indexed8);
 
             img.setColorCount(256);

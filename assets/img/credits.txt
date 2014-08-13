@@ -1,0 +1,4 @@
+
+equirect_earth.jpg
+	http://en.wikipedia.org/wiki/File:Equirectangular_projection_SW.jpg
+	User: Strebe

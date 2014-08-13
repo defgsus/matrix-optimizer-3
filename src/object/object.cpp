@@ -1088,6 +1088,7 @@ ParameterFilename * Object::createFilenameParameter(
     param->setEditable(editable);
     param->setFileType(fileType);
     param->setDefaultValue(defaultValue);
+    param->setStatusTip(statusTip);
 
     return param;
 }

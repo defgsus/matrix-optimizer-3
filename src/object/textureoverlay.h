@@ -50,7 +50,8 @@ private:
     GL::Texture * tex_;
     GL::ScreenQuad * quad_;
     GL::Uniform * u_color_,
-        *u_dir_matrix_, *u_cam_angle_, *u_sphere_offset_;
+        *u_dir_matrix_, *u_cam_angle_, *u_sphere_offset_,
+        *u_local_transform_, *u_cube_hack_;
 };
 
 } // namespace MO

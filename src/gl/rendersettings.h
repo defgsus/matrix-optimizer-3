@@ -27,16 +27,20 @@ public:
     const CameraSpace & cameraSpace() const { return *camSpace_; }
     const LightSettings & lightSettings() const { return *lightSettings_; }
 
+    const FrameBufferObject & finalFrameBuffer() const { return *finalFbo_; }
 
     // ----------- setter ---------------
 
     void setCameraSpace(const CameraSpace * camSpace) { camSpace_ = camSpace; }
     void setLightSettings(const LightSettings * light) { lightSettings_ = light; }
 
+    void setFinalFramebuffer(const FrameBufferObject * fbo) { finalFbo_ = fbo; }
+
 private:
 
     const CameraSpace * camSpace_;
     const LightSettings * lightSettings_;
+    const FrameBufferObject * finalFbo_;
 };
 
 

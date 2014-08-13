@@ -19,6 +19,7 @@
 #include "gl/shadersource.h"
 #include "gl/texture.h"
 #include "gl/screenquad.h"
+#include "gl/framebufferobject.h"
 #include "img/image.h"
 
 
@@ -111,7 +112,9 @@ void TextureOverlay::initGl(uint /*thread*/)
 
     QString defines;
     if (ptype_ == PT_EQUIRECT)
-        defines += "#define MO_EQUIRECT";
+        defines += "#define MO_EQUIRECT\n";
+    if (ptype_ == PT_FLAT)
+        defines += "#define MO_FLAT\n";
 
     quad_->create(":/shader/textureoverlay.vert",
                   ":/shader/textureoverlay.frag",
@@ -120,11 +123,17 @@ void TextureOverlay::initGl(uint /*thread*/)
     // --- uniforms ---
     u_color_ = quad_->shader()->getUniform("u_color", true);
 
+    if (ptype_ == PT_FLAT)
+    {
+        u_local_transform_ = quad_->shader()->getUniform("u_local_transform", true);
+    }
+
     if (ptype_ == PT_EQUIRECT)
     {
         u_dir_matrix_ = quad_->shader()->getUniform("u_cvt", true);
         u_cam_angle_ = quad_->shader()->getUniform("u_cam_angle", true);
         u_sphere_offset_ = quad_->shader()->getUniform("u_sphere_offset", true);
+        u_cube_hack_ = quad_->shader()->getUniform("u_cube_hack", true);
     }
 
     actualPtype_ = ptype_;
@@ -154,6 +163,8 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
 
     if (actualPtype_ == PT_EQUIRECT)
     {
+        u_cube_hack_->floats[0] = rs.cameraSpace().isCubemap() ? 1.f : 0.f;
+
         u_cam_angle_->floats[0] = rs.cameraSpace().isCubemap() ?
                                     90.f : rs.cameraSpace().fieldOfView();
 
@@ -169,7 +180,20 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
                                             &cubeViewTrans[0][0]) );
     }
 
-    tex_->bind();
+    if (actualPtype_ == PT_FLAT)
+    {
+        // get local transformation
+        Mat4 trans(1.0);
+        calculateTransformation(trans, time, thread);
+        trans = glm::inverse(trans);
+
+        quad_->shader()->activate();
+        MO_CHECK_GL( glUniformMatrix4fv(u_local_transform_->location(), 1, GL_FALSE,
+                                        &trans[0][0]) );
+    }
+
+    //tex_->bind();
+    rs.finalFrameBuffer().colorTexture()->bind();
 
     MO_CHECK_GL( glDepthMask(false) );
     quad_->draw(rs.cameraSpace().width(), rs.cameraSpace().height());

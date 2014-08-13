@@ -111,4 +111,11 @@
 #   define MO_DEBUG_RENDER(unused__) { }
 #endif
 
+#if (1) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_RENDER
+#   define MO_DEBUG_IMG(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
+#else
+#   define MO_DEBUG_IMG(unused__) { }
+#endif
+
 #endif // MOSRC_IO_LOG_H

@@ -9,7 +9,12 @@ out vec4 color;
 uniform sampler2D u_tex;
 uniform vec4 u_color;
 uniform float u_cam_angle;
+uniform float u_cube_hack; // XXX
 uniform vec3 u_sphere_offset;
+
+#ifdef MO_FLAT
+uniform mat4 u_local_transform;
+#endif
 
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
@@ -32,10 +37,11 @@ vec3 spherical(vec2 scr)
     }
 
     // XXX
-    float angle = u_cam_angle;// - 11.0 * abs(scr.x)*abs(scr.y);
+    //float angle = u_cam_angle - 11.0 * abs(scr.x)*abs(scr.y);
+    float rad2 = mix(rad, pow(rad,0.59), u_cube_hack * smoothstep(0,1,rad));
 
     float
-        theta = rad * angle * HALF_PI / 180.0,
+        theta = rad2 * u_cam_angle * HALF_PI / 180.0,
 
         cx = cos(phi),
         cy = cos(theta),
@@ -68,6 +74,7 @@ void main(void)
 {
     vec2 scr = v_texCoord.xy * 2.0 - 1.0;
 
+    // -------- equi-rect projection ------------
 #ifdef MO_EQUIRECT
     vec3 sphere = (spherical(scr) + u_sphere_offset) * v_dir_matrix;
     scr = cartesian(sphere);
@@ -75,11 +82,15 @@ void main(void)
     float ang = atan(scr.x, scr.y) / PI;
     float dist = length(scr.xy);
     vec2 uv = 1.0 - vec2(ang, dist);
-#else
-    vec2 uv = scr;
 #endif
-    vec4 col = mo_texture(uv);
 
+    // ------- flat on screen -------------------
+#ifdef MO_FLAT
+    vec4 newpos = u_local_transform * vec4(scr, 0.0, 1.0);
+    vec2 uv = newpos.xy;
+#endif
+
+    vec4 col = mo_texture(uv);
 
     color = clamp(u_color * col, 0.0, 1.0);
 }

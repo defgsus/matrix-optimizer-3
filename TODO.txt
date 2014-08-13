@@ -13,6 +13,8 @@
 
 * fix positioning in ObjectTreeView (below/above... need to account for the sorted proxymodel)
 
+* fix not-working tabOrder for ParameterView widgets (das ging doch eben noch!)
+
     --- TrackView / Sequencer ---
 
     * scroll to selection on resize
@@ -41,9 +43,10 @@
 
 * maybe make ParameterFloat work with equations
 
-* maybe ParameterFloat as modulator
+- OK maybe ParameterFloat as modulator
     (would be nice to have e.g. a frequency value to control the frequency of a lot of sequences
     without creating a track/sequence for it)
+    - now doable with ModulatorFloatObject
 
 * concept for copy/paste of objects that are modulated
     (maybe: when pasting modulated objects, open a dialog for selection of which
@@ -51,11 +54,15 @@
 
 ---- threading -----
 
-* make equation threadsafe
-* preserve a thread-storage for the gui (displaying of sequences and such)
+- OK make equation threadsafe
+- OK preserve a thread-storage for the gui (displaying of sequences and such)
 * generally conceptualize thread-storage
 
 ---- OpenGL -----
+
+* BUG: QImage conversion of certain texture-sizes is buggy and texture-upload crashes!
+
+* fix TextureOverlay::PT_EQUIRECT mode for cube-mapped render
 
 * Shaders
     * text objects and #include support
@@ -63,6 +70,7 @@
 - OK concept and implementation of a generic Model container and a Model renderer
 
 * multi-projection
+
 
 ---- Networking ----
 

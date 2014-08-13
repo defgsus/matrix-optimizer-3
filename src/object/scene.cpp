@@ -657,6 +657,7 @@ void Scene::renderScene(uint thread)
 
         renderSet.setLightSettings(&lightSettings(thread));
         renderSet.setCameraSpace(&camSpace);
+        renderSet.setFinalFramebuffer(fboFinal_[thread]);
 
         // render scene from each camera
         for (auto camera : cameras_)
