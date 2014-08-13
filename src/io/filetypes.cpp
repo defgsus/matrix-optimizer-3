@@ -14,7 +14,7 @@ namespace MO {
 namespace IO {
 
     const QStringList fileTypeIds =
-    { "any", scene", "texture", "model", "geom-set" };
+    { "any", "scene", "texture", "model", "geom-set" };
 
     const QStringList fileTypeNames =
     { "Any file", "Scene", "Texture", "Model", "Geometry settings" };
@@ -32,7 +32,7 @@ namespace IO {
     {
         { "all files ( * )" },
         { "scene files ( *.mo3 )" },
-        { "all image files ( *.png, *.jpg, *.bmp )" },
+        { "all image files ( *.png *.jpg *.jpeg *.bmp )" },
         { "Wavefront OBJ ( *.obj )" },
         { "geometry presets ( *.mo3-geom )" }
     };

@@ -19,6 +19,7 @@
 #include "io/datastream.h"
 #include "object/objectfactory.h"
 #include "object/param/parameterint.h"
+#include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "object/track.h"
@@ -429,6 +430,19 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
 }
 
 void Scene::setParameterValue(ParameterSelect *p, int v)
+{
+    {
+        ScopedSceneLockWrite lock(this);
+        p->setValue(v);
+        p->object()->onParameterChanged(p);
+    }
+    emit parameterChanged(p);
+    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
+        emit sequenceChanged(seq);
+    render_();
+}
+
+void Scene::setParameterValue(ParameterFilename *p, const QString& v)
 {
     {
         ScopedSceneLockWrite lock(this);

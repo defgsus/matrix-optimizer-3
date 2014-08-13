@@ -162,6 +162,7 @@ public slots:
     void setParameterValue(MO::ParameterInt *, Int value);
     void setParameterValue(MO::ParameterFloat *, Double value);
     void setParameterValue(MO::ParameterSelect *, int value);
+    void setParameterValue(MO::ParameterFilename *, const QString& value);
     void addModulator(MO::Parameter *, const QString& idName);
     void removeModulator(MO::Parameter *, const QString& idName);
     void removeAllModulators(MO::Parameter *);

@@ -15,6 +15,8 @@
 #include <QComboBox>
 #include <QAbstractItemView>
 #include <QMenu>
+#include <QLineEdit>
+
 
 #include "parameterview.h"
 #include "object/object.h"
@@ -22,6 +24,7 @@
 #include "object/trackfloat.h"
 #include "object/sequence.h"
 #include "object/param/parameterint.h"
+#include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "object/param/modulator.h"
@@ -82,9 +85,9 @@ void ParameterView::clearWidgets_()
         i->deleteLater();
 
     widgets_.clear();
-    spins_.clear();
-    dspins_.clear();
-    combos_.clear();
+    spinsInt_.clear();
+    spinsFloat_.clear();
+    combosSelect_.clear();
 }
 
 void ParameterView::createWidgets_()
@@ -169,7 +172,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
         DoubleSpinBox * spin = new DoubleSpinBox(w);
         l->addWidget(spin);
-        dspins_.append(spin);
+        spinsFloat_.append(spin);
         // important for update
         spin->setObjectName(p->idName());
 
@@ -218,7 +221,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
         SpinBox * spin = new SpinBox(w);
         l->addWidget(spin);
-        spins_.append(spin);
+        spinsInt_.append(spin);
         // important for update
         spin->setObjectName(p->idName());
 
@@ -255,7 +258,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
         QComboBox * combo = new QComboBox(w);
         l->addWidget(combo);
-        combos_.append(combo);
+        combosSelect_.append(combo);
         // important for update
         combo->setObjectName(p->idName());
 
@@ -317,6 +320,46 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             combo->setCurrentIndex(ps->valueList().indexOf(ps->defaultValue()));
         });
     }
+    else
+
+    // --- filename parameter ---
+    if (ParameterFilename * pfn = dynamic_cast<ParameterFilename*>(p))
+    {
+        defaultValueName = pfn->defaultValue();
+
+        QLineEdit * edit = new QLineEdit(w);
+        l->addWidget(edit);
+        editsFilename_.append(edit);
+        // important for update
+        edit->setObjectName(p->idName());
+
+        edit->setReadOnly(true);
+        edit->setStatusTip(pfn->statusTip());
+        edit->setText(pfn->value());
+
+        if (prevEditWidget_)
+            setTabOrder(prevEditWidget_, edit);
+        prevEditWidget_ = edit;
+
+        // load button
+        QToolButton * butload = new QToolButton(w);
+        l->addWidget(butload);
+        butload->setText("...");
+        butload->setStatusTip(tr("Click to select a file"));
+
+        // load button click
+        connect(butload, &QToolButton::clicked, [=]()
+        {
+            pfn->openFileDialog(this);
+        });
+
+        // reset to default
+        connect(breset, &QToolButton::pressed, [=]()
+        {
+            edit->setText(pfn->defaultValue());
+        });
+    }
+
     else
     MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");
 
@@ -496,7 +539,7 @@ void ParameterView::updateWidgetValue_(Parameter * p)
 
     if (ParameterInt * pi = dynamic_cast<ParameterInt*>(p))
     {
-        for (SpinBox * spin : spins_)
+        for (SpinBox * spin : spinsInt_)
         {
             if (spin->objectName() == pi->idName())
                 spin->setValue(pi->baseValue());
@@ -505,7 +548,7 @@ void ParameterView::updateWidgetValue_(Parameter * p)
     else
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(p))
     {
-        for (DoubleSpinBox * spin : dspins_)
+        for (DoubleSpinBox * spin : spinsFloat_)
         {
             if (spin->objectName() == pf->idName())
                 spin->setValue(pf->baseValue());
@@ -514,7 +557,7 @@ void ParameterView::updateWidgetValue_(Parameter * p)
     else
     if (ParameterSelect * ps = dynamic_cast<ParameterSelect*>(p))
     {
-        for (QComboBox * combo : combos_)
+        for (QComboBox * combo : combosSelect_)
         {
             if (combo->objectName() == ps->idName())
             {
@@ -527,6 +570,15 @@ void ParameterView::updateWidgetValue_(Parameter * p)
                         combo->setStatusTip(ps->statusTips().at(combo->currentIndex()));
                 }
             }
+        }
+    }
+    else
+    if (ParameterFilename * pfn = dynamic_cast<ParameterFilename*>(p))
+    {
+        for (QLineEdit * edit : editsFilename_)
+        {
+            if (edit->objectName() == pfn->idName())
+                edit->setText(pfn->value());
         }
     }
 }

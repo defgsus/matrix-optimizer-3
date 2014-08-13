@@ -12,6 +12,7 @@
 #include "io/datastream.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "param/parameterfilename.h"
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
 #include "gl/shader.h"
@@ -19,6 +20,7 @@
 #include "gl/texture.h"
 #include "gl/screenquad.h"
 #include "img/image.h"
+
 
 namespace MO {
 
@@ -50,7 +52,10 @@ void TextureOverlay::createParameters()
 {
     ObjectGl::createParameters();
 
-    ptypeParam_ = createSelectParameter("projtype", tr("projection"),
+    paramFilename_ = createFilenameParameter("imgfile", tr("image"), tr("Filename of the image"),
+                                             IO::FT_TEXTURE, ":/texture/mo_black.png");
+
+    paramPType_ = createSelectParameter("projtype", tr("projection"),
         tr("Selects the type of projection for the texture overlay"),
         { "flat", "equirect" },
         { tr("flat on screen"), tr("equi-rect") },
@@ -75,16 +80,18 @@ void TextureOverlay::createParameters()
 void TextureOverlay::onParameterChanged(Parameter *p)
 {
     ObjectGl::onParameterChanged(p);
-    if (p == ptypeParam_)
+    if (p == paramPType_)
     {
-        ptype_ = (ProjectionType)ptypeParam_->baseValue();
+        ptype_ = (ProjectionType)paramPType_->baseValue();
         requestReinitGl();
     }
+    if (p == paramFilename_)
+        requestReinitGl();
 }
 
 void TextureOverlay::onParametersLoaded()
 {
-    ptype_ = (ProjectionType)ptypeParam_->baseValue();
+    ptype_ = (ProjectionType)paramPType_->baseValue();
 }
 
 void TextureOverlay::initGl(uint /*thread*/)
@@ -92,7 +99,8 @@ void TextureOverlay::initGl(uint /*thread*/)
     // --- texture ---
 
     Image img;
-    img.loadImage("/home/defgsus/pic/android/_second/Camera/PANO_20140717_144107.jpg");
+    img.loadImage(paramFilename_->value());
+    //img.loadImage("/home/defgsus/pic/android/_second/Camera/PANO_20140717_144107.jpg");
     //img.loadImage("/home/defgsus/prog/C/matrixoptimizer/data/graphic/kepler/bg_wood_03_polar.png");
     //img.loadImage(":/texture/mo_black.png");
     tex_ = GL::Texture::createFromImage(img, GL_RGBA);

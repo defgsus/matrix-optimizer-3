@@ -44,7 +44,8 @@ private:
 
     ProjectionType ptype_, actualPtype_;
 
-    ParameterSelect * ptypeParam_;
+    ParameterFilename * paramFilename_;
+    ParameterSelect * paramPType_;
     ParameterFloat * cr_, *cg_, *cb_, *ca_, *pos_influence_;
     GL::Texture * tex_;
     GL::ScreenQuad * quad_;

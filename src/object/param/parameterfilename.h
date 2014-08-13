@@ -46,6 +46,13 @@ public:
 
     void setFileType(IO::FileType ft) { fileType_ = ft; }
 
+    /** Opens a dialog and selects a new file.
+        If a file was selected, the scene object will be called with
+        Scene::setParameterValue().
+        @note The scene MUST be present for this call!
+        Returns true, when a new file was choosen. */
+    bool openFileDialog(QWidget * parent = 0);
+
 private:
 
     QString value_, defaultValue_;

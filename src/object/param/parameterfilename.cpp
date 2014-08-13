@@ -15,6 +15,8 @@
 #include "object/trackfloat.h"
 #include "object/scene.h"
 #include "modulator.h"
+#include "io/files.h"
+
 
 // make ParameterFilename useable in QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(MO::ParameterFilename*);
@@ -47,6 +49,23 @@ void ParameterFilename::deserialize(IO::DataStream &io)
     io.readHeader("parfn", 1);
 
     io >> value_;
+}
+
+
+bool ParameterFilename::openFileDialog(QWidget * parent)
+{
+    MO_ASSERT(object(), "no object for ParameterFilename::openFileDialog()");
+    MO_ASSERT(object()->sceneObject(), "no scene for ParameterFilename::openFileDialog()");
+
+    if (!object() || !object()->sceneObject())
+        return false;
+
+    QString fn = IO::Files::getOpenFileName(fileType_, parent);
+    if (fn.isEmpty())
+        return false;
+
+    object()->sceneObject()->setParameterValue(this, fn);
+    return true;
 }
 
 

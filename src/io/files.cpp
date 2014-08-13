@@ -66,16 +66,43 @@ void Files::setDirectory(FileType ft, const QString &path)
 
 QString Files::getOpenFileName(FileType ft, QWidget *parent, bool updateDirectory, bool updateFile)
 {
+    /*
     QString filters;
-    for (auto &f : fileTypeDialogFilters[ft])
-        filters += f + ";;";
+    for (int i=0; i<fileTypeDialogFilters[ft].size(); ++i)
+    {
+        filters += fileTypeDialogFilters[ft][i];
+        if (i < fileTypeDialogFilters[ft].size()-1)
+            filters += ";;";
+    }
 
     const QString fn =
         QFileDialog::getOpenFileName(
                 parent,
-                QWidget::tr("Load %1").arg(fileTypeNames[ft]),
+                QWidget::tr("Open %1").arg(fileTypeNames[ft]),
                 directory(ft),
                 filters);
+    */
+
+    QString fn = filename(ft);
+    if (fn.isEmpty())
+        fn = directory(ft);
+
+    // prepare a file dialog
+    QFileDialog diag(parent);
+    diag.setConfirmOverwrite(false);
+    diag.setAcceptMode(QFileDialog::AcceptOpen);
+    diag.setWindowTitle(QFileDialog::tr("Open %1").arg(fileTypeNames[ft]));
+    diag.setDirectory(fn);
+    diag.setNameFilters(fileTypeDialogFilters[ft]);
+    diag.setFileMode(QFileDialog::ExistingFiles);
+    if (!fn.isEmpty())
+        diag.selectFile(fn);
+
+    if (diag.exec() == QDialog::Rejected
+        || diag.selectedFiles().isEmpty())
+        return QString();
+
+    fn = diag.selectedFiles()[0];
 
     if (!fn.isEmpty())
     {

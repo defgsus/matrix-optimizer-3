@@ -22,6 +22,7 @@ class QLabel;
 class QVBoxLayout;
 class QToolButton;
 class QComboBox;
+class QLineEdit;
 
 namespace MO {
 namespace GUI {
@@ -74,9 +75,10 @@ private:
     Object * object_;
     QList<Parameter*> parameters_;
     QMap<QString, QWidget*> widgets_;
-    QList<SpinBox*> spins_;
-    QList<DoubleSpinBox*> dspins_;
-    QList<QComboBox*> combos_;
+    QList<SpinBox*> spinsInt_;
+    QList<DoubleSpinBox*> spinsFloat_;
+    QList<QComboBox*> combosSelect_;
+    QList<QLineEdit*> editsFilename_;
     QWidget * prevEditWidget_;
 
     QVBoxLayout * layout_;

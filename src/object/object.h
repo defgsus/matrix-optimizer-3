@@ -476,7 +476,8 @@ protected:
 
     ParameterFilename * createFilenameParameter(
                 const QString& id, const QString& name, const QString& statusTip,
-                IO::FileType fileType, const QString& defaultValue, bool editable);
+                IO::FileType fileType,
+                const QString& defaultValue = QString(), bool editable = true);
 
     // ------------------- audio ------------------
 public:
