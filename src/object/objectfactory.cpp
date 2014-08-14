@@ -27,6 +27,9 @@
 #include "transform/look.h"
 #include "transform/lookat.h"
 #include "transform/mix.h"
+#include "audio/envelopeunit.h"
+#include "audio/filterunit.h"
+#include "audio/filterbankunit.h"
 #include "scene.h"
 #include "trackfloat.h"
 #include "sequencefloat.h"
@@ -73,7 +76,11 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     static QIcon iconLookAt(":/icon/obj_lookat.png");
     static QIcon iconMix(":/icon/obj_mix.png");
     static QIcon iconGroup(":/icon/obj_group.png");
-
+    static QIcon iconLight(":/icon/obj_light.png");
+    static QIcon iconModulator(":/icon/obj_modulator.png");
+    static QIcon iconAUEnv(":/icon/obj_au_env.png");
+    static QIcon iconAUFilter(":/icon/obj_au_filter.png");
+    static QIcon iconAUFilterBank(":/icon/obj_au_filterbank.png");
 
     if (o->isTransformation())
     {
@@ -92,6 +99,18 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
         if (qobject_cast<const Mix*>(o))
             return iconMix;
     }
+
+    if (o->isAudioUnit())
+    {
+        if (qobject_cast<const EnvelopeUnit*>(o))
+            return iconAUEnv;
+        if (qobject_cast<const FilterUnit*>(o))
+            return iconAUFilter;
+        if (qobject_cast<const FilterBankUnit*>(o))
+            return iconAUFilterBank;
+    }
+
+
     if (o->type() & Object::T_GROUP) return iconGroup;
     if (o->isTrack()) return iconTrack;
     if (o->type() & Object::TG_FLOAT) return iconParameter;
@@ -100,6 +119,8 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     if (o->isSoundSource()) return iconSoundSource;
     if (o->isGl()) return icon3d;
     if (o->isParameter()) return iconParameter;
+    if (o->isLightSource()) return iconLight;
+    if (o->isModulatorObject()) return iconModulator;
 
     return iconNone;
 }

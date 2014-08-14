@@ -28,5 +28,10 @@
         <file alias="new_above.png">assets/icon/new_above.png</file>
         <file alias="delete.png">assets/icon/delete.png</file>
         <file alias="mo.png">assets/icon/mo.png</file>
+        <file alias="obj_light.png">assets/icon/obj_light.png</file>
+        <file alias="obj_au_env.png">assets/icon/obj_au_env.png</file>
+        <file alias="obj_au_filter.png">assets/icon/obj_au_filter.png</file>
+        <file alias="obj_au_filterbank.png">assets/icon/obj_au_filterbank.png</file>
+        <file alias="obj_modulator.png">assets/icon/obj_modulator.png</file>
     </qresource>
 </RCC>

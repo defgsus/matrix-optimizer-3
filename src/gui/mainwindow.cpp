@@ -213,7 +213,7 @@ void MainWindow::createWidgets_()
                 // object editor
                 objectView_ = new ObjectView(this);
                 lv->addWidget(objectView_);
-                objectView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+                objectView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
                 //objectView_->setMinimumWidth(240);
                 objectView_->setSceneSettings(sceneSettings_);
                 connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
