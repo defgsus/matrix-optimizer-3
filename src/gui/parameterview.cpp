@@ -36,6 +36,7 @@
 #include "widget/doublespinbox.h"
 #include "widget/groupwidget.h"
 #include "modulatordialog.h"
+#include "util/scenesettings.h"
 
 Q_DECLARE_METATYPE(MO::Modulator*)
 
@@ -43,9 +44,10 @@ namespace MO {
 namespace GUI {
 
 ParameterView::ParameterView(QWidget *parent) :
-    QWidget (parent),
-    scene_  (0),
-    object_ (0),
+    QWidget         (parent),
+    scene_          (0),
+    sceneSettings_  (0),
+    object_         (0),
 
     doChangeToCreatedTrack_    (false)
 {
@@ -94,16 +96,28 @@ void ParameterView::clearWidgets_()
     combosSelect_.clear();
 }
 
-GroupWidget * ParameterView::getGroupWidget_(const QString &id, const QString& name)
+GroupWidget * ParameterView::getGroupWidget_(const Parameter * p)
 {
-    auto i = groups_.find(id);
+    auto i = groups_.find(p->groupId());
     if (i == groups_.end())
     {
         // create new
-        GroupWidget * g = new GroupWidget(name, this);
-        g->setExpanded(false);
+        GroupWidget * g = new GroupWidget(p->groupName(), this);
+        MO_ASSERT(p->object(), "parameter without object in ParameterView");
+        g->setExpanded(
+            sceneSettings_->getParameterGroupExpanded(p->object(), p->groupId()) );
         layout_->addWidget(g);
-        groups_.insert(id, g);
+        groups_.insert(p->groupId(), g);
+
+        connect(g, &GroupWidget::expanded, [=]()
+        {
+            sceneSettings_->setParameterGroupExpanded(p->object(), p->groupId(), true);
+        });
+        connect(g, &GroupWidget::collapsed, [=]()
+        {
+            sceneSettings_->setParameterGroupExpanded(p->object(), p->groupId(), false);
+        });
+
         return g;
     }
     // return existing
@@ -121,7 +135,7 @@ void ParameterView::createWidgets_()
 
         if (!p->groupId().isEmpty())
         {
-            getGroupWidget_(p->groupId(), p->groupName())->addWidget(w);
+            getGroupWidget_(p)->addWidget(w);
         }
         else
         {

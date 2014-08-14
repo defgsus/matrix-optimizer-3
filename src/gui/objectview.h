@@ -21,6 +21,7 @@ namespace MO {
 class Object;
 namespace GUI {
 
+class SceneSettings;
 class ParameterView;
 
 class ObjectView : public QWidget
@@ -28,6 +29,8 @@ class ObjectView : public QWidget
     Q_OBJECT
 public:
     explicit ObjectView(QWidget *parent = 0);
+
+    void setSceneSettings(SceneSettings * s);
 
 signals:
 
@@ -59,6 +62,8 @@ private:
     void updateNameLabel_();
 
     Object * object_;
+
+    SceneSettings * sceneSettings_;
 
     ParameterView * paramView_;
     QVBoxLayout * layout_;

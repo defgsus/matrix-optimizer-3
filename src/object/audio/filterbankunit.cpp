@@ -49,11 +49,17 @@ void FilterBankUnit::createParameters()
 {
     AudioUnit::createParameters();
 
+    beginParameterGroup("channels", tr("channels"));
+
     numOut_ = createIntParameter("numout", tr("number outputs"),
                                  tr("The number of individual filters in the filter bank"),
                                  numChannelsOut(),
                                  1, MO_MAX_AUDIO_CHANNELS,
                                  1, true, false);
+
+    endParameterGroup();
+
+    beginParameterGroup("filtset", tr("filter settings"));
 
     type_ = createSelectParameter("type", tr("filter type"),
                                   tr("Selectes the type of filter"),
@@ -89,6 +95,7 @@ void FilterBankUnit::createParameters()
                                  0.0, 0.01);
     reso_->setRange(0.0, 1.0);
 
+    endParameterGroup();
 }
 
 void FilterBankUnit::onParameterChanged(Parameter *p)

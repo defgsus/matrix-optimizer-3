@@ -37,6 +37,7 @@ void GroupWidget::createLayout_()
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     auto lv = new QVBoxLayout(this);
+    lv->setMargin(1);
 
         // create header
         auto head = new QWidget(this);
@@ -52,11 +53,10 @@ void GroupWidget::createLayout_()
             button_ = new QToolButton(head);
             lh->addWidget(button_);
             button_->setFixedSize(20,20);
-            button_->setArrowType(expanded_? Qt::UpArrow : Qt::DownArrow);
+            updateArrow_();
             connect(button_, &QToolButton::clicked, [=]()
             {
-                setExpanded(!expanded_);
-                button_->setArrowType(expanded_? Qt::UpArrow : Qt::DownArrow);
+                setExpanded(!expanded_, true);
             });
 
             label_ = new QLabel(title_, head);
@@ -90,6 +90,7 @@ void GroupWidget::collapse(bool send_signal)
         w->setVisible(false);
 
     expanded_ = false;
+    updateArrow_();
 
     if (send_signal)
         emit collapsed();
@@ -104,6 +105,7 @@ void GroupWidget::expand(bool send_signal)
         w->setVisible(true);
 
     expanded_ = true;
+    updateArrow_();
 
     if (send_signal)
         emit expanded();
@@ -119,6 +121,10 @@ void GroupWidget::addWidget(QWidget * w)
     w->setVisible(expanded_);
 }
 
+void GroupWidget::updateArrow_()
+{
+    button_->setArrowType(expanded_? Qt::RightArrow : Qt::DownArrow);
+}
 
 
 

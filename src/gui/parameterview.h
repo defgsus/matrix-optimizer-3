@@ -30,12 +30,15 @@ namespace GUI {
 class SpinBox;
 class DoubleSpinBox;
 class GroupWidget;
+class SceneSettings;
 
 class ParameterView : public QWidget
 {
     Q_OBJECT
 public:
     explicit ParameterView(QWidget *parent = 0);
+
+    void setSceneSettings(SceneSettings * s) { sceneSettings_ = s; }
 
 signals:
 
@@ -59,7 +62,7 @@ private slots:
 
 private:
 
-    GroupWidget * getGroupWidget_(const QString& id, const QString &name);
+    GroupWidget * getGroupWidget_(const Parameter*);
 
     void createWidgets_();
     QWidget * createWidget_(Parameter *);
@@ -74,6 +77,7 @@ private:
     void addEditModMenu_(QMenu *, Parameter *);
 
     Scene * scene_;
+    SceneSettings * sceneSettings_;
     Object * object_;
     QList<Parameter*> parameters_;
     QList<QWidget*> widgets_;

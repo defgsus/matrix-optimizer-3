@@ -42,9 +42,13 @@ void ModulatorObjectFloat::createParameters()
 {
     ModulatorObject::createParameters();
 
+    beginParameterGroup("modval", tr("value"));
+
     valueParam_ = createFloatParameter("val", tr("value"),
                                        tr("A float value - sent to all receivers of the modulator"),
                                        0.0, 1.0);
+
+    endParameterGroup();
 }
 
 Double ModulatorObjectFloat::value(Double time, uint thread) const

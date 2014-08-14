@@ -48,20 +48,23 @@ void EnvelopeUnit::createParameters()
 {
     AudioUnit::createParameters();
 
-    amplitude_ = createFloatParameter("amp", tr("amplitude"),
-                                 tr("Multiplier for the generated envelope"),
-                                 1.0, 0.1);
+    beginParameterGroup("envset", tr("envelope"));
 
-    fadeIn_ = createFloatParameter("fadein", tr("time up"),
-                                 tr("Sets the time to follow rising signals in seconds"),
-                                 0.01, 0.001);
-    fadeIn_->setMinValue(0.00001);
+        amplitude_ = createFloatParameter("amp", tr("amplitude"),
+                                     tr("Multiplier for the generated envelope"),
+                                     1.0, 0.1);
 
-    fadeOut_ = createFloatParameter("fadeout", tr("time down"),
-                                 tr("Sets the time to follow decaying signals in seconds"),
-                                 0.5, 0.001);
-    fadeOut_->setMinValue(0.00001);
+        fadeIn_ = createFloatParameter("fadein", tr("time up"),
+                                     tr("Sets the time to follow rising signals in seconds"),
+                                     0.01, 0.001);
+        fadeIn_->setMinValue(0.00001);
 
+        fadeOut_ = createFloatParameter("fadeout", tr("time down"),
+                                     tr("Sets the time to follow decaying signals in seconds"),
+                                     0.5, 0.001);
+        fadeOut_->setMinValue(0.00001);
+
+    endParameterGroup();
 }
 
 void EnvelopeUnit::channelsChanged()

@@ -13,6 +13,7 @@
 
 #include <QObject>
 #include <QHash>
+#include <QSet>
 #include <QString>
 
 #include "object/object_fwd.h"
@@ -48,10 +49,14 @@ public:
     void setTrackHeight(const Track *, int);
     int getTrackHeight(const Track *) const;
 
+    void setParameterGroupExpanded(const Object *, const QString& groupId, bool expanded);
+    bool getParameterGroupExpanded(const Object *, const QString& groupId) const;
+
 private:
 
     QHash<QString, UTIL::ViewSpace> viewSpaces_;
     QHash<QString, int> trackHeights_;
+    QSet<QString> paramGroupExpanded_;
 
     // ---- config ----
 

@@ -41,6 +41,8 @@ void LookAt::createParameters()
 {
     Transformation::createParameters();
 
+    beginParameterGroup("transmode", tr("transformation mode"));
+
     const QString lookTip = tr("Global position to look at"),
                   upTip = tr("unit vector describing the up-axis (internally normalized)");
 
@@ -66,12 +68,18 @@ void LookAt::createParameters()
         true, false
         );
 
+    endParameterGroup();
+
+    beginParameterGroup("trans", tr("transformation"));
+
     x_ = createFloatParameter("x", "look-at x", lookTip, 0);
     y_ = createFloatParameter("y", "look-at y", lookTip, 0);
     z_ = createFloatParameter("z", "look-at z", lookTip, 0);
     upX_ = createFloatParameter("upx", "up x", upTip, 0);
     upY_ = createFloatParameter("upy", "up y", upTip, 1);
     upZ_ = createFloatParameter("upz", "up z", upTip, 0);
+
+    endParameterGroup();
 }
 
 

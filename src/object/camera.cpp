@@ -59,6 +59,8 @@ void Camera::createParameters()
 {
     ObjectGl::createParameters();
 
+    beginParameterGroup("camera", tr("camera settings"));
+
     cameraMode_ = createSelectParameter("cammode", tr("render mode"),
                                         tr("Selects the display/render mode for this camera"),
     { "persp", "fdcube" },
@@ -73,10 +75,14 @@ void Camera::createParameters()
                                         180.f,
                                         1.f, 360.f, 1.f);
 
-    cameraMix_ = createFloatParameter("cammix", tr("Camera mix"),
-                                      tr("Defines the volume and visibility of the camera [0,1]"),
-                                      1.f,
-                                      0.f, 1.f, 0.05f);
+    endParameterGroup();
+
+    beginParameterGroup("output", tr("output"));
+
+    cameraMix_ = createFloatParameter("cammix", tr("camera mix"),
+                          tr("Defines the volume and visibility of the camera [0,1]"),
+                          1.f,
+                          0.f, 1.f, 0.05f);
 }
 
 void Camera::onParameterChanged(Parameter * p)

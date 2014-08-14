@@ -49,6 +49,7 @@ public slots:
 private:
 
     void createLayout_();
+    void updateArrow_();
 
     bool expanded_;
     QString title_;

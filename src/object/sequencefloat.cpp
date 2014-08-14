@@ -105,30 +105,30 @@ void SequenceFloat::createParameters()
 
     beginParameterGroup("value", tr("value"));
 
-    offset_ = createFloatParameter("value_offset", "value offset",
-               tr("This value is always added to the output of the sequence"),
-               0.0);
-    offset_->setEditable(false);
+        offset_ = createFloatParameter("value_offset", "value offset",
+                   tr("This value is always added to the output of the sequence"),
+                   0.0);
+        offset_->setEditable(false);
 
-    amplitude_ = createFloatParameter("amp", "amplitude",
-              tr("The output of the sequence (before the offset) is multiplied by this value"),
-              1.0);
-    amplitude_->setEditable(false);
+        amplitude_ = createFloatParameter("amp", "amplitude",
+                  tr("The output of the sequence (before the offset) is multiplied by this value"),
+                  1.0);
+        amplitude_->setEditable(false);
 
-    frequency_ = createFloatParameter("freq", "frequency",
-              tr("The frequency of the function in hertz (periods per second)"),
-              1.0);
-    frequency_->setEditable(false);
+        frequency_ = createFloatParameter("freq", "frequency",
+                  tr("The frequency of the function in hertz (periods per second)"),
+                  1.0);
+        frequency_->setEditable(false);
 
-    phase_ = createFloatParameter("phase", "phase",
-              tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
-              0.0);
-    phase_->setEditable(false);
+        phase_ = createFloatParameter("phase", "phase",
+                  tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
+                  0.0);
+        phase_->setEditable(false);
 
-    pulseWidth_ = createFloatParameter("pulsewidth", "pulse width",
-               tr("Pulsewidth of the waveform, describes the width of the positive edge"),
-               0.5);
-    pulseWidth_->setEditable(false);
+        pulseWidth_ = createFloatParameter("pulsewidth", "pulse width",
+                   tr("Pulsewidth of the waveform, describes the width of the positive edge"),
+                   0.5);
+        pulseWidth_->setEditable(false);
 
     endParameterGroup();
 
@@ -136,32 +136,32 @@ void SequenceFloat::createParameters()
 
     beginParameterGroup("spectral", tr("spectral osc."));
 
-    specNum_ = createFloatParameter("specnum", "partial voices",
-               tr("Number of partial voices of the spectral oscillator. Does not have to be an integer"),
-               1.0);
-    specNum_->setEditable(false);
-    specNum_->setMinValue(1.0);
-    specNum_->setMaxValue(64.0);
+        specNum_ = createFloatParameter("specnum", "partial voices",
+                   tr("Number of partial voices of the spectral oscillator. Does not have to be an integer"),
+                   1.0);
+        specNum_->setEditable(false);
+        specNum_->setMinValue(1.0);
+        specNum_->setMaxValue(64.0);
 
-    specOct_ = createFloatParameter("specoct", "octave step",
-               tr("The step in octaves between each partial voice"),
-               1.0);
-    specOct_->setEditable(false);
+        specOct_ = createFloatParameter("specoct", "octave step",
+                   tr("The step in octaves between each partial voice"),
+                   1.0);
+        specOct_->setEditable(false);
 
-    specAmp_ = createFloatParameter("specamp", "amplitude mul.",
-               tr("Multiplier for the amplitude after each partial voice"),
-               0.5);
-    specAmp_->setEditable(false);
+        specAmp_ = createFloatParameter("specamp", "amplitude mul.",
+                   tr("Multiplier for the amplitude after each partial voice"),
+                   0.5);
+        specAmp_->setEditable(false);
 
-    specPhase_ = createFloatParameter("specphase", "base phase",
-               tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
-               0.0);
-    specPhase_->setEditable(false);
+        specPhase_ = createFloatParameter("specphase", "base phase",
+                   tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
+                   0.0);
+        specPhase_->setEditable(false);
 
-    specPhaseShift_ = createFloatParameter("specphaseshift", "phase shift",
-               tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"),
-               0.0);
-    specPhaseShift_->setEditable(false);
+        specPhaseShift_ = createFloatParameter("specphaseshift", "phase shift",
+                   tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"),
+                   0.0);
+        specPhaseShift_->setEditable(false);
 
     endParameterGroup();
 
@@ -169,15 +169,15 @@ void SequenceFloat::createParameters()
 
     beginParameterGroup("loopoverlap", tr("loop overlap"));
 
-    loopOverlap_ = createFloatParameter("loopoverlap", "loop overlap",
-               tr("Overlap of the loop window for smooth transitions (seconds)"),
-               0.1);
-    loopOverlap_->setEditable(false);
+        loopOverlap_ = createFloatParameter("loopoverlap", "loop overlap",
+                   tr("Overlap of the loop window for smooth transitions (seconds)"),
+                   0.1);
+        loopOverlap_->setEditable(false);
 
-    loopOverlapOffset_ = createFloatParameter("loopoverlapofs", "overlap value offset",
-               tr("A value that is added to the blended value in the transition window"),
-               0.0);
-    loopOverlapOffset_->setEditable(false);
+        loopOverlapOffset_ = createFloatParameter("loopoverlapofs", "overlap value offset",
+                   tr("A value that is added to the blended value in the transition window"),
+                   0.0);
+        loopOverlapOffset_->setEditable(false);
 
     endParameterGroup();
 }

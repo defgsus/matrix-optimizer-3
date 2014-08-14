@@ -40,25 +40,16 @@ void Scale::createParameters()
 {
     Transformation::createParameters();
 
+    beginParameterGroup("trans", tr("transformation"));
+
     all_ = createFloatParameter("all", "scale", tr("Scale/multiplier for the whole"), 1, 0.1);
     x_ = createFloatParameter("x", "x", tr("Additional scale for the x axis"), 1, 0.1);
     y_ = createFloatParameter("y", "y", tr("Additional scale for the y axis"), 1, 0.1);
     z_ = createFloatParameter("z", "z", tr("Additional scale for the z axis"), 1, 0.1);
 
-    //useXYZ_ = createSetting("usexyz", "individual scale", false);
+    endParameterGroup();
 }
-/*
-void Scale::settingChanged(Setting * s)
-{
-    if (s == useXYZ_)
-    {
-        bool xyz = useXYZ_->value();
-        x_->setEnabled(xyz);
-        y_->setEnabled(xyz);
-        z_->setEnabled(xyz);
-    }
-}
-*/
+
 void Scale::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
     const float all = all_->value(time, thread);

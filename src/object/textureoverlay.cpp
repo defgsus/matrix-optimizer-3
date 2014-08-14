@@ -55,29 +55,36 @@ void TextureOverlay::createParameters()
 
     beginParameterGroup("texture", tr("texture"));
 
-    paramFilename_ = createFilenameParameter("imgfile", tr("image"), tr("Filename of the image"),
-                                             IO::FT_TEXTURE, ":/texture/mo_black.png");
+        paramFilename_ = createFilenameParameter("imgfile", tr("image"), tr("Filename of the image"),
+                                                 IO::FT_TEXTURE, ":/texture/mo_black.png");
+    endParameterGroup();
 
-    paramPType_ = createSelectParameter("projtype", tr("projection"),
-        tr("Selects the type of projection for the texture overlay"),
-        { "flat", "equirect" },
-        { tr("flat on screen"), tr("equi-rect") },
-        { tr("Projects the texture as-is on screen"),
-          tr("Projects an equi-rectangular map as seen from inside") },
-        { PT_FLAT, PT_EQUIRECT },
-          ptype_, true, false);
+    beginParameterGroup("textureproj", tr("projection"));
 
-    cr_ = createFloatParameter("red", tr("red"), tr("Red amount of color multiplier"), 1.0, 0.1);
-    cr_->setMinValue(0.0);
-    cg_ = createFloatParameter("green", tr("green"), tr("Green amount of color multiplier"), 1.0, 0.1);
-    cg_->setMinValue(0.0);
-    cb_ = createFloatParameter("blue", tr("blue"), tr("Blue amount of color multiplier"), 1.0, 0.1);
-    cb_->setMinValue(0.0);
-    ca_ = createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of color multiplier"), 1.0, 0.1);
-    ca_->setMinValue(0.0);
-    pos_influence_ = createFloatParameter("posinf", tr("position influence"),
-        tr("A multiplier for influencing the texture offset by the transformation position"),
+        paramPType_ = createSelectParameter("projtype", tr("projection"),
+            tr("Selects the type of projection for the texture overlay"),
+            { "flat", "equirect" },
+            { tr("flat on screen"), tr("equi-rect") },
+            { tr("Projects the texture as-is on screen"),
+              tr("Projects an equi-rectangular map as seen from inside") },
+            { PT_FLAT, PT_EQUIRECT },
+              ptype_, true, false);
+
+        pos_influence_ = createFloatParameter("posinf", tr("position influence"),
+            tr("A multiplier for influencing the texture offset by the transformation position"),
                                           0.0, 0.01);
+    endParameterGroup();
+
+    beginParameterGroup("texturecolor", tr("color"));
+
+        cr_ = createFloatParameter("red", tr("red"), tr("Red amount of color multiplier"), 1.0, 0.1);
+        cr_->setMinValue(0.0);
+        cg_ = createFloatParameter("green", tr("green"), tr("Green amount of color multiplier"), 1.0, 0.1);
+        cg_->setMinValue(0.0);
+        cb_ = createFloatParameter("blue", tr("blue"), tr("Blue amount of color multiplier"), 1.0, 0.1);
+        cb_->setMinValue(0.0);
+        ca_ = createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of color multiplier"), 1.0, 0.1);
+        ca_->setMinValue(0.0);
 
     endParameterGroup();
 }

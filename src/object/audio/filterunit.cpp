@@ -48,6 +48,8 @@ void FilterUnit::createParameters()
 {
     AudioUnit::createParameters();
 
+    beginParameterGroup("filtset", tr("filter settings"));
+
     type_ = createSelectParameter("type", tr("filter type"),
                                   tr("Selectes the type of filter"),
                                   AUDIO::MultiFilter::filterTypeIds,
@@ -71,6 +73,8 @@ void FilterUnit::createParameters()
                                  tr("Controls the filter resonance - how much of the filter is fed-back to itself"),
                                  0.0, 0.01);
     reso_->setRange(0.0, 1.0);
+
+    endParameterGroup();
 
 }
 

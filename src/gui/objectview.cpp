@@ -58,6 +58,12 @@ ObjectView::ObjectView(QWidget *parent) :
                 this, SIGNAL(objectActivityChanged(MO::Object*)));
 }
 
+void ObjectView::setSceneSettings(SceneSettings *s)
+{
+    sceneSettings_ = s;
+    paramView_->setSceneSettings(s);
+}
+
 void ObjectView::setObject(Object * object)
 {
     object_ = object;

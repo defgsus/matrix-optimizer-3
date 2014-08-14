@@ -39,14 +39,23 @@ void LightSource::createParameters()
 {
     Object::createParameters();
 
+    beginParameterGroup("color", tr("color"));
+
     all_ = createFloatParameter("all", tr("brightness"), tr("Amplifier for all colors"), 1.0, 0.1);
     r_ = createFloatParameter("red", tr("red"), tr("Red amount of light color"), 1.0, 0.1);
     g_ = createFloatParameter("green", tr("green"), tr("Green amount of light color"), 1.0, 0.1);
     b_ = createFloatParameter("blue", tr("blue"), tr("Blue amount of light color"), 1.0, 0.1);
+
+    endParameterGroup();
+
+    beginParameterGroup("light", tr("light settings"));
+
     dist_ = createFloatParameter("dist", tr("distance attenuation"),
                                  tr("Distance attenuation factor - "
                                     "the higher, the less light reaches distant places"), 0, 0.1);
     dist_->setMinValue(0.0);
+
+    endParameterGroup();
 }
 
 Vec4 LightSource::lightColor(uint thread, Double time) const

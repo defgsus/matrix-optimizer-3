@@ -215,6 +215,7 @@ void MainWindow::createWidgets_()
                 lv->addWidget(objectView_);
                 objectView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
                 //objectView_->setMinimumWidth(240);
+                objectView_->setSceneSettings(sceneSettings_);
                 connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
                                             this, SLOT(objectSelected_(MO::Object*)));
                 connect(objectView_, SIGNAL(statusTipChanged(QString)),

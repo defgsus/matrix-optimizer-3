@@ -52,7 +52,7 @@ void SceneSettings::serialize(IO::DataStream &io) const
 {
     MO_DEBUG_IO("SceneSettings::serialize(" << &io << ")");
 
-    io.writeHeader("scenesettings", 1);
+    io.writeHeader("scenesettings", 2);
 
     io << trackHeights_;
 
@@ -63,13 +63,16 @@ void SceneSettings::serialize(IO::DataStream &io) const
         io << v.key();
         v->serialize(io);
     }
+
+    // v2
+    io << paramGroupExpanded_;
 }
 
 void SceneSettings::deserialize(IO::DataStream &io)
 {
     MO_DEBUG_IO("SceneSettings::deserialize(" << &io << ")");
 
-    io.readHeader("scenesettings", 1);
+    const int ver = io.readHeader("scenesettings", 2);
 
     io >> trackHeights_;
 
@@ -88,6 +91,9 @@ void SceneSettings::deserialize(IO::DataStream &io)
     }
 
     viewSpaces_ = temp;
+
+    if (ver >= 2)
+        io >> paramGroupExpanded_;
 }
 
 void SceneSettings::saveFile(const QString &filename) const
@@ -194,7 +200,7 @@ UTIL::ViewSpace SceneSettings::getViewSpace(const Object *obj)
 
 void SceneSettings::setTrackHeight(const Track * track, int h)
 {
-    trackHeights_.insert(track->idName(), h);
+    trackHeights_[track->idName()] = h;
 }
 
 int SceneSettings::getTrackHeight(const Track * track) const
@@ -204,6 +210,22 @@ int SceneSettings::getTrackHeight(const Track * track) const
         return defaultTrackHeight_;
 
     return i.value();
+}
+
+void SceneSettings::setParameterGroupExpanded(
+        const Object * obj, const QString &groupId, bool expanded)
+{
+    const QString id = obj->idName() + "/" + groupId;
+    if (!expanded)
+        paramGroupExpanded_.remove(id);
+    else
+        paramGroupExpanded_.insert(id);
+}
+
+bool SceneSettings::getParameterGroupExpanded(const Object * obj, const QString &groupId) const
+{
+    const QString id = obj->idName() + "/" + groupId;
+    return paramGroupExpanded_.contains(id);
 }
 
 

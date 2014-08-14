@@ -49,6 +49,9 @@ void AudioUnit::createParameters()
 {
     Object::createParameters();
 
+    // add to object's active group
+    beginParameterGroup("active", tr("activity"));
+
     processModeParameter_ = createSelectParameter(
                         "processmode", tr("processing"),
                         tr("Sets the processing mode"),
@@ -60,6 +63,8 @@ void AudioUnit::createParameters()
                         { PM_ON, PM_OFF, PM_BYPASS },
                         PM_ON,
                         true, false);
+
+    endParameterGroup();
 }
 
 void AudioUnit::setNumberThreads(uint num)

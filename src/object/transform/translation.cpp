@@ -39,9 +39,13 @@ void Translation::createParameters()
 {
     Transformation::createParameters();
 
+    beginParameterGroup("trans", tr("transformation"));
+
     x_ = createFloatParameter("x", tr("x"), tr("Offset on the x axis"), 0.0, 0.2);
     y_ = createFloatParameter("y", tr("y"), tr("Offset on the y axis"), 0.0, 0.2);
     z_ = createFloatParameter("z", tr("z"), tr("Offset on the z axis"), 0.0, 0.2);
+
+    endParameterGroup();
 }
 
 void Translation::applyTransformation(Mat4 &matrix, Double time, uint thread) const
