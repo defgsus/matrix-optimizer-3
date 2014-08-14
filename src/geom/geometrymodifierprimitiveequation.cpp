@@ -37,6 +37,8 @@ void GeometryModifierPrimitiveEquation::serialize(IO::DataStream &io) const
 
 void GeometryModifierPrimitiveEquation::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geoequprim", 1);
 
     io >> equX_ >> equY_ >> equZ_;

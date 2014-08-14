@@ -65,6 +65,8 @@ void GeometryModifierChain::serialize(IO::DataStream &io) const
 
 void GeometryModifierChain::deserialize(IO::DataStream &io)
 {
+    clear();
+
     io.readHeader("geommodchain", 1);
 
     quint32 num;

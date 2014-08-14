@@ -37,6 +37,8 @@ void GeometryModifierTranslate::serialize(IO::DataStream &io) const
 
 void GeometryModifierTranslate::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geotrans", 1);
 
     io >> x_ >> y_ >> z_;

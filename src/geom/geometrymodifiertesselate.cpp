@@ -35,6 +35,8 @@ void GeometryModifierTesselate::serialize(IO::DataStream &io) const
 
 void GeometryModifierTesselate::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geotess", 1);
 
     io >> level_;

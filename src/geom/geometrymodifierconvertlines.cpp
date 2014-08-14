@@ -32,6 +32,8 @@ void GeometryModifierConvertLines::serialize(IO::DataStream &io) const
 
 void GeometryModifierConvertLines::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geoconvline", 1);
 }
 

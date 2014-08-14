@@ -38,6 +38,8 @@ void GeometryModifierScale::serialize(IO::DataStream &io) const
 
 void GeometryModifierScale::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geoscale", 1);
 
     io >> all_ >> x_ >> y_ >> z_;

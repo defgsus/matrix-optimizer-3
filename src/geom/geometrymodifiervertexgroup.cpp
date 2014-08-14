@@ -36,6 +36,8 @@ void GeometryModifierVertexGroup::serialize(IO::DataStream &io) const
 
 void GeometryModifierVertexGroup::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geovshare", 1);
 
     io >> share_ >> threshold_;

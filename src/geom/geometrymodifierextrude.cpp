@@ -36,6 +36,8 @@ void GeometryModifierExtrude::serialize(IO::DataStream &io) const
 
 void GeometryModifierExtrude::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geoextrude", 1);
 
     io >> constant_ >> factor_;

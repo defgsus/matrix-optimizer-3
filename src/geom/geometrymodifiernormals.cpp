@@ -36,6 +36,8 @@ void GeometryModifierNormals::serialize(IO::DataStream &io) const
 
 void GeometryModifierNormals::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geonormal", 1);
 
     io >> calc_ >> invert_;

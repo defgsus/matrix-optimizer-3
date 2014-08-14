@@ -38,6 +38,8 @@ void GeometryModifierRotate::serialize(IO::DataStream &io) const
 
 void GeometryModifierRotate::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("georotate", 1);
 
     io >> angle_ >> x_ >> y_ >> z_;

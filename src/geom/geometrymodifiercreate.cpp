@@ -61,6 +61,8 @@ void GeometryModifierCreate::serialize(IO::DataStream &io) const
 
 void GeometryModifierCreate::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geocreate", 1);
 
     io.readEnum(type_, T_BOX, typeIds);

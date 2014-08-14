@@ -36,6 +36,8 @@ void GeometryModifierRemove::serialize(IO::DataStream &io) const
 
 void GeometryModifierRemove::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("georemove", 1);
 
     io >> prob_ >> seed_;

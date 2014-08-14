@@ -35,6 +35,8 @@ void GeometryModifierNormalize::serialize(IO::DataStream &io) const
 
 void GeometryModifierNormalize::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geonorm", 1);
 
     io >> n_;

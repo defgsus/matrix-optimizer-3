@@ -37,6 +37,8 @@ void GeometryModifierVertexEquation::serialize(IO::DataStream &io) const
 
 void GeometryModifierVertexEquation::deserialize(IO::DataStream &io)
 {
+    GeometryModifier::deserialize(io);
+
     io.readHeader("geoequvert", 1);
 
     io >> equX_ >> equY_ >> equZ_;
