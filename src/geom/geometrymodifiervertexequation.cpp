@@ -18,7 +18,10 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierVertexEquation)
 
 GeometryModifierVertexEquation::GeometryModifierVertexEquation()
-    : GeometryModifier("VertexEquation", QObject::tr("vertex equation"))
+    : GeometryModifier("VertexEquation", QObject::tr("vertex equation")),
+      equX_     ("x"),
+      equY_     ("y"),
+      equZ_     ("z")
 {
 
 }

@@ -18,7 +18,10 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierPrimitiveEquation)
 
 GeometryModifierPrimitiveEquation::GeometryModifierPrimitiveEquation()
-    : GeometryModifier("PrimitiveEquation", QObject::tr("primitive equation"))
+    : GeometryModifier("PrimitiveEquation", QObject::tr("primitive equation")),
+      equX_     ("x"),
+      equY_     ("y"),
+      equZ_     ("z")
 {
 
 }

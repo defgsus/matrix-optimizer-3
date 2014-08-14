@@ -1035,7 +1035,7 @@ GeometryFactorySettings::GeometryFactorySettings()
       withCoords    (true)
 {
     // standard to calculate normals
-    modifierChain.addModifier("Normals");
+    modifierChain.addModifier(new GeometryModifierNormals());
 }
 
 GeometryFactorySettings::~GeometryFactorySettings()
@@ -1177,9 +1177,9 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         {
             auto geom = new GeometryModifierPrimitiveEquation();
             modifierChain.addModifier(geom);
-            geom->setEquationX(equationX);
-            geom->setEquationY(equationY);
-            geom->setEquationZ(equationZ);
+            geom->setEquationX(pEquationX);
+            geom->setEquationY(pEquationY);
+            geom->setEquationZ(pEquationZ);
         }
 
         if (extrude)
@@ -1221,6 +1221,7 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         {
             auto geom = new GeometryModifierScale();
             modifierChain.addModifier(geom);
+            geom->setScaleAll(scale);
             geom->setScaleX(scaleX);
             geom->setScaleX(scaleY);
             geom->setScaleX(scaleZ);

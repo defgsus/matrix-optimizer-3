@@ -929,7 +929,6 @@ void GeometryDialog::updateWidgets_()
     spinSegY_->setValue(settings_->segmentsY);
     spinSegZ_->setValue(settings_->segmentsZ);
 
-
 /*
     cbTriangles_->setChecked(settings_->asTriangles);
     cbConvertToLines_->setChecked(settings_->convertToLines);
@@ -1081,9 +1080,10 @@ void GeometryDialog::presetSelected_()
 void GeometryDialog::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 {
     *settings_ = s;
+    modifiers_ = &settings_->modifierChain;
 
     updateWidgets_();
-
+    createModifierWidgets_();
     updateGeometry_();
 }
 
