@@ -20,13 +20,19 @@
 #include "doublespinbox.h"
 #include "spinbox.h"
 #include "groupwidget.h"
-
+#include "equationeditor.h"
+#include "geom/geometry.h"
 #include "geom/geometrymodifierscale.h"
 #include "geom/geometrymodifiertesselate.h"
 #include "geom/geometrymodifiertranslate.h"
 #include "geom/geometrymodifierrotate.h"
 #include "geom/geometrymodifiernormals.h"
 #include "geom/geometrymodifiernormalize.h"
+#include "geom/geometrymodifierconvertlines.h"
+#include "geom/geometrymodifierremove.h"
+#include "geom/geometrymodifiervertexgroup.h"
+#include "geom/geometrymodifiervertexequation.h"
+#include "geom/geometrymodifierprimitiveequation.h"
 
 namespace MO {
 namespace GUI {
@@ -94,6 +100,14 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     var__->setSingleStep(step__);                   \
     var__->setRange(min__, max__);                  \
     connect(var__, SIGNAL(valueChanged(double)),    \
+            this, SLOT(updateFromWidgets_()));
+
+#define MO__SPIN(var__, statustip__, min__, max__)  \
+    auto var__ = new SpinBox(this);                 \
+    group_->addWidget(var__);                       \
+    var__->setStatusTip(statustip__);               \
+    var__->setRange(min__, max__);                  \
+    connect(var__, SIGNAL(valueChanged(int)),       \
             this, SLOT(updateFromWidgets_()));
 
 #define MO__CHECKBOX(var__, text__, statusTip__, value__)   \
@@ -276,15 +290,10 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 
 
 
-
     if (auto tess = dynamic_cast<GEOM::GeometryModifierTesselate*>(modifier_))
     {
-        auto spinlevel = new SpinBox(this);
-        group_->addWidget(spinlevel);
-        spinlevel->setStatusTip("Order of tesselation. Be careful, this is an exponential value!");
-        spinlevel->setRange(1, 10);
-        connect(spinlevel, SIGNAL(valueChanged(double)),
-                this, SLOT(updateFromWidgets_()));
+        MO__SPIN(spinlevel, tr("Order of tesselation. Be careful, this is an exponential value!"),
+                 1, 10);
 
         funcUpdateFromWidgets_ = [=]()
         {
@@ -296,6 +305,175 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
             spinlevel->setValue(tess->getTesselationLevel());
         };
     }
+
+
+
+    if (auto remove = dynamic_cast<GEOM::GeometryModifierRemove*>(modifier_))
+    {
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            auto label = new QLabel(tr("random probability"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinprob, tr("Probability of removing a primitive, between 0 and 1"),
+                           0.05, 0, 1);
+            lh->addWidget(spinprob);
+
+        lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            label = new QLabel(tr("random seed"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__SPIN(spinseed, tr("Random seed which determines the pattern of removal"),
+                           0, 10000000);
+            lh->addWidget(spinseed);
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            remove->setRemoveProbability(spinprob->value());
+            remove->setRandomSeed(spinseed->value());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            spinprob->setValue(remove->getRemoveProbability());
+            spinseed->setValue(remove->getRandomSeed());
+        };
+    }
+
+
+
+    if (/*auto conv = */dynamic_cast<GEOM::GeometryModifierConvertLines*>(modifier_))
+    {
+        funcUpdateFromWidgets_ = [=]()
+        {
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+        };
+    }
+
+
+
+    if (auto shared = dynamic_cast<GEOM::GeometryModifierVertexGroup*>(modifier_))
+    {
+        MO__CHECKBOX(cbshared, tr("share vertices"),
+                     tr("If enabled, primitives will shared common vertices, "
+                        "if disabled, all vertices will be made unique."),
+                     shared->getShared());
+
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            auto label = new QLabel(tr("vertex distance"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinthresh,
+                     tr("Maximum distance in which vertices will be considered 'the same'"),
+                     0.001, GEOM::Geometry::minimumThreshold, 1000);
+            lh->addWidget(spinthresh);
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            shared->setShared(cbshared->isChecked());
+            shared->setThreshold(spinthresh->value());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            cbshared->setChecked(shared->getShared());
+            spinthresh->setValue(shared->getThreshold());
+        };
+    }
+
+
+
+    if (auto equ = dynamic_cast<GEOM::GeometryModifierVertexEquation*>(modifier_))
+    {
+        QStringList vars = { "x", "y", "z", "i" };
+
+        auto editEquX = new EquationEditor(this);
+        group_->addWidget(editEquX);
+        editEquX->addVariables(vars);
+        editEquX->setPlainText(equ->getEquationX());
+        connect(editEquX, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        auto editEquY = new EquationEditor(this);
+        group_->addWidget(editEquY);
+        editEquY->addVariables(vars);
+        editEquY->setPlainText(equ->getEquationY());
+        connect(editEquY, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        auto editEquZ = new EquationEditor(this);
+        group_->addWidget(editEquZ);
+        editEquZ->addVariables(vars);
+        editEquZ->setPlainText(equ->getEquationZ());
+        connect(editEquZ, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            equ->setEquationX(editEquX->toPlainText());
+            equ->setEquationY(editEquY->toPlainText());
+            equ->setEquationZ(editEquZ->toPlainText());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            editEquX->setPlainText(equ->getEquationX());
+            editEquY->setPlainText(equ->getEquationY());
+            editEquZ->setPlainText(equ->getEquationZ());
+        };
+    }
+
+
+
+
+    if (auto equ = dynamic_cast<GEOM::GeometryModifierPrimitiveEquation*>(modifier_))
+    {
+        QStringList vars = {
+            "x", "y", "z", "nx", "ny", "nz", "i", "p",
+            "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3",
+            "nx1", "ny1", "nz1", "nx2", "ny2", "nz2", "nx3", "ny3", "nz3" };
+
+        auto editEquX = new EquationEditor(this);
+        group_->addWidget(editEquX);
+        editEquX->addVariables(vars);
+        editEquX->setPlainText(equ->getEquationX());
+        connect(editEquX, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        auto editEquY = new EquationEditor(this);
+        group_->addWidget(editEquY);
+        editEquY->addVariables(vars);
+        editEquY->setPlainText(equ->getEquationY());
+        connect(editEquY, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        auto editEquZ = new EquationEditor(this);
+        group_->addWidget(editEquZ);
+        editEquZ->addVariables(vars);
+        editEquZ->setPlainText(equ->getEquationZ());
+        connect(editEquZ, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            equ->setEquationX(editEquX->toPlainText());
+            equ->setEquationY(editEquY->toPlainText());
+            equ->setEquationZ(editEquZ->toPlainText());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            editEquX->setPlainText(equ->getEquationX());
+            editEquY->setPlainText(equ->getEquationY());
+            editEquZ->setPlainText(equ->getEquationZ());
+        };
+    }
+
 }
 
 void GeometryModifierWidget::updateWidgetValues()

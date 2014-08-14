@@ -608,19 +608,28 @@ void GeometryDialog::modifierExpandedChanged_(GEOM::GeometryModifier * g, bool e
 void GeometryDialog::modifierUp_(GEOM::GeometryModifier * g)
 {
     if ( modifiers_->moveModifierUp(g) )
+    {
         createModifierWidgets_();
+        updateFromWidgets_();
+    }
 }
 
 void GeometryDialog::modifierDown_(GEOM::GeometryModifier * g)
 {
     if ( modifiers_->moveModifierDown(g) )
+    {
         createModifierWidgets_();
+        updateFromWidgets_();
+    }
 }
 
 void GeometryDialog::modifierDelete_(GEOM::GeometryModifier * g)
 {
     if ( modifiers_->deleteModifier(g) )
+    {
         createModifierWidgets_();
+        updateFromWidgets_();
+    }
 }
 
 void GeometryDialog::newModifierPopup_(GEOM::GeometryModifier *before)
@@ -644,6 +653,7 @@ void GeometryDialog::newModifierPopup_(GEOM::GeometryModifier *before)
             modifiers_->insertModifier(classname, before);
 
         createModifierWidgets_();
+        updateFromWidgets_();
     });
 
     connect(menu, SIGNAL(aboutToHide()), menu, SLOT(deleteLater()));
