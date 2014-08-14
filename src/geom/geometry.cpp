@@ -212,8 +212,92 @@ const Geometry::VertexType * Geometry::line(
 
 void Geometry::copyFrom(const Geometry &other)
 {
-    // XXX
-    MO_WARNING("Geometry::copyFrom() not implemented yet");
+    if (other.numTriangles())
+    for (uint i=0; i<other.numTriangles(); ++i)
+    {
+        IndexType
+                ot1 = other.triIndex_[i * 3],
+                ot2 = other.triIndex_[i * 3 + 1],
+                ot3 = other.triIndex_[i * 3 + 2],
+
+                t1 = addVertex(
+                    other.vertex_[ot1 * other.numVertexComponents()],
+                    other.vertex_[ot1 * other.numVertexComponents() + 1],
+                    other.vertex_[ot1 * other.numVertexComponents() + 2],
+                    other.normal_[ot1 * other.numNormalComponents()],
+                    other.normal_[ot1 * other.numNormalComponents() + 1],
+                    other.normal_[ot1 * other.numNormalComponents() + 2],
+                    other.color_[ot1 * other.numColorComponents()],
+                    other.color_[ot1 * other.numColorComponents() + 1],
+                    other.color_[ot1 * other.numColorComponents() + 2],
+                    other.color_[ot1 * other.numColorComponents() + 3],
+                    other.texcoord_[ot1 * other.numTextureCoordComponents()],
+                    other.texcoord_[ot1 * other.numTextureCoordComponents() + 1]),
+                t2 = addVertex(
+                    other.vertex_[ot2 * other.numVertexComponents()],
+                    other.vertex_[ot2 * other.numVertexComponents() + 1],
+                    other.vertex_[ot2 * other.numVertexComponents() + 2],
+                    other.normal_[ot2 * other.numNormalComponents()],
+                    other.normal_[ot2 * other.numNormalComponents() + 1],
+                    other.normal_[ot2 * other.numNormalComponents() + 2],
+                    other.color_[ot2 * other.numColorComponents()],
+                    other.color_[ot2 * other.numColorComponents() + 1],
+                    other.color_[ot2 * other.numColorComponents() + 2],
+                    other.color_[ot2 * other.numColorComponents() + 3],
+                    other.texcoord_[ot2 * other.numTextureCoordComponents()],
+                    other.texcoord_[ot2 * other.numTextureCoordComponents() + 1]),
+                t3 = addVertex(
+                    other.vertex_[ot3 * other.numVertexComponents()],
+                    other.vertex_[ot3 * other.numVertexComponents() + 1],
+                    other.vertex_[ot3 * other.numVertexComponents() + 2],
+                    other.normal_[ot3 * other.numNormalComponents()],
+                    other.normal_[ot3 * other.numNormalComponents() + 1],
+                    other.normal_[ot3 * other.numNormalComponents() + 2],
+                    other.color_[ot3 * other.numColorComponents()],
+                    other.color_[ot3 * other.numColorComponents() + 1],
+                    other.color_[ot3 * other.numColorComponents() + 2],
+                    other.color_[ot3 * other.numColorComponents() + 3],
+                    other.texcoord_[ot3 * other.numTextureCoordComponents()],
+                    other.texcoord_[ot3 * other.numTextureCoordComponents() + 1]);
+
+        addTriangle(t1, t2, t3);
+    }
+    else
+    for (uint i=0; i<other.numLines(); ++i)
+    {
+        IndexType
+                ol1 = other.lineIndex_[i * 2],
+                ol2 = other.lineIndex_[i * 2 + 1],
+
+                l1 = addVertex(
+                    other.vertex_[ol1 * other.numVertexComponents()],
+                    other.vertex_[ol1 * other.numVertexComponents() + 1],
+                    other.vertex_[ol1 * other.numVertexComponents() + 2],
+                    other.normal_[ol1 * other.numNormalComponents()],
+                    other.normal_[ol1 * other.numNormalComponents() + 1],
+                    other.normal_[ol1 * other.numNormalComponents() + 2],
+                    other.color_[ol1 * other.numColorComponents()],
+                    other.color_[ol1 * other.numColorComponents() + 1],
+                    other.color_[ol1 * other.numColorComponents() + 2],
+                    other.color_[ol1 * other.numColorComponents() + 3],
+                    other.texcoord_[ol1 * other.numTextureCoordComponents()],
+                    other.texcoord_[ol1 * other.numTextureCoordComponents() + 1]),
+                l2 = addVertex(
+                    other.vertex_[ol2 * other.numVertexComponents()],
+                    other.vertex_[ol2 * other.numVertexComponents() + 1],
+                    other.vertex_[ol2 * other.numVertexComponents() + 2],
+                    other.normal_[ol2 * other.numNormalComponents()],
+                    other.normal_[ol2 * other.numNormalComponents() + 1],
+                    other.normal_[ol2 * other.numNormalComponents() + 2],
+                    other.color_[ol2 * other.numColorComponents()],
+                    other.color_[ol2 * other.numColorComponents() + 1],
+                    other.color_[ol2 * other.numColorComponents() + 2],
+                    other.color_[ol2 * other.numColorComponents() + 3],
+                    other.texcoord_[ol2 * other.numTextureCoordComponents()],
+                    other.texcoord_[ol2 * other.numTextureCoordComponents() + 1]);
+
+        addLine(l1, l2);
+    }
 }
 
 

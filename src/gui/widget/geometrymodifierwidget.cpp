@@ -56,7 +56,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 {
     auto l0 = new QVBoxLayout(this);
     l0->setMargin(0);
-    group_ = new GroupWidget(modifier_->className(), expanded, this);
+    group_ = new GroupWidget(modifier_->guiName(), expanded, this);
     l0->addWidget(group_);
 
     auto butUp = new QToolButton(this);
