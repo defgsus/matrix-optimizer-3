@@ -134,16 +134,19 @@ void main()
     {
         vec3 lightvec = u_light_pos[i] - v_pos_world;
         float dist = length(lightvec);
-        vec3 ldir = lightmat * (lightvec / dist);
+        vec3 lightvecn = lightvec / dist;
+        vec3 ldir = lightmat * lightvecn;
         // calculate influence from distance attenuation
         float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
 
         // attenuation from direction
         if (u_light_dirmix[i]>0)
         {
-            float diratt = pow(dot(u_light_direction[i].xyz, ldir), u_light_direction[i].w);
+            float diratt = pow( max(0.0, dot(u_light_direction[i].xyz, lightvecn)),
+                                u_light_direction[i].w);
             att *= mix(1.0, diratt, u_light_dirmix[i]);
         }
+
         v_light_dir[i] = vec4(ldir, att);
     }
 

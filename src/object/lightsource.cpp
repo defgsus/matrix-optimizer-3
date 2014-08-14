@@ -11,7 +11,7 @@
 #include "lightsource.h"
 #include "io/datastream.h"
 #include "param/parameterfloat.h"
-
+#include "io/log.h"
 
 namespace MO {
 
@@ -61,7 +61,7 @@ void LightSource::createParameters()
         directionExp_ = createFloatParameter("directionexp", tr("angle exponent"),
                                 tr("Exponent for the directional influence "
                                    "- the higher, the narrower the angle"),
-                                1.0, 0.1);
+                                10.0, 0.1);
         directionExp_->setMinValue(0.001);
 
     endParameterGroup();
@@ -78,7 +78,7 @@ Vec4 LightSource::lightColor(uint thread, Double time) const
 
 Vec4 LightSource::lightDirection(uint thread, Double time) const
 {
-    const Mat4& trans = transformation(thread, time);
+    const Mat4& trans = glm::inverse(transformation(thread, 0));
     const Vec3 dir = glm::normalize(
                 Vec3(trans[0][2], trans[1][2], trans[2][2]));
     return Vec4(dir[0], dir[1], dir[2], directionExp_->value(time, thread));
