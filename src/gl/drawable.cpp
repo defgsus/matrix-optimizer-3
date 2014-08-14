@@ -158,6 +158,10 @@ void Drawable::compileShader_()
 
     // --- get variable locations ---
 
+    auto diffExp = shader_->getUniform(shaderSource_->uniformNameDiffuseExponent());
+    if (diffExp)
+        diffExp->floats[0] = 1.0;
+
     uniColor_ = shader_->getUniform(shaderSource_->uniformNameColor());
     if (uniColor_)
         uniColor_->setFloats(1,1,1,1);

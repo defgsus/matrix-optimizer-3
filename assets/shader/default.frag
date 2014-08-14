@@ -2,8 +2,6 @@
 
 #define MO_NUM_LIGHTS 3
 
-#define MO_FRAGMENT_LIGHTING
-
 /* defines
  * MO_ENABLE_TEXTURE
  * MO_ENABLE_NORMALMAP
@@ -34,6 +32,7 @@ out vec4 color;
 // --- uniforms ---
 
 uniform vec4 u_color;
+uniform float u_diffuse_exp;
 uniform vec4 u_light_color[MO_NUM_LIGHTS];
 uniform vec3 u_light_pos[MO_NUM_LIGHTS];
 #ifdef MO_FRAGMENT_LIGHTING
@@ -75,7 +74,7 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
     // dot-product of light normal and vertex normal gives linear light influence
     float d = max(0.0, dot(mo_normal(), light_normal) );
     // shaping the linear light influence
-    float diffuse = pow(d, 1.0 + shinyness);
+    float diffuse = pow(d, shinyness);
 
     //vec3 halfvec = reflect( v_cam_dir, v_normal_eye );
     //float spec = pow( max(0.0, dot(v_light_dir_eye[i], halfvec)), 10.0);
@@ -93,7 +92,7 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
 
         for (int i=0; i<MO_NUM_LIGHTS; ++i)
             c += mo_calc_light_color(
-                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i], 4.0);
+                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i], u_diffuse_exp);
 
         return c;
     }
@@ -126,7 +125,7 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
                 att *= mix(1.0, diratt, u_light_dirmix[i]);
             }
 
-            c += mo_calc_light_color(ldir, att * u_light_color[i], 4.0);
+            c += mo_calc_light_color(ldir, att * u_light_color[i], u_diffuse_exp);
         }
 
         return c;

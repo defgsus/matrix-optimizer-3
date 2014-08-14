@@ -22,6 +22,7 @@ ShaderSource::ShaderSource()
       unCVT_        ("u_cubeViewTransform"),
       unVT_         ("u_viewTransform"),
       unT_          ("u_transform"),
+      unDiffuseExp_ ("u_diffuse_exp"),
       unLightPos_   ("u_light_pos[0]"),
       unLightColor_ ("u_light_color[0]"),
       unLightDir_   ("u_light_direction[0]"),

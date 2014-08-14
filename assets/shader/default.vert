@@ -2,8 +2,6 @@
 
 #define MO_NUM_LIGHTS 3
 
-#define MO_FRAGMENT_LIGHTING
-
 const float PI = 3.14159265358979;
 
 /* defines
