@@ -35,6 +35,9 @@ public:
 
     static const IndexType invalidIndex = (IndexType)-1;
 
+    /** Smallest possible threshold for vertex sharing */
+    static const VertexType minimumThreshold;
+
     // ------ enums ----------
 
     static const GLenum vertexEnum       = GL_FLOAT;
@@ -180,6 +183,11 @@ public:
     IndexType findVertex(VertexType x, VertexType y, VertexType z) const;
 
     // --------- manipulation --------------
+
+    /** Copies all data, step by step.
+        If vertex sharing is enabled, the vertices get shared even
+        if they are not in @p other */
+    void copyFrom(const Geometry& other);
 
     /** Scale all geometry */
     void scale(VertexType x, VertexType y, VertexType z);

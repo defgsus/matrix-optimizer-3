@@ -14,9 +14,6 @@
 
 #include "geometrymodifier.h"
 
-#include "geometrymodifierscale.h"
-#include "io/log.h"
-
 namespace MO {
 namespace GEOM {
 
@@ -41,12 +38,7 @@ GeometryModifierChain& GeometryModifierChain::operator = (const GeometryModifier
     clear();
     for (auto m : other.modifiers_)
     {
-        GeometryModifier * geom = m->clone();
-        if (GeometryModifierScale * scale = dynamic_cast<GeometryModifierScale*>(geom))
-        {
-            MO_DEBUG("copied " << scale->getScaleAll());
-        }
-        addModifier(geom);
+        addModifier(m->clone());
     }
 
     return *this;

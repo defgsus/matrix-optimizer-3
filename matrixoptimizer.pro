@@ -178,7 +178,12 @@ SOURCES += \
     src/geom/geometrymodifiertranslate.cpp \
     src/geom/geometrymodifierrotate.cpp \
     src/geom/geometrymodifiernormalize.cpp \
-    src/geom/geometrymodifiernormals.cpp
+    src/geom/geometrymodifiernormals.cpp \
+    src/geom/geometrymodifierconvertlines.cpp \
+    src/geom/geometrymodifiervertexgroup.cpp \
+    src/geom/geometrymodifierremove.cpp \
+    src/geom/geometrymodifiervertexequation.cpp \
+    src/geom/geometrymodifierprimitiveequation.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -350,7 +355,12 @@ HEADERS += \
     src/geom/geometrymodifiertranslate.h \
     src/geom/geometrymodifierrotate.h \
     src/geom/geometrymodifiernormalize.h \
-    src/geom/geometrymodifiernormals.h
+    src/geom/geometrymodifiernormals.h \
+    src/geom/geometrymodifierconvertlines.h \
+    src/geom/geometrymodifiervertexgroup.h \
+    src/geom/geometrymodifierremove.h \
+    src/geom/geometrymodifiervertexequation.h \
+    src/geom/geometrymodifierprimitiveequation.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

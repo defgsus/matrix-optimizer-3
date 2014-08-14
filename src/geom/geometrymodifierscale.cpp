@@ -11,7 +11,6 @@
 #include "geometrymodifierscale.h"
 #include "io/datastream.h"
 #include "geometry.h"
-#include "io/log.h"
 
 namespace MO {
 namespace GEOM {
@@ -46,7 +45,6 @@ void GeometryModifierScale::deserialize(IO::DataStream &io)
 
 void GeometryModifierScale::execute(Geometry *g)
 {
-    MO_DEBUG("scale " << all_);
     g->scale(all_ * x_, all_ * y_, all_ * z_);
 }
 

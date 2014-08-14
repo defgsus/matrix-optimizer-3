@@ -24,6 +24,7 @@
 namespace MO {
 namespace GEOM {
 
+const Geometry::VertexType Geometry::minimumThreshold = 0.001;
 
 Geometry::Geometry()
     :
@@ -37,7 +38,7 @@ Geometry::Geometry()
         curU_   (0.f),
         curV_   (0.f),
         sharedVertices_ (false),
-        threshold_      (0.001)
+        threshold_      (minimumThreshold)
 {
 }
 
@@ -63,7 +64,13 @@ void Geometry::clear()
 void Geometry::setSharedVertices(bool enable, VertexType threshold)
 {
     sharedVertices_ = enable;
-    threshold_ = std::max((VertexType)0.001, threshold);
+    threshold_ = std::max(minimumThreshold, threshold);
+    if (!enable)
+    {
+        std::map<Key_, MapStruct_> tmp;
+        indexMap_.swap(tmp);
+    }
+
 }
 
 Geometry::IndexType Geometry::addVertex(
@@ -201,6 +208,14 @@ const Geometry::VertexType * Geometry::line(
     return &vertex_[lineIndex_[lineIndex * numLineIndexComponents() + endIndex]
             * numVertexComponents()];
 }
+
+
+void Geometry::copyFrom(const Geometry &other)
+{
+    // XXX
+    MO_WARNING("Geometry::copyFrom() not implemented yet");
+}
+
 
 void Geometry::scale(VertexType x, VertexType y, VertexType z)
 {
