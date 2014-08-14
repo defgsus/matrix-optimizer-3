@@ -2,9 +2,12 @@
 
 #define MO_NUM_LIGHTS 3
 
+#define MO_FRAGMENT_LIGHTING
+
 /* defines
  * MO_ENABLE_TEXTURE
  * MO_ENABLE_NORMALMAP
+ * MO_FRAGMENT_LIGHTING
  */
 
 // --- input from vertex shader ---
@@ -17,7 +20,11 @@ in vec3 v_normal;
 in vec3 v_normal_eye;
 in vec4 v_color;
 in vec2 v_texCoord;
-in vec4 v_light_dir[MO_NUM_LIGHTS];
+#ifndef MO_FRAGMENT_LIGHTING
+    in vec4 v_light_dir[MO_NUM_LIGHTS];
+#else
+    in mat3 v_normal_space;
+#endif
 
 // --- output to rasterizer ---
 
@@ -29,6 +36,10 @@ out vec4 color;
 uniform vec4 u_color;
 uniform vec4 u_light_color[MO_NUM_LIGHTS];
 uniform vec3 u_light_pos[MO_NUM_LIGHTS];
+#ifdef MO_FRAGMENT_LIGHTING
+    uniform vec4 u_light_direction[MO_NUM_LIGHTS];
+    uniform float u_light_dirmix[MO_NUM_LIGHTS];
+#endif
 
 #ifdef MO_ENABLE_TEXTURE
 uniform sampler2D tex_0;
@@ -59,8 +70,7 @@ vec3 mo_normal()
 #endif
 }
 
-
-vec4 getLightColor(in vec3 light_normal, in vec4 color, in float shinyness, in int i)
+vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness)
 {
     // dot-product of light normal and vertex normal gives linear light influence
     float d = max(0.0, dot(mo_normal(), light_normal) );
@@ -75,15 +85,55 @@ vec4 getLightColor(in vec3 light_normal, in vec4 color, in float shinyness, in i
     //return vec4(spec * (0.5+0.5*color.xyz), 0.);
 }
 
-vec4 mo_light_color()
-{
-    vec4 c = vec4(0., 0., 0., 0.);
+#ifndef MO_FRAGMENT_LIGHTING
 
-    for (int i=0; i<MO_NUM_LIGHTS; ++i)
-        c += getLightColor(v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i], 4.0, i);
+    vec4 mo_light_color()
+    {
+        vec4 c = vec4(0., 0., 0., 0.);
 
-    return c;
-}
+        for (int i=0; i<MO_NUM_LIGHTS; ++i)
+            c += mo_calc_light_color(
+                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i], 4.0);
+
+        return c;
+    }
+
+#else
+
+    vec4 mo_light_color()
+    {
+        vec4 c = vec4(0., 0., 0., 0.);
+
+        for (int i=0; i<MO_NUM_LIGHTS; ++i)
+        {
+            // vector towards light in world coords
+            vec3 lightvec = u_light_pos[i] - v_pos_world;
+            // distance to lightsource
+            float dist = length(lightvec);
+            // normalized direction towards lightsource
+            vec3 lightvecn = lightvec / dist;
+            // normalized direction towards lightsource in surface-normal space
+            vec3 ldir = v_normal_space * lightvecn;
+
+            // calculate influence from distance attenuation
+            float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
+
+            // attenuation from direction
+            if (u_light_dirmix[i]>0)
+            {
+                float diratt = pow( max(0.0, dot(u_light_direction[i].xyz, lightvecn)),
+                                    u_light_direction[i].w);
+                att *= mix(1.0, diratt, u_light_dirmix[i]);
+            }
+
+            c += mo_calc_light_color(ldir, att * u_light_color[i], 4.0);
+        }
+
+        return c;
+    }
+
+
+#endif
 
 vec4 mo_toon_color()
 {

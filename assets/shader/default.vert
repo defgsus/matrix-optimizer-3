@@ -2,6 +2,8 @@
 
 #define MO_NUM_LIGHTS 3
 
+#define MO_FRAGMENT_LIGHTING
+
 const float PI = 3.14159265358979;
 
 /* defines
@@ -40,8 +42,12 @@ out vec3 v_normal;
 out vec3 v_normal_eye;
 out vec4 v_color;
 out vec2 v_texCoord;
-out vec4 v_light_dir[MO_NUM_LIGHTS];        // surface-towards light in normal-space
-                                            // w is distance attenuation
+#ifdef MO_FRAGMENT_LIGHTING
+    out mat3 v_normal_space;                    // matrix to convert into normal-space
+#else
+    out vec4 v_light_dir[MO_NUM_LIGHTS];        // surface-towards light in normal-space
+                                                // w is distance attenuation
+#endif
 
 /** Returns the matrix to multiply the light-direction normal */
 mat3 mo_light_matrix()
@@ -126,16 +132,27 @@ void main()
     gl_Position = mo_ftransform(a_position);
 
 
-    // pass light-directions to fragment shader
 
     mat3 lightmat = mo_light_matrix();
 
+#ifdef MO_FRAGMENT_LIGHTING
+    // pass all light relevant settings to fragment shader
+    v_normal_space = lightmat;
+
+#else
+    // calculate as much as possible in vertex shader
+
     for (int i=0; i<MO_NUM_LIGHTS; ++i)
     {
+        // vector towards light in world coords
         vec3 lightvec = u_light_pos[i] - v_pos_world;
+        // distance to lightsource
         float dist = length(lightvec);
+        // normalized direction towards lightsource
         vec3 lightvecn = lightvec / dist;
+        // normalized direction towards lightsource in surface-normal space
         vec3 ldir = lightmat * lightvecn;
+
         // calculate influence from distance attenuation
         float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
 
@@ -149,5 +166,6 @@ void main()
 
         v_light_dir[i] = vec4(ldir, att);
     }
+#endif
 
 }

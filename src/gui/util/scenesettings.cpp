@@ -36,7 +36,8 @@ SceneSettings::SceneSettings(QObject *parent)
 SceneSettings::SceneSettings(const SceneSettings &other)
     :   QObject         (other.parent()),
         viewSpaces_     (other.viewSpaces_),
-        trackHeights_   (other.trackHeights_)
+        trackHeights_   (other.trackHeights_),
+        paramGroupExpanded_(other.paramGroupExpanded_)
 {
 }
 
@@ -44,6 +45,7 @@ SceneSettings& SceneSettings::operator=(const SceneSettings& other)
 {
     viewSpaces_ = other.viewSpaces_;
     trackHeights_ = other.trackHeights_;
+    paramGroupExpanded_ = other.paramGroupExpanded_;
 
     return *this;
 }
@@ -151,7 +153,7 @@ QString SceneSettings::getSettingsFileName(const QString &sceneFilename) const
 {
     return
           QFileInfo(sceneFilename).absolutePath()
-        + "/"
+        + QDir::separator()
         + QFileInfo(sceneFilename).completeBaseName()
         + ".mo3-gui";
 }
@@ -161,6 +163,7 @@ void SceneSettings::clear()
 {
     viewSpaces_.clear();
     trackHeights_.clear();
+    paramGroupExpanded_.clear();
 }
 
 
