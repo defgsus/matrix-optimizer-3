@@ -34,6 +34,7 @@
 #include "util/objectmenu.h"
 #include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
+#include "widget/groupwidget.h"
 #include "modulatordialog.h"
 
 Q_DECLARE_METATYPE(MO::Modulator*)
@@ -81,8 +82,8 @@ void ParameterView::setObject(Object *object)
 
 void ParameterView::clearWidgets_()
 {
-    for (auto i : widgets_)
-        i->deleteLater();
+    for (auto w : widgets_)
+        w->deleteLater();
 
     widgets_.clear();
     spinsInt_.clear();
@@ -95,11 +96,16 @@ void ParameterView::createWidgets_()
     clearWidgets_();
     prevEditWidget_ = 0;
 
+    currentGroup_ = new GroupWidget("Parameters", this);
+    layout_->addWidget(currentGroup_);
+    widgets_.append(currentGroup_);
+
     for (auto p : parameters_)
     {
         QWidget * w = createWidget_(p);
-        widgets_.insert(p->idName(), w);
-        layout_->addWidget(w);
+        //widgets_.insert(p->idName(), w);
+        //layout_->addWidget(w);
+        currentGroup_->addWidget(w);
     }
 }
 

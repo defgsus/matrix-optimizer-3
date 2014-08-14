@@ -167,7 +167,8 @@ SOURCES += \
     src/object/textureoverlay.cpp \
     src/gl/rendersettings.cpp \
     src/object/param/parameterfilename.cpp \
-    src/io/filetypes.cpp
+    src/io/filetypes.cpp \
+    src/gui/widget/groupwidget.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -328,7 +329,8 @@ HEADERS += \
     src/object/textureoverlay.h \
     src/gl/rendersettings.h \
     src/object/param/parameterfilename.h \
-    src/io/filetypes.h
+    src/io/filetypes.h \
+    src/gui/widget/groupwidget.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

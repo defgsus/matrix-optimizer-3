@@ -29,7 +29,7 @@ namespace GUI {
 
 class SpinBox;
 class DoubleSpinBox;
-
+class GroupWidget;
 
 class ParameterView : public QWidget
 {
@@ -74,7 +74,7 @@ private:
     Scene * scene_;
     Object * object_;
     QList<Parameter*> parameters_;
-    QMap<QString, QWidget*> widgets_;
+    QList<QWidget*> widgets_;
     QList<SpinBox*> spinsInt_;
     QList<DoubleSpinBox*> spinsFloat_;
     QList<QComboBox*> combosSelect_;
@@ -82,6 +82,7 @@ private:
     QWidget * prevEditWidget_;
 
     QVBoxLayout * layout_;
+    GroupWidget * currentGroup_;
 
     // ------ config ------
 
