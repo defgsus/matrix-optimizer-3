@@ -168,7 +168,9 @@ SOURCES += \
     src/gl/rendersettings.cpp \
     src/object/param/parameterfilename.cpp \
     src/io/filetypes.cpp \
-    src/gui/widget/groupwidget.cpp
+    src/gui/widget/groupwidget.cpp \
+    src/geom/geometrymodifier.cpp \
+    src/geom/geometrymodifierscale.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -330,7 +332,9 @@ HEADERS += \
     src/gl/rendersettings.h \
     src/object/param/parameterfilename.h \
     src/io/filetypes.h \
-    src/gui/widget/groupwidget.h
+    src/gui/widget/groupwidget.h \
+    src/geom/geometrymodifier.h \
+    src/geom/geometrymodifierscale.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
