@@ -33,6 +33,7 @@
 #include "geom/geometrymodifiervertexgroup.h"
 #include "geom/geometrymodifiervertexequation.h"
 #include "geom/geometrymodifierprimitiveequation.h"
+#include "geom/geometrymodifierextrude.h"
 
 namespace MO {
 namespace GUI {
@@ -389,6 +390,46 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         {
             cbshared->setChecked(shared->getShared());
             spinthresh->setValue(shared->getThreshold());
+        };
+    }
+
+
+
+    if (auto extrude = dynamic_cast<GEOM::GeometryModifierExtrude*>(modifier_))
+    {
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            auto label = new QLabel(tr("constant"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinconst, tr("Extrudes triangles along their normal by a constant value"),
+                           0.05, -1000000, 1000000);
+            lh->addWidget(spinconst);
+
+        lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            label = new QLabel(tr("factor"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinfac, tr("Extrudes triangles vertices along their normal by a factor "
+                                         "of the length of adjecent edges"),
+                           0.05, -1000000, 1000000);
+            lh->addWidget(spinfac);
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            extrude->setConstant(spinconst->value());
+            extrude->setFactor(spinfac->value());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            spinconst->setValue(extrude->getConstant());
+            spinfac->setValue(extrude->getFactor());
         };
     }
 

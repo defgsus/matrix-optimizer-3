@@ -22,6 +22,21 @@
 #include "math/hash.h"
 #include "io/datastream.h"
 
+// for old file conversion
+#include "geom/geometrymodifierchain.h"
+#include "geom/geometrymodifierscale.h"
+#include "geom/geometrymodifiertesselate.h"
+#include "geom/geometrymodifiertranslate.h"
+#include "geom/geometrymodifierrotate.h"
+#include "geom/geometrymodifiernormals.h"
+#include "geom/geometrymodifiernormalize.h"
+#include "geom/geometrymodifierconvertlines.h"
+#include "geom/geometrymodifierremove.h"
+#include "geom/geometrymodifiervertexgroup.h"
+#include "geom/geometrymodifiervertexequation.h"
+#include "geom/geometrymodifierprimitiveequation.h"
+#include "geom/geometrymodifierextrude.h"
+
 namespace MO {
 namespace GEOM {
 
@@ -879,6 +894,9 @@ void GeometryFactory::createFromSettings(Geometry * g,
 
     }
 
+    if (!set->sharedVertices && set->type != GeometryFactorySettings::T_FILE)
+        g->unGroupVertices();
+
     // --- modify ---
 
     /*
@@ -1027,70 +1045,197 @@ GeometryFactorySettings::~GeometryFactorySettings()
 
 void GeometryFactorySettings::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("geomfacset", 7);
+    io.writeHeader("geomfacset", 8);
 
     io << typeIds[type];
 
+#ifdef VERSION_BELOW_8__
+
     io << calcNormals << asTriangles << convertToLines << sharedVertices
-        << tesselate << normalizeVertices << removeRandomly
-        << colorR << colorG << colorB << colorA
-        << scale << scaleX << scaleY << scaleZ
-        << removeProb << gridSize
-        << segmentsX << segmentsY << segmentsZ
-        << tessLevel << removeSeed << withCoords;
+            << tesselate << normalizeVertices << removeRandomly
+            << colorR << colorG << colorB << colorA
+            << scale << scaleX << scaleY << scaleZ
+            << removeProb << gridSize
+            << segmentsX << segmentsY << segmentsZ
+            << tessLevel << removeSeed << withCoords;
 
-    // v6
-    io << invertNormals;
+        // v6
+        io << invertNormals;
 
-    // v2
-    io << normalization;
+        // v2
+        io << normalization;
 
-    // v3
-    io << transformWithEquation << equationX << equationY << equationZ;
+        // v3
+        io << transformWithEquation << equationX << equationY << equationZ;
 
-    // v4
-    io << smallRadius;
+        // v4
+        io << smallRadius;
 
-    // v5
-    io << transformPrimitivesWithEquation << calcNormalsBeforePrimitiveEquation
-       << pEquationX << pEquationY << pEquationZ;
+        // v5
+        io << transformPrimitivesWithEquation << calcNormalsBeforePrimitiveEquation
+           << pEquationX << pEquationY << pEquationZ;
 
-    // v6
-    io << extrude << extrudeConstant << extrudeFactor;
+        // v6
+        io << extrude << extrudeConstant << extrudeFactor;
+    }
+
+#endif
+
+    io << asTriangles << sharedVertices
+          << segmentsX << segmentsY << segmentsZ
+             << smallRadius;
+
+    modifierChain.serialize(io);
 }
 
 void GeometryFactorySettings::deserialize(IO::DataStream & io)
 {
-    int ver = io.readHeader("geomfacset", 7);
+    int ver = io.readHeader("geomfacset", 8);
 
     io.readEnum(type, T_BOX, typeIds);
 
-    io >> calcNormals >> asTriangles >> convertToLines >> sharedVertices
-        >> tesselate >> normalizeVertices >> removeRandomly
-        >> colorR >> colorG >> colorB >> colorA
-        >> scale >> scaleX >> scaleY >> scaleZ
-        >> removeProb >> gridSize
-        >> segmentsX >> segmentsY >> segmentsZ
-        >> tessLevel >> removeSeed >> withCoords;
+    if (ver <= 7)
+    {
+        QString equationX, equationY, equationZ,
+                pEquationX, pEquationY, pEquationZ;
+        bool calcNormals, invertNormals, convertToLines, tesselate,
+            normalizeVertices, removeRandomly, transformWithEquation,
+            transformPrimitivesWithEquation, calcNormalsBeforePrimitiveEquation,
+            extrude;
+        Float colorR, colorG, colorB, colorA;
+        Float scale, scaleX, scaleY, scaleZ, removeProb, normalization,
+            extrudeConstant, extrudeFactor;
+        uint gridSize, tessLevel, removeSeed;
 
-    if (ver >= 6)
-        io >> invertNormals;
+        io >> calcNormals >> asTriangles >> convertToLines >> sharedVertices
+            >> tesselate >> normalizeVertices >> removeRandomly
+            >> colorR >> colorG >> colorB >> colorA
+            >> scale >> scaleX >> scaleY >> scaleZ
+            >> removeProb >> gridSize
+            >> segmentsX >> segmentsY >> segmentsZ
+            >> tessLevel >> removeSeed >> withCoords;
 
-    if (ver >= 2)
-        io >> normalization;
+        if (ver >= 6)
+            io >> invertNormals;
 
-    if (ver >= 3)
-        io >> transformWithEquation >> equationX >> equationY >> equationZ;
+        if (ver >= 2)
+            io >> normalization;
 
-    if (ver >= 4)
-        io >> smallRadius;
+        if (ver >= 3)
+            io >> transformWithEquation >> equationX >> equationY >> equationZ;
 
-    if (ver >= 5)
-        io >> transformPrimitivesWithEquation >> calcNormalsBeforePrimitiveEquation
-           >> pEquationX >> pEquationY >> pEquationZ;
+        if (ver >= 4)
+            io >> smallRadius;
 
-    if (ver >= 7)
-        io >> extrude >> extrudeConstant >> extrudeFactor;
+        if (ver >= 5)
+            io >> transformPrimitivesWithEquation >> calcNormalsBeforePrimitiveEquation
+               >> pEquationX >> pEquationY >> pEquationZ;
+
+        if (ver >= 7)
+            io >> extrude >> extrudeConstant >> extrudeFactor;
+
+        // --- convert to modifier-chain -----
+
+        if (tesselate)
+        {
+            auto geom = new GeometryModifierTesselate();
+            modifierChain.addModifier(geom);
+            geom->setTesselationLevel(tessLevel);
+        }
+
+        if (normalizeVertices)
+        {
+            auto geom = new GeometryModifierNormalize();
+            modifierChain.addModifier(geom);
+            geom->setNormalization(normalization);
+        }
+
+        if (!sharedVertices)
+        {
+            auto geom = new GeometryModifierVertexGroup();
+            modifierChain.addModifier(geom);
+            geom->setShared(false);
+        }
+
+        if (transformWithEquation)
+        {
+            auto geom = new GeometryModifierVertexEquation();
+            modifierChain.addModifier(geom);
+            geom->setEquationX(equationX);
+            geom->setEquationY(equationY);
+            geom->setEquationZ(equationZ);
+        }
+
+        if (calcNormalsBeforePrimitiveEquation)
+        {
+            auto geom = new GeometryModifierNormals();
+            modifierChain.addModifier(geom);
+            geom->setCalcNormals(true);
+        }
+
+        if (transformPrimitivesWithEquation)
+        {
+            auto geom = new GeometryModifierPrimitiveEquation();
+            modifierChain.addModifier(geom);
+            geom->setEquationX(equationX);
+            geom->setEquationY(equationY);
+            geom->setEquationZ(equationZ);
+        }
+
+        if (extrude)
+        {
+            if (calcNormals)
+            {
+                auto geom = new GeometryModifierNormals();
+                modifierChain.addModifier(geom);
+                geom->setCalcNormals(true);
+            }
+            auto geom = new GeometryModifierExtrude();
+            modifierChain.addModifier(geom);
+            geom->setConstant(extrudeConstant);
+            geom->setFactor(extrudeFactor);
+        }
+
+        if (convertToLines)
+        {
+            auto geom = new GeometryModifierConvertLines();
+            modifierChain.addModifier(geom);
+        }
+
+        if (removeRandomly)
+        {
+            auto geom = new GeometryModifierRemove();
+            modifierChain.addModifier(geom);
+            geom->setRandomSeed(removeSeed);
+            geom->setRemoveProbability(removeProb);
+        }
+
+        if (calcNormals || invertNormals)
+        {
+            auto geom = new GeometryModifierNormals();
+            modifierChain.addModifier(geom);
+            geom->setCalcNormals(calcNormals);
+            geom->setInvertNormals(invertNormals);
+        }
+
+        {
+            auto geom = new GeometryModifierScale();
+            modifierChain.addModifier(geom);
+            geom->setScaleX(scaleX);
+            geom->setScaleX(scaleY);
+            geom->setScaleX(scaleZ);
+        }
+
+    }
+
+    if (ver>=8)
+    {
+        io >> asTriangles >> sharedVertices
+              >> segmentsX >> segmentsY >> segmentsZ
+                 >> smallRadius;
+
+        modifierChain.deserialize(io);
+    }
 }
 
 void GeometryFactorySettings::saveFile(const QString &filename) const

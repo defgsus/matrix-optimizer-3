@@ -19,9 +19,9 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierTranslate)
 
 GeometryModifierTranslate::GeometryModifierTranslate()
     : GeometryModifier("Translate", QObject::tr("translate")),
-      x_        (1.0),
-      y_        (1.0),
-      z_        (1.0)
+      x_        (0.0),
+      y_        (0.0),
+      z_        (0.0)
 {
 
 }
