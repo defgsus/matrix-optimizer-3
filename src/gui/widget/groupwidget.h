@@ -26,6 +26,7 @@ class GroupWidget : public QWidget
 public:
     explicit GroupWidget(QWidget *parent = 0);
     explicit GroupWidget(const QString& title, QWidget *parent = 0);
+    explicit GroupWidget(const QString& title, bool expanded, QWidget *parent = 0);
 
     void setTitle(const QString&);
     const QString& title() const { return title_; }
@@ -36,6 +37,9 @@ public:
     void addLayout(QLayout *);
 
     bool isExpanded() const { return expanded_; }
+
+    /** Adds a widget to the header */
+    void addHeaderWidget(QWidget * widget);
 
 signals:
 
@@ -59,6 +63,7 @@ private:
 
     QToolButton * button_;
     QLabel * label_;
+    QWidget * header_;
 };
 
 

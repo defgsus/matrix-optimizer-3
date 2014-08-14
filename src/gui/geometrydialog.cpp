@@ -20,6 +20,7 @@
 #include <QStatusBar>
 #include <QStatusTipEvent>
 #include <QProgressBar>
+#include <QMenu>
 
 #include "geometrydialog.h"
 #include "geom/geometry.h"
@@ -196,15 +197,7 @@ void GeometryDialog::createMainWidgets_()
                     connect(butLoadModelFile_, SIGNAL(clicked()), this, SLOT(loadModelFile_()));
 
 
-                // place to add modifier widgets
-                modifierLayout_ = new QVBoxLayout();
-                lv->addLayout(modifierLayout_);
-                modifierLayout_->setMargin(0);
-                modifierLayout_->setSpacing(1);
 
-
-
-#if (0)
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
@@ -214,21 +207,22 @@ void GeometryDialog::createMainWidgets_()
                     cbTriangles_->setChecked(settings_->asTriangles);
                     connect(cbTriangles_, SIGNAL(stateChanged(int)),
                             this, SLOT(updateFromWidgets_()));
-
+/*
                     // convert to lines
                     cbConvertToLines_ = new QCheckBox(tr("convert to lines"), this);
                     lh2->addWidget(cbConvertToLines_);
                     cbConvertToLines_->setChecked(settings_->convertToLines);
                     connect(cbConvertToLines_, SIGNAL(stateChanged(int)),
                             this, SLOT(updateFromWidgets_()));
+*/
 
-                // shared vertices
-                cbSharedVert_ = new QCheckBox(tr("shared vertices"), this);
-                lv->addWidget(cbSharedVert_);
-                cbSharedVert_->setChecked(settings_->sharedVertices);
-                connect(cbSharedVert_, SIGNAL(stateChanged(int)),
-                        this, SLOT(updateFromWidgets_()));
-
+                    // shared vertices
+                    cbSharedVert_ = new QCheckBox(tr("shared vertices"), this);
+                    lh2->addWidget(cbSharedVert_);
+                    cbSharedVert_->setChecked(settings_->sharedVertices);
+                    connect(cbSharedVert_, SIGNAL(stateChanged(int)),
+                            this, SLOT(updateFromWidgets_()));
+/*
                 // normals and normalization
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
@@ -314,7 +308,7 @@ void GeometryDialog::createMainWidgets_()
                     spinSZ_->setValue(settings_->scaleZ);
                     connect(spinSZ_, SIGNAL(valueChanged(double)),
                             this, SLOT(updateFromWidgets_()));
-
+*/
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
@@ -361,7 +355,7 @@ void GeometryDialog::createMainWidgets_()
                     spinSegZ_->setValue(settings_->segmentsZ);
                     connect(spinSegZ_, SIGNAL(valueChanged(int)),
                             this, SLOT(updateFromWidgets_()));
-
+#if (0)
                 // tesselation
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
@@ -517,6 +511,23 @@ void GeometryDialog::createMainWidgets_()
                 lv->addStretch(1);
 
 #endif
+
+                // add new modifier
+                auto but = new QPushButton(this);
+                lv->addWidget(but);
+                but->setText(tr("new modifier"));
+                connect(but, &QPushButton::clicked, [=]()
+                {
+                    newModifierPopup_(0);
+                });
+
+                // place to add modifier widgets
+                modifierLayout_ = new QVBoxLayout();
+                lv->addLayout(modifierLayout_);
+                modifierLayout_->setMargin(0);
+                modifierLayout_->setSpacing(1);
+
+
                 // info label
                 labelInfo_ = new QLabel(this);
                 lv->addWidget(labelInfo_);
@@ -527,7 +538,7 @@ void GeometryDialog::createMainWidgets_()
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
-                    auto but = new QPushButton(tr("Ok"), this);
+                    but = new QPushButton(tr("Ok"), this);
                     lh2->addWidget(but);
                     connect(but, SIGNAL(clicked()), this, SLOT(accept()));
 
@@ -549,15 +560,94 @@ void GeometryDialog::createMainWidgets_()
 
 void GeometryDialog::createModifierWidgets_()
 {
+    setUpdatesEnabled(false);
+
+    // clear previous
+    for (auto m : modifierWidgets_)
+    {
+        m->deleteLater();
+    }
+    modifierWidgets_.clear();
+
     // create widgets for geometry modifiers
     for (auto m : modifiers_->modifiers())
     {
-        QWidget * w = new GeometryModifierWidget(m, this);
+        auto w = new GeometryModifierWidget(m, expandedModifiers_.contains(m), this);
         modifierLayout_->addWidget(w);
         modifierWidgets_.append(w);
+        connect(w, SIGNAL(requestUp(GEOM::GeometryModifier*)),
+                this, SLOT(modifierUp_(GEOM::GeometryModifier*)));
+        connect(w, SIGNAL(requestDown(GEOM::GeometryModifier*)),
+                this, SLOT(modifierDown_(GEOM::GeometryModifier*)));
+        connect(w, SIGNAL(requestDelete(GEOM::GeometryModifier*)),
+                this, SLOT(modifierDelete_(GEOM::GeometryModifier*)));
+        connect(w, SIGNAL(requestInsertNew(GEOM::GeometryModifier*)),
+                this, SLOT(newModifierPopup_(GEOM::GeometryModifier*)));
+        connect(w, SIGNAL(expandedChange(GEOM::GeometryModifier*,bool)),
+                this, SLOT(modifierExpandedChanged_(GEOM::GeometryModifier*,bool)));
     }
 
-    modifierLayout_->addStretch(1);
+    // a "stretch" that can be deleted later
+    auto stretch = new QWidget(this);
+    modifierLayout_->addWidget(stretch);
+    modifierLayout_->setStretch(modifierLayout_->indexOf(stretch), 2);
+    modifierWidgets_.append(stretch);
+
+    setUpdatesEnabled(true);
+}
+
+void GeometryDialog::modifierExpandedChanged_(GEOM::GeometryModifier * g, bool expanded)
+{
+    if (expanded)
+        expandedModifiers_.insert(g);
+    else
+        expandedModifiers_.remove(g);
+}
+
+void GeometryDialog::modifierUp_(GEOM::GeometryModifier * g)
+{
+    if ( modifiers_->moveModifierUp(g) )
+        createModifierWidgets_();
+}
+
+void GeometryDialog::modifierDown_(GEOM::GeometryModifier * g)
+{
+    if ( modifiers_->moveModifierDown(g) )
+        createModifierWidgets_();
+}
+
+void GeometryDialog::modifierDelete_(GEOM::GeometryModifier * g)
+{
+    if ( modifiers_->deleteModifier(g) )
+        createModifierWidgets_();
+}
+
+void GeometryDialog::newModifierPopup_(GEOM::GeometryModifier *before)
+{
+    QMenu * menu = new QMenu(this);
+    const QList<QString> names = GEOM::GeometryModifierChain::modifierClassNames();
+    for (auto &n : names)
+    {
+        // XXX need translated name
+        QAction * a = new QAction(n, menu);
+        a->setData(n);
+        menu->addAction(a);
+    }
+
+    connect(menu, &QMenu::triggered, [=](QAction * a)
+    {
+        const QString classname = a->data().toString();
+        if (!before)
+            modifiers_->addModifier(classname);
+        else
+            modifiers_->insertModifier(classname, before);
+
+        createModifierWidgets_();
+    });
+
+    connect(menu, SIGNAL(aboutToHide()), menu, SLOT(deleteLater()));
+
+    menu->popup(QCursor::pos());
 }
 
 void GeometryDialog::changeView_()
@@ -653,6 +743,53 @@ void GeometryDialog::updateFromWidgets_()
                         comboType_->itemData(comboType_->currentIndex()).toInt();
 
     settings_->filename = editFilename_->text();
+    settings_->asTriangles = cbTriangles_->isChecked();
+    settings_->sharedVertices = cbSharedVert_->isChecked();
+    settings_->smallRadius = spinSmallRadius_->value();
+    settings_->segmentsX = spinSegX_->value();
+    settings_->segmentsY = spinSegY_->value();
+    settings_->segmentsZ = spinSegZ_->value();
+
+    // update widgets visibility
+
+    const bool
+            isFile = settings_->type ==
+                    GEOM::GeometryFactorySettings::T_FILE,
+            canTriangle = (settings_->type !=
+                            GEOM::GeometryFactorySettings::T_GRID_XZ
+                            && settings_->type !=
+                            GEOM::GeometryFactorySettings::T_LINE_GRID),
+//            hasTriangle = (canTriangle && (settings_->asTriangles || isFile)),
+            has2Segments = (settings_->type ==
+                            GEOM::GeometryFactorySettings::T_UV_SPHERE
+                           || settings_->type ==
+                            GEOM::GeometryFactorySettings::T_GRID_XZ
+                           || settings_->type ==
+                            GEOM::GeometryFactorySettings::T_LINE_GRID
+                           || settings_->type ==
+                            GEOM::GeometryFactorySettings::T_CYLINDER_CLOSED
+                           || settings_->type ==
+                            GEOM::GeometryFactorySettings::T_CYLINDER_OPEN
+                           || settings_->type ==
+                            GEOM::GeometryFactorySettings::T_TORUS),
+            has3Segments = (has2Segments && settings_->type ==
+                            GEOM::GeometryFactorySettings::T_LINE_GRID),
+            hasSmallRadius = (settings_->type ==
+                            GEOM::GeometryFactorySettings::T_TORUS);
+
+    editFilename_->setVisible(isFile);
+    butLoadModelFile_->setVisible(isFile);
+
+    labelSeg_->setVisible( has2Segments );
+    spinSegX_->setVisible( has2Segments );
+    spinSegY_->setVisible( has2Segments );
+    spinSegZ_->setVisible( has3Segments );
+
+    labelSmallRadius_->setVisible( hasSmallRadius );
+    spinSmallRadius_->setVisible( hasSmallRadius );
+
+    cbTriangles_->setVisible( canTriangle && !isFile);
+
 /*
     settings_->calcNormals = cbCalcNormals_->isChecked();
     settings_->invertNormals = cbInvNormals_->isChecked();
@@ -774,6 +911,13 @@ void GeometryDialog::updateWidgets_()
             comboType_->setCurrentIndex(i);
     }
     editFilename_->setText(settings_->filename);
+    cbTriangles_->setChecked(settings_->asTriangles);
+    cbSharedVert_->setChecked(settings_->sharedVertices);
+    spinSmallRadius_->setValue(settings_->smallRadius);
+    spinSegX_->setValue(settings_->segmentsX);
+    spinSegY_->setValue(settings_->segmentsY);
+    spinSegZ_->setValue(settings_->segmentsZ);
+
 /*
     cbTriangles_->setChecked(settings_->asTriangles);
     cbConvertToLines_->setChecked(settings_->convertToLines);

@@ -120,6 +120,59 @@ GeometryModifier * GeometryModifierChain::addModifier(const QString &className)
     return geom;
 }
 
+GeometryModifier * GeometryModifierChain::insertModifier(
+        const QString &className, GeometryModifier *before)
+{
+    GeometryModifier * geom = createModifier(className);
+    if (!geom)
+    {
+        MO_WARNING("request for unknown GeometryModifier '" << className << "'");
+        return 0;
+    }
+
+    const int idx = modifiers_.indexOf(before);
+    if (idx < 0)
+        addModifier(geom);
+    else
+        modifiers_.insert(idx, geom);
+
+    return geom;
+}
+
+bool GeometryModifierChain::moveModifierUp(GeometryModifier *g)
+{
+    const int idx = modifiers_.indexOf(g);
+    if (idx < 1)
+        return false;
+
+    modifiers_.move(idx, idx-1);
+
+    return true;
+}
+
+
+bool GeometryModifierChain::moveModifierDown(GeometryModifier *g)
+{
+    const int idx = modifiers_.indexOf(g);
+    if (idx < 0 || idx >= modifiers_.size()-1)
+        return false;
+
+    modifiers_.move(idx, idx+1);
+
+    return true;
+}
+
+bool GeometryModifierChain::deleteModifier(GeometryModifier *g)
+{
+    if (!modifiers_.contains(g))
+        return false;
+
+    modifiers_.removeAll(g);
+    delete g;
+
+    return true;
+}
+
 void GeometryModifierChain::execute(Geometry *g)
 {
     for (auto m : modifiers_)

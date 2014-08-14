@@ -12,6 +12,8 @@
 #define MOSRC_GUI_GEOMETRYDIALOG_H
 
 #include <QDialog>
+#include <QSet>
+
 #include "gl/opengl_fwd.h"
 
 class QComboBox;
@@ -60,6 +62,12 @@ protected slots:
     void deletePreset_();
     void presetSelected_();
 
+    void modifierUp_(GEOM::GeometryModifier*);
+    void modifierDown_(GEOM::GeometryModifier*);
+    void modifierDelete_(GEOM::GeometryModifier*);
+    void modifierExpandedChanged_(GEOM::GeometryModifier*, bool expanded);
+    void newModifierPopup_(GEOM::GeometryModifier * before);
+
     void creatorProgress_(int);
     void creationFailed_(const QString&);
     void creationFinished_();
@@ -83,7 +91,7 @@ protected:
 
     QList<QWidget*> modifierWidgets_;
     QVBoxLayout * modifierLayout_;
-
+    QSet<GEOM::GeometryModifier*> expandedModifiers_;
 
     QStatusBar * statusBar_;
     QProgressBar * progressBar_;

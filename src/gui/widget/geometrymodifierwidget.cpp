@@ -10,7 +10,8 @@
 
 #include <QLayout>
 #include <QLabel>
-
+#include <QToolButton>
+#include <QIcon>
 
 #include "geometrymodifierwidget.h"
 #include "io/error.h"
@@ -24,7 +25,7 @@
 namespace MO {
 namespace GUI {
 
-GeometryModifierWidget::GeometryModifierWidget(GEOM::GeometryModifier * geom, QWidget *parent) :
+GeometryModifierWidget::GeometryModifierWidget(GEOM::GeometryModifier * geom, bool expanded, QWidget *parent) :
     QWidget                 (parent),
     modifier_               (geom),
     funcUpdateFromWidgets_  (0),
@@ -32,25 +33,52 @@ GeometryModifierWidget::GeometryModifierWidget(GEOM::GeometryModifier * geom, QW
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-    createWidgets_();
+    createWidgets_(expanded);
 
     updateWidgetValues();
 }
 
-/*
-void GeometryModifierWidget::setGeometryModifier(GEOM::GeometryModifier * geom)
-{
-    modifier_ = geom;
-    createWidgets_();
-}
-*/
 
-void GeometryModifierWidget::createWidgets_()
+void GeometryModifierWidget::createWidgets_(bool expanded)
 {
     auto l0 = new QVBoxLayout(this);
     l0->setMargin(0);
-    group_ = new GroupWidget(modifier_->className(), this);
+    group_ = new GroupWidget(modifier_->className(), expanded, this);
     l0->addWidget(group_);
+
+    auto butUp = new QToolButton(this);
+    group_->addHeaderWidget(butUp);
+    butUp->setArrowType(Qt::UpArrow);
+    butUp->setFixedSize(20,20);
+    connect(butUp, &QToolButton::clicked, [=](){ emit requestUp(modifier_); });
+
+    auto butDown = new QToolButton(this);
+    group_->addHeaderWidget(butDown);
+    butDown->setArrowType(Qt::DownArrow);
+    butDown->setFixedSize(20,20);
+    connect(butDown, &QToolButton::clicked, [=](){ emit requestDown(modifier_); });
+
+    auto butInsert = new QToolButton(this);
+    group_->addHeaderWidget(butInsert);
+    butInsert->setText(".");
+    butInsert->setFixedSize(20,20);
+    connect(butInsert, &QToolButton::clicked, [=](){ emit requestInsertNew(modifier_); });
+
+    auto butRemove = new QToolButton(this);
+    group_->addHeaderWidget(butRemove);
+    butRemove->setIcon(QIcon(":/icon/delete.png"));
+    butRemove->setFixedSize(20,20);
+    connect(butRemove, &QToolButton::clicked, [=](){ emit requestDelete(modifier_); });
+
+    connect(group_, &GroupWidget::expanded, [=]()
+    {
+        emit expandedChange(modifier_, true);
+    });
+    connect(group_, &GroupWidget::collapsed, [=]()
+    {
+        emit expandedChange(modifier_, false);
+    });
+
 
     if (auto scale = dynamic_cast<GEOM::GeometryModifierScale*>(modifier_))
     {

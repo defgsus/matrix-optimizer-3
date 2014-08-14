@@ -59,6 +59,21 @@ public:
         Returns the created instance, or NULL if @p className is not defined. */
     GeometryModifier * addModifier(const QString& className);
 
+    /** Inserts a new modifier to the execution chain before the modifier @p before.
+        Returns the created instance, or NULL if @p className is not defined. */
+    GeometryModifier * insertModifier(const QString& className, GeometryModifier * before);
+
+    /** Moves the modifier up in the chain, returns true if moved */
+    bool moveModifierUp(GeometryModifier * g);
+
+    /** Moves the modifier down in the chain, returns true if moved */
+    bool moveModifierDown(GeometryModifier * g);
+
+    /** Deletes all instances of the modifier from the chain.
+        Returns true if deleted (that is: if it was part of the chain).
+        The class is only destroyed when it was part of the chain! */
+    bool deleteModifier(GeometryModifier * g);
+
     // ----------- execution --------------
 
     /** Execute the whole chain */

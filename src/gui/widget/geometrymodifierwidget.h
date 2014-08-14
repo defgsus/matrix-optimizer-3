@@ -25,12 +25,18 @@ class GeometryModifierWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit GeometryModifierWidget(GEOM::GeometryModifier *, QWidget *parent = 0);
+    explicit GeometryModifierWidget(GEOM::GeometryModifier *, bool expanded, QWidget *parent = 0);
 
-    //void setGeometryModifier(GEOM::GeometryModifier *);
     GEOM::GeometryModifier * geometryModifier() const { return modifier_; }
 
 signals:
+
+    void requestUp(GEOM::GeometryModifier *);
+    void requestDown(GEOM::GeometryModifier *);
+    void requestDelete(GEOM::GeometryModifier *);
+    void requestInsertNew(GEOM::GeometryModifier *);
+
+    void expandedChange(GEOM::GeometryModifier*, bool expanded);
 
 public slots:
 
@@ -42,7 +48,7 @@ private slots:
 
 private:
 
-    void createWidgets_();
+    void createWidgets_(bool expanded);
     void updateWidgets_();
 
     GEOM::GeometryModifier * modifier_;

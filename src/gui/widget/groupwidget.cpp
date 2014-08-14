@@ -32,6 +32,15 @@ GroupWidget::GroupWidget(const QString& title, QWidget *parent) :
     createLayout_();
 }
 
+GroupWidget::GroupWidget(const QString& title, bool expanded, QWidget *parent) :
+    QWidget     (parent),
+    expanded_   (expanded),
+    title_      (title)
+{
+    createLayout_();
+    setExpanded(expanded_);
+}
+
 void GroupWidget::createLayout_()
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -40,18 +49,19 @@ void GroupWidget::createLayout_()
     lv->setMargin(1);
 
         // create header
-        auto head = new QWidget(this);
-        lv->addWidget(head);
-        head->setAutoFillBackground(true);
-        QPalette p(head->palette());
+        header_ = new QWidget(this);
+        lv->addWidget(header_);
+        header_->setAutoFillBackground(true);
+        QPalette p(header_->palette());
         p.setColor(QPalette::Background, p.color(QPalette::Background).darker(120));
-        head->setPalette(p);
-        head->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+        header_->setPalette(p);
+        header_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-        auto lh = new QHBoxLayout(head);
+        auto lh = new QHBoxLayout(header_);
         lh->setMargin(0);
+        lh->setSpacing(1);
 
-            button_ = new QToolButton(head);
+            button_ = new QToolButton(header_);
             lh->addWidget(button_);
             button_->setFixedSize(20,20);
             updateArrow_();
@@ -60,9 +70,15 @@ void GroupWidget::createLayout_()
                 setExpanded(!expanded_, true);
             });
 
-            label_ = new QLabel(title_, head);
+            label_ = new QLabel(title_, header_);
             lh->addWidget(label_);
+            lh->setStretch(lh->indexOf(label_), 2);
 
+}
+
+void GroupWidget::addHeaderWidget(QWidget *widget)
+{
+    header_->layout()->addWidget(widget);
 }
 
 void GroupWidget::setTitle(const QString & title)

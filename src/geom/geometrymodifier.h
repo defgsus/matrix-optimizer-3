@@ -30,6 +30,7 @@ class GeometryModifier
 {
 public:
     GeometryModifier(const QString& className);
+    virtual ~GeometryModifier() { }
 
     // ------------- getter ------------------
 
