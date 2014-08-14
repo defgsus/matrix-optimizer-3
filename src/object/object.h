@@ -426,6 +426,11 @@ protected:
         XXX Right now it's a bit unclear, what is possible here except from lazy requests. */
     virtual void onParametersLoaded() { }
 
+    /** Starts a new group which will contain all Parameters created afterwards.
+        @p id is the PERSITANT name, to keep the gui-settings between sessions. */
+    void beginParameterGroup(const QString& id, const QString& name);
+    /** Ends the current Parameter group */
+    void endParameterGroup();
 
     /** Creates the desired parameter,
         or returns an already created parameter object.
@@ -619,6 +624,8 @@ private:
     // ----------- parameter -----------------
 
     QList<Parameter*> parameters_;
+    QString currentParameterGroupId_,
+            currentParameterGroupName_;
 
     // --------- default parameters ----------
 

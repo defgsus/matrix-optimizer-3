@@ -63,6 +63,8 @@ void Sequence::createParameters()
 {
     Object::createParameters();
 
+    beginParameterGroup("time", tr("time"));
+
     loopStart_ = createFloatParameter("loop_start", "loop start",
                                       tr("Local start time of the loop in seconds"),
                                       0.0);
@@ -77,6 +79,8 @@ void Sequence::createParameters()
                                        tr("Time offset into the sequence data in seconds"),
                                        0.0);
     timeOffset_->setEditable(false);
+
+    endParameterGroup();
 }
 
 

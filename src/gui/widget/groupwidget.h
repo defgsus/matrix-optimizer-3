@@ -33,6 +33,8 @@ public:
     /** Adds a widget to the drop-down group */
     void addWidget(QWidget *);
 
+    bool isExpanded() const { return expanded_; }
+
 signals:
 
     void expanded();
@@ -40,6 +42,7 @@ signals:
 
 public slots:
 
+    void setExpanded(bool expanded, bool send_signal = false);
     void expand(bool send_signal = false);
     void collapse(bool send_signal = false);
 

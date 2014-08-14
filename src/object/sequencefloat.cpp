@@ -103,6 +103,8 @@ void SequenceFloat::createParameters()
 {
     Sequence::createParameters();
 
+    beginParameterGroup("value", tr("value"));
+
     offset_ = createFloatParameter("value_offset", "value offset",
                tr("This value is always added to the output of the sequence"),
                0.0);
@@ -128,7 +130,11 @@ void SequenceFloat::createParameters()
                0.5);
     pulseWidth_->setEditable(false);
 
+    endParameterGroup();
+
     // ---- spectral osc -----
+
+    beginParameterGroup("spectral", tr("spectral osc."));
 
     specNum_ = createFloatParameter("specnum", "partial voices",
                tr("Number of partial voices of the spectral oscillator. Does not have to be an integer"),
@@ -157,7 +163,11 @@ void SequenceFloat::createParameters()
                0.0);
     specPhaseShift_->setEditable(false);
 
+    endParameterGroup();
+
     // ----- loop overlap ------
+
+    beginParameterGroup("loopoverlap", tr("loop overlap"));
 
     loopOverlap_ = createFloatParameter("loopoverlap", "loop overlap",
                tr("Overlap of the loop window for smooth transitions (seconds)"),
@@ -168,6 +178,8 @@ void SequenceFloat::createParameters()
                tr("A value that is added to the blended value in the transition window"),
                0.0);
     loopOverlapOffset_->setEditable(false);
+
+    endParameterGroup();
 }
 
 void SequenceFloat::serialize(IO::DataStream &io) const

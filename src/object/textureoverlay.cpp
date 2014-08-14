@@ -53,6 +53,8 @@ void TextureOverlay::createParameters()
 {
     ObjectGl::createParameters();
 
+    beginParameterGroup("texture", tr("texture"));
+
     paramFilename_ = createFilenameParameter("imgfile", tr("image"), tr("Filename of the image"),
                                              IO::FT_TEXTURE, ":/texture/mo_black.png");
 
@@ -76,6 +78,8 @@ void TextureOverlay::createParameters()
     pos_influence_ = createFloatParameter("posinf", tr("position influence"),
         tr("A multiplier for influencing the texture offset by the transformation position"),
                                           0.0, 0.01);
+
+    endParameterGroup();
 }
 
 void TextureOverlay::onParameterChanged(Parameter *p)

@@ -825,6 +825,8 @@ void Object::createParameters()
             strPrev3r(tr("Object is only active in preview mode 3 and when rendering")),
             strRend(tr("Object is only active when rendering"));
 
+    beginParameterGroup("active", tr("activity"));
+
     paramActiveScope_ =
     createSelectParameter("_activescope", tr("activity scope"),
                          strTip,
@@ -839,6 +841,8 @@ void Object::createParameters()
                            AS_PREVIEW_1, AS_PREVIEW_2, AS_PREVIEW_3,
                            AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
                          AS_ON, true, false );
+
+    endParameterGroup();
 }
 
 void Object::onParameterChanged(Parameter * p)
@@ -852,6 +856,17 @@ void Object::onParameterChanged(Parameter * p)
 }
 
 
+void Object::beginParameterGroup(const QString &id, const QString &name)
+{
+    currentParameterGroupId_ = id;
+    currentParameterGroupName_ = name;
+}
+
+void Object::endParameterGroup()
+{
+    currentParameterGroupId_.clear();
+    currentParameterGroupName_.clear();
+}
 
 ParameterFloat * Object::createFloatParameter(
         const QString& id, const QString& name, const QString& statusTip,
@@ -913,6 +928,8 @@ ParameterFloat * Object::createFloatParameter(
     param->setStatusTip(statusTip);
     param->setEditable(editable);
     param->setModulateable(modulateable);
+
+    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
 
     return param;
 }
@@ -981,6 +998,8 @@ ParameterInt * Object::createIntParameter(
     param->setEditable(editable);
     param->setModulateable(modulateable);
 
+    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
+
     return param;
 }
 
@@ -1046,6 +1065,8 @@ ParameterSelect * Object::createSelectParameter(
     param->setStatusTips(statusTips);
     param->setDefaultValue(defaultValue);
 
+    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
+
     return param;
 }
 
@@ -1089,6 +1110,8 @@ ParameterFilename * Object::createFilenameParameter(
     param->setFileType(fileType);
     param->setDefaultValue(defaultValue);
     param->setStatusTip(statusTip);
+
+    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
 
     return param;
 }

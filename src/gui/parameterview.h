@@ -59,6 +59,8 @@ private slots:
 
 private:
 
+    GroupWidget * getGroupWidget_(const QString& id, const QString &name);
+
     void createWidgets_();
     QWidget * createWidget_(Parameter *);
     void clearWidgets_();
@@ -75,6 +77,7 @@ private:
     Object * object_;
     QList<Parameter*> parameters_;
     QList<QWidget*> widgets_;
+    QMap<QString, GroupWidget*> groups_;
     QList<SpinBox*> spinsInt_;
     QList<DoubleSpinBox*> spinsFloat_;
     QList<QComboBox*> combosSelect_;
@@ -82,7 +85,6 @@ private:
     QWidget * prevEditWidget_;
 
     QVBoxLayout * layout_;
-    GroupWidget * currentGroup_;
 
     // ------ config ------
 

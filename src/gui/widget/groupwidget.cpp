@@ -55,10 +55,7 @@ void GroupWidget::createLayout_()
             button_->setArrowType(expanded_? Qt::UpArrow : Qt::DownArrow);
             connect(button_, &QToolButton::clicked, [=]()
             {
-                if (expanded_)
-                    collapse(true);
-                else
-                    expand(true);
+                setExpanded(!expanded_);
                 button_->setArrowType(expanded_? Qt::UpArrow : Qt::DownArrow);
             });
 
@@ -73,6 +70,16 @@ void GroupWidget::setTitle(const QString & title)
     label_->setText(title_);
 }
 
+void GroupWidget::setExpanded(bool expanded, bool send_signal)
+{
+    if (expanded_ == expanded)
+        return;
+
+    if (expanded)
+        expand(send_signal);
+    else
+        collapse(send_signal);
+}
 
 void GroupWidget::collapse(bool send_signal)
 {

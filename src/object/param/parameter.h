@@ -43,12 +43,17 @@ public:
     bool isEditable() const { return isEditable_; }
     bool isModulateable() const { return isModulateable_; }
 
+    const QString& groupId() const { return groupId_; }
+    const QString& groupName() const { return groupName_; }
+
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }
     void setStatusTip(const QString& tip) { statusTip_ = tip; }
     void setEditable(bool enable) { isEditable_ = enable; }
     void setModulateable(bool enable) { isModulateable_ = enable; }
+
+    void setGroup(const QString& id, const QString& name) { groupId_ = id; groupName_ = name; }
 
     // ------------ modulators ------------------
 
@@ -99,7 +104,8 @@ private:
 
     Object * object_;
 
-    QString idName_, name_, statusTip_;
+    QString idName_, name_, statusTip_,
+            groupId_, groupName_;
 
     bool isEditable_, isModulateable_;
 

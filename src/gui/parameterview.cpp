@@ -84,11 +84,30 @@ void ParameterView::clearWidgets_()
 {
     for (auto w : widgets_)
         w->deleteLater();
-
     widgets_.clear();
+    for (auto g : groups_)
+        g->deleteLater();
+    groups_.clear();
+
     spinsInt_.clear();
     spinsFloat_.clear();
     combosSelect_.clear();
+}
+
+GroupWidget * ParameterView::getGroupWidget_(const QString &id, const QString& name)
+{
+    auto i = groups_.find(id);
+    if (i == groups_.end())
+    {
+        // create new
+        GroupWidget * g = new GroupWidget(name, this);
+        g->setExpanded(false);
+        layout_->addWidget(g);
+        groups_.insert(id, g);
+        return g;
+    }
+    // return existing
+    return i.value();
 }
 
 void ParameterView::createWidgets_()
@@ -96,16 +115,19 @@ void ParameterView::createWidgets_()
     clearWidgets_();
     prevEditWidget_ = 0;
 
-    currentGroup_ = new GroupWidget("Parameters", this);
-    layout_->addWidget(currentGroup_);
-    widgets_.append(currentGroup_);
-
     for (auto p : parameters_)
     {
         QWidget * w = createWidget_(p);
-        //widgets_.insert(p->idName(), w);
-        //layout_->addWidget(w);
-        currentGroup_->addWidget(w);
+
+        if (!p->groupId().isEmpty())
+        {
+            getGroupWidget_(p->groupId(), p->groupName())->addWidget(w);
+        }
+        else
+        {
+            layout_->addWidget(w);
+            widgets_.append(w);
+        }
     }
 }
 
