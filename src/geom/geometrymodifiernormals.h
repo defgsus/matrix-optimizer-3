@@ -21,7 +21,7 @@ namespace GEOM {
 class GeometryModifierNormals : public GeometryModifier
 {
 public:
-    GeometryModifierNormals();
+    MO_GEOMETRYMODIFIER_CONSTRUCTOR(GeometryModifierNormals)
 
     // ------------- getter ------------------
 
@@ -32,16 +32,6 @@ public:
 
     void setCalcNormals(bool doo) { calc_ = doo; }
     void setInvertNormals(bool doo) { invert_ = doo; }
-
-    // ----------- virtual interface ---------
-
-    virtual void serialize(IO::DataStream& io) const Q_DECL_OVERRIDE;
-    virtual void deserialize(IO::DataStream& io) Q_DECL_OVERRIDE;
-
-    virtual GeometryModifierNormals * cloneClass() const Q_DECL_OVERRIDE
-                        { return new GeometryModifierNormals(); }
-
-    virtual void execute(Geometry * g) Q_DECL_OVERRIDE;
 
 private:
 

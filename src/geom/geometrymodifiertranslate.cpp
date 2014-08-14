@@ -42,6 +42,7 @@ void GeometryModifierTranslate::deserialize(IO::DataStream &io)
     io >> x_ >> y_ >> z_;
 }
 
+
 void GeometryModifierTranslate::execute(Geometry *g)
 {
     g->translate(x_, y_, z_);

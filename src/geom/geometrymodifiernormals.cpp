@@ -41,6 +41,7 @@ void GeometryModifierNormals::deserialize(IO::DataStream &io)
     io >> calc_ >> invert_;
 }
 
+
 void GeometryModifierNormals::execute(Geometry *g)
 {
     if (calc_)

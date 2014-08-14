@@ -41,7 +41,7 @@ public:
     static const QStringList typeIds;
     static const QStringList typeNames;
 
-    GeometryModifierCreate();
+    MO_GEOMETRYMODIFIER_CONSTRUCTOR(GeometryModifierCreate)
 
     // ------------- getter ------------------
 
@@ -50,16 +50,6 @@ public:
     // ------------ setter -------------------
 
     void setFilename(const QString& filename) { filename_ = filename; }
-
-    // ----------- virtual interface ---------
-
-    virtual void serialize(IO::DataStream& io) const Q_DECL_OVERRIDE;
-    virtual void deserialize(IO::DataStream& io) Q_DECL_OVERRIDE;
-
-    virtual GeometryModifierCreate * cloneClass() const Q_DECL_OVERRIDE
-                        { return new GeometryModifierCreate(); }
-
-    virtual void execute(Geometry * g) Q_DECL_OVERRIDE;
 
 private:
 

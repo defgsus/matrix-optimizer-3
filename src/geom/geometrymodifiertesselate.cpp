@@ -40,6 +40,7 @@ void GeometryModifierTesselate::deserialize(IO::DataStream &io)
     io >> level_;
 }
 
+
 void GeometryModifierTesselate::execute(Geometry *g)
 {
     g->tesselate(level_);

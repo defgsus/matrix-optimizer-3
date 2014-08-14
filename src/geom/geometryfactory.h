@@ -16,12 +16,15 @@
 #include "types/int.h"
 #include "types/float.h"
 
+#include "geometrymodifierchain.h"
+
 namespace MO {
 namespace IO { class DataStream; }
 namespace GEOM {
 
 class Geometry;
 class GeometryFactorySettings;
+class GeometryModifierChain;
 class ObjLoader;
 
 class GeometryFactory
@@ -87,6 +90,7 @@ public:
     static const QStringList typeNames;
 
     GeometryFactorySettings();
+    ~GeometryFactorySettings();
 
     // ---------- io ---------
 
@@ -98,6 +102,8 @@ public:
 
 
     // ---- public member ----
+
+    GeometryModifierChain modifierChain;
 
     Type type;
     QString filename, equationX, equationY, equationZ,

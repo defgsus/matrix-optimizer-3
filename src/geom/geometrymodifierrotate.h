@@ -21,31 +21,21 @@ namespace GEOM {
 class GeometryModifierRotate : public GeometryModifier
 {
 public:
-    GeometryModifierRotate();
+    MO_GEOMETRYMODIFIER_CONSTRUCTOR(GeometryModifierRotate)
 
     // ------------- getter ------------------
 
-    Float getRotateAngle() const { return angle_; }
-    Float getRotateX() const { return x_; }
-    Float getRotateY() const { return y_; }
-    Float getRotateZ() const { return z_; }
+    Float getRotationAngle() const { return angle_; }
+    Float getRotationX() const { return x_; }
+    Float getRotationY() const { return y_; }
+    Float getRotationZ() const { return z_; }
 
     // ------------ setter -------------------
 
-    void setRotateAngle(Float s) { angle_ = s; }
-    void setRotateX(Float s) { x_ = s; }
-    void setRotateY(Float s) { y_ = s; }
-    void setRotateZ(Float s) { z_ = s; }
-
-    // ----------- virtual interface ---------
-
-    virtual void serialize(IO::DataStream& io) const Q_DECL_OVERRIDE;
-    virtual void deserialize(IO::DataStream& io) Q_DECL_OVERRIDE;
-
-    virtual GeometryModifierRotate * cloneClass() const Q_DECL_OVERRIDE
-                        { return new GeometryModifierRotate(); }
-
-    virtual void execute(Geometry * g) Q_DECL_OVERRIDE;
+    void setRotationAngle(Float s) { angle_ = s; }
+    void setRotationX(Float s) { x_ = s; }
+    void setRotationY(Float s) { y_ = s; }
+    void setRotationZ(Float s) { z_ = s; }
 
 private:
 

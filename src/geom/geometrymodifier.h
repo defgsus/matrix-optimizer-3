@@ -25,6 +25,17 @@ namespace GEOM {
     namespace { bool registered_##Class__ = ::MO::GEOM::registerGeometryModifier_(new Class__); }
 
 
+#define MO_GEOMETRYMODIFIER_CONSTRUCTOR(Class__)                        \
+    Class__();                                                          \
+    virtual void serialize(IO::DataStream& io) const Q_DECL_OVERRIDE;   \
+    virtual void deserialize(IO::DataStream& io) Q_DECL_OVERRIDE;       \
+    virtual Class__ * cloneClass() const Q_DECL_OVERRIDE                \
+                                        { return new Class__(); }       \
+    virtual Class__ * clone() const Q_DECL_OVERRIDE                     \
+                { auto c = new Class__(); *c = *this; return c; }       \
+    virtual void execute(Geometry * g) Q_DECL_OVERRIDE;
+
+
 class Geometry;
 
 class GeometryModifier
@@ -53,6 +64,9 @@ public:
 
     /** Returns a new class of the modifier */
     virtual GeometryModifier * cloneClass() const = 0;
+
+    /** Returns a new class of the modifier with all settings copied. */
+    virtual GeometryModifier * clone() const = 0;
 
     /** Applies the modifications */
     virtual void execute(Geometry * g) = 0;

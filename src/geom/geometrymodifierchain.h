@@ -25,6 +25,10 @@ class GeometryModifierChain
 {
 public:
     GeometryModifierChain();
+    ~GeometryModifierChain();
+
+    GeometryModifierChain(const GeometryModifierChain& other);
+    GeometryModifierChain& operator = (const GeometryModifierChain& other);
 
     // ---------------- io ----------------
 
@@ -35,6 +39,9 @@ public:
 
     /** Returns a list of names of possible modifiers */
     static QList<QString> modifierClassNames();
+
+    /** Returns a list of friendly names of possible modifiers */
+    static QList<QString> modifierGuiNames();
 
     /** Returns a new modifier with the specific class name, or NULL */
     static GeometryModifier * createModifier(const QString& className);
@@ -77,7 +84,7 @@ public:
     // ----------- execution --------------
 
     /** Execute the whole chain */
-    void execute(Geometry * g);
+    void execute(Geometry * g) const;
 
 private:
 

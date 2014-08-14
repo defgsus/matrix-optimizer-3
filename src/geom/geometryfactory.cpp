@@ -16,6 +16,7 @@
 
 #include "geometryfactory.h"
 #include "geometry.h"
+#include "geometrymodifierchain.h"
 #include "objloader.h"
 #include "math/vector.h"
 #include "math/hash.h"
@@ -880,6 +881,8 @@ void GeometryFactory::createFromSettings(Geometry * g,
 
     // --- modify ---
 
+    /*
+
     if (set->tesselate)
         g->tesselate(set->tessLevel);
 
@@ -928,7 +931,9 @@ void GeometryFactory::createFromSettings(Geometry * g,
     g->scale(set->scale * set->scaleX,
              set->scale * set->scaleY,
              set->scale * set->scaleZ);
+    */
 
+    set->modifierChain.execute(g);
 }
 
 
@@ -970,7 +975,8 @@ const QStringList GeometryFactorySettings::typeNames =
 };
 
 GeometryFactorySettings::GeometryFactorySettings()
-    : type          (T_BOX),
+    : //modifierChain (new GeometryModifierChain()),
+      type          (T_BOX),
       equationX     ("x"),
       equationY     ("y"),
       equationZ     ("z"),
@@ -1010,7 +1016,13 @@ GeometryFactorySettings::GeometryFactorySettings()
       removeSeed    (1),
       withCoords    (true)
 {
+    // standard to calculate normals
+    modifierChain.addModifier("Normals");
+}
 
+GeometryFactorySettings::~GeometryFactorySettings()
+{
+//    delete modifierChain;
 }
 
 void GeometryFactorySettings::serialize(IO::DataStream & io) const

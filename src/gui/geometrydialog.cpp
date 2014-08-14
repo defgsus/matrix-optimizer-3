@@ -56,9 +56,8 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
 
     createMainWidgets_();
 
-    modifiers_ = new GEOM::GeometryModifierChain();
-    modifiers_->addModifier("Scale");
-    modifiers_->addModifier("Tesselate");
+    modifiers_ = &settings_->modifierChain;
+
     createModifierWidgets_();
 
     updatePresetList_();
@@ -585,6 +584,8 @@ void GeometryDialog::createModifierWidgets_()
                 this, SLOT(newModifierPopup_(GEOM::GeometryModifier*)));
         connect(w, SIGNAL(expandedChange(GEOM::GeometryModifier*,bool)),
                 this, SLOT(modifierExpandedChanged_(GEOM::GeometryModifier*,bool)));
+        connect(w, SIGNAL(valueChanged(GEOM::GeometryModifier*)),
+                this, SLOT(updateFromWidgets_()));
     }
 
     // a "stretch" that can be deleted later
@@ -625,12 +626,12 @@ void GeometryDialog::modifierDelete_(GEOM::GeometryModifier * g)
 void GeometryDialog::newModifierPopup_(GEOM::GeometryModifier *before)
 {
     QMenu * menu = new QMenu(this);
-    const QList<QString> names = GEOM::GeometryModifierChain::modifierClassNames();
-    for (auto &n : names)
+    const QList<QString> classnames = GEOM::GeometryModifierChain::modifierClassNames();
+    const QList<QString> guinames = GEOM::GeometryModifierChain::modifierGuiNames();
+    for (int i=0; i<classnames.size(); ++i)
     {
-        // XXX need translated name
-        QAction * a = new QAction(n, menu);
-        a->setData(n);
+        QAction * a = new QAction(guinames[i], menu);
+        a->setData(classnames[i]);
         menu->addAction(a);
     }
 
@@ -917,6 +918,7 @@ void GeometryDialog::updateWidgets_()
     spinSegX_->setValue(settings_->segmentsX);
     spinSegY_->setValue(settings_->segmentsY);
     spinSegZ_->setValue(settings_->segmentsZ);
+
 
 /*
     cbTriangles_->setChecked(settings_->asTriangles);

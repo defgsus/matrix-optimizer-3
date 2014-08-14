@@ -38,6 +38,8 @@ signals:
 
     void expandedChange(GEOM::GeometryModifier*, bool expanded);
 
+    void valueChanged(GEOM::GeometryModifier *);
+
 public slots:
 
     void updateWidgetValues();

@@ -21,7 +21,7 @@ namespace GEOM {
 class GeometryModifierTesselate : public GeometryModifier
 {
 public:
-    GeometryModifierTesselate();
+    MO_GEOMETRYMODIFIER_CONSTRUCTOR(GeometryModifierTesselate)
 
     // ------------- getter ------------------
 
@@ -30,16 +30,6 @@ public:
     // ------------ setter -------------------
 
     void setTesselationLevel(uint t) { level_ = std::max((uint)1, t); }
-
-    // ----------- virtual interface ---------
-
-    virtual void serialize(IO::DataStream& io) const Q_DECL_OVERRIDE;
-    virtual void deserialize(IO::DataStream& io) Q_DECL_OVERRIDE;
-
-    virtual GeometryModifierTesselate * cloneClass() const Q_DECL_OVERRIDE
-                        { return new GeometryModifierTesselate(); }
-
-    virtual void execute(Geometry * g) Q_DECL_OVERRIDE;
 
 private:
 

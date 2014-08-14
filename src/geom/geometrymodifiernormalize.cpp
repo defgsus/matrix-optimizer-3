@@ -40,6 +40,7 @@ void GeometryModifierNormalize::deserialize(IO::DataStream &io)
     io >> n_;
 }
 
+
 void GeometryModifierNormalize::execute(Geometry *g)
 {
     g->normalizeSphere(1, n_);

@@ -12,6 +12,8 @@
 #include <QLabel>
 #include <QToolButton>
 #include <QIcon>
+#include <QComboBox>
+#include <QCheckBox>
 
 #include "geometrymodifierwidget.h"
 #include "io/error.h"
@@ -21,6 +23,10 @@
 
 #include "geom/geometrymodifierscale.h"
 #include "geom/geometrymodifiertesselate.h"
+#include "geom/geometrymodifiertranslate.h"
+#include "geom/geometrymodifierrotate.h"
+#include "geom/geometrymodifiernormals.h"
+#include "geom/geometrymodifiernormalize.h"
 
 namespace MO {
 namespace GUI {
@@ -80,49 +86,50 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     });
 
 
+#define MO__DOUBLESPIN(var__, statustip__, step__, min__, max__) \
+    auto var__ = new DoubleSpinBox(this);           \
+    group_->addWidget(var__);                       \
+    var__->setStatusTip(statustip__);               \
+    var__->setDecimals(5);                          \
+    var__->setSingleStep(step__);                   \
+    var__->setRange(min__, max__);                  \
+    connect(var__, SIGNAL(valueChanged(double)),    \
+            this, SLOT(updateFromWidgets_()));
+
+#define MO__CHECKBOX(var__, text__, statusTip__, value__)   \
+    auto var__ = new QCheckBox(this);                       \
+    group_->addWidget(var__);                               \
+    var__->setText(text__);                                 \
+    var__->setStatusTip(statusTip__);                       \
+    var__->setChecked(value__);                             \
+    connect(var__, SIGNAL(stateChanged(int)),               \
+            this, SLOT(updateFromWidgets_()));
+
+    // -------- create widgets for specific modifier class -----------
+
     if (auto scale = dynamic_cast<GEOM::GeometryModifierScale*>(modifier_))
     {
-        auto spinall = new DoubleSpinBox(this);
-        group_->addWidget(spinall);
-        spinall->setStatusTip("Overall scale of the model");
-        spinall->setDecimals(5);
-        spinall->setSingleStep(0.1);
-        spinall->setRange(0.0001, 1000000);
-        connect(spinall, SIGNAL(valueChanged(double)),
-                this, SLOT(updateFromWidgets_()));
-
         auto lh = new QHBoxLayout();
         group_->addLayout(lh);
 
-            auto spinx = new DoubleSpinBox(this);
-            group_->addWidget(spinx);
+            auto label = new QLabel(tr("overall scale"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinall, tr("Overall scale of the geometry"), 0.1, 0.0001, 1000000.0);
+            lh->addWidget(spinall);
+
+        lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            MO__DOUBLESPIN(spinx, tr("X-scale of the the geometry"), 0.1, 0.0001, 1000000.0);
             lh->addWidget(spinx);
-            spinx->setStatusTip("X-scale of the model");
-            spinx->setDecimals(5);
-            spinx->setSingleStep(0.1);
-            spinx->setRange(0.0001, 1000000);
-            connect(spinx, SIGNAL(valueChanged(double)),
-                    this, SLOT(updateFromWidgets_()));
 
-            auto spiny = new DoubleSpinBox(this);
-            group_->addWidget(spiny);
+            MO__DOUBLESPIN(spiny, tr("Y-scale of the the geometry"), 0.1, 0.0001, 1000000.0);
             lh->addWidget(spiny);
-            spiny->setStatusTip("Y-scale of the model");
-            spiny->setDecimals(5);
-            spiny->setSingleStep(0.1);
-            spiny->setRange(0.0001, 1000000);
-            connect(spiny, SIGNAL(valueChanged(double)),
-                    this, SLOT(updateFromWidgets_()));
 
-            auto spinz = new DoubleSpinBox(this);
-            group_->addWidget(spinz);
+            MO__DOUBLESPIN(spinz, tr("Z-scale of the the geometry"), 0.1, 0.0001, 1000000.0);
             lh->addWidget(spinz);
-            spinz->setStatusTip("Z-scale of the model");
-            spinz->setDecimals(5);
-            spinz->setSingleStep(0.1);
-            spinz->setRange(0.0001, 1000000);
-            connect(spinz, SIGNAL(valueChanged(double)),
-                    this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()
         {
@@ -142,12 +149,142 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     }
 
 
+
+    if (auto rot = dynamic_cast<GEOM::GeometryModifierRotate*>(modifier_))
+    {
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            auto label = new QLabel(tr("angle °"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinangle, tr("Angle of rotation in degree"), 1, -1000000.0, 1000000.0);
+            lh->addWidget(spinangle);
+
+        lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+
+            MO__DOUBLESPIN(spinx, tr("X-axis of rotation"), 1, -1000000.0, 1000000.0);
+            lh->addWidget(spinx);
+
+            MO__DOUBLESPIN(spiny, tr("Y-axis of rotation"), 1, -1000000.0, 1000000.0);
+            lh->addWidget(spiny);
+
+            MO__DOUBLESPIN(spinz, tr("Z-axis of rotation"), 1, -1000000.0, 1000000.0);
+            lh->addWidget(spinz);
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            rot->setRotationAngle(spinangle->value());
+            rot->setRotationX(spinx->value());
+            rot->setRotationY(spiny->value());
+            rot->setRotationZ(spinz->value());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            spinangle->setValue(rot->getRotationAngle());
+            spinx->setValue(rot->getRotationX());
+            spiny->setValue(rot->getRotationY());
+            spinz->setValue(rot->getRotationZ());
+        };
+    }
+
+
+    if (auto trans = dynamic_cast<GEOM::GeometryModifierTranslate*>(modifier_))
+    {
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            MO__DOUBLESPIN(spinx, tr("Offset of translation on x-axis"), 0.1, -1000000.0, 1000000.0);
+            lh->addWidget(spinx);
+
+            MO__DOUBLESPIN(spiny, tr("Offset of translation on y-axis"), 0.1, -1000000.0, 1000000.0);
+            lh->addWidget(spiny);
+
+            MO__DOUBLESPIN(spinz, tr("Offset of translation on z-axis"), 0.1, -1000000.0, 1000000.0);
+            lh->addWidget(spinz);
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            trans->setTranslationX(spinx->value());
+            trans->setTranslationY(spiny->value());
+            trans->setTranslationZ(spinz->value());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            spinx->setValue(trans->getTranslationX());
+            spiny->setValue(trans->getTranslationY());
+            spinz->setValue(trans->getTranslationZ());
+        };
+    }
+
+
+
+    if (auto normals = dynamic_cast<GEOM::GeometryModifierNormals*>(modifier_))
+    {
+        MO__CHECKBOX(cbcalc, tr("calculate normals"),
+                     tr("Automatically calculates the normals for the triangles"),
+                     normals->getCalcNormals());
+
+        MO__CHECKBOX(cbinvert, tr("invert normals"),
+                     tr("Inverts normals, so that they point into the opposite direction"),
+                     normals->getInvertNormals());
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            normals->setCalcNormals(cbcalc->isChecked());
+            normals->setInvertNormals(cbinvert->isChecked());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            cbcalc->setChecked(normals->getCalcNormals());
+            cbinvert->setChecked(normals->getInvertNormals());
+        };
+    }
+
+
+
+
+    if (auto normalz = dynamic_cast<GEOM::GeometryModifierNormalize*>(modifier_))
+    {
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            auto label = new QLabel(tr("normalization"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinmix, tr("Amount of normalization between 0 and 1"),
+                           0.05, 0, 1);
+            lh->addWidget(spinmix);
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            normalz->setNormalization(spinmix->value());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            spinmix->setValue(normalz->getNormalization());
+        };
+    }
+
+
+
+
     if (auto tess = dynamic_cast<GEOM::GeometryModifierTesselate*>(modifier_))
     {
         auto spinlevel = new SpinBox(this);
         group_->addWidget(spinlevel);
         spinlevel->setStatusTip("Order of tesselation. Be careful, this is an exponential value!");
         spinlevel->setRange(1, 10);
+        connect(spinlevel, SIGNAL(valueChanged(double)),
+                this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()
         {
@@ -164,15 +301,20 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 void GeometryModifierWidget::updateWidgetValues()
 {
     MO_ASSERT(funcUpdateWidgets_, "no update function defined");
+
     if (funcUpdateWidgets_)
         funcUpdateWidgets_();
+
 }
 
 void GeometryModifierWidget::updateFromWidgets_()
 {
     MO_ASSERT(funcUpdateFromWidgets_, "no update function defined");
+
     if (funcUpdateFromWidgets_)
         funcUpdateFromWidgets_();
+
+    emit valueChanged(modifier_);
 }
 
 

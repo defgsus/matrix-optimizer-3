@@ -14,6 +14,8 @@
 
 #include "geometrymodifier.h"
 
+#include "geometrymodifierscale.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GEOM {
@@ -23,6 +25,33 @@ QMap<QString, GeometryModifier*> * GeometryModifierChain::registeredModifiers_ =
 GeometryModifierChain::GeometryModifierChain()
 {
 }
+
+GeometryModifierChain::~GeometryModifierChain()
+{
+    clear();
+}
+
+GeometryModifierChain::GeometryModifierChain(const GeometryModifierChain &other)
+{
+    *this = other;
+}
+
+GeometryModifierChain& GeometryModifierChain::operator = (const GeometryModifierChain& other)
+{
+    clear();
+    for (auto m : other.modifiers_)
+    {
+        GeometryModifier * geom = m->clone();
+        if (GeometryModifierScale * scale = dynamic_cast<GeometryModifierScale*>(geom))
+        {
+            MO_DEBUG("copied " << scale->getScaleAll());
+        }
+        addModifier(geom);
+    }
+
+    return *this;
+}
+
 
 void GeometryModifierChain::serialize(IO::DataStream &io) const
 {
@@ -81,8 +110,26 @@ QList<QString> GeometryModifierChain::modifierClassNames()
     return list;
 }
 
+QList<QString> GeometryModifierChain::modifierGuiNames()
+{
+    QList<QString> list;
+    for (auto m : *registeredModifiers_)
+        list.append(m->guiName());
+    return list;
+}
+
+void GeometryModifierChain::clear()
+{
+    for (auto m : modifiers_)
+        delete m;
+    modifiers_.clear();
+}
+
 GeometryModifier * GeometryModifierChain::createModifier(const QString &className)
 {
+    if (!registeredModifiers_)
+        registeredModifiers_ = new QMap<QString, GeometryModifier*>;
+
     auto i = registeredModifiers_->find(className);
     return (i == registeredModifiers_->end())? 0 : i.value()->cloneClass();
 }
@@ -173,7 +220,7 @@ bool GeometryModifierChain::deleteModifier(GeometryModifier *g)
     return true;
 }
 
-void GeometryModifierChain::execute(Geometry *g)
+void GeometryModifierChain::execute(Geometry *g) const
 {
     for (auto m : modifiers_)
         m->execute(g);
