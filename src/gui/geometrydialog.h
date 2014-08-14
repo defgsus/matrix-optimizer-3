@@ -21,6 +21,7 @@ class QLineEdit;
 class QToolButton;
 class QStatusBar;
 class QProgressBar;
+class QVBoxLayout;
 
 namespace MO {
 namespace GUI {
@@ -67,7 +68,8 @@ protected:
     //void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
     bool event(QEvent *);
 
-    void createWidgets_();
+    void createMainWidgets_();
+    void createModifierWidgets_();
     void updateWidgets_();
     void updatePresetList_(const QString& selectFilename = QString());
     void updatePresetButtons_();
@@ -75,8 +77,13 @@ protected:
     GeometryWidget * geoWidget_;
     GEOM::GeometryFactorySettings * settings_;
     GEOM::GeometryCreator * creator_;
+    GEOM::GeometryModifierChain * modifiers_;
     bool updateGeometryLater_,
          ignoreUpdate_;
+
+    QList<QWidget*> modifierWidgets_;
+    QVBoxLayout * modifierLayout_;
+
 
     QStatusBar * statusBar_;
     QProgressBar * progressBar_;

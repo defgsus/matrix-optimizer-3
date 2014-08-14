@@ -24,11 +24,13 @@
 #include "geometrydialog.h"
 #include "geom/geometry.h"
 #include "geom/geometryfactory.h"
+#include "geom/geometrycreator.h"
+#include "geom/geometrymodifierchain.h"
 #include "widget/geometrywidget.h"
 #include "widget/doublespinbox.h"
 #include "widget/spinbox.h"
+#include "widget/geometrymodifierwidget.h"
 #include "tool/stringmanip.h"
-#include "geom/geometrycreator.h"
 #include "widget/equationeditor.h"
 #include "io/files.h"
 
@@ -46,12 +48,17 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     setObjectName("_GeometryWidget");
     setWindowTitle(tr("geometry editor"));
 
-    setMinimumSize(960,400);
+    setMinimumSize(960,600);
 
     if (set)
         *settings_ = *set;
 
-    createWidgets_();
+    createMainWidgets_();
+
+    modifiers_ = new GEOM::GeometryModifierChain();
+    modifiers_->addModifier("Scale");
+    modifiers_->addModifier("Tesselate");
+    createModifierWidgets_();
 
     updatePresetList_();
 
@@ -72,7 +79,7 @@ bool GeometryDialog::event(QEvent * e)
     return QDialog::event(e);
 }
 
-void GeometryDialog::createWidgets_()
+void GeometryDialog::createMainWidgets_()
 {
     auto lv0 = new QVBoxLayout(this);
     lv0->setMargin(0);
@@ -86,7 +93,7 @@ void GeometryDialog::createWidgets_()
                 // geometry widget
                 geoWidget_ = new GeometryWidget(GeometryWidget::RM_DIRECT, this);
                 lv->addWidget(geoWidget_);
-                geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+                geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
                 connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
 
                 // view settings
@@ -188,6 +195,16 @@ void GeometryDialog::createWidgets_()
                     butLoadModelFile_->setText("...");
                     connect(butLoadModelFile_, SIGNAL(clicked()), this, SLOT(loadModelFile_()));
 
+
+                // place to add modifier widgets
+                modifierLayout_ = new QVBoxLayout();
+                lv->addLayout(modifierLayout_);
+                modifierLayout_->setMargin(0);
+                modifierLayout_->setSpacing(1);
+
+
+
+#if (0)
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
@@ -499,9 +516,11 @@ void GeometryDialog::createWidgets_()
                 // -----------------
                 lv->addStretch(1);
 
+#endif
                 // info label
                 labelInfo_ = new QLabel(this);
                 lv->addWidget(labelInfo_);
+                labelInfo_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 
                 // OK/Cancel
 
@@ -518,12 +537,27 @@ void GeometryDialog::createWidgets_()
 
         statusBar_ = new QStatusBar(this);
         lv0->addWidget(statusBar_);
+        statusBar_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 
         progressBar_ = new QProgressBar(this);
+        progressBar_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
         progressBar_->setOrientation(Qt::Horizontal);
         progressBar_->setRange(0,100);
         progressBar_->setVisible(false);
         statusBar_->addPermanentWidget(progressBar_);
+}
+
+void GeometryDialog::createModifierWidgets_()
+{
+    // create widgets for geometry modifiers
+    for (auto m : modifiers_->modifiers())
+    {
+        QWidget * w = new GeometryModifierWidget(m, this);
+        modifierLayout_->addWidget(w);
+        modifierWidgets_.append(w);
+    }
+
+    modifierLayout_->addStretch(1);
 }
 
 void GeometryDialog::changeView_()
@@ -619,6 +653,7 @@ void GeometryDialog::updateFromWidgets_()
                         comboType_->itemData(comboType_->currentIndex()).toInt();
 
     settings_->filename = editFilename_->text();
+/*
     settings_->calcNormals = cbCalcNormals_->isChecked();
     settings_->invertNormals = cbInvNormals_->isChecked();
     settings_->asTriangles = cbTriangles_->isChecked();
@@ -723,7 +758,7 @@ void GeometryDialog::updateFromWidgets_()
     editPEquX_->setVisible( settings_->transformPrimitivesWithEquation );
     editPEquY_->setVisible( settings_->transformPrimitivesWithEquation );
     editPEquZ_->setVisible( settings_->transformPrimitivesWithEquation );
-
+*/
     updateGeometry_();
 }
 
@@ -739,6 +774,7 @@ void GeometryDialog::updateWidgets_()
             comboType_->setCurrentIndex(i);
     }
     editFilename_->setText(settings_->filename);
+/*
     cbTriangles_->setChecked(settings_->asTriangles);
     cbConvertToLines_->setChecked(settings_->convertToLines);
     cbSharedVert_->setChecked(settings_->sharedVertices);
@@ -772,7 +808,7 @@ void GeometryDialog::updateWidgets_()
     editPEquX_->setPlainText(settings_->pEquationX);
     editPEquY_->setPlainText(settings_->pEquationY);
     editPEquZ_->setPlainText(settings_->pEquationZ);
-
+*/
     ignoreUpdate_ = false;
 }
 

@@ -33,9 +33,14 @@ public:
 
     // ------------ factory ---------------
 
+    /** Returns a list of names of possible modifiers */
+    static QList<QString> modifierClassNames();
+
     /** Returns a new modifier with the specific class name, or NULL */
     static GeometryModifier * createModifier(const QString& className);
-    /** Registers a modifier class */
+
+    /** Registers a modifier class.
+        Use MO_REGISTER_GEOMETRYMODIFIER() instead. */
     static bool registerModifier(GeometryModifier * g);
 
     // ----------- module handling --------
@@ -46,19 +51,24 @@ public:
     /** Returns read access to the list of installed modifiers */
     const QList<GeometryModifier*> modifiers() const { return modifiers_; }
 
-    /** Adds a midifier to the execution chain.
+    /** Adds a modifier to the execution chain.
         Ownership is taken */
     void addModifier(GeometryModifier * g);
 
+    /** Adds a new modifier to the execution chain.
+        Returns the created instance, or NULL if @p className is not defined. */
+    GeometryModifier * addModifier(const QString& className);
+
     // ----------- execution --------------
 
+    /** Execute the whole chain */
     void execute(Geometry * g);
 
 private:
 
     QList<GeometryModifier*> modifiers_;
 
-    static QMap<QString, GeometryModifier*> registeredModifiers_;
+    static QMap<QString, GeometryModifier*> * registeredModifiers_;
 };
 
 

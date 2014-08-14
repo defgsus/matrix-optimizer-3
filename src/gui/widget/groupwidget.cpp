@@ -46,6 +46,7 @@ void GroupWidget::createLayout_()
         QPalette p(head->palette());
         p.setColor(QPalette::Background, p.color(QPalette::Background).darker(120));
         head->setPalette(p);
+        head->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         auto lh = new QHBoxLayout(head);
         lh->setMargin(0);
@@ -119,6 +120,11 @@ void GroupWidget::addWidget(QWidget * w)
     w->setParent(this);
 
     w->setVisible(expanded_);
+}
+
+void GroupWidget::addLayout(QLayout * l)
+{
+    static_cast<QVBoxLayout*>(layout())->addLayout(l);
 }
 
 void GroupWidget::updateArrow_()

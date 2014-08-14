@@ -18,7 +18,7 @@
 namespace MO {
 namespace GEOM {
 
-QMap<QString, GeometryModifier*> GeometryModifierChain::registeredModifiers_;
+QMap<QString, GeometryModifier*> * GeometryModifierChain::registeredModifiers_ = 0;
 
 GeometryModifierChain::GeometryModifierChain()
 {
@@ -72,27 +72,52 @@ void GeometryModifierChain::deserialize(IO::DataStream &io)
     }
 }
 
+QList<QString> GeometryModifierChain::modifierClassNames()
+{
+    QList<QString> list;
+    for (auto i = registeredModifiers_->begin();
+                i!=registeredModifiers_->end(); ++i)
+        list.append(i.key());
+    return list;
+}
+
 GeometryModifier * GeometryModifierChain::createModifier(const QString &className)
 {
-    auto i = registeredModifiers_.find(className);
-    return (i == registeredModifiers_.end())? 0 : i.value()->cloneClass();
+    auto i = registeredModifiers_->find(className);
+    return (i == registeredModifiers_->end())? 0 : i.value()->cloneClass();
 }
 
 bool GeometryModifierChain::registerModifier(GeometryModifier *g)
 {
-    if (registeredModifiers_.contains(g->className()))
+    if (!registeredModifiers_)
+        registeredModifiers_ = new QMap<QString, GeometryModifier*>;
+
+    if (registeredModifiers_->contains(g->className()))
     {
         MO_WARNING("duplicate GeometryModifier '" << g->className() << "' registered!");
         return false;
     }
 
-    registeredModifiers_.insert(g->className(), g);
+    registeredModifiers_->insert(g->className(), g);
     return true;
 }
 
 void GeometryModifierChain::addModifier(GeometryModifier *g)
 {
     modifiers_.append(g);
+}
+
+GeometryModifier * GeometryModifierChain::addModifier(const QString &className)
+{
+    GeometryModifier * geom = createModifier(className);
+    if (!geom)
+    {
+        MO_WARNING("request for unknown GeometryModifier '" << className << "'");
+        return 0;
+    }
+
+    addModifier(geom);
+    return geom;
 }
 
 void GeometryModifierChain::execute(Geometry *g)

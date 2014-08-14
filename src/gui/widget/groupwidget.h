@@ -32,6 +32,8 @@ public:
 
     /** Adds a widget to the drop-down group */
     void addWidget(QWidget *);
+    /** Adds a layout to the group's layout */
+    void addLayout(QLayout *);
 
     bool isExpanded() const { return expanded_; }
 
