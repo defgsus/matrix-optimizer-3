@@ -19,6 +19,11 @@ namespace MO {
 namespace IO { class DataStream; }
 namespace GEOM {
 
+/** Call this somewhere in your modifier .cpp file to register the modifier */
+#define MO_REGISTER_GEOMETRYMODIFIER(Class__) \
+    namespace { bool registered_##Class__ = ::MO::GEOM::registerGeometryModifier_(new Class__); }
+
+
 class Geometry;
 
 class GeometryModifier
@@ -43,6 +48,9 @@ public:
     /** Always call ancestor's method before your derived code. */
     virtual void deserialize(IO::DataStream& io);
 
+    /** Returns a new class of the modifier */
+    virtual GeometryModifier * cloneClass() const = 0;
+
     /** Applies the modifications */
     virtual void execute(Geometry * g) = 0;
 
@@ -53,6 +61,7 @@ private:
     bool enabled_;
 };
 
+bool registerGeometryModifier_(GeometryModifier *);
 
 } // namespace GEOM
 } // namespace MO

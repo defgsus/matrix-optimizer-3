@@ -41,6 +41,9 @@ public:
     virtual void serialize(IO::DataStream& io) const Q_DECL_OVERRIDE;
     virtual void deserialize(IO::DataStream& io) Q_DECL_OVERRIDE;
 
+    virtual GeometryModifierScale * cloneClass() const Q_DECL_OVERRIDE
+                        { return new GeometryModifierScale(); }
+
     virtual void execute(Geometry * g) Q_DECL_OVERRIDE;
 
 private:

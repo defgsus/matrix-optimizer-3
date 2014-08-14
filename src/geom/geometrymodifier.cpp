@@ -10,9 +10,15 @@
 
 #include "geometrymodifier.h"
 #include "io/datastream.h"
+#include "geometrymodifierchain.h"
 
 namespace MO {
 namespace GEOM {
+
+bool registerGeometryModifier_(GeometryModifier * g)
+{
+    return GeometryModifierChain::registerModifier(g);
+}
 
 GeometryModifier::GeometryModifier(const QString &className)
     : className_    (className),

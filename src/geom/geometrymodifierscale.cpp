@@ -15,6 +15,8 @@
 namespace MO {
 namespace GEOM {
 
+MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierScale)
+
 GeometryModifierScale::GeometryModifierScale()
     : GeometryModifier("Scale"),
       all_      (1.0),
