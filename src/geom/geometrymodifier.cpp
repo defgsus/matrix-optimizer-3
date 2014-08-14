@@ -20,8 +20,9 @@ bool registerGeometryModifier_(GeometryModifier * g)
     return GeometryModifierChain::registerModifier(g);
 }
 
-GeometryModifier::GeometryModifier(const QString &className)
+GeometryModifier::GeometryModifier(const QString &className, const QString &guiName)
     : className_    (className),
+      guiName_      (guiName),
       enabled_      (true)
 {
 

@@ -74,7 +74,8 @@ public:
     /** Returns the textual log of the loading process */
     const QString& getLog() const { return log_; }
 
-    /** Load the data into the Geometry container. */
+    /** Load the data into the Geometry container.
+        Previous contents will be kept. */
     void getGeometry(Geometry *) const;
 
     /** Returns the progress during loading [0,100] */

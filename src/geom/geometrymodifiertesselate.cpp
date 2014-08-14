@@ -18,7 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierTesselate)
 
 GeometryModifierTesselate::GeometryModifierTesselate()
-    : GeometryModifier("Tesselate"),
+    : GeometryModifier("Tesselate", QObject::tr("tesselate")),
       level_    (1)
 {
 

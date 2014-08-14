@@ -173,7 +173,12 @@ SOURCES += \
     src/geom/geometrymodifierscale.cpp \
     src/geom/geometrymodifiertesselate.cpp \
     src/geom/geometrymodifierchain.cpp \
-    src/gui/widget/geometrymodifierwidget.cpp
+    src/gui/widget/geometrymodifierwidget.cpp \
+    src/geom/geometrymodifiercreate.cpp \
+    src/geom/geometrymodifiertranslate.cpp \
+    src/geom/geometrymodifierrotate.cpp \
+    src/geom/geometrymodifiernormalize.cpp \
+    src/geom/geometrymodifiernormals.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -340,7 +345,12 @@ HEADERS += \
     src/geom/geometrymodifierscale.h \
     src/geom/geometrymodifiertesselate.h \
     src/geom/geometrymodifierchain.h \
-    src/gui/widget/geometrymodifierwidget.h
+    src/gui/widget/geometrymodifierwidget.h \
+    src/geom/geometrymodifiercreate.h \
+    src/geom/geometrymodifiertranslate.h \
+    src/geom/geometrymodifierrotate.h \
+    src/geom/geometrymodifiernormalize.h \
+    src/geom/geometrymodifiernormals.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

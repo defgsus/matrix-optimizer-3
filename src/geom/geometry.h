@@ -184,6 +184,12 @@ public:
     /** Scale all geometry */
     void scale(VertexType x, VertexType y, VertexType z);
 
+    /** Translate all geometry */
+    void translate(VertexType x, VertexType y, VertexType z);
+
+    /** Apply the matrix to all vertices */
+    void applyMatrix(const Mat4& transformation);
+
     /** Converts all triangles to lines */
     void convertToLines();
 

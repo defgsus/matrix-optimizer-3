@@ -18,7 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierScale)
 
 GeometryModifierScale::GeometryModifierScale()
-    : GeometryModifier("Scale"),
+    : GeometryModifier("Scale", QObject::tr("scale")),
       all_      (1.0),
       x_        (1.0),
       y_        (1.0),

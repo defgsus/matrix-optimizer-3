@@ -212,6 +212,30 @@ void Geometry::scale(VertexType x, VertexType y, VertexType z)
     }
 }
 
+void Geometry::translate(VertexType x, VertexType y, VertexType z)
+{
+    for (uint i=0; i<numVertices(); ++i)
+    {
+        vertex_[i*numVertexComponents()] += x;
+        vertex_[i*numVertexComponents()+1] += y;
+        vertex_[i*numVertexComponents()+2] += z;
+    }
+}
+
+void Geometry::applyMatrix(const Mat4 &transformation)
+{
+    for (uint i=0; i<numVertices(); ++i)
+    {
+        Vec4 v(
+            vertex_[i*numVertexComponents()],
+            vertex_[i*numVertexComponents()+1],
+            vertex_[i*numVertexComponents()+2], 1.f);
+        v = transformation * v;
+        vertex_[i*numVertexComponents()] = v[0];
+        vertex_[i*numVertexComponents()+1] = v[1];
+        vertex_[i*numVertexComponents()+2] = v[2];
+    }
+}
 
 
 void Geometry::calculateTriangleNormals()

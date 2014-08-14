@@ -12,6 +12,7 @@
 #define MOSRC_GEOM_GEOMETRYMODIFIER_H
 
 #include <QString>
+#include <QObject> // for tr() in derived classes
 
 #include "types/float.h"
 
@@ -29,12 +30,13 @@ class Geometry;
 class GeometryModifier
 {
 public:
-    GeometryModifier(const QString& className);
+    GeometryModifier(const QString& className, const QString& guiName);
     virtual ~GeometryModifier() { }
 
     // ------------- getter ------------------
 
     const QString& className() const { return className_; }
+    const QString& guiName() const { return guiName_; }
 
     bool isEnabled() const { return enabled_; }
 
@@ -57,7 +59,7 @@ public:
 
 private:
 
-    QString className_;
+    QString className_, guiName_;
 
     bool enabled_;
 };
