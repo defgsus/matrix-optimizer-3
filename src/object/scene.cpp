@@ -734,6 +734,15 @@ void Scene::updateLightSettings_(uint thread, Double time)
 
         const Vec4 col = lightSources_[i]->lightColor(thread, time);
         l->setColor(i, col[0], col[1], col[2], col[3]);
+
+        const Float mix = lightSources_[i]->lightDirectionalMix(thread, time);
+        l->setDirectionMix(i, mix);
+
+        if (mix > 0)
+        {
+            const Vec4 dir = lightSources_[i]->lightDirection(thread, time);
+            l->setDirection(i, dir[0], dir[1], dir[2], dir[3]);
+        }
     }
 }
 

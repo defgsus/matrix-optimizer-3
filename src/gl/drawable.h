@@ -101,7 +101,9 @@ private:
         uniformVT_,
         uniformT_,
         uniformLightPos_,
-        uniformLightColor_;
+        uniformLightColor_,
+        uniformLightDirection_,
+        uniformLightDirectionMix_;
 
     Uniform * uniColor_;
 

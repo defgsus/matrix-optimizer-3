@@ -30,13 +30,21 @@ public:
         The fourth component is the distance attenuation factor. */
     Vec4 lightColor(uint thread, Double time) const;
 
+    /** Returns the direction normal of the lightsource (xyz)
+        and the exponent in w.
+        The object transformation must be calculated already! */
+    Vec4 lightDirection(uint thread, Double time) const;
+
+    /** Returns the float [0,1] to mix between omni-directional and directional */
+    Float lightDirectionalMix(uint thread, Double time) const;
+
 signals:
 
 public slots:
 
 private:
 
-    ParameterFloat *all_, *r_, *g_, *b_, *dist_;
+    ParameterFloat *all_, *r_, *g_, *b_, *dist_, *directional_, *directionExp_;
 
 };
 

@@ -23,6 +23,8 @@ void LightSettings::resize(uint num)
     count_ = num;
     positions_.resize(num*3);
     colors_.resize(num*4);
+    directions_.resize(num*4);
+    directionMix_.resize(num);
 }
 
 
@@ -37,6 +39,17 @@ void LightSettings::setColor(uint index, Float r, Float g, Float b, Float d)
 {
     Float * p = &colors_[index*4];
     *p++ = r; *p++ = g; *p++ = b; *p = d;
+}
+
+void LightSettings::setDirection(uint index, Float nx, Float ny, Float nz, Float exp)
+{
+    Float * p = &directions_[index*4];
+    *p++ = nx; *p++ = ny; *p++ = nz; *p = exp;
+}
+
+void LightSettings::setDirectionMix(uint index, Float mix)
+{
+    directionMix_[index] = mix;
 }
 
 

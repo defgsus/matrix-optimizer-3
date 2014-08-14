@@ -36,6 +36,8 @@ public:
 
     const QString& uniformNameLightPos() const { return unLightPos_; }
     const QString& uniformNameLightColor() const { return unLightColor_; }
+    const QString& uniformNameLightDirection() const { return unLightDir_; }
+    const QString& uniformNameLightDirectionMix() const { return unLightDirMix_; }
     const QString& uniformNameColor() const { return unColor_; }
 
     const QString& attribNamePosition() const { return anPos_; }
@@ -70,7 +72,8 @@ private:
     void addDefine_(QString& src, const QString& def_line) const;
 
     QString vert_, frag_,
-        unProj_, unCVT_, unVT_, unT_, unLightPos_, unLightColor_,
+        unProj_, unCVT_, unVT_, unT_,
+        unLightPos_, unLightColor_, unLightDir_, unLightDirMix_,
         unColor_,
         anPos_, anCol_, anNorm_, anTexCoord_;
 };

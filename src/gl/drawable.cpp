@@ -193,6 +193,15 @@ void Drawable::compileShader_()
     else
         uniformLightColor_ = invalidGl;
 
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightDirection()))
+        uniformLightDirection_ = u->location();
+    else
+        uniformLightDirection_ = invalidGl;
+
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightDirectionMix()))
+        uniformLightDirectionMix_ = u->location();
+    else
+        uniformLightDirectionMix_ = invalidGl;
 }
 
 void Drawable::createVAO_()
@@ -278,6 +287,10 @@ void Drawable::renderShader(const Mat4 &proj,
             MO_CHECK_GL( glUniform3fv(uniformLightPos_, lights->count(), lights->positions()) );
         if (uniformLightColor_ != invalidGl)
             MO_CHECK_GL( glUniform4fv(uniformLightColor_, lights->count(), lights->colors()) );
+        if (uniformLightDirection_ != invalidGl)
+            MO_CHECK_GL( glUniform4fv(uniformLightDirection_, lights->count(), lights->directions()) );
+        if (uniformLightDirectionMix_ != invalidGl)
+            MO_CHECK_GL( glUniform1fv(uniformLightDirectionMix_, lights->count(), lights->directionMix()) );
     }
 
     if (geometry_->numTriangles())
