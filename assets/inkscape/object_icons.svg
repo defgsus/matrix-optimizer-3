@@ -133,7 +133,7 @@
      inkscape:pageshadow="2"
      inkscape:zoom="3.959798"
      inkscape:cx="637.81935"
-     inkscape:cy="823.08807"
+     inkscape:cy="944.87596"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -1644,5 +1644,40 @@
        inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_modulator.png"
        inkscape:export-xdpi="164.57001"
        inkscape:export-ydpi="164.57001" />
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/new_letters.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-664.42963"
+       x="93.220627"
+       height="68.188736"
+       width="68.188736"
+       id="rect4112"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <path
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/new_letters.png"
+       inkscape:connector-curvature="0"
+       id="path4116"
+       d="m 621.96082,123.27438 0,15.40482"
+       style="fill:none;stroke:#000000;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+    <text
+       xml:space="preserve"
+       style="font-size:34.90764999px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#23d800;fill-opacity:1;stroke:#126100;stroke-width:1.24511695;stroke-opacity:1;font-family:Sans"
+       x="746.62103"
+       y="115.49216"
+       id="text4118"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/new_letters.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001"
+       transform="scale(0.80000094,1.2499985)"><tspan
+         sodipodi:role="line"
+         id="tspan4120"
+         x="746.62103"
+         y="115.49216"
+         style="stroke-width:1.24511695">NEW</tspan></text>
   </g>
 </svg>

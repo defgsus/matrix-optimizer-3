@@ -41,6 +41,8 @@ public:
     /** Adds a widget to the header */
     void addHeaderWidget(QWidget * widget);
 
+    void addHeaderSpacing(int s);
+
 signals:
 
     void expanded();

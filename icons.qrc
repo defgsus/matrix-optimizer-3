@@ -33,5 +33,6 @@
         <file alias="obj_au_filter.png">assets/icon/obj_au_filter.png</file>
         <file alias="obj_au_filterbank.png">assets/icon/obj_au_filterbank.png</file>
         <file alias="obj_modulator.png">assets/icon/obj_modulator.png</file>
+        <file alias="new_letters.png">assets/icon/new_letters.png</file>
     </qresource>
 </RCC>

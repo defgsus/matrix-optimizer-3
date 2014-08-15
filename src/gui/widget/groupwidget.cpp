@@ -13,6 +13,7 @@
 #include <QLabel>
 
 #include "groupwidget.h"
+#include "io/error.h"
 
 namespace MO {
 namespace GUI {
@@ -81,6 +82,12 @@ void GroupWidget::addHeaderWidget(QWidget *widget)
     header_->layout()->addWidget(widget);
 }
 
+void GroupWidget::addHeaderSpacing(int s)
+{
+    MO_ASSERT(qobject_cast<QHBoxLayout*>(header_->layout()), "wrong layout");
+    static_cast<QHBoxLayout*>(header_->layout())->addSpacing(s);
+}
+
 void GroupWidget::setTitle(const QString & title)
 {
     title_ = title;
@@ -140,6 +147,7 @@ void GroupWidget::addWidget(QWidget * w)
 
 void GroupWidget::addLayout(QLayout * l)
 {
+    MO_ASSERT(qobject_cast<QVBoxLayout*>(layout()), "wrong layout");
     static_cast<QVBoxLayout*>(layout())->addLayout(l);
 }
 

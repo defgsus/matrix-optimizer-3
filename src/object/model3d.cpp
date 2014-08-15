@@ -11,7 +11,7 @@
 #include "model3d.h"
 #include "io/datastream.h"
 #include "gl/drawable.h"
-#include "geom/geometryfactory.h"
+#include "geom/geometryfactorysettings.h"
 #include "gl/shadersource.h"
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"

@@ -35,6 +35,7 @@ signals:
     void requestDown(GEOM::GeometryModifier *);
     void requestDelete(GEOM::GeometryModifier *);
     void requestInsertNew(GEOM::GeometryModifier *);
+    void requestMuteChange(GEOM::GeometryModifier *, bool mute);
 
     void expandedChange(GEOM::GeometryModifier*, bool expanded);
 

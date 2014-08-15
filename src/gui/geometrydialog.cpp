@@ -24,9 +24,10 @@
 
 #include "geometrydialog.h"
 #include "geom/geometry.h"
-#include "geom/geometryfactory.h"
+#include "geom/geometryfactorysettings.h"
 #include "geom/geometrycreator.h"
 #include "geom/geometrymodifierchain.h"
+#include "geom/geometrymodifier.h"
 #include "widget/geometrywidget.h"
 #include "widget/doublespinbox.h"
 #include "widget/spinbox.h"
@@ -582,6 +583,8 @@ void GeometryDialog::createModifierWidgets_()
                 this, SLOT(modifierDelete_(GEOM::GeometryModifier*)));
         connect(w, SIGNAL(requestInsertNew(GEOM::GeometryModifier*)),
                 this, SLOT(newModifierPopup_(GEOM::GeometryModifier*)));
+        connect(w, SIGNAL(requestMuteChange(GEOM::GeometryModifier*,bool)),
+                this, SLOT(modifierMuteChange_(GEOM::GeometryModifier*,bool)));
         connect(w, SIGNAL(expandedChange(GEOM::GeometryModifier*,bool)),
                 this, SLOT(modifierExpandedChanged_(GEOM::GeometryModifier*,bool)));
         connect(w, SIGNAL(valueChanged(GEOM::GeometryModifier*)),
@@ -603,6 +606,12 @@ void GeometryDialog::modifierExpandedChanged_(GEOM::GeometryModifier * g, bool e
         expandedModifiers_.insert(g);
     else
         expandedModifiers_.remove(g);
+}
+
+void GeometryDialog::modifierMuteChange_(GEOM::GeometryModifier * g, bool mute)
+{
+    g->setEnabled(!mute);
+    updateFromWidgets_();
 }
 
 void GeometryDialog::modifierUp_(GEOM::GeometryModifier * g)

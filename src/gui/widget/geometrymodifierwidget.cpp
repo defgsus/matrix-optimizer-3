@@ -59,6 +59,19 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     group_ = new GroupWidget(modifier_->guiName(), expanded, this);
     l0->addWidget(group_);
 
+    auto butMute = new QToolButton(this);
+    group_->addHeaderWidget(butMute);
+    butMute->setText(tr("M"));
+    butMute->setFixedSize(20,20);
+    butMute->setCheckable(true);
+    butMute->setChecked(!modifier_->isEnabled());
+    connect(butMute, &QToolButton::clicked, [=]()
+    {
+        emit requestMuteChange(modifier_, butMute->isChecked());
+    });
+
+    group_->addHeaderSpacing(5);
+
     auto butUp = new QToolButton(this);
     group_->addHeaderWidget(butUp);
     butUp->setArrowType(Qt::UpArrow);
@@ -73,7 +86,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 
     auto butInsert = new QToolButton(this);
     group_->addHeaderWidget(butInsert);
-    butInsert->setText(".");
+    butInsert->setIcon(QIcon(":/icon/new_letters.png"));
     butInsert->setFixedSize(20,20);
     connect(butInsert, &QToolButton::clicked, [=](){ emit requestInsertNew(modifier_); });
 

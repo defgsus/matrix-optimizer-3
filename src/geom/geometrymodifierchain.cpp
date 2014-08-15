@@ -217,7 +217,8 @@ bool GeometryModifierChain::deleteModifier(GeometryModifier *g)
 void GeometryModifierChain::execute(Geometry *g) const
 {
     for (auto m : modifiers_)
-        m->execute(g);
+        if (m->isEnabled())
+            m->execute(g);
 }
 
 } // namespace GEOM

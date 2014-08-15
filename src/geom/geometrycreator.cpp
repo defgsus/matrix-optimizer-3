@@ -15,6 +15,7 @@
 #include "geometrycreator.h"
 #include "geom/geometry.h"
 #include "geom/geometryfactory.h"
+#include "geom/geometryfactorysettings.h"
 #include "geom/objloader.h"
 #include "io/log.h"
 

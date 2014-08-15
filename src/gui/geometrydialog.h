@@ -66,6 +66,7 @@ protected slots:
     void modifierDown_(GEOM::GeometryModifier*);
     void modifierDelete_(GEOM::GeometryModifier*);
     void modifierExpandedChanged_(GEOM::GeometryModifier*, bool expanded);
+    void modifierMuteChange_(GEOM::GeometryModifier*, bool mute);
     void newModifierPopup_(GEOM::GeometryModifier * before);
 
     void creatorProgress_(int);

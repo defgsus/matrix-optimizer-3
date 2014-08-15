@@ -184,7 +184,8 @@ SOURCES += \
     src/geom/geometrymodifierremove.cpp \
     src/geom/geometrymodifiervertexequation.cpp \
     src/geom/geometrymodifierprimitiveequation.cpp \
-    src/geom/geometrymodifierextrude.cpp
+    src/geom/geometrymodifierextrude.cpp \
+    src/geom/geometryfactorysettings.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -362,7 +363,8 @@ HEADERS += \
     src/geom/geometrymodifierremove.h \
     src/geom/geometrymodifiervertexequation.h \
     src/geom/geometrymodifierprimitiveequation.h \
-    src/geom/geometrymodifierextrude.h
+    src/geom/geometrymodifierextrude.h \
+    src/geom/geometryfactorysettings.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
