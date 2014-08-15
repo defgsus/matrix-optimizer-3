@@ -57,7 +57,11 @@ void AudioLinkView::createAudioUnitWidgets_()
     clearAudioUnitWidgets_();
 
     int row = 0, col = 0;
+
     createAudioUnitWidgetsRec_(scene_->childObjects(), row, col);
+
+    grid_->setRowStretch(grid_->rowCount(), 2);
+    grid_->setColumnStretch(grid_->columnCount(), 2);
 }
 
 void AudioLinkView::createAudioUnitWidgetsRec_(

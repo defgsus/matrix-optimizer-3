@@ -188,7 +188,8 @@ SOURCES += \
     src/geom/geometryfactorysettings.cpp \
     src/gui/widget/audiounitwidget.cpp \
     src/gui/audiolinkwindow.cpp \
-    src/gui/audiolinkview.cpp
+    src/gui/audiolinkview.cpp \
+    src/gui/widget/audiounitconnectorwidget.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -370,7 +371,8 @@ HEADERS += \
     src/geom/geometryfactorysettings.h \
     src/gui/widget/audiounitwidget.h \
     src/gui/audiolinkwindow.h \
-    src/gui/audiolinkview.h
+    src/gui/audiolinkview.h \
+    src/gui/widget/audiounitconnectorwidget.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

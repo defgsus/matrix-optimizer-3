@@ -32,6 +32,8 @@ public slots:
 
 private:
 
+    void createWidgets_();
+
     AudioUnit * unit_;
 };
 
