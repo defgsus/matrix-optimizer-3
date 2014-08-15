@@ -34,6 +34,13 @@ AudioUnitWidget::AudioUnitWidget(AudioUnit * au, QWidget *parent) :
     setPalette(pal);
 
     createWidgets_();
+
+    // find connected IDs
+    if (unit_->numChannelsOut())
+        for (Object * o : unit_->childObjects())
+            if (AudioUnit * au = qobject_cast<AudioUnit*>(o))
+                if (au->numChannelsIn())
+                    connectedIds_.append(au->idName());
 }
 
 
@@ -48,7 +55,9 @@ void AudioUnitWidget::createWidgets_()
 
             for (uint i=0; i<unit_->numChannelsIn(); ++i)
             {
-                lv->addWidget( new AudioUnitConnectorWidget(unit_, i, true, true, this) );
+                auto c = new AudioUnitConnectorWidget(unit_, i, true, true, this);
+                lv->addWidget( c );
+                audioIns_.append( c );
             }
 
         lh->addStretch(2);
@@ -62,14 +71,18 @@ void AudioUnitWidget::createWidgets_()
             // audio
             for (uint i=0; i<unit_->numChannelsOut(); ++i)
             {
-                lv->addWidget( new AudioUnitConnectorWidget(unit_, i, false, true, this) );
+                auto c = new AudioUnitConnectorWidget(unit_, i, false, true, this);
+                lv->addWidget( c );
+                audioOuts_.append( c );
             }
 
             // modulator
             QList<ModulatorObject*> mods = unit_->findChildObjects<ModulatorObject>();
             for (int i=0; i<mods.size(); ++i)
             {
-                lv->addWidget( new AudioUnitConnectorWidget(unit_, i, false, false, this) );
+                auto c = new AudioUnitConnectorWidget(unit_, i, false, false, this);
+                lv->addWidget( c );
+                modulatorOuts_.append( c );
             }
 
 }

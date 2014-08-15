@@ -12,6 +12,7 @@
 
 #include "audiolinkview.h"
 #include "widget/audiounitwidget.h"
+#include "painter/audiolinkviewoverpaint.h"
 #include "object/scene.h"
 #include "object/audio/audiounit.h"
 
@@ -32,7 +33,17 @@ AudioLinkView::AudioLinkView(QWidget *parent) :
 void AudioLinkView::createMainWidgets_()
 {
     grid_ = new QGridLayout(this);
-    grid_->setSpacing(10);
+    grid_->setHorizontalSpacing(20);
+    grid_->setVerticalSpacing(10);
+
+    overpainter_ = new AudioLinkViewOverpaint(this);
+}
+
+void AudioLinkView::resizeEvent(QResizeEvent * e)
+{
+    QWidget::resizeEvent(e);
+    overpainter_->resize(size());
+    overpainter_->raise();
 }
 
 void AudioLinkView::setScene(Scene * s)
@@ -62,6 +73,8 @@ void AudioLinkView::createAudioUnitWidgets_()
 
     grid_->setRowStretch(grid_->rowCount(), 2);
     grid_->setColumnStretch(grid_->columnCount(), 2);
+
+    overpainter_->raise();
 }
 
 void AudioLinkView::createAudioUnitWidgetsRec_(

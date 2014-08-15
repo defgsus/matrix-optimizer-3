@@ -22,10 +22,14 @@ namespace MO {
 namespace GUI {
 
 class AudioUnitWidget;
+class AudioLinkViewOverpaint;
 
 class AudioLinkView : public QWidget
 {
     Q_OBJECT
+
+    friend class AudioLinkViewOverpaint;
+
 public:
     explicit AudioLinkView(QWidget *parent = 0);
 
@@ -34,6 +38,10 @@ public:
 signals:
 
 public slots:
+
+protected:
+
+    void resizeEvent(QResizeEvent *);
 
 private:
 
@@ -49,6 +57,8 @@ private:
     //QList<AudioUnit*> topLevelUnits_;
 
     QMap<QString, AudioUnitWidget*> unitWidgets_;
+
+    AudioLinkViewOverpaint * overpainter_;
 };
 
 
