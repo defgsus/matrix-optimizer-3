@@ -90,6 +90,8 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     butInsert->setFixedSize(20,20);
     connect(butInsert, &QToolButton::clicked, [=](){ emit requestInsertNew(modifier_); });
 
+    group_->addHeaderSpacing(5);
+
     auto butRemove = new QToolButton(this);
     group_->addHeaderWidget(butRemove);
     butRemove->setIcon(QIcon(":/icon/delete.png"));

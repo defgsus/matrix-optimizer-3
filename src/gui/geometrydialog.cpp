@@ -7,7 +7,6 @@
 
     <p>created 7/28/2014</p>
 */
-
 #include <QLayout>
 #include <QComboBox>
 #include <QLabel>
@@ -35,6 +34,7 @@
 #include "tool/stringmanip.h"
 #include "widget/equationeditor.h"
 #include "io/files.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -207,14 +207,6 @@ void GeometryDialog::createMainWidgets_()
                     cbTriangles_->setChecked(settings_->asTriangles);
                     connect(cbTriangles_, SIGNAL(stateChanged(int)),
                             this, SLOT(updateFromWidgets_()));
-/*
-                    // convert to lines
-                    cbConvertToLines_ = new QCheckBox(tr("convert to lines"), this);
-                    lh2->addWidget(cbConvertToLines_);
-                    cbConvertToLines_->setChecked(settings_->convertToLines);
-                    connect(cbConvertToLines_, SIGNAL(stateChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
-*/
 
                     // shared vertices
                     cbSharedVert_ = new QCheckBox(tr("shared vertices"), this);
@@ -223,137 +215,7 @@ void GeometryDialog::createMainWidgets_()
                     connect(cbSharedVert_, SIGNAL(stateChanged(int)),
                             this, SLOT(updateFromWidgets_()));
 
-                // color
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    spinR_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinR_);
-                    spinR_->setStatusTip("Red amount of initital color");
-                    spinR_->setDecimals(5);
-                    spinR_->setSingleStep(0.1);
-                    spinR_->setRange(0.0, 1);
-                    spinR_->setValue(settings_->colorR);
-                    connect(spinR_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinG_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinG_);
-                    spinG_->setStatusTip("Green amount of initital color");
-                    spinG_->setDecimals(5);
-                    spinG_->setSingleStep(0.1);
-                    spinG_->setRange(0.0, 1);
-                    spinG_->setValue(settings_->colorG);
-                    connect(spinG_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinB_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinB_);
-                    spinB_->setStatusTip("Blue amount of initital color");
-                    spinB_->setDecimals(5);
-                    spinB_->setSingleStep(0.1);
-                    spinB_->setRange(0.0, 1);
-                    spinB_->setValue(settings_->colorB);
-                    connect(spinB_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinA_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinA_);
-                    spinA_->setStatusTip("Alpha amount of initital color");
-                    spinA_->setDecimals(5);
-                    spinA_->setSingleStep(0.1);
-                    spinA_->setRange(0.0, 1);
-                    spinA_->setValue(settings_->colorA);
-                    connect(spinA_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    /*
-                // normals and normalization
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    cbCalcNormals_ = new QCheckBox(tr("calculate normals"), this);
-                    lh2->addWidget(cbCalcNormals_);
-                    cbCalcNormals_->setChecked(settings_->calcNormals);
-                    connect(cbCalcNormals_, SIGNAL(stateChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    cbInvNormals_ = new QCheckBox(tr("invert normals"), this);
-                    lh2->addWidget(cbInvNormals_);
-                    cbInvNormals_->setChecked(settings_->invertNormals);
-                    connect(cbInvNormals_, SIGNAL(stateChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
-
-                // normalization amount
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    cbNorm_ = new QCheckBox(tr("normalize coordinates"), this);
-                    lh2->addWidget(cbNorm_);
-                    cbNorm_->setChecked(settings_->normalizeVertices);
-                    connect(cbNorm_, SIGNAL(stateChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    labelNormAmt_ = new QLabel(tr("amount"), this);
-                    lh2->addWidget(labelNormAmt_);
-
-                    spinNormAmt_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinNormAmt_);
-                    spinNormAmt_->setStatusTip("Amount of normalization between 0 and 1");
-                    spinNormAmt_->setDecimals(5);
-                    spinNormAmt_->setSingleStep(0.02);
-                    spinNormAmt_->setRange(0.0, 1);
-                    spinNormAmt_->setValue(settings_->normalization);
-                    connect(spinNormAmt_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                // scale
-                auto l = new QLabel(tr("scale"), this);
-                lv->addWidget(l);
-
-                spinS_ = new DoubleSpinBox(this);
-                lv->addWidget(spinS_);
-                spinS_->setStatusTip("Overall scale of the model");
-                spinS_->setDecimals(5);
-                spinS_->setSingleStep(0.1);
-                spinS_->setRange(0.0001, 1000000);
-                spinS_->setValue(settings_->scale);
-                connect(spinS_, SIGNAL(valueChanged(double)),
-                        this, SLOT(updateFromWidgets_()));
-
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    spinSX_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinSX_);
-                    spinSX_->setStatusTip("X-scale of the model");
-                    spinSX_->setDecimals(5);
-                    spinSX_->setSingleStep(0.1);
-                    spinSX_->setRange(0.0001, 1000000);
-                    spinSX_->setValue(settings_->scaleX);
-                    connect(spinSX_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinSY_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinSY_);
-                    spinSY_->setStatusTip("Y-scale of the model");
-                    spinSY_->setDecimals(5);
-                    spinSY_->setSingleStep(0.1);
-                    spinSY_->setRange(0.0001, 1000000);
-                    spinSY_->setValue(settings_->scaleY);
-                    connect(spinSY_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinSZ_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinSZ_);
-                    spinSZ_->setStatusTip("Z-scale of the model");
-                    spinSZ_->setDecimals(5);
-                    spinSZ_->setSingleStep(0.1);
-                    spinSZ_->setRange(0.0001, 1000000);
-                    spinSZ_->setValue(settings_->scaleZ);
-                    connect(spinSZ_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-*/
+                // small radius
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
@@ -400,164 +262,61 @@ void GeometryDialog::createMainWidgets_()
                     spinSegZ_->setValue(settings_->segmentsZ);
                     connect(spinSegZ_, SIGNAL(valueChanged(int)),
                             this, SLOT(updateFromWidgets_()));
-#if (0)
-                // tesselation
+
+                // color
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
-                    cbTess_ = new QCheckBox(tr("tesselate"), this);
-                    lh2->addWidget(cbTess_);
-                    cbTess_->setChecked(settings_->tesselate);
-                    connect(cbTess_, SIGNAL(toggled(bool)),
+                    spinR_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinR_);
+                    spinR_->setStatusTip("Red amount of initital color");
+                    spinR_->setDecimals(5);
+                    spinR_->setSingleStep(0.1);
+                    spinR_->setRange(0.0, 1);
+                    spinR_->setValue(settings_->colorR);
+                    QPalette pal(spinR_->palette());
+                    pal.setColor(QPalette::Text, QColor(100,0,0));
+                    spinR_->setPalette(pal);
+                    connect(spinR_, SIGNAL(valueChanged(double)),
                             this, SLOT(updateFromWidgets_()));
 
-                    spinTess_ = new SpinBox(this);
-                    lh2->addWidget(spinTess_);
-                    spinTess_->setStatusTip("Level of tesselation");
-                    spinTess_->setRange(1, 10);
-                    spinTess_->setValue(settings_->tessLevel);
-                    connect(spinTess_, SIGNAL(valueChanged(int)),
+                    spinG_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinG_);
+                    spinG_->setStatusTip("Green amount of initital color");
+                    spinG_->setDecimals(5);
+                    spinG_->setSingleStep(0.1);
+                    spinG_->setRange(0.0, 1);
+                    spinG_->setValue(settings_->colorG);
+                    pal.setColor(QPalette::Text, QColor(0,70,0));
+                    spinG_->setPalette(pal);
+                    connect(spinG_, SIGNAL(valueChanged(double)),
                             this, SLOT(updateFromWidgets_()));
 
-                // remove randomly
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    cbRemove_ = new QCheckBox(tr("randomly\nremove primitives"), this);
-                    lh2->addWidget(cbRemove_);
-                    cbRemove_->setChecked(settings_->removeRandomly);
-                    connect(cbRemove_, SIGNAL(toggled(bool)),
+                    spinB_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinB_);
+                    spinB_->setStatusTip("Blue amount of initital color");
+                    spinB_->setDecimals(5);
+                    spinB_->setSingleStep(0.1);
+                    spinB_->setRange(0.0, 1);
+                    spinB_->setValue(settings_->colorB);
+                    pal.setColor(QPalette::Text, QColor(0,0,140));
+                    spinB_->setPalette(pal);
+                    connect(spinB_, SIGNAL(valueChanged(double)),
                             this, SLOT(updateFromWidgets_()));
 
-                    spinRemoveProb_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinRemoveProb_);
-                    spinRemoveProb_->setStatusTip("Probability for removing points");
-                    spinRemoveProb_->setDecimals(5);
-                    spinRemoveProb_->setSingleStep(0.005);
-                    spinRemoveProb_->setRange(0.0, 1.0);
-                    spinRemoveProb_->setValue(settings_->removeProb);
-                    connect(spinRemoveProb_, SIGNAL(valueChanged(double)),
+                    spinA_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinA_);
+                    spinA_->setStatusTip("Alpha amount of initital color");
+                    spinA_->setDecimals(5);
+                    spinA_->setSingleStep(0.1);
+                    spinA_->setRange(0.0, 1);
+                    spinA_->setValue(settings_->colorA);
+                    connect(spinA_, SIGNAL(valueChanged(double)),
                             this, SLOT(updateFromWidgets_()));
 
-                    spinRemoveSeed_ = new SpinBox(this);
-                    lh2->addWidget(spinRemoveSeed_);
-                    spinRemoveSeed_->setStatusTip("Random seed for removing primitives");
-                    spinRemoveSeed_->setRange(0, 10000000);
-                    spinRemoveSeed_->setValue(settings_->removeSeed);
-                    connect(spinRemoveSeed_, SIGNAL(valueChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
 
-                // transform by equation
 
-                cbTransformEqu_ = new QCheckBox(tr("transform by equation"), this);
-                lv->addWidget(cbTransformEqu_);
-                cbTransformEqu_->setStatusTip(tr("Enables transformation of each vertex point "
-                                                 "by a mathematical formula"));
-                cbTransformEqu_->setChecked(settings_->transformWithEquation);
-                connect(cbTransformEqu_, SIGNAL(toggled(bool)),
-                        this, SLOT(updateFromWidgets_()));
-
-                QStringList vars = { "x", "y", "z", "i" };
-                editEquX_ = new EquationEditor(this);
-                lv->addWidget(editEquX_);
-                editEquX_->addVariables(vars);
-                editEquX_->setPlainText(settings_->equationX);
-                connect(editEquX_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-                editEquY_ = new EquationEditor(this);
-                lv->addWidget(editEquY_);
-                editEquY_->addVariables(vars);
-                editEquY_->setPlainText(settings_->equationY);
-                connect(editEquY_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-                editEquZ_ = new EquationEditor(this);
-                lv->addWidget(editEquZ_);
-                editEquZ_->addVariables(vars);
-                editEquZ_->setPlainText(settings_->equationZ);
-                connect(editEquZ_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-                // transform primitives by equation
-
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    cbTransformPrimEqu_ = new QCheckBox(tr("transform primitives by equation"), this);
-                    lh2->addWidget(cbTransformPrimEqu_);
-                    cbTransformPrimEqu_->setStatusTip(tr("Enables transformation of each vertex point "
-                                                     "of each primitive by a mathematical formula"));
-                    cbTransformPrimEqu_->setChecked(settings_->transformPrimitivesWithEquation);
-                    connect(cbTransformPrimEqu_, SIGNAL(toggled(bool)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    cbCalcNormalsBeforePrimEqu_ = new QCheckBox(tr("calculate normals"), this);
-                    lh2->addWidget(cbCalcNormalsBeforePrimEqu_);
-                    cbCalcNormalsBeforePrimEqu_->setStatusTip(tr("Enables calculation of normals before "
-                                                         "the application of the primitive equations"));
-                    cbCalcNormalsBeforePrimEqu_->setChecked(settings_->transformPrimitivesWithEquation);
-                    connect(cbCalcNormalsBeforePrimEqu_, SIGNAL(toggled(bool)),
-                            this, SLOT(updateFromWidgets_()));
-
-                vars = {
-                    "x", "y", "z", "nx", "ny", "nz", "i", "p",
-                    "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3",
-                    "nx1", "ny1", "nz1", "nx2", "ny2", "nz2", "nx3", "ny3", "nz3" };
-                editPEquX_ = new EquationEditor(this);
-                lv->addWidget(editPEquX_);
-                editPEquX_->addVariables(vars);
-                editPEquX_->setPlainText(settings_->pEquationX);
-                connect(editPEquX_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-                editPEquY_ = new EquationEditor(this);
-                lv->addWidget(editPEquY_);
-                editPEquY_->addVariables(vars);
-                editPEquY_->setPlainText(settings_->pEquationY);
-                connect(editPEquY_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-                editPEquZ_ = new EquationEditor(this);
-                lv->addWidget(editPEquZ_);
-                editPEquZ_->addVariables(vars);
-                editPEquZ_->setPlainText(settings_->pEquationZ);
-                connect(editPEquZ_, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-                // --- extrude ---
-
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    cbExtrude_ = new QCheckBox(tr("extrude"), this);
-                    lh2->addWidget(cbExtrude_);
-                    cbExtrude_->setStatusTip(tr("Extrudes/shifts triangles along their normals"));
-                    cbExtrude_->setChecked(settings_->extrude);
-                    connect(cbExtrude_, SIGNAL(toggled(bool)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinExtrudeConstant_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinExtrudeConstant_);
-                    spinExtrudeConstant_->setStatusTip(tr("Extrudes triangles by a constant value"));
-                    spinExtrudeConstant_->setDecimals(5);
-                    spinExtrudeConstant_->setSingleStep(0.1);
-                    spinExtrudeConstant_->setRange(-1000000, 1000000);
-                    spinExtrudeConstant_->setValue(settings_->extrudeConstant);
-                    connect(spinExtrudeConstant_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinExtrudeFactor_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinExtrudeFactor_);
-                    spinExtrudeFactor_->setStatusTip(
-                                tr("Extrudes triangle vertices by a factor of their adjacent edges"));
-                    spinExtrudeFactor_->setDecimals(5);
-                    spinExtrudeFactor_->setSingleStep(0.1);
-                    spinExtrudeFactor_->setRange(-1000000, 1000000);
-                    spinExtrudeFactor_->setValue(settings_->extrudeFactor);
-                    connect(spinExtrudeFactor_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                // -----------------
-                lv->addStretch(1);
-
-#endif
-
-                // add new modifier
+                // add-new-modifier button
                 auto but = new QPushButton(this);
                 lv->addWidget(but);
                 but->setText(tr("new modifier"));
@@ -585,6 +344,7 @@ void GeometryDialog::createMainWidgets_()
 
                     but = new QPushButton(tr("Ok"), this);
                     lh2->addWidget(but);
+                    but->setDefault(true);
                     connect(but, SIGNAL(clicked()), this, SLOT(accept()));
 
                     but = new QPushButton(tr("Cancel"), this);
@@ -724,17 +484,6 @@ void GeometryDialog::changeView_()
             comboView_->itemData(comboView_->currentIndex()).toInt();
 
     geoWidget_->setRenderMode(rm);
-    /*
-    QLayout * l = geoWidget_->layout();
-    geoWidget_->setVisible(false);
-    geoWidget_->deleteLater();
-
-    // recreate
-    geoWidget_ = new GeometryWidget(rm, this);
-    l->addWidget(geoWidget_);
-    geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
-    */
 }
 
 void GeometryDialog::updateGeometry_()
@@ -859,112 +608,6 @@ void GeometryDialog::updateFromWidgets_()
 
     cbTriangles_->setVisible( canTriangle && !isFile);
 
-/*
-    settings_->calcNormals = cbCalcNormals_->isChecked();
-    settings_->invertNormals = cbInvNormals_->isChecked();
-    settings_->asTriangles = cbTriangles_->isChecked();
-    settings_->convertToLines = cbConvertToLines_->isChecked();
-    settings_->sharedVertices = cbSharedVert_->isChecked();
-    settings_->normalizeVertices = cbNorm_->isChecked();
-    settings_->normalization = spinNormAmt_->value();
-    settings_->scale = spinS_->value();
-    settings_->scaleX = spinSX_->value();
-    settings_->scaleY = spinSY_->value();
-    settings_->scaleZ = spinSZ_->value();
-    settings_->smallRadius = spinSmallRadius_->value();
-    settings_->segmentsX = spinSegX_->value();
-    settings_->segmentsY = spinSegY_->value();
-    settings_->segmentsZ = spinSegZ_->value();
-    settings_->tesselate = cbTess_->isChecked();
-    settings_->tessLevel = spinTess_->value();
-    settings_->removeRandomly = cbRemove_->isChecked();
-    settings_->removeProb = spinRemoveProb_->value();
-    settings_->removeSeed = spinRemoveSeed_->value();
-    settings_->transformWithEquation = cbTransformEqu_->isChecked();
-    settings_->transformPrimitivesWithEquation = cbTransformPrimEqu_->isChecked();
-    settings_->calcNormalsBeforePrimitiveEquation = cbCalcNormalsBeforePrimEqu_->isChecked();
-    settings_->extrude = cbExtrude_->isChecked();
-    settings_->extrudeConstant = spinExtrudeConstant_->value();
-    settings_->extrudeFactor = spinExtrudeFactor_->value();
-    if (editEquX_->isOk())
-        settings_->equationX = editEquX_->toPlainText();
-    if (editEquY_->isOk())
-        settings_->equationY = editEquY_->toPlainText();
-    if (editEquZ_->isOk())
-        settings_->equationZ = editEquZ_->toPlainText();
-    if (editPEquX_->isOk())
-        settings_->pEquationX = editPEquX_->toPlainText();
-    if (editPEquY_->isOk())
-        settings_->pEquationY = editPEquY_->toPlainText();
-    if (editPEquZ_->isOk())
-        settings_->pEquationZ = editPEquZ_->toPlainText();
-
-    // update widgets visibility
-
-    const bool
-            isFile = settings_->type ==
-                    GEOM::GeometryFactorySettings::T_FILE,
-            canTriangle = (settings_->type !=
-                            GEOM::GeometryFactorySettings::T_GRID_XZ
-                            && settings_->type !=
-                            GEOM::GeometryFactorySettings::T_LINE_GRID),
-            hasTriangle = (canTriangle && (settings_->asTriangles || isFile)),
-            has2Segments = (settings_->type ==
-                            GEOM::GeometryFactorySettings::T_UV_SPHERE
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_GRID_XZ
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_LINE_GRID
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_CYLINDER_CLOSED
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_CYLINDER_OPEN
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_TORUS),
-            has3Segments = (has2Segments && settings_->type ==
-                            GEOM::GeometryFactorySettings::T_LINE_GRID),
-            hasSmallRadius = (settings_->type ==
-                            GEOM::GeometryFactorySettings::T_TORUS);
-
-    cbTriangles_->setVisible( canTriangle && !isFile);
-
-    cbCalcNormals_->setVisible( hasTriangle && !settings_->convertToLines );
-    cbInvNormals_->setVisible( hasTriangle && !settings_->convertToLines );
-    cbCalcNormalsBeforePrimEqu_->setVisible(
-                hasTriangle && settings_->transformPrimitivesWithEquation );
-    cbConvertToLines_->setVisible( hasTriangle );
-    spinTess_->setVisible( settings_->tesselate );
-
-    labelNormAmt_->setVisible( settings_->normalizeVertices );
-    spinNormAmt_->setVisible( settings_->normalizeVertices );
-
-    editFilename_->setVisible(isFile);
-    butLoadModelFile_->setVisible(isFile);
-    cbSharedVert_->setVisible( !isFile ); // XXX remove when ObjLoader supports vertex sharing
-
-    labelSeg_->setVisible( has2Segments );
-    spinSegX_->setVisible( has2Segments );
-    spinSegY_->setVisible( has2Segments );
-    spinSegZ_->setVisible( has3Segments );
-
-    labelSmallRadius_->setVisible( hasSmallRadius );
-    spinSmallRadius_->setVisible( hasSmallRadius );
-
-    spinRemoveProb_->setVisible( cbRemove_->isChecked() );
-    spinRemoveSeed_->setVisible( cbRemove_->isChecked() );
-
-    cbExtrude_->setVisible( hasTriangle );
-    spinExtrudeConstant_->setVisible( hasTriangle && settings_->extrude );
-    spinExtrudeFactor_->setVisible( hasTriangle && settings_->extrude );
-
-    editEquX_->setVisible( settings_->transformWithEquation );
-    editEquY_->setVisible( settings_->transformWithEquation );
-    editEquZ_->setVisible( settings_->transformWithEquation );
-
-    editPEquX_->setVisible( settings_->transformPrimitivesWithEquation );
-    editPEquY_->setVisible( settings_->transformPrimitivesWithEquation );
-    editPEquZ_->setVisible( settings_->transformPrimitivesWithEquation );
-*/
     updateGeometry_();
 }
 
@@ -990,41 +633,7 @@ void GeometryDialog::updateWidgets_()
     spinG_->setValue(settings_->colorG);
     spinB_->setValue(settings_->colorB);
     spinA_->setValue(settings_->colorA);
-/*
-    cbTriangles_->setChecked(settings_->asTriangles);
-    cbConvertToLines_->setChecked(settings_->convertToLines);
-    cbSharedVert_->setChecked(settings_->sharedVertices);
-    cbCalcNormals_->setChecked(settings_->calcNormals);
-    cbInvNormals_->setChecked(settings_->invertNormals);
-    cbNorm_->setChecked(settings_->normalizeVertices);
-    spinNormAmt_->setValue(settings_->normalization);
-    spinS_->setValue(settings_->scale);
-    spinSX_->setValue(settings_->scaleX);
-    spinSY_->setValue(settings_->scaleY);
-    spinSZ_->setValue(settings_->scaleZ);
-    spinSmallRadius_->setValue(settings_->smallRadius);
-    spinSegX_->setValue(settings_->segmentsX);
-    spinSegY_->setValue(settings_->segmentsY);
-    spinSegZ_->setValue(settings_->segmentsZ);
-    cbTess_->setChecked(settings_->tesselate);
-    spinTess_->setValue(settings_->tessLevel);
-    cbRemove_->setChecked(settings_->removeRandomly);
-    spinRemoveProb_->setValue(settings_->removeProb);
-    spinRemoveSeed_->setValue(settings_->removeSeed);
-    cbTransformEqu_->setChecked(settings_->transformWithEquation);
-    cbTransformPrimEqu_->setChecked(settings_->transformPrimitivesWithEquation);
-    cbCalcNormalsBeforePrimEqu_->setChecked(settings_->calcNormalsBeforePrimitiveEquation);
-    cbExtrude_->setChecked(settings_->extrude);
-    spinExtrudeConstant_->setValue(settings_->extrudeConstant);
-    spinExtrudeFactor_->setValue(settings_->extrudeFactor);
 
-    editEquX_->setPlainText(settings_->equationX);
-    editEquY_->setPlainText(settings_->equationY);
-    editEquZ_->setPlainText(settings_->equationZ);
-    editPEquX_->setPlainText(settings_->pEquationX);
-    editPEquY_->setPlainText(settings_->pEquationY);
-    editPEquZ_->setPlainText(settings_->pEquationZ);
-*/
     ignoreUpdate_ = false;
 }
 

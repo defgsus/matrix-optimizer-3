@@ -14,6 +14,7 @@
 #include <QString>
 #include <QObject>
 #include <QModelIndex>
+#include <QColor>
 
 /** std::ostream << QString */
 template <typename T>
@@ -54,6 +55,15 @@ std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QModelIndex&
 {
     o << " QModelIndex(" << idx.row() << ", " << idx.column() << ", "
         << idx.internalPointer() << ", " << idx.model() << ") ";
+    return o;
+}
+
+/** std::ostream << QColor */
+template <typename T>
+std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QColor& c)
+{
+    o << "QColor(" << c.red() << ", " << c.green() << ", " << c.blue()
+      << ", " << c.alpha() << ")";
     return o;
 }
 
