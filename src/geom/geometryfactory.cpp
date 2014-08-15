@@ -837,7 +837,7 @@ void GeometryFactory::createFromSettings(Geometry * g,
     break;
 
     case GeometryFactorySettings::T_GRID_XZ:
-        createGridXZ(g, set->segmentsX, set->segmentsY, set->withCoords);
+        createGridXZ(g, set->segmentsX, set->segmentsY, true);
     break;
 
     case GeometryFactorySettings::T_LINE_GRID:
@@ -884,59 +884,7 @@ void GeometryFactory::createFromSettings(Geometry * g,
 
     // --- modify ---
 
-    /*
-
-    if (set->tesselate)
-        g->tesselate(set->tessLevel);
-
-    if (set->normalizeVertices)
-        g->normalizeSphere(1, set->normalization);
-
-    if (!set->sharedVertices
-            //&& set->type != GeometryFactorySettings::T_FILE
-            )
-        g->unGroupVertices();
-
-    if (set->transformWithEquation)
-        g->transformWithEquation(set->equationX, set->equationY, set->equationZ);
-
-    if (g->numTriangles() && set->calcNormalsBeforePrimitiveEquation)
-        g->calculateTriangleNormals();
-
-    if (set->transformPrimitivesWithEquation)
-        g->transformPrimitivesWithEquation(set->pEquationX, set->pEquationY, set->pEquationZ);
-
-    if (set->extrude && g->numTriangles())
-    {
-        if (g->numTriangles() && set->calcNormals)
-            g->calculateTriangleNormals();
-
-        Geometry geom;
-        geom.setSharedVertices(g->sharedVertices(), g->sharedVerticesThreshold());
-        g->extrudeTriangles(geom, set->extrudeConstant, set->extrudeFactor);
-        if (!set->sharedVertices)
-            geom.unGroupVertices();
-        *g = geom;
-    }
-
-    if (set->convertToLines)
-        g->convertToLines();
-
-    if (set->removeRandomly)
-        g->removePrimitivesRandomly(set->removeProb, set->removeSeed);
-
-    if (g->numTriangles() && set->calcNormals)
-        g->calculateTriangleNormals();
-
-    if (set->invertNormals)
-        g->invertNormals();
-
-    g->scale(set->scale * set->scaleX,
-             set->scale * set->scaleY,
-             set->scale * set->scaleZ);
-    */
-
-    set->modifierChain.execute(g);
+    set->modifierChain->execute(g);
 }
 
 

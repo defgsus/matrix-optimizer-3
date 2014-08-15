@@ -16,11 +16,11 @@
 #include "types/int.h"
 #include "types/float.h"
 
-#include "geometrymodifierchain.h"
-
 namespace MO {
 namespace IO { class DataStream; }
 namespace GEOM {
+
+class GeometryModifierChain;
 
 class GeometryFactorySettings
 {
@@ -48,6 +48,9 @@ public:
     GeometryFactorySettings();
     ~GeometryFactorySettings();
 
+    GeometryFactorySettings(const GeometryFactorySettings& other);
+    GeometryFactorySettings& operator=(const GeometryFactorySettings& other);
+
     // ---------- io ---------
 
     void serialize(IO::DataStream&) const;
@@ -59,22 +62,13 @@ public:
 
     // ---- public member ----
 
-    GeometryModifierChain modifierChain;
+    GeometryModifierChain * modifierChain;
 
     Type type;
-    QString filename, equationX, equationY, equationZ,
-                     pEquationX, pEquationY, pEquationZ;
-    bool calcNormals, invertNormals, asTriangles, convertToLines, sharedVertices, tesselate,
-        normalizeVertices, removeRandomly, transformWithEquation,
-        transformPrimitivesWithEquation, calcNormalsBeforePrimitiveEquation,
-        extrude;
-    Float colorR, colorG, colorB, colorA;
-    Float scale, scaleX, scaleY, scaleZ, removeProb, normalization, smallRadius,
-        extrudeConstant, extrudeFactor;
-    uint gridSize, segmentsX, segmentsY, segmentsZ, tessLevel, removeSeed;
-
-    bool withCoords;
-
+    QString filename;
+    bool asTriangles, sharedVertices;
+    Float smallRadius, colorR, colorG, colorB, colorA;
+    uint segmentsX, segmentsY, segmentsZ;
 };
 
 

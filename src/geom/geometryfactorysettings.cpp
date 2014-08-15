@@ -11,15 +11,14 @@
 #include <QFile>
 
 #include "geometryfactorysettings.h"
+#include "geometrymodifierchain.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 
 // for old file conversion
-#include "geom/geometrymodifierchain.h"
 #include "geom/geometrymodifierscale.h"
 #include "geom/geometrymodifiertesselate.h"
-#include "geom/geometrymodifiertranslate.h"
-#include "geom/geometrymodifierrotate.h"
 #include "geom/geometrymodifiernormals.h"
 #include "geom/geometrymodifiernormalize.h"
 #include "geom/geometrymodifierconvertlines.h"
@@ -59,63 +58,63 @@ const QStringList GeometryFactorySettings::typeNames =
 };
 
 GeometryFactorySettings::GeometryFactorySettings()
-    : //modifierChain (new GeometryModifierChain()),
+    : modifierChain (new GeometryModifierChain()),
       type          (T_BOX),
-      equationX     ("x"),
-      equationY     ("y"),
-      equationZ     ("z"),
-      pEquationX    ("x"),
-      pEquationY    ("y"),
-      pEquationZ    ("z"),
-      calcNormals   (true),
-      invertNormals (false),
       asTriangles   (true),
-      convertToLines(false),
       sharedVertices(true),
-      tesselate     (false),
-      normalizeVertices(false),
-      removeRandomly(false),
-      transformWithEquation(false),
-      transformPrimitivesWithEquation(false),
-      calcNormalsBeforePrimitiveEquation(false),
-      extrude       (false),
+      smallRadius   (0.2f),
       colorR        (0.5f),
       colorG        (0.5f),
       colorB        (0.5f),
       colorA        (1.0f),
-      scale         (1.f),
-      scaleX        (1.f),
-      scaleY        (1.f),
-      scaleZ        (1.f),
-      removeProb    (0.1f),
-      normalization (1.f),
-      smallRadius   (0.2f),
-      extrudeConstant(1.f),
-      extrudeFactor (0.f),
-      gridSize      (1),
       segmentsX     (10),
       segmentsY     (10),
-      segmentsZ     (1),
-      tessLevel     (1),
-      removeSeed    (1),
-      withCoords    (true)
+      segmentsZ     (10)
 {
-    // standard to calculate normals
-    modifierChain.addModifier(new GeometryModifierNormals());
+    MO_DEBUG_GEOM("GeometryFactorySettings::GeometryFactorySettings()");
+
+    // default: calculate normals
+    modifierChain->addModifier(new GeometryModifierNormals());
 }
 
 GeometryFactorySettings::~GeometryFactorySettings()
 {
-//    delete modifierChain;
+    MO_DEBUG_GEOM("GeometryFactorySettings::~GeometryFactorySettings()");
+    delete modifierChain;
 }
+
+GeometryFactorySettings::GeometryFactorySettings(const GeometryFactorySettings &other)
+{
+    *this = other;
+}
+
+GeometryFactorySettings& GeometryFactorySettings::operator =(
+        const GeometryFactorySettings& other)
+{
+    *modifierChain = *other.modifierChain;
+    type = other.type;
+    asTriangles = other.asTriangles;
+    sharedVertices = other.sharedVertices;
+    smallRadius = other.smallRadius;
+    colorR = other.colorR;
+    colorG = other.colorG;
+    colorB = other.colorB;
+    colorA = other.colorA;
+    segmentsX = other.segmentsX;
+    segmentsY = other.segmentsY;
+    segmentsZ = other.segmentsZ;
+}
+
 
 void GeometryFactorySettings::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("geomfacset", 8);
+    MO_DEBUG_GEOM("GeometryFactorySettings::serialize()");
+
+    io.writeHeader("geomfacset", 9);
 
     io << typeIds[type];
 
-#ifdef VERSION_BELOW_8__
+#if 0 && defined( THAT_WAS_VERSION_BELOW_8__ )
 
     io << calcNormals << asTriangles << convertToLines << sharedVertices
             << tesselate << normalizeVertices << removeRandomly
@@ -147,19 +146,26 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
 
 #endif
 
+    // v8
     io << asTriangles << sharedVertices
           << segmentsX << segmentsY << segmentsZ
              << smallRadius;
 
-    modifierChain.serialize(io);
+    modifierChain->serialize(io);
+
+    // v9
+    io << colorR << colorG << colorB << colorA;
 }
 
 void GeometryFactorySettings::deserialize(IO::DataStream & io)
 {
-    int ver = io.readHeader("geomfacset", 8);
+    MO_DEBUG_GEOM("GeometryFactorySettings::deserialize()");
+
+    const int ver = io.readHeader("geomfacset", 9);
 
     io.readEnum(type, T_BOX, typeIds);
 
+    // convert old files to new GeometryModifierChain version
     if (ver <= 7)
     {
         QString equationX, equationY, equationZ,
@@ -167,7 +173,7 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         bool calcNormals, invertNormals, convertToLines, tesselate,
             normalizeVertices, removeRandomly, transformWithEquation,
             transformPrimitivesWithEquation, calcNormalsBeforePrimitiveEquation,
-            extrude;
+            extrude, withCoords;
         Float colorR, colorG, colorB, colorA;
         Float scale, scaleX, scaleY, scaleZ, removeProb, normalization,
             extrudeConstant, extrudeFactor;
@@ -205,28 +211,28 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         if (tesselate)
         {
             auto geom = new GeometryModifierTesselate();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setTesselationLevel(tessLevel);
         }
 
         if (normalizeVertices)
         {
             auto geom = new GeometryModifierNormalize();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setNormalization(normalization);
         }
 
         if (!sharedVertices)
         {
             auto geom = new GeometryModifierVertexGroup();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setShared(false);
         }
 
         if (transformWithEquation)
         {
             auto geom = new GeometryModifierVertexEquation();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setEquationX(equationX);
             geom->setEquationY(equationY);
             geom->setEquationZ(equationZ);
@@ -235,14 +241,14 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         if (calcNormalsBeforePrimitiveEquation)
         {
             auto geom = new GeometryModifierNormals();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setCalcNormals(true);
         }
 
         if (transformPrimitivesWithEquation)
         {
             auto geom = new GeometryModifierPrimitiveEquation();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setEquationX(pEquationX);
             geom->setEquationY(pEquationY);
             geom->setEquationZ(pEquationZ);
@@ -253,11 +259,11 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
             if (calcNormals)
             {
                 auto geom = new GeometryModifierNormals();
-                modifierChain.addModifier(geom);
+                modifierChain->addModifier(geom);
                 geom->setCalcNormals(true);
             }
             auto geom = new GeometryModifierExtrude();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setConstant(extrudeConstant);
             geom->setFactor(extrudeFactor);
         }
@@ -265,13 +271,13 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         if (convertToLines)
         {
             auto geom = new GeometryModifierConvertLines();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
         }
 
         if (removeRandomly)
         {
             auto geom = new GeometryModifierRemove();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setRandomSeed(removeSeed);
             geom->setRemoveProbability(removeProb);
         }
@@ -279,14 +285,14 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         if (calcNormals || invertNormals)
         {
             auto geom = new GeometryModifierNormals();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setCalcNormals(calcNormals);
             geom->setInvertNormals(invertNormals);
         }
 
         {
             auto geom = new GeometryModifierScale();
-            modifierChain.addModifier(geom);
+            modifierChain->addModifier(geom);
             geom->setScaleAll(scale);
             geom->setScaleX(scaleX);
             geom->setScaleX(scaleY);
@@ -301,12 +307,17 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
               >> segmentsX >> segmentsY >> segmentsZ
                  >> smallRadius;
 
-        modifierChain.deserialize(io);
+        modifierChain->deserialize(io);
     }
+
+    if (ver>=9)
+        io >> colorR >> colorG >> colorB >> colorA;
 }
 
 void GeometryFactorySettings::saveFile(const QString &filename) const
 {
+    MO_DEBUG_GEOM("GeometryFactorySettings::saveFile('" << filename << "')");
+
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly))
         MO_IO_ERROR(WRITE, "Could not create geometry-settings file '" << filename
@@ -323,6 +334,8 @@ void GeometryFactorySettings::saveFile(const QString &filename) const
 
 void GeometryFactorySettings::loadFile(const QString &filename)
 {
+    MO_DEBUG_GEOM("GeometryFactorySettings::loadFile('" << filename << "')");
+
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly))
         MO_IO_ERROR(WRITE, "Could not open geometry-settings file '" << filename

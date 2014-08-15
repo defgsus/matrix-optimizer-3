@@ -31,7 +31,6 @@ namespace GUI {
 class SpinBox;
 class DoubleSpinBox;
 class GeometryWidget;
-class EquationEditor;
 
 class GeometryDialog : public QDialog
 {
@@ -96,20 +95,15 @@ protected:
 
     QStatusBar * statusBar_;
     QProgressBar * progressBar_;
-    QLabel * labelInfo_, *labelSeg_, *labelNormAmt_, *labelSmallRadius_;
+    QLabel * labelInfo_, *labelSeg_, *labelSmallRadius_;
     QLineEdit * editFilename_;
     QToolButton *butSavePreset_, *butSavePresetAs_, *butDeletePreset_,
                 *butLoadModelFile_;
-    QComboBox * comboPreset_, * comboView_, * comboType_;
-    QCheckBox * cbTriangles_, *cbSharedVert_, *cbConvertToLines_, *cbCalcNormals_,
-            *cbTess_, *cbNorm_, *cbRemove_, *cbTransformEqu_,
-            *cbTransformPrimEqu_, *cbCalcNormalsBeforePrimEqu_,
-            *cbInvNormals_, *cbExtrude_;
-    DoubleSpinBox *spinS_, *spinSX_, *spinSY_, *spinSZ_, *spinRemoveProb_,
-                *spinNormAmt_, *spinSmallRadius_, *spinExtrudeConstant_, *spinExtrudeFactor_;
-    SpinBox * spinSegX_, *spinSegY_, *spinSegZ_, *spinTess_, *spinRemoveSeed_;
-    EquationEditor *editEquX_, *editEquY_, *editEquZ_,
-                    *editPEquX_, *editPEquY_, *editPEquZ_;
+    QComboBox * comboPreset_, *comboView_, * comboType_;
+    QCheckBox * cbTriangles_, *cbSharedVert_;
+    DoubleSpinBox *spinR_, *spinG_, *spinB_, *spinA_,
+                  *spinSmallRadius_;
+    SpinBox * spinSegX_, *spinSegY_, *spinSegZ_;
 };
 
 

@@ -11,7 +11,7 @@
 #include "geometrymodifierchain.h"
 #include "io/datastream.h"
 #include "io/error.h"
-
+#include "io/log.h"
 #include "geometrymodifier.h"
 
 namespace MO {
@@ -21,21 +21,27 @@ QMap<QString, GeometryModifier*> * GeometryModifierChain::registeredModifiers_ =
 
 GeometryModifierChain::GeometryModifierChain()
 {
+    MO_DEBUG_GEOM("GeometryModifierChain::GeometryModifierChain()");
 }
 
 GeometryModifierChain::~GeometryModifierChain()
 {
+    MO_DEBUG_GEOM("GeometryModifierChain::~GeometryModifierChain()");
     clear();
 }
 
 GeometryModifierChain::GeometryModifierChain(const GeometryModifierChain &other)
 {
+    MO_DEBUG_GEOM("GeometryModifierChain::GeometryModifierChain(&other)");
     *this = other;
 }
 
 GeometryModifierChain& GeometryModifierChain::operator = (const GeometryModifierChain& other)
 {
+    MO_DEBUG_GEOM("GeometryModifierChain::operator = (&other)");
+
     clear();
+
     for (auto m : other.modifiers_)
     {
         addModifier(m->clone());
@@ -44,9 +50,20 @@ GeometryModifierChain& GeometryModifierChain::operator = (const GeometryModifier
     return *this;
 }
 
+void GeometryModifierChain::clear()
+{
+    MO_DEBUG_GEOM("GeometryModifierChain::clear()");
+
+    for (auto m : modifiers_)
+        delete m;
+    modifiers_.clear();
+}
+
 
 void GeometryModifierChain::serialize(IO::DataStream &io) const
 {
+    MO_DEBUG_GEOM("GeometryModifierChain::serialize()");
+
     io.writeHeader("geommodchain", 1);
 
     io << (quint32)modifiers_.size();
@@ -65,6 +82,8 @@ void GeometryModifierChain::serialize(IO::DataStream &io) const
 
 void GeometryModifierChain::deserialize(IO::DataStream &io)
 {
+    MO_DEBUG_GEOM("GeometryModifierChain::deserialize()");
+
     clear();
 
     io.readHeader("geommodchain", 1);
@@ -112,13 +131,6 @@ QList<QString> GeometryModifierChain::modifierGuiNames()
     return list;
 }
 
-void GeometryModifierChain::clear()
-{
-    for (auto m : modifiers_)
-        delete m;
-    modifiers_.clear();
-}
-
 GeometryModifier * GeometryModifierChain::createModifier(const QString &className)
 {
     if (!registeredModifiers_)
@@ -130,6 +142,8 @@ GeometryModifier * GeometryModifierChain::createModifier(const QString &classNam
 
 bool GeometryModifierChain::registerModifier(GeometryModifier *g)
 {
+    MO_DEBUG_GEOM("GeometryModifierChain::registerModifier('" << g->className() << "')");
+
     if (!registeredModifiers_)
         registeredModifiers_ = new QMap<QString, GeometryModifier*>;
 

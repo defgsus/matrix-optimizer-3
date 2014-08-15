@@ -57,7 +57,7 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
 
     createMainWidgets_();
 
-    modifiers_ = &settings_->modifierChain;
+    modifiers_ = settings_->modifierChain;
 
     createModifierWidgets_();
 
@@ -222,7 +222,52 @@ void GeometryDialog::createMainWidgets_()
                     cbSharedVert_->setChecked(settings_->sharedVertices);
                     connect(cbSharedVert_, SIGNAL(stateChanged(int)),
                             this, SLOT(updateFromWidgets_()));
-/*
+
+                // color
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    spinR_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinR_);
+                    spinR_->setStatusTip("Red amount of initital color");
+                    spinR_->setDecimals(5);
+                    spinR_->setSingleStep(0.1);
+                    spinR_->setRange(0.0, 1);
+                    spinR_->setValue(settings_->colorR);
+                    connect(spinR_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinG_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinG_);
+                    spinG_->setStatusTip("Green amount of initital color");
+                    spinG_->setDecimals(5);
+                    spinG_->setSingleStep(0.1);
+                    spinG_->setRange(0.0, 1);
+                    spinG_->setValue(settings_->colorG);
+                    connect(spinG_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinB_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinB_);
+                    spinB_->setStatusTip("Blue amount of initital color");
+                    spinB_->setDecimals(5);
+                    spinB_->setSingleStep(0.1);
+                    spinB_->setRange(0.0, 1);
+                    spinB_->setValue(settings_->colorB);
+                    connect(spinB_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    spinA_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinA_);
+                    spinA_->setStatusTip("Alpha amount of initital color");
+                    spinA_->setDecimals(5);
+                    spinA_->setSingleStep(0.1);
+                    spinA_->setRange(0.0, 1);
+                    spinA_->setValue(settings_->colorA);
+                    connect(spinA_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateFromWidgets_()));
+
+                    /*
                 // normals and normalization
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
@@ -769,6 +814,10 @@ void GeometryDialog::updateFromWidgets_()
     settings_->segmentsX = spinSegX_->value();
     settings_->segmentsY = spinSegY_->value();
     settings_->segmentsZ = spinSegZ_->value();
+    settings_->colorR = spinR_->value();
+    settings_->colorG = spinG_->value();
+    settings_->colorB = spinB_->value();
+    settings_->colorA = spinA_->value();
 
     // update widgets visibility
 
@@ -937,7 +986,10 @@ void GeometryDialog::updateWidgets_()
     spinSegX_->setValue(settings_->segmentsX);
     spinSegY_->setValue(settings_->segmentsY);
     spinSegZ_->setValue(settings_->segmentsZ);
-
+    spinR_->setValue(settings_->colorR);
+    spinG_->setValue(settings_->colorG);
+    spinB_->setValue(settings_->colorB);
+    spinA_->setValue(settings_->colorA);
 /*
     cbTriangles_->setChecked(settings_->asTriangles);
     cbConvertToLines_->setChecked(settings_->convertToLines);
@@ -1089,7 +1141,7 @@ void GeometryDialog::presetSelected_()
 void GeometryDialog::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 {
     *settings_ = s;
-    modifiers_ = &settings_->modifierChain;
+    modifiers_ = settings_->modifierChain;
 
     updateWidgets_();
     createModifierWidgets_();
