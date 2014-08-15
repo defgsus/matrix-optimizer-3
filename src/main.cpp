@@ -20,6 +20,7 @@
 #include "io/settings.h"
 #include "io/currentthread.h"
 #include "gui/mainwindow.h"
+#include "gui/audiolinkwindow.h"
 #include "gui/splashscreen.h"
 
 //#include "tests/testtimeline.h"
@@ -69,6 +70,9 @@ int main(int argc, char *argv[])
     MO::application->setMainWindow(mainwin);
 
     mainwin->show();
+
+    //auto audiowin = new MO::GUI::AudioLinkWindow;
+    //audiowin->show();
 
 #ifdef NDEBUG
     splash->raise();

@@ -185,7 +185,10 @@ SOURCES += \
     src/geom/geometrymodifiervertexequation.cpp \
     src/geom/geometrymodifierprimitiveequation.cpp \
     src/geom/geometrymodifierextrude.cpp \
-    src/geom/geometryfactorysettings.cpp
+    src/geom/geometryfactorysettings.cpp \
+    src/gui/widget/audiounitwidget.cpp \
+    src/gui/audiolinkwindow.cpp \
+    src/gui/audiolinkview.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -364,7 +367,10 @@ HEADERS += \
     src/geom/geometrymodifiervertexequation.h \
     src/geom/geometrymodifierprimitiveequation.h \
     src/geom/geometrymodifierextrude.h \
-    src/geom/geometryfactorysettings.h
+    src/geom/geometryfactorysettings.h \
+    src/gui/widget/audiounitwidget.h \
+    src/gui/audiolinkwindow.h \
+    src/gui/audiolinkview.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

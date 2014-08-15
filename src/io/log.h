@@ -118,11 +118,11 @@
 #   define MO_DEBUG_IMG(unused__) { }
 #endif
 
-#if (1) && defined(MO_ENABLE_DEBUG)
+#if (0) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_GEOM
 #   define MO_DEBUG_GEOM(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
-#   define MO_DEBUG_IMG(unused__) { }
+#   define MO_DEBUG_GEOM(unused__) { }
 #endif
 
 #endif // MOSRC_IO_LOG_H

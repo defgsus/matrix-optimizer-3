@@ -103,6 +103,8 @@ GeometryFactorySettings& GeometryFactorySettings::operator =(
     segmentsX = other.segmentsX;
     segmentsY = other.segmentsY;
     segmentsZ = other.segmentsZ;
+
+    return *this;
 }
 
 

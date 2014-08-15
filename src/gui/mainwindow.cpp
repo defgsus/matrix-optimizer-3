@@ -8,6 +8,7 @@
     <p>created 2014/04/21</p>
 */
 
+#include <set>
 
 #include <QDebug>
 #include <QLayout>
@@ -31,8 +32,6 @@
 #include "timeline1dview.h"
 #include "timeline1drulerview.h"
 #include "ruler.h"
-#include "math/timeline1d.h"
-#include "gui/painter/grid.h"
 #include "gui/qobjectinspector.h"
 #include "gui/objecttreeview.h"
 #include "gui/objectview.h"
@@ -44,6 +43,7 @@
 #include "gui/geometrydialog.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
+#include "gui/audiolinkwindow.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -380,6 +380,16 @@ void MainWindow::createMainMenu_()
             pv->show();
         });
 
+        a = new QAction(tr("Audio-link window"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto win = new AudioLinkWindow(this);
+            win->setAttribute(Qt::WA_DeleteOnClose, true);
+            win->setMainWindow(this);
+            win->setScene(scene_);
+            win->show();
+        });
 }
 
 void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
