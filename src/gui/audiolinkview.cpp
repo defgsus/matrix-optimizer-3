@@ -9,6 +9,7 @@
 */
 
 #include <QLayout>
+#include <QTimer>
 
 #include "audiolinkview.h"
 #include "widget/audiounitwidget.h"
@@ -22,11 +23,18 @@ namespace GUI {
 
 AudioLinkView::AudioLinkView(QWidget *parent) :
     QWidget     (parent),
-    scene_      (0)
+    scene_      (0),
+    timer_      (new QTimer(this))
 {
     setObjectName("_AudioLinkView");
 
     createMainWidgets_();
+
+    timer_->setSingleShot(false);
+    timer_->setInterval(1000 / 25);
+    connect(timer_, SIGNAL(timeout()), this, SLOT(updateValueOutputs_()));
+
+    setAnimating(true);
 }
 
 
@@ -97,7 +105,19 @@ void AudioLinkView::createAudioUnitWidgetsRec_(
     }
 }
 
+void AudioLinkView::setAnimating(bool enable)
+{
+    if (enable && !timer_->isActive())
+        timer_->start();
+    if (!enable && timer_->isActive())
+        timer_->stop();
+}
 
+void AudioLinkView::updateValueOutputs_()
+{
+    for (auto w : unitWidgets_)
+        w->updateValueOutputs();
+}
 
 
 } // namespace GUI

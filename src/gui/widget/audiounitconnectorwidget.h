@@ -12,6 +12,8 @@
 #define AUDIOUNITCONNECTORWIDGET_H
 
 #include <QWidget>
+#include <QPen>
+#include <QBrush>
 #include "object/object_fwd.h"
 
 namespace MO {
@@ -25,6 +27,8 @@ public:
     explicit AudioUnitConnectorWidget(AudioUnit * au, uint channel, bool isInput, bool isAudio,
                                       QWidget *parent = 0);
 
+    void setModulatorObjectFloat(const ModulatorObjectFloat * m) { modFloat_ = m; }
+
     AudioUnit * audioUnit() const { return unit_; }
     uint channel() const { return channel_; }
     bool isInput() const { return isInput_; }
@@ -35,19 +39,29 @@ public slots:
 
 protected:
 
-    int heightForWidth(int w) const Q_DECL_OVERRIDE { return w; }
+    //int heightForWidth(int w) const Q_DECL_OVERRIDE { return w; }
+
+    void enterEvent(QEvent *);
+    void leaveEvent(QEvent *);
 
     void paintEvent(QPaintEvent *);
 
 private:
 
     AudioUnit * unit_;
+    const ModulatorObjectFloat * modFloat_;
+
     uint channel_;
     bool isInput_, isAudio_;
 
+    bool hovered_;
+
     // config
 
-    QColor colorAudioUnit_, colorModulatorObject_;
+    QBrush brushAudio_, brushMod_, brushModHover_,
+            brushModValue_;
+    QPen penAudio_, penMod_, penModHover_;
+
 };
 
 

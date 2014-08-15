@@ -45,9 +45,13 @@ signals:
 
 public slots:
 
+    /** Updates the ModulatorObjectFloat value displays */
+    void updateValueOutputs();
+
 private:
 
     void createWidgets_();
+    QWidget * createHeader_();
 
     AudioUnit * unit_;
 

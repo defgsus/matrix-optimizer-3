@@ -23,6 +23,8 @@ AudioLinkViewOverpaint::AudioLinkViewOverpaint(AudioLinkView * parent) :
     QWidget     (parent),
     view_       (parent)
 {
+    setAttribute(Qt::WA_TransparentForMouseEvents);
+
     colorAudioUnit_ = QColor(120,40,80).lighter(120);
     colorModulatorObject_ = QColor(0, 90, 90).lighter(120);
 }
@@ -31,6 +33,7 @@ AudioLinkViewOverpaint::AudioLinkViewOverpaint(AudioLinkView * parent) :
 void AudioLinkViewOverpaint::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing, true);
 
     QPen pen(colorAudioUnit_);
     pen.setWidth(2);
@@ -59,7 +62,10 @@ void AudioLinkViewOverpaint::paintEvent(QPaintEvent *)
                         pto = to->audioInWidgets()[i]->mapTo(view_,
                                       to->audioInWidgets()[i]->rect().center());
 
-                p.drawLine(pfrom, pto);
+                QPainterPath path(pfrom);
+                path.cubicTo(pfrom.x()+20, pfrom.y(), pto.x()-20, pto.y(), pto.x(), pto.y());
+                p.drawPath(path);
+                //p.drawLine(pfrom, pto);
             }
         }
     }

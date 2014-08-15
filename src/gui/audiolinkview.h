@@ -17,6 +17,7 @@
 #include "object/object_fwd.h"
 
 class QGridLayout;
+class QTimer;
 
 namespace MO {
 namespace GUI {
@@ -39,9 +40,15 @@ signals:
 
 public slots:
 
+    void setAnimating(bool enable);
+
 protected:
 
     void resizeEvent(QResizeEvent *);
+
+private slots:
+
+    void updateValueOutputs_();
 
 private:
 
@@ -59,6 +66,8 @@ private:
     QMap<QString, AudioUnitWidget*> unitWidgets_;
 
     AudioLinkViewOverpaint * overpainter_;
+
+    QTimer * timer_;
 };
 
 

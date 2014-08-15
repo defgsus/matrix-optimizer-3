@@ -28,6 +28,9 @@ public:
 
     Double value(Double time, uint thread) const;
 
+    /** Returns the value set with setValue() */
+    Double inputValue() const { return offset_; }
+
     /** Sets the base-value.
         This is an offset independent of the contained ParameterFloat */
     void setValue(Double timeStamp, Double value);
