@@ -145,5 +145,20 @@ void AudioUnitWidget::updateValueOutputs()
         m->update();
 }
 
+void AudioUnitWidget::mousePressEvent(QMouseEvent * e)
+{
+
+}
+
+void AudioUnitWidget::mouseMoveEvent(QMouseEvent * e)
+{
+
+}
+
+void AudioUnitWidget::mouseReleaseEvent(QMouseEvent * e)
+{
+
+}
+
 } // namespace GUI
 } // namespace MO

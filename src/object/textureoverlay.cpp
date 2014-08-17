@@ -203,8 +203,8 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
                                         &trans[0][0]) );
     }
 
-    //tex_->bind();
-    rs.finalFrameBuffer().colorTexture()->bind();
+    tex_->bind();
+    //rs.finalFrameBuffer().colorTexture()->bind();
 
     MO_CHECK_GL( glDepthMask(false) );
     quad_->draw(rs.cameraSpace().width(), rs.cameraSpace().height());

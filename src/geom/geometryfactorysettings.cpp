@@ -92,6 +92,7 @@ GeometryFactorySettings& GeometryFactorySettings::operator =(
         const GeometryFactorySettings& other)
 {
     *modifierChain = *other.modifierChain;
+    filename = other.filename;
     type = other.type;
     asTriangles = other.asTriangles;
     sharedVertices = other.sharedVertices;

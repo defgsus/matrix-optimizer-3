@@ -20,7 +20,7 @@
 #include "objloader.h"
 #include "math/vector.h"
 #include "math/hash.h"
-
+#include "io/log.h"
 
 namespace MO {
 namespace GEOM {
@@ -821,6 +821,7 @@ void GeometryFactory::createFromSettings(Geometry * g,
     switch (set->type)
     {
     case GeometryFactorySettings::T_FILE:
+        MO_DEBUG(set->filename << ", " << loader_);
         if (!set->filename.isEmpty() && loader_)
         {
             loader_->loadFile(set->filename);

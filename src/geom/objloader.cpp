@@ -72,7 +72,7 @@ void ObjLoader::clear()
 
 void ObjLoader::loadFile(const QString &filename)
 {
-    MO_DEBUG_IO("ObjLoader::loadFile(" << filename << ")");
+    MO_DEBUG("ObjLoader::loadFile(" << filename << ")");
 
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly))

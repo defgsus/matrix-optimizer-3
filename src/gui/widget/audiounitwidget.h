@@ -48,6 +48,10 @@ public slots:
     /** Updates the ModulatorObjectFloat value displays */
     void updateValueOutputs();
 
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+
 private:
 
     void createWidgets_();
