@@ -12,6 +12,7 @@
 #define MOSRC_GUI_PAINTER_AUDIOLINKVIEWOVERPAINT_H
 
 #include <QWidget>
+#include <QPen>
 
 namespace MO {
 namespace GUI {
@@ -34,9 +35,6 @@ protected:
 
     AudioLinkView * view_;
 
-    // -- config --
-
-    QColor colorAudioUnit_, colorModulatorObject_;
 };
 
 

@@ -24,9 +24,6 @@ AudioLinkViewOverpaint::AudioLinkViewOverpaint(AudioLinkView * parent) :
     view_       (parent)
 {
     setAttribute(Qt::WA_TransparentForMouseEvents);
-
-    colorAudioUnit_ = QColor(120,40,80).lighter(120);
-    colorModulatorObject_ = QColor(0, 90, 90).lighter(120);
 }
 
 
@@ -35,10 +32,10 @@ void AudioLinkViewOverpaint::paintEvent(QPaintEvent *)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing, true);
 
-    QPen pen(colorAudioUnit_);
-    pen.setWidth(2);
 
-    p.setPen(pen);
+    // ------ draw audio cables ------
+
+    p.setPen(view_->penAudioCable_);
 
     for (const AudioUnitWidget * from : view_->unitWidgets_)
     {
@@ -68,6 +65,23 @@ void AudioLinkViewOverpaint::paintEvent(QPaintEvent *)
                 //p.drawLine(pfrom, pto);
             }
         }
+    }
+
+
+    // ----- drag widget indicator -----
+
+    if (view_->draggedWidget_)
+    {
+        p.setPen(view_->penDragFrame_);
+        p.setBrush(Qt::NoBrush);
+        p.drawRect(view_->getWidgetRect_(view_->draggedWidget_));
+    }
+
+    if (view_->dragGoal_.unitWidget)
+    {
+        p.setPen(view_->penDragFrame_);
+        p.setBrush(view_->brushDragTo_);
+        p.drawRect(view_->dragGoal_.displayRect);
     }
 }
 

@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QIcon>
 #include <QToolButton>
+#include <QPaintEvent>
 
 #include "audiounitwidget.h"
 #include "audiounitconnectorwidget.h"
@@ -27,7 +28,8 @@ namespace GUI {
 
 AudioUnitWidget::AudioUnitWidget(AudioUnit * au, QWidget *parent) :
     QWidget     (parent),
-    unit_       (au)
+    unit_       (au),
+    dragging_   (false)
 {
     setMinimumSize(100,50);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -147,17 +149,46 @@ void AudioUnitWidget::updateValueOutputs()
 
 void AudioUnitWidget::mousePressEvent(QMouseEvent * e)
 {
-
+    if (!dragging_)
+    {
+        dragStart_ = e->pos();
+    }
 }
 
 void AudioUnitWidget::mouseMoveEvent(QMouseEvent * e)
 {
+    if (e->buttons() & Qt::LeftButton)
+    {
+        if (!dragging_ &&
+                (e->pos() - dragStart_).manhattanLength() >= 4)
+        {
+            dragging_ = true;
+            emit dragStart(this);
 
+            e->accept();
+            return;
+        }
+
+        if (dragging_)
+        {
+            emit dragMove(this, e->pos());
+            e->accept();
+            return;
+        }
+    }
+    e->ignore();
 }
 
 void AudioUnitWidget::mouseReleaseEvent(QMouseEvent * e)
 {
+    if (dragging_)
+    {
+        dragging_ = false;
+        emit dragEnd(this, e->pos());
 
+        e->accept();
+        return;
+    }
 }
 
 } // namespace GUI

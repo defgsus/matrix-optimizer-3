@@ -13,6 +13,8 @@
 
 #include <QWidget>
 #include <QMap>
+#include <QPen>
+#include <QBrush>
 
 #include "object/object_fwd.h"
 
@@ -30,6 +32,7 @@ class AudioLinkView : public QWidget
     Q_OBJECT
 
     friend class AudioLinkViewOverpaint;
+    struct DragGoal_;
 
 public:
     explicit AudioLinkView(QWidget *parent = 0);
@@ -50,6 +53,10 @@ private slots:
 
     void updateValueOutputs_();
 
+    void onUnitDragStart_(AudioUnitWidget*);
+    void onUnitDragMove_(AudioUnitWidget*, const QPoint&);
+    void onUnitDragEnd_(AudioUnitWidget*, const QPoint&);
+
 private:
 
     void createMainWidgets_();
@@ -57,6 +64,28 @@ private:
 
     void createAudioUnitWidgets_();
     void createAudioUnitWidgetsRec_(const QList<Object*>& objects, int& row, int col);
+
+    /** Returns the rect for the widget in the gridlayout */
+    QRect getWidgetRect_(AudioUnitWidget * ) const;
+    QRect getWidgetUpdateRect_(AudioUnitWidget * ) const;
+    void getDragGoal(const QPoint& pos, DragGoal_& goal) const;
+
+    struct DragGoal_
+    {
+        enum Pos
+        {
+            ON,
+            LEFT,
+            RIGHT,
+            ABOVE,
+            BELOW
+        };
+
+        AudioUnitWidget * unitWidget;
+        Pos pos;
+        QRect displayRect, updateRect;
+        DragGoal_() : unitWidget(0), pos(ON) { }
+    };
 
     QGridLayout * grid_;
 
@@ -68,6 +97,17 @@ private:
     AudioLinkViewOverpaint * overpainter_;
 
     QTimer * timer_;
+
+    AudioUnitWidget * draggedWidget_;
+    DragGoal_ dragGoal_;
+
+    // -- config --
+
+    QColor colorAudioUnit_, colorModulatorObject_;
+
+    QPen penAudioCable_, penDragFrame_;
+    QBrush brushDragTo_;
+
 };
 
 

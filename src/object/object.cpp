@@ -762,7 +762,7 @@ void Object::requestCreateOutputs()
 
 ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const QString &name)
 {
-    MO_DEBUG("Object('" << idName() << "')::createOutputFloat('"
+    MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat('"
              << given_id << "', '" << name << "')");
 
     QString id = idName() + "_" + given_id;
@@ -777,7 +777,7 @@ ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const 
         mod->idName_ = id;
         mod->name_ = name;
         addObject_(mod);
-        MO_DEBUG("Object('" << idName() << "')::createOutputFloat() created new '"
+        MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat() created new '"
                  << mod->idName() << "'");
         return mod;
     }
@@ -787,7 +787,7 @@ ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const 
     {
         mod->canBeDeleted_ = false;
         mod->name_ = name;
-        MO_DEBUG("Object('" << idName() << "')::createOutputFloat() reusing '"
+        MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat() reusing '"
                  << mod->idName() << "'");
         return mod;
     }

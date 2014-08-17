@@ -43,6 +43,12 @@ public:
 
 signals:
 
+    void dragStart(AudioUnitWidget *);
+    /** @p pos is in this widget's space */
+    void dragMove(AudioUnitWidget *, const QPoint& pos);
+    /** @p pos is in this widget's space */
+    void dragEnd(AudioUnitWidget *, const QPoint& pos);
+
 public slots:
 
     /** Updates the ModulatorObjectFloat value displays */
@@ -65,6 +71,9 @@ private:
         audioIns_,
         audioOuts_,
         modulatorOuts_;
+
+    QPoint dragStart_;
+    bool dragging_;
 };
 
 
