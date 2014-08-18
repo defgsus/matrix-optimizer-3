@@ -158,30 +158,51 @@ QRect AudioLinkView::getWidgetUpdateRect_(AudioUnitWidget * auw) const
     return getWidgetRect_(auw).adjusted(-w,-w,w+1,w+1);
 }
 
-void AudioLinkView::getDragGoal(const QPoint &pos, DragGoal_ &goal) const
+void AudioLinkView::getDragGoal(const QPoint &lpos, DragGoal_ &goal) const
 {
     // NOTE:
     // We don't use childAt() because that returns not the AudioUnitWidget
     // when pos is over a child of the AudioUnitWidget
     // Also we need to know if we are left/right/above/below the widget as well
 
-    goal.unitWidget = 0;
-
     for (AudioUnitWidget * aw : unitWidgets_)
     {
-        // get each widget's rect
-        QRect rect;
-        rect.moveTo( aw->mapTo(this, QPoint(0,0)) );
-        rect.setSize( aw->size() );
+        // transform pos into widget space
+        QPoint pos = aw->mapFrom(this, lpos);
 
-        if (rect.contains(pos))
+        // assume hit at first
+        goal.unitWidget = aw;
+
+        const bool
+                // hit boarder
+                match_l = pos.x() >= -10,
+                match_t = pos.y() >= -10,
+                match_r = pos.x() <= aw->width() + 10,
+                match_b = pos.y() <= aw->height() + 10,
+                // actual hit
+                matcha_l = pos.x() >= 0,
+                matcha_t = pos.y() >= 0,
+                matcha_r = pos.x() <= aw->width(),
+                matcha_b = pos.y() <= aw->height(),
+                matcha = matcha_l || matcha_r || matcha_t || matcha_b;
+
+        if (matcha)
         {
             goal.pos = DragGoal_::ON;
-            goal.unitWidget = aw;
             goal.displayRect = getWidgetUpdateRect_(aw);
             goal.updateRect = getWidgetUpdateRect_(aw);
+            return;
+        }
+
+        if (match_t && !matcha_t)
+        {
+            goal.pos = DragGoal_::ABOVE;
+            goal.displayRect = getWidgetUpdateRect_(aw);
+            goal.displayRect.adjust(0,-10,0,10-goal.displayRect.height());
         }
     }
+
+    goal.unitWidget = 0;
 }
 
 void AudioLinkView::onUnitDragStart_(AudioUnitWidget * w)
