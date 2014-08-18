@@ -40,9 +40,13 @@ public:
 
     Scene * sceneObject() const { return scene_; }
 
-    QModelIndex sceneIndex() const;
+    /** Returns the index (into the filter-model) for a given object. */
+    QModelIndex getIndexForObject(Object *) const;
 
-    QModelIndex findIndexForObject(Object *);
+    /** Returns the index (into the filter-model) of a given object.
+        If the item is not visible because a parent item is not expanded,
+        the next visible parent index will be returned. */
+    QModelIndex getVisibleIndexForObject(Object *) const;
 
 signals:
 

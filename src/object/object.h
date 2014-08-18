@@ -220,6 +220,12 @@ public:
     virtual bool isAudioUnit() const { return false; }
     virtual bool isModulatorObject() const { return false; }
 
+    /** The base class method returns whether any of the Parameters of
+        the object are modulated. */
+    virtual bool isModulated() const;
+
+    // ---------- activity (scope) ----------------
+
     /** Returns the user-set activity scope for the object */
     ActivityScope activityScope() const;
 

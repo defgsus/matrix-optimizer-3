@@ -318,6 +318,15 @@ QString Object::idNamePath() const
     return path;
 }
 
+bool Object::isModulated() const
+{
+    for (auto p : parameters_)
+        if (p->isModulated())
+            return true;
+
+    return false;
+}
+
 Object::ActivityScope Object::activityScope() const
 {
     if (paramActiveScope_)

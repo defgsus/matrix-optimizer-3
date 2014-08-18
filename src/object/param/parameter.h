@@ -46,6 +46,9 @@ public:
     const QString& groupId() const { return groupId_; }
     const QString& groupName() const { return groupName_; }
 
+    /** Returns true if the parameter has at least one modulation source assigned. */
+    bool isModulated() const { return !modulators_.isEmpty(); }
+
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }

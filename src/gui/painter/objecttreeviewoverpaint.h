@@ -16,6 +16,8 @@
 #include <QWidget>
 #include <QModelIndex>
 #include <QMap>
+#include <QPainterPath>
+#include <QPen>
 
 namespace MO {
 class Object;
@@ -33,6 +35,8 @@ signals:
 
 public slots:
 
+    void updateAll();
+
 protected:
 
     void paintEvent(QPaintEvent *);
@@ -41,6 +45,8 @@ private:
 
     void getIndexMap_();
     void getIndexMap_(Object * parent);
+
+    void updateIndexMapVisual_();
 
     void getModulations_();
     void getModulations_(Object * parent);
@@ -52,11 +58,16 @@ private:
     struct ModPath_
     {
         QModelIndex from, to;
+        QPainterPath path;
         ModPath_(const QModelIndex& from, const QModelIndex& to)
             : from(from), to(to) { }
     };
 
     std::vector<ModPath_> modPaths_;
+
+    // --- config ---
+
+    QPen penPath_, penPathSel_;
 };
 
 } // namespace GUI

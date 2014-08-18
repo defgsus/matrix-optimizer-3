@@ -187,18 +187,18 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         // return text
         if (role == Qt::DisplayRole || role == Qt::EditRole)
         {
-            QString name;
-            switch (index.column())
+            if (role == Qt::DisplayRole)
             {
-                case 0: name = role == Qt::DisplayRole? obj->infoName() : obj->name(); break;
-                case 1: name = obj->className(); break;
-                case 2: name = obj->idName(); break;
-                default: MO_LOGIC_ERROR("no DisplayRole defined for column " << index.column());
+                QString name = obj->infoName();
+                if (obj->isModulated())
+                    name += "*";
+                if (obj->canBeDeleted())
+                    return name;
+                else
+                    return "{" + name + "}";
             }
-            if (obj->canBeDeleted())
-                return name;
             else
-                return "{" + name + "}";
+                return obj->name();
         }
 
         // object itself

@@ -60,28 +60,33 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
     createEditActions_();
 }
 
-QModelIndex ObjectTreeView::sceneIndex() const
-{
-    //return filter_->mapFromSource(omodel_->rootIndex());
-    return omodel_->rootIndex();
-}
 
-QModelIndex ObjectTreeView::findIndexForObject(Object * obj)
+QModelIndex ObjectTreeView::getIndexForObject(Object * obj) const
 {
     QModelIndex oidx = omodel_->indexForObject(obj);
     if (!oidx.isValid())
         return QModelIndex();
 
-    while (true)
+    QModelIndex idx = filter_->mapFromSource(oidx);
+    if (idx.isValid())
+        return idx;
+
+    return QModelIndex();
+}
+
+QModelIndex ObjectTreeView::getVisibleIndexForObject(Object * obj) const
+{
+    QModelIndex idx = filter_->mapFromSource(
+                omodel_->indexForObject(obj) );
+
+    while (idx.isValid())
     {
-        QModelIndex idx = filter_->mapFromSource(oidx);
-        if (idx.isValid())
+        // check if visible
+        if (!visualRect(idx).isEmpty())
             return idx;
 
         // look for parent index
-        oidx = oidx.parent();
-        if (!oidx.isValid())
-            break;
+        idx = idx.parent();
     }
 
     return QModelIndex();
@@ -103,6 +108,7 @@ void ObjectTreeView::setObjectModel(ObjectTreeModel *objectModel)
 void ObjectTreeView::modelChanged_()
 {
     scene_ = qobject_cast<Scene*>(omodel_->rootObject());
+    overpaint_->updateAll();
 }
 
 void ObjectTreeView::updateFromModel()
@@ -110,12 +116,15 @@ void ObjectTreeView::updateFromModel()
     if (!scene_)
         return;
     rowsInserted(rootIndex(), 0, scene_->numChildren());
+    overpaint_->updateAll();
 }
 
 void ObjectTreeView::currentChanged(
         const QModelIndex &current, const QModelIndex &/*previous*/)
 {
     Object * obj = model()->data(current, ObjectRole).value<Object*>();
+
+    overpaint_->update();
 
     // create actions with or without object
     createEditActions_(obj);
@@ -136,6 +145,7 @@ void ObjectTreeView::resizeEvent(QResizeEvent *event)
 
     overpaint_->resize(size());
     overpaint_->raise();
+    overpaint_->updateAll();
 }
 
 void ObjectTreeView::mousePressEvent(QMouseEvent * e)

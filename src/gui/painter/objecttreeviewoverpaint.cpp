@@ -7,7 +7,7 @@
 
     <p>created 8/18/2014</p>
 */
-#include <QDebug>
+
 #include <QPainter>
 #include <QPainterPath>
 
@@ -27,32 +27,37 @@ ObjectTreeViewOverpaint::ObjectTreeViewOverpaint(ObjectTreeView *parent) :
     view_   (parent)
 {
     setAttribute(Qt::WA_TransparentForMouseEvents);
+
+    penPath_ = QPen(QColor(0,0,0,20));
+    penPathSel_ = QPen(QColor(0,90,90,100));
+    penPathSel_.setWidth(2);
 }
 
 void ObjectTreeViewOverpaint::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing, true);
 
-    p.setPen(QPen(QColor(0,0,0)));
-    /*p.drawLine(0,0,width(),height());
-    p.drawLine(0,height(),width(),0);*/
 
     getIndexMap_();
     getModulations_();
+    updateIndexMapVisual_();
 
-    MO_DEBUG("modpaths = " << modPaths_.size());
+    const QModelIndex sel = view_->currentIndex();
     for (const ModPath_& m : modPaths_)
     {
-        const QRect
-                from = view_->visualRect(m.from),
-                to = view_->visualRect(m.to);
-        qDebug() << from << to;
-        QPainterPath path(QPoint(from.left(), from.top() + from.height() / 2));
-        path.cubicTo(from.left() + 30, from.top() + from.height() / 2,
-                     to.left() + 30, to.top() + to.height() / 2,
-                     to.left(), to.top() + to.height() / 2);
-        p.drawPath(path);
+        if (m.from == sel || m.to == sel)
+            p.setPen(penPathSel_);
+        else
+            p.setPen(penPath_);
+
+        p.drawPath(m.path);
     }
+}
+
+void ObjectTreeViewOverpaint::updateAll()
+{
+    update();
 }
 
 void ObjectTreeViewOverpaint::getIndexMap_()
@@ -68,7 +73,7 @@ void ObjectTreeViewOverpaint::getIndexMap_(Object * parent)
     {
         // find QModelIndex
 
-        QModelIndex idx = view_->findIndexForObject(obj);
+        QModelIndex idx = view_->getVisibleIndexForObject(obj);
 
         if (idx.isValid())
             indexMap_.insert(obj->idName(), idx);
@@ -77,95 +82,98 @@ void ObjectTreeViewOverpaint::getIndexMap_(Object * parent)
         getIndexMap_(obj);
     }
 
-    /*
-    int row = 0;
-    while (true)
+}
+
+void ObjectTreeViewOverpaint::updateIndexMapVisual_()
+{
+    for (ModPath_ & m : modPaths_)
     {
-        QModelIndex s = parent.child(row, 0);
-        if (!s.isValid())
-            break;
+        QRect rect = view_->visualRect(m.from);
+        QAbstractItemDelegate * d = view_->itemDelegate(m.from);
+        const QPoint pfrom = QPoint(rect.left() + 6
+                                     + d->sizeHint(view_->viewOptions(), m.from).width(),
+                                     rect.top() + rect.height() / 2 - 1);
 
-        ++row;
+        rect = view_->visualRect(m.to);
+        d = view_->itemDelegate(m.to);
+        const QPoint pto = QPoint(rect.left() +
+                                   + d->sizeHint(view_->viewOptions(), m.to).width(),
+                                   rect.top() + rect.height() / 2 + 5);
 
-        Object * obj = s.data(ObjectRole).value<Object*>();
-        MO_ASSERT(obj, "no object for itemindex " << s);
+        // control-point offset
+        const int
+                coff = std::max(50, std::min(300,
+                                        std::abs(pto.y() - pfrom.y()) / 3
+                                  )),
+                yhalf = (pto.y() - pfrom.y()) / 4,
+                xoff = std::max(pfrom.x(), pto.x()) + coff;
+        // path
+        QPainterPath path(pfrom);
+        path.cubicTo(xoff        , pfrom.y() + yhalf,
+                     xoff        , pto.y()   - yhalf,
+                     pto.x() + 5 , pto.y() );
+        // arrow
+        QPolygon poly;
+        poly << QPoint(pto.x(),     pto.y())
+             << QPoint(pto.x() + 5, pto.y() - 4)
+             << QPoint(pto.x() + 5, pto.y() + 4)
+             << QPoint(pto.x(),     pto.y());
+        path.addPolygon(poly);
 
-        indexMap_.insert(obj->idName(), s);
-
-        getIndexMap_(s);
+        m.path = path;
     }
-    */
 }
 
 void ObjectTreeViewOverpaint::getModulations_()
 {
     modPaths_.clear();
-    getModulations_(view_->sceneObject());
+    if (view_->sceneObject())
+        getModulations_(view_->sceneObject());
 }
 
 void ObjectTreeViewOverpaint::getModulations_(Object * parent)
 {
     for (auto obj : parent->childObjects())
     {
-        auto i = indexMap_.find(obj->idName());
-        if (i == indexMap_.end())
+        // XXX don't display track input modulations
+        // because *currently* tracks don't have inputs
+        // except from sequences that are on tracks
+        if (!obj->isTrack())
         {
-            MO_WARNING("object '" << obj->idName() << "' not found in indexMap_");
-            continue;
-        }
-        const QModelIndex idx = i.value();
-
-        QList<Object*> mods = obj->getModulatingObjects();
-        //MO_DEBUG(mods.size() << " mods for '" << obj->idName() << "'");
-        for (auto m : mods)
-        {
-            i = indexMap_.find(m->idName());
+            auto i = indexMap_.find(obj->idName());
             if (i == indexMap_.end())
             {
-                MO_WARNING("modulator '" << m->idName() << "' not found in indexMap_");
+                MO_WARNING("object '" << obj->idName() << "' not found in indexMap_");
                 continue;
             }
+            const QModelIndex idx = i.value();
 
-            modPaths_.push_back(ModPath_(i.value(), idx));
+            QList<Object*> mods = obj->getModulatingObjects();
+
+            for (auto m : mods)
+            {
+                // don't display sequence modulators
+                // because they are part of a track-modulator
+                if (m->isSequence())
+                    continue;
+
+                i = indexMap_.find(m->idName());
+                if (i == indexMap_.end())
+                {
+                    MO_WARNING("modulator '" << m->idName() << "' not found in indexMap_");
+                    continue;
+                }
+
+                // don't display self-references
+                if (i.value() != idx)
+                    modPaths_.push_back(ModPath_(i.value(), idx));
+            }
         }
 
         // go through childs
         getModulations_(obj);
     }
 
-
-    /*
-    int row = 0;
-    while (true)
-    {
-        MO_DEBUG("scan row " << row << " in " << parent);
-        QModelIndex s = parent.child(row, 0);
-        if (!s.isValid())
-            break;
-
-        ++row;
-
-        Object * obj = s.data(ObjectRole).value<Object*>();
-        MO_ASSERT(obj, "no object for itemindex " << s);
-
-        QList<Object*> mods = obj->getModulatingObjects();
-        MO_DEBUG(mods.size() << " mods for '" << obj->idName() << "'");
-        for (auto m : mods)
-        {
-            auto i = indexMap_.find(m->idName());
-            if (i == indexMap_.end())
-            {
-                MO_WARNING("modulator '" << m->idName() << "' not found in indexMap_");
-                continue;
-            }
-
-            modPaths_.push_back(ModPath_(i.value(), s));
-        }
-
-        // through childs
-        //getModulations_(s);
-    }
-    */
 }
 
 } // namespace GUI
