@@ -30,7 +30,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "geometrydialog.h"
-
+#include "painter/objecttreeviewoverpaint.h"
 
 namespace MO {
 namespace GUI {
@@ -38,7 +38,8 @@ namespace GUI {
 
 ObjectTreeView::ObjectTreeView(QWidget *parent) :
     QTreeView   (parent),
-    filter_     (new ObjectTreeSortProxy(this))
+    filter_     (new ObjectTreeSortProxy(this)),
+    overpaint_  (new ObjectTreeViewOverpaint(this))
 {
     setStatusTip(tr("Scene tree: right-click to open context menu"));
 
@@ -57,6 +58,33 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
     createDefaultActions_();
 
     createEditActions_();
+}
+
+QModelIndex ObjectTreeView::sceneIndex() const
+{
+    //return filter_->mapFromSource(omodel_->rootIndex());
+    return omodel_->rootIndex();
+}
+
+QModelIndex ObjectTreeView::findIndexForObject(Object * obj)
+{
+    QModelIndex oidx = omodel_->indexForObject(obj);
+    if (!oidx.isValid())
+        return QModelIndex();
+
+    while (true)
+    {
+        QModelIndex idx = filter_->mapFromSource(oidx);
+        if (idx.isValid())
+            return idx;
+
+        // look for parent index
+        oidx = oidx.parent();
+        if (!oidx.isValid())
+            break;
+    }
+
+    return QModelIndex();
 }
 
 void ObjectTreeView::setObjectModel(ObjectTreeModel *objectModel)
@@ -105,6 +133,9 @@ void ObjectTreeView::resizeEvent(QResizeEvent *event)
     QModelIndex idx = currentIndex();
     if (idx.isValid())
         scrollTo(idx);
+
+    overpaint_->resize(size());
+    overpaint_->raise();
 }
 
 void ObjectTreeView::mousePressEvent(QMouseEvent * e)

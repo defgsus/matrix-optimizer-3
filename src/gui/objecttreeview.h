@@ -24,14 +24,25 @@ class ObjectTreeModel;
 class ObjectTreeSortProxy;
 namespace GUI {
 
+class ObjectTreeViewOverpaint;
 
 class ObjectTreeView : public QTreeView
 {
     Q_OBJECT
+
+    friend class ObjectTreeViewOverpaint;
+
 public:
+
     explicit ObjectTreeView(QWidget *parent = 0);
 
     void setObjectModel(ObjectTreeModel * objectModel);
+
+    Scene * sceneObject() const { return scene_; }
+
+    QModelIndex sceneIndex() const;
+
+    QModelIndex findIndexForObject(Object *);
 
 signals:
 
@@ -92,6 +103,8 @@ protected:
     ObjectTreeModel * omodel_;
     ObjectTreeSortProxy * filter_;
     Scene * scene_;
+
+    ObjectTreeViewOverpaint * overpaint_;
 };
 
 } // namespace GUI
