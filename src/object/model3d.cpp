@@ -64,7 +64,7 @@ void Model3d::createParameters()
         lightMode_ = createSelectParameter("lightmode", tr("lighting mode"),
             tr("Selects the way how the lighting is calculated"),
             { "none", "vertex", "fragment" },
-            { tr("no light"), tr("per vertex"), tr("per fragment") },
+            { tr("off"), tr("per vertex"), tr("per fragment") },
             { tr("Light-calculation is completely disabled."),
               tr("The light influence is calculated per vertex. This might lead to incorrect "
                  "results and artifacts."),
