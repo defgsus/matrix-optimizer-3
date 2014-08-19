@@ -94,6 +94,7 @@ void ParameterView::clearWidgets_()
     spinsInt_.clear();
     spinsFloat_.clear();
     combosSelect_.clear();
+    editsFilename_.clear();
 }
 
 GroupWidget * ParameterView::getGroupWidget_(const Parameter * p)

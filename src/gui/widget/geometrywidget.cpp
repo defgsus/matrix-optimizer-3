@@ -128,6 +128,7 @@ void GeometryWidget::drawGL(const Mat4& projection,
         // set source (and flags)
         GL::ShaderSource * src = new GL::ShaderSource();
         src->loadDefaultSource();
+        src->addDefine("#define MO_ENABLE_LIGHTING");
         if (tex_)
             src->addDefine("#define MO_ENABLE_TEXTURE");
         if (texNorm_)

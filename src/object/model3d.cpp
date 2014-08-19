@@ -63,13 +63,14 @@ void Model3d::createParameters()
 
         lightMode_ = createSelectParameter("lightmode", tr("lighting mode"),
             tr("Selects the way how the lighting is calculated"),
-            { "vertex", "fragment" },
-            { tr("per vertex"), tr("per fragment") },
-            { tr("The light influence is calculated per vertex. This might lead to incorrect "
+            { "none", "vertex", "fragment" },
+            { tr("no light"), tr("per vertex"), tr("per fragment") },
+            { tr("Light-calculation is completely disabled."),
+              tr("The light influence is calculated per vertex. This might lead to incorrect "
                  "results and artifacts."),
               tr("The light influence is calculated per pixel. This is most accurate but a "
                  "bit more computationally expensive.") },
-            { LM_PER_VERTEX, LM_PER_FRAGMENT },
+            { LM_NONE, LM_PER_VERTEX, LM_PER_FRAGMENT },
             LM_PER_FRAGMENT,
             true, false);
 
@@ -157,6 +158,8 @@ void Model3d::setupDrawable_()
     src->loadVertexSource(":/shader/default.vert");
     src->loadFragmentSource(":/shader/default.frag");
 
+    if (lightMode_->baseValue() != LM_NONE)
+        src->addDefine("#define MO_ENABLE_LIGHTING");
     if (lightMode_->baseValue() == LM_PER_FRAGMENT)
         src->addDefine("#define MO_FRAGMENT_LIGHTING");
 

@@ -22,6 +22,7 @@ class Model3d : public ObjectGl
 public:
     enum LightMode
     {
+        LM_NONE,
         LM_PER_VERTEX,
         LM_PER_FRAGMENT
     };

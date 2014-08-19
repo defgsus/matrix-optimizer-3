@@ -5,8 +5,10 @@
 const float PI = 3.14159265358979;
 
 /* defines
+ * MO_ENABLE_LIGHTING
  * MO_ENABLE_TEXTURE
  * MO_ENABLE_NORMALMAP
+ * MO_FRAGMENT_LIGHTING
  */
 
 //#define MO_FULLDOME_BEND
@@ -25,10 +27,12 @@ uniform mat4 u_projection;                  // projection matrix
 uniform mat4 u_cubeViewTransform;           // cube-map * view * transform
 uniform mat4 u_viewTransform;               // view * transform
 uniform mat4 u_transform;                   // transformation only
-uniform vec3 u_light_pos[MO_NUM_LIGHTS];
-uniform vec4 u_light_color[MO_NUM_LIGHTS];
-uniform vec4 u_light_direction[MO_NUM_LIGHTS];
-uniform float u_light_dirmix[MO_NUM_LIGHTS];
+#ifdef MO_ENABLE_LIGHTING
+    uniform vec3 u_light_pos[MO_NUM_LIGHTS];
+    uniform vec4 u_light_color[MO_NUM_LIGHTS];
+    uniform vec4 u_light_direction[MO_NUM_LIGHTS];
+    uniform float u_light_dirmix[MO_NUM_LIGHTS];
+#endif
 
 // --- output of vertex shader ---
 
@@ -129,41 +133,43 @@ void main()
     // set final vertex position
     gl_Position = mo_ftransform(a_position);
 
+#ifdef MO_ENABLE_LIGHTING
 
+        mat3 lightmat = mo_light_matrix();
 
-    mat3 lightmat = mo_light_matrix();
+    #ifdef MO_FRAGMENT_LIGHTING
+        // pass all light relevant settings to fragment shader
+        v_normal_space = lightmat;
 
-#ifdef MO_FRAGMENT_LIGHTING
-    // pass all light relevant settings to fragment shader
-    v_normal_space = lightmat;
+    #else
+        // calculate as much as possible in vertex shader
 
-#else
-    // calculate as much as possible in vertex shader
-
-    for (int i=0; i<MO_NUM_LIGHTS; ++i)
-    {
-        // vector towards light in world coords
-        vec3 lightvec = u_light_pos[i] - v_pos_world;
-        // distance to lightsource
-        float dist = length(lightvec);
-        // normalized direction towards lightsource
-        vec3 lightvecn = lightvec / dist;
-        // normalized direction towards lightsource in surface-normal space
-        vec3 ldir = lightmat * lightvecn;
-
-        // calculate influence from distance attenuation
-        float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
-
-        // attenuation from direction
-        if (u_light_dirmix[i]>0)
+        for (int i=0; i<MO_NUM_LIGHTS; ++i)
         {
-            float diratt = pow( max(0.0, dot(u_light_direction[i].xyz, lightvecn)),
-                                u_light_direction[i].w);
-            att *= mix(1.0, diratt, u_light_dirmix[i]);
-        }
+            // vector towards light in world coords
+            vec3 lightvec = u_light_pos[i] - v_pos_world;
+            // distance to lightsource
+            float dist = length(lightvec);
+            // normalized direction towards lightsource
+            vec3 lightvecn = lightvec / dist;
+            // normalized direction towards lightsource in surface-normal space
+            vec3 ldir = lightmat * lightvecn;
 
-        v_light_dir[i] = vec4(ldir, att);
-    }
-#endif
+            // calculate influence from distance attenuation
+            float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
+
+            // attenuation from direction
+            if (u_light_dirmix[i]>0)
+            {
+                float diratt = pow( max(0.0, dot(u_light_direction[i].xyz, lightvecn)),
+                                    u_light_direction[i].w);
+                att *= mix(1.0, diratt, u_light_dirmix[i]);
+            }
+
+            v_light_dir[i] = vec4(ldir, att);
+        }
+    #endif
+
+#endif // MO_ENABLE_LIGHTING
 
 }

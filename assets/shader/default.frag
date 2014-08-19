@@ -3,6 +3,7 @@
 #define MO_NUM_LIGHTS 3
 
 /* defines
+ * MO_ENABLE_LIGHTING
  * MO_ENABLE_TEXTURE
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
@@ -18,10 +19,12 @@ in vec3 v_normal;
 in vec3 v_normal_eye;
 in vec4 v_color;
 in vec2 v_texCoord;
-#ifndef MO_FRAGMENT_LIGHTING
-    in vec4 v_light_dir[MO_NUM_LIGHTS];
-#else
-    in mat3 v_normal_space;
+#ifdef MO_ENABLE_LIGHTING
+    #ifndef MO_FRAGMENT_LIGHTING
+        in vec4 v_light_dir[MO_NUM_LIGHTS];
+    #else
+        in mat3 v_normal_space;
+    #endif
 #endif
 
 // --- output to rasterizer ---
@@ -32,12 +35,14 @@ out vec4 color;
 // --- uniforms ---
 
 uniform vec4 u_color;
-uniform float u_diffuse_exp;
-uniform vec4 u_light_color[MO_NUM_LIGHTS];
-uniform vec3 u_light_pos[MO_NUM_LIGHTS];
-#ifdef MO_FRAGMENT_LIGHTING
-    uniform vec4 u_light_direction[MO_NUM_LIGHTS];
-    uniform float u_light_dirmix[MO_NUM_LIGHTS];
+#ifdef MO_ENABLE_LIGHTING
+    uniform float u_diffuse_exp;
+    uniform vec4 u_light_color[MO_NUM_LIGHTS];
+    uniform vec3 u_light_pos[MO_NUM_LIGHTS];
+    #ifdef MO_FRAGMENT_LIGHTING
+        uniform vec4 u_light_direction[MO_NUM_LIGHTS];
+        uniform float u_light_dirmix[MO_NUM_LIGHTS];
+    #endif
 #endif
 
 #ifdef MO_ENABLE_TEXTURE
@@ -68,6 +73,9 @@ vec3 mo_normal()
     return normalmap;
 #endif
 }
+
+
+#ifdef MO_ENABLE_LIGHTING
 
 vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness)
 {
@@ -132,7 +140,14 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
     }
 
 
+#endif // !MO_FRAGMENT_LIGHTING
+
+#else // MO_ENABLE_LIGHTING
+
+vec4 mo_light_color() { return vec4(0.); }
+
 #endif
+
 
 vec4 mo_toon_color()
 {
