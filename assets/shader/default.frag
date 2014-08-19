@@ -163,9 +163,9 @@ void main()
     vec4 ambcol = mo_ambient_color();
 
     // adding the light to the base color
-    vec4 col = ambcol + mo_light_color();
+    //vec4 col = ambcol + mo_light_color();
     //vec4 col = vec4(v_cam_dir, 1.0);
-
+    vec4 col = vec4(v_pos * 0.5 + 0.5, 1.0);
     //col *= mo_toon_color();
 
     // final color

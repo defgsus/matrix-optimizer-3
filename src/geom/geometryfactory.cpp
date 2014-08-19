@@ -36,6 +36,7 @@ void GeometryFactory::createQuad(Geometry * g, Float sx, Float sy, bool asTriang
     sx *= 0.5f;
     sy *= 0.5f;
 
+    g->setNormal(0,0,-1);
     g->setTexCoord(0,0);
     const int bl = g->addVertex(-sx, -sy, 0);
     g->setTexCoord(1,0);

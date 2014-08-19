@@ -51,6 +51,13 @@ out vec2 v_texCoord;
                                                 // w is distance attenuation
 #endif
 
+mat3 mo_general_normal_matrix(in vec3 norm)
+{
+    vec3 tangent =  vec3(-norm.z, -norm.y,  norm.x);
+    vec3 binormal = vec3(-norm.x,  norm.z, -norm.y);
+    return mat3(tangent, -binormal, norm);
+}
+
 /** Returns the matrix to multiply the light-direction normal */
 mat3 mo_light_matrix()
 {
@@ -120,6 +127,35 @@ vec4 mo_ftransform(in vec4 pos)
 
 void main()
 {
+#ifdef MO_ENABLE_BILLBOARD
+    // eye-to-center normal
+    vec3 eyen = normalize(u_viewTransform[3].xyz);
+    // rotated/transformed vertex coords
+    vec4 trans_pos = u_transform * vec4(a_position.xyz, 0.0);
+    // it's not entirely correct - but fast
+    vec4 vertex_pos = vec4(
+                trans_pos.x,
+                trans_pos.y,
+                eyen.x * trans_pos.x + eyen.y * trans_pos.y,
+                1.0);
+
+    // pass attributes to fragment shader
+    v_pos = vertex_pos.xyz;
+    v_pos_world = u_transform[3].xyz + vertex_pos.xyz;
+    v_pos_eye = u_viewTransform[3].xyz + vertex_pos.xyz;
+    v_normal = a_normal;
+    v_normal_eye = a_normal;
+    v_color = a_color;
+    v_texCoord = a_texCoord;
+    v_cam_dir = normalize(v_pos_eye);
+
+    // set final vertex position
+    //gl_Position = mo_ftransform(vertex_pos);
+    //gl_Position = vec4(v_pos_eye, 1.0);
+    gl_Position = mo_ftransform(inverse(u_viewTransform)*vec4(v_pos_eye,1.0));
+
+#else
+
     // pass attributes to fragment shader
     v_pos = a_position.xyz;
     v_pos_world = (u_transform * a_position).xyz;
@@ -132,6 +168,8 @@ void main()
 
     // set final vertex position
     gl_Position = mo_ftransform(a_position);
+
+#endif // !MO_ENABLE_BILLBOARD
 
 #ifdef MO_ENABLE_LIGHTING
 
