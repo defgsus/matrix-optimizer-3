@@ -45,13 +45,15 @@ private:
     ProjectionType ptype_, actualPtype_;
 
     ParameterFilename * paramFilename_;
-    ParameterSelect * paramPType_;
-    ParameterFloat * cr_, *cg_, *cb_, *ca_, *pos_influence_;
+    ParameterSelect * paramPType_, *paramPost_;
+    ParameterFloat * cr_, *cg_, *cb_, *ca_, *pos_influence_,
+            * postInv_, *postBright_, *postContrast_, *postContrastThresh_;
     GL::Texture * tex_;
     GL::ScreenQuad * quad_;
     GL::Uniform * u_color_,
         *u_dir_matrix_, *u_cam_angle_, *u_sphere_offset_,
-        *u_local_transform_, *u_cube_hack_;
+        *u_local_transform_, *u_cube_hack_,
+        *u_post_inv_, *u_post_bright_;
 };
 
 } // namespace MO

@@ -87,6 +87,34 @@ void TextureOverlay::createParameters()
         ca_->setMinValue(0.0);
 
     endParameterGroup();
+
+    beginParameterGroup("texturepost", tr("color post-processing"));
+
+        paramPost_ = createSelectParameter("postenable", tr("post-processing"),
+                                           tr("Enables or disables color post-processing"),
+                                            { "off", "on" }, { tr("off"), tr("on") },
+                                            { tr("Color-post-processing is enabled"),
+                                              tr("Color-post-processing is disabled") },
+                                            { 0, 1 }, 0, true, false);
+
+        postBright_ = createFloatParameter("postbright", "brightness",
+                                        tr("Brightness (simply offset to all colors)"),
+                                        0.0, -1.0, 1.0, 0.02);
+
+        postContrast_ = createFloatParameter("postcontr", "contrast",
+                                        tr("Contrast (a multiplier around threshold)"),
+                                        1.0, 0.0, 1000.0, 0.02);
+
+        postContrastThresh_ = createFloatParameter("postcontrt", "threshold",
+                                        tr("The threshold or edge between dark and "
+                                           "bright for contrast setting"),
+                                        0.5, 0.0, 1.0, 0.02);
+
+        postInv_ = createFloatParameter("postinv", "negative",
+                                        tr("Mix between normal and negative colors [0,1]"),
+                                        0.0, 0.0, 1.0, 0.1);
+
+    endParameterGroup();
 }
 
 void TextureOverlay::onParameterChanged(Parameter *p)
@@ -97,7 +125,7 @@ void TextureOverlay::onParameterChanged(Parameter *p)
         ptype_ = (ProjectionType)paramPType_->baseValue();
         requestReinitGl();
     }
-    if (p == paramFilename_)
+    if (p == paramFilename_ || p == paramPost_)
         requestReinitGl();
 }
 
@@ -126,6 +154,8 @@ void TextureOverlay::initGl(uint /*thread*/)
         defines += "#define MO_EQUIRECT\n";
     if (ptype_ == PT_FLAT)
         defines += "#define MO_FLAT\n";
+    if (paramPost_->baseValue())
+        defines += "#define MO_POST_PROCESS";
 
     quad_->create(":/shader/textureoverlay.vert",
                   ":/shader/textureoverlay.frag",
@@ -145,6 +175,12 @@ void TextureOverlay::initGl(uint /*thread*/)
         u_cam_angle_ = quad_->shader()->getUniform("u_cam_angle", true);
         u_sphere_offset_ = quad_->shader()->getUniform("u_sphere_offset", true);
         u_cube_hack_ = quad_->shader()->getUniform("u_cube_hack", true);
+    }
+
+    if (paramPost_->baseValue())
+    {
+        u_post_inv_ = quad_->shader()->getUniform("u_post_inv", true);
+        u_post_bright_ = quad_->shader()->getUniform("u_post_bright", true);
     }
 
     actualPtype_ = ptype_;
@@ -199,8 +235,17 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
         trans = glm::inverse(trans);
 
         quad_->shader()->activate();
+
         MO_CHECK_GL( glUniformMatrix4fv(u_local_transform_->location(), 1, GL_FALSE,
                                         &trans[0][0]) );
+    }
+
+    if (paramPost_->baseValue())
+    {
+        u_post_inv_->floats[0] = postInv_->value(time, thread);
+        u_post_bright_->floats[0] = postBright_->value(time, thread);
+        u_post_bright_->floats[1] = postContrast_->value(time, thread);
+        u_post_bright_->floats[2] = postContrastThresh_->value(time, thread);
     }
 
     tex_->bind();

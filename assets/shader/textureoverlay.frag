@@ -16,6 +16,11 @@ uniform vec3 u_sphere_offset;
 uniform mat4 u_local_transform;
 #endif
 
+#ifdef MO_POST_PROCESS
+uniform float u_post_inv;
+uniform vec3 u_post_bright; // brightness, contrast, threshold
+#endif
+
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
 
@@ -91,6 +96,15 @@ void main(void)
 #endif
 
     vec4 col = mo_texture(uv);
+
+#ifdef MO_POST_PROCESS
+    // negative
+    col.rgb = mix(col.rgb, 1.0 - col.rgb, u_post_inv);
+    // brightness/contrast
+    col.rgb = clamp(
+                (col.rgb - u_post_bright.z) * u_post_bright.y
+                    + u_post_bright.z + u_post_bright.x, 0.0, 1.0);
+#endif
 
     color = clamp(u_color * col, 0.0, 1.0);
 }
