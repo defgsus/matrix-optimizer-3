@@ -308,6 +308,9 @@ void Scene::updateTree_()
         // XXX This should be iteratively for all glContext_s
         setGlContext(MO_GFX_THREAD, glContext_);
 
+        // update the rendermodes
+        propagateRenderMode(0);
+
         // update image
         render_();
     }

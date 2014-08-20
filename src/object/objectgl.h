@@ -26,10 +26,35 @@ class ObjectGl : public Object
 
 public:
 
+    enum DepthTestMode
+    {
+        DTM_PARENT,
+        DTM_ON,
+        DTM_OFF
+    };
+
+    enum DepthWriteMode
+    {
+        DWM_PARENT,
+        DWM_ON,
+        DWM_OFF
+    };
+
+    enum AlphaBlendMode
+    {
+        ABM_PARENT,
+        ABM_MIX,
+        ABM_ADD
+    };
+
+
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(ObjectGl)
 
     virtual Type type() const Q_DECL_OVERRIDE { return T_OBJECT; }
     bool isGl() const Q_DECL_OVERRIDE { return true; }
+
+    virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
@@ -52,9 +77,23 @@ public:
     /** Requests a releaseGl() - initGl() sequence */
     void requestReinitGl();
 
-signals:
+    // ----------------- render state -------------------
 
-public slots:
+    /* these must all be called before createParameters, e.g. in object constructor */
+    void setCreateRenderSettings(bool enable) { enableCreateRenderSettings_ = enable; }
+    void setDefaultDepthTestMode(DepthTestMode m) { defaultDepthTestMode_ = m; }
+    void setDefaultDepthWriteMode(DepthWriteMode m) { defaultDepthWriteMode_ = m; }
+    void setDefaultAlphaBlendMode(AlphaBlendMode m) { defaultAlphaBlendMode_ = m; }
+
+    DepthTestMode defaultDepthTestMode() const { return defaultDepthTestMode_; }
+    DepthWriteMode defaultDepthWriteMode() const { return defaultDepthWriteMode_; }
+    AlphaBlendMode defaultAlphaBlendMode() const { return defaultAlphaBlendMode_; }
+
+    DepthTestMode depthTestMode() const { return curDepthTestMode_; }
+    DepthWriteMode depthWriteMode() const { return curDepthWriteMode_; }
+    AlphaBlendMode alphaBlendMode() const { return curAlphaBlendMode_; }
+
+    virtual void propagateRenderMode(ObjectGl * parent) Q_DECL_OVERRIDE;
 
 private:
 
@@ -67,6 +106,13 @@ private:
 
     std::vector<GL::Context*> glContext_;
     std::vector<int> needsInitGl_, isGlInitialized_;
+
+    DepthTestMode defaultDepthTestMode_, curDepthTestMode_;
+    DepthWriteMode defaultDepthWriteMode_, curDepthWriteMode_;
+    AlphaBlendMode defaultAlphaBlendMode_, curAlphaBlendMode_;
+
+    bool enableCreateRenderSettings_;
+    ParameterSelect *paramDepthTest_, *paramDepthWrite_, *paramAlphaBlend_;
 };
 
 } // namespace MO

@@ -319,6 +319,10 @@ public:
     template <class T>
     int indexOfLastChild(int last = -1) const;
 
+    /** Needed for ObjectGl. Base implementation calls propagteRenderMode() for
+        all children. */
+    virtual void propagateRenderMode(ObjectGl * parent);
+
 protected:
 
     /** Called when the children list has changed */

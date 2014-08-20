@@ -70,6 +70,13 @@ Shader * Drawable::shader()
     return shader_;
 }
 
+VertexArrayObject * Drawable::vao()
+{
+    if (!vao_)
+        vao_ = new VertexArrayObject(name_);
+    return vao_;
+}
+
 bool Drawable::isReady() const
 {
     return geometry_ && vao_ && vao_->isCreated() && shader_ && shader_->ready();
@@ -217,7 +224,7 @@ void Drawable::createVAO_()
     MO_ASSERT(shader_, "Drawable(" << name_ << ")::createVAO_() without shader");
 
     if (!vao_)
-        vao_ = new VertexArrayObject(ER_THROW);
+        vao_ = new VertexArrayObject(name_);
 
     geometry_->getVertexArrayObject(vao_, shader_, geometry_->numTriangles() != 0);
 
@@ -235,9 +242,9 @@ void Drawable::releaseOpenGl()
     if (!vao_)
     {
         vao_->release();
-        delete vao_;
+        //delete vao_;
     }
-    vao_ = 0;
+    //vao_ = 0;
 }
 
 void Drawable::setAmbientColor(Float r, Float g, Float b, Float a)

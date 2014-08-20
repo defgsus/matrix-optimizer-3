@@ -12,6 +12,7 @@
 #include "io/datastream.h"
 #include "geom/geometryfactory.h"
 #include "gl/drawable.h"
+#include "gl/shader.h"
 #include "gl/shadersource.h"
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
@@ -27,6 +28,9 @@ Sprite::Sprite(QObject * parent)
       draw_         (0)
 {
     setName("Sprite");
+
+    setDefaultDepthTestMode(DTM_OFF);
+    setDefaultDepthWriteMode(DWM_OFF);
 }
 
 void Sprite::serialize(IO::DataStream & io) const
@@ -54,6 +58,16 @@ void Sprite::createParameters()
         cb_ = createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
         ca_ = createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
 
+    endParameterGroup();
+
+    beginParameterGroup("repeat", tr("repeat"));
+
+        numRep_ = createFloatParameter("numrep", "number instances",
+                                   tr("The number of instances of the sprite to draw"), 1.0, 1.0);
+        numRep_->setMinValue(1.0);
+        timeSpan_ = createFloatParameter("timespan", "time span",
+                                    tr("The time in seconds from the first to the last instance"),
+                                    -1.0, 0.05);
     endParameterGroup();
 }
 
@@ -90,50 +104,66 @@ void Sprite::releaseGl(uint /*thread*/)
 }
 
 
-void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
+void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 {
-    const Mat4& orgtrans = transformation(thread, 0);
-
-    // extract current position
-    Vec3 pos = Vec3(-orgtrans[3][0], -orgtrans[3][1], -orgtrans[3][2]);
-
-    // forward vector (look-at minus position)
-    Vec3 f = glm::normalize(pos);
-    // up vector
-    Vec3 u = Vec3(orgtrans[0][1], orgtrans[1][1], orgtrans[2][1]);
-    // right vector
-    Vec3 s = glm::normalize(glm::cross(f, u));
-    // rebuild up to avoid distortion
-    u = glm::cross(s, f);
-
-    Mat4 lookm(1);
-
-    lookm[0][0] = s.x;
-    lookm[0][1] = s.y;
-    lookm[0][2] = s.z;
-    lookm[1][0] = u.x;
-    lookm[1][1] = u.y;
-    lookm[1][2] = u.z;
-    lookm[2][0] =-f.x;
-    lookm[2][1] =-f.y;
-    lookm[2][2] =-f.z;
-
-    const Mat4 trans = orgtrans * lookm;
-
-    const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
-    const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
-
     if (draw_->isReady())
     {
+        const uint numrep = numRep_->value(orgtime, thread);
+        const uint numrep0 = numrep>1? numrep-1 : 1;
+        const Float timespan = timeSpan_->value(orgtime, thread);
 
-        draw_->setAmbientColor(
-                    cr_->value(time, thread),
-                    cg_->value(time, thread),
-                    cb_->value(time, thread),
-                    ca_->value(time, thread));
+        // paint each instance
+        for (uint i=0; i<numrep; ++i)
+        {
+            const Float t = (Float)i / numrep0;
 
-        draw_->renderShader(rs.cameraSpace().projectionMatrix(),
-                            cubeViewTrans, viewTrans, trans, &rs.lightSettings());
+            const Float time = orgtime + timespan * t;
+
+            // get parent transformation
+            Mat4 orgtrans = parentObject()->transformation(thread, 0);
+            // apply local transformation with time-offset
+            calculateTransformation(orgtrans, time, thread);
+
+            // -------- billboard matrix ----------
+
+            // extract current position
+            Vec3 pos = Vec3(-orgtrans[3][0], -orgtrans[3][1], -orgtrans[3][2]);
+
+            // forward vector (look-at minus position)
+            Vec3 f = glm::normalize(pos);
+            // up vector
+            Vec3 u = Vec3(orgtrans[0][1], orgtrans[1][1], orgtrans[2][1]);
+            // right vector
+            Vec3 s = glm::normalize(glm::cross(f, u));
+            // rebuild up to avoid distortion
+            u = glm::cross(s, f);
+
+            Mat4 lookm(1);
+
+            lookm[0][0] = s.x;
+            lookm[0][1] = s.y;
+            lookm[0][2] = s.z;
+            lookm[1][0] = u.x;
+            lookm[1][1] = u.y;
+            lookm[1][2] = u.z;
+            lookm[2][0] =-f.x;
+            lookm[2][1] =-f.y;
+            lookm[2][2] =-f.z;
+
+            const Mat4 trans = orgtrans * lookm;
+            const Mat4 cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
+            const Mat4 viewTrans = rs.cameraSpace().viewMatrix() * trans;
+
+            draw_->setAmbientColor(
+                        cr_->value(time, thread),
+                        cg_->value(time, thread),
+                        cb_->value(time, thread),
+                        ca_->value(time, thread));
+
+            draw_->renderShader(rs.cameraSpace().projectionMatrix(),
+                                cubeViewTrans, viewTrans, trans, &rs.lightSettings());
+
+        }
     }
 }
 

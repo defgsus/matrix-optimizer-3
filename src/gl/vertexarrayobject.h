@@ -13,6 +13,8 @@
 
 #include <vector>
 
+#include <QString>
+
 #include "opengl.h"
 
 namespace MO {
@@ -22,7 +24,8 @@ namespace GL {
 class VertexArrayObject
 {
 public:
-    explicit VertexArrayObject(ErrorReporting = ER_IGNORE);
+    /** @p name is for debugging purposes */
+    explicit VertexArrayObject(const QString& name, ErrorReporting = ER_THROW);
     ~VertexArrayObject();
 
     // --------- getter -----------
@@ -68,6 +71,8 @@ public:
     bool drawElements(GLenum primitiveType, GLuint numberVertices = 0, GLuint offset = 0) const;
 
 private:
+
+    QString name_;
 
     ErrorReporting rep_;
     GLuint vao_;

@@ -37,7 +37,8 @@ private slots:
 private:
     GL::Drawable * draw_;
 
-    ParameterFloat * cr_, *cg_, *cb_, *ca_;
+    ParameterFloat * cr_, *cg_, *cb_, *ca_,
+            *numRep_, *timeSpan_;
 };
 
 } // namespace MO

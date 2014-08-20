@@ -33,6 +33,8 @@ Camera::Camera(QObject *parent) :
     renderMode_     (RM_FULLDOME_CUBE)
 {
     setName("Camera");
+
+    setCreateRenderSettings(false);
 }
 
 Camera::~Camera()

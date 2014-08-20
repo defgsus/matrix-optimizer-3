@@ -25,8 +25,9 @@ struct VertexArrayObject::Buffer_
 
 
 
-VertexArrayObject::VertexArrayObject(ErrorReporting errorReport)
-    : rep_          (errorReport),
+VertexArrayObject::VertexArrayObject(const QString& name, ErrorReporting errorReport)
+    : name_         (name),
+      rep_          (errorReport),
       vao_          (invalidGl),
       elementBuffer_(0)
 {
@@ -35,7 +36,7 @@ VertexArrayObject::VertexArrayObject(ErrorReporting errorReport)
 VertexArrayObject::~VertexArrayObject()
 {
     if (isCreated())
-        MO_GL_WARNING("destruction of unreleased vertex array object");
+        MO_GL_WARNING("destruction of unreleased vertex array object '" << name_ << "'");
 
     delete elementBuffer_;
 }
@@ -44,7 +45,7 @@ bool VertexArrayObject::create()
 {
     if (isCreated())
     {
-        MO_GL_ERROR_COND(rep_, "Vertex array object already created");
+        MO_GL_ERROR_COND(rep_, "Vertex array object '" << name_ << "' already created");
         return false;
     }
 
@@ -58,7 +59,7 @@ bool VertexArrayObject::create()
 void VertexArrayObject::release()
 {
     if (!isCreated())
-        MO_GL_ERROR_COND(rep_, "release on uninitialized vertex array object");
+        MO_GL_ERROR_COND(rep_, "release on uninitialized vertex array object '" << name_ << "'");
 
     MO_CHECK_GL( glDeleteVertexArrays(1, &vao_) );
     vao_ = invalidGl;
@@ -86,7 +87,7 @@ GLuint VertexArrayObject::createAttribBuffer(
 
     if (!isCreated())
     {
-        MO_GL_ERROR_COND(rep_, "createAttribBuffer() on uninitialized vertex array object");
+        MO_GL_ERROR_COND(rep_, "createAttribBuffer() on uninitialized vertex array object '" << name_ << "'");
         return buf;
     }
 
@@ -135,7 +136,7 @@ GLuint VertexArrayObject::createIndexBuffer(
 
     if (!isCreated())
     {
-        MO_GL_ERROR_COND(rep_, "createIndexBuffer() on uninitialized vertex array object");
+        MO_GL_ERROR_COND(rep_, "createIndexBuffer() on uninitialized vertex array object '" << name_ << "'");
         return buf;
     }
 
@@ -202,7 +203,8 @@ bool VertexArrayObject::drawElements(
 {
     if (!elementBuffer_)
     {
-        MO_GL_ERROR_COND(rep_, "no element buffer defined for VertexArrayObject::drawElements()");
+        MO_GL_ERROR_COND(rep_, "no element buffer defined for "
+                         "VertexArrayObject('" << name_ << "')::drawElements()");
         return false;
     }
 

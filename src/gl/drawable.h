@@ -28,14 +28,21 @@ public:
 
     // ------------- getter ------------------
 
-    /** Returns access to the geometry class of the Drawable. */
+    /** Returns access to the geometry class of the Drawable.
+        A Geometry will be created if there was none before. */
     GEOM::Geometry * geometry();
 
-    /** Returns access to the shader source of the Drawable. */
+    /** Returns access to the shader source of the Drawable.
+        A ShaderSource will be created if there was none before. */
     ShaderSource * shaderSource();
 
-    /** Returns access to the shader of the Drawable. */
+    /** Returns access to the shader of the Drawable.
+        A Shader will be created if there was none before. */
     Shader * shader();
+
+    /** Returns access to the vertex array object.
+        The VertexArrayObject will be created if there was none before. */
+    VertexArrayObject * vao();
 
     /** Returns true when the Drawable is ready to render */
     bool isReady() const;

@@ -719,6 +719,12 @@ void Object::onObjectsAboutToDelete(const QList<const Object *> & list)
 }
 
 
+void Object::propagateRenderMode(ObjectGl *parent)
+{
+    for (auto c : childObjects_)
+        c->propagateRenderMode(parent);
+}
+
 
 void Object::setNumberThreads(uint num)
 {
