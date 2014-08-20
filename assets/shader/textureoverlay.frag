@@ -17,8 +17,10 @@ uniform mat4 u_local_transform;
 #endif
 
 #ifdef MO_POST_PROCESS
-uniform float u_post_inv;
+uniform vec3 u_post_transform; // grayscale, invert, +/-shift
 uniform vec3 u_post_bright; // brightness, contrast, threshold
+uniform vec4 u_post_alpha; // rgb color and to-alpha amount
+uniform float u_post_alpha_edge;
 #endif
 
 const float PI = 3.14159265358979;
@@ -74,6 +76,13 @@ vec4 mo_texture(vec2 xy)
     return texture2D(u_tex, xy * 0.5 + 0.5);
 }
 
+vec4 mo_color(vec2 xy)
+{
+    vec4 col = mo_texture(xy);
+
+    return col;
+}
+
 
 void main(void)
 {
@@ -87,23 +96,51 @@ void main(void)
     float ang = atan(scr.x, scr.y) / PI;
     float dist = length(scr.xy);
     vec2 uv = 1.0 - vec2(ang, dist);
+
+    vec4 col = mo_color(uv);
+#endif
+
+#ifdef MO_FISHEYE
+    vec3 sphere = (spherical(scr) + u_sphere_offset) * v_dir_matrix;
+    vec4 col1 = mo_color( cartesian(sphere) );
+    sphere.z = -sphere.z;
+    vec4 col2 = mo_color( cartesian(sphere) );
+
+    vec4 col = mix(col2, col1, smoothstep(-0.1,0.1, sphere.z));
 #endif
 
     // ------- flat on screen -------------------
 #ifdef MO_FLAT
     vec4 newpos = u_local_transform * vec4(scr, 0.0, 1.0);
     vec2 uv = newpos.xy;
+
+    vec4 col = mo_color(uv);
 #endif
 
-    vec4 col = mo_texture(uv);
+
 
 #ifdef MO_POST_PROCESS
-    // negative
-    col.rgb = mix(col.rgb, 1.0 - col.rgb, u_post_inv);
+    // color to alpha
+    float cmatch = (1. - distance(u_post_alpha.rgb, col.rgb) / sqrt(3.));
+    col.a -= col.a * u_post_alpha.a * smoothstep(u_post_alpha_edge, 1.0, cmatch);
+
     // brightness/contrast
     col.rgb = clamp(
                 (col.rgb - u_post_bright.z) * u_post_bright.y
                     + u_post_bright.z + u_post_bright.x, 0.0, 1.0);
+
+    // color shift
+    if (u_post_transform.z > 0.0)
+        col.rgb = mix(col.rgb, col.brg, u_post_transform.z);
+    else if (u_post_transform.z < 0.0)
+        col.rgb = mix(col.rgb, col.gbr, -u_post_transform.z);
+
+    // negative
+    col.rgb = mix(col.rgb, 1.0 - col.rgb, u_post_transform.y);
+
+    // grayscale
+    col.rgb = mix(col.rgb, vec3(col.r*0.3 + col.g*0.59 + col.b*0.11), u_post_transform.x);
+
 #endif
 
     color = clamp(u_color * col, 0.0, 1.0);

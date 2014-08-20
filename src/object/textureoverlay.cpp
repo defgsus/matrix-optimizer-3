@@ -63,11 +63,12 @@ void TextureOverlay::createParameters()
 
         paramPType_ = createSelectParameter("projtype", tr("projection"),
             tr("Selects the type of projection for the texture overlay"),
-            { "flat", "equirect" },
-            { tr("flat on screen"), tr("equi-rect") },
+            { "flat", "fish", "equirect" },
+            { tr("flat on screen"), tr("fish-eye"), tr("equi-rect") },
             { tr("Projects the texture as-is on screen"),
+              tr("Projects a fisheye/fulldome master as seen from inside"),
               tr("Projects an equi-rectangular map as seen from inside") },
-            { PT_FLAT, PT_EQUIRECT },
+            { PT_FLAT, PT_FISHEYE, PT_EQUIRECT },
               ptype_, true, false);
 
         pos_influence_ = createFloatParameter("posinf", tr("position influence"),
@@ -97,22 +98,46 @@ void TextureOverlay::createParameters()
                                               tr("Color-post-processing is disabled") },
                                             { 0, 1 }, 0, true, false);
 
+        postAlpha_ = createFloatParameter("postalpha", "color to alpha",
+                                        tr("Makes the choosen color transparent"),
+                                        0.0, 0.0, 1.0, 0.02);
+        postAlphaR_ = createFloatParameter("postalphar", "red",
+                                        tr("Red component of the color to make transparent"),
+                                        0.0, 0.0, 1.0, 0.02);
+        postAlphaG_ = createFloatParameter("postalphag", "green",
+                                        tr("Green component of the color to make transparent"),
+                                        0.0, 0.0, 1.0, 0.02);
+        postAlphaB_ = createFloatParameter("postalphab", "blue",
+                                        tr("Blue component of the color to make transparent"),
+                                        0.0, 0.0, 1.0, 0.02);
+        postAlphaEdge_ = createFloatParameter("postalphae", "edge",
+                                        tr("Edge of the alpha transformation - the lower the smoother"),
+                                        0.0, 0.0, 1.0, 0.02);
+
         postBright_ = createFloatParameter("postbright", "brightness",
                                         tr("Brightness (simply offset to all colors)"),
                                         0.0, -1.0, 1.0, 0.02);
 
         postContrast_ = createFloatParameter("postcontr", "contrast",
                                         tr("Contrast (a multiplier around threshold)"),
-                                        1.0, 0.0, 1000.0, 0.02);
+                                        1.0, 0.0, 100000.0, 0.02);
 
         postContrastThresh_ = createFloatParameter("postcontrt", "threshold",
                                         tr("The threshold or edge between dark and "
                                            "bright for contrast setting"),
                                         0.5, 0.0, 1.0, 0.02);
 
+        postShift_ = createFloatParameter("postshift", "rgb shift",
+                                        tr("Shifts the rgb colors right (postive) or left (negative)"),
+                                        0.0, -1.0, 1.0, 0.05);
+
         postInv_ = createFloatParameter("postinv", "negative",
                                         tr("Mix between normal and negative colors [0,1]"),
-                                        0.0, 0.0, 1.0, 0.1);
+                                        0.0, 0.0, 1.0, 0.05);
+
+        postGray_ = createFloatParameter("postgray", "grayscale",
+                                        tr("Removes the saturation [0,1]"),
+                                        0.0, 0.0, 1.0, 0.05);
 
     endParameterGroup();
 }
@@ -152,6 +177,8 @@ void TextureOverlay::initGl(uint /*thread*/)
     QString defines;
     if (ptype_ == PT_EQUIRECT)
         defines += "#define MO_EQUIRECT\n";
+    if (ptype_ == PT_FISHEYE)
+        defines += "#define MO_FISHEYE\n";
     if (ptype_ == PT_FLAT)
         defines += "#define MO_FLAT\n";
     if (paramPost_->baseValue())
@@ -169,7 +196,7 @@ void TextureOverlay::initGl(uint /*thread*/)
         u_local_transform_ = quad_->shader()->getUniform("u_local_transform", true);
     }
 
-    if (ptype_ == PT_EQUIRECT)
+    if (ptype_ == PT_EQUIRECT || ptype_ == PT_FISHEYE)
     {
         u_dir_matrix_ = quad_->shader()->getUniform("u_cvt", true);
         u_cam_angle_ = quad_->shader()->getUniform("u_cam_angle", true);
@@ -179,8 +206,10 @@ void TextureOverlay::initGl(uint /*thread*/)
 
     if (paramPost_->baseValue())
     {
-        u_post_inv_ = quad_->shader()->getUniform("u_post_inv", true);
+        u_post_trans_ = quad_->shader()->getUniform("u_post_transform", true);
         u_post_bright_ = quad_->shader()->getUniform("u_post_bright", true);
+        u_post_alpha_ = quad_->shader()->getUniform("u_post_alpha", true);
+        u_post_alpha_edge_ = quad_->shader()->getUniform("u_post_alpha_edge", true);
     }
 
     actualPtype_ = ptype_;
@@ -208,7 +237,7 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
                         cb_->value(time, thread),
                         ca_->value(time, thread));
 
-    if (actualPtype_ == PT_EQUIRECT)
+    if (actualPtype_ == PT_EQUIRECT || actualPtype_ == PT_FISHEYE)
     {
         u_cube_hack_->floats[0] = rs.cameraSpace().isCubemap() ? 1.f : 0.f;
 
@@ -242,14 +271,22 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
 
     if (paramPost_->baseValue())
     {
-        u_post_inv_->floats[0] = postInv_->value(time, thread);
+        u_post_trans_->floats[0] = postGray_->value(time, thread);
+        u_post_trans_->floats[1] = postInv_->value(time, thread);
+        u_post_trans_->floats[2] = postShift_->value(time, thread);
         u_post_bright_->floats[0] = postBright_->value(time, thread);
         u_post_bright_->floats[1] = postContrast_->value(time, thread);
         u_post_bright_->floats[2] = postContrastThresh_->value(time, thread);
+        u_post_alpha_->setFloats(
+                    postAlphaR_->value(time, thread),
+                    postAlphaG_->value(time, thread),
+                    postAlphaB_->value(time, thread),
+                    postAlpha_->value(time, thread));
+        u_post_alpha_edge_->floats[0] = postAlphaEdge_->value(time, thread);
     }
 
-    tex_->bind();
-    //rs.finalFrameBuffer().colorTexture()->bind();
+    //tex_->bind();
+    rs.finalFrameBuffer().colorTexture()->bind();
 
     MO_CHECK_GL( glDepthMask(false) );
     quad_->draw(rs.cameraSpace().width(), rs.cameraSpace().height());
