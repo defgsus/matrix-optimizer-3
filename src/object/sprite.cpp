@@ -14,8 +14,10 @@
 #include "gl/drawable.h"
 #include "gl/shader.h"
 #include "gl/shadersource.h"
+#include "gl/texture.h"
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
+#include "img/image.h"
 #include "param/parameterfloat.h"
 //#include "param/parameterselect.h"
 
@@ -25,7 +27,8 @@ MO_REGISTER_OBJECT(Sprite)
 
 Sprite::Sprite(QObject * parent)
     : ObjectGl      (parent),
-      draw_         (0)
+      draw_         (0),
+      tex_          (0)
 {
     setName("Sprite");
 
@@ -78,6 +81,11 @@ void Sprite::onParameterChanged(Parameter *p)
 
 void Sprite::initGl(uint /*thread*/)
 {
+    Image img;
+    img.loadImage(":/texture/dot.png");
+    tex_ = GL::Texture::createFromImage(img, GL_RGBA);
+
+
     draw_ = new GL::Drawable(idName());
 
     GL::ShaderSource * src = new GL::ShaderSource();
@@ -85,6 +93,7 @@ void Sprite::initGl(uint /*thread*/)
     src->loadVertexSource(":/shader/default.vert");
     src->loadFragmentSource(":/shader/default.frag");
 
+    src->addDefine("#define MO_ENABLE_TEXTURE");
     //src->addDefine("#define MO_ENABLE_BILLBOARD");
 
     draw_->setShaderSource(src);
@@ -96,6 +105,11 @@ void Sprite::initGl(uint /*thread*/)
 
 void Sprite::releaseGl(uint /*thread*/)
 {
+    if (tex_->isCreated())
+        tex_->release();
+    delete tex_;
+    tex_ = 0;
+
     if (draw_->isReady())
         draw_->releaseOpenGl();
 
@@ -108,6 +122,9 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 {
     if (draw_->isReady())
     {
+        if (tex_->isAllocated())
+            tex_->bind();
+
         const uint numrep = numRep_->value(orgtime, thread);
         const uint numrep0 = numrep>1? numrep-1 : 1;
         const Float timespan = timeSpan_->value(orgtime, thread);

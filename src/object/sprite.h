@@ -36,6 +36,7 @@ private slots:
 
 private:
     GL::Drawable * draw_;
+    GL::Texture * tex_;
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_,
             *numRep_, *timeSpan_;

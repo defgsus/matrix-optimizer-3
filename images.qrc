@@ -8,5 +8,6 @@
     <qresource prefix="/texture">
         <file alias="default_texture.png">assets/img/mo_def_texture.png</file>
         <file alias="mo_black.png">assets/img/mo_black.png</file>
+        <file alias="dot.png">assets/img/dot.png</file>
     </qresource>
 </RCC>
