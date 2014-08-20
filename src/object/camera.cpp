@@ -249,10 +249,11 @@ void Camera::startGlFrame(uint thread, Double , uint cubeMapIndex)
 
     MO_CHECK_GL( glViewport(0, 0, fbo->width(), fbo->height()) );
 
+    MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
+    MO_CHECK_GL( glDepthMask(true) );
+
     MO_CHECK_GL( glClearColor(0,0.2,0.2,1) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
-
-    MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
 
 }
 

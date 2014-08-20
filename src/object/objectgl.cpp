@@ -20,6 +20,14 @@
 
 namespace MO {
 
+const QStringList ObjectGl::depthTestModeNames =
+{ tr("parent"), tr("on"), tr("off") };
+
+const QStringList ObjectGl::depthWriteModeNames =
+{ tr("parent"), tr("on"), tr("off") };
+
+const QStringList ObjectGl::alphaBlendModeNames =
+{ tr("parent"), tr("off"), tr("cross-fade"), tr("add") };
 
 ObjectGl::ObjectGl(QObject *parent)
     : Object                (parent),
@@ -56,7 +64,7 @@ void ObjectGl::createParameters()
         paramDepthTest_ = createSelectParameter("rendset_dtm", tr("depth testing"),
             tr("Selects whether a test against the depth-map should be performed"),
             { "p", "on", "off" },
-            { tr("parent"), tr("on"), tr("off") },
+            depthTestModeNames,
             { tr("Uses the same setting as the parent object"),
               tr("Depth-testing is on - the object will be hidden by closer objects."),
               tr("Depth-testing is off - "
@@ -67,7 +75,7 @@ void ObjectGl::createParameters()
         paramDepthWrite_ = createSelectParameter("rendset_dwm", tr("depth writing"),
             tr("Selects whether the depth information of the object should be written"),
             { "p", "on", "off" },
-            { tr("parent"), tr("on"), tr("off") },
+            depthWriteModeNames,
             { tr("Uses the same setting as the parent object"),
               tr("Depth-writing is on - the depth information can be used by other objects."),
               tr("Depth-writing is off - the depth information will simply be discarded.") },
@@ -76,12 +84,13 @@ void ObjectGl::createParameters()
 
         paramAlphaBlend_ = createSelectParameter("rendset_abm", tr("alpha blending"),
             tr("Selects how semi-transparent objects are composed on screen"),
-            { "p", "mix", "add" },
-            { tr("parent"), tr("cross-fade"), tr("add") },
+            { "p", "off", "mix", "add" },
+            alphaBlendModeNames,
             { tr("Uses the same setting as the parent object"),
+              tr("No alpha blending occures - the alpha value is ignored"),
               tr("The colors are cross-faded depending on the alpha value"),
-              tr("The colors are simply added on-top.") },
-            { ABM_PARENT, ABM_MIX, ABM_ADD },
+              tr("The colors are simply added on top") },
+            { ABM_PARENT, ABM_OFF, ABM_MIX, ABM_ADD },
             defaultAlphaBlendMode_, true, false);
 
         endParameterGroup();
@@ -185,11 +194,17 @@ void ObjectGl::renderGl_(const GL::RenderSettings &rs, uint thread, Double time)
     else
         MO_CHECK_GL( glDepthMask(true) );
 
-    if (alphaBlendMode() == ABM_ADD)
-        MO_CHECK_GL( glAlphaFunc(GL_SRC_ALPHA, GL_ONE) )
+    if (alphaBlendMode() == ABM_OFF)
+        MO_CHECK_GL( glDisable(GL_BLEND) )
     else
-        MO_CHECK_GL( glAlphaFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+    {
+        MO_CHECK_GL( glEnable(GL_BLEND) );
 
+        if (alphaBlendMode() == ABM_ADD)
+            MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE) )
+        else
+            MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+    }
 
 
     MO_EXTEND_EXCEPTION(

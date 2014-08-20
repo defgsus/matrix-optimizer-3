@@ -302,14 +302,14 @@ void Scene::updateTree_()
     // collect all modulators for each object
     updateModulators_();
 
+    // update the rendermodes
+    propagateRenderMode(0);
+
     if (glContext_)
     {
         // update infos for new objects
         // XXX This should be iteratively for all glContext_s
         setGlContext(MO_GFX_THREAD, glContext_);
-
-        // update the rendermodes
-        propagateRenderMode(0);
 
         // update image
         render_();

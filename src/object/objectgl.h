@@ -33,6 +33,8 @@ public:
         DTM_OFF
     };
 
+    static const QStringList depthTestModeNames;
+
     enum DepthWriteMode
     {
         DWM_PARENT,
@@ -40,12 +42,17 @@ public:
         DWM_OFF
     };
 
+    static const QStringList depthWriteModeNames;
+
     enum AlphaBlendMode
     {
         ABM_PARENT,
+        ABM_OFF,
         ABM_MIX,
         ABM_ADD
     };
+
+    static const QStringList alphaBlendModeNames;
 
 
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(ObjectGl)

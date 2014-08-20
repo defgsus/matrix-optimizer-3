@@ -18,6 +18,7 @@
 #include "types/vector.h"
 #include "io/streamoperators_qt.h"
 #include "object/object.h"
+#include "object/objectgl.h"
 #include "object/transform/transformation.h"
 #include "object/scene.h"
 #include "object/audio/audiounit.h"
@@ -66,6 +67,16 @@ void ObjectInfoDialog::setObject(Object * o)
       << o->idNamePath() << "/" << o->idName() << "<br/>";
 
     s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>";
+
+    // ---------- render modes ---------
+
+    if (ObjectGl * gl = qobject_cast<ObjectGl*>(o))
+    {
+        s << "<p>depth test: " << gl->depthTestModeNames[gl->depthTestMode()]
+          << "<br/>depth write: " << gl->depthWriteModeNames[gl->depthWriteMode()]
+          << "<br/>alpha blend: " << gl->alphaBlendModeNames[gl->alphaBlendMode()]
+          << "</p>";
+    }
 
     // ---------- matrix ---------------
 
