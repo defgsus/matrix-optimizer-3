@@ -10,6 +10,7 @@
 
 #include "sprite.h"
 #include "io/datastream.h"
+#include "io/log.h"
 #include "geom/geometryfactory.h"
 #include "gl/drawable.h"
 #include "gl/shader.h"
@@ -32,7 +33,7 @@ Sprite::Sprite(QObject * parent)
 {
     setName("Sprite");
 
-    setDefaultDepthTestMode(DTM_OFF);
+    //setDefaultDepthTestMode(DTM_OFF);
     setDefaultDepthWriteMode(DWM_OFF);
 }
 
@@ -126,30 +127,34 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
             tex_->bind();
 
         const uint numrep = numRep_->value(orgtime, thread);
-        const uint numrep0 = numrep>1? numrep-1 : 1;
+        //const uint numrep0 = numrep>1? numrep-1 : 1;
         const Float timespan = timeSpan_->value(orgtime, thread);
 
         // paint each instance
         for (uint i=0; i<numrep; ++i)
         {
-            const Float t = (Float)i / numrep0;
+            const Float t = (Float)i / numrep;
 
             const Float time = orgtime + timespan * t;
+
+#if (1) // billboarding on cpu
 
             // get parent transformation
             Mat4 orgtrans = parentObject()->transformation(thread, 0);
             // apply local transformation with time-offset
             calculateTransformation(orgtrans, time, thread);
 
+            const Mat4 viewtrans = rs.cameraSpace().viewMatrix() * orgtrans;
+
             // -------- billboard matrix ----------
 
             // extract current position
-            Vec3 pos = Vec3(-orgtrans[3][0], -orgtrans[3][1], -orgtrans[3][2]);
+            Vec3 pos = Vec3(viewtrans[3][0], viewtrans[3][1], viewtrans[3][2]);
 
-            // forward vector (look-at minus position)
+            // forward vector
             Vec3 f = glm::normalize(pos);
             // up vector
-            Vec3 u = Vec3(orgtrans[0][1], orgtrans[1][1], orgtrans[2][1]);
+            Vec3 u = Vec3(viewtrans[0][1], viewtrans[1][1], viewtrans[2][1]);
             // right vector
             Vec3 s = glm::normalize(glm::cross(f, u));
             // rebuild up to avoid distortion
@@ -157,19 +162,34 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 
             Mat4 lookm(1);
 
-            lookm[0][0] = s.x;
-            lookm[0][1] = s.y;
-            lookm[0][2] = s.z;
-            lookm[1][0] = u.x;
-            lookm[1][1] = u.y;
-            lookm[1][2] = u.z;
+            const Float
+                    scalex = glm::length(viewtrans[0]),
+                    scaley = glm::length(viewtrans[1]);
+
+            lookm[0][0] = s.x * scalex;
+            lookm[0][1] = s.y * scalex;
+            lookm[0][2] = s.z * scalex;
+            lookm[1][0] = u.x * scaley;
+            lookm[1][1] = u.y * scaley;
+            lookm[1][2] = u.z * scaley;
             lookm[2][0] =-f.x;
             lookm[2][1] =-f.y;
             lookm[2][2] =-f.z;
+            lookm[3] = orgtrans[3];
 
-            const Mat4 trans = orgtrans * lookm;
+            const Mat4 trans = lookm;//orgtrans * lookm;
             const Mat4 cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
             const Mat4 viewTrans = rs.cameraSpace().viewMatrix() * trans;
+
+#else
+            // get parent transformation
+            Mat4 trans = parentObject()->transformation(thread, 0);
+            // apply local transformation with time-offset
+            calculateTransformation(trans, time, thread);
+
+            const Mat4 cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
+            const Mat4 viewTrans = rs.cameraSpace().viewMatrix() * trans;
+#endif
 
             draw_->setAmbientColor(
                         cr_->value(time, thread),

@@ -128,6 +128,29 @@ vec4 mo_ftransform(in vec4 pos)
 void main()
 {
 #ifdef MO_ENABLE_BILLBOARD
+    vec3 normal_eye = //transpose(inverse(mat3(u_viewTransform))) *
+            //mat3(u_viewTransform) *
+            //vec3(0,0,1);
+            normalize(-u_viewTransform[3].xyz);
+    mat3 normal_eye_mat = mo_general_normal_matrix(normal_eye);
+
+    vec4 vertex_pos = vec4(normal_eye_mat * a_position.xyz, a_position.w);
+
+    // pass attributes to fragment shader
+    v_pos = vertex_pos.xyz;
+    v_pos_world = (u_transform * vertex_pos).xyz;
+    v_pos_eye = (u_viewTransform * vertex_pos).xyz;
+    v_normal = a_normal;
+    v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
+    v_color = a_color;
+    v_texCoord = a_texCoord;
+    v_cam_dir = normalize(v_pos_eye);
+
+    // set final vertex position
+    gl_Position = mo_ftransform(vertex_pos);
+    //gl_Position = vertex_pos + vec4(u_cubeViewTransform[3].xyz, 0.0);
+
+    /*
     // eye-to-center normal
     vec3 eyen = normalize(u_viewTransform[3].xyz);
     // rotated/transformed vertex coords
@@ -153,7 +176,7 @@ void main()
     //gl_Position = mo_ftransform(vertex_pos);
     //gl_Position = vec4(v_pos_eye, 1.0);
     gl_Position = mo_ftransform(inverse(u_viewTransform)*vec4(v_pos_eye,1.0));
-
+    */
 #else
 
     // pass attributes to fragment shader
