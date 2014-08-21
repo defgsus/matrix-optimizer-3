@@ -24,11 +24,23 @@ const QStringList TextureSetting::textureTypeNames =
 
 
 TextureSetting::TextureSetting(Object *parent, GL::ErrorReporting rep)
-    : QObject   (parent),
-      object_   (parent),
-      rep_      (rep),
-      texture_  (0)
+    : QObject       (parent),
+      object_       (parent),
+      rep_          (rep),
+      texture_      (0),
+      ownTexture_   (false)
 {
+}
+
+TextureSetting::~TextureSetting()
+{
+    if (ownTexture_)
+    {
+        if (texture_ && texture_->isCreated())
+            MO_GL_WARNING("destruction of TextureSetting with allocated texture");
+
+        delete texture_;
+    }
 }
 
 
@@ -51,8 +63,8 @@ void TextureSetting::createParameters(const QString &id_suffix)
             { tr("An image will be loaded from a file"),
               tr("The previous master frame is the source of the image"),
               tr("The previous camera frame is the source of the image") },
-            { TT_FILENAME, TT_MASTER_FRAME, TT_CAMERA_FRAME },
-            TT_FILENAME, true, false);
+            { TT_FILE, TT_MASTER_FRAME, TT_CAMERA_FRAME },
+            TT_FILE, true, false);
 
     paramFilename_ = object_->createFilenameParameter(
                 "imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
@@ -60,6 +72,11 @@ void TextureSetting::createParameters(const QString &id_suffix)
 
 }
 
+bool TextureSetting::needsReinit(Parameter *p) const
+{
+    return (p == paramType_
+        || (p == paramFilename_ && paramType_->baseValue() == TT_FILE));
+}
 
 // --------------- getter -------------------
 
@@ -77,7 +94,9 @@ uint TextureSetting::height() const
 
 bool TextureSetting::initGl()
 {
-    if (paramType_->baseValue() == TT_FILENAME)
+    ownTexture_ = false;
+
+    if (paramType_->baseValue() == TT_FILE)
     {
         Image img;
         img.loadImage(paramFilename_->value());
@@ -85,6 +104,7 @@ bool TextureSetting::initGl()
         texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
         if (!texture_)
             return false;
+        ownTexture_ = true;
     }
 
     return true;
@@ -92,7 +112,7 @@ bool TextureSetting::initGl()
 
 void TextureSetting::releaseGl()
 {
-    if (paramType_->baseValue() == TT_FILENAME)
+    if (ownTexture_)
     {
         texture_->release();
         delete texture_;

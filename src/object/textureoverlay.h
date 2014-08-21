@@ -45,13 +45,15 @@ private:
 
     ProjectionType ptype_, actualPtype_;
 
-    ParameterFilename * paramFilename_;
+    TextureSetting * texture_;
+
+    //ParameterFilename * paramFilename_;
     ParameterSelect * paramPType_, *paramPost_;
     ParameterFloat * cr_, *cg_, *cb_, *ca_, *pos_influence_,
             * postInv_, *postBright_, *postContrast_, *postContrastThresh_,
             *postGray_, *postShift_, *postAlpha_, *postAlphaR_, *postAlphaG_, *postAlphaB_,
             *postAlphaEdge_;
-    GL::Texture * tex_;
+    //GL::Texture * tex_;
     GL::ScreenQuad * quad_;
     GL::Uniform * u_color_,
         *u_dir_matrix_, *u_cam_angle_, *u_sphere_offset_,

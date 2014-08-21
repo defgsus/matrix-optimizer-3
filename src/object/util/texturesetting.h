@@ -25,24 +25,45 @@ class TextureSetting : public QObject
 public:
     enum TextureType
     {
-        TT_FILENAME,
+        TT_FILE,
         TT_MASTER_FRAME,
         TT_CAMERA_FRAME
     };
     static const QStringList textureTypeNames;
 
+    /** Creates a texture setting for the given Object */
     explicit TextureSetting(Object *parent, GL::ErrorReporting = GL::ER_THROW);
+    ~TextureSetting();
+
+    // -------------- io ---------------
 
     void serialize(IO::DataStream& io) const;
     void deserialize(IO::DataStream& io);
 
+    // ---------- parameters -----------
+
+    /** Creates the texture-related parameters in parent Object.
+        Each parameter id is appended with @p id_suffix, to enable
+        more than one texture for an Object. */
     void createParameters(const QString& id_suffix);
+
+    /** Returns true when a change to parameter @p p requires
+        a reinitialization.
+        Call in Object::onParameterChanged() and e.g. call
+        requestReinitGl() when this returns true. */
+    bool needsReinit(Parameter * p) const;
 
     // ------------ getter ---------------
 
+    /** The width of the texture, when initialized */
     uint width() const;
+    /** The height of the texture, when initialized */
     uint height() const;
 
+    /** Returns read access to the texture object.
+        @note Never release or modify the texture through it's opengl handle!
+        There might be other Objects that use the texture.
+        Generally just use bind()/unbind() */
     const GL::Texture * texture() const { return texture_; }
 
     // ------------ opengl ---------------
@@ -60,6 +81,8 @@ private:
     GL::ErrorReporting rep_;
 
     GL::Texture * texture_;
+    bool ownTexture_;
+    //TextureType actualType_;
 
     ParameterSelect * paramType_;
     ParameterFilename * paramFilename_;

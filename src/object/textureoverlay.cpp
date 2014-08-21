@@ -21,7 +21,7 @@
 #include "gl/screenquad.h"
 #include "gl/framebufferobject.h"
 #include "img/image.h"
-
+#include "util/texturesetting.h"
 
 namespace MO {
 
@@ -30,7 +30,8 @@ MO_REGISTER_OBJECT(TextureOverlay)
 TextureOverlay::TextureOverlay(QObject * parent)
     : ObjectGl      (parent),
       ptype_        (PT_FLAT),
-      actualPtype_  (ptype_)
+      actualPtype_  (ptype_),
+      texture_      (new TextureSetting(this))
 {
     setName("TextureOverlay");
 }
@@ -39,14 +40,20 @@ void TextureOverlay::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);
 
-    io.writeHeader("texover", 1);
+    io.writeHeader("texover", 2);
+
+    // v2
+    texture_->serialize(io);
 }
 
 void TextureOverlay::deserialize(IO::DataStream & io)
 {
     ObjectGl::deserialize(io);
 
-    io.readHeader("texover", 1);
+    const int ver = io.readHeader("texover", 2);
+
+    if (ver >= 2)
+        texture_->deserialize(io);
 }
 
 void TextureOverlay::createParameters()
@@ -55,8 +62,11 @@ void TextureOverlay::createParameters()
 
     beginParameterGroup("texture", tr("texture"));
 
+        texture_->createParameters("");
+        /*
         paramFilename_ = createFilenameParameter("imgfile", tr("image"), tr("Filename of the image"),
                                                  IO::FT_TEXTURE, ":/texture/mo_black.png");
+        */
     endParameterGroup();
 
     beginParameterGroup("textureproj", tr("projection"));
@@ -150,7 +160,7 @@ void TextureOverlay::onParameterChanged(Parameter *p)
         ptype_ = (ProjectionType)paramPType_->baseValue();
         requestReinitGl();
     }
-    if (p == paramFilename_ || p == paramPost_)
+    if (p == paramPost_ || texture_->needsReinit(p))
         requestReinitGl();
 }
 
@@ -163,12 +173,16 @@ void TextureOverlay::initGl(uint /*thread*/)
 {
     // --- texture ---
 
+    /*
     Image img;
     img.loadImage(paramFilename_->value());
     //img.loadImage("/home/defgsus/pic/android/_second/Camera/PANO_20140717_144107.jpg");
     //img.loadImage("/home/defgsus/prog/C/matrixoptimizer/data/graphic/kepler/bg_wood_03_polar.png");
     //img.loadImage(":/texture/mo_black.png");
     tex_ = GL::Texture::createFromImage(img, GL_RGBA);
+    */
+    texture_->initGl();
+
 
     // --- shader and quad ---
 
@@ -220,8 +234,8 @@ void TextureOverlay::releaseGl(uint /*thread*/)
     quad_->release();
     delete quad_;
 
-    tex_->release();
-    delete tex_;
+    texture_->releaseGl();
+    //delete tex_;
 }
 
 void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
@@ -286,7 +300,8 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
     }
 
     //tex_->bind();
-    rs.finalFrameBuffer().colorTexture()->bind();
+    //rs.finalFrameBuffer().colorTexture()->bind();
+    texture_->bind();
 
     MO_CHECK_GL( glDepthMask(false) );
     quad_->draw(rs.cameraSpace().width(), rs.cameraSpace().height());
