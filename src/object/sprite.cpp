@@ -21,6 +21,7 @@
 #include "img/image.h"
 #include "param/parameterfloat.h"
 //#include "param/parameterselect.h"
+#include "util/texturesetting.h"
 
 namespace MO {
 
@@ -29,7 +30,7 @@ MO_REGISTER_OBJECT(Sprite)
 Sprite::Sprite(QObject * parent)
     : ObjectGl      (parent),
       draw_         (0),
-      tex_          (0)
+      texture_      (new TextureSetting(this))
 {
     setName("Sprite");
 
@@ -41,19 +42,31 @@ void Sprite::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);
 
-    io.writeHeader("sprite", 1);
+    io.writeHeader("sprite", 2);
+
+    // v2
+    texture_->serialize(io);
 }
 
 void Sprite::deserialize(IO::DataStream & io)
 {
     ObjectGl::deserialize(io);
 
-    io.readHeader("sprite", 1);
+    const int ver = io.readHeader("sprite", 2);
+
+    if (ver >= 2)
+        texture_->deserialize(io);
 }
 
 void Sprite::createParameters()
 {
     ObjectGl::createParameters();
+
+    beginParameterGroup("texture", tr("texture"));
+
+        texture_->createParameters("col");
+
+    endParameterGroup();
 
     beginParameterGroup("color", tr("color"));
 
@@ -78,14 +91,14 @@ void Sprite::createParameters()
 void Sprite::onParameterChanged(Parameter *p)
 {
     ObjectGl::onParameterChanged(p);
+
+    if (texture_->needsReinit(p))
+        requestReinitGl();
 }
 
 void Sprite::initGl(uint /*thread*/)
 {
-    Image img;
-    img.loadImage(":/texture/dot.png");
-    tex_ = GL::Texture::createFromImage(img, GL_RGBA);
-
+    texture_->initGl();
 
     draw_ = new GL::Drawable(idName());
 
@@ -106,10 +119,7 @@ void Sprite::initGl(uint /*thread*/)
 
 void Sprite::releaseGl(uint /*thread*/)
 {
-    if (tex_->isCreated())
-        tex_->release();
-    delete tex_;
-    tex_ = 0;
+    texture_->releaseGl();
 
     if (draw_->isReady())
         draw_->releaseOpenGl();
@@ -123,8 +133,7 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 {
     if (draw_->isReady())
     {
-        if (tex_->isAllocated())
-            tex_->bind();
+        texture_->bind();
 
         const uint numrep = numRep_->value(orgtime, thread);
         //const uint numrep0 = numrep>1? numrep-1 : 1;
