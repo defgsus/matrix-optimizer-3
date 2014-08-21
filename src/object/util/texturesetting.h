@@ -64,7 +64,7 @@ public:
         @note Never release or modify the texture through it's opengl handle!
         There might be other Objects that use the texture.
         Generally just use bind()/unbind() */
-    const GL::Texture * texture() const { return texture_; }
+    const GL::Texture * texture() const { return constTexture_; }
 
     // ------------ opengl ---------------
 
@@ -81,11 +81,13 @@ private:
     GL::ErrorReporting rep_;
 
     GL::Texture * texture_;
+    const GL::Texture * constTexture_;
     bool ownTexture_;
     //TextureType actualType_;
 
     ParameterSelect * paramType_;
     ParameterFilename * paramFilename_;
+    ParameterInt * paramCamera_;
 };
 
 } // namespace MO

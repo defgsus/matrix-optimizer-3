@@ -604,6 +604,22 @@ void Scene::releaseSceneGl_(uint thread)
     screenQuad_[thread] = 0;
 }
 
+GL::FrameBufferObject * Scene::fboMaster(uint thread) const
+{
+    if (thread < fboFinal_.size())
+        return fboFinal_[thread];
+    else
+        return 0;
+}
+
+GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
+{
+    if (camera_index >= cameras_.size())
+        return 0;
+
+    return cameras_[camera_index]->fbo(thread);
+}
+
 void Scene::renderScene(uint thread)
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");

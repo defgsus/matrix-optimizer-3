@@ -24,7 +24,7 @@
 #include "io/filetypes.h"
 
 /** Maximum time in seconds (for widgets mainly) */
-#define MO_MAX_TIME (60 * 60 * 1000)
+#define MO_MAX_TIME (60 * 60 * 1000) // 1000 hours
 
 /** The thread for gui-elements, e.g. drawing sequence content and such. */
 #define MO_GUI_THREAD (0)

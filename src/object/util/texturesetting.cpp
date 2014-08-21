@@ -14,7 +14,9 @@
 #include "object/scene.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parameterint.h"
 #include "gl/texture.h"
+#include "gl/framebufferobject.h"
 #include "img/image.h"
 
 namespace MO {
@@ -28,6 +30,7 @@ TextureSetting::TextureSetting(Object *parent, GL::ErrorReporting rep)
       object_       (parent),
       rep_          (rep),
       texture_      (0),
+      constTexture_ (0),
       ownTexture_   (false)
 {
 }
@@ -57,7 +60,7 @@ void TextureSetting::deserialize(IO::DataStream &io)
 void TextureSetting::createParameters(const QString &id_suffix)
 {
     paramType_ = object_->createSelectParameter(
-            "imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
+            "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
             { "file", "master", "camera" },
             textureTypeNames,
             { tr("An image will be loaded from a file"),
@@ -67,27 +70,32 @@ void TextureSetting::createParameters(const QString &id_suffix)
             TT_FILE, true, false);
 
     paramFilename_ = object_->createFilenameParameter(
-                "imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
+                "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
                 IO::FT_TEXTURE, ":/texture/mo_black.png");
 
+    paramCamera_ = object_->createIntParameter(
+                "_imgcamidx" + id_suffix, tr("camera frame"),
+                tr("The index of the camera starting at 0"),
+                0, true, false);
 }
 
 bool TextureSetting::needsReinit(Parameter *p) const
 {
     return (p == paramType_
-        || (p == paramFilename_ && paramType_->baseValue() == TT_FILE));
+        || (p == paramFilename_ && paramType_->baseValue() == TT_FILE)
+        || (p == paramCamera_ && paramType_->baseValue() == TT_CAMERA_FRAME));
 }
 
 // --------------- getter -------------------
 
 uint TextureSetting::width() const
 {
-    return texture_? texture_->width() : 0;
+    return constTexture_? constTexture_->width() : 0;
 }
 
 uint TextureSetting::height() const
 {
-    return texture_? texture_->height() : 0;
+    return constTexture_? constTexture_->height() : 0;
 }
 
 // ------------- opengl ---------------------
@@ -105,9 +113,58 @@ bool TextureSetting::initGl()
         if (!texture_)
             return false;
         ownTexture_ = true;
+        constTexture_ = texture_;
     }
 
-    return true;
+    if (paramType_->baseValue() == TT_MASTER_FRAME)
+    {
+        Scene * scene = object_->sceneObject();
+        if (!scene)
+        {
+            MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_MASTER_FRAME");
+            return 0;
+        }
+
+        GL::FrameBufferObject * fbo = scene->fboMaster(MO_GFX_THREAD);
+        if (fbo)
+            constTexture_ = fbo->colorTexture();
+    }
+
+
+    if (paramType_->baseValue() == TT_CAMERA_FRAME)
+    {
+        Scene * scene = object_->sceneObject();
+        if (!scene)
+        {
+            MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_CAMERA_FRAME");
+            return 0;
+        }
+
+
+        GL::FrameBufferObject * fbo = scene->fboCamera(MO_GFX_THREAD, paramCamera_->baseValue());
+
+        // special:
+        // when camera index out-of-range, don't throw error
+        // but load an error image
+        if (!fbo)
+        {
+            Image img;
+            img.loadImage(":/texture/error.png");
+            texture_ = GL::Texture::createFromImage(img, GL_RGB, rep_);
+            if (!texture_)
+                return false;
+            ownTexture_ = true;
+            constTexture_ = texture_;
+            return true;
+        }
+
+        constTexture_ = fbo->colorTexture();
+    }
+
+    if (!constTexture_)
+        MO_GL_ERROR_COND(rep_, "no texture assigned in TextureSetting::initGl()");
+
+    return constTexture_ != 0;
 }
 
 void TextureSetting::releaseGl()
@@ -118,23 +175,25 @@ void TextureSetting::releaseGl()
         delete texture_;
         texture_ = 0;
     }
+
+    constTexture_ = 0;
 }
 
 bool TextureSetting::bind()
 {
-    if (!texture_)
+    if (!constTexture_)
     {
         MO_GL_ERROR_COND(rep_, "no texture defined for TextureSetting::bind()");
         return false;
     }
 
-    return texture_->bind();
+    return constTexture_->bind();
 }
 
 void TextureSetting::unbind()
 {
-    if (texture_)
-        texture_->unbind();
+    if (constTexture_)
+        constTexture_->unbind();
 }
 
 } // namespace MO

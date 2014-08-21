@@ -263,6 +263,12 @@ void Camera::finishGlFrame(uint thread, Double)
     //MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
 }
 
+GL::FrameBufferObject * Camera::fbo(uint thread) const
+{
+    return thread < fbo_.size() ?
+                fbo_[thread] : 0;
+}
+
 void Camera::drawFramebuffer(uint thread, Double time)
 {
     GL::FrameBufferObject * fbo = fbo_[thread];

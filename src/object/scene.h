@@ -221,6 +221,12 @@ public slots:
         This may only be valid during rendering in objects! */
     const GL::LightSettings& lightSettings(uint thread) const { return lightSettings_[thread]; }
 
+    /** Returns the framebuffer of the final master frame, or NULL */
+    GL::FrameBufferObject * fboMaster(uint thread) const;
+
+    /** Returns the framebuffer of the camera frame, or NULL */
+    GL::FrameBufferObject * fboCamera(uint thread, uint camera_index) const;
+
     /** Render the whole scene on the current context */
     void renderScene(uint thread);
 

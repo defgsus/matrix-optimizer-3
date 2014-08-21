@@ -70,6 +70,9 @@ public:
     /** Draws the contents of the framebuffer on a [-1,1] quad. */
     void drawFramebuffer(uint thread, Double time);
 
+    /** Returns the framebuffer on which the camera renders, or NULL */
+    GL::FrameBufferObject * fbo(uint thread) const;
+
 signals:
 
 public slots:
