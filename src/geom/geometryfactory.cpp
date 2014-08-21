@@ -822,7 +822,7 @@ void GeometryFactory::createFromSettings(Geometry * g,
     switch (set->type)
     {
     case GeometryFactorySettings::T_FILE:
-        MO_DEBUG(set->filename << ", " << loader_);
+        //MO_DEBUG(set->filename << ", " << loader_);
         if (!set->filename.isEmpty() && loader_)
         {
             loader_->loadFile(set->filename);

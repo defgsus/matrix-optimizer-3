@@ -19,6 +19,7 @@
 #include "geom/geometrycreator.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "util/texturesetting.h"
 
 namespace MO {
 
@@ -29,6 +30,7 @@ Model3d::Model3d(QObject * parent)
       creator_      (0),
       geomSettings_ (new GEOM::GeometryFactorySettings),
       nextGeometry_ (0),
+      texture_      (new TextureSetting(this)),
       u_diff_exp_   (0),
       doRecompile_  (false)
 {
@@ -39,20 +41,26 @@ void Model3d::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);
 
-    io.writeHeader("m3d", 2);
+    io.writeHeader("m3d", 3);
 
     // v2
     geomSettings_->serialize(io);
+
+    // v3
+    texture_->serialize(io);
 }
 
 void Model3d::deserialize(IO::DataStream & io)
 {
     ObjectGl::deserialize(io);
 
-    int ver = io.readHeader("m3d", 2);
+    const int ver = io.readHeader("m3d", 3);
 
     if (ver >= 2)
         geomSettings_->deserialize(io);
+
+    if (ver >= 3)
+        texture_->deserialize(io);
 }
 
 void Model3d::createParameters()
@@ -85,6 +93,12 @@ void Model3d::createParameters()
 
     endParameterGroup();
 
+    beginParameterGroup("texture", tr("texture"));
+
+        texture_->createParameters("col", TextureSetting::TT_NONE, true);
+
+    endParameterGroup();
+
     beginParameterGroup("surface", tr("surface"));
 
         diffExp_ = createFloatParameter("diffuseexp", tr("diffuse exponent"),
@@ -102,10 +116,15 @@ void Model3d::onParameterChanged(Parameter *p)
 
     if (p == lightMode_)
         doRecompile_ = true;
+
+    if (texture_->needsReinit(p))
+        requestReinitGl();
 }
 
 void Model3d::initGl(uint /*thread*/)
 {
+    texture_->initGl();
+
     draw_ = new GL::Drawable(idName());
 
     creator_ = new GEOM::GeometryCreator(this);
@@ -121,6 +140,8 @@ void Model3d::initGl(uint /*thread*/)
 
 void Model3d::releaseGl(uint /*thread*/)
 {
+    texture_->releaseGl();
+
     if (draw_->isReady())
         draw_->releaseOpenGl();
 
@@ -162,6 +183,8 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_ENABLE_LIGHTING");
     if (lightMode_->baseValue() == LM_PER_FRAGMENT)
         src->addDefine("#define MO_FRAGMENT_LIGHTING");
+    if (texture_->isEnabled())
+        src->addDefine("#define MO_ENABLE_TEXTURE");
 
     draw_->setShaderSource(src);
 
@@ -191,6 +214,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 
     if (draw_->isReady())
     {
+        texture_->bind();
+
         draw_->setAmbientColor(
                     cr_->value(time, thread),
                     cg_->value(time, thread),

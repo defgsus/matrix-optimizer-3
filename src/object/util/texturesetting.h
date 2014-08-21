@@ -25,6 +25,7 @@ class TextureSetting : public QObject
 public:
     enum TextureType
     {
+        TT_NONE,
         TT_FILE,
         TT_MASTER_FRAME,
         TT_CAMERA_FRAME
@@ -44,8 +45,12 @@ public:
 
     /** Creates the texture-related parameters in parent Object.
         Each parameter id is appended with @p id_suffix, to enable
-        more than one texture for an Object. */
-    void createParameters(const QString& id_suffix);
+        more than one texture for an Object.
+        @p defaultType is the default value for the type parameter.
+        If @p enableNone is true, the TT_NONE type is choosable. */
+    void createParameters(const QString& id_suffix,
+                          TextureType defaultType = TT_FILE,
+                          bool enableNone = false);
 
     /** Returns true when a change to parameter @p p requires
         a reinitialization.
@@ -54,6 +59,9 @@ public:
     bool needsReinit(Parameter * p) const;
 
     // ------------ getter ---------------
+
+    /** Returns true when type != TT_NONE */
+    bool isEnabled() const;
 
     /** The width of the texture, when initialized */
     uint width() const;
@@ -68,10 +76,16 @@ public:
 
     // ------------ opengl ---------------
 
+    /** Creates or queries the texture, depending on the texture type.
+        Does nothing if type is TT_NONE */
     bool initGl();
+    /** Releases the texture */
     void releaseGl();
 
+    /** Binds the texture to the active slot.
+        Does nothing if type is TT_NONE */
     bool bind();
+    /** Does nothing if type is TT_NONE */
     void unbind();
 
 private:

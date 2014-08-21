@@ -56,6 +56,12 @@ public:
     void setValueIds(const QStringList& ids) { valueIds_ = ids; }
     void setStatusTips(const QStringList& tips) { statusTips_ = tips; }
 
+    /** Completely removes a setting, if it's not the default value. */
+    void removeById(const QString& id);
+
+    /** Completely removes a setting, if it's not the default value. */
+    void removeByValue(int value);
+
     // --------- modulation -----------
 
     // XXX

@@ -62,7 +62,7 @@ void TextureOverlay::createParameters()
 
     beginParameterGroup("texture", tr("texture"));
 
-        texture_->createParameters("");
+        texture_->createParameters("col");
         /*
         paramFilename_ = createFilenameParameter("imgfile", tr("image"), tr("Filename of the image"),
                                                  IO::FT_TEXTURE, ":/texture/mo_black.png");

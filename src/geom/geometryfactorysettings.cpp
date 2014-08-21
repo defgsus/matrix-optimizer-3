@@ -113,7 +113,7 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
 {
     MO_DEBUG_GEOM("GeometryFactorySettings::serialize()");
 
-    io.writeHeader("geomfacset", 9);
+    io.writeHeader("geomfacset", 10);
 
     io << typeIds[type];
 
@@ -158,13 +158,16 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
 
     // v9
     io << colorR << colorG << colorB << colorA;
+
+    // v10
+    io << filename;
 }
 
 void GeometryFactorySettings::deserialize(IO::DataStream & io)
 {
     MO_DEBUG_GEOM("GeometryFactorySettings::deserialize()");
 
-    const int ver = io.readHeader("geomfacset", 9);
+    const int ver = io.readHeader("geomfacset", 10);
 
     io.readEnum(type, T_BOX, typeIds);
 
@@ -315,6 +318,9 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
 
     if (ver>=9)
         io >> colorR >> colorG >> colorB >> colorA;
+
+    if (ver>=10)
+        io >> filename;
 }
 
 void GeometryFactorySettings::saveFile(const QString &filename) const

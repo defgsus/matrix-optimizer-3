@@ -22,7 +22,7 @@
 namespace MO {
 
 const QStringList TextureSetting::textureTypeNames =
-{ tr("file"), tr("master frame"), tr("camera frame") };
+{ tr("none"), tr("file"), tr("master frame"), tr("camera frame") };
 
 
 TextureSetting::TextureSetting(Object *parent, GL::ErrorReporting rep)
@@ -31,7 +31,8 @@ TextureSetting::TextureSetting(Object *parent, GL::ErrorReporting rep)
       rep_          (rep),
       texture_      (0),
       constTexture_ (0),
-      ownTexture_   (false)
+      ownTexture_   (false),
+      paramType_    (0)
 {
 }
 
@@ -57,17 +58,22 @@ void TextureSetting::deserialize(IO::DataStream &io)
     io.readHeader("texs", 1);
 }
 
-void TextureSetting::createParameters(const QString &id_suffix)
+void TextureSetting::createParameters(
+        const QString &id_suffix, TextureType defaultType, bool enableNone)
 {
     paramType_ = object_->createSelectParameter(
             "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
-            { "file", "master", "camera" },
+            { "none", "file", "master", "camera" },
             textureTypeNames,
-            { tr("An image will be loaded from a file"),
+            { tr("No texture will be used - this is not supported by all objects"),
+              tr("An image will be loaded from a file"),
               tr("The previous master frame is the source of the image"),
               tr("The previous camera frame is the source of the image") },
-            { TT_FILE, TT_MASTER_FRAME, TT_CAMERA_FRAME },
-            TT_FILE, true, false);
+            { TT_NONE, TT_FILE, TT_MASTER_FRAME, TT_CAMERA_FRAME },
+            defaultType, true, false);
+    if (!enableNone)
+        paramType_->removeByValue(TT_NONE);
+
 
     paramFilename_ = object_->createFilenameParameter(
                 "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
@@ -88,6 +94,11 @@ bool TextureSetting::needsReinit(Parameter *p) const
 
 // --------------- getter -------------------
 
+bool TextureSetting::isEnabled() const
+{
+    return paramType_? paramType_->baseValue() != TT_NONE : false;
+}
+
 uint TextureSetting::width() const
 {
     return constTexture_? constTexture_->width() : 0;
@@ -102,6 +113,9 @@ uint TextureSetting::height() const
 
 bool TextureSetting::initGl()
 {
+    if (paramType_->baseValue() == TT_NONE)
+        return true;
+
     ownTexture_ = false;
 
     if (paramType_->baseValue() == TT_FILE)
@@ -181,6 +195,9 @@ void TextureSetting::releaseGl()
 
 bool TextureSetting::bind()
 {
+    if (paramType_->baseValue() == TT_NONE)
+        return true;
+
     if (!constTexture_)
     {
         MO_GL_ERROR_COND(rep_, "no texture defined for TextureSetting::bind()");
@@ -192,6 +209,9 @@ bool TextureSetting::bind()
 
 void TextureSetting::unbind()
 {
+    if (paramType_->baseValue() == TT_NONE)
+        return;
+
     if (constTexture_)
         constTexture_->unbind();
 }

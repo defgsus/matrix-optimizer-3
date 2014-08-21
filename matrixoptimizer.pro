@@ -130,7 +130,6 @@ SOURCES += \
     src/gui/geometrydialog.cpp \
     src/geom/objloader.cpp \
     src/geom/geometry.cpp \
-    src/geom/geometry_io_obj.cpp \
     src/geom/geometryfactory.cpp \
     src/gl/texture.cpp \
     src/gl/framebufferobject.cpp \

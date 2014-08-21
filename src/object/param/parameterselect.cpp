@@ -89,6 +89,45 @@ const QString& ParameterSelect::defaultValueName() const
     return valueNames_.at(idx);
 }
 
+void ParameterSelect::removeByValue(int value)
+{
+    if (value == defaultValue_)
+    {
+        MO_WARNING("ParameterSelect::removeByValue(" << value << ") can't remove default value");
+        return;
+    }
+
+    const int idx = valueList_.indexOf(value);
+    if (idx < 0)
+    {
+        MO_WARNING("ParameterSelect::removeByValue(" << value << ") unknown value");
+        return;
+    }
+
+    removeById(valueIds_[idx]);
+}
+
+void ParameterSelect::removeById(const QString &id)
+{
+    const int idx = valueIds_.indexOf(id);
+    if (idx < 0)
+    {
+        MO_WARNING("ParameterSelect::removeById('" << id << "') unknown id");
+        return;
+    }
+
+    if (valueList_[idx] == defaultValue_)
+    {
+        MO_WARNING("ParameterSelect::removeById('" << id << "') can't remove default value");
+        return;
+    }
+
+    valueIds_.removeAt(idx);
+    valueNames_.removeAt(idx);
+    statusTips_.removeAt(idx);
+    valueList_.removeAt(idx);
+}
+
 /*
 Double ParameterSelect::getModulationValue(Double time) const
 {

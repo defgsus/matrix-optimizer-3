@@ -58,6 +58,8 @@ private:
     GEOM::GeometryFactorySettings * geomSettings_;
     GEOM::Geometry * nextGeometry_;
 
+    TextureSetting * texture_;
+
     ParameterFloat * cr_, *cg_, *cb_, *ca_,
         *diffExp_;
     ParameterSelect * lightMode_;
