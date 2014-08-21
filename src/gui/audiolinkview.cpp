@@ -77,6 +77,11 @@ void AudioLinkView::setScene(Scene * s)
     createAudioUnitWidgets_();
 }
 
+void AudioLinkView::updateAll()
+{
+    update();
+    overpainter_->update();
+}
 
 void AudioLinkView::clearAudioUnitWidgets_()
 {
@@ -113,6 +118,7 @@ void AudioLinkView::createAudioUnitWidgetsRec_(
             unitWidgets_.insert(au->idName(), w);
 
             // connect
+            connect(w, SIGNAL(expansionChanged(bool)), this, SLOT(updateAll()));
             connect(w, SIGNAL(dragStart(AudioUnitWidget*)),
                     this, SLOT(onUnitDragStart_(AudioUnitWidget*)));
             connect(w, SIGNAL(dragMove(AudioUnitWidget*, QPoint)),

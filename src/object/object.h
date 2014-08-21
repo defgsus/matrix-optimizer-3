@@ -78,6 +78,8 @@ class Object : public QObject
     friend class ObjectFactory;
     // to edit the tree
     friend class Scene;
+    // to create parameters
+    friend class TextureSetting;
 public:
 
     // -------------- types ------------------

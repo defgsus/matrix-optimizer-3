@@ -29,6 +29,7 @@ namespace GUI {
 AudioUnitWidget::AudioUnitWidget(AudioUnit * au, QWidget *parent) :
     QWidget     (parent),
     unit_       (au),
+    expanded_   (true),
     dragging_   (false)
 {
     setMinimumSize(100,50);
@@ -47,6 +48,8 @@ AudioUnitWidget::AudioUnitWidget(AudioUnit * au, QWidget *parent) :
             if (AudioUnit * au = qobject_cast<AudioUnit*>(o))
                 if (au->numChannelsIn())
                     connectedIds_.append(au->idName());
+
+    updateExpandState_();
 }
 
 QWidget * AudioUnitWidget::createHeader_()
@@ -61,6 +64,14 @@ QWidget * AudioUnitWidget::createHeader_()
 
     auto lh = new QHBoxLayout(head);
     lh->setMargin(0);
+
+        butExpand_ = new QToolButton(head);
+        lh->addWidget(butExpand_);
+        butExpand_->setFixedSize(16,16);
+        connect(butExpand_, &QToolButton::clicked, [=]()
+        {
+            setExpanded(!isExpanded(), true);
+        });
 
         auto label = new QLabel(unit_->name(), this);
         lh->addWidget(label);
@@ -106,12 +117,12 @@ void AudioUnitWidget::createWidgets_()
 
             // icon
 
-            auto label = new QLabel(this);
-            label->setPixmap(ObjectFactory::iconForObject(unit_).pixmap(48,48));
-            label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-            lh->addWidget(label);
-            lh->setStretchFactor(label, 2);
-            lh->setAlignment(label, Qt::AlignCenter);
+            icon_ = new QLabel(this);
+            icon_->setPixmap(ObjectFactory::iconForObject(unit_).pixmap(48,48));
+            icon_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            lh->addWidget(icon_);
+            lh->setStretchFactor(icon_, 2);
+            lh->setAlignment(icon_, Qt::AlignCenter);
 
 
             // --- outputs ---
@@ -189,6 +200,32 @@ void AudioUnitWidget::mouseReleaseEvent(QMouseEvent * e)
         e->accept();
         return;
     }
+}
+
+void AudioUnitWidget::setExpanded(bool enable, bool send_signal)
+{
+    if (expanded_ == enable)
+        return;
+
+    expanded_ = enable;
+
+    updateExpandState_();
+
+    if (send_signal)
+        emit expansionChanged(expanded_);
+}
+
+void AudioUnitWidget::updateExpandState_()
+{
+    butExpand_->setArrowType(expanded_? Qt::RightArrow : Qt::DownArrow);
+
+    icon_->setVisible(expanded_);
+    for (auto c : audioIns_)
+        c->setVisible(expanded_);
+    for (auto c : audioOuts_)
+        c->setVisible(expanded_);
+    for (auto c : modulatorOuts_)
+        c->setVisible(expanded_);
 }
 
 } // namespace GUI

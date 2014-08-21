@@ -44,6 +44,7 @@ signals:
 public slots:
 
     void setAnimating(bool enable);
+    void updateAll();
 
 protected:
 

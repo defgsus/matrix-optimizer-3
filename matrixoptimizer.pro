@@ -192,7 +192,8 @@ SOURCES += \
     src/gui/widget/audiounitconnectorwidget.cpp \
     src/gui/painter/audiolinkviewoverpaint.cpp \
     src/gui/painter/objecttreeviewoverpaint.cpp \
-    src/object/sprite.cpp
+    src/object/sprite.cpp \
+    src/object/util/texturesetting.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -378,7 +379,8 @@ HEADERS += \
     src/gui/widget/audiounitconnectorwidget.h \
     src/gui/painter/audiolinkviewoverpaint.h \
     src/gui/painter/objecttreeviewoverpaint.h \
-    src/object/sprite.h
+    src/object/sprite.h \
+    src/object/util/texturesetting.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

@@ -16,6 +16,9 @@
 
 #include "object/object_fwd.h"
 
+class QLabel;
+class QToolButton;
+
 namespace MO {
 namespace GUI {
 
@@ -26,6 +29,8 @@ class AudioUnitWidget : public QWidget
     Q_OBJECT
 public:
     explicit AudioUnitWidget(AudioUnit * au, QWidget *parent = 0);
+
+    bool isExpanded() const { return expanded_; }
 
     AudioUnit * audioUnit() const { return unit_; }
 
@@ -43,6 +48,9 @@ public:
 
 signals:
 
+    /** Send when expanded or collapsed */
+    void expansionChanged(bool expanded);
+
     void dragStart(AudioUnitWidget *);
     /** @p pos is in this widget's space */
     void dragMove(AudioUnitWidget *, const QPoint& pos);
@@ -54,6 +62,10 @@ public slots:
     /** Updates the ModulatorObjectFloat value displays */
     void updateValueOutputs();
 
+    void setExpanded(bool enable, bool send_signal = false);
+
+protected:
+
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
@@ -62,6 +74,7 @@ private:
 
     void createWidgets_();
     QWidget * createHeader_();
+    void updateExpandState_();
 
     AudioUnit * unit_;
 
@@ -71,6 +84,10 @@ private:
         audioIns_,
         audioOuts_,
         modulatorOuts_;
+
+    QLabel * icon_;
+    QToolButton * butExpand_;
+    bool expanded_;
 
     QPoint dragStart_;
     bool dragging_;

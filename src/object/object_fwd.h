@@ -54,8 +54,7 @@ namespace MO {
     class ModulatorObject;
     class ModulatorObjectFloat;
 
-    class Setting;
-    class SettingFloat;
+    class TextureSetting;
 
     class ObjectTreeModel;
     class ObjectTreeMimeData;
