@@ -257,6 +257,12 @@ public:
                                const QString& equationY,
                                const QString& equationZ);
 
+    /** Applies the equation to the texture coordinates.
+        Variables are x, y, z, s, t and i (for vertex index). */
+    bool transformTexCoordsWithEquation(
+                                const QString& equationS,
+                                const QString& equationT);
+
     /** Extrudes all triangles along their normals -> into @p geom. */
     void extrudeTriangles(Geometry & geom, VertexType constant, VertexType factor) const;
 

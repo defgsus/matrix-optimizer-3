@@ -194,7 +194,8 @@ SOURCES += \
     src/object/sprite.cpp \
     src/object/util/texturesetting.cpp \
     src/geom/geometrymodifiertexcoords.cpp \
-    src/gui/widget/doublespinboxclean.cpp
+    src/gui/widget/doublespinboxclean.cpp \
+    src/geom/geometrymodifiertexcoordequation.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -383,7 +384,8 @@ HEADERS += \
     src/object/sprite.h \
     src/object/util/texturesetting.h \
     src/geom/geometrymodifiertexcoords.h \
-    src/gui/widget/doublespinboxclean.h
+    src/gui/widget/doublespinboxclean.h \
+    src/geom/geometrymodifiertexcoordequation.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

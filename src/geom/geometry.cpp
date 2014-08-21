@@ -782,6 +782,58 @@ bool Geometry::transformPrimitivesWithEquation(
     return true;
 }
 
+bool Geometry::transformTexCoordsWithEquation(
+                                        const QString &equationS,
+                                        const QString &equationT)
+{
+    Double vx, vy, vz, vindex, vs, vt;
+
+    std::vector<PPP_NAMESPACE::Parser> equ(2);
+    for (uint i=0; i<2; ++i)
+    {
+        equ[i].variables().add("x", &vx);
+        equ[i].variables().add("y", &vy);
+        equ[i].variables().add("z", &vz);
+        equ[i].variables().add("i", &vindex);
+        equ[i].variables().add("s", &vs);
+        equ[i].variables().add("t", &vt);
+    }
+
+    if (!equ[0].parse(equationS.toStdString()))
+        return false;
+    if (!equ[1].parse(equationT.toStdString()))
+        return false;
+
+    for (uint i=0; i<numTriangles(); ++i)
+    {
+        for (uint j=0; j<numTriangleIndexComponents(); ++j)
+        {
+            const int idx = triIndex_[i * numTriangleIndexComponents() + j];
+
+            // copy input variables
+            const VertexType * v = &vertex_[idx * numVertexComponents()];
+            vx = v[0];
+            vy = v[1];
+            vz = v[2];
+            vindex = i;
+            TextureCoordType * t = &texcoord_[idx * numTextureCoordComponents()];
+            vs = t[0];
+            vt = t[1];
+
+            // assign result from equation
+            if (equationS != "s")
+                t[0] = equ[0].eval();
+            if (equationT != "t")
+                t[1] = equ[1].eval();
+        }
+
+        progress_ = (i * 100) / numTriangles();
+    }
+
+    return true;
+}
+
+
 void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor) const
 {
     for (uint i=0; i<numTriangles(); ++i)

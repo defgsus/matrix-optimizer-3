@@ -33,6 +33,7 @@
 #include "geom/geometrymodifiervertexgroup.h"
 #include "geom/geometrymodifiervertexequation.h"
 #include "geom/geometrymodifierprimitiveequation.h"
+#include "geom/geometrymodifiertexcoordequation.h"
 #include "geom/geometrymodifierextrude.h"
 #include "geom/geometrymodifiertexcoords.h"
 
@@ -594,6 +595,37 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
             editEquX->setPlainText(equ->getEquationX());
             editEquY->setPlainText(equ->getEquationY());
             editEquZ->setPlainText(equ->getEquationZ());
+        };
+    }
+
+
+
+    if (auto equ = dynamic_cast<GEOM::GeometryModifierTexCoordEquation*>(modifier_))
+    {
+        QStringList vars = { "x", "y", "z", "i", "s", "t" };
+
+        auto editEquS = new EquationEditor(this);
+        group_->addWidget(editEquS);
+        editEquS->addVariables(vars);
+        editEquS->setPlainText(equ->getEquationS());
+        connect(editEquS, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        auto editEquT = new EquationEditor(this);
+        group_->addWidget(editEquT);
+        editEquT->addVariables(vars);
+        editEquT->setPlainText(equ->getEquationT());
+        connect(editEquT, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            equ->setEquationS(editEquS->toPlainText());
+            equ->setEquationT(editEquT->toPlainText());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            editEquS->setPlainText(equ->getEquationS());
+            editEquT->setPlainText(equ->getEquationT());
         };
     }
 
