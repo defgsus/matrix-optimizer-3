@@ -130,6 +130,7 @@ void ParameterView::createWidgets_()
     clearWidgets_();
     prevEditWidget_ = 0;
 
+    QWidget * prev = 0;
     for (auto p : parameters_)
     {
         QWidget * w = createWidget_(p);
@@ -143,6 +144,11 @@ void ParameterView::createWidgets_()
             layout_->addWidget(w);
             widgets_.append(w);
         }
+        /*
+        if (prev)
+            setTabOrder(prev, w);
+        prev = w;
+        */
     }
 }
 
@@ -151,7 +157,7 @@ void ParameterView::updateModulatorButton_(Parameter * p, QToolButton * b)
     static QIcon iconModulateOn(":/icon/modulate_on.png");
     static QIcon iconModulateOff(":/icon/modulate_off.png");
 
-    b->setEnabled(p->isModulateable());
+    b->setVisible(p->isModulateable());
 
     if (p->modulatorIds().size())
     {
@@ -165,8 +171,20 @@ void ParameterView::updateModulatorButton_(Parameter * p, QToolButton * b)
     }
 }
 
+void ParameterView::setNextTabWidget_(QWidget * w)
+{
+    if (prevEditWidget_)
+        setTabOrder(prevEditWidget_, w);
+    //MO_DEBUG("taborder " << prevEditWidget_ << " " << w);
+    prevEditWidget_ = w;
+}
+
 QWidget * ParameterView::createWidget_(Parameter * p)
 {
+    static const QIcon resetIcon(":/icon/reset.png");
+
+    const int butfs = 25;
+
     MO_ASSERT(p->object(), "no object assigned to parameter");
     MO_ASSERT(p->object()->sceneObject(), "no scene assigned to parameter object");
     //ObjectTreeModel * model = p->object()->sceneObject()->model();
@@ -179,6 +197,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
     QHBoxLayout * l = new QHBoxLayout(w);
     l->setMargin(0);
+    l->setSpacing(4);
 
     QLabel * label = new QLabel(p->name(), w);
     l->addWidget(label);
@@ -193,6 +212,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     bmod = new QToolButton(w);
     l->addWidget(bmod);
     bmod->setStatusTip(tr("Click to open the context menu for modulating the parameter"));
+    bmod->setFixedSize(butfs, butfs);
     updateModulatorButton_(p, bmod);
     if (p->isModulateable())
         connect(bmod, &QToolButton::pressed,
@@ -201,12 +221,12 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     // reset-to-default button
     but = breset = new QToolButton(w);
     l->addWidget(but);
-    but->setText("0");
-    but->setEnabled(p->isEditable());
+    but->setIcon(resetIcon);
+    but->setVisible(p->isEditable());
+    but->setFixedSize(butfs*0.7, butfs);
     QString defaultValueName;
 
-    int fs = breset->contentsRect().height() - 4;
-    bmod->setFixedSize(fs, fs);
+    //int fs = bmod->contentsRect().height() - 4;
 
     // --- float parameter ---
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(p))
@@ -230,9 +250,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
                            ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")
                            : pf->statusTip());
 
-        if (prevEditWidget_)
-            setTabOrder(prevEditWidget_, spin);
-        prevEditWidget_ = spin;
+        w->setFocusProxy(spin);
+        setNextTabWidget_(spin);
 
         connect(spin, static_cast<void(DoubleSpinBox::*)(double)>(&DoubleSpinBox::valueChanged), [=]()
         {
@@ -253,7 +272,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             Q_UNUSED(r);
         });
 
-        connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue()); });
+        connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue(), true); });
     }
     else
 
@@ -278,9 +297,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
                            ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")
                            : pi->statusTip());
 
-        if (prevEditWidget_)
-            setTabOrder(prevEditWidget_, spin);
-        prevEditWidget_ = spin;
+        w->setFocusProxy(spin);
+        setNextTabWidget_(spin);
 
         connect(spin, &SpinBox::valueChanged, [=](int value)
         {
@@ -290,7 +308,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             scene->setParameterValue(pi, value);
         });
 
-        connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pi->defaultValue()); });
+        connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pi->defaultValue(), true); });
     }
     else
 
@@ -316,9 +334,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         if (combo->currentIndex() >= 0 && combo->currentIndex() < ps->statusTips().size())
             combo->setStatusTip(ps->statusTips().at(combo->currentIndex()));
 
-        if (prevEditWidget_)
-            setTabOrder(prevEditWidget_, combo);
-        prevEditWidget_ = combo;
+        w->setFocusProxy(combo);
+        setNextTabWidget_(combo);
 
         connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=](int idx)
         {
@@ -380,9 +397,8 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         edit->setStatusTip(pfn->statusTip());
         edit->setText(pfn->value());
 
-        if (prevEditWidget_)
-            setTabOrder(prevEditWidget_, edit);
-        prevEditWidget_ = edit;
+        w->setFocusProxy(edit);
+        setNextTabWidget_(edit);
 
         // load button
         QToolButton * butload = new QToolButton(w);
@@ -404,10 +420,10 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     }
 
     else
-    MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");
+        MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");
 
     if (defaultValueName.isEmpty())
-        breset->setEnabled(false);
+        breset->setVisible(false);
     else
         breset->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")
                       .arg(defaultValueName));

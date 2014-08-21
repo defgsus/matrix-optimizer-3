@@ -29,6 +29,7 @@ SpinBox::SpinBox(QWidget *parent) :
 
     spin_ = new QSpinBox(this);
     l->addWidget(spin_);
+    setFocusProxy(spin_);
 
     connect(spin_, SIGNAL(valueChanged(int)), this, SLOT(internValueChanged_(int)));
 }

@@ -132,8 +132,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="3.959798"
-     inkscape:cx="637.81935"
-     inkscape:cy="944.87596"
+     inkscape:cx="603.49308"
+     inkscape:cy="995.38359"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -1679,5 +1679,31 @@
          x="746.62103"
          y="115.49216"
          style="stroke-width:1.24511695">NEW</tspan></text>
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-78-39"
+       width="68.188736"
+       height="68.188736"
+       x="18.44903"
+       y="-658.87372"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/reset.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <text
+       xml:space="preserve"
+       style="font-size:50.85089493px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:none;stroke:#000000;stroke-width:1.47739732;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Ebrima;-inkscape-font-specification:Ebrima"
+       x="610.89795"
+       y="70.796913"
+       id="text4028"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/reset.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001"><tspan
+         sodipodi:role="line"
+         id="tspan4030"
+         x="610.89795"
+         y="70.796913"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:none;stroke:#000000;stroke-width:1.47739732;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:Droid Sans;-inkscape-font-specification:Droid Sans Bold">0</tspan></text>
   </g>
 </svg>

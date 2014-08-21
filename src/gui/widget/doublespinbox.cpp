@@ -29,6 +29,7 @@ DoubleSpinBox::DoubleSpinBox(QWidget *parent) :
 
     spin_ = new QDoubleSpinBox(this);
     l->addWidget(spin_);
+    setFocusProxy(spin_);
 
     connect(spin_, SIGNAL(valueChanged(double)), this, SLOT(internValueChanged_(double)));
 }

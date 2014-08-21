@@ -66,6 +66,7 @@ private:
 
     void createWidgets_();
     QWidget * createWidget_(Parameter *);
+    void setNextTabWidget_(QWidget*);
     void clearWidgets_();
     /** update values of parameter widgets */
     void updateWidgetValues_();
