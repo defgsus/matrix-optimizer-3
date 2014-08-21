@@ -16,11 +16,13 @@
 #include <QOpenGLContext>
 #include <QKeyEvent>
 #include <QTime>
+#include <QMouseEvent>
 
 #include "window.h"
 #include "context.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "geom/freecamera.h"
 
 namespace MO {
 namespace GL {
@@ -32,7 +34,9 @@ Window::Window(QScreen * targetScreen)
       updatePending_(false),
       animating_    (false),
       messure_      (new QTime()),
-      fps_          (0.0)
+      fps_          (0.0),
+      isFreeCamera_ (true),
+      cameraControl_(new GEOM::FreeCamera())
 {
     MO_DEBUG_GL("Window::Window()");
 
@@ -52,7 +56,10 @@ Window::Window(QScreen * targetScreen)
 Window::~Window()
 {
     MO_DEBUG_GL("Window::~Window()");
+
     delete messure_;
+    delete cameraControl_;
+
 //    if (context_)
 //        context_->doneCurrent();
 }
@@ -153,6 +160,66 @@ void Window::renderNow()
         renderLater();
 }
 
+void Window::mousePressEvent(QMouseEvent * e)
+{
+    lastMousePos_ = e->pos();
+}
+
+void Window::mouseMoveEvent(QMouseEvent * e)
+{
+    if (!isFreeCamera_)
+        return;
+
+    Float fac = e->modifiers() & Qt::SHIFT ?
+                10.f : 1.f;
+
+    int dx = lastMousePos_.x() - e->x(),
+        dy = lastMousePos_.y() - e->y();
+    lastMousePos_ = e->pos();
+
+    bool send = false;
+
+    if (e->buttons() & Qt::LeftButton)
+    {
+        cameraControl_->moveX(-0.03*fac*dx);
+        cameraControl_->moveY( 0.03*fac*dy);
+
+        send = true;
+    }
+
+    if (e->buttons() & Qt::RightButton)
+    {
+        cameraControl_->rotateX(-dy * fac);
+        cameraControl_->rotateY(-dx * fac);
+
+        send = true;
+    }
+
+    if (send)
+    {
+        emit cameraMatrixChanged(cameraControl_->getMatrix());
+        e->accept();
+    }
+}
+
+void Window::mouseReleaseEvent(QMouseEvent *)
+{
+
+}
+
+
+void Window::wheelEvent(QWheelEvent * e)
+{
+    Float fac = e->modifiers() & Qt::SHIFT ?
+                10.f : 1.f;
+
+    Float d = std::max(-1, std::min(1, e->delta() ));
+    cameraControl_->moveZ(-0.3 * d * fac);
+
+    emit cameraMatrixChanged(cameraControl_->getMatrix());
+
+    e->accept();
+}
 
 } // namespace GL
 } // namespace MO

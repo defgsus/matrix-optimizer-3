@@ -12,6 +12,7 @@
 #define MOSRC_GL_MANAGER_H
 
 #include <QObject>
+#include "types/vector.h"
 
 namespace MO {
 namespace GL {
@@ -42,12 +43,14 @@ signals:
     /** Context is current, please render. */
     void renderRequest(uint thread);
 
+    void cameraMatrixChanged(const MO::Mat4&);
+
 public slots:
 
 private slots:
 
     void onContextCreated_(uint thread, MO::GL::Context *);
-
+    void onCameraMatrixChanged_(const MO::Mat4&);
 private:
 
     Window * window_;

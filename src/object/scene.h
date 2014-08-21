@@ -217,6 +217,10 @@ public slots:
     /** Requests rendering of the scene. */
     void render() { render_(); }
 
+    /** Sets the camera matrix in free-camera-mode,
+        used when scene is rendered next time. */
+    void setFreeCameraMatrix(const MO::Mat4& mat) { freeCameraMatrix_ = mat; }
+
     /** Returns the lighting settings for the scene.
         This may only be valid during rendering in objects! */
     const GL::LightSettings& lightSettings(uint thread) const { return lightSettings_[thread]; }
@@ -334,6 +338,9 @@ private:
     std::vector<GL::FrameBufferObject *> fboFinal_;
     std::vector<GL::ScreenQuad *> screenQuad_;
     std::vector<GL::LightSettings> lightSettings_;
+
+    int freeCameraIndex_;
+    Mat4 freeCameraMatrix_;
 
     // ----------- special objects -------------
 

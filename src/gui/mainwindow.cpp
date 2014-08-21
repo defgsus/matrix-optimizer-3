@@ -422,6 +422,8 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
     connect(glManager_, SIGNAL(renderRequest(uint)), scene_, SLOT(renderScene(uint)));
     connect(glManager_, SIGNAL(contextCreated(uint,MO::GL::Context*)),
                 scene_, SLOT(setGlContext(uint,MO::GL::Context*)));
+    connect(glManager_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
+                scene_, SLOT(setFreeCameraMatrix(MO::Mat4)));
 
     connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
 

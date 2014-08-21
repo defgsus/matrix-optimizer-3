@@ -130,7 +130,7 @@ void ParameterView::createWidgets_()
     clearWidgets_();
     prevEditWidget_ = 0;
 
-    QWidget * prev = 0;
+    //QWidget * prev = 0;
     for (auto p : parameters_)
     {
         QWidget * w = createWidget_(p);

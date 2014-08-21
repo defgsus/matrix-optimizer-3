@@ -43,6 +43,7 @@ namespace GL {
 
 } // namespace GL
     namespace GEOM {
+
         class Geometry;
         class GeometryCreator;
         class GeometryFactory;
@@ -52,6 +53,9 @@ namespace GL {
         class GeometryModifierChain;
 
         class ObjLoader;
+
+        class FreeCamera;
+
     } // namespace GEOM
 } // namespace MO
 

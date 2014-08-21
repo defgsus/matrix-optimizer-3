@@ -13,12 +13,13 @@
 
 #include <QWindow>
 
+#include "opengl_fwd.h"
+#include "types/vector.h"
+
 class QTime;
 
 namespace MO {
 namespace GL {
-
-class Context;
 
 /** OpenGL output window.
 
@@ -53,6 +54,9 @@ signals:
     /** Context is current, please render */
     void renderRequest(uint thread);
 
+    /** Send when the camera matrix changed (in free-camera-mode) */
+    void cameraMatrixChanged(const MO::Mat4&);
+
 public slots:
 
     /** Immediately render on current thread */
@@ -68,6 +72,11 @@ protected:
     bool event(QEvent *);
     void exposeEvent(QExposeEvent *);
 
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+    void wheelEvent(QWheelEvent *);
+
 private:
 
     void render_();
@@ -82,6 +91,11 @@ private:
     QTime * messure_;
 
     double fps_;
+
+    bool isFreeCamera_;
+    GEOM::FreeCamera * cameraControl_;
+
+    QPoint lastMousePos_;
 };
 
 

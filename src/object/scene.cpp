@@ -54,6 +54,8 @@ Scene::Scene(QObject *parent) :
     fbCmWidth_          (512),
     fbCmHeight_         (512),
     fboFinal_           (0),
+    freeCameraIndex_    (1),
+    freeCameraMatrix_   (1.0),
     sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
     audioDevice_        (new AUDIO::AudioDevice()),
@@ -614,7 +616,7 @@ GL::FrameBufferObject * Scene::fboMaster(uint thread) const
 
 GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
 {
-    if (camera_index >= cameras_.size())
+    if ((int)camera_index >= cameras_.size())
         return 0;
 
     return cameras_[camera_index]->fbo(thread);
@@ -679,13 +681,17 @@ void Scene::renderScene(uint thread)
         renderSet.setFinalFramebuffer(fboFinal_[thread]);
 
         // render scene from each camera
+        int camcount = 0;
         for (auto camera : cameras_)
         if (camera->active(time, thread))
         {
             // get camera viewspace
             camera->initCameraSpace(camSpace, thread, time);
-            const Mat4 viewm = glm::inverse(camera->transformation(thread, 0));
 
+            // get camera view-matrix
+            const Mat4 viewm = (camcount == freeCameraIndex_)?
+                        freeCameraMatrix_
+                      : glm::inverse(camera->transformation(thread, 0));
             camSpace.setViewMatrix(viewm);
 
             // for each cubemap
@@ -704,7 +710,10 @@ void Scene::renderScene(uint thread)
                     o->renderGl_(renderSet, thread, time);
                 }
             }
+
             camera->finishGlFrame(thread, time);
+
+            ++camcount;
         }
     }
     catch (Exception & e)

@@ -43,8 +43,11 @@ Window * Manager::createGlWindow(uint thread)
         //window_->moveToThread(thrd);
         window_->setThread(thread);
         connect(window_, SIGNAL(contextCreated(uint, MO::GL::Context*)),
-                            SLOT(onContextCreated_(uint, MO::GL::Context*)));
-        connect(window_, SIGNAL(renderRequest(uint)), SIGNAL(renderRequest(uint)));
+                    this, SLOT(onContextCreated_(uint, MO::GL::Context*)));
+        connect(window_, SIGNAL(renderRequest(uint)),
+                    this, SIGNAL(renderRequest(uint)));
+        connect(window_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
+                    this, SLOT(onCameraMatrixChanged_(MO::Mat4)));
     }
     return window_;
 }
@@ -54,6 +57,11 @@ void Manager::onContextCreated_(uint thread, Context * context)
     MO_DEBUG_GL("Manager::onContextCreated_(" << thread << ", " << context << ")");
 
     emit contextCreated(thread, context);
+}
+
+void Manager::onCameraMatrixChanged_(const Mat4 & mat)
+{
+    emit cameraMatrixChanged(mat);
 }
 
 } // namespace GL

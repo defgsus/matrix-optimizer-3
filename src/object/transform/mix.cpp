@@ -55,7 +55,7 @@ void Mix::childrenChanged()
 
 void Mix::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
-    const Double m = m_->value(time, thread);
+    const Float m = m_->value(time, thread);
 
     // don't touch matrix at all
     if (m <= 0)
