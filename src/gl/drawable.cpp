@@ -165,6 +165,11 @@ void Drawable::compileShader_()
 
     // --- get variable locations ---
 
+    // XXX set default slot for normal-map
+    GL::Uniform * u = shader_->getUniform("tex_norm_0");
+    if (u)
+        u->ints[0] = 1;
+
     auto diffExp = shader_->getUniform(shaderSource_->uniformNameDiffuseExponent());
     if (diffExp)
         diffExp->floats[0] = 1.0;

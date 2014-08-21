@@ -150,6 +150,12 @@ public:
                   ColorType r, ColorType g, ColorType b, ColorType a,
                   TextureCoordType u, TextureCoordType v);
 
+    /** Adds a vertex (point) with currently set normal and color.
+        Does not check for setSharedVertices().
+        @see setColor(), setNormal() */
+    IndexType addVertexAlways(VertexType x, VertexType y, VertexType z)
+    { return addVertexAlways(x,y,z, curNx_,curNy_,curNz_, curR_, curG_, curB_, curA_, curU_, curV_); }
+
     /** Adds a vertex (point) with normal and color.
         Does not check for setSharedVertices().
         @returns the index of the vertex. */
@@ -207,6 +213,15 @@ public:
 
     /** Inverts all normals (pointing inwards) */
     void invertNormals();
+
+    /** Invertes (1-uv) the texture coordinates for u and v axis. */
+    void invertTextureCoords(bool invX, bool invY);
+
+    /** Offsets the texture coords */
+    void shiftTextureCoords(TextureCoordType offsetX, TextureCoordType offsetY);
+
+    /** Multiplies the texture coords */
+    void scaleTextureCoords(TextureCoordType scaleX, TextureCoordType scaleY);
 
     /** Makes every vertex in the model unique.
         After this call, every triangle or line vertex will be unique. */

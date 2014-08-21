@@ -140,6 +140,102 @@ void GeometryFactory::createBox(
     }
 }
 
+void GeometryFactory::createTexturedBox(
+        Geometry * g, Float side_length_x, Float side_length_y, Float side_length_z)
+{
+    Float
+        sx = side_length_x * 0.5f,
+        sy = side_length_y * 0.5f,
+        sz = side_length_z * 0.5f;
+/*
+      -+-     ++-
+       +-------+
+      /|      /|
+ -++ / | +++ / |
+    +-------+  |
+    |  +----|--+
+    | / --- | /  +--
+    |/      |/
+    +-------+
+   --+     +-+
+
+*/
+    int a,b,c,d;
+
+    // back
+    g->setTexCoord(0,0);
+    a = g->addVertexAlways(+sx, -sy, -sz);
+    g->setTexCoord(1,0);
+    b = g->addVertexAlways(-sx, -sy, -sz);
+    g->setTexCoord(1,1);
+    c = g->addVertexAlways(-sx, +sy, -sz);
+    g->setTexCoord(0,1);
+    d = g->addVertexAlways(+sx, +sy, -sz);
+    g->addTriangle(a,b,c);
+    g->addTriangle(a,c,d);
+
+    // bottom
+    g->setTexCoord(0,0);
+    a = g->addVertexAlways(-sx, -sy, -sz);
+    g->setTexCoord(1,0);
+    b = g->addVertexAlways(+sx, -sy, -sz);
+    g->setTexCoord(1,1);
+    c = g->addVertexAlways(+sx, -sy, +sz);
+    g->setTexCoord(0,1);
+    d = g->addVertexAlways(-sx, -sy, +sz);
+    g->addTriangle(a,b,c);
+    g->addTriangle(a,c,d);
+
+    // top
+    g->setTexCoord(0,0);
+    a = g->addVertexAlways(-sx, +sy, +sz);
+    g->setTexCoord(1,0);
+    b = g->addVertexAlways(+sx, +sy, +sz);
+    g->setTexCoord(1,1);
+    c = g->addVertexAlways(+sx, +sy, -sz);
+    g->setTexCoord(0,1);
+    d = g->addVertexAlways(-sx, +sy, -sz);
+    g->addTriangle(a,b,c);
+    g->addTriangle(a,c,d);
+
+    // right
+    g->setTexCoord(0,0);
+    a = g->addVertexAlways(-sx, -sy, -sz);
+    g->setTexCoord(1,0);
+    b = g->addVertexAlways(-sx, -sy, +sz);
+    g->setTexCoord(1,1);
+    c = g->addVertexAlways(-sx, +sy, +sz);
+    g->setTexCoord(0,1);
+    d = g->addVertexAlways(-sx, +sy, -sz);
+    g->addTriangle(a,b,c);
+    g->addTriangle(a,c,d);
+
+    // left
+    g->setTexCoord(0,0);
+    a = g->addVertexAlways(+sx, -sy, +sz);
+    g->setTexCoord(1,0);
+    b = g->addVertexAlways(+sx, -sy, -sz);
+    g->setTexCoord(1,1);
+    c = g->addVertexAlways(+sx, +sy, -sz);
+    g->setTexCoord(0,1);
+    d = g->addVertexAlways(+sx, +sy, +sz);
+    g->addTriangle(a,b,c);
+    g->addTriangle(a,c,d);
+
+    // front
+    g->setTexCoord(0,0);
+    a = g->addVertexAlways(-sx, -sy, +sz);
+    g->setTexCoord(1,0);
+    b = g->addVertexAlways(+sx, -sy, +sz);
+    g->setTexCoord(1,1);
+    c = g->addVertexAlways(+sx, +sy, +sz);
+    g->setTexCoord(0,1);
+    d = g->addVertexAlways(-sx, +sy, +sz);
+    g->addTriangle(a,b,c);
+    g->addTriangle(a,c,d);
+
+}
+
 
 void GeometryFactory::createGridXZ(Geometry * g, int sizeX, int sizeY, bool coords)
 {
@@ -836,6 +932,10 @@ void GeometryFactory::createFromSettings(Geometry * g,
 
     case GeometryFactorySettings::T_BOX:
         createCube(g, 1.f, set->asTriangles);
+    break;
+
+    case GeometryFactorySettings::T_BOX_UV:
+        createTexturedBox(g, 1.f, 1.f, 1.f);
     break;
 
     case GeometryFactorySettings::T_GRID_XZ:

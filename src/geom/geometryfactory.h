@@ -43,6 +43,10 @@ public:
             Float side_length_x, Float side_length_y, Float side_length_z,
                           bool asTriangles = true);
 
+    /** Creates a correctly uv-mapped box */
+    static void createTexturedBox(Geometry *,
+            Float side_length_x, Float side_length_y, Float side_length_z);
+
     static void createUVSphere(Geometry *, Float rad, uint segu, uint segv,
                                bool asTriangles = true);
     static void createUVSphereLines(Geometry *, Float rad, uint segu, uint segv);

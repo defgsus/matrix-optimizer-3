@@ -192,7 +192,8 @@ SOURCES += \
     src/gui/painter/audiolinkviewoverpaint.cpp \
     src/gui/painter/objecttreeviewoverpaint.cpp \
     src/object/sprite.cpp \
-    src/object/util/texturesetting.cpp
+    src/object/util/texturesetting.cpp \
+    src/geom/geometrymodifiertexcoords.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -379,7 +380,8 @@ HEADERS += \
     src/gui/painter/audiolinkviewoverpaint.h \
     src/gui/painter/objecttreeviewoverpaint.h \
     src/object/sprite.h \
-    src/object/util/texturesetting.h
+    src/object/util/texturesetting.h \
+    src/geom/geometrymodifiertexcoords.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

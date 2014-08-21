@@ -31,16 +31,15 @@ TextureSetting::TextureSetting(Object *parent, GL::ErrorReporting rep)
       rep_          (rep),
       texture_      (0),
       constTexture_ (0),
-      ownTexture_   (false),
       paramType_    (0)
 {
 }
 
 TextureSetting::~TextureSetting()
 {
-    if (ownTexture_)
+    if (texture_)
     {
-        if (texture_ && texture_->isCreated())
+        if (texture_->isCreated())
             MO_GL_WARNING("destruction of TextureSetting with allocated texture");
 
         delete texture_;
@@ -116,8 +115,6 @@ bool TextureSetting::initGl()
     if (paramType_->baseValue() == TT_NONE)
         return true;
 
-    ownTexture_ = false;
-
     if (paramType_->baseValue() == TT_FILE)
     {
         Image img;
@@ -126,7 +123,6 @@ bool TextureSetting::initGl()
         texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
         if (!texture_)
             return false;
-        ownTexture_ = true;
         constTexture_ = texture_;
     }
 
@@ -167,7 +163,6 @@ bool TextureSetting::initGl()
             texture_ = GL::Texture::createFromImage(img, GL_RGB, rep_);
             if (!texture_)
                 return false;
-            ownTexture_ = true;
             constTexture_ = texture_;
             return true;
         }
@@ -183,7 +178,7 @@ bool TextureSetting::initGl()
 
 void TextureSetting::releaseGl()
 {
-    if (ownTexture_)
+    if (texture_)
     {
         texture_->release();
         delete texture_;
@@ -193,7 +188,7 @@ void TextureSetting::releaseGl()
     constTexture_ = 0;
 }
 
-bool TextureSetting::bind()
+bool TextureSetting::bind(uint slot)
 {
     if (paramType_->baseValue() == TT_NONE)
         return true;
@@ -204,16 +199,42 @@ bool TextureSetting::bind()
         return false;
     }
 
-    return constTexture_->bind();
+    // set active slot
+    slot += GL_TEXTURE0;
+    GLint act;
+    MO_CHECK_GL( glGetIntegerv(GL_ACTIVE_TEXTURE, &act) );
+    if ((GLint)slot != act)
+        MO_CHECK_GL( glActiveTexture(slot) );
+
+    bool r = constTexture_->bind();
+
+    // set back
+    if ((GLint)slot != act)
+        MO_CHECK_GL( glActiveTexture(act) );
+
+    return r;
 }
 
-void TextureSetting::unbind()
+void TextureSetting::unbind(uint slot)
 {
     if (paramType_->baseValue() == TT_NONE)
         return;
 
     if (constTexture_)
+    {
+        // set active slot
+        slot += GL_TEXTURE0;
+        GLint act;
+        MO_CHECK_GL( glGetIntegerv(GL_ACTIVE_TEXTURE, &act) );
+        if ((GLint)slot != act)
+            MO_CHECK_GL( glActiveTexture(slot) );
+
         constTexture_->unbind();
+
+        // set back
+        if ((GLint)slot != act)
+            MO_CHECK_GL( glActiveTexture(act) );
+    }
 }
 
 } // namespace MO

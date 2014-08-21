@@ -58,7 +58,7 @@ private:
     GEOM::GeometryFactorySettings * geomSettings_;
     GEOM::Geometry * nextGeometry_;
 
-    TextureSetting * texture_;
+    TextureSetting * texture_, *textureBump_;
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_,
         *diffExp_;

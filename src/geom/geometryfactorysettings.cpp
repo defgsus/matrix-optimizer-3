@@ -35,7 +35,7 @@ namespace GEOM {
 const QStringList GeometryFactorySettings::typeIds =
 {
     "file", "quad",
-    "tetra", "hexa", "octa", "icosa", "dodeca",
+    "tetra", "hexa", "hexauv", "octa", "icosa", "dodeca",
     "cyl", "cylo", "torus", "uvsphere",
     "gridxz", "lgrid"
 };
@@ -46,6 +46,7 @@ const QStringList GeometryFactorySettings::typeNames =
     QObject::tr("quad"),
     QObject::tr("tetrahedron"),
     QObject::tr("hexahedron (cube)"),
+    QObject::tr("hexahedron (cube) uv-mapped"),
     QObject::tr("octahedron"),
     QObject::tr("icosahedron"),
     QObject::tr("dodecahedron"),

@@ -77,16 +77,20 @@ public:
     // ------------ opengl ---------------
 
     /** Creates or queries the texture, depending on the texture type.
-        Does nothing if type is TT_NONE */
+        Does nothing if type is TT_NONE.
+        @warning Calling initGl() and releaseGl() out of logical order
+        leads to undefined behaviour. */
     bool initGl();
-    /** Releases the texture */
+    /** Releases the texture.
+        @warning Calling initGl() and releaseGl() out of logical order
+        leads to undefined behaviour. */
     void releaseGl();
 
     /** Binds the texture to the active slot.
         Does nothing if type is TT_NONE */
-    bool bind();
+    bool bind(uint slot = 0);
     /** Does nothing if type is TT_NONE */
-    void unbind();
+    void unbind(uint slot = 0);
 
 private:
 
@@ -96,8 +100,6 @@ private:
 
     GL::Texture * texture_;
     const GL::Texture * constTexture_;
-    bool ownTexture_;
-    //TextureType actualType_;
 
     ParameterSelect * paramType_;
     ParameterFilename * paramFilename_;

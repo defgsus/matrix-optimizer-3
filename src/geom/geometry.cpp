@@ -399,6 +399,47 @@ void Geometry::invertNormals()
     }
 }
 
+void Geometry::invertTextureCoords(bool invX, bool invY)
+{
+    MO_ASSERT(numTextureCoordComponents() == 2, "something changed");
+
+    const uint si = texcoord_.size()/2;
+    if (invX)
+    {
+        TextureCoordType * tex = &texcoord_[0];
+        for (uint i=0; i<si; ++i, tex += 2)
+            *tex = 1.0 - *tex;
+    }
+    if (invY)
+    {
+        TextureCoordType * tex = &texcoord_[1];
+        for (uint i=0; i<si; ++i, tex += 2)
+            *tex = 1.0 - *tex;
+    }
+}
+
+void Geometry::shiftTextureCoords(TextureCoordType offsetX, TextureCoordType offsetY)
+{
+    MO_ASSERT(numTextureCoordComponents() == 2, "something changed");
+
+    for (uint i=0; i<texcoord_.size(); i+=2)
+    {
+        texcoord_[i] += offsetX;
+        texcoord_[i+1] += offsetY;
+    }
+}
+
+void Geometry::scaleTextureCoords(TextureCoordType scaleX, TextureCoordType scaleY)
+{
+    MO_ASSERT(numTextureCoordComponents() == 2, "something changed");
+
+    for (uint i=0; i<texcoord_.size(); i+=2)
+    {
+        texcoord_[i] *= scaleX;
+        texcoord_[i+1] *= scaleY;
+    }
+}
+
 void Geometry::unGroupVertices()
 {
     // backup data

@@ -31,6 +31,7 @@ public:
         T_QUAD,
         T_TETRAHEDRON,
         T_BOX,
+        T_BOX_UV,
         T_OCTAHEDRON,
         T_ICOSAHEDRON,
         T_DODECAHEDRON,

@@ -31,6 +31,7 @@ Model3d::Model3d(QObject * parent)
       geomSettings_ (new GEOM::GeometryFactorySettings),
       nextGeometry_ (0),
       texture_      (new TextureSetting(this)),
+      textureBump_  (new TextureSetting(this)),
       u_diff_exp_   (0),
       doRecompile_  (false)
 {
@@ -41,26 +42,31 @@ void Model3d::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);
 
-    io.writeHeader("m3d", 3);
+    io.writeHeader("m3d", 4);
 
     // v2
     geomSettings_->serialize(io);
 
     // v3
     texture_->serialize(io);
+    // v4
+    textureBump_->serialize(io);
 }
 
 void Model3d::deserialize(IO::DataStream & io)
 {
     ObjectGl::deserialize(io);
 
-    const int ver = io.readHeader("m3d", 3);
+    const int ver = io.readHeader("m3d", 4);
 
     if (ver >= 2)
         geomSettings_->deserialize(io);
 
     if (ver >= 3)
         texture_->deserialize(io);
+
+    if (ver >= 4)
+        textureBump_->deserialize(io);
 }
 
 void Model3d::createParameters()
@@ -99,6 +105,12 @@ void Model3d::createParameters()
 
     endParameterGroup();
 
+    beginParameterGroup("texturebump", tr("normal-map texture"));
+
+        textureBump_->createParameters("bump", TextureSetting::TT_NONE, true);
+
+    endParameterGroup();
+
     beginParameterGroup("surface", tr("surface"));
 
         diffExp_ = createFloatParameter("diffuseexp", tr("diffuse exponent"),
@@ -117,13 +129,14 @@ void Model3d::onParameterChanged(Parameter *p)
     if (p == lightMode_)
         doRecompile_ = true;
 
-    if (texture_->needsReinit(p))
+    if (texture_->needsReinit(p) || textureBump_->needsReinit(p))
         requestReinitGl();
 }
 
 void Model3d::initGl(uint /*thread*/)
 {
     texture_->initGl();
+    textureBump_->initGl();
 
     draw_ = new GL::Drawable(idName());
 
@@ -141,6 +154,7 @@ void Model3d::initGl(uint /*thread*/)
 void Model3d::releaseGl(uint /*thread*/)
 {
     texture_->releaseGl();
+    textureBump_->releaseGl();
 
     if (draw_->isReady())
         draw_->releaseOpenGl();
@@ -185,6 +199,8 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_FRAGMENT_LIGHTING");
     if (texture_->isEnabled())
         src->addDefine("#define MO_ENABLE_TEXTURE");
+    if (textureBump_->isEnabled())
+        src->addDefine("#define MO_ENABLE_NORMALMAP");
 
     draw_->setShaderSource(src);
 
@@ -215,6 +231,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
     if (draw_->isReady())
     {
         texture_->bind();
+        textureBump_->bind(1);
 
         draw_->setAmbientColor(
                     cr_->value(time, thread),

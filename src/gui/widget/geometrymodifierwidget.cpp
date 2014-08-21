@@ -34,6 +34,7 @@
 #include "geom/geometrymodifiervertexequation.h"
 #include "geom/geometrymodifierprimitiveequation.h"
 #include "geom/geometrymodifierextrude.h"
+#include "geom/geometrymodifiertexcoords.h"
 
 namespace MO {
 namespace GUI {
@@ -304,6 +305,72 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         };
     }
 
+    if (auto tex = dynamic_cast<GEOM::GeometryModifierTexCoords*>(modifier_))
+    {
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            auto label = new QLabel(tr("offset"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinox, tr("Offset on x-axis"),
+                           0.01, -1, 1);
+            lh->addWidget(spinox);
+
+            MO__DOUBLESPIN(spinoy, tr("Offset on y-axis"),
+                           0.01, -1, 1);
+            lh->addWidget(spinoy);
+
+        lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            label = new QLabel(tr("scale"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinx, tr("Scale on x-axis"),
+                           0.1, -1000000, 1000000);
+            lh->addWidget(spinx);
+
+            MO__DOUBLESPIN(spiny, tr("Scale on y-axis"),
+                           0.1, -1000000, 1000000);
+            lh->addWidget(spiny);
+
+
+        lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            MO__CHECKBOX(cbinvx, tr("invert x"),
+                         tr("Inverts the texture coordinates on the x-axis"),
+                         tex->getInvertX());
+            lh->addWidget(cbinvx);
+
+            MO__CHECKBOX(cbinvy, tr("invert y"),
+                         tr("Inverts the texture coordinates on the y-axis"),
+                         tex->getInvertY());
+            lh->addWidget(cbinvy);
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            tex->setOffsetX(spinox->value());
+            tex->setOffsetY(spinoy->value());
+            tex->setScaleX(spinx->value());
+            tex->setScaleY(spiny->value());
+            tex->setInvertX(cbinvx->isChecked());
+            tex->setInvertY(cbinvy->isChecked());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            spinox->setValue(tex->getOffsetX());
+            spinoy->setValue(tex->getOffsetY());
+            spinx->setValue(tex->getScaleX());
+            spiny->setValue(tex->getScaleY());
+            cbinvx->setChecked(tex->getInvertX());
+            cbinvy->setChecked(tex->getInvertY());
+        };
+    }
 
 
     if (auto tess = dynamic_cast<GEOM::GeometryModifierTesselate*>(modifier_))

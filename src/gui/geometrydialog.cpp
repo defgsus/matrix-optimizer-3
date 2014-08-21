@@ -573,6 +573,8 @@ void GeometryDialog::updateFromWidgets_()
     const bool
             isFile = settings_->type ==
                     GEOM::GeometryFactorySettings::T_FILE,
+            canOnlyTriangle = isFile
+                    || settings_->type == GEOM::GeometryFactorySettings::T_BOX_UV,
             canTriangle = (settings_->type !=
                             GEOM::GeometryFactorySettings::T_GRID_XZ
                             && settings_->type !=
@@ -606,7 +608,7 @@ void GeometryDialog::updateFromWidgets_()
     labelSmallRadius_->setVisible( hasSmallRadius );
     spinSmallRadius_->setVisible( hasSmallRadius );
 
-    cbTriangles_->setVisible( canTriangle && !isFile);
+    cbTriangles_->setVisible( canTriangle && !canOnlyTriangle);
 
     updateGeometry_();
 }
