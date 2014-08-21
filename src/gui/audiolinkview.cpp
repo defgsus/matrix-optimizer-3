@@ -184,21 +184,56 @@ void AudioLinkView::getDragGoal(const QPoint &lpos, DragGoal_ &goal) const
                 matcha_t = pos.y() >= 0,
                 matcha_r = pos.x() <= aw->width(),
                 matcha_b = pos.y() <= aw->height(),
-                matcha = matcha_l || matcha_r || matcha_t || matcha_b;
+                matcha = matcha_l && matcha_r && matcha_t && matcha_b;
 
         if (matcha)
         {
             goal.pos = DragGoal_::ON;
-            goal.displayRect = getWidgetUpdateRect_(aw);
+            goal.displayRect = getWidgetRect_(aw);
             goal.updateRect = getWidgetUpdateRect_(aw);
             return;
         }
 
-        if (match_t && !matcha_t)
+        const int w = penDragFrame_.width();
+
+        if (matcha_l && matcha_r)
         {
-            goal.pos = DragGoal_::ABOVE;
-            goal.displayRect = getWidgetUpdateRect_(aw);
-            goal.displayRect.adjust(0,-10,0,10-goal.displayRect.height());
+            if (match_t && !matcha_t)
+            {
+                goal.pos = DragGoal_::ABOVE;
+                QRect r = getWidgetRect_(aw);
+                goal.displayRect = QRect(r.x(), r.y()-10, r.width(), 10);
+                goal.updateRect = goal.displayRect.adjusted(-w,-w,w+1,w+1);
+                return;
+            }
+            if (match_b && !matcha_b)
+            {
+                goal.pos = DragGoal_::BELOW;
+                QRect r = getWidgetRect_(aw);
+                goal.displayRect = QRect(r.x(), r.y()+r.height(), r.width(), 10);
+                goal.updateRect = goal.displayRect.adjusted(-w,-w,w+1,w+1);
+                return;
+            }
+        }
+
+        if (matcha_t && matcha_b)
+        {
+            if (match_l && !matcha_l)
+            {
+                goal.pos = DragGoal_::LEFT;
+                QRect r = getWidgetRect_(aw);
+                goal.displayRect = QRect(r.x()-10, r.y(), 10, r.height());
+                goal.updateRect = goal.displayRect.adjusted(-w,-w,w+1,w+1);
+                return;
+            }
+            if (match_r && !matcha_r)
+            {
+                goal.pos = DragGoal_::RIGHT;
+                QRect r = getWidgetRect_(aw);
+                goal.displayRect = QRect(r.x()+r.width(), r.y(), 10, r.height());
+                goal.updateRect = goal.displayRect.adjusted(-w,-w,w+1,w+1);
+                return;
+            }
         }
     }
 
@@ -208,6 +243,7 @@ void AudioLinkView::getDragGoal(const QPoint &lpos, DragGoal_ &goal) const
 void AudioLinkView::onUnitDragStart_(AudioUnitWidget * w)
 {
     draggedWidget_ = w;
+    overpainter_->raise();
     update(getWidgetUpdateRect_(w));
 }
 
@@ -219,24 +255,33 @@ void AudioLinkView::onUnitDragMove_(AudioUnitWidget * w, const QPoint &p)
     QPoint pos = w->mapTo(this, p);
     DragGoal_ goal;
     getDragGoal(pos, goal);
-    // update new rect
+
+    // sanitize goal
+    if (goal.unitWidget == w)
+        goal.unitWidget = 0;
+
+    // compose update-rect
+    QRect updateRect = getWidgetUpdateRect_(w);
+    // update new goal
     if (goal.unitWidget)
-        update(goal.updateRect);
-    // update previous rect
+        updateRect |= goal.updateRect;
+    // update previous goal
     if (dragGoal_.unitWidget)
-        update(dragGoal_.updateRect);
+        updateRect |= dragGoal_.updateRect;
+
     dragGoal_ = goal;
+
+    overpainter_->update(updateRect);
 }
 
-void AudioLinkView::onUnitDragEnd_(AudioUnitWidget * w, const QPoint &)
+void AudioLinkView::onUnitDragEnd_(AudioUnitWidget * , const QPoint &)
 {
-    // update view
-    if (dragGoal_.unitWidget)
-        update(dragGoal_.updateRect);
-    update(getWidgetUpdateRect_(w));
     // switch off dragging
     draggedWidget_ = 0;
     dragGoal_.unitWidget = 0;
+
+    // update view
+    overpainter_->update();
 }
 
 } // namespace GUI

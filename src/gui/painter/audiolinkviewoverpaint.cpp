@@ -30,8 +30,11 @@ AudioLinkViewOverpaint::AudioLinkViewOverpaint(AudioLinkView * parent) :
 void AudioLinkViewOverpaint::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
+    p.save();
     p.setRenderHint(QPainter::Antialiasing, true);
 
+    //p.setBrush(QBrush(QColor(rand()%255,0,0,50)));
+    //p.drawRect(rect());
 
     // ------ draw audio cables ------
 
@@ -82,7 +85,12 @@ void AudioLinkViewOverpaint::paintEvent(QPaintEvent *)
         p.setPen(view_->penDragFrame_);
         p.setBrush(view_->brushDragTo_);
         p.drawRect(view_->dragGoal_.displayRect);
+
+        p.drawLine(view_->getWidgetRect_(view_->draggedWidget_).center(),
+                   view_->dragGoal_.displayRect.center());
     }
+
+    p.restore();
 }
 
 } // namespace GUI
