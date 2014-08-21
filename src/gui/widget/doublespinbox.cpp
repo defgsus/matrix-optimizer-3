@@ -11,6 +11,7 @@
 #include <QLayout>
 
 #include "doublespinbox.h"
+#include "doublespinboxclean.h"
 
 namespace MO {
 namespace GUI {
@@ -27,7 +28,7 @@ DoubleSpinBox::DoubleSpinBox(QWidget *parent) :
     //l->setSizeConstraint(QLayout::SetMinAndMaxSize);
     l->setSizeConstraint(QLayout::SetMaximumSize);
 
-    spin_ = new QDoubleSpinBox(this);
+    spin_ = new DoubleSpinBoxClean(this);
     l->addWidget(spin_);
     setFocusProxy(spin_);
 

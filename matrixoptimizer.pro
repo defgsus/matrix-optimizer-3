@@ -193,7 +193,8 @@ SOURCES += \
     src/gui/painter/objecttreeviewoverpaint.cpp \
     src/object/sprite.cpp \
     src/object/util/texturesetting.cpp \
-    src/geom/geometrymodifiertexcoords.cpp
+    src/geom/geometrymodifiertexcoords.cpp \
+    src/gui/widget/doublespinboxclean.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -381,7 +382,8 @@ HEADERS += \
     src/gui/painter/objecttreeviewoverpaint.h \
     src/object/sprite.h \
     src/object/util/texturesetting.h \
-    src/geom/geometrymodifiertexcoords.h
+    src/geom/geometrymodifiertexcoords.h \
+    src/gui/widget/doublespinboxclean.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

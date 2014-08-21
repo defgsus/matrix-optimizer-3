@@ -11,7 +11,7 @@
 #ifndef MOSRC_GUI_DOUBLESPINBOX_H
 #define MOSRC_GUI_DOUBLESPINBOX_H
 
-#include <QDoubleSpinBox>
+#include "doublespinboxclean.h"
 
 namespace MO {
 namespace GUI {
@@ -57,7 +57,7 @@ private slots:
     void internValueChanged_(double);
 
 private:
-    QDoubleSpinBox * spin_;
+    DoubleSpinBoxClean * spin_;
     bool ignoreSignal_;
 };
 
