@@ -36,6 +36,7 @@
 #include "widget/equationeditor.h"
 #include "io/files.h"
 #include "io/log.h"
+#include "geometryexportdialog.h"
 
 namespace MO {
 namespace GUI {
@@ -45,6 +46,7 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     QDialog         (parent, flags),
     settings_       (new GEOM::GeometryFactorySettings()),
     creator_        (0),
+    geometry_       (0),
     updateGeometryLater_(false),
     ignoreUpdate_   (false),
     closeRequest_   (false)
@@ -386,6 +388,20 @@ void GeometryDialog::createMainWidgets_()
                         close();
                     });
 
+                // Export
+
+                but = new QPushButton(tr("Export as file"), this);
+                lv->addWidget(but);
+                connect(but, &QPushButton::clicked, [=]()
+                {
+                    if (!geometry_)
+                        return;
+
+                    GeometryExportDialog exp;
+                    exp.setGeometry(geometry_);
+                    exp.exec();
+                });
+
         statusBar_ = new QStatusBar(this);
         lv0->addWidget(statusBar_);
 
@@ -562,6 +578,7 @@ void GeometryDialog::creationFinished_()
 {
     auto g = creator_->takeGeometry();
 
+    geometry_ = g;
     geoWidget_->setGeometry(g);
 
     progressBar_->setVisible(false);

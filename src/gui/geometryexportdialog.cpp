@@ -30,7 +30,7 @@ GeometryExportDialog::GeometryExportDialog(QWidget *parent) :
     QDialog         (parent),
     geometry_       (0)
 {
-    setMinimumSize(640,480);
+    setMinimumSize(640,240);
 
     createWidgets_();
 }
@@ -77,7 +77,7 @@ void GeometryExportDialog::createWidgets_()
             connect(butOk, SIGNAL(clicked()), this, SLOT(exportNow()));
 
             auto butCancel = new QPushButton(tr("Cancel"), this);
-            lv->addWidget(butOk);
+            lv->addWidget(butCancel);
             connect(butCancel, SIGNAL(clicked()), this, SLOT(reject()));
 
 }
