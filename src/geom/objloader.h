@@ -98,7 +98,7 @@ private:
     std::vector<Float>
         vertex_, texCoord_, normal_;
 
-    std::vector<Vertex> triangle_;
+    std::vector<Vertex> triangle_, line_;
 
     QMap<QString, Material> material_;
     QMap<UInt, QString> materialUse_;

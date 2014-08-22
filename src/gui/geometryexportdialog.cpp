@@ -30,7 +30,10 @@ GeometryExportDialog::GeometryExportDialog(QWidget *parent) :
     QDialog         (parent),
     geometry_       (0)
 {
-    setMinimumSize(640,240);
+    setWindowTitle(tr("geometry exporter"));
+    setObjectName("_GeometryExportDialog");
+
+    setMinimumSize(480,320);
 
     createWidgets_();
 }
@@ -73,11 +76,11 @@ void GeometryExportDialog::createWidgets_()
 
             auto butOk = new QPushButton(tr("Export"), this);
             butOk->setDefault(true);
-            lv->addWidget(butOk);
+            lh->addWidget(butOk);
             connect(butOk, SIGNAL(clicked()), this, SLOT(exportNow()));
 
             auto butCancel = new QPushButton(tr("Cancel"), this);
-            lv->addWidget(butCancel);
+            lh->addWidget(butCancel);
             connect(butCancel, SIGNAL(clicked()), this, SLOT(reject()));
 
 }
@@ -86,14 +89,35 @@ void GeometryExportDialog::setGeometry(const GEOM::Geometry * g)
 {
     geometry_ = g;
 
+    QString text;
+
     if (!geometry_)
-        infoLabel_->setText(tr("no geometry"));
+        text = tr("no geometry");
     else
-        infoLabel_->setText(tr("%1 vertices\n%2 triangles\n%3 lines\nmemory: %4")
+    {
+        text = "<html>" + tr("%1 vertices<br/>%2 triangles<br/>%3 lines<br/>memory: %4")
                             .arg(geometry_->numVertices())
                             .arg(geometry_->numTriangles())
                             .arg(geometry_->numLines())
-                            .arg(byte_to_string(geometry_->memory())));
+                            .arg(byte_to_string(geometry_->memory()));
+
+        if (!geometry_->numTriangles() && !geometry_->numLines())
+            text += "<p><font color=\"#a00\">" + tr("No faces in geometry!") + "</font></p>";
+        else
+        if (!geometry_->numTriangles())
+            text += "<p><font color=\"#a00\">"
+                    + tr("Lines in obj files are generally not supported "
+                         "by other applications.") + "</font></p>";
+
+        text += "</html>";
+    }
+
+    infoLabel_->setText(text);
+
+    // make export flags sensible
+    const bool hasTriangle = geometry_ && geometry_->numTriangles() != 0;
+    cbNormals_->setChecked(cbNormals_->isChecked() && hasTriangle);
+    cbTexCoords_->setChecked(cbTexCoords_->isChecked() && hasTriangle);
 }
 
 void GeometryExportDialog::exportNow()
