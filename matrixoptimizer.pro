@@ -196,7 +196,8 @@ SOURCES += \
     src/geom/geometrymodifiertexcoords.cpp \
     src/gui/widget/doublespinboxclean.cpp \
     src/geom/geometrymodifiertexcoordequation.cpp \
-    src/geom/objexporter.cpp
+    src/geom/objexporter.cpp \
+    src/gui/geometryexportdialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -387,7 +388,8 @@ HEADERS += \
     src/geom/geometrymodifiertexcoords.h \
     src/gui/widget/doublespinboxclean.h \
     src/geom/geometrymodifiertexcoordequation.h \
-    src/geom/objexporter.h
+    src/geom/objexporter.h \
+    src/gui/geometryexportdialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
