@@ -71,8 +71,12 @@ vec4 mo_texture_cube(in samplerCube tex, vec2 st, float angle)
     st = st * 2.0 - 1.0;
 
     float   // distance from center
-            dist = length(st),
-            // cartesian screen-space to spherical
+            dist = length(st);
+
+    if (dist > 1.0)
+        return vec4(0., 0., 0., 1.);
+
+    float   // cartesian screen-space to spherical
             theta = dist * HALF_PI * angle / 180.0,
             phi = atan(st.y, st.x);
 
