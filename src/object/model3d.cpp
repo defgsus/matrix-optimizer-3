@@ -141,7 +141,7 @@ void Model3d::initGl(uint /*thread*/)
     draw_ = new GL::Drawable(idName());
 
     creator_ = new GEOM::GeometryCreator(this);
-    connect(creator_, SIGNAL(finished()), this, SLOT(geometryCreated_()));
+    connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
     connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
 
     creator_->setSettings(*geomSettings_);
@@ -175,6 +175,7 @@ void Model3d::geometryCreated_()
 void Model3d::geometryFailed_()
 {
     creator_->deleteLater();
+    creator_ = 0;
 }
 
 void Model3d::setGeometrySettings(const GEOM::GeometryFactorySettings & s)

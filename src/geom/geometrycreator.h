@@ -29,7 +29,7 @@ public:
     explicit GeometryCreator(QObject *parent = 0);
     ~GeometryCreator();
 
-    /** After finished() was emitted, the Geometry
+    /** After succeeded() was emitted, the Geometry
         can be taken here. */
     GEOM::Geometry * takeGeometry();
 
@@ -40,6 +40,8 @@ signals:
 
     /** There was an error creating the Geometry */
     void failed(const QString&);
+    /** All okay, use takeGeometry() now */
+    void succeeded();
 
 public slots:
 

@@ -93,12 +93,16 @@ void GeometryCreator::run()
             loader_ = new ObjLoader();
     }
 
+    bool success = false;
+
     try
     {
         GeometryFactory::createFromSettings(curGeometry_, &settings, loader_);
+        success = true;
     }
     catch (Exception & e)
     {
+        MO_WARNING("GeometryFactory failed with:\n" << e.what());
         emit failed(e.what());
 
         QMutexLocker lock(mutex_);
@@ -116,6 +120,9 @@ void GeometryCreator::run()
     geometry_ = curGeometry_;
 
     MO_DEBUG_GL("GeometryCreator::run() finished");
+
+    if (success)
+        emit succeeded();
 }
 
 void GeometryCreator::onTimer_()

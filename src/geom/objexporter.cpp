@@ -166,95 +166,171 @@ void ObjExporter::exportGeometry(const QString &filename, const Geometry * geo)
 
     // --- write triangles ---
 
-    io << "\n# " << geo->numTriangles() << " triangles\n";
-
-    const Geometry::IndexType * tris = geo->triangleIndices();
-
-    for (uint i=0; i<geo->numTriangles(); ++i, tris += geo->numTriangleIndexComponents())
+    if (geo->numTriangles())
     {
-        int v1,t1,n1, v2,t2,n2, v3,t3,n3;
+        io << "\n# " << geo->numTriangles() << " triangles\n";
 
-        v1 = tris[0];
-        v2 = tris[1];
-        v3 = tris[2];
+        const Geometry::IndexType * tris = geo->triangleIndices();
 
-        // get indices into normal map
-        if (options_ & EO_NORMALS)
+        for (uint i=0; i<geo->numTriangles(); ++i, tris += geo->numTriangleIndexComponents())
         {
-            const Geometry::NormalType * norms =
-                    &geo->normals()[v1 * geo->numNormalComponents()];
-            auto i = normalMap.find(Hash3(norms[0], norms[1], norms[2]));
-            MO_ASSERT(i != normalMap.end(), "duh?");
-            n1 = i.value() + 1;
+            int v1,t1,n1, v2,t2,n2, v3,t3,n3;
 
-            norms = &geo->normals()[v2 * geo->numNormalComponents()];
-            i = normalMap.find(Hash3(norms[0], norms[1], norms[2]));
-            MO_ASSERT(i != normalMap.end(), "duh?");
-            n2 = i.value() + 1;
+            v1 = tris[0];
+            v2 = tris[1];
+            v3 = tris[2];
 
-            norms = &geo->normals()[v3 * geo->numNormalComponents()];
-            i = normalMap.find(Hash3(norms[0], norms[1], norms[2]));
-            MO_ASSERT(i != normalMap.end(), "duh?");
-            n3 = i.value() + 1;
+            // get indices into normal map
+            if (options_ & EO_NORMALS)
+            {
+                const Geometry::NormalType * norms =
+                        &geo->normals()[v1 * geo->numNormalComponents()];
+                auto i = normalMap.find(Hash3(norms[0], norms[1], norms[2]));
+                MO_ASSERT(i != normalMap.end(), "duh?");
+                n1 = i.value() + 1;
+
+                norms = &geo->normals()[v2 * geo->numNormalComponents()];
+                i = normalMap.find(Hash3(norms[0], norms[1], norms[2]));
+                MO_ASSERT(i != normalMap.end(), "duh?");
+                n2 = i.value() + 1;
+
+                norms = &geo->normals()[v3 * geo->numNormalComponents()];
+                i = normalMap.find(Hash3(norms[0], norms[1], norms[2]));
+                MO_ASSERT(i != normalMap.end(), "duh?");
+                n3 = i.value() + 1;
+            }
+
+            // get indices into tex-coord map
+            if (options_ & EO_TEX_COORDS)
+            {
+                const Geometry::TextureCoordType * texs =
+                        &geo->textureCoords()[v1 * geo->numTextureCoordComponents()];
+                auto i = texMap.find(Hash2(texs[0], texs[1]));
+                MO_ASSERT(i != texMap.end(), "duh?");
+                t1 = i.value() + 1;
+
+                texs = &geo->textureCoords()[v2 * geo->numTextureCoordComponents()];
+                i = texMap.find(Hash2(texs[0], texs[1]));
+                MO_ASSERT(i != texMap.end(), "duh?");
+                t2 = i.value() + 1;
+
+                texs = &geo->textureCoords()[v3 * geo->numTextureCoordComponents()];
+                i = texMap.find(Hash2(texs[0], texs[1]));
+                MO_ASSERT(i != texMap.end(), "duh?");
+                t3 = i.value() + 1;
+            }
+
+            // get indices from vertex map
+            const Geometry::VertexType * verts =
+                    &geo->vertices()[v1 * geo->numVertexComponents()];
+            auto j = vertexMap.find(Hash3(verts[0], verts[1], verts[2]));
+            MO_ASSERT(j != vertexMap.end(), "duh?");
+            v1 = j.value() + 1;
+
+            verts = &geo->vertices()[v2 * geo->numVertexComponents()];
+            j = vertexMap.find(Hash3(verts[0], verts[1], verts[2]));
+            MO_ASSERT(j != vertexMap.end(), "duh?");
+            v2 = j.value() + 1;
+
+            verts = &geo->vertices()[v3 * geo->numVertexComponents()];
+            j = vertexMap.find(Hash3(verts[0], verts[1], verts[2]));
+            MO_ASSERT(j != vertexMap.end(), "duh?");
+            v3 = j.value() + 1;
+
+            // write the face line
+
+            if ((options_ & EO_TEX_COORDS) && (options_ & EO_NORMALS))
+                io << "f " << v1 << "/" << t1 << "/" << n1
+                   << " "  << v2 << "/" << t2 << "/" << n2
+                   << " "  << v3 << "/" << t3 << "/" << n3 << "\n";
+            else
+            if (options_ & EO_TEX_COORDS)
+                io << "f " << v1 << "/" << t1
+                   << " "  << v2 << "/" << t2
+                   << " "  << v3 << "/" << t3 << "\n";
+            else
+            if (options_ & EO_NORMALS)
+                io << "f " << v1 << "//" << n1
+                   << " "  << v2 << "//" << n2
+                   << " "  << v3 << "//" << n3 << "\n";
+            else
+                io << "f " << v1 << " " << v2 << " " << v3 << "\n";
         }
-
-        // get indices into tex-coord map
-        if (options_ & EO_TEX_COORDS)
-        {
-            const Geometry::TextureCoordType * texs =
-                    &geo->textureCoords()[v1 * geo->numTextureCoordComponents()];
-            auto i = texMap.find(Hash2(texs[0], texs[1]));
-            MO_ASSERT(i != texMap.end(), "duh?");
-            t1 = i.value() + 1;
-
-            texs = &geo->textureCoords()[v2 * geo->numTextureCoordComponents()];
-            i = texMap.find(Hash2(texs[0], texs[1]));
-            MO_ASSERT(i != texMap.end(), "duh?");
-            t2 = i.value() + 1;
-
-            texs = &geo->textureCoords()[v3 * geo->numTextureCoordComponents()];
-            i = texMap.find(Hash2(texs[0], texs[1]));
-            MO_ASSERT(i != texMap.end(), "duh?");
-            t3 = i.value() + 1;
-        }
-
-        // get indices from vertex map
-        const Geometry::VertexType * verts =
-                &geo->vertices()[v1 * geo->numVertexComponents()];
-        auto j = vertexMap.find(Hash3(verts[0], verts[1], verts[2]));
-        MO_ASSERT(j != vertexMap.end(), "duh?");
-        v1 = j.value() + 1;
-
-        verts = &geo->vertices()[v2 * geo->numVertexComponents()];
-        j = vertexMap.find(Hash3(verts[0], verts[1], verts[2]));
-        MO_ASSERT(j != vertexMap.end(), "duh?");
-        v2 = j.value() + 1;
-
-        verts = &geo->vertices()[v3 * geo->numVertexComponents()];
-        j = vertexMap.find(Hash3(verts[0], verts[1], verts[2]));
-        MO_ASSERT(j != vertexMap.end(), "duh?");
-        v3 = j.value() + 1;
-
-        // write the face line
-
-        if ((options_ & EO_TEX_COORDS) && (options_ & EO_NORMALS))
-            io << "f " << v1 << "/" << t1 << "/" << n1
-               << " "  << v2 << "/" << t2 << "/" << n2
-               << " "  << v3 << "/" << t3 << "/" << n3 << "\n";
-        else
-        if (options_ & EO_TEX_COORDS)
-            io << "f " << v1 << "/" << t1
-               << " "  << v2 << "/" << t2
-               << " "  << v3 << "/" << t3 << "\n";
-        else
-        if (options_ & EO_NORMALS)
-            io << "f " << v1 << "//" << n1
-               << " "  << v2 << "//" << n2
-               << " "  << v3 << "//" << n3 << "\n";
-        else
-            io << "f " << v1 << " " << v2 << " " << v3 << "\n";
     }
 
+    // --- write lines ---
+    else
+    {
+        io << "\n# " << geo->numLines() << " lines\n";
+
+        const Geometry::IndexType * lines = geo->lineIndices();
+
+        for (uint i=0; i<geo->numLines(); ++i, lines += geo->numLineIndexComponents())
+        {
+            int v1,t1,n1, v2,t2,n2;
+
+            v1 = lines[0];
+            v2 = lines[1];
+
+            // get indices into normal map
+            if (options_ & EO_NORMALS)
+            {
+                const Geometry::NormalType * norms =
+                        &geo->normals()[v1 * geo->numNormalComponents()];
+                auto i = normalMap.find(Hash3(norms[0], norms[1], norms[2]));
+                MO_ASSERT(i != normalMap.end(), "duh?");
+                n1 = i.value() + 1;
+
+                norms = &geo->normals()[v2 * geo->numNormalComponents()];
+                i = normalMap.find(Hash3(norms[0], norms[1], norms[2]));
+                MO_ASSERT(i != normalMap.end(), "duh?");
+                n2 = i.value() + 1;
+            }
+
+            // get indices into tex-coord map
+            if (options_ & EO_TEX_COORDS)
+            {
+                const Geometry::TextureCoordType * texs =
+                        &geo->textureCoords()[v1 * geo->numTextureCoordComponents()];
+                auto i = texMap.find(Hash2(texs[0], texs[1]));
+                MO_ASSERT(i != texMap.end(), "duh?");
+                t1 = i.value() + 1;
+
+                texs = &geo->textureCoords()[v2 * geo->numTextureCoordComponents()];
+                i = texMap.find(Hash2(texs[0], texs[1]));
+                MO_ASSERT(i != texMap.end(), "duh?");
+                t2 = i.value() + 1;
+            }
+
+            // get indices from vertex map
+            const Geometry::VertexType * verts =
+                    &geo->vertices()[v1 * geo->numVertexComponents()];
+            auto j = vertexMap.find(Hash3(verts[0], verts[1], verts[2]));
+            MO_ASSERT(j != vertexMap.end(), "duh?");
+            v1 = j.value() + 1;
+
+            verts = &geo->vertices()[v2 * geo->numVertexComponents()];
+            j = vertexMap.find(Hash3(verts[0], verts[1], verts[2]));
+            MO_ASSERT(j != vertexMap.end(), "duh?");
+            v2 = j.value() + 1;
+
+            // write the line-line
+
+            if ((options_ & EO_TEX_COORDS) && (options_ & EO_NORMALS))
+                io << "f " << v1 << "/" << t1 << "/" << n1
+                   << " "  << v2 << "/" << t2 << "/" << n2 << "\n";
+            else
+            if (options_ & EO_TEX_COORDS)
+                io << "f " << v1 << "/" << t1
+                   << " "  << v2 << "/" << t2 << "\n";
+            else
+            if (options_ & EO_NORMALS)
+                io << "f " << v1 << "//" << n1
+                   << " "  << v2 << "//" << n2 << "\n";
+            else
+                io << "f " << v1 << " " << v2 << "\n";
+        }
+    }
 }
 
 

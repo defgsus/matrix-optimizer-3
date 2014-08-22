@@ -550,7 +550,7 @@ void GeometryDialog::updateGeometry_()
 
     connect(creator_, SIGNAL(failed(QString)),
             this, SLOT(creationFailed_(QString)));
-    connect(creator_, SIGNAL(finished()), this, SLOT(creationFinished_()));
+    connect(creator_, SIGNAL(succeeded()), this, SLOT(creationFinished_()));
     connect(creator_, SIGNAL(progress(int)),
             this, SLOT(creatorProgress_(int)));
 
