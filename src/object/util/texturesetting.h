@@ -63,6 +63,9 @@ public:
     /** Returns true when type != TT_NONE */
     bool isEnabled() const;
 
+    /** Is the texture a cubemap texture? */
+    bool isCube() const;
+
     /** The width of the texture, when initialized */
     uint width() const;
     /** The height of the texture, when initialized */

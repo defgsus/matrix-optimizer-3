@@ -197,6 +197,8 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_FRAGMENT_LIGHTING");
     if (texture_->isEnabled())
         src->addDefine("#define MO_ENABLE_TEXTURE");
+    if (texture_->isCube())
+        src->addDefine("#define MO_TEXTURE_IS_FULLDOME_CUBE");
     if (textureBump_->isEnabled())
         src->addDefine("#define MO_ENABLE_NORMALMAP");
 

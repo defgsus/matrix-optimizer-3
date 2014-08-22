@@ -36,6 +36,9 @@ public:
 
     bool isCreated() const { return fbo_ != invalidGl; }
 
+    /** If true, the color-texture is a texture cube */
+    bool isCubemap() const { return cubemap_; }
+
     /** Returns the associated color texture */
     const Texture * colorTexture() const { return colorTex_; }
 

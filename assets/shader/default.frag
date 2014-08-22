@@ -7,7 +7,11 @@
  * MO_ENABLE_TEXTURE
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
+ * MO_TEXTURE_IS_FULLDOME_CUBE
  */
+
+const float PI = 3.14159265358979;
+const float HALF_PI = 1.5707963268;
 
 // --- input from vertex shader ---
 
@@ -46,21 +50,51 @@ uniform vec4 u_color;
 #endif
 
 #ifdef MO_ENABLE_TEXTURE
-uniform sampler2D tex_0;
+    #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
+        uniform sampler2D tex_0;
+    #else
+        uniform samplerCube tex_0;
+    #endif
 #endif
 
 #ifdef MO_ENABLE_NORMALMAP
 uniform sampler2D tex_norm_0;
-vec3 normalmap = texture2D(tex_norm_0, v_texCoord).xyz * 2.0 - 1.0;
+vec3 normalmap = texture(tex_norm_0, v_texCoord).xyz * 2.0 - 1.0;
 #endif
 
+
+/* read from cubemap as if stiched to a fulldome master
+   st = [0,1]
+   angle [0,360] */
+vec4 mo_texture_cube(in samplerCube tex, vec2 st, float angle)
+{
+    st = st * 2.0 - 1.0;
+
+    float   // distance from center
+            dist = length(st),
+            // cartesian screen-space to spherical
+            theta = dist * HALF_PI * angle / 180.0,
+            phi = atan(st.y, st.x);
+
+    // spherical-to-cartesian
+    vec3 lookup = vec3(
+                sin(theta) * cos(phi),
+                sin(theta) * sin(phi),
+                -cos(theta));
+
+    return texture(tex, lookup);
+}
 
 
 vec4 mo_ambient_color()
 {
     return u_color * v_color
 #ifdef MO_ENABLE_TEXTURE
-            * texture2D(tex_0, v_texCoord)
+    #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
+            * texture(tex_0, v_texCoord)
+    #else
+            * mo_texture_cube(tex_0, v_texCoord, 180.0);
+    #endif
 #endif
             ;
 }

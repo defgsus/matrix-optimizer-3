@@ -62,6 +62,9 @@ public:
     /** Returns whether the texture is allocated on the device. */
     bool isAllocated() const { return uploaded_; }
 
+    /** When true, target() is GL_TEXTURE_CUBE_MAP */
+    bool isCube() const { return target_ == GL_TEXTURE_CUBE_MAP; }
+
     /** Calculated memory of texture in bytes */
     GLsizei memory() const { return memory_; }
 

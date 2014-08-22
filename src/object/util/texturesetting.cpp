@@ -11,6 +11,7 @@
 #include "texturesetting.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "object/scene.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterselect.h"
@@ -82,6 +83,7 @@ void TextureSetting::createParameters(
                 "_imgcamidx" + id_suffix, tr("camera frame"),
                 tr("The index of the camera starting at 0"),
                 0, true, false);
+    paramCamera_->setMinValue(0);
 }
 
 bool TextureSetting::needsReinit(Parameter *p) const
@@ -96,6 +98,11 @@ bool TextureSetting::needsReinit(Parameter *p) const
 bool TextureSetting::isEnabled() const
 {
     return paramType_? paramType_->baseValue() != TT_NONE : false;
+}
+
+bool TextureSetting::isCube() const
+{
+    return constTexture_ && constTexture_->isCube();
 }
 
 uint TextureSetting::width() const
@@ -168,6 +175,7 @@ bool TextureSetting::initGl()
         }
 
         constTexture_ = fbo->colorTexture();
+
     }
 
     if (!constTexture_)
