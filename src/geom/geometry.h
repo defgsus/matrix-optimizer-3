@@ -248,9 +248,10 @@ public:
                                const QString& equationZ);
 
     /** Applies the equation to the each vertex of each primitive.
-        Variables are x, y, z (position), nx, ny, nz (normal),
+        Variables are x, y, z (position), nx, ny, nz (normal), s, t (tex-coords),
         x1, y1, z1, x2, y2, z2, x3, y3, z3 (position of each primitive vertex),
         nx1, ny1, nz1, nx2, ny2, nz2, nx3, ny3, nz3 (normal of each primitive vertex),
+        s1, t1, s2, t2, s3, t3 (tex-coord of each primitive),
         i (primitive index) and p (for index of vertex in primitive). */
     bool transformPrimitivesWithEquation(
                                const QString& equationX,

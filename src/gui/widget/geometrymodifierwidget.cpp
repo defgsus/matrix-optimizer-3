@@ -561,9 +561,10 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     if (auto equ = dynamic_cast<GEOM::GeometryModifierPrimitiveEquation*>(modifier_))
     {
         QStringList vars = {
-            "x", "y", "z", "nx", "ny", "nz", "i", "p",
+            "x", "y", "z", "nx", "ny", "nz", "s", "t", "i", "p",
             "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3",
-            "nx1", "ny1", "nz1", "nx2", "ny2", "nz2", "nx3", "ny3", "nz3" };
+            "nx1", "ny1", "nz1", "nx2", "ny2", "nz2", "nx3", "ny3", "nz3",
+            "s1", "t1", "s2", "t2", "s3", "t3" };
 
         auto editEquX = new EquationEditor(this);
         group_->addWidget(editEquX);

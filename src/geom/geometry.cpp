@@ -636,9 +636,10 @@ bool Geometry::transformPrimitivesWithEquation(
                     const QString &equationY,
                     const QString &equationZ)
 {
-    Double vx, vy, vz, vnx, vny, vnz,
+    Double vx, vy, vz, vnx, vny, vnz, vs, vt,
            vpx[3], vpy[3], vpz[3],
            vpnx[3], vpny[3], vpnz[3],
+           vps[3], vpt[3],
            vp, vi;
 
     std::vector<PPP_NAMESPACE::Parser> equ(3);
@@ -650,6 +651,8 @@ bool Geometry::transformPrimitivesWithEquation(
         equ[i].variables().add("nx", &vnx);
         equ[i].variables().add("ny", &vny);
         equ[i].variables().add("nz", &vnz);
+        equ[i].variables().add("s", &vs);
+        equ[i].variables().add("t", &vt);
         equ[i].variables().add("x1", &vpx[0]);
         equ[i].variables().add("y1", &vpy[0]);
         equ[i].variables().add("z1", &vpz[0]);
@@ -668,6 +671,12 @@ bool Geometry::transformPrimitivesWithEquation(
         equ[i].variables().add("nx3", &vpnx[2]);
         equ[i].variables().add("ny3", &vpny[2]);
         equ[i].variables().add("nz3", &vpnz[2]);
+        equ[i].variables().add("s1", &vps[0]);
+        equ[i].variables().add("t1", &vpt[0]);
+        equ[i].variables().add("s2", &vps[1]);
+        equ[i].variables().add("t2", &vpt[1]);
+        equ[i].variables().add("s3", &vps[2]);
+        equ[i].variables().add("t3", &vpt[2]);
         equ[i].variables().add("i", &vi);
         equ[i].variables().add("p", &vp);
     }
@@ -691,7 +700,8 @@ bool Geometry::transformPrimitivesWithEquation(
                                       &vertex_[i2 * numVertexComponents()] };
         const NormalType * norm[] = { &normal_[i1 * numNormalComponents()],
                                       &normal_[i2 * numNormalComponents()] };
-
+        const TextureCoordType * tex[] = { &texcoord_[i1 * numTextureCoordComponents()],
+                                           &texcoord_[i2 * numTextureCoordComponents()] };
         vi = i;
         for (int j=0; j<2; ++j)
         {
@@ -701,6 +711,8 @@ bool Geometry::transformPrimitivesWithEquation(
             vpnx[j] = norm[j][0];
             vpny[j] = norm[j][1];
             vpnz[j] = norm[j][2];
+            vps[j] = tex[j][0];
+            vpt[j] = tex[j][1];
         }
 
         // execute per primitive vertex
@@ -714,6 +726,8 @@ bool Geometry::transformPrimitivesWithEquation(
             vnx = vpnx[j];
             vny = vpny[j];
             vnz = vpnz[j];
+            vs = vps[j];
+            vt = vpt[j];
 
             // assign result from equation
             if (equationX != "x")
@@ -742,6 +756,9 @@ bool Geometry::transformPrimitivesWithEquation(
         const NormalType * norm[] = { &normal_[i1 * numNormalComponents()],
                                       &normal_[i2 * numNormalComponents()],
                                       &normal_[i3 * numVertexComponents()] };
+        const TextureCoordType * tex[] = { &texcoord_[i1 * numTextureCoordComponents()],
+                                           &texcoord_[i2 * numTextureCoordComponents()],
+                                           &texcoord_[i3 * numTextureCoordComponents()] };
 
         vi = i;
         for (int j=0; j<3; ++j)
@@ -752,6 +769,8 @@ bool Geometry::transformPrimitivesWithEquation(
             vpnx[j] = norm[j][0];
             vpny[j] = norm[j][1];
             vpnz[j] = norm[j][2];
+            vps[j] = tex[j][0];
+            vpt[j] = tex[j][1];
         }
 
         // execute per primitive vertex
@@ -765,6 +784,8 @@ bool Geometry::transformPrimitivesWithEquation(
             vnx = vpnx[j];
             vny = vpny[j];
             vnz = vpnz[j];
+            vs = vps[j];
+            vt = vpt[j];
 
             // assign result from equation
             if (equationX != "x")

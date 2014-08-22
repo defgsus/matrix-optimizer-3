@@ -18,7 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierTexCoordEquation)
 
 GeometryModifierTexCoordEquation::GeometryModifierTexCoordEquation()
-    : GeometryModifier("TexCoordEquation", QObject::tr("TexCoord equation")),
+    : GeometryModifier("TexCoordEquation", QObject::tr("texture coord. equation")),
       equS_     ("s"),
       equT_     ("t")
 {
