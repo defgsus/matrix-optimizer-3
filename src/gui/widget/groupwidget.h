@@ -43,6 +43,7 @@ public:
 
     void addHeaderSpacing(int s);
 
+    void setHeaderStatusTip(const QString& tip);
 signals:
 
     void expanded();

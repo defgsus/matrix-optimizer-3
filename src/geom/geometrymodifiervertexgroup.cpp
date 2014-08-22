@@ -25,6 +25,13 @@ GeometryModifierVertexGroup::GeometryModifierVertexGroup()
 
 }
 
+QString GeometryModifierVertexGroup::statusTip() const
+{
+    return QObject::tr("Groups or un-groups vertices - that is, "
+                       "makes primitives use shared or unique vertices");
+}
+
+
 void GeometryModifierVertexGroup::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

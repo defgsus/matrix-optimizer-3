@@ -26,6 +26,12 @@ GeometryModifierVertexEquation::GeometryModifierVertexEquation()
 
 }
 
+QString GeometryModifierVertexEquation::statusTip() const
+{
+    return QObject::tr("Applies a mathematical equation to each vertex");
+}
+
+
 void GeometryModifierVertexEquation::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

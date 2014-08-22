@@ -27,6 +27,12 @@ GeometryModifierRotate::GeometryModifierRotate()
 
 }
 
+QString GeometryModifierRotate::statusTip() const
+{
+    return QObject::tr("Rotates the vertices (normals are left untouched)");
+}
+
+
 void GeometryModifierRotate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

@@ -65,6 +65,7 @@ void GroupWidget::createLayout_()
             button_ = new QToolButton(header_);
             lh->addWidget(button_);
             button_->setFixedSize(20,20);
+            button_->setStatusTip(tr("Expands or collapses the contents of the group"));
             updateArrow_();
             connect(button_, &QToolButton::clicked, [=]()
             {
@@ -86,6 +87,11 @@ void GroupWidget::addHeaderSpacing(int s)
 {
     MO_ASSERT(qobject_cast<QHBoxLayout*>(header_->layout()), "wrong layout");
     static_cast<QHBoxLayout*>(header_->layout())->addSpacing(s);
+}
+
+void GroupWidget::setHeaderStatusTip(const QString &tip)
+{
+    header_->setStatusTip(tip);
 }
 
 void GroupWidget::setTitle(const QString & title)

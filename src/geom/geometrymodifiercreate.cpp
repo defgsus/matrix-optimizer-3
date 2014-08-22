@@ -49,6 +49,11 @@ GeometryModifierCreate::GeometryModifierCreate()
 
 }
 
+QString GeometryModifierCreate::statusTip() const
+{
+    return QObject::tr("Creates new geometry XXX not working yet");
+}
+
 void GeometryModifierCreate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

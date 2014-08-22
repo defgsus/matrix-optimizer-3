@@ -24,6 +24,13 @@ GeometryModifierNormalize::GeometryModifierNormalize()
 
 }
 
+QString GeometryModifierNormalize::statusTip() const
+{
+    return QObject::tr("Normalizes all vertices - that is, "
+                       "all points are made to lie on a sphere around the origin");
+}
+
+
 void GeometryModifierNormalize::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

@@ -25,6 +25,11 @@ GeometryModifierRemove::GeometryModifierRemove()
 
 }
 
+QString GeometryModifierRemove::statusTip() const
+{
+    return QObject::tr("Randomly removes primitives (lines or triangles)");
+}
+
 void GeometryModifierRemove::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

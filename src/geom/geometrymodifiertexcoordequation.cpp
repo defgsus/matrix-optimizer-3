@@ -25,6 +25,12 @@ GeometryModifierTexCoordEquation::GeometryModifierTexCoordEquation()
 
 }
 
+QString GeometryModifierTexCoordEquation::statusTip() const
+{
+    return QObject::tr("Calculates or modifies the texture coordinates for each vertex "
+                       "of each primitive with a mathematical equation");
+}
+
 void GeometryModifierTexCoordEquation::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

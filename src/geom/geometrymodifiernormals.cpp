@@ -25,6 +25,12 @@ GeometryModifierNormals::GeometryModifierNormals()
 
 }
 
+QString GeometryModifierNormals::statusTip() const
+{
+    return QObject::tr("Manipulates normals or calculates the normals from given triangles");
+}
+
+
 void GeometryModifierNormals::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

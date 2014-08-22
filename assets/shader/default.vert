@@ -1,4 +1,5 @@
 #version 130
+#extension GL_ARB_gpu_shader5 : enable // for inverse()
 
 #define MO_NUM_LIGHTS 3
 

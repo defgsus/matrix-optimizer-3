@@ -23,6 +23,11 @@ GeometryModifierConvertLines::GeometryModifierConvertLines()
 
 }
 
+QString GeometryModifierConvertLines::statusTip() const
+{
+    return QObject::tr("Converts triangles to lines");
+}
+
 void GeometryModifierConvertLines::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

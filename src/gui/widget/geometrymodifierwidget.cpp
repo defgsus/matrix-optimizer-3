@@ -61,9 +61,13 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     group_ = new GroupWidget(modifier_->guiName(), expanded, this);
     l0->addWidget(group_);
 
+    group_->setStatusTip(modifier_->statusTip());
+    group_->setHeaderStatusTip(modifier_->statusTip());
+
     auto butMute = new QToolButton(this);
     group_->addHeaderWidget(butMute);
     butMute->setText(tr("M"));
+    butMute->setStatusTip(tr("Enables or disables the modifier while keeping it in the list"));
     butMute->setFixedSize(20,20);
     butMute->setCheckable(true);
     butMute->setChecked(!modifier_->isEnabled());
@@ -78,18 +82,21 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     group_->addHeaderWidget(butUp);
     butUp->setArrowType(Qt::UpArrow);
     butUp->setFixedSize(20,20);
+    butUp->setStatusTip(tr("Moves the modifier up in the list"));
     connect(butUp, &QToolButton::clicked, [=](){ emit requestUp(modifier_); });
 
     auto butDown = new QToolButton(this);
     group_->addHeaderWidget(butDown);
     butDown->setArrowType(Qt::DownArrow);
     butDown->setFixedSize(20,20);
+    butDown->setStatusTip(tr("Moves the modifier down in the list"));
     connect(butDown, &QToolButton::clicked, [=](){ emit requestDown(modifier_); });
 
     auto butInsert = new QToolButton(this);
     group_->addHeaderWidget(butInsert);
     butInsert->setIcon(QIcon(":/icon/new_letters.png"));
     butInsert->setFixedSize(20,20);
+    butInsert->setStatusTip(tr("Creates a new modifier above this one"));
     connect(butInsert, &QToolButton::clicked, [=](){ emit requestInsertNew(modifier_); });
 
     group_->addHeaderSpacing(5);
@@ -98,6 +105,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     group_->addHeaderWidget(butRemove);
     butRemove->setIcon(QIcon(":/icon/delete.png"));
     butRemove->setFixedSize(20,20);
+    butRemove->setStatusTip(tr("Permanently deletes the modifier"));
     connect(butRemove, &QToolButton::clicked, [=](){ emit requestDelete(modifier_); });
 
     connect(group_, &GroupWidget::expanded, [=]()

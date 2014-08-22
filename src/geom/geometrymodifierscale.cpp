@@ -27,6 +27,12 @@ GeometryModifierScale::GeometryModifierScale()
 
 }
 
+QString GeometryModifierScale::statusTip() const
+{
+    return QObject::tr("Scales the vertices and therefore the whole model");
+}
+
+
 void GeometryModifierScale::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

@@ -26,6 +26,12 @@ GeometryModifierTranslate::GeometryModifierTranslate()
 
 }
 
+QString GeometryModifierTranslate::statusTip() const
+{
+    return QObject::tr("Moves the model around");
+}
+
+
 void GeometryModifierTranslate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

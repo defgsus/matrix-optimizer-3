@@ -26,6 +26,12 @@ GeometryModifierPrimitiveEquation::GeometryModifierPrimitiveEquation()
 
 }
 
+QString GeometryModifierPrimitiveEquation::statusTip() const
+{
+    return QObject::tr("Applies an equation to each coordinate of the vertices of each primitive");
+}
+
+
 void GeometryModifierPrimitiveEquation::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

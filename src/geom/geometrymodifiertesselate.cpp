@@ -24,6 +24,13 @@ GeometryModifierTesselate::GeometryModifierTesselate()
 
 }
 
+QString GeometryModifierTesselate::statusTip() const
+{
+    return QObject::tr("Sub-triangulates triangles to a given level - "
+                       "be careful, size of model grows exponetially!");
+}
+
+
 void GeometryModifierTesselate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

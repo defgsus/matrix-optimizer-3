@@ -33,7 +33,8 @@ namespace GEOM {
                                         { return new Class__(); }       \
     virtual Class__ * clone() const Q_DECL_OVERRIDE                     \
                 { auto c = new Class__(); *c = *this; return c; }       \
-    virtual void execute(Geometry * g) Q_DECL_OVERRIDE;
+    virtual void execute(Geometry * g) Q_DECL_OVERRIDE;                 \
+    virtual QString statusTip() const Q_DECL_OVERRIDE;
 
 
 class Geometry;
@@ -48,6 +49,8 @@ public:
 
     const QString& className() const { return className_; }
     const QString& guiName() const { return guiName_; }
+
+    virtual QString statusTip() const = 0;
 
     bool isEnabled() const { return enabled_; }
 

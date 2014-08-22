@@ -388,10 +388,8 @@ void GeometryDialog::createMainWidgets_()
 
         statusBar_ = new QStatusBar(this);
         lv0->addWidget(statusBar_);
-        statusBar_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 
         progressBar_ = new QProgressBar(this);
-        progressBar_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
         progressBar_->setOrientation(Qt::Horizontal);
         progressBar_->setRange(0,100);
         progressBar_->setVisible(false);

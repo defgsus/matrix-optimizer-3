@@ -29,6 +29,11 @@ GeometryModifierTexCoords::GeometryModifierTexCoords()
 
 }
 
+QString GeometryModifierTexCoords::statusTip() const
+{
+    return QObject::tr("Modifies existing texture coordinates (offset, scale, invert)");
+}
+
 void GeometryModifierTexCoords::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);

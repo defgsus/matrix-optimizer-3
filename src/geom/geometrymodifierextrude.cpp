@@ -25,6 +25,13 @@ GeometryModifierExtrude::GeometryModifierExtrude()
 
 }
 
+QString GeometryModifierExtrude::statusTip() const
+{
+    return QObject::tr("Extrudes triangles - "
+                       "that is, all surfaces are shifted along their normals");
+}
+
+
 void GeometryModifierExtrude::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
