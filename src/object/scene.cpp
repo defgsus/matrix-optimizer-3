@@ -624,7 +624,7 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
 
 void Scene::renderScene(uint thread)
 {
-    //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
+    //MO_DEBUG_GL("Scene::renderScene("<<thread<<")");
 
     MO_ASSERT(glContext_, "renderScene() without context");
 

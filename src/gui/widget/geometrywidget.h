@@ -42,6 +42,8 @@ public slots:
 
 protected:
 
+    void releaseGL() Q_DECL_OVERRIDE;
+
     void drawGL(const Mat4& projection,
                 const Mat4& cubeViewTrans,
                 const Mat4& viewTrans,

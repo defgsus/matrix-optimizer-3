@@ -99,6 +99,8 @@ bool Window::event(QEvent * e)
 
 void Window::renderLater()
 {
+    //MO_DEBUG_GL("Window::renderLater()");
+
     if (!updatePending_)
     {
         updatePending_ = true;

@@ -20,6 +20,7 @@
 #include <QStatusTipEvent>
 #include <QProgressBar>
 #include <QMenu>
+#include <QCloseEvent>
 
 #include "geometrydialog.h"
 #include "geom/geometry.h"
@@ -45,7 +46,8 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     settings_       (new GEOM::GeometryFactorySettings()),
     creator_        (0),
     updateGeometryLater_(false),
-    ignoreUpdate_   (false)
+    ignoreUpdate_   (false),
+    closeRequest_   (false)
 {
     setObjectName("_GeometryWidget");
     setWindowTitle(tr("geometry editor"));
@@ -80,6 +82,30 @@ bool GeometryDialog::event(QEvent * e)
     return QDialog::event(e);
 }
 
+void GeometryDialog::closeEvent(QCloseEvent * e)
+{
+    // keep result
+    // (because QDialog::closeEvent() seems to reset it)
+    int r = result();
+
+    if (geoWidget_->isGlInitialized())
+    {
+        geoWidget_->shutDownGL();
+        closeRequest_ = true;
+        e->ignore();
+    }
+    else QDialog::closeEvent(e);
+
+    setResult(r);
+}
+
+void GeometryDialog::onGlReleased()
+{
+    MO_DEBUG_GL("GeometryDialog::onGlReleased()");
+    if (closeRequest_)
+        close();
+}
+
 void GeometryDialog::createMainWidgets_()
 {
     auto lv0 = new QVBoxLayout(this);
@@ -96,6 +122,7 @@ void GeometryDialog::createMainWidgets_()
                 lv->addWidget(geoWidget_);
                 geoWidget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
                 connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
+                connect(geoWidget_, SIGNAL(glReleased()), this, SLOT(onGlReleased()));
 
                 // view settings
                 auto lh2 = new QHBoxLayout();
@@ -345,11 +372,19 @@ void GeometryDialog::createMainWidgets_()
                     but = new QPushButton(tr("Ok"), this);
                     lh2->addWidget(but);
                     but->setDefault(true);
-                    connect(but, SIGNAL(clicked()), this, SLOT(accept()));
+                    connect(but, &QPushButton::clicked, [=]()
+                    {
+                        setResult(Accepted);
+                        close();
+                    });
 
                     but = new QPushButton(tr("Cancel"), this);
                     lh2->addWidget(but);
-                    connect(but, SIGNAL(clicked()), this, SLOT(reject()));
+                    connect(but, &QPushButton::clicked, [=]()
+                    {
+                        setResult(Rejected);
+                        close();
+                    });
 
         statusBar_ = new QStatusBar(this);
         lv0->addWidget(statusBar_);

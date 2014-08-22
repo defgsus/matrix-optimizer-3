@@ -46,8 +46,6 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
 
 GeometryWidget::~GeometryWidget()
 {
-    if (drawable_->isReady())
-        drawable_->releaseOpenGl();
     delete drawable_;
     delete lights_;
 }
@@ -58,6 +56,13 @@ void GeometryWidget::setGeometry(GEOM::Geometry * g)
     update();
 }
 
+void GeometryWidget::releaseGL()
+{
+    Basic3DWidget::releaseGL();
+
+    if (drawable_->isReady())
+        drawable_->releaseOpenGl();
+}
 
 void GeometryWidget::drawGL(const Mat4& projection,
                             const Mat4& cubeViewTrans,

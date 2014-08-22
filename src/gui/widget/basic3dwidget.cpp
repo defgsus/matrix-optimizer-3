@@ -56,9 +56,8 @@ Basic3DWidget::~Basic3DWidget()
 {
     MO_DEBUG_GL("Basic3DWidget::~Basic3DWidget()");
 
-    // XXX This should always work when GUI has a single thread
     if (isGlInitialized_)
-        releaseGL();
+        MO_GL_WARNING("destructor of Basic3DWidget without releaseGL");
 
     delete camera_;
     delete fbo_;
@@ -170,12 +169,18 @@ void Basic3DWidget::wheelEvent(QWheelEvent * e)
     update();
 }
 
+void Basic3DWidget::shutDownGL()
+{
+    closeRequest_ = true;
+    update();
+}
+
 void Basic3DWidget::closeEvent(QCloseEvent * e)
 {
     if (isGlInitialized_)
     {
         e->ignore();
-        // pass shut-down function to paintGL
+        // pass shut-down signal to paintGL
         closeRequest_ = true;
         update();
     }
@@ -184,30 +189,36 @@ void Basic3DWidget::closeEvent(QCloseEvent * e)
 
 void Basic3DWidget::initializeGL()
 {
-    makeCurrent();
-
     MO_DEBUG_GL("Basic3DWidget::initializeGL()");
+
+    makeCurrent();
 
     MO_EXTEND_EXCEPTION(
         createGLStuff_(),
         "in Basic3DWidget " << this
         );
 
+    // call derived classes
+    initGL();
+
     isGlInitialized_ = true;
 
     emit glInitialized();
 }
 
-void Basic3DWidget::releaseGL()
+void Basic3DWidget::releaseGL_()
 {
-    makeCurrent();
+    MO_DEBUG_GL("Basic3DWidget::releaseGL_()");
 
-    MO_DEBUG_GL("Basic3DWidget::releaseGL()");
+    makeCurrent();
 
     MO_EXTEND_EXCEPTION(
         releaseGLStuff_(),
         "in Basic3DWidget " << this
         );
+
+    // call derived classes
+    releaseGL();
 
     isGlInitialized_ = false;
 
@@ -290,6 +301,13 @@ void Basic3DWidget::paintGL()
 {
     makeCurrent();
 
+    if (closeRequest_)
+    {
+        releaseGL_();
+        closeRequest_ = false;
+        return;
+    }
+
     if (modeChangeRequest_)
     {
         modeChangeRequest_ = false;
@@ -297,13 +315,6 @@ void Basic3DWidget::paintGL()
         renderMode_ = nextRenderMode_;
         createGLStuff_();
         resizeGL(width(), height());
-    }
-
-    if (closeRequest_)
-    {
-        releaseGL();
-        closeRequest_ = false;
-        return;
     }
 
     Mat4 identity(1.0);

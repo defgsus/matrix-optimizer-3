@@ -146,9 +146,6 @@ void Model3d::initGl(uint /*thread*/)
 
     creator_->setSettings(*geomSettings_);
     creator_->start();
-
-    //GEOM::GeometryFactory::createGridXZ(draw_->geometry(), 10, 10, true);
-    //draw_->createOpenGl();
 }
 
 void Model3d::releaseGl(uint /*thread*/)

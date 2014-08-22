@@ -72,9 +72,13 @@ protected slots:
     void creationFailed_(const QString&);
     void creationFinished_();
 
+    void onGlReleased();
+
 protected:
     //void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
     bool event(QEvent *);
+
+    void closeEvent(QCloseEvent *);
 
     void createMainWidgets_();
     void createModifierWidgets_();
@@ -87,7 +91,8 @@ protected:
     GEOM::GeometryCreator * creator_;
     GEOM::GeometryModifierChain * modifiers_;
     bool updateGeometryLater_,
-         ignoreUpdate_;
+         ignoreUpdate_,
+         closeRequest_;
 
     QList<QWidget*> modifierWidgets_;
     QVBoxLayout * modifierLayout_;

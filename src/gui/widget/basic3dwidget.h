@@ -22,7 +22,15 @@ namespace MO {
 namespace GEOM { class FreeCamera; }
 namespace GUI {
 
-/** Override drawGL() to draw your stuff! */
+/** A super-duper opengl shader based, fulldome-cube-able draw area.
+
+    Override drawGL() to draw your stuff!
+    Override initGL() and releaseGL() to aquire and release resources.
+
+    Important: Don't just destroy the widget.
+    Call shutDownGL() or close() first and wait for the glReleased() signal!
+
+    */
 class Basic3DWidget : public QGLWidget
 {
     Q_OBJECT
@@ -53,6 +61,10 @@ signals:
 
 public slots:
 
+    /** Call this to properly release openGL resources and
+        wait for glReleased() signal before destruction. */
+    void shutDownGL();
+
     void setRenderMode(RenderMode);
 
     void viewInit(Float distanceZ = 10.f);
@@ -66,14 +78,11 @@ protected:
     virtual void wheelEvent(QWheelEvent *);
     virtual void closeEvent(QCloseEvent *);
 
-    /** Override this to create resources-per-opengl-context.
-        @note call the base class implementation in your derived function!
-        @note Don't let exceptions propagate out of your derived function. */
-    virtual void initializeGL() Q_DECL_OVERRIDE;
+    /** Override this to create resources-per-opengl-context. */
+    virtual void initGL() { }
 
-    /** Override to release opengl resources.
-        @note call the base class implementation in your derived function! */
-    virtual void releaseGL();
+    /** Override to release opengl resources. */
+    virtual void releaseGL() { }
 
     /** Sets the viewport and the projection matrix */
     void resizeGL(int w, int h) Q_DECL_OVERRIDE;
@@ -96,8 +105,12 @@ protected:
 
 private:
 
+    /** Don't touch this: use initGL() instead */
+    void initializeGL() Q_DECL_OVERRIDE Q_DECL_FINAL;
+
     void createGLStuff_();
     void releaseGLStuff_();
+    void releaseGL_();
 
     RenderMode renderMode_, nextRenderMode_;
 
