@@ -110,7 +110,9 @@ namespace {
             int x2 = x;
             ++x;
             while (x < s.length() &&
-                   (s.at(x).isNumber() || s.at(x) == '.' || s.at(x) == 'e'))
+                   !s.at(x).isSpace() // XXX assume the number is correct
+                   //(s.at(x).isNumber() || s.at(x) == '.' || s.at(x) == 'e' || s.at(x) == '-')
+                   )
                     ++x;
             return s.mid(x2, x - x2).toDouble();
         }
