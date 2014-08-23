@@ -17,6 +17,7 @@
 #include <QKeyEvent>
 #include <QTime>
 #include <QMouseEvent>
+#include <QKeyEvent>
 
 #include "window.h"
 #include "context.h"
@@ -161,6 +162,15 @@ void Window::renderNow()
     if (animating_)
         renderLater();
 }
+
+
+
+void Window::keyPressEvent(QKeyEvent * e)
+{
+    emit keyPressed(e);
+    e->accept();
+}
+
 
 void Window::mousePressEvent(QMouseEvent * e)
 {

@@ -48,6 +48,8 @@ public:
 
 signals:
 
+    void keyPressed(const QKeyEvent *);
+
     /** This will signal a creation of a new Context */
     void contextCreated(uint thread, MO::GL::Context *);
 
@@ -72,6 +74,7 @@ protected:
     bool event(QEvent *);
     void exposeEvent(QExposeEvent *);
 
+    void keyPressEvent(QKeyEvent *);
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);

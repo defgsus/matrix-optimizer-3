@@ -478,6 +478,10 @@ void MainWindow::createObjects_()
 {
     glManager_ = new GL::Manager(this);
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
+
+    connect(glWindow_, SIGNAL(keyPressed(const QKeyEvent*)),
+            this, SLOT(onWindowKeyPressed_(const QKeyEvent*)));
+
     glWindow_->show();
 
     try
@@ -541,6 +545,14 @@ void MainWindow::createDebugScene_()
     */
 }
 
+void MainWindow::onWindowKeyPressed_(const QKeyEvent * e)
+{
+    if (e->key() == Qt::Key_F7 && !isPlayback())
+        start();
+
+    if (e->key() == Qt::Key_F8)
+        stop();
+}
 
 
 void MainWindow::closeEvent(QCloseEvent * e)
