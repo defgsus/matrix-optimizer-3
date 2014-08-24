@@ -197,7 +197,8 @@ SOURCES += \
     src/gui/widget/doublespinboxclean.cpp \
     src/geom/geometrymodifiertexcoordequation.cpp \
     src/geom/objexporter.cpp \
-    src/gui/geometryexportdialog.cpp
+    src/gui/geometryexportdialog.cpp \
+    src/object/util/colorpostprocessingsetting.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -389,7 +390,8 @@ HEADERS += \
     src/gui/widget/doublespinboxclean.h \
     src/geom/geometrymodifiertexcoordequation.h \
     src/geom/objexporter.h \
-    src/gui/geometryexportdialog.h
+    src/gui/geometryexportdialog.h \
+    src/object/util/colorpostprocessingsetting.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

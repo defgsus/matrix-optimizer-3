@@ -155,11 +155,13 @@ void TextureOverlay::createParameters()
 void TextureOverlay::onParameterChanged(Parameter *p)
 {
     ObjectGl::onParameterChanged(p);
+
     if (p == paramPType_)
     {
         ptype_ = (ProjectionType)paramPType_->baseValue();
         requestReinitGl();
     }
+
     if (p == paramPost_ || texture_->needsReinit(p))
         requestReinitGl();
 }
@@ -173,6 +175,8 @@ void TextureOverlay::onParametersLoaded()
 
 void TextureOverlay::updateParameterVisibility()
 {
+    ObjectGl::updateParameterVisibility();
+
     texture_->updateParameterVisibility();
 }
 

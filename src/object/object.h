@@ -80,6 +80,7 @@ class Object : public QObject
     friend class Scene;
     // to create parameters
     friend class TextureSetting;
+    friend class ColorPostProcessingSetting;
 public:
 
     // -------------- types ------------------
