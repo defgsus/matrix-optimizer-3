@@ -20,34 +20,49 @@ namespace MO {
 namespace AUDIO {
 
 
+/** This class is a getter in itself.
+    Use SoundFileManager to load files */
 class SoundFile
 {
-public:
+    friend class SoundFileManager;
+
     SoundFile();
+    ~SoundFile();
+
+public:
 
     // ---------- getter -------------
 
+    /** Returns true if file was loaded / data can be read */
+    bool ok() const;
+
     /** Returns the filename of the sound file */
-    const QString& filename() const { return filename_; }
+    const QString& filename() const;
 
     /** Returns the sampling rate in Hertz */
-    uint sampleRate() const { return sr_; }
+    uint sampleRate() const;
+
+    /** Returns the number of channels in the sound file */
+    uint numberChannels() const;
 
     /** Returns length in seconds */
-    Double lengthSeconds() const { return lenSec_; }
+    Double lengthSeconds() const;
 
     /** Returns length in samples */
-    uint lengthSamples() const { return lenSam_; }
+    uint lengthSamples() const;
 
     /** Returns value at @p time (in seconds) */
-    Double value(Double time) const;
+    Double value(Double time, uint channel = 0) const;
+
 
 private:
 
-    QString filename_;
+    /** Loads file into memory.
+        @throws IoException on errors */
+    void loadFile_(const QString&);
 
-    uint sr_, lenSam_;
-    Double lenSec_;
+    class Private;
+    Private * p_;
 };
 
 
