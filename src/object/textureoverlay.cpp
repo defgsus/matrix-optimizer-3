@@ -22,6 +22,7 @@
 #include "gl/framebufferobject.h"
 #include "img/image.h"
 #include "util/texturesetting.h"
+#include "util/colorpostprocessingsetting.h"
 
 namespace MO {
 
@@ -31,7 +32,8 @@ TextureOverlay::TextureOverlay(QObject * parent)
     : ObjectGl      (parent),
       ptype_        (PT_FLAT),
       actualPtype_  (ptype_),
-      texture_      (new TextureSetting(this))
+      texture_      (new TextureSetting(this)),
+      postProc_     (new ColorPostProcessingSetting(this))
 {
     setName("TextureOverlay");
 }
@@ -101,53 +103,7 @@ void TextureOverlay::createParameters()
 
     beginParameterGroup("texturepost", tr("color post-processing"));
 
-        paramPost_ = createSelectParameter("postenable", tr("post-processing"),
-                                           tr("Enables or disables color post-processing"),
-                                            { "off", "on" }, { tr("off"), tr("on") },
-                                            { tr("Color-post-processing is enabled"),
-                                              tr("Color-post-processing is disabled") },
-                                            { 0, 1 }, 0, true, false);
-
-        postAlpha_ = createFloatParameter("postalpha", "color to alpha",
-                                        tr("Makes the choosen color transparent"),
-                                        0.0, 0.0, 1.0, 0.02);
-        postAlphaR_ = createFloatParameter("postalphar", "red",
-                                        tr("Red component of the color to make transparent"),
-                                        0.0, 0.0, 1.0, 0.02);
-        postAlphaG_ = createFloatParameter("postalphag", "green",
-                                        tr("Green component of the color to make transparent"),
-                                        0.0, 0.0, 1.0, 0.02);
-        postAlphaB_ = createFloatParameter("postalphab", "blue",
-                                        tr("Blue component of the color to make transparent"),
-                                        0.0, 0.0, 1.0, 0.02);
-        postAlphaEdge_ = createFloatParameter("postalphae", "edge",
-                                        tr("Edge of the alpha transformation - the lower the smoother"),
-                                        0.0, 0.0, 1.0, 0.02);
-
-        postBright_ = createFloatParameter("postbright", "brightness",
-                                        tr("Brightness (simply offset to all colors)"),
-                                        0.0, -1.0, 1.0, 0.02);
-
-        postContrast_ = createFloatParameter("postcontr", "contrast",
-                                        tr("Contrast (a multiplier around threshold)"),
-                                        1.0, 0.0, 100000.0, 0.02);
-
-        postContrastThresh_ = createFloatParameter("postcontrt", "threshold",
-                                        tr("The threshold or edge between dark and "
-                                           "bright for contrast setting"),
-                                        0.5, 0.0, 1.0, 0.02);
-
-        postShift_ = createFloatParameter("postshift", "rgb shift",
-                                        tr("Shifts the rgb colors right (postive) or left (negative)"),
-                                        0.0, -1.0, 1.0, 0.05);
-
-        postInv_ = createFloatParameter("postinv", "negative",
-                                        tr("Mix between normal and negative colors [0,1]"),
-                                        0.0, 0.0, 1.0, 0.05);
-
-        postGray_ = createFloatParameter("postgray", "grayscale",
-                                        tr("Removes the saturation [0,1]"),
-                                        0.0, 0.0, 1.0, 0.05);
+        postProc_->createParameters("");
 
     endParameterGroup();
 }
@@ -162,7 +118,7 @@ void TextureOverlay::onParameterChanged(Parameter *p)
         requestReinitGl();
     }
 
-    if (p == paramPost_ || texture_->needsReinit(p))
+    if (texture_->needsReinit(p) || postProc_->needsRecompile(p))
         requestReinitGl();
 }
 
@@ -178,20 +134,13 @@ void TextureOverlay::updateParameterVisibility()
     ObjectGl::updateParameterVisibility();
 
     texture_->updateParameterVisibility();
+    postProc_->updateParameterVisibility();
 }
 
 void TextureOverlay::initGl(uint /*thread*/)
 {
     // --- texture ---
 
-    /*
-    Image img;
-    img.loadImage(paramFilename_->value());
-    //img.loadImage("/home/defgsus/pic/android/_second/Camera/PANO_20140717_144107.jpg");
-    //img.loadImage("/home/defgsus/prog/C/matrixoptimizer/data/graphic/kepler/bg_wood_03_polar.png");
-    //img.loadImage(":/texture/mo_black.png");
-    tex_ = GL::Texture::createFromImage(img, GL_RGBA);
-    */
     texture_->initGl();
 
 
@@ -206,7 +155,7 @@ void TextureOverlay::initGl(uint /*thread*/)
         defines += "#define MO_FISHEYE\n";
     if (ptype_ == PT_FLAT)
         defines += "#define MO_FLAT\n";
-    if (paramPost_->baseValue())
+    if (postProc_->isEnabled())
         defines += "#define MO_POST_PROCESS";
 
     quad_->create(":/shader/textureoverlay.vert",
@@ -229,13 +178,8 @@ void TextureOverlay::initGl(uint /*thread*/)
         u_cube_hack_ = quad_->shader()->getUniform("u_cube_hack", true);
     }
 
-    if (paramPost_->baseValue())
-    {
-        u_post_trans_ = quad_->shader()->getUniform("u_post_transform", true);
-        u_post_bright_ = quad_->shader()->getUniform("u_post_bright", true);
-        u_post_alpha_ = quad_->shader()->getUniform("u_post_alpha", true);
-        u_post_alpha_edge_ = quad_->shader()->getUniform("u_post_alpha_edge", true);
-    }
+    if (postProc_->isEnabled())
+        postProc_->getUniforms(quad_->shader());
 
     actualPtype_ = ptype_;
 }
@@ -246,7 +190,6 @@ void TextureOverlay::releaseGl(uint /*thread*/)
     delete quad_;
 
     texture_->releaseGl();
-    //delete tex_;
 }
 
 void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
@@ -294,24 +237,9 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
                                         &trans[0][0]) );
     }
 
-    if (paramPost_->baseValue())
-    {
-        u_post_trans_->floats[0] = postGray_->value(time, thread);
-        u_post_trans_->floats[1] = postInv_->value(time, thread);
-        u_post_trans_->floats[2] = postShift_->value(time, thread);
-        u_post_bright_->floats[0] = postBright_->value(time, thread);
-        u_post_bright_->floats[1] = postContrast_->value(time, thread);
-        u_post_bright_->floats[2] = postContrastThresh_->value(time, thread);
-        u_post_alpha_->setFloats(
-                    postAlphaR_->value(time, thread),
-                    postAlphaG_->value(time, thread),
-                    postAlphaB_->value(time, thread),
-                    postAlpha_->value(time, thread));
-        u_post_alpha_edge_->floats[0] = postAlphaEdge_->value(time, thread);
-    }
+    if (postProc_->isEnabled())
+        postProc_->updateUniforms(time, thread);
 
-    //tex_->bind();
-    //rs.finalFrameBuffer().colorTexture()->bind();
     texture_->bind();
 
     MO_CHECK_GL( glDepthMask(false) );

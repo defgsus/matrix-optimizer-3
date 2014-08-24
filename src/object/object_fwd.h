@@ -54,6 +54,7 @@ namespace MO {
     class ModulatorObject;
     class ModulatorObjectFloat;
 
+    class ColorPostProcessingSetting;
     class TextureSetting;
 
     class ObjectTreeModel;

@@ -115,4 +115,5 @@ void ColorPostProcessingSetting::updateUniforms(Double time, uint thread)
     u_post_alpha_edge_->floats[0] = postAlphaEdge_->value(time, thread);
 }
 
+
 } // namespace MO
