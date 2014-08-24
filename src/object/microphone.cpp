@@ -84,11 +84,15 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
 
             // get direction of microphone
             // (suppose microphone originally points at <0,0,-1>)
+#if (0)
             F32
                 mx =  mmic[0][2],
                 my =  mmic[1][2],
                 mz = -mmic[2][2];
-
+#else
+            Vec4 mdir_ = mmic * Vec4(0,0,-1, 0);
+            F32 mx = mdir_[0], my = mdir_[1], mz = mdir_[2];
+#endif
             // normalize
             const F32 mdirmag = std::sqrt(mx*mx + my*my + mz*mz);
             mx /= mdirmag;
