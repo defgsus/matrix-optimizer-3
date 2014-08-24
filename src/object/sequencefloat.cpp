@@ -13,11 +13,14 @@
 #include "sequencefloat.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "param/parameterfilename.h"
 #include "math/timeline1d.h"
-#include "audio/tool/waveform.h"
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
+#include "audio/tool/waveform.h"
 #include "audio/tool/wavetablegenerator.h"
+#include "audio/tool/soundfile.h"
+#include "audio/tool/soundfilemanager.h"
 
 namespace MO {
 
@@ -52,11 +55,11 @@ public:
 MO_REGISTER_OBJECT(SequenceFloat)
 
 QStringList SequenceFloat::sequenceTypeId =
-{ "c", "tl", "osc", "spec", "specwt", "eq" };
+{ "c", "tl", "osc", "spec", "specwt", "audiof", "eq" };
 
 QStringList SequenceFloat::sequenceTypeName =
-{ "Constant", "Timeline", "Oscillator",
-  "Spectral Osc.", "Spectral WT", "Equation" };
+{ tr("Constant"), tr("Timeline"), tr("Oscillator"),
+  tr("Spectral Osc."), tr("Spectral WT"), tr("Audio file"), tr("Equation") };
 
 QStringList SequenceFloat::loopOverlapModeId =
 { "o", "b", "e" };
@@ -71,7 +74,10 @@ SequenceFloat::SequenceFloat(QObject *parent)
         timeline_       (0),
         wavetable_      (0),
         wavetableGen_   (0),
+        soundFile_      (0),
         equation_       (0),
+
+        paramSoundFile_ (0),
 
         oscMode_        (AUDIO::Waveform::T_SINE),
         loopOverlapMode_(LOT_OFF),
@@ -90,10 +96,10 @@ SequenceFloat::SequenceFloat(QObject *parent)
 SequenceFloat::~SequenceFloat()
 {
     delete timeline_;
-
     delete wavetable_;
-
     delete wavetableGen_;
+    if (soundFile_)
+        AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
 
     for (auto e : equation_)
         delete e;
@@ -129,6 +135,16 @@ void SequenceFloat::createParameters()
                    tr("Pulsewidth of the waveform, describes the width of the positive edge"),
                    0.5);
         pulseWidth_->setEditable(false);
+
+    endParameterGroup();
+
+    // --- audio file ---
+
+    beginParameterGroup("sndfile", tr("audio file"));
+
+        paramSoundFile_ = createFilenameParameter("sndfilen", tr("filename"),
+                                                  tr("The filename of the audio file"),
+                                                  IO::FT_SOUND_FILE);
 
     endParameterGroup();
 
@@ -180,6 +196,14 @@ void SequenceFloat::createParameters()
         loopOverlapOffset_->setEditable(false);
 
     endParameterGroup();
+}
+
+void SequenceFloat::onParameterChanged(Parameter *p)
+{
+    Sequence::onParameterChanged(p);
+
+    if (p == paramSoundFile_)
+        setMode(mode_);
 }
 
 void SequenceFloat::serialize(IO::DataStream &io) const
@@ -336,6 +360,22 @@ void SequenceFloat::setMode(SequenceType m)
             e = 0;
         }
     }
+
+    if (mode_ == ST_SOUNDFILE && paramSoundFile_)
+    {
+        // release previous, if filename changed
+        if (soundFile_ && soundFile_->filename() != paramSoundFile_->value())
+            AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
+        // get new
+        soundFile_ = AUDIO::SoundFileManager::getSoundFile(paramSoundFile_->value());
+    }
+    else
+    {
+        // get rid of soundfile
+        if (soundFile_)
+            AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
+        soundFile_ = 0;
+    }
 }
 
 PPP_NAMESPACE::Parser * SequenceFloat::equation(uint thread)
@@ -417,6 +457,7 @@ Double SequenceFloat::value(Double gtime, uint thread) const
     return 0.0;
 }
 
+
 Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
 {
     if (typeUsesFrequency() || doUseFreq_)
@@ -444,12 +485,17 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
 
 
         case ST_SPECTRAL_WT:
-            MO_ASSERT(wavetable_, "SequenceFloat::value() without wavetable");
+            MO_ASSERT(wavetable_, "SequenceFloat('" << idName() << "')::value() without wavetable");
             return offset_->value(gtime, thread) + amplitude_->value(gtime, thread)
                 * wavetable_->value(time);
 
+        case ST_SOUNDFILE:
+            MO_ASSERT(soundFile_, "SequenceFloat('" << idName() << "')::value() without soundfile");
+            return offset_->value(gtime, thread) + amplitude_->value(gtime, thread)
+                * soundFile_->value(time);
+
         case ST_EQUATION:
-            MO_ASSERT(equation_[thread], "SequenceFloat::value() without equation "
+            MO_ASSERT(equation_[thread], "SequenceFloat('" << idName() << "')::value() without equation "
                                          "(thread=" << thread << ")");
             equation_[thread]->time = time;
             equation_[thread]->freq = frequency_->value(gtime, thread);

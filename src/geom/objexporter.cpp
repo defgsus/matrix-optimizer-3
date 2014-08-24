@@ -174,7 +174,7 @@ void ObjExporter::exportGeometry(const QString &filename, const Geometry * geo)
 
         for (uint i=0; i<geo->numTriangles(); ++i, tris += geo->numTriangleIndexComponents())
         {
-            int v1,t1,n1, v2,t2,n2, v3,t3,n3;
+            int v1,t1=0,n1=0, v2,t2=0,n2=0, v3,t3=0,n3=0;
 
             v1 = tris[0];
             v2 = tris[1];
@@ -267,7 +267,7 @@ void ObjExporter::exportGeometry(const QString &filename, const Geometry * geo)
 
         for (uint i=0; i<geo->numLines(); ++i, lines += geo->numLineIndexComponents())
         {
-            int v1,t1,n1, v2,t2,n2;
+            int v1,t1=0,n1=0, v2,t2=0,n2=0;
 
             v1 = lines[0];
             v2 = lines[1];

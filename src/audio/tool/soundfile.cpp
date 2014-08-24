@@ -98,9 +98,9 @@ Double SoundFile::value(Double time, uint channel) const
     if (!p_->ok)
         return 0.0;
 
-    // 31bit gives around 13 hours of seekable samples
+    // 31bit gives around 13 hours of seekable samples (in mono!)
     const int frame = time * sampleRate();
-    if (time < 0 || time >= p_->lenSam)
+    if (frame < 0 || frame >= (int)p_->lenSam)
         return 0.0;
 
     if (p_->bitSize == 16)

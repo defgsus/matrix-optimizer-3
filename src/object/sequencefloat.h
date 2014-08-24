@@ -33,6 +33,7 @@ public:
         ST_OSCILLATOR,
         ST_SPECTRAL_OSC,
         ST_SPECTRAL_WT,
+        ST_SOUNDFILE,
         ST_EQUATION
     };
     const static int ST_MAX = ST_EQUATION + 1;
@@ -73,6 +74,7 @@ public:
     virtual Type type() const { return T_SEQUENCE_FLOAT; }
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
@@ -185,9 +187,12 @@ private:
     MATH::Timeline1D * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
     AUDIO::WavetableGenerator * wavetableGen_;
+    AUDIO::SoundFile * soundFile_;
 
     class SeqEquation;
     std::vector<SeqEquation *> equation_;
+
+    ParameterFilename * paramSoundFile_;
 
     ParameterFloat
         * offset_,
