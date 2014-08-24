@@ -552,6 +552,9 @@ void MainWindow::onWindowKeyPressed_(const QKeyEvent * e)
 
     if (e->key() == Qt::Key_F8)
         stop();
+
+    if (e->key() >= Qt::Key_0 && e->key() <= Qt::Key_9)
+        scene_->setFreeCameraIndex(e->key() - Qt::Key_0 - 1);
 }
 
 

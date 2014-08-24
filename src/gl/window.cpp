@@ -210,8 +210,6 @@ void Window::mouseMoveEvent(QMouseEvent * e)
     if (send)
     {
         emit cameraMatrixChanged(cameraControl_->getMatrix());
-        if (!animating_)
-            renderLater();
         e->accept();
     }
 }
@@ -231,8 +229,6 @@ void Window::wheelEvent(QWheelEvent * e)
     cameraControl_->moveZ(-0.3 * d * fac);
 
     emit cameraMatrixChanged(cameraControl_->getMatrix());
-    if (!animating_)
-        renderLater();
 
     e->accept();
 }

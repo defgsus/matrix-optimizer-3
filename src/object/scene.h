@@ -217,9 +217,14 @@ public slots:
     /** Requests rendering of the scene. */
     void render() { render_(); }
 
+    /** Sets the index of the camera to control will setFreeCameraMatrix(),
+        -1 for no free camera. */
+    void setFreeCameraIndex(int index) { freeCameraIndex_ = index; render_(); }
+    int freeCameraIndex() const { return freeCameraIndex_; }
+
     /** Sets the camera matrix in free-camera-mode,
         used when scene is rendered next time. */
-    void setFreeCameraMatrix(const MO::Mat4& mat) { freeCameraMatrix_ = mat; }
+    void setFreeCameraMatrix(const MO::Mat4& mat) { freeCameraMatrix_ = mat; render_(); }
 
     /** Returns the lighting settings for the scene.
         This may only be valid during rendering in objects! */

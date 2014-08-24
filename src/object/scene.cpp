@@ -54,7 +54,7 @@ Scene::Scene(QObject *parent) :
     fbCmWidth_          (512),
     fbCmHeight_         (512),
     fboFinal_           (0),
-    freeCameraIndex_    (1),
+    freeCameraIndex_    (-1),
     freeCameraMatrix_   (1.0),
     sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
