@@ -58,6 +58,9 @@ public:
         requestReinitGl() when this returns true. */
     bool needsReinit(Parameter * p) const;
 
+    /** Sets the visibility of the parameters according to current settings. */
+    void updateParameterVisibility();
+
     // ------------ getter ---------------
 
     /** Returns true when type != TT_NONE */

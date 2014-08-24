@@ -23,7 +23,8 @@ Parameter::Parameter(Object * object, const QString& id, const QString& name) :
     idName_     (id),
     name_       (name),
     isEditable_ (false),
-    isModulateable_(false)
+    isModulateable_(false),
+    isVisible_  (true)
 {
 }
 
@@ -71,6 +72,24 @@ void Parameter::deserialize(IO::DataStream &io)
             io >> id;
             Modulator * m = getModulator(id);
             m->deserialize(io);
+        }
+    }
+}
+
+void Parameter::setVisible(bool visible)
+{
+    if (visible != isVisible_)
+    {
+        isVisible_ = visible;
+
+        // notify scene/gui
+        if (object())
+        {
+            Scene * scene = object()->sceneObject();
+            if (scene)
+            {
+                scene->notifyParameterVisibility(this);
+            }
         }
     }
 }

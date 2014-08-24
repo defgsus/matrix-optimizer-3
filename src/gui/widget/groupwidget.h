@@ -12,6 +12,7 @@
 #define MOSRC_GUI_WIDGET_GROUPWIDGET_H
 
 #include <QWidget>
+#include <QMap>
 
 class QToolButton;
 class QLabel;
@@ -55,6 +56,11 @@ public slots:
     void expand(bool send_signal = false);
     void collapse(bool send_signal = false);
 
+    /** Sets a widget inside the group box visible or hidden.
+        Call this instead of w->setVisible(), because the group
+        will control the visibility of it's widgets. */
+    void setVisible(QWidget * w, bool visible);
+
 private:
 
     void createLayout_();
@@ -63,6 +69,7 @@ private:
     bool expanded_;
     QString title_;
     QList<QWidget*> containedWidgets_;
+    QMap<QWidget*, bool> visibility_;
 
     QToolButton * button_;
     QLabel * label_;

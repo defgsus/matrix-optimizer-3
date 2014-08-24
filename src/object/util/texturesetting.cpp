@@ -65,10 +65,10 @@ void TextureSetting::createParameters(
             "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
             { "none", "file", "master", "camera" },
             textureTypeNames,
-            { tr("No texture will be used - this is not supported by all objects"),
+            { tr("No texture will be used"),
               tr("An image will be loaded from a file"),
               tr("The previous master frame is the source of the image"),
-              tr("The previous camera frame is the source of the image") },
+              tr("The previous frame of one of the cameras is the source of the image") },
             { TT_NONE, TT_FILE, TT_MASTER_FRAME, TT_CAMERA_FRAME },
             defaultType, true, false);
     if (!enableNone)
@@ -91,6 +91,12 @@ bool TextureSetting::needsReinit(Parameter *p) const
     return (p == paramType_
         || (p == paramFilename_ && paramType_->baseValue() == TT_FILE)
         || (p == paramCamera_ && paramType_->baseValue() == TT_CAMERA_FRAME));
+}
+
+void TextureSetting::updateParameterVisibility()
+{
+    paramFilename_->setVisible( paramType_->baseValue() == TT_FILE );
+    paramCamera_->setVisible( paramType_->baseValue() == TT_CAMERA_FRAME );
 }
 
 // --------------- getter -------------------

@@ -36,6 +36,7 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded();
 
     /** Returns the current geometry settings. */
     const GEOM::GeometryFactorySettings& geometrySettings() const { return *geomSettings_; }

@@ -132,7 +132,11 @@ void GroupWidget::expand(bool send_signal)
         return;
 
     for (auto w : containedWidgets_)
-        w->setVisible(true);
+    {
+        auto i = visibility_.find(w);
+        if (i == visibility_.end() || i.value())
+            w->setVisible(true);
+    }
 
     expanded_ = true;
     updateArrow_();
@@ -140,6 +144,14 @@ void GroupWidget::expand(bool send_signal)
     if (send_signal)
         emit expanded();
 }
+
+void GroupWidget::setVisible(QWidget *w, bool visible)
+{
+    visibility_[w] = visible;
+    w->setVisible(visible & expanded_);
+}
+
+
 
 void GroupWidget::addWidget(QWidget * w)
 {

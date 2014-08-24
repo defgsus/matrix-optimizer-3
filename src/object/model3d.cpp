@@ -131,6 +131,17 @@ void Model3d::onParameterChanged(Parameter *p)
 
     if (texture_->needsReinit(p) || textureBump_->needsReinit(p))
         requestReinitGl();
+
+    texture_->updateParameterVisibility();
+    textureBump_->updateParameterVisibility();
+}
+
+void Model3d::onParametersLoaded()
+{
+    ObjectGl::onParametersLoaded();
+
+    texture_->updateParameterVisibility();
+    textureBump_->updateParameterVisibility();
 }
 
 void Model3d::initGl(uint /*thread*/)

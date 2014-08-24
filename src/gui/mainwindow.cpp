@@ -446,8 +446,6 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
     connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(treeChanged_()));
     connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(sceneChanged_()));
     connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(sceneChanged_()));
-    connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
-            objectTreeView_, SLOT(columnMoved()/* force update */));
     connect(scene_, SIGNAL(numberOutputEnvelopesChanged(uint)),
             this, SLOT(updateNumberOutputEnvelopes_(uint)));
     connect(scene_, SIGNAL(outputEnvelopeChanged(const F32*)),
@@ -460,6 +458,10 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
             seqFloatView_, SLOT(setSceneTime(Double)));
     connect(scene_, SIGNAL(sceneTimeChanged(Double)),
             sequencer_, SLOT(setSceneTime(Double)));
+    connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
+            objectTreeView_, SLOT(columnMoved()/* force update */));
+    connect(scene_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
+            objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
 
     objectView_->setObject(0);
 

@@ -82,14 +82,33 @@ void ParameterView::setObject(Object *object)
     createWidgets_();
 }
 
+void ParameterView::updateParameterVisibility(Parameter * p)
+{
+    // see if parameter is known
+    auto i = paramMap_.find(p);
+    if (i!=paramMap_.end())
+    {
+        // see if there's a group
+        auto j = groups_.find(p->groupId());
+        if (j != groups_.end())
+            j.value()->setVisible(i.value(), p->isVisible());
+        // otherwise change widget directly
+        else
+            i.value()->setVisible(p->isVisible());
+    }
+}
+
 void ParameterView::clearWidgets_()
 {
     for (auto w : widgets_)
         w->deleteLater();
     widgets_.clear();
+
     for (auto g : groups_)
         g->deleteLater();
     groups_.clear();
+
+    paramMap_.clear();
 
     spinsInt_.clear();
     spinsFloat_.clear();
@@ -135,15 +154,23 @@ void ParameterView::createWidgets_()
     {
         QWidget * w = createWidget_(p);
 
+        // visibility
+        paramMap_.insert(p, w);
+        if (!p->isVisible())
+            w->setVisible(false);
+
         if (!p->groupId().isEmpty())
         {
-            getGroupWidget_(p)->addWidget(w);
+            GroupWidget * group = getGroupWidget_(p);
+            group->addWidget(w);
+            group->setVisible(w, p->isVisible());
         }
         else
         {
             layout_->addWidget(w);
             widgets_.append(w);
         }
+
         /*
         if (prev)
             setTabOrder(prev, w);
@@ -206,7 +233,6 @@ QWidget * ParameterView::createWidget_(Parameter * p)
                         : p->statusTip());
 
     QToolButton * but, * bmod = 0, * breset;
-
 
     // modulate button
     bmod = new QToolButton(w);

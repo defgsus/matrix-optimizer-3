@@ -19,6 +19,7 @@ class QLabel;
 
 namespace MO {
 class Object;
+class Parameter;
 namespace GUI {
 
 class SceneSettings;
@@ -48,6 +49,10 @@ public slots:
     /** Sets the object for the view.
         Can be NULL to disable it. */
     void setObject(MO::Object *);
+
+    /** Call to change the visibility of a Parameter.
+        If the Parameter is not displayed, this function does nothing. */
+    void updateParameterVisibility(MO::Parameter*);
 
 protected slots:
 

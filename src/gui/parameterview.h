@@ -55,6 +55,10 @@ public slots:
 
     void setObject(MO::Object * object);
 
+    /** Call to change the visibility of a Parameter.
+        If the Parameter is not displayed, this function does nothing. */
+    void updateParameterVisibility(MO::Parameter *);
+
 private slots:
 
     void updateWidgetValue_(MO::Parameter * );
@@ -83,6 +87,7 @@ private:
     QList<Parameter*> parameters_;
     QList<QWidget*> widgets_;
     QMap<QString, GroupWidget*> groups_;
+    QMap<Parameter*, QWidget*> paramMap_;
     QList<SpinBox*> spinsInt_;
     QList<DoubleSpinBox*> spinsFloat_;
     QList<QComboBox*> combosSelect_;

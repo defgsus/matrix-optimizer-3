@@ -105,6 +105,12 @@ public:
     void beginObjectChange(MO::Object *);
     void endObjectChange();
 
+    // --------- parameters --------------------
+
+    /** Used by Parameter to emit a parameterVisibilityChanged() */
+    void notifyParameterVisibility(Parameter * p)
+        { emit parameterVisibilityChanged(p); }
+
 signals:
 
     /** Scene should be re-rendered */
@@ -130,6 +136,9 @@ signals:
 
     /** A parameter has been changed (with Scene::setParameter..) */
     void parameterChanged(MO::Parameter*);
+
+    /** Send when a parameter changed it's visibility */
+    void parameterVisibilityChanged(MO::Parameter*);
 
     /** Emitted after settings in an object have changed. */
     void objectChanged(MO::Object *);

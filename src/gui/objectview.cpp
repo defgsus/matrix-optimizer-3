@@ -82,6 +82,11 @@ void ObjectView::setObject(Object * object)
     paramView_->setObject(object_);
 }
 
+void ObjectView::updateParameterVisibility(Parameter * p)
+{
+    paramView_->updateParameterVisibility(p);
+}
+
 void ObjectView::updateNameLabel_()
 {
     if (object_)

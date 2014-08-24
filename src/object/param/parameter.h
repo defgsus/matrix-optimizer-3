@@ -49,6 +49,9 @@ public:
     /** Returns true if the parameter has at least one modulation source assigned. */
     bool isModulated() const { return !modulators_.isEmpty(); }
 
+    /** Returns true if the parameter should be visible in the ParameterView */
+    bool isVisible() const { return isVisible_; }
+
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }
@@ -57,6 +60,8 @@ public:
     void setModulateable(bool enable) { isModulateable_ = enable; }
 
     void setGroup(const QString& id, const QString& name) { groupId_ = id; groupName_ = name; }
+
+    void setVisible(bool visible);
 
     // ------------ modulators ------------------
 
@@ -110,7 +115,8 @@ private:
     QString idName_, name_, statusTip_,
             groupId_, groupName_;
 
-    bool isEditable_, isModulateable_;
+    bool isEditable_, isModulateable_,
+         isVisible_;
 
     //QList<QString> modulatorIds_;
 
