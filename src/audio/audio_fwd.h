@@ -22,6 +22,8 @@ class Configuration;
 class ChebychevFilter;
 class EnvelopeFollower;
 class MultiFilter;
+class SoundFile;
+class SoundFileManager;
 class Waveform;
 template <typename F> class Wavetable;
 class WavetableGenerator;

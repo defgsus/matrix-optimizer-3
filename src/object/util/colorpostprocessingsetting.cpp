@@ -33,44 +33,55 @@ void ColorPostProcessingSetting::createParameters(const QString &id_suffix)
                                           tr("Color-post-processing is disabled") },
                                         { 0, 1 }, 0, true, false);
 
-    postAlpha_ = object_->createFloatParameter("postalpha" + id_suffix, "color to alpha",
+    postAlpha_ = object_->createFloatParameter("postalpha" + id_suffix,
+                                    tr("color to alpha"),
                                     tr("Makes the choosen color transparent"),
                                     0.0, 0.0, 1.0, 0.02);
-    postAlphaR_ = object_->createFloatParameter("postalphar" + id_suffix, "red",
+    postAlphaR_ = object_->createFloatParameter("postalphar" + id_suffix,
+                                    tr("red"),
                                     tr("Red component of the color to make transparent"),
                                     0.0, 0.0, 1.0, 0.02);
-    postAlphaG_ = object_->createFloatParameter("postalphag" + id_suffix, "green",
+    postAlphaG_ = object_->createFloatParameter("postalphag" + id_suffix,
+                                    tr("green"),
                                     tr("Green component of the color to make transparent"),
                                     0.0, 0.0, 1.0, 0.02);
-    postAlphaB_ = object_->createFloatParameter("postalphab" + id_suffix, "blue",
+    postAlphaB_ = object_->createFloatParameter("postalphab" + id_suffix,
+                                    tr("blue"),
                                     tr("Blue component of the color to make transparent"),
                                     0.0, 0.0, 1.0, 0.02);
-    postAlphaEdge_ = object_->createFloatParameter("postalphae" + id_suffix, "edge",
+    postAlphaEdge_ = object_->createFloatParameter("postalphae" + id_suffix,
+                                    tr("edge"),
                                     tr("Edge of the alpha transformation - the lower the smoother"),
                                     0.0, 0.0, 1.0, 0.02);
 
-    postBright_ = object_->createFloatParameter("postbright" + id_suffix, "brightness",
+    postBright_ = object_->createFloatParameter("postbright" + id_suffix,
+                                    tr("brightness"),
                                     tr("Brightness (simply offset to all colors)"),
                                     0.0, -1.0, 1.0, 0.02);
 
-    postContrast_ = object_->createFloatParameter("postcontr" + id_suffix, "contrast",
+    postContrast_ = object_->createFloatParameter("postcontr" + id_suffix,
+                                    tr("contrast"),
                                     tr("Contrast (a multiplier around threshold)"),
                                     1.0, 0.0, 100000.0, 0.02);
 
-    postContrastThresh_ = object_->createFloatParameter("postcontrt" + id_suffix, "threshold",
+    postContrastThresh_ = object_->createFloatParameter("postcontrt" + id_suffix,
+                                    tr("threshold"),
                                     tr("The threshold or edge between dark and "
                                        "bright for contrast setting"),
                                     0.5, 0.0, 1.0, 0.02);
 
-    postShift_ = object_->createFloatParameter("postshift" + id_suffix, "rgb shift",
+    postShift_ = object_->createFloatParameter("postshift" + id_suffix,
+                                    tr("rgb shift"),
                                     tr("Shifts the rgb colors right (postive) or left (negative)"),
                                     0.0, -1.0, 1.0, 0.05);
 
-    postInv_ = object_->createFloatParameter("postinv" + id_suffix, "negative",
+    postInv_ = object_->createFloatParameter("postinv" + id_suffix,
+                                    tr("negative"),
                                     tr("Mix between normal and negative colors [0,1]"),
                                     0.0, 0.0, 1.0, 0.05);
 
-    postGray_ = object_->createFloatParameter("postgray" + id_suffix, "grayscale",
+    postGray_ = object_->createFloatParameter("postgray" + id_suffix,
+                                    tr("grayscale"),
                                     tr("Removes the saturation [0,1]"),
                                     0.0, 0.0, 1.0, 0.05);
 }
@@ -82,7 +93,19 @@ bool ColorPostProcessingSetting::needsRecompile(Parameter *p) const
 
 void ColorPostProcessingSetting::updateParameterVisibility()
 {
-    // XXX
+    bool act = isEnabled();
+
+    postAlpha_->setVisible( act );
+    postAlphaR_->setVisible( act );
+    postAlphaG_->setVisible( act );
+    postAlphaB_->setVisible( act );
+    postAlphaEdge_->setVisible( act );
+    postBright_->setVisible( act );
+    postContrast_->setVisible( act );
+    postContrastThresh_->setVisible( act );
+    postShift_->setVisible( act );
+    postInv_->setVisible( act );
+    postGray_->setVisible( act );
 }
 
 bool ColorPostProcessingSetting::isEnabled() const

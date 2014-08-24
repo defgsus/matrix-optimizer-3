@@ -198,7 +198,9 @@ SOURCES += \
     src/geom/geometrymodifiertexcoordequation.cpp \
     src/geom/objexporter.cpp \
     src/gui/geometryexportdialog.cpp \
-    src/object/util/colorpostprocessingsetting.cpp
+    src/object/util/colorpostprocessingsetting.cpp \
+    src/audio/tool/soundfile.cpp \
+    src/audio/tool/soundfilemanager.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -391,7 +393,9 @@ HEADERS += \
     src/geom/geometrymodifiertexcoordequation.h \
     src/geom/objexporter.h \
     src/gui/geometryexportdialog.h \
-    src/object/util/colorpostprocessingsetting.h
+    src/object/util/colorpostprocessingsetting.h \
+    src/audio/tool/soundfile.h \
+    src/audio/tool/soundfilemanager.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

@@ -135,6 +135,8 @@ void TextureOverlay::updateParameterVisibility()
 
     texture_->updateParameterVisibility();
     postProc_->updateParameterVisibility();
+
+    pos_influence_->setVisible( paramPType_->baseValue() != PT_FLAT );
 }
 
 void TextureOverlay::initGl(uint /*thread*/)
