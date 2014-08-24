@@ -131,17 +131,16 @@ void Model3d::onParameterChanged(Parameter *p)
 
     if (texture_->needsReinit(p) || textureBump_->needsReinit(p))
         requestReinitGl();
-
-    texture_->updateParameterVisibility();
-    textureBump_->updateParameterVisibility();
 }
 
-void Model3d::onParametersLoaded()
+void Model3d::updateParameterVisibility()
 {
-    ObjectGl::onParametersLoaded();
+    ObjectGl::updateParameterVisibility();
 
     texture_->updateParameterVisibility();
     textureBump_->updateParameterVisibility();
+
+    diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
 }
 
 void Model3d::initGl(uint /*thread*/)

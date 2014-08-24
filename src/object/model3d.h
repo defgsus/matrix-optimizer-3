@@ -30,19 +30,21 @@ public:
 
     MO_OBJECT_CONSTRUCTOR(Model3d);
 
+    /** Returns the current geometry settings. */
+    const GEOM::GeometryFactorySettings& geometrySettings() const { return *geomSettings_; }
+
+    /** Sets new geometry settings and creates the geometry on next render */
+    void setGeometrySettings(const GEOM::GeometryFactorySettings&);
+
+protected:
+
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::RenderSettings& rs, uint, Double time) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
-    virtual void onParametersLoaded();
-
-    /** Returns the current geometry settings. */
-    const GEOM::GeometryFactorySettings& geometrySettings() const { return *geomSettings_; }
-
-    /** Sets new geometry settings and creates the geometry on next render */
-    void setGeometrySettings(const GEOM::GeometryFactorySettings&);
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
 signals:
 
@@ -52,6 +54,7 @@ private slots:
     void geometryFailed_();
 
     void setupDrawable_();
+
 
 private:
     GL::Drawable * draw_;

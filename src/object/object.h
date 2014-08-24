@@ -342,6 +342,12 @@ protected:
         @note Call ancestor's implementation before your derived code! */
     virtual void onParentChanged() { }
 
+    /** Override to set the visibility of Parameters.
+        This function is called after parameters are loaded
+        and after a parameter change.
+        @note Call ancestor's implementation before your derived code! */
+    virtual void updateParameterVisibility() { }
+
 public:
 
     /** Returns the number of threads, this object is assigned for */

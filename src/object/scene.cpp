@@ -414,6 +414,7 @@ void Scene::setParameterValue(ParameterInt *p, Int v)
         ScopedSceneLockWrite lock(this);
         p->setValue(v);
         p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
     }
     emit parameterChanged(p);
     if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
@@ -427,6 +428,7 @@ void Scene::setParameterValue(ParameterFloat *p, Double v)
         ScopedSceneLockWrite lock(this);
         p->setValue(v);
         p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
     }
     emit parameterChanged(p);
     if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
@@ -440,6 +442,7 @@ void Scene::setParameterValue(ParameterSelect *p, int v)
         ScopedSceneLockWrite lock(this);
         p->setValue(v);
         p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
     }
     emit parameterChanged(p);
     if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
@@ -453,6 +456,7 @@ void Scene::setParameterValue(ParameterFilename *p, const QString& v)
         ScopedSceneLockWrite lock(this);
         p->setValue(v);
         p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
     }
     emit parameterChanged(p);
     if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
@@ -467,6 +471,7 @@ void Scene::addModulator(Parameter *p, const QString &idName)
         p->addModulator(idName);
         p->collectModulators();
         p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
     }
     emit parameterChanged(p);
     render_();
@@ -479,6 +484,7 @@ void Scene::removeModulator(Parameter *p, const QString &idName)
         p->removeModulator(idName);
         p->collectModulators();
         p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
     }
     emit parameterChanged(p);
     render_();
@@ -491,6 +497,7 @@ void Scene::removeAllModulators(Parameter *p)
         p->removeAllModulators();
         p->collectModulators();
         p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
     }
     emit parameterChanged(p);
     render_();

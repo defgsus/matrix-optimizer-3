@@ -28,6 +28,7 @@ public:
 
     MO_OBJECT_CONSTRUCTOR(TextureOverlay);
 
+protected:
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::RenderSettings &rs, uint, Double time) Q_DECL_OVERRIDE;
@@ -36,7 +37,7 @@ public:
 
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
-
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 signals:
 
 private slots:

@@ -37,7 +37,13 @@ public:
     /** Adds a layout to the group's layout */
     void addLayout(QLayout *);
 
+    /** Returns if the group is expanded */
     bool isExpanded() const { return expanded_; }
+
+    /** Returns whether the given widget is set visible in the group.
+        This is independend of the expanded-state.
+        Returns true also if widget is unknown */
+    bool isVisible(QWidget *) const;
 
     /** Adds a widget to the header */
     void addHeaderWidget(QWidget * widget);

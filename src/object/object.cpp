@@ -268,6 +268,7 @@ void Object::deserializeParameters_(IO::DataStream & io, Object * o)
     }
 
     o->onParametersLoaded();
+    o->updateParameterVisibility();
 }
 
 

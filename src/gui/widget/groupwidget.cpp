@@ -133,8 +133,7 @@ void GroupWidget::expand(bool send_signal)
 
     for (auto w : containedWidgets_)
     {
-        auto i = visibility_.find(w);
-        if (i == visibility_.end() || i.value())
+        if (isVisible(w))
             w->setVisible(true);
     }
 
@@ -149,9 +148,30 @@ void GroupWidget::setVisible(QWidget *w, bool visible)
 {
     visibility_[w] = visible;
     w->setVisible(visible & expanded_);
+
+/* XXX seems to break the gui somehow
+
+    // check if any of the widgets is visible
+    // to hide/display the whole group widget
+    bool vis = false;
+    for (auto w : containedWidgets_)
+    {
+        if (isVisible(w))
+        {
+            vis = true;
+            break;
+        }
+    }
+
+    QWidget::setVisible(vis);
+*/
 }
 
-
+bool GroupWidget::isVisible(QWidget * w) const
+{
+    auto i = visibility_.find(w);
+    return (i == visibility_.end() || i.value());
+}
 
 void GroupWidget::addWidget(QWidget * w)
 {
