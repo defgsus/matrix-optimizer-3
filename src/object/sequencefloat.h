@@ -121,7 +121,7 @@ public:
     /** A value that is added to the blended value in the transition window */
     Double loopOverlapOffset() const { return p_loopOverlapOffset_->baseValue(); }
 
-    const QString& equationText() const { return equationText_; }
+    const QString & equationText() const;
     bool useFrequency() const { return p_useFreq_->baseValue(); }
     bool phaseInDegree() const { return p_doPhaseDegree_->baseValue(); }
 
@@ -225,7 +225,8 @@ private:
         * p_useFreq_,
         * p_doPhaseDegree_;
 
-
+    ParameterText
+        * p_equationText_;
 
     AUDIO::Waveform::Type tmp_oscMode_;
     LoopOverlapMode tmp_loopOverlapMode_;
@@ -238,7 +239,7 @@ private:
 
     // ----- equation stuff -----
 
-    QString equationText_;
+    QString tmp_equationText_;
 
 };
 

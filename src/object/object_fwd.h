@@ -13,6 +13,13 @@
 
 namespace MO {
 
+    /** Type of text in ParameterText */
+    enum TextType
+    {
+        TT_PLAIN_TEXT,
+        TT_EQUATION
+    };
+
     namespace IO { class DataStream; }
     namespace AUDIO { class AudioSource; }
     namespace GL { class LightSettings; class CameraSpace; }
@@ -34,6 +41,7 @@ namespace MO {
     class ParameterFilename;
     class ParameterFloat;
     class ParameterSelect;
+    class ParameterText;
 
     class Transformation;
     class Rotation;

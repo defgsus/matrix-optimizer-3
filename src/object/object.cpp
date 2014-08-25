@@ -24,6 +24,7 @@
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "param/parameterfilename.h"
+#include "param/parametertext.h"
 #include "audio/audiosource.h"
 #include "modulatorobjectfloat.h"
 
@@ -1096,6 +1097,62 @@ ParameterSelect * Object::createSelectParameter(
     param->setValueNames(valueNames);
     param->setStatusTips(statusTips);
     param->setDefaultValue(defaultValue);
+
+    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
+
+    return param;
+}
+
+ParameterText * Object::createTextParameter(
+            const QString& id, const QString& name, const QString& statusTip,
+            const QString& defaultValue,
+            bool editable, bool modulateable)
+{
+    return createTextParameter(id, name, statusTip, TT_PLAIN_TEXT,
+                               defaultValue, editable, modulateable);
+}
+
+ParameterText * Object::createTextParameter(
+            const QString& id, const QString& name, const QString& statusTip,
+            TextType textType,
+            const QString& defaultValue,
+            bool editable, bool modulateable)
+{
+    ParameterText * param = 0;
+
+    // see if already there
+
+    if (auto p = findParameter(id))
+    {
+        if (auto ps = dynamic_cast<ParameterText*>(p))
+        {
+            param = ps;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested text "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterText(this, id, name);
+        parameters_.append(param);
+
+        // first time init
+        param->setValue(defaultValue);
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setModulateable(modulateable);
+    param->setEditable(editable);
+    param->setTextType(textType);
+    param->setDefaultValue(defaultValue);
+    param->setStatusTip(statusTip);
 
     param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
 

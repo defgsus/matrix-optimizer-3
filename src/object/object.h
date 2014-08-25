@@ -502,6 +502,17 @@ protected:
                 const QList<int>& valueList,
                 int defaultValue, bool editable = true, bool modulateable = true);
 
+    ParameterText * createTextParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                const QString& defaultValue,
+                bool editable = true, bool modulateable = true);
+
+    ParameterText * createTextParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                TextType textType,
+                const QString& defaultValue,
+                bool editable = true, bool modulateable = true);
+
     ParameterFilename * createFilenameParameter(
                 const QString& id, const QString& name, const QString& statusTip,
                 IO::FileType fileType,

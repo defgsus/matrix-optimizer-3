@@ -14,6 +14,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "param/parameterfilename.h"
+#include "param/parametertext.h"
 #include "math/timeline1d.h"
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
@@ -81,8 +82,7 @@ SequenceFloat::SequenceFloat(QObject *parent)
 
         tmp_read_pre6_  (false),
 
-        phaseMult_      (1.0),
-        equationText_   ("sin(x*TWO_PI)")
+        phaseMult_      (1.0)
 
 {
     setName("SequenceFloat");
@@ -133,6 +133,13 @@ void SequenceFloat::createParameters()
                 AUDIO::Waveform::typeStatusTips,
                 AUDIO::Waveform::typeList,
                 AUDIO::Waveform::T_SINE, true, false);
+
+        p_equationText_ = createTextParameter("equ_text", tr("equation"),
+                  tr("The equation is interpreted as a function of time"),
+                  TT_EQUATION,
+                  "sin(x*TWO_PI)", true, false);
+        SeqEquation tmpequ;
+        p_equationText_->setVariableNames(tmpequ.equation->variables().variableNames());
 
         p_useFreq_ = createBooleanParameter("use_freq", tr("use frequency"),
                   tr("Selects whether some types of sequence which don't need a frequency "
@@ -254,6 +261,7 @@ void SequenceFloat::onParametersLoaded()
         p_useFreq_->setValue(tmp_doUseFreq_);
         setPhaseInDegree(tmp_doPhaseDegree_);
         p_loopOverlapMode_->setValue(tmp_loopOverlapMode_);
+        p_equationText_->setValue(tmp_equationText_);
     }
 
     updateValueObjects_();
@@ -325,7 +333,7 @@ void SequenceFloat::deserialize(IO::DataStream &io)
     {
         // equation (v2)
         if (ver >= 2)
-            io >> equationText_ >> tmp_doUseFreq_;
+            io >> tmp_equationText_ >> tmp_doUseFreq_;
 
         if (ver >= 5)
         {
@@ -353,6 +361,11 @@ void SequenceFloat::deserialize(IO::DataStream &io)
         }
     }
 
+}
+
+const QString& SequenceFloat::equationText() const
+{
+    return p_equationText_->baseValue();
 }
 
 void SequenceFloat::setNumberThreads(uint num)
@@ -406,7 +419,7 @@ void SequenceFloat::updateValueObjects_()
         if (!e)
         {
             e = new SeqEquation();
-            e->equation->parse(equationText_.toStdString());
+            e->equation->parse(p_equationText_->value().toStdString());
         }
     }
     else
@@ -448,8 +461,8 @@ const PPP_NAMESPACE::Parser * SequenceFloat::equation(uint thread) const
 
 void SequenceFloat::setEquationText(const QString & t)
 {
-    equationText_ = t;
-    const std::string text = equationText_.toStdString();
+    p_equationText_->setValue(t);
+    const std::string text = t.toStdString();
     for (auto e : equation_)
     {
         MO_ASSERT(e, "setEquationText without equation "

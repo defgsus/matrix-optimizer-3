@@ -200,7 +200,8 @@ SOURCES += \
     src/gui/geometryexportdialog.cpp \
     src/object/util/colorpostprocessingsetting.cpp \
     src/audio/tool/soundfile.cpp \
-    src/audio/tool/soundfilemanager.cpp
+    src/audio/tool/soundfilemanager.cpp \
+    src/object/param/parametertext.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -395,7 +396,8 @@ HEADERS += \
     src/gui/geometryexportdialog.h \
     src/object/util/colorpostprocessingsetting.h \
     src/audio/tool/soundfile.h \
-    src/audio/tool/soundfilemanager.h
+    src/audio/tool/soundfilemanager.h \
+    src/object/param/parametertext.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
