@@ -247,6 +247,19 @@ void SequenceFloat::onParameterChanged(Parameter *p)
 
     if (p == p_soundFile_)
         updateValueObjects_();
+
+    if (p == p_equationText_)
+    {
+        const std::string text = p_equationText_->baseValue().toStdString();
+        for (auto e : equation_)
+        {
+            MO_ASSERT(e, "setEquationText without equation "
+                         "in SequenceFloat " << idNamePath() << " (text = '" << text << "')");
+            if (!e->equation->parse(text))
+                MO_WARNING("parsing failed for equation in SequenceFloat '" << idName() << "'"
+                           " (text = '" << text << "')");
+        }
+    }
 }
 
 void SequenceFloat::onParametersLoaded()
@@ -462,6 +475,7 @@ const PPP_NAMESPACE::Parser * SequenceFloat::equation(uint thread) const
 void SequenceFloat::setEquationText(const QString & t)
 {
     p_equationText_->setValue(t);
+
     const std::string text = t.toStdString();
     for (auto e : equation_)
     {

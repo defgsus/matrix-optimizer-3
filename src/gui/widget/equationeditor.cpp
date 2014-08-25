@@ -144,6 +144,7 @@ void EquationEditor::createCompleter_()
     completer_->setWidget(this);
     connect(completer_, SIGNAL(activated(QString)), this, SLOT(insertCompletion_(QString)));
 
+    highlighter_->rehighlight();
 }
 
 void EquationEditor::onTextChanged_()

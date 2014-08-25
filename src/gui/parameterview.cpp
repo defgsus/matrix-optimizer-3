@@ -793,6 +793,15 @@ void ParameterView::updateWidgetValue_(Parameter * p)
                 edit->setText(pfn->value());
         }
     }
+    else
+    if (ParameterText * ptxt = dynamic_cast<ParameterText*>(p))
+    {
+        for (QLineEdit * edit : edits_)
+        {
+            if (edit->objectName() == ptxt->idName())
+                edit->setText(ptxt->value());
+        }
+    }
 }
 
 

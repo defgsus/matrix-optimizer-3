@@ -61,7 +61,6 @@ void SyntaxHighlighter::setNames(const QStringList &variables, const QStringList
         rule.format = functionFormat;
         rules_.append(rule);
     }
-
 }
 
 

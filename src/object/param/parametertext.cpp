@@ -68,10 +68,17 @@ bool ParameterText::openEditDialog(QWidget *parent)
 
     QString oldText = value_;
 
+    const QString parName = QString("%1.%2").arg(object()->name()).arg(name());
+
     // prepare dialog
     GUI::TextEditDialog diag(value_, textType_, parent);
     if (textType_ == TT_EQUATION)
+    {
         diag.addVariableNames(varNames_);
+        diag.setWindowTitle(QObject::tr("equation for %1").arg(parName));
+    }
+    else
+        diag.setWindowTitle(parName);
 
     diag.connect(&diag, &GUI::TextEditDialog::textChanged, [this, &diag]()
     {

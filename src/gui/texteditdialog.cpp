@@ -30,6 +30,8 @@ public:
     EquationEditor * equEdit;
 
     QString defaultText;
+
+    bool rejected;
 };
 
 TextEditDialog::TextEditDialog(TextType textType, QWidget *parent) :
@@ -37,6 +39,10 @@ TextEditDialog::TextEditDialog(TextType textType, QWidget *parent) :
     p_      (new Private(this))
 {
     p_->textType = textType;
+    p_->rejected = false;
+
+    setObjectName("_TextEditDialog");
+    setWindowTitle(tr("editor"));
 
     setMinimumSize(320, 200);
     createWidgets_();
@@ -60,6 +66,9 @@ TextType TextEditDialog::getTextType() const
 
 QString TextEditDialog::getText() const
 {
+    if (p_->rejected)
+        return p_->defaultText;
+
     switch (p_->textType)
     {
         case TT_PLAIN_TEXT: return p_->plainText->toPlainText();
@@ -123,8 +132,20 @@ void TextEditDialog::createWidgets_()
             lh->addWidget(butOk);
             butOk->setDefault(true);
 
+            connect(butOk, &QPushButton::pressed, [=]()
+            {
+                accept();
+            });
+
             auto butCancel = new QPushButton(tr("Cancel"), this);
             lh->addWidget(butCancel);
+
+            connect(butCancel, &QPushButton::pressed, [=]()
+            {
+                p_->rejected = true;
+                emit textChanged();
+                reject();
+            });
 
 }
 
