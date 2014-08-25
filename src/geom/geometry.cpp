@@ -20,6 +20,7 @@
 #include "math/noiseperlin.h"
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
+#include "math/functions.h"
 
 namespace MO {
 namespace GEOM {
@@ -902,6 +903,9 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
     Map3 verts;
     std::vector<uint> extVerts;
 
+#define MO__MAKEHASH(x__, y__, z__) \
+    Hash3(MATH::quant(x__, 0.001f), MATH::quant(y__, 0.001f), MATH::quant(z__, 0.001f))
+
     for (uint i=0; i<numTriangles(); ++i)
     {
         const IndexType
@@ -958,9 +962,9 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
             extVerts.push_back(d5);
             extVerts.push_back(d6);
 
-            Hash3   hash1(pe1[0], pe1[1], pe1[2]),
-                    hash2(pe2[0], pe2[1], pe2[2]),
-                    hash3(pe3[0], pe3[1], pe3[2]);
+            Hash3   hash1 = MO__MAKEHASH(pe1[0], pe1[1], pe1[2]),
+                    hash2 = MO__MAKEHASH(pe2[0], pe2[1], pe2[2]),
+                    hash3 = MO__MAKEHASH(pe3[0], pe3[1], pe3[2]);
 
             auto i = verts.find(hash1);
             if (i == verts.end())
@@ -1039,9 +1043,9 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
                     pt2 = getTexCoord(t2),
                     pt3 = getTexCoord(t3);
 
-            Hash3   hash1(pe1[0], pe1[1], pe1[2]),
-                    hash2(pe2[0], pe2[1], pe2[2]),
-                    hash3(pe3[0], pe3[1], pe3[2]);
+            Hash3   hash1 = MO__MAKEHASH(pe1[0], pe1[1], pe1[2]),
+                    hash2 = MO__MAKEHASH(pe2[0], pe2[1], pe2[2]),
+                    hash3 = MO__MAKEHASH(pe3[0], pe3[1], pe3[2]);
 
             const uint
                     count1 = verts.value(hash1, 0),
@@ -1075,6 +1079,8 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
             }
         }
     }
+
+#undef MO__MAKEHASH
 }
 
 void Geometry::tesselate(uint level)

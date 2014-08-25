@@ -18,7 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierExtrude)
 
 GeometryModifierExtrude::GeometryModifierExtrude()
-    : GeometryModifier("Extrude", QObject::tr("Extrude")),
+    : GeometryModifier("Extrude", QObject::tr("extrude faces")),
       constant_     (0.1),
       factor_       (0.0),
       doOuterFaces_ (true),
@@ -30,7 +30,8 @@ GeometryModifierExtrude::GeometryModifierExtrude()
 QString GeometryModifierExtrude::statusTip() const
 {
     return QObject::tr("Extrudes triangles - "
-                       "that is, all surfaces are shifted along their normals");
+                       "that is, all surfaces are shifted along their normals "
+                       "and side faces are created");
 }
 
 
