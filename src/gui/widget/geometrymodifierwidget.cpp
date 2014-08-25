@@ -511,16 +511,30 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
                            0.05, -1000000, 1000000);
             lh->addWidget(spinfac);
 
+        MO__CHECKBOX(cbFaces, tr("create orthogonal faces"),
+                     tr("Enables the creation of the outside faces, "
+                        "orthogonal to extruded faces"),
+                     extrude->getDoOuterFaces());
+
+        MO__CHECKBOX(cbQuads, tr("recognize edges"),
+                     tr("If e.g. two triangles are recognized as forming a quad, "
+                        "no orthogonal face is created for the inner edge"),
+                     extrude->getDoRecognizeEdges());
+
         funcUpdateFromWidgets_ = [=]()
         {
             extrude->setConstant(spinconst->value());
             extrude->setFactor(spinfac->value());
+            extrude->setDoOuterFaces(cbFaces->isChecked());
+            extrude->setDoRecognizeEdges(cbQuads->isChecked());
         };
 
         funcUpdateWidgets_ = [=]()
         {
             spinconst->setValue(extrude->getConstant());
             spinfac->setValue(extrude->getFactor());
+            cbFaces->setChecked(extrude->getDoOuterFaces());
+            cbQuads->setChecked(extrude->getDoRecognizeEdges());
         };
     }
 

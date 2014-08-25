@@ -264,8 +264,14 @@ public:
                                 const QString& equationS,
                                 const QString& equationT);
 
-    /** Extrudes all triangles along their normals -> into @p geom. */
-    void extrudeTriangles(Geometry & geom, VertexType constant, VertexType factor) const;
+    /** Extrudes all triangles along their normals -> into @p geom.
+        If @p createNewFaces is true, the orthogonal or orthonormals side faces
+        are created.
+        If also @p recognizeEdges is true, then only those side faces will be created
+        that don't circumvent original triangles with the same normal. E.g.
+        a quad will have 4 side faces and the inner triangle edge face is not created. */
+    void extrudeTriangles(Geometry & geom, VertexType constant, VertexType factor,
+                          bool createNewFaces, bool recognizeEdges) const;
 
     // ------------- opengl -----------------
 

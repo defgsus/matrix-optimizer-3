@@ -26,6 +26,46 @@ namespace GEOM {
 
 const Geometry::VertexType Geometry::minimumThreshold = 0.001;
 
+
+namespace
+{
+    struct Hash2
+    {
+        Float x,y;
+        Hash2(Float x, Float y) : x(x), y(y) { }
+
+        bool operator < (const Hash2& r) const
+        {
+            if (y == r.y)
+                return x < r.x;
+            return y < r.y;
+        }
+    };
+
+    typedef QMap<Hash2, uint> Map2;
+
+    struct Hash3
+    {
+        Float x,y,z;
+        Hash3(Float x, Float y, Float z) : x(x), y(y), z(z) { }
+
+        bool operator < (const Hash3& r) const
+        {
+            if (z == r.z)
+            {
+                if (y == r.y)
+                    return x < r.x;
+                return y < r.y;
+            }
+            return z < r.z;
+        }
+    };
+
+
+    typedef QMap<Hash3, uint> Map3;
+
+}
+
 Geometry::Geometry()
     :
         curR_   (1.f),
@@ -855,8 +895,13 @@ bool Geometry::transformTexCoordsWithEquation(
 }
 
 
-void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor) const
+void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor,
+                                bool createNewFaces, bool recognizeEdges) const
 {
+    // for edge recognition
+    Map3 verts;
+    std::vector<uint> extVerts;
+
     for (uint i=0; i<numTriangles(); ++i)
     {
         const IndexType
@@ -894,23 +939,141 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
                 pt2 = getTexCoord(t2),
                 pt3 = getTexCoord(t3);
 
-        // create vertices in destination geom
+        // -- create vertices in destination geom --
+
         const IndexType
-                d1 = geom.addVertex(p1[0], p1[1], p1[2], pn1[0], pn1[1], pn1[2], pc1[0], pc1[1], pc1[2], pc1[3], pt1[0], pt1[1]),
-                d2 = geom.addVertex(p2[0], p2[1], p2[2], pn2[0], pn2[1], pn2[2], pc2[0], pc2[1], pc2[2], pc2[3], pt2[0], pt2[1]),
-                d3 = geom.addVertex(p3[0], p3[1], p3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]),
+                // extruded triangle
                 d4 = geom.addVertex(pe1[0], pe1[1], pe1[2], pn1[0], pn1[1], pn1[2], pc1[0], pc1[1], pc1[2], pc1[3], pt1[0], pt1[1]),
                 d5 = geom.addVertex(pe2[0], pe2[1], pe2[2], pn2[0], pn2[1], pn2[2], pc2[0], pc2[1], pc2[2], pc2[3], pt2[0], pt2[1]),
                 d6 = geom.addVertex(pe3[0], pe3[1], pe3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]);
 
-        // create triangles in geom
+        // create extruded triangle in geom
         geom.addTriangle(d4,d5,d6);
-        geom.addTriangle(d1,d2,d5);
-        geom.addTriangle(d1,d5,d4);
-        geom.addTriangle(d2,d3,d6);
-        geom.addTriangle(d2,d6,d5);
-        geom.addTriangle(d3,d1,d4);
-        geom.addTriangle(d3,d4,d6);
+
+        // count number of extruded vertices use
+        if (createNewFaces && recognizeEdges)
+        {
+            // also remember them!
+            extVerts.push_back(d4);
+            extVerts.push_back(d5);
+            extVerts.push_back(d6);
+
+            Hash3   hash1(pe1[0], pe1[1], pe1[2]),
+                    hash2(pe2[0], pe2[1], pe2[2]),
+                    hash3(pe3[0], pe3[1], pe3[2]);
+
+            auto i = verts.find(hash1);
+            if (i == verts.end())
+                verts.insert(hash1, 1);
+            else
+                i.value()++;
+
+            i = verts.find(hash2);
+            if (i == verts.end())
+                verts.insert(hash2, 1);
+            else
+                i.value()++;
+
+            i = verts.find(hash3);
+            if (i == verts.end())
+                verts.insert(hash3, 1);
+            else
+                i.value()++;
+        }
+
+        if (createNewFaces && !recognizeEdges)
+        {
+            const IndexType
+                // original triangle for side-faces
+                d1 = geom.addVertex(p1[0], p1[1], p1[2], pn1[0], pn1[1], pn1[2], pc1[0], pc1[1], pc1[2], pc1[3], pt1[0], pt1[1]),
+                d2 = geom.addVertex(p2[0], p2[1], p2[2], pn2[0], pn2[1], pn2[2], pc2[0], pc2[1], pc2[2], pc2[3], pt2[0], pt2[1]),
+                d3 = geom.addVertex(p3[0], p3[1], p3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]);
+
+            // create side faces
+            geom.addTriangle(d1,d2,d5);
+            geom.addTriangle(d1,d5,d4);
+            geom.addTriangle(d2,d3,d6);
+            geom.addTriangle(d2,d6,d5);
+            geom.addTriangle(d3,d1,d4);
+            geom.addTriangle(d3,d4,d6);
+        }
+    }
+
+    // create side faces dependend of exteruded vertex count
+    if (createNewFaces && recognizeEdges)
+    {
+        for (uint i=0; i<numTriangles(); ++i)
+        {
+            const IndexType
+                    t1 = triIndex_[i*3],
+                    t2 = triIndex_[i*3+1],
+                    t3 = triIndex_[i*3+2];
+
+            const Vec3
+                    p1 = getVertex(t1),
+                    p2 = getVertex(t2),
+                    p3 = getVertex(t3),
+
+                    pn1 = getNormal(t1),
+                    pn2 = getNormal(t2),
+                    pn3 = getNormal(t3);
+
+            const Float
+                    dist12 = glm::distance(p1, p2),
+                    dist13 = glm::distance(p1, p3),
+                    dist23 = glm::distance(p2, p3);
+
+            const Vec3
+                    // extruded points
+                    pe1 = p1 + pn1 * (constant + factor * (dist12 + dist13)),
+                    pe2 = p2 + pn2 * (constant + factor * (dist12 + dist23)),
+                    pe3 = p3 + pn3 * (constant + factor * (dist13 + dist23));
+
+            const Vec4
+                    pc1 = getColor(t1),
+                    pc2 = getColor(t2),
+                    pc3 = getColor(t3);
+
+            const Vec2
+                    pt1 = getTexCoord(t1),
+                    pt2 = getTexCoord(t2),
+                    pt3 = getTexCoord(t3);
+
+            Hash3   hash1(pe1[0], pe1[1], pe1[2]),
+                    hash2(pe2[0], pe2[1], pe2[2]),
+                    hash3(pe3[0], pe3[1], pe3[2]);
+
+            const uint
+                    count1 = verts.value(hash1, 0),
+                    count2 = verts.value(hash2, 0),
+                    count3 = verts.value(hash3, 0);
+
+            const IndexType
+                // original triangle for side-faces
+                d1 = geom.addVertex(p1[0], p1[1], p1[2], pn1[0], pn1[1], pn1[2], pc1[0], pc1[1], pc1[2], pc1[3], pt1[0], pt1[1]),
+                d2 = geom.addVertex(p2[0], p2[1], p2[2], pn2[0], pn2[1], pn2[2], pc2[0], pc2[1], pc2[2], pc2[3], pt2[0], pt2[1]),
+                d3 = geom.addVertex(p3[0], p3[1], p3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]),
+                d4 = extVerts[i*3],
+                d5 = extVerts[i*3+1],
+                d6 = extVerts[i*3+2];
+
+            // create side faces
+            if (count1 < 2 || count2 < 2)
+            {
+                geom.addTriangle(d1,d2,d5);
+                geom.addTriangle(d1,d5,d4);
+            }
+            if (count2 < 2 || count3 < 2)
+            {
+                geom.addTriangle(d2,d3,d6);
+                geom.addTriangle(d2,d6,d5);
+            }
+            if (count3 < 2 || count1 < 2)
+            {
+                geom.addTriangle(d3,d1,d4);
+                geom.addTriangle(d3,d4,d6);
+            }
+        }
     }
 }
 
