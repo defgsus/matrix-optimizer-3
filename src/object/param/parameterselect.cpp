@@ -52,48 +52,54 @@ void ParameterSelect::deserialize(IO::DataStream &io)
 
 void ParameterSelect::setDefaultValue(int v)
 {
-    MO_ASSERT(valueList_.contains(v), "ParameterSelect::setDefaultValue(" << v << ") value not known");
+    MO_ASSERT(valueList_.contains(v),
+              "ParameterSelect('" << idName() << "')::setDefaultValue("
+              << v << ") value not known");
     defaultValue_ = v;
 }
 
 void ParameterSelect::setValue(int v)
 {
-    MO_ASSERT(valueList_.contains(v), "ParameterSelect::setValue(" << v << ") value not known");
+    MO_ASSERT(valueList_.contains(v),
+              "ParameterSelect('" << idName() << "')::setValue("
+              << v << ") value not known");
     value_ = v;
 }
 
 void ParameterSelect::setValueFromIndex(int index)
 {
     MO_ASSERT(index >= 0 && index < valueList_.size(),
-              "ParameterSelect::setValueFromIndex(" << index << ") out of range");
+              "ParameterSelect('" << idName() << "')::setValueFromIndex("
+              << index << ") out of range");
     value_ = valueList_.at(index);
 }
 
 const QString& ParameterSelect::valueName() const
 {
     int idx = valueList_.indexOf(value_);
-    MO_ASSERT(idx>=0, "unknown value " << value_ << " in ParameterSelect");
+    MO_ASSERT(idx>=0, "unknown value " << value_ << " in ParameterSelect('" << idName() << "')");
     return valueNames_.at(idx);
 }
 
 const QString& ParameterSelect::valueId() const
 {
     int idx = valueList_.indexOf(value_);
-    MO_ASSERT(idx>=0, "unknown value " << value_ << " in ParameterSelect");
+    MO_ASSERT(idx>=0, "unknown value " << value_ << " in ParameterSelect('" << idName() << "')");
     return valueIds_.at(idx);
 }
 
 const QString& ParameterSelect::defaultValueName() const
 {
     int idx = valueList_.indexOf(defaultValue_);
-    MO_ASSERT(idx>=0, "unknown defaultvalue " << defaultValue_ << " in ParameterSelect");
+    MO_ASSERT(idx>=0, "unknown defaultvalue " << defaultValue_
+              << " in ParameterSelect('" << idName() << "')");
     return valueNames_.at(idx);
 }
 
 void ParameterSelect::setBoolean(bool enable)
 {
     if (enable)
-        MO_ASSERT(valueList_.size() == 2, "ParameterSelect::setBoolean() with "
+        MO_ASSERT(valueList_.size() == 2, "ParameterSelect('" << idName() << "')::setBoolean() with "
                   << valueList_.size() << " values");
     isBoolean_ = enable;
 }
@@ -102,14 +108,16 @@ void ParameterSelect::removeByValue(int value)
 {
     if (value == defaultValue_)
     {
-        MO_WARNING("ParameterSelect::removeByValue(" << value << ") can't remove default value");
+        MO_WARNING("ParameterSelect('" << idName() << "')::removeByValue("
+                   << value << ") can't remove default value");
         return;
     }
 
     const int idx = valueList_.indexOf(value);
     if (idx < 0)
     {
-        MO_WARNING("ParameterSelect::removeByValue(" << value << ") unknown value");
+        MO_WARNING("ParameterSelect('" << idName() << "')::removeByValue("
+                   << value << ") unknown value");
         return;
     }
 

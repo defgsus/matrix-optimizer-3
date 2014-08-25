@@ -77,6 +77,8 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
@@ -165,11 +167,6 @@ public:
     void setEquationText(const QString&);
 
     void setUseFrequency(bool enable) { p_useFreq_->setValue(enable); }
-    void setPhaseInDegree(bool enable);
-
-    /** Updates the internal wavetable from the WavetableGenerator settings.
-        @note mode() MUST be ST_SPECTRAL_WT */
-    void updateWavetable();
 
     // ------------ values --------------
 
@@ -187,6 +184,10 @@ public slots:
 private:
 
     void updateValueObjects_();
+    /** Updates the internal wavetable from the WavetableGenerator settings.
+        @note mode() must be ST_SPECTRAL_WT */
+    void updateWavetable_();
+    void updatePhaseInDegree_();
 
     Double value_(Double gtime, Double time, uint thread) const;
 
@@ -215,10 +216,20 @@ private:
         * p_specPhaseShift_,
         * p_specAmp_,
 
+        * p_wtSpecPhase_,
+        * p_wtSpecPhaseShift_,
+        * p_wtSpecAmp_,
+
         * p_loopOverlap_,
         * p_loopOverlapOffset_;
 
+    ParameterInt
+        * p_wtSpecNum_,
+        * p_wtSpecOct_,
+        * p_wtSpecOctStep_;
+
     ParameterSelect
+        * p_wtSpecSize_,
         * p_mode_,
         * p_oscMode_,
         * p_loopOverlapMode_,

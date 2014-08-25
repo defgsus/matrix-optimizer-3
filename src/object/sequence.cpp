@@ -124,4 +124,13 @@ void Sequence::onParametersLoaded()
     }
 }
 
+void Sequence::updateParameterVisibility()
+{
+    Object::updateParameterVisibility();
+
+    const bool loop = p_looping_->baseValue();
+    p_loopStart_->setVisible(loop);
+    p_loopLength_->setVisible(loop);
+}
+
 } // namespace MO

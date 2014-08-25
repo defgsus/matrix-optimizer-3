@@ -32,6 +32,7 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
     // -------------- tracks -------------------
 
