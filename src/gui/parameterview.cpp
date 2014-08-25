@@ -16,7 +16,8 @@
 #include <QAbstractItemView>
 #include <QMenu>
 #include <QLineEdit>
-
+#include <QScrollArea>
+#include <QScrollBar>
 
 #include "parameterview.h"
 #include "object/object.h"
@@ -51,8 +52,23 @@ ParameterView::ParameterView(QWidget *parent) :
 
     doChangeToCreatedTrack_    (false)
 {
-    layout_ = new QVBoxLayout(this);
-    layout_->setMargin(0);
+    setObjectName("_ParameterView");
+
+    auto layout = new QVBoxLayout(this);
+    layout->setMargin(0);
+
+        scrollArea_ = new QScrollArea(this);
+        layout->addWidget(scrollArea_);
+
+            container_ = new QWidget(scrollArea_);
+            container_->setObjectName("_parameter_container");
+            container_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+            layout_ = new QVBoxLayout(container_);
+            layout_->setMargin(0);
+            layout_->setSizeConstraint(QLayout::SetMinAndMaxSize);
+
+            scrollArea_->setWidget(container_);
 }
 
 
@@ -95,17 +111,44 @@ void ParameterView::updateParameterVisibility(Parameter * p)
         // otherwise change widget directly
         else
             i.value()->setVisible(p->isVisible());
+
+        squeezeView_();
     }
 }
+
+void ParameterView::squeezeView_()
+{
+    const int h = scrollArea_->verticalScrollBar()->sliderPosition();
+
+    for (auto g : groups_)
+        g->layout()->activate();
+    layout_->activate();
+
+    scrollArea_->widget()->setGeometry(QRect(0,0,1,1));
+
+    scrollArea_->ensureWidgetVisible(scrollArea_->widget()->focusWidget());
+
+    // little hack to update the viewport to the slider position
+    // (it won't do it without)
+    scrollArea_->verticalScrollBar()->setSliderPosition(h-1);
+    scrollArea_->verticalScrollBar()->setSliderPosition(h);
+}
+
 
 void ParameterView::clearWidgets_()
 {
     for (auto w : widgets_)
+    {
+        w->setVisible(false);
         w->deleteLater();
+    }
     widgets_.clear();
 
     for (auto g : groups_)
+    {
+        g->setVisible(false);
         g->deleteLater();
+    }
     groups_.clear();
 
     paramMap_.clear();
@@ -122,12 +165,16 @@ GroupWidget * ParameterView::getGroupWidget_(const Parameter * p)
     if (i == groups_.end())
     {
         // create new
-        GroupWidget * g = new GroupWidget(p->groupName(), this);
+        GroupWidget * g = new GroupWidget(p->groupName(), container_);
+        g->setMinimumWidth(300);
+
+        layout_->addWidget(g);
+        groups_.insert(p->groupId(), g);
+
+        // get expanded flag from scene-settings
         MO_ASSERT(p->object(), "parameter without object in ParameterView");
         g->setExpanded(
             sceneSettings_->getParameterGroupExpanded(p->object(), p->groupId()) );
-        layout_->addWidget(g);
-        groups_.insert(p->groupId(), g);
 
         connect(g, &GroupWidget::expanded, [=]()
         {
@@ -136,6 +183,7 @@ GroupWidget * ParameterView::getGroupWidget_(const Parameter * p)
         connect(g, &GroupWidget::collapsed, [=]()
         {
             sceneSettings_->setParameterGroupExpanded(p->object(), p->groupId(), false);
+            squeezeView_();
         });
 
         return g;
@@ -177,6 +225,8 @@ void ParameterView::createWidgets_()
         prev = w;
         */
     }
+
+    squeezeView_();
 }
 
 void ParameterView::updateModulatorButton_(Parameter * p, QToolButton * b)
@@ -217,7 +267,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     //ObjectTreeModel * model = p->object()->sceneObject()->model();
     //MO_ASSERT(model, "No model assigned for Parameter");
 
-    QFrame * w = new QFrame(this);
+    QFrame * w = new QFrame(container_);
     w->setObjectName("_" + p->idName());
     w->setFrameStyle(QFrame::Panel);
     w->setFrameShadow(QFrame::Sunken);

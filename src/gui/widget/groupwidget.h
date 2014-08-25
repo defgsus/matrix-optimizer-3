@@ -67,6 +67,8 @@ public slots:
         will control the visibility of it's widgets. */
     void setVisible(QWidget * w, bool visible);
 
+    /** Pull from QWidget namespace */
+    void setVisible(bool v) { QWidget::setVisible(v); }
 private:
 
     void createLayout_();

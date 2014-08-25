@@ -187,7 +187,7 @@ void MainWindow::createWidgets_()
             l0->addWidget(leftContainer);
             leftContainer->setObjectName("_left_container");
             leftContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-            leftContainer->setMinimumWidth(270);
+            leftContainer->setMinimumWidth(340);
 
             auto lv = new QVBoxLayout(leftContainer);
             lv->setMargin(0);
@@ -197,7 +197,7 @@ void MainWindow::createWidgets_()
                 objectTreeView_ = new ObjectTreeView(this);
                 lv->addWidget(objectTreeView_);
                 objectTreeView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
-                //objectTreeView_->setMinimumWidth(240);
+                //objectTreeView_->setMinimumWidth(320);
                 //objectTreeView_->setMaximumWidth(450);
                 connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
                         SLOT(setEditActions_(const QObject*,QList<QAction*>)));
@@ -214,7 +214,7 @@ void MainWindow::createWidgets_()
                 objectView_ = new ObjectView(this);
                 lv->addWidget(objectView_);
                 objectView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-                //objectView_->setMinimumWidth(240);
+                //objectView_->setMinimumWidth(320);
                 objectView_->setSceneSettings(sceneSettings_);
                 connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
                                             this, SLOT(objectSelected_(MO::Object*)));

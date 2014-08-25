@@ -147,6 +147,7 @@ void Model3d::updateParameterVisibility()
 
     texture_->updateParameterVisibility();
     textureBump_->updateParameterVisibility();
+    texturePostProc_->updateParameterVisibility();
 
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
 }
@@ -237,7 +238,7 @@ void Model3d::setupDrawable_()
 
     // get uniforms
     u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());
-    if (texturePostProc_->isEnabled())
+    if (texture_->isEnabled() && texturePostProc_->isEnabled())
         texturePostProc_->getUniforms(draw_->shader());
 }
 
@@ -272,10 +273,14 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
                     cg_->value(time, thread),
                     cb_->value(time, thread),
                     ca_->value(time, thread));
+
         if (u_diff_exp_)
             u_diff_exp_->floats[0] = diffExp_->value(time, thread);
-        if (texturePostProc_->isEnabled())
+
+        if (texture_->isEnabled() && texturePostProc_->isEnabled())
             texturePostProc_->updateUniforms(time, thread);
+
+        // render the thing
 
         draw_->renderShader(rs.cameraSpace().projectionMatrix(),
                             cubeViewTrans, viewTrans, trans, &rs.lightSettings());

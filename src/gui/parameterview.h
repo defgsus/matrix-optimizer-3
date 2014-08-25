@@ -23,6 +23,7 @@ class QVBoxLayout;
 class QToolButton;
 class QComboBox;
 class QLineEdit;
+class QScrollArea;
 
 namespace MO {
 namespace GUI {
@@ -68,6 +69,7 @@ private:
 
     GroupWidget * getGroupWidget_(const Parameter*);
 
+    void squeezeView_();
     void createWidgets_();
     QWidget * createWidget_(Parameter *);
     void setNextTabWidget_(QWidget*);
@@ -95,6 +97,8 @@ private:
     QWidget * prevEditWidget_;
 
     QVBoxLayout * layout_;
+    QScrollArea * scrollArea_;
+    QWidget * container_;
 
     // ------ config ------
 
