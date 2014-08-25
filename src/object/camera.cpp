@@ -150,7 +150,9 @@ void Camera::initGl(uint thread)
                 ":/shader/framebuffercamera.vert",
                 ":/shader/framebuffercamera.frag",
                 cubeMapped? "#define MO_FULLDOME_CUBE" : "");
+
     // uniforms
+
     uColor_ = screenQuad_[thread]->shader()->getUniform("u_color", true);
     uColor_->setFloats(1,1,1,1);
     if (cubeMapped)
@@ -265,8 +267,18 @@ void Camera::finishGlFrame(uint thread, Double)
 
 GL::FrameBufferObject * Camera::fbo(uint thread) const
 {
-    return thread < fbo_.size() ?
-                fbo_[thread] : 0;
+    if (thread < fbo_.size())
+    {
+        if (!fbo_[thread])
+            MO_WARNING("request for camera fbo [" << thread << "], but fbo is not created yet");
+        return fbo_[thread];
+    }
+    else
+    {
+        MO_WARNING("request for camera framebuffer[" << thread << "] "
+                   "is out of range (" << fbo_.size() << ")");
+        return 0;
+    }
 }
 
 void Camera::drawFramebuffer(uint thread, Double time)

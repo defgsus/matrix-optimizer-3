@@ -52,6 +52,9 @@
     (maybe: when pasting modulated objects, open a dialog for selection of which
     modulators should be reused or recreated)
 
+* make querying for camera fbos independent of the object order
+  best to issue a signal when fbos change anyway!
+
 ---- threading -----
 
 - OK make equation threadsafe

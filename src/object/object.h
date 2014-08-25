@@ -687,14 +687,15 @@ QList<T*> Object::findChildObjects(const QString& id, bool recursive, Object * i
     QList<T*> list;
 
     for (auto o : childObjects_)
+    {
         if (o != ignore
             && (qobject_cast<T*>(o))
             && (id.isEmpty() || o->idName() == id))
                 list.append(static_cast<T*>(o));
 
-    if (recursive)
-        for (auto i : childObjects_)
-            list.append(i->findChildObjects<T>(id, recursive, ignore));
+        if (recursive)
+            list.append(o->findChildObjects<T>(id, recursive, ignore));
+    }
 
     return list;
 }
@@ -706,15 +707,15 @@ QList<T*> Object::findChildObjectsStopAt(
     QList<T*> list;
 
     for (auto o : childObjects_)
+    {
         if (o != stopAt
             && (qobject_cast<T*>(o))
             && (id.isEmpty() || o->idName() == id))
                 list.append(static_cast<T*>(o));
 
-    if (recursive)
-        for (auto i : childObjects_)
-            if (i != stopAt)
-                list.append(i->findChildObjectsStopAt<T>(id, recursive, stopAt));
+        if (recursive && o != stopAt)
+            list.append(o->findChildObjectsStopAt<T>(id, recursive, stopAt));
+    }
 
     return list;
 }

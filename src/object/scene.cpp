@@ -597,6 +597,8 @@ void Scene::createSceneGl_(uint thread)
     // create screen quad
     screenQuad_[thread] = new GL::ScreenQuad("scene_quad", GL::ER_THROW);
     screenQuad_[thread]->create();
+
+
 }
 
 
@@ -624,8 +626,11 @@ GL::FrameBufferObject * Scene::fboMaster(uint thread) const
 GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
 {
     if ((int)camera_index >= cameras_.size())
+    {
+        MO_WARNING("request for camera fbo " << camera_index
+                   << " is out of range (" << cameras_.size() << ")");
         return 0;
-
+    }
     return cameras_[camera_index]->fbo(thread);
 }
 
@@ -646,7 +651,7 @@ void Scene::renderScene(uint thread)
         // modify only thread-local storage
         ScopedSceneLockRead lock(this);
 
-        // release all openGL resources
+        // release all openGL resources and quit
         if (releaseAllGlRequested_[thread])
         {
             releaseSceneGl_(thread);
@@ -667,7 +672,7 @@ void Scene::renderScene(uint thread)
 
         // initialize object gl resources
         for (auto o : glObjects_)
-            if (o->needsInitGl(thread) && o->active(time, thread))
+            if (o->needsInitGl(thread))// && o->active(time, thread))
             {
                 if (o->isGlInitialized(thread))
                     o->releaseGl_(thread);

@@ -171,6 +171,8 @@ bool TextureSetting::initGl()
         // but load an error image
         if (!fbo)
         {
+            MO_WARNING("no camera fbo received from scene");
+
             Image img;
             img.loadImage(":/texture/error.png");
             texture_ = GL::Texture::createFromImage(img, GL_RGB, rep_);
