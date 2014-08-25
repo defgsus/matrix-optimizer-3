@@ -45,11 +45,12 @@ public:
 
     static bool typeUsesFrequency(SequenceType t)
     {
-        return t == ST_OSCILLATOR || t == ST_SPECTRAL_OSC
+        return     t == ST_OSCILLATOR
+                || t == ST_SPECTRAL_OSC
                 || t == ST_SPECTRAL_WT;
     }
 
-    bool typeUsesFrequency() const { return typeUsesFrequency(mode_); }
+    bool typeUsesFrequency() const { return typeUsesFrequency((SequenceType)p_mode_->baseValue()); }
 
     enum LoopOverlapMode
     {
@@ -111,7 +112,8 @@ public:
     Double specPhaseShift() const { return p_specPhaseShift_->baseValue(); }
 
     /** Wheter the loop start/end are overlapping. */
-    LoopOverlapMode loopOverlapMode() const { return loopOverlapMode_; }
+    LoopOverlapMode loopOverlapMode() const
+        { return (LoopOverlapMode)p_loopOverlapMode_->baseValue(); }
 
     /** Overlapping time of loop in seconds */
     Double loopOverlap() const { return p_loopOverlap_->baseValue(); }
@@ -158,7 +160,7 @@ public:
         { p_loopOverlapOffset_->setValue( v ); }
 
     void setLoopOverlapMode(LoopOverlapMode mode)
-        { loopOverlapMode_ = mode; }
+        { p_loopOverlapMode_->setValue(mode); }
 
     void setEquationText(const QString&);
 
@@ -188,7 +190,7 @@ private:
 
     Double value_(Double gtime, Double time, uint thread) const;
 
-    SequenceType mode_;
+    SequenceType tmp_mode_;
     MATH::Timeline1D * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
     AUDIO::WavetableGenerator * wavetableGen_;
@@ -225,11 +227,12 @@ private:
 
 
 
-    AUDIO::Waveform::Type oscMode_;
-    LoopOverlapMode loopOverlapMode_;
+    AUDIO::Waveform::Type tmp_oscMode_;
+    LoopOverlapMode tmp_loopOverlapMode_;
 
-    bool doUseFreq_,
-         doPhaseDegree_;
+    bool tmp_read_pre6_,
+         tmp_doUseFreq_,
+         tmp_doPhaseDegree_;
 
     Double phaseMult_;
 

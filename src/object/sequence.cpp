@@ -16,12 +16,9 @@
 namespace MO {
 
 Sequence::Sequence(QObject *parent) :
-    Object      (parent),
-    start_      (0.0),
-    length_     (60.0),
-    speed_      (1.0),
-    isLooping_    (false),
-    track_      (0)
+    Object          (parent),
+    tmp_read_ver1_  (false),
+    track_          (0)
 {
     setName("Sequence");
 }
@@ -30,20 +27,27 @@ void Sequence::serialize(IO::DataStream &io) const
 {
     Object::serialize(io);
 
-    io.writeHeader("seq", 1);
+    io.writeHeader("seq", 2);
 
+#if (0) // VERSION_1
     io << start_ << length_ << speed_ << (qint8)isLooping_;
+#endif
 }
 
 void Sequence::deserialize(IO::DataStream &io)
 {
     Object::deserialize(io);
 
-    io.readHeader("seq", 1);
+    const int ver = io.readHeader("seq", 2);
 
-    qint8 looping;
-    io >> start_ >> length_ >> speed_ >> looping;
-    isLooping_ = looping;
+    if (ver <= 1)
+    {
+        tmp_read_ver1_ = true;
+
+        qint8 looping;
+        io >> tmp_start_ >> tmp_length_ >> tmp_speed_ >> looping;
+        tmp_isLooping_ = looping;
+    }
 }
 
 QString Sequence::infoName() const
@@ -105,5 +109,19 @@ void Sequence::createParameters()
     endParameterGroup();
 }
 
+void Sequence::onParametersLoaded()
+{
+    Object::onParametersLoaded();
+
+    if (tmp_read_ver1_)
+    {
+        tmp_read_ver1_ = false;
+
+        p_start_->setValue(tmp_start_);
+        p_length_->setValue(tmp_length_);
+        p_speed_->setValue(tmp_speed_);
+        p_looping_->setValue(tmp_isLooping_);
+    }
+}
 
 } // namespace MO

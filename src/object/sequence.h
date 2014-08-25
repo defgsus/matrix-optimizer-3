@@ -30,7 +30,8 @@ public:
 
     virtual QString infoName() const;
 
-    virtual void createParameters();
+    virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
 
     // -------------- tracks -------------------
 
@@ -117,10 +118,11 @@ public slots:
 
 private:
 
-    Double start_,
-           length_,
-           speed_;
-    bool   isLooping_;
+    Double tmp_start_,
+           tmp_length_,
+           tmp_speed_;
+    bool   tmp_isLooping_,
+           tmp_read_ver1_;
 
     ParameterFloat
         * p_start_,
@@ -139,10 +141,10 @@ private:
 
 inline Double Sequence::getSequenceTime(Double time, uint thread) const
 {
-    time = (time - start_) * speed_;
+    time = (time - p_start_->baseValue()) * p_speed_->baseValue();
     time += p_timeOffset_->value(time, thread);
 
-    if (isLooping_)
+    if (p_looping_->baseValue())
     {
         const Double
                 ls = p_loopStart_->value(time, thread),
@@ -158,10 +160,10 @@ inline Double Sequence::getSequenceTime(Double time, uint thread) const
 inline Double Sequence::getSequenceTime(Double time, uint thread,
                                         Double& lStart, Double& lLength, bool& isInLoop) const
 {
-    time = (time - start_) * speed_;
+    time = (time - p_start_->baseValue()) * p_speed_->baseValue();
     time += p_timeOffset_->value(time, thread);
 
-    if (isLooping_)
+    if (p_looping_->baseValue())
     {
         lStart = p_loopStart_->value(time, thread);
         lLength = std::max(p_loopLength_->value(time, thread), minimumLength());

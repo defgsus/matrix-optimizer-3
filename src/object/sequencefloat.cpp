@@ -77,13 +77,9 @@ SequenceFloat::SequenceFloat(QObject *parent)
         soundFile_      (0),
         equation_       (0),
 
-        p_soundFile_ (0),
+        p_soundFile_    (0),
 
-        oscMode_        (AUDIO::Waveform::T_SINE),
-        loopOverlapMode_(LOT_OFF),
-
-        doUseFreq_      (false),
-        doPhaseDegree_  (false),
+        tmp_read_pre6_  (false),
 
         phaseMult_      (1.0),
         equationText_   ("sin(x*TWO_PI)")
@@ -248,6 +244,18 @@ void SequenceFloat::onParameterChanged(Parameter *p)
 
 void SequenceFloat::onParametersLoaded()
 {
+    Sequence::onParametersLoaded();
+
+    if (tmp_read_pre6_)
+    {
+        tmp_read_pre6_ = false;
+        p_mode_->setValue(tmp_mode_);
+        p_oscMode_->setValue(tmp_oscMode_);
+        p_useFreq_->setValue(tmp_doUseFreq_);
+        setPhaseInDegree(tmp_doPhaseDegree_);
+        p_loopOverlapMode_->setValue(tmp_loopOverlapMode_);
+    }
+
     updateValueObjects_();
 }
 
@@ -255,18 +263,19 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 {
     Sequence::serialize(io);
 
-    io.writeHeader("seqf", 5);
+    io.writeHeader("seqf", 6);
 
+#if (0) // PRE_6_VERSION
     io << sequenceTypeId[mode_];
 
     // osc mode
     io << AUDIO::Waveform::typeIds[oscMode_];
-
+#endif
     // timeline
     io << (quint8)(timeline_ != 0);
     if (timeline_)
         timeline_->serialize(io);
-
+#if (0) // PRE_6_VERSION
     // equation (v2)
     io << equationText_ << doUseFreq_;
 
@@ -275,11 +284,12 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 
     // loop overlap (v3)
     io << loopOverlapModeId[loopOverlapMode_];
-
+#endif
     // wavetablegen (v4)
     io << (qint8)(wavetableGen_ != 0);
     if (wavetableGen_)
         wavetableGen_->serialize(io);
+
 
 }
 
@@ -287,14 +297,19 @@ void SequenceFloat::deserialize(IO::DataStream &io)
 {
     Sequence::deserialize(io);
 
-    int ver = io.readHeader("seqf", 5);
+    int ver = io.readHeader("seqf", 6);
 
-    if (!io.readEnum(mode_, ST_CONSTANT, sequenceTypeId))
-        MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
+    if (ver <= 5)
+    {
+        tmp_read_pre6_ = true;
 
-    // oscillator
-    if (!io.readEnum(oscMode_, AUDIO::Waveform::T_SINE, AUDIO::Waveform::typeIds))
-        MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': oscillator mode not known");
+        if (!io.readEnum(tmp_mode_, ST_CONSTANT, sequenceTypeId))
+            MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
+
+        // oscillator
+        if (!io.readEnum(tmp_oscMode_, AUDIO::Waveform::T_SINE, AUDIO::Waveform::typeIds))
+            MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': oscillator mode not known");
+    }
 
     // timeline
     quint8 have;
@@ -306,21 +321,23 @@ void SequenceFloat::deserialize(IO::DataStream &io)
         timeline_->deserialize(io);
     }
 
-    // equation (v2)
-    if (ver >= 2)
-        io >> equationText_ >> doUseFreq_;
-
-    if (ver >= 5)
+    if (ver <= 5)
     {
-        io >> doPhaseDegree_;
-        setPhaseInDegree(doPhaseDegree_);
-    }
+        // equation (v2)
+        if (ver >= 2)
+            io >> equationText_ >> tmp_doUseFreq_;
 
-    // loopoverlap (v3)
-    if (ver >= 3)
-    {
-        if (!io.readEnum(loopOverlapMode_, LOT_OFF, loopOverlapModeId))
-            MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': loop overlap mode unknown");
+        if (ver >= 5)
+        {
+            io >> tmp_doPhaseDegree_;
+        }
+
+        // loopoverlap (v3)
+        if (ver >= 3)
+        {
+            if (!io.readEnum(tmp_loopOverlapMode_, LOT_OFF, loopOverlapModeId))
+                MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': loop overlap mode unknown");
+        }
     }
 
     // wavetable generator
@@ -336,8 +353,6 @@ void SequenceFloat::deserialize(IO::DataStream &io)
         }
     }
 
-    // create needed objects
-    setMode(mode_);
 }
 
 void SequenceFloat::setNumberThreads(uint num)
@@ -353,12 +368,12 @@ void SequenceFloat::setNumberThreads(uint num)
         equation_[i] = 0;
 
     // update/create equation objects
-    setMode(mode_);
+    updateValueObjects_();
 }
 
 void SequenceFloat::setPhaseInDegree(bool enable)
 {
-    doPhaseDegree_ = enable;
+    p_doPhaseDegree_->setValue(enable);
     phaseMult_ = enable? 1.0 / 360.0 : 1.0;
 }
 
@@ -447,7 +462,7 @@ void SequenceFloat::setEquationText(const QString & t)
 
 Double SequenceFloat::value(Double gtime, uint thread) const
 {
-    if (loopOverlapMode_ == LOT_OFF)
+    if (p_loopOverlapMode_->baseValue() == LOT_OFF)
     {
         const Double time = getSequenceTime(gtime, thread);
         return value_(gtime, time, thread);
@@ -458,12 +473,12 @@ Double SequenceFloat::value(Double gtime, uint thread) const
     Double time = getSequenceTime(gtime, thread, lStart, lLength, inLoop);
 
     // XXX strange: inLoop comes to late, e.g. after the loop end
-    if (!inLoop && loopOverlapMode_ == LOT_BEGIN)
+    if (!inLoop && p_loopOverlapMode_->baseValue() == LOT_BEGIN)
         return value_(gtime, time, thread);
 
     Double overlap = std::max(minimumLength(), p_loopOverlap_->value(gtime, thread));
 
-    if (loopOverlapMode_ == LOT_BEGIN)
+    if (p_loopOverlapMode_->baseValue() == LOT_BEGIN)
     {
         if ((time - lStart) > overlap)
             return value_(gtime, time, thread);
@@ -478,7 +493,7 @@ Double SequenceFloat::value(Double gtime, uint thread) const
 
         return (1.0 - ts) * v0 + ts * v;
     }
-    else if (loopOverlapMode_ == LOT_END)
+    else if (p_loopOverlapMode_->baseValue() == LOT_END)
     {
         if ((time - lStart) < lLength - overlap)
             return value_(gtime, time, thread);
@@ -494,7 +509,7 @@ Double SequenceFloat::value(Double gtime, uint thread) const
         return (1.0 - ts) * v0 + ts * v;
     }
 
-    MO_ASSERT(false, "unhandled loopOverlapMode " << loopOverlapMode_
+    MO_ASSERT(false, "unhandled loopOverlapMode " << p_loopOverlapMode_->baseValue()
                      << " in SequenceFloat '" << idNamePath() << "'");
     return 0.0;
 }
@@ -502,17 +517,18 @@ Double SequenceFloat::value(Double gtime, uint thread) const
 
 Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
 {
-    if (typeUsesFrequency() || doUseFreq_)
+    if (typeUsesFrequency() || p_useFreq_->baseValue())
     {
         time = time * p_frequency_->value(gtime, thread)
                 + p_phase_->value(gtime, thread) * phaseMult_;
     }
 
-    switch (mode_)
+    switch ((SequenceType)p_mode_->baseValue())
     {
         case ST_OSCILLATOR:
             return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
-                * AUDIO::Waveform::waveform(time, oscMode_,
+                * AUDIO::Waveform::waveform(time,
+                            (AUDIO::Waveform::Type)p_oscMode_->baseValue(),
                         AUDIO::Waveform::limitPulseWidth(p_pulseWidth_->value(gtime, thread)));
 
         case ST_SPECTRAL_OSC:
