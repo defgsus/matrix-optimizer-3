@@ -25,7 +25,8 @@ namespace MO {
 ParameterSelect::ParameterSelect(Object * object, const QString& id, const QString& name)
     :   Parameter(object, id, name),
         defaultValue_   (0),
-        value_          (0)
+        value_          (0),
+        isBoolean_      (false)
 {
 }
 
@@ -87,6 +88,14 @@ const QString& ParameterSelect::defaultValueName() const
     int idx = valueList_.indexOf(defaultValue_);
     MO_ASSERT(idx>=0, "unknown defaultvalue " << defaultValue_ << " in ParameterSelect");
     return valueNames_.at(idx);
+}
+
+void ParameterSelect::setBoolean(bool enable)
+{
+    if (enable)
+        MO_ASSERT(valueList_.size() == 2, "ParameterSelect::setBoolean() with "
+                  << valueList_.size() << " values");
+    isBoolean_ = enable;
 }
 
 void ParameterSelect::removeByValue(int value)

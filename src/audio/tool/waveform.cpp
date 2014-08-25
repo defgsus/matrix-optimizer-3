@@ -8,6 +8,8 @@
     <p>created 7/2/2014</p>
 */
 
+#include <QObject> // for tr()
+
 #include "waveform.h"
 #include "math/functions.h"
 #include "math/constants.h"
@@ -18,6 +20,8 @@ namespace AUDIO {
 
 MATH::NoisePerlin Waveform::noise_;
 
+const QList<int> Waveform::typeList =
+{ T_SINE, T_COSINE, T_RAMP, T_SAW, T_TRIANGLE, T_SQUARE, T_NOISE };
 
 const QStringList Waveform::typeIds =
 {
@@ -26,8 +30,23 @@ const QStringList Waveform::typeIds =
 
 const QStringList Waveform::typeNames =
 {
-    "Sine", "Cosine", "Ramp", "Sawtooth", "Triangle", "Square", "Noise"
+    QObject::tr("Sine"), QObject::tr("Cosine"),
+    QObject::tr("Ramp"), QObject::tr("Sawtooth"),
+    QObject::tr("Triangle"), QObject::tr("Square"),
+    QObject::tr("Noise")
 };
+
+const QStringList Waveform::typeStatusTips =
+{
+    QObject::tr("A sine oscillator [-1,1]"),
+    QObject::tr("A cosine oscillator [-1,1]"),
+    QObject::tr("A positive ramp [0,1]"),
+    QObject::tr("A sawtooth oscillator [-1,1]"),
+    QObject::tr("A triangle oscillator [-1,1]"),
+    QObject::tr("A square-wave oscillator [-1,1]"),
+    QObject::tr("A continous noise function [-1,1]")
+};
+
 
 bool Waveform::supportsPulseWidth(Type t)
 {

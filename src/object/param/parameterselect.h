@@ -30,6 +30,9 @@ public:
 
     // ------------- getter ---------------
 
+    /** Only has two values and should be displayed as checkbox? */
+    bool isBoolean() const { return isBoolean_; }
+
     int defaultValue() const { return defaultValue_; }
 
     //int value(Double time) const { return value_ }
@@ -45,6 +48,11 @@ public:
     const QString& defaultValueName() const;
 
     // ------------ setter ----------------
+
+    /** Set a flag that this Parameter only has two values and
+        should be displayed as a checkbox.
+        @note Parameter must have exactly two values. */
+    void setBoolean(bool enable);
 
     void setDefaultValue(int v);
     void setValue(int v);
@@ -86,6 +94,9 @@ private:
         statusTips_;
     QList<int> valueList_;
     //QList<TrackFloat*> modulators_;
+
+    bool isBoolean_;
+
 };
 
 } // namespace MO

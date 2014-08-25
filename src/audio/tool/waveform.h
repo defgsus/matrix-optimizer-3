@@ -43,6 +43,12 @@ class Waveform
     /** Friendly names for each Type enum. */
     const static QStringList typeNames;
 
+    /** Description of each Type enum */
+    const static QStringList typeStatusTips;
+
+    /** All Type enums in order */
+    const static QList<int> typeList;
+
     static Double minPulseWidth() { return 0.00001; }
     static Double maxPulseWidth() { return 0.99999; }
 

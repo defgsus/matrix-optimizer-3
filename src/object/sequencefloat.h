@@ -86,35 +86,35 @@ public:
     AUDIO::Waveform::Type oscillatorMode() const { return oscMode_; }
 
     /** Returns the constant offset added to the output */
-    Double offset() const { return offset_->baseValue(); }
+    Double offset() const { return p_offset_->baseValue(); }
 
     /** Returns the amplitude, applied before the constant offset */
-    Double amplitude() const { return amplitude_->baseValue(); }
+    Double amplitude() const { return p_amplitude_->baseValue(); }
 
     /** Returns the frequency of the oscillator in Hertz. */
-    Double frequency() const { return frequency_->baseValue(); }
+    Double frequency() const { return p_frequency_->baseValue(); }
     /** Returns the phase of the oscillator [0,1] */
-    Double phase() const { return phase_->baseValue(); }
+    Double phase() const { return p_phase_->baseValue(); }
     /** Returns the pulsewidth of the oscillator [0,1] */
-    Double pulseWidth() const { return pulseWidth_->baseValue(); }
+    Double pulseWidth() const { return p_pulseWidth_->baseValue(); }
 
     /** Returns either 1 or 1/360, depending on the phaseInDegree mode. */
     Double phaseMultiplier() const { return phaseMult_; }
 
-    Double specNumPartials() const { return specNum_->baseValue(); }
-    Double specOctaveStep() const { return specOct_->baseValue(); }
-    Double specAmplitudeMultiplier() const { return specAmp_->baseValue(); }
-    Double specPhase() const { return specPhase_->baseValue(); }
-    Double specPhaseShift() const { return specPhaseShift_->baseValue(); }
+    Double specNumPartials() const { return p_specNum_->baseValue(); }
+    Double specOctaveStep() const { return p_specOct_->baseValue(); }
+    Double specAmplitudeMultiplier() const { return p_specAmp_->baseValue(); }
+    Double specPhase() const { return p_specPhase_->baseValue(); }
+    Double specPhaseShift() const { return p_specPhaseShift_->baseValue(); }
 
     /** Wheter the loop start/end are overlapping. */
     LoopOverlapMode loopOverlapMode() const { return loopOverlapMode_; }
 
     /** Overlapping time of loop in seconds */
-    Double loopOverlap() const { return loopOverlap_->baseValue(); }
+    Double loopOverlap() const { return p_loopOverlap_->baseValue(); }
 
     /** A value that is added to the blended value in the transition window */
-    Double loopOverlapOffset() const { return loopOverlapOffset_->baseValue(); }
+    Double loopOverlapOffset() const { return p_loopOverlapOffset_->baseValue(); }
 
     const QString& equationText() const { return equationText_; }
     bool useFrequency() const { return doUseFreq_; }
@@ -136,23 +136,23 @@ public:
 
     void setOscillatorMode(AUDIO::Waveform::Type mode) { oscMode_ = mode; }
 
-    void setOffset(Double o) { offset_->setValue(o); }
-    void setAmplitude(Double a) { amplitude_->setValue(a); }
+    void setOffset(Double o) { p_offset_->setValue(o); }
+    void setAmplitude(Double a) { p_amplitude_->setValue(a); }
 
-    void setFrequency(Double f) { frequency_->setValue(f); }
-    void setPhase(Double p) { phase_->setValue(p); }
-    void setPulseWidth(Double pw) { pulseWidth_->setValue(AUDIO::Waveform::limitPulseWidth(pw)); }
+    void setFrequency(Double f) { p_frequency_->setValue(f); }
+    void setPhase(Double p) { p_phase_->setValue(p); }
+    void setPulseWidth(Double pw) { p_pulseWidth_->setValue(AUDIO::Waveform::limitPulseWidth(pw)); }
 
-    void setSpecNumPartials(Double num) { specNum_->setValue(num); }
-    void setSpecOctaveStep(Double step) { specOct_->setValue(step); }
-    void setSpecAmplitudeMultiplier(Double mul) { specAmp_->setValue(mul); }
-    void setSpecPhase(Double p) { specPhase_->setValue(p); }
-    void setSpecPhaseShift(Double p) { specPhaseShift_->setValue(p); }
+    void setSpecNumPartials(Double num) { p_specNum_->setValue(num); }
+    void setSpecOctaveStep(Double step) { p_specOct_->setValue(step); }
+    void setSpecAmplitudeMultiplier(Double mul) { p_specAmp_->setValue(mul); }
+    void setSpecPhase(Double p) { p_specPhase_->setValue(p); }
+    void setSpecPhaseShift(Double p) { p_specPhaseShift_->setValue(p); }
 
     void setLoopOverlap(Double t)
-        { loopOverlap_->setValue( std::max(minimumLength(), t) ); }
+        { p_loopOverlap_->setValue( std::max(minimumLength(), t) ); }
     void setLoopOverlapOffset(Double v)
-        { loopOverlapOffset_->setValue( v ); }
+        { p_loopOverlapOffset_->setValue( v ); }
 
     void setLoopOverlapMode(LoopOverlapMode mode)
         { loopOverlapMode_ = mode; }
@@ -195,21 +195,30 @@ private:
     ParameterFilename * paramSoundFile_;
 
     ParameterFloat
-        * offset_,
-        * amplitude_,
+        * p_offset_,
+        * p_amplitude_,
 
-        * frequency_,
-        * phase_,
-        * pulseWidth_,
+        * p_frequency_,
+        * p_phase_,
+        * p_pulseWidth_,
 
-        * specNum_,
-        * specOct_,
-        * specPhase_,
-        * specPhaseShift_,
-        * specAmp_,
+        * p_specNum_,
+        * p_specOct_,
+        * p_specPhase_,
+        * p_specPhaseShift_,
+        * p_specAmp_,
 
-        * loopOverlap_,
-        * loopOverlapOffset_;
+        * p_loopOverlap_,
+        * p_loopOverlapOffset_;
+
+    ParameterSelect
+        * p_mode_,
+        * p_oscMode_,
+        * p_loopOverlapMode_,
+        * p_useFreq_,
+        * p_doPhaseDegree_;
+
+
 
     AUDIO::Waveform::Type oscMode_;
     LoopOverlapMode loopOverlapMode_;

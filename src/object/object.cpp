@@ -1021,7 +1021,23 @@ ParameterInt * Object::createIntParameter(
 
 
 
+ParameterSelect * Object::createBooleanParameter(
+            const QString& id, const QString& name, const QString& statusTip,
+            const QString& offStatusTip, const QString& onStatusTip,
+            bool defaultValue, bool editable, bool modulateable)
+{
+    ParameterSelect * p = createSelectParameter(
+            id, name, statusTip,
+            { "off", "on" },
+            { tr("off"), tr("on") },
+            { offStatusTip, onStatusTip },
+            { false, true },
+            defaultValue, editable, modulateable);
 
+    p->setBoolean(true);
+
+    return p;
+}
 
 ParameterSelect * Object::createSelectParameter(
             const QString& id, const QString& name, const QString& statusTip,

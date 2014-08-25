@@ -484,6 +484,10 @@ protected:
                 const QString& id, const QString& name, const QString& statusTip,
                 Int defaultValue, bool editable, bool modulateable);
 
+    ParameterSelect * createBooleanParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                const QString& offStatusTip, const QString& onStatusTip,
+                bool defaultValue, bool editable = true, bool modulateable = true);
 
     ParameterSelect * createSelectParameter(
                 const QString& id, const QString& name, const QString& statusTip,

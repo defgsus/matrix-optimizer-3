@@ -65,20 +65,35 @@ void Sequence::createParameters()
 
     beginParameterGroup("time", tr("time"));
 
-    loopStart_ = createFloatParameter("loop_start", "loop start",
+    p_start_ = createFloatParameter("start", tr("sequence start"),
+                                      tr("Global start time of the sequence in seconds"),
+                                      0.0);
+    p_start_->setMinValue(0.0);
+
+    p_length_ = createFloatParameter("length", tr("sequence length"),
+                                      tr("Length of the sequence in seconds"),
+                                      60.0);
+
+    p_speed_ = createFloatParameter("speed", tr("speed"),
+                                      tr("Time multiplier for the whole sequence"),
+                                      1.0);
+
+    p_looping_ = createBooleanParameter("looping", tr("looping"),
+                                      tr("Enables an internal loop for the sequence"),
+                                      tr("No looping"), tr("Looping enabled"),
+                                      false, true, false);
+
+    p_loopStart_ = createFloatParameter("loop_start", tr("loop start"),
                                       tr("Local start time of the loop in seconds"),
                                       0.0);
-    loopStart_->setEditable(false);
 
-    loopLength_ = createFloatParameter("loop_len", "loop length",
+    p_loopLength_ = createFloatParameter("loop_len", tr("loop length"),
                                        tr("Length of loop in seconds"),
                                        1.0);
-    loopLength_->setEditable(false);
 
-    timeOffset_ = createFloatParameter("time_offset", "time offset",
+    p_timeOffset_ = createFloatParameter("time_offset", tr("time offset"),
                                        tr("Time offset into the sequence data in seconds"),
                                        0.0);
-    timeOffset_->setEditable(false);
 
     endParameterGroup();
 }

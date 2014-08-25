@@ -111,30 +111,66 @@ void SequenceFloat::createParameters()
 
     beginParameterGroup("value", tr("value"));
 
-        offset_ = createFloatParameter("value_offset", "value offset",
+        p_mode_ = createSelectParameter("seq_mode", tr("sequence type"),
+                tr("Selects the type of the sequence content"),
+                sequenceTypeId,
+                sequenceTypeName,
+                { tr("A constant value"),
+                  tr("A editable timeline with que-points"),
+                  tr("An oscillator with different waveforms"),
+                  tr("A spectral oscillator build from several harmonic sine tones"),
+                  tr("A spectral oscillator wavetable"),
+                  tr("An audio-file"),
+                  tr("A mathematical equation") },
+                { ST_CONSTANT,
+                  ST_TIMELINE,
+                  ST_OSCILLATOR,
+                  ST_SPECTRAL_OSC,
+                  ST_SPECTRAL_WT,
+                  ST_SOUNDFILE,
+                  ST_EQUATION },
+                  ST_CONSTANT, true, false);
+
+        p_oscMode_ = createSelectParameter("osc_mode", tr("oscillator type"),
+                tr("Selects the type of the oscillator waveform"),
+                AUDIO::Waveform::typeIds,
+                AUDIO::Waveform::typeNames,
+                AUDIO::Waveform::typeStatusTips,
+                AUDIO::Waveform::typeList,
+                AUDIO::Waveform::T_SINE, true, false);
+
+        p_useFreq_ = createBooleanParameter("use_freq", tr("use frequency"),
+                  tr("Selects whether some types of sequence which don't need a frequency "
+                     "will still use it"),
+                  tr("No frequency for non-oscillators"),
+                  tr("Frequency is applied to non-oscillators as well"),
+                  false, true, false);
+
+        p_doPhaseDegree_ = createBooleanParameter("phase_deg", tr("phase in degree"),
+                  tr("Selects whether the phase value has a range of [0,1] or [0,360]"),
+                  tr("Phase is in the range of [0,1]"),
+                  tr("Phase is in the range of [0,360]"),
+                  false, true, false);
+
+        p_offset_ = createFloatParameter("value_offset", "value offset",
                    tr("This value is always added to the output of the sequence"),
                    0.0);
-        offset_->setEditable(false);
 
-        amplitude_ = createFloatParameter("amp", "amplitude",
+        p_amplitude_ = createFloatParameter("amp", "amplitude",
                   tr("The output of the sequence (before the offset) is multiplied by this value"),
                   1.0);
-        amplitude_->setEditable(false);
 
-        frequency_ = createFloatParameter("freq", "frequency",
+        p_frequency_ = createFloatParameter("freq", "frequency",
                   tr("The frequency of the function in hertz (periods per second)"),
                   1.0);
-        frequency_->setEditable(false);
 
-        phase_ = createFloatParameter("phase", "phase",
+        p_phase_ = createFloatParameter("phase", "phase",
                   tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
                   0.0);
-        phase_->setEditable(false);
 
-        pulseWidth_ = createFloatParameter("pulsewidth", "pulse width",
+        p_pulseWidth_ = createFloatParameter("pulsewidth", "pulse width",
                    tr("Pulsewidth of the waveform, describes the width of the positive edge"),
                    0.5);
-        pulseWidth_->setEditable(false);
 
     endParameterGroup();
 
@@ -152,48 +188,53 @@ void SequenceFloat::createParameters()
 
     beginParameterGroup("spectral", tr("spectral osc."));
 
-        specNum_ = createFloatParameter("specnum", "partial voices",
+        p_specNum_ = createFloatParameter("specnum", "partial voices",
                    tr("Number of partial voices of the spectral oscillator. Does not have to be an integer"),
                    1.0);
-        specNum_->setEditable(false);
-        specNum_->setMinValue(1.0);
-        specNum_->setMaxValue(64.0);
+        p_specNum_->setMinValue(1.0);
+        p_specNum_->setMaxValue(64.0);
 
-        specOct_ = createFloatParameter("specoct", "octave step",
+        p_specOct_ = createFloatParameter("specoct", "octave step",
                    tr("The step in octaves between each partial voice"),
                    1.0);
-        specOct_->setEditable(false);
 
-        specAmp_ = createFloatParameter("specamp", "amplitude mul.",
+        p_specAmp_ = createFloatParameter("specamp", "amplitude mul.",
                    tr("Multiplier for the amplitude after each partial voice"),
                    0.5);
-        specAmp_->setEditable(false);
 
-        specPhase_ = createFloatParameter("specphase", "base phase",
+        p_specPhase_ = createFloatParameter("specphase", "base phase",
                    tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
                    0.0);
-        specPhase_->setEditable(false);
 
-        specPhaseShift_ = createFloatParameter("specphaseshift", "phase shift",
+        p_specPhaseShift_ = createFloatParameter("specphaseshift", "phase shift",
                    tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"),
                    0.0);
-        specPhaseShift_->setEditable(false);
 
     endParameterGroup();
 
     // ----- loop overlap ------
 
-    beginParameterGroup("loopoverlap", tr("loop overlap"));
+    beginParameterGroup("time", tr("time"));
 
-        loopOverlap_ = createFloatParameter("loopoverlap", "loop overlap",
+        p_loopOverlapMode_ = createSelectParameter("loopoverlapmode", tr("loop overlap mode"),
+                tr("Selects the loop overlapping mode, that is, if and how values are mixed at "
+                   "the edge of a loop"),
+                loopOverlapModeId,
+                loopOverlapModeName,
+                { tr("No overlap"),
+                  tr("Mix values at the beginning of the loop"),
+                  tr("Mix values at the end of the loop") },
+                { LOT_OFF, LOT_BEGIN, LOT_END },
+                LOT_OFF, true, false);
+
+        p_loopOverlap_ = createFloatParameter("loopoverlap", tr("loop overlap"),
                    tr("Overlap of the loop window for smooth transitions (seconds)"),
                    0.1);
-        loopOverlap_->setEditable(false);
 
-        loopOverlapOffset_ = createFloatParameter("loopoverlapofs", "overlap value offset",
+        p_loopOverlapOffset_ = createFloatParameter("loopoverlapofs", tr("overlap value offset"),
                    tr("A value that is added to the blended value in the transition window"),
                    0.0);
-        loopOverlapOffset_->setEditable(false);
+        p_loopOverlapOffset_->setEditable(false);
 
     endParameterGroup();
 }
@@ -419,7 +460,7 @@ Double SequenceFloat::value(Double gtime, uint thread) const
     if (!inLoop && loopOverlapMode_ == LOT_BEGIN)
         return value_(gtime, time, thread);
 
-    Double overlap = std::max(minimumLength(), loopOverlap_->value(gtime, thread));
+    Double overlap = std::max(minimumLength(), p_loopOverlap_->value(gtime, thread));
 
     if (loopOverlapMode_ == LOT_BEGIN)
     {
@@ -429,8 +470,8 @@ Double SequenceFloat::value(Double gtime, uint thread) const
         const Double
                 v = value_(gtime, time, thread),
                 v0 = value_(gtime, time + lLength, thread)
-                    + loopOverlapOffset_->value(gtime, thread)
-                        * amplitude_->value(time, thread),
+                    + p_loopOverlapOffset_->value(gtime, thread)
+                        * p_amplitude_->value(time, thread),
                 t = (time - lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
@@ -444,8 +485,8 @@ Double SequenceFloat::value(Double gtime, uint thread) const
         const Double
                 v = value_(gtime, time, thread),
                 v0 = value_(gtime, time - lLength, thread)
-                    + loopOverlapOffset_->value(gtime, thread)
-                        * amplitude_->value(time, thread),
+                    + p_loopOverlapOffset_->value(gtime, thread)
+                        * p_amplitude_->value(time, thread),
                 t = (lLength - time + lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
@@ -462,59 +503,59 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
 {
     if (typeUsesFrequency() || doUseFreq_)
     {
-        time = time * frequency_->value(gtime, thread)
-                + phase_->value(gtime, thread) * phaseMult_;
+        time = time * p_frequency_->value(gtime, thread)
+                + p_phase_->value(gtime, thread) * phaseMult_;
     }
 
     switch (mode_)
     {
         case ST_OSCILLATOR:
-            return offset_->value(gtime, thread) + amplitude_->value(gtime, thread)
+            return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
                 * AUDIO::Waveform::waveform(time, oscMode_,
-                        AUDIO::Waveform::limitPulseWidth(pulseWidth_->value(gtime, thread)));
+                        AUDIO::Waveform::limitPulseWidth(p_pulseWidth_->value(gtime, thread)));
 
         case ST_SPECTRAL_OSC:
-            return offset_->value(gtime, thread) + amplitude_->value(gtime, thread)
+            return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
                 * AUDIO::Waveform::spectralWave(time,
-                                    specNum_->value(gtime, thread),
-                                    specOct_->value(gtime, thread),
-                                    specPhase_->value(gtime, thread) * phaseMult_,
-                                    specPhaseShift_->value(gtime, thread) * phaseMult_,
-                                    specAmp_->value(gtime, thread)
+                                    p_specNum_->value(gtime, thread),
+                                    p_specOct_->value(gtime, thread),
+                                    p_specPhase_->value(gtime, thread) * phaseMult_,
+                                    p_specPhaseShift_->value(gtime, thread) * phaseMult_,
+                                    p_specAmp_->value(gtime, thread)
                         );
 
 
         case ST_SPECTRAL_WT:
             MO_ASSERT(wavetable_, "SequenceFloat('" << idName() << "')::value() without wavetable");
-            return offset_->value(gtime, thread) + amplitude_->value(gtime, thread)
+            return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
                 * wavetable_->value(time);
 
         case ST_SOUNDFILE:
             MO_ASSERT(soundFile_, "SequenceFloat('" << idName() << "')::value() without soundfile");
-            return offset_->value(gtime, thread) + amplitude_->value(gtime, thread)
+            return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
                 * soundFile_->value(time);
 
         case ST_EQUATION:
             MO_ASSERT(equation_[thread], "SequenceFloat('" << idName() << "')::value() without equation "
                                          "(thread=" << thread << ")");
             equation_[thread]->time = time;
-            equation_[thread]->freq = frequency_->value(gtime, thread);
-            equation_[thread]->phase = phase_->value(gtime, thread) * phaseMult_;
+            equation_[thread]->freq = p_frequency_->value(gtime, thread);
+            equation_[thread]->phase = p_phase_->value(gtime, thread) * phaseMult_;
             equation_[thread]->pw = AUDIO::Waveform::limitPulseWidth(
-                                        pulseWidth_->value(gtime, thread));
+                                        p_pulseWidth_->value(gtime, thread));
             MO_EXTEND_EXCEPTION(
-                return offset_->value(gtime, thread)
-                    + amplitude_->value(gtime, thread) * equation_[thread]->equation->eval()
+                return p_offset_->value(gtime, thread)
+                    + p_amplitude_->value(gtime, thread) * equation_[thread]->equation->eval()
                 ,
                 "in (thread=" << thread << ") call from SequenceFloat '"
                         << name() << "' (" << idNamePath() << ")"
             );
 
-        case ST_TIMELINE: return offset_->value(gtime, thread)
-                                + amplitude_->value(gtime, thread)
+        case ST_TIMELINE: return p_offset_->value(gtime, thread)
+                                + p_amplitude_->value(gtime, thread)
                                     * timeline_->get(time);
 
-        default: return offset_->value(gtime, thread);
+        default: return p_offset_->value(gtime, thread);
     }
 }
 

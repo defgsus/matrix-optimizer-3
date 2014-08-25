@@ -54,19 +54,19 @@ public:
     bool looping() const { return isLooping_; }
 
     /** Loop start time (local) in seconds */
-    Double loopStart() const { return loopStart_->baseValue(); }
-    Double loopStart(Double time, uint thread) const { return loopStart_->value(time, thread); }
+    Double loopStart() const { return p_loopStart_->baseValue(); }
+    Double loopStart(Double time, uint thread) const { return p_loopStart_->value(time, thread); }
 
     /** Loop length in seconds */
-    Double loopLength() const { return loopLength_->baseValue(); }
-    Double loopLength(Double time, uint thread) const { return loopLength_->value(time, thread); }
+    Double loopLength() const { return p_loopLength_->baseValue(); }
+    Double loopLength(Double time, uint thread) const { return p_loopLength_->value(time, thread); }
 
     /** Loop end time (local) in seconds */
-    Double loopEnd() const { return (loopStart_->baseValue() + loopLength_->baseValue()) / speed_; }
+    Double loopEnd() const { return (p_loopStart_->baseValue() + p_loopLength_->baseValue()) / speed_; }
 
     /** Offset into the sequence data (local) in seconds. */
-    Double timeOffset() const { return timeOffset_->baseValue(); }
-    Double timeOffset(Double time, uint thread) const { return timeOffset_->value(time, thread); }
+    Double timeOffset() const { return p_timeOffset_->baseValue(); }
+    Double timeOffset(Double time, uint thread) const { return p_timeOffset_->value(time, thread); }
 
     /** Sequence internal speed */
     Double speed() const { return speed_; }
@@ -86,16 +86,16 @@ public:
         { isLooping_ = doit; }
 
     void setLoopStart(Double t)
-        { loopStart_->setValue(t); }
+        { p_loopStart_->setValue(t); }
 
     void setLoopEnd(Double t)
-        { loopLength_->setValue(std::max(minimumLength(), (t - loopStart_->baseValue()) * speed_)); }
+        { p_loopLength_->setValue(std::max(minimumLength(), (t - p_loopStart_->baseValue()) * speed_)); }
 
     void setLoopLength(Double t)
-        { loopLength_->setValue( std::max(minimumLength(), t) ); }
+        { p_loopLength_->setValue( std::max(minimumLength(), t) ); }
 
     void setTimeOffset(Double t)
-        { timeOffset_->setValue(t); }
+        { p_timeOffset_->setValue(t); }
 
     void setSpeed(Double t)
         { speed_ = (t >= minimumSpeed()) ? t : minimumSpeed(); }
@@ -118,9 +118,14 @@ private:
     bool   isLooping_;
 
     ParameterFloat
-        * loopStart_,
-        * loopLength_,
-        * timeOffset_;
+        * p_start_,
+        * p_length_,
+        * p_speed_,
+        * p_loopStart_,
+        * p_loopLength_,
+        * p_timeOffset_;
+    ParameterSelect
+        * p_looping_;
 
     /** The track, this sequence is on */
     Track* track_;
@@ -130,13 +135,13 @@ private:
 inline Double Sequence::getSequenceTime(Double time, uint thread) const
 {
     time = (time - start_) * speed_;
-    time += timeOffset_->value(time, thread);
+    time += p_timeOffset_->value(time, thread);
 
     if (isLooping_)
     {
         const Double
-                ls = loopStart_->value(time, thread),
-                ll = std::max(loopLength_->value(time, thread), minimumLength());
+                ls = p_loopStart_->value(time, thread),
+                ll = std::max(p_loopLength_->value(time, thread), minimumLength());
 
         if (time > ls + ll)
             return MATH::moduloSigned(time - ls, ll) + ls;
@@ -149,12 +154,12 @@ inline Double Sequence::getSequenceTime(Double time, uint thread,
                                         Double& lStart, Double& lLength, bool& isInLoop) const
 {
     time = (time - start_) * speed_;
-    time += timeOffset_->value(time, thread);
+    time += p_timeOffset_->value(time, thread);
 
     if (isLooping_)
     {
-        lStart = loopStart_->value(time, thread);
-        lLength = std::max(loopLength_->value(time, thread), minimumLength());
+        lStart = p_loopStart_->value(time, thread);
+        lLength = std::max(p_loopLength_->value(time, thread), minimumLength());
 
         isInLoop = time >= lStart;
 
