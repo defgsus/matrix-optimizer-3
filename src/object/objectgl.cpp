@@ -31,6 +31,7 @@ const QStringList ObjectGl::alphaBlendModeNames =
 
 ObjectGl::ObjectGl(QObject *parent)
     : Object                (parent),
+      numberLightSources_   (0),
       defaultDepthTestMode_ (DTM_PARENT),
       defaultDepthWriteMode_(DWM_PARENT),
       defaultAlphaBlendMode_(ABM_PARENT),

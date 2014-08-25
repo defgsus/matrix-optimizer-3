@@ -104,7 +104,7 @@ void SceneConvertDialog::chooseInputPath_()
         return;
 
     inputPath_->setText(path);
-    fillList_(input_, path);
+    fillList_(input_, path, true);
 
     butConv_->setEnabled(canConvert_());
 }
@@ -116,12 +116,12 @@ void SceneConvertDialog::chooseOutputPath_()
         return;
 
     outputPath_->setText(path);
-    fillList_(output_, path);
+    fillList_(output_, path, false);
 
     butConv_->setEnabled(canConvert_());
 }
 
-void SceneConvertDialog::fillList_(QListWidget * list, const QString &path)
+void SceneConvertDialog::fillList_(QListWidget * list, const QString &path, bool checkable)
 {
     list->clear();
 
@@ -133,13 +133,17 @@ void SceneConvertDialog::fillList_(QListWidget * list, const QString &path)
     for (auto & f : files)
     {
         auto item = new QListWidgetItem(list);
-        item->setFlags(Qt::ItemIsSelectable
-                       | Qt::ItemIsUserCheckable
-                       | Qt::ItemIsEnabled);
+        if (checkable)
+            item->setFlags(Qt::ItemIsSelectable
+                           | Qt::ItemIsUserCheckable
+                           | Qt::ItemIsEnabled);
+        else
+            item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
         item->setData(Qt::UserRole, f);
         item->setData(Qt::UserRole+1, dir.relativeFilePath(f));
         item->setText(dir.relativeFilePath(f));
-        item->setCheckState(Qt::Checked);
+        if (checkable)
+            item->setCheckState(Qt::Checked);
         list->addItem(item);
     }
 }
@@ -182,8 +186,6 @@ void SceneConvertDialog::convert_()
             tex.insertText("creating directory " + newpath + "\n");
             QDir().mkpath(newpath);
         }
-        else
-            MO_DEBUG("exists: '" << newpath << "'");
 
         Scene * scene;
 
@@ -211,6 +213,8 @@ void SceneConvertDialog::convert_()
         delete scene;
         item->setCheckState(Qt::Unchecked);
     }
+
+    fillList_(output_, outputPath_->text(), false);
 }
 
 } // namespace GUI

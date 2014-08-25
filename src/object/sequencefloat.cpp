@@ -426,6 +426,12 @@ void SequenceFloat::deserialize(IO::DataStream &io)
     {
         tmp_read_pre6_ = true;
 
+        tmp_doUseFreq_ = false;
+        tmp_doPhaseDegree_ = false;
+        tmp_oscMode_ = AUDIO::Waveform::T_SINE;
+        tmp_mode_ = ST_CONSTANT;
+        tmp_equationText_ = "sin(x*TWO_PI)";
+
         if (!io.readEnum(tmp_mode_, ST_CONSTANT, sequenceTypeId))
             MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
 
@@ -453,7 +459,6 @@ void SequenceFloat::deserialize(IO::DataStream &io)
         if (ver >= 5)
         {
             io >> tmp_doPhaseDegree_;
-            MO_DEBUG("dophase " << tmp_doPhaseDegree_);
         }
 
         // loopoverlap (v3)

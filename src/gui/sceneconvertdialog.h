@@ -39,7 +39,7 @@ private slots:
 private:
 
     void createWidgets_();
-    void fillList_(QListWidget *, const QString& path);
+    void fillList_(QListWidget *, const QString& path, bool checkable);
     bool canConvert_();
 
     QLineEdit * inputPath_, *outputPath_;
