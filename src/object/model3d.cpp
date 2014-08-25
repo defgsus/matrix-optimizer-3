@@ -181,9 +181,9 @@ void Model3d::releaseGl(uint /*thread*/)
     creator_ = 0;
 }
 
-void Model3d::numberLightSourcesChanged(uint thread)
+void Model3d::numberLightSourcesChanged(uint /*thread*/)
 {
-    doRecompile_ = isGlInitialized(thread);
+    doRecompile_ = true;
 }
 
 void Model3d::geometryCreated_()

@@ -367,7 +367,9 @@ void Scene::updateNumberLights_()
     if ((int)o->numberLightSources() != lightSources_.size())
     {
         o->numberLightSources_ = lightSources_.size();
-        o->numberLightSourcesChanged(MO_GFX_THREAD);
+        // don't notify if objects havn't even been initialized properly
+        if (o->numberThreads() == sceneNumberThreads_)
+            o->numberLightSourcesChanged(MO_GFX_THREAD);
     }
 }
 
@@ -785,20 +787,25 @@ void Scene::updateLightSettings_(uint thread, Double time)
     // fill vectors
     for (uint i=0; i<l->count(); ++i)
     {
-        const Vec3 pos = lightSources_[i]->position(thread, 0);
-        l->setPosition(i, pos[0], pos[1], pos[2]);
-
-        const Vec4 col = lightSources_[i]->lightColor(thread, time);
-        l->setColor(i, col[0], col[1], col[2], col[3]);
-
-        const Float mix = lightSources_[i]->lightDirectionalMix(thread, time);
-        l->setDirectionMix(i, mix);
-
-        if (mix > 0)
+        if (lightSources_[i]->active(time, thread))
         {
-            const Vec4 dir = lightSources_[i]->lightDirection(thread, time);
-            l->setDirection(i, dir[0], dir[1], dir[2], dir[3]);
+            const Vec3 pos = lightSources_[i]->position(thread, 0);
+            l->setPosition(i, pos[0], pos[1], pos[2]);
+
+            const Vec4 col = lightSources_[i]->lightColor(thread, time);
+            l->setColor(i, col[0], col[1], col[2], col[3]);
+
+            const Float mix = lightSources_[i]->lightDirectionalMix(thread, time);
+            l->setDirectionMix(i, mix);
+
+            if (mix > 0)
+            {
+                const Vec4 dir = lightSources_[i]->lightDirection(thread, time);
+                l->setDirection(i, dir[0], dir[1], dir[2], dir[3]);
+            }
         }
+        else
+            l->setColor(i, 0,0,0,1);
     }
 }
 
