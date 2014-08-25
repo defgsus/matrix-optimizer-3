@@ -20,6 +20,7 @@
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "util/texturesetting.h"
+#include "util/colorpostprocessingsetting.h"
 
 namespace MO {
 
@@ -32,6 +33,7 @@ Model3d::Model3d(QObject * parent)
       nextGeometry_ (0),
       texture_      (new TextureSetting(this)),
       textureBump_  (new TextureSetting(this)),
+      texturePostProc_(new ColorPostProcessingSetting(this)),
       u_diff_exp_   (0),
       doRecompile_  (false)
 {
@@ -105,6 +107,12 @@ void Model3d::createParameters()
 
     endParameterGroup();
 
+    beginParameterGroup("texturepp", tr("texture post-processing"));
+
+        texturePostProc_->createParameters("tex");
+
+    endParameterGroup();
+
     beginParameterGroup("texturebump", tr("normal-map texture"));
 
         textureBump_->createParameters("bump", TextureSetting::TT_NONE, true);
@@ -126,7 +134,7 @@ void Model3d::onParameterChanged(Parameter *p)
 {
     ObjectGl::onParameterChanged(p);
 
-    if (p == lightMode_)
+    if (p == lightMode_ || texturePostProc_->needsRecompile(p))
         doRecompile_ = true;
 
     if (texture_->needsReinit(p) || textureBump_->needsReinit(p))
@@ -207,6 +215,8 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_FRAGMENT_LIGHTING");
     if (texture_->isEnabled())
         src->addDefine("#define MO_ENABLE_TEXTURE");
+    if (texturePostProc_->isEnabled())
+        src->addDefine("#define MO_ENABLE_TEXTURE_POST_PROCESS");
     if (texture_->isCube())
         src->addDefine("#define MO_TEXTURE_IS_FULLDOME_CUBE");
     if (textureBump_->isEnabled())
@@ -216,7 +226,10 @@ void Model3d::setupDrawable_()
 
     draw_->createOpenGl();
 
+    // get uniforms
     u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());
+    if (texturePostProc_->isEnabled())
+        texturePostProc_->getUniforms(draw_->shader());
 }
 
 void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
@@ -240,9 +253,11 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 
     if (draw_->isReady())
     {
+        // bind textures
         texture_->bind();
         textureBump_->bind(1);
 
+        // update uniforms
         draw_->setAmbientColor(
                     cr_->value(time, thread),
                     cg_->value(time, thread),
@@ -250,6 +265,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
                     ca_->value(time, thread));
         if (u_diff_exp_)
             u_diff_exp_->floats[0] = diffExp_->value(time, thread);
+        if (texturePostProc_->isEnabled())
+            texturePostProc_->updateUniforms(time, thread);
 
         draw_->renderShader(rs.cameraSpace().projectionMatrix(),
                             cubeViewTrans, viewTrans, trans, &rs.lightSettings());

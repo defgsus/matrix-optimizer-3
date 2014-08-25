@@ -5,6 +5,7 @@
 /* defines
  * MO_ENABLE_LIGHTING
  * MO_ENABLE_TEXTURE
+ * MO_ENABLE_TEXTURE_POST_PROCESS
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
  * MO_TEXTURE_IS_FULLDOME_CUBE
@@ -57,11 +58,49 @@ uniform vec4 u_color;
     #endif
 #endif
 
+#ifdef MO_ENABLE_TEXTURE_POST_PROCESS
+    uniform vec3 u_post_transform; // grayscale, invert, +/-shift
+    uniform vec3 u_post_bright; // brightness, contrast, threshold
+    uniform vec4 u_post_alpha; // rgb color and to-alpha amount
+    uniform float u_post_alpha_edge;
+#endif
+
 #ifdef MO_ENABLE_NORMALMAP
 uniform sampler2D tex_norm_0;
 vec3 normalmap = texture(tex_norm_0, v_texCoord).xyz * 2.0 - 1.0;
 #endif
 
+
+
+// ------------------- functions ------------------------
+
+#ifdef MO_ENABLE_TEXTURE_POST_PROCESS
+vec4 mo_color_post_process(in vec4 col)
+{
+    // color to alpha
+    float cmatch = (1. - distance(u_post_alpha.rgb, col.rgb) / sqrt(3.));
+    col.a -= col.a * u_post_alpha.a * smoothstep(u_post_alpha_edge, 1.0, cmatch);
+
+    // brightness/contrast
+    col.rgb = clamp(
+                (col.rgb - u_post_bright.z) * u_post_bright.y
+                    + u_post_bright.z + u_post_bright.x, 0.0, 1.0);
+
+    // color shift
+    if (u_post_transform.z > 0.0)
+        col.rgb = mix(col.rgb, col.brg, u_post_transform.z);
+    else if (u_post_transform.z < 0.0)
+        col.rgb = mix(col.rgb, col.gbr, -u_post_transform.z);
+
+    // negative
+    col.rgb = mix(col.rgb, 1.0 - col.rgb, u_post_transform.y);
+
+    // grayscale
+    col.rgb = mix(col.rgb, vec3(col.r*0.3 + col.g*0.59 + col.b*0.11), u_post_transform.x);
+
+    return col;
+}
+#endif
 
 /* read from cubemap as if stiched to a fulldome master
    st = [0,1]
@@ -94,15 +133,25 @@ vec4 mo_ambient_color()
 {
     return u_color * v_color
 #ifdef MO_ENABLE_TEXTURE
-    #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
-            * texture(tex_0, v_texCoord)
+    #ifndef MO_ENABLE_TEXTURE_POST_PROCESS
+        #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
+                * texture(tex_0, v_texCoord)
+        #else
+                * mo_texture_cube(tex_0, v_texCoord, 180.0)
+        #endif
     #else
-            * mo_texture_cube(tex_0, v_texCoord, 180.0);
+        #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
+                * mo_color_post_process( texture(tex_0, v_texCoord) )
+        #else
+                * mo_color_post_process( mo_texture_cube(tex_0, v_texCoord, 180.0) )
+        #endif
     #endif
 #endif
             ;
 }
 
+/** Light directions are already in surface normal space,
+    so this either returns the normal-map or <0,0,1> */
 vec3 mo_normal()
 {
 #ifndef MO_ENABLE_NORMALMAP

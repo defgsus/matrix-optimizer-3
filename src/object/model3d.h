@@ -63,6 +63,7 @@ private:
     GEOM::Geometry * nextGeometry_;
 
     TextureSetting * texture_, *textureBump_;
+    ColorPostProcessingSetting * texturePostProc_;
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_,
         *diffExp_;
