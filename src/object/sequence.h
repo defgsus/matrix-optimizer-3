@@ -16,6 +16,7 @@
 #include "object.h"
 #include "math/functions.h"
 #include "param/parameterfloat.h"
+#include "param/parameterselect.h"
 
 namespace MO {
 
@@ -42,16 +43,17 @@ public:
     static Double minimumLength() { return 0.005; }
 
     /** Start time in seconds */
-    Double start() const { return start_; }
+    Double start() const { return p_start_->baseValue(); }
 
     /** End time in seconds */
-    Double end() const { return start_ + length_ / speed_; }
+    Double end() const
+        { return p_start_->baseValue() + p_length_->baseValue() / p_speed_->baseValue(); }
 
     /** Length in seconds */
-    Double length() const { return length_; }
+    Double length() const { return p_length_->baseValue(); }
 
     /** Wheter the sequence is looping or not */
-    bool looping() const { return isLooping_; }
+    bool looping() const { return p_looping_->baseValue(); }
 
     /** Loop start time (local) in seconds */
     Double loopStart() const { return p_loopStart_->baseValue(); }
@@ -62,34 +64,37 @@ public:
     Double loopLength(Double time, uint thread) const { return p_loopLength_->value(time, thread); }
 
     /** Loop end time (local) in seconds */
-    Double loopEnd() const { return (p_loopStart_->baseValue() + p_loopLength_->baseValue()) / speed_; }
+    Double loopEnd() const
+        { return (p_loopStart_->baseValue() + p_loopLength_->baseValue()) / p_speed_->baseValue(); }
 
     /** Offset into the sequence data (local) in seconds. */
     Double timeOffset() const { return p_timeOffset_->baseValue(); }
     Double timeOffset(Double time, uint thread) const { return p_timeOffset_->value(time, thread); }
 
     /** Sequence internal speed */
-    Double speed() const { return speed_; }
+    Double speed() const { return p_speed_->baseValue(); }
 
     // --------------- setter ---------------------
 
     void setStart(Double t)
-        { start_ = t; }
+        { p_start_->setValue(t); }
 
     void setEnd(Double t)
-        { length_ = std::max(minimumLength(), (t - start_) * speed_); }
+        { p_length_->setValue(std::max(minimumLength(),
+                                       (t - p_start_->baseValue()) * p_speed_->baseValue())); }
 
     void setLength(Double t)
-        { length_ = std::max(minimumLength(), t); }
+        { p_length_->setValue(std::max(minimumLength(), t)); }
 
     void setLooping(bool doit)
-        { isLooping_ = doit; }
+        { p_looping_->setValue(doit); }
 
     void setLoopStart(Double t)
         { p_loopStart_->setValue(t); }
 
     void setLoopEnd(Double t)
-        { p_loopLength_->setValue(std::max(minimumLength(), (t - p_loopStart_->baseValue()) * speed_)); }
+        { p_loopLength_->setValue(std::max(minimumLength(),
+                    (t - p_loopStart_->baseValue()) * p_speed_->baseValue())); }
 
     void setLoopLength(Double t)
         { p_loopLength_->setValue( std::max(minimumLength(), t) ); }
@@ -98,7 +103,7 @@ public:
         { p_timeOffset_->setValue(t); }
 
     void setSpeed(Double t)
-        { speed_ = (t >= minimumSpeed()) ? t : minimumSpeed(); }
+        { p_speed_->setValue(std::max(minimumSpeed(), t)); }
 
     /** Translates global time to sequence-local time (with loop) */
     Double getSequenceTime(Double global_time, uint thread) const;

@@ -77,7 +77,7 @@ SequenceFloat::SequenceFloat(QObject *parent)
         soundFile_      (0),
         equation_       (0),
 
-        paramSoundFile_ (0),
+        p_soundFile_ (0),
 
         oscMode_        (AUDIO::Waveform::T_SINE),
         loopOverlapMode_(LOT_OFF),
@@ -90,7 +90,6 @@ SequenceFloat::SequenceFloat(QObject *parent)
 
 {
     setName("SequenceFloat");
-    setMode(ST_CONSTANT);
 }
 
 SequenceFloat::~SequenceFloat()
@@ -178,7 +177,7 @@ void SequenceFloat::createParameters()
 
     beginParameterGroup("sndfile", tr("audio file"));
 
-        paramSoundFile_ = createFilenameParameter("sndfilen", tr("filename"),
+        p_soundFile_ = createFilenameParameter("sndfilen", tr("filename"),
                                                   tr("The filename of the audio file"),
                                                   IO::FT_SOUND_FILE);
 
@@ -214,7 +213,7 @@ void SequenceFloat::createParameters()
 
     // ----- loop overlap ------
 
-    beginParameterGroup("time", tr("time"));
+    beginParameterGroup("loop", tr("looping"));
 
         p_loopOverlapMode_ = createSelectParameter("loopoverlapmode", tr("loop overlap mode"),
                 tr("Selects the loop overlapping mode, that is, if and how values are mixed at "
@@ -243,8 +242,13 @@ void SequenceFloat::onParameterChanged(Parameter *p)
 {
     Sequence::onParameterChanged(p);
 
-    if (p == paramSoundFile_)
-        setMode(mode_);
+    if (p == p_soundFile_)
+        updateValueObjects_();
+}
+
+void SequenceFloat::onParametersLoaded()
+{
+    updateValueObjects_();
 }
 
 void SequenceFloat::serialize(IO::DataStream &io) const
@@ -358,12 +362,9 @@ void SequenceFloat::setPhaseInDegree(bool enable)
     phaseMult_ = enable? 1.0 / 360.0 : 1.0;
 }
 
-void SequenceFloat::setMode(SequenceType m)
+void SequenceFloat::updateValueObjects_()
 {
-    mode_ = m;
-
-
-    if (mode_ == ST_SPECTRAL_WT)
+    if (p_mode_->baseValue() == ST_SPECTRAL_WT)
     {
         if (!wavetable_)
             wavetable_ = new AUDIO::Wavetable<Double>();
@@ -378,13 +379,13 @@ void SequenceFloat::setMode(SequenceType m)
         wavetable_ = 0;
     }
 
-    if (mode_ == ST_TIMELINE)
+    if (p_mode_->baseValue() == ST_TIMELINE)
     {
         if (!timeline_)
             timeline_ = new MATH::Timeline1D;
     }
 
-    if (mode_ == ST_EQUATION)
+    if (p_mode_->baseValue() == ST_EQUATION)
     {
         for (auto &e : equation_)
         if (!e)
@@ -402,13 +403,13 @@ void SequenceFloat::setMode(SequenceType m)
         }
     }
 
-    if (mode_ == ST_SOUNDFILE && paramSoundFile_)
+    if (p_mode_->baseValue() == ST_SOUNDFILE)
     {
         // release previous, if filename changed
-        if (soundFile_ && soundFile_->filename() != paramSoundFile_->value())
+        if (soundFile_ && soundFile_->filename() != p_soundFile_->value())
             AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
         // get new
-        soundFile_ = AUDIO::SoundFileManager::getSoundFile(paramSoundFile_->value());
+        soundFile_ = AUDIO::SoundFileManager::getSoundFile(p_soundFile_->value());
     }
     else
     {

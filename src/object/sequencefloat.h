@@ -75,15 +75,18 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     // ------------ getter --------------
 
     /** The sequence mode - one of the SequenceType enums */
-    SequenceType sequenceType() const { return mode_; }
+    SequenceType sequenceType() const
+        { return (SequenceType)p_mode_->baseValue(); }
 
-    AUDIO::Waveform::Type oscillatorMode() const { return oscMode_; }
+    AUDIO::Waveform::Type oscillatorMode() const
+    { return (AUDIO::Waveform::Type)p_oscMode_->baseValue(); }
 
     /** Returns the constant offset added to the output */
     Double offset() const { return p_offset_->baseValue(); }
@@ -117,8 +120,8 @@ public:
     Double loopOverlapOffset() const { return p_loopOverlapOffset_->baseValue(); }
 
     const QString& equationText() const { return equationText_; }
-    bool useFrequency() const { return doUseFreq_; }
-    bool phaseInDegree() const { return doPhaseDegree_; }
+    bool useFrequency() const { return p_useFreq_->baseValue(); }
+    bool phaseInDegree() const { return p_doPhaseDegree_->baseValue(); }
 
     /** Returns the minimum and maximum values across the time range (local) */
     void getMinMaxValue(Double localStart, Double localEnd,
@@ -132,9 +135,9 @@ public:
 
     // ------------ setter --------------
 
-    void setMode(SequenceType);
+    void setMode(SequenceType m) { p_mode_->setValue(m); updateValueObjects_(); }
 
-    void setOscillatorMode(AUDIO::Waveform::Type mode) { oscMode_ = mode; }
+    void setOscillatorMode(AUDIO::Waveform::Type mode) { p_oscMode_->setValue(mode); }
 
     void setOffset(Double o) { p_offset_->setValue(o); }
     void setAmplitude(Double a) { p_amplitude_->setValue(a); }
@@ -159,7 +162,7 @@ public:
 
     void setEquationText(const QString&);
 
-    void setUseFrequency(bool enable) { doUseFreq_ = enable; }
+    void setUseFrequency(bool enable) { p_useFreq_->setValue(enable); }
     void setPhaseInDegree(bool enable);
 
     /** Updates the internal wavetable from the WavetableGenerator settings.
@@ -181,6 +184,8 @@ public slots:
 
 private:
 
+    void updateValueObjects_();
+
     Double value_(Double gtime, Double time, uint thread) const;
 
     SequenceType mode_;
@@ -192,7 +197,7 @@ private:
     class SeqEquation;
     std::vector<SeqEquation *> equation_;
 
-    ParameterFilename * paramSoundFile_;
+    ParameterFilename * p_soundFile_;
 
     ParameterFloat
         * p_offset_,
