@@ -1003,7 +1003,7 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
         }
     }
 
-    // create side faces dependend of exteruded vertex count
+    // create side faces dependend of extruded vertex count
     if (createNewFaces && recognizeEdges)
     {
         for (uint i=0; i<numTriangles(); ++i)
