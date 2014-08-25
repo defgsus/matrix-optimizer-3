@@ -75,7 +75,7 @@ Scene::Scene(QObject *parent) :
     sceneTime_          (0),
     samplePos_          (0)
 {
-    MO_DEBUG("Scene::Scene()");
+    MO_DEBUG_TREE("Scene::Scene()");
 
     setName("Scene");
 
@@ -94,7 +94,7 @@ Scene::Scene(QObject *parent) :
 
 Scene::~Scene()
 {
-    MO_DEBUG("Scene::~Scene()");
+    MO_DEBUG_TREE("Scene::~Scene()");
 
     stop();
     for (auto i : fboFinal_)

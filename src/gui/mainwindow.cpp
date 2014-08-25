@@ -44,6 +44,7 @@
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/audiolinkwindow.h"
+#include "gui/sceneconvertdialog.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -331,6 +332,17 @@ void MainWindow::createMainMenu_()
             diag.exec();
         });
 
+    // ######### TOOLS MENU #########
+    m = new QMenu(tr("Tools"), menuBar());
+    menuBar()->addMenu(m);
+
+        a = new QAction(tr("Batch scene converter"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            SceneConvertDialog diag;
+            diag.exec();
+        });
 
     // ######### DEBUG MENU #########
     m = new QMenu(tr("Debug"), menuBar());

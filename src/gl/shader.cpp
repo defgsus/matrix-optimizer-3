@@ -173,7 +173,10 @@ bool Shader::compile()
     }
 
     if (!linked)
+    {
+        //MO_DEBUG(source_->vertexSource() << "\n\n" << source_->fragmentSource() << "\n\n");
         return false;
+    }
 
     getUniforms_();
     getAttributes_();

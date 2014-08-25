@@ -215,7 +215,7 @@ void SequenceFloat::createParameters()
                    tr("Number of samples in the wavetable"),
         { "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" },
         { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
-        { "", "", "", "", "", "", "", "", "", "", "" },
+        { "", "", "", "", "", "", "", "", "", "", "", "", "" },
         { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
         1024, true, false);
 
@@ -453,6 +453,7 @@ void SequenceFloat::deserialize(IO::DataStream &io)
         if (ver >= 5)
         {
             io >> tmp_doPhaseDegree_;
+            MO_DEBUG("dophase " << tmp_doPhaseDegree_);
         }
 
         // loopoverlap (v3)

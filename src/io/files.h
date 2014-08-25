@@ -43,6 +43,14 @@ public:
     static QString getSaveFileName(FileType ft, QWidget * parent = 0,
                         bool updateDirectory = true, bool updateFile = true);
 
+    static QString getOpenDirectory(FileType ft, QWidget * parent = 0,
+                        bool updateDirectory = true);
+
+    static void findFiles(FileType ft, const QString& directory, bool recursive,
+                          QStringList& entryList);
+
+    static void getDirectories(const QString& basePath, QStringList& directoryList,
+                               bool recursive);
 };
 
 

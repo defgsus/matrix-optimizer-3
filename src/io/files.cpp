@@ -167,5 +167,81 @@ QString Files::getSaveFileName(FileType ft, QWidget *parent, bool updateDirector
 }
 
 
+
+QString Files::getOpenDirectory(FileType ft, QWidget *parent, bool updateDirectory)
+{
+    QString fn = directory(ft);
+
+    // prepare a file dialog
+    QFileDialog diag(parent);
+    diag.setConfirmOverwrite(false);
+    diag.setAcceptMode(QFileDialog::AcceptOpen);
+    diag.setWindowTitle(QFileDialog::tr("Choose directory for %1").arg(fileTypeNames[ft]));
+    diag.setDirectory(fn);
+    diag.setFileMode(QFileDialog::Directory);
+    diag.setOption(QFileDialog::ShowDirsOnly, true);
+
+    if (diag.exec() == QDialog::Rejected)
+        return QString();
+
+    fn = diag.directory().absolutePath();
+
+    if (!fn.isEmpty())
+    {
+        if (updateDirectory)
+            setDirectory(ft, QFileInfo(fn).absolutePath());
+    }
+
+    return fn;
+}
+
+
+void Files::findFiles(FileType ft, const QString &directory,
+                      bool recursive, QStringList &entryList)
+{
+    QDir dir(directory);
+
+    dir.setFilter(QDir::Files | QDir::NoDotAndDotDot
+                  | QDir::Readable | QDir::Writable | QDir::Hidden);
+    //dir.setSorting(QDir::Name | QDir::IgnoreCase | QDir::LocaleAware);
+
+    QStringList filters;
+    for (auto & s : fileTypeExtensions[ft])
+        filters << ("*." + s);
+    dir.setNameFilters(filters);
+
+    QStringList files = dir.entryList();
+    for (auto & f : files)
+        entryList << (directory + QDir::separator() + f);
+
+    if (recursive)
+    {
+        QStringList dirs;
+        getDirectories(directory, dirs, true);
+
+        for (auto & d : dirs)
+        {
+            findFiles(ft, directory + QDir::separator() + d, true, entryList);
+        }
+    }
+}
+
+void Files::getDirectories(const QString &basePath, QStringList &directoryList,
+                           bool recursive)
+{
+    QDir dir(basePath);
+    dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
+
+    QStringList dirs = dir.entryList();
+
+    directoryList << dirs;
+
+    if (recursive)
+    {
+        for (auto & s : dirs)
+            getDirectories(s, directoryList, true);
+    }
+}
+
 } // namespace IO
 } // namespace MO

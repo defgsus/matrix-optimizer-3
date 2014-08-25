@@ -202,7 +202,8 @@ SOURCES += \
     src/audio/tool/soundfile.cpp \
     src/audio/tool/soundfilemanager.cpp \
     src/object/param/parametertext.cpp \
-    src/gui/texteditdialog.cpp
+    src/gui/texteditdialog.cpp \
+    src/gui/sceneconvertdialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -399,7 +400,8 @@ HEADERS += \
     src/audio/tool/soundfile.h \
     src/audio/tool/soundfilemanager.h \
     src/object/param/parametertext.h \
-    src/gui/texteditdialog.h
+    src/gui/texteditdialog.h \
+    src/gui/sceneconvertdialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
