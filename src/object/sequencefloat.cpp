@@ -82,8 +82,6 @@ SequenceFloat::SequenceFloat(QObject *parent)
 
         p_soundFile_    (0),
 
-        tmp_read_pre6_  (false),
-
         phaseMult_      (1.0)
 
 {
@@ -314,28 +312,6 @@ void SequenceFloat::onParametersLoaded()
 {
     Sequence::onParametersLoaded();
 
-    if (tmp_read_pre6_)
-    {
-        tmp_read_pre6_ = false;
-        p_mode_->setValue(tmp_mode_);
-        p_oscMode_->setValue(tmp_oscMode_);
-        p_useFreq_->setValue(tmp_doUseFreq_);
-        p_doPhaseDegree_->setValue(tmp_doPhaseDegree_);
-        p_loopOverlapMode_->setValue(tmp_loopOverlapMode_);
-        p_equationText_->setValue(tmp_equationText_);
-
-        if (sequenceType() == ST_EQUATION && wavetableGen_)
-        {
-            p_wtSpecSize_->setValue(wavetableGen_->size());
-            p_wtSpecNum_->setValue(wavetableGen_->numPartials());
-            p_wtSpecOct_->setValue(wavetableGen_->baseOctave());
-            p_wtSpecOctStep_->setValue(wavetableGen_->octaveStep());
-            p_wtSpecPhase_->setValue(wavetableGen_->basePhase());
-            p_wtSpecPhaseShift_->setValue(wavetableGen_->phaseShift());
-            p_wtSpecAmp_->setValue(wavetableGen_->amplitudeMultiplier());
-        }
-    }
-
     updateValueObjects_();
     updatePhaseInDegree_();
 }
@@ -388,31 +364,10 @@ void SequenceFloat::serialize(IO::DataStream &io) const
 
     io.writeHeader("seqf", 6);
 
-#if (0) // PRE_6_VERSION
-    io << sequenceTypeId[mode_];
-
-    // osc mode
-    io << AUDIO::Waveform::typeIds[oscMode_];
-#endif
     // timeline
     io << (quint8)(timeline_ != 0);
     if (timeline_)
         timeline_->serialize(io);
-#if (0) // PRE_6_VERSION
-    // equation (v2)
-    io << equationText_ << doUseFreq_;
-
-    // v5
-    io << doPhaseDegree_;
-
-    // loop overlap (v3)
-    io << loopOverlapModeId[loopOverlapMode_];
-
-    // wavetablegen (v4)
-    io << (qint8)(wavetableGen_ != 0);
-    if (wavetableGen_)
-        wavetableGen_->serialize(io);
-#endif
 
 }
 
@@ -424,20 +379,7 @@ void SequenceFloat::deserialize(IO::DataStream &io)
 
     if (ver <= 5)
     {
-        tmp_read_pre6_ = true;
-
-        tmp_doUseFreq_ = false;
-        tmp_doPhaseDegree_ = false;
-        tmp_oscMode_ = AUDIO::Waveform::T_SINE;
-        tmp_mode_ = ST_CONSTANT;
-        tmp_equationText_ = "sin(x*TWO_PI)";
-
-        if (!io.readEnum(tmp_mode_, ST_CONSTANT, sequenceTypeId))
-            MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': mode not known");
-
-        // oscillator
-        if (!io.readEnum(tmp_oscMode_, AUDIO::Waveform::T_SINE, AUDIO::Waveform::typeIds))
-            MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': oscillator mode not known");
+        MO_IO_ERROR(VERSION_MISMATCH, "Can't read sequence format prior to 6");
     }
 
     // timeline
@@ -450,37 +392,6 @@ void SequenceFloat::deserialize(IO::DataStream &io)
         timeline_->deserialize(io);
     }
 
-    if (ver <= 5)
-    {
-        // equation (v2)
-        if (ver >= 2)
-            io >> tmp_equationText_ >> tmp_doUseFreq_;
-
-        if (ver >= 5)
-        {
-            io >> tmp_doPhaseDegree_;
-        }
-
-        // loopoverlap (v3)
-        if (ver >= 3)
-        {
-            if (!io.readEnum(tmp_loopOverlapMode_, LOT_OFF, loopOverlapModeId))
-                MO_IO_WARNING(READ, "SequenceFloat '" << idName() << "': loop overlap mode unknown");
-        }
-
-        // wavetable generator
-        if (ver >= 4)
-        {
-            qint8 isWg;
-            io >> isWg;
-            if (isWg)
-            {
-                if (!wavetableGen_)
-                    wavetableGen_ = new AUDIO::WavetableGenerator();
-                wavetableGen_->deserialize(io);
-            }
-        }
-    }
 }
 
 const QString& SequenceFloat::equationText() const

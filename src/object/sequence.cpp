@@ -17,7 +17,6 @@ namespace MO {
 
 Sequence::Sequence(QObject *parent) :
     Object          (parent),
-    tmp_read_ver1_  (false),
     track_          (0)
 {
     setName("Sequence");
@@ -29,9 +28,6 @@ void Sequence::serialize(IO::DataStream &io) const
 
     io.writeHeader("seq", 2);
 
-#if (0) // VERSION_1
-    io << start_ << length_ << speed_ << (qint8)isLooping_;
-#endif
 }
 
 void Sequence::deserialize(IO::DataStream &io)
@@ -41,13 +37,7 @@ void Sequence::deserialize(IO::DataStream &io)
     const int ver = io.readHeader("seq", 2);
 
     if (ver <= 1)
-    {
-        tmp_read_ver1_ = true;
-
-        qint8 looping;
-        io >> tmp_start_ >> tmp_length_ >> tmp_speed_ >> looping;
-        tmp_isLooping_ = looping;
-    }
+        MO_IO_ERROR(VERSION_MISMATCH, "Can't read sequence format prior to version 2");
 }
 
 QString Sequence::infoName() const
@@ -109,20 +99,6 @@ void Sequence::createParameters()
     endParameterGroup();
 }
 
-void Sequence::onParametersLoaded()
-{
-    Object::onParametersLoaded();
-
-    if (tmp_read_ver1_)
-    {
-        tmp_read_ver1_ = false;
-
-        p_start_->setValue(tmp_start_);
-        p_length_->setValue(tmp_length_);
-        p_speed_->setValue(tmp_speed_);
-        p_looping_->setValue(tmp_isLooping_);
-    }
-}
 
 void Sequence::updateParameterVisibility()
 {

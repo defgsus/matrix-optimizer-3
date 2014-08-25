@@ -191,7 +191,6 @@ private:
 
     Double value_(Double gtime, Double time, uint thread) const;
 
-    SequenceType tmp_mode_;
     MATH::Timeline1D * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
     AUDIO::WavetableGenerator * wavetableGen_;
@@ -239,18 +238,7 @@ private:
     ParameterText
         * p_equationText_;
 
-    AUDIO::Waveform::Type tmp_oscMode_;
-    LoopOverlapMode tmp_loopOverlapMode_;
-
-    bool tmp_read_pre6_,
-         tmp_doUseFreq_,
-         tmp_doPhaseDegree_;
-
     Double phaseMult_;
-
-    // ----- equation stuff -----
-
-    QString tmp_equationText_;
 
 };
 

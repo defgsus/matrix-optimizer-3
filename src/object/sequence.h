@@ -31,7 +31,6 @@ public:
     virtual QString infoName() const;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
-    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
     // -------------- tracks -------------------
@@ -118,12 +117,6 @@ signals:
 public slots:
 
 private:
-
-    Double tmp_start_,
-           tmp_length_,
-           tmp_speed_;
-    bool   tmp_isLooping_,
-           tmp_read_ver1_;
 
     ParameterFloat
         * p_start_,
