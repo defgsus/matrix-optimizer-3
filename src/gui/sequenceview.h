@@ -45,10 +45,6 @@ public:
     /** Returns current viewspace. */
     const UTIL::ViewSpace& viewSpace() const;
 
-    /** Creates a new setting widget container.
-        Add your stuff to the returned widget's layout. */
-    QWidget * newSetting(const QString & name);
-
 signals:
 
     /** Emitted when the viewspace was changed by user. */
@@ -80,21 +76,11 @@ protected slots:
 protected:
     void resizeEvent(QResizeEvent *);
 
-    /** This resizes the scrollarea viewport to minimum.
-        Call this after changes to setting widgets visibilty. */
-    void squeezeView_();
-
     /** Sets the sequence and creates the default settings. */
     void setSequence_(MO::Sequence *);
 
     /** Sets the widget that displays the sequence data. */
     void setSequenceWidget_(QWidget *);
-
-    /** Clear all settings widgets */
-    void clearSettingsWidgets_();
-
-    /** Adds a custom widget to the settings. @see newSetting() */
-    void addSettingsWidget_(QWidget *);
 
     /** Called when something in the sequence has changed. */
     virtual void updateSequence_() = 0;
@@ -113,24 +99,8 @@ private:
     SceneSettings * sceneSettings_;
 
     QGridLayout * grid_;
-    QVBoxLayout * settingsLayout_;
     Ruler * rulerX_, * rulerY_;
     TimeBar * playBar_;
-
-    QScrollArea * settings_;
-    QWidget * defaultSettingsContainer_,
-            * customSettingsContainer_;
-    QList<QWidget*> defaultSettingsWidgets_,
-                    customSettingsWidgets_;
-
-    DoubleSpinBox * spinStart_, * spinLength_, * spinEnd_,
-        * spinLoopStart_, * spinLoopLength_, * spinLoopEnd_,
-        * spinTimeOffset_, * spinSpeed_;
-    QWidget * wLoopStart_, * wLoopLength_, * wLoopEnd_;
-
-    QCheckBox * cbLooping_;
-
-    bool defaultSettingsAvailable_;
 };
 
 
