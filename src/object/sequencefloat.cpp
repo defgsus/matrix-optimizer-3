@@ -160,23 +160,23 @@ void SequenceFloat::createParameters()
 
         p_offset_ = createFloatParameter("value_offset", tr("value offset"),
                    tr("This value is always added to the output of the sequence"),
-                   0.0);
+                   0.0, 0.1);
 
         p_amplitude_ = createFloatParameter("amp", tr("amplitude"),
                   tr("The output of the sequence (before the offset) is multiplied by this value"),
-                  1.0);
+                  1.0, 0.1);
 
         p_frequency_ = createFloatParameter("freq", tr("frequency"),
                   tr("The frequency of the function in hertz (periods per second)"),
-                  1.0);
+                  1.0, 0.1);
 
         p_phase_ = createFloatParameter("phase", tr("phase"),
                   tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
-                  0.0);
+                  0.0, 0.05);
 
         p_pulseWidth_ = createFloatParameter("pulsewidth", tr("pulse width"),
                    tr("Pulsewidth of the waveform, describes the width of the positive edge"),
-                   0.5);
+                   0.5, 0.05);
 
     endParameterGroup();
 
@@ -193,19 +193,19 @@ void SequenceFloat::createParameters()
 
         p_specOct_ = createFloatParameter("specoct", tr("octave step"),
                    tr("The step in octaves between each partial voice"),
-                   1.0);
+                   1.0, 0.5);
 
         p_specAmp_ = createFloatParameter("specamp", tr("amplitude mul."),
                    tr("Multiplier for the amplitude after each partial voice"),
-                   0.5);
+                   0.5, 0.1);
 
         p_specPhase_ = createFloatParameter("specphase", tr("base phase"),
                    tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
-                   0.0);
+                   0.0, 0.05);
 
         p_specPhaseShift_ = createFloatParameter("specphaseshift", tr("phase shift"),
                    tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"),
-                   0.0);
+                   0.0, 0.05);
 
         // wavetable spectral
 
@@ -231,15 +231,15 @@ void SequenceFloat::createParameters()
 
         p_wtSpecAmp_ = createFloatParameter("wtspecamp", tr("amplitude mul."),
                    tr("Multiplier for the amplitude after each partial voice"),
-                   0.5);
+                   0.5, 0.1);
 
         p_wtSpecPhase_ = createFloatParameter("wtspecphase", tr("base phase"),
                    tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
-                   0.0);
+                   0.0, 0.05);
 
         p_wtSpecPhaseShift_ = createFloatParameter("wtspecphaseshift", tr("phase shift"),
                    tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"),
-                   0.0);
+                   0.0, 0.05);
 
     endParameterGroup();
 
@@ -260,7 +260,7 @@ void SequenceFloat::createParameters()
 
         p_loopOverlap_ = createFloatParameter("loopoverlap", tr("loop overlap"),
                    tr("Overlap of the loop window for smooth transitions (seconds)"),
-                   0.1);
+                   0.1, 0.05);
 
         p_loopOverlapOffset_ = createFloatParameter("loopoverlapofs", tr("overlap value offset"),
                    tr("A value that is added to the blended value in the transition window"),
@@ -379,7 +379,7 @@ void SequenceFloat::deserialize(IO::DataStream &io)
 
     if (ver <= 5)
     {
-        MO_IO_ERROR(VERSION_MISMATCH, "Can't read sequence format prior to 6");
+        MO_IO_ERROR(VERSION_MISMATCH, "Can't read SequenceFloat format prior to 6");
     }
 
     // timeline

@@ -55,6 +55,9 @@
 * make querying for camera fbos independent of the object order
   best to issue a signal when fbos change anyway!
 
+* add .mo3-gui files to SceneConvertDialog
+* do the same for geometry presets
+
 ---- threading -----
 
 - OK make equation threadsafe
