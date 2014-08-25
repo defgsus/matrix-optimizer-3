@@ -18,6 +18,7 @@
 #include <QLineEdit>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QCheckBox>
 
 #include "parameterview.h"
 #include "object/object.h"
@@ -28,6 +29,7 @@
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parametertext.h"
 #include "object/param/modulator.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -156,7 +158,8 @@ void ParameterView::clearWidgets_()
     spinsInt_.clear();
     spinsFloat_.clear();
     combosSelect_.clear();
-    editsFilename_.clear();
+    edits_.clear();
+    checkBoxes_.clear();
 }
 
 GroupWidget * ParameterView::getGroupWidget_(const Parameter * p)
@@ -393,68 +396,91 @@ QWidget * ParameterView::createWidget_(Parameter * p)
     {
         defaultValueName = ps->defaultValueName();
 
-        QComboBox * combo = new QComboBox(w);
-        l->addWidget(combo);
-        combosSelect_.append(combo);
-        // important for update
-        combo->setObjectName(p->idName());
-
-        combo->setEnabled(ps->isEditable());
-
-        // fill combobox with value names
-        for (auto & name : ps->valueNames())
-            combo->addItem(name);
-
-        // set index and statustip
-        combo->setCurrentIndex(ps->valueList().indexOf(ps->baseValue()));
-        if (combo->currentIndex() >= 0 && combo->currentIndex() < ps->statusTips().size())
-            combo->setStatusTip(ps->statusTips().at(combo->currentIndex()));
-
-        w->setFocusProxy(combo);
-        setNextTabWidget_(combo);
-
-        connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=](int idx)
+        if (!ps->isBoolean())
         {
-            if (idx<0 || idx >= ps->valueList().size())
-                return;
-            // update statustip of combobox
-            if (idx >= 0 && idx < ps->statusTips().size())
-                combo->setStatusTip(ps->statusTips().at(idx));
+            QComboBox * combo = new QComboBox(w);
+            l->addWidget(combo);
+            combosSelect_.append(combo);
+            // important for update
+            combo->setObjectName(p->idName());
 
-            // get value
-            int value = ps->valueList().at(combo->currentIndex());
-            Scene * scene = p->object()->sceneObject();
-            MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
-            if (!scene) return;
-            /*bool r =
-                metaObject()->invokeMethod(scene,
-                                           "setParameterValue",
-                                           Qt::QueuedConnection,
-                                           Q_ARG(MO::ParameterSelect*, ps),
-                                           Q_ARG(int, value)
-                                           );
-            MO_ASSERT(r, "could not invoke Scene::setParameterValue");
-            Q_UNUSED(r);
-            */
-            scene->setParameterValue(ps, value);
-        });
+            combo->setEnabled(ps->isEditable());
 
-        // statustips from combobox items
-        connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::highlighted), [=](int idx)
-        {
-            if (idx >= 0 && idx < ps->statusTips().size())
+            // fill combobox with value names
+            for (auto & name : ps->valueNames())
+                combo->addItem(name);
+
+            // set index and statustip
+            combo->setCurrentIndex(ps->valueList().indexOf(ps->baseValue()));
+            if (combo->currentIndex() >= 0 && combo->currentIndex() < ps->statusTips().size())
+                combo->setStatusTip(ps->statusTips().at(combo->currentIndex()));
+
+            w->setFocusProxy(combo);
+            setNextTabWidget_(combo);
+
+            connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=](int idx)
             {
-                combo->view()->setStatusTip(ps->statusTips().at(idx));
-                // need to emit explicity for statusbar to update
-                emit statusTipChanged(combo->view()->statusTip());
-            }
-        });
+                if (idx<0 || idx >= ps->valueList().size())
+                    return;
+                // update statustip of combobox
+                if (idx >= 0 && idx < ps->statusTips().size())
+                    combo->setStatusTip(ps->statusTips().at(idx));
 
-        // reset to default
-        connect(breset, &QToolButton::pressed, [=]()
+                // get value
+                int value = ps->valueList().at(combo->currentIndex());
+                Scene * scene = p->object()->sceneObject();
+                MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
+                if (!scene) return;
+                scene->setParameterValue(ps, value);
+            });
+
+            // statustips from combobox items
+            connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::highlighted), [=](int idx)
+            {
+                if (idx >= 0 && idx < ps->statusTips().size())
+                {
+                    combo->view()->setStatusTip(ps->statusTips().at(idx));
+                    // need to emit explicity for statusbar to update
+                    emit statusTipChanged(combo->view()->statusTip());
+                }
+            });
+
+            // reset to default
+            connect(breset, &QToolButton::pressed, [=]()
+            {
+                combo->setCurrentIndex(ps->valueList().indexOf(ps->defaultValue()));
+            });
+        }
+
+        // boolean parameter
+        else
         {
-            combo->setCurrentIndex(ps->valueList().indexOf(ps->defaultValue()));
-        });
+            QCheckBox * cb = new QCheckBox(w);
+            l->addWidget(cb);
+            checkBoxes_.append(cb);
+            // important for update
+            cb->setObjectName(p->idName());
+
+            cb->setEnabled(ps->isEditable());
+            cb->setStatusTip(ps->statusTip());
+
+            w->setFocusProxy(cb);
+            setNextTabWidget_(cb);
+
+            connect(cb, &QCheckBox::clicked, [=]()
+            {
+                Scene * scene = p->object()->sceneObject();
+                MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
+                if (!scene) return;
+                scene->setParameterValue(ps, cb->isChecked()? 1 : 0);
+            });
+
+            // reset to default
+            connect(breset, &QToolButton::pressed, [=]()
+            {
+                cb->setChecked(ps->baseValue());
+            });
+        }
     }
     else
 
@@ -465,9 +491,12 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
         QLineEdit * edit = new QLineEdit(w);
         l->addWidget(edit);
-        editsFilename_.append(edit);
+        edits_.append(edit);
         // important for update
         edit->setObjectName(p->idName());
+
+        // XXX
+        breset->setVisible(false);
 
         edit->setReadOnly(true);
         edit->setStatusTip(pfn->statusTip());
@@ -492,6 +521,47 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         connect(breset, &QToolButton::pressed, [=]()
         {
             edit->setText(pfn->defaultValue());
+        });
+    }
+    else
+
+    // --- text parameter ---
+    if (ParameterText * ptxt = dynamic_cast<ParameterText*>(p))
+    {
+        defaultValueName = ptxt->defaultValue();
+
+        QLineEdit * edit = new QLineEdit(w);
+        l->addWidget(edit);
+        edits_.append(edit);
+        // important for update
+        edit->setObjectName(p->idName());
+
+        edit->setReadOnly(true);
+        edit->setStatusTip(ptxt->statusTip());
+        edit->setText(ptxt->baseValue());
+
+        // XXX
+        breset->setVisible(false);
+
+        w->setFocusProxy(edit);
+        setNextTabWidget_(edit);
+
+        // edit button
+        QToolButton * butedit = new QToolButton(w);
+        l->addWidget(butedit);
+        butedit->setText("...");
+        butedit->setStatusTip(tr("Click to edit the text"));
+
+        // load button click
+        connect(butedit, &QToolButton::clicked, [=]()
+        {
+            ptxt->openEditDialog(this);
+        });
+
+        // reset to default
+        connect(breset, &QToolButton::pressed, [=]()
+        {
+            edit->setText(ptxt->defaultValue());
         });
     }
 
@@ -706,11 +776,18 @@ void ParameterView::updateWidgetValue_(Parameter * p)
                 }
             }
         }
+        for (QCheckBox * cb : checkBoxes_)
+        {
+            if (cb->objectName() == ps->idName())
+            {
+                cb->setChecked(ps->baseValue());
+            }
+        }
     }
     else
     if (ParameterFilename * pfn = dynamic_cast<ParameterFilename*>(p))
     {
-        for (QLineEdit * edit : editsFilename_)
+        for (QLineEdit * edit : edits_)
         {
             if (edit->objectName() == pfn->idName())
                 edit->setText(pfn->value());

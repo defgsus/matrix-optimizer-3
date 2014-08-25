@@ -51,6 +51,14 @@ public:
     void setVariableNames(const QStringList& names) { varNames_ = names; }
     void setVariableNames(const std::vector<std::string>& names);
 
+    /** Opens a dialog to edit the text.
+        Depending on the textType(), the dialog will be structured.
+        If a (valid) text change was done, the scene object will be called with
+        Scene::setParameterValue().
+        @note The scene MUST be present for this call!
+        Returns true, when a change was made. */
+    bool openEditDialog(QWidget * parent = 0);
+
 private:
 
     QString value_, defaultValue_;

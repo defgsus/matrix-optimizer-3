@@ -22,6 +22,7 @@
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parametertext.h"
 #include "object/track.h"
 #include "object/sequencefloat.h"
 #include "object/microphone.h"
@@ -469,6 +470,20 @@ void Scene::setParameterValue(ParameterSelect *p, int v)
 }
 
 void Scene::setParameterValue(ParameterFilename *p, const QString& v)
+{
+    {
+        ScopedSceneLockWrite lock(this);
+        p->setValue(v);
+        p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
+    }
+    emit parameterChanged(p);
+    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
+        emit sequenceChanged(seq);
+    render_();
+}
+
+void Scene::setParameterValue(ParameterText *p, const QString& v)
 {
     {
         ScopedSceneLockWrite lock(this);

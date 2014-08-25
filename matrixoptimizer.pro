@@ -201,7 +201,8 @@ SOURCES += \
     src/object/util/colorpostprocessingsetting.cpp \
     src/audio/tool/soundfile.cpp \
     src/audio/tool/soundfilemanager.cpp \
-    src/object/param/parametertext.cpp
+    src/object/param/parametertext.cpp \
+    src/gui/texteditdialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -397,7 +398,8 @@ HEADERS += \
     src/object/util/colorpostprocessingsetting.h \
     src/audio/tool/soundfile.h \
     src/audio/tool/soundfilemanager.h \
-    src/object/param/parametertext.h
+    src/object/param/parametertext.h \
+    src/gui/texteditdialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

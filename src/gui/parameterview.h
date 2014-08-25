@@ -24,6 +24,7 @@ class QToolButton;
 class QComboBox;
 class QLineEdit;
 class QScrollArea;
+class QCheckBox;
 
 namespace MO {
 namespace GUI {
@@ -93,7 +94,8 @@ private:
     QList<SpinBox*> spinsInt_;
     QList<DoubleSpinBox*> spinsFloat_;
     QList<QComboBox*> combosSelect_;
-    QList<QLineEdit*> editsFilename_;
+    QList<QCheckBox*> checkBoxes_;
+    QList<QLineEdit*> edits_;
     QWidget * prevEditWidget_;
 
     QVBoxLayout * layout_;
