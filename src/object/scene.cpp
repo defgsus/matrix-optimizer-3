@@ -287,10 +287,16 @@ void Scene::updateTree_()
 {
     MO_DEBUG_TREE("Scene::updateTree_()");
 
+    const int numlights = lightSources_.size();
+
     findObjects_();
 
     // tell all objects if there children have changed
     updateChildrenChanged_();
+
+    // tell everyone how much lights we have
+    if (numlights != lightSources_.size())
+        updateNumberLights_();
 
     // tell all objects how much thread data they need
     updateNumberThreads_();
@@ -352,6 +358,16 @@ void Scene::setNumberThreads(uint num)
         fboFinal_[i] = 0;
         screenQuad_[i] = 0;
         lightSettings_[i].resize(0); // just to be sure
+    }
+}
+
+void Scene::updateNumberLights_()
+{
+    for (auto o : glObjects_)
+    if ((int)o->numberLightSources() != lightSources_.size())
+    {
+        o->numberLightSources_ = lightSources_.size();
+        o->numberLightSourcesChanged(MO_GFX_THREAD);
     }
 }
 

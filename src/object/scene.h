@@ -292,6 +292,9 @@ private:
     void allocateAudioOutputEnvelopes_(uint thread);
     void updateModulators_();
 
+    /** Tell everyone the number of light sources */
+    void updateNumberLights_();
+
     /** Creates the framebuffer object */
     void createSceneGl_(uint thread);
     void releaseSceneGl_(uint thread);

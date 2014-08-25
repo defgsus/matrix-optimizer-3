@@ -181,6 +181,11 @@ void Model3d::releaseGl(uint /*thread*/)
     creator_ = 0;
 }
 
+void Model3d::numberLightSourcesChanged(uint thread)
+{
+    doRecompile_ = isGlInitialized(thread);
+}
+
 void Model3d::geometryCreated_()
 {
     nextGeometry_ = creator_->takeGeometry();
@@ -209,8 +214,12 @@ void Model3d::setupDrawable_()
     src->loadVertexSource(":/shader/default.vert");
     src->loadFragmentSource(":/shader/default.frag");
 
-    if (lightMode_->baseValue() != LM_NONE)
+    if (numberLightSources() > 0 && lightMode_->baseValue() != LM_NONE)
+    {
         src->addDefine("#define MO_ENABLE_LIGHTING");
+        src->addDefine(QString("#define MO_NUM_LIGHTS %1")
+                       .arg(numberLightSources()));
+    }
     if (lightMode_->baseValue() == LM_PER_FRAGMENT)
         src->addDefine("#define MO_FRAGMENT_LIGHTING");
     if (texture_->isEnabled())

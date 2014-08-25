@@ -1,7 +1,6 @@
 #version 130
 #extension GL_ARB_gpu_shader5 : enable // for inverse()
 
-#define MO_NUM_LIGHTS 3
 
 const float PI = 3.14159265358979;
 
@@ -45,11 +44,13 @@ out vec3 v_normal;
 out vec3 v_normal_eye;
 out vec4 v_color;
 out vec2 v_texCoord;
-#ifdef MO_FRAGMENT_LIGHTING
-    out mat3 v_normal_space;                    // matrix to convert into normal-space
-#else
-    out vec4 v_light_dir[MO_NUM_LIGHTS];        // surface-towards light in normal-space
-                                                // w is distance attenuation
+#ifdef MO_ENABLE_LIGHTING
+    #ifdef MO_FRAGMENT_LIGHTING
+        out mat3 v_normal_space;                    // matrix to convert into normal-space
+    #else
+        out vec4 v_light_dir[MO_NUM_LIGHTS];        // surface-towards light in normal-space
+                                                    // w is distance attenuation
+    #endif
 #endif
 
 mat3 mo_general_normal_matrix(in vec3 norm)

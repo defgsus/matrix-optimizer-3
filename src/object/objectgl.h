@@ -65,24 +65,47 @@ public:
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
+    // ---------------- opengl --------------------
+
     /** Returns the current GL::Context */
     GL::Context * glContext(uint thread) { return glContext_[thread]; }
     /** Returns the current GL::Context */
     const GL::Context * glContext(uint thread) const { return glContext_[thread]; }
 
+    /** Used by scene */
     bool needsInitGl(uint thread) const { return needsInitGl_[thread]; }
-    bool isGlInitialized(uint thread) const { return isGlInitialized_[thread]; }
 
-    virtual void initGl(uint thread) = 0;
-    virtual void releaseGl(uint thread) = 0;
-
-    virtual void renderGl(const GL::RenderSettings& rs, uint thread, Double time) = 0;
+    /** Used by scene */
+    bool isGlInitialized(uint thread) const
+        { return thread < isGlInitialized_.size() && isGlInitialized_[thread]; }
 
     /** Tell scene that this object wants to be painted */
     void requestRender();
 
     /** Requests a releaseGl() - initGl() sequence */
     void requestReinitGl();
+
+    /** Number of lights, the shader should support */
+    uint numberLightSources() const { return numberLightSources_; }
+
+    // ------------- opengl virtual interface -----------
+
+    /** Override to initialize opengl resources.
+        Currently, there's only one opengl thread, so in most cases
+        the thread parameter can be ignored. */
+    virtual void initGl(uint thread) = 0;
+
+    /** Override to release opengl resources */
+    virtual void releaseGl(uint thread) = 0;
+
+    /** Override to render your stuff */
+    virtual void renderGl(const GL::RenderSettings& rs, uint thread, Double time) = 0;
+
+    /** Called by Scene when the number of lights have changed.
+        numberLightSources() will contain the new value.
+        If you need to recompile the shader, do it in your renderGl() function
+        or call requestReinitGl() */
+    virtual void numberLightSourcesChanged(uint thread) { Q_UNUSED(thread); }
 
     // ----------------- render state -------------------
 
@@ -113,6 +136,11 @@ private:
 
     std::vector<GL::Context*> glContext_;
     std::vector<int> needsInitGl_, isGlInitialized_;
+
+    /** Number of lights that this object's shader is currently compiled for */
+    uint numberLightSources_;
+
+    // --- render state ---
 
     DepthTestMode defaultDepthTestMode_, curDepthTestMode_;
     DepthWriteMode defaultDepthWriteMode_, curDepthWriteMode_;
