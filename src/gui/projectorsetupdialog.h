@@ -16,6 +16,7 @@
 class QVBoxLayout;
 
 namespace MO {
+class DomeSettings;
 namespace GUI {
 
 class DomePreviewWidget;
@@ -26,6 +27,7 @@ class ProjectorSetupDialog : public QDialog
     Q_OBJECT
 public:
     explicit ProjectorSetupDialog(QWidget *parent = 0);
+    ~ProjectorSetupDialog();
 
 signals:
 
@@ -38,20 +40,27 @@ protected:
 private slots:
 
     void onGlReleased_();
+    void updateDomeSettings_();
 
 private:
 
     void createWidgets_();
     DoubleSpinBox * createDoubleSpin(QLayout * layout,
                         const QString& desc, const QString& statusTip,
-                        double value, double smallstep=1, double minv=-9999999, double maxv=9999999);
+                        double value, double smallstep=1, double minv=-9999999, double maxv=9999999,
+                        const char * slot = 0 );
 
     bool closeRequest_;
+
+    DomeSettings * domeSettings_;
 
     DomePreviewWidget * display_;
 
     DoubleSpinBox
-        * spinRadius_,
+        * spinDomeRad_,
+        * spinDomeCover_,
+        * spinDomeTiltX_,
+        * spinDomeTiltZ_,
 
         * spinFov_,
         * spinLat_,

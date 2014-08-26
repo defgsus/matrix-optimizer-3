@@ -51,6 +51,10 @@ public:
                                bool asTriangles = true);
     static void createUVSphereLines(Geometry *, Float rad, uint segu, uint segv);
 
+    static void createDome(Geometry *, Float radius, Float coverage, uint segu, uint segv,
+                           bool asTriangles);
+    static void createDomeLines(Geometry *, Float radius, Float coverage, uint segu, uint segv);
+
     static void createCylinder(Geometry *, Float rad, Float height, uint segu, uint segv, bool open,
                                bool asTriangles);
 

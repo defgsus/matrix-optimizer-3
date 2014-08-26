@@ -453,6 +453,103 @@ void GeometryFactory::createUVSphereLines(
     }
 }
 
+void GeometryFactory::createDome(
+        Geometry * g, Float rad, Float coverage, uint segu, uint segv, bool asTriangles)
+{
+    segu = std::max((uint)3, segu);
+    segv = std::max((uint)2, segv);
+
+    if (!asTriangles)
+    {
+        createDomeLines(g, rad, coverage, segu, segv);
+        return;
+    }
+
+    // top point
+    g->setTexCoord(0,1);
+    g->addVertex(0, rad, 0);
+
+    for (uint v = 1; v<segv; ++v)
+    {
+        // current vertex offset
+        int rown = g->numVertices();
+
+        // body vertices
+        for (unsigned int u = 0; u<segu; ++u)
+        {
+            Vec3 p = MATH::pointOnSphere((Float)u / segu, (Float)v * coverage / (Float)360 / (segv-1));
+
+            g->setTexCoord((Float)(u+1) / (segu+1), 1.f - (Float)(v+1) / (segv+1));
+            g->addVertex(p.x * rad, p.y * rad, p.z * rad);
+        }
+
+        // triangles on each 'row'
+        for (unsigned int u = 0; u<segu; ++u)
+        {
+            // connect to top point
+            if (v==1)
+            {
+                g->addTriangle(0, rown + u, rown + (u + 1) % segu);
+            }
+            else
+            {
+                // connect
+                g->addTriangle(
+                // previous row
+                    rown - segu + u,
+                // with this row
+                    rown + u, rown + (u + 1) % segu);
+                // .. and the other triangle of the quad
+                g->addTriangle(rown - segu + (u + 1) % segu,
+                               rown - segu + u,
+                               rown + (u + 1) % segu);
+            }
+        }
+    }
+}
+
+void GeometryFactory::createDomeLines(
+        Geometry * g, Float rad, Float coverage, uint segu, uint segv)
+{
+    segu = std::max((uint)3, segu);
+    segv = std::max((uint)2, segv);
+
+    // top point
+    g->addVertex(0, rad, 0);
+
+    for (uint v = 1; v<segv; ++v)
+    {
+        // current vertex offset
+        int rown = g->numVertices();
+
+        // body vertices
+        for (unsigned int u = 0; u<segu; ++u)
+        {
+            Vec3 p = MATH::pointOnSphere((Float)u / segu, (Float)v * coverage / (Float)360 / (segv-1));
+            g->addVertex(p.x * rad, p.y * rad, p.z * rad);
+        }
+
+        // lines on each 'row'
+        for (unsigned int u = 0; u<segu; ++u)
+        {
+            if (v==1)
+            {
+                // connect to top point
+                g->addLine(0, rown + u);
+            }
+            else
+            {
+                // connect previous row with this
+                g->addLine(rown + u - segu, rown + u);
+            }
+            // connect with next point in row
+            g->addLine(rown + u, rown + (u + 1) % segu);
+        }
+    }
+}
+
+
+
 void GeometryFactory::createCylinder(Geometry * g, Float rad, Float height,
                                      uint segu, uint segv, bool open, bool asTriangles)
 {
