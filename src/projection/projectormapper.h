@@ -16,6 +16,8 @@
 
 namespace MO {
 
+class DomeSettings;
+
 /** Calculator for ProjectorSettings */
 class ProjectorMapper
 {
@@ -35,7 +37,7 @@ public:
 
     /** Are settings valid?
         If not, the calculated values may not make sense. */
-    bool valid() const { return valid_; }
+    bool isValid() const { return valid_; }
 
     /** Aspect ratio of projector */
     Float aspect() const { return aspect_; }
@@ -44,10 +46,16 @@ public:
     const Vec3& pos() const { return pos_; }
 
     /** Returns the matrix of projector view. */
-    const Mat4& viewMatrix() const { return rpy_; }
+    const Mat4& getTransformationMatrix() const { return trans_; }
 
-    /** Sphere coordinates for the given pixel */
-    Vec2 mapToSphere(int pixel_x, int pixel_y) const;
+    /** Returns the ray for the given pixel in texture coordinates [0,1] */
+    void getRay(Float s, Float t, Vec3 * ray_origin, Vec3 * ray_direction) const;
+
+    /** Gives the 3d coordinate for the given pixel in texture coordinates [0,1] */
+    Vec3 mapToDome(Float s, Float t, const DomeSettings&) const;
+
+    /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
+    Vec2 mapToSphere(Float s, Float t) const;
 
     //______________ PRIVATE AREA _________________
 private:
@@ -63,7 +71,7 @@ private:
     bool valid_;
     Float aspect_;
     Vec3 pos_;
-    Mat4 rpy_;
+    Mat4 trans_;
 };
 
 } // namespace MO
