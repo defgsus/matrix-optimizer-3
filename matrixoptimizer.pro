@@ -32,7 +32,6 @@ SOURCES += \
     src/main.cpp \
     src/gui/mainwindow.cpp \
     src/gui/projectorsetupwidget.cpp \
-    src/projection/projector.cpp \
     src/gui/basic3dview.cpp \
     src/gui/projectorsetupview.cpp \
     src/math/timeline1d.cpp \
@@ -207,13 +206,14 @@ SOURCES += \
     src/math/intersection.cpp \
     src/gui/widget/domepreviewwidget.cpp \
     src/gui/projectorsetupdialog.cpp \
-    src/projection/domesettings.cpp
+    src/projection/domesettings.cpp \
+    src/projection/projectorsettings.cpp \
+    src/projection/projectormapper.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
     src/gui/projectorsetupwidget.h \
     src/types/vector.h \
-    src/projection/projector.h \
     src/gui/basic3dview.h \
     src/gui/projectorsetupview.h \
     src/math/vector.h \
@@ -409,7 +409,9 @@ HEADERS += \
     src/math/intersection.h \
     src/gui/widget/domepreviewwidget.h \
     src/gui/projectorsetupdialog.h \
-    src/projection/domesettings.h
+    src/projection/domesettings.h \
+    src/projection/projectorsettings.h \
+    src/projection/projectormapper.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

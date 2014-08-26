@@ -17,6 +17,7 @@ class QVBoxLayout;
 
 namespace MO {
 class DomeSettings;
+class ProjectorSettings;
 namespace GUI {
 
 class DomePreviewWidget;
@@ -41,7 +42,7 @@ private slots:
 
     void onGlReleased_();
     void updateDomeSettings_();
-
+    void updateProjectorSettings_();
 private:
 
     void createWidgets_();
@@ -53,6 +54,7 @@ private:
     bool closeRequest_;
 
     DomeSettings * domeSettings_;
+    ProjectorSettings * projectorSettings_;
 
     DomePreviewWidget * display_;
 
@@ -63,6 +65,7 @@ private:
         * spinDomeTiltZ_,
 
         * spinFov_,
+        * spinRadius_,
         * spinLat_,
         * spinLong_,
         * spinPitch_,

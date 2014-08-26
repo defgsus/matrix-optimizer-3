@@ -10,6 +10,7 @@
 
 #include "domepreviewwidget.h"
 #include "projection/domesettings.h"
+#include "projection/projectorsettings.h"
 #include "geom/geometry.h"
 #include "geom/geometryfactory.h"
 #include "gl/drawable.h"
@@ -20,7 +21,9 @@ namespace GUI {
 DomePreviewWidget::DomePreviewWidget(QWidget *parent)
     : Basic3DWidget (Basic3DWidget::RM_DIRECT, parent),
       domeSettings_ (new DomeSettings()),
+      projectorSettings_(new ProjectorSettings()),
       domeGeometry_ (0),
+      projectorGeometry_(0),
       showGrid_     (true)
 
 {
@@ -33,6 +36,8 @@ DomePreviewWidget::~DomePreviewWidget()
 {
     delete domeSettings_;
     delete domeGeometry_;
+    delete projectorSettings_;
+    delete projectorGeometry_;
 }
 
 void DomePreviewWidget::setDomeSettings(const DomeSettings & s)
@@ -51,7 +56,6 @@ void DomePreviewWidget::createDomeGeometry_()
                                            domeSettings_->radius(),
                                            domeSettings_->coverage(),
                                            24, 12);
-
     Mat4 trans(1.0);
 
     if (domeSettings_->tiltX() != 0)
@@ -73,6 +77,18 @@ void DomePreviewWidget::createDomeGeometry_()
 
     if (domeGeometry_->numTriangles())
         domeGeometry_->calculateTriangleNormals();
+}
+
+void DomePreviewWidget::setProjectorSettings(const ProjectorSettings & s)
+{
+    *projectorSettings_ = s;
+    createProjectorGeometry_();
+    update();
+}
+
+void DomePreviewWidget::createProjectorGeometry_()
+{
+
 }
 
 void DomePreviewWidget::initGL()
@@ -103,8 +119,19 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
         domeDrawable_->createOpenGl();
     }
 
+    if (projectorGeometry_)
+    {
+        projectorDrawable_->setGeometry(projectorGeometry_);
+        projectorGeometry_ = 0;
+
+        projectorDrawable_->createOpenGl();
+    }
+
     if (domeDrawable_->isReady())
         domeDrawable_->renderShader(projection, cubeViewTrans, viewTrans, trans);
+
+    if (projectorDrawable_->isReady())
+        projectorDrawable_->renderShader(projection, cubeViewTrans, viewTrans, trans);
 
     if (showGrid_)
         drawGrid(projection, cubeViewTrans, viewTrans, trans);

@@ -20,6 +20,7 @@
 #include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
 #include "projection/domesettings.h"
+#include "projection/projectorsettings.h"
 
 namespace MO {
 namespace GUI {
@@ -28,7 +29,8 @@ namespace GUI {
 ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     : QDialog       (parent),
       closeRequest_ (false),
-      domeSettings_ (new DomeSettings())
+      domeSettings_ (new DomeSettings()),
+      projectorSettings_(new ProjectorSettings())
 {
     setObjectName("_ProjectorSetupDialog");
     setWindowTitle(tr("projector setup"));
@@ -40,6 +42,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 ProjectorSetupDialog::~ProjectorSetupDialog()
 {
     delete domeSettings_;
+    delete projectorSettings_;
 }
 
 void ProjectorSetupDialog::createWidgets_()
@@ -59,20 +62,25 @@ void ProjectorSetupDialog::createWidgets_()
 
             spinFov_ = createDoubleSpin(lv, tr("field of view"),
                                          tr("Projector's opening angle"),
-                                         60, 1, 1, 180);
+                                         60, 1, 1, 180, SLOT(updateProjectorSettings_()));
             spinFov_->setSuffix(" " + tr("°"));
 
             label = new QLabel(tr("position"), this);
             lv->addWidget(label);
 
+            spinRadius_ = createDoubleSpin(lv, tr("radius"),
+                                         tr("Projector's position relative to the center of the dome"),
+                                         9, 0.01, 0, 1000, SLOT(updateProjectorSettings_()));
+            spinRadius_->setSuffix(" " + tr("m"));
+
             spinLat_ = createDoubleSpin(lv, tr("latitude"),
                                          tr("Projector's position around the dome"),
-                                         0, 1, -360, 360);
+                                         0, 1, -360, 360, SLOT(updateProjectorSettings_()));
             spinLat_->setSuffix(" " + tr("°"));
 
             spinLong_ = createDoubleSpin(lv, tr("longitude"),
                                          tr("Projector's height"),
-                                         0, 1, -90, 90);
+                                         0, 1, -90, 90, SLOT(updateProjectorSettings_()));
             spinLong_->setSuffix(" " + tr("°"));
 
             label = new QLabel(tr("orientation"), this);
@@ -80,17 +88,17 @@ void ProjectorSetupDialog::createWidgets_()
 
             spinPitch_ = createDoubleSpin(lv, tr("pitch (x)"),
                                          tr("The x rotation of the Projector's direction"),
-                                         0, 1, -360, 360);
+                                         0, 1, -360, 360, SLOT(updateProjectorSettings_()));
             spinPitch_->setSuffix(" " + tr("°"));
 
             spinRoll_ = createDoubleSpin(lv, tr("roll (y)"),
                                          tr("The y rotation of the Projector's direction"),
-                                         0, 1, -360, 360);
+                                         0, 1, -360, 360, SLOT(updateProjectorSettings_()));
             spinRoll_->setSuffix(" " + tr("°"));
 
             spinYaw_ = createDoubleSpin(lv, tr("yaw (z)"),
                                          tr("The z rotation of the Projector's direction"),
-                                         0, 1, -360, 360);
+                                         0, 1, -360, 360, SLOT(updateProjectorSettings_()));
             spinYaw_->setSuffix(" " + tr("°"));
 
             lv->addStretch(2);
@@ -190,6 +198,17 @@ void ProjectorSetupDialog::updateDomeSettings_()
     domeSettings_->setTiltZ(spinDomeTiltZ_->value());
 
     display_->setDomeSettings(*domeSettings_);
+}
+
+void ProjectorSetupDialog::updateProjectorSettings_()
+{
+    projectorSettings_->setFov(spinFov_->value());
+    projectorSettings_->setRadius(spinRadius_->value());
+    projectorSettings_->setLatitude(spinLat_->value());
+    projectorSettings_->setLongitude(spinLong_->value());
+    projectorSettings_->setPitch(spinPitch_->value());
+    projectorSettings_->setRoll(spinRoll_->value());
+    projectorSettings_->setYaw(spinYaw_->value());
 }
 
 } // namespace GUI

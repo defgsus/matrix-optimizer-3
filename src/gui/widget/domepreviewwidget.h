@@ -17,6 +17,7 @@
 namespace MO {
 
 class DomeSettings;
+class ProjectorSettings;
 
 namespace GUI {
 
@@ -35,6 +36,9 @@ public slots:
     /** Updates the dome settings and the graphic */
     void setDomeSettings(const DomeSettings&);
 
+    /** Updates the projector settings and the graphic */
+    void setProjectorSettings(const ProjectorSettings&);
+
 protected:
 
     void initGL() Q_DECL_OVERRIDE;
@@ -48,11 +52,15 @@ protected:
 private:
 
     void createDomeGeometry_();
+    void createProjectorGeometry_();
 
     DomeSettings * domeSettings_;
+    ProjectorSettings * projectorSettings_;
 
     GEOM::Geometry * domeGeometry_;
+    GEOM::Geometry * projectorGeometry_;
     GL::Drawable * domeDrawable_;
+    GL::Drawable * projectorDrawable_;
     //GL::Texture * tex_;
     //GL::LightSettings * lights_;
     bool showGrid_;
