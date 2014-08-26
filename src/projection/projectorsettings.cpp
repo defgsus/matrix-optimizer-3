@@ -16,6 +16,7 @@ ProjectorSettings::ProjectorSettings()
     :   width_      (1280),
         height_     (768),
         fov_        (60),
+        lensRadius_ (0),
         latitude_   (0),
         longitude_  (0),
         radius_     (10),

@@ -65,6 +65,7 @@ private:
         * spinDomeTiltZ_,
 
         * spinFov_,
+        * spinLensRad_,
         * spinRadius_,
         * spinLat_,
         * spinLong_,

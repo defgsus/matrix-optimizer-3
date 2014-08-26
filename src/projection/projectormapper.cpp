@@ -61,16 +61,26 @@ void ProjectorMapper::recalc_()
     valid_ = true;
 }
 
-void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direction) const
+Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
 {
-    *ray_origin = pos_;
-
     s = s * 2 - 1;
     t = (t * 2 - 1) * aspect_;
+
+    Vec3 pos = set_.lensRadius() * std::sqrt((Float)2) * Vec3(-s, t, 0);
+    return Vec3(trans_ * Vec4(pos, (Float)1));
+}
+
+void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direction) const
+{
+    s = s * 2 - 1;
+    t = (t * 2 - 1) * aspect_;
+
+    Vec3 pos = set_.lensRadius() * std::sqrt((Float)2) * Vec3(-s, t, 0);
 
     Vec3 dir = glm::rotateX(Vec3(0,0,-1), t * set_.fov() * (Float)0.5);
          dir = glm::rotateY(dir, s * set_.fov() * (Float)0.5);
 
+    *ray_origin =    Vec3(trans_ * Vec4(pos, (Float)1));
     *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));
 }
 

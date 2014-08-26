@@ -42,11 +42,15 @@ public:
     /** Aspect ratio of projector */
     Float aspect() const { return aspect_; }
 
-    /** Position of projector lens in 3d space. */
+    /** Position of the center of projector lens in 3d space.
+        Use getRayOrigin() to find the actual position. */
     const Vec3& pos() const { return pos_; }
 
     /** Returns the matrix of projector view. */
     const Mat4& getTransformationMatrix() const { return trans_; }
+
+    /** Returns the origin of the ray for the given pixel in texture coordinates [0,1] */
+    Vec3 getRayOrigin(Float s, Float t) const;
 
     /** Returns the ray for the given pixel in texture coordinates [0,1] */
     void getRay(Float s, Float t, Vec3 * ray_origin, Vec3 * ray_direction) const;

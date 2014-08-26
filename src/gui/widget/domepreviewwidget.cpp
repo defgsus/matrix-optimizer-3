@@ -111,23 +111,30 @@ void DomePreviewWidget::createProjectorGeometry_()
     {
         projectorGeometry_->setColor(0.7,0.7,0.5,1);
 
-        Vec3 pos = mapper.pos();
-        const int v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
         for (int i=0; i<3; ++i)
         {
             const Float x = (Float)i/2;
+
+            Vec3 pos = mapper.getRayOrigin(x,0);
+            int v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             pos = mapper.mapToDome(x,0, *domeSettings_);
             int v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             projectorGeometry_->addLine(v0, v1);
 
+            pos = mapper.getRayOrigin(x,1);
+            v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             pos = mapper.mapToDome(x,1, *domeSettings_);
             v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             projectorGeometry_->addLine(v0, v1);
 
+            pos = mapper.getRayOrigin(0,x);
+            v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             pos = mapper.mapToDome(0,x, *domeSettings_);
             v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             projectorGeometry_->addLine(v0, v1);
 
+            pos = mapper.getRayOrigin(1,x);
+            v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             pos = mapper.mapToDome(1,x, *domeSettings_);
             v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             projectorGeometry_->addLine(v0, v1);

@@ -30,6 +30,7 @@ public:
     int width() const { return width_; }
     int height() const { return height_; }
     Float fov() const { return fov_; }
+    Float lensRadius() const { return lensRadius_; }
     Float latitude() const { return latitude_; }
     Float longitude() const { return longitude_; }
     Float radius() const { return radius_; }
@@ -43,6 +44,7 @@ public:
     void setWidth(int v) { width_ = v; }
     void setHeight(int v) { height_ = v; }
     void setFov(Float v) { fov_ = v; }
+    void setLensRadius(Float v) { lensRadius_ = v; }
     void setLatitude(Float v) { latitude_ = v; }
     void setLongitude(Float v) { longitude_ = v; }
     void setRadius(Float v) { radius_ = v; }
@@ -59,6 +61,7 @@ private:
     int width_, height_;
     Float
         fov_,
+        lensRadius_,
         latitude_,
         longitude_,
         radius_,

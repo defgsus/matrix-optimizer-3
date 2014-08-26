@@ -64,9 +64,14 @@ void ProjectorSetupDialog::createWidgets_()
             lv->addWidget(label);
 
             spinFov_ = createDoubleSpin(lv, tr("field of view"),
-                                         tr("Projector's opening angle"),
+                                         tr("Projector's projection angle (for width) in degree"),
                                          60, 1, 1, 180, SLOT(updateProjectorSettings_()));
             spinFov_->setSuffix(" " + tr("°"));
+
+            spinLensRad_ = createDoubleSpin(lv, tr("lens radius"),
+                                         tr("The radius of the projector's lens in centimeters"),
+                                         0, 0.1, 0, 1000, SLOT(updateProjectorSettings_()));
+            spinLensRad_->setSuffix(" " + tr(" cm"));
 
             label = new QLabel(tr("position"), this);
             lv->addWidget(label);
@@ -209,6 +214,7 @@ void ProjectorSetupDialog::updateDomeSettings_()
 void ProjectorSetupDialog::updateProjectorSettings_()
 {
     projectorSettings_->setFov(spinFov_->value());
+    projectorSettings_->setLensRadius(spinLensRad_->value() / 100);
     projectorSettings_->setRadius(spinRadius_->value());
     projectorSettings_->setLatitude(spinLat_->value());
     projectorSettings_->setLongitude(spinLong_->value());
