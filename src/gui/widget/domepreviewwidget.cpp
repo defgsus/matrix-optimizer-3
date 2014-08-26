@@ -54,18 +54,22 @@ void DomePreviewWidget::createDomeGeometry_()
 
     Mat4 trans(1.0);
 
-    if (domeSettings_->tiltX() < 0)
+    if (domeSettings_->tiltX() != 0)
     {
-        trans = glm::translate(trans, Vec3(0,0,-domeSettings_->radius()));
         trans = glm::rotate(trans, domeSettings_->tiltX(), Vec3(1, 0, 0));
     }
-    else if (domeSettings_->tiltX() > 0)
+    if (domeSettings_->tiltZ() != 0)
     {
-        trans = glm::translate(trans, Vec3(0,0,domeSettings_->radius()));
-        trans = glm::rotate(trans, domeSettings_->tiltX(), Vec3(1, 0, 0));
+        trans = glm::rotate(trans, domeSettings_->tiltZ(), Vec3(0, 0, 1));
     }
 
+    // transform
     domeGeometry_->applyMatrix(trans);
+
+    // make sit on floor
+    Vec3 mi, ma;
+    domeGeometry_->getExtent(&mi, &ma);
+    domeGeometry_->translate(0,-mi[1], 0);
 
     if (domeGeometry_->numTriangles())
         domeGeometry_->calculateTriangleNormals();

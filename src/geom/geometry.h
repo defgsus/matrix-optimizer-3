@@ -112,6 +112,14 @@ public:
     const VertexType * triangle(IndexType triangeleIndex, IndexType cornerIndex) const;
     const VertexType * line(IndexType lineIndex, IndexType endIndex) const;
 
+    /** Returns the minimum and maximum vertex coordinates */
+    void getExtent(VertexType * minX, VertexType * maxX,
+                   VertexType * minY, VertexType * maxY,
+                   VertexType * minZ, VertexType * maxZ) const;
+
+    /** Returns the minimum and maximum vertex coordinates */
+    void getExtent(Vec3 * minimum, Vec3 * maximum) const;
+
     // --------- state -----------------------
 
     /** Sets the current color. Any subsequent call to the

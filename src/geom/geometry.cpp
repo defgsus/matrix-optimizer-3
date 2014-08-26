@@ -93,6 +93,37 @@ long unsigned int Geometry::memory() const
             + numLineIndexBytes();
 }
 
+void Geometry::getExtent(VertexType * minX, VertexType * maxX,
+                         VertexType * minY, VertexType * maxY,
+                         VertexType * minZ, VertexType * maxZ) const
+{
+    Vec3 mi, ma;
+    getExtent(&mi, &ma);
+    *minX = mi[0];
+    *minY = mi[1];
+    *minZ = mi[2];
+    *maxX = ma[0];
+    *maxY = ma[1];
+    *maxZ = ma[2];
+}
+
+void Geometry::getExtent(Vec3 * minimum, Vec3 * maximum) const
+{
+    if (numVertices() < 1)
+    {
+        *minimum = Vec3(0,0,0);
+        *maximum = Vec3(0,0,0);
+    }
+
+    *minimum = *maximum = getVertex(0);
+
+    for (uint i=1; i<numVertices(); ++i)
+    {
+        *minimum = glm::min(*minimum, getVertex(i));
+        *maximum = glm::max(*maximum, getVertex(i));
+    }
+}
+
 void Geometry::clear()
 {
     vertex_.clear();
