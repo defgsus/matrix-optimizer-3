@@ -66,6 +66,7 @@ Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
     s = s * 2 - 1;
     t = (t * 2 - 1) * aspect_;
 
+    // XXX why is s negative??
     Vec3 pos = set_.lensRadius() * std::sqrt((Float)2) * Vec3(-s, t, 0);
     return Vec3(trans_ * Vec4(pos, (Float)1));
 }
@@ -75,6 +76,7 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
     s = s * 2 - 1;
     t = (t * 2 - 1) * aspect_;
 
+    // XXX why is s negative??
     Vec3 pos = set_.lensRadius() * std::sqrt((Float)2) * Vec3(-s, t, 0);
 
     Vec3 dir = glm::rotateX(Vec3(0,0,-1), t * set_.fov() * (Float)0.5);

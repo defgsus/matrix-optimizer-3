@@ -8,10 +8,9 @@
     <p>created 6/25/2014</p>
 */
 
-
-#include <QDebug>
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
+#include <QTextStream>
 #include <QFile>
 
 #include "xmlstream.h"
@@ -46,7 +45,7 @@ void XmlStream::save(const QString& filename)
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        MO_IO_ERROR(WRITE, "Io could not save '" << filename << "'\n"
+        MO_IO_ERROR(WRITE, "Could not create xml '" << filename << "'\n"
                         << f.errorString());
     }
 
@@ -63,7 +62,7 @@ void XmlStream::load(const QString& filename)
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        MO_IO_ERROR(READ, "Io could not load '" << filename << "'\n"
+        MO_IO_ERROR(READ, "Could not open xml '" << filename << "'\n"
                         << f.errorString());
     }
 
@@ -76,7 +75,7 @@ void XmlStream::load(const QString& filename)
 
 // -------------------- io ----------------------
 
-void XmlStream::startWriting()
+void XmlStream::startWriting(const QString & main_section)
 {
     MO_DEBUGF("Io::startWriting()");
 
@@ -87,7 +86,7 @@ void XmlStream::startWriting()
     xmlw_->setAutoFormatting(true);
     xmlw_->writeStartDocument();
 
-    newSection("mo-io");
+    newSection(main_section);
 }
 
 void XmlStream::stopWriting()
@@ -103,13 +102,11 @@ void XmlStream::stopWriting()
     xmlw_ = 0;
 
     cur_section_ = "";
-
-    qDebug() << data_ << "\n";
 }
 
 bool XmlStream::isWriteable() { return xmlw_ != 0; }
 
-void XmlStream::startReading()
+void XmlStream::startReading(const QString & main_section)
 {
     MO_DEBUGF("Io::startReading()");
 
@@ -118,10 +115,11 @@ void XmlStream::startReading()
     xmlr_ = new QXmlStreamReader(data_);
 
     if (!(xmlr_->readNextStartElement() &&
-          xmlr_->name() == "mo-io"))
-        MO_IO_ERROR(VERSION_MISMATCH, "Io::startReading() on unknown stream")
-                ;
-    cur_section_ = "mo-io";
+          xmlr_->name() == main_section))
+        MO_IO_ERROR(VERSION_MISMATCH, "Io::startReading() on unknown xml stream, "
+                    "expected '" << main_section << "' section");
+
+    cur_section_ = main_section;
 
     section_stack_.clear();
 }
@@ -137,6 +135,18 @@ void XmlStream::stopReading()
 }
 
 bool XmlStream::isReadable() { return xmlr_ != 0; }
+
+
+// -------------- verification ------------------
+
+void XmlStream::verifySection(const QString &name)
+{
+    if (!isSection(name))
+        MO_IO_ERROR(VERSION_MISMATCH, "expected section '" << name << "' in xml but "
+                    "found " << section());
+}
+
+
 
 // ------------------ sections ------------------
 
@@ -341,6 +351,72 @@ bool XmlStream::read(const QString& key, double& v, double def) const
 
 
 
+
+#undef MO_IO_CHECK_ATTRIBUTE
+
+
+// ----------------- expect read ------------------
+
+
+#define MO_IO_CHECK_ATTRIBUTE(key__, value__) \
+    if (!xmlr_)                                                                         \
+        MO_IO_ERROR(READ, "Io::read('"<<key<<"') on non-readable stream");              \
+    if (!xmlr_->attributes().hasAttribute(key__))                                       \
+    {                                                                                   \
+        MO_IO_ERROR(VERSION_MISMATCH, "Expected key '" << key__ << "' in xml, section " \
+                    "'" << section() << "'");                                           \
+    }                                                                                   \
+    const auto a = xmlr_->attributes().value(key__);
+
+void XmlStream::expect(const QString& key, QString& v) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v);
+    v = a.toString();
+}
+
+void XmlStream::expect(const QString& key, bool& v) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v);
+    v = a.toInt();
+}
+
+void XmlStream::expect(const QString& key, int& v) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v);
+    v = a.toInt();
+}
+
+void XmlStream::expect(const QString& key, unsigned int& v) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v);
+    v = a.toUInt();
+}
+
+void XmlStream::expect(const QString& key, long int& v) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v);
+    v = a.toInt();
+}
+
+void XmlStream::expect(const QString& key, long unsigned int& v) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v);
+    v = a.toUInt();
+}
+
+void XmlStream::expect(const QString& key, float& v) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v);
+    v = a.toFloat();
+}
+
+void XmlStream::expect(const QString& key, double& v) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v);
+    v = a.toDouble();
+}
+
+#undef MO_IO_CHECK_ATTRIBUTE
 
 // --------------------------- test -------------------------------
 /*

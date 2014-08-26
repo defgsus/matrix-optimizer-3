@@ -13,8 +13,6 @@
 
 #include <QDialog>
 
-class QVBoxLayout;
-
 namespace MO {
 class DomeSettings;
 class ProjectorSettings;
@@ -22,6 +20,7 @@ namespace GUI {
 
 class DomePreviewWidget;
 class DoubleSpinBox;
+class SpinBox;
 
 class ProjectorSetupDialog : public QDialog
 {
@@ -46,10 +45,14 @@ private slots:
 private:
 
     void createWidgets_();
-    DoubleSpinBox * createDoubleSpin(QLayout * layout,
+    SpinBox * createSpin_(QLayout * layout,
+                        const QString& desc, const QString& statusTip,
+                        int value, int smallstep=1, int minv=-9999999, int maxv=9999999,
+                        const char * slot = 0);
+    DoubleSpinBox * createDoubleSpin_(QLayout * layout,
                         const QString& desc, const QString& statusTip,
                         double value, double smallstep=1, double minv=-9999999, double maxv=9999999,
-                        const char * slot = 0 );
+                        const char * slot = 0);
 
     bool closeRequest_;
 
@@ -57,6 +60,10 @@ private:
     ProjectorSettings * projectorSettings_;
 
     DomePreviewWidget * display_;
+
+    SpinBox
+        * spinWidth_,
+        * spinHeight_;
 
     DoubleSpinBox
         * spinDomeRad_,

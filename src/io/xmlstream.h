@@ -28,8 +28,8 @@ struct PairStruct
     PairStruct(const QString& key, const T value)
         :   key(key), value(value) { }
 
-    QString key;
-    T value;
+    const QString& key;
+    const T value;
 };
 
 template <class T>
@@ -62,13 +62,18 @@ public:
 
     // --------------- streaming --------------------
 
-    void startWriting();
+    void startWriting(const QString& main_section = "mo-xml");
     void stopWriting();
     bool isWriteable();
 
-    void startReading();
+    void startReading(const QString& main_section = "mo-xml");
     void stopReading();
     bool isReadable();
+
+    // --------------- verification -----------------
+
+    /** @throws IoError when current section is not @p name */
+    void verifySection(const QString& name);
 
     // ------------------ sections ------------------
 
@@ -133,6 +138,34 @@ public:
     long unsigned int readLUInt(const QString& key, long unsigned int def = 0) const { long unsigned int v; read(key, v, def); return v; }
     float readFloat(const QString& key, float def = 0) const { float v; read(key, v, def); return v; }
     double readDouble(const QString& key, double def = 0) const { double v; read(key, v, def); return v; }
+
+    // ------------- expect-read ---------------------
+
+    /** @{ */
+    /** Reads the contents for the given key.
+        If the key is not found, an IoException is thrown. */
+
+    void expect(const QString& key, QString& v) const;
+    void expect(const QString& key, bool& v) const;
+    void expect(const QString& key, int& v) const;
+    void expect(const QString& key, unsigned int& v) const;
+    void expect(const QString& key, long int& v) const;
+    void expect(const QString& key, long unsigned int& v) const;
+    void expect(const QString& key, float& v) const;
+    void expect(const QString& key, double& v) const;
+
+    /** @} */
+
+    // TODO: type checking
+
+    QString expectString(const QString& key) const { QString v; expect(key, v); return v; }
+    bool expectBool(const QString& key) const { bool v; expect(key, v); return v; }
+    int expectInt(const QString& key) const { int v; expect(key, v); return v; }
+    unsigned int expectUInt(const QString& key) const { unsigned int v; expect(key, v); return v; }
+    long int expectLInt(const QString& key) const { long int v; expect(key, v); return v; }
+    long unsigned int expectLUInt(const QString& key) const { long unsigned int v; expect(key, v); return v; }
+    float expectFloat(const QString& key) const { float v; expect(key, v); return v; }
+    double expectDouble(const QString& key) const { double v; expect(key, v); return v; }
 
     // _______________ PRIVATE AREA _________________
 

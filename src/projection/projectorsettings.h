@@ -16,6 +16,7 @@
 #include "types/float.h"
 
 namespace MO {
+namespace IO { class XmlStream; }
 
 /** Settings of one single projector */
 class ProjectorSettings
@@ -23,6 +24,11 @@ class ProjectorSettings
 public:
 
     ProjectorSettings();
+
+    // ------------ io ------------
+
+    void serialize(IO::XmlStream&) const;
+    void deserialize(IO::XmlStream&);
 
     // ---------- getter ----------
 

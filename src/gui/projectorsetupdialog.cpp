@@ -21,6 +21,8 @@
 #include "widget/doublespinbox.h"
 #include "projection/domesettings.h"
 #include "projection/projectorsettings.h"
+#include "io/xmlstream.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -38,8 +40,8 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 
     createWidgets_();
 
-    //updateDomeSettings_();
-    //updateProjectorSettings_();
+    updateDomeSettings_();
+    updateProjectorSettings_();
 }
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
@@ -63,12 +65,22 @@ void ProjectorSetupDialog::createWidgets_()
             auto label = new QLabel(tr("projector settings"), this);
             lv->addWidget(label);
 
-            spinFov_ = createDoubleSpin(lv, tr("field of view"),
-                                         tr("Projector's projection angle (for width) in degree"),
+            spinWidth_ = createSpin_(lv, tr("width"),
+                                         tr("Projector's horizontal resolution in pixels"),
+                                         1024, 1, 1, 8192, SLOT(updateProjectorSettings_()));
+            spinWidth_->setSuffix(" " + tr("px"));
+
+            spinHeight_ = createSpin_(lv, tr("height"),
+                                         tr("Projector's vertical resolution in pixels"),
+                                         768, 1, 1, 8192, SLOT(updateProjectorSettings_()));
+            spinHeight_->setSuffix(" " + tr("px"));
+
+            spinFov_ = createDoubleSpin_(lv, tr("field of view"),
+                                         tr("Projector's projection (horizontal) angle in degree"),
                                          60, 1, 1, 180, SLOT(updateProjectorSettings_()));
             spinFov_->setSuffix(" " + tr("°"));
 
-            spinLensRad_ = createDoubleSpin(lv, tr("lens radius"),
+            spinLensRad_ = createDoubleSpin_(lv, tr("lens radius"),
                                          tr("The radius of the projector's lens in centimeters"),
                                          0, 0.1, 0, 1000, SLOT(updateProjectorSettings_()));
             spinLensRad_->setSuffix(" " + tr(" cm"));
@@ -76,17 +88,17 @@ void ProjectorSetupDialog::createWidgets_()
             label = new QLabel(tr("position"), this);
             lv->addWidget(label);
 
-            spinRadius_ = createDoubleSpin(lv, tr("radius"),
+            spinRadius_ = createDoubleSpin_(lv, tr("radius"),
                                          tr("Projector's position relative to the center of the dome"),
                                          10, 0.01, 0, 1000, SLOT(updateProjectorSettings_()));
             spinRadius_->setSuffix(" " + tr("m"));
 
-            spinLat_ = createDoubleSpin(lv, tr("latitude"),
+            spinLat_ = createDoubleSpin_(lv, tr("latitude"),
                                          tr("Projector's position around the dome"),
                                          0, 1, -360, 360, SLOT(updateProjectorSettings_()));
             spinLat_->setSuffix(" " + tr("°"));
 
-            spinLong_ = createDoubleSpin(lv, tr("longitude"),
+            spinLong_ = createDoubleSpin_(lv, tr("longitude"),
                                          tr("Projector's height"),
                                          0, 1, -90, 90, SLOT(updateProjectorSettings_()));
             spinLong_->setSuffix(" " + tr("°"));
@@ -94,25 +106,41 @@ void ProjectorSetupDialog::createWidgets_()
             label = new QLabel(tr("orientation"), this);
             lv->addWidget(label);
 
-            spinPitch_ = createDoubleSpin(lv, tr("pitch (x)"),
+            spinPitch_ = createDoubleSpin_(lv, tr("pitch (x)"),
                                          tr("The x rotation of the Projector's direction "
                                             "- up and down"),
                                          0, 1, -360, 360, SLOT(updateProjectorSettings_()));
             spinPitch_->setSuffix(" " + tr("°"));
 
-            spinYaw_ = createDoubleSpin(lv, tr("yaw (y)"),
+            spinYaw_ = createDoubleSpin_(lv, tr("yaw (y)"),
                                          tr("The y rotation of the Projector's direction "
                                             "- left and right"),
                                          0, 1, -360, 360, SLOT(updateProjectorSettings_()));
             spinYaw_->setSuffix(" " + tr("°"));
 
-            spinRoll_ = createDoubleSpin(lv, tr("roll (z)"),
+            spinRoll_ = createDoubleSpin_(lv, tr("roll (z)"),
                                          tr("The z rotation of the Projector's direction "
                                             "- turn left and turn right"),
                                          0, 1, -360, 360, SLOT(updateProjectorSettings_()));
             spinRoll_->setSuffix(" " + tr("°"));
 
             lv->addStretch(2);
+
+            auto but = new QPushButton("debug");
+            lv->addWidget(but);
+            connect(but, &QPushButton::clicked, [=]()
+            {
+                IO::XmlStream io;
+                io.startWriting("projector-setup");
+                projectorSettings_->serialize(io);
+                io.stopWriting();
+                MO_DEBUG(io.data());
+
+                io.startReading("projector-setup");
+                io.nextSubSection();
+                projectorSettings_->deserialize(io);
+                io.stopReading();
+            });
 
         // --- preview display ---
 
@@ -129,22 +157,22 @@ void ProjectorSetupDialog::createWidgets_()
             label = new QLabel(tr("dome settings"), this);
             lv->addWidget(label);
 
-            spinDomeRad_ = createDoubleSpin(lv, tr("radius"),
+            spinDomeRad_ = createDoubleSpin_(lv, tr("radius"),
                                          tr("The dome radius in meters - messured at the 180° horizon"),
                                          10, 0.5, 0.1, 1000, SLOT(updateDomeSettings_()));
             spinDomeRad_->setSuffix(" " + tr("m"));
 
-            spinDomeCover_ = createDoubleSpin(lv, tr("coverage"),
+            spinDomeCover_ = createDoubleSpin_(lv, tr("coverage"),
                                          tr("The coverage of the dome in degree - 180 = half-sphere"),
                                          180, 1, 1, 360, SLOT(updateDomeSettings_()));
             spinDomeCover_->setSuffix(" " + tr("°"));
 
-            spinDomeTiltX_ = createDoubleSpin(lv, tr("tilt x"),
+            spinDomeTiltX_ = createDoubleSpin_(lv, tr("tilt x"),
                                          tr("The tilt in degree on the x axis"),
                                          0, 1, -360, 360, SLOT(updateDomeSettings_()));
             spinDomeTiltX_->setSuffix(" " + tr("°"));
 
-            spinDomeTiltZ_ = createDoubleSpin(lv, tr("tilt z"),
+            spinDomeTiltZ_ = createDoubleSpin_(lv, tr("tilt z"),
                                          tr("The tilt in degree on the z axis"),
                                          0, 1, -360, 360, SLOT(updateDomeSettings_()));
             spinDomeTiltZ_->setSuffix(" " + tr("°"));
@@ -152,7 +180,39 @@ void ProjectorSetupDialog::createWidgets_()
 
 }
 
-DoubleSpinBox * ProjectorSetupDialog::createDoubleSpin(QLayout * layout,
+SpinBox * ProjectorSetupDialog::createSpin_(
+                    QLayout * layout,
+                    const QString& desc, const QString& statusTip,
+                    int value, int smallstep, int minv, int maxv,
+                    const char * slot)
+{
+    auto w = new QWidget(this);
+    w->setAutoFillBackground(true);
+    QPalette p(w->palette());
+    p.setColor(QPalette::Window, p.color(QPalette::Window).darker(110));
+    w->setPalette(p);
+    layout->addWidget(w);
+
+        auto lh = new QHBoxLayout(w);
+        lh->setMargin(1);
+
+            auto label = new QLabel(desc, this);
+            label->setStatusTip(statusTip);
+            lh->addWidget(label);
+
+            auto spin = new SpinBox(this);
+            spin->setSingleStep(smallstep);
+            spin->setRange(minv, maxv);
+            spin->setStatusTip(statusTip);
+            spin->setValue(value);
+            lh->addWidget(spin);
+
+            if (slot)
+                connect(spin, SIGNAL(valueChanged(int)), this, slot);
+    return spin;
+}
+
+DoubleSpinBox * ProjectorSetupDialog::createDoubleSpin_(QLayout * layout,
                     const QString& desc, const QString& statusTip,
                     double value, double smallstep, double minv, double maxv,
                     const char * slot)
@@ -172,7 +232,7 @@ DoubleSpinBox * ProjectorSetupDialog::createDoubleSpin(QLayout * layout,
             lh->addWidget(label);
 
             auto spin = new DoubleSpinBox(this);
-            spin->setDecimals(5);
+            spin->setDecimals(7);
             spin->setSingleStep(smallstep);
             spin->setRange(minv, maxv);
             spin->setStatusTip(statusTip);
@@ -213,6 +273,8 @@ void ProjectorSetupDialog::updateDomeSettings_()
 
 void ProjectorSetupDialog::updateProjectorSettings_()
 {
+    projectorSettings_->setWidth(spinWidth_->value());
+    projectorSettings_->setHeight(spinHeight_->value());
     projectorSettings_->setFov(spinFov_->value());
     projectorSettings_->setLensRadius(spinLensRad_->value() / 100);
     projectorSettings_->setRadius(spinRadius_->value());
