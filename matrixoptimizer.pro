@@ -203,7 +203,10 @@ SOURCES += \
     src/audio/tool/soundfilemanager.cpp \
     src/object/param/parametertext.cpp \
     src/gui/texteditdialog.cpp \
-    src/gui/sceneconvertdialog.cpp
+    src/gui/sceneconvertdialog.cpp \
+    src/math/intersection.cpp \
+    src/gui/widget/domepreviewwidget.cpp \
+    src/gui/projectorsetupdialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -401,7 +404,10 @@ HEADERS += \
     src/audio/tool/soundfilemanager.h \
     src/object/param/parametertext.h \
     src/gui/texteditdialog.h \
-    src/gui/sceneconvertdialog.h
+    src/gui/sceneconvertdialog.h \
+    src/math/intersection.h \
+    src/gui/widget/domepreviewwidget.h \
+    src/gui/projectorsetupdialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

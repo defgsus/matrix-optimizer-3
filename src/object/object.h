@@ -227,6 +227,10 @@ public:
         the object are modulated. */
     virtual bool isModulated() const;
 
+    /** Returns true when this objects is a microphone or contains soundsources
+        or any of it's childs does so. */
+    bool isAudioRelevant() const;
+
     // ---------- activity (scope) ----------------
 
     /** Returns the user-set activity scope for the object */

@@ -308,6 +308,7 @@ private:
 
     /** unlocked version */
     void calculateSceneTransform_(uint thread, uint sample, Double time);
+    void calculateAudioSceneTransform_(uint thread, uint sample, Double time);
 
     // ------------ audio ----------------------
 
@@ -364,6 +365,7 @@ private:
 
     QList<Object*> allObjects_;
     QList<Object*> posObjects_;
+    QList<Object*> posObjectsAudio_;
     QList<Camera*> cameras_;
     QList<ObjectGl*> glObjects_;
     QList<Object*> audioObjects_;

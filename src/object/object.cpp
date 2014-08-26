@@ -329,6 +329,18 @@ bool Object::isModulated() const
     return false;
 }
 
+bool Object::isAudioRelevant() const
+{
+    if (isMicrophone() || !audioSources().isEmpty())
+        return true;
+
+    for (auto c : childObjects_)
+        if (c->isAudioRelevant())
+            return true;
+
+    return false;
+}
+
 Object::ActivityScope Object::activityScope() const
 {
     if (paramActiveScope_)

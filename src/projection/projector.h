@@ -58,8 +58,8 @@ public:
     /** Position of projector lens in 3d space. */
     const Vec3& pos() const { return pos_; }
 
-    /** Returns the matrix of projection. */
-    const Mat4& projectionMatrix() const { return rpy_; }
+    /** Returns the matrix of projector view. */
+    const Mat4& viewMatrix() const { return rpy_; }
 
     /** Sphere coordinates for the given pixel */
     Vec2 mapToSphere(int pixel_x, int pixel_y) const;

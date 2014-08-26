@@ -443,10 +443,9 @@ void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
     Double rtime = time;
 
     // calculate one block of transformations
-    // XXX needs only be done for audioobjects and microphones
     for (uint i = 0; i<size; ++i)
     {
-        calculateSceneTransform_(thread, i, rtime);
+        calculateAudioSceneTransform_(thread, i, rtime);
         rtime += sampleRateInv();
     }
 

@@ -133,22 +133,37 @@ void Scene::findObjects_()
     // all objects including scene
     allObjects_ = findChildObjects<Object>(QString(), true);
     allObjects_.prepend(this);
+
     // all cameras
     cameras_ = findChildObjects<Camera>(QString(), true);
+
     // all light sources
     lightSources_ = findChildObjects<LightSource>(QString(), true);
+
     // all objects that need to be rendered
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
+
     // not all objects need there transformation calculated
     // these are the ones that do
     posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
+
+    // all transformation objects that are or include audio relevant objects
+    posObjectsAudio_.clear();
+    for (auto o : posObjects_)
+    {
+        if (o->isAudioRelevant())
+            posObjectsAudio_.append(o);
+    }
+
     // all objects with audio sources
     audioObjects_.clear();
     for (auto o : allObjects_)
         if (!o->audioSources().isEmpty())
             audioObjects_.append(o);
+
     // all microphones
     microphones_ = findChildObjects<Microphone>(QString(), true);
+
     // toplevel audio units
     topLevelAudioUnits_ = findChildObjects<AudioUnit>(QString(), false);
 
@@ -846,7 +861,24 @@ void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
         // write back
         o->setTransformation(thread, sample, matrix);
     }
+}
 
+void Scene::calculateAudioSceneTransform_(uint thread, uint sample, Double time)
+{
+    // set the initial matrix for all objects in scene
+    clearTransformation(thread, sample);
+
+    // calculate transformations
+    for (auto &o : posObjectsAudio_)
+    if (o->active(time, thread))
+    {
+        // get parent transformation
+        Mat4 matrix(o->parentObject()->transformation(thread, sample));
+        // apply object's transformation
+        o->calculateTransformation(matrix, time, thread);
+        // write back
+        o->setTransformation(thread, sample, matrix);
+    }
 }
 
 

@@ -10,7 +10,9 @@
 
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+
 #include "projector.h"
+#include "math/intersection.h"
 
 namespace MO {
 
@@ -55,6 +57,21 @@ void Projector::recalc_()
     rpy_ = glm::rotate(rpy_, latitude_,  Vec3(0,-1,0));
 
     valid_ = true;
+}
+
+Vec2 Projector::mapToSphere(int pixel_x, int pixel_y) const
+{
+    const Vec3 ray_origin = pos_;
+    const Vec3 ray_dir = Vec3( rpy_ * Vec4(0,0,-1,0) );
+
+    Float depth1, depth2;
+
+    if (!MATH::intersect_ray_sphere(ray_origin, ray_dir, Vec3(0,0,0), radius_, &depth1, &depth2))
+    {
+        return Vec2(0,0);
+    }
+
+
 }
 
 

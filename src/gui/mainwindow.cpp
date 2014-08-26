@@ -45,6 +45,7 @@
 #include "gui/widget/transportwidget.h"
 #include "gui/audiolinkwindow.h"
 #include "gui/sceneconvertdialog.h"
+#include "gui/projectorsetupdialog.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -331,6 +332,14 @@ void MainWindow::createMainMenu_()
             AudioDialog diag;
             diag.exec();
         });
+
+    a = new QAction(tr("Projector setup"), m);
+    m->addAction(a);
+    connect(a, &QAction::triggered, [=]()
+    {
+        ProjectorSetupDialog diag(this);
+        diag.exec();
+    });
 
     // ######### TOOLS MENU #########
     m = new QMenu(tr("Tools"), menuBar());
