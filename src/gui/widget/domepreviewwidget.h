@@ -64,6 +64,8 @@ private:
     //GL::Texture * tex_;
     //GL::LightSettings * lights_;
 
+    Mat4 domeTransform_;
+
     bool showGrid_,
          showRays_,
          showProjectedSurface_;

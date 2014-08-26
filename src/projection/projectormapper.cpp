@@ -68,7 +68,7 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
     s = s * 2 - 1;
     t = (t * 2 - 1) * aspect_;
 
-    Vec3 dir = glm::rotateX(Vec3(0,0,1), t * set_.fov() * (Float)0.5);
+    Vec3 dir = glm::rotateX(Vec3(0,0,-1), t * set_.fov() * (Float)0.5);
          dir = glm::rotateY(dir, s * set_.fov() * (Float)0.5);
 
     *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));
@@ -85,7 +85,7 @@ Vec3 ProjectorMapper::mapToDome(Float s, Float t, const DomeSettings & set) cons
         return pos + dir * (Float)100;
     }
 
-    return pos + dir * depth2;
+    return pos + dir * depth1;
 }
 
 Vec2 ProjectorMapper::mapToSphere(Float, Float) const

@@ -50,6 +50,7 @@ void DomePreviewWidget::setDomeSettings(const DomeSettings & s)
 {
     *domeSettings_ = s;
     createDomeGeometry_();
+    createProjectorGeometry_();
     update();
 }
 
@@ -81,6 +82,9 @@ void DomePreviewWidget::createDomeGeometry_()
     Vec3 mi, ma;
     domeGeometry_->getExtent(&mi, &ma);
     domeGeometry_->translate(0,-mi[1], 0);
+
+    // store this transformation
+    domeTransform_ = glm::translate(Mat4(1.0), Vec3(0,-mi[1],0)) * trans;
 
     if (domeGeometry_->numTriangles())
         domeGeometry_->calculateTriangleNormals();
@@ -154,6 +158,8 @@ void DomePreviewWidget::createProjectorGeometry_()
                 projectorGeometry_->addLine(idx[(y-1)*num+x], idx[y*num+x]);
         }
     }
+
+    projectorGeometry_->applyMatrix(domeTransform_);
 }
 
 void DomePreviewWidget::initGL()

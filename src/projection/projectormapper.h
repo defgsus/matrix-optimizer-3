@@ -51,7 +51,9 @@ public:
     /** Returns the ray for the given pixel in texture coordinates [0,1] */
     void getRay(Float s, Float t, Vec3 * ray_origin, Vec3 * ray_direction) const;
 
-    /** Gives the 3d coordinate for the given pixel in texture coordinates [0,1] */
+    /** Gives the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
+        The mapping is always done on the inside of the dome, regardless of the position of
+        the projector. */
     Vec3 mapToDome(Float s, Float t, const DomeSettings&) const;
 
     /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
