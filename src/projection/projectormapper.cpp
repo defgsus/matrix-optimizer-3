@@ -41,7 +41,7 @@ void ProjectorMapper::recalc_()
         return;
 
     // aspect ratio
-    aspect_ = (Float)set_.width()/set_.height();
+    aspect_ = (Float)set_.height()/set_.width();
 
     // -- calc transformation matrix --
 

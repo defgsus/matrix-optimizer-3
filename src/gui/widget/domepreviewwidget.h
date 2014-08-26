@@ -63,7 +63,10 @@ private:
     GL::Drawable * projectorDrawable_;
     //GL::Texture * tex_;
     //GL::LightSettings * lights_;
-    bool showGrid_;
+
+    bool showGrid_,
+         showRays_,
+         showProjectedSurface_;
 
 
 };

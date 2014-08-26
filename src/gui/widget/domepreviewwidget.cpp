@@ -8,6 +8,8 @@
     <p>created 8/26/2014</p>
 */
 
+#include <vector>
+
 #include "domepreviewwidget.h"
 #include "projection/domesettings.h"
 #include "projection/projectorsettings.h"
@@ -25,7 +27,9 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
       projectorSettings_(new ProjectorSettings()),
       domeGeometry_ (0),
       projectorGeometry_(0),
-      showGrid_     (true)
+      showGrid_     (true),
+      showRays_     (true),
+      showProjectedSurface_(true)
 
 {
     setObjectName("_DomePreviewWidget");
@@ -98,31 +102,58 @@ void DomePreviewWidget::createProjectorGeometry_()
 
     // build geometry
     projectorGeometry_ = new GEOM::Geometry();
-    projectorGeometry_->setColor(1,0.5,0.5,1);
 
-    Vec3 pos = mapper.pos();
-    const int v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-    pos = mapper.mapToDome(0,0, *domeSettings_);
-    const int v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-    pos = mapper.mapToDome(1,0, *domeSettings_);
-    const int v2 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-    pos = mapper.mapToDome(1,1, *domeSettings_);
-    const int v3 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-    pos = mapper.mapToDome(0,1, *domeSettings_);
-    const int v4 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+    if (showRays_)
+    {
+        projectorGeometry_->setColor(0.7,0.7,0.5,1);
 
-    projectorGeometry_->addLine(v0, v1);
-    projectorGeometry_->addLine(v0, v2);
-    projectorGeometry_->addLine(v0, v3);
-    projectorGeometry_->addLine(v0, v4);
-    projectorGeometry_->addLine(v1, v2);
-    projectorGeometry_->addLine(v2, v3);
-    projectorGeometry_->addLine(v3, v4);
-    projectorGeometry_->addLine(v4, v1);
+        Vec3 pos = mapper.pos();
+        const int v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+        for (int i=0; i<3; ++i)
+        {
+            const Float x = (Float)i/2;
+            pos = mapper.mapToDome(x,0, *domeSettings_);
+            int v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+            projectorGeometry_->addLine(v0, v1);
 
-    //    Mat4 trans(mapper.getTransformationMatrix());
-    //projectorGeometry_->applyMatrix(trans);
+            pos = mapper.mapToDome(x,1, *domeSettings_);
+            v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+            projectorGeometry_->addLine(v0, v1);
 
+            pos = mapper.mapToDome(0,x, *domeSettings_);
+            v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+            projectorGeometry_->addLine(v0, v1);
+
+            pos = mapper.mapToDome(1,x, *domeSettings_);
+            v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+            projectorGeometry_->addLine(v0, v1);
+        }
+    }
+
+    if (showProjectedSurface_)
+    {
+        projectorGeometry_->setColor(0.5,1.0,0.5,1);
+        std::vector<GEOM::Geometry::IndexType> idx;
+        const int num = 11;
+        // create grid
+        for (uint y = 0; y<num; ++y)
+        for (uint x = 0; x<num; ++x)
+        {
+            const Vec3 pos = mapper.mapToDome(
+                        (Float)x/(num-1), (Float)y/(num-1), *domeSettings_);
+            idx.push_back( projectorGeometry_->addVertex(pos[0], pos[1], pos[2]));
+        }
+
+        // connect grid
+        for (uint y = 0; y<num; ++y)
+        for (uint x = 0; x<num; ++x)
+        {
+            if (x>0)
+                projectorGeometry_->addLine(idx[y*num+x-1], idx[y*num+x]);
+            if (y>0)
+                projectorGeometry_->addLine(idx[(y-1)*num+x], idx[y*num+x]);
+        }
+    }
 }
 
 void DomePreviewWidget::initGL()
