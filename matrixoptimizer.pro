@@ -31,9 +31,7 @@ INCLUDEPATH += src
 SOURCES += \
     src/main.cpp \
     src/gui/mainwindow.cpp \
-    src/gui/projectorsetupwidget.cpp \
     src/gui/basic3dview.cpp \
-    src/gui/projectorsetupview.cpp \
     src/math/timeline1d.cpp \
     src/gui/timeline1dview.cpp \
     src/tests/testtimeline.cpp \
@@ -212,10 +210,8 @@ SOURCES += \
 
 HEADERS += \
     src/gui/mainwindow.h \
-    src/gui/projectorsetupwidget.h \
     src/types/vector.h \
     src/gui/basic3dview.h \
-    src/gui/projectorsetupview.h \
     src/math/vector.h \
     src/math/constants.h \
     src/math/timeline1d.h \
@@ -416,8 +412,7 @@ HEADERS += \
 BISON_FILES = \
     src/math/funcparser/grammar.y
 
-FORMS += \
-    src/gui/projectorsetupwidget.ui
+FORMS +=
 
 RESOURCES += \
     icons.qrc \

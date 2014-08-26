@@ -28,24 +28,23 @@
 #include <QDesktopWidget>
 
 #include "mainwindow.h"
-#include "projectorsetupwidget.h"
 #include "timeline1dview.h"
 #include "timeline1drulerview.h"
 #include "ruler.h"
-#include "gui/qobjectinspector.h"
-#include "gui/objecttreeview.h"
-#include "gui/objectview.h"
-#include "gui/sequencefloatview.h"
-#include "gui/sequencer.h"
-#include "gui/widget/spacer.h"
-#include "gui/util/scenesettings.h"
-#include "gui/audiodialog.h"
-#include "gui/geometrydialog.h"
-#include "gui/widget/envelopewidget.h"
-#include "gui/widget/transportwidget.h"
-#include "gui/audiolinkwindow.h"
-#include "gui/sceneconvertdialog.h"
-#include "gui/projectorsetupdialog.h"
+#include "qobjectinspector.h"
+#include "objecttreeview.h"
+#include "objectview.h"
+#include "sequencefloatview.h"
+#include "sequencer.h"
+#include "widget/spacer.h"
+#include "util/scenesettings.h"
+#include "audiodialog.h"
+#include "geometrydialog.h"
+#include "widget/envelopewidget.h"
+#include "widget/transportwidget.h"
+#include "audiolinkwindow.h"
+#include "sceneconvertdialog.h"
+#include "projectorsetupdialog.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -390,15 +389,6 @@ void MainWindow::createMainMenu_()
             GeometryDialog * diag = new GeometryDialog(0, this);
             connect(diag, SIGNAL(finished(int)), diag, SLOT(deleteLater()));
             diag->show();
-        });
-
-        a = new QAction(tr("Projector dialog"), m);
-        m->addAction(a);
-        connect(a, &QAction::triggered, [=]()
-        {
-            auto pv = new ProjectorSetupWidget();
-            pv->setAttribute(Qt::WA_DeleteOnClose, true);
-            pv->show();
         });
 
         a = new QAction(tr("Audio-link window"), m);

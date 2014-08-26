@@ -11,7 +11,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
-#include "projector.h"
+#include "projectormapper.h"
 #include "math/intersection.h"
 
 namespace MO {
