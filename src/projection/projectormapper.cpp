@@ -14,6 +14,7 @@
 #include "projectormapper.h"
 #include "domesettings.h"
 #include "math/intersection.h"
+#include "math/constants.h"
 #include "io/log.h"
 
 namespace MO {
@@ -66,8 +67,7 @@ Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
     s = s * 2 - 1;
     t = (t * 2 - 1) * aspect_;
 
-    // XXX why is s negative??
-    Vec3 pos = set_.lensRadius() * std::sqrt((Float)2) * Vec3(-s, t, 0);
+    Vec3 pos = set_.lensRadius() * std::sqrt((Float)2) * Vec3(s, t, 0);
     return Vec3(trans_ * Vec4(pos, (Float)1));
 }
 
@@ -76,14 +76,21 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
     s = s * 2 - 1;
     t = (t * 2 - 1) * aspect_;
 
-    // XXX why is s negative??
-    Vec3 pos = set_.lensRadius() * std::sqrt((Float)2) * Vec3(-s, t, 0);
+    Float lensfac = set_.lensRadius() * std::sqrt((Float)2);
+    Vec3 pos = lensfac * Vec3(s, t, 0);
 
-    Vec3 dir = glm::rotateX(Vec3(0,0,-1), t * set_.fov() * (Float)0.5);
-         dir = glm::rotateY(dir, s * set_.fov() * (Float)0.5);
+
+    // size of projection - one unit away
+    //    c² = 2a²(1-cos(fov))
+    // -> c = sqrt(2*(1-cos(fov))
+    const Float c = (Float)0.5
+            * (std::sqrt((Float)2*((Float)1-std::cos(set_.fov()*(Float)DEG_TO_TWO_PI)))
+               // XXX lensradius is not calculated properly here
+                - (Float)0.135 * lensfac);
+    Vec3 dir(s*c, t*c, -1);
 
     *ray_origin =    Vec3(trans_ * Vec4(pos, (Float)1));
-    *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));
+    *ray_direction = Vec3(trans_ * Vec4(glm::normalize(dir), (Float)0));
 }
 
 Vec3 ProjectorMapper::mapToDome(Float s, Float t, const DomeSettings & set) const

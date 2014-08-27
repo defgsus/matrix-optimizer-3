@@ -13,6 +13,8 @@
 
 #include <QDialog>
 
+class QComboBox;
+
 namespace MO {
 class DomeSettings;
 class ProjectorSettings;
@@ -40,8 +42,10 @@ protected:
 private slots:
 
     void onGlReleased_();
+    void changeView_();
     void updateDomeSettings_();
     void updateProjectorSettings_();
+
 private:
 
     void createWidgets_();
@@ -80,6 +84,8 @@ private:
         * spinYaw_,
         * spinRoll_;
 
+    QComboBox
+        * comboView_;
 };
 
 

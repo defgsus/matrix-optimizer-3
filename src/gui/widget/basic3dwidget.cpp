@@ -120,7 +120,7 @@ void Basic3DWidget::mousePressEvent(QMouseEvent * e)
 void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 {
     Float fac = e->modifiers() & Qt::SHIFT ?
-                10.f : 1.f;
+                10.f : e->modifiers() & Qt::CTRL? 0.025f : 1.f;
 
     int dx = lastMousePos_.x() - e->x(),
         dy = lastMousePos_.y() - e->y();
@@ -162,7 +162,7 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 void Basic3DWidget::wheelEvent(QWheelEvent * e)
 {
     Float fac = e->modifiers() & Qt::SHIFT ?
-                10.f : 1.f;
+                10.f : e->modifiers() & Qt::CTRL? 0.025f : 1.f;
 
     Float d = std::max(-1, std::min(1, e->delta() ));
     camera_->moveZ(-0.3 * d * fac);

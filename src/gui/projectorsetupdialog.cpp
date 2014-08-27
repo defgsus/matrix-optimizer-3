@@ -152,6 +152,18 @@ void ProjectorSetupDialog::createWidgets_()
             lv->addWidget(display_);
             connect(display_, SIGNAL(glReleased()), this, SLOT(onGlReleased_()));
 
+            // --- display settings ---
+
+            comboView_ = new QComboBox(this);
+            lv->addWidget(comboView_);
+            comboView_->setStatusTip(tr("Selects the projection type of the preview window"));
+            comboView_->addItem(tr("orthographic"), Basic3DWidget::RM_DIRECT_ORTHO);
+            comboView_->addItem(tr("perspective"), Basic3DWidget::RM_DIRECT);
+            comboView_->addItem(tr("fulldome cubemap"), Basic3DWidget::RM_FULLDOME_CUBE);
+            comboView_->setCurrentIndex(1);
+            connect(comboView_, SIGNAL(currentIndexChanged(int)),
+                    this, SLOT(changeView_()));
+
             // --- dome settings ---
 
             label = new QLabel(tr("dome settings"), this);
@@ -260,6 +272,19 @@ void ProjectorSetupDialog::onGlReleased_()
     if (closeRequest_)
         close();
 }
+
+
+void ProjectorSetupDialog::changeView_()
+{
+    if (comboView_->currentIndex() < 0)
+        return;
+
+    Basic3DWidget::RenderMode rm = (Basic3DWidget::RenderMode)
+            comboView_->itemData(comboView_->currentIndex()).toInt();
+
+    display_->setRenderMode(rm);
+}
+
 
 void ProjectorSetupDialog::updateDomeSettings_()
 {
