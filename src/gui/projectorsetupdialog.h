@@ -66,12 +66,14 @@ private slots:
     //void moveProjectorUp_();
     //void moveProjectorDown_();
 
-    void savePreset_();
+    bool savePreset_(const QString & fn);
+    bool savePresetChoose_();
     void loadPreset_();
 
 private:
 
     void updateWindowTitle_();
+    bool saveToClose_();
 
     void createWidgets_();
     QLineEdit * createEdit_(QLayout * layout,
@@ -88,7 +90,8 @@ private:
                         const char * slot = 0);
 
 
-    bool closeRequest_;
+    bool closeRequest_,
+         saidNoAlready_;
 
     QString filename_;
 

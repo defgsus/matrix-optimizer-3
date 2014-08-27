@@ -36,6 +36,7 @@ namespace GUI {
 ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     : QDialog       (parent),
       closeRequest_ (false),
+      saidNoAlready_(false),
       settings_     (new ProjectionSystemSettings()),
       orgSettings_  (new ProjectionSystemSettings()),
       domeSettings_ (new DomeSettings()),
@@ -187,7 +188,7 @@ void ProjectorSetupDialog::createWidgets_()
 
                 auto but = new QPushButton(tr("save settings"), this);
                 lh2->addWidget(but);
-                connect(but, SIGNAL(clicked()), this, SLOT(savePreset_()));
+                connect(but, SIGNAL(clicked()), this, SLOT(savePresetChoose_()));
 
                 but = new QPushButton(tr("load settings"), this);
                 lh2->addWidget(but);
@@ -396,6 +397,12 @@ DoubleSpinBox * ProjectorSetupDialog::createDoubleSpin_(QLayout * layout,
 
 void ProjectorSetupDialog::closeEvent(QCloseEvent * e)
 {
+    if (!saveToClose_())
+    {
+        e->ignore();
+        return;
+    }
+
     if (display_->isGlInitialized())
     {
         display_->shutDownGL();
@@ -472,11 +479,14 @@ void ProjectorSetupDialog::updateProjectorName_()
 
     comboProj_->setItemText(idx, projectorSettings_->name());
 
+    updateWindowTitle_();
 }
 
 void ProjectorSetupDialog::updateDomeName_()
 {
     domeSettings_->setName(editDomeName_->text());
+
+    updateWindowTitle_();
 }
 
 void ProjectorSetupDialog::updateProjectorSettings_()
@@ -590,11 +600,18 @@ void ProjectorSetupDialog::updateProjectorList_()
 
 }
 
-void ProjectorSetupDialog::savePreset_()
+bool ProjectorSetupDialog::savePresetChoose_()
 {
     QString fn = IO::Files::getSaveFileName(IO::FT_PROJECTION_SETTINGS);
+    if (!fn.isEmpty())
+        return savePreset_(fn);
+    return false;
+}
+
+bool ProjectorSetupDialog::savePreset_(const QString& fn)
+{
     if (fn.isEmpty())
-        return;
+        return false;
 
     try
     {
@@ -602,12 +619,14 @@ void ProjectorSetupDialog::savePreset_()
         filename_ = fn;
         *orgSettings_ = *settings_;
         updateWindowTitle_();
+        return true;
     }
     catch (Exception& e)
     {
         QMessageBox::critical(this, tr("file i/o"),
                               tr("Could not save projection settings") + "\n" + e.what());
     }
+    return false;
 }
 
 void ProjectorSetupDialog::loadPreset_()
@@ -621,7 +640,10 @@ void ProjectorSetupDialog::loadPreset_()
         settings_->loadFile(fn);
         *orgSettings_ = *settings_;
         filename_ = fn;
-        updateWindowTitle_();
+
+        updateProjectorList_();
+        updateDomeSettings_();
+        updateProjectorSettings_();
     }
     catch (Exception& e)
     {
@@ -641,6 +663,33 @@ void ProjectorSetupDialog::updateWindowTitle_()
         title += " [" + QFileInfo(filename_).fileName() + "]";
 
     setWindowTitle(title);
+}
+
+bool ProjectorSetupDialog::saveToClose_()
+{
+    if (saidNoAlready_ || *settings_ == *orgSettings_)
+        return true;
+
+    QMessageBox::Button res =
+        QMessageBox::question(this, tr("unsaved changes"),
+                              tr("There are unsaved changes, do you want to save them?\n%1")
+                              .arg(filename_.isEmpty()? tr("(choose file)") :
+                                                    tr("(to file %1)").arg(filename_)),
+                              QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+                              QMessageBox::Yes);
+    if (res == QMessageBox::Cancel)
+        return false;
+
+    if (res == QMessageBox::No)
+    {
+        saidNoAlready_ = true;
+        return true;
+    }
+
+    if (filename_.isEmpty())
+        return savePresetChoose_();
+    else
+        return savePreset_(filename_);
 }
 
 

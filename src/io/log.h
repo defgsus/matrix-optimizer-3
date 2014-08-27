@@ -125,7 +125,7 @@
 #   define MO_DEBUG_GEOM(unused__) { }
 #endif
 
-#if (1) && defined(MO_ENABLE_DEBUG)
+#if (0) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_SND
 #   define MO_DEBUG_SND(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
