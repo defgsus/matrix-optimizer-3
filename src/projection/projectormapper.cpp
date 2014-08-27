@@ -87,12 +87,12 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
     // and hc = b * sin(alpha)
     // and gamma = 180 - 2*alpha
     // ->  alpha = (180 - gamma) / 2
-    const Float gamma = set_.fov() * (Float)DEG_TO_TWO_PI;
+    const Float gamma = MATH::deg_to_rad(set_.fov());
     const Float c = std::sqrt((Float)2*((Float)1-std::cos(gamma)))
                // XXX lensradius is not calculated properly here
                 - (Float)0.135 * lensfac;
     const Float alpha = (Float)0.5 * ((Float)180 - set_.fov());
-    const Float hc = std::sin(alpha * (Float)DEG_TO_TWO_PI);
+    const Float hc = std::sin(MATH::deg_to_rad(alpha));
     Vec3 dir = glm::normalize(Vec3(s*c*(Float)0.5, t*c*(Float)0.5, -hc));
 
     //MO_DEBUG("dir " << dir << ", len " << glm::length(dir));
@@ -158,7 +158,7 @@ void ProjectorMapper::findCenterProjection() const
 
     // horizontal field of view
     const Float adot = glm::dot(glm::normalize(ml), glm::normalize(mr));
-    const Float angle = std::acos(adot) * (Float)TWO_PI_TO_DEG;
+    const Float angle = MATH::rad_to_deg(std::acos(adot));
     // aspect ratio
     //const Float aspect =
 

@@ -43,11 +43,6 @@
 #define TWO_PI_TO_DEG (180.0/PI)
 #endif
 
-/** degree to radians multiplier (1.0/360.0) */
-#ifndef DEG_TO_RAD
-#define DEG_TO_RAD (0.0027777777777777777777777777777)
-#endif
-
 /** sqrt(2.0) */
 #ifndef SQRT_2
 #define SQRT_2 (1.4142135623730950488016887242097)
@@ -63,6 +58,23 @@
 #define TANH_1_I (1.313035)
 #endif
 
+namespace MO {
+namespace MATH {
+
+    template <typename F>
+    F deg_to_rad(F degree)
+    {
+        return degree * F(DEG_TO_TWO_PI);
+    }
+
+    template <typename F>
+    F rad_to_deg(F radians)
+    {
+        return radians * F(TWO_PI_TO_DEG);
+    }
+
+} // namespace MATH
+} // namespace MO
 
 
 #endif // MOSRC_MATH_CONSTANTS_H
