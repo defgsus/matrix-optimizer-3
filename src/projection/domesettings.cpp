@@ -46,5 +46,14 @@ void DomeSettings::deserialize(IO::XmlStream & io)
         tiltZ_ = io.expectFloat("tiltZ");
 }
 
+bool DomeSettings::operator == (const DomeSettings& o) const
+{
+    return name_ == o.name_
+            && radius_ == o.radius_
+            && coverage_ == o.coverage_
+            && tiltX_ == o.tiltX_
+            && tiltZ_ == o.tiltZ_;
+}
+
 
 } // namespace MO

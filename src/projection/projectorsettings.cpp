@@ -63,5 +63,19 @@ void ProjectorSettings::deserialize(IO::XmlStream & io)
         roll_ = io.expectFloat("roll");
 }
 
+bool ProjectorSettings::operator == (const ProjectorSettings& o) const
+{
+    return name_ == o.name_
+            && width_ == o.width_
+            && height_ == o.height_
+            && fov_ == o.fov_
+            && lensRadius_ == o.lensRadius_
+            && latitude_ == o.latitude_
+            && longitude_ == o.longitude_
+            && distance_ == o.distance_
+            && pitch_ == o.pitch_
+            && yaw_ == o.yaw_
+            && roll_ == o.roll_;
+}
 
 } // namespace MO

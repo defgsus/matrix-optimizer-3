@@ -17,6 +17,8 @@
 #include <QToolButton>
 #include <QCheckBox>
 #include <QLineEdit>
+#include <QMessageBox>
+#include <QFileInfo>
 
 #include "projectorsetupdialog.h"
 #include "widget/domepreviewwidget.h"
@@ -25,6 +27,7 @@
 #include "projection/projectionsystemsettings.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
+#include "io/files.h"
 
 namespace MO {
 namespace GUI {
@@ -34,20 +37,22 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     : QDialog       (parent),
       closeRequest_ (false),
       settings_     (new ProjectionSystemSettings()),
+      orgSettings_  (new ProjectionSystemSettings()),
       domeSettings_ (new DomeSettings()),
       projectorSettings_(new ProjectorSettings())
 {
     setObjectName("_ProjectorSetupDialog");
-    setWindowTitle(tr("projector setup"));
     setMinimumSize(760,600);
 
     createWidgets_();
 
     settings_->appendProjector(ProjectorSettings());
+    *orgSettings_ = *settings_;
     *projectorSettings_ = settings_->projectorSettings(0);
 
-    updateProjectorList_();
+    updateWindowTitle_();
 
+    updateProjectorList_();
     updateDomeWidgets_();
     updateProjectorWidgets_();
 
@@ -58,6 +63,7 @@ ProjectorSetupDialog::~ProjectorSetupDialog()
 {
     delete projectorSettings_;
     delete domeSettings_;
+    delete orgSettings_;
     delete settings_;
 }
 
@@ -65,18 +71,14 @@ void ProjectorSetupDialog::createWidgets_()
 {
     auto lh = new QHBoxLayout(this);
 
-        // --- projector setup ---
+        auto lv0 = new QVBoxLayout();
+        lh->addLayout(lv0);
 
-        auto frame = new QFrame(this);
-        lh->addWidget(frame);
-        frame->setFrameStyle(QFrame::Raised);
-
-        auto lv = new QVBoxLayout(frame);
 
             // ------ projector select ------------
 
             auto lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
+            lv0->addLayout(lh2);
 
                 comboProj_ = new QComboBox(this);
                 lh2->addWidget(comboProj_);
@@ -88,9 +90,9 @@ void ProjectorSetupDialog::createWidgets_()
                 tbut->setIcon(QIcon(":/icon/new_letters.png"));
                 connect(tbut, SIGNAL(clicked()), this, SLOT(newProjector_()));
 
-                auto tbut = tbDup_ = new QToolButton(this);
+                tbut = tbDup_ = new QToolButton(this);
                 lh2->addWidget(tbut);
-                tbut->setText(tr("DUP"))
+                tbut->setText(tr("DUP"));
                 connect(tbut, SIGNAL(clicked()), this, SLOT(duplicateProjector_()));
 
                 tbut = tbRemove_ = new QToolButton(this);
@@ -98,96 +100,98 @@ void ProjectorSetupDialog::createWidgets_()
                 tbut->setIcon(QIcon(":/icon/delete.png"));
                 connect(tbut, SIGNAL(clicked()), this, SLOT(deleteProjector_()));
 
+            // --- projector setup ---
 
-            // --------- projector settings --------------
+            auto frame = new QFrame(this);
+            lv0->addWidget(frame);
+            frame->setFrameStyle(QFrame::Raised | QFrame::Panel);
 
-            auto label = new QLabel(tr("projector settings"), this);
-            lv->addWidget(label);
+                auto lv = new QVBoxLayout(frame);
 
-            editName_ = createEdit_(lv, tr("name"),
-                                        tr("Some name to identify the projector"),
-                                    "projector", SLOT(updateProjectorName_()));
+                // --------- projector settings --------------
 
-            spinWidth_ = createSpin_(lv, tr("width"),
-                                         tr("Projector's horizontal resolution in pixels"),
-                                         1024, 1, 1, 8192, SLOT(updateProjectorSettings_()));
-            spinWidth_->setSuffix(" " + tr("px"));
+                auto label = new QLabel(tr("projector settings"), this);
+                lv->addWidget(label);
 
-            spinHeight_ = createSpin_(lv, tr("height"),
-                                         tr("Projector's vertical resolution in pixels"),
-                                         768, 1, 1, 8192, SLOT(updateProjectorSettings_()));
-            spinHeight_->setSuffix(" " + tr("px"));
+                editName_ = createEdit_(lv, tr("name"),
+                                            tr("Some name to identify the projector"),
+                                        "projector", SLOT(updateProjectorName_()));
 
-            spinFov_ = createDoubleSpin_(lv, tr("field of view"),
-                                         tr("Projector's projection (horizontal) angle in degree"),
-                                         60, 1, 1, 180, SLOT(updateProjectorSettings_()));
-            spinFov_->setSuffix(" " + tr("°"));
+                spinWidth_ = createSpin_(lv, tr("width"),
+                                             tr("Projector's horizontal resolution in pixels"),
+                                             1024, 1, 1, 8192, SLOT(updateProjectorSettings_()));
+                spinWidth_->setSuffix(" " + tr("px"));
 
-            spinLensRad_ = createDoubleSpin_(lv, tr("lens radius"),
-                                         tr("The radius of the projector's lens in centimeters"),
-                                         0, 0.1, 0, 1000, SLOT(updateProjectorSettings_()));
-            spinLensRad_->setSuffix(" " + tr(" cm"));
+                spinHeight_ = createSpin_(lv, tr("height"),
+                                             tr("Projector's vertical resolution in pixels"),
+                                             768, 1, 1, 8192, SLOT(updateProjectorSettings_()));
+                spinHeight_->setSuffix(" " + tr("px"));
 
-            label = new QLabel(tr("position"), this);
-            lv->addWidget(label);
+                spinFov_ = createDoubleSpin_(lv, tr("field of view"),
+                                             tr("Projector's projection (horizontal) angle in degree"),
+                                             60, 1, 1, 180, SLOT(updateProjectorSettings_()));
+                spinFov_->setSuffix(" " + tr("°"));
 
-            spinDist_ = createDoubleSpin_(lv, tr("distance"),
-                                         tr("Projector's distance to the dome periphery "
-                                            "in centimeters - "
-                                            "negative is inside, positive is outside of dome"),
-                                         0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
-            spinDist_->setSuffix(" " + tr("cm"));
+                spinLensRad_ = createDoubleSpin_(lv, tr("lens radius"),
+                                             tr("The radius of the projector's lens in centimeters"),
+                                             0, 0.1, 0, 1000, SLOT(updateProjectorSettings_()));
+                spinLensRad_->setSuffix(" " + tr(" cm"));
 
-            spinLat_ = createDoubleSpin_(lv, tr("latitude"),
-                                         tr("Projector's position around the dome"),
-                                         0, 1, -360, 360, SLOT(updateProjectorSettings_()));
-            spinLat_->setSuffix(" " + tr("°"));
+                label = new QLabel(tr("position"), this);
+                lv->addWidget(label);
 
-            spinLong_ = createDoubleSpin_(lv, tr("longitude"),
-                                         tr("Projector's height"),
-                                         0, 1, -90, 90, SLOT(updateProjectorSettings_()));
-            spinLong_->setSuffix(" " + tr("°"));
+                spinDist_ = createDoubleSpin_(lv, tr("distance"),
+                                             tr("Projector's distance to the dome periphery "
+                                                "in centimeters - "
+                                                "negative is inside, positive is outside of dome"),
+                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
+                spinDist_->setSuffix(" " + tr("cm"));
 
-            label = new QLabel(tr("orientation"), this);
-            lv->addWidget(label);
+                spinLat_ = createDoubleSpin_(lv, tr("latitude"),
+                                             tr("Projector's position around the dome"),
+                                             0, 1, -360, 360, SLOT(updateProjectorSettings_()));
+                spinLat_->setSuffix(" " + tr("°"));
 
-            spinPitch_ = createDoubleSpin_(lv, tr("pitch (x)"),
-                                         tr("The x rotation of the Projector's direction "
-                                            "- up and down"),
-                                         0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
-            spinPitch_->setSuffix(" " + tr("°"));
+                spinLong_ = createDoubleSpin_(lv, tr("longitude"),
+                                             tr("Projector's height"),
+                                             0, 1, -90, 90, SLOT(updateProjectorSettings_()));
+                spinLong_->setSuffix(" " + tr("°"));
 
-            spinYaw_ = createDoubleSpin_(lv, tr("yaw (y)"),
-                                         tr("The y rotation of the Projector's direction "
-                                            "- left and right"),
-                                         0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
-            spinYaw_->setSuffix(" " + tr("°"));
+                label = new QLabel(tr("orientation"), this);
+                lv->addWidget(label);
 
-            spinRoll_ = createDoubleSpin_(lv, tr("roll (z)"),
-                                         tr("The z rotation of the Projector's direction "
-                                            "- turn left and turn right"),
-                                         0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
-            spinRoll_->setSuffix(" " + tr("°"));
+                spinPitch_ = createDoubleSpin_(lv, tr("pitch (x)"),
+                                             tr("The x rotation of the Projector's direction "
+                                                "- up and down"),
+                                             0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
+                spinPitch_->setSuffix(" " + tr("°"));
 
-            lv->addStretch(2);
+                spinYaw_ = createDoubleSpin_(lv, tr("yaw (y)"),
+                                             tr("The y rotation of the Projector's direction "
+                                                "- left and right"),
+                                             0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
+                spinYaw_->setSuffix(" " + tr("°"));
 
-            auto but = new QPushButton("debug");
-            lv->addWidget(but);
-            connect(but, &QPushButton::clicked, [=]()
-            {
-                IO::XmlStream io;
-                io.startWriting("projection-system");
-                settings_->serialize(io);
-                io.stopWriting();
-                MO_DEBUG(io.data());
+                spinRoll_ = createDoubleSpin_(lv, tr("roll (z)"),
+                                             tr("The z rotation of the Projector's direction "
+                                                "- turn left and turn right"),
+                                             0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
+                spinRoll_->setSuffix(" " + tr("°"));
 
-                io.startReading("projection-system");
-                settings_->deserialize(io);
-                io.stopReading();
-                updateProjectorList_();
-                updateDomeWidgets_();
-                updateProjectorWidgets_();
-            });
+            lv0->addStretch(2);
+
+            // -------- io buttons -----------
+
+            lh2 = new QHBoxLayout();
+            lv0->addLayout(lh2);
+
+                auto but = new QPushButton(tr("save settings"), this);
+                lh2->addWidget(but);
+                connect(but, SIGNAL(clicked()), this, SLOT(savePreset_()));
+
+                but = new QPushButton(tr("load settings"), this);
+                lh2->addWidget(but);
+                connect(but, SIGNAL(clicked()), this, SLOT(loadPreset_()));
 
         // --- preview display ---
 
@@ -261,32 +265,40 @@ void ProjectorSetupDialog::createWidgets_()
 
             // --- dome settings ---
 
-            label = new QLabel(tr("dome settings"), this);
-            lv->addWidget(label);
+            frame = new QFrame(this);
+            lv->addWidget(frame);
+            frame->setFrameStyle(QFrame::Raised | QFrame::Panel);
 
-            editDomeName_ = createEdit_(lv, tr("name"),
-                                        tr("Some name to identify the dome/planetarium"),
-                                    "planetarium", SLOT(updateDomeName_()));
+            lv = new QVBoxLayout(frame);
 
-            spinDomeRad_ = createDoubleSpin_(lv, tr("radius"),
-                                         tr("The dome radius in meters - messured at the 180° horizon"),
-                                         10, 0.5, 0.1, 1000, SLOT(updateDomeSettings_()));
-            spinDomeRad_->setSuffix(" " + tr("m"));
+                label = new QLabel(tr("dome settings"), this);
+                lv->addWidget(label);
 
-            spinDomeCover_ = createDoubleSpin_(lv, tr("coverage"),
-                                         tr("The coverage of the dome in degree - 180 = half-sphere"),
-                                         180, 1, 1, 360, SLOT(updateDomeSettings_()));
-            spinDomeCover_->setSuffix(" " + tr("°"));
+                editDomeName_ = createEdit_(lv, tr("name"),
+                                            tr("Some name to identify the dome/planetarium"),
+                                        "planetarium", SLOT(updateDomeName_()));
 
-            spinDomeTiltX_ = createDoubleSpin_(lv, tr("tilt x"),
-                                         tr("The tilt in degree on the x axis"),
-                                         0, 1, -360, 360, SLOT(updateDomeSettings_()));
-            spinDomeTiltX_->setSuffix(" " + tr("°"));
+                spinDomeRad_ = createDoubleSpin_(lv, tr("radius"),
+                                             tr("The dome radius in meters - "
+                                                "messured at the 180° horizon"),
+                                             10, 0.5, 0.1, 1000, SLOT(updateDomeSettings_()));
+                spinDomeRad_->setSuffix(" " + tr("m"));
 
-            spinDomeTiltZ_ = createDoubleSpin_(lv, tr("tilt z"),
-                                         tr("The tilt in degree on the z axis"),
-                                         0, 1, -360, 360, SLOT(updateDomeSettings_()));
-            spinDomeTiltZ_->setSuffix(" " + tr("°"));
+                spinDomeCover_ = createDoubleSpin_(lv, tr("coverage"),
+                                             tr("The coverage of the dome in degree - "
+                                                "180 = half-sphere"),
+                                             180, 1, 1, 360, SLOT(updateDomeSettings_()));
+                spinDomeCover_->setSuffix(" " + tr("°"));
+
+                spinDomeTiltX_ = createDoubleSpin_(lv, tr("tilt x"),
+                                             tr("The tilt in degree on the x axis"),
+                                             0, 1, -360, 360, SLOT(updateDomeSettings_()));
+                spinDomeTiltX_->setSuffix(" " + tr("°"));
+
+                spinDomeTiltZ_ = createDoubleSpin_(lv, tr("tilt z"),
+                                             tr("The tilt in degree on the z axis"),
+                                             0, 1, -360, 360, SLOT(updateDomeSettings_()));
+                spinDomeTiltZ_->setSuffix(" " + tr("°"));
 
 
 }
@@ -435,6 +447,8 @@ void ProjectorSetupDialog::updateDomeSettings_()
     // update system settings as well
     settings_->setDomeSettings(*domeSettings_);
 
+    updateWindowTitle_();
+
     updateDisplay_();
 }
 
@@ -484,6 +498,7 @@ void ProjectorSetupDialog::updateProjectorSettings_()
     if (idx >= 0 && idx < settings_->numProjectors())
     {
         settings_->setProjectorSettings(idx, *projectorSettings_);
+        updateWindowTitle_();
     }
 
     updateDisplay_();
@@ -573,6 +588,59 @@ void ProjectorSetupDialog::updateProjectorList_()
         comboProj_->setCurrentIndex(idx);
     }
 
+}
+
+void ProjectorSetupDialog::savePreset_()
+{
+    QString fn = IO::Files::getSaveFileName(IO::FT_PROJECTION_SETTINGS);
+    if (fn.isEmpty())
+        return;
+
+    try
+    {
+        settings_->saveFile(fn);
+        filename_ = fn;
+        *orgSettings_ = *settings_;
+        updateWindowTitle_();
+    }
+    catch (Exception& e)
+    {
+        QMessageBox::critical(this, tr("file i/o"),
+                              tr("Could not save projection settings") + "\n" + e.what());
+    }
+}
+
+void ProjectorSetupDialog::loadPreset_()
+{
+    QString fn = IO::Files::getOpenFileName(IO::FT_PROJECTION_SETTINGS);
+    if (fn.isEmpty())
+        return;
+
+    try
+    {
+        settings_->loadFile(fn);
+        *orgSettings_ = *settings_;
+        filename_ = fn;
+        updateWindowTitle_();
+    }
+    catch (Exception& e)
+    {
+        QMessageBox::critical(this, tr("file i/o"),
+                              tr("Could not load projection settings") + "\n" + e.what());
+    }
+}
+
+void ProjectorSetupDialog::updateWindowTitle_()
+{
+    QString title = tr("projector setup");
+
+    if (*settings_ != *orgSettings_)
+        title += " *";
+
+    if (!filename_.isEmpty())
+        title += " [" + QFileInfo(filename_).fileName() + "]";
+
+    setWindowTitle(title);
 }
 
 

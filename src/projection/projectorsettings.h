@@ -32,6 +32,8 @@ public:
 
     // ---------- getter ----------
 
+    bool operator == (const ProjectorSettings&) const;
+
     const QString& name() const { return name_; }
     int width() const { return width_; }
     int height() const { return height_; }

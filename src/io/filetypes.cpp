@@ -16,7 +16,7 @@ namespace MO {
 namespace IO {
 
     const QStringList fileTypeIds =
-    { "any", "scene", "texture", "model", "geom-set", "sound" };
+    { "any", "scene", "texture", "model", "geom-set", "sound", "projection-set" };
 
     const QStringList fileTypeNames =
     { QObject::tr("Any file"),
@@ -24,7 +24,8 @@ namespace IO {
       QObject::tr("Texture"),
       QObject::tr("Model"),
       QObject::tr("Geometry settings"),
-      QObject::tr("Audio file") };
+      QObject::tr("Audio file"),
+      QObject::tr("Projection settings")};
 
     const QList<QStringList> fileTypeExtensions =
     {
@@ -33,7 +34,8 @@ namespace IO {
         { "png", "jpg", "jpeg", "bmp" },
         { "obj" },
         { "mo3-geom" },
-        { "wav", "voc", "au", "snd", "aiff", "aifc", "w64", "flac" }
+        { "wav", "voc", "au", "snd", "aiff", "aifc", "w64", "flac" },
+        { "xml-proj" }
     };
 
     const QList<QStringList> fileTypeDialogFilters =
@@ -47,7 +49,8 @@ namespace IO {
         { QObject::tr("Wavefront Object") + " ( *.obj )" },
         { QObject::tr("geometry presets") + " ( *.mo3-geom )" },
         { QObject::tr("all audio files")
-                    + " ( *.wav *.voc *.au *.snd *.aiff *.aifc *.w64 *.flac )" }
+                    + " ( *.wav *.voc *.au *.snd *.aiff *.aifc *.w64 *.flac )" },
+        { QObject::tr("xml files") + " ( *.xml-proj )" }
     };
 
 

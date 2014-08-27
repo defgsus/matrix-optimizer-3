@@ -66,7 +66,12 @@ private slots:
     //void moveProjectorUp_();
     //void moveProjectorDown_();
 
+    void savePreset_();
+    void loadPreset_();
+
 private:
+
+    void updateWindowTitle_();
 
     void createWidgets_();
     QLineEdit * createEdit_(QLayout * layout,
@@ -85,7 +90,9 @@ private:
 
     bool closeRequest_;
 
-    ProjectionSystemSettings * settings_;
+    QString filename_;
+
+    ProjectionSystemSettings * settings_, * orgSettings_;
 
     DomeSettings * domeSettings_;
     ProjectorSettings * projectorSettings_;

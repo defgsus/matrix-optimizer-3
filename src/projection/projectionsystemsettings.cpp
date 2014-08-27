@@ -26,6 +26,19 @@ void ProjectionSystemSettings::clear()
     projectors_.clear();
 }
 
+bool ProjectionSystemSettings::operator == (const ProjectionSystemSettings& o) const
+{
+    if (numProjectors() != o.numProjectors())
+        return false;
+    if (!(dome_ == o.dome_))
+        return false;
+    for (int i=0; i<numProjectors(); ++i)
+        if (!(projectors_[i] == o.projectors_[i]))
+            return false;
+
+    return true;
+}
+
 void ProjectionSystemSettings::serialize(IO::XmlStream & io) const
 {
     MO_DEBUG_IO("ProjectionSystemSettings::serialize()");
@@ -73,7 +86,7 @@ void ProjectionSystemSettings::saveFile(const QString &filename) const
     io.save(filename);
 }
 
-void ProjectionSystemSettings::laodFile(const QString &filename)
+void ProjectionSystemSettings::loadFile(const QString &filename)
 {
     MO_DEBUG_IO("ProjectionSystemSettings::loadFile('" << filename << "')");
 

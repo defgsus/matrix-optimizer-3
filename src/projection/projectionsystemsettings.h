@@ -30,9 +30,12 @@ public:
     void deserialize(IO::XmlStream&);
 
     void saveFile(const QString& filename) const;
-    void laodFile(const QString& filename);
+    void loadFile(const QString& filename);
 
     // ---------- getter ----------
+
+    bool operator == (const ProjectionSystemSettings&) const;
+    bool operator != (const ProjectionSystemSettings& o) const { return !(*this == o); }
 
     int numProjectors() const { return projectors_.size(); }
 

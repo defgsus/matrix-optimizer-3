@@ -24,7 +24,8 @@ namespace IO {
         FT_TEXTURE,
         FT_MODEL,
         FT_GEOMETRY_SETTINGS,
-        FT_SOUND_FILE
+        FT_SOUND_FILE,
+        FT_PROJECTION_SETTINGS
     };
 
     extern const QStringList fileTypeIds;

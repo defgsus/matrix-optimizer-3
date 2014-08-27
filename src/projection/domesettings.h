@@ -30,6 +30,8 @@ public:
 
     // --------- getter -------------
 
+    bool operator == (const DomeSettings&) const;
+
     const QString& name() const { return name_; }
 
     /** Radius in meters */
