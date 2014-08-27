@@ -16,6 +16,7 @@
 #include <QCloseEvent>
 #include <QToolButton>
 #include <QCheckBox>
+#include <QLineEdit>
 
 #include "projectorsetupdialog.h"
 #include "widget/domepreviewwidget.h"
@@ -66,8 +67,20 @@ void ProjectorSetupDialog::createWidgets_()
 
         auto lv = new QVBoxLayout(frame);
 
+            // ------ projector select ------------
+
+            comboProj_ = new QComboBox(this);
+            lv->addWidget(comboProj_);
+
+
+            // --------- projector settings --------------
+
             auto label = new QLabel(tr("projector settings"), this);
             lv->addWidget(label);
+
+            editName_ = createEdit_(lv, tr("name"),
+                                        tr("Some name to identify the projector"),
+                                    "projector", SLOT(updateProjectorName_()));
 
             spinWidth_ = createSpin_(lv, tr("width"),
                                          tr("Projector's horizontal resolution in pixels"),
@@ -246,6 +259,33 @@ void ProjectorSetupDialog::createWidgets_()
 
 }
 
+QLineEdit * ProjectorSetupDialog::createEdit_(QLayout * layout,
+                    const QString& desc, const QString& statusTip,
+                    const QString& value,
+                    const char * slot)
+{
+    auto w = new QWidget(this);
+    w->setAutoFillBackground(true);
+    QPalette p(w->palette());
+    p.setColor(QPalette::Window, p.color(QPalette::Window).darker(110));
+    w->setPalette(p);
+    layout->addWidget(w);
+
+        auto lh = new QHBoxLayout(w);
+        lh->setMargin(1);
+
+            auto label = new QLabel(desc, this);
+            label->setStatusTip(statusTip);
+            lh->addWidget(label);
+
+            auto edit = new QLineEdit(value, this);
+            lh->addWidget(edit);
+
+            if (slot)
+                connect(edit, SIGNAL(textChanged(QString)), this, slot);
+    return edit;
+}
+
 SpinBox * ProjectorSetupDialog::createSpin_(
                     QLayout * layout,
                     const QString& desc, const QString& statusTip,
@@ -363,6 +403,11 @@ void ProjectorSetupDialog::updateDomeSettings_()
         display_->viewSetOrthoScale(domeSettings_->radius());
 
     display_->setDomeSettings(*domeSettings_);
+}
+
+void ProjectorSetupDialog::updateProjectorName_()
+{
+    projectorSettings_->setName(editName_->text());
 }
 
 void ProjectorSetupDialog::updateProjectorSettings_()

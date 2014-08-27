@@ -11,17 +11,26 @@
 #ifndef MOSRC_PROJECTION_DOMESETTINGS_H
 #define MOSRC_PROJECTION_DOMESETTINGS_H
 
+#include <QString>
+
 #include "types/float.h"
 
 namespace MO {
-
+namespace IO { class XmlStream; }
 
 class DomeSettings
 {
 public:
     DomeSettings();
 
+    // ------------ io ------------
+
+    void serialize(IO::XmlStream&) const;
+    void deserialize(IO::XmlStream&);
+
     // --------- getter -------------
+
+    const QString& name() const { return name_; }
 
     /** Radius in meters */
     Float radius() const { return radius_; }
@@ -37,6 +46,8 @@ public:
 
     // --------- setter -------------
 
+    void setName(const QString& n) { name_ = n; }
+
     void setRadius(Float r) { radius_ = r; }
     void setCoverage(Float c) { coverage_ = c; }
     void setTiltX(Float t) { tiltX_ = t; }
@@ -44,6 +55,7 @@ public:
 
 private:
 
+    QString name_;
     Float radius_, coverage_, tiltX_, tiltZ_;
 };
 

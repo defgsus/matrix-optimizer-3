@@ -14,6 +14,7 @@
 #include <QDialog>
 
 class QComboBox;
+class QLineEdit;
 
 namespace MO {
 class DomeSettings;
@@ -49,10 +50,15 @@ private slots:
     void changeView_();
     void updateDomeSettings_();
     void updateProjectorSettings_();
+    void updateProjectorName_();
 
 private:
 
     void createWidgets_();
+    QLineEdit * createEdit_(QLayout * layout,
+                        const QString& desc, const QString& statusTip,
+                        const QString& value,
+                        const char * slot = 0);
     SpinBox * createSpin_(QLayout * layout,
                         const QString& desc, const QString& statusTip,
                         int value, int smallstep=1, int minv=-9999999, int maxv=9999999,
@@ -69,6 +75,9 @@ private:
     ProjectorSettings * projectorSettings_;
 
     DomePreviewWidget * display_;
+
+    QLineEdit
+        * editName_;
 
     SpinBox
         * spinWidth_,
@@ -90,6 +99,7 @@ private:
         * spinRoll_;
 
     QComboBox
+        * comboProj_,
         * comboView_;
 };
 
