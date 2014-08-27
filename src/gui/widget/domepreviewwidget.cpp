@@ -11,8 +11,7 @@
 #include <vector>
 
 #include "domepreviewwidget.h"
-#include "projection/domesettings.h"
-#include "projection/projectorsettings.h"
+#include "projection/projectionsystemsettings.h"
 #include "projection/projectormapper.h"
 #include "geom/geometry.h"
 #include "geom/geometryfactory.h"
@@ -23,8 +22,7 @@ namespace GUI {
 
 DomePreviewWidget::DomePreviewWidget(QWidget *parent)
     : Basic3DWidget (Basic3DWidget::RM_DIRECT, parent),
-      domeSettings_ (new DomeSettings()),
-      projectorSettings_(new ProjectorSettings()),
+      settings_     (new ProjectionSystemSettings()),
       domeGeometry_ (0),
       projectorGeometry_(0),
       showGrid_     (true),
@@ -40,15 +38,16 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
 
 DomePreviewWidget::~DomePreviewWidget()
 {
-    delete domeSettings_;
     delete domeGeometry_;
-    delete projectorSettings_;
     delete projectorGeometry_;
+    delete settings_;
 }
 
-void DomePreviewWidget::setDomeSettings(const DomeSettings & s)
+void DomePreviewWidget::setProjectionSettings(
+        const ProjectionSystemSettings & s, int currentIndex)
 {
-    *domeSettings_ = s;
+    *settings_ = s;
+    projIndex_ = currentIndex;
     createDomeGeometry_();
     createProjectorGeometry_();
     update();
@@ -61,18 +60,18 @@ void DomePreviewWidget::createDomeGeometry_()
     domeGeometry_->setColor(0.5,0.5,0.5,1.0);
 
     GEOM::GeometryFactory::createDomeLines(domeGeometry_,
-                                           domeSettings_->radius(),
-                                           domeSettings_->coverage(),
+                                           settings_->domeSettings().radius(),
+                                           settings_->domeSettings().coverage(),
                                            24, 12);
     Mat4 trans(1.0);
 
-    if (domeSettings_->tiltX() != 0)
+    if (settings_->domeSettings().tiltX() != 0)
     {
-        trans = glm::rotate(trans, domeSettings_->tiltX(), Vec3(1, 0, 0));
+        trans = glm::rotate(trans, settings_->domeSettings().tiltX(), Vec3(1, 0, 0));
     }
-    if (domeSettings_->tiltZ() != 0)
+    if (settings_->domeSettings().tiltZ() != 0)
     {
-        trans = glm::rotate(trans, domeSettings_->tiltZ(), Vec3(0, 0, 1));
+        trans = glm::rotate(trans, settings_->domeSettings().tiltZ(), Vec3(0, 0, 1));
     }
 
     // transform
@@ -90,79 +89,86 @@ void DomePreviewWidget::createDomeGeometry_()
         domeGeometry_->calculateTriangleNormals();
 }
 
-void DomePreviewWidget::setProjectorSettings(const ProjectorSettings & s)
-{
-    *projectorSettings_ = s;
-    createProjectorGeometry_();
-    update();
-}
-
 void DomePreviewWidget::createProjectorGeometry_()
 {
     ProjectorMapper mapper;
-    mapper.setSettings(*domeSettings_, *projectorSettings_);
-    if (!mapper.isValid())
-        return;
 
     // build geometry
     projectorGeometry_ = new GEOM::Geometry();
 
-    if (showRays_)
+    for (int i=0; i<settings_->numProjectors(); ++i)
     {
-        projectorGeometry_->setColor(0.7,0.7,0.5,1);
+        const bool highlight = (projIndex_ < 0 || projIndex_ == i);
 
-        for (int i=0; i<3; ++i)
+        mapper.setSettings(settings_->domeSettings(),
+                           settings_->projectorSettings(i));
+        if (!mapper.isValid())
+            continue;
+
+        if (showRays_)
         {
-            const Float x = (Float)i/2;
+            if (highlight)
+                projectorGeometry_->setColor(0.7,0.7,0.5,1);
+            else
+                projectorGeometry_->setColor(0.4,0.4,0.3,1);
 
-            Vec3 pos = mapper.getRayOrigin(x,0);
-            int v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            pos = mapper.mapToDome(x,0);
-            int v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            projectorGeometry_->addLine(v0, v1);
+            for (int i=0; i<3; ++i)
+            {
+                const Float x = (Float)i/2;
 
-            pos = mapper.getRayOrigin(x,1);
-            v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            pos = mapper.mapToDome(x,1);
-            v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            projectorGeometry_->addLine(v0, v1);
+                Vec3 pos = mapper.getRayOrigin(x,0);
+                int v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+                pos = mapper.mapToDome(x,0);
+                int v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+                projectorGeometry_->addLine(v0, v1);
 
-            pos = mapper.getRayOrigin(0,x);
-            v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            pos = mapper.mapToDome(0,x);
-            v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            projectorGeometry_->addLine(v0, v1);
+                pos = mapper.getRayOrigin(x,1);
+                v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+                pos = mapper.mapToDome(x,1);
+                v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+                projectorGeometry_->addLine(v0, v1);
 
-            pos = mapper.getRayOrigin(1,x);
-            v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            pos = mapper.mapToDome(1,x);
-            v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            projectorGeometry_->addLine(v0, v1);
-        }
-    }
+                pos = mapper.getRayOrigin(0,x);
+                v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+                pos = mapper.mapToDome(0,x);
+                v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+                projectorGeometry_->addLine(v0, v1);
 
-    if (showProjectedSurface_)
-    {
-        projectorGeometry_->setColor(0.5,1.0,0.5,1);
-        std::vector<GEOM::Geometry::IndexType> idx;
-        const int num = 11;
-        // create grid
-        for (uint y = 0; y<num; ++y)
-        for (uint x = 0; x<num; ++x)
-        {
-            const Vec3 pos = mapper.mapToDome(
-                        (Float)x/(num-1), (Float)y/(num-1));
-            idx.push_back( projectorGeometry_->addVertex(pos[0], pos[1], pos[2]));
+                pos = mapper.getRayOrigin(1,x);
+                v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+                pos = mapper.mapToDome(1,x);
+                v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
+                projectorGeometry_->addLine(v0, v1);
+            }
         }
 
-        // connect grid
-        for (uint y = 0; y<num; ++y)
-        for (uint x = 0; x<num; ++x)
+        if (showProjectedSurface_)
         {
-            if (x>0)
-                projectorGeometry_->addLine(idx[y*num+x-1], idx[y*num+x]);
-            if (y>0)
-                projectorGeometry_->addLine(idx[(y-1)*num+x], idx[y*num+x]);
+            if (highlight)
+                projectorGeometry_->setColor(0.5,1.0,0.5,1);
+            else
+                projectorGeometry_->setColor(0.3,0.6,0.3,1);
+
+            std::vector<GEOM::Geometry::IndexType> idx;
+            const int num = 11;
+            // create grid
+            for (uint y = 0; y<num; ++y)
+            for (uint x = 0; x<num; ++x)
+            {
+                const Vec3 pos = mapper.mapToDome(
+                            (Float)x/(num-1), (Float)y/(num-1));
+                idx.push_back( projectorGeometry_->addVertex(pos[0], pos[1], pos[2]));
+            }
+
+            // connect grid
+            for (uint y = 0; y<num; ++y)
+            for (uint x = 0; x<num; ++x)
+            {
+                if (x>0)
+                    projectorGeometry_->addLine(idx[y*num+x-1], idx[y*num+x]);
+                if (y>0)
+                    projectorGeometry_->addLine(idx[(y-1)*num+x], idx[y*num+x]);
+            }
         }
     }
 

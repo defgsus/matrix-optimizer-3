@@ -18,6 +18,7 @@ namespace MO {
 
 class DomeSettings;
 class ProjectorSettings;
+class ProjectionSystemSettings;
 
 namespace GUI {
 
@@ -37,11 +38,9 @@ public slots:
 
     void setShowGrid(bool enable) { showGrid_ = enable; update(); }
 
-    /** Updates the dome settings and the graphic */
-    void setDomeSettings(const DomeSettings&);
-
-    /** Updates the projector settings and the graphic */
-    void setProjectorSettings(const ProjectorSettings&);
+    /** Updates the settings and graphical display.
+        If @p currentProjectorIndex >= 0, then this projector will be highlighted. */
+    void setProjectionSettings(const ProjectionSystemSettings&, int currentProjectorIndex = -1);
 
 protected:
 
@@ -58,15 +57,12 @@ private:
     void createDomeGeometry_();
     void createProjectorGeometry_();
 
-    DomeSettings * domeSettings_;
-    ProjectorSettings * projectorSettings_;
+    ProjectionSystemSettings * settings_;
 
     GEOM::Geometry * domeGeometry_;
     GEOM::Geometry * projectorGeometry_;
     GL::Drawable * domeDrawable_;
     GL::Drawable * projectorDrawable_;
-    //GL::Texture * tex_;
-    //GL::LightSettings * lights_;
 
     Mat4 domeTransform_;
 
@@ -74,7 +70,7 @@ private:
          showRays_,
          showProjectedSurface_;
 
-
+    int projIndex_;
 };
 
 } // namespace GUI

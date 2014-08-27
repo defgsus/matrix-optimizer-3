@@ -61,6 +61,7 @@ private slots:
 
     void projectorSelected_();
     void newProjector_();
+    void duplicateProjector_();
     void deleteProjector_();
     //void moveProjectorUp_();
     //void moveProjectorDown_();
@@ -120,6 +121,7 @@ private:
 
     QToolButton
         * tbAdd_,
+        * tbDup_,
         * tbRemove_;
 };
 

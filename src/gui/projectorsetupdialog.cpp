@@ -88,6 +88,11 @@ void ProjectorSetupDialog::createWidgets_()
                 tbut->setIcon(QIcon(":/icon/new_letters.png"));
                 connect(tbut, SIGNAL(clicked()), this, SLOT(newProjector_()));
 
+                auto tbut = tbDup_ = new QToolButton(this);
+                lh2->addWidget(tbut);
+                tbut->setText(tr("DUP"))
+                connect(tbut, SIGNAL(clicked()), this, SLOT(duplicateProjector_()));
+
                 tbut = tbRemove_ = new QToolButton(this);
                 lh2->addWidget(tbut);
                 tbut->setIcon(QIcon(":/icon/delete.png"));
@@ -489,8 +494,7 @@ void ProjectorSetupDialog::updateDisplay_()
     if (display_->renderMode() == Basic3DWidget::RM_DIRECT_ORTHO)
         display_->viewSetOrthoScale(domeSettings_->radius());
 
-    display_->setDomeSettings(*domeSettings_);
-    display_->setProjectorSettings(*projectorSettings_);
+    display_->setProjectionSettings(*settings_, comboProj_->currentIndex());
 }
 
 void ProjectorSetupDialog::updateProjectorWidgets_()
@@ -522,6 +526,19 @@ void ProjectorSetupDialog::projectorSelected_()
 void ProjectorSetupDialog::newProjector_()
 {
     settings_->appendProjector(ProjectorSettings());
+    *projectorSettings_ = settings_->projectorSettings(settings_->numProjectors()-1);
+    updateProjectorList_();
+
+    comboProj_->setCurrentIndex(settings_->numProjectors()-1);
+}
+
+void ProjectorSetupDialog::duplicateProjector_()
+{
+    int idx = comboProj_->currentIndex();
+    if (idx < 0 || idx >= settings_->numProjectors())
+        return;
+
+    settings_->appendProjector(settings_->projectorSettings(idx));
     *projectorSettings_ = settings_->projectorSettings(settings_->numProjectors()-1);
     updateProjectorList_();
 
