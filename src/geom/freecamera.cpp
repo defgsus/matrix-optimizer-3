@@ -19,6 +19,10 @@ FreeCamera::FreeCamera()
 {
 }
 
+void FreeCamera::setMatrix(const Mat4 & m)
+{
+    matrix_ = m;
+}
 
 Vec3 FreeCamera::forward() const
 {

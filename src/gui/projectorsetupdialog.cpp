@@ -14,6 +14,8 @@
 #include <QFrame>
 #include <QLabel>
 #include <QCloseEvent>
+#include <QToolButton>
+#include <QCheckBox>
 
 #include "projectorsetupdialog.h"
 #include "widget/domepreviewwidget.h"
@@ -36,7 +38,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 {
     setObjectName("_ProjectorSetupDialog");
     setWindowTitle(tr("projector setup"));
-    setMinimumSize(640,480);
+    setMinimumSize(760,600);
 
     createWidgets_();
 
@@ -154,15 +156,63 @@ void ProjectorSetupDialog::createWidgets_()
 
             // --- display settings ---
 
-            comboView_ = new QComboBox(this);
-            lv->addWidget(comboView_);
-            comboView_->setStatusTip(tr("Selects the projection type of the preview window"));
-            comboView_->addItem(tr("orthographic"), Basic3DWidget::RM_DIRECT_ORTHO);
-            comboView_->addItem(tr("perspective"), Basic3DWidget::RM_DIRECT);
-            comboView_->addItem(tr("fulldome cubemap"), Basic3DWidget::RM_FULLDOME_CUBE);
-            comboView_->setCurrentIndex(1);
-            connect(comboView_, SIGNAL(currentIndexChanged(int)),
-                    this, SLOT(changeView_()));
+            auto lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                comboView_ = new QComboBox(this);
+                lh2->addWidget(comboView_);
+                comboView_->setStatusTip(tr("Selects the projection type of the preview window"));
+                comboView_->addItem(tr("orthographic"), Basic3DWidget::RM_DIRECT_ORTHO);
+                comboView_->addItem(tr("perspective"), Basic3DWidget::RM_DIRECT);
+                comboView_->addItem(tr("fulldome cubemap"), Basic3DWidget::RM_FULLDOME_CUBE);
+                comboView_->setCurrentIndex(1);
+                connect(comboView_, SIGNAL(currentIndexChanged(int)),
+                        this, SLOT(changeView_()));
+
+                auto tbut = new QToolButton(this);
+                lh2->addWidget(tbut);
+                tbut->setIcon(QIcon(":/icon/view_front.png"));
+                connect(tbut, &QToolButton::clicked,
+                        [=]{ setViewDirection(Basic3DWidget::VD_FRONT); });
+
+                tbut = new QToolButton(this);
+                lh2->addWidget(tbut);
+                tbut->setIcon(QIcon(":/icon/view_back.png"));
+                connect(tbut, &QToolButton::clicked,
+                        [=]{ setViewDirection(Basic3DWidget::VD_BACK); });
+
+                tbut = new QToolButton(this);
+                lh2->addWidget(tbut);
+                tbut->setIcon(QIcon(":/icon/view_left.png"));
+                connect(tbut, &QToolButton::clicked,
+                        [=]{ setViewDirection(Basic3DWidget::VD_LEFT); });
+
+                tbut = new QToolButton(this);
+                lh2->addWidget(tbut);
+                tbut->setIcon(QIcon(":/icon/view_right.png"));
+                connect(tbut, &QToolButton::clicked,
+                        [=]{ setViewDirection(Basic3DWidget::VD_RIGHT); });
+
+                tbut = new QToolButton(this);
+                lh2->addWidget(tbut);
+                tbut->setIcon(QIcon(":/icon/view_top.png"));
+                connect(tbut, &QToolButton::clicked,
+                        [=]{ setViewDirection(Basic3DWidget::VD_TOP); });
+
+                tbut = new QToolButton(this);
+                lh2->addWidget(tbut);
+                tbut->setIcon(QIcon(":/icon/view_bottom.png"));
+                connect(tbut, &QToolButton::clicked,
+                        [=]{ setViewDirection(Basic3DWidget::VD_BOTTOM); });
+
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                auto cb = new QCheckBox(tr("show coordinates"), this);
+                lh2->addWidget(cb);
+                cb->setChecked(display_->getShowGrid());
+                connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowGrid(bool)));
+
 
             // --- dome settings ---
 
@@ -282,9 +332,21 @@ void ProjectorSetupDialog::changeView_()
     Basic3DWidget::RenderMode rm = (Basic3DWidget::RenderMode)
             comboView_->itemData(comboView_->currentIndex()).toInt();
 
+    if (rm == Basic3DWidget::RM_DIRECT_ORTHO)
+        display_->viewSetOrthoScale(domeSettings_->radius());
+
     display_->setRenderMode(rm);
 }
 
+void ProjectorSetupDialog::setViewDirection(int dir)
+{
+    Float distance = domeSettings_->radius() * 1.5;
+    if (dir == Basic3DWidget::VD_BOTTOM
+        || display_->renderMode() != Basic3DWidget::RM_DIRECT_ORTHO)
+        distance = 0;
+
+    display_->viewSet((Basic3DWidget::ViewDirection)dir, distance);
+}
 
 void ProjectorSetupDialog::updateDomeSettings_()
 {
@@ -292,6 +354,9 @@ void ProjectorSetupDialog::updateDomeSettings_()
     domeSettings_->setCoverage(spinDomeCover_->value());
     domeSettings_->setTiltX(spinDomeTiltX_->value());
     domeSettings_->setTiltZ(spinDomeTiltZ_->value());
+
+    if (display_->renderMode() == Basic3DWidget::RM_DIRECT_ORTHO)
+        display_->viewSetOrthoScale(domeSettings_->radius());
 
     display_->setDomeSettings(*domeSettings_);
 }
@@ -311,6 +376,7 @@ void ProjectorSetupDialog::updateProjectorSettings_()
 
     display_->setProjectorSettings(*projectorSettings_);
 }
+
 
 } // namespace GUI
 } // namespace MO

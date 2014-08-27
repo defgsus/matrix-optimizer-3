@@ -35,5 +35,11 @@
         <file alias="obj_modulator.png">assets/icon/obj_modulator.png</file>
         <file alias="new_letters.png">assets/icon/new_letters.png</file>
         <file alias="reset.png">assets/icon/reset.png</file>
+        <file alias="view_back.png">assets/icon/view_back.png</file>
+        <file alias="view_bottom.png">assets/icon/view_bottom.png</file>
+        <file alias="view_front.png">assets/icon/view_front.png</file>
+        <file alias="view_left.png">assets/icon/view_left.png</file>
+        <file alias="view_right.png">assets/icon/view_right.png</file>
+        <file alias="view_top.png">assets/icon/view_top.png</file>
     </qresource>
 </RCC>

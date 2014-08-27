@@ -35,6 +35,10 @@ signals:
 
 public slots:
 
+    /** Sets the view.
+        @p dir is one of the Basic3DWidget::ViewDirection enums */
+    void setViewDirection(int dir);
+
 protected:
 
     void closeEvent(QCloseEvent *);
@@ -57,6 +61,7 @@ private:
                         const QString& desc, const QString& statusTip,
                         double value, double smallstep=1, double minv=-9999999, double maxv=9999999,
                         const char * slot = 0);
+
 
     bool closeRequest_;
 

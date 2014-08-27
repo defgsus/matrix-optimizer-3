@@ -44,6 +44,16 @@ public:
         RM_FULLDOME_CUBE
     };
 
+    enum ViewDirection
+    {
+        VD_FRONT,
+        VD_BACK,
+        VD_TOP,
+        VD_BOTTOM,
+        VD_LEFT,
+        VD_RIGHT
+    };
+
     explicit Basic3DWidget(RenderMode mode, QWidget *parent = 0);
     ~Basic3DWidget();
 
@@ -70,6 +80,13 @@ public slots:
     void viewInit(Float distanceZ = 10.f);
     void viewRotateX(Float degree);
     void viewRotateY(Float degree);
+
+    /** Sets the camera matrix to one of the ViewDirection enums,
+        with distance to center as @p distance */
+    void viewSet(ViewDirection dir, Float distance);
+    /** Sets the (horizontal) scale of the orthographic projection.
+        The view extends in negative and positive @p s scale */
+    void viewSetOrthoScale(Float s) { orthoScale_ = s; update(); }
 
 protected:
 
@@ -122,7 +139,8 @@ private:
     Mat4
         projectionMatrix_,
         rotationMatrix_;
-    Float distanceZ_;
+    Float distanceZ_,
+        orthoScale_;
 
     QPoint lastMousePos_;
 

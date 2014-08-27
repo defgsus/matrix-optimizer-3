@@ -35,6 +35,7 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     closeRequest_   (false),
     modeChangeRequest_(false),
     useFreeCamera_  (true),
+    orthoScale_     (3.f),
     camera_         (new GEOM::FreeCamera()),
     fbo_            (0),
     screenQuad_     (0),
@@ -78,7 +79,7 @@ void Basic3DWidget::setRenderMode(RenderMode rm)
 void Basic3DWidget::viewInit(Float distanceZ)
 {
     distanceZ_ = distanceZ;
-    rotationMatrix_ = Mat4();
+    rotationMatrix_ = Mat4(1);
     camera_->moveTo(Vec3(0,0,-distanceZ));
     update();
 }
@@ -87,7 +88,7 @@ void Basic3DWidget::viewRotateX(Float d)
 {
     if (!d) return;
     rotationMatrix_ =
-            glm::rotate(Mat4(), d, Vec3(1,0,0))
+            glm::rotate(Mat4(1), d, Vec3(1,0,0))
             * rotationMatrix_;
     update();
 }
@@ -96,8 +97,47 @@ void Basic3DWidget::viewRotateY(Float d)
 {
     if (!d) return;
     rotationMatrix_ =
-            glm::rotate(Mat4(), d, Vec3(0,1,0))
+            glm::rotate(Mat4(1), d, Vec3(0,1,0))
             * rotationMatrix_;
+    update();
+}
+
+void Basic3DWidget::viewSet(ViewDirection dir, Float distance)
+{
+    Mat4 mat(1);
+    switch (dir)
+    {
+        case VD_FRONT:
+            mat = glm::translate(mat, Vec3(0,0,-distance));
+        break;
+
+        case VD_BACK:
+            mat = glm::translate(mat, Vec3(0,0,-distance));
+            mat = glm::rotate(mat, 180.f, Vec3(0,1,0));
+        break;
+
+        case VD_TOP:
+            mat = glm::translate(mat, Vec3(0,0,-distance));
+            mat = glm::rotate(mat, 90.f, Vec3(1,0,0));
+        break;
+
+        case VD_BOTTOM:
+            mat = glm::translate(mat, Vec3(0,0,-distance));
+            mat = glm::rotate(mat, -90.f, Vec3(1,0,0));
+        break;
+
+        case VD_LEFT:
+            mat = glm::translate(mat, Vec3(0,0,-distance));
+            mat = glm::rotate(mat, 90.f, Vec3(0,1,0));
+        break;
+
+        case VD_RIGHT:
+            mat = glm::translate(mat, Vec3(0,0,-distance));
+            mat = glm::rotate(mat, -90.f, Vec3(0,1,0));
+        break;
+    }
+
+    camera_->setMatrix(mat);
     update();
 }
 
@@ -287,7 +327,7 @@ void Basic3DWidget::resizeGL(int w, int h)
     if (renderMode_ == RM_DIRECT_ORTHO)
     {
         const float aspect = (float)w/h;
-        const float scale = 3.f;
+        const float scale = orthoScale_;
         projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale, 0.01f, 1000.f);
     }
     else

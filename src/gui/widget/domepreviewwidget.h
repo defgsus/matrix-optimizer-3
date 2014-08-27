@@ -29,9 +29,13 @@ public:
     explicit DomePreviewWidget(QWidget *parent = 0);
     ~DomePreviewWidget();
 
+    bool getShowGrid() const { return showGrid_; }
+
 signals:
 
 public slots:
+
+    void setShowGrid(bool enable) { showGrid_ = enable; update(); }
 
     /** Updates the dome settings and the graphic */
     void setDomeSettings(const DomeSettings&);
