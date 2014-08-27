@@ -29,6 +29,9 @@ public:
     void serialize(IO::XmlStream&) const;
     void deserialize(IO::XmlStream&);
 
+    void saveFile(const QString& filename) const;
+    void laodFile(const QString& filename);
+
     // ---------- getter ----------
 
     int numProjectors() const { return projectors_.size(); }

@@ -15,10 +15,12 @@
 
 class QComboBox;
 class QLineEdit;
+class QToolButton;
 
 namespace MO {
 class DomeSettings;
 class ProjectorSettings;
+class ProjectionSystemSettings;
 namespace GUI {
 
 class DomePreviewWidget;
@@ -49,8 +51,19 @@ private slots:
     void onGlReleased_();
     void changeView_();
     void updateDomeSettings_();
+    void updateDomeName_();
+    void updateDomeWidgets_();
     void updateProjectorSettings_();
     void updateProjectorName_();
+    void updateProjectorWidgets_();
+    void updateProjectorList_();
+    void updateDisplay_();
+
+    void projectorSelected_();
+    void newProjector_();
+    void deleteProjector_();
+    //void moveProjectorUp_();
+    //void moveProjectorDown_();
 
 private:
 
@@ -71,13 +84,16 @@ private:
 
     bool closeRequest_;
 
+    ProjectionSystemSettings * settings_;
+
     DomeSettings * domeSettings_;
     ProjectorSettings * projectorSettings_;
 
     DomePreviewWidget * display_;
 
     QLineEdit
-        * editName_;
+        * editName_,
+        * editDomeName_;
 
     SpinBox
         * spinWidth_,
@@ -101,6 +117,10 @@ private:
     QComboBox
         * comboProj_,
         * comboView_;
+
+    QToolButton
+        * tbAdd_,
+        * tbRemove_;
 };
 
 

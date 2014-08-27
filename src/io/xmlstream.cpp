@@ -31,7 +31,11 @@ XmlStream::~XmlStream()
 {
     MO_DEBUGF("Io::~Io");
 
-    if (xmlw_) delete xmlw_;
+    if (xmlw_)
+    {
+        MO_IO_WARNING(WRITE, "Destructor of XmlStream without XmlStream::stopWriting()");
+        delete xmlw_;
+    }
     if (xmlr_) delete xmlr_;
 }
 

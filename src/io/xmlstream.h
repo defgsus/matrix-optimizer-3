@@ -62,10 +62,18 @@ public:
 
     // --------------- streaming --------------------
 
+    /** Starts writing an xml.
+        The main section will be set to @p main_section.
+        Always call stopWriting() when you're finished */
     void startWriting(const QString& main_section = "mo-xml");
     void stopWriting();
     bool isWriteable();
 
+    /** Starts reading an xml.
+        The main section is expected to be @p main_section.
+        An IoException is thrown if this is not the case.
+        The current section will be @p main_section after the call.
+        Always call stopReading() when you're finished. */
     void startReading(const QString& main_section = "mo-xml");
     void stopReading();
     bool isReadable();

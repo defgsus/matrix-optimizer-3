@@ -22,8 +22,7 @@
 #include "widget/domepreviewwidget.h"
 #include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
-#include "projection/domesettings.h"
-#include "projection/projectorsettings.h"
+#include "projection/projectionsystemsettings.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
 
@@ -34,6 +33,7 @@ namespace GUI {
 ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     : QDialog       (parent),
       closeRequest_ (false),
+      settings_     (new ProjectionSystemSettings()),
       domeSettings_ (new DomeSettings()),
       projectorSettings_(new ProjectorSettings())
 {
@@ -43,16 +43,22 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 
     createWidgets_();
 
-    updateDomeSettings_();
-    updateProjectorSettings_();
+    settings_->appendProjector(ProjectorSettings());
+    *projectorSettings_ = settings_->projectorSettings(0);
+
+    updateProjectorList_();
+
+    updateDomeWidgets_();
+    updateProjectorWidgets_();
 
     setViewDirection(Basic3DWidget::VD_FRONT);
 }
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
 {
-    delete domeSettings_;
     delete projectorSettings_;
+    delete domeSettings_;
+    delete settings_;
 }
 
 void ProjectorSetupDialog::createWidgets_()
@@ -69,8 +75,23 @@ void ProjectorSetupDialog::createWidgets_()
 
             // ------ projector select ------------
 
-            comboProj_ = new QComboBox(this);
-            lv->addWidget(comboProj_);
+            auto lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                comboProj_ = new QComboBox(this);
+                lh2->addWidget(comboProj_);
+                connect(comboProj_, SIGNAL(currentIndexChanged(int)),
+                        this, SLOT(projectorSelected_()));
+
+                auto tbut = tbAdd_ = new QToolButton(this);
+                lh2->addWidget(tbut);
+                tbut->setIcon(QIcon(":/icon/new_letters.png"));
+                connect(tbut, SIGNAL(clicked()), this, SLOT(newProjector_()));
+
+                tbut = tbRemove_ = new QToolButton(this);
+                lh2->addWidget(tbut);
+                tbut->setIcon(QIcon(":/icon/delete.png"));
+                connect(tbut, SIGNAL(clicked()), this, SLOT(deleteProjector_()));
 
 
             // --------- projector settings --------------
@@ -150,15 +171,17 @@ void ProjectorSetupDialog::createWidgets_()
             connect(but, &QPushButton::clicked, [=]()
             {
                 IO::XmlStream io;
-                io.startWriting("projector-setup");
-                projectorSettings_->serialize(io);
+                io.startWriting("projection-system");
+                settings_->serialize(io);
                 io.stopWriting();
                 MO_DEBUG(io.data());
 
-                io.startReading("projector-setup");
-                io.nextSubSection();
-                projectorSettings_->deserialize(io);
+                io.startReading("projection-system");
+                settings_->deserialize(io);
                 io.stopReading();
+                updateProjectorList_();
+                updateDomeWidgets_();
+                updateProjectorWidgets_();
             });
 
         // --- preview display ---
@@ -173,7 +196,7 @@ void ProjectorSetupDialog::createWidgets_()
 
             // --- display settings ---
 
-            auto lh2 = new QHBoxLayout();
+            lh2 = new QHBoxLayout();
             lv->addLayout(lh2);
 
                 comboView_ = new QComboBox(this);
@@ -186,7 +209,7 @@ void ProjectorSetupDialog::createWidgets_()
                 connect(comboView_, SIGNAL(currentIndexChanged(int)),
                         this, SLOT(changeView_()));
 
-                auto tbut = new QToolButton(this);
+                tbut = new QToolButton(this);
                 lh2->addWidget(tbut);
                 tbut->setIcon(QIcon(":/icon/view_front.png"));
                 connect(tbut, &QToolButton::clicked,
@@ -235,6 +258,10 @@ void ProjectorSetupDialog::createWidgets_()
 
             label = new QLabel(tr("dome settings"), this);
             lv->addWidget(label);
+
+            editDomeName_ = createEdit_(lv, tr("name"),
+                                        tr("Some name to identify the dome/planetarium"),
+                                    "planetarium", SLOT(updateDomeName_()));
 
             spinDomeRad_ = createDoubleSpin_(lv, tr("radius"),
                                          tr("The dome radius in meters - messured at the 180° horizon"),
@@ -394,24 +421,48 @@ void ProjectorSetupDialog::setViewDirection(int dir)
 
 void ProjectorSetupDialog::updateDomeSettings_()
 {
+    domeSettings_->setName(editDomeName_->text());
     domeSettings_->setRadius(spinDomeRad_->value());
     domeSettings_->setCoverage(spinDomeCover_->value());
     domeSettings_->setTiltX(spinDomeTiltX_->value());
     domeSettings_->setTiltZ(spinDomeTiltZ_->value());
 
-    if (display_->renderMode() == Basic3DWidget::RM_DIRECT_ORTHO)
-        display_->viewSetOrthoScale(domeSettings_->radius());
+    // update system settings as well
+    settings_->setDomeSettings(*domeSettings_);
 
-    display_->setDomeSettings(*domeSettings_);
+    updateDisplay_();
+}
+
+void ProjectorSetupDialog::updateDomeWidgets_()
+{
+    editDomeName_->setText(domeSettings_->name());
+    spinDomeRad_->setValue(domeSettings_->radius());
+    spinDomeCover_->setValue(domeSettings_->coverage());
+    spinDomeTiltX_->setValue(domeSettings_->tiltX());
+    spinDomeTiltZ_->setValue(domeSettings_->tiltZ());
 }
 
 void ProjectorSetupDialog::updateProjectorName_()
 {
     projectorSettings_->setName(editName_->text());
+
+    // update name in combobox
+    int idx = comboProj_->currentIndex();
+    if (idx < 0 || idx >= settings_->numProjectors())
+        return;
+
+    comboProj_->setItemText(idx, projectorSettings_->name());
+
+}
+
+void ProjectorSetupDialog::updateDomeName_()
+{
+    domeSettings_->setName(editDomeName_->text());
 }
 
 void ProjectorSetupDialog::updateProjectorSettings_()
 {
+    projectorSettings_->setName(editName_->text());
     projectorSettings_->setWidth(spinWidth_->value());
     projectorSettings_->setHeight(spinHeight_->value());
     projectorSettings_->setFov(spinFov_->value());
@@ -420,10 +471,91 @@ void ProjectorSetupDialog::updateProjectorSettings_()
     projectorSettings_->setLatitude(spinLat_->value());
     projectorSettings_->setLongitude(spinLong_->value());
     projectorSettings_->setPitch(spinPitch_->value());
-    projectorSettings_->setRoll(spinRoll_->value());
     projectorSettings_->setYaw(spinYaw_->value());
+    projectorSettings_->setRoll(spinRoll_->value());
 
+    // update system settings as well
+    int idx = comboProj_->currentIndex();
+    if (idx >= 0 && idx < settings_->numProjectors())
+    {
+        settings_->setProjectorSettings(idx, *projectorSettings_);
+    }
+
+    updateDisplay_();
+}
+
+void ProjectorSetupDialog::updateDisplay_()
+{
+    if (display_->renderMode() == Basic3DWidget::RM_DIRECT_ORTHO)
+        display_->viewSetOrthoScale(domeSettings_->radius());
+
+    display_->setDomeSettings(*domeSettings_);
     display_->setProjectorSettings(*projectorSettings_);
+}
+
+void ProjectorSetupDialog::updateProjectorWidgets_()
+{
+    editName_->setText( projectorSettings_->name() );
+    spinWidth_->setValue( projectorSettings_->width() );
+    spinHeight_->setValue( projectorSettings_->height() );
+    spinFov_->setValue( projectorSettings_->fov() );
+    spinLensRad_->setValue( projectorSettings_->lensRadius() );
+    spinDist_->setValue( projectorSettings_->distance() );
+    spinLat_->setValue( projectorSettings_->latitude() );
+    spinLong_->setValue( projectorSettings_->longitude() );
+    spinPitch_->setValue( projectorSettings_->pitch() );
+    spinYaw_->setValue( projectorSettings_->yaw() );
+    spinRoll_->setValue( projectorSettings_->roll() );
+}
+
+void ProjectorSetupDialog::projectorSelected_()
+{
+    int idx = comboProj_->currentIndex();
+    if (idx < 0 || idx >= settings_->numProjectors())
+        return;
+
+    *projectorSettings_ = settings_->projectorSettings(idx);
+    updateProjectorWidgets_();
+    updateDisplay_();
+}
+
+void ProjectorSetupDialog::newProjector_()
+{
+    settings_->appendProjector(ProjectorSettings());
+    *projectorSettings_ = settings_->projectorSettings(settings_->numProjectors()-1);
+    updateProjectorList_();
+
+    comboProj_->setCurrentIndex(settings_->numProjectors()-1);
+}
+
+void ProjectorSetupDialog::deleteProjector_()
+{
+    int idx = comboProj_->currentIndex();
+    if (idx < 0 || idx >= settings_->numProjectors())
+        return;
+
+    settings_->removeProjector(idx);
+    updateProjectorList_();
+}
+
+void ProjectorSetupDialog::updateProjectorList_()
+{
+    // store index
+    const int idx = comboProj_->currentIndex();
+
+    comboProj_->clear();
+
+    for (int i=0; i<settings_->numProjectors(); ++i)
+        comboProj_->addItem(settings_->projectorSettings(i).name());
+
+    tbRemove_->setEnabled(settings_->numProjectors() > 1);
+
+    // restore index
+    if (idx >= 0 && idx < settings_->numProjectors())
+    {
+        comboProj_->setCurrentIndex(idx);
+    }
+
 }
 
 
