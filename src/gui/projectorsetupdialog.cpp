@@ -19,6 +19,8 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QFileInfo>
+#include <QMenu>
+#include <QMenuBar>
 
 #include "projectorsetupdialog.h"
 #include "widget/domepreviewwidget.h"
@@ -46,7 +48,9 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     setMinimumSize(760,600);
 
     createWidgets_();
+    createMenu_();
 
+    // init default settings
     settings_->appendProjector(ProjectorSettings());
     *orgSettings_ = *settings_;
     *projectorSettings_ = settings_->projectorSettings(0);
@@ -68,9 +72,48 @@ ProjectorSetupDialog::~ProjectorSetupDialog()
     delete settings_;
 }
 
+void ProjectorSetupDialog::createMenu_()
+{
+    //QMenuBar * main = new QMenuBar(this);
+    QMenu * menu;
+    QAction * a;
+
+    // ############### SETUP ###############
+
+    mainMenu_->addMenu(menu = new QMenu(tr("Setup"), mainMenu_));
+
+        menu->addAction(a = new QAction(tr("New setup"), menu));
+        a->setShortcut(Qt::CTRL + Qt::Key_N);
+        connect(a, SIGNAL(triggered()), this, SLOT(clearPreset_()));
+
+        menu->addSeparator();
+
+        menu->addAction(a = new QAction(tr("Load setup ..."), menu));
+        a->setShortcut(Qt::CTRL + Qt::Key_L);
+        connect(a, SIGNAL(triggered()), this, SLOT(loadPreset_()));
+
+        menu->addSeparator();
+
+        menu->addAction(a = new QAction(tr("Save setup"), menu));
+        a->setShortcut(Qt::CTRL + Qt::Key_S);
+        connect(a, SIGNAL(triggered()), this, SLOT(savePresetAuto_()));
+
+        menu->addAction(a = new QAction(tr("Save setup as ..."), menu));
+        a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
+        connect(a, SIGNAL(triggered()), this, SLOT(savePresetChoose_()));
+
+
+}
+
 void ProjectorSetupDialog::createWidgets_()
 {
-    auto lh = new QHBoxLayout(this);
+    auto lv00 = new QVBoxLayout(this);
+
+    mainMenu_ = new QMenuBar(this);
+    lv00->addWidget(mainMenu_);
+
+    auto lh = new QHBoxLayout();
+    lv00->addLayout(lh);
 
         auto lv0 = new QVBoxLayout();
         lh->addLayout(lv0);
@@ -181,19 +224,6 @@ void ProjectorSetupDialog::createWidgets_()
 
             lv0->addStretch(2);
 
-            // -------- io buttons -----------
-
-            lh2 = new QHBoxLayout();
-            lv0->addLayout(lh2);
-
-                auto but = new QPushButton(tr("save settings"), this);
-                lh2->addWidget(but);
-                connect(but, SIGNAL(clicked()), this, SLOT(savePresetChoose_()));
-
-                but = new QPushButton(tr("load settings"), this);
-                lh2->addWidget(but);
-                connect(but, SIGNAL(clicked()), this, SLOT(loadPreset_()));
-
         // --- preview display ---
 
         lv = new QVBoxLayout();
@@ -262,6 +292,11 @@ void ProjectorSetupDialog::createWidgets_()
                 lh2->addWidget(cb);
                 cb->setChecked(display_->getShowGrid());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowGrid(bool)));
+
+                cb = new QCheckBox(tr("show dome"), this);
+                lh2->addWidget(cb);
+                cb->setChecked(display_->getShowDome());
+                connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowDome(bool)));
 
 
             // --- dome settings ---
@@ -472,12 +507,14 @@ void ProjectorSetupDialog::updateProjectorName_()
 {
     projectorSettings_->setName(editName_->text());
 
-    // update name in combobox
-    int idx = comboProj_->currentIndex();
-    if (idx < 0 || idx >= settings_->numProjectors())
-        return;
+    const int idx = comboProj_->currentIndex();
+    if (idx >= 0 && idx < settings_->numProjectors())
+    {
+        settings_->setProjectorSettings(idx, *projectorSettings_);
 
-    comboProj_->setItemText(idx, projectorSettings_->name());
+        // update name in combobox
+        comboProj_->setItemText(idx, projectorSettings_->name());
+    }
 
     updateWindowTitle_();
 }
@@ -485,6 +522,8 @@ void ProjectorSetupDialog::updateProjectorName_()
 void ProjectorSetupDialog::updateDomeName_()
 {
     domeSettings_->setName(editDomeName_->text());
+
+    settings_->setDomeSettings(*domeSettings_);
 
     updateWindowTitle_();
 }
@@ -600,6 +639,30 @@ void ProjectorSetupDialog::updateProjectorList_()
 
 }
 
+void ProjectorSetupDialog::clearPreset_()
+{
+    if (!saveToClear_())
+        return;
+
+    settings_->clear();
+    settings_->appendProjector(ProjectorSettings());
+    *orgSettings_ = *settings_;
+    *projectorSettings_ = settings_->projectorSettings(0);
+
+    updateDomeWidgets_();
+    updateProjectorWidgets_();
+    updateProjectorList_();
+    updateDisplay_();
+}
+
+bool ProjectorSetupDialog::savePresetAuto_()
+{
+    if (filename_.isEmpty())
+        return savePresetChoose_();
+    else
+        return savePreset_(filename_);
+}
+
 bool ProjectorSetupDialog::savePresetChoose_()
 {
     QString fn = IO::Files::getSaveFileName(IO::FT_PROJECTION_SETTINGS);
@@ -665,6 +728,13 @@ void ProjectorSetupDialog::updateWindowTitle_()
     setWindowTitle(title);
 }
 
+bool ProjectorSetupDialog::saveToClear_()
+{
+    bool r = saveToClose_();
+    saidNoAlready_ = false;
+    return r;
+}
+
 bool ProjectorSetupDialog::saveToClose_()
 {
     if (saidNoAlready_ || *settings_ == *orgSettings_)
@@ -686,10 +756,7 @@ bool ProjectorSetupDialog::saveToClose_()
         return true;
     }
 
-    if (filename_.isEmpty())
-        return savePresetChoose_();
-    else
-        return savePreset_(filename_);
+    return savePresetAuto_();
 }
 
 

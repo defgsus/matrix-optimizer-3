@@ -26,6 +26,7 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
       domeGeometry_ (0),
       projectorGeometry_(0),
       showGrid_     (true),
+      showDome_     (true),
       showRays_     (true),
       showProjectedSurface_(true)
 
@@ -67,7 +68,7 @@ void DomePreviewWidget::createDomeGeometry_()
 
     if (settings_->domeSettings().tiltX() != 0)
     {
-        trans = glm::rotate(trans, settings_->domeSettings().tiltX(), Vec3(1, 0, 0));
+        trans = glm::rotate(trans, -settings_->domeSettings().tiltX(), Vec3(1, 0, 0));
     }
     if (settings_->domeSettings().tiltZ() != 0)
     {
@@ -215,7 +216,7 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
         projectorDrawable_->createOpenGl();
     }
 
-    if (domeDrawable_->isReady())
+    if (domeDrawable_->isReady() && showDome_)
         domeDrawable_->renderShader(projection, cubeViewTrans, viewTrans, trans);
 
     if (projectorDrawable_->isReady())

@@ -30,12 +30,14 @@ public:
     explicit DomePreviewWidget(QWidget *parent = 0);
     ~DomePreviewWidget();
 
+    bool getShowDome() const { return showDome_; }
     bool getShowGrid() const { return showGrid_; }
 
 signals:
 
 public slots:
 
+    void setShowDome(bool enable) { showDome_ = enable; update(); }
     void setShowGrid(bool enable) { showGrid_ = enable; update(); }
 
     /** Updates the settings and graphical display.
@@ -67,6 +69,7 @@ private:
     Mat4 domeTransform_;
 
     bool showGrid_,
+         showDome_,
          showRays_,
          showProjectedSurface_;
 

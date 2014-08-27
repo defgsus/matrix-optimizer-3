@@ -16,6 +16,7 @@
 class QComboBox;
 class QLineEdit;
 class QToolButton;
+class QMenuBar;
 
 namespace MO {
 class DomeSettings;
@@ -66,6 +67,8 @@ private slots:
     //void moveProjectorUp_();
     //void moveProjectorDown_();
 
+    void clearPreset_();
+    bool savePresetAuto_();
     bool savePreset_(const QString & fn);
     bool savePresetChoose_();
     void loadPreset_();
@@ -74,6 +77,9 @@ private:
 
     void updateWindowTitle_();
     bool saveToClose_();
+    bool saveToClear_();
+
+    void createMenu_();
 
     void createWidgets_();
     QLineEdit * createEdit_(QLayout * layout,
@@ -101,6 +107,8 @@ private:
     ProjectorSettings * projectorSettings_;
 
     DomePreviewWidget * display_;
+
+    QMenuBar * mainMenu_;
 
     QLineEdit
         * editName_,
