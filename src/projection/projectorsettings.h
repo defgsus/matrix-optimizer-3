@@ -39,7 +39,7 @@ public:
     Float lensRadius() const { return lensRadius_; }
     Float latitude() const { return latitude_; }
     Float longitude() const { return longitude_; }
-    Float radius() const { return radius_; }
+    Float distance() const { return distance_; }
     Float pitch() const { return pitch_; }
     Float yaw() const { return yaw_; }
     Float roll() const { return roll_; }
@@ -53,7 +53,7 @@ public:
     void setLensRadius(Float v) { lensRadius_ = v; }
     void setLatitude(Float v) { latitude_ = v; }
     void setLongitude(Float v) { longitude_ = v; }
-    void setRadius(Float v) { radius_ = v; }
+    void setDistance(Float v) { distance_ = v; }
     void setPitch(Float v) { pitch_ = v; }
     void setYaw(Float v) { yaw_ = v; }
     void setRoll(Float v) { roll_ = v; }
@@ -70,7 +70,7 @@ private:
         lensRadius_,
         latitude_,
         longitude_,
-        radius_,
+        distance_,
         pitch_,
         yaw_,
         roll_;

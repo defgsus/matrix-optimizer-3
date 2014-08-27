@@ -82,7 +82,7 @@ private:
 
         * spinFov_,
         * spinLensRad_,
-        * spinRadius_,
+        * spinDist_,
         * spinLat_,
         * spinLong_,
         * spinPitch_,

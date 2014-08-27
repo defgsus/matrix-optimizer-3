@@ -44,6 +44,8 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 
     updateDomeSettings_();
     updateProjectorSettings_();
+
+    setViewDirection(Basic3DWidget::VD_FRONT);
 }
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
@@ -90,10 +92,12 @@ void ProjectorSetupDialog::createWidgets_()
             label = new QLabel(tr("position"), this);
             lv->addWidget(label);
 
-            spinRadius_ = createDoubleSpin_(lv, tr("radius"),
-                                         tr("Projector's position relative to the center of the dome"),
-                                         10, 0.01, 0, 1000, SLOT(updateProjectorSettings_()));
-            spinRadius_->setSuffix(" " + tr("m"));
+            spinDist_ = createDoubleSpin_(lv, tr("distance"),
+                                         tr("Projector's distance to the dome periphery "
+                                            "in centimeters - "
+                                            "negative is inside, positive is outside of dome"),
+                                         0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
+            spinDist_->setSuffix(" " + tr("cm"));
 
             spinLat_ = createDoubleSpin_(lv, tr("latitude"),
                                          tr("Projector's position around the dome"),
@@ -111,19 +115,19 @@ void ProjectorSetupDialog::createWidgets_()
             spinPitch_ = createDoubleSpin_(lv, tr("pitch (x)"),
                                          tr("The x rotation of the Projector's direction "
                                             "- up and down"),
-                                         0, 1, -360, 360, SLOT(updateProjectorSettings_()));
+                                         0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
             spinPitch_->setSuffix(" " + tr("°"));
 
             spinYaw_ = createDoubleSpin_(lv, tr("yaw (y)"),
                                          tr("The y rotation of the Projector's direction "
                                             "- left and right"),
-                                         0, 1, -360, 360, SLOT(updateProjectorSettings_()));
+                                         0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
             spinYaw_->setSuffix(" " + tr("°"));
 
             spinRoll_ = createDoubleSpin_(lv, tr("roll (z)"),
                                          tr("The z rotation of the Projector's direction "
                                             "- turn left and turn right"),
-                                         0, 1, -360, 360, SLOT(updateProjectorSettings_()));
+                                         0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
             spinRoll_->setSuffix(" " + tr("°"));
 
             lv->addStretch(2);
@@ -340,9 +344,9 @@ void ProjectorSetupDialog::changeView_()
 
 void ProjectorSetupDialog::setViewDirection(int dir)
 {
-    Float distance = domeSettings_->radius() * 1.5;
+    Float distance = domeSettings_->radius() * 2;
     if (dir == Basic3DWidget::VD_BOTTOM
-        || display_->renderMode() != Basic3DWidget::RM_DIRECT_ORTHO)
+        && display_->renderMode() == Basic3DWidget::RM_FULLDOME_CUBE)
         distance = 0;
 
     display_->viewSet((Basic3DWidget::ViewDirection)dir, distance);
@@ -367,7 +371,7 @@ void ProjectorSetupDialog::updateProjectorSettings_()
     projectorSettings_->setHeight(spinHeight_->value());
     projectorSettings_->setFov(spinFov_->value());
     projectorSettings_->setLensRadius(spinLensRad_->value() / 100);
-    projectorSettings_->setRadius(spinRadius_->value());
+    projectorSettings_->setDistance(spinDist_->value() / 100);
     projectorSettings_->setLatitude(spinLat_->value());
     projectorSettings_->setLongitude(spinLong_->value());
     projectorSettings_->setPitch(spinPitch_->value());

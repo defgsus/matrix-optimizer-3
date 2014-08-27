@@ -100,7 +100,7 @@ void DomePreviewWidget::setProjectorSettings(const ProjectorSettings & s)
 void DomePreviewWidget::createProjectorGeometry_()
 {
     ProjectorMapper mapper;
-    mapper.setSettings(*projectorSettings_);
+    mapper.setSettings(*domeSettings_, *projectorSettings_);
     if (!mapper.isValid())
         return;
 
@@ -117,25 +117,25 @@ void DomePreviewWidget::createProjectorGeometry_()
 
             Vec3 pos = mapper.getRayOrigin(x,0);
             int v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            pos = mapper.mapToDome(x,0, *domeSettings_);
+            pos = mapper.mapToDome(x,0);
             int v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             projectorGeometry_->addLine(v0, v1);
 
             pos = mapper.getRayOrigin(x,1);
             v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            pos = mapper.mapToDome(x,1, *domeSettings_);
+            pos = mapper.mapToDome(x,1);
             v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             projectorGeometry_->addLine(v0, v1);
 
             pos = mapper.getRayOrigin(0,x);
             v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            pos = mapper.mapToDome(0,x, *domeSettings_);
+            pos = mapper.mapToDome(0,x);
             v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             projectorGeometry_->addLine(v0, v1);
 
             pos = mapper.getRayOrigin(1,x);
             v0 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
-            pos = mapper.mapToDome(1,x, *domeSettings_);
+            pos = mapper.mapToDome(1,x);
             v1 = projectorGeometry_->addVertex(pos[0], pos[1], pos[2]);
             projectorGeometry_->addLine(v0, v1);
         }
@@ -151,7 +151,7 @@ void DomePreviewWidget::createProjectorGeometry_()
         for (uint x = 0; x<num; ++x)
         {
             const Vec3 pos = mapper.mapToDome(
-                        (Float)x/(num-1), (Float)y/(num-1), *domeSettings_);
+                        (Float)x/(num-1), (Float)y/(num-1));
             idx.push_back( projectorGeometry_->addVertex(pos[0], pos[1], pos[2]));
         }
 

@@ -12,6 +12,7 @@
 #define MOSRC_PROJECTION_PROJECTORMAPPER_H
 
 #include "projectorsettings.h"
+#include "domesettings.h"
 #include "types/vector.h"
 
 namespace MO {
@@ -31,7 +32,7 @@ public:
 
     // -------- setter ------------
 
-    void setSettings(const ProjectorSettings&);
+    void setSettings(const DomeSettings&, const ProjectorSettings&);
 
     // ----- getter for calculated values -----
 
@@ -58,7 +59,7 @@ public:
     /** Gives the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
         The mapping is always done on the inside of the dome, regardless of the position of
         the projector. */
-    Vec3 mapToDome(Float s, Float t, const DomeSettings&) const;
+    Vec3 mapToDome(Float s, Float t) const;
 
     /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
     Vec2 mapToSphere(Float s, Float t) const;
@@ -70,6 +71,7 @@ private:
 
     // ---------- config ----------
 
+    DomeSettings domeSet_;
     ProjectorSettings set_;
 
     // -------- calculated --------

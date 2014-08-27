@@ -27,8 +27,9 @@ ProjectorMapper::ProjectorMapper()
     recalc_();
 }
 
-void ProjectorMapper::setSettings(const ProjectorSettings & s)
+void ProjectorMapper::setSettings(const DomeSettings & ds, const ProjectorSettings & s)
 {
+    domeSet_ = ds;
     set_ = s;
     recalc_();
 }
@@ -49,7 +50,7 @@ void ProjectorMapper::recalc_()
     trans_ = Mat4(1);
     trans_ = glm::rotate(trans_, set_.latitude(), Vec3(0,1,0));
     trans_ = glm::rotate(trans_, -set_.longitude(), Vec3(1,0,0));
-    trans_ = glm::translate(trans_, Vec3(0,0,set_.radius()));
+    trans_ = glm::translate(trans_, Vec3(0,0,domeSet_.radius() + set_.distance()));
 
     // get actual position
     pos_ = Vec3( trans_ * Vec4(0,0,0,1) );
@@ -93,13 +94,13 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
     *ray_direction = Vec3(trans_ * Vec4(glm::normalize(dir), (Float)0));
 }
 
-Vec3 ProjectorMapper::mapToDome(Float s, Float t, const DomeSettings & set) const
+Vec3 ProjectorMapper::mapToDome(Float s, Float t) const
 {
     Vec3 pos, dir;
     getRay(s, t, &pos, &dir);
 
     Float depth1, depth2;
-    if (!MATH::intersect_ray_sphere(pos, dir, Vec3(0,0,0), set.radius(), &depth1, &depth2))
+    if (!MATH::intersect_ray_sphere(pos, dir, Vec3(0,0,0), domeSet_.radius(), &depth1, &depth2))
     {
         return pos + dir * (Float)100;
     }
@@ -114,7 +115,8 @@ Vec2 ProjectorMapper::mapToSphere(Float, Float) const
 
     Float depth1, depth2;
 
-    if (!MATH::intersect_ray_sphere(ray_origin, ray_dir, Vec3(0,0,0), set_.radius(), &depth1, &depth2))
+    if (!MATH::intersect_ray_sphere(
+                ray_origin, ray_dir, Vec3(0,0,0), domeSet_.radius(), &depth1, &depth2))
     {
         return Vec2(0,0);
     }

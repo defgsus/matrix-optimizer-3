@@ -20,7 +20,7 @@ ProjectorSettings::ProjectorSettings()
         lensRadius_ (0),
         latitude_   (0),
         longitude_  (0),
-        radius_     (10),
+        distance_   (0),
         pitch_      (0),
         yaw_        (0),
         roll_       (0)
@@ -38,7 +38,7 @@ void ProjectorSettings::serialize(IO::XmlStream & io) const
         io.write("lens_radius", lensRadius_);
         io.write("latitude", latitude_);
         io.write("longitude", longitude_);
-        io.write("radius", radius_);
+        io.write("distance", distance_);
         io.write("pitch", pitch_);
         io.write("yaw", yaw_);
         io.write("roll", roll_);
@@ -57,7 +57,7 @@ void ProjectorSettings::deserialize(IO::XmlStream & io)
         lensRadius_ = io.expectFloat("lens_radius");
         latitude_ = io.expectFloat("latitude");
         longitude_ = io.expectFloat("longitude");
-        radius_ = io.expectFloat("radius");
+        distance_ = io.expectFloat("distance");
         pitch_ = io.expectFloat("pitch");
         yaw_ = io.expectFloat("yaw");
         roll_ = io.expectFloat("roll");
