@@ -82,16 +82,23 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
 
 
     // size of projection - one unit away
-    //    c² = 2a²(1-cos(fov))
-    // -> c = sqrt(2*(1-cos(fov))
-    const Float c = (Float)0.5
-            * (std::sqrt((Float)2*((Float)1-std::cos(set_.fov()*(Float)DEG_TO_TWO_PI)))
+    //    c² = 2a²(1-cos(gamma))
+    // -> c = sqrt(2*(1-cos(gamma))
+    // and hc = b * sin(alpha)
+    // and gamma = 180 - 2*alpha
+    // ->  alpha = (180 - gamma) / 2
+    const Float gamma = set_.fov() * (Float)DEG_TO_TWO_PI;
+    const Float c = std::sqrt((Float)2*((Float)1-std::cos(gamma)))
                // XXX lensradius is not calculated properly here
-                - (Float)0.135 * lensfac);
-    Vec3 dir(s*c, t*c, -1);
+                - (Float)0.135 * lensfac;
+    const Float alpha = (Float)0.5 * ((Float)180 - set_.fov());
+    const Float hc = std::sin(alpha * (Float)DEG_TO_TWO_PI);
+    Vec3 dir = glm::normalize(Vec3(s*c*(Float)0.5, t*c*(Float)0.5, -hc));
+
+    //MO_DEBUG("dir " << dir << ", len " << glm::length(dir));
 
     *ray_origin =    Vec3(trans_ * Vec4(pos, (Float)1));
-    *ray_direction = Vec3(trans_ * Vec4(glm::normalize(dir), (Float)0));
+    *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));
 }
 
 Vec3 ProjectorMapper::mapToDome(Float s, Float t) const
@@ -124,5 +131,38 @@ Vec2 ProjectorMapper::mapToSphere(Float, Float) const
     return Vec2(0,0);
 }
 
+
+void ProjectorMapper::findCenterProjection() const
+{
+    // find corners of projected area
+    const Vec3
+            bl = mapToDome(0,0),
+            br = mapToDome(1,0),
+            tl = mapToDome(0,1),
+            tr = mapToDome(1,1),
+            ml = mapToDome(0,0.5),
+            mr = mapToDome(1,0.5);
+    /*
+    // project back to identity
+    const Mat4 itrans = glm::inverse(trans_);
+    const Vec3
+            iml = Vec3(itrans * Vec4(ml,1)),
+            imr = Vec3(itrans * Vec4(mr,1)),
+            ibl = Vec3(itrans * Vec4(bl,1)),
+            ibr = Vec3(itrans * Vec4(br,1)),
+            itl = Vec3(itrans * Vec4(tl,1)),
+            itr = Vec3(itrans * Vec4(tr,1));
+
+    MO_DEBUG("iml = " << iml << ", imr = " << imr);
+    */
+
+    // horizontal field of view
+    const Float adot = glm::dot(glm::normalize(ml), glm::normalize(mr));
+    const Float angle = std::acos(adot) * (Float)TWO_PI_TO_DEG;
+    // aspect ratio
+    //const Float aspect =
+
+    MO_DEBUG("angle = " << angle);
+}
 
 } // namespace MO

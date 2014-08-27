@@ -31,6 +31,8 @@
 #include "io/log.h"
 #include "io/files.h"
 
+#include "projection/projectormapper.h"
+
 namespace MO {
 namespace GUI {
 
@@ -74,13 +76,12 @@ ProjectorSetupDialog::~ProjectorSetupDialog()
 
 void ProjectorSetupDialog::createMenu_()
 {
-    //QMenuBar * main = new QMenuBar(this);
     QMenu * menu;
     QAction * a;
 
-    // ############### SETUP ###############
+    // ############### FILE ###############
 
-    mainMenu_->addMenu(menu = new QMenu(tr("Setup"), mainMenu_));
+    mainMenu_->addMenu(menu = new QMenu(tr("File"), mainMenu_));
 
         menu->addAction(a = new QAction(tr("New setup"), menu));
         a->setShortcut(Qt::CTRL + Qt::Key_N);
@@ -549,6 +550,10 @@ void ProjectorSetupDialog::updateProjectorSettings_()
         settings_->setProjectorSettings(idx, *projectorSettings_);
         updateWindowTitle_();
     }
+
+    ProjectorMapper m;
+    m.setSettings(*domeSettings_, *projectorSettings_);
+    m.findCenterProjection();
 
     updateDisplay_();
 }

@@ -64,6 +64,10 @@ public:
     /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
     Vec2 mapToSphere(Float s, Float t) const;
 
+    /** Find the projection/view matrix that covers the whole projected area on the dome
+        when viewed from the center. */
+    void findCenterProjection() const;
+
     //______________ PRIVATE AREA _________________
 private:
 
