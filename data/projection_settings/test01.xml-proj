@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<mo-projection-system>
+    <dome name="" radius="10" coverage="180" tiltX="0" tiltZ="0"/>
+    <projector name="projector 1" width="1280" height="1024" fov="50" lens_radius="0" latitude="0" longitude="0" distance="0" pitch="19" yaw="20.6" roll="0"/>
+    <projector name="projector 2" width="1280" height="1024" fov="50" lens_radius="0" latitude="0" longitude="0" distance="0" pitch="19" yaw="-20.6" roll="0"/>
+</mo-projection-system>
