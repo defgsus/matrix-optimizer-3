@@ -46,7 +46,9 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
       orgSettings_  (new ProjectionSystemSettings()),
       domeSettings_ (new DomeSettings()),
       projectorSettings_(new ProjectorSettings()),
-      cameraSettings_   (new CameraSettings())
+      copyOfProjectorSettings_(0),
+      cameraSettings_   (new CameraSettings()),
+      copyOfCameraSettings_   (0)
 {
     setObjectName("_ProjectorSetupDialog");
     setMinimumSize(760,600);
@@ -72,7 +74,9 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
 {
+    delete copyOfCameraSettings_;
     delete cameraSettings_;
+    delete copyOfProjectorSettings_;
     delete projectorSettings_;
     delete domeSettings_;
     delete orgSettings_;
@@ -108,7 +112,27 @@ void ProjectorSetupDialog::createMenu_()
         a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
         connect(a, SIGNAL(triggered()), this, SLOT(savePresetChoose_()));
 
+    // ############### EDIT ###############
 
+    mainMenu_->addMenu(menu = new QMenu(tr("Edit"), mainMenu_));
+
+        menu->addAction(a = new QAction(tr("Copy projector settings"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(copyProjector_()));
+
+        menu->addAction(a = new QAction(tr("Paste projector settings"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(pasteProjector_()));
+        aPasteProjector_ = a;
+
+        menu->addSeparator();
+
+        menu->addAction(a = new QAction(tr("Copy camera settings"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(copyCamera_()));
+
+        menu->addAction(a = new QAction(tr("Paste camera settings"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(pasteCamera_()));
+        aPasteCamera_ = a;
+
+    updatePaste_();
 }
 
 void ProjectorSetupDialog::createWidgets_()
@@ -895,6 +919,66 @@ bool ProjectorSetupDialog::saveToClose_()
     }
 
     return savePresetAuto_();
+}
+
+void ProjectorSetupDialog::updatePaste_()
+{
+    aPasteProjector_->setEnabled( copyOfProjectorSettings_ != 0);
+    aPasteCamera_->setEnabled( copyOfCameraSettings_ != 0 );
+}
+
+void ProjectorSetupDialog::copyProjector_()
+{
+    if (copyOfProjectorSettings_ == 0)
+        copyOfProjectorSettings_ = new ProjectorSettings();
+    *copyOfProjectorSettings_ = *projectorSettings_;
+
+    updatePaste_();
+}
+
+
+void ProjectorSetupDialog::copyCamera_()
+{
+    if (copyOfCameraSettings_ == 0)
+        copyOfCameraSettings_ = new CameraSettings();
+    *copyOfCameraSettings_ = *cameraSettings_;
+
+    updatePaste_();
+}
+
+void ProjectorSetupDialog::pasteProjector_()
+{
+    if (copyOfProjectorSettings_ == 0)
+        return;
+
+    *projectorSettings_ = *copyOfProjectorSettings_;
+
+    int idx = comboProj_->currentIndex();
+    if (idx > 0 || idx < settings_->numProjectors())
+    {
+        settings_->setProjectorSettings(idx, *projectorSettings_);
+    }
+
+    updateProjectorWidgets_();
+    updateDisplay_();
+}
+
+
+void ProjectorSetupDialog::pasteCamera_()
+{
+    if (copyOfCameraSettings_ == 0)
+        return;
+
+    *cameraSettings_ = *copyOfCameraSettings_;
+
+    int idx = comboProj_->currentIndex();
+    if (idx > 0 || idx < settings_->numProjectors())
+    {
+        settings_->setCameraSettings(idx, *cameraSettings_);
+    }
+
+    updateProjectorWidgets_();
+    updateDisplay_();
 }
 
 

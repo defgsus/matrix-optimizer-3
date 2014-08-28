@@ -17,6 +17,7 @@ class QComboBox;
 class QLineEdit;
 class QToolButton;
 class QMenuBar;
+class QAction;
 
 namespace MO {
 class DomeSettings;
@@ -75,15 +76,22 @@ private slots:
     bool savePresetChoose_();
     void loadPreset_();
 
+    void copyProjector_();
+    void pasteProjector_();
+    void copyCamera_();
+    void pasteCamera_();
+
 private:
 
     void updateWindowTitle_();
+    void updatePaste_();
+
     bool saveToClose_();
     bool saveToClear_();
 
     void createMenu_();
-
     void createWidgets_();
+
     QLineEdit * createEdit_(GroupWidget * group,
                         const QString& desc, const QString& statusTip,
                         const QString& value,
@@ -106,8 +114,8 @@ private:
     ProjectionSystemSettings * settings_, * orgSettings_;
 
     DomeSettings * domeSettings_;
-    ProjectorSettings * projectorSettings_;
-    CameraSettings * cameraSettings_;
+    ProjectorSettings * projectorSettings_, *copyOfProjectorSettings_;
+    CameraSettings * cameraSettings_, *copyOfCameraSettings_;
 
     DomePreviewWidget * display_;
 
@@ -159,6 +167,10 @@ private:
         * tbAdd_,
         * tbDup_,
         * tbRemove_;
+
+    QAction
+        * aPasteProjector_,
+        * aPasteCamera_;
 };
 
 

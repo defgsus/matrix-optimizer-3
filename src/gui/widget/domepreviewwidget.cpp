@@ -150,6 +150,8 @@ void DomePreviewWidget::createProjectorGeometry_()
     for (int i=0; i<settings_->numProjectors(); ++i)
     {
         const bool highlight = (projIndex_ < 0 || projIndex_ == i);
+        if (showCurrentCamera_ && !highlight)
+            continue;
 
         mapper.setSettings(settings_->domeSettings(),
                            settings_->projectorSettings(i));
