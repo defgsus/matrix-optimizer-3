@@ -28,6 +28,7 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
       showGrid_     (true),
       showDome_     (true),
       showRays_     (true),
+      showCurrentCamera_(false),
       showProjectedSurface_(true)
 
 {
@@ -44,6 +45,53 @@ DomePreviewWidget::~DomePreviewWidget()
     delete settings_;
 }
 
+void DomePreviewWidget::setShowCurrentCamera(bool enable)
+{
+    if (enable == showCurrentCamera_)
+        return;
+
+    showCurrentCamera_ = enable;
+
+    if (showCurrentCamera_)
+    {
+        lastRenderMode_ = renderMode();
+        lastCameraMode_ = cameraMode();
+        lastFboSize_ = fboSize();
+
+        setRenderMode(RM_FRAMEBUFFER);
+        setCameraMode(CM_SET);
+
+        setCurrentCameraMatrix_();
+    }
+    else
+    {
+        // switch back
+        setFboSize(lastFboSize_);
+        setRenderMode(lastRenderMode_);
+        setCameraMode(lastCameraMode_);
+    }
+}
+
+void DomePreviewWidget::setCurrentCameraMatrix_()
+{
+    if (projIndex_ < 0 || projIndex_ >= settings_->numProjectors())
+    {
+        // set some default matrix if projector index is out of range
+        setProjectionMatrix(glm::perspective((Float)62,
+                                             (Float)fboSize().width() / fboSize().height(),
+                                             (Float)0.01,
+                                             (Float)10000.));
+        setViewMatrix(glm::translate(Mat4(1), Vec3(0,0,-10)));
+    }
+    else
+    {
+        const CameraSettings& c = settings_->cameraSettings(projIndex_);
+        setFboSize(c.width(), c.height());
+        setProjectionMatrix(c.getProjectionMatrix());
+        setViewMatrix(c.getViewMatrix());
+    }
+}
+
 void DomePreviewWidget::setProjectionSettings(
         const ProjectionSystemSettings & s, int currentIndex)
 {
@@ -51,6 +99,8 @@ void DomePreviewWidget::setProjectionSettings(
     projIndex_ = currentIndex;
     createDomeGeometry_();
     createProjectorGeometry_();
+    if (showCurrentCamera_)
+        setCurrentCameraMatrix_();
     update();
 }
 

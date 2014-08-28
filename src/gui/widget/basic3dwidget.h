@@ -68,6 +68,8 @@ public:
     explicit Basic3DWidget(RenderMode mode, QWidget *parent = 0);
     ~Basic3DWidget();
 
+    const QSize& fboSize() const { return fboSize_; }
+
     RenderMode renderMode() const { return renderMode_; }
     CameraMode cameraMode() const { return cameraMode_; }
 
@@ -87,6 +89,12 @@ public slots:
         wait for glReleased() signal before destruction. */
     void shutDownGL();
 
+    /** Sets the resolution of the framebuffer.
+        In RM_FULLDOME_CUBE, each cube texture will have this resolution.
+        In DIRECT modes, the setting is ignored. */
+    void setFboSize(const QSize&);
+    void setFboSize(uint w, uint h) { setFboSize(QSize(w,h)); }
+
     void setRenderMode(RenderMode);
     void setCameraMode(CameraMode);
 
@@ -103,6 +111,12 @@ public slots:
     /** Sets the (horizontal) scale of the orthographic projection.
         The view extends in negative and positive units @p s. */
     void viewSetOrthoScale(Float s) { orthoScale_ = s; update(); }
+
+    /** Sets the projection matrix when in CM_SET mode */
+    void setProjectionMatrix(const Mat4&);
+
+    /** Sets the view matrix when in CM_SET mode */
+    void setViewMatrix(const Mat4&);
 
 protected:
 

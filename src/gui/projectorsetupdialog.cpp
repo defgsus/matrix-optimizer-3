@@ -44,7 +44,8 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
       settings_     (new ProjectionSystemSettings()),
       orgSettings_  (new ProjectionSystemSettings()),
       domeSettings_ (new DomeSettings()),
-      projectorSettings_(new ProjectorSettings())
+      projectorSettings_(new ProjectorSettings()),
+      cameraSettings_   (new CameraSettings())
 {
     setObjectName("_ProjectorSetupDialog");
     setMinimumSize(760,600);
@@ -53,6 +54,8 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     createMenu_();
 
     // init default settings
+    clearPreset_();
+    /*
     settings_->appendProjector(ProjectorSettings());
     *orgSettings_ = *settings_;
     *projectorSettings_ = settings_->projectorSettings(0);
@@ -62,12 +65,13 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     updateProjectorList_();
     updateDomeWidgets_();
     updateProjectorWidgets_();
-
+    */
     setViewDirection(Basic3DWidget::VD_FRONT);
 }
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
 {
+    delete cameraSettings_;
     delete projectorSettings_;
     delete domeSettings_;
     delete orgSettings_;
@@ -206,22 +210,93 @@ void ProjectorSetupDialog::createWidgets_()
                 lv->addWidget(label);
 
                 spinPitch_ = createDoubleSpin_(lv, tr("pitch (x)"),
-                                             tr("The x rotation of the Projector's direction "
+                                             tr("The x rotation of the projector's direction "
                                                 "- up and down"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinPitch_->setSuffix(" " + tr("°"));
 
                 spinYaw_ = createDoubleSpin_(lv, tr("yaw (y)"),
-                                             tr("The y rotation of the Projector's direction "
+                                             tr("The y rotation of the projector's direction "
                                                 "- left and right"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinYaw_->setSuffix(" " + tr("°"));
 
                 spinRoll_ = createDoubleSpin_(lv, tr("roll (z)"),
-                                             tr("The z rotation of the Projector's direction "
+                                             tr("The z rotation of the projector's direction "
                                                 "- turn left and turn right"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinRoll_->setSuffix(" " + tr("°"));
+
+                // ------- camera settings --------
+
+                label = new QLabel(tr("virtual camera settings"), this);
+                lv->addWidget(label);
+
+                spinCamWidth_ = createSpin_(lv, tr("width"),
+                                             tr("Camera's horizontal resolution in pixels"),
+                                             1024, 1, 1, 8192, SLOT(updateProjectorSettings_()));
+                spinCamWidth_->setSuffix(" " + tr("px"));
+
+                spinCamHeight_ = createSpin_(lv, tr("height"),
+                                             tr("Camera's vertical resolution in pixels"),
+                                             768, 1, 1, 8192, SLOT(updateProjectorSettings_()));
+                spinCamHeight_->setSuffix(" " + tr("px"));
+
+                spinCamFov_ = createDoubleSpin_(lv, tr("field of view"),
+                                             tr("Camera's (horizontal) view angle in degree"),
+                                             60, 1, 1, 180, SLOT(updateProjectorSettings_()));
+                spinCamFov_->setSuffix(" " + tr("°"));
+
+                spinCamZNear_ = createDoubleSpin_(lv, tr("near plane"),
+                                             tr("The distance to the near plane in the camera frustum - "
+                                                "normally no change is needed"),
+                                             0.01, 0.001, 0.00001, 1000000,
+                                             SLOT(updateProjectorSettings_()));
+
+                spinCamZFar_ = createDoubleSpin_(lv, tr("far plane"),
+                                             tr("The distance to the far plane in the camera frustum - "
+                                                "normally no change is needed"),
+                                             0.01, 0.001, 0.00001, 1000000,
+                                             SLOT(updateProjectorSettings_()));
+
+                label = new QLabel(tr("position"), this);
+                lv->addWidget(label);
+
+                spinCamX_ = createDoubleSpin_(lv, tr("x"),
+                                             tr("Camera's position on the x axis in graphic units - "
+                                                "normally zero"),
+                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
+
+                spinCamY_ = createDoubleSpin_(lv, tr("y"),
+                                             tr("Camera's position on the y axis in graphic units - "
+                                                "normally zero"),
+                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
+
+                spinCamZ_ = createDoubleSpin_(lv, tr("z"),
+                                             tr("Camera's position on the z axis in graphic units - "
+                                                "normally zero"),
+                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
+
+                label = new QLabel(tr("orientation"), this);
+                lv->addWidget(label);
+
+                spinCamPitch_ = createDoubleSpin_(lv, tr("pitch (x)"),
+                                             tr("The x rotation of the camera's direction "
+                                                "- up and down"),
+                                             0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
+                spinCamPitch_->setSuffix(" " + tr("°"));
+
+                spinCamYaw_ = createDoubleSpin_(lv, tr("yaw (y)"),
+                                             tr("The y rotation of the camera's direction "
+                                                "- left and right"),
+                                             0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
+                spinCamYaw_->setSuffix(" " + tr("°"));
+
+                spinCamRoll_ = createDoubleSpin_(lv, tr("roll (z)"),
+                                             tr("The z rotation of the camera's direction "
+                                                "- turn left and turn right"),
+                                             0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
+                spinCamRoll_->setSuffix(" " + tr("°"));
 
             lv0->addStretch(2);
 
@@ -299,6 +374,13 @@ void ProjectorSetupDialog::createWidgets_()
                 cb->setChecked(display_->getShowDome());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowDome(bool)));
 
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                cb = new QCheckBox(tr("show current camera view"), this);
+                lh2->addWidget(cb);
+                cb->setChecked(display_->getShowCurrentCamera());
+                connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowCurrentCamera(bool)));
 
             // --- dome settings ---
 
@@ -543,17 +625,30 @@ void ProjectorSetupDialog::updateProjectorSettings_()
     projectorSettings_->setYaw(spinYaw_->value());
     projectorSettings_->setRoll(spinRoll_->value());
 
+    cameraSettings_->setWidth(spinCamWidth_->value());
+    cameraSettings_->setHeight(spinCamHeight_->value());
+    cameraSettings_->setFov(spinCamFov_->value());
+    cameraSettings_->setPosX(spinCamX_->value());
+    cameraSettings_->setPosY(spinCamY_->value());
+    cameraSettings_->setPosZ(spinCamZ_->value());
+    cameraSettings_->setPitch(spinCamPitch_->value());
+    cameraSettings_->setYaw(spinCamYaw_->value());
+    cameraSettings_->setRoll(spinCamRoll_->value());
+    cameraSettings_->setZNear(spinCamZNear_->value());
+    cameraSettings_->setZFar(spinCamZFar_->value());
+
     // update system settings as well
     int idx = comboProj_->currentIndex();
     if (idx >= 0 && idx < settings_->numProjectors())
     {
         settings_->setProjectorSettings(idx, *projectorSettings_);
+        settings_->setCameraSettings(idx, *cameraSettings_);
         updateWindowTitle_();
     }
 
     ProjectorMapper m;
     m.setSettings(*domeSettings_, *projectorSettings_);
-    m.findCenterProjection();
+    //m.findCenterProjection();
 
     updateDisplay_();
 }
@@ -579,6 +674,18 @@ void ProjectorSetupDialog::updateProjectorWidgets_()
     spinPitch_->setValue( projectorSettings_->pitch() );
     spinYaw_->setValue( projectorSettings_->yaw() );
     spinRoll_->setValue( projectorSettings_->roll() );
+
+    spinCamWidth_->setValue( cameraSettings_->width() );
+    spinCamHeight_->setValue( cameraSettings_->height() );
+    spinCamFov_->setValue( cameraSettings_->fov() );
+    spinCamX_->setValue( cameraSettings_->posX() );
+    spinCamY_->setValue( cameraSettings_->posY() );
+    spinCamZ_->setValue( cameraSettings_->posZ() );
+    spinCamPitch_->setValue( cameraSettings_->pitch() );
+    spinCamYaw_->setValue( cameraSettings_->yaw() );
+    spinCamRoll_->setValue( cameraSettings_->roll() );
+    spinCamZNear_->setValue( cameraSettings_->zNear() );
+    spinCamZFar_->setValue( cameraSettings_->zFar() );
 }
 
 void ProjectorSetupDialog::projectorSelected_()
@@ -588,6 +695,7 @@ void ProjectorSetupDialog::projectorSelected_()
         return;
 
     *projectorSettings_ = settings_->projectorSettings(idx);
+    *cameraSettings_ = settings_->cameraSettings(idx);
     updateProjectorWidgets_();
     updateDisplay_();
 }
@@ -608,7 +716,10 @@ void ProjectorSetupDialog::duplicateProjector_()
         return;
 
     settings_->appendProjector(settings_->projectorSettings(idx));
+    settings_->setCameraSettings(settings_->numProjectors()-1,
+                                 settings_->cameraSettings(idx));
     *projectorSettings_ = settings_->projectorSettings(settings_->numProjectors()-1);
+    *cameraSettings_ = settings_->cameraSettings(settings_->numProjectors()-1);
     updateProjectorList_();
 
     comboProj_->setCurrentIndex(settings_->numProjectors()-1);
@@ -653,6 +764,7 @@ void ProjectorSetupDialog::clearPreset_()
     settings_->appendProjector(ProjectorSettings());
     *orgSettings_ = *settings_;
     *projectorSettings_ = settings_->projectorSettings(0);
+    *cameraSettings_ = settings_->cameraSettings(0);
 
     updateDomeWidgets_();
     updateProjectorWidgets_();

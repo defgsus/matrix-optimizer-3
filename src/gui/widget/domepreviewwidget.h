@@ -32,6 +32,7 @@ public:
 
     bool getShowDome() const { return showDome_; }
     bool getShowGrid() const { return showGrid_; }
+    bool getShowCurrentCamera() const { return showCurrentCamera_; }
 
 signals:
 
@@ -39,6 +40,7 @@ public slots:
 
     void setShowDome(bool enable) { showDome_ = enable; update(); }
     void setShowGrid(bool enable) { showGrid_ = enable; update(); }
+    void setShowCurrentCamera(bool enable);
 
     /** Updates the settings and graphical display.
         If @p currentProjectorIndex >= 0, then this projector will be highlighted. */
@@ -58,6 +60,7 @@ private:
 
     void createDomeGeometry_();
     void createProjectorGeometry_();
+    void setCurrentCameraMatrix_();
 
     ProjectionSystemSettings * settings_;
 
@@ -71,9 +74,14 @@ private:
     bool showGrid_,
          showDome_,
          showRays_,
+         showCurrentCamera_,
          showProjectedSurface_;
 
     int projIndex_;
+
+    RenderMode lastRenderMode_;
+    CameraMode lastCameraMode_;
+    QSize lastFboSize_;
 };
 
 } // namespace GUI

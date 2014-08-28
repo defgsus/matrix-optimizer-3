@@ -122,6 +122,12 @@ const ProjectorSettings& ProjectionSystemSettings::projectorSettings(int idx) co
     return projectors_[idx];
 }
 
+const CameraSettings& ProjectionSystemSettings::cameraSettings(int idx) const
+{
+    MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range");
+    return cameras_[idx];
+}
+
 void ProjectionSystemSettings::setProjectorSettings(int idx, const ProjectorSettings &s)
 {
     MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range");
@@ -145,12 +151,14 @@ void ProjectionSystemSettings::appendProjector(const ProjectorSettings &set)
 void ProjectionSystemSettings::insertProjector(int idx, const ProjectorSettings &s)
 {
     projectors_.insert(idx, s);
+    cameras_.insert(idx, CameraSettings());
 }
 
 void ProjectionSystemSettings::removeProjector(int idx)
 {
     MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range");
     projectors_.removeAt(idx);
+    cameras_.removeAt(idx);
 }
 
 

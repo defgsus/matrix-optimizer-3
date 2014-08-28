@@ -67,6 +67,29 @@ Basic3DWidget::~Basic3DWidget()
     delete gridObject_;
 }
 
+void Basic3DWidget::setFboSize(const QSize & s)
+{
+    // XXX fbo_ and fboSize_ might be different when modeChangeRequest_ is pending
+    //     need to think about that ...
+    if (fbo_ && (int)fbo_->width() == s.width() && (int)fbo_->height() == s.height())
+        return;
+
+    // get current render mode
+    // (a change request could be pending)
+    RenderMode rm = renderMode_;
+    if (modeChangeRequest_)
+        rm = nextRenderMode_;
+
+    fboSize_ = s;
+
+    if (rm == RM_DIRECT || rm == RM_DIRECT_ORTHO)
+        return;
+
+    nextRenderMode_ = rm;
+    modeChangeRequest_ = true;
+    update();
+}
+
 void Basic3DWidget::setRenderMode(RenderMode rm)
 {
     if (rm == renderMode_)
@@ -171,6 +194,18 @@ void Basic3DWidget::viewSet(ViewDirection dir, Float distance)
         distanceZ_ = distance;
     }
 
+    update();
+}
+
+void Basic3DWidget::setProjectionMatrix(const Mat4 & m)
+{
+    fixProjectionMatrix_ = m;
+    update();
+}
+
+void Basic3DWidget::setViewMatrix(const Mat4 & m)
+{
+    fixViewMatrix_ = m;
     update();
 }
 
@@ -405,6 +440,8 @@ void Basic3DWidget::paintGL()
     }
 
     Mat4 identity(1.0);
+
+    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
 
     if (renderMode_ == RM_DIRECT || renderMode_ == RM_DIRECT_ORTHO)
     {

@@ -21,6 +21,7 @@ class QMenuBar;
 namespace MO {
 class DomeSettings;
 class ProjectorSettings;
+class CameraSettings;
 class ProjectionSystemSettings;
 namespace GUI {
 
@@ -105,6 +106,7 @@ private:
 
     DomeSettings * domeSettings_;
     ProjectorSettings * projectorSettings_;
+    CameraSettings * cameraSettings_;
 
     DomePreviewWidget * display_;
 
@@ -116,7 +118,10 @@ private:
 
     SpinBox
         * spinWidth_,
-        * spinHeight_;
+        * spinHeight_,
+
+        * spinCamWidth_,
+        * spinCamHeight_;
 
     DoubleSpinBox
         * spinDomeRad_,
@@ -131,7 +136,17 @@ private:
         * spinLong_,
         * spinPitch_,
         * spinYaw_,
-        * spinRoll_;
+        * spinRoll_,
+
+        * spinCamFov_,
+        * spinCamX_,
+        * spinCamY_,
+        * spinCamZ_,
+        * spinCamPitch_,
+        * spinCamYaw_,
+        * spinCamRoll_,
+        * spinCamZNear_,
+        * spinCamZFar_;
 
     QComboBox
         * comboProj_,

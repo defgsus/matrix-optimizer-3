@@ -43,7 +43,7 @@ public:
     Float zNear() const { return zNear_; }
     Float zFar() const { return zFar_; }
 
-    Mat4 getPerspectiveMatrix() const;
+    Mat4 getProjectionMatrix() const;
     Mat4 getViewMatrix() const;
 
     // --------------- setter --------------------
