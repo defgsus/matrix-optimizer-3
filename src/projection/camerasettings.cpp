@@ -92,9 +92,9 @@ Mat4 CameraSettings::getViewMatrix() const
     Mat4 m(glm::translate(Mat4(1), pos()));
 
     // roll-pitch-yaw
-    m = glm::rotate(m, roll_,  Vec3(0,0,1));
     m = glm::rotate(m, yaw_,   Vec3(0,1,0));
     m = glm::rotate(m, pitch_, Vec3(1,0,0));
+    m = glm::rotate(m, roll_,  Vec3(0,0,1));
 
     return glm::inverse(m);
 }

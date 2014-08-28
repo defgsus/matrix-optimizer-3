@@ -58,17 +58,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 
     // init default settings
     clearPreset_();
-    /*
-    settings_->appendProjector(ProjectorSettings());
-    *orgSettings_ = *settings_;
-    *projectorSettings_ = settings_->projectorSettings(0);
 
-    updateWindowTitle_();
-
-    updateProjectorList_();
-    updateDomeWidgets_();
-    updateProjectorWidgets_();
-    */
     setViewDirection(Basic3DWidget::VD_FRONT);
 }
 
@@ -116,6 +106,18 @@ void ProjectorSetupDialog::createMenu_()
 
     mainMenu_->addMenu(menu = new QMenu(tr("Edit"), mainMenu_));
 
+        menu->addAction(a = new QAction(tr("Previous projector"), menu));
+        a->setShortcut(Qt::CTRL + Qt::Key_Up);
+        connect(a, SIGNAL(triggered()), this, SLOT(previousProjector_()));
+        aPrevious_ = a;
+
+        menu->addAction(a = new QAction(tr("Next projector"), menu));
+        a->setShortcut(Qt::CTRL + Qt::Key_Down);
+        connect(a, SIGNAL(triggered()), this, SLOT(nextProjector_()));
+        aNext_ = a;
+
+        menu->addSeparator();
+
         menu->addAction(a = new QAction(tr("Copy projector settings"), menu));
         connect(a, SIGNAL(triggered()), this, SLOT(copyProjector_()));
 
@@ -132,7 +134,7 @@ void ProjectorSetupDialog::createMenu_()
         connect(a, SIGNAL(triggered()), this, SLOT(pasteCamera_()));
         aPasteCamera_ = a;
 
-    updatePaste_();
+    updateActions_();
 }
 
 void ProjectorSetupDialog::createWidgets_()
@@ -264,7 +266,7 @@ void ProjectorSetupDialog::createWidgets_()
                 lv->addWidget(gr);
                 gr->setExpanded(false);
 
-                label = new QLabel(tr("virtual camera settings"), this);
+                label = new QLabel(tr("view"), this);
                 gr->addWidget(label);
 
                 spinCamWidth_ = createSpin_(gr, tr("width"),
@@ -279,7 +281,7 @@ void ProjectorSetupDialog::createWidgets_()
 
                 spinCamFov_ = createDoubleSpin_(gr, tr("field of view"),
                                              tr("Camera's (vertical) view angle in degree"),
-                                             60, 1, 1, 179, SLOT(updateProjectorSettings_()));
+                                             60, 0.1, 1, 179, SLOT(updateProjectorSettings_()));
                 spinCamFov_->setSuffix(" " + tr("°"));
 
                 spinCamZNear_ = createDoubleSpin_(gr, tr("near plane"),
@@ -293,24 +295,6 @@ void ProjectorSetupDialog::createWidgets_()
                                                 "normally no change is needed"),
                                              0.01, 0.001, 0.00001, 1000000,
                                              SLOT(updateProjectorSettings_()));
-
-                label = new QLabel(tr("position"), this);
-                gr->addWidget(label);
-
-                spinCamX_ = createDoubleSpin_(gr, tr("x"),
-                                             tr("Camera's position on the x axis in graphic units - "
-                                                "normally zero"),
-                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
-
-                spinCamY_ = createDoubleSpin_(gr, tr("y"),
-                                             tr("Camera's position on the y axis in graphic units - "
-                                                "normally zero"),
-                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
-
-                spinCamZ_ = createDoubleSpin_(gr, tr("z"),
-                                             tr("Camera's position on the z axis in graphic units - "
-                                                "normally zero"),
-                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
 
                 label = new QLabel(tr("orientation"), this);
                 gr->addWidget(label);
@@ -333,13 +317,25 @@ void ProjectorSetupDialog::createWidgets_()
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinCamRoll_->setSuffix(" " + tr("°"));
 
-            lv0->addStretch(2);
+                label = new QLabel(tr("position"), this);
+                gr->addWidget(label);
 
-        // link groups so only one is visible at a time
-        connect(projectorGroup_, SIGNAL(expanded()), cameraGroup_, SLOT(collapse()));
-        connect(projectorGroup_, SIGNAL(collapsed()), cameraGroup_, SLOT(expand()));
-        connect(cameraGroup_, SIGNAL(expanded()), projectorGroup_, SLOT(collapse()));
-        connect(cameraGroup_, SIGNAL(collapsed()), projectorGroup_, SLOT(expand()));
+                spinCamX_ = createDoubleSpin_(gr, tr("x"),
+                                             tr("Camera's position on the x axis in graphic units - "
+                                                "normally zero"),
+                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
+
+                spinCamY_ = createDoubleSpin_(gr, tr("y"),
+                                             tr("Camera's position on the y axis in graphic units - "
+                                                "normally zero"),
+                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
+
+                spinCamZ_ = createDoubleSpin_(gr, tr("z"),
+                                             tr("Camera's position on the z axis in graphic units - "
+                                                "normally zero"),
+                                             0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
+
+            lv0->addStretch(2);
 
         // --- preview display ---
 
@@ -353,8 +349,11 @@ void ProjectorSetupDialog::createWidgets_()
 
             // --- display settings ---
 
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
+            QWidget * projectionStuff = new QWidget(this);
+            lv->addWidget(projectionStuff);
+
+            lh2 = new QHBoxLayout(projectionStuff);
+            lh2->setMargin(0);
 
                 comboView_ = new QComboBox(this);
                 lh2->addWidget(comboView_);
@@ -415,13 +414,10 @@ void ProjectorSetupDialog::createWidgets_()
                 cb->setChecked(display_->getShowDome());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowDome(bool)));
 
-            lh2 = new QHBoxLayout();
-            lv->addLayout(lh2);
-
-                cb = new QCheckBox(tr("show current camera view"), this);
+                cb = new QCheckBox(tr("show rays"), this);
                 lh2->addWidget(cb);
-                cb->setChecked(display_->getShowCurrentCamera());
-                connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowCurrentCamera(bool)));
+                cb->setChecked(display_->getShowRays());
+                connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowRays(bool)));
 
             // --- dome settings ---
 
@@ -466,6 +462,32 @@ void ProjectorSetupDialog::createWidgets_()
                 spinDomeTiltZ_->setSuffix(" " + tr("°"));
 
 
+    // link groups so only one is visible at a time
+    // and also change display mode
+    connect(projectorGroup_, &GroupWidget::expanded, [=]()
+    {
+        cameraGroup_->collapse();
+        projectionStuff->setEnabled(true);
+        display_->setShowCurrentCamera(false);
+    });
+    connect(projectorGroup_, &GroupWidget::collapsed, [=]()
+    {
+        cameraGroup_->expand();
+        projectionStuff->setEnabled(false);
+        display_->setShowCurrentCamera(true);
+    });
+    connect(cameraGroup_, &GroupWidget::expanded, [=]()
+    {
+        projectorGroup_->collapse();
+        projectionStuff->setEnabled(false);
+        display_->setShowCurrentCamera(true);
+    });
+    connect(cameraGroup_, &GroupWidget::collapsed, [=]()
+    {
+        projectorGroup_->expand();
+        projectionStuff->setEnabled(true);
+        display_->setShowCurrentCamera(false);
+    });
 }
 
 QLineEdit * ProjectorSetupDialog::createEdit_(GroupWidget * group,
@@ -743,6 +765,7 @@ void ProjectorSetupDialog::projectorSelected_()
     *cameraSettings_ = settings_->cameraSettings(idx);
     updateProjectorWidgets_();
     updateDisplay_();
+    updateActions_();
 }
 
 void ProjectorSetupDialog::newProjector_()
@@ -752,6 +775,7 @@ void ProjectorSetupDialog::newProjector_()
     updateProjectorList_();
 
     comboProj_->setCurrentIndex(settings_->numProjectors()-1);
+    updateActions_();
 }
 
 void ProjectorSetupDialog::duplicateProjector_()
@@ -768,6 +792,7 @@ void ProjectorSetupDialog::duplicateProjector_()
     updateProjectorList_();
 
     comboProj_->setCurrentIndex(settings_->numProjectors()-1);
+    updateActions_();
 }
 
 void ProjectorSetupDialog::deleteProjector_()
@@ -778,6 +803,7 @@ void ProjectorSetupDialog::deleteProjector_()
 
     settings_->removeProjector(idx);
     updateProjectorList_();
+    updateActions_();
 }
 
 void ProjectorSetupDialog::updateProjectorList_()
@@ -798,6 +824,7 @@ void ProjectorSetupDialog::updateProjectorList_()
         comboProj_->setCurrentIndex(idx);
     }
 
+    updateActions_();
 }
 
 void ProjectorSetupDialog::clearPreset_()
@@ -815,6 +842,7 @@ void ProjectorSetupDialog::clearPreset_()
     updateProjectorWidgets_();
     updateProjectorList_();
     updateDisplay_();
+    updateActions_();
 }
 
 bool ProjectorSetupDialog::savePresetAuto_()
@@ -869,6 +897,7 @@ void ProjectorSetupDialog::loadPreset_()
         updateProjectorList_();
         updateDomeSettings_();
         updateProjectorSettings_();
+        updateActions_();
     }
     catch (Exception& e)
     {
@@ -921,10 +950,33 @@ bool ProjectorSetupDialog::saveToClose_()
     return savePresetAuto_();
 }
 
-void ProjectorSetupDialog::updatePaste_()
+void ProjectorSetupDialog::updateActions_()
 {
     aPasteProjector_->setEnabled( copyOfProjectorSettings_ != 0);
     aPasteCamera_->setEnabled( copyOfCameraSettings_ != 0 );
+
+    const int idx = comboProj_->currentIndex();
+    aPrevious_->setEnabled(idx >= 1);
+    aNext_->setEnabled(idx < comboProj_->count()-1);
+
+}
+
+void ProjectorSetupDialog::previousProjector_()
+{
+    const int idx = comboProj_->currentIndex();
+    if (idx < 1 || idx >= comboProj_->count())
+        return;
+    comboProj_->setCurrentIndex(idx-1);
+    updateActions_();
+}
+
+void ProjectorSetupDialog::nextProjector_()
+{
+    const int idx = comboProj_->currentIndex();
+    if (idx < 0 || idx >= comboProj_->count()-1)
+        return;
+    comboProj_->setCurrentIndex(idx+1);
+    updateActions_();
 }
 
 void ProjectorSetupDialog::copyProjector_()
@@ -933,7 +985,7 @@ void ProjectorSetupDialog::copyProjector_()
         copyOfProjectorSettings_ = new ProjectorSettings();
     *copyOfProjectorSettings_ = *projectorSettings_;
 
-    updatePaste_();
+    updateActions_();
 }
 
 
@@ -943,7 +995,7 @@ void ProjectorSetupDialog::copyCamera_()
         copyOfCameraSettings_ = new CameraSettings();
     *copyOfCameraSettings_ = *cameraSettings_;
 
-    updatePaste_();
+    updateActions_();
 }
 
 void ProjectorSetupDialog::pasteProjector_()

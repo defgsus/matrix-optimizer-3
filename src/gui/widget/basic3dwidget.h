@@ -116,7 +116,7 @@ public slots:
     void setProjectionMatrix(const Mat4&);
 
     /** Sets the view matrix when in CM_SET mode */
-    void setViewMatrix(const Mat4&);
+    virtual void setViewMatrix(const Mat4&);
 
 protected:
 

@@ -76,6 +76,8 @@ private slots:
     bool savePresetChoose_();
     void loadPreset_();
 
+    void nextProjector_();
+    void previousProjector_();
     void copyProjector_();
     void pasteProjector_();
     void copyCamera_();
@@ -84,7 +86,7 @@ private slots:
 private:
 
     void updateWindowTitle_();
-    void updatePaste_();
+    void updateActions_();
 
     bool saveToClose_();
     bool saveToClear_();
@@ -170,7 +172,9 @@ private:
 
     QAction
         * aPasteProjector_,
-        * aPasteCamera_;
+        * aPasteCamera_,
+        * aNext_,
+        * aPrevious_;
 };
 
 

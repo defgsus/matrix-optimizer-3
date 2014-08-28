@@ -45,6 +45,21 @@ DomePreviewWidget::~DomePreviewWidget()
     delete settings_;
 }
 
+void DomePreviewWidget::setViewMatrix(const Mat4 & m)
+{
+    Basic3DWidget::setViewMatrix(m * glm::inverse(domeTransform_));
+}
+
+void DomePreviewWidget::setShowRays(bool enable)
+{
+    if (enable == showRays_)
+        return;
+
+    showRays_ = enable;
+    createProjectorGeometry_();
+    update();
+}
+
 void DomePreviewWidget::setShowCurrentCamera(bool enable)
 {
     if (enable == showCurrentCamera_)
@@ -70,6 +85,8 @@ void DomePreviewWidget::setShowCurrentCamera(bool enable)
         setRenderMode(lastRenderMode_);
         setCameraMode(lastCameraMode_);
     }
+
+    createProjectorGeometry_();
 }
 
 void DomePreviewWidget::setCurrentCameraMatrix_()
@@ -163,7 +180,7 @@ void DomePreviewWidget::createProjectorGeometry_()
             if (highlight)
                 projectorGeometry_->setColor(0.7,0.7,0.5,1);
             else
-                projectorGeometry_->setColor(0.4,0.4,0.3,1);
+                projectorGeometry_->setColor(0.3,0.3,0.2,1);
 
             for (int i=0; i<3; ++i)
             {
@@ -200,7 +217,7 @@ void DomePreviewWidget::createProjectorGeometry_()
             if (highlight)
                 projectorGeometry_->setColor(0.5,1.0,0.5,1);
             else
-                projectorGeometry_->setColor(0.3,0.6,0.3,1);
+                projectorGeometry_->setColor(0.2,0.3,0.2,1);
 
             std::vector<GEOM::Geometry::IndexType> idx;
             const int num = 11;
@@ -250,7 +267,15 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
                                const Mat4 &viewTrans,
                                const Mat4 &trans)
 {
+    MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+
+    MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
+    MO_CHECK_GL( glEnable(GL_BLEND) );
+    MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
+    MO_CHECK_GL( glEnable(GL_LINE_SMOOTH) );
+    glLineWidth((GLfloat)fboSize().height() / 512);
+    glGetError();
 
     if (domeGeometry_)
     {
@@ -276,6 +301,8 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
 
     if (showGrid_)
         drawGrid(projection, cubeViewTrans, viewTrans, trans);
+
+    MO_CHECK_GL( glDisable(GL_BLEND) );
 }
 
 } // namespace GUI

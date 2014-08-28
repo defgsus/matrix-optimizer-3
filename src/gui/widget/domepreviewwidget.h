@@ -32,7 +32,11 @@ public:
 
     bool getShowDome() const { return showDome_; }
     bool getShowGrid() const { return showGrid_; }
+    bool getShowRays() const { return showRays_; }
     bool getShowCurrentCamera() const { return showCurrentCamera_; }
+
+    /** Sets the view matrix when in CM_SET mode */
+    void setViewMatrix(const Mat4&) Q_DECL_OVERRIDE;
 
 signals:
 
@@ -40,6 +44,7 @@ public slots:
 
     void setShowDome(bool enable) { showDome_ = enable; update(); }
     void setShowGrid(bool enable) { showGrid_ = enable; update(); }
+    void setShowRays(bool enable);
     void setShowCurrentCamera(bool enable);
 
     /** Updates the settings and graphical display.
