@@ -16,7 +16,7 @@ namespace MO {
 CameraSettings::CameraSettings()
     : width_    (1920),
       height_   (1080),
-      fov_      (90),
+      fov_      (60),
       posX_     (0),
       posY_     (0),
       posZ_     (0),
@@ -84,19 +84,19 @@ bool CameraSettings::operator == (const CameraSettings& o) const
 Mat4 CameraSettings::getProjectionMatrix() const
 {
     const Float aspect = Float(width_) / height_;
-    return glm::perspective(fov_ * aspect, aspect, zNear_, zFar_);
+    return glm::perspective(fov_, aspect, zNear_, zFar_);
 }
 
 Mat4 CameraSettings::getViewMatrix() const
 {
-    Mat4 m(glm::translate(Mat4(1), -pos()));
+    Mat4 m(glm::translate(Mat4(1), pos()));
 
     // roll-pitch-yaw
     m = glm::rotate(m, roll_,  Vec3(0,0,1));
     m = glm::rotate(m, yaw_,   Vec3(0,1,0));
     m = glm::rotate(m, pitch_, Vec3(1,0,0));
 
-    return m;
+    return glm::inverse(m);
 }
 
 } // namespace MO

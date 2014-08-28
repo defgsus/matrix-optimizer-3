@@ -43,7 +43,7 @@ void ProjectorMapper::recalc_()
         return;
 
     // aspect ratio
-    aspect_ = (Float)set_.height()/set_.width();
+    aspect_ = (Float)set_.width()/set_.height();
 
     // -- calc transformation matrix --
 
@@ -65,8 +65,8 @@ void ProjectorMapper::recalc_()
 
 Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
 {
-    s = s * 2 - 1;
-    t = (t * 2 - 1) * aspect_;
+    s = (s * 2 - 1) * aspect_;
+    t = (t * 2 - 1);
 
     Vec3 pos = set_.lensRadius() * std::sqrt((Float)2) * Vec3(s, t, 0);
     return Vec3(trans_ * Vec4(pos, (Float)1));
@@ -74,8 +74,8 @@ Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
 
 void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direction) const
 {
-    s = s * 2 - 1;
-    t = (t * 2 - 1) * aspect_;
+    s = (s * 2 - 1) * aspect_;
+    t = (t * 2 - 1);
 
     Float lensfac = set_.lensRadius() * std::sqrt((Float)2);
     Vec3 pos = lensfac * Vec3(s, t, 0);

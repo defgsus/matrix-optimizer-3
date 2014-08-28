@@ -15,6 +15,7 @@
 
 #include "gl/opengl_fwd.h"
 #include "types/int.h"
+#include "types/float.h"
 
 namespace MO {
 namespace GL {
@@ -35,7 +36,14 @@ public:
 
     void release();
 
+    /** Draws a quadratic quad into the view area given by @p w and @p h.
+        The quad will be centered correctly, if @p w != @p h */
     bool draw(uint w, uint h);
+
+    /** Draws a quad scaled to the size 1.0 x @p aspect into the
+        view area given by @p w and @p h.
+        The quad will be centered correctly, if @p w != @p h */
+    bool draw(uint screen_w, uint screen_h, Float aspect);
 
     // ----------- getter -----------
 

@@ -28,6 +28,7 @@ namespace GUI {
 class DomePreviewWidget;
 class DoubleSpinBox;
 class SpinBox;
+class GroupWidget;
 
 class ProjectorSetupDialog : public QDialog
 {
@@ -83,15 +84,15 @@ private:
     void createMenu_();
 
     void createWidgets_();
-    QLineEdit * createEdit_(QLayout * layout,
+    QLineEdit * createEdit_(GroupWidget * group,
                         const QString& desc, const QString& statusTip,
                         const QString& value,
                         const char * slot = 0);
-    SpinBox * createSpin_(QLayout * layout,
+    SpinBox * createSpin_(GroupWidget * group,
                         const QString& desc, const QString& statusTip,
                         int value, int smallstep=1, int minv=-9999999, int maxv=9999999,
                         const char * slot = 0);
-    DoubleSpinBox * createDoubleSpin_(QLayout * layout,
+    DoubleSpinBox * createDoubleSpin_(GroupWidget * group,
                         const QString& desc, const QString& statusTip,
                         double value, double smallstep=1, double minv=-9999999, double maxv=9999999,
                         const char * slot = 0);
@@ -111,6 +112,8 @@ private:
     DomePreviewWidget * display_;
 
     QMenuBar * mainMenu_;
+
+    GroupWidget * projectorGroup_, * cameraGroup_;
 
     QLineEdit
         * editName_,

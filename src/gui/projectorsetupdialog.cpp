@@ -26,6 +26,7 @@
 #include "widget/domepreviewwidget.h"
 #include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
+#include "widget/groupwidget.h"
 #include "projection/projectionsystemsettings.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
@@ -156,72 +157,78 @@ void ProjectorSetupDialog::createWidgets_()
             frame->setFrameStyle(QFrame::Raised | QFrame::Panel);
 
                 auto lv = new QVBoxLayout(frame);
+                lv->setMargin(2);
 
                 // --------- projector settings --------------
 
-                auto label = new QLabel(tr("projector settings"), this);
-                lv->addWidget(label);
+                GroupWidget * gr;
+                projectorGroup_ = gr = new GroupWidget(tr("projector settings"));
+                gr->setExpanded(true);
+                lv->addWidget(gr);
 
-                editName_ = createEdit_(lv, tr("name"),
+                auto label = new QLabel(tr("view"), this);
+                projectorGroup_->addWidget(label);
+
+                editName_ = createEdit_(gr, tr("name"),
                                             tr("Some name to identify the projector"),
                                         "projector", SLOT(updateProjectorName_()));
 
-                spinWidth_ = createSpin_(lv, tr("width"),
+                spinWidth_ = createSpin_(gr, tr("width"),
                                              tr("Projector's horizontal resolution in pixels"),
                                              1024, 1, 1, 8192, SLOT(updateProjectorSettings_()));
                 spinWidth_->setSuffix(" " + tr("px"));
 
-                spinHeight_ = createSpin_(lv, tr("height"),
+                spinHeight_ = createSpin_(gr, tr("height"),
                                              tr("Projector's vertical resolution in pixels"),
                                              768, 1, 1, 8192, SLOT(updateProjectorSettings_()));
                 spinHeight_->setSuffix(" " + tr("px"));
 
-                spinFov_ = createDoubleSpin_(lv, tr("field of view"),
-                                             tr("Projector's projection (horizontal) angle in degree"),
+                spinFov_ = createDoubleSpin_(gr, tr("field of view"),
+                                             tr("Projector's (vertical) projection angle in degree"),
                                              60, 1, 1, 180, SLOT(updateProjectorSettings_()));
                 spinFov_->setSuffix(" " + tr("°"));
 
-                spinLensRad_ = createDoubleSpin_(lv, tr("lens radius"),
+                spinLensRad_ = createDoubleSpin_(gr, tr("lens radius"),
                                              tr("The radius of the projector's lens in centimeters"),
                                              0, 0.1, 0, 1000, SLOT(updateProjectorSettings_()));
                 spinLensRad_->setSuffix(" " + tr(" cm"));
 
                 label = new QLabel(tr("position"), this);
-                lv->addWidget(label);
+                gr->addWidget(label);
 
-                spinDist_ = createDoubleSpin_(lv, tr("distance"),
+                spinDist_ = createDoubleSpin_(gr, tr("distance"),
                                              tr("Projector's distance to the dome periphery "
                                                 "in centimeters - "
                                                 "negative is inside, positive is outside of dome"),
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
                 spinDist_->setSuffix(" " + tr("cm"));
 
-                spinLat_ = createDoubleSpin_(lv, tr("latitude"),
+                spinLat_ = createDoubleSpin_(gr, tr("latitude"),
                                              tr("Projector's position around the dome"),
                                              0, 1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinLat_->setSuffix(" " + tr("°"));
 
-                spinLong_ = createDoubleSpin_(lv, tr("longitude"),
+                spinLong_ = createDoubleSpin_(gr, tr("longitude"),
                                              tr("Projector's height"),
                                              0, 1, -90, 90, SLOT(updateProjectorSettings_()));
                 spinLong_->setSuffix(" " + tr("°"));
 
                 label = new QLabel(tr("orientation"), this);
-                lv->addWidget(label);
+                gr->addWidget(label);
 
-                spinPitch_ = createDoubleSpin_(lv, tr("pitch (x)"),
+                spinPitch_ = createDoubleSpin_(gr, tr("pitch (x)"),
                                              tr("The x rotation of the projector's direction "
                                                 "- up and down"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinPitch_->setSuffix(" " + tr("°"));
 
-                spinYaw_ = createDoubleSpin_(lv, tr("yaw (y)"),
+                spinYaw_ = createDoubleSpin_(gr, tr("yaw (y)"),
                                              tr("The y rotation of the projector's direction "
                                                 "- left and right"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinYaw_->setSuffix(" " + tr("°"));
 
-                spinRoll_ = createDoubleSpin_(lv, tr("roll (z)"),
+                spinRoll_ = createDoubleSpin_(gr, tr("roll (z)"),
                                              tr("The z rotation of the projector's direction "
                                                 "- turn left and turn right"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
@@ -229,76 +236,86 @@ void ProjectorSetupDialog::createWidgets_()
 
                 // ------- camera settings --------
 
-                label = new QLabel(tr("virtual camera settings"), this);
-                lv->addWidget(label);
+                cameraGroup_ = gr = new GroupWidget(tr("virtual camera settings"), this);
+                lv->addWidget(gr);
+                gr->setExpanded(false);
 
-                spinCamWidth_ = createSpin_(lv, tr("width"),
+                label = new QLabel(tr("virtual camera settings"), this);
+                gr->addWidget(label);
+
+                spinCamWidth_ = createSpin_(gr, tr("width"),
                                              tr("Camera's horizontal resolution in pixels"),
                                              1024, 1, 1, 8192, SLOT(updateProjectorSettings_()));
                 spinCamWidth_->setSuffix(" " + tr("px"));
 
-                spinCamHeight_ = createSpin_(lv, tr("height"),
+                spinCamHeight_ = createSpin_(gr, tr("height"),
                                              tr("Camera's vertical resolution in pixels"),
                                              768, 1, 1, 8192, SLOT(updateProjectorSettings_()));
                 spinCamHeight_->setSuffix(" " + tr("px"));
 
-                spinCamFov_ = createDoubleSpin_(lv, tr("field of view"),
-                                             tr("Camera's (horizontal) view angle in degree"),
-                                             60, 1, 1, 180, SLOT(updateProjectorSettings_()));
+                spinCamFov_ = createDoubleSpin_(gr, tr("field of view"),
+                                             tr("Camera's (vertical) view angle in degree"),
+                                             60, 1, 1, 179, SLOT(updateProjectorSettings_()));
                 spinCamFov_->setSuffix(" " + tr("°"));
 
-                spinCamZNear_ = createDoubleSpin_(lv, tr("near plane"),
+                spinCamZNear_ = createDoubleSpin_(gr, tr("near plane"),
                                              tr("The distance to the near plane in the camera frustum - "
                                                 "normally no change is needed"),
                                              0.01, 0.001, 0.00001, 1000000,
                                              SLOT(updateProjectorSettings_()));
 
-                spinCamZFar_ = createDoubleSpin_(lv, tr("far plane"),
+                spinCamZFar_ = createDoubleSpin_(gr, tr("far plane"),
                                              tr("The distance to the far plane in the camera frustum - "
                                                 "normally no change is needed"),
                                              0.01, 0.001, 0.00001, 1000000,
                                              SLOT(updateProjectorSettings_()));
 
                 label = new QLabel(tr("position"), this);
-                lv->addWidget(label);
+                gr->addWidget(label);
 
-                spinCamX_ = createDoubleSpin_(lv, tr("x"),
+                spinCamX_ = createDoubleSpin_(gr, tr("x"),
                                              tr("Camera's position on the x axis in graphic units - "
                                                 "normally zero"),
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
 
-                spinCamY_ = createDoubleSpin_(lv, tr("y"),
+                spinCamY_ = createDoubleSpin_(gr, tr("y"),
                                              tr("Camera's position on the y axis in graphic units - "
                                                 "normally zero"),
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
 
-                spinCamZ_ = createDoubleSpin_(lv, tr("z"),
+                spinCamZ_ = createDoubleSpin_(gr, tr("z"),
                                              tr("Camera's position on the z axis in graphic units - "
                                                 "normally zero"),
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
 
                 label = new QLabel(tr("orientation"), this);
-                lv->addWidget(label);
+                gr->addWidget(label);
 
-                spinCamPitch_ = createDoubleSpin_(lv, tr("pitch (x)"),
+                spinCamPitch_ = createDoubleSpin_(gr, tr("pitch (x)"),
                                              tr("The x rotation of the camera's direction "
                                                 "- up and down"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinCamPitch_->setSuffix(" " + tr("°"));
 
-                spinCamYaw_ = createDoubleSpin_(lv, tr("yaw (y)"),
+                spinCamYaw_ = createDoubleSpin_(gr, tr("yaw (y)"),
                                              tr("The y rotation of the camera's direction "
                                                 "- left and right"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinCamYaw_->setSuffix(" " + tr("°"));
 
-                spinCamRoll_ = createDoubleSpin_(lv, tr("roll (z)"),
+                spinCamRoll_ = createDoubleSpin_(gr, tr("roll (z)"),
                                              tr("The z rotation of the camera's direction "
                                                 "- turn left and turn right"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinCamRoll_->setSuffix(" " + tr("°"));
 
             lv0->addStretch(2);
+
+        // link groups so only one is visible at a time
+        connect(projectorGroup_, SIGNAL(expanded()), cameraGroup_, SLOT(collapse()));
+        connect(projectorGroup_, SIGNAL(collapsed()), cameraGroup_, SLOT(expand()));
+        connect(cameraGroup_, SIGNAL(expanded()), projectorGroup_, SLOT(collapse()));
+        connect(cameraGroup_, SIGNAL(collapsed()), projectorGroup_, SLOT(expand()));
 
         // --- preview display ---
 
@@ -389,32 +406,37 @@ void ProjectorSetupDialog::createWidgets_()
             frame->setFrameStyle(QFrame::Raised | QFrame::Panel);
 
             lv = new QVBoxLayout(frame);
+            lv->setMargin(2);
+
+                gr = new GroupWidget(tr("dome settings"), this);
+                lv->addWidget(gr);
+                gr->setExpanded(false);
 
                 label = new QLabel(tr("dome settings"), this);
-                lv->addWidget(label);
+                gr->addWidget(label);
 
-                editDomeName_ = createEdit_(lv, tr("name"),
+                editDomeName_ = createEdit_(gr, tr("name"),
                                             tr("Some name to identify the dome/planetarium"),
                                         "planetarium", SLOT(updateDomeName_()));
 
-                spinDomeRad_ = createDoubleSpin_(lv, tr("radius"),
+                spinDomeRad_ = createDoubleSpin_(gr, tr("radius"),
                                              tr("The dome radius in meters - "
                                                 "messured at the 180° horizon"),
                                              10, 0.5, 0.1, 1000, SLOT(updateDomeSettings_()));
                 spinDomeRad_->setSuffix(" " + tr("m"));
 
-                spinDomeCover_ = createDoubleSpin_(lv, tr("coverage"),
+                spinDomeCover_ = createDoubleSpin_(gr, tr("coverage"),
                                              tr("The coverage of the dome in degree - "
                                                 "180 = half-sphere"),
                                              180, 1, 1, 360, SLOT(updateDomeSettings_()));
                 spinDomeCover_->setSuffix(" " + tr("°"));
 
-                spinDomeTiltX_ = createDoubleSpin_(lv, tr("tilt x"),
+                spinDomeTiltX_ = createDoubleSpin_(gr, tr("tilt x"),
                                              tr("The tilt in degree on the x axis"),
                                              0, 1, -360, 360, SLOT(updateDomeSettings_()));
                 spinDomeTiltX_->setSuffix(" " + tr("°"));
 
-                spinDomeTiltZ_ = createDoubleSpin_(lv, tr("tilt z"),
+                spinDomeTiltZ_ = createDoubleSpin_(gr, tr("tilt z"),
                                              tr("The tilt in degree on the z axis"),
                                              0, 1, -360, 360, SLOT(updateDomeSettings_()));
                 spinDomeTiltZ_->setSuffix(" " + tr("°"));
@@ -422,7 +444,7 @@ void ProjectorSetupDialog::createWidgets_()
 
 }
 
-QLineEdit * ProjectorSetupDialog::createEdit_(QLayout * layout,
+QLineEdit * ProjectorSetupDialog::createEdit_(GroupWidget * group,
                     const QString& desc, const QString& statusTip,
                     const QString& value,
                     const char * slot)
@@ -432,7 +454,7 @@ QLineEdit * ProjectorSetupDialog::createEdit_(QLayout * layout,
     QPalette p(w->palette());
     p.setColor(QPalette::Window, p.color(QPalette::Window).darker(110));
     w->setPalette(p);
-    layout->addWidget(w);
+    group->addWidget(w);
 
         auto lh = new QHBoxLayout(w);
         lh->setMargin(1);
@@ -449,8 +471,7 @@ QLineEdit * ProjectorSetupDialog::createEdit_(QLayout * layout,
     return edit;
 }
 
-SpinBox * ProjectorSetupDialog::createSpin_(
-                    QLayout * layout,
+SpinBox * ProjectorSetupDialog::createSpin_(GroupWidget * group,
                     const QString& desc, const QString& statusTip,
                     int value, int smallstep, int minv, int maxv,
                     const char * slot)
@@ -460,7 +481,7 @@ SpinBox * ProjectorSetupDialog::createSpin_(
     QPalette p(w->palette());
     p.setColor(QPalette::Window, p.color(QPalette::Window).darker(110));
     w->setPalette(p);
-    layout->addWidget(w);
+    group->addWidget(w);
 
         auto lh = new QHBoxLayout(w);
         lh->setMargin(1);
@@ -481,7 +502,7 @@ SpinBox * ProjectorSetupDialog::createSpin_(
     return spin;
 }
 
-DoubleSpinBox * ProjectorSetupDialog::createDoubleSpin_(QLayout * layout,
+DoubleSpinBox * ProjectorSetupDialog::createDoubleSpin_(GroupWidget * group,
                     const QString& desc, const QString& statusTip,
                     double value, double smallstep, double minv, double maxv,
                     const char * slot)
@@ -491,7 +512,7 @@ DoubleSpinBox * ProjectorSetupDialog::createDoubleSpin_(QLayout * layout,
     QPalette p(w->palette());
     p.setColor(QPalette::Window, p.color(QPalette::Window).darker(110));
     w->setPalette(p);
-    layout->addWidget(w);
+    group->addWidget(w);
 
         auto lh = new QHBoxLayout(w);
         lh->setMargin(1);
