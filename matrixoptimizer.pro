@@ -207,7 +207,8 @@ SOURCES += \
     src/projection/domesettings.cpp \
     src/projection/projectorsettings.cpp \
     src/projection/projectormapper.cpp \
-    src/projection/projectionsystemsettings.cpp
+    src/projection/projectionsystemsettings.cpp \
+    src/projection/camerasettings.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -409,7 +410,8 @@ HEADERS += \
     src/projection/domesettings.h \
     src/projection/projectorsettings.h \
     src/projection/projectormapper.h \
-    src/projection/projectionsystemsettings.h
+    src/projection/projectionsystemsettings.h \
+    src/projection/camerasettings.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

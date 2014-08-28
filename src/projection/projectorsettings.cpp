@@ -31,6 +31,7 @@ void ProjectorSettings::serialize(IO::XmlStream & io) const
 {
     io.newSection("projector");
 
+        io.write("version", 1);
         io.write("name", name_);
         io.write("width", width_);
         io.write("height", height_);
@@ -50,6 +51,7 @@ void ProjectorSettings::deserialize(IO::XmlStream & io)
 {
     io.verifySection("projector");
 
+        //int ver = io.expectInt("version");
         name_ = io.expectString("name");
         width_ = io.expectInt("width");
         height_ = io.expectInt("height");

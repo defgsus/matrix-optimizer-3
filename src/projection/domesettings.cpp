@@ -26,6 +26,7 @@ void DomeSettings::serialize(IO::XmlStream & io) const
 {
     io.newSection("dome");
 
+        io.write("version", 1);
         io.write("name", name_);
         io.write("radius", radius_);
         io.write("coverage", coverage_);
@@ -39,6 +40,7 @@ void DomeSettings::deserialize(IO::XmlStream & io)
 {
     io.verifySection("dome");
 
+        //int ver = io.expectInt("version");
         name_ = io.expectString("name");
         radius_ = io.expectFloat("radius");
         coverage_ = io.expectFloat("coverage");
