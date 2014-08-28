@@ -50,7 +50,7 @@ void CameraSettings::serialize(IO::XmlStream & io) const
 
 void CameraSettings::deserialize(IO::XmlStream & io)
 {
-    io.verifySection("projector");
+    io.verifySection("camera");
 
         //int ver = io.expectInt("version");
         width_ = io.expectInt("width");

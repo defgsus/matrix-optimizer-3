@@ -15,6 +15,7 @@
 
 #include "domesettings.h"
 #include "projectorsettings.h"
+#include "camerasettings.h"
 
 namespace MO {
 namespace IO { class XmlStream; }
@@ -41,7 +42,10 @@ public:
 
     const DomeSettings& domeSettings() const { return dome_; }
 
+    /** Returns the settings for each projector */
     const ProjectorSettings& projectorSettings(int idx) const;
+    /** Returns the settings for each camera of each projector */
+    const CameraSettings& cameraSettings(int idx) const;
 
     // --------- setter -----------
 
@@ -50,6 +54,7 @@ public:
     void setDomeSettings(const DomeSettings& s) { dome_ = s; }
 
     void setProjectorSettings(int idx, const ProjectorSettings& s);
+    void setCameraSettings(int idx, const CameraSettings& s);
 
     void appendProjector(const ProjectorSettings& s);
     void insertProjector(int idx, const ProjectorSettings& s);
@@ -59,6 +64,7 @@ private:
 
     DomeSettings dome_;
     QList<ProjectorSettings> projectors_;
+    QList<CameraSettings> cameras_;
 };
 
 } // namespace MO

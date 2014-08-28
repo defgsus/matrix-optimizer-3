@@ -31,11 +31,12 @@ namespace GUI {
 Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     QGLWidget       (parent),
     renderMode_     (mode),
+    cameraMode_     (CM_FREE),
     isGlInitialized_(false),
     closeRequest_   (false),
     modeChangeRequest_(false),
-    useFreeCamera_  (true),
     orthoScale_     (3.f),
+    fboSize_        (512, 512),
     camera_         (new GEOM::FreeCamera()),
     fbo_            (0),
     screenQuad_     (0),
@@ -50,7 +51,7 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
         setFormat(f);
     }
 
-    viewInit();
+    viewSet(VD_FRONT, 10);
 }
 
 Basic3DWidget::~Basic3DWidget()
@@ -76,29 +77,48 @@ void Basic3DWidget::setRenderMode(RenderMode rm)
     update();
 }
 
-void Basic3DWidget::viewInit(Float distanceZ)
+void Basic3DWidget::setCameraMode(CameraMode cm)
 {
-    distanceZ_ = distanceZ;
-    rotationMatrix_ = Mat4(1);
-    camera_->moveTo(Vec3(0,0,-distanceZ));
+    if (cm == cameraMode_)
+        return;
+
+    cameraMode_ = cm;
     update();
 }
 
 void Basic3DWidget::viewRotateX(Float d)
 {
     if (!d) return;
-    rotationMatrix_ =
+    if (cameraMode_ == CM_CENTER)
+    {
+        rotationMatrix_ =
             glm::rotate(Mat4(1), d, Vec3(1,0,0))
             * rotationMatrix_;
+    }
+    else if (cameraMode_ == CM_SET)
+    {
+        fixViewMatrix_ = glm::rotate(fixViewMatrix_, d, Vec3(1,0,0));
+    }
+    else camera_->rotateX(d);
+
     update();
 }
 
 void Basic3DWidget::viewRotateY(Float d)
 {
     if (!d) return;
-    rotationMatrix_ =
+    if (cameraMode_ == CM_CENTER)
+    {
+        rotationMatrix_ =
             glm::rotate(Mat4(1), d, Vec3(0,1,0))
             * rotationMatrix_;
+    }
+    else if (cameraMode_ == CM_SET)
+    {
+        fixViewMatrix_ = glm::rotate(fixViewMatrix_, d, Vec3(0,1,0));
+    }
+    else camera_->rotateY(d);
+
     update();
 }
 
@@ -137,19 +157,42 @@ void Basic3DWidget::viewSet(ViewDirection dir, Float distance)
         break;
     }
 
-    camera_->setMatrix(mat);
+    if (cameraMode_ == CM_FREE)
+        camera_->setMatrix(mat);
+    else
+    if (cameraMode_ == CM_SET)
+        fixViewMatrix_ = mat;
+    else
+    {
+        rotationMatrix_ = mat;
+        rotationMatrix_[3][0] = 0;
+        rotationMatrix_[3][1] = 0;
+        rotationMatrix_[3][2] = 0;
+        distanceZ_ = distance;
+    }
+
     update();
+}
+
+const Mat4& Basic3DWidget::projectionMatrix() const
+{
+    if (cameraMode_ == CM_SET)
+        return fixProjectionMatrix_;
+    else
+        return projectionMatrix_;
 }
 
 Mat4 Basic3DWidget::viewMatrix() const
 {
-    if (useFreeCamera_)
+    if (cameraMode_ == CM_FREE)
         return camera_->getMatrix();
     else
+    if (cameraMode_ == CM_CENTER)
     {
         Mat4 m = glm::translate(Mat4(), Vec3(0,0,-distanceZ_));
         return m * rotationMatrix_;
     }
+    else return fixViewMatrix_;
 }
 
 void Basic3DWidget::mousePressEvent(QMouseEvent * e)
@@ -159,6 +202,9 @@ void Basic3DWidget::mousePressEvent(QMouseEvent * e)
 
 void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 {
+    if (cameraMode_ == CM_SET)
+        return;
+
     Float fac = e->modifiers() & Qt::SHIFT ?
                 10.f : e->modifiers() & Qt::CTRL? 0.025f : 1.f;
 
@@ -168,15 +214,13 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 
     if (e->buttons() & Qt::LeftButton)
     {
-        if (!useFreeCamera_)
+        if (cameraMode_ == CM_CENTER)
         {
             viewRotateX(dy);
             viewRotateY(dx);
         }
         else
         {
-            //camera_->rotateX(dy);
-            //camera_->rotateY(dx);
             camera_->moveX(-0.03*fac*dx);
             camera_->moveY( 0.03*fac*dy);
             update();
@@ -185,7 +229,7 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 
     if (e->buttons() & Qt::RightButton)
     {
-        if (!useFreeCamera_)
+        if (cameraMode_ == CM_CENTER)
         {
             distanceZ_ += 0.04 * fac * dy;
         }
@@ -193,7 +237,6 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
         {
             camera_->rotateX(-dy * fac);
             camera_->rotateY(-dx * fac);
-            //camera_->moveZ(-0.03 * dy);
         }
         update();
     }
@@ -201,6 +244,9 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 
 void Basic3DWidget::wheelEvent(QWheelEvent * e)
 {
+    if (cameraMode_ != CM_FREE)
+        return;
+
     Float fac = e->modifiers() & Qt::SHIFT ?
                 10.f : e->modifiers() & Qt::CTRL? 0.025f : 1.f;
 
@@ -274,7 +320,8 @@ void Basic3DWidget::createGLStuff_()
                     renderMode_ == RM_FULLDOME_CUBE ?
                         "#define MO_FULLDOME_CUBE" : "");
 
-        fbo_ = new GL::FrameBufferObject(512, 512, GL_RGBA, GL_FLOAT,
+        fbo_ = new GL::FrameBufferObject(fboSize_.width(), fboSize_.height(),
+                                         GL_RGBA, GL_FLOAT,
                                          (renderMode_ == RM_FULLDOME_CUBE),
                                          GL::ER_THROW);
         fbo_->create();

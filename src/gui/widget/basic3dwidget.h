@@ -15,6 +15,7 @@
 #include "gl/opengl.h"
 
 #include <QGLWidget>
+#include <QSize>
 
 #include "types/vector.h"
 
@@ -54,14 +55,25 @@ public:
         VD_RIGHT
     };
 
+    enum CameraMode
+    {
+        /** Camera always faces the origin */
+        CM_CENTER,
+        /** Camera can be freely adjusted */
+        CM_FREE,
+        /** Camera is defined by setProjectionMatrix() and setViewMatrix() */
+        CM_SET
+    };
+
     explicit Basic3DWidget(RenderMode mode, QWidget *parent = 0);
     ~Basic3DWidget();
 
     RenderMode renderMode() const { return renderMode_; }
+    CameraMode cameraMode() const { return cameraMode_; }
 
     bool isGlInitialized() const { return isGlInitialized_; }
 
-    const Mat4& projectionMatrix() const { return projectionMatrix_; }
+    const Mat4& projectionMatrix() const;
     Mat4 viewMatrix() const;
 
 signals:
@@ -76,16 +88,20 @@ public slots:
     void shutDownGL();
 
     void setRenderMode(RenderMode);
-
-    void viewInit(Float distanceZ = 10.f);
-    void viewRotateX(Float degree);
-    void viewRotateY(Float degree);
+    void setCameraMode(CameraMode);
 
     /** Sets the camera matrix to one of the ViewDirection enums,
         with distance to center as @p distance */
     void viewSet(ViewDirection dir, Float distance);
+
+    /** Rotates the current camera */
+    void viewRotateX(Float degree);
+
+    /** Rotates the current camera */
+    void viewRotateY(Float degree);
+
     /** Sets the (horizontal) scale of the orthographic projection.
-        The view extends in negative and positive @p s scale */
+        The view extends in negative and positive units @p s. */
     void viewSetOrthoScale(Float s) { orthoScale_ = s; update(); }
 
 protected:
@@ -130,19 +146,23 @@ private:
     void releaseGL_();
 
     RenderMode renderMode_, nextRenderMode_;
+    CameraMode cameraMode_;
 
     bool isGlInitialized_,
          closeRequest_,
-         modeChangeRequest_,
-         useFreeCamera_;
+         modeChangeRequest_;
 
     Mat4
         projectionMatrix_,
+        fixProjectionMatrix_,
+        fixViewMatrix_,
         rotationMatrix_;
     Float distanceZ_,
         orthoScale_;
 
     QPoint lastMousePos_;
+
+    QSize fboSize_;
 
     GEOM::FreeCamera * camera_;
     GL::FrameBufferObject * fbo_;
