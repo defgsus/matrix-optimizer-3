@@ -21,8 +21,10 @@ class Camera : public ObjectGl
 public:
     enum RenderMode
     {
-        RM_PERSP,
-        RM_FULLDOME_CUBE
+        RM_ORTHOGRAPHIC,
+        RM_PERSPECTIVE,
+        RM_FULLDOME_CUBE,
+        RM_PROJECTOR_SLICE
     };
 
 
@@ -38,6 +40,7 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
@@ -84,7 +87,7 @@ private:
 
     std::vector<GL::ScreenQuad*> screenQuad_;
 
-    ParameterFloat * cameraMix_, *cameraAngle_;
+    ParameterFloat * cameraMix_, *cameraAngle_, *cameraOrthoScale_;
     ParameterSelect * cameraMode_;
     GL::Uniform * uColor_, * uAngle_;
 

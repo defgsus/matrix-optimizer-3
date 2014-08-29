@@ -65,17 +65,25 @@ void Camera::createParameters()
 
     cameraMode_ = createSelectParameter("cammode", tr("render mode"),
                                         tr("Selects the display/render mode for this camera"),
-    { "persp", "fdcube" },
-    { tr("perspective"), tr("fulldome cube") },
-    { tr("Perspective projection for flat screens"),
-      tr("Fulldome projection by means of 5 (or 6) cameras") },
-    { RM_PERSP, RM_FULLDOME_CUBE }, RM_FULLDOME_CUBE,
+    { "ortho", "persp", "fdcube", "slice" },
+    { tr("orthographic"), tr("perspective"), tr("fulldome cube"), tr("projector slice") },
+    { tr("Orthographic projection for flat screens"),
+      tr("Perspective projection for flat screens"),
+      tr("Fulldome projection by means of 5 (or 6) cameras"),
+      tr("Warped projector slice - for multi-machine/projector setups")},
+    { RM_ORTHOGRAPHIC, RM_PERSPECTIVE, RM_FULLDOME_CUBE, RM_PROJECTOR_SLICE },
+                                        RM_FULLDOME_CUBE,
                                         true, false
                                         );
     cameraAngle_ = createFloatParameter("camangle", tr("field of view"),
-                                        tr("Field-of-view specifies the openening angle in degree"),
+                                        tr("Specifies the vertical openening angle in degree"),
                                         180.f,
                                         1.f, 360.f, 1.f);
+
+    cameraOrthoScale_ = createFloatParameter("camorthosc", tr("orthographic scale"),
+                                        tr("Scale (+/-) of the orthographic projection on x,y axis"),
+                                        10.f,
+                                        0.0001f, 1000000.f, 0.1f);
 
     endParameterGroup();
 
@@ -102,6 +110,15 @@ void Camera::onParametersLoaded()
 {
     ObjectGl::onParametersLoaded();
     renderMode_ = (RenderMode)cameraMode_->baseValue();
+}
+
+void Camera::updateParameterVisibility()
+{
+    ObjectGl::updateParameterVisibility();
+
+    cameraOrthoScale_->setVisible( cameraMode_->baseValue() == RM_ORTHOGRAPHIC );
+    cameraAngle_->setVisible( cameraMode_->baseValue() != RM_ORTHOGRAPHIC &&
+                              cameraMode_->baseValue() != RM_PROJECTOR_SLICE );
 }
 
 void Camera::setNumberThreads(uint num)
@@ -189,7 +206,7 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
     cam.setSize(fbo_[thread]->width(), fbo_[thread]->height());
 
     Float angle = 90.f;
-    if (renderMode_ == RM_PERSP)
+    if (renderMode_ == RM_PERSPECTIVE)
     {
         angle = std::min((Double)179, cameraAngle_->value(time, thread));
         cam.setIsCubemap(false);
@@ -198,6 +215,13 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 
     cam.setFieldOfView(angle);
 
+    if (renderMode_ == RM_ORTHOGRAPHIC)
+    {
+        const Float sc = cameraOrthoScale_->value(time, thread);
+        cam.setProjectionMatrix(
+                    glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, 0.001f, 1000.f));
+    }
+    else
     cam.setProjectionMatrix(
                 glm::perspective(angle,
                                 aspectRatio_,
