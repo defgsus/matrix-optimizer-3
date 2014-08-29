@@ -44,7 +44,7 @@ public:
     Float zFar() const { return zFar_; }
 
     Mat4 getProjectionMatrix() const;
-    Mat4 getViewMatrix() const;
+    Mat4 getViewMatrix(Float pitch_offset = Float(0)) const;
 
     // --------------- setter --------------------
 

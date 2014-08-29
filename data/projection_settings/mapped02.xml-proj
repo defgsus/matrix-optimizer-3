@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<mo-projection-system>
+    <dome version="1" name="" radius="10" coverage="180" tiltX="0" tiltZ="0"/>
+    <projector version="1" name="projector 1" width="1920" height="1080" fov="29" lens_radius="0" latitude="0" longitude="0" distance="0" pitch="14.5" yaw="22.5" roll="0"/>
+    <projector version="1" name="projector 2" width="1920" height="1080" fov="29" lens_radius="0" latitude="0" longitude="0" distance="0" pitch="14.5" yaw="-22.5" roll="0"/>
+    <projector version="1" name="projector 3" width="1920" height="1080" fov="29" lens_radius="0" latitude="0" longitude="0" distance="0" pitch="33.4" yaw="20" roll="0"/>
+    <projector version="1" name="projector 4" width="1920" height="1080" fov="29" lens_radius="0" latitude="0" longitude="0" distance="0" pitch="33.4" yaw="-20" roll="0"/>
+    <projector version="1" name="projector 5" width="1920" height="1080" fov="29" lens_radius="0" latitude="180" longitude="0" distance="0" pitch="14.5" yaw="22.5" roll="0"/>
+    <projector version="1" name="projector 6" width="1920" height="1080" fov="29" lens_radius="0" latitude="180" longitude="0" distance="0" pitch="14.5" yaw="-22.5" roll="0"/>
+    <projector version="1" name="projector 7" width="1920" height="1080" fov="29" lens_radius="0" latitude="180" longitude="0" distance="0" pitch="33.4" yaw="20" roll="0"/>
+    <projector version="1" name="projector 8" width="1920" height="1080" fov="29" lens_radius="0" latitude="180" longitude="0" distance="0" pitch="33.4" yaw="-20" roll="0"/>
+    <camera version="1" width="1920" height="1080" fov="72.8" x="0" y="0" z="0" pitch="30.5" yaw="46.8" roll="6.2" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="72.8" x="0" y="0" z="0" pitch="30.5" yaw="-46.8" roll="-6.2" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="67.3" x="0" y="0" z="0" pitch="65.4" yaw="60" roll="20.6" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="67.3" x="0" y="0" z="0" pitch="65.4" yaw="-60" roll="-20.6" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="72.8" x="0" y="0" z="0" pitch="30.5" yaw="226.9" roll="6.2" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="72.8" x="0" y="0" z="0" pitch="30.5" yaw="133.1" roll="-6.2" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="67.3" x="0" y="0" z="0" pitch="65.4" yaw="239.8" roll="20.6" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="67.3" x="0" y="0" z="0" pitch="65.4" yaw="120" roll="-20.6" znear="0.01" zfar="10000"/>
+</mo-projection-system>

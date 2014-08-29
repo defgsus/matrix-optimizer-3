@@ -713,11 +713,10 @@ void ProjectorSetupDialog::updateProjectorSettings_()
         updateWindowTitle_();
     }
 
-    ProjectorMapper m;
+/*    ProjectorMapper m;
     m.setSettings(*domeSettings_, *projectorSettings_);
-    //m.findCenterProjection();
     m.getWarpImage(*cameraSettings_);
-
+*/
     updateDisplay_();
 }
 
