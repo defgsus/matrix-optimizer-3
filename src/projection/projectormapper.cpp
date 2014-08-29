@@ -12,10 +12,11 @@
 #include <glm/gtx/rotate_vector.hpp>
 
 #include "projectormapper.h"
-#include "domesettings.h"
+#include "camerasettings.h"
 #include "math/intersection.h"
 #include "math/constants.h"
 #include "io/log.h"
+#include "geom/geometry.h"
 
 namespace MO {
 
@@ -131,7 +132,7 @@ Vec2 ProjectorMapper::mapToSphere(Float, Float) const
     return Vec2(0,0);
 }
 
-
+#if (0)
 void ProjectorMapper::findCenterProjection() const
 {
     // find corners of projected area
@@ -163,6 +164,68 @@ void ProjectorMapper::findCenterProjection() const
     //const Float aspect =
 
     MO_DEBUG("angle = " << angle);
+}
+#endif
+
+void ProjectorMapper::getWarpImage(const CameraSettings & cam)
+{
+    const Mat4
+            projview = cam.getProjectionMatrix() * cam.getViewMatrix();
+
+    {
+        // find point on dome of projected image
+        const Vec3 pdome = mapToDome(0,0);
+
+        // project into camera space
+        Vec4 pscr = projview * Vec4(pdome, 1);
+        pscr /= pscr[3];
+        pscr = pscr * (Float)0.5 + (Float)0.5;
+
+        MO_DEBUG("pscr = " << pscr);
+    }
+}
+
+void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry * geo,
+                                      int numx, int numy)
+{
+    numx = std::max(numx, 2);
+    numy = std::max(numy, 2);
+
+    geo->clear();
+    geo->setSharedVertices(false);
+    geo->setColor(1,1,1,1);
+
+    const Mat4
+            projview = cam.getProjectionMatrix() * cam.getViewMatrix();
+
+    // create vertex grid with warped tex-coords
+    for (int y = 0; y < numy; ++y)
+    for (int x = 0; x < numx; ++x)
+    {
+        const Float
+                tx = (Float)x / (numx-1),
+                ty = (Float)y / (numy-1);
+
+        // find point on dome of projected image
+        const Vec3 pdome = mapToDome(tx, ty);
+
+        // project into camera space
+        Vec4 pscr = projview * Vec4(pdome, 1);
+        pscr /= pscr[3];
+        // receive [0,1] warped point
+        pscr = pscr * (Float)0.5 + (Float)0.5;
+
+        geo->setTexCoord(pscr[0], pscr[1]);
+        geo->addVertexAlways(tx * 2 - 1, ty * 2 - 1, 0);
+    }
+
+    // create triangles
+    for (int y = 1; y < numy; ++y)
+    for (int x = 1; x < numx; ++x)
+    {
+        geo->addTriangle((y-1)*numx+x-1, (y-1)*numx+x, y*numx+x);
+        geo->addTriangle((y-1)*numx+x-1, y*numx+x, y*numx+x-1);
+    }
 }
 
 } // namespace MO

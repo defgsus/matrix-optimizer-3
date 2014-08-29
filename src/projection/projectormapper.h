@@ -16,8 +16,8 @@
 #include "types/vector.h"
 
 namespace MO {
-
-class DomeSettings;
+namespace GEOM { class Geometry; }
+class CameraSettings;
 
 /** Calculator for ProjectorSettings */
 class ProjectorMapper
@@ -64,9 +64,20 @@ public:
     /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
     Vec2 mapToSphere(Float s, Float t) const;
 
+#if (0)
     /** Find the projection/view matrix that covers the whole projected area on the dome
         when viewed from the center. */
     void findCenterProjection() const;
+#endif
+
+    /** Find the warp necessary to project the image as seen from the camera. */
+    void getWarpImage(const CameraSettings&);
+
+    /** Find the warp necessary to project the image as seen from the camera.
+        The returned Geometry will be a grid of triangles on the z-plane [-1,1]
+        with texture coordinates representing the warped slice. */
+    void getWarpGeometry(const CameraSettings&, GEOM::Geometry *,
+                         int num_segments_x = 32, int num_segments_y = 32);
 
     //______________ PRIVATE AREA _________________
 private:

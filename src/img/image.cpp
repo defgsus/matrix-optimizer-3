@@ -22,7 +22,8 @@ const QStringList Image::formatNames =
 Image::Image()
     : width_        (0),
       height_       (0),
-      format_       (F_RGB_24)
+      format_       (F_RGB_24),
+      data_         (0)
 {
     MO_DEBUG_IMG("Image::Image()");
 }
@@ -30,7 +31,8 @@ Image::Image()
 Image::Image(uint width, uint height, Format format)
     : width_        (width),
       height_       (height),
-      format_       (format)
+      format_       (format),
+      data_         (0)
 {
     MO_DEBUG_IMG("Image::Image(" << width << ", " << height << ", "
                  << formatNames[format] << ")");
@@ -38,6 +40,17 @@ Image::Image(uint width, uint height, Format format)
     resize_();
 }
 
+uint Image::channelSizeInBytes() const
+{
+    switch (format_)
+    {
+        case F_MONO_8: return 1;
+        case F_RGB_24: return 1;
+        case F_RGBA_32: return 1;
+    }
+    MO_ASSERT(false, "unhandled image format");
+    return 0;
+}
 
 uint Image::pixelSizeInBytes() const
 {
@@ -59,7 +72,7 @@ uint Image::glEnumForFormat() const
         case F_RGB_24: return GL_RGB;
         case F_RGBA_32: return GL_RGBA;
     }
-    MO_ASSERT(false, "unknown image format");
+    MO_ASSERT(false, "unhandled image format");
     return GL_NONE;
 }
 
@@ -81,31 +94,19 @@ void Image::resize_()
     MO_DEBUG_IMG("Image::resize_(" << width_ << ", " << height_ <<
                 ", " << formatNames[format_] << ")");
 
-    data_.resize(sizeInBytes());
+    dataVec_.resize(sizeInBytes() + 16);
+    size_t loc = (size_t)&dataVec_[0];
+    data_ = (Color*)( (loc / 16 + 1) * 16 );
 }
 
 const Image::Color * Image::pixel(uint x, uint y) const
 {
-    switch (format_)
-    {
-        case F_MONO_8:  return &data_[y * width_ + x];
-        case F_RGB_24:  return &data_[(y * width_ + x) * 3];
-        case F_RGBA_32: return &data_[(y * width_ + x) * 4];
-    }
-    MO_ASSERT(false, "unknown image format");
-    return 0;
+    return &data_[(y * width_ + x) * pixelSizeInBytes()];
 }
 
 Image::Color * Image::pixel(uint x, uint y)
 {
-    switch (format_)
-    {
-        case F_MONO_8:  return &data_[y * width_ + x];
-        case F_RGB_24:  return &data_[(y * width_ + x) * 3];
-        case F_RGBA_32: return &data_[(y * width_ + x) * 4];
-    }
-    MO_ASSERT(false, "unknown image format");
-    return 0;
+    return &data_[(y * width_ + x) * pixelSizeInBytes()];
 }
 
 Image::Color Image::average(uint x, uint y) const
@@ -120,6 +121,7 @@ Image::Color Image::average(uint x, uint y) const
             return ((int)pix[0] + (int)pix[1] + (int)pix[2])/3;
         }
     }
+    MO_ASSERT(false, "unhandled image format");
     return 0;
 }
 
@@ -260,7 +262,7 @@ bool Image::createFrom(const QImage & img)
         break;
 
         case QImage::Format_ARGB32_Premultiplied: // XXX not tested
-        MO_DEBUG_IMG("Image::createFrom() QImage::Format_ARGB32_Premultiplied -> Image::F_RGBA_32");
+            MO_DEBUG_IMG("Image::createFrom() QImage::Format_ARGB32_Premultiplied -> Image::F_RGBA_32");
         case QImage::Format_ARGB32:
         {
             MO_DEBUG_IMG("Image::createFrom() QImage::Format_ARGB32 -> Image::F_RGBA_32");

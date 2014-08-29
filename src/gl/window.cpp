@@ -140,6 +140,8 @@ void Window::renderNow()
     moInitGl();
 
     MO_CHECK_GL( glViewport(0,0, width(), height()) );
+    MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
+    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
 
     emit renderRequest(thread_);
 

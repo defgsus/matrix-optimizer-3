@@ -59,6 +59,7 @@ public:
     /** Returns the opengl enum for the data type (GL_UNSIGNED_BYTE) */
     uint glEnumForType() const;
 
+    uint channelSizeInBytes() const;
     uint pixelSizeInBytes() const;
     uint sizeInBytes() const { return width_ * height_ * pixelSizeInBytes(); }
 
@@ -102,7 +103,8 @@ private:
     uint width_, height_;
     Format format_;
 
-    std::vector<Color> data_;
+    Color * data_;
+    std::vector<Color> dataVec_;
 };
 
 template <typename T>
