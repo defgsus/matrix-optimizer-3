@@ -14,6 +14,7 @@
 #include "settings.h"
 #include "io/error.h"
 #include "io/files.h"
+#include "projection/projectionsystemsettings.h"
 
 namespace MO {
 
@@ -116,6 +117,28 @@ bool Settings::restoreGeometry(QWidget * win)
         return true;
     }
     return false;
+}
+
+
+DomeSettings Settings::domeSettings() const
+{
+    ProjectionSystemSettings s;
+    s.loadFile("/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj");
+    return s.domeSettings();
+}
+
+ProjectorSettings Settings::projectorSettings() const
+{
+    ProjectionSystemSettings s;
+    s.loadFile("/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj");
+    return s.projectorSettings(0);
+}
+
+CameraSettings Settings::cameraSettings() const
+{
+    ProjectionSystemSettings s;
+    s.loadFile("/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj");
+    return s.cameraSettings(0);
 }
 
 } // namespace MO

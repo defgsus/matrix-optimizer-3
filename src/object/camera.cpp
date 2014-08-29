@@ -23,6 +23,10 @@
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "math/cubemapmatrix.h"
+#include "io/settings.h"
+#include "projection/projectionsystemsettings.h"
+#include "projection/projectormapper.h"
+#include "geom/geometry.h"
 
 namespace MO {
 
@@ -147,18 +151,35 @@ void Camera::initGl(uint thread)
     const Scene * scene = sceneObject();
     MO_ASSERT(scene, "Camera::initGl() without scene object");
 
-    bool cubeMapped = renderMode_ == RM_FULLDOME_CUBE;
+    const bool
+            cubeMapped = renderMode_ == RM_FULLDOME_CUBE,
+            sliced = renderMode_ == RM_PROJECTOR_SLICE;
+
+    CameraSettings camset = settings->cameraSettings();
 
     const int width = cubeMapped?
                           scene->frameBufferCubeMapWidth()
-                        : scene->frameBufferWidth();
+                        : sliced?
+                            camset.width() : scene->frameBufferWidth();
     const int height = cubeMapped?
                           scene->frameBufferCubeMapHeight()
-                        : scene->frameBufferHeight();
+                        : sliced?
+                            camset.height() : scene->frameBufferHeight();
 
     // projection matrix
 
     aspectRatio_ = (Float)width/std::max(1, height);
+
+    // warped quad for slice
+
+    GEOM::Geometry * warped_quad = 0;
+    if (sliced)
+    {
+        warped_quad = new GEOM::Geometry();
+        ProjectorMapper m;
+        m.setSettings(settings->domeSettings(), settings->projectorSettings());
+        m.getWarpGeometry(settings->cameraSettings(), warped_quad);
+    }
 
     // screen-quad
 
@@ -166,7 +187,8 @@ void Camera::initGl(uint thread)
     screenQuad_[thread]->create(
                 ":/shader/framebuffercamera.vert",
                 ":/shader/framebuffercamera.frag",
-                cubeMapped? "#define MO_FULLDOME_CUBE" : "");
+                cubeMapped? "#define MO_FULLDOME_CUBE" : "",
+                warped_quad);
 
     // uniforms
 
@@ -220,6 +242,12 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
         const Float sc = cameraOrthoScale_->value(time, thread);
         cam.setProjectionMatrix(
                     glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, 0.001f, 1000.f));
+    }
+    else
+    if (renderMode_ == RM_PROJECTOR_SLICE)
+    {
+        const CameraSettings c = settings->cameraSettings();
+        cam.setProjectionMatrix(c.getProjectionMatrix() * c.getViewMatrix());
     }
     else
     cam.setProjectionMatrix(
@@ -307,6 +335,8 @@ GL::FrameBufferObject * Camera::fbo(uint thread) const
 
 void Camera::drawFramebuffer(uint thread, Double time)
 {
+    const GL::FrameBufferObject * scenefbo = sceneObject()->fboMaster(thread);
+
     GL::FrameBufferObject * fbo = fbo_[thread];
 
     uColor_->floats[3] = cameraMix_->value(time, thread);
@@ -316,7 +346,7 @@ void Camera::drawFramebuffer(uint thread, Double time)
     fbo->colorTexture()->bind();
     MO_CHECK_GL( glEnable(GL_BLEND) );
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
-    screenQuad_[thread]->draw(fbo->width(), fbo->height());
+    screenQuad_[thread]->draw(scenefbo->width(), scenefbo->height(), aspectRatio_);
     fbo->colorTexture()->unbind();
 }
 

@@ -644,6 +644,7 @@ void Scene::createSceneGl_(uint thread)
 
     // create screen quad
     screenQuad_[thread] = new GL::ScreenQuad("scene_quad", GL::ER_THROW);
+    screenQuad_[thread]->setAntialiasing(3);
     screenQuad_[thread]->create();
 
 

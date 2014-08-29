@@ -351,6 +351,7 @@ void Basic3DWidget::createGLStuff_()
     if (renderMode_ == RM_FULLDOME_CUBE || renderMode_ == RM_FRAMEBUFFER)
     {
         screenQuad_ = new GL::ScreenQuad("basic3dwidget", GL::ER_THROW);
+        screenQuad_->setAntialiasing(3);
         screenQuad_->create(
                     renderMode_ == RM_FULLDOME_CUBE ?
                         "#define MO_FULLDOME_CUBE" : "");

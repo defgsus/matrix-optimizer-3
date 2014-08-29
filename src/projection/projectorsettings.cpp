@@ -16,7 +16,7 @@ namespace MO {
 ProjectorSettings::ProjectorSettings()
     :   width_      (1920),
         height_     (1080),
-        fov_        (60),
+        fov_        (45),
         lensRadius_ (0),
         latitude_   (0),
         longitude_  (0),

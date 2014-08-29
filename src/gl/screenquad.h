@@ -26,13 +26,22 @@ class ScreenQuad
 public:
     ScreenQuad(const QString& name, ErrorReporting reporting = ER_THROW);
 
+    /** 0 or 1 to switch off, 2-n for number of samples in x and y direction.
+        @note Must be called before creation! */
+    void setAntialiasing(uint samples);
+
     bool create(const QString& defines = QString())
         { return create(":/shader/framebufferdraw.vert", ":/shader/framebufferdraw.frag",
                         defines); }
 
+    /** Creates the opengl resources.
+        If @p geom != 0, it will be used as the quad geometry and is
+        expected to be in the range of [-1,1], lying on the z-plane.
+        Ownership is taken. */
     bool create(const QString& vertexFile,
                 const QString& fragmentFile,
-                const QString& defines = QString());
+                const QString& defines = QString(),
+                GEOM::Geometry * geom = 0);
 
     void release();
 
@@ -56,6 +65,8 @@ private:
     QString name_;
     ErrorReporting rep_;
     Drawable * quad_;
+    uint antialias_;
+    Uniform * u_resolution_;
 };
 
 

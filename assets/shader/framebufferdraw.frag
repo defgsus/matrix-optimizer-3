@@ -3,25 +3,31 @@
 in vec4 v_texCoord;
 
 #ifndef MO_FULLDOME_CUBE
-uniform sampler2D tex_framebuffer;
+    uniform sampler2D tex_framebuffer;
 #else
-uniform samplerCube tex_framebuffer;
+    uniform samplerCube tex_framebuffer;
+#endif
+
+#ifdef MO_ANTIALIAS
+    // <xres,yres,1/xres,1/yres>
+    uniform vec4 u_resolution;
 #endif
 
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
 const float angle_of_view = 180.0;
 
-void main(void)
+
+vec4 mo_pixel(in vec2 texCoord)
 {
 #ifndef MO_FULLDOME_CUBE
-    gl_FragColor = texture2D(tex_framebuffer, v_texCoord.xy);
+    return texture2D(tex_framebuffer, texCoord);
 
 #else
     // cube to fulldome
 
     // normalized screen coords
-    vec2 scr = v_texCoord.xy * 2.0 - 1.0;
+    vec2 scr = texCoord * 2.0 - 1.0;
 
     float
             // distance from center
@@ -36,10 +42,34 @@ void main(void)
                 sin(theta) * sin(phi),
                 -cos(theta));
 
-    gl_FragColor =
-            dist > 1.0 ?
+    return dist > 1.0 ?
                 vec4(0., 0., 0., 1.)
               : texture(tex_framebuffer, lookup);
+#endif
+}
 
+
+
+void main(void)
+{
+#ifndef MO_ANTIALIAS
+    gl_FragColor = mo_pixel(v_texCoord.xy);
+#else
+
+    vec4 col = vec4(0., 0., 0., 0.);
+
+    for (int y=0; y<MO_ANTIALIAS; y++)
+    {
+        vec2 ofs = vec2(0., float(y) / MO_ANTIALIAS * u_resolution.w);
+
+        for (int x=0; x<MO_ANTIALIAS; x++)
+        {
+            ofs.x = float(x) / MO_ANTIALIAS * u_resolution.z;
+
+            col += mo_pixel(v_texCoord.xy + ofs);
+        }
+    }
+
+    gl_FragColor = col / float(MO_ANTIALIAS * MO_ANTIALIAS);
 #endif
 }

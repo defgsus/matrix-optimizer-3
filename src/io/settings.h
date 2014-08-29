@@ -18,6 +18,11 @@ class QMainWindow;
 
 namespace MO {
 
+class DomeSettings;
+class ProjectorSettings;
+class CameraSettings;
+
+
 class Settings : public QSettings
 {
     Q_OBJECT
@@ -41,6 +46,11 @@ public:
     void saveGeometry(QWidget *);
     /** Restores the geometry provided the QWidget::objectName() is set */
     bool restoreGeometry(QWidget *);
+
+
+    DomeSettings domeSettings() const;
+    ProjectorSettings projectorSettings() const;
+    CameraSettings cameraSettings() const;
 
 signals:
 
