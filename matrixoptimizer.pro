@@ -3,7 +3,7 @@
 
 TARGET = matrixoptimizer
 
-QT += core gui widgets opengl
+QT += core gui widgets opengl network
 
 TEMPLATE = app
 
@@ -11,7 +11,7 @@ TEMPLATE = app
 
 CONFIG += c++11
 
-QMAKE_CXXFLAGS_RELEASE += -O2 -DNDEBUG
+QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
 DEFINES += GLEW_MX
 
@@ -208,7 +208,8 @@ SOURCES += \
     src/projection/projectorsettings.cpp \
     src/projection/projectormapper.cpp \
     src/projection/projectionsystemsettings.cpp \
-    src/projection/camerasettings.cpp
+    src/projection/camerasettings.cpp \
+    src/network/networkmanager.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -411,7 +412,8 @@ HEADERS += \
     src/projection/projectorsettings.h \
     src/projection/projectormapper.h \
     src/projection/projectionsystemsettings.h \
-    src/projection/camerasettings.h
+    src/projection/camerasettings.h \
+    src/network/networkmanager.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
