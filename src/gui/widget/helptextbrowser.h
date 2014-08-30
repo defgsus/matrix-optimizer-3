@@ -1,6 +1,6 @@
 /** @file helptextbrowser.h
 
-    @brief
+    @brief QTextBrowser with reimplemented loadResource() to work with resource files
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -8,10 +8,12 @@
     <p>created 8/30/2014</p>
 */
 
-#ifndef HELPTEXTBROWSER_H
-#define HELPTEXTBROWSER_H
+#ifndef MOSRC_GUI_WIDGET_HELPTEXTBROWSER_H
+#define MOSRC_GUI_WIDGET_HELPTEXTBROWSER_H
 
 #include <QTextBrowser>
+
+namespace PPP_NAMESPACE { class Function; }
 
 namespace MO {
 namespace GUI {
@@ -24,9 +26,14 @@ public:
 
     QVariant loadResource(int type, const QUrl &name) Q_DECL_OVERRIDE;
 
+private:
+
+    QString addRuntimeInfo_(const QString& doc, const QString& filename) const;
+
+    QString getFunctionDescription_(const PPP_NAMESPACE::Function*) const;
 };
 
 } // namespace GUI
 } // namespace MO
 
-#endif // HELPTEXTBROWSER_H
+#endif // MOSRC_GUI_WIDGET_HELPTEXTBROWSER_H

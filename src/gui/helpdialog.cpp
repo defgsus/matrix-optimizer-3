@@ -16,7 +16,6 @@
 
 #include "helpdialog.h"
 #include "widget/helptextbrowser.h"
-#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -29,7 +28,7 @@ HelpDialog::HelpDialog(QWidget *parent) :
 
     createWidgets_();
 
-    browser_->setSource(QUrl("intro"));
+    browser_->setSource(QUrl("index"));
 }
 
 void HelpDialog::createWidgets_()

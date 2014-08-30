@@ -371,6 +371,14 @@ void Functions::clear_temps_()
     }
 }
 
+std::vector<const Function*> Functions::getFunctions() const
+{
+    std::vector<const Function*> f;
+    for (auto &i : map_)
+        f.push_back(i.second);
+    return f;
+}
+
 std::vector<std::string> Functions::functionNames() const
 {
     std::set<std::string> set;

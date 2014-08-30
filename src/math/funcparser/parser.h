@@ -157,7 +157,8 @@ namespace PPP_NAMESPACE {
         { }
 
         Function(const std::string& name, LambdaFuncPtr lambda_func, int nparam)
-            :	name_(name), nparam_(nparam), func_(0), lambda_func_(lambda_func), type_(LAMBDA), temp_(false)
+            :	name_(name), nparam_(nparam), func_(0),
+                lambda_func_(lambda_func), type_(LAMBDA), temp_(false)
         { }
 
         const std::string& name() const { return name_; }
@@ -241,6 +242,9 @@ namespace PPP_NAMESPACE {
 
         void print(std::ostream& out = std::cout) const;
         std::string string() const { std::stringstream s; print(s); return s.str(); }
+
+        /** Returns all functions */
+        std::vector<const Function*> getFunctions() const;
 
         /** Returns all (unique) function names to the vector of strings */
         std::vector<std::string> functionNames() const;
