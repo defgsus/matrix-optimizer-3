@@ -15,6 +15,8 @@
 
 namespace MO {
 
+class CameraSettings;
+
 class Camera : public ObjectGl
 {
     Q_OBJECT
@@ -67,8 +69,10 @@ public:
     /** Initialize camera space with projection matrix */
     void initCameraSpace(GL::CameraSpace& cam, uint thread, Double time) const;
 
-    /** Returns the view transformation for each cubemap texture */
-    const Mat4& cubeMapMatrix(uint index) const;
+    /** Returns the additional view transformation for the camera.
+        Returns an identity matrix except for RM_FULLDOME_CUBE and RM_PROJECTOR_SLICE.
+        In RM_FULLDOME_CUBE, @p index is the index [0,5] for each cubemap texture */
+    const Mat4& cameraViewMatrix(uint index) const;
 
     /** Draws the contents of the framebuffer on a [-1,1] quad. */
     void drawFramebuffer(uint thread, Double time);
@@ -93,6 +97,8 @@ private:
 
     Float aspectRatio_;
     RenderMode renderMode_;
+
+    Mat4 sliceMatrix_;
 };
 
 } // namespace MO

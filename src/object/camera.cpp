@@ -166,6 +166,8 @@ void Camera::initGl(uint thread)
                         : sliced?
                             camset.height() : scene->frameBufferHeight();
 
+    //MO_DEBUG("Camera fbo = " << width << "x" << height);
+
     // projection matrix
 
     aspectRatio_ = (Float)width/std::max(1, height);
@@ -210,6 +212,11 @@ void Camera::initGl(uint thread)
     fbo_[thread]->create();
     fbo_[thread]->unbind();
 
+    if (renderMode_ == RM_PROJECTOR_SLICE)
+    {
+        sliceMatrix_ = settings->cameraSettings().getViewMatrix();
+    }
+
 }
 
 void Camera::releaseGl(uint thread)
@@ -227,34 +234,39 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 {
     cam.setSize(fbo_[thread]->width(), fbo_[thread]->height());
 
-    Float angle = 90.f;
+    if (renderMode_ == RM_FULLDOME_CUBE)
+    {
+        cam.setFieldOfView(90.f);
+        cam.setProjectionMatrix(
+                    glm::perspective(90.f, aspectRatio_, 0.01f, 1000.0f)
+                    );
+
+        cam.setIsCubemap(true);
+    }
+        else cam.setIsCubemap(false);
+
     if (renderMode_ == RM_PERSPECTIVE)
     {
-        angle = std::min((Double)179, cameraAngle_->value(time, thread));
-        cam.setIsCubemap(false);
+        const Float angle = std::min((Double)179, cameraAngle_->value(time, thread));
+        cam.setFieldOfView(angle);
+        cam.setProjectionMatrix(
+                    glm::perspective(angle, aspectRatio_, 0.01f, 1000.0f));
     }
-    else cam.setIsCubemap(true);
-
-    cam.setFieldOfView(angle);
 
     if (renderMode_ == RM_ORTHOGRAPHIC)
     {
         const Float sc = cameraOrthoScale_->value(time, thread);
+        cam.setFieldOfView(90.); // XXX ???
         cam.setProjectionMatrix(
                     glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, 0.001f, 1000.f));
     }
-    else
+
     if (renderMode_ == RM_PROJECTOR_SLICE)
     {
-        const CameraSettings c = settings->cameraSettings();
-        cam.setProjectionMatrix(c.getProjectionMatrix() * c.getViewMatrix());
+        const auto c = settings->cameraSettings();
+        cam.setFieldOfView(c.fov());
+        cam.setProjectionMatrix(c.getProjectionMatrix());
     }
-    else
-    cam.setProjectionMatrix(
-                glm::perspective(angle,
-                                aspectRatio_,
-                                0.01f, 1000.0f)
-                );
 }
 
 uint Camera::numCubeTextures(uint thread, Double time) const
@@ -267,8 +279,11 @@ uint Camera::numCubeTextures(uint thread, Double time) const
 
 }
 
-const Mat4& Camera::cubeMapMatrix(uint index) const
+const Mat4& Camera::cameraViewMatrix(uint index) const
 {
+    if (renderMode_ == RM_PROJECTOR_SLICE)
+        return sliceMatrix_;
+
     if (renderMode_ != RM_FULLDOME_CUBE)
         return MATH::CubeMapMatrix::identity;
 
@@ -346,7 +361,7 @@ void Camera::drawFramebuffer(uint thread, Double time)
     fbo->colorTexture()->bind();
     MO_CHECK_GL( glEnable(GL_BLEND) );
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
-    screenQuad_[thread]->draw(scenefbo->width(), scenefbo->height(), aspectRatio_);
+    screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
     fbo->colorTexture()->unbind();
 }
 

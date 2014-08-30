@@ -762,7 +762,7 @@ void Scene::renderScene(uint thread)
                 // start camera frame
                 camera->startGlFrame(thread, time, i);
 
-                camSpace.setCubeViewMatrix( camera->cubeMapMatrix(i) * viewm );
+                camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
 
                 // render all opengl objects
                 for (auto o : glObjects_)
@@ -799,7 +799,7 @@ void Scene::renderScene(uint thread)
     MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
-    screenQuad_[thread]->draw(glContext_->size().width(), glContext_->size().height());
+    screenQuad_[thread]->drawCentered(glContext_->size().width(), glContext_->size().height());
     fboFinal_[thread]->colorTexture()->unbind();
 
 }

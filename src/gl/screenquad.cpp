@@ -84,7 +84,20 @@ void ScreenQuad::release()
     quad_ = 0;
 }
 
+
 bool ScreenQuad::draw(uint w, uint h)
+{
+    if (u_resolution_)
+        u_resolution_->setFloats(w, h, (Float)1 / w, (Float)1 / h);
+
+    // center the quad into view
+    Mat4 trans = Mat4(1.0);
+    quad_->renderShader(trans, trans, trans, trans);
+
+    return true;
+}
+
+bool ScreenQuad::drawCentered(uint w, uint h)
 {
     if (u_resolution_)
         u_resolution_->setFloats(w, h, (Float)1 / w, (Float)1 / h);
@@ -98,7 +111,7 @@ bool ScreenQuad::draw(uint w, uint h)
 }
 
 
-bool ScreenQuad::draw(uint iw, uint ih, Float aspect)
+bool ScreenQuad::drawCentered(uint iw, uint ih, Float aspect)
 {
     Float w = iw, h = ih * aspect;
 

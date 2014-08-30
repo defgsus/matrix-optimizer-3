@@ -473,7 +473,7 @@ void Basic3DWidget::paintGL()
         MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
         MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
         fbo_->colorTexture()->bind();
-        screenQuad_->draw(width(), height(), (Float)fbo_->width() / fbo_->height());
+        screenQuad_->drawCentered(width(), height(), (Float)fbo_->width() / fbo_->height());
         fbo_->colorTexture()->unbind();
 
     }
@@ -516,7 +516,7 @@ void Basic3DWidget::paintGL()
         MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
         MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
         fbo_->colorTexture()->bind();
-        screenQuad_->draw(width(), height(), (Float)fbo_->width() / fbo_->height());
+        screenQuad_->drawCentered(width(), height(), (Float)fbo_->width() / fbo_->height());
         fbo_->colorTexture()->unbind();
     }
 }
