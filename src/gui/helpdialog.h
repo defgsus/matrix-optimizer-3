@@ -12,12 +12,14 @@
 #define MOSRC_GUI_HELPDIALOG_H
 
 #include <QDialog>
+#include <QList>
 
-class QTextBrowser;
 class QAction;
 
 namespace MO {
 namespace GUI {
+
+class HelpTextBrowser;
 
 class HelpDialog : public QDialog
 {
@@ -41,12 +43,17 @@ private:
     QString getHelpDocument(const QString & name);
 
     void createWidgets_();
+    void updateActions_();
+    void setDocument_(const QString&);
 
-    QTextBrowser * browser_;
+    HelpTextBrowser * browser_;
 
     QAction
         * aBack_,
         * aForward_;
+
+    QList<QString> history_;
+    int historyPos_;
 };
 
 

@@ -210,7 +210,8 @@ SOURCES += \
     src/projection/projectionsystemsettings.cpp \
     src/projection/camerasettings.cpp \
     src/network/networkmanager.cpp \
-    src/gui/helpdialog.cpp
+    src/gui/helpdialog.cpp \
+    src/gui/widget/helptextbrowser.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -415,7 +416,8 @@ HEADERS += \
     src/projection/projectionsystemsettings.h \
     src/projection/camerasettings.h \
     src/network/networkmanager.h \
-    src/gui/helpdialog.h
+    src/gui/helpdialog.h \
+    src/gui/widget/helptextbrowser.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
