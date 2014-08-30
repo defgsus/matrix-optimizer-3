@@ -22,9 +22,7 @@ class HelpTextBrowser : public QTextBrowser
 public:
     explicit HelpTextBrowser(QWidget *parent = 0);
 
-signals:
-
-public slots:
+    QVariant loadResource(int type, const QUrl &name) Q_DECL_OVERRIDE;
 
 };
 

@@ -31,29 +31,14 @@ signals:
 
 public slots:
 
-    void backward();
-    void forward();
-
 private slots:
-
-    void onAnchor_(const QUrl&);
 
 private:
 
-    QString getHelpDocument(const QString & name);
-
     void createWidgets_();
-    void updateActions_();
-    void setDocument_(const QString&);
 
     HelpTextBrowser * browser_;
 
-    QAction
-        * aBack_,
-        * aForward_;
-
-    QList<QString> history_;
-    int historyPos_;
 };
 
 
