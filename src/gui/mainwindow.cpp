@@ -38,6 +38,7 @@
 #include "sequencer.h"
 #include "widget/spacer.h"
 #include "util/scenesettings.h"
+#include "helpdialog.h"
 #include "audiodialog.h"
 #include "geometrydialog.h"
 #include "widget/envelopewidget.h"
@@ -401,6 +402,23 @@ void MainWindow::createMainMenu_()
             win->setScene(scene_);
             win->show();
         });
+
+    // ######### HELP MENU #########
+    m = new QMenu(tr("Help"), menuBar());
+    menuBar()->addMenu(m);
+
+        a = new QAction(tr("Help"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            HelpDialog diag;
+            diag.exec();
+        });
+
+        a = new QAction(tr("About Qt"), m);
+        m->addAction(a);
+        connect(a, SIGNAL(triggered()), application, SLOT(aboutQt()));
+
 }
 
 void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)

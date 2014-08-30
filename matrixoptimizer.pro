@@ -209,7 +209,8 @@ SOURCES += \
     src/projection/projectormapper.cpp \
     src/projection/projectionsystemsettings.cpp \
     src/projection/camerasettings.cpp \
-    src/network/networkmanager.cpp
+    src/network/networkmanager.cpp \
+    src/gui/helpdialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -413,7 +414,8 @@ HEADERS += \
     src/projection/projectormapper.h \
     src/projection/projectionsystemsettings.h \
     src/projection/camerasettings.h \
-    src/network/networkmanager.h
+    src/network/networkmanager.h \
+    src/gui/helpdialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
@@ -424,7 +426,8 @@ RESOURCES += \
     icons.qrc \
     images.qrc \
     shaders.qrc \
-    models.qrc
+    models.qrc \
+    help.qrc
 
 OTHER_FILES += $$BISON_FILES \
     TODO.txt \
@@ -438,7 +441,9 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/test.vert \
     assets/shader/test.frag \
     assets/shader/textureoverlay.vert \
-    assets/shader/textureoverlay.frag
+    assets/shader/textureoverlay.frag \
+    assets/help/en/intro.html \
+    assets/help/en/objects.html
 
 ####################### BISON PARSER #######################
 

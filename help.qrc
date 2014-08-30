@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/help">
+        <file alias="intro.html">assets/help/en/intro.html</file>
+        <file alias="objects.html">assets/help/en/objects.html</file>
+    </qresource>
+</RCC>
