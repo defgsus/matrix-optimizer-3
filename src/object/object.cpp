@@ -283,6 +283,16 @@ void Object::dumpTreeIds(std::ostream &out, const std::string& prefix) const
         c->dumpTreeIds(out, " " + prefix);
 }
 
+int Object::objectPriority(const Object *o)
+{
+    if (o->isTransformation())
+        return 3;
+    if (o->isModulatorObject())
+        return 2;
+    if (o->isAudioUnit())
+        return 1;
+    return 0;
+}
 
 
 

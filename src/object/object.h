@@ -231,6 +231,9 @@ public:
         or any of it's childs does so. */
     bool isAudioRelevant() const;
 
+    /** Returns a priority for each object type */
+    static int objectPriority(const Object *);
+
     // ---------- activity (scope) ----------------
 
     /** Returns the user-set activity scope for the object */

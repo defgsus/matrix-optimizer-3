@@ -92,6 +92,23 @@ QModelIndex ObjectTreeView::getVisibleIndexForObject(Object * obj) const
     return QModelIndex();
 }
 
+Object * ObjectTreeView::objectAbove(const QModelIndex &idx) const
+{
+    QModelIndex above = indexAbove(idx);
+    if (!above.isValid())
+        return 0;
+    return above.data(ObjectRole).value<Object*>();
+}
+
+
+Object * ObjectTreeView::objectBelow(const QModelIndex &idx) const
+{
+    QModelIndex below = indexBelow(idx);
+    if (!below.isValid())
+        return 0;
+    return below.data(ObjectRole).value<Object*>();
+}
+
 void ObjectTreeView::setObjectModel(ObjectTreeModel *objectModel)
 {
     omodel_ = objectModel;
@@ -171,9 +188,9 @@ void ObjectTreeView::mousePressEvent(QMouseEvent * e)
 }
 
 // for sorting the insert-object list
-bool sortObjectList_TransformFirst(const Object * o1, const Object * o2)
+bool sortObjectList_Priority(const Object * o1, const Object * o2)
 {
-    return o1->isTransformation() && !o2->isTransformation();
+    return Object::objectPriority(o1) > Object::objectPriority(o2);
 }
 
 
@@ -325,17 +342,17 @@ QMenu * ObjectTreeView::createObjectsMenu_(Object *parent, bool with_shortcuts)
     if (list.empty())
         return 0;
 
-    // make transformations first
-    qStableSort(list.begin(), list.end(), sortObjectList_TransformFirst);
+    // sort by priority
+    qStableSort(list.begin(), list.end(), sortObjectList_Priority);
 
     QMenu * menu = new QMenu(this);
-    bool addSep = true;
+    int curprio = Object::objectPriority( list.front() );
     for (auto o : list)
     {
-        if (addSep && !o->isTransformation())
+        if (curprio != Object::objectPriority(o))
         {
             menu->addSeparator();
-            addSep = false;
+            curprio = Object::objectPriority(o);
         }
 
         QAction * a = new QAction(ObjectFactory::iconForObject(o), o->name(), this);
@@ -343,11 +360,11 @@ QMenu * ObjectTreeView::createObjectsMenu_(Object *parent, bool with_shortcuts)
         if (with_shortcuts)
         {
             if (o->className() == "AxisRotate")
-                a->setShortcut(Qt::ALT + Qt::Key_R);
+                a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_R);
             if (o->className() == "Translate")
-                a->setShortcut(Qt::ALT + Qt::Key_T);
+                a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_T);
             if (o->className() == "Scale")
-                a->setShortcut(Qt::ALT + Qt::Key_S);
+                a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_S);
         }
         menu->addAction(a);
     }
@@ -575,41 +592,41 @@ void ObjectTreeView::createMoveActions_(Object * obj)
         return;
 
     Object * parent = obj->parentObject();
-    //const int row = parent->childObjects().indexOf(obj);
     QModelIndex curIdx = currentIndex();
     int row = curIdx.row();
+
+    Object * objAbove = objectAbove(curIdx);
+    Object * objBelow = objectBelow(curIdx);
 
     QAction * a;
 
     // move up
-    if (row > 0)
+    if (objAbove)
     {
-        Object * above = curIdx.sibling(row-1, 0).data(ObjectRole).value<Object*>();
-        if (!sortObjectList_TransformFirst(above, obj))
+        if (!sortObjectList_Priority(objAbove, obj))
         {
             a = editActions_.addAction(QIcon(":/icon/above.png"), tr("Move up"), this);
             a->setStatusTip(tr("Moves the selected object before the previous object"));
             a->setShortcut(Qt::CTRL + Qt::Key_Up);
             connect(a, &QAction::triggered, [=]()
             {
-                omodel_->swapChildren(obj, above);
+                omodel_->swapChildren(obj, objAbove);
                 setFocusIndex( obj );
                 createEditActions_(obj);
             });
         }
     }
     // move down
-    if (row < model()->rowCount(curIdx.parent()) - 1)
+    if (objBelow)
     {
-        Object * below = curIdx.sibling(row+1, 0).data(ObjectRole).value<Object*>();
-        if (!sortObjectList_TransformFirst(obj, below))
+        if (!sortObjectList_Priority(obj, objBelow))
         {
             a = editActions_.addAction(QIcon(":/icon/below.png"), tr("Move down"), this);
             a->setStatusTip(tr("Moves the selected object below the next object"));
             a->setShortcut(Qt::CTRL + Qt::Key_Down);
             connect(a, &QAction::triggered, [=]()
             {
-                omodel_->swapChildren(obj, below);
+                omodel_->swapChildren(obj, objBelow);
                 setFocusIndex( obj );
                 createEditActions_(obj);
             });
@@ -631,8 +648,9 @@ void ObjectTreeView::createMoveActions_(Object * obj)
                 setFocusIndex( filter_->mapFromSource( omodel_->promote(obj) ) );
             });
         }
+
         // demote
-        if (row > 0 && parent->childObjects().at(row-1)->canHaveChildren(obj->type()))
+        if (row > 0 && objAbove && objAbove->canHaveChildren(obj->type()))
         {
 
             a = editActions_.addAction(QIcon(":/icon/right.png"), tr("Demote"), this);
@@ -643,8 +661,7 @@ void ObjectTreeView::createMoveActions_(Object * obj)
                 setFocusIndex( filter_->mapFromSource( omodel_->demote(obj) ) );
             });
         }
-        else if (row == 0 && parent->numChildren()>1
-                 && parent->childObjects().at(1)->canHaveChildren(obj->type()))
+        else if (row == 0 && objBelow && objBelow->canHaveChildren(obj->type()))
         {
             a = editActions_.addAction(QIcon(":/icon/right.png"), tr("Demote"), this);
             a->setStatusTip(tr("Moves the selected object to the childlist of it's sibling below"));
@@ -738,34 +755,50 @@ void ObjectTreeView::expandObjectsByType_(const QModelIndex & index, int typefla
 
 bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
 {
-    MO_DEBUG_TREE("ObjectTreeView::addObject_("
+    MO_DEBUG("ObjectTreeView::addObject_("
              << parent << ", " << row << ", " << obj << ")");
 
-    //if (parent.isValid())
+    //Object * parentObject = model()->data(parent, ObjectRole).value<Object*>();
+    Object * parentObject = parent.data(ObjectRole).value<Object*>();
+
+    if (!parentObject)
+        parentObject = scene_;
+
+    if (parentObject)
     {
-        Object * parentObject = model()->data(parent, ObjectRole).value<Object*>();
-
-        if (!parentObject)
-            parentObject = scene_;
-
-        if (parentObject)
+        // insert at end
+        if (row < 0)
+            row = parentObject->numChildren();
+        else
         {
-            // insert at end
-            if (row < 0)
-                row = parentObject->numChildren();
-
-            QModelIndex orgidx = omodel_->indexForObject(parentObject);
-            QModelIndex idx = omodel_->addObject(orgidx, row, obj);
-
-            setFocusIndex(filter_->mapFromSource(idx));
-
-            return true;
+            // translate filtered row into omodel row
+            // XXX still crap!!
+            Object * o = parent.child(row,0).data(ObjectRole).value<Object*>();
+            if (o)
+            {
+                if (o->parentObject())
+                {
+                    //MO_DEBUG("o=" << o << " p=" << o->parentObject());
+                    int newrow = o->parentObject()->childObjects().indexOf(o);
+                    //MO_DEBUG("translated row = " << newrow);
+                    if (newrow < row)
+                        row = parentObject->numChildren();
+                    else
+                        row = newrow;
+                }
+            }
         }
-        delete obj;
 
-        MO_ASSERT(false, "modelindex has no assigned object");
+        QModelIndex orgidx = omodel_->indexForObject(parentObject);
+        QModelIndex idx = omodel_->addObject(orgidx, row, obj);
+
+        setFocusIndex(filter_->mapFromSource(idx));
+
+        return true;
     }
-    MO_ASSERT(false, "can't add object to invalid index");
+    delete obj;
+
+    MO_ASSERT(false, "modelindex has no assigned object");
 
     return false;
 }

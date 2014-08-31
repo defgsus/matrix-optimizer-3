@@ -26,16 +26,6 @@ ObjectTreeSortProxy::ObjectTreeSortProxy(QObject *parent) :
 {
 }
 
-int ObjectTreeSortProxy::objectPriority(Object *o)
-{
-    if (o->isModulatorObject())
-        return 3;
-    if (o->isTransformation())
-        return 2;
-    if (o->isAudioUnit())
-        return 1;
-    return 0;
-}
 
 bool ObjectTreeSortProxy::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
@@ -46,8 +36,8 @@ bool ObjectTreeSortProxy::lessThan(const QModelIndex &left, const QModelIndex &r
     const bool idxless = left.row() < right.row();
 
     // but sort for types (priority on top)
-    const int pleft = objectPriority(l),
-              pright = objectPriority(r);
+    const int pleft = Object::objectPriority(l),
+              pright = Object::objectPriority(r);
 
     return // less =
                (pleft == pright && idxless)

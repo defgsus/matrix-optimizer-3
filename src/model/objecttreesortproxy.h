@@ -23,9 +23,6 @@ class ObjectTreeSortProxy : public QSortFilterProxyModel
 public:
     explicit ObjectTreeSortProxy(QObject *parent = 0);
 
-    /** Returns a priority for each object type */
-    static int objectPriority(Object * o);
-
 signals:
 
 public slots:

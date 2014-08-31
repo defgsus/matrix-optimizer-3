@@ -48,6 +48,12 @@ public:
         the next visible parent index will be returned. */
     QModelIndex getVisibleIndexForObject(Object *) const;
 
+    /** Returns the object above idx (filter-model), or NULL */
+    Object * objectAbove(const QModelIndex& idx) const;
+
+    /** Returns the object below idx (filter-model), or NULL */
+    Object * objectBelow(const QModelIndex& idx) const;
+
 signals:
 
     /** Sends a list of actions for the edit menu. */
