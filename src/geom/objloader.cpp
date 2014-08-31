@@ -648,7 +648,7 @@ void ObjLoader::getGeometry(Geometry * g) const
 
     const Float defNormal[] = { 0, 1, 0 };
     const Float defTex[] = { 0, 0, 0 };
-    const Float defColor[] = { 0.5, 0.5, 0.5, 1.0 };
+    const Float defColor[] = { 1.0, 1.0, 1.0, 1.0 };
 
     Geometry::IndexType cur[3];
 

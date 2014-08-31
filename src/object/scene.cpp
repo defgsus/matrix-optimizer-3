@@ -36,6 +36,7 @@
 #include "gl/screenquad.h"
 #include "gl/texture.h"
 #include "gl/rendersettings.h"
+#include "gl/scenedebugrenderer.h"
 #include "tool/locklessqueue.h"
 
 namespace MO {
@@ -97,6 +98,8 @@ Scene::~Scene()
     MO_DEBUG_TREE("Scene::~Scene()");
 
     stop();
+    for (auto i : debugRenderer_)
+        delete i;
     for (auto i : fboFinal_)
         delete i;
     for (auto i : screenQuad_)
@@ -307,6 +310,11 @@ void Scene::updateTree_()
 
     findObjects_();
 
+    // update debug renderer objects
+    for (auto i : debugRenderer_)
+        if (i)
+            i->updateTree();
+
     // tell all objects if there children have changed
     updateChildrenChanged_();
 
@@ -368,12 +376,14 @@ void Scene::setNumberThreads(uint num)
     fboFinal_.resize(num);
     screenQuad_.resize(num);
     lightSettings_.resize(num);
+    debugRenderer_.resize(num);
 
     for (uint i=oldnum; i<num; ++i)
     {
         fboFinal_[i] = 0;
         screenQuad_[i] = 0;
         lightSettings_[i].resize(0); // just to be sure
+        debugRenderer_[i] = 0;
     }
 }
 
@@ -647,7 +657,9 @@ void Scene::createSceneGl_(uint thread)
     screenQuad_[thread]->setAntialiasing(3);
     screenQuad_[thread]->create();
 
-
+    debugRenderer_[thread] = new GL::SceneDebugRenderer(this);
+    debugRenderer_[thread]->initGl();
+    debugRenderer_[thread]->updateTree();
 }
 
 
@@ -662,6 +674,10 @@ void Scene::releaseSceneGl_(uint thread)
     screenQuad_[thread]->release();
     delete screenQuad_[thread];
     screenQuad_[thread] = 0;
+
+    debugRenderer_[thread]->releaseGl();
+    delete debugRenderer_[thread];
+    debugRenderer_[thread] = 0;
 }
 
 GL::FrameBufferObject * Scene::fboMaster(uint thread) const
@@ -770,6 +786,9 @@ void Scene::renderScene(uint thread)
                 {
                     o->renderGl_(renderSet, thread, time);
                 }
+
+                // render debug objects
+                debugRenderer_[thread]->render(renderSet, thread);
             }
 
             camera->finishGlFrame(thread, time);

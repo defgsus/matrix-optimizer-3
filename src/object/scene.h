@@ -358,6 +358,8 @@ private:
     std::vector<GL::ScreenQuad *> screenQuad_;
     std::vector<GL::LightSettings> lightSettings_;
 
+    std::vector<GL::SceneDebugRenderer*> debugRenderer_;
+
     int freeCameraIndex_;
     Mat4 freeCameraMatrix_;
 

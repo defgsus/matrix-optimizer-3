@@ -23,10 +23,12 @@ class SceneDebugRenderer
 {
 public:
     SceneDebugRenderer(Scene *);
+    ~SceneDebugRenderer();
 
     /** Call when changes to objects has happened */
     void updateTree();
 
+    bool isGlInitialized() const { return glReady_; }
     void initGl();
     void releaseGl();
 
@@ -34,15 +36,21 @@ public:
 
 private:
 
+    void addCoordinates_(GEOM::Geometry*);
+
     Scene * scene_;
     QList<Camera*> cameras_;
     QList<Microphone*> microphones_;
+    QList<LightSource*> lightSources_;
     QList<AUDIO::AudioSource*> audioSources_;
+
+    bool glReady_;
 
     GL::Drawable
         * drawCamera_,
-        * drawSoundSource_,
-        * drawMicrophone_;
+        * drawAudioSource_,
+        * drawMicrophone_,
+        * drawLightSource_;
 };
 
 } // namespace GL
