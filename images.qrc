@@ -11,4 +11,7 @@
         <file alias="dot.png">assets/img/dot.png</file>
         <file alias="error.png">assets/img/error_tex.png</file>
     </qresource>
+    <qresource prefix="/helpimg">
+        <file alias="ulam_spiral.png">assets/help/img/ulam_spiral.png</file>
+    </qresource>
 </RCC>

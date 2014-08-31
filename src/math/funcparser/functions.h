@@ -241,6 +241,29 @@ struct generic_int
     }
 
 
+    static bool isPrime(I k)
+    {
+        if (k < 2 || k == 4) { return false; } else
+        if (k == 2) { return true; } else
+        // even?
+        if (!(k & 1)) { return false; }
+#ifdef PPP_USE_NDIV_TABLE
+        // test against number-divisors-table
+        if (k < int_table_ndiv_size)
+        {
+            const I n = int_table_ndiv[x];
+            return (n == 2);
+        }
+#endif
+        const I m = std::sqrt(k)+1;
+        // test divisors
+        for (I i=2; i<m; ++i)
+            if (k % i == 0) { return false; }
+
+        return true;
+    }
+
+
     /** greates common divisor */
     static I gcd(I a, I b)
     {
@@ -642,6 +665,8 @@ struct math_func<double>
 
     static void prime_1			(double ** v)
     {
+        *v[0] = generic_int<Int>::isPrime(std::abs(static_cast<Int>(*v[1])));
+        /*
         typedef long int I;
         const I k = std::abs(static_cast<I>(*v[1]));
         if (k < 2 || k == 4) { *v[0] = 0.0; return; } else
@@ -654,6 +679,7 @@ struct math_func<double>
             if (k % i == 0) { *v[0] = 0.0; return; }
 
         *v[0] = 1.0;
+        */
     }
 
     static void sprime_1			(double ** v)

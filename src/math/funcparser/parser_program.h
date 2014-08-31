@@ -121,15 +121,15 @@ namespace PPP_NAMESPACE
 
         f.add(Function::FUNCTION,		1, "exp",		math_func<Float>::exp_1			);
         f.add(Function::FUNCTION,		1, "ln",		math_func<Float>::ln_1			);
-        f.add(Function::FUNCTION,		2, "logistic",	math_func<Float>::logistic_1	);
+        f.add(Function::FUNCTION,		1, "logistic",	math_func<Float>::logistic_1	);
         f.add(Function::FUNCTION,		2, "pow",		math_func<Float>::pow_2			);
         f.add(Function::FUNCTION,		1, "sqrt",		math_func<Float>::sqrt_1		);
         f.add(Function::FUNCTION,		2, "root",		math_func<Float>::root_2		);
 
         f.add(Function::FUNCTION,		3, "smstep",    math_func<Float>::smoothstep_3  );
         f.add(Function::FUNCTION,		3, "smstep2",   math_func<Float>::smootherstep_3);
-        f.add(Function::FUNCTION,       2, "smladder",  math_func<Float>::smoothladder_2);
-        f.add(Function::FUNCTION,       2, "smladder2", math_func<Float>::smootherladder_2);
+        f.add(Function::FUNCTION,       2, "smquant",   math_func<Float>::smoothladder_2);
+        f.add(Function::FUNCTION,       2, "smquant2",  math_func<Float>::smootherladder_2);
 
         f.add(Function::FUNCTION,		1, "beta",		math_func<Float>::beta_1		);
         f.add(Function::FUNCTION,		2, "beta",		math_func<Float>::beta_2		);
@@ -169,7 +169,7 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		3, "harmo",		math_func<Float>::harmo_3		);
 
         f.add(Function::FUNCTION,		1, "prime",		math_func<Float>::prime_1		);
-        f.add(Function::FUNCTION,		1, "sprime",	math_func<Float>::sprime_1		);
+        //f.add(Function::FUNCTION,		1, "sprime",	math_func<Float>::sprime_1		);
 
 //        f.add(Function::FUNCTION,		1, "nextprime",	math_func<Float>::nextprime_1	);
         f.add(Function::FUNCTION,		1, "quer",		math_func<Float>::quer_1		);
