@@ -32,12 +32,15 @@ void checkCompatibility()
                 << "\nversion  " << version
                 << "\nrenderer " << renderer);
 
-    // sorry mesa guys
-    if (!renderer.contains("Mesa", Qt::CaseInsensitive))
-    {
-        enableLineSmooth_ = true;
-        enableLineWidth_ = true;
-    }
+    bool isMesa = renderer.contains("Mesa", Qt::CaseInsensitive);
+
+    // sorry mesa guys, but...
+    enableLineSmooth_ = !isMesa;
+
+    // test line width
+    glLineWidth(2);
+    enableLineWidth_ = (glGetError() == 0);
+    glLineWidth(1);
 }
 
 void setLineSmooth(bool enable)
