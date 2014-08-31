@@ -100,6 +100,9 @@ public:
     void setLoopLength(Double t)
         { p_loopLength_->setValue( std::max(minimumLength(), t) ); }
 
+    void setDefaultLoopLength(Double t)
+        { p_loopLength_->setDefaultValue( std::max(minimumLength(), t) ); }
+
     void setTimeOffset(Double t)
         { p_timeOffset_->setValue(t); }
 

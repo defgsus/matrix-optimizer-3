@@ -470,6 +470,9 @@ void SequenceFloat::updateValueObjects_()
             AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
         // get new
         soundFile_ = AUDIO::SoundFileManager::getSoundFile(p_soundFile_->value());
+        // update loop-length default value
+        if (soundFile_)
+            setDefaultLoopLength(soundFile_->lengthSeconds());
     }
     else
     {

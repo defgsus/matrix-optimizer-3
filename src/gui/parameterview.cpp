@@ -463,6 +463,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
             cb->setEnabled(ps->isEditable());
             cb->setStatusTip(ps->statusTip());
+            cb->setChecked(ps->baseValue() != 0);
 
             w->setFocusProxy(cb);
             setNextTabWidget_(cb);
@@ -478,7 +479,11 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             // reset to default
             connect(breset, &QToolButton::pressed, [=]()
             {
-                cb->setChecked(ps->baseValue());
+                cb->setChecked(ps->defaultValue() != 0);
+                Scene * scene = p->object()->sceneObject();
+                MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
+                if (!scene) return;
+                scene->setParameterValue(ps, ps->defaultValue());
             });
         }
     }
