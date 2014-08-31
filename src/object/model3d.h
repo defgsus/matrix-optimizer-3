@@ -36,6 +36,9 @@ public:
     /** Sets new geometry settings and creates the geometry on next render */
     void setGeometrySettings(const GEOM::GeometryFactorySettings&);
 
+    const GEOM::Geometry * geometry() const;
+    Vec4 modelColor(Double time, uint thread) const;
+
 protected:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;

@@ -58,6 +58,7 @@
 #include "io/application.h"
 #include "engine/renderer.h"
 #include "gl/texture.h"
+#include "io/povrayexporter.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -345,6 +346,15 @@ void MainWindow::createMainMenu_()
     m = new QMenu(tr("Tools"), menuBar());
     menuBar()->addMenu(m);
 
+        a = new QAction(tr("Geometry creator"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            GeometryDialog * diag = new GeometryDialog(0, this);
+            connect(diag, SIGNAL(finished(int)), diag, SLOT(deleteLater()));
+            diag->show();
+        });
+
         a = new QAction(tr("Batch scene converter"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
@@ -383,14 +393,8 @@ void MainWindow::createMainMenu_()
         a->setCheckable(true);
         connect(a, SIGNAL(triggered()), SLOT(runTestThread_()));
 
-        a = new QAction(tr("Geometry dialog"), m);
-        m->addAction(a);
-        connect(a, &QAction::triggered, [=]()
-        {
-            GeometryDialog * diag = new GeometryDialog(0, this);
-            connect(diag, SIGNAL(finished(int)), diag, SLOT(deleteLater()));
-            diag->show();
-        });
+        m->addAction(a = new QAction(tr("Export scene to povray"), m));
+        connect(a, SIGNAL(triggered()), SLOT(exportPovray_()));
 
         a = new QAction(tr("Audio-link window"), m);
         m->addAction(a);
@@ -1024,6 +1028,16 @@ void MainWindow::renderToDisk()
     ren->start();
 }
 
+void MainWindow::exportPovray_()
+{
+    QString fn = IO::Files::getSaveFileName(IO::FT_POVRAY, this);
+    if (fn.isEmpty())
+        return;
+
+    IO::PovrayExporter pov;
+    pov.setScene(scene_);
+    pov.exportScene(fn, scene_->sceneTime());
+}
 
 } // namespace GUI
 } // namespace MO

@@ -96,9 +96,9 @@ void ObjectView::updateNameLabel_()
         QString shortName = fontMetrics().elidedText(
                     object_->name(), Qt::ElideMiddle, maxWidth);
         QString shortPath = fontMetrics().elidedText(
-                    object_->namePath() + "/" + object_->name(), Qt::ElideMiddle, maxWidth);
+                    object_->namePath(), Qt::ElideMiddle, maxWidth);
         QString shortIdPath = fontMetrics().elidedText(
-                    object_->idNamePath() + "/" + object_->idName(), Qt::ElideMiddle, maxWidth);
+                    object_->idNamePath(), Qt::ElideMiddle, maxWidth);
 
         label_->setText(QString("<html><b>%1</b><br/>%2<br/>%3</html>")
                         .arg(shortName)

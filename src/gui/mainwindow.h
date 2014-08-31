@@ -74,6 +74,7 @@ private slots:
     void resetTreeModel_();
     void runTestThread_();
     void dumpIdNames_();
+    void exportPovray_();
 
     void setSceneObject(Scene *, const SceneSettings * = 0);
 

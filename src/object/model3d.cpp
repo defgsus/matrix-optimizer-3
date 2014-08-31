@@ -152,6 +152,20 @@ void Model3d::updateParameterVisibility()
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
 }
 
+const GEOM::Geometry* Model3d::geometry() const
+{
+    return draw_ ? draw_->geometry() : 0;
+}
+
+Vec4 Model3d::modelColor(Double time, uint thread) const
+{
+    return Vec4(
+        cr_->value(time, thread),
+        cg_->value(time, thread),
+        cb_->value(time, thread),
+        ca_->value(time, thread));
+}
+
 void Model3d::initGl(uint /*thread*/)
 {
     texture_->initGl();

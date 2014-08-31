@@ -67,7 +67,7 @@ I getHash(I1 x, I1 y, I1 z, I1 w)
     return    (I)(x * hash_traits<I>::prime1)
             ^ (I)(y * hash_traits<I>::prime2)
             ^ (I)(z * hash_traits<I>::prime3)
-            ^ (I)(z * hash_traits<I>::prime4);
+            ^ (I)(w * hash_traits<I>::prime4);
 }
 
 
@@ -106,7 +106,7 @@ I getHash(I x, I y, I z, I w)
     return    (x * hash_traits<I>::prime1)
             ^ (y * hash_traits<I>::prime2)
             ^ (z * hash_traits<I>::prime3)
-            ^ (z * hash_traits<I>::prime4);
+            ^ (w * hash_traits<I>::prime4);
 }
 
 } // namespace MATH

@@ -96,6 +96,9 @@ public:
     int numTriangleIndexBytes() const { return triIndex_.size() * sizeof(IndexType); }
     int numLineIndexBytes() const { return lineIndex_.size() * sizeof(IndexType); }
 
+    IndexType triangleIndex(uint triangleIndex, uint cornerIndex) const
+        { return triIndex_[triangleIndex * numTriangleIndexComponents() + cornerIndex]; }
+
     /** Returns memory usage in bytes */
     long unsigned int memory() const;
 

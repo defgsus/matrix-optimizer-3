@@ -292,7 +292,7 @@ QString Object::namePath() const
 {
     Object * p = parentObject();
     if (!p)
-        return "/";
+        return name();
 
     QString path;
     while (p)
@@ -301,14 +301,14 @@ QString Object::namePath() const
         p = p->parentObject();
     }
 
-    return path;
+    return path + "/" + name();
 }
 
 QString Object::idNamePath() const
 {
     Object * p = parentObject();
     if (!p)
-        return "/";
+        return idName();
 
     QString path;
     while (p)
@@ -317,7 +317,7 @@ QString Object::idNamePath() const
         p = p->parentObject();
     }
 
-    return path;
+    return path + "/" + idName();
 }
 
 bool Object::isModulated() const
