@@ -31,6 +31,16 @@ HelpDialog::HelpDialog(QWidget *parent) :
     browser_->setSource(QUrl("index"));
 }
 
+HelpDialog::HelpDialog(const QString &url, QWidget *parent) :
+    QDialog     (parent)
+{
+    setMinimumSize(640,480);
+
+    createWidgets_();
+
+    browser_->setSource(QUrl(url));
+}
+
 void HelpDialog::createWidgets_()
 {
     auto lv = new QVBoxLayout(this);

@@ -11,9 +11,11 @@
 #include <QLayout>
 #include <QPushButton>
 #include <QTextEdit>
+#include <QKeyEvent>
 
 #include "texteditdialog.h"
 #include "widget/equationeditor.h"
+#include "helpdialog.h"
 
 namespace MO {
 namespace GUI {
@@ -149,6 +151,34 @@ void TextEditDialog::createWidgets_()
 
 }
 
+void TextEditDialog::keyPressEvent(QKeyEvent * e)
+{
+    if (e->key() == Qt::Key_F1)
+    {
+        e->accept();
+        openHelp();
+        return;
+    }
+    QDialog::keyPressEvent(e);
+}
+
+void TextEditDialog::openHelp()
+{
+    QString url = "index";
+
+    if (p_->textType == TT_EQUATION)
+    {
+        url = "equation.html";
+
+        auto c = p_->equEdit->textCursor();
+        c.select(QTextCursor::WordUnderCursor);
+        if (!c.selectedText().isEmpty())
+            url += "#" + c.selectedText();
+    }
+
+    auto help = new HelpDialog(url, this);
+    help->show();
+}
 
 } // namespace GUI
 } // namespace MO

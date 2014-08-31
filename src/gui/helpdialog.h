@@ -26,6 +26,7 @@ class HelpDialog : public QDialog
     Q_OBJECT
 public:
     explicit HelpDialog(QWidget *parent = 0);
+    explicit HelpDialog(const QString& url, QWidget *parent = 0);
 
 signals:
 

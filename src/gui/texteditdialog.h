@@ -51,6 +51,12 @@ signals:
 
 public slots:
 
+    void openHelp();
+
+protected:
+
+    void keyPressEvent(QKeyEvent *);
+
 private:
 
     void createWidgets_();

@@ -57,13 +57,19 @@ HelpTextBrowser::HelpTextBrowser(QWidget *parent) :
                 );
 }
 
+
 QVariant HelpTextBrowser::loadResource(int type, const QUrl &url)
 {
     if (type == QTextDocument::HtmlResource)
     {
         const QString name = url.url();
-        const QString fn = ":/help/"
+        QString fn = ":/help/"
             + (name.contains(".html")? name : name + ".html");
+
+        // strip anchor
+        int idx = fn.indexOf("#");
+        if (idx > 0)
+            fn = fn.left(idx);
 
         QFile f(fn);
         if (!f.open(QFile::ReadOnly))
@@ -123,11 +129,14 @@ QString HelpTextBrowser::addRuntimeInfo_(
                 || f->name() == "?")
                 continue;
 
-            const QString anchor = QString::fromStdString(f->name())
-                                    + QString::number(f->num_param());
+            const QString
+                    anchor = QString::fromStdString(f->name()),
+                    anchorp = anchor + QString::number(f->num_param());
 
-            str += "<tr><td><a name=\"" + anchor + "\"></a><b>"
-                    + QString::fromStdString(f->name()) + "</b>(";
+            str += "<tr><td>"
+                      "<a name=\"" + anchor + "\"></a>"
+                      "<a name=\"" + anchorp + "\"></a>"
+                      "<b>" + QString::fromStdString(f->name()) + "</b>(";
             for (int i=0; i<f->num_param(); ++i)
             {
                 str += "<i>" + QString('a'+i) + "</i>";
