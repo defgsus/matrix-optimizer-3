@@ -212,7 +212,8 @@ SOURCES += \
     src/network/networkmanager.cpp \
     src/gui/helpdialog.cpp \
     src/gui/widget/helptextbrowser.cpp \
-    src/io/povrayexporter.cpp
+    src/io/povrayexporter.cpp \
+    src/gl/scenedebugrenderer.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -419,7 +420,8 @@ HEADERS += \
     src/network/networkmanager.h \
     src/gui/helpdialog.h \
     src/gui/widget/helptextbrowser.h \
-    src/io/povrayexporter.h
+    src/io/povrayexporter.h \
+    src/gl/scenedebugrenderer.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

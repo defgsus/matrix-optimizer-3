@@ -552,9 +552,11 @@ protected:
         @note Be sure to call the ancestor class implementation before your derived code! */
     virtual void createAudioSources() { };
 
+public:
     /** Returns the audio sources of this object. */
     const QList<AUDIO::AudioSource*>& audioSources() const { return audioSources_; }
 
+protected:
     /** Creates and returns a new audio source installed to this object.
         The id is not really important, only for display purposes. */
     AUDIO::AudioSource * createAudioSource(const QString& id = QString("audio"));

@@ -58,6 +58,9 @@ public:
         The ownership is taken and the previous class is deleted. */
     void setShaderSource(ShaderSource * s);
 
+    /** Sets the (new) shader source. */
+    void setShaderSource(const ShaderSource& s);
+
     /** Sets the shader object.
         The ownership is taken and the previous class is deleted. */
     void setShader(Shader * s);

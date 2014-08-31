@@ -96,6 +96,14 @@ void Drawable::setShaderSource(ShaderSource *s)
     doRecompile_ = true;
 }
 
+void Drawable::setShaderSource(const ShaderSource &s)
+{
+    if (!shaderSource_)
+        shaderSource_ = new ShaderSource();
+    *shaderSource_ = s;
+    doRecompile_ = true;
+}
+
 void Drawable::setShader(Shader *s)
 {
     delete shader_;
