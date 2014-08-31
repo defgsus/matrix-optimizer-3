@@ -30,6 +30,7 @@ private:
 
     QString addRuntimeInfo_(const QString& doc, const QString& filename) const;
 
+    void addEquationInfo_(QString& doc) const;
     QString getFunctionDescription_(const PPP_NAMESPACE::Function*) const;
 
     QImage getFunctionImage(const QString& equ_url) const;

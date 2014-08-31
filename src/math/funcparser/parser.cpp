@@ -258,7 +258,7 @@ Function * Functions::add(Function::Type type, int num_param, const std::string&
         return 0;
     }
     Function * f;
-    map_.insert( std::make_pair( name, f = new Function(name, func_ptr, num_param, type) ) );
+    map_.insert( std::make_pair( name, f = new Function(name, curGroup_, func_ptr, num_param, type) ) );
     return f;
 }
 
@@ -275,6 +275,7 @@ Function * Functions::add(int num_param, const std::string& name, LambdaFuncPtr 
     map_.insert( std::make_pair( name,
                         f = new Function(
                                     name,
+                                    curGroup_,
                                     lambda_func,
                                     num_param) ) );
     return f;

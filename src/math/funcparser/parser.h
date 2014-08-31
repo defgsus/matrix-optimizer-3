@@ -152,16 +152,21 @@ namespace PPP_NAMESPACE {
             LAMBDA
         };
 
-        Function(const std::string& name, FuncPtr func_ptr, int nparam, Type type)
-            :	name_(name), nparam_(nparam), func_(func_ptr), lambda_func_(0), type_(type), temp_(false)
+        Function(const std::string& name, const std::string& groupname,
+                 FuncPtr func_ptr, int nparam, Type type)
+            : name_(name), groupName_(groupname), nparam_(nparam),
+              func_(func_ptr), lambda_func_(0), type_(type), temp_(false)
+
         { }
 
-        Function(const std::string& name, LambdaFuncPtr lambda_func, int nparam)
-            :	name_(name), nparam_(nparam), func_(0),
+        Function(const std::string& name, const std::string& groupname,
+                 LambdaFuncPtr lambda_func, int nparam)
+            :	name_(name), groupName_(groupname), nparam_(nparam), func_(0),
                 lambda_func_(lambda_func), type_(LAMBDA), temp_(false)
         { }
 
         const std::string& name() const { return name_; }
+        const std::string& groupName() const { return groupName_; }
 
         int num_param() const { return nparam_; }
 
@@ -175,7 +180,7 @@ namespace PPP_NAMESPACE {
 
         private:
 
-        std::string name_;
+        std::string name_, groupName_;
         int nparam_;
         FuncPtr func_;
         LambdaFuncPtr lambda_func_;
@@ -202,6 +207,8 @@ namespace PPP_NAMESPACE {
         ~Functions() { clear(); }
 
         Functions& operator = (const Functions& other) { copyFrom(other); return *this; }
+
+        void setCurrentGroup(const std::string& groupName) { curGroup_ = groupName; }
 
         /** add a function */
         Function * add(Function::Type type, int num_param, const std::string& name, FuncPtr func_ptr);
@@ -252,6 +259,8 @@ namespace PPP_NAMESPACE {
         private:
 
         void clear_temps_();
+
+        std::string curGroup_;
     };
 
 

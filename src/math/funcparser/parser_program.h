@@ -85,6 +85,9 @@ namespace PPP_NAMESPACE
         f.add(Function::BINARY_OP,		2, "&&",		math_func<Float>::logic_and_2	);
         f.add(Function::BINARY_OP,		2, "||",		math_func<Float>::logic_or_2	);
         f.add(Function::BINARY_OP,		2, "^^",		math_func<Float>::logic_xor_2	);
+
+        f.setCurrentGroup("comparison");
+
         f.add(Function::BINARY_OP,		2, "==",		math_func<Float>::equal_2		);
         f.add(Function::BINARY_OP,		2, "!=",		math_func<Float>::not_equal_2	);
         f.add(Function::BINARY_OP,		2, "<",			math_func<Float>::smaller_2		);
@@ -92,6 +95,7 @@ namespace PPP_NAMESPACE
         f.add(Function::BINARY_OP,		2, ">",			math_func<Float>::greater_2		);
         f.add(Function::BINARY_OP,		2, ">=",		math_func<Float>::greater_equal_2);
 
+        f.setCurrentGroup("basic");
 
         f.add(Function::FUNCTION,		1, "abs",		math_func<Float>::abs_1			);
         f.add(Function::FUNCTION,		1, "sign",		math_func<Float>::sign_1		);
@@ -107,6 +111,8 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		2, "mod",		math_func<Float>::mod_2			);
         f.add(Function::FUNCTION,		2, "smod",		math_func<Float>::smod_2		);
 
+        f.setCurrentGroup("trigonometry");
+
         f.add(Function::FUNCTION,		1, "sin",		math_func<Float>::sin_1			);
         f.add(Function::FUNCTION,		1, "sinh",		math_func<Float>::sinh_1		);
         f.add(Function::FUNCTION,		1, "asin",		math_func<Float>::asin_1		);
@@ -119,22 +125,12 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		2, "atan",		math_func<Float>::atan_2		);
         f.add(Function::FUNCTION,		1, "sinc",		math_func<Float>::sinc_1		);
 
-        f.add(Function::FUNCTION,		1, "exp",		math_func<Float>::exp_1			);
-        f.add(Function::FUNCTION,		1, "ln",		math_func<Float>::ln_1			);
-        f.add(Function::FUNCTION,		1, "logistic",	math_func<Float>::logistic_1	);
-        f.add(Function::FUNCTION,		2, "pow",		math_func<Float>::pow_2			);
-        f.add(Function::FUNCTION,		1, "sqrt",		math_func<Float>::sqrt_1		);
-        f.add(Function::FUNCTION,		2, "root",		math_func<Float>::root_2		);
-
-        f.add(Function::FUNCTION,		3, "smstep",    math_func<Float>::smoothstep_3  );
-        f.add(Function::FUNCTION,		3, "smstep2",   math_func<Float>::smootherstep_3);
-        f.add(Function::FUNCTION,       2, "smquant",   math_func<Float>::smoothladder_2);
-        f.add(Function::FUNCTION,       2, "smquant2",  math_func<Float>::smootherladder_2);
-
         f.add(Function::FUNCTION,		1, "beta",		math_func<Float>::beta_1		);
         f.add(Function::FUNCTION,		2, "beta",		math_func<Float>::beta_2		);
         f.add(Function::FUNCTION,		3, "beta",		math_func<Float>::beta_3		);
         f.add(Function::FUNCTION,		4, "beta",		math_func<Float>::beta_4		);
+
+        f.setCurrentGroup("geometry");
 
         f.add(Function::FUNCTION,		2, "mag",		math_func<Float>::mag_2			);
         f.add(Function::FUNCTION,		3, "mag",		math_func<Float>::mag_3			);
@@ -144,12 +140,32 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		3, "rotate",	math_func<Float>::rotate_3		);
         f.add(Function::FUNCTION,		3, "rotater",	math_func<Float>::rotater_3		);
 
+        f.setCurrentGroup("algebraic");
+
+        f.add(Function::FUNCTION,		1, "exp",		math_func<Float>::exp_1			);
+        f.add(Function::FUNCTION,		1, "ln",		math_func<Float>::ln_1			);
+        f.add(Function::FUNCTION,		1, "logistic",	math_func<Float>::logistic_1	);
+        f.add(Function::FUNCTION,		2, "pow",		math_func<Float>::pow_2			);
+        f.add(Function::FUNCTION,		1, "sqrt",		math_func<Float>::sqrt_1		);
+        f.add(Function::FUNCTION,		2, "root",		math_func<Float>::root_2		);
+
+        f.setCurrentGroup("transition");
+
+        f.add(Function::FUNCTION,		3, "smstep",    math_func<Float>::smoothstep_3  );
+        f.add(Function::FUNCTION,		3, "smstep2",   math_func<Float>::smootherstep_3);
+        f.add(Function::FUNCTION,       2, "smquant",   math_func<Float>::smoothladder_2);
+        f.add(Function::FUNCTION,       2, "smquant2",  math_func<Float>::smootherladder_2);
+
+        f.setCurrentGroup("oscillator");
+
         f.add(Function::FUNCTION,		1, "ramp",		math_func<Float>::ramp_1		);
         f.add(Function::FUNCTION,		1, "saw",		math_func<Float>::saw_1         );
         f.add(Function::FUNCTION,		1, "square",	math_func<Float>::square_1		);
         f.add(Function::FUNCTION,		2, "square",	math_func<Float>::square_2		);
         f.add(Function::FUNCTION,		1, "tri",		math_func<Float>::tri_1         );
         f.add(Function::FUNCTION,		2, "tri",		math_func<Float>::tri_2         );
+
+        f.setCurrentGroup("random");
 
         f.add(Function::FUNCTION,		0, "rnd",		math_func<Float>::rnd_0			);
         f.add(Function::FUNCTION,		1, "noise",		math_func<Float>::noise_1		);
@@ -158,6 +174,8 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		2, "noiseoct",	math_func<Float>::noiseoct_2	);
         f.add(Function::FUNCTION,		3, "noiseoct",	math_func<Float>::noiseoct_3	);
         f.add(Function::FUNCTION,		4, "noiseoct",	math_func<Float>::noiseoct_4	);
+
+        f.setCurrentGroup("number theory");
 
         f.add(Function::FUNCTION,		1, "fac",		math_func<Float>::factorial_1	);
         f.add(Function::FUNCTION,		1, "fib",		math_func<Float>::fibonacci_1	);
@@ -199,6 +217,8 @@ namespace PPP_NAMESPACE
 
 //        f.add(Function::FUNCTION,		2, "digcount",	math_func<Float>::digit_count_2	);
 //        f.add(Function::FUNCTION,		2, "digfreq",	math_func<Float>::digit_freq_2	);
+
+        f.setCurrentGroup("chaotic");
 
         f.add(Function::FUNCTION,       2, "mandel",    math_func<Float>::mandel_2     );
         f.add(Function::FUNCTION,       2, "mandeli",   math_func<Float>::mandeli_2     );

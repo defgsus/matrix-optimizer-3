@@ -104,27 +104,67 @@ QString HelpTextBrowser::addRuntimeInfo_(
 
     if (filename.contains("equation.html"))
     {
-        QString str;
+        addEquationInfo_(doc);
+    }
 
-        PPP_NAMESPACE::Parser p;
+    doc += "</body></html>";
 
-        std::vector<PPP_NAMESPACE::Variable*> vars;
-        p.variables().getVariables(vars, false);
-        for (PPP_NAMESPACE::Variable * v : vars)
-        {
-            if (!v->isConst())
-                continue;
+    return doc;
+}
 
-            str += QString("<b>%1</b> = %2<br/>\n")
-                    .arg(QString::fromStdString(v->name())).arg(v->value());
-        }
+void HelpTextBrowser::addEquationInfo_(QString& doc) const
+{
+    QString str;
 
-        doc.replace("!CONSTANTS!", str);
+    PPP_NAMESPACE::Parser p;
 
-        str = "<table border=\"0\">";
-        auto funcs = p.functions().getFunctions();
+    std::vector<PPP_NAMESPACE::Variable*> vars;
+    p.variables().getVariables(vars, false);
+    for (PPP_NAMESPACE::Variable * v : vars)
+    {
+        if (!v->isConst())
+            continue;
+
+        str += QString("<b>%1</b> = %2<br/>\n")
+                .arg(QString::fromStdString(v->name())).arg(v->value());
+    }
+
+    doc.replace("!CONSTANTS!", str);
+
+    // ---- functions ----
+
+    QStringList groups, groupsTr;
+    groups  << "basic"
+            << "transition"
+            << "algebraic"
+            << "trigonometry"
+            << "geometry"
+            << "number theory"
+            << "oscillator"
+            << "random"
+            << "chaotic";
+    groupsTr
+            << tr("basic")
+            << tr("transition")
+            << tr("algebra")
+            << tr("trigonometry")
+            << tr("geometry")
+            << tr("number theory")
+            << tr("oscillator")
+            << tr("random")
+            << tr("chaotic");
+
+    str = "<table border=\"0\">";
+    auto funcs = p.functions().getFunctions();
+    for (int k = 0; k<groups.size(); ++k)
+    {
+        str += "<tr><td><h3>" + groupsTr[k] + "</h3></td></tr>\n";
+        const std::string curgroup = groups[k].toStdString();
         for (const PPP_NAMESPACE::Function * f : funcs)
         {
+            if (f->groupName() != curgroup)
+                continue;
+
             if (f->type() != PPP_NAMESPACE::Function::FUNCTION
                 || f->name() == "?")
                 continue;
@@ -145,14 +185,10 @@ QString HelpTextBrowser::addRuntimeInfo_(
             }
             str += ")</td><td>" + getFunctionDescription_(f) + "<br/></td></tr>\n";
         }
-        str += "</table>";
-
-        doc.replace("!FUNCTIONS!", str);
     }
+    str += "</table>";
 
-    doc += "</body></html>";
-
-    return doc;
+    doc.replace("!FUNCTIONS!", str);
 }
 
 QImage HelpTextBrowser::getFunctionImage(const QString &url) const
