@@ -1,5 +1,12 @@
+* {
+    color: #fff;
+    background-color: #222;
+}
 
 i {
     font-style: italic;
-    color: #050;
+    color: #cfc;
 }
+
+a { color: #aaf; }
+

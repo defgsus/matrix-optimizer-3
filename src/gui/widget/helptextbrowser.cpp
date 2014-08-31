@@ -221,7 +221,7 @@ QString HelpTextBrowser::getFunctionDescription_(
         return tr("Returns the absolute value - that is the result is always positive");
     if (f->name() == "sign")
         return tr("Returns +1.0 if <i>a</i> is positive, -1.0 if <i>a</i> is negative and "
-                  "0.0 if <i>a</i> is also zero");
+                  "0.0 if <i>a</i> is zero.");
     if (f->name() == "floor")
         return tr("Returns <i>a</i> without the fractional part, e.g. 2.7 becomes 2.0")
                   +"<br/><b>floor(x)</b>:<br/><img src=\"_equ#0#8#0#8#floor(x)\"/>";
@@ -229,11 +229,13 @@ QString HelpTextBrowser::getFunctionDescription_(
         return tr("Returns <i>a</i> without the fractional part plus one, e.g 2.3 becomes 3.0")
                   +"<br/><b>ceil(x)</b>:<br/><img src=\"_equ#0#8#0#8#ceil(x)\"/>";
     if (f->name() == "round")
-        return tr("Returns <i>a</i> rounded to the nearest integer, e.g. 2.3 becomes 2.0 and "
-                  "2.7 becomes 3.0")
+        return tr("Returns <i>a</i> rounded to the nearest integer, e.g. 2.4 becomes 2.0 and "
+                  "2.5 becomes 3.0")
                   +"<br/><b>round(x)</b>:<br/><img src=\"_equ#0#8#0#8#round(x)\"/>";
     if (f->name() == "frac")
         return tr("Returns the fractional part (the digits right of the point)");
+    if (f->name() == "clamp")
+        return tr("Limits the value of <i>a</i> to the range [-<i>b</i>,<i>c</i>].");
 
     if (f->name() == "min")
         return tr("Returns the smallest of the values <i>a</i> and <i>b</i>");
@@ -328,20 +330,24 @@ QString HelpTextBrowser::getFunctionDescription_(
     if (f->name() == "smstep2")
         return tr("Smoothly fades between 0 and 1 for the value <i>c</i> between it's "
                   "boundaries <i>a</i> and <i>b</i>. This version has slightly different "
-                  "boundary derivatives as the <b>smstep</b> function. ")
+                  "boundary derivatives as the <a href=\"#smstep\">smstep</a> function. ")
                   +"<br/><b>smstep2(1, 2, x)</b>:<br/><img src=\"_equ#0#4#0#1#smstep2(1,2,x)\"/>";
     if (f->name() == "smquant")
-        return tr("Works like <b>quant</b> but smoothly fades between each quantized value.")
+        return tr("Works like <a href=\"#quant\">quant</a> but smoothly fades between each "
+                  "quantized value.")
                   +"<br/><b>smquant(x, 1)</b>:<br/><img src=\"_equ#0#4#0#4#smquant(x,1)\"/>";
     if (f->name() == "smquant2")
-        return tr("Sames as <b>smquant</b> but slightly other derivatives of the smoothing function.")
+        return tr("Sames as <a href=\"#smquant\">smquant</a> but with slightly other "
+                  "derivatives of the smoothing function.")
                   +"<br/><b>smquant2(x, 1)</b>:<br/><img src=\"_equ#0#4#0#4#smquant2(x,1)\"/>";
 
     if (f->name() == "beta" && f->num_param() == 1)
         return tr("Calculates a circle's surface for input <i>a</i> in the range [-1,1]. "
                   "For example <i>a</i> could be the x coordinate and the result would be "
                   "the y coordinate of the circumference of a circle of radius 1 centered at "
-                  "the origin.<br/>The underlying equation is: <b>beta(x) = sqrt(1-x*x)</b>")
+                  "the origin.<br/>The underlying equation is: <b>beta(x) = sqrt(1-x*x)</b> "
+                  "which would be undefined for x outside the range of [-1,1]. In this case "
+                  "<b>beta</b> returns zero.")
                   +"<br/><b>beta(x)</b>:<br/><img src=\"_equ#-1#1#0#1#beta(x)#200#100\"/>";
     if (f->name() == "beta" && f->num_param() == 2)
         return tr("Calculates a sphere's surface for input range [-1,1]. "
@@ -376,7 +382,7 @@ QString HelpTextBrowser::getFunctionDescription_(
     if (f->name() == "rotater")
         return tr("Rotates the 2d-coordinate (<i>a</i>, <i>b</i>) around the origin by the angle "
                   "<i>c</i> in radians and returns the first component of the rotated vector."
-                  "A common rotation can be expressed as:")
+                  "A common rotation would be:<br/>")
                   +"<b>x' = rotater(x, y, degree / 180 * PI)<br/>"
                       "y' = rotater(y, x, -degree / 180 * PI)</b>";
 
@@ -390,21 +396,26 @@ QString HelpTextBrowser::getFunctionDescription_(
         return tr("A square-wave oscillator, output range [-1,1]")
                   +"<br/><b>square(x)</b>:<br/><img src=\"_equ#-1#1#-1#1#square(x)\"/>";
     if (f->name() == "square" && f->num_param() == 2)
-        return tr("A square-wave oscillator with pulse-width control <i>b</i>, output range [-1,1]")
-                  +"<br/><b>square(x, 0.1)</b>:<br/><img src=\"_equ#-1#1#-1#1#square(x,0.1)\"/>";
+        return tr("A square-wave oscillator with pulse-width control <i>b</i>, output range [-1,1]"
+                  "<br/><i>b</i> is in the range of [0.000001,0.999999]")
+                  +"<br/><b>square(x, 0.1)</b>:<br/><img src=\"_equ#-1#1#-1#1#square(x,0.1)\"/>"
+                  +"<br/><b>square(x, 0.9)</b>:<br/><img src=\"_equ#-1#1#-1#1#square(x,0.9)\"/>";
     if (f->name() == "tri" && f->num_param() == 1)
         return tr("A triangle-wave oscillator, output range [-1,1]")
                   +"<br/><b>tri(x)</b>:<br/><img src=\"_equ#-1#1#-1#1#tri(x)\"/>";
     if (f->name() == "tri" && f->num_param() == 2)
-        return tr("A triangle-wave oscillator with pulse-width control <i>b</i>, output range [-1,1]")
-                  +"<br/><b>tri(x, 0.1)</b>:<br/><img src=\"_equ#-1#1#-1#1#tri(x,0.1)\"/>";
+        return tr("A triangle-wave oscillator with pulse-width control <i>b</i>, output range [-1,1]."
+                  "<br/><i>b</i> is in the range of [0.000001,0.999999]")
+                  +"<br/><b>tri(x, 0.1)</b>:<br/><img src=\"_equ#-1#1#-1#1#tri(x,0.1)\"/>"
+                  +"<br/><b>tri(x, 0.9)</b>:<br/><img src=\"_equ#-1#1#-1#1#tri(x,0.9)\"/>";
 
     if (f->name() == "rnd")
         return tr("Returns a pseudo-random number in the range [0,1]. "
                   "<br/>A new random number is generated on each call of the function. "
                   "Generally it's highly experimental to use functions like this in objects "
                   "that support equations. If you need \"predictable\" randomness, "
-                  "use <b>noise</b> instead.");
+                  "use <a href=\"#noise\">noise</a> instead.")
+                  +"<br/><b>rnd(x)</b>:<br/><img src=\"_equ#0#1#0#1#rnd()\"/>";;
     if (f->name() == "noise" && f->num_param() == 1)
         return tr("Returns a 1-dimensional smoothed pseudo-random number in the range [-1,1].")
                   +"<br/><b>noise(x)</b>:<br/><img src=\"_equ#-4#4#-1#1#noise(x)\"/>";
@@ -441,7 +452,7 @@ QString HelpTextBrowser::getFunctionDescription_(
                   + "<br/>fib(n) = fib(n-2) + fib(n-1); where fib(0) and fib(1) are 1";
 
     if (f->name() == "zeta" && f->num_param() == 1)
-        return tr("Approximates the Riemann zeta function of <i>a</i>");
+        return tr("Approximates the Riemann zeta function of <i>a</i> with 70 iterations.");
     if (f->name() == "zeta" && f->num_param() == 2)
         return tr("Approximates the Riemann zeta function of <i>a</i> until the change per "
                   "iteration is equal or lower than <i>b</i>, or the number of iterations "
@@ -452,8 +463,8 @@ QString HelpTextBrowser::getFunctionDescription_(
                   "If neither of the terms results in an integer, the result is 0.");
 
     if (f->name() == "harmo" && f->num_param() == 3)
-        return tr("Returns the harmonic quotient of <i>a</i>/<i>b</i>/<i>c</i> or "
-                  "any permutation of the order. "
+        return tr("Returns the harmonic quotient of the term <i>a</i>/<i>b</i>/<i>c</i> or "
+                  "the 5 other permutations in the order of this term. "
                   "If neither of the terms results in an integer, the result is 0.");
 
     if (f->name() == "prime")
@@ -479,8 +490,10 @@ QString HelpTextBrowser::getFunctionDescription_(
                 + "<br/><img src=\"ulam_spiral.png\"/>";
 
     if (f->name() == "uspiral" && f->num_param() == 3)
-        return tr("Returns the ulam spiral number for the integer coordinate (<i>a</i>, <i>b</i>) "
-                  "with additional width parameter <i>c</i>.");
+        return tr("Returns the <a href=\"#ulam2\">ulam</a> spiral number for the integer "
+                  "coordinate (<i>a</i>, <i>b</i>) with additional width parameter <i>c</i>. "
+                  "So instead of quadratic expansion, the spiral extents rectangular with the "
+                  "longest edges on the x axis.");
 
     if (f->name() == "tspiral" && f->num_param() == 2)
         return tr("Returns the triangle spiral number for the integer coordinate (<i>a</i>, <i>b</i>)."
@@ -519,7 +532,7 @@ QString HelpTextBrowser::getFunctionDescription_(
     if (f->name() == "cong")
         return tr("Returns 1 if the integers <i>a</i> and <i>b</i> are congruent in the "
                   "modulo space of <i>c</i> and 0 otherwise. The calculation is: "
-                  "<br/><b>cong(a,b,m) = ((b-a) modulo m) equals 0</b>");
+                  "<b>cong(a,b,m) = ((b-a) modulo m) equals 0</b>");
     if (f->name() == "digits")
         return tr("Returns the number of digits of the integer <i>a</i> in the base 10 system.");
 
