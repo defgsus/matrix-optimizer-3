@@ -16,6 +16,7 @@
 #include "geom/geometry.h"
 #include "geom/geometryfactory.h"
 #include "gl/drawable.h"
+#include "gl/compatibility.h"
 
 namespace MO {
 namespace GUI {
@@ -273,9 +274,8 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
     MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
     MO_CHECK_GL( glEnable(GL_BLEND) );
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
-    MO_CHECK_GL( glEnable(GL_LINE_SMOOTH) );
-    glLineWidth((GLfloat)fboSize().height() / 512);
-    glGetError();
+    GL::setLineSmooth(true);
+    GL::setLineWidth((GLfloat)fboSize().height() / 512);
 
     if (domeGeometry_)
     {

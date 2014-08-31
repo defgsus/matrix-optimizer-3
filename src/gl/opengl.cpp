@@ -9,50 +9,51 @@
 */
 
 #include "opengl.h"
+#include "compatibility.h"
 #include "io/log.h"
 
 #ifdef GLEW_MX
 
 #include <pthread.h>
 
-static pthread_key_t glew_key_;
-static pthread_once_t glew_key_once_ = PTHREAD_ONCE_INIT;
+    static pthread_key_t glew_key_;
+    static pthread_once_t glew_key_once_ = PTHREAD_ONCE_INIT;
 
 
-static void make_glew_key_()
-{
-    (void) pthread_key_create(&glew_key_, NULL);
-}
-
-GLEWContext * glewGetContext()
-{
-    GLEWContext * con = 0;
-
-    // create the key
-    pthread_once(&glew_key_once_, make_glew_key_);
-
-    void *ptr;
-    if ((ptr = pthread_getspecific(glew_key_)) == NULL)
+    static void make_glew_key_()
     {
-        MO_DEBUG_GL("creating GLEWContext object");
-
-        // create context
-        con = new GLEWContext;
-        memset(con, 0, sizeof(GLEWContext));
-        ptr = con;
-        // store to thread
-        pthread_setspecific(glew_key_, ptr);
-
-        glewInit();
-    }
-    else
-    {
-        //MO_DEBUG_GL("reusing GLEWContext object");
-        con = static_cast<GLEWContext*>(ptr);
+        (void) pthread_key_create(&glew_key_, NULL);
     }
 
-    return con;
-}
+    GLEWContext * glewGetContext()
+    {
+        GLEWContext * con = 0;
+
+        // create the key
+        pthread_once(&glew_key_once_, make_glew_key_);
+
+        void *ptr;
+        if ((ptr = pthread_getspecific(glew_key_)) == NULL)
+        {
+            MO_DEBUG_GL("creating GLEWContext object");
+
+            // create context
+            con = new GLEWContext;
+            memset(con, 0, sizeof(GLEWContext));
+            ptr = con;
+            // store to thread
+            pthread_setspecific(glew_key_, ptr);
+
+            glewInit();
+        }
+        else
+        {
+            //MO_DEBUG_GL("reusing GLEWContext object");
+            con = static_cast<GLEWContext*>(ptr);
+        }
+
+        return con;
+    }
 
 #endif // GLEW_MX
 
@@ -82,6 +83,9 @@ void moInitGl()
 
             MO_GL_ERROR("Could not initialize GLEW\n" << str);
         }
+
+        checkCompatibility();
+
         init = true;
     }
 }

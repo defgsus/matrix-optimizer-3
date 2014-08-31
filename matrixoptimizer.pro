@@ -213,7 +213,8 @@ SOURCES += \
     src/gui/helpdialog.cpp \
     src/gui/widget/helptextbrowser.cpp \
     src/io/povrayexporter.cpp \
-    src/gl/scenedebugrenderer.cpp
+    src/gl/scenedebugrenderer.cpp \
+    src/gl/compatibility.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -421,7 +422,8 @@ HEADERS += \
     src/gui/helpdialog.h \
     src/gui/widget/helptextbrowser.h \
     src/io/povrayexporter.h \
-    src/gl/scenedebugrenderer.h
+    src/gl/scenedebugrenderer.h \
+    src/gl/compatibility.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
