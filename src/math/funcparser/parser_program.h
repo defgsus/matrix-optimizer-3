@@ -169,6 +169,7 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		3, "harmo",		math_func<Float>::harmo_3		);
 
         f.add(Function::FUNCTION,		1, "prime",		math_func<Float>::prime_1		);
+        f.add(Function::FUNCTION,		1, "prime_s",	math_func<Float>::s_prime_1		);
         //f.add(Function::FUNCTION,		1, "sprime",	math_func<Float>::sprime_1		);
 
 //        f.add(Function::FUNCTION,		1, "nextprime",	math_func<Float>::nextprime_1	);

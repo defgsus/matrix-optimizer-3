@@ -761,6 +761,14 @@ struct math_func<double>
 
     // ------------ smoothed number theory --------------
 
+    static void s_prime_1			(double ** v)
+    {
+        *v[0] = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(*v[1]),
+                    (double)generic_int<Int>::isPrime( std::abs((Int)*v[1]) ),
+                    (double)generic_int<Int>::isPrime( std::abs((Int)*v[1] + 1) ));
+    }
+
     static void s_numdiv_1			(double ** v)
     {
         *v[0] = MO::MATH::interpol_smooth(

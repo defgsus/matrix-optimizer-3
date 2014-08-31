@@ -48,7 +48,13 @@ namespace
 HelpTextBrowser::HelpTextBrowser(QWidget *parent) :
     QTextBrowser(parent)
 {
-    setSearchPaths(QStringList() << ":/helpimg" << ":/img" << ":/texture");
+    setSearchPaths(
+        QStringList()
+                << ":/help"
+                << ":/helpimg"
+                << ":/img"
+                << ":/texture"
+                );
 }
 
 QVariant HelpTextBrowser::loadResource(int type, const QUrl &url)
@@ -84,6 +90,12 @@ QVariant HelpTextBrowser::loadResource(int type, const QUrl &url)
 QString HelpTextBrowser::addRuntimeInfo_(
         const QString &orgdoc, const QString &filename) const
 {
+    QString doc =
+            "<html><head>\n"
+            "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">"
+            "</head><body>\n"
+            + orgdoc;
+
     if (filename.contains("equation.html"))
     {
         QString str;
@@ -97,11 +109,10 @@ QString HelpTextBrowser::addRuntimeInfo_(
             if (!v->isConst())
                 continue;
 
-            str += QString("<b>%1<&b> = %2<br/>\n")
+            str += QString("<b>%1</b> = %2<br/>\n")
                     .arg(QString::fromStdString(v->name())).arg(v->value());
         }
 
-        QString doc(orgdoc);
         doc.replace("!CONSTANTS!", str);
 
         str = "<table border=\"0\">";
@@ -119,7 +130,7 @@ QString HelpTextBrowser::addRuntimeInfo_(
                     + QString::fromStdString(f->name()) + "</b>(";
             for (int i=0; i<f->num_param(); ++i)
             {
-                str += QChar('a'+i);
+                str += "<i>" + QString('a'+i) + "</i>";
                 if (i<f->num_param()-1)
                     str += ", ";
             }
@@ -128,12 +139,11 @@ QString HelpTextBrowser::addRuntimeInfo_(
         str += "</table>";
 
         doc.replace("!FUNCTIONS!", str);
-
-        return doc;
     }
 
+    doc += "</body></html>";
 
-    return orgdoc;
+    return doc;
 }
 
 QImage HelpTextBrowser::getFunctionImage(const QString &url) const
@@ -226,10 +236,11 @@ QString HelpTextBrowser::getFunctionDescription_(
         return tr("Quantizes <i>a</i> to the interval <i>b</i>")
                   +"<br/><b>quant(x,0.3)</b>:<br/><img src=\"_equ#0#2#0#2#quant(x,0.3)\"/>";
     if (f->name() == "mod")
-        return tr("Returns <i>a modulo b</i>, that is, <i>a</i> will always be in the "
+        return tr("Returns <i>a</i> modulo <i>b</i>, that is, <i>a</i> will always be in the "
                   "range of [0,<i>b</i>)");
     if (f->name() == "smod")
-        return tr("Returns <i>a modulo b</i> if <i>a</i> is positive and <i>b - (-a modulo b)</i> if a "
+        return tr("Returns <i>a</i> modulo <i>b</i> if <i>a</i> is positive and "
+                  "<i>b</i> - (-<i>a</i> modulo <i>b</i>) if a "
                   "is negative, that is, <i>a</i> will always be in the range of [0,<i>b</i>). "
                   "This function should be used for creating continious functions from a value that "
                   "might be negative as well.");
@@ -441,6 +452,9 @@ QString HelpTextBrowser::getFunctionDescription_(
                   "The first about million numbers have a look-up table for efficient "
                   "execution.")
                 + "<br/><b>prime(x)</b>:<br/><img src=\"_equ#0#100#0#1#prime(x)\"/>"; ;
+    if (f->name() == "prime_s")
+        return tr("Smooth version of <a href=\"#prime1\">prime</a>.")
+                + "<br/><b>prime_s(x)</b>:<br/><img src=\"_equ#0#100#0#1#prime_s(x)\"/>"; ;
 
     if (f->name() == "quer")
         return tr("Returns the cross sum of the integer number <i>a</i>. The cross sum "
@@ -494,7 +508,7 @@ QString HelpTextBrowser::getFunctionDescription_(
         return tr("Returns the greatest common divisor of the integers <i>a</i> and <i>b</i>."
                   "There is no look-up table and this function might be relatively slow.");
     if (f->name() == "cong")
-        return tr("Returns 1 if the integers <i>a</i> and <i>b</i> or cogruent in the "
+        return tr("Returns 1 if the integers <i>a</i> and <i>b</i> are congruent in the "
                   "modulo space of <i>c</i> and 0 otherwise. The calculation is: "
                   "<br/><b>cong(a,b,m) = ((b-a) modulo m) equals 0</b>");
     if (f->name() == "digits")
@@ -536,9 +550,9 @@ QString HelpTextBrowser::getFunctionDescription_(
     if (f->name() == "mandeli" && f->num_param() == 2)
         return tr("Returns the number of iterations after which z in the mandelbrot function "
                   "exceeds the limit of sqrt(-2). The maximum iteration is fixed to 1000.")
-                + "<br/><b>mandeli(x,1)</b>:<br/><img src=\"_equ#-2#2#0#200#mandeli(x,1)\"/>";
+                + "<br/><b>mandeli(x,1)</b>:<br/><img src=\"_equ#-2#2#0#20#mandeli(x,1)\"/>";
     if (f->name() == "mandeli" && f->num_param() == 3)
-        return tr("Sames as <a href=\"#mandeli2\">mandeli(a,b)</a> but with the number of "
+        return tr("Same as <a href=\"#mandeli2\">mandeli(a,b)</a> but with the number of "
                   "maximum iterations given in <i>c</i>");
 
     return "";

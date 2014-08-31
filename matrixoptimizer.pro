@@ -446,7 +446,8 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/textureoverlay.frag \
     assets/help/en/objects.html \
     assets/help/en/equation.html \
-    assets/help/en/index.html
+    assets/help/en/index.html \
+    assets/help/en/style.css
 
 ####################### BISON PARSER #######################
 
