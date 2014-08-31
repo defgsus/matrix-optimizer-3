@@ -317,6 +317,30 @@ void MainWindow::createMainMenu_()
     a->setChecked(true);
     connect(a, SIGNAL(triggered()), this, SLOT(stop()));
 
+    m->addSeparator();
+
+        // ##### DEBUG VISIBILITY SUBMENU #####
+        auto sub = new QMenu(tr("Visibility"), menuBar());
+        m->addMenu(sub);
+
+        m->addAction(a = aDrawCameras_ = new QAction(tr("Show cameras"), sub));
+        a->setCheckable(true);
+        connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
+
+        m->addAction(a = aDrawLightSources_= new QAction(tr("Show lights"), sub));
+        a->setCheckable(true);
+        connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
+
+        m->addAction(a = aDrawMicrophones_ = new QAction(tr("Show microphones"), sub));
+        a->setCheckable(true);
+        connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
+
+        m->addAction(a = aDrawAudioSources_ = new QAction(tr("Show soundsources"), sub));
+        a->setCheckable(true);
+        connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
+
+    m->addSeparator();
+
     m->addAction(a = new QAction(tr("Render to disk"), menuBar()));
     ag->addAction(a);
     connect(a, SIGNAL(triggered()), this, SLOT(renderToDisk()));
@@ -767,6 +791,19 @@ void MainWindow::updateWindowTitle_()
 void MainWindow::updateWidgetsActivity_()
 {
     actionSaveScene_->setEnabled( !currentSceneFilename_.isEmpty() );
+}
+
+void MainWindow::updateDebugRender_()
+{
+    if (!scene_)
+        return;
+
+    scene_->setDebugRenderOptions(
+          (Scene::DD_AUDIO_SOURCES * aDrawAudioSources_->isChecked())
+        | (Scene::DD_CAMERAS * aDrawCameras_->isChecked())
+        | (Scene::DD_LIGHT_SOURCES * aDrawLightSources_->isChecked())
+        | (Scene::DD_MICROPHONES * aDrawMicrophones_->isChecked())
+                );
 }
 
 bool MainWindow::isPlayback() const

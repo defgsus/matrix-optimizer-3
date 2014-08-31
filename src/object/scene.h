@@ -40,6 +40,17 @@ class Scene : public Object
     friend class AudioOutThread;
     friend class AudioInThread;
 public:
+
+    /** Enables drawing of debug objects */
+    enum DebugRenderOption
+    {
+        DD_AUDIO_SOURCES    = 1,
+        DD_MICROPHONES      = 1<<1,
+        DD_CAMERAS          = 1<<2,
+        DD_LIGHT_SOURCES    = 1<<3
+    };
+
+
     MO_OBJECT_CONSTRUCTOR(Scene);
     ~Scene();
 
@@ -72,6 +83,12 @@ public:
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
     void calculateSceneTransform(uint thread, uint sample, Double time);
+
+    /** Sets the options for the debug drawer.
+        @p options can be an OR combination of DebugDrawOption enums */
+    void setDebugRenderOptions(int options)
+        { debugRenderOptions_ = options; render_(); }
+    int debugRenderOptions() const { return debugRenderOptions_; }
 
     // ----------- audio info ------------------
 
@@ -359,9 +376,11 @@ private:
     std::vector<GL::LightSettings> lightSettings_;
 
     std::vector<GL::SceneDebugRenderer*> debugRenderer_;
+    int debugRenderOptions_;
 
     int freeCameraIndex_;
-    Mat4 freeCameraMatrix_;
+    Mat4 freeCameraMatrix_, freeCameraMatrixGfx_;
+    std::vector<Mat4> freeCameraMatrixAudio_;
 
     // ----------- special objects -------------
 

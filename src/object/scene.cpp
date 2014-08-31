@@ -56,6 +56,7 @@ Scene::Scene(QObject *parent) :
     fbCmWidth_          (512),
     fbCmHeight_         (512),
     fboFinal_           (0),
+    debugRenderOptions_ (0),
     freeCameraIndex_    (-1),
     freeCameraMatrix_   (1.0),
     sceneNumberThreads_ (3),
@@ -378,6 +379,7 @@ void Scene::setNumberThreads(uint num)
     screenQuad_.resize(num);
     lightSettings_.resize(num);
     debugRenderer_.resize(num);
+    freeCameraMatrixAudio_.resize(num);
 
     for (uint i=oldnum; i<num; ++i)
     {
@@ -759,7 +761,6 @@ void Scene::renderScene(uint thread)
         renderSet.setFinalFramebuffer(fboFinal_[thread]);
 
         // render scene from each camera
-        int camcount = 0;
         for (auto camera : cameras_)
         if (camera->active(time, thread))
         {
@@ -767,9 +768,7 @@ void Scene::renderScene(uint thread)
             camera->initCameraSpace(camSpace, thread, time);
 
             // get camera view-matrix
-            const Mat4 viewm = (camcount == freeCameraIndex_)?
-                        freeCameraMatrix_
-                      : glm::inverse(camera->transformation(thread, 0));
+            const Mat4 viewm = glm::inverse(camera->transformation(thread, 0));
             camSpace.setViewMatrix(viewm);
 
             // for each cubemap
@@ -789,12 +788,12 @@ void Scene::renderScene(uint thread)
                 }
 
                 // render debug objects
-                debugRenderer_[thread]->render(renderSet, thread);
+                if (debugRenderOptions_)
+                    debugRenderer_[thread]->render(renderSet, thread, debugRenderOptions_);
             }
 
             camera->finishGlFrame(thread, time);
 
-            ++camcount;
         }
     }
     catch (Exception & e)
@@ -803,7 +802,8 @@ void Scene::renderScene(uint thread)
         throw;
     }
 
-    // mix camera frames
+    // --- mix camera frames ---
+
     fboFinal_[thread]->bind();
     fboFinal_[thread]->setViewport();
     MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
@@ -814,7 +814,8 @@ void Scene::renderScene(uint thread)
             camera->drawFramebuffer(thread, time);
     fboFinal_[thread]->unbind();
 
-    // draw to screen
+    // --- draw to screen ---
+
     fboFinal_[thread]->colorTexture()->bind();
     MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
@@ -868,37 +869,88 @@ void Scene::calculateSceneTransform(uint thread, uint sample, Double time)
 
 void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
 {
+    // interpolate free camera
+    if (freeCameraIndex_ >= 0)
+    {
+        freeCameraMatrixGfx_ = glm::inverse(freeCameraMatrix_);
+        //freeCameraMatrixGfx_ += (Float)1 / 30 *
+        //        (glm::inverse(freeCameraMatrix_) - freeCameraMatrixGfx_);
+    }
+
     // set the initial matrix for all objects in scene
     clearTransformation(thread, sample);
 
+    int camcount = 0;
+
     // calculate transformations
     for (auto &o : posObjects_)
-    if (o->active(time, thread))
     {
-        // get parent transformation
-        Mat4 matrix(o->parentObject()->transformation(thread, sample));
-        // apply object's transformation
-        o->calculateTransformation(matrix, time, thread);
-        // write back
-        o->setTransformation(thread, sample, matrix);
+        // see if this object is a user-controlled camera
+        bool freecam = false;
+        if (o->isCamera())
+        {
+            if (camcount == freeCameraIndex_)
+                freecam = true;
+            ++camcount;
+        }
+
+        if (o->active(time, thread))
+        {
+            if (!freecam)
+            {
+                // get parent transformation
+                Mat4 matrix(o->parentObject()->transformation(thread, sample));
+                // apply object's transformation
+                o->calculateTransformation(matrix, time, thread);
+                // write back
+                o->setTransformation(thread, sample, matrix);
+            }
+            else
+                o->setTransformation(thread, sample, freeCameraMatrixGfx_);
+        }
     }
 }
 
 void Scene::calculateAudioSceneTransform_(uint thread, uint sample, Double time)
 {
+    // interpolate free camera matrix
+    if (freeCameraIndex_ >= 0)
+    {
+        freeCameraMatrixAudio_[thread] += (Float)20 / sampleRate_
+                * (glm::inverse(freeCameraMatrix_) - freeCameraMatrixAudio_[thread]);
+    }
+
     // set the initial matrix for all objects in scene
     clearTransformation(thread, sample);
 
+    int camcount = 0;
+
     // calculate transformations
     for (auto &o : posObjectsAudio_)
-    if (o->active(time, thread))
     {
-        // get parent transformation
-        Mat4 matrix(o->parentObject()->transformation(thread, sample));
-        // apply object's transformation
-        o->calculateTransformation(matrix, time, thread);
-        // write back
-        o->setTransformation(thread, sample, matrix);
+        // see if this object is a user-controlled camera
+        bool freecam = false;
+        if (o->isCamera())
+        {
+            if (camcount == freeCameraIndex_)
+                freecam = true;
+            ++camcount;
+        }
+
+        if (o->active(time, thread))
+        {
+            if (!freecam)
+            {
+                // get parent transformation
+                Mat4 matrix(o->parentObject()->transformation(thread, sample));
+                // apply object's transformation
+                o->calculateTransformation(matrix, time, thread);
+                // write back
+                o->setTransformation(thread, sample, matrix);
+            }
+            else
+                o->setTransformation(thread, sample, freeCameraMatrixAudio_[thread]);
+        }
     }
 }
 

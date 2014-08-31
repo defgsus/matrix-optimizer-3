@@ -21,6 +21,7 @@
 #include "gl/cameraspace.h"
 #include "geom/geometry.h"
 #include "geom/objloader.h"
+#include "audio/audiosource.h"
 
 namespace MO {
 namespace GL {
@@ -168,7 +169,7 @@ void SceneDebugRenderer::releaseGl()
     }
 }
 
-void SceneDebugRenderer::render(const RenderSettings & rs, uint thread)
+void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int options)
 {
     MO_ASSERT(glReady_, "drawables not defined for SceneDebugRenderer::render()");
 
@@ -177,21 +178,31 @@ void SceneDebugRenderer::render(const RenderSettings & rs, uint thread)
             cubeView = rs.cameraSpace().cubeViewMatrix(),
             view = rs.cameraSpace().viewMatrix();
 
+    if (options & Scene::DD_CAMERAS)
     for (Camera * o : cameras_)
     {
         const Mat4& trans = o->transformation(thread, 0);
         drawCamera_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 
+    if (options & Scene::DD_LIGHT_SOURCES)
     for (LightSource * o : lightSources_)
     {
         const Mat4& trans = o->transformation(thread, 0);
         drawLightSource_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 
+    if (options & Scene::DD_MICROPHONES)
     for (Microphone * o : microphones_)
     {
         const Mat4& trans = o->transformation(thread, 0);
+        drawMicrophone_->renderShader(proj, cubeView * trans, view * trans, trans);
+    }
+
+    if (options & Scene::DD_AUDIO_SOURCES)
+    for (AUDIO::AudioSource * a : audioSources_)
+    {
+        const Mat4& trans = a->object()->transformation(thread, 0);
         drawMicrophone_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 

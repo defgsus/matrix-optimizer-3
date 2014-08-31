@@ -62,6 +62,7 @@ private slots:
     void setEditActions_(const QObject * sender, QList<QAction*> actions);
     void testSceneTransform_();
     void updateSystemInfo_();
+    void updateDebugRender_();
 
     void objectSelected_(MO::Object*);
     void treeChanged_();
@@ -130,7 +131,11 @@ private:
 
     TestThread * testThread_;
 
-    QAction * actionSaveScene_;
+    QAction * actionSaveScene_,
+            * aDrawLightSources_,
+            * aDrawAudioSources_,
+            * aDrawCameras_,
+            * aDrawMicrophones_;
 
     bool sceneNotSaved_;
 

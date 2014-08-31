@@ -32,7 +32,8 @@ public:
     void initGl();
     void releaseGl();
 
-    void render(const RenderSettings&, uint thread);
+    /** @p options is an OR combination of Scene::DebugRenderOption */
+    void render(const RenderSettings&, uint thread, int options = 0xffffffff);
 
 private:
 
