@@ -1,12 +1,14 @@
 
 <h1>Equations</h1>
 
-<p>Equations are composed of <a href="equation.html#statements">statements</a> and each statement can contain <a href="equation.html#constants">constants</a>, <a href="equation.html#variables">variables</a>, <a href="equation.html#functions">functions</a> and <a href="equation.html#operators">operators</a>.</p>
+<p>In this software, <b>equations</b> refer to objects that calculate a float value at runtime, given some mathematical term, the use can enter. Equations don't need an <b>=</b> operator. Normally they are just the right part of a mathematical equation, while the left part - the value that is calculated - is defined by the context in which the equation can be used.</p>
+
+<p>Equations are composed of <a href="equation.html#statements">statements</a> and each statement can contain <a href="#constants">constants</a>, <a href="#variables">variables</a>, <a href="#functions">functions</a>, <a href="#operators">operators</a> and <a href="#funcdef">function definitions</a>.</p>
 
 
 <a name="statements"><h2>statements</h2></a>
 
-<p>In the simplest form, a statement is a mathematical term leading to some result, for example:</p>
+<p>In the simplest form, a statement is a mathematical term leading to some result or more precisely, the right-hand side of a mathematical equation, for example:</p>
 
 <pre>
 5 + 3
@@ -22,8 +24,25 @@ sin(x * TWO_PI)
 foo = 5 + 3; sin(foo)
 </pre>
 
-<p>In this example, a temporary variable <b>foo</b> is created and assigned. Then the sine of the variable is returned. All equations need exactly one statement that produces a result.</p>
+<p>In this example, a temporary <a href="#variables">variable</a> <b>foo</b> is created and assigned. Then the sinus of the variable is returned. All equations need exactly one statement that produces a result.</p>
 
+<p>Another type of satement is a <a href="#funcdef">function definition</a>. It looks like this:</p>
+<pre>
+foo(bar) { sin(bar) * 5 }; foo(x)
+</pre>
+
+<p>White-space like spaces, tabs and line-breaks are ignored by the parser. There is also the possibility to add comments as in the C++ language:</p>
+<pre>
+/* my super dooper function
+   copyright me */
+
+// main result
+x * (1-x)
+// little offset to fix a bug ;)
+    + 0.01 * x
+// uncomment this to fix more bugs
+//  + 0.001 * x * x
+</pre>
 
 <a name="constants"><h2>constants</h2></a>
 
@@ -35,14 +54,42 @@ foo = 5 + 3; sin(foo)
 
 <a name="variables"><h2>variables</h2></a>
 
-<p>Variables represent values that can change for each execution of the equation.</p>
+<p>Variables represent values that can change for each execution of the equation. Typically variables are defined outside the equation object. For example a <a href="sequence.html#float">float sequence</a> can get it's output value from an equation, while feeding the current time to the equation as the variable <i>x</i>.</p>
 
+<p>Whereever equations are used in this software, there are some input variables that can be used in the equation to produce a value that depends on the input.</p>
+
+<p>Variables can also be created on-the-fly. This can e.g. save some computation when a value is needed more than once.</p>
+
+<pre>
+s = sin(x); s * (1 - s)
+</pre>
+
+<p>This example first calculates the <a href="#sin">sin</a> value of the input variable <i>x</i> and then multiplies the result by the inverse of it.</p>
 
 <a name="functions"><h2>functions</h2></a>
 
 <p>Functions usually take some input variables and return a result from some calculation.</p>
 
+<a name="funcdef"/>
+<p>There are a lot of <a href="#builtin-functions">built-in functions</a>, but they can also be defined on-the-fly. The general syntax is:</p>
+<p><i>name</i>(<i>parameters</i>) { <i>statements</i> }</p>
+<p><i>name</i> can be any word but must not refer to an existing function with the same number of parameters.
+<p><i>parameters</i> is a list of one or more words that define the input variables of the function. Their names can be used inside the function body.</p>
+<p><i>satements</i> can be one or a group of any <a href="#statements">statements</a> that would be allowed outside of the function body, except another function definition. The last statement, however, must be one that returns a value (the right part of an equation).</p>
+
+<p>Here's an example of a definition of a common linear interpolation function. It fades between values <i>a</i> and <i>b</i> by the factor <i>t</i> in the range of [0,1].</p>
+<pre>
+lerp(a, b, t) { a + t * (b - a) }
+</pre>
+<p>This creates a function taking three parameters. The variables <i>a</i>, <i>b</i> and <i>t</i> only exist inside the function body and refer to the values, the function is called with. When calling the function, each input parameter can also be a function call or a mathematical term. Suppose there is an input variable <i>x</i>, then the next statement would be perfectly valid:</p>
+<pre>
+lerp(a, b, t) { a + t * (b - a) };
+lerp(sin(x), exp(x), x)
+    + lerp(lerp(sin(x), tan(x), mod(x,1)), 0.5+0.5*sin(x*10*PI))
+</pre>
+
+
+<a name="builtin-functions"/>
 <p>Default built-in functions are:</p>
 <p>!FUNCTIONS!</p>
 
-<a href="intro.html">Back</a>

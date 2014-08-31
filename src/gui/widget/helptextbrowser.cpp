@@ -144,21 +144,22 @@ void HelpTextBrowser::addEquationInfo_(QString& doc) const
             << "random"
             << "chaotic";
     groupsTr
-            << tr("basic")
-            << tr("transition")
-            << tr("algebra")
-            << tr("trigonometry")
-            << tr("geometry")
-            << tr("number theory")
-            << tr("oscillator")
-            << tr("random")
-            << tr("chaotic");
+            << tr("basic functions")
+            << tr("transition functions")
+            << tr("algebraic functions")
+            << tr("trigonometric functions")
+            << tr("geometric functions")
+            << tr("number theory functions")
+            << tr("oscillator functions")
+            << tr("random functions")
+            << tr("chaotic functions");
 
-    str = "<table border=\"0\">";
+    str = "";
     auto funcs = p.functions().getFunctions();
     for (int k = 0; k<groups.size(); ++k)
     {
-        str += "<tr><td><h3>" + groupsTr[k] + "</h3></td></tr>\n";
+        str += "<h3>" + groupsTr[k] + "</h3>\n";
+        str += "<table border=\"0\">\n";
         const std::string curgroup = groups[k].toStdString();
         for (const PPP_NAMESPACE::Function * f : funcs)
         {
@@ -183,10 +184,11 @@ void HelpTextBrowser::addEquationInfo_(QString& doc) const
                 if (i<f->num_param()-1)
                     str += ", ";
             }
-            str += ")</td><td>" + getFunctionDescription_(f) + "<br/></td></tr>\n";
+            str += ")&nbsp;&nbsp;</td><td>"
+                    + getFunctionDescription_(f) + "<br/></td></tr>\n";
         }
+        str += "</table>\n";
     }
-    str += "</table>";
 
     doc.replace("!FUNCTIONS!", str);
 }
