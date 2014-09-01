@@ -218,7 +218,9 @@ SOURCES += \
     src/gl/scenedebugrenderer.cpp \
     src/gl/compatibility.cpp \
     src/object/microphonegroup.cpp \
-    src/audio/audiomicrophone.cpp
+    src/audio/audiomicrophone.cpp \
+    src/gui/widget/equationdisplaywidget.cpp \
+    src/gui/equationdisplaydialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -429,7 +431,9 @@ HEADERS += \
     src/gl/scenedebugrenderer.h \
     src/gl/compatibility.h \
     src/object/microphonegroup.h \
-    src/audio/audiomicrophone.h
+    src/audio/audiomicrophone.h \
+    src/gui/widget/equationdisplaywidget.h \
+    src/gui/equationdisplaydialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
