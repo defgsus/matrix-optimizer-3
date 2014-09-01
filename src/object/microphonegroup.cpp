@@ -15,9 +15,9 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "param/parameterint.h"
-#include "objectfactory.h"
-#include "scene.h"
-#include "microphone.h"
+#include "param/parameterfloat.h"
+#include "audio/audiomicrophone.h"
+
 
 namespace MO {
 
@@ -43,58 +43,78 @@ void MicrophoneGroup::deserialize(IO::DataStream & io)
 
 void MicrophoneGroup::createParameters()
 {
+    Object::createParameters();
+
     beginParameterGroup("mics", "microphones");
 
         pNumMics_ = createIntParameter("nummic", tr("number microphones"),
                                        tr("The number of microphones to create in the group"),
-                                       1, true, false);
+                                       1, 1, 256, 1, true, false);
 
+        pDistance_ = createFloatParameter("micdist", tr("distance from center"),
+                            tr("The distance of the microphones from the center of the group"),
+                                          0.0, 0.02);
     endParameterGroup();
 }
 
 void MicrophoneGroup::onParameterChanged(Parameter *p)
 {
+    Object::onParameterChanged(p);
+
     if (p == pNumMics_)
-        updateNumMics_();
+        requestCreateMicrophones();
 }
 
-void MicrophoneGroup::onParametersLoaded()
+void MicrophoneGroup::createMicrophones()
 {
-    updateNumMics_();
+    Object::createMicrophones();
+
+    micros_ = createOrDeleteMicrophones("groupmicro", pNumMics_->baseValue());
 }
 
-void MicrophoneGroup::updateNumMics_()
+void MicrophoneGroup::updateAudioTransformations(Double time, uint thread)
 {
-    /*
-    Scene * scene = sceneObject();
-    if (!scene)
+    const Mat4 & trans = transformation(thread, 0);
+
+    const Float
+            micdist = pDistance_->value(time, thread);
+
+    int index = 0;
+    for (AUDIO::AudioMicrophone* m : micros_)
     {
-        MO_WARNING("MicrophoneGroup::updateNumMics_() missing Scene object");
-        return;
+        m->setTransformation(
+                    trans * getMicroTransformation_(index, micdist), thread, 0);
+        ++index;
     }
+}
 
-    int num = pNumMics_->baseValue();
+void MicrophoneGroup::updateAudioTransformations(Double stime, uint blocksize, uint thread)
+{
+    const Mat4 & trans = transformation(thread, 0);
 
-    const QList<Microphone*> exist = findChildObjects<Microphone>();
-
-    // create some more
-    if (num > exist.size())
+    for (uint i=0; i<blocksize; ++i)
     {
-        for (int i=0; i < num - exist.size(); ++i)
+        const Double time = stime + sampleRateInv() * i;
+
+        const Float
+                micdist = pDistance_->value(time, thread);
+
+        int index = 0;
+        for (AUDIO::AudioMicrophone* m : micros_)
         {
-            Object * mic = ObjectFactory::createObject("Microphone");
-            scene->addObject(this, mic);
+            m->setTransformation(
+                    trans * getMicroTransformation_(index, micdist), thread, i);
+            ++index;
         }
     }
-    // remove some
-    else if (num < exist.size())
-    {
-        for (int i=exist.size()-1; i>=num; --i)
-            scene->deleteObject(exist[i]);
-    }
-    */
 }
 
+Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Float dist ) const
+{
+    return glm::translate(
+                glm::rotate(Mat4(1), 20.f * index, Vec3(0,1,0))
+                            , Vec3(0,0,-dist));
+}
 
 
 } // namespace MO

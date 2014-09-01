@@ -210,6 +210,10 @@ Object * Object::deserializeTree_(IO::DataStream & io)
         o->addObject_(child);
     }
 
+    // create audio objects
+    o->createAudioSources();
+    o->createMicrophones();
+
     return o;
 }
 
@@ -1255,12 +1259,25 @@ void Object::setBufferSize(uint bufferSize, uint thread)
 
 void Object::setSampleRate(uint samplerate)
 {
+    MO_ASSERT(samplerate>0, "bogus samplerate");
+
     sampleRate_ = std::max((uint)1, samplerate);
     sampleRateInv_ = 1.0 / sampleRate_;
 
     for (auto m : objMicrophones_)
         m->setSampleRate(sampleRate_);
 }
+
+
+void Object::requestCreateMicrophones()
+{
+    Scene * s = sceneObject();
+    if (!s)
+        createMicrophones();
+    else
+        s->callCreateMicrophones_(this);
+}
+
 
 AUDIO::AudioSource * Object::createAudioSource(const QString& id)
 {
@@ -1276,9 +1293,50 @@ AUDIO::AudioMicrophone * Object::createMicrophone(const QString &id)
     auto m = new AUDIO::AudioMicrophone(id, this);
 
     objMicrophones_.append(m);
+
+    // update with current buffer info
     m->setSampleRate(sampleRate_);
+    m->setNumberThreads(numberThreads());
+    for (uint i=0; i<numberThreads(); ++i)
+        m->setBufferSize(bufferSize(i), i);
 
     return m;
+}
+
+QList<AUDIO::AudioMicrophone*> Object::createOrDeleteMicrophones(const QString &id, uint number)
+{
+    // get all that exist with the given id
+    QMap<QString, AUDIO::AudioMicrophone*> exist;
+    for (auto m : objMicrophones_)
+        if (m->idName().startsWith(id))
+            exist.insert(m->idName(), m);
+
+    QList<AUDIO::AudioMicrophone*> list;
+
+    // create or reuse
+    for (uint i=0; i<number; ++i)
+    {
+        QString curid = QString("%1_%2").arg(id).arg(i+1);
+
+        if (exist.contains(curid))
+        {
+            list.append(exist[curid]);
+            exist.remove(curid);
+        }
+        else
+        {
+            list.append( createMicrophone(curid) );
+        }
+    }
+
+    // delete the ones not needed
+    for (auto m : exist)
+    {
+        objMicrophones_.removeOne(m);
+        delete m;
+    }
+
+    return list;
 }
 
 // -------------------- modulators ---------------------

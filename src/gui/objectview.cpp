@@ -33,6 +33,7 @@ ObjectView::ObjectView(QWidget *parent) :
     object_ (0)
 {
     layout_ = new QVBoxLayout(this);
+    layout_->setMargin(1);
 
         auto lh = new QHBoxLayout();
         layout_->addLayout(lh);

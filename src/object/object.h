@@ -570,6 +570,10 @@ public:
     const QList<AUDIO::AudioMicrophone*>& microphones() const { return objMicrophones_; }
 
 protected:
+
+    /** Call this if you want to have createMicrophones() be called again. */
+    void requestCreateMicrophones();
+
     /** Creates and returns a new audio source installed to this object.
         The id is not really important, only for display purposes. */
     AUDIO::AudioSource * createAudioSource(const QString& id = QString("audio"));
@@ -577,6 +581,10 @@ protected:
     /** Creates and returns a new microphone installed to this object.
         The id is not really important, only for display purposes. */
     AUDIO::AudioMicrophone* createMicrophone(const QString& id = QString("micro"));
+
+    /** Creates @p number microphones.
+        The id is appended with a digit and the microphones are created and deleted as needed. */
+    QList<AUDIO::AudioMicrophone*> createOrDeleteMicrophones(const QString& id, uint number);
 
     /** Override to update the transformations of the AudioSource and Microphone objects
         in the gfx thread.

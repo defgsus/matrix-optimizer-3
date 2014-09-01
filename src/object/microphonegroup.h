@@ -26,18 +26,28 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
-    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    //virtual void onParametersLoaded() Q_DECL_OVERRIDE;
 
+    virtual void createMicrophones() Q_DECL_OVERRIDE;
+
+    virtual void updateAudioTransformations(Double time, uint thread)
+                                                            Q_DECL_OVERRIDE;
+    virtual void updateAudioTransformations(Double time, uint blocksize, uint thread)
+                                                            Q_DECL_OVERRIDE;
 signals:
 
 public slots:
 
 private:
 
-    void updateNumMics_();
+    Mat4 getMicroTransformation_(uint index, Float dist) const;
 
     ParameterInt
         * pNumMics_;
+    ParameterFloat
+        * pDistance_;
+
+    QList<AUDIO::AudioMicrophone*> micros_;
 
 };
 

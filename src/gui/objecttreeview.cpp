@@ -421,7 +421,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
             if (deleteObject_(currentIndex()))
                 emit objectSelected(0);
             // update clipboard actions
-            createEditActions_(obj);
+            //createEditActions_(0);
         });
 
         // delete

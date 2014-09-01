@@ -19,10 +19,11 @@ namespace AUDIO {
 
 
 AudioMicrophone::AudioMicrophone(const QString& id, Object *parent)
-    : object_ (parent),
-      idName_ (id),
-      numberThreads_(0),
-      sampleRate_   (1)
+    : object_       (parent),
+      idName_       (id),
+      sampleRate_   (1),
+      sampleRateInv_(1),
+      numberThreads_(0)
 {
 }
 
@@ -47,6 +48,21 @@ void AudioMicrophone::setBufferSize(uint samples, uint thread)
     clearOutputBuffer(thread);
 }
 
+void AudioMicrophone::setSampleRate(uint sr)
+{
+    MO_ASSERT(sr>0, "bogus samplerate");
+
+    sampleRate_ = std::max((uint)1, sr);
+    sampleRateInv_ = F32(1) / sampleRate_;
+}
+
+void AudioMicrophone::setTransformation(const Mat4& t, uint thread, uint sample)
+{
+    MO_ASSERT(thread < transformation_.size(), "thread " << thread << " out of range");
+    MO_ASSERT(sample < transformation_[thread].size(), "sample " << sample << " out of range");
+
+    transformation_[thread][sample] = t;
+}
 
 void AudioMicrophone::setTransformation(const Mat4 *block, uint thread)
 {

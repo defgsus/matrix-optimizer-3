@@ -41,7 +41,7 @@ public:
     static bool registerObject(Object *);
 
     /** Creates the desired object for className, or returns NULL */
-    static Object * createObject(const QString& className, bool createParameters = true);
+    static Object * createObject(const QString& className, bool createParametersAndObjects = true);
 
     /** Returns a new Scene object */
     static Scene * createSceneObject();

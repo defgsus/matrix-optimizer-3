@@ -55,11 +55,10 @@ public:
     void setNumberThreads(uint num);
     void setBufferSize(uint samples, uint thread);
 
-    void setTransformation(const Mat4& t, uint thread, uint sample)
-        { transformation_[thread][sample] = t; }
+    void setTransformation(const Mat4& t, uint thread, uint sample);
     void setTransformation(const Mat4* transformationBlock, uint thread);
 
-    void setSampleRate(uint sr) { sampleRate_ = sr; }
+    void setSampleRate(uint sr);
 
     // ----------- audio -------------
 
@@ -75,7 +74,10 @@ private:
     Object * object_;
     QString idName_;
 
-    uint numberThreads_, sampleRate_;
+    uint sampleRate_;
+    F32 sampleRateInv_;
+
+    uint numberThreads_;
     std::vector<uint> bufferSize_;
 
     /** [thread][bufferSize] */

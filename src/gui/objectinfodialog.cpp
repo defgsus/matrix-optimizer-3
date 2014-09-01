@@ -68,6 +68,17 @@ void ObjectInfoDialog::setObject(Object * o)
 
     s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>";
 
+    // audiosources and microphones
+    if (!o->microphones().isEmpty() || !o->audioSources().isEmpty())
+    {
+        s << "<p>";
+        if (!o->audioSources().isEmpty())
+            s << "audio sources: " << o->audioSources().size() << "<br/>";
+        if (!o->microphones().isEmpty())
+            s << "microphones: " << o->microphones().size();
+        s << "</p>";
+    }
+
     // ---------- render modes ---------
 
     if (ObjectGl * gl = qobject_cast<ObjectGl*>(o))

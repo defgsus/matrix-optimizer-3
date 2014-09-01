@@ -315,6 +315,18 @@ void Scene::callCreateOutputs_(Object *o)
             emit objectAdded(c);
 }
 
+void Scene::callCreateMicrophones_(Object *o)
+{
+    const QList<AUDIO::AudioMicrophone*> before = o->microphones();
+
+    o->createMicrophones();
+
+    if (o->microphones() != before)
+    {
+        updateTree_();
+    }
+}
+
 void Scene::updateTree_()
 {
     MO_DEBUG_TREE("Scene::updateTree_()");
@@ -343,6 +355,7 @@ void Scene::updateTree_()
 
     // get buffers for microphones
     updateAudioBuffers_();
+    allocateAudioOutputEnvelopes_(MO_AUDIO_THREAD);
 
     // collect all modulators for each object
     updateModulators_();

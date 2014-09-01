@@ -171,7 +171,7 @@ bool ObjectFactory::registerObject(Object * obj)
     return true;
 }
 
-Object * ObjectFactory::createObject(const QString &className, bool createParameters)
+Object * ObjectFactory::createObject(const QString &className, bool createParametersAndObjects)
 {
     auto it = instance().objectMap_.find(className);
     if (it == instance().objectMap_.end())
@@ -189,12 +189,14 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
     if (obj->name_.isEmpty())
         obj->name_ = className;
 
-    if (createParameters)
+    if (createParametersAndObjects)
+    {
         obj->createParameters();
 
-    obj->createAudioSources();
-    obj->createMicrophones();
-    //obj->createOutputs();
+        obj->createAudioSources();
+        obj->createMicrophones();
+        //obj->createOutputs();
+    }
 
     return obj;
 }
