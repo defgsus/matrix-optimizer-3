@@ -96,6 +96,9 @@ public:
     const F32 * outputLevels() const { return &outputEnvelopes_[0]; }
 
     uint numMicrophones() const { return numMicrophones_; }
+    uint numAudioSources() const { return allAudioSources_.size(); }
+
+    const QList<AUDIO::AudioSource*>& allAudioSources() const { return allAudioSources_; }
 
     // --------------- runtime -----------------
 
@@ -421,8 +424,9 @@ private:
     LocklessQueue<const F32*> * audioInQueue_;
     LocklessQueue<F32*> * audioOutQueue_;
 
-    uint numAudioSources_,
-         numMicrophones_;
+    uint numMicrophones_;
+
+    QList<AUDIO::AudioSource*> allAudioSources_;
 
     /** [thread] [microphones][bufferSize] */
     std::vector<std::vector<F32>> sceneAudioOutput_;

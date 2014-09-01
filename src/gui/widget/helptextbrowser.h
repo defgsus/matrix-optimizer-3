@@ -12,6 +12,7 @@
 #define MOSRC_GUI_WIDGET_HELPTEXTBROWSER_H
 
 #include <QTextBrowser>
+#include <QMultiMap>
 
 namespace PPP_NAMESPACE { class Function; }
 
@@ -34,6 +35,17 @@ private:
     QString getFunctionDescription_(const PPP_NAMESPACE::Function*) const;
 
     QImage getFunctionImage(const QString& equ_url) const;
+
+    void loadEquationFunctions_();
+
+    struct EquFunc_
+    {
+        int numParams;
+        QString niceDisplay;
+        QString help;
+    };
+
+    QMultiMap<QString, EquFunc_> funcMap_;
 };
 
 } // namespace GUI

@@ -160,13 +160,12 @@ void Scene::findObjects_()
     }
 
     // all objects with audio sources
-    numAudioSources_ = 0;
     audioObjects_.clear();
     for (auto o : allObjects_)
         if (!o->audioSources().isEmpty())
         {
             audioObjects_.append(o);
-            numAudioSources_ += o->audioSources().size();
+            allAudioSources_.append( o->audioSources() );
         }
 
     // all objects with microphones
