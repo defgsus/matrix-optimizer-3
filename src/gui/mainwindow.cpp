@@ -323,20 +323,24 @@ void MainWindow::createMainMenu_()
         auto sub = new QMenu(tr("Visibility"), menuBar());
         m->addMenu(sub);
 
-        m->addAction(a = aDrawCameras_ = new QAction(tr("Show cameras"), sub));
+        sub->addAction(a = aDrawCameras_ = new QAction(tr("Show cameras"), sub));
         a->setCheckable(true);
+        a->setShortcut(Qt::ALT + Qt::Key_1);
         connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
-        m->addAction(a = aDrawLightSources_= new QAction(tr("Show lights"), sub));
+        sub->addAction(a = aDrawLightSources_= new QAction(tr("Show lights"), sub));
         a->setCheckable(true);
+        a->setShortcut(Qt::ALT + Qt::Key_2);
         connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
-        m->addAction(a = aDrawMicrophones_ = new QAction(tr("Show microphones"), sub));
+        sub->addAction(a = aDrawMicrophones_ = new QAction(tr("Show microphones"), sub));
         a->setCheckable(true);
+        a->setShortcut(Qt::ALT + Qt::Key_3);
         connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
-        m->addAction(a = aDrawAudioSources_ = new QAction(tr("Show soundsources"), sub));
+        sub->addAction(a = aDrawAudioSources_ = new QAction(tr("Show soundsources"), sub));
         a->setCheckable(true);
+        a->setShortcut(Qt::ALT + Qt::Key_4);
         connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
     m->addSeparator();
@@ -446,7 +450,6 @@ void MainWindow::createMainMenu_()
         a = new QAction(tr("About Qt"), m);
         m->addAction(a);
         connect(a, SIGNAL(triggered()), application, SLOT(aboutQt()));
-
 }
 
 void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
@@ -538,8 +541,8 @@ void MainWindow::createObjects_()
     glManager_ = new GL::Manager(this);
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
 
-    connect(glWindow_, SIGNAL(keyPressed(const QKeyEvent*)),
-            this, SLOT(onWindowKeyPressed_(const QKeyEvent*)));
+    connect(glWindow_, SIGNAL(keyPressed(QKeyEvent*)),
+            this, SLOT(onWindowKeyPressed_(QKeyEvent*)));
 
     glWindow_->show();
 
@@ -604,16 +607,29 @@ void MainWindow::createDebugScene_()
     */
 }
 
-void MainWindow::onWindowKeyPressed_(const QKeyEvent * e)
+void MainWindow::onWindowKeyPressed_(QKeyEvent * e)
 {
     if (e->key() == Qt::Key_F7 && !isPlayback())
+    {
+        e->accept();
         start();
+    }
 
     if (e->key() == Qt::Key_F8)
+    {
+        e->accept();
         stop();
+    }
 
-    if (e->key() >= Qt::Key_0 && e->key() <= Qt::Key_9)
+    if ((e->key() >= Qt::Key_0 && e->key() <= Qt::Key_9)
+        && e->modifiers() == 0)
+    {
+        e->accept();
         scene_->setFreeCameraIndex(e->key() - Qt::Key_0 - 1);
+    }
+
+    if (!e->isAccepted())
+        keyPressEvent(e);
 }
 
 

@@ -74,28 +74,38 @@ void Window::exposeEvent(QExposeEvent *)
 
 bool Window::event(QEvent * e)
 {
-    switch (e->type())
+    if (e->type() == QEvent::UpdateRequest)
     {
-    case QEvent::UpdateRequest:
         updatePending_ = false;
         renderNow();
         return true;
-    break;
-
-    case QEvent::KeyPress:
-        if (QKeyEvent * k = dynamic_cast<QKeyEvent*>(e))
-        {
-            if ((k->modifiers() == Qt::ALT && k->key() == Qt::Key_F)
-            || (k->key() == Qt::Key_F11))
-            {
-                setWindowState( (Qt::WindowState)(
-                    windowState() ^ Qt::WindowFullScreen));
-            }
-        }
-    break;
-    default: break;
     }
+
     return QWindow::event(e);
+}
+
+void Window::keyPressEvent(QKeyEvent * e)
+{
+    e->ignore();
+
+    if ((e->modifiers() == Qt::ALT && e->key() == Qt::Key_F)
+    || (e->key() == Qt::Key_F11))
+    {
+        setWindowState( (Qt::WindowState)(
+            windowState() ^ Qt::WindowFullScreen));
+        e->accept();
+    }
+
+    if (e->key() == Qt::Key_Escape)
+    {
+        if (windowState() & Qt::WindowFullScreen)
+            setWindowState( (Qt::WindowState)(
+                windowState() ^ Qt::WindowFullScreen));
+        e->accept();
+    }
+
+    if (!e->isAccepted())
+        emit keyPressed(e);
 }
 
 void Window::renderLater()
@@ -167,11 +177,6 @@ void Window::renderNow()
 
 
 
-void Window::keyPressEvent(QKeyEvent * e)
-{
-    emit keyPressed(e);
-    e->accept();
-}
 
 
 void Window::mousePressEvent(QMouseEvent * e)

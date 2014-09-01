@@ -251,7 +251,7 @@ struct generic_int
         // test against number-divisors-table
         if (k < int_table_ndiv_size)
         {
-            const I n = int_table_ndiv[x];
+            const I n = int_table_ndiv[k];
             return (n == 2);
         }
 #endif

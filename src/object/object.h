@@ -102,13 +102,14 @@ public:
         T_DUMMY             = 1<<11,
         T_LIGHTSOURCE       = 1<<12,
         T_AUDIO_UNIT        = 1<<13,
-        T_MODULATOR_OBJECT_FLOAT   = 1<<14
+        T_MODULATOR_OBJECT_FLOAT   = 1<<14,
+        T_MICROPHONE_GROUP  = 1<<15
     };
     enum TypeGroups
     {
         /** Objects that have a definite position */
         TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE
-                                | T_CAMERA | T_LIGHTSOURCE,
+                                | T_CAMERA | T_LIGHTSOURCE | T_MICROPHONE_GROUP,
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
 
@@ -139,7 +140,7 @@ public:
         If @p parent is also an Object, this object will be installed in the
         parent's child list via setParentObject() or addObject().
         @note The @p parent parameter follows more QObject's style and is not really
-        used here.
+        necessary here.
         @note More important: Never construct an object yourself, it will not suffice.
         Always use ObjectFactory::createObject().
         */
@@ -148,7 +149,7 @@ public:
     ~Object();
 
     /** Creates a new instance of the class.
-        In derived classes this can be defined via the MO_OBJECT_CLONE() macro.
+        In derived classes this will be defined via the MO_OBJECT_CONSTRUCTOR() macro.
         @note Never call cloneClass() yourself, it will not suffice.
         Always use ObjectFactory::createObject(). */
     virtual Object * cloneClass() const = 0;
@@ -227,12 +228,17 @@ public:
         the object are modulated. */
     virtual bool isModulated() const;
 
-    /** Returns true when this objects is a microphone or contains soundsources
-        or any of it's childs does so. */
+    /** Returns true when this object or any of it's childs or sub-childs
+        contains microphones or soundsources. */
     bool isAudioRelevant() const;
 
     /** Returns a priority for each object type */
     static int objectPriority(const Object *);
+
+    // ---------- tree editing --------------------
+
+    /** Returns true when the object can be deleted by the ObjectTreeView */
+    bool canBeDeleted() const { return canBeDeleted_; }
 
     // ---------- activity (scope) ----------------
 
@@ -265,9 +271,6 @@ public:
 
     /** See if this object has a parent object @p o. */
     bool hasParentObject(Object * o) const;
-
-    /** Returns true when the object can be deleted by the ObjectTreeView */
-    bool canBeDeleted() const { return canBeDeleted_; }
 
     /** Test if object @p o can be added to this object.
         This checks for type compatibility as well as for
@@ -555,14 +558,40 @@ protected:
         @note Be sure to call the ancestor class implementation before your derived code! */
     virtual void createAudioSources() { };
 
+    /** Override to create all microphones for your object.
+        @note Be sure to call the ancestor class implementation before your derived code! */
+    virtual void createMicrophones() { };
+
 public:
     /** Returns the audio sources of this object. */
-    const QList<AUDIO::AudioSource*>& audioSources() const { return audioSources_; }
+    const QList<AUDIO::AudioSource*>& audioSources() const { return objAudioSources_; }
+
+    /** Returns the microphones of this object. */
+    const QList<AUDIO::AudioMicrophone*>& microphones() const { return objMicrophones_; }
 
 protected:
     /** Creates and returns a new audio source installed to this object.
         The id is not really important, only for display purposes. */
     AUDIO::AudioSource * createAudioSource(const QString& id = QString("audio"));
+
+    /** Creates and returns a new microphone installed to this object.
+        The id is not really important, only for display purposes. */
+    AUDIO::AudioMicrophone* createMicrophone(const QString& id = QString("micro"));
+
+    /** Override to update the transformations of the AudioSource and Microphone objects
+        in the gfx thread.
+        The object's transformation is calculated before the call of this function.
+        @note Be sure to call the ancestor's method before in your derived method. */
+    virtual void updateAudioTransformations(Double time, uint thread)
+        { Q_UNUSED(time); Q_UNUSED(thread); };
+
+    /** Override to update the transformations of the AudioSource and Microphone objects
+        in the audio thread.
+        The object's transformation is calculated for the whole blocksize
+        before the call of this function.
+        @note Be sure to call the ancestor's method before in your derived method. */
+    virtual void updateAudioTransformations(Double time, uint blockSize, uint thread)
+        { Q_UNUSED(time); Q_UNUSED(blockSize); Q_UNUSED(thread); };
 
     /** Perform all necessary audio calculations and fill the AUDIO::AudioSource class(es).
         The block is given by bufferSize(thread).
@@ -591,7 +620,8 @@ public:
                       transformation_[thread][sample][3][1],
                       transformation_[thread][sample][3][2]); }
 
-    void setTransformation(int thread, int sample, const Mat4& mat) { transformation_[thread][sample] = mat; }
+    void setTransformation(int thread, int sample, const Mat4& mat)
+        { transformation_[thread][sample] = mat; }
 
     /** Apply all transformations of this object to the given matrix. */
     void calculateTransformation(Mat4& matrix, Double time, uint thread) const;
@@ -676,7 +706,8 @@ private:
 
     // ------------ audio --------------------
 
-    QList<AUDIO::AudioSource*> audioSources_;
+    QList<AUDIO::AudioSource*> objAudioSources_;
+    QList<AUDIO::AudioMicrophone*> objMicrophones_;
 
     uint sampleRate_;
     Double sampleRateInv_;

@@ -41,8 +41,8 @@ private:
 
     Scene * scene_;
     QList<Camera*> cameras_;
-    QList<Microphone*> microphones_;
     QList<LightSource*> lightSources_;
+    QList<AUDIO::AudioMicrophone*> microphones_;
     QList<AUDIO::AudioSource*> audioSources_;
 
     bool glReady_;

@@ -165,8 +165,15 @@ void Scene::findObjects_()
         if (!o->audioSources().isEmpty())
             audioObjects_.append(o);
 
-    // all microphones
-    microphones_ = findChildObjects<Microphone>(QString(), true);
+    // all objects with microphones
+    numMicrophones_ = 0;
+    microphoneObjects_.clear();
+    for (auto o : allObjects_)
+        if (!o->microphones().isEmpty())
+        {
+            microphoneObjects_.append(o);
+            numMicrophones_ += o->microphones().size();
+        }
 
     // toplevel audio units
     topLevelAudioUnits_ = findChildObjects<AudioUnit>(QString(), false);
@@ -907,6 +914,8 @@ void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
             }
             else
                 o->setTransformation(thread, sample, freeCameraMatrixGfx_);
+
+            o->updateAudioTransformations(time, thread);
         }
     }
 }
@@ -950,6 +959,8 @@ void Scene::calculateAudioSceneTransform_(uint thread, uint sample, Double time)
             }
             else
                 o->setTransformation(thread, sample, freeCameraMatrixAudio_[thread]);
+
+            o->updateAudioTransformations(time, bufferSize(thread), thread);
         }
     }
 }

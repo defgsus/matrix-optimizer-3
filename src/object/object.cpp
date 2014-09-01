@@ -26,6 +26,7 @@
 #include "param/parameterfilename.h"
 #include "param/parametertext.h"
 #include "audio/audiosource.h"
+#include "audio/audiomicrophone.h"
 #include "modulatorobjectfloat.h"
 
 namespace MO {
@@ -60,8 +61,11 @@ Object::~Object()
     for (auto p : parameters_)
         delete p;
 
-    for (auto a : audioSources_)
+    for (auto a : objAudioSources_)
         delete a;
+
+    for (auto m : objMicrophones_)
+        delete m;
 }
 
 // --------------------- io ------------------------
@@ -341,7 +345,7 @@ bool Object::isModulated() const
 
 bool Object::isAudioRelevant() const
 {
-    if (isMicrophone() || !audioSources().isEmpty())
+    if (!microphones().isEmpty() || !audioSources().isEmpty())
         return true;
 
     for (auto c : childObjects_)
@@ -671,6 +675,10 @@ bool Object::canHaveChildren(Type t) const
     if (t & TG_MODULATOR_OBJECT)
         return true;
 
+    // microphone groups only contain microphones
+    if (type() == T_MICROPHONE_GROUP)
+        return t == T_MICROPHONE;
+
     // audio-units can contain only audio-units
     if (type() == T_AUDIO_UNIT)
         return t == T_AUDIO_UNIT;
@@ -759,8 +767,11 @@ void Object::setNumberThreads(uint num)
     transformation_.resize(num);
     bufferSize_.resize(num);
 
-    for (auto a : audioSources_)
+    for (auto a : objAudioSources_)
         a->setNumberThreads(num);
+
+    for (auto m : objMicrophones_)
+        m->setNumberThreads(num);
 }
 
 
@@ -1235,8 +1246,11 @@ void Object::setBufferSize(uint bufferSize, uint thread)
     bufferSize_[thread] = bufferSize;
     transformation_[thread].resize(bufferSize);
 
-    for (auto a : audioSources_)
+    for (auto a : objAudioSources_)
         a->setBufferSize(bufferSize, thread);
+
+    for (auto m : objMicrophones_)
+        m->setBufferSize(bufferSize, thread);
 }
 
 void Object::setSampleRate(uint samplerate)
@@ -1249,11 +1263,19 @@ AUDIO::AudioSource * Object::createAudioSource(const QString& id)
 {
     auto a = new AUDIO::AudioSource(id, this);
 
-    audioSources_.append(a);
+    objAudioSources_.append(a);
 
     return a;
 }
 
+AUDIO::AudioMicrophone * Object::createMicrophone(const QString &id)
+{
+    auto m = new AUDIO::AudioMicrophone(id, this);
+
+    objMicrophones_.append(m);
+
+    return m;
+}
 
 // -------------------- modulators ---------------------
 

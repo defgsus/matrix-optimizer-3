@@ -214,7 +214,9 @@ SOURCES += \
     src/gui/widget/helptextbrowser.cpp \
     src/io/povrayexporter.cpp \
     src/gl/scenedebugrenderer.cpp \
-    src/gl/compatibility.cpp
+    src/gl/compatibility.cpp \
+    src/object/microphonegroup.cpp \
+    src/audio/audiomicrophone.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -423,7 +425,9 @@ HEADERS += \
     src/gui/widget/helptextbrowser.h \
     src/io/povrayexporter.h \
     src/gl/scenedebugrenderer.h \
-    src/gl/compatibility.h
+    src/gl/compatibility.h \
+    src/object/microphonegroup.h \
+    src/audio/audiomicrophone.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

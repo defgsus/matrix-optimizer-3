@@ -69,7 +69,6 @@ public:
     // ------------- child objects -------------
 
     const QList<Camera*> cameras() const { return cameras_; }
-    const QList<Microphone*> microphones() const { return microphones_; }
 
     // ------------- open gl -------------------
 
@@ -95,6 +94,8 @@ public:
     uint numberChannelsIn() const { return numInputChannels_; }
     uint numberChannelsOut() const { return numOutputChannels_; }
     const F32 * outputLevels() const { return &outputEnvelopes_[0]; }
+
+    uint numMicrophones() const { return numMicrophones_; }
 
     // --------------- runtime -----------------
 
@@ -390,7 +391,7 @@ private:
     QList<Camera*> cameras_;
     QList<ObjectGl*> glObjects_;
     QList<Object*> audioObjects_;
-    QList<Microphone*> microphones_;
+    QList<Object*> microphoneObjects_;
     QList<LightSource*> lightSources_;
     QList<AudioUnit*> topLevelAudioUnits_;
 
@@ -416,6 +417,8 @@ private:
     AudioOutThread * audioOutThread_;
     LocklessQueue<const F32*> * audioInQueue_;
     LocklessQueue<F32*> * audioOutQueue_;
+
+    uint numMicrophones_;
 
     /** [thread] [microphones][bufferSize] */
     std::vector<std::vector<F32>> sceneAudioOutput_;

@@ -193,6 +193,7 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
         obj->createParameters();
 
     obj->createAudioSources();
+    obj->createMicrophones();
     //obj->createOutputs();
 
     return obj;

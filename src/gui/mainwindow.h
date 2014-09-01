@@ -87,7 +87,7 @@ private slots:
     void updateNumberOutputEnvelopes_(uint);
     void updateOutputEnvelope_(const F32*);
 
-    void onWindowKeyPressed_(const QKeyEvent *);
+    void onWindowKeyPressed_(QKeyEvent *);
 private:
 
     void createWidgets_();

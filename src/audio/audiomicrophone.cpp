@@ -1,67 +1,75 @@
-/** @file microphone.cpp
+/** @file audiomicrophone.cpp
 
-    @brief basic microphone object
+    @brief A microphone belonging to a MO::Object
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 6/28/2014</p>
+    <p>created 9/1/2014</p>
 */
 
-#include <math.h>
-
-#include "microphone.h"
-#include "io/datastream.h"
-#include "io/error.h"
+#include "audiomicrophone.h"
 #include "io/log.h"
-#include "audio/audiomicrophone.h"
+#include "io/error.h"
+#include "math/interpol.h"
+#include "audiosource.h"
 
 namespace MO {
+namespace AUDIO {
 
-MO_REGISTER_OBJECT(Microphone)
 
-Microphone::Microphone(QObject *parent) :
-    Object(parent)
+AudioMicrophone::AudioMicrophone(const QString& id, Object *parent)
+    : object_ (parent),
+      idName_ (id),
+      numberThreads_(0),
+      sampleRate_   (1)
 {
-    setName("Microphone");
 }
 
-void Microphone::serialize(IO::DataStream & io) const
+
+void AudioMicrophone::setNumberThreads(uint num)
 {
-    Object::serialize(io);
-    io.writeHeader("mic", 1);
+    bufferSize_.resize(num);
+    outputBuffer_.resize(num);
+    transformation_.resize(num);
 }
 
-void Microphone::deserialize(IO::DataStream & io)
+void AudioMicrophone::setBufferSize(uint samples, uint thread)
 {
-    Object::deserialize(io);
-    io.readHeader("mic", 1);
+    bufferSize_[thread] = samples;
+
+    transformation_[thread].resize(samples);
+
+    for (auto &t : transformation_[thread])
+        t = Mat4(1);
+
+    outputBuffer_[thread].resize(samples);
+    clearOutputBuffer(thread);
 }
 
-void Microphone::createMicrophones()
-{
-    Object::createMicrophones();
 
-    microphone_ = createMicrophone();
+void AudioMicrophone::setTransformation(const Mat4 *block, uint thread)
+{
+    const uint size = bufferSize_[thread];
+    for (uint i = 0; i<size; ++i)
+        transformation_[thread][i] = *block++;
 }
 
-void Microphone::updateAudioTransformations(Double, uint thread)
+
+void AudioMicrophone::clearOutputBuffer(uint thread)
 {
-    microphone_->setTransformation(transformation(thread, 0), thread, 0);
+    for (auto &s : outputBuffer_[thread])
+        s = 0.f;
 }
 
-void Microphone::updateAudioTransformations(Double , uint , uint thread)
-{
-    // copy the block of transformations
-    microphone_->setTransformation(transformations(thread), thread);
-}
-
-#if (0)
-void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, uint thread) const
+void AudioMicrophone::sampleAudioSource(
+        const AUDIO::AudioSource *src, uint thread)
 {
     const uint size = bufferSize(thread);
 
     MO_ASSERT(size == src->bufferSize(thread), "unmatched buffer size");
+
+    F32 * buffer = &outputBuffer_[thread][0];
 
     for (uint i=0; i<size; ++i)
     {
@@ -81,7 +89,6 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
             *buffer++ += src->getSample(thread, i);
         else
         {
-
             // amplitude from distance
             const F32 ampDist = 1.f / (1.f + dist);
 
@@ -126,7 +133,8 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
         }
     }
 }
-#endif
 
 
+
+} // namespace AUDIO
 } // namespace MO

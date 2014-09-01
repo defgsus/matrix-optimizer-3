@@ -22,6 +22,7 @@
 #include "geom/geometry.h"
 #include "geom/objloader.h"
 #include "audio/audiosource.h"
+#include "audio/audiomicrophone.h"
 
 namespace MO {
 namespace GL {
@@ -50,13 +51,15 @@ SceneDebugRenderer::~SceneDebugRenderer()
 void SceneDebugRenderer::updateTree()
 {
     cameras_ = scene_->findChildObjects<Camera>(QString(), true);
-    microphones_ = scene_->findChildObjects<Microphone>(QString(), true);
     lightSources_ = scene_->findChildObjects<LightSource>(QString(), true);
 
     QList<Object*> all = scene_->findChildObjects(Object::TG_ALL, true);
     audioSources_.clear();
     for (Object * o : all)
         audioSources_.append( o->audioSources() );
+    microphones_.clear();
+    for (Object * o : all)
+        microphones_.append( o->microphones() );
 }
 
 void SceneDebugRenderer::initGl()
@@ -193,7 +196,7 @@ void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int opti
     }
 
     if (options & Scene::DD_MICROPHONES)
-    for (Microphone * o : microphones_)
+    for (AUDIO::AudioMicrophone * o : microphones_)
     {
         const Mat4& trans = o->transformation(thread, 0);
         drawMicrophone_->renderShader(proj, cubeView * trans, view * trans, trans);
@@ -202,7 +205,7 @@ void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int opti
     if (options & Scene::DD_AUDIO_SOURCES)
     for (AUDIO::AudioSource * a : audioSources_)
     {
-        const Mat4& trans = a->object()->transformation(thread, 0);
+        const Mat4& trans = a->transformation(thread, 0);
         drawMicrophone_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 
