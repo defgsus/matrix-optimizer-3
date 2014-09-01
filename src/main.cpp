@@ -26,7 +26,7 @@
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
 
-//#include "types/vector.h"
+#include "types/vector.h"
 //#include "tool/stringmanip.h"
 //#include "io/streamoperators_qt.h"
 //#include "math/funcparser/parser.h"
@@ -38,16 +38,18 @@ int main(int argc, char *argv[])
 
     //void * ptr = new float;  MO_DEBUG(ptr);
 
-    /*
+#if (0)
     using namespace MO;
-    MO::Mat4 mat(1.0);
+    Mat4 mat(1.0);
     std::cout << mat << std::endl;
-    mat = glm::rotate(mat, 45.f, MO::Vec3(0,0,1));
+    mat = glm::rotate(mat, 45.f, Vec3(0,0,1));
     std::cout << mat << std::endl;
-    mat = glm::scale(mat, Vec3(2, 1, 1));
-    std::cout << mat << std::endl;
+    Mat4 mat2(1.0);
+    std::cout << (mat + 0.5 * (mat2 - mat)) << std::endl;
+    //mat = glm::scale(mat, Vec3(2, 1, 1));
+    //std::cout << mat << std::endl;
     return 0;
-    */
+#endif
 
     //return PPP_NAMESPACE::test_parser_();
     //MO::TestTimeline t; return t.run();

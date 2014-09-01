@@ -450,6 +450,38 @@ void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
         calculateAudioSceneTransform_(thread, i, rtime);
         rtime += sampleRateInv();
     }
+#elif (0) // NOT WORKING RIGHT
+    // calculate only a few transformations
+    const uint reduce = 20;
+    const uint rsize = size/reduce;
+    for (uint i = 0; i<rsize; ++i)
+    {
+        calculateAudioSceneTransform_(thread, i*reduce, rtime);
+        rtime += sampleRateInv() * reduce;
+    }
+    // calculate the rest if buffersize/reduce misses something
+    if (rsize < size-1)
+    for (uint i=rsize; i<size; ++i)
+    {
+        calculateAudioSceneTransform_(thread, i, rtime);
+        rtime += sampleRateInv();
+    }
+    // interpolate in between
+    for (Object * o : posObjectsAudio_)
+    {
+        for (uint i=0; i<rsize; ++i)
+        {
+            const Mat4&
+                    trans0 = o->transformation(thread, i*reduce),
+                    trans1 = o->transformation(thread, (i+1)*reduce);
+            for (uint j=1; j<reduce; ++j)
+            {
+                const Float t = Float(j) / (reduce);
+                o->setTransformation(thread, i*reduce+j,
+                        trans0 + t * (trans1 - trans0));
+            }
+        }
+    }
 #else
     calculateAudioSceneTransform_(thread, 0, sampleRateInv() * samplePos);
     calculateAudioSceneTransform_(thread, size-1, sampleRateInv() * (samplePos + size-1));

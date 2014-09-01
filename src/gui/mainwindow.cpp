@@ -478,6 +478,9 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
 
     MO_ASSERT(glManager_ && glWindow_, "");
 
+    // update scene settings from mainwindow
+    updateDebugRender_();
+
     // connect to render window
     connect(glManager_, SIGNAL(renderRequest(uint)), scene_, SLOT(renderScene(uint)));
     connect(glManager_, SIGNAL(contextCreated(uint,MO::GL::Context*)),
