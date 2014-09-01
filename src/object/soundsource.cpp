@@ -61,10 +61,21 @@ void SoundSource::updateAudioTransformations(Double, uint thread)
     audio_->setTransformation(transformation(thread, 0), thread, 0);
 }
 
-void SoundSource::updateAudioTransformations(Double , uint , uint thread)
+void SoundSource::updateAudioTransformations(Double , uint size, uint thread)
 {
+#if (1)
     // copy the block of transformations
     audio_->setTransformation(transformations(thread), thread);
+#else
+    for (uint i=0; i<size; ++i)
+    {
+        const Float t = Float(i) / (size-1);
+        audio_->setTransformation(
+                    transformation(thread, 0)
+                    + t * (transformation(thread, size-1) - transformation(thread, 0))
+                    , thread, i);
+    }
+#endif
 }
 
 void SoundSource::performAudioBlock(SamplePos pos, uint thread)

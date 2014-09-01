@@ -444,16 +444,23 @@ void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
     Double rtime = time;
 
     // calculate one block of transformations
+#if (1)
     for (uint i = 0; i<size; ++i)
     {
         calculateAudioSceneTransform_(thread, i, rtime);
         rtime += sampleRateInv();
     }
+#else
+    calculateAudioSceneTransform_(thread, 0, sampleRateInv() * samplePos);
+    calculateAudioSceneTransform_(thread, size-1, sampleRateInv() * (samplePos + size-1));
+#endif
 
     // calculate audio objects
     for (auto o : audioObjects_)
     {
+        o->updateAudioTransformations(time, size, thread);
         o->performAudioBlock(samplePos, thread);
+
         // fill delay lines
         for (auto a : o->audioSources())
             a->pushDelay(thread);
@@ -462,6 +469,8 @@ void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
     int mici = 0;
     for (auto o : microphoneObjects_)
     {
+        o->updateAudioTransformations(time, size, thread);
+
         for (auto mic : o->microphones())
         {
             mic->clearOutputBuffer(thread);

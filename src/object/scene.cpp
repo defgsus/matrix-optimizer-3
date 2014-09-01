@@ -976,8 +976,6 @@ void Scene::calculateAudioSceneTransform_(uint thread, uint sample, Double time)
             }
             else
                 o->setTransformation(thread, sample, freeCameraMatrixAudio_[thread]);
-
-            o->updateAudioTransformations(time, bufferSize(thread), thread);
         }
     }
 }

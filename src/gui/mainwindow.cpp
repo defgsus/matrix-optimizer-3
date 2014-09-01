@@ -1078,6 +1078,7 @@ void MainWindow::renderToDisk()
 
     connect(ren, SIGNAL(finished()), ren, SLOT(deleteLater()));
 
+    MO_DEBUG_RENDER("starting renderer");
     ren->start();
 }
 

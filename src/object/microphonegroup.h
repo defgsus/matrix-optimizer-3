@@ -41,6 +41,7 @@ public slots:
 private:
 
     Mat4 getMicroTransformation_(uint index, Float dist) const;
+    Mat4 getMicroTransformation_(uint index, Double time, uint thread) const;
 
     ParameterInt
         * pNumMics_;

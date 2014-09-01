@@ -90,7 +90,21 @@ void MicrophoneGroup::updateAudioTransformations(Double time, uint thread)
 
 void MicrophoneGroup::updateAudioTransformations(Double stime, uint blocksize, uint thread)
 {
-    const Mat4 & trans = transformation(thread, 0);
+#if (0)
+    int index = 0;
+    for (AUDIO::AudioMicrophone* m : micros_)
+    {
+        m->setTransformation(
+                transformation(thread, 0)
+     //            * getMicroTransformation_(index, stime, thread)
+                 , thread, 0);
+        m->setTransformation(
+                transformation(thread, blocksize-1)
+     //               * getMicroTransformation_(index, stime + sampleRateInv() * (blocksize-1), thread)
+                 , thread, blocksize-1);
+        ++index;
+    }
+#else
 
     for (uint i=0; i<blocksize; ++i)
     {
@@ -103,10 +117,13 @@ void MicrophoneGroup::updateAudioTransformations(Double stime, uint blocksize, u
         for (AUDIO::AudioMicrophone* m : micros_)
         {
             m->setTransformation(
-                    trans * getMicroTransformation_(index, micdist), thread, i);
+                    transformation(thread, i)
+                        * getMicroTransformation_(index, micdist)
+                        , thread, i);
             ++index;
         }
     }
+#endif
 }
 
 Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Float dist ) const
@@ -116,5 +133,12 @@ Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Float dist ) const
                             , Vec3(0,0,-dist));
 }
 
+Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Double time, uint thread) const
+{
+    const Float
+            micdist = pDistance_->value(time, thread);
+
+    return getMicroTransformation_(index, micdist);
+}
 
 } // namespace MO

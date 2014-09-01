@@ -61,14 +61,25 @@ void AudioMicrophone::setTransformation(const Mat4& t, uint thread, uint sample)
     MO_ASSERT(thread < transformation_.size(), "thread " << thread << " out of range");
     MO_ASSERT(sample < transformation_[thread].size(), "sample " << sample << " out of range");
 
-    transformation_[thread][sample] = t;
+    memcpy(&transformation_[thread][sample], &t, sizeof(Mat4));
 }
 
 void AudioMicrophone::setTransformation(const Mat4 *block, uint thread)
 {
     const uint size = bufferSize_[thread];
-    for (uint i = 0; i<size; ++i)
+#if (1)
+    /*for (uint i = 0; i<size; ++i)
         transformation_[thread][i] = *block++;
+    */
+    memcpy(&transformation_[thread][0], block, size * sizeof(Mat4));
+#else
+    for (uint i=0; i<size; ++i)
+    {
+        const Float t = Float(i) / size;
+        transformation_[thread][0] =
+                block[0] + t * (block[size-1] - block[0]);
+    }
+#endif
 }
 
 

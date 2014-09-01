@@ -64,8 +64,8 @@ void Renderer::run()
     QString wavName = path_ + "/audio.wav";
 
     const uint
-            thread = 1,
-            numChannels = scene_->microphones().size(),
+            thread = MO_AUDIO_THREAD,
+            numChannels = scene_->numMicrophones(),
             sampleRate = scene_->sampleRate(),
             bufferSize = scene_->bufferSize(thread);
 

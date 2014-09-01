@@ -63,8 +63,9 @@ void AudioSource::setDelaySize(uint samples, uint thread)
 void AudioSource::setTransformation(const Mat4 *block, uint thread)
 {
     const uint size = bufferSize_[thread];
-    for (uint i = 0; i<size; ++i)
-        transformation_[thread][i] = *block++;
+    //for (uint i = 0; i<size; ++i)
+    //  transformation_[thread][i] = *block++;
+    memcpy(&transformation_[thread][0], block, size * sizeof(Mat4));
 }
 
 void AudioSource::setSample(F32 *audioBlock, uint thread)
