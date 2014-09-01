@@ -1257,6 +1257,9 @@ void Object::setSampleRate(uint samplerate)
 {
     sampleRate_ = std::max((uint)1, samplerate);
     sampleRateInv_ = 1.0 / sampleRate_;
+
+    for (auto m : objMicrophones_)
+        m->setSampleRate(sampleRate_);
 }
 
 AUDIO::AudioSource * Object::createAudioSource(const QString& id)
@@ -1273,6 +1276,7 @@ AUDIO::AudioMicrophone * Object::createMicrophone(const QString &id)
     auto m = new AUDIO::AudioMicrophone(id, this);
 
     objMicrophones_.append(m);
+    m->setSampleRate(sampleRate_);
 
     return m;
 }

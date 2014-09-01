@@ -418,7 +418,8 @@ private:
     LocklessQueue<const F32*> * audioInQueue_;
     LocklessQueue<F32*> * audioOutQueue_;
 
-    uint numMicrophones_;
+    uint numAudioSources_,
+         numMicrophones_;
 
     /** [thread] [microphones][bufferSize] */
     std::vector<std::vector<F32>> sceneAudioOutput_;

@@ -464,11 +464,6 @@ void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
     {
         for (auto mic : o->microphones())
         {
-/* YYY
-        // clear audio buffer
-        F32 * buffer = &sceneAudioOutput_[thread][i * size];
-        memset(buffer, 0, sizeof(F32) * size);
-*/
             mic->clearOutputBuffer(thread);
 
             // for each audio object
