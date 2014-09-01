@@ -30,6 +30,10 @@ public:
     explicit EquationDisplayWidget(QWidget *parent = 0);
     ~EquationDisplayWidget();
 
+    const UTIL::ViewSpace& viewSpace() const { return viewSpace_; }
+    const QString& equation() const { return equation_; }
+    const PPP_NAMESPACE::Parser * parser() const { return parser_; }
+
 signals:
 
     void viewSpaceChanged(const UTIL::ViewSpace&);
@@ -37,20 +41,25 @@ signals:
 public slots:
 
     void setViewSpace(const UTIL::ViewSpace&);
+    void setEquation(const QString& equation);
 
 protected:
 
     void paintEvent(QPaintEvent *);
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
+    void wheelEvent(QWheelEvent *);
 
 private:
 
     PPP_NAMESPACE::Parser * parser_;
 
+    QString equation_;
+
     Double varX_, varY_;
 
-    UTIL::ViewSpace viewSpace_;
+    UTIL::ViewSpace viewSpace_,
+                    lastViewSpace_;
 
     class EquationData;
     EquationData * curveData_;

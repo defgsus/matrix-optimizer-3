@@ -41,6 +41,7 @@
 #include "helpdialog.h"
 #include "audiodialog.h"
 #include "geometrydialog.h"
+#include "equationdisplaydialog.h"
 #include "widget/envelopewidget.h"
 #include "widget/transportwidget.h"
 #include "audiolinkwindow.h"
@@ -374,7 +375,7 @@ void MainWindow::createMainMenu_()
     m = new QMenu(tr("Tools"), menuBar());
     menuBar()->addMenu(m);
 
-        a = new QAction(tr("Geometry creator"), m);
+        a = new QAction(tr("Geometry editor"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
@@ -382,6 +383,16 @@ void MainWindow::createMainMenu_()
             connect(diag, SIGNAL(finished(int)), diag, SLOT(deleteLater()));
             diag->show();
         });
+
+        a = new QAction(tr("Equation tester"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new EquationDisplayDialog(this);
+            connect(diag, SIGNAL(finished(int)), diag, SLOT(deleteLater()));
+            diag->show();
+        });
+
 
         a = new QAction(tr("Batch scene converter"), m);
         m->addAction(a);

@@ -17,6 +17,8 @@ namespace MO {
 namespace GUI {
 
 class EquationDisplayWidget;
+class EquationEditor;
+class DoubleSpinBox;
 
 class EquationDisplayDialog : public QDialog
 {
@@ -28,12 +30,20 @@ signals:
 
 public slots:
 
+private slots:
+
+    void updateViewspace_();
+    void updateFromViewspace_();
+
 private:
 
     void createWidgets_();
 
     EquationDisplayWidget * display_;
+    EquationEditor * editor_;
 
+    DoubleSpinBox
+        *spinX_, *spinY_, *spinScaleX_, *spinScaleY_;
 };
 
 
