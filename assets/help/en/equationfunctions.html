@@ -6,364 +6,414 @@ Returns the absolute value of <i>x</i> - that is the result is always positive.
 Returns +1.0 if <i>x</i> is positive, -1.0 if <i>x</i> is negative and 0.0 if <i>x</i> is zero.
 }}
 
+{{ floor(x)
+Returns <i>x</i> without the fractional part, e.g. 2.7 becomes 2.0
+<br/><b>floor(x)</b>:<br/><img src="_equ#0#8#0#8#floor(x)"/>
+}}
 
-{{ atan(a, b)
-Returns the arcus tangens of <i>a</i>/<i>b</i>. The result is in radians ranging from -<i>PI</i> to +<i>PI</i>.<br/>
-This function is useful to translate a vector position into an angle. For any point x,y (except 0,0) <b>atan(y,x)</b> returns the angle in radians between the positive x-axis and the point.
+{{ ceil(x)
+Returns <i>x</i> without the fractional part plus one, e.g 2.3 becomes 3.0
+<br/><b>ceil(x)</b>:<br/><img src="_equ#0#8#0#8#ceil(x)"/>
+}}
+
+{{ round(x)
+Returns <i>x</i> rounded to the nearest integer, e.g. 2.4 becomes 2.0 and 2.5 becomes 3.0
+<br/><b>round(x)</b>:<br/><img src="_equ#0#8#0#8#round(x)"/>
+}}
+
+{{ frac(x)
+Returns the fractional part (the digits right of the point).
+}}
+
+{{ clamp(x, min, max)
+Limits the value of <i>x</i> to the range [<i>min</i>,<i>max</i>].
+}}
+
+{{ min(x, y)
+Returns the smallest of the values <i>x</i> and <i>y</i>
+}}
+
+{{ max(x, y)
+Returns the largest of the values <i>x</i> and <i>y</i>
+}}
+
+{{ quant(x, q)
+Quantizes <i>x</i> to the interval <i>q</i>
+<br/><b>quant(x,0.3)</b>:<br/><img src="_equ#0#2#0#2#quant(x,0.3)"/>
+}}
+
+{{ mod(x, m)
+Returns <i>x</i> modulo <i>m</i>, that is, <i>x</i> will always be in the range of [0,<i>m</i>).
+}}
+
+{{ smod(x, m)
+Returns <i>x</i> modulo <i>b</i> if <i>x</i> is positive and <i>m</i> - (-<i>x</i> modulo <i>m</i>) if <i>x</i> is negative, that is, <i>x</i> will always be in the range of [0,<i>m</i>). This function should be used for creating continious functions from a value that might be negative as well.
+}}
+
+{{ sin(x)
+Returns the sinus of <i>x</i>. <i>x</i> is in radians, so a full interval is [0,<i>TWO_PI</i>].
+<br/><b>sin(x)</b>:<br/><img src="_equ#0#6.283#-1#1#sin(x)"/>
+}}
+
+{{ sinh(x)
+Returns the sinus hyperbolicus of <i>x</i>.
+<br/><b>sinh(x)</b>:<br/><img src="_equ#-3.1416#3.1416#-12#12#sinh(x)"/>
+}}
+
+{{ asin(x)
+Returns the arcus sinus of <i>x</i>. This translates an angle back to it's sine part. <i>x</i> is in the range of [-1,1], the result is in radians.
+<br/><b>asin(x)</b>:<br/><img src="_equ#-1#1#-1.58#1.58#asin(x)"/>
+}}
+
+{{ cos(x)
+Returns the cosinus of <i>x</i>. <i>x</i> is in radians, so a full interval is [0,<i>TWO_PI</i>].
+<br/><b>cos(x)</b>:<br/><img src="_equ#0#6.283#-1#1#cos(x)"/>
+}}
+
+{{ cosh(x)
+Returns the cosinus hyperbolicus of <i>x</i>.
+<br/><b>cosh(x)</b>:<br/><img src="_equ#-3.1416#3.1416#0#12#cosh(x)"/>
 }}
 
 
-    if (f->name() == "floor")
-        return tr("Returns <i>a</i> without the fractional part, e.g. 2.7 becomes 2.0")
-                  +"<br/><b>floor(x)</b>:<br/><img src=\"_equ#0#8#0#8#floor(x)\"/>";
-    if (f->name() == "ceil")
-        return tr("Returns <i>a</i> without the fractional part plus one, e.g 2.3 becomes 3.0")
-                  +"<br/><b>ceil(x)</b>:<br/><img src=\"_equ#0#8#0#8#ceil(x)\"/>";
-    if (f->name() == "round")
-        return tr("Returns <i>a</i> rounded to the nearest integer, e.g. 2.4 becomes 2.0 and "
-                  "2.5 becomes 3.0")
-                  +"<br/><b>round(x)</b>:<br/><img src=\"_equ#0#8#0#8#round(x)\"/>";
-    if (f->name() == "frac")
-        return tr("Returns the fractional part (the digits right of the point)");
-    if (f->name() == "clamp")
-        return tr("Limits the value of <i>a</i> to the range [-<i>b</i>,<i>c</i>].");
+{{ acos(x)
+Returns the arcus cosinus of <i>x</i>. This translates an angle back to it's cosine part. <i>x</i> is in the range of [-1,1], the result is in radians.
+<br/><b>acos(x)</b>:<br/><img src="_equ#-1#1#-1.58#1.58#acos(x)"/>
+}}
 
-    if (f->name() == "min")
-        return tr("Returns the smallest of the values <i>a</i> and <i>b</i>");
-    if (f->name() == "max")
-        return tr("Returns the largest of the values <i>a</i> and <i>b</i>");
-    if (f->name() == "max")
-        return tr("Limits the value <i>a</i> to minimally <i>b</i> and maximally <i>c</i>");
-    if (f->name() == "quant")
-        return tr("Quantizes <i>a</i> to the interval <i>b</i>")
-                  +"<br/><b>quant(x,0.3)</b>:<br/><img src=\"_equ#0#2#0#2#quant(x,0.3)\"/>";
-    if (f->name() == "mod")
-        return tr("Returns <i>a</i> modulo <i>b</i>, that is, <i>a</i> will always be in the "
-                  "range of [0,<i>b</i>)");
-    if (f->name() == "smod")
-        return tr("Returns <i>a</i> modulo <i>b</i> if <i>a</i> is positive and "
-                  "<i>b</i> - (-<i>a</i> modulo <i>b</i>) if a "
-                  "is negative, that is, <i>a</i> will always be in the range of [0,<i>b</i>). "
-                  "This function should be used for creating continious functions from a value that "
-                  "might be negative as well.");
+{{ tan(x)
+Returns the tangens of <i>x</i>. <i>x</i> is in radians, so a full interval is [0,<i>TWO_PI</i>].
+<br/><b>tan(x)</b>:<br/><img src="_equ#0#6.283#-4#4#tan(x)"/>
+}}
 
-    if (f->name() == "sin")
-        return tr("Returns the sinus of <i>a</i>. <i>a</i> is in radians, so a full interval "
-                  "is [0,<i>TWO_PI</i>]")
-                  +"<br/><b>sin(x)</b>:<br/><img src=\"_equ#0#6.283#-1#1#sin(x)\"/>";
-    if (f->name() == "sinh")
-        return tr("Returns the sinus hyperbolicus of <i>a</i>.")
-                  +"<br/><b>sinh(x)</b>:<br/><img src=\"_equ#-3.1416#3.1416#-12#12#sinh(x)\"/>";
-    if (f->name() == "asin")
-        return tr("Returns the arcus sinus of <i>a</i>. This translates an angle back to it's sine "
-                  "part. <i>a</i> is in the range of [-1,1], the result is in radians.")
-                  +QString("<br/>asin(0.0) = %1, asin(1.0) = %2")
-                        .arg(std::asin(0.0)).arg(std::asin(1.0))
-                  +"<br/><b>asin(x)</b>:<br/><img src=\"_equ#-1#1#-1.58#1.58#asin(x)\"/>";
-    if (f->name() == "cos")
-        return tr("Returns the cosinus of <i>a</i>. <i>a</i> is in radians, so a full interval "
-                  "is [0,<i>TWO_PI</i>]")
-                  +"<br/><b>cos(x)</b>:<br/><img src=\"_equ#0#6.283#-1#1#cos(x)\"/>";
-    if (f->name() == "cosh")
-        return tr("Returns the cosinus hyperbolicus of <i>a</i>.")
-                  +"<br/><b>cosh(x)</b>:<br/><img src=\"_equ#-3.1416#3.1416#0#12#cosh(x)\"/>";
-    if (f->name() == "acos")
-        return tr("Returns the arcus cosinus of <i>a</i>. This translates an angle back to it's "
-                  "cosine part. <i>a</i> is in the range of [-1,1], the result is in radians.")
-                  +QString("<br/>acos(0.0) = %1, acos(1.0) = %2")
-                        .arg(std::acos(0.0)).arg(std::acos(1.0))
-                  +"<br/><b>acos(x)</b>:<br/><img src=\"_equ#-1#1#-1.58#1.58#acos(x)\"/>";
-    if (f->name() == "tan")
-        return tr("Returns the tangens of <i>a</i>. <i>a</i> is in radians, so a full interval "
-                  "is [0,<i>TWO_PI</i>]")
-                  +"<br/><b>tan(x)</b>:<br/><img src=\"_equ#0#6.283#-4#4#tan(x)\"/>";
-    if (f->name() == "tanh")
-        return tr("Returns the tangens hyperbolicus of <i>a</i>.<br/>"
-                  "This function has the nice property of fitting all input values into the "
-                  "range [-1,1], so it can be usefull as a saturation function.")
-                  +"<br/><b>tanh(x)</b>:<br/><img src=\"_equ#-4#4#-1#1#tanh(x)\"/>";
-    if (f->name() == "atan" && f->num_param() == 1)
-        return tr("Returns the arcus tangens of <i>a</i>. <i>a</i> is in the range of [-1,1], "
-                  "the result is in radians.")
-                  +"<br/><b>atan(x)</b>:<br/><img src=\"_equ#-1#1#-1.58#1.58#atan(x)\"/>";
-    if (f->name() == "atan" && f->num_param() == 2)
-        return tr("Returns the arcus tangens of <i>a</i>/<i>b</i>. The result is in radians "
-                  "ranging from -<i>PI</i> to +<i>PI</i>.<br/>"
-                  "This function is useful to translate a vector position into an angle. "
-                  "For any point (except 0,0) <b>atan2(y,x)</b> returns the angle in radians "
-                  "between the positive x-axis and the point x,y");
-    if (f->name() == "sinc")
-        return tr("Calculates <b>sin(<i>a</i>) / <i>a</i></b>, which gives a sine wave with "
-                  "a maximum at zero, fading out in negative and positive directions.")
-                  +"<br/><b>sinc(x)</b>:<br/><img src=\"_equ#-20#20#-1#1#sinc(x)\"/>";
+{{ tanh(x)
+Returns the tangens hyperbolicus of <i>x</i>.
+<br/>This function has the nice property of fitting all input values into the range [-1,1], so it can be usefull as a saturation function.
+<br/><b>tanh(x)</b>:<br/><img src="_equ#-4#4#-1#1#tanh(x)"/>
+}}
 
-    if (f->name() == "exp")
-        return tr("The exponential function. This raises <i>e</i> (Euler's constant) to "
-                  "the power of <i>a</i>");
-    if (f->name() == "ln")
-        return tr("The natural logarithm function returns the exponent to which <i>e</i> "
-                  "(Euler's constant) must be raised to receive <i>a</i>");
-    if (f->name() == "logistic")
-        return tr("A function borrowed mainly from statistics. The result equals "
-                  "<b>1 / (1 + exp(<i>a</i>))</b> and is always in the range of [0,1].")
-                  +"<br/><b>logistic(x)</b>:<br/><img src=\"_equ#-5#5#0#1#logistic(x)\"/>";
-    if (f->name() == "pow")
-        return tr("Raises <i>a</i> to the power of <i>b</i>");
-    if (f->name() == "sqrt")
-        return tr("Returns the square root (or second root) of <i>a</i>");
-    if (f->name() == "root")
-        return tr("Returns the <i>b</i>th root of <i>a</i>");
+{{ atan(x)
+Returns the arcus tangens of <i>x</i>. <i>x</i> is in the range of [-1,1], the result is in radians.
+<br/><b>atan(x)</b>:<br/><img src="_equ#-1#1#-1.58#1.58#atan(x)"/>
+}}
 
-    if (f->name() == "smstep")
-        return tr("Smoothly fades between 0 and 1 for the value <i>c</i> between it's "
-                  "boundaries <i>a</i> and <i>b</i>.")
-                  +"<br/><b>smstep(1, 2, x)</b>:<br/><img src=\"_equ#0#4#0#1#smstep(1,2,x)\"/>";
-    if (f->name() == "smstep2")
-        return tr("Smoothly fades between 0 and 1 for the value <i>c</i> between it's "
-                  "boundaries <i>a</i> and <i>b</i>. This version has slightly different "
-                  "boundary derivatives as the <a href=\"#smstep\">smstep</a> function. ")
-                  +"<br/><b>smstep2(1, 2, x)</b>:<br/><img src=\"_equ#0#4#0#1#smstep2(1,2,x)\"/>";
-    if (f->name() == "smquant")
-        return tr("Works like <a href=\"#quant\">quant</a> but smoothly fades between each "
-                  "quantized value.")
-                  +"<br/><b>smquant(x, 1)</b>:<br/><img src=\"_equ#0#4#0#4#smquant(x,1)\"/>";
-    if (f->name() == "smquant2")
-        return tr("Sames as <a href=\"#smquant\">smquant</a> but with slightly other "
-                  "derivatives of the smoothing function.")
-                  +"<br/><b>smquant2(x, 1)</b>:<br/><img src=\"_equ#0#4#0#4#smquant2(x,1)\"/>";
+{{ atan(a, b)
+Returns the arcus tangens of <i>a</i>/<i>b</i>. The result is in radians ranging from -<i>PI</i> to +<i>PI</i>.
+<br/>This function is useful to translate a vector position into an angle. For any point x,y (except 0,0) <b>atan(y,x)</b> returns the angle in radians between the positive x-axis and the point.
+}}
 
-    if (f->name() == "beta" && f->num_param() == 1)
-        return tr("Calculates a circle's surface for input <i>a</i> in the range [-1,1]. "
-                  "For example <i>a</i> could be the x coordinate and the result would be "
-                  "the y coordinate of the circumference of a circle of radius 1 centered at "
-                  "the origin.<br/>The underlying equation is: <b>beta(x) = sqrt(1-x*x)</b> "
-                  "which would be undefined for x outside the range of [-1,1]. In this case "
-                  "<b>beta</b> returns zero.")
-                  +"<br/><b>beta(x)</b>:<br/><img src=\"_equ#-1#1#0#1#beta(x)#200#100\"/>";
-    if (f->name() == "beta" && f->num_param() == 2)
-        return tr("Calculates a sphere's surface for input range [-1,1]. "
-                  "For example <i>a</i> and <i>b</i> could be the x and y coordinates and the "
-                  "result would be the z coordinate of the periphery of a sphere of radius 1 "
-                  "centered at the origin."
-                  "<br/>The underlying equation is: <b>beta(x,y) = sqrt(1-x*x-y*y)</b>");
-    if (f->name() == "beta" && f->num_param() == 3)
-        return tr("Calculates a 4-dimensional sphere's surface for input range [-1,1]."
-                  "<br/>The underlying equation is: <b>beta(x,y,z) = sqrt(1-x*x-y*y-z*z)</b>");
-    if (f->name() == "beta" && f->num_param() == 4)
-        return tr("Calculates a 5-dimensional sphere's surface for input range [-1,1]."
-                  "<br/>The underlying equation is: <b>beta(x,y,z,w) = sqrt(1-x*x-y*y-z*z-w*w)</b>");
+{{ sinc(x)
+Calculates <b>sin(<i>x</i>) / <i>x</i></b>, which gives a sine wave with a maximum at zero, fading out in negative and positive directions.
+<br/><b>sinc(x)</b>:<br/><img src="_equ#-20#20#-1#1#sinc(x)"/>
+}}
 
-    if (f->name() == "mag" && f->num_param() == 2)
-        return tr("Returns the magnitude or length of the 2d-vector (<i>a</i>, <i>b</i>)");
-    if (f->name() == "mag" && f->num_param() == 3)
-        return tr("Returns the magnitude or length of the 3d-vector (<i>a</i>, <i>b</i>, <i>c</i>)");
-    if (f->name() == "mag" && f->num_param() == 4)
-        return tr("Returns the magnitude or length of the 4d-vector "
-                  "(<i>a</i>, <i>b</i>, <i>c</i>, <i>d</i>)");
-    if (f->name() == "dist")
-        return tr("Returns the distance between the two 2d-coordinates"
-                  "(<i>a</i>, <i>b</i>) and (<i>c</i>, <i>d</i>)");
+{{ exp(x)
+The exponential function. This raises <i>E</i> (Euler's constant) to the power of <i>x</i>
+}}
 
-    if (f->name() == "rotate")
-        return tr("Rotates the 2d-coordinate (<i>a</i>, <i>b</i>) around the origin by the angle "
-                  "<i>c</i> in radians and returns the first component of the rotated vector."
-                  "A common rotation would be:<br/>")
-                  +"<b>x' = rotate(x, y, degree)<br/>"
-                      "y' = rotate(y, x, -degree)</b>";
-    if (f->name() == "rotater")
-        return tr("Rotates the 2d-coordinate (<i>a</i>, <i>b</i>) around the origin by the angle "
-                  "<i>c</i> in radians and returns the first component of the rotated vector."
-                  "A common rotation would be:<br/>")
-                  +"<b>x' = rotater(x, y, degree / 180 * PI)<br/>"
-                      "y' = rotater(y, x, -degree / 180 * PI)</b>";
+{{ ln(x)
+The natural logarithm function returns the exponent to which <i>E</i> (Euler's constant) must be raised to receive <i>x</i>
+}}
 
-    if (f->name() == "ramp")
-        return tr("A ramp oscillator, output range [0,1]")
-                  +"<br/><b>ramp(x)</b>:<br/><img src=\"_equ#-1#1#-1#1#ramp(x)\"/>";
-    if (f->name() == "saw")
-        return tr("A sawtooth oscillator, output range [-1,1]")
-                  +"<br/><b>saw(x)</b>:<br/><img src=\"_equ#-1#1#-1#1#saw(x)\"/>";
-    if (f->name() == "square" && f->num_param() == 1)
-        return tr("A square-wave oscillator, output range [-1,1]")
-                  +"<br/><b>square(x)</b>:<br/><img src=\"_equ#-1#1#-1#1#square(x)\"/>";
-    if (f->name() == "square" && f->num_param() == 2)
-        return tr("A square-wave oscillator with pulse-width control <i>b</i>, output range [-1,1]"
-                  "<br/><i>b</i> is in the range of [0.000001,0.999999]")
-                  +"<br/><b>square(x, 0.1)</b>:<br/><img src=\"_equ#-1#1#-1#1#square(x,0.1)\"/>"
-                  +"<br/><b>square(x, 0.9)</b>:<br/><img src=\"_equ#-1#1#-1#1#square(x,0.9)\"/>";
-    if (f->name() == "tri" && f->num_param() == 1)
-        return tr("A triangle-wave oscillator, output range [-1,1]")
-                  +"<br/><b>tri(x)</b>:<br/><img src=\"_equ#-1#1#-1#1#tri(x)\"/>";
-    if (f->name() == "tri" && f->num_param() == 2)
-        return tr("A triangle-wave oscillator with pulse-width control <i>b</i>, output range [-1,1]."
-                  "<br/><i>b</i> is in the range of [0.000001,0.999999]")
-                  +"<br/><b>tri(x, 0.1)</b>:<br/><img src=\"_equ#-1#1#-1#1#tri(x,0.1)\"/>"
-                  +"<br/><b>tri(x, 0.9)</b>:<br/><img src=\"_equ#-1#1#-1#1#tri(x,0.9)\"/>";
+{{ logistic(x)
+A function borrowed mainly from statistics. The result equals <b>1 / (1 + exp(<i>x</i>))</b> and is always in the range of [0,1].
+<br/><b>logistic(x)</b>:<br/><img src="_equ#-5#5#0#1#logistic(x)"/>
+}}
 
-    if (f->name() == "rnd")
-        return tr("Returns a pseudo-random number in the range [0,1]. "
-                  "<br/>A new random number is generated on each call of the function. "
-                  "Generally it's highly experimental to use functions like this in objects "
-                  "that support equations. If you need \"predictable\" randomness, "
-                  "use <a href=\"#noise\">noise</a> instead.")
-                  +"<br/><b>rnd(x)</b>:<br/><img src=\"_equ#0#1#0#1#rnd()\"/>";;
-    if (f->name() == "noise" && f->num_param() == 1)
-        return tr("Returns a 1-dimensional smoothed pseudo-random number in the range [-1,1].")
-                  +"<br/><b>noise(x)</b>:<br/><img src=\"_equ#-4#4#-1#1#noise(x)\"/>";
-    if (f->name() == "noise" && f->num_param() == 2)
-        return tr("Returns a 2-dimensional smoothed pseudo-random number in the range [-1,1].")
-                  +"<br/><b>noise(x, 0)</b>:<br/><img src=\"_equ#-4#4#-1#1#noise(x,0)\"/>";
-    if (f->name() == "noise" && f->num_param() == 3)
-        return tr("Returns a 3-dimensional smoothed pseudo-random number in the range [-1,1].")
-                  +"<br/><b>noise(x, 0, 0)</b>:<br/><img src=\"_equ#-4#4#-1#1#noise(x,0,0)\"/>";
-    if (f->name() == "noiseoct" && f->num_param() == 2)
-        return tr("Returns a 1-dimensional smoothed pseudo-random number in the range about [-2,2]."
-                  "The noise function is octaved, meaning there are <i>b</i> number of "
-                  "noises mixed together, each with double the frequency and half the amplitude. "
-                  "The number of octaves is limited to 10.")
-                  +"<br/><b>noise(x, 4)</b>:<br/><img src=\"_equ#-4#4#-1#1#noiseoct(x,4)\"/>";
-    if (f->name() == "noiseoct" && f->num_param() == 3)
-        return tr("Returns a 2-dimensional smoothed pseudo-random number in the range about [-2,2]."
-                  "The noise function is octaved, meaning there are <i>c</i> number of "
-                  "noises mixed together, each with double the frequency and half the amplitude. "
-                  "The number of octaves is limited to 10.")
-                  +"<br/><b>noise(x, 0, 4)</b>:<br/><img src=\"_equ#-4#4#-1#1#noiseoct(x,0,4)\"/>";
-    if (f->name() == "noiseoct" && f->num_param() == 4)
-        return tr("Returns a 3-dimensional smoothed pseudo-random number in the range about [-2,2]."
-                  "The noise function is octaved, meaning there are <i>d</i> number of "
-                  "noises mixed together, each with double the frequency and half the amplitude. "
-                  "The number of octaves is limited to 10.")
-                  +"<br/><b>noise(x, 0, 0, 4)</b>:<br/><img src=\"_equ#-4#4#-1#1#noiseoct(x,0,0,4)\"/>";
+{{ pow(x, exp)
+Raises <i>x</i> to the power of <i>exp</i>
+}}
 
-    if (f->name() == "fac")
-        return tr("Returns the factorial of <i>a</i>. E.g. the factorial of 7 is calculated as:")
-                  +" 1 * 2 * 3 * 4 * 5 * 6 * 7";
-    if (f->name() == "fib")
-        return tr("Returns the <i>a</i>th fibonacci number. Fibonacci numbers are defined as:")
-                  + "<br/>fib(n) = fib(n-2) + fib(n-1); where fib(0) and fib(1) are 1";
+{{ sqrt(x)
+Returns the square root (or second root) of <i>x</i>
+}}
 
-    if (f->name() == "zeta" && f->num_param() == 1)
-        return tr("Approximates the Riemann zeta function of <i>a</i> with 70 iterations.");
-    if (f->name() == "zeta" && f->num_param() == 2)
-        return tr("Approximates the Riemann zeta function of <i>a</i> until the change per "
-                  "iteration is equal or lower than <i>b</i>, or the number of iterations "
-                  "reaches 200000");
+{{ root(x, r)
+Returns the <i>r</i>th root of <i>x</i>
+}}
 
-    if (f->name() == "harmo" && f->num_param() == 2)
-        return tr("Returns the harmonic quotient of <i>a</i>/<i>b</i> or <i>b</i>/<i>a</i>. "
-                  "If neither of the terms results in an integer, the result is 0.");
+{{ smstep(edge1, edge2, x)
+Smoothly fades between 0 and 1 for the value <i>x</i> between it's boundaries <i>edge1</i> and <i>edge2</i>.
+<br/><b>smstep(1, 2, x)</b>:<br/><img src="_equ#0#4#0#1#smstep(1,2,x)"/>
+}}
 
-    if (f->name() == "harmo" && f->num_param() == 3)
-        return tr("Returns the harmonic quotient of the term <i>a</i>/<i>b</i>/<i>c</i> or "
-                  "the 5 other permutations in the order of this term. "
-                  "If neither of the terms results in an integer, the result is 0.");
+{{ smstep2(edge1, edge2, x)
+Smoothly fades between 0 and 1 for the value <i>x</i> between it's boundaries <i>edge1</i> and <i>egde2</i>. This version has slightly different boundary derivatives as the <a href="#smstep">smstep</a> function.
+<br/><b>smstep2(1, 2, x)</b>:<br/><img src="_equ#0#4#0#1#smstep2(1,2,x)"/>
+}}
 
-    if (f->name() == "prime")
-        return tr("Returns 1 if <i>a</i> is a prime number and 0 otherwise. "
-                  "The first about million numbers have a look-up table for efficient "
-                  "execution.")
-                + "<br/><b>prime(x)</b>:<br/><img src=\"_equ#0#100#0#1#prime(x)\"/>"; ;
-    if (f->name() == "prime_s")
-        return tr("Smooth version of <a href=\"#prime1\">prime</a>.")
-                + "<br/><b>prime_s(x)</b>:<br/><img src=\"_equ#0#100#0#1#prime_s(x)\"/>"; ;
+{{ smquant(x, q)
+Works like <a href="#quant">quant</a> but smoothly fades between each quantized value.
+<br/><b>smquant(x, 1)</b>:<br/><img src="_equ#0#4#0#4#smquant(x,1)"/>
+}}
 
-    if (f->name() == "quer")
-        return tr("Returns the cross sum of the integer number <i>a</i>. The cross sum "
-                  "is the sum of all digits of a number, in this case in the base 10 system. "
-                  "When the sum is calculated, the cross sum is taken again until only one "
-                  "digit remains.")
-                + "<br/><b>quer(x)</b>:<br/><img src=\"_equ#0#100#0#20#quer(x)\"/>"; ;
+{{ smquant2(x, q)
+Sames as <a href="#smquant">smquant</a> but with slightly other derivatives of the smoothing function.
+<br/><b>smquant2(x, 1)</b>:<br/><img src="_equ#0#4#0#4#smquant2(x,1)"/>
+}}
 
-    if (f->name() == "uspiral" && f->num_param() == 2)
-        return tr("Returns the ulam spiral number for the integer coordinate (<i>a</i>, <i>b</i>)."
-                  "The ulam spiral lives in the integer grid, starts at 1 and extends "
-                  "counter-clockwise in square spirals.")
-                + "<br/><img src=\"ulam_spiral.png\"/>";
+{{ beta(x)
+Calculates a circle's surface for input <i>x</i> in the range [-1,1]. For example <i>x</i> could be the x coordinate and the result would be the y coordinate of the circumference of a circle of radius 1 centered at the origin.
+<br/>The underlying equation is: <b>beta(x) = sqrt(1-x*x)</b> which would be undefined for x outside the range of [-1,1]. In this case the function returns zero.
+<br/><b>beta(x)</b>:<br/><img src="_equ#-1#1#0#1#beta(x)#200#100"/>
+}}
 
-    if (f->name() == "uspiral" && f->num_param() == 3)
-        return tr("Returns the <a href=\"#ulam2\">ulam</a> spiral number for the integer "
-                  "coordinate (<i>a</i>, <i>b</i>) with additional width parameter <i>c</i>. "
-                  "So instead of quadratic expansion, the spiral extents rectangular with the "
-                  "longest edges on the x axis.");
+{{ beta(x, y)
+Calculates a sphere's surface for input range [-1,1]. For example <i>x</i> and <i>y</i> could be the x and y coordinates and the result would be the z coordinate of the periphery of a sphere of radius 1 centered at the origin.
+<br/>The underlying equation is: <b>beta(x,y) = sqrt(1-x*x-y*y)</b>
+}}
 
-    if (f->name() == "tspiral" && f->num_param() == 2)
-        return tr("Returns the triangle spiral number for the integer coordinate (<i>a</i>, <i>b</i>)."
-                  "The triangle spiral lives in the integer grid, starts at 1 and extends "
-                  "counter-clockwise in triangles around itself. "
-                  "<br/>Note that not all positions are defined for the triangle spiral. These "
-                  "undefined positions return 0.");
+{{ beta(x, y, z)
+Calculates a 4-dimensional sphere's surface for input range [-1,1].
+<br/>The underlying equation is: <b>beta(x,y,z) = sqrt(1-x*x-y*y-z*z)</b>
+}}
 
-    if (f->name() == "ndiv")
-        return tr("Returns the number of divisors of the integer <i>a</i>."
-                  "The first about million numbers have a look-up table for efficient "
-                  "execution.")
-                + "<br/><b>ndiv(x)</b>:<br/><img src=\"_equ#0#100#0#20#ndiv(x)\"/>";
-    if (f->name() == "divisor")
-        return tr("Returns the <i>b</i>th divisor of the integer <i>a</i>."
-                  "The first about 260,000 numbers have a look-up table for efficient "
-                  "execution.")
-                + "<br/><b>divisor(x,3)</b>:<br/><img src=\"_equ#0#100#0#20#divisor(x,3)\"/>";
-    if (f->name() == "sumdiv")
-        return tr("Returns the sum of all the divisors of the integer <i>a</i>."
-                  "The first about 260,000 numbers have a look-up table for efficient "
-                  "execution.")
-                + "<br/><b>sumdiv(x)</b>:<br/><img src=\"_equ#0#100#0#100#sumdiv(x)\"/>";
-    if (f->name() == "proddiv")
-        return tr("Returns the product of all the divisors of the integer <i>a</i>."
-                  "The first about 260,000 numbers have a look-up table for efficient "
-                  "execution.")
-                + "<br/><b>proddiv(x)</b>:<br/><img src=\"_equ#0#100#0#10000#proddiv(x)\"/>";
-    if (f->name() == "nextdiv")
-        return tr("Returns the next devisor of the integer <i>a</i>, starting at <i>b</i>."
-                  "It does not matter if <i>b</i> is actually a divisor of <i>a</i>."
-                  "There is no look-up table and this function might be relatively slow.");
-    if (f->name() == "gcd")
-        return tr("Returns the greatest common divisor of the integers <i>a</i> and <i>b</i>."
-                  "There is no look-up table and this function might be relatively slow.");
-    if (f->name() == "cong")
-        return tr("Returns 1 if the integers <i>a</i> and <i>b</i> are congruent in the "
-                  "modulo space of <i>c</i> and 0 otherwise. The calculation is: "
-                  "<b>cong(a,b,m) = ((b-a) modulo m) equals 0</b>");
-    if (f->name() == "digits")
-        return tr("Returns the number of digits of the integer <i>a</i> in the base 10 system.");
+{{ beta(x, y, z, w)
+Calculates a 5-dimensional sphere's surface for input range [-1,1].
+<br/>The underlying equation is: <b>beta(x,y,z,w) = sqrt(1-x*x-y*y-z*z-w*w)</b>
+}}
 
-    if (f->name() == "ndiv_s")
-        return tr("This is the smoothed version of <a href=\"#ndiv1\">ndiv</a>")
-                + "<br/><b>ndiv_s(x)</b>:<br/><img src=\"_equ#0#100#0#20#ndiv_s(x)\"/>";
-    if (f->name() == "divisor_s")
-        return tr("This is the smoothed version of <a href=\"#divisor2\">divisor</a>")
-                + "<br/><b>divisor_s(x,3)</b>:<br/><img src=\"_equ#0#100#0#20#divisor_s(x,3)\"/>";
-    if (f->name() == "sumdiv_s")
-        return tr("This is the smoothed version of <a href=\"#sumdiv1\">sumdiv</a>")
-                + "<br/><b>sumdiv_s(x)</b>:<br/><img src=\"_equ#0#100#0#100#sumdiv_s(x)\"/>";
-    if (f->name() == "proddiv_s")
-        return tr("This is the smoothed version of <a href=\"#proddiv1\">proddiv</a>")
-                + "<br/><b>proddiv_s(x)</b>:<br/><img src=\"_equ#0#100#0#10000#proddiv_s(x)\"/>";
-    if (f->name() == "nextdiv_s")
-        return tr("This is the smoothed version of <a href=\"#nextdiv2\">nextdiv</a>");
-    if (f->name() == "gcd_s")
-        return tr("This is the smoothed version of <a href=\"#gcd2\">gcd</a>");
-    if (f->name() == "cong_s")
-        return tr("This is the smoothed version of <a href=\"#cong3\">cong</a>");
-    if (f->name() == "digits_s")
-        return tr("This is the smoothed version of <a href=\"#digits1\">digits</a>");
+{{ mag(x, y)
+Returns the magnitude or length of the 2d-vector (<i>x</i>, <i>y</i>)
+}
 
-    if (f->name() == "mandel" && f->num_param() == 2)
-        return tr("Returns the approximation of the Mandelbrot function. "
-                  "The input variables are the real (<i>a</i>) and imaginary (<i>b</i>) part "
-                  "of the equation: <b>z(n+1) = z(n) ^ 2 + c</b>; where z and c are complex numbers. "
-                  "z is initially zero and c is initialized to the input variables. The "
-                  "result of the function is the real part of z after a maximum of 1000 iterations.")
-                + "<br/><b>mandel(x,1)</b>:<br/><img src=\"_equ#-2#2#0#6#mandel(x,1)\"/>";
+{{ mag(x, y, z)
+Returns the magnitude or length of the 3d-vector (<i>x</i>, <i>y</i>, <i>z</i>)
+}}
 
-    if (f->name() == "mandel" && f->num_param() == 3)
-        return tr("Sames as <a href=\"#mandel2\">mandel(a,b)</a> but with the number of "
-                  "maximum iterations given in <i>c</i>");
+{{ mag(x, y, z, w)
+Returns the magnitude or length of the 4d-vector (<i>x</i>, <i>y</i>, <i>z</i>, <i>w</i>)
+}}
 
-    if (f->name() == "mandeli" && f->num_param() == 2)
-        return tr("Returns the number of iterations after which z in the mandelbrot function "
-                  "exceeds the limit of sqrt(-2). The maximum iteration is fixed to 1000.")
-                + "<br/><b>mandeli(x,1)</b>:<br/><img src=\"_equ#-2#2#0#20#mandeli(x,1)\"/>";
-    if (f->name() == "mandeli" && f->num_param() == 3)
-        return tr("Same as <a href=\"#mandeli2\">mandeli(a,b)</a> but with the number of "
-                  "maximum iterations given in <i>c</i>");
+{{ dist(x1, y1, x2, y2)
+Returns the distance between the two 2d-coordinates (<i>x1</i>, <i>y1</i>) and (<i>x2</i>, <i>y2</i>)
+}}
+
+{{ rotate(x, y, d)
+Rotates the 2d-coordinate (<i>x</i>, <i>y</i>) around the origin by the angle <i>d</i> in degree and returns the first component of the rotated vector. A common rotation would be:
+<br/><b>x' = rotate(x, y, degree)
+<br/>y' = rotate(y, x, -degree)</b>
+}}
+
+{{ rotater(x, y, r)
+Rotates the 2d-coordinate (<i>x</i>, <i>y</i>) around the origin by the angle <i>r</i> in radians and returns the first component of the rotated vector. A common rotation would be:
+<br/><b>x' = rotater(x, y, degree / 180 * PI)
+<br/>y' = rotater(y, x, -degree / 180 * PI)</b>
+}}
+
+{{ ramp(x)
+A ramp oscillator, output range [0,1].
+<br/><b>ramp(x)</b>:<br/><img src="_equ#-1#1#-1#1#ramp(x)"/>
+}}
+
+{{ saw(x)
+A sawtooth oscillator, output range [-1,1].
+<br/><b>saw(x)</b>:<br/><img src="_equ#-1#1#-1#1#saw(x)"/>
+}}
+
+{{ square(x)
+A square-wave oscillator, output range [-1,1].
+<br/><b>square(x)</b>:<br/><img src="_equ#-1#1#-1#1#square(x)"/>
+}}
+
+{{ square(x, pw)
+A square-wave oscillator with pulse-width control <i>b</i>, output range [-1,1]. <i>pw</i> is in the range of [0.000001,0.999999].
+<br/><b>square(x, 0.1)</b>:<br/><img src="_equ#-1#1#-1#1#square(x,0.1)"/>
+<br/><b>square(x, 0.9)</b>:<br/><img src="_equ#-1#1#-1#1#square(x,0.9)"/>
+}}
+
+{{ tri(x)
+A triangle-wave oscillator, output range [-1,1].
+<br/><b>tri(x)</b>:<br/><img src="_equ#-1#1#-1#1#tri(x)"/>
+}}
+
+{{ tri(x, pw)
+A triangle-wave oscillator with pulse-width control <i>b</i>, output range [-1,1]. <br/><i>pw</i> is in the range of [0.000001,0.999999].
+<br/><b>tri(x, 0.1)</b>:<br/><img src="_equ#-1#1#-1#1#tri(x,0.1)"/>
+<br/><b>tri(x, 0.9)</b>:<br/><img src="_equ#-1#1#-1#1#tri(x,0.9)"/>
+}}
+
+{{ rnd()
+Returns a pseudo-random number in the range [0,1].
+<br/>A new random number is generated on each call of the function. Generally it's highly experimental to use functions like this anywhere. If you need "predictable" randomness, use <a href="#noise">noise</a> instead.
+<br/><b>rnd(x)</b>:<br/><img src="_equ#0#1#0#1#rnd()"/>
+}}
+
+{{ noise(x)
+Returns a 1-dimensional smoothed pseudo-random number in the range [-1,1].
+<br/><b>noise(x)</b>:<br/><img src="_equ#-4#4#-1#1#noise(x)"/>
+}}
+
+{{ noise(x, y)
+Returns a 2-dimensional smoothed pseudo-random number in the range [-1,1].
+<br/><b>noise(x, 0)</b>:<br/><img src="_equ#-4#4#-1#1#noise(x,0)"/>
+}}
+
+{{ noise(x, y, z)
+Returns a 3-dimensional smoothed pseudo-random number in the range [-1,1].
+<br/><b>noise(x, 0, 0)</b>:<br/><img src="_equ#-4#4#-1#1#noise(x,0,0)"/>
+}}
+
+{{ noiseoct(x, o)
+Returns a 1-dimensional smoothed pseudo-random number in the range of about [-2,2]. The noise function is octaved, meaning there are <i>o</i> number of noises mixed together, each with double the frequency and half the amplitude. The number of octaves is limited to 10.
+<br/><b>noise(x, 4)</b>:<br/><img src="_equ#-4#4#-1#1#noiseoct(x,4)"/>
+}}
+
+{{ noiseoct(x, y, o)
+Returns a 2-dimensional smoothed pseudo-random number in the range of about [-2,2]. The noise function is octaved, meaning there are <i>o</i> number of noises mixed together, each with double the frequency and half the amplitude. The number of octaves is limited to 10.
+<br/><b>noise(x, 0, 4)</b>:<br/><img src="_equ#-4#4#-1#1#noiseoct(x,0,4)"/>
+}}
+
+{{ noiseoct(x, y, z, o)
+Returns a 3-dimensional smoothed pseudo-random number in the range of about [-2,2]. The noise function is octaved, meaning there are <i>o</i> number of noises mixed together, each with double the frequency and half the amplitude. The number of octaves is limited to 10.
+<br/><b>noise(x, 0, 0, 4)</b>:<br/><img src="_equ#-4#4#-1#1#noiseoct(x,0,0,4)"/>
+}}
+
+{{ fac(x)
+Returns the factorial of <i>x</i>. E.g. the factorial of 7 is calculated as: 1 * 2 * 3 * 4 * 5 * 6 * 7
+}}
+
+
+{{ fib(x)
+Returns the <i>x</i>th fibonacci number. Fibonacci numbers are defined as:
+<br/>fib(n) = fib(n-2) + fib(n-1 where fib(0) and fib(1) are initially 1
+}}
+
+{{ zeta(x)
+Approximates the Riemann zeta function of <i>a</i> with 70 iterations.
+}}
+
+{{ zeta(x, t)
+Approximates the Riemann zeta function of <i>x</i> until the change per iteration is equal or lower than <i>t</i>, or the number of iterations reaches 200000
+}}
+
+{{ harmo(x, y)
+Returns the harmonic quotient of <i>x</i>/<i>y</i> or <i>y</i>/<i>x</i>. If neither of the terms results in an integer, the result is 0.
+}}
+
+{{ harmo(x, y, z)
+Returns the harmonic quotient of the term <i>x</i>/<i>y</i>/<i>z</i> or of the 5 other permutations in the order of this term. If neither of the terms results in an integer, the result is 0.
+}}
+
+{{ prime(n)
+Returns 1 if integer <i>n</i> is a prime number and 0 otherwise. The first about million numbers have a look-up table for efficient execution.
+<br/><b>prime(x)</b>:<br/><img src="_equ#0#100#0#1#prime(x)"/>
+}}
+
+{{ prime_s(n)
+Smooth version of <a href="#prime">prime</a>.
+<br/><b>prime_s(x)</b>:<br/><img src="_equ#0#100#0#1#prime_s(x)"/>
+}}
+
+{{ quer(n)
+Returns the cross sum of the integer number <i>n</i>. The cross sum is the sum of all digits of a number, in this case in the base 10 system. When the sum is calculated, the cross sum is taken again until only one digit remains.
+<br/><b>quer(x)</b>:<br/><img src="_equ#0#100#0#20#quer(x)"/>
+}}
+
+{{ uspiral(x, y)
+Returns the ulam spiral number for the integer coordinate (<i>x</i>, <i>y</i>).
+The ulam spiral lives in the integer grid, starts at 1 and extends counter-clockwise in square spirals.
+<br/><img src="ulam_spiral.png"/>
+}}
+
+{{ uspiral(x, y, w)
+Returns the <a href="#ulam2">ulam</a> spiral number for the integer coordinate (<i>x</i>, <i>y</i>) with additional width parameter <i>w</i>. Instead of a quadratic expansion, the spiral extents rectangular with the longest edges on the x axis.
+}}
+
+{{ tspiral(x, y)
+Returns the triangle spiral number for the integer coordinate (<i>x</i>, <i>y</i>). The triangle spiral lives in the integer grid, starts at 1 and extends counter-clockwise in triangles around itself.
+<br/>Note that not all positions are defined for the triangle spiral. These undefined positions return zero.
+}}
+
+{{ ndiv(n)
+Returns the number of divisors of the integer <i>n</i>. The first about million numbers have a look-up table for efficient execution.
+<br/><b>ndiv(x)</b>:<br/><img src="_equ#0#100#0#20#ndiv(x)"/>
+}}
+
+{{ divisor(n, i)
+Returns the <i>i</i>th divisor of the integer <i>n</i>. The first about 260,000 numbers have a look-up table for efficient execution.
+}}
+<br/><b>divisor(x,3)</b>:<br/><img src="_equ#0#100#0#20#divisor(x,3)"/>
+
+{{ sumdiv(n)
+Returns the sum of all the divisors of the integer <i>n</i>. The first about 260,000 numbers have a look-up table for efficient execution.
+<br/><b>sumdiv(x)</b>:<br/><img src="_equ#0#100#0#100#sumdiv(x)"/>
+}}
+
+{{ proddiv(n)
+Returns the product of all the divisors of the integer <i>n</i>. The first about 260,000 numbers have a look-up table for efficient execution.
+<br/><b>proddiv(x)</b>:<br/><img src="_equ#0#100#0#10000#proddiv(x)"/>
+}}
+
+{{ nextdiv(n, d)
+Returns the next divisor of the integer <i>n</i>, starting at <i>d</i>. It does not matter if <i>d</i> is actually a divisor of <i>n</i>. There is no look-up table and this function might be relatively slow.
+}}
+
+{{ gcd(a, b)
+Returns the greatest common divisor of the integers <i>a</i> and <i>b</i>. There is no look-up table and this function might be relatively slow.
+}}
+
+{{ cong(a, b, m)
+Returns 1 if the integers <i>a</i> and <i>b</i> are congruent in the modulo space of <i>m</i> and 0 otherwise. The calculation is: <b>cong(a,b,m) = ((b-a) modulo m) equals 0</b>
+}}
+
+{{ digits(n)
+Returns the number of digits of the integer <i>n</i> in the base 10 system.
+}}
+
+{{ ndiv_s(n)
+This is the smoothed version of <a href="#ndiv1">ndiv</a>
+<br/><b>ndiv_s(x)</b>:<br/><img src="_equ#0#100#0#20#ndiv_s(x)"/>
+}}
+
+{{ divisor_s(n, i)
+This is the smoothed version of <a href="#divisor2">divisor</a>
+<br/><b>divisor_s(x,3)</b>:<br/><img src="_equ#0#100#0#20#divisor_s(x,3)"/>
+}}
+
+{{ sumdiv_s(n)
+This is the smoothed version of <a href="#sumdiv1">sumdiv</a>
+<br/><b>sumdiv_s(x)</b>:<br/><img src="_equ#0#100#0#100#sumdiv_s(x)"/>
+}}
+
+{{ proddiv_s(n)
+This is the smoothed version of <a href="#proddiv1">proddiv</a>
+<br/><b>proddiv_s(x)</b>:<br/><img src="_equ#0#100#0#10000#proddiv_s(x)"/>
+}}
+
+{{ nextdiv_s(n, d)
+This is the smoothed version of <a href="#nextdiv2">nextdiv</a>
+}}
+
+{{ gcd_s(a, b)
+This is the smoothed version of <a href="#gcd2">gcd</a>
+}}
+
+{{ cong_s(a, b, m)
+This is the smoothed version of <a href="#cong3">cong</a>
+}}
+
+{{ digits_s(n)
+This is the smoothed version of <a href="#digits1">digits</a>
+}}
+
+{{ mandel(x, y)
+Returns the approximation of the Mandelbrot function. The input variables are the real (<i>x</i>) and imaginary (<i>y</i>) part in the equation: <b>z(n+1) = z(n) ^ 2 + c</b>; where <b>z</b> and <b>c</b> are complex numbers. <b>z</b> is initially zero and <b>c</b> is initialized to the input variables. The result of the function is the real part of <b>z</b> after a maximum of 1000 iterations, or until z exceeds the limit of sqrt(-2).
+<br/><b>mandel(x,1)</b>:<br/><img src="_equ#-2#2#0#6#mandel(x,1)"/>
+}}
+
+{{ mandel(x, y, i)
+Sames as <a href="#mandel2">mandel(x, y)</a> but with the number of maximum iterations given in <i>i</i>.
+<br/><b>mandel(x,1,10)</b>:<br/><img src="_equ#-2#2#0#6#mandel(x,1,10)"/>
+}}
+
+{{ mandeli(x, y)
+Returns the number of iterations after which <b>z</b> in the mandelbrot function exceeds the limit of sqrt(-2). The maximum iteration is fixed to 1000.
+<br/><b>mandeli(x,1)</b>:<br/><img src="_equ#-2#2#0#20#mandeli(x,1)"/>
+}}
+
+{{ mandeli(x, y, i)
+Same as <a href="#mandeli2">mandeli(x, y)</a> but with the number of maximum iterations given in <i>i</i>.
+<br/><b>mandeli(x,1,10)</b>:<br/><img src="_equ#-2#2#0#20#mandeli(x,1,10)"/>
+}}
+
