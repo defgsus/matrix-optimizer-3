@@ -27,12 +27,21 @@ class EquationDisplayWidget : public QWidget
 {
     Q_OBJECT
 public:
+    enum PaintMode
+    {
+        PM_F_OF_X,
+        PM_F_OF_XY,
+        PM_2D_INTEGER_NUM,
+        PM_2D_INTEGER_SQUARE
+    };
+
     explicit EquationDisplayWidget(QWidget *parent = 0);
     ~EquationDisplayWidget();
 
     const UTIL::ViewSpace& viewSpace() const { return viewSpace_; }
     const QString& equation() const { return equation_; }
     const PPP_NAMESPACE::Parser * parser() const { return parser_; }
+    PaintMode paintMode() const { return mode_; }
 
 signals:
 
@@ -40,8 +49,10 @@ signals:
 
 public slots:
 
+    void resetViewSpace();
     void setViewSpace(const UTIL::ViewSpace&);
     void setEquation(const QString& equation);
+    void setPaintMode(PaintMode m);
 
 protected:
 
@@ -57,6 +68,8 @@ private:
     QString equation_;
 
     Double varX_, varY_;
+
+    PaintMode mode_;
 
     UTIL::ViewSpace viewSpace_,
                     lastViewSpace_;

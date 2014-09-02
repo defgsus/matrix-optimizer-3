@@ -16,6 +16,7 @@
 
 #include "helpdialog.h"
 #include "widget/helptextbrowser.h"
+#include "io/application.h"
 
 namespace MO {
 namespace GUI {
@@ -39,6 +40,13 @@ HelpDialog::HelpDialog(const QString &url, QWidget *parent) :
     createWidgets_();
 
     browser_->setSource(QUrl(url));
+}
+
+void HelpDialog::run(const QString &url)
+{
+    auto help = new HelpDialog(url, application->mainWindow());
+    help->setAttribute(Qt::WA_DeleteOnClose);
+    help->show();
 }
 
 void HelpDialog::createWidgets_()

@@ -20,68 +20,95 @@ namespace PAINTER {
 
 Grid::Grid(QObject *parent)
     :   QObject     (parent),
+        options_    (O_DrawAll),
         pen_        (QColor(255,255,255,50)),
-        textPen_    (QColor(255,255,255,150)),
-        options_    (O_DrawAll)
+        penCenter_  (QColor(255,255,255,200)),
+        penText_    (QColor(255,255,255,150))
 {
+    setSpacingX(GS_SECONDS);
+    setSpacingY(GS_SMALL_AND_LARGE);
+}
 
-    spacingX_.insert(0.0010);
-    //spacingX_.insert(0.0025);
-    spacingX_.insert(0.005);
-    spacingX_.insert(0.01);
-    //spacingX_.insert(0.02);
-    //spacingX_.insert(0.025);
-    spacingX_.insert(0.05);
-    spacingX_.insert(0.1);
-    //spacingX_.insert(0.25);
-    spacingX_.insert(0.5);
-    spacingX_.insert(1.0);
-    spacingX_.insert(2.0);
-    spacingX_.insert(5.0);
-    spacingX_.insert(10.0);
-    spacingX_.insert(20.0);
-    spacingX_.insert(30.0);
-    spacingX_.insert(60.0);
-    spacingX_.insert(120.0);
-    spacingX_.insert(240.0);
-    spacingX_.insert(360.0);
-    spacingX_.insert(720.0);
+void Grid::setSpacingX(GridSpacing s)
+{
+    setSpacing_(spacingX_, s);
+}
 
-    spacingY_.insert(0.000001);
-    spacingY_.insert(0.000025);
-    spacingY_.insert(0.00005);
-    spacingY_.insert(0.0001);
-    spacingY_.insert(0.00025);
-    spacingY_.insert(0.0005);
-    spacingY_.insert(0.001);
-    spacingY_.insert(0.0025);
-    spacingY_.insert(0.005);
-    spacingY_.insert(0.01);
-    spacingY_.insert(0.025);
-    spacingY_.insert(0.05);
-    spacingY_.insert(0.1);
-    spacingY_.insert(0.25);
-    spacingY_.insert(0.5);
-    spacingY_.insert(1.0);
-    spacingY_.insert(2.0);
-    spacingY_.insert(5.0);
-    spacingY_.insert(10.0);
-    spacingY_.insert(20.0);
-    spacingY_.insert(50.0);
-    spacingY_.insert(100.0);
-    spacingY_.insert(200.0);
-    spacingY_.insert(500.0);
-    spacingY_.insert(1000.0);
-    spacingY_.insert(2000.0);
-    spacingY_.insert(5000.0);
-    spacingY_.insert(10000.0);
-    spacingY_.insert(20000.0);
-    spacingY_.insert(50000.0);
-    spacingY_.insert(100000.0);
-    spacingY_.insert(200000.0);
-    spacingY_.insert(500000.0);
-    spacingY_.insert(1000000.0);
+void Grid::setSpacingY(GridSpacing s)
+{
+    setSpacing_(spacingY_, s);
+}
 
+void Grid::setSpacing_(std::set<Double> & set, GridSpacing s)
+{
+    set.clear();
+
+    if (s == GS_SECONDS)
+    {
+        set.insert(0.0010);
+        //set.insert(0.0025);
+        set.insert(0.005);
+        set.insert(0.01);
+        //set.insert(0.02);
+        //set.insert(0.025);
+        set.insert(0.05);
+        set.insert(0.1);
+        //set.insert(0.25);
+        set.insert(0.5);
+        set.insert(1.0);
+        set.insert(2.0);
+        set.insert(5.0);
+        set.insert(10.0);
+        set.insert(20.0);
+        set.insert(30.0);
+        set.insert(60.0);
+        set.insert(120.0);
+        set.insert(240.0);
+        set.insert(360.0);
+        set.insert(720.0);
+    }
+
+    if (s == GS_SMALL_AND_LARGE)
+    {
+        set.insert(0.000001);
+        set.insert(0.000025);
+        set.insert(0.00005);
+        set.insert(0.0001);
+        set.insert(0.00025);
+        set.insert(0.0005);
+        set.insert(0.001);
+        set.insert(0.0025);
+        set.insert(0.005);
+        set.insert(0.01);
+        set.insert(0.025);
+        set.insert(0.05);
+        set.insert(0.1);
+        set.insert(0.25);
+        set.insert(0.5);
+    }
+
+    if (s == GS_SMALL_AND_LARGE || s == GS_INTEGER)
+    {
+        set.insert(1.0);
+        set.insert(2.0);
+        set.insert(5.0);
+        set.insert(10.0);
+        set.insert(20.0);
+        set.insert(50.0);
+        set.insert(100.0);
+        set.insert(200.0);
+        set.insert(500.0);
+        set.insert(1000.0);
+        set.insert(2000.0);
+        set.insert(5000.0);
+        set.insert(10000.0);
+        set.insert(20000.0);
+        set.insert(50000.0);
+        set.insert(100000.0);
+        set.insert(200000.0);
+        set.insert(500000.0);
+        set.insert(1000000.0);
+    }
 }
 
 Double Grid::quantizeX(Double x) const
@@ -135,14 +162,18 @@ void Grid::paint(QPainter &p, const QRect &rect)
                     const Double qx = MATH::quant(x,spacing);
                     const int sx = viewspace_.mapXFrom(qx) * width;
 
+                    if (qx == 0)
+                        p.setPen(penCenter_);
                     p.drawLine(sx, rect.top(), sx, rect.bottom());
+                    if (qx == 0)
+                        p.setPen(pen_);
                 }
             }
 
             // draw text
             if ((options_ & O_DrawTextX) && rect.top() < 40)
             {
-                p.setPen(textPen_);
+                p.setPen(penText_);
                 const int fh = p.fontMetrics().height() * 0.8;
                 // determine start offset of text
                 int hs = (int)(x0/spacing) % 2;
@@ -178,16 +209,21 @@ void Grid::paint(QPainter &p, const QRect &rect)
                 p.setPen(pen_);
                 for (Double y = y0; y<y1+spacing; y += spacing)
                 {
-                    const int sy = height - 1 - viewspace_.mapYFrom(MATH::quant(y,spacing)) * height;
+                    const Double qy = MATH::quant(y,spacing);
+                    const int sy = height - 1 - viewspace_.mapYFrom(qy) * height;
 
+                    if (qy == 0)
+                        p.setPen(penCenter_);
                     p.drawLine(rect.left(), sy, rect.right(), sy);
+                    if (qy == 0)
+                        p.setPen(pen_);
                 }
             }
 
             // text
             if (options_ & O_DrawTextY)
             {
-                p.setPen(textPen_);
+                p.setPen(penText_);
                 for (Double y = y0; y<y1+spacing; y += spacing)
                 {
                     const Double qy = MATH::quant(y,spacing);

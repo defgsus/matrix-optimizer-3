@@ -42,6 +42,13 @@ public:
         O_DrawAll = 0xffff
     };
 
+    enum GridSpacing
+    {
+        GS_SECONDS,
+        GS_INTEGER,
+        GS_SMALL_AND_LARGE
+    };
+
     // -------------- types -----------------
 
     Grid(QObject * parent = 0);
@@ -59,6 +66,9 @@ public:
 
     void setViewSpace(const UTIL::ViewSpace& viewspace) { viewspace_ = viewspace; }
 
+    void setSpacingX(GridSpacing);
+    void setSpacingY(GridSpacing);
+
     // ----------- draw action --------------
 
     void paint(QPainter & p);
@@ -67,13 +77,16 @@ public:
 
 protected:
 
+    void setSpacing_(std::set<Double>&, GridSpacing);
+
     UTIL::ViewSpace viewspace_;
 
     std::set<Double> spacingX_, spacingY_;
 
-    QPen pen_, textPen_;
-
     int options_;
+    GridSpacing spacingXMode_, spacingYMode_;
+
+    QPen pen_, penCenter_, penText_;
 };
 
 } // namespace PAINTER

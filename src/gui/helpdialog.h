@@ -28,6 +28,8 @@ public:
     explicit HelpDialog(QWidget *parent = 0);
     explicit HelpDialog(const QString& url, QWidget *parent = 0);
 
+    static void run(const QString& url);
+
 signals:
 
 public slots:

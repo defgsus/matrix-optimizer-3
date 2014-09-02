@@ -44,6 +44,13 @@ void Settings::createDefaultValues_()
     defaultValues_["Audio/buffersize"] = 128;
     defaultValues_["Audio/channelsIn"] = 2;
     defaultValues_["Audio/channelsOut"] = 2;
+
+    defaultValues_["EquEdit/equation"] = "sin(x*TWO_PI)";
+    defaultValues_["EquEdit/paintmode"] = 0;
+    defaultValues_["EquEdit/x0"] = -1;
+    defaultValues_["EquEdit/x1"] = 1;
+    defaultValues_["EquEdit/y0"] = -1;
+    defaultValues_["EquEdit/y1"] = 1;
 }
 
 QVariant Settings::getValue(const QString &key)

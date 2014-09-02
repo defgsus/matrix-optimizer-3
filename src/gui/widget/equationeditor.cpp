@@ -22,6 +22,7 @@
 #include "equationeditor.h"
 #include "tool/syntaxhighlighter.h"
 #include "math/funcparser/parser.h"
+#include "gui/helpdialog.h"
 
 namespace MO {
 namespace GUI {
@@ -177,6 +178,20 @@ void EquationEditor::checkEquation_()
 
 void EquationEditor::keyPressEvent(QKeyEvent * e)
 {
+    if (e->key() == Qt::Key_F1)
+    {
+        QString url = "equation.html";
+
+        auto c = textCursor();
+        c.select(QTextCursor::WordUnderCursor);
+        if (!c.selectedText().isEmpty())
+            url += "#" + c.selectedText();
+        HelpDialog::run(url);
+
+        e->accept();
+        return;
+    }
+
     // Let Enter accept the current auto-complete suggestion
     if ((e->key() == Qt::Key_Enter || e->key() == Qt::Key_Return)
         && completer_ && completer_->popup()->isVisible()

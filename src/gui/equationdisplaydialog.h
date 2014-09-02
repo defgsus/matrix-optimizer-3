@@ -13,6 +13,8 @@
 
 #include <QDialog>
 
+class QComboBox;
+
 namespace MO {
 namespace GUI {
 
@@ -30,7 +32,14 @@ signals:
 
 public slots:
 
+protected:
+
+    void closeEvent(QCloseEvent *);
+
 private slots:
+
+    void loadSettings_();
+    void saveSettings_();
 
     void updateViewspace_();
     void updateFromViewspace_();
@@ -38,12 +47,15 @@ private slots:
 private:
 
     void createWidgets_();
+    void updateModeBox_();
 
     EquationDisplayWidget * display_;
     EquationEditor * editor_;
 
     DoubleSpinBox
-        *spinX_, *spinY_, *spinScaleX_, *spinScaleY_;
+        *spinX0_, *spinY0_, *spinX1_, *spinY1_;
+
+    QComboBox * comboMode_;
 };
 
 
