@@ -33,7 +33,7 @@ namespace
 
         EquationData(const QString& equ)
         {
-            p.variables().add("x", &x);
+            p.variables().add("x", &x, "");
             p.parse(equ.toStdString());
         }
         Double value(Double time) const Q_DECL_OVERRIDE

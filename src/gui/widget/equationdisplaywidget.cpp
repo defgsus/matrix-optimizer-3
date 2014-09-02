@@ -48,8 +48,8 @@ EquationDisplayWidget::EquationDisplayWidget(QWidget *parent) :
     curve_      (0),
     grid_       (new PAINTER::Grid(this))
 {
-    parser_->variables().add("x", &varX_);
-    parser_->variables().add("y", &varY_);
+    parser_->variables().add("x", &varX_, tr("vertical position").toStdString());
+    parser_->variables().add("y", &varY_, tr("horizontal position").toStdString());
 
     //setEquation("sin(x*TWO_PI)");
     setEquation("x==1 || y==1");

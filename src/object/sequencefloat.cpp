@@ -30,17 +30,28 @@ namespace MO {
 class SequenceFloat::SeqEquation
 {
 public:
+
+
+
     SeqEquation()
         : equation(new PPP_NAMESPACE::Parser())
     {
-        equation->variables().add("x", &time);
-        equation->variables().add("time", &time);
-        equation->variables().add("f", &freq);
-        equation->variables().add("freq", &freq);
-        equation->variables().add("p", &phase);
-        equation->variables().add("phase", &phase);
-        equation->variables().add("pw", &pw);
-        equation->variables().add("pulsewidth", &pw);
+        equation->variables().add("x", &time,
+            SequenceFloat::tr("seconds").toStdString());
+        equation->variables().add("time", &time,
+            SequenceFloat::tr("seconds (same as x)").toStdString());
+        equation->variables().add("f", &freq,
+            SequenceFloat::tr("the set frequency").toStdString());
+        equation->variables().add("freq", &freq,
+            SequenceFloat::tr("the set frequency (same as f)").toStdString());
+        equation->variables().add("p", &phase,
+            SequenceFloat::tr("the set phase").toStdString());
+        equation->variables().add("phase", &phase,
+            SequenceFloat::tr("the set phase (same as p)").toStdString());
+        equation->variables().add("pw", &pw,
+            SequenceFloat::tr("the set pulse-width").toStdString());
+        equation->variables().add("pulsewidth", &pw,
+            SequenceFloat::tr("the set pulse-width (same as pw)").toStdString());
     }
 
     ~SeqEquation() { delete equation; }
@@ -712,8 +723,8 @@ void SequenceFloat::updateWavetable_()
     {
         PPP_NAMESPACE::Parser p;
         PPP_NAMESPACE::Float x, r;
-        p.variables().add("x", &x);
-        p.variables().add("r", &r);
+        p.variables().add("x", &x, tr("seconds [0,1]").toStdString());
+        p.variables().add("r", &r, tr("radians [0,TWO_PI]").toStdString());
 
         if (!p.parse(p_wtEquationText_->baseValue().toStdString()))
         {

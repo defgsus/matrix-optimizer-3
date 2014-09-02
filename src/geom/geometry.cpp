@@ -667,10 +667,10 @@ bool Geometry::transformWithEquation(const QString &equationX,
     std::vector<PPP_NAMESPACE::Parser> equ(3);
     for (uint i=0; i<3; ++i)
     {
-        equ[i].variables().add("x", &vx);
-        equ[i].variables().add("y", &vy);
-        equ[i].variables().add("z", &vz);
-        equ[i].variables().add("i", &vindex);
+        equ[i].variables().add("x", &vx, "");
+        equ[i].variables().add("y", &vy, "");
+        equ[i].variables().add("z", &vz, "");
+        equ[i].variables().add("i", &vindex, "");
     }
 
     if (!equ[0].parse(equationX.toStdString()))
@@ -717,40 +717,40 @@ bool Geometry::transformPrimitivesWithEquation(
     std::vector<PPP_NAMESPACE::Parser> equ(3);
     for (uint i=0; i<3; ++i)
     {
-        equ[i].variables().add("x", &vx);
-        equ[i].variables().add("y", &vy);
-        equ[i].variables().add("z", &vz);
-        equ[i].variables().add("nx", &vnx);
-        equ[i].variables().add("ny", &vny);
-        equ[i].variables().add("nz", &vnz);
-        equ[i].variables().add("s", &vs);
-        equ[i].variables().add("t", &vt);
-        equ[i].variables().add("x1", &vpx[0]);
-        equ[i].variables().add("y1", &vpy[0]);
-        equ[i].variables().add("z1", &vpz[0]);
-        equ[i].variables().add("x2", &vpx[1]);
-        equ[i].variables().add("y2", &vpy[1]);
-        equ[i].variables().add("z2", &vpz[1]);
-        equ[i].variables().add("x3", &vpx[2]);
-        equ[i].variables().add("y3", &vpy[2]);
-        equ[i].variables().add("z3", &vpz[2]);
-        equ[i].variables().add("nx1", &vpnx[0]);
-        equ[i].variables().add("ny1", &vpny[0]);
-        equ[i].variables().add("nz1", &vpnz[0]);
-        equ[i].variables().add("nx2", &vpnx[1]);
-        equ[i].variables().add("ny2", &vpny[1]);
-        equ[i].variables().add("nz2", &vpnz[1]);
-        equ[i].variables().add("nx3", &vpnx[2]);
-        equ[i].variables().add("ny3", &vpny[2]);
-        equ[i].variables().add("nz3", &vpnz[2]);
-        equ[i].variables().add("s1", &vps[0]);
-        equ[i].variables().add("t1", &vpt[0]);
-        equ[i].variables().add("s2", &vps[1]);
-        equ[i].variables().add("t2", &vpt[1]);
-        equ[i].variables().add("s3", &vps[2]);
-        equ[i].variables().add("t3", &vpt[2]);
-        equ[i].variables().add("i", &vi);
-        equ[i].variables().add("p", &vp);
+        equ[i].variables().add("x", &vx, "");
+        equ[i].variables().add("y", &vy, "");
+        equ[i].variables().add("z", &vz, "");
+        equ[i].variables().add("nx", &vnx, "");
+        equ[i].variables().add("ny", &vny, "");
+        equ[i].variables().add("nz", &vnz, "");
+        equ[i].variables().add("s", &vs, "");
+        equ[i].variables().add("t", &vt, "");
+        equ[i].variables().add("x1", &vpx[0], "");
+        equ[i].variables().add("y1", &vpy[0], "");
+        equ[i].variables().add("z1", &vpz[0], "");
+        equ[i].variables().add("x2", &vpx[1], "");
+        equ[i].variables().add("y2", &vpy[1], "");
+        equ[i].variables().add("z2", &vpz[1], "");
+        equ[i].variables().add("x3", &vpx[2], "");
+        equ[i].variables().add("y3", &vpy[2], "");
+        equ[i].variables().add("z3", &vpz[2], "");
+        equ[i].variables().add("nx1", &vpnx[0], "");
+        equ[i].variables().add("ny1", &vpny[0], "");
+        equ[i].variables().add("nz1", &vpnz[0], "");
+        equ[i].variables().add("nx2", &vpnx[1], "");
+        equ[i].variables().add("ny2", &vpny[1], "");
+        equ[i].variables().add("nz2", &vpnz[1], "");
+        equ[i].variables().add("nx3", &vpnx[2], "");
+        equ[i].variables().add("ny3", &vpny[2], "");
+        equ[i].variables().add("nz3", &vpnz[2], "");
+        equ[i].variables().add("s1", &vps[0], "");
+        equ[i].variables().add("t1", &vpt[0], "");
+        equ[i].variables().add("s2", &vps[1], "");
+        equ[i].variables().add("t2", &vpt[1], "");
+        equ[i].variables().add("s3", &vps[2], "");
+        equ[i].variables().add("t3", &vpt[2], "");
+        equ[i].variables().add("i", &vi, "");
+        equ[i].variables().add("p", &vp, "");
     }
 
     if (!equ[0].parse(equationX.toStdString()))
@@ -884,12 +884,12 @@ bool Geometry::transformTexCoordsWithEquation(
     std::vector<PPP_NAMESPACE::Parser> equ(2);
     for (uint i=0; i<2; ++i)
     {
-        equ[i].variables().add("x", &vx);
-        equ[i].variables().add("y", &vy);
-        equ[i].variables().add("z", &vz);
-        equ[i].variables().add("i", &vindex);
-        equ[i].variables().add("s", &vs);
-        equ[i].variables().add("t", &vt);
+        equ[i].variables().add("x", &vx, "");
+        equ[i].variables().add("y", &vy, "");
+        equ[i].variables().add("z", &vz, "");
+        equ[i].variables().add("i", &vindex, "");
+        equ[i].variables().add("s", &vs, "");
+        equ[i].variables().add("t", &vt, "");
     }
 
     if (!equ[0].parse(equationS.toStdString()))

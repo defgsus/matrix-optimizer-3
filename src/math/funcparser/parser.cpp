@@ -26,8 +26,9 @@ namespace PPP_NAMESPACE
 
 // --------------------------- Variable ------------------------------------------------------
 
-Variable::Variable(const std::string &name, Float *value)
+Variable::Variable(const std::string &name, Float *value, const std::string & desc)
     :	name_	(name),
+        desc_   (desc),
         value_	(value),
         owner_	(false),
         const_	(false),
@@ -37,8 +38,9 @@ Variable::Variable(const std::string &name, Float *value)
     MF_DEBUG_("Variable("<<this<<")::Variable(\""<<name<<"\", "<<value<<")");
 }
 
-Variable::Variable(const std::string &name, Float value)
+Variable::Variable(const std::string &name, Float value, const std::string& desc)
     :	name_	(name),
+        desc_   (desc),
         value_	(new Float),
         owner_	(true),
         const_	(true),
@@ -69,6 +71,7 @@ Variable& Variable::operator=(const Variable& var)
     if (owner_ && value_) delete value_;
 
     name_ = var.name_;
+    desc_ = var.desc_;
     value_ = var.value_;
     owner_ = var.owner_;
     const_ = var.const_;
@@ -108,12 +111,12 @@ long long int Variable::valueAsInt() const
 
 Variables::Variables()
 {
-    add("PI", PI);
-    add("TWO_PI", TWO_PI);
-    add("TAU", TWO_PI);
-    add("HALF_PI", HALF_PI);
-    add("E", 2.71828182845904523536);
-    add("PHI", (1.0 + sqrt(5.0)) / 2.0);
+    add("PI", PI, QObject::tr("the famous pi constant").toStdString());
+    add("TWO_PI", TWO_PI, QObject::tr("two times pi").toStdString());
+    add("TAU", TWO_PI, QObject::tr("same as TWO_PI").toStdString());
+    add("HALF_PI", HALF_PI, QObject::tr("pi divided by 2").toStdString());
+    add("E", 2.71828182845904523536, QObject::tr("\"Euler's constant\"").toStdString());
+    add("PHI", (1.0 + sqrt(5.0)) / 2.0, QObject::tr("the \"golden ratio\"").toStdString());
 }
 
 Variable * Variables::add_temp_(const std::string& name, Float value, Program * prog)
@@ -162,20 +165,20 @@ bool Variables::getVariables(std::vector<Variable*>& vec, bool temp)
     return r;
 }
 
-bool Variables::add(const std::string& name, Float value)
+bool Variables::add(const std::string& name, Float value, const std::string & desc)
 {
     if (variable(name)) return false;
 
     //std::cout << v.name() << " " << v.value() << "\n";
-    map_.insert( Map::value_type( name, new Variable(name, value) ) );
+    map_.insert( Map::value_type( name, new Variable(name, value, desc) ) );
     return true;
 }
 
-bool Variables::add(const std::string& name, Float* value)
+bool Variables::add(const std::string& name, Float* value, const std::string & desc)
 {
     if (variable(name)) return false;
 
-    map_.insert( std::make_pair( name, new Variable(name, value) ) );
+    map_.insert( std::make_pair( name, new Variable(name, value, desc) ) );
     return true;
 }
 
@@ -217,9 +220,9 @@ void Variables::copyFrom(const Variables &other)
     if (!i->second->temp_)
     {
         if (i->second->owner_)
-            add(i->second->name_, i->second->value_);
+            add(i->second->name_, i->second->value_, i->second->desc_);
         else
-            add(i->second->name_, *i->second->value_);
+            add(i->second->name_, *i->second->value_, i->second->desc_);
     }
 }
 
@@ -531,9 +534,9 @@ int test_parser_()
     Float x = 23.0, y = 42.0;
     double x_ = 23.0, y_ = 42.0;
 
-    p.variables().add("x", &x);
-    p.variables().add("y", &y);
-    p.variables().add("PI", PI);
+    p.variables().add("x", &x, "");
+    p.variables().add("y", &y, "");
+    p.variables().add("PI", PI, "");
 
 #ifndef PPP_TTMATH
 #	define Abs abs

@@ -110,7 +110,8 @@ void EquationEditor::addVariables(const QStringList &variables)
         parser_ = new PPP_NAMESPACE::Parser();
 
     for (auto &v : variables)
-        parser_->variables().add(v.toStdString(), (PPP_NAMESPACE::Float)0);
+        parser_->variables().add(
+                    v.toStdString(), (PPP_NAMESPACE::Float)0, "");
 
     createCompleter_();
 }

@@ -29,6 +29,7 @@ namespace PPP_NAMESPACE {
         public:
 
         const std::string& name() const { return name_; }
+        const std::string& description() const { return desc_; }
 
         Float value() const { return *value_; }
 
@@ -43,10 +44,10 @@ namespace PPP_NAMESPACE {
             manage ownership and stuff */
 
         /** constructor for non-owning float */
-        Variable(const std::string &name_, Float *value_);
+        Variable(const std::string &name_, Float *value_, const std::string& desc = "");
 
         /** constructor for own allocated float */
-        Variable(const std::string &name_, Float value_);
+        Variable(const std::string &name_, Float value_, const std::string& desc = "");
 
         /** copy constructor.
             if 'var' owns it's float, this Variable will own it's own float */
@@ -62,7 +63,9 @@ namespace PPP_NAMESPACE {
     private:
 
         /** name, f.e. "x" */
-        std::string name_;
+        std::string name_,
+        /** Description */
+            desc_;
 
         /** pointer to the float value */
         Float *value_;
@@ -110,10 +113,10 @@ namespace PPP_NAMESPACE {
         Variables& operator = (const Variables& other) { copyFrom(other); return *this; }
 
         /** add a non-owning variable */
-        bool add(const std::string& name, Float * value);
+        bool add(const std::string& name, Float * value, const std::string& desc);
 
         /** add an owning variable */
-        bool add(const std::string& name, Float value);
+        bool add(const std::string& name, Float value, const std::string& desc);
 
         /** return the installed variable or NULL */
         Variable * variable(const std::string& name);
