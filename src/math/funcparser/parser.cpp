@@ -212,6 +212,15 @@ std::vector<std::string> Variables::variableNames() const
     return vec;
 }
 
+std::vector<std::string> Variables::variableDescriptions() const
+{
+    std::vector<std::string> vec;
+    for (auto &i : map_)
+        vec.push_back(i.second->description());
+
+    return vec;
+}
+
 void Variables::copyFrom(const Variables &other)
 {
     clear();

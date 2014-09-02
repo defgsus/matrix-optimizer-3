@@ -122,14 +122,20 @@ void HelpTextBrowser::addEquationInfo_(QString& doc) const
 
     std::vector<PPP_NAMESPACE::Variable*> vars;
     p.variables().getVariables(vars, false);
+
+    str += "<table>\n";
     for (PPP_NAMESPACE::Variable * v : vars)
     {
         if (!v->isConst())
             continue;
 
-        str += QString("<b>%1</b> = %2<br/>\n")
-                .arg(QString::fromStdString(v->name())).arg(v->value());
+        str += QString("<tr><td><b>%1&nbsp;&nbsp;</b></td> "
+                       "<td>%2&nbsp;&nbsp;</td> <td>= %3</td></tr>\n")
+                .arg(QString::fromStdString(v->name()))
+                .arg(QString::fromStdString(v->description()))
+                .arg(v->value());
     }
+    str += "</table>\n";
 
     doc.replace("!CONSTANTS!", str);
 

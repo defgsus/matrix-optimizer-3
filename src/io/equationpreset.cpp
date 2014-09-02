@@ -41,7 +41,7 @@ void EquationPreset::serialize(XmlStream & io) const
     {
         io.newSection("equation");
             io.write("name", e.name);
-            io.write("equ", e.equ);
+            io.write("text", e.equ);
         io.endSection();
     }
 }
@@ -59,7 +59,7 @@ void EquationPreset::deserialize(XmlStream & io)
         {
             Equ_ e;
             io.expect("name", e.name);
-            io.expect("equ", e.equ);
+            io.expect("text", e.equ);
             equs.append(e);
         }
 

@@ -52,12 +52,19 @@ public slots:
         All variables will be initialized to 0 */
     void addVariables(const QStringList& variables);
 
+    /** Adds the variable names and descriptions to the internal parser.
+        All variables will be initialized to 0 */
+    void addVariables(const QStringList& variables,
+                      const QStringList& descriptions);
+
 protected slots:
 
     void onTextChanged_();
     void onCursorChanged_();
+    void onHover_();
     void checkEquation_();
     void insertCompletion_(const QString &word);
+    void insertVariable_(QAction*);
     void saveEquationAs_();
     void saveEquation_(QAction*);
     void loadEquation_(QAction*);
@@ -65,25 +72,33 @@ protected slots:
 protected:
 
     void keyPressEvent(QKeyEvent *);
-    void contextMenuEvent(QContextMenuEvent *e);
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void contextMenuEvent(QContextMenuEvent *);
 
 private:
     void createMenus_();
     void updatePresetMenu_();
+    void updateVariableMenu_();
     void createCompleter_();
     void setOkState_(bool isOk);
     void performCompletion_(const QString &word);
 
     SyntaxHighlighter * highlighter_;
     QCompleter * completer_;
+    QMap<QString, QString> varDescriptions_;
 
     PPP_NAMESPACE::Parser * parser_;
     const PPP_NAMESPACE::Parser * extParser_;
 
-    QTimer * timer_;
+    QTimer * timer_, * hoverTimer_;
     bool ok_;
 
-    QMenu * contextMenu_, *presetLoadMenu_, *presetSaveMenu_;
+    QMenu
+        * contextMenu_,
+        * presetLoadMenu_,
+        * presetSaveMenu_,
+        * variableMenu_;
 };
 
 } // namespace GUI

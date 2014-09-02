@@ -102,6 +102,13 @@ void TextEditDialog::addVariableNames(const QStringList & vars)
         p_->equEdit->addVariables(vars);
 }
 
+void TextEditDialog::addVariableNames(const QStringList & vars,
+                                      const QStringList & descs)
+{
+    if (p_->textType == TT_EQUATION)
+        p_->equEdit->addVariables(vars, descs);
+}
+
 void TextEditDialog::createWidgets_()
 {
     auto lv = new QVBoxLayout(this);

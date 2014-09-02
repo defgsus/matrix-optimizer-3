@@ -42,6 +42,9 @@ public:
     /** Give a list of variables to the equation editor */
     void addVariableNames(const QStringList&);
 
+    /** Give a list of variables with their descriptions to the equation editor */
+    void addVariableNames(const QStringList& names, const QStringList& descriptions);
+
 signals:
 
     /** The text was changed by the user.

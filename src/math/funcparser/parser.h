@@ -133,6 +133,7 @@ namespace PPP_NAMESPACE {
         bool getVariables(std::vector<Variable*>& vec, bool temp);
 
         std::vector<std::string> variableNames() const;
+        std::vector<std::string> variableDescriptions() const;
     };
 
 

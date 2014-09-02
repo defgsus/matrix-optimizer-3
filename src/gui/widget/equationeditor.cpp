@@ -23,6 +23,7 @@
 #include <QContextMenuEvent>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QToolTip>
 
 #include "equationeditor.h"
 #include "tool/syntaxhighlighter.h"
@@ -44,15 +45,19 @@ EquationEditor::EquationEditor(QWidget *parent) :
     parser_         (0),
     extParser_      (0),
     timer_          (new QTimer(this)),
+    hoverTimer_     (new QTimer(this)),
     ok_             (false)
 {
     // --- setup palette ---
+
     QPalette p(palette());
     p.setColor(QPalette::Base, QColor(50,50,50));
     p.setColor(QPalette::Text, QColor(200,200,200));
     setPalette(p);
 
     // --- setup font ---
+
+    // XXX does not work for Mac
     QFont f("Monospace");
     f.setStyleHint(QFont::Monospace);
     setFont(f);
@@ -66,6 +71,11 @@ EquationEditor::EquationEditor(QWidget *parent) :
     timer_->setSingleShot(true);
     timer_->setInterval(200); /* some interval for fast writers */
     connect(timer_, SIGNAL(timeout()), this, SLOT(checkEquation_()));
+
+    setMouseTracking(true);
+    hoverTimer_->setSingleShot(true);
+    hoverTimer_->setInterval(500);
+    connect(hoverTimer_, SIGNAL(timeout()), this, SLOT(onHover_()));
 
     // ---- context menu ----
 
@@ -101,7 +111,19 @@ void EquationEditor::setParser(const PPP_NAMESPACE::Parser * parser )
     parser_->variables() = parser->variables();
     parser_->functions() = parser->functions();
 
+    // get variable descriptions
+    std::vector<PPP_NAMESPACE::Variable*> vars;
+    parser_->variables().getVariables(vars, false);
+
+    for (auto v : vars)
+    {
+        if (!v->description().empty())
+            varDescriptions_[QString::fromStdString(v->name())]
+                    = QString::fromStdString(v->description());
+    }
+
     createCompleter_();
+    updateVariableMenu_();
 }
 
 void EquationEditor::addVariables(const QStringList &variables)
@@ -114,6 +136,30 @@ void EquationEditor::addVariables(const QStringList &variables)
                     v.toStdString(), (PPP_NAMESPACE::Float)0, "");
 
     createCompleter_();
+    updateVariableMenu_();
+}
+
+void EquationEditor::addVariables(
+        const QStringList &variables,
+        const QStringList &descriptions)
+{
+    MO_ASSERT(descriptions.size() >= variables.size(),
+              "descriptions and variables size not matching "
+              << descriptions.size() << ":" << variables.size());
+
+    int k = 0;
+    for (auto &v : variables)
+        varDescriptions_[v] = descriptions[k++];
+
+    if (!parser_)
+        parser_ = new PPP_NAMESPACE::Parser();
+
+    for (auto &v : variables)
+        parser_->variables().add(
+                    v.toStdString(), (PPP_NAMESPACE::Float)0, "");
+
+    createCompleter_();
+    updateVariableMenu_();
 }
 
 void EquationEditor::createCompleter_()
@@ -171,9 +217,20 @@ void EquationEditor::onTextChanged_()
     QTextCursor c = textCursor();
     c.select(QTextCursor::WordUnderCursor);
     QString word = c.selectedText();
+
+    // ignore '(' and get the left word of it
+    if (word.startsWith('('))
+    {
+        // for some reason we need to move two chars
+        c.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 2);
+        c.select(QTextCursor::WordUnderCursor);
+        word = c.selectedText();
+    }
+
     // and test for auto-completion
     if (!word.isEmpty())
         performCompletion_(word);
+
 
     // trigger parsing
     timer_->start();
@@ -240,17 +297,25 @@ void EquationEditor::onCursorChanged_()
 
 void EquationEditor::insertCompletion_(const QString &word)
 {
-    qDebug() << "current" << word;
     QTextCursor c = textCursor();
     // characters left to insert from whole word
     int numChars = word.length() - completer_->completionPrefix().length();
-    int pos = c.position();
+    //int pos = c.position();
     c.insertText(word.right(numChars));
 
     // select the inserted characters
-    c.setPosition(pos);
-    c.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+    //c.setPosition(pos);
+    //c.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
 
+    setTextCursor(c);
+}
+
+void EquationEditor::insertVariable_(QAction * a)
+{
+    QString varname = a->data().toString();
+
+    QTextCursor c = textCursor();
+    c.insertText(varname);
     setTextCursor(c);
 }
 
@@ -279,11 +344,60 @@ void EquationEditor::performCompletion_(const QString &word)
     }
 }
 
+void EquationEditor::mousePressEvent(QMouseEvent * e)
+{
+    setToolTip("");
+    // restart the timer on click
+    hoverTimer_->start();
+    QPlainTextEdit::mousePressEvent(e);
+}
+
+void EquationEditor::mouseMoveEvent(QMouseEvent * e)
+{
+    setToolTip("");
+    // restart the timer whenever mouse moves
+    hoverTimer_->start();
+    QPlainTextEdit::mouseMoveEvent(e);
+}
+
+void EquationEditor::onHover_()
+{
+    // get mouse position on widget
+    QPoint pos = mapFromGlobal(QCursor::pos());
+    if (!rect().contains(pos))
+        return;
+
+    // adjust a littlebit so we get the center of a letter
+    pos.setX(pos.x() - QFontMetrics(font()).width(" ") / 2);
+
+    // find word under cursor
+    QTextCursor c = cursorForPosition(pos);
+    c.select(QTextCursor::WordUnderCursor);
+    QString word = c.selectedText();
+
+    // check for variable
+    auto i = varDescriptions_.find(word);
+    if (i != varDescriptions_.end())
+    {
+        setToolTip(QString("<b>%1</b> - %2")
+                   .arg(word).arg(i.value()));
+    }
+}
+
+
 void EquationEditor::createMenus_()
 {
     QAction * a;
 
     contextMenu_ = createStandardContextMenu();
+
+    contextMenu_->addSeparator();
+
+    contextMenu_->addMenu( variableMenu_ = new QMenu(contextMenu_) );
+    variableMenu_->setTitle(tr("insert variable"));
+    connect(variableMenu_, SIGNAL(triggered(QAction*)),
+            this, SLOT(insertVariable_(QAction*)));
+
     contextMenu_->addSeparator();
 
     contextMenu_->addMenu( presetLoadMenu_ = new QMenu(contextMenu_) );
@@ -300,7 +414,7 @@ void EquationEditor::createMenus_()
     connect(a, SIGNAL(triggered()), this, SLOT(saveEquationAs_()));
     contextMenu_->addAction( a );
 
-
+    updateVariableMenu_();
     updatePresetMenu_();
 }
 
@@ -327,6 +441,38 @@ void EquationEditor::updatePresetMenu_()
             menu->addAction( a );
             a->setData(p->equation(j));
         }
+    }
+}
+
+void EquationEditor::updateVariableMenu_()
+{
+    variableMenu_->clear();
+
+    if (!parser_)
+        return;
+
+    std::vector<PPP_NAMESPACE::Variable*> vars;
+    std::sort(vars.begin(), vars.end());
+
+    parser_->variables().getVariables(vars, false);
+
+    for (PPP_NAMESPACE::Variable * v : vars)
+    {
+        QAction * a = new QAction(variableMenu_);
+
+        variableMenu_->addAction(a);
+
+        QString varname = QString::fromStdString(v->name());
+        // some name for the action
+        a->setText(varname);
+
+        // the definite name as data field
+        a->setData(varname);
+
+        // description as tooltip
+        auto it = varDescriptions_.find(varname);
+        if (it != varDescriptions_.end())
+            a->setToolTip(it.value());
     }
 }
 

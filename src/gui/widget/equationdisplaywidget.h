@@ -67,7 +67,7 @@ private:
 
     QString equation_;
 
-    Double varX_, varY_;
+    Double varX_, varY_, varXR_, varYR_;
 
     PaintMode mode_;
 
@@ -78,6 +78,8 @@ private:
     EquationData * curveData_;
     PAINTER::ValueCurve * curve_;
     PAINTER::Grid * grid_;
+
+    std::vector<QColor> palette_;
 
     QPoint lastMousePos_;
 };

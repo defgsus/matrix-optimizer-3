@@ -51,6 +51,9 @@ public:
     void setVariableNames(const QStringList& names) { varNames_ = names; }
     void setVariableNames(const std::vector<std::string>& names);
 
+    void setVariableDescriptions(const QStringList& descs) { varDescs_ = descs; }
+    void setVariableDescriptions(const std::vector<std::string>& descs);
+
     /** Opens a dialog to edit the text.
         Depending on the textType(), the dialog will be structured.
         If a (valid) text change was done, the scene object will be called with
@@ -63,7 +66,7 @@ private:
 
     QString value_, defaultValue_;
     TextType textType_;
-    QStringList varNames_;
+    QStringList varNames_, varDescs_;
 };
 
 } // namespace MO

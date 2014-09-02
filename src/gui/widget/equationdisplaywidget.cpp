@@ -19,6 +19,7 @@
 #include "gui/painter/valuecurve.h"
 #include "io/log.h"
 #include "math/functions.h"
+#include "math/constants.h"
 
 namespace MO {
 namespace GUI {
@@ -26,14 +27,15 @@ namespace GUI {
 class EquationDisplayWidget::EquationData : public PAINTER::ValueCurveData
 {
     PPP_NAMESPACE::Parser * p;
-    Double & x;
+    Double & x, & xr;
 public:
-    EquationData(PPP_NAMESPACE::Parser * p, Double & x)
-        : p(p), x(x)
+    EquationData(PPP_NAMESPACE::Parser * p, Double & x, Double & xr)
+        : p(p), x(x), xr(xr)
     { }
     Double value(Double time) const Q_DECL_OVERRIDE
     {
         x = time;
+        xr = x * TWO_PI;
         return p->eval();
     }
 };
@@ -50,9 +52,10 @@ EquationDisplayWidget::EquationDisplayWidget(QWidget *parent) :
 {
     parser_->variables().add("x", &varX_, tr("vertical position").toStdString());
     parser_->variables().add("y", &varY_, tr("horizontal position").toStdString());
+    parser_->variables().add("xr", &varXR_, tr("vertical position in radians").toStdString());
+    parser_->variables().add("yr", &varYR_, tr("horizontal position in radians").toStdString());
 
-    //setEquation("sin(x*TWO_PI)");
-    setEquation("x==1 || y==1");
+    setEquation("sin(xr) * cos(yr)");
 
     setPaintMode(PM_F_OF_X);
 
@@ -60,6 +63,12 @@ EquationDisplayWidget::EquationDisplayWidget(QWidget *parent) :
     viewSpace_.setY(-1);
     viewSpace_.setScaleX(2);
     viewSpace_.setScaleY(2);
+
+    for (int i=255; i>=0; --i)
+        palette_.push_back(QColor(i, i*0.7, i*0.3));
+    for (int i=0; i<256; ++i)
+        palette_.push_back(QColor(i*0.4, i, i*0.7));
+
 }
 
 EquationDisplayWidget::~EquationDisplayWidget()
@@ -167,7 +176,7 @@ void EquationDisplayWidget::paintEvent(QPaintEvent * e)
     if (mode_ == PM_F_OF_X)
     {
         if (!curveData_)
-            curveData_ = new EquationData(parser_, varX_);
+            curveData_ = new EquationData(parser_, varX_, varXR_);
         if (!curve_)
         {
             curve_ = new PAINTER::ValueCurve(this);
@@ -205,6 +214,9 @@ void EquationDisplayWidget::paintEvent(QPaintEvent * e)
 
         if (mode_ == PM_2D_INTEGER_SQUARE)
         {
+            const int
+                    w1 = std::max(1, (int)w-1),
+                    h1 = std::max(1, (int)h-1);
             p.setPen(Qt::NoPen);
             for (int j=-1; j<numy; ++j)
             {
@@ -217,14 +229,13 @@ void EquationDisplayWidget::paintEvent(QPaintEvent * e)
 
                     varX_ = specialTrunc(i + viewSpace_.x());
                     varY_ = specialTrunc(j + viewSpace_.y());
+                    varXR_ = varX_ * TWO_PI;
+                    varYR_ = varY_ * TWO_PI;
                     Double v = parser_->eval();
 
-                    const int vc = std::max(0, std::min(255, (int)(v * 255)));
-                    //if (vc>0)
-                    {
-                        p.setBrush(QBrush(QColor(vc, vc, vc)));
-                        p.drawRect(ix, iy, w-1, h-1);
-                    }
+                    const int vc = 255 + std::max(-255, std::min(255, (int)(v * 255)));
+                    p.setBrush(QBrush(palette_[vc]));
+                    p.drawRect(ix, iy, w1, h1);
                 }
             }
         }
@@ -242,6 +253,8 @@ void EquationDisplayWidget::paintEvent(QPaintEvent * e)
 
                     varX_ = specialTrunc(i + viewSpace_.x());
                     varY_ = specialTrunc(j + viewSpace_.y());
+                    varXR_ = varX_ * TWO_PI;
+                    varYR_ = varY_ * TWO_PI;
                     Double v = parser_->eval();
 
                     if (v != 0)
@@ -271,14 +284,13 @@ void EquationDisplayWidget::paintEvent(QPaintEvent * e)
         {
             varX_ = viewSpace_.mapXTo(Float(x*w)/width());
             varY_ = viewSpace_.mapYTo(Float(height()-1-y*h)/height());
+            varXR_ = varX_ * TWO_PI;
+            varYR_ = varY_ * TWO_PI;
             Double v = parser_->eval();
 
-            const int vc = std::max(0, std::min(255, (int)(v * 255)));
-            //if (vc>0)
-            {
-                p.setBrush(QBrush(QColor(vc, vc, vc)));
-                p.drawRect(x*w, y*w, w, h);
-            }
+            const int vc = 255 + std::max(-255, std::min(255, (int)(v * 255)));
+            p.setBrush(QBrush(palette_[vc]));
+            p.drawRect(x*w, y*w, w, h);
         }
 
         grid_->setViewSpace(viewSpace_);

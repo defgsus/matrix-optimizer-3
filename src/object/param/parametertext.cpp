@@ -58,6 +58,13 @@ void ParameterText::setVariableNames(const std::vector<std::string> &names)
         varNames_ << QString::fromStdString(n);
 }
 
+void ParameterText::setVariableDescriptions(const std::vector<std::string> &descs)
+{
+    varDescs_.clear();
+    for (auto & n : descs)
+        varDescs_ << QString::fromStdString(n);
+}
+
 bool ParameterText::openEditDialog(QWidget *parent)
 {
     MO_ASSERT(object(), "no object for ParameterFilename::openFileDialog()");
@@ -74,7 +81,7 @@ bool ParameterText::openEditDialog(QWidget *parent)
     GUI::TextEditDialog diag(value_, textType_, parent);
     if (textType_ == TT_EQUATION)
     {
-        diag.addVariableNames(varNames_);
+        diag.addVariableNames(varNames_, varDescs_);
         diag.setWindowTitle(QObject::tr("equation for %1").arg(parName));
     }
     else

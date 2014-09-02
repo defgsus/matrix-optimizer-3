@@ -40,18 +40,20 @@ public:
             SequenceFloat::tr("seconds").toStdString());
         equation->variables().add("time", &time,
             SequenceFloat::tr("seconds (same as x)").toStdString());
+        equation->variables().add("xr", &rtime,
+            SequenceFloat::tr("radians of time").toStdString());
         equation->variables().add("f", &freq,
-            SequenceFloat::tr("the set frequency").toStdString());
+            SequenceFloat::tr("the sequence frequency").toStdString());
         equation->variables().add("freq", &freq,
-            SequenceFloat::tr("the set frequency (same as f)").toStdString());
+            SequenceFloat::tr("the sequence frequency (same as f)").toStdString());
         equation->variables().add("p", &phase,
-            SequenceFloat::tr("the set phase").toStdString());
+            SequenceFloat::tr("the sequence phase").toStdString());
         equation->variables().add("phase", &phase,
-            SequenceFloat::tr("the set phase (same as p)").toStdString());
+            SequenceFloat::tr("the sequence phase (same as p)").toStdString());
         equation->variables().add("pw", &pw,
-            SequenceFloat::tr("the set pulse-width").toStdString());
+            SequenceFloat::tr("the sequence pulse-width").toStdString());
         equation->variables().add("pulsewidth", &pw,
-            SequenceFloat::tr("the set pulse-width (same as pw)").toStdString());
+            SequenceFloat::tr("the sequence pulse-width (same as pw)").toStdString());
     }
 
     ~SeqEquation() { delete equation; }
@@ -60,6 +62,7 @@ public:
 
     Double
         time,
+        rtime,
         freq,
         phase,
         pw;
@@ -151,16 +154,19 @@ void SequenceFloat::createParameters()
         p_equationText_ = createTextParameter("equ_text", tr("equation"),
                   tr("The equation is interpreted as a function of time"),
                   TT_EQUATION,
-                  "sin(x*TWO_PI)", true, false);
+                  "sin(xr)", true, false);
         SeqEquation tmpequ;
         p_equationText_->setVariableNames(tmpequ.equation->variables().variableNames());
+        p_equationText_->setVariableDescriptions(tmpequ.equation->variables().variableDescriptions());
 
         p_wtEquationText_ = createTextParameter("equwt_text", tr("wavetable equation"),
                   tr("The equation is interpreted as a function of time and should be periodic "
                      "in the range [0,1]"),
                   TT_EQUATION,
-                  "sin(x*TWO_PI)", true, false);
-        p_wtEquationText_->setVariableNames(QStringList() << "x");
+                  "sin(xr)", true, false);
+        p_wtEquationText_->setVariableNames(QStringList() << "x" << "xr");
+        p_wtEquationText_->setVariableDescriptions(QStringList()
+                << tr("wavetable second [0,1]") << tr("radians of wavetable second [0,TWO_PI]"));
 
         p_soundFile_ = createFilenameParameter("sndfilen", tr("filename"),
                                                   tr("The filename of the audio file"),
@@ -653,6 +659,7 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
             MO_ASSERT(equation_[thread], "SequenceFloat('" << idName() << "')::value() without equation "
                                          "(thread=" << thread << ")");
             equation_[thread]->time = time;
+            equation_[thread]->rtime = time * TWO_PI;
             equation_[thread]->freq = p_frequency_->value(gtime, thread);
             equation_[thread]->phase = p_phase_->value(gtime, thread) * phaseMult_;
             equation_[thread]->pw = AUDIO::Waveform::limitPulseWidth(
@@ -723,8 +730,8 @@ void SequenceFloat::updateWavetable_()
     {
         PPP_NAMESPACE::Parser p;
         PPP_NAMESPACE::Float x, r;
-        p.variables().add("x", &x, tr("seconds [0,1]").toStdString());
-        p.variables().add("r", &r, tr("radians [0,TWO_PI]").toStdString());
+        p.variables().add("x", &x, "");
+        p.variables().add("r", &r, "");
 
         if (!p.parse(p_wtEquationText_->baseValue().toStdString()))
         {
