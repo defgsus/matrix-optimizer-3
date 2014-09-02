@@ -46,6 +46,9 @@ public:
     static QString getOpenDirectory(FileType ft, QWidget * parent = 0,
                         bool updateDirectory = true);
 
+    static void findFiles(FileType ft, bool recursive,
+                          QStringList& entryList);
+
     static void findFiles(FileType ft, const QString& directory, bool recursive,
                           QStringList& entryList);
 

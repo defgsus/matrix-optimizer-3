@@ -17,7 +17,7 @@ namespace IO {
 
     const QStringList fileTypeIds =
     { "any", "scene", "texture", "model", "geom-set", "sound", "projection-set",
-      "povray" };
+      "povray", "equpreset" };
 
     const QStringList fileTypeNames =
     { QObject::tr("Any file"),
@@ -27,7 +27,8 @@ namespace IO {
       QObject::tr("Geometry settings"),
       QObject::tr("Audio file"),
       QObject::tr("Projection settings"),
-      QObject::tr("Povray script")};
+      QObject::tr("Povray script"),
+      QObject::tr("Equation preset") };
 
     const QList<QStringList> fileTypeExtensions =
     {
@@ -38,7 +39,8 @@ namespace IO {
         { "mo3-geom" },
         { "wav", "voc", "au", "snd", "aiff", "aifc", "w64", "flac" },
         { "xml-proj" },
-        { "pov" }
+        { "pov" },
+        { "xml-equ" }
     };
 
     const QList<QStringList> fileTypeDialogFilters =
@@ -53,8 +55,9 @@ namespace IO {
         { QObject::tr("geometry presets") + " ( *.mo3-geom )" },
         { QObject::tr("all audio files")
                     + " ( *.wav *.voc *.au *.snd *.aiff *.aifc *.w64 *.flac )" },
-        { QObject::tr("xml files") + " ( *.xml-proj )" },
-        { QObject::tr("povray files") + " ( *.pov )" }
+        { QObject::tr("projector xml files") + " ( *.xml-proj )" },
+        { QObject::tr("povray files") + " ( *.pov )" },
+        { QObject::tr("equation xml files") + " ( *.xml-equ )" }
     };
 
 

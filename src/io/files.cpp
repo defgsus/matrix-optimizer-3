@@ -25,23 +25,21 @@ QString Files::directory(FileType ft)
 {
     // check for directory settings
     QString key = "Directory/" + fileTypeIds[ft];
-    if (!settings->contains(key))
+    QString dir = settings->getValue(key).toString();
+
+    if (dir.isEmpty())
     {
         // or take directory of filename
-        const QString d =
-            settings->getValue("File/" + fileTypeIds[ft]).toString();
-        if (d.isEmpty())
+        dir = settings->getValue("File/" + fileTypeIds[ft]).toString();
+        if (dir.isEmpty())
             // or return current path if both unknown
             return QDir::currentPath();
 
-        QFileInfo info(d);
+        QFileInfo info(dir);
         return info.absolutePath();
     }
 
-    const QString d =
-        settings->getValue(key).toString();
-
-    return d;
+    return dir;
 }
 
 QString Files::filename(FileType ft)
@@ -195,6 +193,10 @@ QString Files::getOpenDirectory(FileType ft, QWidget *parent, bool updateDirecto
     return fn;
 }
 
+void Files::findFiles(FileType ft, bool recursive, QStringList &entryList)
+{
+    findFiles(ft, directory(ft), recursive, entryList);
+}
 
 void Files::findFiles(FileType ft, const QString &directory,
                       bool recursive, QStringList &entryList)

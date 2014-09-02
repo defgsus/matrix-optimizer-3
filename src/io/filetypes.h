@@ -26,7 +26,8 @@ namespace IO {
         FT_GEOMETRY_SETTINGS,
         FT_SOUND_FILE,
         FT_PROJECTION_SETTINGS,
-        FT_POVRAY
+        FT_POVRAY,
+        FT_EQUATION_PRESET
     };
 
     extern const QStringList fileTypeIds;

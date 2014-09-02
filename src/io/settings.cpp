@@ -33,9 +33,19 @@ Settings::Settings(QObject *parent) :
 
 void Settings::createDefaultValues_()
 {
+    const QString mopath = "/home/defgsus/prog/qt_project/mo/matrixoptimizer";
+
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_GEOMETRY_SETTINGS]]
-                                = "./data/geometry_presets";
-    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_SCENE]] = "./data/scene";
+                                = mopath + "/data/geometry_presets";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_SCENE]]
+                                = mopath + "/data/scene";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_EQUATION_PRESET]]
+                                = mopath + "/data/equations";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_PROJECTION_SETTINGS]]
+                                = mopath + "/data/projection_settings";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_GEOMETRY_SETTINGS]]
+                                = mopath + "/data/geometry_presets";
+
     defaultValues_["File/scene"] = "";
 
     defaultValues_["Audio/api"] = "";

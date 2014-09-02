@@ -9,7 +9,9 @@
 */
 
 #include "equationpresets.h"
-
+#include "equationpreset.h"
+#include "io/files.h"
+#include "io/log.h"
 
 namespace MO {
 namespace IO {
@@ -18,8 +20,47 @@ namespace IO {
 
 EquationPresets::EquationPresets()
 {
+    rescan();
 }
 
+EquationPresets::~EquationPresets()
+{
+    clear();
+}
+
+void EquationPresets::clear()
+{
+    for (auto p : presets_)
+        delete p;
+    presets_.clear();
+}
+
+const QString& EquationPresets::name(int index) const
+{
+    return presets_[index]->name();
+}
+
+const QString& EquationPresets::filename(int index) const
+{
+    return presets_[index]->filename();
+}
+
+void EquationPresets::rescan()
+{
+    QStringList files;
+    Files::findFiles(FT_EQUATION_PRESET, true, files);
+
+    MO_DEBUG_IO("EquationPresets::rescan() " << files.count() << " preset files");
+
+    for (auto &f : files)
+    {
+        auto p = new EquationPreset(f);
+        if (p->count())
+            presets_.append(p);
+        else
+            delete p;
+    }
+}
 
 
 } // namespace IO

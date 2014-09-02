@@ -58,13 +58,18 @@ protected slots:
     void onCursorChanged_();
     void checkEquation_();
     void insertCompletion_(const QString &word);
+    void saveEquationAs_();
+    void saveEquation_(QAction*);
+    void loadEquation_(QAction*);
 
 protected:
 
     void keyPressEvent(QKeyEvent *);
+    void contextMenuEvent(QContextMenuEvent *e);
 
 private:
-
+    void createMenus_();
+    void updatePresetMenu_();
     void createCompleter_();
     void setOkState_(bool isOk);
     void performCompletion_(const QString &word);
@@ -77,6 +82,8 @@ private:
 
     QTimer * timer_;
     bool ok_;
+
+    QMenu * contextMenu_, *presetLoadMenu_, *presetSaveMenu_;
 };
 
 } // namespace GUI

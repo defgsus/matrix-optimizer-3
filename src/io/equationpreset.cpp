@@ -9,8 +9,8 @@
 */
 
 #include "equationpreset.h"
-#include "io/error.h"
 #include "io/xmlstream.h"
+#include "io/log.h"
 
 namespace MO {
 namespace IO {
@@ -35,6 +35,7 @@ EquationPreset::EquationPreset(const QString &filename)
 void EquationPreset::serialize(XmlStream & io) const
 {
     io.write("version", 1);
+    io.write("name", name_);
 
     for (auto &e : equs_)
     {
@@ -47,7 +48,10 @@ void EquationPreset::serialize(XmlStream & io) const
 
 void EquationPreset::deserialize(XmlStream & io)
 {
+    QString name;
     QList<Equ_> equs;
+
+    io.expect("name", name);
 
     while (io.nextSubSection())
     {
@@ -62,6 +66,9 @@ void EquationPreset::deserialize(XmlStream & io)
         io.leaveSection();
     }
 
+    qSort(equs);
+
+    name_ = name;
     equs_ = equs;
 }
 
@@ -72,6 +79,7 @@ void EquationPreset::save(const QString &filename)
     serialize(io);
     io.stopWriting();
     io.save(filename);
+    filename_ = filename;
 }
 
 void EquationPreset::load(const QString &filename)
@@ -81,6 +89,18 @@ void EquationPreset::load(const QString &filename)
     io.startReading("equations");
     deserialize(io);
     io.stopReading();
+    filename_ = filename;
+
+    MO_DEBUG_IO("EquationPreset::load('" << filename << "') "
+             << count() << " presets");
+}
+
+
+void EquationPreset::clear()
+{
+    equs_.clear();
+    name_.clear();
+    filename_.clear();
 }
 
 
@@ -113,9 +133,22 @@ void EquationPreset::removeEquation(const QString &name)
     }
 }
 
+
 void EquationPreset::removeEquation(int index)
 {
     equs_.removeAt(index);
+}
+
+bool EquationPreset::hasEquation(const QString &name) const
+{
+    for (int i=0; i<equs_.count(); ++i)
+    {
+        if (equs_[i].name == name)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 

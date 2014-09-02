@@ -11,18 +11,39 @@
 #ifndef MOSRC_IO_EQUATIONPRESETS_H
 #define MOSRC_IO_EQUATIONPRESETS_H
 
+#include <QString>
+#include <QList>
+
 namespace MO {
 namespace IO {
 
+class EquationPreset;
 
 class EquationPresets
 {
 public:
     explicit EquationPresets();
+    ~EquationPresets();
+
+    // ------------ getter -----------------
+
+    int count() const { return presets_.count(); }
+
+    EquationPreset * preset(int index) { return presets_[index]; }
+    const EquationPreset * preset(int index) const { return presets_[index]; }
+
+    const QString& name(int index) const;
+    const QString& filename(int index) const;
+
+    // -------------- setter ---------------
+
+    void clear();
 
     void rescan();
 
-    //void addEquation(const QString& filename, const QString& )
+private:
+
+    QList<EquationPreset*> presets_;
 };
 
 

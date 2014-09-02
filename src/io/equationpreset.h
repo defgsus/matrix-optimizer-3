@@ -32,8 +32,14 @@ public:
 
     void load(const QString& filename);
     void save(const QString& filename);
+    void save() { if (!filename_.isEmpty()) save(filename_); }
 
     // --------- setter ---------------
+
+    void clear();
+
+    /** Sets the preset name */
+    void setName(const QString& name) { name_ = name; }
 
     void setEquation(const QString& name, const QString& equation);
     void removeEquation(const QString& name);
@@ -41,17 +47,25 @@ public:
 
     // --------- getter ---------------
 
+    /** Returns the preset name */
+    const QString& name() const { return name_; }
+    const QString& filename() const { return filename_; }
+
+    /** Returns the number of equations */
     int count() const { return equs_.size(); }
-    const QString& name(int index) const { return equs_[index].name; }
+    const QString& equationName(int index) const { return equs_[index].name; }
     const QString& equation(int index) const { return equs_[index].equ; }
+
+    bool hasEquation(const QString& name) const;
 
 private:
 
-    QString filename_;
+    QString filename_, name_;
 
     struct Equ_
     {
         QString name, equ;
+        bool operator < (const Equ_& r) const { return name < r.name; }
     };
 
     QList<Equ_> equs_;

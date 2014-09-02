@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 
+
 #include <QDebug>
 #include <QPalette>
 #include <QCompleter>
@@ -18,11 +19,19 @@
 #include <QScrollBar>
 #include <QTimer>
 #include <QKeyEvent>
+#include <QMenu>
+#include <QContextMenuEvent>
+#include <QMessageBox>
+#include <QInputDialog>
 
 #include "equationeditor.h"
 #include "tool/syntaxhighlighter.h"
 #include "math/funcparser/parser.h"
 #include "gui/helpdialog.h"
+#include "io/equationpreset.h"
+#include "io/equationpresets.h"
+#include "io/files.h"
+#include "io/error.h"
 
 namespace MO {
 namespace GUI {
@@ -57,6 +66,10 @@ EquationEditor::EquationEditor(QWidget *parent) :
     timer_->setSingleShot(true);
     timer_->setInterval(200); /* some interval for fast writers */
     connect(timer_, SIGNAL(timeout()), this, SLOT(checkEquation_()));
+
+    // ---- context menu ----
+
+    createMenus_();
 }
 
 EquationEditor::~EquationEditor()
@@ -262,6 +275,152 @@ void EquationEditor::performCompletion_(const QString &word)
                     completer_->completionModel()->index(0,0) );
         // show popup
         completer_->complete(rect);
+    }
+}
+
+void EquationEditor::createMenus_()
+{
+    QAction * a;
+
+    contextMenu_ = createStandardContextMenu();
+    contextMenu_->addSeparator();
+
+    contextMenu_->addMenu( presetLoadMenu_ = new QMenu(contextMenu_) );
+    presetLoadMenu_->setTitle(tr("Load equation"));
+    connect(presetLoadMenu_, SIGNAL(triggered(QAction*)),
+            this, SLOT(loadEquation_(QAction*)));
+
+    contextMenu_->addMenu( presetSaveMenu_ = new QMenu(contextMenu_) );
+    presetSaveMenu_->setTitle(tr("Save equation into"));
+    connect(presetSaveMenu_, SIGNAL(triggered(QAction*)),
+            this, SLOT(saveEquation_(QAction*)));
+
+    a = new QAction(tr("Save into new preset"), contextMenu_);
+    connect(a, SIGNAL(triggered()), this, SLOT(saveEquationAs_()));
+    contextMenu_->addAction( a );
+
+
+    updatePresetMenu_();
+}
+
+void EquationEditor::updatePresetMenu_()
+{
+    presetLoadMenu_->clear();
+    presetSaveMenu_->clear();
+
+    IO::EquationPresets pres;
+    for (int i=0; i<pres.count(); ++i)
+    {
+        IO::EquationPreset * p = pres.preset(i);
+
+        QAction * a = new QAction(p->name(), presetSaveMenu_);
+        a->setData(p->filename());
+        presetSaveMenu_->addAction(a);
+
+        QMenu * menu = new QMenu(p->name(), presetLoadMenu_);
+        presetLoadMenu_->addMenu(menu);
+
+        for (int j=0; j<p->count(); ++j)
+        {
+            a = new QAction(p->equationName(j), menu);
+            menu->addAction( a );
+            a->setData(p->equation(j));
+        }
+    }
+}
+
+void EquationEditor::contextMenuEvent(QContextMenuEvent * e)
+{
+    contextMenu_->popup(e->globalPos());
+}
+
+void EquationEditor::saveEquationAs_()
+{
+    QString filename = IO::Files::getSaveFileName(IO::FT_EQUATION_PRESET, this, false, false);
+    if (filename.isEmpty())
+        return;
+
+    QString presetName =
+            QInputDialog::getText(this, tr("input preset name"),
+                tr("Name of the preset collection"),
+                QLineEdit::Normal, tr("new"));
+
+    QString equName =
+            QInputDialog::getText(this, tr("input equation name"),
+                tr("Name of the equation"));
+
+    IO::EquationPreset p;
+    p.setName(presetName);
+    p.setEquation(equName, toPlainText());
+    try
+    {
+        p.save(filename);
+        updatePresetMenu_();
+    }
+    catch (Exception& e)
+    {
+        QMessageBox::critical(this, tr("saving equation"),
+                tr("Sorry but saving the equation preset failed\n%1").arg(e.what()));
+    }
+}
+
+void EquationEditor::loadEquation_(QAction * a)
+{
+    setPlainText(a->data().toString());
+}
+
+void EquationEditor::saveEquation_(QAction * a)
+{
+    QString presName = a->data().toString();
+
+    IO::EquationPresets pres;
+
+ask_again:
+    QString equName =
+            QInputDialog::getText(this,
+                tr("input equation name"),
+                tr("Name of the equation"));
+
+    IO::EquationPreset * p = 0;
+    for (int i=0; i<pres.count(); ++i)
+    {
+        if (pres.preset(i)->filename() == presName)
+        {
+            p = pres.preset(i);
+            break;
+        }
+    }
+    if (!p)
+    {
+        MO_WARNING("preset file '"
+                   << presName << "' not found, aborting save");
+        return;
+    }
+
+    if (p->hasEquation(equName))
+    {
+        QMessageBox::Button res =
+        QMessageBox::question(this, tr("confirm overwrite"),
+            tr("Preset collection <b>%1</b> already has an equation called <b>%2</b>."
+               "<br/>Do you want to overwrite it?").arg(presName).arg(equName),
+              QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+              QMessageBox::No);
+        if (res == QMessageBox::No)
+            goto ask_again;
+        if (res == QMessageBox::Cancel)
+            return;
+    }
+
+    p->setEquation(equName, toPlainText());
+    try
+    {
+        p->save();
+        updatePresetMenu_();
+    }
+    catch (Exception& e)
+    {
+        QMessageBox::critical(this, tr("saving equation"),
+                tr("Sorry but saving the equation preset failed\n%1").arg(e.what()));
     }
 }
 

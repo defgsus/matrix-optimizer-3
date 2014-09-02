@@ -384,7 +384,7 @@ void MainWindow::createMainMenu_()
             diag->show();
         });
 
-        a = new QAction(tr("Equation tester"), m);
+        a = new QAction(tr("Equation editor"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
