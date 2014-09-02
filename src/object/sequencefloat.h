@@ -34,9 +34,10 @@ public:
         ST_SPECTRAL_OSC,
         ST_SPECTRAL_WT,
         ST_SOUNDFILE,
-        ST_EQUATION
+        ST_EQUATION,
+        ST_EQUATION_WT
     };
-    const static int ST_MAX = ST_EQUATION + 1;
+    const static int ST_MAX = ST_EQUATION_WT + 1;
 
     /** PERSISTENT ids of the sequence types */
     static QStringList sequenceTypeId;
@@ -47,7 +48,8 @@ public:
     {
         return     t == ST_OSCILLATOR
                 || t == ST_SPECTRAL_OSC
-                || t == ST_SPECTRAL_WT;
+                || t == ST_SPECTRAL_WT
+                || t == ST_EQUATION_WT;
     }
 
     bool typeUsesFrequency() const { return typeUsesFrequency((SequenceType)p_mode_->baseValue()); }
@@ -228,6 +230,7 @@ private:
         * p_wtSpecOctStep_;
 
     ParameterSelect
+        * p_wtSize_,
         * p_wtSpecSize_,
         * p_mode_,
         * p_oscMode_,
@@ -236,7 +239,8 @@ private:
         * p_doPhaseDegree_;
 
     ParameterText
-        * p_equationText_;
+        * p_equationText_,
+        * p_wtEquationText_;
 
     Double phaseMult_;
 
