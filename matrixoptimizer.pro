@@ -220,7 +220,9 @@ SOURCES += \
     src/object/microphonegroup.cpp \
     src/audio/audiomicrophone.cpp \
     src/gui/widget/equationdisplaywidget.cpp \
-    src/gui/equationdisplaydialog.cpp
+    src/gui/equationdisplaydialog.cpp \
+    src/io/equationpresets.cpp \
+    src/io/equationpreset.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -433,7 +435,9 @@ HEADERS += \
     src/object/microphonegroup.h \
     src/audio/audiomicrophone.h \
     src/gui/widget/equationdisplaywidget.h \
-    src/gui/equationdisplaydialog.h
+    src/gui/equationdisplaydialog.h \
+    src/io/equationpresets.h \
+    src/io/equationpreset.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
