@@ -162,6 +162,10 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		1, "logistic",	math_func<Float>::logistic_1	);
         f.add(Function::FUNCTION,		1, "erf",       math_func<Float>::erf_1         );
         f.add(Function::FUNCTION,		1, "erfc",      math_func<Float>::erfc_1        );
+        f.add(Function::FUNCTION,		2, "gauss",     math_func<Float>::gauss_2       );
+        f.add(Function::FUNCTION,		3, "gauss",     math_func<Float>::gauss_3       );
+        f.add(Function::FUNCTION,		2, "cauchy",    math_func<Float>::cauchy_2      );
+        f.add(Function::FUNCTION,		3, "cauchy",    math_func<Float>::cauchy_3      );
 
         f.setCurrentGroup("transition");
 

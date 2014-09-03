@@ -180,6 +180,26 @@ The completmentary error function. See <a href="http://en.wikipedia.org/wiki/Err
 <br/><b>erfc(x)</b>:<br/><img src="_equ#-2#2#0#2#erfc(x)"/>
 }}
 
+{{ gauss(x, dev)
+The Gaussian function returns a "bell curve" around zero. <i>dev</i> is the standard deviation.
+<br/><b>gauss(x, 1)</b>:<br/><img src="_equ#-4#4#0#1#gauss(x,1)"/>
+}}
+
+{{ gauss(x, dev, center)
+The Gaussian function returns a "bell curve" around <i>center</i>. <i>dev</i> is the standard deviation.
+<br/><b>gauss(x, 1, 2)</b>:<br/><img src="_equ#-4#6#0#1#gauss(x,1,2)"/>
+}}
+
+{{ cauchy(x, s)
+Returns the probability density of the Cauchy distribution around zero. <i>s</i> is the scale parameter.
+<br/><b>cauchy(x, 1)</b>:<br/><img src="_equ#-4#4#0#1#cauchy(x,1)"/>
+}}
+
+{{ cauchy(x, s, center)
+Returns the probability density of the Cauchy distribution around <i>center</i>. <i>s</i> is the scale parameter.
+<br/><b>cauchy(x, 1, 2)</b>:<br/><img src="_equ#-4#6#0#1#cauchy(x,1,2)"/>
+}}
+
 
 {{ smstep(edge1, edge2, x)
 Smoothly fades between 0 and 1 for the value <i>x</i> between it's boundaries <i>edge1</i> and <i>edge2</i>.

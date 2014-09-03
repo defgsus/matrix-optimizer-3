@@ -12,6 +12,7 @@
 #include "math/functions.h"
 #include "math/noiseperlin.h"
 #include "math/interpol.h"
+#include "math/constants.h"
 
 namespace PPP_NAMESPACE {
 
@@ -468,6 +469,14 @@ struct math_func<double>
     static void logistic_1		(double ** v) { RES = 1.0 / (1.0 + std::exp(-A)); }
     static void erf_1       	(double ** v) { RES = std::erf(A); }
     static void erfc_1       	(double ** v) { RES = std::erfc(A); }
+    // gauss(x, dev)
+    static void gauss_2       	(double ** v) { RES = std::exp(-((A*A)/(2.0*B*B))); }
+    // gauss(x, dev, center)
+    static void gauss_3       	(double ** v) { RES = std::exp(-(std::pow(A-C,2)/(2.0*B*B))); }
+    // cauchy(x, dev)
+    static void cauchy_2       	(double ** v) { RES = (1.0/PI) * (B/(A*A + B*B)); }
+    // cauchy(x, dev, center)
+    static void cauchy_3       	(double ** v) { RES = (1.0/PI) * (B/(std::pow(A-C,2)+ B*B)); }
 
 
     // -------------------- common gfx ---------------------------
@@ -801,7 +810,7 @@ struct math_func<double>
         RES = MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
                     (double)generic_int<Int>::num_div( std::abs((Int)A) ),
-                    (double)generic_int<Int>::num_div( std::abs((Int)A + 1) ));
+                    (double)generic_int<Int>::num_div( std::abs((Int)A+1) ));
     }
 
     static void s_divisor_2			(double ** v)
