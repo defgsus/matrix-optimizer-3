@@ -14,6 +14,7 @@
 
 #include "testhelpsystem.h"
 #include "io/helpsystem.h"
+#include "io/helpexporterhtml.h"
 
 namespace MO {
 
@@ -25,7 +26,7 @@ TestHelpSystem::TestHelpSystem()
 int TestHelpSystem::run()
 {
     //qDebug() << help->loadResource("index", HelpSystem::XHtmlResource);
-
+    /*
     QDomDocument doc;
     help->loadXhtml("index", doc);
 
@@ -35,6 +36,10 @@ int TestHelpSystem::run()
     help->renderHtml(doc, stream);
 
     qDebug() << text;
+    */
+
+    HelpExporterHtml exp;
+    exp.save("/home/defgsus/prog/qt_project/mo/matrixoptimizer/help_export");
 
     return 0;
 }

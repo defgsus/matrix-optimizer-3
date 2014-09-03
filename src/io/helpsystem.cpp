@@ -13,6 +13,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDomDocument>
+#include <QImage>
 
 #include "helpsystem.h"
 #include "io/log.h"
@@ -30,15 +31,17 @@ HelpSystem::HelpSystem(QObject *parent) :
 
     searchPaths_
             << ":/help"
-            << ":/helpimg";
+            << ":/helpimg"
+            << ":/img"
+            << ":/texture";
 
 }
 
 
-QString HelpSystem::findResource(const QString &iurl)
+QString HelpSystem::findResource(const QString &iurl, ResourceType type)
 {
     // avoid these
-    if (iurl.startsWith("http"))
+    if (iurl.isEmpty() || iurl.startsWith("http"))
     {
         MO_DEBUG_HELP("HelpSystem::findResource(" << iurl << ") ingored");
         return QString();
@@ -46,16 +49,19 @@ QString HelpSystem::findResource(const QString &iurl)
 
     QString url(iurl);
 
-    // complete with extension
-    if (!url.contains(".html", Qt::CaseInsensitive))
+    if (type == HtmlResource)
     {
-        url.append(".html");
-    }
+        // complete with extension
+        if (!url.contains(".html", Qt::CaseInsensitive))
+        {
+            url.append(".html");
+        }
 
-    // strip anchor
-    const int idx = url.indexOf("#");
-    if (idx > 0)
-        url = url.left(idx);
+        // strip anchor
+        const int idx = url.indexOf("#");
+        if (idx > 0)
+            url = url.left(idx);
+    }
 
 #ifdef MO_DO_DEBUG_HELP
     if (url != iurl)
@@ -89,7 +95,7 @@ QVariant HelpSystem::loadResource(const QString &partial_url, ResourceType type)
 
     if (type == HtmlResource)
     {
-        QString url = findResource(partial_url);
+        QString url = findResource(partial_url, type);
         if (url.isEmpty())
             return QVariant();
 
@@ -106,12 +112,30 @@ QVariant HelpSystem::loadResource(const QString &partial_url, ResourceType type)
         return stream.readAll();
     }
 
+    if (type == ImageResource)
+    {
+        QString url = findResource(partial_url, type);
+        if (url.isEmpty())
+            return QVariant();
+
+        QImage img(url);
+        if (img.isNull())
+        {
+            MO_DEBUG_HELP("HelpSystem::loadResource() can't open image '" << url << "'");
+            return QVariant();
+        }
+
+        return img;
+    }
+
     return QVariant();
 }
 
 bool HelpSystem::loadXhtml(const QString &partial_url, QDomDocument &doc)
 {
-    QString url = findResource(partial_url);
+    MO_DEBUG_HELP("HelpSystem::loadXhtml('" << partial_url << "')");
+
+    QString url = findResource(partial_url, HtmlResource);
     if (url.isEmpty())
         return false;
 
@@ -156,13 +180,20 @@ void HelpSystem::renderHtml(const QDomDocument & doc, QTextStream & stream)
 {
     const QDomElement e = doc.documentElement();
 
-    if (!e.isNull())
-        renderHtml(e, stream);
+    e.save(stream,0);
+    //if (!e.isNull())
+    //    renderHtml_(e, stream);
 }
 
 
-void HelpSystem::renderHtml(const QDomElement & e, QTextStream & stream)
+void HelpSystem::renderHtml_(const QDomElement & e, QTextStream & stream)
 {
+    if (e.tagName() == "img")
+    {
+        renderHtmlImg_(e, stream);
+        return;
+    }
+
     // start tag
     stream << "<" << e.tagName();
 
@@ -179,7 +210,7 @@ void HelpSystem::renderHtml(const QDomElement & e, QTextStream & stream)
     stream << ">";
 
     if (e.tagName() != "html" && e.tagName() != "body")
-        stream << e.text();
+        stream << e.nodeValue();
 
     // traverse childs
     const QDomNodeList childs = e.childNodes();
@@ -188,12 +219,33 @@ void HelpSystem::renderHtml(const QDomElement & e, QTextStream & stream)
     {
         const QDomElement ce = childs.at(i).toElement();
         if (!ce.isNull())
-            renderHtml(ce, stream);
+            renderHtml_(ce, stream);
     }
 
     // close tag
     stream << "</" << e.tagName() << ">\n";
 }
 
+void HelpSystem::renderHtmlImg_(const QDomElement & e, QTextStream & stream)
+{
+    stream << "<img";
+
+    // get attributes
+    const QDomNamedNodeMap attr = e.attributes();
+    for (int i=0; i<attr.count(); ++i)
+    {
+        const QDomAttr a = attr.item(i).toAttr();
+        // write attribute
+        stream << " " << a.name() << "=\""
+               << a.value() << "\"";
+    }
+
+    stream << "/>";
+
+    if (e.hasChildNodes())
+    {
+        MO_DEBUG_HELP("HelpSystem::renderHtmlImg_() childs of img elements not supported");
+    }
+}
 
 } // namespace MO

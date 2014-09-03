@@ -49,11 +49,13 @@ public slots:
     /** Will prefix @p partial_url with the search path where
         the resource can be found.
         If it's not found, an empty QString is returned. */
-    QString findResource(const QString& partial_url);
+    QString findResource(const QString& partial_url, ResourceType type);
 
     void renderHtml(const QDomDocument&, QTextStream&);
-    void renderHtml(const QDomElement&, QTextStream&);
 private:
+
+    void renderHtml_(const QDomElement&, QTextStream&);
+    void renderHtmlImg_(const QDomElement&, QTextStream&);
 
     QStringList searchPaths_;
 };
