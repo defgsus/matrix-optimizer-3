@@ -25,6 +25,7 @@
 
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
+#include "tests/testhelpsystem.h"
 
 #include "types/vector.h"
 //#include "tool/stringmanip.h"
@@ -36,7 +37,8 @@ int main(int argc, char *argv[])
 {
     MO::setCurrentThreadName("GUI");
 
-    //void * ptr = new float;  MO_DEBUG(ptr);
+    // tests
+    { MO::TestHelpSystem test; return test.run(); }
 
 #if (0)
     using namespace MO;

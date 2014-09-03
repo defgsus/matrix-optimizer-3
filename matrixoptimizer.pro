@@ -3,7 +3,7 @@
 
 TARGET = matrixoptimizer
 
-QT += core gui widgets opengl network
+QT += core gui widgets opengl network xml
 
 TEMPLATE = app
 
@@ -222,7 +222,9 @@ SOURCES += \
     src/gui/widget/equationdisplaywidget.cpp \
     src/gui/equationdisplaydialog.cpp \
     src/io/equationpresets.cpp \
-    src/io/equationpreset.cpp
+    src/io/equationpreset.cpp \
+    src/io/helpsystem.cpp \
+    src/tests/testhelpsystem.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -437,7 +439,9 @@ HEADERS += \
     src/gui/widget/equationdisplaywidget.h \
     src/gui/equationdisplaydialog.h \
     src/io/equationpresets.h \
-    src/io/equationpreset.h
+    src/io/equationpreset.h \
+    src/io/helpsystem.h \
+    src/tests/testhelpsystem.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

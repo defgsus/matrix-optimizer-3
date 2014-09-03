@@ -51,6 +51,8 @@ namespace
 HelpTextBrowser::HelpTextBrowser(QWidget *parent) :
     QTextBrowser(parent)
 {
+    setOpenExternalLinks(true);
+
     setSearchPaths(
         QStringList()
                 << ":/help"
