@@ -239,10 +239,15 @@ namespace PPP_NAMESPACE
 
         f.setCurrentGroup("chaotic");
 
-        f.add(Function::FUNCTION,       2, "mandel",    math_func<Float>::mandel_2     );
+        f.add(Function::FUNCTION,       2, "mandel",    math_func<Float>::mandel_2      );
         f.add(Function::FUNCTION,       2, "mandeli",   math_func<Float>::mandeli_2     );
-        f.add(Function::FUNCTION,       3, "mandel",    math_func<Float>::mandel_3     );
+        f.add(Function::FUNCTION,       3, "mandel",    math_func<Float>::mandel_3      );
         f.add(Function::FUNCTION,       3, "mandeli",   math_func<Float>::mandeli_3     );
+
+        f.add(Function::FUNCTION,       4, "julia",     math_func<Float>::julia_4       );
+        f.add(Function::FUNCTION,       4, "juliai",    math_func<Float>::juliai_4      );
+
+        f.setCurrentGroup("lambda");
 
         f.add(							4, "series",	lambda_func<Float>::series_4	);
     }

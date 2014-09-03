@@ -666,6 +666,51 @@ struct math_func<double>
         RES = iter;
     }
 
+    static void julia_4        (double ** v)
+    {
+        double
+            x0 = C,
+            y0 = D,
+            x = A,
+            y = B,
+            tmp = 0.0,
+            z = 0.0;
+        int iter = 0;
+        while (iter < 1000)
+        {
+            const double x2 = x*x,
+                         y2 = y*y;
+            z = x2 + y2;
+            if (z > 2*2) break;
+            tmp = x2 - y2 + x0;
+              y = 2.0*x*y + y0;
+            x = tmp;
+            ++iter;
+        }
+        RES = sqrt(z);
+    }
+
+    static void juliai_4        (double ** v)
+    {
+        double
+            x0 = C,
+            y0 = D,
+            x = A,
+            y = B,
+            tmp = 0.0;
+        int iter = 0;
+        while (iter < 1000)
+        {
+            const double x2 = x*x,
+                         y2 = y*y;
+            if (x2 + y2 > 2*2) break;
+            tmp = x2 - y2 + x0;
+              y = 2.0*x*y + y0;
+            x = tmp;
+            ++iter;
+        }
+        RES = iter;
+    }
 
     // ---------------- number theory ---------------
 

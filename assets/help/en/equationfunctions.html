@@ -491,3 +491,12 @@ Same as <a href="#mandeli2">mandeli(x, y)</a> but with the number of maximum ite
 <br/><b>mandeli(x,1,10)</b>:<br/><img src="_equ#-2#2#0#20#mandeli(x,1,10)"/>
 }}
 
+{{ julia(x, y, im, re)
+Returns the value of the julia fractal (superset of the <a href="#mandel2">mandelbrot</a>) for the coordinate (<i>x</i>, <i>y</i>), with start values for the complex number <b>c</b> of (<i>im</i>, <i>re</i>). The number of iterations is fixed to 1000.
+<br/><b>julia(x, 0, -0.3, 0.63)</b>:<br/><img src="_equ#-2#2#0#5#julia(x,0,-0.3,0.63)"/>
+}}
+
+{{ juliai(x, y, im, re)
+Returns the number of iteration (maximally 1000) after which the value of <b>z</b> in the <a href="#julia">julia</a> function exceeds the boundary of sqrt(-2).
+<br/><b>juliai(x, 0, -0.3, 0.63)</b>:<br/><img src="_equ#-2#2#0#500#juliai(x,0,-0.3,0.63)"/>
+}}
