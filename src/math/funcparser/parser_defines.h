@@ -9,6 +9,7 @@
 #define PARSER_DEFINES_H_INCLUDED
 
 #include <functional>
+#include <cmath>
 
 #define PPP_DOUBLE
 

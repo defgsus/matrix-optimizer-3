@@ -47,7 +47,7 @@ Returns 1 if <i>x</i> is an odd number, 0 otherwise.
 }}
 
 {{ mix(x, y, t)
-Linearily interpolates between values <i>x</i> and <i>y</i> by the factor <i>t</i> of range [0,1]. <i>t</i> = 0 returns <i>x</i>, <i>t</i> = 1 returns <i>y</i>, <i>t</i> = 0.5 returns the average. This function is sometimes also called <b>lerp</b>.
+Linearily interpolates between values <i>x</i> and <i>y</i> by the factor <i>t</i> of range [0,1]. <i>t</i> = 0 returns <i>x</i>, <i>t</i> = 1 returns <i>y</i>, <i>t</i> = 0.5 returns the average. This function is sometimes also called <b>lerp</b> (for linear interpolation).
 <br/><b>mix( <a href="#square">square</a>(x), <a href="#tri">tri</a>(x), <a href="#clamp">clamp</a>(x,0,1) )</b>:<br/><img src="_equ#-4#4#-1#1#mix(square(x),tri(x),clamp(x,0,1))"/>
 }}
 
@@ -79,6 +79,11 @@ Returns the arcus sinus of <i>x</i>. This translates an angle back to it's sine 
 <br/><b>asin(x)</b>:<br/><img src="_equ#-1#1#-1.58#1.58#asin(x)"/>
 }}
 
+{{ asinh(x)
+Returns the inverse sinus hyperbolicus of <i>x</i>.
+<br/><b>asinh(x)</b>:<br/><img src="_equ#-30#30#-4#4#asinh(x)"/>
+}}
+
 {{ cos(x)
 Returns the cosinus of <i>x</i>. <i>x</i> is in radians, so a full interval is [0,<i>TWO_PI</i>].
 <br/><b>cos(x)</b>:<br/><img src="_equ#0#6.283#-1#1#cos(x)"/>
@@ -89,11 +94,16 @@ Returns the cosinus hyperbolicus of <i>x</i>.
 <br/><b>cosh(x)</b>:<br/><img src="_equ#-3.1416#3.1416#0#12#cosh(x)"/>
 }}
 
-
 {{ acos(x)
 Returns the arcus cosinus of <i>x</i>. This translates an angle back to it's cosine part. <i>x</i> is in the range of [-1,1], the result is in radians [0,PI].
 <br/><b>acos(x)</b>:<br/><img src="_equ#-1#1#0#3.1416#acos(x)"/>
 }}
+
+{{ acosh(x)
+Returns the inverse cosinus hyperbolicus of <i>x</i>.
+<br/><b>acosh(x)</b>:<br/><img src="_equ#1#30#0#4#acosh(x)"/>
+}}
+
 
 {{ tan(x)
 Returns the tangens of <i>x</i>. <i>x</i> is in radians, so a full interval is [0,<i>TWO_PI</i>].
@@ -116,6 +126,11 @@ Returns the arcus tangens of <i>a</i>/<i>b</i>. The result is in radians ranging
 <br/>This function is useful to translate a vector position into an angle. For any point x,y (except 0,0) <b>atan(y,x)</b> returns the angle in radians between the positive x-axis and the point.
 }}
 
+{{ atanh(x)
+Returns the inverse tangens hyperbolicus of <i>x</i>.
+<br/><b>atanh(x)</b>:<br/><img src="_equ#-1#1#-3#3#atanh(x)"/>
+}}
+
 {{ sinc(x)
 Calculates <b>sin(<i>x</i>) / <i>x</i></b>, which gives a sine wave with a maximum at zero, fading out in negative and positive directions.
 <br/><b>sinc(x)</b>:<br/><img src="_equ#-20#20#-1#1#sinc(x)"/>
@@ -125,13 +140,16 @@ Calculates <b>sin(<i>x</i>) / <i>x</i></b>, which gives a sine wave with a maxim
 The exponential function. This raises <i>E</i> (Euler's constant) to the power of <i>x</i>
 }}
 
-{{ ln(x)
+{{ log(x)
 The natural logarithm function returns the exponent to which <i>E</i> (Euler's constant) must be raised to receive <i>x</i>
 }}
 
-{{ logistic(x)
-A function borrowed mainly from statistics. The result equals <b>1 / (1 + exp(<i>x</i>))</b> and is always in the range of [0,1].
-<br/><b>logistic(x)</b>:<br/><img src="_equ#-5#5#0#1#logistic(x)"/>
+{{ log2(x)
+The base 2 logarithm function returns the exponent to which 2 must be raised to receive <i>x</i>
+}}
+
+{{ log10(x)
+The base 10 logarithm function returns the exponent to which 10 must be raised to receive <i>x</i>
 }}
 
 {{ pow(x, exp)
@@ -145,6 +163,23 @@ Returns the square root (or second root) of <i>x</i>
 {{ root(x, r)
 Returns the <i>r</i>th root of <i>x</i>
 }}
+
+
+{{ logistic(x)
+A function borrowed mainly from statistics. The result equals <b>1 / (1 + exp(-<i>x</i>))</b> and is always in the range of [0,1].
+<br/><b>logistic(x)</b>:<br/><img src="_equ#-5#5#0#1#logistic(x)"/>
+}}
+
+{{ erf(x)
+The Gauss error function. See <a href="http://en.wikipedia.org/wiki/Error_function">Error function</a> on wikipedia.
+<br/><b>erf(x)</b>:<br/><img src="_equ#-2#2#-1#1#erf(x)"/>
+}}
+
+{{ erfc(x)
+The completmentary error function. See <a href="http://en.wikipedia.org/wiki/Error_function">Error function</a> on wikipedia.
+<br/><b>erfc(x)</b>:<br/><img src="_equ#-2#2#0#2#erfc(x)"/>
+}}
+
 
 {{ smstep(edge1, edge2, x)
 Smoothly fades between 0 and 1 for the value <i>x</i> between it's boundaries <i>edge1</i> and <i>edge2</i>.
@@ -285,6 +320,11 @@ Returns a 3-dimensional smoothed pseudo-random number in the range of about [-2,
 
 {{ fac(x)
 Returns the factorial of <i>x</i>. E.g. the factorial of 7 is calculated as: 1 * 2 * 3 * 4 * 5 * 6 * 7
+}}
+
+{{ gamma(x)
+Calculates the gamma function of <i>x</i>. The gamma function is like the <a href="#fac">factorial</a> function but for non-integers. If <i>x</i> is integer, the result is the factorial of <i>x</i>-1. The valid input range is about [0.0001,171].
+<br/><b>gamma(x)<b>:<br/><img src="_equ#0#5#0#25#gamma(x)"/>
 }}
 
 

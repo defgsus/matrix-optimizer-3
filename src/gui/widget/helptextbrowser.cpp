@@ -150,6 +150,7 @@ void HelpTextBrowser::addEquationInfo_(QString& doc) const
             << "algebraic"
             << "trigonometry"
             << "geometry"
+            << "statistical"
             << "number theory"
             << "oscillator"
             << "random"
@@ -160,6 +161,7 @@ void HelpTextBrowser::addEquationInfo_(QString& doc) const
             << tr("algebraic functions")
             << tr("trigonometric functions")
             << tr("geometric functions")
+            << tr("statistical functions")
             << tr("number theory functions")
             << tr("oscillator functions")
             << tr("random functions")

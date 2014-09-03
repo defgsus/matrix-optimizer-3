@@ -120,13 +120,16 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		1, "sin",		math_func<Float>::sin_1			);
         f.add(Function::FUNCTION,		1, "sinh",		math_func<Float>::sinh_1		);
         f.add(Function::FUNCTION,		1, "asin",		math_func<Float>::asin_1		);
+        f.add(Function::FUNCTION,		1, "asinh",		math_func<Float>::asinh_1		);
         f.add(Function::FUNCTION,		1, "cos",		math_func<Float>::cos_1			);
         f.add(Function::FUNCTION,		1, "cosh",		math_func<Float>::cosh_1		);
         f.add(Function::FUNCTION,		1, "acos",		math_func<Float>::acos_1		);
+        f.add(Function::FUNCTION,		1, "acosh",		math_func<Float>::acosh_1		);
         f.add(Function::FUNCTION,		1, "tan",		math_func<Float>::tan_1			);
         f.add(Function::FUNCTION,		1, "tanh",		math_func<Float>::tanh_1		);
         f.add(Function::FUNCTION,		1, "atan",		math_func<Float>::atan_1		);
         f.add(Function::FUNCTION,		2, "atan",		math_func<Float>::atan_2		);
+        f.add(Function::FUNCTION,		1, "atanh",		math_func<Float>::atanh_1		);
         f.add(Function::FUNCTION,		1, "sinc",		math_func<Float>::sinc_1		);
 
         f.add(Function::FUNCTION,		1, "beta",		math_func<Float>::beta_1		);
@@ -147,11 +150,18 @@ namespace PPP_NAMESPACE
         f.setCurrentGroup("algebraic");
 
         f.add(Function::FUNCTION,		1, "exp",		math_func<Float>::exp_1			);
-        f.add(Function::FUNCTION,		1, "ln",		math_func<Float>::ln_1			);
-        f.add(Function::FUNCTION,		1, "logistic",	math_func<Float>::logistic_1	);
+        f.add(Function::FUNCTION,		1, "log",		math_func<Float>::log_1			);
+        f.add(Function::FUNCTION,		1, "log2",		math_func<Float>::log2_1		);
+        f.add(Function::FUNCTION,		1, "log10",		math_func<Float>::log10_1		);
         f.add(Function::FUNCTION,		2, "pow",		math_func<Float>::pow_2			);
         f.add(Function::FUNCTION,		1, "sqrt",		math_func<Float>::sqrt_1		);
         f.add(Function::FUNCTION,		2, "root",		math_func<Float>::root_2		);
+
+        f.setCurrentGroup("statistical");
+
+        f.add(Function::FUNCTION,		1, "logistic",	math_func<Float>::logistic_1	);
+        f.add(Function::FUNCTION,		1, "erf",       math_func<Float>::erf_1         );
+        f.add(Function::FUNCTION,		1, "erfc",      math_func<Float>::erfc_1        );
 
         f.setCurrentGroup("transition");
 
@@ -182,6 +192,7 @@ namespace PPP_NAMESPACE
         f.setCurrentGroup("number theory");
 
         f.add(Function::FUNCTION,		1, "fac",		math_func<Float>::factorial_1	);
+        f.add(Function::FUNCTION,		1, "gamma",		math_func<Float>::gamma_1       );
         f.add(Function::FUNCTION,		1, "fib",		math_func<Float>::fibonacci_1	);
 
         f.add(Function::FUNCTION,		1, "zeta",		math_func<Float>::zeta_1		);

@@ -374,58 +374,64 @@ static MO::MATH::NoisePerlin noise_;
 template <>
 struct math_func<double>
 {
+#define RES (*v[0])
+#define A (*v[1])
+#define B (*v[2])
+#define C (*v[3])
+#define D (*v[4])
 
     // ---------------------- logic  -----------------------------
 
-    static void assign_1		(double ** v) { *v[0] = *v[1]; }
-    static void neg_assign_1	(double ** v) { *v[0] = -*v[1]; }
+    static void assign_1		(double ** v) { RES = A; }
+    static void neg_assign_1	(double ** v) { RES = -A; }
 
     /** special case for setting variables. v[0] = v[1] = v[2] */
-    static void assign_2		(double ** v) { *v[0] = *v[1] = *v[2]; }
+    static void assign_2		(double ** v) { RES = A = B; }
 
     /** v[0] = v[1]!=0? v[2] : v[3] */
-    static void assign_if_3		(double ** v) { *v[0] = *v[1] != 0? *v[2] : *v[3]; }
+    static void assign_if_3		(double ** v) { RES = A != 0? B : C; }
 
-    static void abs_1			(double ** v) { *v[0] = std::abs(*v[1]); }
-    static void sign_1			(double ** v) { *v[0] = *v[1] > 0.0? -1.0 : *v[1] < 0.0? -1.0 : 0.0; }
-    static void floor_1			(double ** v) { *v[0] = std::floor(*v[1]); }
-    static void ceil_1			(double ** v) { *v[0] = std::ceil(*v[1]); }
-    static void round_1			(double ** v) { *v[0] = std::floor(*v[1] + 0.5); }
-    static void frac_1			(double ** v) { *v[0] = *v[1] - std::floor(*v[1]); }
+    static void abs_1			(double ** v) { RES = std::abs(A); }
+    static void sign_1			(double ** v) { RES = A > 0.0? -1.0 : A < 0.0? -1.0 : 0.0; }
+    static void floor_1			(double ** v) { RES = std::floor(A); }
+    static void ceil_1			(double ** v) { RES = std::ceil(A); }
+    static void round_1			(double ** v) { RES = std::floor(A + 0.5); }
+    static void frac_1			(double ** v) { RES = A - std::floor(A); }
 
-    static void min_2			(double ** v) { *v[0] = std::min(*v[1], *v[2]); }
-    static void max_2			(double ** v) { *v[0] = std::max(*v[1], *v[2]); }
-    static void clamp_3			(double ** v) { *v[0] = std::min(std::max(*v[1], *v[2]), *v[3]); }
-    static void quant_2			(double ** v) { *v[0] = std::floor(*v[1] / *v[2]) * *v[2]; }
-    static void mod_2			(double ** v) { *v[0] = std::fmod(*v[1], *v[2]); }
-    static void smod_2			(double ** v) { *v[0] = (*v[0]<0.0)? std::fmod(*v[1], *v[2]) : *v[2] - std::fmod(-*v[1], *v[2]); }
+    static void min_2			(double ** v) { RES = std::min(A, B); }
+    static void max_2			(double ** v) { RES = std::max(A, B); }
+    static void clamp_3			(double ** v) { RES = std::min(std::max(A, B), C); }
+    static void quant_2			(double ** v) { RES = std::floor(A / B) * B; }
+    static void mod_2			(double ** v) { RES = std::fmod(A, B); }
+    static void smod_2			(double ** v)
+        { RES = (RES<0.0)? std::fmod(A, B) : B - std::fmod(-A, B); }
 
     // ----------------- binary operator -------------------------
 
-    static void add_2			(double ** v) { *v[0] = *v[1] + *v[2]; }
-    static void sub_2			(double ** v) { *v[0] = *v[1] - *v[2]; }
-    static void mul_2			(double ** v) { *v[0] = *v[1] * *v[2]; }
-    static void div_2			(double ** v) { *v[0] = *v[1] / *v[2]; }
+    static void add_2			(double ** v) { RES = A + B; }
+    static void sub_2			(double ** v) { RES = A - B; }
+    static void mul_2			(double ** v) { RES = A * B; }
+    static void div_2			(double ** v) { RES = A / B; }
 
-    static void add_1			(double ** v) { *v[0] += *v[1]; }
-    static void sub_1			(double ** v) { *v[0] -= *v[1]; }
-    static void mul_1			(double ** v) { *v[0] *= *v[1]; }
-    static void div_1			(double ** v) { *v[0] /= *v[1]; }
+    static void add_1			(double ** v) { RES += A; }
+    static void sub_1			(double ** v) { RES -= A; }
+    static void mul_1			(double ** v) { RES *= A; }
+    static void div_1			(double ** v) { RES /= A; }
 
-    static void equal_2			(double ** v) { *v[0] = *v[1] == *v[2]; }
-    static void not_equal_2		(double ** v) { *v[0] = *v[1] != *v[2]; }
-    static void smaller_2		(double ** v) { *v[0] = *v[1] < *v[2]; }
-    static void smaller_equal_2	(double ** v) { *v[0] = *v[1] <= *v[2]; }
-    static void greater_2		(double ** v) { *v[0] = *v[1] > *v[2]; }
-    static void greater_equal_2	(double ** v) { *v[0] = *v[1] >= *v[2]; }
+    static void equal_2			(double ** v) { RES = A == B; }
+    static void not_equal_2		(double ** v) { RES = A != B; }
+    static void smaller_2		(double ** v) { RES = std::isless(A, B); }
+    static void smaller_equal_2	(double ** v) { RES = std::islessequal(A, B); }
+    static void greater_2		(double ** v) { RES = std::isgreater(A, B); }
+    static void greater_equal_2	(double ** v) { RES = std::isgreaterequal(A, B); }
 
-    static void and_2			(double ** v) { *v[0] = ((int)(*v[1])) & ((int)(*v[2])); }
-    static void or_2			(double ** v) { *v[0] = ((int)(*v[1])) | ((int)(*v[2])); }
-    static void xor_2			(double ** v) { *v[0] = ((int)(*v[1])) ^ ((int)(*v[2])); }
+    static void and_2			(double ** v) { RES = ((int)(A)) & ((int)(B)); }
+    static void or_2			(double ** v) { RES = ((int)(A)) | ((int)(B)); }
+    static void xor_2			(double ** v) { RES = ((int)(A)) ^ ((int)(B)); }
 
-    static void logic_and_2		(double ** v) { *v[0] = ((int)(*v[1])) && ((int)(*v[2])); }
-    static void logic_or_2		(double ** v) { *v[0] = ((int)(*v[1])) || ((int)(*v[2])); }
-    static void logic_xor_2		(double ** v) { *v[0] = (*v[1]>0.0) ^ (*v[2]>0.0); }
+    static void logic_and_2		(double ** v) { RES = ((int)(A)) && ((int)(B)); }
+    static void logic_or_2		(double ** v) { RES = ((int)(A)) || ((int)(B)); }
+    static void logic_xor_2		(double ** v) { RES = (A>0.0) ^ (B>0.0); }
 
     typedef void (*FuncPtr)(double **);
     /** return operator call or NULL */
@@ -433,115 +439,126 @@ struct math_func<double>
 
     // ------------------- 'scientific' --------------------------
 
-    static void sin_1			(double ** v) { *v[0] = std::sin(*v[1]); }
-    static void sinh_1			(double ** v) { *v[0] = std::sinh(*v[1]); }
-    static void asin_1			(double ** v) { *v[0] = std::asin(*v[1]); }
-    static void cos_1			(double ** v) { *v[0] = std::cos(*v[1]); }
-    static void cosh_1			(double ** v) { *v[0] = std::cosh(*v[1]); }
-    static void acos_1			(double ** v) { *v[0] = std::acos(*v[1]); }
-    static void tan_1			(double ** v) { *v[0] = std::tan(*v[1]); }
-    static void tanh_1			(double ** v) { *v[0] = std::tanh(*v[1]); }
-    static void atan_1			(double ** v) { *v[0] = std::atan(*v[1]); }
-    static void atan_2			(double ** v) { *v[0] = std::atan2(*v[1], *v[2]); }
-    static void sinc_1			(double ** v) { *v[0] = std::sin(*v[1]) / *v[1]; }
+    static void sin_1			(double ** v) { RES = std::sin(A); }
+    static void sinh_1			(double ** v) { RES = std::sinh(A); }
+    static void asin_1			(double ** v) { RES = std::asin(A); }
+    static void asinh_1			(double ** v) { RES = std::asinh(A); }
+    static void cos_1			(double ** v) { RES = std::cos(A); }
+    static void cosh_1			(double ** v) { RES = std::cosh(A); }
+    static void acos_1			(double ** v) { RES = std::acos(A); }
+    static void acosh_1			(double ** v) { RES = std::acosh(A); }
+    static void tan_1			(double ** v) { RES = std::tan(A); }
+    static void tanh_1			(double ** v) { RES = std::tanh(A); }
+    static void atan_1			(double ** v) { RES = std::atan(A); }
+    static void atan_2			(double ** v) { RES = std::atan2(A, B); }
+    static void atanh_1			(double ** v) { RES = std::atanh(A); }
+    static void sinc_1			(double ** v) { RES = std::sin(A) / A; }
 
-    static void exp_1			(double ** v) { *v[0] = std::exp(*v[1]); }
-    static void ln_1			(double ** v) { *v[0] = std::log(*v[1]); }
-    static void logistic_1		(double ** v) { *v[0] = 1.0 / (1.0 + std::exp(*v[1])); }
+    static void exp_1			(double ** v) { RES = std::exp(A); }
+    static void log_1			(double ** v) { RES = std::log(A); }
+    static void log2_1			(double ** v) { RES = std::log2(A); }
+    static void log10_1			(double ** v) { RES = std::log10(A); }
 
-    static void pow_2			(double ** v) { *v[0] = std::pow(*v[1], *v[2]); }
-    static void sqrt_1			(double ** v) { *v[0] = std::sqrt(*v[1]); }
-    static void root_2			(double ** v) { *v[0] = std::pow(*v[1], 1.0 / *v[2]); }
+    static void pow_2			(double ** v) { RES = std::pow(A, B); }
+    static void sqrt_1			(double ** v) { RES = std::sqrt(A); }
+    static void root_2			(double ** v) { RES = std::pow(A, 1.0 / B); }
+
+    // ------------------- statistics ----------------------------
+
+    static void logistic_1		(double ** v) { RES = 1.0 / (1.0 + std::exp(-A)); }
+    static void erf_1       	(double ** v) { RES = std::erf(A); }
+    static void erfc_1       	(double ** v) { RES = std::erfc(A); }
+
 
     // -------------------- common gfx ---------------------------
 
-    static void mix_3           (double ** v) { *v[0] = *v[1] + *v[3] * (*v[2] - *v[1]); }
+    static void mix_3           (double ** v) { RES = A + C * (B - A); }
 
-    static void smoothstep_3    (double ** v) { *v[0] = MO::MATH::smoothstep(*v[1], *v[2], *v[3]); }
-    static void smootherstep_3  (double ** v) { *v[0] = MO::MATH::smootherstep(*v[1], *v[2], *v[3]); }
+    static void smoothstep_3    (double ** v) { RES = MO::MATH::smoothstep(A, B, C); }
+    static void smootherstep_3  (double ** v) { RES = MO::MATH::smootherstep(A, B, C); }
 
     static void smoothladder_2  (double ** v)
-    { *v[0] = MO::MATH::quant(*v[1], *v[2]) + *v[2] * MO::MATH::smoothstep(0.0, *v[2],
-                MO::MATH::modulo(*v[1], *v[2])); }
+    { RES = MO::MATH::quant(A, B) + B * MO::MATH::smoothstep(0.0, B,
+                MO::MATH::modulo(A, B)); }
 
     static void smootherladder_2(double ** v)
-    { *v[0] = MO::MATH::quant(*v[1], *v[2]) + *v[2] * MO::MATH::smootherstep(0.0, *v[2],
-                MO::MATH::modulo(*v[1], *v[2])); }
+    { RES = MO::MATH::quant(A, B) + B * MO::MATH::smootherstep(0.0, B,
+                MO::MATH::modulo(A, B)); }
     //quant(x,f)+f*smstep(0,f,x%f)
 
     // -------------------- geometric ----------------------------
 
-    static void beta_1			(double ** v) { double a = 1.0 - *v[1] * *v[1];
-                                                *v[0] = a > 0.0? std::sqrt(a) : 0.0; }
-    static void beta_2			(double ** v) { double a = 1.0 - *v[1] * *v[1] - *v[2] * *v[2];
-                                                *v[0] = a > 0.0? std::sqrt(a) : 0.0; }
-    static void beta_3			(double ** v) { double a = 1.0 - *v[1] * *v[1] - *v[2] * *v[2] - *v[3] * *v[3];
-                                                *v[0] = a > 0.0? std::sqrt(a) : 0.0; }
-    static void beta_4			(double ** v) { double a = 1.0 - *v[1] * *v[1] - *v[2] * *v[2] - *v[3] * *v[3] - *v[4] * *v[4];
-                                                *v[0] = a > 0.0? std::sqrt(a) : 0.0; }
+    static void beta_1			(double ** v) { double a = 1.0 - A * A;
+                                                RES = a > 0.0? std::sqrt(a) : 0.0; }
+    static void beta_2			(double ** v) { double a = 1.0 - A * A - B * B;
+                                                RES = a > 0.0? std::sqrt(a) : 0.0; }
+    static void beta_3			(double ** v) { double a = 1.0 - A * A - B * B - C * C;
+                                                RES = a > 0.0? std::sqrt(a) : 0.0; }
+    static void beta_4			(double ** v) { double a = 1.0 - A * A - B * B - C * C - D * D;
+                                                RES = a > 0.0? std::sqrt(a) : 0.0; }
 
-    static void mag_2			(double ** v) { *v[0] = std::sqrt(*v[1] * *v[1] + *v[2] * *v[2]); }
-    static void mag_3			(double ** v) { *v[0] = std::sqrt(*v[1] * *v[1] + *v[2] * *v[2] + *v[3] * *v[3]); }
-    static void mag_4			(double ** v) { *v[0] = std::sqrt(*v[1] * *v[1] + *v[2] * *v[2] + *v[3] * *v[3] + *v[4] * *v[4]); }
+    static void mag_2			(double ** v) { RES = std::sqrt(A * A + B * B); }
+    static void mag_3			(double ** v) { RES = std::sqrt(A * A + B * B + C * C); }
+    static void mag_4			(double ** v) { RES = std::sqrt(A * A + B * B + C * C + D * D); }
 
-    static void dist_4			(double ** v) { *v[0] = std::sqrt(std::pow(*v[3] - *v[1], 2.0) + std::pow(*v[4] - *v[2], 2.0)); }
+    static void dist_4			(double ** v) { RES = std::sqrt(std::pow(C - A, 2.0) + std::pow(D - B, 2.0)); }
 
     /** rotate(x,y,radians) */
     static void rotater_3       (double ** v)
     {
-        const double ca = cos(*v[3]), sa = sin(*v[3]);
-        *v[0] = *v[1] * ca - *v[2] * sa;
+        const double ca = cos(C), sa = sin(C);
+        RES = A * ca - B * sa;
     }
 
     /** rotate(x,y,degree) */
     static void rotate_3        (double ** v)
     {
-        const double r = *v[3] / 180.0 * PI, ca = cos(r), sa = sin(r);
-        *v[0] = *v[1] * ca - *v[2] * sa;
+        const double r = C / 180.0 * PI, ca = cos(r), sa = sin(r);
+        RES = A * ca - B * sa;
     }
 
     // ----------------- oscillator ------------------------------
 
     static void ramp_1			(double ** v)
-        { *v[0] = MO::MATH::moduloSigned( *v[1], 1.0 ); }
+        { RES = MO::MATH::moduloSigned( A, 1.0 ); }
 
     static void saw_1			(double ** v)
-        { *v[0] = -1.0 + 2.0 * MO::MATH::moduloSigned( *v[1], 1.0 ); }
+        { RES = -1.0 + 2.0 * MO::MATH::moduloSigned( A, 1.0 ); }
 
     static void square_1		(double ** v)
-        { *v[0] = (MO::MATH::moduloSigned( *v[1], 1.0 ) >= 0.5) ? -1.0 : 1.0 ; }
+        { RES = (MO::MATH::moduloSigned( A, 1.0 ) >= 0.5) ? -1.0 : 1.0 ; }
 
     static void tri_1			(double ** v)
     {
         double p;
-        p = MO::MATH::moduloSigned(*v[1], 1.0);
-        *v[0] = (p<0.5) ? (p * 4. - 1.) : (3. - p * 4.);
+        p = MO::MATH::moduloSigned(A, 1.0);
+        RES = (p<0.5) ? (p * 4. - 1.) : (3. - p * 4.);
     }
 
     // with pulsewidth
     static void square_2		(double ** v)
-        { *v[0] = (MO::MATH::moduloSigned( *v[1], 1.0 ) >= *v[2]) ? -1.0 : 1.0 ; }
+        { RES = (MO::MATH::moduloSigned( A, 1.0 ) >= B) ? -1.0 : 1.0 ; }
 
     static void tri_2			(double ** v)
     {
         double p;
-        p = MO::MATH::moduloSigned(*v[1], 1.0);
-        *v[0] = (p<*v[2])? p * 2.0/ *v[2] - 1.0 : (1.0-p) * 2.0/(1.0-*v[2]) - 1.0;
+        p = MO::MATH::moduloSigned(A, 1.0);
+        RES = (p<B)? p * 2.0/ B - 1.0 : (1.0-p) * 2.0/(1.0-B) - 1.0;
     }
 
     // -------------- random ------------------------------------
 
-    static void rnd_0			(double ** v) { *v[0] = (double)std::rand() / RAND_MAX; }
+    static void rnd_0			(double ** v) { RES = (double)std::rand() / RAND_MAX; }
 
-    static void noise_1         (double ** v) { *v[0] = noise_.noise(*v[1]); }
-    static void noise_2         (double ** v) { *v[0] = noise_.noise(*v[1], *v[2]); }
-    static void noise_3         (double ** v) { *v[0] = noise_.noise(*v[1], *v[2], *v[3]); }
+    static void noise_1         (double ** v) { RES = noise_.noise(A); }
+    static void noise_2         (double ** v) { RES = noise_.noise(A, B); }
+    static void noise_3         (double ** v) { RES = noise_.noise(A, B, C); }
     static void noiseoct_2      (double ** v)
-        { *v[0] = noise_.noiseoct(*v[1], std::min((uint)10, (uint)*v[2])); }
+        { RES = noise_.noiseoct(A, std::min((uint)10, (uint)B)); }
     static void noiseoct_3      (double ** v)
-        { *v[0] = noise_.noiseoct(*v[1], *v[2], std::min((uint)10, (uint)*v[3])); }
+        { RES = noise_.noiseoct(A, B, std::min((uint)10, (uint)C)); }
     static void noiseoct_4      (double ** v)
-        { *v[0] = noise_.noiseoct(*v[1], *v[2], *v[3], std::min((uint)10, (uint)*v[4])); }
+        { RES = noise_.noiseoct(A, B, C, std::min((uint)10, (uint)D)); }
 
     // -------------- fractal ----------------------------------
 
@@ -549,8 +566,8 @@ struct math_func<double>
     static void mandel_2        (double ** v)
     {
         double
-            x0 = *v[1],
-            y0 = *v[2],
+            x0 = A,
+            y0 = B,
             x = 0.0,
             y = 0.0,
             tmp = 0.0,
@@ -567,15 +584,15 @@ struct math_func<double>
             x = tmp;
             ++iter;
         }
-        *v[0] = sqrt(z);
+        RES = sqrt(z);
     }
 
     // takes x,y position, returns iteration
     static void mandeli_2        (double ** v)
     {
         double
-            x0 = *v[1],
-            y0 = *v[2],
+            x0 = A,
+            y0 = B,
             x = 0.0,
             y = 0.0,
             tmp = 0.0;
@@ -590,19 +607,19 @@ struct math_func<double>
             x = tmp;
             ++iter;
         }
-        *v[0] = iter;
+        RES = iter;
     }
 
     static void mandel_3        (double ** v)
     {
         double
-            x0 = *v[1],
-            y0 = *v[2],
+            x0 = A,
+            y0 = B,
             x = 0.0,
             y = 0.0,
             tmp = 0.0,
             z = 0.0;
-        int iter = 0, maxiter = *v[3];
+        int iter = 0, maxiter = C;
         while (iter < maxiter)
         {
             const double x2 = x*x,
@@ -614,19 +631,19 @@ struct math_func<double>
             x = tmp;
             ++iter;
         }
-        *v[0] = sqrt(z);
+        RES = sqrt(z);
     }
 
     // takes x,y position and maxiter, returns iteration
     static void mandeli_3        (double ** v)
     {
         double
-            x0 = *v[1],
-            y0 = *v[2],
+            x0 = A,
+            y0 = B,
             x = 0.0,
             y = 0.0,
             tmp = 0.0;
-        int iter = 0, maxiter = *v[3];
+        int iter = 0, maxiter = C;
         while (iter < maxiter)
         {
             const double x2 = x*x,
@@ -637,25 +654,25 @@ struct math_func<double>
             x = tmp;
             ++iter;
         }
-        *v[0] = iter;
+        RES = iter;
     }
 
 
     // ---------------- number theory ---------------
 
-    static void odd_1			(double ** v) { *v[0] = int(*v[1]) & 1; }
-    static void even_1			(double ** v) { *v[0] = !(int(*v[1]) & 1); }
+    static void odd_1			(double ** v) { RES = int(A) & 1; }
+    static void even_1			(double ** v) { RES = !(int(A) & 1); }
 
     static void quer_1			(double ** v)
     {
-        int k = *v[1];
+        int k = A;
         int q = 0;
         do
         {
             if (k<10)
             {
                 q += k;
-                *v[0] = q;
+                RES = q;
                 return;
             }
             else
@@ -670,236 +687,246 @@ struct math_func<double>
 
     static void prime_1			(double ** v)
     {
-        *v[0] = generic_int<Int>::isPrime(std::abs(static_cast<Int>(*v[1])));
+        RES = generic_int<Int>::isPrime(std::abs(static_cast<Int>(A)));
         /*
         typedef long int I;
-        const I k = std::abs(static_cast<I>(*v[1]));
-        if (k < 2 || k == 4) { *v[0] = 0.0; return; } else
-        if (k == 2) { *v[0] = 1.0; return; } else
+        const I k = std::abs(static_cast<I>(A));
+        if (k < 2 || k == 4) { RES = 0.0; return; } else
+        if (k == 2) { RES = 1.0; return; } else
         // even?
-        if (!(k & 1)) { *v[0] = 0.0; return; }
+        if (!(k & 1)) { RES = 0.0; return; }
         const I m = sqrt(k)+1;
         // test divisors
         for (I i=2; i<m; ++i)
-            if (k % i == 0) { *v[0] = 0.0; return; }
+            if (k % i == 0) { RES = 0.0; return; }
 
-        *v[0] = 1.0;
+        RES = 1.0;
         */
     }
 
     static void sprime_1			(double ** v)
     {
         typedef long int I;
-        const I k = *v[1];
-        if (k < 2 || k == 4) { *v[0] = 0.0; return; } else
-        if (k == 2) { *v[0] = 1.0; return; } else
+        const I k = A;
+        if (k < 2 || k == 4) { RES = 0.0; return; } else
+        if (k == 2) { RES = 1.0; return; } else
         // even?
-        if (!(k & 1)) { *v[0] = 0.0; return; }
+        if (!(k & 1)) { RES = 0.0; return; }
         const I m = sqrt(k)+1;
         // test divisors
         for (I i=2; i<m; ++i)
-            if (k % i == 0) { *v[0] = 0.0; return; }
+            if (k % i == 0) { RES = 0.0; return; }
 
-        *v[0] = 1.0;
+        RES = 1.0;
     }
 
 
     static void divisor_2			(double ** v)
     {
-        *v[0] = generic_int<Int>::divisor( std::abs((Int)*v[1]), std::abs((Int)*v[2]) );
+        RES = generic_int<Int>::divisor( std::abs((Int)A), std::abs((Int)B) );
     }
 
     static void numdiv_1			(double ** v)
     {
-        *v[0] = generic_int<Int>::num_div( std::abs((Int)*v[1]) );
+        RES = generic_int<Int>::num_div( std::abs((Int)A) );
     }
 
     static void sumdiv_1			(double ** v)
     {
-        *v[0] = generic_int<Int>::sum_div( std::abs((Int)*v[1]) );
+        RES = generic_int<Int>::sum_div( std::abs((Int)A) );
     }
 
     static void proddiv_1			(double ** v)
     {
-        *v[0] = generic_int<Int>::prod_div( std::abs((Int)*v[1]) );
+        RES = generic_int<Int>::prod_div( std::abs((Int)A) );
     }
 
     static void nextdiv_2			(double ** v)
     {
-        *v[0] = generic_int<Int>::next_div( *v[1], *v[2] );
+        RES = generic_int<Int>::next_div( A, B );
     }
 
     static void gcd_2				(double ** v)
     {
-        *v[0] = generic_int<Int>::gcd( *v[1], *v[2] );
+        RES = generic_int<Int>::gcd( A, B );
     }
 
     static void congruent_3			(double ** v)
     {
-        *v[0] = generic_int<Int>::congruent( *v[1], *v[2], *v[3] );
+        RES = generic_int<Int>::congruent( A, B, C );
     }
 
     static void factorial_1			(double ** v)
     {
-        *v[0] = generic_int<Int>::factorial( *v[1] );
+        RES = generic_int<Int>::factorial( A );
+    }
+
+    static void gamma_1			(double ** v)
+    {
+        RES = std::tgamma( A );
     }
 
     static void fibonacci_1		(double ** v)
     {
-        *v[0] = generic_int<Int>::fibonacci( *v[1] );
+        RES = generic_int<Int>::fibonacci( A );
     }
 
     static void ulam_spiral_2	(double ** v)
     {
-        *v[0] = generic_int<Int>::ulam_spiral(*v[1], *v[2]);
+        RES = generic_int<Int>::ulam_spiral(A, B);
     }
 
     static void ulam_spiral_3	(double ** v)
     {
-        *v[0] = generic_int<Int>::ulam_spiral(*v[1], *v[2], *v[3]);
+        RES = generic_int<Int>::ulam_spiral(A, B, C);
     }
 
     static void tri_spiral_2	(double ** v)
     {
-        *v[0] = generic_int<Int>::tri_spiral(*v[1], *v[2]);
+        RES = generic_int<Int>::tri_spiral(A, B);
     }
 
     // ------------ smoothed number theory --------------
 
     static void s_prime_1			(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(*v[1]),
-                    (double)generic_int<Int>::isPrime( std::abs((Int)*v[1]) ),
-                    (double)generic_int<Int>::isPrime( std::abs((Int)*v[1] + 1) ));
+        RES = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(A),
+                    (double)generic_int<Int>::isPrime( std::abs((Int)A) ),
+                    (double)generic_int<Int>::isPrime( std::abs((Int)A + 1) ));
     }
 
     static void s_numdiv_1			(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(*v[1]),
-                    (double)generic_int<Int>::num_div( std::abs((Int)*v[1]) ),
-                    (double)generic_int<Int>::num_div( std::abs((Int)*v[1] + 1) ));
+        RES = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(A),
+                    (double)generic_int<Int>::num_div( std::abs((Int)A) ),
+                    (double)generic_int<Int>::num_div( std::abs((Int)A + 1) ));
     }
 
     static void s_divisor_2			(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-            MO::MATH::frac(*v[1]),
-            (double)generic_int<Int>::divisor( std::abs((Int)*v[1]), std::abs((Int)*v[2]) ),
-            (double)generic_int<Int>::divisor( std::abs((Int)*v[1]+1), std::abs((Int)*v[2]) ));
+        RES = MO::MATH::interpol_smooth(
+            MO::MATH::frac(A),
+            (double)generic_int<Int>::divisor( std::abs((Int)A), std::abs((Int)B) ),
+            (double)generic_int<Int>::divisor( std::abs((Int)A+1), std::abs((Int)B) ));
     }
 
     static void s_sumdiv_1			(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(*v[1]),
-                    (double)generic_int<Int>::sum_div( std::abs((Int)*v[1]) ),
-                    (double)generic_int<Int>::sum_div( std::abs((Int)*v[1] + 1) ));
+        RES = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(A),
+                    (double)generic_int<Int>::sum_div( std::abs((Int)A) ),
+                    (double)generic_int<Int>::sum_div( std::abs((Int)A + 1) ));
     }
 
     static void s_proddiv_1			(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(*v[1]),
-                    (double)generic_int<Int>::prod_div( std::abs((Int)*v[1]) ),
-                    (double)generic_int<Int>::prod_div( std::abs((Int)*v[1] + 1) ));
+        RES = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(A),
+                    (double)generic_int<Int>::prod_div( std::abs((Int)A) ),
+                    (double)generic_int<Int>::prod_div( std::abs((Int)A + 1) ));
     }
 
     static void s_nextdiv_2			(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(*v[1]),
-                    (double)generic_int<Int>::next_div( *v[1], *v[2] ),
-                    (double)generic_int<Int>::next_div( *v[1] + 1, *v[2] ) );
+        RES = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(A),
+                    (double)generic_int<Int>::next_div( A, B ),
+                    (double)generic_int<Int>::next_div( A + 1, B ) );
     }
 
     static void s_gcd_2				(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(*v[1]),
-                    (double)generic_int<Int>::gcd( *v[1], *v[2] ),
-                    (double)generic_int<Int>::gcd( *v[1] + 1, *v[2] ) );
+        RES = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(A),
+                    (double)generic_int<Int>::gcd( A, B ),
+                    (double)generic_int<Int>::gcd( A + 1, B ) );
     }
 
     static void s_congruent_3			(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(*v[1]),
-                    (double)generic_int<Int>::congruent( *v[1], *v[2], *v[3] ),
-                    (double)generic_int<Int>::congruent( *v[1] + 1, *v[2], *v[3] ) );
+        RES = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(A),
+                    (double)generic_int<Int>::congruent( A, B, C ),
+                    (double)generic_int<Int>::congruent( A + 1, B, C ) );
     }
 
     static void s_factorial_1			(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(*v[1]),
-                    (double)generic_int<Int>::factorial( *v[1] ),
-                    (double)generic_int<Int>::factorial( *v[1] + 1 ));
+        RES = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(A),
+                    (double)generic_int<Int>::factorial( A ),
+                    (double)generic_int<Int>::factorial( A + 1 ));
     }
 
     static void s_digits_1      		(double ** v)
     {
-        *v[0] = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(*v[1]),
-                    (double)generic_int<Int>::num_digits( *v[1] ),
-                    (double)generic_int<Int>::num_digits( *v[1] + 1 ));
+        RES = MO::MATH::interpol_smooth(
+                    MO::MATH::frac(A),
+                    (double)generic_int<Int>::num_digits( A ),
+                    (double)generic_int<Int>::num_digits( A + 1 ));
     }
 
     // ------------- float number theory ----------------
 
     static void zeta_1			(double ** v)
     {
-        *v[0] = 0.0;
-        double s = -*v[1];
+        RES = 0.0;
+        double s = -A;
         for (double i=1.0; i<70.0; ++i)
-            *v[0] += std::pow(i, s);
+            RES += std::pow(i, s);
     }
 
     static void zetap_2			(double ** v)
     {
-        *v[0] = 0.0;
-        double i = 1.0, k, s = -*v[1];
+        RES = 0.0;
+        double i = 1.0, k, s = -A;
         do
         {
             k = std::pow(i, s);
-            *v[0] += k;
-        } while (k > *v[2] && ++i <= 200000);
+            RES += k;
+        } while (k > B && ++i <= 200000);
     }
 
 
     static void digits_1 		(double ** v)
     {
-        *v[0] = generic_int<Int>::num_digits( *v[1] );
+        RES = generic_int<Int>::num_digits( A );
     }
 
     static void harmo_2			(double ** v)
     {
-        if (*v[1] == 0.0 || *v[2] == 0.0) { *v[0] = 0.0; return; }
-        double f = *v[1] / *v[2];
-        if (f == floor(f)) { *v[0] = f; return; }
-        f = *v[2] / *v[1];
-        *v[0] = (f == floor(f))? f : 0.0;
+        if (A == 0.0 || B == 0.0) { RES = 0.0; return; }
+        double f = A / B;
+        if (f == floor(f)) { RES = f; return; }
+        f = B / A;
+        RES = (f == floor(f))? f : 0.0;
     }
 
     static void harmo_3			(double ** v)
     {
-        if (*v[1] == 0.0 || *v[2] == 0.0 || *v[3] == 0.0) { *v[0] = 0.0; return; }
+        if (A == 0.0 || B == 0.0 || C == 0.0) { RES = 0.0; return; }
         double
-        f = *v[1] / *v[2] / *v[3];
-        if (f == floor(f)) { *v[0] = f; return; }
-        f = *v[1] / *v[3] / *v[2];
-        if (f == floor(f)) { *v[0] = f; return; }
-        f = *v[2] / *v[1] / *v[3];
-        if (f == floor(f)) { *v[0] = f; return; }
-        f = *v[2] / *v[3] / *v[1];
-        if (f == floor(f)) { *v[0] = f; return; }
-        f = *v[3] / *v[1] / *v[2];
-        if (f == floor(f)) { *v[0] = f; return; }
-        f = *v[3] / *v[2] / *v[1];
-        *v[0] = (f == floor(f))? f : 0.0;
+        f = A / B / C;
+        if (f == floor(f)) { RES = f; return; }
+        f = A / C / B;
+        if (f == floor(f)) { RES = f; return; }
+        f = B / A / C;
+        if (f == floor(f)) { RES = f; return; }
+        f = B / C / A;
+        if (f == floor(f)) { RES = f; return; }
+        f = C / A / B;
+        if (f == floor(f)) { RES = f; return; }
+        f = C / B / A;
+        RES = (f == floor(f))? f : 0.0;
     }
 
+#undef RES
+#undef A
+#undef B
+#undef C
+#undef D
 };
 
 inline math_func<double>::FuncPtr
