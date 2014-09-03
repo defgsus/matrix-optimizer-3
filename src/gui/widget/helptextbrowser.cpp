@@ -17,6 +17,7 @@
 #include "io/log.h"
 #include "io/error.h"
 #include "math/funcparser/parser.h"
+#include "math/constants.h"
 #include "gui/painter/grid.h"
 #include "gui/painter/valuecurve.h"
 
@@ -29,16 +30,18 @@ namespace
     {
     public:
         mutable PPP_NAMESPACE::Parser p;
-        mutable Double x;
+        mutable Double x, xr;
 
         EquationData(const QString& equ)
         {
             p.variables().add("x", &x, "");
+            p.variables().add("xr", &xr, "");
             p.parse(equ.toStdString());
         }
         Double value(Double time) const Q_DECL_OVERRIDE
         {
             x = time;
+            xr = x * TWO_PI;
             return p.eval();
         }
     };

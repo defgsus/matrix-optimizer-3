@@ -455,6 +455,8 @@ struct math_func<double>
 
     // -------------------- common gfx ---------------------------
 
+    static void mix_3           (double ** v) { *v[0] = *v[1] + *v[3] * (*v[2] - *v[1]); }
+
     static void smoothstep_3    (double ** v) { *v[0] = MO::MATH::smoothstep(*v[1], *v[2], *v[3]); }
     static void smootherstep_3  (double ** v) { *v[0] = MO::MATH::smootherstep(*v[1], *v[2], *v[3]); }
 
@@ -640,6 +642,9 @@ struct math_func<double>
 
 
     // ---------------- number theory ---------------
+
+    static void odd_1			(double ** v) { *v[0] = int(*v[1]) & 1; }
+    static void even_1			(double ** v) { *v[0] = !(int(*v[1]) & 1); }
 
     static void quer_1			(double ** v)
     {

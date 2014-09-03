@@ -37,6 +37,20 @@ Returns the smallest of the values <i>x</i> and <i>y</i>
 Returns the largest of the values <i>x</i> and <i>y</i>
 }}
 
+
+{{ even(x)
+Returns 1 if <i>x</i> is an even number, 0 otherwise.
+}}
+
+{{ odd(x)
+Returns 1 if <i>x</i> is an odd number, 0 otherwise.
+}}
+
+{{ mix(x, y, t)
+Linearily interpolates between values <i>x</i> and <i>y</i> by the factor <i>t</i> of range [0,1]. <i>t</i> = 0 returns <i>x</i>, <i>t</i> = 1 returns <i>y</i>, <i>t</i> = 0.5 returns the average. This function is sometimes also called <b>lerp</b>.
+<br/><b>mix( <a href="#square">square</a>(x), <a href="#tri">tri</a>(x), <a href="#clamp">clamp</a>(x,0,1) )</b>:<br/><img src="_equ#-4#4#-1#1#mix(square(x),tri(x),clamp(x,0,1))"/>
+}}
+
 {{ quant(x, q)
 Quantizes <i>x</i> to the interval <i>q</i>
 <br/><b>quant(x,0.3)</b>:<br/><img src="_equ#0#2#0#2#quant(x,0.3)"/>

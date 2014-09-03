@@ -111,6 +111,10 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		2, "mod",		math_func<Float>::mod_2			);
         f.add(Function::FUNCTION,		2, "smod",		math_func<Float>::smod_2		);
 
+        f.add(Function::FUNCTION,		3, "mix",		math_func<Float>::mix_3     	);
+        f.add(Function::FUNCTION,		1, "even",		math_func<Float>::even_1     	);
+        f.add(Function::FUNCTION,		1, "odd",		math_func<Float>::odd_1     	);
+
         f.setCurrentGroup("trigonometry");
 
         f.add(Function::FUNCTION,		1, "sin",		math_func<Float>::sin_1			);
