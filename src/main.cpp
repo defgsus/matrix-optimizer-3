@@ -25,9 +25,9 @@
 
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
-#include "tests/testhelpsystem.h"
+//#include "tests/testhelpsystem.h"
 
-#include "types/vector.h"
+//#include "types/vector.h"
 //#include "tool/stringmanip.h"
 //#include "io/streamoperators_qt.h"
 //#include "math/funcparser/parser.h"
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     MO::settings = new MO::Settings(MO::application);
 
     // tests
-    { MO::TestHelpSystem test; return test.run(); }
+//    { MO::TestHelpSystem test; return test.run(); }
 
 #ifdef NDEBUG
     auto splash = new MO::GUI::SplashScreen();
