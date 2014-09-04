@@ -22,17 +22,24 @@
 namespace MO {
 
 HelpExporterHtml::HelpExporterHtml(QObject *parent) :
-    QObject (parent),
-    help_   (new HelpSystem(this))
-
+    QObject         (parent),
+    help_           (new HelpSystem(this)),
+    imageExtension_ ("png")
 {
 }
 
 void HelpExporterHtml::save(const QString &directory)
 {
+    imageCounter_ = 0;
+    imageNames_.clear();
+
+    // create directories
     QDir dir(directory);
     if (!dir.mkpath(directory))
         MO_IO_ERROR(WRITE, "Can't create directory '" << directory << "'");
+    QString imgdir = directory + QDir::separator() + "img";
+    if (!dir.mkpath(imgdir))
+        MO_IO_ERROR(WRITE, "Can't create directory '" << imgdir << "'");
 
 
     QDomDocument doc;
@@ -59,15 +66,31 @@ void HelpExporterHtml::save(const QString &directory)
             htmlsExp_[link] = true;
             htmls_.pop_front();
 
-            if (!help_->loadXhtml(link, doc))
+            // write html
+            if (link.endsWith(".html", Qt::CaseInsensitive))
             {
-                MO_IO_WARNING(READ, "Could not load xhtml '" << link << "' "
-                              "from HelpSystem");
-                continue;
-            }
+                if (!help_->loadXhtml(link, doc))
+                {
+                    MO_IO_WARNING(READ, "Could not load xhtml '" << link << "' "
+                                  "from HelpSystem");
+                    continue;
+                }
 
-            prepareHtml_(doc);
-            writeHtml_(directory + QDir::separator() + link, doc);
+                prepareHtml_(doc);
+                writeHtml_(directory + QDir::separator() + link, doc);
+            }
+            // write stylesheet
+            else if (link.endsWith(".css", Qt::CaseInsensitive))
+            {
+                QVariant v = help_->loadResource(link, HelpSystem::StyleSheetResource);
+                if (v.isNull())
+                {
+                    MO_IO_WARNING(READ, "Could not load css '" << link << "' "
+                                  "from HelpSystem");
+                    continue;
+                }
+                writeString_(directory + QDir::separator() + link, v.toString());
+            }
         }
         else htmls_.pop_front();
     }
@@ -77,9 +100,9 @@ void HelpExporterHtml::save(const QString &directory)
 
 void HelpExporterHtml::prepareHtml_(QDomDocument &doc)
 {
-    // search for links
-    gatherLinks_(doc.documentElement());
-    gatherImages_(doc.documentElement());
+    QDomElement e = doc.documentElement();
+    gatherLinks_(e);
+    gatherImages_(e);
 }
 
 void HelpExporterHtml::writeHtml_(const QString &filename, const QDomDocument &doc)
@@ -95,12 +118,26 @@ void HelpExporterHtml::writeHtml_(const QString &filename, const QDomDocument &d
     doc.save(stream, 0);
 }
 
-void HelpExporterHtml::gatherLinks_(const QDomElement &e)
+void HelpExporterHtml::writeString_(const QString &filename, const QString& text)
+{
+    MO_DEBUG_HELP("HelpExporterHtml::writeString_('" << filename << "')");
+
+    QFile file(filename);
+    if (!file.open(QFile::WriteOnly))
+        MO_IO_ERROR(WRITE, "Can't create file '" << filename << "'\n"
+                    << file.errorString());
+
+    QTextStream stream(&file);
+    stream << text;
+}
+
+
+void HelpExporterHtml::gatherLinks_(QDomElement & e)
 {
     if (!e.isElement())
         return;
 
-    if (e.tagName() == "a")
+    if (e.tagName() == "a" || e.tagName() == "link")
         getPotentialLink_(e);
 
     // traverse childs
@@ -121,6 +158,7 @@ void HelpExporterHtml::getPotentialLink_(const QDomElement & e)
 
     MO_DEBUG_HELP("HelpExporterHtml: found href '" << href << "'");
 
+    // ignore these
     if (href.startsWith("#") || href.startsWith("http"))
         return;
 
@@ -138,7 +176,7 @@ void HelpExporterHtml::getPotentialLink_(const QDomElement & e)
     }
 }
 
-void HelpExporterHtml::gatherImages_(const QDomElement &e)
+void HelpExporterHtml::gatherImages_(QDomElement &e)
 {
     if (!e.isElement())
         return;
@@ -151,7 +189,11 @@ void HelpExporterHtml::gatherImages_(const QDomElement &e)
         if (!src.isEmpty())
         {
             imgs_.push_back(src);
+            // transform into something writeable
+            src = getFilenameFor_(src);
             imgsExp_.insert(src, false);
+            // and replace link in html
+            e.setAttribute("src", src);
         }
     }
 
@@ -169,15 +211,17 @@ void HelpExporterHtml::writeImages_(const QString &directory)
 {
     while (imgs_.begin() != imgs_.end())
     {
-        const QString link = imgs_.front();
+        const QString
+                link = imgs_.front(),
+                file = getFilenameFor_(link);
         imgs_.pop_front();
 
         // not saved?
-        if (!imgsExp_[link])
+        if (!imgsExp_[file])
         {
-            MO_DEBUG_HELP("HelpExporterHtml: writing image '" << link << "'");
+            MO_DEBUG_HELP("HelpExporterHtml: writing image '" << file << "'");
             // remove from todolist
-            imgsExp_[link] = true;
+            imgsExp_[file] = true;
 
             QVariant v = help_->loadResource(link, HelpSystem::ImageResource);
             if (v.isNull())
@@ -188,10 +232,38 @@ void HelpExporterHtml::writeImages_(const QString &directory)
             }
 
             QImage img = v.value<QImage>();
-            img.save(directory + QDir::separator() + link);
+            img.save(directory + QDir::separator() + file);
         }
     }
 
 }
+
+QString HelpExporterHtml::getFilenameFor_(const QString &url)
+{
+    // transform those pseudo-urls to something of a filename
+    if (url.startsWith("_"))
+    {
+        auto it = imageNames_.find(url);
+        if (it == imageNames_.end())
+        {
+            const QString n = QString("img%3image_%1.%2")
+                    .arg(imageCounter_++)
+                    .arg(imageExtension_)
+                    .arg(QDir::separator());
+            imageNames_.insert(url, n);
+            return n;
+        }
+        else
+            return it.value();
+        /*
+        return QString("equimg_%1%2.png")
+                .arg(qHash(url,23), 1,16,QChar('_'))
+                .arg(qHash(url.rightRef(url.size()/2),42), 1,16,QChar('_'));
+        */
+    }
+
+    return url;
+}
+
 
 } // namespace MO

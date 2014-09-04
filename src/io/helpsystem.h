@@ -14,6 +14,7 @@
 #include <QObject>
 #include <QVariant>
 #include <QStringList>
+#include <QImage>
 
 class QDomDocument;
 class QDomElement;
@@ -52,12 +53,29 @@ public slots:
     QString findResource(const QString& partial_url, ResourceType type);
 
     void renderHtml(const QDomDocument&, QTextStream&);
+
+    /** Returns an image for the special equation url
+     *  _equ#xstart#xend#ystart#yend#equation[#width[#height]] */
+    QImage getEquationImage(const QString& url) const;
+
 private:
 
     void renderHtml_(const QDomElement&, QTextStream&);
     void renderHtmlImg_(const QDomElement&, QTextStream&);
 
+    void loadEquationFunctions_();
+    void addEquationInfo_(QString& doc);
+
     QStringList searchPaths_;
+
+    struct EquFunc_
+    {
+        int numParams;
+        QString niceDisplay;
+        QString help;
+    };
+
+    QMultiMap<QString, EquFunc_> funcMap_;
 };
 
 } // namespace MO

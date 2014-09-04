@@ -35,16 +35,22 @@ private:
 
     void prepareHtml_(QDomDocument& doc);
     void writeHtml_(const QString& filename, const QDomDocument& doc);
+    void writeString_(const QString& filename, const QString& text);
     void writeImages_(const QString& directory);
 
-    void gatherLinks_(const QDomElement & e);
+    void gatherLinks_(QDomElement & e);
     void getPotentialLink_(const QDomElement& e);
-    void gatherImages_(const QDomElement & e);
+    void gatherImages_(QDomElement & e);
+
+    QString getFilenameFor_(const QString& url);
 
     HelpSystem * help_;
 
     QList<QString> htmls_, imgs_;
     QMap<QString, bool> htmlsExp_, imgsExp_;
+    QMap<QString, QString> imageNames_;
+    int imageCounter_;
+    QString imageExtension_;
 };
 
 } // namespace MO
