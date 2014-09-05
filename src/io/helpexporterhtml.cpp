@@ -30,9 +30,6 @@ HelpExporterHtml::HelpExporterHtml(QObject *parent) :
 
 void HelpExporterHtml::save(const QString &directory)
 {
-    imageCounter_ = 0;
-    imageNames_.clear();
-
     // create directories
     QDir dir(directory);
     if (!dir.mkpath(directory))
@@ -41,11 +38,14 @@ void HelpExporterHtml::save(const QString &directory)
     if (!dir.mkpath(imgdir))
         MO_IO_ERROR(WRITE, "Can't create directory '" << imgdir << "'");
 
+    // --- start ---
 
-    QDomDocument doc;
     htmls_.clear();
     htmlsExp_.clear();
+    imageNames_.clear();
+    imageCounter_ = 0;
 
+    QDomDocument doc;
     help_->loadXhtml("index.html", doc);
 
     // write first page

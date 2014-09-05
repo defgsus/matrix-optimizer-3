@@ -225,7 +225,8 @@ SOURCES += \
     src/io/equationpreset.cpp \
     src/io/helpsystem.cpp \
     src/tests/testhelpsystem.cpp \
-    src/io/helpexporterhtml.cpp
+    src/io/helpexporterhtml.cpp \
+    src/io/helpexporterlatex.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -443,7 +444,8 @@ HEADERS += \
     src/io/equationpreset.h \
     src/io/helpsystem.h \
     src/tests/testhelpsystem.h \
-    src/io/helpexporterhtml.h
+    src/io/helpexporterhtml.h \
+    src/io/helpexporterlatex.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

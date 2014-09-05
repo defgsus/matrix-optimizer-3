@@ -29,6 +29,7 @@ class HelpExporterHtml : public QObject
 public:
     explicit HelpExporterHtml(QObject *parent = 0);
 
+    /** Any errors will throw IoException */
     void save(const QString& directory);
 
 private:

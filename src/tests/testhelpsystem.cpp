@@ -15,6 +15,7 @@
 #include "testhelpsystem.h"
 #include "io/helpsystem.h"
 #include "io/helpexporterhtml.h"
+#include "io/helpexporterlatex.h"
 
 namespace MO {
 
@@ -38,8 +39,11 @@ int TestHelpSystem::run()
     qDebug() << text;
     */
 
-    HelpExporterHtml exp;
-    exp.save("/home/defgsus/prog/qt_project/mo/matrixoptimizer/help_export");
+//    HelpExporterHtml exp;
+//    exp.save("/home/defgsus/prog/qt_project/mo/matrixoptimizer/help_export");
+
+    HelpExporterLatex exp;
+    exp.save("/home/defgsus/prog/qt_project/mo/matrixoptimizer/help_export/latex");
 
     return 0;
 }
