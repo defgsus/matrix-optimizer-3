@@ -37,6 +37,9 @@ public:
     QList<QString> todo;
 
     QMap<QString, Link> links;
+
+    QString curUrl;
+    bool hadnewline;
 };
 
 
@@ -98,6 +101,7 @@ void HelpExporterLatex::save(const QString &directory)
     QTextStream stream(&file);
 
     stream << "\\documentclass{article}\n"
+              "\\usepackage{hyperref}\n"
               "\\begin{document}\n"
               "\\tableofcontents\n"
               "\\newpage\n";
@@ -178,7 +182,7 @@ void HelpExporterLatex::getPotentialLink_(const QDomElement &e)
     }
 }
 
-void HelpExporterLatex::gatherImages_(QDomElement &e)
+void HelpExporterLatex::gatherImages_(QDomElement &)
 {
 
 }
@@ -188,13 +192,17 @@ void HelpExporterLatex::exportHtml_(QDomDocument &doc, const QString& url, QStri
 {
     QTextStream stream(&content);
 
-    stream << "% " << url << "\n";
+    stream << "% --- begin of " << url << " ---\n";
 
-    QDomElement e(doc.documentElement());
-    prepareNode_(e);
-    exportNode_(e, stream);
+    stream << "\\newpage"
+           << "\\hypertarget{" << url << "}{}\n";
 
-    stream << "% end " << url << "\n";
+    p_->curUrl = url;
+
+    QDomNode n(doc.documentElement());
+    exportNode_(n, stream);
+
+    stream << "\n% --- end of " << url << " ---\n";
 }
 
 QString HelpExporterLatex::str_(const QString &text)
@@ -204,201 +212,184 @@ QString HelpExporterLatex::str_(const QString &text)
     str.replace("}", "\\}");
     str.replace("%", "\\%");
     str.replace("_", "\\_");
-    str.replace("^", "\\^");
+    str.replace("^", "\\textasciicircum");
+    str.replace("~", "\\textasciitilde");
     str.replace("&", "\\&");
+    str.replace("ß", "\\SS");
+    str.replace("<", "\\textless");
+    str.replace(">", "\\textgreater");
     return str;
 }
 
-void HelpExporterLatex::prepareNode_(QDomElement &e)
+void HelpExporterLatex::exportNode_(const QDomNode & n, QTextStream &stream, bool newl)
 {
-    // traverse childs first
-    QDomNodeList list = e.childNodes();
-    for (int i=0; i<list.count(); ++i)
+#define MO__CHILDS \
+    { exportChilds_(n, stream, newl); \
+      p_->hadnewline = newline; }
+#define MO__NEWLINE \
+    if (!p_->hadnewline && !newline) \
+        { stream << "\\newline\n"; p_->hadnewline = newline = true; }
+
+    bool newline = false;
+
+    if (n.isText())
     {
-        QDomElement ce = list.item(i).toElement();
-        if (ce.isElement())
-            prepareNode_(ce);
-    }
-
-    const QString
-            tag = e.tagName(),
-            text = str_(e.text());
-    QString repl;
-
-    if (tag == "h1")
-    {
-        repl = QString("\\newpage\n"
-                       "\\section{%1}\n").arg(text);
-    }
-
-    else
-    if (tag == "h2")
-    {
-        repl = QString("\\subsection{%1}\n").arg(text);
-    }
-
-    else
-    if (tag == "h3")
-    {
-        repl = QString("\\subsubsection{%1}\n").arg(text);
-    }
-
-    if (tag == "i")
-    {
-        repl = QString("\\textit{%1}").arg(text);
-    }
-
-    if (tag == "b")
-    {
-        repl = QString("\\textbf{%1}").arg(text);
-    }
-
-    if (tag == "td")
-    {
-        repl = QString("%1\\newline").arg(text);
-    }
-
-    if (tag == "p")
-    {
-        repl = text;
-    }
-
-    if (!repl.isEmpty())
-        MO_DEBUG_HELP("prepared: [" << repl << "]");
-
-    e.setAttribute("latex", repl);
-}
-
-void HelpExporterLatex::exportNode_(QDomElement &e, QTextStream &stream)
-{
-    const QString
-            tag = e.tagName(),
-            text = str_(e.text());
-
-    //QDomNodeList list = e.childNodes();
-    //exportNodeFragment_(e, stream);
-
-    stream << "% tag=" << tag << "\n";
-
-    if (tag == "html" || e.tagName() == "body" || e.tagName() == "head")
-    {
-        // nothing
-    }
-
-    if (e.hasAttribute("latex"))
-        stream << e.attribute("latex");
-    /*
-    else
-    if (tag == "p" || tag == "td" || tag == "h1" || tag == "h2" || tag == "h3")
-        stream << text << "\n";
-    */
-    /*
-    else
-    if (tag == "h1")
-    {
-        stream << "\\newpage\n"
-                  "\\section{" << text << "}\n";
-    }
-
-    else
-    if (tag == "h2")
-    {
-        stream << "\\subsection{" << text << "}\n";
-    }
-
-    else
-    if (tag == "h3")
-    {
-        stream << "\\subsubsection{" << text << "}\n";
-    }
-
-    else
-    if (tag == "b")
-    {
-        stream << "\\textbf{" << text << "}";
-    }
-
-    else
-    if (tag == "i")
-    {
-        stream << "\\textit{" << text << "}";
-    }
-
-    else
-    if (tag == "p")
-    {
-        stream << "\n" << text << "\n";
-    }
-
-    else
-    if (tag == "td")
-    {
-        stream << "\n" << text << "\\newline\n";
-    }
-
-    else
-    if (tag == "pre")
-    {
-        QString textnl(text);
-        textnl.replace("\n", "\\newline\n");
-        stream <<
-                  "\\texttt{" << textnl << "}"
-                  "\\newline\n";
-    }
-    */
-
-    // traverse childs
-    QDomNodeList list = e.childNodes();
-    for (int i=0; i<list.count(); ++i)
-    {
-        QDomElement ce = list.item(i).toElement();
-        if (ce.isElement())
-            exportNode_(ce, stream);
-    }
-}
-
-void HelpExporterLatex::exportNodeFragment_(QDomElement &e, QTextStream &stream)
-{
-    // <p><a name="bla"/>Hal<i>l</i>o Welt</p>
-    // "Hallo Welt"
-    int y = e.lineNumber(),
-        x = e.columnNumber();
-    QDomNodeList list = e.childNodes();
-
-    std::cout << "element " << e.tagName() << " "
-              << y << ":" << x << " text [" << e.text() << "]"
-              << std::endl;
-
-    int lx = x, ly = y, tpos=0, ltpos = 0;
-    for (int i=0; i<list.count(); ++i)
-    {
-        QDomElement ce = list.item(i).toElement();
-        if (!ce.isElement())
-            continue;
-
-        int cy = ce.lineNumber(),
-            cx = ce.columnNumber();
-
-        if (cy>ly)
-            tpos += lx;
+        if (!newl)
+            stream << str_(n.nodeValue());
         else
-            tpos += std::max(0, cx - lx);
+        {
+            QString textnl(str_(n.nodeValue()));
+            textnl.replace("\n", "\\newline\n");
+            stream << textnl;
+        }
+    }
+    else
+    if (n.isElement())
+    {
+        QDomElement e = n.toElement();
+        const QString tag = e.tagName();
+
+        stream << "% tag=" << tag << "\n";
+
+        if (tag == "a")
+        {
+            if (e.hasAttribute("href"))
+            {
+                QString href = e.attribute("href");
+
+                // external links
+                if (href.startsWith("http"))
+                {
+                    stream << "\\href{" << href << "}{";
+                    MO__CHILDS;
+                    stream << "}";
+                }
+                // internal links
+                else
+                {
+                    // add current page url
+                    if (href.startsWith("#"))
+                        href = p_->curUrl + href;
+
+                    // Tex doesn't like #
+                    href.replace("#", "_");
+
+                    stream << "\\hyperlink{" << href << "}{";
+                    MO__CHILDS;
+                    stream << "}";
+                }
+            }
+            // create a link target
+            else if (e.hasAttribute("name"))
+            {
+                stream << "\\hypertarget{"
+                       << p_->curUrl << "_" << e.attribute("name")
+                       << "}{}";
+                MO__CHILDS;
+            }
+        }
+
+        else
+        if (tag == "h1")
+        {
+            stream << "\\section{";
+            MO__CHILDS;
+            stream << "}\n";
+        }
+
+        else
+        if (tag == "h2")
+        {
+            stream << "\\subsection{";
+            MO__CHILDS;
+            stream << "}\n";
+        }
+
+        else
+        if (tag == "h3")
+        {
+            stream << "\\subsubsection{";
+            MO__CHILDS;
+            stream << "}\n";
+        }
+
+        else
+        if (tag == "b")
+        {
+            stream << "\\textbf{";
+            MO__CHILDS;
+            stream << "}";
+        }
+
+        else
+        if (tag == "i")
+        {
+            stream << "\\textit{";
+            MO__CHILDS;
+            stream << "}";
+        }
+
+        else
+        if (tag == "p")
+        {
+            stream << "\\paragraph*{}";
+            MO__CHILDS;
+        }
+
+        else
+        if (tag == "pre")
+        {
+            MO__NEWLINE;
+            stream << "\\texttt{";
+            exportChilds_(n, stream, true);
+            stream << "}";
+            MO__NEWLINE;
+        }
+
+        else
+        if (tag == "br")
+        {
+            MO__NEWLINE;
+            MO__CHILDS;
+        }
         /*
-        if (cy == y)
-            tpos += (cx - lx);
-        if (cy>ly)
-            tpos += lx;
+        else
+        if (tag == "table")
+        {
+            stream << "\\begin{tabular}[t]{llll}\n";
+            MO__CHILDS;
+            stream << "\\end{tabular}\n";
+        }
+
+        else
+        if (tag == "td")
+        {
+            MO__CHILDS;
+            //stream << " &\n";
+        }
         */
+        else
+        if (tag == "td")
+        {
+            MO__CHILDS;
+            MO__NEWLINE;
+        }
 
-        QString textpart = e.text().mid(ltpos, tpos-ltpos);
-        std::cout << "  textpart (" << ltpos << "-" << tpos << ") [" << textpart << "]\n"
-                 "  subelement " << ce.tagName() << " "
-                 << cy << ":" << cx << " text [" << ce.text() << "]"
-                 << std::endl;
+        else
+            MO__CHILDS;
+    }
 
-        lx = cx;
-        ly = cy;
-        ltpos = tpos;
+#undef MO__CHILDS
+#undef MO__NEWLINE
+}
+
+void HelpExporterLatex::exportChilds_(const QDomNode &n, QTextStream &stream, bool newl)
+{
+    // traverse childs
+    QDomNodeList list = n.childNodes();
+    for (int i=0; i<list.count(); ++i)
+    {
+        exportNode_(list.item(i), stream, newl);
     }
 }
 

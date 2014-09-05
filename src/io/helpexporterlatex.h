@@ -16,6 +16,7 @@
 
 class QDomDocument;
 class QDomElement;
+class QDomNode;
 class QTextStream;
 
 namespace MO {
@@ -48,9 +49,8 @@ private:
     void gatherImages_(QDomElement & e);
 
     void exportHtml_(QDomDocument & doc, const QString& url, QString& content);
-    void prepareNode_(QDomElement& e);
-    void exportNode_(QDomElement& e, QTextStream& stream);
-    void exportNodeFragment_(QDomElement& e, QTextStream& stream);
+    void exportNode_(const QDomNode& n, QTextStream& stream, bool newl = false);
+    void exportChilds_(const QDomNode& n, QTextStream& stream, bool newl = false);
 
     // returns a latex conformant text
     QString str_(const QString& text);
