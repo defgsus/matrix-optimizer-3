@@ -24,6 +24,8 @@
 #   define MO_ENABLE_DEBUG
 #endif
 
+#define MO_PRINT(stream_arg__) \
+    MO_STREAM_OUT(std::cout, stream_arg__ << std::endl)
 
 #ifdef MO_ENABLE_DEBUG
     #define MO_DEBUG_IMPL_(stream_arg__)                    \

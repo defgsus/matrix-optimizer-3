@@ -15,7 +15,7 @@ CONFIG += c++11
 
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
-DEFINES += GLEW_MX
+DEFINES += GLEW_MX MO_CLIENT
 
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
@@ -57,7 +57,6 @@ SOURCES += \
     src/gl/manager.cpp \
     src/io/init.cpp \
     src/object/model3d.cpp \
-    src/gui/parameterview.cpp \
     src/types/float.cpp \
     src/io/applicationtime.cpp \
     src/object/sequence.cpp \
@@ -75,9 +74,6 @@ SOURCES += \
     src/object/transform/scale.cpp \
     src/object/param/parameter.cpp \
     src/object/param/parameterfloat.cpp \
-    src/gui/widget/timebar.cpp \
-    src/gui/trackviewoverpaint.cpp \
-    src/gui/widget/spacer.cpp \
     src/tool/actionlist.cpp \
     src/tool/enumnames.cpp \
     src/object/transform/look.cpp \
@@ -90,10 +86,6 @@ SOURCES += \
     src/io/settings.cpp \
     src/audio/audiodevices.cpp \
     src/audio/audiodevice.cpp \
-    src/gui/audiodialog.cpp \
-    src/gui/objectinfodialog.cpp \
-    src/gui/splashscreen.cpp \
-    src/gui/widget/spinbox.cpp \
     src/engine/renderer.cpp \
     src/gl/drawable.cpp \
     src/gl/shader.cpp \
@@ -173,7 +165,8 @@ SOURCES += \
     src/object/microphonegroup.cpp \
     src/audio/audiomicrophone.cpp \
     src/network/tcpserver.cpp \
-    src/network/netlog.cpp
+    src/network/netlog.cpp \
+    src/engine/client.cpp
 
 HEADERS += \
     src/types/vector.h \
@@ -332,7 +325,8 @@ HEADERS += \
     src/audio/audiomicrophone.h \
     src/tests/testhelpsystem.h \
     src/network/tcpserver.h \
-    src/network/netlog.h
+    src/network/netlog.h \
+    src/engine/client.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

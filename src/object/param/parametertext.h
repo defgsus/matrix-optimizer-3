@@ -54,6 +54,7 @@ public:
     void setVariableDescriptions(const QStringList& descs) { varDescs_ = descs; }
     void setVariableDescriptions(const std::vector<std::string>& descs);
 
+#ifndef MO_CLIENT
     /** Opens a dialog to edit the text.
         Depending on the textType(), the dialog will be structured.
         If a (valid) text change was done, the scene object will be called with
@@ -61,6 +62,7 @@ public:
         @note The scene MUST be present for this call!
         Returns true, when a change was made. */
     bool openEditDialog(QWidget * parent = 0);
+#endif
 
 private:
 

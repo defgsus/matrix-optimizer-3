@@ -8,15 +8,13 @@
     <p>created 9/6/2014</p>
 */
 
-#include <qglobal.h>
-#include <QDesktopWidget>
-
 #include <iostream>
 
 #include "io/init.h"
 #include "io/application.h"
 #include "io/settings.h"
 #include "io/currentthread.h"
+#include "engine/client.h"
 
 int main(int argc, char *argv[])
 {
@@ -27,14 +25,9 @@ int main(int argc, char *argv[])
     MO::application = new MO::Application(argc, argv);
     MO::settings = new MO::Settings(MO::application);
 
-/*    auto mainwin = new MO::GUI::MainWindow;
-    MO::application->setMainWindow(mainwin);
+    MO::Client * client = new MO::Client(MO::application);
 
-    mainwin->show();
-*/
-
-    int ret = MO::application->exec();
-
+    int ret = client->run();
 
     delete MO::application;
 

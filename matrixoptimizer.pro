@@ -229,8 +229,7 @@ SOURCES += \
     src/io/helpexporterlatex.cpp \
     src/gui/networkdialog.cpp \
     src/network/tcpserver.cpp \
-    src/network/netlog.cpp \
-    src/main_client.cpp
+    src/network/netlog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
