@@ -20,13 +20,16 @@ namespace AUDIO {
 
 class MidiDevices
 {
+    // for pm_initialized_
+    friend class MidiDevice;
+
 public:
 
     struct DeviceInfo
     {
         int id;
-        QString name;
-        bool input, output;
+        QString name, apiName;
+        bool output;
     };
 
 

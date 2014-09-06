@@ -18,6 +18,9 @@ class AudioDevice;
 class AudioDecices;
 class AudioSource;
 class Configuration;
+class MidiDevice;
+class MidiDevices;
+class MidiEvent;
 
 class ChebychevFilter;
 class EnvelopeFollower;

@@ -21,15 +21,16 @@ bool MidiDevices::pm_initialized_ = false;
 
 MidiDevices::MidiDevices()
 {
+}
+
+bool MidiDevices::checkDevices()
+{
     if (!pm_initialized_)
     {
         pm_initialized_ = true;
         Pm_Initialize();
     }
-}
 
-bool MidiDevices::checkDevices()
-{
     apiNames_.clear();
     devices_.clear();
 
@@ -52,7 +53,7 @@ bool MidiDevices::checkDevices()
         DeviceInfo inf;
         inf.id = i;
         inf.name = info->name;
-        inf.input = info->input;
+        inf.apiName = api;
         inf.output = info->output;
         devices_.append(inf);
     }

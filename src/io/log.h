@@ -142,4 +142,12 @@
 #   define MO_DEBUG_HELP(unused__) { }
 #endif
 
+
+#if (1) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_MIDI
+#   define MO_DEBUG_MIDI(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
+#else
+#   define MO_DEBUG_MIDI(unused__) { }
+#endif
+
 #endif // MOSRC_IO_LOG_H

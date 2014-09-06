@@ -29,7 +29,7 @@ win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 ###################### files ##########################
 
 include(src/gui/gui.pri)
-include(network.pri)
+include(src/gui/network.pri)
 
 INCLUDEPATH += src
 
@@ -172,7 +172,9 @@ SOURCES += \
     src/tests/testhelpsystem.cpp \
     src/io/helpexporterhtml.cpp \
     src/io/helpexporterlatex.cpp \
-    src/audio/mididevices.cpp
+    src/audio/mididevices.cpp \
+    src/audio/mididevice.cpp \
+    src/audio/midievent.cpp
 
 HEADERS += \
     src/types/vector.h \
@@ -334,7 +336,9 @@ HEADERS += \
     src/tests/testhelpsystem.h \
     src/io/helpexporterhtml.h \
     src/io/helpexporterlatex.h \
-    src/audio/mididevices.h
+    src/audio/mididevices.h \
+    src/audio/mididevice.h \
+    src/audio/midievent.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
