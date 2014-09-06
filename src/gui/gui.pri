@@ -56,7 +56,8 @@ HEADERS += \
     src/gui/widget/helptextbrowser.h \
     src/gui/widget/equationdisplaywidget.h \
     src/gui/equationdisplaydialog.h \
-    src/gui/networkdialog.h
+    src/gui/networkdialog.h \
+    src/gui/midisettingsdialog.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -116,4 +117,5 @@ SOURCES += \
     src/gui/widget/helptextbrowser.cpp \
     src/gui/widget/equationdisplaywidget.cpp \
     src/gui/equationdisplaydialog.cpp \
-    src/gui/networkdialog.cpp
+    src/gui/networkdialog.cpp \
+    src/gui/midisettingsdialog.cpp

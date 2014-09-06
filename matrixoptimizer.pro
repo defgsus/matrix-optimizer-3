@@ -22,13 +22,13 @@ unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
 
-unix: { LIBS += -lGLEWmx -lGLU -lGL -lX11 -lportaudio -lsndfile }
+unix: { LIBS += -lGLEWmx -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
 
 win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 
 ###################### files ##########################
 
-include(gui.pri)
+include(src/gui/gui.pri)
 include(network.pri)
 
 INCLUDEPATH += src
@@ -171,7 +171,8 @@ SOURCES += \
     src/io/helpsystem.cpp \
     src/tests/testhelpsystem.cpp \
     src/io/helpexporterhtml.cpp \
-    src/io/helpexporterlatex.cpp
+    src/io/helpexporterlatex.cpp \
+    src/audio/mididevices.cpp
 
 HEADERS += \
     src/types/vector.h \
@@ -332,7 +333,8 @@ HEADERS += \
     src/io/helpsystem.h \
     src/tests/testhelpsystem.h \
     src/io/helpexporterhtml.h \
-    src/io/helpexporterlatex.h
+    src/io/helpexporterlatex.h \
+    src/audio/mididevices.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

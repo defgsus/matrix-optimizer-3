@@ -48,6 +48,7 @@
 #include "sceneconvertdialog.h"
 #include "projectorsetupdialog.h"
 #include "networkdialog.h"
+#include "midisettingsdialog.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -361,6 +362,14 @@ void MainWindow::createMainMenu_()
         {
             scene_->closeAudio();
             AudioDialog diag;
+            diag.exec();
+        });
+
+        a = new QAction(tr("Midi settings"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            MidiSettingsDialog diag;
             diag.exec();
         });
 
