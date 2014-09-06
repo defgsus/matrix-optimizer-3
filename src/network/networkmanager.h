@@ -29,6 +29,21 @@ class NetworkManager : public QObject
 public:
     explicit NetworkManager(QObject *parent = 0);
 
+    // ---------- info ---------------------
+
+    /** Returns whether the application settings are configured
+        for networking */
+    bool isConfigured() const;
+
+    /** Returns the network name from settings */
+    QString defaultNetworkName() const;
+
+    /** Returns the udp port from settings */
+    int defaultUdpPort() const;
+
+    /** Returns the udp port from settings */
+    int defaultTcpPort() const;
+
     /** Returns a list of all networks available */
     QString systemInfo() const;
 
@@ -37,16 +52,27 @@ public:
 
     // ---------- initialization -----------
 
-    /** Returns the set configuration (ethernet & active),
-        or 0 if not found. */
+    /** Returns the configuration from settings that
+        has ethernet & active flags.
+        If settings are not configured, the first active ethernet is returned.
+        Returns NULL if nothing was found. */
     QNetworkConfiguration * defaultNetwork() const;
 
+    /** Returns true when a network connection has been
+        successfully opened with open(). */
     bool isOpen() const;
+
+    /** Returns the current session object (when opened), or NULL.
+        Ownership stays with this class. */
+    QNetworkSession * currentSession() const;
 
 signals:
 
+    /** Emitted on network errors */
     void error(const QString& text);
+    /** Emitted on succesful open() */
     void opened();
+    /** Emitted on succesful close() or when the network goes down. */
     void closed();
 
 public slots:
@@ -55,7 +81,7 @@ public slots:
         The opened() signal will be emitted on success. */
     void open();
 
-    /** Tries to close the default network.
+    /** Tries to close the currently open network.
         The closed() signal will be emitted on success. */
     void close();
 
@@ -68,7 +94,6 @@ protected slots:
 protected:
 
     QNetworkConfigurationManager * conf_;
-    //QNetworkAccessManager * mgr_;
     QNetworkSession * net_;
 };
 

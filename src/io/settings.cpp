@@ -61,6 +61,10 @@ void Settings::createDefaultValues_()
     defaultValues_["EquEdit/x1"] = 1;
     defaultValues_["EquEdit/y0"] = -1;
     defaultValues_["EquEdit/y1"] = 1;
+
+    defaultValues_["Network/name"] = "";
+    defaultValues_["Network/tcpport"] = 50000;
+    defaultValues_["Network/udpport"] = 50001;
 }
 
 QVariant Settings::getValue(const QString &key)

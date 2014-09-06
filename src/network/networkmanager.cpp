@@ -19,6 +19,7 @@
 #include <QtNetwork/QTcpServer>
 
 #include "networkmanager.h"
+#include "io/settings.h"
 
 namespace MO {
 
@@ -32,6 +33,25 @@ NetworkManager::NetworkManager(QObject *parent)
 }
 
 
+bool NetworkManager::isConfigured() const
+{
+    return !settings->getValue("Network/name").toString().isEmpty();
+}
+
+QString NetworkManager::defaultNetworkName() const
+{
+    return settings->getValue("Network/name").toString();
+}
+
+int NetworkManager::defaultUdpPort() const
+{
+    return settings->getValue("Network/udpport").toInt();
+}
+
+int NetworkManager::defaultTcpPort() const
+{
+    return settings->getValue("Network/tcpport").toInt();
+}
 
 
 QString NetworkManager::systemInfo() const
@@ -135,10 +155,13 @@ QString NetworkManager::networkInfo() const
 
 QNetworkConfiguration * NetworkManager::defaultNetwork() const
 {
+    QString name = defaultNetworkName();
+
     for (auto &i : conf_->allConfigurations())
     {
         if (i.bearerType() == QNetworkConfiguration::BearerEthernet
-                &&  i.state() == QNetworkConfiguration::Active)
+                &&  i.state() == QNetworkConfiguration::Active
+                && (name.isEmpty() || i.name() == name))
         {
             return &i;
         }
@@ -147,6 +170,10 @@ QNetworkConfiguration * NetworkManager::defaultNetwork() const
     return 0;
 }
 
+QNetworkSession * NetworkManager::currentSession() const
+{
+    return isOpen() ? net_ : 0;
+}
 
 void NetworkManager::open()
 {
@@ -193,11 +220,11 @@ void NetworkManager::slotError_(QNetworkSession::SessionError e)
     QString s;
     switch (e)
     {
-        case QNetworkSession::UnknownSessionError: s = "unknown session error"; break;
-        case QNetworkSession::SessionAbortedError: s = "session was aborted"; break;
-        case QNetworkSession::RoamingError: s = "roaming error"; break;
-        case QNetworkSession::OperationNotSupportedError: s = "operation not supported"; break;
-        case QNetworkSession::InvalidConfigurationError: s = "invalid configuration"; break;
+        case QNetworkSession::UnknownSessionError: s = tr("unknown session error"); break;
+        case QNetworkSession::SessionAbortedError: s = tr("session was aborted"); break;
+        case QNetworkSession::RoamingError: s = tr("roaming error"); break;
+        case QNetworkSession::OperationNotSupportedError: s = tr("operation not supported"); break;
+        case QNetworkSession::InvalidConfigurationError: s = tr("invalid configuration"); break;
     }
 
     emit error(s);

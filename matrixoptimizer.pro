@@ -227,7 +227,9 @@ SOURCES += \
     src/tests/testhelpsystem.cpp \
     src/io/helpexporterhtml.cpp \
     src/io/helpexporterlatex.cpp \
-    src/gui/networkdialog.cpp
+    src/gui/networkdialog.cpp \
+    src/network/tcpserver.cpp \
+    src/network/netlog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -447,7 +449,9 @@ HEADERS += \
     src/tests/testhelpsystem.h \
     src/io/helpexporterhtml.h \
     src/io/helpexporterlatex.h \
-    src/gui/networkdialog.h
+    src/gui/networkdialog.h \
+    src/network/tcpserver.h \
+    src/network/netlog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
