@@ -28,26 +28,20 @@ win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 
 ###################### files ##########################
 
+include(gui.pri)
+
 INCLUDEPATH += src
 
 SOURCES += \
     src/main.cpp \
-    src/gui/mainwindow.cpp \
-    src/gui/basic3dview.cpp \
     src/math/timeline1d.cpp \
-    src/gui/timeline1dview.cpp \
     src/tests/testtimeline.cpp \
     src/io/console.cpp \
     src/audio/audiosource.cpp \
-    src/gui/painter/grid.cpp \
-    src/gui/ruler.cpp \
-    src/gui/timeline1drulerview.cpp \
-    src/gui/util/viewspace.cpp \
     src/io/xmlstream.cpp \
     src/tests/testxmlstream.cpp \
     src/io/datastream.cpp \
     src/model/qobjecttreemodel.cpp \
-    src/gui/qobjectinspector.cpp \
     src/object/object.cpp \
     src/tool/stringmanip.cpp \
     src/model/objecttreemodel.cpp \
@@ -57,7 +51,6 @@ SOURCES += \
     src/object/microphone.cpp \
     src/object/camera.cpp \
     src/object/dummy.cpp \
-    src/gui/objecttreeview.cpp \
     src/model/objecttreemimedata.cpp \
     src/gl/window.cpp \
     src/gl/context.cpp \
@@ -66,28 +59,14 @@ SOURCES += \
     src/gl/manager.cpp \
     src/io/init.cpp \
     src/object/model3d.cpp \
-    src/gui/parameterview.cpp \
     src/types/float.cpp \
     src/io/applicationtime.cpp \
-    src/gui/objectview.cpp \
     src/object/sequence.cpp \
     src/object/sequences.cpp \
     src/object/sequencefloat.cpp \
-    src/gui/sequenceview.cpp \
-    src/gui/sequencefloatview.cpp \
-    src/gui/painter/valuecurve.cpp \
-    src/gui/painter/sequenceoverpaint.cpp \
-    src/gui/generalsequencefloatview.cpp \
     src/math/noiseperlin.cpp \
     src/math/funcparser/parser.cpp \
     src/object/track.cpp \
-    src/gui/trackview.cpp \
-    src/gui/sequencer.cpp \
-    src/gui/widget/sequencewidget.cpp \
-    src/gui/trackheader.cpp \
-    src/gui/widget/trackheaderwidget.cpp \
-    src/gui/widget/doublespinbox.cpp \
-    src/gui/widget/equationeditor.cpp \
     src/tool/syntaxhighlighter.cpp \
     src/model/objecttreesortproxy.cpp \
     src/object/trackfloat.cpp \
@@ -97,9 +76,6 @@ SOURCES += \
     src/object/transform/scale.cpp \
     src/object/param/parameter.cpp \
     src/object/param/parameterfloat.cpp \
-    src/gui/widget/timebar.cpp \
-    src/gui/trackviewoverpaint.cpp \
-    src/gui/widget/spacer.cpp \
     src/tool/actionlist.cpp \
     src/tool/enumnames.cpp \
     src/object/transform/look.cpp \
@@ -109,24 +85,15 @@ SOURCES += \
     src/io/memory.cpp \
     src/object/param/parameterselect.cpp \
     src/object/group.cpp \
-    src/gui/util/objectmenu.cpp \
     src/io/settings.cpp \
-    src/gui/util/scenesettings.cpp \
     src/audio/audiodevices.cpp \
     src/audio/audiodevice.cpp \
-    src/gui/audiodialog.cpp \
-    src/gui/objectinfodialog.cpp \
-    src/gui/splashscreen.cpp \
-    src/gui/widget/spinbox.cpp \
     src/engine/renderer.cpp \
     src/gl/drawable.cpp \
     src/gl/shader.cpp \
     src/gl/shadersource.cpp \
     src/gl/opengl.cpp \
     src/gl/vertexarrayobject.cpp \
-    src/gui/widget/basic3dwidget.cpp \
-    src/gui/widget/geometrywidget.cpp \
-    src/gui/geometrydialog.cpp \
     src/geom/objloader.cpp \
     src/geom/geometry.cpp \
     src/geom/geometryfactory.cpp \
@@ -140,8 +107,6 @@ SOURCES += \
     src/io/files.cpp \
     src/object/param/modulator.cpp \
     src/object/param/modulatorfloat.cpp \
-    src/gui/widget/modulatorwidget.cpp \
-    src/gui/modulatordialog.cpp \
     src/io/currentthread.cpp \
     src/img/imagegenerator.cpp \
     src/object/lightsource.cpp \
@@ -154,8 +119,6 @@ SOURCES += \
     src/audio/tool/waveform.cpp \
     src/audio/tool/wavetablegenerator.cpp \
     src/object/audio/envelopeunit.cpp \
-    src/gui/widget/envelopewidget.cpp \
-    src/gui/widget/transportwidget.cpp \
     src/io/lockedoutput.cpp \
     src/object/modulatorobject.cpp \
     src/object/modulatorobjectfloat.cpp \
@@ -166,12 +129,10 @@ SOURCES += \
     src/gl/rendersettings.cpp \
     src/object/param/parameterfilename.cpp \
     src/io/filetypes.cpp \
-    src/gui/widget/groupwidget.cpp \
     src/geom/geometrymodifier.cpp \
     src/geom/geometrymodifierscale.cpp \
     src/geom/geometrymodifiertesselate.cpp \
     src/geom/geometrymodifierchain.cpp \
-    src/gui/widget/geometrymodifierwidget.cpp \
     src/geom/geometrymodifiercreate.cpp \
     src/geom/geometrymodifiertranslate.cpp \
     src/geom/geometrymodifierrotate.cpp \
@@ -184,79 +145,54 @@ SOURCES += \
     src/geom/geometrymodifierprimitiveequation.cpp \
     src/geom/geometrymodifierextrude.cpp \
     src/geom/geometryfactorysettings.cpp \
-    src/gui/widget/audiounitwidget.cpp \
-    src/gui/audiolinkwindow.cpp \
-    src/gui/audiolinkview.cpp \
-    src/gui/widget/audiounitconnectorwidget.cpp \
-    src/gui/painter/audiolinkviewoverpaint.cpp \
-    src/gui/painter/objecttreeviewoverpaint.cpp \
     src/object/sprite.cpp \
     src/object/util/texturesetting.cpp \
     src/geom/geometrymodifiertexcoords.cpp \
-    src/gui/widget/doublespinboxclean.cpp \
     src/geom/geometrymodifiertexcoordequation.cpp \
     src/geom/objexporter.cpp \
-    src/gui/geometryexportdialog.cpp \
     src/object/util/colorpostprocessingsetting.cpp \
     src/audio/tool/soundfile.cpp \
     src/audio/tool/soundfilemanager.cpp \
     src/object/param/parametertext.cpp \
-    src/gui/texteditdialog.cpp \
-    src/gui/sceneconvertdialog.cpp \
     src/math/intersection.cpp \
-    src/gui/widget/domepreviewwidget.cpp \
-    src/gui/projectorsetupdialog.cpp \
     src/projection/domesettings.cpp \
     src/projection/projectorsettings.cpp \
     src/projection/projectormapper.cpp \
     src/projection/projectionsystemsettings.cpp \
     src/projection/camerasettings.cpp \
     src/network/networkmanager.cpp \
-    src/gui/helpdialog.cpp \
-    src/gui/widget/helptextbrowser.cpp \
     src/io/povrayexporter.cpp \
     src/gl/scenedebugrenderer.cpp \
     src/gl/compatibility.cpp \
     src/object/microphonegroup.cpp \
     src/audio/audiomicrophone.cpp \
-    src/gui/widget/equationdisplaywidget.cpp \
-    src/gui/equationdisplaydialog.cpp \
     src/io/equationpresets.cpp \
     src/io/equationpreset.cpp \
     src/io/helpsystem.cpp \
     src/tests/testhelpsystem.cpp \
     src/io/helpexporterhtml.cpp \
     src/io/helpexporterlatex.cpp \
-    src/gui/networkdialog.cpp \
     src/network/tcpserver.cpp \
     src/network/netlog.cpp
 
 HEADERS += \
-    src/gui/mainwindow.h \
     src/types/vector.h \
-    src/gui/basic3dview.h \
     src/math/vector.h \
     src/math/constants.h \
     src/math/timeline1d.h \
     src/math/interpol.h \
-    src/gui/timeline1dview.h \
     src/types/float.h \
     src/tests/testtimeline.h \
     src/io/console.h \
     src/audio/audiosource.h \
-    src/gui/painter/grid.h \
-    src/gui/util/viewspace.h \
     src/math/functions.h \
-    src/gui/ruler.h \
     src/io/log.h \
     src/io/error.h \
     src/io/streamoperators_qt.h \
-    src/gui/timeline1drulerview.h \
     src/io/xmlstream.h \
     src/tests/testxmlstream.h \
     src/io/datastream.h \
     src/model/qobjecttreemodel.h \
-    src/gui/qobjectinspector.h \
     src/doc.h \
     src/object/object.h \
     src/tool/stringmanip.h \
@@ -267,7 +203,6 @@ HEADERS += \
     src/object/microphone.h \
     src/object/camera.h \
     src/object/dummy.h \
-    src/gui/objecttreeview.h \
     src/model/objecttreemimedata.h \
     src/gl/window.h \
     src/gl/context.h \
@@ -276,17 +211,10 @@ HEADERS += \
     src/gl/manager.h \
     src/io/init.h \
     src/object/model3d.h \
-    src/gui/parameterview.h \
     src/io/applicationtime.h \
-    src/gui/objectview.h \
     src/object/sequence.h \
     src/object/sequences.h \
     src/object/sequencefloat.h \
-    src/gui/sequenceview.h \
-    src/gui/sequencefloatview.h \
-    src/gui/painter/valuecurve.h \
-    src/gui/painter/sequenceoverpaint.h \
-    src/gui/generalsequencefloatview.h \
     src/math/random.h \
     src/math/noiseperlin.h \
     src/math/funcparser/functions.h \
@@ -294,13 +222,6 @@ HEADERS += \
     src/math/funcparser/parser_defines.h \
     src/math/funcparser/parser_program.h \
     src/object/track.h \
-    src/gui/trackview.h \
-    src/gui/sequencer.h \
-    src/gui/widget/sequencewidget.h \
-    src/gui/trackheader.h \
-    src/gui/widget/trackheaderwidget.h \
-    src/gui/widget/doublespinbox.h \
-    src/gui/widget/equationeditor.h \
     src/tool/syntaxhighlighter.h \
     src/model/objecttreesortproxy.h \
     src/object/trackfloat.h \
@@ -311,9 +232,6 @@ HEADERS += \
     src/object/transform/scale.h \
     src/object/param/parameter.h \
     src/object/param/parameterfloat.h \
-    src/gui/widget/timebar.h \
-    src/gui/trackviewoverpaint.h \
-    src/gui/widget/spacer.h \
     src/tool/actionlist.h \
     src/tool/enumnames.h \
     src/object/transform/look.h \
@@ -323,17 +241,11 @@ HEADERS += \
     src/io/memory.h \
     src/object/param/parameterselect.h \
     src/object/group.h \
-    src/gui/util/objectmenu.h \
     src/io/settings.h \
-    src/gui/util/scenesettings.h \
     src/audio/configuration.h \
     src/types/int.h \
     src/audio/audiodevices.h \
     src/audio/audiodevice.h \
-    src/gui/audiodialog.h \
-    src/gui/objectinfodialog.h \
-    src/gui/splashscreen.h \
-    src/gui/widget/spinbox.h \
     src/engine/renderer.h \
     src/gl/drawable.h \
     src/gl/shader.h \
@@ -341,10 +253,7 @@ HEADERS += \
     src/gl/cameraspace.h \
     src/gl/opengl.h \
     src/gl/vertexarrayobject.h \
-    src/gui/widget/basic3dwidget.h \
-    src/gui/widget/geometrywidget.h \
     src/gl/opengl_fwd.h \
-    src/gui/geometrydialog.h \
     src/math/hash.h \
     src/geom/objloader.h \
     src/geom/geometry.h \
@@ -359,8 +268,6 @@ HEADERS += \
     src/io/files.h \
     src/object/param/modulator.h \
     src/object/param/modulatorfloat.h \
-    src/gui/widget/modulatorwidget.h \
-    src/gui/modulatordialog.h \
     src/io/currentthread.h \
     src/img/imagegenerator.h \
     src/object/lightsource.h \
@@ -375,8 +282,6 @@ HEADERS += \
     src/audio/tool/wavetable.h \
     src/audio/tool/wavetablegenerator.h \
     src/object/audio/envelopeunit.h \
-    src/gui/widget/envelopewidget.h \
-    src/gui/widget/transportwidget.h \
     src/tool/locklessqueue.h \
     src/io/lockedoutput.h \
     src/object/modulatorobject.h \
@@ -388,12 +293,10 @@ HEADERS += \
     src/gl/rendersettings.h \
     src/object/param/parameterfilename.h \
     src/io/filetypes.h \
-    src/gui/widget/groupwidget.h \
     src/geom/geometrymodifier.h \
     src/geom/geometrymodifierscale.h \
     src/geom/geometrymodifiertesselate.h \
     src/geom/geometrymodifierchain.h \
-    src/gui/widget/geometrymodifierwidget.h \
     src/geom/geometrymodifiercreate.h \
     src/geom/geometrymodifiertranslate.h \
     src/geom/geometrymodifierrotate.h \
@@ -406,57 +309,38 @@ HEADERS += \
     src/geom/geometrymodifierprimitiveequation.h \
     src/geom/geometrymodifierextrude.h \
     src/geom/geometryfactorysettings.h \
-    src/gui/widget/audiounitwidget.h \
-    src/gui/audiolinkwindow.h \
-    src/gui/audiolinkview.h \
-    src/gui/widget/audiounitconnectorwidget.h \
-    src/gui/painter/audiolinkviewoverpaint.h \
-    src/gui/painter/objecttreeviewoverpaint.h \
     src/object/sprite.h \
     src/object/util/texturesetting.h \
     src/geom/geometrymodifiertexcoords.h \
-    src/gui/widget/doublespinboxclean.h \
     src/geom/geometrymodifiertexcoordequation.h \
     src/geom/objexporter.h \
-    src/gui/geometryexportdialog.h \
     src/object/util/colorpostprocessingsetting.h \
     src/audio/tool/soundfile.h \
     src/audio/tool/soundfilemanager.h \
     src/object/param/parametertext.h \
-    src/gui/texteditdialog.h \
-    src/gui/sceneconvertdialog.h \
     src/math/intersection.h \
-    src/gui/widget/domepreviewwidget.h \
-    src/gui/projectorsetupdialog.h \
     src/projection/domesettings.h \
     src/projection/projectorsettings.h \
     src/projection/projectormapper.h \
     src/projection/projectionsystemsettings.h \
     src/projection/camerasettings.h \
     src/network/networkmanager.h \
-    src/gui/helpdialog.h \
-    src/gui/widget/helptextbrowser.h \
     src/io/povrayexporter.h \
     src/gl/scenedebugrenderer.h \
     src/gl/compatibility.h \
     src/object/microphonegroup.h \
     src/audio/audiomicrophone.h \
-    src/gui/widget/equationdisplaywidget.h \
-    src/gui/equationdisplaydialog.h \
     src/io/equationpresets.h \
     src/io/equationpreset.h \
     src/io/helpsystem.h \
     src/tests/testhelpsystem.h \
     src/io/helpexporterhtml.h \
     src/io/helpexporterlatex.h \
-    src/gui/networkdialog.h \
     src/network/tcpserver.h \
     src/network/netlog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
-
-FORMS +=
 
 RESOURCES += \
     icons.qrc \

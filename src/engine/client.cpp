@@ -14,11 +14,14 @@
 #include "gl/manager.h"
 #include "gl/window.h"
 #include "object/scene.h"
+#include "network/tcpserver.h"
+#include "network/netlog.h"
 
 namespace MO {
 
 Client::Client(QObject *parent) :
-    QObject(parent)
+    QObject     (parent),
+    glManager_  (0)
 {
 }
 
@@ -26,7 +29,9 @@ int Client::run()
 {
     MO_PRINT(tr("Matrix Optimizer Client"));
 
-    createObjects_();
+//    createObjects_();
+
+    startNetwork_();
 
     int ret = application->exec();
 
@@ -36,12 +41,19 @@ int Client::run()
 }
 
 
-void Client::createObjects_()
+void Client::createGlObjects_()
 {
     glManager_ = new GL::Manager(this);
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
 
     glWindow_->show();//FullScreen();
+}
+
+void Client::startNetwork_()
+{
+    tcp_ = new TcpServer(this);
+
+    tcp_->open();
 }
 
 } // namespace MO

@@ -33,16 +33,16 @@ public:
 
     /** Returns whether the application settings are configured
         for networking */
-    bool isConfigured() const;
+    static bool isConfigured();
 
     /** Returns the network name from settings */
-    QString defaultNetworkName() const;
+    static QString defaultNetworkName();
 
     /** Returns the udp port from settings */
-    int defaultUdpPort() const;
+    static int defaultUdpPort();
 
     /** Returns the udp port from settings */
-    int defaultTcpPort() const;
+    static int defaultTcpPort();
 
     /** Returns a list of all networks available */
     QString systemInfo() const;

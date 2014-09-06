@@ -33,22 +33,22 @@ NetworkManager::NetworkManager(QObject *parent)
 }
 
 
-bool NetworkManager::isConfigured() const
+bool NetworkManager::isConfigured()
 {
     return !settings->getValue("Network/name").toString().isEmpty();
 }
 
-QString NetworkManager::defaultNetworkName() const
+QString NetworkManager::defaultNetworkName()
 {
     return settings->getValue("Network/name").toString();
 }
 
-int NetworkManager::defaultUdpPort() const
+int NetworkManager::defaultUdpPort()
 {
     return settings->getValue("Network/udpport").toInt();
 }
 
-int NetworkManager::defaultTcpPort() const
+int NetworkManager::defaultTcpPort()
 {
     return settings->getValue("Network/tcpport").toInt();
 }

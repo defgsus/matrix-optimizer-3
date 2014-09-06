@@ -11,7 +11,11 @@
 #ifndef MOSRC_NETWORK_TCPSERVER_H
 #define MOSRC_NETWORK_TCPSERVER_H
 
+#include <QList>
 #include <QObject>
+#include <QTcpServer>
+
+class QTcpSocket;
 
 namespace MO {
 
@@ -21,10 +25,49 @@ class TcpServer : public QObject
 public:
     explicit TcpServer(QObject *parent = 0);
 
+    // --------------- info ----------------
+
+    /** Should return true after a call to open() */
+    bool isListening() const;
+
+    /** Returns the number of open connections */
+    int openConnections() const { return sockets_.size(); }
+
 signals:
+
+    /** A new connection was established */
+    void socketOpened(QTcpSocket *);
+    /** The connection was closed */
+    void socketClosed(QTcpSocket *);
+    /** There was an error in the connection */
+    void socketError(QTcpSocket *);
+
+    /** Data is available for the connection */
+    void socketData(QTcpSocket *);
+    /** The number of @p bytes was written to the connection */
+    void socketDataWritten(QTcpSocket *, qint64 bytes);
 
 public slots:
 
+    /** Starts listening on all devices on the
+        port that is set in the application settings.
+        Returns success. */
+    bool open();
+    /** Stops listening */
+    void close();
+
+
+    // ____________ PRIVATE AREA ______________
+
+private slots:
+
+    void onNewConnection_();
+    void onAcceptError_(QAbstractSocket::SocketError);
+
+private:
+
+    QTcpServer * server_;
+    QMap<QTcpSocket*, QString> sockets_;
 };
 
 } // namespace MO

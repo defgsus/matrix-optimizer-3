@@ -17,6 +17,8 @@
 
 namespace MO {
 
+class TcpServer;
+
 class Client : public QObject
 {
     Q_OBJECT
@@ -31,10 +33,13 @@ public slots:
 
 private:
 
-    void createObjects_();
+    void createGlObjects_();
+    void startNetwork_();
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
+
+    TcpServer * tcp_;
 };
 
 } // namespace MO

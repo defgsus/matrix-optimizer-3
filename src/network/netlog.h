@@ -14,9 +14,6 @@
 
 #include "io/applicationtime.h"
 #include "io/currentthread.h"
-#ifndef NDEBUG
-#   include "io/log.h"
-#endif
 
 #ifndef MOSRC_NETWORK_NETLOG_H
 #define MOSRC_NETWORK_NETLOG_H
@@ -35,6 +32,7 @@ public:
     {
         ERROR,
         DEBUG,
+        EVENT,
         CTOR
     };
 

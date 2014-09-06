@@ -11,6 +11,7 @@
 #include "netlog.h"
 #include "io/application.h"
 #include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -20,7 +21,7 @@ NetworkLogger::NetworkLogger(QObject * p)
     : QObject   (p),
       stream_   (new QTextStream(&curText_))
 {
-    MO_NETLOG(CTOR, "NetworkLogger::NetworkLogger(" << p << ")");
+    MO_DEBUG_IO("NetworkLogger::NetworkLogger(" << p << ")");
 }
 
 NetworkLogger::~NetworkLogger()
@@ -40,7 +41,7 @@ NetworkLogger& NetworkLogger::instance()
 
 void NetworkLogger::beginWrite(Level l)
 {
-    NetworkLogger & n(instance());
+    NetworkLogger & n = instance();
     n.stream_->seek(0);
     n.curText_.clear();
     n.curLevel_ = l;
@@ -55,6 +56,8 @@ void NetworkLogger::endWrite()
     line.string = n.curText_;
 
     n.text_.append(line);
+
+    MO_DEBUG("NETLOG: " << line.string.left(line.string.count()-1));
 }
 
 } // namespace MO
