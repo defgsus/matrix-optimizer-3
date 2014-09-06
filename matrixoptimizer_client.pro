@@ -28,6 +28,8 @@ win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 
 ###################### files ##########################
 
+include(network.pri)
+
 INCLUDEPATH += src
 
 SOURCES += \
@@ -158,15 +160,11 @@ SOURCES += \
     src/projection/projectormapper.cpp \
     src/projection/projectionsystemsettings.cpp \
     src/projection/camerasettings.cpp \
-    src/network/networkmanager.cpp \
     src/io/povrayexporter.cpp \
     src/gl/scenedebugrenderer.cpp \
     src/gl/compatibility.cpp \
     src/object/microphonegroup.cpp \
-    src/audio/audiomicrophone.cpp \
-    src/network/tcpserver.cpp \
-    src/network/netlog.cpp \
-    src/engine/client.cpp
+    src/audio/audiomicrophone.cpp
 
 HEADERS += \
     src/types/vector.h \
@@ -317,15 +315,12 @@ HEADERS += \
     src/projection/projectormapper.h \
     src/projection/projectionsystemsettings.h \
     src/projection/camerasettings.h \
-    src/network/networkmanager.h \
     src/io/povrayexporter.h \
     src/gl/scenedebugrenderer.h \
     src/gl/compatibility.h \
     src/object/microphonegroup.h \
     src/audio/audiomicrophone.h \
     src/tests/testhelpsystem.h \
-    src/network/tcpserver.h \
-    src/network/netlog.h \
     src/engine/client.h
 
 BISON_FILES = \

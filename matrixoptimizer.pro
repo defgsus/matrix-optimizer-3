@@ -29,6 +29,7 @@ win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 ###################### files ##########################
 
 include(gui.pri)
+include(network.pri)
 
 INCLUDEPATH += src
 
@@ -160,7 +161,6 @@ SOURCES += \
     src/projection/projectormapper.cpp \
     src/projection/projectionsystemsettings.cpp \
     src/projection/camerasettings.cpp \
-    src/network/networkmanager.cpp \
     src/io/povrayexporter.cpp \
     src/gl/scenedebugrenderer.cpp \
     src/gl/compatibility.cpp \
@@ -171,10 +171,7 @@ SOURCES += \
     src/io/helpsystem.cpp \
     src/tests/testhelpsystem.cpp \
     src/io/helpexporterhtml.cpp \
-    src/io/helpexporterlatex.cpp \
-    src/network/tcpserver.cpp \
-    src/network/netlog.cpp \
-    src/network/tcpsocket.cpp
+    src/io/helpexporterlatex.cpp
 
 HEADERS += \
     src/types/vector.h \
@@ -325,7 +322,6 @@ HEADERS += \
     src/projection/projectormapper.h \
     src/projection/projectionsystemsettings.h \
     src/projection/camerasettings.h \
-    src/network/networkmanager.h \
     src/io/povrayexporter.h \
     src/gl/scenedebugrenderer.h \
     src/gl/compatibility.h \
@@ -336,10 +332,7 @@ HEADERS += \
     src/io/helpsystem.h \
     src/tests/testhelpsystem.h \
     src/io/helpexporterhtml.h \
-    src/io/helpexporterlatex.h \
-    src/network/tcpserver.h \
-    src/network/netlog.h \
-    src/network/tcpsocket.h
+    src/io/helpexporterlatex.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y
