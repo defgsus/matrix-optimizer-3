@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<equations version="1" name="tests">
+    <equation name="blablub" text="foo(a) { sin(a+sin(a+sin(a))) };&#10;foo(x+foo(x+foo(x)))&#10;&#10;//turb(a,b,t) { n1=noise(a,b); n2=noise(b,a); noise(a+n1*t,b+n2*t) };&#10;//turb(a,b,t,s) { n1=noise(a*s,b*s); n2=noise(b*s,a*s); noise(a+n1*t,b+n2*t) };&#10;//smstep(0,0.1, turb(x,y,2))&#10;//abs(turb(x,y,2,0.5))&#10;&#10;/*noiz(a,b) { pow(clamp(noiseoct(a,b,6)+0.5,0,1),5) };&#10;noiz(x,y)*/"/>
+    <equation name="full triangle spiral" text="odd(a) { a &amp; 1 };&#10;even(a) { (a &amp; 1) == 0 };&#10;&#10;tspiral(x-odd(x)*even(y), y-odd(y)*even(x))"/>
+    <equation name="maze 2" text="lerp(a,b,t) { a + t * (b-a) }; &#10;noise1(a,b) { noiseoct(a/20,b/20,4) };&#10;noise2(a,b) { noise1(a,b)*noise1(a*1.1,b*2.1) };&#10;maze1(a,b) { (a) &amp; 1 };&#10;maze2(a,b) { noise2(a,b) &gt; 0 ? maze1(a,b) : maze1(-b,-a) };&#10;maze2(x,y)"/>
+    <equation name="maze1" text="lerp(a,b,t) { a + t * (b-a) }; &#10;noise1(a,b) { noise(a/10,b/10) };&#10;noise2(a,b) { pow(clamp(noise1(a,b)*10,0,1),1) };&#10;maze1(a,b) { a &amp; 1 };&#10;maze2(a,b) { lerp(maze1(a,b),maze1(b,a), noise2(a,b)) &gt; 0.65 };&#10;maze2(x,y)"/>
+    <equation name="steep sine" text="foo(a) { sin(a+sin(a+sin(a))) };&#10;foo2(a) { foo(a+foo(a+foo(a))) };&#10;foo2(x*TWO_PI)"/>
+    <equation name="sumdiv maze !!" text="n = (uspiral(x-y,y+x)+40);&#10;sumdiv(n) &lt; n/20"/>
+    <equation name="turbulent noise" text="turb(a,b,t) { n1=noise(a,b); n2=noise(b,a); noise(a+n1*t,b+n2*t) };&#10;turb(a,b,t,s) { n1=noise(a*s,b*s); n2=noise(b*s,a*s); noise(a+n1*t,b+n2*t) };&#10;turb(x,y,2,0.5)"/>
+    <equation name="ulam maze" text="prime(uspiral(x-y,y+x)+40)"/>
+    <equation name="integergrid" text="grid(w) { (x&gt;=0 &amp;&amp; y&lt;w &amp;&amp; y&gt;=0) * (x * w + y) };&#10;ndiv(grid(24)) == 6&#10;&#10;//divisor(x,ndiv(y))&#10;/*&#10;lerp(a,b,t) { a + t * (b-a) }; &#10;noise1(a,b) { n=3*noiseoct(a/20,b/20,4); noise(a/21+n,b/21+n) };&#10;noise2(a,b) { noise1(a,b)*noise1(a*1.1,b*2.1) };&#10;maze1(a,b) { a &amp; 1 };&#10;maze2(a,b) { noise2(a,b) &gt; 0.01*(maze1(b,a)-0.5) ? maze1(a,b) : maze1(-b,-a) };&#10;maze2(x,y)&#10;*/&#10;"/>
+</equations>
