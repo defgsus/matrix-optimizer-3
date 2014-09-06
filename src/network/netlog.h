@@ -12,11 +12,10 @@
 #include <QList>
 #include <QTextStream>
 
-#include "io/applicationtime.h"
-#include "io/currentthread.h"
-
 #ifndef MOSRC_NETWORK_NETLOG_H
 #define MOSRC_NETWORK_NETLOG_H
+
+class QTcpSocket;
 
 namespace MO {
 
@@ -44,6 +43,10 @@ public:
 
     static NetworkLogger & instance();
 
+    static void connectForLogging(QTcpSocket*);
+
+    // -------- logging ----------
+
     static void beginWrite(Level);
     static void endWrite();
 
@@ -68,9 +71,7 @@ private:
 {   ::MO::NetworkLogger::beginWrite(                    \
         ::MO::NetworkLogger::level__);                  \
     ::MO::NetworkLogger::instance()                     \
-        << "[" << ::MO::currentThreadName() << "/"      \
-        << "[" << ::MO::applicationTimeString() << "] " \
-        << stream_arg__ << "\n";                        \
+        << stream_arg__;                                \
     ::MO::NetworkLogger::endWrite();                    \
 }
 

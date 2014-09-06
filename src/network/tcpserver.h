@@ -1,6 +1,6 @@
 /** @file tcpserver.h
 
-    @brief Tcp listener for matrixoptimizer clients
+    @brief Tcp connection listener
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -33,6 +33,9 @@ public:
     /** Returns the number of open connections */
     int openConnections() const { return sockets_.size(); }
 
+    /** Returns human readable name of a socket */
+    const QString& socketName(QTcpSocket*) const;
+
 signals:
 
     /** A new connection was established */
@@ -49,7 +52,7 @@ signals:
 
 public slots:
 
-    /** Starts listening on all devices on the
+    /** Starts listening on all adresses on the
         port that is set in the application settings.
         Returns success. */
     bool open();

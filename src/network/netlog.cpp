@@ -8,8 +8,13 @@
     <p>created 9/6/2014</p>
 */
 
+#include <QTcpSocket>
+#include <QHostAddress>
+
 #include "netlog.h"
 #include "io/application.h"
+#include "io/applicationtime.h"
+#include "io/currentthread.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -39,6 +44,57 @@ NetworkLogger& NetworkLogger::instance()
     return *instance_;
 }
 
+
+void NetworkLogger::connectForLogging(QTcpSocket * socket)
+{
+    //NetworkLogger & n(instance());
+
+    connect(socket,
+        static_cast<void (QTcpSocket::*)(QAbstractSocket::SocketError)>(
+                &QTcpSocket::error), [=]()
+    {
+        MO_NETLOG(ERROR,
+                  "TcpSocket(" << socket->peerAddress().toString() << "): "
+                  "error: " << socket->errorString());
+    });
+
+    connect(socket, &QTcpSocket::hostFound, [=]()
+    {
+        MO_NETLOG(EVENT,
+                  "TcpSocket(" << socket->peerAddress().toString() << "): "
+                  "host found");
+    });
+
+    connect(socket, &QTcpSocket::connected, [=]()
+    {
+        MO_NETLOG(EVENT,
+                  "TcpSocket(" << socket->peerAddress().toString() << "): "
+                  "connected");
+    });
+
+    connect(socket, &QTcpSocket::disconnected, [=]()
+    {
+        MO_NETLOG(EVENT,
+                  "TcpSocket(" << socket->peerAddress().toString() << "): "
+                  "connection closed");
+    });
+
+    connect(socket, &QTcpSocket::readyRead, [=]()
+    {
+        MO_NETLOG(EVENT,
+                  "TcpSocket(" << socket->peerAddress().toString() << "): "
+                  "received " << socket->bytesAvailable() << " bytes");
+    });
+
+    connect(socket, &QTcpSocket::bytesWritten, [=](qint64 bytes)
+    {
+        MO_NETLOG(EVENT,
+                  "TcpSocket(" << socket->peerAddress().toString() << "): "
+                  "send " << bytes << " bytes");
+    });
+}
+
+
 void NetworkLogger::beginWrite(Level l)
 {
     NetworkLogger & n = instance();
@@ -53,11 +109,13 @@ void NetworkLogger::endWrite()
 
     LogLine line;
     line.level = n.curLevel_;
-    line.string = n.curText_;
+    line.string =
+        currentThreadName() + "/" + applicationTimeString()
+            + n.curText_ + "\n";
 
     n.text_.append(line);
 
-    MO_DEBUG("NETLOG: " << line.string.left(line.string.count()-1));
+    MO_DEBUG("NETLOG: " << n.curText_);
 }
 
 } // namespace MO

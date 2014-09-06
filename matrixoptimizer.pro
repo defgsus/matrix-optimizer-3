@@ -173,7 +173,8 @@ SOURCES += \
     src/io/helpexporterhtml.cpp \
     src/io/helpexporterlatex.cpp \
     src/network/tcpserver.cpp \
-    src/network/netlog.cpp
+    src/network/netlog.cpp \
+    src/network/tcpsocket.cpp
 
 HEADERS += \
     src/types/vector.h \
@@ -337,7 +338,8 @@ HEADERS += \
     src/io/helpexporterhtml.h \
     src/io/helpexporterlatex.h \
     src/network/tcpserver.h \
-    src/network/netlog.h
+    src/network/netlog.h \
+    src/network/tcpsocket.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
     MO::Client * client = new MO::Client(MO::application);
 
-    int ret = client->run();
+    int ret = client->run(argc, argv);
 
     delete MO::application;
 

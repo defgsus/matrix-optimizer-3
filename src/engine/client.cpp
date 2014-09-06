@@ -8,6 +8,8 @@
     <p>created 9/6/2014</p>
 */
 
+#include <QTcpSocket>
+
 #include "client.h"
 #include "io/log.h"
 #include "io/application.h"
@@ -16,6 +18,7 @@
 #include "object/scene.h"
 #include "network/tcpserver.h"
 #include "network/netlog.h"
+#include "network/networkmanager.h"
 
 namespace MO {
 
@@ -25,11 +28,13 @@ Client::Client(QObject *parent) :
 {
 }
 
-int Client::run()
+int Client::run(int argc, char ** argv)
 {
     MO_PRINT(tr("Matrix Optimizer Client"));
 
 //    createObjects_();
+
+    send_ = (argc>1 && QString("send") == argv[1]);
 
     startNetwork_();
 
@@ -51,9 +56,37 @@ void Client::createGlObjects_()
 
 void Client::startNetwork_()
 {
-    tcp_ = new TcpServer(this);
+    if (send_)
+    {
+        MO_PRINT("SEND-MODE");
 
-    tcp_->open();
+        socket_ = new QTcpSocket(this);
+
+        NetworkLogger::connectForLogging(socket_);
+
+        socket_->connectToHost(
+                    QHostAddress("0.0.0.0"),
+                    NetworkManager::defaultTcpPort());
+
+        connect(socket_, &QTcpSocket::connected, [=]()
+        {
+            QTextStream stream(socket_);
+            stream << "hello world";
+        });
+    }
+    else
+    {
+        MO_PRINT("SERVER-MODE");
+
+        tcp_ = new TcpServer(this);
+        tcp_->open();
+
+        connect(tcp_, &TcpServer::socketData, [=](QTcpSocket * s)
+        {
+            QTextStream stream(s);
+            MO_PRINT("received: [" << stream.readAll() << "]");
+        });
+    }
 }
 
 } // namespace MO

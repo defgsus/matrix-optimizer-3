@@ -15,6 +15,8 @@
 
 #include "gl/opengl_fwd.h"
 
+class QTcpSocket;
+
 namespace MO {
 
 class TcpServer;
@@ -25,7 +27,7 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = 0);
 
-    int run();
+    int run(int argc, char ** argv);
 
 signals:
 
@@ -40,6 +42,9 @@ private:
     GL::Window * glWindow_;
 
     TcpServer * tcp_;
+    QTcpSocket * socket_;
+
+    bool send_;
 };
 
 } // namespace MO

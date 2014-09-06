@@ -1,6 +1,6 @@
 /** @file tcpserver.cpp
 
-    @brief Tcp listener for matrixoptimizer clients
+    @brief Tcp connection listener
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -36,13 +36,16 @@ bool TcpServer::open()
 
     MO_NETLOG(DEBUG, "TcpServer: start listening on port " << port);
 
-    if (!server_->listen())
+    if (!server_->listen(QHostAddress::Any//("127.0.0.1")
+                         , port))
     {
         MO_NETLOG(ERROR, "TcpServer: failed to start: " << server_->errorString());
         return false;
     }
 
-    MO_NETLOG(EVENT, "TcpServer: started listening on port " << port);
+    MO_NETLOG(EVENT, "TcpServer: started listening on "
+              << server_->serverAddress().toString()
+              << ":" << server_->serverPort());
 
     connect(server_, SIGNAL(newConnection()), this, SLOT(onNewConnection_()));
     connect(server_, SIGNAL(acceptError(QAbstractSocket::SocketError)),
@@ -56,6 +59,14 @@ void TcpServer::close()
     MO_NETLOG(DEBUG, "TcpServer::close()");
 
     server_->close();
+}
+
+const QString& TcpServer::socketName(QTcpSocket * s) const
+{
+    static const QString unknown = tr("unknown");
+
+    auto it = sockets_.find(s);
+    return it == sockets_.end() ? unknown : it.value();
 }
 
 void TcpServer::onAcceptError_(QAbstractSocket::SocketError )
@@ -74,7 +85,7 @@ void TcpServer::onNewConnection_()
         return;
     }
 
-    const QString name = socket->peerName() + ":" + socket->peerPort();
+    const QString name = socket->peerAddress().toString();
 
     MO_NETLOG(EVENT, "TcpServer: new connection from " << name);
 
@@ -87,25 +98,29 @@ void TcpServer::onNewConnection_()
         static_cast<void (QTcpSocket::*)(QAbstractSocket::SocketError)>(
                 &QTcpSocket::error), [=]()
     {
-        MO_NETLOG(ERROR, "TcpServer:: connection error: "
-                  << socket->errorString());
+        MO_NETLOG(ERROR, "TcpServer: connection error: "
+                  << socket->errorString() << " on " << socketName(socket));
         emit socketError(socket);
     });
 
     connect(socket, &QTcpSocket::readyRead, [=]()
     {
+        MO_NETLOG(EVENT, "TcpServer: received " << socket->bytesAvailable()
+                  << " bytes on " << socketName(socket));
         emit socketData(socket);
     });
 
-    connect(socket, &QTcpSocket::bytesWritten(qint64), [=](qint64 bytes)
+    connect(socket, &QTcpSocket::bytesWritten, [=](qint64 bytes)
     {
+        MO_NETLOG(EVENT, "TcpServer: send " << bytes
+                  << " bytes on " << socketName(socket));
         emit socketDataWritten(socket, bytes);
     });
 
     connect(socket, &QTcpSocket::disconnected, [=]()
     {
         MO_NETLOG(EVENT, "TcpServer: connection "
-                  << sockets_[socket] << " closed");
+                  << socketName(socket) << " closed");
 
         // remove from list
         sockets_.remove(socket);
