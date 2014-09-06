@@ -226,7 +226,8 @@ SOURCES += \
     src/io/helpsystem.cpp \
     src/tests/testhelpsystem.cpp \
     src/io/helpexporterhtml.cpp \
-    src/io/helpexporterlatex.cpp
+    src/io/helpexporterlatex.cpp \
+    src/gui/networkdialog.cpp
 
 HEADERS += \
     src/gui/mainwindow.h \
@@ -445,7 +446,8 @@ HEADERS += \
     src/io/helpsystem.h \
     src/tests/testhelpsystem.h \
     src/io/helpexporterhtml.h \
-    src/io/helpexporterlatex.h
+    src/io/helpexporterlatex.h \
+    src/gui/networkdialog.h
 
 BISON_FILES = \
     src/math/funcparser/grammar.y

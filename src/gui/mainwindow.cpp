@@ -47,6 +47,7 @@
 #include "audiolinkwindow.h"
 #include "sceneconvertdialog.h"
 #include "projectorsetupdialog.h"
+#include "networkdialog.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -363,13 +364,21 @@ void MainWindow::createMainMenu_()
             diag.exec();
         });
 
-    a = new QAction(tr("Projector setup"), m);
-    m->addAction(a);
-    connect(a, &QAction::triggered, [=]()
-    {
-        ProjectorSetupDialog diag(this);
-        diag.exec();
-    });
+        a = new QAction(tr("Network settings"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            NetworkDialog diag(this);
+            diag.exec();
+        });
+
+        a = new QAction(tr("Projector setup"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            ProjectorSetupDialog diag(this);
+            diag.exec();
+        });
 
     // ######### TOOLS MENU #########
     m = new QMenu(tr("Tools"), menuBar());

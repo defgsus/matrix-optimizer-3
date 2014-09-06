@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     MO::settings = new MO::Settings(MO::application);
 
     // tests
-    { MO::TestHelpSystem test; return test.run(); }
+    //{ MO::TestHelpSystem test; return test.run(); }
 
 #ifdef NDEBUG
     auto splash = new MO::GUI::SplashScreen();

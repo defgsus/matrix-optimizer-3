@@ -226,6 +226,8 @@ void HelpExporterLatex::exportNode_(const QDomNode & n, QTextStream &stream, boo
 #define MO__CHILDS \
     { exportChilds_(n, stream, newl); \
       p_->hadnewline = newline; }
+// XXX still too many newlines created.
+//     this test is not working correctly
 #define MO__NEWLINE \
     if (!p_->hadnewline && !newline) \
         { stream << "\\newline\n"; p_->hadnewline = newline = true; }
