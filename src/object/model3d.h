@@ -70,10 +70,10 @@ private:
     ColorPostProcessingSetting * texturePostProc_;
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_,
-        *diffExp_;
+        *diffExp_, *bumpScale_;
     ParameterSelect * lightMode_;
 
-    GL::Uniform * u_diff_exp_;
+    GL::Uniform * u_diff_exp_, * u_bump_scale_;
 
     bool doRecompile_;
 };

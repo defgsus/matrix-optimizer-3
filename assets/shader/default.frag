@@ -67,7 +67,12 @@ uniform vec4 u_color;
 
 #ifdef MO_ENABLE_NORMALMAP
 uniform sampler2D tex_norm_0;
-vec3 normalmap = texture(tex_norm_0, v_texCoord).xyz * 2.0 - 1.0;
+uniform float u_bump_scale;
+vec3 normalmap = mix(
+            vec3(0., 0., 1.),
+            texture(tex_norm_0, v_texCoord).xyz * 2.0 - 1.0,
+            u_bump_scale
+        );
 #endif
 
 

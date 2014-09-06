@@ -115,7 +115,12 @@ void Model3d::createParameters()
 
     beginParameterGroup("texturebump", tr("normal-map texture"));
 
-        textureBump_->createParameters("bump", TextureSetting::TT_NONE, true);
+        textureBump_->createParameters("bump", TextureSetting::TT_NONE, true, true);
+
+        bumpScale_ = createFloatParameter("bumpdepth", tr("bump scale"),
+                            tr("The influence of the normal-map"),
+                            1.0, 0.05);
+        //bumpDepth_->setMinValue(0.);
 
     endParameterGroup();
 
@@ -254,6 +259,8 @@ void Model3d::setupDrawable_()
     u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());
     if (texture_->isEnabled() && texturePostProc_->isEnabled())
         texturePostProc_->getUniforms(draw_->shader());
+    if (textureBump_->isEnabled())
+        u_bump_scale_ = draw_->shader()->getUniform(src->uniformNameBumpScale());
 }
 
 void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
@@ -290,6 +297,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 
         if (u_diff_exp_)
             u_diff_exp_->floats[0] = diffExp_->value(time, thread);
+        if (u_bump_scale_)
+            u_bump_scale_->floats[0] = bumpScale_->value(time, thread);
 
         if (texture_->isEnabled() && texturePostProc_->isEnabled())
             texturePostProc_->updateUniforms(time, thread);

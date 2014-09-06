@@ -50,7 +50,8 @@ public:
         If @p enableNone is true, the TT_NONE type is choosable. */
     void createParameters(const QString& id_suffix,
                           TextureType defaultType = TT_FILE,
-                          bool enableNone = false);
+                          bool enableNone = false,
+                          bool normalMap = false);
 
     /** Returns true when a change to parameter @p p requires
         a reinitialization.

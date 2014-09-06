@@ -11,6 +11,7 @@
 #include <QLayout>
 #include <QToolButton>
 #include <QComboBox>
+#include <QThread>
 
 #include "equationdisplaydialog.h"
 #include "widget/equationdisplaywidget.h"
@@ -33,6 +34,11 @@ EquationDisplayDialog::EquationDisplayDialog(QWidget *parent) :
     createWidgets_();
 
     loadSettings_();
+}
+
+EquationDisplayDialog::~EquationDisplayDialog()
+{
+    saveSettings_();
 }
 
 void EquationDisplayDialog::createWidgets_()
@@ -134,7 +140,7 @@ void EquationDisplayDialog::createWidgets_()
 
 void EquationDisplayDialog::closeEvent(QCloseEvent * e)
 {
-    saveSettings_();
+    //saveSettings_();
     QDialog::closeEvent(e);
 }
 

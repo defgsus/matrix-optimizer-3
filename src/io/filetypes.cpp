@@ -16,13 +16,15 @@ namespace MO {
 namespace IO {
 
     const QStringList fileTypeIds =
-    { "any", "scene", "texture", "model", "geom-set", "sound", "projection-set",
+    { "any", "scene", "texture", "ntexture", "model",
+      "geom-set", "sound", "projection-set",
       "povray", "equpreset" };
 
     const QStringList fileTypeNames =
     { QObject::tr("Any file"),
       QObject::tr("Scene"),
       QObject::tr("Texture"),
+      QObject::tr("Normal-map texture"),
       QObject::tr("Model"),
       QObject::tr("Geometry settings"),
       QObject::tr("Audio file"),
@@ -34,6 +36,7 @@ namespace IO {
     {
         { "*" },
         { "mo3" },
+        { "png", "jpg", "jpeg", "bmp" },
         { "png", "jpg", "jpeg", "bmp" },
         { "obj" },
         { "mo3-geom" },
@@ -47,6 +50,10 @@ namespace IO {
     {
         { QObject::tr("all files") + " ( * )" },
         { QObject::tr("scene files") + " ( *.mo3 )" },
+        { QObject::tr("all image files") + " ( *.png *.jpg *.jpeg *.bmp )",
+          QObject::tr("portable network graphics") + " ( *.png )",
+          QObject::tr("jpeg") + " ( *.jpg *.jpeg )",
+          QObject::tr("windows bitmap") + " ( *.bmp )" },
         { QObject::tr("all image files") + " ( *.png *.jpg *.jpeg *.bmp )",
           QObject::tr("portable network graphics") + " ( *.png )",
           QObject::tr("jpeg") + " ( *.jpg *.jpeg )",

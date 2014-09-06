@@ -27,6 +27,7 @@ class EquationDisplayDialog : public QDialog
     Q_OBJECT
 public:
     explicit EquationDisplayDialog(QWidget *parent = 0);
+    ~EquationDisplayDialog();
 
 signals:
 

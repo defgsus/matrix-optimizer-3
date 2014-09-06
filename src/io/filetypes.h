@@ -22,6 +22,7 @@ namespace IO {
         FT_ANY,
         FT_SCENE,
         FT_TEXTURE,
+        FT_NORMAL_MAP,
         FT_MODEL,
         FT_GEOMETRY_SETTINGS,
         FT_SOUND_FILE,

@@ -58,8 +58,8 @@ void TextureSetting::deserialize(IO::DataStream &io)
     io.readHeader("texs", 1);
 }
 
-void TextureSetting::createParameters(
-        const QString &id_suffix, TextureType defaultType, bool enableNone)
+void TextureSetting::createParameters(const QString &id_suffix, TextureType defaultType,
+                bool enableNone, bool normalMap)
 {
     paramType_ = object_->createSelectParameter(
             "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
@@ -77,7 +77,8 @@ void TextureSetting::createParameters(
 
     paramFilename_ = object_->createFilenameParameter(
                 "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
-                IO::FT_TEXTURE, ":/texture/mo_black.png");
+                normalMap? IO::FT_NORMAL_MAP : IO::FT_TEXTURE,
+                normalMap? ":/normalmap/01.png" : ":/texture/mo_black.png");
 
     paramCamera_ = object_->createIntParameter(
                 "_imgcamidx" + id_suffix, tr("camera frame"),
