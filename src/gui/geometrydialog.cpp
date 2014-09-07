@@ -126,7 +126,8 @@ void GeometryDialog::createMainWidgets_()
                 connect(geoWidget_, SIGNAL(glInitialized()), this, SLOT(updateFromWidgets_()));
                 connect(geoWidget_, SIGNAL(glReleased()), this, SLOT(onGlReleased()));
 
-                // view settings
+                // --- view settings ---
+
                 auto lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
@@ -139,6 +140,45 @@ void GeometryDialog::createMainWidgets_()
                     comboView_->setCurrentIndex(1);
                     connect(comboView_, SIGNAL(currentIndexChanged(int)),
                             this, SLOT(changeView_()));
+
+                    auto tbut = new QToolButton(this);
+                    lh2->addWidget(tbut);
+                    tbut->setIcon(QIcon(":/icon/view_front.png"));
+                    connect(tbut, &QToolButton::clicked,
+                            [=]{ setViewDirection(Basic3DWidget::VD_FRONT); });
+
+                    tbut = new QToolButton(this);
+                    lh2->addWidget(tbut);
+                    tbut->setIcon(QIcon(":/icon/view_back.png"));
+                    connect(tbut, &QToolButton::clicked,
+                            [=]{ setViewDirection(Basic3DWidget::VD_BACK); });
+
+                    tbut = new QToolButton(this);
+                    lh2->addWidget(tbut);
+                    tbut->setIcon(QIcon(":/icon/view_left.png"));
+                    connect(tbut, &QToolButton::clicked,
+                            [=]{ setViewDirection(Basic3DWidget::VD_LEFT); });
+
+                    tbut = new QToolButton(this);
+                    lh2->addWidget(tbut);
+                    tbut->setIcon(QIcon(":/icon/view_right.png"));
+                    connect(tbut, &QToolButton::clicked,
+                            [=]{ setViewDirection(Basic3DWidget::VD_RIGHT); });
+
+                    tbut = new QToolButton(this);
+                    lh2->addWidget(tbut);
+                    tbut->setIcon(QIcon(":/icon/view_top.png"));
+                    connect(tbut, &QToolButton::clicked,
+                            [=]{ setViewDirection(Basic3DWidget::VD_TOP); });
+
+                    tbut = new QToolButton(this);
+                    lh2->addWidget(tbut);
+                    tbut->setIcon(QIcon(":/icon/view_bottom.png"));
+                    connect(tbut, &QToolButton::clicked,
+                            [=]{ setViewDirection(Basic3DWidget::VD_BOTTOM); });
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
 
                     auto cb = new QCheckBox(tr("show coordinates"), this);
                     lh2->addWidget(cb);
@@ -453,6 +493,23 @@ void GeometryDialog::createModifierWidgets_()
 
     setUpdatesEnabled(true);
 }
+
+void GeometryDialog::setViewDirection(int dir)
+{
+    Float distance = 5.f;
+
+    if (geometry_)
+    {
+        Vec3 mi,ma;
+        geometry_->getExtent(&ma, &ma);
+        distance = std::max(distance,
+                            std::max(std::max(ma[0], ma[1]), std::max(ma[2],
+                std::max(std::max(std::abs(mi[0]),std::abs(mi[1])),std::abs(mi[2])))));
+    }
+
+    geoWidget_->viewSet((Basic3DWidget::ViewDirection)dir, distance);
+}
+
 
 void GeometryDialog::modifierExpandedChanged_(GEOM::GeometryModifier * g, bool expanded)
 {

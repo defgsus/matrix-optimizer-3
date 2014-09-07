@@ -50,6 +50,9 @@ public slots:
     /* Sets the settings to display/edit */
     void setGeometrySettings(const GEOM::GeometryFactorySettings&);
 
+    /** One of Basic3DWidget::ViewDirection enums */
+    void setViewDirection(int);
+
 protected slots:
 
     void changeView_();
