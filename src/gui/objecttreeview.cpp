@@ -413,7 +413,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         // cut
         a = editActions_.addAction(tr("Cut"), this);
         a->setStatusTip(tr("Moves the selected object and all it's children to the clipboard"));
-        a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_C);
+        a->setShortcut(Qt::CTRL + Qt::Key_X);
         connect(a, &QAction::triggered, [=]()
         {
             application->clipboard()->setMimeData(

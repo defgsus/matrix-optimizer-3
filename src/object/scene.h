@@ -285,8 +285,7 @@ private:
     // ------------ object collection ----------
 
     /** Calls onObjectsDeleted() for every object in @p toTell. */
-    void tellObjectsAboutToDelete_(
-            const QList<Object*> & toTell, const QList<const Object*> & deleted);
+    void tellObjectsAboutToDelete_(const QList<Object*> & toTell, const QList<Object *> & deleted);
 
     /** Does everything to update the tree */
     void updateTree_();
@@ -400,6 +399,7 @@ private:
     QList<Object*> microphoneObjects_;
     QList<LightSource*> lightSources_;
     QList<AudioUnit*> topLevelAudioUnits_;
+    QList<Object*> deletedObjects_;
 
     // ---------- properties -------------------
 

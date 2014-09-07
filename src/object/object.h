@@ -346,7 +346,7 @@ protected:
         @note Call ancestor's implementation before your derived code!
         Object's base implementation removes all modulators from parameters
         that point to deleted objects. */
-    virtual void onObjectsAboutToDelete(const QList<const Object*>& list);
+    virtual void onObjectsAboutToDelete(const QList<Object*>& list);
 
     /** Called when the parent of this object has changed.
         This happens when the object has been added to or moved in tree.
@@ -397,8 +397,9 @@ private:
     void swapChildren_(int from, int to);
 
     /** Deletes the child from the list of children, if found,
-        and deletes the object itself. Nothing more. */
-    void deleteObject_(Object * child);
+        and destroys the object itself if @p destroy is true.
+        Also sets childrenChanged_ to true. */
+    void deleteObject_(Object * child, bool destroy);
 
 public:
     // --------------- modulators ------------------

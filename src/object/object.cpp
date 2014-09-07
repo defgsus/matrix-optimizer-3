@@ -548,12 +548,13 @@ Object * Object::addChildObjectHelper_(Object * o, int index)
     return o;
 }
 
-void Object::deleteObject_(Object * child)
+void Object::deleteObject_(Object * child, bool destroy)
 {
     if (takeChild_(child))
     {
         child->setParent(0);
-        delete child;
+        if (destroy)
+            delete child;
         childrenHaveChanged_ = true;
     }
 }
@@ -744,7 +745,7 @@ void Object::childrenChanged_()
 }
 
 
-void Object::onObjectsAboutToDelete(const QList<const Object *> & list)
+void Object::onObjectsAboutToDelete(const QList<Object *> & list)
 {
     for (Parameter * p : parameters_)
     {

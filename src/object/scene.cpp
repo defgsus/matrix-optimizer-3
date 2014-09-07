@@ -238,13 +238,13 @@ void Scene::deleteObject(Object *object)
 
     MO_ASSERT(object->parentObject(), "Scene::deleteObject("<<object<<") without parent");
 
-    QList<const Object*> dellist;
+    QList<Object*> dellist;
 
     {
         ScopedSceneLockWrite lock(this);
 
         // get list of all objects that will be deleted
-        dellist = object->findChildObjects<const Object>(QString(), true);
+        dellist = object->findChildObjects<Object>(QString(), true);
         dellist.prepend(object);
 
         // get list of all remaining objects
@@ -256,7 +256,7 @@ void Scene::deleteObject(Object *object)
 
         // execute
         Object * parent = object->parentObject();
-        parent->deleteObject_(object);
+        parent->deleteObject_(object, false);
         parent->childrenChanged_();
 
         // finally update tree
@@ -265,6 +265,9 @@ void Scene::deleteObject(Object *object)
 
     // tell gui
     emit objectDeleted(object);
+
+    // memorize so we can free resources later
+    deletedObjects_.append(dellist);
 
     // XXX right now GUI does not listen to the specific
     // object but rather updates everything.
@@ -295,7 +298,7 @@ void Scene::swapChildren(Object *parent, int from, int to)
 }
 
 void Scene::tellObjectsAboutToDelete_(
-        const QList<Object *>& toTell, const QList<const Object *>& deleted)
+        const QList<Object *>& toTell, const QList<Object *>& deleted)
 {
     for (auto o : toTell)
         o->onObjectsAboutToDelete(deleted);
@@ -741,6 +744,22 @@ void Scene::renderScene(uint thread)
         // read-lock is sufficient because we
         // modify only thread-local storage
         ScopedSceneLockRead lock(this);
+
+        // free deleted objects resources
+        for (Object * o : deletedObjects_)
+        {
+            // destroy tree structure so we can
+            // destroy each object safely
+            o->setParent(0);
+            if (ObjectGl * gl = qobject_cast<ObjectGl*>(o))
+            {
+                if (gl->isGlInitialized(thread))
+                    gl->releaseGl(thread);
+            }
+        }
+        for (Object * o : deletedObjects_)
+            delete o;
+        deletedObjects_.clear();
 
         // release all openGL resources and quit
         if (releaseAllGlRequested_[thread])
