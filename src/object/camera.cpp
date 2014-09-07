@@ -91,6 +91,23 @@ void Camera::createParameters()
 
     endParameterGroup();
 
+    beginParameterGroup("camback", tr("background"));
+
+        backR_ = createFloatParameter("cambackr", tr("red"),
+                                      tr("Red amount of background color"),
+                                      0.0, 0.0, 1.0, 0.1);
+        backG_ = createFloatParameter("cambackg", tr("green"),
+                                      tr("Red amount of background color"),
+                                      0.0, 0.0, 1.0, 0.1);
+        backB_ = createFloatParameter("cambackb", tr("blue"),
+                                      tr("Red amount of background color"),
+                                      0.0, 0.0, 1.0, 0.1);
+        backA_ = createFloatParameter("cambacka", tr("red"),
+                                      tr("Alpha amount of background color"),
+                                      1.0, 0.0, 1.0, 0.1);
+
+    endParameterGroup();
+
     beginParameterGroup("output", tr("output"));
 
     cameraMix_ = createFloatParameter("cammix", tr("camera mix"),
@@ -298,7 +315,7 @@ const Mat4& Camera::cameraViewMatrix(uint index) const
     }
 }
 
-void Camera::startGlFrame(uint thread, Double , uint cubeMapIndex)
+void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
 {
     GL::FrameBufferObject * fbo = fbo_[thread];
     fbo->bind();
@@ -321,7 +338,10 @@ void Camera::startGlFrame(uint thread, Double , uint cubeMapIndex)
     MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
     MO_CHECK_GL( glDepthMask(true) );
 
-    MO_CHECK_GL( glClearColor(0,0.2,0.2,1) );
+    MO_CHECK_GL( glClearColor(backR_->value(time, thread),
+                              backG_->value(time, thread),
+                              backB_->value(time, thread),
+                              backA_->value(time, thread)) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
 }

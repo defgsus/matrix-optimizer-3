@@ -91,7 +91,8 @@ private:
 
     std::vector<GL::ScreenQuad*> screenQuad_;
 
-    ParameterFloat * cameraMix_, *cameraAngle_, *cameraOrthoScale_;
+    ParameterFloat * cameraMix_, *cameraAngle_, *cameraOrthoScale_,
+        *backR_, *backG_, *backB_, *backA_;
     ParameterSelect * cameraMode_;
     GL::Uniform * uColor_, * uAngle_;
 
