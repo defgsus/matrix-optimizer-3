@@ -41,6 +41,10 @@ private slots:
     void onTest_(bool go);
     void onApiChoosen_();
     void onDeviceChoosen_();
+    void onOk_();
+
+    void saveSettings_();
+    void loadSettings_();
 
 private:
 
@@ -49,7 +53,7 @@ private:
     void updateDeviceBox_();
     void updateWidgets_();
 
-    QString curApi_;
+    QString curApiName_, curDeviceName_;
     int curId_;
 
     AUDIO::MidiDevice * curDevice_;

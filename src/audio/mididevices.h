@@ -48,6 +48,11 @@ public:
     const QList<QString> apiNames() const { return apiNames_; }
     const QList<DeviceInfo> deviceInfos() const { return devices_; }
 
+    /** Returns the id matching the device name, or -1 */
+    int idForName(const QString& name, bool output) const;
+    /** Returns the name of the device @p id, or an empty string */
+    const QString& nameForId(int id) const;
+
 private:
 
     /** Global check for Pm_Initialized() called */

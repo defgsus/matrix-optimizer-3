@@ -22,6 +22,8 @@
 #include "audio/mididevice.h"
 #include "io/error.h"
 #include "io/applicationtime.h"
+#include "io/settings.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -38,13 +40,13 @@ MidiSettingsDialog::MidiSettingsDialog(QWidget *parent)
     setWindowTitle(tr("Midi settings"));
     setMinimumSize(640,480);
 
-    createWidgets_();
-    checkDevices_();
-    updateWidgets_();
-
     timer_->setSingleShot(false);
     timer_->setInterval(1000 / 30);
     connect(timer_, SIGNAL(timeout()), this, SLOT(onTimer_()));
+
+    createWidgets_();
+
+    loadSettings_();
 }
 
 MidiSettingsDialog::~MidiSettingsDialog()
@@ -97,14 +99,34 @@ void MidiSettingsDialog::createWidgets_()
             lh->addWidget(textBuffer_);
 
     lv->addStretch(2);
+
+        lh = new QHBoxLayout();
+        lv->addLayout(lh);
+
+            auto butOk = new QPushButton(tr("Ok"), this);
+            lh->addWidget(butOk);
+            butOk->setDefault(true);
+            connect(butOk, SIGNAL(clicked()), this, SLOT(onOk_()));
+
+            auto butCancel = new QPushButton(tr("Cancel"), this);
+            lh->addWidget(butCancel);
+            connect(butCancel, SIGNAL(clicked()), this, SLOT(reject()));
+
 }
 
 void MidiSettingsDialog::checkDevices_()
 {
+    const QString capi(curApiName_), cdev(curDeviceName_);
+    const int cid(curId_);
+
     comboApi_->clear();
     comboApi_->addItem(tr("None"), -1);
     comboDevice_->clear();
     comboDevice_->addItem(tr("None"), -1);
+
+    curApiName_ = capi;
+    curDeviceName_ = cdev;
+    curId_ = cid;
 
     if (!devices_)
         devices_ = new AUDIO::MidiDevices();
@@ -116,7 +138,7 @@ void MidiSettingsDialog::checkDevices_()
     for (auto &n : devices_->apiNames())
     {
         comboApi_->addItem(n, n);
-        if (curApi_ == n)
+        if (curApiName_ == n)
             comboApi_->setCurrentIndex(k);
         ++k;
     }
@@ -126,16 +148,26 @@ void MidiSettingsDialog::checkDevices_()
 
 void MidiSettingsDialog::updateDeviceBox_()
 {
+    const QString cdev(curDeviceName_);
+    const int cid(curId_);
+
     comboDevice_->clear();
     comboDevice_->addItem(tr("None"), -1);
+
+    curDeviceName_ = cdev;
+    curId_ = cid;
 
     int k = 1;
     for (const AUDIO::MidiDevices::DeviceInfo& i : devices_->deviceInfos())
     {
-        if (!i.output && i.apiName == curApi_)
-            comboDevice_->addItem(i.name, i.id);
+        if (i.output || i.apiName != curApiName_)
+            continue;
+
+        comboDevice_->addItem(i.name, i.id);
+
         if (curId_ == i.id)
             comboDevice_->setCurrentIndex(k);
+
         ++k;
     }
 }
@@ -154,7 +186,7 @@ void MidiSettingsDialog::onApiChoosen_()
     if (idx < 0 || idx > comboApi_->count())
         return;
 
-    curApi_ = comboApi_->itemData(idx).toString();
+    curApiName_ = comboApi_->itemData(idx).toString();
 
     updateDeviceBox_();
 }
@@ -166,6 +198,7 @@ void MidiSettingsDialog::onDeviceChoosen_()
         return;
 
     curId_ = comboDevice_->itemData(idx).toInt();
+    curDeviceName_ = devices_->nameForId(curId_);
 
     updateWidgets_();
 }
@@ -206,6 +239,45 @@ void MidiSettingsDialog::onTimer_()
         textBuffer_->appendPlainText(
                     "[" + applicationTimeString() + "] " + e.toString());
     }
+}
+
+void MidiSettingsDialog::saveSettings_()
+{
+    MO_DEBUG_MIDI("saving midi settings " << curApiName_ << "/" << curDeviceName_);
+
+    if (curId_ < 0 || curDeviceName_.isEmpty())
+    {
+        settings->setValue("MidiIn/api", "");
+        settings->setValue("MidiIn/device", "");
+    }
+    else
+    {
+        settings->setValue("MidiIn/api", curApiName_);
+        settings->setValue("MidiIn/device", curDeviceName_);
+    }
+}
+
+void MidiSettingsDialog::loadSettings_()
+{
+    curApiName_ = settings->getValue("MidiIn/api").toString();
+    curDeviceName_ = settings->getValue("MidiIn/device").toString();
+
+    if (!devices_)
+        devices_ = new AUDIO::MidiDevices;
+    devices_->checkDevices();
+
+    curId_ = devices_->idForName(curDeviceName_, false);
+
+    MO_DEBUG("loaded midi settings " << curApiName_ << "/"
+             << curDeviceName_ << " today's id=" << curId_);
+
+    checkDevices_();
+}
+
+void MidiSettingsDialog::onOk_()
+{
+    saveSettings_();
+    accept();
 }
 
 } // namespace GUI

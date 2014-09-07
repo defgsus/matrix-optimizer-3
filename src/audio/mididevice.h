@@ -27,12 +27,23 @@ public:
 
     // ------------ init -------------------
 
-    /** Throws AudiException on errors */
+    /** Tries to open the device id as input.
+        Throws AudiException on errors */
     void openInput(uint id);
     /** Just closes the device - no error checking */
     void close();
 
+    /** Initializes a device from the stored settings.
+        Returns true when this worked.
+        Returns false otherwise or if no settings are made yet.
+        Shows an error dialog on api failure.
+        @see isMidiConfigured() */
+    bool openInputFromSettings();
+
     // --------------- getter --------------
+
+    /** Returns true when application settings for midi input have been set */
+    bool isMidiInputConfigured() const;
 
     bool isOpen() const;
 

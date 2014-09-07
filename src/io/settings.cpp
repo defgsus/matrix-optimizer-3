@@ -55,6 +55,9 @@ void Settings::createDefaultValues_()
     defaultValues_["Audio/channelsIn"] = 2;
     defaultValues_["Audio/channelsOut"] = 2;
 
+    defaultValues_["MidiIn/api"] = "";
+    defaultValues_["MidiIn/device"] = "";
+
     defaultValues_["EquEdit/equation"] = "sin(x*TWO_PI)";
     defaultValues_["EquEdit/paintmode"] = 0;
     defaultValues_["EquEdit/x0"] = -1;

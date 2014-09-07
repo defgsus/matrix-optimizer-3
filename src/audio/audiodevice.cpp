@@ -297,8 +297,8 @@ bool AudioDevice::initFromSettings()
     }
     catch (AudioException& e)
     {
-        QMessageBox::warning(0, QWidget::tr("Error"),
-                             QWidget::tr("Failed to initialize audio devices.\n%1").arg(e.what())
+        QMessageBox::warning(0, QMessageBox::tr("Error"),
+                             QMessageBox::tr("Failed to initialize audio devices.\n%1").arg(e.what())
                              );
         return false;
     }
@@ -317,8 +317,8 @@ bool AudioDevice::initFromSettings()
 
     if (idx < 0)
     {
-        QMessageBox::warning(0, QWidget::tr("Error"),
-                             QWidget::tr("The configured device '%1' could not be found.")
+        QMessageBox::warning(0, QMessageBox::tr("Error"),
+                             QMessageBox::tr("The configured audio device '%1' could not be found.")
                              .arg(deviceName)
                              );
         return false;
@@ -338,8 +338,8 @@ bool AudioDevice::initFromSettings()
     }
     catch (AudioException& e)
     {
-        QMessageBox::warning(0, QWidget::tr("Error"),
-                             QWidget::tr("Failed to init audio device '%1'.\n%2")
+        QMessageBox::warning(0, QMessageBox::tr("Error"),
+                             QMessageBox::tr("Failed to init audio device '%1'.\n%2")
                              .arg(deviceName)
                              .arg(e.what())
                              );

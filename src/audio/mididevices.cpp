@@ -61,6 +61,25 @@ bool MidiDevices::checkDevices()
     return true;
 }
 
+int MidiDevices::idForName(const QString &name, bool output) const
+{
+    for (auto & d : devices_)
+        if (d.output == output && d.name == name)
+            return d.id;
+
+    return -1;
+}
+
+const QString& MidiDevices::nameForId(int id) const
+{
+    for (auto & d : devices_)
+        if (d.id == id)
+            return d.name;
+
+    static const QString empty;
+    return empty;
+}
+
 
 } // namespace AUDIO
 } // namespace MO

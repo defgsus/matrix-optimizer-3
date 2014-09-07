@@ -10,10 +10,13 @@
 
 #include <portmidi.h>
 
+#include <QMessageBox>
+
 #include "mididevice.h"
 #include "mididevices.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "io/settings.h"
 
 namespace MO {
 namespace AUDIO {
@@ -109,6 +112,61 @@ void MidiDevice::close()
     free(events_);
 }
 
+
+bool MidiDevice::isMidiInputConfigured() const
+{
+    return settings->getValue("MidiIn/device").toString().size();
+}
+
+bool MidiDevice::openInputFromSettings()
+{
+    QString devname = settings->getValue("MidiIn/device").toString();
+    if (devname.isEmpty())
+    {
+        QMessageBox::critical(0, QMessageBox::tr("midi input"),
+                              QMessageBox::tr("Midi input has not been configured"));
+        return false;
+    }
+
+    // find today's id
+    MidiDevices devs;
+    devs.checkDevices();
+
+    int id = devs.idForName(devname, false);
+
+
+    if (id < 0)
+    {
+        QMessageBox::warning(0, QMessageBox::tr("midi input"),
+                 QMessageBox::tr("The configured midi device '%1' could not be found.")
+                 .arg(devname)
+                         );
+        return false;
+    }
+
+    try
+    {
+        openInput(id);
+    }
+    catch (Exception & e)
+    {
+        QMessageBox::critical(0, QMessageBox::tr("midi input"),
+            QMessageBox::tr(
+                "Sorry, but there was an error opening the midi input device '%1'\n%2")
+                              .arg(devname).arg(e.what()));
+        return false;
+    }
+
+    return true;
+}
+
+
+
+
+
+
+
+
 bool MidiDevice::isInputEvent() const
 {
     if (!stream_)
@@ -128,7 +186,7 @@ MidiEvent MidiDevice::read()
 {
     int num = Pm_Read(stream_, (PmEvent*)events_, 1);
 
-//    MO_DEBUG_MIDI("MidiDevice(" << id_ << ")::read() " << num << " events");
+    //MO_DEBUG_MIDI("MidiDevice(" << id_ << ")::read() " << num << " events");
 
     if (num < 0)
     {
@@ -136,11 +194,12 @@ MidiEvent MidiDevice::read()
         return MidiEvent();
     }
 
-    MO_DEBUG_MIDI("MidiDevice(" << id_ << ")::read() event = "
-                  << QString("%1").arg(((PmEvent*)events_)->message, 8, 16, QChar('0')));
+    //MO_DEBUG_MIDI("MidiDevice(" << id_ << ")::read() event = "
+    //              << QString("%1").arg(((PmEvent*)events_)->message, 8, 16, QChar('0')));
 
     return MidiEvent(uint32_t( ((PmEvent*)events_)->message ));
 }
+
 
 
 } // namespace AUDIO
