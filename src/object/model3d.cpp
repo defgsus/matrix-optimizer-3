@@ -35,6 +35,7 @@ Model3d::Model3d(QObject * parent)
       textureBump_  (new TextureSetting(this)),
       texturePostProc_(new ColorPostProcessingSetting(this)),
       u_diff_exp_   (0),
+      u_bump_scale_ (0),
       doRecompile_  (false)
 {
     setName("Model3D");

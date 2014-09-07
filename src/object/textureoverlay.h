@@ -57,6 +57,7 @@ private:
         *u_dir_matrix_, *u_cam_angle_, *u_sphere_offset_,
         *u_local_transform_, *u_cube_hack_;
 
+    Mat4 deg90_;
 
 };
 

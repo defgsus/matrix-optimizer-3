@@ -36,6 +36,8 @@ TextureOverlay::TextureOverlay(QObject * parent)
       postProc_     (new ColorPostProcessingSetting(this))
 {
     setName("TextureOverlay");
+
+    deg90_ = glm::rotate(Mat4(1), 90.f, Vec3(1,0,0));
 }
 
 void TextureOverlay::serialize(IO::DataStream & io) const
@@ -196,7 +198,10 @@ void TextureOverlay::releaseGl(uint /*thread*/)
 
 void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
-    const Mat4& trans = transformation(thread, 0);
+    const Mat4& trans =
+            (actualPtype_ == PT_EQUIRECT || actualPtype_ == PT_FISHEYE)
+                ? transformation(thread, 0) * deg90_
+                : transformation(thread, 0);
     const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
     //const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
 
