@@ -33,6 +33,7 @@
 #include "io/equationpresets.h"
 #include "io/files.h"
 #include "io/error.h"
+#include "gui/saveequationdialog.h"
 
 namespace MO {
 namespace GUI {
@@ -414,6 +415,10 @@ void EquationEditor::createMenus_()
     connect(a, SIGNAL(triggered()), this, SLOT(saveEquationAs_()));
     contextMenu_->addAction( a );
 
+    a = new QAction(tr("*Dialog*"), contextMenu_);
+    connect(a, SIGNAL(triggered()), this, SLOT(saveEquationDialog_()));
+    contextMenu_->addAction( a );
+
     updateVariableMenu_();
     updatePresetMenu_();
 }
@@ -479,6 +484,12 @@ void EquationEditor::updateVariableMenu_()
 void EquationEditor::contextMenuEvent(QContextMenuEvent * e)
 {
     contextMenu_->popup(e->globalPos());
+}
+
+void EquationEditor::saveEquationDialog_()
+{
+    SaveEquationDialog diag;
+    diag.exec();
 }
 
 void EquationEditor::saveEquationAs_()

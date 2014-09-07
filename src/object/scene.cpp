@@ -99,6 +99,9 @@ Scene::~Scene()
     MO_DEBUG_TREE("Scene::~Scene()");
 
     stop();
+
+    destroyDeletedObjects_(false);
+
     for (auto i : debugRenderer_)
         delete i;
     for (auto i : fboFinal_)
@@ -656,7 +659,28 @@ void Scene::endObjectChange()
     render_();
 }
 
+void Scene::destroyDeletedObjects_(bool releaseGl)
+{
+    for (Object * o : deletedObjects_)
+    {
+        // unmake the QObject tree structure so we can
+        // destroy each object safely
+        o->setParent(0);
 
+        if (releaseGl)
+        if (ObjectGl * gl = qobject_cast<ObjectGl*>(o))
+        {
+            for (uint i=0; i<gl->numberThreads(); ++i)
+                if (gl->isGlInitialized(i))
+                    gl->releaseGl(i);
+        }
+    }
+
+    for (Object * o : deletedObjects_)
+        delete o;
+
+    deletedObjects_.clear();
+}
 
 
 // ----------------------- open gl ---------------------------
@@ -746,20 +770,7 @@ void Scene::renderScene(uint thread)
         ScopedSceneLockRead lock(this);
 
         // free deleted objects resources
-        for (Object * o : deletedObjects_)
-        {
-            // destroy tree structure so we can
-            // destroy each object safely
-            o->setParent(0);
-            if (ObjectGl * gl = qobject_cast<ObjectGl*>(o))
-            {
-                if (gl->isGlInitialized(thread))
-                    gl->releaseGl(thread);
-            }
-        }
-        for (Object * o : deletedObjects_)
-            delete o;
-        deletedObjects_.clear();
+        destroyDeletedObjects_(true);
 
         // release all openGL resources and quit
         if (releaseAllGlRequested_[thread])

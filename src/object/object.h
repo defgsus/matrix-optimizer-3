@@ -398,7 +398,8 @@ private:
 
     /** Deletes the child from the list of children, if found,
         and destroys the object itself if @p destroy is true.
-        Also sets childrenChanged_ to true. */
+        @p child will have it's QObject parent set to NULL.
+        Also childrenChanged_ is set to true for this class. */
     void deleteObject_(Object * child, bool destroy);
 
 public:

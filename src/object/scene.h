@@ -323,6 +323,11 @@ private:
     void createSceneGl_(uint thread);
     void releaseSceneGl_(uint thread);
 
+    /** Safely destroys all deletedObjects_.
+        if @p releaseGl is true, their Object::releaseGl() functions
+        will be called for each thread if needed. */
+    void destroyDeletedObjects_(bool releaseGl);
+
     // ----------- runtime ---------------------
 
     void lockRead_();

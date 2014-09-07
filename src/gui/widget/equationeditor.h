@@ -66,6 +66,7 @@ protected slots:
     void insertCompletion_(const QString &word);
     void insertVariable_(QAction*);
     void saveEquationAs_();
+    void saveEquationDialog_();
     void saveEquation_(QAction*);
     void loadEquation_(QAction*);
 
