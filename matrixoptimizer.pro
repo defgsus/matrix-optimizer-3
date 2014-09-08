@@ -33,17 +33,8 @@ include(src/common.pri)
 
 INCLUDEPATH += src
 
-
-
-BISON_FILES = \
-    src/math/funcparser/grammar.y
-
-RESOURCES += \
-    icons.qrc \
-    images.qrc \
-    shaders.qrc \
-    models.qrc \
-    help.qrc
+SOURCES += \
+    src/main.cpp
 
 OTHER_FILES += $$BISON_FILES \
     TODO.txt \

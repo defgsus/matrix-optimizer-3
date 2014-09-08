@@ -1,3 +1,24 @@
+RESOURCES += \
+    images.qrc \
+    shaders.qrc \
+    models.qrc
+
+BISON_FILES = \
+    src/math/funcparser/grammar.y
+
+OTHER_FILES += $$BISON_FILES \
+    TODO.txt \
+    assets/shader/default.vert \
+    assets/shader/default.frag \
+    assets/shader/framebufferdraw.vert \
+    assets/shader/framebufferdraw.frag \
+    assets/shader/framebuffercamera.vert \
+    assets/shader/framebuffercamera.frag \
+    assets/shader/test.vert \
+    assets/shader/test.frag \
+    assets/shader/textureoverlay.vert \
+    assets/shader/textureoverlay.frag
+
 HEADERS += \
     src/types/vector.h \
     src/math/vector.h \
@@ -154,10 +175,6 @@ HEADERS += \
     src/audio/audiomicrophone.h \
     src/io/equationpresets.h \
     src/io/equationpreset.h \
-    src/io/helpsystem.h \
-    src/tests/testhelpsystem.h \
-    src/io/helpexporterhtml.h \
-    src/io/helpexporterlatex.h \
     src/audio/mididevices.h \
     src/audio/mididevice.h \
     src/audio/midievent.h \
@@ -168,7 +185,6 @@ HEADERS += \
 
 
 SOURCES += \
-    src/main.cpp \
     src/math/timeline1d.cpp \
     src/tests/testtimeline.cpp \
     src/io/console.cpp \
@@ -302,10 +318,6 @@ SOURCES += \
     src/audio/audiomicrophone.cpp \
     src/io/equationpresets.cpp \
     src/io/equationpreset.cpp \
-    src/io/helpsystem.cpp \
-    src/tests/testhelpsystem.cpp \
-    src/io/helpexporterhtml.cpp \
-    src/io/helpexporterlatex.cpp \
     src/audio/mididevices.cpp \
     src/audio/mididevice.cpp \
     src/audio/midievent.cpp \
