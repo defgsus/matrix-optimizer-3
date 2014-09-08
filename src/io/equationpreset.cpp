@@ -11,6 +11,7 @@
 #include "equationpreset.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
+#include "io/error.h"
 
 namespace MO {
 namespace IO {
@@ -74,6 +75,8 @@ void EquationPreset::deserialize(XmlStream & io)
 
 void EquationPreset::save(const QString &filename)
 {
+    MO_DEBUG("EquationPreset::save('" << filename << "')");
+
     XmlStream io;
     io.startWriting("equations");
     serialize(io);
@@ -82,8 +85,18 @@ void EquationPreset::save(const QString &filename)
     filename_ = filename;
 }
 
+void EquationPreset::save()
+{
+     if (filename_.isEmpty())
+         MO_IO_ERROR(WRITE, "no filename defined for equation preset '" << name_ << "'");
+
+     save(filename_);
+}
+
 void EquationPreset::load(const QString &filename)
 {
+    MO_DEBUG("EquationPreset::load('" << filename << "')");
+
     XmlStream io;
     io.load(filename);
     io.startReading("equations");

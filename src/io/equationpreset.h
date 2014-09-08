@@ -32,7 +32,7 @@ public:
 
     void load(const QString& filename);
     void save(const QString& filename);
-    void save() { if (!filename_.isEmpty()) save(filename_); }
+    void save();
 
     // --------- setter ---------------
 

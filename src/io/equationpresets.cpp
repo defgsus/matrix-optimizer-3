@@ -52,6 +52,8 @@ void EquationPresets::rescan()
 
     MO_DEBUG_IO("EquationPresets::rescan() " << files.count() << " preset files");
 
+    clear();
+
     for (auto &f : files)
     {
         auto p = new EquationPreset(f);

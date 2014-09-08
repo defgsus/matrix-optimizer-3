@@ -57,6 +57,13 @@ public slots:
     void addVariables(const QStringList& variables,
                       const QStringList& descriptions);
 
+protected:
+
+    void keyPressEvent(QKeyEvent *);
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void contextMenuEvent(QContextMenuEvent *);
+
 protected slots:
 
     void onTextChanged_();
@@ -66,16 +73,10 @@ protected slots:
     void insertCompletion_(const QString &word);
     void insertVariable_(QAction*);
     void saveEquationAs_();
-    void saveEquationDialog_();
     void saveEquation_(QAction*);
+    void saveEquation_();
     void loadEquation_(QAction*);
-
-protected:
-
-    void keyPressEvent(QKeyEvent *);
-    void mousePressEvent(QMouseEvent *);
-    void mouseMoveEvent(QMouseEvent *);
-    void contextMenuEvent(QContextMenuEvent *);
+    void insertEquation_(QAction*);
 
 private:
     void createMenus_();
@@ -84,6 +85,7 @@ private:
     void createCompleter_();
     void setOkState_(bool isOk);
     void performCompletion_(const QString &word);
+    void highlight_(bool on);
 
     SyntaxHighlighter * highlighter_;
     QCompleter * completer_;
@@ -92,14 +94,22 @@ private:
     PPP_NAMESPACE::Parser * parser_;
     const PPP_NAMESPACE::Parser * extParser_;
 
+    QString presetName_, equationName_;
+
     QTimer * timer_, * hoverTimer_;
-    bool ok_;
+    bool ok_, isHighlight_;
 
     QMenu
         * contextMenu_,
         * presetLoadMenu_,
+        * presetInsertMenu_,
         * presetSaveMenu_,
         * variableMenu_;
+    QAction * actSave_;
+
+    // config
+
+    QColor colorBase_, colorText_, colorBaseHl_;
 };
 
 } // namespace GUI

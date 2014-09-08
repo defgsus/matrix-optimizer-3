@@ -47,13 +47,18 @@ EquationEditor::EquationEditor(QWidget *parent) :
     extParser_      (0),
     timer_          (new QTimer(this)),
     hoverTimer_     (new QTimer(this)),
-    ok_             (false)
+    ok_             (false),
+    isHighlight_    (false)
 {
     // --- setup palette ---
 
+    colorBase_ = QColor(50,50,50);
+    colorBaseHl_ = QColor(50,100,50);
+    colorText_ = QColor(200,200,200);
+
     QPalette p(palette());
-    p.setColor(QPalette::Base, QColor(50,50,50));
-    p.setColor(QPalette::Text, QColor(200,200,200));
+    p.setColor(QPalette::Base, colorBase_);
+    p.setColor(QPalette::Text, colorText_);
     setPalette(p);
 
     // --- setup font ---
@@ -163,12 +168,24 @@ void EquationEditor::addVariables(
     updateVariableMenu_();
 }
 
+void EquationEditor::highlight_(bool on)
+{
+    QPalette p(palette());
+    p.setColor(QPalette::Base, on ? colorBaseHl_ : colorBase_);
+    setPalette(p);
+
+    if (on)
+        timer_->start();
+
+    isHighlight_ = on;
+}
+
 void EquationEditor::createCompleter_()
 {
     // extract name lists
 
     // XXX highlighter currently doesn't like operator chars
-    const QRegExp filter("^[a-z,A-Z,_]*$");
+    const QRegExp filter("^[a-z,A-Z,0-9,_]*$");
 
     std::vector<std::string> vec = parser_->functions().functionNames();
     QStringList funcNames;
@@ -239,6 +256,11 @@ void EquationEditor::onTextChanged_()
 
 void EquationEditor::checkEquation_()
 {
+    if (isHighlight_)
+    {
+        highlight_(false);
+    }
+
     if (!parser_)
         return;
 
@@ -406,6 +428,18 @@ void EquationEditor::createMenus_()
     connect(presetLoadMenu_, SIGNAL(triggered(QAction*)),
             this, SLOT(loadEquation_(QAction*)));
 
+    contextMenu_->addMenu( presetInsertMenu_ = new QMenu(contextMenu_) );
+    presetInsertMenu_->setTitle(tr("Insert equation"));
+    connect(presetInsertMenu_, SIGNAL(triggered(QAction*)),
+            this, SLOT(insertEquation_(QAction*)));
+
+    contextMenu_->addSeparator();
+
+    contextMenu_->addAction(a = new QAction(tr("Save equation"), contextMenu_));
+    a->setShortcut(Qt::CTRL + Qt::Key_S);
+    connect(a, SIGNAL(triggered()), this, SLOT(saveEquation_()));
+    actSave_ = a;
+
     contextMenu_->addMenu( presetSaveMenu_ = new QMenu(contextMenu_) );
     presetSaveMenu_->setTitle(tr("Save equation into"));
     connect(presetSaveMenu_, SIGNAL(triggered(QAction*)),
@@ -415,10 +449,6 @@ void EquationEditor::createMenus_()
     connect(a, SIGNAL(triggered()), this, SLOT(saveEquationAs_()));
     contextMenu_->addAction( a );
 
-    a = new QAction(tr("*Dialog*"), contextMenu_);
-    connect(a, SIGNAL(triggered()), this, SLOT(saveEquationDialog_()));
-    contextMenu_->addAction( a );
-
     updateVariableMenu_();
     updatePresetMenu_();
 }
@@ -426,19 +456,44 @@ void EquationEditor::createMenus_()
 void EquationEditor::updatePresetMenu_()
 {
     presetLoadMenu_->clear();
+    presetInsertMenu_->clear();
     presetSaveMenu_->clear();
+
+    if (!presetName_.isEmpty() && !equationName_.isEmpty())
+    {
+        actSave_->setEnabled(true);
+        actSave_->setText(tr("Save %1:%2").arg(presetName_).arg(equationName_));
+    }
+    else
+    {
+        actSave_->setEnabled(false);
+        actSave_->setText(tr("Save equation"));
+    }
 
     IO::EquationPresets pres;
     for (int i=0; i<pres.count(); ++i)
     {
         IO::EquationPreset * p = pres.preset(i);
 
+        // save
         QAction * a = new QAction(p->name(), presetSaveMenu_);
-        a->setData(p->filename());
+        a->setData(p->name());
         presetSaveMenu_->addAction(a);
 
+        // load
         QMenu * menu = new QMenu(p->name(), presetLoadMenu_);
         presetLoadMenu_->addMenu(menu);
+
+        for (int j=0; j<p->count(); ++j)
+        {
+            a = new QAction(p->equationName(j), menu);
+            menu->addAction( a );
+            a->setData(p->equation(j));
+        }
+
+        // insert
+        menu = new QMenu(p->name(), presetInsertMenu_);
+        presetInsertMenu_->addMenu(menu);
 
         for (int j=0; j<p->count(); ++j)
         {
@@ -486,99 +541,78 @@ void EquationEditor::contextMenuEvent(QContextMenuEvent * e)
     contextMenu_->popup(e->globalPos());
 }
 
-void EquationEditor::saveEquationDialog_()
-{
-    SaveEquationDialog diag;
-    diag.exec();
-}
-
-void EquationEditor::saveEquationAs_()
-{
-    QString filename = IO::Files::getSaveFileName(IO::FT_EQUATION_PRESET, this, false, false);
-    if (filename.isEmpty())
-        return;
-
-    QString presetName =
-            QInputDialog::getText(this, tr("input preset name"),
-                tr("Name of the preset collection"),
-                QLineEdit::Normal, tr("new"));
-
-    QString equName =
-            QInputDialog::getText(this, tr("input equation name"),
-                tr("Name of the equation"));
-
-    IO::EquationPreset p;
-    p.setName(presetName);
-    p.setEquation(equName, toPlainText());
-    try
-    {
-        p.save(filename);
-        updatePresetMenu_();
-    }
-    catch (Exception& e)
-    {
-        QMessageBox::critical(this, tr("saving equation"),
-                tr("Sorry but saving the equation preset failed\n%1").arg(e.what()));
-    }
-}
 
 void EquationEditor::loadEquation_(QAction * a)
 {
     setPlainText(a->data().toString());
 }
 
+void EquationEditor::insertEquation_(QAction * a)
+{
+    QTextCursor c(textCursor());
+    c.insertText(a->data().toString());
+    setTextCursor(c);
+}
+
+void EquationEditor::saveEquation_()
+{
+    if (presetName_.isEmpty() || equationName_.isEmpty())
+        return;
+
+    IO::EquationPreset * p = 0;
+
+    IO::EquationPresets ps;
+    for (int i=0; i<ps.count(); ++i)
+    {
+        if (ps.name(i) == presetName_)
+        {
+            p = ps.preset(i);
+            break;
+        }
+    }
+
+    if (p == 0)
+        return;
+
+    p->setEquation(equationName_, toPlainText());
+    try
+    {
+        p->save();
+        highlight_(true);
+        updatePresetMenu_();
+    }
+    catch (Exception & e)
+    {
+        QMessageBox::critical(this, tr("saving equation"),
+                tr("Sorry but saving the equation preset '%1' failed\n%2")
+                              .arg(presetName_).arg(e.what()));
+        return;
+    }
+}
+
+void EquationEditor::saveEquationAs_()
+{
+    SaveEquationDialog diag(toPlainText());
+    if (diag.exec() == QDialog::Accepted)
+    {
+        presetName_ = diag.presetName();
+        equationName_ = diag.equationName();
+        updatePresetMenu_();
+        highlight_(true);
+    }
+}
+
 void EquationEditor::saveEquation_(QAction * a)
 {
     QString presName = a->data().toString();
 
-    IO::EquationPresets pres;
-
-ask_again:
-    QString equName =
-            QInputDialog::getText(this,
-                tr("input equation name"),
-                tr("Name of the equation"));
-
-    IO::EquationPreset * p = 0;
-    for (int i=0; i<pres.count(); ++i)
+    SaveEquationDialog diag(toPlainText(), presName);
+    if (diag.exec() == QDialog::Accepted)
     {
-        if (pres.preset(i)->filename() == presName)
-        {
-            p = pres.preset(i);
-            break;
-        }
-    }
-    if (!p)
-    {
-        MO_WARNING("preset file '"
-                   << presName << "' not found, aborting save");
-        return;
-    }
-
-    if (p->hasEquation(equName))
-    {
-        QMessageBox::Button res =
-        QMessageBox::question(this, tr("confirm overwrite"),
-            tr("Preset collection <b>%1</b> already has an equation called <b>%2</b>."
-               "<br/>Do you want to overwrite it?").arg(presName).arg(equName),
-              QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
-              QMessageBox::No);
-        if (res == QMessageBox::No)
-            goto ask_again;
-        if (res == QMessageBox::Cancel)
-            return;
-    }
-
-    p->setEquation(equName, toPlainText());
-    try
-    {
-        p->save();
+        presetName_ = diag.presetName();
+        equationName_ = diag.equationName();
         updatePresetMenu_();
-    }
-    catch (Exception& e)
-    {
-        QMessageBox::critical(this, tr("saving equation"),
-                tr("Sorry but saving the equation preset failed\n%1").arg(e.what()));
+        highlight_(true);
     }
 }
 
