@@ -19,6 +19,7 @@
 #include "network/tcpserver.h"
 #include "network/netlog.h"
 #include "network/networkmanager.h"
+#include "network/netevent.h"
 
 namespace MO {
 
@@ -28,13 +29,13 @@ Client::Client(QObject *parent) :
 {
 }
 
-int Client::run(int argc, char ** argv)
+int Client::run(int , char ** )
 {
     MO_PRINT(tr("Matrix Optimizer Client"));
 
 //    createObjects_();
 
-    send_ = (argc>1 && QString("send") == argv[1]);
+    //send_ = (argc>1 && QString("send") == argv[1]);
 
     startNetwork_();
 
@@ -56,6 +57,21 @@ void Client::createGlObjects_()
 
 void Client::startNetwork_()
 {
+    socket_ = new QTcpSocket(this);
+
+    NetworkLogger::connectForLogging(socket_);
+
+    socket_->connectToHost(
+                QHostAddress("0.0.0.0"),
+                NetworkManager::defaultTcpPort());
+
+    connect(socket_, &QTcpSocket::connected, [=]()
+    {
+        NetInfoEvent info("hello");
+        info.send(socket_);
+    });
+
+    /*
     if (send_)
     {
         MO_PRINT("SEND-MODE");
@@ -87,6 +103,7 @@ void Client::startNetwork_()
             MO_PRINT("received: [" << stream.readAll() << "]");
         });
     }
+    */
 }
 
 } // namespace MO

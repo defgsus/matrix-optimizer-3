@@ -180,7 +180,8 @@ HEADERS += \
     src/audio/midievent.h \
     src/network/netlog.h \
     src/network/networkmanager.h \
-    src/network/tcpserver.h
+    src/network/tcpserver.h \
+    src/network/netevent.h
 
 
 
@@ -323,4 +324,5 @@ SOURCES += \
     src/audio/midievent.cpp \
     src/network/netlog.cpp \
     src/network/networkmanager.cpp \
-    src/network/tcpserver.cpp
+    src/network/tcpserver.cpp \
+    src/network/netevent.cpp

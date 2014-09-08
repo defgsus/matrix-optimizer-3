@@ -43,8 +43,6 @@ private:
 
     TcpServer * tcp_;
     QTcpSocket * socket_;
-
-    bool send_;
 };
 
 } // namespace MO
