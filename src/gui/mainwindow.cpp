@@ -49,6 +49,7 @@
 #include "projectorsetupdialog.h"
 #include "networkdialog.h"
 #include "midisettingsdialog.h"
+#include "infowindow.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -462,6 +463,14 @@ void MainWindow::createMainMenu_()
             win->setMainWindow(this);
             win->setScene(scene_);
             win->show();
+        });
+
+        a = new QAction(tr("Info window"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto w = new InfoWindow(this);
+            w->showFullScreen();
         });
 
     // ######### HELP MENU #########

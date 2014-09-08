@@ -25,6 +25,8 @@ public:
     QMainWindow * mainWindow() const { return mainWindow_; }
     void setMainWindow(QMainWindow * win) { mainWindow_ = win; }
 
+    QString ipName() const;
+
 signals:
 
 public slots:

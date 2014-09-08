@@ -489,6 +489,9 @@ void EquationEditor::updatePresetMenu_()
             a = new QAction(p->equationName(j), menu);
             menu->addAction( a );
             a->setData(p->equation(j));
+
+            // XXX not displayed :(
+            // a->setToolTip(p->equation(j));
         }
 
         // insert

@@ -58,7 +58,8 @@ HEADERS += \
     src/gui/equationdisplaydialog.h \
     src/gui/networkdialog.h \
     src/gui/midisettingsdialog.h \
-    src/gui/saveequationdialog.h
+    src/gui/saveequationdialog.h \
+    src/gui/infowindow.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -120,4 +121,5 @@ SOURCES += \
     src/gui/equationdisplaydialog.cpp \
     src/gui/networkdialog.cpp \
     src/gui/midisettingsdialog.cpp \
-    src/gui/saveequationdialog.cpp
+    src/gui/saveequationdialog.cpp \
+    src/gui/infowindow.cpp

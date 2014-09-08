@@ -99,6 +99,8 @@ private:
     GEOM::FreeCamera * cameraControl_;
 
     QPoint lastMousePos_;
+
+    QString displayText_;
 };
 
 

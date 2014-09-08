@@ -13,6 +13,8 @@
 
 #include <QPalette>
 #include <QWidget>
+#include <QTcpServer>
+#include <QHostAddress>
 
 #include "io/application.h"
 #include "io/error.h"
@@ -102,6 +104,12 @@ void Application::setPaletteFor(QWidget * w)
 }
 
 
+QString Application::ipName() const
+{
+    QTcpServer s;
+    s.listen();
+    return s.serverAddress().toString();
+}
 
 
 } // namespace MO
