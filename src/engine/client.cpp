@@ -67,7 +67,8 @@ void Client::startNetwork_()
 
     connect(socket_, &QTcpSocket::connected, [=]()
     {
-        NetInfoEvent info("hello");
+        NetInfoEvent info;
+        info.setId("hello");
         info.send(socket_);
     });
 

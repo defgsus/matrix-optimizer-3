@@ -12,6 +12,8 @@
 #define MOSRC_NETWORK_NETEVENT_H
 
 #include <QString>
+#include <QMap>
+
 
 class QIODevice;
 class QAbstractSocket;
@@ -19,27 +21,34 @@ class QAbstractSocket;
 namespace MO {
 namespace IO { class DataStream; }
 
+
+
 #define MO_NETEVENT_CONSTRUCTOR(Class__)                                        \
     Class__();                                                                  \
     const QString& className() const Q_DECL_OVERRIDE                            \
                         { static QString s(#Class__); return s; }               \
+    virtual Class__ * cloneClass() const Q_DECL_OVERRIDE                        \
+                        { return new Class__(); }                               \
     virtual void serialize(IO::DataStream & io) const Q_DECL_OVERRIDE;          \
     virtual void deserialize(IO::DataStream & io) Q_DECL_OVERRIDE;              \
 
-#define MO_NETEVENT_CONSTRUCTOR_1(Class__, Par1__)                              \
-    Class__(Par1__);                                                            \
-    const QString& className() const Q_DECL_OVERRIDE                            \
-                        { static QString s(#Class__); return s; }               \
-    virtual void serialize(IO::DataStream & io) const Q_DECL_OVERRIDE;          \
-    virtual void deserialize(IO::DataStream & io) Q_DECL_OVERRIDE;              \
-
-
+#define MO_REGISTER_NETEVENT(Class__)                                           \
+    namespace { static const bool registered##Class__ =                         \
+        AbstractNetEvent::registerEventClass(new Class__); }
 
 class AbstractNetEvent
 {
 public:
     AbstractNetEvent();
     virtual ~AbstractNetEvent() { }
+
+    // ------------ factory ---------------
+
+    static bool registerEventClass(AbstractNetEvent*);
+
+    static AbstractNetEvent * createClass(const QString& className);
+
+    virtual AbstractNetEvent * cloneClass() const = 0;
 
     // ------------ getter ----------------
 
@@ -64,19 +73,25 @@ private:
     void deserialize_(QIODevice & io);
 
     bool isValid_, isReceived_, isSend_;
+
+    static QMap<QString, AbstractNetEvent*> registeredEvents_;
 };
 
 
 class NetInfoEvent : public AbstractNetEvent
 {
 public:
-    MO_NETEVENT_CONSTRUCTOR_1(NetInfoEvent, const QString& id)
+    MO_NETEVENT_CONSTRUCTOR(NetInfoEvent)
 
     // --------- getter -------------------
 
     const QString& id() const { return id_; }
     const QString& info() const { return info_; }
 
+    // --------- setter -------------------
+
+    void setId(const QString& id) { id_ = id; }
+    void setInfo(const QString& info) { info_ = info; }
 
 private:
 

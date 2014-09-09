@@ -25,6 +25,29 @@ AbstractNetEvent::AbstractNetEvent()
 {
 }
 
+QMap<QString, AbstractNetEvent*> AbstractNetEvent::registeredEvents_;
+
+bool AbstractNetEvent::registerEventClass(AbstractNetEvent * e)
+{
+    MO_ASSERT(!registeredEvents_.contains(e->className()),
+              "duplicate NetEvent '" << e->className() << "'");
+
+    registeredEvents_[e->className()] = e;
+    return true;
+}
+
+AbstractNetEvent * AbstractNetEvent::createClass(const QString &className)
+{
+    auto it = registeredEvents_.find(className);
+    if (it == registeredEvents_.end())
+    {
+        MO_WARNING("Request for unknown NetEvent '" << className << "'");
+        return 0;
+    }
+
+    return it.value()->cloneClass();
+}
+
 void AbstractNetEvent::serialize_(QIODevice &io) const
 {
     IO::DataStream s(&io);
@@ -52,8 +75,11 @@ bool AbstractNetEvent::send(QAbstractSocket * socket)
 }
 
 
-NetInfoEvent::NetInfoEvent(const QString &id)
-    : id_   (id)
+
+
+MO_REGISTER_NETEVENT(NetInfoEvent)
+
+NetInfoEvent::NetInfoEvent()
 {
 
 }
