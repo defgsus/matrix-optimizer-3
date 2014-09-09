@@ -11,6 +11,7 @@
 #include <QTcpSocket>
 #include <QHostAddress>
 #include <QHostInfo>
+#include <QTimer>
 
 #include "client.h"
 #include "netlog.h"
@@ -21,7 +22,8 @@ namespace MO {
 
 Client::Client(QObject *parent) :
     QObject (parent),
-    socket_ (new QTcpSocket(this))
+    socket_ (new QTcpSocket(this)),
+    timer_  (new QTimer(this))
 {
     MO_NETLOG(CTOR, "Client::Client(" << parent << ")");
 
@@ -33,8 +35,16 @@ Client::Client(QObject *parent) :
             this, SLOT(onDisconnected_()));
     connect(socket_, SIGNAL(readyRead()),
             this, SLOT(onData_()));
+
+    timer_->setSingleShot(true);
+    connect(timer_, SIGNAL(timeout()), this, SLOT(onTimer_()));
 }
 
+Client::~Client()
+{
+    if (socket_->isOpen())
+        socket_->close();
+}
 
 bool Client::connectToMaster()
 {
@@ -65,6 +75,16 @@ bool Client::connectToMaster()
     return true;
 }
 
+void Client::reconnect_(int ms)
+{
+    timer_->start(ms);
+}
+
+void Client::onTimer_()
+{
+    connect_();
+}
+
 void Client::connectTo(const QString &ip)
 {
     connectTo(QHostAddress(ip));
@@ -72,9 +92,13 @@ void Client::connectTo(const QString &ip)
 
 void Client::connectTo(const QHostAddress & a)
 {
-    MO_NETLOG(DEBUG, "Client::connectTo(" << a.toString() << ")");
-
     address_ = a;
+    connect_();
+}
+
+void Client::connect_()
+{
+    MO_NETLOG(DEBUG, "Client::connect_(" << address_.toString() << ")");
 
     socket_->connectToHost(address_, NetworkManager::defaultTcpPort());
 }
@@ -83,18 +107,26 @@ void Client::onError_()
 {
     MO_NETLOG(ERROR, "Client: connection error:\n"
               << socket_->errorString());
+
+    reconnect_(1000);
 }
 
 void Client::onConnected_()
 {
     MO_NETLOG(EVENT, "Client: connected to "
               << address_.toString());
+
+    emit connected();
 }
 
 void Client::onDisconnected_()
 {
     MO_NETLOG(EVENT, "Client: disconnected from "
               << address_.toString());
+
+    emit disconnected();
+
+    reconnect_(1000);
 }
 
 void Client::onData_()

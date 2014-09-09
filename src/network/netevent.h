@@ -11,6 +11,8 @@
 #ifndef MOSRC_NETWORK_NETEVENT_H
 #define MOSRC_NETWORK_NETEVENT_H
 
+#include <atomic>
+
 #include <QString>
 #include <QMap>
 
@@ -58,6 +60,8 @@ public:
     bool isReceived() const { return isReceived_; }
     bool isSend() const { return isSend_; }
 
+    QAbstractSocket * sender() const { return socket_; }
+
     // ------------ io --------------------
 
     virtual void serialize(IO::DataStream & io) const = 0;
@@ -79,6 +83,11 @@ private:
     bool isValid_, isReceived_, isSend_;
 
     static QMap<QString, AbstractNetEvent*> registeredEvents_;
+
+    QAbstractSocket * socket_;
+
+    int counter_;
+    static std::atomic_int global_counter_;
 };
 
 

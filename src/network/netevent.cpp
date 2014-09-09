@@ -18,14 +18,17 @@
 
 namespace MO {
 
+QMap<QString, AbstractNetEvent*> AbstractNetEvent::registeredEvents_;
+
+std::atomic_int AbstractNetEvent::global_counter_;
+
 AbstractNetEvent::AbstractNetEvent()
     : isValid_      (true),
       isReceived_   (false),
-      isSend_       (false)
+      isSend_       (false),
+      counter_      (global_counter_++)
 {
 }
-
-QMap<QString, AbstractNetEvent*> AbstractNetEvent::registeredEvents_;
 
 bool AbstractNetEvent::registerEventClass(AbstractNetEvent * e)
 {
@@ -53,6 +56,7 @@ void AbstractNetEvent::serialize_(QIODevice &io) const
     IO::DataStream s(&io);
 
     s << className();
+    s << counter_;
 
     serialize(s);
 }
@@ -92,9 +96,12 @@ AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s)
             return 0;
         }
 
+        stream >> event->counter_;
+
         try
         {
             event->deserialize(stream);
+            event->socket_ = s;
             return event;
         }
         catch (const Exception & e)

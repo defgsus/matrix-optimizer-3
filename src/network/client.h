@@ -15,6 +15,7 @@
 #include <QHostAddress>
 
 class QTcpSocket;
+class QTimer;
 
 namespace MO {
 
@@ -25,8 +26,12 @@ class Client : public QObject
     Q_OBJECT
 public:
     explicit Client(QObject *parent = 0);
+    ~Client();
 
 signals:
+
+    void connected();
+    void disconnected();
 
     void eventReceived(AbstractNetEvent * event);
 
@@ -44,11 +49,18 @@ private slots:
     void onDisconnected_();
     void onData_();
 
+    void onTimer_();
+
 private:
 
+    /** Reconnect in a second or two */
+    void reconnect_(int millisecs);
+    void connect_();
 
     QHostAddress address_;
     QTcpSocket * socket_;
+
+    QTimer * timer_;
 };
 
 } // namespace MO
