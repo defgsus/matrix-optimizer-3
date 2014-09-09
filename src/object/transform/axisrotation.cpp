@@ -11,6 +11,7 @@
 #include "axisrotation.h"
 #include "object/param/parameterfloat.h"
 #include "io/datastream.h"
+#include "math/vector.h"
 
 
 namespace MO {
@@ -54,7 +55,7 @@ void AxisRotation::createParameters()
 
 void AxisRotation::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
-    matrix = glm::rotate(matrix,
+    matrix = MATH::rotate(matrix,
                 (Mat4::value_type)angle_->value(time, thread),
                  Vec3(x_->value(time, thread),
                       y_->value(time, thread),

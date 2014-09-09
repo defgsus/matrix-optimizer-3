@@ -8,8 +8,6 @@
     <p>created 7/26/2014</p>
 */
 
-#include <glm/gtx/rotate_vector.hpp>
-
 #include <QObject>
 #include <QHash>
 
@@ -668,7 +666,7 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
             const Float tx = (Float)x / (segu-1);
             const Float a = (Float)x / segu * TWO_PI;
 
-            const Vec3 v = glm::rotateY(
+            const Vec3 v = MATH::rotateY(
                         Vec3(rad_out + rad_in*sin(a), rad_in*cos(a), 0),
                         ang);
 

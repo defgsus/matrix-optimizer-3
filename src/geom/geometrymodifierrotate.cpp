@@ -11,6 +11,7 @@
 #include "geometrymodifierrotate.h"
 #include "io/datastream.h"
 #include "geometry.h"
+#include "math/vector.h"
 
 namespace MO {
 namespace GEOM {
@@ -53,7 +54,7 @@ void GeometryModifierRotate::deserialize(IO::DataStream &io)
 
 void GeometryModifierRotate::execute(Geometry *g)
 {
-    const Mat4 rot = glm::rotate(Mat4(1.0), angle_, Vec3(x_, y_, z_));
+    const Mat4 rot = MATH::rotate(Mat4(1.0), angle_, Vec3(x_, y_, z_));
     g->applyMatrix(rot);
 }
 

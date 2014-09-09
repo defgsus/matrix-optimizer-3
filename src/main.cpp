@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     using namespace MO;
     Mat4 mat(1.0);
     std::cout << mat << std::endl;
-    mat = glm::rotate(mat, 45.f, Vec3(0,0,1));
+    mat = MATH::rotate(mat, 45.f, Vec3(0,0,1));
     std::cout << mat << std::endl;
     Mat4 mat2(1.0);
     std::cout << (mat + 0.5 * (mat2 - mat)) << std::endl;

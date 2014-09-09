@@ -10,6 +10,7 @@
 
 #include "camerasettings.h"
 #include "io/xmlstream.h"
+#include "math/vector.h"
 
 namespace MO {
 
@@ -84,7 +85,7 @@ bool CameraSettings::operator == (const CameraSettings& o) const
 Mat4 CameraSettings::getProjectionMatrix() const
 {
     const Float aspect = Float(width_) / height_;
-    return glm::perspective(fov_, aspect, zNear_, zFar_);
+    return MATH::perspective(fov_, aspect, zNear_, zFar_);
 }
 
 Mat4 CameraSettings::getViewMatrix(Float pitch_offset) const
@@ -92,9 +93,9 @@ Mat4 CameraSettings::getViewMatrix(Float pitch_offset) const
     Mat4 m(glm::translate(Mat4(1), pos()));
 
     // roll-pitch-yaw
-    m = glm::rotate(m, yaw_,   Vec3(0,1,0));
-    m = glm::rotate(m, pitch_ + pitch_offset, Vec3(1,0,0));
-    m = glm::rotate(m, roll_,  Vec3(0,0,1));
+    m = MATH::rotate(m, yaw_,   Vec3(0,1,0));
+    m = MATH::rotate(m, pitch_ + pitch_offset, Vec3(1,0,0));
+    m = MATH::rotate(m, roll_,  Vec3(0,0,1));
 
     return glm::inverse(m);
 }

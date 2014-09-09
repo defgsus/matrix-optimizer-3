@@ -17,6 +17,7 @@
 #include "geom/geometryfactory.h"
 #include "gl/drawable.h"
 #include "gl/compatibility.h"
+#include "math/vector.h"
 
 namespace MO {
 namespace GUI {
@@ -95,7 +96,7 @@ void DomePreviewWidget::setCurrentCameraMatrix_()
     if (projIndex_ < 0 || projIndex_ >= settings_->numProjectors())
     {
         // set some default matrix if projector index is out of range
-        setProjectionMatrix(glm::perspective((Float)62,
+        setProjectionMatrix(MATH::perspective((Float)62,
                                              (Float)fboSize().width() / fboSize().height(),
                                              (Float)0.01,
                                              (Float)10000.));
@@ -136,11 +137,11 @@ void DomePreviewWidget::createDomeGeometry_()
 
     if (settings_->domeSettings().tiltX() != 0)
     {
-        trans = glm::rotate(trans, -settings_->domeSettings().tiltX(), Vec3(1, 0, 0));
+        trans = MATH::rotate(trans, -settings_->domeSettings().tiltX(), Vec3(1, 0, 0));
     }
     if (settings_->domeSettings().tiltZ() != 0)
     {
-        trans = glm::rotate(trans, settings_->domeSettings().tiltZ(), Vec3(0, 0, 1));
+        trans = MATH::rotate(trans, settings_->domeSettings().tiltZ(), Vec3(0, 0, 1));
     }
 
     // transform

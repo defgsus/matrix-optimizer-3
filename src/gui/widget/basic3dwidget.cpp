@@ -22,7 +22,7 @@
 #include "math/cubemapmatrix.h"
 #include "geom/geometryfactory.h"
 #include "geom/freecamera.h"
-
+#include "math/vector.h"
 
 namespace MO {
 namespace GUI {
@@ -115,12 +115,12 @@ void Basic3DWidget::viewRotateX(Float d)
     if (cameraMode_ == CM_CENTER)
     {
         rotationMatrix_ =
-            glm::rotate(Mat4(1), d, Vec3(1,0,0))
+            MATH::rotate(Mat4(1), d, Vec3(1,0,0))
             * rotationMatrix_;
     }
     else if (cameraMode_ == CM_SET)
     {
-        fixViewMatrix_ = glm::rotate(fixViewMatrix_, d, Vec3(1,0,0));
+        fixViewMatrix_ = MATH::rotate(fixViewMatrix_, d, Vec3(1,0,0));
     }
     else camera_->rotateX(d);
 
@@ -133,12 +133,12 @@ void Basic3DWidget::viewRotateY(Float d)
     if (cameraMode_ == CM_CENTER)
     {
         rotationMatrix_ =
-            glm::rotate(Mat4(1), d, Vec3(0,1,0))
+            MATH::rotate(Mat4(1), d, Vec3(0,1,0))
             * rotationMatrix_;
     }
     else if (cameraMode_ == CM_SET)
     {
-        fixViewMatrix_ = glm::rotate(fixViewMatrix_, d, Vec3(0,1,0));
+        fixViewMatrix_ = MATH::rotate(fixViewMatrix_, d, Vec3(0,1,0));
     }
     else camera_->rotateY(d);
 
@@ -156,27 +156,27 @@ void Basic3DWidget::viewSet(ViewDirection dir, Float distance)
 
         case VD_BACK:
             mat = glm::translate(mat, Vec3(0,0,-distance));
-            mat = glm::rotate(mat, 180.f, Vec3(0,1,0));
+            mat = MATH::rotate(mat, 180.f, Vec3(0,1,0));
         break;
 
         case VD_TOP:
             mat = glm::translate(mat, Vec3(0,0,-distance));
-            mat = glm::rotate(mat, 90.f, Vec3(1,0,0));
+            mat = MATH::rotate(mat, 90.f, Vec3(1,0,0));
         break;
 
         case VD_BOTTOM:
             mat = glm::translate(mat, Vec3(0,0,-distance));
-            mat = glm::rotate(mat, -90.f, Vec3(1,0,0));
+            mat = MATH::rotate(mat, -90.f, Vec3(1,0,0));
         break;
 
         case VD_LEFT:
             mat = glm::translate(mat, Vec3(0,0,-distance));
-            mat = glm::rotate(mat, 90.f, Vec3(0,1,0));
+            mat = MATH::rotate(mat, 90.f, Vec3(0,1,0));
         break;
 
         case VD_RIGHT:
             mat = glm::translate(mat, Vec3(0,0,-distance));
-            mat = glm::rotate(mat, -90.f, Vec3(0,1,0));
+            mat = MATH::rotate(mat, -90.f, Vec3(0,1,0));
         break;
     }
 
@@ -398,13 +398,13 @@ void Basic3DWidget::resizeGL(int w, int h)
     if (renderMode_ == RM_FRAMEBUFFER)
     {
         projectionMatrix_ =
-                glm::perspective(angle, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
+                MATH::perspective(angle, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
     }
     else
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
         projectionMatrix_ =
-                glm::perspective(90.f, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
+                MATH::perspective(90.f, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
     }
     else
     if (renderMode_ == RM_DIRECT_ORTHO)
@@ -415,7 +415,7 @@ void Basic3DWidget::resizeGL(int w, int h)
     }
     else
         projectionMatrix_ =
-                glm::perspective(angle, (float)w/h, 0.01f, 1000.0f);
+                MATH::perspective(angle, (float)w/h, 0.01f, 1000.0f);
 
     MO_CHECK_GL( glViewport(0,0,w,h) );
 }

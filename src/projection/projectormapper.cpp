@@ -15,6 +15,7 @@
 #include "camerasettings.h"
 #include "math/intersection.h"
 #include "math/constants.h"
+#include "math/vector.h"
 #include "io/log.h"
 #include "geom/geometry.h"
 
@@ -49,17 +50,17 @@ void ProjectorMapper::recalc_()
     // -- calc transformation matrix --
 
     trans_ = Mat4(1);
-    trans_ = glm::rotate(trans_, set_.latitude(), Vec3(0,1,0));
-    trans_ = glm::rotate(trans_, -set_.longitude(), Vec3(1,0,0));
+    trans_ = MATH::rotate(trans_, set_.latitude(), Vec3(0,1,0));
+    trans_ = MATH::rotate(trans_, -set_.longitude(), Vec3(1,0,0));
     trans_ = glm::translate(trans_, Vec3(0,0,domeSet_.radius() + set_.distance()));
 
     // get actual position
     pos_ = Vec3( trans_ * Vec4(0,0,0,1) );
 
     // roll-pitch-yaw
-    trans_ = glm::rotate(trans_, set_.roll(),      Vec3(0,0,1));
-    trans_ = glm::rotate(trans_, set_.yaw(),       Vec3(0,1,0));
-    trans_ = glm::rotate(trans_, set_.pitch(),     Vec3(1,0,0));
+    trans_ = MATH::rotate(trans_, set_.roll(),      Vec3(0,0,1));
+    trans_ = MATH::rotate(trans_, set_.yaw(),       Vec3(0,1,0));
+    trans_ = MATH::rotate(trans_, set_.pitch(),     Vec3(1,0,0));
 
     valid_ = true;
 }

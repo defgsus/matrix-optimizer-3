@@ -9,6 +9,7 @@
 */
 
 #include "freecamera.h"
+#include "math/vector.h"
 
 namespace MO {
 namespace GEOM {
@@ -46,17 +47,17 @@ void FreeCamera::moveZ(Float steps)
 
 void FreeCamera::rotateX(Float degree)
 {
-    matrix_ = glm::rotate(Mat4(1.0), degree, Vec3(1,0,0)) * matrix_;
+    matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(1,0,0)) * matrix_;
 }
 
 void FreeCamera::rotateY(Float degree)
 {
-    matrix_ = glm::rotate(Mat4(1.0), degree, Vec3(0,1,0)) * matrix_;
+    matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(0,1,0)) * matrix_;
 }
 
 void FreeCamera::rotateZ(Float degree)
 {
-    matrix_ = glm::rotate(Mat4(1.0), degree, Vec3(0,0,1)) * matrix_;
+    matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(0,0,1)) * matrix_;
 }
 
 void FreeCamera::moveTo(const Vec3 & v)

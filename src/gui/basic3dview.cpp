@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 
 #include "basic3dview.h"
+#include "math/vector.h"
 
 namespace MO {
 namespace GUI {
@@ -32,7 +33,7 @@ void Basic3DView::viewRotateX(Float d)
 {
     if (!d) return;
     rotationMatrix_ =
-            glm::rotate(Mat4(), d, Vec3(1,0,0))
+            MATH::rotate(Mat4(), d, Vec3(1,0,0))
             * rotationMatrix_;
     updateGL();
 }
@@ -41,7 +42,7 @@ void Basic3DView::viewRotateY(Float d)
 {
     if (!d) return;
     rotationMatrix_ =
-            glm::rotate(Mat4(), d, Vec3(0,1,0))
+            MATH::rotate(Mat4(), d, Vec3(0,1,0))
             * rotationMatrix_;
     updateGL();
 }
@@ -72,7 +73,7 @@ void Basic3DView::mouseMoveEvent(QMouseEvent * e)
 
 void Basic3DView::resizeGL(int w, int h)
 {
-    projectionMatrix_ = glm::perspective(63.f, (float)w/h, 0.1f, 1000.0f);
+    projectionMatrix_ = MATH::perspective(63.f, (float)w/h, 0.1f, 1000.0f);
 
     glViewport(0,0,w,h);
 

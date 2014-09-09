@@ -23,6 +23,7 @@
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "math/cubemapmatrix.h"
+#include "math/vector.h"
 #include "io/settings.h"
 #include "projection/projectionsystemsettings.h"
 #include "projection/projectormapper.h"
@@ -255,7 +256,7 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
     {
         cam.setFieldOfView(90.f);
         cam.setProjectionMatrix(
-                    glm::perspective(90.f, aspectRatio_, 0.01f, 1000.0f)
+                    MATH::perspective(90.f, aspectRatio_, 0.01f, 1000.0f)
                     );
 
         cam.setIsCubemap(true);
@@ -267,7 +268,7 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
         const Float angle = std::min((Double)179, cameraAngle_->value(time, thread));
         cam.setFieldOfView(angle);
         cam.setProjectionMatrix(
-                    glm::perspective(angle, aspectRatio_, 0.01f, 1000.0f));
+                    MATH::perspective(angle, aspectRatio_, 0.01f, 1000.0f));
     }
 
     if (renderMode_ == RM_ORTHOGRAPHIC)

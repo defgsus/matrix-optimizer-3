@@ -23,6 +23,7 @@
 #include "img/image.h"
 #include "util/texturesetting.h"
 #include "util/colorpostprocessingsetting.h"
+#include "math/vector.h"
 
 namespace MO {
 
@@ -37,7 +38,7 @@ TextureOverlay::TextureOverlay(QObject * parent)
 {
     setName("TextureOverlay");
 
-    deg90_ = glm::rotate(Mat4(1), 90.f, Vec3(1,0,0));
+    deg90_ = MATH::rotate(Mat4(1), 90.f, Vec3(1,0,0));
 }
 
 void TextureOverlay::serialize(IO::DataStream & io) const

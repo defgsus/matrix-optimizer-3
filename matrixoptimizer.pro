@@ -17,6 +17,9 @@ QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
 DEFINES += GLEW_MX
 
+#for glm version >= 0.9.5
+DEFINES += GLM_FORCE_RADIANS
+
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 

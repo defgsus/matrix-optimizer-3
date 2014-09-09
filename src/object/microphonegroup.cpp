@@ -17,6 +17,7 @@
 #include "param/parameterint.h"
 #include "param/parameterfloat.h"
 #include "audio/audiomicrophone.h"
+#include "math/vector.h"
 
 
 namespace MO {
@@ -129,7 +130,7 @@ void MicrophoneGroup::updateAudioTransformations(Double stime, uint blocksize, u
 Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Float dist ) const
 {
     return glm::translate(
-                glm::rotate(Mat4(1), 20.f * index, Vec3(0,1,0))
+                MATH::rotate(Mat4(1), 20.f * index, Vec3(0,1,0))
                             , Vec3(0,0,-dist));
 }
 
