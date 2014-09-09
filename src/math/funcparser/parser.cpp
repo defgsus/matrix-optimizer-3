@@ -473,6 +473,8 @@ bool Parser::parse(const std::string& str)
     else
         PPP_PROG_DEBUG("parsing finished\n");
 
+    //std::cout << d_->param.prog->string() << std::endl;
+    //d_->param.prog->printSyntax(std::cout); std::cout << std::endl;
     PPP_PROG_DEBUG( "--- after parsing:");
     PPP_PROG_DEBUG( d_->param.prog->string() )
     ok_ = d_->param.prog->compile();

@@ -2517,20 +2517,23 @@ int yylex (YYSTYPE * lhs, YYLTYPE * loc, void * YYPARSE_PARAM)
 		bool hasexp=false;
 		do
 		{
-			lhs->str += c;
+            if (c == 'e') hasexp = true;
+            lhs->str += char(c);
             c = P->get_the_char();
 			++loc->last_column;
-			if (c == 'e') hasexp = true;
-		}
-		while (isdigit(c) || c == '.' || (hasexp && (c=='+' || c=='-')));
+        }
+        while (isdigit(c) || c == '.' || (c == 'e' && !hasexp) || (hasexp && (c=='+' || c=='-')));
 		P->back();
 
 	#ifdef PPP_TTMATH
 		lhs->num = lhs->str;
 	#else
-		lhs->num = atof(lhs->str.c_str());
+        lhs->num = QString::fromStdString(lhs->str).toDouble();
+                // XXX below seems to return ints only in some cases
+                //std::strtod(lhs->str.c_str(), 0);
 	#endif
 		PPP_LEX_DEBUG("(num) " << lhs->str)
+        //std::cout << "CONV: [" << lhs->str << "] to " << lhs->num << std::endl;
 		return lhs->type = NUM;
     }
 

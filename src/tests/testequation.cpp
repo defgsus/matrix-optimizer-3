@@ -10,6 +10,8 @@
 
 #include <iostream>
 
+#include <QString>
+
 #include "testequation.h"
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
@@ -35,8 +37,8 @@ int TestEquation::compareTests_()
     Float x = 23.0, y = 42.0;
     double x_ = 23.0, y_ = 42.0;
 
-    p.variables().add("x", &x, "");
-    p.variables().add("y", &y, "");
+    p.variables().add("x", &x, "an x");
+    p.variables().add("y", &y, "an y");
 
 #ifndef PPP_TTMATH
 #	define Abs abs
@@ -49,7 +51,7 @@ int TestEquation::compareTests_()
     #define PPP_COMPARE_2(cexpression__, expression__) \
     {	\
         std::cout << #expression__ << "\n"; \
-        if (!p.parse(#expression__)) \
+        if (!p.parse(QString(#expression__).toStdString())) \
         { \
             std::cout << "[parsing failed]\n"; \
             ++errors; \
