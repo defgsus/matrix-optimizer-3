@@ -12,18 +12,18 @@
 #include <QHostAddress>
 #include <QHostInfo>
 
-#include "tcpclient.h"
+#include "client.h"
 #include "netlog.h"
 #include "netevent.h"
 #include "networkmanager.h"
 
 namespace MO {
 
-TcpClient::TcpClient(QObject *parent) :
+Client::Client(QObject *parent) :
     QObject (parent),
     socket_ (new QTcpSocket(this))
 {
-    MO_NETLOG(CTOR, "TcpClient::TcpClient(" << parent << ")");
+    MO_NETLOG(CTOR, "Client::Client(" << parent << ")");
 
     connect(socket_, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(onError_()));
@@ -36,18 +36,18 @@ TcpClient::TcpClient(QObject *parent) :
 }
 
 
-bool TcpClient::connectToMaster()
+bool Client::connectToMaster()
 {
     //const QString name = "_tcp.matrixoptimizer.master";
     const QString name = "schleppi";
 
-    MO_NETLOG(DEBUG, "TcpClient::connectToMaster()");
+    MO_NETLOG(DEBUG, "Client::connectToMaster()");
 
     auto info = QHostInfo::fromName(name);
 
     if (info.error() != QHostInfo::NoError)
     {
-        MO_NETLOG(ERROR, "TcpClient::connectToMaster() "
+        MO_NETLOG(ERROR, "Client::connectToMaster() "
                   "error resolving hostname '" << name << "'\n"
                   << info.errorString());
         return false;
@@ -55,7 +55,7 @@ bool TcpClient::connectToMaster()
 
     if (info.addresses().isEmpty())
     {
-        MO_NETLOG(ERROR, "TcpClient::connectToMaster() "
+        MO_NETLOG(ERROR, "Client::connectToMaster() "
                   "host '" << name << "' not found");
         return false;
     }
@@ -65,41 +65,41 @@ bool TcpClient::connectToMaster()
     return true;
 }
 
-void TcpClient::connectTo(const QString &ip)
+void Client::connectTo(const QString &ip)
 {
     connectTo(QHostAddress(ip));
 }
 
-void TcpClient::connectTo(const QHostAddress & a)
+void Client::connectTo(const QHostAddress & a)
 {
-    MO_NETLOG(DEBUG, "TcpClient::connectTo(" << a.toString() << ")");
+    MO_NETLOG(DEBUG, "Client::connectTo(" << a.toString() << ")");
 
     address_ = a;
 
     socket_->connectToHost(address_, NetworkManager::defaultTcpPort());
 }
 
-void TcpClient::onError_()
+void Client::onError_()
 {
-    MO_NETLOG(ERROR, "TcpClient: connection error:\n"
+    MO_NETLOG(ERROR, "Client: connection error:\n"
               << socket_->errorString());
 }
 
-void TcpClient::onConnected_()
+void Client::onConnected_()
 {
-    MO_NETLOG(EVENT, "TcpClient: connected to "
+    MO_NETLOG(EVENT, "Client: connected to "
               << address_.toString());
 }
 
-void TcpClient::onDisconnected_()
+void Client::onDisconnected_()
 {
-    MO_NETLOG(EVENT, "TcpClient: disconnected from "
+    MO_NETLOG(EVENT, "Client: disconnected from "
               << address_.toString());
 }
 
-void TcpClient::onData_()
+void Client::onData_()
 {
-    MO_NETLOG(EVENT, "TcpClient: data available ("
+    MO_NETLOG(EVENT, "Client: data available ("
               << socket_->bytesAvailable() << "b)");
 
     AbstractNetEvent * event = AbstractNetEvent::receive(socket_);

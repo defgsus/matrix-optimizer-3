@@ -10,7 +10,7 @@
 
 #include <QTcpSocket>
 
-#include "client.h"
+#include "clientengine.h"
 #include "io/log.h"
 #include "io/application.h"
 #include "gl/manager.h"
@@ -20,18 +20,18 @@
 #include "network/netlog.h"
 #include "network/networkmanager.h"
 #include "network/netevent.h"
-#include "network/tcpclient.h"
+#include "network/client.h"
 
 namespace MO {
 
-Client::Client(QObject *parent) :
+ClientEngine::ClientEngine(QObject *parent) :
     QObject     (parent),
     glManager_  (0),
     client_     (0)
 {
 }
 
-int Client::run(int , char ** )
+int ClientEngine::run(int , char ** )
 {
     MO_PRINT(tr("Matrix Optimizer Client"));
 
@@ -49,7 +49,7 @@ int Client::run(int , char ** )
 }
 
 
-void Client::createGlObjects_()
+void ClientEngine::createGlObjects_()
 {
     glManager_ = new GL::Manager(this);
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
@@ -57,11 +57,11 @@ void Client::createGlObjects_()
     glWindow_->show();//FullScreen();
 }
 
-void Client::startNetwork_()
+void ClientEngine::startNetwork_()
 {
-    client_ = new TcpClient(this);
+    client_ = new Client(this);
 
-    connect(client_, &TcpClient::eventReceived, [=](AbstractNetEvent*e)
+    connect(client_, &Client::eventReceived, [=](AbstractNetEvent*e)
     {
         MO_PRINT("got event '" << e->className() << "'");
     });

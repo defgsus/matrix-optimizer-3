@@ -20,11 +20,11 @@ namespace MO {
 
 class AbstractNetEvent;
 
-class TcpClient : public QObject
+class Client : public QObject
 {
     Q_OBJECT
 public:
-    explicit TcpClient(QObject *parent = 0);
+    explicit Client(QObject *parent = 0);
 
 signals:
 

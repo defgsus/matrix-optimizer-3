@@ -17,13 +17,13 @@
 
 namespace MO {
 
-class TcpClient;
+class Client;
 
-class Client : public QObject
+class ClientEngine : public QObject
 {
     Q_OBJECT
 public:
-    explicit Client(QObject *parent = 0);
+    explicit ClientEngine(QObject *parent = 0);
 
     int run(int argc, char ** argv);
 
@@ -39,7 +39,7 @@ private:
     GL::Manager * glManager_;
     GL::Window * glWindow_;
 
-    TcpClient * client_;
+    Client * client_;
 };
 
 } // namespace MO

@@ -14,7 +14,7 @@
 #include "io/application.h"
 #include "io/settings.h"
 #include "io/currentthread.h"
-#include "engine/client.h"
+#include "engine/clientengine.h"
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     MO::application = new MO::Application(argc, argv);
     MO::settings = new MO::Settings(MO::application);
 
-    MO::Client * client = new MO::Client(MO::application);
+    MO::ClientEngine * client = new MO::ClientEngine(MO::application);
 
     int ret = client->run(argc, argv);
 

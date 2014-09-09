@@ -47,8 +47,3 @@ INCLUDEPATH += src
 #bison_comp.commands = $$BISON_BIN ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.cc --defines=./${QMAKE_FILE_BASE}.hh
 #QMAKE_EXTRA_COMPILERS += bison_comp
 
-HEADERS += \
-    src/network/tcpclient.h
-
-SOURCES += \
-    src/network/tcpclient.cpp
