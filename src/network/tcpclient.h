@@ -12,8 +12,13 @@
 #define MOSRC_NETWORK_TCPCLIENT_H
 
 #include <QObject>
+#include <QHostAddress>
+
+class QTcpSocket;
 
 namespace MO {
+
+class AbstractNetEvent;
 
 class TcpClient : public QObject
 {
@@ -23,10 +28,26 @@ public:
 
 signals:
 
+    void eventReceived(AbstractNetEvent * event);
+
 public slots:
 
     bool connectToMaster();
 
+    void connectTo(const QHostAddress&);
+
+private slots:
+
+    void onError_();
+    void onConnected_();
+    void onDisconnected_();
+    void onData_();
+
+private:
+
+
+    QHostAddress address_;
+    QTcpSocket * socket_;
 };
 
 } // namespace MO

@@ -20,12 +20,14 @@
 #include "network/netlog.h"
 #include "network/networkmanager.h"
 #include "network/netevent.h"
+#include "network/tcpclient.h"
 
 namespace MO {
 
 Client::Client(QObject *parent) :
     QObject     (parent),
-    glManager_  (0)
+    glManager_  (0),
+    client_     (0)
 {
 }
 
@@ -57,8 +59,18 @@ void Client::createGlObjects_()
 
 void Client::startNetwork_()
 {
-    socket_ = new QTcpSocket(this);
+    client_ = new TcpClient(this);
 
+    connect(client_, &TcpClient::eventReceived, [=](AbstractNetEvent*e)
+    {
+        MO_PRINT("got event '" << e->className() << "'");
+    });
+
+    while (!client_->connectToMaster())
+    {
+        MO_PRINT("retrying");
+    }
+/*
     NetworkLogger::connectForLogging(socket_);
 
     socket_->connectToHost(
@@ -71,7 +83,7 @@ void Client::startNetwork_()
         info.setId("hello");
         info.send(socket_);
     });
-
+    */
     /*
     if (send_)
     {

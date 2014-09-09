@@ -65,12 +65,16 @@ public:
 
     // ---------- network -----------------
 
+    /** Serializes the event onto the socket stream */
     bool send(QAbstractSocket*);
+
+    /** Creates the appropriate event class from the socket stream.
+        Returns the event if succesful, or NULL otherwise */
+    static AbstractNetEvent * receive(QAbstractSocket *);
 
 private:
 
     void serialize_(QIODevice & io) const;
-    void deserialize_(QIODevice & io);
 
     bool isValid_, isReceived_, isSend_;
 

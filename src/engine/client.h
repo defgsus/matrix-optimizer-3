@@ -15,11 +15,9 @@
 
 #include "gl/opengl_fwd.h"
 
-class QTcpSocket;
-
 namespace MO {
 
-class TcpServer;
+class TcpClient;
 
 class Client : public QObject
 {
@@ -41,8 +39,7 @@ private:
     GL::Manager * glManager_;
     GL::Window * glWindow_;
 
-    TcpServer * tcp_;
-    QTcpSocket * socket_;
+    TcpClient * client_;
 };
 
 } // namespace MO

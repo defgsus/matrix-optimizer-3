@@ -13,7 +13,7 @@
 
 #include <QPalette>
 #include <QWidget>
-#include <QTcpServer>
+#include <QHostInfo>
 #include <QHostAddress>
 
 #include "io/application.h"
@@ -101,14 +101,6 @@ void Application::setPaletteFor(QWidget * w)
    // p.setColor(QPalette::Background, QColor(30,30,30));
 
     w->setPalette(p);
-}
-
-
-QString Application::ipName() const
-{
-    QTcpServer s;
-    s.listen();
-    return s.serverAddress().toString();
 }
 
 

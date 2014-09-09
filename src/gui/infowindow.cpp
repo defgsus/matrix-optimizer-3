@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QFont>
 #include <QTextStream>
+#include <QHostInfo>
 
 #include "infowindow.h"
 #include "io/application.h"
@@ -58,7 +59,8 @@ QString InfoWindow::infoString() const
     QTextStream s(&text);
 
     s << application->applicationName()
-      << "\nlocal ip: " << application->ipName();
+      << "\nlocal host/domain: \"" << QHostInfo::localHostName()
+         << "\" / \"" << QHostInfo::localDomainName() << "\"";
 
     return text;
 }

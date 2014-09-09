@@ -51,14 +51,12 @@ AbstractNetEvent * AbstractNetEvent::createClass(const QString &className)
 void AbstractNetEvent::serialize_(QIODevice &io) const
 {
     IO::DataStream s(&io);
+
+    s << className();
+
     serialize(s);
 }
 
-void AbstractNetEvent::deserialize_(QIODevice &io)
-{
-    IO::DataStream s(&io);
-    deserialize(s);
-}
 
 bool AbstractNetEvent::send(QAbstractSocket * socket)
 {
@@ -74,7 +72,45 @@ bool AbstractNetEvent::send(QAbstractSocket * socket)
     return false;
 }
 
+AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s)
+{
+    QString cname;
+    AbstractNetEvent * event = 0;
 
+    try
+    {
+        QByteArray data = s->readAll();
+        IO::DataStream stream(data);
+
+        // get classname
+        stream >> cname;
+
+        event = createClass(cname);
+        if (!event)
+        {
+            MO_NETLOG(ERROR, "unknown NetEvent '" << cname << "'");
+            return 0;
+        }
+
+        try
+        {
+            event->deserialize(stream);
+            return event;
+        }
+        catch (const Exception & e)
+        {
+            MO_NETLOG(ERROR, "error on receiving NetEvent '" << cname << "'\n"
+                      << e.what());
+            delete event;
+            return 0;
+        }
+    }
+    catch (...)
+    {
+        MO_NETLOG(ERROR, "unknown error receiving NetEvent '" << cname << "'");
+        return 0;
+    }
+}
 
 
 MO_REGISTER_NETEVENT(NetInfoEvent)
