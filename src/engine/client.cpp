@@ -66,10 +66,14 @@ void Client::startNetwork_()
         MO_PRINT("got event '" << e->className() << "'");
     });
 
+    client_->connectTo("192.168.1.33");
+
+    /*
     while (!client_->connectToMaster())
     {
         MO_PRINT("retrying");
-    }
+    }*/
+
 /*
     NetworkLogger::connectForLogging(socket_);
 

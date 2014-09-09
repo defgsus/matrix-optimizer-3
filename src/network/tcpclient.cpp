@@ -38,7 +38,8 @@ TcpClient::TcpClient(QObject *parent) :
 
 bool TcpClient::connectToMaster()
 {
-    const QString name = "_tcp.matrixoptimizer.master";
+    //const QString name = "_tcp.matrixoptimizer.master";
+    const QString name = "schleppi";
 
     MO_NETLOG(DEBUG, "TcpClient::connectToMaster()");
 
@@ -64,8 +65,15 @@ bool TcpClient::connectToMaster()
     return true;
 }
 
+void TcpClient::connectTo(const QString &ip)
+{
+    connectTo(QHostAddress(ip));
+}
+
 void TcpClient::connectTo(const QHostAddress & a)
 {
+    MO_NETLOG(DEBUG, "TcpClient::connectTo(" << a.toString() << ")");
+
     address_ = a;
 
     socket_->connectToHost(address_, NetworkManager::defaultTcpPort());
@@ -73,7 +81,7 @@ void TcpClient::connectTo(const QHostAddress & a)
 
 void TcpClient::onError_()
 {
-    MO_NETLOG(ERROR, "TcpClient: socket error:\n"
+    MO_NETLOG(ERROR, "TcpClient: connection error:\n"
               << socket_->errorString());
 }
 

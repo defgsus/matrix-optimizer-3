@@ -34,6 +34,7 @@ public slots:
 
     bool connectToMaster();
 
+    void connectTo(const QString& ip);
     void connectTo(const QHostAddress&);
 
 private slots:
