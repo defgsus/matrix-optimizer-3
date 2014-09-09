@@ -33,7 +33,8 @@ Settings::Settings(QObject *parent) :
 
 void Settings::createDefaultValues_()
 {
-    const QString mopath = "/home/defgsus/prog/qt_project/mo/matrixoptimizer";
+    //const QString mopath = "/home/defgsus/prog/qt_project/mo/matrixoptimizer";
+    const QString mopath = "/home/defgsus/prog/C/mo/matrixoptimizer3";
 
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_GEOMETRY_SETTINGS]]
                                 = mopath + "/data/geometry_presets";

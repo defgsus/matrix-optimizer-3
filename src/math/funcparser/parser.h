@@ -324,10 +324,6 @@ namespace PPP_NAMESPACE {
         Functions funcs_;
     };
 
-
-	/** test Parser and return errors */
-	extern int test_parser_();
-
 } // namespace PPP_NAMESPACE
 
 #endif // PARSER_H_INCLUDED
