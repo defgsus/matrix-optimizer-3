@@ -144,24 +144,28 @@ bool Settings::restoreGeometry(QWidget * win)
 }
 
 
+static const char * tmp_path =
+        //"/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj";
+        "/home/defgsus/prog/C/mo/matrixoptimizer3/data/projection_settings/mapped01.xml-proj";
+
 DomeSettings Settings::domeSettings() const
 {
     ProjectionSystemSettings s;
-    s.loadFile("/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj");
+    s.loadFile(tmp_path);
     return s.domeSettings();
 }
 
 ProjectorSettings Settings::projectorSettings() const
 {
     ProjectionSystemSettings s;
-    s.loadFile("/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj");
+    s.loadFile(tmp_path);
     return s.projectorSettings(0);
 }
 
 CameraSettings Settings::cameraSettings() const
 {
     ProjectionSystemSettings s;
-    s.loadFile("/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj");
+    s.loadFile(tmp_path);
     return s.cameraSettings(0);
 }
 

@@ -22,11 +22,11 @@ namespace MATH {
     then the result is the rotated P. <br>
     u and v are in the range of 0..1 for the whole sphere */
     template <typename F>
-    glm::detail::tvec3<F> pointOnSphere(F u, F v)
+    glm::detail::tvec3<F,glm::defaultp> pointOnSphere(F u, F v)
     {
         u *= TWO_PI,
         v *= PI;
-        auto P = glm::detail::tvec3<F>(
+        auto P = glm::detail::tvec3<F,glm::defaultp>(
         // rotate a point (0,1,0) around z
             -sin(v), std::cos(v), 0 );
         // rotate this point around y

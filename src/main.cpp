@@ -25,7 +25,7 @@
 
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
-#include "tests/testhelpsystem.h"
+//#include "tests/testhelpsystem.h"
 
 //#include "types/vector.h"
 //#include "tool/stringmanip.h"

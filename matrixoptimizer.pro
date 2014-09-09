@@ -54,7 +54,8 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/index.html \
     assets/help/en/style.css \
     assets/help/en/equationfunctions.html \
-    assets/help/en/sequence.html
+    assets/help/en/sequence.html \
+    src/INSTALL.txt
 
 ####################### BISON PARSER #######################
 
