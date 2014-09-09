@@ -1,0 +1,9 @@
+/** @file %FILENAME%
+
+    @brief 
+    
+    <p>(c) %YEAR%, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
+
+    <p>created %DATE%</p>
+*/
