@@ -17,6 +17,7 @@
 #include "infowindow.h"
 #include "io/application.h"
 #include "io/systeminfo.h"
+#include "io/settings.h"
 
 namespace MO {
 namespace GUI {
@@ -54,7 +55,7 @@ void InfoWindow::createWidgets_()
 
 void InfoWindow::updateInfo()
 {
-    labelId_->setText("1");
+    labelId_->setText(QString::number(settings->clientIndex()));
     labelInfo_->setText(infoString());
 }
 

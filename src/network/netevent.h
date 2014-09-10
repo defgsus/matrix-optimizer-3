@@ -127,13 +127,20 @@ E * netevent_cast(AbstractNetEvent * e)
 class NetEventRequest : public AbstractNetEvent
 {
 public:
+    /** Obviously, the order of these must be the same
+        for server and clients! */
     enum Request
     {
         NONE,
+        /** Requests a NetEventSysInfo event */
         GET_SYSTEM_INFO,
+        /** Requests a NetEventInfo with the current index (int) */
         GET_CLIENT_INDEX,
+        /** Sets the client index (int) */
         SET_CLIENT_INDEX,
+        /** Shows the fullscreen info window */
         SHOW_INFO_WINDOW,
+        /** Hides the fullscreen info window */
         HIDE_INFO_WINDOW
     };
 
