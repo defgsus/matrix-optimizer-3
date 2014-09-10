@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 
     delete MO::application;
 
-    std::cout
+    std::cout << std::endl
 #if (0)
         << "peak memory: " << MO::Memory::peak()
         << ", lost = " << MO::Memory::lost() << "\n"

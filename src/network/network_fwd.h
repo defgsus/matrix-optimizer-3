@@ -15,8 +15,10 @@ namespace MO
 {
     class AbstractNetEvent;
     class NetworkManager;
+#ifndef MO_CLIENT
     class TcpServer;
-#ifdef MO_CLIENT
+    class ServerEngine;
+#else
     class Client;
     class ClientEngine;
 #endif

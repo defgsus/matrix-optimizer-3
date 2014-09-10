@@ -58,6 +58,11 @@ public:
         return *this;
     }
 
+signals:
+
+    /** Emitted on endWrite() */
+    void textAdded(int level, const QString& text);
+
 private:
 
     static NetworkLogger * instance_;

@@ -15,7 +15,10 @@
 #include <QMainWindow>
 
 namespace MO {
-class TcpServer;
+
+#ifndef MO_CLIENT
+class ServerEngine;
+#endif
 
 class Application : public QApplication
 {
@@ -27,8 +30,8 @@ public:
     void setMainWindow(QMainWindow * win) { mainWindow_ = win; }
 
 #ifndef MO_CLIENT
-    /** Returns the one server object */
-    TcpServer * server();
+    /** Returns the one server engine object */
+    ServerEngine * serverEngine();
 #endif
 
 signals:
@@ -44,7 +47,7 @@ protected:
     QMainWindow * mainWindow_;
 
 #ifndef MO_CLIENT
-    TcpServer * server_;
+    ServerEngine * server_;
 #endif
 };
 

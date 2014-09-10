@@ -68,7 +68,8 @@ HEADERS += \
     src/gui/midisettingsdialog.h \
     src/gui/saveequationdialog.h \
     src/gui/infowindow.h \
-    src/gui/serverdialog.h
+    src/gui/serverdialog.h \
+    src/gui/widget/netlogwidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -136,4 +137,5 @@ SOURCES += \
     src/gui/midisettingsdialog.cpp \
     src/gui/saveequationdialog.cpp \
     src/gui/infowindow.cpp \
-    src/gui/serverdialog.cpp
+    src/gui/serverdialog.cpp \
+    src/gui/widget/netlogwidget.cpp

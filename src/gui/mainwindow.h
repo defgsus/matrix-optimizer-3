@@ -32,6 +32,7 @@ class Spacer;
 class SceneSettings;
 class TransportWidget;
 class TestThread;
+class ServerDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -129,6 +130,7 @@ private:
     QLabel * sysInfoLabel_;
 
     TestThread * testThread_;
+    ServerDialog * serverDiag_;
 
     QAction * actionSaveScene_,
             * aDrawLightSources_,

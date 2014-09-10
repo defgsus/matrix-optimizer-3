@@ -24,6 +24,7 @@ class TcpServer : public QObject
     Q_OBJECT
 public:
     explicit TcpServer(QObject *parent = 0);
+    ~TcpServer();
 
     // --------------- info ----------------
 

@@ -27,6 +27,7 @@ class ServerDialog : public QDialog
     Q_OBJECT
 public:
     explicit ServerDialog(QWidget *parent = 0);
+    ~ServerDialog();
 
 signals:
 
@@ -39,7 +40,7 @@ private slots:
 private:
     void createWidgets_();
 
-    TcpServer * server_;
+    ServerEngine * server_;
 
     QCheckBox * cbRunning_;
 };

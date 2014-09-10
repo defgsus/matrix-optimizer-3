@@ -38,7 +38,8 @@ include(src/tests/tests.pri)
 INCLUDEPATH += src
 
 SOURCES += \
-    src/main.cpp
+    src/main.cpp \
+    src/engine/serverengine.cpp
 
 OTHER_FILES += $$BISON_FILES \
     TODO.txt \
@@ -69,4 +70,7 @@ OTHER_FILES += $$BISON_FILES \
 ##bison_comp.output = ./${QMAKE_FILE_BASE}.cc
 #bison_comp.commands = $$BISON_BIN ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.cc --defines=./${QMAKE_FILE_BASE}.hh
 #QMAKE_EXTRA_COMPILERS += bison_comp
+
+HEADERS += \
+    src/engine/serverengine.h
 

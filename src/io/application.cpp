@@ -18,8 +18,11 @@
 
 #include "io/application.h"
 #include "io/error.h"
-#include "network/tcpserver.h"
+#ifndef MO_CLIENT
+#   include "engine/serverengine.h"
+#endif
 
+// usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
 
 
@@ -37,14 +40,13 @@ Application::Application(int& argc, char** args)
 }
 
 #ifndef MO_CLIENT
-TcpServer * Application::server()
+ServerEngine * Application::serverEngine()
 {
     if (!server_)
-        server_ = new TcpServer(this);
+        server_ = new ServerEngine(this);
 
     return server_;
 }
-
 #endif
 
 

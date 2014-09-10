@@ -134,6 +134,7 @@ MainWindow::MainWindow(QWidget *parent) :
     seqFloatView_   (0),
     qobjectView_    (0),
     testThread_     (0),
+    serverDiag_     (0),
 
     currentSceneDirectory_(IO::Files::directory(IO::FT_SCENE)),
     statusMessageTimeout_(1000 * 5)
@@ -379,8 +380,10 @@ void MainWindow::createMainMenu_()
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            ServerDialog diag(this);
-            diag.exec();
+            if (!serverDiag_)
+                serverDiag_ = new ServerDialog(this);
+            if (serverDiag_->isHidden())
+                serverDiag_->show();
         });
 
         a = new QAction(tr("Network settings"), m);

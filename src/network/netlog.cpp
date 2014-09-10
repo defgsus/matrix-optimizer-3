@@ -111,11 +111,13 @@ void NetworkLogger::endWrite()
     line.level = n.curLevel_;
     line.string =
         currentThreadName() + "/" + applicationTimeString()
-            + n.curText_ + "\n";
+            + " " + n.curText_;
 
     n.text_.append(line);
 
     MO_DEBUG("NETLOG: " << n.curText_);
+
+    emit n.textAdded(line.level, line.string);
 }
 
 } // namespace MO

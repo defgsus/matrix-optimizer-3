@@ -25,6 +25,14 @@ TcpServer::TcpServer(QObject *parent)
     MO_NETLOG(CTOR, "TcpServer::TcpServer(" << parent << ")");
 }
 
+TcpServer::~TcpServer()
+{
+    MO_NETLOG(CTOR, "TcpServer::~TcpServer()");
+
+    if (isListening())
+        close();
+}
+
 bool TcpServer::isListening() const
 {
     return server_->isListening();
