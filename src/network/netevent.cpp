@@ -117,6 +117,7 @@ AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s) noexcept
 
             event->deserialize(stream);
             event->socket_ = s;
+            event->isReceived_ = true;
 
             return event;
         }

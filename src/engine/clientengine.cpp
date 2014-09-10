@@ -140,8 +140,8 @@ void ClientEngine::showInfoWindow_(bool enable)
         infoWindow_->updateInfo();
         infoWindow_->showFullScreen();
     }
-    else
-        infoWindow_->hide();
+    else if (infoWindow_)
+            infoWindow_->hide();
 }
 
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
@@ -175,7 +175,7 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
 
         if (e->request() == NetEventRequest::SHOW_INFO_WINDOW)
         {
-            showInfoWindow_(false);
+            showInfoWindow_(true);
             return;
         }
 
