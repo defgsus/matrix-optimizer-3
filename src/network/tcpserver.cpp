@@ -107,21 +107,21 @@ void TcpServer::onNewConnection_()
                 &QTcpSocket::error), [=]()
     {
         MO_NETLOG(ERROR, "TcpServer: connection error: "
-                  << socket->errorString() << " on " << socketName(socket));
+                  << socket->errorString() << " from " << socketName(socket));
         emit socketError(socket);
     });
 
     connect(socket, &QTcpSocket::readyRead, [=]()
     {
         MO_NETLOG(EVENT, "TcpServer: received " << socket->bytesAvailable()
-                  << " bytes on " << socketName(socket));
+                  << " bytes from " << socketName(socket));
         emit socketData(socket);
     });
 
     connect(socket, &QTcpSocket::bytesWritten, [=](qint64 bytes)
     {
         MO_NETLOG(EVENT, "TcpServer: send " << bytes
-                  << " bytes on " << socketName(socket));
+                  << " bytes to " << socketName(socket));
         emit socketDataWritten(socket, bytes);
     });
 

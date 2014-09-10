@@ -54,7 +54,7 @@ bool ServerEngine::isRunning() const
 
 int ServerEngine::numClients() const
 {
-    return server_->numOpenConnections();
+    return clients_.size();
 }
 
 bool ServerEngine::open()
@@ -65,6 +65,12 @@ bool ServerEngine::open()
 void ServerEngine::close()
 {
     server_->close();
+
+    for (auto &i : clients_)
+        delete i.p_;
+    clients_.clear();
+
+    emit numberClientsChanged(0);
 }
 
 int ServerEngine::clientForTcp_(QTcpSocket * s)
@@ -79,7 +85,9 @@ void ServerEngine::onTcpConnected_(QTcpSocket * s)
 {
     int i = clientForTcp_(s);
     if (i>=0)
-        MO_NETLOG(WARNING, "reconnection of already mapped client " << clients_[i].index)
+    {
+        MO_NETLOG(WARNING, "reconnection of already mapped client " << clients_[i].index);
+    }
     else
     {
         ClientInfo inf;
@@ -99,27 +107,38 @@ void ServerEngine::onTcpConnected_(QTcpSocket * s)
         getClientIndex_(clients_[i]);
 
     // tell others
-    emit numberClientsChanged(server_->numOpenConnections());
+    emit numberClientsChanged(clients_.size());
 }
 
 void ServerEngine::onTcpDisconnected_(QTcpSocket * s)
 {
     int i = clientForTcp_(s);
     if (i<0)
-        MO_NETLOG(WARNING, "disconnection of unmapped client " << s->peerAddress().toString())
+    {
+        QString str;
+        QTextStream stream(&str);
+        stream << "current list:";
+        for (int i=0; i<clients_.size(); ++i)
+            stream << "\n" << i << " " << clients_[i].tcpSocket
+                    << " " << clients_[i].tcpSocket->peerName();
+
+        MO_NETLOG(WARNING, "disconnection of unmapped client " << s->peerName()
+                  << " " << s << "\n" << str);
+
+    }
     else
     {
         delete clients_[i].p_;
         clients_.removeAt(i);
     }
 
-    emit numberClientsChanged(server_->numOpenConnections());
+    emit numberClientsChanged(clients_.size());
 }
 
-void ServerEngine::onTcpError_(QTcpSocket * s)
+void ServerEngine::onTcpError_(QTcpSocket * )
 {
-    if (s->error() == QAbstractSocket::RemoteHostClosedError)
-        onTcpDisconnected_(s);
+    //if (s->error() == QAbstractSocket::RemoteHostClosedError)
+    //    onTcpDisconnected_(s);
 }
 
 void ServerEngine::sendEvent(AbstractNetEvent * e)
@@ -179,6 +198,7 @@ void ServerEngine::onTcpData_(QTcpSocket * s)
     if (NetEventSysInfo * sys = netevent_cast<NetEventSysInfo>(event))
     {
         client.sysinfo = sys->info();
+        return;
     }
 
     if (NetEventInfo * info = netevent_cast<NetEventInfo>(event))

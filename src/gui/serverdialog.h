@@ -42,7 +42,7 @@ private slots:
 private:
     void createWidgets_();
     void updateClientWidgets_();
-    QWidget * createClientWidget_(const ClientInfo&);
+    QWidget * createClientWidget_(int index, const ClientInfo&);
 
     ServerEngine * server_;
 
