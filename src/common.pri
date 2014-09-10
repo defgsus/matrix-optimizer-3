@@ -26,7 +26,6 @@ HEADERS += \
     src/math/timeline1d.h \
     src/math/interpol.h \
     src/types/float.h \
-    src/tests/testtimeline.h \
     src/io/console.h \
     src/audio/audiosource.h \
     src/math/functions.h \
@@ -34,7 +33,6 @@ HEADERS += \
     src/io/error.h \
     src/io/streamoperators_qt.h \
     src/io/xmlstream.h \
-    src/tests/testxmlstream.h \
     src/io/datastream.h \
     src/model/qobjecttreemodel.h \
     src/doc.h \
@@ -186,14 +184,11 @@ HEADERS += \
     src/network/network_fwd.h
 
 
-
 SOURCES += \
     src/math/timeline1d.cpp \
-    src/tests/testtimeline.cpp \
     src/io/console.cpp \
     src/audio/audiosource.cpp \
     src/io/xmlstream.cpp \
-    src/tests/testxmlstream.cpp \
     src/io/datastream.cpp \
     src/model/qobjecttreemodel.cpp \
     src/object/object.cpp \

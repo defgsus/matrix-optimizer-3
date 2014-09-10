@@ -18,7 +18,7 @@
 
 #include "io/application.h"
 #include "io/error.h"
-
+#include "network/tcpserver.h"
 
 #define MO_APP_EXCEPTIONS_ABORT //abort();
 
@@ -28,10 +28,26 @@ namespace MO {
 Application * application;
 
 Application::Application(int& argc, char** args)
-    :   QApplication(argc, args)
+    : QApplication  (argc, args)
+    #ifndef MO_CLIENT
+      ,server_      (0)
+    #endif
 {
     //updateStyle();
 }
+
+#ifndef MO_CLIENT
+TcpServer * Application::server()
+{
+    if (!server_)
+        server_ = new TcpServer(this);
+
+    return server_;
+}
+
+#endif
+
+
 
 bool Application::notify(QObject * o, QEvent * e)
 {

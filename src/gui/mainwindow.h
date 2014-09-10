@@ -21,7 +21,6 @@ class QTimer;
 
 namespace MO {
 namespace GL { class Window; class Context; class Manager; }
-class TcpServer;
 namespace GUI {
 
 class QObjectInspector;
@@ -130,7 +129,6 @@ private:
     QLabel * sysInfoLabel_;
 
     TestThread * testThread_;
-    TcpServer * server_;
 
     QAction * actionSaveScene_,
             * aDrawLightSources_,

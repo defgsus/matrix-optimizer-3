@@ -47,7 +47,7 @@ void InfoWindow::createWidgets_()
         labelId_->setFont(bigFont_);
         labelId_->setAlignment(Qt::AlignCenter);
 
-        auto labelInfo = new QLabel(this);
+        labelInfo_ = new QLabel(this);
         lv->addWidget(labelInfo_);
         labelInfo_->setWordWrap(true);
 }

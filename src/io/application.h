@@ -15,6 +15,7 @@
 #include <QMainWindow>
 
 namespace MO {
+class TcpServer;
 
 class Application : public QApplication
 {
@@ -24,6 +25,11 @@ public:
 
     QMainWindow * mainWindow() const { return mainWindow_; }
     void setMainWindow(QMainWindow * win) { mainWindow_ = win; }
+
+#ifndef MO_CLIENT
+    /** Returns the one server object */
+    TcpServer * server();
+#endif
 
 signals:
 
@@ -36,6 +42,10 @@ protected:
     virtual bool notify(QObject * o, QEvent * e);
 
     QMainWindow * mainWindow_;
+
+#ifndef MO_CLIENT
+    TcpServer * server_;
+#endif
 };
 
 extern Application * application;

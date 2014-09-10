@@ -63,7 +63,7 @@
 #include "engine/renderer.h"
 #include "gl/texture.h"
 #include "io/povrayexporter.h"
-#include "network/tcpserver.h"
+#include "serverdialog.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -134,7 +134,6 @@ MainWindow::MainWindow(QWidget *parent) :
     seqFloatView_   (0),
     qobjectView_    (0),
     testThread_     (0),
-    server_         (0),
 
     currentSceneDirectory_(IO::Files::directory(IO::FT_SCENE)),
     statusMessageTimeout_(1000 * 5)
@@ -376,6 +375,14 @@ void MainWindow::createMainMenu_()
             diag.exec();
         });
 
+        a = new QAction(tr("Server/client settings"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            ServerDialog diag(this);
+            diag.exec();
+        });
+
         a = new QAction(tr("Network settings"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
@@ -475,23 +482,6 @@ void MainWindow::createMainMenu_()
             w->showFullScreen();
         });
 
-        a = new QAction(tr("Run server"), m);
-        m->addAction(a);
-        a->setCheckable(true);
-        connect(a, &QAction::triggered, [=](bool checked)
-        {
-            if (checked)
-            {
-                server_ = new TcpServer(this);
-                server_->open();
-            }
-            else if (server_)
-            {
-                server_->close();
-                server_->deleteLater();
-                server_ = 0;
-            }
-        });
 
     // ######### HELP MENU #########
     m = new QMenu(tr("Help"), menuBar());

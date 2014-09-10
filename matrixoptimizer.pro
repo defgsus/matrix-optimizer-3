@@ -33,12 +33,12 @@ win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 
 include(src/gui/gui.pri)
 include(src/common.pri)
+include(src/tests/tests.pri)
 
 INCLUDEPATH += src
 
 SOURCES += \
-    src/main.cpp \
-    src/tests/testequation.cpp
+    src/main.cpp
 
 OTHER_FILES += $$BISON_FILES \
     TODO.txt \
@@ -70,5 +70,3 @@ OTHER_FILES += $$BISON_FILES \
 #bison_comp.commands = $$BISON_BIN ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.cc --defines=./${QMAKE_FILE_BASE}.hh
 #QMAKE_EXTRA_COMPILERS += bison_comp
 
-HEADERS += \
-    src/tests/testequation.h
