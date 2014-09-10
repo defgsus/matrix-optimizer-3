@@ -181,7 +181,9 @@ HEADERS += \
     src/network/netlog.h \
     src/network/networkmanager.h \
     src/network/tcpserver.h \
-    src/network/netevent.h
+    src/network/netevent.h \
+    src/io/systeminfo.h \
+    src/network/network_fwd.h
 
 
 
@@ -325,4 +327,5 @@ SOURCES += \
     src/network/netlog.cpp \
     src/network/networkmanager.cpp \
     src/network/tcpserver.cpp \
-    src/network/netevent.cpp
+    src/network/netevent.cpp \
+    src/io/systeminfo.cpp

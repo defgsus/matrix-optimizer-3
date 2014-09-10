@@ -30,6 +30,7 @@ public:
     enum Level
     {
         ERROR,
+        WARNING,
         DEBUG,
         EVENT,
         CTOR

@@ -14,8 +14,10 @@
 #include <QObject>
 
 #include "gl/opengl_fwd.h"
+#include "network/network_fwd.h"
 
 namespace MO {
+namespace GUI { class InfoWindow; }
 
 class Client;
 
@@ -31,13 +33,20 @@ signals:
 
 public slots:
 
+private slots:
+
+    void onNetEvent_(AbstractNetEvent *);
+    void showInfoWindow_(bool enable);
+
 private:
 
     void createGlObjects_();
     void startNetwork_();
+    void shutDown_();
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
+    GUI::InfoWindow * infoWindow_;
 
     Client * client_;
 };

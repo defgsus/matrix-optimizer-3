@@ -15,6 +15,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "network/netlog.h"
+#include "io/systeminfo.h"
 
 namespace MO {
 
@@ -26,6 +27,7 @@ AbstractNetEvent::AbstractNetEvent()
     : isValid_      (true),
       isReceived_   (false),
       isSend_       (false),
+      socket_       (0),
       counter_      (global_counter_++)
 {
 }
@@ -55,6 +57,8 @@ void AbstractNetEvent::serialize_(QIODevice &io) const
 {
     IO::DataStream s(&io);
 
+    s.writeHeader("nete", 1);
+
     s << className();
     s << counter_;
 
@@ -62,11 +66,20 @@ void AbstractNetEvent::serialize_(QIODevice &io) const
 }
 
 
-bool AbstractNetEvent::send(QAbstractSocket * socket)
+bool AbstractNetEvent::send(QAbstractSocket * socket) noexcept
 {
+    if (socket)
+        socket_ = socket;
+
+    if (!socket_)
+    {
+        MO_NETLOG(ERROR, "Can't send NetEvent '" << className() << "' without socket");
+        return false;
+    }
+
     try
     {
-        serialize_(*socket);
+        serialize_(*socket_);
         return isSend_ = true;
     }
     catch (const Exception& e)
@@ -76,7 +89,7 @@ bool AbstractNetEvent::send(QAbstractSocket * socket)
     return false;
 }
 
-AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s)
+AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s) noexcept
 {
     QString cname;
     AbstractNetEvent * event = 0;
@@ -86,22 +99,25 @@ AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s)
         QByteArray data = s->readAll();
         IO::DataStream stream(data);
 
-        // get classname
-        stream >> cname;
-
-        event = createClass(cname);
-        if (!event)
-        {
-            MO_NETLOG(ERROR, "unknown NetEvent '" << cname << "'");
-            return 0;
-        }
-
-        stream >> event->counter_;
-
         try
         {
+            stream.readHeader("nete", 1);
+
+            // get classname
+            stream >> cname;
+
+            event = createClass(cname);
+            if (!event)
+            {
+                MO_NETLOG(ERROR, "unknown NetEvent '" << cname << "'");
+                return 0;
+            }
+
+            stream >> event->counter_;
+
             event->deserialize(stream);
             event->socket_ = s;
+
             return event;
         }
         catch (const Exception & e)
@@ -120,21 +136,78 @@ AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s)
 }
 
 
-MO_REGISTER_NETEVENT(NetInfoEvent)
-
-NetInfoEvent::NetInfoEvent()
+AbstractNetEvent * AbstractNetEvent::createResponse(const QString &name) const
 {
+    if (!isReceived_ || !socket_)
+    {
+        MO_NETLOG(WARNING, "trying to construct a NetEvent response to event '"
+                  << className() << "' which was not received");
+    }
 
+    AbstractNetEvent * e = createClass(name);
+    e->socket_ = socket_;
+    e->counter_ = counter_;
+
+    return e;
 }
 
-void NetInfoEvent::serialize(IO::DataStream &io) const
+AbstractNetEvent * AbstractNetEvent::createResponseThrow(const QString &name) const
 {
-    io << id_ << info_;
+    auto e = createResponse(name);
+    if (!e)
+        MO_IO_ERROR(VERSION_MISMATCH, "Unknown NetEvent response '" << name << "'");
+
+    return e;
 }
 
-void NetInfoEvent::deserialize(IO::DataStream &io)
+
+
+
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventRequest)
+
+NetEventRequest::NetEventRequest()
+    : request_    (NONE)
 {
-    io >> id_ >> info_;
+}
+
+void NetEventRequest::serialize(IO::DataStream &io) const
+{
+    io << (qint64)request_;
+}
+
+void NetEventRequest::deserialize(IO::DataStream &io)
+{
+    qint64 r;
+    io >> r;
+    request_ = (Request)r;
+}
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventSysInfo)
+
+NetEventSysInfo::NetEventSysInfo()
+{
+}
+
+void NetEventSysInfo::serialize(IO::DataStream &io) const
+{
+    info_.serialize(io);
+}
+
+void NetEventSysInfo::deserialize(IO::DataStream &io)
+{
+    info_.deserialize(io);
+}
+
+void NetEventSysInfo::getInfo()
+{
+    info_.get();
 }
 
 

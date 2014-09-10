@@ -12,6 +12,8 @@
 #define MOSRC_IO_SYSTEMINFO_H
 
 #include <QString>
+#include <QSize>
+#include <QList>
 
 namespace MO {
 namespace IO { class DataStream; }
@@ -31,16 +33,20 @@ public:
     /** Fills all datafields from current system */
     void get();
 
+    /** Returns all info as multiline string */
+    QString toString() const;
+
     const QString& applicationPath() const { return appPath_; }
 
-    int width() const { return w_; }
-    int height() const { return h_; }
+    int numScreens() const { return screenSizes_.size(); }
+
+    const QSize& resolution(int screen) const { return screenSizes_.at(screen); }
 
 private:
 
-    QString appPath_;
+    QString appPath_, localIp_;
 
-    int w_, h_;
+    QList<QSize> screenSizes_;
 };
 
 } // namespace MO

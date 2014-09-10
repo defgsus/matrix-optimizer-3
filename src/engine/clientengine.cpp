@@ -21,12 +21,15 @@
 #include "network/networkmanager.h"
 #include "network/netevent.h"
 #include "network/client.h"
+#include "io/systeminfo.h"
+#include "gui/infowindow.h"
 
 namespace MO {
 
 ClientEngine::ClientEngine(QObject *parent) :
     QObject     (parent),
     glManager_  (0),
+    infoWindow_ (0),
     client_     (0)
 {
 }
@@ -43,9 +46,15 @@ int ClientEngine::run(int , char ** )
 
     int ret = application->exec();
 
-    delete glManager_;
+    shutDown_();
 
     return ret;
+}
+
+void ClientEngine::shutDown_()
+{
+    delete glManager_;
+    delete infoWindow_;
 }
 
 
@@ -61,10 +70,7 @@ void ClientEngine::startNetwork_()
 {
     client_ = new Client(this);
 
-    connect(client_, &Client::eventReceived, [=](AbstractNetEvent*e)
-    {
-        MO_PRINT("got event '" << e->className() << "'");
-    });
+    connect(client_, SIGNAL(eventReceived), this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
     client_->connectTo("192.168.1.33");
 
@@ -121,6 +127,49 @@ void ClientEngine::startNetwork_()
         });
     }
     */
+}
+
+void ClientEngine::showInfoWindow_(bool enable)
+{
+    if (enable)
+    {
+        if (!infoWindow_)
+            infoWindow_ = new GUI::InfoWindow();
+
+        infoWindow_->updateInfo();
+        infoWindow_->showFullScreen();
+    }
+    else
+        infoWindow_->hide();
+}
+
+void ClientEngine::onNetEvent_(AbstractNetEvent * event)
+{
+    if (NetEventRequest * e = netevent_cast<NetEventRequest>(event))
+    {
+        // respond with system information
+        if (e->request() == NetEventRequest::SYSTEM_INFO)
+        {
+            auto r = e->createResponse<NetEventSysInfo>();
+            r->getInfo();
+            r->send();
+            return;
+        }
+
+        if (e->request() == NetEventRequest::SHOW_INFO_WINDOW)
+        {
+            showInfoWindow_(false);
+            return;
+        }
+
+        if (e->request() == NetEventRequest::HIDE_INFO_WINDOW)
+        {
+            showInfoWindow_(false);
+            return;
+        }
+    }
+
+    MO_NETLOG(WARNING, "unhandled NetEvent " << event->className() << " in ClientEngine");
 }
 
 } // namespace MO

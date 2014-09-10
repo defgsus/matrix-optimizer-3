@@ -14,6 +14,8 @@
 #include <QMainWindow>
 #include <QFont>
 
+class QLabel;
+
 namespace MO {
 namespace GUI {
 
@@ -30,9 +32,13 @@ signals:
 
 public slots:
 
+    void updateInfo();
+
 private:
 
     void createWidgets_();
+
+    QLabel *labelId_, *labelInfo_;
 
     // --- config ----
 

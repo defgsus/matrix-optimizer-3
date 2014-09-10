@@ -16,6 +16,7 @@
 
 #include "infowindow.h"
 #include "io/application.h"
+#include "io/systeminfo.h"
 
 namespace MO {
 namespace GUI {
@@ -32,6 +33,7 @@ InfoWindow::InfoWindow(QWidget *parent) :
     bigFont_.setPointSize(120);
 
     createWidgets_();
+    updateInfo();
 }
 
 
@@ -40,27 +42,32 @@ void InfoWindow::createWidgets_()
     setCentralWidget(new QWidget(this));
     auto lv = new QVBoxLayout(centralWidget());
 
-        auto labelId = new QLabel(this);
-        lv->addWidget(labelId);
-        labelId->setFont(bigFont_);
-        labelId->setText("1");
-        labelId->setAlignment(Qt::AlignCenter);
+        labelId_ = new QLabel(this);
+        lv->addWidget(labelId_);
+        labelId_->setFont(bigFont_);
+        labelId_->setAlignment(Qt::AlignCenter);
 
         auto labelInfo = new QLabel(this);
-        lv->addWidget(labelInfo);
-        labelInfo->setWordWrap(true);
-        labelInfo->setText(infoString());
+        lv->addWidget(labelInfo_);
+        labelInfo_->setWordWrap(true);
+}
+
+void InfoWindow::updateInfo()
+{
+    labelId_->setText("1");
+    labelInfo_->setText(infoString());
 }
 
 
 QString InfoWindow::infoString() const
 {
+    SystemInfo info;
+    info.get();
+
     QString text;
     QTextStream s(&text);
 
-    s << application->applicationName()
-      << "\nlocal host/domain: \"" << QHostInfo::localHostName()
-         << "\" / \"" << QHostInfo::localDomainName() << "\"";
+    s << info.toString();
 
     return text;
 }

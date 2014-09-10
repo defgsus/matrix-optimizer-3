@@ -16,6 +16,7 @@
 #include <QString>
 #include <QMap>
 
+#include "io/systeminfo.h"
 
 class QIODevice;
 class QAbstractSocket;
@@ -24,11 +25,12 @@ namespace MO {
 namespace IO { class DataStream; }
 
 
-
 #define MO_NETEVENT_CONSTRUCTOR(Class__)                                        \
     Class__();                                                                  \
-    const QString& className() const Q_DECL_OVERRIDE                            \
+    static const QString& staticClassName()                                     \
                         { static QString s(#Class__); return s; }               \
+    const QString& className() const Q_DECL_OVERRIDE                            \
+                                    { return staticClassName(); }               \
     virtual Class__ * cloneClass() const Q_DECL_OVERRIDE                        \
                         { return new Class__(); }                               \
     virtual void serialize(IO::DataStream & io) const Q_DECL_OVERRIDE;          \
@@ -62,6 +64,9 @@ public:
 
     QAbstractSocket * sender() const { return socket_; }
 
+    /** Returns the internal counter to identify the event */
+    int counter() const { return counter_; }
+
     // ------------ io --------------------
 
     virtual void serialize(IO::DataStream & io) const = 0;
@@ -69,12 +74,29 @@ public:
 
     // ---------- network -----------------
 
-    /** Serializes the event onto the socket stream */
-    bool send(QAbstractSocket*);
+    /** Serializes the event onto the socket stream.
+        If @p socket is NULL, the previously used socket will be used. */
+    bool send(QAbstractSocket * socket = 0) noexcept;
 
     /** Creates the appropriate event class from the socket stream.
         Returns the event if succesful, or NULL otherwise */
-    static AbstractNetEvent * receive(QAbstractSocket *);
+    static AbstractNetEvent * receive(QAbstractSocket *) noexcept;
+
+    /** Creates a new event as response to this incoming event.
+        counter() and socket() will have the same value.
+        If className is unknown, NULL is returned. */
+    AbstractNetEvent * createResponse(const QString& className) const;
+
+    /** Creates a new event as response to this incoming event.
+        counter() and socket() will have the same value.
+        If className is unknown, an IoException will be thrown. */
+    AbstractNetEvent * createResponseThrow(const QString& className) const;
+
+    /** Creates a new event as response to this incoming event.
+        counter() and socket() will have the same value.
+        @throws IoException will be thrown if something goes wrong. */
+    template <class E>
+    E * createResponse() const { return static_cast<E*>(createResponseThrow(E::staticClassName())); }
 
 private:
 
@@ -90,27 +112,64 @@ private:
     static std::atomic_int global_counter_;
 };
 
+template <class E>
+E * netevent_cast(AbstractNetEvent * e)
+{
+    return e->className() == E::staticClassName() ? static_cast<E*>(e) : 0;
+}
 
-class NetInfoEvent : public AbstractNetEvent
+
+
+
+
+
+class NetEventRequest : public AbstractNetEvent
 {
 public:
-    MO_NETEVENT_CONSTRUCTOR(NetInfoEvent)
+    enum Request
+    {
+        NONE,
+        SYSTEM_INFO,
+        SHOW_INFO_WINDOW,
+        HIDE_INFO_WINDOW
+    };
+
+    MO_NETEVENT_CONSTRUCTOR(NetEventRequest)
 
     // --------- getter -------------------
 
-    const QString& id() const { return id_; }
-    const QString& info() const { return info_; }
+    Request request() const { return request_; }
 
     // --------- setter -------------------
 
-    void setId(const QString& id) { id_ = id; }
-    void setInfo(const QString& info) { info_ = info; }
+    void setRequest(Request id) { request_ = id; }
 
 private:
 
-    QString id_, info_;
+    Request request_;
 };
 
+
+class NetEventSysInfo : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventSysInfo)
+
+    // --------- getter -------------------
+
+    const SystemInfo& info() const { return info_; }
+
+    // --------- setter -------------------
+
+    void setInfo(const SystemInfo& info) { info_ = info; }
+
+    /** Fills the info() with the current system info */
+    void getInfo();
+
+private:
+
+    SystemInfo info_;
+};
 
 
 

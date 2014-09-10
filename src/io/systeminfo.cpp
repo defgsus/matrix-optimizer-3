@@ -9,6 +9,9 @@
 */
 
 #include <QDesktopWidget>
+#include <QTextStream>
+#include <QNetworkInterface>
+#include <QHostAddress>
 
 #include "systeminfo.h"
 #include "io/datastream.h"
@@ -25,26 +28,56 @@ void SystemInfo::serialize(IO::DataStream &io) const
 {
     io.writeHeader("sysinfo", 1);
 
-    io << appPath_ << w_ << h_;
+    io << appPath_ << screenSizes_;
 }
 
 void SystemInfo::deserialize(IO::DataStream &io)
 {
     io.readHeader("sysinfo", 1);
 
-    io >> appPath_ >> w_ >> h_;
+    io >> appPath_ >> screenSizes_;
 }
 
 void SystemInfo::get()
 {
     appPath_ = application->applicationFilePath();
 
-    auto desk = application->desktop();
+    // local ip
+    localIp_ = "unknown";
+    const auto ips = QNetworkInterface::allAddresses();
+    for (const QHostAddress ip : ips)
+    {
+        if (!ip.isLoopback() && ip.protocol() == QAbstractSocket::IPv4Protocol
+            && ip != QHostAddress::LocalHost)
+        {
+            localIp_ = ip.toString();
+            break;
+        }
+    }
 
-    w_ = desk->width();
-    h_ = desk->height();
+    // screen geometries
+    auto desk = application->desktop();
+    for (int i=0; i<desk->screenCount(); ++i)
+    {
+        screenSizes_.append(desk->screenGeometry(i).size());
+    }
 }
 
+QString SystemInfo::toString() const
+{
+    QString text;
+    QTextStream s(&text);
+
+    s << "path: " << appPath_
+      << "\nip: " << localIp_
+      << "\nscreens:";
+    for (int i=0; i<screenSizes_.size(); ++i)
+        s << " " << i << ": " << screenSizes_[i].width()
+          << "x" << screenSizes_[i].height();
+
+
+    return text;
+}
 
 
 } // namespace MO

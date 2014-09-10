@@ -47,9 +47,3 @@ INCLUDEPATH += src
 #bison_comp.commands = $$BISON_BIN ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.cc --defines=./${QMAKE_FILE_BASE}.hh
 #QMAKE_EXTRA_COMPILERS += bison_comp
 
-HEADERS += \
-    src/io/systeminfo.h
-
-SOURCES += \
-    src/io/systeminfo.cpp
-
