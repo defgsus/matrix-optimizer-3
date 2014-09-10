@@ -18,6 +18,7 @@ namespace MO
 #ifndef MO_CLIENT
     class TcpServer;
     class ServerEngine;
+    class ClientInfo;
 #else
     class Client;
     class ClientEngine;

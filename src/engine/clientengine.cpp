@@ -161,13 +161,14 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         {
             auto r = e->createResponse<NetEventInfo>();
             r->setRequest(e->request());
-            r->setInfo(settings->clientIndex());
+            r->setData(settings->clientIndex());
             r->send();
             return;
         }
 
         if (e->request() == NetEventRequest::SET_CLIENT_INDEX)
         {
+            MO_NETLOG(EVENT, "setting client index to " << e->data().toInt());
             settings->setClientIndex(e->data().toInt());
             return;
         }

@@ -52,7 +52,7 @@ bool ServerEngine::isRunning() const
     return server_->isListening();
 }
 
-int ServerEngine::numOpenConnections() const
+int ServerEngine::numClients() const
 {
     return server_->numOpenConnections();
 }
@@ -102,7 +102,7 @@ void ServerEngine::onTcpConnected_(QTcpSocket * s)
     emit numberClientsChanged(server_->numOpenConnections());
 }
 
-void ServerEngine::onTcpDisonnected_(QTcpSocket * s)
+void ServerEngine::onTcpDisconnected_(QTcpSocket * s)
 {
     int i = clientForTcp_(s);
     if (i<0)
@@ -127,6 +127,8 @@ void ServerEngine::sendEvent(AbstractNetEvent * e)
     {
         e->send(i.tcpSocket);
     }
+
+    delete e;
 }
 
 void ServerEngine::getSysInfo_(ClientInfo & inf)
@@ -188,6 +190,24 @@ void ServerEngine::onTcpData_(QTcpSocket * s)
 
     MO_NETLOG(WARNING, "unhandled NetEvent '" << event->className()
               << "' from client " << s->peerAddress().toString());
+}
+
+
+void ServerEngine::showInfoWindow(int index, bool show)
+{
+    NetEventRequest r;
+    r.setRequest(show? NetEventRequest::SHOW_INFO_WINDOW : NetEventRequest::HIDE_INFO_WINDOW);
+
+    r.send(clients_[index].tcpSocket);
+}
+
+void ServerEngine::setClientIndex(int index, int cindex)
+{
+    NetEventRequest r;
+    r.setRequest(NetEventRequest::SET_CLIENT_INDEX);
+    r.setData(cindex);
+
+    r.send(clients_[index].tcpSocket);
 }
 
 } // namespace MO

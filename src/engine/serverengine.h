@@ -47,7 +47,9 @@ public:
 
     bool isRunning() const;
 
-    int numOpenConnections() const;
+    int numClients() const;
+
+    const ClientInfo& clientInfo(int index) const { return clients_[index]; }
 
     /** Returns the one tcp server */
     TcpServer * tcpServer() const { return server_; }
@@ -70,10 +72,13 @@ signals:
 
 public slots:
 
+    void showInfoWindow(int index, bool show);
+    void setClientIndex(int index, int client_index);
+
 private slots:
 
     void onTcpConnected_(QTcpSocket*);
-    void onTcpDisonnected_(QTcpSocket*);
+    void onTcpDisconnected_(QTcpSocket*);
     void onTcpError_(QTcpSocket*);
     void onTcpData_(QTcpSocket*);
 

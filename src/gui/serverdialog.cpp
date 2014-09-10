@@ -38,6 +38,11 @@ ServerDialog::ServerDialog(QWidget *parent) :
     server_ = application->serverEngine();
 
     createWidgets_();
+
+    updateClientWidgets_();
+
+    connect(server_, SIGNAL(numberClientsChanged(int)),
+            this, SLOT(onClientsChanged_()));
 }
 
 ServerDialog::~ServerDialog()
@@ -59,18 +64,71 @@ void ServerDialog::createWidgets_()
             cbRunning_->setChecked(server_->isRunning());
             connect(cbRunning_, SIGNAL(clicked(bool)), this, SLOT(startServer_(bool)));
 
-            auto label = new QLabel(this);
-            lh->addWidget(label);
-            label->setText(tr("%1 connected clients").arg(server_->numOpenConnections()));
-            connect(server_, &ServerEngine::numberClientsChanged, [=](int num)
-            {
-                label->setText(tr("%1 connected clients").arg(num));
-            });
+            labelNum_ = new QLabel(this);
+            lh->addWidget(labelNum_);
+
+        // --- clients ---
+
+        clientLayout_ = new QVBoxLayout();
+        lv->addLayout(clientLayout_);
 
         // --- log ---
 
         auto logger = new NetLogWidget(this);
         lv->addWidget(logger);
+}
+
+void ServerDialog::onClientsChanged_()
+{
+    updateClientWidgets_();
+}
+
+void ServerDialog::updateClientWidgets_()
+{
+    // delete previous
+    for (auto w : clientWidgets_)
+    {
+        w->setVisible(false);
+        w->deleteLater();
+    }
+
+    // update other widgets
+    labelNum_->setText(tr("%1 connected clients").arg(server_->numClients()));
+
+    // create client widgets
+    for (int i=0; i<server_->numClients(); ++i)
+    {
+        clientLayout_->addWidget(createClientWidget_(
+                                    server_->clientInfo(i)));
+    }
+}
+
+QWidget * ServerDialog::createClientWidget_(const ClientInfo & inf)
+{
+    QWidget * w = new QWidget(this);
+    auto lv = new QVBoxLayout(w);
+
+        auto label = new QLabel(tr("Client %1").arg(inf.index), w);
+        lv->addWidget(label);
+
+        auto lh = new QHBoxLayout();
+        lv->addLayout(lh);
+
+            auto but = new QPushButton(tr("show info window"), w);
+            lh->addWidget(but);
+            connect(but, &QPushButton::clicked, [=]()
+            {
+                server_->showInfoWindow(inf.index, true);
+            });
+
+            but = new QPushButton(tr("hide info window"), w);
+            lh->addWidget(but);
+            connect(but, &QPushButton::clicked, [=]()
+            {
+                server_->showInfoWindow(inf.index, false);
+            });
+
+    return w;
 }
 
 void ServerDialog::startServer_(bool run)

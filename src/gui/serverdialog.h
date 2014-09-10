@@ -17,6 +17,7 @@
 
 
 class QCheckBox;
+class QLabel;
 
 namespace MO {
 namespace GUI {
@@ -36,13 +37,19 @@ public slots:
 private slots:
 
     void startServer_(bool);
+    void onClientsChanged_();
 
 private:
     void createWidgets_();
+    void updateClientWidgets_();
+    QWidget * createClientWidget_(const ClientInfo&);
 
     ServerEngine * server_;
 
     QCheckBox * cbRunning_;
+    QLabel * labelNum_;
+    QLayout * clientLayout_;
+    QList<QWidget*> clientWidgets_;
 };
 
 } // namespace GUI
