@@ -69,6 +69,8 @@ void Settings::createDefaultValues_()
     defaultValues_["Network/name"] = "";
     defaultValues_["Network/tcpport"] = 50000;
     defaultValues_["Network/udpport"] = 50001;
+
+    defaultValues_["Client/index"] = -1;
 }
 
 QVariant Settings::getValue(const QString &key)
@@ -142,6 +144,17 @@ bool Settings::restoreGeometry(QWidget * win)
         return true;
     }
     return false;
+}
+
+
+int Settings::clientIndex()
+{
+    return getValue("Client/index").toInt();
+}
+
+void Settings::setClientIndex(int i)
+{
+    setValue("Client/index", i);
 }
 
 

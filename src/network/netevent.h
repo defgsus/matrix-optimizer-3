@@ -15,6 +15,7 @@
 
 #include <QString>
 #include <QMap>
+#include <QVariant>
 
 #include "io/systeminfo.h"
 
@@ -129,7 +130,9 @@ public:
     enum Request
     {
         NONE,
-        SYSTEM_INFO,
+        GET_SYSTEM_INFO,
+        GET_CLIENT_INDEX,
+        SET_CLIENT_INDEX,
         SHOW_INFO_WINDOW,
         HIDE_INFO_WINDOW
     };
@@ -140,13 +143,42 @@ public:
 
     Request request() const { return request_; }
 
+    /** The data that is associated with the request */
+    const QVariant& data() const { return data_; }
+
     // --------- setter -------------------
 
     void setRequest(Request id) { request_ = id; }
+    void setData(const QVariant& d) { data_ = d; }
 
 private:
 
     Request request_;
+    QVariant data_;
+};
+
+class NetEventInfo : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventInfo)
+
+    // --------- getter -------------------
+
+    /** Returns the type of the initial request */
+    NetEventRequest::Request request() const { return request_; }
+
+    /** Returns the answer to the initial request */
+    const QVariant& data() const { return data_; }
+
+    // --------- setter -------------------
+
+    void setRequest(NetEventRequest::Request r) { request_ = r; }
+    void setData(const QVariant& v) { data_ = v; }
+
+private:
+
+    NetEventRequest::Request request_;
+    QVariant data_;
 };
 
 

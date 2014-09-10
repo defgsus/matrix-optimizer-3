@@ -30,6 +30,9 @@ public:
 
     // ----------- getter -------------
 
+    /** Returns true when system information has been gathered */
+    bool isValid() const { return !appPath_.isEmpty(); }
+
     /** Fills all datafields from current system */
     void get();
 

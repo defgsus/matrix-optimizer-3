@@ -32,10 +32,14 @@ public:
     bool isListening() const;
 
     /** Returns the number of open connections */
-    int openConnections() const { return sockets_.size(); }
+    int numOpenConnections() const { return sockets_.size(); }
+
+    /** Returns the given socket, @p index is in range [0, numOpenConnections()-1] */
+    //QTcpSocket * socket(int index) const { return sockets_[index]; }
 
     /** Returns human readable name of a socket */
     const QString& socketName(QTcpSocket*) const;
+
 
 signals:
 
@@ -53,13 +57,12 @@ signals:
 
 public slots:
 
-    /** Starts listening on all adresses on the
-        port that is set in the application settings.
+    /** Starts listening on all adresses, on the
+        port specified in the application settings.
         Returns success. */
     bool open();
     /** Stops listening */
     void close();
-
 
     // ____________ PRIVATE AREA ______________
 

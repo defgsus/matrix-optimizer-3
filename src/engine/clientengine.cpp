@@ -23,6 +23,7 @@
 #include "network/client.h"
 #include "io/systeminfo.h"
 #include "gui/infowindow.h"
+#include "io/settings.h"
 
 namespace MO {
 
@@ -148,11 +149,26 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
     if (NetEventRequest * e = netevent_cast<NetEventRequest>(event))
     {
         // respond with system information
-        if (e->request() == NetEventRequest::SYSTEM_INFO)
+        if (e->request() == NetEventRequest::GET_SYSTEM_INFO)
         {
             auto r = e->createResponse<NetEventSysInfo>();
             r->getInfo();
             r->send();
+            return;
+        }
+
+        if (e->request() == NetEventRequest::GET_CLIENT_INDEX)
+        {
+            auto r = e->createResponse<NetEventInfo>();
+            r->setRequest(e->request());
+            r->setInfo(settings->clientIndex());
+            r->send();
+            return;
+        }
+
+        if (e->request() == NetEventRequest::SET_CLIENT_INDEX)
+        {
+            settings->setClientIndex(e->data().toInt());
             return;
         }
 

@@ -176,14 +176,36 @@ NetEventRequest::NetEventRequest()
 
 void NetEventRequest::serialize(IO::DataStream &io) const
 {
-    io << (qint64)request_;
+    io << (qint64)request_ << data_;
 }
 
 void NetEventRequest::deserialize(IO::DataStream &io)
 {
     qint64 r;
-    io >> r;
+    io >> r >> data_;
     request_ = (Request)r;
+}
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventInfo)
+
+NetEventInfo::NetEventInfo()
+    : request_  (NetEventRequest::NONE)
+{
+}
+
+void NetEventInfo::serialize(IO::DataStream &io) const
+{
+    io << (qint64)request_ << data_;
+}
+
+void NetEventInfo::deserialize(IO::DataStream &io)
+{
+    qint64 r;
+    io >> r >> data_;
+    request_ = (NetEventRequest::Request)r;
 }
 
 

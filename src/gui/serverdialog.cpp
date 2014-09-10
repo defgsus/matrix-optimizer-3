@@ -49,14 +49,23 @@ void ServerDialog::createWidgets_()
 {
     auto lv = new QVBoxLayout(this);
 
-        // --- run state ---
+        auto lh = new QHBoxLayout(this);
+        lv->addLayout(lh);
 
-        cbRunning_ = new QCheckBox(tr("run server"), this);
-        lv->addWidget(cbRunning_);
-        cbRunning_->setChecked(server_->isRunning());
-        connect(cbRunning_, SIGNAL(clicked(bool)), this, SLOT(startServer_(bool)));
+            // --- run state ---
 
+            cbRunning_ = new QCheckBox(tr("run server"), this);
+            lh->addWidget(cbRunning_);
+            cbRunning_->setChecked(server_->isRunning());
+            connect(cbRunning_, SIGNAL(clicked(bool)), this, SLOT(startServer_(bool)));
 
+            auto label = new QLabel(this);
+            lh->addWidget(label);
+            label->setText(tr("%1 connected clients").arg(server_->numOpenConnections()));
+            connect(server_, &ServerEngine::numberClientsChanged, [=](int num)
+            {
+                label->setText(tr("%1 connected clients").arg(num));
+            });
 
         // --- log ---
 

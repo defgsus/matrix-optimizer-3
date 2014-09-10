@@ -48,6 +48,10 @@ public:
     bool restoreGeometry(QWidget *);
 
 
+    /** Returns the index of the client */
+    int clientIndex();
+    void setClientIndex(int);
+
     DomeSettings domeSettings() const;
     ProjectorSettings projectorSettings() const;
     CameraSettings cameraSettings() const;
