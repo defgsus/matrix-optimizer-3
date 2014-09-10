@@ -19,6 +19,7 @@
 #include "network/netevent.h"
 #include "widget/netlogwidget.h"
 #include "io/settings.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -54,7 +55,7 @@ void ServerDialog::createWidgets_()
 {
     auto lv = new QVBoxLayout(this);
 
-        auto lh = new QHBoxLayout(this);
+        auto lh = new QHBoxLayout();
         lv->addLayout(lh);
 
             // --- run state ---
@@ -80,6 +81,9 @@ void ServerDialog::createWidgets_()
 
 void ServerDialog::onClientsChanged_()
 {
+    MO_DEBUG("ServerDialog::onClientsChanged() "
+             << server_->numClients());
+
     updateClientWidgets_();
 }
 
@@ -91,6 +95,7 @@ void ServerDialog::updateClientWidgets_()
         w->setVisible(false);
         w->deleteLater();
     }
+    clientWidgets_.clear();
 
     // update other widgets
     labelNum_->setText(tr("%1 connected clients").arg(server_->numClients()));
@@ -98,12 +103,13 @@ void ServerDialog::updateClientWidgets_()
     // create client widgets
     for (int i=0; i<server_->numClients(); ++i)
     {
-        clientLayout_->addWidget(createClientWidget_(
-                                    server_->clientInfo(i)));
+        QWidget * w = createClientWidget_(i, server_->clientInfo(i));
+        clientWidgets_.append(w);
+        clientLayout_->addWidget(w);
     }
 }
 
-QWidget * ServerDialog::createClientWidget_(const ClientInfo & inf)
+QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
 {
     QWidget * w = new QWidget(this);
     auto lv = new QVBoxLayout(w);
@@ -118,14 +124,14 @@ QWidget * ServerDialog::createClientWidget_(const ClientInfo & inf)
             lh->addWidget(but);
             connect(but, &QPushButton::clicked, [=]()
             {
-                server_->showInfoWindow(inf.index, true);
+                server_->showInfoWindow(index, true);
             });
 
             but = new QPushButton(tr("hide info window"), w);
             lh->addWidget(but);
             connect(but, &QPushButton::clicked, [=]()
             {
-                server_->showInfoWindow(inf.index, false);
+                server_->showInfoWindow(index, false);
             });
 
     return w;
