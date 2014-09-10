@@ -71,7 +71,7 @@ void ClientEngine::startNetwork_()
 {
     client_ = new Client(this);
 
-    connect(client_, SIGNAL(eventReceived), this, SLOT(onNetEvent_(AbstractNetEvent*)));
+    connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
     client_->connectTo("192.168.1.33");
 

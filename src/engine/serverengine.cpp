@@ -116,9 +116,10 @@ void ServerEngine::onTcpDisconnected_(QTcpSocket * s)
     emit numberClientsChanged(server_->numOpenConnections());
 }
 
-void ServerEngine::onTcpError_(QTcpSocket *)
+void ServerEngine::onTcpError_(QTcpSocket * s)
 {
-
+    if (s->error() == QAbstractSocket::RemoteHostClosedError)
+        onTcpDisconnected_(s);
 }
 
 void ServerEngine::sendEvent(AbstractNetEvent * e)
