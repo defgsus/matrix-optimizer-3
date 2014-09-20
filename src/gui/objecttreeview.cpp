@@ -276,14 +276,10 @@ void ObjectTreeView::createTypeActions_()
 
 void ObjectTreeView::createEditActions_(Object * obj)
 {
-    // remove old actions
+    // remove old actions (except default actions)
     for (auto a : editActions_)
         if (!actions().contains(a))
-        {
-            if (a->menu())
-                a->menu()->deleteLater();
             a->deleteLater();
-        }
 
     editActions_.clear();
 
