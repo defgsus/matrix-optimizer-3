@@ -27,7 +27,12 @@ unix: { LIBS += -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
 
 win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 
+mac: { LIBS += -L/opt/local/lib/ -L/usr/local/lib/ -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
+
 ###################### files ##########################
+
+mac: { INCLUDEPATH += /opt/local/include \
+                      /usr/local/include }
 
 include(src/gui/gui.pri)
 include(src/common.pri)

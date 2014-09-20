@@ -31,6 +31,8 @@
 #include "io/datastream.h"
 #include "tool/enumnames.h"
 
+#include <cmath>
+
 namespace MO {
 namespace GUI {
 

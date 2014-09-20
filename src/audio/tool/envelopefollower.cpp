@@ -11,6 +11,8 @@
 #include "envelopefollower.h"
 #include "io/error.h"
 
+#include <cmath>
+
 namespace MO {
 namespace AUDIO {
 

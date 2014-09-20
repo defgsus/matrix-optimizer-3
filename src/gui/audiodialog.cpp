@@ -26,6 +26,7 @@
 #include "io/settings.h"
 #include "widget/envelopewidget.h"
 
+#include <cmath>
 
 namespace MO {
 namespace GUI {
