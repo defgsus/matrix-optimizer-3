@@ -70,6 +70,11 @@ public:
 
     const QList<Camera*> cameras() const { return cameras_; }
 
+    // --------------- files -------------------
+
+    /** Gets the needed files of ALL objects */
+    virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
+
     // ------------- open gl -------------------
 
     // XXX These can be separate per thread!
@@ -327,6 +332,10 @@ private:
         if @p releaseGl is true, their Object::releaseGl() functions
         will be called for each thread if needed. */
     void destroyDeletedObjects_(bool releaseGl);
+
+    // ------------- files ---------------------
+
+    void getNeededFiles_(Object *, IO::FileList&);
 
     // ----------- runtime ---------------------
 

@@ -38,6 +38,9 @@ protected:
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+
+    virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
+
 signals:
 
 private slots:

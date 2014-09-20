@@ -143,7 +143,6 @@ void MultiFilter::updateCoefficients()
     }
     else if (doReallocate_)
     {
-
         delete cheby_;
         cheby_ = 0;
     }
@@ -323,7 +322,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
         case T_CHEBYCHEV_LOW:
         case T_CHEBYCHEV_HIGH:
         case T_CHEBYCHEV_BAND:
-            MO_ASSERT(cheby_, "forgot to call MultiFilter::updateCoefficients()?");
+            MO_ASSERT(cheby_, "forgot to call MultiFilter::updateCoefficients() ?");
             cheby_->process(input, inputStride, output, outputStride, blockSize);
         break;
 

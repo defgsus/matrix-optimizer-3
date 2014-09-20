@@ -450,6 +450,9 @@ void MainWindow::createMainMenu_()
         m->addAction(a = new QAction(tr("Dump id names"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpIdNames_()));
 
+        m->addAction(a = new QAction(tr("Dump needed files"), m));
+        connect(a, SIGNAL(triggered()), SLOT(dumpNeededFiles_()));
+
         m->addAction(a = new QAction(tr("Test transformation speed"), m));
         connect(a, SIGNAL(triggered()), SLOT(testSceneTransform_()));
 
@@ -819,7 +822,18 @@ void MainWindow::dumpIdNames_()
         sorted.insert(id);
 
     for (auto & id : sorted)
-        MO_STREAM_OUT(std::cout, "{" << id << "}" << std::endl);
+        MO_PRINT("{" << id << "}");
+}
+
+void MainWindow::dumpNeededFiles_()
+{
+    IO::FileList files;
+    scene_->getNeededFiles(files);
+
+    for (const IO::FileListEntry& f : files)
+    {
+        MO_PRINT(IO::fileTypeNames[f.second] << "\t " << f.first);
+    }
 }
 
 void MainWindow::updateSystemInfo_()

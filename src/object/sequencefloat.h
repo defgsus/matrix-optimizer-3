@@ -84,6 +84,8 @@ public:
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
+    virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
+
     // ------------ getter --------------
 
     /** The sequence mode - one of the SequenceType enums */

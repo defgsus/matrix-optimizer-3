@@ -13,6 +13,8 @@
 
 #include <QObject>
 
+#include "filetypes.h"
+
 namespace MO {
 namespace IO {
 
@@ -26,16 +28,34 @@ class FileManager : public QObject
     Q_OBJECT
 public:
     explicit FileManager(QObject *parent = 0);
+    ~FileManager();
+
+    // ------------------ getter --------------------
 
     /** Returns the local filename for the given @p filename.
-        Resource filenames (starting with ':') are returns as-is.
-        On clients, the file is actually transferred before return of the function. */
+        Resource filenames (starting with ':') are returned as-is. */
     QString localFilename(const QString& filename);
+
+    // ------------------ setter --------------------
+
+    /** Clears the list of known filenames */
+    void reset();
+
+    /** Adds a filename to the list if files that are needed. */
+    void addFilename(FileType ft, const QString& filename);
+
+    /** Starts looking for files.
+        On clients, the files will be transferred if needed. */
+    void acquireFiles();
 
 signals:
 
 public slots:
 
+private:
+
+    class Private;
+    Private * p_;
 };
 
 

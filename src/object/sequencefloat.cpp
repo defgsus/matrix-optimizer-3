@@ -405,6 +405,14 @@ void SequenceFloat::updateParameterVisibility()
 
 }
 
+void SequenceFloat::getNeededFiles(IO::FileList &files)
+{
+    if (sequenceType() == ST_SOUNDFILE)
+    {
+        files.append(IO::FileListEntry(p_soundFile_->value(), p_soundFile_->fileType()));
+    }
+}
+
 void SequenceFloat::serialize(IO::DataStream &io) const
 {
     Sequence::serialize(io);

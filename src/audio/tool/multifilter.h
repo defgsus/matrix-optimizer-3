@@ -43,7 +43,12 @@ public:
     static const QStringList filterTypeStatusTips;
     static const QList<int>  filterTypeEnums;
 
+    /** If @p dynamicAllocation is false, individual sub-classes
+        like the ChebychevFilter will be created in the constructor,
+        if true, they will be created and deleted as needed by
+        updateCoefficients() */
     MultiFilter(bool dynamicAllocation = true);
+
     ~MultiFilter();
 
     // ----------- setter ----------------

@@ -144,6 +144,12 @@ void TextureOverlay::updateParameterVisibility()
     pos_influence_->setVisible( paramPType_->baseValue() != PT_FLAT );
 }
 
+void TextureOverlay::getNeededFiles(IO::FileList &files)
+{
+    texture_->getNeededFiles(files, IO::FT_TEXTURE);
+}
+
+
 void TextureOverlay::initGl(uint /*thread*/)
 {
     // --- texture ---

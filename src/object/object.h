@@ -640,6 +640,16 @@ public:
     /** List of all direct transformation childs */
     const QList<Transformation*> transformationObjects() const { return transformationObjects_; }
 
+
+    // ------------------ files ----------------------
+
+    /** Should return the list of files, this object needs, by appending to the list.
+        The method is called, regardless of the activity scope of the object.
+        Derived classes should return any potentially needed files.
+        More is better than not enough, in this case.
+        Always call the ancestor's method before your derived code. */
+    virtual void getNeededFiles(IO::FileList & files) { Q_UNUSED(files); }
+
 signals:
 
 public slots:

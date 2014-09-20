@@ -103,6 +103,12 @@ void TextureSetting::updateParameterVisibility()
     paramCamera_->setVisible( paramType_->baseValue() == TT_CAMERA_FRAME );
 }
 
+void TextureSetting::getNeededFiles(IO::FileList &files, IO::FileType ft)
+{
+    if (paramType_->baseValue() == TT_FILE)
+        files.append(IO::FileListEntry(paramFilename_->value(), ft));
+}
+
 // --------------- getter -------------------
 
 bool TextureSetting::isEnabled() const

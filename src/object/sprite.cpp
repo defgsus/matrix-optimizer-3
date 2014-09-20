@@ -96,6 +96,11 @@ void Sprite::onParameterChanged(Parameter *p)
         requestReinitGl();
 }
 
+void Sprite::getNeededFiles(IO::FileList &files)
+{
+    texture_->getNeededFiles(files, IO::FT_TEXTURE);
+}
+
 void Sprite::initGl(uint /*thread*/)
 {
     texture_->initGl();
