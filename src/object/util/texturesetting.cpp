@@ -19,6 +19,7 @@
 #include "gl/texture.h"
 #include "gl/framebufferobject.h"
 #include "img/image.h"
+#include "io/filemanager.h"
 
 using namespace gl;
 
@@ -134,7 +135,12 @@ bool TextureSetting::initGl()
     if (paramType_->baseValue() == TT_FILE)
     {
         Image img;
-        img.loadImage(paramFilename_->value());
+        const QString fn = IO::fileManager().localFilename(paramFilename_->value());
+
+        if (!img.loadImage(fn))
+        {
+            img.loadImage(":/texture/error.png");
+        }
 
         texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
         if (!texture_)

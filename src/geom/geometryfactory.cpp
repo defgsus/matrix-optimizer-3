@@ -19,6 +19,7 @@
 #include "math/vector.h"
 #include "math/hash.h"
 #include "io/log.h"
+#include "io/filemanager.h"
 
 namespace MO {
 namespace GEOM {
@@ -1016,7 +1017,8 @@ void GeometryFactory::createFromSettings(Geometry * g,
         //MO_DEBUG(set->filename << ", " << loader_);
         if (!set->filename.isEmpty() && loader_)
         {
-            loader_->loadFile(set->filename);
+            const QString& filename = IO::fileManager().localFilename(set->filename);
+            loader_->loadFile(filename);
             loader_->getGeometry(g);
         }
     break;

@@ -183,7 +183,8 @@ HEADERS += \
     src/io/systeminfo.h \
     src/network/network_fwd.h \
     src/gl/opengl_undef.h \
-    src/io/streamoperators_glbinding.h
+    src/io/streamoperators_glbinding.h \
+    src/io/filemanager.h
 
 
 SOURCES += \
@@ -325,4 +326,5 @@ SOURCES += \
     src/network/networkmanager.cpp \
     src/network/tcpserver.cpp \
     src/network/netevent.cpp \
-    src/io/systeminfo.cpp
+    src/io/systeminfo.cpp \
+    src/io/filemanager.cpp

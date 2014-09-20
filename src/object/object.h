@@ -130,6 +130,7 @@ public:
         AS_PREVIEW_2    = 1<<1,
         AS_PREVIEW_3    = 1<<2,
         AS_RENDER       = 1<<3,
+        AS_CLIENT_ONLY  = 1<<4,
         AS_PREVIEW      = AS_PREVIEW_1 | AS_PREVIEW_2 | AS_PREVIEW_3,
         AS_ON           = AS_PREVIEW | AS_RENDER,
     };
