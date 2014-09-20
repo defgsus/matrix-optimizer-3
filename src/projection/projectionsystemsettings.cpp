@@ -65,7 +65,6 @@ void ProjectionSystemSettings::deserialize(IO::XmlStream & io)
     while (io.nextSubSection())
     {
         //MO_DEBUG_IO("ProjectionSystemSettings::deserialize() section='" << io.section() << "'");
-        //MO_IO_ERROR(VERSION_MISMATCH, "no section found in projection-system xml");
 
         if (io.isSection("dome"))
         {
@@ -86,12 +85,35 @@ void ProjectionSystemSettings::deserialize(IO::XmlStream & io)
             if (count < cameras_.size())
                 setCameraSettings(count, s);
             else
+                // more cameras than projectors?
                 MO_IO_WARNING(READ, "Camera settings for " << count << "th camera out of range ("
                               << cameras_.size());
             ++count;
             io.leaveSection();
         }
     }
+}
+
+void ProjectionSystemSettings::serialize(QByteArray & a) const
+{
+    MO_DEBUG_IO("ProjectionSystemSettings::serialize(QByteArray)");
+
+    IO::XmlStream io;
+    io.startWriting("mo-projection-system");
+    serialize(io);
+    io.stopWriting();
+    a = io.data().toUtf8();
+}
+
+void ProjectionSystemSettings::deserialize(const QByteArray & a)
+{
+    MO_DEBUG_IO("ProjectionSystemSettings::deserialize(QByteArray)");
+
+    IO::XmlStream io;
+    io.setData(a);
+    io.startReading("mo-projection-system");
+    deserialize(io);
+    io.stopReading();
 }
 
 void ProjectionSystemSettings::saveFile(const QString &filename) const

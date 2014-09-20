@@ -37,7 +37,8 @@ MO_REGISTER_OBJECT(Camera)
 
 Camera::Camera(QObject *parent) :
     ObjectGl        (parent),
-    renderMode_     (RM_FULLDOME_CUBE)
+    renderMode_     (RM_FULLDOME_CUBE),
+    sliceCameraSettings_(new CameraSettings())
 {
     setName("Camera");
 
@@ -46,6 +47,8 @@ Camera::Camera(QObject *parent) :
 
 Camera::~Camera()
 {
+    delete sliceCameraSettings_;
+
     for (auto i : fbo_)
         delete i;
     for (auto i : screenQuad_)
@@ -175,16 +178,16 @@ void Camera::initGl(uint thread)
             cubeMapped = renderMode_ == RM_FULLDOME_CUBE,
             sliced = renderMode_ == RM_PROJECTOR_SLICE;
 
-    CameraSettings camset = settings->cameraSettings();
+    *sliceCameraSettings_ = settings->cameraSettings();
 
     const int width = cubeMapped?
                           scene->frameBufferCubeMapWidth()
                         : sliced?
-                            camset.width() : scene->frameBufferWidth();
+                            sliceCameraSettings_->width() : scene->frameBufferWidth();
     const int height = cubeMapped?
                           scene->frameBufferCubeMapHeight()
                         : sliced?
-                            camset.height() : scene->frameBufferHeight();
+                            sliceCameraSettings_->height() : scene->frameBufferHeight();
 
     //MO_DEBUG("Camera fbo = " << width << "x" << height);
 
@@ -283,9 +286,8 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 
     if (renderMode_ == RM_PROJECTOR_SLICE)
     {
-        const auto c = settings->cameraSettings();
-        cam.setFieldOfView(c.fov());
-        cam.setProjectionMatrix(c.getProjectionMatrix());
+        cam.setFieldOfView(sliceCameraSettings_->fov());
+        cam.setProjectionMatrix(sliceCameraSettings_->getProjectionMatrix());
     }
 }
 

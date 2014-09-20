@@ -21,6 +21,7 @@ namespace MO {
 class DomeSettings;
 class ProjectorSettings;
 class CameraSettings;
+class ProjectionSystemSettings;
 
 
 class Settings : public QSettings
@@ -52,9 +53,16 @@ public:
     int clientIndex();
     void setClientIndex(int);
 
-    DomeSettings domeSettings() const;
-    ProjectorSettings projectorSettings() const;
-    CameraSettings cameraSettings() const;
+    /** Sets the ProjectionSystemSettings as default for the application */
+    void setDefaultProjectionSettings(const ProjectionSystemSettings&);
+
+    /** Returns a previously saved setting. If there is no saved setting,
+        a default setting with 1 projector will be returned. */
+    ProjectionSystemSettings getDefaultProjectionSettings();
+
+    DomeSettings domeSettings();
+    ProjectorSettings projectorSettings();
+    CameraSettings cameraSettings();
 
 signals:
 

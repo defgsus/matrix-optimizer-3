@@ -15,6 +15,7 @@
 #include "io/error.h"
 #include "io/files.h"
 #include "projection/projectionsystemsettings.h"
+#include "io/xmlstream.h"
 
 namespace MO {
 
@@ -34,7 +35,8 @@ Settings::Settings(QObject *parent) :
 void Settings::createDefaultValues_()
 {
     //const QString mopath = "/home/defgsus/prog/qt_project/mo/matrixoptimizer";
-    const QString mopath = "/home/defgsus/prog/C/mo/matrixoptimizer3";
+    //const QString mopath = "/home/defgsus/prog/C/mo/matrixoptimizer3";
+    const QString mopath = ".";
 
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_GEOMETRY_SETTINGS]]
                                 = mopath + "/data/geometry_presets";
@@ -70,7 +72,7 @@ void Settings::createDefaultValues_()
     defaultValues_["Network/tcpport"] = 50000;
     defaultValues_["Network/udpport"] = 50001;
 
-    defaultValues_["Client/index"] = -1;
+    defaultValues_["Client/index"] = 0;
 }
 
 QVariant Settings::getValue(const QString &key)
@@ -112,13 +114,13 @@ void Settings::restoreGeometry(QMainWindow * win)
 */
 void Settings::saveGeometry(QWindow * win)
 {
-    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QWindow");
+    MO_ASSERT(!win->objectName().isEmpty(), "Settings::saveGeometry(): no objectName set for QWindow");
     setValue("Geometry/" + win->objectName(), win->geometry());
 }
 
 bool Settings::restoreGeometry(QWindow * win)
 {
-    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QWindow");
+    MO_ASSERT(!win->objectName().isEmpty(), "Settings::restoreGeometry(): no objectName set for QWindow");
     const QString key = "Geometry/" + win->objectName();
     if (contains(key))
     {
@@ -130,13 +132,13 @@ bool Settings::restoreGeometry(QWindow * win)
 
 void Settings::saveGeometry(QWidget * win)
 {
-    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QWidget");
+    MO_ASSERT(!win->objectName().isEmpty(), "Settings::saveGeometry(): no objectName set for QWidget");
     setValue("Geometry/" + win->objectName(), win->saveGeometry());
 }
 
 bool Settings::restoreGeometry(QWidget * win)
 {
-    MO_ASSERT(!win->objectName().isEmpty(), "no objectName set for QWidget");
+    MO_ASSERT(!win->objectName().isEmpty(), "Settings::restoreGeometry(): no objectName set for QWidget");
     const QString key = "Geometry/" + win->objectName();
     if (contains(key))
     {
@@ -158,29 +160,73 @@ void Settings::setClientIndex(int i)
 }
 
 
-static const char * tmp_path =
-        "/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj";
-        //"/home/defgsus/prog/C/mo/matrixoptimizer3/data/projection_settings/mapped01.xml-proj";
+void Settings::setDefaultProjectionSettings(const ProjectionSystemSettings &p)
+{
+    QByteArray data;
+    p.serialize(data);
 
-DomeSettings Settings::domeSettings() const
+    setValue("ProjectionSystem/xml", data);
+}
+
+ProjectionSystemSettings Settings::getDefaultProjectionSettings()
 {
     ProjectionSystemSettings s;
-    s.loadFile(tmp_path);
+
+    QByteArray data = getValue("ProjectionSystem/xml").toByteArray();
+    if (data.isEmpty())
+    {
+        s.appendProjector(ProjectorSettings());
+        return s;
+    }
+
+    try
+    {
+        s.deserialize(data);
+    }
+    catch (const Exception& e)
+    {
+        MO_IO_WARNING(READ, "Failed to deserialize ProjectionSystemSettings from bytearray\n"
+                      << e.what());
+        s.clear();
+        s.appendProjector(ProjectorSettings());
+    }
+
+    return s;
+}
+
+
+DomeSettings Settings::domeSettings()
+{
+    ProjectionSystemSettings s(getDefaultProjectionSettings());
     return s.domeSettings();
 }
 
-ProjectorSettings Settings::projectorSettings() const
+ProjectorSettings Settings::projectorSettings()
 {
-    ProjectionSystemSettings s;
-    s.loadFile(tmp_path);
-    return s.projectorSettings(0);
+    ProjectionSystemSettings s(getDefaultProjectionSettings());
+
+    const int idx = clientIndex();
+    if (idx >= s.numProjectors())
+    {
+        MO_WARNING("Settings::projectorSettings() clientIndex == " << idx
+                   << " numProjectors == " << s.numProjectors());
+        return projectorSettings();
+    }
+    return s.projectorSettings(idx);
 }
 
-CameraSettings Settings::cameraSettings() const
+CameraSettings Settings::cameraSettings()
 {
-    ProjectionSystemSettings s;
-    s.loadFile(tmp_path);
-    return s.cameraSettings(0);
+    ProjectionSystemSettings s(getDefaultProjectionSettings());
+
+    const int idx = clientIndex();
+    if (idx >= s.numProjectors())
+    {
+        MO_WARNING("Settings::cameraSettings() clientIndex == " << idx
+                   << " numProjectors == " << s.numProjectors());
+        return cameraSettings();
+    }
+    return s.cameraSettings(idx);
 }
 
 } // namespace MO

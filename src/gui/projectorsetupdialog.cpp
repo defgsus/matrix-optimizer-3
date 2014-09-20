@@ -31,6 +31,7 @@
 #include "io/xmlstream.h"
 #include "io/log.h"
 #include "io/files.h"
+#include "io/settings.h"
 
 #include "projection/projectormapper.h"
 
@@ -57,7 +58,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     createMenu_();
 
     // init default settings
-    clearPreset_();
+    loadDefault_();
 
     setViewDirection(Basic3DWidget::VD_FRONT);
 }
@@ -102,17 +103,26 @@ void ProjectorSetupDialog::createMenu_()
         a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
         connect(a, SIGNAL(triggered()), this, SLOT(savePresetChoose_()));
 
+        menu->addSeparator();
+
+        menu->addAction(a = new QAction(tr("Load default"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(loadDefault_()));
+
+        menu->addAction(a = new QAction(tr("Save as default"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(saveDefault_()));
+
+
     // ############### EDIT ###############
 
     mainMenu_->addMenu(menu = new QMenu(tr("Edit"), mainMenu_));
 
         menu->addAction(a = new QAction(tr("Previous projector"), menu));
-        a->setShortcut(Qt::CTRL + Qt::Key_Up);
+        a->setShortcut(Qt::CTRL + Qt::Key_Left);
         connect(a, SIGNAL(triggered()), this, SLOT(previousProjector_()));
         aPrevious_ = a;
 
         menu->addAction(a = new QAction(tr("Next projector"), menu));
-        a->setShortcut(Qt::CTRL + Qt::Key_Down);
+        a->setShortcut(Qt::CTRL + Qt::Key_Right);
         connect(a, SIGNAL(triggered()), this, SLOT(nextProjector_()));
         aNext_ = a;
 
@@ -837,12 +847,37 @@ void ProjectorSetupDialog::clearPreset_()
     *orgSettings_ = *settings_;
     *projectorSettings_ = settings_->projectorSettings(0);
     *cameraSettings_ = settings_->cameraSettings(0);
+    *domeSettings_ = settings_->domeSettings();
 
     updateDomeWidgets_();
     updateProjectorWidgets_();
     updateProjectorList_();
     updateDisplay_();
     updateActions_();
+}
+
+void ProjectorSetupDialog::loadDefault_()
+{
+    if (!saveToClear_())
+        return;
+
+    *settings_ = settings->getDefaultProjectionSettings();
+    *orgSettings_ = *settings_;
+    *projectorSettings_ = settings_->projectorSettings(0);
+    *cameraSettings_ = settings_->cameraSettings(0);
+    *domeSettings_ = settings_->domeSettings();
+    filename_.clear();
+
+    updateDomeWidgets_();
+    updateProjectorWidgets_();
+    updateProjectorList_();
+    updateDisplay_();
+    updateActions_();
+}
+
+void ProjectorSetupDialog::saveDefault_()
+{
+    settings->setDefaultProjectionSettings(*settings_);
 }
 
 bool ProjectorSetupDialog::savePresetAuto_()
@@ -893,11 +928,15 @@ void ProjectorSetupDialog::loadPreset_()
         settings_->loadFile(fn);
         *orgSettings_ = *settings_;
         filename_ = fn;
+        *projectorSettings_ = settings_->projectorSettings(0);
+        *cameraSettings_ = settings_->cameraSettings(0);
+        *domeSettings_ = settings_->domeSettings();
 
         updateProjectorList_();
-        updateDomeSettings_();
-        updateProjectorSettings_();
+        updateDomeWidgets_();
+        updateProjectorWidgets_();
         updateActions_();
+        updateWindowTitle_();
     }
     catch (Exception& e)
     {

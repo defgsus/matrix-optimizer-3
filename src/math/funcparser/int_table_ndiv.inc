@@ -1,7 +1,7 @@
 #ifndef INT_TABLE_NDIV_H
 #define INT_TABLE_NDIV_H
 const static int int_table_ndiv_size = 1048577;
-const static int int_table_ndiv[] = 
+const static unsigned char int_table_ndiv[] =
 {
 	0, 1, 2, 2, 3, 2, 4, 2, 4, 3, 4, 2, 6, 2, 4, 4, 
 	5, 2, 6, 2, 6, 4, 4, 2, 8, 3, 4, 4, 6, 2, 8, 2, 

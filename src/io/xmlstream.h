@@ -60,6 +60,9 @@ public:
     /** Returns the current data stream */
     const QString data() const { return data_; }
 
+    void setData(const QString& s) { data_ = s; }
+    void setData(const QByteArray& a) { data_ = a; }
+
     // --------------- streaming --------------------
 
     /** Starts writing an xml.

@@ -505,6 +505,10 @@ void EquationEditor::updatePresetMenu_()
             a->setData(p->equation(j));
         }
     }
+
+    presetLoadMenu_->setEnabled(pres.count() > 0);
+    presetInsertMenu_->setEnabled(pres.count() > 0);
+    presetSaveMenu_->setEnabled(pres.count() > 0);
 }
 
 void EquationEditor::updateVariableMenu_()

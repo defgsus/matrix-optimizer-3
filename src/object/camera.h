@@ -100,6 +100,8 @@ private:
     RenderMode renderMode_;
 
     Mat4 sliceMatrix_;
+
+    CameraSettings * sliceCameraSettings_;
 };
 
 } // namespace MO

@@ -74,7 +74,9 @@ private slots:
     bool savePresetAuto_();
     bool savePreset_(const QString & fn);
     bool savePresetChoose_();
+    void saveDefault_();
     void loadPreset_();
+    void loadDefault_();
 
     void nextProjector_();
     void previousProjector_();

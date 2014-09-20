@@ -30,6 +30,9 @@ public:
     void serialize(IO::XmlStream&) const;
     void deserialize(IO::XmlStream&);
 
+    void serialize(QByteArray&) const;
+    void deserialize(const QByteArray&);
+
     void saveFile(const QString& filename) const;
     void loadFile(const QString& filename);
 

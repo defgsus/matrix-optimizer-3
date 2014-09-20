@@ -201,6 +201,9 @@ void Files::findFiles(FileType ft, bool recursive, QStringList &entryList)
 void Files::findFiles(FileType ft, const QString &directory,
                       bool recursive, QStringList &entryList)
 {
+    MO_DEBUG_IO("Files::findFiles(" << ft << ", " << directory << ", "
+             << recursive << ")");
+
     QDir dir(directory);
 
     dir.setFilter(QDir::Files | QDir::NoDotAndDotDot
