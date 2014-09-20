@@ -31,6 +31,7 @@
 #include "model/objecttreemodel.h"
 #include "audio/audiodevice.h"
 #include "audio/audiosource.h"
+#include "gl/context.h"
 #include "gl/cameraspace.h"
 #include "gl/framebufferobject.h"
 #include "gl/screenquad.h"
@@ -52,7 +53,7 @@ Scene::Scene(QObject *parent) :
     releaseAllGlRequested_(false),
     fbWidth_            (1024),
     fbHeight_           (1024),
-    fbFormat_           (GL_RGBA),
+    //fbFormat_           (gl::GL_RGBA),
     fbCmWidth_          (512),
     fbCmHeight_         (512),
     fboFinal_           (0),
@@ -701,7 +702,7 @@ void Scene::createSceneGl_(uint thread)
     MO_DEBUG_GL("Scene::createSceneGl_(" << thread << ")");
 
     fboFinal_[thread] = new GL::FrameBufferObject(
-                fbWidth_, fbHeight_, fbFormat_, GL_FLOAT, false, GL::ER_THROW);
+                fbWidth_, fbHeight_, gl::GLenum(fbFormat_), gl::GL_FLOAT, false, GL::ER_THROW);
     fboFinal_[thread]->create();
     fboFinal_[thread]->unbind();
 
@@ -854,6 +855,9 @@ void Scene::renderScene(uint thread)
         e << "\nin Scene::renderScene(" << thread << ")";
         throw;
     }
+
+
+    using namespace gl;
 
     // --- mix camera frames ---
 

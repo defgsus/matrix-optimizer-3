@@ -27,11 +27,11 @@ public:
 
     // ------- types ---------
 
-    typedef GLfloat VertexType;
-    typedef GLfloat NormalType;
-    typedef GLfloat ColorType;
-    typedef GLfloat TextureCoordType;
-    typedef GLuint  IndexType;
+    typedef gl::GLfloat VertexType;
+    typedef gl::GLfloat NormalType;
+    typedef gl::GLfloat ColorType;
+    typedef gl::GLfloat TextureCoordType;
+    typedef gl::GLuint  IndexType;
 
     static const IndexType invalidIndex = (IndexType)-1;
 
@@ -40,11 +40,11 @@ public:
 
     // ------ enums ----------
 
-    static const GLenum vertexEnum       = GL_FLOAT;
-    static const GLenum normalEnum       = GL_FLOAT;
-    static const GLenum colorEnum        = GL_FLOAT;
-    static const GLenum textureCoordEnum = GL_FLOAT;
-    static const GLenum indexEnum        = GL_UNSIGNED_INT;
+    static const gl::GLenum vertexEnum;
+    static const gl::GLenum normalEnum;
+    static const gl::GLenum colorEnum;
+    static const gl::GLenum textureCoordEnum;
+    static const gl::GLenum indexEnum;
 
     // -------- ctor ---------
 

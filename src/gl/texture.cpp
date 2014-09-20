@@ -15,6 +15,8 @@
 #include "io/error.h"
 #include "io/log.h"
 
+using namespace gl;
+
 namespace MO {
 namespace GL {
 
@@ -108,6 +110,10 @@ Texture::~Texture()
         MO_GL_WARNING("destructor of bound texture!");
 }
 
+bool Texture::isCube() const
+{
+     return target_ == GL_TEXTURE_CUBE_MAP;
+}
 
 bool Texture::create(GLsizei width, GLsizei height,
                 GLenum format, GLenum input_format,
@@ -190,7 +196,7 @@ GLuint Texture::genTexture_() const
     GLenum err;
     MO_CHECK_GL_RET_COND( rep_, glGenTextures(1, &tex), err );
 
-    return err ? invalidGl : tex;
+    return err == GL_NO_ERROR ? tex : invalidGl;
 }
 
 void Texture::releaseTexture_()
@@ -215,16 +221,16 @@ void Texture::releaseTexture_()
 
 bool Texture::bind() const
 {
-    GLint err;
+    GLenum err;
     MO_CHECK_GL_RET_COND( rep_, glBindTexture(target_, handle_), err );
-    if (err) return false;
+    if (err != GL_NO_ERROR) return false;
 
     /*
     if (target_ != GL_TEXTURE_CUBE_MAP)
         MO_CHECK_GL_RET_COND( rep_, glEnable(target_), err );
     */
 
-    return !err;
+    return err != GL_NO_ERROR;
 }
 
 void Texture::unbind() const
@@ -239,7 +245,7 @@ void Texture::release()
     releaseTexture_();
 }
 
-void Texture::texParameter(GLenum param, GLenum value) const
+void Texture::texParameter(GLenum param, GLint value) const
 {
     MO_CHECK_GL_COND( rep_, glTexParameteri(target_, param, value) );
 }
@@ -319,7 +325,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
         return false;
     }
 
-    GLint err;
+    GLenum err;
     switch (target_)
     {
         case GL_TEXTURE_1D:
@@ -329,7 +335,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // mipmap level
                 mipmap_level,
                 // color components
-                format_,
+                GLint(format_),
                 // size
                 width_,
                 // boarder
@@ -341,7 +347,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // pixel data
                 ptr)
             , err);
-            if (err) return false;
+            if (err != GL_NO_ERROR) return false;
 
             // count memory
             if (!uploaded_)
@@ -360,7 +366,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // mipmap level
                 mipmap_level,
                 // color components
-                format_,
+                GLint(format_),
                 // size
                 width_, height_,
                 // boarder
@@ -373,7 +379,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 ptr)
             , err);
 
-            if (err)
+            if (err != GL_NO_ERROR)
             {
                 MO_DEBUG_GL("Texture::upload_() failed");
                 return false;
@@ -396,7 +402,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // mipmap level
                 mipmap_level,
                 // color components
-                format_,
+                GLint(format_),
                 // size
                 width_, height_,
                 // boarder
@@ -408,7 +414,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // ptr
                 ptr);
             , err)
-            if (err) return false;
+            if (err != GL_NO_ERROR) return false;
 
             // XXX fix memory count for cubemap
             if (!uploaded_)
@@ -418,15 +424,16 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 memory_used_ += memory_;
             }
         break;
+        default: break;
     }
 
-    texParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    texParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    texParameter(GL_TEXTURE_MIN_FILTER, GLint(GL_LINEAR));
+    texParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
 
     // XXX needs to be true for TEXTURE_CUBE_MAP
     bool repeat = true;
-    texParameter(GL_TEXTURE_WRAP_S, (repeat)? GL_REPEAT : GL_CLAMP );
-    texParameter(GL_TEXTURE_WRAP_T, (repeat)? GL_REPEAT : GL_CLAMP );
+    texParameter(GL_TEXTURE_WRAP_S, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
+    texParameter(GL_TEXTURE_WRAP_T, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
 
     MO_DEBUG_IMG("Texture::upload_() finished");
 
@@ -463,7 +470,7 @@ bool Texture::download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) c
 
     MO_ASSERT(ptr, "download from texture to NULL");
 
-    GLint err;
+    GLenum err;
     MO_CHECK_GL_RET_COND( rep_,
         glGetTexImage(
             target,
@@ -477,7 +484,7 @@ bool Texture::download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) c
             ptr)
         , err);
 
-    return (!err);
+    return (err != GL_NO_ERROR);
 }
 
 
@@ -504,7 +511,7 @@ QImage Texture::getImage()
 
     std::vector<GLchar> buffer(width() * height() * 3);
 
-    GLint err;
+    GLenum err;
     MO_CHECK_GL_RET_COND( rep_,
         glGetTexImage(
             target_,
@@ -518,7 +525,7 @@ QImage Texture::getImage()
             &buffer[0])
         , err);
 
-    if (err)
+    if (err != GL_NO_ERROR)
         return QImage();
 
     for (uint y=0; y<height(); ++y)

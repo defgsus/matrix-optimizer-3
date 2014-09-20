@@ -13,25 +13,12 @@
 
 #include <iostream>
 
-#include <Qt>
-
-#ifdef Q_OS_UNIX
-#   include <GL/glew.h>
-#endif
-
-// to avoid qt glew warnings
-#include "context.h"
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
 
 #include "opengl_fwd.h"
 #include "io/error.h"
 
-
-#ifdef GLEW_MX
-
-/** needed for GLEW MX support */
-GLEWContext * glewGetContext();
-
-#endif
 
 // TODO: remove from release version
 
@@ -40,7 +27,10 @@ GLEWContext * glewGetContext();
 #define MO_CHECK_GL(command__)                  \
 {                                               \
     command__;                                  \
-    if (GLenum err__ = glGetError())            \
+}
+#if (0)
+::gl::GLenum err__(::gl::glGetError());     \
+    if (err__ != ::gl::GL_NO_ERROR)             \
     {                                           \
         std::cerr << "opengl error "            \
             << ::MO::GL::errorName(err__)       \
@@ -50,7 +40,7 @@ GLEWContext * glewGetContext();
             << ": " << __LINE__ << "\n";        \
     }                                           \
 }
-
+#endif
 // TODO: remove __FILE__ and __LINE__ from release version
 
 /** Executes the command and calls glGetError().
@@ -59,7 +49,8 @@ GLEWContext * glewGetContext();
 #define MO_CHECK_GL_COND(report__, command__)   \
 {                                               \
     command__;                                  \
-    if (GLenum err__ = glGetError())            \
+    ::gl::GLenum err__ = ::gl::glGetError();    \
+    if (err__ != ::gl::GL_NO_ERROR)             \
     {                                           \
         std::stringstream s__;                  \
         s__ << "OPENGL ERROR "                  \
@@ -82,7 +73,8 @@ GLEWContext * glewGetContext();
 #define MO_CHECK_GL_RET_COND(report__, command__, ret__) \
 {                                               \
     command__;                                  \
-    if ((ret__ = glGetError()))                 \
+    ret__ = ::gl::glGetError();                 \
+    if (ret__ != ::gl::GL_NO_ERROR)             \
     {                                           \
         std::stringstream s__;                  \
         s__ << "opengl error "                  \
@@ -104,7 +96,8 @@ GLEWContext * glewGetContext();
 #define MO_ASSERT_GL(command__, text__)         \
 {                                               \
     command__;                                  \
-    if (GLenum err__ = glGetError())            \
+    ::gl::GLenum err__ = ::gl::glGetError();    \
+    if (err__ != ::gl::GL_NO_ERROR)             \
     {                                           \
         MO_GL_ERROR(text__ << "\n(opengl error "\
             << ::MO::GL::errorName(err__)       \
@@ -118,22 +111,24 @@ GLEWContext * glewGetContext();
 namespace MO {
 namespace GL {
 
+    //bool operator == (const ::gl::GLenum & lhs, const ::gl::GLenum & rhs);
+
     /** Used to flag invalid GLuint names */
-    const GLuint invalidGl = -1;
+    const gl::GLuint invalidGl = -1;
 
     /** Need to be called, once a context is ready */
     void moInitGl();
 
     /** Returns the readable name of the error */
-    const char * errorName(GLenum error);
+    const char * errorName(gl::GLenum error);
 
     /** Returns the size in bytes of an openGL type enum (like GL_FLOAT) */
-    GLuint typeSize(GLenum);
+    gl::GLuint typeSize(gl::GLenum);
 
     /** Returns the number of channels for a given
         enum like GL_RED, GL_RGB, or GL_RGBA...
         returns 0, if type is not known! */
-    GLuint channelSize(GLenum channel_format);
+    gl::GLuint channelSize(gl::GLenum channel_format);
 
 } // namespace GL
 } // namespace MO

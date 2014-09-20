@@ -15,6 +15,8 @@
 #include "io/log.h"
 #include "shadersource.h"
 
+using namespace gl;
+
 namespace MO {
 namespace GL {
 
@@ -24,7 +26,7 @@ void privateAttributeDeleter(Attribute * a) { delete a; }
 
 
 Uniform::Uniform()
-    :   type_    (0),
+    :   type_    (GLenum(0)),
         size_    (0),
         location_(0)
 {
@@ -33,7 +35,7 @@ Uniform::Uniform()
 }
 
 Attribute::Attribute()
-    :   type_    (0),
+    :   type_    (GLenum(0)),
         size_    (0),
         location_(0)
 { }
@@ -126,13 +128,13 @@ bool Shader::compile()
     attributeList_.clear();
 
     // delete previous shader object
-    MO_CHECK_GL_COND(rep_, if (glIsProgram(prog_)) glDeleteProgram(prog_) );
+    MO_CHECK_GL_COND(rep_, if (glIsProgram(prog_)==GL_TRUE) glDeleteProgram(prog_) );
 
     // create shader object
     MO_CHECK_GL_COND(rep_, prog_ = glCreateProgram() );
 
     // test if working
-    if (!glIsProgram(prog_))
+    if (glIsProgram(prog_) == GL_FALSE)
     {
         log_ += "could not create ProgramObject\n";
         return false;
@@ -195,7 +197,7 @@ bool Shader::compileShader_(GLenum type, const QString& typeName, const QString 
 
     int shadername;
     MO_CHECK_GL_COND(rep_, shadername = glCreateShader(type) );
-    if (!glIsShader(shadername))
+    if (glIsShader(shadername) == GL_FALSE)
     {
         log_ += "error creating " + typeName + " ShaderObject\n";
         return false;

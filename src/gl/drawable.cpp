@@ -22,6 +22,8 @@
 #include "vertexarrayobject.h"
 #include "lightsettings.h"
 
+using namespace gl;
+
 namespace MO {
 namespace GL {
 

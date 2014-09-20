@@ -19,6 +19,8 @@
 #include "img/image.h"
 #include "img/imagegenerator.h"
 
+#include "gl/opengl_undef.h"
+
 namespace MO {
 namespace GUI {
 
@@ -69,11 +71,13 @@ void GeometryWidget::drawGL(const Mat4& projection,
                             const Mat4& viewTrans,
                             const Mat4& trans)
 {
-    MO_CHECK_GL( glClearColor(0.1, 0.2, 0.3, 1.0) );
-    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+    using namespace gl;
+
+    MO_CHECK_GL( gl::glClearColor(0.1, 0.2, 0.3, 1.0) );
+    MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
     // XXX not working in RM_DIRECT
-    MO_CHECK_GL( glEnable(GL_BLEND) );
-    MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+    MO_CHECK_GL( gl::glEnable(GL_BLEND) );
+    MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
     bool recompile = false;
 

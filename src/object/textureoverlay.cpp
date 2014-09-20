@@ -25,6 +25,8 @@
 #include "util/colorpostprocessingsetting.h"
 #include "math/vector.h"
 
+using namespace gl;
+
 namespace MO {
 
 MO_REGISTER_OBJECT(TextureOverlay)
@@ -250,9 +252,9 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
 
     texture_->bind();
 
-    MO_CHECK_GL( glDepthMask(false) );
+    MO_CHECK_GL( glDepthMask(GL_FALSE) );
     quad_->draw(rs.cameraSpace().width(), rs.cameraSpace().height());
-    MO_CHECK_GL( glDepthMask(true) );
+    MO_CHECK_GL( glDepthMask(GL_TRUE) );
 
 }
 

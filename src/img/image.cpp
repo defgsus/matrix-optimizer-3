@@ -14,6 +14,8 @@
 #include "gl/opengl.h"
 #include "io/log.h"
 
+using namespace gl;
+
 namespace MO {
 
 const QStringList Image::formatNames =
@@ -64,7 +66,7 @@ uint Image::pixelSizeInBytes() const
     return 0;
 }
 
-uint Image::glEnumForFormat() const
+GLenum Image::glEnumForFormat() const
 {
     switch (format_)
     {
@@ -76,7 +78,7 @@ uint Image::glEnumForFormat() const
     return GL_NONE;
 }
 
-uint Image::glEnumForType() const
+GLenum Image::glEnumForType() const
 {
     return GL_UNSIGNED_BYTE;
 }

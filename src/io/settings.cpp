@@ -159,8 +159,8 @@ void Settings::setClientIndex(int i)
 
 
 static const char * tmp_path =
-        //"/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj";
-        "/home/defgsus/prog/C/mo/matrixoptimizer3/data/projection_settings/mapped01.xml-proj";
+        "/home/defgsus/prog/qt_project/mo/matrixoptimizer/data/projection_settings/mapped01.xml-proj";
+        //"/home/defgsus/prog/C/mo/matrixoptimizer3/data/projection_settings/mapped01.xml-proj";
 
 DomeSettings Settings::domeSettings() const
 {

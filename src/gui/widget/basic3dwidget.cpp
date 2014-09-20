@@ -24,6 +24,8 @@
 #include "geom/freecamera.h"
 #include "math/vector.h"
 
+#include "gl/opengl_undef.h"
+
 namespace MO {
 namespace GUI {
 
@@ -357,14 +359,14 @@ void Basic3DWidget::createGLStuff_()
                         "#define MO_FULLDOME_CUBE" : "");
 
         fbo_ = new GL::FrameBufferObject(fboSize_.width(), fboSize_.height(),
-                                         GL_RGBA, GL_FLOAT,
+                                         gl::GL_RGBA, gl::GL_FLOAT,
                                          (renderMode_ == RM_FULLDOME_CUBE),
                                          GL::ER_THROW);
         fbo_->create();
         fbo_->unbind();
     }
 
-    MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
+    MO_CHECK_GL( gl::glEnable(gl::GL_DEPTH_TEST) );
 }
 
 void Basic3DWidget::releaseGLStuff_()
@@ -442,6 +444,8 @@ void Basic3DWidget::paintGL()
 
     Mat4 identity(1.0);
 
+    using namespace gl;
+
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
 
     if (renderMode_ == RM_DIRECT || renderMode_ == RM_DIRECT_ORTHO)
@@ -468,10 +472,10 @@ void Basic3DWidget::paintGL()
         fbo_->unbind();
 
         // draw to screen
-        MO_CHECK_GL( glViewport(0,0,width(), height()) );
-        MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
-        MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
-        MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
+        MO_CHECK_GL( gl::glViewport(0,0,width(), height()) );
+        MO_CHECK_GL( gl::glClearColor(0.1, 0.1, 0.1, 1.0) );
+        MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
+        MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
         fbo_->colorTexture()->bind();
         screenQuad_->drawCentered(width(), height(), (Float)fbo_->width() / fbo_->height());
         fbo_->colorTexture()->unbind();
@@ -511,10 +515,10 @@ void Basic3DWidget::paintGL()
         fbo_->unbind();
 
         // draw to screen
-        MO_CHECK_GL( glViewport(0,0,width(), height()) );
-        MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
-        MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
-        MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
+        MO_CHECK_GL( gl::glViewport(0,0,width(), height()) );
+        MO_CHECK_GL( gl::glClearColor(0, 0, 0, 1.0) );
+        MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
+        MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
         fbo_->colorTexture()->bind();
         screenQuad_->drawCentered(width(), height(), (Float)fbo_->width() / fbo_->height());
         fbo_->colorTexture()->unbind();

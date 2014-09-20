@@ -12,6 +12,8 @@
 #include "io/error.h"
 #include "io/log.h"
 
+using namespace gl;
+
 namespace MO {
 namespace GL {
 
@@ -51,7 +53,7 @@ bool VertexArrayObject::create()
 
     GLenum e;
     MO_CHECK_GL_RET_COND(rep_, glGenVertexArrays(1, &vao_), e );
-    if (e) return false;
+    if (e != GL_NO_ERROR) return false;
 
     return true;
 }
@@ -94,23 +96,23 @@ GLuint VertexArrayObject::createAttribBuffer(
     GLenum e;
 
     MO_CHECK_GL_RET_COND(rep_, glGenBuffers(1, &buf), e);
-    if (e) return invalidGl;
+    if (e != GL_NO_ERROR) return invalidGl;
 
     MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ARRAY_BUFFER, buf), e);
-    if (e) goto fail;
+    if (e != GL_NO_ERROR) goto fail;
 
     MO_CHECK_GL_RET_COND(rep_, glBufferData(GL_ARRAY_BUFFER,
                     sizeInBytes, ptr, storageType), e);
-    if (e) goto fail;
+    if (e != GL_NO_ERROR) goto fail;
 
     MO_CHECK_GL_RET_COND(rep_, glEnableVertexAttribArray(location), e);
-    if (e) goto fail;
+    if (e != GL_NO_ERROR) goto fail;
 
     //MO_DEBUG("glVertexAttribPointer("<<location<<", "<<numberCoordinates
     //         <<", "<<valueType<<", "<<(int)normalized<<", "<<stride<<", "<<0<<")");
     MO_CHECK_GL_RET_COND(rep_, glVertexAttribPointer(
             location, numberCoordinates, valueType, normalized, stride, NULL), e);
-    if (e) goto fail;
+    if (e != GL_NO_ERROR) goto fail;
 
     // keep track
     Buffer_ b;
@@ -143,17 +145,17 @@ GLuint VertexArrayObject::createIndexBuffer(
     GLenum e;
 
     MO_CHECK_GL_RET_COND(rep_, glGenBuffers(1, &buf), e);
-    if (e) return invalidGl;
+    if (e != GL_NO_ERROR) return invalidGl;
 
     MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf), e);
-    if (e) goto fail;
+    if (e != GL_NO_ERROR) goto fail;
 
     //MO_DEBUG("glBufferData("<<GL_ELEMENT_ARRAY_BUFFER
     //         <<", "<<(numberVertices * typeSize(valueType))
     //         <<", "<<ptr<<", "<<storageType<<")");
     MO_CHECK_GL_RET_COND(rep_, glBufferData(GL_ELEMENT_ARRAY_BUFFER,
         numberVertices * typeSize(valueType), ptr, storageType), e);
-    if (e) goto fail;
+    if (e != GL_NO_ERROR) goto fail;
 
     // delete previous
     if (elementBuffer_)
@@ -180,12 +182,12 @@ bool VertexArrayObject::bind()
 {
     GLenum e;
     MO_CHECK_GL_RET_COND(rep_, glBindVertexArray(vao_), e);
-    if (e) { return false; }
+    if (e != GL_NO_ERROR) { return false; }
 
     if (elementBuffer_)
     {
         MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_->id), e);
-        if (e) { MO_CHECK_GL(glBindVertexArray(0)); return false; }
+        if (e != GL_NO_ERROR) { MO_CHECK_GL(glBindVertexArray(0)); return false; }
     }
 
     return true;
@@ -213,12 +215,12 @@ bool VertexArrayObject::drawElements(
 
     GLenum e;
     MO_CHECK_GL_RET_COND(rep_, glBindVertexArray(vao_), e);
-    if (e) { return false; }
+    if (e != GL_NO_ERROR) { return false; }
 
     // Some drivers don't seem to store the element array in the vao state!!
     // http://stackoverflow.com/questions/8973690/vao-and-element-array-buffer-state
     MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_->id), e);
-    if (e) { MO_CHECK_GL(glBindVertexArray(0)); return false; }
+    if (e != GL_NO_ERROR) { MO_CHECK_GL(glBindVertexArray(0)); return false; }
 
     //MO_DEBUG("glDrawElements("<<primitiveType<<", "<<numberVertices<<", "<<elementBuffer_->valueType
     //         <<", "<<reinterpret_cast<void*>(offset)<<")");
@@ -231,7 +233,7 @@ bool VertexArrayObject::drawElements(
     MO_CHECK_GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
     MO_CHECK_GL(glBindVertexArray(0));
 
-    return !e;
+    return e != GL_NO_ERROR;
 }
 
 

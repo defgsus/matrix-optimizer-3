@@ -19,6 +19,8 @@
 #include "gl/compatibility.h"
 #include "math/vector.h"
 
+#include "gl/opengl_undef.h"
+
 namespace MO {
 namespace GUI {
 
@@ -269,12 +271,12 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
                                const Mat4 &viewTrans,
                                const Mat4 &trans)
 {
-    MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
-    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+    MO_CHECK_GL( gl::glClearColor(0, 0, 0, 1) );
+    MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
 
-    MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
-    MO_CHECK_GL( glEnable(GL_BLEND) );
-    MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
+    MO_CHECK_GL( gl::glDisable(gl::GL_DEPTH_TEST) );
+    MO_CHECK_GL( gl::glEnable(gl::GL_BLEND) );
+    MO_CHECK_GL( gl::glBlendFunc(gl::GL_SRC_ALPHA, gl::GL_ONE) );
     GL::setLineSmooth(true);
     GL::setLineWidth((GLfloat)fboSize().height() / 512);
 
@@ -303,7 +305,7 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
     if (showGrid_)
         drawGrid(projection, cubeViewTrans, viewTrans, trans);
 
-    MO_CHECK_GL( glDisable(GL_BLEND) );
+    MO_CHECK_GL( gl::glDisable(gl::GL_BLEND) );
 }
 
 } // namespace GUI

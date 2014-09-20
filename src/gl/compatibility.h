@@ -23,7 +23,7 @@ void checkCompatibility();
 void setLineSmooth(bool enable);
 
 /** Sets the line-width */
-void setLineWidth(GLfloat width);
+void setLineWidth(gl::GLfloat width);
 
 
 

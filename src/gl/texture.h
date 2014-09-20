@@ -25,17 +25,17 @@ public:
 
     /** 2d, explicit format, input_format, type */
     explicit Texture(
-                GLsizei width, GLsizei height,
-                GLenum format, GLenum input_format,
-                GLenum type,
+                gl::GLsizei width, gl::GLsizei height,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
                 void* ptr_to_data,
                 ErrorReporting reporting = ER_THROW);
 
     /** cubemap, explicit format, input_format, type */
     explicit Texture(
-                GLsizei width, GLsizei height,
-                GLenum format, GLenum input_format,
-                GLenum type,
+                gl::GLsizei width, gl::GLsizei height,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
                 void * ptr_px, void * ptr_nx,
                 void * ptr_py, void * ptr_ny,
                 void * ptr_pz, void * ptr_nz,
@@ -48,12 +48,12 @@ public:
     /** Creates a new Texture from an image.
         Returns NULL on fail, or throws exception.
         OpenGL context must be present of course. */
-    static Texture * createFromImage(const Image&, GLenum gpu_format, ErrorReporting = ER_THROW);
+    static Texture * createFromImage(const Image&, gl::GLenum gpu_format, ErrorReporting = ER_THROW);
 
     /** Creates a new Texture from an image.
         Returns NULL on fail, or throws exception.
         OpenGL context must be present of course. */
-    static Texture * createFromImage(const QImage&, GLenum gpu_format, ErrorReporting = ER_THROW);
+    static Texture * createFromImage(const QImage&, gl::GLenum gpu_format, ErrorReporting = ER_THROW);
 
     // --------------- getter ---------------------
 
@@ -63,20 +63,20 @@ public:
     bool isAllocated() const { return uploaded_; }
 
     /** When true, target() is GL_TEXTURE_CUBE_MAP */
-    bool isCube() const { return target_ == GL_TEXTURE_CUBE_MAP; }
+    bool isCube() const;
 
     /** Calculated memory of texture in bytes */
-    GLsizei memory() const { return memory_; }
+    gl::GLsizei memory() const { return memory_; }
 
     /** Approximated memory usage of all textures */
     static long int memoryAll() { return memory_used_; }
 
     uint width() const { return width_; }
     uint height() const { return height_; }
-    GLenum format() const { return format_; }
-    GLenum type() const { return type_; }
-    GLenum target() const { return target_; }
-    GLuint handle() const { return handle_; }
+    gl::GLenum format() const { return format_; }
+    gl::GLenum type() const { return type_; }
+    gl::GLenum target() const { return target_; }
+    gl::GLuint handle() const { return handle_; }
 
     /** Returns the assigned pointer. */
     void * pointer() const { return ptr_; }
@@ -91,29 +91,29 @@ public:
     void unbind() const;
 
     /** Convenience function for glTexParameteri(target, param, value) */
-    void texParameter(GLenum param, GLenum value) const;
+    void texParameter(gl::GLenum param, gl::GLint value) const;
 
     /** @{ */
     /** create() (re-)defines the piece of data that Texture should work with.
         The data is created or uploaded depending if @p ptr_to_data is not NULL. */
 
     /** create 2d, explicit format, input_format, type */
-    bool create(GLsizei width, GLsizei height,
-                GLenum format, GLenum input_format,
-                GLenum type,
+    bool create(gl::GLsizei width, gl::GLsizei height,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
                 void* ptr_to_data);
 
     /** create 2d, explicit format and input_format, type */
-    bool create(GLsizei width, GLsizei height,
-                GLenum format,
-                GLenum type,
+    bool create(gl::GLsizei width, gl::GLsizei height,
+                gl::GLenum format,
+                gl::GLenum type,
                 void* ptr_to_data)
     { return create(width, height, format, format, type, ptr_to_data); }
 
     /** create cube, explicit format, input_format, type */
-    bool create(GLsizei width, GLsizei height,
-                GLenum format, GLenum input_format,
-                GLenum type,
+    bool create(gl::GLsizei width, gl::GLsizei height,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
                 void * ptr_px, void * ptr_nx,
                 void * ptr_py, void * ptr_ny,
                 void * ptr_pz, void * ptr_nz);
@@ -128,20 +128,20 @@ public:
         the call is equivalent to create().
         <br><b>Texture must be bound()</b>
         */
-    bool upload(GLint mipmap_level = 0);
+    bool upload(gl::GLint mipmap_level = 0);
 
     /** Uploads the data specified by ptr_to_data.
         For cube-maps, all textures will be uploaded from the same source.
         <br><b>Texture must be bound()</b>
         */
-    bool upload(void * ptr_to_data, GLint mipmap_level = 0);
+    bool upload(void * ptr_to_data, gl::GLint mipmap_level = 0);
 
     /** Downloads the texture from device to host. <br/>
         If the pointer is zero, the previously assigned pointer is used.
         Eventually, the pointer must be non-zero and capable of storing the required memory.
         <br><b>Texture must be bound()</b>
         */
-    bool download(void * ptr_to_data = 0, GLuint mipmap_level = 0) const;
+    bool download(void * ptr_to_data = 0, gl::GLuint mipmap_level = 0) const;
 
     /** free the device data and release handle */
     void release();
@@ -158,15 +158,15 @@ private:
     ErrorReporting rep_;
 
     /** Generates a texture handle */
-    GLuint genTexture_() const;
+    gl::GLuint genTexture_() const;
 
     /** Releases the texture handle (and device data) */
     void releaseTexture_();
 
     /** Creates or uploads the texture */
-    bool upload_(const void * ptr, GLint mipmap_level, GLenum cube_target = 0);
+    bool upload_(const void * ptr, gl::GLint mipmap_level, gl::GLenum cube_target = gl::GLenum(0));
     /** Downloads to ptr (must be non-NULL) */
-    bool download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) const;
+    bool download_(void * ptr, gl::GLuint mipmap, gl::GLenum target, gl::GLenum type) const;
 
     void
     /** pointer to data for 1d/2d */
@@ -176,15 +176,15 @@ private:
     /** already uploaded? */
         uploaded_;
 
-    GLsizei
+    gl::GLsizei
         width_,
         height_,
     /** calculated memory of texture in bytes */
         memory_;
-    GLuint
+    gl::GLuint
     /** texture identifier */
         handle_;
-    GLenum
+    gl::GLenum
     /** 1d/2d/3d */
         target_,
     /** device channel format */

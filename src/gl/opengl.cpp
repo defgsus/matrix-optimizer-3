@@ -12,53 +12,6 @@
 #include "compatibility.h"
 #include "io/log.h"
 
-#ifdef GLEW_MX
-
-#include <pthread.h>
-
-    static pthread_key_t glew_key_;
-    static pthread_once_t glew_key_once_ = PTHREAD_ONCE_INIT;
-
-
-    static void make_glew_key_()
-    {
-        (void) pthread_key_create(&glew_key_, NULL);
-    }
-
-    GLEWContext * glewGetContext()
-    {
-        GLEWContext * con = 0;
-
-        // create the key
-        pthread_once(&glew_key_once_, make_glew_key_);
-
-        void *ptr;
-        if ((ptr = pthread_getspecific(glew_key_)) == NULL)
-        {
-            MO_DEBUG_GL("creating GLEWContext object");
-
-            // create context
-            con = new GLEWContext;
-            memset(con, 0, sizeof(GLEWContext));
-            ptr = con;
-            // store to thread
-            pthread_setspecific(glew_key_, ptr);
-
-            glewInit();
-        }
-        else
-        {
-            //MO_DEBUG_GL("reusing GLEWContext object");
-            con = static_cast<GLEWContext*>(ptr);
-        }
-
-        return con;
-    }
-
-#endif // GLEW_MX
-
-
-
 namespace MO {
 namespace GL {
 
@@ -67,22 +20,9 @@ void moInitGl()
     static bool init = false;
     if (!init)
     {
-        MO_DEBUG_GL("Initializing GLEW (single-threaded)");
+        MO_DEBUG_GL("Initializing glBinding");
 
-        GLenum err = glewInit();
-        if (err != GLEW_OK)
-        {
-            QString str;
-            if (err == GLEW_ERROR_NO_GL_VERSION)
-                str = "missing GL version";
-            else if (err == GLEW_ERROR_GL_VERSION_10_ONLY)
-                str = "Need at least OpenGL 1.1";
-            else if (err == GLEW_ERROR_GLX_VERSION_11_ONLY)
-                str = "Need at least GLX 1.2";
-            else str = "Unknown error";
-
-            MO_GL_ERROR("Could not initialize GLEW\n" << str);
-        }
+        glbinding::Binding::initialize();
 
         checkCompatibility();
 
@@ -91,8 +31,10 @@ void moInitGl()
 }
 
 
-const char * errorName(GLenum error)
+const char * errorName(gl::GLenum error)
 {
+    using namespace gl;
+
     switch (error)
     {
         case GL_INVALID_ENUM: return "GL_INVALID_ENUM";
@@ -106,8 +48,10 @@ const char * errorName(GLenum error)
     }
 }
 
-GLuint typeSize(GLenum t)
+gl::GLuint typeSize(gl::GLenum t)
 {
+    using namespace gl;
+
     switch (t)
     {
         case GL_INT:
@@ -126,8 +70,10 @@ GLuint typeSize(GLenum t)
 }
 
 
-GLuint channelSize(GLenum channel_format)
+gl::GLuint channelSize(gl::GLenum channel_format)
 {
+    using namespace gl;
+
     switch (channel_format)
     {
         case GL_RED:

@@ -35,11 +35,11 @@ public:
     {
         /** A vector of floats,
             for types GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3 and GL_FLOAT_VEC4. */
-        GLfloat floats[4];
+        gl::GLfloat floats[4];
 
         /** A vector of ints,
             for types GL_INT, GL_INT_VEC2, GL_INT_VEC3 and GL_INT_VEC4 */
-        GLint ints[4];
+        gl::GLint ints[4];
     };
 
     // ----- getter -----
@@ -47,15 +47,15 @@ public:
     /** Name as in the shader source */
     const QString& name() const { return name_; }
     /** Type of the uniform (as OpenGL enum) */
-    GLenum type() const { return type_; }
+    gl::GLenum type() const { return type_; }
     /** Number of instances (for arrays) */
-    GLint size() const { return size_; }
+    gl::GLint size() const { return size_; }
     /** Uniform location, to send the stuff over */
-    GLint location() const { return location_; }
+    gl::GLint location() const { return location_; }
 
     // ----- setter -----
 
-    void setFloats(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+    void setFloats(gl::GLfloat x, gl::GLfloat y, gl::GLfloat z, gl::GLfloat w)
     { floats[0] = x; floats[1] = y; floats[2] = z; floats[3] = w; }
 
 
@@ -73,9 +73,9 @@ private:
     void copyValuesFrom_(Uniform*);
 
     QString name_;
-    GLenum type_;
-    GLint size_;
-    GLint location_;
+    gl::GLenum type_;
+    gl::GLint size_;
+    gl::GLint location_;
 
 };
 
@@ -90,11 +90,11 @@ public:
     /** Name as in the shader source */
     const QString& name() const { return name_; }
     /** Type of the uniform (as OpenGL enum) */
-    GLenum type() const { return type_; }
+    gl::GLenum type() const { return type_; }
     /** Number of instances (for arrays) */
-    GLint size() const { return size_; }
+    gl::GLint size() const { return size_; }
     /** Attribute location, to send the stuff over */
-    GLint location() const { return location_; }
+    gl::GLint location() const { return location_; }
 
     friend class Shader;
     friend void privateAttributeDeleter(Attribute*);
@@ -108,9 +108,9 @@ private:
     ~Attribute() { }
 
     QString name_;
-    GLenum type_;
-    GLint size_;
-    GLint location_;
+    gl::GLenum type_;
+    gl::GLint size_;
+    gl::GLint location_;
 };
 
 
@@ -154,7 +154,7 @@ public:
     Uniform * getUniform(size_t index);
 
     /** Returns the program index in OpenGL space after successful compilation. */
-    GLuint programId() const { return prog_; }
+    gl::GLuint programId() const { return prog_; }
 
     /** Returns the list of all attached uniforms.
         The public members of the Uniform classes can be manipulated.
@@ -230,7 +230,7 @@ private:
     void getAttributes_();
 
     /** Compiles one of the vertex/fragment shaders and attaches to current programObject */
-    bool compileShader_(GLenum type, const QString& typeName, const QString& source);
+    bool compileShader_(gl::GLenum type, const QString& typeName, const QString& source);
 
     ErrorReporting rep_;
 
@@ -238,7 +238,7 @@ private:
 
     QString name_, log_;
 
-    GLuint prog_;
+    gl::GLuint prog_;
 
     bool sourceChanged_, ready_, activated_;
 

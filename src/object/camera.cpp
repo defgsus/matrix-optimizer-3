@@ -29,6 +29,8 @@
 #include "projection/projectormapper.h"
 #include "geom/geometry.h"
 
+using namespace gl;
+
 namespace MO {
 
 MO_REGISTER_OBJECT(Camera)
@@ -222,8 +224,8 @@ void Camera::initGl(uint thread)
     fbo_[thread] = new GL::FrameBufferObject(
                 width,
                 height,
-                scene->frameBufferFormat(),
-                GL_FLOAT,
+                gl::GLenum(scene->frameBufferFormat()),
+                gl::GL_FLOAT,
                 cubeMapped,
                 GL::ER_THROW);
 
@@ -337,7 +339,7 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
     MO_CHECK_GL( glViewport(0, 0, fbo->width(), fbo->height()) );
 
     MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
-    MO_CHECK_GL( glDepthMask(true) );
+    MO_CHECK_GL( glDepthMask(GL_TRUE) );
 
     MO_CHECK_GL( glClearColor(backR_->value(time, thread),
                               backG_->value(time, thread),

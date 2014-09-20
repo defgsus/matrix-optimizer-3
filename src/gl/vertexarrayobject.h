@@ -31,7 +31,7 @@ public:
     // --------- getter -----------
 
     /** Returns the openGL name of the vertex array object */
-    GLuint id() const { return vao_; }
+    gl::GLuint id() const { return vao_; }
 
     /** Returns true, when a vertex array object has been created */
     bool isCreated() const { return vao_ != invalidGl; }
@@ -51,31 +51,32 @@ public:
     /** Creates a vertex attribute array buffer.
         Returns the opengl name of the buffer, or invalidGl on failure.
         The vertex array object needs to be bound. */
-    GLuint createAttribBuffer(
-            GLuint attributeLocation, GLenum valueType, GLint numberCoordinates,
-            GLuint sizeInBytes, const void * ptr,
-            GLenum storageType = GL_STATIC_DRAW, GLint stride = 0,
-            GLboolean normalized = GL_FALSE);
+    gl::GLuint createAttribBuffer(
+            gl::GLuint attributeLocation, gl::GLenum valueType, gl::GLint numberCoordinates,
+            gl::GLuint sizeInBytes, const void * ptr,
+            gl::GLenum storageType = gl::GL_STATIC_DRAW, gl::GLint stride = 0,
+            gl::GLboolean normalized = gl::GL_FALSE);
 
     /** Creates an element array buffer.
         Returns the opengl name of the buffer, or invalidGl on failure.
         The vertex array object needs to be bound. */
-    GLuint createIndexBuffer(
-            GLenum valueType,
-            GLuint numberVertices, const void * ptr,
-            GLenum storageType = GL_STATIC_DRAW);
+    gl::GLuint createIndexBuffer(
+            gl::GLenum valueType,
+            gl::GLuint numberVertices, const void * ptr,
+            gl::GLenum storageType = gl::GL_STATIC_DRAW);
 
     /** Draws the vertex array object.
         If @p numberVertices <= 0, the number from createIndexBuffer() is used.
         Objects are unbound on return. */
-    bool drawElements(GLenum primitiveType, GLuint numberVertices = 0, GLuint offset = 0) const;
+    bool drawElements(gl::GLenum primitiveType, gl::GLuint numberVertices = 0,
+                      gl::GLuint offset = 0) const;
 
 private:
 
     QString name_;
 
     ErrorReporting rep_;
-    GLuint vao_;
+    gl::GLuint vao_;
 
     struct Buffer_;
     std::vector<Buffer_> buffers_;

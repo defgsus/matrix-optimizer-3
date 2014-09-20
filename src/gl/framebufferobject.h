@@ -24,8 +24,8 @@ class FrameBufferObject
 public:
 
     explicit FrameBufferObject(
-            GLsizei width, GLsizei height,
-            GLenum format, GLenum type,
+            gl::GLsizei width, gl::GLsizei height,
+            gl::GLenum format, gl::GLenum type,
             bool cubemap,
             ErrorReporting reporting = ER_THROW);
 
@@ -63,7 +63,7 @@ public:
         @p target is of type GL_TEXTURE_CUBE_MAP_[POSITIVE|NEGATIVE]_[X|Y|Z].
         Prior, create() must have been successfully called and
         the framebuffer object must be in cubemap mode. */
-    bool attachCubeTexture(GLenum target);
+    bool attachCubeTexture(gl::GLenum target);
 
     /** Downloads the color texture from the device.
         NOT available for cubemap textures. */
@@ -81,7 +81,7 @@ private:
 
     Texture * colorTex_;
 
-    GLuint fbo_, rbo_;
+    gl::GLuint fbo_, rbo_;
 
     bool cubemap_;
 };

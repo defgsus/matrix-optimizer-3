@@ -11,12 +11,13 @@
 #ifndef MOSRC_GUI_WIDGET_BASIC3DWIDGET_H
 #define MOSRC_GUI_WIDGET_BASIC3DWIDGET_H
 
-// to include glew before gl.h
+// to include glbinding before Qt's include of gl.h
 #include "gl/opengl.h"
 
 #include <QGLWidget>
 #include <QSize>
 
+#include "gl/opengl_undef.h"
 #include "types/vector.h"
 
 namespace MO {

@@ -17,6 +17,7 @@
 #include <QStringList>
 
 #include "types/int.h"
+#include "gl/opengl.h"
 
 class QImage;
 
@@ -55,9 +56,9 @@ public:
     Format format() const { return format_; }
 
     /** Returns a opengl enum like GL_LUMINANCE or GL_RGB */
-    uint glEnumForFormat() const;
+    gl::GLenum glEnumForFormat() const;
     /** Returns the opengl enum for the data type (GL_UNSIGNED_BYTE) */
-    uint glEnumForType() const;
+    gl::GLenum glEnumForType() const;
 
     uint channelSizeInBytes() const;
     uint pixelSizeInBytes() const;

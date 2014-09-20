@@ -22,10 +22,18 @@
 #include "math/constants.h"
 #include "math/functions.h"
 
+using namespace gl;
+
 namespace MO {
 namespace GEOM {
 
 const Geometry::VertexType Geometry::minimumThreshold = 0.001;
+
+const GLenum Geometry::vertexEnum       = GL_FLOAT;
+const GLenum Geometry::normalEnum       = GL_FLOAT;
+const GLenum Geometry::colorEnum        = GL_FLOAT;
+const GLenum Geometry::textureCoordEnum = GL_FLOAT;
+const GLenum Geometry::indexEnum        = GL_UNSIGNED_INT;
 
 
 namespace

@@ -20,6 +20,8 @@
 #include "gl/framebufferobject.h"
 #include "img/image.h"
 
+using namespace gl;
+
 namespace MO {
 
 const QStringList TextureSetting::textureTypeNames =
@@ -217,17 +219,17 @@ bool TextureSetting::bind(uint slot)
     }
 
     // set active slot
-    slot += GL_TEXTURE0;
+    slot += (uint)GL_TEXTURE0;
     GLint act;
     MO_CHECK_GL( glGetIntegerv(GL_ACTIVE_TEXTURE, &act) );
     if ((GLint)slot != act)
-        MO_CHECK_GL( glActiveTexture(slot) );
+        MO_CHECK_GL( glActiveTexture(GLenum(slot)) );
 
     bool r = constTexture_->bind();
 
     // set back
     if ((GLint)slot != act)
-        MO_CHECK_GL( glActiveTexture(act) );
+        MO_CHECK_GL( glActiveTexture(GLenum(act)) );
 
     return r;
 }
@@ -240,17 +242,17 @@ void TextureSetting::unbind(uint slot)
     if (constTexture_)
     {
         // set active slot
-        slot += GL_TEXTURE0;
+        slot += uint(GL_TEXTURE0);
         GLint act;
         MO_CHECK_GL( glGetIntegerv(GL_ACTIVE_TEXTURE, &act) );
         if ((GLint)slot != act)
-            MO_CHECK_GL( glActiveTexture(slot) );
+            MO_CHECK_GL( glActiveTexture(GLenum(slot)) );
 
         constTexture_->unbind();
 
         // set back
         if ((GLint)slot != act)
-            MO_CHECK_GL( glActiveTexture(act) );
+            MO_CHECK_GL( glActiveTexture(GLenum(act)) );
     }
 }
 

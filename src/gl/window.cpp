@@ -25,6 +25,8 @@
 #include "io/log.h"
 #include "geom/freecamera.h"
 
+#include "gl/opengl_undef.h"
+
 namespace MO {
 namespace GL {
 
@@ -48,10 +50,12 @@ Window::Window(QScreen * targetScreen)
     setHeight(512);
 
     setSurfaceType(QSurface::OpenGLSurface);
-
-    /*QSurfaceFormat format;
-    format.setSamples(16);
-    setFormat(format);*/
+#if (1)
+    QSurfaceFormat format;
+    format.setVersion(3, 3);
+    format.setProfile(QSurfaceFormat::CompatibilityProfile);
+    setFormat(format);
+#endif
 }
 
 Window::~Window()
@@ -149,9 +153,9 @@ void Window::renderNow()
 
     moInitGl();
 
-    MO_CHECK_GL( glViewport(0,0, width(), height()) );
-    MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
-    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
+    MO_CHECK_GL( gl::glViewport(0,0, width(), height()) );
+    MO_CHECK_GL( gl::glClearColor(0.1f, 0.1f, 0.1f, 1.0f) );
+    MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT) );
 
     emit renderRequest(thread_);
 

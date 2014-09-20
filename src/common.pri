@@ -181,7 +181,8 @@ HEADERS += \
     src/network/tcpserver.h \
     src/network/netevent.h \
     src/io/systeminfo.h \
-    src/network/network_fwd.h
+    src/network/network_fwd.h \
+    src/gl/opengl_undef.h
 
 
 SOURCES += \

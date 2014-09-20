@@ -178,6 +178,8 @@ void ObjectGl::releaseGl_(uint thread)
 
 void ObjectGl::renderGl_(const GL::RenderSettings &rs, uint thread, Double time)
 {
+    using namespace gl;
+
     if (!glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
     if (!glContext_[thread]->isValid())
@@ -191,9 +193,9 @@ void ObjectGl::renderGl_(const GL::RenderSettings &rs, uint thread, Double time)
         MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
 
     if (depthWriteMode() == DWM_OFF)
-        MO_CHECK_GL( glDepthMask(false) )
+        MO_CHECK_GL( glDepthMask(GL_FALSE) )
     else
-        MO_CHECK_GL( glDepthMask(true) );
+        MO_CHECK_GL( glDepthMask(GL_TRUE) );
 
     if (alphaBlendMode() == ABM_OFF)
         MO_CHECK_GL( glDisable(GL_BLEND) )

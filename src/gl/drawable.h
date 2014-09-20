@@ -105,7 +105,7 @@ private:
 
     VertexArrayObject * vao_;
 
-    GLuint
+    gl::GLuint
         uniformProj_,
         uniformCVT_,
         uniformVT_,
