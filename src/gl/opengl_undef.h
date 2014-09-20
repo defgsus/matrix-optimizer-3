@@ -8,8 +8,12 @@
     <p>created 9/20/2014</p>
 */
 
-//#ifndef MOSRC_GL_OPENGL_UNDEF_H
-//#undef MOSRC_GL_OPENGL_UNDEF_H
+/* This file should follow all includes of Qt's opengl headers,
+ * like QOpenGLWidget and so on.
+ * The opengl defines break glbinding code..
+ */
+
+
 
 /* Boolean values */
 #undef GL_FALSE
@@ -1039,6 +1043,3 @@
 #undef GL_BUFFER_MAP_LENGTH
 #undef GL_BUFFER_MAP_OFFSET
 
-
-
-//#endif // MOSRC_GL_OPENGL_UNDEF_H

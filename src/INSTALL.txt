@@ -1,13 +1,13 @@
-packages for generic debian:
+--- packages for generic debian:
 
 g++
 
-//libglew-dev
-//libglewmx-dev
 libglm-dev
 
 portaudio19-dev
 libportmidi-dev
+
+--- other libraries:
 
 https://github.com/hpicgs/glbinding.git
 
