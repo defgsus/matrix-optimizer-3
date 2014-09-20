@@ -47,7 +47,7 @@ void checkCompatibility()
                 << "\nversion  " << version
                 << "\nrenderer " << renderer);
 
-    dumpExtensions();
+    //dumpExtensions();
 /*
 #define MO__REQUIRE(str__)                                  \
     if (!glewIsSupported(str__))                            \

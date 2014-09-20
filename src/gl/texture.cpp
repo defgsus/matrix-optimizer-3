@@ -14,6 +14,7 @@
 #include "img/image.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "io/streamoperators_glbinding.h"
 
 using namespace gl;
 
@@ -143,7 +144,10 @@ bool Texture::create(GLsizei width, GLsizei height,
     ptr_nz_ = 0;
 
     if (!bind())
+    {
+        MO_GL_WARNING("Could not bind 2D-texture for creation");
         return false;
+    }
 
     return upload_(ptr_, 0);
 }
@@ -221,16 +225,18 @@ void Texture::releaseTexture_()
 
 bool Texture::bind() const
 {
+    //MO_DEBUG_IMG("Texture::bind(" << target_ << ", " << handle_ << ")");
+
     GLenum err;
     MO_CHECK_GL_RET_COND( rep_, glBindTexture(target_, handle_), err );
-    if (err != GL_NO_ERROR) return false;
-
+    if (err != GL_NO_ERROR)
+        return false;
     /*
     if (target_ != GL_TEXTURE_CUBE_MAP)
         MO_CHECK_GL_RET_COND( rep_, glEnable(target_), err );
     */
 
-    return err != GL_NO_ERROR;
+    return err == GL_NO_ERROR;
 }
 
 void Texture::unbind() const
@@ -260,10 +266,16 @@ bool Texture::create()
 
     handle_ = genTexture_();
     if (handle_ == invalidGl)
+    {
+        MO_GL_WARNING("genTexture_() failed");
         return false;
+    }
 
     if (!bind())
+    {
+        MO_GL_WARNING("bind of texture before creation failed");
         return false;
+    }
 
     if (target_ != GL_TEXTURE_CUBE_MAP)
         return upload_(ptr_, 0);
@@ -381,7 +393,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 
             if (err != GL_NO_ERROR)
             {
-                MO_DEBUG_GL("Texture::upload_() failed");
+                MO_GL_WARNING("Texture::upload_() failed");
                 return false;
             }
 
@@ -424,7 +436,10 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 memory_used_ += memory_;
             }
         break;
-        default: break;
+
+        default:
+            MO_GL_WARNING("Unhandled texture target " << (int)target_ << " in Texture::create_()");
+        break;
     }
 
     texParameter(GL_TEXTURE_MIN_FILTER, GLint(GL_LINEAR));

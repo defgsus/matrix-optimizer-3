@@ -27,9 +27,7 @@
 #define MO_CHECK_GL(command__)                  \
 {                                               \
     command__;                                  \
-}
-#if (0)
-::gl::GLenum err__(::gl::glGetError());     \
+    ::gl::GLenum err__(::gl::glGetError());     \
     if (err__ != ::gl::GL_NO_ERROR)             \
     {                                           \
         std::cerr << "opengl error "            \
@@ -40,7 +38,8 @@
             << ": " << __LINE__ << "\n";        \
     }                                           \
 }
-#endif
+
+
 // TODO: remove __FILE__ and __LINE__ from release version
 
 /** Executes the command and calls glGetError().

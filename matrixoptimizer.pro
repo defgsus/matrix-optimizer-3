@@ -15,8 +15,6 @@ CONFIG += c++11
 
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
-#DEFINES += GLEW_MX
-
 #for glm version >= 0.9.5
 DEFINES += GLM_FORCE_RADIANS
 
@@ -25,7 +23,7 @@ unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
 
-unix: { LIBS += -lGLEW -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
+unix: { LIBS += -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
 
 win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 

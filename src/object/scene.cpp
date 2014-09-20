@@ -53,7 +53,7 @@ Scene::Scene(QObject *parent) :
     releaseAllGlRequested_(false),
     fbWidth_            (1024),
     fbHeight_           (1024),
-    //fbFormat_           (gl::GL_RGBA),
+    fbFormat_           ((int)gl::GL_RGBA),
     fbCmWidth_          (512),
     fbCmHeight_         (512),
     fboFinal_           (0),

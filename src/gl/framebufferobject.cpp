@@ -12,6 +12,7 @@
 #include "texture.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "io/streamoperators_glbinding.h"
 
 using namespace gl;
 
@@ -74,7 +75,7 @@ bool FrameBufferObject::bind()
     MO_CHECK_GL_RET_COND(rep_, glBindFramebuffer(GL_FRAMEBUFFER, fbo_), err );
     if (err != GL_NO_ERROR) return false;
     MO_CHECK_GL_RET_COND(rep_, glBindRenderbuffer(GL_RENDERBUFFER, rbo_), err );
-    return err != GL_NO_ERROR;
+    return err == GL_NO_ERROR;
 }
 
 void FrameBufferObject::unbind()
@@ -171,7 +172,7 @@ bool FrameBufferObject::attachCubeTexture(GLenum target)
     GLenum err;
     MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
             GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, colorTex_->handle(), 0), err );
-    return err != GL_NO_ERROR;
+    return err == GL_NO_ERROR;
 
 }
 

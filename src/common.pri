@@ -182,7 +182,8 @@ HEADERS += \
     src/network/netevent.h \
     src/io/systeminfo.h \
     src/network/network_fwd.h \
-    src/gl/opengl_undef.h
+    src/gl/opengl_undef.h \
+    src/io/streamoperators_glbinding.h
 
 
 SOURCES += \
