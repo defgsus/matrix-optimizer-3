@@ -15,26 +15,23 @@ CONFIG += c++11
 
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
-DEFINES += GLEW_MX MO_CLIENT
+DEFINES += MO_CLIENT
 
 #for glm version >= 0.9.5
 DEFINES += GLM_FORCE_RADIANS
 
-# for optirun bug
-unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
-
 ##################### libs ############################
 
-unix: { LIBS += -lGLEWmx -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
+unix: { LIBS += -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
 
 win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lportmidi -lsndfile-1 }
 
 ###################### files ##########################
 
+INCLUDEPATH += src
+
 include(src/common.pri)
 include(src/client.pri)
-
-INCLUDEPATH += src
 
 
 
