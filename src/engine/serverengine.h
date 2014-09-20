@@ -20,12 +20,20 @@ class QTcpSocket;
 
 namespace MO {
 
+class ServerEngine;
+
+/** Returns a singleton instance of the server */
+ServerEngine & serverEngine();
+
 struct ClientInfo
 {
+    /** Connection to/from each client */
     QTcpSocket * tcpSocket;
 
+    /** Index of the client (as in ProjectionSystemSettings) */
     int index;
 
+    /** System-info of each client */
     SystemInfo sysinfo;
 
     struct Private;
@@ -75,6 +83,9 @@ public slots:
     void showInfoWindow(int index, bool show);
     void setClientIndex(int index, int client_index);
 
+    /** Sends the current default ProjectionSystemSettings to all clients */
+    void sendProjectionSettings();
+
 private slots:
 
     void onTcpConnected_(QTcpSocket*);
@@ -89,6 +100,7 @@ private:
 
     void getSysInfo_(ClientInfo&);
     void getClientIndex_(ClientInfo&);
+    void sendProjectionSettings_(ClientInfo&);
 
     QList<ClientInfo> clients_;
 

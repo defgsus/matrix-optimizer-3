@@ -32,7 +32,7 @@
 #include "io/log.h"
 #include "io/files.h"
 #include "io/settings.h"
-
+#include "engine/serverengine.h"
 #include "projection/projectormapper.h"
 
 namespace MO {
@@ -878,6 +878,10 @@ void ProjectorSetupDialog::loadDefault_()
 void ProjectorSetupDialog::saveDefault_()
 {
     settings->setDefaultProjectionSettings(*settings_);
+
+    // update clients
+    if (serverEngine().isRunning())
+        serverEngine().sendProjectionSettings();
 }
 
 bool ProjectorSetupDialog::savePresetAuto_()

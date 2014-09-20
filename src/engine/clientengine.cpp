@@ -11,6 +11,7 @@
 #include <QTcpSocket>
 
 #include "clientengine.h"
+#include "io/error.h"
 #include "io/log.h"
 #include "io/application.h"
 #include "gl/manager.h"
@@ -24,6 +25,7 @@
 #include "io/systeminfo.h"
 #include "gui/infowindow.h"
 #include "io/settings.h"
+#include "projection/projectionsystemsettings.h"
 
 namespace MO {
 
@@ -74,60 +76,6 @@ void ClientEngine::startNetwork_()
     connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
     client_->connectTo("192.168.1.33");
-
-    /*
-    while (!client_->connectToMaster())
-    {
-        MO_PRINT("retrying");
-    }*/
-
-/*
-    NetworkLogger::connectForLogging(socket_);
-
-    socket_->connectToHost(
-                QHostAddress("0.0.0.0"),
-                NetworkManager::defaultTcpPort());
-
-    connect(socket_, &QTcpSocket::connected, [=]()
-    {
-        NetInfoEvent info;
-        info.setId("hello");
-        info.send(socket_);
-    });
-    */
-    /*
-    if (send_)
-    {
-        MO_PRINT("SEND-MODE");
-
-        socket_ = new QTcpSocket(this);
-
-        NetworkLogger::connectForLogging(socket_);
-
-        socket_->connectToHost(
-                    QHostAddress("0.0.0.0"),
-                    NetworkManager::defaultTcpPort());
-
-        connect(socket_, &QTcpSocket::connected, [=]()
-        {
-            QTextStream stream(socket_);
-            stream << "hello world";
-        });
-    }
-    else
-    {
-        MO_PRINT("SERVER-MODE");
-
-        tcp_ = new TcpServer(this);
-        tcp_->open();
-
-        connect(tcp_, &TcpServer::socketData, [=](QTcpSocket * s)
-        {
-            QTextStream stream(s);
-            MO_PRINT("received: [" << stream.readAll() << "]");
-        });
-    }
-    */
 }
 
 void ClientEngine::showInfoWindow_(bool enable)
@@ -184,9 +132,33 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             showInfoWindow_(false);
             return;
         }
+
+        if (e->request() == NetEventRequest::SET_PROJECTION_SETTINGS)
+        {
+            setProjectionSettings_(e);
+            return;
+        }
     }
 
     MO_NETLOG(WARNING, "unhandled NetEvent " << event->className() << " in ClientEngine");
+}
+
+void ClientEngine::setProjectionSettings_(NetEventRequest * e)
+{
+    QByteArray data = e->data().toByteArray();
+
+    ProjectionSystemSettings s;
+
+    try
+    {
+        s.deserialize(data);
+        settings->setDefaultProjectionSettings(s);
+    }
+    catch (const Exception& e)
+    {
+        MO_NETLOG(ERROR, "Failed to deserialize ProjectionSystemSettings\n"
+                  << e.what());
+    }
 }
 
 } // namespace MO

@@ -43,6 +43,7 @@ private:
     void createGlObjects_();
     void startNetwork_();
     void shutDown_();
+    void setProjectionSettings_(NetEventRequest*);
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;

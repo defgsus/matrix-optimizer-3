@@ -14,8 +14,21 @@
 #include "network/tcpserver.h"
 #include "network/netevent.h"
 #include "network/netlog.h"
+#include "io/application.h"
+#include "io/settings.h"
+#include "projection/projectionsystemsettings.h"
 
 namespace MO {
+
+ServerEngine & serverEngine()
+{
+    static ServerEngine * instance_ = 0;
+    if (!instance_)
+        instance_ = new ServerEngine(application);
+
+    return *instance_;
+}
+
 
 struct ClientInfo::Private
 {
@@ -151,6 +164,20 @@ void ServerEngine::sendEvent(AbstractNetEvent * e)
     delete e;
 }
 
+void ServerEngine::sendProjectionSettings()
+{
+    auto event = new NetEventRequest;
+    event->setRequest(NetEventRequest::SET_PROJECTION_SETTINGS);
+
+    auto s = settings->getDefaultProjectionSettings();
+    QByteArray data;
+    s.serialize(data);
+
+    event->setData(data);
+
+    sendEvent(event);
+}
+
 void ServerEngine::getSysInfo_(ClientInfo & inf)
 {
     // construct event
@@ -169,6 +196,19 @@ void ServerEngine::getClientIndex_(ClientInfo & inf)
 
     // send off to client
     r.send(inf.tcpSocket);
+}
+
+void ServerEngine::sendProjectionSettings_(ClientInfo & inf)
+{
+    NetEventRequest event;
+    event.setRequest(NetEventRequest::SET_PROJECTION_SETTINGS);
+
+    auto s = settings->getDefaultProjectionSettings();
+    QByteArray data;
+    s.serialize(data);
+
+    // XXX error checking???
+    event.send(inf.tcpSocket);
 }
 
 void ServerEngine::onTcpData_(QTcpSocket * s)
@@ -210,7 +250,7 @@ void ServerEngine::onTcpData_(QTcpSocket * s)
     }
 
     MO_NETLOG(WARNING, "unhandled NetEvent '" << event->className()
-              << "' from client " << s->peerAddress().toString());
+              << "' from client " << s->peerName());
 }
 
 

@@ -141,7 +141,9 @@ public:
         /** Shows the fullscreen info window */
         SHOW_INFO_WINDOW,
         /** Hides the fullscreen info window */
-        HIDE_INFO_WINDOW
+        HIDE_INFO_WINDOW,
+        /** Sets the default ProjectionSystemSettings (QByteArray) */
+        SET_PROJECTION_SETTINGS
     };
 
     MO_NETEVENT_CONSTRUCTOR(NetEventRequest)
