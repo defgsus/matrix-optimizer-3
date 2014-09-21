@@ -48,6 +48,15 @@ public:
         On clients, the files will be transferred if needed. */
     void acquireFiles();
 
+    // ----------------- client mode ----------------
+
+#ifdef MO_CLIENT
+
+    /** Gets the file */
+    void getFile(const QString& filename, IO::FileType ft);
+
+#endif
+
 signals:
 
 public slots:

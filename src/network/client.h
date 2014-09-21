@@ -42,6 +42,10 @@ public slots:
     void connectTo(const QString& ip);
     void connectTo(const QHostAddress&);
 
+    /** Sends event to server.
+        Ownership of event is taken. */
+    bool sendEvent(AbstractNetEvent *);
+
 private slots:
 
     void onError_();

@@ -15,6 +15,7 @@
 #include <vector>
 
 #include <QString>
+#include <QDateTime>
 
 class QXmlStreamWriter;
 class QXmlStreamReader;
@@ -120,6 +121,7 @@ public:
     void write(const QString& key, long unsigned int v);
     void write(const QString& key, float);
     void write(const QString& key, double);
+    void write(const QString& key, const QDateTime& v);
 
     template <class T>
     XmlStream& operator << (const PairStruct<T>& p) { write(p.key, p.value); return *this; }
@@ -138,6 +140,7 @@ public:
     bool read(const QString& key, long unsigned int& v, long unsigned int def = 0) const;
     bool read(const QString& key, float& v, float def = 0) const;
     bool read(const QString& key, double& v, double def = 0) const;
+    bool read(const QString& key, QDateTime& v, const QDateTime& def = QDateTime()) const;
 
     /** @} */
 
@@ -149,6 +152,7 @@ public:
     long unsigned int readLUInt(const QString& key, long unsigned int def = 0) const { long unsigned int v; read(key, v, def); return v; }
     float readFloat(const QString& key, float def = 0) const { float v; read(key, v, def); return v; }
     double readDouble(const QString& key, double def = 0) const { double v; read(key, v, def); return v; }
+    QDateTime readDateTime(const QString& key, const QDateTime& def = QDateTime()) { QDateTime v; read(key, v, def); return v; }
 
     // ------------- expect-read ---------------------
 
@@ -164,6 +168,7 @@ public:
     void expect(const QString& key, long unsigned int& v) const;
     void expect(const QString& key, float& v) const;
     void expect(const QString& key, double& v) const;
+    void expect(const QString& key, QDateTime& v) const;
 
     /** @} */
 
@@ -177,6 +182,7 @@ public:
     long unsigned int expectLUInt(const QString& key) const { long unsigned int v; expect(key, v); return v; }
     float expectFloat(const QString& key) const { float v; expect(key, v); return v; }
     double expectDouble(const QString& key) const { double v; expect(key, v); return v; }
+    QDateTime expectDateTime(const QString& key) const { QDateTime v; expect(key, v); return v; }
 
     // _______________ PRIVATE AREA _________________
 

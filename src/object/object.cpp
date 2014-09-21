@@ -50,8 +50,8 @@ Object::Object(QObject *parent) :
     parentActivityScope_    (AS_ON),
     currentActivityScope_   (AS_ON)
 #else
-    parentActivityScope_    (AS_ON | AS_CLIENT_ONLY),
-    currentActivityScope_   (AS_ON | AS_CLIENT_ONLY)
+    parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY)),
+    currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
 #endif
 {
     // tie into Object hierarchy
@@ -410,7 +410,7 @@ void Object::setCurrentActivityScope(ActivityScope scope)
     currentActivityScope_ = scope;
 
 #ifdef MO_CLIENT
-    currentActivityScope_ |= AS_CLIENT_ONLY;
+    currentActivityScope_ = ActivityScope(currentActivityScope_ | AS_CLIENT_ONLY);
 #endif
 
     for (auto o : childObjects_)

@@ -26,8 +26,18 @@
 #include "gui/infowindow.h"
 #include "io/settings.h"
 #include "projection/projectionsystemsettings.h"
+#include "io/clientfiles.h"
 
 namespace MO {
+
+ClientEngine & clientEngine()
+{
+    static ClientEngine * instance_ = 0;
+    if (!instance_)
+        instance_ = new ClientEngine(application);
+
+    return *instance_;
+}
 
 ClientEngine::ClientEngine(QObject *parent) :
     QObject     (parent),
@@ -60,6 +70,10 @@ void ClientEngine::shutDown_()
     delete infoWindow_;
 }
 
+bool ClientEngine::sendEvent(AbstractNetEvent * event)
+{
+    return client_->sendEvent(event);
+}
 
 void ClientEngine::createGlObjects_()
 {
@@ -140,7 +154,19 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         }
     }
 
+    if (NetEventFileInfo * e = netevent_cast<NetEventFileInfo>(event))
+    {
+        IO::clientFiles().receiveFileInfo(e);
+    }
+
+    if (NetEventFile * e = netevent_cast<NetEventFile>(event))
+    {
+        IO::clientFiles().receiveFile(e);
+    }
+
     MO_NETLOG(WARNING, "unhandled NetEvent " << event->className() << " in ClientEngine");
+
+    delete event;
 }
 
 void ClientEngine::setProjectionSettings_(NetEventRequest * e)

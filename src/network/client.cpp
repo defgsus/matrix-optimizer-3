@@ -96,6 +96,23 @@ void Client::connectTo(const QHostAddress & a)
     connect_();
 }
 
+bool Client::sendEvent(AbstractNetEvent * event)
+{
+    MO_NETLOG(DEBUG, "Client::sendEvent(" << event << ")");
+
+    if (!socket_->isWritable())
+    {
+        MO_NETLOG(ERROR, "Client::sendEvent(" << event << ") on unwriteable socket");
+        delete event;
+        return false;
+    }
+
+    bool suc = event->send(socket_);
+    delete event;
+
+    return suc;
+}
+
 void Client::connect_()
 {
     MO_NETLOG(DEBUG, "Client::connect_(" << address_.toString() << ")");

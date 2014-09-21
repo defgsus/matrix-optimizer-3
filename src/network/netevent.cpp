@@ -10,6 +10,8 @@
 
 #include <QIODevice>
 #include <QAbstractSocket>
+#include <QFile>
+#include <QFileInfo>
 
 #include "netevent.h"
 #include "io/datastream.h"
@@ -74,6 +76,12 @@ bool AbstractNetEvent::send(QAbstractSocket * socket) noexcept
     if (!socket_)
     {
         MO_NETLOG(ERROR, "Can't send NetEvent '" << className() << "' without socket");
+        return false;
+    }
+
+    if (!socket_->isWritable())
+    {
+        MO_NETLOG(ERROR, "Attempt to send NetEvent '" << className() << "' on unwriteable socket");
         return false;
     }
 
@@ -233,5 +241,82 @@ void NetEventSysInfo::getInfo()
     info_.get();
 }
 
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventFileInfo)
+
+NetEventFileInfo::NetEventFileInfo()
+    : present_  (false)
+{
+}
+
+void NetEventFileInfo::serialize(IO::DataStream &io) const
+{
+    io << filename_ << time_ << present_;
+}
+
+void NetEventFileInfo::deserialize(IO::DataStream &io)
+{
+    io >> filename_ >> time_ >> present_;
+}
+
+void NetEventFileInfo::getFileTime()
+{
+    QFileInfo info(filename_);
+
+    present_ = info.exists();
+    time_ = info.lastModified();
+}
+
+
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventFile)
+
+NetEventFile::NetEventFile()
+{
+}
+
+void NetEventFile::serialize(IO::DataStream &io) const
+{
+    io << filename_ << time_ << data_;
+}
+
+void NetEventFile::deserialize(IO::DataStream &io)
+{
+    io >> filename_ >> time_ >> data_;
+}
+
+void NetEventFile::loadFile(const QString &fn)
+{
+    filename_ = fn;
+
+    data_.clear();
+
+    QFile f(fn);
+    if (!f.open(QFile::ReadOnly))
+    {
+        MO_NETLOG(ERROR, "NetEventFile: failed to load file '" << fn << "'");
+        return;
+    }
+
+    data_ = f.readAll();
+}
+
+void NetEventFile::saveFile(const QString &fn) const
+{
+    QFile f(fn);
+    if (!f.open(QFile::WriteOnly))
+    {
+        MO_NETLOG(ERROR, "NetEventFile: failed to write file '" << fn << "'");
+        return;
+    }
+
+    f.write(data_);
+}
 
 } // namespace MO

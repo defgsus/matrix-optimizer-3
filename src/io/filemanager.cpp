@@ -123,6 +123,15 @@ void FileManager::acquireFiles()
 }
 
 
+#ifdef MO_CLIENT
+
+void FileManager::getFile(const QString &filename, FileType ft)
+{
+
+}
+
+#endif
+
 
 } // namespace IO
 } // namespace MO

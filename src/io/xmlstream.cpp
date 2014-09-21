@@ -20,6 +20,12 @@
 namespace MO {
 namespace IO {
 
+namespace
+{
+    const QString datetime_format = "yyyy.MM.dd-hh:mm:ss.zzz";
+}
+
+
 XmlStream::XmlStream()
     :   xmlw_   (0),
         xmlr_   (0)
@@ -285,6 +291,15 @@ void XmlStream::write(const QString& key, double v)
     xmlw_->writeAttribute(key, QString::number(v));
 }
 
+void XmlStream::write(const QString& key, const QDateTime& v)
+{
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
+    xmlw_->writeAttribute(key, v.toString(datetime_format));
+}
+
+
 // ----------------- data read ------------------
 
 #define MO_IO_CHECK_ATTRIBUTE(key__, value__, default__) \
@@ -354,6 +369,13 @@ bool XmlStream::read(const QString& key, double& v, double def) const
 }
 
 
+bool XmlStream::read(const QString& key, QDateTime& v, const QDateTime& def) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v, def);
+    v = QDateTime::fromString(a.toString(), datetime_format);
+    return true;
+}
+
 
 
 #undef MO_IO_CHECK_ATTRIBUTE
@@ -420,55 +442,16 @@ void XmlStream::expect(const QString& key, double& v) const
     v = a.toDouble();
 }
 
-#undef MO_IO_CHECK_ATTRIBUTE
 
-// --------------------------- test -------------------------------
-/*
-
-void testIo()
+void XmlStream::expect(const QString& key, QDateTime& v) const
 {
-    Io io;
-
-    io.startWriting();
-
-    io.newSection("patch");
-        io.write("version", "1");
-        io.newSection("module");
-            io.write("class", "Math");
-            io.write("id", "Math1");
-            io.write("name", "Mathematik");
-            io.newSection("param");
-                io.write("id", "num_in");
-                io.write("v", 2);
-            io.endSection();
-        io.endSection();
-        io.newSection("connections");
-            io.newSection("c");
-            io.write("fm", "Math1");
-            io.write("fc", "out1");
-            io.write("tm", "Math1");
-            io.write("tc", "in1");
-            io.endSection();
-        io.endSection();
-    io.endSection();
-
-    io.stopWriting();
-
-    qDebug("-------------");
-
-    io.startReading();
-
-    io.nextSubSection();
-    if (io.section() != "patch") { std::cout << "expected patch\n"; exit(-1); }
-
-    std::cout << "version " << io.readInt("version") << std::endl;
-
-
-
-    io.stopReading();
+    MO_IO_CHECK_ATTRIBUTE(key, v);
+    v = QDateTime::fromString(a.toString(), datetime_format);
 }
 
-*/
+
+#undef MO_IO_CHECK_ATTRIBUTE
+
 
 } // namespace IO
 } // namespace MO

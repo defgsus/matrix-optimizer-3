@@ -16,6 +16,7 @@
 #include <QString>
 #include <QMap>
 #include <QVariant>
+#include <QDateTime>
 
 #include "io/systeminfo.h"
 
@@ -143,7 +144,11 @@ public:
         /** Hides the fullscreen info window */
         HIDE_INFO_WINDOW,
         /** Sets the default ProjectionSystemSettings (QByteArray) */
-        SET_PROJECTION_SETTINGS
+        SET_PROJECTION_SETTINGS,
+        /** Tells server to send a NetEventFileInfo for filename (QString) */
+        GET_SERVER_FILE_TIME,
+        /** Tells server to send a NetEventFile for filename (QString) */
+        GET_SERVER_FILE
     };
 
     MO_NETEVENT_CONSTRUCTOR(NetEventRequest)
@@ -166,6 +171,8 @@ private:
     QVariant data_;
 };
 
+
+/** General info event - typically an answer to NetEventRequest */
 class NetEventInfo : public AbstractNetEvent
 {
 public:
@@ -191,6 +198,7 @@ private:
 };
 
 
+/** SystemInfo event */
 class NetEventSysInfo : public AbstractNetEvent
 {
 public:
@@ -210,6 +218,82 @@ public:
 private:
 
     SystemInfo info_;
+};
+
+
+/** File info event - answer to NetEventRequest::GET_SERVER_FILE_TIME */
+class NetEventFileInfo : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventFileInfo)
+
+    // --------- getter -------------------
+
+    /** The filename of the querried file */
+    const QString& filename() const { return filename_; }
+
+    /** The timestamp of the original file */
+    const QDateTime& time() const { return time_; }
+
+    /** File was found? */
+    bool isPresent() const { return present_; }
+
+    // --------- setter -------------------
+
+    void setFilename(const QString& fn) { filename_ = fn; }
+    void setTime(const QDateTime& t) { time_ = t; }
+    void setPresent(bool p) { present_ = p; }
+
+    /** Convenience function - sets all necessary data */
+    void getFileTime();
+
+private:
+
+    QString filename_;
+    QDateTime time_;
+    bool present_;
+};
+
+
+
+
+/** File transfer vehicle - generally an answer to NetEventRequest::GET_SERVER_FILE */
+class NetEventFile : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventFile)
+
+    // --------- getter -------------------
+
+    /** The filename of the transferred file */
+    const QString& filename() const { return filename_; }
+
+    /** The timestamp of the original file */
+    const QDateTime& time() const { return time_; }
+
+    /** File was found? */
+    bool isPresent() const { return !data_.isEmpty(); }
+
+    /** The whole file data */
+    const QByteArray& data() { return data_; }
+
+    // --------- setter -------------------
+
+    void setFilename(const QString& fn) { filename_ = fn; }
+    void setTime(const QDateTime& t) { time_ = t; }
+    void setData(const QByteArray& a) { data_ = a; }
+
+    /** Convenience function - sets all necessary data */
+    void loadFile(const QString& fn);
+
+    /** Saves the data to a file */
+    void saveFile(const QString& fn) const;
+
+private:
+
+    QString filename_;
+    QDateTime time_;
+    QByteArray data_;
 };
 
 
