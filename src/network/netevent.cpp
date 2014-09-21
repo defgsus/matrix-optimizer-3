@@ -283,12 +283,12 @@ NetEventFile::NetEventFile()
 
 void NetEventFile::serialize(IO::DataStream &io) const
 {
-    io << filename_ << time_ << data_;
+    io << filename_ << time_ << present_ << data_;
 }
 
 void NetEventFile::deserialize(IO::DataStream &io)
 {
-    io >> filename_ >> time_ >> data_;
+    io >> filename_ >> time_ >> present_ >> data_;
 }
 
 void NetEventFile::loadFile(const QString &fn)
@@ -300,23 +300,26 @@ void NetEventFile::loadFile(const QString &fn)
     QFile f(fn);
     if (!f.open(QFile::ReadOnly))
     {
+        present_ = false;
         MO_NETLOG(ERROR, "NetEventFile: failed to load file '" << fn << "'");
         return;
     }
 
+    present_ = true;
     data_ = f.readAll();
 }
 
-void NetEventFile::saveFile(const QString &fn) const
+bool NetEventFile::saveFile(const QString &fn) const
 {
     QFile f(fn);
     if (!f.open(QFile::WriteOnly))
     {
         MO_NETLOG(ERROR, "NetEventFile: failed to write file '" << fn << "'");
-        return;
+        return false;
     }
 
     f.write(data_);
+    return true;
 }
 
 } // namespace MO

@@ -11,6 +11,7 @@
 #include <QMap>
 #include <QFileInfo>
 #include <QDateTime>
+#include <QDir>
 
 #include "clientfiles.h"
 #include "io/xmlstream.h"
@@ -32,9 +33,15 @@ public:
 
     struct FileInfo
     {
-        QString serverFilename, clientFilename;
-        QDateTime serverTime, clientTime;
-        bool serverPresent, clientPresent;
+        QString serverFilename,
+                clientFilename;
+        QDateTime
+        /** If up-to-date serverTime matches clientTime. */
+                serverTime,
+        /** Set to serverTime on transfer */
+                clientTime;
+        bool    serverPresent,
+                clientPresent;
     };
 
     void loadCache();
@@ -63,11 +70,21 @@ ClientFiles::ClientFiles(QObject *parent)
     : QObject   (parent),
       p_        (new Private())
 {
+    // be sure the directory for cached files is present
+    const QString cachedir = settings->getValue("Directory/filecache").toString();
+
+    QDir dir(cachedir);
+    if (!dir.exists() && !dir.mkpath(cachedir))
+        MO_NETLOG(ERROR, "ClientFiles is unable to access/create filecache directory '"
+                  << cachedir << "'");
+
     p_->loadCache();
 }
 
 ClientFiles::~ClientFiles()
 {
+    saveCacheNow();
+
     delete p_;
 }
 
@@ -106,7 +123,7 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
     auto it = p_->files.find(e->filename());
 
     // update existing cache info
-    if (it == p_->files.end())
+    if (it != p_->files.end())
     {
         it.value().serverTime = e->time();
         it.value().serverPresent = e->isPresent();
@@ -128,7 +145,33 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
 
 void ClientFiles::receiveFile(NetEventFile * e)
 {
+    Private::FileInfo * f;
 
+    auto it = p_->files.find(e->filename());
+
+    // create or reuse FileInfo field
+    if (it != p_->files.end())
+        f = &it.value();
+    else
+        f = &p_->files.insert(e->filename(), Private::FileInfo()).value();
+
+    f->serverFilename = e->filename();
+    f->serverTime = e->time();
+    f->serverPresent = e->isPresent();
+
+    // construct a local filename
+    f->clientFilename = f->serverFilename;
+    f->clientFilename.replace("/","_");
+    f->clientFilename.replace("\\","_");
+    f->clientFilename.replace(":","_");
+    f->clientFilename.insert(0,
+            settings->getValue("Directory/filecache").toString()
+            + QDir::separator());
+
+    f->clientTime = f->serverTime;
+    f->clientPresent = e->saveFile(f->clientFilename);
+
+    saveCache();
 }
 
 
@@ -175,6 +218,7 @@ void ClientFiles::Private::saveCache()
         MO_IO_WARNING(WRITE, "Could not save file-cache\n" << e.what());
     }
 }
+
 
 void ClientFiles::Private::loadCache()
 {
@@ -223,8 +267,6 @@ void ClientFiles::Private::checkLocalPresense()
         QFileInfo info(f.clientFilename);
 
         f.clientPresent = info.exists();
-        if (f.clientPresent)
-            f.clientTime = info.lastModified();
     }
 }
 

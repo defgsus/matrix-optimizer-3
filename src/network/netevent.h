@@ -272,7 +272,7 @@ public:
     const QDateTime& time() const { return time_; }
 
     /** File was found? */
-    bool isPresent() const { return !data_.isEmpty(); }
+    bool isPresent() const { return present_; }
 
     /** The whole file data */
     const QByteArray& data() { return data_; }
@@ -281,18 +281,20 @@ public:
 
     void setFilename(const QString& fn) { filename_ = fn; }
     void setTime(const QDateTime& t) { time_ = t; }
+    void setPresent(bool p) { present_ = p; }
     void setData(const QByteArray& a) { data_ = a; }
 
     /** Convenience function - sets all necessary data */
     void loadFile(const QString& fn);
 
-    /** Saves the data to a file */
-    void saveFile(const QString& fn) const;
+    /** Saves the data to a file and returns the file's timestamp */
+    bool saveFile(const QString& fn) const;
 
 private:
 
     QString filename_;
     QDateTime time_;
+    bool present_;
     QByteArray data_;
 };
 
