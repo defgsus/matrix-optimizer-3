@@ -154,14 +154,18 @@ void ServerEngine::onTcpError_(QTcpSocket * )
     //    onTcpDisconnected_(s);
 }
 
-void ServerEngine::sendEvent(AbstractNetEvent * e)
+bool ServerEngine::sendEvent(AbstractNetEvent * e)
 {
+    bool suc = !clients_.isEmpty();
+
     for (ClientInfo& i : clients_)
     {
-        e->send(i.tcpSocket);
+        suc &= e->send(i.tcpSocket);
     }
 
     delete e;
+
+    return suc;
 }
 
 void ServerEngine::sendProjectionSettings()
@@ -270,5 +274,19 @@ void ServerEngine::setClientIndex(int index, int cindex)
 
     r.send(clients_[index].tcpSocket);
 }
+
+bool ServerEngine::sendScene(Scene *scene)
+{
+    auto e = new NetEventScene();
+    if (!e->setScene(scene))
+    {
+        MO_NETLOG(ERROR, "Could not serialize scene");
+        return false;
+    }
+
+    return sendEvent(e);
+}
+
+
 
 } // namespace MO

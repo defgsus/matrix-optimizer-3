@@ -24,7 +24,6 @@
 namespace MO {
 namespace GUI {
 
-
 ServerDialog::ServerDialog(QWidget *parent) :
     QDialog(parent)
 {
@@ -36,7 +35,7 @@ ServerDialog::ServerDialog(QWidget *parent) :
 
     settings->restoreGeometry(this);
 
-    server_ = application->serverEngine();
+    server_ = &serverEngine();
 
     createWidgets_();
 

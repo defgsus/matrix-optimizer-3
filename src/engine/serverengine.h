@@ -21,6 +21,7 @@ class QTcpSocket;
 namespace MO {
 
 class ServerEngine;
+class Scene;
 
 /** Returns a singleton instance of the server */
 ServerEngine & serverEngine();
@@ -71,7 +72,7 @@ public:
 
     /** Sends the event to all connected clients.
         Ownership is taken. */
-    void sendEvent(AbstractNetEvent*);
+    bool sendEvent(AbstractNetEvent*);
 
 signals:
 
@@ -85,6 +86,9 @@ public slots:
 
     /** Sends the current default ProjectionSystemSettings to all clients */
     void sendProjectionSettings();
+
+    /** Send the scene to all clients */
+    bool sendScene(Scene * scene);
 
 private slots:
 

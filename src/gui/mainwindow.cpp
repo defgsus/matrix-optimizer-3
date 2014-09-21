@@ -64,6 +64,7 @@
 #include "gl/texture.h"
 #include "io/povrayexporter.h"
 #include "serverdialog.h"
+#include "engine/serverengine.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -590,6 +591,9 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
     glWindow_->renderLater();
 
     updateSystemInfo_();
+
+    if (serverEngine().isRunning())
+        serverEngine().sendScene(scene_);
 }
 
 
