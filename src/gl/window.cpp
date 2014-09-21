@@ -53,7 +53,11 @@ Window::Window(QScreen * targetScreen)
 #if (1)
     QSurfaceFormat format;
     format.setVersion(3, 3);
+#ifdef __APPLE__
+    format.setProfile(QSurfaceFormat::CoreProfile);
+#else
     format.setProfile(QSurfaceFormat::CompatibilityProfile);
+#endif
     setFormat(format);
 #endif
 }
