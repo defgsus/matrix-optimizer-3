@@ -1036,7 +1036,8 @@ void Scene::kill()
     stop();
 
     // release opengl resources later in their thread
-    for (uint i=0; i<numberThreads(); ++i)
+    // for (uint i=0; i<numberThreads(); ++i)
+    for (uint i=0; i<releaseAllGlRequested_.size(); ++i)
         releaseAllGlRequested_[i] = true;
 
     render_();

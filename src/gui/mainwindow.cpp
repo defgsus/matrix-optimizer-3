@@ -279,7 +279,9 @@ void MainWindow::createMainMenu_()
 
     // ######### FILE MENU #########
     m = editMenu_ = new QMenu(tr("File"), menuBar());
+#ifndef __APPLE__
     menuBar()->addMenu(m);
+#endif
 
     m->addAction(a = new QAction(tr("New scene"), menuBar()));
     connect(a, SIGNAL(triggered()), this, SLOT(newScene()));
@@ -298,11 +300,12 @@ void MainWindow::createMainMenu_()
     a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
     connect(a, SIGNAL(triggered()), this, SLOT(saveSceneAs()));
 
-
+#ifndef __APPLE__
     // ######### EDIT MENU #########
     m = editMenu_ = new QMenu(tr("Edit"), menuBar());
     menuBar()->addMenu(m);
     // will be updated from child widgets
+#endif
 
 
     // ######### RENDER MENU #########
@@ -758,8 +761,10 @@ void MainWindow::sceneChanged_()
 
 void MainWindow::setEditActions_(const QObject *, QList<QAction *> actions)
 {
+#ifndef __APPLE__
     editMenu_->clear();
     editMenu_->addActions(actions);
+#endif
 }
 
 void MainWindow::testSceneTransform_()
