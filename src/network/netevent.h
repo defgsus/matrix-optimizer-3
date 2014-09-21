@@ -36,6 +36,7 @@ namespace IO { class DataStream; }
                         { static QString s(#Class__); return s; }               \
     const QString& className() const Q_DECL_OVERRIDE                            \
                                     { return staticClassName(); }               \
+    QString infoName() const Q_DECL_OVERRIDE;                                   \
     virtual Class__ * cloneClass() const Q_DECL_OVERRIDE                        \
                         { return new Class__(); }                               \
     virtual void serialize(IO::DataStream & io) const Q_DECL_OVERRIDE;          \
@@ -62,6 +63,10 @@ public:
     // ------------ getter ----------------
 
     virtual const QString& className() const = 0;
+
+    /** Should return something to clearly identify the event (for debugging).
+        Base implementation returns className() + counter() */
+    virtual QString infoName() const;
 
     bool isValid() const { return isValid_; }
     bool isReceived() const { return isReceived_; }
@@ -153,6 +158,8 @@ public:
         /** Tells server to send a NetEventFile for filename (QString) */
         GET_SERVER_FILE
     };
+
+    static QString requestName(Request);
 
     MO_NETEVENT_CONSTRUCTOR(NetEventRequest)
 

@@ -98,7 +98,7 @@ void Client::connectTo(const QHostAddress & a)
 
 bool Client::sendEvent(AbstractNetEvent * event)
 {
-    MO_NETLOG(DEBUG, "Client::sendEvent(" << event << ")");
+    MO_NETLOG(DEBUG, "Client::sendEvent(" << event->infoName() << ")");
 
     if (!socket_->isWritable())
     {

@@ -50,9 +50,17 @@ ClientEngine::ClientEngine(QObject *parent) :
 {
 }
 
-int ClientEngine::run(int , char ** )
+int ClientEngine::run(int argc, char ** argv)
 {
     MO_PRINT(tr("Matrix Optimizer Client"));
+
+    // XXX hacky
+    if (argc >= 3)
+    {
+        if (QString(argv[1]) == "-server")
+            settings->setValue("Client/serverAddress", argv[2]);
+    }
+
 
 //    createObjects_();
 
@@ -90,7 +98,7 @@ void ClientEngine::startNetwork_()
 
     connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
-    client_->connectTo("192.168.1.33");
+    client_->connectTo(settings->getValue("Client/serverAddress").toString());
 }
 
 void ClientEngine::showInfoWindow_(bool enable)
@@ -126,6 +134,20 @@ void ClientEngine::showRenderWindow_(bool enable)
 
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
 {
+    MO_NETLOG(DEBUG, "ClientEngine::onNetEvent('" << event->infoName() << "')");
+
+    // auto-delete
+    class EventOwner
+    {
+    public:
+        EventOwner(AbstractNetEvent*e) : e(e) { }
+        ~EventOwner() { delete e; }
+        AbstractNetEvent * e;
+    };
+
+    EventOwner owner(event);
+
+
     if (NetEventRequest * e = netevent_cast<NetEventRequest>(event))
     {
         // respond with system information
@@ -175,11 +197,13 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
     if (NetEventFileInfo * e = netevent_cast<NetEventFileInfo>(event))
     {
         IO::clientFiles().receiveFileInfo(e);
+        return;
     }
 
     if (NetEventFile * e = netevent_cast<NetEventFile>(event))
     {
         IO::clientFiles().receiveFile(e);
+        return;
     }
 
     if (NetEventScene * e = netevent_cast<NetEventScene>(event))
@@ -189,11 +213,10 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             setSceneObject(scene);
         else
             MO_NETLOG(ERROR, "received invalid Scene object");
+        return;
     }
 
     MO_NETLOG(WARNING, "unhandled NetEvent " << event->className() << " in ClientEngine");
-
-    delete event;
 }
 
 void ClientEngine::setProjectionSettings_(NetEventRequest * e)

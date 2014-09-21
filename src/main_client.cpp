@@ -25,9 +25,7 @@ int main(int argc, char *argv[])
     MO::application = new MO::Application(argc, argv);
     MO::settings = new MO::Settings(MO::application);
 
-    MO::ClientEngine * client = new MO::ClientEngine(MO::application);
-
-    int ret = client->run(argc, argv);
+    int ret = MO::clientEngine().run(argc, argv);
 
     delete MO::application;
 

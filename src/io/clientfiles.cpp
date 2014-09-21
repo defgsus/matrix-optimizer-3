@@ -125,6 +125,8 @@ void ClientFiles::fetchFile(const QString &serverFilename)
 
 void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
 {
+    MO_NETLOG(DEBUG, "ClientFiles::receiveFileInfo('" << e->filename() << "')");
+
     auto it = p_->files.find(e->filename());
 
     // update existing cache info
@@ -161,6 +163,8 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
 
 void ClientFiles::receiveFile(NetEventFile * e)
 {
+    MO_NETLOG(DEBUG, "ClientFiles::receiveFile('" << e->filename() << "')");
+
     Private::FileInfo * f;
 
     auto it = p_->files.find(e->filename());
@@ -214,6 +218,8 @@ void ClientFiles::saveCacheNow()
 
 void ClientFiles::Private::saveCache()
 {
+    MO_NETLOG(DEBUG, "ClientFiles::saveCache()");
+
     saveCachePending = false;
 
     try
@@ -243,6 +249,8 @@ void ClientFiles::Private::saveCache()
 
 void ClientFiles::Private::loadCache()
 {
+    MO_NETLOG(DEBUG, "ClientFiles::loadCache()");
+
     files.clear();
 
     IO::XmlStream xml;
@@ -307,6 +315,8 @@ void ClientFiles::Private::queryServerTime()
 
 void ClientFiles::Private::requestFileTime(const QString& serverFilename)
 {
+    MO_NETLOG(DEBUG, "ClientFiles::requestFileTime('" << serverFilename << "')");
+
     auto event = new NetEventRequest();
     event->setRequest(NetEventRequest::GET_SERVER_FILE_TIME);
     event->setData(serverFilename);
@@ -319,6 +329,8 @@ void ClientFiles::Private::requestFileTime(const QString& serverFilename)
 
 void ClientFiles::Private::requestFile(const QString& serverFilename)
 {
+    MO_NETLOG(DEBUG, "ClientFiles::requestFile('" << serverFilename << "')");
+
     auto event = new NetEventRequest();
     event->setRequest(NetEventRequest::GET_SERVER_FILE);
     event->setData(serverFilename);

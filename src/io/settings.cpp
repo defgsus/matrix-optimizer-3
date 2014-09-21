@@ -76,6 +76,7 @@ void Settings::createDefaultValues_()
     defaultValues_["Network/udpport"] = 50001;
 
     defaultValues_["Client/index"] = 0;
+    defaultValues_["Client/serverAddress"] = "192.168.1.33";
 }
 
 QVariant Settings::getValue(const QString &key)

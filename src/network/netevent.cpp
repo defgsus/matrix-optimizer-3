@@ -69,6 +69,10 @@ void AbstractNetEvent::serialize_(QIODevice &io) const
     serialize(s);
 }
 
+QString AbstractNetEvent::infoName() const
+{
+    return QString("%1[%2]").arg(className()).arg(counter());
+}
 
 bool AbstractNetEvent::send(QAbstractSocket * socket) noexcept
 {
@@ -185,6 +189,28 @@ NetEventRequest::NetEventRequest()
 {
 }
 
+QString NetEventRequest::infoName() const
+{
+    return AbstractNetEvent::infoName() + ":" + requestName(request_);
+}
+
+QString NetEventRequest::requestName(Request r)
+{
+    switch (r)
+    {
+        case NONE: return "NONE";
+        case GET_SYSTEM_INFO: return "GET_SYSTEM_INFO";
+        case GET_CLIENT_INDEX: return "GET_CLIENT_INDEX";
+        case SET_CLIENT_INDEX: return "SET_CLIENT_INDEX";
+        case SHOW_INFO_WINDOW: return "SHOW_INFO_WINDOW";
+        case HIDE_INFO_WINDOW: return "HIDE_INFO_WINDOW";
+        case SET_PROJECTION_SETTINGS: return "SET_PROJECTION_SETTINGS";
+        case GET_SERVER_FILE_TIME: return "GET_SERVER_FILE_TIME";
+        case GET_SERVER_FILE: return "GET_SERVER_FILE";
+    }
+    return "*UNKNOWN*";
+}
+
 void NetEventRequest::serialize(IO::DataStream &io) const
 {
     io << (qint64)request_ << data_;
@@ -207,6 +233,14 @@ NetEventInfo::NetEventInfo()
 {
 }
 
+QString NetEventInfo::infoName() const
+{
+    return QString("%1:%2(%3)")
+            .arg(AbstractNetEvent::infoName())
+            .arg(NetEventRequest::requestName(request_))
+            .arg(data_.typeName());
+}
+
 void NetEventInfo::serialize(IO::DataStream &io) const
 {
     io << (qint64)request_ << data_;
@@ -226,6 +260,11 @@ MO_REGISTER_NETEVENT(NetEventSysInfo)
 
 NetEventSysInfo::NetEventSysInfo()
 {
+}
+
+QString NetEventSysInfo::infoName() const
+{
+    return AbstractNetEvent::infoName();
 }
 
 void NetEventSysInfo::serialize(IO::DataStream &io) const
@@ -252,6 +291,11 @@ MO_REGISTER_NETEVENT(NetEventFileInfo)
 NetEventFileInfo::NetEventFileInfo()
     : present_  (false)
 {
+}
+
+QString NetEventFileInfo::infoName() const
+{
+    return AbstractNetEvent::infoName() + "(.." + filename_.right(12) + ")";
 }
 
 void NetEventFileInfo::serialize(IO::DataStream &io) const
@@ -281,6 +325,11 @@ MO_REGISTER_NETEVENT(NetEventFile)
 
 NetEventFile::NetEventFile()
 {
+}
+
+QString NetEventFile::infoName() const
+{
+    return AbstractNetEvent::infoName() + "(.." + filename_.right(12) + ")";
 }
 
 void NetEventFile::serialize(IO::DataStream &io) const
@@ -333,6 +382,11 @@ MO_REGISTER_NETEVENT(NetEventScene)
 
 NetEventScene::NetEventScene()
 {
+}
+
+QString NetEventScene::infoName() const
+{
+    return AbstractNetEvent::infoName() + "(" + data_.size() + "b)";
 }
 
 void NetEventScene::serialize(IO::DataStream &io) const
