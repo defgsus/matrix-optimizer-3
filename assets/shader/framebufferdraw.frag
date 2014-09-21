@@ -1,6 +1,7 @@
-#version 130
+#version 330
 
 in vec4 v_texCoord;
+out vec4 fragColor;
 
 #ifndef MO_FULLDOME_CUBE
     uniform sampler2D tex_framebuffer;
@@ -21,7 +22,7 @@ const float angle_of_view = 180.0;
 vec4 mo_pixel(in vec2 texCoord)
 {
 #ifndef MO_FULLDOME_CUBE
-    return texture2D(tex_framebuffer, texCoord);
+    return texture(tex_framebuffer, texCoord);
 
 #else
     // cube to fulldome
@@ -70,6 +71,6 @@ void main(void)
         }
     }
 
-    gl_FragColor = col / float(MO_ANTIALIAS * MO_ANTIALIAS);
+    fragColor = col / float(MO_ANTIALIAS * MO_ANTIALIAS);
 #endif
 }

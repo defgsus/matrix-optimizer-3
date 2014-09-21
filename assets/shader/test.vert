@@ -1,4 +1,4 @@
-#version 130
+#version 330
 
 #define MO_NUM_LIGHTS 3
 

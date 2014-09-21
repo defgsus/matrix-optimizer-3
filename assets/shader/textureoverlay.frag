@@ -1,4 +1,4 @@
-#version 130
+#version 330
 
 in vec4 v_texCoord;
 in mat3 v_dir_matrix;

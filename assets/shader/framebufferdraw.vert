@@ -1,7 +1,7 @@
-#version 130
+#version 330
 
-attribute vec4 a_position;
-attribute vec4 a_texCoord;
+in vec4 a_position;
+in vec4 a_texCoord;
 
 uniform mat4 u_viewTransform;
 

@@ -1,6 +1,7 @@
-#version 130
+#version 330
 
 in vec4 v_texCoord;
+out vec4 fragColor;
 
 #ifndef MO_FULLDOME_CUBE
 uniform sampler2D tex_framebuffer;
@@ -53,7 +54,7 @@ vec4 mo_pixel(in vec2 texCoord)
 void main(void)
 {
 #ifndef MO_ANTIALIAS
-    gl_FragColor = u_color * mo_pixel(v_texCoord.xy);
+    fragColor = u_color * mo_pixel(v_texCoord.xy);
 #else
 
     vec4 col = vec4(0., 0., 0., 0.);
@@ -70,6 +71,6 @@ void main(void)
         }
     }
 
-    gl_FragColor = u_color * (col / float(MO_ANTIALIAS * MO_ANTIALIAS));
+    fragColor = u_color * (col / float(MO_ANTIALIAS * MO_ANTIALIAS));
 #endif
 }

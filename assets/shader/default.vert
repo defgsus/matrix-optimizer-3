@@ -1,4 +1,4 @@
-#version 130
+#version 330
 #extension GL_ARB_gpu_shader5 : enable // for inverse()
 
 
