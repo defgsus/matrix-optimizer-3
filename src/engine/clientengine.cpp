@@ -28,6 +28,7 @@
 #include "projection/projectionsystemsettings.h"
 #include "io/clientfiles.h"
 #include "io/filemanager.h"
+#include "tool/deleter.h"
 
 namespace MO {
 
@@ -134,19 +135,9 @@ void ClientEngine::showRenderWindow_(bool enable)
 
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
 {
-    MO_NETLOG(DEBUG, "ClientEngine::onNetEvent('" << event->infoName() << "')");
+    MO_NETLOG(DEBUG, "ClientEngine::onNetEvent( " << event->infoName() << " )");
 
-    // auto-delete
-    class EventOwner
-    {
-    public:
-        EventOwner(AbstractNetEvent*e) : e(e) { }
-        ~EventOwner() { delete e; }
-        AbstractNetEvent * e;
-    };
-
-    EventOwner owner(event);
-
+    ScopedDeleter<AbstractNetEvent> deleter(event);
 
     if (NetEventRequest * e = netevent_cast<NetEventRequest>(event))
     {
@@ -216,7 +207,7 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         return;
     }
 
-    MO_NETLOG(WARNING, "unhandled NetEvent " << event->className() << " in ClientEngine");
+    MO_NETLOG(WARNING, "unhandled NetEvent " << event->infoName() << " in ClientEngine");
 }
 
 void ClientEngine::setProjectionSettings_(NetEventRequest * e)

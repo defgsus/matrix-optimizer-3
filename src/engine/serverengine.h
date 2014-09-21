@@ -74,6 +74,10 @@ public:
         Ownership is taken. */
     bool sendEvent(AbstractNetEvent*);
 
+    /** Sends the event to the particular client.
+        Ownership is taken. */
+    bool sendEvent(ClientInfo&, AbstractNetEvent*);
+
 signals:
 
     /** Emitted whenever a client connects or disconnects */
@@ -96,6 +100,7 @@ private slots:
     void onTcpDisconnected_(QTcpSocket*);
     void onTcpError_(QTcpSocket*);
     void onTcpData_(QTcpSocket*);
+    void onEvent_(ClientInfo& , AbstractNetEvent*);
 
 private:
 

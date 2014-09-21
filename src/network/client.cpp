@@ -17,6 +17,7 @@
 #include "netlog.h"
 #include "netevent.h"
 #include "networkmanager.h"
+#include "tool/deleter.h"
 
 namespace MO {
 
@@ -98,19 +99,17 @@ void Client::connectTo(const QHostAddress & a)
 
 bool Client::sendEvent(AbstractNetEvent * event)
 {
-    MO_NETLOG(DEBUG, "Client::sendEvent(" << event->infoName() << ")");
+    MO_NETLOG(DEBUG, "Client::sendEvent( " << event->infoName() << " )");
+
+    ScopedDeleter<AbstractNetEvent> deleter(event);
 
     if (!socket_->isWritable())
     {
-        MO_NETLOG(ERROR, "Client::sendEvent(" << event << ") on unwriteable socket");
-        delete event;
+        MO_NETLOG(ERROR, "Client::sendEvent( " << event->infoName() << " ) on unwriteable socket");
         return false;
     }
 
-    bool suc = event->send(socket_);
-    delete event;
-
-    return suc;
+    return event->send(socket_);
 }
 
 void Client::connect_()

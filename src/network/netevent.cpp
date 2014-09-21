@@ -59,14 +59,26 @@ AbstractNetEvent * AbstractNetEvent::createClass(const QString &className)
 
 void AbstractNetEvent::serialize_(QIODevice &io) const
 {
-    IO::DataStream s(&io);
+    // first serialize into a bytearray
+    QByteArray data;
+    IO::DataStream s(&data, QIODevice::WriteOnly);
 
-    s.writeHeader("nete", 1);
+    s.writeHeader("netev", 1);
 
     s << className();
     s << counter_;
 
     serialize(s);
+
+    // then write the size + raw data to socket/device
+    QDataStream stream(&io);
+    stream << (qint64)data.size();
+
+    qint64 written = io.write(data);
+
+    if (written != data.size())
+        MO_IO_ERROR(WRITE, "Could not write all of NetEvent data to socket "
+                    << written << "/" << data.size());
 }
 
 QString AbstractNetEvent::infoName() const
@@ -98,7 +110,7 @@ bool AbstractNetEvent::send(QAbstractSocket * socket) noexcept
     }
     catch (const Exception& e)
     {
-        MO_NETLOG(ERROR, "Error sending event " << className() << "\n" << e.what());
+        MO_NETLOG(ERROR, "Error sending event " << infoName() << "\n" << e.what());
     }
     return false;
 }
@@ -110,12 +122,30 @@ AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s) noexcept
 
     try
     {
+        // read size
+        qint64 size;
+        {
+            QDataStream stream(s);
+            stream >> size;
+        }
+
+        // read data
         QByteArray data = s->readAll();
+
+        // block until all is received
+        // XXX add timeout!
+        while (data.size() < size)
+        {
+            MO_NETLOG(DEBUG, "waiting for " << (size - data.size()) << " more bytes.");
+            s->waitForReadyRead();
+            data.append(s->readAll());
+        }
+
         IO::DataStream stream(data);
 
         try
         {
-            stream.readHeader("nete", 1);
+            stream.readHeader("netev", 1);
 
             // get classname
             stream >> cname;
@@ -145,7 +175,7 @@ AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s) noexcept
     }
     catch (...)
     {
-        MO_NETLOG(ERROR, "unknown error receiving NetEvent '" << cname << "'");
+        MO_NETLOG(ERROR, "reading error on receiving NetEvent '" << cname << "'");
         return 0;
     }
 }
@@ -295,7 +325,7 @@ NetEventFileInfo::NetEventFileInfo()
 
 QString NetEventFileInfo::infoName() const
 {
-    return AbstractNetEvent::infoName() + "(.." + filename_.right(12) + ")";
+    return AbstractNetEvent::infoName() + "(.." + filename_.right(18) + ")";
 }
 
 void NetEventFileInfo::serialize(IO::DataStream &io) const
@@ -329,7 +359,7 @@ NetEventFile::NetEventFile()
 
 QString NetEventFile::infoName() const
 {
-    return AbstractNetEvent::infoName() + "(.." + filename_.right(12) + ")";
+    return AbstractNetEvent::infoName() + "(.." + filename_.right(18) + ")";
 }
 
 void NetEventFile::serialize(IO::DataStream &io) const

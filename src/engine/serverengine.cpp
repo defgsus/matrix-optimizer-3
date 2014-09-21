@@ -17,6 +17,7 @@
 #include "io/application.h"
 #include "io/settings.h"
 #include "projection/projectionsystemsettings.h"
+#include "tool/deleter.h"
 
 namespace MO {
 
@@ -156,6 +157,10 @@ void ServerEngine::onTcpError_(QTcpSocket * )
 
 bool ServerEngine::sendEvent(AbstractNetEvent * e)
 {
+    MO_NETLOG(DEBUG, "ServerEngine::sendEvent( " << e->infoName() << " )");
+
+    AutoDeleter<AbstractNetEvent> deleter(e);
+
     bool suc = !clients_.isEmpty();
 
     for (ClientInfo& i : clients_)
@@ -163,9 +168,16 @@ bool ServerEngine::sendEvent(AbstractNetEvent * e)
         suc &= e->send(i.tcpSocket);
     }
 
-    delete e;
-
     return suc;
+}
+
+bool ServerEngine::sendEvent(ClientInfo& client, AbstractNetEvent * e)
+{
+    MO_NETLOG(DEBUG, "ServerEngine::sendEvent(" << client.index << ", " << e->infoName() << " )");
+
+    AutoDeleter<AbstractNetEvent> deleter(e);
+
+    return e->send(client.tcpSocket);
 }
 
 void ServerEngine::sendProjectionSettings()
@@ -222,7 +234,7 @@ void ServerEngine::onTcpData_(QTcpSocket * s)
     const int idx = clientForTcp_(s);
     if (idx<0)
     {
-        MO_NETLOG(WARNING, "data from unknown client " << s->peerAddress().toString());
+        MO_NETLOG(WARNING, "data from unknown client " << s->peerName());
         return;
     }
     ClientInfo& client = clients_[idx];
@@ -233,11 +245,19 @@ void ServerEngine::onTcpData_(QTcpSocket * s)
 
     if (!event)
     {
-        MO_NETLOG(WARNING, "unhandled data from client " << s->peerAddress().toString());
+        MO_NETLOG(WARNING, "unhandled data from client " << s->peerName());
         return;
     }
 
     // handle events
+    onEvent_(client, event);
+}
+
+void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
+{
+    MO_NETLOG(DEBUG, "ServerEngine::onEvent_(" << client.index << ", " << event->infoName() << " )");
+
+    AutoDeleter<AbstractNetEvent> deleter(event);
 
     if (NetEventSysInfo * sys = netevent_cast<NetEventSysInfo>(event))
     {
@@ -249,12 +269,33 @@ void ServerEngine::onTcpData_(QTcpSocket * s)
     {
         if (info->request() == NetEventRequest::GET_CLIENT_INDEX)
             client.index = info->data().toInt();
-
         return;
     }
 
+    if (NetEventRequest * req = netevent_cast<NetEventRequest>(event))
+    {
+        if (req->request() == NetEventRequest::GET_SERVER_FILE_TIME)
+        {
+            auto f = req->createResponse<NetEventFileInfo>();
+            f->setFilename(req->data().toString());
+            f->getFileTime();
+
+            sendEvent(client, f);
+            return;
+        }
+
+        if (req->request() == NetEventRequest::GET_SERVER_FILE)
+        {
+            auto f = req->createResponse<NetEventFile>();
+            f->loadFile(req->data().toString());
+
+            sendEvent(client, f);
+            return;
+        }
+    }
+
     MO_NETLOG(WARNING, "unhandled NetEvent '" << event->className()
-              << "' from client " << s->peerName());
+              << "' from client " << client.tcpSocket->peerName());
 }
 
 

@@ -184,7 +184,8 @@ HEADERS += \
     src/network/network_fwd.h \
     src/gl/opengl_undef.h \
     src/io/streamoperators_glbinding.h \
-    src/io/filemanager.h
+    src/io/filemanager.h \
+    src/tool/deleter.h
 
 
 SOURCES += \
