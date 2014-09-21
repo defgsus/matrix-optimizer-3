@@ -39,10 +39,13 @@ public:
     // ------------------ setter --------------------
 
     /** Clears the list of known filenames */
-    void reset();
+    void clear();
 
     /** Adds a filename to the list of files that are needed. */
     void addFilename(FileType ft, const QString& filename);
+
+    /** Adds all the filenames to the list of files that are needed. */
+    void addFilenames(const FileList&);
 
     /** Starts looking for files.
         On clients, the files will be transferred if needed. */

@@ -27,6 +27,7 @@
 #include "io/settings.h"
 #include "projection/projectionsystemsettings.h"
 #include "io/clientfiles.h"
+#include "io/filemanager.h"
 
 namespace MO {
 
@@ -248,7 +249,17 @@ void ClientEngine::setSceneObject(Scene * scene)
     connect(scene_, SIGNAL(playbackStopped()),
             glWindow_, SLOT(stopAnimation()));
 
-    glWindow_->renderLater();
+    // check for needed files
+
+    IO::FileList files;
+    scene_->getNeededFiles(files);
+
+    IO::fileManager().clear();
+    IO::fileManager().addFilenames(files);
+
+    IO::fileManager().acquireFiles();
+
+    //glWindow_->renderLater();
 }
 
 

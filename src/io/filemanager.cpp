@@ -82,9 +82,17 @@ QString FileManager::localFilename(const QString &filename)
 }
 
 
-void FileManager::reset()
+void FileManager::clear()
 {
     p_->files.clear();
+}
+
+void FileManager::addFilenames(const FileList & list)
+{
+    for (const FileListEntry& f : list)
+    {
+        addFilename(f.second, f.first);
+    }
 }
 
 void FileManager::addFilename(FileType ft, const QString &filename)
