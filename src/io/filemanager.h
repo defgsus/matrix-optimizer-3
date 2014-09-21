@@ -41,25 +41,27 @@ public:
     /** Clears the list of known filenames */
     void reset();
 
-    /** Adds a filename to the list if files that are needed. */
+    /** Adds a filename to the list of files that are needed. */
     void addFilename(FileType ft, const QString& filename);
 
     /** Starts looking for files.
         On clients, the files will be transferred if needed. */
     void acquireFiles();
 
-    // ----------------- client mode ----------------
-
-#ifdef MO_CLIENT
-
-    /** Gets the file */
-    void getFile(const QString& filename, IO::FileType ft);
-
-#endif
-
 signals:
 
-public slots:
+    /** Emitted when all files are ready */
+    void filesReady();
+
+    /** Emitted when a file is not ready */
+    void fileNotReady(const QString& filename);
+
+private slots:
+
+#ifdef MO_CLIENT
+    void onFileReady_(const QString& serverName, const QString& localName);
+    void onFileNotReady_(const QString&);
+#endif
 
 private:
 

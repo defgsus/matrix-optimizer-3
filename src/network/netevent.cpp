@@ -18,6 +18,8 @@
 #include "io/error.h"
 #include "network/netlog.h"
 #include "io/systeminfo.h"
+#include "object/objectfactory.h"
+#include "object/scene.h"
 
 namespace MO {
 
@@ -320,6 +322,58 @@ bool NetEventFile::saveFile(const QString &fn) const
 
     f.write(data_);
     return true;
+}
+
+
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventScene)
+
+NetEventScene::NetEventScene()
+{
+}
+
+void NetEventScene::serialize(IO::DataStream &io) const
+{
+    io << data_;
+}
+
+void NetEventScene::deserialize(IO::DataStream &io)
+{
+    io >> data_;
+}
+
+bool NetEventScene::setScene(const Scene *scene)
+{
+    IO::DataStream io(&data_, QIODevice::WriteOnly);
+    try
+    {
+        ObjectFactory::saveScene(io, scene);
+        return true;
+    }
+    catch (const Exception& e)
+    {
+        MO_NETLOG(ERROR, "Error on NetEventScene::setScene()\n"
+                  << e.what());
+    }
+    return false;
+}
+
+Scene * NetEventScene::getScene() const
+{
+    IO::DataStream io(data_);
+    try
+    {
+        return ObjectFactory::loadScene(io);
+    }
+    catch (const Exception& e)
+    {
+        MO_NETLOG(ERROR, "Error on NetEventScene::getScene()\n"
+                  << e.what());
+    }
+    return 0;
 }
 
 } // namespace MO

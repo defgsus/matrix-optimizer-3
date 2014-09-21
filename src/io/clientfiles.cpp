@@ -29,7 +29,7 @@ class ClientFiles::Private
 {
 public:
 
-    Private() : saveCachePending(false) { }
+    Private(ClientFiles * cf) : cf(cf), saveCachePending(false) { }
 
     struct FileInfo
     {
@@ -41,12 +41,20 @@ public:
         /** Set to serverTime on transfer */
                 clientTime;
         bool    serverPresent,
-                clientPresent;
+                clientPresent,
+        /** Server was querried for file time (serverTime) ? */
+                timeUpdated;
     };
 
     void loadCache();
     void saveCache();
     void checkLocalPresense();
+    void queryServerTime();
+    void requestFileTime(const QString& serverFilename);
+    void requestFile(const QString& serverFilename);
+    bool checkAllReady();
+
+    ClientFiles * cf;
 
     /** serverFilename, FileInfo */
     QMap<QString, FileInfo> files;
@@ -68,7 +76,7 @@ ClientFiles & clientFiles()
 
 ClientFiles::ClientFiles(QObject *parent)
     : QObject   (parent),
-      p_        (new Private())
+      p_        (new Private(this))
 {
     // be sure the directory for cached files is present
     const QString cachedir = settings->getValue("Directory/filecache").toString();
@@ -100,23 +108,20 @@ void ClientFiles::fetchFile(const QString &serverFilename)
         if (it.value().clientPresent)
         {
             // matches server-time?
-            // XXX server should be querried
-            if (it.value().clientTime == it.value().serverTime)
+            if (it.value().timeUpdated
+                && it.value().clientTime == it.value().serverTime)
             {
                 emit fileReady(serverFilename, it.value().clientFilename);
             }
+            else
+                p_->requestFileTime(it.value().serverFilename);
         }
     }
 
-    // request file
-
-    auto event = new NetEventRequest();
-    event->setRequest(NetEventRequest::GET_SERVER_FILE);
-    event->setData(serverFilename);
-
-    if (!clientEngine().sendEvent(event))
-        emit fileNotReady(serverFilename);
+    // not there at all?
+    p_->requestFile(serverFilename);
 }
+
 
 void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
 {
@@ -127,8 +132,18 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
     {
         it.value().serverTime = e->time();
         it.value().serverPresent = e->isPresent();
+        it.value().timeUpdated = true;
 
         saveCache();
+
+        // if file time has changed, request the whole file
+        if (it.value().clientTime < it.value().serverTime)
+            p_->requestFile(it.value().serverFilename);
+        else
+            // done?
+            if (p_->checkAllReady())
+                emit allFilesReady();
+
         return;
     }
 
@@ -138,6 +153,7 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
     f.serverTime = e->time();
     f.serverPresent = e->isPresent();
     f.clientPresent = false;
+    f.timeUpdated = true;
     p_->files.insert(f.serverFilename, f);
 
     saveCache();
@@ -169,9 +185,14 @@ void ClientFiles::receiveFile(NetEventFile * e)
             + QDir::separator());
 
     f->clientTime = f->serverTime;
+    f->timeUpdated = true;
     f->clientPresent = e->saveFile(f->clientFilename);
 
     saveCache();
+
+    // done?
+    if (p_->checkAllReady())
+        emit allFilesReady();
 }
 
 
@@ -246,6 +267,7 @@ void ClientFiles::Private::loadCache()
                 f.clientTime = xml.expectDateTime("local-time");
                 f.serverPresent = false;
                 f.clientPresent = false;
+                f.timeUpdated = false;
 
                 files.insert(f.serverFilename, f);
             }
@@ -258,6 +280,7 @@ void ClientFiles::Private::loadCache()
     }
 
     checkLocalPresense();
+    queryServerTime();
 }
 
 void ClientFiles::Private::checkLocalPresense()
@@ -270,6 +293,52 @@ void ClientFiles::Private::checkLocalPresense()
     }
 }
 
+void ClientFiles::Private::queryServerTime()
+{
+    for (FileInfo& f : files)
+    {
+        auto event = new NetEventRequest();
+        event->setRequest(NetEventRequest::GET_SERVER_FILE_TIME);
+        event->setData(f.serverFilename);
+
+        clientEngine().sendEvent(event);
+    }
+}
+
+void ClientFiles::Private::requestFileTime(const QString& serverFilename)
+{
+    auto event = new NetEventRequest();
+    event->setRequest(NetEventRequest::GET_SERVER_FILE_TIME);
+    event->setData(serverFilename);
+
+    // if sending failed
+    if (!clientEngine().sendEvent(event))
+        // we definitely won't get a file
+        emit cf->fileNotReady(serverFilename);
+}
+
+void ClientFiles::Private::requestFile(const QString& serverFilename)
+{
+    auto event = new NetEventRequest();
+    event->setRequest(NetEventRequest::GET_SERVER_FILE);
+    event->setData(serverFilename);
+
+    // if sending failed
+    if (!clientEngine().sendEvent(event))
+        // we definitely won't get a file
+        emit cf->fileNotReady(serverFilename);
+}
+
+bool ClientFiles::Private::checkAllReady()
+{
+    for (const FileInfo& f : files)
+        if (!(f.serverPresent && f.clientPresent
+           && f.timeUpdated
+           && f.clientTime == f.serverTime))
+            return false;
+
+    return true;
+}
 
 } // namespace IO
 } // namespace MO

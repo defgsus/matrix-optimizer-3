@@ -24,6 +24,9 @@ class QIODevice;
 class QAbstractSocket;
 
 namespace MO {
+
+class Scene;
+
 namespace IO { class DataStream; }
 
 
@@ -298,6 +301,31 @@ private:
     QByteArray data_;
 };
 
+
+
+
+/** Sends a whole Scene */
+class NetEventScene : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventScene)
+
+    // --------- getter -------------------
+
+    /** Constructs a scene object.
+        On errors, NULL is returned. */
+    Scene * getScene() const;
+
+    // --------- setter -------------------
+
+    /** Serializes the scene object.
+        Returns success. Throws nothing. */
+    bool setScene(const Scene * scene);
+
+private:
+
+    QByteArray data_;
+};
 
 
 } // namespace MO

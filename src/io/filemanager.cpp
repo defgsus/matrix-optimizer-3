@@ -14,9 +14,11 @@
 #include "filemanager.h"
 #include "application.h"
 #ifndef MO_CLIENT
-#   include "engine/serverengine.h"
+//#   include "engine/serverengine.h"
 #else
 #   include "engine/clientengine.h"
+#   include "io/clientfiles.h"
+#   include "network/netlog.h"
 #endif
 
 namespace MO {
@@ -51,6 +53,12 @@ FileManager::FileManager(QObject *parent)
     : QObject   (parent),
       p_        (new Private())
 {
+#ifdef MO_CLIENT
+    connect(&clientFiles(), SIGNAL(fileReady(QString,QString)),
+            this, SLOT(onFileReady_(QString,QString)));
+    connect(&clientFiles(), SIGNAL(fileNotReady(QString)),
+            this, SLOT(onFileNotReady_(QString)));
+#endif
 }
 
 FileManager::~FileManager()
@@ -94,11 +102,13 @@ void FileManager::addFilename(FileType ft, const QString &filename)
 
 void FileManager::acquireFiles()
 {
+    bool allpresent = true;
+
     for (Private::File & f : p_->files)
     {
         if (!f.present)
         {
-            // suppose resource-files as always present
+            // suppose resource-files are always present
             if (f.filename.startsWith(":"))
             {
                 f.present = true;
@@ -112,22 +122,52 @@ void FileManager::acquireFiles()
             QFileInfo inf(f.filename);
             f.present = inf.exists();
             f.localFilename = f.filename;
+            if (!f.present)
+            {
+                emit fileNotReady(f.filename);
+                allpresent = false;
+            }
 
 #else // MO_CLIENT
 
-            // TODO
-
+            clientFiles().fetchFile(f.filename);
+            allpresent = false;
 #endif
         }
     }
+
+    if (allpresent)
+        emit filesReady();
 }
 
 
 #ifdef MO_CLIENT
 
-void FileManager::getFile(const QString &filename, FileType ft)
+void FileManager::onFileReady_(const QString &serverName, const QString &localName)
 {
+    auto it = p_->files.find(serverName);
+    if (it == p_->files.end())
+    {
+        MO_NETLOG(WARNING, "Received file-ready for unrequested file '" << serverName << "'");
+        return;
+    }
 
+    it.value().present = true;
+    it.value().localFilename = localName;
+
+
+    // check for readyness
+
+    for (const Private::File& f : p_->files)
+        if (!f.present)
+            return;
+
+    emit filesReady();
+}
+
+void FileManager::onFileNotReady_(const QString & fn)
+{
+    emit fileNotReady(fn);
 }
 
 #endif

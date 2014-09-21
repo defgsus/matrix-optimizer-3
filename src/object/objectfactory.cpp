@@ -294,6 +294,11 @@ void ObjectFactory::saveScene(const QString &fn, const Scene * scene)
 
     IO::DataStream io(&file);
 
+    saveScene(io, scene);
+}
+
+void ObjectFactory::saveScene(IO::DataStream & io, const Scene * scene)
+{
     io.writeHeader(MO_SCENEFILE_HEADER, MO_SCENEFILE_VERSION);
 
     io << (quint8)useCompression_;
@@ -317,6 +322,11 @@ Scene * ObjectFactory::loadScene(const QString &fn)
 
     IO::DataStream io(&file);
 
+    return loadScene(io);
+}
+
+Scene * ObjectFactory::loadScene(IO::DataStream &io)
+{
     try
     {
         io.readHeader(MO_SCENEFILE_HEADER, MO_SCENEFILE_VERSION);
@@ -324,7 +334,7 @@ Scene * ObjectFactory::loadScene(const QString &fn)
     catch (const IoException &e)
     {
         MO_IO_WARNING(VERSION_MISMATCH,
-                      "error reading scene file '" << fn << "'\n"
+                      "error reading scene\n"
                       << e.what());
         return 0;
     }
@@ -349,12 +359,12 @@ Scene * ObjectFactory::loadScene(const QString &fn)
     }
     else
     {
-        MO_IO_WARNING(VERSION_MISMATCH, "no Scene in file '" << fn << "'");
+        MO_IO_WARNING(VERSION_MISMATCH, "Expected scene, got "
+                      << (o? o->className() : "NULL"));
         if (o)
             delete o;
         return 0;
     }
-
 }
 
 } // namespace MO

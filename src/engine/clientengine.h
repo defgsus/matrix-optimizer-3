@@ -18,6 +18,7 @@
 #include "io/filetypes.h"
 
 namespace MO {
+class Scene;
 namespace GUI { class InfoWindow; }
 
 class Client;
@@ -43,10 +44,14 @@ public slots:
         Ownership of event is taken. */
     bool sendEvent(AbstractNetEvent *);
 
+    /** Sets the current Scene. Ownership is taken. */
+    void setSceneObject(Scene *);
+
 private slots:
 
     void onNetEvent_(AbstractNetEvent *);
     void showInfoWindow_(bool enable);
+    void showRenderWindow_(bool enable);
 
 private:
 
@@ -60,6 +65,8 @@ private:
     GUI::InfoWindow * infoWindow_;
 
     Client * client_;
+
+    Scene * scene_;
 };
 
 } // namespace MO

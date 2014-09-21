@@ -42,8 +42,10 @@ ClientEngine & clientEngine()
 ClientEngine::ClientEngine(QObject *parent) :
     QObject     (parent),
     glManager_  (0),
+    glWindow_   (0),
     infoWindow_ (0),
-    client_     (0)
+    client_     (0),
+    scene_      (0)
 {
 }
 
@@ -79,8 +81,6 @@ void ClientEngine::createGlObjects_()
 {
     glManager_ = new GL::Manager(this);
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
-
-    glWindow_->show();//FullScreen();
 }
 
 void ClientEngine::startNetwork_()
@@ -105,6 +105,23 @@ void ClientEngine::showInfoWindow_(bool enable)
     else if (infoWindow_)
             infoWindow_->hide();
 }
+
+void ClientEngine::showRenderWindow_(bool enable)
+{
+    if (enable)
+    {
+        if (!glWindow_)
+            createGlObjects_();
+
+        glWindow_->showFullScreen();
+    }
+    else
+    {
+        if (glWindow_)
+            glWindow_->hide();
+    }
+}
+
 
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
 {
@@ -164,6 +181,15 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         IO::clientFiles().receiveFile(e);
     }
 
+    if (NetEventScene * e = netevent_cast<NetEventScene>(event))
+    {
+        Scene * scene = e->getScene();
+        if (scene)
+            setSceneObject(scene);
+        else
+            MO_NETLOG(ERROR, "received invalid Scene object");
+    }
+
     MO_NETLOG(WARNING, "unhandled NetEvent " << event->className() << " in ClientEngine");
 
     delete event;
@@ -186,5 +212,44 @@ void ClientEngine::setProjectionSettings_(NetEventRequest * e)
                   << e.what());
     }
 }
+
+void ClientEngine::setSceneObject(Scene * scene)
+{
+    // create gl objects
+
+    if (!glManager_ || !glWindow_)
+        createGlObjects_();
+
+    // delete previous scene
+    if (scene_)
+    {
+        scene_->kill();
+        scene_->deleteLater();
+    }
+
+    scene_ = scene;
+
+    // manage memory
+    scene_->setParent(this);
+
+    // connect to render window
+    connect(glManager_, SIGNAL(renderRequest(uint)), scene_, SLOT(renderScene(uint)));
+    connect(glManager_, SIGNAL(contextCreated(uint,MO::GL::Context*)),
+                scene_, SLOT(setGlContext(uint,MO::GL::Context*)));
+    connect(glManager_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
+                scene_, SLOT(setFreeCameraMatrix(MO::Mat4)));
+
+    connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
+
+    if (glWindow_->context())
+        scene_->setGlContext(glWindow_->threadId(), glWindow_->context());
+    connect(scene_, SIGNAL(playbackStarted()),
+            glWindow_, SLOT(startAnimation()));
+    connect(scene_, SIGNAL(playbackStopped()),
+            glWindow_, SLOT(stopAnimation()));
+
+    glWindow_->renderLater();
+}
+
 
 } // namespace MO
