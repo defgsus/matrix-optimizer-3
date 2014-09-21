@@ -50,7 +50,7 @@ Scene::Scene(QObject *parent) :
     Object              (parent),
     model_              (0),
     glContext_          (0),
-    releaseAllGlRequested_(false),
+    releaseAllGlRequested_(0),
     fbWidth_            (1024),
     fbHeight_           (1024),
     fbFormat_           ((int)gl::GL_RGBA),
@@ -85,6 +85,7 @@ Scene::Scene(QObject *parent) :
     readWriteLock_ = new QReadWriteLock(QReadWriteLock::Recursive);
 
     sceneBufferSize_.resize(sceneNumberThreads_);
+    releaseAllGlRequested_.resize(sceneNumberThreads_);
     sceneBufferSize_[MO_GUI_THREAD] =
     sceneBufferSize_[MO_GFX_THREAD] = 1;
     sceneBufferSize_[MO_AUDIO_THREAD] = 32;
