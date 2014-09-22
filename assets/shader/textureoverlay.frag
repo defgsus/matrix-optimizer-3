@@ -9,7 +9,7 @@ out vec4 color;
 uniform sampler2D u_tex;
 uniform vec4 u_color;
 uniform float u_cam_angle;
-uniform float u_cube_hack; // XXX
+uniform float u_is_cube;
 uniform vec3 u_sphere_offset;
 
 #ifdef MO_FLAT
@@ -43,12 +43,8 @@ vec3 spherical(vec2 scr)
             phi = asin(scr.y / rad);
     }
 
-    // XXX
-    //float angle = u_cam_angle - 11.0 * abs(scr.x)*abs(scr.y);
-    float rad2 = mix(rad, pow(rad,0.59), u_cube_hack * smoothstep(0,1,rad));
-
     float
-        theta = rad2 * u_cam_angle * HALF_PI / 180.0,
+        theta = rad * u_cam_angle * HALF_PI / 180.0,
 
         cx = cos(phi),
         cy = cos(theta),
@@ -68,6 +64,40 @@ vec2 cartesian(vec3 pos)
         cos(u) * v,
         sin(u) * v
         );
+}
+
+// http://stackoverflow.com/questions/2656899/mapping-a-sphere-to-a-cube
+
+vec2 cube_map(in vec2 v)
+{
+    float a2 = v.x * v.x;
+    float b2 = v.y * v.y;
+    float inner1 = 2.0 * a2 - 2.0 * b2 - 3.0;
+    float inner2 = sqrt(inner1 * inner1 - 24.0 * a2);
+    return vec2(
+                sqrt(inner2 + 2.0 * a2 - 2.0 * b2 + 3.0),
+                sqrt(inner2 - 2.0 * a2 + 2.0 * b2 + 3.0)
+                ) / sqrt(2.0)
+//            * vec2(v.x>0.0? 1. : -1, v.y>0.0? 1. : -1.)
+            ;
+
+    //s = sqrt(-sqrt((2 a^2-2 b^2-3)^2-24 a^2)+2 a^2-2 b^2+3)/sqrt(2)
+    //t = sqrt(-sqrt((2 a^2-2 b^2-3)^2-24 a^2)-2 a^2+2 b^2+3)/sqrt(2)
+}
+
+
+// transforms a 3d vector on a unit-sphere surface to a unit-cube position
+// XXX not working
+vec3 to_cube(in vec3 s)
+{
+    vec3 as = abs(s);
+
+    if (as.z > as.x && as.z > as.y)
+        return vec3(cube_map(s.xy), -1.);
+    if (as.x > as.y && as.x > as.z)
+        return vec3(1., cube_map(s.yz));
+    // ...
+    return s;
 }
 
 // get texture color from xy [-1,1]
@@ -90,8 +120,16 @@ void main(void)
 
     // -------- equi-rect projection ------------
 #ifdef MO_EQUIRECT
-    vec3 sphere = (spherical(scr) + u_sphere_offset) * v_dir_matrix;
-    scr = cartesian(sphere);
+
+    vec3 sphere = spherical(scr) + u_sphere_offset;
+
+    // XXX u_sphere_offset not working correctly
+    vec3 cube = //to_cube(normalize(sphere));
+                vec3(scr, -1.) + u_sphere_offset;
+
+    vec3 surface = mix(sphere, cube, u_is_cube) * v_dir_matrix;
+
+    scr = cartesian(surface);
 
     float ang = atan(scr.x, scr.y) / PI;
     float dist = length(scr.xy);
@@ -101,10 +139,15 @@ void main(void)
 #endif
 
 #ifdef MO_FISHEYE
-    vec3 sphere = (spherical(scr) + u_sphere_offset) * v_dir_matrix;
-    vec4 col1 = mo_color( cartesian(sphere) );
-    sphere.z = -sphere.z;
-    vec4 col2 = mo_color( cartesian(sphere) );
+    vec3 sphere = spherical(scr) + u_sphere_offset;
+
+    vec3 cube = vec3(scr, -1.) + u_sphere_offset;
+
+    vec3 surface = mix(sphere, cube, u_is_cube) * v_dir_matrix;
+
+    vec4 col1 = mo_color( cartesian(surface) );
+    surface.z = -surface.z;
+    vec4 col2 = mo_color( cartesian(surface) );
 
     vec4 col = mix(col2, col1, smoothstep(-0.1,0.1, sphere.z));
 #endif

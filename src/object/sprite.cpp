@@ -158,17 +158,24 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
             // apply local transformation with time-offset
             calculateTransformation(orgtrans, time, thread);
 
-            const Mat4 viewtrans = rs.cameraSpace().viewMatrix() * orgtrans;
-
+            const Mat4 cam = rs.cameraSpace().viewMatrix();
+            /*adj_cam[0] = Vec4(1,0,0,0);
+            adj_cam[1] = Vec4(0,1,0,0);
+            adj_cam[2] = Vec4(0,0,1,0);
+            const Mat4 viewtrans = adj_cam * orgtrans;//rs.cameraSpace().viewMatrix() * orgtrans;
+            */
             // -------- billboard matrix ----------
 
             // extract current position
-            Vec3 pos = Vec3(viewtrans[3][0], viewtrans[3][1], viewtrans[3][2]);
+            Vec3 pos = Vec3(orgtrans[3][0], orgtrans[3][1], orgtrans[3][2])
+                       + Vec3(cam[3][0], cam[3][1], cam[3][2]);
+                        //Vec3(viewtrans * Vec4(0,0,0,1));
+                        //Vec3(viewtrans[3][0], viewtrans[3][1], viewtrans[3][2]);
 
             // forward vector
             Vec3 f = glm::normalize(pos);
             // up vector
-            Vec3 u = Vec3(viewtrans[0][1], viewtrans[1][1], viewtrans[2][1]);
+            Vec3 u = Vec3(0,1,0);//Vec3(viewtrans[0][1], viewtrans[1][1], viewtrans[2][1]);
             // right vector
             Vec3 s = glm::normalize(glm::cross(f, u));
             // rebuild up to avoid distortion
@@ -177,8 +184,8 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
             Mat4 lookm(1);
 
             const Float
-                    scalex = glm::length(viewtrans[0]),
-                    scaley = glm::length(viewtrans[1]);
+                    scalex = glm::length(orgtrans[0]),
+                    scaley = glm::length(orgtrans[1]);
 
             lookm[0][0] = s.x * scalex;
             lookm[0][1] = s.y * scalex;
