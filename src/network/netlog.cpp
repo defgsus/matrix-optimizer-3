@@ -99,6 +99,10 @@ void NetworkLogger::connectForLogging(QTcpSocket * socket)
 void NetworkLogger::beginWrite(Level l)
 {
     NetworkLogger & n = instance();
+
+    if (!(l & n.acceptedLevels_))
+        return;
+
     n.stream_->seek(0);
     n.curText_.clear();
     n.curLevel_ = l;
@@ -107,6 +111,9 @@ void NetworkLogger::beginWrite(Level l)
 void NetworkLogger::endWrite()
 {
     NetworkLogger & n(instance());
+
+    if (!(n.curLevel_ & n.acceptedLevels_))
+        return;
 
     LogLine line;
     line.level = n.curLevel_;

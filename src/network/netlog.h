@@ -57,7 +57,8 @@ public:
     template <typename T>
     NetworkLogger& operator << (const T& stuff)
     {
-        *stream_ << stuff;
+        if (curLevel_ & acceptedLevels_)
+            *stream_ << stuff;
         return *this;
     }
 
