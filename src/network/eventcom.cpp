@@ -111,7 +111,7 @@ void EventCom::inputData(QAbstractSocket * socket)
             }
             // otherwise we got more than one packet?
 
-            MO_NETLOG(DEBUG, "got more than one packet " << size << "/" << data.size());
+            MO_NETLOG(DEBUG_V2, "got more than one packet " << size << "/" << data.size());
 
             // process first part
             processPacket_(data.left(size), socket);
@@ -137,24 +137,24 @@ void EventCom::inputData(QAbstractSocket * socket)
     // process buffered data
     if (bufferSize_)
     {
-        MO_NETLOG(DEBUG, "processing data in buffer " << buffer_.size() << "/" << bufferSize_);
+        MO_NETLOG(DEBUG_V2, "processing data in buffer " << buffer_.size() << "/" << bufferSize_);
 
         // append data to buffer
         buffer_.append(socket->readAll());
 
-        // read exactly one packet?
-        if (buffer_.size() == bufferSize_)
-        {
-            processPacket_(buffer_, socket);
-            bufferSize_ = 0;
-            buffer_.clear();
-            return;
-        }
-
         // got more than one packet?
-        while (buffer_.size() > bufferSize_)
+        while (buffer_.size() && buffer_.size() >= bufferSize_)
         {
-            MO_NETLOG(DEBUG, "got more than one packet in buffer "
+            // read exactly one packet?
+            if (buffer_.size() == bufferSize_)
+            {
+                processPacket_(buffer_, socket);
+                bufferSize_ = 0;
+                buffer_.clear();
+                return;
+            }
+
+            MO_NETLOG(DEBUG_V2, "got more than one packet in buffer "
                       << bufferSize_ << "/" << buffer_.size());
 
             // process first part
@@ -169,14 +169,6 @@ void EventCom::inputData(QAbstractSocket * socket)
 
         // rest of the buffer will be processed later
 
-        /*
-        // got only a part?
-        if (buffer_.size() != 0 && buffer_.size() < bufferSize_)
-        {
-            MO_NETLOG(DEBUG, "got part of a packet in buffer " << buffer_.size() << "/" << bufferSize_);
-            // add to buffer
-            buffer_.append(data);
-        }*/
     }
 }
 

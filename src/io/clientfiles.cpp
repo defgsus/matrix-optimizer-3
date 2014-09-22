@@ -82,7 +82,7 @@ ClientFiles::ClientFiles(QObject *parent)
     const QString cachedir = settings->getValue("Directory/filecache").toString();
 
     QDir dir(cachedir);
-    if (!dir.exists() && !dir.mkpath(cachedir))
+    if (!dir.exists() && !dir.mkpath("."))
         MO_NETLOG(ERROR, "ClientFiles is unable to access/create filecache directory '"
                   << cachedir << "'");
 
