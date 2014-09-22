@@ -149,7 +149,7 @@ void Client::onDisconnected_()
 
 void Client::onData_()
 {
-    MO_NETLOG(EVENT, "Client: data available ("
+    MO_NETLOG(EVENT_V2, "Client: data available ("
               << socket_->bytesAvailable() << "b)");
 
     eventCom_->inputData(socket_);

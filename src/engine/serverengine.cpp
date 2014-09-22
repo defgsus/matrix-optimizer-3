@@ -255,7 +255,7 @@ void ServerEngine::onEventCom_(AbstractNetEvent * event)
 
 void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
 {
-    MO_NETLOG(DEBUG, "ServerEngine::onEvent_(" << client.index << ", " << event->infoName() << " )");
+    //MO_NETLOG(DEBUG, "ServerEngine::onEvent_(" << client.index << ", " << event->infoName() << " )");
 
     ScopedDeleter<AbstractNetEvent> deleter(event);
 

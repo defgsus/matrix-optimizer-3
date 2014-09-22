@@ -24,7 +24,8 @@ NetworkLogger * NetworkLogger::instance_ = 0;
 
 NetworkLogger::NetworkLogger(QObject * p)
     : QObject   (p),
-      stream_   (new QTextStream(&curText_))
+      stream_   (new QTextStream(&curText_)),
+      acceptedLevels_   (0xffff ^ EVENT_V2)
 {
     MO_DEBUG_IO("NetworkLogger::NetworkLogger(" << p << ")");
 }

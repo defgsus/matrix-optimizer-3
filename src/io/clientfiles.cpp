@@ -208,7 +208,7 @@ void ClientFiles::saveCache()
     p_->saveCachePending = true;
 
     metaObject()->invokeMethod(
-                this, SLOT(saveCacheNow()), Qt::QueuedConnection);
+                this, "saveCacheNow", Qt::QueuedConnection);
 }
 
 void ClientFiles::saveCacheNow()
