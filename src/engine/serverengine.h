@@ -100,6 +100,7 @@ private slots:
     void onTcpDisconnected_(QTcpSocket*);
     void onTcpError_(QTcpSocket*);
     void onTcpData_(QTcpSocket*);
+    void onEventCom_(AbstractNetEvent*);
     void onEvent_(ClientInfo& , AbstractNetEvent*);
 
 private:
@@ -114,7 +115,7 @@ private:
     QList<ClientInfo> clients_;
 
     TcpServer * server_;
-
+    EventCom * eventCom_;
 };
 
 } // namespace MO

@@ -48,6 +48,7 @@ namespace IO { class DataStream; }
 
 class AbstractNetEvent
 {
+    friend class EventCom;
 public:
     AbstractNetEvent();
     virtual ~AbstractNetEvent() { }
@@ -84,14 +85,6 @@ public:
 
     // ---------- network -----------------
 
-    /** Serializes the event onto the socket stream.
-        If @p socket is NULL, the previously used socket will be used. */
-    bool send(QAbstractSocket * socket = 0) noexcept;
-
-    /** Creates the appropriate event class from the socket stream.
-        Returns the event if succesful, or NULL otherwise */
-    static AbstractNetEvent * receive(QAbstractSocket *) noexcept;
-
     /** Creates a new event as response to this incoming event.
         counter() and socket() will have the same value.
         If className is unknown, NULL is returned. */
@@ -109,8 +102,6 @@ public:
     E * createResponse() const { return static_cast<E*>(createResponseThrow(E::staticClassName())); }
 
 private:
-
-    void serialize_(QIODevice & io) const;
 
     bool isValid_, isReceived_, isSend_;
 

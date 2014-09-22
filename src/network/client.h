@@ -14,12 +14,13 @@
 #include <QObject>
 #include <QHostAddress>
 
+#include "network/network_fwd.h"
+
 class QTcpSocket;
 class QTimer;
 
 namespace MO {
 
-class AbstractNetEvent;
 
 class Client : public QObject
 {
@@ -27,6 +28,8 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = 0);
     ~Client();
+
+    EventCom & eventCom() { return *eventCom_; }
 
 signals:
 
@@ -45,6 +48,9 @@ public slots:
     /** Sends event to server.
         Ownership of event is taken. */
     bool sendEvent(AbstractNetEvent *);
+    /** Sends event to server.
+        Ownership stays will caller. */
+    bool sendEvent(AbstractNetEvent &);
 
 private slots:
 
@@ -63,6 +69,7 @@ private:
 
     QHostAddress address_;
     QTcpSocket * socket_;
+    EventCom * eventCom_;
 
     QTimer * timer_;
 };

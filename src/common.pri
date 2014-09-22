@@ -185,7 +185,8 @@ HEADERS += \
     src/gl/opengl_undef.h \
     src/io/streamoperators_glbinding.h \
     src/io/filemanager.h \
-    src/tool/deleter.h
+    src/tool/deleter.h \
+    src/network/eventcom.h
 
 
 SOURCES += \
@@ -328,4 +329,5 @@ SOURCES += \
     src/network/tcpserver.cpp \
     src/network/netevent.cpp \
     src/io/systeminfo.cpp \
-    src/io/filemanager.cpp
+    src/io/filemanager.cpp \
+    src/network/eventcom.cpp

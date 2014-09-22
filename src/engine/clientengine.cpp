@@ -135,8 +135,6 @@ void ClientEngine::showRenderWindow_(bool enable)
 
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
 {
-    MO_NETLOG(DEBUG, "ClientEngine::onNetEvent( " << event->infoName() << " )");
-
     ScopedDeleter<AbstractNetEvent> deleter(event);
 
     if (NetEventRequest * e = netevent_cast<NetEventRequest>(event))
@@ -146,7 +144,7 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         {
             auto r = e->createResponse<NetEventSysInfo>();
             r->getInfo();
-            r->send();
+            client_->sendEvent(r);
             return;
         }
 
@@ -155,7 +153,7 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             auto r = e->createResponse<NetEventInfo>();
             r->setRequest(e->request());
             r->setData(settings->clientIndex());
-            r->send();
+            client_->sendEvent(r);
             return;
         }
 

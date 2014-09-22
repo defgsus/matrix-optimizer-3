@@ -14,6 +14,7 @@
 #include "network/tcpserver.h"
 #include "network/netevent.h"
 #include "network/netlog.h"
+#include "network/eventcom.h"
 #include "io/application.h"
 #include "io/settings.h"
 #include "projection/projectionsystemsettings.h"
@@ -40,7 +41,8 @@ struct ClientInfo::Private
 
 ServerEngine::ServerEngine(QObject *parent)
     : QObject       (parent),
-      server_       (new TcpServer(this))
+      server_       (new TcpServer(this)),
+      eventCom_     (new EventCom(this))
 {
     MO_NETLOG(CTOR, "ServerEngine::ServerEngine(" << parent << ")");
 
@@ -53,6 +55,8 @@ ServerEngine::ServerEngine(QObject *parent)
     connect(server_, SIGNAL(socketData(QTcpSocket*)),
             this, SLOT(onTcpData_(QTcpSocket*)));
 
+    connect(eventCom_, SIGNAL(eventReceived(AbstractNetEvent*)),
+            this, SLOT(onEventCom_(AbstractNetEvent*)));
 }
 
 ServerEngine::~ServerEngine()
@@ -165,7 +169,7 @@ bool ServerEngine::sendEvent(AbstractNetEvent * e)
 
     for (ClientInfo& i : clients_)
     {
-        suc &= e->send(i.tcpSocket);
+        suc &= eventCom_->sendEvent(i.tcpSocket, e);
     }
 
     return suc;
@@ -177,7 +181,7 @@ bool ServerEngine::sendEvent(ClientInfo& client, AbstractNetEvent * e)
 
     ScopedDeleter<AbstractNetEvent> deleter(e);
 
-    return e->send(client.tcpSocket);
+    return eventCom_->sendEvent(client.tcpSocket, e);
 }
 
 void ServerEngine::sendProjectionSettings()
@@ -201,7 +205,7 @@ void ServerEngine::getSysInfo_(ClientInfo & inf)
     r.setRequest(NetEventRequest::GET_SYSTEM_INFO);
 
     // send off to client
-    r.send(inf.tcpSocket);
+    eventCom_->sendEvent(inf.tcpSocket, &r);
 }
 
 void ServerEngine::getClientIndex_(ClientInfo & inf)
@@ -211,7 +215,7 @@ void ServerEngine::getClientIndex_(ClientInfo & inf)
     r.setRequest(NetEventRequest::GET_CLIENT_INDEX);
 
     // send off to client
-    r.send(inf.tcpSocket);
+    eventCom_->sendEvent(inf.tcpSocket, &r);
 }
 
 void ServerEngine::sendProjectionSettings_(ClientInfo & inf)
@@ -224,32 +228,28 @@ void ServerEngine::sendProjectionSettings_(ClientInfo & inf)
     s.serialize(data);
 
     // XXX error checking???
-    event.send(inf.tcpSocket);
+    eventCom_->sendEvent(inf.tcpSocket, &event);
 }
 
 void ServerEngine::onTcpData_(QTcpSocket * s)
 {
+    // check for event
+
+    eventCom_->inputData(s);
+}
+
+void ServerEngine::onEventCom_(AbstractNetEvent * event)
+{
     // find client
 
-    const int idx = clientForTcp_(s);
+    const int idx = clientForTcp_(static_cast<QTcpSocket*>(event->sender()));
     if (idx<0)
     {
-        MO_NETLOG(WARNING, "data from unknown client " << s->peerName());
+        MO_NETLOG(WARNING, "data from unknown client " << event->sender()->peerName());
         return;
     }
     ClientInfo& client = clients_[idx];
 
-    // check for event
-
-    AbstractNetEvent * event = AbstractNetEvent::receive(s);
-
-    if (!event)
-    {
-        MO_NETLOG(WARNING, "unhandled data from client " << s->peerName());
-        return;
-    }
-
-    // handle events
     onEvent_(client, event);
 }
 
@@ -304,7 +304,7 @@ void ServerEngine::showInfoWindow(int index, bool show)
     NetEventRequest r;
     r.setRequest(show? NetEventRequest::SHOW_INFO_WINDOW : NetEventRequest::HIDE_INFO_WINDOW);
 
-    r.send(clients_[index].tcpSocket);
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
 }
 
 void ServerEngine::setClientIndex(int index, int cindex)
@@ -313,7 +313,7 @@ void ServerEngine::setClientIndex(int index, int cindex)
     r.setRequest(NetEventRequest::SET_CLIENT_INDEX);
     r.setData(cindex);
 
-    r.send(clients_[index].tcpSocket);
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
 }
 
 bool ServerEngine::sendScene(Scene *scene)
