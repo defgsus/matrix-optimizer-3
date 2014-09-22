@@ -271,6 +271,7 @@ void NetEventFile::loadFile(const QString &fn)
 
     present_ = true;
     data_ = f.readAll();
+    time_ = QFileInfo(fn).lastModified();
 }
 
 bool NetEventFile::saveFile(const QString &fn) const

@@ -52,7 +52,7 @@ void Settings::createDefaultValues_()
     defaultValues_["File/scene"] = "";
 
     defaultValues_["Directory/filecache"] = mopath + "/data/cache";
-    defaultValues_["File/filecache"] = mopath + "/data/filecache.xml";
+    defaultValues_["File/filecache"] = mopath + "/data/cache/filecache.xml";
 
     defaultValues_["Audio/api"] = "";
     defaultValues_["Audio/device"] = "";

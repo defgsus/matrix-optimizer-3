@@ -127,7 +127,7 @@ void EventCom::inputData(QAbstractSocket * socket)
         // got only a part?
         if (data.size() != 0 && data.size() < size)
         {
-            MO_NETLOG(DEBUG, "got part of a packet " << data.size() << "/" << size);
+            MO_NETLOG(DEBUG_V2, "got part of a packet " << data.size() << "/" << size);
             // add to buffer
             bufferSize_ = size;
             buffer_ = data;

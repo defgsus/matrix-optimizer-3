@@ -42,8 +42,12 @@ public:
                 clientTime;
         bool    serverPresent,
                 clientPresent,
-        /** Server was querried for file time (serverTime) ? */
-                timeUpdated;
+        /** Server has submitted file time (serverTime) ? */
+                timeUpdated,
+        /** Server was querried for file time */
+                infoRequested,
+        /** Server was querried for the file */
+                transferRequested;
     };
 
     void loadCache();
@@ -102,20 +106,29 @@ void ClientFiles::fetchFile(const QString &serverFilename)
     auto it = p_->files.find(serverFilename);
 
     // have it in cache-file?
-    if (it != p_->files.end())
+    if (it == p_->files.end())
+        MO_NETLOG(DEBUG, "ClientFiles: not in cache: '" << serverFilename << "'")
+    else
     {
         // is actually here?
-        if (it.value().clientPresent)
+        if (!it.value().clientPresent)
+            MO_NETLOG(DEBUG, "ClientFiles: in cache but not present: '" << serverFilename << "'")
+        else
         {
             // matches server-time?
-            if (it.value().timeUpdated
-                && it.value().clientTime == it.value().serverTime)
+            if (!(it.value().timeUpdated
+                  && it.value().clientTime == it.value().serverTime))
+            {
+                MO_NETLOG(DEBUG, "ClientFiles: in cache but outdated: '" << serverFilename << "'");
+                p_->requestFileTime(it.value().serverFilename);
+            }
+            else
             {
                 emit fileReady(serverFilename, it.value().clientFilename);
             }
-            else
-                p_->requestFileTime(it.value().serverFilename);
+            return;
         }
+
     }
 
     // not there at all?
@@ -132,6 +145,8 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
     // update existing cache info
     if (it != p_->files.end())
     {
+        MO_NETLOG(DEBUG, "ClientFiles: updating cache for '" << e->filename() << "'");
+
         it.value().serverTime = e->time();
         it.value().serverPresent = e->isPresent();
         it.value().timeUpdated = true;
@@ -156,6 +171,8 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
     f.serverPresent = e->isPresent();
     f.clientPresent = false;
     f.timeUpdated = true;
+    // clear flag, once the info is there
+    f.infoRequested = false;
     p_->files.insert(f.serverFilename, f);
 
     saveCache();
@@ -178,6 +195,8 @@ void ClientFiles::receiveFile(NetEventFile * e)
     f->serverFilename = e->filename();
     f->serverTime = e->time();
     f->serverPresent = e->isPresent();
+    // clear flag, once the file is there
+    f->transferRequested = false;
 
     // construct a local filename
     f->clientFilename = f->serverFilename;
@@ -231,7 +250,7 @@ void ClientFiles::Private::saveCache()
         {
             xml.newSection("file");
             xml.write("name", f.serverFilename);
-            xml.write("time", f.serverTime.toString());
+            xml.write("time", f.serverTime);
             xml.write("local-name", f.clientFilename);
             xml.write("local-time", f.clientTime);
             xml.endSection();
@@ -315,6 +334,14 @@ void ClientFiles::Private::queryServerTime()
 
 void ClientFiles::Private::requestFileTime(const QString& serverFilename)
 {
+    // check if already requested
+    auto it = files.find(serverFilename);
+    if (it != files.end())
+    {
+        if (it.value().infoRequested)
+            return;
+    }
+
     MO_NETLOG(DEBUG, "ClientFiles::requestFileTime('" << serverFilename << "')");
 
     auto event = new NetEventRequest();
@@ -325,10 +352,24 @@ void ClientFiles::Private::requestFileTime(const QString& serverFilename)
     if (!clientEngine().sendEvent(event))
         // we definitely won't get a file
         emit cf->fileNotReady(serverFilename);
+    else
+    {
+        // flag as requested
+        if (it != files.end())
+            it.value().infoRequested = true;
+    }
 }
 
 void ClientFiles::Private::requestFile(const QString& serverFilename)
 {
+    // check if already requested
+    auto it = files.find(serverFilename);
+    if (it != files.end())
+    {
+        if (it.value().transferRequested)
+            return;
+    }
+
     MO_NETLOG(DEBUG, "ClientFiles::requestFile('" << serverFilename << "')");
 
     auto event = new NetEventRequest();
@@ -339,6 +380,12 @@ void ClientFiles::Private::requestFile(const QString& serverFilename)
     if (!clientEngine().sendEvent(event))
         // we definitely won't get a file
         emit cf->fileNotReady(serverFilename);
+    else
+    {
+        // flag as requested
+        if (it != files.end())
+            it.value().transferRequested = true;
+    }
 }
 
 bool ClientFiles::Private::checkAllReady()
