@@ -32,9 +32,10 @@ public:
         ERROR       = 1,
         WARNING     = 1<<1,
         DEBUG       = 1<<2,
-        EVENT       = 1<<3,
-        EVENT_V2    = 1<<4,
-        CTOR        = 1<<5
+        DEBUG_V2    = 1<<3,
+        EVENT       = 1<<4,
+        EVENT_V2    = 1<<5,
+        CTOR        = 1<<6
     };
 
     struct LogLine
