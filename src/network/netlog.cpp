@@ -100,12 +100,13 @@ void NetworkLogger::beginWrite(Level l)
 {
     NetworkLogger & n = instance();
 
+    n.curLevel_ = l;
+
     if (!(l & n.acceptedLevels_))
         return;
 
     n.stream_->seek(0);
     n.curText_.clear();
-    n.curLevel_ = l;
 }
 
 void NetworkLogger::endWrite()

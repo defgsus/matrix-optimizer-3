@@ -24,11 +24,12 @@ EventCom::EventCom(QObject *parent)
     : QObject       (parent),
       bufferSize_   (0)
 {
+    MO_NETLOG(CTOR, "EventCom::EventCom(" << parent << ")");
 }
 
 bool EventCom::sendEvent(QAbstractSocket * socket, AbstractNetEvent * event)
 {
-    MO_NETLOG(DEBUG, "EventCom::sendEvent(" << socket->peerName()
+    MO_NETLOG(EVENT, "EventCom::sendEvent(" << socket->peerName()
               << ", " << event->infoName() << " )");
 
     if (socket)
@@ -94,16 +95,22 @@ void EventCom::inputData(QAbstractSocket * socket)
         // read data
         QByteArray data = socket->readAll();
 
-        // read exactly one packet?
-        if (data.size() == size)
+        if (data.isEmpty())
         {
-            processPacket_(data, socket);
+            MO_NETLOG(ERROR, "EventCom: received NULL package");
             return;
         }
 
-        // got more than one packet?
-        while (data.size() > size)
+        while (data.size() && data.size() >= size)
         {
+            // read exactly one packet?
+            if (data.size() == size)
+            {
+                processPacket_(data, socket);
+                return;
+            }
+            // otherwise we got more than one packet?
+
             MO_NETLOG(DEBUG, "got more than one packet " << size << "/" << data.size());
 
             // process first part
@@ -114,6 +121,7 @@ void EventCom::inputData(QAbstractSocket * socket)
             QDataStream stream(data);
             stream >> size;
             data.remove(0, sizeof(qint64));
+//            MO_NETLOG(DEBUG, "next chunk " << size << "/" << data.size());
         }
 
         // got only a part?
@@ -129,6 +137,8 @@ void EventCom::inputData(QAbstractSocket * socket)
     // process buffered data
     if (bufferSize_)
     {
+        MO_NETLOG(DEBUG, "processing data in buffer " << buffer_.size() << "/" << bufferSize_);
+
         // append data to buffer
         buffer_.append(socket->readAll());
 
@@ -187,7 +197,7 @@ void EventCom::processPacket_(const QByteArray & data, QAbstractSocket * sender)
         event = AbstractNetEvent::createClass(cname);
         if (!event)
         {
-            MO_NETLOG(ERROR, "unknown NetEvent '" << cname << "'");
+            MO_NETLOG(ERROR, "received unknown NetEvent '" << cname << "'");
             return;
         }
 
@@ -197,7 +207,7 @@ void EventCom::processPacket_(const QByteArray & data, QAbstractSocket * sender)
         event->socket_ = sender;
         event->isReceived_ = true;
 
-        MO_NETLOG(DEBUG, "EventCom::eventReceived(" << sender->peerName()
+        MO_NETLOG(EVENT, "EventCom::eventReceived(" << sender->peerName()
                   << ", " << event->infoName() << " )");
 
         emit eventReceived(event);
