@@ -159,7 +159,7 @@ bool ServerEngine::sendEvent(AbstractNetEvent * e)
 {
     MO_NETLOG(DEBUG, "ServerEngine::sendEvent( " << e->infoName() << " )");
 
-    AutoDeleter<AbstractNetEvent> deleter(e);
+    ScopedDeleter<AbstractNetEvent> deleter(e);
 
     bool suc = !clients_.isEmpty();
 
@@ -175,7 +175,7 @@ bool ServerEngine::sendEvent(ClientInfo& client, AbstractNetEvent * e)
 {
     MO_NETLOG(DEBUG, "ServerEngine::sendEvent(" << client.index << ", " << e->infoName() << " )");
 
-    AutoDeleter<AbstractNetEvent> deleter(e);
+    ScopedDeleter<AbstractNetEvent> deleter(e);
 
     return e->send(client.tcpSocket);
 }
@@ -257,7 +257,7 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
 {
     MO_NETLOG(DEBUG, "ServerEngine::onEvent_(" << client.index << ", " << event->infoName() << " )");
 
-    AutoDeleter<AbstractNetEvent> deleter(event);
+    ScopedDeleter<AbstractNetEvent> deleter(event);
 
     if (NetEventSysInfo * sys = netevent_cast<NetEventSysInfo>(event))
     {
