@@ -73,7 +73,7 @@ vec2 cartesian(vec3 pos)
 // get texture color from xy [-1,1]
 vec4 mo_texture(vec2 xy)
 {
-    return texture2D(u_tex, xy * 0.5 + 0.5);
+    return texture(u_tex, xy * 0.5 + 0.5);
 }
 
 vec4 mo_color(vec2 xy)

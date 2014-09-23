@@ -22,7 +22,7 @@ const float HALF_PI = 1.5707963268;
 vec4 mo_pixel(in vec2 texCoord)
 {
 #ifndef MO_FULLDOME_CUBE
-    return texture2D(tex_framebuffer, texCoord);
+    return texture(tex_framebuffer, texCoord);
 
 #else
     // cube to fulldome
