@@ -75,7 +75,10 @@ void Basic3DView::resizeGL(int w, int h)
 {
     projectionMatrix_ = MATH::perspective(63.f, (float)w/h, 0.1f, 1000.0f);
 
-    glViewport(0,0,w,h);
+    // is this necessary here?
+    int pixelsize = devicePixelRatio(); // Retina support
+    std::cerr << "Basic3DView::resizeGL(int w, int h)" << std::endl;
+    glViewport(0,0,w*pixelsize,h*pixelsize);
 
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(&projectionMatrix_[0][0]);

@@ -875,7 +875,9 @@ void Scene::renderScene(uint thread)
     // --- draw to screen ---
 
     fboFinal_[thread]->colorTexture()->bind();
-    MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
+    int pixelsize = 1; //devicePixelRatio(); // Retina support
+    MO_DEBUG_GL("Scene::renderScene(uint thread)")
+    MO_CHECK_GL( glViewport(0, 0, glContext_->size().width()*pixelsize, glContext_->size().height()*pixelsize) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     screenQuad_[thread]->drawCentered(glContext_->size().width(), glContext_->size().height());

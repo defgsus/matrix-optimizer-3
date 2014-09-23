@@ -65,7 +65,9 @@ uint FrameBufferObject::height() const
 
 void FrameBufferObject::setViewport() const
 {
-    MO_CHECK_GL_COND(rep_, glViewport(0,0, width(), height()) );
+    int pixelsize = 1; //devicePixelRatio(); // Retina support
+    MO_DEBUG_GL("FrameBufferObject::setViewport()")
+    MO_CHECK_GL_COND(rep_, glViewport(0,0, width()*pixelsize, height()*pixelsize) );
 }
 
 
@@ -144,7 +146,9 @@ bool FrameBufferObject::create()
             GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_), err );
     if (err != GL_NO_ERROR) return false;
 
-    MO_CHECK_GL_COND(rep_, glViewport(0, 0, width(), height()) );
+    int pixelsize = 1; //devicePixelRatio(); // Retina support
+    MO_DEBUG_GL("FrameBufferObject::create()")
+    MO_CHECK_GL_COND(rep_, glViewport(0, 0, width()*pixelsize, height()*pixelsize) );
     MO_CHECK_GL_COND(rep_, glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
     return true;

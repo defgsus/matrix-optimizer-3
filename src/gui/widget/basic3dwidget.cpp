@@ -29,9 +29,15 @@
 namespace MO {
 namespace GUI {
 
+QGLFormat createFormat() {
+    QGLFormat format;
+    format.setVersion(3, 3);
+    format.setProfile(QGLFormat::CoreProfile);
+    return format;
+}
 
 Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
-    QGLWidget       (parent),
+    QGLWidget       (createFormat(), parent),
     renderMode_     (mode),
     cameraMode_     (CM_FREE),
     isGlInitialized_(false),
@@ -48,9 +54,6 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
 
     //if (mode == RM_DIRECT)
     {
-        QGLFormat f(format());
-        f.setDepth(true);
-        setFormat(f);
     }
 
     viewSet(VD_FRONT, 10);
@@ -313,8 +316,17 @@ void Basic3DWidget::closeEvent(QCloseEvent * e)
 void Basic3DWidget::initializeGL()
 {
     MO_DEBUG_GL("Basic3DWidget::initializeGL()");
-
     makeCurrent();
+    //glbinding::Binding::initialize(false);
+
+    const QString
+            vendor = (const char *)glGetString(gl::GL_VENDOR),
+            version = (const char *)glGetString(gl::GL_VERSION),
+            renderer = (const char *)glGetString(gl::GL_RENDERER);
+
+    MO_DEBUG(     "vendor   " << vendor
+                << "\nversion  " << version
+                << "\nrenderer " << renderer);
 
     MO_EXTEND_EXCEPTION(
         createGLStuff_(),
@@ -472,7 +484,9 @@ void Basic3DWidget::paintGL()
         fbo_->unbind();
 
         // draw to screen
-        MO_CHECK_GL( gl::glViewport(0,0,width(), height()) );
+        int pixelsize = devicePixelRatio(); // Retina support
+        MO_DEBUG_GL("Basic3DWidget::paintGL()")
+        MO_CHECK_GL( gl::glViewport(0,0,width()*pixelsize, height()*pixelsize) );
         MO_CHECK_GL( gl::glClearColor(0.1, 0.1, 0.1, 1.0) );
         MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
         MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
@@ -515,7 +529,9 @@ void Basic3DWidget::paintGL()
         fbo_->unbind();
 
         // draw to screen
-        MO_CHECK_GL( gl::glViewport(0,0,width(), height()) );
+        int pixelsize = devicePixelRatio(); // Retina support
+        MO_DEBUG_GL("Basic3DWidget::paintGL()")
+        MO_CHECK_GL( gl::glViewport(0,0,width()*pixelsize, height()*pixelsize) );
         MO_CHECK_GL( gl::glClearColor(0, 0, 0, 1.0) );
         MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
         MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
