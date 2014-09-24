@@ -12,8 +12,10 @@
 #define MOSRC_PROJECTION_PROJECTORSETTINGS_H
 
 #include <QString>
+#include <QVector>
 
 #include "types/float.h"
+#include "types/vector.h"
 
 namespace MO {
 namespace IO { class XmlStream; }
@@ -46,6 +48,9 @@ public:
     Float yaw() const { return yaw_; }
     Float roll() const { return roll_; }
 
+    uint numOverlapAreas() const { return overlapAreas_.count(); }
+    const QVector<Vec2> & overlapArea(uint idx) const { return overlapAreas_[idx]; }
+
     // -------- setter ------------
 
     void setName(const QString& name) { name_ = name; }
@@ -59,6 +64,9 @@ public:
     void setPitch(Float v) { pitch_ = v; }
     void setYaw(Float v) { yaw_ = v; }
     void setRoll(Float v) { roll_ = v; }
+
+    void clearOverlapAreas() { overlapAreas_.clear(); }
+    void appendOverlapArea(const QVector<Vec2>& a) { overlapAreas_.append(a); }
 
     //______________ PRIVATE AREA _________________
 private:
@@ -76,6 +84,8 @@ private:
         pitch_,
         yaw_,
         roll_;
+
+    QVector<QVector<Vec2>> overlapAreas_;
 };
 
 } // namespace MO

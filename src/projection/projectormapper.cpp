@@ -11,6 +11,8 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
+#include <QSet>
+
 #include "projectormapper.h"
 #include "camerasettings.h"
 #include "math/intersection.h"
@@ -62,6 +64,12 @@ void ProjectorMapper::recalc_()
     trans_ = MATH::rotate(trans_, set_.yaw(),       Vec3(0,1,0));
     trans_ = MATH::rotate(trans_, set_.pitch(),     Vec3(1,0,0));
 
+    // projection matrix of this projector
+    frustum_ = MATH::perspective(set_.fov(), (Float)set_.width()/set_.height(),
+                                 0.0001f, glm::length(pos_) + domeSet_.radius() + 0.1f);
+    // inverse projection/view matrix (for backward mapping)
+    inverseProjView_ = frustum_ * glm::inverse(trans_);
+
     valid_ = true;
 }
 
@@ -111,7 +119,8 @@ Vec3 ProjectorMapper::mapToDome(Float s, Float t) const
     Float depth1, depth2;
     if (!MATH::intersect_ray_sphere(pos, dir, Vec3(0,0,0), domeSet_.radius(), &depth1, &depth2))
     {
-        return pos + dir * (Float)100;
+        // outside dome...
+        return pos + dir * (Float)0.01;
     }
 
     return pos + dir * depth1;
@@ -133,6 +142,15 @@ Vec2 ProjectorMapper::mapToSphere(Float, Float) const
     return Vec2(0,0);
 }
 
+Vec2 ProjectorMapper::mapFromDome(const Vec3 & pdome) const
+{
+    // project into projector's view space
+    Vec4 pscr = inverseProjView_ * Vec4(pdome, 1);
+    pscr /= pscr[3];
+
+    // receive [0,1] point
+    return Vec2(pscr) * (Float)0.5 + (Float)0.5;
+}
 
 
 void ProjectorMapper::getWarpImage(const CameraSettings & cam)
@@ -195,5 +213,89 @@ void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry
         geo->addTriangle((y-1)*numx+x-1, y*numx+x, y*numx+x-1);
     }
 }
+
+
+QVector<Vec2> ProjectorMapper::getOverlapArea(const ProjectorSettings &otherP, Float spacing) const
+{
+    spacing = std::max(spacing, (Float)0.0001);
+
+    // number of points per edge
+    const int numPoints = std::max(1, (int)((Float)1 / spacing));
+
+    // list of already set points within given spacing
+    QSet<qint64> hash;
+
+    // points to work on
+    struct Point
+    {
+        Vec2 st;
+        // corners should always be added
+        // regardless of their spacing to other points
+        bool add_always;
+        Point() { }
+        Point(const Vec2& st, bool add_always = false) : st(st), add_always(add_always) { }
+    };
+    QVector<Point> points;
+
+    // return list
+    QVector<Vec2> poly;
+
+    // mapper for other projector
+    ProjectorMapper other;
+    other.setSettings(domeSet_, otherP);
+
+    // -- get other's edge points to process --
+
+    // bottom edge
+    for (int i=0; i<numPoints; ++i)
+        // other's slice coordinate [0,1]
+        points.append(Point(Vec2((Float)i/(numPoints), 0), i==0));
+    // right edge
+    for (int i=0; i<numPoints; ++i)
+        points.append(Point(Vec2(1, (Float)i/(numPoints)), i==0));
+    // top edge
+    for (int i=0; i<numPoints; ++i)
+        points.append(Point(Vec2((Float)1 - (Float)i/(numPoints), 1), i==0));
+    // left edge
+    for (int i=0; i<numPoints; ++i)
+        points.append(Point(Vec2(0, (Float)1 - (Float)i/(numPoints)), i==0));
+
+    // -- map those points into the current slice --
+
+    for (const Point& p : points)
+    {
+        // other's projection on dome
+        const Vec3 other_dome = other.mapToDome(p.st);
+        const Vec2
+                // slice coordinate [0,1] of other's projection
+                // (which could be outside)
+                st = mapFromDome(other_dome);
+
+        const bool outside = st[0] < 0 || st[0] > 1 || st[1] < 0 || st[1] > 1;
+
+        // always add corners that are inside our slice
+        if (p.add_always && !outside)
+        {
+            poly.append(st);
+            continue;
+        }
+
+        // otherwise clamp to slice area ...
+        const Vec2 stc = glm::clamp(st, (Float)0, (Float)1);
+
+        // ... and check spacing
+        qint64 h = qint64(stc[0] / spacing) | (qint64(stc[1] / spacing) << 32);
+
+        if (!hash.contains(h))
+        {
+            poly.append(stc);
+            hash.insert(h);
+        }
+    }
+
+    return poly;
+}
+
+
 
 } // namespace MO

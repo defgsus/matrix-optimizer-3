@@ -12,6 +12,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "io/xmlstream.h"
+#include "projectormapper.h"
 
 namespace MO {
 
@@ -183,5 +184,24 @@ void ProjectionSystemSettings::removeProjector(int idx)
     cameras_.removeAt(idx);
 }
 
+void ProjectionSystemSettings::calculateOverlapAreas(Float spacing)
+{
+    ProjectorMapper mapper;
+
+    for (int i=0; i<numProjectors(); ++i)
+    {
+        mapper.setSettings(domeSettings(), projectorSettings(i));
+        projectors_[i].clearOverlapAreas();
+
+        for (int j=0; j<numProjectors(); ++j)
+        if (i != j)
+        {
+            const QVector<Vec2>
+                    area = mapper.getOverlapArea(projectorSettings(j), spacing);
+            if (!area.isEmpty())
+                projectors_[i].appendOverlapArea(area);
+        }
+    }
+}
 
 } // namespace MO

@@ -63,8 +63,18 @@ public:
         the projector. */
     Vec3 mapToDome(Float s, Float t) const;
 
+    /** Gives the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
+        The mapping is always done on the inside of the dome, regardless of the position of
+        the projector. */
+    Vec3 mapToDome(const Vec2& st) const { return mapToDome(st[0], st[1]); }
+
     /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
     Vec2 mapToSphere(Float s, Float t) const;
+
+    /** Returns the coordinate within the slice [0,1] for the given position on the dome.
+        If the dome position is not within the projected area, the returned point will
+        be outside the range [0,1]. */
+    Vec2 mapFromDome(const Vec3& dome_pos) const;
 
     // --------------- warping ----------------------------
 
@@ -79,6 +89,11 @@ public:
 
     // -------------- blending -----------------------------
 
+    /** Returns a anti-clockwise polygon outline of the overlapping area between
+        this slice and the slice in @p other.
+        The coordinates are in the range [0,1].
+        If there is no overlap, an empty array is returned. */
+    QVector<Vec2> getOverlapArea(const ProjectorSettings& other, Float spacing = 0.05) const;
 
     //______________ PRIVATE AREA _________________
 private:
@@ -95,7 +110,7 @@ private:
     bool valid_;
     Float aspect_;
     Vec3 pos_;
-    Mat4 trans_;
+    Mat4 trans_, frustum_, inverseProjView_;
 };
 
 } // namespace MO
