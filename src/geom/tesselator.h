@@ -15,6 +15,7 @@
 #include <QPointF>
 
 #include "types/int.h"
+#include "types/vector.h"
 
 namespace MO {
 namespace GEOM {
@@ -29,6 +30,16 @@ public:
     ~Tesselator();
 
     // -------------- tesselation ------------------
+
+    /** Tesselates the polygon described by @p points.
+        The points must describe the contour of a polygon in anti-clockwise order.
+        Any previous data is cleared. */
+    void tesselate(const QVector<Vec2> & points);
+
+    /** Tesselates the polygon described by @p points.
+        The points must describe the contour of a polygon in anti-clockwise order.
+        Any previous data is cleared. */
+    void tesselate(const QVector<DVec2> & points);
 
     /** Tesselates the polygon described by @p points.
         The points must describe the contour of a polygon in anti-clockwise order.

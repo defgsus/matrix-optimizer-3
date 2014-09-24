@@ -31,9 +31,9 @@ namespace GEOM {
 
 void CALLBACK moTesselatorBegin(GLenum which, void * usr);
 void CALLBACK moTesselatorEnd(void * usr);
-void CALLBACK moTesselatorVertex(QPointF * data, void * usr);
+void CALLBACK moTesselatorVertex(DVec2 * data, void * usr);
 void CALLBACK moTesselatorCombine(
-        GLdouble coords[3], void * d[4], GLfloat w[4], QPointF ** out, void * usr);
+        GLdouble coords[3], void * d[4], GLfloat w[4], DVec2 ** out, void * usr);
 
 
 // -- Private --
@@ -44,8 +44,8 @@ public:
 
     GLUtesselator * ctx;
 
-    QVector<QPointF> input, output;
-    QVector<QPointF*> temp;
+    QVector<DVec2> input, output;
+    QVector<DVec2*> temp;
 
     GLenum primitiveType;
 
@@ -78,11 +78,31 @@ Tesselator::~Tesselator()
 }
 
 
-void Tesselator::tesselate(const QVector<QPointF> & poly)
+void Tesselator::tesselate(const QVector<DVec2> & poly)
 {
     // copy points
     p_->clear();
     p_->input = poly;
+
+    p_->tesselate();
+}
+
+void Tesselator::tesselate(const QVector<Vec2> & poly)
+{
+    // copy points
+    p_->clear();
+    for (const Vec2& p : poly)
+        p_->input.append(DVec2(p[0], p[1]));
+
+    p_->tesselate();
+}
+
+void Tesselator::tesselate(const QVector<QPointF> & poly)
+{
+    // copy points
+    p_->clear();
+    for (const QPointF& p : poly)
+        p_->input.append(DVec2(p.x(), p.y()));
 
     p_->tesselate();
 }
@@ -92,9 +112,9 @@ void TesselatorPrivate::tesselate()
     gluTessBeginPolygon(ctx, (void*)this);
     gluTessBeginContour(ctx);
 
-    for (const QPointF& p : input)
+    for (const DVec2& p : input)
     {
-        GLdouble v[] = { p.x(), p.y(), 0.0 };
+        GLdouble v[] = { p[0], p[1], 0.0 };
 
         gluTessVertex(ctx, v, (void*)&p);
     }
@@ -128,21 +148,20 @@ void moTesselatorEnd(void * )
     MO_DEBUG("end");
 }
 
-void moTesselatorVertex(QPointF * p, void * usr)
+void moTesselatorVertex(DVec2 * p, void * usr)
 {
-    //MO_DEBUG("vertex " << p);
-    MO_DEBUG("vertex " << p->x() << ", " << p->y());
+    MO_DEBUG("vertex " << *p);
 
     ((TesselatorPrivate*)usr)->output.append(*p);
 }
 
 void moTesselatorCombine(
-        GLdouble coords[3], void *[], GLfloat [], QPointF **out, void *usr)
+        GLdouble coords[3], void *[], GLfloat [], DVec2 **out, void *usr)
 {
     MO_DEBUG("combine");
 
     // simply copy the new point (no other information needed)
-    *out = new QPointF(coords[0], coords[1]);
+    *out = new DVec2(coords[0], coords[1]);
 
     // append to list for memory managment
     ((TesselatorPrivate*)usr)->temp.append(*out);
@@ -196,9 +215,9 @@ void Tesselator::getGeometry(Geometry & g) const
         for (int i=0; i<p_->output.count()/3; ++i)
         {
             const Geometry::IndexType
-                    p1 = g.addVertex(p_->output.at(i*3).x(), p_->output.at(i*3).y(), 0),
-                    p2 = g.addVertex(p_->output.at(i*3+1).x(), p_->output.at(i*3+1).y(), 0),
-                    p3 = g.addVertex(p_->output.at(i*3+2).x(), p_->output.at(i*3+2).y(), 0);
+                    p1 = g.addVertex(p_->output.at(i*3)[0], p_->output.at(i*3)[1], 0),
+                    p2 = g.addVertex(p_->output.at(i*3+1)[0], p_->output.at(i*3+1)[1], 0),
+                    p3 = g.addVertex(p_->output.at(i*3+2)[0], p_->output.at(i*3+2)[1], 0);
             g.addTriangle(p1,p2,p3);
         }
 
@@ -209,13 +228,13 @@ void Tesselator::getGeometry(Geometry & g) const
     if (p_->primitiveType == GL_TRIANGLE_FAN)
     {
         const Geometry::IndexType
-                origin = g.addVertex(p_->output.at(0).x(), p_->output.at(0).y(), 0);
+                origin = g.addVertex(p_->output.at(0)[0], p_->output.at(0)[1], 0);
 
         for (int i=1; i<p_->output.count()-1; ++i)
         {
             const Geometry::IndexType
-                    p1 = g.addVertex(p_->output.at(i).x(), p_->output.at(i).y(), 0),
-                    p2 = g.addVertex(p_->output.at(i+1).x(), p_->output.at(i+1).y(), 0);
+                    p1 = g.addVertex(p_->output.at(i)[0], p_->output.at(i)[1], 0),
+                    p2 = g.addVertex(p_->output.at(i+1)[0], p_->output.at(i+1)[1], 0);
 
             g.addTriangle(origin, p1, p2);
         }
@@ -228,9 +247,9 @@ void Tesselator::getGeometry(Geometry & g) const
     {
         // first triangle
         Geometry::IndexType
-                p1 = g.addVertex(p_->output.at(0).x(), p_->output.at(0).y(), 0),
-                p2 = g.addVertex(p_->output.at(1).x(), p_->output.at(1).y(), 0),
-                p3 = g.addVertex(p_->output.at(2).x(), p_->output.at(2).y(), 0);
+                p1 = g.addVertex(p_->output.at(0)[0], p_->output.at(0)[1], 0),
+                p2 = g.addVertex(p_->output.at(1)[0], p_->output.at(1)[1], 0),
+                p3 = g.addVertex(p_->output.at(2)[0], p_->output.at(2)[1], 0);
 
         g.addTriangle(p1,p2,p3);
 
@@ -238,7 +257,7 @@ void Tesselator::getGeometry(Geometry & g) const
         {
             p1 = p2;
             p2 = p3;
-            p3 = g.addVertex(p_->output.at(i+2).x(), p_->output.at(i+2).y(), 0);
+            p3 = g.addVertex(p_->output.at(i+2)[0], p_->output.at(i+2)[1], 0);
 
             if (i&1)
                 g.addTriangle(p2,p1,p3);

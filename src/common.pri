@@ -186,7 +186,9 @@ HEADERS += \
     src/io/streamoperators_glbinding.h \
     src/io/filemanager.h \
     src/tool/deleter.h \
-    src/network/eventcom.h
+    src/network/eventcom.h \
+    src/geom/tesselator.h \
+    src/tests/testtesselator.h
 
 
 SOURCES += \
@@ -330,4 +332,6 @@ SOURCES += \
     src/network/netevent.cpp \
     src/io/systeminfo.cpp \
     src/io/filemanager.cpp \
-    src/network/eventcom.cpp
+    src/network/eventcom.cpp \
+    src/geom/tesselator.cpp \
+    src/tests/testtesselator.cpp
