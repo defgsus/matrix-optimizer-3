@@ -133,40 +133,7 @@ Vec2 ProjectorMapper::mapToSphere(Float, Float) const
     return Vec2(0,0);
 }
 
-#if (0)
-void ProjectorMapper::findCenterProjection() const
-{
-    // find corners of projected area
-    const Vec3
-            bl = mapToDome(0,0),
-            br = mapToDome(1,0),
-            tl = mapToDome(0,1),
-            tr = mapToDome(1,1),
-            ml = mapToDome(0,0.5),
-            mr = mapToDome(1,0.5);
-    /*
-    // project back to identity
-    const Mat4 itrans = glm::inverse(trans_);
-    const Vec3
-            iml = Vec3(itrans * Vec4(ml,1)),
-            imr = Vec3(itrans * Vec4(mr,1)),
-            ibl = Vec3(itrans * Vec4(bl,1)),
-            ibr = Vec3(itrans * Vec4(br,1)),
-            itl = Vec3(itrans * Vec4(tl,1)),
-            itr = Vec3(itrans * Vec4(tr,1));
 
-    MO_DEBUG("iml = " << iml << ", imr = " << imr);
-    */
-
-    // horizontal field of view
-    const Float adot = glm::dot(glm::normalize(ml), glm::normalize(mr));
-    const Float angle = MATH::rad_to_deg(std::acos(adot));
-    // aspect ratio
-    //const Float aspect =
-
-    MO_DEBUG("angle = " << angle);
-}
-#endif
 
 void ProjectorMapper::getWarpImage(const CameraSettings & cam)
 {

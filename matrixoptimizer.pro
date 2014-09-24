@@ -36,11 +36,15 @@ include(src/tests/tests.pri)
 INCLUDEPATH += src
 
 HEADERS += \
-    src/engine/serverengine.h
+    src/engine/serverengine.h \
+    src/geom/tesselator.h \
+    src/tests/testtesselator.h
 
 SOURCES += \
     src/main.cpp \
-    src/engine/serverengine.cpp
+    src/engine/serverengine.cpp \
+    src/geom/tesselator.cpp \
+    src/tests/testtesselator.cpp
 
 OTHER_FILES += $$BISON_FILES \
     TODO.txt \

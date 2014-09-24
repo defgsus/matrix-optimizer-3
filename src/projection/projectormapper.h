@@ -50,6 +50,8 @@ public:
     /** Returns the matrix of projector view. */
     const Mat4& getTransformationMatrix() const { return trans_; }
 
+    // --------------- transformation ---------------------
+
     /** Returns the origin of the ray for the given pixel in texture coordinates [0,1] */
     Vec3 getRayOrigin(Float s, Float t) const;
 
@@ -64,11 +66,7 @@ public:
     /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
     Vec2 mapToSphere(Float s, Float t) const;
 
-#if (0)
-    /** Find the projection/view matrix that covers the whole projected area on the dome
-        when viewed from the center. */
-    void findCenterProjection() const;
-#endif
+    // --------------- warping ----------------------------
 
     /** Find the warp necessary to project the image as seen from the camera. */
     void getWarpImage(const CameraSettings&);
@@ -78,6 +76,9 @@ public:
         with texture coordinates representing the warped slice. */
     void getWarpGeometry(const CameraSettings&, GEOM::Geometry *,
                          int num_segments_x = 32, int num_segments_y = 32);
+
+    // -------------- blending -----------------------------
+
 
     //______________ PRIVATE AREA _________________
 private:
