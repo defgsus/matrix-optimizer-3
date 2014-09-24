@@ -11,6 +11,7 @@
 #include "overlapareaeditwidget.h"
 #include "projection/projectorsettings.h"
 #include "geom/geometry.h"
+#include "geom/tesselator.h"
 #include "gl/drawable.h"
 
 namespace MO {
@@ -51,6 +52,16 @@ void OverlapAreaEditWidget::setProjector(const ProjectorSettings& p)
 void OverlapAreaEditWidget::createGeometry_()
 {
     lineGeom_ = new GEOM::Geometry();
+
+    const GEOM::Geometry::IndexType
+            p1 = lineGeom_->addVertex(0,0,0),
+            p2 = lineGeom_->addVertex(1,0,0),
+            p3 = lineGeom_->addVertex(1,1,0),
+            p4 = lineGeom_->addVertex(0,1,0);
+    lineGeom_->addLine(p1,p2);
+    lineGeom_->addLine(p2,p3);
+    lineGeom_->addLine(p3,p4);
+    lineGeom_->addLine(p4,p1);
 }
 
 void OverlapAreaEditWidget::initGL()
@@ -61,9 +72,9 @@ void OverlapAreaEditWidget::initGL()
 
 void OverlapAreaEditWidget::releaseGL()
 {
-    if (triangles_->isReady())
+    if (triangles_ && triangles_->isReady())
         triangles_->releaseOpenGl();
-    if (lines_->isReady())
+    if (lines_ && lines_->isReady())
         lines_->releaseOpenGl();
 }
 
@@ -90,6 +101,7 @@ void OverlapAreaEditWidget::drawGL(const Mat4& projection,
 
     using namespace gl;
 
+    MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
 
     if (triangles_->isReady())

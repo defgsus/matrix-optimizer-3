@@ -27,6 +27,7 @@
 #include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
 #include "widget/groupwidget.h"
+#include "widget/overlapareaeditwidget.h"
 #include "projection/projectionsystemsettings.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
@@ -345,6 +346,20 @@ void ProjectorSetupDialog::createWidgets_()
                                                 "normally zero"),
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
 
+
+                // ------- overlap area --------
+
+                areaGroup_ = gr = new GroupWidget(tr("overlap area blending"), this);
+                lv->addWidget(gr);
+                gr->setExpanded(true);
+
+                areaEdit_ = new OverlapAreaEditWidget(this);
+                areaEdit_->setMinimumSize(160,90);
+                gr->addWidget(areaEdit_);
+                connect(areaEdit_, SIGNAL(glReleased()), this, SLOT(onGlReleased_()));
+
+
+
             lv0->addStretch(2);
 
         // --- preview display ---
@@ -598,9 +613,14 @@ void ProjectorSetupDialog::closeEvent(QCloseEvent * e)
         return;
     }
 
-    if (display_->isGlInitialized())
+    if (display_->isGlInitialized() || areaEdit_->isGlInitialized())
     {
-        display_->shutDownGL();
+        if (display_->isGlInitialized())
+            display_->shutDownGL();
+
+        if (areaEdit_->isGlInitialized())
+            areaEdit_->shutDownGL();
+
         closeRequest_ = true;
         e->ignore();
     }
