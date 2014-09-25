@@ -93,7 +93,7 @@ public:
         this slice and the slice in @p other.
         The coordinates are in the range [0,1].
         If there is no overlap, an empty array is returned. */
-    QVector<Vec2> getOverlapArea(const ProjectorSettings& other, Float spacing = 0.05) const;
+    QVector<Vec2> getOverlapArea(const ProjectorSettings& other, Float min_spacing = 0.05, Float max_spacing = 1.0) const;
 
     //______________ PRIVATE AREA _________________
 private:

@@ -349,18 +349,21 @@ void ProjectorSetupDialog::createWidgets_()
 
                 // ------- overlap area --------
 
-                areaGroup_ = gr = new GroupWidget(tr("overlap area blending"), this);
+                /*areaGroup_ = gr = new GroupWidget(tr("overlap area blending"), this);
                 lv->addWidget(gr);
                 gr->setExpanded(true);
+                */
 
                 areaEdit_ = new OverlapAreaEditWidget(this);
                 areaEdit_->setMinimumSize(160,90);
-                gr->addWidget(areaEdit_);
+                lv->addWidget(areaEdit_);
+                areaEdit_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
                 connect(areaEdit_, SIGNAL(glReleased()), this, SLOT(onGlReleased_()));
 
+                //areaGroup_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
 
-            lv0->addStretch(2);
+            //lv0->addStretch(2);
 
         // --- preview display ---
 
@@ -743,10 +746,8 @@ void ProjectorSetupDialog::updateProjectorSettings_()
         updateWindowTitle_();
     }
 
-/*    ProjectorMapper m;
-    m.setSettings(*domeSettings_, *projectorSettings_);
-    m.getWarpImage(*cameraSettings_);
-*/
+    settings_->calculateOverlapAreas();
+
     updateDisplay_();
 }
 
@@ -755,7 +756,13 @@ void ProjectorSetupDialog::updateDisplay_()
     if (display_->renderMode() == Basic3DWidget::RM_DIRECT_ORTHO)
         display_->viewSetOrthoScale(domeSettings_->radius());
 
-    display_->setProjectionSettings(*settings_, comboProj_->currentIndex());
+    const int idx = comboProj_->currentIndex();
+    if (idx < 0 || idx >= settings_->numProjectors())
+        return;
+
+    display_->setProjectionSettings(*settings_, idx);
+
+    areaEdit_->setProjector(settings_->projectorSettings(idx));
 }
 
 void ProjectorSetupDialog::updateProjectorWidgets_()
@@ -832,6 +839,8 @@ void ProjectorSetupDialog::deleteProjector_()
         return;
 
     settings_->removeProjector(idx);
+    settings_->calculateOverlapAreas();
+
     updateProjectorList_();
     updateActions_();
 }
@@ -869,11 +878,13 @@ void ProjectorSetupDialog::clearPreset_()
     *cameraSettings_ = settings_->cameraSettings(0);
     *domeSettings_ = settings_->domeSettings();
 
+    settings_->calculateOverlapAreas();
+
     updateDomeWidgets_();
     updateProjectorWidgets_();
     updateProjectorList_();
-    updateDisplay_();
     updateActions_();
+    updateDisplay_();
 }
 
 void ProjectorSetupDialog::loadDefault_()
@@ -888,11 +899,13 @@ void ProjectorSetupDialog::loadDefault_()
     *domeSettings_ = settings_->domeSettings();
     filename_.clear();
 
+    settings_->calculateOverlapAreas();
+
     updateDomeWidgets_();
     updateProjectorWidgets_();
     updateProjectorList_();
-    updateDisplay_();
     updateActions_();
+    updateDisplay_();
 }
 
 void ProjectorSetupDialog::saveDefault_()
@@ -955,6 +968,8 @@ void ProjectorSetupDialog::loadPreset_()
         *projectorSettings_ = settings_->projectorSettings(0);
         *cameraSettings_ = settings_->cameraSettings(0);
         *domeSettings_ = settings_->domeSettings();
+
+        settings_->calculateOverlapAreas();
 
         updateProjectorList_();
         updateDomeWidgets_();

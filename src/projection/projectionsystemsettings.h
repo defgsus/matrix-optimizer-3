@@ -66,7 +66,7 @@ public:
     // --------- blending ---------
 
     /** Calculates the overlapping areas between each projector */
-    void calculateOverlapAreas(Float spacing = 0.05);
+    void calculateOverlapAreas(Float min_spacing = 0.05, Float max_spacing = 1.0);
 
 private:
 

@@ -215,12 +215,12 @@ void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry
 }
 
 
-QVector<Vec2> ProjectorMapper::getOverlapArea(const ProjectorSettings &otherP, Float spacing) const
+QVector<Vec2> ProjectorMapper::getOverlapArea(const ProjectorSettings &otherP, Float min_spacing, Float max_spacing) const
 {
-    spacing = std::max(spacing, (Float)0.0001);
+    min_spacing = std::max(min_spacing, (Float)0.0001);
 
     // number of points per edge
-    const int numPoints = std::max(1, (int)((Float)1 / spacing));
+    const int numPoints = std::max(1, (int)((Float)1 / min_spacing));
 
     // list of already set points within given spacing
     QSet<qint64> hash;
@@ -228,70 +228,159 @@ QVector<Vec2> ProjectorMapper::getOverlapArea(const ProjectorSettings &otherP, F
     // points to work on
     struct Point
     {
-        Vec2 st;
+        Vec2 p;
         // corners should always be added
         // regardless of their spacing to other points
-        bool add_always;
+        bool is_corner,
+             is_inside;
         Point() { }
-        Point(const Vec2& st, bool add_always = false) : st(st), add_always(add_always) { }
+        Point(const Vec2& point, const ProjectorMapper& me, const ProjectorMapper& other, bool corner = false)
+            : is_corner(corner)
+        {
+            // project other's projected point into our slice
+            p = me.mapFromDome(other.mapToDome(point));
+            // remember if inside
+            is_inside = MATH::inside_range(p, 0, 1);
+        }
     };
     QVector<Point> points;
-
-    // return list
-    QVector<Vec2> poly;
 
     // mapper for other projector
     ProjectorMapper other;
     other.setSettings(domeSet_, otherP);
 
-    // -- get other's edge points to process --
+    // find if corners of this slice map into other slice
+    const bool
+            c_bl = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(0,0))), 0, 1),
+            c_br = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(1,0))), 0, 1),
+            c_tl = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(0,1))), 0, 1),
+            c_tr = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(1,1))), 0, 1);
+
+    // -- get other's edge points projected into our slice --
+    //    (and flag corners)
 
     // bottom edge
     for (int i=0; i<numPoints; ++i)
-        // other's slice coordinate [0,1]
-        points.append(Point(Vec2((Float)i/(numPoints), 0), i==0));
+        points.append(Point(Vec2((Float)i/(numPoints), 0), *this, other, i==0));
     // right edge
     for (int i=0; i<numPoints; ++i)
-        points.append(Point(Vec2(1, (Float)i/(numPoints)), i==0));
+        points.append(Point(Vec2(1, (Float)i/(numPoints)), *this, other, i==0));
     // top edge
     for (int i=0; i<numPoints; ++i)
-        points.append(Point(Vec2((Float)1 - (Float)i/(numPoints), 1), i==0));
+        points.append(Point(Vec2((Float)1 - (Float)i/(numPoints), 1), *this, other, i==0));
     // left edge
     for (int i=0; i<numPoints; ++i)
-        points.append(Point(Vec2(0, (Float)1 - (Float)i/(numPoints)), i==0));
+        points.append(Point(Vec2(0, (Float)1 - (Float)i/(numPoints)), *this, other, i==0));
 
-    // -- map those points into the current slice --
+    // -- create intersecion with our slice --
 
-    for (const Point& p : points)
+    QVector<Vec2> tmp_poly;
+
+    for (int i=0; i<points.count(); ++i)
     {
-        // other's projection on dome
-        const Vec3 other_dome = other.mapToDome(p.st);
-        const Vec2
-                // slice coordinate [0,1] of other's projection
-                // (which could be outside)
-                st = mapFromDome(other_dome);
-
-        const bool outside = st[0] < 0 || st[0] > 1 || st[1] < 0 || st[1] > 1;
+        const Point& p = points.at(i);
 
         // always add corners that are inside our slice
-        if (p.add_always && !outside)
+        if (p.is_corner && p.is_inside)
         {
-            poly.append(st);
+            tmp_poly.append(p.p);
             continue;
         }
 
-        // otherwise clamp to slice area ...
-        const Vec2 stc = glm::clamp(st, (Float)0, (Float)1);
+        // if outside?
+        if (!p.is_inside)
+        {
+            // get previous/next point
+            const Point&
+                    prev = points.at((i+points.count()-1)%points.count()),
+                    next = points.at((i+1)%points.count());
 
-        // ... and check spacing
-        qint64 h = qint64(stc[0] / spacing) | (qint64(stc[1] / spacing) << 32);
+            // see if prev or next are inside
+            Point p1, p2;
+            if (prev.is_inside)
+            {
+                p1 = prev;
+                p2 = p;
+            }
+            else if (next.is_inside)
+            {
+                p1 = p;
+                p2 = next;
+            }
+            // neither inside
+            else
+            // check if candidate for a slice corner
+            if ((p.p[0] < 0 || p.p[0] > 1) && (p.p[1] < 0 || p.p[1] > 1))
+            {
+                if (!(   (p.p[0] < 0 && p.p[1] < 0 && c_bl)
+                      || (p.p[0] > 1 && p.p[1] < 0 && c_br)
+                      || (p.p[0] < 0 && p.p[1] > 1 && c_tl)
+                      || (p.p[0] > 1 && p.p[1] > 1 && c_tr)))
+                    continue;
+
+                // add unique corner of our slice
+                Vec2 c = glm::clamp(p.p, (Float)0, (Float)1);
+                qint64 h = qint64(c[0] / min_spacing) | (qint64(c[1] / min_spacing) << 32);
+
+                if (!hash.contains(h))
+                {
+                    tmp_poly.append(c);
+                    hash.insert(h);
+                }
+
+                continue;
+            }
+
+            // find intersection with slice edge
+            Float t;
+            if (MATH::intersect_line_line(Vec2(0,0), Vec2(0,1), p1.p, p2.p, &t))
+                tmp_poly.append(Vec2(0,t));
+            else if (MATH::intersect_line_line(Vec2(0,0), Vec2(1,0), p1.p, p2.p, &t))
+                tmp_poly.append(Vec2(t,0));
+            else if (MATH::intersect_line_line(Vec2(1,0), Vec2(1,1), p1.p, p2.p, &t))
+                tmp_poly.append(Vec2(1,t));
+            else if (MATH::intersect_line_line(Vec2(0,1), Vec2(1,1), p1.p, p2.p, &t))
+                tmp_poly.append(Vec2(t,1));
+
+            continue;
+        }
+
+        // if inside, simply add, but check for spacing
+        qint64 h = qint64(p.p[0] / min_spacing) | (qint64(p.p[1] / min_spacing) << 32);
 
         if (!hash.contains(h))
         {
-            poly.append(stc);
+            tmp_poly.append(p.p);
             hash.insert(h);
         }
     }
+
+    if (tmp_poly.isEmpty())
+        return tmp_poly;
+
+    // -- finally create points in-between when spacing is to large --
+    //    (like on our slice's edges)
+
+    QVector<Vec2> poly;
+
+    for (int i=1; i<tmp_poly.count(); ++i)
+    {
+        const Vec2 &
+                p1 = tmp_poly.at(i-1),
+                p2 = tmp_poly.at(i);
+        const Float d = glm::distance(p1, p2);
+        if (d > max_spacing*1.1)
+        {
+            Float t = 0;
+            while (t < d)
+            {
+                poly.append(p1 + t * (p2 - p1));
+                t += max_spacing;
+            }
+        }
+        else poly.append(p1);
+    }
+    poly.append(tmp_poly.back());
 
     return poly;
 }

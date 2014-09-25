@@ -184,7 +184,7 @@ void ProjectionSystemSettings::removeProjector(int idx)
     cameras_.removeAt(idx);
 }
 
-void ProjectionSystemSettings::calculateOverlapAreas(Float spacing)
+void ProjectionSystemSettings::calculateOverlapAreas(Float min_spacing, Float max_spacing)
 {
     ProjectorMapper mapper;
 
@@ -197,7 +197,7 @@ void ProjectionSystemSettings::calculateOverlapAreas(Float spacing)
         if (i != j)
         {
             const QVector<Vec2>
-                    area = mapper.getOverlapArea(projectorSettings(j), spacing);
+                    area = mapper.getOverlapArea(projectorSettings(j), min_spacing, max_spacing);
             if (!area.isEmpty())
                 projectors_[i].appendOverlapArea(area);
         }

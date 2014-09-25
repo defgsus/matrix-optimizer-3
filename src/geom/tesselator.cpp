@@ -20,6 +20,13 @@
 // must be last to avoid conflict with glbinding
 #include <GL/glu.h>
 
+#if (1)
+#   define MO_DEBUG_TESS(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
+#else
+#   define MO_DEBUG_TESS(unused__)
+#endif
+
+
 namespace MO {
 namespace GEOM {
 
@@ -31,6 +38,7 @@ namespace GEOM {
 
 void CALLBACK moTesselatorBegin(GLenum which, void * usr);
 void CALLBACK moTesselatorEnd(void * usr);
+void CALLBACK moTesselatorEdgeFlag(GLboolean, void * usr);
 void CALLBACK moTesselatorVertex(DVec2 * data, void * usr);
 void CALLBACK moTesselatorCombine(
         GLdouble coords[3], void * d[4], GLfloat w[4], DVec2 ** out, void * usr);
@@ -44,13 +52,22 @@ public:
 
     GLUtesselator * ctx;
 
-    QVector<DVec2> input, output;
+    QVector<DVec2>
+    /** input data (polygon outline) */
+        input,
+    /** output of one begin/end block */
+        output,
+    /** final triangles (3 verts each) */
+        final;
+    /** temporary storage (for combine callback) */
     QVector<DVec2*> temp;
 
+    /** type of current begin/end block */
     GLenum primitiveType;
 
     void clear();
-    void tesselate();
+    void tesselate(bool trianglesOnly);
+    void convertBlock();
 };
 
 // -- Tesselator --
@@ -68,6 +85,7 @@ Tesselator::Tesselator()
     gluTessCallback(p_->ctx, GLU_TESS_END_DATA, (void (CALLBACK *)())moTesselatorEnd);
     gluTessCallback(p_->ctx, GLU_TESS_VERTEX_DATA, (void (CALLBACK *)())moTesselatorVertex);
     gluTessCallback(p_->ctx, GLU_TESS_COMBINE_DATA, (void (CALLBACK *)())moTesselatorCombine);
+    //gluTessCallback(p_->ctx, GLU_TESS_EDGE_FLAG_DATA, (void (CALLBACK *)())moTesselatorEdgeFlag);
 }
 
 Tesselator::~Tesselator()
@@ -78,37 +96,44 @@ Tesselator::~Tesselator()
 }
 
 
-void Tesselator::tesselate(const QVector<DVec2> & poly)
+void Tesselator::tesselate(const QVector<DVec2> & poly, bool trianglesOnly)
 {
     // copy points
     p_->clear();
     p_->input = poly;
 
-    p_->tesselate();
+    p_->tesselate(trianglesOnly);
 }
 
-void Tesselator::tesselate(const QVector<Vec2> & poly)
+void Tesselator::tesselate(const QVector<Vec2> & poly, bool trianglesOnly)
 {
     // copy points
     p_->clear();
     for (const Vec2& p : poly)
         p_->input.append(DVec2(p[0], p[1]));
 
-    p_->tesselate();
+    p_->tesselate(trianglesOnly);
 }
 
-void Tesselator::tesselate(const QVector<QPointF> & poly)
+void Tesselator::tesselate(const QVector<QPointF> & poly, bool trianglesOnly)
 {
     // copy points
     p_->clear();
     for (const QPointF& p : poly)
         p_->input.append(DVec2(p.x(), p.y()));
 
-    p_->tesselate();
+    p_->tesselate(trianglesOnly);
 }
 
-void TesselatorPrivate::tesselate()
+void TesselatorPrivate::tesselate(bool trianglesOnly)
 {
+    if (trianglesOnly)
+        gluTessCallback(ctx, GLU_TESS_EDGE_FLAG_DATA, (void (CALLBACK *)())moTesselatorEdgeFlag);
+    else
+        gluTessCallback(ctx, GLU_TESS_EDGE_FLAG_DATA, 0);
+
+    gluTessNormal(ctx, 0,0,1);
+
     gluTessBeginPolygon(ctx, (void*)this);
     gluTessBeginContour(ctx);
 
@@ -127,6 +152,7 @@ void TesselatorPrivate::clear()
 {
     input.clear();
     output.clear();
+    final.clear();
 
     for (auto it : temp)
         delete it;
@@ -138,19 +164,27 @@ void TesselatorPrivate::clear()
 
 void moTesselatorBegin(GLenum which, void * usr)
 {
-    MO_DEBUG("begin " << glbinding::Meta::getString(gl::GLenum(which)));
+    MO_DEBUG_TESS("begin " << glbinding::Meta::getString(gl::GLenum(which)));
 
     ((TesselatorPrivate*)usr)->primitiveType = which;
 }
 
-void moTesselatorEnd(void * )
+void moTesselatorEnd(void * usr)
 {
-    MO_DEBUG("end");
+    MO_DEBUG_TESS("end");
+
+    ((TesselatorPrivate*)usr)->convertBlock();
+    ((TesselatorPrivate*)usr)->output.clear();
+}
+
+void moTesselatorEdgeFlag(GLboolean flag, void*)
+{
+    MO_DEBUG_TESS("edgeflag " << (flag ? "true" : "false"));
 }
 
 void moTesselatorVertex(DVec2 * p, void * usr)
 {
-    MO_DEBUG("vertex " << *p);
+    MO_DEBUG_TESS("vertex " << *p);
 
     ((TesselatorPrivate*)usr)->output.append(*p);
 }
@@ -158,7 +192,7 @@ void moTesselatorVertex(DVec2 * p, void * usr)
 void moTesselatorCombine(
         GLdouble coords[3], void *[], GLfloat [], DVec2 **out, void *usr)
 {
-    MO_DEBUG("combine");
+    MO_DEBUG_TESS("combine");
 
     // simply copy the new point (no other information needed)
     *out = new DVec2(coords[0], coords[1]);
@@ -167,103 +201,105 @@ void moTesselatorCombine(
     ((TesselatorPrivate*)usr)->temp.append(*out);
 }
 
+void TesselatorPrivate::convertBlock()
+{
+    if (!(  (primitiveType == GL_TRIANGLES
+          || primitiveType == GL_TRIANGLE_STRIP
+          || primitiveType == GL_TRIANGLE_FAN)
+         && output.count() >= 3))
+    {
+        MO_WARNING("invalid data on call to TesselatorPrivate::convertBlock()");
+        return;
+    }
+
+    if (primitiveType == GL_TRIANGLES)
+    {
+        final += output;
+        return;
+    }
+
+
+    if (primitiveType == GL_TRIANGLE_FAN)
+    {
+        const DVec2 origin = output.at(0);
+
+        for (int i=1; i<output.count()-1; ++i)
+        {
+            final.append(origin);
+            final.append(output.at(i));
+            final.append(output.at(i+1));
+        }
+
+        return;
+    }
+
+
+    if (primitiveType == GL_TRIANGLE_STRIP)
+    {
+        // first triangle
+        DVec2   p1 = output.at(0),
+                p2 = output.at(1),
+                p3 = output.at(2);
+
+        final.append(p1);
+        final.append(p2);
+        final.append(p3);
+
+        for (int i=1; i<output.count()-2; ++i)
+        {
+            p1 = p2;
+            p2 = p3;
+            p3 = output.at(i+2);
+
+            final.append(p1);
+            final.append(p2);
+            final.append(p3);
+        }
+    }
+
+}
+
 
 bool Tesselator::isValid() const
 {
-    return ((p_->primitiveType == GL_TRIANGLES
-            || p_->primitiveType == GL_TRIANGLE_STRIP
-            || p_->primitiveType == GL_TRIANGLE_FAN)
-            && p_->output.count() >= 3);
+    return p_->final.count() >= 3;
 }
 
 uint Tesselator::numVertices() const
 {
-    return p_->output.count();
+    return p_->final.count();
 }
 
 uint Tesselator::numTriangles() const
 {
-    if (p_->primitiveType == GL_TRIANGLES)
-        return p_->output.count() / 3;
-    if (p_->primitiveType == GL_TRIANGLE_STRIP
-        || p_->primitiveType == GL_TRIANGLE_FAN)
-        return p_->output.count() - 2;
-
-    MO_WARNING("undefined primitive tyoe in Tesselator::numTriangles()");
-    return 0;
+    return p_->final.count() / 3;
 }
 
-Geometry * Tesselator::getGeometry() const
+Geometry * Tesselator::getGeometry(bool asTriangles) const
 {
     auto g = new Geometry();
-    getGeometry(*g);
+    getGeometry(*g, asTriangles);
     return g;
 }
 
-void Tesselator::getGeometry(Geometry & g) const
+void Tesselator::getGeometry(Geometry & g, bool asTriangles) const
 {
-    // makes sure that primitiveType is defined
-    // and there is at least one triangle
-    if (!isValid())
-    {
-        MO_WARNING("invalid data on call to Tesselator::getGeometry()");
-        return;
-    }
-
-    if (p_->primitiveType == GL_TRIANGLES)
-    {
-        for (int i=0; i<p_->output.count()/3; ++i)
-        {
-            const Geometry::IndexType
-                    p1 = g.addVertex(p_->output.at(i*3)[0], p_->output.at(i*3)[1], 0),
-                    p2 = g.addVertex(p_->output.at(i*3+1)[0], p_->output.at(i*3+1)[1], 0),
-                    p3 = g.addVertex(p_->output.at(i*3+2)[0], p_->output.at(i*3+2)[1], 0);
-            g.addTriangle(p1,p2,p3);
-        }
-
-        return;
-    }
-
-
-    if (p_->primitiveType == GL_TRIANGLE_FAN)
+    for (int i=0; i<p_->final.count()/3; ++i)
     {
         const Geometry::IndexType
-                origin = g.addVertex(p_->output.at(0)[0], p_->output.at(0)[1], 0);
+                p1 = g.addVertex(p_->final.at(i*3  )[0], p_->final.at(i*3)[1], 0),
+                p2 = g.addVertex(p_->final.at(i*3+1)[0], p_->final.at(i*3+1)[1], 0),
+                p3 = g.addVertex(p_->final.at(i*3+2)[0], p_->final.at(i*3+2)[1], 0);
 
-        for (int i=1; i<p_->output.count()-1; ++i)
+        if (asTriangles)
+            g.addTriangle(p1, p2, p3);
+        else
         {
-            const Geometry::IndexType
-                    p1 = g.addVertex(p_->output.at(i)[0], p_->output.at(i)[1], 0),
-                    p2 = g.addVertex(p_->output.at(i+1)[0], p_->output.at(i+1)[1], 0);
-
-            g.addTriangle(origin, p1, p2);
+            g.addLine(p1, p2);
+            g.addLine(p2, p3);
+            g.addLine(p3, p1);
         }
 
-        return;
-    }
-
-
-    if (p_->primitiveType == GL_TRIANGLE_STRIP)
-    {
-        // first triangle
-        Geometry::IndexType
-                p1 = g.addVertex(p_->output.at(0)[0], p_->output.at(0)[1], 0),
-                p2 = g.addVertex(p_->output.at(1)[0], p_->output.at(1)[1], 0),
-                p3 = g.addVertex(p_->output.at(2)[0], p_->output.at(2)[1], 0);
-
-        g.addTriangle(p1,p2,p3);
-
-        for (int i=1; i<p_->output.count()-1; ++i)
-        {
-            p1 = p2;
-            p2 = p3;
-            p3 = g.addVertex(p_->output.at(i+2)[0], p_->output.at(i+2)[1], 0);
-
-            if (i&1)
-                g.addTriangle(p2,p1,p3);
-            else
-                g.addTriangle(p1, p2, p3);
-        }
     }
 }
 

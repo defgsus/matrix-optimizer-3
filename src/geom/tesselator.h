@@ -33,18 +33,21 @@ public:
 
     /** Tesselates the polygon described by @p points.
         The points must describe the contour of a polygon in anti-clockwise order.
+        If @p trianglesOnly is true, no GL_TRIANGLE_FAN or GL_TRIANGLE_STRIP will be created.
         Any previous data is cleared. */
-    void tesselate(const QVector<Vec2> & points);
+    void tesselate(const QVector<Vec2> & points, bool trianglesOnly = false);
 
     /** Tesselates the polygon described by @p points.
         The points must describe the contour of a polygon in anti-clockwise order.
+        If @p trianglesOnly is true, no GL_TRIANGLE_FAN or GL_TRIANGLE_STRIP will be created.
         Any previous data is cleared. */
-    void tesselate(const QVector<DVec2> & points);
+    void tesselate(const QVector<DVec2> & points, bool trianglesOnly = false);
 
     /** Tesselates the polygon described by @p points.
         The points must describe the contour of a polygon in anti-clockwise order.
+        If @p trianglesOnly is true, no GL_TRIANGLE_FAN or GL_TRIANGLE_STRIP will be created.
         Any previous data is cleared. */
-    void tesselate(const QVector<QPointF> & points);
+    void tesselate(const QVector<QPointF> & points, bool trianglesOnly = false);
 
     // -------------- getter -----------------------
 
@@ -58,11 +61,11 @@ public:
 
     /** Adds the tesselated triangles to the Geometry object.
         If tesselation was unsuccessful, nothing is added. */
-    void getGeometry(Geometry&) const;
+    void getGeometry(Geometry&, bool asTriangles = true) const;
 
     /** Creates an Geometry object with the tesselated triangles.
         If tesselation was unsuccessful, an empty Geometry is returned. */
-    Geometry * getGeometry() const;
+    Geometry * getGeometry(bool asTriangles = true) const;
 
 private:
 

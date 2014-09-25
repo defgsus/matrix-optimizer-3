@@ -37,6 +37,8 @@ public slots:
 
 protected:
 
+    void resizeGL(int w, int h);
+
     void initGL() Q_DECL_OVERRIDE;
     void releaseGL() Q_DECL_OVERRIDE;
 
@@ -47,12 +49,15 @@ protected:
 
 private:
 
+    void updateFboSize_();
     void createGeometry_();
 
     ProjectorSettings * projector_;
 
     GEOM::Geometry * triangleGeom_, *lineGeom_;
     GL::Drawable * triangles_, *lines_;
+
+    bool showTesselation_;
 };
 
 } // namespace GUI

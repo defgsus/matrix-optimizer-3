@@ -10,6 +10,8 @@
 
 #include "testtesselator.h"
 #include "geom/tesselator.h"
+#include "geom/geometry.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -46,6 +48,25 @@ int TestTesselator::run()
     GEOM::Tesselator tess;
 
     tess.tesselate(points);
+
+    std::cerr.flush();
+    std::cout.flush();
+
+    GEOM::Geometry * g = tess.getGeometry();
+    for (uint i=0; i<g->numTriangles(); ++i)
+    {
+        const GEOM::Geometry::IndexType
+                i1 = g->triangleIndices()[i*3],
+                i2 = g->triangleIndices()[i*3+1],
+                i3 = g->triangleIndices()[i*3+2];
+
+        const Vec3
+                p1 = g->getVertex(i1),
+                p2 = g->getVertex(i2),
+                p3 = g->getVertex(i3);
+
+        MO_PRINT(i << "\t" << p1 << ", " << p2 << ", " << p3);
+    }
 
     return 0;
 }
