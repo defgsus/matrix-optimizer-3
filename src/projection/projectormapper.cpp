@@ -218,6 +218,7 @@ void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry
 QVector<Vec2> ProjectorMapper::getOverlapArea(const ProjectorSettings &otherP, Float min_spacing, Float max_spacing) const
 {
     min_spacing = std::max(min_spacing, (Float)0.0001);
+    max_spacing = std::max(max_spacing, (Float)0.0001);
 
     // number of points per edge
     const int numPoints = std::max(1, (int)((Float)1 / min_spacing));

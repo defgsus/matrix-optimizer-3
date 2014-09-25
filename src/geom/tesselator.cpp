@@ -299,7 +299,6 @@ void Tesselator::getGeometry(Geometry & g, bool asTriangles) const
             g.addLine(p2, p3);
             g.addLine(p3, p1);
         }
-
     }
 }
 
