@@ -130,6 +130,7 @@ public:
         AS_PREVIEW_2    = 1<<1,
         AS_PREVIEW_3    = 1<<2,
         AS_RENDER       = 1<<3,
+        AS_CLIENT_ONLY  = 1<<4,
         AS_PREVIEW      = AS_PREVIEW_1 | AS_PREVIEW_2 | AS_PREVIEW_3,
         AS_ON           = AS_PREVIEW | AS_RENDER,
     };
@@ -638,6 +639,16 @@ public:
 
     /** List of all direct transformation childs */
     const QList<Transformation*> transformationObjects() const { return transformationObjects_; }
+
+
+    // ------------------ files ----------------------
+
+    /** Should return the list of files, this object needs, by appending to the list.
+        The method is called, regardless of the activity scope of the object.
+        Derived classes should return any potentially needed files.
+        More is better than not enough, in this case.
+        Always call the ancestor's method before your derived code. */
+    virtual void getNeededFiles(IO::FileList & files) { Q_UNUSED(files); }
 
 signals:
 

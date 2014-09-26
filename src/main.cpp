@@ -27,6 +27,7 @@
 //#include "tests/testxmlstream.h"
 //#include "tests/testhelpsystem.h"
 //#include "tests/testequation.h"
+//#include "tests/testtesselator.h"
 
 //#include "types/vector.h"
 //#include "tool/stringmanip.h"
@@ -39,6 +40,7 @@ int main(int argc, char *argv[])
     MO::setCurrentThreadName("GUI");
 
     //MO::TestEquation t; return t.run();
+    //MO::TestTesselator t; return t.run();
 
 #if (0)
     using namespace MO;

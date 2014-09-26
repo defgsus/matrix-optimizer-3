@@ -15,6 +15,45 @@ namespace MATH {
 
 namespace { const Float EPSILON = 0.00001; }
 
+bool inside_range(const Vec2 &v, Float mi, Float ma)
+{
+    return v[0] >= mi && v[1] >= mi && v[0] <= ma && v[1] <= ma;
+}
+
+
+bool intersect_line_line(const Vec2& A1,
+                         const Vec2& A2,
+                         const Vec2& B1,
+                         const Vec2& B2,
+                         Float * t)
+{
+    const Vec2
+            u = A2 - A1,
+            v = B2 - B1,
+            w = A1 - B1;
+    const Float D = u[0] * v[1] - u[1] * v[0];
+
+    // parallel?
+    if (std::abs(D) < EPSILON)
+        return false;
+
+    const Float iA = (v[0] * w[1] - v[1] * w[0]) / D;
+    if (iA < 0 || iA > 1)
+        return false;
+
+    const Float iB = (u[0] * w[1] - u[1] * w[0]) / D;
+    if (iB < 0 || iB > 1)
+        return false;
+
+    if (t)
+        *t = iA;
+
+    return true;
+}
+
+
+
+// implementation from povray source :)
 bool intersect_ray_sphere(const Vec3& ray_origin,
                           const Vec3& ray_direction,
                           const Vec3& sphere_center,
@@ -39,8 +78,10 @@ bool intersect_ray_sphere(const Vec3& ray_origin,
     {
         const Float half_chord = std::sqrt(half_chord2);
 
-        *depth1 = closest + half_chord;
-        *depth2 = closest - half_chord;
+        if (depth1)
+            *depth1 = closest + half_chord;
+        if (depth2)
+            *depth2 = closest - half_chord;
 
         return true;
     }

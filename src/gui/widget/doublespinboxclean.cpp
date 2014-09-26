@@ -24,7 +24,8 @@ DoubleSpinBoxClean::DoubleSpinBoxClean(QWidget *parent) :
 
 QString DoubleSpinBoxClean::textFromValue(double val) const
 {
-    return QString::number(val);
+    QLocale l;
+    return l.toString(val);
 }
 
 

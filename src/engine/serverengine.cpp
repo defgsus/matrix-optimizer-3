@@ -14,8 +14,23 @@
 #include "network/tcpserver.h"
 #include "network/netevent.h"
 #include "network/netlog.h"
+#include "network/eventcom.h"
+#include "io/application.h"
+#include "io/settings.h"
+#include "projection/projectionsystemsettings.h"
+#include "tool/deleter.h"
 
 namespace MO {
+
+ServerEngine & serverEngine()
+{
+    static ServerEngine * instance_ = 0;
+    if (!instance_)
+        instance_ = new ServerEngine(application);
+
+    return *instance_;
+}
+
 
 struct ClientInfo::Private
 {
@@ -26,7 +41,8 @@ struct ClientInfo::Private
 
 ServerEngine::ServerEngine(QObject *parent)
     : QObject       (parent),
-      server_       (new TcpServer(this))
+      server_       (new TcpServer(this)),
+      eventCom_     (new EventCom(this))
 {
     MO_NETLOG(CTOR, "ServerEngine::ServerEngine(" << parent << ")");
 
@@ -39,6 +55,8 @@ ServerEngine::ServerEngine(QObject *parent)
     connect(server_, SIGNAL(socketData(QTcpSocket*)),
             this, SLOT(onTcpData_(QTcpSocket*)));
 
+    connect(eventCom_, SIGNAL(eventReceived(AbstractNetEvent*)),
+            this, SLOT(onEventCom_(AbstractNetEvent*)));
 }
 
 ServerEngine::~ServerEngine()
@@ -141,14 +159,43 @@ void ServerEngine::onTcpError_(QTcpSocket * )
     //    onTcpDisconnected_(s);
 }
 
-void ServerEngine::sendEvent(AbstractNetEvent * e)
+bool ServerEngine::sendEvent(AbstractNetEvent * e)
 {
+    MO_NETLOG(DEBUG, "ServerEngine::sendEvent( " << e->infoName() << " )");
+
+    ScopedDeleter<AbstractNetEvent> deleter(e);
+
+    bool suc = !clients_.isEmpty();
+
     for (ClientInfo& i : clients_)
     {
-        e->send(i.tcpSocket);
+        suc &= eventCom_->sendEvent(i.tcpSocket, e);
     }
 
-    delete e;
+    return suc;
+}
+
+bool ServerEngine::sendEvent(ClientInfo& client, AbstractNetEvent * e)
+{
+    MO_NETLOG(DEBUG, "ServerEngine::sendEvent(" << client.index << ", " << e->infoName() << " )");
+
+    ScopedDeleter<AbstractNetEvent> deleter(e);
+
+    return eventCom_->sendEvent(client.tcpSocket, e);
+}
+
+void ServerEngine::sendProjectionSettings()
+{
+    auto event = new NetEventRequest;
+    event->setRequest(NetEventRequest::SET_PROJECTION_SETTINGS);
+
+    auto s = settings->getDefaultProjectionSettings();
+    QByteArray data;
+    s.serialize(data);
+
+    event->setData(data);
+
+    sendEvent(event);
 }
 
 void ServerEngine::getSysInfo_(ClientInfo & inf)
@@ -158,7 +205,7 @@ void ServerEngine::getSysInfo_(ClientInfo & inf)
     r.setRequest(NetEventRequest::GET_SYSTEM_INFO);
 
     // send off to client
-    r.send(inf.tcpSocket);
+    eventCom_->sendEvent(inf.tcpSocket, &r);
 }
 
 void ServerEngine::getClientIndex_(ClientInfo & inf)
@@ -168,32 +215,49 @@ void ServerEngine::getClientIndex_(ClientInfo & inf)
     r.setRequest(NetEventRequest::GET_CLIENT_INDEX);
 
     // send off to client
-    r.send(inf.tcpSocket);
+    eventCom_->sendEvent(inf.tcpSocket, &r);
+}
+
+void ServerEngine::sendProjectionSettings_(ClientInfo & inf)
+{
+    NetEventRequest event;
+    event.setRequest(NetEventRequest::SET_PROJECTION_SETTINGS);
+
+    auto s = settings->getDefaultProjectionSettings();
+    QByteArray data;
+    s.serialize(data);
+
+    // XXX error checking???
+    eventCom_->sendEvent(inf.tcpSocket, &event);
 }
 
 void ServerEngine::onTcpData_(QTcpSocket * s)
 {
+    // check for event
+
+    eventCom_->inputData(s);
+}
+
+void ServerEngine::onEventCom_(AbstractNetEvent * event)
+{
     // find client
 
-    const int idx = clientForTcp_(s);
+    const int idx = clientForTcp_(static_cast<QTcpSocket*>(event->sender()));
     if (idx<0)
     {
-        MO_NETLOG(WARNING, "data from unknown client " << s->peerAddress().toString());
+        MO_NETLOG(WARNING, "data from unknown client " << event->sender()->peerName());
         return;
     }
     ClientInfo& client = clients_[idx];
 
-    // check for event
+    onEvent_(client, event);
+}
 
-    AbstractNetEvent * event = AbstractNetEvent::receive(s);
+void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
+{
+    //MO_NETLOG(DEBUG, "ServerEngine::onEvent_(" << client.index << ", " << event->infoName() << " )");
 
-    if (!event)
-    {
-        MO_NETLOG(WARNING, "unhandled data from client " << s->peerAddress().toString());
-        return;
-    }
-
-    // handle events
+    ScopedDeleter<AbstractNetEvent> deleter(event);
 
     if (NetEventSysInfo * sys = netevent_cast<NetEventSysInfo>(event))
     {
@@ -205,12 +269,33 @@ void ServerEngine::onTcpData_(QTcpSocket * s)
     {
         if (info->request() == NetEventRequest::GET_CLIENT_INDEX)
             client.index = info->data().toInt();
-
         return;
     }
 
+    if (NetEventRequest * req = netevent_cast<NetEventRequest>(event))
+    {
+        if (req->request() == NetEventRequest::GET_SERVER_FILE_TIME)
+        {
+            auto f = req->createResponse<NetEventFileInfo>();
+            f->setFilename(req->data().toString());
+            f->getFileTime();
+
+            sendEvent(client, f);
+            return;
+        }
+
+        if (req->request() == NetEventRequest::GET_SERVER_FILE)
+        {
+            auto f = req->createResponse<NetEventFile>();
+            f->loadFile(req->data().toString());
+
+            sendEvent(client, f);
+            return;
+        }
+    }
+
     MO_NETLOG(WARNING, "unhandled NetEvent '" << event->className()
-              << "' from client " << s->peerAddress().toString());
+              << "' from client " << client.tcpSocket->peerName());
 }
 
 
@@ -219,7 +304,7 @@ void ServerEngine::showInfoWindow(int index, bool show)
     NetEventRequest r;
     r.setRequest(show? NetEventRequest::SHOW_INFO_WINDOW : NetEventRequest::HIDE_INFO_WINDOW);
 
-    r.send(clients_[index].tcpSocket);
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
 }
 
 void ServerEngine::setClientIndex(int index, int cindex)
@@ -228,7 +313,21 @@ void ServerEngine::setClientIndex(int index, int cindex)
     r.setRequest(NetEventRequest::SET_CLIENT_INDEX);
     r.setData(cindex);
 
-    r.send(clients_[index].tcpSocket);
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
 }
+
+bool ServerEngine::sendScene(Scene *scene)
+{
+    auto e = new NetEventScene();
+    if (!e->setScene(scene))
+    {
+        MO_NETLOG(ERROR, "Could not serialize scene");
+        return false;
+    }
+
+    return sendEvent(e);
+}
+
+
 
 } // namespace MO

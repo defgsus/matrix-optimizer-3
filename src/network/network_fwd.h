@@ -14,7 +14,13 @@
 namespace MO
 {
     class AbstractNetEvent;
+    class NetEventRequest;
+    class NetEventInfo;
+    class NetEventSysInfo;
+    class NetEventFileInfo;
+    class NetEventFile;
     class NetworkManager;
+    class EventCom;
 #ifndef MO_CLIENT
     class TcpServer;
     class ServerEngine;

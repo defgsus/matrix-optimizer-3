@@ -16,10 +16,6 @@
 
 namespace MO {
 
-#ifndef MO_CLIENT
-class ServerEngine;
-#endif
-
 class Application : public QApplication
 {
     Q_OBJECT
@@ -28,11 +24,6 @@ public:
 
     QMainWindow * mainWindow() const { return mainWindow_; }
     void setMainWindow(QMainWindow * win) { mainWindow_ = win; }
-
-#ifndef MO_CLIENT
-    /** Returns the one server engine object */
-    ServerEngine * serverEngine();
-#endif
 
 signals:
 
@@ -46,9 +37,6 @@ protected:
 
     QMainWindow * mainWindow_;
 
-#ifndef MO_CLIENT
-    ServerEngine * server_;
-#endif
 };
 
 extern Application * application;

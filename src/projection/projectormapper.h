@@ -50,6 +50,8 @@ public:
     /** Returns the matrix of projector view. */
     const Mat4& getTransformationMatrix() const { return trans_; }
 
+    // --------------- transformation ---------------------
+
     /** Returns the origin of the ray for the given pixel in texture coordinates [0,1] */
     Vec3 getRayOrigin(Float s, Float t) const;
 
@@ -61,14 +63,20 @@ public:
         the projector. */
     Vec3 mapToDome(Float s, Float t) const;
 
+    /** Gives the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
+        The mapping is always done on the inside of the dome, regardless of the position of
+        the projector. */
+    Vec3 mapToDome(const Vec2& st) const { return mapToDome(st[0], st[1]); }
+
     /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
     Vec2 mapToSphere(Float s, Float t) const;
 
-#if (0)
-    /** Find the projection/view matrix that covers the whole projected area on the dome
-        when viewed from the center. */
-    void findCenterProjection() const;
-#endif
+    /** Returns the coordinate within the slice [0,1] for the given position on the dome.
+        If the dome position is not within the projected area, the returned point will
+        be outside the range [0,1]. */
+    Vec2 mapFromDome(const Vec3& dome_pos) const;
+
+    // --------------- warping ----------------------------
 
     /** Find the warp necessary to project the image as seen from the camera. */
     void getWarpImage(const CameraSettings&);
@@ -78,6 +86,14 @@ public:
         with texture coordinates representing the warped slice. */
     void getWarpGeometry(const CameraSettings&, GEOM::Geometry *,
                          int num_segments_x = 32, int num_segments_y = 32);
+
+    // -------------- blending -----------------------------
+
+    /** Returns a anti-clockwise polygon outline of the overlapping area between
+        this slice and the slice in @p other.
+        The coordinates are in the range [0,1].
+        If there is no overlap, an empty array is returned. */
+    QVector<Vec2> getOverlapArea(const ProjectorSettings& other, Float min_spacing = 0.05, Float max_spacing = 1.0) const;
 
     //______________ PRIVATE AREA _________________
 private:
@@ -94,7 +110,7 @@ private:
     bool valid_;
     Float aspect_;
     Vec3 pos_;
-    Mat4 trans_;
+    Mat4 trans_, frustum_, inverseProjView_;
 };
 
 } // namespace MO

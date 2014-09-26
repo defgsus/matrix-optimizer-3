@@ -20,12 +20,21 @@ class QTcpSocket;
 
 namespace MO {
 
+class ServerEngine;
+class Scene;
+
+/** Returns a singleton instance of the server */
+ServerEngine & serverEngine();
+
 struct ClientInfo
 {
+    /** Connection to/from each client */
     QTcpSocket * tcpSocket;
 
+    /** Index of the client (as in ProjectionSystemSettings) */
     int index;
 
+    /** System-info of each client */
     SystemInfo sysinfo;
 
     struct Private;
@@ -63,7 +72,11 @@ public:
 
     /** Sends the event to all connected clients.
         Ownership is taken. */
-    void sendEvent(AbstractNetEvent*);
+    bool sendEvent(AbstractNetEvent*);
+
+    /** Sends the event to the particular client.
+        Ownership is taken. */
+    bool sendEvent(ClientInfo&, AbstractNetEvent*);
 
 signals:
 
@@ -75,12 +88,20 @@ public slots:
     void showInfoWindow(int index, bool show);
     void setClientIndex(int index, int client_index);
 
+    /** Sends the current default ProjectionSystemSettings to all clients */
+    void sendProjectionSettings();
+
+    /** Send the scene to all clients */
+    bool sendScene(Scene * scene);
+
 private slots:
 
     void onTcpConnected_(QTcpSocket*);
     void onTcpDisconnected_(QTcpSocket*);
     void onTcpError_(QTcpSocket*);
     void onTcpData_(QTcpSocket*);
+    void onEventCom_(AbstractNetEvent*);
+    void onEvent_(ClientInfo& , AbstractNetEvent*);
 
 private:
 
@@ -89,11 +110,12 @@ private:
 
     void getSysInfo_(ClientInfo&);
     void getClientIndex_(ClientInfo&);
+    void sendProjectionSettings_(ClientInfo&);
 
     QList<ClientInfo> clients_;
 
     TcpServer * server_;
-
+    EventCom * eventCom_;
 };
 
 } // namespace MO

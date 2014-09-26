@@ -11,6 +11,8 @@
 #ifndef MOSRC_AUDIO_TOOL_SOUNDFILEMANAGER_H
 #define MOSRC_AUDIO_TOOL_SOUNDFILEMANAGER_H
 
+#include <QString>
+
 namespace MO {
 namespace AUDIO {
 

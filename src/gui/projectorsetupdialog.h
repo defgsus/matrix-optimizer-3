@@ -30,6 +30,7 @@ class DomePreviewWidget;
 class DoubleSpinBox;
 class SpinBox;
 class GroupWidget;
+class OverlapAreaEditWidget;
 
 class ProjectorSetupDialog : public QDialog
 {
@@ -122,10 +123,11 @@ private:
     CameraSettings * cameraSettings_, *copyOfCameraSettings_;
 
     DomePreviewWidget * display_;
+    OverlapAreaEditWidget * areaEdit_;
 
     QMenuBar * mainMenu_;
 
-    GroupWidget * projectorGroup_, * cameraGroup_;
+    GroupWidget * projectorGroup_, * cameraGroup_, * areaGroup_;
 
     QLineEdit
         * editName_,

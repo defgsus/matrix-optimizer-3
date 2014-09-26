@@ -74,6 +74,8 @@ Basic3DWidget::~Basic3DWidget()
 
 void Basic3DWidget::setFboSize(const QSize & s)
 {
+    MO_DEBUG_GL("Basic3DWidget::setFboSize(" << s.width() << ", " << s.height() << ")");
+
     // XXX fbo_ and fboSize_ might be different when modeChangeRequest_ is pending
     //     need to think about that ...
     if (fbo_ && (int)fbo_->width() == s.width() && (int)fbo_->height() == s.height())
@@ -362,7 +364,9 @@ void Basic3DWidget::releaseGL_()
 
 void Basic3DWidget::createGLStuff_()
 {
-    if (renderMode_ == RM_FULLDOME_CUBE || renderMode_ == RM_FRAMEBUFFER)
+    if (renderMode_ == RM_FULLDOME_CUBE
+        || renderMode_ == RM_FRAMEBUFFER
+        || renderMode_ == RM_FRAMEBUFFER_ORTHO)
     {
         screenQuad_ = new GL::ScreenQuad("basic3dwidget", GL::ER_THROW);
         screenQuad_->setAntialiasing(3);
@@ -425,7 +429,14 @@ void Basic3DWidget::resizeGL(int w, int h)
     {
         const float aspect = (float)w/h;
         const float scale = orthoScale_;
-        projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale, 0.01f, 1000.f);
+        projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale);
+    }
+    else
+    if (renderMode_ == RM_FRAMEBUFFER_ORTHO)
+    {
+        const float aspect = (float)fbo_->width()/fbo_->height();
+        const float scale = orthoScale_;
+        projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale);
     }
     else
         projectionMatrix_ =
@@ -469,7 +480,7 @@ void Basic3DWidget::paintGL()
         return;
     }
 
-    if (renderMode_ == RM_FRAMEBUFFER)
+    if (renderMode_ == RM_FRAMEBUFFER || renderMode_ == RM_FRAMEBUFFER_ORTHO)
     {
         fbo_->bind();
         fbo_->setViewport();

@@ -113,14 +113,14 @@ void TcpServer::onNewConnection_()
 
     connect(socket, &QTcpSocket::readyRead, [=]()
     {
-        MO_NETLOG(EVENT, "TcpServer: received " << socket->bytesAvailable()
+        MO_NETLOG(EVENT_V2, "TcpServer: received " << socket->bytesAvailable()
                   << " bytes from " << socketName(socket));
         emit socketData(socket);
     });
 
     connect(socket, &QTcpSocket::bytesWritten, [=](qint64 bytes)
     {
-        MO_NETLOG(EVENT, "TcpServer: send " << bytes
+        MO_NETLOG(EVENT_V2, "TcpServer: send " << bytes
                   << " bytes to " << socketName(socket));
         emit socketDataWritten(socket, bytes);
     });

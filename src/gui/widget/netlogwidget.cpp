@@ -35,6 +35,10 @@ void NetLogWidget::addLine_(int level, const QString & text)
             s += "#777";
             break;
 
+        case NetworkLogger::DEBUG_V2:
+            s += "#999";
+            break;
+
         case NetworkLogger::WARNING:
             s += "#a00";
             break;
@@ -45,6 +49,10 @@ void NetLogWidget::addLine_(int level, const QString & text)
 
         case NetworkLogger::EVENT:
             s += "#000";
+            break;
+
+        case NetworkLogger::EVENT_V2:
+            s += "#333";
             break;
     }
 

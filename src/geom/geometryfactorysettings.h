@@ -15,6 +15,7 @@
 
 #include "types/int.h"
 #include "types/float.h"
+#include "io/filetypes.h"
 
 namespace MO {
 namespace IO { class DataStream; }
@@ -60,6 +61,8 @@ public:
     void saveFile(const QString& filename) const;
     void loadFile(const QString& filename);
 
+    /** Appends the geometry file to the list if type is T_FILE */
+    void getNeededFiles(IO::FileList &files);
 
     // ---- public member ----
 

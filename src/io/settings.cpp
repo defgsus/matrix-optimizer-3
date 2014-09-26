@@ -51,6 +51,9 @@ void Settings::createDefaultValues_()
 
     defaultValues_["File/scene"] = "";
 
+    defaultValues_["Directory/filecache"] = mopath + "/data/cache";
+    defaultValues_["File/filecache"] = mopath + "/data/cache/filecache.xml";
+
     defaultValues_["Audio/api"] = "";
     defaultValues_["Audio/device"] = "";
     defaultValues_["Audio/samplerate"] = 44100;
@@ -73,6 +76,7 @@ void Settings::createDefaultValues_()
     defaultValues_["Network/udpport"] = 50001;
 
     defaultValues_["Client/index"] = 0;
+    defaultValues_["Client/serverAddress"] = "192.168.1.33";
 }
 
 QVariant Settings::getValue(const QString &key)

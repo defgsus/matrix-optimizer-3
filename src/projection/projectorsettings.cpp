@@ -77,7 +77,8 @@ bool ProjectorSettings::operator == (const ProjectorSettings& o) const
             && distance_ == o.distance_
             && pitch_ == o.pitch_
             && yaw_ == o.yaw_
-            && roll_ == o.roll_;
+            && roll_ == o.roll_
+            && overlapAreas_ == o.overlapAreas_;
 }
 
 } // namespace MO

@@ -211,7 +211,7 @@ void SequenceFloat::createParameters()
 
         p_pulseWidth_ = createFloatParameter("pulsewidth", tr("pulse width"),
                    tr("Pulsewidth of the waveform, describes the width of the positive edge"),
-                   0.5, 0.05);
+                   0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05);
 
     endParameterGroup();
 
@@ -403,6 +403,14 @@ void SequenceFloat::updateParameterVisibility()
     p_wtSpecPhaseShift_->setVisible(wtspec);
     p_wtSpecAmp_->setVisible(wtspec);
 
+}
+
+void SequenceFloat::getNeededFiles(IO::FileList &files)
+{
+    if (sequenceType() == ST_SOUNDFILE)
+    {
+        files.append(IO::FileListEntry(p_soundFile_->value(), p_soundFile_->fileType()));
+    }
 }
 
 void SequenceFloat::serialize(IO::DataStream &io) const

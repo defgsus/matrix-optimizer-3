@@ -216,6 +216,21 @@ void Scene::render_()
 }
 
 
+// ----------------------- files -----------------------------
+
+void Scene::getNeededFiles(IO::FileList &files)
+{
+    for (auto c : childObjects())
+        getNeededFiles_(c, files);
+}
+
+void Scene::getNeededFiles_(Object * o, IO::FileList & files)
+{
+    o->getNeededFiles(files);
+
+    for (auto c : o->childObjects())
+        getNeededFiles_(c, files);
+}
 
 // ----------------------- tree ------------------------------
 

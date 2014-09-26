@@ -62,6 +62,7 @@ public:
 
         while (!stop_)
         {
+            // XXX sometimes crash on load-new-scene
             if (scene_->audioInQueue_->consume(buf))
             {
                 // process audio input

@@ -18,6 +18,7 @@
 #include "gl/drawable.h"
 #include "gl/compatibility.h"
 #include "math/vector.h"
+#include "io/log.h"
 
 #include "gl/opengl_undef.h"
 

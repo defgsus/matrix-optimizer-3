@@ -24,7 +24,8 @@ NetworkLogger * NetworkLogger::instance_ = 0;
 
 NetworkLogger::NetworkLogger(QObject * p)
     : QObject   (p),
-      stream_   (new QTextStream(&curText_))
+      stream_   (new QTextStream(&curText_)),
+      acceptedLevels_   (0xffff ^ (EVENT_V2 | DEBUG_V2))
 {
     MO_DEBUG_IO("NetworkLogger::NetworkLogger(" << p << ")");
 }
@@ -98,14 +99,22 @@ void NetworkLogger::connectForLogging(QTcpSocket * socket)
 void NetworkLogger::beginWrite(Level l)
 {
     NetworkLogger & n = instance();
+
+    n.curLevel_ = l;
+
+    if (!(l & n.acceptedLevels_))
+        return;
+
     n.stream_->seek(0);
     n.curText_.clear();
-    n.curLevel_ = l;
 }
 
 void NetworkLogger::endWrite()
 {
     NetworkLogger & n(instance());
+
+    if (!(n.curLevel_ & n.acceptedLevels_))
+        return;
 
     LogLine line;
     line.level = n.curLevel_;

@@ -17,13 +17,16 @@
 #include "netlog.h"
 #include "netevent.h"
 #include "networkmanager.h"
+#include "eventcom.h"
+#include "tool/deleter.h"
 
 namespace MO {
 
 Client::Client(QObject *parent) :
-    QObject (parent),
-    socket_ (new QTcpSocket(this)),
-    timer_  (new QTimer(this))
+    QObject     (parent),
+    socket_     (new QTcpSocket(this)),
+    eventCom_   (new EventCom(this)),
+    timer_      (new QTimer(this))
 {
     MO_NETLOG(CTOR, "Client::Client(" << parent << ")");
 
@@ -35,6 +38,9 @@ Client::Client(QObject *parent) :
             this, SLOT(onDisconnected_()));
     connect(socket_, SIGNAL(readyRead()),
             this, SLOT(onData_()));
+
+    connect(eventCom_, SIGNAL(eventReceived(AbstractNetEvent*)),
+            this, SIGNAL(eventReceived(AbstractNetEvent*)));
 
     timer_->setSingleShot(true);
     connect(timer_, SIGNAL(timeout()), this, SLOT(onTimer_()));
@@ -96,6 +102,18 @@ void Client::connectTo(const QHostAddress & a)
     connect_();
 }
 
+bool Client::sendEvent(AbstractNetEvent * event)
+{
+    ScopedDeleter<AbstractNetEvent> deleter(event);
+
+    return eventCom_->sendEvent(socket_, event);
+}
+
+bool Client::sendEvent(AbstractNetEvent & event)
+{
+    return eventCom_->sendEvent(socket_, &event);
+}
+
 void Client::connect_()
 {
     MO_NETLOG(DEBUG, "Client::connect_(" << address_.toString() << ")");
@@ -131,15 +149,10 @@ void Client::onDisconnected_()
 
 void Client::onData_()
 {
-    MO_NETLOG(EVENT, "Client: data available ("
+    MO_NETLOG(EVENT_V2, "Client: data available ("
               << socket_->bytesAvailable() << "b)");
 
-    AbstractNetEvent * event = AbstractNetEvent::receive(socket_);
-
-    if (event)
-    {
-        emit eventReceived(event);
-    }
+    eventCom_->inputData(socket_);
 }
 
 } // namespace MO

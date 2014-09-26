@@ -101,7 +101,7 @@ public slots:
     QModelIndex promote(Object * object);
     QModelIndex demote(Object * object);
 
-    TrackFloat * createFloatTrack(ParameterFloat * parameter);
+    TrackFloat * createFloatTrack(Parameter *parameter);
 
     SequenceFloat * createFloatSequence(TrackFloat * track, Double time);
 

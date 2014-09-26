@@ -30,6 +30,8 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
 
+    virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
+
 signals:
 
 private slots:

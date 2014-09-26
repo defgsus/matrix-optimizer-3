@@ -78,6 +78,12 @@ GeometryFactorySettings::GeometryFactorySettings()
     modifierChain->addModifier(new GeometryModifierNormals());
 }
 
+void GeometryFactorySettings::getNeededFiles(IO::FileList &files)
+{
+    if (type == T_FILE)
+        files.append(IO::FileListEntry(filename, IO::FT_MODEL));
+}
+
 GeometryFactorySettings::~GeometryFactorySettings()
 {
     MO_DEBUG_GEOM("GeometryFactorySettings::~GeometryFactorySettings()");

@@ -158,6 +158,14 @@ void Model3d::updateParameterVisibility()
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
 }
 
+void Model3d::getNeededFiles(IO::FileList &files)
+{
+    texture_->getNeededFiles(files, IO::FT_TEXTURE);
+    textureBump_->getNeededFiles(files, IO::FT_NORMAL_MAP);
+
+    geomSettings_->getNeededFiles(files);
+}
+
 const GEOM::Geometry* Model3d::geometry() const
 {
     return draw_ ? draw_->geometry() : 0;

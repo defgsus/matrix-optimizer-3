@@ -16,6 +16,7 @@
 
 #include "object/objectfactory.h"
 #include "gl/opengl_fwd.h"
+#include "io/filetypes.h"
 
 namespace MO {
 
@@ -40,6 +41,10 @@ public:
 
     void serialize(IO::DataStream& io) const;
     void deserialize(IO::DataStream& io);
+
+    /** Appends the filename (and type) to the list of files,
+        if type is TT_FILE. */
+    void getNeededFiles(IO::FileList & files, IO::FileType ft);
 
     // ---------- parameters -----------
 

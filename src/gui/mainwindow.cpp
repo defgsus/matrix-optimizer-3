@@ -64,6 +64,7 @@
 #include "gl/texture.h"
 #include "io/povrayexporter.h"
 #include "serverdialog.h"
+#include "engine/serverengine.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -453,6 +454,9 @@ void MainWindow::createMainMenu_()
         m->addAction(a = new QAction(tr("Dump id names"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpIdNames_()));
 
+        m->addAction(a = new QAction(tr("Dump needed files"), m));
+        connect(a, SIGNAL(triggered()), SLOT(dumpNeededFiles_()));
+
         m->addAction(a = new QAction(tr("Test transformation speed"), m));
         connect(a, SIGNAL(triggered()), SLOT(testSceneTransform_()));
 
@@ -590,6 +594,9 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
     glWindow_->renderLater();
 
     updateSystemInfo_();
+
+    if (serverEngine().isRunning())
+        serverEngine().sendScene(scene_);
 }
 
 
@@ -824,7 +831,18 @@ void MainWindow::dumpIdNames_()
         sorted.insert(id);
 
     for (auto & id : sorted)
-        MO_STREAM_OUT(std::cout, "{" << id << "}" << std::endl);
+        MO_PRINT("{" << id << "}");
+}
+
+void MainWindow::dumpNeededFiles_()
+{
+    IO::FileList files;
+    scene_->getNeededFiles(files);
+
+    for (const IO::FileListEntry& f : files)
+    {
+        MO_PRINT(IO::fileTypeNames[f.second] << "\t " << f.first);
+    }
 }
 
 void MainWindow::updateSystemInfo_()

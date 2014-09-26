@@ -46,10 +46,16 @@ Object::Object(QObject *parent) :
     paramActiveScope_       (0),
     sampleRate_             (44100),
     sampleRateInv_          (1.0/44100.0),
+#ifndef MO_CLIENT
     parentActivityScope_    (AS_ON),
     currentActivityScope_   (AS_ON)
+#else
+    parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY)),
+    currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
+#endif
 {
     // tie into Object hierarchy
+    // NOTE: Has not been tested yet, and is actually never used
     if (auto o = qobject_cast<Object*>(parent))
     {
         setParentObject_(o);
@@ -402,6 +408,10 @@ void Object::setName(const QString & n)
 void Object::setCurrentActivityScope(ActivityScope scope)
 {
     currentActivityScope_ = scope;
+
+#ifdef MO_CLIENT
+    currentActivityScope_ = ActivityScope(currentActivityScope_ | AS_CLIENT_ONLY);
+#endif
 
     for (auto o : childObjects_)
         o->setCurrentActivityScope(scope);
@@ -871,6 +881,7 @@ void Object::createParameters()
             strTip(tr("Defines the scope in which the object and all of it's children are active")),
             strOff(tr("Object is inactive")),
             strOn(tr("Object is always active")),
+            strClient(tr("Object is only active on clients (projectors)")),
             strPrev(tr("Object is only active in the preview modes and will not be rendered")),
             strPrev1(tr("Object is only active in preview mode 1 and will not be rendered")),
             strPrev2(tr("Object is only active in preview mode 2 and will not be rendered")),
@@ -885,14 +896,14 @@ void Object::createParameters()
     paramActiveScope_ =
     createSelectParameter("_activescope", tr("activity scope"),
                          strTip,
-                         { "off", "on", "prev", "ren", "prev1", "prev2", "prev3",
+                         { "off", "on", "client", "prev", "ren", "prev1", "prev2", "prev3",
                            "prev1r", "prev2r", "prev3r" },
-                         { tr("off"), tr("on"), tr("preview"), tr("render"),
+                         { tr("off"), tr("on"), tr("client only"), tr("preview"), tr("render"),
                            tr("preview 1"), tr("preview 2"), tr("preview 3"),
                            tr("preview 1 + render"), tr("preview 2 + render"), tr("preview 3 + render") },
-                         { strOff, strOn, strPrev, strRend, strPrev1, strPrev2, strPrev3,
+                         { strOff, strOn, strClient, strPrev, strRend, strPrev1, strPrev2, strPrev3,
                            strPrev1r, strPrev2r, strPrev3r },
-                         { AS_OFF, AS_ON, AS_PREVIEW, AS_RENDER,
+                         { AS_OFF, AS_ON, AS_CLIENT_ONLY, AS_PREVIEW, AS_RENDER,
                            AS_PREVIEW_1, AS_PREVIEW_2, AS_PREVIEW_3,
                            AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
                          AS_ON, true, false );

@@ -10,12 +10,16 @@
 
 #include <QIODevice>
 #include <QAbstractSocket>
+#include <QFile>
+#include <QFileInfo>
 
 #include "netevent.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "network/netlog.h"
 #include "io/systeminfo.h"
+#include "object/objectfactory.h"
+#include "object/scene.h"
 
 namespace MO {
 
@@ -53,88 +57,11 @@ AbstractNetEvent * AbstractNetEvent::createClass(const QString &className)
     return it.value()->cloneClass();
 }
 
-void AbstractNetEvent::serialize_(QIODevice &io) const
+QString AbstractNetEvent::infoName() const
 {
-    IO::DataStream s(&io);
-
-    s.writeHeader("nete", 1);
-
-    s << className();
-    s << counter_;
-
-    serialize(s);
+    return QString("%1[%2]").arg(className()).arg(counter());
 }
 
-
-bool AbstractNetEvent::send(QAbstractSocket * socket) noexcept
-{
-    if (socket)
-        socket_ = socket;
-
-    if (!socket_)
-    {
-        MO_NETLOG(ERROR, "Can't send NetEvent '" << className() << "' without socket");
-        return false;
-    }
-
-    try
-    {
-        serialize_(*socket_);
-        return isSend_ = true;
-    }
-    catch (const Exception& e)
-    {
-        MO_NETLOG(ERROR, "Error sending event " << className() << "\n" << e.what());
-    }
-    return false;
-}
-
-AbstractNetEvent * AbstractNetEvent::receive(QAbstractSocket * s) noexcept
-{
-    QString cname;
-    AbstractNetEvent * event = 0;
-
-    try
-    {
-        QByteArray data = s->readAll();
-        IO::DataStream stream(data);
-
-        try
-        {
-            stream.readHeader("nete", 1);
-
-            // get classname
-            stream >> cname;
-
-            event = createClass(cname);
-            if (!event)
-            {
-                MO_NETLOG(ERROR, "unknown NetEvent '" << cname << "'");
-                return 0;
-            }
-
-            stream >> event->counter_;
-
-            event->deserialize(stream);
-            event->socket_ = s;
-            event->isReceived_ = true;
-
-            return event;
-        }
-        catch (const Exception & e)
-        {
-            MO_NETLOG(ERROR, "error on receiving NetEvent '" << cname << "'\n"
-                      << e.what());
-            delete event;
-            return 0;
-        }
-    }
-    catch (...)
-    {
-        MO_NETLOG(ERROR, "unknown error receiving NetEvent '" << cname << "'");
-        return 0;
-    }
-}
 
 
 AbstractNetEvent * AbstractNetEvent::createResponse(const QString &name) const
@@ -175,6 +102,28 @@ NetEventRequest::NetEventRequest()
 {
 }
 
+QString NetEventRequest::infoName() const
+{
+    return AbstractNetEvent::infoName() + ":" + requestName(request_);
+}
+
+QString NetEventRequest::requestName(Request r)
+{
+    switch (r)
+    {
+        case NONE: return "NONE";
+        case GET_SYSTEM_INFO: return "GET_SYSTEM_INFO";
+        case GET_CLIENT_INDEX: return "GET_CLIENT_INDEX";
+        case SET_CLIENT_INDEX: return "SET_CLIENT_INDEX";
+        case SHOW_INFO_WINDOW: return "SHOW_INFO_WINDOW";
+        case HIDE_INFO_WINDOW: return "HIDE_INFO_WINDOW";
+        case SET_PROJECTION_SETTINGS: return "SET_PROJECTION_SETTINGS";
+        case GET_SERVER_FILE_TIME: return "GET_SERVER_FILE_TIME";
+        case GET_SERVER_FILE: return "GET_SERVER_FILE";
+    }
+    return "*UNKNOWN*";
+}
+
 void NetEventRequest::serialize(IO::DataStream &io) const
 {
     io << (qint64)request_ << data_;
@@ -195,6 +144,14 @@ MO_REGISTER_NETEVENT(NetEventInfo)
 NetEventInfo::NetEventInfo()
     : request_  (NetEventRequest::NONE)
 {
+}
+
+QString NetEventInfo::infoName() const
+{
+    return QString("%1:%2(%3)")
+            .arg(AbstractNetEvent::infoName())
+            .arg(NetEventRequest::requestName(request_))
+            .arg(data_.typeName());
 }
 
 void NetEventInfo::serialize(IO::DataStream &io) const
@@ -218,6 +175,11 @@ NetEventSysInfo::NetEventSysInfo()
 {
 }
 
+QString NetEventSysInfo::infoName() const
+{
+    return AbstractNetEvent::infoName();
+}
+
 void NetEventSysInfo::serialize(IO::DataStream &io) const
 {
     info_.serialize(io);
@@ -233,5 +195,153 @@ void NetEventSysInfo::getInfo()
     info_.get();
 }
 
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventFileInfo)
+
+NetEventFileInfo::NetEventFileInfo()
+    : present_  (false)
+{
+}
+
+QString NetEventFileInfo::infoName() const
+{
+    return AbstractNetEvent::infoName() + "(.." + filename_.right(18) + ")";
+}
+
+void NetEventFileInfo::serialize(IO::DataStream &io) const
+{
+    io << filename_ << time_ << present_;
+}
+
+void NetEventFileInfo::deserialize(IO::DataStream &io)
+{
+    io >> filename_ >> time_ >> present_;
+}
+
+void NetEventFileInfo::getFileTime()
+{
+    QFileInfo info(filename_);
+
+    present_ = info.exists();
+    time_ = info.lastModified();
+}
+
+
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventFile)
+
+NetEventFile::NetEventFile()
+{
+}
+
+QString NetEventFile::infoName() const
+{
+    return AbstractNetEvent::infoName() + "(.." + filename_.right(18) + ")";
+}
+
+void NetEventFile::serialize(IO::DataStream &io) const
+{
+    io << filename_ << time_ << present_ << data_;
+}
+
+void NetEventFile::deserialize(IO::DataStream &io)
+{
+    io >> filename_ >> time_ >> present_ >> data_;
+}
+
+void NetEventFile::loadFile(const QString &fn)
+{
+    filename_ = fn;
+
+    data_.clear();
+
+    QFile f(fn);
+    if (!f.open(QFile::ReadOnly))
+    {
+        present_ = false;
+        MO_NETLOG(ERROR, "NetEventFile: failed to load file '" << fn << "'");
+        return;
+    }
+
+    present_ = true;
+    data_ = f.readAll();
+    time_ = QFileInfo(fn).lastModified();
+}
+
+bool NetEventFile::saveFile(const QString &fn) const
+{
+    QFile f(fn);
+    if (!f.open(QFile::WriteOnly))
+    {
+        MO_NETLOG(ERROR, "NetEventFile: failed to write file '" << fn << "'");
+        return false;
+    }
+
+    f.write(data_);
+    return true;
+}
+
+
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventScene)
+
+NetEventScene::NetEventScene()
+{
+}
+
+QString NetEventScene::infoName() const
+{
+    return AbstractNetEvent::infoName() + "(" + data_.size() + "b)";
+}
+
+void NetEventScene::serialize(IO::DataStream &io) const
+{
+    io << data_;
+}
+
+void NetEventScene::deserialize(IO::DataStream &io)
+{
+    io >> data_;
+}
+
+bool NetEventScene::setScene(const Scene *scene)
+{
+    IO::DataStream io(&data_, QIODevice::WriteOnly);
+    try
+    {
+        ObjectFactory::saveScene(io, scene);
+        return true;
+    }
+    catch (const Exception& e)
+    {
+        MO_NETLOG(ERROR, "Error on NetEventScene::setScene()\n"
+                  << e.what());
+    }
+    return false;
+}
+
+Scene * NetEventScene::getScene() const
+{
+    IO::DataStream io(data_);
+    try
+    {
+        return ObjectFactory::loadScene(io);
+    }
+    catch (const Exception& e)
+    {
+        MO_NETLOG(ERROR, "Error on NetEventScene::getScene()\n"
+                  << e.what());
+    }
+    return 0;
+}
 
 } // namespace MO

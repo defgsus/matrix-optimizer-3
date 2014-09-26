@@ -626,6 +626,34 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
 
     }
     else
+    if (ParameterInt * pi = dynamic_cast<ParameterInt*>(param))
+    {
+        // create modulation
+        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            if (Object * o = model->createFloatTrack(pi))
+            {
+                if (doChangeToCreatedTrack_)
+                    emit objectSelected(o);
+            }
+        });
+
+        // link to existing modulator
+        addLinkModMenu_(menu, param,
+            Object::T_TRACK_FLOAT | Object::T_MODULATOR_OBJECT_FLOAT);
+
+        menu->addSeparator();
+
+        // edit modulations
+        addEditModMenu_(menu, param);
+
+        menu->addSeparator();
+
+        // remove modulation
+        addRemoveModMenu_(menu, param);
+    }
+    else
         MO_ASSERT(false, "No modulation menu implemented for requested parameter '" << param->idName() << "'");
 
     if (menu->isEmpty())

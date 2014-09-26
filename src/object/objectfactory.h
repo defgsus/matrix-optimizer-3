@@ -72,6 +72,17 @@ public:
     /** Returns true of the object can have children at all. */
     static bool canHaveChildObjects(const Object * parent);
 
+    // -------------- byte io ---------------------
+
+    /** Stores the complete Scene object.
+        On IO errors, an IoException will be thrown. */
+    static void saveScene(IO::DataStream& io, const Scene*);
+
+    /** Tries to load a scene and returns a the object tree.
+        If the saved object was no Scene, NULL is returned.
+        On other IO errors an IoException will be thrown. */
+    static Scene * loadScene(IO::DataStream& io);
+
     // ------------- file io ----------------------
 
     /** Stores the complete Scene object to disk.

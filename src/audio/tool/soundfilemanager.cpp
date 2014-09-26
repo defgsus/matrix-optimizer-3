@@ -17,6 +17,7 @@
 #include "soundfile.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "io/filemanager.h"
 
 namespace MO {
 namespace AUDIO {
@@ -61,9 +62,11 @@ SoundFileManager * SoundFileManager::getInstance_()
 }
 
 
-SoundFile * SoundFileManager::getSoundFile(const QString &filename)
+SoundFile * SoundFileManager::getSoundFile(const QString &filename_)
 {
-    MO_DEBUG_SND("SoundFileManager::getSoundFile('" << filename << "'");
+    QString filename = IO::fileManager().localFilename(filename_);
+
+    MO_DEBUG_SND("SoundFileManager::getSoundFile('" << filename_ << "'");
 
     auto sfm = getInstance_();
 

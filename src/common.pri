@@ -183,7 +183,16 @@ HEADERS += \
     src/io/systeminfo.h \
     src/network/network_fwd.h \
     src/gl/opengl_undef.h \
-    src/io/streamoperators_glbinding.h
+    src/io/streamoperators_glbinding.h \
+    src/io/filemanager.h \
+    src/tool/deleter.h \
+    src/network/eventcom.h \
+    src/geom/tesselator.h \
+    src/tests/testtesselator.h \
+    src/audio/tool/notefreq.h \
+    src/object/synthesizer.h \
+    src/audio/tool/floatgate.h \
+    src/audio/tool/synth.h
 
 
 SOURCES += \
@@ -325,4 +334,10 @@ SOURCES += \
     src/network/networkmanager.cpp \
     src/network/tcpserver.cpp \
     src/network/netevent.cpp \
-    src/io/systeminfo.cpp
+    src/io/systeminfo.cpp \
+    src/io/filemanager.cpp \
+    src/network/eventcom.cpp \
+    src/geom/tesselator.cpp \
+    src/tests/testtesselator.cpp \
+    src/object/synthesizer.cpp \
+    src/audio/tool/synth.cpp

@@ -63,6 +63,11 @@ public:
     void insertProjector(int idx, const ProjectorSettings& s);
     void removeProjector(int idx);
 
+    // --------- blending ---------
+
+    /** Calculates the overlapping areas between each projector */
+    void calculateOverlapAreas(Float min_spacing = 0.05, Float max_spacing = 1.0);
+
 private:
 
     DomeSettings dome_;

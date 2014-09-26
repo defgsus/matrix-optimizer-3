@@ -18,9 +18,6 @@
 
 #include "io/application.h"
 #include "io/error.h"
-#ifndef MO_CLIENT
-#   include "engine/serverengine.h"
-#endif
 
 // usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
@@ -32,22 +29,9 @@ Application * application;
 
 Application::Application(int& argc, char** args)
     : QApplication  (argc, args)
-    #ifndef MO_CLIENT
-      ,server_      (0)
-    #endif
 {
     //updateStyle();
 }
-
-#ifndef MO_CLIENT
-ServerEngine * Application::serverEngine()
-{
-    if (!server_)
-        server_ = new ServerEngine(this);
-
-    return server_;
-}
-#endif
 
 
 
@@ -98,6 +82,8 @@ bool Application::notify(QObject * o, QEvent * e)
 
 void Application::updateStyle()
 {
+    // XXX some test for styles
+
     setStyleSheet(
                 "* { background-color: #202020; color: #a0a0a0; "
                 "    border: 1px solid #404040; "

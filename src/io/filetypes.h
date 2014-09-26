@@ -13,6 +13,7 @@
 
 
 #include <QStringList>
+#include <QPair>
 
 namespace MO {
 namespace IO {
@@ -35,6 +36,9 @@ namespace IO {
     extern const QStringList fileTypeNames;
     extern const QList<QStringList> fileTypeExtensions;
     extern const QList<QStringList> fileTypeDialogFilters;
+
+    typedef QPair<QString, FileType> FileListEntry;
+    typedef QList<FileListEntry> FileList;
 
 } // namespace IO
 } // namespace MO
