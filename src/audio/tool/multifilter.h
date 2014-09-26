@@ -27,6 +27,7 @@ public:
 
     enum FilterType
     {
+        T_BYPASS,
         T_FIRST_ORDER_LOW,
         T_FIRST_ORDER_HIGH,
         T_FIRST_ORDER_BAND,
@@ -42,6 +43,9 @@ public:
     static const QStringList filterTypeNames;
     static const QStringList filterTypeStatusTips;
     static const QList<int>  filterTypeEnums;
+
+    /** Returns true when the given filter-type is an 'nth order type' */
+    static bool supportsOrder(FilterType);
 
     /** If @p dynamicAllocation is false, individual sub-classes
         like the ChebychevFilter will be created in the constructor,

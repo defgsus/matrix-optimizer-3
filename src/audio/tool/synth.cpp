@@ -29,15 +29,13 @@ class SynthVoice::Private
           freq_c	(0.0),
           phase		(0.0),
           pw        (0.5),
-          velo		(0.f),
-          env		(0.f),
-          attack	(0.f),
-          decay 	(0.f),
-          sustain	(0.f),
-          release	(0.f),
-          envstate	(SynthVoice::ENV_ATTACK),
+          velo		(0.0),
+          fenvAmt   (0),
+          filterFreq(0),
+          lifetime	(0),
           waveform	(Waveform::T_SINE),
-          lifetime	(0)
+          filter    (true)
+
     { }
 
     Synth * synth;
@@ -53,17 +51,18 @@ class SynthVoice::Private
         phase,
         pw,
         velo,
-        env,
-        attack,
-        decay,
-        sustain,
-        release;
+        fenvAmt,
+        filterFreq;
 
-    SynthVoice::EnvelopeState envstate;
+    uint lifetime;
+
+    EnvelopeGenerator<Double> env, fenv;
 
     Waveform::Type waveform;
 
-    uint lifetime;
+    MultiFilter filter;
+
+
 };
 
 // ------------------------------------ synthvoice ------------------------------------
@@ -85,13 +84,18 @@ Double SynthVoice::freq() const { return p_->freq; }
 Double SynthVoice::phase() const { return p_->phase; }
 Double SynthVoice::pulseWidth() const { return p_->pw; }
 Double SynthVoice::velocity() const { return p_->velo; }
-Double SynthVoice::attack() const { return p_->attack; }
-Double SynthVoice::decay() const { return p_->decay; }
-Double SynthVoice::sustain() const { return p_->sustain; }
-Double SynthVoice::release() const { return p_->release; }
+Double SynthVoice::attack() const { return p_->env.attack(); }
+Double SynthVoice::decay() const { return p_->env.decay(); }
+Double SynthVoice::sustain() const { return p_->env.sustain(); }
+Double SynthVoice::release() const { return p_->env.release(); }
+Double SynthVoice::filterAttack() const { return p_->fenv.attack(); }
+Double SynthVoice::filterDecay() const { return p_->fenv.decay(); }
+Double SynthVoice::filterSustain() const { return p_->fenv.sustain(); }
+Double SynthVoice::filterRelease() const { return p_->fenv.release(); }
+Double SynthVoice::filterEnvelopeAmount() const { return p_->fenvAmt; }
 Waveform::Type SynthVoice::waveform() const { return p_->waveform; }
-SynthVoice::EnvelopeState SynthVoice::envelopeState() const { return p_->envstate; }
-
+const EnvelopeGenerator<Double>& SynthVoice::envelope() const { return p_->env; }
+const MultiFilter& SynthVoice::filter() const { return p_->filter; }
 
 // ------------------------------------ synth private ------------------------------------
 
@@ -102,13 +106,23 @@ public:
         : synth         (s),
           voicePolicy   (Synth::VP_OLDEST),
           sampleRate    (44100),
+          filterOrder   (1),
           volume        (1.0),
           attack        (0.05),
           decay         (1.0),
           sustain       (0.0),
           release       (1.0),
           pulseWidth    (0.5),
-          waveform      (Waveform::T_SINE)
+          filterFreq    (1000.0),
+          filterReso    (0.0),
+          filterKeyFollow(0.0),
+          filterEnvAmt  (0.0),
+          filterAttack  (0.05),
+          filterDecay   (1.0),
+          filterSustain (0.0),
+          filterRelease (1.0),
+          waveform      (Waveform::T_SINE),
+          filterType    (MultiFilter::T_BYPASS)
     {
         setNumVoices(4);
     }
@@ -143,9 +157,13 @@ public:
 
     Synth::VoicePolicy voicePolicy;
 
-    uint sampleRate;
-    Double volume, attack, decay, sustain, release, pulseWidth;
+    uint sampleRate, filterOrder;
+    Double volume, attack, decay, sustain, release, pulseWidth,
+            filterFreq, filterReso, filterKeyFollow,
+            filterEnvAmt, filterAttack, filterDecay, filterSustain, filterRelease;
+
     Waveform::Type waveform;
+    MultiFilter::FilterType filterType;
 
     NoteFreq<Double> noteFreq;
 };
@@ -226,18 +244,34 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
     v->p_->phase = 0.0;
     v->p_->pw = pulseWidth;
     v->p_->velo = velocity;
-    v->p_->env = 0.0;
-    v->p_->envstate = startSample > 0 ? SynthVoice::ENV_CUED : SynthVoice::ENV_ATTACK;
     v->p_->startSample = startSample;
-    // envelope times as coefficients
-    v->p_->attack  = 8.0 / std::max(8.0, attack * sampleRate);
-    v->p_->decay   = 8.0 / std::max(8.0, decay * sampleRate);
-    v->p_->release = 8.0 / std::max(8.0, release * sampleRate);
-    v->p_->sustain = sustain;
+    v->p_->env.setSampleRate(sampleRate);
+    v->p_->env.setAttack(attack);
+    v->p_->env.setDecay(decay);
+    v->p_->env.setSustain(sustain);
+    v->p_->env.setRelease(release);
+    v->p_->fenv.setSampleRate(sampleRate);
+    v->p_->fenv.setAttack(filterAttack);
+    v->p_->fenv.setDecay(filterDecay);
+    v->p_->fenv.setSustain(filterSustain);
+    v->p_->fenv.setRelease(filterRelease);
+    if (startSample == 0)
+    {
+        v->p_->env.trigger();
+        v->p_->fenv.trigger();
+    }
     v->p_->waveform = waveform;
     v->p_->lifetime = 0;
     v->p_->note = note;
-    v->p_->active = true;
+    v->p_->active = startSample == 0;
+    v->p_->filterFreq = filterFreq + filterKeyFollow * freq;
+    v->p_->filter.setType(filterType);
+    v->p_->filter.setOrder(filterOrder);
+    v->p_->filter.setFrequency(v->p_->filterFreq);
+    v->p_->filter.setResonance(filterReso);
+    v->p_->filter.reset();
+    v->p_->filter.updateCoefficients();
+    v->p_->fenvAmt = filterEnvAmt;
 
     return v;
 }
@@ -249,10 +283,16 @@ void Synth::Private::noteOff(uint /*stopSample*/, int note)
     for (auto i : voices)
     if (i->p_->active && i->p_->note == note)
     {
-        if (i->p_->release > 0)
-            i->p_->envstate = SynthVoice::ENV_RELEASE;
+        if (i->p_->env.release() > 0)
+        {
+            i->p_->env.setState(ENV_RELEASE);
+            i->p_->fenv.setState(ENV_RELEASE);
+        }
         else
+        {
+            i->p_->env.stop();
             i->p_->active = false;
+        }
     }
 }
 
@@ -270,11 +310,11 @@ void Synth::Private::process(F32 *output, uint bufferLength)
             SynthVoice::Private * v = i->p_;
 
             // start cued voice
-            if (v->envstate == SynthVoice::ENV_CUED
-                && v->startSample == sample)
+            if (v->startSample > 0 && v->startSample == sample)
             {
-                v->envstate = SynthVoice::ENV_ATTACK;
+                v->env.trigger();
                 v->active = true;
+                v->startSample = 0;
             }
 
             if (!v->active)
@@ -289,41 +329,27 @@ void Synth::Private::process(F32 *output, uint bufferLength)
             // get sample
             F32 s = Waveform::waveform(v->phase, v->waveform, v->pw);
 
+            // filter
+            if (v->filter.type() != MultiFilter::T_BYPASS)
+                v->filter.process(&s, &s, 1);
+
             // put into buffer
-            *output += s * volume * v->velo * v->env;
+            *output += s * volume * v->velo * v->env.value();
 
-            // process envelope
-            switch (v->envstate)
+            // process envelop
+            v->env.next();
+            // check for end of envelop
+            if (!v->env.active())
             {
-                case SynthVoice::ENV_ATTACK:
-                    v->env += v->attack * (1.0 - v->env);
-                    if (v->env >= 0.999)
-                        v->envstate = SynthVoice::ENV_DECAY;
-                break;
+                v->active = false;
+                continue;
+            }
 
-                case SynthVoice::ENV_DECAY:
-                    v->env += v->decay * (v->sustain - v->env);
-                    if (v->env <= v->sustain*1.001)
-                    {
-                        if (v->sustain > 0)
-                            v->envstate = SynthVoice::ENV_SUSTAIN;
-                        else
-                            v->active = false;
-                    }
-                break;
-
-                case SynthVoice::ENV_RELEASE:
-                    v->env -= v->release * v->env;
-                    if (v->env <= 0.0001)
-                    {
-                        v->active = false;
-                        v->env = 0.0;
-                    }
-                break;
-
-                case SynthVoice::ENV_SUSTAIN:
-                case SynthVoice::ENV_CUED:
-                break;
+            // process filter envelop
+            if (v->filter.type() != MultiFilter::T_BYPASS && v->fenvAmt != 0)
+            {
+                v->filter.setFrequency(v->filterFreq + v->fenvAmt * v->fenv.next());
+                v->filter.updateCoefficients();
             }
         }
     }
@@ -355,6 +381,16 @@ const NoteFreq<Double>& Synth::noteFreq() const { return p_->noteFreq; }
 Double Synth::notesPerOctave() const { return p_->noteFreq.notesPerOctave(); }
 Double Synth::baseFrequency() const { return p_->noteFreq.baseFrequency(); }
 Waveform::Type Synth::waveform() const { return p_->waveform; }
+uint Synth::filterOrder() const { return p_->filterOrder; }
+Double Synth::filterFrequency() const { return p_->filterFreq; }
+Double Synth::filterResonance() const { return p_->filterReso; }
+Double Synth::filterKeyFollower() const { return p_->filterKeyFollow; }
+MultiFilter::FilterType Synth::filterType() const { return p_->filterType; }
+Double Synth::filterEnvelopeAmount() const { return p_->filterEnvAmt; }
+Double Synth::filterAttack() const { return p_->filterAttack; }
+Double Synth::filterDecay() const { return p_->filterDecay; }
+Double Synth::filterSustain() const { return p_->filterSustain; }
+Double Synth::filterRelease() const { return p_->filterRelease; }
 
 void Synth::setNumberVoices(uint v) { p_->setNumVoices(v); }
 void Synth::setSampleRate(uint v) { p_->sampleRate = v; }
@@ -368,6 +404,16 @@ void Synth::setNoteFreq(const NoteFreq<Double>& n) { p_->noteFreq = n; }
 void Synth::setNotesPerOctave(Double v) { p_->noteFreq.setNotesPerOctave(v); }
 void Synth::setBaseFrequency(Double v) { p_->noteFreq.setBaseFrequency(v); }
 void Synth::setWaveform(Waveform::Type t) { p_->waveform = t; }
+void Synth::setFilterOrder(uint v) { p_->filterOrder = std::max(uint(1), v); }
+void Synth::setFilterFrequency(Double v) { p_->filterFreq = v; }
+void Synth::setFilterResonance(Double v) { p_->filterReso = v; }
+void Synth::setFilterKeyFollower(Double v) { p_->filterKeyFollow = v; }
+void Synth::setFilterType(MultiFilter::FilterType t) { p_->filterType = t; }
+void Synth::setFilterEnvelopeAmount(Double v) { p_->filterEnvAmt = v; }
+void Synth::setFilterAttack(Double v) { p_->filterAttack = v; }
+void Synth::setFilterDecay(Double v) { p_->filterDecay = v; }
+void Synth::setFilterSustain(Double v) { p_->filterSustain = v; }
+void Synth::setFilterRelease(Double v) { p_->filterRelease = v; }
 
 SynthVoice * Synth::noteOn(int note, Float velocity)
 {

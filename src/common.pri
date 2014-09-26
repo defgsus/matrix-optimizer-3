@@ -192,7 +192,8 @@ HEADERS += \
     src/audio/tool/notefreq.h \
     src/object/synthesizer.h \
     src/audio/tool/floatgate.h \
-    src/audio/tool/synth.h
+    src/audio/tool/synth.h \
+    src/audio/tool/envelopegenerator.h
 
 
 SOURCES += \

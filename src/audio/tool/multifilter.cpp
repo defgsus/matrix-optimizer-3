@@ -17,12 +17,13 @@ namespace AUDIO {
 
 
 const QStringList MultiFilter::filterTypeIds =
-{ "low", "high", "band",
+{ "bypass", "low", "high", "band",
   "nlow", "nhigh", "nband",
   "cheblow", "chebhigh", "chebband" };
 
 const QStringList MultiFilter::filterTypeNames =
-{ QObject::tr("1st order low-pass"),
+{ QObject::tr("off"),
+  QObject::tr("1st order low-pass"),
   QObject::tr("1st order high-pass"),
   QObject::tr("1st order band-pass"),
   QObject::tr("nth order low-pass"),
@@ -33,18 +34,20 @@ const QStringList MultiFilter::filterTypeNames =
   QObject::tr("2nd chebychev band") };
 
 const QStringList MultiFilter::filterTypeStatusTips =
-{ QObject::tr("1st order low-pass"),
-  QObject::tr("1st order high-pass"),
-  QObject::tr("1st order band-pass"),
-  QObject::tr("nth order low-pass"),
-  QObject::tr("nth order high-pass"),
-  QObject::tr("nth order band-pass"),
+{ QObject::tr("No filtering takes place"),
+  QObject::tr("1st order, 6db/oct, low-pass"),
+  QObject::tr("1st order, 6db/oct, high-pass"),
+  QObject::tr("1st order, 6db/oct, band-pass"),
+  QObject::tr("n repeated stages of 1st order, 6db/oct, low-pass"),
+  QObject::tr("n repeated stages of 1st order, 6db/oct, high-pass"),
+  QObject::tr("n repeated stages of 1st order, 6db/oct, band-pass"),
   QObject::tr("2nd order, 24db/oct, chebychev low-pass"),
   QObject::tr("2nd order, 24db/oct, chebychev high-pass"),
   QObject::tr("2nd order, 24db/oct, chebychev band-pass") };
 
 const QList<int> MultiFilter::filterTypeEnums =
-{ T_FIRST_ORDER_LOW,
+{ T_BYPASS,
+  T_FIRST_ORDER_LOW,
   T_FIRST_ORDER_HIGH,
   T_FIRST_ORDER_BAND,
   T_NTH_ORDER_LOW,
@@ -53,6 +56,13 @@ const QList<int> MultiFilter::filterTypeEnums =
   T_CHEBYCHEV_LOW,
   T_CHEBYCHEV_HIGH,
   T_CHEBYCHEV_BAND };
+
+bool MultiFilter::supportsOrder(FilterType t)
+{
+    return t == T_NTH_ORDER_LOW
+        || t == T_NTH_ORDER_HIGH
+        || t == T_NTH_ORDER_BAND;
+}
 
 MultiFilter::MultiFilter(bool alloc)
     : doReallocate_ (alloc),
@@ -96,25 +106,42 @@ void MultiFilter::updateCoefficients()
     // init internal types
     switch (type_)
     {
+        case T_BYPASS: break;
+
         case T_NTH_ORDER_LOW:
         case T_NTH_ORDER_HIGH:
         case T_NTH_ORDER_BAND:
-            so1_.resize(order_);
-            for (auto & f : so1_)
-                f = 0;
-            so2_.resize(order_);
-            for (auto & f : so2_)
-                f = 0;
-            po0_.resize(order_);
-            for (auto & f : po0_)
-                f = 0;
-            po1_.resize(order_);
-            for (auto & f : po1_)
-                f = 0;
+            if (so1_.size() != order_)
+            {
+                so1_.resize(order_);
+                for (auto & f : so1_)
+                    f = 0;
+            }
+            if (so2_.size() != order_)
+            {
+                so2_.resize(order_);
+                for (auto & f : so2_)
+                    f = 0;
+            }
+            if (po0_.size() != order_)
+            {
+                po0_.resize(order_);
+                for (auto & f : po0_)
+                    f = 0;
+            }
+            if (po1_.size() != order_)
+            {
+                po1_.resize(order_);
+                for (auto & f : po1_)
+                    f = 0;
+            }
         case T_FIRST_ORDER_LOW:
         case T_FIRST_ORDER_HIGH:
         case T_FIRST_ORDER_BAND:
-            q1_ = std::min(1.f, 2.f * freq_ / sr_);
+            // frequency coefficient
+            q1_ = 1.f - std::min(1.f, std::exp(-2.f * 3.14159265f * freq_ / sr_));
+                //q1_ = std::min(1.f, 2.f * freq_ / sr_);
+            // resonance coefficient
             q2_ = std::max(0.f, std::min(0.99999f, reso_));
         break;
 
@@ -153,6 +180,11 @@ void MultiFilter::process(const F32 *input, uint inputStride,
 {
     switch (type_)
     {
+        case T_BYPASS:
+            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                *output = *input;
+        break;
+
         case T_FIRST_ORDER_LOW:
             // without resonance
             if (!q2_)
@@ -256,7 +288,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                     for (uint j=1; j<so1_.size(); ++j)
                     {
                         so1_[j] += q1_ * (tmp - so1_[j]);
-                        tmp = so1_[j-1] - so1_[j];
+                        tmp = tmp - so1_[j];
                     }
                     *output = tmp;
                 }
@@ -276,7 +308,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                         po1_[j] = so1_[j];
                         so1_[j] += q1_ * (tmp - so1_[j])
                                  + q2_ * (so1_[j] - po0_[j]);
-                        tmp = so1_[j-1] - so1_[j];
+                        tmp = tmp - so1_[j];
                     }
                     *output = tmp;
                 }
@@ -301,11 +333,11 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                 for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
                 {
                     so1_[0] += q1_ * (*input - so1_[0]);
-                    // lowpass of highpass
+                    // lowpass of highpass (with resonance)
                     po0_[0] = po1_[0];
                     po1_[0] = so2_[0];
                     so2_[0] += q1_ * ((*input - so1_[0]) - so2_[0])
-                             + q2_ * (so1_[0] - po0_[0]);
+                             + q2_ * (so2_[0] - po0_[0]);
 
                     for (uint j=1; j<so1_.size(); ++j)
                     {
