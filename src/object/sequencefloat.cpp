@@ -211,7 +211,7 @@ void SequenceFloat::createParameters()
 
         p_pulseWidth_ = createFloatParameter("pulsewidth", tr("pulse width"),
                    tr("Pulsewidth of the waveform, describes the width of the positive edge"),
-                   0.5, 0.05);
+                   0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05);
 
     endParameterGroup();
 

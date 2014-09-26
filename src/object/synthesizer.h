@@ -26,6 +26,9 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_OBJECT; }
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
     virtual void createAudioSources() Q_DECL_OVERRIDE;
 
@@ -49,7 +52,15 @@ private:
     ParameterFloat
         * p_gate_,
         * p_notesPerOct_,
-        * p_baseFreq_;
+        * p_baseFreq_,
+        * p_attack_,
+        * p_decay_,
+        * p_sustain_,
+        * p_release_,
+        * p_pulseWidth_;
+
+    ParameterSelect
+        * p_waveform_;
 
     AUDIO::Synth * synth_;
     AUDIO::FloatGate<Double> * gate_;

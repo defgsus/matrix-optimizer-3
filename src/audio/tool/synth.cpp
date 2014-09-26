@@ -9,6 +9,7 @@
 */
 
 #include "synth.h"
+#include "io/log.h"
 
 namespace MO {
 namespace AUDIO {
@@ -105,10 +106,12 @@ public:
           attack        (0.05),
           decay         (1.0),
           sustain       (0.0),
-          release       (0.0),
+          release       (1.0),
           pulseWidth    (0.5),
           waveform      (Waveform::T_SINE)
-    { }
+    {
+        setNumVoices(4);
+    }
 
     ~Private()
     {
@@ -150,6 +153,9 @@ public:
 
 SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Float velocity)
 {
+    if (voices.empty())
+        return 0;
+
     // find free (non-active) voice
     auto i = voices.begin();
     for (; i!=voices.end(); ++i)
@@ -211,6 +217,8 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
     // (re-)init voice
 
     SynthVoice * v = *i;
+
+    //MO_DEBUG("start voice " << freq << "hz " << velocity);
 
     v->p_->freq = freq;
     // freq as coefficient
@@ -290,13 +298,18 @@ void Synth::Private::process(F32 *output, uint bufferLength)
                 case SynthVoice::ENV_ATTACK:
                     v->env += v->attack * (1.0 - v->env);
                     if (v->env >= 0.999)
-                        v->envstate = SynthVoice::ENV_RELEASE;
+                        v->envstate = SynthVoice::ENV_DECAY;
                 break;
 
                 case SynthVoice::ENV_DECAY:
                     v->env += v->decay * (v->sustain - v->env);
                     if (v->env <= v->sustain*1.001)
-                        v->envstate = SynthVoice::ENV_RELEASE;
+                    {
+                        if (v->sustain > 0)
+                            v->envstate = SynthVoice::ENV_SUSTAIN;
+                        else
+                            v->active = false;
+                    }
                 break;
 
                 case SynthVoice::ENV_RELEASE:
@@ -341,6 +354,7 @@ Double Synth::pulseWidth() const { return p_->pulseWidth; }
 const NoteFreq<Double>& Synth::noteFreq() const { return p_->noteFreq; }
 Double Synth::notesPerOctave() const { return p_->noteFreq.notesPerOctave(); }
 Double Synth::baseFrequency() const { return p_->noteFreq.baseFrequency(); }
+Waveform::Type Synth::waveform() const { return p_->waveform; }
 
 void Synth::setNumberVoices(uint v) { p_->setNumVoices(v); }
 void Synth::setSampleRate(uint v) { p_->sampleRate = v; }
@@ -353,10 +367,11 @@ void Synth::setPulseWidth(Double v) { p_->pulseWidth = Waveform::limitPulseWidth
 void Synth::setNoteFreq(const NoteFreq<Double>& n) { p_->noteFreq = n; }
 void Synth::setNotesPerOctave(Double v) { p_->noteFreq.setNotesPerOctave(v); }
 void Synth::setBaseFrequency(Double v) { p_->noteFreq.setBaseFrequency(v); }
+void Synth::setWaveform(Waveform::Type t) { p_->waveform = t; }
 
 SynthVoice * Synth::noteOn(int note, Float velocity)
 {
-    return p_->noteOn(0, 0.0, note, velocity);
+    return p_->noteOn(0, p_->noteFreq.frequency(note), note, velocity);
 }
 
 void Synth::noteOff(int note)

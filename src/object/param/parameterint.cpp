@@ -14,7 +14,7 @@
 #include "io/log.h"
 #include "object/trackfloat.h"
 #include "object/scene.h"
-#include "modulator.h"
+#include "modulatorfloat.h"
 
 // make ParameterInt useable in QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(MO::ParameterInt*);
@@ -59,13 +59,13 @@ void ParameterInt::deserialize(IO::DataStream &io)
 }
 
 
-Int ParameterInt::getModulationValue(Double , uint ) const
+Int ParameterInt::getModulationValue(Double time, uint thread) const
 {
     Int mod = 0;
-    /*
+
     for (auto m : modulators())
         mod += static_cast<ModulatorFloat*>(m)->value(time, thread);
-    */
+
     return mod;
 }
 
@@ -76,13 +76,11 @@ Modulator * ParameterInt::getModulator(const QString& id)
     Modulator * m = findModulator(id);
     if (m)
         return m;
-    /*
+
     m = new ModulatorFloat(idName(), id, object());
     addModulator_(m);
 
     return m;
-    */
-    return 0;
 }
 
 

@@ -13,6 +13,7 @@
 #include "audio/audiosource.h"
 #include "param/parameterfloat.h"
 #include "param/parameterint.h"
+#include "param/parameterselect.h"
 #include "io/log.h"
 #include "audio/tool/synth.h"
 #include "audio/tool/floatgate.h"
@@ -55,7 +56,7 @@ void Synthesizer::createParameters()
 
         p_numVoices_ = createIntParameter("num_voices", tr("number voices"),
                                            tr("The number of polyphonic voices"),
-                                           4, 1, 512, 1, true, false);
+                                           synth_->numberVoices(), 1, 512, 1, true, false);
 
         p_gate_ = createFloatParameter("gate", tr("gate"),
                                            tr("A positive value starts a new note - all parameters below take affect then"),
@@ -67,14 +68,62 @@ void Synthesizer::createParameters()
 
         p_baseFreq_ = createFloatParameter("base_freq", tr("base frequency"),
                                            tr("The frequency in Hertz of the lowest C note"),
-                                           AUDIO::NoteFreq<Double>::defaultBaseFrequency());
+                                           synth_->baseFrequency());
 
         p_notesPerOct_ = createFloatParameter("notes_oct", tr("notes per octave"),
                                               tr("The number of notes per one octave"),
-                                              12.0, 0.00001, 256.0, 1.0);
+                                              synth_->notesPerOctave(), 0.00001, 256.0, 1.0);
 
+        p_attack_ =   createFloatParameter("attack", tr("attack"),
+                                           tr("Attack time of envelope in seconds"),
+                                           synth_->attack(), 0.0, 10000.0, 0.05);
+
+        p_decay_ =    createFloatParameter("decay", tr("decay"),
+                                           tr("Decay time of envelope in seconds"),
+                                           synth_->decay(), 0.0, 10000.0, 0.05);
+
+        p_sustain_ =  createFloatParameter("sustain", tr("sustain"),
+                                           tr("Sustain level of envelope"),
+                                           synth_->sustain(), 0.05);
+
+        p_release_ =  createFloatParameter("release", tr("release"),
+                                           tr("Release time of envelope in seconds"),
+                                           synth_->release(), 0.0, 10000.0, 0.05);
+
+        p_waveform_ = createSelectParameter("waveform", tr("oscillator type"),
+                                        tr("Selects the type of the oscillator waveform"),
+                                        AUDIO::Waveform::typeIds,
+                                        AUDIO::Waveform::typeNames,
+                                        AUDIO::Waveform::typeStatusTips,
+                                        AUDIO::Waveform::typeList,
+                                        AUDIO::Waveform::T_SINE, true, false);
+
+        p_pulseWidth_ = createFloatParameter("pulsewidth", tr("pulse width"),
+                   tr("Pulsewidth of the oscillator waveform - describes the width of the positive edge"),
+                   0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05);
 
     endParameterGroup();
+}
+
+void Synthesizer::updateParameterVisibility()
+{
+    p_pulseWidth_->setVisible(
+                AUDIO::Waveform::supportsPulseWidth((AUDIO::Waveform::Type)p_waveform_->baseValue()) );
+}
+
+void Synthesizer::onParameterChanged(Parameter * p)
+{
+    Object::onParameterChanged(p);
+
+    if (p == p_numVoices_)
+        synth_->setNumberVoices(p_numVoices_->baseValue());
+}
+
+void Synthesizer::onParametersLoaded()
+{
+    Object::onParametersLoaded();
+
+    synth_->setNumberVoices(p_numVoices_->baseValue());
 }
 
 void Synthesizer::createAudioSources()
@@ -116,6 +165,12 @@ void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
             synth_->setNotesPerOctave(notesOct);
 
         synth_->setBaseFrequency(p_baseFreq_->value(time, thread));
+        synth_->setAttack(p_attack_->value(time, thread));
+        synth_->setDecay(p_decay_->value(time, thread));
+        synth_->setSustain(p_sustain_->value(time, thread));
+        synth_->setRelease(p_release_->value(time, thread));
+        synth_->setPulseWidth(p_pulseWidth_->value(time, thread) );
+        synth_->setWaveform((AUDIO::Waveform::Type)p_waveform_->baseValue());
 
         const int note = p_note_->value(time, thread);
 

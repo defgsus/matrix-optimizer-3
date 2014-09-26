@@ -95,6 +95,8 @@ public:
     Double notesPerOctave() const;
     Double baseFrequency() const;
 
+    Waveform::Type waveform() const;
+
     // ----------- setter -----------------
 
     void setSampleRate(uint sr);
@@ -109,6 +111,8 @@ public:
     void setNoteFreq(const NoteFreq<Double>& n);
     void setNotesPerOctave(Double notes);
     void setBaseFrequency(Double f);
+
+    void setWaveform(Waveform::Type t);
 
     // ---------- audio -------------------
 

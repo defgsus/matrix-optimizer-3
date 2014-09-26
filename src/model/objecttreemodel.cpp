@@ -690,7 +690,7 @@ QModelIndex ObjectTreeModel::demote(Object *object)
 }
 
 
-TrackFloat * ObjectTreeModel::createFloatTrack(ParameterFloat * param)
+TrackFloat * ObjectTreeModel::createFloatTrack(Parameter * param)
 {
     MO_DEBUG_TREE("ObjectTreeModel::createFloatTrack('" << param->idName() << "')");
 
