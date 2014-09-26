@@ -14,6 +14,7 @@
 #include "waveform.h"
 #include "notefreq.h"
 #include "multifilter.h"
+#include "envelopegenerator.h"
 
 namespace MO {
 namespace AUDIO {
@@ -25,15 +26,6 @@ class SynthVoice
 {
     friend class Synth;
 public:
-
-    enum EnvelopeState
-    {
-        ENV_CUED,
-        ENV_ATTACK,
-        ENV_DECAY,
-        ENV_SUSTAIN,
-        ENV_RELEASE
-    };
 
     SynthVoice(Synth *);
     ~SynthVoice();
@@ -51,8 +43,16 @@ public:
     Double decay() const;
     Double sustain() const;
     Double release() const;
+    Double filterEnvelopeAmount() const;
+    Double filterAttack() const;
+    Double filterDecay() const;
+    Double filterSustain() const;
+    Double filterRelease() const;
+
     Waveform::Type waveform() const;
-    EnvelopeState envelopeState() const;
+
+    const EnvelopeGenerator<Double>& envelope() const;
+    const EnvelopeGenerator<Double>& filterEnvelope() const;
 
     const MultiFilter& filter() const;
 
@@ -105,6 +105,11 @@ public:
     Double filterFrequency() const;
     Double filterResonance() const;
     Double filterKeyFollower() const;
+    Double filterEnvelopeAmount() const;
+    Double filterAttack() const;
+    Double filterDecay() const;
+    Double filterSustain() const;
+    Double filterRelease() const;
 
     // ----------- setter -----------------
 
@@ -128,6 +133,11 @@ public:
     void setFilterFrequency(Double freq);
     void setFilterResonance(Double res);
     void setFilterKeyFollower(Double amt);
+    void setFilterEnvelopeAmount(Double env);
+    void setFilterAttack(Double attack);
+    void setFilterDecay(Double decay);
+    void setFilterSustain(Double sustain);
+    void setFilterRelease(Double release);
 
     // ---------- audio -------------------
 

@@ -111,18 +111,30 @@ void MultiFilter::updateCoefficients()
         case T_NTH_ORDER_LOW:
         case T_NTH_ORDER_HIGH:
         case T_NTH_ORDER_BAND:
-            so1_.resize(order_);
-            for (auto & f : so1_)
-                f = 0;
-            so2_.resize(order_);
-            for (auto & f : so2_)
-                f = 0;
-            po0_.resize(order_);
-            for (auto & f : po0_)
-                f = 0;
-            po1_.resize(order_);
-            for (auto & f : po1_)
-                f = 0;
+            if (so1_.size() != order_)
+            {
+                so1_.resize(order_);
+                for (auto & f : so1_)
+                    f = 0;
+            }
+            if (so2_.size() != order_)
+            {
+                so2_.resize(order_);
+                for (auto & f : so2_)
+                    f = 0;
+            }
+            if (po0_.size() != order_)
+            {
+                po0_.resize(order_);
+                for (auto & f : po0_)
+                    f = 0;
+            }
+            if (po1_.size() != order_)
+            {
+                po1_.resize(order_);
+                for (auto & f : po1_)
+                    f = 0;
+            }
         case T_FIRST_ORDER_LOW:
         case T_FIRST_ORDER_HIGH:
         case T_FIRST_ORDER_BAND:

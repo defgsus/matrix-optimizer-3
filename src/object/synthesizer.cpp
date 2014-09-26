@@ -129,7 +129,27 @@ void Synthesizer::createParameters()
 
         p_filterKeyFollow_ = createFloatParameter("filterkeyf", tr("filter key follow"),
                                      tr("Factor for voices frequency to be added to the filter frequency."),
-                                     synth_->filterKeyFollower(), 0.0, 0.01);
+                                     synth_->filterKeyFollower(), 0.01);
+
+        p_filterEnv_ = createFloatParameter("filterenv", tr("filter envelope"),
+                                     tr("Frequency of filter envelop in Hertz"),
+                                     synth_->filterEnvelopeAmount(), 10.0);
+
+        p_fattack_ =  createFloatParameter("fattack", tr("filter attack"),
+                                           tr("Attack time of filter envelope in seconds"),
+                                           synth_->filterAttack(), 0.0, 10000.0, 0.05);
+
+        p_fdecay_ =   createFloatParameter("fdecay", tr("filter decay"),
+                                           tr("Decay time of filter envelope in seconds"),
+                                           synth_->filterDecay(), 0.0, 10000.0, 0.05);
+
+        p_fsustain_ = createFloatParameter("fsustain", tr("filter sustain"),
+                                           tr("Sustain level of filter envelope"),
+                                           synth_->filterSustain(), 0.05);
+
+        p_frelease_ = createFloatParameter("frelease", tr("frelease"),
+                                           tr("Release time of filter envelope in seconds"),
+                                           synth_->filterRelease(), 0.0, 10000.0, 0.05);
 
     endParameterGroup();
 }
@@ -148,6 +168,11 @@ void Synthesizer::updateParameterVisibility()
     p_filterFreq_->setVisible(isfilter);
     p_filterReso_->setVisible(isfilter);
     p_filterKeyFollow_->setVisible(isfilter);
+    p_filterEnv_->setVisible(isfilter);
+    p_fattack_->setVisible(isfilter);
+    p_fdecay_->setVisible(isfilter);
+    p_fsustain_->setVisible(isfilter);
+    p_frelease_->setVisible(isfilter);
 }
 
 void Synthesizer::onParameterChanged(Parameter * p)
@@ -215,6 +240,11 @@ void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
         synth_->setFilterFrequency(p_filterFreq_->value(time, thread));
         synth_->setFilterResonance(p_filterReso_->value(time, thread));
         synth_->setFilterKeyFollower(p_filterKeyFollow_->value(time, thread));
+        synth_->setFilterEnvelopeAmount(p_filterEnv_->value(time, thread));
+        synth_->setFilterAttack(p_fattack_->value(time, thread));
+        synth_->setFilterDecay(p_fdecay_->value(time, thread));
+        synth_->setFilterSustain(p_fsustain_->value(time, thread));
+        synth_->setFilterRelease(p_frelease_->value(time, thread));
 
         const int note = p_note_->value(time, thread);
 

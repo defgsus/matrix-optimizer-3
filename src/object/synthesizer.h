@@ -61,7 +61,12 @@ private:
         * p_pulseWidth_,
         * p_filterFreq_,
         * p_filterReso_,
-        * p_filterKeyFollow_;
+        * p_filterKeyFollow_,
+        * p_filterEnv_,
+        * p_fattack_,
+        * p_fdecay_,
+        * p_fsustain_,
+        * p_frelease_;
 
     ParameterSelect
         * p_waveform_,
