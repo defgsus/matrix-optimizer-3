@@ -188,7 +188,11 @@ HEADERS += \
     src/tool/deleter.h \
     src/network/eventcom.h \
     src/geom/tesselator.h \
-    src/tests/testtesselator.h
+    src/tests/testtesselator.h \
+    src/audio/tool/notefreq.h \
+    src/object/synthesizer.h \
+    src/audio/tool/floatgate.h \
+    src/audio/tool/synth.h
 
 
 SOURCES += \
@@ -334,4 +338,6 @@ SOURCES += \
     src/io/filemanager.cpp \
     src/network/eventcom.cpp \
     src/geom/tesselator.cpp \
-    src/tests/testtesselator.cpp
+    src/tests/testtesselator.cpp \
+    src/object/synthesizer.cpp \
+    src/audio/tool/synth.cpp

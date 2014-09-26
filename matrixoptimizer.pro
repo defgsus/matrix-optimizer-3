@@ -36,13 +36,11 @@ include(src/tests/tests.pri)
 INCLUDEPATH += src
 
 HEADERS += \
-    src/engine/serverengine.h \
-    src/audio/tool/synth.h
+    src/engine/serverengine.h
 
 SOURCES += \
     src/main.cpp \
-    src/engine/serverengine.cpp \
-    src/audio/tool/synth.cpp
+    src/engine/serverengine.cpp
 
 OTHER_FILES += $$BISON_FILES \
     TODO.txt \

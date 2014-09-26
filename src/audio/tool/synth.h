@@ -12,6 +12,7 @@
 #define MOSRC_AUDIO_TOOL_SYNTH_H
 
 #include "waveform.h"
+#include "notefreq.h"
 
 namespace MO {
 namespace AUDIO {
@@ -26,6 +27,7 @@ public:
 
     enum EnvelopeState
     {
+        ENV_CUED,
         ENV_ATTACK,
         ENV_DECAY,
         ENV_SUSTAIN,
@@ -35,11 +37,14 @@ public:
     SynthVoice(Synth *);
     ~SynthVoice();
 
+    // ------------ getter -------------
+
     Synth * synth() const;
     bool active() const;
     int note() const;
     Double freq() const;
     Double phase() const;
+    Double pulseWidth() const;
     Double velocity() const;
     Double attack() const;
     Double decay() const;
@@ -75,9 +80,47 @@ public:
     Synth();
     ~Synth();
 
+    // ------------ getter ----------------
+
+    uint sampleRate() const;
+    uint numberVoices() const;
+    Double volume() const;
+    Double attack() const;
+    Double decay() const;
+    Double sustain() const;
+    Double release() const;
+    Double pulseWidth() const;
+
+    const NoteFreq<Double>& noteFreq() const;
+    Double notesPerOctave() const;
+    Double baseFrequency() const;
+
+    // ----------- setter -----------------
+
+    void setSampleRate(uint sr);
+    void setNumberVoices(uint num);
+    void setVolume(Double volume);
+    void setAttack(Double attack);
+    void setDecay(Double decay);
+    void setSustain(Double sustain);
+    void setRelease(Double release);
+    void setPulseWidth(Double pw);
+
+    void setNoteFreq(const NoteFreq<Double>& n);
+    void setNotesPerOctave(Double notes);
+    void setBaseFrequency(Double f);
+
+    // ---------- audio -------------------
+
     /** Starts the next free voice.
         Returns the triggered voice or NULL. */
-    SynthVoice * noteOn(Double time, int note, Float velocity);
+    SynthVoice * noteOn(int note, Float velocity);
+
+    /** Puts all active voices of the given note into RELEASE state */
+    void noteOff(int note);
+
+    /** Generates @p bufferLength samples of synthesizer music */
+    void process(F32 * output, uint bufferLength);
 
 private:
 
