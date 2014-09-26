@@ -18,7 +18,6 @@
 #include "widget/spinbox.h"
 #include "audio/tool/multifilter.h"
 #include "io/settings.h"
-#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -71,7 +70,7 @@ void AudioFilterDialog::createWidgets_()
                 combo->addItem(
                             AUDIO::MultiFilter::filterTypeNames[i],
                             (int)AUDIO::MultiFilter::filterTypeEnums[i]);
-            MO_DEBUG("SetCurrent " << filter_->typeName());
+
             combo->setCurrentText(filter_->typeName());
 
             // frequency

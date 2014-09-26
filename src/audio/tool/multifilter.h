@@ -21,6 +21,7 @@ namespace AUDIO {
 
 class ChebychevFilter;
 class Filter24;
+class ButterworthFilter;
 
 class MultiFilter
 {
@@ -41,6 +42,9 @@ public:
         T_CHEBYCHEV_LOW,
         T_CHEBYCHEV_HIGH,
         T_CHEBYCHEV_BAND,
+        T_BUTTERWORTH_LOW,
+        T_BUTTERWORTH_HIGH,
+        T_BUTTERWORTH_BAND
     };
 
     static const QStringList filterTypeIds;
@@ -133,6 +137,7 @@ private:
 
     ChebychevFilter * cheby_;
     Filter24 * filter24_;
+    ButterworthFilter * butter_;
 };
 
 } // namespace AUDIO

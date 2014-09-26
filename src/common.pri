@@ -194,7 +194,9 @@ HEADERS += \
     src/audio/tool/floatgate.h \
     src/audio/tool/synth.h \
     src/audio/tool/envelopegenerator.h \
-    src/audio/tool/filter24.h
+    src/audio/tool/filter24.h \
+    src/math/denormals.h \
+    src/audio/tool/butterworthfilter.h
 
 
 SOURCES += \
@@ -343,4 +345,6 @@ SOURCES += \
     src/tests/testtesselator.cpp \
     src/object/synthesizer.cpp \
     src/audio/tool/synth.cpp \
-    src/audio/tool/filter24.cpp
+    src/audio/tool/filter24.cpp \
+    src/math/denormals.cpp \
+    src/audio/tool/butterworthfilter.cpp

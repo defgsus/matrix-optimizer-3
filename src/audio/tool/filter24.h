@@ -18,6 +18,10 @@ namespace MO {
 namespace AUDIO {
 
 
+/** Nice sounding 24db/oct filter.
+
+    Currently a bit unstable (overflowing) for resonance > about 0.7
+    */
 class Filter24
 {
 public:

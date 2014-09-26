@@ -1,19 +1,19 @@
-/** @file chebychevfilter.h
+/** @file butterworthfilter.h
 
-    @brief 2nd order 24db/oct chebychev filter
+    @brief Linkwitz-Riley filter
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 8/12/2014</p>
+    <p>created 27.09.2014</p>
 
-    adapted from:
-        http://musicdsp.org/archive.php?classid=3#229
-        http://musicdsp.org/showArchiveComment.php?ArchiveID=229
+    adopted from:
+        http://musicdsp.org/archive.php?classid=3#266
 */
 
-#ifndef MOSRC_AUDIO_TOOL_CHEBYCHEVFILTER_H
-#define MOSRC_AUDIO_TOOL_CHEBYCHEVFILTER_H
+#ifndef BUTTERWORTHFILTER_H
+#define BUTTERWORTHFILTER_H
+
 
 #include "types/int.h"
 #include "types/float.h"
@@ -22,7 +22,11 @@ namespace MO {
 namespace AUDIO {
 
 
-class ChebychevFilter
+/** 4th order Linkwitz-Riley filter.
+
+    Currently very over-exciting for frequencies < 200 and > nyquist - 200
+    */
+class ButterworthFilter
 {
 public:
 
@@ -33,7 +37,7 @@ public:
         T_BANDPASS
     };
 
-    ChebychevFilter();
+    ButterworthFilter();
 
     // ----------- setter ----------------
 
@@ -88,14 +92,19 @@ private:
 
     uint sr_;
     F32 freq_, reso_, clip_,
-        a0_, a1_, a2_, a3_, a4_, a5_,
-        b0_, b1_, b2_, b3_, b4_, b5_,
-        stage0_, stage1_, state0_, state1_, state2_, state3_,
-        bstage0_, bstage1_, bstate0_, bstate1_, bstate2_, bstate3_;
+        q_,
+        a0_, a1_, a2_, a3_, a4_,
+        ha0_, ha1_, ha2_, ha3_, ha4_,
+        b1_, b2_, b3_, b4_,
+        xm1_, xm2_, xm3_, xm4_,
+        ym1_, ym2_, ym3_, ym4_,
+        hxm1_, hxm2_, hxm3_, hxm4_,
+        hym1_, hym2_, hym3_, hym4_;
 
 };
 
 } // namespace AUDIO
 } // namespace MO
 
-#endif // MOSRC_AUDIO_TOOL_CHEBYCHEVFILTER_H
+
+#endif // BUTTERWORTHFILTER_H

@@ -15,6 +15,7 @@
 #include "filter24.h"
 #include "io/error.h"
 #include "math/constants.h"
+#include "math/denormals.h"
 
 namespace MO {
 namespace AUDIO {
@@ -27,6 +28,8 @@ Filter24::Filter24()
       reso_     (0)
 
 {
+    MATH::setDenormals(false);
+
     reset();
     updateCoefficients();
 }
@@ -63,7 +66,8 @@ void Filter24::process(const F32 *input, uint inputStride,
 {
 #define MO__LIMIT(v__) std::min(F32(1),std::max(F32(-1), (v__) ))
 
-    const F32 denorm = std::numeric_limits<F32>::min();
+    // we globally disabled denormals in constructor
+    const F32 denorm = 0;//std::numeric_limits<F32>::min();
 
     switch (type_)
     {
