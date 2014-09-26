@@ -63,6 +63,7 @@ private:
         * p_filterReso_,
         * p_filterKeyFollow_,
         * p_filterEnv_,
+        * p_filterEnvKeyFollow_,
         * p_fattack_,
         * p_fdecay_,
         * p_fsustain_,

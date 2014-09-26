@@ -338,7 +338,7 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
         }
     }
 
-    int pixelsize = 1; //devicePixelRatio(); // Retina support
+    //int pixelsize = 1; //devicePixelRatio(); // Retina support
     MO_DEBUG_GL("Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)")
     MO_CHECK_GL( glViewport(0, 0, fbo->width(), fbo->height()) );
 

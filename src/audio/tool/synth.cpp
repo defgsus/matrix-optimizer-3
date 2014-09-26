@@ -117,6 +117,7 @@ public:
           filterReso    (0.0),
           filterKeyFollow(0.0),
           filterEnvAmt  (0.0),
+          filterEnvKeyFollow(0.0),
           filterAttack  (0.05),
           filterDecay   (1.0),
           filterSustain (0.0),
@@ -160,7 +161,8 @@ public:
     uint sampleRate, filterOrder;
     Double volume, attack, decay, sustain, release, pulseWidth,
             filterFreq, filterReso, filterKeyFollow,
-            filterEnvAmt, filterAttack, filterDecay, filterSustain, filterRelease;
+            filterEnvAmt, filterEnvKeyFollow,
+            filterAttack, filterDecay, filterSustain, filterRelease;
 
     Waveform::Type waveform;
     MultiFilter::FilterType filterType;
@@ -271,7 +273,7 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
     v->p_->filter.setResonance(filterReso);
     v->p_->filter.reset();
     v->p_->filter.updateCoefficients();
-    v->p_->fenvAmt = filterEnvAmt;
+    v->p_->fenvAmt = filterEnvAmt + filterEnvKeyFollow * freq;
 
     return v;
 }
@@ -387,13 +389,14 @@ Double Synth::filterResonance() const { return p_->filterReso; }
 Double Synth::filterKeyFollower() const { return p_->filterKeyFollow; }
 MultiFilter::FilterType Synth::filterType() const { return p_->filterType; }
 Double Synth::filterEnvelopeAmount() const { return p_->filterEnvAmt; }
+Double Synth::filterEnvelopeKeyFollower() const { return p_->filterEnvKeyFollow; }
 Double Synth::filterAttack() const { return p_->filterAttack; }
 Double Synth::filterDecay() const { return p_->filterDecay; }
 Double Synth::filterSustain() const { return p_->filterSustain; }
 Double Synth::filterRelease() const { return p_->filterRelease; }
 
 void Synth::setNumberVoices(uint v) { p_->setNumVoices(v); }
-void Synth::setSampleRate(uint v) { p_->sampleRate = v; }
+void Synth::setSampleRate(uint v) { p_->sampleRate = std::max(uint(1), v); }
 void Synth::setVolume(Double v) { p_->volume = v; }
 void Synth::setAttack(Double v) { p_->attack = v; }
 void Synth::setDecay(Double v) { p_->decay = v; }
@@ -410,6 +413,7 @@ void Synth::setFilterResonance(Double v) { p_->filterReso = v; }
 void Synth::setFilterKeyFollower(Double v) { p_->filterKeyFollow = v; }
 void Synth::setFilterType(MultiFilter::FilterType t) { p_->filterType = t; }
 void Synth::setFilterEnvelopeAmount(Double v) { p_->filterEnvAmt = v; }
+void Synth::setFilterEnvelopeKeyFollower(Double v) { p_->filterEnvKeyFollow = v; }
 void Synth::setFilterAttack(Double v) { p_->filterAttack = v; }
 void Synth::setFilterDecay(Double v) { p_->filterDecay = v; }
 void Synth::setFilterSustain(Double v) { p_->filterSustain = v; }

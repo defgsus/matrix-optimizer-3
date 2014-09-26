@@ -106,6 +106,7 @@ public:
     Double filterResonance() const;
     Double filterKeyFollower() const;
     Double filterEnvelopeAmount() const;
+    Double filterEnvelopeKeyFollower() const;
     Double filterAttack() const;
     Double filterDecay() const;
     Double filterSustain() const;
@@ -134,6 +135,7 @@ public:
     void setFilterResonance(Double res);
     void setFilterKeyFollower(Double amt);
     void setFilterEnvelopeAmount(Double env);
+    void setFilterEnvelopeKeyFollower(Double amt);
     void setFilterAttack(Double attack);
     void setFilterDecay(Double decay);
     void setFilterSustain(Double sustain);

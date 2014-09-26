@@ -128,12 +128,16 @@ void Synthesizer::createParameters()
                                      synth_->filterResonance(), 0.0, 1.0, 0.01);
 
         p_filterKeyFollow_ = createFloatParameter("filterkeyf", tr("filter key follow"),
-                                     tr("Factor for voices frequency to be added to the filter frequency."),
+                                     tr("Factor for voice frequency to be added to the filter frequency."),
                                      synth_->filterKeyFollower(), 0.01);
 
         p_filterEnv_ = createFloatParameter("filterenv", tr("filter envelope"),
-                                     tr("Frequency of filter envelop in Hertz"),
+                                     tr("Frequency of filter envelope in Hertz"),
                                      synth_->filterEnvelopeAmount(), 10.0);
+
+        p_filterEnvKeyFollow_ = createFloatParameter("filterenvkeyf", tr("filter envelope key f."),
+                                     tr("Factor for voice frequency to be added to the filter envelope amount."),
+                                     synth_->filterEnvelopeKeyFollower(), 0.01);
 
         p_fattack_ =  createFloatParameter("fattack", tr("filter attack"),
                                            tr("Attack time of filter envelope in seconds"),
@@ -169,6 +173,7 @@ void Synthesizer::updateParameterVisibility()
     p_filterReso_->setVisible(isfilter);
     p_filterKeyFollow_->setVisible(isfilter);
     p_filterEnv_->setVisible(isfilter);
+    p_filterEnvKeyFollow_->setVisible(isfilter);
     p_fattack_->setVisible(isfilter);
     p_fdecay_->setVisible(isfilter);
     p_fsustain_->setVisible(isfilter);
@@ -241,6 +246,7 @@ void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
         synth_->setFilterResonance(p_filterReso_->value(time, thread));
         synth_->setFilterKeyFollower(p_filterKeyFollow_->value(time, thread));
         synth_->setFilterEnvelopeAmount(p_filterEnv_->value(time, thread));
+        synth_->setFilterEnvelopeKeyFollower(p_filterEnvKeyFollow_->value(time, thread));
         synth_->setFilterAttack(p_fattack_->value(time, thread));
         synth_->setFilterDecay(p_fdecay_->value(time, thread));
         synth_->setFilterSustain(p_fsustain_->value(time, thread));

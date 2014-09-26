@@ -29,11 +29,14 @@
 namespace MO {
 namespace GUI {
 
-QGLFormat createFormat() {
-    QGLFormat format;
-    format.setVersion(3, 3);
-    format.setProfile(QGLFormat::CoreProfile);
-    return format;
+namespace
+{
+    QGLFormat createFormat() {
+        QGLFormat format;
+        format.setVersion(3, 3);
+        format.setProfile(QGLFormat::CoreProfile);
+        return format;
+    }
 }
 
 Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
