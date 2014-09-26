@@ -65,6 +65,7 @@
 #include "io/povrayexporter.h"
 #include "serverdialog.h"
 #include "engine/serverengine.h"
+#include "audiofilterdialog.h"
 
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -434,6 +435,14 @@ void MainWindow::createMainMenu_()
         connect(a, &QAction::triggered, [=]()
         {
             SceneConvertDialog diag;
+            diag.exec();
+        });
+
+        a = new QAction(tr("Audio-filter tester"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            AudioFilterDialog diag;
             diag.exec();
         });
 

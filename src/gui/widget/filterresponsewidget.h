@@ -30,6 +30,10 @@ public:
     explicit FilterResponseWidget(QWidget *parent = 0);
     ~FilterResponseWidget();
 
+    uint sampleRate() const { return sampleRate_; }
+
+    int XForFreq(F32 freq) const;
+    F32 freqForX(int x) const;
     F32 freqForBand(uint band) const;
 
 public slots:
@@ -49,10 +53,11 @@ private:
     std::vector<F32> response_;
 
     uint sampleRate_;
+    F32 lowFreq_;
     bool logScale_;
 
     // -- config --
-    QPen penGrid_, penCurve_;
+    QPen penGrid_, penFreq_, penCurve_;
     QBrush brushBack_;
 };
 

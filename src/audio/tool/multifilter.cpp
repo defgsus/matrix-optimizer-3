@@ -129,6 +129,13 @@ MultiFilter& MultiFilter::operator = (const MultiFilter& other)
     return *this;
 }
 
+void MultiFilter::setType(const QString &id)
+{
+    int idx = filterTypeIds.indexOf(id);
+    if (idx >= 0)
+        setType((FilterType)filterTypeEnums[idx]);
+}
+
 void MultiFilter::reset()
 {
     s1_ = s2_ = p0_ = p1_ = 0;

@@ -13,6 +13,7 @@
 #include "filterresponsewidget.h"
 #include "audio/tool/multifilter.h"
 #include "math/constants.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -22,6 +23,7 @@ FilterResponseWidget::FilterResponseWidget(QWidget *parent)
       filter_       (new AUDIO::MultiFilter()),
       response_     (128),
       sampleRate_   (44100),
+      lowFreq_      (20),
       logScale_     (false)
 {
     setObjectName("_FilterResponseWidget");
@@ -30,6 +32,8 @@ FilterResponseWidget::FilterResponseWidget(QWidget *parent)
 
     brushBack_ = QBrush(QColor(0,0,0));
     penGrid_ = QPen(QColor(60,60,60));
+    penFreq_ = QPen(QColor(60,140,60));
+    penFreq_.setStyle(Qt::DotLine);
     penCurve_ = QPen(QColor(100,200,100));
 }
 
@@ -61,20 +65,26 @@ void FilterResponseWidget::paintEvent(QPaintEvent *)
     p.setPen(penGrid_);
 
     // x (freq)
-    int num = 32;
-    for (int i=0; i<num; ++i)
+    F32 freq = 0;
+    while (freq < sampleRate_)
     {
-        int x = width() / num;
+        int x = XForFreq(freq);
         p.drawLine(x,0, x,height());
+        freq += 2000;
     }
 
     // y (amp)
-    num = 4;
+    int num = 4;
     for (int i=0; i<num; ++i)
     {
-        int y = height() - 1 - height() / num;
+        int y = height() - 1 - i * height() / num;
         p.drawLine(0,y, width(),y);
     }
+
+    // center freq
+    p.setPen(penFreq_);
+    int x = XForFreq(filter_->frequency());
+    p.drawLine(x,0, x,height());
 
     // response curve
     p.setRenderHint(QPainter::Antialiasing, true);
@@ -83,8 +93,8 @@ void FilterResponseWidget::paintEvent(QPaintEvent *)
     int lx=0, ly=0;
     for (uint i=0; i<response_.size(); ++i)
     {
-        int x = i * width() / response_.size();
-        int y = height() - 1 - response_[i] / 4;
+        int x = XForFreq(freqForBand(i));
+        int y = height() - 1 - height() * response_[i] / 4;
 
         if (i>0)
             p.drawLine(lx,ly, x,y);
@@ -94,13 +104,27 @@ void FilterResponseWidget::paintEvent(QPaintEvent *)
     }
 }
 
+int FilterResponseWidget::XForFreq(F32 freq) const
+{
+    return freq / (sampleRate_ / 2) * width();
+}
+
+F32 FilterResponseWidget::freqForX(int x) const
+{
+    return F32(x) / width() * sampleRate_ / 2;
+}
+
 F32 FilterResponseWidget::freqForBand(uint band) const
 {
-    return F32(band + 1) / response_.size() * sampleRate_ / 2;
+    return lowFreq_ + F32(band) / response_.size() * (sampleRate_ - lowFreq_) / 2;
 }
 
 void FilterResponseWidget::calcResponse_()
 {
+    MO_DEBUG_GUI("FilterResponseWidget::calcResponse_() t="
+             << filter_->typeName() << " f=" << filter_->frequency()
+             << " r=" << filter_->resonance() << " o=" << filter_->order());
+
     std::vector<F32>
             input(2000),
             output(input.size());
@@ -122,6 +146,7 @@ void FilterResponseWidget::calcResponse_()
         for (uint i=1; i<output.size(); ++i)
             amp = std::max(amp, std::abs(output[i]));
 
+        response_[j] = amp;
     }
 }
 

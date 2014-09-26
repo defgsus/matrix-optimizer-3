@@ -68,6 +68,10 @@ public:
         Requires updateCoefficients() to be called. */
     void setType(FilterType type) { type_ = type; }
 
+    /** Sets the type of the filter, if id is known.
+        Requires updateCoefficients() to be called. */
+    void setType(const QString& id);
+
     /** Sets the order of the T_NTH_ORDER type filters.
         Requires updateCoefficients() to be called. */
     void setOrder(uint order) { order_ = std::max((uint)1, order); }
@@ -87,6 +91,8 @@ public:
     // ---------- getter ------------------
 
     FilterType type() const { return type_; }
+    const QString& typeName() const { return filterTypeNames[type_]; }
+    const QString& typeId() const { return filterTypeIds[type_]; }
 
     uint order() const { return order_; }
 
