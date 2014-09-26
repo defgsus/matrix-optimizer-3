@@ -35,12 +35,12 @@ const QStringList MultiFilter::filterTypeNames =
 
 const QStringList MultiFilter::filterTypeStatusTips =
 { QObject::tr("No filtering takes place"),
-  QObject::tr("1st order low-pass"),
-  QObject::tr("1st order high-pass"),
-  QObject::tr("1st order band-pass"),
-  QObject::tr("nth order low-pass"),
-  QObject::tr("nth order high-pass"),
-  QObject::tr("nth order band-pass"),
+  QObject::tr("1st order, 6db/oct, low-pass"),
+  QObject::tr("1st order, 6db/oct, high-pass"),
+  QObject::tr("1st order, 6db/oct, band-pass"),
+  QObject::tr("n repeated stages of 1st order, 6db/oct, low-pass"),
+  QObject::tr("n repeated stages of 1st order, 6db/oct, high-pass"),
+  QObject::tr("n repeated stages of 1st order, 6db/oct, band-pass"),
   QObject::tr("2nd order, 24db/oct, chebychev low-pass"),
   QObject::tr("2nd order, 24db/oct, chebychev high-pass"),
   QObject::tr("2nd order, 24db/oct, chebychev band-pass") };
@@ -138,7 +138,10 @@ void MultiFilter::updateCoefficients()
         case T_FIRST_ORDER_LOW:
         case T_FIRST_ORDER_HIGH:
         case T_FIRST_ORDER_BAND:
-            q1_ = std::min(1.f, 2.f * freq_ / sr_);
+            // frequency coefficient
+            q1_ = 1.f - std::min(1.f, std::exp(-2.f * 3.14159265f * freq_ / sr_));
+                //q1_ = std::min(1.f, 2.f * freq_ / sr_);
+            // resonance coefficient
             q2_ = std::max(0.f, std::min(0.99999f, reso_));
         break;
 
