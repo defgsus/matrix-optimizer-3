@@ -102,13 +102,52 @@ void Synthesizer::createParameters()
                    tr("Pulsewidth of the oscillator waveform - describes the width of the positive edge"),
                    0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05);
 
+        // ---- filter -----
+
+        p_filterType_ = createSelectParameter("filtertype", tr("filter type"),
+                                      tr("Selectes the type of filter"),
+                                      AUDIO::MultiFilter::filterTypeIds,
+                                      AUDIO::MultiFilter::filterTypeNames,
+                                      AUDIO::MultiFilter::filterTypeStatusTips,
+                                      AUDIO::MultiFilter::filterTypeEnums,
+                                      synth_->filterType(), true, false);
+
+        p_filterOrder_ = createIntParameter("filterorder", tr("filter order"),
+                                     tr("The order (sharpness) of the filter for the 'nth order' types"),
+                                     synth_->filterOrder(),
+                                     1, 20,
+                                     1);
+
+        p_filterFreq_ = createFloatParameter("filterfreq", tr("filter frequency"),
+                                     tr("Controls the filter frequency in Hertz"),
+                                     synth_->filterFrequency(), 0.00001, 100000.0, 10.);
+
+
+        p_filterReso_ = createFloatParameter("filterreso", tr("filter resonance"),
+                                     tr("Controls the filter resonance - how much of the filter is fed-back to itself"),
+                                     synth_->filterResonance(), 0.0, 1.0, 0.01);
+
+        p_filterKeyFollow_ = createFloatParameter("filterkeyf", tr("filter key follow"),
+                                     tr("Factor for voices frequency to be added to the filter frequency."),
+                                     synth_->filterKeyFollower(), 0.0, 0.01);
+
     endParameterGroup();
 }
 
 void Synthesizer::updateParameterVisibility()
 {
+    const auto wavetype = (AUDIO::Waveform::Type)p_waveform_->baseValue();
+    const auto filtertype = (AUDIO::MultiFilter::FilterType)p_filterType_->baseValue();
+    const bool
+            isfilter = filtertype != AUDIO::MultiFilter::T_BYPASS;
+
     p_pulseWidth_->setVisible(
-                AUDIO::Waveform::supportsPulseWidth((AUDIO::Waveform::Type)p_waveform_->baseValue()) );
+                AUDIO::Waveform::supportsPulseWidth(wavetype) );
+    p_filterOrder_->setVisible(isfilter &&
+                AUDIO::MultiFilter::supportsOrder(filtertype));
+    p_filterFreq_->setVisible(isfilter);
+    p_filterReso_->setVisible(isfilter);
+    p_filterKeyFollow_->setVisible(isfilter);
 }
 
 void Synthesizer::onParameterChanged(Parameter * p)
@@ -171,6 +210,11 @@ void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
         synth_->setRelease(p_release_->value(time, thread));
         synth_->setPulseWidth(p_pulseWidth_->value(time, thread) );
         synth_->setWaveform((AUDIO::Waveform::Type)p_waveform_->baseValue());
+        synth_->setFilterType((AUDIO::MultiFilter::FilterType)p_filterType_->baseValue());
+        synth_->setFilterOrder(p_filterOrder_->value(time, thread));
+        synth_->setFilterFrequency(p_filterFreq_->value(time, thread));
+        synth_->setFilterResonance(p_filterReso_->value(time, thread));
+        synth_->setFilterKeyFollower(p_filterKeyFollow_->value(time, thread));
 
         const int note = p_note_->value(time, thread);
 

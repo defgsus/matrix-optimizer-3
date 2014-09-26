@@ -13,6 +13,7 @@
 
 #include "waveform.h"
 #include "notefreq.h"
+#include "multifilter.h"
 
 namespace MO {
 namespace AUDIO {
@@ -52,6 +53,8 @@ public:
     Double release() const;
     Waveform::Type waveform() const;
     EnvelopeState envelopeState() const;
+
+    const MultiFilter& filter() const;
 
 private:
 
@@ -97,6 +100,12 @@ public:
 
     Waveform::Type waveform() const;
 
+    MultiFilter::FilterType filterType() const;
+    uint filterOrder() const;
+    Double filterFrequency() const;
+    Double filterResonance() const;
+    Double filterKeyFollower() const;
+
     // ----------- setter -----------------
 
     void setSampleRate(uint sr);
@@ -113,6 +122,12 @@ public:
     void setBaseFrequency(Double f);
 
     void setWaveform(Waveform::Type t);
+
+    void setFilterType(MultiFilter::FilterType t);
+    void setFilterOrder(uint order);
+    void setFilterFrequency(Double freq);
+    void setFilterResonance(Double res);
+    void setFilterKeyFollower(Double amt);
 
     // ---------- audio -------------------
 

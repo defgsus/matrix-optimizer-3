@@ -47,7 +47,8 @@ private:
 
     ParameterInt
         * p_numVoices_,
-        * p_note_;
+        * p_note_,
+        * p_filterOrder_;
 
     ParameterFloat
         * p_gate_,
@@ -57,10 +58,14 @@ private:
         * p_decay_,
         * p_sustain_,
         * p_release_,
-        * p_pulseWidth_;
+        * p_pulseWidth_,
+        * p_filterFreq_,
+        * p_filterReso_,
+        * p_filterKeyFollow_;
 
     ParameterSelect
-        * p_waveform_;
+        * p_waveform_,
+        * p_filterType_;
 
     AUDIO::Synth * synth_;
     AUDIO::FloatGate<Double> * gate_;

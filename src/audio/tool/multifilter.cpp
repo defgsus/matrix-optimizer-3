@@ -17,12 +17,13 @@ namespace AUDIO {
 
 
 const QStringList MultiFilter::filterTypeIds =
-{ "low", "high", "band",
+{ "bypass", "low", "high", "band",
   "nlow", "nhigh", "nband",
   "cheblow", "chebhigh", "chebband" };
 
 const QStringList MultiFilter::filterTypeNames =
-{ QObject::tr("1st order low-pass"),
+{ QObject::tr("off"),
+  QObject::tr("1st order low-pass"),
   QObject::tr("1st order high-pass"),
   QObject::tr("1st order band-pass"),
   QObject::tr("nth order low-pass"),
@@ -33,7 +34,8 @@ const QStringList MultiFilter::filterTypeNames =
   QObject::tr("2nd chebychev band") };
 
 const QStringList MultiFilter::filterTypeStatusTips =
-{ QObject::tr("1st order low-pass"),
+{ QObject::tr("No filtering takes place"),
+  QObject::tr("1st order low-pass"),
   QObject::tr("1st order high-pass"),
   QObject::tr("1st order band-pass"),
   QObject::tr("nth order low-pass"),
@@ -44,7 +46,8 @@ const QStringList MultiFilter::filterTypeStatusTips =
   QObject::tr("2nd order, 24db/oct, chebychev band-pass") };
 
 const QList<int> MultiFilter::filterTypeEnums =
-{ T_FIRST_ORDER_LOW,
+{ T_BYPASS,
+  T_FIRST_ORDER_LOW,
   T_FIRST_ORDER_HIGH,
   T_FIRST_ORDER_BAND,
   T_NTH_ORDER_LOW,
@@ -53,6 +56,13 @@ const QList<int> MultiFilter::filterTypeEnums =
   T_CHEBYCHEV_LOW,
   T_CHEBYCHEV_HIGH,
   T_CHEBYCHEV_BAND };
+
+bool MultiFilter::supportsOrder(FilterType t)
+{
+    return t == T_NTH_ORDER_LOW
+        || t == T_NTH_ORDER_HIGH
+        || t == T_NTH_ORDER_BAND;
+}
 
 MultiFilter::MultiFilter(bool alloc)
     : doReallocate_ (alloc),
@@ -96,6 +106,8 @@ void MultiFilter::updateCoefficients()
     // init internal types
     switch (type_)
     {
+        case T_BYPASS: break;
+
         case T_NTH_ORDER_LOW:
         case T_NTH_ORDER_HIGH:
         case T_NTH_ORDER_BAND:
@@ -153,6 +165,11 @@ void MultiFilter::process(const F32 *input, uint inputStride,
 {
     switch (type_)
     {
+        case T_BYPASS:
+            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+                *output = *input;
+        break;
+
         case T_FIRST_ORDER_LOW:
             // without resonance
             if (!q2_)
@@ -256,7 +273,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                     for (uint j=1; j<so1_.size(); ++j)
                     {
                         so1_[j] += q1_ * (tmp - so1_[j]);
-                        tmp = so1_[j-1] - so1_[j];
+                        tmp = tmp - so1_[j];
                     }
                     *output = tmp;
                 }
@@ -276,7 +293,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                         po1_[j] = so1_[j];
                         so1_[j] += q1_ * (tmp - so1_[j])
                                  + q2_ * (so1_[j] - po0_[j]);
-                        tmp = so1_[j-1] - so1_[j];
+                        tmp = tmp - so1_[j];
                     }
                     *output = tmp;
                 }
@@ -301,11 +318,11 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                 for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
                 {
                     so1_[0] += q1_ * (*input - so1_[0]);
-                    // lowpass of highpass
+                    // lowpass of highpass (with resonance)
                     po0_[0] = po1_[0];
                     po1_[0] = so2_[0];
                     so2_[0] += q1_ * ((*input - so1_[0]) - so2_[0])
-                             + q2_ * (so1_[0] - po0_[0]);
+                             + q2_ * (so2_[0] - po0_[0]);
 
                     for (uint j=1; j<so1_.size(); ++j)
                     {

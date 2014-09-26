@@ -35,9 +35,11 @@ class SynthVoice::Private
           decay 	(0.f),
           sustain	(0.f),
           release	(0.f),
+          lifetime	(0),
           envstate	(SynthVoice::ENV_ATTACK),
           waveform	(Waveform::T_SINE),
-          lifetime	(0)
+          filter    (true)
+
     { }
 
     Synth * synth;
@@ -59,11 +61,15 @@ class SynthVoice::Private
         sustain,
         release;
 
+    uint lifetime;
+
     SynthVoice::EnvelopeState envstate;
 
     Waveform::Type waveform;
 
-    uint lifetime;
+    MultiFilter filter;
+
+
 };
 
 // ------------------------------------ synthvoice ------------------------------------
@@ -91,7 +97,7 @@ Double SynthVoice::sustain() const { return p_->sustain; }
 Double SynthVoice::release() const { return p_->release; }
 Waveform::Type SynthVoice::waveform() const { return p_->waveform; }
 SynthVoice::EnvelopeState SynthVoice::envelopeState() const { return p_->envstate; }
-
+const MultiFilter& SynthVoice::filter() const { return p_->filter; }
 
 // ------------------------------------ synth private ------------------------------------
 
@@ -102,13 +108,18 @@ public:
         : synth         (s),
           voicePolicy   (Synth::VP_OLDEST),
           sampleRate    (44100),
+          filterOrder   (1),
           volume        (1.0),
           attack        (0.05),
           decay         (1.0),
           sustain       (0.0),
           release       (1.0),
           pulseWidth    (0.5),
-          waveform      (Waveform::T_SINE)
+          filterFreq    (1000.0),
+          filterReso    (0.0),
+          filterKeyFollow(0.0),
+          waveform      (Waveform::T_SINE),
+          filterType    (MultiFilter::T_BYPASS)
     {
         setNumVoices(4);
     }
@@ -143,9 +154,12 @@ public:
 
     Synth::VoicePolicy voicePolicy;
 
-    uint sampleRate;
-    Double volume, attack, decay, sustain, release, pulseWidth;
+    uint sampleRate, filterOrder;
+    Double volume, attack, decay, sustain, release, pulseWidth,
+            filterFreq, filterReso, filterKeyFollow;
+
     Waveform::Type waveform;
+    MultiFilter::FilterType filterType;
 
     NoteFreq<Double> noteFreq;
 };
@@ -238,6 +252,12 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
     v->p_->lifetime = 0;
     v->p_->note = note;
     v->p_->active = true;
+    v->p_->filter.setType(filterType);
+    v->p_->filter.setOrder(filterOrder);
+    v->p_->filter.setFrequency(filterFreq + filterKeyFollow * freq);
+    v->p_->filter.setResonance(filterReso);
+    v->p_->filter.reset();
+    v->p_->filter.updateCoefficients();
 
     return v;
 }
@@ -288,6 +308,10 @@ void Synth::Private::process(F32 *output, uint bufferLength)
 
             // get sample
             F32 s = Waveform::waveform(v->phase, v->waveform, v->pw);
+
+            // filter
+            if (v->filter.type() != MultiFilter::T_BYPASS)
+                v->filter.process(&s, &s, 1);
 
             // put into buffer
             *output += s * volume * v->velo * v->env;
@@ -355,6 +379,11 @@ const NoteFreq<Double>& Synth::noteFreq() const { return p_->noteFreq; }
 Double Synth::notesPerOctave() const { return p_->noteFreq.notesPerOctave(); }
 Double Synth::baseFrequency() const { return p_->noteFreq.baseFrequency(); }
 Waveform::Type Synth::waveform() const { return p_->waveform; }
+uint Synth::filterOrder() const { return p_->filterOrder; }
+Double Synth::filterFrequency() const { return p_->filterFreq; }
+Double Synth::filterResonance() const { return p_->filterReso; }
+Double Synth::filterKeyFollower() const { return p_->filterKeyFollow; }
+MultiFilter::FilterType Synth::filterType() const { return p_->filterType; }
 
 void Synth::setNumberVoices(uint v) { p_->setNumVoices(v); }
 void Synth::setSampleRate(uint v) { p_->sampleRate = v; }
@@ -368,6 +397,11 @@ void Synth::setNoteFreq(const NoteFreq<Double>& n) { p_->noteFreq = n; }
 void Synth::setNotesPerOctave(Double v) { p_->noteFreq.setNotesPerOctave(v); }
 void Synth::setBaseFrequency(Double v) { p_->noteFreq.setBaseFrequency(v); }
 void Synth::setWaveform(Waveform::Type t) { p_->waveform = t; }
+void Synth::setFilterOrder(uint v) { p_->filterOrder = std::max(uint(1), v); }
+void Synth::setFilterFrequency(Double v) { p_->filterFreq = v; }
+void Synth::setFilterResonance(Double v) { p_->filterReso = v; }
+void Synth::setFilterKeyFollower(Double v) { p_->filterKeyFollow = v; }
+void Synth::setFilterType(MultiFilter::FilterType t) { p_->filterType = t; }
 
 SynthVoice * Synth::noteOn(int note, Float velocity)
 {
