@@ -70,7 +70,8 @@ HEADERS += \
     src/gui/infowindow.h \
     src/gui/serverdialog.h \
     src/gui/widget/netlogwidget.h \
-    src/gui/widget/overlapareaeditwidget.h
+    src/gui/widget/overlapareaeditwidget.h \
+    src/gui/widget/filterresponsewidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -140,4 +141,5 @@ SOURCES += \
     src/gui/infowindow.cpp \
     src/gui/serverdialog.cpp \
     src/gui/widget/netlogwidget.cpp \
-    src/gui/widget/overlapareaeditwidget.cpp
+    src/gui/widget/overlapareaeditwidget.cpp \
+    src/gui/widget/filterresponsewidget.cpp

@@ -20,6 +20,7 @@ namespace MO {
 namespace AUDIO {
 
 class ChebychevFilter;
+class Filter24;
 
 class MultiFilter
 {
@@ -34,6 +35,9 @@ public:
         T_NTH_ORDER_LOW,
         T_NTH_ORDER_HIGH,
         T_NTH_ORDER_BAND,
+        T_24_LOW,
+        T_24_HIGH,
+        T_24_BAND,
         T_CHEBYCHEV_LOW,
         T_CHEBYCHEV_HIGH,
         T_CHEBYCHEV_BAND,
@@ -54,6 +58,9 @@ public:
     MultiFilter(bool dynamicAllocation = true);
 
     ~MultiFilter();
+
+    MultiFilter(const MultiFilter& other);
+    MultiFilter& operator = (const MultiFilter& other);
 
     // ----------- setter ----------------
 
@@ -119,6 +126,7 @@ private:
     std::vector<F32> so1_, so2_, po0_, po1_;
 
     ChebychevFilter * cheby_;
+    Filter24 * filter24_;
 };
 
 } // namespace AUDIO

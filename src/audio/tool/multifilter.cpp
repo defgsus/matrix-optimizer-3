@@ -10,6 +10,7 @@
 
 #include "multifilter.h"
 #include "chebychevfilter.h"
+#include "filter24.h"
 #include "io/error.h"
 
 namespace MO {
@@ -19,6 +20,7 @@ namespace AUDIO {
 const QStringList MultiFilter::filterTypeIds =
 { "bypass", "low", "high", "band",
   "nlow", "nhigh", "nband",
+  "low24", "high24", "band24",
   "cheblow", "chebhigh", "chebband" };
 
 const QStringList MultiFilter::filterTypeNames =
@@ -29,6 +31,9 @@ const QStringList MultiFilter::filterTypeNames =
   QObject::tr("nth order low-pass"),
   QObject::tr("nth order high-pass"),
   QObject::tr("nth order band-pass"),
+  QObject::tr("24db/oct low-pass"),
+  QObject::tr("24db/oct high-pass"),
+  QObject::tr("24db/oct band-pass"),
   QObject::tr("2nd chebychev low"),
   QObject::tr("2nd chebychev high"),
   QObject::tr("2nd chebychev band") };
@@ -41,6 +46,9 @@ const QStringList MultiFilter::filterTypeStatusTips =
   QObject::tr("n repeated stages of 1st order, 6db/oct, low-pass"),
   QObject::tr("n repeated stages of 1st order, 6db/oct, high-pass"),
   QObject::tr("n repeated stages of 1st order, 6db/oct, band-pass"),
+  QObject::tr("1st order, 24db/oct, low-pass"),
+  QObject::tr("1st order, 24db/oct, high-pass"),
+  QObject::tr("1st order, 24db/oct, band-pass"),
   QObject::tr("2nd order, 24db/oct, chebychev low-pass"),
   QObject::tr("2nd order, 24db/oct, chebychev high-pass"),
   QObject::tr("2nd order, 24db/oct, chebychev band-pass") };
@@ -53,6 +61,9 @@ const QList<int> MultiFilter::filterTypeEnums =
   T_NTH_ORDER_LOW,
   T_NTH_ORDER_HIGH,
   T_NTH_ORDER_BAND,
+  T_24_LOW,
+  T_24_HIGH,
+  T_24_BAND,
   T_CHEBYCHEV_LOW,
   T_CHEBYCHEV_HIGH,
   T_CHEBYCHEV_BAND };
@@ -71,7 +82,8 @@ MultiFilter::MultiFilter(bool alloc)
       order_        (1),
       freq_         (1000),
       reso_         (0),
-      cheby_        (doReallocate_? 0 : new ChebychevFilter())
+      cheby_        (doReallocate_? 0 : new ChebychevFilter()),
+      filter24_     (doReallocate_? 0 : new Filter24())
 {
     reset();
     updateCoefficients();
@@ -79,9 +91,43 @@ MultiFilter::MultiFilter(bool alloc)
 
 MultiFilter::~MultiFilter()
 {
+    delete filter24_;
     delete cheby_;
 }
 
+MultiFilter::MultiFilter(const MultiFilter &other)
+{
+    *this = other;
+}
+
+MultiFilter& MultiFilter::operator = (const MultiFilter& other)
+{
+    type_ = other.type_;
+    sr_ = other.sr_;
+    freq_ = other.freq_;
+    reso_ = other.reso_;
+    order_ = other.order_;
+
+    if (cheby_)
+    {
+        delete cheby_;
+        cheby_ = 0;
+    }
+    if (filter24_)
+    {
+        delete filter24_;
+        filter24_ = 0;
+    }
+
+    updateCoefficients();
+
+    if (cheby_ && other.cheby_)
+        *cheby_ = *other.cheby_;
+    if (filter24_ && other.filter24_)
+        *filter24_ = *other.filter24_;
+
+    return *this;
+}
 
 void MultiFilter::reset()
 {
@@ -97,6 +143,8 @@ void MultiFilter::reset()
 
     if (cheby_)
         cheby_->reset();
+    if (filter24_)
+        filter24_->reset();
 }
 
 void MultiFilter::updateCoefficients()
@@ -145,12 +193,16 @@ void MultiFilter::updateCoefficients()
             q2_ = std::max(0.f, std::min(0.99999f, reso_));
         break;
 
+        case T_24_LOW:
+        case T_24_HIGH:
+        case T_24_BAND: break;
+
         case T_CHEBYCHEV_LOW:
         case T_CHEBYCHEV_HIGH:
         case T_CHEBYCHEV_BAND: break;
     }
 
-    // init chebychev filters
+    // init chebychev filter
     if (   type_ == T_CHEBYCHEV_LOW
         || type_ == T_CHEBYCHEV_HIGH
         || type_ == T_CHEBYCHEV_BAND)
@@ -172,6 +224,30 @@ void MultiFilter::updateCoefficients()
     {
         delete cheby_;
         cheby_ = 0;
+    }
+
+    // init 24db filter
+    if (   type_ == T_24_LOW
+        || type_ == T_24_HIGH
+        || type_ == T_24_BAND)
+    {
+        if (!filter24_)
+            filter24_ = new Filter24();
+        filter24_->setSampleRate(sr_);
+        filter24_->setFrequency(freq_);
+        filter24_->setResonance(reso_);
+        if (type_ == T_24_LOW)
+            filter24_->setType(Filter24::T_LOWPASS);
+        else if (type_ == T_24_HIGH)
+            filter24_->setType(Filter24::T_HIGHPASS);
+        if (type_ == T_24_BAND)
+            filter24_->setType(Filter24::T_BANDPASS);
+        filter24_->updateCoefficients();
+    }
+    else if (doReallocate_)
+    {
+        delete filter24_;
+        filter24_ = 0;
     }
 }
 
@@ -356,6 +432,13 @@ void MultiFilter::process(const F32 *input, uint inputStride,
         case T_CHEBYCHEV_BAND:
             MO_ASSERT(cheby_, "forgot to call MultiFilter::updateCoefficients() ?");
             cheby_->process(input, inputStride, output, outputStride, blockSize);
+        break;
+
+        case T_24_LOW:
+        case T_24_HIGH:
+        case T_24_BAND:
+            MO_ASSERT(filter24_, "forgot to call MultiFilter::updateCoefficients() ?");
+            filter24_->process(input, inputStride, output, outputStride, blockSize);
         break;
 
     }

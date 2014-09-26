@@ -193,7 +193,8 @@ HEADERS += \
     src/object/synthesizer.h \
     src/audio/tool/floatgate.h \
     src/audio/tool/synth.h \
-    src/audio/tool/envelopegenerator.h
+    src/audio/tool/envelopegenerator.h \
+    src/audio/tool/filter24.h
 
 
 SOURCES += \
@@ -341,4 +342,5 @@ SOURCES += \
     src/geom/tesselator.cpp \
     src/tests/testtesselator.cpp \
     src/object/synthesizer.cpp \
-    src/audio/tool/synth.cpp
+    src/audio/tool/synth.cpp \
+    src/audio/tool/filter24.cpp
