@@ -82,7 +82,9 @@ private:
     F32 freq_, reso_,
         fc_, fc2_, rc_,
         y1_, y2_, y3_, y4_,
-        oldx_, oldy1_, oldy2_, oldy3_, oldy4_;
+        oldx_, oldy1_, oldy2_, oldy3_, oldy4_,
+        by1_, by2_, by3_, by4_,
+        boldx_, boldy1_, boldy2_, boldy3_, boldy4_;
 
 };
 

@@ -10,6 +10,8 @@
     adapted from: http://musicdsp.org/archive.php?classid=3#196 (azertopia@free.fr)
 */
 
+#include <limits>
+
 #include "filter24.h"
 #include "io/error.h"
 #include "math/constants.h"
@@ -33,6 +35,8 @@ void Filter24::reset()
 {
     y1_ = y2_ = y3_ = y4_ =
     oldx_ = oldy1_ = oldy2_ = oldy3_ = oldy4_ = 0.0;
+    by1_ = by2_ = by3_ = by4_ =
+    boldx_ = boldy1_ = boldy2_ = boldy3_ = boldy4_ = 0.0;
 }
 
 void Filter24::updateCoefficients()
@@ -57,47 +61,94 @@ void Filter24::updateCoefficients()
 void Filter24::process(const F32 *input, uint inputStride,
                                 F32 *output, uint outputStride, uint blockSize)
 {
-    const F32 denorm = 0.00000001;
+#define MO__LIMIT(v__) std::min(F32(1),std::max(F32(-1), (v__) ))
 
-    for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+    const F32 denorm = std::numeric_limits<F32>::min();
+
+    switch (type_)
     {
-        F32 x = *input - rc_ * y4_;
+        case T_LOWPASS:
+            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+            {
+                F32 x = *input - rc_ * y4_;
 
-        y1_ = fc_ * x   + fc_ * oldx_  - fc2_ * y1_;
-        y2_ = fc_ * y1_ + fc_ * oldy1_ - fc2_ * y2_;
-        y3_ = fc_ * y2_ + fc_ * oldy2_ - fc2_ * y3_;
-        y4_ = fc_ * y3_ + fc_ * oldy3_ - fc2_ * y4_;
-        y4_ -= y4_ * y4_ * y4_ / 6.0;
+                y1_ = fc_ * x   + fc_ * oldx_  - fc2_ * y1_;
+                y2_ = fc_ * y1_ + fc_ * oldy1_ - fc2_ * y2_;
+                y3_ = fc_ * y2_ + fc_ * oldy2_ - fc2_ * y3_;
+                y4_ = fc_ * y3_ + fc_ * oldy3_ - fc2_ * y4_;
+                y4_ = MO__LIMIT( y4_ - y4_ * y4_ * y4_ / F32(6) );
 
-        oldx_ = x;
-        oldy1_ = y1_ + denorm;
-        oldy2_ = y2_ + denorm;
-        oldy3_ = y3_ + denorm;
-        oldy4_ = y4_;
+                oldx_ = x;
+                oldy1_ = y1_ + denorm;
+                oldy2_ = y2_ + denorm;
+                oldy3_ = y3_ + denorm;
+                oldy4_ = y4_;
 
-        *output = y4_;
+                *output = y4_;
+            }
+        break;
+
+        case T_HIGHPASS:
+            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+            {
+                F32 x = *input - rc_ * y4_;
+
+                y1_ = fc_ * x   + fc_ * oldx_  - fc2_ * y1_;
+                y2_ = fc_ * y1_ + fc_ * oldy1_ - fc2_ * y2_;
+                y3_ = fc_ * y2_ + fc_ * oldy2_ - fc2_ * y3_;
+                y4_ = fc_ * y3_ + fc_ * oldy3_ - fc2_ * y4_;
+                y4_ = MO__LIMIT( y4_ - y4_ * y4_ * y4_ / F32(6) );
+
+                oldx_ = x;
+                oldy1_ = y1_ + denorm;
+                oldy2_ = y2_ + denorm;
+                oldy3_ = y3_ + denorm;
+                oldy4_ = y4_;
+
+                *output = *input - y4_;
+            }
+        break;
+
+        case T_BANDPASS:
+            for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
+            {
+                F32 x = *input - rc_ * y4_;
+
+                y1_ = fc_ * x   + fc_ * oldx_  - fc2_ * y1_;
+                y2_ = fc_ * y1_ + fc_ * oldy1_ - fc2_ * y2_;
+                y3_ = fc_ * y2_ + fc_ * oldy2_ - fc2_ * y3_;
+                y4_ = fc_ * y3_ + fc_ * oldy3_ - fc2_ * y4_;
+                y4_ = MO__LIMIT( y4_ - y4_ * y4_ * y4_ / F32(6) );
+
+                oldx_ = x;
+                oldy1_ = y1_ + denorm;
+                oldy2_ = y2_ + denorm;
+                oldy3_ = y3_ + denorm;
+                oldy4_ = y4_;
+
+                // lowpass of highpass
+                x = (*input - y4_) - rc_ * by4_;
+
+                by1_ = fc_ * x    + fc_ * boldx_  - fc2_ * by1_;
+                by2_ = fc_ * by1_ + fc_ * boldy1_ - fc2_ * by2_;
+                by3_ = fc_ * by2_ + fc_ * boldy2_ - fc2_ * by3_;
+                by4_ = fc_ * by3_ + fc_ * boldy3_ - fc2_ * by4_;
+                by4_ = MO__LIMIT( by4_ - by4_ * by4_ * by4_ / F32(6) );
+
+                boldx_ = x;
+                boldy1_ = by1_ + denorm;
+                boldy2_ = by2_ + denorm;
+                boldy3_ = by3_ + denorm;
+                boldy4_ = by4_;
+
+                *output = by4_;
+            }
+        break;
     }
-/*
-  f := (Frq+Frq) / SR;
-  p:=f*(1.8-0.8*f);
-  k:=p+p-1.0;
-  t:=(1.0-p)*1.386249;
-  t2:=12.0+t*t;
-  r := res*(t2+6.0*t)/(t2-6.0*t);
 
-  x := inp - r*y4;
 
-  y1:=x*p + oldx*p - k*y1;
-  y2:=y1*p+oldy1*p - k*y2;
-  y3:=y2*p+oldy2*p - k*y3;
-  y4:=y3*p+oldy3*p - k*y4;
-  y4 := y4 - ((y4*y4*y4)/6.0);
-  oldx := x;
-  oldy1 := y1+_kd;
-  oldy2 := y2+_kd;;
-  oldy3 := y3+_kd;;
-  outlp := y4;
-    */
+
+#undef MO__LIMIT
 }
 
 } // namespace AUDIO

@@ -195,7 +195,7 @@ void MultiFilter::updateCoefficients()
         case T_FIRST_ORDER_BAND:
             // frequency coefficient
             q1_ = 1.f - std::min(1.f, std::exp(-2.f * 3.14159265f * freq_ / sr_));
-                //q1_ = std::min(1.f, 2.f * freq_ / sr_);
+            //q1_ = std::min(1.f, 2.f * freq_ / sr_);
             // resonance coefficient
             q2_ = std::max(0.f, std::min(0.99999f, reso_));
         break;
