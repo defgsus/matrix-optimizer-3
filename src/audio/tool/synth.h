@@ -56,8 +56,17 @@ public:
 
     const MultiFilter& filter() const;
 
-    /** Returns the next unison voice, or NULL */
+    /** Returns the next unisono voice, or NULL */
     SynthVoice * nextUnisonVoice() const;
+
+    /** Returns the data previously set with setUserData(),
+        or NULL if the voice was created by Synth::notOn() */
+    void * userData() const;
+
+    // ----------- setter --------------
+
+    /** Freely chooseable user data */
+    void setUserData(void * data);
 
 private:
 
@@ -66,6 +75,8 @@ private:
 };
 
 
+
+/** A stand-alone polyphonic synthesizer */
 class Synth
 {
 public:
@@ -123,31 +134,61 @@ public:
     // ----------- setter -----------------
 
     void setSampleRate(uint sr);
+    /** Sets the polyphony of the synthesizer.
+        Currently, this immidiately stops and destroys all voices,
+        so all voices you got from noteOn() will be invalid! */
     void setNumberVoices(uint num);
-    void setVolume(Double volume);
-    void setCombinedUnison(bool combined);
-    void setUnisonVoices(uint num);
-    void setUnisonDetune(Double cent);
-    void setUnisonNoteStep(int step);
 
     // below values are used per voice on noteOn()
 
+    /** Master volume of the synthesizer */
+    void setVolume(Double volume);
+    /** Number of actual voices triggered for each noteOn() */
+    void setUnisonVoices(uint num);
+    /** Changes the unisono mode.
+        If @p combined is true, no additional voices will be created.
+        Instead each voice will generate unisonVoices() number of sounds
+        which all go through the same filter and envelope.
+        If @p combined is false, each unisono voice will be an
+        actual SynthVoice. */
+    void setCombinedUnison(bool combined);
+    /** Sets the random detuning of each additional unisono voice in cents
+        (100 cents == one note). */
+    void setUnisonDetune(Double cent);
+    /** Sets the note that is added for each additional unisono voice. */
+    void setUnisonNoteStep(int step);
+
+    /** Attack time in seconds */
     void setAttack(Double attack);
+    /** Decay time in seconds */
     void setDecay(Double decay);
+    /** Sustain level */
     void setSustain(Double sustain);
+    /** Release time in seconds. */
     void setRelease(Double release);
+    /** Pulsewidth for oscillator types that support it, 0 < @p pw < 1.
+        See AUDIO::Waveform::supportsPulseWidth() */
     void setPulseWidth(Double pw);
 
+    /** Replaces the note-to-frequency setting.s */
     void setNoteFreq(const NoteFreq<Double>& n);
+    /** Sets the number of notes per octave. */
     void setNotesPerOctave(Double notes);
+    /** Sets the frequency in Hertz of the lowest C note */
     void setBaseFrequency(Double f);
 
+    /** Sets the waveform of the oscillator */
     void setWaveform(Waveform::Type t);
 
     void setFilterType(MultiFilter::FilterType t);
     void setFilterOrder(uint order);
     void setFilterFrequency(Double freq);
     void setFilterResonance(Double res);
+    /** Sets the key-follower for the filter.
+        The note frequency is multiplied by @p amp and added to the
+        set filter frequency.
+        E.g. if filterFrequency() == 0 and filterKeyFollower() == 1,
+        the filter frequency will be exactly the note frequency. */
     void setFilterKeyFollower(Double amt);
     void setFilterEnvelopeAmount(Double env);
     void setFilterEnvelopeKeyFollower(Double amt);
@@ -159,10 +200,19 @@ public:
     // ---------- audio -------------------
 
     /** Starts the next free voice.
-        Returns the triggered voice or NULL. */
-    SynthVoice * noteOn(int note, Float velocity);
+        Returns the triggered voice, or NULL if no free voice was found and
+        the VoicePolicy doesn't allow for stopping a voice.
+        For true unisono voices (when unisonVoices() > 1 and combinedUnison() == true),
+        the additional voices are in SynthVoice::nextUnisonVoice().
+        If @p startSample > 0, the start of the voice will be delayed for the
+        given number of samples. The returned voice will be valid but not active yet.
+        Note that startSample must be smaller than the bufferLength parameter
+        in process() to start the voice. */
+    SynthVoice * noteOn(int note, Float velocity, uint startSample = 0);
 
-    /** Puts all active voices of the given note into RELEASE state */
+    /** Stops all active voices of the given note.
+        Depending on their sustain level, they will immidiately stop
+        (sustain==0) or enter into RELEASE evelope state. */
     void noteOff(int note);
 
     /** Generates @p bufferLength samples of synthesizer music */

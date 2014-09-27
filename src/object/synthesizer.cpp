@@ -54,13 +54,22 @@ void Synthesizer::createParameters()
 
     beginParameterGroup("synthesizer", tr("synthesizer"));
 
-        p_volume_ = createFloatParameter("volume", tr("volume"),
-                                       tr("Master volume of all played voices"),
-                                       synth_->volume(), 0.0, 100000.0, 0.1);
-
         p_numVoices_ = createIntParameter("num_voices", tr("number voices"),
                                            tr("The number of polyphonic voices"),
                                            synth_->numberVoices(), 1, 512, 1, true, false);
+
+        p_volume_ = createFloatParameter("volume", tr("volume"),
+                                           tr("Master volume of all played voices"),
+                                           synth_->volume(), 0.0, 100000.0, 0.1);
+
+        p_gate_ = createFloatParameter("gate", tr("gate"),
+                                           tr("A positive value starts a new note with the value as amplitude "
+                                              "- all parameters below take affect then"),
+                                           0.0);
+
+        p_note_ = createIntParameter("note", tr("note"),
+                                     tr("The note that is triggered on a positive input to gate"),
+                                     48, true, true);
 
         p_numUnison_ = createIntParameter("num_unison", tr("number unisono voices"),
                                            tr("The number of unisono voices that will be played for one note"),
@@ -81,15 +90,6 @@ void Synthesizer::createParameters()
                                            tr("The amount of random detuning for each individual "
                                               "unisono voice in cents (100 per full note)"),
                                            synth_->unisonDetune());
-
-        p_gate_ = createFloatParameter("gate", tr("gate"),
-                                           tr("A positive value starts a new note with the value as amplitude "
-                                              "- all parameters below take affect then"),
-                                           0.0);
-
-        p_note_ = createIntParameter("note", tr("note"),
-                                     tr("The note that is triggered on a positive input to gate"),
-                                     48, true, true);
 
         p_baseFreq_ = createFloatParameter("base_freq", tr("base frequency"),
                                            tr("The frequency in Hertz of the lowest C note"),

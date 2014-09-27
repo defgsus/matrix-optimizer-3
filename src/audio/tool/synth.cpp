@@ -34,7 +34,8 @@ class SynthVoice::Private
           lifetime	(0),
           waveform	(Waveform::T_SINE),
           filter    (true),
-          nextUnison(0)
+          nextUnison(0),
+          data      (0)
 
     { }
 
@@ -65,7 +66,12 @@ class SynthVoice::Private
     MultiFilter filter;
 
     SynthVoice * nextUnison;
+
+    void * data;
 };
+
+
+
 
 // ------------------------------------ synthvoice ------------------------------------
 
@@ -99,6 +105,15 @@ Waveform::Type SynthVoice::waveform() const { return p_->waveform; }
 const EnvelopeGenerator<Double>& SynthVoice::envelope() const { return p_->env; }
 const MultiFilter& SynthVoice::filter() const { return p_->filter; }
 SynthVoice * SynthVoice::nextUnisonVoice() const { return p_->nextUnison; }
+void * SynthVoice::userData() const { return p_->data; }
+
+void SynthVoice::setUserData(void *data) { p_->data = data; }
+
+
+
+
+
+
 
 // ------------------------------------ synth private ------------------------------------
 
@@ -241,57 +256,60 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
                 }
             }
         }
+
+        (*i)->p_->active = false;
     }
 
     // (re-)init voice
 
-    SynthVoice * v = *i;
+    SynthVoice::Private * v = (*i)->p_;
 
     //MO_DEBUG("start voice " << freq << "hz " << velocity);
 
-    v->p_->freq = freq;
-    const Double freqc = v->p_->freq / sampleRate;
+    v->freq = freq;
+    const Double freqc = v->freq / sampleRate;
 
-    v->p_->phase.resize(numCombinedUnison);
-    v->p_->freq_c.resize(numCombinedUnison);
+    v->phase.resize(numCombinedUnison);
+    v->freq_c.resize(numCombinedUnison);
     for (uint i=0; i<numCombinedUnison; ++i)
     {
         // freq as coefficient
-        v->p_->freq_c[i] = freqc;
-        v->p_->phase[i] = 0.0;
+        v->freq_c[i] = freqc;
+        v->phase[i] = 0.0;
     }
-    v->p_->pw = pulseWidth;
-    v->p_->velo = velocity;
-    v->p_->startSample = startSample;
-    v->p_->env.setSampleRate(sampleRate);
-    v->p_->env.setAttack(attack);
-    v->p_->env.setDecay(decay);
-    v->p_->env.setSustain(sustain);
-    v->p_->env.setRelease(release);
-    v->p_->fenv.setSampleRate(sampleRate);
-    v->p_->fenv.setAttack(filterAttack);
-    v->p_->fenv.setDecay(filterDecay);
-    v->p_->fenv.setSustain(filterSustain);
-    v->p_->fenv.setRelease(filterRelease);
+    v->pw = pulseWidth;
+    v->velo = velocity;
+    v->startSample = startSample;
+    v->env.setSampleRate(sampleRate);
+    v->env.setAttack(attack);
+    v->env.setDecay(decay);
+    v->env.setSustain(sustain);
+    v->env.setRelease(release);
+    v->fenv.setSampleRate(sampleRate);
+    v->fenv.setAttack(filterAttack);
+    v->fenv.setDecay(filterDecay);
+    v->fenv.setSustain(filterSustain);
+    v->fenv.setRelease(filterRelease);
     if (startSample == 0)
     {
-        v->p_->env.trigger();
-        v->p_->fenv.trigger();
+        v->env.trigger();
+        v->fenv.trigger();
     }
-    v->p_->waveform = waveform;
-    v->p_->lifetime = 0;
-    v->p_->note = note;
-    v->p_->active = startSample == 0;
-    v->p_->filterFreq = filterFreq + filterKeyFollow * freq;
-    v->p_->filter.setType(filterType);
-    v->p_->filter.setOrder(filterOrder);
-    v->p_->filter.setFrequency(v->p_->filterFreq);
-    v->p_->filter.setResonance(filterReso);
-    v->p_->filter.reset();
-    v->p_->filter.updateCoefficients();
-    v->p_->fenvAmt = filterEnvAmt + filterEnvKeyFollow * freq;
+    v->waveform = waveform;
+    v->lifetime = 0;
+    v->note = note;
+    v->active = startSample == 0;
+    v->filterFreq = filterFreq + filterKeyFollow * freq;
+    v->filter.setType(filterType);
+    v->filter.setOrder(filterOrder);
+    v->filter.setFrequency(v->filterFreq);
+    v->filter.setResonance(filterReso);
+    v->filter.reset();
+    v->filter.updateCoefficients();
+    v->fenvAmt = filterEnvAmt + filterEnvKeyFollow * freq;
+    v->data = 0;
 
-    return v;
+    return *i;
 }
 
 void Synth::Private::noteOff(uint /*stopSample*/, int note)
@@ -448,11 +466,11 @@ void Synth::setFilterDecay(Double v) { p_->filterDecay = v; }
 void Synth::setFilterSustain(Double v) { p_->filterSustain = v; }
 void Synth::setFilterRelease(Double v) { p_->filterRelease = v; }
 
-SynthVoice * Synth::noteOn(int note, Float velocity)
+SynthVoice * Synth::noteOn(int note, Float velocity, uint startSample)
 {
     Double freq = p_->noteFreq.frequency(note);
 
-    SynthVoice * voice = p_->noteOn(0, freq, note, velocity, p_->combinedUnison? p_->unisonVoices : 1);
+    SynthVoice * voice = p_->noteOn(startSample, freq, note, velocity, p_->combinedUnison? p_->unisonVoices : 1);
 
     // no unisono mode?
     if (p_->unisonVoices < 2)
@@ -493,7 +511,7 @@ SynthVoice * Synth::noteOn(int note, Float velocity)
 
         const Double detune = MATH::rnd(-maxdetune, maxdetune);
 
-        SynthVoice * v = p_->noteOn(0, freq + detune, note, velocity, 1);
+        SynthVoice * v = p_->noteOn(startSample, freq + detune, note, velocity, 1);
         if (v)
             lastv->p_->nextUnison = v;
         else
