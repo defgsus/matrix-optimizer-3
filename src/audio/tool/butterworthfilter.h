@@ -11,8 +11,8 @@
         http://musicdsp.org/archive.php?classid=3#266
 */
 
-#ifndef BUTTERWORTHFILTER_H
-#define BUTTERWORTHFILTER_H
+#ifndef MOSRC_AUDIO_TOOL_BUTTERWORTHFILTER_H
+#define MOSRC_AUDIO_TOOL_BUTTERWORTHFILTER_H
 
 
 #include "types/int.h"
@@ -107,4 +107,4 @@ private:
 } // namespace MO
 
 
-#endif // BUTTERWORTHFILTER_H
+#endif // MOSRC_AUDIO_TOOL_BUTTERWORTHFILTER_H

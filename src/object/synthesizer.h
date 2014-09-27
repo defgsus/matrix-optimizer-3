@@ -48,12 +48,16 @@ private:
     ParameterInt
         * p_numVoices_,
         * p_note_,
-        * p_filterOrder_;
+        * p_filterOrder_,
+        * p_numUnison_,
+        * p_unisonNoteStep_;
 
     ParameterFloat
+        * p_volume_,
         * p_gate_,
         * p_notesPerOct_,
         * p_baseFreq_,
+        * p_unisonDetune_,
         * p_attack_,
         * p_decay_,
         * p_sustain_,
@@ -71,7 +75,8 @@ private:
 
     ParameterSelect
         * p_waveform_,
-        * p_filterType_;
+        * p_filterType_,
+        * p_combinedUnison_;
 
     AUDIO::Synth * synth_;
     AUDIO::FloatGate<Double> * gate_;

@@ -56,6 +56,9 @@ public:
 
     const MultiFilter& filter() const;
 
+    /** Returns the next unison voice, or NULL */
+    SynthVoice * nextUnisonVoice() const;
+
 private:
 
     class Private;
@@ -88,6 +91,11 @@ public:
     uint sampleRate() const;
     uint numberVoices() const;
     Double volume() const;
+    bool combinedUnison() const;
+    uint unisonVoices() const;
+    Double unisonDetune() const;
+    int unisonNoteStep() const;
+
     Double attack() const;
     Double decay() const;
     Double sustain() const;
@@ -117,6 +125,13 @@ public:
     void setSampleRate(uint sr);
     void setNumberVoices(uint num);
     void setVolume(Double volume);
+    void setCombinedUnison(bool combined);
+    void setUnisonVoices(uint num);
+    void setUnisonDetune(Double cent);
+    void setUnisonNoteStep(int step);
+
+    // below values are used per voice on noteOn()
+
     void setAttack(Double attack);
     void setDecay(Double decay);
     void setSustain(Double sustain);

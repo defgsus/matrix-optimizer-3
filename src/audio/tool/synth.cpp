@@ -10,6 +10,7 @@
 
 #include "synth.h"
 #include "io/log.h"
+#include "math/random.h"
 
 namespace MO {
 namespace AUDIO {
@@ -26,15 +27,14 @@ class SynthVoice::Private
           note   	(0),
           startSample(0),
           freq		(0.0),
-          freq_c	(0.0),
-          phase		(0.0),
           pw        (0.5),
           velo		(0.0),
           fenvAmt   (0),
           filterFreq(0),
           lifetime	(0),
           waveform	(Waveform::T_SINE),
-          filter    (true)
+          filter    (true),
+          nextUnison(0)
 
     { }
 
@@ -47,12 +47,14 @@ class SynthVoice::Private
 
     Double
         freq,
-        freq_c,
-        phase,
         pw,
         velo,
         fenvAmt,
         filterFreq;
+
+    std::vector<Double>
+        freq_c,
+        phase;
 
     uint lifetime;
 
@@ -62,7 +64,7 @@ class SynthVoice::Private
 
     MultiFilter filter;
 
-
+    SynthVoice * nextUnison;
 };
 
 // ------------------------------------ synthvoice ------------------------------------
@@ -81,7 +83,7 @@ Synth * SynthVoice::synth() const { return p_->synth; }
 bool SynthVoice::active() const { return p_->active; }
 int SynthVoice::note() const { return p_->note; }
 Double SynthVoice::freq() const { return p_->freq; }
-Double SynthVoice::phase() const { return p_->phase; }
+Double SynthVoice::phase() const { return p_->phase[0]; }
 Double SynthVoice::pulseWidth() const { return p_->pw; }
 Double SynthVoice::velocity() const { return p_->velo; }
 Double SynthVoice::attack() const { return p_->env.attack(); }
@@ -96,6 +98,7 @@ Double SynthVoice::filterEnvelopeAmount() const { return p_->fenvAmt; }
 Waveform::Type SynthVoice::waveform() const { return p_->waveform; }
 const EnvelopeGenerator<Double>& SynthVoice::envelope() const { return p_->env; }
 const MultiFilter& SynthVoice::filter() const { return p_->filter; }
+SynthVoice * SynthVoice::nextUnisonVoice() const { return p_->nextUnison; }
 
 // ------------------------------------ synth private ------------------------------------
 
@@ -107,7 +110,11 @@ public:
           voicePolicy   (Synth::VP_OLDEST),
           sampleRate    (44100),
           filterOrder   (1),
+          unisonVoices  (1),
+          unisonNoteStep(0),
+          combinedUnison(true),
           volume        (1.0),
+          unisonDetune  (20),
           attack        (0.05),
           decay         (1.0),
           sustain       (0.0),
@@ -148,7 +155,7 @@ public:
             v = new SynthVoice(synth);
     }
 
-    SynthVoice * noteOn(uint startSample, Double freq, int note, Float velocity);
+    SynthVoice * noteOn(uint startSample, Double freq, int note, Float velocity, uint numCombinedUnison);
     void noteOff(uint stopSample, int note);
     void process(F32 * output, uint bufferLength);
 
@@ -158,8 +165,10 @@ public:
 
     Synth::VoicePolicy voicePolicy;
 
-    uint sampleRate, filterOrder;
-    Double volume, attack, decay, sustain, release, pulseWidth,
+    uint sampleRate, filterOrder, unisonVoices, unisonNoteStep;
+    bool combinedUnison;
+    Double  volume, unisonDetune,
+            attack, decay, sustain, release, pulseWidth,
             filterFreq, filterReso, filterKeyFollow,
             filterEnvAmt, filterEnvKeyFollow,
             filterAttack, filterDecay, filterSustain, filterRelease;
@@ -171,7 +180,7 @@ public:
 };
 
 
-SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Float velocity)
+SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Float velocity, uint numCombinedUnison)
 {
     if (voices.empty())
         return 0;
@@ -241,9 +250,16 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
     //MO_DEBUG("start voice " << freq << "hz " << velocity);
 
     v->p_->freq = freq;
-    // freq as coefficient
-    v->p_->freq_c = v->p_->freq / sampleRate;
-    v->p_->phase = 0.0;
+    const Double freqc = v->p_->freq / sampleRate;
+
+    v->p_->phase.resize(numCombinedUnison);
+    v->p_->freq_c.resize(numCombinedUnison);
+    for (uint i=0; i<numCombinedUnison; ++i)
+    {
+        // freq as coefficient
+        v->p_->freq_c[i] = freqc;
+        v->p_->phase[i] = 0.0;
+    }
     v->p_->pw = pulseWidth;
     v->p_->velo = velocity;
     v->p_->startSample = startSample;
@@ -325,11 +341,14 @@ void Synth::Private::process(F32 *output, uint bufferLength)
             // count number of samples alive
             ++(v->lifetime);
 
-            // advance phase counter
-            v->phase += v->freq_c;
-
-            // get sample
-            F32 s = Waveform::waveform(v->phase, v->waveform, v->pw);
+            F32 s = 0.0;
+            for (uint j = 0; j<v->phase.size(); ++j)
+            {
+                // advance phase counter
+                v->phase[j] += v->freq_c[j];
+                // get sample
+                s += Waveform::waveform(v->phase[j], v->waveform, v->pw);
+            }
 
             // filter
             if (v->filter.type() != MultiFilter::T_BYPASS)
@@ -374,6 +393,11 @@ Synth::~Synth()
 uint Synth::sampleRate() const { return p_->sampleRate; }
 uint Synth::numberVoices() const { return p_->voices.size(); }
 Double Synth::volume() const { return p_->volume; }
+bool Synth::combinedUnison() const { return p_->combinedUnison; }
+uint Synth::unisonVoices() const { return p_->unisonVoices; }
+Double Synth::unisonDetune() const { return p_->unisonDetune; }
+int Synth::unisonNoteStep() const { return p_->unisonNoteStep; }
+
 Double Synth::attack() const { return p_->attack; }
 Double Synth::decay() const { return p_->decay; }
 Double Synth::sustain() const { return p_->sustain; }
@@ -398,6 +422,11 @@ Double Synth::filterRelease() const { return p_->filterRelease; }
 void Synth::setNumberVoices(uint v) { p_->setNumVoices(v); }
 void Synth::setSampleRate(uint v) { p_->sampleRate = std::max(uint(1), v); }
 void Synth::setVolume(Double v) { p_->volume = v; }
+void Synth::setCombinedUnison(bool v) { p_->combinedUnison = v; }
+void Synth::setUnisonVoices(uint v) { p_->unisonVoices = std::max(uint(1), v); }
+void Synth::setUnisonDetune(Double v) { p_->unisonDetune = v; }
+void Synth::setUnisonNoteStep(int v) { p_->unisonNoteStep = v; }
+
 void Synth::setAttack(Double v) { p_->attack = v; }
 void Synth::setDecay(Double v) { p_->decay = v; }
 void Synth::setSustain(Double v) { p_->sustain = v; }
@@ -421,7 +450,57 @@ void Synth::setFilterRelease(Double v) { p_->filterRelease = v; }
 
 SynthVoice * Synth::noteOn(int note, Float velocity)
 {
-    return p_->noteOn(0, p_->noteFreq.frequency(note), note, velocity);
+    Double freq = p_->noteFreq.frequency(note);
+
+    SynthVoice * voice = p_->noteOn(0, freq, note, velocity, p_->combinedUnison? p_->unisonVoices : 1);
+
+    // no unisono mode?
+    if (p_->unisonVoices < 2)
+        return voice;
+
+    // set frequency coefficient for combined-unisono mode
+    if (p_->combinedUnison)
+    {
+        for (uint i=1; i<p_->unisonVoices; ++i)
+        {
+            note += p_->unisonNoteStep;
+            freq = p_->noteFreq.frequency(note);
+
+            // maximum (+/-) detune in phase-seconds
+            const Double maxdetune =
+                    p_->unisonDetune / 200.0
+                        // range of one note
+                        * (p_->noteFreq.frequency(note + 1) - freq)
+                        / sampleRate();
+
+            voice->p_->freq_c[i] += MATH::rnd(-maxdetune, maxdetune);
+        }
+        return voice;
+    }
+
+    // generate inidivdual voices for each unisono voice
+    SynthVoice * lastv = voice;
+    for (uint i=1; i<p_->unisonVoices; ++i)
+    {
+        note += p_->unisonNoteStep;
+        freq = p_->noteFreq.frequency(note);
+
+        // maximum (+/-) detune in Hertz
+        const Double maxdetune =
+                p_->unisonDetune / 200.0
+                    // range of one note
+                    * (p_->noteFreq.frequency(note + 1) - freq);
+
+        const Double detune = MATH::rnd(-maxdetune, maxdetune);
+
+        SynthVoice * v = p_->noteOn(0, freq + detune, note, velocity, 1);
+        if (v)
+            lastv->p_->nextUnison = v;
+        else
+            return voice;
+    }
+
+    return voice;
 }
 
 void Synth::noteOff(int note)

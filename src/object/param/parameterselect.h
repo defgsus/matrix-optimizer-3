@@ -14,6 +14,7 @@
 #include <QStringList>
 
 #include "parameter.h"
+#include "types/float.h"
 
 namespace MO {
 
@@ -35,7 +36,7 @@ public:
 
     int defaultValue() const { return defaultValue_; }
 
-    //int value(Double time) const { return value_ }
+    int value(Double time, uint thread) const { Q_UNUSED(time); Q_UNUSED(thread); return value_; }
     int baseValue() const { return value_; }
 
     const QList<int>& valueList() const { return valueList_; }

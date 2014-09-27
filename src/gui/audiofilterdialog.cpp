@@ -35,6 +35,7 @@ AudioFilterDialog::AudioFilterDialog(QWidget *parent) :
     restoreFilter_();
 
     createWidgets_();
+    updateVisibility_();
 
     display_->setFilter(*filter_);
 }
@@ -112,10 +113,10 @@ void AudioFilterDialog::createWidgets_()
 
             // order
 
-            label = new QLabel(tr("filter order"), this);
+            label = labelOrder_ = new QLabel(tr("filter order"), this);
             lv->addWidget(label);
 
-            auto spin = new SpinBox(this);
+            auto spin = spinOrder_ = new SpinBox(this);
             lv->addWidget(spin);
             spin->setMinimum(1);
             spin->setMaximum(30);
@@ -136,9 +137,7 @@ void AudioFilterDialog::createWidgets_()
                 filter_->setType((AUDIO::MultiFilter::FilterType)
                                  combo->itemData(idx).toInt());
 
-                bool isorder = AUDIO::MultiFilter::supportsOrder(filter_->type());
-                label->setVisible(isorder);
-                spin->setVisible(isorder);
+                updateVisibility_();
 
                 display_->setFilter(*filter_);
             });
@@ -162,6 +161,12 @@ void AudioFilterDialog::restoreFilter_()
     filter_->setOrder(settings->value("AudioFilterDialog/order", filter_->order()).toInt());
 }
 
+void AudioFilterDialog::updateVisibility_()
+{
+    const bool isorder = AUDIO::MultiFilter::supportsOrder(filter_->type());
+    labelOrder_->setVisible(isorder);
+    spinOrder_->setVisible(isorder);
+}
 
 } // namespace GUI
 } // namespace MO

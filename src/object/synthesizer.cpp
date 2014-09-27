@@ -54,16 +54,41 @@ void Synthesizer::createParameters()
 
     beginParameterGroup("synthesizer", tr("synthesizer"));
 
+        p_volume_ = createFloatParameter("volume", tr("volume"),
+                                       tr("Master volume of all played voices"),
+                                       synth_->volume(), 0.0, 100000.0, 0.1);
+
         p_numVoices_ = createIntParameter("num_voices", tr("number voices"),
                                            tr("The number of polyphonic voices"),
                                            synth_->numberVoices(), 1, 512, 1, true, false);
 
+        p_numUnison_ = createIntParameter("num_unison", tr("number unisono voices"),
+                                           tr("The number of unisono voices that will be played for one note"),
+                                           synth_->unisonVoices(), 1, 512, 1, true, true);
+
+        p_combinedUnison_ = createBooleanParameter("comb_unison", tr("combined unisono voices"),
+                                           tr("Should unisono voices be individual synthesizer voices "
+                                              "or should they be combined into one."),
+                                           tr("Each unisono voice is a different synthesizer voice."),
+                                           tr("All unisono voices are combined into one synthesizer voice."),
+                                           synth_->combinedUnison(), true, false);
+
+        p_unisonNoteStep_ = createIntParameter("unison_notestep", tr("unisono note step"),
+                                           tr("Note to be added/subtracted for each unisono voice"),
+                                           synth_->unisonNoteStep(), true, true);
+
+        p_unisonDetune_ = createFloatParameter("unison_detune", tr("unisono detune"),
+                                           tr("The amount of random detuning for each individual "
+                                              "unisono voice in cents (100 per full note)"),
+                                           synth_->unisonDetune());
+
         p_gate_ = createFloatParameter("gate", tr("gate"),
-                                           tr("A positive value starts a new note - all parameters below take affect then"),
+                                           tr("A positive value starts a new note with the value as amplitude "
+                                              "- all parameters below take affect then"),
                                            0.0);
 
         p_note_ = createIntParameter("note", tr("note"),
-                                     tr("The note that is triggered on gate"),
+                                     tr("The note that is triggered on a positive input to gate"),
                                      48, true, true);
 
         p_baseFreq_ = createFloatParameter("base_freq", tr("base frequency"),
@@ -233,7 +258,12 @@ void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
         if (notesOct != synth_->notesPerOctave())
             synth_->setNotesPerOctave(notesOct);
 
+        synth_->setVolume(p_volume_->value(time, thread));
         synth_->setBaseFrequency(p_baseFreq_->value(time, thread));
+        synth_->setCombinedUnison(p_combinedUnison_->value(time, thread));
+        synth_->setUnisonVoices(p_numUnison_->value(time,thread));
+        synth_->setUnisonNoteStep(p_unisonNoteStep_->value(time, thread));
+        synth_->setUnisonDetune(p_unisonDetune_->value(time, thread));
         synth_->setAttack(p_attack_->value(time, thread));
         synth_->setDecay(p_decay_->value(time, thread));
         synth_->setSustain(p_sustain_->value(time, thread));

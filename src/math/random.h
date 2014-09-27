@@ -13,9 +13,18 @@
 
 
 #include <limits>
+#include <cstdlib>
 
 namespace MO {
 namespace MATH {
+
+
+template <typename F>
+F rnd(F min, F max)
+{
+    return min + F(std::rand()) / RAND_MAX * (max - min);
+}
+
 
 /** a random number generator.
     <p>UI must be an <b>unsigned</b> integer type</p>

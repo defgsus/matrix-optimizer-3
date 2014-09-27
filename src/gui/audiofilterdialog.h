@@ -13,11 +13,14 @@
 
 #include <QDialog>
 
+class QLabel;
+
 namespace MO {
 namespace AUDIO { class MultiFilter; }
 namespace GUI {
 
 class FilterResponseWidget;
+class SpinBox;
 
 class AudioFilterDialog : public QDialog
 {
@@ -31,12 +34,15 @@ public slots:
 private:
 
     void createWidgets_();
+    void updateVisibility_();
     void saveFilter_();
     void restoreFilter_();
 
     AUDIO::MultiFilter * filter_;
     FilterResponseWidget * display_;
 
+    QLabel * labelOrder_;
+    SpinBox * spinOrder_;
 };
 
 } // namespace GUI
