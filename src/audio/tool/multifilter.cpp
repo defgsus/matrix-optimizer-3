@@ -12,6 +12,7 @@
 #include "filter24.h"
 #include "chebychevfilter.h"
 #include "butterworthfilter.h"
+#include "fixedfilter.h"
 #include "io/error.h"
 
 namespace MO {
@@ -23,7 +24,10 @@ const QStringList MultiFilter::filterTypeIds =
   "nlow", "nhigh", "nband",
   "low24", "high24", "band24",
   "cheblow", "chebhigh", "chebband",
-  "butlow", "buthigh", "butband"
+  "butlow", "buthigh", "butband",
+  "nbeslow", "nbeshigh", "nbesband",
+  "nchebylow", "nchebyhigh", "nchebyband",
+  "nbutlow", "nbuthigh", "nbutband"
 };
 
 const QStringList MultiFilter::filterTypeNames =
@@ -42,7 +46,16 @@ const QStringList MultiFilter::filterTypeNames =
   QObject::tr("2nd chebychev band"),
   QObject::tr("4th butterworth low"),
   QObject::tr("4th butterworth high"),
-  QObject::tr("4th butterworth band")
+  QObject::tr("4th butterworth band"),
+  QObject::tr("nth bessel low-pass"),
+  QObject::tr("nth bessel high-pass"),
+  QObject::tr("nth bessel band-pass"),
+  QObject::tr("nth chebychev low-pass"),
+  QObject::tr("nth chebychev high-pass"),
+  QObject::tr("nth chebychev band-pass"),
+  QObject::tr("nth butterworth low-pass"),
+  QObject::tr("nth butterworth high-pass"),
+  QObject::tr("nth butterworth band-pass")
 };
 
 const QStringList MultiFilter::filterTypeStatusTips =
@@ -61,7 +74,17 @@ const QStringList MultiFilter::filterTypeStatusTips =
   QObject::tr("2nd order, 24db/oct, chebychev band-pass"),
   QObject::tr("4th order Linkwitz-Riley low-pass"),
   QObject::tr("4th order Linkwitz-Riley high-pass"),
-  QObject::tr("4th order Linkwitz-Riley band-pass"),};
+  QObject::tr("4th order Linkwitz-Riley band-pass"),
+  QObject::tr("nth order bessel low-pass"),
+  QObject::tr("nth order bessel high-pass"),
+  QObject::tr("nth order bessel band-pass"),
+  QObject::tr("nth order chebychev low-pass"),
+  QObject::tr("nth order chebychev high-pass"),
+  QObject::tr("nth order chebychev band-pass"),
+  QObject::tr("nth order butterworth low-pass"),
+  QObject::tr("nth order butterworth high-pass"),
+  QObject::tr("nth order butterworth band-pass")
+};
 
 const QList<int> MultiFilter::filterTypeEnums =
 { T_BYPASS,
@@ -79,14 +102,32 @@ const QList<int> MultiFilter::filterTypeEnums =
   T_CHEBYCHEV_BAND,
   T_BUTTERWORTH_LOW,
   T_BUTTERWORTH_HIGH,
-  T_BUTTERWORTH_BAND
+  T_BUTTERWORTH_BAND,
+  T_NTH_BESSEL_LOW,
+  T_NTH_BESSEL_HIGH,
+  T_NTH_BESSEL_BAND,
+  T_NTH_CHEBYCHEV_LOW,
+  T_NTH_CHEBYCHEV_HIGH,
+  T_NTH_CHEBYCHEV_BAND,
+  T_NTH_BUTTERWORTH_LOW,
+  T_NTH_BUTTERWORTH_HIGH,
+  T_NTH_BUTTERWORTH_BAND
 };
 
 bool MultiFilter::supportsOrder(FilterType t)
 {
     return t == T_NTH_ORDER_LOW
         || t == T_NTH_ORDER_HIGH
-        || t == T_NTH_ORDER_BAND;
+        || t == T_NTH_ORDER_BAND
+        || t == T_NTH_BESSEL_LOW
+        || t == T_NTH_BESSEL_HIGH
+        || t == T_NTH_BESSEL_BAND
+        || t == T_NTH_CHEBYCHEV_LOW
+        || t == T_NTH_CHEBYCHEV_HIGH
+        || t == T_NTH_CHEBYCHEV_BAND
+        || t == T_NTH_BUTTERWORTH_LOW
+        || t == T_NTH_BUTTERWORTH_HIGH
+        || t == T_NTH_BUTTERWORTH_BAND;
 }
 
 MultiFilter::MultiFilter(bool alloc)
@@ -98,7 +139,8 @@ MultiFilter::MultiFilter(bool alloc)
       reso_         (0),
       cheby_        (doReallocate_? 0 : new ChebychevFilter()),
       filter24_     (doReallocate_? 0 : new Filter24()),
-      butter_       (doReallocate_? 0 : new ButterworthFilter())
+      butter_       (doReallocate_? 0 : new ButterworthFilter()),
+      fixed_        (doReallocate_? 0 : new FixedFilter())
 {
     reset();
     updateCoefficients();
@@ -106,6 +148,7 @@ MultiFilter::MultiFilter(bool alloc)
 
 MultiFilter::~MultiFilter()
 {
+    delete fixed_;
     delete butter_;
     delete filter24_;
     delete cheby_;
@@ -138,6 +181,11 @@ MultiFilter& MultiFilter::operator = (const MultiFilter& other)
     {
         delete butter_;
         butter_ = 0;
+    }
+    if (fixed_)
+    {
+        delete fixed_;
+        fixed_ = 0;
     }
 
     updateCoefficients();
@@ -230,6 +278,15 @@ void MultiFilter::updateCoefficients()
         case T_BUTTERWORTH_HIGH:
         case T_BUTTERWORTH_BAND: break;
 
+        case T_NTH_BESSEL_LOW:
+        case T_NTH_BESSEL_HIGH:
+        case T_NTH_BESSEL_BAND:
+        case T_NTH_CHEBYCHEV_LOW:
+        case T_NTH_CHEBYCHEV_HIGH:
+        case T_NTH_CHEBYCHEV_BAND:
+        case T_NTH_BUTTERWORTH_LOW:
+        case T_NTH_BUTTERWORTH_HIGH:
+        case T_NTH_BUTTERWORTH_BAND: break;
     }
 
     // init chebychev filter
@@ -302,6 +359,46 @@ void MultiFilter::updateCoefficients()
     {
         delete butter_;
         butter_ = 0;
+    }
+
+    // init fixed filter
+    if ( type_ == T_NTH_BESSEL_LOW
+      || type_ == T_NTH_BESSEL_HIGH
+      || type_ == T_NTH_BESSEL_BAND
+      || type_ == T_NTH_CHEBYCHEV_LOW
+      || type_ == T_NTH_CHEBYCHEV_HIGH
+      || type_ == T_NTH_CHEBYCHEV_BAND
+      || type_ == T_NTH_BUTTERWORTH_LOW
+      || type_ == T_NTH_BUTTERWORTH_HIGH
+      || type_ == T_NTH_BUTTERWORTH_BAND)
+    {
+        if (!fixed_)
+            fixed_ = new FixedFilter();
+
+        fixed_->setSampleRate(sr_);
+        fixed_->setFrequency(freq_);
+        fixed_->setOrder(order_);
+
+        switch (type_)
+        {
+            case T_NTH_BESSEL_LOW: fixed_->setType(FixedFilter::FT_BESSEL); fixed_->setBandType(FixedFilter::BT_LOWPASS); break;
+            case T_NTH_BESSEL_HIGH: fixed_->setType(FixedFilter::FT_BESSEL); fixed_->setBandType(FixedFilter::BT_HIGHPASS); break;
+            case T_NTH_BESSEL_BAND: fixed_->setType(FixedFilter::FT_BESSEL); fixed_->setBandType(FixedFilter::BT_BANDPASS); break;
+            case T_NTH_CHEBYCHEV_LOW: fixed_->setType(FixedFilter::FT_CHEBYCHEV); fixed_->setBandType(FixedFilter::BT_LOWPASS); break;
+            case T_NTH_CHEBYCHEV_HIGH: fixed_->setType(FixedFilter::FT_CHEBYCHEV); fixed_->setBandType(FixedFilter::BT_HIGHPASS); break;
+            case T_NTH_CHEBYCHEV_BAND: fixed_->setType(FixedFilter::FT_CHEBYCHEV); fixed_->setBandType(FixedFilter::BT_BANDPASS); break;
+            case T_NTH_BUTTERWORTH_LOW: fixed_->setType(FixedFilter::FT_BUTTERWORTH); fixed_->setBandType(FixedFilter::BT_LOWPASS); break;
+            case T_NTH_BUTTERWORTH_HIGH: fixed_->setType(FixedFilter::FT_BUTTERWORTH); fixed_->setBandType(FixedFilter::BT_HIGHPASS); break;
+            case T_NTH_BUTTERWORTH_BAND: fixed_->setType(FixedFilter::FT_BUTTERWORTH); fixed_->setBandType(FixedFilter::BT_BANDPASS); break;
+            default: break;
+        }
+
+        fixed_->updateCoefficients();
+    }
+    else if (doReallocate_)
+    {
+        delete fixed_;
+        fixed_ = 0;
     }
 }
 
@@ -501,6 +598,20 @@ void MultiFilter::process(const F32 *input, uint inputStride,
             MO_ASSERT(butter_, "forgot to call MultiFilter::updateCoefficients() ?");
             butter_->process(input, inputStride, output, outputStride, blockSize);
         break;
+
+        case T_NTH_BESSEL_LOW:
+        case T_NTH_BESSEL_HIGH:
+        case T_NTH_BESSEL_BAND:
+        case T_NTH_CHEBYCHEV_LOW:
+        case T_NTH_CHEBYCHEV_HIGH:
+        case T_NTH_CHEBYCHEV_BAND:
+        case T_NTH_BUTTERWORTH_LOW:
+        case T_NTH_BUTTERWORTH_HIGH:
+        case T_NTH_BUTTERWORTH_BAND:
+            MO_ASSERT(fixed_, "forgot to call MultiFilter::updateCoefficients() ?");
+            fixed_->process(input, inputStride, output, outputStride, blockSize);
+        break;
+
     }
 }
 

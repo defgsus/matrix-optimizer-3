@@ -146,13 +146,15 @@ void FixedFilter::Private::setdefaults()
         bandType
     */
 
-    spoles.resize(numpoles);
-    zpoles.resize(numpoles);
-    zzeros.resize(numpoles);
-    xcoeffs.resize(numpoles+1);
-    ycoeffs.resize(numpoles+1);
-    xv.resize(numpoles+1);
-    yv.resize(numpoles+1);
+    const uint poles = order * 2;
+
+    spoles.resize(poles);
+    zpoles.resize(poles);
+    zzeros.resize(poles);
+    xcoeffs.resize(poles+1);
+    ycoeffs.resize(poles+1);
+    xv.resize(poles+1);
+    yv.resize(poles+1);
 
     if (!specifiedPolesOnly)
         polemask = 0xffffffff;
@@ -320,7 +322,8 @@ void FixedFilter::Private::compute_z()
 void FixedFilter::Private::expandpoly()
 {
     std::vector<Complex>
-            topcoeffs, botcoeffs;
+            topcoeffs(numpoles+1),
+            botcoeffs(numpoles+1);
 
     expand(zzeros, topcoeffs);
     expand(zpoles, botcoeffs);
