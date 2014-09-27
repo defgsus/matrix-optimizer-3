@@ -81,6 +81,7 @@ class Object : public QObject
     // to create parameters
     friend class TextureSetting;
     friend class ColorPostProcessingSetting;
+    friend class SynthSetting;
 public:
 
     // -------------- types ------------------
@@ -578,14 +579,20 @@ protected:
     void requestCreateMicrophones();
 
     /** Creates and returns a new audio source installed to this object.
-        The id is not really important, only for display purposes. */
+        The id is not really important, only for display purposes,
+        except when using createOrDeleteAudiosources(). */
     AUDIO::AudioSource * createAudioSource(const QString& id = QString("audio"));
 
+    /** Creates @p number audiosources, destroys all others.
+        The id is appended with a digit and the audiosources are created and deleted as needed. */
+    QList<AUDIO::AudioSource*> createOrDeleteAudioSources(const QString& id, uint number);
+
     /** Creates and returns a new microphone installed to this object.
-        The id is not really important, only for display purposes. */
+        The id is not really important, only for display purposes,
+        except when using createOrDeleteMicrophones(). */
     AUDIO::AudioMicrophone* createMicrophone(const QString& id = QString("micro"));
 
-    /** Creates @p number microphones.
+    /** Creates @p number microphones, destroys all others.
         The id is appended with a digit and the microphones are created and deleted as needed. */
     QList<AUDIO::AudioMicrophone*> createOrDeleteMicrophones(const QString& id, uint number);
 

@@ -83,7 +83,7 @@ void SoundSource::performAudioBlock(SamplePos pos, uint thread)
     // copy the samples from the audiotrack
 
     audioTrack_->getValues(pos, thread, sampleRateInv(), bufferSize(thread),
-                           audio_->getSamples(thread));
+                           audio_->samples(thread));
 
 
     /*

@@ -76,7 +76,7 @@ public:
     void setSample(F32 * audioBlock, uint thread);
 
     /** Returns a pointer to bufferSize(thead) number of samples for read/write. */
-    F32* getSamples(uint thread) { return &sample_[thread][0]; }
+    F32* samples(uint thread) { return &sample_[thread][0]; }
 
     /** Writes the current sampleblock to the delay history */
     void pushDelay(uint thread);

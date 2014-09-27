@@ -1300,6 +1300,42 @@ AUDIO::AudioSource * Object::createAudioSource(const QString& id)
     return a;
 }
 
+QList<AUDIO::AudioSource*> Object::createOrDeleteAudioSources(const QString &id, uint number)
+{
+    // get all that exist with the given id
+    QMap<QString, AUDIO::AudioSource*> exist;
+    for (auto m : objAudioSources_)
+        if (m->idName().startsWith(id))
+            exist.insert(m->idName(), m);
+
+    QList<AUDIO::AudioSource*> list;
+
+    // create or reuse
+    for (uint i=0; i<number; ++i)
+    {
+        QString curid = QString("%1_%2").arg(id).arg(i+1);
+
+        if (exist.contains(curid))
+        {
+            list.append(exist[curid]);
+            exist.remove(curid);
+        }
+        else
+        {
+            list.append( createAudioSource(curid) );
+        }
+    }
+
+    // delete the ones not needed
+    for (auto m : exist)
+    {
+        objAudioSources_.removeOne(m);
+        delete m;
+    }
+
+    return list;
+}
+
 AUDIO::AudioMicrophone * Object::createMicrophone(const QString &id)
 {
     auto m = new AUDIO::AudioMicrophone(id, this);
