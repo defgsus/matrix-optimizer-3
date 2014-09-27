@@ -196,7 +196,8 @@ HEADERS += \
     src/audio/tool/envelopegenerator.h \
     src/audio/tool/filter24.h \
     src/math/denormals.h \
-    src/audio/tool/butterworthfilter.h
+    src/audio/tool/butterworthfilter.h \
+    src/audio/tool/fixedfilter.h
 
 
 SOURCES += \
@@ -347,4 +348,5 @@ SOURCES += \
     src/audio/tool/synth.cpp \
     src/audio/tool/filter24.cpp \
     src/math/denormals.cpp \
-    src/audio/tool/butterworthfilter.cpp
+    src/audio/tool/butterworthfilter.cpp \
+    src/audio/tool/fixedfilter.cpp
