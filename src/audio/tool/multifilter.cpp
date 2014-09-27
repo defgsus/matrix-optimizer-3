@@ -130,6 +130,22 @@ bool MultiFilter::supportsOrder(FilterType t)
         || t == T_NTH_BUTTERWORTH_BAND;
 }
 
+bool MultiFilter::supportsResonance(FilterType t)
+{
+    return !(
+           t == T_NTH_BESSEL_LOW
+        || t == T_NTH_BESSEL_HIGH
+//        || t == T_NTH_BESSEL_BAND
+        || t == T_NTH_CHEBYCHEV_LOW
+        || t == T_NTH_CHEBYCHEV_HIGH
+//        || t == T_NTH_CHEBYCHEV_BAND
+        || t == T_NTH_BUTTERWORTH_LOW
+        || t == T_NTH_BUTTERWORTH_HIGH
+//        || t == T_NTH_BUTTERWORTH_BAND
+            );
+}
+
+
 MultiFilter::MultiFilter(bool alloc)
     : doReallocate_ (alloc),
       type_         (T_FIRST_ORDER_LOW),
@@ -383,13 +399,22 @@ void MultiFilter::updateCoefficients()
         {
             case T_NTH_BESSEL_LOW: fixed_->setType(FixedFilter::FT_BESSEL); fixed_->setBandType(FixedFilter::BT_LOWPASS); break;
             case T_NTH_BESSEL_HIGH: fixed_->setType(FixedFilter::FT_BESSEL); fixed_->setBandType(FixedFilter::BT_HIGHPASS); break;
-            case T_NTH_BESSEL_BAND: fixed_->setType(FixedFilter::FT_BESSEL); fixed_->setBandType(FixedFilter::BT_BANDPASS); break;
+            case T_NTH_BESSEL_BAND:
+                fixed_->setType(FixedFilter::FT_BESSEL); fixed_->setBandType(FixedFilter::BT_BANDPASS);
+                fixed_->setBandpassSize(10 + (1.0-reso_) * sr_ / 3);
+            break;
             case T_NTH_CHEBYCHEV_LOW: fixed_->setType(FixedFilter::FT_CHEBYCHEV); fixed_->setBandType(FixedFilter::BT_LOWPASS); break;
             case T_NTH_CHEBYCHEV_HIGH: fixed_->setType(FixedFilter::FT_CHEBYCHEV); fixed_->setBandType(FixedFilter::BT_HIGHPASS); break;
-            case T_NTH_CHEBYCHEV_BAND: fixed_->setType(FixedFilter::FT_CHEBYCHEV); fixed_->setBandType(FixedFilter::BT_BANDPASS); break;
+            case T_NTH_CHEBYCHEV_BAND:
+                fixed_->setType(FixedFilter::FT_CHEBYCHEV); fixed_->setBandType(FixedFilter::BT_BANDPASS);
+                fixed_->setBandpassSize(10 + (1.0-reso_) * sr_ / 3);
+            break;
             case T_NTH_BUTTERWORTH_LOW: fixed_->setType(FixedFilter::FT_BUTTERWORTH); fixed_->setBandType(FixedFilter::BT_LOWPASS); break;
             case T_NTH_BUTTERWORTH_HIGH: fixed_->setType(FixedFilter::FT_BUTTERWORTH); fixed_->setBandType(FixedFilter::BT_HIGHPASS); break;
-            case T_NTH_BUTTERWORTH_BAND: fixed_->setType(FixedFilter::FT_BUTTERWORTH); fixed_->setBandType(FixedFilter::BT_BANDPASS); break;
+            case T_NTH_BUTTERWORTH_BAND:
+                fixed_->setType(FixedFilter::FT_BUTTERWORTH); fixed_->setBandType(FixedFilter::BT_BANDPASS);
+                fixed_->setBandpassSize(10 + (1.0-reso_) * sr_ / 3);
+            break;
             default: break;
         }
 

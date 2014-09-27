@@ -36,12 +36,20 @@ public:
     F32 freqForX(int x) const;
     F32 freqForBand(uint band) const;
 
+signals:
+
+    /** Emitted on clicking or dragging on the x-axis */
+    void frequencyChanged(F32 freq);
+
 public slots:
 
     /** Sets a new filter setting and updates display */
     void setFilter(const AUDIO::MultiFilter&);
 
 protected:
+
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
 
     void paintEvent(QPaintEvent *);
 

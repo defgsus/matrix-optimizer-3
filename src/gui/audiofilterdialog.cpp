@@ -79,10 +79,10 @@ void AudioFilterDialog::createWidgets_()
             label = new QLabel(tr("frequency"), this);
             lv->addWidget(label);
 
-            auto dspin = new DoubleSpinBox(this);
+            auto dspin = dspinFreq_ = new DoubleSpinBox(this);
             lv->addWidget(dspin);
             dspin->setMinimum(0.0001);
-            dspin->setMaximum(display_->sampleRate());
+            dspin->setMaximum(display_->sampleRate()/2);
             dspin->setDecimals(6);
             dspin->setSuffix(tr(" hz"));
             dspin->setValue(filter_->frequency());
@@ -95,10 +95,10 @@ void AudioFilterDialog::createWidgets_()
 
             // resonance
 
-            label = new QLabel(tr("resonance"), this);
+            label = labelReso_ = new QLabel(tr("resonance"), this);
             lv->addWidget(label);
 
-            dspin = new DoubleSpinBox(this);
+            dspin = dspinReso_ = new DoubleSpinBox(this);
             lv->addWidget(dspin);
             dspin->setMinimum(0.0);
             dspin->setMaximum(1.0);
@@ -127,7 +127,7 @@ void AudioFilterDialog::createWidgets_()
                 display_->setFilter(*filter_);
             });
 
-
+            // combo change
             connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=]()
             {
                 int idx = combo->currentIndex();
@@ -140,6 +140,12 @@ void AudioFilterDialog::createWidgets_()
                 updateVisibility_();
 
                 display_->setFilter(*filter_);
+            });
+
+            // frequency choose from display
+            connect(display_, &FilterResponseWidget::frequencyChanged, [=](F32 f)
+            {
+                dspinFreq_->setValue(f, true);
             });
 
             lv->addStretch(1);
@@ -166,6 +172,9 @@ void AudioFilterDialog::updateVisibility_()
     const bool isorder = AUDIO::MultiFilter::supportsOrder(filter_->type());
     labelOrder_->setVisible(isorder);
     spinOrder_->setVisible(isorder);
+    const bool isreso = AUDIO::MultiFilter::supportsResonance(filter_->type());
+    labelReso_->setVisible(isreso);
+    dspinReso_->setVisible(isreso);
 }
 
 } // namespace GUI

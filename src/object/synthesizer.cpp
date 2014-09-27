@@ -140,7 +140,7 @@ void Synthesizer::createParameters()
         p_filterOrder_ = createIntParameter("filterorder", tr("filter order"),
                                      tr("The order (sharpness) of the filter for the 'nth order' types"),
                                      synth_->filterOrder(),
-                                     1, 20,
+                                     1, 10,
                                      1);
 
         p_filterFreq_ = createFloatParameter("filterfreq", tr("filter frequency"),
@@ -149,7 +149,7 @@ void Synthesizer::createParameters()
 
 
         p_filterReso_ = createFloatParameter("filterreso", tr("filter resonance"),
-                                     tr("Controls the filter resonance - how much of the filter is fed-back to itself"),
+                                     tr("Controls the filter resonance or quality - how steep the transition between passband and stopband is"),
                                      synth_->filterResonance(), 0.0, 1.0, 0.01);
 
         p_filterKeyFollow_ = createFloatParameter("filterkeyf", tr("filter key follow"),
@@ -188,14 +188,15 @@ void Synthesizer::updateParameterVisibility()
     const auto wavetype = (AUDIO::Waveform::Type)p_waveform_->baseValue();
     const auto filtertype = (AUDIO::MultiFilter::FilterType)p_filterType_->baseValue();
     const bool
-            isfilter = filtertype != AUDIO::MultiFilter::T_BYPASS;
+            haspw = AUDIO::Waveform::supportsPulseWidth(wavetype),
+            isfilter = filtertype != AUDIO::MultiFilter::T_BYPASS,
+            hasorder = AUDIO::MultiFilter::supportsOrder(filtertype),
+            hasreso = AUDIO::MultiFilter::supportsResonance(filtertype);
 
-    p_pulseWidth_->setVisible(
-                AUDIO::Waveform::supportsPulseWidth(wavetype) );
-    p_filterOrder_->setVisible(isfilter &&
-                AUDIO::MultiFilter::supportsOrder(filtertype));
+    p_pulseWidth_->setVisible(haspw);
+    p_filterOrder_->setVisible(isfilter && hasorder);
     p_filterFreq_->setVisible(isfilter);
-    p_filterReso_->setVisible(isfilter);
+    p_filterReso_->setVisible(isfilter && hasreso);
     p_filterKeyFollow_->setVisible(isfilter);
     p_filterEnv_->setVisible(isfilter);
     p_filterEnvKeyFollow_->setVisible(isfilter);

@@ -64,11 +64,16 @@ public:
         normalize();
         compute_z();
         expandpoly();
+        getGain();
+
+        //dumpCoeffs();
     }
 
     template <typename F>
     void process(const F * input, uint inputStride,
                        F * output, uint outputStride, uint size);
+
+    void dumpCoeffs();
 
     // ---- coefficient calculation ----
 
@@ -92,6 +97,7 @@ public:
     void expand(std::vector<Complex> & pz, std::vector<Complex> & coeffs);
     /** multiply factor (z-w) into coeffs */
     void multin(const Complex & w, std::vector<Complex> & coeffs);
+    void getGain();
 
     FixedFilter::BandType bandType;
     FixedFilter::FilterType type;
@@ -115,7 +121,7 @@ public:
     // execution buffers
         xv, yv;
 
-    Double clip;
+    Double maxgain, clip;
 };
 
 FixedFilter::Private::Private()
@@ -125,6 +131,7 @@ FixedFilter::Private::Private()
       freq          (1000),
       freqRange     (100),
       order         (2),
+      chebrip       (-1),
       specifiedPolesOnly(false),
       noPrewarp     (false),
       clip          (4)
@@ -161,8 +168,8 @@ void FixedFilter::Private::setdefaults()
 
     if (bandType == BT_BANDPASS)
     {
-        raw_alpha1 = (freq - freqRange * 0.5) / sr;
-        raw_alpha2 = (freq + freqRange * 0.5) / sr;
+        raw_alpha1 = std::max(1.0,std::min(Double(sr)/2-1, (freq - freqRange * 0.5))) / sr;
+        raw_alpha2 = std::max(1.0,std::min(Double(sr)/2-1, (freq + freqRange * 0.5))) / sr;
     }
     else
         raw_alpha1 = raw_alpha2 = freq / sr;
@@ -369,6 +376,107 @@ void FixedFilter::Private::multin(const Complex& w, std::vector<Complex> & coeff
     coeffs[0] = nw * coeffs[0];
 }
 
+namespace
+{
+    std::string gainStr(const std::string& str, const Complex& c)
+    {
+        std::stringstream s;
+
+        Double r = std::hypot(c.imag(), c.real());
+        s << "gain at " << str << ":   mag = " << r;
+        if (r > 1.0e-10)
+            s << "   phase = " << (std::atan2(c.imag(), c.real()) / PI) << " pi";
+
+        return s.str();
+    }
+}
+
+void FixedFilter::Private::getGain()
+{
+    switch (bandType)
+    {
+        case BT_LOWPASS: maxgain = std::max(Double(0.00001),
+                                std::hypot(dc_gain.imag(), dc_gain.real())); break;
+        case BT_HIGHPASS: maxgain = std::max(Double(0.00001),
+                                std::hypot(hf_gain.imag(), hf_gain.real())); break;
+        case BT_BANDPASS: maxgain = std::max(Double(0.00001),
+                                std::hypot(fc_gain.imag(), fc_gain.real())); break;
+    }
+}
+
+void FixedFilter::Private::dumpCoeffs()
+{
+    std::stringstream s;
+
+    s << "FixedFilter: numpoles = " << numpoles << "\n";
+
+    s << "raw alpha1    = " << raw_alpha1 <<
+         "\nwarped alpha1 = " << warped_alpha1 <<
+         "\nraw alpha2    = " << raw_alpha2 <<
+         "\nwarped alpha2 = " << warped_alpha2 <<
+         "\n" << gainStr("dc    ", dc_gain) <<
+         "\n" << gainStr("centre", fc_gain) <<
+         "\n" << gainStr("hf    ", hf_gain) << "\n";
+
+    s << "\nS-plane zeros:\n";
+    switch (bandType)
+    {
+        case BT_LOWPASS:
+            s << "none\n";
+        break;
+
+        case BT_HIGHPASS:
+            s << "\t" << czero << "\t" << numpoles << " times\n";
+        break;
+
+        case BT_BANDPASS:
+            s << "\t" << czero << "\t" << (numpoles/2) << " times\n";
+        break;
+    }
+
+    s << "\nS-plane poles:\n";
+    for (uint i=0; i < numpoles; i++)
+        s << "\t" << spoles[i] << "\n";
+
+    s << "\nZ-plane zeros:\n";
+    switch (bandType)
+    {
+        case BT_LOWPASS:
+            s << "\t" << cmone << "\t" << numpoles << " times\n";
+        break;
+
+        case BT_HIGHPASS:
+            s << "\t" << cone << "\t" << numpoles << " times\n";
+        break;
+
+        case BT_BANDPASS:
+            s << "\t" << cone << "\t" << (numpoles/2) << " times\n";
+            s << "\t" << cmone << "\t" << (numpoles/2) << " times\n";
+        break;
+    }
+
+    s << "\nZ-plane poles:\n";
+    for (uint i=0; i < numpoles; i++)
+    {
+        s << "\t" << zpoles[i] << "\n";
+    }
+
+    s << "\nRecurrence relation:\n"
+      << "y[n] = ";
+    for (uint i=0; i < numpoles+1; i++)
+    {
+        if (i > 0)
+            s << "     + ";
+        s << "(" << xcoeffs[i] << " * x[n-" << (numpoles-i) << "])\n";
+    }
+    s << "\n";
+    for (uint i=0; i < numpoles; i++)
+    {
+        s << "     + (" << ycoeffs[i] << " * y[n-" << (numpoles-i) << "])\n";
+    }
+
+    MO_PRINT(s.str());
+}
 
 
 
@@ -393,7 +501,7 @@ void FixedFilter::Private::process(const F *input, uint inputStride,
         for (uint j=0; j < numpoles; j++)
             yv[numpoles] += (xcoeffs[j] * xv[j]) + (ycoeffs[j] * yv[j]);
 
-        *output = yv[numpoles];
+        *output = yv[numpoles] / maxgain;
     }
 
 #undef MO__CLIP

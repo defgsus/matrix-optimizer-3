@@ -9,6 +9,7 @@
 */
 
 #include <QPainter>
+#include <QMouseEvent>
 
 #include "filterresponsewidget.h"
 #include "audio/tool/multifilter.h"
@@ -48,6 +49,24 @@ void FilterResponseWidget::setFilter(const AUDIO::MultiFilter & f)
     filter_->setSampleRate(sampleRate_);
     calcResponse_();
     update();
+}
+
+void FilterResponseWidget::mousePressEvent(QMouseEvent * e)
+{
+    if (e->buttons() & Qt::LeftButton)
+    {
+        const F32 freq = freqForX(e->x());
+        emit frequencyChanged(freq);
+    }
+}
+
+void FilterResponseWidget::mouseMoveEvent(QMouseEvent * e)
+{
+    if (e->buttons() & Qt::LeftButton)
+    {
+        const F32 freq = freqForX(e->x());
+        emit frequencyChanged(freq);
+    }
 }
 
 void FilterResponseWidget::paintEvent(QPaintEvent *)

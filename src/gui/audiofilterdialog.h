@@ -21,6 +21,7 @@ namespace GUI {
 
 class FilterResponseWidget;
 class SpinBox;
+class DoubleSpinBox;
 
 class AudioFilterDialog : public QDialog
 {
@@ -41,8 +42,9 @@ private:
     AUDIO::MultiFilter * filter_;
     FilterResponseWidget * display_;
 
-    QLabel * labelOrder_;
+    QLabel * labelOrder_, * labelReso_;
     SpinBox * spinOrder_;
+    DoubleSpinBox * dspinFreq_, * dspinReso_;
 };
 
 } // namespace GUI

@@ -65,6 +65,9 @@ public:
     /** Returns true when the given filter-type is an 'nth order type' */
     static bool supportsOrder(FilterType);
 
+    /** Returns true when the given filter-type has a resonance setting */
+    static bool supportsResonance(FilterType);
+
     /** If @p dynamicAllocation is false, individual sub-classes
         like the ChebychevFilter will be created in the constructor,
         if true, they will be created and deleted as needed by
@@ -100,7 +103,7 @@ public:
 
     /** Sets the resonance [0,1].
         Requires updateCoefficients() to be called. */
-    void setResonance(F32 reso) { reso_ = reso; }
+    void setResonance(F32 reso) { reso_ = std::max(0.f,std::min(1.f, reso )); }
 
     // ---------- getter ------------------
 
