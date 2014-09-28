@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_UTIL_SYNTHSETTING_H
 #define MOSRC_OBJECT_UTIL_SYNTHSETTING_H
 
+#include <vector>
+
 #include <QObject>
 
 #include "object/object_fwd.h"
@@ -24,6 +26,17 @@ class SynthSetting : public QObject
 {
     Q_OBJECT
 public:
+
+    /** Each triggered voice contains a pointer to this field */
+    struct VoiceData
+    {
+        /** Scene-time when the voice was started */
+        Double timeStarted;
+        /** Freely chooseable user data */
+        void * userData;
+    };
+
+
     explicit SynthSetting(Object *parent);
     ~SynthSetting();
 
@@ -60,6 +73,7 @@ private:
     Object * o_;
     AUDIO::Synth * synth_;
     AUDIO::FloatGate<Double> * gate_;
+    std::vector<VoiceData> voiceData_;
 
     ParameterInt
         * p_numVoices_,

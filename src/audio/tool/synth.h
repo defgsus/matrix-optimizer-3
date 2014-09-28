@@ -33,6 +33,8 @@ public:
     // ------------ getter -------------
 
     Synth * synth() const;
+    /** Returns the index of this voice in Synth */
+    uint index() const;
     bool active() const;
     int note() const;
     Double freq() const;

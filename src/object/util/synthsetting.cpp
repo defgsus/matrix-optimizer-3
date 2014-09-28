@@ -193,6 +193,7 @@ bool SynthSetting::onParameterChanged(Parameter *p)
     if (p == p_numVoices_)
     {
         synth_->setNumberVoices(p_numVoices_->baseValue());
+        voiceData_.resize(synth_->numberVoices());
         return true;
     }
 
@@ -202,6 +203,7 @@ bool SynthSetting::onParameterChanged(Parameter *p)
 void SynthSetting::onParametersLoaded()
 {
     synth_->setNumberVoices(p_numVoices_->baseValue());
+    voiceData_.resize(synth_->numberVoices());
 }
 
 
@@ -245,7 +247,13 @@ void SynthSetting::feedSynth(Double time, uint thread, QVector<AUDIO::SynthVoice
 
         auto voice = synth_->noteOn(note, gate);
         if (voice && voices)
+        {
+            // attach VoiceData
+            auto data = &voiceData_[voice->index()];
+            data->timeStarted = time;
+            voice->setUserData(data);
             voices->append(voice);
+        }
     }
 }
 

@@ -132,6 +132,7 @@ void Synthesizer::setNumberThreads(uint num)
     Object::setNumberThreads(num);
 
     audioBuffers_.resize(num);
+    audioPos_.resize(num);
 }
 
 void Synthesizer::setBufferSize(uint bufferSize, uint thread)
@@ -142,22 +143,39 @@ void Synthesizer::setBufferSize(uint bufferSize, uint thread)
     audioBuffers_[thread].resize(audios_.size());
     for (int i=0; i<audios_.size(); ++i)
         audioBuffers_[thread][i] = audios_[i]->samples(thread);
+
+    audioPos_[thread].resize(audios_.size());
 }
 
 void Synthesizer::updateAudioTransformations(Double, uint thread)
 {
-    for (auto a : audios_)
+    const Mat4 trans = transformation(thread, 0);
+
+    for (int i=0; i<audios_.size(); ++i)
     {
-        a->setTransformation(transformation(thread, 0), thread, 0);
+        audios_[i]->setTransformation(trans * audioPos_[MO_AUDIO_THREAD][i], thread, 0);
     }
 }
 
-void Synthesizer::updateAudioTransformations(Double, uint , uint thread)
+void Synthesizer::updateAudioTransformations(Double, uint size, uint thread)
 {
+    if (!p_polyAudio_->baseValue())
     for (auto a : audios_)
     {
         // copy the block of transformations
         a->setTransformation(transformations(thread), thread);
+    }
+    else
+    {
+        for (uint j=0; j<size; ++j)
+        {
+            const Mat4 trans = transformation(thread, j);
+
+            for (int i=0; i<audios_.size(); ++i)
+            {
+                audios_[i]->setTransformation(trans * audioPos_[thread][i], thread, j);
+            }
+        }
     }
 }
 
@@ -165,16 +183,34 @@ void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
 {
     const Double time = pos * sampleRateInv();
 
-    synth_->feedSynth(time, thread);
-
     if (!p_polyAudio_->baseValue())
+    {
         // mono output
+        synth_->feedSynth(time, thread);
         synth_->synth()->process(audios_[0]->samples(thread), bufferSize(thread));
+    }
     else
     {
         // polyphonic output
+        QVector<AUDIO::SynthVoice*> voices;
+        synth_->feedSynth(time, thread, &voices);
         synth_->synth()->process(
                     &audioBuffers_[thread][0], bufferSize(thread));
+
+        // place in space
+        for (AUDIO::SynthVoice * v : voices)
+        {
+            // get info that SynthSetting attached to the voice
+            auto data = static_cast<SynthSetting::VoiceData*>(v->userData());
+
+            // set audio-source's transformation matrix
+            audioPos_[thread][v->index()] = glm::translate(Mat4(1.f),
+                        Vec3(
+                            p_audioX_->value(data->timeStarted, thread),
+                            p_audioY_->value(data->timeStarted, thread),
+                            p_audioZ_->value(data->timeStarted, thread)
+                        ));
+        }
     }
 }
 

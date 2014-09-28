@@ -25,6 +25,7 @@ class SynthVoice::Private
         : synth     (synth),
           active	(false),
           note   	(0),
+          index     (0),
           startSample(0),
           freq		(0.0),
           pw        (0.5),
@@ -44,7 +45,7 @@ class SynthVoice::Private
     bool active;
 
     int note;
-    uint startSample;
+    uint index, startSample;
 
     Double
         freq,
@@ -86,6 +87,7 @@ SynthVoice::~SynthVoice()
 }
 
 Synth * SynthVoice::synth() const { return p_->synth; }
+uint SynthVoice::index() const { return p_->index; }
 bool SynthVoice::active() const { return p_->active; }
 int SynthVoice::note() const { return p_->note; }
 Double SynthVoice::freq() const { return p_->freq; }
@@ -166,8 +168,11 @@ public:
     {
         deleteVoices();
         voices.resize(n);
-        for (auto & v : voices)
-            v = new SynthVoice(synth);
+        for (uint i=0; i<n; ++i)
+        {
+            voices[i] = new SynthVoice(synth);
+            voices[i]->p_->index = i;
+        }
     }
 
     SynthVoice * noteOn(uint startSample, Double freq, int note, Float velocity, uint numCombinedUnison);
