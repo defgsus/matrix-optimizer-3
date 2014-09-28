@@ -101,6 +101,8 @@ void Synthesizer::onParameterChanged(Parameter * p)
         if (   (ispoly && synth_->synth()->numberVoices() != (uint)audios_.size())
             || (!ispoly && audios_.size() > 1))
             requestCreateAudioSources();
+
+        setCallbacks_();
     }
 }
 
@@ -109,6 +111,7 @@ void Synthesizer::onParametersLoaded()
     Object::onParametersLoaded();
 
     synth_->onParametersLoaded();
+    setCallbacks_();
 }
 
 void Synthesizer::createAudioSources()
@@ -145,6 +148,36 @@ void Synthesizer::setBufferSize(uint bufferSize, uint thread)
         audioBuffers_[thread][i] = audios_[i]->samples(thread);
 
     audioPos_[thread].resize(audios_.size());
+    for (int i=0; i<audios_.size(); ++i)
+        audioPos_[thread][i].resize(bufferSize);
+}
+
+void Synthesizer::setCallbacks_()
+{
+    if (!p_polyAudio_->baseValue())
+    {
+        synth_->synth()->setVoiceStartedCallback(0);
+        synth_->synth()->setVoiceEndedCallback(0);
+    }
+    else
+    {
+        synth_->synth()->setVoiceStartedCallback([=](AUDIO::SynthVoice * v)
+        {
+            // get info that SynthSetting attached to the voice
+            auto data = static_cast<SynthSetting::VoiceData*>(v->userData());
+
+            // set audio-source's transformation matrix
+            const Mat4 trans = glm::translate(Mat4(1.f),
+                          Vec3(
+                              p_audioX_->value(data->timeStarted, data->thread),
+                              p_audioY_->value(data->timeStarted, data->thread),
+                              p_audioZ_->value(data->timeStarted, data->thread)
+                          ));
+
+            for (uint i=v->startSample(); i<bufferSize(data->thread); ++i)
+                audioPos_[data->thread][v->index()][i] = trans;
+        });
+    }
 }
 
 void Synthesizer::updateAudioTransformations(Double, uint thread)
@@ -153,7 +186,8 @@ void Synthesizer::updateAudioTransformations(Double, uint thread)
 
     for (int i=0; i<audios_.size(); ++i)
     {
-        audios_[i]->setTransformation(trans * audioPos_[MO_AUDIO_THREAD][i], thread, 0);
+        audios_[i]->setTransformation(trans * audioPos_[MO_AUDIO_THREAD][i][
+                                      bufferSize(MO_AUDIO_THREAD)-1], thread, 0);
     }
 }
 
@@ -173,7 +207,7 @@ void Synthesizer::updateAudioTransformations(Double, uint size, uint thread)
 
             for (int i=0; i<audios_.size(); ++i)
             {
-                audios_[i]->setTransformation(trans * audioPos_[thread][i], thread, j);
+                audios_[i]->setTransformation(trans * audioPos_[thread][i][j], thread, j);
             }
         }
     }
@@ -181,36 +215,20 @@ void Synthesizer::updateAudioTransformations(Double, uint size, uint thread)
 
 void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
 {
-    const Double time = pos * sampleRateInv();
-
     if (!p_polyAudio_->baseValue())
     {
         // mono output
-        synth_->feedSynth(time, thread);
+        synth_->feedSynth(pos, thread, bufferSize(thread));
+        // get synth output
         synth_->synth()->process(audios_[0]->samples(thread), bufferSize(thread));
     }
     else
     {
         // polyphonic output
-        QVector<AUDIO::SynthVoice*> voices;
-        synth_->feedSynth(time, thread, &voices);
+        synth_->feedSynth(pos, thread, bufferSize(thread));
+        // get polyphonic synth output
         synth_->synth()->process(
                     &audioBuffers_[thread][0], bufferSize(thread));
-
-        // place in space
-        for (AUDIO::SynthVoice * v : voices)
-        {
-            // get info that SynthSetting attached to the voice
-            auto data = static_cast<SynthSetting::VoiceData*>(v->userData());
-
-            // set audio-source's transformation matrix
-            audioPos_[thread][v->index()] = glm::translate(Mat4(1.f),
-                        Vec3(
-                            p_audioX_->value(data->timeStarted, thread),
-                            p_audioY_->value(data->timeStarted, thread),
-                            p_audioZ_->value(data->timeStarted, thread)
-                        ));
-        }
     }
 }
 

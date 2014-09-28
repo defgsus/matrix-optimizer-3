@@ -8,6 +8,8 @@
     <p>created 25.09.2014</p>
 */
 
+#include <functional>
+
 #ifndef MOSRC_AUDIO_TOOL_SYNTH_H
 #define MOSRC_AUDIO_TOOL_SYNTH_H
 
@@ -36,6 +38,9 @@ public:
     /** Returns the index of this voice in Synth */
     uint index() const;
     bool active() const;
+    bool cued() const;
+    uint startSample() const;
+
     int note() const;
     Double freq() const;
     Double phase() const;
@@ -62,7 +67,7 @@ public:
     SynthVoice * nextUnisonVoice() const;
 
     /** Returns the data previously set with setUserData(),
-        or NULL if the voice was created by Synth::notOn() */
+        or the one that was passed to Synth::noteOn(). */
     void * userData() const;
 
     // ----------- setter --------------
@@ -201,6 +206,18 @@ public:
     void setFilterSustain(Double sustain);
     void setFilterRelease(Double release);
 
+    // ---------- callbacks ---------------
+
+    /** Supplies a function that should be called when a voice was started.
+        The call is immediate and might come from the audio thread!
+        Actually the only function that can cause this callback is process(). */
+    void setVoiceStartedCallback(std::function<void(SynthVoice*)> func);
+    /** Supplies a function that should be called when a voice has ended.
+        The call is immediate and might come from the audio thread!
+        Actually the only functions that can cause this callback are process(),
+        setNumberVoices() and the destructor. */
+    void setVoiceEndedCallback(std::function<void(SynthVoice*)> func);
+
     // ---------- audio -------------------
 
     /** Starts the next free voice.
@@ -211,8 +228,9 @@ public:
         If @p startSample > 0, the start of the voice will be delayed for the
         given number of samples. The returned voice will be valid but not active yet.
         Note that startSample must be smaller than the bufferLength parameter
-        in process() to start the voice. */
-    SynthVoice * noteOn(int note, Float velocity, uint startSample = 0);
+        in process() to start the voice.
+        @p userData is passed to the SynthVoice. */
+    SynthVoice * noteOn(int note, Float velocity, uint startSample = 0, void * userData = 0);
 
     /** Stops all active voices of the given note.
         Depending on their sustain level, they will immidiately stop

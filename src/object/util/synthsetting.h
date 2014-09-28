@@ -32,6 +32,8 @@ public:
     {
         /** Scene-time when the voice was started */
         Double timeStarted;
+        /** Thread in which feedSynth() was called */
+        uint thread;
         /** Freely chooseable user data */
         void * userData;
     };
@@ -63,10 +65,20 @@ public:
 
     // ------------ runtime --------------
 
-    /** Feeds all parameters at the given time to the synthesizer.
-        Subsequently AUDIO::Synth::process() can be called.
-        The triggered voices are appended to the @p voices vector if not NULL. */
-    void feedSynth(Double time, uint thread, QVector<AUDIO::SynthVoice*> * voices = 0);
+    /** Feeds all parameters at the given time to the synthesizer. */
+    void updateSynthParameters(Double time, uint thread);
+
+    /** Feeds all parameters at the given time to the synthesizer and
+        starts voices according to gate track.
+        Subsequently AUDIO::Synth::process() can be called. */
+    void feedSynthOnce(Double time, uint thread);
+
+    /** Feeds all parameters at the given time to the synthesizer and
+        starts voices according to gate track.
+        The gate track is checked for the whole audio block.
+        @p samplePos is translated into seconds with the samplerate of the Synth object.
+        Subsequently AUDIO::Synth::process() can be called. */
+    void feedSynth(SamplePos samplePos, uint thread, uint bufferSize);
 
 private:
 

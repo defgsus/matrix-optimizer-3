@@ -45,6 +45,7 @@ public:
 protected:
 
     void updateAudioSources_();
+    void setCallbacks_();
 
     SynthSetting * synth_;
 
@@ -52,7 +53,8 @@ protected:
 
     /** [thread][audiosource] */
     std::vector<std::vector<F32*>> audioBuffers_;
-    std::vector<std::vector<Mat4>> audioPos_;
+    /** [thread][audiosource][bufferSize] */
+    std::vector<std::vector<std::vector<Mat4>>> audioPos_;
 
     ParameterSelect
         * p_polyAudio_;

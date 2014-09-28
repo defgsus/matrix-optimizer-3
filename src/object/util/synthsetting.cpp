@@ -206,56 +206,87 @@ void SynthSetting::onParametersLoaded()
     voiceData_.resize(synth_->numberVoices());
 }
 
+void SynthSetting::updateSynthParameters(Double time, uint thread)
+{
+    // notesPerOctave setting needs recalculation
+    // so only set when changed
+    const Double notesOct = p_notesPerOct_->value(time, thread);
+    if (notesOct != synth_->notesPerOctave())
+        synth_->setNotesPerOctave(notesOct);
 
-void SynthSetting::feedSynth(Double time, uint thread, QVector<AUDIO::SynthVoice*> * voices)
+    synth_->setVolume(p_volume_->value(time, thread));
+    synth_->setBaseFrequency(p_baseFreq_->value(time, thread));
+    synth_->setCombinedUnison(p_combinedUnison_->value(time, thread));
+    synth_->setUnisonVoices(p_numUnison_->value(time,thread));
+    synth_->setUnisonNoteStep(p_unisonNoteStep_->value(time, thread));
+    synth_->setUnisonDetune(p_unisonDetune_->value(time, thread));
+    synth_->setAttack(p_attack_->value(time, thread));
+    synth_->setDecay(p_decay_->value(time, thread));
+    synth_->setSustain(p_sustain_->value(time, thread));
+    synth_->setRelease(p_release_->value(time, thread));
+    synth_->setPulseWidth(p_pulseWidth_->value(time, thread) );
+    synth_->setWaveform((AUDIO::Waveform::Type)p_waveform_->baseValue());
+    synth_->setFilterType((AUDIO::MultiFilter::FilterType)p_filterType_->baseValue());
+    synth_->setFilterOrder(p_filterOrder_->value(time, thread));
+    synth_->setFilterFrequency(p_filterFreq_->value(time, thread));
+    synth_->setFilterResonance(p_filterReso_->value(time, thread));
+    synth_->setFilterKeyFollower(p_filterKeyFollow_->value(time, thread));
+    synth_->setFilterEnvelopeAmount(p_filterEnv_->value(time, thread));
+    synth_->setFilterEnvelopeKeyFollower(p_filterEnvKeyFollow_->value(time, thread));
+    synth_->setFilterAttack(p_fattack_->value(time, thread));
+    synth_->setFilterDecay(p_fdecay_->value(time, thread));
+    synth_->setFilterSustain(p_fsustain_->value(time, thread));
+    synth_->setFilterRelease(p_frelease_->value(time, thread));
+}
+
+
+void SynthSetting::feedSynthOnce(Double time, uint thread)
 {
     Double gate = gate_->input(p_gate_->value(time, thread));
 
     if (gate > 0)
     {
-        // notesPerOctave setting needs recalculation
-        // so only set when changed
-        const Double notesOct = p_notesPerOct_->value(time, thread);
-        if (notesOct != synth_->notesPerOctave())
-            synth_->setNotesPerOctave(notesOct);
-
-        synth_->setVolume(p_volume_->value(time, thread));
-        synth_->setBaseFrequency(p_baseFreq_->value(time, thread));
-        synth_->setCombinedUnison(p_combinedUnison_->value(time, thread));
-        synth_->setUnisonVoices(p_numUnison_->value(time,thread));
-        synth_->setUnisonNoteStep(p_unisonNoteStep_->value(time, thread));
-        synth_->setUnisonDetune(p_unisonDetune_->value(time, thread));
-        synth_->setAttack(p_attack_->value(time, thread));
-        synth_->setDecay(p_decay_->value(time, thread));
-        synth_->setSustain(p_sustain_->value(time, thread));
-        synth_->setRelease(p_release_->value(time, thread));
-        synth_->setPulseWidth(p_pulseWidth_->value(time, thread) );
-        synth_->setWaveform((AUDIO::Waveform::Type)p_waveform_->baseValue());
-        synth_->setFilterType((AUDIO::MultiFilter::FilterType)p_filterType_->baseValue());
-        synth_->setFilterOrder(p_filterOrder_->value(time, thread));
-        synth_->setFilterFrequency(p_filterFreq_->value(time, thread));
-        synth_->setFilterResonance(p_filterReso_->value(time, thread));
-        synth_->setFilterKeyFollower(p_filterKeyFollow_->value(time, thread));
-        synth_->setFilterEnvelopeAmount(p_filterEnv_->value(time, thread));
-        synth_->setFilterEnvelopeKeyFollower(p_filterEnvKeyFollow_->value(time, thread));
-        synth_->setFilterAttack(p_fattack_->value(time, thread));
-        synth_->setFilterDecay(p_fdecay_->value(time, thread));
-        synth_->setFilterSustain(p_fsustain_->value(time, thread));
-        synth_->setFilterRelease(p_frelease_->value(time, thread));
+        updateSynthParameters(time, thread);
 
         const int note = p_note_->value(time, thread);
 
         auto voice = synth_->noteOn(note, gate);
-        if (voice && voices)
+        if (voice)
         {
             // attach VoiceData
             auto data = &voiceData_[voice->index()];
             data->timeStarted = time;
+            data->thread = thread;
             voice->setUserData(data);
-            voices->append(voice);
         }
     }
 }
 
+void SynthSetting::feedSynth(SamplePos samplePos, uint thread, uint bufferSize)
+{
+    for (uint i=0; i<bufferSize; ++i)
+    {
+        const Double
+                time = Double(samplePos + i) / synth_->sampleRate(),
+                gate = gate_->input(p_gate_->value(time, thread));
+
+        if (gate > 0)
+        {
+            updateSynthParameters(time, thread);
+
+            const int note = p_note_->value(time, thread);
+
+            auto voice = synth_->noteOn(note, gate, i);
+            if (voice)
+            {
+                // attach VoiceData
+                auto data = &voiceData_[voice->index()];
+                data->timeStarted = time;
+                data->thread = thread;
+                voice->setUserData(data);
+            }
+        }
+    }
+}
 
 } // namespace MO

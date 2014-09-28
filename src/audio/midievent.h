@@ -20,7 +20,8 @@ namespace AUDIO {
 
 
 /** A classic midi event
-    - no sysex messages */
+    - no sysex messages
+    - currently no NRPN controllers */
 class MidiEvent
 {
 public:

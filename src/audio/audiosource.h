@@ -29,7 +29,8 @@ class AudioSource
 {
 public:
     /** Constructs the audio source for a particular object.
-        The @p id is not really important and only used for displaying. */
+        The @p id is not in all cases important and generally used for displaying.
+        It's important however for Object::createOrDeleteAudioSources(). */
     AudioSource(const QString& id, Object * parent);
 
     // ---------- getter -------------
@@ -49,36 +50,54 @@ public:
     /** Returns the length of the delay in samples for the given thread */
     uint delaySize(uint thread) const { return history_[thread].size(); }
 
-    /** Returns the set transformation for the given thread */
+    /** Returns the transformation for the given thread and given sample in bufferSize(thread).
+        This is the stuff that was put in with setTransformation(). */
     const Mat4& transformation(uint thread, uint sample) const { return transformation_[thread][sample]; }
 
-    /** Returns the sample for the given thread at the given sample position in the block */
+    /** Returns the sample for the given thread at the given sample position in the block.
+        This is the stuff that was put in with setSample(). */
     F32 getSample(uint thread, uint sample) const { return sample_[thread][sample]; }
 
-    /** Returns a const pointer to bufferSize(thead) number of samples */
+    /** Returns a const pointer to bufferSize(thread) number of samples.
+        This is the stuff that was put in with setSample(). */
     const F32* getSample(uint thread) const { return &sample_[thread][0]; }
 
-    /** Returns a sample from the history */
+    /** Returns a sample from the history.
+        @p delayPos is in samples but can be fractional.
+        A value of 0 means the 'youngest' sample, greater values means 'older' samples. */
     F32 getDelaySample(uint thread, uint sample, F32 delayPos) const;
 
     // ---------- setter -------------
 
+    /** Sets the number of threads runnable on this thing */
     void setNumberThreads(uint num);
+
+    /** Sets the audio block size per thread.
+        This call always comes after setNumberThreads(). */
     void setBufferSize(uint samples, uint thread);
+
     /** Sets the delaysize for the given thread.
-        @note Must be a power of two! */
+        @note The actual delaysize will be rounded to the next power of two! */
     void setDelaySize(uint samples, uint thread);
 
+    /** Sets one sample of the transformation.
+        Gfx threads should set the first sample (0) to enable correct display
+        of sound sources for debugging. */
     void setTransformation(const Mat4& t, uint thread, uint sample) { transformation_[thread][sample] = t; }
+
+    /** Sets a whole block of transformations if length bufferSize(thread). */
     void setTransformation(const Mat4* transformationBlock, uint thread);
 
+    /** Sets an individual audio sample in the audio buffer */
     void setSample(F32 audio, uint thread, uint sample) { sample_[thread][sample] = audio; }
+    /** Sets the whole audio buffer. @p audioBlock is copied */
     void setSample(F32 * audioBlock, uint thread);
 
-    /** Returns a pointer to bufferSize(thead) number of samples for read/write. */
+    /** Returns a pointer to bufferSize(thread) number of samples for read/write. */
     F32* samples(uint thread) { return &sample_[thread][0]; }
 
-    /** Writes the current sampleblock to the delay history */
+    /** Writes the current sampleblock to the delay history.
+        Scene object takes care of that, you don't have to worry. */
     void pushDelay(uint thread);
 
 private:
@@ -92,8 +111,9 @@ private:
     /** [thread][bufferSize] */
     std::vector<std::vector<F32>> sample_;
 
-    /** [thread][delaylength] */
+    /** [thread][delaySize] */
     std::vector<std::vector<F32>> history_;
+    /** [thread] */
     std::vector<uint> historyPos_;
 
     /** [thread][bufferSize] */

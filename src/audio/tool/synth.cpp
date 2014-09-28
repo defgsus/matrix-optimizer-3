@@ -24,6 +24,7 @@ class SynthVoice::Private
     Private(Synth * synth)
         : synth     (synth),
           active	(false),
+          cued      (false),
           note   	(0),
           index     (0),
           startSample(0),
@@ -42,7 +43,7 @@ class SynthVoice::Private
 
     Synth * synth;
 
-    bool active;
+    bool active, cued;
 
     int note;
     uint index, startSample;
@@ -89,7 +90,9 @@ SynthVoice::~SynthVoice()
 Synth * SynthVoice::synth() const { return p_->synth; }
 uint SynthVoice::index() const { return p_->index; }
 bool SynthVoice::active() const { return p_->active; }
+bool SynthVoice::cued() const { return p_->cued; }
 int SynthVoice::note() const { return p_->note; }
+uint SynthVoice::startSample() const { return p_->startSample; }
 Double SynthVoice::freq() const { return p_->freq; }
 Double SynthVoice::phase() const { return p_->phase[0]; }
 Double SynthVoice::pulseWidth() const { return p_->pw; }
@@ -147,7 +150,9 @@ public:
           filterSustain (0.0),
           filterRelease (1.0),
           waveform      (Waveform::T_SINE),
-          filterType    (MultiFilter::T_BYPASS)
+          filterType    (MultiFilter::T_BYPASS),
+          cbStart_      (0),
+          cbEnd_        (0)
     {
         setNumVoices(4);
     }
@@ -160,7 +165,11 @@ public:
     void deleteVoices()
     {
         for (auto v : voices)
+        {
+            if (v->p_->active && synth->p_->cbEnd_)
+                synth->p_->cbEnd_(v);
             delete v;
+        }
         voices.clear();
     }
 
@@ -175,7 +184,8 @@ public:
         }
     }
 
-    SynthVoice * noteOn(uint startSample, Double freq, int note, Float velocity, uint numCombinedUnison);
+    SynthVoice * noteOn(uint startSample, Double freq, int note, Float velocity,
+                        uint numCombinedUnison, void *userData);
     void noteOff(uint stopSample, int note);
     /** Mono output */
     void process(F32 * output, uint bufferLength);
@@ -200,10 +210,14 @@ public:
     MultiFilter::FilterType filterType;
 
     NoteFreq<Double> noteFreq;
+
+    std::function<void(SynthVoice*)>
+        cbStart_, cbEnd_;
 };
 
 
-SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Float velocity, uint numCombinedUnison)
+SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Float velocity,
+                                    uint numCombinedUnison, void * userData)
 {
     if (voices.empty())
         return 0;
@@ -298,15 +312,11 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
     v->fenv.setDecay(filterDecay);
     v->fenv.setSustain(filterSustain);
     v->fenv.setRelease(filterRelease);
-    if (startSample == 0)
-    {
-        v->env.trigger();
-        v->fenv.trigger();
-    }
     v->waveform = waveform;
     v->lifetime = 0;
     v->note = note;
-    v->active = startSample == 0;
+    v->active = false;
+    v->cued = true;
     v->filterFreq = filterFreq + filterKeyFollow * freq;
     v->filter.setType(filterType);
     v->filter.setOrder(filterOrder);
@@ -315,7 +325,7 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
     v->filter.reset();
     v->filter.updateCoefficients();
     v->fenvAmt = filterEnvAmt + filterEnvKeyFollow * freq;
-    v->data = 0;
+    v->data = userData;
 
     return *i;
 }
@@ -349,16 +359,20 @@ void Synth::Private::process(F32 *output, uint bufferLength)
     for (uint sample = 0; sample < bufferLength; ++sample, ++output)
     {
         // for each voice
-        for (auto i : voices)
+        for (SynthVoice * i : voices)
         {
             SynthVoice::Private * v = i->p_;
 
             // start cued voice
-            if (v->startSample > 0 && v->startSample == sample)
+            if (v->cued && v->startSample == sample)
             {
                 v->env.trigger();
+                if (v->fenvAmt)
+                    v->fenv.trigger();
                 v->active = true;
-                v->startSample = 0;
+                v->cued = false;
+                if (cbStart_)
+                    cbStart_(i);
             }
 
             if (!v->active)
@@ -389,6 +403,8 @@ void Synth::Private::process(F32 *output, uint bufferLength)
             if (!v->env.active())
             {
                 v->active = false;
+                if (cbEnd_)
+                    cbEnd_(i);
                 continue;
             }
 
@@ -409,30 +425,46 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
     for (auto i : voices)
     {
         F32 * output = outputs[voicecount];
+        SynthVoice::Private * v = i->p_;
+
+        uint start = 0;
+
+        // start it?
+        if (v->cued)
+        {
+            if (v->startSample < bufferLength)
+            {
+                // start now
+                start = v->startSample;
+                v->env.trigger();
+                if (v->fenvAmt)
+                    v->fenv.trigger();
+                v->active = true;
+                v->cued = false;
+                if (cbStart_)
+                    cbStart_(i);
+
+                // clear first part of buffer
+                memset(output, 0, sizeof(F32) * start);
+                output += start;
+            }
+        }
+
+        // if voice is inactive
+        if (!v->active)
+        {
+            // clear output buffer
+            memset(output, 0, sizeof(F32) * bufferLength);
+            continue;
+        }
 
         // for each sample
-        for (uint sample = 0; sample < bufferLength; ++sample, ++output)
+        for (uint sample = start; sample < bufferLength; ++sample, ++output)
         {
-            SynthVoice::Private * v = i->p_;
-
-            // start cued voice
-            if (v->startSample > 0 && v->startSample == sample)
-            {
-                v->env.trigger();
-                v->active = true;
-                v->startSample = 0;
-            }
-
-            if (!v->active)
-            {
-                // clear rest of buffer
-                memset(output, 0, sizeof(F32) * (bufferLength - sample));
-                break;
-            }
-
             // count number of samples alive
             ++(v->lifetime);
 
+            // get oscillator sample
             F32 s = 0.0;
             for (uint j = 0; j<v->phase.size(); ++j)
             {
@@ -453,12 +485,14 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
 
             // process envelop
             v->env.next();
-            // check for end of envelop
+            // check for end of envelope
             if (!v->env.active())
             {
                 v->active = false;
                 // clear rest of buffer
                 memset(output, 0, sizeof(F32) * (bufferLength - sample));
+                if (cbEnd_)
+                    cbEnd_(i);
                 break;
             }
 
@@ -545,11 +579,18 @@ void Synth::setFilterDecay(Double v) { p_->filterDecay = v; }
 void Synth::setFilterSustain(Double v) { p_->filterSustain = v; }
 void Synth::setFilterRelease(Double v) { p_->filterRelease = v; }
 
-SynthVoice * Synth::noteOn(int note, Float velocity, uint startSample)
+void Synth::setVoiceStartedCallback(std::function<void (SynthVoice *)> func) { p_->cbStart_ = func; }
+void Synth::setVoiceEndedCallback(std::function<void (SynthVoice *)> func) { p_->cbEnd_ = func; }
+
+
+
+SynthVoice * Synth::noteOn(int note, Float velocity, uint startSample, void * userData)
 {
     Double freq = p_->noteFreq.frequency(note);
 
-    SynthVoice * voice = p_->noteOn(startSample, freq, note, velocity, p_->combinedUnison? p_->unisonVoices : 1);
+    SynthVoice * voice = p_->noteOn(startSample, freq, note, velocity,
+                                    p_->combinedUnison? p_->unisonVoices : 1,
+                                    userData);
 
     // no unisono mode?
     if (p_->unisonVoices < 2)
@@ -590,7 +631,7 @@ SynthVoice * Synth::noteOn(int note, Float velocity, uint startSample)
 
         const Double detune = MATH::rnd(-maxdetune, maxdetune);
 
-        SynthVoice * v = p_->noteOn(startSample, freq + detune, note, velocity, 1);
+        SynthVoice * v = p_->noteOn(startSample, freq + detune, note, velocity, 1, userData);
         if (v)
             lastv->p_->nextUnison = v;
         else
