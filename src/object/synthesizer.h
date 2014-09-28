@@ -33,21 +33,33 @@ public:
     virtual void createAudioSources() Q_DECL_OVERRIDE;
 
     virtual void setSampleRate(uint samplerate) Q_DECL_OVERRIDE;
+    virtual void setNumberThreads(uint numThreads) Q_DECL_OVERRIDE;
+    virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
     virtual void updateAudioTransformations(Double time, uint thread) Q_DECL_OVERRIDE;
     virtual void updateAudioTransformations(Double time, uint blockSize, uint thread)
                                                                     Q_DECL_OVERRIDE;
 
     virtual void performAudioBlock(SamplePos pos, uint thread) Q_DECL_OVERRIDE;
-signals:
 
-public slots:
+protected:
 
-private:
+    void updateAudioSources_();
 
     SynthSetting * synth_;
 
-    AUDIO::AudioSource * audio_;
+    QList<AUDIO::AudioSource*> audios_;
+
+    /** [thread][audiosource] */
+    std::vector<std::vector<F32*>> audioBuffers_;
+
+    ParameterSelect
+        * p_polyAudio_;
+
+    ParameterFloat
+        * p_audioX_,
+        * p_audioY_,
+        * p_audioZ_;
 };
 
 } // namespace MO

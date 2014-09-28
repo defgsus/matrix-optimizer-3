@@ -366,8 +366,14 @@ public:
     /** Returns the number of threads, this object is assigned for */
     uint numberThreads() const { return numberThreads_; }
 
+    /** Returns true if number of threads is matching @p num.
+        This checks for all contained stuff like AudioSources as well.
+        @note Call ancestor's implementation before your derived code! */
+    virtual bool verifyNumberThreads(uint num);
+
     /** Sets the number of threads that will run on this object.
-        Any mutable values of the object must be present @p num times! */
+        Any mutable values of the object must be present @p num times!
+        @note Call ancestor's implementation before your derived code! */
     virtual void setNumberThreads(uint num);
 #if (0)
     /** Sets the thread and dsp-block storage for the object.
@@ -545,6 +551,11 @@ public:
 
 protected:
 
+    /** Returns true if the buffersize of the thread is matching @p bufferSize.
+        This checks for all contained stuff like AudioSources as well.
+        @note Call ancestor's implementation before your derived code! */
+    virtual bool verifyBufferSize(uint thread, uint bufferSize);
+
     /** Sets the audio block size for this object and the given thread.
         This function is only called <b>after</b> setNumberThreads().
         Override to make your per-thread-storage of dsp blocks.
@@ -574,6 +585,9 @@ public:
     const QList<AUDIO::AudioMicrophone*>& microphones() const { return objMicrophones_; }
 
 protected:
+
+    /** Call this if you want to have createAudioSources() be called again. */
+    void requestCreateAudioSources();
 
     /** Call this if you want to have createMicrophones() be called again. */
     void requestCreateMicrophones();

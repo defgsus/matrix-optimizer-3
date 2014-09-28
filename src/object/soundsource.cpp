@@ -61,7 +61,7 @@ void SoundSource::updateAudioTransformations(Double, uint thread)
     audio_->setTransformation(transformation(thread, 0), thread, 0);
 }
 
-void SoundSource::updateAudioTransformations(Double , uint size, uint thread)
+void SoundSource::updateAudioTransformations(Double , uint /*size*/, uint thread)
 {
 #if (1)
     // copy the block of transformations

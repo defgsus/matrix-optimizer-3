@@ -172,7 +172,10 @@ public:
 
     SynthVoice * noteOn(uint startSample, Double freq, int note, Float velocity, uint numCombinedUnison);
     void noteOff(uint stopSample, int note);
+    /** Mono output */
     void process(F32 * output, uint bufferLength);
+    /** Multichannel output */
+    void process(F32 ** output, uint bufferLength);
 
     Synth * synth;
 
@@ -394,6 +397,77 @@ void Synth::Private::process(F32 *output, uint bufferLength)
     }
 }
 
+void Synth::Private::process(F32 ** outputs, uint bufferLength)
+{
+    // for each voice
+    int voicecount = 0;
+    for (auto i : voices)
+    {
+        F32 * output = outputs[voicecount];
+
+        // for each sample
+        for (uint sample = 0; sample < bufferLength; ++sample, ++output)
+        {
+            SynthVoice::Private * v = i->p_;
+
+            // start cued voice
+            if (v->startSample > 0 && v->startSample == sample)
+            {
+                v->env.trigger();
+                v->active = true;
+                v->startSample = 0;
+            }
+
+            if (!v->active)
+            {
+                // clear rest of buffer
+                memset(output, 0, sizeof(F32) * (bufferLength - sample));
+                break;
+            }
+
+            // count number of samples alive
+            ++(v->lifetime);
+
+            F32 s = 0.0;
+            for (uint j = 0; j<v->phase.size(); ++j)
+            {
+                // advance phase counter
+                v->phase[j] += v->freq_c[j];
+                // get sample
+                s += Waveform::waveform(v->phase[j], v->waveform, v->pw);
+            }
+
+            // filter
+            // TODO: For non-enveloped filters,
+            //       we could process the whole buffer at once
+            if (v->filter.type() != MultiFilter::T_BYPASS)
+                v->filter.process(&s, &s, 1);
+
+            // put into buffer
+            *output = s * volume * v->velo * v->env.value();
+
+            // process envelop
+            v->env.next();
+            // check for end of envelop
+            if (!v->env.active())
+            {
+                v->active = false;
+                // clear rest of buffer
+                memset(output, 0, sizeof(F32) * (bufferLength - sample));
+                break;
+            }
+
+            // process filter envelop
+            if (v->filter.type() != MultiFilter::T_BYPASS && v->fenvAmt != 0)
+            {
+                v->filter.setFrequency(v->filterFreq + v->fenvAmt * v->fenv.next());
+                v->filter.updateCoefficients();
+            }
+        }
+
+        ++voicecount;
+    }
+}
 
 // ------------------------------------ synth ------------------------------------
 
@@ -531,6 +605,10 @@ void Synth::process(F32 *output, uint bufferLength)
     p_->process(output, bufferLength);
 }
 
+void Synth::process(F32 ** output, uint bufferLength)
+{
+    p_->process(output, bufferLength);
+}
 
 
 } // namespace AUDIO

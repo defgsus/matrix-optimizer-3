@@ -133,7 +133,9 @@ public:
 
     // ----------- setter -----------------
 
+    /** Sets the sampling rate in Hertz. */
     void setSampleRate(uint sr);
+
     /** Sets the polyphony of the synthesizer.
         Currently, this immidiately stops and destroys all voices,
         so all voices you got from noteOn() will be invalid! */
@@ -215,8 +217,15 @@ public:
         (sustain==0) or enter into RELEASE evelope state. */
     void noteOff(int note);
 
-    /** Generates @p bufferLength samples of synthesizer music */
+    /** Generates @p bufferLength samples of synthesizer music.
+        The output will be mono and @p output is expected to point
+        at a buffer of size @p bufferLength. */
     void process(F32 * output, uint bufferLength);
+
+    /** Generates @p bufferLength samples of synthesizer music.
+        Each voice's channel is placed into the buffer of @p output[x].
+        @p output is expected to point at numberVoices() buffers of size @p bufferLength. */
+    void process(F32 ** output, uint bufferLength);
 
 private:
 

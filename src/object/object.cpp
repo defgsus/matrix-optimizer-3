@@ -772,6 +772,21 @@ void Object::propagateRenderMode(ObjectGl *parent)
         c->propagateRenderMode(parent);
 }
 
+bool Object::verifyNumberThreads(uint num)
+{
+    if (numberThreads_ != num)
+        return false;
+
+    for (auto a : objAudioSources_)
+        if (a->numberThreads() != num)
+            return false;
+
+    for (auto m : objMicrophones_)
+        if (m->numberThreads() != num)
+            return false;
+
+    return true;
+}
 
 void Object::setNumberThreads(uint num)
 {
@@ -1257,6 +1272,23 @@ ParameterFilename * Object::createFilenameParameter(
 
 // ----------------- audio sources ---------------------
 
+bool Object::verifyBufferSize(uint thread, uint bufferSize)
+{
+    if (bufferSize_.size() < thread
+        || bufferSize_[thread] != bufferSize)
+        return false;
+
+    for (auto a : objAudioSources_)
+        if (a->bufferSize(thread) != bufferSize)
+            return false;
+
+    for (auto m : objMicrophones_)
+        if (m->bufferSize(thread) != bufferSize)
+            return false;
+
+    return true;
+}
+
 void Object::setBufferSize(uint bufferSize, uint thread)
 {
     bufferSize_[thread] = bufferSize;
@@ -1280,6 +1312,14 @@ void Object::setSampleRate(uint samplerate)
         m->setSampleRate(sampleRate_);
 }
 
+void Object::requestCreateAudioSources()
+{
+    Scene * s = sceneObject();
+    if (!s)
+        createAudioSources();
+    else
+        s->callCreateAudioSources_(this);
+}
 
 void Object::requestCreateMicrophones()
 {
@@ -1302,6 +1342,8 @@ AUDIO::AudioSource * Object::createAudioSource(const QString& id)
 
 QList<AUDIO::AudioSource*> Object::createOrDeleteAudioSources(const QString &id, uint number)
 {
+    //MO_DEBUG("Object::createOrDeleteAudioSources(" << id << ", " << number << ")");
+
     // get all that exist with the given id
     QMap<QString, AUDIO::AudioSource*> exist;
     for (auto m : objAudioSources_)

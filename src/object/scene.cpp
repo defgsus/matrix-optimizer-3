@@ -337,6 +337,18 @@ void Scene::callCreateOutputs_(Object *o)
             emit objectAdded(c);
 }
 
+void Scene::callCreateAudioSources_(Object *o)
+{
+    const QList<AUDIO::AudioSource*> before = o->audioSources();
+
+    o->createAudioSources();
+
+    if (o->audioSources() != before)
+    {
+        updateTree_();
+    }
+}
+
 void Scene::callCreateMicrophones_(Object *o)
 {
     const QList<AUDIO::AudioMicrophone*> before = o->microphones();
@@ -408,11 +420,11 @@ void Scene::updateNumberThreads_()
 {
     MO_DEBUG_TREE("Scene::updateNumberThreads_() sceneNumberThreads_ == " << sceneNumberThreads_);
 
-    if (numberThreads() != sceneNumberThreads_)
+    if (!verifyNumberThreads(sceneNumberThreads_))
         setNumberThreads(sceneNumberThreads_);
 
     for (auto o : allObjects_)
-        if (o->numberThreads() != sceneNumberThreads_)
+        if (!o->verifyNumberThreads(sceneNumberThreads_))
             o->setNumberThreads(sceneNumberThreads_);
 }
 
@@ -453,7 +465,7 @@ void Scene::updateBufferSize_()
     MO_DEBUG_AUDIO("Scene::updateBufferSize_() numberThreads() == " << numberThreads());
 
     for (uint i=0; i<sceneNumberThreads_; ++i)
-        if (bufferSize(i) != sceneBufferSize_[i])
+        if (!verifyBufferSize(i, sceneBufferSize_[i]))
             setBufferSize(sceneBufferSize_[i], i);
 
 #ifdef MO_DO_DEBUG_AUDIO
@@ -465,7 +477,7 @@ void Scene::updateBufferSize_()
     {
         for (uint i=0; i<sceneNumberThreads_; ++i)
         {
-            if (o->bufferSize(i) != sceneBufferSize_[i])
+            if (!o->verifyBufferSize(i, sceneBufferSize_[i]))
                 o->setBufferSize(sceneBufferSize_[i], i);
         }
     }

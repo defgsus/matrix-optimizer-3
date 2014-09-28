@@ -50,6 +50,29 @@ void Synthesizer::createParameters()
         synth_->createParameters("");
 
     endParameterGroup();
+
+    beginParameterGroup("audiosources", tr("audio sources"));
+
+        p_polyAudio_ = createBooleanParameter("polyaudiosrc", tr("polyphonic audio sources"),
+                                              tr("When enabled, each synthesizer voice will be an audio source"),
+                                              tr("All voices are emitted through one audio source"),
+                                              tr("Each voice is emitted through it's own audio source"),
+                                              false,
+                                              true, false);
+
+        p_audioX_ = createFloatParameter("vaudiox", tr("voice position x"),
+                                         tr("X position where the voice is emitted in space"),
+                                         0.0, 0.1);
+
+        p_audioY_ = createFloatParameter("vaudioy", tr("voice position y"),
+                                         tr("Y position where the voice is emitted in space"),
+                                         0.0, 0.1);
+
+        p_audioZ_ = createFloatParameter("vaudioz", tr("voice position z"),
+                                         tr("Z position where the voice is emitted in space"),
+                                         0.0, 0.1);
+
+    endParameterGroup();
 }
 
 void Synthesizer::updateParameterVisibility()
@@ -57,13 +80,28 @@ void Synthesizer::updateParameterVisibility()
     Object::updateParameterVisibility();
 
     synth_->updateParameterVisibility();
+
+    const bool ispoly = p_polyAudio_->baseValue();
+    p_audioX_->setVisible(ispoly);
+    p_audioY_->setVisible(ispoly);
+    p_audioZ_->setVisible(ispoly);
 }
 
 void Synthesizer::onParameterChanged(Parameter * p)
 {
     Object::onParameterChanged(p);
 
-    synth_->onParameterChanged(p);
+    bool checkVoices = synth_->onParameterChanged(p);
+
+    checkVoices |= (p == p_polyAudio_);
+
+    if (checkVoices)
+    {
+        const bool ispoly = p_polyAudio_->baseValue();
+        if (   (ispoly && synth_->synth()->numberVoices() != (uint)audios_.size())
+            || (!ispoly && audios_.size() > 1))
+            requestCreateAudioSources();
+    }
 }
 
 void Synthesizer::onParametersLoaded()
@@ -77,7 +115,9 @@ void Synthesizer::createAudioSources()
 {
     Object::createAudioSources();
 
-    audio_ = createAudioSource();
+    const bool ispoly = p_polyAudio_->baseValue();
+
+    audios_ = createOrDeleteAudioSources("voice", ispoly? synth_->synth()->numberVoices() : 1);
 }
 
 void Synthesizer::setSampleRate(uint samplerate)
@@ -87,15 +127,38 @@ void Synthesizer::setSampleRate(uint samplerate)
     synth_->synth()->setSampleRate(samplerate);
 }
 
+void Synthesizer::setNumberThreads(uint num)
+{
+    Object::setNumberThreads(num);
+
+    audioBuffers_.resize(num);
+}
+
+void Synthesizer::setBufferSize(uint bufferSize, uint thread)
+{
+    Object::setBufferSize(bufferSize, thread);
+
+    // copy pointers to audiobuffers
+    audioBuffers_[thread].resize(audios_.size());
+    for (int i=0; i<audios_.size(); ++i)
+        audioBuffers_[thread][i] = audios_[i]->samples(thread);
+}
+
 void Synthesizer::updateAudioTransformations(Double, uint thread)
 {
-    audio_->setTransformation(transformation(thread, 0), thread, 0);
+    for (auto a : audios_)
+    {
+        a->setTransformation(transformation(thread, 0), thread, 0);
+    }
 }
 
 void Synthesizer::updateAudioTransformations(Double, uint , uint thread)
 {
-    // copy the block of transformations
-    audio_->setTransformation(transformations(thread), thread);
+    for (auto a : audios_)
+    {
+        // copy the block of transformations
+        a->setTransformation(transformations(thread), thread);
+    }
 }
 
 void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
@@ -104,7 +167,15 @@ void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
 
     synth_->feedSynth(time, thread);
 
-    synth_->synth()->process(audio_->samples(thread), bufferSize(thread));
+    if (!p_polyAudio_->baseValue())
+        // mono output
+        synth_->synth()->process(audios_[0]->samples(thread), bufferSize(thread));
+    else
+    {
+        // polyphonic output
+        synth_->synth()->process(
+                    &audioBuffers_[thread][0], bufferSize(thread));
+    }
 }
 
 
