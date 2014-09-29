@@ -32,9 +32,20 @@ public:
 
     uint sampleRate() const { return sampleRate_; }
 
+    /** Number of bands to display/analyze */
+    uint numBands() const { return numBands_; }
+    /** Returns the length of the buffer for analyzing bands */
+    uint bufferSize() const { return bufferSize_; }
+
+    /** Returns x coordinate for filter frequency */
     int XForFreq(F32 freq) const;
+    /** Returns frequency for x coordinate */
     F32 freqForX(int x) const;
+    /** Returns frequency of given band */
     F32 freqForBand(uint band) const;
+
+    /** Returns the current filter settings */
+    const AUDIO::MultiFilter & filter() const { return *filter_; }
 
 signals:
 
@@ -44,7 +55,12 @@ signals:
 public slots:
 
     /** Sets a new filter setting and updates display */
-    void setFilter(const AUDIO::MultiFilter&);
+    void setFilter(const AUDIO::MultiFilter&, bool update = true);
+
+    /** Sets the number of bands to display/analyze */
+    void setNumBands(uint num, bool update = true);
+    /** Sets the length of the buffer for analyzing bands */
+    void setBufferSize(uint size, bool update = true);
 
 protected:
 
@@ -60,9 +76,12 @@ private:
     AUDIO::MultiFilter * filter_;
     std::vector<F32> response_;
 
-    uint sampleRate_;
+    uint sampleRate_, numBands_, bufferSize_;
     F32 lowFreq_;
+    // not implemented yet
     bool logScale_;
+
+    QThread * thread_;
 
     // -- config --
     QPen penGrid_, penFreq_, penCurve_;

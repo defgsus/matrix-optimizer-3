@@ -10,6 +10,7 @@
 
 #include <QPainter>
 #include <QMouseEvent>
+#include <QThread>
 
 #include "filterresponsewidget.h"
 #include "audio/tool/multifilter.h"
@@ -19,13 +20,41 @@
 namespace MO {
 namespace GUI {
 
+namespace
+{
+    // thread for calculating the filter response
+    class ResponseCalc : public QThread
+    {
+    public:
+
+        ResponseCalc(FilterResponseWidget * w, std::vector<F32>& response)
+            : QThread(w),
+              w(w), response(response), doStop(false)
+        { }
+
+        virtual void run() Q_DECL_OVERRIDE;
+
+        void calc(uint from, uint to);
+        void stop();
+
+        FilterResponseWidget * w;
+        std::vector<F32>& response;
+        uint from, to;
+        volatile bool doStop;
+
+        AUDIO::MultiFilter filter;
+    };
+}
+
 FilterResponseWidget::FilterResponseWidget(QWidget *parent)
     : QWidget       (parent),
       filter_       (new AUDIO::MultiFilter()),
       response_     (128),
       sampleRate_   (44100),
+      bufferSize_   (1024),
       lowFreq_      (20),
-      logScale_     (false)
+      logScale_     (false),
+      thread_       (0)
 {
     setObjectName("_FilterResponseWidget");
 
@@ -40,15 +69,41 @@ FilterResponseWidget::FilterResponseWidget(QWidget *parent)
 
 FilterResponseWidget::~FilterResponseWidget()
 {
+    if (thread_ && thread_->isRunning())
+        ((ResponseCalc*)thread_)->stop();
+
     delete filter_;
 }
 
-void FilterResponseWidget::setFilter(const AUDIO::MultiFilter & f)
+void FilterResponseWidget::setFilter(const AUDIO::MultiFilter & f, bool upd)
 {
     *filter_ = f;
     filter_->setSampleRate(sampleRate_);
-    calcResponse_();
-    update();
+    if (upd)
+    {
+        calcResponse_();
+        update();
+    }
+}
+
+void FilterResponseWidget::setNumBands(uint num, bool upd)
+{
+    numBands_ = num;
+    if (upd)
+    {
+        calcResponse_();
+        update();
+    }
+}
+
+void FilterResponseWidget::setBufferSize(uint size, bool upd)
+{
+    bufferSize_ = size;
+    if (upd)
+    {
+        calcResponse_();
+        update();
+    }
 }
 
 void FilterResponseWidget::mousePressEvent(QMouseEvent * e)
@@ -144,28 +199,75 @@ void FilterResponseWidget::calcResponse_()
              << filter_->typeName() << " f=" << filter_->frequency()
              << " r=" << filter_->resonance() << " o=" << filter_->order());
 
-    std::vector<F32>
-            input(2000),
-            output(input.size());
-
-    for (uint j=0; j<response_.size(); ++j)
+    if (!thread_)
+        thread_ = new ResponseCalc(this, response_);
+    else
     {
-        const F32 freq = freqForBand(j);
+        ((ResponseCalc*)thread_)->stop();
+    }
 
-        // create a sine tone
-        for (uint i=0; i<input.size(); ++i)
-            input[i] = std::sin(F32(i) / sampleRate_ * TWO_PI * freq);
+    response_.resize(numBands_);
 
-        // filter it
-        filter_->reset();
-        filter_->process(&input[0], &output[0], input.size());
+    ((ResponseCalc*)thread_)->calc(0, response_.size()-1);
+}
 
-        // get amplitude
-        F32 amp = std::abs(output[0]);
-        for (uint i=1; i<output.size(); ++i)
-            amp = std::max(amp, std::abs(output[i]));
+namespace
+{
+    void ResponseCalc::run()
+    {
+        filter = w->filter();
 
-        response_[j] = amp;
+        std::vector<F32>
+                buffer(w->bufferSize());
+
+        for (uint j=from; j<=to; ++j)
+        {
+            if (doStop)
+                return;
+
+            const F32 freq = w->freqForBand(j);
+
+            // create a sine tone
+            const uint fadeoutp = buffer.size() * 0.8,
+                       fadeoutl = buffer.size() - fadeoutp;
+            for (uint i=0; i<buffer.size(); ++i)
+            {
+                // with fade-out
+                F32 f = i < fadeoutp ? 1.f :
+                             1.f - F32(i-fadeoutp) / fadeoutl;
+                buffer[i] = f * std::sin(F32(i) / w->sampleRate() * TWO_PI * freq);
+            }
+
+            if (doStop)
+                return;
+
+            // filter it
+            filter.reset();
+            filter.process(&buffer[0], &buffer[0], buffer.size());
+
+            // get amplitude
+            F32 amp = std::abs(buffer[0]);
+            for (uint i=1; i<buffer.size(); ++i)
+                amp = std::max(amp, std::abs(buffer[i]));
+
+            response[j] = amp;
+        }
+
+        w->update();
+    }
+
+    void ResponseCalc::calc(uint from, uint to)
+    {
+        doStop = false;
+        this->from = from;
+        this->to = to;
+        start();
+    }
+
+    void ResponseCalc::stop()
+    {
+        doStop = true;
+        wait();
     }
 }
 

@@ -24,7 +24,8 @@ namespace GUI {
 
 AudioFilterDialog::AudioFilterDialog(QWidget *parent) :
     QDialog     (parent),
-    filter_     (new AUDIO::MultiFilter())
+    filter_     (new AUDIO::MultiFilter()),
+    display_    (new FilterResponseWidget(this))
 {
     setObjectName("AudioFilterDialog");
     setMinimumSize(320,240);
@@ -52,7 +53,6 @@ void AudioFilterDialog::createWidgets_()
 {
     auto lh = new QHBoxLayout(this);
 
-        display_ = new FilterResponseWidget(this);
         display_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         lh->addWidget(display_);
 
@@ -149,6 +149,35 @@ void AudioFilterDialog::createWidgets_()
             });
 
             lv->addStretch(1);
+
+            // resolution
+
+            label = new QLabel(tr("display resolution"), this);
+            lv->addWidget(label);
+
+            spin = new SpinBox(this);
+            lv->addWidget(spin);
+            spin->setMinimum(8);
+            spin->setMaximum(1024);
+            spin->setValue(display_->numBands());
+            spin->setSuffix(tr(" bands"));
+            connect(spin, &SpinBox::valueChanged, [=](int n)
+            {
+                display_->setNumBands(n);
+            });
+
+            label = new QLabel(tr("buffer length"), this);
+            lv->addWidget(label);
+
+            spin = new SpinBox(this);
+            lv->addWidget(spin);
+            spin->setMinimum(8);
+            spin->setMaximum(8192);
+            spin->setValue(display_->bufferSize());
+            connect(spin, &SpinBox::valueChanged, [=](int n)
+            {
+                display_->setBufferSize(n);
+            });
 }
 
 void AudioFilterDialog::saveFilter_()
@@ -157,6 +186,8 @@ void AudioFilterDialog::saveFilter_()
     settings->setValue("AudioFilterDialog/frequency", (Double)filter_->frequency());
     settings->setValue("AudioFilterDialog/resonance", (Double)filter_->resonance());
     settings->setValue("AudioFilterDialog/order", filter_->order());
+    settings->setValue("AudioFilterDialog/resolution", display_->numBands());
+    settings->setValue("AudioFilterDialog/bufferSize", display_->bufferSize());
 }
 
 void AudioFilterDialog::restoreFilter_()
@@ -165,6 +196,8 @@ void AudioFilterDialog::restoreFilter_()
     filter_->setFrequency(settings->value("AudioFilterDialog/frequency", (Double)filter_->frequency()).toDouble());
     filter_->setResonance(settings->value("AudioFilterDialog/resonance", (Double)filter_->resonance()).toDouble());
     filter_->setOrder(settings->value("AudioFilterDialog/order", filter_->order()).toInt());
+    display_->setNumBands(settings->value("AudioFilterDialog/resolution", display_->numBands()).toInt(), false);
+    display_->setBufferSize(settings->value("AudioFilterDialog/bufferSize", display_->bufferSize()).toInt(), false);
 }
 
 void AudioFilterDialog::updateVisibility_()
