@@ -52,6 +52,7 @@ private:
     void checkDevices_();
     void updateDeviceBox_();
     void updateWidgets_();
+    void startAudio_(bool start);
 
     QString curApiName_, curDeviceName_;
     int curId_;
@@ -64,6 +65,9 @@ private:
     QToolButton * butTest_;
 
     QTimer * timer_;
+
+    class Private;
+    Private * p_;
 };
 
 } // namespace GUI

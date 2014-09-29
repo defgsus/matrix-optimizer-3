@@ -20,13 +20,37 @@
 #include "midisettingsdialog.h"
 #include "audio/mididevices.h"
 #include "audio/mididevice.h"
+#include "audio/audiodevice.h"
+#include "audio/tool/synth.h"
 #include "io/error.h"
 #include "io/applicationtime.h"
 #include "io/settings.h"
 #include "io/log.h"
+#include "tool/locklessqueue.h"
 
 namespace MO {
 namespace GUI {
+
+class MidiSettingsDialog::Private
+{
+public:
+
+    Private()
+        : device(new AUDIO::AudioDevice()),
+          synth(new AUDIO::Synth())
+    { }
+
+    ~Private()
+    {
+        delete synth;
+        delete device;
+    }
+
+    AUDIO::AudioDevice * device;
+    AUDIO::Synth * synth;
+    std::vector<F32> buffer;
+    LocklessQueue<AUDIO::MidiEvent> queue;
+};
 
 
 MidiSettingsDialog::MidiSettingsDialog(QWidget *parent)
@@ -34,7 +58,8 @@ MidiSettingsDialog::MidiSettingsDialog(QWidget *parent)
       curId_    (-1),
       curDevice_(0),
       devices_  (0),
-      timer_    (new QTimer(this))
+      timer_    (new QTimer(this)),
+      p_        (0)
 {
     setObjectName("_MidiSettingsDialig");
     setWindowTitle(tr("Midi settings"));
@@ -51,6 +76,9 @@ MidiSettingsDialog::MidiSettingsDialog(QWidget *parent)
 
 MidiSettingsDialog::~MidiSettingsDialog()
 {
+    if (p_->device && p_->device->isPlaying())
+        p_->device->close();
+    delete p_;
     delete devices_;
     delete curDevice_;
 }
@@ -211,6 +239,7 @@ void MidiSettingsDialog::onTest_(bool go)
         try
         {
             curDevice_->openInput(curId_);
+            startAudio_(true);
             timer_->start();
             return;
         }
@@ -223,6 +252,7 @@ void MidiSettingsDialog::onTest_(bool go)
         }
     }
 
+    startAudio_(false);
     delete curDevice_;
     curDevice_ = 0;
 }
@@ -238,6 +268,14 @@ void MidiSettingsDialog::onTimer_()
         AUDIO::MidiEvent e = curDevice_->read();
         textBuffer_->appendPlainText(
                     "[" + applicationTimeString() + "] " + e.toString());
+
+        if (p_->device->isPlaying())
+        {
+            if (e.command() == AUDIO::MidiEvent::C_NOTE_ON
+             || e.command() == AUDIO::MidiEvent::C_NOTE_OFF)
+                p_->queue.produce(e);
+        }
+
     }
 }
 
@@ -279,6 +317,48 @@ void MidiSettingsDialog::onOk_()
     saveSettings_();
     accept();
 }
+
+void MidiSettingsDialog::startAudio_(bool start)
+{
+    if (!start && p_)
+    {
+        p_->device->close();
+        return;
+    }
+
+    if (!p_)
+    {
+        p_ = new Private();
+
+        p_->device->setCallback([this](const F32 *, F32 * out)
+        {
+            AUDIO::MidiEvent event;
+            while (p_->queue.consume(event))
+            {
+                if (event.command() == AUDIO::MidiEvent::C_NOTE_ON)
+                    p_->synth->noteOn(event.key(), (Float)event.velocity()/255);
+                else
+                    p_->synth->noteOff(event.key());
+            }
+
+            F32 * buf = &p_->buffer[0];
+
+            p_->synth->process(buf, p_->buffer.size());
+
+            for (uint i=0; i<p_->buffer.size(); ++i, ++buf)
+                for (uint j=0; j<p_->device->numOutputChannels(); ++j, ++out)
+                    *out = *buf;
+        });
+    }
+
+    if (p_->device->initFromSettings())
+    {
+        p_->synth->setSustain(1);
+        p_->buffer.resize(p_->device->bufferSize());
+        p_->device->start();
+    }
+}
+
 
 } // namespace GUI
 } // namespace MO

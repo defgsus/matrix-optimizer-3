@@ -377,6 +377,7 @@ void MainWindow::createMainMenu_()
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
+            scene_->closeAudio();
             MidiSettingsDialog diag;
             diag.exec();
         });

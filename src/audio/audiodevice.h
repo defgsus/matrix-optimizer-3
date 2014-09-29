@@ -99,7 +99,7 @@ public:
     /** Returns true when an audio stream is initialized */
     bool ok() const { return ok_; }
     /** Returns true when the audio stream is running/playing */
-    bool playing() const { return play_; }
+    bool isPlaying() const { return play_; }
 
     /** name of the audio device */
     const QString& name() const { return name_; }
