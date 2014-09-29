@@ -93,12 +93,18 @@ public:
     {
         /** Forget new voice */
         VP_FORGET,
-        /** Stop oldest voice */
-        VP_OLDEST,
         /** Stop lowest voice */
         VP_LOWEST,
         /** Stop highest voice */
-        VP_HIGHEST
+        VP_HIGHEST,
+        /** Stop oldest voice */
+        VP_OLDEST,
+        /** Stop newest voice */
+        VP_NEWEST,
+        /** Stop the quitest voice */
+        VP_QUITEST,
+        /** Stop the loudest voice */
+        VP_LOUDEST
     };
 
     static const QStringList voicePolicyIds;

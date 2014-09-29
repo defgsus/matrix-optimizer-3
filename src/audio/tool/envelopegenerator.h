@@ -36,15 +36,26 @@ public:
 
     uint sampleRate() const { return sr_; }
 
+    /** Returns true when envelope was triggered and has not
+        elapsed the release state. */
+    bool active() const { return active_; }
+
+    /** Returns the current state */
+    EnvelopeState state() const { return state_; }
+
     /** Returns current envelope value */
     F value() const { return value_; }
-
-    bool active() const { return active_; }
 
     F attack() const { return attack_; }
     F decay() const { return decay_; }
     F sustain() const { return sustain_; }
     F release() const { return release_; }
+
+    /** Returns true if this envelope is at a later state than @p other */
+    bool laterThan(const EnvelopeGenerator& other) { return state_ > other.state_; }
+
+    /** Returns true if this envelope is at an earlier state than @p other */
+    bool earlierThan(const EnvelopeGenerator& other) { return state_ < other.state_; }
 
     // ----------- setter ------------
 

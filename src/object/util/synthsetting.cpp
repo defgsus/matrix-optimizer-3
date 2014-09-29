@@ -42,8 +42,8 @@ void SynthSetting::createParameters(const QString &id_suffix)
                                        tr("The number of polyphonic voices"),
                                        synth_->numberVoices(), 1, 512, 1, true, false);
 
-    p_policy_ = o_->createSelectParameter("voice_policy", tr("voice policy"),
-                                          tr("Sets the policy to use when the maximum polyphony "
+    p_policy_ = o_->createSelectParameter("voice_policy", tr("voice reuse policy"),
+                                          tr("Sets the policy to apply when the maximum polyphony "
                                              "is reached and a new note-on is requested"),
                                           AUDIO::Synth::voicePolicyIds,
                                           AUDIO::Synth::voicePolicyNames,

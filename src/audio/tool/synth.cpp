@@ -50,6 +50,8 @@ class SynthVoice::Private
 
     { }
 
+    Double curLevel() const { return velo * env.value(); }
+
     Synth * synth;
 
     bool active, cued;
@@ -136,7 +138,7 @@ class Synth::Private
 public:
     Private(Synth * s)
         : synth         (s),
-          voicePolicy   (Synth::VP_OLDEST),
+          voicePolicy   (Synth::VP_QUITEST),
           sampleRate    (44100),
           filterOrder   (1),
           unisonVoices  (1),
@@ -250,44 +252,86 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
         {
             // decide which to overwrite
 
-            if (voicePolicy == Synth::VP_LOWEST)
-            {
-                auto j = i;
-                Double f = (*i)->p_->freq;
-                ++j;
-                for (; j != voices.end(); ++j)
-                if ((*j)->p_->freq < f)
-                {
-                    f = (*j)->p_->freq;
-                    i = j;
-                }
+            // this macro compares the value__s of each voice
+            // and returns the voice to reuse in 'i'
+            // it also checks for the envelope state and
+            // rather reuses voices that are at a later state
+            #define MO__FIND_VOICE_ENV(value__, operator__)                 \
+            {                                                               \
+                auto j = i;                                                 \
+                auto val1 = (*i)->p_->value__;                              \
+                auto val2 = val1;                                           \
+                ++j;                                                        \
+                for (; j != voices.end(); ++j)                              \
+                {                                                           \
+                    auto val = (*j)->p_->value__;                           \
+                    if (val operator__ val1                                 \
+                        && (*j)->p_->env.state() > (*i)->p_->env.state())   \
+                    {                                                       \
+                        val1 = val;                                         \
+                        i = j;                                              \
+                    }                                                       \
+                    else if (val operator__ val2)                           \
+                    {                                                       \
+                        val2 = val;                                         \
+                        i = j;                                              \
+                    }                                                       \
+                }                                                           \
             }
-            else
-            if (voicePolicy == Synth::VP_HIGHEST)
-            {
-                auto j = i;
-                Double f = (*i)->p_->freq;
-                ++j;
-                for (; j != voices.end(); ++j)
-                if ((*j)->p_->freq > f)
-                {
-                    f = (*j)->p_->freq;
-                    i = j;
-                }
+
+            // same as above but does not care for envelope states
+            #define MO__FIND_VOICE_NO_ENV(value__, operator__)              \
+            {                                                               \
+                auto j = i;                                                 \
+                auto val1 = (*i)->p_->value__;                              \
+                ++j;                                                        \
+                for (; j != voices.end(); ++j)                              \
+                {                                                           \
+                    auto val = (*j)->p_->value__;                           \
+                    f (val operator__ val1)                                 \
+                    {                                                       \
+                        val1 = val;                                         \
+                        i = j;                                              \
+                    }                                                       \
+                }                                                           \
             }
-            else
-            //if (voicePolicy == Synth::VP_OLDEST)
+
+            // XXX place for branching with a yet missing option in Synth
+            #define MO__FIND_VOICE(value__, operator__) \
+                    MO__FIND_VOICE_ENV(value__, operator__)
+
+            switch (voicePolicy)
             {
-                auto j = i;
-                uint l = (*i)->p_->lifetime;
-                ++j;
-                for (; j != voices.end(); ++j)
-                if ((*j)->p_->lifetime > l)
-                {
-                    l = (*j)->p_->lifetime;
-                    i = j;
-                }
+                case Synth::VP_LOWEST:
+                    MO__FIND_VOICE(freq, <);
+                break;
+
+                case Synth::VP_HIGHEST:
+                    MO__FIND_VOICE(freq, >);
+                break;
+
+                case Synth::VP_OLDEST:
+                    MO__FIND_VOICE(lifetime, >);
+                break;
+
+                case Synth::VP_NEWEST:
+                    MO__FIND_VOICE(lifetime, <);
+                break;
+
+                case Synth::VP_QUITEST:
+                    MO__FIND_VOICE(curLevel(), <);
+                break;
+
+                case Synth::VP_LOUDEST:
+                    MO__FIND_VOICE(curLevel(), >);
+                break;
+
+                case Synth::VP_FORGET: break;
             }
+
+            #undef MO__FIND_VOICE
+            #undef MO__FIND_VOICE_ENV
+            #undef MO__FIND_VOICE_NO_ENV
         }
 
         MO_DEBUG_SYNTH("Synth::noteOn(): reusing voice " << (*i)->p_->index);
@@ -297,7 +341,7 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
 
     SynthVoice::Private * v = (*i)->p_;
 
-    //MO_DEBUG("start voice " << freq << "hz " << velocity);
+    MO_DEBUG_SYNTH("init voice " << v->index << " f=" << freq << "hz " << " v=" << velocity);
 
     v->lifetime = 0;
     v->active = false;
@@ -546,22 +590,41 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
 // ------------------------------------ synth ------------------------------------
 
 const QStringList Synth::voicePolicyIds =
-{ "fgt", "old", "low", "high" };
+{
+    "fgt",
+    "low", "high",
+    "old", "new",
+    "quite", "loud"
+};
 
 const QStringList Synth::voicePolicyNames =
-{ QObject::tr("forget"), QObject::tr("oldest"), QObject::tr("lowest"), QObject::tr("highest") };
+{
+    QObject::tr("forget"),
+    QObject::tr("lowest"),
+    QObject::tr("highest"),
+    QObject::tr("oldest"),
+    QObject::tr("newest"),
+    QObject::tr("quitest"),
+    QObject::tr("loudest")
+};
 
 const QStringList Synth::voicePolicyStatusTips =
 {
     QObject::tr("Don't start a new voice when maximum polyphony is reached"),
-    QObject::tr("Stop and reuse the oldest voice when maximum polyphony is reached"),
     QObject::tr("Stop and reuse the lowest voice when maximum polyphony is reached"),
-    QObject::tr("Stop and reuse the highest voice when maximum polyphony is reached")
+    QObject::tr("Stop and reuse the highest voice when maximum polyphony is reached"),
+    QObject::tr("Stop and reuse the oldest voice when maximum polyphony is reached"),
+    QObject::tr("Stop and reuse the newest voice when maximum polyphony is reached"),
+    QObject::tr("Stop and reuse the quitest voice when maximum polyphony is reached"),
+    QObject::tr("Stop and reuse the loudest voice when maximum polyphony is reached")
 };
 
 const QList<int> Synth::voicePolicyEnums =
 {
-    VP_FORGET, VP_OLDEST, VP_LOWEST, VP_HIGHEST
+    VP_FORGET,
+    VP_LOWEST, VP_HIGHEST,
+    VP_OLDEST, VP_NEWEST,
+    VP_QUITEST, VP_LOUDEST
 };
 
 Synth::Synth()
