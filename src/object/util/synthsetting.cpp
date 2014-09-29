@@ -265,6 +265,10 @@ void SynthSetting::feedSynthOnce(Double time, uint thread)
         auto voice = synth_->noteOn(note, gate);
         if (voice)
         {
+            MO_ASSERT(voice->index() < voiceData_.size(),
+                      "voiceData_ not initialized "
+                      << voice->index() << "/" << voiceData_.size());
+
             // attach VoiceData
             auto data = &voiceData_[voice->index()];
             data->timeStarted = time;

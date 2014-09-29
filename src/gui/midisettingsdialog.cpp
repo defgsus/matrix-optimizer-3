@@ -31,6 +31,10 @@
 namespace MO {
 namespace GUI {
 
+// Enables polyphonic output of Synth
+#define MO_MS_SYNTH_POLYOUT
+
+
 class MidiSettingsDialog::Private
 {
 public:
@@ -49,6 +53,9 @@ public:
     AUDIO::AudioDevice * device;
     AUDIO::Synth * synth;
     std::vector<F32> buffer;
+#ifdef MO_MS_SYNTH_POLYOUT
+    std::vector<F32*> buffers;
+#endif
     LocklessQueue<AUDIO::MidiEvent> queue;
 };
 
@@ -348,13 +355,32 @@ void MidiSettingsDialog::startAudio_(bool start)
 
             }
 
-            F32 * buf = &p_->buffer[0];
+#ifndef MO_MS_SYNTH_POLYOUT
 
+            // monophonic output
+            F32 * buf = &p_->buffer[0];
             p_->synth->process(buf, p_->buffer.size());
 
             for (uint i=0; i<p_->buffer.size(); ++i, ++buf)
                 for (uint j=0; j<p_->device->numOutputChannels(); ++j, ++out)
                     *out = *buf;
+#else
+            // polyphonic output
+            p_->synth->process(&p_->buffers[0], p_->device->bufferSize());
+
+            // mix back together
+            memset(out, 0, sizeof(F32) * p_->device->bufferSize() * p_->device->numOutputChannels());
+            for (uint i=0; i<p_->device->bufferSize(); ++i)
+            {
+                for (uint j=0; j<p_->synth->numberVoices(); ++j)
+                {
+                    const F32 * buf = p_->buffers[j];
+                    out[i * p_->device->numOutputChannels()
+                          + (j % p_->device->numOutputChannels())] += buf[i];
+                }
+            }
+#endif
+
         });
     }
 
@@ -372,7 +398,14 @@ void MidiSettingsDialog::startAudio_(bool start)
         p_->synth->setFilterDecay(3.5);
 
         p_->synth->setFilterSustain(0.5);
+#ifndef MO_MS_SYNTH_POLYOUT
         p_->buffer.resize(p_->device->bufferSize());
+#else
+        p_->buffer.resize(p_->device->bufferSize() * p_->synth->numberVoices());
+        p_->buffers.resize(p_->synth->numberVoices());
+        for (uint i=0; i<p_->synth->numberVoices(); ++i)
+            p_->buffers[i] = &p_->buffer[i * p_->device->bufferSize()];
+#endif
         p_->device->start();
     }
 }

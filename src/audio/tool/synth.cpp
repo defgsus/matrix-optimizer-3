@@ -14,7 +14,7 @@
 #include "io/log.h"
 #include "math/random.h"
 
-#if (1)
+#if (0)
 #   define MO_DEBUG_SYNTH(arg__) MO_DEBUG(arg__)
 #else
 #   define MO_DEBUG_SYNTH(unused__)
@@ -436,19 +436,20 @@ void Synth::Private::process(F32 *output, uint bufferLength)
 void Synth::Private::process(F32 ** outputs, uint bufferLength)
 {
     // for each voice
-    int voicecount = 0;
-    for (auto i : voices)
+    for (uint voicecount = 0; voicecount < voices.size(); ++voicecount)
     {
         F32 * output = outputs[voicecount];
-        SynthVoice::Private * v = i->p_;
+        SynthVoice::Private * v = voices[voicecount]->p_;
 
         // if voice is inactive (and won't become active)
         if (!v->active && !v->cued)
         {
-            //MO_DEBUG("unused " << v->index);
+            //MO_DEBUG_SYNTH("unused " << v->index);
+
             // clear output buffer
             memset(output, 0, sizeof(F32) * bufferLength);
-            break;
+
+            continue;
         }
 
         // where to start rendering
@@ -459,6 +460,8 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
         {
             if (v->startSample < bufferLength)
             {
+                MO_DEBUG_SYNTH("start cued voice " << v->index << " s=" << v->startSample);
+
                 // start at specified start-sample
                 start = v->startSample;
                 v->env.trigger();
@@ -468,9 +471,7 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
                 v->cued = false;
                 // send callback
                 if (cbStart_)
-                    cbStart_(i);
-
-                MO_DEBUG_SYNTH("start voice " << v->index << " s=" << start);
+                    cbStart_(voices[voicecount]);
 
                 // clear first part of buffer
                 memset(output, 0, sizeof(F32) * start);
@@ -481,7 +482,7 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
                 // if startsample is out of range
                 // don't check again
                 v->cued = false;
-                break;
+                continue;
             }
         }
 
@@ -517,14 +518,15 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
             // check for end of envelope
             if (!v->env.active())
             {
-                //MO_DEBUG("end " << v->index << " s=" << sample);
+                MO_DEBUG_SYNTH("voice end " << v->index << " s=" << sample);
+
                 v->active = false;
                 // clear rest of buffer
                 if (sample < bufferLength - 1)
                     memset(output+1, 0, sizeof(F32) * (bufferLength - sample - 1));
                 // send callback
                 if (cbEnd_)
-                    cbEnd_(i);
+                    cbEnd_(voices[voicecount]);
                 break;
             }
 
@@ -538,8 +540,6 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
 
         // count number of samples alive
         v->lifetime += bufferLength - start;
-
-        ++voicecount;
     }
 }
 
@@ -701,13 +701,18 @@ SynthVoice * Synth::noteOn(int note, Float velocity, uint startSample, void * us
 
         SynthVoice * v = p_->noteOn(startSample, freq + detune, note, velocity, 1, userData);
         if (v)
+        {
             lastv->p_->nextUnison = v;
+            lastv = v;
+        }
         else
         {
             MO_DEBUG_SYNTH("Synth::noteOn(): failed to created all unisono voices "
                      << i << "/" << p_->unisonVoices);
             return voice;
         }
+
+
     }
 
     return voice;
