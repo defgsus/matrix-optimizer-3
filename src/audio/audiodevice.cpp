@@ -265,13 +265,13 @@ void AudioDevice::stop()
     play_ = false;
 }
 
-bool AudioDevice::isAudioConfigured() const
+bool AudioDevice::isAudioConfigured()
 {
     const QString name = settings->getValue("Audio/device").toString();
     return !(name.isEmpty() || name == "None");
 }
 
-uint AudioDevice::numConfiguredInputChannels() const
+uint AudioDevice::numConfiguredInputChannels()
 {
     return settings->value("Audio/channelsIn", 0).toInt();
 }

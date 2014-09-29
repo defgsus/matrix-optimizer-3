@@ -83,7 +83,7 @@ MidiSettingsDialog::MidiSettingsDialog(QWidget *parent)
 
 MidiSettingsDialog::~MidiSettingsDialog()
 {
-    if (p_->device && p_->device->isPlaying())
+    if (p_ && p_->device->isPlaying())
         p_->device->close();
     delete p_;
     delete devices_;
@@ -124,11 +124,22 @@ void MidiSettingsDialog::createWidgets_()
         lh = new QHBoxLayout();
         lv->addLayout(lh);
 
-            butTest_ = new QToolButton(this);
-            lh->addWidget(butTest_);
-            butTest_->setText(tr("test input"));
-            butTest_->setCheckable(true);
-            connect(butTest_, SIGNAL(toggled(bool)), this, SLOT(onTest_(bool)));
+            auto lv2 = new QVBoxLayout();
+            lh->addLayout(lv2);
+
+                butTest_ = new QToolButton(this);
+                lv2->addWidget(butTest_);
+                butTest_->setText(tr("test input"));
+                butTest_->setCheckable(true);
+                connect(butTest_, SIGNAL(toggled(bool)), this, SLOT(onTest_(bool)));
+
+                butTestSynth_ = new QToolButton(this);
+                lv2->addWidget(butTestSynth_);
+                butTestSynth_->setText(tr("test synthesizer"));
+                butTestSynth_->setCheckable(true);
+                connect(butTestSynth_, SIGNAL(toggled(bool)), this, SLOT(onTestSynth_(bool)));
+
+                lv2->addStretch(1);
 
             textBuffer_ = new QPlainTextEdit(this);
             lh->addWidget(textBuffer_);
@@ -210,6 +221,8 @@ void MidiSettingsDialog::updateDeviceBox_()
 void MidiSettingsDialog::updateWidgets_()
 {
     butTest_->setEnabled(curId_ >= 0);
+    butTestSynth_->setEnabled(curId_ >= 0
+                              && AUDIO::AudioDevice::isAudioConfigured());
 }
 
 void MidiSettingsDialog::onApiChoosen_()
@@ -240,13 +253,27 @@ void MidiSettingsDialog::onDeviceChoosen_()
 
 void MidiSettingsDialog::onTest_(bool go)
 {
+    butTestSynth_->setEnabled(!go);
+    startTest_(go, false);
+}
+
+void MidiSettingsDialog::onTestSynth_(bool go)
+{
+    butTest_->setDown(go);
+    butTest_->setEnabled(!go);
+    startTest_(go, true);
+}
+
+void MidiSettingsDialog::startTest_(bool go, bool audio)
+{
     if (go)
     {
         curDevice_ = new AUDIO::MidiDevice();
         try
         {
             curDevice_->openInput(curId_);
-            startAudio_(true);
+            if (audio)
+                startAudio_(true);
             timer_->start();
             return;
         }
@@ -255,7 +282,8 @@ void MidiSettingsDialog::onTest_(bool go)
             QMessageBox::critical(this, tr("midi"),
                                   tr("Could not open the midi input device\n%1")
                                   .arg(e.what()));
-            butTest_->setChecked(false);
+            butTest_->setDown(false);
+            butTestSynth_->setDown(false);
         }
     }
 
@@ -276,11 +304,10 @@ void MidiSettingsDialog::onTimer_()
         textBuffer_->appendPlainText(
                     "[" + applicationTimeString() + "] " + e.toString());
 
-        if (p_->device->isPlaying())
+        if (p_ && p_->device->isPlaying())
         {
-            //if (e.command() == AUDIO::MidiEvent::C_NOTE_ON
-            //|| e.command() == AUDIO::MidiEvent::C_NOTE_OFF)
-                p_->queue.produce(e);
+            // send all midi events to audio thread
+            p_->queue.produce(e);
         }
 
     }
@@ -329,7 +356,8 @@ void MidiSettingsDialog::startAudio_(bool start)
 {
     if (!start && p_)
     {
-        p_->device->close();
+        if (p_->device->isPlaying())
+            p_->device->close();
         return;
     }
 

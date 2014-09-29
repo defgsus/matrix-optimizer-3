@@ -120,10 +120,10 @@ public:
     // --------- initialisation ----------
 
     /** Returns true when audio-settings are already made. */
-    bool isAudioConfigured() const;
+    static bool isAudioConfigured();
 
     /** Returns the number of input channels in configuration */
-    uint numConfiguredInputChannels() const;
+    static uint numConfiguredInputChannels();
 
     /** Initializes a device/stream from the stored settings.
         Returns true when this worked.
