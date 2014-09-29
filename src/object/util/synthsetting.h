@@ -76,7 +76,7 @@ public:
     /** Feeds all parameters at the given time to the synthesizer and
         starts voices according to gate track.
         The gate track is checked for the whole audio block.
-        @p samplePos is translated into seconds with the samplerate of the Synth object.
+        @p samplePos is translated into seconds with the samplerate of the parent object.
         Subsequently AUDIO::Synth::process() can be called. */
     void feedSynth(SamplePos samplePos, uint thread, uint bufferSize);
 
@@ -116,6 +116,7 @@ private:
         * p_frelease_;
 
     ParameterSelect
+        * p_policy_,
         * p_waveform_,
         * p_filterType_,
         * p_combinedUnison_;

@@ -41,6 +41,15 @@ void SynthSetting::createParameters(const QString &id_suffix)
                                        tr("The number of polyphonic voices"),
                                        synth_->numberVoices(), 1, 512, 1, true, false);
 
+    p_policy_ = o_->createSelectParameter("voice_policy", tr("voice policy"),
+                                          tr("Sets the policy to use when the maximum polyphony "
+                                             "is reached and a new note-on is requested"),
+                                          AUDIO::Synth::voicePolicyIds,
+                                          AUDIO::Synth::voicePolicyNames,
+                                          AUDIO::Synth::voicePolicyStatusTips,
+                                          AUDIO::Synth::voicePolicyEnums,
+                                          (int)synth_->voicePolicy(), true, false);
+
     p_volume_ = o_->createFloatParameter("volume" + id_suffix, tr("volume"),
                                        tr("Master volume of all played voices"),
                                        synth_->volume(), 0.0, 100000.0, 0.1);
@@ -214,6 +223,8 @@ void SynthSetting::updateSynthParameters(Double time, uint thread)
     if (notesOct != synth_->notesPerOctave())
         synth_->setNotesPerOctave(notesOct);
 
+    synth_->setVoicePolicy((AUDIO::Synth::VoicePolicy)
+                           p_policy_->baseValue());
     synth_->setVolume(p_volume_->value(time, thread));
     synth_->setBaseFrequency(p_baseFreq_->value(time, thread));
     synth_->setCombinedUnison(p_combinedUnison_->value(time, thread));
@@ -267,7 +278,7 @@ void SynthSetting::feedSynth(SamplePos samplePos, uint thread, uint bufferSize)
     for (uint i=0; i<bufferSize; ++i)
     {
         const Double
-                time = Double(samplePos + i) / synth_->sampleRate(),
+                time = Double(samplePos + i) * o_->sampleRateInv(),
                 gate = gate_->input(p_gate_->value(time, thread));
 
         if (gate > 0)
@@ -277,13 +288,15 @@ void SynthSetting::feedSynth(SamplePos samplePos, uint thread, uint bufferSize)
             const int note = p_note_->value(time, thread);
 
             auto voice = synth_->noteOn(note, gate, i);
-            if (voice)
+            while (voice)
             {
                 // attach VoiceData
                 auto data = &voiceData_[voice->index()];
                 data->timeStarted = time;
                 data->thread = thread;
                 voice->setUserData(data);
+
+                voice = voice->nextUnisonVoice();
             }
         }
     }

@@ -101,6 +101,11 @@ public:
         VP_HIGHEST
     };
 
+    static const QStringList voicePolicyIds;
+    static const QStringList voicePolicyNames;
+    static const QStringList voicePolicyStatusTips;
+    static const QList<int> voicePolicyEnums;
+
     Synth();
     ~Synth();
 
@@ -108,6 +113,8 @@ public:
 
     uint sampleRate() const;
     uint numberVoices() const;
+    VoicePolicy voicePolicy() const;
+
     Double volume() const;
     bool combinedUnison() const;
     uint unisonVoices() const;
@@ -147,6 +154,9 @@ public:
         Currently, this immidiately stops and destroys all voices,
         so all voices you got from noteOn() will be invalid! */
     void setNumberVoices(uint num);
+
+    /** Sets the policy to use when maximum polyphony is reached on noteOn() */
+    void setVoicePolicy(VoicePolicy policy);
 
     // below values are used per voice on noteOn()
 

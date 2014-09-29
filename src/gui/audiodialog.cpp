@@ -521,6 +521,7 @@ void AudioDialog::startTone_()
         device_->start();
         timer_->start();
         envWidget_->setVisible(true);
+        envWidget_->setAnimating(true);
     }
     catch (AudioException& e)
     {
@@ -541,6 +542,7 @@ void AudioDialog::stopTone_()
     timer_->stop();
     if (device_)
     {
+        envWidget_->setAnimating(false);
         envWidget_->setVisible(false);
         device_->stop();
         device_->close();
