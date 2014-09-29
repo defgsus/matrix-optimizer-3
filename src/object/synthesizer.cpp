@@ -136,6 +136,7 @@ void Synthesizer::setNumberThreads(uint num)
 
     audioBuffers_.resize(num);
     audioPos_.resize(num);
+    audioPosFifo_.resize(num);
 }
 
 void Synthesizer::setBufferSize(uint bufferSize, uint thread)
@@ -148,8 +149,9 @@ void Synthesizer::setBufferSize(uint bufferSize, uint thread)
         audioBuffers_[thread][i] = audios_[i]->samples(thread);
 
     audioPos_[thread].resize(audios_.size());
-    for (int i=0; i<audios_.size(); ++i)
-        audioPos_[thread][i].resize(bufferSize);
+    audioPosFifo_[thread].resize(audios_.size());
+    for (auto & f : audioPosFifo_[thread])
+        f.clear();
 }
 
 void Synthesizer::setCallbacks_()
@@ -166,16 +168,21 @@ void Synthesizer::setCallbacks_()
             // get info that SynthSetting attached to the voice
             auto data = static_cast<SynthSetting::VoiceData*>(v->userData());
 
+            VoicePos_ p;
+
             // set audio-source's transformation matrix
-            const Mat4 trans = glm::translate(Mat4(1.f),
+            p.trans = glm::translate(Mat4(1.f),
                           Vec3(
                               p_audioX_->value(data->timeStarted, data->thread),
                               p_audioY_->value(data->timeStarted, data->thread),
                               p_audioZ_->value(data->timeStarted, data->thread)
                           ));
 
-            for (uint i=v->startSample(); i<bufferSize(data->thread); ++i)
-                audioPos_[data->thread][v->index()][i] = trans;
+            p.sample = v->startSample();
+            p.sceneTime = data->timeStarted;
+
+            // add to fifo
+            audioPosFifo_[data->thread][v->index()].push_back(p);
         });
     }
 }
@@ -186,12 +193,13 @@ void Synthesizer::updateAudioTransformations(Double, uint thread)
 
     for (int i=0; i<audios_.size(); ++i)
     {
-        audios_[i]->setTransformation(trans * audioPos_[MO_AUDIO_THREAD][i][
-                                      bufferSize(MO_AUDIO_THREAD)-1], thread, 0);
+        // XXX It is quite hacky to pull the audio-thread information here
+        // because there might be more than one audio-thread in the future!
+        audios_[i]->setTransformation(trans * audioPos_[MO_AUDIO_THREAD][i], thread, 0);
     }
 }
 
-void Synthesizer::updateAudioTransformations(Double, uint size, uint thread)
+void Synthesizer::updateAudioTransformations(Double sceneTime, uint size, uint thread)
 {
     if (!p_polyAudio_->baseValue())
     for (auto a : audios_)
@@ -200,14 +208,32 @@ void Synthesizer::updateAudioTransformations(Double, uint size, uint thread)
         a->setTransformation(transformations(thread), thread);
     }
     else
-    {
-        for (uint j=0; j<size; ++j)
+    {            
+        for (int i=0; i<audios_.size(); ++i)
         {
-            const Mat4 trans = transformation(thread, j);
-
-            for (int i=0; i<audios_.size(); ++i)
+            for (uint j=0; j<size; ++j)
             {
-                audios_[i]->setTransformation(trans * audioPos_[thread][i][j], thread, j);
+                Double time = sceneTime + sampleRateInv() * j;
+
+                // get object's transformation
+                const Mat4 trans = transformation(thread, j);
+
+                // get next audio transformation from fifo buffer
+                if (!audioPosFifo_[thread][i].empty()
+                        && time >= audioPosFifo_[thread][i].front().sceneTime)
+                {
+                    /*MO_DEBUG("new transformation: s=" << j
+                             << " ss=" << audioPosFifo_[thread][i].front().sample
+                             << " t=" << audioPosFifo_[thread][i].front().sceneTime);
+                    */
+                    audioPos_[thread][i] = audioPosFifo_[thread][i].front().trans;
+                    audioPosFifo_[thread][i].pop_front();
+                }
+
+                // current audiosource transformation
+                const Mat4 atrans = audioPos_[thread][i];
+
+                audios_[i]->setTransformation(trans * atrans, thread, j);
             }
         }
     }

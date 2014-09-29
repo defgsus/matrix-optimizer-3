@@ -11,6 +11,9 @@
 #ifndef MOSRC_OBJECT_SYNTHESIZER_H
 #define MOSRC_OBJECT_SYNTHESIZER_H
 
+#include <vector>
+#include <deque>
+
 #include "object.h"
 
 namespace MO {
@@ -47,14 +50,23 @@ protected:
     void updateAudioSources_();
     void setCallbacks_();
 
+    struct VoicePos_
+    {
+        uint sample;
+        Double sceneTime;
+        Mat4 trans;
+    };
+
     SynthSetting * synth_;
 
     QList<AUDIO::AudioSource*> audios_;
 
     /** [thread][audiosource] */
     std::vector<std::vector<F32*>> audioBuffers_;
-    /** [thread][audiosource][bufferSize] */
-    std::vector<std::vector<std::vector<Mat4>>> audioPos_;
+    /** [thread][audiosource] */
+    std::vector<std::vector<Mat4>> audioPos_;
+    /** [thread][audiosource][voice-in-time] */
+    std::vector<std::vector<std::deque<VoicePos_>>> audioPosFifo_;
 
     ParameterSelect
         * p_polyAudio_;

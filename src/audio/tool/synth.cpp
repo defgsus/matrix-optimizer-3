@@ -397,9 +397,9 @@ void Synth::Private::process(F32 *output, uint bufferLength)
             // put into buffer
             *output += s * volume * v->velo * v->env.value();
 
-            // process envelop
+            // process envelope
             v->env.next();
-            // check for end of envelop
+            // check for end of envelope
             if (!v->env.active())
             {
                 v->active = false;
@@ -408,7 +408,7 @@ void Synth::Private::process(F32 *output, uint bufferLength)
                 continue;
             }
 
-            // process filter envelop
+            // process filter envelope
             if (v->filter.type() != MultiFilter::T_BYPASS && v->fenvAmt != 0)
             {
                 v->filter.setFrequency(v->filterFreq + v->fenvAmt * v->fenv.next());
@@ -427,9 +427,10 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
         F32 * output = outputs[voicecount];
         SynthVoice::Private * v = i->p_;
 
+        // where to start rendering
         uint start = 0;
 
-        // start it?
+        // start voice?
         if (v->cued)
         {
             if (v->startSample < bufferLength)
@@ -491,6 +492,7 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
                 v->active = false;
                 // clear rest of buffer
                 memset(output, 0, sizeof(F32) * (bufferLength - sample));
+                MO_DEBUG("end s=" << sample);
                 if (cbEnd_)
                     cbEnd_(i);
                 break;
