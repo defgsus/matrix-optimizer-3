@@ -18,7 +18,11 @@
 #include "geom/geometry.h"
 
 // must be last to avoid conflict with glbinding
-#include <GL/glu.h>
+#if defined(__APPLE__)
+ #include <OpenGL/glu.h>
+#else
+ #include <GL/glu.h>
+#endif
 
 #if (1)
 #   define MO_DEBUG_TESS(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
