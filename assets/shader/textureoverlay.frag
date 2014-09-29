@@ -9,7 +9,6 @@ out vec4 color;
 uniform sampler2D u_tex;
 uniform vec4 u_color;
 uniform float u_cam_angle;
-uniform float u_is_cube;
 uniform vec3 u_sphere_offset;
 
 #ifdef MO_FLAT
@@ -55,7 +54,7 @@ vec3 spherical(vec2 scr)
 }
 
 // transform spherical to cartesian coords
-vec2 cartesian(vec3 pos)
+vec2 sphere_surface_to_2d_fisheye(vec3 pos)
 {
     vec3 posn = normalize(pos);
     float u = atan(posn.y, posn.x),
@@ -66,53 +65,6 @@ vec2 cartesian(vec3 pos)
         );
 }
 
-// http://stackoverflow.com/questions/2656899/mapping-a-sphere-to-a-cube
-
-vec2 cube_map(in vec2 v)
-{
-    float l = length(v);
-    return v*sqrt(2.0);
-
-    /*
-    float a2 = v.x * v.x;
-    float b2 = v.y * v.y;
-    float inner1 = 2.0 * a2 - 2.0 * b2 - 3.0;
-    float inner2 = -sqrt(inner1 * inner1 - 24.0 * a2);
-    return vec2(
-                sqrt(inner2 + 2.0 * a2 - 2.0 * b2 + 3.0),
-                sqrt(inner2 - 2.0 * a2 + 2.0 * b2 + 3.0)
-                ) / sqrt(2.0)
-//            * vec2(v.x>0.0? 1. : -1, v.y>0.0? 1. : -1.)
-            ;
-*/
-    //s = sqrt(-sqrt((2 a^2-2 b^2-3)^2-24 a^2)+2 a^2-2 b^2+3)/sqrt(2)
-    //t = sqrt(-sqrt((2 a^2-2 b^2-3)^2-24 a^2)-2 a^2+2 b^2+3)/sqrt(2)
-}
-
-
-// transforms a 3d vector on a unit-sphere surface to a unit-cube position
-// XXX not working
-vec3 to_cube(in vec3 s)
-{
-    float beta = sqrt(1.0 - (s.x*s.x - s.y*s.y));
-    return vec3(s.x, s.y, s.z+beta);
-
-    /*
-    vec3 as = abs(s);
-
-    if (as.z > as.x && as.z > as.y)
-        return vec3(cube_map(s.xy), s.z > 0.0? 1.0 : -1.0);
-    if (as.x > as.y && as.x > as.z)
-        return vec3(s.x > 0.0? 1.0 : -1.0, cube_map(s.yz));
-    if (as.y > as.x && as.y > as.z)
-    {
-        vec2 c = cube_map(s.xz);
-        return vec3(c.x, s.y > 0.0? 1.0 : -1.0, c.y);
-    }
-
-    return s;
-    */
-}
 
 // get texture color from xy [-1,1]
 vec4 mo_texture(vec2 xy)
@@ -136,56 +88,30 @@ void main(void)
     // -------- equi-rect projection ------------
 #ifdef MO_EQUIRECT
 
-    vec3 sphere = spherical(scr) + u_sphere_offset;
-
+    float fac = tan((u_cam_angle / 360.0)*PI);
     // XXX u_sphere_offset not working correctly
-    vec3 cube = //to_cube(normalize(sphere));
-                //normalize(sphere * vec3(1.,1.,beta(sphere.xy)));
-                clamp(vec3(scr, -1.) + u_sphere_offset, -1., 1.0);
+    vec3 cube = (vec3(scr * fac, -1.) + u_sphere_offset) * v_dir_matrix;
 
-    vec3 surface = mix(sphere, cube, u_is_cube) * v_dir_matrix;
-
-    scr = cartesian(surface);
+    scr = sphere_surface_to_2d_fisheye(cube);
 
     float ang = atan(scr.x, scr.y) / PI;
     float dist = length(scr.xy);
     vec2 uv = 1.0 - vec2(ang, dist);
 
     vec4 col = mo_color(uv);
-    /*
-    {
-        vec3 cube = clamp(vec3(v_texCoord.xy * 2.0 - 1.0, -1.) + u_sphere_offset, -1., 1.0);
-
-        scr = cartesian(cube * v_dir_matrix);
-
-        float ang = atan(scr.x, scr.y) / PI;
-        float dist = length(scr.xy);
-        vec2 uv = 1.0 - vec2(ang, dist);
-
-        col = (col + mo_color(uv)) * 0.5;
-    }*/
 #endif
 
 #ifdef MO_FISHEYE
-    vec3 sphere = spherical(scr) + u_sphere_offset;
+    // XXX
+    float fac = tan((u_cam_angle / 360.0)*PI);
+    vec3 cube = (vec3(scr * fac, -1.) + u_sphere_offset) * v_dir_matrix;
 
-    vec3 cube = vec3(scr, -1.) + u_sphere_offset;
+    vec4 col1 = mo_color( sphere_surface_to_2d_fisheye(cube) );
+    cube.z = -cube.z;
+    vec4 col2 = mo_color( sphere_surface_to_2d_fisheye(cube) );
 
-    vec3 surface = mix(sphere, cube, 0.000001*u_is_cube) * v_dir_matrix;
+    vec4 col = mix(col2, col1, smoothstep(-0.1,0.1, cube.z));
 
-    vec4 col1 = mo_color( cartesian(surface) );
-    surface.z = -surface.z;
-    vec4 col2 = mo_color( cartesian(surface) );
-
-    vec4 col = mix(col2, col1, smoothstep(-0.1,0.1, sphere.z));
-
-    {
-        vec3 cube = clamp(vec3(v_texCoord.xy * 2.0 - 1.0, -1.) + u_sphere_offset, -1., 1.0);
-
-        scr = cartesian(cube * v_dir_matrix);
-
-        col = (col + mo_color(scr)) * 0.5;
-    }
 #endif
 
     // ------- flat on screen -------------------

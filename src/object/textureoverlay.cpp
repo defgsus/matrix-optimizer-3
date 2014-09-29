@@ -188,7 +188,6 @@ void TextureOverlay::initGl(uint /*thread*/)
         u_dir_matrix_ = quad_->shader()->getUniform("u_cvt", true);
         u_cam_angle_ = quad_->shader()->getUniform("u_cam_angle", true);
         u_sphere_offset_ = quad_->shader()->getUniform("u_sphere_offset", true);
-        u_is_cube_ = quad_->shader()->getUniform("u_is_cube", true);
     }
 
     if (postProc_->isEnabled())
@@ -223,8 +222,6 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
 
     if (actualPtype_ == PT_EQUIRECT || actualPtype_ == PT_FISHEYE)
     {
-        u_is_cube_->floats[0] = rs.cameraSpace().isCubemap() ? 1.f : 0.f;
-
         u_cam_angle_->floats[0] = rs.cameraSpace().isCubemap() ?
                                     90.f : rs.cameraSpace().fieldOfView();
 

@@ -271,8 +271,8 @@ void MidiSettingsDialog::onTimer_()
 
         if (p_->device->isPlaying())
         {
-            if (e.command() == AUDIO::MidiEvent::C_NOTE_ON
-             || e.command() == AUDIO::MidiEvent::C_NOTE_OFF)
+            //if (e.command() == AUDIO::MidiEvent::C_NOTE_ON
+            //|| e.command() == AUDIO::MidiEvent::C_NOTE_OFF)
                 p_->queue.produce(e);
         }
 
@@ -336,9 +336,16 @@ void MidiSettingsDialog::startAudio_(bool start)
             while (p_->queue.consume(event))
             {
                 if (event.command() == AUDIO::MidiEvent::C_NOTE_ON)
-                    p_->synth->noteOn(event.key(), (Float)event.velocity()/255);
-                else
+                    p_->synth->noteOn(event.key(), (Float)event.velocity()/127);
+                else if (event.command() == AUDIO::MidiEvent::C_NOTE_OFF)
                     p_->synth->noteOff(event.key());
+                else if (event.command() == AUDIO::MidiEvent::C_CONTROL_CHANGE)
+                {
+                    if (event.controller() == 1)
+                         p_->synth->setFilterFrequency(
+                             100.f + (Float)event.value() / 127 * 5000.f);
+                }
+
             }
 
             F32 * buf = &p_->buffer[0];
@@ -353,7 +360,18 @@ void MidiSettingsDialog::startAudio_(bool start)
 
     if (p_->device->initFromSettings())
     {
+        p_->synth->setNumberVoices(16);
         p_->synth->setSustain(1);
+        p_->synth->setRelease(3);
+        p_->synth->setWaveform(AUDIO::Waveform::T_TRIANGLE);
+        p_->synth->setFilterFrequency(100);
+        p_->synth->setFilterType(AUDIO::MultiFilter::T_24_LOW);
+        p_->synth->setFilterResonance(0.6);
+        p_->synth->setFilterKeyFollower(0.5);
+        p_->synth->setFilterEnvelopeKeyFollower(2);
+        p_->synth->setFilterDecay(3.5);
+
+        p_->synth->setFilterSustain(0.5);
         p_->buffer.resize(p_->device->bufferSize());
         p_->device->start();
     }

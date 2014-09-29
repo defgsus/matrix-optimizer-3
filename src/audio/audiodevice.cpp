@@ -77,8 +77,6 @@ int AudioDevice::callback_(const void * in, void * out)
 }
 
 
-
-
 // ---------------- ctor -------------
 
 AudioDevice::AudioDevice()
