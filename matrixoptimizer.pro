@@ -23,11 +23,9 @@ unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
 
-unix: { LIBS += -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
-
-win32: { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
-
-mac: { LIBS += -L/opt/local/lib/ -L/usr/local/lib/ -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
+mac  { LIBS += -L/opt/local/lib/ -L/usr/local/lib/ -lglbinding -lportaudio -lportmidi -lsndfile }
+else: unix: { LIBS += -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
+else: win32 { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
 
 ###################### files ##########################
 

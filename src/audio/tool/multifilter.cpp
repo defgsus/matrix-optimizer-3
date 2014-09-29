@@ -8,6 +8,8 @@
     <p>created 8/8/2014</p>
 */
 
+#include <cmath>
+
 #include "multifilter.h"
 #include "filter24.h"
 #include "chebychevfilter.h"

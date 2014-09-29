@@ -11,6 +11,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QThread>
+#include <cmath>
 
 #include "filterresponsewidget.h"
 #include "audio/tool/multifilter.h"

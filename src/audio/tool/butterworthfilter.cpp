@@ -8,6 +8,8 @@
     <p>created 27.09.2014</p>
 */
 
+#include <cmath>
+
 #include "butterworthfilter.h"
 #include "io/error.h"
 #include "math/constants.h"
