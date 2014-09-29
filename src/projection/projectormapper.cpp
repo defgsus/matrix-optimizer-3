@@ -55,12 +55,16 @@ void ProjectorMapper::recalc_()
     // we choose it so the lensradius will fit
     zNear_ = set_.lensRadius() * aspect_ / std::tan(MATH::deg_to_rad(set_.fov()) / 2);
 
-    zFar_ = zNear_ + set_.distance() + domeSet_.radius() + 0.1f;
+    // make far-plane always farther than distance to other side of dome
+    zFar_ = zNear_ + set_.distance() + domeSet_.radius() * 2.f + 0.1f;
 
+    // projector's projection matrix
     frustum_ = MATH::perspective(set_.fov(), (Float)set_.width()/set_.height(), zNear_, zFar_);
     // inverse frustum for ray direction
     inverseFrustum_ = glm::inverse(frustum_);
 
+    // get the shift to make zNear plane the actual lens surface
+    // XXX this is a hack!
     Vec4 tmp = inverseFrustum_ * Vec4(0,0,-zNear_,1);
     Float zNearShift = tmp.z / tmp.w;
 
@@ -71,8 +75,7 @@ void ProjectorMapper::recalc_()
     trans_ = MATH::rotate(trans_, -set_.longitude(), Vec3(1,0,0));
     trans_ = glm::translate(trans_, Vec3(0,0,domeSet_.radius() + set_.distance()
                                          - zNearShift));
-
-    // get actual position
+    // get actual position (lens centre)
     pos_ = Vec3( trans_ * Vec4(0,0,0,1) );
 
     // roll-pitch-yaw
