@@ -49,12 +49,28 @@ void ProjectorMapper::recalc_()
     // aspect ratio
     aspect_ = (Float)set_.width()/set_.height();
 
+    // ---- calc projection of projector ----
+
+    // near-plane is the surface of the projector lens
+    // we choose it so the lensradius will fit
+    zNear_ = set_.lensRadius() * aspect_ / std::tan(MATH::deg_to_rad(set_.fov()) / 2);
+
+    zFar_ = zNear_ + set_.distance() + domeSet_.radius() + 0.1f;
+
+    frustum_ = MATH::perspective(set_.fov(), (Float)set_.width()/set_.height(), zNear_, zFar_);
+    // inverse frustum for ray direction
+    inverseFrustum_ = glm::inverse(frustum_);
+
+    Vec4 tmp = inverseFrustum_ * Vec4(0,0,-zNear_,1);
+    Float zNearShift = tmp.z / tmp.w;
+
     // -- calc transformation matrix --
 
     trans_ = Mat4(1);
     trans_ = MATH::rotate(trans_, set_.latitude(), Vec3(0,1,0));
     trans_ = MATH::rotate(trans_, -set_.longitude(), Vec3(1,0,0));
-    trans_ = glm::translate(trans_, Vec3(0,0,domeSet_.radius() + set_.distance()));
+    trans_ = glm::translate(trans_, Vec3(0,0,domeSet_.radius() + set_.distance()
+                                         - zNearShift));
 
     // get actual position
     pos_ = Vec3( trans_ * Vec4(0,0,0,1) );
@@ -64,10 +80,7 @@ void ProjectorMapper::recalc_()
     trans_ = MATH::rotate(trans_, set_.yaw(),       Vec3(0,1,0));
     trans_ = MATH::rotate(trans_, set_.pitch(),     Vec3(1,0,0));
 
-    // projection matrix of this projector
-    frustum_ = MATH::perspective(set_.fov(), (Float)set_.width()/set_.height(),
-                                 0.0001f, glm::length(pos_) + domeSet_.radius() + 0.1f);
-    // inverse projection/view matrix (for backward mapping)
+    // inverse projection/view matrix for backward mapping
     inverseProjView_ = frustum_ * glm::inverse(trans_);
 
     valid_ = true;
@@ -75,21 +88,30 @@ void ProjectorMapper::recalc_()
 
 Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
 {
-    s = (s * 2 - 1) * aspect_;
+#if (1)
+    s = (s * 2 - 1);
     t = (t * 2 - 1);
 
-    Vec3 pos = set_.lensRadius() * std::sqrt((Float)2) * Vec3(s, t, 0);
-    return Vec3(trans_ * Vec4(pos, (Float)1));
+    Vec4 pos = inverseFrustum_ * Vec4(s, t, -zNear_, 1);
+    pos /= pos.w;
+
+    return Vec3(trans_ * pos);
+#else
+    Vec3 org, dir;
+    getRay(s, t, &org, &dir);
+    return org;
+#endif
 }
 
 void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direction) const
 {
+#if (0)
+
     s = (s * 2 - 1) * aspect_;
     t = (t * 2 - 1);
 
     Float lensfac = set_.lensRadius() * std::sqrt((Float)2);
     Vec3 pos = lensfac * Vec3(s, t, 0);
-
 
     // size of projection - one unit away
     //    c² = 2a²(1-cos(gamma))
@@ -109,6 +131,25 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
 
     *ray_origin =    Vec3(trans_ * Vec4(pos, (Float)1));
     *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));
+
+#else
+
+    s = (s * 2 - 1);
+    t = (t * 2 - 1);
+
+    Vec4 pos = inverseFrustum_ * Vec4(s, t, -zNear_, 1);
+    pos /= pos.w;
+
+    Vec4 dirf = inverseFrustum_ * Vec4(s, t, -zFar_, 1);
+    dirf /= dirf.w;
+
+    Vec3 dir = glm::normalize(Vec3(dirf));
+
+    *ray_origin =    Vec3(trans_ * pos);
+    *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));
+
+#endif
+
 }
 
 Vec3 ProjectorMapper::mapToDome(Float s, Float t) const

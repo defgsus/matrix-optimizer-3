@@ -56,7 +56,7 @@ void ProjectorSettings::deserialize(IO::XmlStream & io)
         width_ = io.expectInt("width");
         height_ = io.expectInt("height");
         fov_ = io.expectFloat("fov");
-        lensRadius_ = io.expectFloat("lens_radius");
+        lensRadius_ = std::max(Float(0.00001), io.expectFloat("lens_radius"));
         latitude_ = io.expectFloat("latitude");
         longitude_ = io.expectFloat("longitude");
         distance_ = io.expectFloat("distance");

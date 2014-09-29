@@ -14,6 +14,13 @@
 #include "io/log.h"
 #include "math/random.h"
 
+#if (1)
+#   define MO_DEBUG_SYNTH(arg__) MO_DEBUG(arg__)
+#else
+#   define MO_DEBUG_SYNTH(unused__)
+#endif
+
+
 namespace MO {
 namespace AUDIO {
 
@@ -234,6 +241,8 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
     {
         if (voicePolicy == Synth::VP_FORGET) return 0;
 
+        MO_DEBUG_SYNTH("Synth::noteOn() looking for voice to reuse");
+
         i = voices.begin();
 
         // policy doesn't matter for monophonic synth
@@ -281,9 +290,7 @@ SynthVoice * Synth::Private::noteOn(uint startSample, Double freq, int note, Flo
             }
         }
 
-        //MO_DEBUG("voice reuse " << (*i)->p_->index);
-
-        (*i)->p_->active = false;
+        MO_DEBUG_SYNTH("Synth::noteOn(): reusing voice " << (*i)->p_->index);
     }
 
     // (re-)init voice
@@ -463,7 +470,7 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
                 if (cbStart_)
                     cbStart_(i);
 
-                MO_DEBUG("start " << v->index << " s=" << start);
+                MO_DEBUG_SYNTH("start voice " << v->index << " s=" << start);
 
                 // clear first part of buffer
                 memset(output, 0, sizeof(F32) * start);
@@ -635,7 +642,7 @@ void Synth::setVoiceEndedCallback(std::function<void (SynthVoice *)> func) { p_-
 
 SynthVoice * Synth::noteOn(int note, Float velocity, uint startSample, void * userData)
 {
-    MO_DEBUG("Synth::noteOn(" << note << ", " << velocity << ", "
+    MO_DEBUG_SYNTH("Synth::noteOn(" << note << ", " << velocity << ", "
              << startSample << ", " << userData << ")");
 
     Double freq = p_->noteFreq.frequency(note);
@@ -643,6 +650,11 @@ SynthVoice * Synth::noteOn(int note, Float velocity, uint startSample, void * us
     SynthVoice * voice = p_->noteOn(startSample, freq, note, velocity,
                                     p_->combinedUnison? p_->unisonVoices : 1,
                                     userData);
+    if (!voice)
+    {
+        MO_DEBUG_SYNTH("Synth::noteOn() failed");
+        return 0;
+    }
 
     // no unisono mode?
     if (p_->unisonVoices < 2)
@@ -656,21 +668,25 @@ SynthVoice * Synth::noteOn(int note, Float velocity, uint startSample, void * us
             note += p_->unisonNoteStep;
             freq = p_->noteFreq.frequency(note);
 
-            // maximum (+/-) detune in phase-seconds
+            // maximum (+/-) detune in Hertz
             const Double maxdetune =
                     p_->unisonDetune / 200.0
                         // range of one note
-                        * (p_->noteFreq.frequency(note + 1) - freq)
-                        / sampleRate();
+                        * (p_->noteFreq.frequency(note + 1) - freq),
 
-            voice->p_->freq_c[i] += MATH::rnd(-maxdetune, maxdetune);
+                    detune = MATH::rnd(-maxdetune, maxdetune);
+
+            voice->p_->freq = freq + detune;
+            voice->p_->freq_c[i] = voice->p_->freq / sampleRate();
         }
         return voice;
     }
 
+    const uint numUnison = std::min(numberVoices(), unisonVoices());
+
     // generate inidivdual voices for each unisono voice
     SynthVoice * lastv = voice;
-    for (uint i=1; i<p_->unisonVoices; ++i)
+    for (uint i=1; i<numUnison; ++i)
     {
         note += p_->unisonNoteStep;
         freq = p_->noteFreq.frequency(note);
@@ -687,7 +703,11 @@ SynthVoice * Synth::noteOn(int note, Float velocity, uint startSample, void * us
         if (v)
             lastv->p_->nextUnison = v;
         else
+        {
+            MO_DEBUG_SYNTH("Synth::noteOn(): failed to created all unisono voices "
+                     << i << "/" << p_->unisonVoices);
             return voice;
+        }
     }
 
     return voice;

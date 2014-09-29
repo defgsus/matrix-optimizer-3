@@ -49,8 +49,8 @@ namespace
 FilterResponseWidget::FilterResponseWidget(QWidget *parent)
     : QWidget       (parent),
       filter_       (new AUDIO::MultiFilter()),
-      response_     (128),
       sampleRate_   (44100),
+      numBands_     (128),
       bufferSize_   (1024),
       lowFreq_      (20),
       logScale_     (false),

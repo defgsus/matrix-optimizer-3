@@ -52,8 +52,10 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
       cameraSettings_   (new CameraSettings()),
       copyOfCameraSettings_   (0)
 {
-    setObjectName("_ProjectorSetupDialog");
+    setObjectName("ProjectorSetupDialog");
     setMinimumSize(760,600);
+
+    settings->restoreGeometry(this);
 
     createWidgets_();
     createMenu_();
@@ -66,6 +68,8 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
 {
+    settings->saveGeometry(this);
+
     delete copyOfCameraSettings_;
     delete cameraSettings_;
     delete copyOfProjectorSettings_;

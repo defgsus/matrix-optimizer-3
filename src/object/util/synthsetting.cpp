@@ -17,6 +17,7 @@
 #include "object/param/parameterfloat.h"
 #include "audio/tool/synth.h"
 #include "audio/tool/floatgate.h"
+#include "io/error.h"
 
 namespace MO {
 
@@ -290,6 +291,9 @@ void SynthSetting::feedSynth(SamplePos samplePos, uint thread, uint bufferSize)
             auto voice = synth_->noteOn(note, gate, i);
             while (voice)
             {
+                MO_ASSERT(voice->index() < voiceData_.size(),
+                          "voiceData_ not initialized "
+                          << voice->index() << "/" << voiceData_.size());
                 // attach VoiceData
                 auto data = &voiceData_[voice->index()];
                 data->timeStarted = time;

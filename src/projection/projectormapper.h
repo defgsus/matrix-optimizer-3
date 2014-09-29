@@ -108,9 +108,9 @@ private:
     // -------- calculated --------
 
     bool valid_;
-    Float aspect_;
+    Float aspect_, zNear_, zFar_;
     Vec3 pos_;
-    Mat4 trans_, frustum_, inverseProjView_;
+    Mat4 trans_, frustum_, inverseFrustum_, inverseProjView_;
 };
 
 } // namespace MO

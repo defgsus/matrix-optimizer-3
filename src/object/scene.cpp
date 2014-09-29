@@ -242,6 +242,7 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
         ScopedSceneLockWrite lock(this);
         parent->addObject_(newChild, insert_index);
         parent->childrenChanged_();
+        newChild->onParametersLoaded();
         newChild->updateParameterVisibility();
         updateTree_();
 

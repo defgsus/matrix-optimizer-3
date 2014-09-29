@@ -57,7 +57,7 @@ public:
     void setWidth(int v) { width_ = v; }
     void setHeight(int v) { height_ = v; }
     void setFov(Float v) { fov_ = v; }
-    void setLensRadius(Float v) { lensRadius_ = v; }
+    void setLensRadius(Float v) { lensRadius_ = std::max(Float(0.0001), v); }
     void setLatitude(Float v) { latitude_ = v; }
     void setLongitude(Float v) { longitude_ = v; }
     void setDistance(Float v) { distance_ = v; }
