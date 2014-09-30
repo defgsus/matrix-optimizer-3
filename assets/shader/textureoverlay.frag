@@ -53,7 +53,7 @@ vec3 spherical(vec2 scr)
     return vec3( cx * sy, sx * sy, -cy );
 }
 
-// transform spherical to cartesian coords
+// transform sphere surface to "fulldome master"
 vec2 sphere_surface_to_2d_fisheye(vec3 pos)
 {
     vec3 posn = normalize(pos);
@@ -115,7 +115,10 @@ vec2 sphere_transform(vec2 xy)
     sph_squared = r_squared;
     uso_squared = dot(sphere_offset,sphere_offset);
     sph_times_uso = dot(sphere,sphere_offset);
-    t = (-sph_times_uso + sqrt(r_squared*sph_squared + sph_times_uso*sph_times_uso - uso_squared*sph_squared))/sph_squared;
+    t = (- sph_times_uso
+         + sqrt(r_squared * sph_squared
+                + sph_times_uso*sph_times_uso
+                - uso_squared*sph_squared)) / sph_squared;
 
     vec3 new_sphere = sphere_offset + t*sphere;
     return cartesian_mh(new_sphere);
@@ -125,8 +128,8 @@ vec2 sphere_transform(vec2 xy)
 // get texture color from xy [-1,1]
 vec4 mo_texture(vec2 xy)
 {
-    //return texture(u_tex, xy * 0.5 + 0.5);
-    return texture(u_tex, sphere_transform(xy) * 0.5 + 0.5);
+    return texture(u_tex, xy * 0.5 + 0.5);
+    //return texture(u_tex, sphere_transform(xy) * 0.5 + 0.5);
 }
 
 vec4 mo_color(vec2 xy)
@@ -147,26 +150,32 @@ void main(void)
 
     float fac = tan((u_cam_angle / 360.0)*PI);
     // XXX u_sphere_offset not working correctly
-    vec3 cube = (vec3(scr * fac, -1.) + u_sphere_offset) * v_dir_matrix;
+    vec3 cube = (vec3(scr * fac, -1.) /*+ u_sphere_offset*/) * v_dir_matrix;
 
     scr = sphere_surface_to_2d_fisheye(cube);
 
+    // fisheye to equi-rect
     float ang = atan(scr.x, scr.y) / PI;
     float dist = length(scr.xy);
     vec2 uv = 1.0 - vec2(ang, dist);
 
-    vec4 col = mo_color(uv);
+    vec4 col = mo_color(sphere_transform(uv));
 #endif
 
 #ifdef MO_FISHEYE
-    // XXX
     float fac = tan((u_cam_angle / 360.0)*PI);
-    vec3 cube = (vec3(scr * fac, -1.) + u_sphere_offset) * v_dir_matrix;
+    // XXX u_sphere_offset not working correctly
+    vec3 cube = (vec3(scr * fac, -1.)/* + u_sphere_offset*/) * v_dir_matrix;
 
-    vec4 col1 = mo_color( sphere_surface_to_2d_fisheye(cube) );
+    vec2 uv = sphere_transform(sphere_surface_to_2d_fisheye(cube));
+
+    // front half
+    vec4 col1 = mo_color( uv );
+    // back half
     cube.z = -cube.z;
-    vec4 col2 = mo_color( sphere_surface_to_2d_fisheye(cube) );
-
+    uv = sphere_transform(sphere_surface_to_2d_fisheye(cube));
+    vec4 col2 = mo_color( uv );
+    // mix together
     vec4 col = mix(col2, col1, smoothstep(-0.1,0.1, cube.z));
 
 #endif
