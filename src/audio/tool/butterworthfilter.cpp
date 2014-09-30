@@ -35,8 +35,6 @@ void ButterworthFilter::reset()
 {
     xm1_ = xm2_ = xm3_ = xm4_ =
     ym1_ = ym2_ = ym3_ = ym4_ = 0;
-    hxm1_ = hxm2_ = hxm3_ = hxm4_ =
-    hym1_ = hym2_ = hym3_ = hym4_ = 0;
 }
 
 void ButterworthFilter::updateCoefficients()
@@ -75,12 +73,6 @@ void ButterworthFilter::updateCoefficients()
             a4_ = a0_;
         break;
 
-        case T_BANDPASS:
-            ha0_ = wc4 / a_tmp;
-            ha1_ = 4.0 * wc4 / a_tmp;
-            ha2_ = 6.0 * wc4 / a_tmp;
-            ha3_ = ha1_;
-            ha4_ = ha0_;
         case T_HIGHPASS:
             a0_ = k4 / a_tmp;
             a1_ = -4.0 * k4 / a_tmp;
@@ -96,21 +88,9 @@ void ButterworthFilter::updateCoefficients()
             * std::pow(std::sin(fc*2), 2.5);
 
     // amplitude adjustment
-    if (type_ == T_BANDPASS)
-    {
-        F32 af = std::pow(reso, F32(0.35));
-        amp_ = F32(4) + af * F32(1./6.3 - 4.);
-    }
-    else
-    {
-        F32 af = std::pow(reso, F32(0.5));
-        amp_ = F32(1) + af * F32(1./3 - 1.);
-    }
+    F32 af = std::pow(reso, F32(0.5));
+    amp_ = F32(1) + af * F32(1./3 - 1.);
 
-/*
-    MO_DEBUG(b1_ << " " << b2_ << " " << b3_ << " " << b4_ << ", " <<
-             a0_ << " " << a1_ << " " << a2_ << " " << a3_ << " " << a4_);
-*/
 }
 
 void ButterworthFilter::process(const F32 *input, uint inputStride,
@@ -118,89 +98,34 @@ void ButterworthFilter::process(const F32 *input, uint inputStride,
 {
 #define MO__CLIP(v__) std::max(-clip_,std::min(clip_, (v__) ))
 
-    if (type_ != T_BANDPASS)
+    for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
     {
-        for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
-        {
-            const F32
+        const F32
 
-                tempx = MO__CLIP( *input ),
-                tempy = MO__CLIP(
-                            a0_ * tempx
-                          + a1_ * xm1_
-                          + a2_ * xm2_
-                          + a3_ * xm3_
-                          + a4_ * xm4_
-                          - b1_ * ym1_
-                          - b2_ * ym2_
-                          - b3_ * ym3_
-                          - b4_ * ym4_
-                        // hacked-in resonance
-                          + q_ * (xm1_ - xm3_));
-
-            xm4_ = xm3_;
-            xm3_ = xm2_;
-            xm2_ = xm1_;
-            xm1_ = tempx;
-            ym4_ = ym3_;
-            ym3_ = ym2_;
-            ym2_ = ym1_;
-            ym1_ = tempy;
-
-            *output = tempy * amp_;
-        }
-    }
-    else
-    {
-        for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
-        {
-            // highpass
-            F32 tempx = MO__CLIP( *input ),
-                tempy = MO__CLIP(
-                            a0_ * tempx
-                          + a1_ * xm1_
-                          + a2_ * xm2_
-                          + a3_ * xm3_
-                          + a4_ * xm4_
-                          - b1_ * ym1_
-                          - b2_ * ym2_
-                          - b3_ * ym3_
-                          - b4_ * ym4_);
-
-            xm4_ = xm3_;
-            xm3_ = xm2_;
-            xm2_ = xm1_;
-            xm1_ = tempx;
-            ym4_ = ym3_;
-            ym3_ = ym2_;
-            ym2_ = ym1_;
-            ym1_ = tempy;
-
-            // lowpass
-            tempx = tempy;
+            tempx = MO__CLIP( *input ),
             tempy = MO__CLIP(
-                            ha0_ * tempx
-                          + ha1_ * hxm1_
-                          + ha2_ * hxm2_
-                          + ha3_ * hxm3_
-                          + ha4_ * hxm4_
-                          - b1_ * hym1_
-                          - b2_ * hym2_
-                          - b3_ * hym3_
-                          - b4_ * hym4_
-                          + q_ * (xm1_ - xm3_));
+                        a0_ * tempx
+                      + a1_ * xm1_
+                      + a2_ * xm2_
+                      + a3_ * xm3_
+                      + a4_ * xm4_
+                      - b1_ * ym1_
+                      - b2_ * ym2_
+                      - b3_ * ym3_
+                      - b4_ * ym4_
+                    // hacked-in resonance
+                      + q_ * (xm1_ - xm3_));
 
-            hxm4_ = hxm3_;
-            hxm3_ = hxm2_;
-            hxm2_ = hxm1_;
-            hxm1_ = tempx;
-            hym4_ = hym3_;
-            hym3_ = hym2_;
-            hym2_ = hym1_;
-            hym1_ = tempy;
+        xm4_ = xm3_;
+        xm3_ = xm2_;
+        xm2_ = xm1_;
+        xm1_ = tempx;
+        ym4_ = ym3_;
+        ym3_ = ym2_;
+        ym2_ = ym1_;
+        ym1_ = tempy;
 
-            *output = tempy * amp_;
-        }
+        *output = tempy * amp_;
     }
 
 #undef MO__CLIP

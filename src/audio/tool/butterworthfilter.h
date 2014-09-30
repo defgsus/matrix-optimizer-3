@@ -33,8 +33,7 @@ public:
     enum FilterType
     {
         T_LOWPASS,
-        T_HIGHPASS,
-        T_BANDPASS
+        T_HIGHPASS
     };
 
     ButterworthFilter();
@@ -94,12 +93,9 @@ private:
     F32 freq_, reso_, clip_,
         q_, amp_,
         a0_, a1_, a2_, a3_, a4_,
-        ha0_, ha1_, ha2_, ha3_, ha4_,
         b1_, b2_, b3_, b4_,
         xm1_, xm2_, xm3_, xm4_,
-        ym1_, ym2_, ym3_, ym4_,
-        hxm1_, hxm2_, hxm3_, hxm4_,
-        hym1_, hym2_, hym3_, hym4_;
+        ym1_, ym2_, ym3_, ym4_;
 
 };
 

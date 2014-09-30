@@ -123,13 +123,13 @@ void ChebychevFilter::process(const F32 *input, uint inputStride,
             state3_ = MO__CLIP( b5_ * stage1_ + a5_ * stage0_ );
 
             // high pass == signal minus low pass
-            inp -= stage0_;
+            inp -= stage0_ * F32(0.5);
 
             // now lowpass on top
             bstage1_ = MO__CLIP( b0_ * inp + bstate0_ );
             bstate0_ = MO__CLIP( b1_ * inp + a1_ * bstage1_ + bstate1_ );
             bstate1_ = MO__CLIP( b2_ * inp + a2_ * bstage1_ );
-            *output  = MO__CLIP( b3_ * bstage1_ + bstate2_ );
+            *output  = MO__CLIP( (b3_ * bstage1_ + bstate2_) * F32(0.75) );
             bstate2_ = MO__CLIP( b4_ * bstage1_ + a4_ * *output + bstate3_ );
             bstate3_ = MO__CLIP( b5_ * bstage1_ + a5_ * *output );
         }

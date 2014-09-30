@@ -16,6 +16,7 @@
 #include "butterworthfilter.h"
 #include "fixedfilter.h"
 #include "io/error.h"
+#include "math/interpol.h"
 
 namespace MO {
 namespace AUDIO {
@@ -26,7 +27,7 @@ const QStringList MultiFilter::filterTypeIds =
   "nlow", "nhigh", "nband",
   "low24", "high24", "band24",
   "cheblow", "chebhigh", "chebband",
-  "butlow", "buthigh", "butband",
+  "butlow", "buthigh",
   "nbeslow", "nbeshigh", "nbesband",
   "nchebylow", "nchebyhigh", "nchebyband",
   "nbutlow", "nbuthigh", "nbutband"
@@ -48,7 +49,6 @@ const QStringList MultiFilter::filterTypeNames =
   QObject::tr("2nd chebychev band"),
   QObject::tr("4th butterworth low"),
   QObject::tr("4th butterworth high"),
-  QObject::tr("4th butterworth band"),
   QObject::tr("nth bessel low-pass"),
   QObject::tr("nth bessel high-pass"),
   QObject::tr("nth bessel band-pass"),
@@ -76,7 +76,6 @@ const QStringList MultiFilter::filterTypeStatusTips =
   QObject::tr("2nd order, 24db/oct, chebychev band-pass"),
   QObject::tr("4th order Linkwitz-Riley low-pass"),
   QObject::tr("4th order Linkwitz-Riley high-pass"),
-  QObject::tr("4th order Linkwitz-Riley band-pass"),
   QObject::tr("nth order bessel low-pass"),
   QObject::tr("nth order bessel high-pass"),
   QObject::tr("nth order bessel band-pass"),
@@ -104,7 +103,6 @@ const QList<int> MultiFilter::filterTypeEnums =
   T_CHEBYCHEV_BAND,
   T_BUTTERWORTH_LOW,
   T_BUTTERWORTH_HIGH,
-  T_BUTTERWORTH_BAND,
   T_NTH_BESSEL_LOW,
   T_NTH_BESSEL_HIGH,
   T_NTH_BESSEL_BAND,
@@ -274,9 +272,9 @@ void MultiFilter::updateCoefficients()
                 for (auto & f : po1_)
                     f = 0;
             }
+        case T_FIRST_ORDER_BAND:
         case T_FIRST_ORDER_LOW:
         case T_FIRST_ORDER_HIGH:
-        case T_FIRST_ORDER_BAND:
             // frequency coefficient
             q1_ = 1.f - std::min(1.f, std::exp(-2.f * 3.14159265f * freq_ / sr_));
             //q1_ = std::min(1.f, 2.f * freq_ / sr_);
@@ -293,8 +291,7 @@ void MultiFilter::updateCoefficients()
         case T_CHEBYCHEV_BAND: break;
 
         case T_BUTTERWORTH_LOW:
-        case T_BUTTERWORTH_HIGH:
-        case T_BUTTERWORTH_BAND: break;
+        case T_BUTTERWORTH_HIGH: break;
 
         case T_NTH_BESSEL_LOW:
         case T_NTH_BESSEL_HIGH:
@@ -306,6 +303,40 @@ void MultiFilter::updateCoefficients()
         case T_NTH_BUTTERWORTH_HIGH:
         case T_NTH_BUTTERWORTH_BAND: break;
     }
+
+
+    // amplitude adjustment for internal types
+    switch (type_)
+    {
+        case T_FIRST_ORDER_BAND:
+        case T_NTH_ORDER_BAND:
+            amp_ = F32(1) + q2_ * F32(1./5 - 1);
+            amp_ += MATH::smoothstep(F32(.94), F32(1), q2_) * (F32(1./70) - amp_);
+        break;
+
+        case T_FIRST_ORDER_LOW:
+        case T_NTH_ORDER_LOW:
+        {
+            F32 fac = std::pow(
+                        MATH::smoothstep(F32(0), F32(0.4), q1_) * F32(0.2) + F32(0.8) * q2_
+                        , F32(0.5));
+            amp_ = F32(1) + fac * F32(1./8 - 1);
+            amp_ += MATH::smoothstep(F32(.94), F32(1), q2_) * (F32(1./250) - amp_);
+        }
+        break;
+        case T_FIRST_ORDER_HIGH:
+        case T_NTH_ORDER_HIGH:
+        {
+            F32 fac = std::pow(
+                        MATH::smoothstep(F32(0), F32(0.4), q1_) * F32(0.2) + F32(0.8) * q2_
+                        , F32(0.5));
+            amp_ = F32(1) + fac * F32(1./8 - 1);
+            amp_ += MATH::smoothstep(F32(.90), F32(1), q2_) * (F32(1./250) - amp_);
+        }
+        default:
+        break;
+    }
+
 
     // init chebychev filter
     if (   type_ == T_CHEBYCHEV_LOW
@@ -357,8 +388,7 @@ void MultiFilter::updateCoefficients()
 
     // init butterworth filter
     if (   type_ == T_BUTTERWORTH_LOW
-        || type_ == T_BUTTERWORTH_HIGH
-        || type_ == T_BUTTERWORTH_BAND)
+        || type_ == T_BUTTERWORTH_HIGH)
     {
         if (!butter_)
             butter_ = new ButterworthFilter();
@@ -369,8 +399,6 @@ void MultiFilter::updateCoefficients()
             butter_->setType(ButterworthFilter::T_LOWPASS);
         else if (type_ == T_BUTTERWORTH_HIGH)
             butter_->setType(ButterworthFilter::T_HIGHPASS);
-        if (type_ == T_BUTTERWORTH_BAND)
-            butter_->setType(ButterworthFilter::T_BANDPASS);
         butter_->updateCoefficients();
     }
     else if (doReallocate_)
@@ -471,8 +499,8 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                 {
                     p0_ = p1_;
                     p1_ = s1_;
-                    *output = s1_ += q1_ * (*input - s1_)
-                                   + q2_ * (s1_ - p0_);
+                    *output = (s1_ += q1_ * (*input - s1_)
+                                    + q2_ * (s1_ - p0_)) * amp_;
                 }
         break;
 
@@ -492,7 +520,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                     s1_ += q1_ * (*input - s1_)
                          + q2_ * (s1_ - p0_);
                     // highpass == input minus lowpass
-                    *output = *input - s1_;
+                    *output = (*input - s1_) * amp_;
                 }
         break;
 
@@ -514,7 +542,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                     p1_ = s2_;
                     s2_ += q1_ * ((*input - s1_) - s2_)
                          + q2_ * (s2_ - p0_);
-                    *output = s2_;
+                    *output = s2_ * amp_;
                 }
         break;
 
@@ -543,10 +571,10 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                     {
                         po0_[j] = po1_[j];
                         po1_[j] = so1_[j];
-                        so1_[j] += q1_ * (so1_[j-1] - so1_[j])
-                                 + q2_ * (so1_[j] - po0_[j]);
+                        so1_[j] += (q1_ * (so1_[j-1] - so1_[j])
+                                  + q2_ * (so1_[j] - po0_[j])) * amp_;
                     }
-                    *output = so1_[order_-1];
+                    *output = so1_[order_-1] * amp_;
                 }
         break;
 
@@ -581,9 +609,9 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                         po1_[j] = so1_[j];
                         so1_[j] += q1_ * (tmp - so1_[j])
                                  + q2_ * (so1_[j] - po0_[j]);
-                        tmp = tmp - so1_[j];
+                        tmp = (tmp - so1_[j]) * amp_;
                     }
-                    *output = tmp;
+                    *output = tmp * amp_;
                 }
         break;
 
@@ -617,10 +645,10 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                         so1_[j] += q1_ * (so2_[j-1] - so1_[j]);
                         po0_[j] = po1_[j];
                         po1_[j] = so2_[j];
-                        so2_[j] += q1_ * ((so2_[j-1] - so1_[j]) - so2_[j])
-                                 + q2_ * (so2_[j] - po0_[j]);
+                        so2_[j] += (q1_ * ((so2_[j-1] - so1_[j]) - so2_[j])
+                                  + q2_ * (so2_[j] - po0_[j])) * amp_;
                     }
-                    *output = so2_[order_-1];
+                    *output = so2_[order_-1] * amp_;
                 }
         break;
 
@@ -640,7 +668,6 @@ void MultiFilter::process(const F32 *input, uint inputStride,
 
         case T_BUTTERWORTH_LOW:
         case T_BUTTERWORTH_HIGH:
-        case T_BUTTERWORTH_BAND:
             MO_ASSERT(butter_, "forgot to call MultiFilter::updateCoefficients() ?");
             butter_->process(input, inputStride, output, outputStride, blockSize);
         break;

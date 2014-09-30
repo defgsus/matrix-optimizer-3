@@ -45,7 +45,6 @@ public:
         T_CHEBYCHEV_BAND,
         T_BUTTERWORTH_LOW,
         T_BUTTERWORTH_HIGH,
-        T_BUTTERWORTH_BAND,
         T_NTH_BESSEL_LOW,
         T_NTH_BESSEL_HIGH,
         T_NTH_BESSEL_BAND,
@@ -144,7 +143,7 @@ private:
     FilterType type_;
 
     uint sr_, order_;
-    F32 freq_, reso_,
+    F32 freq_, reso_, amp_,
         q1_, q2_, s1_, s2_, p0_, p1_;
     std::vector<F32> so1_, so2_, po0_, po1_;
 

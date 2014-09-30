@@ -181,7 +181,11 @@ void moTesselatorEnd(void * usr)
     ((TesselatorPrivate*)usr)->output.clear();
 }
 
-void moTesselatorEdgeFlag(GLboolean flag, void*)
+void moTesselatorEdgeFlag(GLboolean
+                        #ifdef MO_DO_DEBUG_TESS
+                          flag
+                        #endif
+                          , void*)
 {
     MO_DEBUG_TESS("edgeflag " << (flag ? "true" : "false"));
 }

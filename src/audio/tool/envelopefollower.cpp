@@ -46,7 +46,10 @@ F32 EnvelopeFollower::process(const F32 *input, uint inputStride, uint blockSize
     {
         const F32 in = std::abs(*input);
 
-        if (in >= env_)
+        if (in >= 0.99)
+            // always indicate clipping
+            env_ = 1;
+        else if (in >= env_)
             env_ += qIn_ * (in - env_);
         else
             env_ += qOut_ * (in - env_);
