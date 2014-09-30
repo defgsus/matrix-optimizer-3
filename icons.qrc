@@ -41,5 +41,7 @@
         <file alias="view_left.png">assets/icon/view_left.png</file>
         <file alias="view_right.png">assets/icon/view_right.png</file>
         <file alias="view_top.png">assets/icon/view_top.png</file>
+        <file alias="midi.png">assets/icon/midi.png</file>
+        <file alias="music_note.png">assets/icon/music_note.png</file>
     </qresource>
 </RCC>

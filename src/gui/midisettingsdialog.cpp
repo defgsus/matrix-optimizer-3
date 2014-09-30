@@ -68,9 +68,10 @@ MidiSettingsDialog::MidiSettingsDialog(QWidget *parent)
       timer_    (new QTimer(this)),
       p_        (0)
 {
-    setObjectName("_MidiSettingsDialig");
+    setObjectName("_MidiSettingsDialog");
     setWindowTitle(tr("Midi settings"));
-    setMinimumSize(640,480);
+    setWindowIcon(QIcon(":/icon/midi.png"));
+    setMinimumSize(640,280);
 
     timer_->setSingleShot(false);
     timer_->setInterval(1000 / 30);

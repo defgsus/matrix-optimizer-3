@@ -34,6 +34,7 @@
 #include "trackfloat.h"
 #include "sequencefloat.h"
 #include "modulatorobjectfloat.h"
+#include "synthesizer.h"
 
 namespace MO {
 
@@ -81,6 +82,11 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     static QIcon iconAUEnv(":/icon/obj_au_env.png");
     static QIcon iconAUFilter(":/icon/obj_au_filter.png");
     static QIcon iconAUFilterBank(":/icon/obj_au_filterbank.png");
+    static QIcon iconMusicNote(":/icon/music_note.png");
+
+
+    if (qobject_cast<const Synthesizer*>(o))
+        return iconMusicNote;
 
     if (o->isTransformation())
     {

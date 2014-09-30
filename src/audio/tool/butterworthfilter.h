@@ -92,7 +92,7 @@ private:
 
     uint sr_;
     F32 freq_, reso_, clip_,
-        q_,
+        q_, amp_,
         a0_, a1_, a2_, a3_, a4_,
         ha0_, ha1_, ha2_, ha3_, ha4_,
         b1_, b2_, b3_, b4_,

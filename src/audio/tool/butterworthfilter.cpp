@@ -90,9 +90,22 @@ void ButterworthFilter::updateCoefficients()
         break;
     }
 
-    q_ = std::max(F32(0), std::min(F32(0.99999), reso_))
+    const F32 reso = std::max(F32(0), std::min(F32(0.99999), reso_));
+    q_ = reso
             // limit resonance at edges
             * std::pow(std::sin(fc*2), 2.5);
+
+    // amplitude adjustment
+    if (type_ == T_BANDPASS)
+    {
+        F32 af = std::pow(reso, F32(0.35));
+        amp_ = F32(4) + af * F32(1./6.3 - 4.);
+    }
+    else
+    {
+        F32 af = std::pow(reso, F32(0.5));
+        amp_ = F32(1) + af * F32(1./3 - 1.);
+    }
 
 /*
     MO_DEBUG(b1_ << " " << b2_ << " " << b3_ << " " << b4_ << ", " <<
@@ -134,7 +147,7 @@ void ButterworthFilter::process(const F32 *input, uint inputStride,
             ym2_ = ym1_;
             ym1_ = tempy;
 
-            *output = tempy;
+            *output = tempy * amp_;
         }
     }
     else
@@ -186,7 +199,7 @@ void ButterworthFilter::process(const F32 *input, uint inputStride,
             hym2_ = hym1_;
             hym1_ = tempy;
 
-            *output = tempy;
+            *output = tempy * amp_;
         }
     }
 

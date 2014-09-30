@@ -362,6 +362,7 @@ void MainWindow::createMainMenu_()
 
         a = new QAction(tr("Audio settings"), m);
         m->addAction(a);
+        a->setIcon(QIcon(":/icon/obj_soundsource.png"));
         connect(a, &QAction::triggered, [=]()
         {
             scene_->closeAudio();
@@ -371,6 +372,7 @@ void MainWindow::createMainMenu_()
 
         a = new QAction(tr("Midi settings"), m);
         m->addAction(a);
+        a->setIcon(QIcon(":/icon/midi.png"));
         connect(a, &QAction::triggered, [=]()
         {
             scene_->closeAudio();
@@ -398,6 +400,7 @@ void MainWindow::createMainMenu_()
 
         a = new QAction(tr("Projector setup"), m);
         m->addAction(a);
+        a->setIcon(QIcon(":/icon/obj_camera.png"));
         connect(a, &QAction::triggered, [=]()
         {
             ProjectorSetupDialog diag(this);
