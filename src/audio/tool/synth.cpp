@@ -104,7 +104,7 @@ bool SynthVoice::active() const { return p_->active; }
 bool SynthVoice::cued() const { return p_->cued; }
 int SynthVoice::note() const { return p_->note; }
 uint SynthVoice::startSample() const { return p_->startSample; }
-Double SynthVoice::freq() const { return p_->freq; }
+Double SynthVoice::frequency() const { return p_->freq; }
 Double SynthVoice::phase() const { return p_->phase[0]; }
 Double SynthVoice::pulseWidth() const { return p_->pw; }
 Double SynthVoice::velocity() const { return p_->velo; }

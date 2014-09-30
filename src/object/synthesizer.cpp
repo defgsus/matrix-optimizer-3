@@ -14,11 +14,63 @@
 #include "param/parameterfloat.h"
 #include "param/parameterint.h"
 #include "param/parameterselect.h"
+#include "param/parametertext.h"
 #include "io/log.h"
 #include "audio/tool/synth.h"
 #include "util/synthsetting.h"
+#include "math/funcparser/parser.h"
+#include "math/constants.h"
 
 namespace MO {
+
+Synthesizer::VoiceEqu_::VoiceEqu_()
+    : parserX   (new PPP_NAMESPACE::Parser()),
+      parserY   (new PPP_NAMESPACE::Parser()),
+      parserZ   (new PPP_NAMESPACE::Parser())
+{
+    initParser_(parserX);
+    initParser_(parserY);
+    initParser_(parserZ);
+}
+
+Synthesizer::VoiceEqu_::~VoiceEqu_()
+{
+    delete parserZ;
+    delete parserY;
+    delete parserX;
+}
+
+void Synthesizer::VoiceEqu_::initParser_(PPP_NAMESPACE::Parser * parser)
+{
+    parser->variables().add("time", &time,
+            tr("Time when the voice was started in seconds").toStdString());
+    parser->variables().add("timer", &timer,
+            tr("Time when the voice was started in radians").toStdString());
+    parser->variables().add("note", &note,
+            tr("The value of the voice's note").toStdString());
+    parser->variables().add("vel", &vel,
+            tr("The velocity of the voice, typical range [0,1]").toStdString());
+    parser->variables().add("freq", &freq,
+            tr("The frequency of the voice in Hertz").toStdString());
+    parser->variables().add("x", &x,
+            tr("The current x position of the voice").toStdString());
+    parser->variables().add("y", &x,
+            tr("The current y position of the voice").toStdString());
+    parser->variables().add("z", &x,
+            tr("The current z position of the voice").toStdString());
+}
+
+void Synthesizer::VoiceEqu_::feedParser_(Double x, Double y, Double z, const AUDIO::SynthVoice &v)
+{
+    this->x = x;
+    this->y = y;
+    this->z = z;
+    time = static_cast<SynthSetting::VoiceData*>(v.userData())->timeStarted;
+    timer = time * TWO_PI;
+    note = v.note();
+    vel = v.velocity();
+    freq = v.frequency();
+}
 
 MO_REGISTER_OBJECT(Synthesizer)
 
@@ -72,6 +124,32 @@ void Synthesizer::createParameters()
                                          tr("Z position where the voice is emitted in space"),
                                          0.0, 0.1);
 
+        p_posEqu_ = createBooleanParameter("doposequ", tr("position equation"),
+                                           tr("Enables the position to be modified by equations"),
+                                           tr("Off"),
+                                           tr("On"),
+                                           false,
+                                           true, false);
+
+        VoiceEqu_ tmp;
+        p_equX_ = createTextParameter("posequx", tr("x equation"),
+                                      tr("Modifies the x position of where the voice is emitted"),
+                                      TT_EQUATION, "0", true, false);
+        p_equX_->setVariableDescriptions(tmp.parserX->variables().variableDescriptions());
+        p_equX_->setVariableNames(tmp.parserX->variables().variableNames());
+
+        p_equY_ = createTextParameter("posequy", tr("y equation"),
+                                      tr("Modifies the y position of where the voice is emitted"),
+                                      TT_EQUATION, "0", true, false);
+        p_equY_->setVariableDescriptions(tmp.parserX->variables().variableDescriptions());
+        p_equY_->setVariableNames(tmp.parserX->variables().variableNames());
+
+        p_equZ_ = createTextParameter("posequz", tr("z equation"),
+                                      tr("Modifies the z position of where the voice is emitted"),
+                                      TT_EQUATION, "0", true, false);
+        p_equZ_->setVariableDescriptions(tmp.parserX->variables().variableDescriptions());
+        p_equZ_->setVariableNames(tmp.parserX->variables().variableNames());
+
     endParameterGroup();
 }
 
@@ -85,6 +163,11 @@ void Synthesizer::updateParameterVisibility()
     p_audioX_->setVisible(ispoly);
     p_audioY_->setVisible(ispoly);
     p_audioZ_->setVisible(ispoly);
+
+    const bool isequ = p_posEqu_->baseValue();
+    p_equX_->setVisible(isequ);
+    p_equY_->setVisible(isequ);
+    p_equZ_->setVisible(isequ);
 }
 
 void Synthesizer::onParameterChanged(Parameter * p)
@@ -104,6 +187,12 @@ void Synthesizer::onParameterChanged(Parameter * p)
 
         setCallbacks_();
     }
+
+    if (p == p_posEqu_
+        || p == p_equX_
+        || p == p_equY_
+        || p == p_equZ_)
+        updatePosParser_();
 }
 
 void Synthesizer::onParametersLoaded()
@@ -111,7 +200,22 @@ void Synthesizer::onParametersLoaded()
     Object::onParametersLoaded();
 
     synth_->onParametersLoaded();
+
+    updatePosParser_();
     setCallbacks_();
+}
+
+void Synthesizer::updatePosParser_()
+{
+    if (!p_posEqu_->baseValue())
+        return;
+
+    for (VoiceEqu_ & v : voiceEqu_)
+    {
+        v.parserX->parse(p_equX_->baseValue().toStdString());
+        v.parserY->parse(p_equY_->baseValue().toStdString());
+        v.parserZ->parse(p_equZ_->baseValue().toStdString());
+    }
 }
 
 void Synthesizer::createAudioSources()
@@ -137,6 +241,8 @@ void Synthesizer::setNumberThreads(uint num)
     audioBuffers_.resize(num);
     audioPos_.resize(num);
     audioPosFifo_.resize(num);
+    voiceEqu_.resize(num);
+    updatePosParser_();
 }
 
 void Synthesizer::setBufferSize(uint bufferSize, uint thread)
@@ -170,13 +276,28 @@ void Synthesizer::setCallbacks_()
 
             VoicePos_ p;
 
+            // get position from parameters
+            Vec3 pos(
+                p_audioX_->value(data->timeStarted, data->thread),
+                p_audioY_->value(data->timeStarted, data->thread),
+                p_audioZ_->value(data->timeStarted, data->thread)
+                );
+
+            // add values from equation
+            if (p_posEqu_->baseValue())
+            {
+                VoiceEqu_ & equ = voiceEqu_[data->thread];
+                equ.feedParser_(pos[0], pos[1], pos[2], *v);
+                if (equ.parserX->ok())
+                    pos[0] += equ.parserX->eval();
+                if (equ.parserY->ok())
+                    pos[1] += equ.parserY->eval();
+                if (equ.parserZ->ok())
+                    pos[2] += equ.parserZ->eval();
+            }
+
             // set audio-source's transformation matrix
-            p.trans = glm::translate(Mat4(1.f),
-                          Vec3(
-                              p_audioX_->value(data->timeStarted, data->thread),
-                              p_audioY_->value(data->timeStarted, data->thread),
-                              p_audioZ_->value(data->timeStarted, data->thread)
-                          ));
+            p.trans = glm::translate(Mat4(1.f), pos);
 
             p.sample = v->startSample();
             p.sceneTime = data->timeStarted;

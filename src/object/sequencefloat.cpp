@@ -580,7 +580,7 @@ Double SequenceFloat::value(Double gtime, uint thread) const
     }
 
     bool inLoop;
-    Double lStart, lLength;
+    Double lStart=0, lLength=0;
     Double time = getSequenceTime(gtime, thread, lStart, lLength, inLoop);
 
     // XXX strange: inLoop comes to late, e.g. after the loop end

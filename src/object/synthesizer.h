@@ -16,7 +16,9 @@
 
 #include "object.h"
 
+namespace PPP_NAMESPACE { class Parser; }
 namespace MO {
+namespace AUDIO { class SynthVoice; }
 
 class SynthSetting;
 
@@ -48,6 +50,7 @@ public:
 protected:
 
     void updateAudioSources_();
+    void updatePosParser_();
     void setCallbacks_();
 
     struct VoicePos_
@@ -55,6 +58,17 @@ protected:
         uint sample;
         Double sceneTime;
         Mat4 trans;
+    };
+
+    struct VoiceEqu_
+    {
+        VoiceEqu_();
+        ~VoiceEqu_();
+        void initParser_(PPP_NAMESPACE::Parser*);
+        void feedParser_(Double x, Double y, Double z, const AUDIO::SynthVoice& v);
+        PPP_NAMESPACE::Parser
+            *parserX, *parserY, *parserZ;
+        Double note, freq, vel, time, timer, x, y, z;
     };
 
     SynthSetting * synth_;
@@ -67,14 +81,22 @@ protected:
     std::vector<std::vector<Mat4>> audioPos_;
     /** [thread][audiosource][voice-in-time] */
     std::vector<std::vector<std::deque<VoicePos_>>> audioPosFifo_;
+    /** [thread] */
+    std::vector<VoiceEqu_> voiceEqu_;
 
     ParameterSelect
-        * p_polyAudio_;
+        * p_polyAudio_,
+        * p_posEqu_;
 
     ParameterFloat
         * p_audioX_,
         * p_audioY_,
         * p_audioZ_;
+
+    ParameterText
+        * p_equX_,
+        * p_equY_,
+        * p_equZ_;
 };
 
 } // namespace MO

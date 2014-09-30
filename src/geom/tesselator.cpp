@@ -24,7 +24,8 @@
  #include <GL/glu.h>
 #endif
 
-#if (1)
+#if (1) && !defined(NDEBUG)
+#   define MO_DO_DEBUG_TESS
 #   define MO_DEBUG_TESS(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_TESS(unused__)

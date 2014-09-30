@@ -42,7 +42,7 @@ public:
     uint startSample() const;
 
     int note() const;
-    Double freq() const;
+    Double frequency() const;
     Double phase() const;
     Double pulseWidth() const;
     Double velocity() const;
