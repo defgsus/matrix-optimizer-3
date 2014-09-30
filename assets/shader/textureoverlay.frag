@@ -65,11 +65,68 @@ vec2 sphere_surface_to_2d_fisheye(vec3 pos)
         );
 }
 
+/*
+ *  transform spherical coordinates int cartesian coordinates
+ *  on a unit sphere
+ */
+vec3 spherical_mh(vec2 scr)
+{
+    vec2 lscr = vec2 (PI*(scr.x/2.0+0.5), PI*(scr.y+1.0));
+
+    float
+        cx = cos(lscr.x),
+        cy = cos(lscr.y),
+        sx = sin(lscr.x),
+        sy = sin(lscr.y);
+
+    return vec3( cx * cy, cx * sy, sx );
+}
+
+/*
+ * transform cartesian coordinates on a unit sphere
+ * to spherical coordinates
+ */
+vec2 cartesian_mh(vec3 pos)
+{
+    float
+        theta = asin(pos.z),
+        phi   = atan(pos.y,pos.x);
+    if(pos.x == 0 && pos.y == 0) phi = 0;
+    return vec2(
+        ((theta/PI)*2-1),
+        (phi/PI)
+        );
+}
+
+vec2 sphere_transform(vec2 xy)
+{
+    float
+        r_squared,
+        sph_squared,
+        uso_squared,
+        sph_times_uso,
+        t;
+
+    vec3
+        sphere = spherical_mh(xy),
+        sphere_offset = u_sphere_offset * v_dir_matrix;
+
+    r_squared = dot(sphere,sphere);
+    sph_squared = r_squared;
+    uso_squared = dot(sphere_offset,sphere_offset);
+    sph_times_uso = dot(sphere,sphere_offset);
+    t = (-sph_times_uso + sqrt(r_squared*sph_squared + sph_times_uso*sph_times_uso - uso_squared*sph_squared))/sph_squared;
+
+    vec3 new_sphere = sphere_offset + t*sphere;
+    return cartesian_mh(new_sphere);
+}
+
 
 // get texture color from xy [-1,1]
 vec4 mo_texture(vec2 xy)
 {
-    return texture(u_tex, xy * 0.5 + 0.5);
+    //return texture(u_tex, xy * 0.5 + 0.5);
+    return texture(u_tex, sphere_transform(xy) * 0.5 + 0.5);
 }
 
 vec4 mo_color(vec2 xy)
