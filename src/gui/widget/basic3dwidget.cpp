@@ -432,7 +432,7 @@ void Basic3DWidget::resizeGL(int w, int h)
     {
         const float aspect = (float)w/h;
         const float scale = orthoScale_;
-        projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale);
+        projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale, 0.001f, 1000.f);
     }
     else
     if (renderMode_ == RM_FRAMEBUFFER_ORTHO)

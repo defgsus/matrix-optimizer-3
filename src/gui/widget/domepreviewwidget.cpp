@@ -19,8 +19,7 @@
 #include "gl/compatibility.h"
 #include "math/vector.h"
 #include "io/log.h"
-
-#include "gl/opengl_undef.h"
+#include "io/settings.h"
 
 namespace MO {
 namespace GUI {
@@ -39,12 +38,20 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
 {
     setObjectName("_DomePreviewWidget");
 
+    showGrid_ = MO::settings->value(objectName()+"/showGrid", true).toBool();
+    showDome_ = MO::settings->value(objectName()+"/showDome", true).toBool();
+    showRays_ = MO::settings->value(objectName()+"/showRays", true).toBool();
+
     createDomeGeometry_();
     createProjectorGeometry_();
 }
 
 DomePreviewWidget::~DomePreviewWidget()
 {
+    MO::settings->setValue(objectName()+"/showGrid", showGrid_);
+    MO::settings->setValue(objectName()+"/showDome", showDome_);
+    MO::settings->setValue(objectName()+"/showRays", showRays_);
+
     delete domeGeometry_;
     delete projectorGeometry_;
     delete settings_;
@@ -180,6 +187,7 @@ void DomePreviewWidget::createProjectorGeometry_()
         if (!mapper.isValid())
             continue;
 
+        // projector rays
         if (showRays_)
         {
             if (highlight)

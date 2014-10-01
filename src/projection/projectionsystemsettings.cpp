@@ -154,7 +154,23 @@ const CameraSettings& ProjectionSystemSettings::cameraSettings(int idx) const
 void ProjectionSystemSettings::setProjectorSettings(int idx, const ProjectorSettings &s)
 {
     MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range");
+
+    // check for unique id
+    // but ignore the idx'th projector
+    bool hasid = false;
+    for (int i = 0; i<projectors_.size(); ++i)
+        if (i != idx && projectors_[i].id() == s.id())
+        {
+            hasid = true;
+            break;
+        }
+
     projectors_[idx] = s;
+    if (projectors_[idx].name().isEmpty())
+        projectors_[idx].setName(QString("Projector %1").arg(idx+1));
+    if (hasid)
+        projectors_[idx].setId(getUniqueId());
+
 }
 
 void ProjectionSystemSettings::setCameraSettings(int idx, const CameraSettings &s)
@@ -165,14 +181,20 @@ void ProjectionSystemSettings::setCameraSettings(int idx, const CameraSettings &
 
 void ProjectionSystemSettings::appendProjector(const ProjectorSettings &set)
 {
-    ProjectorSettings s(set);
-    if (s.name().isEmpty())
-        s.setName(QString("projector %1").arg(projectors_.size()+1));
-    insertProjector(projectors_.size(), s);
+    insertProjector(projectors_.size(), set);
 }
 
-void ProjectionSystemSettings::insertProjector(int idx, const ProjectorSettings &s)
+void ProjectionSystemSettings::insertProjector(int idx, const ProjectorSettings &set)
 {
+    ProjectorSettings s(set);
+    if (s.name().isEmpty())
+        s.setName(QString("Projector %1").arg(idx+1));
+    if (hasId(s.id()))
+    {
+        //MO_DEBUG("Setting new projector id " << s.id() << " -> " << getUniqueId());
+        s.setId(getUniqueId());
+    }
+
     projectors_.insert(idx, s);
     cameras_.insert(idx, CameraSettings());
 }
@@ -202,6 +224,24 @@ void ProjectionSystemSettings::calculateOverlapAreas(Float min_spacing, Float ma
                 projectors_[i].appendOverlapArea(area);
         }
     }
+}
+
+int ProjectionSystemSettings::getUniqueId() const
+{
+    int id = 0;
+    for (auto & p : projectors_)
+        id = std::max(id, p.id()+1);
+
+    return id;
+}
+
+bool ProjectionSystemSettings::hasId(int id) const
+{
+    for (auto & p : projectors_)
+        if (p.id() == id)
+            return true;
+
+    return false;
 }
 
 } // namespace MO

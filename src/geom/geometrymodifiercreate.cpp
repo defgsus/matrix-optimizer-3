@@ -74,10 +74,12 @@ void GeometryModifierCreate::deserialize(IO::DataStream &io)
     io >> filename_ >> asTriangles_ >> sharedVertices_;
 }
 
-void GeometryModifierCreate::execute(Geometry *g)
+void GeometryModifierCreate::execute(Geometry *)
 {
-#if (0)
     // XXX
+    // Would be create but is a bit complicated since
+    // ObjLoader is handled by GeometryCreator
+#if (0)
     g->setSharedVertices(sharedVertices_);
 
     // initial color

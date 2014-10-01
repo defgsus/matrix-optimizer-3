@@ -207,12 +207,15 @@ void ProjectorSetupDialog::createWidgets_()
                 gr->setExpanded(true);
                 lv->addWidget(gr);
 
-                auto label = new QLabel(tr("view"), this);
-                projectorGroup_->addWidget(label);
+                editId_ = createEdit_(gr, tr("id"), tr("The internal id of the projector - don't bother"),
+                                      "0", 0, true);
 
                 editName_ = createEdit_(gr, tr("name"),
                                             tr("Some name to identify the projector"),
                                         "projector", SLOT(updateProjectorName_()));
+
+                auto label = new QLabel(tr("view"), this);
+                projectorGroup_->addWidget(label);
 
                 spinWidth_ = createSpin_(gr, tr("width"),
                                              tr("Projector's horizontal resolution in pixels"),
@@ -366,6 +369,13 @@ void ProjectorSetupDialog::createWidgets_()
 
                 //areaGroup_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
+                auto cb = new QCheckBox(tr("show tesselation"), this);
+                lv->addWidget(cb);
+                connect(cb, &QCheckBox::clicked, [=](bool c)
+                {
+                    areaEdit_->setShowTesselation(c);
+                });
+
 
             //lv0->addStretch(2);
 
@@ -436,7 +446,7 @@ void ProjectorSetupDialog::createWidgets_()
             lh2 = new QHBoxLayout();
             lv->addLayout(lh2);
 
-                auto cb = new QCheckBox(tr("show coordinates"), this);
+                cb = new QCheckBox(tr("show coordinates"), this);
                 lh2->addWidget(cb);
                 cb->setChecked(display_->getShowGrid());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowGrid(bool)));
@@ -525,7 +535,8 @@ void ProjectorSetupDialog::createWidgets_()
 QLineEdit * ProjectorSetupDialog::createEdit_(GroupWidget * group,
                     const QString& desc, const QString& statusTip,
                     const QString& value,
-                    const char * slot)
+                    const char * slot,
+                    bool readOnly)
 {
     auto w = new QWidget(this);
     w->setAutoFillBackground(true);
@@ -543,6 +554,8 @@ QLineEdit * ProjectorSetupDialog::createEdit_(GroupWidget * group,
 
             auto edit = new QLineEdit(value, this);
             lh->addWidget(edit);
+            edit->setReadOnly(readOnly);
+            edit->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
 
             if (slot)
                 connect(edit, SIGNAL(textChanged(QString)), this, slot);
@@ -657,7 +670,9 @@ void ProjectorSetupDialog::changeView_()
 
 void ProjectorSetupDialog::setViewDirection(int dir)
 {
-    Float distance = domeSettings_->radius() * 2;
+    Float distance = domeSettings_->radius() * 2.0;
+    if (display_->isVisible())
+        distance *= display_->height() / display_->width();
     if (dir == Basic3DWidget::VD_BOTTOM
         && display_->renderMode() == Basic3DWidget::RM_FULLDOME_CUBE)
         distance = 0;
@@ -766,11 +781,13 @@ void ProjectorSetupDialog::updateDisplay_()
 
     display_->setProjectionSettings(*settings_, idx);
 
-    areaEdit_->setProjector(settings_->projectorSettings(idx));
+    areaEdit_->setSettings(settings_->domeSettings(),
+                           settings_->projectorSettings(idx));
 }
 
 void ProjectorSetupDialog::updateProjectorWidgets_()
 {
+    editId_->setText( QString::number(projectorSettings_->id()) );
     editName_->setText( projectorSettings_->name() );
     spinWidth_->setValue( projectorSettings_->width() );
     spinHeight_->setValue( projectorSettings_->height() );

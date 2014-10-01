@@ -34,8 +34,11 @@ public:
 
     // ---------- getter ----------
 
+    /** Compares the two projector settings */
     bool operator == (const ProjectorSettings&) const;
 
+    /** Unique id (per ProjectionSystemSettings) */
+    int id() const { return id_; }
     const QString& name() const { return name_; }
     int width() const { return width_; }
     int height() const { return height_; }
@@ -53,6 +56,7 @@ public:
 
     // -------- setter ------------
 
+    void setId(int id) { id_ = id; }
     void setName(const QString& name) { name_ = name; }
     void setWidth(int v) { width_ = v; }
     void setHeight(int v) { height_ = v; }
@@ -74,7 +78,7 @@ private:
     // ---------- config ----------
 
     QString name_;
-    int width_, height_;
+    int id_, width_, height_;
     Float
         fov_,
         lensRadius_,

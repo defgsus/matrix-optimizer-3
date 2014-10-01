@@ -18,8 +18,10 @@
 #include "math/intersection.h"
 #include "math/constants.h"
 #include "math/vector.h"
+#include "math/interpol.h"
 #include "io/log.h"
 #include "geom/geometry.h"
+#include "geom/tesselator.h"
 
 namespace MO {
 
@@ -170,6 +172,18 @@ Vec3 ProjectorMapper::mapToDome(Float s, Float t) const
     return pos + dir * depth1;
 }
 
+void ProjectorMapper::mapToDome(GEOM::Geometry * g) const
+{
+    for (uint i=0; i<g->numVertices(); ++i)
+    {
+        auto v = &g->vertices()[i*g->numVertexComponents()];
+        Vec3 d = mapToDome(v[0], v[1]);
+        v[0] = d[0];
+        v[1] = d[1];
+        v[2] = d[2];
+    }
+}
+
 Vec2 ProjectorMapper::mapToSphere(Float, Float) const
 {
     const Vec3 ray_origin = Vec3( trans_ * Vec4(0,0,0,1) );
@@ -196,7 +210,21 @@ Vec2 ProjectorMapper::mapFromDome(const Vec3 & pdome) const
     return Vec2(pscr) * (Float)0.5 + (Float)0.5;
 }
 
+void ProjectorMapper::mapFromDome(GEOM::Geometry * g) const
+{
+    for (uint i=0; i<g->numVertices(); ++i)
+    {
+        Vec2 slice = mapFromDome(g->getVertex(i));
+        auto v = &g->vertices()[i*g->numVertexComponents()];
+        v[0] = slice[0];
+        v[1] = slice[1];
+        v[2] = 0.f;
+    }
+}
 
+/*
+XXX this is difficult!
+    Currently we let the user handle this herself
 void ProjectorMapper::getWarpImage(const CameraSettings & cam)
 {
     const Mat4
@@ -214,9 +242,10 @@ void ProjectorMapper::getWarpImage(const CameraSettings & cam)
         MO_DEBUG("pscr = " << pscr);
     }
 }
+*/
 
 void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry * geo,
-                                      int numx, int numy)
+                                      int numx, int numy) const
 {
     numx = std::max(numx, 2);
     numy = std::max(numy, 2);
@@ -430,6 +459,34 @@ QVector<Vec2> ProjectorMapper::getOverlapArea(const ProjectorSettings &otherP, F
     return poly;
 }
 
+
+void ProjectorMapper::getBlendGeometry(const QVector<Vec2> & poly, GEOM::Geometry * geom) const
+{
+    GEOM::Tesselator tess;
+
+    tess.tesselate(poly, true);
+    tess.getGeometry(*geom, true);
+
+    // set blend colors for each vertex
+    for (uint i=0; i<geom->numVertices(); ++i)
+    {
+        Vec3 v = geom->getVertex(i);
+
+        // distance to edge
+        Float dist = std::min(
+                            std::min(v[0], std::abs(1.f-v[0])),
+                            std::min(v[1], std::abs(1.f-v[1])));
+
+        Float col = MATH::smoothstep(0.0f, 0.1f, dist);
+
+//        MO_DEBUG("vec " << v << " dist " << dist << " col " << col);
+
+        geom->colors()[i*4] = col;
+        geom->colors()[i*4+1] = col;
+        geom->colors()[i*4+2] = col;
+        geom->colors()[i*4+3] = 1.f;
+    }
+}
 
 
 } // namespace MO

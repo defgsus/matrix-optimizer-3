@@ -10,6 +10,7 @@
 
 #include "overlapareaeditwidget.h"
 #include "projection/projectorsettings.h"
+#include "projection/projectormapper.h"
 #include "geom/geometry.h"
 #include "geom/tesselator.h"
 #include "gl/drawable.h"
@@ -21,11 +22,15 @@ namespace GUI {
 OverlapAreaEditWidget::OverlapAreaEditWidget(QWidget *parent)
     : Basic3DWidget (RM_FRAMEBUFFER_ORTHO, parent),
       projector_    (new ProjectorSettings()),
+      dome_         (new DomeSettings()),
       triangleGeom_ (0),
       lineGeom_     (0),
+      blendGeom_    (0),
       triangles_    (0),
       lines_        (0),
-      showTesselation_(true)
+      blends_       (0),
+      showTesselation_(true),
+      showBlend_    (true)
 {
     setObjectName("_OverlapAreaEditWidget");
 
@@ -37,16 +42,20 @@ OverlapAreaEditWidget::OverlapAreaEditWidget(QWidget *parent)
 
 OverlapAreaEditWidget::~OverlapAreaEditWidget()
 {
+    delete blends_;
     delete lines_;
     delete triangles_;
+    delete blendGeom_;
     delete lineGeom_;
     delete triangleGeom_;
+    delete dome_;
     delete projector_;
 }
 
-void OverlapAreaEditWidget::setProjector(const ProjectorSettings& p)
+void OverlapAreaEditWidget::setSettings(const DomeSettings& d, const ProjectorSettings& p)
 {
     *projector_ = p;
+    *dome_ = d;
 
     updateFboSize_();
 
@@ -70,6 +79,9 @@ void OverlapAreaEditWidget::updateFboSize_()
 void OverlapAreaEditWidget::createGeometry_()
 {
     GEOM::Tesselator tess;
+
+    ProjectorMapper mapper;
+    mapper.setSettings(*dome_, *projector_);
 
     lineGeom_ = new GEOM::Geometry();
 
@@ -96,7 +108,6 @@ void OverlapAreaEditWidget::createGeometry_()
         if (!showTesselation_)
         {
             // draw outline
-
             GEOM::Geometry::IndexType p1=0, p2;
             for (int i=0; i<=area.size(); ++i)
             {
@@ -111,6 +122,13 @@ void OverlapAreaEditWidget::createGeometry_()
             tess.tesselate(area);
             tess.getGeometry(*lineGeom_, false);
         }
+
+        if (showBlend_)
+        {
+            blendGeom_ = new GEOM::Geometry();
+            blendGeom_->clear();
+            mapper.getBlendGeometry(area, blendGeom_);
+        }
     }
 }
 
@@ -118,6 +136,7 @@ void OverlapAreaEditWidget::initGL()
 {
     triangles_ = new GL::Drawable(objectName() + "_triangles");
     lines_ = new GL::Drawable(objectName() + "_lines");
+    blends_ = new GL::Drawable(objectName() + "_blends");
 }
 
 void OverlapAreaEditWidget::releaseGL()
@@ -126,6 +145,8 @@ void OverlapAreaEditWidget::releaseGL()
         triangles_->releaseOpenGl();
     if (lines_ && lines_->isReady())
         lines_->releaseOpenGl();
+    if (blends_ && blends_->isReady())
+        blends_->releaseOpenGl();
 }
 
 void OverlapAreaEditWidget::drawGL(const Mat4& projection,
@@ -149,11 +170,29 @@ void OverlapAreaEditWidget::drawGL(const Mat4& projection,
         triangles_->createOpenGl();
     }
 
+    if (blendGeom_)
+    {
+        blends_->setGeometry(blendGeom_);
+        blendGeom_ = 0;
+
+        blends_->createOpenGl();
+    }
+
     using namespace gl;
 
     MO_CHECK_GL( gl::glClearColor(0,0,0,1) );
     MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
+    MO_CHECK_GL( gl::glEnable(GL_BLEND) );
+
+    if (blends_->isReady())
+    {
+        MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
+
+        blends_->renderShader(projection, cubeViewTrans, viewTrans, trans);
+
+        MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+    }
 
     if (triangles_->isReady())
         triangles_->renderShader(projection, cubeViewTrans, viewTrans, trans);

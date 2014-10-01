@@ -100,7 +100,7 @@ private:
     QLineEdit * createEdit_(GroupWidget * group,
                         const QString& desc, const QString& statusTip,
                         const QString& value,
-                        const char * slot = 0);
+                        const char * slot = 0, bool readOnly = false);
     SpinBox * createSpin_(GroupWidget * group,
                         const QString& desc, const QString& statusTip,
                         int value, int smallstep=1, int minv=-9999999, int maxv=9999999,
@@ -131,7 +131,8 @@ private:
 
     QLineEdit
         * editName_,
-        * editDomeName_;
+        * editDomeName_,
+        * editId_;
 
     SpinBox
         * spinWidth_,

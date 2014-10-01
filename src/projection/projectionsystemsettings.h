@@ -50,16 +50,30 @@ public:
     /** Returns the settings for each camera of each projector */
     const CameraSettings& cameraSettings(int idx) const;
 
+    /** Returns a projector id that is not currently used */
+    int getUniqueId() const;
+    /** Returns true if the projector id is currently used */
+    bool hasId(int id) const;
+
     // --------- setter -----------
 
     void clear();
 
     void setDomeSettings(const DomeSettings& s) { dome_ = s; }
 
+    /** Replaces the projector.
+        If it's name is empty it will be called projector x (x depending on the position).
+        The projector id will be made unique if necessary. */
     void setProjectorSettings(int idx, const ProjectorSettings& s);
     void setCameraSettings(int idx, const CameraSettings& s);
 
+    /** Appends the projector to the internal list.
+        If it's name is empty it will be called "Projector x" (x depending on the new position).
+        The projector id will be made unique if necessary. */
     void appendProjector(const ProjectorSettings& s);
+    /** Inserts the projector into the internal list.
+        If it's name is empty it will be called "Projector x" (x depending on the new position).
+        The projector id will be made unique if necessary. */
     void insertProjector(int idx, const ProjectorSettings& s);
     void removeProjector(int idx);
 

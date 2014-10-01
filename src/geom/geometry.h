@@ -123,6 +123,21 @@ public:
     /** Returns the minimum and maximum vertex coordinates */
     void getExtent(Vec3 * minimum, Vec3 * maximum) const;
 
+    // -------------- setter -----------------
+
+    /** Returns a pointer to numVertices() * 3 coordinates */
+    VertexType * vertices() { return &vertex_[0]; }
+    /** Returns a pointer to numVertices() * 3 coordinates */
+    NormalType * normals() { return &normal_[0]; }
+    /** Returns a pointer to numVertices() * 4 entries */
+    ColorType * colors() { return &color_[0]; }
+    /** Returns a pointer to numVertices() * 2 coordinates */
+    TextureCoordType * textureCoords() { return &texcoord_[0]; }
+    /** Returns a pointer to numTriangles() * 3 indices */
+    IndexType * triangleIndices() { return &triIndex_[0]; }
+    /** Returns a pointer to numTriangles() * 3 indices */
+    IndexType * lineIndices() { return &lineIndex_[0]; }
+
     // --------- state -----------------------
 
     /** Sets the current color. Any subsequent call to the
