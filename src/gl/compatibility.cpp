@@ -20,7 +20,10 @@ namespace
 {
     static bool
         enableLineSmooth_ = false,
-        enableLineWidth_ = false;
+        enableLineWidth_ = false,
+        isLineSmooth = false;
+    static GLint lineRangeA[2],
+                 lineRangeS[2];
 
     void dumpExtensions()
     {
@@ -73,6 +76,11 @@ void checkCompatibility()
     glLineWidth(2.5f);
     enableLineWidth_ = (glGetError() == GL_NO_ERROR);
     glLineWidth(1);
+
+    MO_CHECK_GL( glGetIntegerv(GL_ALIASED_LINE_WIDTH_RANGE, lineRangeA) );
+    MO_CHECK_GL( glGetIntegerv(GL_SMOOTH_LINE_WIDTH_RANGE, lineRangeS) );
+    MO_DEBUG("gl line-width range, aliased " << lineRangeA[0] << "-" << lineRangeA[1]
+            << ", smooth " << lineRangeS[0] << "-" << lineRangeS[1]);
 }
 
 void setLineSmooth(bool enable)
@@ -84,12 +92,23 @@ void setLineSmooth(bool enable)
         MO_CHECK_GL( glEnable(GL_LINE_SMOOTH) )
     else
         MO_CHECK_GL( glDisable(GL_LINE_SMOOTH) );
+
+    isLineSmooth = enable;
 }
 
 void setLineWidth(gl::GLfloat width)
 {
     if (!enableLineWidth_)
         return;
+
+    if (isLineSmooth)
+    {
+        if (width < lineRangeS[0] || width > lineRangeS[1])
+            return;
+    }
+    else
+        if (width < lineRangeA[0] || width > lineRangeA[1])
+            return;
 
     MO_CHECK_GL( glLineWidth(width) );
 }
