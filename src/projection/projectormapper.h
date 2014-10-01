@@ -112,8 +112,9 @@ public:
 
     /** Creates an anti-clockwise polygon outline of the projector slice.
         Range of coordinates is always [0,1].
-        @p max_spacing defines the maximum distance between points */
-    QVector<Vec2> createOutline(Float max_spacing) const;
+        @p max_spacing defines the maximum distance between points.
+        @p smaller makes the area smaller, range [0,1) */
+    QVector<Vec2> createOutline(Float max_spacing, Float smaller = 0) const;
 
     /** Returns an anti-clockwise polygon outline of the overlapping area between
         this slice and the slice in @p other.

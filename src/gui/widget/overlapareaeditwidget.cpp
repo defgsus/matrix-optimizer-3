@@ -148,7 +148,7 @@ void OverlapAreaEditWidget::createGeometry_()
         QVector<Vec3> domec;
         QVector<Vec2> slicec;
 
-        omapper.mapToDome(omapper.createOutline(0.1), domec);
+        omapper.mapToDome(omapper.createOutline(0.05), domec);
         mapper.mapFromDome(domec, slicec);
 
         // draw outline
@@ -164,11 +164,44 @@ void OverlapAreaEditWidget::createGeometry_()
             const Float dist = std::max(
                                   p[0] < 0 ? -p[0] : p[0] > 1 ? p[0] - 1 : 0,
                                   p[1] < 0 ? -p[1] : p[1] > 1 ? p[1] - 1 : 0),
+            // fadeout for outsiders
                         colf = 1.f - MATH::smoothstep(0.f, 0.2f, std::max(dist, ldist));
 
             lineGeom_->setColor(0.5,1,0.5, colf);
 
             p2 = lineGeom_->addVertex(p[0], p[1], 0);
+            if (j>0)
+                lineGeom_->addLine(p1, p2);
+            p1 = p2;
+            ldist = dist;
+        }
+
+        // XXX currently a little hack to display a blend edge
+
+        domec.clear();
+        slicec.clear();
+        omapper.mapToDome(omapper.createOutline(0.05, 0.2), domec);
+        mapper.mapFromDome(domec, slicec);
+
+        // draw outline
+        p1=0;
+        ldist = 0;
+        for (int j=0; j<=slicec.size(); ++j)
+        {
+            const Vec2 p = Vec2(
+                        slicec[j % slicec.size()][0],
+                        slicec[j % slicec.size()][1]);
+
+            // distance from slice
+            const Float dist = std::max(
+                                  p[0] < 0 ? -p[0] : p[0] > 1 ? p[0] - 1 : 0,
+                                  p[1] < 0 ? -p[1] : p[1] > 1 ? p[1] - 1 : 0),
+            // fadeout for outsiders
+                        colf = 1.f - MATH::smoothstep(0.f, 0.2f, std::max(dist, ldist));
+
+            lineGeom_->setColor(0.5,0.5,0.5, colf);
+
+            p2 = lineGeom_->addVertexAlways(p[0], p[1], 0);
             if (j>0)
                 lineGeom_->addLine(p1, p2);
             p1 = p2;

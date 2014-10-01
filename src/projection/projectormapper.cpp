@@ -300,7 +300,7 @@ void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry
 }
 
 
-QVector<Vec2> ProjectorMapper::createOutline(Float space) const
+QVector<Vec2> ProjectorMapper::createOutline(Float space, Float sm) const
 {
     QVector<Vec2> p;
 
@@ -315,6 +315,13 @@ QVector<Vec2> ProjectorMapper::createOutline(Float space) const
 
     for (Float t = 0; t < 1; t += space)
         p.append(Vec2(0, 1.f-t));
+
+    if (sm != 0)
+    {
+        Float sm2 = sm * 0.5f;
+        for (auto & v : p)
+            v = sm2 + v * (1.f - sm);
+    }
 
     return p;
 }

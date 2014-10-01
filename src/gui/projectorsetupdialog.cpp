@@ -710,7 +710,7 @@ void ProjectorSetupDialog::updateProjectorName_()
     projectorSettings_->setName(editName_->text());
 
     const int idx = comboProj_->currentIndex();
-    if (idx >= 0 && idx < settings_->numProjectors())
+    if (idx >= 0 && idx < (int)settings_->numProjectors())
     {
         settings_->setProjectorSettings(idx, *projectorSettings_);
 
@@ -758,7 +758,7 @@ void ProjectorSetupDialog::updateProjectorSettings_()
 
     // update system settings as well
     int idx = comboProj_->currentIndex();
-    if (idx >= 0 && idx < settings_->numProjectors())
+    if (idx >= 0 && idx < (int)settings_->numProjectors())
     {
         settings_->setProjectorSettings(idx, *projectorSettings_);
         settings_->setCameraSettings(idx, *cameraSettings_);
@@ -776,7 +776,7 @@ void ProjectorSetupDialog::updateDisplay_()
         display_->viewSetOrthoScale(domeSettings_->radius());
 
     const int idx = comboProj_->currentIndex();
-    if (idx < 0 || idx >= settings_->numProjectors())
+    if (idx < 0 || idx >= (int)settings_->numProjectors())
         return;
 
     display_->setProjectionSettings(*settings_, idx);
@@ -815,7 +815,7 @@ void ProjectorSetupDialog::updateProjectorWidgets_()
 void ProjectorSetupDialog::projectorSelected_()
 {
     int idx = comboProj_->currentIndex();
-    if (idx < 0 || idx >= settings_->numProjectors())
+    if (idx < 0 || idx >= (int)settings_->numProjectors())
         return;
 
     *projectorSettings_ = settings_->projectorSettings(idx);
@@ -838,7 +838,7 @@ void ProjectorSetupDialog::newProjector_()
 void ProjectorSetupDialog::duplicateProjector_()
 {
     int idx = comboProj_->currentIndex();
-    if (idx < 0 || idx >= settings_->numProjectors())
+    if (idx < 0 || idx >= (int)settings_->numProjectors())
         return;
 
     settings_->appendProjector(settings_->projectorSettings(idx));
@@ -855,7 +855,7 @@ void ProjectorSetupDialog::duplicateProjector_()
 void ProjectorSetupDialog::deleteProjector_()
 {
     int idx = comboProj_->currentIndex();
-    if (idx < 0 || idx >= settings_->numProjectors())
+    if (idx < 0 || idx >= (int)settings_->numProjectors())
         return;
 
     settings_->removeProjector(idx);
@@ -872,13 +872,13 @@ void ProjectorSetupDialog::updateProjectorList_()
 
     comboProj_->clear();
 
-    for (int i=0; i<settings_->numProjectors(); ++i)
+    for (uint i=0; i<settings_->numProjectors(); ++i)
         comboProj_->addItem(settings_->projectorSettings(i).name());
 
     tbRemove_->setEnabled(settings_->numProjectors() > 1);
 
     // restore index
-    if (idx >= 0 && idx < settings_->numProjectors())
+    if (idx >= 0 && idx < (int)settings_->numProjectors())
     {
         comboProj_->setCurrentIndex(idx);
     }
@@ -1104,7 +1104,7 @@ void ProjectorSetupDialog::pasteProjector_()
     *projectorSettings_ = *copyOfProjectorSettings_;
 
     int idx = comboProj_->currentIndex();
-    if (idx > 0 || idx < settings_->numProjectors())
+    if (idx >= 0 || idx < (int)settings_->numProjectors())
     {
         settings_->setProjectorSettings(idx, *projectorSettings_);
     }
@@ -1122,7 +1122,7 @@ void ProjectorSetupDialog::pasteCamera_()
     *cameraSettings_ = *copyOfCameraSettings_;
 
     int idx = comboProj_->currentIndex();
-    if (idx > 0 || idx < settings_->numProjectors())
+    if (idx >= 0 || idx < (int)settings_->numProjectors())
     {
         settings_->setCameraSettings(idx, *cameraSettings_);
     }
