@@ -464,8 +464,8 @@ void ProjectorMapper::getBlendGeometry(const QVector<Vec2> & poly, GEOM::Geometr
 {
     GEOM::Tesselator tess;
 
-    tess.tesselate(poly, true);
-    tess.getGeometry(*geom, true);
+    tess.tesselate(poly);
+    tess.getGeometry(*geom);
 
     // set blend colors for each vertex
     for (uint i=0; i<geom->numVertices(); ++i)

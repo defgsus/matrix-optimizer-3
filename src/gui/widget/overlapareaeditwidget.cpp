@@ -20,7 +20,7 @@ namespace GUI {
 
 
 OverlapAreaEditWidget::OverlapAreaEditWidget(QWidget *parent)
-    : Basic3DWidget (RM_FRAMEBUFFER_ORTHO, parent),
+    : Basic3DWidget (RM_DIRECT, parent),
       projector_    (new ProjectorSettings()),
       dome_         (new DomeSettings()),
       triangleGeom_ (0),
