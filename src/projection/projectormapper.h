@@ -28,10 +28,15 @@ public:
 
     // ---------- getter ----------
 
-    const ProjectorSettings& settings() const { return set_; }
+    /** Returns the current projector settings */
+    const ProjectorSettings& projectorSettings() const { return set_; }
+
+    /** Returns the current dome settings */
+    const DomeSettings& domeSettings() const { return domeSet_; }
 
     // -------- setter ------------
 
+    /** Copies the settings and calculates all the transformation stuff */
     void setSettings(const DomeSettings&, const ProjectorSettings&);
 
     // ----- getter for calculated values -----
@@ -61,17 +66,22 @@ public:
     /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
     Vec2 mapToSphere(Float s, Float t) const;
 
-    /** Gives the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
+    /** Returns the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
         The mapping is always done on the inside of the dome, regardless of the position of
         the projector. */
     Vec3 mapToDome(Float s, Float t) const;
 
-    /** Gives the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
+    /** Returns the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
         The mapping is always done on the inside of the dome, regardless of the position of
         the projector. */
     Vec3 mapToDome(const Vec2& st) const { return mapToDome(st[0], st[1]); }
 
-    /** Maps the Geometry to on the dome surface.
+    /** Maps the slice coordinates on the dome surface.
+        The coordinates should be in the range [0,1].
+        The coordinates will be appended to @p dome_coords. */
+    void mapToDome(const QVector<Vec2>& slice_coords, QVector<Vec3>& dome_coords) const;
+
+    /** Maps the Geometry on the dome surface.
         The vertices should by 2d (xy-plane) and in the range [0,1] */
     void mapToDome(GEOM::Geometry *) const;
 
@@ -82,6 +92,10 @@ public:
 
     /** Maps the Geometry supposed to lie on the dome surface to the slice coordiantes. */
     void mapFromDome(GEOM::Geometry *) const;
+
+    /** Maps the dome surface coordinates into the slice.
+        The coordinates will be appended to @p slice_coords. */
+    void mapFromDome(const QVector<Vec3>& dome_coords, QVector<Vec2>& slice_coords) const;
 
     // --------------- warping ----------------------------
 
@@ -95,6 +109,11 @@ public:
                          int num_segments_x = 32, int num_segments_y = 32) const;
 
     // -------------- blending -----------------------------
+
+    /** Creates an anti-clockwise polygon outline of the projector slice.
+        Range of coordinates is always [0,1].
+        @p max_spacing defines the maximum distance between points */
+    QVector<Vec2> createOutline(Float max_spacing) const;
 
     /** Returns an anti-clockwise polygon outline of the overlapping area between
         this slice and the slice in @p other.

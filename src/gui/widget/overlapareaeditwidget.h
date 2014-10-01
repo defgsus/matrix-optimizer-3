@@ -16,8 +16,7 @@
 
 namespace MO {
 
-class ProjectorSettings;
-class DomeSettings;
+class ProjectionSystemSettings;
 
 namespace GUI {
 
@@ -34,7 +33,7 @@ signals:
 public slots:
 
     /** Updates the settings and graphical display. */
-    void setSettings(const DomeSettings&, const ProjectorSettings&);
+    void setSettings(const ProjectionSystemSettings&, uint projector_index);
 
     void setShowTesselation(bool enable) { showTesselation_ = enable; createGeometry_(); update(); }
     void setShowBlend(bool enable) { showBlend_ = enable; createGeometry_(); update(); }
@@ -56,8 +55,8 @@ private:
     void updateFboSize_();
     void createGeometry_();
 
-    ProjectorSettings * projector_;
-    DomeSettings * dome_;
+    ProjectionSystemSettings * settings_;
+    uint projectorIndex_;
 
     GEOM::Geometry * triangleGeom_, *lineGeom_, *blendGeom_;
     GL::Drawable * triangles_, *lines_, *blends_;

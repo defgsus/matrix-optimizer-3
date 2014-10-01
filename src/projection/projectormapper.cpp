@@ -184,6 +184,12 @@ void ProjectorMapper::mapToDome(GEOM::Geometry * g) const
     }
 }
 
+void ProjectorMapper::mapToDome(const QVector<Vec2> &slice_coords, QVector<Vec3> &dome_coords) const
+{
+    for (auto & c : slice_coords)
+        dome_coords.append(mapToDome(c));
+}
+
 Vec2 ProjectorMapper::mapToSphere(Float, Float) const
 {
     const Vec3 ray_origin = Vec3( trans_ * Vec4(0,0,0,1) );
@@ -220,6 +226,12 @@ void ProjectorMapper::mapFromDome(GEOM::Geometry * g) const
         v[1] = slice[1];
         v[2] = 0.f;
     }
+}
+
+void ProjectorMapper::mapFromDome(const QVector<Vec3> &dome_coords, QVector<Vec2> &slice_coords) const
+{
+    for (auto & c : dome_coords)
+        slice_coords.append(mapFromDome(c));
 }
 
 /*
@@ -285,6 +297,26 @@ void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry
         geo->addTriangle((y-1)*numx+x-1, (y-1)*numx+x, y*numx+x);
         geo->addTriangle((y-1)*numx+x-1, y*numx+x, y*numx+x-1);
     }
+}
+
+
+QVector<Vec2> ProjectorMapper::createOutline(Float space) const
+{
+    QVector<Vec2> p;
+
+    for (Float t = 0; t < 1; t += space)
+        p.append(Vec2(t, 0));
+
+    for (Float t = 0; t < 1; t += space)
+        p.append(Vec2(1, t));
+
+    for (Float t = 0; t < 1; t += space)
+        p.append(Vec2(1.f-t, 1));
+
+    for (Float t = 0; t < 1; t += space)
+        p.append(Vec2(0, 1.f-t));
+
+    return p;
 }
 
 

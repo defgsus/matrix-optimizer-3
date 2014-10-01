@@ -247,13 +247,13 @@ void ProjectorSetupDialog::createWidgets_()
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
                 spinDist_->setSuffix(" " + tr("cm"));
 
-                spinLat_ = createDoubleSpin_(gr, tr("latitude"),
+                spinLat_ = createDoubleSpin_(gr, tr("latitude / azimuth"),
                                              tr("Projector's position around the dome"),
                                              0, 1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinLat_->setSuffix(" " + tr("°"));
 
-                spinLong_ = createDoubleSpin_(gr, tr("longitude"),
-                                             tr("Projector's height"),
+                spinLong_ = createDoubleSpin_(gr, tr("longitude / elevation"),
+                                             tr("Projector's height in the dome"),
                                              0, 1, -90, 90, SLOT(updateProjectorSettings_()));
                 spinLong_->setSuffix(" " + tr("°"));
 
@@ -781,8 +781,7 @@ void ProjectorSetupDialog::updateDisplay_()
 
     display_->setProjectionSettings(*settings_, idx);
 
-    areaEdit_->setSettings(settings_->domeSettings(),
-                           settings_->projectorSettings(idx));
+    areaEdit_->setSettings(*settings_, idx);
 }
 
 void ProjectorSetupDialog::updateProjectorWidgets_()

@@ -36,7 +36,7 @@ bool ProjectionSystemSettings::operator == (const ProjectionSystemSettings& o) c
     if (!(dome_ == o.dome_))
         return false;
 
-    for (int i=0; i<numProjectors(); ++i)
+    for (uint i=0; i<numProjectors(); ++i)
         if (   !(projectors_[i] == o.projectors_[i])
             || !(cameras_[i] == o.cameras_[i]))
             return false;
@@ -141,19 +141,22 @@ void ProjectionSystemSettings::loadFile(const QString &filename)
 
 const ProjectorSettings& ProjectionSystemSettings::projectorSettings(int idx) const
 {
-    MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range");
+    MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range "
+              "(" << projectors_.size() << ")");
     return projectors_[idx];
 }
 
 const CameraSettings& ProjectionSystemSettings::cameraSettings(int idx) const
 {
-    MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range");
+    MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range "
+              "(" << projectors_.size() << ")");
     return cameras_[idx];
 }
 
 void ProjectionSystemSettings::setProjectorSettings(int idx, const ProjectorSettings &s)
 {
-    MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range");
+    MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range "
+              "(" << projectors_.size() << ")");
 
     // check for unique id
     // but ignore the idx'th projector
@@ -175,7 +178,8 @@ void ProjectionSystemSettings::setProjectorSettings(int idx, const ProjectorSett
 
 void ProjectionSystemSettings::setCameraSettings(int idx, const CameraSettings &s)
 {
-    MO_ASSERT(idx >=0 && idx < cameras_.size(), "index " << idx << " out of range");
+    MO_ASSERT(idx >=0 && idx < cameras_.size(), "index " << idx << " out of range "
+              "(" << cameras_.size() << ")");
     cameras_[idx] = s;
 }
 
@@ -201,7 +205,8 @@ void ProjectionSystemSettings::insertProjector(int idx, const ProjectorSettings 
 
 void ProjectionSystemSettings::removeProjector(int idx)
 {
-    MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range");
+    MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range "
+              "(" << projectors_.size() << ")");
     projectors_.removeAt(idx);
     cameras_.removeAt(idx);
 }
@@ -210,12 +215,12 @@ void ProjectionSystemSettings::calculateOverlapAreas(Float min_spacing, Float ma
 {
     ProjectorMapper mapper;
 
-    for (int i=0; i<numProjectors(); ++i)
+    for (uint i=0; i<numProjectors(); ++i)
     {
         mapper.setSettings(domeSettings(), projectorSettings(i));
         projectors_[i].clearOverlapAreas();
 
-        for (int j=0; j<numProjectors(); ++j)
+        for (uint j=0; j<numProjectors(); ++j)
         if (i != j)
         {
             const QVector<Vec2>

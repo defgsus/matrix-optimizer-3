@@ -210,7 +210,7 @@ ProjectorSettings Settings::projectorSettings()
     ProjectionSystemSettings s(getDefaultProjectionSettings());
 
     const int idx = clientIndex();
-    if (idx >= s.numProjectors())
+    if (idx >= (int)s.numProjectors())
     {
         MO_WARNING("Settings::projectorSettings() clientIndex == " << idx
                    << " numProjectors == " << s.numProjectors());
@@ -224,7 +224,7 @@ CameraSettings Settings::cameraSettings()
     ProjectionSystemSettings s(getDefaultProjectionSettings());
 
     const int idx = clientIndex();
-    if (idx >= s.numProjectors())
+    if (idx >= (int)s.numProjectors())
     {
         MO_WARNING("Settings::cameraSettings() clientIndex == " << idx
                    << " numProjectors == " << s.numProjectors());

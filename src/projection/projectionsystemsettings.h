@@ -41,7 +41,7 @@ public:
     bool operator == (const ProjectionSystemSettings&) const;
     bool operator != (const ProjectionSystemSettings& o) const { return !(*this == o); }
 
-    int numProjectors() const { return projectors_.size(); }
+    uint numProjectors() const { return projectors_.size(); }
 
     const DomeSettings& domeSettings() const { return dome_; }
 
