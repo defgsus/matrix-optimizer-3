@@ -103,7 +103,7 @@ void DomePreviewWidget::setShowCurrentCamera(bool enable)
 
 void DomePreviewWidget::setCurrentCameraMatrix_()
 {
-    if (projIndex_ < 0 || projIndex_ >= settings_->numProjectors())
+    if (projIndex_ < 0 || projIndex_ >= (int)settings_->numProjectors())
     {
         // set some default matrix if projector index is out of range
         setProjectionMatrix(MATH::perspective((Float)62,
@@ -176,9 +176,9 @@ void DomePreviewWidget::createProjectorGeometry_()
     // build geometry
     projectorGeometry_ = new GEOM::Geometry();
 
-    for (int i=0; i<settings_->numProjectors(); ++i)
+    for (uint i=0; i<settings_->numProjectors(); ++i)
     {
-        const bool highlight = (projIndex_ < 0 || projIndex_ == i);
+        const bool highlight = (projIndex_ < 0 || projIndex_ == (int)i);
         if (showCurrentCamera_ && !highlight)
             continue;
 

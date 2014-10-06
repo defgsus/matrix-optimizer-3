@@ -37,6 +37,7 @@ class TrackView : public QWidget
     friend class TrackViewOverpaint;
 public:
     explicit TrackView(QWidget *parent = 0);
+    ~TrackView();
 
     void setSceneSettings(SceneSettings * s) { sceneSettings_ = s; }
     SceneSettings * sceneSettings() const { return sceneSettings_; }
@@ -91,9 +92,20 @@ public slots:
 
     /** Remove everything from this view. */
     void clearTracks();
+
     /** Insert the list of tracks and their sequences into the view.
-        Previous content will be removed. */
+        Previous content will be removed.
+        If @p send_signal is true, a tracksChanged() signal will be emitted. */
     void setTracks(const QList<Track*>& tracks, bool send_signal = false);
+
+    /** Inserts all tracks and their sequences and modulating objects into the view.
+        Previous content will be removed. */
+    void setObjects(const QList<Object*>& objects, bool send_signal = false);
+
+    /** Tell the sequencer which object is currently selected.
+        This might change the track list according to filter settings.
+        If @p send_signal is true, a tracksChanged() signal will be emitted on change. */
+    void setCurrentObject(Object * o, bool send_signal = false);
 
     /** Updates the view for the given Track */
     void updateTrack(Track *);
@@ -170,10 +182,14 @@ private:
     /** Returns index number for track, or -1 */
     int trackIndex_(Track *);
 
+    void clearTracks_(bool keep_alltracks);
+
+    /** Transforms alltracks_ into a changed list according to ObjectFilter */
+    void getFilteredTracks_(QList<Track*>& list);
+
     // editing
     bool deleteObject_(Object * seq);
     bool paste_(bool single_track = false);
-
 
     // _______________ MEMBER _________________
 
@@ -182,6 +198,9 @@ private:
     Scene * scene_;
     ObjectTreeModel * omodel_;
     SceneSettings * sceneSettings_;
+    ObjectFilter * objectFilter_;
+    Object * currentObject_;
+    QList<Object*> allObjects_;
     QList<Track*> tracks_;
 
     TrackViewOverpaint * overpaint_;

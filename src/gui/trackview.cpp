@@ -25,6 +25,7 @@
 #include "object/sequencefloat.h"
 #include "object/trackfloat.h"
 #include "object/scene.h"
+#include "object/util/objectfilter.h"
 #include "model/objecttreemodel.h"
 #include "model/objecttreemimedata.h"
 #include "io/error.h"
@@ -33,7 +34,6 @@
 #include "tool/enumnames.h"
 #include "util/scenesettings.h"
 
-
 namespace MO {
 namespace GUI {
 
@@ -41,6 +41,9 @@ TrackView::TrackView(QWidget *parent) :
     QWidget         (parent),
     scene_          (0),
     omodel_         (0),
+    sceneSettings_  (0),
+    objectFilter_   (new ObjectFilter()),
+    currentObject_  (0),
     header_         (0),
 
     offsetY_                (0),
@@ -90,6 +93,11 @@ TrackView::TrackView(QWidget *parent) :
     penFramedWidget_ = QPen(QColor(200,200,200));
     penFramedWidget_.setStyle(Qt::DotLine);
     penCurrentTime_ = QPen(QColor(255,255,255,60));
+}
+
+TrackView::~TrackView()
+{
+    delete objectFilter_;
 }
 
 void TrackView::setViewSpace(const UTIL::ViewSpace & s)
@@ -188,6 +196,13 @@ bool TrackView::updateWidgetViewSpace_(SequenceWidget * s)
 
 void TrackView::clearTracks()
 {
+    clearTracks_(false);
+}
+
+void TrackView::clearTracks_(bool keep_alltracks)
+{
+    if (!keep_alltracks)
+        allObjects_.clear();
     tracks_.clear();
     trackY_.clear();
 
@@ -203,18 +218,26 @@ void TrackView::clearTracks()
     header_->clearTracks();
 }
 
-
 void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
 {
-    MO_ASSERT(sceneSettings_, "TrackView::setTracks() without SceneSettings");
+    QList<Object*> obj;
+    for (auto t : tracks)
+        obj.append(t);
 
-    // removed previous content
+    setObjects(obj, send_signal);
+}
+
+void TrackView::setCurrentObject(Object * obj, bool send_signal)
+{
+    MO_ASSERT(sceneSettings_, "TrackView::setObjects() without SceneSettings");
+
+    // remove previous content
     clearTracks();
-    if (tracks.empty())
+    if (obj.empty())
         return;
 
     // determine scene
-    Scene * scene = tracks[0]->sceneObject();
+    Scene * scene = obj->sceneObject();
     if (scene != scene_)
     {
         connect(scene, SIGNAL(objectChanged(MO::Object*)),
@@ -226,10 +249,12 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
     }
     scene_ = scene;
     omodel_ = scene->model();
+    currentObject_ = obj;
 
     MO_ASSERT(scene_, "Scene not set in TrackView::setTracks()");
 
-    tracks_ = tracks;
+    // filter visible tracks
+    getFilteredTracks_(tracks_);
 
     calcTrackY_();
 
@@ -240,11 +265,37 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
     updateWidgetsViewSpace_();
     update();
 
+    header_->setTracks(tracks_);
+
     if (send_signal)
         emit tracksChanged();
-
-    header_->setTracks(tracks);
 }
+
+
+void TrackView::getFilteredTracks_(QList<Track *> &list)
+{
+    if (1) // belong-to-object
+    {
+        allObjects_ = currentObject_->getModulatingObjects();
+        allObjects_.prepend(currentObject_);
+    }
+    else
+    {
+        // copy tracks
+        allObjects_ = scene_->findChildObjects(Object::TG_ALL, true);
+        // expand by modulators
+        //objectFilter_->addAllModulators(obj, allObjects_);
+    }
+
+    // setup filter
+    //objectFilter_->setBelongToFilter(currentObject_);
+    //objectFilter_->setExpandObjects(true);
+
+    // transform
+    list.clear();
+    objectFilter_->transform(allObjects_, list);
+}
+
 
 void TrackView::calcTrackY_()
 {
@@ -830,6 +881,9 @@ int TrackView::trackIndex_(Track * t)
 {
     return tracks_.indexOf(t);
 }
+
+
+
 
 void TrackView::createEditActions_()
 {

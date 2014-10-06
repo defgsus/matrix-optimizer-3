@@ -744,8 +744,7 @@ void MainWindow::objectSelected_(Object * o)
     objectView_->setObject(o);
 
     // update sequencer
-    // XXX
-    //sequencer_->setTracks(scene_);
+    sequencer_->setCurrentObject(o);
 
     // update sequence editor
     if (o && o->type() == Object::T_SEQUENCE_FLOAT)

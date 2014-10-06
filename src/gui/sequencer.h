@@ -64,6 +64,13 @@ public slots:
     /** Convenience function to insert all tracks of the object. */
     void setTracks(Object *, bool recursive = true);
 
+    /** Adds everything relevant belonging to the objects */
+    void setObjects(const QList<Object*>& objects);
+
+    /** Tell the sequencer which object is currently selected.
+        This might change the track list according to filter settings. */
+    void setCurrentObject(Object *);
+
 protected:
 
     void resizeEvent(QResizeEvent *);

@@ -198,7 +198,8 @@ HEADERS += \
     src/math/denormals.h \
     src/audio/tool/butterworthfilter.h \
     src/audio/tool/fixedfilter.h \
-    src/object/util/synthsetting.h
+    src/object/util/synthsetting.h \
+    src/object/util/objectfilter.h
 
 
 SOURCES += \
@@ -351,4 +352,5 @@ SOURCES += \
     src/math/denormals.cpp \
     src/audio/tool/butterworthfilter.cpp \
     src/audio/tool/fixedfilter.cpp \
-    src/object/util/synthsetting.cpp
+    src/object/util/synthsetting.cpp \
+    src/object/util/objectfilter.cpp

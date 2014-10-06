@@ -63,7 +63,10 @@ namespace MO {
     class ModulatorObjectFloat;
 
     class ColorPostProcessingSetting;
+    class SynthSetting;
     class TextureSetting;
+
+    class ObjectFilter;
 
     class ObjectTreeModel;
     class ObjectTreeMimeData;
