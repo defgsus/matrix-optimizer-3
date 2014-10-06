@@ -139,6 +139,7 @@ void Geometry::clear()
     color_.clear();
     texcoord_.clear();
     triIndex_.clear();
+    indexMap_.clear();
 }
 
 void Geometry::setSharedVertices(bool enable, VertexType threshold)
@@ -290,7 +291,7 @@ const Geometry::VertexType * Geometry::line(
 }
 
 
-void Geometry::copyFrom(const Geometry &other)
+void Geometry::addGeometry(const Geometry &other)
 {
     if (other.numTriangles())
     for (uint i=0; i<other.numTriangles(); ++i)
@@ -666,9 +667,11 @@ void Geometry::normalizeSphere(VertexType scale, VertexType normalization)
     }
 }
 
-bool Geometry::transformWithEquation(const QString &equationX,
-                                     const QString &equationY,
-                                     const QString &equationZ)
+bool Geometry::transformWithEquation(const QString& equationX,
+                                     const QString& equationY,
+                                     const QString& equationZ,
+                                     const QStringList &constantNames,
+                                     const QList<Double> &constantValues)
 {
     Double vx, vy, vz, vindex;
 
@@ -679,6 +682,9 @@ bool Geometry::transformWithEquation(const QString &equationX,
         equ[i].variables().add("y", &vy, "");
         equ[i].variables().add("z", &vz, "");
         equ[i].variables().add("i", &vindex, "");
+
+        for (auto j=0; j<constantNames.size(); ++j)
+            equ[i].variables().add(constantNames[j].toStdString(), constantValues[j], "");
     }
 
     if (!equ[0].parse(equationX.toStdString()))
@@ -714,7 +720,9 @@ bool Geometry::transformWithEquation(const QString &equationX,
 bool Geometry::transformPrimitivesWithEquation(
                     const QString &equationX,
                     const QString &equationY,
-                    const QString &equationZ)
+                    const QString &equationZ,
+                    const QStringList& constantNames,
+                    const QList<Double>& constantValues)
 {
     Double vx, vy, vz, vnx, vny, vnz, vs, vt,
            vpx[3], vpy[3], vpz[3],
@@ -759,6 +767,8 @@ bool Geometry::transformPrimitivesWithEquation(
         equ[i].variables().add("t3", &vpt[2], "");
         equ[i].variables().add("i", &vi, "");
         equ[i].variables().add("p", &vp, "");
+        for (auto j=0; j<constantNames.size(); ++j)
+            equ[i].variables().add(constantNames[j].toStdString(), constantValues[j], "");
     }
 
     if (!equ[0].parse(equationX.toStdString()))
@@ -883,6 +893,8 @@ bool Geometry::transformPrimitivesWithEquation(
     return true;
 }
 
+
+
 bool Geometry::transformTexCoordsWithEquation(
                                         const QString &equationS,
                                         const QString &equationT)
@@ -933,6 +945,12 @@ bool Geometry::transformTexCoordsWithEquation(
 
     return true;
 }
+
+
+
+
+
+
 
 
 void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor,

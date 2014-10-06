@@ -63,6 +63,7 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void contextMenuEvent(QContextMenuEvent *);
+    void leaveEvent(QEvent *);
 
 protected slots:
 

@@ -57,7 +57,7 @@ TrackView::TrackView(QWidget *parent) :
     currentTime_            (0),
     hoverWidget_            (0),
 
-    filterCurrentObjectOnly_(false),
+    filterCurrentObjectOnly_(true),
     filterAddModulatingObjects_(true),
     alwaysFullObject_       (true),
 

@@ -216,10 +216,11 @@ public:
 
     // --------- manipulation --------------
 
-    /** Copies all data, step by step.
-        If vertex sharing is enabled, the vertices get shared even
-        if they are not in @p other */
-    void copyFrom(const Geometry& other);
+    /** Copies all data, step by step from @p other.
+        Previous contents stay as they are.
+        If vertex sharing is enabled, the vertices area shared regardless
+        of the setting in @p other */
+    void addGeometry(const Geometry& other);
 
     /** Scale all geometry */
     void scale(VertexType x, VertexType y, VertexType z);
@@ -271,7 +272,9 @@ public:
         Variables are x, y, z and i (for vertex index). */
     bool transformWithEquation(const QString& equationX,
                                const QString& equationY,
-                               const QString& equationZ);
+                               const QString& equationZ,
+                               const QStringList &constantNames = QStringList(),
+                               const QList<Double> &constantValues = QList<Double>());
 
     /** Applies the equation to the each vertex of each primitive.
         Variables are x, y, z (position), nx, ny, nz (normal), s, t (tex-coords),
@@ -279,10 +282,11 @@ public:
         nx1, ny1, nz1, nx2, ny2, nz2, nx3, ny3, nz3 (normal of each primitive vertex),
         s1, t1, s2, t2, s3, t3 (tex-coord of each primitive),
         i (primitive index) and p (for index of vertex in primitive). */
-    bool transformPrimitivesWithEquation(
-                               const QString& equationX,
-                               const QString& equationY,
-                               const QString& equationZ);
+    bool transformPrimitivesWithEquation(const QString& equationX,
+                                         const QString& equationY,
+                                         const QString& equationZ,
+                                         const QStringList &constantNames = QStringList(),
+                                         const QList<Double> &constantValues = QList<Double>());
 
     /** Applies the equation to the texture coordinates.
         Variables are x, y, z, s, t and i (for vertex index). */

@@ -36,6 +36,7 @@
 #include "geom/geometrymodifiertexcoordequation.h"
 #include "geom/geometrymodifierextrude.h"
 #include "geom/geometrymodifiertexcoords.h"
+#include "geom/geometrymodifierduplicate.h"
 
 namespace MO {
 namespace GUI {
@@ -651,6 +652,71 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
             editEquT->setPlainText(equ->getEquationT());
         };
     }
+
+
+    if (auto dupli = dynamic_cast<GEOM::GeometryModifierDuplicate*>(modifier_))
+    {
+        auto label = new QLabel(tr("number duplicates"), this);
+        group_->addWidget(label);
+
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            MO__SPIN(spinx, tr("Number of duplicates on x axis"),
+                           1, 1000000);
+            lh->addWidget(spinx);
+
+            MO__SPIN(spiny, tr("Number of duplicates on y axis"),
+                           1, 1000000);
+            lh->addWidget(spiny);
+
+            MO__SPIN(spinz, tr("Number of duplicates on z axis"),
+                           1, 1000000);
+            lh->addWidget(spinz);
+
+        QStringList vars = {
+            "x", "y", "z", "i", "s", "t",
+            "d", "dx", "dy", "dz" };
+
+        auto editEquX = new EquationEditor(this);
+        group_->addWidget(editEquX);
+        editEquX->addVariables(vars);
+        editEquX->setPlainText(dupli->getEquationX());
+        connect(editEquX, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        auto editEquY = new EquationEditor(this);
+        group_->addWidget(editEquY);
+        editEquY->addVariables(vars);
+        editEquY->setPlainText(dupli->getEquationY());
+        connect(editEquY, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        auto editEquZ = new EquationEditor(this);
+        group_->addWidget(editEquZ);
+        editEquZ->addVariables(vars);
+        editEquZ->setPlainText(dupli->getEquationZ());
+        connect(editEquZ, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            dupli->setDuplicatesX(spinx->value());
+            dupli->setDuplicatesY(spiny->value());
+            dupli->setDuplicatesZ(spinz->value());
+            dupli->setEquationX(editEquX->toPlainText());
+            dupli->setEquationY(editEquY->toPlainText());
+            dupli->setEquationZ(editEquZ->toPlainText());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            spinx->setValue(dupli->duplicatesX());
+            spiny->setValue(dupli->duplicatesY());
+            spinz->setValue(dupli->duplicatesZ());
+            editEquX->setPlainText(dupli->getEquationX());
+            editEquY->setPlainText(dupli->getEquationY());
+            editEquZ->setPlainText(dupli->getEquationZ());
+        };
+    }
+
 
 }
 

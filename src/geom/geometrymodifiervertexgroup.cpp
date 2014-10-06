@@ -57,7 +57,7 @@ void GeometryModifierVertexGroup::execute(Geometry *g)
         Geometry geo(*g);
         g->clear();
         g->setSharedVertices(true, threshold_);
-        g->copyFrom(geo);
+        g->addGeometry(geo);
     }
 
     if (!share_)

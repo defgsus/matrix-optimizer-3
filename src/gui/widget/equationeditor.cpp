@@ -311,12 +311,19 @@ void EquationEditor::keyPressEvent(QKeyEvent * e)
 
 void EquationEditor::onCursorChanged_()
 {
-    QTextCursor c = textCursor();
+    //QTextCursor c = textCursor();
+
     // hide the auto-completer
     if (completer_ && completer_->popup()->isVisible())
         completer_->popup()->hide();
 }
 
+void EquationEditor::leaveEvent(QEvent *)
+{
+    // hide the auto-completer
+    if (completer_ && completer_->popup()->isVisible())
+        completer_->popup()->hide();
+}
 
 void EquationEditor::insertCompletion_(const QString &word)
 {
