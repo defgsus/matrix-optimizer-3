@@ -17,6 +17,8 @@
 #include <QPainter>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QHBoxLayout>
+#include <QAction>
 
 #include "trackview.h"
 #include "trackviewoverpaint.h"
@@ -54,6 +56,10 @@ TrackView::TrackView(QWidget *parent) :
     nextFocusSequence_      (0),
     currentTime_            (0),
     hoverWidget_            (0),
+
+    filterCurrentObjectOnly_(false),
+    filterAddModulatingObjects_(true),
+    alwaysFullObject_       (true),
 
     trackSpacing_           (2),
     modifierMultiSelect_    (Qt::CTRL),
@@ -218,23 +224,22 @@ void TrackView::clearTracks_(bool keep_alltracks)
     header_->clearTracks();
 }
 
-void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
-{
-    QList<Object*> obj;
-    for (auto t : tracks)
-        obj.append(t);
-
-    setObjects(obj, send_signal);
-}
 
 void TrackView::setCurrentObject(Object * obj, bool send_signal)
 {
     MO_ASSERT(sceneSettings_, "TrackView::setObjects() without SceneSettings");
 
+//    if (obj == currentObject_)
+//        return;
+
     // remove previous content
     clearTracks();
-    if (obj.empty())
+
+    if (!obj)
+    {
+        currentObject_ = 0;
         return;
+    }
 
     // determine scene
     Scene * scene = obj->sceneObject();
@@ -274,10 +279,19 @@ void TrackView::setCurrentObject(Object * obj, bool send_signal)
 
 void TrackView::getFilteredTracks_(QList<Track *> &list)
 {
-    if (1) // belong-to-object
+    if (filterCurrentObjectOnly_ && currentObject_) // belong-to-object
     {
-        allObjects_ = currentObject_->getModulatingObjects();
-        allObjects_.prepend(currentObject_);
+        Object * o = getContainerObject_(currentObject_);
+
+        QList<Object*> list = o->findChildObjects(Object::TG_ALL, true);
+        list.prepend(o);
+
+        allObjects_ = list;
+
+        if (filterAddModulatingObjects_)
+            for (auto o : list)
+                allObjects_.append( o->getModulatingObjects() );
+
     }
     else
     {
@@ -294,6 +308,68 @@ void TrackView::getFilteredTracks_(QList<Track *> &list)
     // transform
     list.clear();
     objectFilter_->transform(allObjects_, list);
+}
+
+Object * TrackView::getContainerObject_(Object * o)
+{
+    int mask = Object::TG_REAL_OBJECT;
+
+    // at least the track
+    if (!alwaysFullObject_)
+        mask |= Object::TG_TRACK;
+
+    while (!(o->type() & mask))
+    {
+        if (!o->parentObject())
+            return o;
+
+        o = o->parentObject();
+    }
+    return o;
+}
+
+
+QMenu * TrackView::createFilterMenu()
+{
+    QMenu * m = new QMenu(this);
+    QAction * a;
+
+    QAction * curA = a = new QAction(tr("only show current object"), m);
+    m->addAction(a);
+    a->setCheckable(true);
+    a->setChecked(filterCurrentObjectOnly_);
+
+    QAction * fullA = a = new QAction(tr("always show full object"), m);
+    m->addAction(a);
+    a->setCheckable(true);
+    a->setChecked(alwaysFullObject_);
+    a->setEnabled(filterCurrentObjectOnly_);
+    connect(a, &QAction::triggered, [=]()
+    {
+        alwaysFullObject_ = a->isChecked();
+        setCurrentObject(currentObject_);
+    });
+
+    QAction * modA = a = new QAction(tr("include modulators"), m);
+    m->addAction(a);
+    a->setCheckable(true);
+    a->setChecked(filterAddModulatingObjects_);
+    a->setEnabled(filterCurrentObjectOnly_);
+    connect(a, &QAction::triggered, [=]()
+    {
+        filterAddModulatingObjects_ = a->isChecked();
+        setCurrentObject(currentObject_);
+    });
+
+    connect(curA, &QAction::triggered, [=]()
+    {
+        filterCurrentObjectOnly_ = curA->isChecked();
+        fullA->setEnabled(filterCurrentObjectOnly_);
+        modA->setEnabled(filterCurrentObjectOnly_);
+        setCurrentObject(currentObject_);
+    });
+
+    return m;
 }
 
 

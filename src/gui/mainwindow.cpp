@@ -215,6 +215,8 @@ void MainWindow::createWidgets_()
                         SLOT(setEditActions_(const QObject*,QList<QAction*>)));
                 connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
                         SLOT(objectSelected_(MO::Object*)));
+                connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
+                        SLOT(objectSelectedTree_(MO::Object*)));
 
                 // object tree model
                 objectTreeModel_ = new ObjectTreeModel(0, this);
@@ -599,7 +601,7 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
     seqFloatView_->setScene(scene_);
     seqFloatView_->setSequence(0);
 
-    sequencer_->setTracks(scene_);
+    sequencer_->setCurrentObject(scene_);
 
     glWindow_->renderLater();
 
@@ -740,11 +742,10 @@ bool MainWindow::restoreAllGeometry_()
 
 void MainWindow::objectSelected_(Object * o)
 {
+    MO_DEBUG("MainWindow::objectSelected(" << o << ")");
+
     // update object editor
     objectView_->setObject(o);
-
-    // update sequencer
-    sequencer_->setCurrentObject(o);
 
     // update sequence editor
     if (o && o->type() == Object::T_SEQUENCE_FLOAT)
@@ -760,11 +761,19 @@ void MainWindow::objectSelected_(Object * o)
     objectTreeView_->setFocusIndex(o);
 }
 
+void MainWindow::objectSelectedTree_(Object * o)
+{
+    MO_DEBUG("MainWindow::objectSelectedTree(" << o << ")");
+
+    // update sequence
+    sequencer_->setCurrentObject(o);
+}
+
 void MainWindow::treeChanged_()
 {
     //objectTreeView_->updateFromModel();
 
-    sequencer_->setTracks(scene_);
+    sequencer_->setCurrentObject(scene_);
 }
 
 void MainWindow::sceneChanged_()

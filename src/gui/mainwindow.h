@@ -65,6 +65,7 @@ private slots:
     void updateDebugRender_();
 
     void objectSelected_(MO::Object*);
+    void objectSelectedTree_(MO::Object*);
     void treeChanged_();
     /** To trigger sceneNotSaved_ */
     void sceneChanged_();

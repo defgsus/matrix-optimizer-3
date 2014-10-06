@@ -40,6 +40,8 @@ namespace GUI {
 ObjectTreeView::ObjectTreeView(QWidget *parent) :
     QTreeView   (parent),
     filter_     (new ObjectTreeSortProxy(this)),
+    scene_      (0),
+    lastSelectedObject_(0),
     overpaint_  (new ObjectTreeViewOverpaint(this)),
     sceneSettings_(0),
     sendExpanded_(true)
@@ -160,8 +162,10 @@ void ObjectTreeView::currentChanged(
     createEditActions_(obj);
 
     // notify mainwindow
-    if (obj)
+    if (obj && obj != lastSelectedObject_)
         emit objectSelected(obj);
+
+    lastSelectedObject_ = obj;
 }
 
 

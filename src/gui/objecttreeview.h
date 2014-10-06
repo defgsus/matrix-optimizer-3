@@ -122,12 +122,14 @@ protected:
     ObjectTreeModel * omodel_;
     ObjectTreeSortProxy * filter_;
     Scene * scene_;
+    Object * lastSelectedObject_;
 
     ObjectTreeViewOverpaint * overpaint_;
 
     SceneSettings * sceneSettings_;
 
     bool sendExpanded_;
+
 };
 
 } // namespace GUI
