@@ -18,6 +18,9 @@ QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 #for glm version >= 0.9.5
 DEFINES += GLM_FORCE_RADIANS
 
+#disable for production until it works ...
+DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
+
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 

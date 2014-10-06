@@ -231,12 +231,12 @@ void ProjectorSetupDialog::createWidgets_()
                                              tr("Projector's (vertical) projection angle in degree"),
                                              60, 1, 1, 180, SLOT(updateProjectorSettings_()));
                 spinFov_->setSuffix(" " + tr("°"));
-
+#ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
                 spinLensRad_ = createDoubleSpin_(gr, tr("lens radius"),
                                              tr("The radius of the projector's lens in centimeters"),
                                              0, 0.1, 0, 1000, SLOT(updateProjectorSettings_()));
                 spinLensRad_->setSuffix(" " + tr(" cm"));
-
+#endif
                 label = new QLabel(tr("position"), this);
                 gr->addWidget(label);
 
@@ -736,7 +736,9 @@ void ProjectorSetupDialog::updateProjectorSettings_()
     projectorSettings_->setWidth(spinWidth_->value());
     projectorSettings_->setHeight(spinHeight_->value());
     projectorSettings_->setFov(spinFov_->value());
+#ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     projectorSettings_->setLensRadius(spinLensRad_->value() / 100);
+#endif
     projectorSettings_->setDistance(spinDist_->value() / 100);
     projectorSettings_->setLatitude(spinLat_->value());
     projectorSettings_->setLongitude(spinLong_->value());
@@ -791,7 +793,9 @@ void ProjectorSetupDialog::updateProjectorWidgets_()
     spinWidth_->setValue( projectorSettings_->width() );
     spinHeight_->setValue( projectorSettings_->height() );
     spinFov_->setValue( projectorSettings_->fov() );
+#ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     spinLensRad_->setValue( projectorSettings_->lensRadius() );
+#endif
     spinDist_->setValue( projectorSettings_->distance() );
     spinLat_->setValue( projectorSettings_->latitude() );
     spinLong_->setValue( projectorSettings_->longitude() );

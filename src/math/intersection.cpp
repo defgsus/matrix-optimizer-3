@@ -89,36 +89,19 @@ bool intersect_ray_sphere(const Vec3& ray_origin,
     return false;
 }
 
+
+
+
 /*
-bool Sphere::Intersect(const Ray& ray, const VECTOR Center, DBL Radius2, DBL *Depth1, DBL *Depth2)
+QVector<Vec2> get_intersection(const QVector<Vec2> &poly, const Vec2 &box_br, const Vec2 &box_tl)
 {
-    DBL OCSquared, t_Closest_Approach, Half_Chord, t_Half_Chord_Squared;
-    VECTOR Origin_To_Center;
 
-    VSub(Origin_To_Center, Center, ray.Origin);
-
-    VDot(OCSquared, Origin_To_Center, Origin_To_Center);
-
-    VDot(t_Closest_Approach, Origin_To_Center, ray.Direction);
-
-    if ((OCSquared >= Radius2) && (t_Closest_Approach < EPSILON))
-        return(false);
-
-    t_Half_Chord_Squared = Radius2 - OCSquared + Sqr(t_Closest_Approach);
-
-    if (t_Half_Chord_Squared > EPSILON)
-    {
-        Half_Chord = sqrt(t_Half_Chord_Squared);
-
-        *Depth1 = t_Closest_Approach - Half_Chord;
-        *Depth2 = t_Closest_Approach + Half_Chord;
-
-        return(true);
-    }
-
-    return(false);
 }
 */
+
+
+
+
 
 } // namespace MATH
 } // namespace MO

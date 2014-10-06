@@ -34,11 +34,9 @@ SceneSettings::SceneSettings(QObject *parent)
 }
 
 SceneSettings::SceneSettings(const SceneSettings &other)
-    :   QObject         (other.parent()),
-        viewSpaces_     (other.viewSpaces_),
-        trackHeights_   (other.trackHeights_),
-        paramGroupExpanded_(other.paramGroupExpanded_)
+    :   QObject         (other.parent())
 {
+    *this = other;
 }
 
 SceneSettings& SceneSettings::operator=(const SceneSettings& other)
@@ -46,6 +44,7 @@ SceneSettings& SceneSettings::operator=(const SceneSettings& other)
     viewSpaces_ = other.viewSpaces_;
     trackHeights_ = other.trackHeights_;
     paramGroupExpanded_ = other.paramGroupExpanded_;
+    treeExpanded_ = other.treeExpanded_;
 
     return *this;
 }
@@ -54,7 +53,7 @@ void SceneSettings::serialize(IO::DataStream &io) const
 {
     MO_DEBUG_IO("SceneSettings::serialize(" << &io << ")");
 
-    io.writeHeader("scenesettings", 2);
+    io.writeHeader("scenesettings", 3);
 
     io << trackHeights_;
 
@@ -68,13 +67,16 @@ void SceneSettings::serialize(IO::DataStream &io) const
 
     // v2
     io << paramGroupExpanded_;
+
+    // v3
+    io << treeExpanded_;
 }
 
 void SceneSettings::deserialize(IO::DataStream &io)
 {
     MO_DEBUG_IO("SceneSettings::deserialize(" << &io << ")");
 
-    const int ver = io.readHeader("scenesettings", 2);
+    const int ver = io.readHeader("scenesettings", 3);
 
     io >> trackHeights_;
 
@@ -96,6 +98,9 @@ void SceneSettings::deserialize(IO::DataStream &io)
 
     if (ver >= 2)
         io >> paramGroupExpanded_;
+
+    if (ver >= 3)
+        io >> treeExpanded_;
 }
 
 void SceneSettings::saveFile(const QString &filename) const
@@ -164,6 +169,7 @@ void SceneSettings::clear()
     viewSpaces_.clear();
     trackHeights_.clear();
     paramGroupExpanded_.clear();
+    treeExpanded_.clear();
 }
 
 
@@ -230,6 +236,25 @@ bool SceneSettings::getParameterGroupExpanded(const Object * obj, const QString 
     const QString id = obj->idName() + "/" + groupId;
     return paramGroupExpanded_.contains(id);
 }
+
+
+void SceneSettings::setExpanded(
+        const Object * obj, const QString &groupId, bool expanded)
+{
+    const QString id = groupId + "/" + obj->idName();
+//    MO_DEBUG("expanded " << id << " " << (int)expanded);
+    if (!expanded)
+        treeExpanded_.remove(id);
+    else
+        treeExpanded_.insert(id);
+}
+
+bool SceneSettings::getExpanded(const Object * obj, const QString &groupId) const
+{
+    const QString id = groupId + "/" + obj->idName();
+    return treeExpanded_.contains(id);
+}
+
 
 
 } // namespace GUI

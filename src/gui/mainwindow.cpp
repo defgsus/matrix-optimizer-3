@@ -208,6 +208,7 @@ void MainWindow::createWidgets_()
                 objectTreeView_ = new ObjectTreeView(this);
                 lv->addWidget(objectTreeView_);
                 objectTreeView_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+                objectTreeView_->setSceneSettings(sceneSettings_);
                 //objectTreeView_->setMinimumWidth(320);
                 //objectTreeView_->setMaximumWidth(450);
                 connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
@@ -762,7 +763,8 @@ void MainWindow::objectSelected_(Object * o)
 
 void MainWindow::treeChanged_()
 {
-    objectTreeView_->updateFromModel();
+    //objectTreeView_->updateFromModel();
+
     sequencer_->setTracks(scene_);
 }
 

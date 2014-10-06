@@ -53,9 +53,13 @@ void ProjectorMapper::recalc_()
 
     // ---- calc projection of projector ----
 
+#ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     // near-plane is the surface of the projector lens
     // we choose it so the lensradius will fit
     zNear_ = set_.lensRadius() * aspect_ / std::tan(MATH::deg_to_rad(set_.fov()) / 2);
+#else
+    zNear_ = 0.01;
+#endif
 
     // make far-plane always farther than distance to other side of dome
     zFar_ = zNear_ + set_.distance() + domeSet_.radius() * 2.f + 0.1f;

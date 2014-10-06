@@ -3,6 +3,8 @@
     <dome version="1" name="" radius="10" coverage="180" tiltX="0" tiltZ="0"/>
     <projector version="2" id="1" name="projector 1" width="1920" height="1080" fov="30" lens_radius="0.0001" latitude="180" longitude="0" distance="0" pitch="43.8" yaw="37.1" roll="0"/>
     <projector version="2" id="2" name="projector 2" width="1920" height="1080" fov="29" lens_radius="0.0001" latitude="0" longitude="-1" distance="0" pitch="20" yaw="0" roll="0"/>
+    <projector version="2" id="0" name="Projector 3" width="1920" height="1080" fov="30" lens_radius="0.01" latitude="0" longitude="0" distance="0" pitch="20.2" yaw="34.2" roll="0"/>
     <camera version="1" width="1920" height="1080" fov="73.1" x="0" y="0" z="0" pitch="58.6" yaw="-48.1" roll="70" znear="0.01" zfar="10000"/>
     <camera version="1" width="1920" height="1080" fov="71.9" x="0" y="0" z="0" pitch="45.7" yaw="0" roll="0" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="60" x="0" y="0" z="0" pitch="0" yaw="0" roll="0" znear="0.01" zfar="10000"/>
 </mo-projection-system>

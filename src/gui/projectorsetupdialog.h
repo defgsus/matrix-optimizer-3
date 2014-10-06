@@ -148,7 +148,9 @@ private:
         * spinDomeTiltZ_,
 
         * spinFov_,
+#ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
         * spinLensRad_,
+#endif
         * spinDist_,
         * spinLat_,
         * spinLong_,

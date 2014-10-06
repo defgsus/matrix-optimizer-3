@@ -25,6 +25,7 @@ class ObjectTreeSortProxy;
 namespace GUI {
 
 class ObjectTreeViewOverpaint;
+class SceneSettings;
 
 class ObjectTreeView : public QTreeView
 {
@@ -38,10 +39,12 @@ public:
 
     void setObjectModel(ObjectTreeModel * objectModel);
 
+    void setSceneSettings(SceneSettings * s) { sceneSettings_ = s; }
+
     Scene * sceneObject() const { return scene_; }
 
     /** Returns the index (into the filter-model) for a given object. */
-    QModelIndex getIndexForObject(Object *) const;
+    QModelIndex getIndexForObject(const Object *) const;
 
     /** Returns the index (into the filter-model) of a given object.
         If the item is not visible because a parent item is not expanded,
@@ -77,6 +80,8 @@ public slots:
 protected slots:
 
     void modelChanged_();
+    void onExpanded_(const QModelIndex&);
+    void onCollapsed_(const QModelIndex&);
 
 protected:
 
@@ -94,6 +99,10 @@ protected:
     void createEditObjectActions_(Object *);
     void createNewObjectActions_(Object *);
     void createMoveActions_(Object *);
+
+    /** Sets the expanded-flags according to SceneSettings */
+    void restoreExpansion_();
+    void restoreExpansion_(const Object*);
 
     /** Creates a menu with all possibly child objects for @p parent.
         Each action has the Object::className() in it's data QVariant.
@@ -115,6 +124,10 @@ protected:
     Scene * scene_;
 
     ObjectTreeViewOverpaint * overpaint_;
+
+    SceneSettings * sceneSettings_;
+
+    bool sendExpanded_;
 };
 
 } // namespace GUI

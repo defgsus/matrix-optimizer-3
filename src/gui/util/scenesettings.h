@@ -43,20 +43,34 @@ public:
     /** Clear everything */
     void clear();
 
+    // -------- ViewSpaces accociated to Objects ---------
+
     void setViewSpace(const Object *obj, const UTIL::ViewSpace &viewspace);
     UTIL::ViewSpace getViewSpace(const Object * obj);
+
+    // --------------- Track heights ---------------------
 
     void setTrackHeight(const Track *, int);
     int getTrackHeight(const Track *) const;
 
+    // ------ expanded-flag of ParameterGroups -----------
+
     void setParameterGroupExpanded(const Object *, const QString& groupId, bool expanded);
     bool getParameterGroupExpanded(const Object *, const QString& groupId) const;
+
+    // ------ expanded-flags of Objects in ObjectTreeView ------
+
+    void setExpanded(const Object *, const QString& groupdId, bool expanded);
+    bool getExpanded(const Object *, const QString& groupdId) const;
 
 private:
 
     QHash<QString, UTIL::ViewSpace> viewSpaces_;
     QHash<QString, int> trackHeights_;
-    QSet<QString> paramGroupExpanded_;
+    QSet<QString>
+        paramGroupExpanded_,
+        treeExpanded_;
+
 
     // ---- config ----
 

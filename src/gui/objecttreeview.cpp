@@ -31,6 +31,7 @@
 #include "io/log.h"
 #include "geometrydialog.h"
 #include "painter/objecttreeviewoverpaint.h"
+#include "util/scenesettings.h"
 
 namespace MO {
 namespace GUI {
@@ -39,7 +40,9 @@ namespace GUI {
 ObjectTreeView::ObjectTreeView(QWidget *parent) :
     QTreeView   (parent),
     filter_     (new ObjectTreeSortProxy(this)),
-    overpaint_  (new ObjectTreeViewOverpaint(this))
+    overpaint_  (new ObjectTreeViewOverpaint(this)),
+    sceneSettings_(0),
+    sendExpanded_(true)
 {
     setStatusTip(tr("Scene tree: right-click to open context menu"));
 
@@ -54,6 +57,11 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
     setHeaderHidden(true);
     setRootIsDecorated(true);
 
+    connect(this, SIGNAL(expanded(QModelIndex)),
+            this, SLOT(onExpanded_(QModelIndex)));
+    connect(this, SIGNAL(collapsed(QModelIndex)),
+            this, SLOT(onCollapsed_(QModelIndex)));
+
     // default actions
     createDefaultActions_();
 
@@ -61,7 +69,7 @@ ObjectTreeView::ObjectTreeView(QWidget *parent) :
 }
 
 
-QModelIndex ObjectTreeView::getIndexForObject(Object * obj) const
+QModelIndex ObjectTreeView::getIndexForObject(const Object * obj) const
 {
     QModelIndex oidx = omodel_->indexForObject(obj);
     if (!oidx.isValid())
@@ -126,13 +134,18 @@ void ObjectTreeView::modelChanged_()
 {
     scene_ = qobject_cast<Scene*>(omodel_->rootObject());
     overpaint_->updateAll();
+
+    restoreExpansion_();
 }
 
 void ObjectTreeView::updateFromModel()
 {
     if (!scene_)
         return;
+
     rowsInserted(rootIndex(), 0, scene_->numChildren());
+    //omodel_->setSceneObject(scene_);
+
     overpaint_->updateAll();
 }
 
@@ -819,6 +832,65 @@ bool ObjectTreeView::deleteObject_(const QModelIndex &index)
     MO_ASSERT(false, "can't delete object with invalid index");
 
     return false;
+}
+
+void ObjectTreeView::onExpanded_(const QModelIndex & idx)
+{
+    if (!sendExpanded_ || !sceneSettings_)
+        return;
+
+    const Object * o = model()->data(idx, ObjectRole).value<Object*>();
+    if (o)
+        sceneSettings_->setExpanded(o, "tv0", true);
+}
+
+void ObjectTreeView::onCollapsed_(const QModelIndex & idx)
+{
+    if (!sendExpanded_ || !sceneSettings_)
+        return;
+
+    const Object * o = model()->data(idx, ObjectRole).value<Object*>();
+    if (o)
+        sceneSettings_->setExpanded(o, "tv0", false);
+}
+
+void ObjectTreeView::restoreExpansion_()
+{
+    if (!sceneSettings_)
+        return;
+
+    // ommit unnecessary updating of SceneSettings
+    sendExpanded_ = false;
+
+    restoreExpansion_(sceneObject());
+
+    sendExpanded_ = true;
+}
+
+void ObjectTreeView::restoreExpansion_(const Object * o)
+{
+    QModelIndex idx = getIndexForObject(o);
+
+    //MO_DEBUG("expand " << o << " " << idx);
+
+    if (!o)
+        return;
+
+    // expand/collapse this object
+    if (idx.isValid())
+    {
+        bool exp = isExpanded(idx),
+             exp2 = sceneSettings_->getExpanded(o, "tv0");
+        //MO_DEBUG("expand " << o << " " << idx << " " << (int)exp << " " << (int)exp2);
+        if (exp != exp2)
+            setExpanded(idx, exp2);
+    }
+
+    // traverse childs
+    for (auto c : o->childObjects())
+    {
+        restoreExpansion_(c);
+    }
 }
 
 

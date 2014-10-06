@@ -11,6 +11,8 @@
 #ifndef MOSRC_MATH_INTERSECTION_H
 #define MOSRC_MATH_INTERSECTION_H
 
+#include <QVector>
+
 #include "types/vector.h"
 
 namespace MO {
@@ -38,6 +40,12 @@ bool intersect_ray_sphere(const Vec3& ray_origin,
                           Float sphere_radius,
                           Float * depth1 = 0,
                           Float * depth2 = 0);
+
+
+/* Returns the intersection of a polygon and a box */
+//QVector<Vec2> get_intersection(const QVector<Vec2>& poly, const Vec2& box_br, const Vec2& box_tl);
+
+
 
 } // namespace MATH
 } // namespace MO
