@@ -342,7 +342,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
     {
         case GL_TEXTURE_1D:
             MO_CHECK_GL_RET_COND( rep_,
-            glTexImage1D(
+            gl::glTexImage1D(
                 target_,
                 // mipmap level
                 mipmap_level,
@@ -373,7 +373,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
         case GL_TEXTURE_2D:
 
             MO_CHECK_GL_RET_COND( rep_,
-            glTexImage2D(
+            gl::glTexImage2D(
                 target_,
                 // mipmap level
                 mipmap_level,
@@ -409,7 +409,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
         case GL_TEXTURE_CUBE_MAP:
 
             MO_CHECK_GL_RET_COND( rep_,
-            glTexImage2D(
+            gl::glTexImage2D(
                 cube_target,
                 // mipmap level
                 mipmap_level,

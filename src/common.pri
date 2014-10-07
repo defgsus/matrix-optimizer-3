@@ -199,7 +199,8 @@ HEADERS += \
     src/audio/tool/fixedfilter.h \
     src/object/util/synthsetting.h \
     src/object/util/objectfilter.h \
-    src/geom/geometrymodifierduplicate.h
+    src/geom/geometrymodifierduplicate.h \
+    src/math/polygon.h
 
 
 SOURCES += \
@@ -353,4 +354,5 @@ SOURCES += \
     src/audio/tool/fixedfilter.cpp \
     src/object/util/synthsetting.cpp \
     src/object/util/objectfilter.cpp \
-    src/geom/geometrymodifierduplicate.cpp
+    src/geom/geometrymodifierduplicate.cpp \
+    src/math/polygon.cpp

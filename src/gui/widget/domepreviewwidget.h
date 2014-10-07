@@ -34,6 +34,7 @@ public:
     bool getShowGrid() const { return showGrid_; }
     bool getShowRays() const { return showRays_; }
     bool getShowCurrentCamera() const { return showCurrentCamera_; }
+    bool getShowTexture() const { return showSliceTexture_; }
 
     /** Sets the view matrix when in CM_SET mode */
     void setViewMatrix(const Mat4&) Q_DECL_OVERRIDE;
@@ -46,6 +47,7 @@ public slots:
     void setShowGrid(bool enable) { showGrid_ = enable; update(); }
     void setShowRays(bool enable);
     void setShowCurrentCamera(bool enable);
+    void setShowTexture(bool enable);
 
     /** Updates the settings and graphical display.
         If @p currentProjectorIndex >= 0, then this projector will be highlighted. */
@@ -66,13 +68,17 @@ private:
     void createDomeGeometry_();
     void createProjectorGeometry_();
     void setCurrentCameraMatrix_();
+    void createTexture_(GL::Texture ** , int index);
 
     ProjectionSystemSettings * settings_;
 
     GEOM::Geometry * domeGeometry_;
     GEOM::Geometry * projectorGeometry_;
+    std::vector<GEOM::Geometry*> ptextureGeom_;
     GL::Drawable * domeDrawable_;
     GL::Drawable * projectorDrawable_;
+    std::vector<GL::Drawable*> ptextureDrawable_;
+    std::vector<GL::Texture*> ptexture_;
 
     Mat4 domeTransform_;
 
@@ -80,7 +86,8 @@ private:
          showDome_,
          showRays_,
          showCurrentCamera_,
-         showProjectedSurface_;
+         showProjectedSurface_,
+         showSliceTexture_;
 
     int projIndex_;
 

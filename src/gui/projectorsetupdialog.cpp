@@ -461,6 +461,11 @@ void ProjectorSetupDialog::createWidgets_()
                 cb->setChecked(display_->getShowRays());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowRays(bool)));
 
+                cb = new QCheckBox(tr("show content"), this);
+                lh2->addWidget(cb);
+                cb->setChecked(display_->getShowTexture());
+                connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowTexture(bool)));
+
             // --- dome settings ---
 
             frame = new QFrame(this);

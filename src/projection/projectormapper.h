@@ -116,6 +116,10 @@ public:
         @p smaller makes the area smaller, range [0,1) */
     QVector<Vec2> createOutline(Float max_spacing, Float smaller = 0) const;
 
+    /** Find edge-blend necessary for this projector to fade into @p other.
+        Geometry is written into @p g. */
+    bool getBlendGeometry(const ProjectorMapper & other, GEOM::Geometry * g);
+
     /** Returns an anti-clockwise polygon outline of the overlapping area between
         this slice and the slice in @p other.
         The coordinates are in the range [0,1].
@@ -127,7 +131,7 @@ public:
         @note Needless to say that @p other should have the same DomeSettings. */
     QVector<Vec2> getOverlapArea(const ProjectorSettings& other, Float min_spacing = 0.05, Float max_spacing = 1.0) const;
 
-    /** Truns the polygon into a triangle Geometry. */
+    /** Turns the polygon into a triangle Geometry. */
     void getBlendGeometry(const QVector<Vec2>&, GEOM::Geometry *) const;
 
     //______________ PRIVATE AREA _________________

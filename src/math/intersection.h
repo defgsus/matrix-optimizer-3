@@ -22,6 +22,9 @@ namespace MATH {
     In other words, if the point @p v, is within the square <mi,mi> - <ma,ma> */
 bool inside_range(const Vec2& v, Float mi, Float ma);
 
+/** Returns true if both components of @p v are in the range [@p mi,@p ma].
+    In other words, if the point @p v, is within the mi - ma */
+bool inside_range(const Vec2 &v, const Vec2& mi, const Vec2& ma);
 
 /** Returns true if lines A and B intersect.
     Returns the intersection parameter in @p t [0,1], if @p t != NULL.
@@ -42,8 +45,6 @@ bool intersect_ray_sphere(const Vec3& ray_origin,
                           Float * depth2 = 0);
 
 
-/* Returns the intersection of a polygon and a box */
-//QVector<Vec2> get_intersection(const QVector<Vec2>& poly, const Vec2& box_br, const Vec2& box_tl);
 
 
 

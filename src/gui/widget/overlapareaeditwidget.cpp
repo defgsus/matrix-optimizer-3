@@ -90,6 +90,7 @@ void OverlapAreaEditWidget::createGeometry_()
     mapper.setSettings(dome, proj);
 
     lineGeom_ = new GEOM::Geometry();
+    blendGeom_ = new GEOM::Geometry();
 
     // -- outline --
     lineGeom_->setColor(0.3,0.3,0.3,1);
@@ -207,6 +208,12 @@ void OverlapAreaEditWidget::createGeometry_()
             p1 = p2;
             ldist = dist;
         }
+
+
+        // the blend geometry
+
+        mapper.getBlendGeometry(omapper, blendGeom_);
+
     }
 }
 

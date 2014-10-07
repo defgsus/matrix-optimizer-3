@@ -10,6 +10,9 @@
 
 #include <vector>
 
+#include <QPainter>
+#include <QImage>
+
 #include "domepreviewwidget.h"
 #include "projection/projectionsystemsettings.h"
 #include "projection/projectormapper.h"
@@ -17,6 +20,9 @@
 #include "geom/geometryfactory.h"
 #include "gl/drawable.h"
 #include "gl/compatibility.h"
+#include "gl/shadersource.h"
+#include "gl/texture.h"
+#include "img/image.h"
 #include "math/vector.h"
 #include "io/log.h"
 #include "io/settings.h"
@@ -33,7 +39,8 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
       showDome_     (true),
       showRays_     (true),
       showCurrentCamera_(false),
-      showProjectedSurface_(true)
+      showProjectedSurface_(true),
+      showSliceTexture_(false)
 
 {
     setObjectName("_DomePreviewWidget");
@@ -41,6 +48,7 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
     showGrid_ = MO::settings->value(objectName()+"/showGrid", true).toBool();
     showDome_ = MO::settings->value(objectName()+"/showDome", true).toBool();
     showRays_ = MO::settings->value(objectName()+"/showRays", true).toBool();
+    showSliceTexture_ = MO::settings->value(objectName()+"/showTex", true).toBool();
 
     createDomeGeometry_();
     createProjectorGeometry_();
@@ -51,7 +59,12 @@ DomePreviewWidget::~DomePreviewWidget()
     MO::settings->setValue(objectName()+"/showGrid", showGrid_);
     MO::settings->setValue(objectName()+"/showDome", showDome_);
     MO::settings->setValue(objectName()+"/showRays", showRays_);
+    MO::settings->setValue(objectName()+"/showTex", showSliceTexture_);
 
+    for (auto i : ptextureGeom_)
+        delete i;
+    for (auto i : ptextureDrawable_)
+        delete i;
     delete domeGeometry_;
     delete projectorGeometry_;
     delete settings_;
@@ -68,6 +81,16 @@ void DomePreviewWidget::setShowRays(bool enable)
         return;
 
     showRays_ = enable;
+    createProjectorGeometry_();
+    update();
+}
+
+void DomePreviewWidget::setShowTexture(bool enable)
+{
+    if (enable == showSliceTexture_)
+        return;
+
+    showSliceTexture_ = enable;
     createProjectorGeometry_();
     update();
 }
@@ -100,6 +123,7 @@ void DomePreviewWidget::setShowCurrentCamera(bool enable)
 
     createProjectorGeometry_();
 }
+
 
 void DomePreviewWidget::setCurrentCameraMatrix_()
 {
@@ -135,6 +159,7 @@ void DomePreviewWidget::setProjectionSettings(
 
 void DomePreviewWidget::createDomeGeometry_()
 {
+    delete domeGeometry_;
     domeGeometry_ = new GEOM::Geometry();
     domeGeometry_->setSharedVertices(false);
     domeGeometry_->setColor(0.5,0.5,0.5,1.0);
@@ -173,7 +198,12 @@ void DomePreviewWidget::createProjectorGeometry_()
 {
     ProjectorMapper mapper;
 
+    for (auto i : ptextureGeom_)
+        delete i;
+    ptextureGeom_.clear();
+
     // build geometry
+    delete projectorGeometry_;
     projectorGeometry_ = new GEOM::Geometry();
 
     for (uint i=0; i<settings_->numProjectors(); ++i)
@@ -253,9 +283,47 @@ void DomePreviewWidget::createProjectorGeometry_()
                     projectorGeometry_->addLine(idx[(y-1)*num+x], idx[y*num+x]);
             }
         }
+
+
+        // textured slice
+
+        if (showSliceTexture_)
+        {
+            GEOM::Geometry * g = new GEOM::Geometry();
+
+            if (highlight)
+                g->setColor(1,1,1,1);
+            else
+                g->setColor(0.5,0.5,0.5,1);
+
+            std::vector<GEOM::Geometry::IndexType> idx;
+            const int num = 11;
+            // create grid
+            for (uint y = 0; y<num; ++y)
+            for (uint x = 0; x<num; ++x)
+            {
+                const Vec3 pos = mapper.mapToDome(
+                            (Float)x/(num-1), (Float)y/(num-1));
+                g->setTexCoord(Float(x)/(num-1), Float(y)/(num-1));
+                idx.push_back( g->addVertex(pos[0], pos[1], pos[2]));
+            }
+
+            // connect grid
+            for (uint y = 1; y<num; ++y)
+            for (uint x = 1; x<num; ++x)
+            {
+                g->addTriangle(idx[(y-1)*num+x-1], idx[(y-1)*num+x], idx[y*num+x]);
+                g->addTriangle(idx[(y-1)*num+x-1], idx[y*num+x], idx[y*num+x-1]);
+            }
+
+            ptextureGeom_.push_back(g);
+        }
+
     }
 
     projectorGeometry_->applyMatrix(domeTransform_);
+    for (auto p : ptextureGeom_)
+        p->applyMatrix(domeTransform_);
 }
 
 void DomePreviewWidget::initGL()
@@ -273,6 +341,22 @@ void DomePreviewWidget::releaseGL()
     if (projectorDrawable_->isReady())
         projectorDrawable_->releaseOpenGl();
     delete projectorDrawable_;
+
+    for (auto i : ptextureDrawable_)
+    {
+        if (i->isReady())
+            i->releaseOpenGl();
+        delete i;
+    }
+    ptextureDrawable_.clear();
+
+    for (auto i : ptexture_)
+    {
+        if (i->isCreated())
+            i->release();
+        delete i;
+    }
+    ptexture_.clear();
 }
 
 void DomePreviewWidget::drawGL(const Mat4 &projection,
@@ -280,15 +364,6 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
                                const Mat4 &viewTrans,
                                const Mat4 &trans)
 {
-    MO_CHECK_GL( gl::glClearColor(0, 0, 0, 1) );
-    MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
-
-    MO_CHECK_GL( gl::glDisable(gl::GL_DEPTH_TEST) );
-    MO_CHECK_GL( gl::glEnable(gl::GL_BLEND) );
-    MO_CHECK_GL( gl::glBlendFunc(gl::GL_SRC_ALPHA, gl::GL_ONE) );
-    GL::setLineSmooth(true);
-    GL::setLineWidth((GLfloat)fboSize().height() / 512);
-
     if (domeGeometry_)
     {
         domeDrawable_->setGeometry(domeGeometry_);
@@ -305,17 +380,114 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
         projectorDrawable_->createOpenGl();
     }
 
+    if (ptextureGeom_.size())
+    {
+        // create drawables if necessary
+        if (ptextureDrawable_.size() < ptextureGeom_.size())
+        {
+            int s = ptextureDrawable_.size();
+            ptextureDrawable_.resize(ptextureGeom_.size());
+            for (uint i=s; i<ptextureDrawable_.size(); ++i)
+            {
+                ptextureDrawable_[i] = new GL::Drawable(QString("_tex%1").arg(i));
+                GL::ShaderSource * src = new GL::ShaderSource();
+                src->loadDefaultSource();
+                src->addDefine("#define MO_ENABLE_TEXTURE");
+                ptextureDrawable_[i]->setShaderSource(src);
+            }
+            // also create textures
+            ptexture_.resize(ptextureGeom_.size());
+            for (uint i=s; i<ptextureDrawable_.size(); ++i)
+            {
+                createTexture_(&ptexture_[i], i);
+            }
+        }
+        // or remove them
+        else if (ptextureDrawable_.size() > ptextureGeom_.size())
+        {
+            int s = ptextureDrawable_.size();
+            for (uint i=s; i<ptextureDrawable_.size(); ++i)
+            {
+                if (ptextureDrawable_[i]->isReady())
+                    ptextureDrawable_[i]->releaseOpenGl();
+                delete ptextureDrawable_[i];
+            }
+            ptextureDrawable_.resize(ptextureGeom_.size());
+            // remove textures
+            for (uint i=s; i<ptexture_.size(); ++i)
+            {
+                if (ptexture_[i]->isCreated())
+                    ptexture_[i]->release();
+                delete ptexture_[i];
+            }
+            ptexture_.resize(ptextureGeom_.size());
+        }
+        // create vaos
+        for (uint i = 0; i < ptextureGeom_.size(); ++i)
+        {
+            ptextureDrawable_[i]->setGeometry(ptextureGeom_[i]);
+            ptextureDrawable_[i]->createOpenGl();
+        }
+
+        ptextureGeom_.clear();
+
+    }
+
+    // --- draw ---
+
+    MO_CHECK_GL( gl::glClearColor(0, 0, 0, 1) );
+    MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
+
+    MO_CHECK_GL( gl::glDisable(gl::GL_DEPTH_TEST) );
+    MO_CHECK_GL( gl::glEnable(gl::GL_BLEND) );
+    MO_CHECK_GL( gl::glBlendFunc(gl::GL_SRC_ALPHA, gl::GL_ONE) );
+    GL::setLineSmooth(true);
+    GL::setLineWidth((GLfloat)fboSize().height() / 512);
+
     if (domeDrawable_->isReady() && showDome_)
         domeDrawable_->renderShader(projection, cubeViewTrans, viewTrans, trans);
 
     if (projectorDrawable_->isReady())
         projectorDrawable_->renderShader(projection, cubeViewTrans, viewTrans, trans);
 
+    if (showSliceTexture_)
+    for (uint i=0; i<ptextureDrawable_.size(); ++i)
+    {
+        ptexture_[i]->bind();
+        ptextureDrawable_[i]->renderShader(projection, cubeViewTrans, viewTrans, trans);
+    }
+
     if (showGrid_)
         drawGrid(projection, cubeViewTrans, viewTrans, trans);
 
     MO_CHECK_GL( gl::glDisable(gl::GL_BLEND) );
 }
+
+
+void DomePreviewWidget::createTexture_(GL::Texture **tex, int index)
+{
+    MO_DEBUG_GL("DomePreviewWidget::createTexture_(" << *tex << ", " << index << ")");
+
+    QImage qimg(320,200, QImage::Format_ARGB32);
+    QPainter p(&qimg);
+
+    qimg.fill(QColor(100,100,100));
+    p.setPen(QPen(Qt::white));
+    p.setBrush(QBrush(Qt::white));
+    QFont font(p.font());
+    font.setPixelSize(qimg.height()/2);
+    p.setFont(font);
+    p.drawText(qimg.rect(), Qt::AlignCenter | Qt::AlignVCenter,
+               QString("%1").arg(index+1));
+
+    Image img;
+    img.createFrom(qimg);
+
+    *tex = GL::Texture::createFromImage(img, gl::GL_RGB);
+
+    //tex->create(320,200,gl::GL_RGB,gl::GL_FLOAT,0);
+}
+
 
 } // namespace GUI
 } // namespace MO

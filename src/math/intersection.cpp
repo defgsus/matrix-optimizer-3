@@ -20,6 +20,11 @@ bool inside_range(const Vec2 &v, Float mi, Float ma)
     return v[0] >= mi && v[1] >= mi && v[0] <= ma && v[1] <= ma;
 }
 
+bool inside_range(const Vec2 &v, const Vec2& mi, const Vec2& ma)
+{
+    return v[0] >= mi[0] && v[1] >= mi[1] && v[0] <= ma[0] && v[1] <= ma[1];
+}
+
 
 bool intersect_line_line(const Vec2& A1,
                          const Vec2& A2,
@@ -92,12 +97,7 @@ bool intersect_ray_sphere(const Vec3& ray_origin,
 
 
 
-/*
-QVector<Vec2> get_intersection(const QVector<Vec2> &poly, const Vec2 &box_br, const Vec2 &box_tl)
-{
 
-}
-*/
 
 
 

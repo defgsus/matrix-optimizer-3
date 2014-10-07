@@ -19,6 +19,7 @@
 #include "math/constants.h"
 #include "math/vector.h"
 #include "math/interpol.h"
+#include "math/polygon.h"
 #include "io/log.h"
 #include "geom/geometry.h"
 #include "geom/tesselator.h"
@@ -315,16 +316,20 @@ QVector<Vec2> ProjectorMapper::createOutline(Float space, Float sm) const
         p.append(Vec2(1, t));
 
     for (Float t = 0; t < 1; t += space)
-        p.append(Vec2(1.f-t, 1));
+        p.append(Vec2(1.f-t, 1.f));
 
     for (Float t = 0; t < 1; t += space)
         p.append(Vec2(0, 1.f-t));
 
     if (sm != 0)
     {
-        Float sm2 = sm * 0.5f;
+        const Vec2
+                ofs = Vec2(sm, sm * aspect_) * 0.5f,
+                mul = 1.f - 2.f * ofs;
         for (auto & v : p)
-            v = sm2 + v * (1.f - sm);
+        {
+            v = ofs + mul * v;
+        }
     }
 
     return p;
@@ -529,6 +534,62 @@ void ProjectorMapper::getBlendGeometry(const QVector<Vec2> & poly, GEOM::Geometr
         geom->colors()[i*4+2] = col;
         geom->colors()[i*4+3] = 1.f;
     }
+}
+
+
+bool ProjectorMapper::getBlendGeometry(const ProjectorMapper &other, GEOM::Geometry *g)
+{
+    const Float
+            minspace = 0.05,
+            outrange = 1.25;
+
+    // map other's slice projection into our screen space
+    QVector<Vec3> domec;
+    QVector<Vec2> pout, pin;
+    other.mapToDome( other.createOutline(minspace), domec);
+    mapFromDome(domec, pout);
+    //MATH::limit(pout, Vec2(-4,-4), Vec2(4,4));
+
+    // now the inner edge
+    domec.clear();
+    other.mapToDome( other.createOutline(minspace, 0.2), domec);
+    mapFromDome(domec, pin);
+
+    MO_ASSERT(pin.size() == pout.size(), "rounding error in createOutline?");
+
+    // connect blend area by triangles
+    for (int i=0; i<pout.size(); ++i)
+    {
+        const int i1 = (i+1) % pout.size();
+
+        // only create the triangles inside
+        if (!(MATH::inside_range(pout[i], -outrange, outrange)
+              && MATH::inside_range(pout[i1], -outrange, outrange)
+              && MATH::inside_range(pin[i], -outrange, outrange)
+              && MATH::inside_range(pin[i1], -outrange, outrange)))
+            continue;
+
+        g->setColor(0,0,0,0);
+        auto v1 = g->addVertex(pout[i][0], pout[i][1], 0);
+        auto v2 = g->addVertex(pout[i1][0], pout[i1][1], 0);
+        g->setColor(1,0,0,1);
+        auto v3 = g->addVertex(pin[i][0], pin[i][1], 0);
+        auto v4 = g->addVertex(pin[i1][0], pin[i1][1], 0);
+
+        g->addTriangle(v1, v2, v3);
+        g->addTriangle(v2, v4, v3);
+    }
+
+    // -- get complete blackout area --
+
+    MATH::limit(pin, Vec2(-outrange,-outrange), Vec2(outrange, outrange));
+    QVector<Vec2> black = MATH::get_intersection_poly_rect(pin, Vec2(0,0), Vec2(1,1));
+    GEOM::Tesselator tess;
+    tess.tesselate(black);
+    g->setColor(1,0,0,1);
+    tess.getGeometry(*g);
+
+    return true;
 }
 
 
