@@ -33,7 +33,6 @@
 #include "geom/geometrymodifiervertexgroup.h"
 #include "geom/geometrymodifiervertexequation.h"
 #include "geom/geometrymodifierprimitiveequation.h"
-#include "geom/geometrymodifiertexcoordequation.h"
 #include "geom/geometrymodifierextrude.h"
 #include "geom/geometrymodifiertexcoords.h"
 #include "geom/geometrymodifierduplicate.h"
@@ -543,38 +542,24 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 
     if (auto equ = dynamic_cast<GEOM::GeometryModifierVertexEquation*>(modifier_))
     {
-        QStringList vars = { "x", "y", "z", "i" };
+        QStringList vars = {
+            "x", "y", "z", "i", "s", "t",
+            "red", "green", "blue", "alpha", "bright" };
 
-        auto editEquX = new EquationEditor(this);
-        group_->addWidget(editEquX);
-        editEquX->addVariables(vars);
-        editEquX->setPlainText(equ->getEquationX());
-        connect(editEquX, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquY = new EquationEditor(this);
-        group_->addWidget(editEquY);
-        editEquY->addVariables(vars);
-        editEquY->setPlainText(equ->getEquationY());
-        connect(editEquY, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquZ = new EquationEditor(this);
-        group_->addWidget(editEquZ);
-        editEquZ->addVariables(vars);
-        editEquZ->setPlainText(equ->getEquationZ());
-        connect(editEquZ, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+        auto editEqu = new EquationEditor(this);
+        group_->addWidget(editEqu);
+        editEqu->addVariables(vars);
+        editEqu->setPlainText(equ->getEquation());
+        connect(editEqu, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()
         {
-            equ->setEquationX(editEquX->toPlainText());
-            equ->setEquationY(editEquY->toPlainText());
-            equ->setEquationZ(editEquZ->toPlainText());
+            equ->setEquation(editEqu->toPlainText());
         };
 
         funcUpdateWidgets_ = [=]()
         {
-            editEquX->setPlainText(equ->getEquationX());
-            editEquY->setPlainText(equ->getEquationY());
-            editEquZ->setPlainText(equ->getEquationZ());
+            editEqu->setPlainText(equ->getEquation());
         };
     }
 
@@ -585,73 +570,31 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     {
         QStringList vars = {
             "x", "y", "z", "nx", "ny", "nz", "s", "t", "i", "p",
+            "red", "green", "blue", "alpha", "bright",
             "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3",
             "nx1", "ny1", "nz1", "nx2", "ny2", "nz2", "nx3", "ny3", "nz3",
-            "s1", "t1", "s2", "t2", "s3", "t3" };
+            "s1", "t1", "s2", "t2", "s3", "t3",
+            "red1", "green1", "blue1", "alpha1",
+            "red2", "green2", "blue2", "alpha2",
+            "red3", "green3", "blue3", "alpha3" };
 
-        auto editEquX = new EquationEditor(this);
-        group_->addWidget(editEquX);
-        editEquX->addVariables(vars);
-        editEquX->setPlainText(equ->getEquationX());
-        connect(editEquX, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquY = new EquationEditor(this);
-        group_->addWidget(editEquY);
-        editEquY->addVariables(vars);
-        editEquY->setPlainText(equ->getEquationY());
-        connect(editEquY, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquZ = new EquationEditor(this);
-        group_->addWidget(editEquZ);
-        editEquZ->addVariables(vars);
-        editEquZ->setPlainText(equ->getEquationZ());
-        connect(editEquZ, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+        auto editEqu = new EquationEditor(this);
+        group_->addWidget(editEqu);
+        editEqu->addVariables(vars);
+        editEqu->setPlainText(equ->getEquation());
+        connect(editEqu, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()
         {
-            equ->setEquationX(editEquX->toPlainText());
-            equ->setEquationY(editEquY->toPlainText());
-            equ->setEquationZ(editEquZ->toPlainText());
+            equ->setEquation(editEqu->toPlainText());
         };
 
         funcUpdateWidgets_ = [=]()
         {
-            editEquX->setPlainText(equ->getEquationX());
-            editEquY->setPlainText(equ->getEquationY());
-            editEquZ->setPlainText(equ->getEquationZ());
+            editEqu->setPlainText(equ->getEquation());
         };
     }
 
-
-
-    if (auto equ = dynamic_cast<GEOM::GeometryModifierTexCoordEquation*>(modifier_))
-    {
-        QStringList vars = { "x", "y", "z", "i", "s", "t" };
-
-        auto editEquS = new EquationEditor(this);
-        group_->addWidget(editEquS);
-        editEquS->addVariables(vars);
-        editEquS->setPlainText(equ->getEquationS());
-        connect(editEquS, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquT = new EquationEditor(this);
-        group_->addWidget(editEquT);
-        editEquT->addVariables(vars);
-        editEquT->setPlainText(equ->getEquationT());
-        connect(editEquT, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        funcUpdateFromWidgets_ = [=]()
-        {
-            equ->setEquationS(editEquS->toPlainText());
-            equ->setEquationT(editEquT->toPlainText());
-        };
-
-        funcUpdateWidgets_ = [=]()
-        {
-            editEquS->setPlainText(equ->getEquationS());
-            editEquT->setPlainText(equ->getEquationT());
-        };
-    }
 
 
     if (auto dupli = dynamic_cast<GEOM::GeometryModifierDuplicate*>(modifier_))
@@ -676,34 +619,21 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 
         QStringList vars = {
             "x", "y", "z", "i", "s", "t",
+            "red", "green", "blue", "alpha",
             "d", "dx", "dy", "dz" };
 
-        auto editEquX = new EquationEditor(this);
-        group_->addWidget(editEquX);
-        editEquX->addVariables(vars);
-        editEquX->setPlainText(dupli->getEquationX());
-        connect(editEquX, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquY = new EquationEditor(this);
-        group_->addWidget(editEquY);
-        editEquY->addVariables(vars);
-        editEquY->setPlainText(dupli->getEquationY());
-        connect(editEquY, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquZ = new EquationEditor(this);
-        group_->addWidget(editEquZ);
-        editEquZ->addVariables(vars);
-        editEquZ->setPlainText(dupli->getEquationZ());
-        connect(editEquZ, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+        auto editEqu = new EquationEditor(this);
+        group_->addWidget(editEqu);
+        editEqu->addVariables(vars);
+        editEqu->setPlainText(dupli->getEquation());
+        connect(editEqu, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()
         {
             dupli->setDuplicatesX(spinx->value());
             dupli->setDuplicatesY(spiny->value());
             dupli->setDuplicatesZ(spinz->value());
-            dupli->setEquationX(editEquX->toPlainText());
-            dupli->setEquationY(editEquY->toPlainText());
-            dupli->setEquationZ(editEquZ->toPlainText());
+            dupli->setEquation(editEqu->toPlainText());
         };
 
         funcUpdateWidgets_ = [=]()
@@ -711,9 +641,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
             spinx->setValue(dupli->duplicatesX());
             spiny->setValue(dupli->duplicatesY());
             spinz->setValue(dupli->duplicatesZ());
-            editEquX->setPlainText(dupli->getEquationX());
-            editEquY->setPlainText(dupli->getEquationY());
-            editEquZ->setPlainText(dupli->getEquationZ());
+            editEqu->setPlainText(dupli->getEquation());
         };
     }
 

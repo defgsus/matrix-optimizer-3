@@ -717,6 +717,72 @@ bool Geometry::transformWithEquation(const QString& equationX,
     return true;
 }
 
+
+bool Geometry::transformWithEquation(const QString& equation,
+                                     const QStringList &constantNames,
+                                     const QList<Double> &constantValues)
+{
+    Double vx, vy, vz, vindex, vs, vt,
+            red,green,blue,alpha,bright;
+
+    PPP_NAMESPACE::Parser equ;
+    equ.variables().add("x", &vx, "");
+    equ.variables().add("y", &vy, "");
+    equ.variables().add("z", &vz, "");
+    equ.variables().add("i", &vindex, "");
+    equ.variables().add("s", &vs, "");
+    equ.variables().add("t", &vt, "");
+    equ.variables().add("red", &red, "");
+    equ.variables().add("green", &green, "");
+    equ.variables().add("blue", &blue, "");
+    equ.variables().add("alpha", &alpha, "");
+    equ.variables().add("bright", &bright, "");
+
+    for (auto j=0; j<constantNames.size(); ++j)
+        equ.variables().add(constantNames[j].toStdString(), constantValues[j], "");
+
+    if (!equ.parse(equation.toStdString()))
+        return false;
+
+    for (uint i=0; i<numVertices(); ++i)
+    {
+        // copy input variables
+        VertexType * v = &vertex_[i * numVertexComponents()];
+        vx = v[0];
+        vy = v[1];
+        vz = v[2];
+        vindex = i;
+        TextureCoordType * t = &texcoord_[i * numTextureCoordComponents()];
+        vs = t[0];
+        vt = t[1];
+        vindex = i;
+        ColorType * c = &color_[i * numColorComponents()];
+        red = c[0];
+        green = c[1];
+        blue = c[2];
+        alpha = c[3];
+        bright = 1;
+
+        equ.eval();
+
+        // assign result from equation
+        v[0] = vx;
+        v[1] = vy;
+        v[2] = vz;
+        t[0] = vs;
+        t[1] = vt;
+        c[0] = std::max(0.0, std::min(1.0, red * bright ));
+        c[1] = std::max(0.0, std::min(1.0, green * bright ));
+        c[2] = std::max(0.0, std::min(1.0, blue * bright ));
+        c[3] = std::max(0.0, std::min(1.0, alpha ));
+
+        progress_ = (i * 100) / numVertices();
+    }
+
+    return true;
+}
+
+
 bool Geometry::transformPrimitivesWithEquation(
                     const QString &equationX,
                     const QString &equationY,
@@ -894,57 +960,233 @@ bool Geometry::transformPrimitivesWithEquation(
 }
 
 
-
-bool Geometry::transformTexCoordsWithEquation(
-                                        const QString &equationS,
-                                        const QString &equationT)
+bool Geometry::transformPrimitivesWithEquation(
+                    const QString &equation,
+                    const QStringList& constantNames,
+                    const QList<Double>& constantValues)
 {
-    Double vx, vy, vz, vindex, vs, vt;
+    Double vx, vy, vz, vnx, vny, vnz, vs, vt,
+           red,green,blue,alpha,bright,
+           vpx[3], vpy[3], vpz[3],
+           vpnx[3], vpny[3], vpnz[3],
+           vps[3], vpt[3],
+           vred[3], vgreen[3], vblue[3], valpha[3],
+           vp, vi;
 
-    std::vector<PPP_NAMESPACE::Parser> equ(2);
-    for (uint i=0; i<2; ++i)
-    {
-        equ[i].variables().add("x", &vx, "");
-        equ[i].variables().add("y", &vy, "");
-        equ[i].variables().add("z", &vz, "");
-        equ[i].variables().add("i", &vindex, "");
-        equ[i].variables().add("s", &vs, "");
-        equ[i].variables().add("t", &vt, "");
-    }
+    PPP_NAMESPACE::Parser equ;
+    equ.variables().add("x", &vx, "");
+    equ.variables().add("y", &vy, "");
+    equ.variables().add("z", &vz, "");
+    equ.variables().add("nx", &vnx, "");
+    equ.variables().add("ny", &vny, "");
+    equ.variables().add("nz", &vnz, "");
+    equ.variables().add("s", &vs, "");
+    equ.variables().add("t", &vt, "");
+    equ.variables().add("red", &red, "");
+    equ.variables().add("green", &green, "");
+    equ.variables().add("blue", &blue, "");
+    equ.variables().add("alpha", &alpha, "");
+    equ.variables().add("bright", &bright, "");
+    equ.variables().add("x1", &vpx[0], "");
+    equ.variables().add("y1", &vpy[0], "");
+    equ.variables().add("z1", &vpz[0], "");
+    equ.variables().add("x2", &vpx[1], "");
+    equ.variables().add("y2", &vpy[1], "");
+    equ.variables().add("z2", &vpz[1], "");
+    equ.variables().add("x3", &vpx[2], "");
+    equ.variables().add("y3", &vpy[2], "");
+    equ.variables().add("z3", &vpz[2], "");
+    equ.variables().add("nx1", &vpnx[0], "");
+    equ.variables().add("ny1", &vpny[0], "");
+    equ.variables().add("nz1", &vpnz[0], "");
+    equ.variables().add("nx2", &vpnx[1], "");
+    equ.variables().add("ny2", &vpny[1], "");
+    equ.variables().add("nz2", &vpnz[1], "");
+    equ.variables().add("nx3", &vpnx[2], "");
+    equ.variables().add("ny3", &vpny[2], "");
+    equ.variables().add("nz3", &vpnz[2], "");
+    equ.variables().add("s1", &vps[0], "");
+    equ.variables().add("t1", &vpt[0], "");
+    equ.variables().add("s2", &vps[1], "");
+    equ.variables().add("t2", &vpt[1], "");
+    equ.variables().add("s3", &vps[2], "");
+    equ.variables().add("t3", &vpt[2], "");
+    equ.variables().add("red1", &vred[0], "");
+    equ.variables().add("red2", &vred[1], "");
+    equ.variables().add("red3", &vred[2], "");
+    equ.variables().add("green1", &vgreen[0], "");
+    equ.variables().add("green2", &vgreen[1], "");
+    equ.variables().add("green3", &vgreen[2], "");
+    equ.variables().add("blue1", &vblue[0], "");
+    equ.variables().add("blue2", &vblue[1], "");
+    equ.variables().add("blue3", &vblue[2], "");
+    equ.variables().add("alpha1", &valpha[0], "");
+    equ.variables().add("alpha2", &valpha[1], "");
+    equ.variables().add("alpha3", &valpha[2], "");
+    equ.variables().add("i", &vi, "");
+    equ.variables().add("p", &vp, "");
+    for (auto j=0; j<constantNames.size(); ++j)
+        equ.variables().add(constantNames[j].toStdString(), constantValues[j], "");
 
-    if (!equ[0].parse(equationS.toStdString()))
+    if (!equ.parse(equation.toStdString()))
         return false;
-    if (!equ[1].parse(equationT.toStdString()))
-        return false;
 
-    for (uint i=0; i<numTriangles(); ++i)
+    if (!numTriangles())
+    for (uint i=0; i<numLines(); ++i)
     {
-        for (uint j=0; j<numTriangleIndexComponents(); ++j)
+        // get vertex indices
+        int i1 = lineIndex_[i*2],
+            i2 = lineIndex_[i*2+1];
+
+        // copy primitive input variables
+        VertexType * vert[] = { &vertex_[i1 * numVertexComponents()],
+                                &vertex_[i2 * numVertexComponents()] };
+        NormalType * norm[] = { &normal_[i1 * numNormalComponents()],
+                                &normal_[i2 * numNormalComponents()] };
+        TextureCoordType * tex[] = { &texcoord_[i1 * numTextureCoordComponents()],
+                                     &texcoord_[i2 * numTextureCoordComponents()] };
+        ColorType * color[] = { &color_[i1 * numColorComponents()],
+                                &color_[i2 * numColorComponents()] };
+
+        // assign all primitive vertex data
+        vi = i;
+        for (int j=0; j<2; ++j)
         {
-            const int idx = triIndex_[i * numTriangleIndexComponents() + j];
-
-            // copy input variables
-            const VertexType * v = &vertex_[idx * numVertexComponents()];
-            vx = v[0];
-            vy = v[1];
-            vz = v[2];
-            vindex = i;
-            TextureCoordType * t = &texcoord_[idx * numTextureCoordComponents()];
-            vs = t[0];
-            vt = t[1];
-
-            // assign result from equation
-            if (equationS != "s")
-                t[0] = equ[0].eval();
-            if (equationT != "t")
-                t[1] = equ[1].eval();
+            vpx[j] = vert[j][0];
+            vpy[j] = vert[j][1];
+            vpz[j] = vert[j][2];
+            vpnx[j] = norm[j][0];
+            vpny[j] = norm[j][1];
+            vpnz[j] = norm[j][2];
+            vps[j] = tex[j][0];
+            vpt[j] = tex[j][1];
+            vred[j] = color[j][0];
+            vgreen[j] = color[j][1];
+            vblue[j] = color[j][2];
+            valpha[j] = color[j][3];
         }
 
-        progress_ = (i * 100) / numTriangles();
+        // execute per primitive vertex
+        for (int j=0; j<2; ++j)
+        {
+            // copy 'current' variables
+            vp = j;
+            vx = vpx[j];
+            vy = vpy[j];
+            vz = vpz[j];
+            vnx = vpnx[j];
+            vny = vpny[j];
+            vnz = vpnz[j];
+            vs = vps[j];
+            vt = vpt[j];
+            red = vred[j];
+            green = vgreen[j];
+            blue = vblue[j];
+            alpha = valpha[j];
+            bright = 1;
+
+            equ.eval();
+
+            // assign result back
+            vert[j][0] = vx;
+            vert[j][1] = vy;
+            vert[j][2] = vz;
+            norm[j][0] = vnx;
+            norm[j][1] = vny;
+            norm[j][2] = vnz;
+            tex[j][0] = vs;
+            tex[j][1] = vt;
+            color[j][0] = std::max(0.0,std::min(1.0, red * bright ));
+            color[j][1] = std::max(0.0,std::min(1.0, green * bright ));
+            color[j][2] = std::max(0.0,std::min(1.0, blue * bright ));
+            color[j][3] = std::max(0.0,std::min(1.0, alpha ));
+        }
+
+        progress_ = (i * 100) / numLines();
     }
+
+    else // triangles
+    for (uint i=0; i<numTriangles(); ++i)
+    {
+        // get vertex indices
+        int i1 = triIndex_[i*3],
+            i2 = triIndex_[i*3+1],
+            i3 = triIndex_[i*3+2];
+
+        // copy primitive input variables
+        VertexType * vert[] = { &vertex_[i1 * numVertexComponents()],
+                                &vertex_[i2 * numVertexComponents()],
+                                &vertex_[i3 * numVertexComponents()] };
+        NormalType * norm[] = { &normal_[i1 * numNormalComponents()],
+                                &normal_[i2 * numNormalComponents()],
+                                &normal_[i3 * numVertexComponents()] };
+        TextureCoordType * tex[] = { &texcoord_[i1 * numTextureCoordComponents()],
+                                     &texcoord_[i2 * numTextureCoordComponents()],
+                                     &texcoord_[i3 * numTextureCoordComponents()] };
+        ColorType * color[] = { &color_[i1 * numColorComponents()],
+                                &color_[i2 * numColorComponents()],
+                                &color_[i3 * numColorComponents()] };
+
+        vi = i;
+        for (int j=0; j<3; ++j)
+        {
+            vpx[j] = vert[j][0];
+            vpy[j] = vert[j][1];
+            vpz[j] = vert[j][2];
+            vpnx[j] = norm[j][0];
+            vpny[j] = norm[j][1];
+            vpnz[j] = norm[j][2];
+            vps[j] = tex[j][0];
+            vpt[j] = tex[j][1];
+            vred[j] = color[j][0];
+            vgreen[j] = color[j][1];
+            vblue[j] = color[j][2];
+            valpha[j] = color[j][3];
+        }
+
+        // execute per primitive vertex
+        for (int j=0; j<3; ++j)
+        {
+            // copy 'current' variables
+            vp = j;
+            vx = vpx[j];
+            vy = vpy[j];
+            vz = vpz[j];
+            vnx = vpnx[j];
+            vny = vpny[j];
+            vnz = vpnz[j];
+            vs = vps[j];
+            vt = vpt[j];
+            red = vred[j];
+            green = vgreen[j];
+            blue = vblue[j];
+            alpha = valpha[j];
+            bright = 1;
+
+            equ.eval();
+
+            // assign result from equation
+            vert[j][0] = vx;
+            vert[j][1] = vy;
+            vert[j][2] = vz;
+            norm[j][0] = vnx;
+            norm[j][1] = vny;
+            norm[j][2] = vnz;
+            tex[j][0] = vs;
+            tex[j][1] = vt;
+            color[j][0] = std::max(0.0,std::min(1.0, red * bright ));
+            color[j][1] = std::max(0.0,std::min(1.0, green * bright ));
+            color[j][2] = std::max(0.0,std::min(1.0, blue * bright ));
+            color[j][3] = std::max(0.0,std::min(1.0, alpha ));
+        }
+
+        progress_ = (i * 100) / numVertices();
+    }
+
 
     return true;
 }
+
 
 
 

@@ -154,7 +154,6 @@ HEADERS += \
     src/object/sprite.h \
     src/object/util/texturesetting.h \
     src/geom/geometrymodifiertexcoords.h \
-    src/geom/geometrymodifiertexcoordequation.h \
     src/geom/objexporter.h \
     src/object/util/colorpostprocessingsetting.h \
     src/audio/tool/soundfile.h \
@@ -316,7 +315,6 @@ SOURCES += \
     src/object/sprite.cpp \
     src/object/util/texturesetting.cpp \
     src/geom/geometrymodifiertexcoords.cpp \
-    src/geom/geometrymodifiertexcoordequation.cpp \
     src/geom/objexporter.cpp \
     src/object/util/colorpostprocessingsetting.cpp \
     src/audio/tool/soundfile.cpp \

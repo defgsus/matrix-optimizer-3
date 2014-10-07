@@ -269,6 +269,13 @@ public:
                             int seedX, int seedY, int seedZ);
 
     /** Applies the equation to the each vertex.
+        Variables are x, y, z and i (for vertex index),
+        red, green, blue, alpha, bright. */
+    bool transformWithEquation(const QString& equation,
+                               const QStringList &constantNames = QStringList(),
+                               const QList<Double> &constantValues = QList<Double>());
+
+    /** Applies the equation to the each vertex.
         Variables are x, y, z and i (for vertex index). */
     bool transformWithEquation(const QString& equationX,
                                const QString& equationY,
@@ -278,21 +285,19 @@ public:
 
     /** Applies the equation to the each vertex of each primitive.
         Variables are x, y, z (position), nx, ny, nz (normal), s, t (tex-coords),
+        red, green, blue, alpha, bright (colors).
         x1, y1, z1, x2, y2, z2, x3, y3, z3 (position of each primitive vertex),
         nx1, ny1, nz1, nx2, ny2, nz2, nx3, ny3, nz3 (normal of each primitive vertex),
         s1, t1, s2, t2, s3, t3 (tex-coord of each primitive),
         i (primitive index) and p (for index of vertex in primitive). */
+    bool transformPrimitivesWithEquation(const QString& equation,
+                                         const QStringList &constantNames = QStringList(),
+                                         const QList<Double> &constantValues = QList<Double>());
     bool transformPrimitivesWithEquation(const QString& equationX,
                                          const QString& equationY,
                                          const QString& equationZ,
                                          const QStringList &constantNames = QStringList(),
                                          const QList<Double> &constantValues = QList<Double>());
-
-    /** Applies the equation to the texture coordinates.
-        Variables are x, y, z, s, t and i (for vertex index). */
-    bool transformTexCoordsWithEquation(
-                                const QString& equationS,
-                                const QString& equationT);
 
     /** Extrudes all triangles along their normals -> into @p geom.
         If @p createNewFaces is true, the orthogonal or orthonormals side faces

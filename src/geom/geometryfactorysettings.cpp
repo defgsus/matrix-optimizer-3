@@ -246,9 +246,10 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         {
             auto geom = new GeometryModifierVertexEquation();
             modifierChain->addModifier(geom);
-            geom->setEquationX(equationX);
-            geom->setEquationY(equationY);
-            geom->setEquationZ(equationZ);
+            geom->setEquation("x = " + equationX + ";\n"
+                              "y = " + equationY + ";\n"
+                              "z = " + equationZ);
+
         }
 
         if (calcNormalsBeforePrimitiveEquation)
@@ -262,9 +263,9 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         {
             auto geom = new GeometryModifierPrimitiveEquation();
             modifierChain->addModifier(geom);
-            geom->setEquationX(pEquationX);
-            geom->setEquationY(pEquationY);
-            geom->setEquationZ(pEquationZ);
+            geom->setEquation("x = " + pEquationX + ";\n"
+                              "y = " + pEquationY + ";\n"
+                              "z = " + pEquationZ);
         }
 
         if (extrude)

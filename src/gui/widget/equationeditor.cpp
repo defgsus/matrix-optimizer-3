@@ -79,10 +79,12 @@ EquationEditor::EquationEditor(QWidget *parent) :
     timer_->setInterval(200); /* some interval for fast writers */
     connect(timer_, SIGNAL(timeout()), this, SLOT(checkEquation_()));
 
-    setMouseTracking(true);
     hoverTimer_->setSingleShot(true);
     hoverTimer_->setInterval(500);
     connect(hoverTimer_, SIGNAL(timeout()), this, SLOT(onHover_()));
+
+    setMouseTracking(true);
+    setTabChangesFocus(true);
 
     // ---- context menu ----
 

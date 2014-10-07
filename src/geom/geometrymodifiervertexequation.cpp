@@ -19,9 +19,7 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierVertexEquation)
 
 GeometryModifierVertexEquation::GeometryModifierVertexEquation()
     : GeometryModifier("VertexEquation", QObject::tr("vertex equation")),
-      equX_     ("x"),
-      equY_     ("y"),
-      equZ_     ("z")
+      equ_      ("x = x;\ny = y;\nz = z")
 {
 
 }
@@ -36,23 +34,30 @@ void GeometryModifierVertexEquation::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geoequvert", 1);
+    io.writeHeader("geoequvert", 2);
 
-    io << equX_ << equY_ << equZ_;
+    io << equ_;
 }
 
 void GeometryModifierVertexEquation::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geoequvert", 1);
+    const int ver = io.readHeader("geoequvert", 2);
 
-    io >> equX_ >> equY_ >> equZ_;
+    if (ver<2)
+    {
+        QString equx, equy, equz;
+        io >> equx >> equy >> equz;
+        equ_ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
+    }
+    else
+        io >> equ_;
 }
 
 void GeometryModifierVertexEquation::execute(Geometry *g)
 {
-    g->transformWithEquation(equX_, equY_, equZ_);
+    g->transformWithEquation(equ_);
 }
 
 } // namespace GEOM

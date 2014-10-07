@@ -19,11 +19,10 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierDuplicate)
 
 GeometryModifierDuplicate::GeometryModifierDuplicate()
     : GeometryModifier("Duplicate", QObject::tr("duplicate")),
-      equX_     ("4 * dx + x"),
-      equY_     ("4 * dy + y"),
-      equZ_     ("4 * dz + z"),
+      equ_      ("x = 2 * dx + x;\n"
+                 "y = 2 * dy + y;\n"),
       numX_     (2),
-      numY_     (1),
+      numY_     (2),
       numZ_     (1)
 {
 
@@ -41,18 +40,27 @@ void GeometryModifierDuplicate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geoequdup", 1);
+    io.writeHeader("geoequdup", 2);
 
-    io << numX_ << numY_ << numZ_ << equX_ << equY_ << equZ_;
+    io << numX_ << numY_ << numZ_ << equ_;
 }
 
 void GeometryModifierDuplicate::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geoequdup", 1);
+    const int ver = io.readHeader("geoequdup", 2);
 
-    io >> numX_ >> numY_ >> numZ_ >> equX_ >> equY_ >> equZ_;
+    io >> numX_ >> numY_ >> numZ_;
+
+    if (ver<2)
+    {
+        QString equx, equy, equz;
+        io >> equx >> equy >> equz;
+        equ_ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
+    }
+    else
+        io >> equ_;
 }
 
 void GeometryModifierDuplicate::execute(Geometry *g)
@@ -70,10 +78,10 @@ void GeometryModifierDuplicate::execute(Geometry *g)
     {
         Geometry geom(copy);
         geom.transformWithEquation(
-                    equX_, equY_, equZ_,
+                    equ_,
                     constants,
                     QList<Double>()
-                        << ((z*numY_+y)*numX_) << x << y << z
+                        << ((z*numY_+y)*numX_+x) << x << y << z
                     );
 
         g->addGeometry(geom);

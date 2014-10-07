@@ -29,15 +29,11 @@ public:
     uint duplicatesY() const { return numY_; }
     uint duplicatesZ() const { return numZ_; }
 
-    const QString& getEquationX() const { return equX_; }
-    const QString& getEquationY() const { return equY_; }
-    const QString& getEquationZ() const { return equZ_; }
+    const QString& getEquation() const { return equ_; }
 
     // ------------ setter -------------------
 
-    void setEquationX(const QString& e) { equX_ = e; }
-    void setEquationY(const QString& e) { equY_ = e; }
-    void setEquationZ(const QString& e) { equZ_ = e; }
+    void setEquation(const QString& e) { equ_ = e; }
 
     void setDuplicatesX(uint num) { numX_ = num; }
     void setDuplicatesY(uint num) { numY_ = num; }
@@ -45,7 +41,7 @@ public:
 
 private:
 
-    QString equX_, equY_, equZ_;
+    QString equ_;
     uint numX_, numY_, numZ_;
 };
 
