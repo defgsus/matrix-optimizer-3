@@ -33,6 +33,7 @@ namespace GUI {
 DomePreviewWidget::DomePreviewWidget(QWidget *parent)
     : Basic3DWidget (Basic3DWidget::RM_DIRECT, parent),
       settings_     (new ProjectionSystemSettings()),
+      textureFunc_  (0),
       domeGeometry_ (0),
       projectorGeometry_(0),
       showGrid_     (true),
@@ -467,6 +468,17 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
 void DomePreviewWidget::createTexture_(GL::Texture **tex, int index)
 {
     MO_DEBUG_GL("DomePreviewWidget::createTexture_(" << *tex << ", " << index << ")");
+
+    // use callback
+    if (textureFunc_)
+    {
+        *tex = textureFunc_(index);
+        // restore viewport
+        MO_CHECK_GL( gl::glViewport(0,0,width(), height()) );
+        return;
+    }
+
+    // render a number per projector
 
     QImage qimg(320,200, QImage::Format_ARGB32);
     QPainter p(&qimg);

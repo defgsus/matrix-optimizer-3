@@ -59,6 +59,9 @@ void OverlapAreaEditWidget::setSettings(const ProjectionSystemSettings& set, uin
     *settings_ = set;
     projectorIndex_ = std::min(set.numProjectors()-1u, idx);
 
+    //Float aspect = set.projectorSettings(projectorIndex_).aspect();
+    //viewSetOrthoScale(1.f * aspect, 1.f);
+
     updateFboSize_();
 
     createGeometry_();
@@ -181,7 +184,7 @@ void OverlapAreaEditWidget::createGeometry_()
 
         domec.clear();
         slicec.clear();
-        omapper.mapToDome(omapper.createOutline(0.05, 0.2), domec);
+        omapper.mapToDome(omapper.createOutline(0.05, 0.3), domec);
         mapper.mapFromDome(domec, slicec);
 
         // draw outline
@@ -215,6 +218,10 @@ void OverlapAreaEditWidget::createGeometry_()
         mapper.getBlendGeometry(omapper, blendGeom_);
 
     }
+
+    Float aspect = settings_->projectorSettings(projectorIndex_).aspect();
+    lineGeom_->scale(aspect, 1, 1);
+    blendGeom_->scale(aspect, 1, 1);
 }
 
 void OverlapAreaEditWidget::initGL()
@@ -265,14 +272,15 @@ void OverlapAreaEditWidget::drawGL(const Mat4& projection,
 
     using namespace gl;
 
-    MO_CHECK_GL( gl::glClearColor(0,0,0,1) );
+    MO_CHECK_GL( gl::glClearColor(0.5,0.5,0.5,1) );
     MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
     MO_CHECK_GL( gl::glEnable(GL_BLEND) );
 
     if (blends_->isReady())
     {
-        MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
+        //MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
+        MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
         blends_->renderShader(projection, cubeViewTrans, viewTrans, trans);
     }

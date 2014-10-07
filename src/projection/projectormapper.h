@@ -14,6 +14,7 @@
 #include "projectorsettings.h"
 #include "domesettings.h"
 #include "types/vector.h"
+#include "gl/opengl_fwd.h"
 
 namespace MO {
 namespace GEOM { class Geometry; }
@@ -119,6 +120,8 @@ public:
     /** Find edge-blend necessary for this projector to fade into @p other.
         Geometry is written into @p g. */
     bool getBlendGeometry(const ProjectorMapper & other, GEOM::Geometry * g);
+
+    GL::Texture * renderBlendTexture(const ProjectorMapper & other);
 
     /** Returns an anti-clockwise polygon outline of the overlapping area between
         this slice and the slice in @p other.

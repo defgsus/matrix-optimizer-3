@@ -389,6 +389,9 @@ void ProjectorSetupDialog::createWidgets_()
             lv->addWidget(display_);
             connect(display_, SIGNAL(glReleased()), this, SLOT(onGlReleased_()));
 
+            display_->setTextureCallback(
+                        std::bind(&ProjectorSetupDialog::createTexture_, this, std::placeholders::_1));
+
             // --- display settings ---
 
             QWidget * projectionStuff = new QWidget(this);
@@ -1140,6 +1143,16 @@ void ProjectorSetupDialog::pasteCamera_()
     updateDisplay_();
 }
 
+GL::Texture * ProjectorSetupDialog::createTexture_(int index)
+{
+    ProjectorMapper mapper, omapper;
+    mapper.setSettings(settings_->domeSettings(),
+                       settings_->projectorSettings(index) );
+
+    omapper.setSettings(settings_->domeSettings(),
+                        settings_->projectorSettings((index+1) % settings_->numProjectors()) );
+    return mapper.renderBlendTexture(omapper);
+}
 
 } // namespace GUI
 } // namespace MO

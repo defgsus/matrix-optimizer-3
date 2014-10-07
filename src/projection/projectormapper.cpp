@@ -541,7 +541,8 @@ bool ProjectorMapper::getBlendGeometry(const ProjectorMapper &other, GEOM::Geome
 {
     const Float
             minspace = 0.05,
-            outrange = 1.25;
+            blendedge = 0.3,
+            outrange = 1.55;
 
     // map other's slice projection into our screen space
     QVector<Vec3> domec;
@@ -552,7 +553,7 @@ bool ProjectorMapper::getBlendGeometry(const ProjectorMapper &other, GEOM::Geome
 
     // now the inner edge
     domec.clear();
-    other.mapToDome( other.createOutline(minspace, 0.2), domec);
+    other.mapToDome( other.createOutline(minspace, blendedge), domec);
     mapFromDome(domec, pin);
 
     MO_ASSERT(pin.size() == pout.size(), "rounding error in createOutline?");
@@ -572,7 +573,7 @@ bool ProjectorMapper::getBlendGeometry(const ProjectorMapper &other, GEOM::Geome
         g->setColor(0,0,0,0);
         auto v1 = g->addVertex(pout[i][0], pout[i][1], 0);
         auto v2 = g->addVertex(pout[i1][0], pout[i1][1], 0);
-        g->setColor(1,0,0,1);
+        g->setColor(0,0,0,1);
         auto v3 = g->addVertex(pin[i][0], pin[i][1], 0);
         auto v4 = g->addVertex(pin[i1][0], pin[i1][1], 0);
 
@@ -586,11 +587,12 @@ bool ProjectorMapper::getBlendGeometry(const ProjectorMapper &other, GEOM::Geome
     QVector<Vec2> black = MATH::get_intersection_poly_rect(pin, Vec2(0,0), Vec2(1,1));
     GEOM::Tesselator tess;
     tess.tesselate(black);
-    g->setColor(1,0,0,1);
+    g->setColor(0,0,0,1);
     tess.getGeometry(*g);
 
     return true;
 }
+
 
 
 } // namespace MO

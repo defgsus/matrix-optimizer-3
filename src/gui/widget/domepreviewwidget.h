@@ -8,8 +8,10 @@
     <p>created 8/26/2014</p>
 */
 
-#ifndef DOMEPREVIEWWIDGET_H
-#define DOMEPREVIEWWIDGET_H
+#ifndef MOSRC_GUI_WIDGET_DOMEPREVIEWWIDGET_H
+#define MOSRC_GUI_WIDGET_DOMEPREVIEWWIDGET_H
+
+#include <functional>
 
 #include "basic3dwidget.h"
 #include "gl/opengl_fwd.h"
@@ -38,6 +40,9 @@ public:
 
     /** Sets the view matrix when in CM_SET mode */
     void setViewMatrix(const Mat4&) Q_DECL_OVERRIDE;
+
+    /** Sets the callback that is used to create a texture for each Projector slice */
+    void setTextureCallback(std::function<GL::Texture*(int index)> func) { textureFunc_ = func; }
 
 signals:
 
@@ -72,6 +77,8 @@ private:
 
     ProjectionSystemSettings * settings_;
 
+    std::function<GL::Texture*(int index)> textureFunc_;
+
     GEOM::Geometry * domeGeometry_;
     GEOM::Geometry * projectorGeometry_;
     std::vector<GEOM::Geometry*> ptextureGeom_;
@@ -99,4 +106,4 @@ private:
 } // namespace GUI
 } // namespace MO
 
-#endif // DOMEPREVIEWWIDGET_H
+#endif // MOSRC_GUI_WIDGET_DOMEPREVIEWWIDGET_H

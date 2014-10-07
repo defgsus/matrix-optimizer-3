@@ -13,6 +13,8 @@
 
 #include <QDialog>
 
+#include "gl/opengl.h"
+
 class QComboBox;
 class QLineEdit;
 class QToolButton;
@@ -87,6 +89,8 @@ private slots:
     void pasteCamera_();
 
 private:
+
+    GL::Texture * createTexture_(int index);
 
     void updateWindowTitle_();
     void updateActions_();

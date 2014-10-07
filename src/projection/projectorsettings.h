@@ -42,6 +42,7 @@ public:
     const QString& name() const { return name_; }
     int width() const { return width_; }
     int height() const { return height_; }
+    Float aspect() const { return Float(width())/height(); }
     Float fov() const { return fov_; }
     Float lensRadius() const { return lensRadius_; }
     Float latitude() const { return latitude_; }

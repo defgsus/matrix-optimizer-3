@@ -355,4 +355,5 @@ SOURCES += \
     src/object/util/synthsetting.cpp \
     src/object/util/objectfilter.cpp \
     src/geom/geometrymodifierduplicate.cpp \
-    src/math/polygon.cpp
+    src/math/polygon.cpp \
+    src/projection/projectormapper_gl.cpp

@@ -185,6 +185,21 @@ bool FrameBufferObject::downloadColorTexture(void *ptr)
     return colorTex_->download(ptr);
 }
 
+Texture * FrameBufferObject::takeColorTexture()
+{
+    Texture * t = colorTex_;
+
+    // create new one
+    if (!cubemap_)
+        colorTex_ = new Texture(width(), height(), colorTex_->format(), colorTex_->format(), colorTex_->type(), 0, rep_);
+    else
+    {
+        colorTex_ = new Texture(width(), height(), colorTex_->format(), colorTex_->format(), colorTex_->type(),
+                                0, 0, 0, 0, 0, 0, rep_);
+    }
+
+    return t;
+}
 
 } // namespace GL
 } // namespace MO

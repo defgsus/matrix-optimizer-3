@@ -26,7 +26,7 @@ public:
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
-            bool cubemap,
+            bool cubemap = false,
             ErrorReporting reporting = ER_THROW);
 
     ~FrameBufferObject();
@@ -41,6 +41,11 @@ public:
 
     /** Returns the associated color texture */
     const Texture * colorTexture() const { return colorTex_; }
+
+    /** Returns the associated color texture.
+        The texture is detached from the fbo and will not be released or used further.
+        You need to call create() to make the fbo useable again. */
+    Texture * takeColorTexture();
 
     uint width() const;
     uint height() const;

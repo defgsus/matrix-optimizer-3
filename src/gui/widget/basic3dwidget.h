@@ -112,7 +112,11 @@ public slots:
 
     /** Sets the (horizontal) scale of the orthographic projection.
         The view extends in negative and positive units @p s. */
-    void viewSetOrthoScale(Float s) { orthoScale_ = s; update(); }
+    void viewSetOrthoScale(Float s) { orthoScaleX_ = orthoScaleY_ = s; updateProjection_(); update(); }
+
+    /** Sets the (horizontal) scale of the orthographic projection.
+        The view extends in negative and positive units @p s. */
+    void viewSetOrthoScale(Float sx, Float sy) { orthoScaleX_ = sx; orthoScaleY_ = sy; updateProjection_(); update(); }
 
     /** Sets the projection matrix when in CM_SET mode */
     void setProjectionMatrix(const Mat4&);
@@ -160,6 +164,7 @@ private:
     void createGLStuff_();
     void releaseGLStuff_();
     void releaseGL_();
+    void updateProjection_();
 
     RenderMode renderMode_, nextRenderMode_;
     CameraMode cameraMode_;
@@ -174,7 +179,8 @@ private:
         fixViewMatrix_,
         rotationMatrix_;
     Float distanceZ_,
-        orthoScale_;
+        orthoScaleX_,
+        orthoScaleY_;
 
     QPoint lastMousePos_;
 

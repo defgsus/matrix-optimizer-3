@@ -46,7 +46,8 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     isGlInitialized_(false),
     closeRequest_   (false),
     modeChangeRequest_(false),
-    orthoScale_     (3.f),
+    orthoScaleX_    (3.f),
+    orthoScaleY_    (3.f),
     fboSize_        (512, 512),
     camera_         (new GEOM::FreeCamera()),
     fbo_            (0),
@@ -412,7 +413,12 @@ void Basic3DWidget::releaseGLStuff_()
     }
 }
 
-void Basic3DWidget::resizeGL(int w, int h)
+void Basic3DWidget::resizeGL(int , int )
+{
+    updateProjection_();
+}
+
+void Basic3DWidget::updateProjection_()
 {
     float angle = 63;
 
@@ -430,22 +436,22 @@ void Basic3DWidget::resizeGL(int w, int h)
     else
     if (renderMode_ == RM_DIRECT_ORTHO)
     {
-        const float aspect = (float)w/h;
-        const float scale = orthoScale_;
-        projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale, 0.001f, 1000.f);
+        const float aspect = (float)width()/height();
+        projectionMatrix_ = glm::ortho(-orthoScaleX_*aspect, orthoScaleX_*aspect,
+                                       -orthoScaleY_, orthoScaleY_, 0.001f, 1000.f);
     }
     else
     if (renderMode_ == RM_FRAMEBUFFER_ORTHO)
     {
         const float aspect = (float)fbo_->width()/fbo_->height();
-        const float scale = orthoScale_;
-        projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale);
+        projectionMatrix_ = glm::ortho(-orthoScaleX_*aspect, orthoScaleX_*aspect,
+                                       -orthoScaleY_, orthoScaleY_, 0.001f, 1000.f);
     }
     else
         projectionMatrix_ =
-                MATH::perspective(angle, (float)w/h, 0.01f, 1000.0f);
+                MATH::perspective(angle, (float)width()/height(), 0.01f, 1000.0f);
 
-    MO_CHECK_GL( glViewport(0,0,w,h) );
+    MO_CHECK_GL( glViewport(0,0,width(),height()) );
 }
 
 void Basic3DWidget::paintGL()
