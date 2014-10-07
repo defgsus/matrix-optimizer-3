@@ -20,7 +20,7 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierDuplicate)
 GeometryModifierDuplicate::GeometryModifierDuplicate()
     : GeometryModifier("Duplicate", QObject::tr("duplicate")),
       equ_      ("x = 2 * dx + x;\n"
-                 "y = 2 * dy + y;\n"),
+                 "y = 2 * dy + y"),
       numX_     (2),
       numY_     (2),
       numZ_     (1)

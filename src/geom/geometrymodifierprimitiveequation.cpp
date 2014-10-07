@@ -19,7 +19,7 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierPrimitiveEquation)
 
 GeometryModifierPrimitiveEquation::GeometryModifierPrimitiveEquation()
     : GeometryModifier("PrimitiveEquation", QObject::tr("primitive equation")),
-      equ_     ("x = x; y = y; z = z")
+      equ_     ("x = x;\ny = y;\nz = z")
 {
 
 }
