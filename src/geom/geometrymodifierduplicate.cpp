@@ -18,7 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierDuplicate)
 
 GeometryModifierDuplicate::GeometryModifierDuplicate()
-    : GeometryModifier("Duplicate", QObject::tr("primitive equation")),
+    : GeometryModifier("Duplicate", QObject::tr("duplicate")),
       equX_     ("4 * dx + x"),
       equY_     ("4 * dy + y"),
       equZ_     ("4 * dz + z"),
