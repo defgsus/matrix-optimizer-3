@@ -201,7 +201,8 @@ HEADERS += \
     src/object/util/objectfilter.h \
     src/geom/geometrymodifierduplicate.h \
     src/math/polygon.h \
-    src/audio/tool/bandlimitwavetablegenerator.h
+    src/audio/tool/bandlimitwavetablegenerator.h \
+    src/math/fft.h
 
 
 SOURCES += \
@@ -358,4 +359,5 @@ SOURCES += \
     src/geom/geometrymodifierduplicate.cpp \
     src/math/polygon.cpp \
     src/projection/projectormapper_gl.cpp \
-    src/audio/tool/bandlimitwavetablegenerator.cpp
+    src/audio/tool/bandlimitwavetablegenerator.cpp \
+    src/math/fft.cpp

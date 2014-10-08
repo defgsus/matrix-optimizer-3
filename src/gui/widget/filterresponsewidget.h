@@ -30,6 +30,8 @@ public:
     explicit FilterResponseWidget(QWidget *parent = 0);
     ~FilterResponseWidget();
 
+    bool fftDisplay() const { return doFft_; }
+
     uint sampleRate() const { return sampleRate_; }
 
     /** Number of bands to display/analyze */
@@ -57,6 +59,9 @@ public slots:
     /** Sets a new filter setting and updates display */
     void setFilter(const AUDIO::MultiFilter&, bool update = true);
 
+    /** Switches between sin-band-analyzer and FFT response */
+    void setFftDisplay(bool enable, bool update = true);
+
     /** Sets the number of bands to display/analyze */
     void setNumBands(uint num, bool update = true);
     /** Sets the length of the buffer for analyzing bands */
@@ -79,7 +84,8 @@ private:
     uint sampleRate_, numBands_, bufferSize_;
     F32 lowFreq_;
     // not implemented yet
-    bool logScale_;
+    bool logScale_,
+        doFft_;
 
     QThread * thread_;
 

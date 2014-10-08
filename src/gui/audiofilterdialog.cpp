@@ -11,6 +11,7 @@
 #include <QLayout>
 #include <QComboBox>
 #include <QLabel>
+#include <QCheckBox>
 
 #include "audiofilterdialog.h"
 #include "widget/filterresponsewidget.h"
@@ -142,7 +143,7 @@ void AudioFilterDialog::createWidgets_()
                 display_->setFilter(*filter_);
             });
 
-            // frequency choose from display
+            // frequency choosing from display drag
             connect(display_, &FilterResponseWidget::frequencyChanged, [=](F32 f)
             {
                 dspinFreq_->setValue(f, true);
@@ -177,6 +178,13 @@ void AudioFilterDialog::createWidgets_()
             connect(spin, &SpinBox::valueChanged, [=](int n)
             {
                 display_->setBufferSize(n);
+            });
+
+            auto cb = new QCheckBox(tr("FFT"), this);
+            lv->addWidget(cb);
+            connect(cb, &QCheckBox::clicked, [=]()
+            {
+                display_->setFftDisplay(cb->isChecked());
             });
 }
 

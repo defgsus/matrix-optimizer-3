@@ -16,6 +16,7 @@
 #include "filterresponsewidget.h"
 #include "audio/tool/multifilter.h"
 #include "math/constants.h"
+#include "math/fft.h"
 #include "io/log.h"
 
 namespace MO {
@@ -36,11 +37,18 @@ namespace
         virtual void run() Q_DECL_OVERRIDE;
 
         void calc(uint from, uint to);
+        void calcFft();
         void stop();
+
+    private:
+
+        void calcResponse_();
+        void calcFft_();
 
         FilterResponseWidget * w;
         std::vector<F32>& response;
         uint from, to;
+        bool doFft_;
         volatile bool doStop;
 
         AUDIO::MultiFilter filter;
@@ -55,6 +63,7 @@ FilterResponseWidget::FilterResponseWidget(QWidget *parent)
       bufferSize_   (1024),
       lowFreq_      (20),
       logScale_     (false),
+      doFft_        (false),
       thread_       (0)
 {
     setObjectName("_FilterResponseWidget");
@@ -80,6 +89,16 @@ void FilterResponseWidget::setFilter(const AUDIO::MultiFilter & f, bool upd)
 {
     *filter_ = f;
     filter_->setSampleRate(sampleRate_);
+    if (upd)
+    {
+        calcResponse_();
+        update();
+    }
+}
+
+void FilterResponseWidget::setFftDisplay(bool fft, bool upd)
+{
+    doFft_ = fft;
     if (upd)
     {
         calcResponse_();
@@ -209,7 +228,10 @@ void FilterResponseWidget::calcResponse_()
 
     response_.resize(numBands_);
 
-    ((ResponseCalc*)thread_)->calc(0, response_.size()-1);
+    if (doFft_)
+        ((ResponseCalc*)thread_)->calcFft();
+    else
+        ((ResponseCalc*)thread_)->calc(0, response_.size()-1);
 }
 
 namespace
@@ -218,6 +240,38 @@ namespace
     {
         filter = w->filter();
 
+        if (doFft_)
+            calcFft_();
+        else
+            calcResponse_();
+    }
+
+
+    void ResponseCalc::calc(uint from, uint to)
+    {
+        doStop = false;
+        this->from = from;
+        this->to = to;
+        doFft_ = false;
+        start();
+    }
+
+    void ResponseCalc::calcFft()
+    {
+        doStop = false;
+        doFft_ = true;
+        start();
+    }
+
+    void ResponseCalc::stop()
+    {
+        doStop = true;
+        wait();
+    }
+
+
+    void ResponseCalc::calcResponse_()
+    {
         std::vector<F32>
                 buffer(w->bufferSize());
 
@@ -257,18 +311,52 @@ namespace
         w->update();
     }
 
-    void ResponseCalc::calc(uint from, uint to)
-    {
-        doStop = false;
-        this->from = from;
-        this->to = to;
-        start();
-    }
 
-    void ResponseCalc::stop()
+    void ResponseCalc::calcFft_()
     {
-        doStop = true;
-        wait();
+        const uint bufferSize = 2048;
+
+        std::vector<F32>
+                buffer(bufferSize * 2);
+
+        for (auto & v : response)
+            v = 0.0;
+
+        const uint num = 200;
+        const F32 ampfac = 20.f;
+
+        // repeat n times
+        for (uint k = 0; k < num && !doStop; ++k)
+        {
+
+            // fill with noise
+            for (uint j=0; j<bufferSize; ++j)
+            {
+
+                buffer[j] = (F32)rand() / RAND_MAX * 2.f - 1.f;
+            }
+
+            // filter it
+            filter.reset();
+            filter.process(&buffer[0], &buffer[0], bufferSize);
+
+            // get fft
+            MATH::realfft(&buffer[0], bufferSize);
+
+            // fill into response array
+            for (uint j=0; j<response.size(); ++j)
+            {
+                // index into ft
+                uint i = (j * (bufferSize/2) / response.size());
+
+                // get amplitude
+                F32 amp = buffer[i] * ampfac;
+
+                response[j] = std::max(response[j], amp);
+            }
+        }
+
+        w->update();
     }
 }
 
