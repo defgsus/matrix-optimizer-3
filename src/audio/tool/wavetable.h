@@ -47,7 +47,7 @@ public:
         It will also be at least 2! */
     void setSize(uint size);
 
-    /** Sets the data of the wavetable.
+    /** Copies the data in @p ptr into the wavetable.
         @p ptr is expected to point at size() consecutive entries of type F */
     void setData(const F * ptr);
 
@@ -55,7 +55,7 @@ public:
     F * data() { return &data_[0]; }
 
     /** Sets all data to zero */
-    void clearData();
+    void clear();
 
     /** Puts everything in the range of [-1,1] */
     void normalize();
@@ -75,7 +75,7 @@ void Wavetable<F>::setSize(uint size)
 }
 
 template <typename F>
-void Wavetable<F>::clearData()
+void Wavetable<F>::clear()
 {
     for (auto &d : data_)
         d = F(0);

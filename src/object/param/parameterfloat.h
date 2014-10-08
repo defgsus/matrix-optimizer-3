@@ -39,7 +39,8 @@ public:
     Double maxValue() const { return maxValue_; }
     Double smallStep() const { return smallStep_; }
 
-    Double value(Double time, uint thread) const { return value_ + getModulationValue(time, thread); }
+    Double value(Double time, uint thread) const
+        { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time, thread) )); }
     Double baseValue() const { return value_; }
 
     /** Writes @p number values starting at @p time into the pointer */

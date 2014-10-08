@@ -66,7 +66,7 @@ class Waveform
         @p pulseWidth is only used by types that support it.
         @note pulseWidth must be between minPulseWidth() and maxPulseWidth() !
         @see supportsPulseWidth() */
-    static Double waveform(Double time, Type type, Double pulseWidth = 0.5);
+    static Double waveform(Double time, Type type, Double pulseWidth);
 
     static Double spectralWave(Double time,
                                Double numPartials,

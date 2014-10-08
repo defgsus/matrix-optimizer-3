@@ -15,6 +15,7 @@
 #include <QObject>
 #include <QModelIndex>
 #include <QColor>
+#include <QRect>
 
 /** std::ostream << QString */
 template <typename T>
@@ -24,6 +25,13 @@ std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QString& s)
     return o;
 }
 
+/** std::ostream << QRect */
+template <typename T>
+std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QRect& r)
+{
+    o << "QRect(" << r.x() << ", " << r.y() << ", " << r.width() << ", " << r.height() << ")";
+    return o;
+}
 
 /** std::ostream << QObject* */
 template <typename T>

@@ -33,7 +33,7 @@ QVector<Vec2> get_intersection_poly_rect(const QVector<Vec2> &poly, const Vec2 &
 
     // find a point which is outside
     int out = -1;
-    for (int i; i<poly.size(); ++i)
+    for (int i=0; i<poly.size(); ++i)
     {
         if (!MO__INSIDE(poly[i]))
         {
@@ -48,6 +48,9 @@ QVector<Vec2> get_intersection_poly_rect(const QVector<Vec2> &poly, const Vec2 &
     // intersection is congruent with poly
     if (out < 0)
         return poly;
+
+
+    // otherwise use QPolygon for intersection
 
     QPolygonF qrect, qpoly;
     qrect << QPointF(rect_br[0], rect_br[1])

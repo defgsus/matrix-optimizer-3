@@ -742,7 +742,7 @@ bool MainWindow::restoreAllGeometry_()
 
 void MainWindow::objectSelected_(Object * o)
 {
-    MO_DEBUG("MainWindow::objectSelected(" << o << ")");
+    MO_DEBUG_GUI("MainWindow::objectSelected(" << o << ")");
 
     // update object editor
     objectView_->setObject(o);
@@ -763,7 +763,7 @@ void MainWindow::objectSelected_(Object * o)
 
 void MainWindow::objectSelectedTree_(Object * o)
 {
-    MO_DEBUG("MainWindow::objectSelectedTree(" << o << ")");
+    MO_DEBUG_GUI("MainWindow::objectSelectedTree(" << o << ")");
 
     // update sequence
     sequencer_->setCurrentObject(o);

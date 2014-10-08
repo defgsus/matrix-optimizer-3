@@ -768,7 +768,7 @@ void ObjectTreeView::expandObjectsByType_(const QModelIndex & index, int typefla
 
 bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
 {
-    MO_DEBUG("ObjectTreeView::addObject_("
+    MO_DEBUG_TREE("ObjectTreeView::addObject_("
              << parent << ", " << row << ", " << obj << ")");
 
     //Object * parentObject = model()->data(parent, ObjectRole).value<Object*>();

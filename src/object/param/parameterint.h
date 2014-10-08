@@ -38,7 +38,8 @@ public:
     Int maxValue() const { return maxValue_; }
     Int smallStep() const { return smallStep_; }
 
-    Int value(Double time, uint thread) const { return value_ + getModulationValue(time, thread); }
+    Int value(Double time, uint thread) const
+        { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time, thread) )); }
     Int baseValue() const { return value_; }
 
     // ---------------- setter -----------------

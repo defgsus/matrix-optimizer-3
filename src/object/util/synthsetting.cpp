@@ -134,7 +134,7 @@ void SynthSetting::createParameters(const QString &id_suffix)
                                  tr("The order (sharpness) of the filter for the 'nth order' types"),
                                  synth_->filterOrder(),
                                  1, 10,
-                                 1);
+                                 1, true, true);
 
     p_filterFreq_ = o_->createFloatParameter("filterfreq" + id_suffix, tr("filter frequency"),
                                  tr("Controls the filter frequency in Hertz"),

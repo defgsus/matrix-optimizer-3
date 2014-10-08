@@ -16,6 +16,7 @@
 #include "io/files.h"
 #include "projection/projectionsystemsettings.h"
 #include "io/xmlstream.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -118,6 +119,8 @@ void Settings::restoreGeometry(QMainWindow * win)
 */
 void Settings::saveGeometry(QWindow * win)
 {
+    MO_DEBUG_GUI("Settings::saveGeometry(" << win << ", " << win->geometry());
+
     MO_ASSERT(!win->objectName().isEmpty(), "Settings::saveGeometry(): no objectName set for QWindow");
     setValue("Geometry/" + win->objectName(), win->geometry());
 }
@@ -129,6 +132,7 @@ bool Settings::restoreGeometry(QWindow * win)
     if (contains(key))
     {
         win->setGeometry( getValue(key).value<QRect>() );
+        MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());
         return true;
     }
     return false;
@@ -136,8 +140,11 @@ bool Settings::restoreGeometry(QWindow * win)
 
 void Settings::saveGeometry(QWidget * win)
 {
+    MO_DEBUG_GUI("Settings::saveGeometry(" << win << ", " << win->geometry());
+
     MO_ASSERT(!win->objectName().isEmpty(), "Settings::saveGeometry(): no objectName set for QWidget");
     setValue("Geometry/" + win->objectName(), win->saveGeometry());
+    //setValue("Geometry/" + win->objectName(), win->geometry());
 }
 
 bool Settings::restoreGeometry(QWidget * win)
@@ -147,6 +154,8 @@ bool Settings::restoreGeometry(QWidget * win)
     if (contains(key))
     {
         win->restoreGeometry( getValue(key).toByteArray() );
+        //win->setGeometry( getValue(key).value<QRect>() );
+        MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());
         return true;
     }
     return false;

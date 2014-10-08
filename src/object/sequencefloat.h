@@ -31,6 +31,7 @@ public:
         ST_CONSTANT,
         ST_TIMELINE,
         ST_OSCILLATOR,
+        ST_OSCILLATOR_WT,
         ST_SPECTRAL_OSC,
         ST_SPECTRAL_WT,
         ST_SOUNDFILE,
@@ -47,6 +48,7 @@ public:
     static bool typeUsesFrequency(SequenceType t)
     {
         return     t == ST_OSCILLATOR
+                || t == ST_OSCILLATOR_WT
                 || t == ST_SPECTRAL_OSC
                 || t == ST_SPECTRAL_WT
                 || t == ST_EQUATION_WT;
@@ -198,6 +200,7 @@ private:
     MATH::Timeline1D * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
     AUDIO::WavetableGenerator * wavetableGen_;
+    AUDIO::BandlimitWavetableGenerator * waveformGen_;
     AUDIO::SoundFile * soundFile_;
 
     class SeqEquation;
@@ -233,6 +236,7 @@ private:
 
     ParameterSelect
         * p_wtSize_,
+        * p_oscWtSize_,
         * p_wtSpecSize_,
         * p_mode_,
         * p_oscMode_,

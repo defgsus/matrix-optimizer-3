@@ -22,6 +22,7 @@ class MidiDevice;
 class MidiDevices;
 class MidiEvent;
 
+class BandlimitWavetableGenerator;
 class ButterworthFilter;
 class ChebychevFilter;
 class EnvelopeFollower;
