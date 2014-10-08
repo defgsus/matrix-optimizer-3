@@ -284,7 +284,7 @@ void SequenceFloat::createParameters()
 
         p_wtSpecAmp_ = createFloatParameter("wtspecamp", tr("amplitude mul."),
                    tr("Additional multiplier for the amplitude after each partial voice"),
-                   1.0, 0.05, true, false);
+                   1.0, 0.0025, true, false);
 
         p_wtSpecPhase_ = createFloatParameter("wtspecphase", tr("base phase"),
                    tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
