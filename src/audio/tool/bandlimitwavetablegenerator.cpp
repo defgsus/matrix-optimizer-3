@@ -8,6 +8,15 @@
     <p>created 08.10.2014</p>
 */
 
+/* Note:
+ *
+ * http://musicdsp.org/showArchiveComment.php?ArchiveID=134
+ * states that he made good experience with 32x oversampling and
+ * a 511-tap FIR (blackman-harris) 12 khz cutoff.
+ * maybe try that once...
+ *
+ */
+
 #include "bandlimitwavetablegenerator.h"
 #include "fixedfilter.h"
 #include "math/constants.h"
@@ -17,8 +26,9 @@ namespace AUDIO {
 
 BandlimitWavetableGenerator::BandlimitWavetableGenerator()
     : tableSize_        (nextPowerOfTwo(32000)),
-      oversampling_     (3),
+      oversampling_     (4),
       waveType_         (Waveform::T_SQUARE),
+      pulseWidth_       (0.5),
       needRecalc_       (true),
       needWaveCalc_     (true),
       filter_           (new FixedFilter())
@@ -49,27 +59,25 @@ void BandlimitWavetableGenerator::setWaveform(Waveform::Type type)
     needWaveCalc_ = true;
 }
 
+void BandlimitWavetableGenerator::setPulseWidth(Double pw)
+{
+    pulseWidth_ = Waveform::limitPulseWidth(pw);
+    needWaveCalc_ = true;
+}
+
 
 void BandlimitWavetableGenerator::recalc_()
 {
     if (!needRecalc_)
         return;
 
-    // suppose tableSize_ * oversampling_ is exactly one second
+    // suppose tableSize_ * oversampling_ is exactly one second/period
     const uint hz = tableSize_ * oversampling_;
 
     table_.resize(hz);
     ftable_.resize(hz);
 
-#if (0)
-    filter_->setBandType(FixedFilter::BT_BANDPASS);
-    filter_->setSampleRate(hz);
-    filter_->setOrder(6);
-    // set the allowed band to the nyquist range
-    filter_->setFrequency(hz/4);
-    filter_->setBandpassSize(hz/4.1);
-    filter_->updateCoefficients();
-#else
+    // setup filter
     filter_->setType(FixedFilter::FT_BUTTERWORTH);
     filter_->setBandType(FixedFilter::BT_LOWPASS);
     filter_->setOrder(6);
@@ -78,7 +86,6 @@ void BandlimitWavetableGenerator::recalc_()
     filter_->setSampleRate(tableSize_ * 2);
     filter_->setFrequency(tableSize_ / 60);
     filter_->updateCoefficients();
-#endif
 
     needRecalc_ = false;
     needWaveCalc_ = true;
@@ -94,7 +101,7 @@ void BandlimitWavetableGenerator::generateTable_()
     // generate it
     for (uint i=0; i<hz; ++i)
     {
-        table_[i] = Waveform::waveform(Double(i) / hz, waveType_);
+        table_[i] = Waveform::waveform(Double(i) / hz, waveType_, pulseWidth_);
     }
 
     // filter it

@@ -29,7 +29,8 @@ class Waveform
         T_SINE,
         T_COSINE,
         T_RAMP,
-        T_SAW,
+        T_SAW_RISE,
+        T_SAW_DECAY,
         T_TRIANGLE,
         T_SQUARE,
         T_NOISE

@@ -226,6 +226,11 @@ void SequenceFloat::createParameters()
                    tr("Pulsewidth of the waveform, describes the width of the positive edge"),
                    0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05);
 
+        p_oscWtPulseWidth_ = createFloatParameter("oscwtpulsewidth", tr("pulse width"),
+                   tr("Pulsewidth of the waveform, describes the width of the positive edge"),
+                   0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05,
+                   true, false);
+
     endParameterGroup();
 
 
@@ -279,15 +284,15 @@ void SequenceFloat::createParameters()
 
         p_wtSpecAmp_ = createFloatParameter("wtspecamp", tr("amplitude mul."),
                    tr("Additional multiplier for the amplitude after each partial voice"),
-                   1.0, 0.05);
+                   1.0, 0.05, true, false);
 
         p_wtSpecPhase_ = createFloatParameter("wtspecphase", tr("base phase"),
                    tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
-                   0.0, 0.05);
+                   0.0, 0.05, true, false);
 
         p_wtSpecPhaseShift_ = createFloatParameter("wtspecphaseshift", tr("phase shift"),
                    tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"),
-                   0.0, 0.05);
+                   0.0, 0.05, true, false);
 
     endParameterGroup();
 
@@ -365,7 +370,8 @@ void SequenceFloat::onParameterChanged(Parameter *p)
     if (sequenceType() == ST_OSCILLATOR_WT)
     {
         if (p == p_oscWtSize_
-            || p == p_oscMode_)
+            || p == p_oscMode_
+            || p == p_oscWtPulseWidth_)
                 updateWavetable_();
     }
 }
@@ -390,6 +396,7 @@ void SequenceFloat::updateParameterVisibility()
     const bool loop = looping();
     const bool looplap = loop && p_loopOverlap_->baseValue() != LOT_OFF;
     const bool pw = (osc && AUDIO::Waveform::supportsPulseWidth(oscillatorMode())) || equ;
+    const bool oscwtpw = (oscwt && AUDIO::Waveform::supportsPulseWidth(oscillatorMode()));
     const bool spec = sequenceType() == ST_SPECTRAL_OSC;
     const bool wtspec = sequenceType() == ST_SPECTRAL_WT;
     const bool wave = sequenceType() == ST_SOUNDFILE;
@@ -410,6 +417,7 @@ void SequenceFloat::updateParameterVisibility()
     p_wtEquationText_->setVisible(equwt);
     p_wtSize_->setVisible(equwt);
     p_oscWtSize_->setVisible(oscwt);
+    p_oscWtPulseWidth_->setVisible(oscwtpw);
 
     p_specNum_->setVisible(spec);
     p_specOct_->setVisible(spec);
@@ -760,6 +768,7 @@ void SequenceFloat::updateWavetable_()
         MO_ASSERT(waveformGen_, "updateWavetable() without bandlimited wavetable generator");
         waveformGen_->setTableSize(p_oscWtSize_->baseValue());
         waveformGen_->setWaveform((AUDIO::Waveform::Type)p_oscMode_->baseValue());
+        waveformGen_->setPulseWidth(p_oscWtPulseWidth_->baseValue());
         waveformGen_->createWavetable(*wavetable_);
     }
 

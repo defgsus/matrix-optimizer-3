@@ -21,17 +21,18 @@ namespace AUDIO {
 MATH::NoisePerlin Waveform::noise_;
 
 const QList<int> Waveform::typeList =
-{ T_SINE, T_COSINE, T_RAMP, T_SAW, T_TRIANGLE, T_SQUARE, T_NOISE };
+{ T_SINE, T_COSINE, T_RAMP, T_SAW_RISE, T_SAW_DECAY, T_TRIANGLE, T_SQUARE, T_NOISE };
 
 const QStringList Waveform::typeIds =
 {
-    "sin", "cos", "ramp", "saw", "tri", "sqr", "noise"
+    "sin", "cos", "ramp", "saw", "sawd", "tri", "sqr", "noise"
 };
 
 const QStringList Waveform::typeNames =
 {
     QObject::tr("Sine"), QObject::tr("Cosine"),
-    QObject::tr("Ramp"), QObject::tr("Sawtooth"),
+    QObject::tr("Ramp"),
+    QObject::tr("Sawtooth up"), QObject::tr("Sawtooth down"),
     QObject::tr("Triangle"), QObject::tr("Square"),
     QObject::tr("Noise")
 };
@@ -41,7 +42,8 @@ const QStringList Waveform::typeStatusTips =
     QObject::tr("A sine oscillator [-1,1]"),
     QObject::tr("A cosine oscillator [-1,1]"),
     QObject::tr("A positive ramp [0,1]"),
-    QObject::tr("A sawtooth oscillator [-1,1]"),
+    QObject::tr("A sawtooth oscillator with rising edge [-1,1]"),
+    QObject::tr("A sawtooth oscillator with decaying edge [-1,1]"),
     QObject::tr("A triangle oscillator [-1,1]"),
     QObject::tr("A square-wave oscillator [-1,1]"),
     QObject::tr("A continous noise function [-1,1]")
@@ -71,8 +73,11 @@ Double Waveform::waveform(Double t, Type type)
         case T_RAMP:
             return MATH::moduloSigned( t, 1.0 );
 
-        case T_SAW:
+        case T_SAW_RISE:
             return -1.0 + 2.0 * MATH::moduloSigned( t, 1.0 );
+
+        case T_SAW_DECAY:
+            return 1.0 - 2.0 * MATH::moduloSigned( t, 1.0 );
 
         case T_TRIANGLE:
             p = MATH::moduloSigned(t, 1.0);
@@ -106,8 +111,11 @@ Double Waveform::waveform(Double t, Type type, Double pw)
         case T_RAMP:
             return MATH::moduloSigned( t, 1.0 );
 
-        case T_SAW:
+        case T_SAW_RISE:
             return -1.0 + 2.0 * MATH::moduloSigned( t, 1.0 );
+
+        case T_SAW_DECAY:
+            return 1.0 - 2.0 * MATH::moduloSigned( t, 1.0 );
 
         case T_TRIANGLE:
             p = MATH::moduloSigned(t, 1.0);

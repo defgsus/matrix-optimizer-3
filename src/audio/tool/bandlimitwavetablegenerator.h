@@ -47,6 +47,9 @@ public:
     /** Sets the type of waveform to render */
     void setWaveform(Waveform::Type);
 
+    /** Sets the pulsewidth for Waveform types that support it. */
+    void setPulseWidth(Double pw);
+
     // ------------ wavetables -------------
 
     /** Generates the wavetable with the given waveform of size tableSize() */
@@ -62,6 +65,7 @@ private:
     std::vector<Double> table_, ftable_;
 
     Waveform::Type waveType_;
+    Double pulseWidth_;
 
     bool needRecalc_,
          needWaveCalc_;
