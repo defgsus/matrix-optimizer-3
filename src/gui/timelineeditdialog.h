@@ -31,6 +31,11 @@ public:
 
     const MATH::Timeline1D & timeline() const { return *tl_; }
 
+    int options() const { return options_; }
+
+    const Timeline1DView & editor() const;
+    Timeline1DView & editor();
+
 signals:
 
     /** Emitted when a changed has been made to the timeline */
@@ -41,6 +46,8 @@ public slots:
     /** Sets the timeline data to edit */
     void setTimeline(const MATH::Timeline1D& tl);
 
+    /** Sets the Timeline1DView::Option options */
+    void setOptions(int options);
 
 private:
 
@@ -49,6 +56,8 @@ private:
     MATH::Timeline1D * tl_;
     Timeline1DRulerView * editor_;
     QTimer * timer_;
+    bool autoUpdate_;
+    int options_;
 };
 
 } // namespace GUI

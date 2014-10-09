@@ -30,6 +30,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
+#include "object/param/parametertimeline1d.h"
 #include "object/param/modulator.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -567,6 +568,31 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         connect(breset, &QToolButton::pressed, [=]()
         {
             edit->setText(ptxt->defaultValue());
+        });
+    }
+
+    else
+    // --- timeline1d parameter ---
+    if (ParameterTimeline1D * ptl = dynamic_cast<ParameterTimeline1D*>(p))
+    {
+        defaultValueName = ptl->defaultTimeline() ? "..." : "empty";
+
+        // edit button
+        QToolButton * butedit = new QToolButton(w);
+        l->addWidget(butedit);
+        butedit->setText("...");
+        butedit->setStatusTip(tr("Click to edit the timeline"));
+
+        // load button click
+        connect(butedit, &QToolButton::clicked, [=]()
+        {
+            ptl->openEditDialog(this);
+        });
+
+        // reset to default
+        connect(breset, &QToolButton::pressed, [=]()
+        {
+            ptl->reset();
         });
     }
 

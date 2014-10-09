@@ -193,6 +193,11 @@ void SequenceFloat::createParameters()
         { 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
         4096, true, false);
 
+        auto tmp = createTimeline1DParameter("wtfreqs", tr("frequency spectrum"),
+                                             tr("Editable curve for the amplitudes of each frequency band"),
+                                             0,
+                                             0.0, 1.0);
+
         p_useFreq_ = createBooleanParameter("use_freq", tr("use frequency"),
                   tr("Selects whether some types of sequence which don't need a frequency "
                      "will still use it"),

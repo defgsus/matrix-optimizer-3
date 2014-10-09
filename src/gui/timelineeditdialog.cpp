@@ -10,10 +10,13 @@
 
 #include <QLayout>
 #include <QTimer>
+#include <QCheckBox>
+#include <QPushButton>
 
 #include "timelineeditdialog.h"
 #include "math/timeline1d.h"
 #include "timeline1drulerview.h"
+#include "timeline1dview.h"
 #include "io/settings.h"
 
 namespace MO {
@@ -21,7 +24,9 @@ namespace GUI {
 
 TimelineEditDialog::TimelineEditDialog(QWidget *parent)
     : QDialog       (parent),
-      tl_           (0)
+      tl_           (0),
+      autoUpdate_   (false),
+      options_      (Timeline1DView::O_EnableAll)
 {
     setObjectName("_TimelineEditDialog");
     setWindowTitle(tr("Timeline editor"));
@@ -29,6 +34,7 @@ TimelineEditDialog::TimelineEditDialog(QWidget *parent)
     setMinimumSize(320,200);
 
     settings->restoreGeometry(this);
+    autoUpdate_ = settings->value(objectName()+"/autoupdate", autoUpdate_).toBool();
 
     createWidgets_();
 }
@@ -36,6 +42,7 @@ TimelineEditDialog::TimelineEditDialog(QWidget *parent)
 TimelineEditDialog::~TimelineEditDialog()
 {
     settings->saveGeometry(this);
+    settings->setValue(objectName()+"/autoupdate", autoUpdate_);
     delete tl_;
 }
 
@@ -49,18 +56,70 @@ void TimelineEditDialog::createWidgets_()
 
     auto lv = new QVBoxLayout(this);
 
+        // editor
         editor_ = new Timeline1DRulerView(tl_, this);
         lv->addWidget(editor_);
+        editor_->setOptions(options_);
 
-        connect(editor_, SIGNAL(Timeline1DRulerView::timelineChanged),
-                timer_, SLOT(start()));
+        connect(editor_, &Timeline1DRulerView::timelineChanged, [=]()
+        {
+            if (autoUpdate_)
+                timer_->start();
+        });
+
+        // lower area
+        auto lh = new QHBoxLayout();
+        lv->addLayout(lh);
+
+            // ok
+            auto bok = new QPushButton(tr("Ok"), this);
+            lh->addWidget(bok);
+            bok->setDefault(true);
+            connect(bok, &QPushButton::clicked, [=]()
+            {
+                accept();
+            });
+
+            // cancel
+            auto bcanc = new QPushButton(tr("Cancel"), this);
+            lh->addWidget(bcanc);
+            connect(bcanc, &QPushButton::clicked, [=]()
+            {
+                reject();
+            });
+
+            // always update?
+            auto cb = new QCheckBox(tr("always update"), this);
+            lh->addWidget(cb);
+            cb->setChecked(autoUpdate_);
+            connect(bok, &QCheckBox::clicked, [=]()
+            {
+                autoUpdate_ = cb->isChecked();
+            });
 }
 
+
+const Timeline1DView & TimelineEditDialog::editor() const
+{
+    return *editor_->timelineView();
+}
+
+Timeline1DView & TimelineEditDialog::editor()
+{
+    return *editor_->timelineView();
+}
+
+void TimelineEditDialog::setOptions(int o)
+{
+    options_ = o;
+    editor_->setOptions(options_);
+}
 
 void TimelineEditDialog::setTimeline(const MATH::Timeline1D & tl)
 {
     if (!tl_)
         tl_ = new MATH::Timeline1D();
+
     *tl_ = tl;
 
     editor_->setTimeline(tl_);

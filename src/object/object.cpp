@@ -1330,12 +1330,14 @@ ParameterTimeline1D * Object::createTimeline1DParameter(
         parameters_.append(param);
 
         // first time init
-        param->setTimeline(*defaultValue);
+        if (defaultValue)
+            param->setTimeline(*defaultValue);
     }
 
     // override potentially previous
     param->setName(name);
-    param->setDefaultTimeline(*defaultValue);
+    if (defaultValue)
+        param->setDefaultTimeline(*defaultValue);
     param->setMinTime(minTime);
     param->setMaxTime(maxTime);
     param->setMinValue(minValue);

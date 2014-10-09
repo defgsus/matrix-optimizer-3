@@ -16,6 +16,7 @@
 #include "math/timeline1d.h"
 #ifndef MO_CLIENT
 #   include "gui/timelineeditdialog.h"
+#   include "gui/timeline1dview.h"
 #endif
 
 // make ParameterTimeline1D useable in QMetaObject::invokeMethod
@@ -128,9 +129,26 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
 
     const QString parName = QString("%1.%2").arg(object()->name()).arg(name());
 
+    MATH::Timeline1D backup(*timeline());
+
     // prepare dialog
     GUI::TimelineEditDialog diag(parent);
     diag.setWindowTitle(QObject::tr("timeline %1").arg(parName));
+    diag.setTimeline(*timeline());
+
+    if (minTime_ > -infinity)
+    {
+        GUI::UTIL::ViewSpace space = diag.editor().viewSpace();
+        space.setMinX(minTime_);
+        diag.editor().setViewSpace(space);
+    }
+    if (maxTime_ < infinity)
+    {
+        GUI::UTIL::ViewSpace space = diag.editor().viewSpace();
+        space.setMaxX(maxTime_);
+        diag.editor().setViewSpace(space);
+    }
+
 
     bool changed = false;
 
@@ -140,7 +158,9 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
         changed = true;
     });
 
-    diag.exec();
+    // reset to default
+    if (diag.exec() == QDialog::Rejected && changed)
+        object()->sceneObject()->setParameterValue(this, backup);
 
     return changed;
 }
