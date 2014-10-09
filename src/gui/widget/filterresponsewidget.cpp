@@ -323,7 +323,8 @@ namespace
             v = 0.0;
 
         const uint num = 200;
-        const F32 ampfac = 20.f;
+
+        filter.reset();
 
         // repeat n times
         for (uint k = 0; k < num && !doStop; ++k)
@@ -332,16 +333,19 @@ namespace
             // fill with noise
             for (uint j=0; j<bufferSize; ++j)
             {
-
-                buffer[j] = (F32)rand() / RAND_MAX * 2.f - 1.f;
+                // window function
+                const F32 fade = std::sin(F32(j) / bufferSize * PI);
+                // noise
+                buffer[j] = fade * (F32)rand() / RAND_MAX * 2.f - 1.f;
+                //buffer[j] = fade * std::sin(F32(j)/w->sampleRate() * TWO_PI * 4000);
             }
 
             // filter it
-            filter.reset();
             filter.process(&buffer[0], &buffer[0], bufferSize);
 
             // get fft
-            MATH::realfft(&buffer[0], bufferSize);
+            MATH::real_fft(&buffer[0], bufferSize);
+            MATH::get_amplitude_phase(&buffer[0], bufferSize);
 
             // fill into response array
             for (uint j=0; j<response.size(); ++j)
@@ -350,7 +354,10 @@ namespace
                 uint i = (j * (bufferSize/2) / response.size());
 
                 // get amplitude
-                F32 amp = buffer[i] * ampfac;
+                F32 amp = (buffer[i]
+                // and take aliased frequencies above nyquist
+                // (maybe this is more useful information)
+                           + buffer[bufferSize-1-i]) * 0.75f;
 
                 response[j] = std::max(response[j], amp);
             }
