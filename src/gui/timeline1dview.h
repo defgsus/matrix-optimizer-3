@@ -69,6 +69,9 @@ public:
 
     // ---------- getter -----------
 
+    /** Returns assigned timeline */
+    MATH::Timeline1D * timeline() const { return tl_; }
+
     int options() const { return options_; }
 
     /** is anyone selected? */
@@ -82,7 +85,8 @@ public:
 
     // ----------- assignment ------
 
-    /** Assigns a new (or no) Timeline1D */
+    /** Assigns a new (or no) Timeline1D and updates the widget.
+        No ownership change. */
     void setTimeline(MATH::Timeline1D * timeline = 0);
 
     /** Assigns a sequencer overpainter for timelines in sequences */
@@ -111,7 +115,11 @@ signals:
     /** Send when viewspace was changed by user */
     void viewSpaceChanged(const UTIL::ViewSpace&);
 
+    /** Emitted after a change to the timeline data */
+    void timelineChanged();
+
     void statusTipChanged(const QString&);
+
 
 public slots:
 

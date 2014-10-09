@@ -70,8 +70,8 @@ void ParameterText::setVariableDescriptions(const std::vector<std::string> &desc
 #ifndef MO_CLIENT
 bool ParameterText::openEditDialog(QWidget *parent)
 {
-    MO_ASSERT(object(), "no object for ParameterFilename::openFileDialog()");
-    MO_ASSERT(object()->sceneObject(), "no scene for ParameterFilename::openFileDialog()");
+    MO_ASSERT(object(), "no object for ParameterText::openFileDialog()");
+    MO_ASSERT(object()->sceneObject(), "no scene for ParameterText::openFileDialog()");
 
     if (!object() || !object()->sceneObject())
         return false;

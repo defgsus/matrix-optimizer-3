@@ -25,6 +25,7 @@
 #include "param/parameterselect.h"
 #include "param/parameterfilename.h"
 #include "param/parametertext.h"
+#include "param/parametertimeline1d.h"
 #include "audio/audiosource.h"
 #include "audio/audiomicrophone.h"
 #include "modulatorobjectfloat.h"
@@ -1263,6 +1264,84 @@ ParameterFilename * Object::createFilenameParameter(
     param->setFileType(fileType);
     param->setDefaultValue(defaultValue);
     param->setStatusTip(statusTip);
+
+    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
+
+    return param;
+}
+
+
+ParameterTimeline1D * Object::createTimeline1DParameter(
+        const QString& id, const QString& name, const QString& statusTip,
+        const MATH::Timeline1D * defaultValue,
+        bool editable)
+{
+    return createTimeline1DParameter(id, name, statusTip,
+                              defaultValue,
+                              -ParameterTimeline1D::infinity,
+                              +ParameterTimeline1D::infinity,
+                              -ParameterTimeline1D::infinity,
+                              +ParameterTimeline1D::infinity,
+                              editable);
+}
+
+ParameterTimeline1D * Object::createTimeline1DParameter(
+        const QString& id, const QString& name, const QString& statusTip,
+        const MATH::Timeline1D * defaultValue,
+        Double minTime, Double maxTime,
+        bool editable)
+{
+    return createTimeline1DParameter(id, name, statusTip,
+                              defaultValue,
+                              minTime, maxTime,
+                              -ParameterTimeline1D::infinity,
+                              +ParameterTimeline1D::infinity,
+                              editable);
+}
+
+ParameterTimeline1D * Object::createTimeline1DParameter(
+        const QString& id, const QString& name, const QString& statusTip,
+        const MATH::Timeline1D * defaultValue,
+        Double minTime, Double maxTime, Double minValue, Double maxValue,
+        bool editable)
+{
+    ParameterTimeline1D * param = 0;
+
+    // see if already there
+
+    if (auto p = findParameter(id))
+    {
+        if (auto pf = dynamic_cast<ParameterTimeline1D*>(p))
+        {
+            param = pf;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested timeline1d "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterTimeline1D(this, id, name);
+        parameters_.append(param);
+
+        // first time init
+        param->setTimeline(*defaultValue);
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setDefaultTimeline(*defaultValue);
+    param->setMinTime(minTime);
+    param->setMaxTime(maxTime);
+    param->setMinValue(minValue);
+    param->setMaxValue(maxValue);
+    param->setStatusTip(statusTip);
+    param->setEditable(editable);
 
     param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
 

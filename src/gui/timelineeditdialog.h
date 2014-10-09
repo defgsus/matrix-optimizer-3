@@ -13,28 +13,33 @@
 
 #include <QDialog>
 
+class QTimer;
+
 namespace MO {
 namespace MATH { class Timeline1D; }
 namespace GUI {
 
 class Timeline1DView;
+class Timeline1DRulerView;
 
 class TimelineEditDialog : public QDialog
 {
     Q_OBJECT
 public:
     explicit TimelineEditDialog(QWidget *parent = 0);
+    ~TimelineEditDialog();
 
-    const MATH::Timeline1D * timeline() const { return tl_; }
-
-    Timeline1DView * editor() const { return editor_; }
+    const MATH::Timeline1D & timeline() const { return *tl_; }
 
 signals:
 
+    /** Emitted when a changed has been made to the timeline */
+    void timelineChanged();
+
 public slots:
 
-    /** Sets the timeline to edit */
-    void setTimeline(MATH::Timeline1D *);
+    /** Sets the timeline data to edit */
+    void setTimeline(const MATH::Timeline1D& tl);
 
 
 private:
@@ -42,7 +47,8 @@ private:
     void createWidgets_();
 
     MATH::Timeline1D * tl_;
-    Timeline1DView * editor_;
+    Timeline1DRulerView * editor_;
+    QTimer * timer_;
 };
 
 } // namespace GUI

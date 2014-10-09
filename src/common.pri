@@ -202,7 +202,8 @@ HEADERS += \
     src/geom/geometrymodifierduplicate.h \
     src/math/polygon.h \
     src/audio/tool/bandlimitwavetablegenerator.h \
-    src/math/fft.h
+    src/math/fft.h \
+    src/object/param/parametertimeline1d.h
 
 
 SOURCES += \
@@ -360,4 +361,5 @@ SOURCES += \
     src/math/polygon.cpp \
     src/projection/projectormapper_gl.cpp \
     src/audio/tool/bandlimitwavetablegenerator.cpp \
-    src/math/fft.cpp
+    src/math/fft.cpp \
+    src/object/param/parametertimeline1d.cpp

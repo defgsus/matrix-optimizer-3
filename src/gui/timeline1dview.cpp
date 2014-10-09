@@ -639,8 +639,11 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
             dx = 0;
 
         {
-            Locker_ lock(this);
-            moveSelected_(dx, dy);
+            {
+                Locker_ lock(this);
+                moveSelected_(dx, dy);
+            }
+            emit timelineChanged();
         }
 
         e->accept();
@@ -793,8 +796,11 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
     {
         if (e->button() == Qt::LeftButton)
         {
-            Locker_ lock(this);
-            addPoint_(screen2time(e->x()), screen2value(e->y()));
+            {
+                Locker_ lock(this);
+                addPoint_(screen2time(e->x()), screen2value(e->y()));
+            }
+            emit timelineChanged();
             e->accept();
             // do not return but go on to click-on-point (start dragging)
         }
@@ -909,6 +915,7 @@ void Timeline1DView::mouseDoubleClickEvent(QMouseEvent * e)
                 Locker_ lock(this);
                 addPoint_(screen2time(e->x()), screen2value(e->y()));
             }
+            emit timelineChanged();
             // go to drag action imidiately
             mousePressEvent(e);
             return;
@@ -1150,6 +1157,7 @@ void Timeline1DView::slotPointContextMenu_()
                 Locker_ lock(this);
                 changePointType_(type);
             }
+            emit timelineChanged();
             update();
         });
     }
@@ -1178,6 +1186,7 @@ void Timeline1DView::slotPointContextMenu_()
                     Locker_ lock(this);
                     tl_->remove(t);
                 }
+                emit timelineChanged();
                 selectHashSet_.remove(MATH::Timeline1D::hash(t));
                 update();
             });
@@ -1208,8 +1217,9 @@ void Timeline1DView::slotPointContextMenu_()
 
                     tl_->setAutoDerivative();
                 }
-                selectHashSet_.clear();
+                emit timelineChanged();
 
+                selectHashSet_.clear();
                 update();
             });
         }
@@ -1583,12 +1593,16 @@ void Timeline1DView::paste()
                         addSelect_(*p);
                 }
             }
+            emit timelineChanged();
         }
         // whole timeline
         else
         {
-            Locker_ lock(this);
-            *tl_ = tl;
+            {
+                Locker_ lock(this);
+                *tl_ = tl;
+            }
+            emit timelineChanged();
         }
 
         update();

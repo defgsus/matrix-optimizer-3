@@ -42,6 +42,7 @@ namespace MO {
     class ParameterFloat;
     class ParameterSelect;
     class ParameterText;
+    class ParameterTimeline1D;
 
     class Transformation;
     class Rotation;

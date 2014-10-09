@@ -37,7 +37,7 @@
 
 namespace MO {
 namespace IO { class DataStream; }
-
+namespace MATH { class Timeline1D; }
 
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
@@ -537,6 +537,24 @@ protected:
                 const QString& id, const QString& name, const QString& statusTip,
                 IO::FileType fileType,
                 const QString& defaultValue = QString(), bool editable = true);
+
+
+    /** Creates a timeline parameter.
+        Ownership of @p defaultValue stays with caller. */
+    ParameterTimeline1D * createTimeline1DParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                const MATH::Timeline1D * defaultValue = 0, bool editable = true);
+
+    ParameterTimeline1D * createTimeline1DParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                const MATH::Timeline1D * defaultValue,
+                Double minTime, Double maxTime, bool editable = true);
+
+    ParameterTimeline1D * createTimeline1DParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                const MATH::Timeline1D * defaultValue,
+                Double minTime, Double maxTime, Double minValue, Double maxValue,
+                bool editable = true);
 
     // ------------------- audio ------------------
 public:

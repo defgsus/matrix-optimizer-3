@@ -50,6 +50,7 @@
 #include "networkdialog.h"
 #include "midisettingsdialog.h"
 #include "infowindow.h"
+#include "timelineeditdialog.h"
 #include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
@@ -446,6 +447,14 @@ void MainWindow::createMainMenu_()
         connect(a, &QAction::triggered, [=]()
         {
             AudioFilterDialog diag;
+            diag.exec();
+        });
+
+        a = new QAction(tr("Timeline editor"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            TimelineEditDialog diag;
             diag.exec();
         });
 

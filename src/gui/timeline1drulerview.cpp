@@ -84,8 +84,16 @@ Timeline1DRulerView::Timeline1DRulerView(MATH::Timeline1D *timeline, QWidget *pa
         }
     });
 
+    // forward timelineview's signals
+    connect(timelineView_, SIGNAL(timelineChanged()), this, SIGNAL(timelineChanged()));
+
     // update rulers
     timelineView_->setViewSpace(timelineView_->viewSpace(), true);
+}
+
+MATH::Timeline1D * Timeline1DRulerView::timeline() const
+{
+    return timelineView_->timeline();
 }
 
 void Timeline1DRulerView::setTimeline(MATH::Timeline1D *timeline)
