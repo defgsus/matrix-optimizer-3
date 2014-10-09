@@ -314,7 +314,7 @@ namespace
 
     void ResponseCalc::calcFft_()
     {
-        const uint bufferSize = 2048;
+        const uint bufferSize = response.size() * 2;
 
         std::vector<F32>
                 buffer(bufferSize * 2);
@@ -350,14 +350,8 @@ namespace
             // fill into response array
             for (uint j=0; j<response.size(); ++j)
             {
-                // index into ft
-                uint i = (j * (bufferSize/2) / response.size());
-
                 // get amplitude
-                F32 amp = (buffer[i]
-                // and take aliased frequencies above nyquist
-                // (maybe this is more useful information)
-                           + buffer[bufferSize-1-i]) * 0.75f;
+                F32 amp = buffer[j];
 
                 response[j] = std::max(response[j], amp);
             }

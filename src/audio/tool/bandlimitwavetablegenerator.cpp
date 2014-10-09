@@ -21,6 +21,9 @@
 #include "fixedfilter.h"
 #include "math/constants.h"
 
+//#include "math/fft.h"
+//#include <iostream>
+
 namespace MO {
 namespace AUDIO {
 
@@ -98,6 +101,41 @@ void BandlimitWavetableGenerator::generateTable_()
 
     const uint hz = tableSize_ * oversampling_;
 
+#ifdef XXX_LITTLE_TEST_HERE
+
+    MATH::Fft<Double> fft(hz);
+
+    #if (1)
+        // generate something
+        for (uint i=0; i<hz; ++i)
+        {
+            fft.buffer()[i] =
+                    std::sin((Double(i)/hz+0.125) * TWO_PI )
+                    * (rand()%2);//std::sin(Double(i)/hz * TWO_PI * 2.0);
+        }
+        fft.fft();
+        std::cout << "real" << std::endl;
+        for (uint i=0; i<hz; ++i)
+            std::cout << " " << (std::abs(fft.buffer()[i]) > 1e-15 ? fft.buffer()[i] : 0.);
+        std::cout << std::endl << "imag" << std::endl;
+        for (uint i=0; i<hz; ++i)
+            std::cout << " " << fft.buffer()[i+hz];
+        std::cout << std::endl;
+    #else
+        // make up something
+        for (uint i=0; i<hz; ++i)
+        {
+            fft.buffer()[i] = (i==hz-1)? -0.5 : 0;
+            fft.buffer()[hz*2-1-i] = (i==hz-1)? 10 : 0;
+        }
+    #endif
+
+    fft.ifft();
+
+    for (uint i=0; i<hz; ++i)
+        ftable_[i] = fft.buffer()[i];
+
+#else
     // generate it
     for (uint i=0; i<hz; ++i)
     {
@@ -111,7 +149,7 @@ void BandlimitWavetableGenerator::generateTable_()
     filter_->process(&table_[0], &ftable_[0], hz);
     // one real pass
     filter_->process(&table_[0], &ftable_[0], hz);
-
+#endif
     needWaveCalc_ = false;
 }
 

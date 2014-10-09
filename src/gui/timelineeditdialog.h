@@ -1,0 +1,52 @@
+/** @file timelineeditdialog.h
+
+    @brief
+
+    <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
+
+    <p>created 09.10.2014</p>
+*/
+
+#ifndef MOSRC_GUI_TIMELINEEDITDIALOG_H
+#define MOSRC_GUI_TIMELINEEDITDIALOG_H
+
+#include <QDialog>
+
+namespace MO {
+namespace MATH { class Timeline1D; }
+namespace GUI {
+
+class Timeline1DView;
+
+class TimelineEditDialog : public QDialog
+{
+    Q_OBJECT
+public:
+    explicit TimelineEditDialog(QWidget *parent = 0);
+
+    const MATH::Timeline1D * timeline() const { return tl_; }
+
+    Timeline1DView * editor() const { return editor_; }
+
+signals:
+
+public slots:
+
+    /** Sets the timeline to edit */
+    void setTimeline(MATH::Timeline1D *);
+
+
+private:
+
+    void createWidgets_();
+
+    MATH::Timeline1D * tl_;
+    Timeline1DView * editor_;
+};
+
+} // namespace GUI
+} // namespace MO
+
+
+#endif // MOSRC_GUI_TIMELINEEDITDIALOG_H

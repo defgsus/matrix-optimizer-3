@@ -72,7 +72,8 @@ HEADERS += \
     src/gui/widget/netlogwidget.h \
     src/gui/widget/overlapareaeditwidget.h \
     src/gui/widget/filterresponsewidget.h \
-    src/gui/audiofilterdialog.h
+    src/gui/audiofilterdialog.h \
+    src/gui/timelineeditdialog.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -144,4 +145,5 @@ SOURCES += \
     src/gui/widget/netlogwidget.cpp \
     src/gui/widget/overlapareaeditwidget.cpp \
     src/gui/widget/filterresponsewidget.cpp \
-    src/gui/audiofilterdialog.cpp
+    src/gui/audiofilterdialog.cpp \
+    src/gui/timelineeditdialog.cpp
