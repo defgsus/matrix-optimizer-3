@@ -144,6 +144,10 @@ protected:
         Override drawGL() to implement drawing. */
     void paintGL() Q_DECL_OVERRIDE Q_DECL_FINAL;
 
+    /** This is called before drawGL() and before any Basic3DWidget framebuffers are bound.
+        Usefull to lazy-initialize gl resources. */
+    virtual void prepareDrawGL() { };
+
     /** Override to draw your stuff */
     virtual void drawGL(const Mat4& projection,
                         const Mat4& cubeViewTrans,

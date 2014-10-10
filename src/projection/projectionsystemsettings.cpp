@@ -141,6 +141,8 @@ void ProjectionSystemSettings::loadFile(const QString &filename)
 
 const ProjectorSettings& ProjectionSystemSettings::projectorSettings(int idx) const
 {
+//    if (idx >= projectors_.size())
+//        abort();
     MO_ASSERT(idx >=0 && idx < projectors_.size(), "index " << idx << " out of range "
               "(" << projectors_.size() << ")");
     return projectors_[idx];

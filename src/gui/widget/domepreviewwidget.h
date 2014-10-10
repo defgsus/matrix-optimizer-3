@@ -58,11 +58,15 @@ public slots:
         If @p currentProjectorIndex >= 0, then this projector will be highlighted. */
     void setProjectionSettings(const ProjectionSystemSettings&, int currentProjectorIndex = -1);
 
+    /** Forces recalculation of a certain texture */
+    void updateTexture(uint index);
+
 protected:
 
     void initGL() Q_DECL_OVERRIDE;
     void releaseGL() Q_DECL_OVERRIDE;
 
+    void prepareDrawGL() Q_DECL_OVERRIDE;
     void drawGL(const Mat4& projection,
                 const Mat4& cubeViewTrans,
                 const Mat4& viewTrans,
@@ -85,7 +89,7 @@ private:
     GL::Drawable * domeDrawable_;
     GL::Drawable * projectorDrawable_;
     std::vector<GL::Drawable*> ptextureDrawable_;
-    std::vector<GL::Texture*> ptexture_;
+    std::vector<GL::Texture*> ptexture_, ptextureRelease_;
 
     Mat4 domeTransform_;
 

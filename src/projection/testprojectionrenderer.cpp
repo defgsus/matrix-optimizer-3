@@ -26,7 +26,7 @@ class TestProjectionRenderer::Private
 public:
 
     GL::Drawable * stuff;
-    ProjectionSystemSettings set;
+    ProjectionSystemSettings set, oldset;
 
     struct Projector
     {
@@ -80,12 +80,19 @@ const ProjectionSystemSettings& TestProjectionRenderer::settings() const
 
 void TestProjectionRenderer::setSettings(const ProjectionSystemSettings & set)
 {
+    p_->oldset = p_->set;
     p_->set = set;
 }
 
 void TestProjectionRenderer::Private::recalc()
 {
+    // opengl objects
+
     projector.resize(set.numProjectors());
+
+    bool samedome =
+               set.numProjectors() == oldset.numProjectors()
+            && set.domeSettings() == oldset.domeSettings();
 
     for (uint i=0; i<set.numProjectors(); ++i)
     {
@@ -112,6 +119,17 @@ void TestProjectionRenderer::Private::recalc()
             proj.fbo->create();
         }
 
+        // force recreation of warp geom
+        if (!samedome
+            || !(set.projectorSettings(i) == oldset.projectorSettings(i))
+            || !(set.cameraSettings(i) == oldset.cameraSettings(i)))
+        {
+            if (proj.warp)
+                proj.warp->release();
+            delete proj.warp;
+            proj.warp = 0;
+        }
+
         // init warp quad
         if (!proj.warp)
         {
@@ -123,20 +141,29 @@ void TestProjectionRenderer::Private::recalc()
                         proj.warp);
         }
     }
+
+    oldset = set;
 }
 
 
 void TestProjectionRenderer::releaseGl()
 {
-    p_->stuff->releaseOpenGl();
-    delete p_->stuff;
-    p_->stuff = 0;
+    if (p_->stuff)
+    {
+        if (p_->stuff->isReady())
+            p_->stuff->releaseOpenGl();
+        delete p_->stuff;
+        p_->stuff = 0;
+    }
 
     p_->projector.clear();
 }
 
 void TestProjectionRenderer::renderSlice(uint index)
 {
+    MO_ASSERT(index < p_->set.numProjectors(), "TextProjectionRenderer::renderSlice(" << index << ") "
+              "index out of range (" << p_->set.numProjectors() << ")");
+
     // create test scene
     if (!p_->stuff)
     {

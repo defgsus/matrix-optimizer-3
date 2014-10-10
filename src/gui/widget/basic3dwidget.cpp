@@ -474,6 +474,8 @@ void Basic3DWidget::paintGL()
         resizeGL(width(), height());
     }
 
+    prepareDrawGL();
+
     Mat4 identity(1.0);
 
     using namespace gl;

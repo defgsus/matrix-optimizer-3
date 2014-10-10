@@ -643,6 +643,18 @@ void ProjectorSetupDialog::closeEvent(QCloseEvent * e)
         return;
     }
 
+    // release gl resources from testrenderer
+    if (testRenderer_)
+    {
+        // XXX this one is a bit hacky
+        // we need a current context, and don't have it anywhere
+        // in this dialog... so pull it in here
+        if (display_ && display_->context())
+            display_->context()->makeCurrent();
+        // this will throw an exception if context is not ready
+        try { testRenderer_->releaseGl(); } catch(...) { }
+    }
+
     if (display_->isGlInitialized() || areaEdit_->isGlInitialized())
     {
         if (display_->isGlInitialized())

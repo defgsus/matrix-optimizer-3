@@ -187,7 +187,7 @@ void OverlapAreaEditWidget::createGeometry_()
         omapper.mapToDome(omapper.createOutline(0.05, 0.3), domec);
         mapper.mapFromDome(domec, slicec);
 
-        // draw outline
+        // draw inner outline
         p1=0;
         ldist = 0;
         for (int j=0; j<=slicec.size(); ++j)
@@ -203,7 +203,7 @@ void OverlapAreaEditWidget::createGeometry_()
             // fadeout for outsiders
                         colf = 1.f - MATH::smoothstep(0.f, 0.2f, std::max(dist, ldist));
 
-            lineGeom_->setColor(0.5,0.5,0.5, colf);
+            lineGeom_->setColor(0.6,0.3,0.1, colf);
 
             p2 = lineGeom_->addVertexAlways(p[0], p[1], 0);
             if (j>0)

@@ -123,6 +123,7 @@ void DomePreviewWidget::setShowCurrentCamera(bool enable)
     }
 
     createProjectorGeometry_();
+    update();
 }
 
 
@@ -156,6 +157,21 @@ void DomePreviewWidget::setProjectionSettings(
     if (showCurrentCamera_)
         setCurrentCameraMatrix_();
     update();
+}
+
+void DomePreviewWidget::updateTexture(uint index)
+{
+    if (index >= ptexture_.size())
+        return;
+
+    GL::Texture * tex = ptexture_[index];
+    if (tex)
+    {
+        // put to release stack
+        ptextureRelease_.push_back(tex);
+        // flag for recreation
+        ptexture_[index] = 0;
+    }
 }
 
 void DomePreviewWidget::createDomeGeometry_()
@@ -203,6 +219,14 @@ void DomePreviewWidget::createProjectorGeometry_()
         delete i;
     ptextureGeom_.clear();
 
+    // move all textures to release-stack
+    if (1)
+    {
+        for (auto t : ptexture_)
+            ptextureRelease_.push_back(t);
+        ptexture_.clear();
+    }
+
     // build geometry
     delete projectorGeometry_;
     projectorGeometry_ = new GEOM::Geometry();
@@ -210,15 +234,16 @@ void DomePreviewWidget::createProjectorGeometry_()
     for (uint i=0; i<settings_->numProjectors(); ++i)
     {
         const bool highlight = (projIndex_ < 0 || projIndex_ == (int)i);
-        if (showCurrentCamera_ && !highlight)
-            continue;
+        //if (showCurrentCamera_ && !highlight)
+        //    continue;
 
         mapper.setSettings(settings_->domeSettings(),
                            settings_->projectorSettings(i));
-        if (!mapper.isValid())
-            continue;
+//        if (!mapper.isValid())
+//            continue;
 
         // projector rays
+
         if (showRays_)
         {
             if (highlight)
@@ -256,12 +281,17 @@ void DomePreviewWidget::createProjectorGeometry_()
             }
         }
 
+        // projected grid
+
         if (showProjectedSurface_)
         {
             if (highlight)
                 projectorGeometry_->setColor(0.5,1.0,0.5,1);
             else
-                projectorGeometry_->setColor(0.2,0.3,0.2,1);
+                if (showCurrentCamera_)
+                    projectorGeometry_->setColor(0.1,0.13,0.1,1);
+                else
+                    projectorGeometry_->setColor(0.2,0.3,0.2,1);
 
             std::vector<GEOM::Geometry::IndexType> idx;
             const int num = 11;
@@ -295,7 +325,10 @@ void DomePreviewWidget::createProjectorGeometry_()
             if (highlight)
                 g->setColor(1,1,1,1);
             else
-                g->setColor(0.5,0.5,0.5,1);
+                if (showCurrentCamera_)
+                    g->setColor(0.15,0.15,0.15,1);
+                else
+                    g->setColor(0.5,0.5,0.5,1);
 
             std::vector<GEOM::Geometry::IndexType> idx;
             const int num = 11;
@@ -360,10 +393,7 @@ void DomePreviewWidget::releaseGL()
     ptexture_.clear();
 }
 
-void DomePreviewWidget::drawGL(const Mat4 &projection,
-                               const Mat4 &cubeViewTrans,
-                               const Mat4 &viewTrans,
-                               const Mat4 &trans)
+void DomePreviewWidget::prepareDrawGL()
 {
     if (domeGeometry_)
     {
@@ -388,7 +418,7 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
         {
             int s = ptextureDrawable_.size();
             ptextureDrawable_.resize(ptextureGeom_.size());
-            for (uint i=s; i<ptextureDrawable_.size(); ++i)
+            for (uint i=s; i<ptextureGeom_.size(); ++i)
             {
                 ptextureDrawable_[i] = new GL::Drawable(QString("_tex%1").arg(i));
                 GL::ShaderSource * src = new GL::ShaderSource();
@@ -396,33 +426,20 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
                 src->addDefine("#define MO_ENABLE_TEXTURE");
                 ptextureDrawable_[i]->setShaderSource(src);
             }
-            // also create textures
-            ptexture_.resize(ptextureGeom_.size());
-            for (uint i=s; i<ptextureDrawable_.size(); ++i)
-            {
-                createTexture_(&ptexture_[i], i);
-            }
         }
         // or remove them
         else if (ptextureDrawable_.size() > ptextureGeom_.size())
         {
-            int s = ptextureDrawable_.size();
+            int s = ptextureGeom_.size();
             for (uint i=s; i<ptextureDrawable_.size(); ++i)
             {
                 if (ptextureDrawable_[i]->isReady())
                     ptextureDrawable_[i]->releaseOpenGl();
                 delete ptextureDrawable_[i];
             }
-            ptextureDrawable_.resize(ptextureGeom_.size());
-            // remove textures
-            for (uint i=s; i<ptexture_.size(); ++i)
-            {
-                if (ptexture_[i]->isCreated())
-                    ptexture_[i]->release();
-                delete ptexture_[i];
-            }
-            ptexture_.resize(ptextureGeom_.size());
+            ptextureDrawable_.resize(s);
         }
+
         // create vaos
         for (uint i = 0; i < ptextureGeom_.size(); ++i)
         {
@@ -431,9 +448,56 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
         }
 
         ptextureGeom_.clear();
-
     }
 
+    // create content textures if necessary
+    if (showSliceTexture_)
+    {
+        if (ptexture_.size() < ptextureDrawable_.size())
+        {
+            int s = ptexture_.size();
+            ptexture_.resize(ptextureDrawable_.size());
+            for (uint i=s; i<ptextureDrawable_.size(); ++i)
+                ptexture_[i] = 0;
+        }
+        // or remove them
+        else if (ptexture_.size() > ptextureDrawable_.size())
+        {
+            int s = ptextureDrawable_.size();
+            for (uint i=s; i<ptexture_.size(); ++i)
+            {
+                if (ptexture_[i]->isCreated())
+                    ptexture_[i]->release();
+                delete ptexture_[i];
+            }
+            ptexture_.resize(ptextureDrawable_.size());
+        }
+    }
+
+    // release unused textures
+    while (!ptextureRelease_.empty())
+    {
+        GL::Texture * tex = ptextureRelease_.back();
+        ptextureRelease_.pop_back();
+        if (tex->isAllocated())
+            tex->release();
+        delete tex;
+    }
+
+    // update content textures
+    if (showSliceTexture_)
+    for (uint i=0; i<ptexture_.size(); ++i)
+    {
+        if (!ptexture_[i])
+            createTexture_(&ptexture_[i], i);
+    }
+}
+
+void DomePreviewWidget::drawGL(const Mat4 &projection,
+                               const Mat4 &cubeViewTrans,
+                               const Mat4 &viewTrans,
+                               const Mat4 &trans)
+{
     // --- draw ---
 
     MO_CHECK_GL( gl::glClearColor(0, 0, 0, 1) );
