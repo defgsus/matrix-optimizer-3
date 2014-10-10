@@ -75,6 +75,12 @@ void Wavetable<F>::setSize(uint size)
 }
 
 template <typename F>
+void Wavetable<F>::setData(const F * p)
+{
+    memcpy(&data_[0], p, data_.size() * sizeof(F));
+}
+
+template <typename F>
 void Wavetable<F>::clear()
 {
     for (auto &d : data_)

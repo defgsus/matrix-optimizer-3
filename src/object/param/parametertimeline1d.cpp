@@ -87,6 +87,14 @@ MATH::Timeline1D * ParameterTimeline1D::timeline()
     return tl_;
 }
 
+const MATH::Timeline1D & ParameterTimeline1D::getDefaultTimeline()
+{
+    if (!default_)
+        default_ = new MATH::Timeline1D();
+
+    return *default_;
+}
+
 void ParameterTimeline1D::setTimeline(MATH::Timeline1D *tl)
 {
     delete tl_;
@@ -140,13 +148,26 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
     {
         GUI::UTIL::ViewSpace space = diag.editor().viewSpace();
         space.setMinX(minTime_);
-        diag.editor().setViewSpace(space);
+        diag.setViewSpace(space);
     }
     if (maxTime_ < infinity)
     {
         GUI::UTIL::ViewSpace space = diag.editor().viewSpace();
         space.setMaxX(maxTime_);
-        diag.editor().setViewSpace(space);
+        diag.setViewSpace(space);
+    }
+
+    if (minValue_ > -infinity)
+    {
+        GUI::UTIL::ViewSpace space = diag.editor().viewSpace();
+        space.setMinY(minValue_);
+        diag.setViewSpace(space);
+    }
+    if (maxValue_ < infinity)
+    {
+        GUI::UTIL::ViewSpace space = diag.editor().viewSpace();
+        space.setMaxY(maxValue_);
+        diag.setViewSpace(space);
     }
 
 

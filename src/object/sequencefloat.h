@@ -32,7 +32,8 @@ public:
         ST_TIMELINE,
         ST_OSCILLATOR,
         ST_OSCILLATOR_WT,
-        ST_SPECTRAL_OSC,
+        ST_ADD_OSC,
+        ST_ADD_WT,
         ST_SPECTRAL_WT,
         ST_SOUNDFILE,
         ST_EQUATION,
@@ -49,7 +50,8 @@ public:
     {
         return     t == ST_OSCILLATOR
                 || t == ST_OSCILLATOR_WT
-                || t == ST_SPECTRAL_OSC
+                || t == ST_ADD_OSC
+                || t == ST_ADD_WT
                 || t == ST_SPECTRAL_WT
                 || t == ST_EQUATION_WT;
     }
@@ -248,6 +250,10 @@ private:
     ParameterText
         * p_equationText_,
         * p_wtEquationText_;
+
+    ParameterTimeline1D
+        * p_wtFreqs_,
+        * p_wtPhases_;
 
     Double phaseMult_;
 

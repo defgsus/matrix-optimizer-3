@@ -593,6 +593,7 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         connect(breset, &QToolButton::pressed, [=]()
         {
             ptl->reset();
+            scene_->setParameterValue(ptl, ptl->getDefaultTimeline());
         });
     }
 

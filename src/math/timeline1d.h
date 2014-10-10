@@ -147,10 +147,10 @@ class Timeline1D
     bool empty() const { return data_.empty(); }
 
     /** get value at time (with limits) */
-    Double get(Double time);
+    Double get(Double time) const;
 
     /** get value at time (without limits) */
-    Double getNoLimit(Double time);
+    Double getNoLimit(Double time) const;
 
     /** return smallest time */
     Double tmin() const
@@ -306,7 +306,14 @@ class Timeline1D
     Point::Type currentType_(Double time);
 
     /** returns true if the iterator 'i' is the LAST element in data */
-    bool isLastElement_(TpList::iterator i)
+    bool isLastElement_(TpList::iterator i) const
+    {
+        if (i==data_.end()) return false;
+        i++;
+        return (i==data_.end());
+    }
+
+    bool isLastElement_(TpList::const_iterator i) const
     {
         if (i==data_.end()) return false;
         i++;
@@ -315,14 +322,14 @@ class Timeline1D
 
     /** linearly fade between the two points. <br>
         'time' must be <b>between</b> 'p1's and 'p2's time */
-    Double fadeLinear_(Point &p1, Point &p2, Double time)
+    Double fadeLinear_(Point &p1, Point &p2, Double time) const
     {
         Double f = (time - p1.t) / (p2.t - p1.t);
         return p1.val*(1.0-f) + f*p2.val;
     }
 
     /** limit the value according to limit-settings */
-    Double limit_(Double val)
+    Double limit_(Double val) const
     {
         if (lowerLimit_) val = std::max(lmin_, val);
         if (upperLimit_) val = std::min(lmax_, val);

@@ -43,8 +43,11 @@ public:
     Double minTime() const { return minTime_; }
     Double maxTime() const { return maxTime_; }
 
-    /** Returns the default value */
+    /** Returns the default timeline, or NULL if none is set */
     const MATH::Timeline1D * defaultTimeline() const { return default_; }
+
+    /** Always returns the default timeline and creates one if neccessary. */
+    const MATH::Timeline1D & getDefaultTimeline();
 
     // ---------------- setter -----------------
 

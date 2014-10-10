@@ -63,8 +63,12 @@ public:
 
     // ------------ setter ----------------
 
-    /** Sets the size of the buffer (rounded to the next power of two) */
-    void setSize(uint size) { buffer_.resize(nextPowerOfTwo(size)); }
+    /** Sets the size of the buffer (rounded to the next power of two).
+        Also zeroes all data. */
+    void setSize(uint size) { buffer_.resize(nextPowerOfTwo(size)); clear(); }
+
+    /** Zeroes the buffer */
+    void clear() { for (auto & v : buffer_) v = F(0); }
 
     /** Write access to the internal buffer */
     F * buffer() { return &buffer_[0]; }

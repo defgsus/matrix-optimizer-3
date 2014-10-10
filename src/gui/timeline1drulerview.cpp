@@ -132,7 +132,11 @@ void Timeline1DRulerView::setOptions(int options)
 
 void Timeline1DRulerView::setViewSpace(const UTIL::ViewSpace & v, bool send_signal)
 {
-    timelineView_->setViewSpace(v, send_signal);
+    timelineView_->setViewSpace(v);
+    rulerX_->setViewSpace(v);
+    rulerY_->setViewSpace(v);
+    if (send_signal)
+        emit viewSpaceChanged(v);
 }
 
 void Timeline1DRulerView::fitToView(bool fitX, bool fitY, int marginInPixels)

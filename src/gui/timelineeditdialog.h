@@ -18,6 +18,7 @@ class QTimer;
 namespace MO {
 namespace MATH { class Timeline1D; }
 namespace GUI {
+namespace UTIL { class ViewSpace; }
 
 class Timeline1DView;
 class Timeline1DRulerView;
@@ -48,6 +49,8 @@ public slots:
 
     /** Sets the Timeline1DView::Option options */
     void setOptions(int options);
+
+    void setViewSpace(const UTIL::ViewSpace&);
 
 private:
 

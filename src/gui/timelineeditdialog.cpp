@@ -72,7 +72,7 @@ void TimelineEditDialog::createWidgets_()
         lv->addLayout(lh);
 
             // ok
-            auto bok = new QPushButton(tr("Ok"), this);
+            auto bok = new QPushButton(tr("ok"), this);
             lh->addWidget(bok);
             bok->setDefault(true);
             connect(bok, &QPushButton::clicked, [=]()
@@ -81,7 +81,7 @@ void TimelineEditDialog::createWidgets_()
             });
 
             // cancel
-            auto bcanc = new QPushButton(tr("Cancel"), this);
+            auto bcanc = new QPushButton(tr("cancel"), this);
             lh->addWidget(bcanc);
             connect(bcanc, &QPushButton::clicked, [=]()
             {
@@ -113,6 +113,11 @@ void TimelineEditDialog::setOptions(int o)
 {
     options_ = o;
     editor_->setOptions(options_);
+}
+
+void TimelineEditDialog::setViewSpace(const UTIL::ViewSpace& vs)
+{
+    editor_->setViewSpace(vs);
 }
 
 void TimelineEditDialog::setTimeline(const MATH::Timeline1D & tl)

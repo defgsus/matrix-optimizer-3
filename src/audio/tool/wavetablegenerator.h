@@ -13,6 +13,7 @@
 
 #include "wavetable.h"
 #include "types/float.h"
+#include "types/int.h"
 
 namespace MO {
 namespace IO { class DataStream; }
@@ -49,7 +50,7 @@ public:
     // ---------- setter ---------------
 
     /** Sets the size of the wavetable, which will be matched to the next power of two. */
-    void setSize(uint size) { size_ = size; }
+    void setSize(uint size) { size_ = nextPowerOfTwo(size); }
 
     /** Sets the number of voices */
     void setNumPartials(uint num) { numPartials_ = num; }

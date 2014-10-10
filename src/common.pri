@@ -203,7 +203,8 @@ HEADERS += \
     src/math/polygon.h \
     src/audio/tool/bandlimitwavetablegenerator.h \
     src/math/fft.h \
-    src/object/param/parametertimeline1d.h
+    src/object/param/parametertimeline1d.h \
+    src/audio/tool/fftwavetablegenerator.h
 
 
 SOURCES += \
