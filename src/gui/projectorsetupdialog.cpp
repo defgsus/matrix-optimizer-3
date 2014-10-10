@@ -35,6 +35,7 @@
 #include "io/settings.h"
 #include "engine/serverengine.h"
 #include "projection/projectormapper.h"
+#include "projection/testprojectionrenderer.h"
 
 namespace MO {
 namespace GUI {
@@ -50,7 +51,8 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
       projectorSettings_(new ProjectorSettings()),
       copyOfProjectorSettings_(0),
       cameraSettings_   (new CameraSettings()),
-      copyOfCameraSettings_   (0)
+      copyOfCameraSettings_   (0),
+      testRenderer_ (0)
 {
     setObjectName("ProjectorSetupDialog");
     setMinimumSize(760,600);
@@ -1145,6 +1147,14 @@ void ProjectorSetupDialog::pasteCamera_()
 
 GL::Texture * ProjectorSetupDialog::createTexture_(int index)
 {
+    if (!testRenderer_)
+        testRenderer_ = new TestProjectionRenderer();
+
+    testRenderer_->setSettings(*settings_);
+
+    return testRenderer_->renderSliceTexture(index);
+
+    /*
     ProjectorMapper mapper, omapper;
     mapper.setSettings(settings_->domeSettings(),
                        settings_->projectorSettings(index) );
@@ -1152,6 +1162,7 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
     omapper.setSettings(settings_->domeSettings(),
                         settings_->projectorSettings((index+1) % settings_->numProjectors()) );
     return mapper.renderBlendTexture(omapper);
+    */
 }
 
 } // namespace GUI

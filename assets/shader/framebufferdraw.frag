@@ -54,7 +54,7 @@ vec4 mo_pixel(in vec2 texCoord)
 void main(void)
 {
 #ifndef MO_ANTIALIAS
-    gl_FragColor = mo_pixel(v_texCoord.xy);
+    fragColor = mo_pixel(v_texCoord.xy);
 #else
 
     vec4 col = vec4(0., 0., 0., 0.);

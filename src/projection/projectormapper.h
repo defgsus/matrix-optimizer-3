@@ -53,8 +53,11 @@ public:
         Use getRayOrigin() to find the actual position. */
     const Vec3& pos() const { return pos_; }
 
-    /** Returns the matrix of projector view. */
+    /** Returns the transformation matrix of projector view. */
     const Mat4& getTransformationMatrix() const { return trans_; }
+
+    /** Returns the projector's projection matrix. */
+    const Mat4& getProjecionMatrix() const { return frustum_; }
 
     // --------------- transformation ---------------------
 
@@ -107,6 +110,10 @@ public:
         The returned Geometry will be a grid of triangles on the z-plane [-1,1]
         with texture coordinates representing the warped slice. */
     void getWarpGeometry(const CameraSettings&, GEOM::Geometry *,
+                         int num_segments_x = 32, int num_segments_y = 32) const;
+
+    /** Constructs the ScreenQuad with the correct warp mesh in @p quad. */
+    void getWarpDrawable(const CameraSettings&, GL::ScreenQuad * quad,
                          int num_segments_x = 32, int num_segments_y = 32) const;
 
     // -------------- blending -----------------------------

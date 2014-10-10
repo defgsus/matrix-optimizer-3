@@ -36,7 +36,7 @@ public:
 
     /** Creates the opengl resources.
         If @p geom != 0, it will be used as the quad geometry and is
-        expected to be in the range of [-1,1], lying on the z-plane.
+        expected to be in the range of [-1,1], orthogonal to the z-plane.
         Ownership is taken. */
     bool create(const QString& vertexFile,
                 const QString& fragmentFile,

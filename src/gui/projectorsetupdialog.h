@@ -26,6 +26,7 @@ class DomeSettings;
 class ProjectorSettings;
 class CameraSettings;
 class ProjectionSystemSettings;
+class TestProjectionRenderer;
 namespace GUI {
 
 class DomePreviewWidget;
@@ -125,6 +126,8 @@ private:
     DomeSettings * domeSettings_;
     ProjectorSettings * projectorSettings_, *copyOfProjectorSettings_;
     CameraSettings * cameraSettings_, *copyOfCameraSettings_;
+
+    TestProjectionRenderer * testRenderer_;
 
     DomePreviewWidget * display_;
     OverlapAreaEditWidget * areaEdit_;

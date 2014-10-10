@@ -23,6 +23,7 @@
 #include "io/log.h"
 #include "geom/geometry.h"
 #include "geom/tesselator.h"
+#include "gl/screenquad.h"
 
 namespace MO {
 
@@ -302,6 +303,21 @@ void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry
         geo->addTriangle((y-1)*numx+x-1, (y-1)*numx+x, y*numx+x);
         geo->addTriangle((y-1)*numx+x-1, y*numx+x, y*numx+x-1);
     }
+}
+
+void ProjectorMapper::getWarpDrawable(const CameraSettings & camera, GL::ScreenQuad * quad,
+                                      int num_segments_x, int num_segments_y) const
+{
+    GEOM::Geometry * warp = new GEOM::Geometry();
+
+    getWarpGeometry(camera, warp, num_segments_x, num_segments_y);
+
+    // screen-quad
+    quad->create(
+                ":/shader/framebufferdraw.vert",
+                ":/shader/framebufferdraw.frag",
+                "",
+                warp);
 }
 
 
