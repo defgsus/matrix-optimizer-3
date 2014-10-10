@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<equations version="1" name="hyperbolic">
+    <equation name="collection" text="trac(a,b) { 1/(a*a+b*b) };&#10;line(a,b) { smstep(0.03,0, abs(a*0.9+0.1*b-1) ) };&#10;ang = atan(x,y);&#10;rad = sqrt(x*x+y*y);&#10;tra = trac(x,y);&#10;line(sin(ang)*tra,cos(ang)*tra)&#10;"/>
+</equations>
