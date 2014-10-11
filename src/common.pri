@@ -205,7 +205,9 @@ HEADERS += \
     src/math/fft.h \
     src/object/param/parametertimeline1d.h \
     src/audio/tool/fftwavetablegenerator.h \
-    src/projection/testprojectionrenderer.h
+    src/projection/testprojectionrenderer.h \
+    src/io/commandlineparser.h \
+    src/io/version.h
 
 
 SOURCES += \
@@ -365,4 +367,6 @@ SOURCES += \
     src/audio/tool/bandlimitwavetablegenerator.cpp \
     src/math/fft.cpp \
     src/object/param/parametertimeline1d.cpp \
-    src/projection/testprojectionrenderer.cpp
+    src/projection/testprojectionrenderer.cpp \
+    src/io/commandlineparser.cpp \
+    src/io/version.cpp

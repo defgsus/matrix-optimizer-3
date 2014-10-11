@@ -76,4 +76,93 @@ QString byte_to_string(unsigned long int byte)
 }
 
 
+
+
+QString fit_text_block(const QString & s, int max_width, const QString& line_beginning)
+{
+    QString ret = line_beginning;
+
+    int x = line_beginning.size(), x1, i1;
+    bool newline = false;
+
+    // go through string
+    for (int i=0; i<s.length(); ++i)
+    {
+        // -- get next token --
+
+        // process spaces
+        while (i < s.length() && s.at(i).isSpace())
+        {
+            // check linebreak
+            if (s.at(i) == '\n')
+            {
+                goto make_newline;
+            }
+
+            if (x < max_width)
+            {
+                ret.append(s.at(i));
+                ++x;
+                ++i;
+            }
+            else
+            {
+                newline = true;
+                break;
+            }
+        }
+
+        if (i == s.length())
+            break;
+
+        // see if next token would fit
+        i1=i;
+        x1=x;
+        while (i1 < s.length() && !s.at(i1).isSpace())
+        {
+            ++i1; ++x1;
+            if (x1 >= max_width)
+                break;
+        }
+
+        // did not fit
+        if (x1 >= max_width)
+        {
+            // token would match on next line?
+            if (i1-i < max_width - line_beginning.size())
+            {
+                // break at 'i'
+                newline = true;
+                --i;
+            }
+            // token must be broken apart
+            else
+            {
+                i1 = i + (max_width - x);
+                ret.append(s.mid(i,i1-i));
+                i = i1-1;
+                newline = true;
+            }
+        }
+        else
+        {
+            ret.append(s.mid(i,i1-i));
+            i = i1-1;
+            x = x1;
+        }
+
+        if (newline)
+        {
+make_newline:
+            ret += "\n" + line_beginning;
+            newline = false;
+            x = line_beginning.size();
+        }
+
+    }
+
+    return ret;
+}
+
+
 } // namespace MO
