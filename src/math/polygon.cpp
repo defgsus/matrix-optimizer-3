@@ -71,5 +71,24 @@ QVector<Vec2> get_intersection_poly_rect(const QVector<Vec2> &poly, const Vec2 &
 }
 
 
+QVector<Vec2> get_intersection_poly_poly(const QVector<Vec2> &poly, const QVector<Vec2> &other)
+{
+    QPolygonF qpoly1, qpoly2, qpoly3;
+
+    for (auto & p : poly)
+        qpoly1 << QPointF(p[0], p[1]);
+
+    for (auto & p : other)
+        qpoly2 << QPointF(p[0], p[1]);
+
+    qpoly3 = qpoly1.intersected(qpoly2);
+
+    QVector<Vec2> ret;
+    for (auto & p : qpoly3)
+        ret.append(Vec2(p.x(), p.y()));
+
+    return ret;
+}
+
 } // namespace MATH
 } // namespace MO

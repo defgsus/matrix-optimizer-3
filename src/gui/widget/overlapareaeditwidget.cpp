@@ -215,7 +215,8 @@ void OverlapAreaEditWidget::createGeometry_()
 
         // the blend geometry
 
-        mapper.getBlendGeometry(omapper, blendGeom_);
+        //mapper.getBlendGeometry(omapper, blendGeom_);
+        mapper.getIntersectionGeometry(omapper, blendGeom_);
 
     }
 

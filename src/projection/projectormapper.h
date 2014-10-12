@@ -124,9 +124,12 @@ public:
         @p smaller makes the area smaller, range [0,1) */
     QVector<Vec2> createOutline(Float max_spacing, Float smaller = 0) const;
 
-    /** Find edge-blend necessary for this projector to fade into @p other.
+    /** Find edge-blend neccessary for this projector to fade into @p other.
         Geometry is written into @p g. */
     bool getBlendGeometry(const ProjectorMapper & other, GEOM::Geometry * g);
+
+    /** new try of the above. */
+    bool getIntersectionGeometry(const ProjectorMapper & other, GEOM::Geometry * g);
 
     GL::Texture * renderBlendTexture(const ProjectorMapper & other);
 

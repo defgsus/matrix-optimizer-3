@@ -41,7 +41,8 @@ GL::Texture * ProjectorMapper::renderBlendTexture(const ProjectorMapper &other)
         MO_CHECK_GL( gl::glBlendFunc(gl::GL_SRC_ALPHA, gl::GL_ONE_MINUS_SRC_ALPHA) );
 
         auto geom = new GEOM::Geometry();
-        getBlendGeometry(other, geom);
+        //getBlendGeometry(other, geom);
+        getIntersectionGeometry(other, geom);
 
         GL::Drawable draw("blend_geometry");
         draw.setGeometry(geom);

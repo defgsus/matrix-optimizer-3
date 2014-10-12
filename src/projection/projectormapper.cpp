@@ -611,4 +611,71 @@ bool ProjectorMapper::getBlendGeometry(const ProjectorMapper &other, GEOM::Geome
 
 
 
+bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM::Geometry *g)
+{
+    const Float
+            minspace = 0.05,
+            outrange = 1.55,
+            edge = 0.3;
+
+    // map other's slice projection into our screen space
+    QVector<Vec3> odome;
+    QVector<Vec2> osliceorg, oslice;
+    osliceorg = other.createOutline(minspace);
+    other.mapToDome(osliceorg, odome);
+    mapFromDome(odome, oslice);
+    // clip to some extent (some back-projections are terribly wrong outside our frustum)
+    MATH::limit(oslice, Vec2(-outrange,-outrange), Vec2(outrange, outrange));
+
+    // intersect with own rectangle
+    QVector<Vec2> overlap
+            = MATH::get_intersection_poly_rect(oslice, Vec2(0,0), Vec2(1,1));
+
+    if (overlap.isEmpty())
+        return false;
+
+    // triangulate
+    GEOM::Tesselator tess;
+    tess.tesselate(overlap, true);
+
+    // create geometry
+    GEOM::Geometry geom;
+    tess.getGeometry(geom);
+
+    // make finer resolution
+    geom.tesselate(3);
+
+#define MO__EDGE_DIST(vec__)                                    \
+    std::min(std::min(MATH::smoothstep(0.f,edge,vec__[0]),      \
+                      MATH::smoothstep(1.f,1.f-edge,vec__[0])), \
+             std::min(MATH::smoothstep(0.f,edge,vec__[1]),      \
+                      MATH::smoothstep(1.f,1.f-edge,vec__[1])))
+
+    // set color
+    for (uint i=0; i<geom.numVertices(); ++i)
+    {
+        const Vec2 pos = Vec2(geom.vertices()[i * geom.numVertexComponents()],
+                              geom.vertices()[i * geom.numVertexComponents()+1]),
+                   opos = other.mapFromDome(mapToDome(pos));
+        auto color = &geom.colors()[i * geom.numColorComponents()];
+
+        const Float white = std::max(0.f,
+                    1.f - MO__EDGE_DIST(opos)
+                    - (1.f - MO__EDGE_DIST(pos)));
+
+        color[0] = 0;
+        color[1] = 0;
+        color[2] = 0;
+        color[3] = 1.f - white;
+    }
+
+#undef MO__EDGE_DIST
+
+    g->addGeometry(geom);
+
+    return true;
+}
+
+
+
 } // namespace MO

@@ -26,6 +26,9 @@ void limit(QVector<Vec2>& poly, const Vec2& minimum, const Vec2& maximum);
     Returns an empty list if no intersection occures. */
 QVector<Vec2> get_intersection_poly_rect(const QVector<Vec2>& poly, const Vec2& rect_br, const Vec2& rect_tl);
 
+/** Returns the intersection of two polygons.
+    Returns an empty list if no intersection occures. */
+QVector<Vec2> get_intersection_poly_poly(const QVector<Vec2>& poly, const QVector<Vec2>& other);
 
 } // namespace MATH
 } // namespace MO
