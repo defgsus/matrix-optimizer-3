@@ -616,7 +616,7 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
     const Float
             minspace = 0.05,
             outrange = 1.55,
-            edge = 0.3;
+            edge = 0.5;
 
     // map other's slice projection into our screen space
     QVector<Vec3> odome;
@@ -659,9 +659,18 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
                    opos = other.mapFromDome(mapToDome(pos));
         auto color = &geom.colors()[i * geom.numColorComponents()];
 
-        const Float white = std::max(0.f,
-                    1.f - MO__EDGE_DIST(opos)
-                    - (1.f - MO__EDGE_DIST(pos)));
+        const Float edged = MO__EDGE_DIST(pos),
+                    oedged = MO__EDGE_DIST(opos),
+
+                    centd = std::min(1.f, 2.f * glm::length(pos-Vec2(.5f,.5f))),
+                    ocentd = std::min(1.f, 2.f * glm::length(opos-Vec2(.5f,.5f)));
+
+        /*const Float white = std::max(0.f,
+                    1.f - oedged
+                    - (1.f - edged));*/
+        const Float white = 1.f-oedged;
+        //const Float white = std::max(0.f, ocentd -
+        //                    ((1-ocentd) * (1-centd)));
 
         color[0] = 0;
         color[1] = 0;

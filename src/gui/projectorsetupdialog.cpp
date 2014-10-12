@@ -466,10 +466,19 @@ void ProjectorSetupDialog::createWidgets_()
                 cb->setChecked(display_->getShowRays());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowRays(bool)));
 
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                cb = new QCheckBox(tr("highlight current projector"), this);
+                lh2->addWidget(cb);
+                cb->setChecked(display_->getShowHighlight());
+                connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowHighlight(bool)));
+
                 cb = new QCheckBox(tr("show content"), this);
                 lh2->addWidget(cb);
                 cb->setChecked(display_->getShowTexture());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowTexture(bool)));
+
 
             // --- dome settings ---
 
@@ -1159,14 +1168,15 @@ void ProjectorSetupDialog::pasteCamera_()
 
 GL::Texture * ProjectorSetupDialog::createTexture_(int index)
 {
+#if 0
     if (!testRenderer_)
         testRenderer_ = new TestProjectionRenderer();
 
     testRenderer_->setSettings(*settings_);
 
     return testRenderer_->renderSliceTexture(index);
+#else
 
-    /*
     ProjectorMapper mapper, omapper;
     mapper.setSettings(settings_->domeSettings(),
                        settings_->projectorSettings(index) );
@@ -1174,7 +1184,7 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
     omapper.setSettings(settings_->domeSettings(),
                         settings_->projectorSettings((index+1) % settings_->numProjectors()) );
     return mapper.renderBlendTexture(omapper);
-    */
+#endif
 }
 
 } // namespace GUI

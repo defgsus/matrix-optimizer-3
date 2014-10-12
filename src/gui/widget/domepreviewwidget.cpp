@@ -41,7 +41,8 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
       showRays_     (true),
       showCurrentCamera_(false),
       showProjectedSurface_(true),
-      showSliceTexture_(false)
+      showSliceTexture_(false),
+      showHighlight_(true)
 
 {
     setObjectName("_DomePreviewWidget");
@@ -50,6 +51,7 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
     showDome_ = MO::settings->value(objectName()+"/showDome", true).toBool();
     showRays_ = MO::settings->value(objectName()+"/showRays", true).toBool();
     showSliceTexture_ = MO::settings->value(objectName()+"/showTex", true).toBool();
+    showHighlight_ = MO::settings->value(objectName()+"/showHighlight", true).toBool();
 
     createDomeGeometry_();
     createProjectorGeometry_();
@@ -61,6 +63,7 @@ DomePreviewWidget::~DomePreviewWidget()
     MO::settings->setValue(objectName()+"/showDome", showDome_);
     MO::settings->setValue(objectName()+"/showRays", showRays_);
     MO::settings->setValue(objectName()+"/showTex", showSliceTexture_);
+    MO::settings->setValue(objectName()+"/showHighlight", showHighlight_);
 
     for (auto i : ptextureGeom_)
         delete i;
@@ -92,6 +95,16 @@ void DomePreviewWidget::setShowTexture(bool enable)
         return;
 
     showSliceTexture_ = enable;
+    createProjectorGeometry_();
+    update();
+}
+
+void DomePreviewWidget::setShowHighlight(bool enable)
+{
+    if (enable == showHighlight_)
+        return;
+
+    showHighlight_ = enable;
     createProjectorGeometry_();
     update();
 }
@@ -233,7 +246,8 @@ void DomePreviewWidget::createProjectorGeometry_()
 
     for (uint i=0; i<settings_->numProjectors(); ++i)
     {
-        const bool highlight = (projIndex_ < 0 || projIndex_ == (int)i);
+        const bool highlight =
+                showHighlight_ && (projIndex_ < 0 || projIndex_ == (int)i);
         //if (showCurrentCamera_ && !highlight)
         //    continue;
 

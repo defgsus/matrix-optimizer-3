@@ -37,6 +37,7 @@ public:
     bool getShowRays() const { return showRays_; }
     bool getShowCurrentCamera() const { return showCurrentCamera_; }
     bool getShowTexture() const { return showSliceTexture_; }
+    bool getShowHighlight() const { return showHighlight_; }
 
     /** Sets the view matrix when in CM_SET mode */
     void setViewMatrix(const Mat4&) Q_DECL_OVERRIDE;
@@ -53,6 +54,7 @@ public slots:
     void setShowRays(bool enable);
     void setShowCurrentCamera(bool enable);
     void setShowTexture(bool enable);
+    void setShowHighlight(bool enable);
 
     /** Updates the settings and graphical display.
         If @p currentProjectorIndex >= 0, then this projector will be highlighted. */
@@ -98,7 +100,8 @@ private:
          showRays_,
          showCurrentCamera_,
          showProjectedSurface_,
-         showSliceTexture_;
+         showSliceTexture_,
+         showHighlight_;
 
     int projIndex_;
 

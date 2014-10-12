@@ -132,6 +132,7 @@ public:
     bool getIntersectionGeometry(const ProjectorMapper & other, GEOM::Geometry * g);
 
     GL::Texture * renderBlendTexture(const ProjectorMapper & other);
+    GL::Texture * renderBlendTextureNew(const ProjectorMapper & other);
 
     /** Returns an anti-clockwise polygon outline of the overlapping area between
         this slice and the slice in @p other.
