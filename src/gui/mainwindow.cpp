@@ -36,6 +36,7 @@
 #include "objectview.h"
 #include "sequencefloatview.h"
 #include "sequencer.h"
+#include "clipview.h"
 #include "widget/spacer.h"
 #include "util/scenesettings.h"
 #include "helpdialog.h"
@@ -162,6 +163,8 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     updateWindowTitle_();
+
+    showClipView_(true);
 }
 
 MainWindow::~MainWindow()
@@ -255,6 +258,11 @@ void MainWindow::createWidgets_()
                 {
                     objectSelected_(seq);
                 });
+
+                // clipview
+                clipView_ = new ClipView(this);
+                clipView_->setVisible(false);
+                lv->addWidget(clipView_);
 
                 //spacer2_ = new Spacer(Qt::Horizontal, this);
                 //lv->addWidget(spacer2_);
@@ -529,6 +537,12 @@ void MainWindow::createMainMenu_()
         a = new QAction(tr("About Qt"), m);
         m->addAction(a);
         connect(a, SIGNAL(triggered()), application, SLOT(aboutQt()));
+}
+
+void MainWindow::showClipView_(bool enable)
+{
+    sequencer_->setVisible(!enable);
+    clipView_->setVisible(enable);
 }
 
 void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)

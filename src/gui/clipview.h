@@ -11,12 +11,15 @@
 #ifndef MOSRC_GUI_CLIPVIEW_H
 #define MOSRC_GUI_CLIPVIEW_H
 
-#include <QGraphicsView>
+#include <QWidget>
+
+class QGridLayout;
+class QScrollArea;
 
 namespace MO {
 namespace GUI {
 
-class ClipView : public QGraphicsView
+class ClipView : public QWidget
 {
     Q_OBJECT
 public:
@@ -29,7 +32,12 @@ public slots:
 
 private:
 
-    QGraphicsScene * scene_;
+    void createWidgets_();
+
+    QScrollArea * scrollArea_;
+    QWidget * container_;
+    QGridLayout * layout_;
+
 };
 
 } // namespace GUI

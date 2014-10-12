@@ -33,6 +33,7 @@ class SceneSettings;
 class TransportWidget;
 class TestThread;
 class ServerDialog;
+class ClipView;
 
 class MainWindow : public QMainWindow
 {
@@ -79,6 +80,8 @@ private slots:
     void dumpNeededFiles_();
     void exportPovray_();
 
+    void showClipView_(bool enable);
+
     void setSceneObject(Scene *, const SceneSettings * = 0);
 
     void updateWidgetsActivity_();
@@ -120,6 +123,7 @@ private:
     SceneSettings * sceneSettings_;
 
     Sequencer * sequencer_;
+    ClipView * clipView_;
     SequenceFloatView * seqFloatView_;
 
     TransportWidget * transport_;

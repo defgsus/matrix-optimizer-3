@@ -75,7 +75,7 @@ HEADERS += \
     src/gui/audiofilterdialog.h \
     src/gui/timelineeditdialog.h \
     src/gui/clipview.h \
-    src/gui/widget/clipitem.h
+    src/gui/widget/clipwidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -150,4 +150,4 @@ SOURCES += \
     src/gui/audiofilterdialog.cpp \
     src/gui/timelineeditdialog.cpp \
     src/gui/clipview.cpp \
-    src/gui/widget/clipitem.cpp
+    src/gui/widget/clipwidget.cpp
