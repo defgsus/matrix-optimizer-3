@@ -691,6 +691,18 @@ bool Object::canHaveChildren(Type t) const
     if (t & TG_MODULATOR_OBJECT)
         return true;
 
+    // Clips belong into ClipContainer ...
+    if (t == T_CLIP)
+        return type() == T_CLIP_CONTAINER;
+
+    // and nothing else
+    if (type() == T_CLIP_CONTAINER)
+        return t == T_CLIP;
+
+    // XXX Currently ClipContainer only into scene
+    if (t & T_CLIP_CONTAINER)
+        return type() == T_SCENE;
+
     // microphone groups only contain microphones
     if (type() == T_MICROPHONE_GROUP)
         return t == T_MICROPHONE;
@@ -712,11 +724,12 @@ bool Object::canHaveChildren(Type t) const
     if (type() == T_TRANSFORMATION_MIX)
         return t & TG_TRANSFORMATION;
 
-    // sequences belong on tracks or sequencegroups only
-    // with matching type
+    // sequences only belong on tracks or sequencegroups with matching type
+    // or clips
     if (t & TG_SEQUENCE)
         return
-            type() == T_SEQUENCEGROUP
+               type() == T_SEQUENCEGROUP
+            || type() == T_CLIP
             || (t == T_SEQUENCE_FLOAT && type() == T_TRACK_FLOAT);
 
     // sequencegroups belong on tracks

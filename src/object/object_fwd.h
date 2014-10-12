@@ -35,6 +35,8 @@ namespace MO {
     class Sequences;
     class Sequence;
     class SequenceFloat;
+    class Clip;
+    class ClipContainer;
 
     class Parameter;
     class ParameterInt;

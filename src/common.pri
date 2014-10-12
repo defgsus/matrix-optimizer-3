@@ -207,7 +207,9 @@ HEADERS += \
     src/audio/tool/fftwavetablegenerator.h \
     src/projection/testprojectionrenderer.h \
     src/io/commandlineparser.h \
-    src/io/version.h
+    src/io/version.h \
+    src/object/clip.h \
+    src/object/clipcontainer.h
 
 
 SOURCES += \
@@ -369,4 +371,6 @@ SOURCES += \
     src/object/param/parametertimeline1d.cpp \
     src/projection/testprojectionrenderer.cpp \
     src/io/commandlineparser.cpp \
-    src/io/version.cpp
+    src/io/version.cpp \
+    src/object/clip.cpp \
+    src/object/clipcontainer.cpp

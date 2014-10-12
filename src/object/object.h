@@ -104,13 +104,16 @@ public:
         T_LIGHTSOURCE       = 1<<12,
         T_AUDIO_UNIT        = 1<<13,
         T_MODULATOR_OBJECT_FLOAT   = 1<<14,
-        T_MICROPHONE_GROUP  = 1<<15
+        T_MICROPHONE_GROUP  = 1<<15,
+        T_CLIP              = 1<<16,
+        T_CLIP_CONTAINER    = 1<<17
     };
     enum TypeGroups
     {
         /** Objects that have a definite position */
         TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE
                                 | T_CAMERA | T_LIGHTSOURCE | T_MICROPHONE_GROUP,
+
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
 
@@ -222,6 +225,8 @@ public:
     virtual bool isParameter() const { return false; }
     virtual bool isTrack() const { return false; }
     virtual bool isSequence() const { return false; }
+    virtual bool isClip() const { return false; }
+    virtual bool isClipContainer() const { return false; }
     virtual bool isLightSource() const { return false; }
     virtual bool isAudioUnit() const { return false; }
     virtual bool isModulatorObject() const { return false; }
