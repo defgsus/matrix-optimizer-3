@@ -60,22 +60,23 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
         // add sub menu
         if (c->numChildren())
         {
-            // create a new action for the submenu if
-            // the previous action should be a clickable object
-            if (match)
-            {
-                menu->addAction(a);
-                a = new QAction(ObjectFactory::iconForObject(c), c->name(), menu);
-                a->setData(c->idName());
-            }
-
             QMenu * m = new QMenu(menu);
 
             createObjectMenuRecursive_(m, c, objectTypeFlags);
             if (m->isEmpty())
                 m->deleteLater();
             else
+            {
+                // create a new action for the submenu if
+                // the previous action should be a clickable object
+                if (match)
+                {
+                    menu->addAction(a);
+                    a = new QAction(ObjectFactory::iconForObject(c), c->name(), menu);
+                    a->setData(c->idName());
+                }
                 a->setMenu(m);
+            }
         }
 
        a->setEnabled( match || a->menu());

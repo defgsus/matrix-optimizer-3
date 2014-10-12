@@ -7,7 +7,7 @@
 
 ---- geometry ----
 
-* make GeometryFactory/Dialog accessible through simple building/modifications blocks, yah!!
+- OK make GeometryFactory/Dialog accessible through simple building/modifications blocks, yah!!
 
 ----- GUI -----
 
@@ -24,12 +24,12 @@
 * application settings dialog
     * especially colors, fonts, pens and brushes
 
-* SequenceFloatView: fix difference in update of phaseInDegree between oscillators and wavetable
+- OK SequenceFloatView: fix difference in update of phaseInDegree between oscillators and wavetable
 
 ---- math ----
 
 * fix negative time issue in Spectral Oscillator mode
-* BUG fix microphone transformation (not working correctly, when e.g. a sound is attached to
+- OK fix microphone transformation (not working correctly, when e.g. a sound is attached to
     microphone and the microphone rotates around)
 
 ---- Objects ----
@@ -93,3 +93,7 @@
 * adjustable derivatives
 * display time/value
 * numerically edit time/value
+
+---- clips -----
+
+* clips and clip containers :D

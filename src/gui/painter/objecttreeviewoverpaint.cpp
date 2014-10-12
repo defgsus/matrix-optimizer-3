@@ -28,7 +28,7 @@ ObjectTreeViewOverpaint::ObjectTreeViewOverpaint(ObjectTreeView *parent) :
 {
     setAttribute(Qt::WA_TransparentForMouseEvents);
 
-    penPath_ = QPen(QColor(0,0,0,20));
+    penPath_ = QPen(QColor(0,0,0,50));
     penPathSel_ = QPen(QColor(0,90,90,100));
     penPathSel_.setWidth(2);
 }
