@@ -65,6 +65,10 @@ public:
 
     // ------------ modulators ------------------
 
+    /** Should return an OR combination of all Object types
+        that are supported as modulators */
+    virtual int getModulatorTypes() const { return 0; }
+
     /** Returns list of all modulator ids */
     QStringList modulatorIds() const;
 

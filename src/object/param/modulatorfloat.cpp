@@ -105,8 +105,13 @@ Double ModulatorFloat::value(Double time, uint thread) const
                     static_cast<TrackFloat*>(modulator())->value(time, thread);
 
         case ST_SEQUENCE_FLOAT:
-            return amplitude_ *
-                    static_cast<SequenceFloat*>(modulator())->value(time, thread);
+        {
+            auto seq = static_cast<SequenceFloat*>(modulator());
+            // sequences in clips need a playing clip
+            if (seq->parentClip() && !seq->parentClip()->isPlaying())
+                return 0.0;
+            return amplitude_ * seq->value(time, thread);
+        }
 
         case ST_MODULATOR_OBJECT_FLOAT:
             return amplitude_ *

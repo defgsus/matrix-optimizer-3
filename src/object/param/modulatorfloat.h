@@ -40,6 +40,8 @@ public:
 
     // ------------- getter --------------
 
+
+
     /** Returns if the object can be the modulating object */
     virtual bool canBeModulator(const Object *) const Q_DECL_OVERRIDE;
 

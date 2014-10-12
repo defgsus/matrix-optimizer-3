@@ -68,6 +68,8 @@ public:
 
     // --------- modulation -----------
 
+    int getModulatorTypes() const Q_DECL_OVERRIDE;
+
     /** Receives modulation value at time */
     Double getModulationValue(Double time, uint thread) const;
 

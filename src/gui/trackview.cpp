@@ -441,6 +441,8 @@ void TrackView::createSequenceWidgets_(Track * t)
     // create SequenceWidgets
     for (Sequence * seq : seqs)
     {
+        MO_ASSERT(seq->parentTrack(), "No parent track for sequence in TrackView");
+
         // create the widget
         auto w = new SequenceWidget(t, seq, this);
         sequenceWidgets_.insert( w );
@@ -1043,7 +1045,7 @@ void TrackView::createEditActions_()
             for (auto w : selectedWidgets_)
             {
                 seqs.append(w->sequence());
-                order.append(trackIndex_(w->sequence()->track()));
+                order.append(trackIndex_(w->sequence()->parentTrack()));
             }
 
             auto data = new ObjectTreeMimeData();
@@ -1062,7 +1064,7 @@ void TrackView::createEditActions_()
             for (auto w : selectedWidgets_)
             {
                 seqs.append(w->sequence());
-                order.append(trackIndex_(w->sequence()->track()));
+                order.append(trackIndex_(w->sequence()->parentTrack()));
             }
 
             auto data = new ObjectTreeMimeData();

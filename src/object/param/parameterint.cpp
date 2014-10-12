@@ -58,6 +58,12 @@ void ParameterInt::deserialize(IO::DataStream &io)
     value_ = v;
 }
 
+int ParameterInt::getModulatorTypes() const
+{
+    return Object::T_TRACK_FLOAT
+        | Object::T_SEQUENCE_FLOAT
+        | Object::T_MODULATOR_OBJECT_FLOAT;
+}
 
 Int ParameterInt::getModulationValue(Double time, uint thread) const
 {

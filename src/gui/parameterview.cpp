@@ -639,7 +639,7 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
 
         // link to existing modulator
         addLinkModMenu_(menu, param,
-            Object::T_TRACK_FLOAT | Object::T_MODULATOR_OBJECT_FLOAT);
+            pf->getModulatorTypes());
 
         menu->addSeparator();
 
@@ -668,7 +668,7 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
 
         // link to existing modulator
         addLinkModMenu_(menu, param,
-            Object::T_TRACK_FLOAT | Object::T_MODULATOR_OBJECT_FLOAT);
+            pi->getModulatorTypes());
 
         menu->addSeparator();
 
@@ -775,8 +775,8 @@ void ParameterView::addLinkModMenu_(
     ObjectMenu::setEnabled(linkMenu, param->modulatorIds(), false);
 
     QAction * a = menu->addMenu(linkMenu);
-    a->setText(tr("Choose existing track"));
-    a->setIcon(QIcon(":/icon/obj_track.png"));
+    a->setText(tr("Choose existing source"));
+    a->setIcon(QIcon(":/icon/modulate_on.png"));
     connect(linkMenu, &QMenu::triggered, [=](QAction* a)
     {
         scene->addModulator(param, a->data().toString());

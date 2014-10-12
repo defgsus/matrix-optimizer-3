@@ -18,8 +18,12 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Clip)
 
-Clip::Clip(QObject *parent) :
-    Object          (parent)
+Clip::Clip(QObject *parent)
+    : Object        (parent),
+      clipContainer_(0),
+      timeStarted_  (0),
+      running_      (false)
+
 {
     setName("Clip");
 }
@@ -39,12 +43,6 @@ void Clip::deserialize(IO::DataStream &io)
     io.readHeader("clip", 1);
 }
 
-ClipContainer * Clip::clipContainer() const
-{
-    return qobject_cast<ClipContainer*>(parentObject());
-}
-
-
 void Clip::createParameters()
 {
     Object::createParameters();
@@ -56,10 +54,30 @@ void Clip::updateParameterVisibility()
     Object::updateParameterVisibility();
 }
 
+void Clip::onParentChanged()
+{
+    Object::onParentChanged();
+
+    clipContainer_ = qobject_cast<ClipContainer*>(parentObject());
+}
 
 void Clip::childrenChanged()
 {
+    // get all sequences and sub-sequences
     sequences_ = findChildObjects<Sequence>(QString(), true);
 }
+
+
+void Clip::startClip(Double gtime)
+{
+    timeStarted_ = gtime;
+    running_ = true;
+}
+
+void Clip::stopClip()
+{
+    running_ = false;
+}
+
 
 } // namespace MO

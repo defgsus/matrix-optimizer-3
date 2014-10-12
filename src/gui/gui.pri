@@ -73,7 +73,9 @@ HEADERS += \
     src/gui/widget/overlapareaeditwidget.h \
     src/gui/widget/filterresponsewidget.h \
     src/gui/audiofilterdialog.h \
-    src/gui/timelineeditdialog.h
+    src/gui/timelineeditdialog.h \
+    src/gui/clipview.h \
+    src/gui/widget/clipitem.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -146,4 +148,6 @@ SOURCES += \
     src/gui/widget/overlapareaeditwidget.cpp \
     src/gui/widget/filterresponsewidget.cpp \
     src/gui/audiofilterdialog.cpp \
-    src/gui/timelineeditdialog.cpp
+    src/gui/timelineeditdialog.cpp \
+    src/gui/clipview.cpp \
+    src/gui/widget/clipitem.cpp

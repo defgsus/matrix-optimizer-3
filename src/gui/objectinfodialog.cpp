@@ -22,6 +22,7 @@
 #include "object/transform/transformation.h"
 #include "object/scene.h"
 #include "object/audio/audiounit.h"
+#include "object/clip.h"
 
 namespace MO {
 namespace GUI {
@@ -63,12 +64,13 @@ void ObjectInfoDialog::setObject(Object * o)
         curTime = s->sceneTime();
 
     std::stringstream s, s1;
-    s << "<html><b>" << o->name() << "</b><br/>"
+    s << "<html><b>" << o->infoName() << "</b><br/>"
       << o->idNamePath() << "/" << o->idName() << "<br/>";
 
     s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>";
 
-    // audiosources and microphones
+    // ----- audiosources and microphones -----
+
     if (!o->microphones().isEmpty() || !o->audioSources().isEmpty())
     {
         s << "<p>";
@@ -117,6 +119,20 @@ void ObjectInfoDialog::setObject(Object * o)
             s << au->bufferSize(i);
         }
         s  << "</p>";
+    }
+
+    // ------------ clip ---------------
+
+    if (Clip * clip = qobject_cast<Clip*>(o))
+    {
+        s << "<p>Contained sequences: "
+          << clip->sequences().size()
+          << "<br/>playing: ";
+        if (clip->isPlaying())
+            s << "since " << clip->timeStarted();
+        else
+            s << "no";
+        s << "</p>";
     }
 
     s << "</html>";

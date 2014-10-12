@@ -17,6 +17,7 @@
 #include "math/functions.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "clip.h"
 
 namespace MO {
 
@@ -33,10 +34,15 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
-    // -------------- tracks -------------------
+    virtual void onParentChanged() Q_DECL_OVERRIDE;
 
-    /** The track, this sequence is on (actually the parent) */
-    Track * track() const;
+    // -------------- parents -------------------
+
+    /** The track, this sequence is on, or NULL */
+    Track * parentTrack() const;
+
+    /** The clip, this sequence is on, or NULL */
+    Clip * parentClip() const;
 
     // -------------- getter -------------------
 
@@ -111,7 +117,8 @@ public:
 
     /** Translates global time to sequence-local time (with loop) */
     Double getSequenceTime(Double global_time, uint thread) const;
-    /** Translates global time to sequence-local time and returnd the current loop settings */
+    /** Translates global time to sequence-local time (with loop)
+        and returns the current loop settings */
     Double getSequenceTime(Double global_time, uint thread,
                            Double& loopStart, Double& loopLength, bool& isInLoop) const;
 
@@ -132,12 +139,16 @@ private:
         * p_looping_;
 
     /** The track, this sequence is on */
-    Track* track_;
+    Track* parentTrack_;
+    Clip * parentClip_;
 };
 
 
 inline Double Sequence::getSequenceTime(Double time, uint thread) const
 {
+    if (parentClip_)
+        time -= parentClip_->timeStarted();
+
     time = (time - p_start_->baseValue()) * p_speed_->baseValue();
     time += p_timeOffset_->value(time, thread);
 
@@ -157,6 +168,9 @@ inline Double Sequence::getSequenceTime(Double time, uint thread) const
 inline Double Sequence::getSequenceTime(Double time, uint thread,
                                         Double& lStart, Double& lLength, bool& isInLoop) const
 {
+    if (parentClip_)
+        time -= parentClip_->timeStarted();
+
     time = (time - p_start_->baseValue()) * p_speed_->baseValue();
     time += p_timeOffset_->value(time, thread);
 

@@ -33,17 +33,36 @@ public:
     /** Collects all sequences */
     virtual void childrenChanged() Q_DECL_OVERRIDE;
 
-    // -------------- tracks -------------------
+    virtual void onParentChanged() Q_DECL_OVERRIDE;
 
-    /** The ClipContainer, this Clip is on (actually the parent) */
-    ClipContainer * clipContainer() const;
+    // -------------- tree -------------------
+
+    /** The ClipContainer, this Clip is on, or NULL */
+    ClipContainer * clipContainer() const { return clipContainer_; }
+
+    /** Returns the list of contained sequences.
+        Counts sub-objects as well */
+    const QList<Sequence*> & sequences() const { return sequences_; }
 
     // -------------- getter -------------------
 
     // -------------- setter -------------------
 
 
+    // -------------- trigger ------------------
+
+    /** Starts the clip (assuming global time @p gtime) */
+    void startClip(Double gtime);
+
+    /** Stops the clip */
+    void stopClip();
+
     // -------------- values -------------------
+
+    bool isPlaying() const { return running_; }
+
+    /** Returns the global scene time when the clip was started */
+    Double timeStarted() const { return timeStarted_; }
 
     //Double value(Double time, uint thread) const;
 
@@ -55,6 +74,10 @@ private:
 
     QList<Sequence*> sequences_;
 
+    ClipContainer * clipContainer_;
+
+    Double timeStarted_;
+    bool running_;
 };
 
 

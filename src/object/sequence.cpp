@@ -12,12 +12,14 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "track.h"
+#include "clip.h"
 
 namespace MO {
 
 Sequence::Sequence(QObject *parent) :
     Object          (parent),
-    track_          (0)
+    parentTrack_    (0),
+    parentClip_     (0)
 {
     setName("Sequence");
 }
@@ -42,15 +44,30 @@ void Sequence::deserialize(IO::DataStream &io)
 
 QString Sequence::infoName() const
 {
-    if (track_)
-        return name() + " (on " + track_->name() + ")";
+    if (parentTrack_)
+        return name() + " (on " + parentTrack_->name() + ")";
+    else if (parentClip_)
+        return name() + " (on " + parentClip_->name() + ")";
     else
         return name();
 }
 
-Track * Sequence::track() const
+void Sequence::onParentChanged()
 {
-    return qobject_cast<Track*>(parentObject());
+    Object::onParentChanged();
+
+    parentTrack_ = qobject_cast<Track*>(parentObject());
+    parentClip_ = qobject_cast<Clip*>(parentObject());
+}
+
+Track * Sequence::parentTrack() const
+{
+    return parentTrack_;
+}
+
+Clip * Sequence::parentClip() const
+{
+    return parentClip_;
 }
 
 void Sequence::createParameters()
