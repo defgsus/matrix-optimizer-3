@@ -8,75 +8,91 @@
     <p>created 12.10.2014</p>
 */
 
-#include <QGraphicsRectItem>
 #include <QPainter>
+#include <QMouseEvent>
+#include <QImage>
 
 #include "clipwidget.h"
 #include "gui/clipview.h"
 #include "io/error.h"
+#include "object/clip.h"
 
 namespace MO {
 namespace GUI {
 
-ClipWidget::ClipWidget(int x, int y, ClipView * parent)
+ClipWidget::ClipWidget(Type type, Clip * clip, ClipView * parent)
     : QWidget       (parent),
       view_         (parent),
-      x_            (x),
-      y_            (y),
+      clip_         (clip),
+      type_         (type),
       hasFocus_     (false),
       isSelected_   (false)
 {
-    MO_ASSERT(!(x_==0 && y_==0), "illegal position for ClipWidget (0,0)");
+    setMouseTracking(true);
 
-    if (x_ == 0)
-        type_ = T_ROW;
-    else if (y_ == 0)
-        type_ = T_COLUMN;
-    else
-        type_ = T_CLIP;
+    if (clip_)
+        name_ = clip_->name();
 
+    updateColors_();
+}
+
+void ClipWidget::setClip(Clip * c)
+{
+    if (clip_ == c)
+        return;
+
+    clip_ = c;
+
+    if (clip_)
+        name_ = clip_->name();
+
+    updateColors_();
+
+    update();
+}
+
+void ClipWidget::updateColors_()
+{
     switch (type_)
     {
         case T_COLUMN:
             setFixedSize(60, 20);
             penOutline_ = Qt::NoPen;
             brushBody_ = QBrush(QColor(100,100,100));
+            penText_ = QPen(Qt::white);
         break;
 
         case T_ROW:
             setFixedSize(20, 20);
             penOutline_ = Qt::NoPen;
             brushBody_ = QBrush(QColor(100,100,100));
+            penText_ = QPen(Qt::white);
         break;
 
         case T_CLIP:
             setFixedSize(60, 20);
             penOutline_ = QPen(QColor(40,40,40));
-            brushBody_ = QBrush(QColor(60,70,60));
-            if (rand()%20==0)
-                brushBody_ = QBrush(QColor(130,170,130));
+            brushBody_ = clip_? QBrush(QColor(130,170,130))
+                              : QBrush(QColor(20,20,20));
+            penText_ = QPen(Qt::white);
         break;
     }
 
-    setMouseTracking(true);
-
-    updateColors_();
-}
-
-void ClipWidget::updateColors_()
-{
     brushBodyH_ = brushBodyS_ = brushBodySH_ = brushBody_;
     brushBodyH_.setColor(brushBody_.color().lighter(120));
     brushBodyS_.setColor(brushBody_.color().lighter(150));
     brushBodySH_.setColor(brushBodyS_.color().lighter(120));
 
     penOutlineS_ = penOutline_;
-    penOutlineS_.setColor(penOutline_.color().lighter(150));
+    penOutlineS_.setColor(penOutline_.color().lighter(180));
+    penOutlineS_.setWidth(penOutline_.width()+1);
 }
 
 void ClipWidget::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
+
+    // -- rect --
 
     if (isSelected_)
     {
@@ -89,7 +105,39 @@ void ClipWidget::paintEvent(QPaintEvent*)
         p.setBrush(hasFocus_? brushBodyH_ : brushBody_);
     }
     int b = penOutline_.width();
-    p.drawRect(rect().adjusted(b-1,b-1,-2*b+1,-2*b+1));
+    p.drawRect(rect().adjusted(b/2,b/2,-b/2-1,-b/2-1));
+
+    int x = b + 1;
+
+    // -- playbutton --
+
+    if (type_ == T_CLIP)
+    {
+        static const QImage play_off(":/icon/play_off_small");
+        static const QImage play_on(":/icon/play_on_small");
+        static const QImage stop(":/icon/stop_small");
+
+        int y = (height()-play_off.height())/2;
+        if (!clip_)
+            p.drawImage(x, y, stop);
+        else
+            p.drawImage(x, y, clip_->isPlaying() ? play_on : play_off);
+
+        x += play_off.width() + 1;
+    }
+
+    // -- name --
+
+    if (!name_.isEmpty())
+    {
+        if (nameText_.text() != name_)
+            nameText_.setText(name_);
+
+        p.setPen(penText_);
+        p.drawStaticText(x + 1,
+                         (height() - nameText_.size().height()) / 2,
+                         nameText_);
+    }
 }
 
 
@@ -105,6 +153,41 @@ void ClipWidget::leaveEvent(QEvent *)
     update();
 }
 
+
+void ClipWidget::mousePressEvent(QMouseEvent * e)
+{
+    //if (e->buttons() & Qt::LeftButton)
+    emit clicked(this, e->buttons(), e->modifiers());
+}
+
+void ClipWidget::mouseMoveEvent(QMouseEvent * )
+{
+    if (!hasFocus_)
+        return;
+}
+
+void ClipWidget::mouseReleaseEvent(QMouseEvent * )
+{
+
+}
+
+
+void ClipWidget::setName(const QString & n)
+{
+    name_ = n;
+    update();
+}
+
+
+void ClipWidget::setSelected(bool s)
+{
+    if (isSelected_ == s)
+        return;
+
+    isSelected_ = s;
+
+    update();
+}
 
 
 } // namespace GUI

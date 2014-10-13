@@ -131,9 +131,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.959798"
-     inkscape:cx="479.88734"
-     inkscape:cy="712.81273"
+     inkscape:zoom="5.6"
+     inkscape:cx="369.81712"
+     inkscape:cy="523.12309"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -2229,5 +2229,66 @@
        inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/midi.png"
        inkscape:export-xdpi="164"
        inkscape:export-ydpi="164" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-1-7-0-5"
+       width="68.188736"
+       height="68.188736"
+       x="443.491"
+       y="-439.34329"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/play_off_small.png"
+       inkscape:export-xdpi="21.860001"
+       inkscape:export-ydpi="21.860001" />
+    <path
+       style="fill:#ffffff;fill-opacity:0.13333334;stroke:#000000;stroke-width:2.70000000000000018;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 384.68647,447.53335 -0.14794,59.95614 46.61015,-30.14132 z"
+       id="path4118"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/play_off_small.png"
+       inkscape:export-xdpi="21.860001"
+       inkscape:export-ydpi="21.860001" />
+    <rect
+       inkscape:export-ydpi="21.860001"
+       inkscape:export-xdpi="21.860001"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/play_on_small.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-524.16473"
+       x="443.13385"
+       height="68.188736"
+       width="68.188736"
+       id="rect4924"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <path
+       inkscape:export-ydpi="21.860001"
+       inkscape:export-xdpi="21.860001"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/play_on_small.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4926"
+       d="m 469.5079,447.17621 -0.14794,59.95614 46.61015,-30.14132 z"
+       style="fill:#00ff00;fill-opacity:0.71232879;stroke:#000000;stroke-width:2.70000004999999987;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    <rect
+       inkscape:export-ydpi="21.860001"
+       inkscape:export-xdpi="21.860001"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/stop_small.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-439.16476"
+       x="528.49109"
+       height="68.188736"
+       width="68.188736"
+       id="rect4928"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <rect
+       style="fill:#ffffff;fill-opacity:0.13242009;stroke:#000000;stroke-width:2.70000000000000018;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect4932"
+       width="45.807663"
+       height="45.939289"
+       x="382.45328"
+       y="539.48181"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/stop_small.png"
+       inkscape:export-xdpi="21"
+       inkscape:export-ydpi="21" />
   </g>
 </svg>

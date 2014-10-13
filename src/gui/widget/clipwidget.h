@@ -14,14 +14,17 @@
 #include <QWidget>
 #include <QPen>
 #include <QBrush>
+#include <QStaticText>
 
 namespace MO {
+class Clip;
 namespace GUI {
 
 class ClipView;
 
 class ClipWidget : public QWidget
 {
+    Q_OBJECT
 public:
 
     enum Type
@@ -31,7 +34,27 @@ public:
         T_CLIP
     };
 
-    explicit ClipWidget(int x, int y, ClipView * parent = 0);
+    explicit ClipWidget(Type type, Clip * clip, ClipView *parent = 0);
+
+    const QString& name() const { return name_; }
+
+    Clip * clip() const { return clip_; }
+
+public slots:
+
+    /** Sets the name to display */
+    void setName(const QString&);
+
+    /** Sets the selection state */
+    void setSelected(bool enable);
+
+    /** Sets a new or no Clip */
+    void setClip(Clip *);
+
+signals:
+
+    /** Emitted when clicked */
+    void clicked(ClipWidget*, Qt::MouseButtons, Qt::KeyboardModifiers);
 
 protected:
 
@@ -41,14 +64,21 @@ protected:
     void enterEvent(QEvent *);
     void leaveEvent(QEvent *);
 
+    void mousePressEvent(QMouseEvent*);
+    void mouseMoveEvent(QMouseEvent*);
+    void mouseReleaseEvent(QMouseEvent*);
+
     ClipView * view_;
+    Clip * clip_;
 
     Type type_;
-    int x_, y_;
+
+    QString name_;
+    QStaticText nameText_;
 
     bool hasFocus_, isSelected_;
 
-    QPen penOutline_, penOutlineS_;
+    QPen penOutline_, penOutlineS_, penText_;
     QBrush brushBody_, brushBodyH_, brushBodyS_, brushBodySH_;
 };
 

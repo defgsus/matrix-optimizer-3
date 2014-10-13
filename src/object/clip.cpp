@@ -22,8 +22,9 @@ Clip::Clip(QObject *parent)
     : Object        (parent),
       clipContainer_(0),
       timeStarted_  (0),
-      running_      (false)
-
+      running_      (false),
+      column_       (0),
+      row_          (0)
 {
     setName("Clip");
 }
@@ -34,6 +35,7 @@ void Clip::serialize(IO::DataStream &io) const
 
     io.writeHeader("clip", 1);
 
+    io << column_ << row_;
 }
 
 void Clip::deserialize(IO::DataStream &io)
@@ -41,6 +43,8 @@ void Clip::deserialize(IO::DataStream &io)
     Object::deserialize(io);
 
     io.readHeader("clip", 1);
+
+    io >> column_ >> row_;
 }
 
 void Clip::createParameters()

@@ -12,12 +12,17 @@
 #define MOSRC_GUI_CLIPVIEW_H
 
 #include <QWidget>
+#include <QMap>
 
 class QGridLayout;
 class QScrollArea;
 
 namespace MO {
+class Clip;
+class ClipContainer;
 namespace GUI {
+
+class ClipWidget;
 
 class ClipView : public QWidget
 {
@@ -29,14 +34,36 @@ signals:
 
 public slots:
 
+    /** Completely resets the view to the new data */
+    void setClipContainer(ClipContainer *);
+
+private slots:
+
+    void onClicked_(ClipWidget*, Qt::MouseButtons, Qt::KeyboardModifiers);
 
 private:
 
     void createWidgets_();
+    void createClipWidgets_();
 
-    QScrollArea * scrollArea_;
-    QWidget * container_;
-    QGridLayout * layout_;
+    void updateClipWidget_(uint x, uint y);
+
+    void openPopup_();
+
+    ClipWidget * widgetForClip_(Clip *);
+    ClipWidget * clipWidget_(uint x, uint y);
+
+    ClipContainer * clipCon_;
+
+    QList<ClipWidget*> clipWidgets_;
+    QMap<Clip*, ClipWidget*> widgetMap_;
+
+    uint curX_, curY_;
+    Clip * curClip_;
+
+    QScrollArea * scrollArea_, * scrollAreaH_, *scrollAreaV_;
+    QWidget * container_, *containerH_, *containerV_;
+    QGridLayout * layout_, *layoutH_, *layoutV_;
 
 };
 

@@ -43,5 +43,8 @@
         <file alias="view_top.png">assets/icon/view_top.png</file>
         <file alias="midi.png">assets/icon/midi.png</file>
         <file alias="music_note.png">assets/icon/music_note.png</file>
+        <file alias="play_off_small.png">assets/icon/play_off_small.png</file>
+        <file alias="play_on_small.png">assets/icon/play_on_small.png</file>
+        <file alias="stop_small.png">assets/icon/stop_small.png</file>
     </qresource>
 </RCC>

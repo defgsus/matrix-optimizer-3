@@ -11,6 +11,9 @@
 #ifndef MOSRC_OBJECT_CLIPCONTAINER_H
 #define MOSRC_OBJECT_CLIPCONTAINER_H
 
+#include <QVector>
+#include <QMap>
+
 #include "object.h"
 
 namespace MO {
@@ -28,15 +31,30 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
-    // -------------- tracks -------------------
+    virtual void childrenChanged() Q_DECL_OVERRIDE;
 
-    /** The ClipContainer, this sequence is on (actually the parent) */
-    //ClipContainer * clipContainer() const;
+    // -------------- getter ------------------
 
-    // -------------- getter -------------------
+    uint numberRows() const { return rows_; }
+    uint numberColumns() const { return cols_; }
 
-    // --------------- setter ---------------------
+    /** Returns the name of the column */
+    QString columnName(uint index) const;
+    /** Returns the name of the row */
+    QString rowName(uint index) const;
 
+    // -------------- setter ------------------
+
+    /** Sets the extent of the clip area.
+        The area will always be as large as the contained clips need it */
+    void setNumber(uint cols, uint rows);
+    void setNumberRows(uint rows) { setNumber(numberColumns(), rows); }
+    void setNumberColumns(uint cols) { setNumber(cols, numberRows()); }
+
+    // -------------- clips -------------------
+
+    /** Returns the clip at the specific position, or NULL */
+    Clip * clip(uint column, uint row) const;
 
 signals:
 
@@ -44,6 +62,15 @@ public slots:
 
 private:
 
+    uint rows_, cols_,
+        maxRow_, maxCol_;
+
+    /** [y][x] */
+    QVector<Clip*> clips_;
+
+    QMap<uint, QString>
+        columnNames_,
+        rowNames_;
 };
 
 

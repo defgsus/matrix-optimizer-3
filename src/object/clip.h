@@ -46,8 +46,15 @@ public:
 
     // -------------- getter -------------------
 
+    uint column() const { return column_; }
+    uint row() const { return row_; }
+
     // -------------- setter -------------------
 
+    /** Sets the position in the ClipContainer */
+    void setPosition(uint col, uint row) { column_ = col; row_ = row; }
+    void setRow(uint row) { setPosition(column(), row); }
+    void setColumn(uint col) { setPosition(col, row()); }
 
     // -------------- trigger ------------------
 
@@ -78,6 +85,8 @@ private:
 
     Double timeStarted_;
     bool running_;
+
+    uint column_, row_;
 };
 
 
