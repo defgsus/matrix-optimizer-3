@@ -43,6 +43,10 @@ public:
     /** Returns the name of the row */
     QString rowName(uint index) const;
 
+    /** Adjusts @p column and @p row to point at the next free position.
+        Returns true when a free slot was found. */
+    bool findNextFreeSlot(uint & column, uint & row, bool resizeIfNecessary = false);
+
     // -------------- setter ------------------
 
     /** Sets the extent of the clip area.

@@ -40,13 +40,12 @@ ClipWidget::ClipWidget(Type type, Clip * clip, ClipView * parent)
 
 void ClipWidget::setClip(Clip * c)
 {
-    if (clip_ == c)
-        return;
-
     clip_ = c;
 
     if (clip_)
         name_ = clip_->name();
+    else
+        name_.clear();
 
     updateColors_();
 
@@ -74,7 +73,7 @@ void ClipWidget::updateColors_()
         case T_CLIP:
             setFixedSize(60, 20);
             penOutline_ = QPen(QColor(40,40,40));
-            brushBody_ = clip_? QBrush(QColor(130,170,130))
+            brushBody_ = clip_? QBrush(QColor(50,80,60))
                               : QBrush(QColor(20,20,20));
             penText_ = clip_? QPen(Qt::black) : QPen(Qt::white);
         break;

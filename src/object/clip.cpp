@@ -63,6 +63,9 @@ void Clip::onParentChanged()
     Object::onParentChanged();
 
     clipContainer_ = qobject_cast<ClipContainer*>(parentObject());
+
+    if (clipContainer_)
+        clipContainer_->findNextFreeSlot(column_, row_, true);
 }
 
 void Clip::childrenChanged()

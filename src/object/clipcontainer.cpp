@@ -17,10 +17,15 @@ namespace MO {
 
 MO_REGISTER_OBJECT(ClipContainer)
 
+namespace {
+    const uint minimumRows_ = 4;
+    const uint minimumColumns_ = 4;
+}
+
 ClipContainer::ClipContainer(QObject *parent) :
     Object          (parent),
-    rows_           (0),
-    cols_           (0)
+    rows_           (minimumRows_),
+    cols_           (minimumColumns_)
 {
     setName("ClipContainer");
 }
@@ -61,11 +66,19 @@ void ClipContainer::childrenChanged()
 
 QString ClipContainer::columnName(uint index) const
 {
+    // return set name
     auto i = columnNames_.find(index);
     if (i != columnNames_.end())
         return i.value();
-    else
-        return QString::number(index);
+
+    // return letter combi
+    QString ret;
+    do
+    {
+        ret.prepend(QChar((index%26) + 'A'));
+        index /= 26;
+    } while (index);
+    return ret;
 }
 
 QString ClipContainer::rowName(uint index) const
@@ -91,12 +104,8 @@ void ClipContainer::setNumber(uint cols, uint rows)
         maxRow_ = std::max(maxRow_, c->row());
     }
 
-    // resize if necessary
-    if (maxRow_ > rows_ || maxCol_ > cols_)
-        setNumber(cols_, rows_);
-
-    rows_ = std::max(10u, std::max(maxRow_, rows));
-    cols_ = std::max(10u, std::max(maxCol_, cols));
+    rows_ = std::max(minimumRows_, std::max(maxRow_, rows));
+    cols_ = std::max(minimumColumns_, std::max(maxCol_, cols));
 
     // resize grid vector
     clips_.resize(cols_ * rows_);
@@ -121,6 +130,64 @@ Clip * ClipContainer::clip(uint column, uint row) const
         return 0;
 
     return clips_[row * cols_ + column];
+}
+
+bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNecessary)
+{
+    column = std::min(column, cols_-1);
+    row = std::min(row, rows_-1);
+
+    // If clips_ array has not been initialized yet
+    // it's probably XXX save to use the given position
+    if (clips_.isEmpty())
+        return true;
+
+    int ocolumn = column,
+        ocolumn1 = column,
+        orow = row;
+
+    // search forward
+    while (column < cols_)
+    {
+        if (clips_[row * cols_ + column] == 0)
+            return true;
+
+        row++;
+        if (row >= rows_)
+        {
+            row = 0;
+            column++;
+        }
+    }
+
+    // search backwards
+    while (ocolumn >= 0)
+    {
+        if (clips_[orow * cols_ + ocolumn] == 0)
+        {
+            column = ocolumn;
+            row = orow;
+            return true;
+        }
+
+        orow--;
+        if (orow < 0)
+        {
+            orow = rows_ - 1;
+            ocolumn--;
+        }
+    }
+
+    // still not found
+    if (!resizeIfNecessary)
+        return false;
+
+    // resize and place in new row
+    setNumberRows(rows_ + 1);
+    column = ocolumn1;
+    row = rows_ - 1;
+
+    return true;
 }
 
 } // namespace MO

@@ -31,6 +31,8 @@ namespace GUI {
 ClipView::ClipView(QWidget * parent)
     : QWidget   (parent),
       clipCon_  (0),
+      lastX_    (0),
+      lastY_    (0),
       curX_     (0),
       curY_     (0),
       curClip_  (0)
@@ -133,6 +135,14 @@ void ClipView::createWidgets_()
 
 void ClipView::setClipContainer(ClipContainer * con)
 {
+    if (con && clipCon_ == con)
+    {
+        // don't update if all is same
+        if (lastX_ == con->numberColumns()
+            && lastY_ == con->numberRows())
+            return;
+    }
+
     clipCon_ = con;
 
     createClipWidgets_();
@@ -150,7 +160,13 @@ void ClipView::createClipWidgets_()
     widgetMap_.clear();
 
     if (!clipCon_)
+    {
+        lastX_ = lastY_ = 0;
         return;
+    }
+
+    lastX_ = clipCon_->numberColumns();
+    lastY_ = clipCon_->numberRows();
 
     // column headers
     for (uint x=0; x<clipCon_->numberColumns(); ++x)
@@ -186,6 +202,19 @@ void ClipView::createClipWidgets_()
     }
 }
 
+void ClipView::updateClip(Clip * clip)
+{
+    if (!clip || !clipCon_ || clip->clipContainer() != clipCon_)
+        return;
+
+    updateClipWidget_(clip->column(), clip->row());
+}
+
+void ClipView::updateClip(uint x, uint y)
+{
+    updateClipWidget_(x, y);
+}
+
 void ClipView::updateClipWidget_(uint x, uint y)
 {
     if (!clipCon_)
@@ -201,8 +230,24 @@ void ClipView::updateClipWidget_(uint x, uint y)
     Clip * clip = clipCon_->clip(x, y);
     ClipWidget * w = clipWidget_(x, y);
 
-    if (clip != w->clip())
+    if (w && clip != w->clip())
         w->setClip(clip);
+}
+
+void ClipView::removeObject(const Object *o)
+{
+    if (o == clipCon_)
+    {
+        setClipContainer(0);
+        return;
+    }
+
+    // see if o was a clip
+    auto w = widgetForClip_(static_cast<const Clip*>(o));
+    if (w)
+    {
+        w->setClip(0);
+    }
 }
 
 ClipWidget * ClipView::clipWidget_(uint x, uint y)
@@ -224,7 +269,7 @@ ClipWidget * ClipView::clipWidget_(uint x, uint y)
     return clipWidgets_[i];
 }
 
-ClipWidget * ClipView::widgetForClip_(Clip * c)
+ClipWidget * ClipView::widgetForClip_(const Clip * c)
 {
     auto i = widgetMap_.find(c);
     return (i == widgetMap_.end())? 0 : i.value();
@@ -271,13 +316,22 @@ void ClipView::openPopup_()
         connect(a, &QAction::triggered, [=]()
         {
             Clip * clip = static_cast<Clip*>(ObjectFactory::createObject("Clip"));
-            MO_DEBUG("set " << curX_ << ", " << curY_);
             clip->setPosition(curX_, curY_);
             scene->addObject(clipCon_, clip);
-            updateClipWidget_(curX_, curY_);
         });
     }
 
+    // ---- clip actions ---
+
+    if (curClip_)
+    {
+        // delete clip
+        menu->addAction(a = new QAction(tr("Delete clip"), menu));
+        connect(a, &QAction::triggered, [=]()
+        {
+            scene->deleteObject(curClip_);
+        });
+    }
 
     if (menu->isEmpty())
     {

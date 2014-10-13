@@ -23,6 +23,7 @@
 #include "object/scene.h"
 #include "object/audio/audiounit.h"
 #include "object/clip.h"
+#include "object/clipcontainer.h"
 
 namespace MO {
 namespace GUI {
@@ -121,12 +122,22 @@ void ObjectInfoDialog::setObject(Object * o)
         s  << "</p>";
     }
 
+    // ------- clip container -------------
+
+    if (ClipContainer * clipcon = qobject_cast<ClipContainer*>(o))
+    {
+        s << "<p>ClipContainer:<br/>size: "
+          << clipcon->numberColumns() << "x"
+          << clipcon->numberRows()
+          << "</p>";
+    }
+
     // ------------ clip ---------------
 
     if (Clip * clip = qobject_cast<Clip*>(o))
     {
-        s << "<p>Contained sequences: "
-          << clip->sequences().size()
+        s << "<p>Clip:<br/>position: " << clip->column() << ", " << clip->row()
+          << "<br/>Contained sequences: " << clip->sequences().size()
           << "<br/>playing: ";
         if (clip->isPlaying())
             s << "since " << clip->timeStarted();

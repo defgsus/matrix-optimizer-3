@@ -217,14 +217,14 @@ void MainWindow::createWidgets_()
                 connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
                         SLOT(setEditActions_(const QObject*,QList<QAction*>)));
                 connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
-                        SLOT(objectSelected_(MO::Object*)));
+                        SLOT(onObjectSelected_(MO::Object*)));
                 connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
-                        SLOT(objectSelectedTree_(MO::Object*)));
+                        SLOT(onObjectSelectedTree_(MO::Object*)));
 
                 // object tree model
                 objectTreeModel_ = new ObjectTreeModel(0, this);
                 connect(objectTreeModel_, SIGNAL(sceneChanged()),
-                        this, SLOT(sceneChanged_()));
+                        this, SLOT(onSceneChanged_()));
                 objectTreeView_->setObjectModel(objectTreeModel_);
 
                 // object editor
@@ -234,7 +234,7 @@ void MainWindow::createWidgets_()
                 //objectView_->setMinimumWidth(320);
                 objectView_->setSceneSettings(sceneSettings_);
                 connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
-                                            this, SLOT(objectSelected_(MO::Object*)));
+                                            this, SLOT(onObjectSelected_(MO::Object*)));
                 connect(objectView_, SIGNAL(statusTipChanged(QString)),
                         statusBar(), SLOT(showMessage(QString)));
             //l0->setStretchFactor(lv, -1);
@@ -255,7 +255,7 @@ void MainWindow::createWidgets_()
                 lv->addWidget(sequencer_);
                 connect(sequencer_, &Sequencer::sequenceSelected, [this](Sequence * seq)
                 {
-                    objectSelected_(seq);
+                    onObjectSelected_(seq);
                 });
 
                 // clipview
@@ -596,11 +596,11 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
 
     // scene changes
     // XXX all very unfinished right now
-    connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(treeChanged_()));
-    connect(scene_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(treeChanged_()));
-    connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(treeChanged_()));
-    connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(sceneChanged_()));
-    connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(sceneChanged_()));
+    connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
+    connect(scene_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+    connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(onTreeChanged_()));
+    connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
+    connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
     connect(scene_, SIGNAL(numberOutputEnvelopesChanged(uint)),
             this, SLOT(updateNumberOutputEnvelopes_(uint)));
     connect(scene_, SIGNAL(outputEnvelopeChanged(const F32*)),
@@ -762,7 +762,29 @@ bool MainWindow::restoreAllGeometry_()
 }
 
 
-void MainWindow::objectSelected_(Object * o)
+void MainWindow::onObjectAdded_(Object * o)
+{
+    // update clipview
+    if (Clip * clip = qobject_cast<Clip*>(o))
+    {
+        if (clip->clipContainer() == clipView_->clipContainer())
+            clipView_->updateClip(clip);
+    }
+
+    // XXX refine this!
+    onTreeChanged_();
+}
+
+void MainWindow::onObjectDeleted_(const Object * o)
+{
+    // update clipview
+    clipView_->removeObject(o);
+
+    // XXX refine this!
+    onTreeChanged_();
+}
+
+void MainWindow::onObjectSelected_(Object * o)
 {
     MO_DEBUG_GUI("MainWindow::objectSelected(" << o << ")");
 
@@ -783,46 +805,45 @@ void MainWindow::objectSelected_(Object * o)
     objectTreeView_->setFocusIndex(o);
 }
 
-void MainWindow::objectSelectedTree_(Object * o)
+void MainWindow::onObjectSelectedTree_(Object * o)
 {
     MO_DEBUG_GUI("MainWindow::objectSelectedTree(" << o << ")");
 
-    // update sequencer
-    if (!o->isClip() && !o->isClipContainer())
-    {
-        if (clipView_->isVisible())
-            showClipView_(false);
-
-        sequencer_->setCurrentObject(o);
-    }
     // update clipview
-    else
+    if (o && (o->isClip() || o->isClipContainer()))
     {
         if (!clipView_->isVisible())
             showClipView_(true);
 
         if (o->isClipContainer())
         {
-            if (clipView_->clipContainer() != o)
-                clipView_->setClipContainer(static_cast<ClipContainer*>(o));
+            clipView_->setClipContainer(static_cast<ClipContainer*>(o));
         }
         else
         {
             Object * con = o->getParentObject(Object::T_CLIP_CONTAINER);
-            if (con && clipView_->clipContainer() != con)
+            if (con)
                 clipView_->setClipContainer(static_cast<ClipContainer*>(con));
         }
     }
+    // update sequencer
+    else
+    {
+        if (o && clipView_->isVisible())
+            showClipView_(false);
+
+        sequencer_->setCurrentObject(o);
+    }
 }
 
-void MainWindow::treeChanged_()
+void MainWindow::onTreeChanged_()
 {
     //objectTreeView_->updateFromModel();
 
     sequencer_->setCurrentObject(scene_);
 }
 
-void MainWindow::sceneChanged_()
+void MainWindow::onSceneChanged_()
 {
     if (!sceneNotSaved_)
     {
