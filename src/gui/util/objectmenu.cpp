@@ -24,12 +24,48 @@
 namespace MO {
 namespace GUI {
 
+namespace
+{
+    bool sortObjectList_Priority(const Object * o1, const Object * o2)
+    {
+        return Object::objectPriority(o1) > Object::objectPriority(o2);
+    }
+}
 
 ObjectMenu::ObjectMenu()
 {
 }
 
-QMenu * ObjectMenu::createObjectMenu(Object *root, int objectTypeFlags, QWidget *parent)
+QMenu * ObjectMenu::createObjectMenu(int objectTypeFlags, QWidget *parent)
+{
+    QList<const Object*> list(ObjectFactory::objects(objectTypeFlags));
+    if (list.empty())
+        return 0;
+
+    // sort by priority
+    qStableSort(list.begin(), list.end(), sortObjectList_Priority);
+
+    QMenu * menu = new QMenu(parent);
+    int curprio = Object::objectPriority( list.front() );
+    for (auto o : list)
+    {
+        if (curprio != Object::objectPriority(o))
+        {
+            menu->addSeparator();
+            curprio = Object::objectPriority(o);
+        }
+
+        QAction * a = new QAction(ObjectFactory::iconForObject(o), o->name(), parent);
+        a->setData(o->className());
+        menu->addAction(a);
+    }
+
+    return menu;
+}
+
+
+
+QMenu * ObjectMenu::createObjectChildMenu(Object *root, int objectTypeFlags, QWidget *parent)
 {
     QMenu * menu = new QMenu(parent);
 

@@ -273,6 +273,22 @@ QList<const Object*> ObjectFactory::possibleChildObjects(const Object * parent)
     return list;
 }
 
+QList<const Object*> ObjectFactory::objects(int types)
+{
+    QList<const Object*> list;
+
+    for (auto &i : instance().objectMap_)
+    {
+        Object * o = i.second.get();
+
+        if (o->type() & types)
+            list.append(o);
+    }
+
+    return list;
+}
+
+
 bool ObjectFactory::canHaveChildObjects(const Object * parent)
 {
     for (auto &i : instance().objectMap_)

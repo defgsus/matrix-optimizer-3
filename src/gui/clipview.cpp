@@ -22,6 +22,8 @@
 #include "object/objectfactory.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "util/objectmenu.h"
+#include "model/objecttreemodel.h"
 
 namespace MO {
 namespace GUI {
@@ -41,12 +43,12 @@ ClipView::ClipView(QWidget * parent)
 
     setMinimumSize(240, 120);
 
-    /*
+    // background color
     QPalette p(palette());
     p.setColor(QPalette::Window, QColor(20,20,20));
     setPalette(p);
     setAutoFillBackground(true);
-    */
+
 
     createWidgets_();
 
@@ -298,7 +300,14 @@ void ClipView::openPopup_()
     Scene * scene = clipCon_->sceneObject();
     if (!scene)
     {
-        MO_WARNING("Can't edit without Scene object");
+        MO_WARNING("ClipView: Can't edit without Scene object");
+        return;
+    }
+
+    ObjectTreeModel * model = scene->model();
+    if (!model)
+    {
+        MO_WARNING("ClipView: Can't edit without ObjectTreeModel");
         return;
     }
 
@@ -317,7 +326,8 @@ void ClipView::openPopup_()
         {
             Clip * clip = static_cast<Clip*>(ObjectFactory::createObject("Clip"));
             clip->setPosition(curX_, curY_);
-            scene->addObject(clipCon_, clip);
+            if (!model->addObject(clipCon_, clip))
+                delete clip;
         });
     }
 
@@ -325,11 +335,27 @@ void ClipView::openPopup_()
 
     if (curClip_)
     {
+        // add new sequence
+        menu->addAction(a = new QAction(tr("Add object"), menu));
+        QMenu * sub = ObjectMenu::createObjectMenu(Object::TG_SEQUENCE, menu);
+        a->setMenu(sub);
+        connect(sub, &QMenu::triggered, [=](QAction * a)
+        {
+            Object * o = ObjectFactory::createObject(a->data().toString());
+            MO_ASSERT(o, "ClipView: Could not create object class '" << a->data().toString() << "'");
+            if (!model->addObject(curClip_, o))
+                delete o;
+        });
+
+
+        menu->addSeparator();
+
         // delete clip
         menu->addAction(a = new QAction(tr("Delete clip"), menu));
         connect(a, &QAction::triggered, [=]()
         {
-            scene->deleteObject(curClip_);
+            const QModelIndex idx = model->indexForObject(curClip_);
+            model->deleteObject(idx);
         });
     }
 

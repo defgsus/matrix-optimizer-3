@@ -26,9 +26,14 @@ class ObjectMenu
 public:
     ObjectMenu();
 
-    /** Creates a menu with all objects matching @p objectTypeFlags.
+    /** Creates a menu with all objects matching the types.
+        QAction::data() contains the Object::className().
+        Returns NULL when typeflags did not match any object! */
+    static QMenu * createObjectMenu(int objectTypeFlags, QWidget * parent = 0);
+
+    /** Creates a menu with all objects in @p root matching @p objectTypeFlags.
         The QAction::data() contains the Object::idName(). */
-    static QMenu * createObjectMenu(Object * root, int objectTypeFlags, QWidget *parent = 0);
+    static QMenu * createObjectChildMenu(Object * root, int objectTypeFlags, QWidget *parent = 0);
 
     /** Creates a menu with all modulators for the given Parameter.
         The QAction::data() contains the Object::idName(). */

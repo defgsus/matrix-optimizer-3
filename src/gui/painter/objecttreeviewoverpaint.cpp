@@ -143,7 +143,8 @@ void ObjectTreeViewOverpaint::getModulations_(Object * parent)
             auto i = indexMap_.find(obj->idName());
             if (i == indexMap_.end())
             {
-                MO_WARNING("object '" << obj->idName() << "' not found in indexMap_");
+                MO_WARNING("ObjectTreeViewOverpaint: object '" << obj->idName()
+                           << "' not found in indexMap_");
                 continue;
             }
             const QModelIndex idx = i.value();
@@ -160,7 +161,8 @@ void ObjectTreeViewOverpaint::getModulations_(Object * parent)
                 i = indexMap_.find(m->idName());
                 if (i == indexMap_.end())
                 {
-                    MO_WARNING("modulator '" << m->idName() << "' not found in indexMap_");
+                    MO_WARNING("ObjectTreeViewOverpaint: modulator '" << m->idName()
+                               << "' not found in indexMap_");
                     continue;
                 }
 

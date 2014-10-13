@@ -764,7 +764,7 @@ void ParameterView::addLinkModMenu_(
 {
     Scene * scene = param->object()->sceneObject();
 
-    QMenu * linkMenu = ObjectMenu::createObjectMenu(scene, objectTypeFlags, menu);
+    QMenu * linkMenu = ObjectMenu::createObjectChildMenu(scene, objectTypeFlags, menu);
     if (linkMenu->isEmpty())
     {
         linkMenu->deleteLater();

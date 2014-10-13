@@ -799,7 +799,10 @@ void MainWindow::onObjectSelected_(Object * o)
             seqFloatView_->setVisible(true);
     }
     else
-        seqFloatView_->setVisible(false);
+    {
+        if (!o || o->type() != Object::T_CLIP)
+            seqFloatView_->setVisible(false);
+    }
 
     // update tree view
     objectTreeView_->setFocusIndex(o);
@@ -810,7 +813,8 @@ void MainWindow::onObjectSelectedTree_(Object * o)
     MO_DEBUG_GUI("MainWindow::objectSelectedTree(" << o << ")");
 
     // update clipview
-    if (o && (o->isClip() || o->isClipContainer()))
+    if (o && (o->isClip() || o->isClipContainer() ||
+              o->getParentObject(Object::T_CLIP_CONTAINER)))
     {
         if (!clipView_->isVisible())
             showClipView_(true);

@@ -28,6 +28,11 @@ ClipContainer::ClipContainer(QObject *parent) :
     cols_           (minimumColumns_)
 {
     setName("ClipContainer");
+
+    // init grid vector
+    clips_.resize(cols_ * rows_);
+    for (auto & c : clips_)
+        c = 0;
 }
 
 void ClipContainer::serialize(IO::DataStream &io) const
@@ -129,7 +134,14 @@ Clip * ClipContainer::clip(uint column, uint row) const
     if (column >= cols_ || row >= rows_)
         return 0;
 
-    return clips_[row * cols_ + column];
+    const int i = row * cols_ + column;
+    if (i >= clips_.size())
+    {
+        MO_WARNING("ClipContainer::clip(" << column << ", " << row << ") "
+                   "out of range for clips_ array " << i << "/" << clips_.size());
+        return 0;
+    }
+    return clips_[i];
 }
 
 bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNecessary)

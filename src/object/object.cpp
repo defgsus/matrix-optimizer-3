@@ -708,8 +708,12 @@ bool Object::canHaveChildren(Type t) const
         return t == T_CLIP;
 
     // XXX Currently ClipContainer only into scene
-    if (t & T_CLIP_CONTAINER)
+    if (t == T_CLIP_CONTAINER)
         return type() == T_SCENE;
+
+    // Clips only contain sequences
+    if (type() == T_CLIP)
+        return t & TG_SEQUENCE;
 
     // microphone groups only contain microphones
     if (type() == T_MICROPHONE_GROUP)
