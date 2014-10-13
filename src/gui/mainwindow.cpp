@@ -624,6 +624,7 @@ void MainWindow::setSceneObject(Scene * s, const SceneSettings * set)
     seqFloatView_->setSequence(0);
 
     sequencer_->setCurrentObject(scene_);
+    clipView_->setClipContainer(0);
 
     glWindow_->renderLater();
 

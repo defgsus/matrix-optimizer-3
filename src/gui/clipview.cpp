@@ -33,10 +33,12 @@ namespace GUI {
 ClipView::ClipView(QWidget * parent)
     : QWidget   (parent),
       clipCon_  (0),
-      lastX_    (0),
-      lastY_    (0),
+      curNumX_ (0),
+      curNumY_ (0),
       curX_     (0),
       curY_     (0),
+      selStartX_(0),
+      selStartY_(0),
       curClip_  (0)
 {
     setObjectName("_ClipView");
@@ -140,8 +142,8 @@ void ClipView::setClipContainer(ClipContainer * con)
     if (con && clipCon_ == con)
     {
         // don't update if all is same
-        if (lastX_ == con->numberColumns()
-            && lastY_ == con->numberRows())
+        if (curNumX_ == con->numberColumns()
+            && curNumY_ == con->numberRows())
             return;
     }
 
@@ -163,12 +165,12 @@ void ClipView::createClipWidgets_()
 
     if (!clipCon_)
     {
-        lastX_ = lastY_ = 0;
+        curNumX_ = curNumY_ = 0;
         return;
     }
 
-    lastX_ = clipCon_->numberColumns();
-    lastY_ = clipCon_->numberRows();
+    curNumX_ = clipCon_->numberColumns();
+    curNumY_ = clipCon_->numberRows();
 
     // column headers
     for (uint x=0; x<clipCon_->numberColumns(); ++x)
@@ -277,20 +279,71 @@ ClipWidget * ClipView::widgetForClip_(const Clip * c)
     return (i == widgetMap_.end())? 0 : i.value();
 }
 
-void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifiers)
+void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifiers mod)
 {
     // set current selection
     curClip_ = w->clip();
     curX_ = w->posX();
     curY_ = w->posY();
 
-    // pass further
+    // left-click
     if (b & Qt::LeftButton)
-        w->setSelected(true);
+    {
+        // add-sub select
+        if (mod & Qt::ControlModifier)
+        {
+            selection_.flip(w);
+            w->update();
+        }
+        // range select
+        else if (mod & Qt::ShiftModifier)
+        {
+            const uint
+                    mix = std::min(selStartX_, curX_),
+                    max = std::max(selStartX_, curX_),
+                    miy = std::min(selStartY_, curY_),
+                    may = std::max(selStartY_, curY_);
+            clearSelection_();
+            for (uint y=miy; y<=may; ++y)
+            for (uint x=mix; x<=max; ++x)
+            {
+                select_(clipWidget_(x, y));
+            }
+        }
+        // simple select
+        else
+        {
+            if (!isSelected(w))
+            {
+                clearSelection_();
+                select_(w);
+                selStartX_ = curX_;
+                selStartY_ = curY_;
+            }
+        }
+
+    }
+    // right-click
     else if (b & Qt::RightButton)
+    {
         openPopup_();
+    }
 }
 
+void ClipView::clearSelection_()
+{
+    for (auto w : selection_)
+        w->update();
+    selection_.clear();
+}
+
+void ClipView::select_(ClipWidget * w)
+{
+    MO_ASSERT(w, "ClipView::select_(NULL) called");
+
+    selection_.select(w);
+    w->update();
+}
 
 void ClipView::openPopup_()
 {

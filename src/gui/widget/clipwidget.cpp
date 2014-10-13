@@ -26,7 +26,6 @@ ClipWidget::ClipWidget(Type type, Clip * clip, ClipView * parent)
       clip_         (clip),
       type_         (type),
       hasFocus_     (false),
-      isSelected_   (false),
       x_            (0),
       y_            (0)
 {
@@ -81,11 +80,11 @@ void ClipWidget::updateColors_()
 
     brushBodyH_ = brushBodyS_ = brushBodySH_ = brushBody_;
     brushBodyH_.setColor(brushBody_.color().lighter(120));
-    brushBodyS_.setColor(brushBody_.color().lighter(150));
+    brushBodyS_.setColor(brushBody_.color().lighter(160));
     brushBodySH_.setColor(brushBodyS_.color().lighter(120));
 
     penOutlineS_ = penOutline_;
-    penOutlineS_.setColor(penOutline_.color().lighter(180));
+    penOutlineS_.setColor(penOutline_.color().lighter(200));
     penOutlineS_.setWidth(penOutline_.width()+1);
 }
 
@@ -95,7 +94,7 @@ void ClipWidget::paintEvent(QPaintEvent*)
 
     // -- rect --
 
-    if (isSelected_)
+    if (view_->isSelected(this))
     {
         p.setPen(penOutlineS_);
         p.setBrush(hasFocus_? brushBodySH_ : brushBodyS_);
@@ -157,7 +156,6 @@ void ClipWidget::leaveEvent(QEvent *)
 
 void ClipWidget::mousePressEvent(QMouseEvent * e)
 {
-    //if (e->buttons() & Qt::LeftButton)
     emit clicked(this, e->buttons(), e->modifiers());
 }
 
@@ -176,17 +174,6 @@ void ClipWidget::mouseReleaseEvent(QMouseEvent * )
 void ClipWidget::setName(const QString & n)
 {
     name_ = n;
-    update();
-}
-
-
-void ClipWidget::setSelected(bool s)
-{
-    if (isSelected_ == s)
-        return;
-
-    isSelected_ = s;
-
     update();
 }
 

@@ -209,7 +209,8 @@ HEADERS += \
     src/io/commandlineparser.h \
     src/io/version.h \
     src/object/clip.h \
-    src/object/clipcontainer.h
+    src/object/clipcontainer.h \
+    src/tool/selection.h
 
 
 SOURCES += \

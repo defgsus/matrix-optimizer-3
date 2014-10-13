@@ -49,9 +49,6 @@ public slots:
     /** Sets the name to display */
     void setName(const QString&);
 
-    /** Sets the selection state */
-    void setSelected(bool enable);
-
     /** Sets a new or no Clip */
     void setClip(Clip *);
 
@@ -80,7 +77,7 @@ protected:
     QString name_;
     QStaticText nameText_;
 
-    bool hasFocus_, isSelected_;
+    bool hasFocus_;
 
     uint x_, y_;
 

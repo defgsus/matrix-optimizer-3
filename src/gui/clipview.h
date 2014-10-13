@@ -14,6 +14,8 @@
 #include <QWidget>
 #include <QMap>
 
+#include "tool/selection.h"
+
 class QGridLayout;
 class QScrollArea;
 
@@ -32,6 +34,8 @@ public:
     explicit ClipView(QWidget *parent = 0);
 
     ClipContainer * clipContainer() const { return clipCon_; }
+
+    bool isSelected(ClipWidget * c) const { return selection_.isSelected(c); }
 
 signals:
 
@@ -64,6 +68,9 @@ private:
 
     void openPopup_();
 
+    void clearSelection_();
+    void select_(ClipWidget * w);
+
     ClipWidget * widgetForClip_(const Clip *);
     ClipWidget * clipWidget_(uint x, uint y);
 
@@ -72,7 +79,12 @@ private:
     QList<ClipWidget*> clipWidgets_;
     QMap<const Clip*, ClipWidget*> widgetMap_;
 
-    uint lastX_, lastY_, curX_, curY_;
+    Selection<ClipWidget*> selection_;
+
+    uint
+        curNumX_, curNumY_,
+        curX_, curY_,
+        selStartX_, selStartY_;
     Clip * curClip_;
 
     QScrollArea * scrollArea_, * scrollAreaH_, *scrollAreaV_;
