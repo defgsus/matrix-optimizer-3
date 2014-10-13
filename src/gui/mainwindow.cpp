@@ -73,6 +73,7 @@
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/sequencefloat.h"
+#include "object/clipcontainer.h"
 
 namespace MO {
 namespace GUI {
@@ -163,8 +164,6 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     updateWindowTitle_();
-
-    showClipView_(true);
 }
 
 MainWindow::~MainWindow()
@@ -788,8 +787,32 @@ void MainWindow::objectSelectedTree_(Object * o)
 {
     MO_DEBUG_GUI("MainWindow::objectSelectedTree(" << o << ")");
 
-    // update sequence
-    sequencer_->setCurrentObject(o);
+    // update sequencer
+    if (!o->isClip() && !o->isClipContainer())
+    {
+        if (clipView_->isVisible())
+            showClipView_(false);
+
+        sequencer_->setCurrentObject(o);
+    }
+    // update clipview
+    else
+    {
+        if (!clipView_->isVisible())
+            showClipView_(true);
+
+        if (o->isClipContainer())
+        {
+            if (clipView_->clipContainer() != o)
+                clipView_->setClipContainer(static_cast<ClipContainer*>(o));
+        }
+        else
+        {
+            Object * con = o->getParentObject(Object::T_CLIP_CONTAINER);
+            if (con && clipView_->clipContainer() != con)
+                clipView_->setClipContainer(static_cast<ClipContainer*>(con));
+        }
+    }
 }
 
 void MainWindow::treeChanged_()

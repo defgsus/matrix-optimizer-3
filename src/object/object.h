@@ -279,6 +279,9 @@ public:
     /** See if this object has a parent object @p o. */
     bool hasParentObject(Object * o) const;
 
+    /** Returns the first parent object of given type, or NULL */
+    Object * getParentObject(Type) const;
+
     /** Test if object @p o can be added to this object.
         This checks for type compatibility as well as for
         potential loops in the modulation path. */

@@ -30,6 +30,8 @@ class ClipView : public QWidget
 public:
     explicit ClipView(QWidget *parent = 0);
 
+    ClipContainer * clipContainer() const { return clipCon_; }
+
 signals:
 
 public slots:

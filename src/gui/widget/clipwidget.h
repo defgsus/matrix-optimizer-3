@@ -40,6 +40,10 @@ public:
 
     Clip * clip() const { return clip_; }
 
+    uint posX() const { return x_; }
+    uint posY() const { return y_; }
+    void setPos(uint x, uint y) { x_=x; y_=y; }
+
 public slots:
 
     /** Sets the name to display */
@@ -77,6 +81,8 @@ protected:
     QStaticText nameText_;
 
     bool hasFocus_, isSelected_;
+
+    uint x_, y_;
 
     QPen penOutline_, penOutlineS_, penText_;
     QBrush brushBody_, brushBodyH_, brushBodyS_, brushBodySH_;

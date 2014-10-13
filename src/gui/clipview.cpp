@@ -19,7 +19,9 @@
 #include "object/clipcontainer.h"
 #include "object/clip.h"
 #include "object/scene.h"
+#include "object/objectfactory.h"
 #include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -144,6 +146,7 @@ void ClipView::createClipWidgets_()
         w->setVisible(false);
         w->deleteLater();
     }
+    clipWidgets_.clear();
     widgetMap_.clear();
 
     if (!clipCon_)
@@ -153,6 +156,7 @@ void ClipView::createClipWidgets_()
     for (uint x=0; x<clipCon_->numberColumns(); ++x)
     {
         auto w = new ClipWidget(ClipWidget::T_COLUMN, 0, this);
+        w->setPos(x, 0);
         w->setName(clipCon_->columnName(x));
         layoutH_->addWidget(w, 0, x);
         clipWidgets_.append(w);
@@ -162,6 +166,7 @@ void ClipView::createClipWidgets_()
     for (uint y=0; y<clipCon_->numberRows(); ++y)
     {
         auto w = new ClipWidget(ClipWidget::T_ROW, 0, this);
+        w->setPos(0, y);
         w->setName(clipCon_->rowName(y));
         layoutV_->addWidget(w, y, 0);
         clipWidgets_.append(w);
@@ -172,6 +177,7 @@ void ClipView::createClipWidgets_()
     for (uint x=0; x<clipCon_->numberColumns(); ++x)
     {
         auto w = new ClipWidget(ClipWidget::T_CLIP, clipCon_->clip(x, y), this);
+        w->setPos(x, y);
         layout_->addWidget(w, y, x);
         clipWidgets_.append(w);
         widgetMap_.insert(clipCon_->clip(x, y), w);
@@ -227,14 +233,9 @@ ClipWidget * ClipView::widgetForClip_(Clip * c)
 void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifiers)
 {
     // set current selection
-    if (w->clip())
-    {
-        curX_ = w->clip()->column();
-        curY_ = w->clip()->row();
-        curClip_ = w->clip();
-    }
-    else
-        curClip_ = 0;
+    curClip_ = w->clip();
+    curX_ = w->posX();
+    curY_ = w->posY();
 
     // pass further
     if (b & Qt::LeftButton)
@@ -257,6 +258,8 @@ void ClipView::openPopup_()
     }
 
     QMenu * menu = new QMenu(this);
+    connect(menu, SIGNAL(triggered(QAction*)), menu, SLOT(deleteLater()));
+
     QAction * a;
 
     // --- empty ---
@@ -267,12 +270,23 @@ void ClipView::openPopup_()
         menu->addAction(a = new QAction(tr("Create new clip"), menu));
         connect(a, &QAction::triggered, [=]()
         {
-            Clip * clip = new Clip();
+            Clip * clip = static_cast<Clip*>(ObjectFactory::createObject("Clip"));
+            MO_DEBUG("set " << curX_ << ", " << curY_);
             clip->setPosition(curX_, curY_);
             scene->addObject(clipCon_, clip);
             updateClipWidget_(curX_, curY_);
         });
     }
+
+
+    if (menu->isEmpty())
+    {
+        menu->deleteLater();
+        return;
+    }
+
+    menu->popup(QCursor::pos());
+
 }
 
 } // namespace GUI

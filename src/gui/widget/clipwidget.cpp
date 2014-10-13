@@ -26,7 +26,9 @@ ClipWidget::ClipWidget(Type type, Clip * clip, ClipView * parent)
       clip_         (clip),
       type_         (type),
       hasFocus_     (false),
-      isSelected_   (false)
+      isSelected_   (false),
+      x_            (0),
+      y_            (0)
 {
     setMouseTracking(true);
 
@@ -74,7 +76,7 @@ void ClipWidget::updateColors_()
             penOutline_ = QPen(QColor(40,40,40));
             brushBody_ = clip_? QBrush(QColor(130,170,130))
                               : QBrush(QColor(20,20,20));
-            penText_ = QPen(Qt::white);
+            penText_ = clip_? QPen(Qt::black) : QPen(Qt::white);
         break;
     }
 

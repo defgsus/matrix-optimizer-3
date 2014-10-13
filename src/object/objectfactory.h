@@ -107,6 +107,9 @@ private:
     std::map<QString, std::shared_ptr<Object>> objectMap_;
 };
 
+
+
+
 } // namespace MO
 
 #endif // MOSRC_OBJECT_OBJECTFACTORY_H

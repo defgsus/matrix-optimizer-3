@@ -459,6 +459,14 @@ bool Object::hasParentObject(Object *o) const
     return parentObject_ == o? true : parentObject_->hasParentObject(o);
 }
 
+Object * Object::getParentObject(Type t) const
+{
+    if (!parentObject_)
+        return 0;
+
+    return parentObject_->type() == t ? parentObject_ : parentObject_->getParentObject(t);
+}
+
 bool Object::isSaveToAdd(Object *o, QString &error) const
 {
     if (!o)

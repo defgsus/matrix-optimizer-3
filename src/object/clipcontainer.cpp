@@ -95,8 +95,8 @@ void ClipContainer::setNumber(uint cols, uint rows)
     if (maxRow_ > rows_ || maxCol_ > cols_)
         setNumber(cols_, rows_);
 
-    rows_ = std::max(maxRow_, rows);
-    cols_ = std::max(maxCol_, cols);
+    rows_ = std::max(10u, std::max(maxRow_, rows));
+    cols_ = std::max(10u, std::max(maxCol_, cols));
 
     // resize grid vector
     clips_.resize(cols_ * rows_);
