@@ -35,7 +35,8 @@ public:
 
     ClipContainer * clipContainer() const { return clipCon_; }
 
-    bool isSelected(ClipWidget * c) const { return selection_.isSelected(c); }
+    /** Used by ClipWidget to show selection highlight */
+    bool isSelected(ClipWidget * c) const;
 
 signals:
 
@@ -58,6 +59,8 @@ public slots:
 private slots:
 
     void onClicked_(ClipWidget*, Qt::MouseButtons, Qt::KeyboardModifiers);
+    void onMoved_(ClipWidget*, const QPoint&, Qt::MouseButtons, Qt::KeyboardModifiers);
+    void onReleased_(ClipWidget*, Qt::MouseButtons, Qt::KeyboardModifiers);
 
 private:
 
@@ -71,6 +74,9 @@ private:
     void clearSelection_();
     void select_(ClipWidget * w);
 
+    void moveSelection_(int dx, int dy);
+    void moveClip_(ClipWidget *, uint newx, uint newy);
+
     ClipWidget * widgetForClip_(const Clip *);
     ClipWidget * clipWidget_(uint x, uint y);
 
@@ -79,13 +85,15 @@ private:
     QList<ClipWidget*> clipWidgets_;
     QMap<const Clip*, ClipWidget*> widgetMap_;
 
-    Selection<ClipWidget*> selection_;
+    Selection<ClipWidget*>
+        selection_, goalSelection_;
 
     uint
         curNumX_, curNumY_,
         curX_, curY_,
         selStartX_, selStartY_;
     Clip * curClip_;
+    ClipWidget * dragWidget_, *goalWidget_;
 
     QScrollArea * scrollArea_, * scrollAreaH_, *scrollAreaV_;
     QWidget * container_, *containerH_, *containerV_;

@@ -29,6 +29,8 @@ public:
 
     // ---------- getter ------------
 
+    bool isEmpty() const { return s_.empty(); }
+
     /** Returns true if @p o is selected */
     bool isSelected(T o) const
     {

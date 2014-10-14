@@ -36,6 +36,8 @@ public:
 
     explicit ClipWidget(Type type, Clip * clip, ClipView *parent = 0);
 
+    Type type() const { return type_; }
+
     const QString& name() const { return name_; }
 
     Clip * clip() const { return clip_; }
@@ -56,6 +58,8 @@ signals:
 
     /** Emitted when clicked */
     void clicked(ClipWidget*, Qt::MouseButtons, Qt::KeyboardModifiers);
+    void moved(ClipWidget*, const QPoint&, Qt::MouseButtons, Qt::KeyboardModifiers);
+    void released(ClipWidget*, Qt::MouseButtons, Qt::KeyboardModifiers);
 
 protected:
 

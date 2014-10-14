@@ -159,15 +159,17 @@ void ClipWidget::mousePressEvent(QMouseEvent * e)
     emit clicked(this, e->buttons(), e->modifiers());
 }
 
-void ClipWidget::mouseMoveEvent(QMouseEvent * )
+void ClipWidget::mouseMoveEvent(QMouseEvent * e)
 {
     if (!hasFocus_)
         return;
+
+    emit moved(this, e->pos(), e->buttons(), e->modifiers());
 }
 
-void ClipWidget::mouseReleaseEvent(QMouseEvent * )
+void ClipWidget::mouseReleaseEvent(QMouseEvent * e)
 {
-
+    emit released(this, e->buttons(), e->modifiers());
 }
 
 

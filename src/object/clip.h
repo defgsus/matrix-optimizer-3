@@ -51,7 +51,9 @@ public:
 
     // -------------- setter -------------------
 
-    /** Sets the position in the ClipContainer */
+    /** Sets the position in the ClipContainer.
+        @note The ClipContainer does not get notified of this change!
+              Call ClipContainer::updateClipPositions()! */
     void setPosition(uint col, uint row) { column_ = col; row_ = row; }
     void setRow(uint row) { setPosition(column(), row); }
     void setColumn(uint col) { setPosition(col, row()); }

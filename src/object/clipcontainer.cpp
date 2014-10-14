@@ -97,6 +97,13 @@ QString ClipContainer::rowName(uint index) const
 
 void ClipContainer::setNumber(uint cols, uint rows)
 {
+    cols_ = cols;
+    rows_ = rows;
+    updateClipPositions();
+}
+
+void ClipContainer::updateClipPositions()
+{
     // get all clips
     auto clips = findChildObjects<Clip>();
 
@@ -109,8 +116,8 @@ void ClipContainer::setNumber(uint cols, uint rows)
         maxRow_ = std::max(maxRow_, c->row());
     }
 
-    rows_ = std::max(minimumRows_, std::max(maxRow_, rows));
-    cols_ = std::max(minimumColumns_, std::max(maxCol_, cols));
+    rows_ = std::max(minimumRows_, std::max(maxRow_, rows_));
+    cols_ = std::max(minimumColumns_, std::max(maxCol_, cols_));
 
     // resize grid vector
     clips_.resize(cols_ * rows_);

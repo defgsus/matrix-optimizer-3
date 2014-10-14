@@ -39,7 +39,9 @@ ClipView::ClipView(QWidget * parent)
       curY_     (0),
       selStartX_(0),
       selStartY_(0),
-      curClip_  (0)
+      curClip_  (0),
+      dragWidget_(0),
+      goalWidget_(0)
 {
     setObjectName("_ClipView");
 
@@ -203,7 +205,17 @@ void ClipView::createClipWidgets_()
         widgetMap_.insert(clipCon_->clip(x, y), w);
         connect(w, SIGNAL(clicked(ClipWidget*,Qt::MouseButtons,Qt::KeyboardModifiers)),
                 this, SLOT(onClicked_(ClipWidget*,Qt::MouseButtons,Qt::KeyboardModifiers)));
+        connect(w, SIGNAL(moved(ClipWidget*,QPoint,Qt::MouseButtons,Qt::KeyboardModifiers)),
+                this, SLOT(onMoved_(ClipWidget*,QPoint,Qt::MouseButtons,Qt::KeyboardModifiers)));
+        connect(w, SIGNAL(released(ClipWidget*,Qt::MouseButtons,Qt::KeyboardModifiers)),
+                this, SLOT(onReleased_(ClipWidget*,Qt::MouseButtons,Qt::KeyboardModifiers)));
     }
+}
+
+bool ClipView::isSelected(ClipWidget * c) const
+{
+    return selection_.isSelected(c)
+        || goalSelection_.isSelected(c);
 }
 
 void ClipView::updateClip(Clip * clip)
@@ -281,6 +293,9 @@ ClipWidget * ClipView::widgetForClip_(const Clip * c)
 
 void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifiers mod)
 {
+    if (!clipCon_)
+        return;
+
     // set current selection
     curClip_ = w->clip();
     curX_ = w->posX();
@@ -313,7 +328,7 @@ void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifi
         // simple select
         else
         {
-            if (!isSelected(w))
+            if (!selection_.isSelected(w))
             {
                 clearSelection_();
                 select_(w);
@@ -322,6 +337,7 @@ void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifi
             }
         }
 
+        dragWidget_ = w;
     }
     // right-click
     else if (b & Qt::RightButton)
@@ -330,11 +346,148 @@ void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifi
     }
 }
 
+void ClipView::onMoved_(ClipWidget * widget, const QPoint &wpos, Qt::MouseButtons b, Qt::KeyboardModifiers mod)
+{
+    if (!clipCon_ || !dragWidget_ || selection_.isEmpty() || !(b & Qt::LeftButton))
+        return;
+
+    // find move-to position
+    QPoint pos = widget->mapTo(this, wpos);
+    ClipWidget * goalw = qobject_cast<ClipWidget*>(childAt(pos));
+    if (!goalw || goalw->type() != ClipWidget::T_CLIP)
+        return;
+
+    int dx = (int)goalw->posX() - (int)dragWidget_->posX(),
+        dy = (int)goalw->posY() - (int)dragWidget_->posY();
+
+    goalWidget_ = (dx != 0 || dy != 0)? goalw : 0;
+
+    // update goal selection
+    for (auto w : goalSelection_)
+        w->update();
+    goalSelection_.clear();
+
+    // goal-select each selected clip
+    for (auto w : selection_)
+    {
+        if (!w->clip())
+            continue;
+
+        uint newx = w->posX() + dx,
+             newy = w->posY() + dy;
+
+        if (newx >= clipCon_->numberColumns()
+         || newy >= clipCon_->numberRows())
+            continue;
+
+        ClipWidget * goal = clipWidget_(newx, newy);
+        if (!goal)
+            continue;
+        goalSelection_.select(goal);
+        goal->update();
+    }
+}
+
+void ClipView::onReleased_(ClipWidget * w, Qt::MouseButtons, Qt::KeyboardModifiers )
+{
+    if (!clipCon_ || !dragWidget_ || (w != dragWidget_) || !goalWidget_)
+        return;
+
+    // find move-to position
+    int dx = (int)goalWidget_->posX() - dragWidget_->posX(),
+        dy = (int)goalWidget_->posY() - dragWidget_->posY();
+
+    // clear drag state
+    dragWidget_ = goalWidget_ = 0;
+
+    // clear goal selection
+    for (auto w : goalSelection_)
+        w->update();
+    goalSelection_.clear();
+
+    if (dx != 0 || dy != 0)
+        moveSelection_(dx, dy);
+}
+
+void ClipView::moveSelection_(int dx, int dy)
+{
+    // temporary struct to remember the moves
+    // because clips might temporarily be placed on one another
+    struct Move
+    {
+        ClipWidget *from, *to;
+        Clip * clip;
+    };
+    QVector<Move> moves;
+
+    // move each clip
+    for (auto w : selection_)
+    {
+        if (!w->clip())
+            continue;
+
+        uint x = w->clip()->column(),
+             y = w->clip()->row(),
+             newx = x + dx,
+             newy = y + dy;
+
+        if (newx >= clipCon_->numberColumns()
+         || newy >= clipCon_->numberRows())
+            continue;
+
+//        MO_DEBUG("move " << x << ", " << y << " to "
+//                 << newx << ", " << newy);
+
+        // goal clipwidget
+        ClipWidget * tow = clipWidget_(newx, newy);
+
+        // don't move on top of another clip
+        // unless it also gets moved
+        if (tow->clip() && !selection_.isSelected(tow))
+            continue;
+
+        // remember the move
+        Move m;
+        m.from = w;
+        m.to = tow;
+        m.clip = w->clip();
+        moves.append(m);
+    }
+
+    clearSelection_();
+
+    // execute moves
+    for (auto & m : moves)
+    {
+//        MO_DEBUG("move " << m.from->posX() << ", " << m.from->posY()
+//                 << m.to->posX() << ", " << m.to->posY());
+
+        Clip * clip = m.clip;
+        // set clip position
+        clip->setPosition(m.to->posX(), m.to->posY());
+        // update clipwidgets
+        if (!selection_.isSelected(m.from))
+            m.from->setClip(0);
+        m.to->setClip(clip);
+        // update widget map
+        widgetMap_.remove(clip);
+        widgetMap_.insert(clip, m.to);
+        // select
+        selection_.select(m.to);
+    }
+
+    clipCon_->updateClipPositions();
+}
+
+
 void ClipView::clearSelection_()
 {
     for (auto w : selection_)
         w->update();
+    for (auto w : goalSelection_)
+        w->update();
     selection_.clear();
+    goalSelection_.clear();
 }
 
 void ClipView::select_(ClipWidget * w)
@@ -343,6 +496,40 @@ void ClipView::select_(ClipWidget * w)
 
     selection_.select(w);
     w->update();
+}
+
+void ClipView::moveClip_(ClipWidget * w, uint newx, uint newy)
+{
+    if (!clipCon_)
+        return;
+
+    if (newx >= clipCon_->numberColumns()
+        || newy >= clipCon_->numberRows())
+    {
+        MO_WARNING("ClipView::moveClip_(" << w << ", " << newx << ", " << newy << ") "
+                   "out of range (" << clipCon_->numberColumns() << ", " << clipCon_->numberRows() << ")");
+        return;
+    }
+
+    // don't need to move an empty clipwidget
+    if (!w->clip())
+        return;
+
+    Clip * clip = w->clip();
+
+    //uint oldx = clip->column(),
+    //     oldy = clip->row();
+    // move clip
+    clip->setPosition(newx, newy);
+    // update clip container
+    clipCon_->updateClipPositions();
+    // update widgetmap
+    ClipWidget * neww = clipWidget_(newx, newy);
+    widgetMap_.remove(clip);
+    widgetMap_.insert(clip, neww);
+    // update clipwidgets
+    w->setClip(0);
+    neww->setClip(clip);
 }
 
 void ClipView::openPopup_()

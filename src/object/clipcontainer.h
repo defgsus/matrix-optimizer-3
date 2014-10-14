@@ -57,6 +57,11 @@ public:
 
     // -------------- clips -------------------
 
+    /** Call this after changes to the positions of Clips.
+        This might also change the size of the ClipContainer to fit in
+        all the Clip positions. */
+    void updateClipPositions();
+
     /** Returns the clip at the specific position, or NULL */
     Clip * clip(uint column, uint row) const;
 
