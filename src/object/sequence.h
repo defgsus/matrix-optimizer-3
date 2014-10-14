@@ -52,6 +52,12 @@ public:
     /** Start time in seconds */
     Double start() const { return p_start_->baseValue(); }
 
+    /** Return actual start time in seconds,
+        including the start time of the parentClip() */
+    Double realStart() const { return parentClip_
+                ? p_start_->baseValue() + parentClip_->timeStarted()
+                : p_start_->baseValue(); }
+
     /** End time in seconds */
     Double end() const
         { return p_start_->baseValue() + p_length_->baseValue() / p_speed_->baseValue(); }

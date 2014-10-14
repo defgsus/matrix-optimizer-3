@@ -30,7 +30,7 @@ namespace {
     public:
         const SequenceFloat * sequence;
         Double value(Double time) const
-            { return sequence->value(sequence->start() + time, MO_GUI_THREAD); }
+            { return sequence->value(sequence->realStart() + time, MO_GUI_THREAD); }
     };
 }
 
@@ -152,7 +152,6 @@ void SequenceFloatView::setViewSpace(const UTIL::ViewSpace & v)
 
     if (timeline_)// && timeline_->isVisible())
     {
-        //MO_ASSERT(sequence_, "Timeline1DView without sequence");
         if (sequence_)
         {
             // timeline's viewspace is special

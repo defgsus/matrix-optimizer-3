@@ -26,6 +26,7 @@ TimeBar::TimeBar(QWidget *parent) :
     minTime_(-1.0e100),
     maxTime_(1.0e100),
     offset_ (0.0),
+    active_ (true),
     dragging_(false)
 {
     setStatusTip("Drag left and right to change time");
@@ -74,8 +75,20 @@ void TimeBar::setTimeOffset(Double offset)
     update_();
 }
 
+void TimeBar::setActive(bool enable)
+{
+    active_ = enable;
+    if (active_)
+        update_();
+    else
+        setVisible(false);
+}
+
 void TimeBar::update_()
 {
+    if (!active_)
+        return;
+
     const int x = space_.mapXFrom(time_) * rect_.width();
 
     move(x - 1 + rect_.x(), rect_.y());
@@ -129,6 +142,12 @@ void TimeBar::mouseReleaseEvent(QMouseEvent * e)
 
 void TimeBar::paintEvent(QPaintEvent * e)
 {
+    if (!active_)
+    {
+        e->ignore();
+        return;
+    }
+
     // draw only if inside the contained-rect
     if (geometry().left() >= rect_.x() - 1
             && geometry().right() <= rect_.right() + 1)

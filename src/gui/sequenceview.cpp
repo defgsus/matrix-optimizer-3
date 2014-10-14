@@ -21,6 +21,7 @@
 #include "ruler.h"
 #include "object/scene.h"
 #include "object/sequence.h"
+#include "object/clip.h"
 #include "io/error.h"
 #include "widget/doublespinbox.h"
 #include "widget/timebar.h"
@@ -126,6 +127,12 @@ void SequenceView::setScene(Scene *scene)
 void SequenceView::setSceneTime(Double time)
 {
     playBar_->setTime(time);
+    // check for containing clip
+    if (baseSequence_ && baseSequence_->parentClip())
+    {
+        playBar_->setTimeOffset(-baseSequence_->realStart());
+        playBar_->setActive(baseSequence_->parentClip()->isPlaying());
+    }
 }
 
 const UTIL::ViewSpace& SequenceView::viewSpace() const
@@ -158,8 +165,14 @@ void SequenceView::setSequence_(Sequence * s)
     if (different && baseSequence_)
     {
         // adjust playbar offset to local time
-        playBar_->setTimeOffset(-baseSequence_->start());
-        // get viewspace from previous settings
+        if (!baseSequence_->parentClip())
+            playBar_->setTimeOffset(-baseSequence_->start());
+        else
+        {
+            playBar_->setTimeOffset(-baseSequence_->realStart());
+            playBar_->setActive(baseSequence_->parentClip()->isPlaying());
+        }
+        // get viewspace from previous use
         setViewSpace(sceneSettings_->getViewSpace(baseSequence_));
     }
 }
@@ -189,7 +202,7 @@ void SequenceView::setSequenceWidget_(QWidget * w)
 void SequenceView::rulerXClicked_(Double time)
 {
     if (baseSequence_)
-        time += baseSequence_->start();
+        time += baseSequence_->realStart();
 
     emit sceneTimeChanged(time);
 }
@@ -209,8 +222,9 @@ void SequenceView::onSequenceChanged_(Sequence * s)
                    << " defaultSettingsAvailable_=" << defaultSettingsAvailable_);
     Q_UNUSED(s);
 
-    playBar_->setTimeOffset(-baseSequence_->start());
+    playBar_->setTimeOffset(-baseSequence_->realStart());
     playBar_->setMinimumTime(-baseSequence_->start());
+    playBar_->setActive(baseSequence_->parentClip()->isPlaying());
 
     updateSequence_();
 
