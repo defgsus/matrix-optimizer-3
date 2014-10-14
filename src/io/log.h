@@ -150,4 +150,11 @@
 #   define MO_DEBUG_MIDI(unused__) { }
 #endif
 
+#if (1) && defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_CLIP
+#   define MO_DEBUG_CLIP(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
+#else
+#   define MO_DEBUG_CLIP(unused__) { }
+#endif
+
 #endif // MOSRC_IO_LOG_H

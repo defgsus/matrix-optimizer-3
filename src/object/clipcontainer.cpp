@@ -233,7 +233,7 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
 
 void ClipContainer::triggerClip(Clip *clip, Double gtime)
 {
-    MO_DEBUG("ClipContainer::triggerClip(" << clip << ", " << gtime << ")");
+    MO_DEBUG_CLIP("ClipContainer::triggerClip(" << clip << ", " << gtime << ")");
 
     emit clipTriggered(clip);
 
@@ -244,7 +244,7 @@ void ClipContainer::triggerClip(Clip *clip, Double gtime)
 
 void ClipContainer::triggerStopClip(Clip *clip, Double gtime)
 {
-    MO_DEBUG("ClipContainer::triggerStopClip(" << clip << ", " << gtime << ")");
+    MO_DEBUG_CLIP("ClipContainer::triggerStopClip(" << clip << ", " << gtime << ")");
 
     emit clipStopTriggered(clip);
 
@@ -255,7 +255,7 @@ void ClipContainer::triggerStopClip(Clip *clip, Double gtime)
 
 void ClipContainer::triggerRow(uint index, Double gtime)
 {
-    MO_DEBUG("ClipContainer::triggerRow(" << index << ", " << gtime << ")");
+    MO_DEBUG_CLIP("ClipContainer::triggerRow(" << index << ", " << gtime << ")");
 
     MO_ASSERT(index < rows_, "ClipContainer::triggerRow(" << index << ", " << gtime << ") "
               "out of range (" << rows_ << ")");
