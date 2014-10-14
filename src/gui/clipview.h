@@ -61,6 +61,12 @@ private slots:
     void onClicked_(ClipWidget*, Qt::MouseButtons, Qt::KeyboardModifiers);
     void onMoved_(ClipWidget*, const QPoint&, Qt::MouseButtons, Qt::KeyboardModifiers);
     void onReleased_(ClipWidget*, Qt::MouseButtons, Qt::KeyboardModifiers);
+    void onButtonClicked_(ClipWidget*);
+
+    void onClipTriggered_(Clip*);
+    void onClipStopTriggered_(Clip*);
+    void onClipStarted_(Clip*);
+    void onClipStopped_(Clip*);
 
 private:
 

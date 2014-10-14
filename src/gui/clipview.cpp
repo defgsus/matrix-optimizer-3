@@ -55,10 +55,6 @@ ClipView::ClipView(QWidget * parent)
 
 
     createWidgets_();
-
-    auto con = new ClipContainer(this);
-    con->setNumber(40,30);
-    setClipContainer(con);
 }
 
 void ClipView::createWidgets_()
@@ -73,7 +69,7 @@ void ClipView::createWidgets_()
         lg->addWidget(scrollAreaV_, 1, 0);
         scrollAreaV_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         scrollAreaV_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        scrollAreaV_->setMaximumWidth(24);
+        scrollAreaV_->setMaximumWidth(ClipWidget::sizeForType(ClipWidget::T_ROW).width() + 2);
 
         containerV_ = new QWidget(scrollAreaV_);
         containerV_->setObjectName("_rowheader_container");
@@ -93,7 +89,7 @@ void ClipView::createWidgets_()
         lg->addWidget(scrollAreaH_, 0, 1);
         scrollAreaH_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         scrollAreaH_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        scrollAreaH_->setMaximumHeight(30);
+        scrollAreaH_->setMaximumHeight(ClipWidget::sizeForType(ClipWidget::T_COLUMN).height() + 2);
 
         containerH_ = new QWidget(scrollAreaH_);
         containerH_->setObjectName("_columnheader_container");
@@ -149,7 +145,22 @@ void ClipView::setClipContainer(ClipContainer * con)
             return;
     }
 
+    // disconnect previous
+    if (clipCon_)
+    {
+        disconnect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
+        disconnect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
+        disconnect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
+        disconnect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
+    }
+
     clipCon_ = con;
+
+    // connect
+    connect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
+    connect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
+    connect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
+    connect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
 
     createClipWidgets_();
 }
@@ -182,6 +193,8 @@ void ClipView::createClipWidgets_()
         w->setName(clipCon_->columnName(x));
         layoutH_->addWidget(w, 0, x);
         clipWidgets_.append(w);
+        connect(w, SIGNAL(buttonClicked(ClipWidget*)),
+                this, SLOT(onButtonClicked_(ClipWidget*)));
     }
 
     // row headers
@@ -192,6 +205,8 @@ void ClipView::createClipWidgets_()
         w->setName(clipCon_->rowName(y));
         layoutV_->addWidget(w, y, 0);
         clipWidgets_.append(w);
+        connect(w, SIGNAL(buttonClicked(ClipWidget*)),
+                this, SLOT(onButtonClicked_(ClipWidget*)));
     }
 
     // clips
@@ -203,12 +218,15 @@ void ClipView::createClipWidgets_()
         layout_->addWidget(w, y, x);
         clipWidgets_.append(w);
         widgetMap_.insert(clipCon_->clip(x, y), w);
+        // connect clipwidget
         connect(w, SIGNAL(clicked(ClipWidget*,Qt::MouseButtons,Qt::KeyboardModifiers)),
                 this, SLOT(onClicked_(ClipWidget*,Qt::MouseButtons,Qt::KeyboardModifiers)));
         connect(w, SIGNAL(moved(ClipWidget*,QPoint,Qt::MouseButtons,Qt::KeyboardModifiers)),
                 this, SLOT(onMoved_(ClipWidget*,QPoint,Qt::MouseButtons,Qt::KeyboardModifiers)));
         connect(w, SIGNAL(released(ClipWidget*,Qt::MouseButtons,Qt::KeyboardModifiers)),
                 this, SLOT(onReleased_(ClipWidget*,Qt::MouseButtons,Qt::KeyboardModifiers)));
+        connect(w, SIGNAL(buttonClicked(ClipWidget*)),
+                this, SLOT(onButtonClicked_(ClipWidget*)));
     }
 }
 
@@ -462,16 +480,15 @@ void ClipView::moveSelection_(int dx, int dy)
 //        MO_DEBUG("move " << m.from->posX() << ", " << m.from->posY()
 //                 << m.to->posX() << ", " << m.to->posY());
 
-        Clip * clip = m.clip;
         // set clip position
-        clip->setPosition(m.to->posX(), m.to->posY());
+        m.clip->setPosition(m.to->posX(), m.to->posY());
         // update clipwidgets
         if (!selection_.isSelected(m.from))
             m.from->setClip(0);
-        m.to->setClip(clip);
+        m.to->setClip(m.clip);
         // update widget map
-        widgetMap_.remove(clip);
-        widgetMap_.insert(clip, m.to);
+        widgetMap_.remove(m.clip);
+        widgetMap_.insert(m.clip, m.to);
         // select
         selection_.select(m.to);
     }
@@ -608,6 +625,61 @@ void ClipView::openPopup_()
     menu->popup(QCursor::pos());
 
 }
+
+
+void ClipView::onButtonClicked_(ClipWidget * w)
+{
+    if (!clipCon_)
+        return;
+
+    // get the current scene time
+    Double gtime = 0;
+    if (Scene * scene = clipCon_->sceneObject())
+    {
+        gtime = scene->sceneTime();
+    }
+
+    switch (w->type())
+    {
+        case ClipWidget::T_CLIP:
+            if (w->clip())
+                clipCon_->triggerClip(w->clip(), gtime);
+        break;
+
+        case ClipWidget::T_ROW:
+            clipCon_->triggerRow(w->posY(), gtime);
+        break;
+
+        case ClipWidget::T_COLUMN:
+            clipCon_->triggerStopColumn(w->posX(), gtime);
+        break;
+    }
+}
+
+void ClipView::onClipTriggered_(Clip * clip)
+{
+    if (ClipWidget * w = widgetForClip_(clip))
+        w->setTriggered();
+}
+
+void ClipView::onClipStopTriggered_(Clip * clip)
+{
+    if (ClipWidget * w = widgetForClip_(clip))
+        w->setStopTriggered();
+}
+
+void ClipView::onClipStarted_(Clip * clip)
+{
+    if (ClipWidget * w = widgetForClip_(clip))
+        w->setStarted();
+}
+
+void ClipView::onClipStopped_(Clip * clip)
+{
+    if (ClipWidget * w = widgetForClip_(clip))
+        w->setStopped();
+}
+
 
 } // namespace GUI
 } // namespace MO

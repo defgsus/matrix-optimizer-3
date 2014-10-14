@@ -11,6 +11,7 @@
 #include "clipcontainer.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "clip.h"
 
 namespace MO {
@@ -151,6 +152,26 @@ Clip * ClipContainer::clip(uint column, uint row) const
     return clips_[i];
 }
 
+Clip * ClipContainer::playingClip(uint column) const
+{
+    if (column >= cols_)
+    {
+        MO_WARNING("ClipContainer::playingClip(" << column << ") "
+                   "out of range (" << cols_ << ")");
+        return 0;
+    }
+
+    for (uint y = 0; y < rows_; ++y)
+    {
+        Clip * c = clip(column, y);
+        if (c && c->isPlaying())
+            return c;
+    }
+
+    return 0;
+}
+
+
 bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNecessary)
 {
     column = std::min(column, cols_-1);
@@ -208,5 +229,69 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
 
     return true;
 }
+
+
+void ClipContainer::triggerClip(Clip *clip, Double gtime)
+{
+    MO_DEBUG("ClipContainer::triggerClip(" << clip << ", " << gtime << ")");
+
+    emit clipTriggered(clip);
+
+    // XXX
+    clip->startClip(gtime);
+    emit clipStarted(clip);
+}
+
+void ClipContainer::triggerStopClip(Clip *clip, Double gtime)
+{
+    MO_DEBUG("ClipContainer::triggerStopClip(" << clip << ", " << gtime << ")");
+
+    emit clipStopTriggered(clip);
+
+    // XXX
+    clip->stopClip();
+    emit clipStopped(clip);
+}
+
+void ClipContainer::triggerRow(uint index, Double gtime)
+{
+    MO_DEBUG("ClipContainer::triggerRow(" << index << ", " << gtime << ")");
+
+    MO_ASSERT(index < rows_, "ClipContainer::triggerRow(" << index << ", " << gtime << ") "
+              "out of range (" << rows_ << ")");
+
+    for (uint x = 0; x < cols_; ++x)
+    {
+        Clip * c = clip(x, index);
+        Clip * other = playingClip(x);
+
+        if (c)
+        {
+            emit clipTriggered(c);
+
+            // XXX
+            c->startClip(gtime);
+            emit clipStarted(c);
+        }
+
+        // stop others on this column
+        if (other && other != c)
+            triggerStopClip(other, gtime);
+    }
+}
+
+void ClipContainer::triggerStopColumn(uint index, Double gtime)
+{
+    MO_DEBUG("ClipContainer::triggerStopColumn(" << index << ", " << gtime << ")");
+
+    MO_ASSERT(index < cols_, "ClipContainer::triggerStopColumn(" << index << ", " << gtime << ") "
+              "out of range (" << cols_ << ")");
+
+    if (Clip * other = playingClip(index))
+        triggerStopClip(other, gtime);
+}
+
+
+
 
 } // namespace MO

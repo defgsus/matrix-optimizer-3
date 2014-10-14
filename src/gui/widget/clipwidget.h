@@ -21,6 +21,7 @@ class Clip;
 namespace GUI {
 
 class ClipView;
+class ClipWidgetButton;
 
 class ClipWidget : public QWidget
 {
@@ -35,6 +36,8 @@ public:
     };
 
     explicit ClipWidget(Type type, Clip * clip, ClipView *parent = 0);
+
+    static QSize sizeForType(Type t);
 
     Type type() const { return type_; }
 
@@ -54,6 +57,11 @@ public slots:
     /** Sets a new or no Clip */
     void setClip(Clip *);
 
+    void setTriggered();
+    void setStopTriggered();
+    void setStarted();
+    void setStopped();
+
 signals:
 
     /** Emitted when clicked */
@@ -61,9 +69,12 @@ signals:
     void moved(ClipWidget*, const QPoint&, Qt::MouseButtons, Qt::KeyboardModifiers);
     void released(ClipWidget*, Qt::MouseButtons, Qt::KeyboardModifiers);
 
+    void buttonClicked(ClipWidget *);
+
 protected:
 
     void updateColors_();
+    void resizeEvent(QResizeEvent *);
     void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
 
     void enterEvent(QEvent *);
@@ -80,6 +91,7 @@ protected:
 
     QString name_;
     QStaticText nameText_;
+    ClipWidgetButton * button_;
 
     bool hasFocus_;
 

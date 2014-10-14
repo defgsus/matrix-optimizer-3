@@ -65,7 +65,29 @@ public:
     /** Returns the clip at the specific position, or NULL */
     Clip * clip(uint column, uint row) const;
 
+    /** Returns the one clip that is playing on @p column, or NULL */
+    Clip * playingClip(uint column) const;
+
+    /** Queues a clip for playing at global scene time @p gtime */
+    void triggerClip(Clip * clip, Double gtime);
+
+    /** Queues a clip for stopping at global scene time @p gtime */
+    void triggerStopClip(Clip * clip, Double gtime);
+
+    /** Queues a whole row for playing at global scene time @p gtime.
+        Any playing clip on each column is triggered for stopping. */
+    void triggerRow(uint index, Double gtime);
+
+    /** Queues a column for stopping at global scene time @p gtime.
+        The currently playing clip on the column is triggered for stopping. */
+    void triggerStopColumn(uint index, Double gtime);
+
 signals:
+
+    void clipTriggered(Clip *);
+    void clipStopTriggered(Clip *);
+    void clipStarted(Clip *);
+    void clipStopped(Clip *);
 
 public slots:
 

@@ -60,7 +60,8 @@ public:
 
     // -------------- trigger ------------------
 
-    /** Starts the clip (assuming global time @p gtime) */
+    /** Starts the clip (assuming global time @p gtime).
+        Generally don't use this. Use ClipContainer::triggerClip() instead. */
     void startClip(Double gtime);
 
     /** Stops the clip */

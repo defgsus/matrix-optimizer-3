@@ -13,6 +13,7 @@
 #include <QImage>
 
 #include "clipwidget.h"
+#include "clipwidgetbutton.h"
 #include "gui/clipview.h"
 #include "io/error.h"
 #include "object/clip.h"
@@ -25,11 +26,22 @@ ClipWidget::ClipWidget(Type type, Clip * clip, ClipView * parent)
       view_         (parent),
       clip_         (clip),
       type_         (type),
+      button_       (0),
       hasFocus_     (false),
       x_            (0),
       y_            (0)
 {
     setMouseTracking(true);
+
+    setFixedSize(sizeForType(type_));
+
+    button_ = new ClipWidgetButton(type_ != T_COLUMN
+                                     ? ClipWidgetButton::T_PLAY
+                                     : ClipWidgetButton::T_STOP, this);
+    connect(button_, &ClipWidgetButton::clicked, [=]()
+    {
+        emit buttonClicked(this);
+    });
 
     if (clip_)
         name_ = clip_->name();
@@ -51,26 +63,36 @@ void ClipWidget::setClip(Clip * c)
     update();
 }
 
+QSize ClipWidget::sizeForType(Type t)
+{
+    switch (t)
+    {
+        case T_COLUMN:  return QSize(60, 20);
+        case T_ROW:     return QSize(60, 20);
+        case T_CLIP:    return QSize(60, 20);
+    }
+    return QSize();
+}
+
 void ClipWidget::updateColors_()
 {
+    button_->setVisible(type_ != T_CLIP || clip_ != 0);
+
     switch (type_)
     {
         case T_COLUMN:
-            setFixedSize(60, 20);
             penOutline_ = Qt::NoPen;
             brushBody_ = QBrush(QColor(100,100,100));
             penText_ = QPen(Qt::white);
         break;
 
         case T_ROW:
-            setFixedSize(20, 20);
             penOutline_ = Qt::NoPen;
             brushBody_ = QBrush(QColor(100,100,100));
             penText_ = QPen(Qt::white);
         break;
 
         case T_CLIP:
-            setFixedSize(60, 20);
             penOutline_ = QPen(QColor(40,40,40));
             brushBody_ = clip_? QBrush(QColor(50,80,60))
                               : QBrush(QColor(20,20,20));
@@ -85,7 +107,13 @@ void ClipWidget::updateColors_()
 
     penOutlineS_ = penOutline_;
     penOutlineS_.setColor(penOutline_.color().lighter(200));
-    penOutlineS_.setWidth(penOutline_.width()+1);
+    if (clip_)
+        penOutlineS_.setWidth(penOutline_.width()+1);
+}
+
+void ClipWidget::resizeEvent(QResizeEvent *)
+{
+    button_->move(3, (height() - button_->height()) / 2);
 }
 
 void ClipWidget::paintEvent(QPaintEvent*)
@@ -111,20 +139,7 @@ void ClipWidget::paintEvent(QPaintEvent*)
 
     // -- playbutton --
 
-    if (type_ == T_CLIP)
-    {
-        static const QImage play_off(":/icon/play_off_small");
-        static const QImage play_on(":/icon/play_on_small");
-        static const QImage stop(":/icon/stop_small");
-
-        int y = (height()-play_off.height())/2;
-        if (!clip_)
-            p.drawImage(x, y, stop);
-        else
-            p.drawImage(x, y, clip_->isPlaying() ? play_on : play_off);
-
-        x += play_off.width() + 1;
-    }
+    x += button_->width() + 1;
 
     // -- name --
 
@@ -177,6 +192,38 @@ void ClipWidget::setName(const QString & n)
 {
     name_ = n;
     update();
+}
+
+void ClipWidget::setTriggered()
+{
+    if (!clip_)
+        return;
+
+    button_->setState(ClipWidgetButton::S_TRIGGERED);
+}
+
+void ClipWidget::setStopTriggered()
+{
+    if (!clip_)
+        return;
+
+    button_->setState(ClipWidgetButton::S_TRIGGERED);
+}
+
+void ClipWidget::setStarted()
+{
+    if (!clip_)
+        return;
+
+    button_->setState(ClipWidgetButton::S_ON);
+}
+
+void ClipWidget::setStopped()
+{
+    if (!clip_)
+        return;
+
+    button_->setState(ClipWidgetButton::S_OFF);
 }
 
 
