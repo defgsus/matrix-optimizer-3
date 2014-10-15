@@ -31,6 +31,9 @@ public:
 
     bool isEmpty() const { return s_.empty(); }
 
+    /** Returns the number of selected items */
+    uint size() const { return s_.size(); }
+
     /** Returns true if @p o is selected */
     bool isSelected(T o) const
     {
@@ -44,6 +47,9 @@ public:
 
     /** Selects the object */
     void select(T o) { s_.insert(o); }
+
+    /** Remove the selection for the object */
+    void unselect(T o) { auto i = s_.find(o); if (i != s_.end()) s_.erase(i); }
 
     /** Flips selected state */
     void flip(T o)

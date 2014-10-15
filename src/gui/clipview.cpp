@@ -13,6 +13,7 @@
 #include <QScrollBar>
 #include <QMenu>
 #include <QAction>
+#include <QClipboard>
 
 #include "clipview.h"
 #include "widget/clipwidget.h"
@@ -22,8 +23,10 @@
 #include "object/objectfactory.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "io/application.h"
 #include "util/objectmenu.h"
 #include "model/objecttreemodel.h"
+#include "model/objecttreemimedata.h"
 
 namespace MO {
 namespace GUI {
@@ -167,14 +170,20 @@ void ClipView::setClipContainer(ClipContainer * con)
 
 void ClipView::createClipWidgets_()
 {
-    // remove previous
+    // clear everything that has pointers to objects
+    widgetMap_.clear();
+    selection_.clear();
+    goalSelection_.clear();
+    curClip_ = 0;
+    dragWidget_ = goalWidget_ = 0;
+
+    // remove previous widgets
     for (auto w : clipWidgets_)
     {
-        w->setVisible(false);
+        w->setVisible(false); // save layout from additional work
         w->deleteLater();
     }
     clipWidgets_.clear();
-    widgetMap_.clear();
 
     if (!clipCon_)
     {
@@ -264,8 +273,20 @@ void ClipView::updateClipWidget_(uint x, uint y)
     Clip * clip = clipCon_->clip(x, y);
     ClipWidget * w = clipWidget_(x, y);
 
-    if (w && clip != w->clip())
+    if (!w)
+    {
+        MO_WARNING("ClipView::updateClipWidget_(" << x << ", " << y << ") "
+                   "no ClipWidget at this position");
+        return;
+    }
+
+    // update clip in clipwidget
+    if (clip != w->clip())
         w->setClip(clip);
+
+    // update widgetmap
+    if (clip && !widgetMap_.contains(clip))
+        widgetMap_.insert(clip, w);
 }
 
 void ClipView::removeObject(const Object *o)
@@ -322,45 +343,52 @@ void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifi
     // left-click
     if (b & Qt::LeftButton)
     {
-        // add-sub select
-        if (mod & Qt::ControlModifier)
-        {
-            selection_.flip(w);
-            w->update();
-        }
-        // range select
-        else if (mod & Qt::ShiftModifier)
-        {
-            const uint
-                    mix = std::min(selStartX_, curX_),
-                    max = std::max(selStartX_, curX_),
-                    miy = std::min(selStartY_, curY_),
-                    may = std::max(selStartY_, curY_);
-            clearSelection_();
-            for (uint y=miy; y<=may; ++y)
-            for (uint x=mix; x<=max; ++x)
-            {
-                select_(clipWidget_(x, y));
-            }
-        }
-        // simple select
-        else
-        {
-            if (!selection_.isSelected(w))
-            {
-                clearSelection_();
-                select_(w);
-                selStartX_ = curX_;
-                selStartY_ = curY_;
-            }
-        }
+        clickSelect_(w, mod);
 
         dragWidget_ = w;
     }
     // right-click
     else if (b & Qt::RightButton)
     {
+        clickSelect_(w, mod);
+
         openPopup_();
+    }
+}
+
+void ClipView::clickSelect_(ClipWidget *w, Qt::KeyboardModifiers mod)
+{
+    // add-sub select
+    if (mod & Qt::ControlModifier)
+    {
+        selection_.flip(w);
+        w->update();
+    }
+    // range select
+    else if (mod & Qt::ShiftModifier)
+    {
+        const uint
+                mix = std::min(selStartX_, curX_),
+                max = std::max(selStartX_, curX_),
+                miy = std::min(selStartY_, curY_),
+                may = std::max(selStartY_, curY_);
+        clearSelection_();
+        for (uint y=miy; y<=may; ++y)
+        for (uint x=mix; x<=max; ++x)
+        {
+            select_(clipWidget_(x, y));
+        }
+    }
+    // simple select
+    else
+    {
+        if (!selection_.isSelected(w))
+        {
+            clearSelection_();
+            select_(w);
+            selStartX_ = curX_;
+            selStartY_ = curY_;
+        }
     }
 }
 
@@ -425,6 +453,59 @@ void ClipView::onReleased_(ClipWidget * w, Qt::MouseButtons, Qt::KeyboardModifie
 
     if (dx != 0 || dy != 0)
         moveSelection_(dx, dy);
+}
+
+void ClipView::onButtonClicked_(ClipWidget * w)
+{
+    if (!clipCon_)
+        return;
+
+    // get the current scene time
+    Double gtime = 0;
+    if (Scene * scene = clipCon_->sceneObject())
+    {
+        gtime = scene->sceneTime();
+    }
+
+    switch (w->type())
+    {
+        case ClipWidget::T_CLIP:
+            if (w->clip())
+                clipCon_->triggerClip(w->clip(), gtime);
+        break;
+
+        case ClipWidget::T_ROW:
+            clipCon_->triggerRow(w->posY(), gtime);
+        break;
+
+        case ClipWidget::T_COLUMN:
+            clipCon_->triggerStopColumn(w->posX(), gtime);
+        break;
+    }
+}
+
+void ClipView::onClipTriggered_(Clip * clip)
+{
+    if (ClipWidget * w = widgetForClip_(clip))
+        w->setTriggered();
+}
+
+void ClipView::onClipStopTriggered_(Clip * clip)
+{
+    if (ClipWidget * w = widgetForClip_(clip))
+        w->setStopTriggered();
+}
+
+void ClipView::onClipStarted_(Clip * clip)
+{
+    if (ClipWidget * w = widgetForClip_(clip))
+        w->setStarted();
+}
+
+void ClipView::onClipStopped_(Clip * clip)
+{
+    if (ClipWidget * w = widgetForClip_(clip))
+        w->setStopped();
 }
 
 void ClipView::moveSelection_(int dx, int dy)
@@ -568,6 +649,8 @@ void ClipView::openPopup_()
         return;
     }
 
+    ClipWidget * curWidget = widgetForClip_(curClip_);
+
     QMenu * menu = new QMenu(this);
     connect(menu, SIGNAL(triggered(QAction*)), menu, SLOT(deleteLater()));
 
@@ -586,6 +669,25 @@ void ClipView::openPopup_()
             if (!model->addObject(clipCon_, clip))
                 delete clip;
         });
+
+        // from clipboard actions
+        if (ObjectTreeMimeData::isObjectTypeInClipboard(Object::T_CLIP))
+        {
+            const bool plural = ObjectTreeMimeData::numObjectsInClipboard() > 1;
+
+            // paste clip
+            menu->addAction(a = new QAction(plural ? tr("Paste clips") : tr("Paste clip"), menu));
+            a->setShortcut(Qt::CTRL + Qt::Key_V);
+            connect(a, &QAction::triggered, [=]()
+            {
+                QList<Object*> list =
+                static_cast<const ObjectTreeMimeData*>(
+                        application->clipboard()->mimeData())->getObjectTrees();
+                if (list.empty())
+                    return;
+                pasteClips_(list, curX_, curY_);
+            });
+        }
     }
 
     // ---- clip actions ---
@@ -593,7 +695,7 @@ void ClipView::openPopup_()
     if (curClip_)
     {
         // add new sequence
-        menu->addAction(a = new QAction(tr("Add object"), menu));
+        menu->addAction(a = new QAction(tr("Add object to clip"), menu));
         QMenu * sub = ObjectMenu::createObjectMenu(Object::TG_SEQUENCE, menu);
         a->setMenu(sub);
         connect(sub, &QMenu::triggered, [=](QAction * a)
@@ -604,16 +706,94 @@ void ClipView::openPopup_()
                 delete o;
         });
 
-
         menu->addSeparator();
 
-        // delete clip
-        menu->addAction(a = new QAction(tr("Delete clip"), menu));
-        connect(a, &QAction::triggered, [=]()
+        // single clip actions
+        if (selection_.size() < 2)
         {
-            const QModelIndex idx = model->indexForObject(curClip_);
-            model->deleteObject(idx);
-        });
+            // copy clip
+            menu->addAction(a = new QAction(tr("Copy clip"), menu));
+            a->setShortcut(Qt::CTRL + Qt::Key_C);
+            connect(a, &QAction::triggered, [=]()
+            {
+                auto data = new ObjectTreeMimeData();
+                data->storeObjectTree(curClip_);
+                application->clipboard()->setMimeData(data);
+            });
+
+            // cut clip
+            menu->addAction(a = new QAction(tr("Cut clip"), menu));
+            a->setShortcut(Qt::CTRL + Qt::Key_X);
+            connect(a, &QAction::triggered, [=]()
+            {
+                auto data = new ObjectTreeMimeData();
+                data->storeObjectTree(curClip_);
+                application->clipboard()->setMimeData(data);
+                const QModelIndex idx = model->indexForObject(curClip_);
+                model->deleteObject(idx);
+                selection_.unselect(curWidget);
+            });
+
+            // delete clip
+            menu->addAction(a = new QAction(tr("Delete clip"), menu));
+            connect(a, &QAction::triggered, [=]()
+            {
+                const QModelIndex idx = model->indexForObject(curClip_);
+                model->deleteObject(idx);
+                selection_.unselect(curWidget);
+            });
+        }
+        // multi clip actions
+        else
+        {
+            // copy clips
+            menu->addAction(a = new QAction(tr("Copy clips"), menu));
+            a->setShortcut(Qt::CTRL + Qt::Key_C);
+            connect(a, &QAction::triggered, [=]()
+            {
+                auto data = new ObjectTreeMimeData();
+                QList<Object*> list;
+                for (auto w : selection_)
+                    if (w->clip())
+                        list << w->clip();
+                data->storeObjectTrees(list);
+                application->clipboard()->setMimeData(data);
+            });
+
+            // cut clips
+            menu->addAction(a = new QAction(tr("Cut clips"), menu));
+            a->setShortcut(Qt::CTRL + Qt::Key_X);
+            connect(a, &QAction::triggered, [=]()
+            {
+                auto data = new ObjectTreeMimeData();
+                QList<Object*> list;
+                for (auto w : selection_)
+                    if (w->clip())
+                        list << w->clip();
+                data->storeObjectTrees(list);
+                application->clipboard()->setMimeData(data);
+                for (auto w : selection_)
+                if (w->clip())
+                {
+                    const QModelIndex idx = model->indexForObject(w->clip());
+                    model->deleteObject(idx);
+                }
+                clearSelection_();
+            });
+
+            // delete clip
+            menu->addAction(a = new QAction(tr("Delete clip"), menu));
+            connect(a, &QAction::triggered, [=]()
+            {
+                for (auto w : selection_)
+                if (w->clip())
+                {
+                    const QModelIndex idx = model->indexForObject(w->clip());
+                    model->deleteObject(idx);
+                }
+                clearSelection_();
+            });
+        }
     }
 
     if (menu->isEmpty())
@@ -626,59 +806,62 @@ void ClipView::openPopup_()
 
 }
 
-
-void ClipView::onButtonClicked_(ClipWidget * w)
+void ClipView::pasteClips_(const QList<Object*>& list, uint x, uint y)
 {
-    if (!clipCon_)
-        return;
+    uint minx = -1, miny = -1; // very large
 
-    // get the current scene time
-    Double gtime = 0;
-    if (Scene * scene = clipCon_->sceneObject())
+    // find all clips and the object list
+    // and get minimum row and column
+    QList<Clip*> clips;
+    for (auto obj : list)
     {
-        gtime = scene->sceneTime();
+        if (Clip * clip = qobject_cast<Clip*>(obj))
+        {
+            clips << clip;
+            minx = std::min(minx, clip->column());
+            miny = std::min(miny, clip->row());
+        }
+        else
+            delete obj;
     }
 
-    switch (w->type())
+    MO_ASSERT(clipCon_ && clipCon_->sceneObject() &&
+              clipCon_->sceneObject()->model(), "");
+
+    auto model = clipCon_->sceneObject()->model();
+
+    // paste clips
+    bool resized = false;
+    for (auto & clip : clips)
     {
-        case ClipWidget::T_CLIP:
-            if (w->clip())
-                clipCon_->triggerClip(w->clip(), gtime);
-        break;
+        uint col = x + clip->column() - minx,
+             row = y + clip->row() - miny;
+        bool lresized;
+        clipCon_->findNextFreeSlot(col, row, true, &lresized);
+        resized |= lresized;
+        clip->setPosition(col, row);
+        if (!model->addObject(clipCon_, clip))
+        {
+            delete clip;
+            clip = 0;
+        }
+    }
 
-        case ClipWidget::T_ROW:
-            clipCon_->triggerRow(w->posY(), gtime);
-        break;
+    // update everything on resize
+    if (resized)
+        createClipWidgets_();
 
-        case ClipWidget::T_COLUMN:
-            clipCon_->triggerStopColumn(w->posX(), gtime);
-        break;
+    // select
+    for (auto clip : clips)
+    if (clip)
+    {
+        ClipWidget * w = widgetForClip_(clip);
+        if (w)
+            select_(w);
     }
 }
 
-void ClipView::onClipTriggered_(Clip * clip)
-{
-    if (ClipWidget * w = widgetForClip_(clip))
-        w->setTriggered();
-}
 
-void ClipView::onClipStopTriggered_(Clip * clip)
-{
-    if (ClipWidget * w = widgetForClip_(clip))
-        w->setStopTriggered();
-}
-
-void ClipView::onClipStarted_(Clip * clip)
-{
-    if (ClipWidget * w = widgetForClip_(clip))
-        w->setStarted();
-}
-
-void ClipView::onClipStopped_(Clip * clip)
-{
-    if (ClipWidget * w = widgetForClip_(clip))
-        w->setStopped();
-}
 
 
 } // namespace GUI

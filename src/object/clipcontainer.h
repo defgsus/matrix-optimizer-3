@@ -44,8 +44,9 @@ public:
     QString rowName(uint index) const;
 
     /** Adjusts @p column and @p row to point at the next free position.
-        Returns true when a free slot was found. */
-    bool findNextFreeSlot(uint & column, uint & row, bool resizeIfNecessary = false);
+        Returns true when a free slot was found.
+        Returns true in @p resized if the container had to be resized. */
+    bool findNextFreeSlot(uint & column, uint & row, bool resizeIfNecessary = false, bool * resized = 0);
 
     // -------------- setter ------------------
 
@@ -68,7 +69,8 @@ public:
     /** Returns the one clip that is playing on @p column, or NULL */
     Clip * playingClip(uint column) const;
 
-    /** Queues a clip for playing at global scene time @p gtime */
+    /** Queues a clip for playing at global scene time @p gtime.
+        Another playing clip on the same column is triggered for stopping. */
     void triggerClip(Clip * clip, Double gtime);
 
     /** Queues a clip for stopping at global scene time @p gtime */

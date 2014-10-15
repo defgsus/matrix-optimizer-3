@@ -29,15 +29,25 @@ public:
     static const QString numMimeType;
     static const QString orderMimeType;
 
+    // ----------- info ----------------
+
+    /** Returns true if at least one object is in the clipboard */
+    static bool isObjectInClipboard();
+    /** Returns the number of objects in the clipboard, or 0 */
+    static int numObjectsInClipboard();
+    /** Returns true if @p typeFlags matches the Object::Type of the
+        first Object in clipboard */
+    static bool isObjectTypeInClipboard(int typeFlags);
+
     virtual QStringList formats() const;
 
     // ------------ store --------------
 
-    /** Store a single tree */
+    /** Store a single tree/branch */
     void storeObjectTree(const Object * o);
-    /** Store multiple trees */
+    /** Store multiple trees/branches */
     void storeObjectTrees(const QList<const Object *> &o);
-    /** Store multiple trees */
+    /** Store multiple trees/branches */
     void storeObjectTrees(const QList<Object *> &o);
     /** Store an int list */
     void storeOrder(const QList<int>& order);
@@ -54,9 +64,9 @@ public:
     QList<int> getOrder() const;
     bool hasOrder() const;
 
-    /** Restore the first tree */
+    /** Restore the first tree/branch */
     Object * getObjectTree() const;
-    /** Restore all trees */
+    /** Restore all trees/branches */
     QList<Object*> getObjectTrees() const;
 
     // ------ for drag/drop -------------

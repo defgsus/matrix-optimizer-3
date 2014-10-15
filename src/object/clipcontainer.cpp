@@ -172,8 +172,11 @@ Clip * ClipContainer::playingClip(uint column) const
 }
 
 
-bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNecessary)
+bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNecessary, bool* resized)
 {
+    if (resized)
+        *resized = false;
+
     column = std::min(column, cols_-1);
     row = std::min(row, rows_-1);
 
@@ -227,6 +230,9 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
     column = ocolumn1;
     row = rows_ - 1;
 
+    if (resized)
+        *resized = true;
+
     return true;
 }
 
@@ -236,6 +242,10 @@ void ClipContainer::triggerClip(Clip *clip, Double gtime)
     MO_DEBUG_CLIP("ClipContainer::triggerClip(" << clip << ", " << gtime << ")");
 
     emit clipTriggered(clip);
+
+    if (Clip * c = playingClip(clip->column()))
+        if (c != clip)
+            triggerStopClip(c, gtime);
 
     // XXX
     clip->startClip(gtime);

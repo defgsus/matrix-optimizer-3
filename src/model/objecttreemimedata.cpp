@@ -8,13 +8,14 @@
     <p>created 6/28/2014</p>
 */
 
-//#include <QDebug>
 #include <QStringList>
+#include <QClipboard>
 
 #include "objecttreemimedata.h"
 #include "object/object.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/application.h"
 
 namespace MO {
 
@@ -35,7 +36,32 @@ QStringList ObjectTreeMimeData::formats() const
     return QStringList() << objectMimeType;
 }
 
+bool ObjectTreeMimeData::isObjectInClipboard()
+{
+    return application->clipboard()->mimeData()->formats()
+            .contains(objectMimeType);
+}
 
+int ObjectTreeMimeData::numObjectsInClipboard()
+{
+    if (!isObjectInClipboard())
+        return 0;
+
+    return static_cast<const ObjectTreeMimeData*>(
+                application->clipboard()->mimeData())->getNumObjects();
+}
+
+bool ObjectTreeMimeData::isObjectTypeInClipboard(int typeFlags)
+{
+    if (!application->clipboard()->mimeData()->formats()
+                .contains(objectMimeType))
+        return false;
+
+    Object::Type type = static_cast<const ObjectTreeMimeData*>(
+                application->clipboard()->mimeData())->getObjectType();
+
+    return type & typeFlags;
+}
 
 void ObjectTreeMimeData::storeObjectTree(const Object * obj)
 {

@@ -79,9 +79,11 @@ private:
 
     void clearSelection_();
     void select_(ClipWidget * w);
+    void clickSelect_(ClipWidget * w, Qt::KeyboardModifiers);
 
     void moveSelection_(int dx, int dy);
     void moveClip_(ClipWidget *, uint newx, uint newy);
+    void pasteClips_(const QList<Object*>&, uint x, uint y);
 
     ClipWidget * widgetForClip_(const Clip *);
     ClipWidget * clipWidget_(uint x, uint y);
