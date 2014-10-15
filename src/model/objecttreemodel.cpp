@@ -440,6 +440,7 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                 // .. but not for tracks on sequences
                 if (copy->isSequence() && obj->isTrack())
                     reusemod = false;
+
                 if (reusemod)
                     keepmods.addOriginalObject(copy);
 

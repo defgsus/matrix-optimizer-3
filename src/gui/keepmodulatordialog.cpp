@@ -65,9 +65,9 @@ void KeepModulators::addOriginalObject(Object * o)
         {
             // keep an entry with the original modulator id
             Private_ p;
-            p.oldId = obj->idName();
-            p.param = i.value();
-            p.object = obj;
+            p.oldId = obj->idName(); // modulator id
+            p.object = obj; // modulator
+            p.param = i.value(); // modulation goal (always parameter)
 
             p_.insertMulti(obj, p);
 
