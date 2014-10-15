@@ -35,6 +35,7 @@
 #include "io/application.h"
 #include "tool/enumnames.h"
 #include "util/scenesettings.h"
+#include "util/objectmenu.h"
 
 namespace MO {
 namespace GUI {
@@ -969,8 +970,8 @@ void TrackView::createEditActions_()
     for (auto a : editActions_)
         if (!actions().contains(a))
         {
-            if (a->menu())
-                a->menu()->deleteLater();
+//            if (a->menu())
+//                a->menu()->deleteLater();
             a->deleteLater();
         }
 
@@ -984,9 +985,26 @@ void TrackView::createEditActions_()
     if (hoverWidget_ && selectedWidgets_.size() < 2)
     {
         Sequence * seq = hoverWidget_->sequence();
+        // local copy of hoverWidget_
+        // ('cause it goes away in lambdas)
+        SequenceWidget * widget = hoverWidget_;
 
         // title
         editActions_.addTitle(seq->name(), this);
+
+        editActions_.addSeparator(this);
+
+        // set color
+        a = editActions_.addAction(tr("Change color"), this);
+        a->setStatusTip(tr("Sets a custom color for the sequence"));
+        QMenu * sub = ObjectMenu::createColorMenu(this);
+        a->setMenu(sub);
+        connect(sub, &QMenu::triggered, [this, seq, widget](QAction*a)
+        {
+            QColor col = a->data().value<QColor>();
+            seq->setColor(col);
+            widget->updateColors();
+        });
 
         editActions_.addSeparator(this);
 

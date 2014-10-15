@@ -54,6 +54,8 @@ public slots:
     void updateValueRange();
     void updateName();
 
+    void updateColors();
+
 protected:
     void resizeEvent(QResizeEvent *);
     void paintEvent(QPaintEvent *);

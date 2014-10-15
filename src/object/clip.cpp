@@ -24,7 +24,8 @@ Clip::Clip(QObject *parent)
       timeStarted_  (0),
       running_      (false),
       column_       (0),
-      row_          (0)
+      row_          (0),
+      color_        (QColor(50,100,50))
 {
     setName("Clip");
 }
@@ -33,18 +34,24 @@ void Clip::serialize(IO::DataStream &io) const
 {
     Object::serialize(io);
 
-    io.writeHeader("clip", 1);
+    io.writeHeader("clip", 2);
 
     io << column_ << row_;
+
+    // v2
+    io << color_;
 }
 
 void Clip::deserialize(IO::DataStream &io)
 {
     Object::deserialize(io);
 
-    io.readHeader("clip", 1);
+    const int ver = io.readHeader("clip", 2);
 
     io >> column_ >> row_;
+
+    if (ver >= 2)
+        io >> color_;
 }
 
 void Clip::createParameters()

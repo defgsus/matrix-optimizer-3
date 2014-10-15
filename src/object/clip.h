@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_CLIP_H
 #define MOSRC_OBJECT_CLIP_H
 
+#include <QColor>
+
 #include "object.h"
 
 namespace MO {
@@ -49,6 +51,8 @@ public:
     uint column() const { return column_; }
     uint row() const { return row_; }
 
+    const QColor color() const { return color_; }
+
     // -------------- setter -------------------
 
     /** Sets the position in the ClipContainer.
@@ -57,6 +61,8 @@ public:
     void setPosition(uint col, uint row) { column_ = col; row_ = row; }
     void setRow(uint row) { setPosition(column(), row); }
     void setColumn(uint col) { setPosition(col, row()); }
+
+    void setColor(const QColor& color) { color_ = color; }
 
     // -------------- trigger ------------------
 
@@ -90,6 +96,8 @@ private:
     bool running_;
 
     uint column_, row_;
+
+    QColor color_;
 };
 
 

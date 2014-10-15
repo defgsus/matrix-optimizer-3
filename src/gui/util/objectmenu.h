@@ -43,6 +43,10 @@ public:
         @p enable */
     static void setEnabled(QMenu * menu, const QStringList& ids, bool enable);
 
+    /** Creates a menu to select a color.
+        The QColor is stored in QAction::data() */
+    static QMenu * createColorMenu(QWidget * parent = 0);
+
 private:
 
     static void createObjectMenuRecursive_(QMenu *, Object * root, int objectTypeFlags);

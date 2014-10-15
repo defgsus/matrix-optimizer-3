@@ -19,7 +19,8 @@ namespace MO {
 Sequence::Sequence(QObject *parent) :
     Object          (parent),
     parentTrack_    (0),
-    parentClip_     (0)
+    parentClip_     (0),
+    color_          (QColor(80, 120, 80))
 {
     setName("Sequence");
 }
@@ -28,18 +29,23 @@ void Sequence::serialize(IO::DataStream &io) const
 {
     Object::serialize(io);
 
-    io.writeHeader("seq", 2);
+    io.writeHeader("seq", 3);
 
+    // v3
+    io << color_;
 }
 
 void Sequence::deserialize(IO::DataStream &io)
 {
     Object::deserialize(io);
 
-    const int ver = io.readHeader("seq", 2);
+    const int ver = io.readHeader("seq", 3);
 
     if (ver <= 1)
         MO_IO_ERROR(VERSION_MISMATCH, "Can't read sequence format prior to version 2");
+
+    if (ver >= 3)
+        io >> color_;
 }
 
 QString Sequence::infoName() const

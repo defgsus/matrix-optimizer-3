@@ -284,6 +284,9 @@ void ClipView::updateClipWidget_(uint x, uint y)
     if (clip != w->clip())
         w->setClip(clip);
 
+    if (clip->color() != w->clipColor())
+        w->setClipColor(clip->color());
+
     // update widgetmap
     if (clip && !widgetMap_.contains(clip))
         widgetMap_.insert(clip, w);
@@ -704,6 +707,19 @@ void ClipView::openPopup_()
             MO_ASSERT(o, "ClipView: Could not create object class '" << a->data().toString() << "'");
             if (!model->addObject(curClip_, o))
                 delete o;
+        });
+
+        menu->addSeparator();
+
+        // set color
+        menu->addAction(a = new QAction(tr("Change clip color"), menu));
+        sub = ObjectMenu::createColorMenu(menu);
+        a->setMenu(sub);
+        connect(sub, &QMenu::triggered, [=](QAction * a)
+        {
+            QColor c = a->data().value<QColor>();
+            curClip_->setColor(c);
+            updateClip(curClip_);
         });
 
         menu->addSeparator();

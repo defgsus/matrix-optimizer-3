@@ -12,6 +12,7 @@
 #define MOSRC_OBJECT_SEQUENCE_H
 
 #include <QList>
+#include <QColor>
 
 #include "object.h"
 #include "math/functions.h"
@@ -45,6 +46,8 @@ public:
     Clip * parentClip() const;
 
     // -------------- getter -------------------
+
+    const QColor& color() const { return color_; }
 
     static Double minimumSpeed() { return 0.001; }
     static Double minimumLength() { return 0.005; }
@@ -88,6 +91,8 @@ public:
     Double speed() const { return p_speed_->baseValue(); }
 
     // --------------- setter ---------------------
+
+    void setColor(const QColor& color) { color_ = color; }
 
     void setStart(Double t)
         { p_start_->setValue(t); }
@@ -148,6 +153,8 @@ private:
     /** The track, this sequence is on */
     Track* parentTrack_;
     Clip * parentClip_;
+
+    QColor color_;
 };
 
 

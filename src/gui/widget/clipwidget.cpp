@@ -44,7 +44,10 @@ ClipWidget::ClipWidget(Type type, Clip * clip, ClipView * parent)
     });
 
     if (clip_)
+    {
         name_ = clip_->name();
+        clipColor_ = clip_->color();
+    }
 
     updateColors_();
 }
@@ -54,12 +57,22 @@ void ClipWidget::setClip(Clip * c)
     clip_ = c;
 
     if (clip_)
+    {
         name_ = clip_->name();
+        clipColor_ = clip_->color();
+    }
     else
         name_.clear();
 
     updateColors_();
 
+    update();
+}
+
+void ClipWidget::setClipColor(const QColor &color)
+{
+    clipColor_ = color;
+    updateColors_();
     update();
 }
 
@@ -94,9 +107,11 @@ void ClipWidget::updateColors_()
 
         case T_CLIP:
             penOutline_ = QPen(QColor(40,40,40));
-            brushBody_ = clip_? QBrush(QColor(50,80,60))
+            brushBody_ = clip_? QBrush(clipColor_)
                               : QBrush(QColor(20,20,20));
-            penText_ = clip_? QPen(Qt::black) : QPen(Qt::white);
+            penText_ = brushBody_.color().lightness() > 128
+                                ? QPen(Qt::black)
+                                : QPen(Qt::white);
         break;
     }
 
@@ -106,7 +121,7 @@ void ClipWidget::updateColors_()
     brushBodySH_.setColor(brushBodyS_.color().lighter(120));
 
     penOutlineS_ = penOutline_;
-    penOutlineS_.setColor(penOutline_.color().lighter(200));
+    penOutlineS_.setColor(QColor(200,200,200));
     if (clip_)
         penOutlineS_.setWidth(penOutline_.width()+1);
 }

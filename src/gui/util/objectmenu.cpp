@@ -11,6 +11,8 @@
 #include <QIcon>
 #include <QMenu>
 #include <QAction>
+#include <QPixmap>
+#include <QPainter>
 
 #include "objectmenu.h"
 #include "object/object.h"
@@ -169,6 +171,81 @@ void ObjectMenu::setEnabled(QMenu *menu, const QStringList& ids, bool enable)
     }
 }
 
+
+
+QMenu * ObjectMenu::createColorMenu(QWidget *parent)
+{
+    QMenu * menu = new QMenu(parent);
+
+    // --- create color list ---
+
+    static QList<QColor> base_colors;
+    if (base_colors.isEmpty())
+    {
+        base_colors
+                << QColor(255, 255, 255);
+
+        for (int i=0; i < 360; i += 30)
+            base_colors
+                << QColor::fromHsv(i, 255, 128);
+    }
+
+    // create dark-bright gradient of base_colors
+    static QList<QList<QColor>> colors;
+    if (colors.empty())
+    {
+        for (auto & c : base_colors)
+        {
+            QList<QColor> cols;
+
+            const int brightest = (c == base_colors.front())
+                    ? 255 : 235;
+            for (int i=brightest; i>=20; i -= 20)
+                cols << QColor::fromHsl(c.hue(), c.saturation(), i);
+
+            colors << cols;
+        }
+    }
+
+    // --- create icon lists ---
+
+    static QList<QList<QIcon>> icons;
+    if (icons.isEmpty())
+    {
+        for (auto & cols : colors)
+        {
+            QList<QIcon> list;
+
+            for (auto & col : cols)
+            {
+                QPixmap pixmap(32, 32);
+                QPainter painter(&pixmap);
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(QBrush(col));
+                painter.drawRect(pixmap.rect());
+
+                list << QIcon(pixmap);
+            }
+            icons << list;
+        }
+    }
+
+    for (int i=0; i<icons.size(); ++i)
+    {
+        QAction * a = new QAction(icons[i][icons[i].size()/2], "", menu);
+        QMenu * sub = new QMenu(menu);
+        a->setMenu(sub);
+        menu->addAction(a);
+        for (int j=0; j<icons[i].size(); ++j)
+        {
+            QAction * a = new QAction(icons[i][j], "", sub);
+            a->setData(colors[i][j]);
+            sub->addAction(a);
+        }
+    }
+
+    return menu;
+}
 
 
 } // namespace GUI
