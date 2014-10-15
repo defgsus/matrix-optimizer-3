@@ -63,6 +63,10 @@ public:
         @note Use canBeModulator() to see if the object fits the requirements. */
     void setModulator(Object * object);
 
+    /** Reimplement this to copy addition parameter settings.
+        This does not include the id or something like that. */
+    virtual void copySettingsFrom(const Modulator * other) = 0;
+
 protected:
 
     /** Called when the modulating object has been set. */

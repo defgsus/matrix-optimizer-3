@@ -75,6 +75,11 @@ public:
     /** Gets the needed files of ALL objects */
     virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 
+    // ------------- modulators ----------------
+
+    /** Returns a list of all objects that currently serve as modulator */
+    QSet<Object*> getAllModulators() const;
+
     // ------------- open gl -------------------
 
     // XXX These can be separate per thread!
@@ -186,7 +191,10 @@ public slots:
 
     // --------------- tree --------------------
 
-    // these are all locked
+    /** @defgroup scene_lock threadsafe Scene functions
+     *  These functions are all locked, so it's safe to call them anywhere.
+     *  @{
+     */
 
     void addObject(Object * parent, Object * newChild, int insert_index = -1);
     void deleteObject(Object * object);
@@ -237,6 +245,8 @@ public slots:
 
     /** Performs one audio block calculation of the whole scene. */
     void calculateAudioBlock(SamplePos samplePos, uint thread);
+
+    /** @} */
 
     /** Returns a pointer to the audio block previously calculated by calculateAudioBlock().
         The format in the returned pointer is [microphone][buffersize]. */

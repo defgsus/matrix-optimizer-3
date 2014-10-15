@@ -239,7 +239,7 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         // font
         if (role == Qt::FontRole)
         {
-            bool bold = !(obj->type() & Object::TG_MODULATION);
+            bool bold = !(obj->type() & Object::TG_MODULATOR);
             bool italic = !(obj->activeAtAll());
             if (bold && italic)
                 return boldItalicFont_;

@@ -40,6 +40,13 @@ public:
     const QString& name() const { return name_; }
     const QString& statusTip() const { return statusTip_; }
 
+    /** Returns a string in the form of 'RealObject/SubObject.parameterId'.
+        Goes up the branch until the first Object::TG_REAL_OBJECT */
+    QString infoName() const;
+    /** Returns a string in the form of 'RealObjectId/SubObjectId.parameterId'.
+        Goes up the branch until the first Object::TG_REAL_OBJECT */
+    QString infoIdName() const;
+
     bool isEditable() const { return isEditable_; }
     bool isModulateable() const { return isModulateable_; }
 

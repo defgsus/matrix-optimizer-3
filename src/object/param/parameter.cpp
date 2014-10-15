@@ -76,6 +76,42 @@ void Parameter::deserialize(IO::DataStream &io)
     }
 }
 
+QString Parameter::infoName() const
+{
+    if (!object_)
+        return name_;
+
+    QString s = object_->name() + "." + name_;
+    Object * o = object_;
+    while (o && !(o->type() & Object::TG_REAL_OBJECT))
+    {
+        o = o->parentObject();
+
+        if (o)
+            s.prepend(o->name() + "/");
+    }
+
+    return s;
+}
+
+QString Parameter::infoIdName() const
+{
+    if (!object_)
+        return idName_;
+
+    QString s = object_->idName() + "." + idName_;
+    Object * o = object_;
+    while (o && !(o->type() & Object::TG_REAL_OBJECT))
+    {
+        o = o->parentObject();
+
+        if (o)
+            s.prepend(o->idName() + "/");
+    }
+
+    return s;
+}
+
 void Parameter::setVisible(bool visible)
 {
     if (visible != isVisible_)

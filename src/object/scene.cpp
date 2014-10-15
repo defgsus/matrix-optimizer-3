@@ -233,6 +233,20 @@ void Scene::getNeededFiles_(Object * o, IO::FileList & files)
         getNeededFiles_(c, files);
 }
 
+QSet<Object*> Scene::getAllModulators() const
+{
+    QSet<Object*> set;
+
+    for (auto o : allObjects_)
+    {
+        QList<Object*> list = o->getModulatingObjects();
+        for (auto mod : list)
+            set.insert(mod);
+    }
+
+    return set;
+}
+
 // ----------------------- tree ------------------------------
 
 void Scene::addObject(Object *parent, Object *newChild, int insert_index)

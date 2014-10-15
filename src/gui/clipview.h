@@ -85,6 +85,8 @@ private:
     void moveSelection_(int dx, int dy);
     void moveClip_(ClipWidget *, uint newx, uint newy);
     void pasteClips_(const QList<Object*>&, uint x, uint y);
+    void pasteSubObjects_(const QList<Object*>&, Clip * parent);
+    void pasteClipsInClip_(const QList<Object*>&, Clip * parent);
 
     ClipWidget * widgetForClip_(const Clip *);
     ClipWidget * clipWidget_(uint x, uint y);

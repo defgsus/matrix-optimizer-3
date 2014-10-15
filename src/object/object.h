@@ -120,7 +120,8 @@ public:
         TG_FLOAT            = T_TRACK_FLOAT | T_SEQUENCE_FLOAT,
 
         TG_MODULATOR_OBJECT = T_MODULATOR_OBJECT_FLOAT,
-        TG_MODULATION       = TG_MODULATOR_OBJECT | TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP,
+        /** All objects that can server as a modulator source */
+        TG_MODULATOR        = TG_MODULATOR_OBJECT | TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP,
 
         TG_TRANSFORMATION   = T_TRANSFORMATION | T_TRANSFORMATION_MIX,
 
@@ -425,6 +426,11 @@ public:
 
     /** Returns a list of objects that modulate this object. */
     virtual QList<Object*> getModulatingObjects() const;
+
+    /** Returns the list of all Parameters that are modulated.
+        Each entry is a pair of the Parameter and the modulating object.
+        Multiple modulations on the same Parameter have multiply entries in the list. */
+    virtual QList<QPair<Parameter*, Object*>> getModulationPairs() const;
 
     /** Returns a list of objects that will modulate this object
         when it gets added to the scene. */

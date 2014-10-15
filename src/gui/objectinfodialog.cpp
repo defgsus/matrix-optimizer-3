@@ -66,9 +66,22 @@ void ObjectInfoDialog::setObject(Object * o)
 
     std::stringstream s, s1;
     s << "<html><b>" << o->infoName() << "</b><br/>"
-      << o->idNamePath() << "/" << o->idName() << "<br/>";
+      << o->idNamePath() << "<br/>";
+
+    // ----- children -----
 
     s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>";
+
+    // ----- modulators -----
+
+    auto mods = o->getModulatingObjects();
+    if (!mods.isEmpty())
+    {
+        s << "<p>modulators:";
+        for (auto mod : mods)
+            s << "<br/>" << mod->idNamePath();
+        s << "</p>";
+    }
 
     // ----- audiosources and microphones -----
 

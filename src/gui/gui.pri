@@ -76,7 +76,8 @@ HEADERS += \
     src/gui/timelineeditdialog.h \
     src/gui/clipview.h \
     src/gui/widget/clipwidget.h \
-    src/gui/widget/clipwidgetbutton.h
+    src/gui/widget/clipwidgetbutton.h \
+    src/gui/keepmodulatordialog.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -152,4 +153,5 @@ SOURCES += \
     src/gui/timelineeditdialog.cpp \
     src/gui/clipview.cpp \
     src/gui/widget/clipwidget.cpp \
-    src/gui/widget/clipwidgetbutton.cpp
+    src/gui/widget/clipwidgetbutton.cpp \
+    src/gui/keepmodulatordialog.cpp

@@ -63,6 +63,8 @@ public:
 
     // ------------- setter ----------------
 
+    virtual void copySettingsFrom(const Modulator * other) Q_DECL_OVERRIDE;
+
     void setAmplitude(Double amp) { amplitude_ = amp; }
     void setTimeOffset(Double off) { timeOffset_ = off; }
 

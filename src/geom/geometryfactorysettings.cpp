@@ -181,12 +181,12 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
     // convert old files to new GeometryModifierChain version
     if (ver <= 7)
     {
-        QString equationX, equationY, equationZ,
-                pEquationX, pEquationY, pEquationZ;
-        bool calcNormals, invertNormals, convertToLines, tesselate,
-            normalizeVertices, removeRandomly, transformWithEquation,
-            transformPrimitivesWithEquation, calcNormalsBeforePrimitiveEquation,
-            extrude, withCoords;
+        QString equationX="x", equationY="y", equationZ="z",
+                pEquationX="x", pEquationY="y", pEquationZ="z";
+        bool calcNormals = false, invertNormals = false, convertToLines = false, tesselate = false,
+            normalizeVertices = false, removeRandomly = false, transformWithEquation = false,
+            transformPrimitivesWithEquation = false, calcNormalsBeforePrimitiveEquation = false,
+            extrude = false, withCoords = true;
         Float colorR, colorG, colorB, colorA;
         Float scale, scaleX, scaleY, scaleZ, removeProb, normalization,
             extrudeConstant, extrudeFactor;

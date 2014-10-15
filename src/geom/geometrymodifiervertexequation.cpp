@@ -49,6 +49,12 @@ void GeometryModifierVertexEquation::deserialize(IO::DataStream &io)
     {
         QString equx, equy, equz;
         io >> equx >> equy >> equz;
+        if (equx.isEmpty())
+            equx = "x";
+        if (equy.isEmpty())
+            equy = "y";
+        if (equz.isEmpty())
+            equz = "z";
         equ_ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
     }
     else

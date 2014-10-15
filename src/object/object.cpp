@@ -1561,5 +1561,20 @@ QList<Object*> Object::getFutureModulatingObjects(const Scene *scene) const
     return list;
 }
 
+QList<QPair<Parameter*, Object*>> Object::getModulationPairs() const
+{
+    QList<QPair<Parameter*, Object*>> pairs;
+
+    for (auto p : parameters())
+    {
+        const QList<Object*> list = p->getModulatingObjects();
+
+        for (auto o : list)
+            pairs.append(qMakePair(p, o));
+    }
+
+    return pairs;
+}
+
 
 } // namespace MO

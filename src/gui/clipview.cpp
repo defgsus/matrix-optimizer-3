@@ -27,6 +27,7 @@
 #include "util/objectmenu.h"
 #include "model/objecttreemodel.h"
 #include "model/objecttreemimedata.h"
+#include "keepmodulatordialog.h"
 
 namespace MO {
 namespace GUI {
@@ -707,7 +708,7 @@ void ClipView::openPopup_()
                 delete clip;
         });
 
-        // from clipboard actions
+        // clips from clipboard
         if (ObjectTreeMimeData::isObjectTypeInClipboard(Object::T_CLIP))
         {
             const bool plural = ObjectTreeMimeData::numObjectsInClipboard() > 1;
@@ -725,6 +726,28 @@ void ClipView::openPopup_()
                 pasteClips_(list, curX_, curY_);
             });
         }
+
+        // sub-objects from clipboard
+        // XXX paste into a new clip
+        /*
+        if (ObjectTreeMimeData::isObjectTypeInClipboard(Object::TG_SEQUENCE))
+        {
+            const bool plural = ObjectTreeMimeData::numObjectsInClipboard() > 1;
+
+            // paste sequences
+            menu->addAction(a = new QAction(plural ? tr("Paste sequences") : tr("Paste sequence"), menu));
+            a->setShortcut(Qt::CTRL + Qt::Key_V);
+            connect(a, &QAction::triggered, [=]()
+            {
+                QList<Object*> list =
+                static_cast<const ObjectTreeMimeData*>(
+                        application->clipboard()->mimeData())->getObjectTrees();
+                if (list.empty())
+                    return;
+                pasteSubObjects_(list, curClip_);
+            });
+        }
+        */
     }
 
     // ---- clip actions ---
@@ -769,7 +792,6 @@ void ClipView::openPopup_()
         {
             // copy clip
             menu->addAction(a = new QAction(tr("Copy clip"), menu));
-            a->setShortcut(Qt::CTRL + Qt::Key_C);
             connect(a, &QAction::triggered, [=]()
             {
                 auto data = new ObjectTreeMimeData();
@@ -779,7 +801,6 @@ void ClipView::openPopup_()
 
             // cut clip
             menu->addAction(a = new QAction(tr("Cut clip"), menu));
-            a->setShortcut(Qt::CTRL + Qt::Key_X);
             connect(a, &QAction::triggered, [=]()
             {
                 auto data = new ObjectTreeMimeData();
@@ -798,13 +819,46 @@ void ClipView::openPopup_()
                 model->deleteObject(idx);
                 selection_.unselect(curWidget);
             });
+
+            menu->addSeparator();
+
+            // paste sequences into clip
+            if (ObjectTreeMimeData::isObjectTypeInClipboard(Object::TG_SEQUENCE))
+            {
+                const bool plural = ObjectTreeMimeData::numObjectsInClipboard() > 1;
+
+                menu->addAction(a = new QAction(plural ? tr("Paste sequences") : tr("Paste sequence"), menu));
+                connect(a, &QAction::triggered, [=]()
+                {
+                    QList<Object*> list =
+                    static_cast<const ObjectTreeMimeData*>(
+                            application->clipboard()->mimeData())->getObjectTrees();
+                    if (list.empty())
+                        return;
+                    pasteSubObjects_(list, curClip_);
+                });
+            }
+
+            // paste clips into clip
+            if (ObjectTreeMimeData::isObjectTypeInClipboard(Object::T_CLIP))
+            {
+                menu->addAction(a = new QAction(tr("Paste clip contents"), menu));
+                connect(a, &QAction::triggered, [=]()
+                {
+                    QList<Object*> list =
+                    static_cast<const ObjectTreeMimeData*>(
+                            application->clipboard()->mimeData())->getObjectTrees();
+                    if (list.empty())
+                        return;
+                    pasteClipsInClip_(list, curClip_);
+                });
+            }
         }
         // multi clip actions
         else
         {
             // copy clips
             menu->addAction(a = new QAction(tr("Copy clips"), menu));
-            a->setShortcut(Qt::CTRL + Qt::Key_C);
             connect(a, &QAction::triggered, [=]()
             {
                 auto data = new ObjectTreeMimeData();
@@ -818,7 +872,6 @@ void ClipView::openPopup_()
 
             // cut clips
             menu->addAction(a = new QAction(tr("Cut clips"), menu));
-            a->setShortcut(Qt::CTRL + Qt::Key_X);
             connect(a, &QAction::triggered, [=]()
             {
                 auto data = new ObjectTreeMimeData();
@@ -838,7 +891,7 @@ void ClipView::openPopup_()
             });
 
             // delete clip
-            menu->addAction(a = new QAction(tr("Delete clip"), menu));
+            menu->addAction(a = new QAction(tr("Delete clips"), menu));
             connect(a, &QAction::triggered, [=]()
             {
                 for (auto w : selection_)
@@ -886,21 +939,34 @@ void ClipView::pasteClips_(const QList<Object*>& list, uint x, uint y)
 
     auto model = clipCon_->sceneObject()->model();
 
+    KeepModulators keepmods(clipCon_->sceneObject());
+
     // paste clips
     bool resized = false;
     for (auto & clip : clips)
     {
+        keepmods.addOriginalObject(clip);
+
+        // get new insert position
         uint col = x + clip->column() - minx,
              row = y + clip->row() - miny;
+
+        // find free slot and keep track if container resized
         bool lresized;
         clipCon_->findNextFreeSlot(col, row, true, &lresized);
         resized |= lresized;
+
+        // place at new position
         clip->setPosition(col, row);
+
         if (!model->addObject(clipCon_, clip))
         {
             delete clip;
             clip = 0;
         }
+        else
+            // store the original and the new id
+            keepmods.addNewObject(clip);
     }
 
     // update everything on resize
@@ -915,8 +981,53 @@ void ClipView::pasteClips_(const QList<Object*>& list, uint x, uint y)
         if (w)
             select_(w);
     }
+
+    // check for modulator reuse
+    if (keepmods.modulatorsPresent())
+    {
+        KeepModulatorDialog diag(keepmods);
+        diag.exec();
+    }
 }
 
+
+
+void ClipView::pasteSubObjects_(const QList<Object*>& list, Clip * clip)
+{
+    MO_ASSERT(clipCon_ && clipCon_->sceneObject() &&
+              clipCon_->sceneObject()->model(), "");
+
+    auto model = clipCon_->sceneObject()->model();
+
+    // paste
+    for (auto obj : list)
+    {
+        if (!clip->canHaveChildren(obj->type())
+        || !model->addObject(clip, obj))
+            delete obj;
+    }
+}
+
+void ClipView::pasteClipsInClip_(const QList<Object*>& list, Clip * parent)
+{
+    MO_ASSERT(clipCon_ && clipCon_->sceneObject() &&
+              clipCon_->sceneObject()->model(), "");
+
+    auto model = clipCon_->sceneObject()->model();
+
+    // paste all childs of obj
+    for (auto obj : list)
+    {
+        if (Clip * clip = qobject_cast<Clip*>(obj))
+        {
+            for (auto c : clip->childObjects())
+                if (parent->canHaveChildren(c->type()))
+                    model->addObject(parent, c);
+        }
+
+        delete obj;
+    }
+}
 
 
 

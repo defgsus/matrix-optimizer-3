@@ -46,6 +46,20 @@ void ModulatorFloat::deserialize(IO::DataStream & io)
     io >> amplitude_ >> timeOffset_;
 }
 
+void ModulatorFloat::copySettingsFrom(const Modulator *other)
+{
+    const ModulatorFloat * f = dynamic_cast<const ModulatorFloat*>(other);
+    if (!f)
+    {
+        MO_WARNING("ModulatorFloat::copySettingsFrom(" << other << ") "
+                   "with non-float type");
+        return;
+    }
+
+    amplitude_ = f->amplitude();
+    timeOffset_ = f->timeOffset();
+}
+
 bool ModulatorFloat::canBeModulator(const Object * o) const
 {
     MO_ASSERT(o, "ModulatorFloat::canBeModulator(NULL) called");

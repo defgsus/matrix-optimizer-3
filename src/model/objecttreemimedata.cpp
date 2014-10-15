@@ -15,6 +15,7 @@
 #include "object/object.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 #include "io/application.h"
 
 namespace MO {
@@ -28,7 +29,7 @@ const QString ObjectTreeMimeData::orderMimeType = "matrixoptimizer/object-tree-o
 ObjectTreeMimeData::ObjectTreeMimeData() :
     QMimeData   ()
 {
-    //setParent(parent);
+
 }
 
 QStringList ObjectTreeMimeData::formats() const
