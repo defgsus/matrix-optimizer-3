@@ -999,12 +999,29 @@ void ClipView::pasteSubObjects_(const QList<Object*>& list, Clip * clip)
 
     auto model = clipCon_->sceneObject()->model();
 
+    KeepModulators keepmods(clipCon_->sceneObject());
+
     // paste
     for (auto obj : list)
     {
-        if (!clip->canHaveChildren(obj->type())
-        || !model->addObject(clip, obj))
+        if (clip->canHaveChildren(obj->type()))
+        {
+            keepmods.addOriginalObject(obj);
+
+            if (model->addObject(clip, obj))
+                keepmods.addNewObject(obj);
+            else
+                delete obj;
+        }
+        else
             delete obj;
+    }
+
+    // check for modulator reuse
+    if (keepmods.modulatorsPresent())
+    {
+        KeepModulatorDialog diag(keepmods);
+        diag.exec();
     }
 }
 
@@ -1015,17 +1032,31 @@ void ClipView::pasteClipsInClip_(const QList<Object*>& list, Clip * parent)
 
     auto model = clipCon_->sceneObject()->model();
 
+    KeepModulators keepmods(clipCon_->sceneObject());
+
     // paste all childs of obj
     for (auto obj : list)
     {
         if (Clip * clip = qobject_cast<Clip*>(obj))
         {
             for (auto c : clip->childObjects())
-                if (parent->canHaveChildren(c->type()))
-                    model->addObject(parent, c);
+            if (parent->canHaveChildren(c->type()))
+            {
+                keepmods.addOriginalObject(c);
+
+                if (model->addObject(parent, c))
+                    keepmods.addNewObject(c);
+            }
         }
 
         delete obj;
+    }
+
+    // check for modulator reuse
+    if (keepmods.modulatorsPresent())
+    {
+        KeepModulatorDialog diag(keepmods);
+        diag.exec();
     }
 }
 

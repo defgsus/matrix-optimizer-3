@@ -37,9 +37,11 @@ public:
         The objects added with addNewObject() must exist in the supplied Scene object! */
     KeepModulators(Scene * scene);
 
-    /** Add the object from the clipboard here. */
+    /** Add the object from the clipboard here.
+        The object and all of it's childs are saved. */
     void addOriginalObject(Object *);
-    /** Add the object after it has been pasted to the Scene (with new idNames) */
+    /** Add the object after it has been pasted to the Scene (with new idNames).
+        The object and all of it's childs are checked for modulator reuse. */
     void addNewObject(Object *);
 
     /** Returns true when modulators where present in addOriginalObject().
@@ -47,7 +49,10 @@ public:
         otherwise it can be ignored. */
     bool modulatorsPresent() const;
 
-    /** Creates the new modulation paths */
+    /** Creates the new modulation paths.
+        For every (sub-)object added with addOriginalObject() that is a wired modulator
+        to some Parameter in Scene, the new objects added with addNewObject() are
+        made to modulate the same goal. */
     void createNewModulators();
 
 private:

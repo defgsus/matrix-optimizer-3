@@ -45,7 +45,7 @@ void KeepModulators::addOriginalObject(Object * o)
 {
     // get list of all modulator objects in o (including o)
     QList<Object*> list = o->findChildObjects(Object::TG_MODULATOR, true);
-    if (o->type() & Object::TG_MODULATOR_OBJECT)
+    if (o->type() & Object::TG_MODULATOR)
         list.prepend(o);
 
     // for each object that is an actually wired modulator
@@ -74,7 +74,7 @@ void KeepModulators::addNewObject(Object * o)
 {
     // get list of all modulator objects in o (including o)
     QList<Object*> list = o->findChildObjects(Object::TG_MODULATOR, true);
-    if (o->type() & Object::TG_MODULATOR_OBJECT)
+    if (o->type() & Object::TG_MODULATOR)
         list.prepend(o);
 
     for (auto obj : list)
@@ -108,13 +108,18 @@ void KeepModulators::createNewModulators()
 
         // copy modulator settings
         Modulator
-                * oldm = m.param->getModulator(m.oldId),
-                * newm = m.param->getModulator(m.newId);
+                * oldm = m.param->findModulator(m.oldId),
+                * newm = m.param->findModulator(m.newId);
         if (oldm && newm)
             newm->copySettingsFrom(oldm);
-        else
+        // XXX oldm is undefined for Sequences in Tracks
+        // because the actual modulator is the track, not the sequence
+        // TODO: go up the parent branch of oldId until the modulator is found!
+        /*else
             MO_WARNING("Something went wrong on creating modulation path '"
                        << m.newId << " -> " << m.param->infoName() << "'");
+        */
+
     }
 }
 
@@ -178,6 +183,7 @@ void KeepModulatorDialog::createList_()
 {
     list_->clear();
     for (auto & m : mods_.p_)
+    if (!m.newId.isEmpty())
     {
         // prepare an entry
         auto item = new QListWidgetItem(list_);

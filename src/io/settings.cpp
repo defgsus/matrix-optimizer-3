@@ -10,10 +10,12 @@
 
 #include <QMainWindow>
 #include <QWindow>
+#include <QDesktopWidget>
 
 #include "settings.h"
 #include "io/error.h"
 #include "io/files.h"
+#include "io/application.h"
 #include "projection/projectionsystemsettings.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
@@ -124,7 +126,7 @@ void Settings::restoreGeometry(QMainWindow * win)
 */
 void Settings::saveGeometry(QWindow * win)
 {
-    MO_DEBUG("Settings::saveGeometry(" << win << ", " << win->geometry());
+    MO_DEBUG_GUI("Settings::saveGeometry(" << win << ", " << win->geometry());
 
     MO_ASSERT(!win->objectName().isEmpty(), "Settings::saveGeometry(): no objectName set for QWindow");
 
@@ -173,8 +175,16 @@ bool Settings::restoreGeometry(QWindow * win)
     */
 #endif
 
-    if (found)
-        MO_DEBUG("Settings::restoreGeometry(" << win << ", " << win->geometry());
+    if (!found)
+    {
+        // center on screen
+        QRect r = application->desktop()->screenGeometry(win->position());
+        win->setGeometry((r.width() - win->width())/2,
+                         (r.height() - win->height())/2,
+                         win->width(), win->height());
+    }
+    else
+        MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());
 
     return found;
 }
@@ -227,7 +237,15 @@ bool Settings::restoreGeometry(QWidget * win)
     }
 #endif
 
-    if (found)
+    if (!found)
+    {
+        // center on screen
+        QRect r = application->desktop()->screenGeometry(win->pos());
+        win->setGeometry((r.width() - win->width())/2,
+                         (r.height() - win->height())/2,
+                         win->width(), win->height());
+    }
+    else
         MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());
 
     return found;

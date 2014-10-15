@@ -62,6 +62,7 @@
 #include "io/memory.h"
 #include "io/settings.h"
 #include "io/application.h"
+#include "io/version.h"
 #include "engine/renderer.h"
 #include "gl/texture.h"
 #include "io/povrayexporter.h"
@@ -78,9 +79,9 @@
 namespace MO {
 namespace GUI {
 
-
-static QString windowTitleString("Matrix Optimizer 3.0");
-
+namespace {
+    static QString windowTitleString("Matrix Optimizer " + versionString());
+}
 
 
 class TestThread : public QThread
@@ -154,14 +155,7 @@ MainWindow::MainWindow(QWidget *parent) :
     createObjects_();
 
     // read previous geometry
-    if (!restoreAllGeometry_())
-    {
-        // center window
-        QRect r = application->desktop()->screenGeometry(pos());
-        setGeometry((r.width() - width())/2,
-                    (r.height() - height())/2,
-                     width(), height());
-    }
+    restoreAllGeometry_();
 
     updateWindowTitle_();
 }

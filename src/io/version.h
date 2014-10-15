@@ -13,21 +13,28 @@
 
 #include <QString>
 
-#define MO_VERSION_MAJOR int(3)
-#define MO_VERSION_MINOR int(0)
-#define MO_VERSION_TINY  int(1)
-#define MO_VERSION_MICRO int(2)
+#define MO_VERSION_MAJOR 3
+#define MO_VERSION_MINOR 0
+#define MO_VERSION_TINY  1
+#define MO_VERSION_MICRO 2
 
-#define MO_VERSION                \
-    (  MO_VERSION_MAJOR * 1000000 \
-     + MO_VERSION_MINOR * 10000   \
-     + MO_VERSION_TINY  * 100     \
-     + MO_VERSION_MICRO)
+/** Constructs a number from the smaller parts (major = most-significant) */
+#define MO_VERSION_COMBINE(maj__, min__, tiny__, micro__) \
+                (  (maj__)  * 1000000 \
+                 + (min__)  * 10000   \
+                 + (tiny__) * 100     \
+                 + (micro__)          )
+
+/** The program version as one number (major = most-significant) */
+#define MO_VERSION                                                            \
+    MO_VERSION_COMBINE(                                                       \
+        MO_VERSION_MAJOR, MO_VERSION_MINOR, MO_VERSION_TINY, MO_VERSION_MICRO )
 
 
 namespace MO {
 
 
+/** Returns a string in the form of 'x.y.z.www' */
 QString versionString();
 
 

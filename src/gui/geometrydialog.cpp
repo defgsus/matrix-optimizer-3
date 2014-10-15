@@ -36,6 +36,7 @@
 #include "widget/equationeditor.h"
 #include "io/files.h"
 #include "io/log.h"
+#include "io/settings.h"
 #include "geometryexportdialog.h"
 
 namespace MO {
@@ -55,6 +56,7 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     setWindowTitle(tr("geometry editor"));
 
     setMinimumSize(960,600);
+    settings->restoreGeometry(this);
 
     if (set)
         *settings_ = *set;
@@ -72,6 +74,7 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
 
 GeometryDialog::~GeometryDialog()
 {
+    settings->saveGeometry(this);
     delete settings_;
 }
 
