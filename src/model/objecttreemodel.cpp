@@ -21,7 +21,7 @@
 #include "object/sequencefloat.h"
 #include "object/param/parameterfloat.h"
 #include "object/scene.h"
-
+#include "gui/keepmodulatordialog.h"
 
 namespace MO {
 
@@ -382,14 +382,14 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
     if (!data->formats().contains(ObjectTreeMimeData::objectMimeType))
     {
-        MO_WARNING("mimedata is invalid");
+        MO_WARNING("ObjectTreeModel::dropMimeData() mimedata is invalid");
         return false;
     }
 
     // NOTE: dynamic_cast or qobject_cast won't work between
     // application boundaries, e.g. after quit or pasting into
-    // a different instance. But static_cast works alright.
-    // It's important though to not rely on class members of ObjectTreeMimeData
+    // a different instance. But static_cast works alright after we checked the MimiType.
+    // It's important to not rely on class members of ObjectTreeMimeData
     // but to manage everything over QMimeData::data()
     if (auto objdata = static_cast<const ObjectTreeMimeData*>(data))
     {
@@ -421,24 +421,47 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                         MO_DEBUG_TREE("move " << fromObj->idName()
                                       << " " << fromIndex.row() << " -> "
                                       << obj->idName() << " " << row);
+
                         scene_->addObject(obj, fromObj, row);
 
                         endMoveColumns();
                         lastDropIndex_ = createIndex(row, 0, copy);
 
                         emit sceneChanged();
+
                         return true;
                     }
+                    return false;
                 }
+
+                // keep track of modulators
+                KeepModulators keepmods(scene_);
+                bool reusemod = true;
+                // .. but not for tracks on sequences
+                if (copy->isSequence() && obj->isTrack())
+                    reusemod = false;
+                if (reusemod)
+                    keepmods.addOriginalObject(copy);
 
                 // insert it
                 beginInsertRows(parent, row, row);
                 scene_->addObject(obj, copy, row);
                 endInsertRows();
 
+                if (reusemod)
+                    keepmods.addNewObject(copy);
+
                 lastDropIndex_ = createIndex(row, 0, copy);
 
                 emit sceneChanged();
+
+                // check for modulator reuse
+                if (keepmods.modulatorsPresent())
+                {
+                    GUI::KeepModulatorDialog diag(keepmods);
+                    diag.exec();
+                }
+
                 return true;
             }
             MO_WARNING("Could not deserialize object tree from mime-data");

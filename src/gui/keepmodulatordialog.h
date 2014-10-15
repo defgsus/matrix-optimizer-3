@@ -37,10 +37,11 @@ public:
         The objects added with addNewObject() must exist in the supplied Scene object! */
     KeepModulators(Scene * scene);
 
-    /** Add the object from the clipboard here.
-        The object and all of it's childs are saved. */
+    /** Add the object from the clipboard here, before adding to Scene.
+        The object and all of it's childs are saved (if they are modulators in Scene). */
     void addOriginalObject(Object *);
-    /** Add the object after it has been pasted to the Scene (with new idNames).
+
+    /** Add the object after it has been added to the Scene (with new idNames).
         The object and all of it's childs are checked for modulator reuse. */
     void addNewObject(Object *);
 
@@ -61,6 +62,7 @@ private:
         QString oldId, newId;
         bool reuse;
         Parameter* param;
+        Object * object;
     };
 
     QMultiMap<Object*, Private_> p_;

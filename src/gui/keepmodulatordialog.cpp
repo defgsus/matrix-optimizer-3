@@ -17,6 +17,7 @@
 #include "object/scene.h"
 #include "object/param/parameter.h"
 #include "object/param/modulator.h"
+#include "object/objectfactory.h"
 #include "io/log.h"
 #include "io/error.h"
 #include "io/settings.h"
@@ -26,7 +27,7 @@ namespace MO {
 KeepModulators::KeepModulators(Scene *scene)
     : scene_    (scene)
 {
-    MO_ASSERT(scene_, "No scene given to KeepModulators");
+    MO_ASSERT(scene_, "Null scene given to KeepModulators");
 
     // list of all objects
     QList<Object*> list = scene->findChildObjects(Object::TG_ALL, true);
@@ -39,10 +40,15 @@ KeepModulators::KeepModulators(Scene *scene)
         for (auto & p : pairs)
             modPairs_.insertMulti(p.second->idName(), p.first);
     }
+
+    MO_DEBUG_MOD("KeepModulators::KeepModulators(" << scene << ") "
+                 "found " << modPairs_.size() << " modulation pairs");
 }
 
 void KeepModulators::addOriginalObject(Object * o)
 {
+    MO_DEBUG_MOD("KeepModulators::addOriginalObject(" << o << ")");
+
     // get list of all modulator objects in o (including o)
     QList<Object*> list = o->findChildObjects(Object::TG_MODULATOR, true);
     if (o->type() & Object::TG_MODULATOR)
@@ -61,6 +67,7 @@ void KeepModulators::addOriginalObject(Object * o)
             Private_ p;
             p.oldId = obj->idName();
             p.param = i.value();
+            p.object = obj;
 
             p_.insertMulti(obj, p);
 
@@ -72,6 +79,8 @@ void KeepModulators::addOriginalObject(Object * o)
 
 void KeepModulators::addNewObject(Object * o)
 {
+    MO_DEBUG_MOD("KeepModulators::addNewObject(" << o << ")");
+
     // get list of all modulator objects in o (including o)
     QList<Object*> list = o->findChildObjects(Object::TG_MODULATOR, true);
     if (o->type() & Object::TG_MODULATOR)
@@ -88,6 +97,11 @@ void KeepModulators::addNewObject(Object * o)
             // and initialize to rewire
             i.value().reuse = true;
 
+            // switch default off for sequences on tracks
+            // (since normally the tracks are the modulators)
+            if (obj->isSequence() && obj->parentObject() && obj->parentObject()->isTrack())
+                i.value().reuse = false;
+
             ++i;
         }
     }
@@ -101,9 +115,14 @@ bool KeepModulators::modulatorsPresent() const
 
 void KeepModulators::createNewModulators()
 {
+    MO_DEBUG_MOD("KeepModulators::createNewModulators()");
+
     for (const Private_ & m : p_)
     if (m.reuse && m.newId != m.oldId)
     {
+        MO_DEBUG_MOD("KeepModulators: creating path " << m.newId
+                 << " -> " << m.param->infoName());
+
         scene_->addModulator(m.param, m.newId);
 
         // copy modulator settings
@@ -112,7 +131,7 @@ void KeepModulators::createNewModulators()
                 * newm = m.param->findModulator(m.newId);
         if (oldm && newm)
             newm->copySettingsFrom(oldm);
-        // XXX oldm is undefined for Sequences in Tracks
+        // XXX oldm is NULL for Sequences in Tracks
         // because the actual modulator is the track, not the sequence
         // TODO: go up the parent branch of oldId until the modulator is found!
         /*else
@@ -194,6 +213,7 @@ void KeepModulatorDialog::createList_()
                       );
         item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
         item->setCheckState(m.reuse ? Qt::Checked : Qt::Unchecked);
+        item->setIcon(ObjectFactory::iconForObject(m.object));
         list_->addItem(item);
     }
 }
