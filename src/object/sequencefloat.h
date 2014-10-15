@@ -198,6 +198,7 @@ private:
     void updatePhaseInDegree_();
 
     Double value_(Double gtime, Double time, uint thread) const;
+    Double fade_(Double gtime, Double localTime, uint thread) const;
 
     MATH::Timeline1D * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
@@ -230,7 +231,10 @@ private:
         * p_wtSpecAmp_,
 
         * p_loopOverlap_,
-        * p_loopOverlapOffset_;
+        * p_loopOverlapOffset_,
+
+        * p_fadeIn_,
+        * p_fadeOut_;
 
     ParameterInt
         * p_wtSpecNum_,
@@ -245,7 +249,8 @@ private:
         * p_oscMode_,
         * p_loopOverlapMode_,
         * p_useFreq_,
-        * p_doPhaseDegree_;
+        * p_doPhaseDegree_,
+        * p_fadeMode_;
 
     ParameterText
         * p_equationText_,

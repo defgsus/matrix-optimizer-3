@@ -122,11 +122,12 @@ public:
         { p_speed_->setValue(std::max(minimumSpeed(), t)); }
 
     /** Translates global time to sequence-local time (with loop) */
-    Double getSequenceTime(Double global_time, uint thread) const;
+    Double getSequenceTime(Double global_time, uint thread, Double &timeWithoutLoop) const;
     /** Translates global time to sequence-local time (with loop)
         and returns the current loop settings */
     Double getSequenceTime(Double global_time, uint thread,
-                           Double& loopStart, Double& loopLength, bool& isInLoop) const;
+                           Double& loopStart, Double& loopLength, bool& isInLoop,
+                           Double &timeWithoutLoop) const;
 
 signals:
 
@@ -150,13 +151,16 @@ private:
 };
 
 
-inline Double Sequence::getSequenceTime(Double time, uint thread) const
+inline Double Sequence::getSequenceTime(Double time, uint thread,
+                                        Double &timeWithoutLoop) const
 {
     if (parentClip_)
         time -= parentClip_->timeStarted();
 
     time = (time - p_start_->baseValue()) * p_speed_->baseValue();
     time += p_timeOffset_->value(time, thread);
+
+    timeWithoutLoop = time;
 
     if (p_looping_->baseValue())
     {
@@ -172,13 +176,16 @@ inline Double Sequence::getSequenceTime(Double time, uint thread) const
 }
 
 inline Double Sequence::getSequenceTime(Double time, uint thread,
-                                        Double& lStart, Double& lLength, bool& isInLoop) const
+                                        Double& lStart, Double& lLength, bool& isInLoop,
+                                        Double& timeWithoutLoop) const
 {
     if (parentClip_)
         time -= parentClip_->timeStarted();
 
     time = (time - p_start_->baseValue()) * p_speed_->baseValue();
     time += p_timeOffset_->value(time, thread);
+
+    timeWithoutLoop = time;
 
     if (p_looping_->baseValue())
     {

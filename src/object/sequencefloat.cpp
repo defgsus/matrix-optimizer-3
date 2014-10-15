@@ -126,6 +126,32 @@ void SequenceFloat::createParameters()
 {
     Sequence::createParameters();
 
+    // ----- fade ------------
+
+    beginParameterGroup("fade", tr("fade in/out"));
+
+        p_fadeIn_ = createFloatParameter("fadein", tr("fade in"),
+                      tr("Time in seconds to fade from zero to the actual value"),
+                      0.0, 0.1);
+        p_fadeIn_->setMinValue(0.0);
+
+        p_fadeOut_ = createFloatParameter("fadeout", tr("fade out"),
+                      tr("Time in seconds to fade to zero at the end of the sequence"),
+                      0.0, 0.1);
+        p_fadeOut_->setMinValue(0.0);
+
+        p_fadeMode_ = createSelectParameter("fademode", tr("fade derivative"),
+                                            tr("Selects the type of fade function"),
+                                            { "lin", "quad" },
+                                            { tr("linear"), tr("quadratic") },
+                                            { tr("Linear fade"), tr("Smooth quadratic fade") },
+                                            { 0, 1 },
+                                            1, true, false);
+
+    endParameterGroup();
+
+    // ------ value ----------
+
     beginParameterGroup("value", tr("value"));
 
         p_mode_ = createSelectParameter("seq_mode", tr("sequence type"),
@@ -247,7 +273,6 @@ void SequenceFloat::createParameters()
                    true, false);
 
     endParameterGroup();
-
 
     // ---- spectral osc -----
 
@@ -417,7 +442,7 @@ void SequenceFloat::updateParameterVisibility()
     const bool oscwt = sequenceType() == ST_OSCILLATOR_WT;
     const bool freq = useFrequency() || typeUsesFrequency() || equ;
     const bool loop = looping();
-    const bool looplap = loop && p_loopOverlap_->baseValue() != LOT_OFF;
+    const bool looplap = loop && p_loopOverlapMode_->baseValue() != LOT_OFF;
     const bool pw = (osc && AUDIO::Waveform::supportsPulseWidth(oscillatorMode())) || equ;
     const bool oscwtpw = (oscwt && AUDIO::Waveform::supportsPulseWidth(oscillatorMode()));
     const bool add = sequenceType() == ST_ADD_OSC;
@@ -642,28 +667,55 @@ void SequenceFloat::setEquationText(const QString & t)
     }
 }
 
+Double SequenceFloat::fade_(Double gtime, Double time, uint thread) const
+{
+    // fade in/out
+    Double fade = 1.0;
+    const Double fadein = p_fadeIn_->value(gtime, thread);
+    if (time >= 0 && time < fadein)
+        fade = time / fadein;
+    // fadeout only for non-clip sequences
+    if (!parentClip())
+    {
+        const Double fadeout = p_fadeOut_->value(gtime, thread);
+        if (fadeout > 0 && time > (length() - fadeout)
+                && time <= length())
+            fade *= (length() - time) / fadeout;
+    }
+    // fade shape
+    if (p_fadeMode_->baseValue())
+        return fade * fade * (3.0 - 2.0 * fade);
+    else
+        return fade;
+}
+
 Double SequenceFloat::value(Double gtime, uint thread) const
 {
+    Double timeNoLoop;
     if (p_loopOverlapMode_->baseValue() == LOT_OFF)
     {
-        const Double time = getSequenceTime(gtime, thread);
-        return value_(gtime, time, thread);
+        const Double
+                time = getSequenceTime(gtime, thread, timeNoLoop),
+                fade = fade_(gtime, timeNoLoop, thread);
+        return fade * value_(gtime, time, thread);
     }
 
     bool inLoop;
     Double lStart=0, lLength=0;
-    Double time = getSequenceTime(gtime, thread, lStart, lLength, inLoop);
+    Double time = getSequenceTime(gtime, thread, lStart, lLength, inLoop, timeNoLoop);
+
+    const Double fade = fade_(gtime, timeNoLoop, thread);
 
     // XXX strange: inLoop comes to late, e.g. after the loop end
     if (!inLoop && p_loopOverlapMode_->baseValue() == LOT_BEGIN)
-        return value_(gtime, time, thread);
+        return fade * value_(gtime, time, thread);
 
     Double overlap = std::max(minimumLength(), p_loopOverlap_->value(gtime, thread));
 
     if (p_loopOverlapMode_->baseValue() == LOT_BEGIN)
     {
         if ((time - lStart) > overlap)
-            return value_(gtime, time, thread);
+            return fade * value_(gtime, time, thread);
 
         const Double
                 v = value_(gtime, time, thread),
@@ -673,12 +725,12 @@ Double SequenceFloat::value(Double gtime, uint thread) const
                 t = (time - lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
-        return (1.0 - ts) * v0 + ts * v;
+        return fade * ((1.0 - ts) * v0 + ts * v);
     }
     else if (p_loopOverlapMode_->baseValue() == LOT_END)
     {
         if ((time - lStart) < lLength - overlap)
-            return value_(gtime, time, thread);
+            return fade * value_(gtime, time, thread);
 
         const Double
                 v = value_(gtime, time, thread),
@@ -688,7 +740,7 @@ Double SequenceFloat::value(Double gtime, uint thread) const
                 t = (lLength - time + lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
-        return (1.0 - ts) * v0 + ts * v;
+        return fade * ( (1.0 - ts) * v0 + ts * v );
     }
 
     MO_ASSERT(false, "unhandled loopOverlapMode " << p_loopOverlapMode_->baseValue()
@@ -705,6 +757,7 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
                 + p_phase_->value(gtime, thread) * phaseMult_;
     }
 
+    // return value
     switch ((SequenceType)p_mode_->baseValue())
     {
         case ST_CONSTANT:

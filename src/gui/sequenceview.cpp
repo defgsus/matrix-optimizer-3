@@ -224,7 +224,8 @@ void SequenceView::onSequenceChanged_(Sequence * s)
 
     playBar_->setTimeOffset(-baseSequence_->realStart());
     playBar_->setMinimumTime(-baseSequence_->start());
-    playBar_->setActive(baseSequence_->parentClip()->isPlaying());
+    if (baseSequence_->parentClip())
+        playBar_->setActive(baseSequence_->parentClip()->isPlaying());
 
     updateSequence_();
 
