@@ -18,6 +18,11 @@
 #include "io/xmlstream.h"
 #include "io/log.h"
 
+
+#ifdef Q_OS_LINUX
+#   define MO_GEOMETRY_SAVE_HACK
+#endif
+
 namespace MO {
 
 Settings * settings = 0;
@@ -119,46 +124,113 @@ void Settings::restoreGeometry(QMainWindow * win)
 */
 void Settings::saveGeometry(QWindow * win)
 {
-    MO_DEBUG_GUI("Settings::saveGeometry(" << win << ", " << win->geometry());
+    MO_DEBUG("Settings::saveGeometry(" << win << ", " << win->geometry());
 
     MO_ASSERT(!win->objectName().isEmpty(), "Settings::saveGeometry(): no objectName set for QWindow");
+
+#ifndef MO_GEOMETRY_SAVE_HACK
     setValue("Geometry/" + win->objectName(), win->geometry());
+#else
+    // try to fix the window header bug on X11
+    setValue("Geometry/Geom/" + win->objectName(), win->geometry());
+    setValue("Geometry/Frame/" + win->objectName(), win->frameGeometry());
+#endif
 }
 
 bool Settings::restoreGeometry(QWindow * win)
 {
     MO_ASSERT(!win->objectName().isEmpty(), "Settings::restoreGeometry(): no objectName set for QWindow");
+
+    bool found = false;
+
+#ifndef MO_GEOMETRY_SAVE_HACK
     const QString key = "Geometry/" + win->objectName();
     if (contains(key))
     {
         win->setGeometry( getValue(key).value<QRect>() );
-        MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());
-        return true;
+        found = true;
     }
-    return false;
+#else
+    const QString
+            keyGeom = "Geometry/Geom/" + win->objectName(),
+            keyPos = "Geometry/Frame/" + win->objectName();
+
+    if (contains(keyGeom))
+    {
+        const QRect r = getValue(keyGeom).value<QRect>();
+        win->setGeometry(r);
+        found = true;
+    }
+    /*
+    if (contains(keyPos))
+    {
+        const QRect r = getValue(keyPos).value<QRect>();
+        // XXX It's all a hack (X11 is a bitch regarding this)
+        QRect winr = win->geometry();
+        winr.moveTop(setTop(r.top() + 10);
+        win->setGeometry(winr);
+    }
+    */
+#endif
+
+    if (found)
+        MO_DEBUG("Settings::restoreGeometry(" << win << ", " << win->geometry());
+
+    return found;
 }
 
 void Settings::saveGeometry(QWidget * win)
 {
-    MO_DEBUG_GUI("Settings::saveGeometry(" << win << ", " << win->geometry());
+    MO_DEBUG_GUI("Settings::saveGeometry(" << win << ", " << win->geometry()
+             << ", " << win->frameGeometry() << ")");
 
     MO_ASSERT(!win->objectName().isEmpty(), "Settings::saveGeometry(): no objectName set for QWidget");
+
+#ifndef MO_GEOMETRY_SAVE_HACK
     setValue("Geometry/" + win->objectName(), win->saveGeometry());
-    //setValue("Geometry/" + win->objectName(), win->geometry());
+#else
+    // try to fix the window header bug on X11
+    setValue("Geometry/Geom/" + win->objectName(), win->geometry());
+    setValue("Geometry/Frame/" + win->objectName(), win->frameGeometry());
+#endif
 }
 
 bool Settings::restoreGeometry(QWidget * win)
 {
     MO_ASSERT(!win->objectName().isEmpty(), "Settings::restoreGeometry(): no objectName set for QWidget");
+
+    bool found = false;
+
+#ifndef MO_GEOMETRY_SAVE_HACK
     const QString key = "Geometry/" + win->objectName();
     if (contains(key))
     {
         win->restoreGeometry( getValue(key).toByteArray() );
-        //win->setGeometry( getValue(key).value<QRect>() );
-        MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());
-        return true;
+        found = true;
     }
-    return false;
+#else
+    const QString
+            keyGeom = "Geometry/Geom/" + win->objectName(),
+            keyPos = "Geometry/Frame/" + win->objectName();
+
+    if (contains(keyGeom))
+    {
+        const QRect r = getValue(keyGeom).value<QRect>();
+        win->setGeometry(r);
+        found = true;
+    }
+    if (contains(keyPos))
+    {
+        const QRect r = getValue(keyPos).value<QRect>();
+        // XXX It's all a hack (X11 is a bitch regarding this)
+        win->move(win->x(), r.top() + 10);
+    }
+#endif
+
+    if (found)
+        MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());
+
+    return found;
 }
 
 
