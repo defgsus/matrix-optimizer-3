@@ -160,10 +160,13 @@ void ClipView::setClipContainer(ClipContainer * con)
     clipCon_ = con;
 
     // connect
-    connect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
-    connect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
-    connect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
-    connect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
+    if (clipCon_)
+    {
+        connect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
+        connect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
+        connect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
+        connect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
+    }
 
     createClipWidgets_();
 }
@@ -370,17 +373,8 @@ void ClipView::clickSelect_(ClipWidget *w, Qt::KeyboardModifiers mod)
     // range select
     else if (mod & Qt::ShiftModifier)
     {
-        const uint
-                mix = std::min(selStartX_, curX_),
-                max = std::max(selStartX_, curX_),
-                miy = std::min(selStartY_, curY_),
-                may = std::max(selStartY_, curY_);
         clearSelection_();
-        for (uint y=miy; y<=may; ++y)
-        for (uint x=mix; x<=max; ++x)
-        {
-            select_(clipWidget_(x, y));
-        }
+        selectRange_(selStartX_, selStartY_, curX_, curY_);
     }
     // simple select
     else
@@ -406,10 +400,19 @@ void ClipView::onMoved_(ClipWidget * widget, const QPoint &wpos, Qt::MouseButton
     if (!goalw || goalw->type() != ClipWidget::T_CLIP)
         return;
 
+    // get move delta in slots
     int dx = (int)goalw->posX() - (int)dragWidget_->posX(),
         dy = (int)goalw->posY() - (int)dragWidget_->posY();
 
-    goalWidget_ = (dx != 0 || dy != 0)? goalw : 0;
+    goalWidget_ = (dx != 0 || dy != 0)? goalw : 0;    
+
+    // only range-select (started on empty clipslot)
+    if (!dragWidget_->clip())
+    {
+        clearSelection_();
+        selectRange_(selStartX_, selStartY_, goalw->posX(), goalw->posY());
+        return;
+    }
 
     // update goal selection
     for (auto w : goalSelection_)
@@ -439,8 +442,23 @@ void ClipView::onMoved_(ClipWidget * widget, const QPoint &wpos, Qt::MouseButton
 
 void ClipView::onReleased_(ClipWidget * w, Qt::MouseButtons, Qt::KeyboardModifiers )
 {
-    if (!clipCon_ || !dragWidget_ || (w != dragWidget_) || !goalWidget_)
+    if (!clipCon_)
         return;
+
+    if (!dragWidget_ || (w != dragWidget_) || !goalWidget_)
+        return;
+
+    // end of range select?
+    if (!dragWidget_->clip())
+    {
+        // only select clips
+        auto sel = selection_;
+        clearSelection_();
+        for (auto w : sel)
+            if (w->clip())
+                select_(w);
+        return;
+    }
 
     // find move-to position
     int dx = (int)goalWidget_->posX() - dragWidget_->posX(),
@@ -599,6 +617,22 @@ void ClipView::select_(ClipWidget * w)
     w->update();
 }
 
+void ClipView::selectRange_(uint x1, uint y1, uint x2, uint y2)
+{
+    const uint
+            mix = std::min(x1, x2),
+            max = std::max(x1, x2),
+            miy = std::min(y1, y2),
+            may = std::max(y1, y2);
+    for (uint y=miy; y<=may; ++y)
+    for (uint x=mix; x<=max; ++x)
+    {
+        ClipWidget * w = clipWidget_(x, y);
+        if (w)
+            select_(w);
+    }
+}
+
 void ClipView::moveClip_(ClipWidget * w, uint newx, uint newy)
 {
     if (!clipCon_)
@@ -697,6 +731,8 @@ void ClipView::openPopup_()
 
     if (curClip_)
     {
+        const bool plural = selection_.size() > 1;
+
         // add new sequence
         menu->addAction(a = new QAction(tr("Add object to clip"), menu));
         QMenu * sub = ObjectMenu::createObjectMenu(Object::TG_SEQUENCE, menu);
@@ -712,14 +748,18 @@ void ClipView::openPopup_()
         menu->addSeparator();
 
         // set color
-        menu->addAction(a = new QAction(tr("Change clip color"), menu));
+        menu->addAction(a = new QAction(plural? tr("Change clip colors") : tr("Change clip color"), menu));
         sub = ObjectMenu::createColorMenu(menu);
         a->setMenu(sub);
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             QColor c = a->data().value<QColor>();
-            curClip_->setColor(c);
-            updateClip(curClip_);
+            for (auto w : selection_)
+            if (w->clip())
+            {
+                w->clip()->setColor(c);
+                updateClip(w->clip());
+            }
         });
 
         menu->addSeparator();

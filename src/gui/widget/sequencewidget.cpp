@@ -106,6 +106,7 @@ void SequenceWidget::updateColors()
     colorOutline_ = QColor(0,0,0);
     colorOutlineSel_ = colorBody_.lighter(200);
 
+    // make text and curve darker or brighter than body?
     const bool dark = colorBody_.lightness() > 100;
 
     penText_ = dark ? QPen(Qt::black) : QPen(Qt::white);

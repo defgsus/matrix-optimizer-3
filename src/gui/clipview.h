@@ -79,6 +79,7 @@ private:
 
     void clearSelection_();
     void select_(ClipWidget * w);
+    void selectRange_(uint x1, uint y1, uint x2, uint y2);
     void clickSelect_(ClipWidget * w, Qt::KeyboardModifiers);
 
     void moveSelection_(int dx, int dy);
