@@ -233,7 +233,9 @@ bool Settings::restoreGeometry(QWidget * win)
     {
         const QRect r = getValue(keyPos).value<QRect>();
         // XXX It's all a hack (X11 is a bitch regarding this)
-        win->move(win->x(), r.top() + 10);
+        win->move(win->x(), r.top()
+                  //+ 10
+                  );
     }
 #endif
 

@@ -36,6 +36,7 @@ public:
         The modulators present in @p scene must not change until the call to createNewModulators()!
         The objects added with addNewObject() must exist in the supplied Scene object! */
     KeepModulators(Scene * scene);
+    ~KeepModulators();
 
     /** Add the object from the clipboard here, before adding to Scene.
         The object and all of it's childs are saved (if they are modulators in Scene). */
@@ -57,19 +58,9 @@ public:
     void createNewModulators();
 
 private:
-    struct Private_
-    {
-        QString oldId, newId;
-        bool reuse;
-        Parameter* param;
-        Object * object;
-    };
 
-    QMultiMap<Object*, Private_> p_;
-
-    Scene * scene_;
-
-    QMultiMap<QString, Parameter*> modPairs_;
+    struct Private;
+    Private * p_;
 };
 
 
@@ -93,7 +84,9 @@ public:
 private slots:
 
     void doit_();
-
+    void selectAll_();
+    void unselectAll_();
+    void flipAll_();
 private:
 
     void createWidgets_();

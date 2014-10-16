@@ -275,7 +275,7 @@ void ObjectTreeView::createTypeActions_()
     MO__TYPE_ACTION(Object::T_TRANSFORMATION, tr("Transformations"));
     MO__TYPE_ACTION(Object::TG_TRACK, tr("Tracks"));
     MO__TYPE_ACTION(Object::TG_SEQUENCE | Object::T_SEQUENCEGROUP, tr("Sequences"));
-    MO__TYPE_ACTION(Object::T_CLIP, tr("Clips"));
+    MO__TYPE_ACTION(Object::T_CLIP | Object::T_CLIP_CONTAINER, tr("Clips"));
     MO__TYPE_ACTION(Object::T_AUDIO_UNIT, tr("Audio-units"));
     MO__TYPE_ACTION(Object::TG_MODULATOR_OBJECT, tr("Outputs"));
 

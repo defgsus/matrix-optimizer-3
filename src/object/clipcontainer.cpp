@@ -19,8 +19,8 @@ namespace MO {
 MO_REGISTER_OBJECT(ClipContainer)
 
 namespace {
-    const uint minimumRows_ = 4;
-    const uint minimumColumns_ = 4;
+    const uint minimumRows_ = 12;
+    const uint minimumColumns_ = 12;
 }
 
 ClipContainer::ClipContainer(QObject *parent) :
@@ -52,6 +52,9 @@ void ClipContainer::deserialize(IO::DataStream &io)
     io.readHeader("clipcon", 1);
 
     io >> rows_ >> cols_;
+
+    cols_ = std::max(minimumColumns_, cols_);
+    rows_ = std::max(minimumRows_, rows_);
 }
 
 void ClipContainer::createParameters()

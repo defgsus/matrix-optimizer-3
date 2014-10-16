@@ -668,7 +668,8 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
         /*const Float white = std::max(0.f,
                     1.f - oedged
                     - (1.f - edged));*/
-        const Float white = 1.f-oedged;
+        const Float white = std::min(1.f, 1.f-oedged+edged);
+                            //std::min(1.f-oedged, edged);
         //const Float white = std::max(0.f, ocentd -
         //                    ((1-ocentd) * (1-centd)));
 

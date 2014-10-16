@@ -79,7 +79,13 @@ void ObjectInfoDialog::setObject(Object * o)
     {
         s << "<p>modulators:";
         for (auto mod : mods)
+        {
+            // once again, don't display sequence-on-track modulators
+            if (mod->isSequence()
+                    && mod->parentObject() && mod->parentObject()->isTrack())
+                continue;
             s << "<br/>" << mod->idNamePath();
+        }
         s << "</p>";
     }
 

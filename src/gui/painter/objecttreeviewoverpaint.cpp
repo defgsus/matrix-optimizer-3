@@ -153,10 +153,11 @@ void ObjectTreeViewOverpaint::getModulations_(Object * parent)
 
             for (auto m : mods)
             {
-                // don't display sequence modulators
-                // because they are part of a track-modulator
-                //if (m->isSequence())
-                //    continue;
+                // don't display sequence-on-track modulators
+                // because the track is the modulator
+                if (m->isSequence()
+                    && m->parentObject() && m->parentObject()->isTrack())
+                    continue;
 
                 i = indexMap_.find(m->idName());
                 if (i == indexMap_.end())

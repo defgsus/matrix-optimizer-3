@@ -14,6 +14,7 @@
 #include <QString>
 #include <QVariant>
 #include <QList>
+#include <QStringList>
 
 namespace MO {
 namespace IO {
