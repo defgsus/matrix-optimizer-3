@@ -21,8 +21,7 @@ namespace GUI {
 
 AudioLinkWindow::AudioLinkWindow(QWidget *parent)
     : QMainWindow   (parent),
-      scene_        (0),
-      mainWindow_   (0)
+      scene_        (0)
 {
     setObjectName("_AudioLinkWindow");
     setWindowTitle(tr("Matrix Optimizer III"));
@@ -46,11 +45,6 @@ void AudioLinkWindow::createWidgets_()
 
         audioView_ = new AudioLinkView(this);
         lv->addWidget(audioView_);
-}
-
-void AudioLinkWindow::setMainWindow(MainWindow * w)
-{
-    mainWindow_ = w;
 }
 
 void AudioLinkWindow::setScene(Scene * s)

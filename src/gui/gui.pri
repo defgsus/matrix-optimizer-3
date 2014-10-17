@@ -77,7 +77,8 @@ HEADERS += \
     src/gui/clipview.h \
     src/gui/widget/clipwidget.h \
     src/gui/widget/clipwidgetbutton.h \
-    src/gui/keepmodulatordialog.h
+    src/gui/keepmodulatordialog.h \
+    src/gui/util/mainwidgetcontroller.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -154,4 +155,5 @@ SOURCES += \
     src/gui/clipview.cpp \
     src/gui/widget/clipwidget.cpp \
     src/gui/widget/clipwidgetbutton.cpp \
-    src/gui/keepmodulatordialog.cpp
+    src/gui/keepmodulatordialog.cpp \
+    src/gui/util/mainwidgetcontroller.cpp

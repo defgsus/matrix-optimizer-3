@@ -18,7 +18,6 @@
 namespace MO {
 namespace GUI {
 
-class MainWindow;
 class AudioLinkView;
 
 class AudioLinkWindow : public QMainWindow
@@ -27,7 +26,6 @@ class AudioLinkWindow : public QMainWindow
 public:
     explicit AudioLinkWindow(QWidget *parent = 0);
 
-    void setMainWindow(MainWindow*);
     void setScene(Scene *);
 signals:
 
@@ -39,7 +37,6 @@ private:
 
     Scene * scene_;
 
-    MainWindow * mainWindow_;
     AudioLinkView * audioView_;
 };
 
