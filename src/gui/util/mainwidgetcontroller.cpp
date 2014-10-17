@@ -531,7 +531,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     MO_ASSERT(glManager_ && glWindow_, "");
 
-    // update scene settings from MainWidgetController
+    // update render settings from MainWidgetController
     updateDebugRender_();
 
     // connect to render window
@@ -820,7 +820,10 @@ void MainWidgetController::onObjectSelectedObjectView_(Object * o)
     MO_DEBUG_GUI("MainWidgetController::objectSelectedObjectView_(" << o << ")");
 
     // update sequence view
-    showSequence_(o->isSequence(), static_cast<Sequence*>(o));
+    updateSequenceView_(o);
+
+    // jump to modulator in tree view
+    objectTreeView_->setFocusIndex(o);
 
     // update clipview
     if (o && (o->isClip() || o->isClipContainer() ||

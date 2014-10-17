@@ -47,6 +47,14 @@ public:
         Counts sub-objects as well */
     const QList<Sequence*> & sequences() const { return sequences_; }
 
+    /** Returns a list of all Clips that object @p o is influenced by. */
+    static QList<Clip*> getAssociatedClips(Object * o);
+
+    /** Returns a list of all Clips that Parameter @p p is influenced by.
+        If @p alsoCheckObject is true, the Clips modulating the parent Object will
+        also be added. */
+    static QList<Clip*> getAssociatedClips(Parameter * p, bool alsoCheckObject);
+
     // -------------- getter -------------------
 
     uint column() const { return column_; }

@@ -25,6 +25,7 @@
 #include "object/scene.h"
 #include "object/trackfloat.h"
 #include "object/sequence.h"
+#include "object/clip.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
@@ -52,8 +53,9 @@ ParameterView::ParameterView(QWidget *parent) :
     scene_          (0),
     sceneSettings_  (0),
     object_         (0),
+    // config
+    doChangeToCreatedMod_(false)
 
-    doChangeToCreatedTrack_    (false)
 {
     setObjectName("_ParameterView");
 
@@ -632,7 +634,30 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
         {
             if (Object * o = model->createFloatTrack(pf))
             {
-                if (doChangeToCreatedTrack_)
+                if (doChangeToCreatedMod_)
+                    emit objectSelected(o);
+            }
+        });
+        // create modulation in clip
+        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float sequence"), menu) );
+        QMenu * sub = new QMenu(menu);
+        a->setMenu(sub);
+        sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
+        auto list = Clip::getAssociatedClips(param, true);
+        for (Clip * clip : list)
+        {
+            sub->addAction( a = new QAction(tr("clip %1 (%2)").arg(clip->name()).arg(clip->idName()), sub) );
+            a->setData(QVariant::fromValue(clip));
+        }
+        connect(sub, &QMenu::triggered, [=](QAction * a)
+        {
+            Clip * parent = a->data().value<Clip*>();
+            if (Object * o = model->createInClip("SequenceFloat", parent))
+            {
+                // modulate
+                scene_->addModulator(param, o->idName());
+
+                if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
         });
@@ -661,7 +686,30 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
         {
             if (Object * o = model->createFloatTrack(pi))
             {
-                if (doChangeToCreatedTrack_)
+                if (doChangeToCreatedMod_)
+                    emit objectSelected(o);
+            }
+        });
+        // create modulation in clip
+        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float sequence"), menu) );
+        QMenu * sub = new QMenu(menu);
+        a->setMenu(sub);
+        sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
+        auto list = Clip::getAssociatedClips(param, true);
+        for (Clip * clip : list)
+        {
+            sub->addAction( a = new QAction(tr("clip %1").arg(clip->name()), sub) );
+            a->setData(QVariant::fromValue(clip));
+        }
+        connect(sub, &QMenu::triggered, [=](QAction * a)
+        {
+            Clip * parent = a->data().value<Clip*>();
+            if (Object * o = model->createInClip("SequenceFloat", parent))
+            {
+                // modulate
+                scene_->addModulator(param, o->idName());
+
+                if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
         });
@@ -708,6 +756,7 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
     }
     else
     */
+    // remove single
     if (param->modulatorIds().size() > 0)
     {
         QMenu * rem = ObjectMenu::createRemoveModulationMenu(param, menu);
@@ -720,6 +769,7 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
             param->object()->sceneObject()->removeModulator(param, a->data().toString());
         });
     }
+    // remove all
     if (param->modulatorIds().size() > 1)
     {
         QAction * a = new QAction(tr("Remove all modulations (%1)")

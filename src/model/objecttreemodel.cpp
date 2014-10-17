@@ -21,6 +21,8 @@
 #include "object/sequencefloat.h"
 #include "object/param/parameterfloat.h"
 #include "object/scene.h"
+#include "object/clipcontainer.h"
+#include "object/clip.h"
 #include "gui/keepmodulatordialog.h"
 
 namespace MO {
@@ -745,13 +747,62 @@ TrackFloat * ObjectTreeModel::createFloatTrack(Parameter * param)
     addObject(indexForObject(obj), -1, track);
 
     // modulate parameter
-    {
-        ScopedObjectChange lock(scene_, param->object());
-        param->addModulator(track->idName());
-        param->collectModulators();
-    }
+    scene_->addModulator(param, track->idName());
 
     return track;
+}
+
+Object * ObjectTreeModel::createInClip(const QString& className, Clip * parent)
+{
+    MO_DEBUG_TREE("ObjectTreeModel::createInClip('" << className << ", " << parent << "')");
+
+    MO_ASSERT(scene_, "can't edit");
+
+    Object * obj = ObjectFactory::createObject(className);
+    if (!obj)
+        MO_ERROR("Can't create object '" << className << "'");
+
+    if (parent && !parent->canHaveChildren(obj->type()))
+    {
+        delete obj;
+        MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
+    }
+
+    // create a clip
+    if (!parent)
+    {
+        ClipContainer * con = 0;
+
+        // take first found container
+        auto clipcons = scene_->findChildObjects<ClipContainer>(QString(), true);
+        if (!clipcons.isEmpty())
+            con = clipcons[0];
+        // or create new
+        else
+        {
+            con = static_cast<ClipContainer*>(ObjectFactory::createObject("ClipContainer"));
+            if (!con)
+                MO_ERROR("Could not create ClipContainer");
+            addObject(scene_, con, 0);
+        }
+
+        // create clip
+        parent = static_cast<Clip*>(ObjectFactory::createObject("Clip"));
+        if (!parent)
+            MO_ERROR("Could not create Clip");
+        addObject(con, parent);
+    }
+
+    if (!parent->canHaveChildren(obj->type()))
+    {
+        delete obj;
+        MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
+    }
+
+    // add to parent
+    addObject(indexForObject(parent), -1, obj);
+
+    return obj;
 }
 
 SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double time)

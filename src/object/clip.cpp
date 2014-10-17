@@ -7,7 +7,7 @@
 
     <p>created 12.10.2014</p>
 */
-
+#include <QDebug>
 #include "clip.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -87,6 +87,44 @@ void Clip::childrenChanged()
 {
     // get all sequences and sub-sequences
     sequences_ = findChildObjects<Sequence>(QString(), true);
+}
+
+QList<Clip*> Clip::getAssociatedClips(Object *o)
+{
+    QSet<Clip*> clips;
+
+    auto mod = o->getModulatingObjects();
+    for (auto m : mod)
+        if (m->parentObject() && m->parentObject()->isClip())
+            clips.insert(static_cast<Clip*>(m->parentObject()));
+
+    QList<Clip*> ret;
+    for (auto c : clips)
+        ret << c;
+    return ret;
+}
+
+QList<Clip*> Clip::getAssociatedClips(Parameter * p, bool alsoObject)
+{
+    QSet<Clip*> clips;
+
+    auto mod = p->getModulatingObjects();
+    for (auto m : mod)
+        if (m->parentObject() && m->parentObject()->isClip())
+            clips.insert(static_cast<Clip*>(m->parentObject()));
+
+    if (alsoObject && p->object())
+    {
+        auto mod = p->object()->getModulatingObjects();
+        for (auto m : mod)
+            if (m->parentObject() && m->parentObject()->isClip())
+                clips.insert(static_cast<Clip*>(m->parentObject()));
+    }
+
+    QList<Clip*> ret;
+    for (auto c : clips)
+        ret << c;
+    return ret;
 }
 
 

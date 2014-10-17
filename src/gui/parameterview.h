@@ -104,7 +104,7 @@ private:
 
     // ------ config ------
 
-    bool doChangeToCreatedTrack_;
+    bool doChangeToCreatedMod_;
 };
 
 } // namespace GUI

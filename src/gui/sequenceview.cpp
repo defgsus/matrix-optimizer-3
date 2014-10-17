@@ -179,10 +179,11 @@ void SequenceView::setSequence_(Sequence * s)
 
     sequence_ = s;
 
-    if (different && sequence_)
-    {
+    if (different)
         updateSequenceWidget_();
 
+    if (different && sequence_)
+    {
         // adjust playbar offset to local time
         if (!sequence_->parentClip())
             playBar_->setTimeOffset(-sequence_->start());
@@ -199,6 +200,17 @@ void SequenceView::setSequence_(Sequence * s)
 
 void SequenceView::updateSequenceWidget_()
 {
+    if (!sequence_)
+    {
+        if (seqFloatView_)
+        {
+            seqFloatView_->setVisible(false);
+            seqFloatView_->setSequence(0);
+        }
+
+        return;
+    }
+
     QWidget * w = 0;
 
     if (sequence_->type() == Object::T_SEQUENCE_FLOAT)

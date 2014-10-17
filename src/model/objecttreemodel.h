@@ -103,6 +103,11 @@ public slots:
 
     TrackFloat * createFloatTrack(Parameter *parameter);
 
+    /** Creates the object of @p className in the @p clip.
+        If @p clip is NULL, a clip (and maybe a ClipContainer are autimatically created).
+        @throws Exception if anything goes wrong. */
+    Object * createInClip(const QString& className, Clip * clip = 0);
+
     SequenceFloat * createFloatSequence(TrackFloat * track, Double time);
 
 private:
