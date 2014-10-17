@@ -222,6 +222,7 @@ void SequenceView::updateSequenceWidget_()
                     this, SLOT(onViewSpaceChanged_(UTIL::ViewSpace)));
         }
 
+        seqFloatView_->setVisible(true);
         seqFloatView_->setSequence(static_cast<SequenceFloat*>(sequence_));
     }
 

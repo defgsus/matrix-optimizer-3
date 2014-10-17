@@ -758,6 +758,10 @@ bool Object::canHaveChildren(Type t) const
     if (t & TG_MODULATOR_OBJECT)
         return true;
 
+    // XXX test123: Let's place sequences everywhere
+    if (t & TG_SEQUENCE)
+        return true;
+
     // Clips belong into ClipContainer ...
     if (t == T_CLIP)
         return type() == T_CLIP_CONTAINER;
