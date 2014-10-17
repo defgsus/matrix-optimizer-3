@@ -16,6 +16,7 @@
 #include <QCursor>
 #include <QClipboard>
 #include <QMimeData>
+#include <QMessageBox>
 
 #include "objecttreeview.h"
 #include "model/objecttreemodel.h"
@@ -29,6 +30,7 @@
 #include "io/application.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "io/files.h"
 #include "geometrydialog.h"
 #include "painter/objecttreeviewoverpaint.h"
 #include "util/scenesettings.h"
@@ -422,6 +424,7 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         createEditActions_(obj);
     });
 
+
     if (obj->canBeDeleted())
     {
         // cut
@@ -508,6 +511,50 @@ void ObjectTreeView::createClipboardActions_(Object * obj)
         }
 
     }
+
+    editActions_.addSeparator(this);
+
+    // ---- insert template ----
+
+    a = editActions_.addAction(QIcon(":/icon/new.png"), tr("insert template"), this);
+    a->setStatusTip(tr("Inserts a previously saved object from a file"));
+    QMenu * sub = new QMenu(this);
+    a->setMenu(sub);
+
+        if (parentObj)
+        {
+            a = sub->addAction(QIcon(":/icon/above.png"), tr("above"));
+            a->setStatusTip(tr("Inserts a previously saved object from a file above the current object"));
+            connect(a, &QAction::triggered, [=]()
+            {
+                Object * o = loadObjectTemplate_();
+                if (o)
+                    addObject_(currentIndex().parent(), parentObj->childObjects().indexOf(obj), o);
+            });
+        }
+
+        a = sub->addAction(QIcon(":/icon/child.png"), tr("as child"));
+        a->setStatusTip(tr("Inserts a previously saved object from a file as child of the current object"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            Object * o = loadObjectTemplate_();
+            if (o)
+                addObject_(currentIndex(), -1, o);
+        });
+
+
+        if (parentObj)
+        {
+            a = sub->addAction(QIcon(":/icon/below.png"), tr("below"));
+            a->setStatusTip(tr("Inserts a previously saved object from a file below the current object"));
+            connect(a, &QAction::triggered, [=]()
+            {
+                Object * o = loadObjectTemplate_();
+                if (o)
+                    addObject_(currentIndex().parent(), parentObj->childObjects().indexOf(obj)+1, o);
+            });
+        }
+
 }
 
 
@@ -533,6 +580,14 @@ void ObjectTreeView::createEditObjectActions_(Object * obj)
             }
         });
     }
+
+    a = editActions_.addAction(tr("Save as template ..."), this);
+    a->setStatusTip(tr("Saves the object and it's sub-tree to a file for later reuse"));
+    connect(a, &QAction::triggered, [=]()
+    {
+        storeObjectTemplate_(obj);
+    });
+
 }
 
 void ObjectTreeView::createNewObjectActions_(Object * obj)
@@ -545,6 +600,7 @@ void ObjectTreeView::createNewObjectActions_(Object * obj)
     {
         // new sibling above
         QMenu * menu = createObjectsMenu_(parentObj);
+
         if (menu)
         {
             QModelIndex parentIndex = currentIndex().parent();
@@ -688,6 +744,43 @@ void ObjectTreeView::createMoveActions_(Object * obj)
     }
 }
 
+void ObjectTreeView::storeObjectTemplate_(Object * obj)
+{
+    QString fn = IO::Files::getSaveFileName(IO::FT_OBJECT_TEMPLATE, this);
+    if (fn.isEmpty())
+        return;
+
+    try
+    {
+        ObjectFactory::saveObject(fn, obj);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("io error"),
+                              tr("Could not save the object template\n%1\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+}
+
+Object * ObjectTreeView::loadObjectTemplate_()
+{
+    QString fn = IO::Files::getOpenFileName(IO::FT_OBJECT_TEMPLATE, this);
+    if (fn.isEmpty())
+        return 0;
+
+    try
+    {
+        Object * o = ObjectFactory::loadObject(fn);
+        return o;
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("io error"),
+                              tr("Could not load the object template\n%1\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+    return 0;
+}
 
 void ObjectTreeView::setFocusIndex(const QModelIndex & idx)
 {
@@ -780,6 +873,18 @@ bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
 
     if (parentObject)
     {
+        QString err;
+        if (!parentObject->isSaveToAdd(obj, err))
+        {
+            QMessageBox::critical(this, tr("Can't do that"),
+                                  tr("Can't add %1 to %2.\n%3")
+                                  .arg(obj->name())
+                                  .arg(parentObject->name())
+                                  .arg(err));
+            delete obj;
+            return false;
+        }
+
         // insert at end
         if (row < 0)
             row = parentObject->numChildren();
@@ -804,7 +909,8 @@ bool ObjectTreeView::addObject_(const QModelIndex &parent, int row, Object *obj)
         }
 
         QModelIndex orgidx = omodel_->indexForObject(parentObject);
-        QModelIndex idx = omodel_->addObject(orgidx, row, obj);
+        QModelIndex idx =
+                omodel_->addObject(orgidx, row, obj);
 
         setFocusIndex(filter_->mapFromSource(idx));
 

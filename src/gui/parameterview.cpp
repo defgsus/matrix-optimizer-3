@@ -656,6 +656,7 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
             {
                 // modulate
                 scene_->addModulator(param, o->idName());
+                o->setName("mod: " + param->infoName());
 
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
@@ -708,6 +709,7 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
             {
                 // modulate
                 scene_->addModulator(param, o->idName());
+                o->setName("mod: " + param->infoName());
 
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);

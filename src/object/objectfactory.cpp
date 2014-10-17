@@ -43,6 +43,9 @@ namespace {
     static QString MO_SCENEFILE_HEADER( "matrix-optimizer-scene" );
     static int     MO_SCENEFILE_VERSION( 1 );
 
+    static QString MO_OBJECTFILE_HEADER( "matrix-optimizer-object" );
+    static int     MO_OBJECTFILE_VERSION( 1 );
+
 }
 
 ObjectFactory * ObjectFactory::instance_ = 0;
@@ -389,4 +392,84 @@ Scene * ObjectFactory::loadScene(IO::DataStream &io)
     }
 }
 
+
+
+
+
+void ObjectFactory::saveObject(const QString &fn, const Object * obj)
+{
+    QFile file(fn);
+
+    if (!file.open(QFile::WriteOnly))
+        MO_IO_ERROR(WRITE, "could not create object file '" << fn << "'\n"
+                    << file.errorString());
+
+    IO::DataStream io(&file);
+
+    saveObject(io, obj);
+}
+
+void ObjectFactory::saveObject(IO::DataStream & io, const Object * obj)
+{
+    io.writeHeader(MO_OBJECTFILE_HEADER, MO_OBJECTFILE_VERSION);
+
+    io << (quint8)useCompression_;
+
+    if (!useCompression_)
+        obj->serializeTree(io);
+    else
+    {
+        QByteArray data = obj->serializeTreeCompressed();
+        io << data;
+    }
+}
+
+Object * ObjectFactory::loadObject(const QString &fn)
+{
+    QFile file(fn);
+
+    if (!file.open(QFile::ReadOnly))
+        MO_IO_ERROR(READ, "could not open object file '" << fn << "'\n"
+                    << file.errorString());
+
+    IO::DataStream io(&file);
+
+    return loadObject(io);
+}
+
+Object * ObjectFactory::loadObject(IO::DataStream &io)
+{
+    try
+    {
+        io.readHeader(MO_OBJECTFILE_HEADER, MO_OBJECTFILE_VERSION);
+    }
+    catch (const IoException &e)
+    {
+        MO_IO_WARNING(VERSION_MISMATCH,
+                      "error reading object\n"
+                      << e.what());
+        return 0;
+    }
+
+    quint8 compressed;
+    io >> compressed;
+
+    Object * o;
+
+    if (!compressed)
+        o = Object::deserializeTree(io);
+    else
+    {
+        QByteArray data;
+        io >> data;
+        o = Object::deserializeTreeCompressed(data);
+    }
+
+    return o;
+}
+
+
+
+
 } // namespace MO
+

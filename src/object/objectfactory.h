@@ -86,6 +86,14 @@ public:
         On other IO errors an IoException will be thrown. */
     static Scene * loadScene(IO::DataStream& io);
 
+    /** Stores the complete Object and it's subtree object.
+        On IO errors, an IoException will be thrown. */
+    static void saveObject(IO::DataStream& io, const Object*);
+
+    /** Tries to load an object and returns a the object tree.
+        On IO errors an IoException will be thrown. */
+    static Object * loadObject(IO::DataStream& io);
+
     // ------------- file io ----------------------
 
     /** Stores the complete Scene object to disk.
@@ -96,6 +104,14 @@ public:
         If the saved object was no Scene, NULL is returned.
         On other IO errors an IoException will be thrown. */
     static Scene * loadScene(const QString& filename);
+
+    /** Stores the object and it's subtree to disk.
+        On IO errors, an IoException will be thrown. */
+    static void saveObject(const QString& filename, const Object*);
+
+    /** Tries to load an object from disk and returns a the object tree.
+        On any IO errors an IoException will be thrown. */
+    static Object * loadObject(const QString& filename);
 
 signals:
 

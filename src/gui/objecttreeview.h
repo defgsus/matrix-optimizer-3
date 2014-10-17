@@ -111,6 +111,11 @@ protected:
 
     void expandObjectsByType_(const QModelIndex& indexInOriginalModel, int typeflags);
 
+    /** Open file dialog */
+    void storeObjectTemplate_(Object *);
+    /** Opens filedialig, returns an object or NULL */
+    Object * loadObjectTemplate_();
+
     /** highlevel do-it-all function for adding objects in the tree. */
     bool addObject_(const QModelIndex& parent, int row, Object * obj);
     bool deleteObject_(const QModelIndex&);
