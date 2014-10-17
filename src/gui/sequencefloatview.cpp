@@ -8,7 +8,10 @@
     <p>created 7/1/2014</p>
 */
 
+#include <QLayout>
+
 #include "sequencefloatview.h"
+#include "sequenceview.h"
 #include "timeline1dview.h"
 #include "ruler.h"
 #include "math/timeline1d.h"
@@ -17,7 +20,6 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "generalsequencefloatview.h"
-#include "util/scenesettings.h"
 #include "painter/valuecurve.h"
 #include "painter/sequenceoverpaint.h"
 
@@ -35,14 +37,16 @@ namespace {
 }
 
 
-SequenceFloatView::SequenceFloatView(QWidget *parent) :
-    SequenceView    (parent),
+SequenceFloatView::SequenceFloatView(SequenceView *parent) :
+    QWidget         (parent),
+    view_           (parent),
     sequence_       (0),
     timeline_       (0),
     seqView_        (0),
-    sequenceCurveData_(0)
+    sequenceCurveData_(0),
+    layout_         (0)
 {
-    updateSequence_();
+    updateSequence();
 }
 
 SequenceFloatView::~SequenceFloatView()
@@ -58,6 +62,7 @@ void SequenceFloatView::createTimeline_()
 
     timeline_ = new Timeline1DView(0, this);
     timeline_->setGridOptions(Ruler::O_DrawX | Ruler::O_DrawY);
+
 
     connect(timeline_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
                  this, SLOT(updateViewSpaceTl_(UTIL::ViewSpace)));
@@ -79,6 +84,8 @@ void SequenceFloatView::createTimeline_()
     timeline_->sequenceCurvePainter()->setCurveData(sequenceCurveData_);
     timeline_->sequenceCurvePainter()->setAlpha(80);
     timeline_->sequenceCurvePainter()->setOverpaint(1);
+
+    layout_->addWidget(timeline_);
 }
 
 void SequenceFloatView::createSequenceView_()
@@ -89,7 +96,10 @@ void SequenceFloatView::createSequenceView_()
     seqView_ = new GeneralSequenceFloatView(this);
     seqView_->setGridOptions(Ruler::O_DrawX | Ruler::O_DrawY);
 
-    connect(seqView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), SLOT(updateViewSpace_(UTIL::ViewSpace)));
+    connect(seqView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+            this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
+
+    layout_->addWidget(seqView_);
 }
 
 void SequenceFloatView::setSequence(SequenceFloat * s)
@@ -97,23 +107,31 @@ void SequenceFloatView::setSequence(SequenceFloat * s)
     MO_DEBUG_GUI("SequenceFloatView::setSequence(" << s << ") sequence_ = " << sequence_);
 
     bool different = sequence_ != s;
-    sequence_ = s;
 
-    setSequence_(s);
+    sequence_ = s;
 
     if (different)
     {
-        updateSequence_();
+        updateSequence();
     }
 }
 
-void SequenceFloatView::updateSequence_()
+void SequenceFloatView::updateSequence()
 {
     // XXX This is called quite often!!
+
+    if (!layout_)
+    {
+        layout_ = new QVBoxLayout(this);
+        layout_->setContentsMargins(0,0,0,0);
+    }
 
     if (sequence_ && sequence_->sequenceType() == SequenceFloat::ST_TIMELINE)
     {
         MO_ASSERT(sequence_->timeline(), "No timeline in SequenceFloat with timeline mode");
+
+        if (seqView_ && seqView_->isVisible())
+            seqView_->setVisible(false);
 
         createTimeline_();
         timeline_->setTimeline(sequence_->timeline());
@@ -124,23 +142,23 @@ void SequenceFloatView::updateSequence_()
         timeline_->sequenceCurvePainter()->setCurveData( sequenceCurveData_ );
         static_cast<SequenceCurveData*>(sequenceCurveData_)->sequence = sequence_;
 
-        setSequenceWidget_(timeline_);
-        if (seqView_ && seqView_->isVisible())
-            seqView_->setVisible(false);
         timeline_->setVisible(true);
 
     }
     else
     {
-        createSequenceView_();
-        seqView_->setSequence(sequence_);
-        setSequenceWidget_(seqView_);
         if (timeline_ && timeline_->isVisible())
             timeline_->setVisible(false);
+
+        createSequenceView_();
+
+        seqView_->setSequence(sequence_);
+
         seqView_->setVisible(true);
     }
 
-    setViewSpace(viewSpace());
+    // XXX forgot why
+    //setViewSpace(view_->viewSpace());
 
     update();
 }
@@ -162,12 +180,6 @@ void SequenceFloatView::setViewSpace(const UTIL::ViewSpace & v)
         else
             timeline_->setViewSpace(v);
     }
-
-    // save the current viewspace
-    if (sequence_)
-        sceneSettings()->setViewSpace(sequence_, v);
-
-    updateViewSpace_(v);
 }
 
 void SequenceFloatView::updateViewSpaceTl_(const UTIL::ViewSpace & s)

@@ -32,7 +32,7 @@ namespace GUI {
 class QObjectInspector;
 class ObjectView;
 class ObjectTreeView;
-class SequenceFloatView;
+class SequenceView;
 class Sequencer;
 class SceneSettings;
 class TransportWidget;
@@ -61,7 +61,7 @@ public:
     ObjectTreeView * objectTreeView() const { return objectTreeView_; }
     Sequencer * sequencer() const { return sequencer_; }
     ClipView * clipView() const { return clipView_; }
-    SequenceFloatView * sequenceFloatView() const { return seqFloatView_; }
+    SequenceView * sequenceView() const { return seqView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
     QObjectInspector * objectInspector() const { return qobjectInspector_; }
     ServerDialog * serverDialog() const { return serverDialog_; }
@@ -160,7 +160,7 @@ private:
 
     Sequencer * sequencer_;
     ClipView * clipView_;
-    SequenceFloatView * seqFloatView_;
+    SequenceView * seqView_;
 
     TransportWidget * transportWidget_;
 

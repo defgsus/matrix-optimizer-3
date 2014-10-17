@@ -29,6 +29,7 @@ class Ruler;
 class DoubleSpinBox;
 class TimeBar;
 class SceneSettings;
+class SequenceFloatView;
 
 class SequenceView : public QWidget
 {
@@ -44,6 +45,8 @@ public:
 
     /** Returns current viewspace. */
     const UTIL::ViewSpace& viewSpace() const;
+
+    Sequence * sequence() const { return sequence_; }
 
 signals:
 
@@ -61,12 +64,15 @@ signals:
 public slots:
 
     /** Sets the ViewSpace for the shown sequence */
-    virtual void setViewSpace(const UTIL::ViewSpace&) = 0;
+    void setViewSpace(const UTIL::ViewSpace&);
+
+    /** Sets the sequence to show, or NULL */
+    void setSequence(MO::Sequence *);
 
     /** Tells me that the scene time has changed */
     void setSceneTime(Double);
 
-protected slots:
+private slots:
 
     /** updates the Rulers to the viewspace. */
     void updateViewSpace_(const UTIL::ViewSpace&);
@@ -76,7 +82,6 @@ protected slots:
 
     void rulerXClicked_(Double);
 
-protected:
     void resizeEvent(QResizeEvent *);
     void focusInEvent(QFocusEvent * event);
 
@@ -84,20 +89,13 @@ protected:
     void setSequence_(MO::Sequence *);
 
     /** Sets the widget that displays the sequence data. */
-    void setSequenceWidget_(QWidget *);
-
-    /** Called when something in the sequence has changed. */
-    virtual void updateSequence_() = 0;
+    void updateSequenceWidget_();
+    /** Change from internal widgets */
+    void onViewSpaceChanged_(const UTIL::ViewSpace & v);
 
 private:
 
-    QWidget * newContainer_(const QString&);
-    QWidget * newDefaultSetting_(const QString & name);
-
-    void clearDefaultSettingsWidgets_();
-    void createDefaultSettingsWidgets_();
-
-    Sequence * baseSequence_;
+    Sequence * sequence_;
     Scene * scene_;
 
     SceneSettings * sceneSettings_;
@@ -105,6 +103,8 @@ private:
     QGridLayout * grid_;
     Ruler * rulerX_, * rulerY_;
     TimeBar * playBar_;
+
+    SequenceFloatView * seqFloatView_;
 };
 
 

@@ -11,10 +11,12 @@
 #ifndef MOSRC_GUI_SEQUENCEFLOATVIEW_H
 #define MOSRC_GUI_SEQUENCEFLOATVIEW_H
 
-#include "sequenceview.h"
-#include "object/object_fwd.h"
+#include <QWidget>
 
-class QComboBox;
+#include "object/object_fwd.h"
+#include "util/viewspace.h"
+
+class QLayout;
 
 namespace MO {
 namespace GUI {
@@ -22,27 +24,30 @@ namespace PAINTER { class ValueCurveData; }
 
 class Timeline1DView;
 class GeneralSequenceFloatView;
-class EquationEditor;
-class DoubleSpinBox;
-class SpinBox;
+class SequenceView;
 
-class SequenceFloatView : public SequenceView
+class SequenceFloatView : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SequenceFloatView(QWidget *parent = 0);
+    explicit SequenceFloatView(SequenceView *parent = 0);
     ~SequenceFloatView();
 
     SequenceFloat * sequence() const { return sequence_; }
 
 signals:
 
+    void viewSpaceChanged(const UTIL::ViewSpace&);
+
 public slots:
 
     /** Sets the ViewSpace for the shown sequence */
     void setViewSpace(const UTIL::ViewSpace&);
 
-    void setSequence(MO::SequenceFloat *);
+    void setSequence(SequenceFloat *);
+
+    /** Creates another sequence widget if needed */
+    void updateSequence();
 
 private slots:
 
@@ -50,17 +55,13 @@ private slots:
 
 private:
 
-    void createSettingsWidgets_();
-
     /** Creates a Timeline1DView if not already there. */
     void createTimeline_();
     void createSequenceView_();
 
-    /** Creates another sequence widget if needed */
-    void updateSequence_();
-
     // -------------- MMMEMBER ---------------
 
+    SequenceView * view_;
     SequenceFloat * sequence_;
 
     Timeline1DView * timeline_;
@@ -68,6 +69,7 @@ private:
     /** For timeline_ */
     PAINTER::ValueCurveData * sequenceCurveData_;
 
+    QLayout * layout_;
 };
 
 

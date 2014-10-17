@@ -18,9 +18,11 @@
 #include <QScrollBar>
 
 #include "sequenceview.h"
+#include "sequencefloatview.h"
 #include "ruler.h"
 #include "object/scene.h"
 #include "object/sequence.h"
+#include "object/sequencefloat.h"
 #include "object/clip.h"
 #include "io/error.h"
 #include "widget/doublespinbox.h"
@@ -33,12 +35,13 @@ namespace GUI {
 
 SequenceView::SequenceView(QWidget *parent) :
     QWidget         (parent),
-    baseSequence_   (0),
+    sequence_       (0),
     scene_          (0),
     sceneSettings_  (0),
     grid_           (new QGridLayout(this)),
     rulerX_         (new Ruler(this)),
-    rulerY_         (new Ruler(this))
+    rulerY_         (new Ruler(this)),
+    seqFloatView_   (0)
 {
     setFocusPolicy(Qt::StrongFocus);
 
@@ -69,8 +72,8 @@ SequenceView::SequenceView(QWidget *parent) :
     //connect(rulerY_, SIGNAL(fitRequest()),
 
     // pass viewSpaceChanged to this classes signal
-    connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
-    connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
+    connect(rulerX_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SLOT(onViewSpaceChanged_(UTIL::ViewSpace)));
+    connect(rulerY_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SLOT(onViewSpaceChanged_(UTIL::ViewSpace)));
     //connect(timelineView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)), this, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)));
 
     // connect ruler click to scene time
@@ -130,10 +133,10 @@ void SequenceView::setSceneTime(Double time)
 {
     playBar_->setTime(time);
     // check for containing clip
-    if (baseSequence_ && baseSequence_->parentClip())
+    if (sequence_ && sequence_->parentClip())
     {
-        playBar_->setTimeOffset(-baseSequence_->realStart());
-        playBar_->setActive(baseSequence_->parentClip()->isPlaying());
+        playBar_->setTimeOffset(-sequence_->realStart());
+        playBar_->setActive(sequence_->parentClip()->isPlaying());
     }
 }
 
@@ -161,33 +164,86 @@ void SequenceView::focusInEvent(QFocusEvent * e)
     emit clicked();
 }
 
+void SequenceView::setSequence(Sequence * s)
+{
+    setSequence_(s);
+}
+
 void SequenceView::setSequence_(Sequence * s)
 {
-    MO_DEBUG_GUI("SequenceView::setSequence(" << s << ") baseSequence_ = " << baseSequence_);
+    MO_DEBUG_GUI("SequenceView::setSequence(" << s << ") baseSequence_ = " << sequence_);
 
     MO_ASSERT(sceneSettings_, "SequenceView::setSequence() without SceneSettings");
 
-    bool different = baseSequence_ != s;
+    bool different = sequence_ != s;
 
-    baseSequence_ = s;
+    sequence_ = s;
 
-    if (different && baseSequence_)
+    if (different && sequence_)
     {
+        updateSequenceWidget_();
+
         // adjust playbar offset to local time
-        if (!baseSequence_->parentClip())
-            playBar_->setTimeOffset(-baseSequence_->start());
+        if (!sequence_->parentClip())
+            playBar_->setTimeOffset(-sequence_->start());
         else
         {
-            playBar_->setTimeOffset(-baseSequence_->realStart());
-            playBar_->setActive(baseSequence_->parentClip()->isPlaying());
+            playBar_->setTimeOffset(-sequence_->realStart());
+            playBar_->setActive(sequence_->parentClip()->isPlaying());
         }
+
         // get viewspace from previous use
-        setViewSpace(sceneSettings_->getViewSpace(baseSequence_));
+        setViewSpace(sceneSettings_->getViewSpace(sequence_));
     }
+}
+
+void SequenceView::updateSequenceWidget_()
+{
+    QWidget * w = 0;
+
+    if (sequence_->type() == Object::T_SEQUENCE_FLOAT)
+    {
+        if (!seqFloatView_)
+        {
+            w = seqFloatView_ = new SequenceFloatView(this);
+            connect(seqFloatView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+                    this, SLOT(onViewSpaceChanged_(UTIL::ViewSpace)));
+        }
+
+        seqFloatView_->setSequence(static_cast<SequenceFloat*>(sequence_));
+    }
+
+    if (w)
+    {
+        grid_->addWidget(w, 1, 1);
+    }
+
+    playBar_->raise();
+}
+
+void SequenceView::setViewSpace(const UTIL::ViewSpace & v)
+{
+    // own space
+    updateViewSpace_(v);
+
+    // sub-widgets
+    if (seqFloatView_)
+        seqFloatView_->setViewSpace(v);
+
+}
+
+void SequenceView::onViewSpaceChanged_(const UTIL::ViewSpace & v)
+{
+    // save the current viewspace
+    if (sequence_)
+        sceneSettings()->setViewSpace(sequence_, v);
+
+    emit viewSpaceChanged(v);
 }
 
 void SequenceView::updateViewSpace_(const UTIL::ViewSpace & v)
 {
+
     rulerX_->setViewSpace(v);
     rulerY_->setViewSpace(v);
     //if (!baseSequence_)
@@ -201,17 +257,11 @@ void SequenceView::updateViewSpace_(const UTIL::ViewSpace & v)
 }
 
 
-void SequenceView::setSequenceWidget_(QWidget * w)
-{
-    grid_->addWidget(w, 1, 1);
-
-    playBar_->raise();
-}
 
 void SequenceView::rulerXClicked_(Double time)
 {
-    if (baseSequence_)
-        time += baseSequence_->realStart();
+    if (sequence_)
+        time += sequence_->realStart();
 
     emit sceneTimeChanged(time);
 }
@@ -220,23 +270,27 @@ void SequenceView::rulerXClicked_(Double time)
 
 void SequenceView::onParameterChanged_(Parameter * p)
 {
-    if (p->object() == baseSequence_)
-        onSequenceChanged_(baseSequence_);
+    if (p->object() == sequence_)
+        onSequenceChanged_(sequence_);
 }
+
 
 void SequenceView::onSequenceChanged_(Sequence * s)
 {
     MO_DEBUG_PARAM("SequenceView::sequenceTimeChanged(" << s
-                   << ") baseSequence_=" << baseSequence_
+                   << ") baseSequence_=" << sequence_
                    << " defaultSettingsAvailable_=" << defaultSettingsAvailable_);
     Q_UNUSED(s);
 
-    playBar_->setTimeOffset(-baseSequence_->realStart());
-    playBar_->setMinimumTime(-baseSequence_->start());
-    if (baseSequence_->parentClip())
-        playBar_->setActive(baseSequence_->parentClip()->isPlaying());
+    // update playbar
+    playBar_->setTimeOffset(-sequence_->realStart());
+    playBar_->setMinimumTime(-sequence_->start());
+    if (sequence_->parentClip())
+        playBar_->setActive(sequence_->parentClip()->isPlaying());
 
-    updateSequence_();
+    // repaint float view
+    if (seqFloatView_ && seqFloatView_->isVisible())
+        seqFloatView_->updateSequence();
 
     update();
 }

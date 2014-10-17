@@ -193,6 +193,7 @@ UTIL::ViewSpace SceneSettings::getViewSpace(const Object *obj)
     if (const Sequence * seq = qobject_cast<const Sequence*>(obj))
     {
         space.setScaleX(std::min(60.0, seq->length()));
+        space.setY(-1.2);
         space.setScaleY(2.4);
     }
 

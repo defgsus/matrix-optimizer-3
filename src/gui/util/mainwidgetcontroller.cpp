@@ -34,7 +34,7 @@
 #include "gui/qobjectinspector.h"
 #include "gui/objecttreeview.h"
 #include "gui/objectview.h"
-#include "gui/sequencefloatview.h"
+#include "gui/sequenceview.h"
 #include "gui/sequencer.h"
 #include "gui/clipview.h"
 #include "gui/helpdialog.h"
@@ -156,7 +156,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       sceneSettings_    (0),
       sequencer_        (0),
       clipView_         (0),
-      seqFloatView_     (0),
+      seqView_          (0),
       transportWidget_  (0),
       qobjectInspector_ (0),
       serverDialog_     (0),
@@ -227,12 +227,12 @@ void MainWidgetController::createObjects_()
             this, SLOT(onSceneChanged_()));
 
     // SequenceFloat view
-    seqFloatView_ = new SequenceFloatView(window_);
-    seqFloatView_->setVisible(false);
-    seqFloatView_->setSceneSettings(sceneSettings_);
-    connect(seqFloatView_, SIGNAL(statusTipChanged(QString)),
+    seqView_ = new SequenceView(window_);
+    seqView_->setVisible(false);
+    seqView_->setSceneSettings(sceneSettings_);
+    connect(seqView_, SIGNAL(statusTipChanged(QString)),
             statusBar_, SLOT(showMessage(QString)));
-    connect(seqFloatView_, SIGNAL(clicked()),
+    connect(seqView_, SIGNAL(clicked()),
             this, SLOT(onSequenceClicked_()));
 
     // gl manager and window
@@ -550,7 +550,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     connect(scene_, SIGNAL(playbackStopped()),
             glWindow_, SLOT(stopAnimation()));
 
-    connect(seqFloatView_, SIGNAL(sceneTimeChanged(Double)),
+    connect(seqView_, SIGNAL(sceneTimeChanged(Double)),
             scene_, SLOT(setSceneTime(Double)));
     connect(sequencer_, SIGNAL(sceneTimeChanged(Double)),
             scene_, SLOT(setSceneTime(Double)));
@@ -572,7 +572,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     scene_->setObjectModel(objectTreeModel_);
     connect(scene_, SIGNAL(sceneTimeChanged(Double)),
-            seqFloatView_, SLOT(setSceneTime(Double)));
+            seqView_, SLOT(setSceneTime(Double)));
     connect(scene_, SIGNAL(sceneTimeChanged(Double)),
             sequencer_, SLOT(setSceneTime(Double)));
     connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
@@ -582,8 +582,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     objectView_->setObject(0);
 
-    seqFloatView_->setScene(scene_);
-    seqFloatView_->setSequence(0);
+    seqView_->setScene(scene_);
+    seqView_->setSequence(0);
 
     sequencer_->setCurrentObject(scene_);
     clipView_->setClipContainer(0);
@@ -705,14 +705,14 @@ void MainWidgetController::showSequence_(bool enable, Sequence * seq)
     {
         if (seq->type() == Object::T_SEQUENCE_FLOAT)
         {
-            seqFloatView_->setSequence(static_cast<SequenceFloat*>(seq));
-            seqFloatView_->setVisible(true);
+            seqView_->setSequence(static_cast<SequenceFloat*>(seq));
+            seqView_->setVisible(true);
         }
-        else seqFloatView_->setVisible(false);
+        else seqView_->setVisible(false);
     }
     else
     {
-        seqFloatView_->setVisible(false);
+        seqView_->setVisible(false);
     }
 
 }
@@ -728,8 +728,8 @@ void MainWidgetController::updateSequenceView_(Object * o)
     if (o->isClip())
     {
         // if the clip contains the current displayed sequence
-        if (seqFloatView_->isVisible()
-            && o->containsObject(seqFloatView_->sequence()))
+        if (seqView_->isVisible()
+            && o->containsObject(seqView_->sequence()))
             return;
 
         // switch to first sequence
@@ -850,8 +850,13 @@ void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
 void MainWidgetController::onSequenceClicked_()
 {
     // update objectview if not already
-    if (objectView_->object() != seqFloatView_->sequence())
-        objectView_->setObject(seqFloatView_->sequence());
+    if (objectView_->object() != seqView_->sequence())
+        objectView_->setObject(seqView_->sequence());
+
+    // focus in tree
+    const QModelIndex & idx = objectTreeView_->getIndexForObject(seqView_->sequence());
+    if (objectTreeView_->currentIndex() != idx)
+        objectTreeView_->setFocusIndex(idx);
 }
 
 
