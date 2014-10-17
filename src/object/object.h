@@ -308,6 +308,10 @@ public:
         the Object::Type mask in @p typeFlags */
     bool containsTypes(int typeFlags) const;
 
+    /** Returns true if this object or any of it's childs are
+        equal to @p o */
+    bool containsObject(Object * o) const;
+
     /** Returns number of direct childs or number of all sub-childs. */
     int numChildren(bool recursive = false) const;
 

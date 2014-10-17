@@ -54,8 +54,9 @@ public slots:
         Set to NULL to clear this view. */
     void setClipContainer(ClipContainer *);
 
-    /** Selects the clip belonging to @p o.
-        If @p o is NULL the selection is cleared. */
+    /** Selects the clip or clips belonging to @p o.
+        If @p o is NULL the selection is cleared.
+        Otherwise @p o can be of any Object class. */
     void selectObject(Object * o);
 
     /** Update the widget for this clip */

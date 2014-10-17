@@ -55,6 +55,9 @@ signals:
 
     void statusTipChanged(const QString&);
 
+    /** Emitted whenever the user interacts with the view */
+    void clicked();
+
 public slots:
 
     /** Sets the ViewSpace for the shown sequence */
@@ -75,6 +78,7 @@ protected slots:
 
 protected:
     void resizeEvent(QResizeEvent *);
+    void focusInEvent(QFocusEvent * event);
 
     /** Sets the sequence and creates the default settings. */
     void setSequence_(MO::Sequence *);

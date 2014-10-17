@@ -381,20 +381,39 @@ void ClipView::selectObject(Object *o)
         return;
     }
 
-    if (o->isClip())
-    {
-        ClipWidget * w = widgetForClip_(static_cast<Clip*>(o));
-        if (w)
-            clickSelect_(w, 0);
+    if (o->isClipContainer())
         return;
-    }
 
-    if (Object * clip = o->findParentObject(Object::T_CLIP))
+    // -- select specific clip --
+
+    Object * clip = 0;
+
+    if (o->isClip())
+        clip = o;
+    else
+    if (Object * c = o->findParentObject(Object::T_CLIP))
+        clip = c;
+
+    if (clip)
     {
         ClipWidget * w = widgetForClip_(static_cast<Clip*>(clip));
         if (w)
             clickSelect_(w, 0);
         return;
+    }
+
+    // -- select all clips connected to object --
+
+    auto list = o->getModulatingObjects();
+    if (!list.isEmpty())
+    {
+        clearSelection_();
+        for (Object * o : list)
+        {
+            if (Object * c = o->findContainingObject(Object::T_CLIP))
+                if (ClipWidget * w = widgetForClip_(static_cast<Clip*>(c)))
+                    select_(w);
+        }
     }
 }
 

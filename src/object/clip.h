@@ -14,6 +14,7 @@
 #include <QColor>
 
 #include "object.h"
+#include "param/parameterfloat.h"
 
 namespace MO {
 
@@ -52,6 +53,8 @@ public:
     uint row() const { return row_; }
 
     const QColor color() const { return color_; }
+
+    Double speed() const { return p_speed_->baseValue(); }
 
     // -------------- setter -------------------
 
@@ -98,6 +101,9 @@ private:
     uint column_, row_;
 
     QColor color_;
+
+    ParameterFloat
+            * p_speed_;
 };
 
 

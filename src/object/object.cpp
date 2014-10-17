@@ -358,6 +358,18 @@ bool Object::containsTypes(const int typeFlags) const
     return false;
 }
 
+bool Object::containsObject(Object * o) const
+{
+    if (this == o)
+        return true;
+
+    for (auto c : childObjects())
+        if (c->containsObject(o))
+            return true;
+
+    return false;
+}
+
 // ---------------- getter -------------------------
 
 QString Object::namePath() const

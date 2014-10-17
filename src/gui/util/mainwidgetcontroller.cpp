@@ -232,6 +232,8 @@ void MainWidgetController::createObjects_()
     seqFloatView_->setSceneSettings(sceneSettings_);
     connect(seqFloatView_, SIGNAL(statusTipChanged(QString)),
             statusBar_, SLOT(showMessage(QString)));
+    connect(seqFloatView_, SIGNAL(clicked()),
+            this, SLOT(onSequenceClicked_()));
 
     // gl manager and window
     glManager_ = new GL::Manager(this);
@@ -715,6 +717,31 @@ void MainWidgetController::showSequence_(bool enable, Sequence * seq)
 
 }
 
+/** Shows or hides the sequence view and selects a sequence to display */
+void MainWidgetController::updateSequenceView_(Object * o)
+{
+    // show the clicked-on sequence
+    if (o->isSequence())
+        showSequence_(true, static_cast<Sequence*>(o));
+
+    // selected a clip?
+    if (o->isClip())
+    {
+        // if the clip contains the current displayed sequence
+        if (seqFloatView_->isVisible()
+            && o->containsObject(seqFloatView_->sequence()))
+            return;
+
+        // switch to first sequence
+        auto clip = static_cast<Clip*>(o);
+        if (!clip->sequences().isEmpty())
+        {
+            showSequence_(true, clip->sequences()[0]);
+            return;
+        }
+    }
+}
+
 
 void MainWidgetController::onObjectNameChanged_(Object * o)
 {
@@ -741,13 +768,13 @@ void MainWidgetController::onObjectSelectedTree_(Object * o)
 
     if (!o)
     {
-        sequencer_->setVisible(false);
-        seqFloatView_->setVisible(false);
+        showSequencer_(false);
+        showSequence_(false);
         return;
     }
 
     // update sequence view
-    showSequence_(o->isSequence(), static_cast<Sequence*>(o));
+    updateSequenceView_(o);
 
     // update clipview
     if (o->isClip() || o->isClipContainer() ||
@@ -764,7 +791,13 @@ void MainWidgetController::onObjectSelectedTree_(Object * o)
         if ((real && real->containsTypes(Object::TG_TRACK))
                 || o->containsTypes(Object::TG_TRACK))
             showSequencer_(true, o);
+
+        // if not tracks in object, select clips belonging to object
+        if (clipView_->isVisible())
+            clipView_->selectObject(o);
     }
+
+
 }
 
 
@@ -779,7 +812,7 @@ void MainWidgetController::onObjectSelectedClipView_(Object * o)
     objectTreeView_->setFocusIndex(o);
 
     // update sequence view
-    showSequence_(o->isSequence(), static_cast<Sequence*>(o));
+    updateSequenceView_(o);
 }
 
 void MainWidgetController::onObjectSelectedObjectView_(Object * o)
@@ -814,6 +847,12 @@ void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
     objectTreeView_->setFocusIndex(o);
 }
 
+void MainWidgetController::onSequenceClicked_()
+{
+    // update objectview if not already
+    if (objectView_->object() != seqFloatView_->sequence())
+        objectView_->setObject(seqFloatView_->sequence());
+}
 
 
 void MainWidgetController::onTreeChanged_()

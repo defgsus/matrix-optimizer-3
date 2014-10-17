@@ -33,6 +33,8 @@ public:
     explicit SequenceFloatView(QWidget *parent = 0);
     ~SequenceFloatView();
 
+    SequenceFloat * sequence() const { return sequence_; }
+
 signals:
 
 public slots:

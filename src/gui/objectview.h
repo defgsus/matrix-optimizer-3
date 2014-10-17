@@ -33,6 +33,9 @@ public:
 
     void setSceneSettings(SceneSettings * s);
 
+    /** The currently edited object */
+    Object * object() const { return object_; }
+
 signals:
 
     /** When a modulation object was created */

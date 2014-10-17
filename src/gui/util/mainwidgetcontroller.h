@@ -108,6 +108,7 @@ private slots:
     void onObjectSelectedObjectView_(MO::Object*);
     void onObjectSelectedClipView_(MO::Object*);
     void onObjectSelectedSequencer_(MO::Sequence*);
+    void onSequenceClicked_();
 
     void onObjectNameChanged_(MO::Object*);
     void onObjectAdded_(MO::Object*);
@@ -138,6 +139,7 @@ private:
     void createObjects_();
     void setScene_(Scene *, const SceneSettings *set = 0);
 
+    void updateSequenceView_(Object *o);
     void updateWindowTitle_();
     QString getSceneSaveFilename_();
     bool saveScene_(const QString& fn);

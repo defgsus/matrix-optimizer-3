@@ -97,25 +97,25 @@ void MainWindow::createWidgets_()
             l0->addWidget(leftContainer);
             leftContainer->setObjectName("_left_container");
             leftContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-            leftContainer->setMinimumWidth(340);
+            leftContainer->setMinimumWidth(630);
 
-            auto lv = new QVBoxLayout(leftContainer);
-            lv->setMargin(0);
+            auto ll = new QHBoxLayout(leftContainer);
+            ll->setMargin(0);
             //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
                 // object tree view
-                lv->addWidget(controller_->objectTreeView());
-                controller_->objectTreeView()->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+                ll->addWidget(controller_->objectTreeView());
+                controller_->objectTreeView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
                 //objectTreeView_->setMinimumWidth(320);
                 //objectTreeView_->setMaximumWidth(450);
 
                 // object editor
-                lv->addWidget(controller_->objectView());
-                controller_->objectView()->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+                ll->addWidget(controller_->objectView());
+                controller_->objectView()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
                 //objectView_->setMinimumWidth(320);
             //l0->setStretchFactor(lv, -1);
 
-            lv = new QVBoxLayout();
+            auto lv = new QVBoxLayout();
             l0->addLayout(lv);
 
                 spacer_ = new Spacer(Qt::Vertical, this);

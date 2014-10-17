@@ -40,6 +40,8 @@ SequenceView::SequenceView(QWidget *parent) :
     rulerX_         (new Ruler(this)),
     rulerY_         (new Ruler(this))
 {
+    setFocusPolicy(Qt::StrongFocus);
+
     grid_->setMargin(1);
     grid_->setContentsMargins(1,1,1,1);
     grid_->setSpacing(2);
@@ -150,6 +152,13 @@ void SequenceView::resizeEvent(QResizeEvent * e)
     playBar_->setContainingRect(
         QRect(rulerX_->pos(), QSize(rulerX_->width(), grid_->geometry().height()))
                 );
+}
+
+void SequenceView::focusInEvent(QFocusEvent * e)
+{
+    QWidget::focusInEvent(e);
+
+    emit clicked();
 }
 
 void SequenceView::setSequence_(Sequence * s)

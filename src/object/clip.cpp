@@ -57,6 +57,14 @@ void Clip::deserialize(IO::DataStream &io)
 void Clip::createParameters()
 {
     Object::createParameters();
+
+    beginParameterGroup("clip", tr("clip"));
+
+        p_speed_ = createFloatParameter("speed", tr("speed"),
+                                        tr("The speed multiplier for all sequences in the clip"),
+                                        1, 0.1, true, false);
+
+    endParameterGroup();
 }
 
 
