@@ -104,8 +104,12 @@ private slots:
     void updateSystemInfo_();
     void updateDebugRender_();
 
-    void onObjectSelected_(MO::Object*);
     void onObjectSelectedTree_(MO::Object*);
+    void onObjectSelectedObjectView_(MO::Object*);
+    void onObjectSelectedClipView_(MO::Object*);
+    void onObjectSelectedSequencer_(MO::Sequence*);
+
+    void onObjectNameChanged_(MO::Object*);
     void onObjectAdded_(MO::Object*);
     void onObjectDeleted_(const MO::Object*);
     void onTreeChanged_();
@@ -118,7 +122,9 @@ private slots:
     void dumpNeededFiles_();
     void exportPovray_();
 
-    void showClipView_(bool enable);
+    void showClipView_(bool enable, Object * = 0);
+    void showSequence_(bool enable, Sequence * = 0);
+    void showSequencer_(bool enable, Object * = 0);
 
     void updateWidgetsActivity_();
 
@@ -136,6 +142,7 @@ private:
     QString getSceneSaveFilename_();
     bool saveScene_(const QString& fn);
     void loadScene_(const QString& fn);
+
 
     QMainWindow * window_;
     Scene * scene_;

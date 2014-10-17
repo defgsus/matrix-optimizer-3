@@ -310,7 +310,7 @@ bool ObjectTreeModel::setData(const QModelIndex &index, const QVariant &value, i
         // set name
         if (role == Qt::EditRole && index.column() == 0)
         {
-            obj->setName(value.toString());
+            scene_->setObjectName(obj, value.toString());
             return true;
         }
     }

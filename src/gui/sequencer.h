@@ -44,7 +44,7 @@ public:
 signals:
 
     /** Emitted when a sequence was double-clicked */
-    void sequenceSelected(Sequence *);
+    void sequenceSelected(MO::Sequence *);
 
     /** User dragged the time bar */
     void sceneTimeChanged(Double);

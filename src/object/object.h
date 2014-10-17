@@ -240,13 +240,11 @@ public:
         contains microphones or soundsources. */
     bool isAudioRelevant() const;
 
-    /** Returns a priority for each object type */
-    static int objectPriority(const Object *);
-
-    // ---------- tree editing --------------------
-
     /** Returns true when the object can be deleted by the ObjectTreeView */
     bool canBeDeleted() const { return canBeDeleted_; }
+
+    /** Returns a priority for each object type */
+    static int objectPriority(const Object *);
 
     // ---------- activity (scope) ----------------
 
@@ -272,21 +270,12 @@ public:
         will be reflected in their active() method. */
     void setCurrentActivityScope(ActivityScope scope);
 
-    // ------------- tree stuff -----------------
+    // ---------- tree getter --------------------
 
-    /** Returns the parent Object, or NULL */
-    Object * parentObject() const { return parentObject_; }
-
-    /** See if this object has a parent object @p o. */
-    bool hasParentObject(Object * o) const;
-
-    /** Returns the first parent object of given type, or NULL */
-    Object * getParentObject(Type) const;
-
-    /** Test if object @p o can be added to this object.
+    /** Test if object @p newChild can be added to this object.
         This checks for type compatibility as well as for
         potential loops in the modulation path. */
-    bool isSaveToAdd(Object * o, QString& error) const;
+    bool isSaveToAdd(Object * newChild, QString& error) const;
 
     /** Returns the root object of this hierarchy, which may
         be the object itself. */
@@ -297,12 +286,27 @@ public:
     const Scene * sceneObject() const;
           Scene * sceneObject();
 
-    /** Returns a string that is unique among the @p existingNames.
-        If a match is found, a counter is added to the idName.
-        Also, any whitespace is relpaced with underscores.
-        If @p existed != NULL, it will be set to true, if
-        the id needed to be changed. */
-    static QString getUniqueId(QString id, const QSet<QString> &existingNames, bool *existed = 0);
+    /** Returns the parent Object, or NULL */
+    Object * parentObject() const { return parentObject_; }
+
+    /** See if this object has a parent object @p o. */
+    bool hasParentObject(Object * o) const;
+
+    /** Returns the first parent object of given type, or NULL */
+    Object * findParentObject(Type) const;
+
+    /** Returns this object or the first parent that matches
+        the Object::Type mask in @p typeFlags.
+        If none matches, returns NULL */
+    Object * findContainingObject(int typeFlags);
+    /** Returns this object or the first parent that matches
+        the Object::Type mask in @p typeFlags.
+        If none matches, returns NULL */
+    const Object * findContainingObject(int typeFlags) const;
+
+    /** Returns true if this object or any of it's children match
+        the Object::Type mask in @p typeFlags */
+    bool containsTypes(int typeFlags) const;
 
     /** Returns number of direct childs or number of all sub-childs. */
     int numChildren(bool recursive = false) const;
@@ -342,6 +346,15 @@ public:
     /** Returns the index of the last child object of type @p T */
     template <class T>
     int indexOfLastChild(int last = -1) const;
+
+    // ------------- tree stuff -----------------
+
+    /** Returns a string that is unique among the @p existingNames.
+        If a match is found, a counter is added to the idName.
+        Also, any whitespace is relpaced with underscores.
+        If @p existed != NULL, it will be set to true, if
+        the id needed to be changed. */
+    static QString getUniqueId(QString id, const QSet<QString> &existingNames, bool *existed = 0);
 
     /** Needed for ObjectGl. Base implementation calls propagteRenderMode() for
         all children. */

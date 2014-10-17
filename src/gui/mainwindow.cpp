@@ -77,6 +77,9 @@ void MainWindow::createWidgets_()
     controller_->createMainMenu(menuBar());
     setStatusBar(controller_->statusBar());
 
+    // window title
+    connect(controller_, SIGNAL(windowTitle(QString)),
+            this, SLOT(setWindowTitle(QString)));
 
     // main-main layout
     auto lv0 = new QVBoxLayout(centralWidget());

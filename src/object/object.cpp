@@ -309,7 +309,54 @@ int Object::objectPriority(const Object *o)
     return 0;
 }
 
+Object * Object::findContainingObject(const int typeFlags)
+{
+    if (type() & typeFlags)
+        return this;
 
+    // find parent that matches
+    Object * p = parentObject();
+    while (p)
+    {
+        if (p->type() & typeFlags)
+            return p;
+
+        p = p->parentObject();
+    }
+
+    return 0;
+}
+
+const Object * Object::findContainingObject(const int typeFlags) const
+{
+    if (type() & typeFlags)
+        return this;
+
+    // find parent that matches
+    Object * p = parentObject();
+    while (p)
+    {
+        if (p->type() & typeFlags)
+            return p;
+
+        p = p->parentObject();
+    }
+
+    return 0;
+}
+
+
+bool Object::containsTypes(const int typeFlags) const
+{
+    if (type() & typeFlags)
+        return true;
+
+    for (auto c : childObjects())
+        if (c->containsTypes(typeFlags))
+            return true;
+
+    return false;
+}
 
 // ---------------- getter -------------------------
 
@@ -459,12 +506,12 @@ bool Object::hasParentObject(Object *o) const
     return parentObject_ == o? true : parentObject_->hasParentObject(o);
 }
 
-Object * Object::getParentObject(Type t) const
+Object * Object::findParentObject(Type t) const
 {
     if (!parentObject_)
         return 0;
 
-    return parentObject_->type() == t ? parentObject_ : parentObject_->getParentObject(t);
+    return parentObject_->type() == t ? parentObject_ : parentObject_->findParentObject(t);
 }
 
 bool Object::isSaveToAdd(Object *o, QString &error) const

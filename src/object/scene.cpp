@@ -249,6 +249,18 @@ QSet<Object*> Scene::getAllModulators() const
 
 // ----------------------- tree ------------------------------
 
+void Scene::setObjectName(Object *object, const QString &name)
+{
+    MO_DEBUG_TREE("Scene::setObjectName(" << object << ", " << name << ")");
+
+    const bool changed = object->name() != name;
+
+    object->setName(name);
+
+    if (changed)
+        emit objectNameChanged(object);
+}
+
 void Scene::addObject(Object *parent, Object *newChild, int insert_index)
 {
     MO_DEBUG_TREE("Scene::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");

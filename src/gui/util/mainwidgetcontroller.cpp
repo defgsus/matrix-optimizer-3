@@ -195,21 +195,19 @@ void MainWidgetController::createObjects_()
     connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
             SLOT(setEditActions_(const QObject*,QList<QAction*>)));
     connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
-            SLOT(onObjectSelected_(MO::Object*)));
-    connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
             SLOT(onObjectSelectedTree_(MO::Object*)));
 
     // object tree model
     objectTreeModel_ = new ObjectTreeModel(0, this);
-    connect(objectTreeModel_, SIGNAL(sceneChanged()),
-            this, SLOT(onSceneChanged_()));
+    //connect(objectTreeModel_, SIGNAL(sceneChanged()),
+    //        this, SLOT(onSceneChanged_()));
     objectTreeView_->setObjectModel(objectTreeModel_);
 
     // object View
     objectView_ = new ObjectView(window_);
     objectView_->setSceneSettings(sceneSettings_);
     connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
-            this, SLOT(onObjectSelected_(MO::Object*)));
+            this, SLOT(onObjectSelectedObjectView_(MO::Object*)));
     connect(objectView_, SIGNAL(statusTipChanged(QString)),
             statusBar_, SLOT(showMessage(QString)));
 
@@ -217,14 +215,16 @@ void MainWidgetController::createObjects_()
     sequencer_ = new Sequencer(window_);
     sequencer_->setSceneSettings(sceneSettings_);
     sequencer_->setMinimumHeight(300);
-    connect(sequencer_, &Sequencer::sequenceSelected, [this](Sequence * seq)
-    {
-        onObjectSelected_(seq);
-    });
+    connect(sequencer_, SIGNAL(sequenceSelected(MO::Sequence*)),
+            this, SLOT(onObjectSelectedSequencer_(MO::Sequence*)));
 
     // clipview
     clipView_ = new ClipView(window_);
     clipView_->setVisible(false);
+    connect(clipView_, SIGNAL(objectSelected(MO::Object*)),
+            this, SLOT(onObjectSelectedClipView_(MO::Object*)));
+    connect(clipView_, SIGNAL(clipsMoved()),
+            this, SLOT(onSceneChanged_()));
 
     // SequenceFloat view
     seqFloatView_ = new SequenceFloatView(window_);
@@ -554,7 +554,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             scene_, SLOT(setSceneTime(Double)));
 
     // scene changes
-    // XXX still very unfinished right now
+    // XXX still very unfinished right now - but in the process right now ;)
+    connect(scene_, SIGNAL(objectNameChanged(MO::Object*)), this, SLOT(onObjectNameChanged_(MO::Object*)));
     connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
     connect(scene_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
     connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(onTreeChanged_()));
@@ -598,13 +599,6 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
 
 
-
-
-void MainWidgetController::showClipView_(bool enable)
-{
-    sequencer_->setVisible(!enable);
-    clipView_->setVisible(enable);
-}
 
 
 
@@ -664,61 +658,163 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
     onTreeChanged_();
 }
 
-void MainWidgetController::onObjectSelected_(Object * o)
+
+
+
+
+
+
+void MainWidgetController::showClipView_(bool enable, Object * o)
 {
-    MO_DEBUG_GUI("MainWidgetController::objectSelected(" << o << ")");
+    sequencer_->setVisible(!enable);
+    clipView_->setVisible(enable);
 
-    // update object editor
-    objectView_->setObject(o);
+    if (!enable)
+        return;
 
-    // update sequence editor
-    if (o && o->type() == Object::T_SEQUENCE_FLOAT)
+    if (o->isClipContainer())
     {
-        seqFloatView_->setSequence(static_cast<SequenceFloat*>(o));
-        if (!seqFloatView_->isVisible())
-            seqFloatView_->setVisible(true);
+        clipView_->setClipContainer(static_cast<ClipContainer*>(o));
     }
     else
     {
-        if (!o || o->type() != Object::T_CLIP)
-            seqFloatView_->setVisible(false);
+        Object * con = o->findParentObject(Object::T_CLIP_CONTAINER);
+        if (con)
+            clipView_->setClipContainer(static_cast<ClipContainer*>(con));
+
+        clipView_->selectObject(o);
+    }
+}
+
+void MainWidgetController::showSequencer_(bool enable, Object * o)
+{
+    sequencer_->setVisible(enable);
+    clipView_->setVisible(!enable);
+
+    if (!enable)
+        return;
+
+    sequencer_->setCurrentObject(o);
+}
+
+void MainWidgetController::showSequence_(bool enable, Sequence * seq)
+{
+    if (enable)
+    {
+        if (seq->type() == Object::T_SEQUENCE_FLOAT)
+        {
+            seqFloatView_->setSequence(static_cast<SequenceFloat*>(seq));
+            seqFloatView_->setVisible(true);
+        }
+        else seqFloatView_->setVisible(false);
+    }
+    else
+    {
+        seqFloatView_->setVisible(false);
     }
 
-    // update tree view
-    objectTreeView_->setFocusIndex(o);
 }
+
+
+void MainWidgetController::onObjectNameChanged_(Object * o)
+{
+    // update clipview
+    if (o->isClip())
+        clipView_->updateClip(static_cast<Clip*>(o));
+
+    // update objectview
+    objectView_->setObject(o);
+
+    // flag as change to scene
+    onSceneChanged_();
+
+    // we don't need to update treeview here
+}
+
 
 void MainWidgetController::onObjectSelectedTree_(Object * o)
 {
     MO_DEBUG_GUI("MainWidgetController::objectSelectedTree(" << o << ")");
 
+    // update object editor
+    objectView_->setObject(o);
+
+    if (!o)
+    {
+        sequencer_->setVisible(false);
+        seqFloatView_->setVisible(false);
+        return;
+    }
+
+    // update sequence view
+    showSequence_(o->isSequence(), static_cast<Sequence*>(o));
+
+    // update clipview
+    if (o->isClip() || o->isClipContainer() ||
+              o->findParentObject(Object::T_CLIP_CONTAINER))
+    {
+        showClipView_(true, o);
+    }
+
+    else
+    {
+        // update sequencer
+        // when this object or it's real-object parent contains tracks
+        Object * real = o->findContainingObject(Object::TG_REAL_OBJECT);
+        if ((real && real->containsTypes(Object::TG_TRACK))
+                || o->containsTypes(Object::TG_TRACK))
+            showSequencer_(true, o);
+    }
+}
+
+
+void MainWidgetController::onObjectSelectedClipView_(Object * o)
+{
+    MO_DEBUG_GUI("MainWidgetController::onObjectSelectedClipView_(" << o << ")");
+
+    // update object editor
+    objectView_->setObject(o);
+
+    // jump to clip in tree view
+    objectTreeView_->setFocusIndex(o);
+
+    // update sequence view
+    showSequence_(o->isSequence(), static_cast<Sequence*>(o));
+}
+
+void MainWidgetController::onObjectSelectedObjectView_(Object * o)
+{
+    MO_DEBUG_GUI("MainWidgetController::objectSelectedObjectView_(" << o << ")");
+
+    // update sequence view
+    showSequence_(o->isSequence(), static_cast<Sequence*>(o));
+
     // update clipview
     if (o && (o->isClip() || o->isClipContainer() ||
-              o->getParentObject(Object::T_CLIP_CONTAINER)))
+              o->findParentObject(Object::T_CLIP_CONTAINER)))
     {
-        if (!clipView_->isVisible())
-            showClipView_(true);
-
-        if (o->isClipContainer())
-        {
-            clipView_->setClipContainer(static_cast<ClipContainer*>(o));
-        }
-        else
-        {
-            Object * con = o->getParentObject(Object::T_CLIP_CONTAINER);
-            if (con)
-                clipView_->setClipContainer(static_cast<ClipContainer*>(con));
-        }
+        showClipView_(true, o);
     }
+
     // update sequencer
     else
     {
-        if (o && clipView_->isVisible())
-            showClipView_(false);
-
-        sequencer_->setCurrentObject(o);
+        showSequencer_(true, o);
     }
 }
+
+void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
+{
+    MO_DEBUG_GUI("MainWidgetController::objectSelectedSequencer_(" << o << ")");
+
+    // update object editor
+    objectView_->setObject(o);
+
+    // jump to sequence in tree view
+    objectTreeView_->setFocusIndex(o);
+}
+
+
 
 void MainWidgetController::onTreeChanged_()
 {

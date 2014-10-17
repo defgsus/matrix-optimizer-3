@@ -174,6 +174,9 @@ signals:
     /** Emitted after settings in an object have changed. */
     void objectChanged(MO::Object *);
 
+    /** Emitted after a change to an object name */
+    void objectNameChanged(MO::Object *);
+
     /** Some setting in the Sequence has changed. */
     void sequenceChanged(MO::Sequence *);
 
@@ -199,6 +202,9 @@ public slots:
     void addObject(Object * parent, Object * newChild, int insert_index = -1);
     void deleteObject(Object * object);
     void swapChildren(Object * parent, int from, int to);
+
+    /** Changes the objects name, emits objectNameChanged() */
+    void setObjectName(Object * object, const QString& name);
 
     // ------------- parameter -----------------
 

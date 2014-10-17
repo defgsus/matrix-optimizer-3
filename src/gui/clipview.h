@@ -40,6 +40,12 @@ public:
 
 signals:
 
+    /** When a clip was selected */
+    void objectSelected(MO::Object*);
+
+    /** Emitted after clips have been moved */
+    void clipsMoved();
+
 public slots:
 
     /** Completely resets or updates the view to the new data.
@@ -47,6 +53,10 @@ public slots:
         it will be updated for rows/columns.
         Set to NULL to clear this view. */
     void setClipContainer(ClipContainer *);
+
+    /** Selects the clip belonging to @p o.
+        If @p o is NULL the selection is cleared. */
+    void selectObject(Object * o);
 
     /** Update the widget for this clip */
     void updateClip(Clip *);

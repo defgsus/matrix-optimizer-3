@@ -284,16 +284,23 @@ void ClipView::updateClipWidget_(uint x, uint y)
         return;
     }
 
-    // update clip in clipwidget
+    // update clip in clipwidget (if clip changed)
     if (clip != w->clip())
         w->setClip(clip);
 
-    if (clip->color() != w->clipColor())
-        w->setClipColor(clip->color());
+    if (clip)
+    {
+        // -- pass other parameters on change --
+        if (clip->color() != w->clipColor())
+            w->setClipColor(clip->color());
 
-    // update widgetmap
-    if (clip && !widgetMap_.contains(clip))
-        widgetMap_.insert(clip, w);
+        if (clip->name() != w->name())
+            w->setName(clip->name());
+
+        // update widgetmap
+        if (!widgetMap_.contains(clip))
+            widgetMap_.insert(clip, w);
+    }
 }
 
 void ClipView::removeObject(const Object *o)
@@ -352,6 +359,9 @@ void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifi
     {
         clickSelect_(w, mod);
 
+        if (w->clip())
+            emit objectSelected(w->clip());
+
         dragWidget_ = w;
     }
     // right-click
@@ -360,6 +370,31 @@ void ClipView::onClicked_(ClipWidget * w, Qt::MouseButtons b, Qt::KeyboardModifi
         clickSelect_(w, mod);
 
         openPopup_();
+    }
+}
+
+void ClipView::selectObject(Object *o)
+{
+    if (!o)
+    {
+        clearSelection_();
+        return;
+    }
+
+    if (o->isClip())
+    {
+        ClipWidget * w = widgetForClip_(static_cast<Clip*>(o));
+        if (w)
+            clickSelect_(w, 0);
+        return;
+    }
+
+    if (Object * clip = o->findParentObject(Object::T_CLIP))
+    {
+        ClipWidget * w = widgetForClip_(static_cast<Clip*>(clip));
+        if (w)
+            clickSelect_(w, 0);
+        return;
     }
 }
 
@@ -597,6 +632,9 @@ void ClipView::moveSelection_(int dx, int dy)
     }
 
     clipCon_->updateClipPositions();
+
+    if (!moves.isEmpty())
+        emit clipsMoved();
 }
 
 

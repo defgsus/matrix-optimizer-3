@@ -35,7 +35,7 @@ public:
 
 signals:
 
-    /** When a modulation track was created */
+    /** When a modulation object was created */
     void objectSelected(MO::Object*);
 
     /** Emitted when the ActivityScope of an object has changed */
