@@ -63,7 +63,10 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     createMenu_();
 
     // init default settings
-    loadDefault_();
+    //loadDefault_();
+
+    // XXX MH Temporary Fix for disabled menus:
+    loadPreset_();
 
     setViewDirection(Basic3DWidget::VD_FRONT);
 }
