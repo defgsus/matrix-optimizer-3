@@ -514,9 +514,17 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
 {
     // --- draw ---
 
+    makeCurrent();
+    // Mac OS X has a problem here with the implementation of glClear
+    // http://stackoverflow.com/questions/9986826/glclear-fails-with-gl-framebuffer-undefined
     MO_CHECK_GL( gl::glClearColor(0, 0, 0, 1) );
+#ifdef __APPLE__
+    gl::glGetError();
+#endif
     MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
-
+#ifdef __APPLE__
+    gl::glGetError();
+#endif
     MO_CHECK_GL( gl::glDisable(gl::GL_DEPTH_TEST) );
     MO_CHECK_GL( gl::glEnable(gl::GL_BLEND) );
     MO_CHECK_GL( gl::glBlendFunc(gl::GL_SRC_ALPHA, gl::GL_ONE) );
