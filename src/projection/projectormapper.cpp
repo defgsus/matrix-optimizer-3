@@ -643,7 +643,7 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
     tess.getGeometry(geom);
 
     // make finer resolution
-    geom.tesselate(5);
+    geom.tesselate(6);
 
 #define MO__EDGE_DIST(vec__)                                    \
     std::min(std::min(MATH::smoothstep(0.f,edge,vec__[0]),      \
@@ -669,9 +669,9 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
                     1.f - oedged
                     - (1.f - edged));*/
         // Version Nr. 1:
-        const Float white = 0.7 * (float(edged > 0.01) * float(oedged > 0.01))
-                          + 1.0 * (std::min(1.f, 100.f * edged * float(edged >  0.01)) * float(oedged <= 0.01))
-                          + 1.0 * (std::min(1.f, 0.7f * float(edged <= 0.01) * float(oedged <= 0.01)));
+        const Float white = 0.65 * (float(edged > 0.05) * float(oedged > 0.05))
+                          + 1.0 * (std::min(1.f, 50.f * edged * float(edged >  0.05)) * float(oedged <= 0.05))
+                          + 1.0 * (std::min(1.f, 0.65f * float(edged <= 0.05) * float(oedged <= 0.05)));
                             //std::min(1.f-oedged, edged);
         //const Float white = std::max(0.f, ocentd -
         //                    ((1-ocentd) * (1-centd)));
