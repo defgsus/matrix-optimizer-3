@@ -35,6 +35,7 @@
 
 #include "fft.h"
 #include "math/constants.h"
+#include <cmath>
 
 #include <cmath>
 
