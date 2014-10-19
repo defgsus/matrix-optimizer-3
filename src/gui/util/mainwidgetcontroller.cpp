@@ -68,7 +68,7 @@
 #include "object/scene.h"
 #include "object/sequencefloat.h"
 #include "object/clipcontainer.h"
-
+#include "object/util/objectmodulatorgraph.h"
 
 
 
@@ -483,6 +483,21 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         {
             auto w = new InfoWindow(window_);
             w->showFullScreen();
+        });
+
+        a = new QAction(tr("Dump modulation graph"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            ObjectGraph graph;
+            getObjectModulatorGraph(graph, scene_);
+            graph.dumpEdges(std::cout);
+            QVector<Object*> linear;
+            graph.makeLinear(std::inserter(linear, linear.begin()));
+            std::cout << "linear: ";
+            for (auto o : linear)
+                std::cout << " " << o->idName();
+            std::cout << std::endl;
         });
 
 

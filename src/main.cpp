@@ -29,6 +29,7 @@
 //#include "tests/testequation.h"
 //#include "tests/testtesselator.h"
 //#include "tests/testcommandlineparser.h"
+//#include "tests/testdirectedgraph.h"
 
 //#include "types/vector.h"
 //#include "tool/stringmanip.h"
@@ -40,8 +41,10 @@ int main(int argc, char *argv[])
 {
     MO::setCurrentThreadName("GUI");
 
+    // tests without QApplication
     //MO::TestEquation t; return t.run();
     //MO::TestTesselator t; return t.run();
+    //MO::TestDirectedGraph t; return t.run();
 
 #if (0)
     using namespace MO;
@@ -73,7 +76,7 @@ int main(int argc, char *argv[])
     MO::application = new MO::Application(dummy, 0);
     MO::settings = new MO::Settings(MO::application);
 
-    // tests
+    // tests with QApplication
     //{ MO::TestHelpSystem test; return test.run(); }
     //{ MO::TestCommandLineParser test; return test.run(argc, argv, 1); }
 

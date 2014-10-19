@@ -292,8 +292,8 @@ public:
     /** See if this object has a parent object @p o. */
     bool hasParentObject(Object * o) const;
 
-    /** Returns the first parent object of given type, or NULL */
-    Object * findParentObject(Type) const;
+    /** Returns the first parent object matching given Type mask, or NULL */
+    Object * findParentObject(int typeFlags) const;
 
     /** Returns this object or the first parent that matches
         the Object::Type mask in @p typeFlags.
