@@ -1191,10 +1191,11 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
     ProjectorMapper mapper, omapper;
     mapper.setSettings(settings_->domeSettings(),
                        settings_->projectorSettings(index) );
+    return mapper.renderBlendTexture(index, *settings_);
 
-    omapper.setSettings(settings_->domeSettings(),
-                        settings_->projectorSettings((index+1) % settings_->numProjectors()) );
-    return mapper.renderBlendTexture(omapper);
+    //omapper.setSettings(settings_->domeSettings(),
+    //                    settings_->projectorSettings((index+1) % settings_->numProjectors()) );
+    //return mapper.renderBlendTexture(omapper);
 #endif
 }
 
