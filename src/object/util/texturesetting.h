@@ -104,6 +104,12 @@ public:
     /** Does nothing if type is TT_NONE */
     void unbind(uint slot = 0);
 
+protected slots:
+
+    bool setTextureFromImage_(const QString& fn);
+    bool updateCameraFbo_();
+    bool updateSceneFbo_();
+
 private:
 
     Object * object_;

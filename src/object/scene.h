@@ -86,14 +86,9 @@ public:
     uint frameBufferWidth() const { return fbWidth_; }
     uint frameBufferHeight() const { return fbHeight_; }
     uint frameBufferFormat() const { return fbFormat_; }
-    uint frameBufferCubeMapWidth() const { return fbCmWidth_; }
-    uint frameBufferCubeMapHeight() const { return fbCmHeight_; }
 
     /** Sets the output framebuffer size */
     void setResolution(uint width, uint height);
-
-    /** Sets the resolution of each cubemap texture */
-    void setCubeMapResolution(uint width, uint height);
 
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
@@ -195,6 +190,9 @@ signals:
 
     /** Emitted after swapChildren() */
     void childrenSwapped(MO::Object *, int from, int to);
+
+    void CameraFboChanged(Camera *);
+    void sceneFboChanged();
 
 public slots:
 
@@ -398,6 +396,9 @@ private:
     /* Initializes all opengl childs */
     //void initGlChilds_();
 
+    /** Fulfills a resize/format request */
+    void resizeFbo_(uint thread);
+
     /** Fills the LightSettings class with info from the ready transformed tree */
     void updateLightSettings_(uint thread, Double time);
 
@@ -415,7 +416,7 @@ private:
     std::vector<bool> releaseAllGlRequested_;
 
     uint fbWidth_, fbHeight_, fbFormat_,
-        fbCmWidth_, fbCmHeight_;
+        fbWidthRequest_, fbHeightRequest_, fbFormatRequest_;
 
     std::vector<GL::FrameBufferObject *> fboFinal_;
     std::vector<GL::ScreenQuad *> screenQuad_;

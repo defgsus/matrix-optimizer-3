@@ -140,18 +140,10 @@ bool TextureSetting::initGl()
 
     if (paramType_->baseValue() == TT_FILE)
     {
-        Image img;
         const QString fn = IO::fileManager().localFilename(paramFilename_->value());
 
-        if (!img.loadImage(fn))
-        {
-            img.loadImage(":/texture/error.png");
-        }
-
-        texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
-        if (!texture_)
-            return false;
-        constTexture_ = texture_;
+        if (setTextureFromImage_(fn))
+            return true;
     }
 
     if (paramType_->baseValue() == TT_MASTER_FRAME)
@@ -163,9 +155,11 @@ bool TextureSetting::initGl()
             return 0;
         }
 
-        GL::FrameBufferObject * fbo = scene->fboMaster(MO_GFX_THREAD);
-        if (fbo)
-            constTexture_ = fbo->colorTexture();
+        connect(scene, SIGNAL(sceneFboChanged()),
+                this, SLOT(updateSceneFbo_()));
+
+        if (updateSceneFbo_())
+            return true;
     }
 
 
@@ -178,27 +172,11 @@ bool TextureSetting::initGl()
             return 0;
         }
 
+        connect(scene, SIGNAL(CameraFboChanged(Camera*)),
+                this, SLOT(updateCameraFbo_()));
 
-        GL::FrameBufferObject * fbo = scene->fboCamera(MO_GFX_THREAD, paramCamera_->baseValue());
-
-        // special:
-        // when camera index out-of-range, don't throw error
-        // but load an error image
-        if (!fbo)
-        {
-            MO_WARNING("no camera fbo received from scene");
-
-            Image img;
-            img.loadImage(":/texture/error.png");
-            texture_ = GL::Texture::createFromImage(img, GL_RGB, rep_);
-            if (!texture_)
-                return false;
-            constTexture_ = texture_;
+        if (updateCameraFbo_())
             return true;
-        }
-
-        constTexture_ = fbo->colorTexture();
-
     }
 
     if (!constTexture_)
@@ -209,6 +187,15 @@ bool TextureSetting::initGl()
 
 void TextureSetting::releaseGl()
 {
+    Scene * scene = object_->sceneObject();
+    if (scene)
+    {
+        connect(scene, SIGNAL(sceneFboChanged()),
+                this, SLOT(updateSceneFbo_()));
+        disconnect(scene, SIGNAL(CameraFboChanged(Camera*)),
+                   this, SLOT(updateCameraFbo_()));
+    }
+
     if (texture_)
     {
         texture_->release();
@@ -217,6 +204,75 @@ void TextureSetting::releaseGl()
     }
 
     constTexture_ = 0;
+}
+
+bool TextureSetting::updateCameraFbo_()
+{
+    MO_DEBUG_GL("TextureSetting::updateCameraFbo_");
+
+    Scene * scene = object_->sceneObject();
+    if (!scene)
+    {
+        MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_CAMERA_FRAME");
+        return 0;
+    }
+
+    GL::FrameBufferObject * fbo = scene->fboCamera(MO_GFX_THREAD, paramCamera_->baseValue());
+
+    // special:
+    // when camera index out-of-range, don't throw error
+    // but load an error image
+    if (!fbo)
+    {
+        MO_WARNING("no camera fbo received from scene");
+
+        return setTextureFromImage_(":/texture/error.png");
+    }
+
+    constTexture_ = fbo->colorTexture();
+
+    return true;
+}
+
+bool TextureSetting::updateSceneFbo_()
+{
+    MO_DEBUG_GL("TextureSetting::updateSceneFbo_");
+
+    Scene * scene = object_->sceneObject();
+    if (!scene)
+    {
+        MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_MASTER_FRAME");
+        return 0;
+    }
+
+    GL::FrameBufferObject * fbo = scene->fboMaster(MO_GFX_THREAD);
+    if (fbo)
+        constTexture_ = fbo->colorTexture();
+
+    return constTexture_ != 0;
+}
+
+bool TextureSetting::setTextureFromImage_(const QString& fn)
+{
+    if (texture_ && texture_->isAllocated())
+        texture_->release();
+    delete texture_;
+    texture_ = 0;
+    constTexture_ = 0;
+
+    Image img;
+    if (!img.loadImage(fn) &&
+        !img.loadImage(":/texture/error.png"))
+        return false;
+
+    texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
+
+    if (!texture_)
+        return false;
+
+    constTexture_ = texture_;
+    return true;
+
 }
 
 bool TextureSetting::bind(uint slot)

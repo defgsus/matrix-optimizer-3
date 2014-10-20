@@ -262,6 +262,8 @@ void Camera::initGl(uint thread)
         sliceMatrix_ = settings->cameraSettings().getViewMatrix();
     }
 
+    if (sceneObject())
+        emit sceneObject()->CameraFboChanged(this);
 }
 
 void Camera::releaseGl(uint thread)

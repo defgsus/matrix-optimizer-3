@@ -55,8 +55,9 @@ Scene::Scene(QObject *parent) :
     fbWidth_            (1024),
     fbHeight_           (1024),
     fbFormat_           ((int)gl::GL_RGBA),
-    fbCmWidth_          (512),
-    fbCmHeight_         (512),
+    fbWidthRequest_     (fbWidth_),
+    fbHeightRequest_    (fbHeight_),
+    fbFormatRequest_    (fbFormat_),
     fboFinal_           (0),
     debugRenderOptions_ (0),
     freeCameraIndex_    (-1),
@@ -804,6 +805,32 @@ void Scene::releaseSceneGl_(uint thread)
     debugRenderer_[thread] = 0;
 }
 
+void Scene::setResolution(uint width, uint height)
+{
+    fbWidthRequest_ = width;
+    fbHeightRequest_ = height;
+}
+
+void Scene::resizeFbo_(uint thread)
+{
+    if (thread < fboFinal_.size() || !fboFinal_[thread])
+        return;
+
+    fbWidth_ = fbWidthRequest_;
+    fbHeight_ = fbHeightRequest_;
+    fbFormat_ = fbFormatRequest_;
+
+    if (fboFinal_[thread]->isCreated())
+        fboFinal_[thread]->release();
+    delete fboFinal_[thread];
+
+    fboFinal_[thread] = new GL::FrameBufferObject(
+                fbWidth_, fbHeight_, gl::GLenum(fbFormat_), gl::GL_FLOAT, false, GL::ER_THROW);
+    fboFinal_[thread]->create();
+
+    emit sceneFboChanged();
+}
+
 GL::FrameBufferObject * Scene::fboMaster(uint thread) const
 {
     if (thread < fboFinal_.size())
@@ -861,6 +888,12 @@ void Scene::renderScene(uint thread)
         // initialize scene gl resources
         if (!fboFinal_[thread])
             createSceneGl_(thread);
+
+        // resize fbo on request
+        if (fbWidth_ != fbWidthRequest_
+         || fbHeight_ != fbHeightRequest_
+         || fbFormat_ != fbFormatRequest_)
+            resizeFbo_(thread);
 
         // initialize object gl resources
         for (auto o : glObjects_)
