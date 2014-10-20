@@ -1,6 +1,6 @@
 /** @file objectmodulatorgraph.cpp
 
-    @brief
+    @brief Functions for managing modulations between objects
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -15,6 +15,7 @@
 #include "object/param/modulator.h"
 
 namespace MO {
+
 
 
 

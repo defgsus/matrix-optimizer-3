@@ -8,6 +8,7 @@
     <p>created 17.10.2014</p>
 */
 
+#include <QLayout>
 #include <QStatusBar>
 #include <QMainWindow>
 #include <QMessageBox>
@@ -69,8 +70,8 @@
 #include "object/sequencefloat.h"
 #include "object/clipcontainer.h"
 #include "object/util/objectmodulatorgraph.h"
-
-
+#include "model/treemodel.h"
+#include "object/util/objecttree.h"
 
 namespace MO {
 namespace GUI {
@@ -500,6 +501,20 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             std::cout << std::endl;
         });
 
+        a = new QAction(tr("Show modulation graph"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto tree = getObjectTree(scene_);
+            TreeModel<Object*> model(tree);
+            QDialog diag;
+            auto l = new QVBoxLayout(&diag);
+            auto tv = new QTreeView(&diag);
+            l->addWidget(tv);
+            tv->setModel(&model);
+            diag.exec();
+            delete tree;
+        });
 
     // ######### HELP MENU #########
     m = new QMenu(tr("Help"), menuBar);

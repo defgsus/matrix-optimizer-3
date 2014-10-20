@@ -1,6 +1,6 @@
 /** @file objectmodulatorgraph.h
 
-    @brief
+    @brief Functions for managing modulations between objects
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -12,19 +12,17 @@
 #define MOSRC_OBJECT_UTIL_OBJECTMODULATORGRAPH_H
 
 #include "graph/directedgraph.h"
+#include "graph/tree.h"
 
 namespace MO {
 
-class Object;
+    class Object;
 
-// XXX Should go in own header file
-typedef DirectedGraph<Object*> ObjectGraph;
+    typedef DirectedGraph<Object*> ObjectGraph;
 
-
-/** Puts all modulation dependencies into the graph object.
-    @p graph is not cleared. */
-void getObjectModulatorGraph(ObjectGraph& graph, Object * root);
-
+    /** Puts all modulation dependencies into the graph object.
+        @p graph is not cleared. */
+    void getObjectModulatorGraph(ObjectGraph& graph, Object * root);
 
 
 } // namespace MO

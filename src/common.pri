@@ -212,7 +212,10 @@ HEADERS += \
     src/object/clipcontainer.h \
     src/tool/selection.h \
     src/graph/directedgraph.h \
-    src/object/util/objectmodulatorgraph.h
+    src/object/util/objectmodulatorgraph.h \
+    src/graph/tree.h \
+    src/model/treemodel.h \
+    src/object/util/objecttree.h
 
 
 SOURCES += \
@@ -377,4 +380,5 @@ SOURCES += \
     src/io/version.cpp \
     src/object/clip.cpp \
     src/object/clipcontainer.cpp \
-    src/object/util/objectmodulatorgraph.cpp
+    src/object/util/objectmodulatorgraph.cpp \
+    src/object/util/objecttree.cpp
