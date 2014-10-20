@@ -60,6 +60,7 @@ private:
 
     GEOM::Geometry * triangleGeom_, *lineGeom_, *blendGeom_;
     GL::Drawable * triangles_, *lines_, *blends_;
+    GL::Texture * blendTex_;
 
     bool showTesselation_, showBlend_;
 };

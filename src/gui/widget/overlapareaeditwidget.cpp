@@ -11,9 +11,14 @@
 #include "overlapareaeditwidget.h"
 #include "projection/projectionsystemsettings.h"
 #include "projection/projectormapper.h"
+#include "projection/projectorblender.h"
 #include "geom/geometry.h"
 #include "geom/tesselator.h"
+#include "geom/geometryfactory.h"
 #include "gl/drawable.h"
+#include "gl/texture.h"
+#include "gl/shader.h"
+#include "gl/shadersource.h"
 #include "math/interpol.h"
 
 namespace MO {
@@ -30,6 +35,7 @@ OverlapAreaEditWidget::OverlapAreaEditWidget(QWidget *parent)
       triangles_    (0),
       lines_        (0),
       blends_       (0),
+      blendTex_     (0),
       showTesselation_(true),
       showBlend_    (true)
 {
@@ -216,9 +222,12 @@ void OverlapAreaEditWidget::createGeometry_()
         // the blend geometry
 
         //mapper.getBlendGeometry(omapper, blendGeom_);
-        mapper.getIntersectionGeometry(omapper, blendGeom_);
+        //mapper.getIntersectionGeometry(omapper, blendGeom_);
 
     }
+
+    GEOM::GeometryFactory::createQuad(blendGeom_, 1, 1);
+    blendGeom_->translate(0.5,0.5,0);
 
     Float aspect = settings_->projectorSettings(projectorIndex_).aspect();
     lineGeom_->scale(aspect, 1, 1);
@@ -240,6 +249,10 @@ void OverlapAreaEditWidget::releaseGL()
         lines_->releaseOpenGl();
     if (blends_ && blends_->isReady())
         blends_->releaseOpenGl();
+    if (blendTex_ && blendTex_->isAllocated())
+        blendTex_->release();
+    delete blendTex_;
+    blendTex_ = 0;
 }
 
 void OverlapAreaEditWidget::drawGL(const Mat4& projection,
@@ -268,11 +281,24 @@ void OverlapAreaEditWidget::drawGL(const Mat4& projection,
         blends_->setGeometry(blendGeom_);
         blendGeom_ = 0;
 
+        auto src = new GL::ShaderSource();
+        src->loadDefaultSource();
+        src->addDefine(
+                    "#define MO_ENABLE_TEXTURE");
+        blends_->setShaderSource(src);
         blends_->createOpenGl();
     }
 
+    if (!blendTex_)
+    {
+        ProjectorBlender blender(settings_);
+        blendTex_ = blender.renderBlendTexture(projectorIndex_);
+    }
+
+
     using namespace gl;
 
+    MO_CHECK_GL( gl::glViewport(0,0,width(),height()) );
     MO_CHECK_GL( gl::glClearColor(0.5,0.5,0.5,1) );
     MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
@@ -280,9 +306,10 @@ void OverlapAreaEditWidget::drawGL(const Mat4& projection,
 
     if (blends_->isReady())
     {
-        //MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
-        MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+        MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
+        //MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
+        blendTex_->bind();
         blends_->renderShader(projection, cubeViewTrans, viewTrans, trans);
     }
 

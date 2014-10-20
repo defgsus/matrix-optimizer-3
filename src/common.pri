@@ -215,7 +215,8 @@ HEADERS += \
     src/object/util/objectmodulatorgraph.h \
     src/graph/tree.h \
     src/model/treemodel.h \
-    src/object/util/objecttree.h
+    src/object/util/objecttree.h \
+    src/projection/projectorblender.h
 
 
 SOURCES += \
@@ -381,4 +382,5 @@ SOURCES += \
     src/object/clip.cpp \
     src/object/clipcontainer.cpp \
     src/object/util/objectmodulatorgraph.cpp \
-    src/object/util/objecttree.cpp
+    src/object/util/objecttree.cpp \
+    src/projection/projectorblender.cpp

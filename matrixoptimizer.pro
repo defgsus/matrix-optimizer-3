@@ -61,6 +61,8 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/test.frag \
     assets/shader/textureoverlay.vert \
     assets/shader/textureoverlay.frag \
+    assets/shader/edgeblend.vert \
+    assets/shader/edgeblend.frag \
     assets/help/en/objects.html \
     assets/help/en/equation.html \
     assets/help/en/index.html \

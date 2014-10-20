@@ -36,6 +36,7 @@
 #include "engine/serverengine.h"
 #include "projection/projectormapper.h"
 #include "projection/testprojectionrenderer.h"
+#include "projection/projectorblender.h"
 
 namespace MO {
 namespace GUI {
@@ -1186,7 +1187,7 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
     testRenderer_->setSettings(*settings_);
 
     return testRenderer_->renderSliceTexture(index);
-#else
+#elif 0
 
     ProjectorMapper mapper, omapper;
     mapper.setSettings(settings_->domeSettings(),
@@ -1196,6 +1197,11 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
     //omapper.setSettings(settings_->domeSettings(),
     //                    settings_->projectorSettings((index+1) % settings_->numProjectors()) );
     //return mapper.renderBlendTexture(omapper);
+#else
+
+    ProjectorBlender blender(settings_);
+    return blender.renderBlendTexture(index);
+
 #endif
 }
 

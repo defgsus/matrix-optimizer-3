@@ -60,6 +60,12 @@ public:
     /** Returns the projector's projection matrix. */
     const Mat4& getProjecionMatrix() const { return frustum_; }
 
+    /** Returns the inverse of the projection matrux to cast from the projector */
+    const Mat4& getInverseProjectionMatrix() const { return inverseFrustum_; }
+
+    Float nearPlane() const { return zNear_; }
+    Float farPlane() const { return zFar_; }
+
     // --------------- transformation ---------------------
 
     /** Returns the origin of the ray for the given pixel in texture coordinates [0,1] */
