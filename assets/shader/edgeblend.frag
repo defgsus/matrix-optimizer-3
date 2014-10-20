@@ -5,6 +5,7 @@ out vec4 fragColor;
 
 uniform int u_index;
 uniform float u_dome_radius;
+uniform float u_aspect[MO_NUM_PROJECTORS]; // width divided by height
 uniform vec2  u_nearFar[MO_NUM_PROJECTORS];
 uniform mat4  u_projection[MO_NUM_PROJECTORS];
 uniform mat4  u_inverseProjection[MO_NUM_PROJECTORS];
@@ -15,7 +16,8 @@ const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
 
 
-// implementation after povray source :)
+/** Returns intersection of endless ray with sphere surface.
+    Implementation after povray source */
 bool intersect_ray_sphere(in vec3 ray_origin,
                           in vec3 ray_direction,
                           in vec3 sphere_center,
@@ -52,7 +54,8 @@ bool intersect_ray_sphere(in vec3 ray_origin,
 
 
 
-
+/** Returns position and normalized direction of a ray for
+    projector pixel @p slice [-1,1] */
 void get_ray(in int index, in vec2 slice, out vec3 pos, out vec3 dir)
 {
     vec4 p = u_inverseProjection[index] * vec4(slice, -u_nearFar[index].x, 1.);
@@ -63,6 +66,7 @@ void get_ray(in int index, in vec2 slice, out vec3 pos, out vec3 dir)
     dir = vec3(u_view[index] * vec4(normalize(dirf.xyz / dirf.w), 0.));
 }
 
+/** Maps the indexth projector pixel in @p slice [-1,1] onto the dome surface */
 vec3 map_to_dome(in int index, in vec2 slice)
 {
     vec3 pos, dir;
@@ -79,6 +83,7 @@ vec3 map_to_dome(in int index, in vec2 slice)
 }
 
 
+/** Maps the dome surface position to the indexth projector's pixel [-1,1] */
 vec2 map_from_dome(in int index, in vec3 pdome)
 {
     // project into projector's view space
@@ -88,32 +93,89 @@ vec2 map_from_dome(in int index, in vec3 pdome)
 }
 
 
-float white(in vec2 slice)
+/** Returns the number of projectors overlapping on each pixel.
+    @p slice is [-1,1] */
+int get_num_shared(in vec2 slice)
 {
-    float white = 1.0;
+    // own pixel on dome surface
+    vec3 pdome = map_to_dome(u_index, slice);
+
+    int numShared = 1;
+    for (int i = 0; i < MO_NUM_PROJECTORS; ++i)
+    if (i != u_index)
+    {
+        // others pixel in his slice-space [-1,1]
+        vec2 oslice = map_from_dome(i, pdome);
+
+        if (abs(oslice.x) < 1. && abs(oslice.y) < 1.)
+            numShared++;
+    }
+
+    return numShared;
+}
+
+
+/** Returns the distance [0,1] from the edges of a slice for
+    slice coordinate @p slice [-1,1].
+    Corrects for aspect ratio of projector @p index */
+float edge_distance(in int index, in vec2 slice)
+{
+    return 1. - max(1. - abs(1.- abs(slice.x)) * u_aspect[index],
+                    abs(slice.y));
+}
+
+
+
+// Basic method:
+// fade into other's slice but only at own edges
+// by product of other's and own edge distance
+//
+float white_method_0(in vec2 slice)
+{
+    // step width from edge
+    // < 1 is smaller, 1 is unchanged
+    const float edge1 = 0.5;
 
     // own pixel on dome surface
     vec3 pdome = map_to_dome(u_index, slice);
 
+    // distance to edge
+    float edged = edge_distance(u_index, slice);
+    // with smaller stepwidth
+    float edged1 = smoothstep(0.0, edge1, edged);
+
+    float black = 0;
+
     for (int i = 0; i < MO_NUM_PROJECTORS; ++i)
     if (i != u_index)
     {
-        //float edged = min(1. - abs(slice.x), 1. - abs(slice.y));
-
         // others pixel in slice-space [-1,1]
         vec2 oslice = map_from_dome(i, pdome);
+        // other's distance to edge
+        float oedged = edge_distance(i, oslice);
+        float oedged1 = smoothstep(0.0, edge1, oedged);
 
-        bool oinside = abs(oslice.x) < 1. && abs(oslice.y) < 1.;
+        // inside other's slice?
+        float oinside = abs(oslice.x) < 1. && abs(oslice.y) < 1. ? 1.0 : 0.0;
 
-        white = max(0, white - (oinside ? 0.5 : 0));
+        // add black for each projector
+        black += oinside * oedged1 * (1.0 - edged1) * 1.f;
     }
 
-    //return smoothstep(0, 0.2, edged);
-    return white;
+    return clamp(1. - black, 0., 1.);
+}
+
+
+
+
+float white(in vec2 slice)
+{
+    return white_method_0(slice);
 }
 
 
 void main(void)
 {
+    // return black with alpha
     fragColor = vec4(0., 0., 0., 1. - white(v_texCoord.xy * 2. - 1.));
 }

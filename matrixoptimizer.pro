@@ -38,6 +38,10 @@ mac: { INCLUDEPATH += /opt/local/include \
                       /opt/local/include/glib-2.0 \
                       /opt/local/lib/glib-2.0/include }
 
+linux: { INCLUDEPATH += /usr/include/gstreamer-1.0 \
+                        /usr/include/glib-2.0 \
+                        /usr/lib/x86_64-linux-gnu/glib-2.0/include }
+
 include(src/gui/gui.pri)
 include(src/common.pri)
 include(src/tests/tests.pri)
