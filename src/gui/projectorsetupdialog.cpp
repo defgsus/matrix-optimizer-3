@@ -1193,15 +1193,9 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
                        settings_->projectorSettings(index) );
     return mapper.renderBlendTexture(index, *settings_);
 
-<<<<<<< .merge_file_0e9j0s
-    omapper.setSettings(settings_->domeSettings(),
-                        settings_->projectorSettings((index+1) % settings_->numProjectors()) );
-    return mapper.renderBlendTexture(omapper);
-=======
     //omapper.setSettings(settings_->domeSettings(),
     //                    settings_->projectorSettings((index+1) % settings_->numProjectors()) );
     //return mapper.renderBlendTexture(omapper);
->>>>>>> .merge_file_Ho3iD2
 #endif
 }
 
