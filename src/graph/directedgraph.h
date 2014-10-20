@@ -70,10 +70,10 @@ public:
         { for (auto n : p_out_) if (n->object() == object) return true; return false; }
 
     int indexOfInput(GraphNode<T> * node) const
-        { for (auto i=0; i<p_in_.size(); ++i) if (p_in_[i] == node) return i; return -1; }
+        { for (auto i=0u; i<p_in_.size(); ++i) if (p_in_[i] == node) return i; return -1; }
 
     int indexOfOutput(GraphNode<T> * node) const
-        { for (auto i=0; i<p_out_.size(); ++i) if (p_out_[i] == node) return i; return -1; }
+        { for (auto i=0u; i<p_out_.size(); ++i) if (p_out_[i] == node) return i; return -1; }
 
     int indexOfInput(T object) const
         { for (auto i=0; i<p_in_.size(); ++i) if (p_in_[i]->object() == object) return i; return -1; }

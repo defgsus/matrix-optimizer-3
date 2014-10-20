@@ -163,7 +163,7 @@ bool TreeNode<T>::remove(T object)
 template <class T>
 bool TreeNode<T>::remove(TreeNode * node)
 {
-    const int i = indexOf(object);
+    const int i = indexOf(node);
     if (i < 0)
         return false;
     remove(i);

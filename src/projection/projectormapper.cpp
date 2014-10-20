@@ -669,17 +669,17 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
                     1.f - oedged
                     - (1.f - edged));*/
         // Version Nr. 1:
-//        const Float white = 0.65 * (float(edged > 0.05) * float(oedged > 0.05))
-//                          + 1.0 * (std::min(1.f, 50.f * edged * float(edged >  0.05)) * float(oedged <= 0.05))
-//                          + 1.0 * (std::min(1.f, 0.65f * float(edged <= 0.05) * float(oedged <= 0.05)));
-//                            //std::min(1.f-oedged, edged);
+        const Float white = 0.65 * (float(edged > 0.05) * float(oedged > 0.05))
+                          + 1.0 * (std::min(1.f, 50.f * edged * float(edged >  0.05)) * float(oedged <= 0.05))
+                          + 1.0 * (std::min(1.f, 0.65f * float(edged <= 0.05) * float(oedged <= 0.05)));
+                            //std::min(1.f-oedged, edged);
         // Version 2: introduces edges
-        Float white = 0.f;
-        if(set_.id() > other.set_.id()) {
-            white = 1.f;
-        } else {
-            white = 0.f;
-        }
+//        Float white = 0.f;
+//        if(set_.id() > other.set_.id()) {
+//            white = 0.f; // * (1.f - glm::smoothstep(0.f, 0.1f, oedged ) * float(oedged < 0.1f));
+//        } else {
+//            white = 1.f; //(1.f - glm::smoothstep(0.f, 0.1f, oedged ) * float(oedged < 0.1f)); //0.f;
+//        }
 //        const Float white = std::max(0.f, ocentd -
 //                            ((1-ocentd) * (1-centd)));
 

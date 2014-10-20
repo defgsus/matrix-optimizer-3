@@ -26,14 +26,17 @@ unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
 
-mac  { LIBS += -L/opt/local/lib/ -L/usr/local/lib/ -lglbinding -lportaudio -lportmidi -lsndfile }
-else: unix: { LIBS += -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile }
-else: win32 { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 }
+mac  { LIBS += -L/opt/local/lib/ -L/usr/local/lib/ -lglbinding -lportaudio -lportmidi -lsndfile -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 }
+else: unix: { LIBS += -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 }
+else: win32 { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 }
 
 ###################### files ##########################
 
 mac: { INCLUDEPATH += /opt/local/include \
-                      /usr/local/include }
+                      /usr/local/include \
+                      /opt/local/include/gstreamer-1.0 \
+                      /opt/local/include/glib-2.0 \
+                      /opt/local/lib/glib-2.0/include }
 
 include(src/gui/gui.pri)
 include(src/common.pri)
