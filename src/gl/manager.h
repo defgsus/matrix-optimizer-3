@@ -45,6 +45,8 @@ signals:
 
     void cameraMatrixChanged(const MO::Mat4&);
 
+    void outputSizeChanged(const QSize&);
+
 public slots:
 
 private slots:

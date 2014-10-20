@@ -48,6 +48,8 @@ Window * Manager::createGlWindow(uint thread)
                     this, SIGNAL(renderRequest(uint)));
         connect(window_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
                     this, SLOT(onCameraMatrixChanged_(MO::Mat4)));
+        connect(window_, SIGNAL(sizeChanged(QSize)),
+                    this, SIGNAL(outputSizeChanged(QSize)));
     }
     return window_;
 }

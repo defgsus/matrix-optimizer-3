@@ -50,6 +50,8 @@ public:
     uint width() const;
     uint height() const;
 
+    float aspect() { return float(width()) / std::max(1u, height()); }
+
     // ------------- setter ----------------------
 
     // ------------ opengl interface -------------

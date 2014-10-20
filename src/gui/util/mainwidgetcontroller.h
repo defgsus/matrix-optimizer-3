@@ -12,6 +12,7 @@
 #define MOSRC_GUI_UTIL_MAINWIDGETCONTROLLER_H
 
 #include <QObject>
+#include <QSize>
 
 #include "object/object_fwd.h"
 #include "types/float.h"
@@ -117,6 +118,8 @@ private slots:
     /** To trigger sceneNotSaved_ */
     void onSceneChanged_();
 
+    void onOutputSizeChanged_(const QSize&);
+
     void resetTreeModel_();
     void runTestThread_();
     void dumpIdNames_();
@@ -151,6 +154,8 @@ private:
     QMainWindow * window_;
     Scene * scene_;
     ObjectTreeModel * objectTreeModel_;
+
+    QSize outputSize_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;

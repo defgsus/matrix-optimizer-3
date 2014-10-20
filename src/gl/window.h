@@ -59,6 +59,8 @@ signals:
     /** Send when the camera matrix changed (in free-camera-mode) */
     void cameraMatrixChanged(const MO::Mat4&);
 
+    void sizeChanged(const QSize&) const;
+
 public slots:
 
     /** Immediately render on current thread */
@@ -73,6 +75,7 @@ public slots:
 protected:
     bool event(QEvent *);
     void exposeEvent(QExposeEvent *);
+    void resizeEvent(QResizeEvent *);
 
     void keyPressEvent(QKeyEvent *);
     void mousePressEvent(QMouseEvent *);

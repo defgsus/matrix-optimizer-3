@@ -93,6 +93,11 @@ bool Window::event(QEvent * e)
     return QWindow::event(e);
 }
 
+void Window::resizeEvent(QResizeEvent *)
+{
+    emit sizeChanged(QSize(width(), height()) * devicePixelRatio());
+}
+
 void Window::keyPressEvent(QKeyEvent * e)
 {
     e->ignore();

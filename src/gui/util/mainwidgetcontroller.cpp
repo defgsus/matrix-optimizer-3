@@ -151,6 +151,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       window_           (win),
       scene_            (0),
       objectTreeModel_  (0),
+      outputSize_       (512, 512),
       glManager_        (0),
       glWindow_         (0),
       objectView_       (0),
@@ -239,6 +240,9 @@ void MainWidgetController::createObjects_()
 
     // gl manager and window
     glManager_ = new GL::Manager(this);
+    connect(glManager_, SIGNAL(outputSizeChanged(QSize)),
+            this, SLOT(onOutputSizeChanged_(QSize)));
+
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
 
     connect(glWindow_, SIGNAL(keyPressed(QKeyEvent*)),
@@ -1314,7 +1318,14 @@ void MainWidgetController::exportPovray_()
     pov.exportScene(fn, scene_->sceneTime());
 }
 
+void MainWidgetController::onOutputSizeChanged_(const QSize & size)
+{
+    outputSize_ = size;
 
+    // XXX link scene resolution to window resolution
+    if (scene_)
+        scene_->setResolution(outputSize_.width(), outputSize_.height());
+}
 
 
 
