@@ -16,7 +16,7 @@
 #include <gst/app/gstappsink.h>
 
 VideoStreamReader::VideoStreamReader(std::string &uri,
-                                     std::string &format,
+                                     const char* format,
                                      int reqested_width)
     : m_pipeline(NULL)
     , m_sink(NULL)

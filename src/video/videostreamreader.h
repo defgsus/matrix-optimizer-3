@@ -22,7 +22,7 @@ class VideoStreamReader {
 
 public:
     VideoStreamReader(std::string &uri,
-                      std::string &format="RGB",
+                      const char* format="RGB",
                       int reqested_width=640);
 
     ~VideoStreamReader();
