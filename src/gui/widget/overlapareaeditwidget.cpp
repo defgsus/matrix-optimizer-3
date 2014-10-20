@@ -298,7 +298,8 @@ void OverlapAreaEditWidget::drawGL(const Mat4& projection,
 
     using namespace gl;
 
-    MO_CHECK_GL( gl::glViewport(0,0,width(),height()) );
+    int pixelsize = devicePixelRatio();
+    MO_CHECK_GL( gl::glViewport(0,0,pixelsize * width(), pixelsize * height()) );
     MO_CHECK_GL( gl::glClearColor(0.5,0.5,0.5,1) );
     MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
