@@ -12,6 +12,7 @@
 
 #include <QGLWidget>
 
+#include <gst/gst.h>
 #include <gst/app/gstappsink.h>
 
 VideoStreamReader::VideoStreamReader(std::string uri,
@@ -62,7 +63,15 @@ void VideoStreamReader::initialize(std::string uri)
     GstElement
             *scale  = gst_element_factory_make("videoscale",   "scale"),
             *flip   = gst_element_factory_make("videoflip",    "flip"),
+#if(0)
+            *asink  = gst_element_factory_make("fakesink", "asink");
+#else
+#ifdef __APPLE__
             *asink  = gst_element_factory_make("osxaudiosink", "asink");
+#else
+            *asink  = gst_element_factory_make("autoaudiosink", "asink");
+#endif
+#endif
     GstElement
             *bin    = gst_bin_new("postprocess");
     gst_bin_add_many(GST_BIN(bin), scale, flip, m_sink, NULL);
