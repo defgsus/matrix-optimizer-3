@@ -203,6 +203,7 @@ void MainWidgetController::createObjects_()
     //connect(objectTreeModel_, SIGNAL(sceneChanged()),
     //        this, SLOT(onSceneChanged_()));
     objectTreeView_->setObjectModel(objectTreeModel_);
+    objectTreeModel_->setSceneSettings(sceneSettings_);
 
     // object View
     objectView_ = new ObjectView(window_);
@@ -570,7 +571,10 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     if (!set)
         sceneSettings_->clear();
     else
+    {
         *sceneSettings_ = *set;
+        objectTreeModel_->setSceneSettings(sceneSettings_);
+    }
 
     MO_ASSERT(glManager_ && glWindow_, "");
 
@@ -683,6 +687,9 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
 
 void MainWidgetController::onObjectAdded_(Object * o)
 {
+    // copy scene-gui-settings from original object (if pasted)
+    copySceneSettings_(o);
+
     // update clipview
     if (Clip * clip = qobject_cast<Clip*>(o))
     {
@@ -1041,6 +1048,16 @@ void MainWidgetController::updateWidgetsActivity_()
 {
     actionSaveScene_->setEnabled( !currentSceneFilename_.isEmpty() );
 }
+
+void MainWidgetController::copySceneSettings_(Object *o)
+{
+    if (o->idName() != o->originalIdName())
+        sceneSettings_->copySettings(o->idName(), o->originalIdName());
+
+    for (auto c : o->childObjects())
+        copySceneSettings_(c);
+}
+
 
 void MainWidgetController::updateDebugRender_()
 {

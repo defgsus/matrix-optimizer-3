@@ -23,13 +23,17 @@
 #include "object/scene.h"
 #include "object/clipcontainer.h"
 #include "object/clip.h"
+#ifndef MO_CLIENT
 #include "gui/keepmodulatordialog.h"
+#include "gui/util/scenesettings.h"
+#endif
 
 namespace MO {
 
-ObjectTreeModel::ObjectTreeModel(Scene * scene, QObject *parent) :
-    QAbstractItemModel(parent),
-    scene_            (scene)
+ObjectTreeModel::ObjectTreeModel(Scene * scene, QObject *parent)
+    : QAbstractItemModel    (parent),
+      scene_                (scene),
+      sceneSettings_        (0)
 {
     headerNames_
             << "name"
@@ -449,12 +453,15 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                 // insert it
                 beginInsertRows(parent, row, row);
                 scene_->addObject(obj, copy, row);
+                if (sceneSettings_ && copy->originalIdName() != copy->idName())
+                    sceneSettings_->copySettings(copy->idName(), copy->originalIdName());
                 endInsertRows();
 
                 if (reusemod)
                     keepmods.addNewObject(copy);
 
                 lastDropIndex_ = createIndex(row, 0, copy);
+
 
                 emit sceneChanged();
 

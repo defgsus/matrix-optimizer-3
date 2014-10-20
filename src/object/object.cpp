@@ -203,7 +203,7 @@ Object * Object::deserializeTree_(IO::DataStream & io)
     }
 
     // set default object info
-    o->idName_ = idName;
+    o->idName_ = o->orgIdName_ = idName;
     o->name_ = name;
 
     // iterate over childs
@@ -943,7 +943,7 @@ ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const 
     {
         ModulatorObjectFloat * mod = ObjectFactory::createModulatorObjectFloat();
         mod->canBeDeleted_ = false;
-        mod->idName_ = id;
+        mod->idName_ = mod->orgIdName_ = id;
         mod->name_ = name;
         addObject_(mod);
         MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat() created new '"

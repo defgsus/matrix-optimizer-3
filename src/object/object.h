@@ -208,6 +208,9 @@ public:
     /** Override to add some additional information. */
     virtual QString infoName() const { return name_; }
 
+    /** Returns the id of the object before it might have been changed through makeUniqueId() */
+    const QString& originalIdName() const { return orgIdName_; }
+
     /** Return the path up to this object */
     QString namePath() const;
 
@@ -769,7 +772,7 @@ private:
 
     // ------------ properties ---------------
 
-    QString idName_, name_;
+    QString idName_, name_, orgIdName_;
 
     bool canBeDeleted_;
 
