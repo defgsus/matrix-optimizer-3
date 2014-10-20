@@ -19,15 +19,24 @@ using namespace gl;
 namespace MO {
 namespace GL {
 
-
-
 FrameBufferObject::FrameBufferObject(GLsizei width, GLsizei height,
             GLenum format, GLenum type, bool cubemap,
             ErrorReporting report)
+    : FrameBufferObject(width, height, format, type, 0, cubemap, report)
+{
+}
+
+
+FrameBufferObject::FrameBufferObject(GLsizei width, GLsizei height,
+            GLenum format, GLenum type,
+            int attachmentMask, bool cubemap,
+            ErrorReporting report)
     : rep_          (report),
       colorTex_     (0),
+      depthTex_     (0),
       fbo_          (invalidGl),
       rbo_          (invalidGl),
+      attachments_  (attachmentMask),
       cubemap_      (cubemap)
 {
     MO_DEBUG_GL("FrameBufferObject::FrameBufferObject("
@@ -40,6 +49,16 @@ FrameBufferObject::FrameBufferObject(GLsizei width, GLsizei height,
     {
         colorTex_ = new Texture(width, height, format, format, type, 0, 0, 0, 0, 0, 0, report);
     }
+
+    if (attachments_ & A_DEPTH)
+    {
+        if (!cubemap_)
+            depthTex_ = new Texture(width, height, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, 0, report);
+        else
+        {
+            depthTex_ = new Texture(width, height, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, 0, 0, 0, 0, 0, 0, report);
+        }
+    }
 }
 
 FrameBufferObject::~FrameBufferObject()
@@ -49,6 +68,7 @@ FrameBufferObject::~FrameBufferObject()
     if (isCreated())
         MO_GL_WARNING("destructor of unreleased FrameBufferObject");
 
+    delete depthTex_;
     delete colorTex_;
 }
 
@@ -96,6 +116,9 @@ void FrameBufferObject::release_()
 
     if (colorTex_->isCreated())
         colorTex_->release();
+
+    if (depthTex_ && depthTex_->isCreated())
+        depthTex_->release();
 }
 
 bool FrameBufferObject::create()
@@ -122,6 +145,15 @@ bool FrameBufferObject::create()
         }
     }
 
+    if (depthTex_ && !depthTex_->isCreated())
+    {
+        if (!depthTex_->create())
+        {
+            MO_GL_ERROR_COND(rep_, "could not create depthbuffer for framebuffer");
+            return false;
+        }
+    }
+
     GLenum err;
     MO_CHECK_GL_RET_COND(rep_, glGenFramebuffers(1, &fbo_), err );
     if (err != GL_NO_ERROR) return false;
@@ -139,16 +171,26 @@ bool FrameBufferObject::create()
     if (err != GL_NO_ERROR) return false;
     MO_CHECK_GL_RET_COND(rep_, glBindRenderbuffer(GL_RENDERBUFFER, rbo_), err );
     if (err != GL_NO_ERROR) return false;
-    MO_CHECK_GL_RET_COND(rep_, glRenderbufferStorage(
-            GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, colorTex_->width(), colorTex_->height() ), err );
-    if (err != GL_NO_ERROR) return false;
-    MO_CHECK_GL_RET_COND(rep_, glFramebufferRenderbuffer(
-            GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_), err );
-    if (err != GL_NO_ERROR) return false;
+    if (attachments_ & A_DEPTH)
+    {
+        // attach depth texture
+        MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
+                GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, target, depthTex_->handle(), 0), err );
+        if (err != GL_NO_ERROR) return false;
+    }
+    else
+    {
+        // attach internal storage for depth
+        MO_CHECK_GL_RET_COND(rep_, glRenderbufferStorage(
+                GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, colorTex_->width(), colorTex_->height() ), err );
+        if (err != GL_NO_ERROR) return false;
+        MO_CHECK_GL_RET_COND(rep_, glFramebufferRenderbuffer(
+                GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_), err );
+        if (err != GL_NO_ERROR) return false;
+    }
 
-    int pixelsize = 1; //devicePixelRatio(); // Retina support
     MO_DEBUG_GL("FrameBufferObject::create()")
-    MO_CHECK_GL_COND(rep_, glViewport(0, 0, width()*pixelsize, height()*pixelsize) );
+    MO_CHECK_GL_COND(rep_, glViewport(0, 0, width(), height()) );
     MO_CHECK_GL_COND(rep_, glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
     return true;
@@ -176,6 +218,13 @@ bool FrameBufferObject::attachCubeTexture(GLenum target)
     GLenum err;
     MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
             GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, colorTex_->handle(), 0), err );
+    if (err != GL_NO_ERROR)
+        return false;
+    if (attachments_ & A_DEPTH)
+    {
+        MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
+            GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, target, depthTex_->handle(), 0), err );
+    }
     return err == GL_NO_ERROR;
 
 }
@@ -195,6 +244,30 @@ Texture * FrameBufferObject::takeColorTexture()
     else
     {
         colorTex_ = new Texture(width(), height(), colorTex_->format(), colorTex_->format(), colorTex_->type(),
+                                0, 0, 0, 0, 0, 0, rep_);
+    }
+
+    return t;
+}
+
+bool FrameBufferObject::downloadDepthTexture(void *ptr)
+{
+    return depthTex_ ? depthTex_->download(ptr) : 0;
+}
+
+Texture * FrameBufferObject::takeDepthTexture()
+{
+    if (!depthTex_)
+        return 0;
+
+    Texture * t = depthTex_;
+
+    // create new one
+    if (!cubemap_)
+        depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(), colorTex_->type(), 0, rep_);
+    else
+    {
+        depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(), colorTex_->type(),
                                 0, 0, 0, 0, 0, 0, rep_);
     }
 

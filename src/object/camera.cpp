@@ -251,6 +251,7 @@ void Camera::initGl(uint thread)
                 height,
                 gl::GLenum(scene->frameBufferFormat()),
                 gl::GL_FLOAT,
+                GL::FrameBufferObject::A_DEPTH,
                 cubeMapped,
                 GL::ER_THROW);
 

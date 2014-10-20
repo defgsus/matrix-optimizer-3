@@ -773,7 +773,9 @@ void Scene::createSceneGl_(uint thread)
     MO_DEBUG_GL("Scene::createSceneGl_(" << thread << ")");
 
     fboFinal_[thread] = new GL::FrameBufferObject(
-                fbWidth_, fbHeight_, gl::GLenum(fbFormat_), gl::GL_FLOAT, false, GL::ER_THROW);
+                fbWidth_, fbHeight_, gl::GLenum(fbFormat_), gl::GL_FLOAT,
+                GL::FrameBufferObject::A_DEPTH,
+                false, GL::ER_THROW);
     fboFinal_[thread]->create();
     fboFinal_[thread]->unbind();
 
@@ -827,7 +829,8 @@ void Scene::resizeFbo_(uint thread)
     delete fboFinal_[thread];
 
     fboFinal_[thread] = new GL::FrameBufferObject(
-                fbWidth_, fbHeight_, gl::GLenum(fbFormat_), gl::GL_FLOAT, false, GL::ER_THROW);
+                fbWidth_, fbHeight_, gl::GLenum(fbFormat_), gl::GL_FLOAT,
+                GL::FrameBufferObject::A_DEPTH, false, GL::ER_THROW);
     fboFinal_[thread]->create();
 
     emit sceneFboChanged();

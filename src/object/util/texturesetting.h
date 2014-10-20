@@ -29,7 +29,9 @@ public:
         TT_NONE,
         TT_FILE,
         TT_MASTER_FRAME,
-        TT_CAMERA_FRAME
+        TT_MASTER_FRAME_DEPTH,
+        TT_CAMERA_FRAME,
+        TT_CAMERA_FRAME_DEPTH
     };
     static const QStringList textureTypeNames;
 

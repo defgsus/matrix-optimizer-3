@@ -26,7 +26,8 @@ using namespace gl;
 namespace MO {
 
 const QStringList TextureSetting::textureTypeNames =
-{ tr("none"), tr("file"), tr("master frame"), tr("camera frame") };
+{ tr("none"), tr("file"), tr("master frame"), tr("master frame depth"),
+  tr("camera frame"), tr("camera frame depth") };
 
 
 TextureSetting::TextureSetting(Object *parent, GL::ErrorReporting rep)
@@ -66,13 +67,17 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
 {
     paramType_ = object_->createSelectParameter(
             "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
-            { "none", "file", "master", "camera" },
+            { "none", "file", "master", "masterd", "camera", "camerad" },
             textureTypeNames,
             { tr("No texture will be used"),
               tr("An image will be loaded from a file"),
               tr("The previous master frame is the source of the image"),
-              tr("The previous frame of one of the cameras is the source of the image") },
-            { TT_NONE, TT_FILE, TT_MASTER_FRAME, TT_CAMERA_FRAME },
+              tr("The depth information in the previous master frame is the source of the image"),
+              tr("The previous frame of one of the cameras is the source of the image"),
+              tr("The depth information in the previous frame of one of the cameras is the source of the image")},
+            { TT_NONE, TT_FILE,
+              TT_MASTER_FRAME, TT_MASTER_FRAME_DEPTH,
+              TT_CAMERA_FRAME, TT_CAMERA_FRAME_DEPTH },
             defaultType, true, false);
     if (!enableNone)
         paramType_->removeByValue(TT_NONE);
@@ -94,13 +99,16 @@ bool TextureSetting::needsReinit(Parameter *p) const
 {
     return (p == paramType_
         || (p == paramFilename_ && paramType_->baseValue() == TT_FILE)
-        || (p == paramCamera_ && paramType_->baseValue() == TT_CAMERA_FRAME));
+        || (p == paramCamera_ && (   paramType_->baseValue() == TT_CAMERA_FRAME
+                                  || paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH)));
 }
 
 void TextureSetting::updateParameterVisibility()
 {
     paramFilename_->setVisible( paramType_->baseValue() == TT_FILE );
-    paramCamera_->setVisible( paramType_->baseValue() == TT_CAMERA_FRAME );
+    paramCamera_->setVisible(
+                   paramType_->baseValue() == TT_CAMERA_FRAME
+                || paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH );
 }
 
 void TextureSetting::getNeededFiles(IO::FileList &files, IO::FileType ft)
@@ -146,7 +154,8 @@ bool TextureSetting::initGl()
             return true;
     }
 
-    if (paramType_->baseValue() == TT_MASTER_FRAME)
+    if (paramType_->baseValue() == TT_MASTER_FRAME
+     || paramType_->baseValue() == TT_MASTER_FRAME_DEPTH)
     {
         Scene * scene = object_->sceneObject();
         if (!scene)
@@ -163,7 +172,8 @@ bool TextureSetting::initGl()
     }
 
 
-    if (paramType_->baseValue() == TT_CAMERA_FRAME)
+    if (paramType_->baseValue() == TT_CAMERA_FRAME
+     || paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH)
     {
         Scene * scene = object_->sceneObject();
         if (!scene)
@@ -229,9 +239,17 @@ bool TextureSetting::updateCameraFbo_()
         return setTextureFromImage_(":/texture/error.png");
     }
 
-    constTexture_ = fbo->colorTexture();
+    if (paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH )
+    {
+        constTexture_ = fbo->depthTexture();
+        if (constTexture_ == 0)
+            MO_GL_WARNING("no depth texture in TT_CAMERA_FRAME_DEPTH");
+    }
+    else
+        constTexture_ = fbo->colorTexture();
 
-    return true;
+
+    return constTexture_ != 0;
 }
 
 bool TextureSetting::updateSceneFbo_()
@@ -247,7 +265,16 @@ bool TextureSetting::updateSceneFbo_()
 
     GL::FrameBufferObject * fbo = scene->fboMaster(MO_GFX_THREAD);
     if (fbo)
-        constTexture_ = fbo->colorTexture();
+    {
+        if (paramType_->baseValue() == TT_MASTER_FRAME_DEPTH )
+        {
+            constTexture_ = fbo->depthTexture();
+            if (constTexture_ == 0)
+                MO_GL_WARNING("no depth texture in TT_MASTER_FRAME_DEPTH");
+        }
+        else
+            constTexture_ = fbo->colorTexture();
+    }
 
     return constTexture_ != 0;
 }
