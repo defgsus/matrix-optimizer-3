@@ -63,6 +63,12 @@ public:
     void setExpanded(const Object *, const QString& groupdId, bool expanded);
     bool getExpanded(const Object *, const QString& groupdId) const;
 
+    // -------------------- copy -------------------------
+
+    /** Copies all settings from @p src to @p dst */
+    void copySettings(const Object * dst, const Object * src);
+    void copySettings(const QString& dstId, const QString& srcId);
+
 private:
 
     QHash<QString, UTIL::ViewSpace> viewSpaces_;

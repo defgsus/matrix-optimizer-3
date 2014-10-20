@@ -203,7 +203,7 @@ Object * Object::deserializeTree_(IO::DataStream & io)
     }
 
     // set default object info
-    o->idName_ = idName;
+    o->idName_ = o->orgIdName_ = idName;
     o->name_ = name;
 
     // iterate over childs
@@ -518,12 +518,12 @@ bool Object::hasParentObject(Object *o) const
     return parentObject_ == o? true : parentObject_->hasParentObject(o);
 }
 
-Object * Object::findParentObject(Type t) const
+Object * Object::findParentObject(int tflags) const
 {
     if (!parentObject_)
         return 0;
 
-    return parentObject_->type() == t ? parentObject_ : parentObject_->findParentObject(t);
+    return parentObject_->type() & tflags ? parentObject_ : parentObject_->findParentObject(tflags);
 }
 
 bool Object::isSaveToAdd(Object *o, QString &error) const
@@ -943,7 +943,7 @@ ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const 
     {
         ModulatorObjectFloat * mod = ObjectFactory::createModulatorObjectFloat();
         mod->canBeDeleted_ = false;
-        mod->idName_ = id;
+        mod->idName_ = mod->orgIdName_ = id;
         mod->name_ = name;
         addObject_(mod);
         MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat() created new '"

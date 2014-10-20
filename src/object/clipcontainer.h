@@ -101,6 +101,8 @@ private:
     /** [y][x] */
     QVector<Clip*> clips_;
 
+    QMap<SamplePos, Clip*> triggerStart_, triggerStop_;
+
     QMap<uint, QString>
         columnNames_,
         rowNames_;

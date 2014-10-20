@@ -686,7 +686,11 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
         color[0] = 0; //float(set_.id())/10.0;
         color[1] = 0; //float(set_.id())/10.0;
         color[2] = 0;
+<<<<<<< HEAD
+        color[3] = white; //1.f - white;
+=======
         color[3] = glm::clamp(1.f - white, 0.f, 1.f);
+>>>>>>> 3cd98b0f950857cc7f2e10fafc9016c2c3dfa10f
     }
 
 #undef MO__EDGE_DIST

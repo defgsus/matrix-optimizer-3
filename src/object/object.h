@@ -208,6 +208,9 @@ public:
     /** Override to add some additional information. */
     virtual QString infoName() const { return name_; }
 
+    /** Returns the id of the object before it might have been changed through makeUniqueId() */
+    const QString& originalIdName() const { return orgIdName_; }
+
     /** Return the path up to this object */
     QString namePath() const;
 
@@ -292,8 +295,8 @@ public:
     /** See if this object has a parent object @p o. */
     bool hasParentObject(Object * o) const;
 
-    /** Returns the first parent object of given type, or NULL */
-    Object * findParentObject(Type) const;
+    /** Returns the first parent object matching given Type mask, or NULL */
+    Object * findParentObject(int typeFlags) const;
 
     /** Returns this object or the first parent that matches
         the Object::Type mask in @p typeFlags.
@@ -769,7 +772,7 @@ private:
 
     // ------------ properties ---------------
 
-    QString idName_, name_;
+    QString idName_, name_, orgIdName_;
 
     bool canBeDeleted_;
 

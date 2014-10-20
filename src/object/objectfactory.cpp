@@ -194,7 +194,7 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
 
     // --- prepare object ---
 
-    obj->idName_ = obj->className();
+    obj->idName_ = obj->orgIdName_ = obj->className();
     if (obj->name_.isEmpty())
         obj->name_ = className;
 

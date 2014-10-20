@@ -8,6 +8,7 @@
     <p>created 17.10.2014</p>
 */
 
+#include <QLayout>
 #include <QStatusBar>
 #include <QMainWindow>
 #include <QMessageBox>
@@ -68,9 +69,9 @@
 #include "object/scene.h"
 #include "object/sequencefloat.h"
 #include "object/clipcontainer.h"
-
-
-
+#include "object/util/objectmodulatorgraph.h"
+#include "model/treemodel.h"
+#include "object/util/objecttree.h"
 
 namespace MO {
 namespace GUI {
@@ -202,6 +203,7 @@ void MainWidgetController::createObjects_()
     //connect(objectTreeModel_, SIGNAL(sceneChanged()),
     //        this, SLOT(onSceneChanged_()));
     objectTreeView_->setObjectModel(objectTreeModel_);
+    objectTreeModel_->setSceneSettings(sceneSettings_);
 
     // object View
     objectView_ = new ObjectView(window_);
@@ -451,6 +453,14 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Dump id names"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpIdNames_()));
 
+        m->addAction( a = new QAction(tr("Dump object tree"), m) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto tree = getObjectTree(scene_);
+            tree->dumpTree(std::cout, "");
+            delete tree;
+        });
+
         m->addAction(a = new QAction(tr("Dump needed files"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpNeededFiles_()));
 
@@ -467,8 +477,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Export scene to povray"), m));
         connect(a, SIGNAL(triggered()), SLOT(exportPovray_()));
 
-        a = new QAction(tr("Audio-link window"), m);
-        m->addAction(a);
+        m->addAction( a = new QAction(tr("Audio-link window"), m) );
         connect(a, &QAction::triggered, [=]()
         {
             auto win = new AudioLinkWindow(window_);
@@ -477,14 +486,49 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             win->show();
         });
 
-        a = new QAction(tr("Info window"), m);
-        m->addAction(a);
+        m->addAction( a = new QAction(tr("Info window"), m) );
         connect(a, &QAction::triggered, [=]()
         {
             auto w = new InfoWindow(window_);
             w->showFullScreen();
         });
 
+        m->addAction( a = new QAction(tr("Dump modulation graph"), m) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto tree = getObjectTree(scene_);
+            tree->dumpTree(std::cout);
+
+            ObjectGraph graph;
+            getObjectModulatorGraph(graph, scene_);
+            graph.dumpEdges(std::cout);
+            QVector<Object*> linear;
+            graph.makeLinear(std::inserter(linear, linear.begin()));
+            std::cout << "linear: ";
+            for (auto o : linear)
+                std::cout << " " << o->idName();
+            std::cout << std::endl;
+        });
+
+        m->addAction( a = new QAction(tr("Show modulation graph"), m) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            ObjectGraph graph;
+            getObjectModulatorGraph(graph, scene_);
+            auto tree = new ObjectTreeNode(scene_);
+                        //getObjectTree(scene_);
+            //getModulationTree(tree, graph);
+
+            //linearizedGraphToTree(tree, graph);
+            TreeModel<Object*> model(tree);
+            QDialog diag;
+            auto l = new QVBoxLayout(&diag);
+            auto tv = new QTreeView(&diag);
+            l->addWidget(tv);
+            tv->setModel(&model);
+            diag.exec();
+            delete tree;
+        });
 
     // ######### HELP MENU #########
     m = new QMenu(tr("Help"), menuBar);
@@ -527,7 +571,10 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     if (!set)
         sceneSettings_->clear();
     else
+    {
         *sceneSettings_ = *set;
+        objectTreeModel_->setSceneSettings(sceneSettings_);
+    }
 
     MO_ASSERT(glManager_ && glWindow_, "");
 
@@ -640,6 +687,9 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
 
 void MainWidgetController::onObjectAdded_(Object * o)
 {
+    // copy scene-gui-settings from original object (if pasted)
+    copySceneSettings_(o);
+
     // update clipview
     if (Clip * clip = qobject_cast<Clip*>(o))
     {
@@ -998,6 +1048,16 @@ void MainWidgetController::updateWidgetsActivity_()
 {
     actionSaveScene_->setEnabled( !currentSceneFilename_.isEmpty() );
 }
+
+void MainWidgetController::copySceneSettings_(Object *o)
+{
+    if (o->idName() != o->originalIdName())
+        sceneSettings_->copySettings(o->idName(), o->originalIdName());
+
+    for (auto c : o->childObjects())
+        copySceneSettings_(c);
+}
+
 
 void MainWidgetController::updateDebugRender_()
 {

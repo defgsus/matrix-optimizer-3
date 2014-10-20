@@ -246,6 +246,7 @@ void ClipContainer::triggerClip(Clip *clip, Double gtime)
 
     emit clipTriggered(clip);
 
+    // stop other clip on this column
     if (Clip * c = playingClip(clip->column()))
         if (c != clip)
             triggerStopClip(c, gtime);

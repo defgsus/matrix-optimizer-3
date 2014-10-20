@@ -26,9 +26,9 @@ namespace GUI {
 
 
 SceneSettings::SceneSettings(QObject *parent)
-    :   QObject(parent),
-      useCompression_         (true),
-      defaultTrackHeight_     (30)
+    : QObject               (parent),
+      useCompression_       (true),
+      defaultTrackHeight_   (30)
 
 {
 }
@@ -257,6 +257,33 @@ bool SceneSettings::getExpanded(const Object * obj, const QString &groupId) cons
     return treeExpanded_.contains(id);
 }
 
+void SceneSettings::copySettings(const Object *dst, const Object *src)
+{
+    copySettings(dst->idName(), src->idName());
+}
+
+void SceneSettings::copySettings(const QString& dst, const QString& src)
+{
+    if (viewSpaces_.contains(src))
+        viewSpaces_.insert(dst, viewSpaces_.value(src));
+
+    if (trackHeights_.contains(src))
+        trackHeights_.insert(dst, trackHeights_.value(src));
+
+    for (auto & s : paramGroupExpanded_)
+    if (s.startsWith(src + "/"))
+    {
+        const QString suff = s.mid(src.size());
+        paramGroupExpanded_.insert(dst + suff);
+    }
+
+    for (auto & s : treeExpanded_)
+    if (s.endsWith("/" + src))
+    {
+        const QString pref = s.left(s.size() - src.size());
+        treeExpanded_.insert(pref + dst);
+    }
+}
 
 
 } // namespace GUI

@@ -145,6 +145,8 @@ private:
     bool saveScene_(const QString& fn);
     void loadScene_(const QString& fn);
 
+    void copySceneSettings_(Object * o);
+
 
     QMainWindow * window_;
     Scene * scene_;

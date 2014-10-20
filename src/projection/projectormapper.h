@@ -19,6 +19,7 @@
 namespace MO {
 namespace GEOM { class Geometry; }
 class CameraSettings;
+class ProjectionSystemSettings;
 
 /** Calculator for ProjectorSettings */
 class ProjectorMapper
@@ -132,6 +133,7 @@ public:
     bool getIntersectionGeometry(const ProjectorMapper & other, GEOM::Geometry * g);
 
     GL::Texture * renderBlendTexture(const ProjectorMapper & other);
+    GL::Texture * renderBlendTexture(uint index, const ProjectionSystemSettings &settings);
     GL::Texture * renderBlendTextureNew(const ProjectorMapper & other);
 
     /** Returns an anti-clockwise polygon outline of the overlapping area between

@@ -24,6 +24,7 @@
 #include "object/object_fwd.h"
 
 namespace MO {
+namespace GUI { class SceneSettings; }
 
 enum
 {
@@ -37,6 +38,8 @@ public:
     explicit ObjectTreeModel(Scene * scene = 0, QObject *parent = 0);
 
     void setSceneObject(Scene * scene);
+    void setSceneSettings(GUI::SceneSettings * settings) { sceneSettings_ = settings; }
+
     Object * rootObject() const;
     Scene * sceneObject() const { return scene_; }
 
@@ -113,10 +116,12 @@ public slots:
 private:
 
     Scene * scene_;
+    GUI::SceneSettings * sceneSettings_;
+
+    QStringList headerNames_;
 
     QModelIndex lastDropIndex_;
 
-    QStringList headerNames_;
 
     // ----- config -----
 
