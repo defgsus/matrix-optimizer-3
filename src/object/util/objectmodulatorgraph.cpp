@@ -41,13 +41,15 @@ void getObjectModulatorGraph(ObjectGraph &graph, Object * object)
             graph.addEdge(object, con);
     }
     else*/
+
     // sequences
     if (object->isSequence())
     {
         // sequence as part of clip
-        if (Object * clip = object->findParentObject(Object::T_CLIP))
+        /*if (Object * clip = object->findParentObject(Object::T_CLIP))
             graph.addEdge(object, clip);
-        else
+        else*/
+
         // sequence as part of track
         if (Object * track = object->findParentObject(Object::TG_TRACK))
             graph.addEdge(object, track);

@@ -13,6 +13,14 @@
 
 #include <vector>
 
+#ifndef MO_GRAPH_DEBUG
+#define MO_GRAPH_DEBUG
+#endif
+
+#ifdef MO_GRAPH_DEBUG
+#   include <iostream>
+#endif
+
 #include "io/error.h"
 
 
@@ -64,6 +72,12 @@ public:
     bool remove(T object);
     bool remove(TreeNode * node);
     void remove(size_t index);
+
+    // ---------------- debug -----------------
+
+#ifdef MO_GRAPH_DEBUG
+    std::ostream& dumpTree(std::ostream& out, const std::string& prepend = "") const;
+#endif
 
 private:
 
@@ -164,6 +178,27 @@ void TreeNode<T>::remove(size_t index)
     delete p_child_[index];
     p_child_.erase(p_child_.begin() + index);
 }
+
+
+
+
+
+// --------------------------------- debug --------------------------------
+
+#ifdef MO_GRAPH_DEBUG
+
+template <class T>
+std::ostream& TreeNode<T>::dumpTree(std::ostream& out, const std::string& prepend) const
+{
+    out << prepend << object() << std::endl;
+
+    for (auto i : p_child_)
+        i->dumpTree(out, " " + prepend);
+
+    return out;
+}
+
+#endif
 
 
 } // namespace MO

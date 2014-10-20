@@ -10,13 +10,14 @@
 
 #include "objecttree.h"
 #include "object/object.h"
+#include "object/objectfactory.h"
 
 namespace MO {
 
 
-ObjectTree * getObjectTree(Object * root_object)
+ObjectTreeNode * getObjectTree(Object * root_object)
 {
-    auto node = new ObjectTree(root_object);
+    auto node = new ObjectTreeNode(root_object);
 
     for (auto c : root_object->childObjects())
         node->add( getObjectTree(c) );
@@ -40,6 +41,12 @@ QVariant getModelData(Object * obj, int role)
 
     else if (role == Qt::EditRole)
         return obj->name();
+
+    // icon
+    if (role == Qt::DecorationRole)
+    {
+        return ObjectFactory::iconForObject(obj);
+    }
 
     return QVariant();
 }

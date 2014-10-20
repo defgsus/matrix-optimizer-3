@@ -19,11 +19,11 @@ namespace MO {
 
     class Object;
 
-    typedef TreeNode<Object*> ObjectTree;
+    typedef TreeNode<Object*> ObjectTreeNode;
 
     /** XXX Returns a copy of the object tree structure.
         Maybe i switch to hold Objects together with TreeNode<Object*> */
-    ObjectTree * getObjectTree(Object* root_object);
+    ObjectTreeNode * getObjectTree(Object* root_object);
 
     QVariant getModelData(Object*, int role);
     bool setModelData(Object *, const QVariant& data, int role);

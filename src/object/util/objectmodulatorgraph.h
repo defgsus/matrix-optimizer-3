@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_UTIL_OBJECTMODULATORGRAPH_H
 #define MOSRC_OBJECT_UTIL_OBJECTMODULATORGRAPH_H
 
+#include <map>
+
 #include "graph/directedgraph.h"
 #include "graph/tree.h"
 
@@ -24,6 +26,44 @@ namespace MO {
         @p graph is not cleared. */
     void getObjectModulatorGraph(ObjectGraph& graph, Object * root);
 
+
+    // XXX belongs into graph/conversion.h or something
+    /*
+    XXX not really working nor sensible
+    template <class T>
+    void getModulationTree(TreeNode<T> * root, const DirectedGraph<T>& graph)
+    {
+        std::vector<T> linear;
+        graph.makeLinear(linear);
+
+        // remember treenodes and objects
+        std::map<T, TreeNode<T>*> nodes;
+
+        for (auto i = linear.rbegin(); i!=linear.rend(); ++i)
+        {
+            const GraphNode<T> * n = graph.node(*i);
+            MO_ASSERT(n, "error in linearized DirectedGraph");
+
+            // store output nodes at top-level
+            if (n->hasInputs() && n->hasNoOutputs())
+                nodes.insert(std::make_pair(n->object(), root->add(n->object()) ));
+
+            // if node has outputs it's lower level
+            for (auto j = 0; j < n->numOutputs(); ++j)
+            {
+                auto pit = nodes.find(n->output(j)->object());
+                if (pit == nodes.end())
+                {
+                    MO_WARNING("output node not in tree");
+                }
+                else
+                {
+                    nodes.insert(std::make_pair(n->object(), pit->second->add(n->object()) ));
+                }
+            }
+        }
+    }
+    */
 
 } // namespace MO
 

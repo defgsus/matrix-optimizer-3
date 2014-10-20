@@ -452,6 +452,14 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Dump id names"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpIdNames_()));
 
+        m->addAction( a = new QAction(tr("Dump object tree"), m) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto tree = getObjectTree(scene_);
+            tree->dumpTree(std::cout, "");
+            delete tree;
+        });
+
         m->addAction(a = new QAction(tr("Dump needed files"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpNeededFiles_()));
 
@@ -468,8 +476,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Export scene to povray"), m));
         connect(a, SIGNAL(triggered()), SLOT(exportPovray_()));
 
-        a = new QAction(tr("Audio-link window"), m);
-        m->addAction(a);
+        m->addAction( a = new QAction(tr("Audio-link window"), m) );
         connect(a, &QAction::triggered, [=]()
         {
             auto win = new AudioLinkWindow(window_);
@@ -478,18 +485,19 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             win->show();
         });
 
-        a = new QAction(tr("Info window"), m);
-        m->addAction(a);
+        m->addAction( a = new QAction(tr("Info window"), m) );
         connect(a, &QAction::triggered, [=]()
         {
             auto w = new InfoWindow(window_);
             w->showFullScreen();
         });
 
-        a = new QAction(tr("Dump modulation graph"), m);
-        m->addAction(a);
+        m->addAction( a = new QAction(tr("Dump modulation graph"), m) );
         connect(a, &QAction::triggered, [=]()
         {
+            auto tree = getObjectTree(scene_);
+            tree->dumpTree(std::cout);
+
             ObjectGraph graph;
             getObjectModulatorGraph(graph, scene_);
             graph.dumpEdges(std::cout);
@@ -501,11 +509,16 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             std::cout << std::endl;
         });
 
-        a = new QAction(tr("Show modulation graph"), m);
-        m->addAction(a);
+        m->addAction( a = new QAction(tr("Show modulation graph"), m) );
         connect(a, &QAction::triggered, [=]()
         {
-            auto tree = getObjectTree(scene_);
+            ObjectGraph graph;
+            getObjectModulatorGraph(graph, scene_);
+            auto tree = new ObjectTreeNode(scene_);
+                        //getObjectTree(scene_);
+            //getModulationTree(tree, graph);
+
+            //linearizedGraphToTree(tree, graph);
             TreeModel<Object*> model(tree);
             QDialog diag;
             auto l = new QVBoxLayout(&diag);
