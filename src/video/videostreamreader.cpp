@@ -15,8 +15,8 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
 
-VideoStreamReader::VideoStreamReader(std::string uri,
-                                     std::string format,
+VideoStreamReader::VideoStreamReader(std::string &uri,
+                                     const char* format,
                                      int reqested_width)
     : m_pipeline(NULL)
     , m_sink(NULL)
@@ -40,7 +40,7 @@ VideoStreamReader::~VideoStreamReader()
     if(m_image) delete m_image;
 }
 
-void VideoStreamReader::initialize(std::string uri)
+void VideoStreamReader::initialize(std::string &uri)
 {
 
     gst_init(0,NULL);

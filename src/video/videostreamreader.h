@@ -21,13 +21,13 @@
 class VideoStreamReader {
 
 public:
-    VideoStreamReader(std::string uri,
-                      std::string format="RGB",
+    VideoStreamReader(std::string &uri,
+                      const char* format="RGB",
                       int reqested_width=640);
 
     ~VideoStreamReader();
 
-    void initialize(std::string uri);
+    void initialize(std::string &uri);
 
     void pause();
     void play();
@@ -41,7 +41,7 @@ public:
     int height() { return m_height; }
 
     void requestWidth(int w) { v_width = w; }
-    void requestFormat(std::string format) { v_format = format; }
+    void requestFormat(std::string &format) { v_format = format; }
 
     bool isPlaying() { return m_isPlaying; }
     bool isPaused() { return m_isPaused; }

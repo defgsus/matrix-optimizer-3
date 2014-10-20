@@ -451,7 +451,8 @@ void Basic3DWidget::updateProjection_()
         projectionMatrix_ =
                 MATH::perspective(angle, (float)width()/height(), 0.01f, 1000.0f);
 
-    MO_CHECK_GL( glViewport(0,0,width(),height()) );
+    int pixelsize = 1; //devicePixelRatio(); //Retina support
+    MO_CHECK_GL( glViewport(0,0,pixelsize*width(),pixelsize*height()) );
 }
 
 void Basic3DWidget::paintGL()
