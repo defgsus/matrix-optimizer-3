@@ -63,7 +63,12 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     createMenu_();
 
     // init default settings
-    loadDefault_();
+    //loadDefault_();
+
+    // XXX MH Temporary Fix for disabled menus:
+    loadPreset_();
+
+    //setModal(false);
 
     setViewDirection(Basic3DWidget::VD_FRONT);
 }
@@ -79,6 +84,8 @@ ProjectorSetupDialog::~ProjectorSetupDialog()
     delete domeSettings_;
     delete orgSettings_;
     delete settings_;
+
+    //delete mainMenu_;
 }
 
 void ProjectorSetupDialog::createMenu_()
@@ -150,6 +157,10 @@ void ProjectorSetupDialog::createMenu_()
         menu->addAction(a = new QAction(tr("Paste camera settings"), menu));
         connect(a, SIGNAL(triggered()), this, SLOT(pasteCamera_()));
         aPasteCamera_ = a;
+
+#ifdef __APPLE__
+        mainMenu_->setNativeMenuBar(false);
+#endif
 
     updateActions_();
 }
