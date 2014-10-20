@@ -86,14 +86,18 @@ public slots:
 
 private:
 
+    void updateFboSize_();
+
     //std::vector<std::vector<Mat4>> projection_;
     std::vector<GL::FrameBufferObject*> fbo_;
 
     std::vector<GL::ScreenQuad*> screenQuad_;
 
-    ParameterFloat * cameraMix_, *cameraAngle_, *cameraOrthoScale_,
-        *backR_, *backG_, *backB_, *backA_;
-    ParameterSelect * cameraMode_;
+    ParameterFloat * p_cameraMix_, *p_cameraAngle_, *p_cameraOrthoScale_,
+        *p_backR_, *p_backG_, *p_backB_, *p_backA_;
+    ParameterSelect * p_cameraMode_;
+    ParameterInt * p_width_, * p_height_,
+                 * p_cubeRes_;
     GL::Uniform * uColor_, * uAngle_;
 
     Float aspectRatio_;

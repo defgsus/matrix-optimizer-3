@@ -89,6 +89,12 @@ public:
     uint frameBufferCubeMapWidth() const { return fbCmWidth_; }
     uint frameBufferCubeMapHeight() const { return fbCmHeight_; }
 
+    /** Sets the output framebuffer size */
+    void setResolution(uint width, uint height);
+
+    /** Sets the resolution of each cubemap texture */
+    void setCubeMapResolution(uint width, uint height);
+
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
     void calculateSceneTransform(uint thread, uint sample, Double time);
