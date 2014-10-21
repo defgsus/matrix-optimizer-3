@@ -51,9 +51,10 @@ public:
     static QList<Clip*> getAssociatedClips(Object * o);
 
     /** Returns a list of all Clips that Parameter @p p is influenced by.
-        If @p alsoCheckObject is true, the Clips modulating the parent Object will
-        also be added. */
-    static QList<Clip*> getAssociatedClips(Parameter * p, bool alsoCheckObject);
+        @p parentMask can be an or-combination of Object::Type flags.
+        They controll, how much the parameter's parents, if any, are also
+        checked for beeing modulated by clips. */
+    static QList<Clip*> getAssociatedClips(Parameter * p, int parentMask = 0);
 
     // -------------- getter -------------------
 

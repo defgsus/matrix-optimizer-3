@@ -83,6 +83,7 @@ private:
     void addRemoveModMenu_(QMenu *, Parameter *);
     void addLinkModMenu_(QMenu *, Parameter *, int objectTypeFlags);
     void addEditModMenu_(QMenu *, Parameter *);
+    void addCreateModMenuFloat_(QMenu *, Parameter *);
 
     Scene * scene_;
     SceneSettings * sceneSettings_;
