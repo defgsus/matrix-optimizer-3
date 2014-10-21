@@ -218,7 +218,8 @@ HEADERS += \
     src/object/util/objecttree.h \
     src/projection/projectorblender.h \
     src/video/videostreamreader.h \
-    src/tool/commonresolutions.h
+    src/tool/commonresolutions.h \
+    src/gl/scenerenderer.h
 
 
 SOURCES += \
@@ -387,4 +388,5 @@ SOURCES += \
     src/object/util/objecttree.cpp \
     src/projection/projectorblender.cpp \
     src/video/videostreamreader.cpp \
-    src/tool/commonresolutions.cpp
+    src/tool/commonresolutions.cpp \
+    src/gl/scenerenderer.cpp

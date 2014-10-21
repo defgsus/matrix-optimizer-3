@@ -282,6 +282,9 @@ public slots:
 
     // ------------- open gl -------------------
 
+    /** Returns currently set opengl context of all objects in scene. */
+    GL::Context * glContext() const { return glContext_; }
+
     /** Sets the opengl Context for all objects in the scene. */
     void setGlContext(uint thread, MO::GL::Context * context);
 

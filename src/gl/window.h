@@ -23,10 +23,7 @@ namespace GL {
 
 /** OpenGL output window.
 
-    This window creates an OpenGL context and sends it off
-    to MO::GL::Manager when it first gets shown.
-
-    It can be made fullscreen with F11 (or ALT+F).
+    Can be made fullscreen with F11 (or ALT+F).
 */
 class Window : public QWindow
 {
@@ -35,8 +32,10 @@ public:
     explicit Window(QScreen * targetScreen = 0);
     ~Window();
 
-    /** Returns the opengl context associated to this window */
-    Context * context() const { return context_; }
+    /** Returns the opengl renderer associated to this window */
+    SceneRenderer * renderer() const { return renderer_; }
+
+    void setRenderer(SceneRenderer * renderer);
 
     /** Returns the messured fps (valid when animating) */
     double messuredFps() const { return fps_; }
@@ -50,8 +49,8 @@ signals:
 
     void keyPressed(QKeyEvent *);
 
-    /** This will signal a creation of a new Context */
-    void contextCreated(uint thread, MO::GL::Context *);
+    /* This will signal a creation of a new Context */
+    //void contextCreated(uint thread, MO::GL::Context *);
 
     /** Context is current, please render */
     void renderRequest(uint thread);
@@ -86,8 +85,9 @@ protected:
 private:
 
     void render_();
+    void createRenderer_();
 
-    Context * context_;
+    SceneRenderer * renderer_;
 
     uint thread_;
 

@@ -19,20 +19,21 @@
 #include <QMouseEvent>
 #include <QKeyEvent>
 
+#include "gl/opengl_undef.h"
+
 #include "window.h"
 #include "context.h"
 #include "io/error.h"
 #include "io/log.h"
 #include "geom/freecamera.h"
-
-#include "gl/opengl_undef.h"
+#include "gl/scenerenderer.h"
 
 namespace MO {
 namespace GL {
 
 Window::Window(QScreen * targetScreen)
     : QWindow       (targetScreen),
-      context_      (0),
+      renderer_     (0),
       thread_       (0),
       updatePending_(false),
       animating_    (false),
@@ -50,17 +51,7 @@ Window::Window(QScreen * targetScreen)
     setHeight(512);
 
     setSurfaceType(QSurface::OpenGLSurface);
-#if (1)
-        QSurfaceFormat format;
-        format.setVersion(3, 3);
-    #ifdef __APPLE__
-        format.setProfile(QSurfaceFormat::CoreProfile);
-    #else
-        //format.setProfile(QSurfaceFormat::CompatibilityProfile);
-        format.setProfile(QSurfaceFormat::CoreProfile);
-    #endif
-        setFormat(format);
-#endif
+    setFormat(SceneRenderer::defaultFormat());
 }
 
 Window::~Window()
@@ -70,10 +61,16 @@ Window::~Window()
     delete messure_;
     delete cameraControl_;
 
+    delete renderer_;
+
 //    if (context_)
 //        context_->doneCurrent();
 }
 
+void Window::setRenderer(SceneRenderer *renderer)
+{
+    renderer_ = renderer;
+}
 
 void Window::exposeEvent(QExposeEvent *)
 {
@@ -95,7 +92,10 @@ bool Window::event(QEvent * e)
 
 void Window::resizeEvent(QResizeEvent *)
 {
-    emit sizeChanged(QSize(width(), height()) * devicePixelRatio());
+    if (renderer_)
+        renderer_->setSize(size() * devicePixelRatio());
+
+    emit sizeChanged(size() * devicePixelRatio());
 }
 
 void Window::keyPressEvent(QKeyEvent * e)
@@ -133,51 +133,33 @@ void Window::renderLater()
     }
 }
 
+/*
+void Window::createRenderer_()
+{
+    MO_DEBUG_GL("creating renderer in window");
+    renderer_ = new GL::SceneRenderer();
+    renderer_->setSize(size() * devicePixelRatio());
+
+    renderer_->createContext(this);
+
+    //emit contextCreated(thread_, context_);
+}
+*/
+
 void Window::renderNow()
 {
     //MO_DEBUG_GL("Window::renderNow()");
 
-    if (!isExposed())
+    if (!isExposed() || !renderer_)
         return;
 
-    //bool needsInit = false;
+    if (!renderer_->context())
+        renderer_->createContext(this);
 
-    if (!context_)
-    {
-        MO_DEBUG_GL("creating context in window");
+    // constantly update size XXX
+    renderer_->setSize(size() * devicePixelRatio());
 
-        context_ = new MO::GL::Context(this);
-        context_->qcontext()->setFormat(requestedFormat());
-        if (!context_->qcontext()->create())
-            MO_GL_ERROR("could not create context");
-
-        emit contextCreated(thread_, context_);
-
-        //needsInit = true;
-    }
-
-    if (!context_->qcontext()->makeCurrent(this))
-        MO_GL_ERROR("could not make context current");
-
-    //Retina-Display Fix
-    int pixelsize=devicePixelRatio();
-    QSize contextSize;
-    contextSize.setHeight(size().height()*pixelsize);
-    contextSize.setWidth(size().width()*pixelsize);
-    context_->setSize(contextSize);
-
-    moInitGl();
-
-    //int pixelsize = devicePixelRatio(); // Retina support
-    MO_DEBUG_GL("Window::renderNow()")
-    MO_CHECK_GL( gl::glViewport(0,0, width(), height()) );
-    MO_CHECK_GL( gl::glClearColor(0.1f, 0.1f, 0.1f, 1.0f) );
-    MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT) );
-
-    emit renderRequest(thread_);
-
-
-    context_->qcontext()->swapBuffers(this);
+    renderer_->render(0.0);
 
     // messure time
     if (animating_)

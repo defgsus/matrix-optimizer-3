@@ -620,16 +620,16 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     updateDebugRender_();
 
     // connect to render window
-    connect(glManager_, SIGNAL(renderRequest(uint)), scene_, SLOT(renderScene(uint)));
-    connect(glManager_, SIGNAL(contextCreated(uint,MO::GL::Context*)),
-                scene_, SLOT(setGlContext(uint,MO::GL::Context*)));
+    glManager_->setScene(scene_);
+//    connect(glManager_, SIGNAL(renderRequest(uint)), scene_, SLOT(renderScene(uint)));
+//    connect(glManager_, SIGNAL(contextCreated(uint,MO::GL::Context*)),
+//                scene_, SLOT(setGlContext(uint,MO::GL::Context*)));
     connect(glManager_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
                 scene_, SLOT(setFreeCameraMatrix(MO::Mat4)));
 
+    // connect events from scene to window
     connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
 
-    if (glWindow_->context())
-        scene_->setGlContext(glWindow_->threadId(), glWindow_->context());
     connect(scene_, SIGNAL(playbackStarted()),
             glWindow_, SLOT(startAnimation()));
     connect(scene_, SIGNAL(playbackStopped()),
