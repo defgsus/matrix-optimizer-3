@@ -57,7 +57,7 @@ void ColorPostProcessingSetting::createParameters(const QString &id_suffix)
     postBright_ = object_->createFloatParameter("postbright" + id_suffix,
                                     tr("brightness"),
                                     tr("Brightness (simply offset to all colors)"),
-                                    0.0, -1.0, 1.0, 0.02);
+                                    0.0, -100000.0, 100000.0, 0.02);
 
     postContrast_ = object_->createFloatParameter("postcontr" + id_suffix,
                                     tr("contrast"),

@@ -13,6 +13,7 @@
 #include "io/error.h"
 #include "sequence.h"
 #include "clipcontainer.h"
+#include "util/objectmodulatorgraph.h"
 
 #include "io/log.h"
 
@@ -108,10 +109,10 @@ QList<Clip*> Clip::getAssociatedClips(Object *o)
 
 QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
 {    
-    // list of all modulating objects
+    // list of all modulating objects to the parameter
     QList<Object*> mod;
 
-    // check parent objects?
+    // check parent object?
     Object * obj = 0;
     if (parentMask)
     {
@@ -123,10 +124,6 @@ QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
                 obj = 0;
             else
             {
-                // get clips of all objects around and inclusive parameter
-                MO_DEBUG("modcheck " << obj->idName());
-                mod << obj->getModulatingObjects();
-
                 // go up in tree if parent matches mask
                 if (obj->parentObject()
                     && (obj->parentObject()->type() & parentMask))
@@ -140,6 +137,16 @@ QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
     // get all objects modulating this parameter
     if (!obj)
         mod << p->getModulatingObjects();
+
+    // get clips of all objects around and inclusive parameter
+    else
+    {
+        ObjectGraph mods;
+        getObjectModulatorGraph(mods, obj);
+
+        mod << mods.toList();
+    }
+
 
     QSet<Clip*> clips;
 
