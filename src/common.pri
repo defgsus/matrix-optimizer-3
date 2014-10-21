@@ -217,7 +217,8 @@ HEADERS += \
     src/model/treemodel.h \
     src/object/util/objecttree.h \
     src/projection/projectorblender.h \
-    src/video/videostreamreader.h
+    src/video/videostreamreader.h \
+    src/tool/commonresolutions.h
 
 
 SOURCES += \
@@ -385,4 +386,5 @@ SOURCES += \
     src/object/util/objectmodulatorgraph.cpp \
     src/object/util/objecttree.cpp \
     src/projection/projectorblender.cpp \
-    src/video/videostreamreader.cpp
+    src/video/videostreamreader.cpp \
+    src/tool/commonresolutions.cpp

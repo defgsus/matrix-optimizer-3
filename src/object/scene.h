@@ -12,6 +12,7 @@
 #define MOSRC_OBJECT_SCENE_H
 
 #include <QTimer>
+#include <QSize>
 
 #include "object.h"
 #include "gl/opengl_fwd.h"
@@ -83,12 +84,25 @@ public:
     // ------------- open gl -------------------
 
     // XXX These can be separate per thread!
-    uint frameBufferWidth() const { return fbWidth_; }
-    uint frameBufferHeight() const { return fbHeight_; }
+
+    /** Returns the currently active framebuffer resolution */
+    const QSize & frameBufferSize() const { return fbSize_; }
+
     uint frameBufferFormat() const { return fbFormat_; }
 
-    /** Sets the output framebuffer size */
-    void setResolution(uint width, uint height);
+    /** Returns the resolution of the framebuffer during the next render pass */
+    const QSize & requestedFrameBufferSize() const { return fbSizeRequest_; }
+
+    /** Returns the flag if output resolution should be matched by scene fbo resolution */
+    bool doMatchOutputResolution() const { return doMatchOutputResolution_; }
+    /** Sets the flag if output resolution should be matched by scene fbo resolution.
+        This does not do anything else than storing the flag! */
+    void setMatchOutputResolution(bool enable) { doMatchOutputResolution_ = enable; }
+
+    /** Sets the output framebuffer size.
+        This is only a request! The framebuffer will change just
+        before the scene is rendered again! */
+    void setResolution(const QSize& resolution);
 
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
@@ -415,8 +429,12 @@ private:
 
     std::vector<bool> releaseAllGlRequested_;
 
-    uint fbWidth_, fbHeight_, fbFormat_,
-        fbWidthRequest_, fbHeightRequest_, fbFormatRequest_;
+    QSize fbSize_;
+    uint fbFormat_;
+    QSize fbSizeRequest_;
+    uint fbFormatRequest_;
+
+    bool doMatchOutputResolution_;
 
     std::vector<GL::FrameBufferObject *> fboFinal_;
     std::vector<GL::ScreenQuad *> screenQuad_;

@@ -137,6 +137,10 @@ private slots:
 
     void onWindowKeyPressed_(QKeyEvent *);
 
+    void onResolutionOutput_();
+    void onResolutionCustom_();
+    void onResolutionPredefined_(QAction*);
+
 private:
 
     void createObjects_();
@@ -149,7 +153,8 @@ private:
     void loadScene_(const QString& fn);
 
     void copySceneSettings_(Object * o);
-
+    void setPredefinedResolution_(int index);
+    void updateResolutionActions_();
 
     QMainWindow * window_;
     Scene * scene_;
@@ -183,13 +188,16 @@ private:
 
     TestThread * testThread_;
 
-    QMenu * editMenu_;
+    QMenu * menuEdit_, * menuResolutions_;
 
     QAction * actionSaveScene_,
             * aDrawLightSources_,
             * aDrawAudioSources_,
             * aDrawCameras_,
-            * aDrawMicrophones_;
+            * aDrawMicrophones_,
+            * aResolutionOutput_,
+            * aResolutionCustom_,
+            * aResolutionPredefined_;
 
     bool sceneNotSaved_;
 

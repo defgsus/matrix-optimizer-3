@@ -21,6 +21,7 @@
 #include <QMenuBar>
 #include <QKeyEvent>
 #include <QTime>
+#include <QActionGroup>
 
 #include "mainwidgetcontroller.h"
 #include "io/error.h"
@@ -51,6 +52,7 @@
 #include "gui/timelineeditdialog.h"
 #include "gui/audiofilterdialog.h"
 #include "gui/serverdialog.h"
+#include "gui/resolutiondialog.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
@@ -72,6 +74,7 @@
 #include "object/util/objectmodulatorgraph.h"
 #include "model/treemodel.h"
 #include "object/util/objecttree.h"
+#include "tool/commonresolutions.h"
 
 namespace MO {
 namespace GUI {
@@ -287,7 +290,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
     connect(a, SIGNAL(triggered()), this, SLOT(saveSceneAs()));
 
     // ######### EDIT MENU #########
-    m = editMenu_ = new QMenu(tr("Edit"), menuBar);
+    m = menuEdit_ = new QMenu(tr("Edit"), menuBar);
     menuBar->addMenu(m);
     // will be updated from child widgets
 
@@ -312,8 +315,35 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
     m->addSeparator();
 
+    // ##### RESOLUTION SUBMENU #####
+    auto sub = new QMenu(tr("Resolution"), menuBar);
+    m->addMenu(sub);
+
+        ag = new QActionGroup(sub);
+        sub->addAction( a = aResolutionOutput_ = new QAction(tr("Same as output window"), sub) );
+        a->setCheckable(true);
+        connect(a, SIGNAL(triggered()), this, SLOT(onResolutionOutput_()));
+        ag->addAction(a);
+
+        sub->addAction( a = aResolutionCustom_ = new QAction(tr("Custom ... "), sub) );
+        a->setCheckable(true);
+        connect(a, SIGNAL(triggered()), this, SLOT(onResolutionCustom_()));
+        ag->addAction(a);
+
+        auto sub2 = menuResolutions_ = new QMenu(tr("Predefined"), sub);
+        a = aResolutionPredefined_ = sub->addMenu(sub2);
+        a->setCheckable(true);
+        ag->addAction(a);
+
+            CommonResolutions::addResolutionActions(sub2, true);
+            connect(sub2, SIGNAL(triggered(QAction*)),
+                    this, SLOT(onResolutionPredefined_(QAction*)));
+
+
+    m->addSeparator();
+
         // ##### DEBUG VISIBILITY SUBMENU #####
-        auto sub = new QMenu(tr("Visibility"), menuBar);
+        sub = new QMenu(tr("Visibility"), menuBar);
         m->addMenu(sub);
 
         sub->addAction(a = aDrawCameras_ = new QAction(tr("Show cameras"), sub));
@@ -582,6 +612,10 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     MO_ASSERT(glManager_ && glWindow_, "");
 
+    // set current resolution
+    if (scene_->doMatchOutputResolution())
+        scene_->setResolution(outputSize_);
+
     // update render settings from MainWidgetController
     updateDebugRender_();
 
@@ -642,6 +676,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     glWindow_->renderLater();
 
     updateSystemInfo_();
+    updateResolutionActions_();
 
     if (serverEngine().isRunning())
         serverEngine().sendScene(scene_);
@@ -936,8 +971,8 @@ void MainWidgetController::onSceneChanged_()
 void MainWidgetController::setEditActions_(const QObject *, QList<QAction *> actions)
 {
 #ifndef __APPLE__
-    editMenu_->clear();
-    editMenu_->addActions(actions);
+    menuEdit_->clear();
+    menuEdit_->addActions(actions);
 #endif
 }
 
@@ -1318,13 +1353,125 @@ void MainWidgetController::exportPovray_()
     pov.exportScene(fn, scene_->sceneTime());
 }
 
+void MainWidgetController::onResolutionOutput_()
+{
+    if (scene_)
+    {
+        // notify change on scene
+        if (!scene_->doMatchOutputResolution())
+            onSceneChanged_();
+
+        scene_->setMatchOutputResolution(true);
+        if (scene_->frameBufferSize() != outputSize_)
+            scene_->setResolution(outputSize_);
+    }
+}
+
+void MainWidgetController::onResolutionCustom_()
+{
+    ResolutionDialog diag(scene_->frameBufferSize());
+
+    if (diag.exec() != QDialog::Accepted)
+        return;
+
+    if (scene_)
+    {
+        // notify change on scene
+        if (scene_->doMatchOutputResolution()
+            || scene_->frameBufferSize() != diag.resolution())
+            onSceneChanged_();
+
+        scene_->setMatchOutputResolution(false);
+        scene_->setResolution(diag.resolution());
+    }
+
+    updateResolutionActions_();
+}
+
+void MainWidgetController::onResolutionPredefined_(QAction * a)
+{
+    setPredefinedResolution_(a->data().toInt());
+}
+
+void MainWidgetController::setPredefinedResolution_(int index)
+{
+    if (index < 0 || index >= CommonResolutions::resolutions.size())
+        return;
+
+    QSize res = CommonResolutions::resolutions[index].size();
+
+    aResolutionPredefined_->setChecked(true);
+    aResolutionCustom_->setText(tr("Custom ..."));
+
+    if (scene_)
+    {
+        // notify change on scene
+        if (!scene_->doMatchOutputResolution()
+            || scene_->frameBufferSize() != res)
+            onSceneChanged_();
+
+        scene_->setMatchOutputResolution(false);
+        scene_->setResolution(res);
+    }
+}
+
+void MainWidgetController::updateResolutionActions_()
+{
+    if (!scene_)
+        return;
+
+    // update from output window resolution
+    aResolutionOutput_->setText(tr("Same as output window %1x%2")
+                                .arg(outputSize_.width())
+                                .arg(outputSize_.height()));
+
+    if (scene_->doMatchOutputResolution())
+    {
+        aResolutionOutput_->setChecked(true);
+        aResolutionCustom_->setText(tr("Custom ..."));
+    }
+    else
+    {
+        bool found = false;
+
+        // find current scene resolution in predefined menu
+        for (QAction * a : menuResolutions_->actions())
+        {
+            const int index = a->data().toInt();
+            if (index >= 0 && index < CommonResolutions::resolutions.size())
+            {
+                const QSize s = CommonResolutions::resolutions[index].size();
+                if (s == scene_->requestedFrameBufferSize())
+                {
+                    a->setChecked(found = true);
+                    aResolutionPredefined_->setChecked(true);
+                    break;
+                }
+            }
+        }
+
+        // set custom resolution
+        if (!found)
+        {
+            aResolutionCustom_->setChecked(true);
+            aResolutionCustom_->setText(tr("Custom %1x%2 ...")
+                                        .arg(scene_->requestedFrameBufferSize().width())
+                                        .arg(scene_->requestedFrameBufferSize().height()));
+        }
+    }
+}
+
 void MainWidgetController::onOutputSizeChanged_(const QSize & size)
 {
     outputSize_ = size;
 
-    // XXX link scene resolution to window resolution
-    if (scene_)
-        scene_->setResolution(outputSize_.width(), outputSize_.height());
+    aResolutionOutput_->setText(tr("Same as output window %1x%2")
+                                .arg(outputSize_.width())
+                                .arg(outputSize_.height()));
+
+    // link scene resolution to window resolution
+    if (scene_ && scene_->doMatchOutputResolution())
+        scene_->setResolution(outputSize_);
 }
 
 

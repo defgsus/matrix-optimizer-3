@@ -52,12 +52,11 @@ Scene::Scene(QObject *parent) :
     model_              (0),
     glContext_          (0),
     releaseAllGlRequested_(0),
-    fbWidth_            (1024),
-    fbHeight_           (1024),
+    fbSize_             (1024, 1024),
     fbFormat_           ((int)gl::GL_RGBA),
-    fbWidthRequest_     (fbWidth_),
-    fbHeightRequest_    (fbHeight_),
+    fbSizeRequest_      (fbSize_),
     fbFormatRequest_    (fbFormat_),
+    doMatchOutputResolution_(false),
     fboFinal_           (0),
     debugRenderOptions_ (0),
     freeCameraIndex_    (-1),
@@ -121,13 +120,19 @@ Scene::~Scene()
 void Scene::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
-    io.writeHeader("scene", 1);
+    io.writeHeader("scene", 2);
+
+    // v2
+    io << fbSize_ << doMatchOutputResolution_;
 }
 
 void Scene::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
-    io.readHeader("scene", 1);
+    const int ver = io.readHeader("scene", 2);
+
+    if (ver >= 2)
+        io >> fbSizeRequest_ >> doMatchOutputResolution_;
 }
 
 void Scene::setObjectModel(ObjectTreeModel * model)
@@ -773,7 +778,10 @@ void Scene::createSceneGl_(uint thread)
     MO_DEBUG_GL("Scene::createSceneGl_(" << thread << ")");
 
     fboFinal_[thread] = new GL::FrameBufferObject(
-                fbWidth_, fbHeight_, gl::GLenum(fbFormat_), gl::GL_FLOAT,
+                fbSize_.width(),
+                fbSize_.height(),
+                gl::GLenum(fbFormat_),
+                gl::GL_FLOAT,
                 GL::FrameBufferObject::A_DEPTH,
                 false, GL::ER_THROW);
     fboFinal_[thread]->create();
@@ -807,10 +815,10 @@ void Scene::releaseSceneGl_(uint thread)
     debugRenderer_[thread] = 0;
 }
 
-void Scene::setResolution(uint width, uint height)
+void Scene::setResolution(const QSize &r)
 {
-    fbWidthRequest_ = width;
-    fbHeightRequest_ = height;
+    fbSizeRequest_ = r;
+    render_();
 }
 
 void Scene::resizeFbo_(uint thread)
@@ -820,8 +828,7 @@ void Scene::resizeFbo_(uint thread)
     if (thread >= fboFinal_.size() || !fboFinal_[thread])
         return;
 
-    fbWidth_ = fbWidthRequest_;
-    fbHeight_ = fbHeightRequest_;
+    fbSize_ = fbSizeRequest_;
     fbFormat_ = fbFormatRequest_;
 
     if (fboFinal_[thread]->isCreated())
@@ -829,8 +836,13 @@ void Scene::resizeFbo_(uint thread)
     delete fboFinal_[thread];
 
     fboFinal_[thread] = new GL::FrameBufferObject(
-                fbWidth_, fbHeight_, gl::GLenum(fbFormat_), gl::GL_FLOAT,
-                GL::FrameBufferObject::A_DEPTH, false, GL::ER_THROW);
+                fbSize_.width(),
+                fbSize_.height(),
+                gl::GLenum(fbFormat_),
+                gl::GL_FLOAT,
+                GL::FrameBufferObject::A_DEPTH,
+                false,
+                GL::ER_THROW);
     fboFinal_[thread]->create();
 
     emit sceneFboChanged();
@@ -895,8 +907,7 @@ void Scene::renderScene(uint thread)
             createSceneGl_(thread);
 
         // resize fbo on request
-        if (fbWidth_ != fbWidthRequest_
-         || fbHeight_ != fbHeightRequest_
+        if (fbSize_ != fbSizeRequest_
          || fbFormat_ != fbFormatRequest_)
             resizeFbo_(thread);
 
@@ -981,10 +992,9 @@ void Scene::renderScene(uint thread)
 
     // --- draw to screen ---
 
+    //MO_DEBUG_GL("Scene::renderScene(" << thread << ")");
     fboFinal_[thread]->colorTexture()->bind();
-    int pixelsize = 1; //devicePixelRatio(); // Retina support
-    MO_DEBUG_GL("Scene::renderScene(uint thread)")
-    MO_CHECK_GL( glViewport(0, 0, glContext_->size().width()*pixelsize, glContext_->size().height()*pixelsize) );
+    MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     screenQuad_[thread]->drawCentered(glContext_->size().width(), glContext_->size().height(),
