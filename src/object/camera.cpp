@@ -39,6 +39,7 @@ MO_REGISTER_OBJECT(Camera)
 Camera::Camera(QObject *parent) :
     ObjectGl        (parent),
     renderMode_     (RM_FULLDOME_CUBE),
+    alphaBlend_     (this),
     sliceCameraSettings_(new CameraSettings())
 {
     setName("Camera");
@@ -116,7 +117,7 @@ void Camera::createParameters()
         p_backB_ = createFloatParameter("cambackb", tr("blue"),
                                       tr("Red amount of background color"),
                                       0.0, 0.0, 1.0, 0.1);
-        p_backA_ = createFloatParameter("cambacka", tr("red"),
+        p_backA_ = createFloatParameter("cambacka", tr("alpha"),
                                       tr("Alpha amount of background color"),
                                       1.0, 0.0, 1.0, 0.1);
 
@@ -124,10 +125,12 @@ void Camera::createParameters()
 
     beginParameterGroup("output", tr("output"));
 
-    p_cameraMix_ = createFloatParameter("cammix", tr("camera mix"),
+        p_cameraMix_ = createFloatParameter("cammix", tr("camera mix"),
                           tr("Defines the volume and visibility of the camera [0,1]"),
                           1.f,
                           0.f, 1.f, 0.05f);
+
+        alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_camout");
 }
 
 void Camera::onParameterChanged(Parameter * p)
@@ -164,6 +167,7 @@ void Camera::updateParameterVisibility()
     p_width_->setVisible( !iscube );
     p_height_->setVisible( !iscube );
     p_cubeRes_->setVisible( iscube );
+    p_cameraMix_->setVisible( alphaBlend_.hasAlpha() );
 }
 
 void Camera::setNumberThreads(uint num)
@@ -277,7 +281,6 @@ void Camera::releaseGl(uint thread)
     fbo_[thread]->release();
     delete fbo_[thread];
     fbo_[thread] = 0;
-    MO_DEBUG("Camera ---------- release");
 }
 
 void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) const
@@ -424,8 +427,7 @@ void Camera::drawFramebuffer(uint thread, Double time)
             * scenefbo = sceneObject()->fboMaster(thread);
 
     // set blendmode
-    MO_CHECK_GL( glEnable(GL_BLEND) );
-    MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+    alphaBlend_.apply(time, thread);
 
     fbo->colorTexture()->bind();
     screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);

@@ -997,6 +997,7 @@ void Scene::renderScene(uint thread)
     MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
+    MO_CHECK_GL( glDisable(GL_BLEND) );
     screenQuad_[thread]->drawCentered(glContext_->size().width(), glContext_->size().height(),
                                       fboFinal_[thread]->aspect());
     fboFinal_[thread]->colorTexture()->unbind();

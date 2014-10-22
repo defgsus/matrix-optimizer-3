@@ -102,6 +102,7 @@ private:
 
     Float aspectRatio_;
     RenderMode renderMode_;
+    AlphaBlendSetting alphaBlend_;
 
     Mat4 sliceMatrix_;
 

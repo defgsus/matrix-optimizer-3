@@ -21,7 +21,7 @@ namespace MO {
 class AlphaBlendSetting
 {
 public:
-    AlphaBlendSetting(Object *parent = 0);
+    AlphaBlendSetting(Object *parent);
 
     /** Type of alpha mix */
     enum Mode
@@ -29,9 +29,16 @@ public:
         M_PARENT,
         M_OFF,
         M_MIX,
+        M_MIX_BRIGHT,
+        M_MIX_DARK,
         M_ADD,
-        M_MIX_BRIGHT
+        M_ADD_BRIGHT,
+        M_ADD_DARK,
+        M_SUB,
+        M_SUB_BRIGHT,
+        M_SUB_DARK
     };
+
 
     static const QStringList modeNames;
     static const QStringList modeIds;
@@ -57,9 +64,14 @@ public:
 
     // ---------- opengl ---------------
 
+    /** Current blend mode */
     Mode mode() const;
 
+    /** Set parent blend mode */
     Mode parentMode() const { return parentMode_; }
+
+    /** Returns true when the current mode uses the alpha channel */
+    bool hasAlpha() const;
 
     /** Sets the opengl state according to current parameter values */
     void apply(Double time, uint thread);
