@@ -6,6 +6,8 @@
  * MO_NUM_LIGHTS x
  * MO_ENABLE_TEXTURE
  * MO_ENABLE_TEXTURE_POST_PROCESS
+ * MO_ENABLE_TEXTURE_TRANSFORMATION
+ * MO_ENABLE_TEXTURE_SINE_MORPH
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
  * MO_TEXTURE_IS_FULLDOME_CUBE
@@ -65,6 +67,11 @@ uniform vec4 u_color;
     uniform float u_post_alpha_edge;
 #endif
 
+// texture transform and morph
+    uniform vec4 u_tex_transform; // x,y, scalex, scaley
+    uniform vec3 u_tex_morphx;    // amp, freq, phase [0,2pi]
+    uniform vec3 u_tex_morphy;
+
 #ifdef MO_ENABLE_NORMALMAP
 uniform sampler2D tex_norm_0;
 uniform float u_bump_scale;
@@ -78,6 +85,24 @@ vec3 normalmap = mix(
 
 
 // ------------------- functions ------------------------
+
+// morphs the texture coordinates
+vec2 mo_texture_lookup(in vec2 st)
+{
+    return st
+#ifdef MO_ENABLE_TEXTURE_TRANSFORMATION
+            * u_tex_transform.zw
+            + u_tex_transform.xy
+#endif
+
+#ifdef MO_ENABLE_TEXTURE_SINE_MORPH
+            + vec2(
+                  u_tex_morphx.x * sin(st.y * u_tex_morphx.y + u_tex_morphx.z),
+                  u_tex_morphy.x * sin(st.x * u_tex_morphy.y + u_tex_morphy.z))
+#endif
+            ;
+}
+
 
 #ifdef MO_ENABLE_TEXTURE_POST_PROCESS
 vec4 mo_color_post_process(in vec4 col)
@@ -106,6 +131,8 @@ vec4 mo_color_post_process(in vec4 col)
     return col;
 }
 #endif
+
+
 
 /* read from cubemap as if stiched to a fulldome master
    st = [0,1]
@@ -136,19 +163,22 @@ vec4 mo_texture_cube(in samplerCube tex, vec2 st, float angle)
 
 vec4 mo_ambient_color()
 {
+    // transform tex-coord
+    vec2 tc = mo_texture_lookup( v_texCoord );
+
     return u_color * v_color
 #ifdef MO_ENABLE_TEXTURE
     #ifndef MO_ENABLE_TEXTURE_POST_PROCESS
         #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
-                * texture(tex_0, v_texCoord)
+                * texture(tex_0, tc)
         #else
-                * mo_texture_cube(tex_0, v_texCoord, 180.0)
+                * mo_texture_cube(tex_0, tc, 180.0)
         #endif
     #else
         #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
-                * mo_color_post_process( texture(tex_0, v_texCoord) )
+                * mo_color_post_process( texture(tex_0, tc) )
         #else
-                * mo_color_post_process( mo_texture_cube(tex_0, v_texCoord, 180.0) )
+                * mo_color_post_process( mo_texture_cube(tex_0, tc, 180.0) )
         #endif
     #endif
 #endif

@@ -101,6 +101,27 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
                 tr("Linear interpolation"),
                 true,
                 true, false);
+
+    paramWrapX_ = object_->createSelectParameter(
+            "_imgwrapx" + id_suffix, tr("on horiz. edges"),
+            tr("Selects what happens on the horizontal edges of the texture"),
+            { "clamp", "repeat" },
+            { tr("clamp"), tr("repeat") },
+            { tr("Colors stay the same"),
+              tr("The texture repeats") },
+            { WM_CLAMP, WM_REPEAT },
+            WM_REPEAT, true, false);
+
+    paramWrapY_ = object_->createSelectParameter(
+            "_imgwrapy" + id_suffix, tr("on vert. edges"),
+            tr("Selects what happens on the vertical edges of the texture"),
+            { "clamp", "repeat" },
+            { tr("clamp"), tr("repeat") },
+            { tr("Colors stay the same"),
+              tr("The texture repeats") },
+            { WM_CLAMP, WM_REPEAT },
+            WM_REPEAT, true, false);
+
 }
 
 bool TextureSetting::needsReinit(Parameter *p) const
@@ -335,6 +356,17 @@ bool TextureSetting::bind(uint slot)
         constTexture_->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
     else
         constTexture_->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
+
+    // wrapmode
+    if (paramWrapX_->baseValue() == WM_CLAMP)
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP)) )
+    else
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_REPEAT)) );
+
+    if (paramWrapY_->baseValue() == WM_CLAMP)
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP)) )
+    else
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_REPEAT)) );
 
     // set back
     if ((GLint)slot != act)

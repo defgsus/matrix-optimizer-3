@@ -35,6 +35,12 @@ public:
     };
     static const QStringList textureTypeNames;
 
+    enum WrapMode
+    {
+        WM_CLAMP,
+        WM_REPEAT
+    };
+
     /** Creates a texture setting for the given Object */
     explicit TextureSetting(Object *parent, GL::ErrorReporting = GL::ER_THROW);
     ~TextureSetting();
@@ -121,7 +127,8 @@ private:
     GL::Texture * texture_;
     const GL::Texture * constTexture_;
 
-    ParameterSelect * paramType_, *paramInterpol_;
+    ParameterSelect * paramType_, *paramInterpol_,
+                    *paramWrapX_, *paramWrapY_;
     ParameterFilename * paramFilename_;
     ParameterInt * paramCamera_;
 };

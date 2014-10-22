@@ -16,6 +16,8 @@
 
 namespace MO {
 
+class TextureMorphSetting;
+
 class Model3d : public ObjectGl
 {
     Q_OBJECT
@@ -70,6 +72,7 @@ private:
 
     TextureSetting * texture_, *textureBump_;
     ColorPostProcessingSetting * texturePostProc_;
+    TextureMorphSetting *textureMorph_;
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_,
         *diffExp_, *bumpScale_;

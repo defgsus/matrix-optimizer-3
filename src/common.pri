@@ -220,7 +220,8 @@ HEADERS += \
     src/video/videostreamreader.h \
     src/tool/commonresolutions.h \
     src/gl/scenerenderer.h \
-    src/object/util/alphablendsetting.h
+    src/object/util/alphablendsetting.h \
+    src/object/util/texturemorphsetting.h
 
 
 SOURCES += \
@@ -391,4 +392,5 @@ SOURCES += \
     src/video/videostreamreader.cpp \
     src/tool/commonresolutions.cpp \
     src/gl/scenerenderer.cpp \
-    src/object/util/alphablendsetting.cpp
+    src/object/util/alphablendsetting.cpp \
+    src/object/util/texturemorphsetting.cpp
