@@ -93,6 +93,14 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
                 tr("The index of the camera starting at 0"),
                 0, true, false);
     paramCamera_->setMinValue(0);
+
+    paramInterpol_ = object_->createBooleanParameter(
+                "_imginterpol" + id_suffix, tr("interpolation"),
+                tr("The interpolation mode for pixel magnification"),
+                tr("No interpolation"),
+                tr("Linear interpolation"),
+                true,
+                true, false);
 }
 
 bool TextureSetting::needsReinit(Parameter *p) const
@@ -321,6 +329,12 @@ bool TextureSetting::bind(uint slot)
         MO_CHECK_GL( glActiveTexture(GLenum(slot)) );
 
     bool r = constTexture_->bind();
+
+    // set interpolation mode
+    if (paramInterpol_->baseValue())
+        constTexture_->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
+    else
+        constTexture_->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
 
     // set back
     if ((GLint)slot != act)

@@ -93,9 +93,24 @@ void Camera::createParameters()
                                         1.f, 360.f, 1.f);
 
     p_cameraOrthoScale_ = createFloatParameter("camorthosc", tr("orthographic scale"),
-                                        tr("Scale (+/-) of the orthographic projection on x,y axis"),
+                                        tr("Visible area of the orthographic projection on x,y plane"),
                                         10.f,
                                         0.0001f, 1000000.f, 0.1f);
+
+    p_cameraOrthoMix_ = createFloatParameter("camorthomix", tr("orthographic mix"),
+                                        tr("Mix between perspective and orthographic projection, range [0,1]"),
+                                        0.f,
+                                        0.0f, 1.f, 0.0125f);
+
+    p_near_ = createFloatParameter("camnear", tr("near plane"),
+                                        tr("Near plane of camera frustum - everything closer can not be drawn"),
+                                        0.001f,
+                                        0.00001f, 100000.f, 0.05f);
+    p_far_ = createFloatParameter("camfar", tr("far plane"),
+                                        tr("Far plane of camera frustum - everything farther away can not be drawn"),
+                                        1000.f,
+                                        0.00002f, 100000.f, 1.f);
+
 
     p_width_ = createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
                                   1024, 16, 4096*4, 16, true, false);
@@ -131,6 +146,13 @@ void Camera::createParameters()
                           0.f, 1.f, 0.05f);
 
         alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_camout");
+
+        p_magInterpol_ = createBooleanParameter("cammaginterpol", tr("interpolation"),
+                                                tr("The interpolation mode for pixel magnification"),
+                                                tr("No interpolation"),
+                                                tr("Linear interpolation"),
+                                                true,
+                                                true, false);
 }
 
 void Camera::onParameterChanged(Parameter * p)
@@ -159,15 +181,19 @@ void Camera::updateParameterVisibility()
 
     const bool
             isortho = p_cameraMode_->baseValue() == RM_ORTHOGRAPHIC,
+            ispersp = p_cameraMode_->baseValue() == RM_PERSPECTIVE,
             isslice = p_cameraMode_->baseValue() == RM_PROJECTOR_SLICE,
             iscube = p_cameraMode_->baseValue() == RM_FULLDOME_CUBE;
 
     p_cameraOrthoScale_->setVisible( isortho );
+    p_cameraOrthoMix_->setVisible( ispersp );
     p_cameraAngle_->setVisible( !isortho && !isslice );
     p_width_->setVisible( !iscube );
     p_height_->setVisible( !iscube );
     p_cubeRes_->setVisible( iscube );
     p_cameraMix_->setVisible( alphaBlend_.hasAlpha() );
+    p_near_->setVisible( !isslice );
+    p_far_->setVisible( !isslice );
 }
 
 void Camera::setNumberThreads(uint num)
@@ -287,32 +313,51 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 {
     cam.setSize(fbo_[thread]->width(), fbo_[thread]->height());
 
+    const Float
+            near = p_near_->value(time, thread),
+            far = p_far_->value(time, thread);
+
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
         cam.setFieldOfView(90.f);
         cam.setProjectionMatrix(
-                    MATH::perspective(90.f, aspectRatio_, 0.01f, 1000.0f)
+                    MATH::perspective(90.f, aspectRatio_, near, far)
                     );
 
         cam.setIsCubemap(true);
     }
         else cam.setIsCubemap(false);
 
+
     if (renderMode_ == RM_PERSPECTIVE)
     {
         const Float angle = std::min((Double)179, p_cameraAngle_->value(time, thread));
         cam.setFieldOfView(angle);
-        cam.setProjectionMatrix(
-                    MATH::perspective(angle, aspectRatio_, 0.01f, 1000.0f));
+
+        const Mat4 mat1 = MATH::perspective(angle, aspectRatio_, near, far);
+
+        // mix with orthographic matrix
+        const Float mix = p_cameraOrthoMix_->value(time, thread);
+        if (mix > 0.f)
+        {
+            const Float sc = p_cameraOrthoScale_->value(time, thread);
+            const Mat4 mat2 = glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far);
+
+            cam.setProjectionMatrix(mat1 + std::min(1.f, mix) * (mat2 - mat1));
+        }
+        else
+            cam.setProjectionMatrix(mat1);
     }
+
 
     if (renderMode_ == RM_ORTHOGRAPHIC)
     {
         const Float sc = p_cameraOrthoScale_->value(time, thread);
         cam.setFieldOfView(90.); // XXX ???
         cam.setProjectionMatrix(
-                    glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, 0.001f, 1000.f));
+                    glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far));
     }
+
 
     if (renderMode_ == RM_PROJECTOR_SLICE)
     {
@@ -430,6 +475,13 @@ void Camera::drawFramebuffer(uint thread, Double time)
     alphaBlend_.apply(time, thread);
 
     fbo->colorTexture()->bind();
+
+    // set interpolation mode
+    if (p_magInterpol_->baseValue())
+        fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
+    else
+        fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
+
     screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
     fbo->colorTexture()->unbind();
 }

@@ -121,7 +121,7 @@ private:
     GL::Texture * texture_;
     const GL::Texture * constTexture_;
 
-    ParameterSelect * paramType_;
+    ParameterSelect * paramType_, *paramInterpol_;
     ParameterFilename * paramFilename_;
     ParameterInt * paramCamera_;
 };

@@ -251,7 +251,7 @@ void Texture::release()
     releaseTexture_();
 }
 
-void Texture::texParameter(GLenum param, GLint value) const
+void Texture::setTexParameter(GLenum param, GLint value) const
 {
     MO_CHECK_GL_COND( rep_, glTexParameteri(target_, param, value) );
 }
@@ -442,13 +442,13 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
         break;
     }
 
-    texParameter(GL_TEXTURE_MIN_FILTER, GLint(GL_LINEAR));
-    texParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
+    setTexParameter(GL_TEXTURE_MIN_FILTER, GLint(GL_LINEAR));
+    setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
 
     // XXX needs to be true for TEXTURE_CUBE_MAP
     bool repeat = true;
-    texParameter(GL_TEXTURE_WRAP_S, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
-    texParameter(GL_TEXTURE_WRAP_T, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
+    setTexParameter(GL_TEXTURE_WRAP_S, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
+    setTexParameter(GL_TEXTURE_WRAP_T, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
 
     MO_DEBUG_IMG("Texture::upload_() finished");
 
