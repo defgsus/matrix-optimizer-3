@@ -54,14 +54,14 @@ public slots:
 
 private slots:
 
-    void onContextCreated_(uint thread, MO::GL::Context *);
     void onCameraMatrixChanged_(const MO::Mat4&);
 
 private:
 
+    Scene * scene_;
     Window * window_;
     SceneRenderer * renderer_;
-    Scene * scene_;
+
 };
 
 } // namespace GL

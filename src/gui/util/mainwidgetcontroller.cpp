@@ -621,27 +621,17 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     // connect to render window
     glManager_->setScene(scene_);
-//    connect(glManager_, SIGNAL(renderRequest(uint)), scene_, SLOT(renderScene(uint)));
-//    connect(glManager_, SIGNAL(contextCreated(uint,MO::GL::Context*)),
-//                scene_, SLOT(setGlContext(uint,MO::GL::Context*)));
     connect(glManager_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
                 scene_, SLOT(setFreeCameraMatrix(MO::Mat4)));
 
-    // connect events from scene to window
-    connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
-
-    connect(scene_, SIGNAL(playbackStarted()),
-            glWindow_, SLOT(startAnimation()));
-    connect(scene_, SIGNAL(playbackStopped()),
-            glWindow_, SLOT(stopAnimation()));
-
+    // widgets -> scenetime
     connect(seqView_, SIGNAL(sceneTimeChanged(Double)),
             scene_, SLOT(setSceneTime(Double)));
     connect(sequencer_, SIGNAL(sceneTimeChanged(Double)),
             scene_, SLOT(setSceneTime(Double)));
 
     // scene changes
-    // XXX still very unfinished right now - but in the process right now ;)
+    // XXX still very unfinished - but in the process  ;)
     connect(scene_, SIGNAL(objectNameChanged(MO::Object*)), this, SLOT(onObjectNameChanged_(MO::Object*)));
     connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
     connect(scene_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));

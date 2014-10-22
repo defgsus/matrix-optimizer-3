@@ -219,7 +219,8 @@ HEADERS += \
     src/projection/projectorblender.h \
     src/video/videostreamreader.h \
     src/tool/commonresolutions.h \
-    src/gl/scenerenderer.h
+    src/gl/scenerenderer.h \
+    src/object/util/alphablendsetting.h
 
 
 SOURCES += \
@@ -389,4 +390,5 @@ SOURCES += \
     src/projection/projectorblender.cpp \
     src/video/videostreamreader.cpp \
     src/tool/commonresolutions.cpp \
-    src/gl/scenerenderer.cpp
+    src/gl/scenerenderer.cpp \
+    src/object/util/alphablendsetting.cpp

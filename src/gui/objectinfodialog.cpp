@@ -24,6 +24,7 @@
 #include "object/audio/audiounit.h"
 #include "object/clip.h"
 #include "object/clipcontainer.h"
+#include "object/util/alphablendsetting.h"
 
 namespace MO {
 namespace GUI {
@@ -107,7 +108,7 @@ void ObjectInfoDialog::setObject(Object * o)
     {
         s << "<p>depth test: " << gl->depthTestModeNames[gl->depthTestMode()]
           << "<br/>depth write: " << gl->depthWriteModeNames[gl->depthWriteMode()]
-          << "<br/>alpha blend: " << gl->alphaBlendModeNames[gl->alphaBlendMode()]
+          << "<br/>alpha blend: " << AlphaBlendSetting::modeNames[gl->alphaBlendMode()]
           << "</p>";
     }
 

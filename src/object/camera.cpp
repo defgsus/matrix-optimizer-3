@@ -269,6 +269,7 @@ void Camera::initGl(uint thread)
 
 void Camera::releaseGl(uint thread)
 {
+
     screenQuad_[thread]->release();
     delete screenQuad_[thread];
     screenQuad_[thread] = 0;
@@ -276,6 +277,7 @@ void Camera::releaseGl(uint thread)
     fbo_[thread]->release();
     delete fbo_[thread];
     fbo_[thread] = 0;
+    MO_DEBUG("Camera ---------- release");
 }
 
 void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) const
@@ -350,6 +352,7 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
     GL::FrameBufferObject * fbo = fbo_[thread];
     fbo->bind();
 
+    // attach each cubemap texture
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
         switch (cubeMapIndex)
@@ -363,12 +366,14 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
         }
     }
 
-    //int pixelsize = 1; //devicePixelRatio(); // Retina support
-    MO_DEBUG_GL("Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)")
     MO_CHECK_GL( glViewport(0, 0, fbo->width(), fbo->height()) );
+
+    // --- set default render state ---
 
     MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
     MO_CHECK_GL( glDepthMask(GL_TRUE) );
+
+    // --- background ---
 
     MO_CHECK_GL( glClearColor(p_backR_->value(time, thread),
                               p_backG_->value(time, thread),
@@ -381,7 +386,6 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
 void Camera::finishGlFrame(uint thread, Double)
 {
     fbo_[thread]->unbind();
-    //MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
 }
 
 GL::FrameBufferObject * Camera::fbo(uint thread) const
@@ -402,17 +406,28 @@ GL::FrameBufferObject * Camera::fbo(uint thread) const
 
 void Camera::drawFramebuffer(uint thread, Double time)
 {
-    const GL::FrameBufferObject * scenefbo = sceneObject()->fboMaster(thread);
-
-    GL::FrameBufferObject * fbo = fbo_[thread];
+    // -- shader uniforms --
 
     uColor_->floats[3] = p_cameraMix_->value(time, thread);
+
     if (renderMode_ == RM_FULLDOME_CUBE)
         uAngle_->floats[0] = p_cameraAngle_->value(time, thread);
 
-    fbo->colorTexture()->bind();
+
+    // -- render camera frame onto current context --
+
+    // cameras framebuffer
+    GL::FrameBufferObject * fbo = fbo_[thread];
+
+    // final framebuffer
+    const GL::FrameBufferObject
+            * scenefbo = sceneObject()->fboMaster(thread);
+
+    // set blendmode
     MO_CHECK_GL( glEnable(GL_BLEND) );
     MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+
+    fbo->colorTexture()->bind();
     screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
     fbo->colorTexture()->unbind();
 }

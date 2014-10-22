@@ -287,6 +287,9 @@ void Scene::audioCallback_(const F32 * in, F32 * out)
 
 void Scene::start()
 {
+    if (isPlayback())
+        return;
+
     ScopedSceneLockWrite lock(this);
 
     if (!isAudioInitialized())
@@ -297,6 +300,9 @@ void Scene::start()
     if (isAudioInitialized())
     {
         isPlayback_ = true;
+
+        audioInQueue_->reset();
+        audioOutQueue_->reset();
 
         audioInThread_ = new AudioInThread(this, this);
         audioInThread_->start();

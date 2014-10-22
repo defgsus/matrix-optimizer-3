@@ -26,19 +26,20 @@ const QStringList ObjectGl::depthTestModeNames =
 const QStringList ObjectGl::depthWriteModeNames =
 { tr("parent"), tr("on"), tr("off") };
 
-const QStringList ObjectGl::alphaBlendModeNames =
-{ tr("parent"), tr("off"), tr("cross-fade"), tr("add") };
+//const QStringList ObjectGl::alphaBlendModeNames =
+//{ tr("parent"), tr("off"), tr("cross-fade"), tr("add") };
 
 ObjectGl::ObjectGl(QObject *parent)
-    : Object                (parent),
-      numberLightSources_   (0),
-      defaultDepthTestMode_ (DTM_PARENT),
-      defaultDepthWriteMode_(DWM_PARENT),
-      defaultAlphaBlendMode_(ABM_PARENT),
-      enableCreateRenderSettings_(true),
-      paramDepthTest_       (0),
-      paramDepthWrite_      (0),
-      paramAlphaBlend_      (0)
+    : Object                    (parent),
+      p_alphaBlend_             (this),
+      p_numberLightSources_     (0),
+      p_defaultDepthTestMode_   (DTM_PARENT),
+      p_defaultDepthWriteMode_  (DWM_PARENT),
+      p_defaultAlphaBlendMode_  (AlphaBlendSetting::M_PARENT),
+      p_enableCreateRenderSettings_(true),
+      p_paramDepthTest_         (0),
+      p_paramDepthWrite_        (0)
+      //paramAlphaBlend_        (0)
 {
 }
 
@@ -58,11 +59,11 @@ void ObjectGl::createParameters()
 {
     Object::createParameters();
 
-    if (enableCreateRenderSettings_)
+    if (p_enableCreateRenderSettings_)
     {
         beginParameterGroup("renderset", tr("render settings"));
 
-        paramDepthTest_ = createSelectParameter("rendset_dtm", tr("depth testing"),
+        p_paramDepthTest_ = createSelectParameter("rendset_dtm", tr("depth testing"),
             tr("Selects whether a test against the depth-map should be performed"),
             { "p", "on", "off" },
             depthTestModeNames,
@@ -71,9 +72,9 @@ void ObjectGl::createParameters()
               tr("Depth-testing is off - "
                  "the object will paint itself regardless of other objects.") },
             { DTM_PARENT, DTM_ON, DTM_OFF },
-            defaultDepthTestMode_, true, false);
+            p_defaultDepthTestMode_, true, false);
 
-        paramDepthWrite_ = createSelectParameter("rendset_dwm", tr("depth writing"),
+        p_paramDepthWrite_ = createSelectParameter("rendset_dwm", tr("depth writing"),
             tr("Selects whether the depth information of the object should be written"),
             { "p", "on", "off" },
             depthWriteModeNames,
@@ -81,8 +82,10 @@ void ObjectGl::createParameters()
               tr("Depth-writing is on - the depth information can be used by other objects."),
               tr("Depth-writing is off - the depth information will simply be discarded.") },
             { DWM_PARENT, DWM_ON, DWM_OFF },
-            defaultDepthWriteMode_, true, false);
+            p_defaultDepthWriteMode_, true, false);
 
+        p_alphaBlend_.createParameters(AlphaBlendSetting::M_PARENT, true, "_OGl_");
+        /*
         paramAlphaBlend_ = createSelectParameter("rendset_abm", tr("alpha blending"),
             tr("Selects how semi-transparent objects are composed on screen"),
             { "p", "off", "mix", "add" },
@@ -93,7 +96,7 @@ void ObjectGl::createParameters()
               tr("The colors are simply added on top") },
             { ABM_PARENT, ABM_OFF, ABM_MIX, ABM_ADD },
             defaultAlphaBlendMode_, true, false);
-
+*/
         endParameterGroup();
     }
 }
@@ -102,7 +105,9 @@ void ObjectGl::onParameterChanged(Parameter *p)
 {
     Object::onParameterChanged(p);
 
-    if (p == paramDepthTest_ || p == paramDepthWrite_ || p == paramAlphaBlend_)
+    if (   p == p_paramDepthTest_
+        || p == p_paramDepthWrite_
+        || p_alphaBlend_.hasParameter(p))
     {
         rootObject()->propagateRenderMode(0);
     }
@@ -115,40 +120,40 @@ void ObjectGl::setNumberThreads(uint num)
 
     Object::setNumberThreads(num);
 
-    uint oldnum = glContext_.size();
-    glContext_.resize(num);
-    needsInitGl_.resize(num);
-    isGlInitialized_.resize(num);
+    uint oldnum = p_glContext_.size();
+    p_glContext_.resize(num);
+    p_needsInitGl_.resize(num);
+    p_isGlInitialized_.resize(num);
 
     for (uint i=oldnum; i<num; ++i)
     {
-        glContext_[i] = 0;
-        needsInitGl_[i] = true;
-        isGlInitialized_[i] = false;
+        p_glContext_[i] = 0;
+        p_needsInitGl_[i] = true;
+        p_isGlInitialized_[i] = false;
     }
 }
 
-void ObjectGl::setGlContext_(uint thread, GL::Context * c)
+void ObjectGl::p_setGlContext_(uint thread, GL::Context * c)
 {
-    MO_ASSERT(thread < glContext_.size(),
+    MO_ASSERT(thread < p_glContext_.size(),
               "setGlContext_(" << thread << ", " << c << ") but "
-              "glContext_.size() == " << glContext_.size());
+              "glContext_.size() == " << p_glContext_.size());
 
-    if (c != glContext_[thread])
+    if (c != p_glContext_[thread])
     {
-        needsInitGl_[thread] = true;
+        p_needsInitGl_[thread] = true;
     }
 
-    glContext_[thread] = c;
+    p_glContext_[thread] = c;
 }
 
-void ObjectGl::initGl_(uint thread)
+void ObjectGl::p_initGl_(uint thread)
 {
     MO_DEBUG_GL("ObjectGl('" << idName() << "')::initGl_(" << thread << ")");
 
-    if (!glContext_[thread])
+    if (!p_glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
-    if (!glContext_[thread]->isValid())
+    if (!p_glContext_[thread]->isValid())
         MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
 
     MO_EXTEND_EXCEPTION(
@@ -156,16 +161,16 @@ void ObjectGl::initGl_(uint thread)
                 "in ObjectGl '" << idName() << "', thread=" << thread
                 );
 
-    needsInitGl_[thread] = false;
-    isGlInitialized_[thread] = true;
+    p_needsInitGl_[thread] = false;
+    p_isGlInitialized_[thread] = true;
 }
 
 
-void ObjectGl::releaseGl_(uint thread)
+void ObjectGl::p_releaseGl_(uint thread)
 {
     MO_DEBUG_GL("ObjectGl('" << idName() << "')::releaseGl_(" << thread << ")");
 
-    if (!glContext_[thread])
+    if (!p_glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
 
     MO_EXTEND_EXCEPTION(
@@ -173,16 +178,16 @@ void ObjectGl::releaseGl_(uint thread)
                 "in ObjectGl '" << idName() << "', thread=" << thread
                 );
 
-    isGlInitialized_[thread] = false;
+    p_isGlInitialized_[thread] = false;
 }
 
-void ObjectGl::renderGl_(const GL::RenderSettings &rs, uint thread, Double time)
+void ObjectGl::p_renderGl_(const GL::RenderSettings &rs, uint thread, Double time)
 {
     using namespace gl;
 
-    if (!glContext_[thread])
+    if (!p_glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
-    if (!glContext_[thread]->isValid())
+    if (!p_glContext_[thread]->isValid())
         MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
 
     // ---- set render modes -----
@@ -197,23 +202,14 @@ void ObjectGl::renderGl_(const GL::RenderSettings &rs, uint thread, Double time)
     else
         MO_CHECK_GL( glDepthMask(GL_TRUE) );
 
-    if (alphaBlendMode() == ABM_OFF)
-        MO_CHECK_GL( glDisable(GL_BLEND) )
-    else
-    {
-        MO_CHECK_GL( glEnable(GL_BLEND) );
-
-        if (alphaBlendMode() == ABM_ADD)
-            MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE) )
-        else
-            MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
-    }
-
+    p_alphaBlend_.apply(alphaBlendMode());
 
     MO_EXTEND_EXCEPTION(
-                renderGl(rs, thread, time),
-                "in ObjectGl '" << idName() << "', thread=" << thread
-                );
+
+        renderGl(rs, thread, time);
+
+        , "in ObjectGl '" << idName() << "', thread=" << thread
+    );
 
 }
 
@@ -230,7 +226,7 @@ void ObjectGl::requestReinitGl()
 {
     for (uint i=0; i<numberThreads(); ++i)
     {
-        needsInitGl_[i] = true;
+        p_needsInitGl_[i] = true;
     }
 
     requestRender();
@@ -275,35 +271,42 @@ void ObjectGl::propagateRenderMode(ObjectGl *parent)
 {
     // -- determine settings from parameters and/or from parent
 
-    if (!paramDepthTest_)
-        curDepthTestMode_ = DTM_ON;
+    if (!p_paramDepthTest_)
+        p_curDepthTestMode_ = DTM_ON;
     else
     {
-        if (paramDepthTest_->baseValue() == DTM_PARENT)
-            curDepthTestMode_ = parent ? parent->depthTestMode() : DTM_ON;
+        if (p_paramDepthTest_->baseValue() == DTM_PARENT)
+            p_curDepthTestMode_ = parent ? parent->depthTestMode() : DTM_ON;
         else
-            curDepthTestMode_ = (DepthTestMode)paramDepthTest_->baseValue();
+            p_curDepthTestMode_ = (DepthTestMode)p_paramDepthTest_->baseValue();
     }
 
-    if (!paramDepthWrite_)
-        curDepthWriteMode_ = DWM_ON;
+    if (!p_paramDepthWrite_)
+        p_curDepthWriteMode_ = DWM_ON;
     else
     {
-        if (paramDepthWrite_->baseValue() == DWM_PARENT)
-            curDepthWriteMode_ = parent ? parent->depthWriteMode() : DWM_ON;
+        if (p_paramDepthWrite_->baseValue() == DWM_PARENT)
+            p_curDepthWriteMode_ = parent ? parent->depthWriteMode() : DWM_ON;
         else
-            curDepthWriteMode_ = (DepthWriteMode)paramDepthWrite_->baseValue();
+            p_curDepthWriteMode_ = (DepthWriteMode)p_paramDepthWrite_->baseValue();
     }
 
-    if (!paramAlphaBlend_)
-        curAlphaBlendMode_ = ABM_MIX;
+    if (!p_alphaBlend_.parametersCreated())
+        p_curAlphaBlendMode_ = AlphaBlendSetting::M_MIX;
     else
     {
-        if (paramAlphaBlend_->baseValue() == ABM_PARENT)
-            curAlphaBlendMode_ = parent ? parent->alphaBlendMode() : ABM_MIX;
+        if (p_alphaBlend_.mode() == AlphaBlendSetting::M_PARENT)
+            // get parent's value
+            p_curAlphaBlendMode_ = parent ? parent->alphaBlendMode()
+                                            // mix is default when no parent
+                                          : AlphaBlendSetting::M_MIX;
         else
-            curAlphaBlendMode_ = (AlphaBlendMode)paramAlphaBlend_->baseValue();
+            p_curAlphaBlendMode_ =
+                    (AlphaBlendSetting::Mode)p_alphaBlend_.mode();
+
+        p_alphaBlend_.setParentMode(p_curAlphaBlendMode_);
     }
+
 
     // pass to children
 

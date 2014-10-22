@@ -13,6 +13,7 @@
 
 #include "object.h"
 #include "gl/opengl.h"
+#include "util/alphablendsetting.h"
 
 namespace MO {
 namespace GL { class Context; class Drawable; }
@@ -44,16 +45,6 @@ public:
 
     static const QStringList depthWriteModeNames;
 
-    enum AlphaBlendMode
-    {
-        ABM_PARENT,
-        ABM_OFF,
-        ABM_MIX,
-        ABM_ADD
-    };
-
-    static const QStringList alphaBlendModeNames;
-
 
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(ObjectGl)
 
@@ -68,16 +59,16 @@ public:
     // ---------------- opengl --------------------
 
     /** Returns the current GL::Context */
-    GL::Context * glContext(uint thread) { return glContext_[thread]; }
+    GL::Context * glContext(uint thread) { return p_glContext_[thread]; }
     /** Returns the current GL::Context */
-    const GL::Context * glContext(uint thread) const { return glContext_[thread]; }
+    const GL::Context * glContext(uint thread) const { return p_glContext_[thread]; }
 
     /** Used by scene */
-    bool needsInitGl(uint thread) const { return needsInitGl_[thread]; }
+    bool needsInitGl(uint thread) const { return p_needsInitGl_[thread]; }
 
     /** Used by scene */
     bool isGlInitialized(uint thread) const
-        { return thread < isGlInitialized_.size() && isGlInitialized_[thread]; }
+        { return thread < p_isGlInitialized_.size() && p_isGlInitialized_[thread]; }
 
     /** Tell scene that this object wants to be painted */
     void requestRender();
@@ -86,7 +77,7 @@ public:
     void requestReinitGl();
 
     /** Number of lights, the shader should support */
-    uint numberLightSources() const { return numberLightSources_; }
+    uint numberLightSources() const { return p_numberLightSources_; }
 
     // ------------- opengl virtual interface -----------
 
@@ -110,44 +101,48 @@ public:
     // ----------------- render state -------------------
 
     /* these must all be called before createParameters, e.g. in object constructor */
-    void setCreateRenderSettings(bool enable) { enableCreateRenderSettings_ = enable; }
-    void setDefaultDepthTestMode(DepthTestMode m) { defaultDepthTestMode_ = m; }
-    void setDefaultDepthWriteMode(DepthWriteMode m) { defaultDepthWriteMode_ = m; }
-    void setDefaultAlphaBlendMode(AlphaBlendMode m) { defaultAlphaBlendMode_ = m; }
+    void setCreateRenderSettings(bool enable) { p_enableCreateRenderSettings_ = enable; }
+    void setDefaultDepthTestMode(DepthTestMode m) { p_defaultDepthTestMode_ = m; }
+    void setDefaultDepthWriteMode(DepthWriteMode m) { p_defaultDepthWriteMode_ = m; }
+    void setDefaultAlphaBlendMode(AlphaBlendSetting::Mode m) { p_defaultAlphaBlendMode_ = m; }
 
-    DepthTestMode defaultDepthTestMode() const { return defaultDepthTestMode_; }
-    DepthWriteMode defaultDepthWriteMode() const { return defaultDepthWriteMode_; }
-    AlphaBlendMode defaultAlphaBlendMode() const { return defaultAlphaBlendMode_; }
+    DepthTestMode defaultDepthTestMode() const { return p_defaultDepthTestMode_; }
+    DepthWriteMode defaultDepthWriteMode() const { return p_defaultDepthWriteMode_; }
+    AlphaBlendSetting::Mode defaultAlphaBlendMode() const { return p_defaultAlphaBlendMode_; }
 
-    DepthTestMode depthTestMode() const { return curDepthTestMode_; }
-    DepthWriteMode depthWriteMode() const { return curDepthWriteMode_; }
-    AlphaBlendMode alphaBlendMode() const { return curAlphaBlendMode_; }
+    DepthTestMode depthTestMode() const { return p_curDepthTestMode_; }
+    DepthWriteMode depthWriteMode() const { return p_curDepthWriteMode_; }
+    AlphaBlendSetting::Mode alphaBlendMode() const { return p_curAlphaBlendMode_; }
 
     virtual void propagateRenderMode(ObjectGl * parent) Q_DECL_OVERRIDE;
 
 private:
 
-    /** Sets the OpenGL Context */
-    void setGlContext_(uint thread, GL::Context *);
+    /** Sets the OpenGL Context.
+     *  Only Scene needs access here.
+     *  XXX please refacture this and all those friend dependencies */
+    void p_setGlContext_(uint thread, GL::Context *);
 
-    void initGl_(uint thread);
-    void releaseGl_(uint thread);
-    void renderGl_(const GL::RenderSettings& rs, uint thread, Double time);
+    void p_initGl_(uint thread);
+    void p_releaseGl_(uint thread);
+    void p_renderGl_(const GL::RenderSettings& rs, uint thread, Double time);
 
-    std::vector<GL::Context*> glContext_;
-    std::vector<int> needsInitGl_, isGlInitialized_;
+    std::vector<GL::Context*> p_glContext_;
+    std::vector<int> p_needsInitGl_, p_isGlInitialized_;
+
+    AlphaBlendSetting p_alphaBlend_;
 
     /** Number of lights that this object's shader is currently compiled for */
-    uint numberLightSources_;
+    uint p_numberLightSources_;
 
     // --- render state ---
 
-    DepthTestMode defaultDepthTestMode_, curDepthTestMode_;
-    DepthWriteMode defaultDepthWriteMode_, curDepthWriteMode_;
-    AlphaBlendMode defaultAlphaBlendMode_, curAlphaBlendMode_;
+    DepthTestMode p_defaultDepthTestMode_, p_curDepthTestMode_;
+    DepthWriteMode p_defaultDepthWriteMode_, p_curDepthWriteMode_;
+    AlphaBlendSetting::Mode p_defaultAlphaBlendMode_, p_curAlphaBlendMode_;
 
-    bool enableCreateRenderSettings_;
-    ParameterSelect *paramDepthTest_, *paramDepthWrite_, *paramAlphaBlend_;
+    bool p_enableCreateRenderSettings_;
+    ParameterSelect *p_paramDepthTest_, *p_paramDepthWrite_;//, *p_paramAlphaBlend_;
 };
 
 } // namespace MO

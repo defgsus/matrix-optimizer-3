@@ -14,6 +14,7 @@
 #include "window.h"
 #include "context.h"
 #include "scenerenderer.h"
+#include "object/scene.h"
 #include "io/log.h"
 
 namespace MO {
@@ -21,8 +22,8 @@ namespace GL {
 
 Manager::Manager(QObject *parent) :
     QObject(parent),
-    window_     (0),
     scene_      (0),
+    window_     (0),
     renderer_   (0)
 {
     MO_DEBUG_GL("Manager::Manager()");
@@ -36,21 +37,15 @@ Manager::~Manager()
         window_->close();
 }
 
-Window * Manager::createGlWindow(uint thread)
+Window * Manager::createGlWindow(uint /*thread*/)
 {
     if (!window_)
     {
         window_ = new Window();
-        //QThread * thrd = new QThread(this);
-        //thrd->start();
-        //window_->moveToThread(thrd);
-        //window_->setThread(thread);
-        //connect(window_, SIGNAL(contextCreated(uint, MO::GL::Context*)),
-        //            this, SLOT(onContextCreated_(uint, MO::GL::Context*)));
-        //connect(window_, SIGNAL(renderRequest(uint)),
-        //            this, SIGNAL(renderRequest(uint)));
+
         connect(window_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
                     this, SLOT(onCameraMatrixChanged_(MO::Mat4)));
+
         connect(window_, SIGNAL(sizeChanged(QSize)),
                     this, SIGNAL(outputSizeChanged(QSize)));
     }
@@ -58,8 +53,10 @@ Window * Manager::createGlWindow(uint thread)
     if (!renderer_)
     {
         renderer_ = new SceneRenderer();
+
         if (scene_)
             renderer_->setScene(scene_);
+
         window_->setRenderer(renderer_);
     }
 
@@ -68,16 +65,25 @@ Window * Manager::createGlWindow(uint thread)
 
 void Manager::setScene(Scene * scene)
 {
+    bool changed = (scene != scene_);
+
     scene_ = scene;
 
+    // XXX Would not work if window was not created yet
+    if (changed && scene_ && window_)
+    {
+        // connect events from scene to window
+        connect(scene_, SIGNAL(renderRequest()),
+                    window_, SLOT(renderLater()));
+
+        connect(scene_, SIGNAL(playbackStarted()),
+                    window_, SLOT(startAnimation()));
+
+        connect(scene_, SIGNAL(playbackStopped()),
+                    window_, SLOT(stopAnimation()));
+    }
+
     renderer_->setScene(scene);
-}
-
-void Manager::onContextCreated_(uint thread, Context * context)
-{
-    MO_DEBUG_GL("Manager::onContextCreated_(" << thread << ", " << context << ")");
-
-    //emit contextCreated(thread, context);
 }
 
 void Manager::onCameraMatrixChanged_(const Mat4 & mat)

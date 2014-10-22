@@ -487,7 +487,7 @@ void Scene::updateNumberLights_()
     for (auto o : glObjects_)
     if ((int)o->numberLightSources() != lightSources_.size())
     {
-        o->numberLightSources_ = lightSources_.size();
+        o->p_numberLightSources_ = lightSources_.size();
         // don't notify if objects havn't even been initialized properly
         if (o->numberThreads() == sceneNumberThreads_)
             o->numberLightSourcesChanged(MO_GFX_THREAD);
@@ -770,7 +770,7 @@ void Scene::setGlContext(uint thread, GL::Context *context)
 
     MO_DEBUG_GL("setting gl context for objects");
     for (auto o : glObjects_)
-        o->setGlContext_(thread, glContext_);
+        o->p_setGlContext_(thread, glContext_);
 }
 
 void Scene::createSceneGl_(uint thread)
@@ -894,7 +894,7 @@ void Scene::renderScene(uint thread)
 
             for (auto o : glObjects_)
                 if (o->isGlInitialized(thread))
-                    o->releaseGl_(thread);
+                    o->p_releaseGl_(thread);
 
             releaseAllGlRequested_[thread] = false;
 
@@ -916,8 +916,8 @@ void Scene::renderScene(uint thread)
             if (o->needsInitGl(thread))// && o->active(time, thread))
             {
                 if (o->isGlInitialized(thread))
-                    o->releaseGl_(thread);
-                o->initGl_(thread);
+                    o->p_releaseGl_(thread);
+                o->p_initGl_(thread);
             }
 
         // position all objects
@@ -957,7 +957,7 @@ void Scene::renderScene(uint thread)
                 for (auto o : glObjects_)
                 if (o->active(time, thread))
                 {
-                    o->renderGl_(renderSet, thread, time);
+                    o->p_renderGl_(renderSet, thread, time);
                 }
 
                 // render debug objects
