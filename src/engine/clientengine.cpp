@@ -199,6 +199,9 @@ void ClientEngine::showRenderWindow_(bool enable)
 {
     if (enable)
     {
+        if (!scene_)
+            return;
+
         if (!glWindow_)
             createGlObjects_();
 
@@ -475,6 +478,9 @@ void ClientEngine::onFilesReady_()
     nextScene_ = 0;
 
     setSceneObject(s);
+
+    if (glWindow_ && !glWindow_->isVisible())
+        showRenderWindow_(true);
 
     sendState_();
 }
