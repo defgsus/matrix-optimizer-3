@@ -99,13 +99,7 @@ int ClientEngine::run(int argc, char ** argv)
             return -1;
 
         showRenderWindow_(true);
-
-        // XXX hack: trigger first clip row
-        auto cc = scene_->findChildObjects<ClipContainer>(QString(), true);
-        if (!cc.isEmpty())
-            cc[0]->triggerRow(0, 0);
-
-        scene_->start();
+        setPlayback_(true);
     }
 
 
@@ -298,6 +292,18 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             setProjectionSettings_(e);
             return;
         }
+
+        if (e->request() == NetEventRequest::START_RENDER)
+        {
+            setPlayback_(true);
+            return;
+        }
+
+        if (e->request() == NetEventRequest::STOP_RENDER)
+        {
+            setPlayback_(false);
+            return;
+        }
     }
 
     if (NetEventFileInfo * e = netevent_cast<NetEventFileInfo>(event))
@@ -405,5 +411,22 @@ bool ClientEngine::loadSceneFile_(const QString &fn)
     return false;
 }
 
+void ClientEngine::setPlayback_(bool play)
+{
+    if (!scene_)
+        return;
+
+    if (play)
+    {
+        // XXX hack: trigger first clip row
+        auto cc = scene_->findChildObjects<ClipContainer>(QString(), true);
+        if (!cc.isEmpty())
+            cc[0]->triggerRow(0, 0);
+
+        scene_->start();
+    }
+    else
+        scene_->stop();
+}
 
 } // namespace MO

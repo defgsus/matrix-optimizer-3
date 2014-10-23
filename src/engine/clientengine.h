@@ -69,6 +69,7 @@ private:
     void shutDown_();
     void setProjectionSettings_(NetEventRequest*);
     bool loadSceneFile_(const QString& fn);
+    void setPlayback_(bool play);
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
