@@ -290,6 +290,8 @@ void Scene::start()
     if (isPlayback())
         return;
 
+#ifndef MO_DISABLE_AUDIO
+
     ScopedSceneLockWrite lock(this);
 
     if (!isAudioInitialized())
@@ -313,6 +315,15 @@ void Scene::start()
 
         emit playbackStarted();
     }
+#else
+    ScopedSceneLockWrite lock(this);
+
+    updateAudioUnitChannels_();
+
+    isPlayback_ = true;
+
+    emit playbackStarted();
+#endif
 }
 
 void Scene::stop()
@@ -320,9 +331,10 @@ void Scene::stop()
     if (isPlayback())
     {
         isPlayback_ = false;
+#ifndef MO_DISABLE_AUDIO
         if (isAudioInitialized())
             audioDevice_->stop();
-
+#endif
         emit playbackStopped();
     }
     else
@@ -330,6 +342,7 @@ void Scene::stop()
         setSceneTime(0.0);
     }
 
+#ifndef MO_DISABLE_AUDIO
     // kill audio-in thread
     if (audioInThread_)
     {
@@ -347,13 +360,7 @@ void Scene::stop()
         audioOutThread_->deleteLater();
         audioOutThread_ = 0;
     }
-
-    /*
-    if (timer_.isActive())
-        timer_.stop();
-    else
-        setSceneTime(0);
-    */
+#endif
 }
 
 

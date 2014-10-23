@@ -1,7 +1,7 @@
 
 #################### qt stuff #########################
 
-TARGET = matrixoptimizer_client
+TARGET = matrixoptimizer_client_ph
 
 QT += core gui widgets opengl network xml
 
@@ -19,6 +19,10 @@ DEFINES += MO_CLIENT
 
 #for glm version >= 0.9.5
 DEFINES += GLM_FORCE_RADIANS
+
+#special conditions for hamburg release
+DEFINES += MO_HAMBURG
+DEFINES += MO_DISABLE_AUDIO
 
 #temporarily
 DEFINES += MO_DISABLE_GST

@@ -134,7 +134,7 @@ public:
     CommandLineParameter * parameter(const QString& id) const;
 
     /** Returns true when the parameter matching @p id was parsed */
-    bool isPresent(const QString& id) const;
+    bool contains(const QString& id) const;
 
     /** Returns the value of the parameter matching @p id,
         or an empty QVariant if not found. */
@@ -161,7 +161,7 @@ public:
         @p p is not added and false is returned. */
     bool addParameter(CommandLineParameter * p);
 
-    /** Creates a parameter and returns it.
+    /** Creates a valueless parameter and returns it.
         If the CommandLineParameter::id() is already present,
         no parameter is created and NULL returned. */
     CommandLineParameter * addParameter(

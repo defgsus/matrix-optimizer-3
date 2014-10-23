@@ -159,7 +159,7 @@ void Window::renderNow()
     // constantly update size XXX
     renderer_->setSize(size() * devicePixelRatio());
 
-    renderer_->render(0.0);
+    renderer_->render();
 
     // messure time
     if (animating_)

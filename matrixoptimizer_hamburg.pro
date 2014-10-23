@@ -17,6 +17,8 @@ QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
 #special conditions for hamburg release
 DEFINES += MO_HAMBURG
+DEFINES += MO_DISABLE_AUDIO
+
 
 #for glm version >= 0.9.5
 DEFINES += GLM_FORCE_RADIANS

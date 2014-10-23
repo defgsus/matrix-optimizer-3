@@ -15,6 +15,7 @@
 #include "object/scene.h"
 #include "io/error.h"
 #include "gl/opengl.h"
+#include "io/currenttime.h"
 
 #include <QOpenGLContext>
 #include "gl/opengl_undef.h"
@@ -101,7 +102,7 @@ void SceneRenderer::updateSceneGlContext_()
 }
 
 
-void SceneRenderer::render(Double time)
+void SceneRenderer::render()
 {
     if (!context_ || !scene_)
         return;
@@ -125,7 +126,13 @@ void SceneRenderer::render(Double time)
     if (scene_->glContext() != context_)
         scene_->setGlContext(MO_GFX_THREAD, context_);
 
-    scene_->renderScene(MO_GFX_THREAD);
+#ifndef MO_DISABLE_AUDIO
+    Double time = scene_->sceneTime();
+#else
+    Double time = currentTime();
+#endif
+
+    scene_->renderScene(time, MO_GFX_THREAD);
 
     context_->qcontext()->swapBuffers(surface_);
 }
