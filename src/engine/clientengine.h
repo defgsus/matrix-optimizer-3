@@ -19,6 +19,7 @@
 
 namespace MO {
 class Scene;
+namespace IO { class CommandLineParser; }
 namespace GUI { class InfoWindow; }
 
 class Client;
@@ -32,6 +33,7 @@ class ClientEngine : public QObject
     Q_OBJECT
 public:
     explicit ClientEngine(QObject *parent = 0);
+    ~ClientEngine();
 
     /** Runs the complete client event loop */
     int run(int argc, char ** argv);
@@ -52,13 +54,16 @@ private slots:
     void onNetEvent_(AbstractNetEvent *);
     void showInfoWindow_(bool enable);
     void showRenderWindow_(bool enable);
-
+    void renderWindowSizeChanged_(const QSize&);
 private:
 
+    void initCommandLine_();
+    bool parseCommandLine_(int argc, char ** argv);
     void createGlObjects_();
     void startNetwork_();
     void shutDown_();
     void setProjectionSettings_(NetEventRequest*);
+    bool loadSceneFile_(const QString& fn);
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
@@ -67,6 +72,11 @@ private:
     Client * client_;
 
     Scene * scene_;
+
+    IO::CommandLineParser * cl_;
+
+    bool doNetwork_;
+    QString sceneFile_;
 };
 
 } // namespace MO

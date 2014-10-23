@@ -311,7 +311,7 @@ public slots:
     GL::FrameBufferObject * fboCamera(uint thread, uint camera_index) const;
 
     /** Render the whole scene on the current context */
-    void renderScene(uint thread);
+    void renderScene(Double time, uint thread);
 
     /** Start realtime playback */
     void start();

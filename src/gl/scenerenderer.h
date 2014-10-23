@@ -44,7 +44,7 @@ public:
 
     void createContext(QSurface *surface);
 
-    void render(Double time);
+    void render();
 
 signals:
 

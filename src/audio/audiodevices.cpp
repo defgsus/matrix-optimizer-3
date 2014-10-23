@@ -47,14 +47,18 @@ bool AudioDevices::checkDevices()
 {
     MO_DEBUG_AUDIO("AudioDevices::checkDevices()");
 
+    api_infos_.clear();
+    dev_infos_.clear();
+
+#ifdef MO_DISABLE_AUDIO
+    return false;
+#endif
+
     if (!pa_initialized_)
     {
         MO_CHECKPA(Pa_Initialize(), "could not initialize audio library");
         pa_initialized_ = true;
     }
-
-    api_infos_.clear();
-    dev_infos_.clear();
 
     // ----------- apis ------------------
 

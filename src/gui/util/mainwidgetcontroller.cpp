@@ -79,9 +79,6 @@
 namespace MO {
 namespace GUI {
 
-namespace {
-    static QString windowTitleString("Matrix Optimizer " + versionString());
-}
 
 
 
@@ -1070,7 +1067,7 @@ void MainWidgetController::updateWindowTitle_()
         t += QFileInfo(currentSceneFilename_).fileName() + " - ";
     }
 
-    emit windowTitle(t + windowTitleString);
+    emit windowTitle(t + applicationName());
 }
 
 void MainWidgetController::updateWidgetsActivity_()

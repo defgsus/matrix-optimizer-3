@@ -85,7 +85,7 @@ CommandLineParameter * CommandLineParser::parameter(const QString &id) const
     return 0;
 }
 
-bool CommandLineParser::isPresent(const QString &id) const
+bool CommandLineParser::contains(const QString &id) const
 {
     auto p = parameter(id);
     return p && p->isPresent();

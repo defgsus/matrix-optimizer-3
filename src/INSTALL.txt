@@ -7,6 +7,9 @@ libglm-dev
 portaudio19-dev
 libportmidi-dev
 
+libgstreamer1.0-dev
+libgstreamer-plugins-base1.0-dev
+
 --- other libraries:
 
 https://github.com/hpicgs/glbinding.git

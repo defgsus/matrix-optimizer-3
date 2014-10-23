@@ -9,6 +9,7 @@
 */
 
 #include <QTcpSocket>
+#include <QUrl>
 
 #include "clientengine.h"
 #include "io/error.h"
@@ -17,6 +18,8 @@
 #include "gl/manager.h"
 #include "gl/window.h"
 #include "object/scene.h"
+#include "object/objectfactory.h"
+#include "object/clipcontainer.h"
 #include "network/tcpserver.h"
 #include "network/netlog.h"
 #include "network/networkmanager.h"
@@ -29,6 +32,8 @@
 #include "io/clientfiles.h"
 #include "io/filemanager.h"
 #include "tool/deleter.h"
+#include "io/commandlineparser.h"
+#include "io/version.h"
 
 namespace MO {
 
@@ -47,27 +52,58 @@ ClientEngine::ClientEngine(QObject *parent) :
     glWindow_   (0),
     infoWindow_ (0),
     client_     (0),
-    scene_      (0)
+    scene_      (0),
+    cl_         (new IO::CommandLineParser)
 {
+    initCommandLine_();
+}
+
+ClientEngine::~ClientEngine()
+{
+    delete cl_;
+}
+
+void ClientEngine::initCommandLine_()
+{
+    cl_->addParameter("help", "h,help",
+                      tr("Displays the help"));
+    cl_->addParameter("server", "server",
+                      tr("Sets the server IP. The client will constantly try to "
+                         "connect itself to that address and the ip is stored as the default.\n"
+                         "The parameter accepts the common ip notation (xxx.yyy.zzz.www)"),
+                      "192.168.1.33");
+    cl_->addParameter("nonet", "nonet",
+                      tr("Turns off networking for the client. "
+                         "This is for debugging purposes only."));
+    cl_->addParameter("scene", "scene",
+                      tr("The client will load and run the specified scene file upon start."),
+                      "");
 }
 
 int ClientEngine::run(int argc, char ** argv)
 {
-    MO_PRINT(tr("Matrix Optimizer Client"));
+    MO_PRINT(applicationName());
 
-    // XXX hacky
-    if (argc >= 3)
-    {
-        if (QString(argv[1]) == "-server")
-            settings->setValue("Client/serverAddress", argv[2]);
-    }
-
+    if (!parseCommandLine_(argc, argv))
+        return -1;
 
 //    createObjects_();
 
-    //send_ = (argc>1 && QString("send") == argv[1]);
+    // load and run a scene
+    if (!sceneFile_.isEmpty())
+    {
+        if (!loadSceneFile_(sceneFile_))
+            return -1;
+        showRenderWindow_(true);
+        // XXX hack: trigger first clip row
+        auto cc = scene_->findChildObjects<ClipContainer>(QString(), true);
+        if (!cc.isEmpty())
+            cc[0]->triggerRow(0, 0);
+        scene_->start();
+    }
 
-    startNetwork_();
+    if (doNetwork_)
+        startNetwork_();
 
     int ret = application->exec();
 
@@ -82,6 +118,52 @@ void ClientEngine::shutDown_()
     delete infoWindow_;
 }
 
+bool ClientEngine::parseCommandLine_(int argc, char **argv)
+{
+#if (1)
+    // commandline params for debug purposes
+    QStringList args;
+    args << "-nonet"
+         << "-scene" << "../matrixoptimizer/data/scene/boxgrid2.mo3";
+    if (!cl_->parse(args))
+#else
+    // check commandline
+    if (!cl_->parse(argc, argv, 1))
+#endif
+    {
+        MO_PRINT("Use -h to get help");
+        return false;
+    }
+
+    if (cl_->contains("help"))
+    {
+        MO_PRINT("Usage:\n" << cl_->helpString());
+        return false;
+    }
+
+    doNetwork_ = !cl_->contains("nonet");
+
+    // set server IP
+    if (cl_->contains("server"))
+    {
+        QString ip = cl_->value("server").toString();
+        QUrl url(ip);
+        if (!url.isValid())
+        {
+            MO_PRINT("Could not parse the server ip '" << ip << "'");
+            return false;
+        }
+        settings->setValue("Client/serverAddress", ip);
+    }
+
+    // scene file
+    if (cl_->contains("scene"))
+        sceneFile_ = cl_->value("scene").toString();
+
+    return true;
+}
+
+
 bool ClientEngine::sendEvent(AbstractNetEvent * event)
 {
     return client_->sendEvent(event);
@@ -91,6 +173,9 @@ void ClientEngine::createGlObjects_()
 {
     glManager_ = new GL::Manager(this);
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
+
+    connect(glManager_, SIGNAL(outputSizeChanged(QSize)),
+            this, SLOT(renderWindowSizeChanged_(QSize)));
 }
 
 void ClientEngine::startNetwork_()
@@ -132,6 +217,11 @@ void ClientEngine::showRenderWindow_(bool enable)
     }
 }
 
+void ClientEngine::renderWindowSizeChanged_(const QSize & size)
+{
+    if (scene_)
+        scene_->setResolution(size);
+}
 
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
 {
@@ -245,17 +335,9 @@ void ClientEngine::setSceneObject(Scene * scene)
     // manage memory
     scene_->setParent(this);
 
+    glManager_->setScene(scene_);
+
     // connect to render window
-    connect(glManager_, SIGNAL(renderRequest(uint)), scene_, SLOT(renderScene(uint)));
-    connect(glManager_, SIGNAL(contextCreated(uint,MO::GL::Context*)),
-                scene_, SLOT(setGlContext(uint,MO::GL::Context*)));
-    connect(glManager_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
-                scene_, SLOT(setFreeCameraMatrix(MO::Mat4)));
-
-    connect(scene_, SIGNAL(renderRequest()), glWindow_, SLOT(renderLater()));
-
-    if (glWindow_->context())
-        scene_->setGlContext(glWindow_->threadId(), glWindow_->context());
     connect(scene_, SIGNAL(playbackStarted()),
             glWindow_, SLOT(startAnimation()));
     connect(scene_, SIGNAL(playbackStopped()),
@@ -272,6 +354,28 @@ void ClientEngine::setSceneObject(Scene * scene)
     IO::fileManager().acquireFiles();
 
     //glWindow_->renderLater();
+}
+
+
+bool ClientEngine::loadSceneFile_(const QString &fn)
+{
+    try
+    {
+        Scene * scene = ObjectFactory::loadScene(fn);
+        if (!scene)
+        {
+            MO_PRINT("No Scene file: " << fn);
+            return false;
+        }
+        setSceneObject(scene);
+        return true;
+    }
+    catch (const Exception& e)
+    {
+        MO_PRINT("Could not load Scene file " << fn << "\n"
+                 << e.what());
+    }
+    return false;
 }
 
 
