@@ -36,6 +36,9 @@ public:
         Resource filenames (starting with ':') are returned as-is. */
     QString localFilename(const QString& filename);
 
+    /** Debug dump */
+    void dumpStatus() const;
+
     // ------------------ setter --------------------
 
     /** Clears the list of known filenames */
@@ -59,11 +62,15 @@ signals:
     /** Emitted when a file is not ready */
     void fileNotReady(const QString& filename);
 
+    /** Emitted when all files are fetched for but not all are ready. */
+    void finished();
+
 private slots:
 
 #ifdef MO_CLIENT
     void onFileReady_(const QString& serverName, const QString& localName);
     void onFileNotReady_(const QString&);
+    void checkReadyOrFinished_();
 #endif
 
 private:

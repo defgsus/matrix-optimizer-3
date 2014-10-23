@@ -103,6 +103,8 @@ ClientFiles::~ClientFiles()
 
 void ClientFiles::fetchFile(const QString &serverFilename)
 {
+    MO_NETLOG(DEBUG, "ClientFiles::fetchFile(" << serverFilename << ")");
+
     auto it = p_->files.find(serverFilename);
 
     // have it in cache-file?
@@ -124,6 +126,7 @@ void ClientFiles::fetchFile(const QString &serverFilename)
             }
             else
             {
+                MO_NETLOG(DEBUG, "ClientFiles::fileReady(" << serverFilename << ")");
                 emit fileReady(serverFilename, it.value().clientFilename);
             }
             return;

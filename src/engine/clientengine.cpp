@@ -170,6 +170,9 @@ void ClientEngine::startNetwork_()
     // receive files-ready signal from file cacher
     connect(&IO::fileManager(), SIGNAL(filesReady()),
             this, SLOT(onFilesReady_()));
+
+    connect(&IO::fileManager(), SIGNAL(finished()),
+            this, SLOT(onFilesNotReady_()));
 }
 
 
@@ -497,6 +500,14 @@ void ClientEngine::onFilesReady_()
         showRenderWindow_(true);
 
     sendState_();
+}
+
+void ClientEngine::onFilesNotReady_()
+{
+    MO_WARNING("Some file are not ready");
+
+    // run scene nevertheless
+    onFilesReady_();
 }
 
 void ClientEngine::sendState_()

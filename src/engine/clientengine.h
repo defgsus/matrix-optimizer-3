@@ -64,6 +64,7 @@ private slots:
 
     void onSceneReceived_(Scene *);
     void onFilesReady_();
+    void onFilesNotReady_();
     /** Sends a NetEventClientState to server */
     void sendState_();
 private:
