@@ -302,7 +302,17 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
 void ServerEngine::showInfoWindow(int index, bool show)
 {
     NetEventRequest r;
-    r.setRequest(show? NetEventRequest::SHOW_INFO_WINDOW : NetEventRequest::HIDE_INFO_WINDOW);
+    r.setRequest(show? NetEventRequest::SHOW_INFO_WINDOW
+                     : NetEventRequest::HIDE_INFO_WINDOW);
+
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
+}
+
+void ServerEngine::showRenderWindow(int index, bool show)
+{
+    NetEventRequest r;
+    r.setRequest(show? NetEventRequest::SHOW_RENDER_WINDOW
+                     : NetEventRequest::HIDE_RENDER_WINDOW);
 
     eventCom_->sendEvent(clients_[index].tcpSocket, &r);
 }
@@ -316,6 +326,16 @@ void ServerEngine::setClientIndex(int index, int cindex)
     eventCom_->sendEvent(clients_[index].tcpSocket, &r);
 }
 
+void ServerEngine::setDesktopIndex(int index, int desk)
+{
+    NetEventRequest r;
+    r.setRequest(NetEventRequest::SET_DESKTOP_INDEX);
+    r.setData(desk);
+
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
+}
+
+
 bool ServerEngine::sendScene(Scene *scene)
 {
     auto e = new NetEventScene();
@@ -328,6 +348,16 @@ bool ServerEngine::sendScene(Scene *scene)
     return sendEvent(e);
 }
 
+void ServerEngine::setScenePlaying(bool enabled)
+{
+    NetEventRequest r;
+    if (enabled)
+        r.setRequest(NetEventRequest::START_RENDER);
+    else
+        r.setRequest(NetEventRequest::STOP_RENDER);
 
+    for (int i=0; i<numClients(); ++i)
+        eventCom_->sendEvent(clients_[i].tcpSocket, &r);
+}
 
 } // namespace MO

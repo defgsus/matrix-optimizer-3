@@ -85,14 +85,24 @@ signals:
 
 public slots:
 
+    // -- per client commands --
+
     void showInfoWindow(int index, bool show);
+    void showRenderWindow(int index, bool enable);
+
     void setClientIndex(int index, int client_index);
+    void setDesktopIndex(int index, int desktopIndex);
+
+    // -- commands for all clients --
 
     /** Sends the current default ProjectionSystemSettings to all clients */
     void sendProjectionSettings();
 
     /** Send the scene to all clients */
     bool sendScene(Scene * scene);
+
+    /** Start and stop playback */
+    void setScenePlaying(bool enabled);
 
 private slots:
 

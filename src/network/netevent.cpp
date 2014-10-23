@@ -120,6 +120,8 @@ QString NetEventRequest::requestName(Request r)
         case HIDE_INFO_WINDOW: return "HIDE_INFO_WINDOW";
         case SHOW_RENDER_WINDOW: return "SHOW_RENDER_WINDOW";
         case HIDE_RENDER_WINDOW: return "HIDE_RENDER_WINDOW";
+        case START_RENDER: return "START_RENDER";
+        case STOP_RENDER: return "STOP_RENDER";
         case SET_PROJECTION_SETTINGS: return "SET_PROJECTION_SETTINGS";
         case GET_SERVER_FILE_TIME: return "GET_SERVER_FILE_TIME";
         case GET_SERVER_FILE: return "GET_SERVER_FILE";

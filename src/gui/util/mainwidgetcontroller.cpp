@@ -75,6 +75,7 @@
 #include "model/treemodel.h"
 #include "object/util/objecttree.h"
 #include "tool/commonresolutions.h"
+#include "engine/serverengine.h"
 
 namespace MO {
 namespace GUI {
@@ -171,6 +172,11 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
     setObjectName("_MainWidgetController");
 
     createObjects_();
+
+    // start server automatically
+    if (settings->value("Server/running").toBool()
+        && !serverEngine().isRunning())
+            serverEngine().open();
 }
 
 MainWidgetController::~MainWidgetController()
@@ -398,7 +404,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         connect(a, &QAction::triggered, [=]()
         {
             if (!serverDialog_)
+            {
                 serverDialog_ = new ServerDialog(window_);
+                connect(serverDialog_, SIGNAL(sendScene()),
+                        this, SLOT(sendSceneToClients_()));
+            }
             if (serverDialog_->isHidden())
                 serverDialog_->show();
         });
@@ -1106,11 +1116,17 @@ bool MainWidgetController::isPlayback() const
 void MainWidgetController::start()
 {
     scene_->start();
+
+    if (serverEngine().isRunning())
+        serverEngine().setScenePlaying(true);
 }
 
 void MainWidgetController::stop()
 {
     scene_->stop();
+
+    if (serverEngine().isRunning())
+        serverEngine().setScenePlaying(true);
 }
 
 void MainWidgetController::updateNumberOutputEnvelopes_(uint num)
@@ -1463,6 +1479,15 @@ void MainWidgetController::onOutputSizeChanged_(const QSize & size)
 
 
 
+
+
+void MainWidgetController::sendSceneToClients_()
+{
+    if (!scene_)
+        return;
+
+    serverEngine().sendScene(scene_);
+}
 
 
 

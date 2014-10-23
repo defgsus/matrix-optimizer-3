@@ -146,6 +146,8 @@ public:
         HIDE_INFO_WINDOW,
         SHOW_RENDER_WINDOW,
         HIDE_RENDER_WINDOW,
+        START_RENDER,
+        STOP_RENDER,
         /** Sets the default ProjectionSystemSettings (QByteArray) */
         SET_PROJECTION_SETTINGS,
         /** Tells server to send a NetEventFileInfo for filename (QString) */

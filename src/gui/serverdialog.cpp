@@ -119,19 +119,23 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
         auto lh = new QHBoxLayout();
         lv->addLayout(lh);
 
-            auto but = new QPushButton(tr("show info window"), w);
-            lh->addWidget(but);
-            connect(but, &QPushButton::clicked, [=]()
+            auto cb = new QCheckBox(tr("show info window"), w);
+            lh->addWidget(cb);
+            connect(cb, &QCheckBox::clicked, [=](bool s)
             {
-                server_->showInfoWindow(index, true);
+                server_->showInfoWindow(index, s);
             });
 
-            but = new QPushButton(tr("hide info window"), w);
-            lh->addWidget(but);
-            connect(but, &QPushButton::clicked, [=]()
+            cb = new QCheckBox(tr("show render window"), w);
+            lh->addWidget(cb);
+            connect(cb, &QCheckBox::clicked, [=](bool s)
             {
-                server_->showInfoWindow(index, false);
+                server_->showRenderWindow(index, s);
             });
+
+            auto but = new QPushButton(tr("send scene"), w);
+            lh->addWidget(but);
+            connect(but, SIGNAL(clicked()), this, SIGNAL(sendScene()));
 
     return w;
 }
@@ -142,6 +146,10 @@ void ServerDialog::startServer_(bool run)
         server_->open();
     else
         server_->close();
+
+    // store as default
+    settings->setValue("Server/running", run);
+
 
     //cbRunning_->setChecked(server_->isRunning());
 }

@@ -141,6 +141,9 @@ private slots:
     void onResolutionCustom_();
     void onResolutionPredefined_(QAction*);
 
+    // -- network --
+
+    void sendSceneToClients_();
 private:
 
     void createObjects_();

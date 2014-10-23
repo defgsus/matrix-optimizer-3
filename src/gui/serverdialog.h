@@ -32,6 +32,9 @@ public:
 
 signals:
 
+    /** Someone should send the current scene to clients */
+    void sendScene();
+
 public slots:
 
 private slots:
