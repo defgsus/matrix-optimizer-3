@@ -32,8 +32,8 @@
 #include "io/clientfiles.h"
 #include "io/filemanager.h"
 #include "tool/deleter.h"
-#include "io/commandlineparser.h"
 #include "io/version.h"
+#include "clientenginecommandline.h"
 
 namespace MO {
 
@@ -53,116 +53,14 @@ ClientEngine::ClientEngine(QObject *parent) :
     infoWindow_ (0),
     client_     (0),
     scene_      (0),
-    cl_         (new IO::CommandLineParser)
+    cl_         (new ClientEngineCommandLine(this))
 {
-    initCommandLine_();
 }
 
 ClientEngine::~ClientEngine()
 {
-    delete cl_;
+    MO_NETLOG(CTOR, "ClientEngine::~ClientEngine()");
 }
-
-void ClientEngine::initCommandLine_()
-{
-    cl_->addParameter("help", "h,help",
-                      tr("Prints the help and exits"));
-    cl_->addParameter("info", "info",
-                      tr("Prints the system info and exits"));
-    cl_->addParameter("infowin", "infowin, infowindow",
-                      tr("Displays the info window on the selected desktop"));
-    cl_->addParameter("server", "server",
-                      tr("Sets the server IP. The client will constantly try to "
-                         "connect itself to that address and the ip is stored as the default.\n"
-                         "The parameter accepts the common ip notation (xxx.yyy.zzz.www)"),
-                      "192.168.1.33");
-    cl_->addParameter("desktop", "desktop",
-                      tr("Selects the desktop for output windows. "
-                         "The value will be stored as default."),
-                      0u);
-    cl_->addParameter("nonet", "nonet",
-                      tr("Turns off networking for the client. "
-                         "This is for debugging purposes only."));
-    cl_->addParameter("scene", "scene",
-                      tr("The client will load and run the specified scene file upon start."),
-                      "");
-}
-
-bool ClientEngine::parseCommandLine_(int argc, char **argv)
-{
-#if (1)
-    // compile-time commandline params for debug purposes
-    Q_UNUSED(argc)
-    Q_UNUSED(argv)
-    QStringList args;
-    args
-//            << "-info"
-            << "-nonet"
-            << "-desktop" << "1"
-            //<< "-infowin"
-            //<< "-scene" << "../matrixoptimizer3/data/scene/boxgrid2.mo3"
-            ;
-    if (!cl_->parse(args))
-#else
-
-    // check commandline
-    if (!cl_->parse(argc, argv, 1))
-#endif
-    {
-        MO_PRINT(tr("Use -h to get help"));
-        return false;
-    }
-
-    if (cl_->contains("help"))
-    {
-        MO_PRINT(tr("Usage") << ":\n" << cl_->helpString());
-        return false;
-    }
-
-    if (cl_->contains("info"))
-    {
-        SystemInfo info;
-        info.get();
-        MO_PRINT(tr("Info") << ":\n" << info.toString());
-        return false;
-    }
-
-    doNetwork_ = !cl_->contains("nonet");
-    doShowInfoWin_ = cl_->contains("infowin");
-
-    // set server IP
-    if (cl_->contains("server"))
-    {
-        QString ip = cl_->value("server").toString();
-        QUrl url(ip);
-        if (!url.isValid())
-        {
-            MO_PRINT(tr("Could not parse the server ip") << " '" << ip << "'");
-            return false;
-        }
-        settings->setValue("Client/serverAddress", ip);
-        MO_PRINT("server ip: " << ip);
-    }
-
-    // set desktop
-    if (cl_->contains("desktop"))
-    {
-        const int idx = cl_->value("desktop").toInt();
-        settings->setDesktop(idx);
-        MO_PRINT(tr("desktop index") << ": " << idx);
-    }
-
-    // scene file
-    if (cl_->contains("scene"))
-    {
-        sceneFile_ = cl_->value("scene").toString();
-        MO_PRINT(tr("fixed scene file") << ": " << sceneFile_);
-    }
-
-    return true;
-}
-
-
 
 
 
@@ -173,34 +71,51 @@ int ClientEngine::run(int argc, char ** argv)
     // print some info
     MO_PRINT(applicationName());
 
-    if (!parseCommandLine_(argc, argv))
+    // parse commandline
+    const auto res = cl_->parse(argc, argv);
+
+    if (res == ClientEngineCommandLine::Error)
         return -1;
 
-//    createObjects_();
+    if (res == ClientEngineCommandLine::Quit)
+        return 0;
+
+
+    // start network
+
+    if (cl_->doNetwork())
+        startNetwork_();
+
+    // show the info window
+
+    if (cl_->doShowInfoWin())
+        showInfoWindow_(true);
 
     // load and run a scene
-    if (!sceneFile_.isEmpty())
+
+    if (cl_->doLoadScene())
     {
-        if (!loadSceneFile_(sceneFile_))
+        if (!loadSceneFile_(cl_->sceneFile()))
             return -1;
+
         showRenderWindow_(true);
+
         // XXX hack: trigger first clip row
         auto cc = scene_->findChildObjects<ClipContainer>(QString(), true);
         if (!cc.isEmpty())
             cc[0]->triggerRow(0, 0);
+
         scene_->start();
     }
 
-    if (doNetwork_)
-        startNetwork_();
 
-    if (doShowInfoWin_)
-        showInfoWindow_(true);
-
+    // -- run eventloop --
 
     int ret = 0;
 
-    if (!doNetwork_ && application->allWindows().isEmpty())
+    // when not connecting to server and no window is opened
+    // we exit
+    if (!cl_->doNetwork() && application->allWindows().isEmpty())
     {
         MO_PRINT(tr("Nothing to do, exiting..."));
     }
@@ -246,8 +161,9 @@ void ClientEngine::startNetwork_()
 
     connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
-    client_->connectTo(settings->getValue("Client/serverAddress").toString());
+    client_->connectTo(settings->serverAddress());
 }
+
 
 void ClientEngine::showInfoWindow_(bool enable)
 {
@@ -289,6 +205,25 @@ void ClientEngine::showRenderWindow_(bool enable)
     }
 }
 
+void ClientEngine::updateDesktopIndex_()
+{
+    if (glWindow_)
+    {
+        glWindow_->setScreen(settings->desktop());
+        // XXX moving by above 'workaround' leaves fullscreen
+        if (glWindow_->isVisible())
+            glWindow_->showFullScreen();
+    }
+
+    if (infoWindow_)
+    {
+        infoWindow_->setGeometry(application->screenGeometry(
+                                     settings->desktop()));
+        if (infoWindow_->isVisible())
+            infoWindow_->showFullScreen();
+    }
+}
+
 void ClientEngine::renderWindowSizeChanged_(const QSize & size)
 {
     if (scene_)
@@ -326,6 +261,14 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             return;
         }
 
+        if (e->request() == NetEventRequest::SET_DESKTOP_INDEX)
+        {
+            MO_NETLOG(EVENT, "setting desktop/screen index to " << e->data().toInt());
+            settings->setDesktop(e->data().toInt());
+            updateDesktopIndex_();
+            return;
+        }
+
         if (e->request() == NetEventRequest::SHOW_INFO_WINDOW)
         {
             showInfoWindow_(true);
@@ -335,6 +278,18 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         if (e->request() == NetEventRequest::HIDE_INFO_WINDOW)
         {
             showInfoWindow_(false);
+            return;
+        }
+
+        if (e->request() == NetEventRequest::SHOW_RENDER_WINDOW)
+        {
+            showRenderWindow_(true);
+            return;
+        }
+
+        if (e->request() == NetEventRequest::HIDE_RENDER_WINDOW)
+        {
+            showRenderWindow_(false);
             return;
         }
 

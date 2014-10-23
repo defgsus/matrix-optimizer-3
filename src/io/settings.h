@@ -30,6 +30,9 @@ class Settings : public QSettings
 public:
     explicit Settings(QObject *parent = 0);
 
+    /** Returns the value for key.
+        If key is unknown, warning is printed
+        and empty QVariant() returned. */
     QVariant getValue(const QString& key);
 
 #if (0)
@@ -38,6 +41,7 @@ public:
     /** Restores the geometry provided the QWidget::objectName() is set */
     void restoreGeometry(QMainWindow *);
 #endif
+
     /** Stores the geometry provided the QWidget::objectName() is set */
     void saveGeometry(QWindow *);
     /** Restores the geometry provided the QWidget::objectName() is set */
@@ -48,6 +52,11 @@ public:
     /** Restores the geometry provided the QWidget::objectName() is set */
     bool restoreGeometry(QWidget *);
 
+#ifdef MO_CLIENT
+    /** Returns address of the server */
+    QString serverAddress();
+    void setServerAddress(const QString&);
+#endif
 
     /** Returns the index of the client */
     int clientIndex();

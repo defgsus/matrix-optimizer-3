@@ -277,6 +277,18 @@ bool Settings::restoreGeometry(QWidget * win)
     return found;
 }
 
+#ifdef MO_CLIENT
+QString Settings::serverAddress()
+{
+    return getValue("Client/serverAddress").toString();
+}
+
+void Settings::setServerAddress(const QString & a)
+{
+    setValue("Client/serverAddress", a);
+}
+#endif
+
 
 int Settings::clientIndex()
 {

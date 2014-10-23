@@ -138,10 +138,14 @@ public:
         GET_CLIENT_INDEX,
         /** Sets the client index (int) */
         SET_CLIENT_INDEX,
+        /** Sets the index of the screen to be used for windows */
+        SET_DESKTOP_INDEX,
         /** Shows the fullscreen info window */
         SHOW_INFO_WINDOW,
         /** Hides the fullscreen info window */
         HIDE_INFO_WINDOW,
+        SHOW_RENDER_WINDOW,
+        HIDE_RENDER_WINDOW,
         /** Sets the default ProjectionSystemSettings (QByteArray) */
         SET_PROJECTION_SETTINGS,
         /** Tells server to send a NetEventFileInfo for filename (QString) */

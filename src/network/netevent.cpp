@@ -115,8 +115,11 @@ QString NetEventRequest::requestName(Request r)
         case GET_SYSTEM_INFO: return "GET_SYSTEM_INFO";
         case GET_CLIENT_INDEX: return "GET_CLIENT_INDEX";
         case SET_CLIENT_INDEX: return "SET_CLIENT_INDEX";
+        case SET_DESKTOP_INDEX: return "SET_DESKTOP_INDEX";
         case SHOW_INFO_WINDOW: return "SHOW_INFO_WINDOW";
         case HIDE_INFO_WINDOW: return "HIDE_INFO_WINDOW";
+        case SHOW_RENDER_WINDOW: return "SHOW_RENDER_WINDOW";
+        case HIDE_RENDER_WINDOW: return "HIDE_RENDER_WINDOW";
         case SET_PROJECTION_SETTINGS: return "SET_PROJECTION_SETTINGS";
         case GET_SERVER_FILE_TIME: return "GET_SERVER_FILE_TIME";
         case GET_SERVER_FILE: return "GET_SERVER_FILE";

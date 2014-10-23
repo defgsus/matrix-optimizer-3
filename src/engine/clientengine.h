@@ -19,7 +19,7 @@
 
 namespace MO {
 class Scene;
-namespace IO { class CommandLineParser; }
+class ClientEngineCommandLine;
 namespace GUI { class InfoWindow; }
 
 class Client;
@@ -63,9 +63,8 @@ private slots:
     void renderWindowSizeChanged_(const QSize&);
 private:
 
-    void initCommandLine_();
-    bool parseCommandLine_(int argc, char ** argv);
     void createGlObjects_();
+    void updateDesktopIndex_();
     void startNetwork_();
     void shutDown_();
     void setProjectionSettings_(NetEventRequest*);
@@ -79,11 +78,7 @@ private:
 
     Scene * scene_;
 
-    IO::CommandLineParser * cl_;
-
-    bool doNetwork_,
-         doShowInfoWin_;
-    QString sceneFile_;
+    ClientEngineCommandLine * cl_;
 };
 
 } // namespace MO
