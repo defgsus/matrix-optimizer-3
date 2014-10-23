@@ -20,6 +20,7 @@
 #include "widget/netlogwidget.h"
 #include "io/settings.h"
 #include "io/log.h"
+#include "gui/widget/spinbox.h"
 
 namespace MO {
 namespace GUI {
@@ -148,6 +149,21 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
             auto but = new QPushButton(tr("send scene"), w);
             lh->addWidget(but);
             connect(but, SIGNAL(clicked()), this, SIGNAL(sendScene()));
+
+        lh = new QHBoxLayout();
+        lv->addLayout(lh);
+
+            label = new QLabel(tr("output screen"), w);
+            lh->addWidget(label);
+
+            auto sb = new SpinBox(w);
+            lh->addWidget(sb);
+            sb->setRange(0, inf.sysinfo.numScreens() - 1);
+            sb->setValue(inf.state.desktop());
+            connect(sb, &SpinBox::valueChanged, [=](int val)
+            {
+                server_->setDesktopIndex(index, val);
+            });
 
     return w;
 }
