@@ -272,6 +272,13 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
         return;
     }
 
+    if (NetEventClientState * state = netevent_cast<NetEventClientState>(event))
+    {
+        client.state = state->state();
+        emit clientStateChanged(client.index);
+        return;
+    }
+
     if (NetEventRequest * req = netevent_cast<NetEventRequest>(event))
     {
         if (req->request() == NetEventRequest::GET_SERVER_FILE_TIME)

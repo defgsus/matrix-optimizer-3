@@ -15,6 +15,7 @@
 
 #include "network/network_fwd.h"
 #include "io/systeminfo.h"
+#include "network/clientstate.h"
 
 class QTcpSocket;
 
@@ -36,6 +37,9 @@ struct ClientInfo
 
     /** System-info of each client */
     SystemInfo sysinfo;
+
+    /** Current state of each client */
+    ClientState state;
 
     struct Private;
     Private * p_;
@@ -82,6 +86,9 @@ signals:
 
     /** Emitted whenever a client connects or disconnects */
     void numberClientsChanged(int);
+
+    /** Emitted when a client has send a new ClientState */
+    void clientStateChanged(int index);
 
 public slots:
 

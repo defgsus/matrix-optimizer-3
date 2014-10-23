@@ -43,6 +43,8 @@ ServerDialog::ServerDialog(QWidget *parent) :
 
     connect(server_, SIGNAL(numberClientsChanged(int)),
             this, SLOT(onClientsChanged_()));
+    connect(server_, SIGNAL(clientStateChanged(int)),
+            this, SLOT(updateClientWidgets_()));
 }
 
 ServerDialog::~ServerDialog()
@@ -113,7 +115,15 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
     QWidget * w = new QWidget(this);
     auto lv = new QVBoxLayout(w);
 
-        auto label = new QLabel(tr("Client %1").arg(inf.index), w);
+        auto label = new QLabel(tr("Client %1 (desktop %2)\n"
+                                   "info win %3, render win %4, ready %5, playing %6")
+                                .arg(inf.index)
+                                .arg(inf.state.desktop())
+                                .arg(inf.state.isInfoWindow() ? tr("yes") : tr("no"))
+                                .arg(inf.state.isRenderWindow() ? tr("yes") : tr("no"))
+                                .arg(inf.state.isSceneReady() ? tr("yes") : tr("no"))
+                                .arg(inf.state.isPlayback() ? tr("yes") : tr("no"))
+                                , w);
         lv->addWidget(label);
 
         auto lh = new QHBoxLayout();

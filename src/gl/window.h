@@ -37,6 +37,9 @@ public:
 
     void setRenderer(SceneRenderer * renderer);
 
+    /** Returns the current size in device pixels */
+    QSize frameSize() const;
+
     /** Returns the messured fps (valid when animating) */
     double messuredFps() const { return fps_; }
 

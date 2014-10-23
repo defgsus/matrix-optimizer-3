@@ -19,6 +19,7 @@
 #include <QDateTime>
 
 #include "io/systeminfo.h"
+#include "clientstate.h"
 
 class QIODevice;
 class QAbstractSocket;
@@ -136,6 +137,8 @@ public:
         GET_SYSTEM_INFO,
         /** Requests a NetEventInfo with the current index (int) */
         GET_CLIENT_INDEX,
+        /** Requests a NetEventClientState event from the client */
+        GET_CLIENT_STATE,
         /** Sets the client index (int) */
         SET_CLIENT_INDEX,
         /** Sets the index of the screen to be used for windows */
@@ -153,7 +156,7 @@ public:
         /** Tells server to send a NetEventFileInfo for filename (QString) */
         GET_SERVER_FILE_TIME,
         /** Tells server to send a NetEventFile for filename (QString) */
-        GET_SERVER_FILE
+        GET_SERVER_FILE,
     };
 
     static QString requestName(Request);
@@ -329,6 +332,24 @@ public:
 private:
 
     QByteArray data_;
+};
+
+
+/** Clients current state info event - typically an answer to NetEventRequest */
+class NetEventClientState : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventClientState)
+
+    // --------- getter -------------------
+
+    ClientState & state() { return state_; }
+
+private:
+
+    friend class ClientEngine;
+
+    ClientState state_;
 };
 
 

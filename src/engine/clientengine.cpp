@@ -46,6 +46,7 @@ ClientEngine & clientEngine()
     return *instance_;
 }
 
+
 ClientEngine::ClientEngine(QObject *parent) :
     QObject     (parent),
     glManager_  (0),
@@ -53,13 +54,17 @@ ClientEngine::ClientEngine(QObject *parent) :
     infoWindow_ (0),
     client_     (0),
     scene_      (0),
+    nextScene_  (0),
     cl_         (new ClientEngineCommandLine(this))
 {
+    MO_NETLOG(CTOR, "ClientEngine::ClientEngine()");
 }
 
 ClientEngine::~ClientEngine()
 {
     MO_NETLOG(CTOR, "ClientEngine::~ClientEngine()");
+
+    delete nextScene_;
 }
 
 
@@ -122,6 +127,9 @@ int ClientEngine::run(int argc, char ** argv)
     return ret;
 }
 
+
+
+
 void ClientEngine::createGlObjects_()
 {
     // manager
@@ -151,6 +159,11 @@ bool ClientEngine::sendEvent(AbstractNetEvent * event)
 
 void ClientEngine::startNetwork_()
 {
+    connect(&IO::fileManager(), SIGNAL(filesReady()),
+            this, SLOT(onFilesReady_()));
+
+    // create client connection and receive events
+
     client_ = new Client(this);
 
     connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
@@ -177,6 +190,8 @@ void ClientEngine::showInfoWindow_(bool enable)
     }
     else if (infoWindow_)
             infoWindow_->hide();
+
+    sendState_();
 }
 
 void ClientEngine::showRenderWindow_(bool enable)
@@ -197,6 +212,8 @@ void ClientEngine::showRenderWindow_(bool enable)
         if (glWindow_)
             glWindow_->hide();
     }
+
+    sendState_();
 }
 
 void ClientEngine::updateDesktopIndex_()
@@ -216,6 +233,8 @@ void ClientEngine::updateDesktopIndex_()
         if (infoWindow_->isVisible())
             infoWindow_->showFullScreen();
     }
+
+    sendState_();
 }
 
 void ClientEngine::renderWindowSizeChanged_(const QSize & size)
@@ -322,7 +341,7 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
     {
         Scene * scene = e->getScene();
         if (scene)
-            setSceneObject(scene);
+            onSceneReceived_(scene);
         else
             MO_NETLOG(ERROR, "received invalid Scene object");
         return;
@@ -376,17 +395,8 @@ void ClientEngine::setSceneObject(Scene * scene)
     connect(scene_, SIGNAL(playbackStopped()),
             glWindow_, SLOT(stopAnimation()));
 
-    // check for needed files
-
-    IO::FileList files;
-    scene_->getNeededFiles(files);
-
-    IO::fileManager().clear();
-    IO::fileManager().addFilenames(files);
-
-    IO::fileManager().acquireFiles();
-
-    //glWindow_->renderLater();
+    // update resolution from output window
+    scene_->setResolution(glWindow_->frameSize());
 }
 
 
@@ -427,6 +437,58 @@ void ClientEngine::setPlayback_(bool play)
     }
     else
         scene_->stop();
+
+    sendState_();
+}
+
+void ClientEngine::onSceneReceived_(Scene * scene)
+{
+    if (nextScene_)
+        delete nextScene_;
+
+    // put on stack
+    nextScene_ = scene;
+
+    sendState_();
+
+    // check for needed files
+
+    IO::FileList files;
+    nextScene_->getNeededFiles(files);
+
+    IO::fileManager().clear();
+    IO::fileManager().addFilenames(files);
+
+    if (!files.isEmpty())
+        MO_PRINT("Checking file cache..");
+
+    IO::fileManager().acquireFiles();
+}
+
+void ClientEngine::onFilesReady_()
+{
+    if (!nextScene_)
+        return;
+
+    Scene * s = nextScene_;
+    nextScene_ = 0;
+
+    setSceneObject(s);
+
+    sendState_();
+}
+
+void ClientEngine::sendState_()
+{
+    NetEventClientState state;
+    state.state_.index_ = settings->clientIndex();
+    state.state_.desktop_ = settings->desktop();
+    state.state_.isInfoWindow_ = infoWindow_ && infoWindow_->isVisible();
+    state.state_.isRenderWindow_ = glWindow_ && glWindow_->isVisible();
+    state.state_.isSceneReady_ = scene_ && !nextScene_;
+    state.state_.isPlayback_ = scene_ && scene_->isPlayback();
+
+    client_->sendEvent(state);
 }
 
 } // namespace MO

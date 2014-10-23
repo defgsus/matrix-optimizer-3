@@ -61,6 +61,11 @@ private slots:
     void showInfoWindow_(bool enable);
     void showRenderWindow_(bool enable);
     void renderWindowSizeChanged_(const QSize&);
+
+    void onSceneReceived_(Scene *);
+    void onFilesReady_();
+    /** Sends a NetEventClientState to server */
+    void sendState_();
 private:
 
     void createGlObjects_();
@@ -77,7 +82,7 @@ private:
 
     Client * client_;
 
-    Scene * scene_;
+    Scene * scene_, * nextScene_;
 
     ClientEngineCommandLine * cl_;
 };

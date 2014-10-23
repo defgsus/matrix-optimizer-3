@@ -41,10 +41,10 @@ private slots:
 
     void startServer_(bool);
     void onClientsChanged_();
+    void updateClientWidgets_();
 
 private:
     void createWidgets_();
-    void updateClientWidgets_();
     QWidget * createClientWidget_(int index, const ClientInfo&);
 
     ServerEngine * server_;

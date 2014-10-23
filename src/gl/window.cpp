@@ -68,6 +68,11 @@ Window::~Window()
 //        context_->doneCurrent();
 }
 
+QSize Window::frameSize() const
+{
+    return size() * devicePixelRatio();
+}
+
 void Window::setScreen(uint screenIndex)
 {
     // XXX workaround because setScreen() is not very reliable right now

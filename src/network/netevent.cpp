@@ -20,6 +20,7 @@
 #include "io/systeminfo.h"
 #include "object/objectfactory.h"
 #include "object/scene.h"
+#include "tool/stringmanip.h"
 
 namespace MO {
 
@@ -114,6 +115,7 @@ QString NetEventRequest::requestName(Request r)
         case NONE: return "NONE";
         case GET_SYSTEM_INFO: return "GET_SYSTEM_INFO";
         case GET_CLIENT_INDEX: return "GET_CLIENT_INDEX";
+        case GET_CLIENT_STATE: return "GET_CLIENT_STATE";
         case SET_CLIENT_INDEX: return "SET_CLIENT_INDEX";
         case SET_DESKTOP_INDEX: return "SET_DESKTOP_INDEX";
         case SHOW_INFO_WINDOW: return "SHOW_INFO_WINDOW";
@@ -305,7 +307,7 @@ NetEventScene::NetEventScene()
 
 QString NetEventScene::infoName() const
 {
-    return AbstractNetEvent::infoName() + "(" + data_.size() + "b)";
+    return AbstractNetEvent::infoName() + "(" + byte_to_string(data_.size()) + ")";
 }
 
 void NetEventScene::serialize(IO::DataStream &io) const
@@ -348,5 +350,43 @@ Scene * NetEventScene::getScene() const
     }
     return 0;
 }
+
+
+
+
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventClientState)
+
+NetEventClientState::NetEventClientState()
+{
+}
+
+QString NetEventClientState::infoName() const
+{
+    return AbstractNetEvent::infoName();
+}
+
+void NetEventClientState::serialize(IO::DataStream &io) const
+{
+    state_.serialize(io);
+}
+
+void NetEventClientState::deserialize(IO::DataStream &io)
+{
+    state_.deserialize(io);
+}
+
+
+
+
+
+
+
+
+
+
 
 } // namespace MO
