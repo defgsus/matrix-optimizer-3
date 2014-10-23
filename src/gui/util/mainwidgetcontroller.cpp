@@ -1126,7 +1126,7 @@ void MainWidgetController::stop()
     scene_->stop();
 
     if (serverEngine().isRunning())
-        serverEngine().setScenePlaying(true);
+        serverEngine().setScenePlaying(false);
 }
 
 void MainWidgetController::updateNumberOutputEnvelopes_(uint num)

@@ -131,6 +131,7 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
 
             auto cb = new QCheckBox(tr("show info window"), w);
             lh->addWidget(cb);
+            cb->setChecked(inf.state.isInfoWindow());
             connect(cb, &QCheckBox::clicked, [=](bool s)
             {
                 server_->showInfoWindow(index, s);
@@ -138,6 +139,7 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
 
             cb = new QCheckBox(tr("show render window"), w);
             lh->addWidget(cb);
+            cb->setChecked(inf.state.isRenderWindow());
             connect(cb, &QCheckBox::clicked, [=](bool s)
             {
                 server_->showRenderWindow(index, s);
