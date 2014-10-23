@@ -18,6 +18,7 @@
 #include "geom/geometry.h"
 #include "img/image.h"
 #include "img/imagegenerator.h"
+#include "io/settings.h"
 
 #include "gl/opengl_undef.h"
 
@@ -31,23 +32,32 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     tex_            (0),
     texNorm_        (0),
     lights_         (new GL::LightSettings()),
-    showGrid_       (false),
-    showTexture_    (false),
-    showNormalMap_  (false)
+    showGrid_       (settings->value("GeometryWidget/showGrid", false).toBool()),
+    showTexture_    (settings->value("GeometryWidget/showTexture", false).toBool()),
+    showNormalMap_  (settings->value("GeometryWidget/showNormalMap", false).toBool()),
+    showLights_     (settings->value("GeometryWidget/showLights", false).toBool())
 {
     setMinimumSize(128, 128);
+}
 
+void GeometryWidget::setLights_(Float amp)
+{
     lights_->resize(3);
     lights_->setPosition(0, 1000.f, 2000.f, 800.f);
     lights_->setPosition(1, -2000.f, 1000.f, 1200.f);
     lights_->setPosition(2, 2000.f, -500.f, 1500.f);
-    lights_->setColor(0, 1.f, 1.f, 1.f);
-    lights_->setColor(1, 0.2f, 0.5f, 1.f);
-    lights_->setColor(2, 0.5f, 0.25f, 0.1f);
+    lights_->setColor(0, 0.7f*amp, 0.7f*amp, 0.7f*amp);
+    lights_->setColor(1, 0.2f*amp, 0.5f*amp, 0.8f*amp);
+    lights_->setColor(2, 0.5f*amp, 0.25f*amp, 0.1f*amp);
 }
 
 GeometryWidget::~GeometryWidget()
 {
+    settings->setValue("GeometryWidget/showGrid", showGrid_);
+    settings->setValue("GeometryWidget/showTexture", showTexture_);
+    settings->setValue("GeometryWidget/showNormalMap", showNormalMap_);
+    settings->setValue("GeometryWidget/showLights", showLights_);
+
     delete drawable_;
     delete lights_;
 }
@@ -158,7 +168,9 @@ void GeometryWidget::drawGL(const Mat4& projection,
     }
 
     if (drawable_->isReady())
+    {
         drawable_->renderShader(projection, cubeViewTrans, viewTrans, trans, lights_);
+    }
 }
 
 

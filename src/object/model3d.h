@@ -72,7 +72,9 @@ private:
 
     TextureSetting * texture_, *textureBump_;
     ColorPostProcessingSetting * texturePostProc_;
-    TextureMorphSetting *textureMorph_;
+    TextureMorphSetting
+        *textureMorph_,
+        *textureBumpMorph_;
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_,
         *diffExp_, *bumpScale_;

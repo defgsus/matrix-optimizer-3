@@ -11,6 +11,10 @@
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
  * MO_TEXTURE_IS_FULLDOME_CUBE
+ * MO_ENABLE_TEXTURE_TRANSFORMATION
+ * MO_ENABLE_TEXTURE_SINE_MORPH
+ * MO_ENABLE_NORMALMAP_TRANSFORMATION
+ * MO_ENABLE_NORMALMAP_SINE_MORPH
  */
 
 const float PI = 3.14159265358979;
@@ -42,6 +46,7 @@ out vec4 color;
 // --- uniforms ---
 
 uniform vec4 u_color;
+
 #ifdef MO_ENABLE_LIGHTING
     uniform float u_diffuse_exp;
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
@@ -71,15 +76,14 @@ uniform vec4 u_color;
     uniform vec4 u_tex_transform; // x,y, scalex, scaley
     uniform vec3 u_tex_morphx;    // amp, freq, phase [0,2pi]
     uniform vec3 u_tex_morphy;
+// same for normalmap
+    uniform vec4 u_tex_transform_bump;
+    uniform vec3 u_tex_morphx_bump;
+    uniform vec3 u_tex_morphy_bump;
 
 #ifdef MO_ENABLE_NORMALMAP
-uniform sampler2D tex_norm_0;
-uniform float u_bump_scale;
-vec3 normalmap = mix(
-            vec3(0., 0., 1.),
-            texture(tex_norm_0, v_texCoord).xyz * 2.0 - 1.0,
-            u_bump_scale
-        );
+    uniform sampler2D tex_norm_0;
+    uniform float u_bump_scale;
 #endif
 
 
@@ -102,6 +106,32 @@ vec2 mo_texture_lookup(in vec2 st)
 #endif
             ;
 }
+
+// same for normalmap coordinates
+vec2 mo_normalmap_lookup(in vec2 st)
+{
+    return st
+#ifdef MO_ENABLE_NORMALMAP_TRANSFORMATION
+            * u_tex_transform_bump.zw
+            + u_tex_transform_bump.xy
+#endif
+
+#ifdef MO_ENABLE_NORMALMAP_SINE_MORPH
+            + vec2(
+                  u_tex_morphx_bump.x * sin(st.y * u_tex_morphx_bump.y + u_tex_morphx_bump.z),
+                  u_tex_morphy_bump.x * sin(st.x * u_tex_morphy_bump.y + u_tex_morphy_bump.z))
+#endif
+            ;
+}
+
+#ifdef MO_ENABLE_NORMALMAP
+// calculate the normal map influence
+vec3 normalmap = mix(
+            vec3(0., 0., 1.),
+            texture(tex_norm_0, mo_normalmap_lookup(v_texCoord)).xyz * 2.0 - 1.0,
+            u_bump_scale
+        );
+#endif
 
 
 #ifdef MO_ENABLE_TEXTURE_POST_PROCESS

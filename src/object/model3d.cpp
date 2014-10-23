@@ -36,6 +36,7 @@ Model3d::Model3d(QObject * parent)
       textureBump_  (new TextureSetting(this)),
       texturePostProc_(new ColorPostProcessingSetting(this)),
       textureMorph_ (new TextureMorphSetting(this)),
+      textureBumpMorph_(new TextureMorphSetting(this)),
       u_diff_exp_   (0),
       u_bump_scale_ (0),
       doRecompile_  (false)
@@ -104,6 +105,16 @@ void Model3d::createParameters()
 
     endParameterGroup();
 
+    beginParameterGroup("surface", tr("surface"));
+
+        diffExp_ = createFloatParameter("diffuseexp", tr("diffuse exponent"),
+                                   tr("Exponent for the diffuse lighting - the higher, the narrower "
+                                      "is the light cone"),
+                                   4.0, 0.1);
+        diffExp_->setMinValue(0.001);
+
+    endParameterGroup();
+
     beginParameterGroup("texture", tr("texture"));
 
         texture_->createParameters("col", TextureSetting::TT_NONE, true);
@@ -125,17 +136,12 @@ void Model3d::createParameters()
         bumpScale_ = createFloatParameter("bumpdepth", tr("bump scale"),
                             tr("The influence of the normal-map"),
                             1.0, 0.05);
-        //bumpDepth_->setMinValue(0.);
 
     endParameterGroup();
 
-    beginParameterGroup("surface", tr("surface"));
+    beginParameterGroup("texturebumppp", tr("normal-map post-proc"));
 
-        diffExp_ = createFloatParameter("diffuseexp", tr("diffuse exponent"),
-                                   tr("Exponent for the diffuse lighting - the higher, the narrower "
-                                      "is the light cone"),
-                                   4.0, 0.1);
-        diffExp_->setMinValue(0.001);
+        textureBumpMorph_->createParameters("bump");
 
     endParameterGroup();
 }
@@ -146,7 +152,8 @@ void Model3d::onParameterChanged(Parameter *p)
 
     if (p == lightMode_
             || texturePostProc_->needsRecompile(p)
-            || textureMorph_->needsRecompile(p))
+            || textureMorph_->needsRecompile(p)
+            || textureBumpMorph_->needsRecompile(p))
         doRecompile_ = true;
 
     if (texture_->needsReinit(p) || textureBump_->needsReinit(p))
@@ -161,6 +168,7 @@ void Model3d::updateParameterVisibility()
     textureBump_->updateParameterVisibility();
     texturePostProc_->updateParameterVisibility();
     textureMorph_->updateParameterVisibility();
+    textureBumpMorph_->updateParameterVisibility();
 
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
 }
@@ -270,6 +278,10 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_ENABLE_TEXTURE_TRANSFORMATION");
     if (textureMorph_->isSineMorphEnabled())
         src->addDefine("#define MO_ENABLE_TEXTURE_SINE_MORPH");
+    if (textureBumpMorph_->isTransformEnabled())
+        src->addDefine("#define MO_ENABLE_NORMALMAP_TRANSFORMATION");
+    if (textureBumpMorph_->isSineMorphEnabled())
+        src->addDefine("#define MO_ENABLE_NORMALMAP_SINE_MORPH");
 
     draw_->setShaderSource(src);
 
@@ -278,14 +290,21 @@ void Model3d::setupDrawable_()
     // get uniforms
     u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());
 
-    if (texture_->isEnabled() && texturePostProc_->isEnabled())
-        texturePostProc_->getUniforms(draw_->shader());
+    if (texture_->isEnabled())
+    {
+        if (texturePostProc_->isEnabled())
+            texturePostProc_->getUniforms(draw_->shader());
 
-    textureMorph_->getUniforms(draw_->shader());
+        // (checks for itself)
+        textureMorph_->getUniforms(draw_->shader());
+    }
 
     if (textureBump_->isEnabled())
+    {
         u_bump_scale_ = draw_->shader()->getUniform(src->uniformNameBumpScale());
 
+        textureBumpMorph_->getUniforms(draw_->shader(), "_bump");
+    }
 
 }
 
@@ -326,10 +345,18 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         if (u_bump_scale_)
             u_bump_scale_->floats[0] = bumpScale_->value(time, thread);
 
-        if (texture_->isEnabled() && texturePostProc_->isEnabled())
-            texturePostProc_->updateUniforms(time, thread);
+        if (texture_->isEnabled())
+        {
+            if (texturePostProc_->isEnabled())
+                texturePostProc_->updateUniforms(time, thread);
 
-        textureMorph_->updateUniforms(time, thread);
+            textureMorph_->updateUniforms(time, thread);
+        }
+
+        if (textureBump_->isEnabled())
+        {
+            textureBumpMorph_->updateUniforms(time, thread);
+        }
 
         // render the thing
 

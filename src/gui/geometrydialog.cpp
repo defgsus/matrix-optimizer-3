@@ -38,6 +38,7 @@
 #include "io/log.h"
 #include "io/settings.h"
 #include "geometryexportdialog.h"
+#include "gl/lightsettings.h"
 
 namespace MO {
 namespace GUI {
@@ -183,12 +184,20 @@ void GeometryDialog::createMainWidgets_()
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
-                    auto cb = new QCheckBox(tr("show coordinates"), this);
+                    auto cb = new QCheckBox(tr("coordinates"), this);
                     lh2->addWidget(cb);
                     cb->setChecked(geoWidget_->isShowGrid());
                     connect(cb, &QCheckBox::stateChanged, [this](int state)
                     {
                         geoWidget_->setShowGrid(state == Qt::Checked);
+                    });
+
+                    cb = new QCheckBox(tr("lights"), this);
+                    lh2->addWidget(cb);
+                    cb->setChecked(geoWidget_->isShowLights());
+                    connect(cb, &QCheckBox::stateChanged, [this](int state)
+                    {
+                        geoWidget_->setShowLights(state == Qt::Checked);
                     });
 
                     cb = new QCheckBox(tr("textured"), this);
