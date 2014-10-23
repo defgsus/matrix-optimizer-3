@@ -35,8 +35,10 @@ namespace MO {
 
 
 /** Returns a string in the form of 'x.y.z.www' */
-QString versionString();
+const QString& versionString();
 
+/** Returns "Matrix Optimizer [version] [suffix] */
+const QString& applicationName();
 
 } // namespace MO
 

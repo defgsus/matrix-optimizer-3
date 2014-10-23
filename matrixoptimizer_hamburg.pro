@@ -1,7 +1,7 @@
 
 #################### qt stuff #########################
 
-TARGET = matrixoptimizer
+TARGET = matrixoptimizer_ph
 
 QT += core gui widgets opengl network xml
 
@@ -15,11 +15,17 @@ CONFIG += c++11
 
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
+#special conditions for hamburg release
+DEFINES += MO_HAMBURG
+
 #for glm version >= 0.9.5
 DEFINES += GLM_FORCE_RADIANS
 
 #disable for production until it works ...
 DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
+
+#disable gstreamer for now
+DEFINES += MO_DISABLE_GST
 
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
@@ -32,14 +38,17 @@ LIBS += -L/opt/local/lib/ \
         -lglbinding       \
         -lportaudio       \
         -lportmidi        \
-        -lsndfile         \
-        -lgstreamer-1.0   \
-        -lgstapp-1.0      \
-        -lgobject-2.0     \
-        -lglib-2.0
+        -lsndfile         
+        #	-lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
-else: unix: { LIBS += -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 }
-else: win32 { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 }
+else: unix: { 
+	LIBS += -lglbinding -lGLU -lGL -lX11 -lportaudio -lportmidi -lsndfile 
+	#	-lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 
+}
+else: win32 { 
+	LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 
+	#	-lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 
+}
 
 ###################### files ##########################
 

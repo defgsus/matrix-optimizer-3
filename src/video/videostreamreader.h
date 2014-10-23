@@ -8,6 +8,8 @@
     <p>created 20/10/2014</p>
 */
 
+#ifndef MO_DISABLE_GST
+
 #ifndef VIDEOSTREAMREADER_H
 #define VIDEOSTREAMREADER_H
 
@@ -64,3 +66,5 @@ private:
 };
 
 #endif // VIDEOSTREAMREADER_H
+
+#endif // MO_DISABLE_GST

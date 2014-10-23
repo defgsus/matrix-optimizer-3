@@ -1,4 +1,4 @@
-/** @file videostreamreader.cpp
+    /** @file videostreamreader.cpp
 
     @brief play video uris through gstreamer
 
@@ -7,6 +7,8 @@
 
     <p>created 20/10/2014</p>
 */
+
+#ifndef MO_DISABLE_GST
 
 #include "videostreamreader.h"
 
@@ -219,3 +221,5 @@ unsigned char *VideoStreamReader::getGlTexture()
     }
 }
 
+
+#endif // MO_DISABLE_GST
