@@ -89,6 +89,9 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index)
             inverseViews(set.numProjectors());
     std::vector<Vec2>
             nearFars(set.numProjectors());
+    std::vector<Float>
+            aspects(set.numProjectors());
+
     for (uint i=0; i<set.numProjectors(); ++i)
     {
         projections[i] = mapper[i].getProjecionMatrix();
@@ -97,6 +100,7 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index)
         inverseViews[i] = glm::inverse(mapper[i].getTransformationMatrix());
 
         nearFars[i] = Vec2(mapper[i].nearPlane(), mapper[i].farPlane());
+        aspects[i] = mapper[i].aspect();
     }
 
     try
@@ -117,6 +121,7 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index)
         auto u_inverseView = quad->shader()->getUniform("u_inverseView[0]", true);
         auto u_dome_radius = quad->shader()->getUniform("u_dome_radius", true);
         auto u_nearFar = quad->shader()->getUniform("u_nearFar[0]", true);
+        auto u_aspect = quad->shader()->getUniform("u_aspect[0]", true);
         auto u_index = quad->shader()->getUniform("u_index", true);
 
         u_dome_radius->floats[0] = set.domeSettings().radius();
@@ -149,6 +154,8 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index)
                                             &inverseViews[0][0][0]) );
         MO_CHECK_GL( gl::glUniform2fv(u_nearFar->location(), set.numProjectors(),
                                             &nearFars[0][0]) );
+        MO_CHECK_GL( gl::glUniform1fv(u_aspect->location(), set.numProjectors(),
+                                            &aspects[0]) );
 
         quad->draw(width, height);
 

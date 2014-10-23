@@ -15,10 +15,12 @@
 #include "types/vector.h"
 
 namespace MO {
+class Scene;
 namespace GL {
 
 class Window;
 class Context;
+class SceneRenderer;
 
 class Manager : public QObject
 {
@@ -34,26 +36,32 @@ public:
         and Manager::contextCreated() will be emitted. */
     Window * createGlWindow(uint thread);
 
+    void setScene(Scene *);
 
 signals:
 
-    /** This will signal the creation of a new Context */
-    void contextCreated(uint thread, MO::GL::Context *);
+    /* This will signal the creation of a new Context */
+    //void contextCreated(uint thread, MO::GL::Context *);
 
     /** Context is current, please render. */
     void renderRequest(uint thread);
 
     void cameraMatrixChanged(const MO::Mat4&);
 
+    void outputSizeChanged(const QSize&);
+
 public slots:
 
 private slots:
 
-    void onContextCreated_(uint thread, MO::GL::Context *);
     void onCameraMatrixChanged_(const MO::Mat4&);
+
 private:
 
+    Scene * scene_;
     Window * window_;
+    SceneRenderer * renderer_;
+
 };
 
 } // namespace GL

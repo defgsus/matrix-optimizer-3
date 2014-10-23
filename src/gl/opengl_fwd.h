@@ -30,6 +30,7 @@ namespace GL {
     class FrameBufferObject;
     class Manager;
     class SceneDebugRenderer;
+    class SceneRenderer;
     class ScreenQuad;
     class Shader;
     class ShaderSource;

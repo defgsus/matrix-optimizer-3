@@ -22,6 +22,7 @@
 #include "scene.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "param/parameterint.h"
 #include "math/cubemapmatrix.h"
 #include "math/vector.h"
 #include "io/settings.h"
@@ -38,6 +39,7 @@ MO_REGISTER_OBJECT(Camera)
 Camera::Camera(QObject *parent) :
     ObjectGl        (parent),
     renderMode_     (RM_FULLDOME_CUBE),
+    alphaBlend_     (this),
     sliceCameraSettings_(new CameraSettings())
 {
     setName("Camera");
@@ -73,7 +75,7 @@ void Camera::createParameters()
 
     beginParameterGroup("camera", tr("camera settings"));
 
-    cameraMode_ = createSelectParameter("cammode", tr("render mode"),
+    p_cameraMode_ = createSelectParameter("cammode", tr("render mode"),
                                         tr("Selects the display/render mode for this camera"),
     { "ortho", "persp", "fdcube", "slice" },
     { tr("orthographic"), tr("perspective"), tr("fulldome cube"), tr("projector slice") },
@@ -85,30 +87,52 @@ void Camera::createParameters()
                                         RM_FULLDOME_CUBE,
                                         true, false
                                         );
-    cameraAngle_ = createFloatParameter("camangle", tr("field of view"),
+    p_cameraAngle_ = createFloatParameter("camangle", tr("field of view"),
                                         tr("Specifies the vertical openening angle in degree"),
                                         180.f,
                                         1.f, 360.f, 1.f);
 
-    cameraOrthoScale_ = createFloatParameter("camorthosc", tr("orthographic scale"),
-                                        tr("Scale (+/-) of the orthographic projection on x,y axis"),
+    p_cameraOrthoScale_ = createFloatParameter("camorthosc", tr("orthographic scale"),
+                                        tr("Visible area of the orthographic projection on x,y plane"),
                                         10.f,
                                         0.0001f, 1000000.f, 0.1f);
+
+    p_cameraOrthoMix_ = createFloatParameter("camorthomix", tr("orthographic mix"),
+                                        tr("Mix between perspective and orthographic projection, range [0,1]"),
+                                        0.f,
+                                        0.0f, 1.f, 0.0125f);
+
+    p_near_ = createFloatParameter("camnear", tr("near plane"),
+                                        tr("Near plane of camera frustum - everything closer can not be drawn"),
+                                        0.001f,
+                                        0.00001f, 100000.f, 0.05f);
+    p_far_ = createFloatParameter("camfar", tr("far plane"),
+                                        tr("Far plane of camera frustum - everything farther away can not be drawn"),
+                                        1000.f,
+                                        0.00002f, 100000.f, 1.f);
+
+
+    p_width_ = createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
+                                  1024, 16, 4096*4, 16, true, false);
+    p_height_ = createIntParameter("fboheight", tr("height"), tr("Height of rendered frame in pixels"),
+                                  1024, 16, 4096*4, 16, true, false);
+    p_cubeRes_ = createIntParameter("fbocuberes", tr("size of cube map"), tr("Width and height of the rendered frame per cube map"),
+                                  1024, 16, 4096*4, 16, true, false);
 
     endParameterGroup();
 
     beginParameterGroup("camback", tr("background"));
 
-        backR_ = createFloatParameter("cambackr", tr("red"),
+        p_backR_ = createFloatParameter("cambackr", tr("red"),
                                       tr("Red amount of background color"),
                                       0.0, 0.0, 1.0, 0.1);
-        backG_ = createFloatParameter("cambackg", tr("green"),
+        p_backG_ = createFloatParameter("cambackg", tr("green"),
                                       tr("Red amount of background color"),
                                       0.0, 0.0, 1.0, 0.1);
-        backB_ = createFloatParameter("cambackb", tr("blue"),
+        p_backB_ = createFloatParameter("cambackb", tr("blue"),
                                       tr("Red amount of background color"),
                                       0.0, 0.0, 1.0, 0.1);
-        backA_ = createFloatParameter("cambacka", tr("red"),
+        p_backA_ = createFloatParameter("cambacka", tr("alpha"),
                                       tr("Alpha amount of background color"),
                                       1.0, 0.0, 1.0, 0.1);
 
@@ -116,36 +140,60 @@ void Camera::createParameters()
 
     beginParameterGroup("output", tr("output"));
 
-    cameraMix_ = createFloatParameter("cammix", tr("camera mix"),
+        p_cameraMix_ = createFloatParameter("cammix", tr("camera mix"),
                           tr("Defines the volume and visibility of the camera [0,1]"),
                           1.f,
                           0.f, 1.f, 0.05f);
+
+        alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_camout");
+
+        p_magInterpol_ = createBooleanParameter("cammaginterpol", tr("interpolation"),
+                                                tr("The interpolation mode for pixel magnification"),
+                                                tr("No interpolation"),
+                                                tr("Linear interpolation"),
+                                                true,
+                                                true, false);
 }
 
 void Camera::onParameterChanged(Parameter * p)
 {
     ObjectGl::onParameterChanged(p);
 
-    if (p == cameraMode_)
+    if (p == p_cameraMode_)
     {
-        renderMode_ = (RenderMode)cameraMode_->baseValue();
+        renderMode_ = (RenderMode)p_cameraMode_->baseValue();
         requestReinitGl();
     }
+
+    if (p == p_width_ || p == p_height_ || p == p_cubeRes_)
+        requestReinitGl();
 }
 
 void Camera::onParametersLoaded()
 {
     ObjectGl::onParametersLoaded();
-    renderMode_ = (RenderMode)cameraMode_->baseValue();
+    renderMode_ = (RenderMode)p_cameraMode_->baseValue();
 }
 
 void Camera::updateParameterVisibility()
 {
     ObjectGl::updateParameterVisibility();
 
-    cameraOrthoScale_->setVisible( cameraMode_->baseValue() == RM_ORTHOGRAPHIC );
-    cameraAngle_->setVisible( cameraMode_->baseValue() != RM_ORTHOGRAPHIC &&
-                              cameraMode_->baseValue() != RM_PROJECTOR_SLICE );
+    const bool
+            isortho = p_cameraMode_->baseValue() == RM_ORTHOGRAPHIC,
+            ispersp = p_cameraMode_->baseValue() == RM_PERSPECTIVE,
+            isslice = p_cameraMode_->baseValue() == RM_PROJECTOR_SLICE,
+            iscube = p_cameraMode_->baseValue() == RM_FULLDOME_CUBE;
+
+    p_cameraOrthoScale_->setVisible( isortho );
+    p_cameraOrthoMix_->setVisible( ispersp );
+    p_cameraAngle_->setVisible( !isortho && !isslice );
+    p_width_->setVisible( !iscube );
+    p_height_->setVisible( !iscube );
+    p_cubeRes_->setVisible( iscube );
+    p_cameraMix_->setVisible( alphaBlend_.hasAlpha() );
+    p_near_->setVisible( !isslice );
+    p_far_->setVisible( !isslice );
 }
 
 void Camera::setNumberThreads(uint num)
@@ -180,14 +228,18 @@ void Camera::initGl(uint thread)
 
     *sliceCameraSettings_ = settings->cameraSettings();
 
-    const int width = cubeMapped?
-                          scene->frameBufferCubeMapWidth()
-                        : sliced?
-                            sliceCameraSettings_->width() : scene->frameBufferWidth();
-    const int height = cubeMapped?
-                          scene->frameBufferCubeMapHeight()
-                        : sliced?
-                            sliceCameraSettings_->height() : scene->frameBufferHeight();
+    int width = p_width_->baseValue(),
+        height = p_height_->baseValue();
+
+    if (cubeMapped)
+    {
+        width = height = p_cubeRes_->baseValue();
+    }
+    else if (sliced)
+    {
+        width = sliceCameraSettings_->width();
+        height = sliceCameraSettings_->height();
+    }
 
     //MO_DEBUG("Camera fbo = " << width << "x" << height);
 
@@ -229,6 +281,7 @@ void Camera::initGl(uint thread)
                 height,
                 gl::GLenum(scene->frameBufferFormat()),
                 gl::GL_FLOAT,
+                GL::FrameBufferObject::A_DEPTH,
                 cubeMapped,
                 GL::ER_THROW);
 
@@ -240,10 +293,13 @@ void Camera::initGl(uint thread)
         sliceMatrix_ = settings->cameraSettings().getViewMatrix();
     }
 
+    if (sceneObject())
+        emit sceneObject()->CameraFboChanged(this);
 }
 
 void Camera::releaseGl(uint thread)
 {
+
     screenQuad_[thread]->release();
     delete screenQuad_[thread];
     screenQuad_[thread] = 0;
@@ -257,32 +313,51 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 {
     cam.setSize(fbo_[thread]->width(), fbo_[thread]->height());
 
+    const Float
+            near = p_near_->value(time, thread),
+            far = p_far_->value(time, thread);
+
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
         cam.setFieldOfView(90.f);
         cam.setProjectionMatrix(
-                    MATH::perspective(90.f, aspectRatio_, 0.01f, 1000.0f)
+                    MATH::perspective(90.f, aspectRatio_, near, far)
                     );
 
         cam.setIsCubemap(true);
     }
         else cam.setIsCubemap(false);
 
+
     if (renderMode_ == RM_PERSPECTIVE)
     {
-        const Float angle = std::min((Double)179, cameraAngle_->value(time, thread));
+        const Float angle = std::min((Double)179, p_cameraAngle_->value(time, thread));
         cam.setFieldOfView(angle);
-        cam.setProjectionMatrix(
-                    MATH::perspective(angle, aspectRatio_, 0.01f, 1000.0f));
+
+        const Mat4 mat1 = MATH::perspective(angle, aspectRatio_, near, far);
+
+        // mix with orthographic matrix
+        const Float mix = p_cameraOrthoMix_->value(time, thread);
+        if (mix > 0.f)
+        {
+            const Float sc = p_cameraOrthoScale_->value(time, thread);
+            const Mat4 mat2 = glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far);
+
+            cam.setProjectionMatrix(mat1 + std::min(1.f, mix) * (mat2 - mat1));
+        }
+        else
+            cam.setProjectionMatrix(mat1);
     }
+
 
     if (renderMode_ == RM_ORTHOGRAPHIC)
     {
-        const Float sc = cameraOrthoScale_->value(time, thread);
+        const Float sc = p_cameraOrthoScale_->value(time, thread);
         cam.setFieldOfView(90.); // XXX ???
         cam.setProjectionMatrix(
-                    glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, 0.001f, 1000.f));
+                    glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far));
     }
+
 
     if (renderMode_ == RM_PROJECTOR_SLICE)
     {
@@ -296,7 +371,7 @@ uint Camera::numCubeTextures(uint thread, Double time) const
     if (renderMode_ != RM_FULLDOME_CUBE)
         return 1;
 
-    return (cameraAngle_->value(time, thread) >= 250.f)
+    return (p_cameraAngle_->value(time, thread) >= 250.f)
                ? 6 : 5;
 
 }
@@ -325,6 +400,7 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
     GL::FrameBufferObject * fbo = fbo_[thread];
     fbo->bind();
 
+    // attach each cubemap texture
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
         switch (cubeMapIndex)
@@ -338,17 +414,19 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
         }
     }
 
-    //int pixelsize = 1; //devicePixelRatio(); // Retina support
-    MO_DEBUG_GL("Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)")
     MO_CHECK_GL( glViewport(0, 0, fbo->width(), fbo->height()) );
+
+    // --- set default render state ---
 
     MO_CHECK_GL( glEnable(GL_DEPTH_TEST) );
     MO_CHECK_GL( glDepthMask(GL_TRUE) );
 
-    MO_CHECK_GL( glClearColor(backR_->value(time, thread),
-                              backG_->value(time, thread),
-                              backB_->value(time, thread),
-                              backA_->value(time, thread)) );
+    // --- background ---
+
+    MO_CHECK_GL( glClearColor(p_backR_->value(time, thread),
+                              p_backG_->value(time, thread),
+                              p_backB_->value(time, thread),
+                              p_backA_->value(time, thread)) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
 }
@@ -356,7 +434,6 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
 void Camera::finishGlFrame(uint thread, Double)
 {
     fbo_[thread]->unbind();
-    //MO_CHECK_GL( glViewport(0, 0, glContext(thread)->size().width(), glContext(thread)->size().height()) );
 }
 
 GL::FrameBufferObject * Camera::fbo(uint thread) const
@@ -377,17 +454,34 @@ GL::FrameBufferObject * Camera::fbo(uint thread) const
 
 void Camera::drawFramebuffer(uint thread, Double time)
 {
-    const GL::FrameBufferObject * scenefbo = sceneObject()->fboMaster(thread);
+    // -- shader uniforms --
 
+    uColor_->floats[3] = p_cameraMix_->value(time, thread);
+
+    if (renderMode_ == RM_FULLDOME_CUBE)
+        uAngle_->floats[0] = p_cameraAngle_->value(time, thread);
+
+
+    // -- render camera frame onto current context --
+
+    // cameras framebuffer
     GL::FrameBufferObject * fbo = fbo_[thread];
 
-    uColor_->floats[3] = cameraMix_->value(time, thread);
-    if (renderMode_ == RM_FULLDOME_CUBE)
-        uAngle_->floats[0] = cameraAngle_->value(time, thread);
+    // final framebuffer
+    const GL::FrameBufferObject
+            * scenefbo = sceneObject()->fboMaster(thread);
+
+    // set blendmode
+    alphaBlend_.apply(time, thread);
 
     fbo->colorTexture()->bind();
-    MO_CHECK_GL( glEnable(GL_BLEND) );
-    MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+
+    // set interpolation mode
+    if (p_magInterpol_->baseValue())
+        fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
+    else
+        fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
+
     screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
     fbo->colorTexture()->unbind();
 }

@@ -52,11 +52,11 @@ Scene::Scene(QObject *parent) :
     model_              (0),
     glContext_          (0),
     releaseAllGlRequested_(0),
-    fbWidth_            (1024),
-    fbHeight_           (1024),
+    fbSize_             (1024, 1024),
     fbFormat_           ((int)gl::GL_RGBA),
-    fbCmWidth_          (512),
-    fbCmHeight_         (512),
+    fbSizeRequest_      (fbSize_),
+    fbFormatRequest_    (fbFormat_),
+    doMatchOutputResolution_(false),
     fboFinal_           (0),
     debugRenderOptions_ (0),
     freeCameraIndex_    (-1),
@@ -120,13 +120,19 @@ Scene::~Scene()
 void Scene::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
-    io.writeHeader("scene", 1);
+    io.writeHeader("scene", 2);
+
+    // v2
+    io << fbSize_ << doMatchOutputResolution_;
 }
 
 void Scene::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
-    io.readHeader("scene", 1);
+    const int ver = io.readHeader("scene", 2);
+
+    if (ver >= 2)
+        io >> fbSizeRequest_ >> doMatchOutputResolution_;
 }
 
 void Scene::setObjectModel(ObjectTreeModel * model)
@@ -481,7 +487,7 @@ void Scene::updateNumberLights_()
     for (auto o : glObjects_)
     if ((int)o->numberLightSources() != lightSources_.size())
     {
-        o->numberLightSources_ = lightSources_.size();
+        o->p_numberLightSources_ = lightSources_.size();
         // don't notify if objects havn't even been initialized properly
         if (o->numberThreads() == sceneNumberThreads_)
             o->numberLightSourcesChanged(MO_GFX_THREAD);
@@ -764,7 +770,7 @@ void Scene::setGlContext(uint thread, GL::Context *context)
 
     MO_DEBUG_GL("setting gl context for objects");
     for (auto o : glObjects_)
-        o->setGlContext_(thread, glContext_);
+        o->p_setGlContext_(thread, glContext_);
 }
 
 void Scene::createSceneGl_(uint thread)
@@ -772,7 +778,12 @@ void Scene::createSceneGl_(uint thread)
     MO_DEBUG_GL("Scene::createSceneGl_(" << thread << ")");
 
     fboFinal_[thread] = new GL::FrameBufferObject(
-                fbWidth_, fbHeight_, gl::GLenum(fbFormat_), gl::GL_FLOAT, false, GL::ER_THROW);
+                fbSize_.width(),
+                fbSize_.height(),
+                gl::GLenum(fbFormat_),
+                gl::GL_FLOAT,
+                GL::FrameBufferObject::A_DEPTH,
+                false, GL::ER_THROW);
     fboFinal_[thread]->create();
     fboFinal_[thread]->unbind();
 
@@ -802,6 +813,39 @@ void Scene::releaseSceneGl_(uint thread)
     debugRenderer_[thread]->releaseGl();
     delete debugRenderer_[thread];
     debugRenderer_[thread] = 0;
+}
+
+void Scene::setResolution(const QSize &r)
+{
+    fbSizeRequest_ = r;
+    render_();
+}
+
+void Scene::resizeFbo_(uint thread)
+{
+    MO_DEBUG_GL("Scene::resizeFbo_(" << thread << ")");
+
+    if (thread >= fboFinal_.size() || !fboFinal_[thread])
+        return;
+
+    fbSize_ = fbSizeRequest_;
+    fbFormat_ = fbFormatRequest_;
+
+    if (fboFinal_[thread]->isCreated())
+        fboFinal_[thread]->release();
+    delete fboFinal_[thread];
+
+    fboFinal_[thread] = new GL::FrameBufferObject(
+                fbSize_.width(),
+                fbSize_.height(),
+                gl::GLenum(fbFormat_),
+                gl::GL_FLOAT,
+                GL::FrameBufferObject::A_DEPTH,
+                false,
+                GL::ER_THROW);
+    fboFinal_[thread]->create();
+
+    emit sceneFboChanged();
 }
 
 GL::FrameBufferObject * Scene::fboMaster(uint thread) const
@@ -850,7 +894,7 @@ void Scene::renderScene(uint thread)
 
             for (auto o : glObjects_)
                 if (o->isGlInitialized(thread))
-                    o->releaseGl_(thread);
+                    o->p_releaseGl_(thread);
 
             releaseAllGlRequested_[thread] = false;
 
@@ -862,13 +906,18 @@ void Scene::renderScene(uint thread)
         if (!fboFinal_[thread])
             createSceneGl_(thread);
 
+        // resize fbo on request
+        if (fbSize_ != fbSizeRequest_
+         || fbFormat_ != fbFormatRequest_)
+            resizeFbo_(thread);
+
         // initialize object gl resources
         for (auto o : glObjects_)
             if (o->needsInitGl(thread))// && o->active(time, thread))
             {
                 if (o->isGlInitialized(thread))
-                    o->releaseGl_(thread);
-                o->initGl_(thread);
+                    o->p_releaseGl_(thread);
+                o->p_initGl_(thread);
             }
 
         // position all objects
@@ -908,7 +957,7 @@ void Scene::renderScene(uint thread)
                 for (auto o : glObjects_)
                 if (o->active(time, thread))
                 {
-                    o->renderGl_(renderSet, thread, time);
+                    o->p_renderGl_(renderSet, thread, time);
                 }
 
                 // render debug objects
@@ -943,13 +992,14 @@ void Scene::renderScene(uint thread)
 
     // --- draw to screen ---
 
+    //MO_DEBUG_GL("Scene::renderScene(" << thread << ")");
     fboFinal_[thread]->colorTexture()->bind();
-    int pixelsize = 1; //devicePixelRatio(); // Retina support
-    MO_DEBUG_GL("Scene::renderScene(uint thread)")
-    MO_CHECK_GL( glViewport(0, 0, glContext_->size().width()*pixelsize, glContext_->size().height()*pixelsize) );
+    MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
-    screenQuad_[thread]->drawCentered(glContext_->size().width(), glContext_->size().height());
+    MO_CHECK_GL( glDisable(GL_BLEND) );
+    screenQuad_[thread]->drawCentered(glContext_->size().width(), glContext_->size().height(),
+                                      fboFinal_[thread]->aspect());
     fboFinal_[thread]->colorTexture()->unbind();
 
 }

@@ -29,9 +29,17 @@ public:
         TT_NONE,
         TT_FILE,
         TT_MASTER_FRAME,
-        TT_CAMERA_FRAME
+        TT_MASTER_FRAME_DEPTH,
+        TT_CAMERA_FRAME,
+        TT_CAMERA_FRAME_DEPTH
     };
     static const QStringList textureTypeNames;
+
+    enum WrapMode
+    {
+        WM_CLAMP,
+        WM_REPEAT
+    };
 
     /** Creates a texture setting for the given Object */
     explicit TextureSetting(Object *parent, GL::ErrorReporting = GL::ER_THROW);
@@ -104,6 +112,12 @@ public:
     /** Does nothing if type is TT_NONE */
     void unbind(uint slot = 0);
 
+protected slots:
+
+    bool setTextureFromImage_(const QString& fn);
+    bool updateCameraFbo_();
+    bool updateSceneFbo_();
+
 private:
 
     Object * object_;
@@ -113,7 +127,8 @@ private:
     GL::Texture * texture_;
     const GL::Texture * constTexture_;
 
-    ParameterSelect * paramType_;
+    ParameterSelect * paramType_, *paramInterpol_,
+                    *paramWrapX_, *paramWrapY_;
     ParameterFilename * paramFilename_;
     ParameterInt * paramCamera_;
 };

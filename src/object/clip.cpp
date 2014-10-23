@@ -7,12 +7,15 @@
 
     <p>created 12.10.2014</p>
 */
-#include <QDebug>
+
 #include "clip.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "sequence.h"
 #include "clipcontainer.h"
+#include "util/objectmodulatorgraph.h"
+
+#include "io/log.h"
 
 namespace MO {
 
@@ -104,22 +107,53 @@ QList<Clip*> Clip::getAssociatedClips(Object *o)
     return ret;
 }
 
-QList<Clip*> Clip::getAssociatedClips(Parameter * p, bool alsoObject)
-{
+QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
+{    
+    // list of all modulating objects to the parameter
+    QList<Object*> mod;
+
+    // check parent object?
+    Object * obj = 0;
+    if (parentMask)
+    {
+        obj = p->object();
+        while (obj)
+        {
+            // no match - no check
+            if (!(obj->type() & parentMask))
+                obj = 0;
+            else
+            {
+                // go up in tree if parent matches mask
+                if (obj->parentObject()
+                    && (obj->parentObject()->type() & parentMask))
+                    obj = obj->parentObject();
+                else
+                    break;
+            }
+        }
+    }
+
+    // get all objects modulating this parameter
+    if (!obj)
+        mod << p->getModulatingObjects();
+
+    // get clips of all objects around and inclusive parameter
+    else
+    {
+        ObjectGraph mods;
+        getObjectModulatorGraph(mods, obj);
+
+        mod << mods.toList();
+    }
+
+
     QSet<Clip*> clips;
 
-    auto mod = p->getModulatingObjects();
+    // and keep the clips, the modulators are in
     for (auto m : mod)
-        if (m->parentObject() && m->parentObject()->isClip())
-            clips.insert(static_cast<Clip*>(m->parentObject()));
-
-    if (alsoObject && p->object())
-    {
-        auto mod = p->object()->getModulatingObjects();
-        for (auto m : mod)
-            if (m->parentObject() && m->parentObject()->isClip())
-                clips.insert(static_cast<Clip*>(m->parentObject()));
-    }
+        if (Object * clip = m->findParentObject(T_CLIP))
+            clips.insert(static_cast<Clip*>(clip));
 
     QList<Clip*> ret;
     for (auto c : clips)

@@ -1922,8 +1922,8 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 312 "grammar.y"
-    { PPP_PROG_WARN((yylsp[(1) - (3)]), "overwriting non-local variable '"<<(yyvsp[(1) - (3)].str)<<"'");
-										(yyval.expr) = P->prog->assignment((yyloc), (yyvsp[(1) - (3)].str), (yylsp[(1) - (3)]), (yyvsp[(3) - (3)].expr), (yylsp[(3) - (3)])); }
+    { //PPP_PROG_WARN((yylsp[(1) - (3)]), "overwriting non-local variable '"<<(yyvsp[(1) - (3)].str)<<"'");
+        (yyval.expr) = P->prog->assignment((yyloc), (yyvsp[(1) - (3)].str), (yylsp[(1) - (3)]), (yyvsp[(3) - (3)].expr), (yylsp[(3) - (3)])); }
     break;
 
   case 34:

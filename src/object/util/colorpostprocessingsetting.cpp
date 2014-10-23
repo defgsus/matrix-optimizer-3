@@ -26,12 +26,12 @@ ColorPostProcessingSetting::ColorPostProcessingSetting(Object * parent) :
 
 void ColorPostProcessingSetting::createParameters(const QString &id_suffix)
 {
-    paramPost_ = object_->createSelectParameter("postenable" + id_suffix, tr("post-processing"),
-                                       tr("Enables or disables color post-processing"),
-                                        { "off", "on" }, { tr("off"), tr("on") },
-                                        { tr("Color-post-processing is enabled"),
-                                          tr("Color-post-processing is disabled") },
-                                        { 0, 1 }, 0, true, false);
+    paramPost_ = object_->createBooleanParameter("postenable" + id_suffix, tr("color effects"),
+                                    tr("Enables or disables color post-processing"),
+                                    tr("Color-post-processing is disabled"),
+                                    tr("Color-post-processing is enabled"),
+                                    false,
+                                    true, false);
 
     postAlpha_ = object_->createFloatParameter("postalpha" + id_suffix,
                                     tr("color to alpha"),
@@ -57,7 +57,7 @@ void ColorPostProcessingSetting::createParameters(const QString &id_suffix)
     postBright_ = object_->createFloatParameter("postbright" + id_suffix,
                                     tr("brightness"),
                                     tr("Brightness (simply offset to all colors)"),
-                                    0.0, -1.0, 1.0, 0.02);
+                                    0.0, -100000.0, 100000.0, 0.02);
 
     postContrast_ = object_->createFloatParameter("postcontr" + id_suffix,
                                     tr("contrast"),

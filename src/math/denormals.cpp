@@ -24,6 +24,7 @@ namespace MATH {
 
 #   define _MM_SET_DENORMALS_ZERO_MODE(mode)                                   \
             _mm_setcsr((_mm_getcsr() & ~_MM_DENORMALS_ZERO_MASK) | (mode))
+
 #   define _MM_GET_DENORMALS_ZERO_MODE()                                       \
             (_mm_getcsr() & _MM_DENORMALS_ZERO_MASK)
 #endif

@@ -12,6 +12,7 @@
 #define MOSRC_GUI_UTIL_MAINWIDGETCONTROLLER_H
 
 #include <QObject>
+#include <QSize>
 
 #include "object/object_fwd.h"
 #include "types/float.h"
@@ -117,6 +118,8 @@ private slots:
     /** To trigger sceneNotSaved_ */
     void onSceneChanged_();
 
+    void onOutputSizeChanged_(const QSize&);
+
     void resetTreeModel_();
     void runTestThread_();
     void dumpIdNames_();
@@ -134,6 +137,10 @@ private slots:
 
     void onWindowKeyPressed_(QKeyEvent *);
 
+    void onResolutionOutput_();
+    void onResolutionCustom_();
+    void onResolutionPredefined_(QAction*);
+
 private:
 
     void createObjects_();
@@ -146,11 +153,14 @@ private:
     void loadScene_(const QString& fn);
 
     void copySceneSettings_(Object * o);
-
+    void setPredefinedResolution_(int index);
+    void updateResolutionActions_();
 
     QMainWindow * window_;
     Scene * scene_;
     ObjectTreeModel * objectTreeModel_;
+
+    QSize outputSize_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
@@ -178,13 +188,16 @@ private:
 
     TestThread * testThread_;
 
-    QMenu * editMenu_;
+    QMenu * menuEdit_, * menuResolutions_;
 
     QAction * actionSaveScene_,
             * aDrawLightSources_,
             * aDrawAudioSources_,
             * aDrawCameras_,
-            * aDrawMicrophones_;
+            * aDrawMicrophones_,
+            * aResolutionOutput_,
+            * aResolutionCustom_,
+            * aResolutionPredefined_;
 
     bool sceneNotSaved_;
 

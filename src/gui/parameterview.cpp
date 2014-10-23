@@ -628,40 +628,7 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
 
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(param))
     {
-        // create modulation
-        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
-        connect(a, &QAction::triggered, [=]()
-        {
-            if (Object * o = model->createFloatTrack(pf))
-            {
-                if (doChangeToCreatedMod_)
-                    emit objectSelected(o);
-            }
-        });
-        // create modulation in clip
-        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float sequence"), menu) );
-        QMenu * sub = new QMenu(menu);
-        a->setMenu(sub);
-        sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
-        auto list = Clip::getAssociatedClips(param, true);
-        for (Clip * clip : list)
-        {
-            sub->addAction( a = new QAction(tr("clip %1 (%2)").arg(clip->name()).arg(clip->idName()), sub) );
-            a->setData(QVariant::fromValue(clip));
-        }
-        connect(sub, &QMenu::triggered, [=](QAction * a)
-        {
-            Clip * parent = a->data().value<Clip*>();
-            if (Object * o = model->createInClip("SequenceFloat", parent))
-            {
-                // modulate
-                scene_->addModulator(param, o->idName());
-                o->setName("mod: " + param->infoName());
-
-                if (doChangeToCreatedMod_)
-                    emit objectSelected(o);
-            }
-        });
+        addCreateModMenuFloat_(menu, param);
 
         // link to existing modulator
         addLinkModMenu_(menu, param,
@@ -731,7 +698,7 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
         addRemoveModMenu_(menu, param);
     }
     else
-        MO_ASSERT(false, "No modulation menu implemented for requested parameter '" << param->idName() << "'");
+        MO_ASSERT(false, "No modulation menu implemented for requested parameter '" << param->infoIdName() << "'");
 
     if (menu->isEmpty())
     {
@@ -836,6 +803,70 @@ void ParameterView::addLinkModMenu_(
 
 }
 
+
+void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
+{
+    // get model
+    MO_ASSERT(param->object() && param->object()->sceneObject() &&
+              param->object()->sceneObject()->model(), "missing model in modulator menu");
+    ObjectTreeModel * model =
+        param->object()->sceneObject()->model();
+
+    // create track modulation
+    QAction * a;
+    menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
+    connect(a, &QAction::triggered, [=]()
+    {
+        if (Object * o = model->createFloatTrack(param))
+        {
+            if (doChangeToCreatedMod_)
+                emit objectSelected(o);
+        }
+    });
+
+    // create sequence in clip
+    menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float sequence"), menu) );
+    QMenu * sub = new QMenu(menu);
+    a->setMenu(sub);
+
+        // in new clip
+        sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
+
+        // in existing clip
+        auto list = Clip::getAssociatedClips(param,
+                Object::TG_REAL_OBJECT | Object::TG_SEQUENCE
+                | Object::TG_TRACK | Object::TG_TRANSFORMATION
+                | Object::T_CLIP);
+
+        for (Clip * clip : list)
+        {
+            sub->addAction( a = new QAction(tr("clip %1 (%2)").arg(clip->name()).arg(clip->idName()), sub) );
+            a->setData(QVariant::fromValue(clip));
+        }
+
+        connect(sub, &QMenu::triggered, [=](QAction * a)
+        {
+            Clip * parent = a->data().value<Clip*>();
+            if (Object * o = model->createInClip("SequenceFloat", parent))
+            {
+                // modulate
+                scene_->addModulator(param, o->idName());
+                o->setName("mod: " + param->infoName());
+
+                if (doChangeToCreatedMod_)
+                    emit objectSelected(o);
+            }
+        });
+
+}
+
+
+
+
+
+
+
+
 void ParameterView::onSequenceChanged(Sequence * seq)
 {
     if (seq == object_)
@@ -914,7 +945,11 @@ void ParameterView::updateWidgetValue_(Parameter * p)
                 edit->setText(ptxt->value());
         }
     }
+
+    else
+        MO_WARNING("Parameter widget update not implemented for '" << p->infoIdName() << "'");
 }
+
 
 
 } // namespace GUI

@@ -18,6 +18,8 @@
 #include <vector>
 #include <map>
 
+#include <QList>
+
 #ifdef MO_GRAPH_DEBUG
 #   include <iostream>
 #endif
@@ -139,6 +141,9 @@ public:
     void removeEdge(Node * from, Node * to);
 
     // ------------- transform --------------------
+
+    /** Returns a QList filled with all objects */
+    QList<T> toList() const;
 
     /** Transforms the graph into a linear list of node objects,
         ordered by input dependency,
@@ -291,6 +296,15 @@ void DirectedGraph<T>::removeEdge(Node *from, Node *to)
 
 
 // ------------------------------- transform ------------------------------
+
+template <class T>
+QList<T> DirectedGraph<T>::toList() const
+{
+    QList<T> list;
+    for (auto i = p_nodes_.begin(); i != p_nodes_.end(); ++i)
+        list.append( i->first );
+    return list;
+}
 
 template <class T>
 template <class U>

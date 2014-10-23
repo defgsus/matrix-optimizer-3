@@ -118,7 +118,12 @@ void LookAt::applyTransformation(Mat4 &matrix, Double time, uint thread) const
     Vec3 pos = Vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
 
     // forward vector (look-at minus position)
-    Vec3 f = glm::normalize(lookAt - pos);
+    Vec3 f = lookAt - pos;
+    // failsafe
+    if (std::abs(f.x) < 0.00001 && std::abs(f.y) < 0.00001
+            && std::abs(f.z) < 0.00001)
+        f.z = -1;
+    f = glm::normalize(f);
     // up vector
     Vec3 u = glm::normalize(up);
     // right vector

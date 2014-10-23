@@ -12,6 +12,7 @@
 #define MOSRC_OBJECT_SCENE_H
 
 #include <QTimer>
+#include <QSize>
 
 #include "object.h"
 #include "gl/opengl_fwd.h"
@@ -83,11 +84,25 @@ public:
     // ------------- open gl -------------------
 
     // XXX These can be separate per thread!
-    uint frameBufferWidth() const { return fbWidth_; }
-    uint frameBufferHeight() const { return fbHeight_; }
+
+    /** Returns the currently active framebuffer resolution */
+    const QSize & frameBufferSize() const { return fbSize_; }
+
     uint frameBufferFormat() const { return fbFormat_; }
-    uint frameBufferCubeMapWidth() const { return fbCmWidth_; }
-    uint frameBufferCubeMapHeight() const { return fbCmHeight_; }
+
+    /** Returns the resolution of the framebuffer during the next render pass */
+    const QSize & requestedFrameBufferSize() const { return fbSizeRequest_; }
+
+    /** Returns the flag if output resolution should be matched by scene fbo resolution */
+    bool doMatchOutputResolution() const { return doMatchOutputResolution_; }
+    /** Sets the flag if output resolution should be matched by scene fbo resolution.
+        This does not do anything else than storing the flag! */
+    void setMatchOutputResolution(bool enable) { doMatchOutputResolution_ = enable; }
+
+    /** Sets the output framebuffer size.
+        This is only a request! The framebuffer will change just
+        before the scene is rendered again! */
+    void setResolution(const QSize& resolution);
 
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
@@ -190,6 +205,9 @@ signals:
     /** Emitted after swapChildren() */
     void childrenSwapped(MO::Object *, int from, int to);
 
+    void CameraFboChanged(Camera *);
+    void sceneFboChanged();
+
 public slots:
 
     // --------------- tree --------------------
@@ -263,6 +281,9 @@ public slots:
     void getAudioOutput(uint numChannels, uint thread, F32 * buffer) const;
 
     // ------------- open gl -------------------
+
+    /** Returns currently set opengl context of all objects in scene. */
+    GL::Context * glContext() const { return glContext_; }
 
     /** Sets the opengl Context for all objects in the scene. */
     void setGlContext(uint thread, MO::GL::Context * context);
@@ -392,6 +413,9 @@ private:
     /* Initializes all opengl childs */
     //void initGlChilds_();
 
+    /** Fulfills a resize/format request */
+    void resizeFbo_(uint thread);
+
     /** Fills the LightSettings class with info from the ready transformed tree */
     void updateLightSettings_(uint thread, Double time);
 
@@ -408,8 +432,12 @@ private:
 
     std::vector<bool> releaseAllGlRequested_;
 
-    uint fbWidth_, fbHeight_, fbFormat_,
-        fbCmWidth_, fbCmHeight_;
+    QSize fbSize_;
+    uint fbFormat_;
+    QSize fbSizeRequest_;
+    uint fbFormatRequest_;
+
+    bool doMatchOutputResolution_;
 
     std::vector<GL::FrameBufferObject *> fboFinal_;
     std::vector<GL::ScreenQuad *> screenQuad_;

@@ -30,6 +30,11 @@ public:
     bool isShowGrid() const { return showGrid_; }
     bool isShowTexture() const { return showTexture_; }
     bool isShowNormalMap() const { return showNormalMap_; }
+    bool isShowLights() const { return showLights_; }
+
+    // access to light settings
+    //GL::LightSettings & lightSettings() { return *lights_; }
+
 signals:
 
 public slots:
@@ -39,8 +44,11 @@ public slots:
     void setShowGrid(bool enable) { showGrid_ = enable; update(); }
     void setShowTexture(bool enable) { showTexture_ = enable; update(); }
     void setShowNormalMap(bool enable) { showNormalMap_ = enable; update(); }
+    void setShowLights(bool enable) { setLights_(enable? 0.7:0); update(); }
 
 protected:
+
+    void setLights_(Float amp);
 
     void releaseGL() Q_DECL_OVERRIDE;
 
@@ -52,7 +60,7 @@ protected:
     GL::Drawable * drawable_;
     GL::Texture * tex_, * texNorm_;
     GL::LightSettings * lights_;
-    bool showGrid_, showTexture_, showNormalMap_;
+    bool showGrid_, showTexture_, showNormalMap_, showLights_;
 };
 
 

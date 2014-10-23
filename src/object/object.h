@@ -79,9 +79,12 @@ class Object : public QObject
     // to edit the tree
     friend class Scene;
     // to create parameters
+    // XXX need to refacture this
     friend class TextureSetting;
     friend class ColorPostProcessingSetting;
+    friend class TextureMorphSetting;
     friend class SynthSetting;
+    friend class AlphaBlendSetting;
 public:
 
     // -------------- types ------------------
