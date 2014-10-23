@@ -28,6 +28,12 @@ class ClientEngine;
 /** Returns singleton instance */
 ClientEngine & clientEngine();
 
+
+/**
+    The client engine basically creates an GL::Manager and GL::Window,
+    a network Client and connects all the signals.
+
+ */
 class ClientEngine : public QObject
 {
     Q_OBJECT
@@ -75,7 +81,8 @@ private:
 
     IO::CommandLineParser * cl_;
 
-    bool doNetwork_;
+    bool doNetwork_,
+         doShowInfoWin_;
     QString sceneFile_;
 };
 

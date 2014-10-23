@@ -27,12 +27,13 @@
 #include "io/log.h"
 #include "geom/freecamera.h"
 #include "gl/scenerenderer.h"
+#include "io/application.h"
 
 namespace MO {
 namespace GL {
 
-Window::Window(QScreen * targetScreen)
-    : QWindow       (targetScreen),
+Window::Window()
+    : QWindow       (),
       renderer_     (0),
       thread_       (0),
       updatePending_(false),
@@ -65,6 +66,13 @@ Window::~Window()
 
 //    if (context_)
 //        context_->doneCurrent();
+}
+
+void Window::setScreen(uint screenIndex)
+{
+    // XXX workaround because setScreen() is not very reliable right now
+    // ( https://bugreports.qt-project.org/browse/QTBUG-33138 )
+    setGeometry(application->screenGeometry(screenIndex));
 }
 
 void Window::setRenderer(SceneRenderer *renderer)
@@ -169,9 +177,12 @@ void Window::renderNow()
 
         double fps = 1000.0 / std::max(1, e);
         fps_ += 0.1 * (fps - fps_);
-        setTitle(tr("OpenGl %1 fps").arg((int)(fps_+0.5)));
+
+        // XXX takes too much resources
+        // update should come less frequently
+        //setTitle(tr("OpenGl %1 fps").arg((int)(fps_+0.5)));
     }
-        else setTitle(tr("OpenGL"));
+        //else setTitle(tr("OpenGL"));
 
     // call again :)
     if (animating_)

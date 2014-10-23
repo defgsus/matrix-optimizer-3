@@ -29,7 +29,7 @@ class Window : public QWindow
 {
     Q_OBJECT
 public:
-    explicit Window(QScreen * targetScreen = 0);
+    explicit Window();
     ~Window();
 
     /** Returns the opengl renderer associated to this window */
@@ -44,6 +44,10 @@ public:
     void setThread(uint thread) { thread_ = thread; }
     /** Returns the thread identifier for this window/context */
     uint threadId() const { return thread_; }
+
+    /** Moves the window to a particular screen */
+    void setScreen(uint screenIndex);
+    using QWindow::setScreen;
 
 signals:
 

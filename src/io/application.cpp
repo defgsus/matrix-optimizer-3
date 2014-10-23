@@ -15,6 +15,7 @@
 #include <QWidget>
 #include <QHostInfo>
 #include <QHostAddress>
+#include <QScreen>
 
 #include "io/application.h"
 #include "io/error.h"
@@ -78,6 +79,26 @@ bool Application::notify(QObject * o, QEvent * e)
     }
     return false;
 }
+
+QRect Application::screenGeometry(uint screenIndex) const
+{
+    // check desktop index
+    auto scr = screens();
+    if (screenIndex >= (uint)scr.size())
+    {
+        MO_WARNING("screen index " << screenIndex
+                   << " is out of range ("
+                   << scr.size() << ")");
+        // XXX Does not check for ZERO screens..
+        screenIndex = scr.size() - 1;
+    }
+
+    // XXX workaround because setScreen() is not very reliable right now
+    // ( https://bugreports.qt-project.org/browse/QTBUG-33138 )
+    return scr[screenIndex]->geometry();
+}
+
+
 
 
 void Application::updateStyle()

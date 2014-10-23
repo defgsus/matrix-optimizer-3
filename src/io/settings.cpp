@@ -34,7 +34,11 @@ Settings::Settings(QObject *parent) :
         QSettings::IniFormat,
         QSettings::UserScope,
         "modular-audio-graphics",
+#ifdef MO_CLIENT
+        "matrix-optimizer-3-client",
+#else
         "matrix-optimizer-3",
+#endif
         parent)
 {
     createDefaultValues_();
@@ -42,6 +46,14 @@ Settings::Settings(QObject *parent) :
 
 void Settings::createDefaultValues_()
 {
+    // --- application stats ---
+
+    defaultValues_["Status/desktopRuns"] = 0;
+    defaultValues_["Status/serverRuns"] = 0;
+    defaultValues_["Status/clientRuns"] = 0;
+
+    // --- default directories ---
+
     //const QString mopath = "/home/defgsus/prog/qt_project/mo/matrixoptimizer";
     //const QString mopath = "/home/defgsus/prog/C/mo/matrixoptimizer3";
     const QString mopath = ".";
@@ -64,6 +76,8 @@ void Settings::createDefaultValues_()
     defaultValues_["Directory/filecache"] = mopath + "/data/cache";
     defaultValues_["File/filecache"] = mopath + "/data/cache/filecache.xml";
 
+    // --- hardware settings ---
+
     defaultValues_["Audio/api"] = "";
     defaultValues_["Audio/device"] = "";
     defaultValues_["Audio/samplerate"] = 44100;
@@ -74,6 +88,8 @@ void Settings::createDefaultValues_()
     defaultValues_["MidiIn/api"] = "";
     defaultValues_["MidiIn/device"] = "";
 
+    // -- equation editor ---
+
     defaultValues_["EquEdit/equation"] = "sin(x*TWO_PI)";
     defaultValues_["EquEdit/paintmode"] = 0;
     defaultValues_["EquEdit/x0"] = -1;
@@ -81,12 +97,18 @@ void Settings::createDefaultValues_()
     defaultValues_["EquEdit/y0"] = -1;
     defaultValues_["EquEdit/y1"] = 1;
 
+    // -- networking ---
+
     defaultValues_["Network/name"] = "";
     defaultValues_["Network/tcpport"] = 50000;
     defaultValues_["Network/udpport"] = 50001;
 
     defaultValues_["Client/index"] = 0;
     defaultValues_["Client/serverAddress"] = "192.168.1.33";
+
+    // -- client --
+
+    defaultValues_["Client/desktopIndex"] = 0;
 }
 
 QVariant Settings::getValue(const QString &key)
@@ -266,6 +288,15 @@ void Settings::setClientIndex(int i)
     setValue("Client/index", i);
 }
 
+uint Settings::desktop()
+{
+    return getValue("Client/desktopIndex").toInt();
+}
+
+void Settings::setDesktop(uint index)
+{
+    setValue("Client/desktopIndex", index);
+}
 
 void Settings::setDefaultProjectionSettings(const ProjectionSystemSettings &p)
 {

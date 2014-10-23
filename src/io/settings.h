@@ -53,6 +53,10 @@ public:
     int clientIndex();
     void setClientIndex(int);
 
+    /** Selected desktop index */
+    uint desktop();
+    void setDesktop(uint index);
+
     /** Sets the ProjectionSystemSettings as default for the application */
     void setDefaultProjectionSettings(const ProjectionSystemSettings&);
 

@@ -37,7 +37,6 @@ InfoWindow::InfoWindow(QWidget *parent) :
     updateInfo();
 }
 
-
 void InfoWindow::createWidgets_()
 {
     setCentralWidget(new QWidget(this));
@@ -52,6 +51,7 @@ void InfoWindow::createWidgets_()
         lv->addWidget(labelInfo_);
         labelInfo_->setWordWrap(true);
 }
+
 
 void InfoWindow::updateInfo()
 {
@@ -72,6 +72,8 @@ QString InfoWindow::infoString() const
 
     return text;
 }
+
+
 
 
 } // namespace GUI

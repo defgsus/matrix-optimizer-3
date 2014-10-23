@@ -22,14 +22,19 @@ int main(int argc, char *argv[])
 
     MO::startOfProgram();
 
+    // application and settings
     MO::application = new MO::Application(argc, argv);
     MO::settings = new MO::Settings(MO::application);
+
+    // stats
+    MO::settings->setValue("Stats/clientRuns",
+                           MO::settings->value("Stats/clientRuns").toInt() + 1);
 
     int ret = MO::clientEngine().run(argc, argv);
 
     delete MO::application;
 
-    std::cout << "bis später" << std::endl;
+    //std::cout << "bis später" << std::endl;
 
     return ret;
 }
