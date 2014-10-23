@@ -66,13 +66,13 @@ int TestCommandLineParser::run(int argc, char *argv[], int skip)
     if (!ok)
         return -1;
 
-    if (parser.isPresent("version"))
+    if (parser.contains("version"))
     {
         MO_PRINT("MatrixOptimizer " << versionString());
         return 0;
     }
 
-    if (parser.isPresent("help"))
+    if (parser.contains("help"))
     {
         MO_PRINT(parser.helpString());
         return 0;

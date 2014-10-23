@@ -140,10 +140,17 @@ float white(in vec2 slice)
                                !((edged <= MARGIN) && (oedged <= MARGIN)))
                 ? clamp((2.0 * intersection_color) * (1.0 - oedged / MARGIN), 0.0, 1.0)
                 : 0.0;
-        float rest          = ((edged <= MARGIN) && (oedged <= MARGIN) && (oedged > 0.0))
-                ? intersection_color
+        float rest_in       = ((edged <= MARGIN) && (oedged <= MARGIN) &&
+                               (oedged > 0.0) && (u_index < i))
+                ? clamp((2.0 * intersection_color) * (edged / MARGIN), 0.0, 1.0 )
                 : 0.0;
-        white = 1.0 - (blending_out + blending_in + rest + inner_section + outer_section);
+        float rest_out      = ((edged <= MARGIN) && (oedged <= MARGIN) &&
+                               (oedged > 0.0) && (u_index > i))
+                ? clamp((2.0 * intersection_color) * (1.0 - oedged / MARGIN), 0.0, 1.0 )
+                : 0.0;
+        white = 1.0 - (blending_out + blending_in +
+                       rest_in + rest_out +
+                       inner_section + outer_section);
         white = clamp(white, 0.0, 1.0);
         //Version 1
         //bool oinside = abs(oslice.x) < 1. && abs(oslice.y) < 1.;
