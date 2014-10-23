@@ -199,17 +199,16 @@ void ClientEngine::showRenderWindow_(bool enable)
 {
     if (enable)
     {
-        if (!scene_)
-            return;
+        if (scene_)
+        {
+            if (!glWindow_)
+                createGlObjects_();
 
-        if (!glWindow_)
-            createGlObjects_();
-
-        // move to desired desktop
-        glWindow_->setScreen(settings->desktop());
-        // show
-        glWindow_->showFullScreen();
-
+            // move to desired desktop
+            glWindow_->setScreen(settings->desktop());
+            // show
+            glWindow_->showFullScreen();
+        }
     }
     else
     {
@@ -224,17 +223,28 @@ void ClientEngine::updateDesktopIndex_()
 {
     if (glWindow_)
     {
+        bool vis = glWindow_->isVisible();
+
+        if (vis)
+            glWindow_->hide();
+
         glWindow_->setScreen(settings->desktop());
+
         // XXX moving by above 'workaround' leaves fullscreen
-        if (glWindow_->isVisible())
+        if (vis)
             glWindow_->showFullScreen();
     }
 
     if (infoWindow_)
     {
+        bool vis = infoWindow_->isVisible();
+
+        if (vis)
+            infoWindow_->hide();
+
         infoWindow_->setGeometry(application->screenGeometry(
                                      settings->desktop()));
-        if (infoWindow_->isVisible())
+        if (vis)
             infoWindow_->showFullScreen();
     }
 
@@ -259,6 +269,8 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             auto r = e->createResponse<NetEventSysInfo>();
             r->getInfo();
             client_->sendEvent(r);
+            // also send state
+            sendState_();
             return;
         }
 
@@ -275,6 +287,7 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         {
             MO_NETLOG(EVENT, "setting client index to " << e->data().toInt());
             settings->setClientIndex(e->data().toInt());
+            sendState_();
             return;
         }
 
@@ -348,6 +361,7 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             onSceneReceived_(scene);
         else
             MO_NETLOG(ERROR, "received invalid Scene object");
+        // XXX Need to reflect this in ClientState
         return;
     }
 

@@ -338,8 +338,8 @@ void ClientFiles::Private::requestFileTime(const QString& serverFilename)
     auto it = files.find(serverFilename);
     if (it != files.end())
     {
-        if (it.value().infoRequested)
-            return;
+        //if (it.value().infoRequested)
+        //    return;
     }
 
     MO_NETLOG(DEBUG, "ClientFiles::requestFileTime('" << serverFilename << "')");
