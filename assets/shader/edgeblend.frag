@@ -15,6 +15,7 @@ uniform mat4  u_inverseView[MO_NUM_PROJECTORS];
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
 
+const float MARGIN = 0.15; // The margin of the blending
 
 /** Returns intersection of endless ray with sphere surface.
     Implementation after povray source */
@@ -92,13 +93,21 @@ vec2 map_from_dome(in int index, in vec3 pdome)
     return pscr.xy / pscr.w;
 }
 
-
-/** Returns the number of projectors overlapping on each pixel.
-    @p slice is [-1,1] */
-int get_num_shared(in vec2 slice)
+float inside_distance(vec2 slice)
 {
-    // own pixel on dome surface
-    vec3 pdome = map_to_dome(u_index, slice);
+    return float(abs(slice.x)<=1) * float(abs(slice.y)<=1) * min(1-abs(slice.x),1-abs(slice.y));
+}
+
+bool inside(vec2 slice)
+{
+    return abs(slice.x) < 1. && abs(slice.y) < 1.;
+}
+
+float sqr(float x) { return x*x; }
+
+float white(in vec2 slice)
+{
+    float white = 1.0;
 
     int numShared = 1;
     for (int i = 0; i < MO_NUM_PROJECTORS; ++i)
@@ -139,43 +148,55 @@ float white_method_0(in vec2 slice)
     // own pixel on dome surface
     vec3 pdome = map_to_dome(u_index, slice);
 
-    // distance to edge
-    float edged = edge_distance(u_index, slice);
-    // with smaller stepwidth
-    float edged1 = smoothstep(0.0, edge1, edged);
-
-    float black = 0;
+    int num_shared = 0;
+    for(int i=0; i< MO_NUM_PROJECTORS; ++i) {
+        vec2 oslice = map_from_dome(i, pdome);
+        if(inside(oslice))
+            ++num_shared;
+    }
 
     for (int i = 0; i < MO_NUM_PROJECTORS; ++i)
     if (i != u_index)
     {
+        //float edged = min(1. - abs(slice.x), 1. - abs(slice.y));
+
         // others pixel in slice-space [-1,1]
         vec2 oslice = map_from_dome(i, pdome);
-        // other's distance to edge
-        float oedged = edge_distance(i, oslice);
-        float oedged1 = smoothstep(0.0, edge1, oedged);
 
-        // inside other's slice?
-        float oinside = abs(oslice.x) < 1. && abs(oslice.y) < 1. ? 1.0 : 0.0;
+        float oedged = inside_distance(oslice);
+        float edged  = inside_distance(slice);
 
-        // add black for each projector
-        black += oinside * oedged1 * (1.0 - edged1) * 1.f;
+        white = 0.0;
+        float intersection_color = (1.0 / (float(num_shared) - 0.5*(float(num_shared-1))));
+        float inner_section = (float(edged >= MARGIN) * float(oedged >= MARGIN)) * intersection_color;
+        float outer_section =  ((edged <= 1.0) && (oedged == 0.0))
+                ? intersection_color
+                : 0.0;
+        float blending_out  = (((edged == 0.0) || (oedged >= MARGIN)) &&
+                               ((edged <= MARGIN) || (oedged <= MARGIN)) &&
+                               !((edged <= MARGIN) && (oedged <= MARGIN)))
+                ? clamp((2.0 * intersection_color) * (edged / MARGIN), 0.0, 1.0 )
+                : 0.0;
+        float blending_in   = ((oedged > 0.0) && (oedged <= MARGIN) && (edged > 0.0) &&
+                               !((edged <= MARGIN) && (oedged <= MARGIN)))
+                ? clamp((2.0 * intersection_color) * (1.0 - oedged / MARGIN), 0.0, 1.0)
+                : 0.0;
+        float rest          = ((edged <= MARGIN) && (oedged <= MARGIN) && (oedged > 0.0))
+                ? intersection_color
+                : 0.0;
+        white = 1.0 - (blending_out + blending_in + rest + inner_section + outer_section);
+        white = clamp(white, 0.0, 1.0);
+        //Version 1
+        //bool oinside = abs(oslice.x) < 1. && abs(oslice.y) < 1.;
+        //white = max(0, white - (oinside ? 0.5 : 0));
     }
 
-    return clamp(1. - black, 0., 1.);
-}
-
-
-
-
-float white(in vec2 slice)
-{
-    return white_method_0(slice);
+    //return smoothstep(0, 0.2, edged);
+    return white;
 }
 
 
 void main(void)
 {
-    // return black with alpha
-    fragColor = vec4(0., 0., 0., 1. - white(v_texCoord.xy * 2. - 1.));
+    fragColor = vec4(0., 0., 0., white(v_texCoord.xy * 2. - 1.));
 }
