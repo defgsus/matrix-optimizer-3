@@ -106,20 +106,22 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
             "_imgwrapx" + id_suffix, tr("on horiz. edges"),
             tr("Selects what happens on the horizontal edges of the texture"),
             { "clamp", "repeat" },
-            { tr("clamp"), tr("repeat") },
+            { tr("clamp"), tr("repeat"), tr("mirror") },
             { tr("Colors stay the same"),
-              tr("The texture repeats") },
-            { WM_CLAMP, WM_REPEAT },
+              tr("The texture repeats"),
+              tr("The texture repeats mirrored") },
+            { WM_CLAMP, WM_REPEAT, WM_MIRROR },
             WM_REPEAT, true, false);
 
     paramWrapY_ = object_->createSelectParameter(
             "_imgwrapy" + id_suffix, tr("on vert. edges"),
             tr("Selects what happens on the vertical edges of the texture"),
-            { "clamp", "repeat" },
-            { tr("clamp"), tr("repeat") },
+            { "clamp", "repeat", "repeatm" },
+            { tr("clamp"), tr("repeat"), tr("mirror") },
             { tr("Colors stay the same"),
-              tr("The texture repeats") },
-            { WM_CLAMP, WM_REPEAT },
+              tr("The texture repeats"),
+              tr("The texture repeats mirrored") },
+            { WM_CLAMP, WM_REPEAT, WM_MIRROR },
             WM_REPEAT, true, false);
 
 }
@@ -359,12 +361,16 @@ bool TextureSetting::bind(uint slot)
 
     // wrapmode
     if (paramWrapX_->baseValue() == WM_CLAMP)
-        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP)) )
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE)) )
+    else if (paramWrapX_->baseValue() == WM_MIRROR)
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_MIRRORED_REPEAT)) )
     else
         MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_REPEAT)) );
 
     if (paramWrapY_->baseValue() == WM_CLAMP)
-        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP)) )
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE)) )
+    else if (paramWrapY_->baseValue() == WM_MIRROR)
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_MIRRORED_REPEAT)) )
     else
         MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_REPEAT)) );
 
