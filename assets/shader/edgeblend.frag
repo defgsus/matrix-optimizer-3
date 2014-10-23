@@ -193,6 +193,7 @@ float white_mh(in vec2 slice)
                         inner_section
                         );
         black_so_far = clamp(black_so_far, 0.0, 1.0);
+
         //Version 1
         //bool oinside = abs(oslice.x) < 1. && abs(oslice.y) < 1.;
         //white = max(0, white - (oinside ? 0.5 : 0));
