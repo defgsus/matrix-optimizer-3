@@ -159,9 +159,6 @@ bool ClientEngine::sendEvent(AbstractNetEvent * event)
 
 void ClientEngine::startNetwork_()
 {
-    connect(&IO::fileManager(), SIGNAL(filesReady()),
-            this, SLOT(onFilesReady_()));
-
     // create client connection and receive events
 
     client_ = new Client(this);
@@ -169,6 +166,10 @@ void ClientEngine::startNetwork_()
     connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
     client_->connectTo(settings->serverAddress());
+
+    // receive files-ready signal from file cacher
+    connect(&IO::fileManager(), SIGNAL(filesReady()),
+            this, SLOT(onFilesReady_()));
 }
 
 
