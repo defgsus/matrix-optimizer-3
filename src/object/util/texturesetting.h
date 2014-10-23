@@ -38,7 +38,8 @@ public:
     enum WrapMode
     {
         WM_CLAMP,
-        WM_REPEAT
+        WM_REPEAT,
+        WM_MIRROR
     };
 
     /** Creates a texture setting for the given Object */
