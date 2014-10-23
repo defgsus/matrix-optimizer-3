@@ -14,6 +14,7 @@ uniform mat4  u_inverseView[MO_NUM_PROJECTORS];
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
 
+const float MARGIN = 0.15; // The margin of the blending
 
 // implementation after povray source :)
 bool intersect_ray_sphere(in vec3 ray_origin,
@@ -87,6 +88,17 @@ vec2 map_from_dome(in int index, in vec3 pdome)
     return pscr.xy / pscr.w;
 }
 
+float inside_distance(vec2 slice)
+{
+    return float(abs(slice.x)<=1) * float(abs(slice.y)<=1) * min(1-abs(slice.x),1-abs(slice.y));
+}
+
+bool inside(vec2 slice)
+{
+    return abs(slice.x) < 1. && abs(slice.y) < 1.;
+}
+
+float sqr(float x) { return x*x; }
 
 float white(in vec2 slice)
 {
@@ -94,6 +106,13 @@ float white(in vec2 slice)
 
     // own pixel on dome surface
     vec3 pdome = map_to_dome(u_index, slice);
+
+    int num_shared = 0;
+    for(int i=0; i< MO_NUM_PROJECTORS; ++i) {
+        vec2 oslice = map_from_dome(i, pdome);
+        if(inside(oslice))
+            ++num_shared;
+    }
 
     for (int i = 0; i < MO_NUM_PROJECTORS; ++i)
     if (i != u_index)
@@ -103,9 +122,32 @@ float white(in vec2 slice)
         // others pixel in slice-space [-1,1]
         vec2 oslice = map_from_dome(i, pdome);
 
-        bool oinside = abs(oslice.x) < 1. && abs(oslice.y) < 1.;
+        float oedged = inside_distance(oslice);
+        float edged  = inside_distance(slice);
 
-        white = max(0, white - (oinside ? 0.5 : 0));
+        white = 0.0;
+        float intersection_color = (1.0 / (float(num_shared) - 0.5*(float(num_shared-1))));
+        float inner_section = (float(edged >= MARGIN) * float(oedged >= MARGIN)) * intersection_color;
+        float outer_section =  ((edged <= 1.0) && (oedged == 0.0))
+                ? intersection_color
+                : 0.0;
+        float blending_out  = (((edged == 0.0) || (oedged >= MARGIN)) &&
+                               ((edged <= MARGIN) || (oedged <= MARGIN)) &&
+                               !((edged <= MARGIN) && (oedged <= MARGIN)))
+                ? clamp((2.0 * intersection_color) * (edged / MARGIN), 0.0, 1.0 )
+                : 0.0;
+        float blending_in   = ((oedged > 0.0) && (oedged <= MARGIN) && (edged > 0.0) &&
+                               !((edged <= MARGIN) && (oedged <= MARGIN)))
+                ? clamp((2.0 * intersection_color) * (1.0 - oedged / MARGIN), 0.0, 1.0)
+                : 0.0;
+        float rest          = ((edged <= MARGIN) && (oedged <= MARGIN) && (oedged > 0.0))
+                ? intersection_color
+                : 0.0;
+        white = 1.0 - (blending_out + blending_in + rest + inner_section + outer_section);
+        white = clamp(white, 0.0, 1.0);
+        //Version 1
+        //bool oinside = abs(oslice.x) < 1. && abs(oslice.y) < 1.;
+        //white = max(0, white - (oinside ? 0.5 : 0));
     }
 
     //return smoothstep(0, 0.2, edged);
@@ -115,5 +157,5 @@ float white(in vec2 slice)
 
 void main(void)
 {
-    fragColor = vec4(0., 0., 0., 1. - white(v_texCoord.xy * 2. - 1.));
+    fragColor = vec4(0., 0., 0., white(v_texCoord.xy * 2. - 1.));
 }
