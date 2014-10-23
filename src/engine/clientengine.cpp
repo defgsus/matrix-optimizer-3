@@ -19,6 +19,7 @@
 #include "gl/window.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
+#include "object/clipcontainer.h"
 #include "network/tcpserver.h"
 #include "network/netlog.h"
 #include "network/networkmanager.h"
@@ -88,11 +89,17 @@ int ClientEngine::run(int argc, char ** argv)
 
 //    createObjects_();
 
+    // load and run a scene
     if (!sceneFile_.isEmpty())
     {
         if (!loadSceneFile_(sceneFile_))
             return -1;
         showRenderWindow_(true);
+        // XXX hack: trigger first clip row
+        auto cc = scene_->findChildObjects<ClipContainer>(QString(), true);
+        if (!cc.isEmpty())
+            cc[0]->triggerRow(0, 0);
+        scene_->start();
     }
 
     if (doNetwork_)
@@ -113,8 +120,16 @@ void ClientEngine::shutDown_()
 
 bool ClientEngine::parseCommandLine_(int argc, char **argv)
 {
+#if (1)
+    // commandline params for debug purposes
+    QStringList args;
+    args << "-nonet"
+         << "-scene" << "../matrixoptimizer/data/scene/boxgrid2.mo3";
+    if (!cl_->parse(args))
+#else
     // check commandline
     if (!cl_->parse(argc, argv, 1))
+#endif
     {
         MO_PRINT("Use -h to get help");
         return false;
@@ -158,6 +173,9 @@ void ClientEngine::createGlObjects_()
 {
     glManager_ = new GL::Manager(this);
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
+
+    connect(glManager_, SIGNAL(outputSizeChanged(QSize)),
+            this, SLOT(renderWindowSizeChanged_(QSize)));
 }
 
 void ClientEngine::startNetwork_()
@@ -199,6 +217,11 @@ void ClientEngine::showRenderWindow_(bool enable)
     }
 }
 
+void ClientEngine::renderWindowSizeChanged_(const QSize & size)
+{
+    if (scene_)
+        scene_->setResolution(size);
+}
 
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
 {

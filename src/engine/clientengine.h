@@ -54,7 +54,7 @@ private slots:
     void onNetEvent_(AbstractNetEvent *);
     void showInfoWindow_(bool enable);
     void showRenderWindow_(bool enable);
-
+    void renderWindowSizeChanged_(const QSize&);
 private:
 
     void initCommandLine_();
