@@ -311,7 +311,13 @@ void Camera::initGl(uint thread)
 
     if (renderMode_ == RM_PROJECTOR_SLICE)
     {
+        // the matrix that transforms the camera's viewspace
+        // (which is identity normally)
         sliceMatrix_ = settings->cameraSettings().getViewMatrix();
+        // but we need to turn it because the setup was done
+        // assuming a dome with it's top/middle in the y-direction
+        sliceMatrix_ = sliceMatrix_ * glm::rotate(Mat4(1.f), 90.f, Vec3(1.f, 0.f, 0.f))
+                            ;//* sliceMatrix_;
     }
 
     if (sceneObject())
@@ -505,6 +511,11 @@ void Camera::drawFramebuffer(uint thread, Double time)
         fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
     else
         fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
+
+    // set edge-clamp
+    // (mainly important for cube maps, so the seams disappear as opposed to GL_REPEAT mode)
+    fbo->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE));
+    fbo->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE));
 
     // bind blend texture
     if (blendTexture_)

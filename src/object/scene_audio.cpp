@@ -323,6 +323,10 @@ void Scene::start()
 
     isPlayback_ = true;
 
+    // XXX NAH, this time thing is all hacky right now
+    // lets wait for the hamburg visit...
+    //CurrentTime::setTime(sceneTime());
+
     emit playbackStarted();
 #endif
 }
