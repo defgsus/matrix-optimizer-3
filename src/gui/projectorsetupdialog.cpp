@@ -368,6 +368,32 @@ void ProjectorSetupDialog::createWidgets_()
                                                 "normally zero"),
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
 
+                // ------- blend settings ------
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    label = new QLabel(tr("Blend method"), this);
+                    lh2->addWidget(label);
+
+                    spinBlendMethod_ = new SpinBox(this);
+                    lh2->addWidget(spinBlendMethod_);
+                    spinBlendMethod_->setRange(0,1);
+                    connect(spinBlendMethod_, SIGNAL(valueChanged(int)),
+                            this, SLOT(updateProjectorSettings_()));
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    label = new QLabel(tr("Blend margin"), this);
+                    lh2->addWidget(label);
+
+                    spinBlendMargin_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinBlendMargin_);
+                    spinBlendMargin_->setRange(0,1);
+                    spinBlendMargin_->setSingleStep(0.025);
+                    connect(spinBlendMargin_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateProjectorSettings_()));
 
                 // ------- overlap area --------
 
@@ -803,6 +829,10 @@ void ProjectorSetupDialog::updateProjectorSettings_()
     cameraSettings_->setZFar(spinCamZFar_->value());
 
     // update system settings as well
+
+    settings_->setBlendMethod(spinBlendMethod_->value());
+    settings_->setBlendMargin(spinBlendMargin_->value());
+
     int idx = comboProj_->currentIndex();
     if (idx >= 0 && idx < (int)settings_->numProjectors())
     {
@@ -858,6 +888,9 @@ void ProjectorSetupDialog::updateProjectorWidgets_()
     spinCamRoll_->setValue( cameraSettings_->roll() );
     spinCamZNear_->setValue( cameraSettings_->zNear() );
     spinCamZFar_->setValue( cameraSettings_->zFar() );
+
+    spinBlendMethod_->setValue( settings_->blendMethod() );
+    spinBlendMargin_->setValue( settings_->blendMargin() );
 }
 
 void ProjectorSetupDialog::projectorSelected_()
@@ -1201,7 +1234,7 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
 #else
 
     ProjectorBlender blender(settings_);
-    return blender.renderBlendTexture(index);
+    return blender.renderBlendTexture(index, 320);
 
 #endif
 }

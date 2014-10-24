@@ -146,7 +146,9 @@ private:
         * spinHeight_,
 
         * spinCamWidth_,
-        * spinCamHeight_;
+        * spinCamHeight_,
+
+        * spinBlendMethod_;
 
     DoubleSpinBox
         * spinDomeRad_,
@@ -173,7 +175,9 @@ private:
         * spinCamYaw_,
         * spinCamRoll_,
         * spinCamZNear_,
-        * spinCamZFar_;
+        * spinCamZFar_,
+
+        * spinBlendMargin_;
 
     QComboBox
         * comboProj_,

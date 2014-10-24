@@ -272,7 +272,7 @@ void Camera::initGl(uint thread)
     if (cubeMapped)
         defines += "#define MO_FULLDOME_CUBE";
     if (sliced)
-        defines += "#define MO_BLEND_TEXTURE";
+        defines += "\n#define MO_BLEND_TEXTURE";
 
     screenQuad_[thread] = new GL::ScreenQuad(idName() + "_quad", GL::ER_THROW);
     screenQuad_[thread]->create(

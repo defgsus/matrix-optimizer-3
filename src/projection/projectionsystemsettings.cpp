@@ -18,6 +18,8 @@ namespace MO {
 
 
 ProjectionSystemSettings::ProjectionSystemSettings()
+    : blendMethod_  (1),
+      blendMargin_  (0.3f)
 {
 }
 
@@ -26,10 +28,16 @@ void ProjectionSystemSettings::clear()
     dome_ = DomeSettings();
     projectors_.clear();
     cameras_.clear();
+    blendMethod_ = 1;
+    blendMargin_ = 0.3f;
 }
 
 bool ProjectionSystemSettings::operator == (const ProjectionSystemSettings& o) const
 {
+    if (blendMethod() != o.blendMethod()
+        || blendMargin() != o.blendMargin())
+        return false;
+
     if (numProjectors() != o.numProjectors())
         return false;
 
@@ -47,6 +55,13 @@ bool ProjectionSystemSettings::operator == (const ProjectionSystemSettings& o) c
 void ProjectionSystemSettings::serialize(IO::XmlStream & io) const
 {
     MO_DEBUG_IO("ProjectionSystemSettings::serialize()");
+
+    io.newSection("blending");
+
+        io.write("method", blendMethod_);
+        io.write("margin", blendMargin_);
+
+    io.endSection();
 
     dome_.serialize(io);
 
@@ -67,19 +82,28 @@ void ProjectionSystemSettings::deserialize(IO::XmlStream & io)
     {
         //MO_DEBUG_IO("ProjectionSystemSettings::deserialize() section='" << io.section() << "'");
 
+        if (io.isSection("blending"))
+        {
+            blendMethod_ = io.expectInt("method");
+            blendMargin_ = io.expectFloat("margin");
+            io.leaveSection();
+        }
+        else
         if (io.isSection("dome"))
         {
             dome_.deserialize(io);
             io.leaveSection();
         }
-        else if (io.isSection("projector"))
+        else
+        if (io.isSection("projector"))
         {
             ProjectorSettings s;
             s.deserialize(io);
             appendProjector(s);
             io.leaveSection();
         }
-        else if (io.isSection("camera"))
+        else
+        if (io.isSection("camera"))
         {
             CameraSettings s;
             s.deserialize(io);

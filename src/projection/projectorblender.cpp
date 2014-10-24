@@ -31,7 +31,7 @@ public:
     QVector<ProjectorMapper> mapper;
 
     void setSettings(const ProjectionSystemSettings & set);
-    GL::Texture * renderBlendTexture(uint index);
+    GL::Texture * renderBlendTexture(uint index, uint height);
 };
 
 
@@ -52,12 +52,12 @@ void ProjectorBlender::setSettings(const ProjectionSystemSettings & set)
     p_->setSettings(set);
 }
 
-GL::Texture * ProjectorBlender::renderBlendTexture(uint index)
+GL::Texture * ProjectorBlender::renderBlendTexture(uint index, uint height)
 {
     MO_ASSERT(index < p_->set.numProjectors(), "ProjectorBlender::getBlendTexture("
               << index << ") out of range (" << p_->set.numProjectors() << ")");
 
-    return p_->renderBlendTexture(index);
+    return p_->renderBlendTexture(index, height);
 }
 
 
@@ -72,14 +72,20 @@ void ProjectorBlender::Private::setSettings(const ProjectionSystemSettings &sett
 }
 
 
-GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index)
+GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index, uint height0)
 {
     GL::Texture * tex = 0;
     GL::ScreenQuad * quad = 0;
     GL::FrameBufferObject * fbo = 0;
 
-    const int width = 320,
-              height = 180;
+    int width = set.cameraSettings(index).width(),
+        height = set.cameraSettings(index).height();
+
+    if (height0 != 0)
+    {
+        height = height0;
+        width = set.cameraSettings(index).aspect() * height0;
+    }
 
     // prepare variables for shader
     std::vector<Mat4>
@@ -109,12 +115,18 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index)
 
         quad = new GL::ScreenQuad("ProjectorBlender_quad");
 
+        QString defines =
+                QString("#define MO_NUM_PROJECTORS %1\n"
+                        "#define MO_BLEND_METHOD %2")
+                        .arg(set.numProjectors())
+                        .arg(set.blendMethod());
+
         quad->create(
                     ":/shader/edgeblend.vert",
                     ":/shader/edgeblend.frag",
-                    QString("#define MO_NUM_PROJECTORS %1")
-                        .arg(set.numProjectors()));
+                    defines);
 
+        auto u_margin = quad->shader()->getUniform("u_margin", true);
         auto u_projection = quad->shader()->getUniform("u_projection[0]", true);
         auto u_inverseProjection = quad->shader()->getUniform("u_inverseProjection[0]", true);
         auto u_view = quad->shader()->getUniform("u_view[0]", true);
@@ -126,6 +138,7 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index)
 
         u_dome_radius->floats[0] = set.domeSettings().radius();
         u_index->ints[0] = index;
+        u_margin->floats[0] = set.blendMargin();
 
         // prepare fbo
 
@@ -142,6 +155,7 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index)
         MO_CHECK_GL( gl::glEnable(gl::GL_BLEND) );
         MO_CHECK_GL( gl::glBlendFunc(gl::GL_SRC_ALPHA, gl::GL_ONE_MINUS_SRC_ALPHA) );
 
+        // set uniforms
         quad->shader()->activate();
 
         MO_CHECK_GL( gl::glUniformMatrix4fv(u_projection->location(), set.numProjectors(), gl::GL_FALSE,

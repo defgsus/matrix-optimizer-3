@@ -43,8 +43,11 @@ public:
 
     uint numProjectors() const { return projectors_.size(); }
 
-    const DomeSettings& domeSettings() const { return dome_; }
+    int blendMethod() const { return blendMethod_; }
+    Float blendMargin() const { return blendMargin_; }
 
+    /** Returns the settings for the dome */
+    const DomeSettings& domeSettings() const { return dome_; }
     /** Returns the settings for each projector */
     const ProjectorSettings& projectorSettings(int idx) const;
     /** Returns the settings for each camera of each projector */
@@ -52,12 +55,16 @@ public:
 
     /** Returns a projector id that is not currently used */
     int getUniqueId() const;
+
     /** Returns true if the projector id is currently used */
     bool hasId(int id) const;
 
     // --------- setter -----------
 
     void clear();
+
+    void setBlendMethod(int method) { blendMethod_ = method; }
+    void setBlendMargin(Float margin) { blendMargin_ = margin; }
 
     void setDomeSettings(const DomeSettings& s) { dome_ = s; }
 
@@ -87,6 +94,9 @@ private:
     DomeSettings dome_;
     QList<ProjectorSettings> projectors_;
     QList<CameraSettings> cameras_;
+
+    int blendMethod_;
+    Float blendMargin_;
 };
 
 } // namespace MO

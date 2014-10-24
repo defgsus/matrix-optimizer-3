@@ -5,6 +5,7 @@ out vec4 fragColor;
 
 uniform int u_index;
 uniform float u_dome_radius;
+uniform float u_margin;
 uniform vec2  u_nearFar[MO_NUM_PROJECTORS];
 uniform mat4  u_projection[MO_NUM_PROJECTORS];
 uniform mat4  u_inverseProjection[MO_NUM_PROJECTORS];
@@ -14,7 +15,6 @@ uniform mat4  u_inverseView[MO_NUM_PROJECTORS];
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
 
-const float MARGIN = 0.25; // The margin of the blending
 const float MULT = 1.0;
 
 // implementation after povray source :)
@@ -101,6 +101,7 @@ bool inside(vec2 slice)
 
 float sqr(float x) { return x*x; }
 
+
 float white_mh(in vec2 slice)
 {
     float black = 0.0;
@@ -137,28 +138,28 @@ float white_mh(in vec2 slice)
 
         float black_so_far = 0.0;
         float intersection_color = /*1.0 / float(num_shared); // */(1.0 / (float(num_shared) + 3.0*(float(num_shared-2))));
-        float inner_section = ((edged >= MARGIN) && (oedged >= MARGIN))
+        float inner_section = ((edged >= u_margin) && (oedged >= u_margin))
                 ? intersection_color
                 : 0.0;
         float outer_section =  ((edged <= 1.0) && (oedged == 0.0))
                 ? 1.0
                 : 0.0; //intersection_color;
-        float blending_out  = (((edged == 0.0) || (oedged >= MARGIN)) &&
-                               ((edged <= MARGIN) || (oedged <= MARGIN)) &&
-                               !((edged < MARGIN) && (oedged < MARGIN)))
-                ? clamp(intersection_color * (edged / MARGIN), 0.0, 1.0 )
+        float blending_out  = (((edged == 0.0) || (oedged >= u_margin)) &&
+                               ((edged <= u_margin) || (oedged <= u_margin)) &&
+                               !((edged < u_margin) && (oedged < u_margin)))
+                ? clamp(intersection_color * (edged / u_margin), 0.0, 1.0 )
                 : 0.0;
-        float blending_in   = ((oedged > 0.0) && (oedged <= MARGIN) && (edged > 0.0) &&
-                               !((edged <= MARGIN) && (oedged <= MARGIN)))
-                ? clamp(intersection_color * (1.0 - oedged / MARGIN) + intersection_color, 0.0, 1.0)
+        float blending_in   = ((oedged > 0.0) && (oedged <= u_margin) && (edged > 0.0) &&
+                               !((edged <= u_margin) && (oedged <= u_margin)))
+                ? clamp(intersection_color * (1.0 - oedged / u_margin) + intersection_color, 0.0, 1.0)
                 : 0.0;
-        float rest_in       = ((edged <= MARGIN) && (oedged <= MARGIN) &&
+        float rest_in       = ((edged <= u_margin) && (oedged <= u_margin) &&
                                (oedged > 0.0) && (u_index < i))
-                ? clamp(intersection_color * (edged / (MARGIN)), 0.0, 1.0)
+                ? clamp(intersection_color * (edged / (u_margin)), 0.0, 1.0)
                 : 0.0;
-        float rest_out      = ((edged <= MARGIN) && (oedged <= MARGIN) &&
+        float rest_out      = ((edged <= u_margin) && (oedged <= u_margin) &&
                                (oedged > 0.0) && (u_index > i))
-                ? clamp(intersection_color * (1.0 - oedged / MARGIN) + intersection_color, 0.0, 1.0)
+                ? clamp(intersection_color * (1.0 - oedged / u_margin) + intersection_color, 0.0, 1.0)
                 : 0.0;
         black_so_far = (
                         blending_out +
@@ -209,12 +210,9 @@ float white_sb(in vec2 slice)
         float oedged = inside_distance(oslice);
         float edged  = inside_distance(slice);
 
-        float oedged1 = smoothstep(0.0, 0.3, oedged);
+        float oedged1 = smoothstep(0.0, u_margin, oedged);
 
-        //float inner_section =
-        //        (float(edged >= MARGIN) * float(oedged >= MARGIN));
-
-        white -= oedged1;
+        white -= oedged1 * intersection_color;
     }
 
     return white;
@@ -222,12 +220,11 @@ float white_sb(in vec2 slice)
 
 void main(void)
 {
-#if 0
+#if MO_BLEND_METHOD == 0
     float w = white_sb(v_texCoord.xy * 2. - 1.);
     fragColor = vec4(w,w,w,1.);
-#else
+#elif MO_BLEND_METHOD == 1
     float b = white_mh(v_texCoord.xy * 2. - 1.);
     fragColor = vec4(b,b,b,1.);
 #endif
-    //fragColor = vec4(0., 0., 0., black_sb(v_texCoord.xy * 2. - 1.));
 }
