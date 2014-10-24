@@ -108,6 +108,8 @@ private:
 
     Mat4 sliceMatrix_;
 
+    GL::Texture * blendTexture_;
+
     CameraSettings * sliceCameraSettings_;
 };
 

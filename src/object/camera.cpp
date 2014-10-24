@@ -28,6 +28,7 @@
 #include "io/settings.h"
 #include "projection/projectionsystemsettings.h"
 #include "projection/projectormapper.h"
+#include "projection/projectorblender.h"
 #include "geom/geometry.h"
 
 using namespace gl;
@@ -40,6 +41,7 @@ Camera::Camera(QObject *parent) :
     ObjectGl        (parent),
     renderMode_     (RM_FULLDOME_CUBE),
     alphaBlend_     (this),
+    blendTexture_   (0),
     sliceCameraSettings_(new CameraSettings())
 {
     setName("Camera");
@@ -256,15 +258,27 @@ void Camera::initGl(uint thread)
         ProjectorMapper m;
         m.setSettings(settings->domeSettings(), settings->projectorSettings());
         m.getWarpGeometry(settings->cameraSettings(), warped_quad);
+
+        // and blend texture
+
+        ProjectorBlender blend;
+        blend.setSettings(settings->getDefaultProjectionSettings());
+        blendTexture_ = blend.renderBlendTexture(settings->clientIndex());
     }
 
     // screen-quad
+
+    QString defines;
+    if (cubeMapped)
+        defines += "#define MO_FULLDOME_CUBE";
+    if (sliced)
+        defines += "#define MO_BLEND_TEXTURE";
 
     screenQuad_[thread] = new GL::ScreenQuad(idName() + "_quad", GL::ER_THROW);
     screenQuad_[thread]->create(
                 ":/shader/framebuffercamera.vert",
                 ":/shader/framebuffercamera.frag",
-                cubeMapped? "#define MO_FULLDOME_CUBE" : "",
+                defines,
                 warped_quad);
 
     // uniforms
@@ -273,6 +287,13 @@ void Camera::initGl(uint thread)
     uColor_->setFloats(1,1,1,1);
     if (cubeMapped)
         uAngle_ = screenQuad_[thread]->shader()->getUniform("u_angle", true);
+
+    // blendtexture slot
+    if (sliced)
+    {
+        auto btex = screenQuad_[thread]->shader()->getUniform("tex_blend", true);
+        btex->ints[0] = 1;
+    }
 
     // create framebuffer
 
@@ -299,6 +320,9 @@ void Camera::initGl(uint thread)
 
 void Camera::releaseGl(uint thread)
 {
+    if (blendTexture_)
+        blendTexture_->release();
+    blendTexture_ = 0;
 
     screenQuad_[thread]->release();
     delete screenQuad_[thread];
@@ -481,6 +505,14 @@ void Camera::drawFramebuffer(uint thread, Double time)
         fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
     else
         fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
+
+    // bind blend texture
+    if (blendTexture_)
+    {
+        MO_CHECK_GL( glActiveTexture(GL_TEXTURE1) );
+        blendTexture_->bind();
+        MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
+    }
 
     screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
     fbo->colorTexture()->unbind();

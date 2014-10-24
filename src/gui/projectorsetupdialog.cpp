@@ -69,7 +69,8 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     // XXX MH Temporary Fix for disabled menus:
     //loadPreset_();
 
-    //setModal(false);
+    // fixes problems on MAC
+    setWindowModality(Qt::WindowModal);
 
     setViewDirection(Basic3DWidget::VD_FRONT);
 }

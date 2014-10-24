@@ -27,8 +27,10 @@ class Scene;
 /** Returns a singleton instance of the server */
 ServerEngine & serverEngine();
 
-struct ClientInfo
+class ClientInfo
 {
+public:
+
     /** Connection to/from each client */
     QTcpSocket * tcpSocket;
 

@@ -170,6 +170,12 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index)
         tex = fbo->takeColorTexture();
 
         fbo->release();
+
+        // set texture edge settings
+        // XXX not sure if this will stay until use...
+        tex->bind();
+        tex->setTexParameter(gl::GL_TEXTURE_WRAP_S, gl::GLint(gl::GL_CLAMP_TO_EDGE));
+        tex->setTexParameter(gl::GL_TEXTURE_WRAP_T, gl::GLint(gl::GL_CLAMP_TO_EDGE));
     }
     catch (Exception & e)
     {
