@@ -67,7 +67,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     loadDefault_();
 
     // XXX MH Temporary Fix for disabled menus:
-    loadPreset_();
+    //loadPreset_();
 
     //setModal(false);
 

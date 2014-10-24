@@ -62,7 +62,7 @@ private:
     GL::Drawable * triangles_, *lines_, *blends_;
     GL::Texture * blendTex_;
 
-    bool showTesselation_, showBlend_;
+    bool showTesselation_, showBlend_, setNewBlendTexture_;
 };
 
 } // namespace GUI

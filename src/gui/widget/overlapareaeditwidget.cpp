@@ -37,7 +37,8 @@ OverlapAreaEditWidget::OverlapAreaEditWidget(QWidget *parent)
       blends_       (0),
       blendTex_     (0),
       showTesselation_(true),
-      showBlend_    (true)
+      showBlend_    (true),
+      setNewBlendTexture_(true)
 {
     setObjectName("_OverlapAreaEditWidget");
 
@@ -226,6 +227,8 @@ void OverlapAreaEditWidget::createGeometry_()
 
     }
 
+    setNewBlendTexture_ = true;
+
     GEOM::GeometryFactory::createQuad(blendGeom_, 1, 1);
     blendGeom_->translate(0.5,0.5,0);
 
@@ -287,6 +290,15 @@ void OverlapAreaEditWidget::drawGL(const Mat4& projection,
                     "#define MO_ENABLE_TEXTURE");
         blends_->setShaderSource(src);
         blends_->createOpenGl();
+    }
+
+    if (setNewBlendTexture_)
+    {
+        if (blendTex_ && blendTex_->isAllocated())
+            blendTex_->release();
+        delete blendTex_;
+        blendTex_ = 0;
+        setNewBlendTexture_ = false;
     }
 
     if (!blendTex_)
