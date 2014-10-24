@@ -20,6 +20,7 @@
 
 #include "io/systeminfo.h"
 #include "clientstate.h"
+#include "types/float.h"
 
 class QIODevice;
 class QAbstractSocket;
@@ -352,6 +353,25 @@ private:
     ClientState state_;
 };
 
+
+/** Clients current state info event - typically an answer to NetEventRequest */
+class NetEventTime : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventTime)
+
+    // --------- getter -------------------
+
+    Double time() { return time_; }
+
+    // --------- setter -------------------
+
+    void setTime(Double t) { time_ = t; }
+
+private:
+
+    Double time_;
+};
 
 } // namespace MO
 

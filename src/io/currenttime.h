@@ -15,10 +15,22 @@
 
 namespace MO {
 
-/** Should return the current project time according to timecode or some other
-    global counter */
-Double currentTime();
 
+class CurrentTime
+{
+public:
+
+    /** Should return the current project/scene time according to timecode or some other
+        global counter */
+    static Double time();
+
+    static void start() { setTime(0.0); }
+    static void setTime(Double time);
+
+private:
+
+    static Double startTime_;
+};
 
 } // namespace MO
 

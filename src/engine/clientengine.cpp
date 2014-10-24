@@ -34,6 +34,7 @@
 #include "tool/deleter.h"
 #include "io/version.h"
 #include "clientenginecommandline.h"
+#include "io/currenttime.h"
 
 namespace MO {
 
@@ -357,6 +358,13 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         return;
     }
 
+    if (NetEventTime * e = netevent_cast<NetEventTime>(event))
+    {
+        CurrentTime::setTime(e->time());
+        render_();
+        return;
+    }
+
     if (NetEventScene * e = netevent_cast<NetEventScene>(event))
     {
         Scene * scene = e->getScene();
@@ -521,6 +529,12 @@ void ClientEngine::sendState_()
     state.state_.isPlayback_ = scene_ && scene_->isPlayback();
 
     client_->sendEvent(state);
+}
+
+void ClientEngine::render_()
+{
+    if (glWindow_ && scene_ && !scene_->isPlayback())
+        glWindow_->renderLater();
 }
 
 } // namespace MO

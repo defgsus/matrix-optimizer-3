@@ -67,6 +67,10 @@ private slots:
     void onFilesNotReady_();
     /** Sends a NetEventClientState to server */
     void sendState_();
+
+    /** Renders the scene if not running */
+    void render_();
+
 private:
 
     void createGlObjects_();

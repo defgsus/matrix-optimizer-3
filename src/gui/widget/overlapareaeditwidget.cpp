@@ -319,8 +319,8 @@ void OverlapAreaEditWidget::drawGL(const Mat4& projection,
 
     if (blends_->isReady())
     {
-        MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
-        //MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+        //MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE) );
+        MO_CHECK_GL( gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
         blendTex_->bind();
         blends_->renderShader(projection, cubeViewTrans, viewTrans, trans);

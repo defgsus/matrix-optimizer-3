@@ -40,6 +40,7 @@
 #include "gl/rendersettings.h"
 #include "gl/scenedebugrenderer.h"
 #include "tool/locklessqueue.h"
+#include "io/currenttime.h"
 
 namespace MO {
 
@@ -1174,8 +1175,12 @@ void Scene::setSceneTime(Double time, bool send_signal)
 {
     sceneTime_ = time;
     samplePos_ = time * sampleRate();
+
+    CurrentTime::setTime(time);
+
     if (send_signal)
         emit sceneTimeChanged(sceneTime_);
+
     render_();
 }
 
@@ -1183,6 +1188,9 @@ void Scene::setSceneTime(SamplePos pos, bool send_signal)
 {
     sceneTime_ = pos * sampleRateInv();
     samplePos_ = pos;
+
+    CurrentTime::setTime(sceneTime_);
+
     if (send_signal)
         emit sceneTimeChanged(sceneTime_);
     render_();

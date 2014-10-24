@@ -384,6 +384,26 @@ void NetEventClientState::deserialize(IO::DataStream &io)
 
 
 
+MO_REGISTER_NETEVENT(NetEventTime)
+
+NetEventTime::NetEventTime()
+{
+}
+
+QString NetEventTime::infoName() const
+{
+    return AbstractNetEvent::infoName() + "(" + QString::number(time_) + ")";
+}
+
+void NetEventTime::serialize(IO::DataStream &io) const
+{
+    io << time_;
+}
+
+void NetEventTime::deserialize(IO::DataStream &io)
+{
+    io >> time_;
+}
 
 
 
