@@ -136,8 +136,6 @@ public:
         NONE,
         /** Requests a NetEventSysInfo event */
         GET_SYSTEM_INFO,
-        /** Requests a NetEventInfo with the current index (int) */
-        GET_CLIENT_INDEX,
         /** Requests a NetEventClientState event from the client */
         GET_CLIENT_STATE,
         /** Sets the client index (int) */

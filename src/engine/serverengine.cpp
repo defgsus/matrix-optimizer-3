@@ -211,7 +211,7 @@ void ServerEngine::getClientIndex_(ClientInfo & inf)
 {
     // construct event
     NetEventRequest r;
-    r.setRequest(NetEventRequest::GET_CLIENT_INDEX);
+    r.setRequest(NetEventRequest::GET_CLIENT_STATE);
 
     // send off to client
     eventCom_->sendEvent(inf.tcpSocket, &r);
@@ -264,16 +264,10 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
         return;
     }
 
-    if (NetEventInfo * info = netevent_cast<NetEventInfo>(event))
-    {
-        if (info->request() == NetEventRequest::GET_CLIENT_INDEX)
-            client.index = info->data().toInt();
-        return;
-    }
-
     if (NetEventClientState * state = netevent_cast<NetEventClientState>(event))
     {
         client.state = state->state();
+        client.index = client.state.clientIndex();
         emit clientStateChanged(client.index);
         return;
     }

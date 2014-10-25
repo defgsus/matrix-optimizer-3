@@ -114,7 +114,6 @@ QString NetEventRequest::requestName(Request r)
     {
         case NONE: return "NONE";
         case GET_SYSTEM_INFO: return "GET_SYSTEM_INFO";
-        case GET_CLIENT_INDEX: return "GET_CLIENT_INDEX";
         case GET_CLIENT_STATE: return "GET_CLIENT_STATE";
         case SET_CLIENT_INDEX: return "SET_CLIENT_INDEX";
         case SET_DESKTOP_INDEX: return "SET_DESKTOP_INDEX";
