@@ -169,6 +169,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       sceneNotSaved_    (false),
       statusMessageTimeout_(7 * 1000)
 {
+    aResolutionOutput_ = 0;
     setObjectName("_MainWidgetController");
 
     createObjects_();
@@ -1529,9 +1530,12 @@ void MainWidgetController::onOutputSizeChanged_(const QSize & size)
 {
     outputSize_ = size;
 
-    aResolutionOutput_->setText(tr("Same as output window %1x%2")
+    if (aResolutionOutput_ != 0)
+    {
+        aResolutionOutput_->setText(tr("Same as output window %1x%2")
                                 .arg(outputSize_.width())
                                 .arg(outputSize_.height()));
+    }
 
     // link scene resolution to window resolution
     if (scene_ && scene_->doMatchOutputResolution())

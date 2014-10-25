@@ -9,7 +9,7 @@
 */
 
 #ifndef MOSRC_TOOL_COMMONRESOLUTIONS_H
-#define MOSRC_TOOL_COMMONRESLUTIONS_H
+#define MOSRC_TOOL_COMMONRESOLUTIONS_H
 
 #include <QSize>
 #include <QSizeF>

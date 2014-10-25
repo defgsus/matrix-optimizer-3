@@ -47,6 +47,9 @@ else: win32 { LIBS += -lkernel32 -lpsapi -lportaudio -lsndfile-1 -lgstreamer-1.0
 
 mac: { INCLUDEPATH += /opt/local/include \
                       /usr/local/include \
+                      /usr/local/include/gstreamer-1.0 \
+                      /usr/local/include/glib-2.0 \
+                      /usr/local/lib/glib-2.0/include \
                       /opt/local/include/gstreamer-1.0 \
                       /opt/local/include/glib-2.0 \
                       /opt/local/lib/glib-2.0/include }
