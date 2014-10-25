@@ -223,7 +223,8 @@ HEADERS += \
     src/object/util/alphablendsetting.h \
     src/object/util/texturemorphsetting.h \
     src/io/currenttime.h \
-    src/network/clientstate.h
+    src/network/clientstate.h \
+    src/io/qtextstreamoperators.h
 
 
 SOURCES += \
@@ -397,4 +398,5 @@ SOURCES += \
     src/object/util/alphablendsetting.cpp \
     src/object/util/texturemorphsetting.cpp \
     src/io/currenttime.cpp \
-    src/network/clientstate.cpp
+    src/network/clientstate.cpp \
+    src/io/qtextstreamoperators.cpp

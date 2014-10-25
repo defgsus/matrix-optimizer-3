@@ -388,7 +388,15 @@ void ClientEngine::setProjectionSettings_(NetEventRequest * e)
     try
     {
         s.deserialize(data);
+        // update system settings
         settings->setDefaultProjectionSettings(s);
+
+        // update scene
+        if (scene_)
+        {
+            scene_->setProjectionSettings(s);
+            scene_->setProjectorIndex(settings->clientIndex());
+        }
     }
     catch (const Exception& e)
     {
@@ -426,6 +434,9 @@ void ClientEngine::setSceneObject(Scene * scene)
 
     // update resolution from output window
     scene_->setResolution(glWindow_->frameSize());
+    // update projection settings
+    scene_->setProjectionSettings(settings->getDefaultProjectionSettings());
+    scene_->setProjectorIndex(settings->clientIndex());
 }
 
 

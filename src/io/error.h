@@ -36,8 +36,12 @@
 #else
 // to pass MO_WARNING messages to the server
 #   include "network/netlog.h"
+// also include QTextStream << stuff operators
+// for NetworkLogger::operator <<
+#   include "io/qtextstreamoperators.h"
 #   define MO_CLIENT_WARNING_(text__) MO_NETLOG(APP_ERROR, text__)
 #endif
+
 
 
 namespace MO {

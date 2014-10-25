@@ -1,6 +1,6 @@
 /** @file streamoperators.h
 
-    @brief Enable specific Qt types for streaming (<</>>) with std::basic_(i/o)stream
+    @brief Enable specific Qt types for streaming (<<) with std::basic_(i/o)stream
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -44,19 +44,6 @@ std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QObject * ob
     return o;
 }
 
-#if (0)
-/** See if a QObject is behind ptr */
-template <typename T>
-std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, void * ptr)
-{
-    //if (QObject * obj = dynamic_cast<QObject*>((QObject*)ptr))
-    //    o << obj;
-    //else
-        o << "0x" << std::hex << (size_t)ptr << std::dec;
-    return o;
-}
-#endif
-
 /** std::ostream << QModelIndex */
 template <typename T>
 std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QModelIndex& idx)
@@ -74,5 +61,18 @@ std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QColor& c)
       << ", " << c.alpha() << ")";
     return o;
 }
+
+#if (0) // impossible it seems
+/** See if a QObject is behind ptr */
+template <typename T>
+std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, void * ptr)
+{
+    //if (QObject * obj = dynamic_cast<QObject*>((QObject*)ptr))
+    //    o << obj;
+    //else
+        o << "0x" << std::hex << (size_t)ptr << std::dec;
+    return o;
+}
+#endif
 
 #endif // MOSRC_IO_STREAMOPERATORS_QT_H
