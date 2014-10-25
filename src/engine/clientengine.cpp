@@ -291,6 +291,8 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         {
             MO_NETLOG(EVENT, "setting client index to " << e->data().toInt());
             settings->setClientIndex(e->data().toInt());
+            if (scene_)
+                scene_->setProjectorIndex(e->data().toInt());
             sendState_();
             return;
         }
