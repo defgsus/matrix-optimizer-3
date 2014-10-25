@@ -44,6 +44,9 @@ signals:
 
 public slots:
 
+    /** Updates the cache when the server is connected */
+    void update();
+
     /** Requests saving the current info-cache to disk, in the next event-cycle */
     void saveCache();
 

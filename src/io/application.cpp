@@ -23,6 +23,17 @@
 // usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
 
+#ifndef MO_CLIENT
+#   define MO_APP_PRINT(text__) \
+        { std::cout << text__ << std::endl; }
+#else
+#   define MO_APP_PRINT(text__)             \
+    {                                       \
+        std::cout << text__ << std::endl;   \
+        MO_NETLOG(ERROR, text__);           \
+    }
+
+#endif
 
 namespace MO {
 
@@ -44,37 +55,37 @@ bool Application::notify(QObject * o, QEvent * e)
     }
     catch (const MO::AudioException& e)
     {
-        std::cout << "AudioException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("AudioException in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const MO::LogicException& e)
     {
-        std::cout << "LogicException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("LogicException in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const MO::IoException& e)
     {
-        std::cout << "IoException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("IoException in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const MO::GlException& e)
     {
-        std::cout << "GlException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("GlException in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const MO::Exception& e)
     {
-        std::cout << "Exception in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("Exception in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const std::exception& e)
     {
-        std::cout << "std::exception in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("std::exception in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (...)
     {
-        std::cout << "unrecognized exception in notify" << std::endl;
+        MO_APP_PRINT("unknown exception in notify");
         MO_APP_EXCEPTIONS_ABORT
     }
     return false;

@@ -41,6 +41,8 @@ public:
     explicit ClientEngine(QObject *parent = 0);
     ~ClientEngine();
 
+    bool isRunning() const;
+
     /** Runs the complete client event loop */
     int run(int argc, char ** argv);
 
@@ -57,6 +59,7 @@ public slots:
 
 private slots:
 
+    void onConnected_();
     void onNetEvent_(AbstractNetEvent *);
     void showInfoWindow_(bool enable);
     void showRenderWindow_(bool enable);
@@ -80,6 +83,7 @@ private:
     void setProjectionSettings_(NetEventRequest*);
     bool loadSceneFile_(const QString& fn);
     void setPlayback_(bool play);
+    void setClientIndex_(int index);
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;

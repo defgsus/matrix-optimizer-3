@@ -52,6 +52,11 @@ Client::~Client()
         socket_->close();
 }
 
+bool Client::isRunning() const
+{
+    return socket_->isOpen();
+}
+
 bool Client::connectToMaster()
 {
     //const QString name = "_tcp.matrixoptimizer.master";

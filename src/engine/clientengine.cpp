@@ -70,7 +70,10 @@ ClientEngine::~ClientEngine()
 
 
 
-
+bool ClientEngine::isRunning() const
+{
+    return client_->isRunning();
+}
 
 int ClientEngine::run(int argc, char ** argv)
 {
@@ -164,6 +167,7 @@ void ClientEngine::startNetwork_()
 
     client_ = new Client(this);
 
+    connect(client_, SIGNAL(connected()), this, SLOT(onConnected_()));
     connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
     client_->connectTo(settings->serverAddress());
@@ -261,6 +265,12 @@ void ClientEngine::renderWindowSizeChanged_(const QSize & size)
         scene_->setResolution(size);
 }
 
+void ClientEngine::onConnected_()
+{
+    MO_NETLOG(DEBUG, "ClientEngine connected :D");
+    IO::clientFiles().update();
+}
+
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
 {
     ScopedDeleter<AbstractNetEvent> deleter(event);
@@ -278,22 +288,10 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             return;
         }
 
-        if (e->request() == NetEventRequest::GET_CLIENT_INDEX)
-        {
-            auto r = e->createResponse<NetEventInfo>();
-            r->setRequest(e->request());
-            r->setData(settings->clientIndex());
-            client_->sendEvent(r);
-            return;
-        }
-
         if (e->request() == NetEventRequest::SET_CLIENT_INDEX)
         {
             MO_NETLOG(EVENT, "setting client index to " << e->data().toInt());
-            settings->setClientIndex(e->data().toInt());
-            if (scene_)
-                scene_->setProjectorIndex(e->data().toInt());
-            sendState_();
+            setClientIndex_(e->data().toInt());
             return;
         }
 
@@ -480,6 +478,25 @@ void ClientEngine::setPlayback_(bool play)
     else
         scene_->stop();
 
+    sendState_();
+}
+
+void ClientEngine::setClientIndex_(int index)
+{
+    // XXX this variable requires parsing the whole xml
+    const int maxi = settings->getDefaultProjectionSettings().numProjectors();
+
+    MO_ASSERT(maxi > 0, "Somethings wrong with the DefaultProjectionSettings");
+
+    if (index >= maxi)
+    {
+        MO_WARNING("Could not set projector/client index " << index
+                   << " because it's out of range (0-" << (maxi-1) << ")");
+        index = maxi - 1;
+    }
+    settings->setClientIndex(index);
+    if (scene_)
+        scene_->setProjectorIndex(index);
     sendState_();
 }
 

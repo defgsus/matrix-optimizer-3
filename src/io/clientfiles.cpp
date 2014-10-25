@@ -221,6 +221,11 @@ void ClientFiles::receiveFile(NetEventFile * e)
         emit allFilesReady();
 }
 
+void ClientFiles::update()
+{
+    p_->queryServerTime();
+}
+
 
 void ClientFiles::saveCache()
 {
@@ -325,6 +330,9 @@ void ClientFiles::Private::checkLocalPresense()
 
 void ClientFiles::Private::queryServerTime()
 {
+    if (!clientEngine().isRunning())
+        return;
+
     for (FileInfo& f : files)
     {
         auto event = new NetEventRequest();
