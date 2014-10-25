@@ -36,7 +36,6 @@
 
 #include "fft.h"
 #include "math/constants.h"
-#include <cmath>
 
 namespace MO {
 namespace MATH {
