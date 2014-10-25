@@ -32,12 +32,10 @@
   */
 
 
+#include <cmath>
 
 #include "fft.h"
 #include "math/constants.h"
-#include <cmath>
-
-#include <cmath>
 
 namespace MO {
 namespace MATH {

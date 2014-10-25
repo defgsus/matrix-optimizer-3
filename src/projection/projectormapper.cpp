@@ -660,10 +660,11 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
         auto color = &geom.colors()[i * geom.numColorComponents()];
 
         const Float edged = MO__EDGE_DIST(pos),
-                    oedged = MO__EDGE_DIST(opos),
+                    oedged = MO__EDGE_DIST(opos)
 
-                    centd = std::min(1.f, 2.f * glm::length(pos-Vec2(.5f,.5f))),
-                    ocentd = std::min(1.f, 2.f * glm::length(opos-Vec2(.5f,.5f)));
+                //    centd = std::min(1.f, 2.f * glm::length(pos-Vec2(.5f,.5f))),
+                //    ocentd = std::min(1.f, 2.f * glm::length(opos-Vec2(.5f,.5f)))
+                ;
 
         /*const Float white = std::max(0.f,
                     1.f - oedged
