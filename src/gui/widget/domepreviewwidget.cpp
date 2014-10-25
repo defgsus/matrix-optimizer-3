@@ -172,6 +172,23 @@ void DomePreviewWidget::setProjectionSettings(
     update();
 }
 
+void DomePreviewWidget::updateTextures()
+{
+    for (uint i=0; i<ptexture_.size(); ++i)
+    {
+        GL::Texture * tex = ptexture_[i];
+        if (tex)
+        {
+            // put to release stack
+            ptextureRelease_.push_back(tex);
+            // flag for recreation
+            ptexture_[i] = 0;
+        }
+    }
+
+    update();
+}
+
 void DomePreviewWidget::updateTexture(uint index)
 {
     if (index >= ptexture_.size())
@@ -185,6 +202,8 @@ void DomePreviewWidget::updateTexture(uint index)
         // flag for recreation
         ptexture_[index] = 0;
     }
+
+    update();
 }
 
 void DomePreviewWidget::createDomeGeometry_()

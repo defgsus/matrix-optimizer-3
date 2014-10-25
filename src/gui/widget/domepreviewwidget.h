@@ -62,6 +62,8 @@ public slots:
 
     /** Forces recalculation of a certain texture */
     void updateTexture(uint index);
+    /** Forces recalculation of all textures */
+    void updateTextures();
 
 protected:
 

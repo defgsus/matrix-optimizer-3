@@ -125,6 +125,7 @@ void ProjectorSetupDialog::createMenu_()
         connect(a, SIGNAL(triggered()), this, SLOT(loadDefault_()));
 
         menu->addAction(a = new QAction(tr("Save as default"), menu));
+        a->setShortcut(Qt::CTRL + Qt::Key_D);
         connect(a, SIGNAL(triggered()), this, SLOT(saveDefault_()));
 
 
@@ -376,6 +377,21 @@ void ProjectorSetupDialog::createWidgets_()
                                                 "normally zero"),
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
 
+                // ------- overlap area --------
+
+                /*areaGroup_ = gr = new GroupWidget(tr("overlap area blending"), this);
+                lv->addWidget(gr);
+                gr->setExpanded(true);
+                */
+
+                areaEdit_ = new OverlapAreaEditWidget(this);
+                areaEdit_->setMinimumSize(160,90);
+                lv->addWidget(areaEdit_);
+                areaEdit_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+                connect(areaEdit_, SIGNAL(glReleased()), this, SLOT(onGlReleased_()));
+
+                //areaGroup_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
                 // ------- blend settings ------
 
                 lh2 = new QHBoxLayout();
@@ -402,28 +418,6 @@ void ProjectorSetupDialog::createWidgets_()
                     spinBlendMargin_->setSingleStep(0.025);
                     connect(spinBlendMargin_, SIGNAL(valueChanged(double)),
                             this, SLOT(updateProjectorSettings_()));
-
-                // ------- overlap area --------
-
-                /*areaGroup_ = gr = new GroupWidget(tr("overlap area blending"), this);
-                lv->addWidget(gr);
-                gr->setExpanded(true);
-                */
-
-                areaEdit_ = new OverlapAreaEditWidget(this);
-                areaEdit_->setMinimumSize(160,90);
-                lv->addWidget(areaEdit_);
-                areaEdit_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-                connect(areaEdit_, SIGNAL(glReleased()), this, SLOT(onGlReleased_()));
-
-                //areaGroup_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-                auto cb = new QCheckBox(tr("show tesselation"), this);
-                lv->addWidget(cb);
-                connect(cb, &QCheckBox::clicked, [=](bool c)
-                {
-                    areaEdit_->setShowTesselation(c);
-                });
 
 
             //lv0->addStretch(2);
@@ -498,7 +492,7 @@ void ProjectorSetupDialog::createWidgets_()
             lh2 = new QHBoxLayout();
             lv->addLayout(lh2);
 
-                cb = new QCheckBox(tr("show coordinates"), this);
+                auto cb = new QCheckBox(tr("show coordinates"), this);
                 lh2->addWidget(cb);
                 cb->setChecked(display_->getShowGrid());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowGrid(bool)));
@@ -521,10 +515,15 @@ void ProjectorSetupDialog::createWidgets_()
                 cb->setChecked(display_->getShowHighlight());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowHighlight(bool)));
 
-                cb = new QCheckBox(tr("show content"), this);
-                lh2->addWidget(cb);
-                cb->setChecked(display_->getShowTexture());
-                connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowTexture(bool)));
+                comboContent_ = new QComboBox(this);
+                lh2->addWidget(comboContent_);
+                comboContent_->addItem(tr("no content"));
+                comboContent_->addItem(tr("display blendings"));
+                comboContent_->addItem(tr("display test scene"));
+                //comboContent_->addItem(tr("display current scene"));
+                comboContent_->setCurrentIndex(settings->value(objectName() + "/displayContent", 0).toInt());
+                connect(comboContent_, SIGNAL(currentIndexChanged(int)),
+                        this, SLOT(onComboContent_()));
 
 
             // --- dome settings ---
@@ -1251,31 +1250,47 @@ void ProjectorSetupDialog::createFromClients_()
     updateDisplay_();
 }
 
+void ProjectorSetupDialog::onComboContent_()
+{
+    int idx = comboContent_->currentIndex();
+    if (idx < 0 || idx >= comboContent_->count())
+        idx = 0;
+
+    // store in settings
+    settings->setValue(objectName() + "/displayContent", idx);
+
+    if (idx == 0)
+        display_->setShowTexture(false);
+    else
+    {
+        display_->setShowTexture(true);
+        display_->updateTextures();
+    }
+}
+
 GL::Texture * ProjectorSetupDialog::createTexture_(int index)
 {
-#if 0
-    if (!testRenderer_)
-        testRenderer_ = new TestProjectionRenderer();
+    // test render
+    if (comboContent_->currentIndex() == 2)
+    {
+        if (!testRenderer_)
+            testRenderer_ = new TestProjectionRenderer();
 
-    testRenderer_->setSettings(*settings_);
+        testRenderer_->setSettings(*settings_);
 
-    return testRenderer_->renderSliceTexture(index);
-#elif 0
+        return testRenderer_->renderSliceTexture(index);
+    }
 
-    ProjectorMapper mapper, omapper;
-    mapper.setSettings(settings_->domeSettings(),
-                       settings_->projectorSettings(index) );
-    return mapper.renderBlendTexture(index, *settings_);
+    // render current scene
+    else
+    if (comboContent_->currentIndex() == 3)
+    {
+        // XXX
+    }
 
-    //omapper.setSettings(settings_->domeSettings(),
-    //                    settings_->projectorSettings((index+1) % settings_->numProjectors()) );
-    //return mapper.renderBlendTexture(omapper);
-#else
-
+    // blendings only
     ProjectorBlender blender(settings_);
     return blender.renderBlendTexture(index, 320);
-
-#endif
 }
 
 } // namespace GUI

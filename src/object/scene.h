@@ -325,8 +325,9 @@ public slots:
     /** Returns the framebuffer of the camera frame, or NULL */
     GL::FrameBufferObject * fboCamera(uint thread, uint camera_index) const;
 
-    /** Render the whole scene on the current context */
-    void renderScene(Double time, uint thread);
+    /** Render the whole scene on the current context.
+        If @p fbo is set, the scene will be rendered into the framebuffer object. */
+    void renderScene(Double time, uint thread, GL::FrameBufferObject * fbo = 0);
 
     /** Start realtime playback */
     void start();

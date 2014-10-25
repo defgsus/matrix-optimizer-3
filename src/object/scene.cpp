@@ -877,7 +877,7 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
     return cameras_[camera_index]->fbo(thread);
 }
 
-void Scene::renderScene(Double time, uint thread)
+void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * outputFbo)
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
 
@@ -1003,15 +1003,28 @@ void Scene::renderScene(Double time, uint thread)
     // --- draw to screen ---
 
     //MO_DEBUG_GL("Scene::renderScene(" << thread << ")");
+
+    int width = glContext_->size().width(),
+        height = glContext_->size().height();
+    // .. or output fbo
+    if (outputFbo)
+    {
+        width = outputFbo->width();
+        height = outputFbo->height();
+
+        outputFbo->bind();
+    }
+
     fboFinal_[thread]->colorTexture()->bind();
-    MO_CHECK_GL( glViewport(0, 0, glContext_->size().width(), glContext_->size().height()) );
+    MO_CHECK_GL( glViewport(0, 0, width, height) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_BLEND) );
-    screenQuad_[thread]->drawCentered(glContext_->size().width(), glContext_->size().height(),
-                                      fboFinal_[thread]->aspect());
+    screenQuad_[thread]->drawCentered(width, height, fboFinal_[thread]->aspect());
     fboFinal_[thread]->colorTexture()->unbind();
 
+    if (outputFbo)
+        outputFbo->unbind();
 }
 
 void Scene::updateLightSettings_(uint thread, Double time)

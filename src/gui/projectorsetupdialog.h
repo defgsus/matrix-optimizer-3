@@ -93,6 +93,7 @@ private slots:
     void pasteCamera_();
 
     void createFromClients_();
+    void onComboContent_();
 
 private:
 
@@ -186,7 +187,8 @@ private:
 
     QComboBox
         * comboProj_,
-        * comboView_;
+        * comboView_,
+        * comboContent_;
 
     QToolButton
         * tbAdd_,
