@@ -16,6 +16,7 @@
 #include "network/network_fwd.h"
 #include "io/systeminfo.h"
 #include "network/clientstate.h"
+#include "projection/projectionsystemsettings.h"
 
 class QTcpSocket;
 
@@ -68,6 +69,12 @@ public:
 
     /** Returns the one tcp server */
     TcpServer * tcpServer() const { return server_; }
+
+    /** Creates a new projection set from the info of the
+        connected clients.
+        @note If no client is connected, the settings will not
+        contain anything. */
+    ProjectionSystemSettings createProjectionSystemSettings();
 
     // ------------ network --------------------
 

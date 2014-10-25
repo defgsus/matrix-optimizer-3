@@ -371,6 +371,20 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
     m->addSeparator();
 
+        // ##### PROJECTOR INDEX SUBMENU #####
+        sub = menuProjectorIndex_ = new QMenu(tr("Projector index"), menuBar);
+        m->addMenu(sub);
+        // will be updated by onProjectionSettingsChanged_();
+
+        connect(sub, &QMenu::triggered, [=](QAction*a)
+        {
+            settings->setClientIndex(a->data().toInt());
+            updateSceneProjectionSettings_();
+        });
+
+
+    m->addSeparator();
+
     m->addAction(a = new QAction(tr("Render to disk"), menuBar));
     ag->addAction(a);
     connect(a, SIGNAL(triggered()), this, SLOT(renderToDisk()));
@@ -426,8 +440,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         a->setIcon(QIcon(":/icon/obj_camera.png"));
         connect(a, &QAction::triggered, [=]()
         {
-            ProjectorSetupDialog diag(window_);
-            diag.exec();
+            auto diag = new ProjectorSetupDialog(window_);
+            diag->setAttribute(Qt::WA_DeleteOnClose, true);
+            connect(diag, SIGNAL(projectionSettingsChanged()),
+                    this, SLOT(onProjectionSettingsChanged_()));
+            diag->show();
         });
 
     // ######### TOOLS MENU #########
@@ -586,6 +603,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         a = new QAction(tr("About Qt"), m);
         m->addAction(a);
         connect(a, SIGNAL(triggered()), application, SLOT(aboutQt()));
+
+
+    // create projector-index-menu
+    onProjectionSettingsChanged_();
 }
 
 
@@ -608,7 +629,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     // manage memory
     scene_->setParent(this);
 
-    // clear or init scene widget settings
+    // clear or init scene gui settings
     if (!set)
         sceneSettings_->clear();
     else
@@ -622,6 +643,9 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     // set current resolution
     if (scene_->doMatchOutputResolution())
         scene_->setResolution(outputSize_);
+
+    // set projection settings
+    updateSceneProjectionSettings_();
 
     // update render settings from MainWidgetController
     updateDebugRender_();
@@ -1462,6 +1486,43 @@ void MainWidgetController::updateResolutionActions_()
                                         .arg(scene_->requestedFrameBufferSize().height()));
         }
     }
+}
+
+void MainWidgetController::onProjectionSettingsChanged_()
+{
+    // update scene
+    updateSceneProjectionSettings_();
+
+    // update list of projectors in menu
+
+    menuProjectorIndex_->clear();
+
+    auto g = new QActionGroup(menuProjectorIndex_);
+
+    const ProjectionSystemSettings& set = settings->getDefaultProjectionSettings();
+    for (uint i=0; i<set.numProjectors(); ++i)
+    {
+        auto a = new QAction(menuProjectorIndex_);
+        a->setText(QString("%1 - %2")
+                   .arg(i+1)
+                   .arg(set.projectorSettings(i).name()));
+        a->setData(i);
+        a->setCheckable(true);
+        a->setChecked(settings->clientIndex() == (int)i);
+
+        menuProjectorIndex_->addAction(a);
+        g->addAction(a);
+    }
+
+}
+
+void MainWidgetController::updateSceneProjectionSettings_()
+{
+    if (!scene_)
+        return;
+
+    scene_->setProjectionSettings(settings->getDefaultProjectionSettings());
+    scene_->setProjectorIndex(settings->clientIndex());
 }
 
 void MainWidgetController::onOutputSizeChanged_(const QSize & size)

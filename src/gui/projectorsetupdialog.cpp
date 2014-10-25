@@ -160,8 +160,16 @@ void ProjectorSetupDialog::createMenu_()
         connect(a, SIGNAL(triggered()), this, SLOT(pasteCamera_()));
         aPasteCamera_ = a;
 
+    // ############### CLIENT ###############
+
+    mainMenu_->addMenu(menu = new QMenu(tr("Clients"), mainMenu_));
+
+        menu->addAction(a = new QAction(tr("Create setup from connected clients"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(createFromClients_()));
+
+
 #ifdef __APPLE__
-        mainMenu_->setNativeMenuBar(false);
+    mainMenu_->setNativeMenuBar(false);
 #endif
 
     updateActions_();
@@ -1016,6 +1024,9 @@ void ProjectorSetupDialog::saveDefault_()
     // update clients
     if (serverEngine().isRunning())
         serverEngine().sendProjectionSettings();
+
+    // update everyone else
+    emit projectionSettingsChanged();
 }
 
 bool ProjectorSetupDialog::savePresetAuto_()
@@ -1209,6 +1220,34 @@ void ProjectorSetupDialog::pasteCamera_()
     }
 
     updateProjectorWidgets_();
+    updateDisplay_();
+}
+
+void ProjectorSetupDialog::createFromClients_()
+{
+    if (!serverEngine().isRunning())
+    {
+        QMessageBox::information(this, tr("Creation from clients"),
+                                 tr("The server is not running."));
+        return;
+    }
+
+    if (!saveToClear_())
+        return;
+
+    *settings_ = serverEngine().createProjectionSystemSettings();
+
+    *projectorSettings_ = settings_->projectorSettings(0);
+    *cameraSettings_ = settings_->cameraSettings(0);
+    // keep the dome settings
+    settings_->setDomeSettings(*domeSettings_);
+
+    settings_->calculateOverlapAreas();
+
+    updateDomeWidgets_();
+    updateProjectorWidgets_();
+    updateProjectorList_();
+    updateActions_();
     updateDisplay_();
 }
 

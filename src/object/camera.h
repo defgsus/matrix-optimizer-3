@@ -15,8 +15,6 @@
 
 namespace MO {
 
-class CameraSettings;
-
 class Camera : public ObjectGl
 {
     Q_OBJECT
@@ -109,8 +107,6 @@ private:
     Mat4 sliceMatrix_;
 
     GL::Texture * blendTexture_;
-
-    CameraSettings * sliceCameraSettings_;
 };
 
 } // namespace MO

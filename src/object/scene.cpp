@@ -41,6 +41,7 @@
 #include "gl/scenedebugrenderer.h"
 #include "tool/locklessqueue.h"
 #include "io/currenttime.h"
+#include "projection/projectionsystemsettings.h"
 
 namespace MO {
 
@@ -62,6 +63,8 @@ Scene::Scene(QObject *parent) :
     debugRenderOptions_ (0),
     freeCameraIndex_    (-1),
     freeCameraMatrix_   (1.0),
+    projectionSettings_ (new ProjectionSystemSettings()),
+    projectorIndex_     (0),
     sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
     audioDevice_        (new AUDIO::AudioDevice()),
@@ -116,6 +119,7 @@ Scene::~Scene()
     delete readWriteLock_;
     delete audioOutQueue_;
     delete audioInQueue_;
+    delete projectionSettings_;
 }
 
 void Scene::serialize(IO::DataStream & io) const
@@ -1197,5 +1201,31 @@ void Scene::setSceneTime(SamplePos pos, bool send_signal)
 }
 
 
+void Scene::setProjectionSettings(const ProjectionSystemSettings & p)
+{
+    *projectionSettings_ = p;
+
+    // update all cameras
+    for (Camera * c : cameras_)
+        for (uint i=0; i<c->numberThreads(); ++i)
+            c->p_needsInitGl_[i] = true;
+
+    render_();
+}
+
+void Scene::setProjectorIndex(uint index)
+{
+    if (index == projectorIndex_)
+        return;
+
+    projectorIndex_ = index;
+
+    // update all cameras
+    for (Camera * c : cameras_)
+        for (uint i=0; i<c->numberThreads(); ++i)
+            c->p_needsInitGl_[i] = true;
+
+    render_();
+}
 
 } // namespace MO

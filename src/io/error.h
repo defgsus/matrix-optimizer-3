@@ -31,6 +31,14 @@
 #define MO_EXTENDED_EXCEPTIONS
 
 
+#ifndef MO_CLIENT
+#   define MO_CLIENT_WARNING_(unused__)
+#else
+// to pass MO_WARNING messages to the server
+#   include "network/netlog.h"
+#   define MO_CLIENT_WARNING_(text__) MO_NETLOG(APP_ERROR, text__)
+#endif
+
 
 namespace MO {
 
@@ -160,9 +168,10 @@ public:
 
 #ifdef MO_ENABLE_WARNING
 #   define MO_WARNING_IMPL_(text__) \
-        { std::cerr << "[" << ::MO::applicationTimeString() << "] " << text__ << std::endl; }
+        { std::cerr << "[" << ::MO::applicationTimeString() << "] " << text__ << std::endl; \
+          MO_CLIENT_WARNING_(text__); }
 #else
-#   define MO_WARNING_IMPL(unused__) { }
+#   define MO_WARNING_IMPL_(unused__) { }
 #endif
 
 

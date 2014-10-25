@@ -17,7 +17,6 @@
 #include "network/eventcom.h"
 #include "io/application.h"
 #include "io/settings.h"
-#include "projection/projectionsystemsettings.h"
 #include "tool/deleter.h"
 
 namespace MO {
@@ -366,5 +365,39 @@ void ServerEngine::setScenePlaying(bool enabled)
     for (int i=0; i<numClients(); ++i)
         eventCom_->sendEvent(clients_[i].tcpSocket, &r);
 }
+
+
+ProjectionSystemSettings ServerEngine::createProjectionSystemSettings()
+{
+    ProjectionSystemSettings set;
+
+    for (int i = 0; i < clients_.size(); ++i)
+    {
+        const ClientInfo & client = clients_[i];
+
+        // the set desktop
+        int desktop = client.state.desktop();
+        // resolution
+        QSize size = client.sysinfo.resolution(desktop);
+
+        // create a projector
+        ProjectorSettings proj;
+        proj.setName(client.tcpSocket->peerName());
+        proj.setWidth(size.width());
+        proj.setHeight(size.height());
+
+        set.appendProjector(proj);
+
+        // create camera
+        CameraSettings cam;
+        cam.setWidth(size.width());
+        cam.setHeight(size.height());
+
+        set.setCameraSettings(set.numProjectors()-1, cam);
+    }
+
+    return set;
+}
+
 
 } // namespace MO

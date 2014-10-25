@@ -44,6 +44,9 @@ public:
 
 signals:
 
+    /** Emitted when the default projection settings have been set */
+    void projectionSettingsChanged();
+
 public slots:
 
     /** Sets the view.
@@ -88,6 +91,8 @@ private slots:
     void pasteProjector_();
     void copyCamera_();
     void pasteCamera_();
+
+    void createFromClients_();
 
 private:
 

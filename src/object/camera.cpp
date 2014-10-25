@@ -25,7 +25,6 @@
 #include "param/parameterint.h"
 #include "math/cubemapmatrix.h"
 #include "math/vector.h"
-#include "io/settings.h"
 #include "projection/projectionsystemsettings.h"
 #include "projection/projectormapper.h"
 #include "projection/projectorblender.h"
@@ -41,8 +40,7 @@ Camera::Camera(QObject *parent) :
     ObjectGl        (parent),
     renderMode_     (RM_FULLDOME_CUBE),
     alphaBlend_     (this),
-    blendTexture_   (0),
-    sliceCameraSettings_(new CameraSettings())
+    blendTexture_   (0)
 {
     setName("Camera");
 
@@ -51,8 +49,6 @@ Camera::Camera(QObject *parent) :
 
 Camera::~Camera()
 {
-    delete sliceCameraSettings_;
-
     for (auto i : fbo_)
         delete i;
     for (auto i : screenQuad_)
@@ -228,7 +224,11 @@ void Camera::initGl(uint thread)
             cubeMapped = renderMode_ == RM_FULLDOME_CUBE,
             sliced = renderMode_ == RM_PROJECTOR_SLICE;
 
-    *sliceCameraSettings_ = settings->cameraSettings();
+    const ProjectionSystemSettings& projset = scene->projectionSettings();
+    const ProjectorSettings& proj = projset.projectorSettings(scene->projectorIndex());
+    const CameraSettings& projcam = projset.cameraSettings(scene->projectorIndex());
+
+    // size of camera frame
 
     int width = p_width_->baseValue(),
         height = p_height_->baseValue();
@@ -239,13 +239,9 @@ void Camera::initGl(uint thread)
     }
     else if (sliced)
     {
-        width = sliceCameraSettings_->width();
-        height = sliceCameraSettings_->height();
+        width = projcam.width();
+        height = projcam.height();
     }
-
-    //MO_DEBUG("Camera fbo = " << width << "x" << height);
-
-    // projection matrix
 
     aspectRatio_ = (Float)width/std::max(1, height);
 
@@ -256,14 +252,14 @@ void Camera::initGl(uint thread)
     {
         warped_quad = new GEOM::Geometry();
         ProjectorMapper m;
-        m.setSettings(settings->domeSettings(), settings->projectorSettings());
-        m.getWarpGeometry(settings->cameraSettings(), warped_quad);
+        m.setSettings(projset.domeSettings(), proj);
+        m.getWarpGeometry(projcam, warped_quad);
 
         // and blend texture
 
         ProjectorBlender blend;
-        blend.setSettings(settings->getDefaultProjectionSettings());
-        blendTexture_ = blend.renderBlendTexture(settings->clientIndex());
+        blend.setSettings(projset);
+        blendTexture_ = blend.renderBlendTexture(scene->projectorIndex());
     }
 
     // screen-quad
@@ -313,11 +309,11 @@ void Camera::initGl(uint thread)
     {
         // the matrix that transforms the camera's viewspace
         // (which is identity normally)
-        sliceMatrix_ = settings->cameraSettings().getViewMatrix();
+        sliceMatrix_ = projcam.getViewMatrix();
         // but we need to turn it because the setup was done
-        // assuming a dome with it's top/middle in the y-direction
-        sliceMatrix_ = sliceMatrix_ * glm::rotate(Mat4(1.f), 90.f, Vec3(1.f, 0.f, 0.f))
-                            ;//* sliceMatrix_;
+        // assuming a dome with it's top/middle in the y direction
+        // while the camera usually points in the -z direction
+        sliceMatrix_ = MATH::rotate(sliceMatrix_, 90.f, Vec3(1.f, 0.f, 0.f));
     }
 
     if (sceneObject())
@@ -391,8 +387,14 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 
     if (renderMode_ == RM_PROJECTOR_SLICE)
     {
-        cam.setFieldOfView(sliceCameraSettings_->fov());
-        cam.setProjectionMatrix(sliceCameraSettings_->getProjectionMatrix());
+        const Scene * scene = sceneObject();
+        MO_ASSERT(scene, "No Scene in Camera::initCameraSpace()");
+
+        const CameraSettings& projcam
+                = scene->projectionSettings().cameraSettings(scene->projectorIndex());
+
+        cam.setFieldOfView(projcam.fov());
+        cam.setProjectionMatrix(projcam.getProjectionMatrix());
     }
 }
 

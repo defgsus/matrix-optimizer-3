@@ -28,6 +28,7 @@ class ObjectTreeModel;
 class AudioOutThread;
 class AudioInThread;
 template <typename T> class LocklessQueue;
+class ProjectionSystemSettings;
 
 /** Handles tree managment, locking, rendering and audio processing */
 class Scene : public Object
@@ -113,6 +114,20 @@ public:
     void setDebugRenderOptions(int options)
         { debugRenderOptions_ = options; render_(); }
     int debugRenderOptions() const { return debugRenderOptions_; }
+
+    // ----------- projection ------------------
+
+    /** Sets the projection settings */
+    void setProjectionSettings(const ProjectionSystemSettings &);
+    /** The slice camera */
+    const ProjectionSystemSettings& projectionSettings() const
+        { return * projectionSettings_; }
+
+    /** Sets the index of the projector.
+        @note Call setProjectionSettings() before to make
+        sure the index is not out of range. */
+    void setProjectorIndex(uint index);
+    uint projectorIndex() const { return projectorIndex_; }
 
     // ----------- audio info ------------------
 
@@ -449,6 +464,9 @@ private:
     int freeCameraIndex_;
     Mat4 freeCameraMatrix_, freeCameraMatrixGfx_;
     std::vector<Mat4> freeCameraMatrixAudio_;
+
+    ProjectionSystemSettings * projectionSettings_;
+    uint projectorIndex_;
 
     // ----------- special objects -------------
 

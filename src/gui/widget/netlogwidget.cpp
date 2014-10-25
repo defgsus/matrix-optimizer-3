@@ -39,10 +39,12 @@ void NetLogWidget::addLine_(int level, const QString & text)
             s += "#999";
             break;
 
+        case NetworkLogger::APP_WARNING:
         case NetworkLogger::WARNING:
             s += "#a00";
             break;
 
+        case NetworkLogger::APP_ERROR:
         case NetworkLogger::ERROR:
             s += "#f00";
             break;

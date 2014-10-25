@@ -118,6 +118,9 @@ private slots:
     /** To trigger sceneNotSaved_ */
     void onSceneChanged_();
 
+    void onProjectionSettingsChanged_();
+    void updateSceneProjectionSettings_();
+
     void onOutputSizeChanged_(const QSize&);
 
     void resetTreeModel_();
@@ -191,7 +194,8 @@ private:
 
     TestThread * testThread_;
 
-    QMenu * menuEdit_, * menuResolutions_;
+    QMenu * menuEdit_, * menuResolutions_,
+          * menuProjectorIndex_;
 
     QAction * actionSaveScene_,
             * aDrawLightSources_,

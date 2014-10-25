@@ -35,7 +35,10 @@ public:
         DEBUG_V2    = 1<<3,
         EVENT       = 1<<4,
         EVENT_V2    = 1<<5,
-        CTOR        = 1<<6
+        CTOR        = 1<<6,
+        // for normal MO_ERROR and MO_WARNING messages
+        APP_ERROR   = 1<<7,
+        APP_WARNING = 1<<8
     };
 
     struct LogLine
@@ -48,13 +51,21 @@ public:
 
     // -------- logging ----------
 
+    /** Sets the bit-mask of messages that should be printed */
     static void setLevels(int levels);
 
+    /** Connects all the signals of the socket to logging functions.
+        Convenience function. */
     static void connectForLogging(QTcpSocket*);
 
+    /** Starts writing a message (locked).
+        @note Use MO_NETLOG() macro instead. */
     static void beginWrite(Level);
+    /** Ends writing a message (unlock).
+        @note Use MO_NETLOG() macro instead. */
     static void endWrite();
 
+    /** Stream operator into an internal QTextStream */
     template <typename T>
     NetworkLogger& operator << (const T& stuff)
     {

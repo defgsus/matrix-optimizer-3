@@ -130,6 +130,35 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
         auto lh = new QHBoxLayout();
         lv->addLayout(lh);
 
+            label = new QLabel(tr("client index"), w);
+            label->setAlignment(Qt::AlignRight);
+            lh->addWidget(label);
+
+            auto sb = new SpinBox(w);
+            lh->addWidget(sb);
+            sb->setMinimum(0);
+            sb->setValue(inf.index);
+            connect(sb, &SpinBox::valueChanged, [=](int val)
+            {
+                server_->setClientIndex(index, val);
+            });
+
+            label = new QLabel(tr("output screen"), w);
+            label->setAlignment(Qt::AlignRight);
+            lh->addWidget(label);
+
+            sb = new SpinBox(w);
+            lh->addWidget(sb);
+            sb->setRange(0, inf.sysinfo.numScreens() - 1);
+            sb->setValue(inf.state.desktop());
+            connect(sb, &SpinBox::valueChanged, [=](int val)
+            {
+                server_->setDesktopIndex(index, val);
+            });
+
+        lh = new QHBoxLayout();
+        lv->addLayout(lh);
+
             auto cb = new QCheckBox(tr("show info window"), w);
             lh->addWidget(cb);
             cb->setChecked(inf.state.isInfoWindow());
@@ -149,21 +178,6 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
             auto but = new QPushButton(tr("send scene"), w);
             lh->addWidget(but);
             connect(but, SIGNAL(clicked()), this, SIGNAL(sendScene()));
-
-        lh = new QHBoxLayout();
-        lv->addLayout(lh);
-
-            label = new QLabel(tr("output screen"), w);
-            lh->addWidget(label);
-
-            auto sb = new SpinBox(w);
-            lh->addWidget(sb);
-            sb->setRange(0, inf.sysinfo.numScreens() - 1);
-            sb->setValue(inf.state.desktop());
-            connect(sb, &SpinBox::valueChanged, [=](int val)
-            {
-                server_->setDesktopIndex(index, val);
-            });
 
     return w;
 }
