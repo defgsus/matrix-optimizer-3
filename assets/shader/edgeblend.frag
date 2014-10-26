@@ -162,11 +162,11 @@ float white_mh(in vec2 slice)
 //                : 0.0;
         float rest_in_1     = ((edged <= u_margin) && (oedged <= u_margin) && (oedged >= edged) &&
                                (oedged > 0.0) && (u_index < i))
-                ? clamp(intersection_color * (edged / u_margin) + (1.0-oedged / u_margin), 0.0, 1.0)
+                ? clamp(intersection_color * (edged / u_margin), 0.0, 1.0)
                 : 0.0;
         float rest_in_2     = ((edged <= u_margin) && (oedged <= u_margin) && (oedged <= edged) &&
                                (oedged > 0.0) && (u_index < i))
-                ? clamp(1.0-intersection_color * (oedged / u_margin), 0.0, 1.0)
+                ? clamp(0.0 - intersection_color * ( oedged / u_margin) + (edged / u_margin), 0.0, 1.0)
                 : 0.0;
 //        float rest_out      = ((edged <= u_margin) && (oedged <= u_margin) &&
 //                               (oedged > 0.0) && (u_index > i))
