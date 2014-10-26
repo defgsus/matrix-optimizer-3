@@ -243,7 +243,7 @@ void FileManager::checkReadyOrFinished_()
                 return;
     }
 
-    MO_NETLOG(DEBUG, "FileManager: finished but not all ready ready");
+    MO_NETLOG(DEBUG, "FileManager: finished but not all ready");
 
     emit finished();
 }

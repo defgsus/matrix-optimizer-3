@@ -156,7 +156,7 @@ public:
         /** Tells server to send a NetEventFileInfo for filename (QString) */
         GET_SERVER_FILE_TIME,
         /** Tells server to send a NetEventFile for filename (QString) */
-        GET_SERVER_FILE,
+        GET_SERVER_FILE
     };
 
     static QString requestName(Request);

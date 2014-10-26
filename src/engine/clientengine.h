@@ -86,6 +86,7 @@ private:
     bool loadSceneFile_(const QString& fn);
     void setPlayback_(bool play);
     void setClientIndex_(int index);
+    void setNextScene_();
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
@@ -96,6 +97,8 @@ private:
     Scene * scene_, * nextScene_;
 
     ClientEngineCommandLine * cl_;
+
+    bool isFilesReady_;
 };
 
 } // namespace MO

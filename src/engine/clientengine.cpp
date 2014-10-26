@@ -56,7 +56,8 @@ ClientEngine::ClientEngine(QObject *parent) :
     client_     (0),
     scene_      (0),
     nextScene_  (0),
-    cl_         (new ClientEngineCommandLine(this))
+    cl_         (new ClientEngineCommandLine(this)),
+    isFilesReady_(false)
 {
     MO_NETLOG(CTOR, "ClientEngine::ClientEngine()");
 
@@ -531,6 +532,8 @@ void ClientEngine::onSceneReceived_(Scene * scene)
     // put on stack
     nextScene_ = scene;
 
+    isFilesReady_ = false;
+
     sendState_();
 
     // check for needed files
@@ -549,6 +552,23 @@ void ClientEngine::onSceneReceived_(Scene * scene)
 
 void ClientEngine::onFilesReady_()
 {
+    isFilesReady_ = true;
+
+    setNextScene_();
+}
+
+void ClientEngine::onFilesNotReady_()
+{
+    MO_WARNING("Some files are not ready");
+
+    isFilesReady_ = false;
+
+    // run scene nevertheless
+    setNextScene_();
+}
+
+void ClientEngine::setNextScene_()
+{
     if (!nextScene_)
         return;
 
@@ -563,14 +583,6 @@ void ClientEngine::onFilesReady_()
     sendState_();
 }
 
-void ClientEngine::onFilesNotReady_()
-{
-    MO_WARNING("Some file are not ready");
-
-    // run scene nevertheless
-    onFilesReady_();
-}
-
 void ClientEngine::sendState_()
 {
     NetEventClientState state;
@@ -580,6 +592,7 @@ void ClientEngine::sendState_()
     state.state_.isRenderWindow_ = glWindow_ && glWindow_->isVisible();
     state.state_.isSceneReady_ = scene_ && !nextScene_;
     state.state_.isPlayback_ = scene_ && scene_->isPlayback();
+    state.state_.isFilesReady_ = isFilesReady_;
 
     client_->sendEvent(state);
 }

@@ -127,11 +127,12 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
     auto lv = new QVBoxLayout(w);
 
         auto label = new QLabel(tr("Client %1 (desktop %2)\n"
-                                   "info win %3, render win %4, ready %5, playing %6")
+                                   "info win %3, render win %4, files ready %5, scene ready %6, playing %7")
                                 .arg(inf.index)
                                 .arg(inf.state.desktop())
                                 .arg(inf.state.isInfoWindow() ? tr("yes") : tr("no"))
                                 .arg(inf.state.isRenderWindow() ? tr("yes") : tr("no"))
+                                .arg(inf.state.isFilesReady() ? tr("yes") : tr("no"))
                                 .arg(inf.state.isSceneReady() ? tr("yes") : tr("no"))
                                 .arg(inf.state.isPlayback() ? tr("yes") : tr("no"))
                                 , w);

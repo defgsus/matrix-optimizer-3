@@ -34,12 +34,17 @@ public:
     bool isInfoWindow() const { return isInfoWindow_; }
     bool isRenderWindow() const { return isRenderWindow_; }
     bool isSceneReady() const { return isSceneReady_; }
+    bool isFilesReady() const { return isFilesReady_; }
 
 private:
 
     friend class ClientEngine;
 
-    bool isPlayback_, isInfoWindow_, isRenderWindow_, isSceneReady_;
+    bool isPlayback_,
+         isInfoWindow_,
+         isRenderWindow_,
+         isSceneReady_,
+         isFilesReady_;
     int index_, desktop_;
 };
 
