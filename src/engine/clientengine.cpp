@@ -59,6 +59,9 @@ ClientEngine::ClientEngine(QObject *parent) :
     cl_         (new ClientEngineCommandLine(this))
 {
     MO_NETLOG(CTOR, "ClientEngine::ClientEngine()");
+
+    connect(&NetworkLogger::instance(), SIGNAL(textAdded(int, QString)),
+            this, SLOT(onNetLog_(int, QString)));
 }
 
 ClientEngine::~ClientEngine()
@@ -180,6 +183,20 @@ void ClientEngine::startNetwork_()
             this, SLOT(onFilesNotReady_()));
 }
 
+void ClientEngine::onNetLog_(int level, const QString &text)
+{
+    if (!isRunning())
+        return;
+
+    // send special log levels back to server
+    if (level & (NetworkLogger::APP_WARNING |
+                 NetworkLogger::APP_ERROR))
+    {
+        auto e = new NetEventLog();
+        e->setMessage((NetworkLogger::Level)level, text);
+        sendEvent(e);
+    }
+}
 
 void ClientEngine::showInfoWindow_(bool enable)
 {

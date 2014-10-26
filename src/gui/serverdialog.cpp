@@ -46,6 +46,8 @@ ServerDialog::ServerDialog(QWidget *parent) :
             this, SLOT(onClientsChanged_()));
     connect(server_, SIGNAL(clientStateChanged(int)),
             this, SLOT(updateClientWidgets_()));
+    connect(server_, SIGNAL(clientMessage(ClientInfo,int,QString)),
+            this, SLOT(onClientMessage_(ClientInfo,int,QString)));
 }
 
 ServerDialog::~ServerDialog()
@@ -77,8 +79,9 @@ void ServerDialog::createWidgets_()
 
         // --- log ---
 
-        auto logger = new NetLogWidget(this);
-        lv->addWidget(logger);
+        // connects itself to NetworkLogger
+        logger_ = new NetLogWidget(this);
+        lv->addWidget(logger_);
 }
 
 void ServerDialog::onClientsChanged_()
@@ -87,6 +90,13 @@ void ServerDialog::onClientsChanged_()
              << server_->numClients());
 
     updateClientWidgets_();
+}
+
+void ServerDialog::onClientMessage_(const ClientInfo & c, int level, const QString & msg)
+{
+    logger_->addLine(level, QString("Client[%1]: %2")
+                     .arg(c.index)
+                     .arg(msg));
 }
 
 void ServerDialog::updateClientWidgets_()

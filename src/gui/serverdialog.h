@@ -22,6 +22,7 @@ class QLabel;
 namespace MO {
 namespace GUI {
 
+class NetLogWidget;
 
 class ServerDialog : public QDialog
 {
@@ -41,6 +42,7 @@ private slots:
 
     void startServer_(bool);
     void onClientsChanged_();
+    void onClientMessage_(const ClientInfo&, int level, const QString&);
     void updateClientWidgets_();
 
 private:
@@ -53,6 +55,8 @@ private:
     QLabel * labelNum_;
     QLayout * clientLayout_;
     QList<QWidget*> clientWidgets_;
+
+    NetLogWidget * logger_;
 };
 
 } // namespace GUI

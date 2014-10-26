@@ -99,6 +99,10 @@ signals:
     /** Emitted when a client has send a new ClientState */
     void clientStateChanged(int index);
 
+    /** A Client send a warning or error.
+        @p level is one of NetworkLogger::Level */
+    void clientMessage(const ClientInfo&, int level, const QString& message);
+
 public slots:
 
     // -- per client commands --

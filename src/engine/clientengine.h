@@ -64,6 +64,7 @@ private slots:
     void showInfoWindow_(bool enable);
     void showRenderWindow_(bool enable);
     void renderWindowSizeChanged_(const QSize&);
+    void onNetLog_(int level, const QString& text);
 
     void onSceneReceived_(Scene *);
     void onFilesReady_();
@@ -73,6 +74,7 @@ private slots:
 
     /** Renders the scene if not running */
     void render_();
+
 
 private:
 

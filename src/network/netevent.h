@@ -21,6 +21,7 @@
 #include "io/systeminfo.h"
 #include "clientstate.h"
 #include "types/float.h"
+#include "network/netlog.h"
 
 class QIODevice;
 class QAbstractSocket;
@@ -179,6 +180,31 @@ private:
     Request request_;
     QVariant data_;
 };
+
+
+/** Logging event */
+class NetEventLog : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventLog)
+
+    // --------- getter -------------------
+
+    NetworkLogger::Level level() const { return level_; }
+    const QString& message() const { return message_; }
+
+    // --------- setter -------------------
+
+    void setMessage(NetworkLogger::Level level,
+                    const QString& message)
+        { level_ = level; message_ = message; }
+
+private:
+
+    NetworkLogger::Level level_;
+    QString message_;
+};
+
 
 
 /** General info event - typically an answer to NetEventRequest */

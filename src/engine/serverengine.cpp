@@ -264,6 +264,12 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
         return;
     }
 
+    if (NetEventLog * log = netevent_cast<NetEventLog>(event))
+    {
+        emit clientMessage(client, log->level(), log->message());
+        return;
+    }
+
     if (NetEventClientState * state = netevent_cast<NetEventClientState>(event))
     {
         client.state = state->state();

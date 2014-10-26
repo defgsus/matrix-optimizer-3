@@ -27,9 +27,7 @@ signals:
 
 public slots:
 
-private slots:
-
-    void addLine_(int level, const QString&);
+    void addLine(int level, const QString&);
 
 };
 

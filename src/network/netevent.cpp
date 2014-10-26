@@ -145,6 +145,35 @@ void NetEventRequest::deserialize(IO::DataStream &io)
 
 
 
+
+MO_REGISTER_NETEVENT(NetEventLog)
+
+NetEventLog::NetEventLog()
+{
+}
+
+QString NetEventLog::infoName() const
+{
+    return AbstractNetEvent::infoName();
+}
+
+void NetEventLog::serialize(IO::DataStream &io) const
+{
+    io << (qint64)level_ << message_;
+}
+
+void NetEventLog::deserialize(IO::DataStream &io)
+{
+    qint64 l;
+    io >> l >> message_;
+    level_ = (NetworkLogger::Level)l;
+}
+
+
+
+
+
+
 MO_REGISTER_NETEVENT(NetEventInfo)
 
 NetEventInfo::NetEventInfo()

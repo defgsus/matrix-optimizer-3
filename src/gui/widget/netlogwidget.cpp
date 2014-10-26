@@ -21,10 +21,10 @@ NetLogWidget::NetLogWidget(QWidget *parent) :
     setReadOnly(true);
 
     connect(&NetworkLogger::instance(), SIGNAL(textAdded(int,QString)),
-            this, SLOT(addLine_(int,QString)));
+            this, SLOT(addLine(int,QString)));
 }
 
-void NetLogWidget::addLine_(int level, const QString & text)
+void NetLogWidget::addLine(int level, const QString & text)
 {
     QString s = "<font color=\"";
 
