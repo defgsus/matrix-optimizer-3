@@ -8,6 +8,8 @@
     <p>created 9/21/2014</p>
 */
 
+//#include <QDebug>
+
 #include <QMap>
 #include <QFileInfo>
 #include <QDateTime>
@@ -150,6 +152,10 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
     {
         MO_NETLOG(DEBUG, "ClientFiles: updating cache for '" << e->filename() << "'");
 
+//        const QString datetime_format = "yyyy.MM.dd-hh:mm:ss.zzz";
+//        qDebug() << "----------------" << e->time().toString();
+//        qDebug() << "----------++++++" << e->time().toString(datetime_format);
+
         it.value().serverTime = e->time();
         it.value().serverPresent = e->isPresent();
         it.value().timeUpdated = true;
@@ -160,10 +166,12 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
         if (it.value().clientTime < it.value().serverTime)
             p_->requestFile(it.value().serverFilename);
         else
+        {
+            MO_NETLOG(DEBUG, "ClientFiles: file is UP-TO-DATE '" << e->filename() << "'");
             // done?
             if (p_->checkAllReady())
                 emit allFilesReady();
-
+        }
         return;
     }
 
@@ -212,9 +220,13 @@ void ClientFiles::receiveFile(NetEventFile * e)
 
     f->clientTime = f->serverTime;
     f->timeUpdated = true;
-    f->clientPresent = e->saveFile(f->clientFilename);
+    f->clientPresent = f->serverPresent && e->saveFile(f->clientFilename);
 
     saveCache();
+
+    if (!f->clientPresent)
+        emit fileNotReady(f->serverFilename);
+    else
 
     // done?
     if (p_->checkAllReady())

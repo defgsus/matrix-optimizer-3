@@ -305,6 +305,12 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             return;
         }
 
+        if (e->request() == NetEventRequest::GET_CLIENT_STATE)
+        {
+            sendState_();
+            return;
+        }
+
         if (e->request() == NetEventRequest::SET_CLIENT_INDEX)
         {
             MO_NETLOG(EVENT, "setting client index to " << e->data().toInt());

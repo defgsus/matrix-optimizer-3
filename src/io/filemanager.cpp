@@ -132,7 +132,8 @@ void FileManager::acquireFiles()
             // suppose resource-files are always present
             if (f.filename.startsWith(":"))
             {
-                f.present = true;
+                f.present =
+                f.queried = true;
 #ifdef MO_CLIENT
                 onFileReady_(f.filename, f.filename);
 #endif
@@ -164,6 +165,10 @@ void FileManager::acquireFiles()
 
     if (allpresent)
         emit filesReady();
+#ifdef MO_CLIENT
+    else
+        checkReadyOrFinished_();
+#endif
 
 #ifndef MO_CLIENT
     // XXX not used either
@@ -223,7 +228,7 @@ void FileManager::checkReadyOrFinished_()
 
     if (ready == p_->files.size())
     {
-        MO_NETLOG(DEBUG, "FileManager::filesReady()");
+        MO_NETLOG(DEBUG, "FileManager: all files ready");
         emit filesReady();
         return;
     }
@@ -234,9 +239,11 @@ void FileManager::checkReadyOrFinished_()
         if (!f.queried)
             return;
         else
-            if (!f.error)
+            if (!f.error && !f.present)
                 return;
     }
+
+    MO_NETLOG(DEBUG, "FileManager: finished but not all ready ready");
 
     emit finished();
 }
