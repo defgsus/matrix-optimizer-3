@@ -75,7 +75,7 @@ ClientEngine::~ClientEngine()
 
 bool ClientEngine::isRunning() const
 {
-    return client_->isRunning();
+    return client_ && client_->isRunning();
 }
 
 int ClientEngine::run(int argc, char ** argv)
