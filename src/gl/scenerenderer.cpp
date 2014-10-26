@@ -80,6 +80,7 @@ void SceneRenderer::createContext(QSurface * surface)
     surface_ = surface;
     context_ = new MO::GL::Context(this);
 
+    context_->setSurface(surface);
     context_->qcontext()->setFormat(surface_->format());
 
     if (!context_->qcontext()->create())
@@ -104,7 +105,7 @@ void SceneRenderer::updateSceneGlContext_()
 
 void SceneRenderer::render()
 {
-    if (!context_ || !scene_)
+    if (!context_ || !scene_ || scene_->isShutDown())
         return;
 
 //    MO_ASSERT(context_, "no context to render");

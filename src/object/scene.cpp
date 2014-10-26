@@ -59,6 +59,7 @@ Scene::Scene(QObject *parent) :
     fbSizeRequest_      (fbSize_),
     fbFormatRequest_    (fbFormat_),
     doMatchOutputResolution_(false),
+    isShutDown_         (false),
     fboFinal_           (0),
     debugRenderOptions_ (0),
     freeCameraIndex_    (-1),
@@ -1180,12 +1181,22 @@ void Scene::kill()
 {
     stop();
 
+    if (!glContext_)
+        return;
+
     // release opengl resources later in their thread
-    // for (uint i=0; i<numberThreads(); ++i)
     for (uint i=0; i<releaseAllGlRequested_.size(); ++i)
         releaseAllGlRequested_[i] = true;
 
+#if 1
+    // kill now (The calling thread must be GUI thread!)
+    glContext_->makeCurrent();
+    renderScene(0, MO_GFX_THREAD);
+    isShutDown_ = true;
+#else
+    // move to later (Window must repaint!)
     render_();
+#endif
 }
 
 void Scene::setSceneTime(Double time, bool send_signal)

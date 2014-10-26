@@ -297,6 +297,8 @@ public slots:
 
     // ------------- open gl -------------------
 
+    bool isShutDown() const { return isShutDown_; }
+
     /** Returns currently set opengl context of all objects in scene. */
     GL::Context * glContext() const { return glContext_; }
 
@@ -453,7 +455,8 @@ private:
     QSize fbSizeRequest_;
     uint fbFormatRequest_;
 
-    bool doMatchOutputResolution_;
+    bool doMatchOutputResolution_,
+         isShutDown_;
 
     std::vector<GL::FrameBufferObject *> fboFinal_;
     std::vector<GL::ScreenQuad *> screenQuad_;

@@ -15,6 +15,7 @@
 #include <QSize>
 
 class QOpenGLContext;
+class QSurface;
 
 namespace MO {
 namespace GL {
@@ -30,13 +31,17 @@ public:
 
     const QSize& size() const { return size_; }
     void setSize(const QSize& size) { size_ = size; }
+    void setSurface(QSurface* s) { surface_ = s; }
 
     bool isValid() const;
+
+    bool makeCurrent();
 
 private:
 
     QSize size_;
     QOpenGLContext * qcontext_;
+    QSurface * surface_;
 };
 
 
