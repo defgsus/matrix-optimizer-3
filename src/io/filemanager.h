@@ -51,8 +51,15 @@ public:
     void addFilenames(const FileList&);
 
     /** Starts looking for files.
-        On clients, the files will be transferred if needed. */
+        On clients, the files will be transferred if needed.
+        For both clients and servers, if all files are found
+        the filesReady() signal will be emitted. If a file is
+        not found the fileNotReady() signal is emitted and
+        after all files have been checked the finished() signal. */
     void acquireFiles();
+
+    void clearSearchPaths();
+    void addSearchPath(const QString& path);
 
 signals:
 

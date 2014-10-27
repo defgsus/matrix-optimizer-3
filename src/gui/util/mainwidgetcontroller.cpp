@@ -30,6 +30,7 @@
 #include "io/application.h"
 #include "io/memory.h"
 #include "io/version.h"
+#include "io/filemanager.h"
 #include "gui/timeline1dview.h"
 #include "gui/timeline1drulerview.h"
 #include "gui/ruler.h"
@@ -638,6 +639,16 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
         *sceneSettings_ = *set;
         objectTreeModel_->setSceneSettings(sceneSettings_);
     }
+
+    // check for local filenames
+
+    IO::FileList files;
+    scene_->getNeededFiles(files);
+
+    IO::fileManager().clear();
+    IO::fileManager().addFilenames(files);
+    IO::fileManager().acquireFiles();
+    IO::fileManager().dumpStatus();
 
     MO_ASSERT(glManager_ && glWindow_, "");
 

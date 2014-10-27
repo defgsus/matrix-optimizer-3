@@ -10,6 +10,7 @@
 
 #include <QMap>
 #include <QFileInfo>
+#include <QDir>
 
 #include "filemanager.h"
 #include "application.h"
@@ -50,6 +51,12 @@ public:
     };
 
     QMap<QString, File> files;
+
+    QStringList searchPaths;
+
+    /** Tries to locate f in local search paths.
+        Sets present and localFilename fields. */
+    void checkSearchPaths(File& f);
 };
 
 
@@ -57,6 +64,8 @@ FileManager::FileManager(QObject *parent)
     : QObject   (parent),
       p_        (new Private())
 {
+    addSearchPath(".");
+
 #ifdef MO_CLIENT
     connect(&clientFiles(), SIGNAL(fileReady(QString,QString)),
             this, SLOT(onFileReady_(QString,QString)));
@@ -75,21 +84,41 @@ QString FileManager::localFilename(const QString &filename)
     if (filename.startsWith(":"))
         return filename;
 
-#ifndef MO_CLIENT
-    return filename;
-#else
-
     // XXX
     auto it = p_->files.find(filename);
     if (it == p_->files.end())
     {
-        MO_WARNING("FileManager::localFilename() request of unknown file " << filename);
+#ifdef MO_CLIENT
+        MO_WARNING("FileManager::localFilename() request of previously unknown file " << filename);
         return filename;
+#else
+        // XXX more like a hack
+        // on desktops/servers this will
+        // look in searchpaths for the unknown files
+        // which helps to load waves in sequences
+        // unfortunately they are tried to load
+        // on scene object construction...
+
+        // create entry
+        Private::File f;
+        //f.type = XXX unknown here;
+        f.filename = f.localFilename = filename;
+        f.queried = true;
+        f.error = false;
+        QFileInfo inf(f.filename);
+        f.present = inf.exists();
+        if (!f.present)
+            // look in local search paths
+            p_->checkSearchPaths(f);
+
+        p_->files.insert(filename, f);
+
+        return f.localFilename;
+#endif
     }
 
     return it.value().localFilename;
 
-#endif
 }
 
 
@@ -127,7 +156,7 @@ void FileManager::acquireFiles()
 
     for (Private::File & f : p_->files)
     {
-        if (!f.present)
+        if (!f.present) // XXX should be f.querried but not tested for client
         {
             // suppose resource-files are always present
             if (f.filename.startsWith(":"))
@@ -142,11 +171,16 @@ void FileManager::acquireFiles()
 
 #ifndef MO_CLIENT
 
-            // XXX currently not really used
-
+            // check existence
             QFileInfo inf(f.filename);
+            f.queried = true;
             f.present = inf.exists();
             f.localFilename = f.filename;
+            if (!f.present)
+                // look in local search paths
+                p_->checkSearchPaths(f);
+
+            // emit file error
             if (!f.present)
             {
                 f.error = true;
@@ -171,7 +205,7 @@ void FileManager::acquireFiles()
 #endif
 
 #ifndef MO_CLIENT
-    // XXX not used either
+    // XXX currently not used
     if (!allpresent)
         emit finished();
 #endif
@@ -255,8 +289,8 @@ void FileManager::dumpStatus() const
 {
     for (const Private::File& f : p_->files)
     {
-        std::cout << (f.present ? "P" : ".")
-                  << (f.queried ? "Q" : ".")
+        std::cout << (f.queried ? "Q" : ".")
+                  << (f.present ? "P" : ".")
                   << (f.error   ? "E" : ".")
                   << " " << f.filename.toStdString()
                   << " (" << f.localFilename.toStdString() << ")"
@@ -265,5 +299,57 @@ void FileManager::dumpStatus() const
 }
 
 
+void FileManager::clearSearchPaths()
+{
+    p_->searchPaths.clear();
+}
+
+
+void FileManager::addSearchPath(const QString &path)
+{
+    p_->searchPaths << path;
+}
+
+void FileManager::Private::checkSearchPaths(File & finf)
+{
+    /* suppose:
+     *  /home/someuser/mo/data/graphic/exciting.png
+     * should match:
+     *  /home/otheruser/app/mo3/data/graphic/exciting.png
+     *
+     * it would be really nice to find the common root
+     * in this case data/
+     * right now, we just assume data/ is it..
+     */
+
+    finf.present = false;
+
+    // check if contains data/
+    int idx = finf.filename.indexOf("data/");
+    if (idx < 0)
+        idx = finf.filename.indexOf("data\\");
+    if (idx < 0)
+        return;
+
+    QString fn = finf.filename.mid(idx);
+
+    for (auto & p : searchPaths)
+    {
+        // see if searchpath + / + data/... is present
+        QFileInfo inf(p + QDir::separator() + fn);
+//        std::cout << "------- " << (p + QDir::separator() + fn) << std::endl;
+        if (inf.exists())
+        {
+//            std::cout << "EXISTS" << std::endl;
+            finf.present = true;
+            finf.localFilename = fn;
+            return;
+        }
+//        std::cout << "EXISTS NOT" << std::endl;
+    }
+}
+
+
 } // namespace IO
 } // namespace MO
+

@@ -27,6 +27,9 @@
 
 <p>To understand the possible transformations, it's important to understand the coordinate system of this software. It is the standard OpenGL coordinate system with <b>+x = left</b>, <b>+y = up</b> and <b>+z = back</b>.</p>
 
+<p>It's also helpful to understand the concept of a <a name="unitvector">unit vector</a>. A <b>direction</b> in space can be expressed with three values, x, y and z respectively. Every transformable object in this software has a position and a direction (or orientation). A direction describes only the direction (as the name suggests) and not a distance or length. So the x,y,z-vector describing the direction generally has a length of 1.0. That makes it a unit vector. Any non-null vector can be transformed into a unit vector by dividing it's components by the length of the vector. This is called normalizing. Generally, at all places in this software where an <b>axis</b> can be entered, the values are normalized to form the unit vector.</p>
+
+
 <p>The different transformation objects are:</p>
 
 <h3>translation</h3>
@@ -53,15 +56,38 @@
 <p>This is no transformation in itself but rather a container for transformations. All children transformations can be mixed in or out with the <b>mix</b> parameter.</p>
 <p>Note that 'mixing' between transformations does not always make sense. It works without problem for scale and position. But mixing into a 180 degree rotation will not rotate the object during the transition, instead it will look like a scale transformation. Think of the mix transformation as only mixing between the <b>result</b> of two transformations.</p>
 
+
+
+
 <a name="soundobjects"></a>
 <h2>Sound objects</h2>
 
-<p>
+<p>Sound objects are currently not part of this package . . .</p>
+
+
 
 
 
 <a name="visibleobjects"></a>
 <h2>Visible objects</h2>
 
-<p>Visible objects generally are drawn in some way into the output graphic buffer. The order in which they are drawn is the order in which they are placed in the object tree, starting at the top.</p>
+<p>Visible objects generally are drawn in some way into the graphic output buffer. The order in which they are drawn is the order in which they are placed in the object tree, starting at the top.</p>
 
+<p>For 3D objects like the <a href="#model3d">model</a>, the order is more important if the object is translucent, that is, if it's color's alpha value is less than 1. See the <a href="opengldrawing.html">OpenGL drawing</a> chapter for more information.</p>
+
+
+<a name="lightsource"></a>
+<h3>Light source</h3>
+<p>
+
+
+<a name="model3d"></a>
+<h3>3D Model</h3>
+
+
+<a name="textureoverlay"></a>
+<h3>Texture overlay</h3>
+
+
+<a name="sprite"></a>
+<h3>Sprite</h3>
