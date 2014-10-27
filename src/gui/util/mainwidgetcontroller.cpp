@@ -31,6 +31,7 @@
 #include "io/memory.h"
 #include "io/version.h"
 #include "io/filemanager.h"
+#include "io/helpexporterhtml.h"
 #include "gui/timeline1dview.h"
 #include "gui/timeline1drulerview.h"
 #include "gui/ruler.h"
@@ -601,6 +602,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             HelpDialog diag;
             diag.exec();
         });
+
+        a = new QAction(tr("Export help (html)"), m);
+        m->addAction(a);
+        connect(a, SIGNAL(triggered()), this, SLOT(exportHelpHtml_()));
 
         a = new QAction(tr("About Qt"), m);
         m->addAction(a);
@@ -1553,7 +1558,24 @@ void MainWidgetController::onOutputSizeChanged_(const QSize & size)
         scene_->setResolution(outputSize_);
 }
 
+void MainWidgetController::exportHelpHtml_()
+{
+    QString fn = IO::Files::getOpenDirectory(IO::FT_HELP_EXPORT);
+    if (fn.isEmpty())
+        return;
 
+    HelpExporterHtml exp;
+    try
+    {
+        exp.save(fn);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("Help export"),
+                              tr("Failed to export html help to '%1'\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+}
 
 
 

@@ -128,6 +128,7 @@ private slots:
     void dumpIdNames_();
     void dumpNeededFiles_();
     void exportPovray_();
+    void exportHelpHtml_();
 
     void showClipView_(bool enable, Object * = 0);
     void showSequence_(bool enable, Sequence * = 0);

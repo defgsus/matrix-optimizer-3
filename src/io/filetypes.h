@@ -30,7 +30,8 @@ namespace IO {
         FT_SOUND_FILE,
         FT_PROJECTION_SETTINGS,
         FT_POVRAY,
-        FT_EQUATION_PRESET
+        FT_EQUATION_PRESET,
+        FT_HELP_EXPORT
     };
 
     extern const QStringList fileTypeIds;
