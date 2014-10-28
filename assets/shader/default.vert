@@ -9,6 +9,7 @@ const float PI = 3.14159265358979;
  * MO_ENABLE_TEXTURE
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
+ * MO_ENABLE_VERTEX_EFFECTS
  */
 
 //#define MO_FULLDOME_BEND
@@ -32,6 +33,10 @@ uniform mat4 u_transform;                   // transformation only
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
     uniform vec4 u_light_direction[MO_NUM_LIGHTS];
     uniform float u_light_dirmix[MO_NUM_LIGHTS];
+#endif
+
+#ifdef MO_ENABLE_VERTEX_EFFECTS
+    uniform float u_vertex_extrude;
 #endif
 
 // --- output of vertex shader ---
@@ -119,6 +124,10 @@ vec4 mo_pos_to_fulldome_scr(in vec3 pos)
 
 vec4 mo_ftransform(in vec4 pos)
 {
+#ifdef MO_ENABLE_VERTEX_EFFECTS
+    pos.xyz += u_vertex_extrude * a_normal;
+#endif
+
 #ifndef MO_FULLDOME_BEND
     return u_projection * u_cubeViewTransform * pos;
 #else

@@ -77,10 +77,12 @@ private:
         *textureBumpMorph_;
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_,
-        *diffExp_, *bumpScale_;
-    ParameterSelect * lightMode_;
+        *diffExp_, *bumpScale_,
+        *vertexExtrude_;
+    ParameterSelect * lightMode_, *vertexFx_;
 
-    GL::Uniform * u_diff_exp_, * u_bump_scale_;
+    GL::Uniform * u_diff_exp_, * u_bump_scale_,
+                * u_vertex_extrude_;
 
     bool doRecompile_;
 };

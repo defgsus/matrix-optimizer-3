@@ -72,6 +72,7 @@ uniform vec4 u_color;
     uniform float u_post_alpha_edge;
 #endif
 
+
 // texture transform and morph
     uniform vec4 u_tex_transform; // x,y, scalex, scaley
     uniform vec3 u_tex_morphx;    // amp, freq, phase [0,2pi]

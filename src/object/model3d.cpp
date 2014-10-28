@@ -39,6 +39,7 @@ Model3d::Model3d(QObject * parent)
       textureBumpMorph_(new TextureMorphSetting(this)),
       u_diff_exp_   (0),
       u_bump_scale_ (0),
+      u_vertex_extrude_(0),
       doRecompile_  (false)
 {
     setName("Model3D");
@@ -144,6 +145,21 @@ void Model3d::createParameters()
         textureBumpMorph_->createParameters("bump");
 
     endParameterGroup();
+
+    beginParameterGroup("vertexfx", tr("vertex effects"));
+
+        vertexFx_ = createBooleanParameter("vertexfx", tr("enable effects"),
+                                           tr("Enables realtime vertex processing effects"),
+                                           tr("Vertex effects disabled"),
+                                           tr("Vertex effects enabled"),
+                                           false,
+                                           true, false);
+
+        vertexExtrude_ = createFloatParameter("vertexextrude", tr("extrusion"),
+                                              tr("All vertex positions of the model are moved along their "
+                                                 "normals by this amount"),
+                                              0.0, 0.05);
+    endParameterGroup();
 }
 
 void Model3d::onParameterChanged(Parameter *p)
@@ -151,6 +167,7 @@ void Model3d::onParameterChanged(Parameter *p)
     ObjectGl::onParameterChanged(p);
 
     if (p == lightMode_
+            || p == vertexFx_
             || texturePostProc_->needsRecompile(p)
             || textureMorph_->needsRecompile(p)
             || textureBumpMorph_->needsRecompile(p))
@@ -171,6 +188,9 @@ void Model3d::updateParameterVisibility()
     textureBumpMorph_->updateParameterVisibility();
 
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
+
+    bool vertfx = vertexFx_->baseValue();
+    vertexExtrude_->setVisible(vertfx);
 }
 
 void Model3d::getNeededFiles(IO::FileList &files)
@@ -282,6 +302,8 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_ENABLE_NORMALMAP_TRANSFORMATION");
     if (textureBumpMorph_->isSineMorphEnabled())
         src->addDefine("#define MO_ENABLE_NORMALMAP_SINE_MORPH");
+    if (vertexFx_->baseValue())
+        src->addDefine("#define MO_ENABLE_VERTEX_EFFECTS");
 
     draw_->setShaderSource(src);
 
@@ -289,6 +311,9 @@ void Model3d::setupDrawable_()
 
     // get uniforms
     u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());
+
+    const bool isvertfx = vertexFx_->baseValue();
+    u_vertex_extrude_ = draw_->shader()->getUniform("u_vertex_extrude", isvertfx);
 
     if (texture_->isEnabled())
     {
@@ -344,6 +369,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
             u_diff_exp_->floats[0] = diffExp_->value(time, thread);
         if (u_bump_scale_)
             u_bump_scale_->floats[0] = bumpScale_->value(time, thread);
+        if (u_vertex_extrude_)
+            u_vertex_extrude_->floats[0] = vertexExtrude_->value(time, thread);
 
         if (texture_->isEnabled())
         {
