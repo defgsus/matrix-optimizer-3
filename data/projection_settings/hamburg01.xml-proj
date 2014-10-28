@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<mo-projection-system>
+    <blending method="0" margin="0.22"/>
+    <dome version="1" name="Hamburg (as i imagine it)" radius="10" coverage="180" tiltX="0" tiltZ="0"/>
+    <projector version="2" id="0" name="projector 1" width="2048" height="1080" fov="29" lens_radius="1e-05" latitude="0" longitude="0" distance="0" pitch="14.7" yaw="25.4" roll="6.5"/>
+    <projector version="2" id="1" name="projector 2" width="2048" height="1080" fov="29" lens_radius="1e-05" latitude="0" longitude="0" distance="0" pitch="14.7" yaw="-25.4" roll="-6.2"/>
+    <projector version="2" id="2" name="projector 3" width="1920" height="1080" fov="19" lens_radius="1e-05" latitude="0" longitude="0" distance="0" pitch="33.4" yaw="20" roll="0"/>
+    <projector version="2" id="3" name="projector 4" width="1920" height="1080" fov="18" lens_radius="1e-05" latitude="0" longitude="0" distance="0" pitch="33.4" yaw="-20" roll="0"/>
+    <camera version="1" width="2048" height="1080" fov="78.6" x="0" y="0" z="0" pitch="29.7" yaw="54.3" roll="6.2" znear="0.01" zfar="10000"/>
+    <camera version="1" width="2048" height="1080" fov="79.1" x="0" y="0" z="0" pitch="28.4" yaw="-54.6" roll="-6.2" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="67.4" x="0" y="0" z="0" pitch="65.4" yaw="60.2" roll="20.6" znear="0.01" zfar="10000"/>
+    <camera version="1" width="1920" height="1080" fov="67.5" x="0" y="0" z="0" pitch="65.4" yaw="-60" roll="-20.6" znear="0.01" zfar="10000"/>
+</mo-projection-system>
