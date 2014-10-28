@@ -14,10 +14,8 @@
 #include "io/log.h"
 #include "object/scene.h"
 #include "math/timeline1d.h"
-#ifndef MO_CLIENT
-#   include "gui/timelineeditdialog.h"
-#   include "gui/timeline1dview.h"
-#endif
+#include "gui/timelineeditdialog.h"
+#include "gui/timeline1dview.h"
 
 // make ParameterTimeline1D useable in QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(MO::ParameterTimeline1D*);
@@ -126,7 +124,6 @@ void ParameterTimeline1D::reset()
 
 
 
-#ifndef MO_CLIENT
 bool ParameterTimeline1D::openEditDialog(QWidget *parent)
 {
     MO_ASSERT(object(), "no object for ParameterTimeline1D::openFileDialog()");
@@ -185,7 +182,6 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
 
     return changed;
 }
-#endif
 
 
 } // namespace MO

@@ -44,7 +44,7 @@ public:
     bool isRunning() const;
 
     /** Runs the complete client event loop */
-    int run(int argc, char ** argv);
+    int run(int argc, char ** argv, int skip);
 
 signals:
 

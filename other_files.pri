@@ -1,6 +1,9 @@
+BISON_FILES = \
+    src/math/funcparser/grammar.y
 
 OTHER_FILES += $$BISON_FILES \
     TODO.txt \
+    src/INSTALL.txt \
     assets/shader/default.vert \
     assets/shader/default.frag \
     assets/model/camera.obj_ \
@@ -20,5 +23,4 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/style.css \
     assets/help/en/equationfunctions.html \
     assets/help/en/sequence.html \
-    src/INSTALL.txt \
     assets/help/en/opengldrawing.html

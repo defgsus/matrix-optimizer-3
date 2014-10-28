@@ -79,13 +79,17 @@ bool ClientEngine::isRunning() const
     return client_ && client_->isRunning();
 }
 
-int ClientEngine::run(int argc, char ** argv)
+int ClientEngine::run(int argc, char ** argv, int skip)
 {
+    // stats
+    settings->setValue("Stats/clientRuns",
+                        settings->value("Stats/clientRuns").toInt() + 1);
+
     // print some info
     MO_PRINT(applicationName());
 
     // parse commandline
-    const auto res = cl_->parse(argc, argv);
+    const auto res = cl_->parse(argc, argv, skip);
 
     if (res == ClientEngineCommandLine::Error)
         return -1;

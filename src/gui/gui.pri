@@ -57,11 +57,7 @@ HEADERS += \
     src/gui/widget/domepreviewwidget.h \
     src/gui/projectorsetupdialog.h \
     src/gui/helpdialog.h \
-    src/io/helpsystem.h \
-    src/tests/testhelpsystem.h \
     src/gui/widget/helptextbrowser.h \
-    src/io/helpexporterhtml.h \
-    src/io/helpexporterlatex.h \
     src/gui/widget/equationdisplaywidget.h \
     src/gui/equationdisplaydialog.h \
     src/gui/networkdialog.h \
@@ -136,13 +132,9 @@ SOURCES += \
     src/gui/widget/domepreviewwidget.cpp \
     src/gui/projectorsetupdialog.cpp \
     src/gui/helpdialog.cpp \
-    src/io/helpsystem.cpp \
-    src/tests/testhelpsystem.cpp \
     src/gui/widget/helptextbrowser.cpp \
     src/gui/widget/equationdisplaywidget.cpp \
     src/gui/equationdisplaydialog.cpp \
-    src/io/helpexporterhtml.cpp \
-    src/io/helpexporterlatex.cpp \
     src/gui/networkdialog.cpp \
     src/gui/midisettingsdialog.cpp \
     src/gui/saveequationdialog.cpp \

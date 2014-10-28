@@ -47,13 +47,10 @@ Object::Object(QObject *parent) :
     paramActiveScope_       (0),
     sampleRate_             (44100),
     sampleRateInv_          (1.0/44100.0),
-#ifndef MO_CLIENT
     parentActivityScope_    (AS_ON),
     currentActivityScope_   (AS_ON)
-#else
-    parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY)),
-    currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
-#endif
+//    parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY)),
+//    currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
 {
     // tie into Object hierarchy
     // NOTE: Has not been tested yet, and is actually never used
@@ -469,9 +466,7 @@ void Object::setCurrentActivityScope(ActivityScope scope)
 {
     currentActivityScope_ = scope;
 
-#ifdef MO_CLIENT
-    currentActivityScope_ = ActivityScope(currentActivityScope_ | AS_CLIENT_ONLY);
-#endif
+    // currentActivityScope_ = ActivityScope(currentActivityScope_ | AS_CLIENT_ONLY);
 
     for (auto o : childObjects_)
         o->setCurrentActivityScope(scope);

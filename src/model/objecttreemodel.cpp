@@ -23,10 +23,8 @@
 #include "object/scene.h"
 #include "object/clipcontainer.h"
 #include "object/clip.h"
-#ifndef MO_CLIENT
 #include "gui/keepmodulatordialog.h"
 #include "gui/util/scenesettings.h"
-#endif
 
 namespace MO {
 
@@ -440,45 +438,54 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                     return false;
                 }
 
-#ifndef MO_CLIENT
                 // keep track of modulators
                 KeepModulators keepmods(scene_);
                 bool reusemod = true;
-                // .. but not for tracks on sequences
-                if (copy->isSequence() && obj->isTrack())
-                    reusemod = false;
 
-                if (reusemod)
-                    keepmods.addOriginalObject(copy);
-#endif
+                if (!isClient())
+                {
+                    // .. but not for tracks on sequences
+                    if (copy->isSequence() && obj->isTrack())
+                        reusemod = false;
+
+                    if (reusemod)
+                        keepmods.addOriginalObject(copy);
+                }
 
                 // insert it
                 beginInsertRows(parent, row, row);
                 scene_->addObject(obj, copy, row);
-#ifndef MO_CLIENT
-                // copy gui settings
-                if (sceneSettings_ && copy->originalIdName() != copy->idName())
-                    sceneSettings_->copySettings(copy->idName(), copy->originalIdName());
-#endif
+
+                if (!isClient())
+                {
+                    // copy gui settings
+                    if (sceneSettings_ && copy->originalIdName() != copy->idName())
+                        sceneSettings_->copySettings(copy->idName(), copy->originalIdName());
+                }
+
                 endInsertRows();
 
-#ifndef MO_CLIENT
-                if (reusemod)
-                    keepmods.addNewObject(copy);
-#endif
+                if (!isClient())
+                {
+                    if (reusemod)
+                        keepmods.addNewObject(copy);
+                }
+
                 lastDropIndex_ = createIndex(row, 0, copy);
 
 
                 emit sceneChanged();
 
-#ifndef MO_CLIENT
-                // check for modulator reuse
-                if (keepmods.modulatorsPresent())
+                if (!isClient())
                 {
-                    GUI::KeepModulatorDialog diag(keepmods);
-                    diag.exec();
+                    // check for modulator reuse
+                    if (keepmods.modulatorsPresent())
+                    {
+                        GUI::KeepModulatorDialog diag(keepmods);
+                        diag.exec();
+                    }
                 }
-#endif
+
                 return true;
             }
             MO_WARNING("Could not deserialize object tree from mime-data");

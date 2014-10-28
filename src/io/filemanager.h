@@ -74,13 +74,15 @@ signals:
 
 private slots:
 
-#ifdef MO_CLIENT
+    // currently only used in client mode
     void onFileReady_(const QString& serverName, const QString& localName);
     void onFileNotReady_(const QString&);
     void checkReadyOrFinished_();
-#endif
 
 private:
+
+    void aquireFilesServer_();
+    void aquireFilesClient_();
 
     class Private;
     Private * p_;

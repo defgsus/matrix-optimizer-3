@@ -3,22 +3,6 @@ RESOURCES += \
     shaders.qrc \
     models.qrc
 
-BISON_FILES = \
-    src/math/funcparser/grammar.y
-
-OTHER_FILES += $$BISON_FILES \
-    TODO.txt \
-    assets/shader/default.vert \
-    assets/shader/default.frag \
-    assets/shader/framebufferdraw.vert \
-    assets/shader/framebufferdraw.frag \
-    assets/shader/framebuffercamera.vert \
-    assets/shader/framebuffercamera.frag \
-    assets/shader/test.vert \
-    assets/shader/test.frag \
-    assets/shader/textureoverlay.vert \
-    assets/shader/textureoverlay.frag
-
 HEADERS += \
     src/types/vector.h \
     src/math/vector.h \
@@ -187,7 +171,6 @@ HEADERS += \
     src/tool/deleter.h \
     src/network/eventcom.h \
     src/geom/tesselator.h \
-    src/tests/testtesselator.h \
     src/audio/tool/notefreq.h \
     src/object/synthesizer.h \
     src/audio/tool/floatgate.h \
@@ -224,7 +207,12 @@ HEADERS += \
     src/object/util/texturemorphsetting.h \
     src/io/currenttime.h \
     src/network/clientstate.h \
-    src/io/qtextstreamoperators.h
+    src/io/qtextstreamoperators.h \
+    src/io/helpsystem.h \
+    src/io/helpexporterhtml.h \
+    src/io/helpexporterlatex.h \
+    src/io/isclient.h \
+    src/engine/serverengine.h
 
 
 SOURCES += \
@@ -369,7 +357,6 @@ SOURCES += \
     src/io/filemanager.cpp \
     src/network/eventcom.cpp \
     src/geom/tesselator.cpp \
-    src/tests/testtesselator.cpp \
     src/object/synthesizer.cpp \
     src/audio/tool/synth.cpp \
     src/audio/tool/filter24.cpp \
@@ -399,4 +386,10 @@ SOURCES += \
     src/object/util/texturemorphsetting.cpp \
     src/io/currenttime.cpp \
     src/network/clientstate.cpp \
-    src/io/qtextstreamoperators.cpp
+    src/io/qtextstreamoperators.cpp \
+    src/io/helpsystem.cpp \
+    src/io/helpexporterhtml.cpp \
+    src/io/helpexporterlatex.cpp \
+    src/io/isclient.cpp \
+    src/main.cpp \
+    src/engine/serverengine.cpp

@@ -16,9 +16,7 @@
 #include "object/scene.h"
 #include "modulator.h"
 #include "io/files.h"
-#ifndef MO_CLIENT
-#   include "gui/texteditdialog.h"
-#endif
+#include "gui/texteditdialog.h"
 
 // make ParameterText useable in QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(MO::ParameterText*);
@@ -67,7 +65,6 @@ void ParameterText::setVariableDescriptions(const std::vector<std::string> &desc
         varDescs_ << QString::fromStdString(n);
 }
 
-#ifndef MO_CLIENT
 bool ParameterText::openEditDialog(QWidget *parent)
 {
     MO_ASSERT(object(), "no object for ParameterText::openFileDialog()");
@@ -99,6 +96,6 @@ bool ParameterText::openEditDialog(QWidget *parent)
 
     return oldText != value_;
 }
-#endif
+
 
 } // namespace MO

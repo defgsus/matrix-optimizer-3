@@ -29,9 +29,7 @@ const QString& applicationName()
 {
     static const QString ret =
             "Matrix Optimizer "
-#ifdef MO_CLIENT
-            "Client "
-#endif
+//            "Client "
             + versionString()
 #ifdef MO_HAMBURG
             + " (Planetarium Hamburg)"

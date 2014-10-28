@@ -18,6 +18,12 @@
 #include "io/streamoperators_qt.h"
 #include "io/applicationtime.h"
 #include "io/currentthread.h"
+#include "io/isclient.h"
+// to pass MO_WARNING messages to the server
+#include "network/netlog.h"
+// also include QTextStream << stuff operators
+// for NetworkLogger::operator <<
+#include "io/qtextstreamoperators.h"
 
 #ifndef NDEBUG
 /** Enables MO_ASSERT() */
@@ -29,18 +35,6 @@
 /** *currently* adds a lot of infos to exceptions by means
     of many catch/rethrow on different levels. */
 #define MO_EXTENDED_EXCEPTIONS
-
-
-#ifndef MO_CLIENT
-#   define MO_CLIENT_WARNING_(unused__)
-#else
-// to pass MO_WARNING messages to the server
-#   include "network/netlog.h"
-// also include QTextStream << stuff operators
-// for NetworkLogger::operator <<
-#   include "io/qtextstreamoperators.h"
-#   define MO_CLIENT_WARNING_(text__) MO_NETLOG(APP_ERROR, text__)
-#endif
 
 
 
@@ -173,7 +167,8 @@ public:
 #ifdef MO_ENABLE_WARNING
 #   define MO_WARNING_IMPL_(text__) \
         { std::cerr << "[" << ::MO::applicationTimeString() << "] " << text__ << std::endl; \
-          MO_CLIENT_WARNING_(text__); }
+          if (isClient()) \
+            MO_NETLOG(APP_WARNING, text__); }
 #else
 #   define MO_WARNING_IMPL_(unused__) { }
 #endif

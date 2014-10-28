@@ -35,7 +35,7 @@ public:
 
     /** Processes the commandline.
         Setter for global values in Settings will be executed. */
-    ReturnValue parse(int argc, char ** argv);
+    ReturnValue parse(int argc, char ** argv, int skip);
 
 
     // ------------------- getter after parse ----------------------

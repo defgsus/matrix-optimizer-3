@@ -74,7 +74,7 @@ ClientEngineCommandLine::~ClientEngineCommandLine()
 }
 
 ClientEngineCommandLine::ReturnValue
-    ClientEngineCommandLine::parse(int argc, char **argv)
+    ClientEngineCommandLine::parse(int argc, char **argv, int skip)
 {
 #if (0)
     // compile-time commandline params for debug purposes
@@ -92,7 +92,7 @@ ClientEngineCommandLine::ReturnValue
 #else
 
     // check commandline
-    if (!cl_->parse(argc, argv, 1))
+    if (!cl_->parse(argc, argv, skip))
 #endif
     {
         MO_PRINT(tr("Use -h to get help"));

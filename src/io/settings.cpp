@@ -19,7 +19,7 @@
 #include "projection/projectionsystemsettings.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
-
+#include "io/isclient.h"
 
 #ifdef Q_OS_LINUX
 #   define MO_GEOMETRY_SAVE_HACK
@@ -34,11 +34,9 @@ Settings::Settings(QObject *parent) :
         QSettings::IniFormat,
         QSettings::UserScope,
         "modular-audio-graphics",
-#ifdef MO_CLIENT
-        "matrix-optimizer-3-client",
-#else
-        "matrix-optimizer-3",
-#endif
+        isClient()
+            ? "matrix-optimizer-3-client"
+            : "matrix-optimizer-3",
         parent)
 {
     createDefaultValues_();
@@ -277,7 +275,6 @@ bool Settings::restoreGeometry(QWidget * win)
     return found;
 }
 
-#ifdef MO_CLIENT
 QString Settings::serverAddress()
 {
     return getValue("Client/serverAddress").toString();
@@ -287,8 +284,6 @@ void Settings::setServerAddress(const QString & a)
 {
     setValue("Client/serverAddress", a);
 }
-#endif
-
 
 int Settings::clientIndex()
 {

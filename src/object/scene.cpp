@@ -139,11 +139,6 @@ void Scene::deserialize(IO::DataStream & io)
 
     if (ver >= 2)
         io >> fbSizeRequest_ >> doMatchOutputResolution_;
-
-//#ifdef MO_CLIENT
-    // XXX quick hack
-//    doMatchOutputResolution_ = true;
-//#endif
 }
 
 void Scene::setObjectModel(ObjectTreeModel * model)

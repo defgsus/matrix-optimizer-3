@@ -19,21 +19,17 @@
 
 #include "io/application.h"
 #include "io/error.h"
+#include "io/isclient.h"
 
 // usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
 
-#ifndef MO_CLIENT
-#   define MO_APP_PRINT(text__) \
-        { std::cout << text__ << std::endl; }
-#else
-#   define MO_APP_PRINT(text__)             \
-    {                                       \
-        std::cout << text__ << std::endl;   \
-        MO_NETLOG(ERROR, text__);           \
-    }
-
-#endif
+#define MO_APP_PRINT(text__)            \
+{                                       \
+    std::cout << text__ << std::endl;   \
+    if (isClient)                       \
+        MO_NETLOG(ERROR, text__);       \
+}
 
 namespace MO {
 

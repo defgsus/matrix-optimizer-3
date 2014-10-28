@@ -80,13 +80,11 @@ public:
 
     // --------- gui -----------
 
-#ifndef MO_CLIENT
     /** Opens a modal dialog to edit the timeline.
         Returns true, when a change was made.
         @note The scene MUST be present for this call!
         */
     bool openEditDialog(QWidget * parent = 0);
-#endif
 
 private:
 

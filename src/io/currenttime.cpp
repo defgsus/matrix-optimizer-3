@@ -10,11 +10,10 @@
 
 #include "currenttime.h"
 #include "applicationtime.h"
-
 #include "network/netevent.h"
-#ifndef MO_CLIENT
-#   include "engine/serverengine.h"
-#endif
+#include "engine/serverengine.h"
+#include "io/application.h"
+#include "io/isclient.h"
 
 namespace MO {
 
@@ -29,14 +28,12 @@ void CurrentTime::setTime(Double time)
 {
     startTime_ = applicationTime() - time;
 
-#ifndef MO_CLIENT
-    if (serverEngine().isRunning())
+    if (isClient() && serverEngine().isRunning())
     {
         auto e = new NetEventTime();
         e->setTime(time);
         serverEngine().sendEvent(e);
     }
-#endif
 }
 
 }

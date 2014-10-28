@@ -15,13 +15,10 @@
 #include "filemanager.h"
 #include "application.h"
 #include "io/error.h"
-#ifndef MO_CLIENT
-//#   include "engine/serverengine.h"
-#else
-#   include "engine/clientengine.h"
-#   include "io/clientfiles.h"
-#   include "network/netlog.h"
-#endif
+#include "engine/serverengine.h"
+#include "engine/clientengine.h"
+#include "io/clientfiles.h"
+#include "network/netlog.h"
 
 namespace MO {
 namespace IO {
@@ -66,12 +63,13 @@ FileManager::FileManager(QObject *parent)
 {
     addSearchPath(".");
 
-#ifdef MO_CLIENT
-    connect(&clientFiles(), SIGNAL(fileReady(QString,QString)),
-            this, SLOT(onFileReady_(QString,QString)));
-    connect(&clientFiles(), SIGNAL(fileNotReady(QString)),
-            this, SLOT(onFileNotReady_(QString)));
-#endif
+    if (isClient())
+    {
+        connect(&clientFiles(), SIGNAL(fileReady(QString,QString)),
+                this, SLOT(onFileReady_(QString,QString)));
+        connect(&clientFiles(), SIGNAL(fileNotReady(QString)),
+                this, SLOT(onFileNotReady_(QString)));
+    }
 }
 
 FileManager::~FileManager()
@@ -88,33 +86,36 @@ QString FileManager::localFilename(const QString &filename)
     auto it = p_->files.find(filename);
     if (it == p_->files.end())
     {
-#ifdef MO_CLIENT
-        MO_WARNING("FileManager::localFilename() request of previously unknown file " << filename);
-        return filename;
-#else
-        // XXX more like a hack
-        // on desktops/servers this will
-        // look in searchpaths for the unknown files
-        // which helps to load waves in sequences
-        // unfortunately they are tried to load
-        // on scene object construction...
+        if (isClient())
+        {
+            MO_WARNING("FileManager::localFilename() request of previously unknown file " << filename);
+            return filename;
+        }
+        else
+        {
+            // XXX more like a hack
+            // on desktops/servers this will
+            // look in searchpaths for the unknown files
+            // which helps to load waves in sequences
+            // unfortunately they are tried to load
+            // on scene object construction...
 
-        // create entry
-        Private::File f;
-        //f.type = XXX unknown here;
-        f.filename = f.localFilename = filename;
-        f.queried = true;
-        f.error = false;
-        QFileInfo inf(f.filename);
-        f.present = inf.exists();
-        if (!f.present)
-            // look in local search paths
-            p_->checkSearchPaths(f);
+            // create entry
+            Private::File f;
+            //f.type = XXX unknown here;
+            f.filename = f.localFilename = filename;
+            f.queried = true;
+            f.error = false;
+            QFileInfo inf(f.filename);
+            f.present = inf.exists();
+            if (!f.present)
+                // look in local search paths
+                p_->checkSearchPaths(f);
 
-        p_->files.insert(filename, f);
+            p_->files.insert(filename, f);
 
-        return f.localFilename;
-#endif
+            return f.localFilename;
+        }
     }
 
     return it.value().localFilename;
@@ -152,24 +153,27 @@ void FileManager::addFilename(FileType ft, const QString &filename)
 
 void FileManager::acquireFiles()
 {
+    if (isClient())
+        aquireFilesClient_();
+    else
+        aquireFilesServer_();
+}
+
+void FileManager::aquireFilesServer_()
+{
     bool allpresent = true;
 
     for (Private::File & f : p_->files)
     {
-        if (!f.present) // XXX should be f.querried but not tested for client
+        if (!f.queried)
         {
             // suppose resource-files are always present
             if (f.filename.startsWith(":"))
             {
                 f.present =
                 f.queried = true;
-#ifdef MO_CLIENT
-                onFileReady_(f.filename, f.filename);
-#endif
                 continue;
             }
-
-#ifndef MO_CLIENT
 
             // check existence
             QFileInfo inf(f.filename);
@@ -187,33 +191,47 @@ void FileManager::acquireFiles()
                 emit fileNotReady(f.filename);
                 allpresent = false;
             }
-
-#else // MO_CLIENT
-
-            clientFiles().fetchFile(f.filename);
-            f.queried = true;
-            allpresent = false;
-#endif
         }
     }
 
     if (allpresent)
         emit filesReady();
-#ifdef MO_CLIENT
-    else
-        checkReadyOrFinished_();
-#endif
-
-#ifndef MO_CLIENT
     // XXX currently not used
-    if (!allpresent)
+    else
         emit finished();
-#endif
-
 }
 
 
-#ifdef MO_CLIENT
+void FileManager::aquireFilesClient_()
+{
+    bool allpresent = true;
+
+    for (Private::File & f : p_->files)
+    {
+        if (!f.present) // XXX should be f.querried but not tested for client
+        {
+            // suppose resource-files are always present
+            if (f.filename.startsWith(":"))
+            {
+                f.present =
+                f.queried = true;
+                onFileReady_(f.filename, f.filename);
+                continue;
+            }
+
+            clientFiles().fetchFile(f.filename);
+            f.queried = true;
+            allpresent = false;
+        }
+    }
+
+    if (allpresent)
+        emit filesReady();
+    else
+        checkReadyOrFinished_();
+}
+
+
 
 void FileManager::onFileReady_(const QString &serverName, const QString &localName)
 {
@@ -281,8 +299,6 @@ void FileManager::checkReadyOrFinished_()
 
     emit finished();
 }
-
-#endif
 
 
 void FileManager::dumpStatus() const

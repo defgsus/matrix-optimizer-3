@@ -18,10 +18,12 @@
 #include "io/init.h"
 #include "io/application.h"
 #include "io/settings.h"
+#include "io/isclient.h"
 #include "io/currentthread.h"
 #include "gui/mainwindow.h"
 #include "gui/audiolinkwindow.h"
 #include "gui/splashscreen.h"
+#include "engine/clientengine.h"
 
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
@@ -70,6 +72,15 @@ int main(int argc, char *argv[])
     return 0;
     */
 
+    // get major command switch
+    QString command;
+
+    if (argc > 1)
+        command = argv[1];
+
+    if (command.compare("client", Qt::CaseInsensitive))
+        MO::setThisApplicationToClient();
+
     MO::startOfProgram();
 
     int dummy;
@@ -80,29 +91,49 @@ int main(int argc, char *argv[])
     //{ MO::TestHelpSystem test; return test.run(); }
     //{ MO::TestCommandLineParser test; return test.run(argc, argv, 1); }
 
-#ifdef NDEBUG
-    auto splash = new MO::GUI::SplashScreen();
-    splash->show();
-#endif
 
-    auto mainwin = new MO::GUI::MainWindow;
-    MO::application->setMainWindow(mainwin);
+    // ------ start program ---------
 
-    mainwin->show();
+    int ret;
 
-    //auto audiowin = new MO::GUI::AudioLinkWindow;
-    //audiowin->show();
+    if (MO::isClient())
+    {
+        ret = MO::clientEngine().run(argc, argv, 2);
+    }
+    else
+    {
 
-#ifdef NDEBUG
-    splash->raise();
-#endif
+    #ifdef NDEBUG
+        MO::GUI::SplashScreen * splash = 0;
+        if (1)
+        {
+            splash = new MO::GUI::SplashScreen();
+            splash->show();
+        }
+    #endif
 
-    MO::application->setPaletteFor(mainwin);
+        auto mainwin = new MO::GUI::MainWindow;
+        MO::application->setMainWindow(mainwin);
 
-    //MO::GUI::QObjectInspector oi(&w);
-    //oi.show();
+        mainwin->show();
 
-    int ret = MO::application->exec();
+        //auto audiowin = new MO::GUI::AudioLinkWindow;
+        //audiowin->show();
+
+    #ifdef NDEBUG
+        if (splash)
+            splash->raise();
+    #endif
+
+        MO::application->setPaletteFor(mainwin);
+
+        //MO::GUI::QObjectInspector oi(&w);
+        //oi.show();
+
+        ret = MO::application->exec();
+    }
+
+    // ----- end of program ------
 
     delete MO::application;
 

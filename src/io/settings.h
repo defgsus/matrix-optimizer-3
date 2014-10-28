@@ -52,11 +52,9 @@ public:
     /** Restores the geometry provided the QWidget::objectName() is set */
     bool restoreGeometry(QWidget *);
 
-#ifdef MO_CLIENT
     /** Returns address of the server */
     QString serverAddress();
     void setServerAddress(const QString&);
-#endif
 
     /** Returns the index of the client */
     int clientIndex();

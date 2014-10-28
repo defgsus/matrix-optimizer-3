@@ -16,6 +16,7 @@
 
 namespace MO {
 
+
 class Application : public QApplication
 {
     Q_OBJECT
