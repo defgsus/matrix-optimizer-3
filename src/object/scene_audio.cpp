@@ -339,6 +339,9 @@ void Scene::stop()
 #ifndef MO_DISABLE_AUDIO
         if (isAudioInitialized())
             audioDevice_->stop();
+#else
+        // XXX hack
+        setSceneTime(CurrentTime::time());
 #endif
         emit playbackStopped();
     }

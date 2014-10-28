@@ -130,7 +130,12 @@ void SceneRenderer::render()
 #ifndef MO_DISABLE_AUDIO
     Double time = scene_->sceneTime();
 #else
-    Double time = CurrentTime::time();
+    Double time = scene_->isPlayback()
+            ? CurrentTime::time()
+            : scene_->sceneTime();
+    //scene_->setSceneTime(time);
+    // XXX hack
+    emit scene_->sceneTimeChanged(time);
 #endif
 
     scene_->renderScene(time, MO_GFX_THREAD);
