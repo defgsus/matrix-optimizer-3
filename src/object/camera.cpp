@@ -87,27 +87,32 @@ void Camera::createParameters()
                                         );
     p_cameraAngle_ = createFloatParameter("camangle", tr("field of view"),
                                         tr("Specifies the vertical openening angle in degree"),
-                                        180.f,
-                                        1.f, 360.f, 1.f);
+                                        60.0,
+                                        0.001, 179.999, 1.0);
+
+    p_cameraFdAngle_ = createFloatParameter("camanglefd", tr("field of view"),
+                                        tr("Specifies the fisheye opening angle in degree"),
+                                        180.0,
+                                        1.0, 360.0, 1.0);
 
     p_cameraOrthoScale_ = createFloatParameter("camorthosc", tr("orthographic scale"),
                                         tr("Visible area of the orthographic projection on x,y plane"),
-                                        10.f,
-                                        0.0001f, 1000000.f, 0.1f);
+                                        10.0,
+                                        0.0001, 1000000.0, 0.1);
 
     p_cameraOrthoMix_ = createFloatParameter("camorthomix", tr("orthographic mix"),
                                         tr("Mix between perspective and orthographic projection, range [0,1]"),
-                                        0.f,
-                                        0.0f, 1.f, 0.0125f);
+                                        0.0,
+                                        0.0, 1.0, 0.0125);
 
     p_near_ = createFloatParameter("camnear", tr("near plane"),
                                         tr("Near plane of camera frustum - everything closer can not be drawn"),
-                                        0.001f,
-                                        0.00001f, 100000.f, 0.05f);
+                                        0.001,
+                                        0.00001, 100000.0, 0.05);
     p_far_ = createFloatParameter("camfar", tr("far plane"),
                                         tr("Far plane of camera frustum - everything farther away can not be drawn"),
-                                        1000.f,
-                                        0.00002f, 100000.f, 1.f);
+                                        1000.0,
+                                        0.00002, 100000.0, 1.0);
 
 
     p_width_ = createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
@@ -140,8 +145,8 @@ void Camera::createParameters()
 
         p_cameraMix_ = createFloatParameter("cammix", tr("camera mix"),
                           tr("Defines the volume and visibility of the camera [0,1]"),
-                          1.f,
-                          0.f, 1.f, 0.05f);
+                          1.0,
+                          0.0, 1.0, 0.05);
 
         alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_camout");
 
@@ -185,9 +190,10 @@ void Camera::updateParameterVisibility()
 
     p_cameraOrthoScale_->setVisible( isortho );
     p_cameraOrthoMix_->setVisible( ispersp );
-    p_cameraAngle_->setVisible( !isortho && !isslice );
-    p_width_->setVisible( !iscube );
-    p_height_->setVisible( !iscube );
+    p_cameraAngle_->setVisible( !isortho && !isslice && !iscube);
+    p_cameraFdAngle_->setVisible( iscube );
+    p_width_->setVisible( !iscube && !isslice);
+    p_height_->setVisible( !iscube && !isslice );
     p_cubeRes_->setVisible( iscube );
     p_cameraMix_->setVisible( alphaBlend_.hasAlpha() );
     p_near_->setVisible( !isslice );
@@ -357,7 +363,7 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 
     if (renderMode_ == RM_PERSPECTIVE)
     {
-        const Float angle = std::min((Double)179, p_cameraAngle_->value(time, thread));
+        const Float angle = p_cameraAngle_->value(time, thread);
         cam.setFieldOfView(angle);
 
         const Mat4 mat1 = MATH::perspective(angle, aspectRatio_, near, far);
@@ -491,7 +497,7 @@ void Camera::drawFramebuffer(uint thread, Double time)
     uColor_->floats[3] = p_cameraMix_->value(time, thread);
 
     if (renderMode_ == RM_FULLDOME_CUBE)
-        uAngle_->floats[0] = p_cameraAngle_->value(time, thread);
+        uAngle_->floats[0] = p_cameraFdAngle_->value(time, thread);
 
 
     // -- render camera frame onto current context --

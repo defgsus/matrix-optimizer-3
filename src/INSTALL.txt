@@ -1,3 +1,22 @@
+############### NON-DEV ######################
+
+--- packages for generic debian:
+
+g++
+libportaudio2
+libportmidi0
+
+gstreamer1.0-plugins-base-apps
+
+libltcsmpte1
+
+--- other libraries:
+
+https://github.com/hpicgs/glbinding.git
+
+
+############### DEV ##########################
+
 --- packages for generic debian:
 
 g++
@@ -9,6 +28,8 @@ libportmidi-dev
 
 libgstreamer1.0-dev
 libgstreamer-plugins-base1.0-dev
+
+libltcsmpte-dev
 
 --- other libraries:
 

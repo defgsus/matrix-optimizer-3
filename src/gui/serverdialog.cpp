@@ -72,6 +72,17 @@ void ServerDialog::createWidgets_()
             labelNum_ = new QLabel(this);
             lh->addWidget(labelNum_);
 
+        lh = new QHBoxLayout();
+        lv->addLayout(lh);
+
+            // --- send scene ---
+
+            butSendScene_ = new QPushButton(tr("send current scene"), this);
+            butSendScene_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+            butSendScene_->setEnabled(server_->isRunning());
+            lh->addWidget(butSendScene_);
+            connect(butSendScene_, SIGNAL(clicked()), this, SIGNAL(sendScene()));
+
         // --- clients ---
 
         clientLayout_ = new QVBoxLayout();
@@ -186,10 +197,6 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
                 server_->showRenderWindow(index, s);
             });
 
-            auto but = new QPushButton(tr("send scene"), w);
-            lh->addWidget(but);
-            connect(but, SIGNAL(clicked()), this, SIGNAL(sendScene()));
-
     return w;
 }
 
@@ -203,7 +210,7 @@ void ServerDialog::startServer_(bool run)
     // store as default
     settings->setValue("Server/running", run);
 
-
+    butSendScene_->setEnabled(server_->isRunning());
     //cbRunning_->setChecked(server_->isRunning());
 }
 

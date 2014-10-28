@@ -17,29 +17,34 @@
 #include "helpdialog.h"
 #include "widget/helptextbrowser.h"
 #include "io/application.h"
+#include "io/settings.h"
 
 namespace MO {
 namespace GUI {
 
 
-HelpDialog::HelpDialog(QWidget *parent) :
-    QDialog     (parent)
+HelpDialog::HelpDialog(QWidget *parent)
+    : HelpDialog    ("index", parent)
 {
-    setMinimumSize(640,480);
-
-    createWidgets_();
-
-    browser_->setSource(QUrl("index"));
 }
 
-HelpDialog::HelpDialog(const QString &url, QWidget *parent) :
-    QDialog     (parent)
+HelpDialog::HelpDialog(const QString &url, QWidget *parent)
+    : QDialog       (parent)
 {
+    setObjectName("_HelpDialog");
+
     setMinimumSize(640,480);
+
+    settings->restoreGeometry(this);
 
     createWidgets_();
 
     browser_->setSource(QUrl(url));
+}
+
+HelpDialog::~HelpDialog()
+{
+    settings->saveGeometry(this);
 }
 
 void HelpDialog::run(const QString &url)

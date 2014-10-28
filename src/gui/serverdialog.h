@@ -52,6 +52,7 @@ private:
     ServerEngine * server_;
 
     QCheckBox * cbRunning_;
+    QPushButton * butSendScene_;
     QLabel * labelNum_;
     QLayout * clientLayout_;
     QList<QWidget*> clientWidgets_;
