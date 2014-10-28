@@ -1,4 +1,12 @@
 
+--- stuff after hamburg ---
+
+* synchronizing clients! Either with ltc timecode (libltcsmpte) or by clever networking
+* (completely) free mesh adjustments for projector setup
+* better oversight for multiple clients in ServerDialog
+* preview / "monitor" editing of scene before sending to clients
+
+
 ---- files ----
 
 * project-files manager
@@ -96,7 +104,7 @@
 
 ---- clips -----
 
-* clips and clip containers :D
+- OK clips and clip containers :D
 
 
 
