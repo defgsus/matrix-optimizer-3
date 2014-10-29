@@ -105,10 +105,10 @@ void OverlapAreaEditWidget::createGeometry_()
     // -- outline --
     lineGeom_->setColor(0.3,0.3,0.3,1);
     const GEOM::Geometry::IndexType
-            p1 = lineGeom_->addVertex(0,0,0),
-            p2 = lineGeom_->addVertex(1,0,0),
-            p3 = lineGeom_->addVertex(1,1,0),
-            p4 = lineGeom_->addVertex(0,1,0);
+            p1 = lineGeom_->addVertex(-1,-1,0),
+            p2 = lineGeom_->addVertex( 1,-1,0),
+            p3 = lineGeom_->addVertex( 1, 1,0),
+            p4 = lineGeom_->addVertex(-1, 1,0);
     lineGeom_->addLine(p1,p2);
     lineGeom_->addLine(p2,p3);
     lineGeom_->addLine(p3,p4);
@@ -172,11 +172,9 @@ void OverlapAreaEditWidget::createGeometry_()
                         slicec[j % slicec.size()][1]);
 
             // distance from slice
-            const Float dist = std::max(
-                                  p[0] < 0 ? -p[0] : p[0] > 1 ? p[0] - 1 : 0,
-                                  p[1] < 0 ? -p[1] : p[1] > 1 ? p[1] - 1 : 0),
+            const Float dist = std::max(std::abs(p[0]), std::abs(p[1])),
             // fadeout for outsiders
-                        colf = 1.f - MATH::smoothstep(0.f, 0.2f, std::max(dist, ldist));
+                        colf = 1.f - MATH::smoothstep(1.f, 1.3f, std::max(dist, ldist));
 
             lineGeom_->setColor(0.5,1,0.5, colf);
 
@@ -191,7 +189,7 @@ void OverlapAreaEditWidget::createGeometry_()
 
         domec.clear();
         slicec.clear();
-        omapper.mapToDome(omapper.createOutline(0.05, 0.3), domec);
+        omapper.mapToDome(omapper.createOutline(0.05, 0.25), domec);
         mapper.mapFromDome(domec, slicec);
 
         // draw inner outline
@@ -204,11 +202,9 @@ void OverlapAreaEditWidget::createGeometry_()
                         slicec[j % slicec.size()][1]);
 
             // distance from slice
-            const Float dist = std::max(
-                                  p[0] < 0 ? -p[0] : p[0] > 1 ? p[0] - 1 : 0,
-                                  p[1] < 0 ? -p[1] : p[1] > 1 ? p[1] - 1 : 0),
+            const Float dist = std::max(std::abs(p[0]), std::abs(p[1])),
             // fadeout for outsiders
-                        colf = 1.f - MATH::smoothstep(0.f, 0.2f, std::max(dist, ldist));
+                        colf = 1.f - MATH::smoothstep(1.f, 1.3f, std::max(dist, ldist));
 
             lineGeom_->setColor(0.6,0.3,0.1, colf);
 
@@ -229,8 +225,7 @@ void OverlapAreaEditWidget::createGeometry_()
 
     setNewBlendTexture_ = true;
 
-    GEOM::GeometryFactory::createQuad(blendGeom_, 1, 1);
-    blendGeom_->translate(0.5,0.5,0);
+    GEOM::GeometryFactory::createQuad(blendGeom_, 2, 2);
 
     Float aspect = settings_->projectorSettings(projectorIndex_).aspect();
     lineGeom_->scale(aspect, 1, 1);

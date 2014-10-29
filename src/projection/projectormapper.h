@@ -68,27 +68,27 @@ public:
 
     // --------------- transformation ---------------------
 
-    /** Returns the origin of the ray for the given pixel in texture coordinates [0,1] */
+    /** Returns the origin of the ray for the given pixel in texture coordinates [-1,1] */
     Vec3 getRayOrigin(Float s, Float t) const;
 
-    /** Returns the ray for the given pixel in texture coordinates [0,1] */
+    /** Returns the ray for the given pixel in texture coordinates [-1,1] */
     void getRay(Float s, Float t, Vec3 * ray_origin, Vec3 * ray_direction) const;
 
-    /** Sphere coordinates for the given pixel in texture coordinates [0,1] */
+    /** Sphere coordinates for the given pixel in texture coordinates [-1,1] */
     Vec2 mapToSphere(Float s, Float t) const;
 
-    /** Returns the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
+    /** Returns the 3d coordinate on the dome for the given pixel in texture coordinates [-1,1].
         The mapping is always done on the inside of the dome, regardless of the position of
         the projector. */
     Vec3 mapToDome(Float s, Float t) const;
 
-    /** Returns the 3d coordinate on the dome for the given pixel in texture coordinates [0,1].
+    /** Returns the 3d coordinate on the dome for the given pixel in texture coordinates [-1,1].
         The mapping is always done on the inside of the dome, regardless of the position of
         the projector. */
     Vec3 mapToDome(const Vec2& st) const { return mapToDome(st[0], st[1]); }
 
     /** Maps the slice coordinates on the dome surface.
-        The coordinates should be in the range [0,1].
+        The coordinates should be in the range [-1,1].
         The coordinates will be appended to @p dome_coords. */
     void mapToDome(const QVector<Vec2>& slice_coords, QVector<Vec3>& dome_coords) const;
 
@@ -126,25 +126,25 @@ public:
     // -------------- blending -----------------------------
 
     /** Creates an anti-clockwise polygon outline of the projector slice.
-        Range of coordinates is always [0,1].
+        Range of coordinates is always [-1,1].
         @p max_spacing defines the maximum distance between points.
         @p smaller makes the area smaller, range [0,1) */
     QVector<Vec2> createOutline(Float max_spacing, Float smaller = 0) const;
 
-    /** Find edge-blend neccessary for this projector to fade into @p other.
+    /* Find edge-blend neccessary for this projector to fade into @p other.
         Geometry is written into @p g. */
-    bool getBlendGeometry(const ProjectorMapper & other, GEOM::Geometry * g);
+    //bool getBlendGeometry(const ProjectorMapper & other, GEOM::Geometry * g);
 
-    /** new try of the above. */
+    /* new try of the above. */
     bool getIntersectionGeometry(const ProjectorMapper & other, GEOM::Geometry * g);
 
-    GL::Texture * renderBlendTexture(const ProjectorMapper & other);
+    //GL::Texture * renderBlendTexture(const ProjectorMapper & other);
     GL::Texture * renderBlendTexture(uint index, const ProjectionSystemSettings &settings);
-    GL::Texture * renderBlendTextureNew(const ProjectorMapper & other);
+    //GL::Texture * renderBlendTextureNew(const ProjectorMapper & other);
 
     /** Returns an anti-clockwise polygon outline of the overlapping area between
         this slice and the slice in @p other.
-        The coordinates are in the range [0,1].
+        The coordinates are in the range [-1,1].
         If there is no overlap, an empty array is returned.
         @p min_spacing is the minimum distance between points of the polygon.
         @p max_spacing is the maximum distance. Points will be added between two consecutive
@@ -153,8 +153,8 @@ public:
         @note Needless to say that @p other should have the same DomeSettings. */
     QVector<Vec2> getOverlapArea(const ProjectorSettings& other, Float min_spacing = 0.05, Float max_spacing = 1.0) const;
 
-    /** Turns the polygon into a triangle Geometry. */
-    void getBlendGeometry(const QVector<Vec2>&, GEOM::Geometry *) const;
+    /* Turns the polygon into a triangle Geometry. */
+    //void getBlendGeometry(const QVector<Vec2>&, GEOM::Geometry *) const;
 
     //______________ PRIVATE AREA _________________
 private:

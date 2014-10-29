@@ -51,6 +51,10 @@ public:
     Float pitch() const { return pitch_; }
     Float yaw() const { return yaw_; }
     Float roll() const { return roll_; }
+    Float sectionLeft() const { return sLeft_; }
+    Float sectionRight() const { return sRight_; }
+    Float sectionBottom() const { return sBottom_; }
+    Float sectionTop() const { return sTop_; }
 
     uint numOverlapAreas() const { return overlapAreas_.count(); }
     const QVector<Vec2> & overlapArea(uint idx) const { return overlapAreas_[idx]; }
@@ -69,6 +73,10 @@ public:
     void setPitch(Float v) { pitch_ = v; }
     void setYaw(Float v) { yaw_ = v; }
     void setRoll(Float v) { roll_ = v; }
+    void setSectionLeft(Float v) { sLeft_ = v; }
+    void setSectionRight(Float v) { sRight_ = v; }
+    void setSectionBottom(Float v) { sBottom_ = v; }
+    void setSectionTop(Float v) { sTop_ = v; }
 
     void clearOverlapAreas() { overlapAreas_.clear(); }
     void appendOverlapArea(const QVector<Vec2>& a) { overlapAreas_.append(a); }
@@ -88,7 +96,11 @@ private:
         distance_,
         pitch_,
         yaw_,
-        roll_;
+        roll_,
+        sLeft_,
+        sRight_,
+        sBottom_,
+        sTop_;
 
     QVector<QVector<Vec2>> overlapAreas_;
 };

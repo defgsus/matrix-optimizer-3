@@ -24,7 +24,11 @@ ProjectorSettings::ProjectorSettings()
         distance_   (0),
         pitch_      (0),
         yaw_        (0),
-        roll_       (0)
+        roll_       (0),
+        sLeft_      (-1),
+        sRight_     ( 1),
+        sBottom_    (-1),
+        sTop_       ( 1)
 {
 }
 
@@ -32,7 +36,8 @@ void ProjectorSettings::serialize(IO::XmlStream & io) const
 {
     io.newSection("projector");
 
-        io.write("version", 2);
+        io.write("version", 3);
+
         io.write("id", id_);
         io.write("name", name_);
         io.write("width", width_);
@@ -46,6 +51,11 @@ void ProjectorSettings::serialize(IO::XmlStream & io) const
         io.write("yaw", yaw_);
         io.write("roll", roll_);
 
+        io.write("sec_left", sLeft_);
+        io.write("sec_right", sRight_);
+        io.write("sec_bottom", sBottom_);
+        io.write("sec_top", sTop_);
+
     io.endSection();
 }
 
@@ -56,6 +66,7 @@ void ProjectorSettings::deserialize(IO::XmlStream & io)
         int ver = io.expectInt("version");
         if (ver >= 2)
             id_ = io.expectInt("id");
+
         name_ = io.expectString("name");
         width_ = io.expectInt("width");
         height_ = io.expectInt("height");
@@ -67,6 +78,14 @@ void ProjectorSettings::deserialize(IO::XmlStream & io)
         pitch_ = io.expectFloat("pitch");
         yaw_ = io.expectFloat("yaw");
         roll_ = io.expectFloat("roll");
+
+        if (ver >= 3)
+        {
+            sLeft_ = io.expectFloat("sec_left");
+            sRight_ = io.expectFloat("sec_right");
+            sBottom_ = io.expectFloat("sec_bottom");
+            sTop_ = io.expectFloat("sec_top");
+        }
 }
 
 bool ProjectorSettings::operator == (const ProjectorSettings& o) const
@@ -82,6 +101,10 @@ bool ProjectorSettings::operator == (const ProjectorSettings& o) const
             && pitch_ == o.pitch_
             && yaw_ == o.yaw_
             && roll_ == o.roll_
+            && sLeft_ == o.sLeft_
+            && sRight_ == o.sRight_
+            && sBottom_ == o.sBottom_
+            && sTop_ == o.sTop_
             //&& overlapAreas_ == o.overlapAreas_
             ;
 }

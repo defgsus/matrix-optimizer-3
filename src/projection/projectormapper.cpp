@@ -63,7 +63,7 @@ void ProjectorMapper::recalc_()
     zNear_ = 0.01;
 #endif
 
-    // make far-plane always farther than distance to other side of dome
+    // make far-plane at least the distance to other side of dome
     zFar_ = zNear_ + set_.distance() + domeSet_.radius() * 2.f + 0.1f;
 
     // projector's projection matrix
@@ -100,9 +100,6 @@ void ProjectorMapper::recalc_()
 Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
 {
 #if (1)
-    s = (s * 2 - 1);
-    t = (t * 2 - 1);
-
     Vec4 pos = inverseFrustum_ * Vec4(s, t, -zNear_, 1);
     pos /= pos.w;
 
@@ -117,10 +114,6 @@ Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
 void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direction) const
 {
 #if (0)
-
-    s = (s * 2 - 1) * aspect_;
-    t = (t * 2 - 1);
-
     Float lensfac = set_.lensRadius() * std::sqrt((Float)2);
     Vec3 pos = lensfac * Vec3(s, t, 0);
 
@@ -144,9 +137,6 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
     *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));
 
 #else
-
-    s = (s * 2 - 1);
-    t = (t * 2 - 1);
 
     Vec4 pos = inverseFrustum_ * Vec4(s, t, -zNear_, 1);
     pos /= pos.w;
@@ -196,12 +186,12 @@ void ProjectorMapper::mapToDome(const QVector<Vec2> &slice_coords, QVector<Vec3>
         dome_coords.append(mapToDome(c));
 }
 
-Vec2 ProjectorMapper::mapToSphere(Float, Float) const
+Vec2 ProjectorMapper::mapToSphere(Float x, Float y) const
 {
-    const Vec3 ray_origin = Vec3( trans_ * Vec4(0,0,0,1) );
-    const Vec3 ray_dir = Vec3( trans_ * Vec4(0,0,-1,0) );
-
+    Vec3 ray_origin, ray_dir;
     Float depth1, depth2;
+
+    getRay(x, y, &ray_origin, &ray_dir);
 
     if (!MATH::intersect_ray_sphere(
                 ray_origin, ray_dir, Vec3(0,0,0), domeSet_.radius(), &depth1, &depth2))
@@ -218,8 +208,8 @@ Vec2 ProjectorMapper::mapFromDome(const Vec3 & pdome) const
     Vec4 pscr = inverseProjView_ * Vec4(pdome, 1);
     pscr /= pscr[3];
 
-    // receive [0,1] point
-    return Vec2(pscr) * (Float)0.5 + (Float)0.5;
+    // receive [-1,1] point
+    return Vec2(pscr);
 }
 
 void ProjectorMapper::mapFromDome(GEOM::Geometry * g) const
@@ -227,6 +217,7 @@ void ProjectorMapper::mapFromDome(GEOM::Geometry * g) const
     for (uint i=0; i<g->numVertices(); ++i)
     {
         Vec2 slice = mapFromDome(g->getVertex(i));
+
         auto v = &g->vertices()[i*g->numVertexComponents()];
         v[0] = slice[0];
         v[1] = slice[1];
@@ -280,8 +271,8 @@ void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry
     for (int x = 0; x < numx; ++x)
     {
         const Float
-                tx = (Float)x / (numx-1),
-                ty = (Float)y / (numy-1);
+                tx = (Float)x / (numx-1) * 2.f - 1.f,
+                ty = (Float)y / (numy-1) * 2.f - 1.f;
 
         // find point on dome of projected image
         const Vec3 pdome = mapToDome(tx, ty);
@@ -293,7 +284,7 @@ void ProjectorMapper::getWarpGeometry(const CameraSettings & cam, GEOM::Geometry
         pscr = pscr * (Float)0.5 + (Float)0.5;
 
         geo->setTexCoord(pscr[0], pscr[1]);
-        geo->addVertexAlways(tx * 2 - 1, ty * 2 - 1, 0);
+        geo->addVertexAlways(tx, ty, 0);
     }
 
     // create triangles
@@ -325,27 +316,27 @@ QVector<Vec2> ProjectorMapper::createOutline(Float space, Float sm) const
 {
     QVector<Vec2> p;
 
-    for (Float t = 0; t < 1; t += space)
-        p.append(Vec2(t, 0));
+    for (Float t = -1; t < 1; t += space)
+        p.append(Vec2(t, -1));
 
-    for (Float t = 0; t < 1; t += space)
+    for (Float t = -1; t < 1; t += space)
         p.append(Vec2(1, t));
 
-    for (Float t = 0; t < 1; t += space)
-        p.append(Vec2(1.f-t, 1.f));
+    for (Float t = -1; t < 1; t += space)
+        p.append(Vec2(-t, 1.f));
 
-    for (Float t = 0; t < 1; t += space)
-        p.append(Vec2(0, 1.f-t));
+    for (Float t = -1; t < 1; t += space)
+        p.append(Vec2(-1.f, -t));
 
+    // make smaller
     if (sm != 0)
     {
         const Vec2
-                ofs = Vec2(sm, sm * aspect_) * 0.5f,
-                mul = 1.f - 2.f * ofs;
+                mul = 1.f - Vec2(sm, sm * aspect_);
+
         for (auto & v : p)
-        {
-            v = ofs + mul * v;
-        }
+            v *= mul;
+
     }
 
     return p;
@@ -389,10 +380,10 @@ QVector<Vec2> ProjectorMapper::getOverlapArea(const ProjectorSettings &otherP, F
 
     // find if corners of this slice map into other slice
     const bool
-            c_bl = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(0,0))), 0, 1),
-            c_br = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(1,0))), 0, 1),
-            c_tl = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(0,1))), 0, 1),
-            c_tr = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(1,1))), 0, 1);
+            c_bl = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(-1,-1))), 0, 1),
+            c_br = MATH::inside_range(other.mapFromDome(mapToDome(Vec2( 1,-1))), 0, 1),
+            c_tl = MATH::inside_range(other.mapFromDome(mapToDome(Vec2(-1, 1))), 0, 1),
+            c_tr = MATH::inside_range(other.mapFromDome(mapToDome(Vec2( 1, 1))), 0, 1);
 
     // -- get other's edge points projected into our slice --
     //    (and flag corners)
@@ -523,7 +514,7 @@ QVector<Vec2> ProjectorMapper::getOverlapArea(const ProjectorSettings &otherP, F
     return poly;
 }
 
-
+/*
 void ProjectorMapper::getBlendGeometry(const QVector<Vec2> & poly, GEOM::Geometry * geom) const
 {
     GEOM::Tesselator tess;
@@ -551,8 +542,8 @@ void ProjectorMapper::getBlendGeometry(const QVector<Vec2> & poly, GEOM::Geometr
         geom->colors()[i*4+3] = 1.f;
     }
 }
-
-
+*/
+/*
 bool ProjectorMapper::getBlendGeometry(const ProjectorMapper &other, GEOM::Geometry *g)
 {
     const Float
@@ -608,9 +599,9 @@ bool ProjectorMapper::getBlendGeometry(const ProjectorMapper &other, GEOM::Geome
 
     return true;
 }
+*/
 
-
-
+#if 1
 bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM::Geometry *g)
 {
     const Float
@@ -696,7 +687,7 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
 
     return true;
 }
-
+#endif
 
 
 } // namespace MO
