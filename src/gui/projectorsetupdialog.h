@@ -183,6 +183,9 @@ private:
         * spinCamZNear_,
         * spinCamZFar_,
 
+        * spinOffsetX_,
+        * spinOffsetY_,
+
         * spinBlendMargin_;
 
     QComboBox

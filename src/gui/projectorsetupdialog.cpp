@@ -302,6 +302,13 @@ void ProjectorSetupDialog::createWidgets_()
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinRoll_->setSuffix(" " + tr("°"));
 
+                spinOffsetX_ = createDoubleSpin_(gr, tr("offset x"),
+                                             tr("Shift of projection on x axis"),
+                                             0, 0.05, -1000, 1000, SLOT(updateProjectorSettings_()));
+                spinOffsetY_ = createDoubleSpin_(gr, tr("offset y"),
+                                             tr("Shift of projection on y axis"),
+                                             0, 0.05, -1000, 1000, SLOT(updateProjectorSettings_()));
+
                 // ------- camera settings --------
 
                 cameraGroup_ = gr = new GroupWidget(tr("virtual camera settings"), this);
@@ -822,6 +829,8 @@ void ProjectorSetupDialog::updateProjectorSettings_()
     projectorSettings_->setPitch(spinPitch_->value());
     projectorSettings_->setYaw(spinYaw_->value());
     projectorSettings_->setRoll(spinRoll_->value());
+    projectorSettings_->setOffsetX(spinOffsetX_->value());
+    projectorSettings_->setOffsetY(spinOffsetY_->value());
 
     cameraSettings_->setWidth(spinCamWidth_->value());
     cameraSettings_->setHeight(spinCamHeight_->value());
@@ -873,6 +882,8 @@ void ProjectorSetupDialog::updateProjectorWidgets_()
     editName_->setText( projectorSettings_->name() );
     spinWidth_->setValue( projectorSettings_->width() );
     spinHeight_->setValue( projectorSettings_->height() );
+    spinOffsetX_->setValue( projectorSettings_->offsetX() );
+    spinOffsetY_->setValue( projectorSettings_->offsetY() );
     spinFov_->setValue( projectorSettings_->fov() );
 #ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     spinLensRad_->setValue( projectorSettings_->lensRadius() );

@@ -50,6 +50,17 @@ void ProjectorMapper::recalc_()
     if (set_.width() <= 0 || set_.height() <= 0)
         return;
 
+    // slice scale/offset from section borders
+    /*
+    sOffset_ = Vec2(set_.sectionLeft(), set_.sectionBottom());
+    sScale_ = (Vec2(set_.sectionRight(),  set_.sectionTop())
+                - sOffset_) / 2.f;
+    sOffset_ = sScale_ + Vec2(set_.sectionLeft(), set_.sectionBottom());
+    */
+    offset_ = Vec2(set_.offsetX(), set_.offsetY());
+
+    //MO_PRINT("ofs " << sOffset_ << ", sc " << sScale_);
+
     // aspect ratio
     aspect_ = (Float)set_.width()/set_.height();
 
@@ -67,7 +78,12 @@ void ProjectorMapper::recalc_()
     zFar_ = zNear_ + set_.distance() + domeSet_.radius() * 2.f + 0.1f;
 
     // projector's projection matrix
-    frustum_ = MATH::perspective(set_.fov(), (Float)set_.width()/set_.height(), zNear_, zFar_);
+    Mat4 shear(1);
+    Float shearfac = std::tan(MATH::deg_to_rad(set_.fov() / 2.f));
+    shear[2][0] = 2.f * offset_.x * shearfac * set_.aspect();
+    shear[2][1] = 2.f * offset_.y * shearfac;
+    frustum_ = MATH::perspective(set_.fov(), (Float)set_.aspect(), zNear_, zFar_)
+            * shear;
     // inverse frustum for ray direction
     inverseFrustum_ = glm::inverse(frustum_);
 
@@ -87,9 +103,9 @@ void ProjectorMapper::recalc_()
     pos_ = Vec3( trans_ * Vec4(0,0,0,1) );
 
     // roll-pitch-yaw
-    trans_ = MATH::rotate(trans_, set_.roll(),      Vec3(0,0,1));
-    trans_ = MATH::rotate(trans_, set_.yaw(),       Vec3(0,1,0));
     trans_ = MATH::rotate(trans_, set_.pitch(),     Vec3(1,0,0));
+    trans_ = MATH::rotate(trans_, set_.yaw(),       Vec3(0,1,0));
+    trans_ = MATH::rotate(trans_, set_.roll(),      Vec3(0,0,1));
 
     // inverse projection/view matrix for backward mapping
     inverseProjView_ = frustum_ * glm::inverse(trans_);
@@ -99,8 +115,10 @@ void ProjectorMapper::recalc_()
 
 Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
 {
-#if (1)
-    Vec4 pos = inverseFrustum_ * Vec4(s, t, -zNear_, 1);
+#if (0)
+    Vec4 pos = inverseFrustum_ * Vec4(s * sScale_.x + sOffset_.x,
+                                      t * sScale_.y + sOffset_.y,
+                                      -zNear_, 1);
     pos /= pos.w;
 
     return Vec3(trans_ * pos);
@@ -113,44 +131,24 @@ Vec3 ProjectorMapper::getRayOrigin(Float s, Float t) const
 
 void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direction) const
 {
-#if (0)
-    Float lensfac = set_.lensRadius() * std::sqrt((Float)2);
-    Vec3 pos = lensfac * Vec3(s, t, 0);
+    Vec2 st = Vec2(s, t);// * sScale_ + sOffset_;
 
-    // size of projection - one unit away
-    //    c² = 2a²(1-cos(gamma))
-    // -> c = sqrt(2*(1-cos(gamma))
-    // and hc = b * sin(alpha)
-    // and gamma = 180 - 2*alpha
-    // ->  alpha = (180 - gamma) / 2
-    const Float gamma = MATH::deg_to_rad(set_.fov());
-    const Float c = std::sqrt((Float)2*((Float)1-std::cos(gamma)))
-               // XXX lensradius is not calculated properly here
-                - (Float)0.135 * lensfac;
-    const Float alpha = (Float)0.5 * ((Float)180 - set_.fov());
-    const Float hc = std::sin(MATH::deg_to_rad(alpha));
-    Vec3 dir = glm::normalize(Vec3(s*c*(Float)0.5, t*c*(Float)0.5, -hc));
-
-    //MO_DEBUG("dir " << dir << ", len " << glm::length(dir));
-
-    *ray_origin =    Vec3(trans_ * Vec4(pos, (Float)1));
-    *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));
-
-#else
-
-    Vec4 pos = inverseFrustum_ * Vec4(s, t, -zNear_, 1);
+    Vec4 pos = inverseFrustum_ * Vec4(st.x, st.y, -zNear_, 1);
     pos /= pos.w;
 
-    Vec4 dirf = inverseFrustum_ * Vec4(s, t, -zFar_, 1);
+    Vec4 dirf = inverseFrustum_ * Vec4(st.x, st.y, -zFar_, 1);
     dirf /= dirf.w;
+
+    /*Vec4 dirofs = inverseFrustum_ * Vec4(set_.sectionLeft(), set_.sectionBottom(), -zFar_, 1);
+    dirofs /= dirofs.w;
+    dirf.x += dirofs.x;
+    dirf.y += dirofs.y;
+    */
 
     Vec3 dir = glm::normalize(Vec3(dirf));
 
     *ray_origin =    Vec3(trans_ * pos);
     *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));
-
-#endif
-
 }
 
 Vec3 ProjectorMapper::mapToDome(Float s, Float t) const
@@ -167,6 +165,18 @@ Vec3 ProjectorMapper::mapToDome(Float s, Float t) const
 
     return pos + dir * depth1;
 }
+
+Vec2 ProjectorMapper::mapFromDome(const Vec3 & pdome) const
+{
+    // project into projector's view space
+    Vec4 pscr = inverseProjView_ * Vec4(pdome, 1);
+    pscr /= pscr[3];
+
+    // receive [-1,1] point
+    //return (Vec2(pscr) - sOffset_) / sScale_;
+    return Vec2(pscr);
+}
+
 
 void ProjectorMapper::mapToDome(GEOM::Geometry * g) const
 {
@@ -200,16 +210,6 @@ Vec2 ProjectorMapper::mapToSphere(Float x, Float y) const
     }
 
     return Vec2(0,0);
-}
-
-Vec2 ProjectorMapper::mapFromDome(const Vec3 & pdome) const
-{
-    // project into projector's view space
-    Vec4 pscr = inverseProjView_ * Vec4(pdome, 1);
-    pscr /= pscr[3];
-
-    // receive [-1,1] point
-    return Vec2(pscr);
 }
 
 void ProjectorMapper::mapFromDome(GEOM::Geometry * g) const

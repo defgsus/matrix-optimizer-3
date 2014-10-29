@@ -170,6 +170,7 @@ private:
 
     bool valid_;
     Float aspect_, zNear_, zFar_;
+    Vec2 offset_;
     Vec3 pos_;
     Mat4 trans_, frustum_, inverseFrustum_, inverseProjView_;
 };
