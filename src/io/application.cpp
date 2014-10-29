@@ -27,7 +27,7 @@
 #define MO_APP_PRINT(text__)            \
 {                                       \
     std::cout << text__ << std::endl;   \
-    if (isClient)                       \
+    if (isClient())                     \
         MO_NETLOG(ERROR, text__);       \
 }
 
