@@ -10,17 +10,37 @@
 
 #include <iostream>
 
-#include <Qt>
+#include <QFile>
+#include <QTextStream>
 
 #include "io/init.h"
 #include "io/application.h"
 #include "io/settings.h"
 #include "io/isclient.h"
 #include "io/currentthread.h"
+#include "io/log.h"
+#include "io/version.h"
 #include "gui/mainwindow.h"
-#include "gui/audiolinkwindow.h"
 #include "gui/splashscreen.h"
 #include "engine/clientengine.h"
+
+
+void showHelp()
+{
+    QFile f(":/help/commandlinehelp.txt");
+    f.open(QFile::ReadOnly);
+    QTextStream s(&f);
+
+    MO_PRINT(
+           "\n"
+        << MO::applicationName()
+        << "\n\n"
+        << s.readAll()
+        );
+}
+
+
+
 
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
@@ -71,13 +91,31 @@ int main(int argc, char *argv[])
 
     // get major command switch
     QString command;
-
     if (argc > 1)
         command = argv[1];
 
-    if (command.compare("client", Qt::CaseInsensitive))
+    // determine what to do
+    if (0 == command.compare("-h", Qt::CaseInsensitive)
+     || command.contains("help", Qt::CaseInsensitive))
+    {
+        showHelp();
+        return 0;
+    }
+    else
+    if (0 == command.compare("client", Qt::CaseInsensitive))
+    {
         MO::setThisApplicationToClient();
+    }
+    else
+    if (!command.isEmpty())
+    {
+        showHelp();
+        MO_PRINT("Unrecognized command '" << command << "'");
+        return 1;
+    }
 
+    // any 3rd library code that needs global initialization
+    // goes in here
     MO::startOfProgram();
 
     int dummy;

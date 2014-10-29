@@ -7,5 +7,6 @@
         <file alias="equationfunctions.html">assets/help/en/equationfunctions.html</file>
         <file alias="sequence.html">assets/help/en/sequence.html</file>
         <file alias="opengldrawing.html">assets/help/en/opengldrawing.html</file>
+        <file alias="commandlinehelp.txt">assets/help/en/commandlinehelp.txt</file>
     </qresource>
 </RCC>
