@@ -101,7 +101,6 @@ bool inside(vec2 slice)
 
 float sqr(float x) { return x*x; }
 
-
 const float EPS = 0.0001;
 
 float white_mh(in vec2 slice)
@@ -116,6 +115,13 @@ float white_mh(in vec2 slice)
         vec2 oslice = map_from_dome(i, pdome);
         if(inside(oslice))
             ++num_shared;
+    }
+
+    int num_covered = 0;
+    for (int i = 0; i < u_index; ++i) {
+        vec2 oslice = map_from_dome(i, pdome);
+        if(inside(oslice))
+            ++num_covered;
     }
 
     bool  pure_slice = inside(slice);
@@ -139,8 +145,9 @@ float white_mh(in vec2 slice)
         float edged  = inside_distance(slice);
 
         float black_so_far = 0.0;
-        float intersection_color = /*1.0 / float(num_shared); // */
-                        (1.0 / (float(num_shared) + 3.0*(float(num_shared-2))));
+        float intersection_color = (1.0 / (float(num_shared) + 3.0*(float(num_shared-2))));
+        float max_color = intersection_color * (float(num_covered+1) /*+ 3.0*(float(num_covered-1))*/);
+        float min_color = intersection_color * (float(num_covered));
         float inner_section = ((edged >= u_margin) && (oedged >= u_margin))
                 ? intersection_color
                 : 0.0;
@@ -162,11 +169,11 @@ float white_mh(in vec2 slice)
 //                : 0.0;
         float rest_in_1     = ((edged <= u_margin) && (oedged <= u_margin) && (oedged >= edged) &&
                                (oedged > 0.0) && (u_index < i))
-                ? clamp(intersection_color * (edged / u_margin) + (1.0-oedged / u_margin), 0.0, 1.0)
+                ? clamp(intersection_color * (edged / u_margin), 0.0, 1.0)
                 : 0.0;
         float rest_in_2     = ((edged <= u_margin) && (oedged <= u_margin) && (oedged <= edged) &&
                                (oedged > 0.0) && (u_index < i))
-                ? clamp(1.0-intersection_color * (oedged / u_margin), 0.0, 1.0)
+                ? clamp(intersection_color * (edged/u_margin) + intersection_color * ((edged / u_margin) - ( oedged / u_margin)), 0.0, 1.0)
                 : 0.0;
 //        float rest_out      = ((edged <= u_margin) && (oedged <= u_margin) &&
 //                               (oedged > 0.0) && (u_index > i))
@@ -174,11 +181,11 @@ float white_mh(in vec2 slice)
 //                : 0.0;
         float rest_out_1    = ((edged <= u_margin) && (oedged <= u_margin) && (oedged <= edged) &&
                                (oedged > 0.0) && (u_index > i))
-                ? clamp(1.0 - intersection_color * (oedged / u_margin) /*+ (edged / u_margin)*/, 0.0, 1.0)
+                ? clamp(max_color /*+ max_color*(1.0-edged/u_margin)*/ - intersection_color * (oedged / u_margin), 0.0, 1.0)
                 : 0.0;
         float rest_out_2    = ((edged <= u_margin) && (oedged <= u_margin) && (oedged >= edged) &&
                                (oedged > 0.0) && (u_index > i))
-                ? clamp(intersection_color * (edged / u_margin) + (1.0-oedged / u_margin), 0.0, 1.0)
+                ? clamp(intersection_color * (edged / u_margin) + max_color*(1.0-oedged / u_margin), 0.0, 1.0)
                 : 0.0;
         black_so_far = ( blending_out + blending_in +
                         /*rest_in  +*/ rest_in_1 + rest_in_2 +
