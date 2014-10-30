@@ -21,12 +21,17 @@ namespace MO {
 
     typedef TreeNode<Object*> ObjectTreeNode;
 
-    /** XXX Returns a copy of the object tree structure.
+    /** XXX Returns a copy of the current object tree structure.
         Maybe i switch to hold Objects together with TreeNode<Object*> */
     ObjectTreeNode * getObjectTree(Object* root_object);
 
-    QVariant getModelData(Object*, int role);
-    bool setModelData(Object *, const QVariant& data, int role);
+
+    namespace Private
+    {
+        QVariant getModelData(Object*, int role);
+        bool setModelData(Object *, const QVariant& data, int role);
+    }
+
 
     /** specialization for Object* in TreeModel */
     template <>
@@ -34,12 +39,12 @@ namespace MO {
     {
         static QVariant data(TreeNode<Object*> * node, int role)
         {
-            return getModelData(node->object(), role);
+            return Private::getModelData(node->object(), role);
         }
 
         static bool setData(TreeNode<Object*> * node, const QVariant& value, int role)
         {
-            return setModelData(node->object(), value, role);
+            return Private::setModelData(node->object(), value, role);
         }
     };
 

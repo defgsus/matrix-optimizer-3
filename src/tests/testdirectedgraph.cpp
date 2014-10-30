@@ -19,6 +19,8 @@
 #endif
 
 #include "graph/directedgraph.h"
+#include "graph/tree.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -32,6 +34,7 @@ namespace
         QString name;
     };
 
+    // binder to std::out
     template <typename T>
     std::basic_ostream<T>& operator << (std::basic_ostream<T>& out, const Thing * thing)
     {
@@ -89,6 +92,41 @@ namespace
         return res ? 1 : 0;
     }
 
+
+
+
+    // ---------------------------- object tree ------------------------------
+
+    class SomeObject
+    {
+    public:
+
+        QString id;
+
+        SomeObject() { MO_PRINT("obj(" << this << ")"); }
+        ~SomeObject() { MO_PRINT("~obj(" << this << ")"); }
+    };
+
+    typedef TreeNode<SomeObject*> SomeNode;
+
+    int testSomeObjectTree()
+    {
+        auto rootObj = new SomeObject();
+        SomeNode root(rootObj);
+
+        SomeNode * insert = &root;
+        for (int i=0; i<4; ++i)
+        {
+            auto node = insert->append(new SomeObject());
+            for (int j=0; j<4; ++j)
+                node = node->insert(0, new SomeObject());
+        }
+
+        root.dumpTree(std::cout);
+
+       return 0;
+    }
+
 }
 
 
@@ -102,9 +140,10 @@ TestDirectedGraph::TestDirectedGraph()
 
 int TestDirectedGraph::run()
 {
-    int errors = 0;
-
-    errors += testLinear();
+    int errors =
+        //    + testLinear()
+            + testSomeObjectTree()
+            ;
 
     return errors;
 }

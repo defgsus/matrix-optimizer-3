@@ -109,7 +109,8 @@ public:
         T_MODULATOR_OBJECT_FLOAT   = 1<<14,
         T_MICROPHONE_GROUP  = 1<<15,
         T_CLIP              = 1<<16,
-        T_CLIP_CONTAINER    = 1<<17
+        T_CLIP_CONTAINER    = 1<<17,
+        T_OSCILLATOR        = 1<<18
     };
     enum TypeGroups
     {
@@ -121,10 +122,12 @@ public:
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
 
         TG_FLOAT            = T_TRACK_FLOAT | T_SEQUENCE_FLOAT,
-
+        /** All explicit modulator objects */
         TG_MODULATOR_OBJECT = T_MODULATOR_OBJECT_FLOAT,
-        /** All objects that can server as a modulator source */
-        TG_MODULATOR        = TG_MODULATOR_OBJECT | TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP,
+        /** All objects that can serve as a modulator source */
+        TG_MODULATOR        = TG_MODULATOR_OBJECT
+                                | TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP
+                                | T_OSCILLATOR,
 
         TG_TRANSFORMATION   = T_TRANSFORMATION | T_TRANSFORMATION_MIX,
 

@@ -20,43 +20,48 @@ ObjectTreeNode * getObjectTree(Object * root_object)
     auto node = new ObjectTreeNode(root_object);
 
     for (auto c : root_object->childObjects())
-        node->add( getObjectTree(c) );
+        node->append( getObjectTree(c) );
 
     return node;
 }
 
 
-QVariant getModelData(Object * obj, int role)
+namespace Private
 {
-    if (role == Qt::DisplayRole)
+
+    QVariant getModelData(Object * obj, int role)
     {
-        QString name = obj->infoName();
-        if (obj->isModulated())
-            name += "*";
-        if (obj->canBeDeleted())
-            return name;
-        else
-            return "{" + name + "}";
+        if (role == Qt::DisplayRole)
+        {
+            QString name = obj->infoName();
+            if (obj->isModulated())
+                name += "*";
+            if (obj->canBeDeleted())
+                return name;
+            else
+                return "{" + name + "}";
+        }
+
+        else if (role == Qt::EditRole)
+            return obj->name();
+
+        // icon
+        if (role == Qt::DecorationRole)
+        {
+            return ObjectFactory::iconForObject(obj);
+        }
+
+        return QVariant();
     }
 
-    else if (role == Qt::EditRole)
-        return obj->name();
-
-    // icon
-    if (role == Qt::DecorationRole)
+    bool setModelData(Object * obj, const QVariant& value, int role)
     {
-        return ObjectFactory::iconForObject(obj);
+        if (role == Qt::EditRole)
+            obj->setName(value.toString());
+
+        return false;
     }
 
-    return QVariant();
-}
-
-bool setModelData(Object * obj, const QVariant& value, int role)
-{
-    if (role == Qt::EditRole)
-        obj->setName(value.toString());
-
-    return false;
-}
+} // namespace Private
 
 } // namespace MO

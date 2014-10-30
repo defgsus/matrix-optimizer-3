@@ -357,7 +357,9 @@ bool DirectedGraph<T>::makeLinear(std::insert_iterator<U> insertit) const
         }
     }
 
+#ifdef MO_GRAPH_DEBUG
     graph.dumpEdges(std::cout);
+#endif
 
     // check if edges left
     for (auto & n : graph.p_nodes_)
