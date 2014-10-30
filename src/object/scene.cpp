@@ -1048,6 +1048,9 @@ void Scene::updateLightSettings_(uint thread, Double time)
             const Float mix = lightSources_[i]->lightDirectionalMix(thread, time);
             l->setDirectionMix(i, mix);
 
+            const Float diffexp = lightSources_[i]->diffuseExponent(thread, time);
+            l->setDiffuseExponent(i, diffexp);
+
             if (mix > 0)
             {
                 const Vec4 dir = lightSources_[i]->lightDirection(thread, time);
@@ -1055,6 +1058,7 @@ void Scene::updateLightSettings_(uint thread, Double time)
             }
         }
         else
+            // XXX there should be a runtime switch in shader!
             l->setColor(i, 0,0,0,1);
     }
 }

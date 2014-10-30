@@ -28,6 +28,7 @@ ShaderSource::ShaderSource()
       unLightColor_ ("u_light_color[0]"),
       unLightDir_   ("u_light_direction[0]"),
       unLightDirMix_("u_light_dirmix[0]"),
+      unLightDiffExp_("u_light_diffuse_exp[0]"),
       unColor_      ("u_color"),
       anPos_        ("a_position"),
       anCol_        ("a_color"),

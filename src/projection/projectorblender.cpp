@@ -136,8 +136,6 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index, uint hei
         auto u_dome_radius = quad->shader()->getUniform("u_dome_radius", true);
         auto u_nearFar = quad->shader()->getUniform("u_nearFar[0]", true);
         //auto u_aspect = quad->shader()->getUniform("u_aspect[0]", true);
-        auto u_section = quad->shader()->getUniform("u_section[0]", false);
-        MO_ASSERT(!u_section, "");
         auto u_index = quad->shader()->getUniform("u_index", true);
 
         u_dome_radius->floats[0] = set.domeSettings().radius();

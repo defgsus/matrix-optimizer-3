@@ -113,7 +113,8 @@ private:
         uniformLightPos_,
         uniformLightColor_,
         uniformLightDirection_,
-        uniformLightDirectionMix_;
+        uniformLightDirectionMix_,
+        uniformLightDiffuseExp_;
 
     Uniform * uniColor_;
 

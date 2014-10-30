@@ -47,6 +47,8 @@ public:
         omni-directional (0) and directional (1) */
     const Float * directionMix() const { return &directionMix_[0]; }
 
+    const Float * diffuseExponent() const { return &diffuseExp_[0]; }
+
     // --------------- setter ---------------
 
     /** Reserves space for the @p num light sources */
@@ -56,10 +58,16 @@ public:
     void setColor(uint index, Float r, Float g, Float b, Float d = 0.0);
     void setDirection(uint index, Float nx, Float ny, Float nz, Float exp);
     void setDirectionMix(uint index, Float mix);
+    void setDiffuseExponent(uint index, Float exp);
 
 private:
 
-    std::vector<Float> positions_, colors_, directions_, directionMix_;
+    std::vector<Float>
+        positions_,
+        colors_,
+        directions_,
+        directionMix_,
+        diffuseExp_;
 
     uint count_;
 };

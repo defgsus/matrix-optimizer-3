@@ -38,13 +38,17 @@ public:
     /** Returns the float [0,1] to mix between omni-directional and directional */
     Float lightDirectionalMix(uint thread, Double time) const;
 
+    Float diffuseExponent(uint thread, Double time) const;
+
 signals:
 
 public slots:
 
 private:
 
-    ParameterFloat *all_, *r_, *g_, *b_, *dist_, *directional_, *directionExp_;
+    ParameterFloat *all_, *r_, *g_, *b_,
+            *dist_, *directional_, *directionExp_,
+            *diffuseExp_;
 
 };
 

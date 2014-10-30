@@ -219,6 +219,11 @@ void Drawable::compileShader_()
     else
         uniformLightColor_ = invalidGl;
 
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightDiffuseExponent()))
+        uniformLightDiffuseExp_ = u->location();
+    else
+        uniformLightDiffuseExp_ = invalidGl;
+
     if (auto u = shader_->getUniform(shaderSource_->uniformNameLightDirection()))
         uniformLightDirection_ = u->location();
     else
@@ -317,6 +322,9 @@ void Drawable::renderShader(const Mat4 &proj,
             MO_CHECK_GL( glUniform4fv(uniformLightDirection_, lights->count(), lights->directions()) );
         if (uniformLightDirectionMix_ != invalidGl)
             MO_CHECK_GL( glUniform1fv(uniformLightDirectionMix_, lights->count(), lights->directionMix()) );
+        if (uniformLightDiffuseExp_ != invalidGl)
+            MO_CHECK_GL( glUniform1fv(uniformLightDiffuseExp_, lights->count(), lights->diffuseExponent()) );
+
     }
 
     if (geometry_->numTriangles())

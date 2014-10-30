@@ -55,6 +55,12 @@ void LightSource::createParameters()
                                         "the higher, the less light reaches distant places"), 0, 0.1);
         dist_->setMinValue(0.0);
 
+        diffuseExp_ = createFloatParameter("diffuseexp", tr("diffuse exponent"),
+                                tr("Multiplier for diffuse lighting exponent"
+                                   "- the higher, the less light reflects off surfaces not facing the lightsource"),
+                                1.0, 0.1);
+        diffuseExp_->setMinValue(0.001);
+
         directional_ = createFloatParameter("directional", tr("directional"),
                                 tr("Mix between omni-directional (0) and directional light (1) "),
                                 0.0, 0.0, 1.0, 0.1);
@@ -89,5 +95,9 @@ Float LightSource::lightDirectionalMix(uint thread, Double time) const
     return directional_->value(time, thread);
 }
 
+Float LightSource::diffuseExponent(uint thread, Double time) const
+{
+    return diffuseExp_->value(time, thread);
+}
 
 } // namespace MO

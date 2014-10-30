@@ -49,6 +49,7 @@ uniform vec4 u_color;
 
 #ifdef MO_ENABLE_LIGHTING
     uniform float u_diffuse_exp;
+    uniform float u_light_diffuse_exp[MO_NUM_LIGHTS];
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
     uniform vec3 u_light_pos[MO_NUM_LIGHTS];
     #ifdef MO_FRAGMENT_LIGHTING
@@ -253,7 +254,8 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
 
         for (int i=0; i<MO_NUM_LIGHTS; ++i)
             c += mo_calc_light_color(
-                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i], u_diffuse_exp);
+                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i],
+                            u_diffuse_exp * u_light_diffuse_exp[i]);
 
         return c;
     }
@@ -286,7 +288,8 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
                 att *= mix(1.0, diratt, u_light_dirmix[i]);
             }
 
-            c += mo_calc_light_color(ldir, att * u_light_color[i], u_diffuse_exp);
+            c += mo_calc_light_color(ldir, att * u_light_color[i],
+                                     u_diffuse_exp * u_light_diffuse_exp[i]);
         }
 
         return c;

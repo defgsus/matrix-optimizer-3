@@ -34,6 +34,7 @@ public:
     const QString& uniformNameViewTransformation() const { return unVT_; }
     const QString& uniformNameTransformation() const { return unT_; }
 
+    const QString& uniformNameColor() const { return unColor_; }
     const QString& uniformNameDiffuseExponent() const { return unDiffuseExp_; }
     const QString& uniformNameBumpScale() const { return unBumpScale_; }
 
@@ -41,7 +42,7 @@ public:
     const QString& uniformNameLightColor() const { return unLightColor_; }
     const QString& uniformNameLightDirection() const { return unLightDir_; }
     const QString& uniformNameLightDirectionMix() const { return unLightDirMix_; }
-    const QString& uniformNameColor() const { return unColor_; }
+    const QString& uniformNameLightDiffuseExponent() const { return unLightDiffExp_; }
 
     const QString& attribNamePosition() const { return anPos_; }
     const QString& attribNameColor() const { return anCol_; }
@@ -78,6 +79,7 @@ private:
         unProj_, unCVT_, unVT_, unT_,
         unDiffuseExp_, unBumpScale_,
         unLightPos_, unLightColor_, unLightDir_, unLightDirMix_,
+        unLightDiffExp_,
         unColor_,
         anPos_, anCol_, anNorm_, anTexCoord_;
 };
