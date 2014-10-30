@@ -213,7 +213,8 @@ HEADERS += \
     src/io/helpexporterlatex.h \
     src/io/isclient.h \
     src/engine/serverengine.h \
-    src/object/oscillatorobject.h
+    src/object/oscillatorobject.h \
+    src/object/object1.h
 
 
 SOURCES += \
@@ -394,4 +395,5 @@ SOURCES += \
     src/io/isclient.cpp \
     src/main.cpp \
     src/engine/serverengine.cpp \
-    src/object/oscillatorobject.cpp
+    src/object/oscillatorobject.cpp \
+    src/object/object1.cpp

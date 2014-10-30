@@ -30,14 +30,19 @@ namespace MO {
 //template <class T>
 //class Tree;
 
-//template <class T>
-//struct TreeNodeTraits
-//{
-//};
+template <class T>
+class TreeNode;
 
+template <class T>
+struct TreeNodeTraits
+{
+    typedef TreeNode<T> Node;
 
-
-
+    /** This is called when a node is created */
+    static void creator(Node * node) { node=node; }
+    /** Called in destructor of node */
+    static void destructor(Node * node) { node=node; }
+};
 
 
 template <class T>
@@ -46,13 +51,26 @@ class TreeNode
 
 public:
 
-    TreeNode(T object, bool own = true) : p_parent_(0), p_obj_(object), p_own_(own) { }
-    ~TreeNode() { if (p_own_) delete p_obj_; for (auto c : p_child_) delete c; }
+    typedef TreeNodeTraits<T> Traits;
+
+    TreeNode(T object, bool own = true)
+        : p_parent_(0), p_obj_(object), p_own_(own)
+    {
+        Traits::creator(this);
+    }
+    ~TreeNode()
+    {
+        Traits::destructor(this);
+        for (auto c : p_child_) delete c;
+    }
 
     // ------- getter --------
 
     /** Associated object */
     T object() const { return p_obj_; }
+
+    /** Returns true if the associated object is owned */
+    bool isOwning() const { return p_own_; }
 
     /** Parent node */
     TreeNode * parent() const { return p_parent_; }
@@ -75,6 +93,19 @@ public:
 
     bool hasChild(T child) const { return indexOf(child) >= 0; }
     bool hasChild(TreeNode * child) const { return indexOf(child) >= 0; }
+
+    // ------ more complex getter ------
+
+    /** Will return the root of the hierarchy which can be
+        the node itself */
+    TreeNode * root() const;
+
+    /** Returns the node for the object if it's in the hierarchy, include
+        this node itself, or NULL */
+    TreeNode * find(T object) const;
+
+    /** Returns the node for the object if it's a parent of this node, or NULL */
+    TreeNode * findParent(T object) const;
 
     // ------- setter --------
 
@@ -124,6 +155,9 @@ private:
     T p_obj_;
     bool p_own_;
 };
+
+
+
 
 
 
@@ -197,6 +231,8 @@ inline void TreeNode<T>::insert(int index, TreeNode * node)
                 p_child_.begin()
                     + std::min((int)p_child_.size()-1, index)
                 , node);
+
+    p_install_node_(node);
 }
 
 template <class T>
@@ -236,6 +272,37 @@ inline void TreeNode<T>::remove(size_t index)
 
 
 
+template <class T>
+inline TreeNode<T> * TreeNode<T>::root() const
+{
+    return parent() ? parent()->root() : 0;
+}
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::findParent(T o) const
+{
+    return parent() ?
+                parent()->object() == o ? parent()
+                                        : parent()->findParent(o)
+                    : 0;
+}
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::find(T o) const
+{
+    if (object() == o)
+        return this;
+
+    for (auto c : p_child_)
+    {
+        if (c->object() == o)
+            return c;
+        if (auto n = c->find(o))
+            return n;
+    }
+
+    return 0;
+}
 
 
 // --------------------------------- debug --------------------------------

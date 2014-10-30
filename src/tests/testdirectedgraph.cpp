@@ -24,8 +24,8 @@
 
 namespace MO {
 
-namespace
-{
+//namespace
+//{
     // Structure of some object
     struct Thing
     {
@@ -97,14 +97,30 @@ namespace
 
     // ---------------------------- object tree ------------------------------
 
+    class SomeObject;
+    typedef TreeNode<SomeObject*> SomeNode;
+
     class SomeObject
     {
+        SomeNode * node_;
+        friend class TreeNodeTraits<SomeObject*>;
     public:
 
         QString id;
 
-        SomeObject() { MO_PRINT("obj(" << this << ")"); }
+        SomeObject() : node_(0) { MO_PRINT("obj(" << this << ")"); }
         ~SomeObject() { MO_PRINT("~obj(" << this << ")"); }
+
+        SomeNode * node() const { return node_; }
+    };
+
+    template <>
+    struct TreeNodeTraits<SomeObject*>
+    {
+        typedef TreeNode<SomeObject*> Node;
+
+        static void creator(Node * node) { if (node->object()) node->object()->node_ = node; }
+        static void destructor(Node * node) { if (node->isOwning()) delete node->object(); }
     };
 
     typedef TreeNode<SomeObject*> SomeNode;
@@ -127,7 +143,7 @@ namespace
        return 0;
     }
 
-}
+// } namespace
 
 
 TestDirectedGraph::TestDirectedGraph()
