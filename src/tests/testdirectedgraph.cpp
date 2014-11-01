@@ -104,15 +104,27 @@ namespace MO {
     {
         SomeNode * node_;
         friend class TreeNodeTraits<SomeObject*>;
+        static int counter_;
     public:
 
         QString id;
 
-        SomeObject() : node_(0) { MO_PRINT("obj(" << this << ")"); }
-        ~SomeObject() { MO_PRINT("~obj(" << this << ")"); }
+        SomeObject() : node_(0)
+        {
+            id = QString::number(counter_++);
+            MO_PRINT("obj(" << id << ")");
+        }
+        ~SomeObject() { MO_PRINT("~obj(" << id << ")"); }
 
         SomeNode * node() const { return node_; }
     };
+    int SomeObject::counter_ = 0;
+    /*
+    std::ostream& operator << (std::ostream& out, SomeObject* o)
+    {
+        out << "obj(" << o->id << ")";
+        return out;
+    }*/
 
     template <>
     struct TreeNodeTraits<SomeObject*>
@@ -121,6 +133,9 @@ namespace MO {
 
         static void creator(Node * node) { if (node->object()) node->object()->node_ = node; }
         static void destructor(Node * node) { if (node->isOwning()) delete node->object(); }
+        static QString toString(const Node * node)
+            { return node->object() ? QString("obj(%1)").arg(node->object()->id)
+                                                                     : "null"; }
     };
 
     typedef TreeNode<SomeObject*> SomeNode;
@@ -139,6 +154,17 @@ namespace MO {
         }
 
         root.dumpTree(std::cout);
+
+        MO_PRINT("copy:");
+        auto cpy = root.copy(false);
+        cpy->dumpTree(std::cout);
+        delete cpy;
+
+        MO_PRINT("find:")
+        QList<SomeObject*> objs;
+        root.find(objs, [](const SomeObject*o){ return (o->id.toInt() % 2) == 0; }, false );
+        for (auto o : objs)
+            MO_PRINT(o->id);
 
        return 0;
     }

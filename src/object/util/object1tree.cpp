@@ -1,35 +1,24 @@
-/** @file objecttree.cpp
+/** @file object1tree.cpp
 
     @brief
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 20.10.2014</p>
+    <p>created 01.11.2014</p>
 */
 
-#include "objecttree.h"
-#include "object/object.h"
+
+#include "object1tree.h"
+#include "object/object1.h"
 #include "object/objectfactory.h"
 
 namespace MO {
 
-
-ObjectTreeNode * getObjectTree(Object * root_object)
-{
-    auto node = new ObjectTreeNode(root_object);
-
-    for (auto c : root_object->childObjects())
-        node->append( getObjectTree(c) );
-
-    return node;
-}
-
-
 namespace Private
 {
 
-    QVariant getModelData(Object * obj, int role)
+    QVariant getModelData(Object1 * obj, int role)
     {
         if (role == Qt::DisplayRole)
         {
@@ -48,16 +37,16 @@ namespace Private
         // icon
         if (role == Qt::DecorationRole)
         {
-            return ObjectFactory::iconForObject(obj);
+            //return ObjectFactory::iconForObject(obj);
         }
 
         return QVariant();
     }
 
-    bool setModelData(Object * obj, const QVariant& value, int role)
+    bool setModelData(Object1 * obj, const QVariant& value, int role)
     {
-        if (role == Qt::EditRole)
-            obj->setName(value.toString());
+        //if (role == Qt::EditRole)
+            //obj->setName(value.toString());
 
         return false;
     }
@@ -67,25 +56,25 @@ namespace Private
 
 
 
-class ObjectTree::Private
+class Object1Tree::Private
 {
 public:
-    Object * root;
-    ObjectTreeNode * rootNode;
-    std::map<Object*, ObjectTreeNode*> nodes;
+    Object1 * root;
+    Object1TreeNode * rootNode;
+    std::map<Object1*, Object1TreeNode*> nodes;
 };
 
 
 
-ObjectTree::ObjectTree(Object *root)
+Object1Tree::Object1Tree(Object1 *root)
     : p_    (new Private())
 {
     p_->root = root;
-    p_->rootNode = new ObjectTreeNode(p_->root, true);
+    p_->rootNode = new Object1TreeNode(p_->root, true);
     p_->nodes.insert(std::make_pair(p_->root, p_->rootNode));
 }
 
-ObjectTree::~ObjectTree()
+Object1Tree::~Object1Tree()
 {
     delete p_;
 }
@@ -109,3 +98,4 @@ ObjectTree::~ObjectTree()
 
 
 } // namespace MO
+

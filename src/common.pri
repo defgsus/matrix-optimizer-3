@@ -214,7 +214,8 @@ HEADERS += \
     src/io/isclient.h \
     src/engine/serverengine.h \
     src/object/oscillatorobject.h \
-    src/object/object1.h
+    src/object/object1.h \
+    src/object/util/object1tree.h
 
 
 SOURCES += \
@@ -396,4 +397,5 @@ SOURCES += \
     src/main.cpp \
     src/engine/serverengine.cpp \
     src/object/oscillatorobject.cpp \
-    src/object/object1.cpp
+    src/object/object1.cpp \
+    src/object/util/object1tree.cpp

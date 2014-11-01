@@ -49,6 +49,25 @@ namespace MO {
     };
 
 
+
+    class ObjectTree
+    {
+    public:
+
+        ObjectTree(Object * root);
+        ~ObjectTree();
+
+        void addObject(Object * parent, Object * newChild, int insert_index = -1);
+        void deleteObject(Object * object);
+        void swapChildren(Object * parent, int from, int to);
+
+    private:
+
+        class Private;
+        Private * p_;
+    };
+
+
 } // namespace MO
 
 

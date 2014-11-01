@@ -11,11 +11,16 @@
 #ifndef MOSRC_GRAPH_TREE_H
 #define MOSRC_GRAPH_TREE_H
 
-#include <vector>
-
 #ifndef MO_GRAPH_DEBUG
 #define MO_GRAPH_DEBUG
 #endif
+
+
+#include <vector>
+#include <functional>
+
+#include <QString>
+#include <QList>
 
 #ifdef MO_GRAPH_DEBUG
 #   include <iostream>
@@ -33,6 +38,7 @@ namespace MO {
 template <class T>
 class TreeNode;
 
+/** Traits class for objects in TreeNode */
 template <class T>
 struct TreeNodeTraits
 {
@@ -42,6 +48,10 @@ struct TreeNodeTraits
     static void creator(Node * node) { node=node; }
     /** Called in destructor of node */
     static void destructor(Node * node) { node=node; }
+
+    /** Returns a string representation of each node */
+    static QString toString(const Node * node)
+        { return QString("Node(0x%1)").arg((size_t)node, 0, 16); }
 };
 
 
@@ -60,8 +70,8 @@ public:
     }
     ~TreeNode()
     {
-        Traits::destructor(this);
         for (auto c : p_child_) delete c;
+        Traits::destructor(this);
     }
 
     // ------- getter --------
@@ -94,18 +104,34 @@ public:
     bool hasChild(T child) const { return indexOf(child) >= 0; }
     bool hasChild(TreeNode * child) const { return indexOf(child) >= 0; }
 
-    // ------ more complex getter ------
+    // ------ iterative getter ------
 
     /** Will return the root of the hierarchy which can be
         the node itself */
     TreeNode * root() const;
 
-    /** Returns the node for the object if it's in the hierarchy, include
+    /** Creates a copy of this node and it's subtree. */
+    TreeNode * copy(bool owning = false) const;
+
+    /** Returns the node for the object if it's in the hierarchy, including
         this node itself, or NULL */
-    TreeNode * find(T object) const;
+    TreeNode * find(T object, bool recursive) const;
 
     /** Returns the node for the object if it's a parent of this node, or NULL */
     TreeNode * findParent(T object) const;
+
+    // ------- getter with selector lambda -------
+
+    /* Creates a copy of this node and it's subtree. */
+    //TreeNode * copy(std::function<bool(const T)> selector, bool owning = false) const;
+
+    /** Returns the node for the first object for which @p selector returns true,
+        including this node itself, or NULL */
+    TreeNode * find(bool recursive, std::function<bool(const T)> selector) const;
+
+    /** Puts all objects of the hierarchy into @p objects, if the @p selector
+        function returns true. */
+    bool find(QList<T>& objects, bool recursive, std::function<bool(const T)> selector) const;
 
     // ------- setter --------
 
@@ -118,7 +144,7 @@ public:
     void insert(int index, TreeNode * object);
 
     /** Adds a new children node with associated object.
-        Currently multiple adds of the same object are allowed.... */
+        Adding the same node twice leads to undefined behaviour. */
     TreeNode * append(T object);
 
     /** Inserts a new children node with associated object at the given index,
@@ -137,6 +163,8 @@ public:
     void remove(size_t index);
 
     // ---------------- debug -----------------
+
+    QString toString() const { return Traits::toString(this); }
 
 #ifdef MO_GRAPH_DEBUG
     std::ostream& dumpTree(std::ostream& out, const std::string& prepend = "") const;
@@ -191,9 +219,9 @@ inline TreeNode<T> * TreeNode<T>::children(T object) const
 template <class T>
 inline TreeNode<T> * TreeNode<T>::append(T object)
 {
-    //MO_ASSERT(indexOf(node) < 0, "TreeNode<T>::append() duplicate node " << node);
+    MO_ASSERT(indexOf(object) < 0, "TreeNode::append() duplicate object " << object);
 
-    auto node = new TreeNode(object);
+    auto node = new TreeNode(object, p_own_);
     append(node);
     return node;
 }
@@ -201,7 +229,7 @@ inline TreeNode<T> * TreeNode<T>::append(T object)
 template <class T>
 inline void TreeNode<T>::append(TreeNode * node)
 {
-    MO_ASSERT(indexOf(node) < 0, "TreeNode<T>::append() duplicate node " << node);
+    MO_ASSERT(indexOf(node) < 0, "TreeNode::append() duplicate node " << node);
 
     p_child_.push_back(node);
     p_install_node_(node);
@@ -214,7 +242,7 @@ inline TreeNode<T> * TreeNode<T>::insert(int index, T object)
     if (i >= 0)
         return children(i);
 
-    auto node = new TreeNode(object);
+    auto node = new TreeNode(object, p_own_);
     insert(index, node);
     return node;
 }
@@ -279,6 +307,27 @@ inline TreeNode<T> * TreeNode<T>::root() const
 }
 
 template <class T>
+inline TreeNode<T> * TreeNode<T>::copy(bool owning) const
+{
+    MO_ASSERT(!(p_own_ && owning), "copy of TreeNode with more than one owner");
+
+    auto root = new TreeNode(p_obj_, owning);
+
+    for (auto c : p_child_)
+        root->append(c->copy(owning));
+
+    return root;
+}
+
+/*
+template <class T>
+inline TreeNode<T> * TreeNode<T>::copy(std::function<bool(const T)> selector, bool owning) const
+{
+    MO_ASSERT(!(p_own_ && owning), "copy of TreeNode with more than one owner");
+}
+*/
+
+template <class T>
 inline TreeNode<T> * TreeNode<T>::findParent(T o) const
 {
     return parent() ?
@@ -288,22 +337,75 @@ inline TreeNode<T> * TreeNode<T>::findParent(T o) const
 }
 
 template <class T>
-inline TreeNode<T> * TreeNode<T>::find(T o) const
+inline TreeNode<T> * TreeNode<T>::find(T o, bool recursive) const
 {
     if (object() == o)
         return this;
 
+    if (!recursive)
+    {
+        for (auto c : p_child_)
+            if (c->object() == o)
+                return c;
+    }
+    else
     for (auto c : p_child_)
     {
         if (c->object() == o)
             return c;
-        if (auto n = c->find(o))
+        if (auto n = c->find(o, true))
             return n;
     }
 
     return 0;
 }
 
+template <class T>
+TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T)> selector) const
+{
+    if (selector(object()))
+        return this;
+
+    if (!recursive)
+    {
+        for (auto c : children())
+            if (selector(c->object()))
+                return c;
+    }
+    else
+    {
+        for (auto c : children())
+            if (auto n = c->find(true, selector))
+                return n;
+    }
+
+    return 0;
+}
+
+template <class T>
+bool TreeNode<T>::find(QList<T>& objects, bool recursive, std::function<bool(const T)> selector) const
+{
+    bool f = selector(object());
+    if (f)
+        objects.append(object());
+
+    if (!recursive)
+    {
+        for (auto c : p_child_)
+        {
+            if (selector(c->object()))
+            {
+                f = true;
+                objects.append(c->object());
+            }
+        }
+    }
+    else
+    for (auto c : p_child_)
+        f |= c->find(objects, true, selector);
+
+    return f;
+}
 
 // --------------------------------- debug --------------------------------
 
@@ -312,7 +414,7 @@ inline TreeNode<T> * TreeNode<T>::find(T o) const
 template <class T>
 std::ostream& TreeNode<T>::dumpTree(std::ostream& out, const std::string& prepend) const
 {
-    out << prepend << object() << std::endl;
+    out << prepend << toString().toStdString() << std::endl;
 
     for (auto i : p_child_)
         i->dumpTree(out, " " + prepend);
