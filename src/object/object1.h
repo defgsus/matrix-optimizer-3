@@ -29,8 +29,8 @@ namespace MO {
 namespace IO { class DataStream; }
 namespace MATH { class Timeline1D; }
 
-
 class Object1;
+namespace Private { void setObjectNode(Object1*, TreeNode<Object1*> *); }
 
 
 
@@ -68,10 +68,11 @@ class Object1;
 */
 class Object1
 {
-    // to set idName_
+    // to set idName
     friend class ObjectFactory;
     // to set the node
-    friend class TreeNodeTraits<Object1*>;
+    friend void Private::setObjectNode(Object1*, TreeNode<Object1*> *);
+    friend struct TreeNodeTraits<Object1*>;
 public:
 
     // -------------- types ------------------
@@ -186,19 +187,22 @@ public:
 
     // --------------- getter -------------------
 
+    TreeNode<Object1*> * node() const;
+
     /** Name of the object class, for creating objects at runtime.
         MUST NOT CHANGE for compatibility with saved files! */
     virtual const QString& className() const = 0;
     /** Tree-unique id of the object. */
-    const QString& idName() const { return idName_; }
+    const QString& idName() const;
     /** User defined name of the object */
-    const QString& name() const { return name_; }
-    /** Override to add some additional information. */
-    virtual QString infoName() const { return name_; }
-
+    const QString& name() const;
+    /** Override to add some additional information.
+        The base class returns name() */
+    virtual QString infoName() const { return name(); }
+#if 0
     /** Returns the id of the object before it might have been changed through makeUniqueId() */
     const QString& originalIdName() const { return orgIdName_; }
-
+#endif
     /** Return the path up to this object */
     QString namePath() const;
 
@@ -232,10 +236,10 @@ public:
     bool isAudioRelevant() const;
 
     /** Returns true when the object can be deleted by the ObjectTreeView */
-    bool canBeDeleted() const { return canBeDeleted_; }
+    bool canBeDeleted() const;
 
     /** Returns a priority for each object type */
-    static int objectPriority(const Object *);
+    static int objectPriority(const Object1 *);
 
     // ---------- activity (scope) ----------------
 
@@ -243,7 +247,7 @@ public:
     ActivityScope activityScope() const;
 
     /** Returns the currently set scope for the tree */
-    ActivityScope currentActivityScope() const { return currentActivityScope_; }
+    ActivityScope currentActivityScope() const;
 
     /** Returns if the object is active at the given time */
     bool active(Double time, uint thread) const;
@@ -266,19 +270,19 @@ public:
     /** Test if object @p newChild can be added to this object.
         This checks for type compatibility as well as for
         potential loops in the modulation path. */
-    bool isSaveToAdd(Object * newChild, QString& error) const;
+    bool isSaveToAdd(Object1 * newChild, QString& error) const;
 
     /** Returns the root object of this hierarchy, which may
         be the object itself. */
-    const Object * rootObject() const;
-          Object * rootObject();
+    const Object1 * rootObject() const;
+          Object1 * rootObject();
 
     /** Returns the Scene object (also for the scene itself), or NULL */
     const Scene * sceneObject() const;
           Scene * sceneObject();
 
     /** Returns the parent Object, or NULL */
-    Object1 * parentObject() const { return p_node_ ? p_node_->parent()->object() : 0; }
+    Object1 * parentObject() const;
 #if 0
     /** See if this object has a parent object @p o. */
     bool hasParentObject(Object1 * o) const;
@@ -302,9 +306,10 @@ public:
     /** Returns true if this object or any of it's childs are
         equal to @p o */
     bool containsObject(Object1 * o) const;
-#endif
+
     /** Returns number of direct childs or number of all sub-childs. */
     int numChildren(bool recursive = false) const;
+#endif
 
     /** Returns true if an Object of @p type can be a children of this Object. */
     virtual bool canHaveChildren(Type type) const;
@@ -365,7 +370,7 @@ protected:
         @note Call ancestor's implementation before your derived code!
         Object's base implementation removes all modulators from parameters
         that point to deleted objects. */
-    virtual void onObjectsAboutToDelete(const QList<Object*>& list);
+    virtual void onObjectsAboutToDelete(const QList<Object1 *> &list);
 
     /** Called when the parent of this object has changed.
         This happens when the object has been added to or moved in tree.
@@ -381,7 +386,7 @@ protected:
 public:
 
     /** Returns the number of threads, this object is assigned for */
-    uint numberThreads() const { return numberThreads_; }
+    uint numberThreads() const;
 
     /** Returns true if number of threads is matching @p num.
         This checks for all contained stuff like AudioSources as well.
@@ -435,16 +440,16 @@ public:
     virtual void collectModulators() { };
 
     /** Returns a list of objects that modulate this object. */
-    virtual QList<Object*> getModulatingObjects() const;
+    virtual QList<Object1*> getModulatingObjects() const;
 
     /** Returns the list of all Parameters that are modulated.
         Each entry is a pair of the Parameter and the modulating object.
         Multiple modulations on the same Parameter have multiply entries in the list. */
-    virtual QList<QPair<Parameter*, Object*>> getModulationPairs() const;
+    virtual QList<QPair<Parameter*, Object1*>> getModulationPairs() const;
 
     /** Returns a list of objects that will modulate this object
         when it gets added to the scene. */
-    virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
+    virtual QList<Object1*> getFutureModulatingObjects(const Scene * scene) const;
 
     // --------------- outputs ---------------------
 
@@ -723,10 +728,6 @@ public:
     virtual void getNeededFiles(IO::FileList & files) { Q_UNUSED(files); }
 #endif
 
-signals:
-
-public slots:
-
     // _____________ PRIVATE AREA __________________
 
 private:
@@ -734,6 +735,9 @@ private:
     // disable copy
     Object1(const Object1&);
     void operator=(const Object1&);
+
+    void p_set_node_(Node *);
+    void p_set_id_(const QString&);
 
 #if 0
     /** Implementation of deserializeTree() */
@@ -771,36 +775,19 @@ private:
 
     void passDownActivityScope_(ActivityScope parent_scope);
 #endif
-    // ------------ properties ---------------
 
-    QString idName_, name_, orgIdName_;
+    class PrivateObject;
+    PrivateObject * p_o_;
 
-    bool canBeDeleted_;
 
     // ----------- tree ----------------------
 
-    Node * p_node_;
 #if 0
     Object1 * parentObject_;
     QList<Object1*> childObjects_;
     QList<Transformation*> transformationObjects_;
     bool childrenHaveChanged_;
 #endif
-    // ---------- threads and blocksize ------
-
-    uint numberThreads_;
-    std::vector<uint> bufferSize_;
-
-    // ----------- parameter -----------------
-
-    QList<Parameter*> parameters_;
-    QString currentParameterGroupId_,
-            currentParameterGroupName_;
-
-    // --------- default parameters ----------
-
-    ParameterSelect * paramActiveScope_;
-
     // ------------ audio --------------------
 #if 0
     QList<AUDIO::AudioSource*> objAudioSources_;
@@ -811,11 +798,6 @@ private:
 #endif
     // ------------ runtime ------------------
 
-    ActivityScope
-    /** activity scope passed down from parents */
-        parentActivityScope_,
-    /** current requested activity scope */
-        currentActivityScope_;
 
     // ----------- position ------------------
 #if 0
@@ -826,18 +808,6 @@ private:
 /** Installs the Object1 in ObjectFactory.
     @note Prefere to use MO_REGISTER_Object to do the job */
 extern bool registerObject1_(Object1 *);
-
-
-
-/** Specialization for TreeNode */
-template <>
-struct TreeNodeTraits<Object1*>
-{
-    typedef TreeNode<Object1*> Node;
-
-    static void creator(Node * node) { if (node->object()) node->object()->p_node_ = node; }
-    static void destructor(Node * node) { if (node->isOwning()) delete node->object(); }
-};
 
 
 

@@ -21,12 +21,28 @@ namespace MO {
 
     typedef TreeNode<Object1*> Object1TreeNode;
 
+    // some functions to set or retrieve certain values from Object1
+    // without including it's header
     namespace Private
     {
         QVariant getModelData(Object1*, int role);
         bool setModelData(Object1*, const QVariant& data, int role);
+        void setObjectNode(Object1*, Object1TreeNode *);
+        void deleteObject(Object1*);
     }
 
+    /** Specialization for Object1* in TreeNode */
+    template <>
+    struct TreeNodeTraits<Object1*>
+    {
+        typedef TreeNode<Object1*> Node;
+
+        static void creator(Node * node) { if (node->object()) Private::setObjectNode(node->object(), node); }
+        static void destructor(Node * node) { if (node->isOwning()) Private::deleteObject(node->object()); }
+        static QString toString(const Node * node)
+            { if (node->object()) return Private::getModelData(node->object(), Qt::DisplayRole).toString();
+                else return "Object(null)"; }
+    };
 
     /** specialization for Object* in TreeModel */
     template <>

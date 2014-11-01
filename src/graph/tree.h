@@ -87,6 +87,10 @@ public:
 
     /** Number of direct children */
     size_t numChildren() const { return p_child_.size(); }
+
+    /** Read access to std container with children nodes. */
+    const std::vector<TreeNode*> & children() const { return p_child_; }
+
     /** Access to xth children.
         Not range checked! */
     TreeNode * children(size_t index) const { return p_child_[index]; }
