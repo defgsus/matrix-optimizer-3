@@ -38,7 +38,8 @@ GeometryFactorySettings::GeometryFactorySettings()
 {
     MO_DEBUG_GEOM("GeometryFactorySettings::GeometryFactorySettings()");
 
-    // default: calculate normals
+    // default: create and calculate normals
+    modifierChain_->addModifier(new GeometryModifierCreate());
     modifierChain_->addModifier(new GeometryModifierNormals());
 }
 
@@ -303,6 +304,7 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         // convert above stuff
 
         auto geom = new GeometryModifierCreate();
+        geom->setType(pre11Type);
         geom->setAsTriangles(asTriangles);
         geom->setSharedVertices(sharedVertices);
         geom->setSegmentsX(segmentsX);
@@ -315,7 +317,7 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         geom->setAlpha(colorA);
         geom->setFilename(filename);
 
-        modifierChain_->addModifier(geom);
+        modifierChain_->insertModifier(geom, 0);
 
     }
 

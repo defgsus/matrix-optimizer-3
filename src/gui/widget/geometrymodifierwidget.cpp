@@ -18,6 +18,7 @@
 
 #include "geometrymodifierwidget.h"
 #include "io/error.h"
+#include "io/files.h"
 #include "doublespinbox.h"
 #include "spinbox.h"
 #include "groupwidget.h"
@@ -665,9 +666,9 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
 
     for (uint i=0; i<settings->numTypes; ++i)
     {
-        comboType_->addItem(settings->typeNames[i], i);
-        if (settings_->type == (GEOM::GeometryModifierCreate::Type)i)
-            comboType_->setCurrentIndex(i);
+        comboType->addItem(settings->typeNames[i], i);
+        if (settings->type() == (GEOM::GeometryModifierCreate::Type)i)
+            comboType->setCurrentIndex(i);
     }
 
     connect(comboType, SIGNAL(currentIndexChanged(QString)),
@@ -679,15 +680,23 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         // filename
         auto editFilename = new QLineEdit(this);
         lh2->addWidget(editFilename);
-        editFilename->setText(settings->filename);
+        editFilename->setText(settings->filename());
         editFilename->setReadOnly(true);
 
         auto butLoadModelFile = new QToolButton(this);
         lh2->addWidget(butLoadModelFile);
         butLoadModelFile->setText("...");
-        // XXXX
-        connect(butLoadModelFile, SIGNAL(clicked()), this, SLOT(loadModelFile_()));
+        connect(butLoadModelFile, &QToolButton::clicked, [=]()
+        {
+            QString filename =
+                IO::Files::getOpenFileName(IO::FT_MODEL, this);
 
+            if (filename.isEmpty())
+                return;
+
+            editFilename->setText(filename);
+            updateFromWidgets_();
+        });
 
 
     lh2 = new QHBoxLayout();
@@ -696,14 +705,14 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         // create triangles
         auto cbTriangles = new QCheckBox(tr("create triangles"), this);
         lh2->addWidget(cbTriangles);
-        cbTriangles->setChecked(settings->asTriangles);
+        cbTriangles->setChecked(settings->asTriangles());
         connect(cbTriangles, SIGNAL(stateChanged(int)),
                 this, SLOT(updateFromWidgets_()));
 
         // shared vertices
         auto cbSharedVert = new QCheckBox(tr("shared vertices"), this);
         lh2->addWidget(cbSharedVert);
-        cbSharedVert->setChecked(settings->sharedVertices);
+        cbSharedVert->setChecked(settings->sharedVertices());
         connect(cbSharedVert, SIGNAL(stateChanged(int)),
                 this, SLOT(updateFromWidgets_()));
 
@@ -720,13 +729,13 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         spinSmallRadius->setDecimals(5);
         spinSmallRadius->setSingleStep(0.02);
         spinSmallRadius->setRange(0.0001, 100000);
-        spinSmallRadius->setValue(settings_->smallRadius);
+        spinSmallRadius->setValue(settings->smallRadius());
         connect(spinSmallRadius, SIGNAL(valueChanged(double)),
                 this, SLOT(updateFromWidgets_()));
 
     // segments
     auto labelSeg = new QLabel(tr("segments"), this);
-    lv->addWidget(labelSeg);
+    group_->addWidget(labelSeg);
 
     lh2 = new QHBoxLayout();
     group_->addLayout(lh2);
@@ -735,7 +744,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         lh2->addWidget(spinSegX);
         spinSegX->setStatusTip("Number of segments (X)");
         spinSegX->setRange(1, 10000);
-        spinSegX->setValue(settings_->segmentsX);
+        spinSegX->setValue(settings->segmentsX());
         connect(spinSegX, SIGNAL(valueChanged(int)),
                 this, SLOT(updateFromWidgets_()));
 
@@ -743,7 +752,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         lh2->addWidget(spinSegY);
         spinSegY->setStatusTip("Number of segments (Y)");
         spinSegY->setRange(1, 10000);
-        spinSegY->setValue(settings_->segmentsY);
+        spinSegY->setValue(settings->segmentsY());
         connect(spinSegY, SIGNAL(valueChanged(int)),
                 this, SLOT(updateFromWidgets_()));
 
@@ -751,7 +760,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         lh2->addWidget(spinSegZ);
         spinSegZ->setStatusTip("Number of segments (Z)");
         spinSegZ->setRange(0, 10000);
-        spinSegZ->setValue(settings_->segmentsZ);
+        spinSegZ->setValue(settings->segmentsZ());
         connect(spinSegZ, SIGNAL(valueChanged(int)),
                 this, SLOT(updateFromWidgets_()));
 
@@ -765,11 +774,11 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         spinR->setDecimals(5);
         spinR->setSingleStep(0.1);
         spinR->setRange(0.0, 1);
-        spinR->setValue(settings_->colorR);
+        spinR->setValue(settings->red());
         QPalette pal(spinR->palette());
         pal.setColor(QPalette::Text, QColor(100,0,0));
         spinR->setPalette(pal);
-        connect(spinR_, SIGNAL(valueChanged(double)),
+        connect(spinR, SIGNAL(valueChanged(double)),
                 this, SLOT(updateFromWidgets_()));
 
         auto spinG = new DoubleSpinBox(this);
@@ -778,7 +787,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         spinG->setDecimals(5);
         spinG->setSingleStep(0.1);
         spinG->setRange(0.0, 1);
-        spinG->setValue(settings_->colorG);
+        spinG->setValue(settings->green());
         pal.setColor(QPalette::Text, QColor(0,70,0));
         spinG->setPalette(pal);
         connect(spinG, SIGNAL(valueChanged(double)),
@@ -790,7 +799,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         spinB->setDecimals(5);
         spinB->setSingleStep(0.1);
         spinB->setRange(0.0, 1);
-        spinB->setValue(settings_->colorB);
+        spinB->setValue(settings->blue());
         pal.setColor(QPalette::Text, QColor(0,0,140));
         spinB->setPalette(pal);
         connect(spinB, SIGNAL(valueChanged(double)),
@@ -802,38 +811,38 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         spinA->setDecimals(5);
         spinA->setSingleStep(0.1);
         spinA->setRange(0.0, 1);
-        spinA->setValue(settings_->colorA);
+        spinA->setValue(settings->alpha());
         connect(spinA, SIGNAL(valueChanged(double)),
                 this, SLOT(updateFromWidgets_()));
 
     auto funcUpdateVisibility = [=]()
     {
         const bool
-                isFile = settings->type ==
-                        GEOM::GeometryFactorySettings::T_FILE,
+                isFile = settings->type() ==
+                        GEOM::GeometryModifierCreate::T_FILE,
                 canOnlyTriangle = isFile
-                        || settings->type == GEOM::GeometryFactorySettings::T_BOX_UV,
-                canTriangle = (settings->type !=
-                                GEOM::GeometryFactorySettings::T_GRID_XZ
-                                && settings->type !=
-                                GEOM::GeometryFactorySettings::T_LINE_GRID),
+                        || settings->type() == GEOM::GeometryModifierCreate::T_BOX_UV,
+                canTriangle = (settings->type() !=
+                                GEOM::GeometryModifierCreate::T_GRID_XZ
+                                && settings->type() !=
+                                GEOM::GeometryModifierCreate::T_LINE_GRID),
     //            hasTriangle = (canTriangle && (settings_->asTriangles || isFile)),
-                has2Segments = (settings->type ==
-                                GEOM::GeometryFactorySettings::T_UV_SPHERE
-                               || settings->type ==
-                                GEOM::GeometryFactorySettings::T_GRID_XZ
-                               || settings->type ==
-                                GEOM::GeometryFactorySettings::T_LINE_GRID
-                               || settings->type ==
-                                GEOM::GeometryFactorySettings::T_CYLINDER_CLOSED
-                               || settings->type ==
-                                GEOM::GeometryFactorySettings::T_CYLINDER_OPEN
-                               || settings->type ==
-                                GEOM::GeometryFactorySettings::T_TORUS),
-                has3Segments = (has2Segments && settings->type ==
-                                GEOM::GeometryFactorySettings::T_LINE_GRID),
-                hasSmallRadius = (settings->type ==
-                                GEOM::GeometryFactorySettings::T_TORUS);
+                has2Segments = (settings->type() ==
+                                GEOM::GeometryModifierCreate::T_UV_SPHERE
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_GRID_XZ
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_LINE_GRID
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_CYLINDER_CLOSED
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_CYLINDER_OPEN
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_TORUS),
+                has3Segments = (has2Segments && settings->type() ==
+                                GEOM::GeometryModifierCreate::T_LINE_GRID),
+                hasSmallRadius = (settings->type() ==
+                                GEOM::GeometryModifierCreate::T_TORUS);
 
         editFilename->setVisible(isFile);
         butLoadModelFile->setVisible(isFile);
@@ -849,9 +858,13 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         cbTriangles->setVisible( canTriangle && !canOnlyTriangle);
     };
 
+    //bool ignoreUpdates = false;
 
     funcUpdateFromWidgets_ = [=]()
     {
+        //if (ignoreUpdates)
+        //    return;
+
         settings->setAsTriangles(cbTriangles->isChecked());
         settings->setSharedVertices(cbSharedVert->isChecked());
         settings->setRed(spinR->value());
@@ -865,7 +878,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         settings->setSmallRadius(spinSmallRadius->value());
         if (comboType->currentIndex() >= 0)
             settings->setType((GEOM::GeometryModifierCreate::Type)
-                comboType->itemData(comboType->currentIndex()).toInt();
+                comboType->itemData(comboType->currentIndex()).toInt());
 
         funcUpdateVisibility();
     };
@@ -873,6 +886,8 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
     funcUpdateWidgets_ = [=]()
     {
         funcUpdateVisibility();
+
+        //ignoreUpdates = true;
 
         editFilename->setText(settings->filename());
         cbTriangles->setChecked(settings->asTriangles());
@@ -885,6 +900,8 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         spinG->setValue(settings->green());
         spinB->setValue(settings->blue());
         spinA->setValue(settings->alpha());
+
+        //ignoreUpdates = false;
     };
 
 }

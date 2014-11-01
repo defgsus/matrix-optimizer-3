@@ -58,7 +58,6 @@ protected slots:
     void changeView_();
     void updateGeometry_();
     void updateFromWidgets_();
-    void loadModelFile_();
     void savePreset_();
     void savePresetAs_();
     void deletePreset_();
@@ -104,15 +103,9 @@ protected:
 
     QStatusBar * statusBar_;
     QProgressBar * progressBar_;
-    QLabel * labelInfo_, *labelSeg_, *labelSmallRadius_;
-    QLineEdit * editFilename_;
-    QToolButton *butSavePreset_, *butSavePresetAs_, *butDeletePreset_,
-                *butLoadModelFile_;
+    QLabel * labelInfo_;
+    QToolButton *butSavePreset_, *butSavePresetAs_, *butDeletePreset_;
     QComboBox * comboPreset_, *comboView_, * comboType_;
-    QCheckBox * cbTriangles_, *cbSharedVert_;
-    DoubleSpinBox *spinR_, *spinG_, *spinB_, *spinA_,
-                  *spinSmallRadius_;
-    SpinBox * spinSegX_, *spinSegY_, *spinSegZ_;
 };
 
 

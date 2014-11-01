@@ -171,6 +171,12 @@ void GeometryModifierChain::addModifier(GeometryModifier *g)
     modifiers_.append(g);
 }
 
+void GeometryModifierChain::insertModifier(
+        GeometryModifier * geom, uint index)
+{
+    modifiers_.insert(index, geom);
+}
+
 GeometryModifier * GeometryModifierChain::addModifier(const QString &className)
 {
     GeometryModifier * geom = createModifier(className);
@@ -202,6 +208,22 @@ GeometryModifier * GeometryModifierChain::insertModifier(
 
     return geom;
 }
+
+GeometryModifier * GeometryModifierChain::insertModifier(
+        const QString &className, uint index)
+{
+    GeometryModifier * geom = createModifier(className);
+    if (!geom)
+    {
+        MO_WARNING("request for unknown GeometryModifier '" << className << "'");
+        return 0;
+    }
+
+    modifiers_.insert(index, geom);
+
+    return geom;
+}
+
 
 bool GeometryModifierChain::moveModifierUp(GeometryModifier *g)
 {

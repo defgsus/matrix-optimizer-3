@@ -162,7 +162,8 @@ namespace MO {
 
         MO_PRINT("find:")
         QList<SomeObject*> objs;
-        root.find(objs, [](const SomeObject*o){ return (o->id.toInt() % 2) == 0; }, false );
+        root.find(objs, false, [](const SomeObject*o)
+            { return (o->id.toInt() % 2) == 0; } );
         for (auto o : objs)
             MO_PRINT(o->id);
 

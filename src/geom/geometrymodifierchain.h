@@ -64,6 +64,10 @@ public:
         Ownership is taken */
     void addModifier(GeometryModifier * g);
 
+    /** Inserts a modifier to the execution chain.
+        Ownership is taken */
+    void insertModifier(GeometryModifier * g, uint index);
+
     /** Adds a new modifier to the execution chain.
         Returns the created instance, or NULL if @p className is not defined. */
     GeometryModifier * addModifier(const QString& className);
@@ -71,6 +75,10 @@ public:
     /** Inserts a new modifier to the execution chain before the modifier @p before.
         Returns the created instance, or NULL if @p className is not defined. */
     GeometryModifier * insertModifier(const QString& className, GeometryModifier * before);
+
+    /** Inserts a new modifier to the execution chain at given index.
+        Returns the created instance, or NULL if @p className is not defined. */
+    GeometryModifier * insertModifier(const QString& className, uint index);
 
     /** Moves the modifier up in the chain, returns true if moved */
     bool moveModifierUp(GeometryModifier * g);

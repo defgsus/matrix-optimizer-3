@@ -523,66 +523,6 @@ void GeometryDialog::updateFromWidgets_()
     if (ignoreUpdate_)
         return;
 
-    // update settings
-
-    if (comboType_->currentIndex() >= 0)
-    settings_->type = (GEOM::GeometryFactorySettings::Type)
-                        comboType_->itemData(comboType_->currentIndex()).toInt();
-
-    settings_->filename = editFilename_->text();
-    settings_->asTriangles = cbTriangles_->isChecked();
-    settings_->sharedVertices = cbSharedVert_->isChecked();
-    settings_->smallRadius = spinSmallRadius_->value();
-    settings_->segmentsX = spinSegX_->value();
-    settings_->segmentsY = spinSegY_->value();
-    settings_->segmentsZ = spinSegZ_->value();
-    settings_->colorR = spinR_->value();
-    settings_->colorG = spinG_->value();
-    settings_->colorB = spinB_->value();
-    settings_->colorA = spinA_->value();
-
-    // update widgets visibility
-
-    const bool
-            isFile = settings_->type ==
-                    GEOM::GeometryFactorySettings::T_FILE,
-            canOnlyTriangle = isFile
-                    || settings_->type == GEOM::GeometryFactorySettings::T_BOX_UV,
-            canTriangle = (settings_->type !=
-                            GEOM::GeometryFactorySettings::T_GRID_XZ
-                            && settings_->type !=
-                            GEOM::GeometryFactorySettings::T_LINE_GRID),
-//            hasTriangle = (canTriangle && (settings_->asTriangles || isFile)),
-            has2Segments = (settings_->type ==
-                            GEOM::GeometryFactorySettings::T_UV_SPHERE
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_GRID_XZ
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_LINE_GRID
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_CYLINDER_CLOSED
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_CYLINDER_OPEN
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_TORUS),
-            has3Segments = (has2Segments && settings_->type ==
-                            GEOM::GeometryFactorySettings::T_LINE_GRID),
-            hasSmallRadius = (settings_->type ==
-                            GEOM::GeometryFactorySettings::T_TORUS);
-
-    editFilename_->setVisible(isFile);
-    butLoadModelFile_->setVisible(isFile);
-
-    labelSeg_->setVisible( has2Segments );
-    spinSegX_->setVisible( has2Segments );
-    spinSegY_->setVisible( has2Segments );
-    spinSegZ_->setVisible( has3Segments );
-
-    labelSmallRadius_->setVisible( hasSmallRadius );
-    spinSmallRadius_->setVisible( hasSmallRadius );
-
-    cbTriangles_->setVisible( canTriangle && !canOnlyTriangle);
-
     updateGeometry_();
 }
 
@@ -590,39 +530,9 @@ void GeometryDialog::updateWidgets_()
 {
     ignoreUpdate_ = true;
 
-    comboType_->clear();
-    for (uint i=0; i<settings_->numTypes; ++i)
-    {
-        comboType_->addItem(settings_->typeNames[i], i);
-        if (settings_->type == (GEOM::GeometryFactorySettings::Type)i)
-            comboType_->setCurrentIndex(i);
-    }
-    editFilename_->setText(settings_->filename);
-    cbTriangles_->setChecked(settings_->asTriangles);
-    cbSharedVert_->setChecked(settings_->sharedVertices);
-    spinSmallRadius_->setValue(settings_->smallRadius);
-    spinSegX_->setValue(settings_->segmentsX);
-    spinSegY_->setValue(settings_->segmentsY);
-    spinSegZ_->setValue(settings_->segmentsZ);
-    spinR_->setValue(settings_->colorR);
-    spinG_->setValue(settings_->colorG);
-    spinB_->setValue(settings_->colorB);
-    spinA_->setValue(settings_->colorA);
-
     ignoreUpdate_ = false;
 }
 
-void GeometryDialog::loadModelFile_()
-{
-    QString filename =
-        IO::Files::getOpenFileName(IO::FT_MODEL, this);
-
-    if (filename.isEmpty())
-        return;
-
-    editFilename_->setText(filename);
-    updateFromWidgets_();
-}
 
 void GeometryDialog::updatePresetList_(const QString &selectFilename)
 {
@@ -725,7 +635,7 @@ void GeometryDialog::presetSelected_()
 void GeometryDialog::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 {
     *settings_ = s;
-    modifiers_ = settings_->modifierChain;
+    modifiers_ = settings_->modifierChain();
 
     updateWidgets_();
     createModifierWidgets_();
