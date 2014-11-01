@@ -13,6 +13,7 @@
 
 #include <QList>
 #include <QMap>
+#include "io/filetypes.h"
 
 namespace MO {
 namespace IO { class DataStream; }
@@ -20,6 +21,7 @@ namespace GEOM {
 
 class Geometry;
 class GeometryModifier;
+class ObjLoader;
 
 class GeometryModifierChain
 {
@@ -80,6 +82,10 @@ public:
         Returns true if deleted (that is: if it was part of the chain).
         The class is only destroyed when it was part of the chain! */
     bool deleteModifier(GeometryModifier * g);
+
+    // ----------- info -------------------
+
+    void getNeededFiles(IO::FileList & files) const;
 
     // ----------- execution --------------
 

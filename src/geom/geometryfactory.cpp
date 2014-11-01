@@ -13,13 +13,9 @@
 
 #include "geometryfactory.h"
 #include "geometry.h"
-#include "geometryfactorysettings.h"
-#include "geometrymodifierchain.h"
-#include "objloader.h"
 #include "math/vector.h"
 #include "math/hash.h"
 #include "io/log.h"
-#include "io/filemanager.h"
 
 namespace MO {
 namespace GEOM {
@@ -998,93 +994,6 @@ void GeometryFactory::createDodecahedron(Geometry * g, Float scale, bool asTrian
 
 
 
-
-
-void GeometryFactory::createFromSettings(Geometry * g,
-                                         const GeometryFactorySettings * set,
-                                         ObjLoader * loader_)
-{
-    // shared vertices?
-    g->setSharedVertices(set->sharedVertices);
-
-    // initial color
-    g->setColor(set->colorR, set->colorG, set->colorB, set->colorA);
-
-    // create mesh
-    switch (set->type)
-    {
-    case GeometryFactorySettings::T_FILE:
-        //MO_DEBUG(set->filename << ", " << loader_);
-        if (!set->filename.isEmpty() && loader_)
-        {
-            const QString& filename = IO::fileManager().localFilename(set->filename);
-            loader_->loadFile(filename);
-            loader_->getGeometry(g);
-        }
-    break;
-
-    case GeometryFactorySettings::T_QUAD:
-        createQuad(g, 1.f, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_BOX:
-        createCube(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_BOX_UV:
-        createTexturedBox(g, 1.f, 1.f, 1.f);
-    break;
-
-    case GeometryFactorySettings::T_GRID_XZ:
-        createGridXZ(g, set->segmentsX, set->segmentsY, true);
-    break;
-
-    case GeometryFactorySettings::T_LINE_GRID:
-        createLineGrid(g, set->segmentsX, set->segmentsY, set->segmentsZ);
-    break;
-
-    case GeometryFactorySettings::T_UV_SPHERE:
-        createUVSphere(g, 1.f, std::max((uint)3, set->segmentsX),
-                               std::max((uint)2, set->segmentsY), set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_TETRAHEDRON:
-        createTetrahedron(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_OCTAHEDRON:
-        createOctahedron(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_ICOSAHEDRON:
-        createIcosahedron(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_DODECAHEDRON:
-        createDodecahedron(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_CYLINDER_CLOSED:
-        createCylinder(g, 1.f, 1.f, set->segmentsX, set->segmentsY, false, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_CYLINDER_OPEN:
-        createCylinder(g, 1.f, 1.f, set->segmentsX, set->segmentsY, true, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_TORUS:
-        createTorus(g, 1.f, set->smallRadius, set->segmentsX, set->segmentsY, set->asTriangles);
-    break;
-
-    }
-
-    if (!set->sharedVertices && set->type != GeometryFactorySettings::T_FILE)
-        g->unGroupVertices();
-
-    // --- modify ---
-
-    set->modifierChain->execute(g);
-}
 
 
 

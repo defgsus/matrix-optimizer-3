@@ -16,7 +16,7 @@
 #include "geom/geometry.h"
 #include "geom/geometryfactory.h"
 #include "geom/geometryfactorysettings.h"
-#include "geom/objloader.h"
+#include "geom/geometrymodifierchain.h"
 #include "io/log.h"
 
 namespace MO {
@@ -31,7 +31,6 @@ GeometryCreator::GeometryCreator(QObject *parent) :
     geometry_   (0),
     curGeometry_(0),
     settings_   (new GeometryFactorySettings()),
-    loader_     (0),
     timer_      (new QTimer(this)),
     mutex_      (new QMutex())
 {
@@ -88,16 +87,14 @@ void GeometryCreator::run()
 
         settings = *settings_;
 
-        // create a file loader if nescessary
-        if (settings.type == GeometryFactorySettings::T_FILE)
-            loader_ = new ObjLoader();
     }
 
     bool success = false;
 
     try
     {
-        GeometryFactory::createFromSettings(curGeometry_, &settings, loader_);
+        settings.modifierChain()->execute(curGeometry_);
+
         success = true;
     }
     catch (Exception & e)
@@ -112,9 +109,6 @@ void GeometryCreator::run()
     }
 
     QMutexLocker lock(mutex_);
-
-    delete loader_;
-    loader_ = 0;
 
     delete geometry_;
     geometry_ = curGeometry_;
@@ -135,11 +129,11 @@ void GeometryCreator::onTimer_()
 
     QMutexLocker lock(mutex_);
 
-    if (loader_ && loader_->isLoading())
+    /*if (loader_ && loader_->isLoading())
     {
         emit progress(loader_->progress());
         return;
-    }
+    }*/
 
     if (curGeometry_)
         emit progress(curGeometry_->progress());

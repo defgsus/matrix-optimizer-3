@@ -13,6 +13,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "geometrymodifier.h"
+#include "geometrymodifiercreate.h"
 
 namespace MO {
 namespace GEOM {
@@ -129,6 +130,14 @@ QList<QString> GeometryModifierChain::modifierGuiNames()
     for (auto m : *registeredModifiers_)
         list.append(m->guiName());
     return list;
+}
+
+void GeometryModifierChain::getNeededFiles(IO::FileList &files) const
+{
+    for (auto m : modifiers())
+        if (auto mc = dynamic_cast<GeometryModifierCreate*>(m))
+            if (mc->type() == GeometryModifierCreate::T_FILE)
+                files.append(IO::FileListEntry(mc->filename(), IO::FT_MODEL));
 }
 
 GeometryModifier * GeometryModifierChain::createModifier(const QString &className)
