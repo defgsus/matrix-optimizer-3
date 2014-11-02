@@ -138,6 +138,9 @@ public:
     /** Returns a pointer to numTriangles() * 3 indices */
     IndexType * lineIndices() { return &lineIndex_[0]; }
 
+    /** Returns false if the triangle is degenerate */
+    static bool checkTriangle(const Vec3&, const Vec3&, const Vec3&);
+
     // --------- state -----------------------
 
     /** Sets the current color. Any subsequent call to the
@@ -197,6 +200,10 @@ public:
 
     /** Connects three previously created indices to form a triangle. */
     void addTriangle(IndexType p1, IndexType p2, IndexType p3);
+
+    /** Connects three previously created indices to form a triangle.
+        Uses checkTriangle() to discard degenerate triangles. */
+    void addTriangleChecked(IndexType p1, IndexType p2, IndexType p3);
 
     /** Connects two previously created indices to form a line */
     void addLine(IndexType p1, IndexType p2);
@@ -309,8 +316,12 @@ public:
         are created.
         If also @p recognizeEdges is true, then only those side faces will be created
         that don't circumvent original triangles with the same normal. E.g.
-        a quad will have 4 side faces and the inner triangle edge face is not created. */
+        a quad will have 4 side faces and the inner triangle edge face is not created.
+        @p shift_center is a factor [0,1] of moving the extruded triangled vertices
+        into the center of the extruded triangle and can be negative for experimental
+        reasons. */
     void extrudeTriangles(Geometry & geom, VertexType constant, VertexType factor,
+                          VertexType shift_center,
                           bool createNewFaces, bool recognizeEdges) const;
 
     // ------------- opengl -----------------

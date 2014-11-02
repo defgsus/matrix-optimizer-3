@@ -79,6 +79,8 @@
 
 ---- OpenGL -----
 
+* BUG: scale transformation screws normals/lighting
+
 * BUG: QImage conversion of certain texture-sizes is buggy and texture-upload crashes!
 
 * fix TextureOverlay::PT_EQUIRECT mode for cube-mapped render
@@ -88,7 +90,7 @@
 
 - OK concept and implementation of a generic Model container and a Model renderer
 
-* multi-projection
+- Ok multi-projection
 
 
 ---- Networking ----

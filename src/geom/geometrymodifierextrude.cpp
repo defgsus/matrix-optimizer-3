@@ -21,6 +21,7 @@ GeometryModifierExtrude::GeometryModifierExtrude()
     : GeometryModifier("Extrude", QObject::tr("extrude faces")),
       constant_     (0.1),
       factor_       (0.0),
+      shiftCenter_  (0.0),
       doOuterFaces_ (true),
       doRecogEdges_ (false)
 {
@@ -39,24 +40,28 @@ void GeometryModifierExtrude::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geoextrude", 2);
+    io.writeHeader("geoextrude", 3);
 
     io << constant_ << factor_;
 
     // v2
     io << doOuterFaces_ << doRecogEdges_;
+    // v3
+    io << shiftCenter_;
 }
 
 void GeometryModifierExtrude::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    const int ver = io.readHeader("geoextrude", 2);
+    const int ver = io.readHeader("geoextrude", 3);
 
     io >> constant_ >> factor_;
 
     if (ver>=2)
         io >> doOuterFaces_ >> doRecogEdges_;
+    if (ver>=3)
+        io >> shiftCenter_;
 }
 
 void GeometryModifierExtrude::execute(Geometry *g)
@@ -67,7 +72,7 @@ void GeometryModifierExtrude::execute(Geometry *g)
     Geometry geom;
     geom.setSharedVertices(g->sharedVertices(), g->sharedVerticesThreshold());
 
-    g->extrudeTriangles(geom, constant_, factor_, doOuterFaces_, doRecogEdges_);
+    g->extrudeTriangles(geom, constant_, factor_, shiftCenter_, doOuterFaces_, doRecogEdges_);
 
     // explicitly ungroup vertices if so desired
     if (!g->sharedVertices())

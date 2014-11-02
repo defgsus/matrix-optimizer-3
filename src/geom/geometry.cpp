@@ -154,6 +154,15 @@ void Geometry::setSharedVertices(bool enable, VertexType threshold)
 
 }
 
+bool Geometry::checkTriangle(const Vec3 & a, const Vec3 & b, const Vec3 & c)
+{
+    const Float small = 0.00001;
+    return !(glm::distance(a, b) < small
+          || glm::distance(a, c) < small
+          || glm::distance(b, c) < small
+           );
+}
+
 Geometry::IndexType Geometry::addVertex(
                 VertexType x, VertexType y, VertexType z,
                 NormalType nx, NormalType ny, NormalType nz,
@@ -247,6 +256,20 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
     triIndex_.push_back(p1);
     triIndex_.push_back(p2);
     triIndex_.push_back(p3);
+}
+
+void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
+{
+    const Vec3
+            pos1 = getVertex(p1),
+            pos2 = getVertex(p2),
+            pos3 = getVertex(p3);
+    if (checkTriangle(pos1, pos2, pos3))
+    {
+        triIndex_.push_back(p1);
+        triIndex_.push_back(p2);
+        triIndex_.push_back(p3);
+    }
 }
 
 void Geometry::addLine(IndexType p1, IndexType p2)
@@ -1195,7 +1218,7 @@ bool Geometry::transformPrimitivesWithEquation(
 
 
 
-void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor,
+void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor, VertexType eshift,
                                 bool createNewFaces, bool recognizeEdges) const
 {
     // for edge recognition
@@ -1228,9 +1251,14 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
 
         const Vec3
                 // extruded points
-                pe1 = p1 + pn1 * (constant + factor * (dist12 + dist13)),
-                pe2 = p2 + pn2 * (constant + factor * (dist12 + dist23)),
-                pe3 = p3 + pn3 * (constant + factor * (dist13 + dist23));
+                pe_1 = p1 + pn1 * (constant + factor * (dist12 + dist13)),
+                pe_2 = p2 + pn2 * (constant + factor * (dist12 + dist23)),
+                pe_3 = p3 + pn3 * (constant + factor * (dist13 + dist23)),
+                pe_mid = (pe_1 + pe_2 + pe_3) / 3.f,
+                // with shift
+                pe1 = pe_1 + eshift * (pe_mid - pe_1),
+                pe2 = pe_2 + eshift * (pe_mid - pe_2),
+                pe3 = pe_3 + eshift * (pe_mid - pe_3);
 
         const Vec4
                 pc1 = getColor(t1),
@@ -1251,7 +1279,7 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
                 d6 = geom.addVertex(pe3[0], pe3[1], pe3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]);
 
         // create extruded triangle in geom
-        geom.addTriangle(d4,d5,d6);
+        geom.addTriangleChecked(d4,d5,d6);
 
         // count number of extruded vertices use
         if (createNewFaces && recognizeEdges)
@@ -1293,12 +1321,13 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
                 d3 = geom.addVertex(p3[0], p3[1], p3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]);
 
             // create side faces
-            geom.addTriangle(d1,d2,d5);
-            geom.addTriangle(d1,d5,d4);
-            geom.addTriangle(d2,d3,d6);
-            geom.addTriangle(d2,d6,d5);
-            geom.addTriangle(d3,d1,d4);
-            geom.addTriangle(d3,d4,d6);
+            geom.addTriangleChecked(d1,d2,d5);
+            geom.addTriangleChecked(d1,d5,d4);
+            geom.addTriangleChecked(d2,d3,d6);
+            geom.addTriangleChecked(d2,d6,d5);
+            geom.addTriangleChecked(d3,d1,d4);
+            geom.addTriangleChecked(d3,d4,d6);
+
         }
     }
 
@@ -1360,21 +1389,25 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
                 d5 = extVerts[i*3+1],
                 d6 = extVerts[i*3+2];
 
-            // create side faces
-            if (count1 < 2 || count2 < 2)
+
+            if (geom.checkTriangle(p1,p2,p3))
             {
-                geom.addTriangle(d1,d2,d5);
-                geom.addTriangle(d1,d5,d4);
-            }
-            if (count2 < 2 || count3 < 2)
-            {
-                geom.addTriangle(d2,d3,d6);
-                geom.addTriangle(d2,d6,d5);
-            }
-            if (count3 < 2 || count1 < 2)
-            {
-                geom.addTriangle(d3,d1,d4);
-                geom.addTriangle(d3,d4,d6);
+                // create side faces
+                if (count1 < 2 || count2 < 2)
+                {
+                    geom.addTriangleChecked(d1,d2,d5);
+                    geom.addTriangleChecked(d1,d5,d4);
+                }
+                if (count2 < 2 || count3 < 2)
+                {
+                    geom.addTriangleChecked(d2,d3,d6);
+                    geom.addTriangleChecked(d2,d6,d5);
+                }
+                if (count3 < 2 || count1 < 2)
+                {
+                    geom.addTriangleChecked(d3,d1,d4);
+                    geom.addTriangleChecked(d3,d4,d6);
+                }
             }
         }
     }

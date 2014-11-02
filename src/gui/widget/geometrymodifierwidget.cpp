@@ -519,6 +519,17 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
                            0.05, -1000000, 1000000);
             lh->addWidget(spinfac);
 
+        lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            label = new QLabel(tr("shift"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinshift, tr("Shifts the extruded vertices towards the center of the triangles"),
+                           0.05, -1000000, 1000000);
+            lh->addWidget(spinshift);
+
         MO__CHECKBOX(cbFaces, tr("create orthogonal faces"),
                      tr("Enables the creation of the outside faces, "
                         "orthogonal to extruded faces"),
@@ -533,6 +544,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         {
             extrude->setConstant(spinconst->value());
             extrude->setFactor(spinfac->value());
+            extrude->setShiftCenter(spinshift->value());
             extrude->setDoOuterFaces(cbFaces->isChecked());
             extrude->setDoRecognizeEdges(cbQuads->isChecked());
         };
@@ -541,6 +553,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         {
             spinconst->setValue(extrude->getConstant());
             spinfac->setValue(extrude->getFactor());
+            spinshift->setValue(extrude->getShiftCenter());
             cbFaces->setChecked(extrude->getDoOuterFaces());
             cbQuads->setChecked(extrude->getDoRecognizeEdges());
         };

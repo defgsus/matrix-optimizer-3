@@ -94,10 +94,10 @@ void GeometryModifierCreate::deserialize(IO::DataStream &io)
        >> smallRadius_;
 }
 
-void GeometryModifierCreate::execute(Geometry * geometry)
+void GeometryModifierCreate::execute(Geometry * g)
 {
-    Geometry * g = new Geometry();
-    ScopedDeleter<Geometry> auto_remove(g);
+    //Geometry * g = new Geometry();
+    //ScopedDeleter<Geometry> auto_remove(g);
 
     // shared vertices?
     g->setSharedVertices(sharedVertices_);
@@ -173,7 +173,7 @@ void GeometryModifierCreate::execute(Geometry * geometry)
     if (!sharedVertices_ && type_ != T_FILE)
         g->unGroupVertices();
 
-    geometry->addGeometry(*g);
+    //geometry->addGeometry(*g);
 }
 
 
