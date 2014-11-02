@@ -45,8 +45,8 @@ namespace Private
 
     bool setModelData(Object1 * obj, const QVariant& value, int role)
     {
-        //if (role == Qt::EditRole)
-            //obj->setName(value.toString());
+        if (role == Qt::EditRole)
+            obj->setName(value.toString());
 
         return false;
     }
@@ -113,7 +113,7 @@ void Object1Tree::deleteObject(Object1 * object)
         delete node;
 }
 
-void Object1Tree::swapChildren(Object1 * parent, int from, int to)
+void Object1Tree::swapChildren(Object1 * /*parent*/, int /*from*/, int /*to*/)
 {
     //
 }

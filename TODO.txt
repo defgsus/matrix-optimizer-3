@@ -68,7 +68,7 @@
 
 --- rendermodes ---
 
-* fix difference between fulldome cube and projector slice camera transform, if possible
+- OK fix difference between fulldome cube and projector slice camera transform, if possible
 * fix TextureOverlay equi-rect and fisheye projections angle-of-view to work with non-quadratic fbos
 
 ---- threading -----

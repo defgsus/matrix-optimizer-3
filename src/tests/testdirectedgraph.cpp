@@ -140,6 +140,12 @@ namespace MO {
 
     typedef TreeNode<SomeObject*> SomeNode;
 
+
+#define MO__PRINT_LIST(list__) \
+    { for (const auto & e__ : list__) \
+        std::cout << " " << e__->id; \
+        std::cout << std::endl; }
+
     int testSomeObjectTree()
     {
         auto rootObj = new SomeObject();
@@ -164,8 +170,34 @@ namespace MO {
         QList<SomeObject*> objs;
         root.find(objs, false, [](const SomeObject*o)
             { return (o->id.toInt() % 2) == 0; } );
-        for (auto o : objs)
-            MO_PRINT(o->id);
+        MO__PRINT_LIST(objs);
+
+        MO_PRINT("copy sel:");
+        cpy = root.copy(false, [](const SomeObject*o)
+        {
+            return (o->id.toInt() % 5) != 1;
+        });
+        cpy->dumpTree(std::cout);
+        delete cpy;
+
+        MO_PRINT("make linear depth:");
+        objs.clear();
+        root.makeLinear(objs, SomeNode::O_DepthFirst, 3);
+        MO__PRINT_LIST(objs);
+        MO_PRINT("make linear breath:");
+        objs.clear();
+        root.makeLinear(objs, SomeNode::O_BreathFirst, 3);
+        MO__PRINT_LIST(objs);
+
+        auto selector = [](SomeObject * o) { return (o->id.toInt() & 1) != 0; };
+        MO_PRINT("make linear depth sel:");
+        objs.clear();
+        root.makeLinear(objs, selector, SomeNode::O_DepthFirst);
+        MO__PRINT_LIST(objs);
+        MO_PRINT("make linear breath sel:");
+        objs.clear();
+        root.makeLinear(objs, selector, SomeNode::O_BreathFirst);
+        MO__PRINT_LIST(objs);
 
        return 0;
     }

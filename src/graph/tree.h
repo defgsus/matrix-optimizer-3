@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <functional>
+#include <queue>
 
 #include <QString>
 #include <QList>
@@ -61,7 +62,17 @@ class TreeNode
 
 public:
 
+    // ---------- types --------------
+
     typedef TreeNodeTraits<T> Traits;
+
+    enum Order
+    {
+        O_DepthFirst,
+        O_BreathFirst
+    };
+
+    // -------------- ctor -----------
 
     TreeNode(T object, bool own = true)
         : p_parent_(0), p_obj_(object), p_own_(own)
@@ -124,24 +135,44 @@ public:
     /** Returns the node for the object if it's a parent of this node, or NULL */
     TreeNode * findParent(T object) const;
 
+    /** Linearizes the objects into @p objects in the given order to the given level.
+        If @p max_level < 0, all levels will be considered, otherwise @p max_level states
+        the number of levels to consider, e.g. 0 for none, 1 for the node itself,
+        2 for all direct children, etc... */
+    void makeLinear(QList<T>& objects, Order order = O_DepthFirst, int max_level = -1) const;
+
     // ------- getter with selector lambda -------
 
-    /* Creates a copy of this node and it's subtree. */
-    //TreeNode * copy(std::function<bool(const T)> selector, bool owning = false) const;
+    /** Creates a copy of this node and it's subtree if @p selector returns true
+        for the contained objects.
+        @note The node for which this function is called will <b>always</b> be the
+        root of the returned tree, regardless of the selector. */
+    TreeNode * copy(bool owning, std::function<bool(const T)> selector) const;
 
     /** Returns the node for the first object for which @p selector returns true,
         including this node itself, or NULL */
     TreeNode * find(bool recursive, std::function<bool(const T)> selector) const;
 
-    /** Puts all objects of the hierarchy into @p objects, if the @p selector
-        function returns true. */
-    bool find(QList<T>& objects, bool recursive, std::function<bool(const T)> selector) const;
+    /** Puts all objects of the hierarchy depth-first into @p objects, if the @p selector
+        function returns true.
+        Same as makeLiner(objects, selector, O_DepthFirst, recursive ? -1 : 1) */
+    void find(QList<T>& objects, bool recursive, std::function<bool(const T)> selector) const
+        { makeLinear(objects, selector, O_DepthFirst, recursive ? -1 : 1); }
+
+    /** Linearizes the objects into @p objects in the given order to the given level,
+        if @p selector returns true for the objects.
+        If @p max_level < 0, all levels will be considered, otherwise @p max_level states
+        the number of levels to consider, e.g. 0 for none, 1 for the node itself,
+        2 for all direct children, etc... */
+    void makeLinear(QList<T>& objects, std::function<bool(const T)> selector,
+                    Order order = O_DepthFirst, int max_level = -1) const;
 
     // ------- setter --------
 
     /** Adds the node as children.
-        Adding the same node twice leads to undefined behaviour. */
-    void append(TreeNode * node);
+        Adding the same node twice leads to undefined behaviour.
+        The added node is returned. */
+    TreeNode * append(TreeNode * node);
 
     /** Inserts the node at the given index,
         -1 for append */
@@ -181,6 +212,8 @@ private:
     void operator=(const TreeNode&);
 
     void p_install_node_(TreeNode*);
+    TreeNode * p_copy_impl_(TreeNode * inserter,
+                            std::function<bool(const T)> selector, bool owning = false) const;
 
     TreeNode * p_parent_;
     std::vector<TreeNode*> p_child_;
@@ -231,12 +264,14 @@ inline TreeNode<T> * TreeNode<T>::append(T object)
 }
 
 template <class T>
-inline void TreeNode<T>::append(TreeNode * node)
+inline TreeNode<T> * TreeNode<T>::append(TreeNode * node)
 {
     MO_ASSERT(indexOf(node) < 0, "TreeNode::append() duplicate node " << node);
 
     p_child_.push_back(node);
     p_install_node_(node);
+
+    return node;
 }
 
 template <class T>
@@ -310,6 +345,9 @@ inline TreeNode<T> * TreeNode<T>::root() const
     return parent() ? parent()->root() : 0;
 }
 
+
+// ------------------------- copy --------------------------------
+
 template <class T>
 inline TreeNode<T> * TreeNode<T>::copy(bool owning) const
 {
@@ -323,13 +361,149 @@ inline TreeNode<T> * TreeNode<T>::copy(bool owning) const
     return root;
 }
 
-/*
+
 template <class T>
-inline TreeNode<T> * TreeNode<T>::copy(std::function<bool(const T)> selector, bool owning) const
+inline TreeNode<T> * TreeNode<T>::p_copy_impl_(TreeNode<T> * inserter,
+                                             std::function<bool(const T)> selector, bool owning) const
+{
+    if (selector(object()))
+        inserter = inserter->append(new TreeNode(object(), owning));
+
+    for (auto c : children())
+        c->p_copy_impl_(inserter, selector, owning);
+
+    return inserter;
+}
+
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::copy(bool owning, std::function<bool(const T)> selector) const
 {
     MO_ASSERT(!(p_own_ && owning), "copy of TreeNode with more than one owner");
+
+    TreeNode * root = new TreeNode(object(), owning);
+
+    for (auto c : children())
+        c->p_copy_impl_(root, selector, owning);
+
+    return root;
 }
-*/
+
+// ---------------------------- linear ------------------------------
+
+template <class T>
+void TreeNode<T>::makeLinear(QList<T>& objects, std::function<bool(const T)> selector,
+                             Order order, int max_level) const
+{
+    if (max_level == 0)
+        return;
+
+    if (order == O_DepthFirst)
+    {
+        // add self
+        if (selector(object()))
+            objects.append(object());
+
+        if (max_level == 1)
+            return;
+
+        for (auto c : children())
+            c->makeLinear(objects, selector, order, max_level < 0 ? -1 : (max_level - 1));
+    }
+
+    // O_BreathFirst
+    else
+    {
+        std::queue<const TreeNode*> stack;
+        std::queue<int> levels;
+        stack.push(this);
+        levels.push(1);
+
+        while (!stack.empty())
+        {
+            // take off stack
+            const TreeNode * n = stack.front();
+            stack.pop();
+
+            // and level
+            int level = levels.front();
+            levels.pop();
+            if (max_level >= 0 && level > max_level)
+                break;
+
+            // add to output list
+            if (selector(n->object()))
+                objects.append(n->object());
+
+            // push children
+            //   and their levels
+            ++level;
+            for (auto c : n->children())
+            {
+                stack.push(c);
+                levels.push(level);
+            }
+        }
+    }
+}
+
+
+template <class T>
+void TreeNode<T>::makeLinear(QList<T>& objects, Order order, int max_level) const
+{
+    if (max_level == 0)
+        return;
+
+    if (order == O_DepthFirst)
+    {
+        // add self
+        objects.append(object());
+
+        if (max_level == 1)
+            return;
+
+        for (auto c : children())
+            c->makeLinear(objects, order, max_level < 0 ? -1 : (max_level - 1));
+    }
+
+    // O_BreathFirst
+    else
+    {
+        std::queue<const TreeNode*> stack;
+        std::queue<int> levels;
+        stack.push(this);
+        levels.push(1);
+
+        while (!stack.empty())
+        {
+            // take off stack
+            const TreeNode * n = stack.front();
+            stack.pop();
+
+            // and level
+            int level = levels.front();
+            levels.pop();
+            if (max_level >= 0 && level > max_level)
+                break;
+
+            // add to output list
+            objects.append(n->object());
+
+            // push children
+            //   and their levels
+            ++level;
+            for (auto c : n->children())
+            {
+                stack.push(c);
+                levels.push(level);
+            }
+        }
+    }
+}
+
+
+
+// ---------------------------- find --------------------------------
 
 template <class T>
 inline TreeNode<T> * TreeNode<T>::findParent(T o) const
@@ -386,30 +560,7 @@ TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T)> sel
     return 0;
 }
 
-template <class T>
-bool TreeNode<T>::find(QList<T>& objects, bool recursive, std::function<bool(const T)> selector) const
-{
-    bool f = selector(object());
-    if (f)
-        objects.append(object());
 
-    if (!recursive)
-    {
-        for (auto c : p_child_)
-        {
-            if (selector(c->object()))
-            {
-                f = true;
-                objects.append(c->object());
-            }
-        }
-    }
-    else
-    for (auto c : p_child_)
-        f |= c->find(objects, true, selector);
-
-    return f;
-}
 
 // --------------------------------- debug --------------------------------
 

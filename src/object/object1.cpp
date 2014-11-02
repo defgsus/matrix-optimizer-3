@@ -277,11 +277,13 @@ Object1 * Object1::rootObject()
 const Scene * Object1::sceneObject() const
 {
     //return dynamic_cast<const Scene*>(rootObject());
+    return 0;
 }
 
 Scene * Object1::sceneObject()
 {
     //return dynamic_cast<Scene*>(rootObject());
+    return 0;
 }
 
 Object1 * Object1::parentObject() const
@@ -437,12 +439,12 @@ QList<Object1*> Object1::getModulatingObjects() const
 
 QList<QPair<Parameter*, Object1*>> Object1::getModulationPairs() const
 {
-
+    return QList<QPair<Parameter*, Object1*>>();
 }
 
-QList<Object1*> Object1::getFutureModulatingObjects(const Scene * scene) const
+QList<Object1*> Object1::getFutureModulatingObjects(const Scene * /*scene*/) const
 {
-
+    return QList<Object1*>();
 }
 
 void Object1::requestCreateOutputs()
