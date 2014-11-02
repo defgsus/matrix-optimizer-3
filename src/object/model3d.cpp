@@ -275,8 +275,7 @@ void Model3d::setupDrawable_()
 {
     GL::ShaderSource * src = new GL::ShaderSource();
 
-    src->loadVertexSource(":/shader/default.vert");
-    src->loadFragmentSource(":/shader/default.frag");
+    src->loadDefaultSource();
 
     if (numberLightSources() > 0 && lightMode_->baseValue() != LM_NONE)
     {

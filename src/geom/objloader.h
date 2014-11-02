@@ -14,6 +14,7 @@
 #include <vector>
 
 #include <QMap>
+#include <QMutex>
 
 #include <QString>
 #include <QByteArray>
@@ -74,12 +75,20 @@ public:
     /** Returns the textual log of the loading process */
     const QString& getLog() const { return log_; }
 
-    /** Load the data into the Geometry container.
+    /** Loads the data into the Geometry container.
         Previous contents will be kept. */
     void getGeometry(Geometry *) const;
 
     /** Returns the progress during loading [0,100] */
     int progress() const { return progress_; }
+
+    // ----- buffer singleton access ----------
+
+    /** Loads the data into the Geometry container.
+        Previous contents will be kept.
+        An ObjLoader class will be created for the file and kept.
+        Throws IO::Exception on any errors. */
+    static void getGeometry(const QString& filename, Geometry *);
 
 private:
 
@@ -102,6 +111,9 @@ private:
 
     QMap<QString, Material> material_;
     QMap<UInt, QString> materialUse_;
+
+    static std::map<QString, ObjLoader*> instances_;
+    static QMutex instanceMutex_;
 };
 
 } // namespace GEOM

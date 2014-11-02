@@ -8,10 +8,22 @@
     <p>created 7/29/2014</p>
 */
 
+/* some nice format docs:
+    .obj
+    http://www.martinreddy.net/gfx/3d/OBJ.spec
+    https://en.wikipedia.org/wiki/Wavefront_.obj_file
+    http://www.fileformat.info/format/wavefrontobj/egff.htm
+
+    .mtl
+    http://paulbourke.net/dataformats/mtl/
+*/
+
+
 #include <QFile>
 #include <QTextStream>
 #include <QFileInfo>
 #include <QDir>
+#include <QMutexLocker>
 
 #include "objloader.h"
 #include "io/log.h"
@@ -40,16 +52,9 @@
 namespace MO {
 namespace GEOM {
 
-/* some nice format docs:
-    .obj
-    http://www.martinreddy.net/gfx/3d/OBJ.spec
-    https://en.wikipedia.org/wiki/Wavefront_.obj_file
-    http://www.fileformat.info/format/wavefrontobj/egff.htm
 
-    .mtl
-    http://paulbourke.net/dataformats/mtl/
-*/
-
+std::map<QString, ObjLoader*> ObjLoader::instances_;
+QMutex ObjLoader::instanceMutex_;
 
 ObjLoader::ObjLoader()
     :   progress_   (0),
@@ -87,6 +92,31 @@ void ObjLoader::loadFile(const QString &filename)
 
     filename_ = "";
 }
+
+
+void ObjLoader::getGeometry(const QString &filename, Geometry * g)
+{
+    QMutexLocker lock(&instanceMutex_);
+
+    auto i = instances_.find(filename);
+
+    // reuse
+    if (i != instances_.end())
+    {
+        i->second->getGeometry(g);
+        return;
+    }
+
+    // create and load
+    ObjLoader * loader = new ObjLoader();
+    loader->loadFile(filename);
+    loader->getGeometry(g);
+
+    // store for later
+    instances_.insert(std::make_pair(filename, loader));
+}
+
+
 
 
 namespace {
@@ -648,7 +678,7 @@ void ObjLoader::getGeometry(Geometry * g) const
 
     const Float defNormal[] = { 0, 1, 0 };
     const Float defTex[] = { 0, 0, 0 };
-    const Float defColor[] = { 1.0, 1.0, 1.0, 1.0 };
+    const Float defColor[] = { g->currentRed(), g->currentGreen(), g->currentBlue(), g->currentAlpha() };
 
     Geometry::IndexType cur[3];
 

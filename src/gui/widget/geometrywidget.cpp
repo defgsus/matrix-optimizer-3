@@ -38,6 +38,8 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     showLights_     (settings->value("GeometryWidget/showLights", false).toBool())
 {
     setMinimumSize(128, 128);
+
+    setLights_(showLights_ ? 1 : 0);
 }
 
 void GeometryWidget::setLights_(Float amp)
@@ -49,6 +51,9 @@ void GeometryWidget::setLights_(Float amp)
     lights_->setColor(0, 0.7f*amp, 0.7f*amp, 0.7f*amp);
     lights_->setColor(1, 0.2f*amp, 0.5f*amp, 0.8f*amp);
     lights_->setColor(2, 0.5f*amp, 0.25f*amp, 0.1f*amp);
+    lights_->setDiffuseExponent(0, 4);
+    lights_->setDiffuseExponent(1, 3);
+    lights_->setDiffuseExponent(2, 2);
 }
 
 GeometryWidget::~GeometryWidget()
@@ -148,7 +153,8 @@ void GeometryWidget::drawGL(const Mat4& projection,
         GL::ShaderSource * src = new GL::ShaderSource();
         src->loadDefaultSource();
         src->addDefine("#define MO_ENABLE_LIGHTING");
-        src->addDefine("#define MO_NUM_LIGHTS 3");
+        src->addDefine("#define MO_FRAGMENT_LIGHTING");
+        src->addDefine(QString("#define MO_NUM_LIGHTS %1").arg(lights_->count()));
         if (tex_)
             src->addDefine("#define MO_ENABLE_TEXTURE");
         if (texNorm_)
@@ -164,6 +170,9 @@ void GeometryWidget::drawGL(const Mat4& projection,
             GL::Uniform * u = drawable_->shader()->getUniform("tex_norm_0");
             if (u)
                 u->ints[0] = 1;
+            u = drawable_->shader()->getUniform(drawable_->shader()->source()->uniformNameBumpScale());
+            if (u)
+                u->floats[0] = 1.0;
         }
     }
 

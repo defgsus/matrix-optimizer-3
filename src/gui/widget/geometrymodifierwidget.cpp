@@ -659,7 +659,6 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate * settings)
 {
     // geometry type
-
     auto comboType = new QComboBox(this);
     group_->addWidget(comboType);
     comboType->setStatusTip("Selects the type of geometry");
@@ -679,11 +678,13 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
 
         // filename
         auto editFilename = new QLineEdit(this);
+        group_->addWidget(editFilename);
         lh2->addWidget(editFilename);
         editFilename->setText(settings->filename());
         editFilename->setReadOnly(true);
 
         auto butLoadModelFile = new QToolButton(this);
+        group_->addWidget(butLoadModelFile);
         lh2->addWidget(butLoadModelFile);
         butLoadModelFile->setText("...");
         connect(butLoadModelFile, &QToolButton::clicked, [=]()
@@ -704,6 +705,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
 
         // create triangles
         auto cbTriangles = new QCheckBox(tr("create triangles"), this);
+        group_->addWidget(cbTriangles);
         lh2->addWidget(cbTriangles);
         cbTriangles->setChecked(settings->asTriangles());
         connect(cbTriangles, SIGNAL(stateChanged(int)),
@@ -711,6 +713,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
 
         // shared vertices
         auto cbSharedVert = new QCheckBox(tr("shared vertices"), this);
+        group_->addWidget(cbSharedVert);
         lh2->addWidget(cbSharedVert);
         cbSharedVert->setChecked(settings->sharedVertices());
         connect(cbSharedVert, SIGNAL(stateChanged(int)),
@@ -721,9 +724,11 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
     group_->addLayout(lh2);
 
         auto labelSmallRadius = new QLabel(tr("small radius"), this);
+        group_->addWidget(labelSmallRadius);
         lh2->addWidget(labelSmallRadius);
 
         auto spinSmallRadius = new DoubleSpinBox(this);
+        group_->addWidget(spinSmallRadius);
         lh2->addWidget(spinSmallRadius);
         spinSmallRadius->setStatusTip("Smaller radius");
         spinSmallRadius->setDecimals(5);
@@ -736,11 +741,13 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
     // segments
     auto labelSeg = new QLabel(tr("segments"), this);
     group_->addWidget(labelSeg);
+    group_->addWidget(labelSeg);
 
     lh2 = new QHBoxLayout();
     group_->addLayout(lh2);
 
         auto spinSegX = new SpinBox(this);
+        group_->addWidget(spinSegX);
         lh2->addWidget(spinSegX);
         spinSegX->setStatusTip("Number of segments (X)");
         spinSegX->setRange(1, 10000);
@@ -749,6 +756,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
                 this, SLOT(updateFromWidgets_()));
 
         auto spinSegY = new SpinBox(this);
+        group_->addWidget(spinSegY);
         lh2->addWidget(spinSegY);
         spinSegY->setStatusTip("Number of segments (Y)");
         spinSegY->setRange(1, 10000);
@@ -757,6 +765,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
                 this, SLOT(updateFromWidgets_()));
 
         auto spinSegZ = new SpinBox(this);
+        group_->addWidget(spinSegZ);
         lh2->addWidget(spinSegZ);
         spinSegZ->setStatusTip("Number of segments (Z)");
         spinSegZ->setRange(0, 10000);
@@ -769,6 +778,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
     group_->addLayout(lh2);
 
         auto spinR = new DoubleSpinBox(this);
+        group_->addWidget(spinR);
         lh2->addWidget(spinR);
         spinR->setStatusTip("Red amount of initital color");
         spinR->setDecimals(5);
@@ -782,6 +792,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
                 this, SLOT(updateFromWidgets_()));
 
         auto spinG = new DoubleSpinBox(this);
+        group_->addWidget(spinG);
         lh2->addWidget(spinG);
         spinG->setStatusTip("Green amount of initital color");
         spinG->setDecimals(5);
@@ -794,6 +805,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
                 this, SLOT(updateFromWidgets_()));
 
         auto spinB = new DoubleSpinBox(this);
+        group_->addWidget(spinB);
         lh2->addWidget(spinB);
         spinB->setStatusTip("Blue amount of initital color");
         spinB->setDecimals(5);
@@ -806,6 +818,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
                 this, SLOT(updateFromWidgets_()));
 
         auto spinA = new DoubleSpinBox(this);
+        group_->addWidget(spinA);
         lh2->addWidget(spinA);
         spinA->setStatusTip("Alpha amount of initital color");
         spinA->setDecimals(5);
@@ -844,18 +857,18 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
                 hasSmallRadius = (settings->type() ==
                                 GEOM::GeometryModifierCreate::T_TORUS);
 
-        editFilename->setVisible(isFile);
-        butLoadModelFile->setVisible(isFile);
+        group_->setVisible(editFilename, isFile);
+        group_->setVisible(butLoadModelFile, isFile);
 
-        labelSeg->setVisible( has2Segments );
-        spinSegX->setVisible( has2Segments );
-        spinSegY->setVisible( has2Segments );
-        spinSegZ->setVisible( has3Segments );
+        group_->setVisible(labelSeg, has2Segments );
+        group_->setVisible(spinSegX, has2Segments );
+        group_->setVisible(spinSegY, has2Segments );
+        group_->setVisible(spinSegZ, has3Segments );
 
-        labelSmallRadius->setVisible( hasSmallRadius );
-        spinSmallRadius->setVisible( hasSmallRadius );
+        group_->setVisible(labelSmallRadius, hasSmallRadius );
+        group_->setVisible(spinSmallRadius, hasSmallRadius );
 
-        cbTriangles->setVisible( canTriangle && !canOnlyTriangle);
+        group_->setVisible(cbTriangles, canTriangle && !canOnlyTriangle);
     };
 
     //bool ignoreUpdates = false;

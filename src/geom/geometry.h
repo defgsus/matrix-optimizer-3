@@ -156,6 +156,11 @@ public:
     void setTexCoord(TextureCoordType u, TextureCoordType v)
         { curU_ = u; curV_ = v; }
 
+    ColorType currentRed() const { return curR_; }
+    ColorType currentGreen() const { return curG_; }
+    ColorType currentBlue() const { return curB_; }
+    ColorType currentAlpha() const { return curA_; }
+
     // -------- vertex/triangle handling -----
 
     /** Clear ALL contents */

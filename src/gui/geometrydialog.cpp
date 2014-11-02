@@ -64,8 +64,6 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
 
     createMainWidgets_();
 
-    modifiers_ = settings_->modifierChain();
-
     createModifierWidgets_();
 
     updatePresetList_();
@@ -330,7 +328,7 @@ void GeometryDialog::createModifierWidgets_()
     modifierWidgets_.clear();
 
     // create widgets for geometry modifiers
-    for (auto m : modifiers_->modifiers())
+    for (auto m : settings_->modifierChain()->modifiers())
     {
         auto w = new GeometryModifierWidget(m, expandedModifiers_.contains(m), this);
         modifierLayout_->addWidget(w);
@@ -393,7 +391,7 @@ void GeometryDialog::modifierMuteChange_(GEOM::GeometryModifier * g, bool mute)
 
 void GeometryDialog::modifierUp_(GEOM::GeometryModifier * g)
 {
-    if ( modifiers_->moveModifierUp(g) )
+    if ( settings_->modifierChain()->moveModifierUp(g) )
     {
         createModifierWidgets_();
         updateFromWidgets_();
@@ -402,7 +400,7 @@ void GeometryDialog::modifierUp_(GEOM::GeometryModifier * g)
 
 void GeometryDialog::modifierDown_(GEOM::GeometryModifier * g)
 {
-    if ( modifiers_->moveModifierDown(g) )
+    if ( settings_->modifierChain()->moveModifierDown(g) )
     {
         createModifierWidgets_();
         updateFromWidgets_();
@@ -411,7 +409,7 @@ void GeometryDialog::modifierDown_(GEOM::GeometryModifier * g)
 
 void GeometryDialog::modifierDelete_(GEOM::GeometryModifier * g)
 {
-    if ( modifiers_->deleteModifier(g) )
+    if ( settings_->modifierChain()->deleteModifier(g) )
     {
         createModifierWidgets_();
         updateFromWidgets_();
@@ -434,9 +432,9 @@ void GeometryDialog::newModifierPopup_(GEOM::GeometryModifier *before)
     {
         const QString classname = a->data().toString();
         if (!before)
-            modifiers_->addModifier(classname);
+            settings_->modifierChain()->addModifier(classname);
         else
-            modifiers_->insertModifier(classname, before);
+            settings_->modifierChain()->insertModifier(classname, before);
 
         createModifierWidgets_();
         updateFromWidgets_();
@@ -635,7 +633,6 @@ void GeometryDialog::presetSelected_()
 void GeometryDialog::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 {
     *settings_ = s;
-    modifiers_ = settings_->modifierChain();
 
     updateWidgets_();
     createModifierWidgets_();

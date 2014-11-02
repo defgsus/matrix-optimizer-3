@@ -91,7 +91,6 @@ protected:
     GeometryWidget * geoWidget_;
     GEOM::GeometryFactorySettings * settings_;
     GEOM::GeometryCreator * creator_;
-    GEOM::GeometryModifierChain * modifiers_;
     GEOM::Geometry * geometry_;
     bool updateGeometryLater_,
          ignoreUpdate_,

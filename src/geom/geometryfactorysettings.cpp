@@ -63,6 +63,7 @@ GeometryFactorySettings& GeometryFactorySettings::operator =(
         const GeometryFactorySettings& other)
 {
     *modifierChain_ = *other.modifierChain_;
+
     return *this;
 }
 

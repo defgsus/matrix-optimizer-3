@@ -420,5 +420,16 @@ void Shader::releaseGL()
 }
 
 
+void Shader::dumpUniforms(std::ostream &out) const
+{
+    for (Uniform * u : uniformList_)
+    {
+        out << "[" << u->name() << "] @ " << u->location() << "\n"
+            << "ints(" << u->ints[0] << ", " << u->ints[1] << ", " << u->ints[2] << ", " << u->ints[3] << ") "
+            << "floats(" << u->floats[0] << ", " << u->floats[1] << ", " << u->floats[2] << ", " << u->floats[3] << ")"
+            << std::endl;
+    }
+}
+
 } // namespace GL
 } // namespace MO

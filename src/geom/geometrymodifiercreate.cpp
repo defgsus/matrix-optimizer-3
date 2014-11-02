@@ -94,10 +94,10 @@ void GeometryModifierCreate::deserialize(IO::DataStream &io)
        >> smallRadius_;
 }
 
-void GeometryModifierCreate::execute(Geometry * g)
+void GeometryModifierCreate::execute(Geometry * geometry)
 {
-//    Geometry * g = new Geometry();
-//    ScopedDeleter<Geometry> auto_remove(g);
+    Geometry * g = new Geometry();
+    ScopedDeleter<Geometry> auto_remove(g);
 
     // shared vertices?
     g->setSharedVertices(sharedVertices_);
@@ -109,11 +109,8 @@ void GeometryModifierCreate::execute(Geometry * g)
     switch (type_)
     {
     case T_FILE:
-        /*if (!filename_.isEmpty() && objLoader_)
-        {
-            objLoader_->loadFile(filename_);
-            objLoader_->getGeometry(g);
-        }*/
+        if (!filename_.isEmpty())
+            ObjLoader::getGeometry(filename_, g);
     break;
     case T_QUAD:
         GeometryFactory::createQuad(g, 1.f, 1.f, asTriangles_);
@@ -176,7 +173,7 @@ void GeometryModifierCreate::execute(Geometry * g)
     if (!sharedVertices_ && type_ != T_FILE)
         g->unGroupVertices();
 
-    //geometry->addGeometry(*g);
+    geometry->addGeometry(*g);
 }
 
 

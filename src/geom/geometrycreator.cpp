@@ -93,9 +93,9 @@ void GeometryCreator::run()
 
     try
     {
-        curGeometry_->setColor(1,1,1,1);
-        GeometryFactory::createCube(curGeometry_, true);
-        //settings.modifierChain()->execute(curGeometry_);
+        //curGeometry_->setColor(1,1,1,1);
+        //GeometryFactory::createCube(curGeometry_, true);
+        settings.modifierChain()->execute(curGeometry_);
 
         success = true;
     }
