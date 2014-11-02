@@ -74,16 +74,8 @@ public:
 
     // -------------- ctor -----------
 
-    TreeNode(T object, bool own = true)
-        : p_parent_(0), p_obj_(object), p_own_(own)
-    {
-        Traits::creator(this);
-    }
-    ~TreeNode()
-    {
-        for (auto c : p_child_) delete c;
-        Traits::destructor(this);
-    }
+    TreeNode(T object, bool own = true);
+    ~TreeNode();
 
     // ------- getter --------
 
@@ -124,6 +116,10 @@ public:
     /** Will return the root of the hierarchy which can be
         the node itself */
     TreeNode * root() const;
+
+    /** Returns the level below root.
+        0 for root itself */
+    int countLevel() const;
 
     /** Creates a copy of this node and it's subtree. */
     TreeNode * copy(bool owning = false) const;
@@ -174,27 +170,32 @@ public:
         The added node is returned. */
     TreeNode * append(TreeNode * node);
 
-    /** Inserts the node at the given index,
-        -1 for append */
+    /** Inserts the node at the given index, -1 for append.
+        Adding the same node twice leads to undefined behaviour. */
     void insert(int index, TreeNode * object);
 
     /** Adds a new children node with associated object.
-        Adding the same node twice leads to undefined behaviour. */
+        Adding the same object twice when this node is owning
+        leads to undefined behaviour. */
     TreeNode * append(T object);
 
     /** Inserts a new children node with associated object at the given index,
         -1 for append */
     TreeNode * insert(int index, T object);
 
-    /** Removes the children node with the associated object,
+    /** Destroys the children node with the associated object,
         returns true if found and removed */
     bool remove(T object);
 
-    /** Removes and destroys the children node if it exists,
+    /** Destroys all the children nodes with the associated object,
+        returns true if found and removed */
+    bool removeAll(T object);
+
+    /** Destroys and destroys the children node if it exists,
         returns true if removed */
     bool remove(TreeNode * node);
 
-    /** Removes and destroys the xth node */
+    /** Destroys and destroys the xth node */
     void remove(size_t index);
 
     // ---------------- debug -----------------
@@ -230,6 +231,22 @@ private:
 // #################################### templ impl ##########################################
 
 template <class T>
+inline TreeNode<T>::TreeNode(T object, bool own)
+    : p_parent_(0), p_obj_(object), p_own_(own)
+{
+    Traits::creator(this);
+}
+
+template <class T>
+inline TreeNode<T>::~TreeNode()
+{
+    for (auto c : p_child_) delete c;
+    Traits::destructor(this);
+}
+
+
+
+template <class T>
 inline int TreeNode<T>::indexOf(TreeNode * child) const
 {
     for (size_t i=0; i!=p_child_.size(); ++i)
@@ -256,7 +273,7 @@ inline TreeNode<T> * TreeNode<T>::children(T object) const
 template <class T>
 inline TreeNode<T> * TreeNode<T>::append(T object)
 {
-    MO_ASSERT(indexOf(object) < 0, "TreeNode::append() duplicate object " << object);
+    MO_ASSERT(!isOwning() || indexOf(object) < 0, "TreeNode::append() duplicate object " << object);
 
     auto node = new TreeNode(object, p_own_);
     append(node);
@@ -277,9 +294,7 @@ inline TreeNode<T> * TreeNode<T>::append(TreeNode * node)
 template <class T>
 inline TreeNode<T> * TreeNode<T>::insert(int index, T object)
 {
-    const int i = indexOf(object);
-    if (i >= 0)
-        return children(i);
+    MO_ASSERT(!isOwning() || indexOf(object) < 0, "TreeNode::insert() duplicate object " << object);
 
     auto node = new TreeNode(object, p_own_);
     insert(index, node);
@@ -319,6 +334,21 @@ inline bool TreeNode<T>::remove(T object)
 }
 
 template <class T>
+inline bool TreeNode<T>::removeAll(T object)
+{
+    size_t i = indexOf(object);
+    if (i < 0)
+        return false;
+    do
+    {
+        remove(i);
+        i = indexOf(object);
+    } while (i >= 0);
+
+    return true;
+}
+
+template <class T>
 inline bool TreeNode<T>::remove(TreeNode * node)
 {
     const size_t i = indexOf(node);
@@ -338,13 +368,29 @@ inline void TreeNode<T>::remove(size_t index)
 }
 
 
+// ----------------- iterative ----------------
 
 template <class T>
 inline TreeNode<T> * TreeNode<T>::root() const
 {
-    return parent() ? parent()->root() : 0;
+    TreeNode * p = parent();
+    while (p)
+        p = p->parent();
+    return p;
 }
 
+template <class T>
+inline int TreeNode<T>::countLevel() const
+{
+    int level = 0;
+    TreeNode * p = parent();
+    while (p)
+    {
+        p = p->parent();
+        ++level;
+    }
+    return level;
+}
 
 // ------------------------- copy --------------------------------
 

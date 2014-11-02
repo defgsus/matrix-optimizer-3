@@ -131,7 +131,7 @@ namespace MO {
     {
         typedef TreeNode<SomeObject*> Node;
 
-        static void creator(Node * node) { if (node->object()) node->object()->node_ = node; }
+        static void creator(Node * node) { if (node->object() && node->isOwning()) node->object()->node_ = node; }
         static void destructor(Node * node) { if (node->isOwning()) delete node->object(); }
         static QString toString(const Node * node)
             { return node->object() ? QString("obj(%1)").arg(node->object()->id)
@@ -198,6 +198,14 @@ namespace MO {
         objs.clear();
         root.makeLinear(objs, selector, SomeNode::O_BreathFirst);
         MO__PRINT_LIST(objs);
+
+        // create a tree with multiple instances
+        cpy = new SomeNode(rootObj, false);
+        cpy->append(rootObj);
+        cpy->append(rootObj)->append(rootObj);
+        cpy->append(rootObj)->append(rootObj)->append(rootObj);
+        cpy->dumpTree(std::cout);
+        delete cpy;
 
        return 0;
     }
