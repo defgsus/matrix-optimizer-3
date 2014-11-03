@@ -83,7 +83,8 @@ QString Parameter::infoName() const
 
     QString s = object_->name() + "." + name_;
     Object * o = object_;
-    while (o && !(o->type() & Object::TG_REAL_OBJECT))
+    while (o && !(o->type() & Object::TG_REAL_OBJECT
+                  || o->type() & Object::T_CLIP))
     {
         o = o->parentObject();
 
@@ -101,7 +102,8 @@ QString Parameter::infoIdName() const
 
     QString s = object_->idName() + "." + idName_;
     Object * o = object_;
-    while (o && !(o->type() & Object::TG_REAL_OBJECT))
+    while (o && !(o->type() & Object::TG_REAL_OBJECT
+                  || o->type() & Object::T_CLIP))
     {
         o = o->parentObject();
 

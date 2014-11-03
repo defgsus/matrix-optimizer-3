@@ -112,6 +112,8 @@ public slots:
     Object * createInClip(const QString& className, Clip * clip = 0);
 
     SequenceFloat * createFloatSequence(TrackFloat * track, Double time);
+    /** Create right there somewhere */
+    SequenceFloat * createFloatSequenceFor(Object * object, const QString& goal = "");
 
 private:
 

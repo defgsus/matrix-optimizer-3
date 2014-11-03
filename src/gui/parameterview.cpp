@@ -25,6 +25,7 @@
 #include "object/scene.h"
 #include "object/trackfloat.h"
 #include "object/sequence.h"
+#include "object/sequencefloat.h"
 #include "object/clip.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterfilename.h"
@@ -151,6 +152,11 @@ void ParameterView::clearWidgets_()
 
     for (auto g : groups_)
     {
+        if (!g)
+        {
+            MO_WARNING("This segfaulted once!!!!\n" __FILE__ "\nline " << __LINE__);
+            continue;
+        }
         g->setVisible(false);
         g->deleteLater();
     }
@@ -824,13 +830,42 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         }
     });
 
-    // create sequence in clip
+    // create sequence
     menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float sequence"), menu) );
     QMenu * sub = new QMenu(menu);
     a->setMenu(sub);
 
+        // right here
+        sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("right here"), sub) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            if (Object * o = model->createFloatSequenceFor(param->object()))
+            {
+                // modulate
+                scene_->addModulator(param, o->idName());
+                o->setName(">" + param->infoName());
+
+                if (doChangeToCreatedMod_)
+                    emit objectSelected(o);
+            }
+        });
+
+        sub->addSeparator();
+
         // in new clip
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            if (Object * o = model->createInClip("SequenceFloat", 0))
+            {
+                // modulate
+                scene_->addModulator(param, o->idName());
+                o->setName(">" + param->infoName());
+
+                if (doChangeToCreatedMod_)
+                    emit objectSelected(o);
+            }
+        });
 
         // in existing clip
         auto list = Clip::getAssociatedClips(param,
@@ -846,12 +881,12 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
 
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
-            Clip * parent = a->data().value<Clip*>();
+            if (Clip * parent = a->data().value<Clip*>())
             if (Object * o = model->createInClip("SequenceFloat", parent))
             {
                 // modulate
                 scene_->addModulator(param, o->idName());
-                o->setName("mod: " + param->infoName());
+                o->setName(">" + param->infoName());
 
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);

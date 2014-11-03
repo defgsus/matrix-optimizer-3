@@ -48,7 +48,7 @@ void showHelp()
 //#include "tests/testequation.h"
 //#include "tests/testtesselator.h"
 //#include "tests/testcommandlineparser.h"
-#include "tests/testdirectedgraph.h"
+//#include "tests/testdirectedgraph.h"
 
 //#include "types/vector.h"
 //#include "tool/stringmanip.h"
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     // tests without QApplication
     //MO::TestEquation t; return t.run();
     //MO::TestTesselator t; return t.run();
-    MO::TestDirectedGraph t; return t.run();
+    //MO::TestDirectedGraph t; return t.run();
 
 #if (0)
     using namespace MO;

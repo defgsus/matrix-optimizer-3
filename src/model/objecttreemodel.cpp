@@ -459,7 +459,9 @@ bool ObjectTreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                 if (!isClient())
                 {
                     // copy gui settings
-                    if (sceneSettings_ && copy->originalIdName() != copy->idName())
+                    if (sceneSettings_ && copy->originalIdName() != copy->idName()
+                        // XXX if it's already in the scene
+                        && copy->originalIdName().contains(QRegExp("[0-9]*")))
                         sceneSettings_->copySettings(copy->idName(), copy->originalIdName());
                 }
 
@@ -851,6 +853,38 @@ SequenceFloat * ObjectTreeModel::createFloatSequence(TrackFloat *track, Double t
 
     // place the sequence on the track
     addObject(trackIdx, -1, seq);
+
+    return seq;
+}
+
+
+SequenceFloat * ObjectTreeModel::createFloatSequenceFor(Object * object, const QString& goal)
+{
+    MO_DEBUG_TREE("ObjectTreeModel::createFloatSequenceFor('" << object->idName() << "')");
+
+    MO_ASSERT(scene_, "can't edit");
+
+    // get a good name
+    QString name = ">" + object->name();
+    if (!goal.isEmpty())
+        name += "." + goal;
+
+    Object * parent = object;
+    int insertIndex = -1;
+
+    if (parent->parentObject())
+    {
+        insertIndex = 1 + parent->parentObject()->children().indexOf(parent);
+        parent = parent->parentObject();
+    }
+
+    QModelIndex idx = indexForObject(parent);
+
+    // creat sequence
+    auto seq = ObjectFactory::createSequenceFloat(name);
+
+    // place the sequence on the track
+    addObject(idx, insertIndex, seq);
 
     return seq;
 }

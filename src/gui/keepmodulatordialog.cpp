@@ -31,7 +31,7 @@ struct KeepModulators::Private
     struct Mod
     {
         // the old and new modulator ids
-        QString oldId, newId;
+        QString oldId, newId, oldName, newName;
         // the original modulation goal
         Parameter* param,
         // the modulation goal in the copied object
@@ -126,6 +126,7 @@ void KeepModulators::addOriginalObject(Object * o)
             // keep an entry with the original modulator id
             Private::Mod m;
             m.oldId = obj->idName(); // modulator id
+            m.oldName = obj->name();
             m.object = obj; // modulator
             m.param = i.value(); // modulation goal (always parameter)
             m.newparam = 0;
@@ -169,6 +170,7 @@ void KeepModulators::addNewObject(Object * o)
         {
             // remember new id
             i.value().newId = obj->idName();
+            i.value().newName = obj->name();
             p_->ids.insert(i.value().oldId, i.value().newId);
             // and initialize to rewire
             i.value().createCopy = true;
@@ -305,9 +307,9 @@ void KeepModulatorDialog::createList_()
         // prepare an entry
         auto item = new QListWidgetItem(list_);
         item->setText(QString("create \"%1\" <- \"%2\" (copy of \"%3\")")
-                      .arg(m.param->infoIdName())
-                      .arg(m.newId)
-                      .arg(m.oldId)
+                      .arg(m.param->infoName())
+                      .arg(m.newName)
+                      .arg(m.oldName)
                       );
         item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
         item->setCheckState(m.createCopy ? Qt::Checked : Qt::Unchecked);
