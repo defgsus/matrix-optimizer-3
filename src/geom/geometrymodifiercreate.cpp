@@ -14,6 +14,7 @@
 #include "geometryfactory.h"
 #include "objloader.h"
 #include "tool/deleter.h"
+#include "io/filemanager.h"
 
 namespace MO {
 namespace GEOM {
@@ -110,7 +111,7 @@ void GeometryModifierCreate::execute(Geometry * g)
     {
     case T_FILE:
         if (!filename_.isEmpty())
-            ObjLoader::getGeometry(filename_, g);
+            ObjLoader::getGeometry(IO::fileManager().localFilename(filename_), g);
     break;
     case T_QUAD:
         GeometryFactory::createQuad(g, 1.f, 1.f, asTriangles_);
