@@ -75,7 +75,9 @@ HEADERS += \
     src/gui/widget/clipwidgetbutton.h \
     src/gui/keepmodulatordialog.h \
     src/gui/util/mainwidgetcontroller.h \
-    src/gui/resolutiondialog.h
+    src/gui/resolutiondialog.h \
+    src/gui/objectgraphview.h \
+    src/gui/item/abstractobjectitem.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -150,4 +152,6 @@ SOURCES += \
     src/gui/widget/clipwidgetbutton.cpp \
     src/gui/keepmodulatordialog.cpp \
     src/gui/util/mainwidgetcontroller.cpp \
-    src/gui/resolutiondialog.cpp
+    src/gui/resolutiondialog.cpp \
+    src/gui/objectgraphview.cpp \
+    src/gui/item/abstractobjectitem.cpp
