@@ -40,6 +40,7 @@ class TransportWidget;
 class ServerDialog;
 class ClipView;
 class TestThread;
+class ObjectGraphView;
 
 class MainWidgetController : public QObject
 {
@@ -60,6 +61,7 @@ public:
     GL::Window * glWindow() const { return glWindow_; }
     ObjectView * objectView() const { return objectView_; }
     ObjectTreeView * objectTreeView() const { return objectTreeView_; }
+    ObjectGraphView * objectGraphView() const { return objectGraphView_; }
     Sequencer * sequencer() const { return sequencer_; }
     ClipView * clipView() const { return clipView_; }
     SequenceView * sequenceView() const { return seqView_; }
@@ -174,6 +176,7 @@ private:
 
     ObjectView * objectView_;
     ObjectTreeView * objectTreeView_;
+    ObjectGraphView * objectGraphView_;
 
     SceneSettings * sceneSettings_;
 

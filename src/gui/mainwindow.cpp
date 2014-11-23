@@ -24,6 +24,7 @@
 #include "gui/objectview.h"
 #include "gui/sequencer.h"
 #include "gui/sequenceview.h"
+#include "gui/objectgraphview.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
 #include "object/scene.h"
@@ -129,6 +130,9 @@ void MainWindow::createWidgets_()
 
                 // clipview
                 lv->addWidget(controller_->clipView());
+
+                // object graph
+                lv->addWidget(controller_->objectGraphView());
 
                 //spacer2_ = new Spacer(Qt::Horizontal, this);
                 //lv->addWidget(spacer2_);

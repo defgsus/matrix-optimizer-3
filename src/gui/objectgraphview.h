@@ -13,6 +13,8 @@
 
 #include <QGraphicsView>
 
+#include "object/object_fwd.h"
+
 namespace MO {
 namespace GUI {
 
@@ -27,10 +29,16 @@ signals:
 
 public slots:
 
+    /** Sets the root object and completely
+        (re-)initializes the QGraphicsScene */
+    void setRootObject(Object * root);
 
 private:
 
+    void initScene_();
+
     QGraphicsScene * gscene_;
+    Object * root_;
 };
 
 

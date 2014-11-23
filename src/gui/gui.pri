@@ -77,7 +77,9 @@ HEADERS += \
     src/gui/util/mainwidgetcontroller.h \
     src/gui/resolutiondialog.h \
     src/gui/objectgraphview.h \
-    src/gui/item/abstractobjectitem.h
+    src/gui/item/abstractobjectitem.h \
+    src/gui/util/objectgraphsettings.h \
+    src/gui/item/objectgraphexpanditem.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -154,4 +156,6 @@ SOURCES += \
     src/gui/util/mainwidgetcontroller.cpp \
     src/gui/resolutiondialog.cpp \
     src/gui/objectgraphview.cpp \
-    src/gui/item/abstractobjectitem.cpp
+    src/gui/item/abstractobjectitem.cpp \
+    src/gui/util/objectgraphsettings.cpp \
+    src/gui/item/objectgraphexpanditem.cpp

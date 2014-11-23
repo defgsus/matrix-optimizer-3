@@ -20,6 +20,9 @@ namespace GUI {
 class AbstractObjectItem : public QGraphicsItem
 {
 public:
+
+    /** Constructs an AbstractObjectItem for the given object.
+        @p object MUST point to a valid object */
     AbstractObjectItem(Object * object, QGraphicsItem * parent = 0);
     ~AbstractObjectItem();
 
@@ -30,6 +33,40 @@ public:
 
     /** Returns the icon for the assigned object */
     const QIcon & icon() const;
+
+    /** Returns true if item is expanded */
+    bool isExpanded() const;
+
+    /** Returns the size of the item in grid-cells.
+        This changes with expanded() state. */
+    const QSize& gridSize() const;
+
+    /** Returns the position in the grid */
+    const QPoint& gridPos() const;
+
+    /** Returns true if mouse is over item */
+    bool isHover() const;
+
+    // ------------------ setter -----------------------
+
+    /** Sets the item to be expanded/collapsed */
+    void setExpanded(bool enable);
+
+    /** Sets a new position for the item */
+    void setGridPos(const QPoint& pos);
+
+    // ---------- QGraphicsItem interface --------------
+
+    /** Returns the true pixel coordinates resulting from
+        gridPos() and gridSize() times the ObjectGraphSettings::gridSize() */
+    QRectF boundingRect() const Q_DECL_OVERRIDE;
+
+    void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
+
+protected:
+
+    void hoverEnterEvent(QGraphicsSceneHoverEvent*);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent*);
 
 private:
 

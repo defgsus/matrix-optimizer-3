@@ -55,6 +55,7 @@
 #include "gui/audiofilterdialog.h"
 #include "gui/serverdialog.h"
 #include "gui/resolutiondialog.h"
+#include "gui/objectgraphview.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
@@ -207,6 +208,9 @@ void MainWidgetController::createObjects_()
             SLOT(setEditActions_(const QObject*,QList<QAction*>)));
     connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
             SLOT(onObjectSelectedTree_(MO::Object*)));
+
+    // object graph view
+    objectGraphView_ = new ObjectGraphView(window_);
 
     // object tree model
     objectTreeModel_ = new ObjectTreeModel(0, this);
@@ -703,6 +707,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     connect(scene_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
             objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
 
+    objectGraphView_->setRootObject(scene_);
     objectView_->setObject(0);
 
     seqView_->setScene(scene_);
