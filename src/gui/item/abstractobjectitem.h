@@ -24,7 +24,7 @@ public:
     // Does not work with qgraphicsitem_cast!!
     enum Type
     {
-        T_BASE = UserType + 1
+        T_BASE = UserType + 42
     };
 
     /** Constructs an AbstractObjectItem for the given object.

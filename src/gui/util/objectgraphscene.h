@@ -26,6 +26,14 @@ public:
     explicit ObjectGraphScene(QObject *parent = 0);
     ~ObjectGraphScene();
 
+    // -------------- getter -------------------
+
+    /** Return the item for the object, or NULL */
+    AbstractObjectItem * itemForObject(Object * o) const;
+
+    /** Return the first visible item or one of it's parents for the object, or NULL */
+    AbstractObjectItem * visibleItemForObject(Object * o) const;
+
 signals:
 
 public slots:

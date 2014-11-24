@@ -1595,6 +1595,16 @@ QList<AUDIO::AudioMicrophone*> Object::createOrDeleteMicrophones(const QString &
 
 // -------------------- modulators ---------------------
 
+QList<Modulator*> Object::getModulators() const
+{
+    QList<Modulator*> mods;
+    for (auto p : parameters())
+    {
+        mods.append( p->modulators() );
+    }
+    return mods;
+}
+
 QList<Object*> Object::getModulatingObjects() const
 {
     QList<Object*> list;

@@ -20,6 +20,7 @@ namespace MO {
 
     class Object;
 
+    typedef GraphNode<Object*> ObjectGraphNode;
     typedef DirectedGraph<Object*> ObjectGraph;
 
     /** Puts all modulation dependencies into the graph object.

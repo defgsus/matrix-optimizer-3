@@ -84,7 +84,7 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     // setup graphicsItems
     setCursor(QCursor(Qt::SizeAllCursor));
     setAcceptHoverEvents(true);
-
+    setToolTip(object->name());
 }
 
 AbstractObjectItem::~AbstractObjectItem()
