@@ -11,6 +11,9 @@
 #include <QPen>
 
 #include "objectgraphsettings.h"
+#include "gui/item/abstractobjectitem.h"
+#include "object/objectfactory.h"
+
 
 namespace MO {
 namespace GUI {
@@ -33,6 +36,12 @@ QSize ObjectGraphSettings::gridSize()
 {
     //return QSize(64, 64);
     return QSize(54, 54);
+}
+
+QSize ObjectGraphSettings::iconSize()
+{
+    const auto s = gridSize();
+    return QSize(s.width() - 12, s.height() - 12);
 }
 
 QSize ObjectGraphSettings::expandItemSize()
@@ -73,9 +82,11 @@ const QPainterPath& ObjectGraphSettings::pathCollapsed()
     return *Private::ppCollapsed;
 }
 
-QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * )
+QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * item)
 {
-    QPen pen(Qt::gray);
+    QPen pen;
+    if (item->object())
+        pen.setColor(ObjectFactory::colorForObject(item->object()));
     pen.setWidth(penOutlineWidth());
     return pen;
 }

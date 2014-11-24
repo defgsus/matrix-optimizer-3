@@ -25,6 +25,7 @@ class ObjectGraphSettings
 public:
 
     static QSize gridSize();
+    static QSize iconSize();
 
     static QSize expandItemSize();
 

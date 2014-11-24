@@ -50,6 +50,7 @@ public:
     bool expanded, hover, layouted;
     QPoint pos, offset; ///< pos in grid
     QSize size; ///< size in grid coords
+    QIcon icon;
     QPixmap iconPixmap;
     QBrush brushBack, brushBackSel;
     ObjectGraphExpandItem * itemExp;
@@ -75,7 +76,9 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     p_oi_->brushBack =
     p_oi_->brushBackSel = ObjectGraphSettings::brushBackground();
     p_oi_->brushBackSel.setColor(p_oi_->brushBackSel.color().lighter(130));
-    p_oi_->iconPixmap = icon().pixmap(ObjectGraphSettings::gridSize());
+    p_oi_->icon = ObjectFactory::iconForObject(p_oi_->object,
+                            ObjectGraphSettings::penOutline(this).color());
+    p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
     p_oi_->itemExp = new ObjectGraphExpandItem(this);
     p_oi_->itemExp->setVisible(false);
     p_oi_->itemExp->setPos(ObjectGraphSettings::penOutlineWidth() * 3.,
@@ -101,7 +104,7 @@ Object * AbstractObjectItem::object() const
 
 const QIcon& AbstractObjectItem::icon() const
 {
-    return ObjectFactory::iconForObject(p_oi_->object);
+    return p_oi_->icon;
 }
 
 AbstractObjectItem * AbstractObjectItem::parentObjectItem() const
@@ -424,7 +427,13 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
 
     p->drawRoundedRect(r, cornerRadius, cornerRadius);
 
-    p->drawPixmap(0, 0, p_oi_->iconPixmap);
+    //p_oi_->icon.paint(p, 0, 0,
+    //                  ObjectGraphSettings::gridSize().width(),
+    //                  ObjectGraphSettings::gridSize().height());
+    const auto si = ObjectGraphSettings::gridSize() - ObjectGraphSettings::iconSize();
+    p->drawPixmap(si.width()/2,
+                  si.height()/2,
+                  p_oi_->iconPixmap);
 }
 
 

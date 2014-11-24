@@ -15,6 +15,7 @@
 #include <memory>
 
 #include <QObject>
+#include <QSize>
 
 #include "object/object_fwd.h"
 
@@ -60,11 +61,16 @@ public:
 
     // ----------- object infos -------------------
 
+    static QColor colorForObject(const Object *, bool darkSet = false);
+
     /** Returns an icon for the object type */
     static const QIcon& iconForObject(const Object *);
 
     /** Returns an icon for the object type (Object::Type) */
     static const QIcon& iconForObject(int objectType);
+
+    /** Returns an icon for the object with given color. */
+    static QIcon iconForObject(const Object *, QColor color, const QSize& size = QSize());
 
     /** Returns a list of objects, possible to add to given object @p parent */
     static QList<const Object*> possibleChildObjects(const Object * parent);

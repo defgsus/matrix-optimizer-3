@@ -10,6 +10,7 @@
 
 #include <QDebug>
 #include <QIcon>
+#include <QBitmap>
 #include <QFile>
 
 #include "objectfactory.h"
@@ -61,6 +62,31 @@ ObjectFactory& ObjectFactory::instance()
         instance_ = new ObjectFactory();
 
     return *instance_;
+}
+
+QColor ObjectFactory::colorForObject(const Object * o, bool darkSet)
+{
+    const int sat = o->activeAtAll() ? 128 : 48;
+    const int bright = darkSet? 48 : 200;
+    QColor c;
+    if (o->type() == Object::T_TRANSFORMATION)
+        c.setHsl(240, sat, bright);
+    else
+    if (o->type() & Object::TG_TRACK)
+        c.setHsl(100, sat, bright);
+    else
+    if (o->type() & Object::TG_SEQUENCE)
+        c.setHsl(140, sat, bright);
+    else
+    if (o->type() & Object::TG_MODULATOR_OBJECT)
+        c.setHsl(170, sat, bright);
+    else
+    if (o->type() & Object::T_AUDIO_UNIT)
+        c.setHsl(300, sat, bright);
+    else
+        c.setHsl(0, 0, bright);
+
+    return c;
 }
 
 const QIcon& ObjectFactory::iconForObject(const Object * o)
@@ -161,6 +187,17 @@ const QIcon& ObjectFactory::iconForObject(int type)
     return iconNone;
 }
 
+QIcon ObjectFactory::iconForObject(const Object * obj, QColor color, const QSize& size)
+{
+    QSize si = size;
+    QIcon org = iconForObject(obj);
+    if (si.isEmpty())
+        si = QSize(128, 128);
+    QPixmap pix(si);
+    pix.fill(color);
+    pix.setMask(org.pixmap(si).mask());
+    return QIcon(pix);
+}
 
 bool ObjectFactory::registerObject(Object * obj)
 {
