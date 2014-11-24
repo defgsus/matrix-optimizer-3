@@ -61,6 +61,10 @@ public:
 
     // ----------- object infos -------------------
 
+    /** Hue value for object type (Object::Type).
+        Returns hue for a defined object group, or -1 if undefined! */
+    static int hueForObject(int type);
+
     static QColor colorForObject(const Object *, bool darkSet = false);
 
     /** Returns an icon for the object type */

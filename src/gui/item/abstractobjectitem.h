@@ -17,6 +17,8 @@ namespace MO {
 class Object;
 namespace GUI {
 
+class ObjectGraphScene;
+
 class AbstractObjectItem : public QGraphicsItem
 {
 public:
@@ -33,6 +35,9 @@ public:
     ~AbstractObjectItem();
 
     // -------------------- getter ---------------------
+
+    /** Returns the ObjectGraphScene this item is in, or NULL */
+    ObjectGraphScene * objectScene() const;
 
     virtual int type() const { return T_BASE; }
 

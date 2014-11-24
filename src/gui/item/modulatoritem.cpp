@@ -9,10 +9,12 @@
 */
 
 #include <QPainter>
+#include <QCursor>
 
 #include "modulatoritem.h"
 #include "abstractobjectitem.h"
 #include "gui/util/objectgraphscene.h"
+#include "gui/util/objectgraphsettings.h"
 #include "object/object.h"
 #include "object/param/modulator.h"
 #include "math/vector.h"
@@ -29,6 +31,8 @@ ModulatorItem::ModulatorItem(Modulator * mod)
       from_         (0),
       to_           (0)
 {
+    setCursor(QCursor(Qt::ArrowCursor));
+    setFlag(ItemIsSelectable);
 }
 
 ObjectGraphScene * ModulatorItem::objectScene() const
@@ -39,7 +43,8 @@ ObjectGraphScene * ModulatorItem::objectScene() const
 void ModulatorItem::updateShape()
 {
     prepareGeometryChange();
-    updateFromTo_();
+    updateFromTo_(); // a connected item's parent might be collapsed/expanded
+    updatePos_();
     update();
 }
 
@@ -51,8 +56,9 @@ QPainterPath ModulatorItem::createArrow(const QPointF &from, const QPointF &to)
     shape.cubicTo(from.x() + std::abs(pd.x()) / 2,    from.y(),
                   to.x() - std::abs(pd.x()) / 2,      to.y(),
                   to.x(), to.y());
+
     // arrow head
-#if (0)
+#if (0) // arrow head in linear direction of path
     const Vec2
             dir = glm::normalize(Vec2(pd.x(), pd.y())) * 10.f,
             p1 = MATH::rotate(dir, 140),
@@ -61,7 +67,7 @@ QPainterPath ModulatorItem::createArrow(const QPointF &from, const QPointF &to)
                  to.y() + p1.y);
     shape.lineTo(to.x() + p2.x,
                  to.y() + p2.y);
-#else
+#else // arrow head
     shape.lineTo(to + QPointF(-5,-5));
     shape.lineTo(to + QPointF(-5,5));
 #endif
@@ -84,7 +90,10 @@ void ModulatorItem::updateFromTo_()
             //            << from_ << " " << to_);
         }
     }
+}
 
+void ModulatorItem::updatePos_()
+{
     // get positions of modulator and goal item
     if (from_)
         fromPos_ = from_->mapToScene(QPointF(from_->rect().right(),
@@ -103,10 +112,10 @@ void ModulatorItem::updateFromTo_()
     shape_ = createArrow(fromPos_ - pos(), toPos_ - pos());
 }
 
-/*QPainterPath ModulatorItem::shape() const
+QPainterPath ModulatorItem::shape() const
 {
     return shape_;
-}*/
+}
 
 QRectF ModulatorItem::boundingRect() const
 {
@@ -127,11 +136,14 @@ void ModulatorItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 
 void ModulatorItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    p->setPen(QPen(QColor(130,255,130)));
+    const bool sel = (from_ && from_->isSelected())
+                  || (to_ && to_->isSelected());
+    p->setPen(ObjectGraphSettings::penModulator(mod_, sel, isSelected()));
 
     p->drawPath(shape_);
 }
 
 //void ModulatorItem::mouseMoveEvent()
+
 } // namespace GUI
 } // namespace MO

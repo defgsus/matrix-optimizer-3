@@ -48,7 +48,7 @@ public:
 
     // ---------- QGraphicsItem interface --------------
 
-    //QPainterPath shape() const Q_DECL_OVERRIDE;
+    QPainterPath shape() const Q_DECL_OVERRIDE;
     QRectF boundingRect() const Q_DECL_OVERRIDE;
 
     void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
@@ -63,6 +63,7 @@ protected:
 private:
 
     void updateFromTo_();
+    void updatePos_();
     void calcShape_();
 
     Modulator * mod_;

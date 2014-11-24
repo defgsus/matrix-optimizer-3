@@ -12,8 +12,9 @@
 
 #include "objectgraphsettings.h"
 #include "gui/item/abstractobjectitem.h"
+#include "object/object.h"
 #include "object/objectfactory.h"
-
+#include "object/param/modulator.h"
 
 namespace MO {
 namespace GUI {
@@ -82,11 +83,15 @@ const QPainterPath& ObjectGraphSettings::pathCollapsed()
     return *Private::ppCollapsed;
 }
 
-QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * item)
+QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * item, bool sel)
 {
-    QPen pen;
+    QColor c(Qt::white);
     if (item->object())
-        pen.setColor(ObjectFactory::colorForObject(item->object()).darker(130));
+        c = ObjectFactory::colorForObject(item->object()).darker(140);
+    if (sel)
+        c = c.lighter(150);
+
+    QPen pen(c);
     pen.setWidth(penOutlineWidth());
     return pen;
 }
@@ -94,6 +99,21 @@ QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * item)
 int ObjectGraphSettings::penOutlineWidth()
 {
     return 3;
+}
+
+QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool sel)
+{
+    int sat = 70 + highl * 110,
+        bright = 150 + sel * 70,
+        hue = 140;
+    if (mod->modulator())
+        hue = ObjectFactory::hueForObject(mod->modulator()->type());
+    if (hue == -1)
+        sat = 0;
+
+    QPen pen(QColor::fromHsl(hue, sat, bright));
+    pen.setWidth(2);
+    return pen;
 }
 
 } // namespace GUI

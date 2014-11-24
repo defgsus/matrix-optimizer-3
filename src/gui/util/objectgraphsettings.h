@@ -15,6 +15,7 @@
 #include <QBrush>
 
 namespace MO {
+class Modulator;
 namespace GUI {
 
 class AbstractObjectItem;
@@ -34,8 +35,10 @@ public:
     static const QPainterPath& pathExpanded();
     static const QPainterPath& pathCollapsed();
 
-    static QPen penOutline(const AbstractObjectItem *);
+    static QPen penOutline(const AbstractObjectItem *, bool selected = false);
     static int penOutlineWidth();
+
+    static QPen penModulator(const Modulator *, bool highlight = false, bool selected = false);
 
 private:
 

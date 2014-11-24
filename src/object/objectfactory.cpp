@@ -64,29 +64,37 @@ ObjectFactory& ObjectFactory::instance()
     return *instance_;
 }
 
+int ObjectFactory::hueForObject(int type)
+{
+    if (type == Object::T_TRANSFORMATION)
+        return 240;
+    else
+    if (type & Object::TG_TRACK)
+        return 100;
+    else
+    if (type & Object::TG_SEQUENCE)
+        return 140;
+    else
+    if (type & Object::TG_MODULATOR_OBJECT)
+        return 170;
+    else
+    if (type & Object::T_AUDIO_UNIT)
+        return 300;
+    else
+        return -1;
+}
+
 QColor ObjectFactory::colorForObject(const Object * o, bool darkSet)
 {
-    const int sat = o->activeAtAll() ? 128 : 48;
     const int bright = darkSet? 48 : 200;
-    QColor c;
-    if (o->type() == Object::T_TRANSFORMATION)
-        c.setHsl(240, sat, bright);
-    else
-    if (o->type() & Object::TG_TRACK)
-        c.setHsl(100, sat, bright);
-    else
-    if (o->type() & Object::TG_SEQUENCE)
-        c.setHsl(140, sat, bright);
-    else
-    if (o->type() & Object::TG_MODULATOR_OBJECT)
-        c.setHsl(170, sat, bright);
-    else
-    if (o->type() & Object::T_AUDIO_UNIT)
-        c.setHsl(300, sat, bright);
-    else
-        c.setHsl(0, 0, bright);
+    const int hue = hueForObject(o->type());
 
-    return c;
+    if (hue == -1)
+        return QColor(bright, bright, bright);
+
+    const int sat = o->activeAtAll() ? 128 : 48;
+
+    return QColor::fromHsl(hue, sat, bright);
 }
 
 const QIcon& ObjectFactory::iconForObject(const Object * o)

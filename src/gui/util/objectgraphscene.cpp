@@ -14,6 +14,7 @@
 #include "gui/item/abstractobjectitem.h"
 #include "gui/item/modulatoritem.h"
 #include "object/object.h"
+#include "object/param/modulator.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "io/log.h"
 
@@ -29,11 +30,14 @@ public:
 
     void createObjectChildItems(Object * o, AbstractObjectItem * item);
     void createModulatorItems(Object * root);
+    void addModItem(Modulator *);
 
     void resolveLayout();
 
     ObjectGraphScene * scene;
     std::map<Object*, AbstractObjectItem*> itemMap;
+    std::multimap<Object*, ModulatorItem*> modItemMap;
+    QList<ModulatorItem*> modItems;
 };
 
 
@@ -78,12 +82,21 @@ void ObjectGraphScene::setRootObject(Object *root)
 {
     clear();
 
+    p_->itemMap.clear();
+    p_->modItemMap.clear();
+    p_->modItems.clear();
+
     p_->createObjectChildItems(root, 0);
     p_->resolveLayout();
     p_->createModulatorItems(root);
 
     //for (auto & p : p_->itemMap)
     //    MO_DEBUG(p.first->name() << " :: " << p.second);
+}
+
+void ObjectGraphScene::setGridPos(AbstractObjectItem * item, const QPoint &gridPos)
+{
+    item->setGridPos(gridPos);
 }
 
 void ObjectGraphScene::onChanged_()
@@ -132,14 +145,24 @@ void ObjectGraphScene::Private::createModulatorItems(Object *root)
     auto mods = root->getModulators();
     for (Modulator * m : mods)
     {
-        auto item = new ModulatorItem(m);
-        scene->addItem( item );
-        item->updateShape();
+        addModItem(m);
     }
 
     // process childs
     for (auto c : root->childObjects())
         createModulatorItems(c);
+}
+
+void ObjectGraphScene::Private::addModItem(Modulator * m)
+{
+    auto item = new ModulatorItem(m);
+    scene->addItem( item );
+    item->updateShape(); // calc arrow shape
+
+    // store in map
+    modItems.append( item );
+    //modItemMap.insert(std::make_pair(m->parent(), item));
+    //modItemMap.insert(std::make_pair(m->modulator(), item));
 }
 
 void ObjectGraphScene::Private::resolveLayout()
@@ -173,7 +196,21 @@ void ObjectGraphScene::Private::resolveLayout()
     }
 }
 
-
+void ObjectGraphScene::repaintModulators(AbstractObjectItem * item)
+{
+    // XXX currently updates all !! could be more efficent
+    for (ModulatorItem * i : p_->modItems)
+    {
+        i->update();
+    }
+    /*
+    auto i = p_->modItemMap.find(item->object());
+    while (i != p_->modItemMap.end())
+    {
+        i->second->update();
+        ++i;
+    }*/
+}
 
 } // namespace GUI
 } // namespace MO

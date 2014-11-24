@@ -23,6 +23,7 @@
 #include "object/object.h"
 #include "object/objectfactory.h"
 #include "gui/util/objectgraphsettings.h"
+#include "gui/util/objectgraphscene.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -86,6 +87,7 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     // setup graphicsItems
     setCursor(QCursor(Qt::SizeAllCursor));
     setAcceptHoverEvents(true);
+    setFlag(ItemIsSelectable, true);
     setToolTip(object->name());
 }
 
@@ -95,6 +97,11 @@ AbstractObjectItem::~AbstractObjectItem()
 }
 
 // -------------------------- state ----------------------------------
+
+ObjectGraphScene * AbstractObjectItem::objectScene() const
+{
+    return qobject_cast<ObjectGraphScene*>(scene());
+}
 
 Object * AbstractObjectItem::object() const
 {
@@ -158,6 +165,7 @@ void AbstractObjectItem::setLayoutDirty(bool dirty)
 
 QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVariant &value)
 {
+
     if (change == ItemPositionChange)
     {
         // value is the new position.
@@ -180,7 +188,17 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
             setLayoutDirty();
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    QVariant ret = QGraphicsItem::itemChange(change, value);
+
+    // change of selection must update connected modulator paths
+    if (change == ItemSelectedChange)
+    {
+        auto s = objectScene();
+        if (s)
+            s->repaintModulators(this);
+    }
+
+    return ret;
 }
 
 void AbstractObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
@@ -198,6 +216,8 @@ void AbstractObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 
 void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 {
+    QGraphicsItem::mousePressEvent(e);
+
     // store current state on click
     if (e->button() == Qt::LeftButton)
     {
@@ -206,13 +226,17 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
         p_oi_->gridPosDown = mapToGrid(e->pos());
 
         e->accept();
+        //setSelected(true);
         update();
     }
 }
 
 void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 {
-    if (!scene())
+    //QGraphicsItem::mouseMoveEvent(e);
+
+    auto sc = objectScene();
+    if (!sc)
         return;
 
     // drag position
@@ -230,15 +254,18 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
         if (newGrid != gridPos())
         //        !itemInGrid(newGrid))
         {
-            setGridPos(newGrid);
+            sc->setGridPos(this, newGrid);
+            //setGridPos(newGrid);
             //ensureVisible(QRectF(), 0,0);
         }
 
     }
 }
 
-void AbstractObjectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * )
+void AbstractObjectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * e)
 {
+    QGraphicsItem::mouseReleaseEvent(e);
+
     p_oi_->isMouseDown = false;
     update();
 }
@@ -419,7 +446,7 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
     else
         p->setBrush(p_oi_->brushBack);
 
-    p->setPen(ObjectGraphSettings::penOutline(this));
+    p->setPen(ObjectGraphSettings::penOutline(this, isSelected()));
 
     const auto r = rect();
     const qreal cornerRadius = 0.1 * ObjectGraphSettings::gridSize().width();
