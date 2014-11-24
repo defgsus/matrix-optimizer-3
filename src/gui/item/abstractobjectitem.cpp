@@ -15,6 +15,7 @@
 #include <QBrush>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsItemGroup>
 #include <QCursor>
 
 #include "abstractobjectitem.h"
@@ -33,20 +34,24 @@ namespace GUI {
 class AbstractObjectItem::PrivateOI
 {
 public:
-    PrivateOI()
-        : object        (0),
+    PrivateOI(AbstractObjectItem * item)
+        : item          (item),
+          object        (0),
           expanded      (false),
           hover         (false),
-          size          (2, 2), // expanded size minimum
+          layouted      (false),
+          size          (3, 3), // expanded size minimum
+          itemExp       (0),
           isMouseDown   (false)
     { }
 
+    AbstractObjectItem * item; ///< parent item class
     Object * object;
-    bool expanded, hover;
+    bool expanded, hover, layouted;
     QPoint pos, offset; ///< pos in grid
     QSize size; ///< size in grid coords
     QPixmap iconPixmap;
-    QBrush brushBack;
+    QBrush brushBack, brushBackSel;
     ObjectGraphExpandItem * itemExp;
 
     bool isMouseDown;
@@ -61,16 +66,18 @@ public:
 
 AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     : QGraphicsItem     (parent),
-      p_oi_             (new PrivateOI())
+      p_oi_             (new PrivateOI(this))
 {
     MO_ASSERT(object, "no object given for AbstractObjectItem");
 
     // prepare private state
     p_oi_->object = object;
-    p_oi_->brushBack = ObjectGraphSettings::brushBackground();
-    p_oi_->brushBack.setColor(p_oi_->brushBack.color().lighter(130));
+    p_oi_->brushBack =
+    p_oi_->brushBackSel = ObjectGraphSettings::brushBackground();
+    p_oi_->brushBackSel.setColor(p_oi_->brushBackSel.color().lighter(130));
     p_oi_->iconPixmap = icon().pixmap(ObjectGraphSettings::gridSize());
     p_oi_->itemExp = new ObjectGraphExpandItem(this);
+    p_oi_->itemExp->setVisible(false);
     p_oi_->itemExp->setPos(ObjectGraphSettings::penOutlineWidth() * 3.,
                            ObjectGraphSettings::penOutlineWidth() * 3.);
 
@@ -97,6 +104,12 @@ const QIcon& AbstractObjectItem::icon() const
     return ObjectFactory::iconForObject(p_oi_->object);
 }
 
+AbstractObjectItem * AbstractObjectItem::parentObjectItem() const
+{
+    return parentItem() && parentItem()->type() >= T_BASE
+            ? static_cast<AbstractObjectItem*>(parentItem())
+            : 0;
+}
 
 bool AbstractObjectItem::isExpanded() const
 {
@@ -115,18 +128,54 @@ void AbstractObjectItem::setExpanded(bool enable)
 
     prepareGeometryChange();
     p_oi_->expanded = enable;
+
+    // set childs (in-)visible
+    const auto list = childItems();
+    for (auto i : list)
+        if (i->type() >= T_BASE)
+            i->setVisible(enable);
+
+    setLayoutDirty();
 }
 
+bool AbstractObjectItem::isLayouted() const
+{
+    return p_oi_->layouted;
+}
+
+void AbstractObjectItem::setLayoutDirty(bool dirty)
+{
+    p_oi_->layouted = !dirty;
+    // propagate dirty state up
+    if (dirty)
+        if (auto p = parentObjectItem())
+            p->setLayoutDirty();
+}
 
 // --------------------------- events ---------------------------------
 
 QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    if (change == ItemPositionChange && scene())
+    if (change == ItemPositionChange)
     {
         // value is the new position.
         QPointF pos = value.toPointF();
         p_oi_->pos = mapToGrid(pos);
+        setLayoutDirty();
+    }
+    else
+    if (change == ItemChildAddedChange)
+    {
+        if (p_oi_->itemExp)
+            p_oi_->itemExp->setVisible(true);
+
+        // set visibility of new child
+        auto item = value.value<QGraphicsItem*>();
+        if (item && item->type() >= T_BASE)
+            item->setVisible(isExpanded());
+
+        if (isExpanded())
+            setLayoutDirty();
     }
 
     return QGraphicsItem::itemChange(change, value);
@@ -151,7 +200,7 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
     if (e->button() == Qt::LeftButton)
     {
         p_oi_->isMouseDown = true;
-        p_oi_->posMouseDown_ = mapToScene(e->pos());
+        p_oi_->posMouseDown_ = mapToParent(e->pos());
         p_oi_->gridPosDown_ = gridPos();
 
         e->accept();
@@ -167,10 +216,16 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
     // drag position
     if (p_oi_->isMouseDown)
     {
-        const QPointF p = mapToScene(e->pos());
+        const QPointF p = mapToParent(e->pos());
         QPoint newGrid = mapToGrid(p);
 
-        //if (newGrid != gridPos() &&
+        if (parentObjectItem())
+        {
+            newGrid.rx() = std::max(1, newGrid.x());
+            newGrid.ry() = std::max(1, newGrid.y());
+        }
+
+        if (newGrid != gridPos())
         //        !itemInGrid(newGrid))
         {
             setGridPos(newGrid);
@@ -229,9 +284,29 @@ const QSize& AbstractObjectItem::gridSize() const
 
 void AbstractObjectItem::setGridPos(const QPoint &pos)
 {
+    if (pos == p_oi_->pos)
+        return;
+
     prepareGeometryChange();
     setPos(mapFromGrid(pos));
-    adjustRightItems();
+    setLayoutDirty();
+}
+
+void AbstractObjectItem::setGridSize(const QSize &size)
+{
+    if (size == p_oi_->size)
+        return;
+
+    if (isExpanded())
+        prepareGeometryChange();
+
+    p_oi_->size = size;
+
+    if (isExpanded())
+    {
+        setLayoutDirty();
+        update();
+    }
 }
 
 // --------------------------- global queries ----------------------------------------------------
@@ -247,9 +322,33 @@ AbstractObjectItem * AbstractObjectItem::itemInGrid(const QPoint& p) const
     const QList<QGraphicsItem*> list = scene()->items(
                 QRectF(f.x(), f.y(), s.width(), s.height()));
     for (auto i : list)
-        if (auto item = dynamic_cast<AbstractObjectItem*>(i))
-            return item;
+        if (i->type() >= T_BASE)
+            return static_cast<AbstractObjectItem*>(i);
     return 0;
+}
+
+
+// --------------------------------------- layout ---------------------------------------------------
+
+void AbstractObjectItem::adjustSizeToChildren()
+{
+    // first do children
+    const auto list = childItems();
+    for (auto c : list)
+    if (c->type() >= T_BASE)
+    {
+        auto o = static_cast<AbstractObjectItem*>(c);
+        if (o->isExpanded())
+            o->adjustSizeToChildren();
+    }
+
+    // rect of children
+    const auto crect = childrenBoundingRect();
+    // grid size
+    const auto s = ObjectGraphSettings::gridSize();
+    const QSize gs = QSize(std::max(2.0, crect.right() / s.width() + 1),
+                           std::max(2.0, crect.bottom() / s.height() + 1));
+    setGridSize(gs);
 }
 
 void AbstractObjectItem::adjustRightItems()
@@ -266,17 +365,18 @@ void AbstractObjectItem::adjustRightItems()
     // get all object-items that should be moved right
     QList<AbstractObjectItem*> list;
     for (QGraphicsItem * i : list2)
-        if (i != this && i->pos().x() >= pos().x())
-            if (auto o = dynamic_cast<AbstractObjectItem*>(i))
-                list << o;
+        if (i != this && i->type() >= T_BASE && i->pos().x() >= pos().x())
+                list << static_cast<AbstractObjectItem*>(i);
 
     // move them away
     //const auto ofs = p_oi_->offset;
     MO_DEBUG("--");
     for (AbstractObjectItem * o : list)
+    {
         MO_DEBUG(o->object()->name());
-//        o->setGridPos(QPoint(gridPos().x() + gridSize().width() + 1,
-//                                o->gridPos().y()));
+        o->setGridPos(QPoint(gridPos().x() + gridSize().width() + 1,
+                                o->gridPos().y()));
+    }
 
 
     /*
@@ -313,9 +413,9 @@ QRectF AbstractObjectItem::boundingRect() const
 void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *)
 {
     if (isHover())
-        p->setBrush(p_oi_->brushBack);
+        p->setBrush(p_oi_->brushBackSel);
     else
-        p->setBrush(Qt::NoBrush);
+        p->setBrush(p_oi_->brushBack);
 
     p->setPen(ObjectGraphSettings::penOutline(this));
 

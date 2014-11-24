@@ -9,6 +9,7 @@
 */
 
 #include <QPainter>
+#include <QCursor>
 
 #include "objectgraphexpanditem.h"
 #include "abstractobjectitem.h"
@@ -24,6 +25,7 @@ ObjectGraphExpandItem::ObjectGraphExpandItem(AbstractObjectItem *parent)
       isHovered_    (false)
 {
     setAcceptHoverEvents(true);
+    setCursor(QCursor(Qt::ArrowCursor));
 }
 
 void ObjectGraphExpandItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)

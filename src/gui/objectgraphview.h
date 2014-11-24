@@ -18,6 +18,7 @@
 namespace MO {
 namespace GUI {
 
+class ObjectGraphScene;
 
 class ObjectGraphView : public QGraphicsView
 {
@@ -35,9 +36,7 @@ public slots:
 
 private:
 
-    void initScene_();
-
-    QGraphicsScene * gscene_;
+    ObjectGraphScene * gscene_;
     Object * root_;
 };
 

@@ -21,6 +21,12 @@ class AbstractObjectItem : public QGraphicsItem
 {
 public:
 
+    // Does not work with qgraphicsitem_cast!!
+    enum Type
+    {
+        T_BASE = UserType + 1
+    };
+
     /** Constructs an AbstractObjectItem for the given object.
         @p object MUST point to a valid object */
     AbstractObjectItem(Object * object, QGraphicsItem * parent = 0);
@@ -28,14 +34,23 @@ public:
 
     // -------------------- getter ---------------------
 
+    virtual int type() const { return T_BASE; }
+
     /** Returns the assigned object */
     Object * object() const;
 
     /** Returns the icon for the assigned object */
     const QIcon & icon() const;
 
+    /** Returns the parent AbstractObjectItem, or NULL */
+    AbstractObjectItem * parentObjectItem() const;
+
     /** Returns true if item is expanded */
     bool isExpanded() const;
+
+    /** Returns true when size or position have changed
+        and the surrounding layout may need adjustment */
+    bool isLayouted() const;
 
     /** Returns the size of the item in grid-cells.
         This changes with expanded() state. */
@@ -71,10 +86,19 @@ public:
     /** Sets a new position for the item */
     void setGridPos(const QPoint& pos);
 
+    /** Sets a new size in grid coords */
+    void setGridSize(const QSize& size);
+
     /** Sets an offset to the actual position */
     void setGridOffset(const QPoint& offset);
 
-    // ----------------- global stuff ------------------
+    /** Requests an update of the surrounding layout */
+    void setLayoutDirty(bool dirty = true);
+
+    // ----------------- layout stuff ------------------
+
+    /** Recursively adjust all sizes to fit in the children */
+    void adjustSizeToChildren();
 
     void adjustRightItems();
 
