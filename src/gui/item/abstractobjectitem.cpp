@@ -55,8 +55,8 @@ public:
     ObjectGraphExpandItem * itemExp;
 
     bool isMouseDown;
-    QPoint gridPosDown_;
-    QPointF posMouseDown_;
+    QPoint gridPosDown;
+    QPointF posMouseDown;
 };
 
 
@@ -200,8 +200,8 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
     if (e->button() == Qt::LeftButton)
     {
         p_oi_->isMouseDown = true;
-        p_oi_->posMouseDown_ = mapToParent(e->pos());
-        p_oi_->gridPosDown_ = gridPos();
+        p_oi_->posMouseDown = e->pos();//mapToParent(e->pos());
+        p_oi_->gridPosDown = mapToGrid(e->pos());
 
         e->accept();
         update();
@@ -217,7 +217,7 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
     if (p_oi_->isMouseDown)
     {
         const QPointF p = mapToParent(e->pos());
-        QPoint newGrid = mapToGrid(p);
+        QPoint newGrid = mapToGrid(p) - p_oi_->gridPosDown;
 
         if (parentObjectItem())
         {

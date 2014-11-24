@@ -32,7 +32,7 @@ QPainterPath * ObjectGraphSettings::Private::ppCollapsed = 0;
 QSize ObjectGraphSettings::gridSize()
 {
     //return QSize(64, 64);
-    return QSize(48, 48);
+    return QSize(54, 54);
 }
 
 QSize ObjectGraphSettings::expandItemSize()
