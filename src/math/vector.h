@@ -120,6 +120,17 @@ namespace MATH {
         #endif
     }
 
+    /** 2D rotation */
+    template <typename T, glm::precision P>
+    glm::detail::tvec2<T, P> rotate(const glm::detail::tvec2<T, P> & v, Float angle_degree)
+    {
+        const Float a = deg_to_rad(angle_degree);
+        const Float s = std::sin(a),
+                    c = std::cos(a);
+
+        return Vec2(v.x * c - v.y * s,
+                    v.x * s + v.y * c);
+    }
 
 
 /** Returns a point on a unit sphere (radius = 1.0). <br>

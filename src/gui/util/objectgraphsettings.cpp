@@ -86,7 +86,7 @@ QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * item)
 {
     QPen pen;
     if (item->object())
-        pen.setColor(ObjectFactory::colorForObject(item->object()));
+        pen.setColor(ObjectFactory::colorForObject(item->object()).darker(130));
     pen.setWidth(penOutlineWidth());
     return pen;
 }

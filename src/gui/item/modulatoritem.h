@@ -40,6 +40,8 @@ public:
     /** Returns the ObjectGraphScene this item is in, or NULL */
     ObjectGraphScene * objectScene() const;
 
+    static QPainterPath createArrow(const QPointF& from, const QPointF& to);
+
     // ------------------ setter -----------------------
 
     void updateShape();

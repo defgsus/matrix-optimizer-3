@@ -15,6 +15,7 @@
 #include "gui/util/objectgraphscene.h"
 #include "object/object.h"
 #include "object/param/modulator.h"
+#include "math/vector.h"
 #include "io/log.h"
 
 namespace MO {
@@ -42,6 +43,33 @@ void ModulatorItem::updateShape()
     update();
 }
 
+QPainterPath ModulatorItem::createArrow(const QPointF &from, const QPointF &to)
+{
+    QPainterPath shape(from);
+    auto pd = to - from;
+    //shape_.lineTo(p);
+    shape.cubicTo(from.x() + std::abs(pd.x()) / 2,    from.y(),
+                  to.x() - std::abs(pd.x()) / 2,      to.y(),
+                  to.x(), to.y());
+    // arrow head
+#if (0)
+    const Vec2
+            dir = glm::normalize(Vec2(pd.x(), pd.y())) * 10.f,
+            p1 = MATH::rotate(dir, 140),
+            p2 = MATH::rotate(dir, 220);
+    shape.lineTo(to.x() + p1.x,
+                 to.y() + p1.y);
+    shape.lineTo(to.x() + p2.x,
+                 to.y() + p2.y);
+#else
+    shape.lineTo(to + QPointF(-5,-5));
+    shape.lineTo(to + QPointF(-5,5));
+#endif
+    shape.lineTo(to);
+
+    return shape;
+}
+
 void ModulatorItem::updateFromTo_()
 {
     from_ = to_ = 0;
@@ -57,23 +85,22 @@ void ModulatorItem::updateFromTo_()
         }
     }
 
-    // get positions of modualtor and goal item
+    // get positions of modulator and goal item
     if (from_)
-        fromPos_ = from_->mapToScene(QPointF(from_->rect().width(),
-                                             from_->rect().height()/2));
+        fromPos_ = from_->mapToScene(QPointF(from_->rect().right(),
+                                             from_->rect().center().y()));
     if (to_)
-        toPos_ = to_->mapToScene(QPointF(0, to_->rect().height()/2));
+        toPos_ = to_->mapToScene(QPointF(to_->rect().left(), to_->rect().center().y()));
 
     // min/max rect
-    rect_.setLeft( std::min(fromPos_.x(), toPos_.x()) );
-    rect_.setRight( std::max(fromPos_.x(), toPos_.x()) );
-    rect_.setTop( std::min(fromPos_.y(), toPos_.y()) );
+    rect_.setLeft(   std::min(fromPos_.x(), toPos_.x()) );
+    rect_.setRight(  std::max(fromPos_.x(), toPos_.x()) );
+    rect_.setTop(    std::min(fromPos_.y(), toPos_.y()) );
     rect_.setBottom( std::max(fromPos_.y(), toPos_.y()) );
     setPos(rect_.topLeft());
 
     // arrow
-    shape_ = QPainterPath(fromPos_ - pos());
-    shape_.lineTo(toPos_ - pos());
+    shape_ = createArrow(fromPos_ - pos(), toPos_ - pos());
 }
 
 /*QPainterPath ModulatorItem::shape() const
@@ -83,7 +110,7 @@ void ModulatorItem::updateFromTo_()
 
 QRectF ModulatorItem::boundingRect() const
 {
-    return QRectF(0, 0, rect_.width(), rect_.height());
+    return shape_.boundingRect();
 }
 
 void ModulatorItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)

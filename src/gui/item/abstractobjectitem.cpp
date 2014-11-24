@@ -73,11 +73,10 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
 
     // prepare private state
     p_oi_->object = object;
-    p_oi_->brushBack =
-    p_oi_->brushBackSel = ObjectGraphSettings::brushBackground();
-    p_oi_->brushBackSel.setColor(p_oi_->brushBackSel.color().lighter(130));
-    p_oi_->icon = ObjectFactory::iconForObject(p_oi_->object,
-                            ObjectGraphSettings::penOutline(this).color());
+    const QColor color = ObjectFactory::colorForObject(p_oi_->object);
+    p_oi_->brushBack = QBrush(color.darker(400));
+    p_oi_->brushBackSel = QBrush(p_oi_->brushBack.color().lighter(120));
+    p_oi_->icon = ObjectFactory::iconForObject(p_oi_->object, color);
     p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
     p_oi_->itemExp = new ObjectGraphExpandItem(this);
     p_oi_->itemExp->setVisible(false);
