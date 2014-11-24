@@ -41,11 +41,27 @@ public:
         This changes with expanded() state. */
     const QSize& gridSize() const;
 
-    /** Returns the position in the grid */
+    /** Returns the position in the grid,
+        which is derived from the pos(). */
     const QPoint& gridPos() const;
+
+    /** Returns the rectangle occupied in the grid */
+    const QRect gridRect() const { return QRect(gridPos(), gridSize()); }
+
+    /** Translates a global point into grid coordinates */
+    QPoint mapToGrid(const QPointF&) const;
+
+    /** Translates grid coordinates into global coordinates */
+    QPointF mapFromGrid(const QPoint&) const;
+
+    /** Returns the pixel rectangle */
+    QRectF rect() const;
 
     /** Returns true if mouse is over item */
     bool isHover() const;
+
+    /** Returns the item for the given grid-pos, or NULL */
+    AbstractObjectItem * itemInGrid(const QPoint& gridpos) const;
 
     // ------------------ setter -----------------------
 
@@ -55,18 +71,30 @@ public:
     /** Sets a new position for the item */
     void setGridPos(const QPoint& pos);
 
+    /** Sets an offset to the actual position */
+    void setGridOffset(const QPoint& offset);
+
+    // ----------------- global stuff ------------------
+
+    void adjustRightItems();
+
     // ---------- QGraphicsItem interface --------------
 
     /** Returns the true pixel coordinates resulting from
         gridPos() and gridSize() times the ObjectGraphSettings::gridSize() */
-    QRectF boundingRect() const Q_DECL_OVERRIDE;
+    virtual QRectF boundingRect() const Q_DECL_OVERRIDE;
 
-    void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
+    virtual void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
 
 protected:
 
-    void hoverEnterEvent(QGraphicsSceneHoverEvent*);
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent*);
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value) Q_DECL_OVERRIDE;
+    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;
+    virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;
+
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
 
 private:
 

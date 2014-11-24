@@ -17,6 +17,8 @@
 namespace MO {
 namespace GUI {
 
+class AbstractObjectItem;
+
 
 class ObjectGraphSettings
 {
@@ -27,6 +29,17 @@ public:
     static QSize expandItemSize();
 
     static QBrush brushBackground();
+
+    static const QPainterPath& pathExpanded();
+    static const QPainterPath& pathCollapsed();
+
+    static QPen penOutline(const AbstractObjectItem *);
+    static int penOutlineWidth();
+
+private:
+
+    class Private;
+    static Private * p_;
 };
 
 } // namespace GUI

@@ -24,10 +24,6 @@ public:
 
     ObjectGraphExpandItem(AbstractObjectItem * parent);
 
-    void setPosition(const QPoint& pos) { prepareGeometryChange(); pos_ = pos; }
-
-    const QPoint& position() const { return pos_; }
-
     // ---------- QGraphicsItem interface --------------
 
     QRectF boundingRect() const Q_DECL_OVERRIDE;
@@ -43,7 +39,6 @@ protected:
 
 private:
 
-    QPoint pos_;
     AbstractObjectItem * objectItem_;
     bool isHovered_;
 };
