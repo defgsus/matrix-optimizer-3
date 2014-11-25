@@ -654,12 +654,12 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     else
     {
         *sceneSettings_ = *set;
+    }
 
 #ifndef MO_DISABLE_TREE
-        objectTreeModel_->setSceneSettings(sceneSettings_);
+    objectTreeModel_->setSceneSettings(sceneSettings_);
 #endif
-        objectGraphView_->setGuiSettings(sceneSettings_);
-    }
+    objectGraphView_->setGuiSettings(sceneSettings_);
 
     // check for local filenames
 

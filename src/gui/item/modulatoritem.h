@@ -40,8 +40,6 @@ public:
     /** Returns the ObjectGraphScene this item is in, or NULL */
     ObjectGraphScene * objectScene() const;
 
-    static QPainterPath createArrow(const QPointF& from, const QPointF& to);
-
     // ------------------ setter -----------------------
 
     void updateShape();
@@ -71,7 +69,7 @@ private:
     AbstractObjectItem * from_, * to_;
     QPointF fromPos_, toPos_;
     QRectF rect_;
-    QPainterPath shape_;
+    QPainterPath shape_, boundingShape_;
 };
 
 } // namespace GUI
