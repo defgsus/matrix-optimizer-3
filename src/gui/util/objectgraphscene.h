@@ -48,6 +48,8 @@ public slots:
     /** Calls update for all ModulatorItems connected to the given item */
     void repaintModulators(AbstractObjectItem *);
 
+    void toFront(AbstractObjectItem *);
+
 private slots:
 
     void onChanged_();

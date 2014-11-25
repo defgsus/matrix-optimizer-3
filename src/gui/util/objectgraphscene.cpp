@@ -25,19 +25,23 @@ class ObjectGraphScene::Private
 {
 public:
     Private(ObjectGraphScene * scene)
-        :   scene   (scene)
+        :   scene   (scene),
+            zStack  (0)
     { }
 
     void createObjectChildItems(Object * o, AbstractObjectItem * item);
     void createModulatorItems(Object * root);
     void addModItem(Modulator *);
+    void addModItemMap(Object *, ModulatorItem *);
+    void raiseModItems(AbstractObjectItem*); ///< raise all ModulatorItems of the item and it's childs
 
     void resolveLayout();
 
     ObjectGraphScene * scene;
     std::map<Object*, AbstractObjectItem*> itemMap;
-    std::multimap<Object*, ModulatorItem*> modItemMap;
+    std::multimap<Object*, QList<ModulatorItem*>> modItemMap;
     QList<ModulatorItem*> modItems;
+    int zStack; ///< highest current stack value
 };
 
 
@@ -85,6 +89,7 @@ void ObjectGraphScene::setRootObject(Object *root)
     p_->itemMap.clear();
     p_->modItemMap.clear();
     p_->modItems.clear();
+    p_->zStack = 0;
 
     p_->createObjectChildItems(root, 0);
     p_->resolveLayout();
@@ -124,6 +129,7 @@ void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObject
             scene->addItem(item);
         else
             item->setParentItem(pitem);
+        ++zStack;
 
         // add childs
         createObjectChildItems(c, item);
@@ -157,12 +163,27 @@ void ObjectGraphScene::Private::addModItem(Modulator * m)
 {
     auto item = new ModulatorItem(m);
     scene->addItem( item );
+    ++zStack;
     item->updateShape(); // calc arrow shape
 
     // store in map
     modItems.append( item );
-    //modItemMap.insert(std::make_pair(m->parent(), item));
-    //modItemMap.insert(std::make_pair(m->modulator(), item));
+    // ModulatorItems per object
+    addModItemMap(m->parent(), item);
+    addModItemMap(m->modulator(), item);
+}
+
+void ObjectGraphScene::Private::addModItemMap(Object * o, ModulatorItem * item)
+{
+    auto i = modItemMap.find(o);
+    if (i == modItemMap.end())
+    {
+        modItemMap.insert(std::make_pair(o, QList<ModulatorItem*>() << item));
+    }
+    else
+    {
+        i->second << item;
+    }
 }
 
 void ObjectGraphScene::Private::resolveLayout()
@@ -196,7 +217,7 @@ void ObjectGraphScene::Private::resolveLayout()
     }
 }
 
-void ObjectGraphScene::repaintModulators(AbstractObjectItem * item)
+void ObjectGraphScene::repaintModulators(AbstractObjectItem * )
 {
     // XXX currently updates all !! could be more efficent
     for (ModulatorItem * i : p_->modItems)
@@ -210,6 +231,31 @@ void ObjectGraphScene::repaintModulators(AbstractObjectItem * item)
         i->second->update();
         ++i;
     }*/
+}
+
+void ObjectGraphScene::toFront(AbstractObjectItem * item)
+{
+    item->setZValue(++p_->zStack);
+
+    // raise ModulatorItems
+    p_->raiseModItems(item);
+}
+
+void ObjectGraphScene::Private::raiseModItems(AbstractObjectItem * item)
+{
+    // raise all connected ModulatorItems
+    auto i = modItemMap.find(item->object());
+    if (i != modItemMap.end())
+    {
+        for (auto mi : i->second)
+            mi->setZValue(++zStack);
+    }
+
+    // traverse AbstractObjectItem childs
+    const auto list = item->childItems();
+    for (auto c : list)
+        if (c->type() >= AbstractObjectItem::T_BASE)
+            raiseModItems(static_cast<AbstractObjectItem*>(c));
 }
 
 } // namespace GUI

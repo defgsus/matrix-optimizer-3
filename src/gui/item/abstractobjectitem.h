@@ -83,6 +83,9 @@ public:
     /** Returns the item for the given grid-pos, or NULL */
     AbstractObjectItem * itemInGrid(const QPoint& gridpos) const;
 
+    QRectF childrenBoundingRect(bool checkVisibilty);
+    using QGraphicsItem::childrenBoundingRect;
+
     // ------------------ setter -----------------------
 
     /** Sets the item to be expanded/collapsed */

@@ -195,7 +195,9 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
     {
         auto s = objectScene();
         if (s)
+        {
             s->repaintModulators(this);
+        }
     }
 
     return ret;
@@ -225,15 +227,17 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
         p_oi_->posMouseDown = e->pos();//mapToParent(e->pos());
         p_oi_->gridPosDown = mapToGrid(e->pos());
 
+        if (auto s = objectScene())
+            s->toFront(this);
+
         e->accept();
-        //setSelected(true);
         update();
     }
 }
 
 void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 {
-    //QGraphicsItem::mouseMoveEvent(e);
+    //QGraphicsItem::mouseMoveEvent(e); // probably doesn't do anything
 
     auto sc = objectScene();
     if (!sc)
@@ -255,8 +259,6 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
         //        !itemInGrid(newGrid))
         {
             sc->setGridPos(this, newGrid);
-            //setGridPos(newGrid);
-            //ensureVisible(QRectF(), 0,0);
         }
 
     }
@@ -359,6 +361,21 @@ AbstractObjectItem * AbstractObjectItem::itemInGrid(const QPoint& p) const
 
 // --------------------------------------- layout ---------------------------------------------------
 
+QRectF AbstractObjectItem::childrenBoundingRect(bool checkVisibilty)
+{
+    if (!checkVisibilty)
+        return childrenBoundingRect();
+
+    QRectF rect;
+    const auto list = childItems();
+    for (QGraphicsItem * c : list)
+    if (c->isVisible())
+    {
+        rect |= c->mapToParent(c->boundingRect()).boundingRect();
+    }
+    return rect;
+}
+
 void AbstractObjectItem::adjustSizeToChildren()
 {
     // first do children
@@ -372,7 +389,7 @@ void AbstractObjectItem::adjustSizeToChildren()
     }
 
     // rect of children
-    const auto crect = childrenBoundingRect();
+    const auto crect = childrenBoundingRect(true);
     // grid size
     const auto s = ObjectGraphSettings::gridSize();
     const QSize gs = QSize(std::max(2.0, crect.right() / s.width() + 1),
@@ -406,7 +423,6 @@ void AbstractObjectItem::adjustRightItems()
         o->setGridPos(QPoint(gridPos().x() + gridSize().width() + 1,
                                 o->gridPos().y()));
     }
-
 
     /*
     const QRectF r = rect();
