@@ -58,5 +58,15 @@ void ObjectGraphView::onShitView_(const QPointF & )
     //scrollBarWidgets();
 }
 
+void ObjectGraphView::setFocusObject(Object * o)
+{
+    QGraphicsItem * item = gscene_->itemForObject(o);
+    if (!item)
+        return;
+
+    // XXX
+}
+
+
 } // namespace GUI
 } // namespace MO

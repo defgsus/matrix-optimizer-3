@@ -17,6 +17,7 @@ class QMimeData;
 
 namespace MO {
 class Object;
+class Parameter;
 namespace GUI {
 
 class AbstractObjectItem;
@@ -81,6 +82,9 @@ public slots:
     /** Returns all top-level AbstractObjectItems */
     QList<AbstractObjectItem*> topLevelObjectItems() const;
 
+    /** Reduces the objects in the list to the ones at the top */
+    void reduceToTopLevel(QList<AbstractObjectItem*>&);
+
     /** Returns the item at global grid position, or NULL */
     AbstractObjectItem * objectItemAt(const QPoint& gridPos);
 
@@ -97,13 +101,25 @@ public slots:
     // ------------------- editing --------------------
 
     /** Adds an object to object-tree and item-tree.
+        @p newObject is completely given away. If it can't be added to parent, it will be deleted
+        and a message is displayed to the user.
         @p gridPos is global and will be retranslated to parent's local coords if necessary. */
     void addObject(Object * parent, Object * newObject, const QPoint &gridPos = QPoint(1,1), int insert_index = -1);
 
     /** Adds an object to object-tree and item-tree.
+        The items in @p newObjects are completely given away. If they can't be added to parent,
+        they will be deleted and a message is displayed to the user.
         @p gridPos is global and will be retranslated to parent's local coords if necessary. */
     void addObjects(Object * parent, const QList<Object*> newObjects,
                     const QPoint &gridPos = QPoint(1,1), int insert_index = -1);
+
+    /** Deletes the object.
+        The object MUST NOT be root! */
+    void deleteObject(Object * o);
+
+    void deleteObjects(const QList<AbstractObjectItem*> o);
+
+    void addModulator(MO::Parameter *, const QString& idName);
 
 private slots:
 

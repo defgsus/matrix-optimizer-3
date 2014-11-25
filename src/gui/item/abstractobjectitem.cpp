@@ -142,7 +142,7 @@ void AbstractObjectItem::setExpanded(bool enable)
     p_oi_->expanded = enable;
     // store in gui settings
     auto s = objectScene();
-    if (s && object())
+    if (s && object() && s->guiSettings())
         s->guiSettings()->setExpanded(object(), "0", enable);
 
     // set childs (in-)visible

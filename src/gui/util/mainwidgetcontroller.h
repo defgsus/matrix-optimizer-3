@@ -11,6 +11,8 @@
 #ifndef MOSRC_GUI_UTIL_MAINWIDGETCONTROLLER_H
 #define MOSRC_GUI_UTIL_MAINWIDGETCONTROLLER_H
 
+#define MO_DISABLE_TREE
+
 #include <QObject>
 #include <QSize>
 
@@ -55,12 +57,14 @@ public:
     bool isPlayback() const;
 
     Scene * scene() const { return scene_; }
-    ObjectTreeModel * objectTreeModel() const { return objectTreeModel_; }
     SceneSettings * sceneSettings() const { return sceneSettings_; }
     GL::Manager * glManager() const { return glManager_; }
     GL::Window * glWindow() const { return glWindow_; }
     ObjectView * objectView() const { return objectView_; }
+#ifndef MO_DISABLE_TREE
     ObjectTreeView * objectTreeView() const { return objectTreeView_; }
+    ObjectTreeModel * objectTreeModel() const { return objectTreeModel_; }
+#endif
     ObjectGraphView * objectGraphView() const { return objectGraphView_; }
     Sequencer * sequencer() const { return sequencer_; }
     ClipView * clipView() const { return clipView_; }
@@ -168,15 +172,18 @@ private:
 
     QMainWindow * window_;
     Scene * scene_;
+#ifndef MO_DISABLE_TREE
     ObjectTreeModel * objectTreeModel_;
-
+#endif
     QSize outputSize_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
 
     ObjectView * objectView_;
+#ifndef MO_DISABLE_TREE
     ObjectTreeView * objectTreeView_;
+#endif
     ObjectGraphView * objectGraphView_;
 
     SceneSettings * sceneSettings_;

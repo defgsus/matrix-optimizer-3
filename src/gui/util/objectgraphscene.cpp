@@ -59,8 +59,14 @@ public:
     /// Creates the items for all children of o and recusively
     void createObjectChildItems(Object * o, AbstractObjectItem * item);
     void createModulatorItems(Object * root);
+    void recreateModulatorItems();
     void addModItem(Modulator *);
     void addModItemMap(Object *, ModulatorItem *);
+    /// Removes all modulator items of object and it's children
+    //void removeModItemsFor(Object *);
+    /// Returns all modulator items of object and it's children
+    QList<ModulatorItem*> getAllModItemsFor(Object *);
+    void getAllModItemsFor(Object * o, QSet<ModulatorItem*>& set);
     /// Recursively get the item below @p localGridPos
     AbstractObjectItem * childItemAt(AbstractObjectItem * parent, const QPoint& localGridPos);
     void raiseModItems(AbstractObjectItem*); ///< raise all ModulatorItems of the item and it's childs
@@ -76,7 +82,7 @@ public:
     ObjectGraphScene * scene;
     Scene * root;
     std::map<Object*, AbstractObjectItem*> itemMap;
-    std::multimap<Object*, QList<ModulatorItem*>> modItemMap;
+    std::map<Object*, QList<ModulatorItem*>> modItemMap;
     QList<ModulatorItem*> modItems;
     int zStack; ///< highest current stack value
     Action action;
@@ -403,6 +409,60 @@ void ObjectGraphScene::Private::raiseModItems(AbstractObjectItem * item)
             raiseModItems(static_cast<AbstractObjectItem*>(c));
 }
 
+QList<ModulatorItem*> ObjectGraphScene::Private::getAllModItemsFor(Object * o)
+{
+    QSet<ModulatorItem*> set;
+    getAllModItemsFor(o, set);
+    return set.toList();
+}
+
+void ObjectGraphScene::Private::getAllModItemsFor(Object * o, QSet<ModulatorItem*>& set)
+{
+    auto i = modItemMap.find(o);
+    if (i != modItemMap.end())
+    {
+        for (auto mi : i->second)
+            set.insert(mi);
+    }
+
+    for (auto c : o->childObjects())
+        getAllModItemsFor(c, set);
+}
+/*
+void ObjectGraphScene::Private::removeModItemsFor(Object * o)
+{
+    auto moditems = getAllModItemsFor(o);
+
+    // remove entries in map
+    QList<Object*> allsubs = o->findChildObjects(Object::TG_ALL, true);
+    allsubs << o;
+    for (auto o : allsubs)
+        modItemMap.erase(o);
+
+    // delete items
+    for (auto mi : moditems)
+    {
+        modItems.removeAll(mi);
+        scene->removeItem(mi);
+        delete mi;
+    }
+}
+*/
+
+void ObjectGraphScene::Private::recreateModulatorItems()
+{
+    for (auto m : modItems)
+    {
+        scene->removeItem(m);
+        delete m;
+    }
+    modItems.clear();
+    modItemMap.clear();
+
+    if (root)
+        createModulatorItems(root);
+}
+
 QList<AbstractObjectItem*> ObjectGraphScene::topLevelObjectItems() const
 {
     QList<AbstractObjectItem*> ret;
@@ -412,6 +472,33 @@ QList<AbstractObjectItem*> ObjectGraphScene::topLevelObjectItems() const
             ret << i.second;
 
     return ret;
+}
+
+void ObjectGraphScene::reduceToTopLevel(QList<AbstractObjectItem *> & input)
+{
+    // get objects
+    auto set = input.toSet();
+
+    // filter only top-level objects
+    QList<AbstractObjectItem*> toplevel;
+    for (auto i : set)
+    {
+        auto tl = i;
+        while ((i = i->parentObjectItem()))
+        {
+            if (set.contains(i))
+            {
+                tl = 0;
+                break;
+            }
+        }
+
+        if (tl)
+            toplevel << tl;
+    }
+
+    if (toplevel.size() != input.size())
+        std::swap(input, toplevel);
 }
 
 AbstractObjectItem * ObjectGraphScene::objectItemAt(const QPoint &gridPos)
@@ -576,24 +663,25 @@ void ObjectGraphScene::popup(const QPoint& gridPos)
     p_->popupGridPos = gridPos;
 
     // title
-    QString title(obj->name());
+    QString title(items.size() < 2
+                  ? obj->name()
+                  : tr("%1 objects").arg(items.size()));
     p_->actions.addTitle(title, this);
 
-    p_->actions.addSeparator(this);
-
-        // new object
+    // new object
+    if (items.size() < 2)
         p_->createNewObjectMenu(obj);
 
-    p_->actions.addSeparator(this);
-
-        // clipboard
-        p_->createClipboardMenu(obj, items);
+    // clipboard
+    p_->createClipboardMenu(obj, items);
 
     p_->showPopup();
 }
 
 void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 {
+    actions.addSeparator(scene);
+
     if (!root)
     {
         MO_WARNING("Can't edit");
@@ -626,21 +714,36 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 
 void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const QList<AbstractObjectItem*>& items)
 {
+    actions.addSeparator(scene);
+
     const bool plural = items.size() > 1;
     Object * obj = items.isEmpty() ? 0 : items.first()->object();
 
     QAction * a;
 
-    // copy
     if (obj && obj != root)
     {
+        // copy
         a = actions.addAction(plural ? tr("Copy objects") : tr("Copy"), scene);
         a->setStatusTip(tr("Copies the selected object(s) and all it's children to the clipboard"));
         a->setShortcut(Qt::CTRL + Qt::Key_C);
-        connect(a, &QAction::triggered, [=]()
+        connect(a, &QAction::triggered, [this, items]()
         {
             application->clipboard()->setMimeData(scene->mimeData(items));
         });
+
+        // delete
+        a = actions.addAction(plural ? tr("Delete objects") : tr("Delete"), scene);
+        a->setStatusTip(tr("Deletes the object(s) from the scene"));
+        a->setShortcut(Qt::CTRL + Qt::Key_Delete);
+        connect(a, &QAction::triggered, [this, items]()
+        {
+            if (items.size() == 1)
+                scene->deleteObject(items.first()->object());
+            else
+                scene->deleteObjects(items);
+        });
+
     }
 
     if (!plural)
@@ -844,6 +947,69 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
     addObjects(root, copies, gridPos);
 
 }
+
+void ObjectGraphScene::deleteObject(Object * o)
+{
+    if (!o || !p_->root)
+        return;
+
+    MO_ASSERT(o != p_->root, "Can't delete root here");
+
+    // remove items and references
+    auto item = itemForObject(o);
+    if (item)
+    {
+        removeItem(item);
+        delete item;
+    }
+    p_->itemMap.erase(o);
+
+    // delete for real
+    p_->root->deleteObject(o);
+
+    // recreate all modulation items
+    p_->recreateModulatorItems();
+
+}
+
+void ObjectGraphScene::deleteObjects(const QList<AbstractObjectItem *> items1)
+{
+    if (!p_->root)
+        return;
+
+    auto items = items1;
+    reduceToTopLevel(items);
+
+    for (auto item : items)
+    {
+        Object * o = item->object();
+        MO_ASSERT(o != p_->root, "Can't delete root here");
+
+        // remove item and references
+        removeItem(item);
+        delete item;
+
+        p_->itemMap.erase(o);
+
+        // delete for real
+        p_->root->deleteObject(o);
+    }
+
+    p_->recreateModulatorItems();
+}
+
+
+void ObjectGraphScene::addModulator(Parameter * p, const QString &idName)
+{
+    if (!p_->root)
+        return;
+
+    p_->root->addModulator(p, idName);
+
+    p_->recreateModulatorItems();
+}
+
+
 
 
 } // namespace GUI

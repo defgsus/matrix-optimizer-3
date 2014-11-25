@@ -154,7 +154,9 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
     : QObject           (win),
       window_           (win),
       scene_            (0),
+#ifndef MO_DISABLE_TREE
       objectTreeModel_  (0),
+#endif
       outputSize_       (512, 512),
       glManager_        (0),
       glWindow_         (0),
@@ -201,6 +203,7 @@ void MainWidgetController::createObjects_()
     // transport widget
     transportWidget_ = new TransportWidget(window_);
 
+#ifndef MO_DISABLE_TREE
     // object tree view
     objectTreeView_ = new ObjectTreeView(window_);
     objectTreeView_->setSceneSettings(sceneSettings_);
@@ -208,18 +211,21 @@ void MainWidgetController::createObjects_()
             SLOT(setEditActions_(const QObject*,QList<QAction*>)));
     connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
             SLOT(onObjectSelectedTree_(MO::Object*)));
+#endif
 
     // object graph view
     objectGraphView_ = new ObjectGraphView(window_);
     connect(objectGraphView_, SIGNAL(objectSelected(MO::Object*)),
             this, SLOT(onObjectSelectedGraphView_(MO::Object*)));
 
+#ifndef MO_DISABLE_TREE
     // object tree model
     objectTreeModel_ = new ObjectTreeModel(0, this);
     //connect(objectTreeModel_, SIGNAL(sceneChanged()),
     //        this, SLOT(onSceneChanged_()));
     objectTreeView_->setObjectModel(objectTreeModel_);
     objectTreeModel_->setSceneSettings(sceneSettings_);
+#endif
 
     // object View
     objectView_ = new ObjectView(window_);
@@ -649,7 +655,9 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     {
         *sceneSettings_ = *set;
 
+#ifndef MO_DISABLE_TREE
         objectTreeModel_->setSceneSettings(sceneSettings_);
+#endif
         objectGraphView_->setGuiSettings(sceneSettings_);
     }
 
@@ -701,13 +709,18 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     // update widgets
 
+#ifndef MO_DISABLE_TREE
     scene_->setObjectModel(objectTreeModel_);
+#endif
+
     connect(scene_, SIGNAL(sceneTimeChanged(Double)),
             seqView_, SLOT(setSceneTime(Double)));
     connect(scene_, SIGNAL(sceneTimeChanged(Double)),
             sequencer_, SLOT(setSceneTime(Double)));
+#ifndef MO_DISABLE_TREE
     connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
             objectTreeView_, SLOT(columnMoved()/* force update */));
+#endif
     connect(scene_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
             objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
 
@@ -740,7 +753,9 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
 void MainWidgetController::resetTreeModel_()
 {
+#ifndef MO_DISABLE_TREE
     objectTreeModel_->setSceneObject(scene_);
+#endif
 }
 
 void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
@@ -947,8 +962,10 @@ void MainWidgetController::onObjectSelectedGraphView_(Object * o)
         showSequence_(false);
         return;
     }
+#ifndef MO_DISABLE_TREE
     else
         objectTreeView_->setFocusIndex(o);
+#endif
 
     // update sequence view
     updateSequenceView_(o);
@@ -983,7 +1000,10 @@ void MainWidgetController::onObjectSelectedClipView_(Object * o)
     objectView_->setObject(o);
 
     // jump to clip in tree view
+#ifndef MO_DISABLE_TREE
     objectTreeView_->setFocusIndex(o);
+#endif
+    objectGraphView()->setFocusObject(o);
 
     // update sequence view
     updateSequenceView_(o);
@@ -998,7 +1018,10 @@ void MainWidgetController::onObjectSelectedObjectView_(Object * o)
     updateSequenceView_(o);
 
     // jump to modulator in tree view
+#ifndef MO_DISABLE_TREE
     objectTreeView_->setFocusIndex(o);
+#endif
+    objectGraphView()->setFocusObject(o);
 
     // update clipview
     if (o && (o->isClip() || o->isClipContainer() ||
@@ -1023,7 +1046,10 @@ void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
     objectView_->setObject(o);
 
     // jump to sequence in tree view
+#ifndef MO_DISABLE_TREE
     objectTreeView_->setFocusIndex(o);
+#endif
+    objectGraphView()->setFocusObject(o);
 }
 
 void MainWidgetController::onSequenceClicked_()
@@ -1032,10 +1058,12 @@ void MainWidgetController::onSequenceClicked_()
     if (objectView_->object() != seqView_->sequence())
         objectView_->setObject(seqView_->sequence());
 
+#ifndef MO_DISABLE_TREE
     // focus in tree
     const QModelIndex & idx = objectTreeView_->getIndexForObject(seqView_->sequence());
     if (objectTreeView_->currentIndex() != idx)
         objectTreeView_->setFocusIndex(idx);
+#endif
 }
 
 

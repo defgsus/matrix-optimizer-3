@@ -98,17 +98,23 @@ void MainWindow::createWidgets_()
             l0->addWidget(leftContainer);
             leftContainer->setObjectName("_left_container");
             leftContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+#ifndef MO_DISABLE_TREE
             leftContainer->setMinimumWidth(630);
+#else
+            leftContainer->setMinimumWidth(320);
+#endif
 
             auto ll = new QHBoxLayout(leftContainer);
             ll->setMargin(0);
             //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
                 // object tree view
+#ifndef MO_DISABLE_TREE
                 ll->addWidget(controller_->objectTreeView());
                 controller_->objectTreeView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
                 //objectTreeView_->setMinimumWidth(320);
                 //objectTreeView_->setMaximumWidth(450);
+#endif
 
                 // object editor
                 ll->addWidget(controller_->objectView());

@@ -41,6 +41,9 @@ public slots:
         (re-)initializes the QGraphicsScene */
     void setRootObject(Object * root);
 
+    /** Focuses the view on the object */
+    void setFocusObject(Object * o);
+
 private slots:
 
     void onShitView_(const QPointF&);
