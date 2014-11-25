@@ -68,8 +68,11 @@ ObjectFactory& ObjectFactory::instance()
 
 int ObjectFactory::hueForObject(int type)
 {
-    if (type == Object::T_TRANSFORMATION)
+    if (type & Object::TG_TRANSFORMATION)
         return 240;
+    else
+    if (type == Object::T_LIGHTSOURCE)
+        return 60;
     else
     if (type & Object::TG_TRACK)
         return 100;
@@ -83,18 +86,29 @@ int ObjectFactory::hueForObject(int type)
     if (type & Object::T_AUDIO_UNIT)
         return 300;
     else
+    if (type & Object::T_SOUNDSOURCE)
+        return 340;
+    else
+    if (type & Object::T_SOUND_OBJECT)
+        return 350;
+    else
         return -1;
 }
 
 QColor ObjectFactory::colorForObject(const Object * o, bool darkSet)
 {
-    const int bright = darkSet? 48 : 200;
+    const bool active = o->activeAtAll();
+
+          int bright = darkSet? 48 : 200;
     const int hue = hueForObject(o->type());
+
+    if (!active)
+        bright += darkSet? 100 : -90;
 
     if (hue == -1)
         return QColor(bright, bright, bright);
 
-    const int sat = o->activeAtAll() ? 128 : 48;
+    const int sat = active ? 128 : 28;
 
     return QColor::fromHsl(hue, sat, bright);
 }

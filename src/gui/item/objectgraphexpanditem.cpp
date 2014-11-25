@@ -30,7 +30,6 @@ ObjectGraphExpandItem::ObjectGraphExpandItem(AbstractObjectItem *parent)
 
 void ObjectGraphExpandItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {
-    MO_DEBUG("enter");
     isHovered_ = true;
     update();
 }
@@ -43,7 +42,6 @@ void ObjectGraphExpandItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 
 void ObjectGraphExpandItem::mousePressEvent(QGraphicsSceneMouseEvent *)
 {
-    MO_DEBUG("enter");
     objectItem_->setExpanded(!objectItem_->isExpanded());
     update();
 }

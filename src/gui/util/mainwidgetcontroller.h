@@ -108,6 +108,7 @@ private slots:
     void updateDebugRender_();
 
     void onObjectSelectedTree_(MO::Object*);
+    void onObjectSelectedGraphView_(MO::Object*);
     void onObjectSelectedObjectView_(MO::Object*);
     void onObjectSelectedClipView_(MO::Object*);
     void onObjectSelectedSequencer_(MO::Sequence*);

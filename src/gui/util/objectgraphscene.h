@@ -13,6 +13,8 @@
 
 #include <QGraphicsScene>
 
+class QMimeData;
+
 namespace MO {
 class Object;
 namespace GUI {
@@ -53,6 +55,8 @@ signals:
 
     void shiftView(const QPointF& delta);
 
+    void objectSelected(MO::Object *);
+
 public slots:
 
     /** Sets the gui-settings for the associated objects */
@@ -69,16 +73,37 @@ public slots:
     void repaintModulators(AbstractObjectItem *);
 
     /** Bring the item and all it's cables to front */
-    void toFront(AbstractObjectItem *);
+    void toFront(QGraphicsItem *);
 
     /** Creates the edit menu, for scene or for selected items */
     void popup(const QPoint &gridPos);
+
+    /** Returns all top-level AbstractObjectItems */
+    QList<AbstractObjectItem*> topLevelObjectItems() const;
+
+    /** Returns the item at global grid position, or NULL */
+    AbstractObjectItem * objectItemAt(const QPoint& gridPos);
+
+    // ------------------- clipboard ------------------
+
+    /** Creates the QMimeData of the items in the list.
+        Ownership is on caller. */
+    QMimeData * mimeData(const QList<AbstractObjectItem*>&) const;
+
+    /** Put clipboard data into scene.
+        @p gridPos is global and will be retranslated to parent's local coords if necessary. */
+    void dropMimeData(const QMimeData*, const QPoint& gridPos);
 
     // ------------------- editing --------------------
 
     /** Adds an object to object-tree and item-tree.
         @p gridPos is global and will be retranslated to parent's local coords if necessary. */
     void addObject(Object * parent, Object * newObject, const QPoint &gridPos = QPoint(1,1), int insert_index = -1);
+
+    /** Adds an object to object-tree and item-tree.
+        @p gridPos is global and will be retranslated to parent's local coords if necessary. */
+    void addObjects(Object * parent, const QList<Object*> newObjects,
+                    const QPoint &gridPos = QPoint(1,1), int insert_index = -1);
 
 private slots:
 

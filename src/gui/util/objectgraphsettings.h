@@ -38,7 +38,7 @@ public:
     static QPen penOutline(const AbstractObjectItem *, bool selected = false);
     static int penOutlineWidth();
 
-    static QPen penModulator(const Modulator *, bool highlight = false, bool selected = false);
+    static QPen penModulator(const Modulator *, bool highlight = false, bool selected = false, bool active = true);
 
     static QPen penSelectionFrame();
 

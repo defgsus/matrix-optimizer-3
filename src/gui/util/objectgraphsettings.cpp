@@ -101,17 +101,19 @@ int ObjectGraphSettings::penOutlineWidth()
     return 3;
 }
 
-QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool sel)
+QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool sel, bool active)
 {
     int sat = 70 + highl * 110,
         bright = 150 + sel * 70,
         hue = 140;
     if (mod->modulator())
         hue = ObjectFactory::hueForObject(mod->modulator()->type());
+    if (!active)
+        sat /= 4;
     if (hue == -1)
         sat = 0;
 
-    QPen pen(QColor::fromHsl(hue, sat, bright));
+    QPen pen(QColor::fromHsl(hue, sat, bright, active ? 196 : 64));
     pen.setWidth(2);
     return pen;
 }

@@ -15,6 +15,8 @@
 #include <QPainter>
 #include <QMenu>
 #include <QAction>
+#include <QClipboard>
+#include <QMessageBox>
 
 #include "objectgraphscene.h"
 #include "gui/item/abstractobjectitem.h"
@@ -27,6 +29,7 @@
 #include "object/util/objectmodulatorgraph.h"
 #include "object/objectfactory.h"
 #include "object/scenelock_p.h"
+#include "model/objecttreemimedata.h"
 #include "tool/actionlist.h"
 #include "io/application.h"
 #include "io/log.h"
@@ -58,12 +61,15 @@ public:
     void createModulatorItems(Object * root);
     void addModItem(Modulator *);
     void addModItemMap(Object *, ModulatorItem *);
+    /// Recursively get the item below @p localGridPos
+    AbstractObjectItem * childItemAt(AbstractObjectItem * parent, const QPoint& localGridPos);
     void raiseModItems(AbstractObjectItem*); ///< raise all ModulatorItems of the item and it's childs
     void resolveLayout();
 
     void clearActions();
     void showPopup(); ///< Runs popup after actions have been created
     void createNewObjectMenu(Object * o);
+    void createClipboardMenu(Object * parent, const QList<AbstractObjectItem*>& items);
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts);
 
     SceneSettings * gui;
@@ -368,12 +374,16 @@ void ObjectGraphScene::repaintModulators(AbstractObjectItem * )
     }*/
 }
 
-void ObjectGraphScene::toFront(AbstractObjectItem * item)
+void ObjectGraphScene::toFront(QGraphicsItem * item)
 {
     item->setZValue(++p_->zStack);
 
     // raise ModulatorItems
-    p_->raiseModItems(item);
+    if (item->type() >= AbstractObjectItem::T_BASE)
+    {
+        auto oi = static_cast<AbstractObjectItem*>(item);
+        p_->raiseModItems(oi);
+    }
 }
 
 void ObjectGraphScene::Private::raiseModItems(AbstractObjectItem * item)
@@ -393,12 +403,63 @@ void ObjectGraphScene::Private::raiseModItems(AbstractObjectItem * item)
             raiseModItems(static_cast<AbstractObjectItem*>(c));
 }
 
+QList<AbstractObjectItem*> ObjectGraphScene::topLevelObjectItems() const
+{
+    QList<AbstractObjectItem*> ret;
 
+    for (auto & i : p_->itemMap)
+        if (!i.second->parentItem())
+            ret << i.second;
+
+    return ret;
+}
+
+AbstractObjectItem * ObjectGraphScene::objectItemAt(const QPoint &gridPos)
+{
+    // NOTE: Lets not rely on QGraphicsScene::itemAt because
+    // cables could come in the way
+
+    if (!p_->root)
+        return 0;
+
+    const auto list = topLevelObjectItems();
+    for (AbstractObjectItem * i : list)
+        if (auto ret = p_->childItemAt(i, gridPos - i->gridPos()))
+            return ret;
+
+    return 0;
+}
+
+AbstractObjectItem * ObjectGraphScene::Private::childItemAt(AbstractObjectItem * parent, const QPoint& pos)
+{
+    // pos is local in parent
+
+    if (pos.x() < 0 || pos.y() < 0
+        || pos.x() >= parent->gridSize().width()
+        || pos.y() >= parent->gridSize().height())
+        return 0;
+
+    for (auto i : parent->childItems())
+    if (i->type() >= AbstractObjectItem::T_BASE)
+    {
+        auto o = static_cast<AbstractObjectItem*>(i);
+
+        if (auto ret = childItemAt(o, pos - o->gridPos()))
+            return ret;
+    }
+
+    return parent;
+}
 
 // ------------------------------ mouse events ----------------------------------
 
 void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+/*    auto it = objectItemAt(mapToGrid(event->scenePos()));
+    if (it)
+        MO_DEBUG(it->object()->name());
+*/
+
     QGraphicsScene::mousePressEvent(event);
     if (event->isAccepted())
         return;
@@ -518,8 +579,15 @@ void ObjectGraphScene::popup(const QPoint& gridPos)
     QString title(obj->name());
     p_->actions.addTitle(title, this);
 
-    // new object
-    p_->createNewObjectMenu(obj);
+    p_->actions.addSeparator(this);
+
+        // new object
+        p_->createNewObjectMenu(obj);
+
+    p_->actions.addSeparator(this);
+
+        // clipboard
+        p_->createClipboardMenu(obj, items);
 
     p_->showPopup();
 }
@@ -537,7 +605,8 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 
     QAction * a;
 
-    actions.append( a = new QAction(obj ? tr("new child object") : tr("new object"), scene) );
+    actions.append( a = new QAction(obj && obj != root ?
+                tr("new child object") : tr("new object"), scene) );
 
     QMenu * menu = createObjectsMenu(obj, true, false);
     a->setMenu(menu);
@@ -553,6 +622,46 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
             scene->addObject(obj, onew, popupGridPos);
     });
 
+}
+
+void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const QList<AbstractObjectItem*>& items)
+{
+    const bool plural = items.size() > 1;
+    Object * obj = items.isEmpty() ? 0 : items.first()->object();
+
+    QAction * a;
+
+    // copy
+    if (obj && obj != root)
+    {
+        a = actions.addAction(plural ? tr("Copy objects") : tr("Copy"), scene);
+        a->setStatusTip(tr("Copies the selected object(s) and all it's children to the clipboard"));
+        a->setShortcut(Qt::CTRL + Qt::Key_C);
+        connect(a, &QAction::triggered, [=]()
+        {
+            application->clipboard()->setMimeData(scene->mimeData(items));
+        });
+    }
+
+    if (!plural)
+    {
+        const auto data = application->clipboard()->mimeData();
+        const bool isClip = data->formats().contains(ObjectTreeMimeData::objectMimeType);
+
+        if (isClip)
+        {
+            const auto pitem = scene->objectItemAt(popupGridPos);
+            const QString pname = pitem && pitem->object()
+                    ? pitem->object()->name() : tr("Scene");
+
+            // paste
+            a = actions.addAction(tr("Paste into %1").arg(pname), scene);
+            connect(a, &QAction::triggered, [=]()
+            {
+                scene->dropMimeData(application->clipboard()->mimeData(), popupGridPos);
+            });
+        }
+    }
 }
 
 namespace {
@@ -620,7 +729,17 @@ void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint
 {
     MO_ASSERT(p_->root, "Can't edit");
 
-    ScopedSceneLockWrite lock(p_->root);
+    QString error;
+    if (!parent->isSaveToAdd(newObject, error))
+    {
+        delete newObject;
+        QMessageBox::critical(0, tr("can't add object"),
+                              tr("The object %1 could not be added to %2.\n%3")
+                              .arg(newObject->name())
+                              .arg(parent->name())
+                              .arg(error));
+        return;
+    }
 
     // add to object tree
     p_->root->addObject(parent, newObject, insert_index);
@@ -628,6 +747,103 @@ void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint
     p_->createObjectItem(newObject, gridPos);
 }
 
+void ObjectGraphScene::addObjects(Object *parent, const QList<Object *> newObjects, const QPoint &gridPos, int insert_index)
+{
+    MO_ASSERT(p_->root, "Can't edit");
+
+    QString error;
+
+    int k = 0;
+    for (auto o : newObjects)
+    {
+        QString err;
+        if (!parent->isSaveToAdd(o, err))
+        {
+            delete o;
+            error += "\n" + err;
+        }
+        else
+            addObject(parent, o, gridPos + QPoint(0, k++), insert_index);
+    }
+
+    if (!error.isEmpty())
+    {
+        QMessageBox::critical(0, tr("can't add object"),
+                              tr("Some objects could not be added to %1.%2")
+                              .arg(parent->name())
+                              .arg(error));
+    }
+}
+
+// ------------------------------- clipboard ---------------------------------------------
+
+QMimeData * ObjectGraphScene::mimeData(const QList<AbstractObjectItem *> & list) const
+{
+    // get objects
+    QSet<Object*> objects;
+    for (auto item : list)
+        if (item->object())
+            objects << item->object();
+
+    // filter only top-level objects
+    // we don't want to copy the children of a copied object
+    QList<Object*> toplevel;
+    for (Object * o : objects)
+    {
+        Object * tl = o;
+        while ((o = o->parentObject()))
+        {
+            if (objects.contains(o))
+            {
+                tl = 0;
+                break;
+            }
+        }
+
+        if (tl)
+            toplevel << tl;
+    }
+
+    auto data = new ObjectTreeMimeData();
+    data->storeObjectTrees(toplevel);
+    return data;
+}
+
+void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPos)
+{
+    if (!p_->root)
+    {
+        MO_WARNING("ObjectGraphScene::dropMimeData() without root object")
+        return;
+    }
+
+    if (!data->formats().contains(ObjectTreeMimeData::objectMimeType))
+    {
+        MO_WARNING("ObjectGraphScene::dropMimeData() mimedata is invalid");
+        return;
+    }
+
+    // NOTE: dynamic_cast or qobject_cast won't work between
+    // application boundaries, e.g. after quit or pasting into
+    // a different instance. But static_cast works alright after we checked the MimiType.
+    // It's important to not rely on class members of ObjectTreeMimeData
+    // but to manage everything per QMimeData::data()
+    auto objdata = static_cast<const ObjectTreeMimeData*>(data);
+
+    // deserialize object
+    QList<Object*> copies = objdata->getObjectTrees();
+
+    // XXX how to copy/paste gui settings???
+
+    // find object to paste in
+    Object * root = p_->root;
+    if (auto pitem = objectItemAt(gridPos))
+        if (pitem->object())
+            root = pitem->object();
+
+    addObjects(root, copies, gridPos);
+
+}
 
 
 } // namespace GUI

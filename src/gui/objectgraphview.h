@@ -29,6 +29,9 @@ public:
 
 signals:
 
+    /** An object has been clicked */
+    void objectSelected(MO::Object *);
+
 public slots:
 
     /** Call this before setting the root object */

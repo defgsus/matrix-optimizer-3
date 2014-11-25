@@ -28,6 +28,8 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
     setScene(gscene_);
     connect(gscene_, SIGNAL(shiftView(QPointF)),
             this, SLOT(onShitView_(QPointF)));
+    connect(gscene_, SIGNAL(objectSelected(MO::Object*)),
+            this, SIGNAL(objectSelected(MO::Object*)));
 
     setBackgroundBrush(ObjectGraphSettings::brushBackground());
 }

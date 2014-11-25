@@ -211,6 +211,8 @@ void MainWidgetController::createObjects_()
 
     // object graph view
     objectGraphView_ = new ObjectGraphView(window_);
+    connect(objectGraphView_, SIGNAL(objectSelected(MO::Object*)),
+            this, SLOT(onObjectSelectedGraphView_(MO::Object*)));
 
     // object tree model
     objectTreeModel_ = new ObjectTreeModel(0, this);
@@ -230,7 +232,7 @@ void MainWidgetController::createObjects_()
     // sequencer
     sequencer_ = new Sequencer(window_);
     sequencer_->setSceneSettings(sceneSettings_);
-    sequencer_->setMinimumHeight(300);
+    sequencer_->setMinimumHeight(120);
     connect(sequencer_, SIGNAL(sequenceSelected(MO::Sequence*)),
             this, SLOT(onObjectSelectedSequencer_(MO::Sequence*)));
 
@@ -930,10 +932,48 @@ void MainWidgetController::onObjectSelectedTree_(Object * o)
         if (clipView_->isVisible())
             clipView_->selectObject(o);
     }
-
-
 }
 
+void MainWidgetController::onObjectSelectedGraphView_(Object * o)
+{
+    MO_DEBUG_GUI("MainWidgetController::objectSelectedGraphView(" << o << ")");
+
+    // update object editor
+    objectView_->setObject(o);
+
+    if (!o)
+    {
+        showSequencer_(false);
+        showSequence_(false);
+        return;
+    }
+    else
+        objectTreeView_->setFocusIndex(o);
+
+    // update sequence view
+    updateSequenceView_(o);
+
+    // update clipview
+    if (o->isClip() || o->isClipContainer() ||
+              o->findParentObject(Object::T_CLIP_CONTAINER))
+    {
+        showClipView_(true, o);
+    }
+
+    else
+    {
+        // update sequencer
+        // when this object or it's real-object parent contains tracks
+        Object * real = o->findContainingObject(Object::TG_REAL_OBJECT);
+        if ((real && real->containsTypes(Object::TG_TRACK))
+                || o->containsTypes(Object::TG_TRACK))
+            showSequencer_(true, o);
+
+        // if not tracks in object, select clips belonging to object
+        if (clipView_->isVisible())
+            clipView_->selectObject(o);
+    }
+}
 
 void MainWidgetController::onObjectSelectedClipView_(Object * o)
 {
@@ -948,6 +988,7 @@ void MainWidgetController::onObjectSelectedClipView_(Object * o)
     // update sequence view
     updateSequenceView_(o);
 }
+
 
 void MainWidgetController::onObjectSelectedObjectView_(Object * o)
 {
@@ -972,6 +1013,7 @@ void MainWidgetController::onObjectSelectedObjectView_(Object * o)
         showSequencer_(true, o);
     }
 }
+
 
 void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
 {

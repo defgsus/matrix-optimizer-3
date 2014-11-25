@@ -251,10 +251,15 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
         p_oi_->gridPosDown = mapToGrid(e->pos());
 
         if (auto s = objectScene())
+        {
             s->toFront(this);
+            if (object())
+                emit s->objectSelected(object());
+        }
 
         e->accept();
         update();
+
         return;
     }
 }
@@ -337,6 +342,7 @@ void AbstractObjectItem::setGridPos(const QPoint &pos)
         return;
 
     prepareGeometryChange();
+    p_oi_->pos = pos;
     setPos(mapFromGrid(pos));
     setLayoutDirty();
 }

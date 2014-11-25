@@ -110,13 +110,15 @@ public:
         T_MICROPHONE_GROUP  = 1<<15,
         T_CLIP              = 1<<16,
         T_CLIP_CONTAINER    = 1<<17,
-        T_OSCILLATOR        = 1<<18
+        T_SOUND_OBJECT      = 1<<18,
+        T_OSCILLATOR        = 1<<19
     };
     enum TypeGroups
     {
         /** Objects that have a definite position */
         TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE
-                                | T_CAMERA | T_LIGHTSOURCE | T_MICROPHONE_GROUP,
+                                | T_CAMERA | T_LIGHTSOURCE | T_MICROPHONE_GROUP
+                                | T_SOUND_OBJECT,
 
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,

@@ -138,7 +138,8 @@ void ModulatorItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget
 {
     const bool sel = (from_ && from_->isSelected())
                   || (to_ && to_->isSelected());
-    p->setPen(ObjectGraphSettings::penModulator(mod_, sel, isSelected()));
+    const bool act = !from_ || (from_->object() && from_->object()->activeAtAll());
+    p->setPen(ObjectGraphSettings::penModulator(mod_, sel, isSelected(), act));
 
     p->drawPath(shape_);
 }

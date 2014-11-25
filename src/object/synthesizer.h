@@ -28,7 +28,7 @@ class Synthesizer : public Object
 public:
     MO_OBJECT_CONSTRUCTOR(Synthesizer);
 
-    virtual Type type() const Q_DECL_OVERRIDE { return T_OBJECT; }
+    virtual Type type() const Q_DECL_OVERRIDE { return T_SOUND_OBJECT; }
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
