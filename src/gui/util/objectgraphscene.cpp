@@ -257,7 +257,7 @@ void ObjectGraphScene::Private::addModItem(Modulator * m)
 {
     auto item = new ModulatorItem(m);
     scene->addItem( item );
-    ++zStack;
+    item->setZValue(++zStack);
     item->updateShape(); // calc arrow shape
 
     // store in map
@@ -537,7 +537,7 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 
     QAction * a;
 
-    actions.append( a = new QAction(tr("new object"), scene) );
+    actions.append( a = new QAction(obj ? tr("new child object") : tr("new object"), scene) );
 
     QMenu * menu = createObjectsMenu(obj, true, false);
     a->setMenu(menu);
