@@ -19,6 +19,7 @@ namespace MO {
 namespace GUI {
 
 class ObjectGraphScene;
+class SceneSettings;
 
 class ObjectGraphView : public QGraphicsView
 {
@@ -29,6 +30,9 @@ public:
 signals:
 
 public slots:
+
+    /** Call this before setting the root object */
+    void setGuiSettings(SceneSettings*);
 
     /** Sets the root object and completely
         (re-)initializes the QGraphicsScene */

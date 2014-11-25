@@ -20,6 +20,7 @@
 #include "gui/item/abstractobjectitem.h"
 #include "gui/item/modulatoritem.h"
 #include "gui/util/objectgraphsettings.h"
+#include "gui/util/scenesettings.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/param/modulator.h"
@@ -44,7 +45,8 @@ public:
     };
 
     Private(ObjectGraphScene * scene)
-        :   scene   (scene),
+        :   gui     (0),
+            scene   (scene),
             zStack  (0),
             action  (A_NONE)
     { }
@@ -64,6 +66,7 @@ public:
     void createNewObjectMenu(Object * o);
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts);
 
+    SceneSettings * gui;
     ObjectGraphScene * scene;
     Scene * root;
     std::map<Object*, AbstractObjectItem*> itemMap;
@@ -116,6 +119,16 @@ AbstractObjectItem * ObjectGraphScene::visibleItemForObject(Object *o) const
     return p;
 }
 
+void ObjectGraphScene::setGuiSettings(SceneSettings *set)
+{
+    p_->gui = set;
+}
+
+SceneSettings * ObjectGraphScene::guiSettings() const
+{
+    return p_->gui;
+}
+
 void ObjectGraphScene::setRootObject(Object *root)
 {
     clear();
@@ -134,9 +147,14 @@ void ObjectGraphScene::setRootObject(Object *root)
     //    MO_DEBUG(p.first->name() << " :: " << p.second);
 }
 
+
+
 void ObjectGraphScene::setGridPos(AbstractObjectItem * item, const QPoint &gridPos)
 {
     item->setGridPos(gridPos);
+    // save in gui
+    if (item->object() && guiSettings())
+        guiSettings()->setLocalGridPos(item->object(), "0", gridPos);
 }
 
 QPoint ObjectGraphScene::mapToGrid(const QPointF & f) const
@@ -187,8 +205,18 @@ void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObject
         // save in map
         itemMap.insert(std::make_pair(c, item));
 
-        // set initial position
-        item->setGridPos(QPoint(1, y));
+        // set expanded according to gui settings
+        if (gui && gui->getExpanded(c, "0"))
+            item->setExpanded(true);
+
+        // set initial position (from gui settings or vertically)
+        if (gui && gui->hasLocalGridPos(c, "0"))
+        {
+            item->setGridPos(gui->getLocalGridPos(c, "0"));
+            y = std::max(y, item->gridPos().y());
+        }
+        else
+            item->setGridPos(QPoint(1, y));
 
         // install in item tree
         if (!pitem)

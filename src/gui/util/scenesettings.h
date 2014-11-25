@@ -15,6 +15,7 @@
 #include <QHash>
 #include <QSet>
 #include <QString>
+#include <QPoint>
 
 #include "object/object_fwd.h"
 #include "viewspace.h"
@@ -58,7 +59,11 @@ public:
     void setParameterGroupExpanded(const Object *, const QString& groupId, bool expanded);
     bool getParameterGroupExpanded(const Object *, const QString& groupId) const;
 
-    // ------ expanded-flags of Objects in ObjectTreeView ------
+    // ------------- ObjectGraphView ---------------------
+
+    bool hasLocalGridPos(const Object*, const QString& groupId) const;
+    const QPoint &getLocalGridPos(const Object*, const QString& groupId) const;
+    void setLocalGridPos(const Object*, const QString& groupdId, const QPoint&);
 
     void setExpanded(const Object *, const QString& groupdId, bool expanded);
     bool getExpanded(const Object *, const QString& groupdId) const;
@@ -73,6 +78,7 @@ private:
 
     QHash<QString, UTIL::ViewSpace> viewSpaces_;
     QHash<QString, int> trackHeights_;
+    QHash<QString, QPoint> gridPos_;
     QSet<QString>
         paramGroupExpanded_,
         treeExpanded_;

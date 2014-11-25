@@ -24,6 +24,7 @@
 #include "object/objectfactory.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
+#include "gui/util/scenesettings.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -136,7 +137,13 @@ void AbstractObjectItem::setExpanded(bool enable)
         return ;
 
     prepareGeometryChange();
+
+    // set state
     p_oi_->expanded = enable;
+    // store in gui settings
+    auto s = objectScene();
+    if (s && object())
+        s->guiSettings()->setExpanded(object(), "0", enable);
 
     // set childs (in-)visible
     const auto list = childItems();
@@ -146,9 +153,9 @@ void AbstractObjectItem::setExpanded(bool enable)
 
     setLayoutDirty();
 
-    if (enable)
-        if (auto s = objectScene())
-            s->toFront(this);
+    // bring to front
+    if (enable && s)
+        s->toFront(this);
 }
 
 bool AbstractObjectItem::isLayouted() const

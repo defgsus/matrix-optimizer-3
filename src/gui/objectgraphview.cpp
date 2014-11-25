@@ -32,6 +32,11 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
     setBackgroundBrush(ObjectGraphSettings::brushBackground());
 }
 
+void ObjectGraphView::setGuiSettings(SceneSettings * s)
+{
+    gscene_->setGuiSettings(s);
+}
+
 void ObjectGraphView::setRootObject(Object *root)
 {
     root_ = root;

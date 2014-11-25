@@ -646,7 +646,9 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     else
     {
         *sceneSettings_ = *set;
+
         objectTreeModel_->setSceneSettings(sceneSettings_);
+        objectGraphView_->setGuiSettings(sceneSettings_);
     }
 
     // check for local filenames

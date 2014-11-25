@@ -18,6 +18,7 @@ class Object;
 namespace GUI {
 
 class AbstractObjectItem;
+class SceneSettings;
 
 class ObjectGraphScene : public QGraphicsScene
 {
@@ -27,6 +28,9 @@ public:
     ~ObjectGraphScene();
 
     // -------------- getter -------------------
+
+    /** Returns installed settings, or NULL */
+    SceneSettings * guiSettings() const;
 
     /** Return the item for the object, or NULL */
     AbstractObjectItem * itemForObject(Object * o) const;
@@ -50,6 +54,9 @@ signals:
     void shiftView(const QPointF& delta);
 
 public slots:
+
+    /** Sets the gui-settings for the associated objects */
+    void setGuiSettings(SceneSettings * set);
 
     /** Sets the root object and completely
         (re-)initializes the QGraphicsScene */

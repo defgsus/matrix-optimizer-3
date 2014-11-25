@@ -8,6 +8,8 @@
     <p>created 7/22/2014</p>
 */
 
+#include <QDebug>
+
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
@@ -45,15 +47,25 @@ SceneSettings& SceneSettings::operator=(const SceneSettings& other)
     trackHeights_ = other.trackHeights_;
     paramGroupExpanded_ = other.paramGroupExpanded_;
     treeExpanded_ = other.treeExpanded_;
+    gridPos_ = other.gridPos_;
 
     return *this;
+}
+
+void SceneSettings::clear()
+{
+    viewSpaces_.clear();
+    trackHeights_.clear();
+    paramGroupExpanded_.clear();
+    treeExpanded_.clear();
+    gridPos_.clear();
 }
 
 void SceneSettings::serialize(IO::DataStream &io) const
 {
     MO_DEBUG_IO("SceneSettings::serialize(" << &io << ")");
 
-    io.writeHeader("scenesettings", 3);
+    io.writeHeader("scenesettings", 4);
 
     io << trackHeights_;
 
@@ -70,13 +82,18 @@ void SceneSettings::serialize(IO::DataStream &io) const
 
     // v3
     io << treeExpanded_;
+
+    // v4
+    io << gridPos_;
 }
 
 void SceneSettings::deserialize(IO::DataStream &io)
 {
     MO_DEBUG_IO("SceneSettings::deserialize(" << &io << ")");
 
-    const int ver = io.readHeader("scenesettings", 3);
+    clear();
+
+    const int ver = io.readHeader("scenesettings", 4);
 
     io >> trackHeights_;
 
@@ -101,6 +118,10 @@ void SceneSettings::deserialize(IO::DataStream &io)
 
     if (ver >= 3)
         io >> treeExpanded_;
+
+    if (ver >= 4)
+        io >> gridPos_;
+//    qDebug() << gridPos_;
 }
 
 void SceneSettings::saveFile(const QString &filename) const
@@ -163,14 +184,6 @@ QString SceneSettings::getSettingsFileName(const QString &sceneFilename) const
         + ".mo3-gui";
 }
 
-
-void SceneSettings::clear()
-{
-    viewSpaces_.clear();
-    trackHeights_.clear();
-    paramGroupExpanded_.clear();
-    treeExpanded_.clear();
-}
 
 
 void SceneSettings::setViewSpace(const Object *obj, const UTIL::ViewSpace &viewspace)
@@ -239,6 +252,27 @@ bool SceneSettings::getParameterGroupExpanded(const Object * obj, const QString 
     return paramGroupExpanded_.contains(id);
 }
 
+bool SceneSettings::hasLocalGridPos(const Object * o, const QString &groupId) const
+{
+    return gridPos_.contains(o->idName() + "/" + groupId);
+}
+
+const QPoint& SceneSettings::getLocalGridPos(const Object * o, const QString &groupId) const
+{
+    const QString id = o->idName() + "/" + groupId;
+    auto i = gridPos_.find(id);
+    if (i != gridPos_.end())
+        return i.value();
+
+    static const QPoint p(1,1);
+    return p;
+}
+
+void SceneSettings::setLocalGridPos(const Object * o, const QString &groupId, const QPoint& pos)
+{
+    const QString id = o->idName() + "/" + groupId;
+    gridPos_.insert(id, pos);
+}
 
 void SceneSettings::setExpanded(
         const Object * obj, const QString &groupId, bool expanded)

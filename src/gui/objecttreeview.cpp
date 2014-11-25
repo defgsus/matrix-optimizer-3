@@ -945,24 +945,24 @@ bool ObjectTreeView::deleteObject_(const QModelIndex &index)
     return false;
 }
 
-void ObjectTreeView::onExpanded_(const QModelIndex & idx)
+void ObjectTreeView::onExpanded_(const QModelIndex & )
 {
     if (!sendExpanded_ || !sceneSettings_)
         return;
 
-    const Object * o = model()->data(idx, ObjectRole).value<Object*>();
-    if (o)
-        sceneSettings_->setExpanded(o, "tv0", true);
+//    const Object * o = model()->data(idx, ObjectRole).value<Object*>();
+//    if (o)
+//        sceneSettings_->setExpanded(o, "tv0", true);
 }
 
-void ObjectTreeView::onCollapsed_(const QModelIndex & idx)
+void ObjectTreeView::onCollapsed_(const QModelIndex & )
 {
     if (!sendExpanded_ || !sceneSettings_)
         return;
 
-    const Object * o = model()->data(idx, ObjectRole).value<Object*>();
-    if (o)
-        sceneSettings_->setExpanded(o, "tv0", false);
+//    const Object * o = model()->data(idx, ObjectRole).value<Object*>();
+//    if (o)
+//        sceneSettings_->setExpanded(o, "tv0", false);
 }
 
 void ObjectTreeView::restoreExpansion_()
