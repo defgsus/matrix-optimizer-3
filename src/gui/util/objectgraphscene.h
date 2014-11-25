@@ -34,8 +34,16 @@ public:
     /** Return the first visible item or one of it's parents for the object, or NULL */
     AbstractObjectItem * visibleItemForObject(Object * o) const;
 
+    /** Returns a list of all selected items that are AbstractObjectItems */
+    QList<AbstractObjectItem*> selectedObjectItems() const;
+
+    // -------------- coords -------------------
+
     /** Translates a global point into grid coordinates */
     QPoint mapToGrid(const QPointF& global_pos) const;
+
+    /** Translates grid coordinates into global coordinates */
+    QPointF mapFromGrid(const QPoint&) const;
 
 signals:
 
@@ -56,12 +64,14 @@ public slots:
     /** Bring the item and all it's cables to front */
     void toFront(AbstractObjectItem *);
 
-    /** Creates the edit object, for scene or for item */
-    void createEditActions(AbstractObjectItem * = 0);
+    /** Creates the edit menu, for scene or for selected items */
+    void popup(const QPoint &gridPos);
 
     // ------------------- editing --------------------
 
-    void addObject(Object * parent, Object * newObject, int insert_index = -1);
+    /** Adds an object to object-tree and item-tree.
+        @p gridPos is global and will be retranslated to parent's local coords if necessary. */
+    void addObject(Object * parent, Object * newObject, const QPoint &gridPos = QPoint(1,1), int insert_index = -1);
 
 private slots:
 

@@ -224,9 +224,21 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 {
     QGraphicsItem::mousePressEvent(e);
 
-    // store current state on click
+    if (e->button() == Qt::RightButton)
+    {
+        if (auto s = objectScene())
+        {
+            setSelected(true);
+            s->toFront(this);
+            s->popup(mapToGrid(e->scenePos()));
+            e->accept();
+            return;
+        }
+    }
+
     if (e->button() == Qt::LeftButton)
     {
+        // store current state on click
         p_oi_->isMouseDown = true;
         p_oi_->posMouseDown = e->pos();//mapToParent(e->pos());
         p_oi_->gridPosDown = mapToGrid(e->pos());
@@ -236,6 +248,7 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 
         e->accept();
         update();
+        return;
     }
 }
 

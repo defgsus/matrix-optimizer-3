@@ -89,7 +89,7 @@ public:
     // ------------------ setter -----------------------
 
     /** Sets the item to be expanded/collapsed */
-    void setExpanded(bool enable);
+    void setExpanded(bool enable = true);
 
     /** Sets a new position for the item */
     void setGridPos(const QPoint& pos);

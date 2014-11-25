@@ -60,7 +60,7 @@ public:
     void resolveLayout();
 
     void clearActions();
-    void showPopup_(); ///< Runs popup after actions have been created
+    void showPopup(); ///< Runs popup after actions have been created
     void createNewObjectMenu(Object * o);
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts);
 
@@ -75,6 +75,7 @@ public:
     QRectF selUpdateRect;
 
     ActionList actions;
+    QPoint popupGridPos;
 };
 
 
@@ -146,6 +147,28 @@ QPoint ObjectGraphScene::mapToGrid(const QPointF & f) const
     return QPoint(int(f.x() / s.width()) + ox,
                   int(f.y() / s.height()) + oy);
 }
+
+QPointF ObjectGraphScene::mapFromGrid(const QPoint & p) const
+{
+    const auto s = ObjectGraphSettings::gridSize();
+    return QPointF(p.x() * s.width(),
+                   p.y() * s.height());
+}
+
+
+
+QList<AbstractObjectItem*> ObjectGraphScene::selectedObjectItems() const
+{
+    auto list = selectedItems();
+
+    QList<AbstractObjectItem*> l2;
+    for (auto i : list)
+        if (i->type() >= AbstractObjectItem::T_BASE)
+            l2 << static_cast<AbstractObjectItem*>(i);
+
+    return l2;
+}
+
 
 void ObjectGraphScene::onChanged_()
 {
@@ -229,24 +252,39 @@ void ObjectGraphScene::Private::addModItemMap(Object * o, ModulatorItem * item)
     }
 }
 
-void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& pos)
+void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& pos1)
 {
     // create item
     auto item = new AbstractObjectItem(o);
     // save in map
     itemMap.insert(std::make_pair(o, item));
 
+    // item for parent
+    auto pitem = scene->itemForObject(o->parentObject());
+
+    // make pos1 local to parent item
+    QPoint pos(pos1);
+    if (pitem)
+    {
+        pos = scene->mapToGrid(
+                    pitem->mapFromScene(
+                        scene->mapFromGrid(pos)));
+        pos.rx() = std::max(1, pos.x());
+        pos.ry() = std::max(1, pos.y());
+    }
+
     // set initial position
     item->setGridPos(pos);
     item->setZValue(++zStack);
-
-    auto pitem = scene->itemForObject(o->parentObject());
 
     // install in item tree
     if (!pitem)
         scene->addItem(item);
     else
+    {
         item->setParentItem(pitem);
+        pitem->setExpanded();
+    }
 
     // add childs
     createObjectChildItems(o, item);
@@ -339,13 +377,14 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     if (event->button() == Qt::RightButton)
     {
+        // popup for empty space
         p_->lastMousePos = event->scenePos();
-        createEditActions(0);
-        p_->showPopup_();
+        popup(mapToGrid(p_->lastMousePos));
     }
 
     if (event->button() == Qt::LeftButton)
     {
+        // start drag-select
         p_->action = Private::A_RECT_SELECT;
         p_->lastMousePos = event->scenePos();
         setSelectionArea(QPainterPath());
@@ -413,7 +452,7 @@ void ObjectGraphScene::drawForeground(QPainter *p, const QRectF &)
 
 // --------------------------------- menu --------------------------------------
 
-void ObjectGraphScene::Private::showPopup_()
+void ObjectGraphScene::Private::showPopup()
 {
     auto popup = new QMenu(application->mainWindow());
     popup->setAttribute(Qt::WA_DeleteOnClose, true);
@@ -434,21 +473,27 @@ void ObjectGraphScene::Private::clearActions()
     actions.clear();
 }
 
-void ObjectGraphScene::createEditActions(AbstractObjectItem * item)
+void ObjectGraphScene::popup(const QPoint& gridPos)
 {
     p_->clearActions();
 
-    Object * obj = item ? item->object() : p_->root;
+    auto items = selectedObjectItems();
+
+    Object * obj = items.isEmpty() ? p_->root : items.first()->object();
+
+    if (!obj)
+        return;
+
+    p_->popupGridPos = gridPos;
 
     // title
-    if (obj)
-    {
-        QString title(obj->name());
-        p_->actions.addTitle(title, this);
-    }
+    QString title(obj->name());
+    p_->actions.addTitle(title, this);
 
+    // new object
     p_->createNewObjectMenu(obj);
 
+    p_->showPopup();
 }
 
 void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
@@ -477,7 +522,7 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
         else
             onew = ObjectFactory::createObject(id);
         if (onew)
-            scene->addObject(obj, onew);
+            scene->addObject(obj, onew, popupGridPos);
     });
 
 }
@@ -543,7 +588,7 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_t
 
 // ----------------------------------- editing -------------------------------------------
 
-void ObjectGraphScene::addObject(Object *parent, Object *newObject, int insert_index)
+void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint& gridPos, int insert_index)
 {
     MO_ASSERT(p_->root, "Can't edit");
 
@@ -552,7 +597,7 @@ void ObjectGraphScene::addObject(Object *parent, Object *newObject, int insert_i
     // add to object tree
     p_->root->addObject(parent, newObject, insert_index);
     // add to graphics scene
-    p_->createObjectItem(newObject, mapToGrid(p_->lastMousePos));
+    p_->createObjectItem(newObject, gridPos);
 }
 
 
