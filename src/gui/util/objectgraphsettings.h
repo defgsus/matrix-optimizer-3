@@ -40,6 +40,8 @@ public:
 
     static QPen penModulator(const Modulator *, bool highlight = false, bool selected = false);
 
+    static QPen penSelectionFrame();
+
 private:
 
     class Private;

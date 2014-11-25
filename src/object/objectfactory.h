@@ -123,6 +123,14 @@ public:
         On any IO errors an IoException will be thrown. */
     static Object * loadObject(const QString& filename);
 
+    /** Opens filedialog, saves the object,
+        no exceptions. */
+    static void storeObjectTemplate(Object * obj);
+
+    /** Opens filedialog, returns an object or NULL,
+        no exceptions. */
+    static Object * loadObjectTemplate();
+
 signals:
 
 public slots:

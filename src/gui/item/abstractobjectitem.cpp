@@ -49,7 +49,7 @@ public:
     AbstractObjectItem * item; ///< parent item class
     Object * object;
     bool expanded, hover, layouted;
-    QPoint pos, offset; ///< pos in grid
+    QPoint pos; ///< pos in grid
     QSize size; ///< size in grid coords
     QIcon icon;
     QPixmap iconPixmap;
@@ -145,6 +145,10 @@ void AbstractObjectItem::setExpanded(bool enable)
             i->setVisible(enable);
 
     setLayoutDirty();
+
+    if (enable)
+        if (auto s = objectScene())
+            s->toFront(this);
 }
 
 bool AbstractObjectItem::isLayouted() const
@@ -282,8 +286,7 @@ QPoint AbstractObjectItem::mapToGrid(const QPointF & f) const
     const int ox = f.x() < 0 ? -1 : 0,
               oy = f.y() < 0 ? -1 : 0;
     return QPoint(int(f.x() / s.width()) + ox,
-                  int(f.y() / s.height()) + oy)
-            - p_oi_->offset;
+                  int(f.y() / s.height()) + oy);
 }
 
 QPointF AbstractObjectItem::mapFromGrid(const QPoint & p) const
@@ -291,8 +294,8 @@ QPointF AbstractObjectItem::mapFromGrid(const QPoint & p) const
     const auto s = ObjectGraphSettings::gridSize();
     const int ox = p.x() < 0 ? 0 : 0,
               oy = p.y() < 0 ? 0 : 0;
-    return QPointF((p.x() + ox + p_oi_->offset.x()) * s.width(),
-                   (p.y() + oy + p_oi_->offset.y()) * s.height());
+    return QPointF((p.x() + ox) * s.width(),
+                   (p.y() + oy) * s.height());
 }
 
 const QPoint& AbstractObjectItem::gridPos() const
@@ -301,11 +304,6 @@ const QPoint& AbstractObjectItem::gridPos() const
 }
 
 
-void AbstractObjectItem::setGridOffset(const QPoint &offset)
-{
-    p_oi_->offset = offset;
-    update();
-}
 
 const QSize& AbstractObjectItem::gridSize() const
 {

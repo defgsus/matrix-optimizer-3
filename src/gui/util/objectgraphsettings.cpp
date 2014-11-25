@@ -89,7 +89,7 @@ QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * item, bool sel)
     if (item->object())
         c = ObjectFactory::colorForObject(item->object()).darker(140);
     if (sel)
-        c = c.lighter(150);
+        c = c.lighter(180);
 
     QPen pen(c);
     pen.setWidth(penOutlineWidth());
@@ -114,6 +114,13 @@ QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool s
     QPen pen(QColor::fromHsl(hue, sat, bright));
     pen.setWidth(2);
     return pen;
+}
+
+QPen ObjectGraphSettings::penSelectionFrame()
+{
+    QPen p(Qt::DotLine);
+    p.setColor(Qt::white);
+    return p;
 }
 
 } // namespace GUI

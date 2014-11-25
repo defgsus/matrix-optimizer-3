@@ -34,6 +34,9 @@ public slots:
         (re-)initializes the QGraphicsScene */
     void setRootObject(Object * root);
 
+private slots:
+
+    void onShitView_(const QPointF&);
 private:
 
     ObjectGraphScene * gscene_;

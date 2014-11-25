@@ -8,6 +8,7 @@
     <p>created 23.11.2014</p>
 */
 
+#include <QDebug>
 #include <QGraphicsScene>
 
 #include "objectgraphview.h"
@@ -25,6 +26,8 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
       gscene_       (new ObjectGraphScene(this))
 {
     setScene(gscene_);
+    connect(gscene_, SIGNAL(shiftView(QPointF)),
+            this, SLOT(onShitView_(QPointF)));
 
     setBackgroundBrush(ObjectGraphSettings::brushBackground());
 }
@@ -35,6 +38,18 @@ void ObjectGraphView::setRootObject(Object *root)
     gscene_->setRootObject(root_);
 }
 
+void ObjectGraphView::onShitView_(const QPointF & )
+{
+    // XXX Nothing does work
+    // rotate() even crashes, wtf..
+
+//    translate(d.x(), d.y());
+    /*auto t = QTransform();
+    t.translate(d.x(), d.y());
+    setTransform(t);*/
+//    qDebug() << transform();
+    //scrollBarWidgets();
+}
 
 } // namespace GUI
 } // namespace MO

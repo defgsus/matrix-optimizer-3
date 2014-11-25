@@ -10,12 +10,24 @@
 
 #include <map>
 
+#include <QDebug>
+#include <QGraphicsSceneMouseEvent>
+#include <QPainter>
+#include <QMenu>
+#include <QAction>
+
 #include "objectgraphscene.h"
 #include "gui/item/abstractobjectitem.h"
 #include "gui/item/modulatoritem.h"
+#include "gui/util/objectgraphsettings.h"
 #include "object/object.h"
+#include "object/scene.h"
 #include "object/param/modulator.h"
 #include "object/util/objectmodulatorgraph.h"
+#include "object/objectfactory.h"
+#include "object/scenelock_p.h"
+#include "tool/actionlist.h"
+#include "io/application.h"
 #include "io/log.h"
 
 namespace MO {
@@ -24,24 +36,45 @@ namespace GUI {
 class ObjectGraphScene::Private
 {
 public:
+    enum Action
+    {
+        A_NONE,
+        A_DRAG_SPACE,
+        A_RECT_SELECT
+    };
+
     Private(ObjectGraphScene * scene)
         :   scene   (scene),
-            zStack  (0)
+            zStack  (0),
+            action  (A_NONE)
     { }
 
+    /// Creates the item for o and all of its children
+    void createObjectItem(Object * o, const QPoint &grid_pos);
+    /// Creates the items for all children of o and recusively
     void createObjectChildItems(Object * o, AbstractObjectItem * item);
     void createModulatorItems(Object * root);
     void addModItem(Modulator *);
     void addModItemMap(Object *, ModulatorItem *);
     void raiseModItems(AbstractObjectItem*); ///< raise all ModulatorItems of the item and it's childs
-
     void resolveLayout();
 
+    void clearActions();
+    void showPopup_(); ///< Runs popup after actions have been created
+    void createNewObjectMenu(Object * o);
+    QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts);
+
     ObjectGraphScene * scene;
+    Scene * root;
     std::map<Object*, AbstractObjectItem*> itemMap;
     std::multimap<Object*, QList<ModulatorItem*>> modItemMap;
     QList<ModulatorItem*> modItems;
     int zStack; ///< highest current stack value
+    Action action;
+    QPointF lastMousePos;
+    QRectF selUpdateRect;
+
+    ActionList actions;
 };
 
 
@@ -90,6 +123,7 @@ void ObjectGraphScene::setRootObject(Object *root)
     p_->modItemMap.clear();
     p_->modItems.clear();
     p_->zStack = 0;
+    p_->root = qobject_cast<Scene*>(root);
 
     p_->createObjectChildItems(root, 0);
     p_->resolveLayout();
@@ -102,6 +136,15 @@ void ObjectGraphScene::setRootObject(Object *root)
 void ObjectGraphScene::setGridPos(AbstractObjectItem * item, const QPoint &gridPos)
 {
     item->setGridPos(gridPos);
+}
+
+QPoint ObjectGraphScene::mapToGrid(const QPointF & f) const
+{
+    const auto s = ObjectGraphSettings::gridSize();
+    const int ox = f.x() < 0 ? -1 : 0,
+              oy = f.y() < 0 ? -1 : 0;
+    return QPoint(int(f.x() / s.width()) + ox,
+                  int(f.y() / s.height()) + oy);
 }
 
 void ObjectGraphScene::onChanged_()
@@ -129,7 +172,7 @@ void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObject
             scene->addItem(item);
         else
             item->setParentItem(pitem);
-        ++zStack;
+        item->setZValue(++zStack);
 
         // add childs
         createObjectChildItems(c, item);
@@ -184,6 +227,32 @@ void ObjectGraphScene::Private::addModItemMap(Object * o, ModulatorItem * item)
     {
         i->second << item;
     }
+}
+
+void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& pos)
+{
+    // create item
+    auto item = new AbstractObjectItem(o);
+    // save in map
+    itemMap.insert(std::make_pair(o, item));
+
+    // set initial position
+    item->setGridPos(pos);
+    item->setZValue(++zStack);
+
+    auto pitem = scene->itemForObject(o->parentObject());
+
+    // install in item tree
+    if (!pitem)
+        scene->addItem(item);
+    else
+        item->setParentItem(pitem);
+
+    // add childs
+    createObjectChildItems(o, item);
+
+    // create modulator items
+    createModulatorItems(o);
 }
 
 void ObjectGraphScene::Private::resolveLayout()
@@ -257,6 +326,236 @@ void ObjectGraphScene::Private::raiseModItems(AbstractObjectItem * item)
         if (c->type() >= AbstractObjectItem::T_BASE)
             raiseModItems(static_cast<AbstractObjectItem*>(c));
 }
+
+
+
+// ------------------------------ mouse events ----------------------------------
+
+void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsScene::mousePressEvent(event);
+    if (event->isAccepted())
+        return;
+
+    if (event->button() == Qt::RightButton)
+    {
+        p_->lastMousePos = event->scenePos();
+        createEditActions(0);
+        p_->showPopup_();
+    }
+
+    if (event->button() == Qt::LeftButton)
+    {
+        p_->action = Private::A_RECT_SELECT;
+        p_->lastMousePos = event->scenePos();
+        setSelectionArea(QPainterPath());
+    }
+}
+
+void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsScene::mouseMoveEvent(event);
+    if (event->isAccepted())
+        return;
+
+    if (p_->action == Private::A_DRAG_SPACE)
+    {
+        emit shiftView(event->pos() - p_->lastMousePos);
+    }
+
+    if (p_->action == Private::A_RECT_SELECT)
+    {
+        // update previous sel-area
+        update(p_->selUpdateRect);
+        // make new
+        p_->selUpdateRect.setLeft(  std::min(p_->lastMousePos.x(), event->scenePos().x()));
+        p_->selUpdateRect.setRight( std::max(p_->lastMousePos.x(), event->scenePos().x()));
+        p_->selUpdateRect.setTop(   std::min(p_->lastMousePos.y(), event->scenePos().y()));
+        p_->selUpdateRect.setBottom(std::max(p_->lastMousePos.y(), event->scenePos().y()));
+        QPainterPath p;
+        p.addRect(p_->selUpdateRect);
+        setSelectionArea(p);
+        p_->selUpdateRect.adjust(-1,-1,2,2);
+        update(p_->selUpdateRect);
+    }
+}
+
+void ObjectGraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsScene::mouseReleaseEvent(event);
+    if (event->isAccepted())
+        return;
+
+    if (p_->action == Private::A_RECT_SELECT)
+    {
+        update(p_->selUpdateRect);
+        //setSelectionArea(QPainterPath());
+    }
+
+    p_->action = Private::A_NONE;
+}
+
+
+
+// ------------------------------------- drawing -------------------------------
+
+void ObjectGraphScene::drawForeground(QPainter *p, const QRectF &)
+{
+    if (p_->action == Private::A_RECT_SELECT)
+    {
+        p->setBrush(Qt::NoBrush);
+        p->setPen(ObjectGraphSettings::penSelectionFrame());
+
+        p->drawPath(selectionArea());
+    }
+}
+
+
+// --------------------------------- menu --------------------------------------
+
+void ObjectGraphScene::Private::showPopup_()
+{
+    auto popup = new QMenu(application->mainWindow());
+    popup->setAttribute(Qt::WA_DeleteOnClose, true);
+
+    popup->addActions(actions);
+
+    popup->popup(QCursor::pos());
+}
+
+void ObjectGraphScene::Private::clearActions()
+{
+    for (QAction * a : actions)
+    {
+        if (a->menu() && !a->menu()->parent())
+            delete a->menu();
+        a->deleteLater();
+    }
+    actions.clear();
+}
+
+void ObjectGraphScene::createEditActions(AbstractObjectItem * item)
+{
+    p_->clearActions();
+
+    Object * obj = item ? item->object() : p_->root;
+
+    // title
+    if (obj)
+    {
+        QString title(obj->name());
+        p_->actions.addTitle(title, this);
+    }
+
+    p_->createNewObjectMenu(obj);
+
+}
+
+void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
+{
+    if (!root)
+    {
+        MO_WARNING("Can't edit");
+        return;
+    }
+
+    if (!obj)
+        obj = root;
+
+    QAction * a;
+
+    actions.append( a = new QAction(tr("new object"), scene) );
+
+    QMenu * menu = createObjectsMenu(obj, true, false);
+    a->setMenu(menu);
+    connect(menu, &QMenu::triggered, [=](QAction*act)
+    {
+        QString id = act->data().toString();
+        Object * onew;
+        if (id == "_template_")
+            onew = ObjectFactory::loadObjectTemplate();
+        else
+            onew = ObjectFactory::createObject(id);
+        if (onew)
+            scene->addObject(obj, onew);
+    });
+
+}
+
+namespace {
+
+    // for sorting the insert-object list
+    bool sortObjectList_Priority(const Object * o1, const Object * o2)
+    {
+        return Object::objectPriority(o1) > Object::objectPriority(o2);
+    }
+}
+
+QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts)
+{
+    QList<const Object*> list(ObjectFactory::possibleChildObjects(parent));
+    if (list.empty() && !with_template)
+        return 0;
+
+    // sort by priority
+    qStableSort(list.begin(), list.end(), sortObjectList_Priority);
+
+    QMenu * menu = new QMenu();
+
+    // from template
+    if (with_template)
+    {
+        QAction * a = new QAction(tr("from template ..."), scene);
+        a->setData("_template_");
+        menu->addAction(a);
+        menu->addSeparator();
+    }
+
+    if (!list.empty())
+    {
+        int curprio = Object::objectPriority( list.front() );
+        for (auto o : list)
+        {
+            if (curprio != Object::objectPriority(o))
+            {
+                menu->addSeparator();
+                curprio = Object::objectPriority(o);
+            }
+
+            QAction * a = new QAction(ObjectFactory::iconForObject(o), o->name(), scene);
+            a->setData(o->className());
+            if (with_shortcuts)
+            {
+                if (o->className() == "AxisRotate")
+                    a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_R);
+                if (o->className() == "Translate")
+                    a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_T);
+                if (o->className() == "Scale")
+                    a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_S);
+            }
+            menu->addAction(a);
+        }
+    }
+
+    return menu;
+}
+
+
+// ----------------------------------- editing -------------------------------------------
+
+void ObjectGraphScene::addObject(Object *parent, Object *newObject, int insert_index)
+{
+    MO_ASSERT(p_->root, "Can't edit");
+
+    ScopedSceneLockWrite lock(p_->root);
+
+    // add to object tree
+    p_->root->addObject(parent, newObject, insert_index);
+    // add to graphics scene
+    p_->createObjectItem(newObject, mapToGrid(p_->lastMousePos));
+}
+
+
 
 } // namespace GUI
 } // namespace MO

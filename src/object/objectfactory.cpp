@@ -12,6 +12,7 @@
 #include <QIcon>
 #include <QBitmap>
 #include <QFile>
+#include <QMessageBox>
 
 #include "objectfactory.h"
 #include "io/datastream.h"
@@ -36,6 +37,7 @@
 #include "sequencefloat.h"
 #include "modulatorobjectfloat.h"
 #include "synthesizer.h"
+#include "io/files.h"
 
 namespace MO {
 
@@ -514,6 +516,43 @@ Object * ObjectFactory::loadObject(IO::DataStream &io)
 }
 
 
+void ObjectFactory::storeObjectTemplate(Object * obj)
+{
+    QString fn = IO::Files::getSaveFileName(IO::FT_OBJECT_TEMPLATE, 0);
+    if (fn.isEmpty())
+        return;
+
+    try
+    {
+        saveObject(fn, obj);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("io error"),
+                              tr("Could not save the object template\n%1\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+}
+
+Object * ObjectFactory::loadObjectTemplate()
+{
+    QString fn = IO::Files::getOpenFileName(IO::FT_OBJECT_TEMPLATE, 0);
+    if (fn.isEmpty())
+        return 0;
+
+    try
+    {
+        Object * o = ObjectFactory::loadObject(fn);
+        return o;
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("io error"),
+                              tr("Could not load the object template\n%1\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+    return 0;
+}
 
 
 } // namespace MO

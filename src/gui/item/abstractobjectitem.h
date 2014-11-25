@@ -97,9 +97,6 @@ public:
     /** Sets a new size in grid coords */
     void setGridSize(const QSize& size);
 
-    /** Sets an offset to the actual position */
-    void setGridOffset(const QPoint& offset);
-
     /** Requests an update of the surrounding layout */
     void setLayoutDirty(bool dirty = true);
 
