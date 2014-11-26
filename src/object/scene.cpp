@@ -51,7 +51,9 @@ MO_REGISTER_OBJECT(Scene)
 
 Scene::Scene(QObject *parent) :
     Object              (parent),
+#ifndef MO_DISABLE_TREE
     model_              (0),
+#endif
     glContext_          (0),
     releaseAllGlRequested_(0),
     fbSize_             (1024, 1024),
@@ -141,12 +143,13 @@ void Scene::deserialize(IO::DataStream & io)
         io >> fbSizeRequest_ >> doMatchOutputResolution_;
 }
 
+#ifndef MO_DISABLE_TREE
 void Scene::setObjectModel(ObjectTreeModel * model)
 {
     model_ = model;
     model_->setSceneObject(this);
 }
-
+#endif
 
 void Scene::findObjects_()
 {

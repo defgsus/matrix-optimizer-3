@@ -8,6 +8,8 @@
     <p>created 6/27/2014</p>
 */
 
+#ifndef MO_DISABLE_TREE
+
 
 #include <QDebug>
 
@@ -889,5 +891,6 @@ SequenceFloat * ObjectTreeModel::createFloatSequenceFor(Object * object, const Q
     return seq;
 }
 
-
 } // namespace MO
+
+#endif

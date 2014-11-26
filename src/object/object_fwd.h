@@ -71,7 +71,9 @@ namespace MO {
 
     class ObjectFilter;
 
+#ifndef MO_DISABLE_TREE
     class ObjectTreeModel;
+#endif
     class ObjectTreeMimeData;
 
 } // namespace MO

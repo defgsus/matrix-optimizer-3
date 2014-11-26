@@ -8,6 +8,8 @@
     <p>created 6/28/2014</p>
 */
 
+#ifndef MO_DISABLE_TREE
+
 
 #include <QDebug>
 #include <QAction>
@@ -1007,3 +1009,5 @@ void ObjectTreeView::restoreExpansion_(const Object * o)
 
 } // namespace GUI
 } // namespace MO
+
+#endif

@@ -11,8 +11,6 @@
 #ifndef MOSRC_GUI_UTIL_MAINWIDGETCONTROLLER_H
 #define MOSRC_GUI_UTIL_MAINWIDGETCONTROLLER_H
 
-#define MO_DISABLE_TREE
-
 #include <QObject>
 #include <QSize>
 

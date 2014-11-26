@@ -8,6 +8,8 @@
     <p>created 7/5/2014</p>
 */
 
+#ifndef MO_DISABLE_TREE
+
 #ifndef MOSRC_MODEL_OBJECTTREESORTPROXY_H
 #define MOSRC_MODEL_OBJECTTREESORTPROXY_H
 
@@ -39,4 +41,7 @@ protected:
 
 } // namespace MO
 
+#endif
+
 #endif // MOSRC_MODEL_OBJECTTREESORTPROXY_H
+

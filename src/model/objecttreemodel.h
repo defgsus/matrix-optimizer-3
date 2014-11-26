@@ -15,6 +15,9 @@
 #ifndef MOSRC_MODEL_OBJECTTREEMODEL_H
 #define MOSRC_MODEL_OBJECTTREEMODEL_H
 
+#ifndef MO_DISABLE_TREE
+
+
 #include <QAbstractItemModel>
 #include <QStringList>
 #include <QIcon>
@@ -140,5 +143,7 @@ private:
 };
 
 } // namespace MO
+
+#endif
 
 #endif // MOSRC_MODEL_OBJECTTREEMODEL_H

@@ -24,7 +24,9 @@ class QReadWriteLock;
 namespace MO {
 namespace AUDIO { class AudioDevice; }
 
+#ifndef MO_DISABLE_TREE
 class ObjectTreeModel;
+#endif
 class AudioOutThread;
 class AudioInThread;
 template <typename T> class LocklessQueue;
@@ -63,10 +65,12 @@ public:
 
     // ------------- object model --------------
 
+#ifndef MO_DISABLE_TREE
     /** Sets the model to edit the scene. */
     void setObjectModel(ObjectTreeModel *);
     /** Returns the model that is assigned to this scene. */
     ObjectTreeModel * model() const { return model_; }
+#endif
 
     // ------------- child objects -------------
 
@@ -442,7 +446,9 @@ private:
 
     // -------------- model --------------------
 
+#ifndef MO_DISABLE_TREE
     ObjectTreeModel * model_;
+#endif
 
     // ---------- opengl -----------------------
 

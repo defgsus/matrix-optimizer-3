@@ -8,6 +8,8 @@
     <p>created 7/5/2014</p>
 */
 
+#ifndef MO_DISABLE_TREE
+
 
 #include <QDebug>
 
@@ -68,3 +70,5 @@ bool ObjectTreeSortProxy::filterAcceptsRow(int source_row, const QModelIndex &so
 
 
 } // namespace MO
+
+#endif

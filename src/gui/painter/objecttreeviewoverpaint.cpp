@@ -8,6 +8,9 @@
     <p>created 8/18/2014</p>
 */
 
+#ifndef MO_DISABLE_TREE
+
+
 #include <QPainter>
 #include <QPainterPath>
 
@@ -181,3 +184,5 @@ void ObjectTreeViewOverpaint::getModulations_(Object * parent)
 
 } // namespace GUI
 } // namespace MO
+
+#endif

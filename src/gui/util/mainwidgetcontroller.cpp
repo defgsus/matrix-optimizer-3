@@ -583,6 +583,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             std::cout << std::endl;
         });
 
+#ifndef MO_DISABLE_TREE
         m->addAction( a = new QAction(tr("Show modulation graph"), m) );
         connect(a, &QAction::triggered, [=]()
         {
@@ -602,6 +603,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             diag.exec();
             delete tree;
         });
+#endif
 
     // ######### HELP MENU #########
     m = new QMenu(tr("Help"), menuBar);

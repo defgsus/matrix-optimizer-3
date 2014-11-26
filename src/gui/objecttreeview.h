@@ -8,6 +8,9 @@
     <p>created 6/28/2014</p>
 */
 
+#ifndef MO_DISABLE_TREE
+
+
 #ifndef MOSRC_GUI_OBJECTTREEVIEW_H
 #define MOSRC_GUI_OBJECTTREEVIEW_H
 
@@ -141,3 +144,5 @@ protected:
 } // namespace MO
 
 #endif // MOSRC_GUI_OBJECTTREEVIEW_H
+
+#endif

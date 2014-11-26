@@ -8,6 +8,8 @@
     <p>created 8/18/2014</p>
 */
 
+#ifndef MO_DISABLE_TREE
+
 #ifndef MOSRC_GUI_PAINTER_OBJECTTREEVIEWOVERPAINT_H
 #define MOSRC_GUI_PAINTER_OBJECTTREEVIEWOVERPAINT_H
 
@@ -74,3 +76,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_GUI_PAINTER_OBJECTTREEVIEWOVERPAINT_H
+
+#endif

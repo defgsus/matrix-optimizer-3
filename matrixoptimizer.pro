@@ -23,6 +23,9 @@ DEFINES += GLM_FORCE_RADIANS
 #disable for production until it works ...
 DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
 
+#disable obsolete ObjectTreeModel
+DEFINES += MO_DISABLE_TREE
+
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 

@@ -623,8 +623,10 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
     MO_ASSERT(object, "No Object for edit Parameter");
     Scene * scene = object->sceneObject();
     MO_ASSERT(scene, "No Scene for object in Parameter");
+#ifndef MO_DISABLE_TREE
     ObjectTreeModel * model = scene->model();
     MO_ASSERT(model, "No model assigned for Parameter");
+#endif
 
     QMenu * menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
@@ -658,11 +660,13 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
         menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
         connect(a, &QAction::triggered, [=]()
         {
+#ifndef MO_DISABLE_TREE
             if (Object * o = model->createFloatTrack(pi))
             {
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
+#endif
         });
         // create modulation in clip
         menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float sequence"), menu) );
@@ -678,6 +682,7 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             Clip * parent = a->data().value<Clip*>();
+#ifndef MO_DISABLE_TREE
             if (Object * o = model->createInClip("SequenceFloat", parent))
             {
                 // modulate
@@ -687,6 +692,7 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
+#endif
         });
 
         // link to existing modulator
@@ -813,21 +819,27 @@ void ParameterView::addLinkModMenu_(
 void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
 {
     // get model
-    MO_ASSERT(param->object() && param->object()->sceneObject() &&
-              param->object()->sceneObject()->model(), "missing model in modulator menu");
+    MO_ASSERT(param->object() && param->object()->sceneObject()
+#ifndef MO_DISABLE_TREE
+              && param->object()->sceneObject()->model()
+#endif
+              , "missing model in modulator menu");
+#ifndef MO_DISABLE_TREE
     ObjectTreeModel * model =
         param->object()->sceneObject()->model();
-
+#endif
     // create track modulation
     QAction * a;
     menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
     connect(a, &QAction::triggered, [=]()
     {
+#ifndef MO_DISABLE_TREE
         if (Object * o = model->createFloatTrack(param))
         {
             if (doChangeToCreatedMod_)
                 emit objectSelected(o);
         }
+#endif
     });
 
     // create sequence
@@ -839,6 +851,7 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("right here"), sub) );
         connect(a, &QAction::triggered, [=]()
         {
+#ifndef MO_DISABLE_TREE
             if (Object * o = model->createFloatSequenceFor(param->object()))
             {
                 // modulate
@@ -848,6 +861,7 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
+#endif
         });
 
         sub->addSeparator();
@@ -856,6 +870,7 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
         connect(a, &QAction::triggered, [=]()
         {
+#ifndef MO_DISABLE_TREE
             if (Object * o = model->createInClip("SequenceFloat", 0))
             {
                 // modulate
@@ -865,6 +880,7 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
+#endif
         });
 
         // in existing clip
@@ -881,6 +897,7 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
 
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
+#ifndef MO_DISABLE_TREE
             if (Clip * parent = a->data().value<Clip*>())
             if (Object * o = model->createInClip("SequenceFloat", parent))
             {
@@ -891,6 +908,7 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
+#endif
         });
 
 }

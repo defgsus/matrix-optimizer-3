@@ -296,10 +296,13 @@ void SequenceView::onSequenceChanged_(Sequence * s)
     Q_UNUSED(s);
 
     // update playbar
-    playBar_->setTimeOffset(-sequence_->realStart());
-    playBar_->setMinimumTime(-sequence_->start());
-    if (sequence_->parentClip())
-        playBar_->setActive(sequence_->parentClip()->isPlaying());
+    if (sequence_ && sequence_ == s)
+    {
+        playBar_->setTimeOffset(-sequence_->realStart());
+        playBar_->setMinimumTime(-sequence_->start());
+        if (sequence_->parentClip())
+            playBar_->setActive(sequence_->parentClip()->isPlaying());
+    }
 
     // repaint float view
     if (seqFloatView_ && seqFloatView_->isVisible())
