@@ -375,7 +375,7 @@ public:
         all children. */
     virtual void propagateRenderMode(ObjectGl * parent);
 
-protected:
+//protected:
 
     /** Called when the children list has changed */
     virtual void childrenChanged() { }
@@ -498,7 +498,6 @@ public:
         Always call the ancestor classes createParameters() in your derived function! */
     virtual void createParameters();
 
-protected:
 
     /** Called when a parameter has changed it's value (from the gui).
         Be sure to call the ancestor class implementation before your derived code! */
@@ -509,6 +508,8 @@ protected:
         Be sure to call the ancestor class implementation before your derived code!
         XXX Right now it's a bit unclear, what is possible here except from lazy requests. */
     virtual void onParametersLoaded() { }
+
+protected:
 
     /** Starts a new group which will contain all Parameters created afterwards.
         @p id is the PERSITANT name, to keep the gui-settings between sessions. */

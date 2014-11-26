@@ -23,6 +23,7 @@ namespace MO {
     namespace IO { class DataStream; }
     namespace AUDIO { class AudioSource; class AudioMicrophone; }
     namespace GL { class LightSettings; class CameraSpace; }
+    namespace MATH { class Timeline1D; }
 
     class Object;
     class Scene;
@@ -71,6 +72,7 @@ namespace MO {
 
     class ObjectFilter;
 
+    class ObjectEditor;
 #ifndef MO_DISABLE_TREE
     class ObjectTreeModel;
 #endif

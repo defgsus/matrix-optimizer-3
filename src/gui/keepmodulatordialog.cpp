@@ -18,6 +18,7 @@
 #include "object/param/parameter.h"
 #include "object/param/modulator.h"
 #include "object/objectfactory.h"
+#include "object/util/objecteditor.h"
 #include "io/log.h"
 #include "io/error.h"
 #include "io/settings.h"
@@ -201,7 +202,7 @@ void KeepModulators::createNewModulators()
         MO_DEBUG_MOD("KeepModulators: creating path " << m.newId
                  << " -> " << m.param->infoName());
 
-        p_->scene->addModulator(m.param, m.newId);
+        p_->scene->editor()->addModulator(m.param, m.newId);
 
         // copy modulator settings
         Modulator

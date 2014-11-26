@@ -75,6 +75,7 @@
 #include "object/sequencefloat.h"
 #include "object/clipcontainer.h"
 #include "object/util/objectmodulatorgraph.h"
+#include "object/util/objecteditor.h"
 #include "model/treemodel.h"
 #include "object/util/objecttree.h"
 #include "tool/commonresolutions.h"
@@ -160,6 +161,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       outputSize_       (512, 512),
       glManager_        (0),
       glWindow_         (0),
+      objectEditor_     (0),
       objectView_       (0),
       sceneSettings_    (0),
       sequencer_        (0),
@@ -196,12 +198,22 @@ void MainWidgetController::createObjects_()
     // scene settings class
     sceneSettings_ = new SceneSettings(this);
 
+    // editor
+    objectEditor_ = new ObjectEditor(this);
+    connect(objectEditor_, SIGNAL(objectNameChanged(MO::Object*)), this, SLOT(onObjectNameChanged_(MO::Object*)));
+    connect(objectEditor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
+    connect(objectEditor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+    connect(objectEditor_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(onTreeChanged_()));
+    connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
+    connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
+
     // status bar
     statusBar_ = new QStatusBar(window_);
     statusBar_->addPermanentWidget(sysInfoLabel_ = new QLabel(statusBar()));
 
     // transport widget
     transportWidget_ = new TransportWidget(window_);
+
 
 #ifndef MO_DISABLE_TREE
     // object tree view
@@ -697,13 +709,6 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             scene_, SLOT(setSceneTime(Double)));
 
     // scene changes
-    // XXX still very unfinished - but in the process  ;)
-    connect(scene_, SIGNAL(objectNameChanged(MO::Object*)), this, SLOT(onObjectNameChanged_(MO::Object*)));
-    connect(scene_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
-    connect(scene_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
-    connect(scene_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(onTreeChanged_()));
-    connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
-    connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
     connect(scene_, SIGNAL(numberOutputEnvelopesChanged(uint)),
             this, SLOT(updateNumberOutputEnvelopes_(uint)));
     connect(scene_, SIGNAL(outputEnvelopeChanged(const F32*)),
@@ -714,6 +719,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 #ifndef MO_DISABLE_TREE
     scene_->setObjectModel(objectTreeModel_);
 #endif
+    scene_->setObjectEditor(objectEditor_);
 
     connect(scene_, SIGNAL(sceneTimeChanged(Double)),
             seqView_, SLOT(setSceneTime(Double)));

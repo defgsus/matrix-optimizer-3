@@ -1414,7 +1414,7 @@ ParameterTimeline1D * Object::createTimeline1DParameter(
 
         // first time init
         if (defaultValue)
-            param->setTimeline(*defaultValue);
+            param->setValue(*defaultValue);
     }
 
     // override potentially previous

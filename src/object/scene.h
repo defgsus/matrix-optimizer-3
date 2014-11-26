@@ -71,6 +71,11 @@ public:
     /** Returns the model that is assigned to this scene. */
     ObjectTreeModel * model() const { return model_; }
 #endif
+    /** Sets the editor to edit the scene.
+        This also assignes the scene to the editor. */
+    void setObjectEditor(ObjectEditor * );
+    /** Returns the editor that is assigned to this scene. */
+    ObjectEditor * editor() const { return editor_; }
 
     // ------------- child objects -------------
 
@@ -199,30 +204,8 @@ signals:
     /** openGL resources have been released for the given thread. */
     void glReleased(uint thread);
 
-    /** A parameter has been changed (with Scene::setParameter..) */
-    void parameterChanged(MO::Parameter*);
-
     /** Send when a parameter changed it's visibility */
     void parameterVisibilityChanged(MO::Parameter*);
-
-    /** Emitted after settings in an object have changed. */
-    void objectChanged(MO::Object *);
-
-    /** Emitted after a change to an object name */
-    void objectNameChanged(MO::Object *);
-
-    /** Some setting in the Sequence has changed. */
-    void sequenceChanged(MO::Sequence *);
-
-    /** Emitted when the given object was added to the scene. */
-    void objectAdded(MO::Object *);
-
-    /** Emitted when the object was deleted.
-        The object pointer will not point to a valid object anymore. */
-    void objectDeleted(const MO::Object *);
-
-    /** Emitted after swapChildren() */
-    void childrenSwapped(MO::Object *, int from, int to);
 
     void CameraFboChanged(Camera *);
     void sceneFboChanged();
@@ -239,21 +222,6 @@ public slots:
     void addObject(Object * parent, Object * newChild, int insert_index = -1);
     void deleteObject(Object * object);
     void swapChildren(Object * parent, int from, int to);
-
-    /** Changes the objects name, emits objectNameChanged() */
-    void setObjectName(Object * object, const QString& name);
-
-    // ------------- parameter -----------------
-
-    void setParameterValue(MO::ParameterInt *, Int value);
-    void setParameterValue(MO::ParameterFloat *, Double value);
-    void setParameterValue(MO::ParameterSelect *, int value);
-    void setParameterValue(MO::ParameterFilename *, const QString& value);
-    void setParameterValue(MO::ParameterText *, const QString& value);
-    void setParameterValue(MO::ParameterTimeline1D *, const MATH::Timeline1D& value);
-    void addModulator(MO::Parameter *, const QString& idName);
-    void removeModulator(MO::Parameter *, const QString& idName);
-    void removeAllModulators(MO::Parameter *);
 
     // --------------- tracks ------------------
 
@@ -449,6 +417,7 @@ private:
 #ifndef MO_DISABLE_TREE
     ObjectTreeModel * model_;
 #endif
+    ObjectEditor * editor_;
 
     // ---------- opengl -----------------------
 

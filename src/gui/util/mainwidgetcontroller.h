@@ -32,7 +32,9 @@ namespace GUI {
 
 class QObjectInspector;
 class ObjectView;
+#ifndef MO_DISABLE_TREE
 class ObjectTreeView;
+#endif
 class SequenceView;
 class Sequencer;
 class SceneSettings;
@@ -63,6 +65,7 @@ public:
     ObjectTreeView * objectTreeView() const { return objectTreeView_; }
     ObjectTreeModel * objectTreeModel() const { return objectTreeModel_; }
 #endif
+    ObjectEditor * objectEditor() const { return objectEditor_; }
     ObjectGraphView * objectGraphView() const { return objectGraphView_; }
     Sequencer * sequencer() const { return sequencer_; }
     ClipView * clipView() const { return clipView_; }
@@ -178,6 +181,7 @@ private:
     GL::Manager * glManager_;
     GL::Window * glWindow_;
 
+    ObjectEditor * objectEditor_;
     ObjectView * objectView_;
 #ifndef MO_DISABLE_TREE
     ObjectTreeView * objectTreeView_;

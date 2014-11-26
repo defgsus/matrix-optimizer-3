@@ -14,6 +14,7 @@
 #include "io/log.h"
 #include "object/trackfloat.h"
 #include "object/scene.h"
+#include "object/util/objecteditor.h"
 #include "modulator.h"
 #include "io/files.h"
 #include "gui/texteditdialog.h"
@@ -69,6 +70,7 @@ bool ParameterText::openEditDialog(QWidget *parent)
 {
     MO_ASSERT(object(), "no object for ParameterText::openFileDialog()");
     MO_ASSERT(object()->sceneObject(), "no scene for ParameterText::openFileDialog()");
+    MO_ASSERT(object()->sceneObject()->editor(), "no editor for ParameterText::openFileDialog()");
 
     if (!object() || !object()->sceneObject())
         return false;
@@ -89,7 +91,7 @@ bool ParameterText::openEditDialog(QWidget *parent)
 
     diag.connect(&diag, &GUI::TextEditDialog::textChanged, [this, &diag]()
     {
-        object()->sceneObject()->setParameterValue(this, diag.getText());
+        object()->sceneObject()->editor()->setParameterValue(this, diag.getText());
     });
 
     diag.exec();

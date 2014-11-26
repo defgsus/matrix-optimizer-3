@@ -13,6 +13,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "object/scene.h"
+#include "object/util/objecteditor.h"
 #include "math/timeline1d.h"
 #include "gui/timelineeditdialog.h"
 #include "gui/timeline1dview.h"
@@ -99,7 +100,7 @@ void ParameterTimeline1D::setTimeline(MATH::Timeline1D *tl)
     tl_ = tl;
 }
 
-void ParameterTimeline1D::setTimeline(const MATH::Timeline1D & tl)
+void ParameterTimeline1D::setValue(const MATH::Timeline1D & tl)
 {
     *(timeline()) = tl;
 }
@@ -128,6 +129,7 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
 {
     MO_ASSERT(object(), "no object for ParameterTimeline1D::openFileDialog()");
     MO_ASSERT(object()->sceneObject(), "no scene for ParameterTimeline1D::openFileDialog()");
+    MO_ASSERT(object()->sceneObject()->editor(), "no editor for ParameterTimeline1D::openFileDialog()");
 
     if (!object() || !object()->sceneObject())
         return false;
@@ -172,13 +174,13 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
 
     diag.connect(&diag, &GUI::TimelineEditDialog::timelineChanged, [this, &diag, &changed]()
     {
-        object()->sceneObject()->setParameterValue(this, diag.timeline());
+        object()->sceneObject()->editor()->setParameterValue(this, diag.timeline());
         changed = true;
     });
 
     // reset to default
     if (diag.exec() == QDialog::Rejected && changed)
-        object()->sceneObject()->setParameterValue(this, backup);
+        object()->sceneObject()->editor()->setParameterValue(this, backup);
 
     return changed;
 }

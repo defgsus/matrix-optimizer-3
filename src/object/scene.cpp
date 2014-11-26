@@ -29,6 +29,7 @@
 #include "object/microphone.h"
 #include "object/lightsource.h"
 #include "object/audio/audiounit.h"
+#include "object/util/objecteditor.h"
 #include "model/objecttreemodel.h"
 #include "audio/audiodevice.h"
 #include "audio/audiosource.h"
@@ -54,6 +55,7 @@ Scene::Scene(QObject *parent) :
 #ifndef MO_DISABLE_TREE
     model_              (0),
 #endif
+    editor_             (0),
     glContext_          (0),
     releaseAllGlRequested_(0),
     fbSize_             (1024, 1024),
@@ -150,6 +152,12 @@ void Scene::setObjectModel(ObjectTreeModel * model)
     model_->setSceneObject(this);
 }
 #endif
+
+void Scene::setObjectEditor(ObjectEditor * editor)
+{
+    editor_ = editor;
+    editor_->setScene(this);
+}
 
 void Scene::findObjects_()
 {
@@ -264,18 +272,6 @@ QSet<Object*> Scene::getAllModulators() const
 
 // ----------------------- tree ------------------------------
 
-void Scene::setObjectName(Object *object, const QString &name)
-{
-    MO_DEBUG_TREE("Scene::setObjectName(" << object << ", " << name << ")");
-
-    const bool changed = object->name() != name;
-
-    object->setName(name);
-
-    if (changed)
-        emit objectNameChanged(object);
-}
-
 void Scene::addObject(Object *parent, Object *newChild, int insert_index)
 {
     MO_DEBUG_TREE("Scene::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
@@ -291,7 +287,6 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
         if (newChild->isAudioUnit())
             updateAudioUnitChannels_();
     }
-    emit objectAdded(newChild);
     render_();
 }
 
@@ -326,9 +321,6 @@ void Scene::deleteObject(Object *object)
         updateTree_();
     }
 
-    // tell gui
-    emit objectDeleted(object);
-
     // memorize so we can free resources later
     deletedObjects_.append(dellist);
 
@@ -356,7 +348,6 @@ void Scene::swapChildren(Object *parent, int from, int to)
             updateAudioUnitChannels_();
 
     }
-    emit childrenSwapped(parent, from, to);
     render_();
 }
 
@@ -375,9 +366,10 @@ void Scene::callCreateOutputs_(Object *o)
     o->createOutputs();
 
     // emit changes
-    for (auto c : o->childObjects())
-        if (!list.contains(c))
-            emit objectAdded(c);
+    if (editor_)
+        for (auto c : o->childObjects())
+            if (!list.contains(c))
+                emit editor_->objectAdded(c);
 }
 
 void Scene::callCreateAudioSources_(Object *o)
@@ -556,128 +548,6 @@ void Scene::updateSampleRate_()
 
 // -------------------- parameter ----------------------------
 
-void Scene::setParameterValue(ParameterInt *p, Int v)
-{
-    {
-        ScopedSceneLockWrite lock(this);
-        p->setValue(v);
-        p->object()->onParameterChanged(p);
-        p->object()->updateParameterVisibility();
-    }
-    emit parameterChanged(p);
-    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
-        emit sequenceChanged(seq);
-    render_();
-}
-
-void Scene::setParameterValue(ParameterFloat *p, Double v)
-{
-    {
-        ScopedSceneLockWrite lock(this);
-        p->setValue(v);
-        p->object()->onParameterChanged(p);
-        p->object()->updateParameterVisibility();
-    }
-    emit parameterChanged(p);
-    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
-        emit sequenceChanged(seq);
-    render_();
-}
-
-void Scene::setParameterValue(ParameterSelect *p, int v)
-{
-    {
-        ScopedSceneLockWrite lock(this);
-        p->setValue(v);
-        p->object()->onParameterChanged(p);
-        p->object()->updateParameterVisibility();
-    }
-    emit parameterChanged(p);
-    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
-        emit sequenceChanged(seq);
-    render_();
-}
-
-void Scene::setParameterValue(ParameterFilename *p, const QString& v)
-{
-    {
-        ScopedSceneLockWrite lock(this);
-        p->setValue(v);
-        p->object()->onParameterChanged(p);
-        p->object()->updateParameterVisibility();
-    }
-    emit parameterChanged(p);
-    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
-        emit sequenceChanged(seq);
-    render_();
-}
-
-void Scene::setParameterValue(ParameterText *p, const QString& v)
-{
-    {
-        ScopedSceneLockWrite lock(this);
-        p->setValue(v);
-        p->object()->onParameterChanged(p);
-        p->object()->updateParameterVisibility();
-    }
-    emit parameterChanged(p);
-    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
-        emit sequenceChanged(seq);
-    render_();
-}
-
-void Scene::setParameterValue(ParameterTimeline1D *p, const MATH::Timeline1D& v)
-{
-    {
-        ScopedSceneLockWrite lock(this);
-        p->setTimeline(v);
-        p->object()->onParameterChanged(p);
-        //p->object()->updateParameterVisibility();
-    }
-    emit parameterChanged(p);
-    if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
-        emit sequenceChanged(seq);
-    render_();
-}
-
-void Scene::addModulator(Parameter *p, const QString &idName)
-{
-    {
-        ScopedSceneLockWrite lock(this);
-        p->addModulator(idName);
-        p->collectModulators();
-        p->object()->onParameterChanged(p);
-        p->object()->updateParameterVisibility();
-    }
-    emit parameterChanged(p);
-    render_();
-}
-
-void Scene::removeModulator(Parameter *p, const QString &idName)
-{
-    {
-        ScopedSceneLockWrite lock(this);
-        p->removeModulator(idName);
-        p->collectModulators();
-        p->object()->onParameterChanged(p);
-        p->object()->updateParameterVisibility();
-    }
-    emit parameterChanged(p);
-    render_();
-}
-
-void Scene::removeAllModulators(Parameter *p)
-{
-    {
-        ScopedSceneLockWrite lock(this);
-        p->removeAllModulators();
-        p->collectModulators();
-        p->object()->onParameterChanged(p);
-        p->object()->updateParameterVisibility();
-    }
-    emit parameterChanged(p);
-    render_();
-}
 
 // --------------------- tracks ------------------------------
 
@@ -707,7 +577,8 @@ void Scene::endSequenceChange()
 {
     MO_DEBUG_PARAM("Scene::endSequenceChange()");
     unlock_();
-    emit sequenceChanged(changedSequence_);
+    if (editor_)
+        emit editor_->sequenceChanged(changedSequence_);
     render_();
 }
 
@@ -723,7 +594,8 @@ void Scene::endTimelineChange()
     MO_DEBUG_PARAM("Scene::endTimelineChange()");
     unlock_();
     if (Sequence * s = qobject_cast<Sequence*>(changedTimelineObject_))
-        emit sequenceChanged(s);
+        if (editor_)
+            emit editor_->sequenceChanged(s);
 
     render_();
 }
@@ -741,7 +613,8 @@ void Scene::endObjectChange()
 {
     MO_DEBUG_PARAM("Scene::endObjectChange()");
     unlock_();
-    emit objectChanged(changedObject_);
+    if (editor_)
+        emit editor_->objectChanged(changedObject_);
     render_();
 }
 

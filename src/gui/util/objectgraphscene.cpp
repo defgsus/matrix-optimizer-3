@@ -28,7 +28,7 @@
 #include "object/param/modulator.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "object/objectfactory.h"
-#include "object/scenelock_p.h"
+#include "object/util/objecteditor.h"
 #include "model/objecttreemimedata.h"
 #include "tool/actionlist.h"
 #include "io/application.h"
@@ -150,6 +150,11 @@ void ObjectGraphScene::setRootObject(Object *root)
     p_->modItems.clear();
     p_->zStack = 0;
     p_->root = qobject_cast<Scene*>(root);
+
+    if (p_->root)
+    {
+        MO_ASSERT(p_->root->editor(), "ObjectGraphScene given Scene without ObjectEditor");
+    }
 
     p_->createObjectChildItems(root, 0);
     p_->resolveLayout();
@@ -992,7 +997,7 @@ void ObjectGraphScene::deleteObjects(const QList<AbstractObjectItem *> items1)
         p_->itemMap.erase(o);
 
         // delete for real
-        p_->root->deleteObject(o);
+        p_->root->editor()->deleteObject(o);
     }
 
     p_->recreateModulatorItems();
@@ -1004,7 +1009,7 @@ void ObjectGraphScene::addModulator(Parameter * p, const QString &idName)
     if (!p_->root)
         return;
 
-    p_->root->addModulator(p, idName);
+    p_->root->editor()->addModulator(p, idName);
 
     p_->recreateModulatorItems();
 }

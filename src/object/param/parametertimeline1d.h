@@ -60,7 +60,7 @@ public:
     void setTimeline(MATH::Timeline1D * tl);
 
     /** Sets new internal timeline data */
-    void setTimeline(const MATH::Timeline1D &);
+    void setValue(const MATH::Timeline1D &);
 
     /** Sets new default content for the internal timeline */
     void setDefaultTimeline(const MATH::Timeline1D &);

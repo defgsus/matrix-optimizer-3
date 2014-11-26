@@ -27,6 +27,7 @@
 #include "object/sequence.h"
 #include "object/sequencefloat.h"
 #include "object/clip.h"
+#include "object/util/objecteditor.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
@@ -391,9 +392,9 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         connect(spin, &SpinBox::valueChanged, [=](int value)
         {
             Scene * scene = p->object()->sceneObject();
-            MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
-            if (!scene) return;
-            scene->setParameterValue(pi, value);
+            MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
+            if (!scene || !scene->editor()) return;
+            scene->editor()->setParameterValue(pi, value);
         });
 
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pi->defaultValue(), true); });
@@ -438,9 +439,9 @@ QWidget * ParameterView::createWidget_(Parameter * p)
                 // get value
                 int value = ps->valueList().at(combo->currentIndex());
                 Scene * scene = p->object()->sceneObject();
-                MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
-                if (!scene) return;
-                scene->setParameterValue(ps, value);
+                MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
+                if (!scene || !scene->editor()) return;
+                scene->editor()->setParameterValue(ps, value);
             });
 
             // statustips from combobox items
@@ -480,9 +481,9 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             connect(cb, &QCheckBox::clicked, [=]()
             {
                 Scene * scene = p->object()->sceneObject();
-                MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
-                if (!scene) return;
-                scene->setParameterValue(ps, cb->isChecked()? 1 : 0);
+                MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
+                if (!scene || !scene->editor()) return;
+                scene->editor()->setParameterValue(ps, cb->isChecked()? 1 : 0);
             });
 
             // reset to default
@@ -490,9 +491,9 @@ QWidget * ParameterView::createWidget_(Parameter * p)
             {
                 cb->setChecked(ps->defaultValue() != 0);
                 Scene * scene = p->object()->sceneObject();
-                MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
-                if (!scene) return;
-                scene->setParameterValue(ps, ps->defaultValue());
+                MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
+                if (!scene || !scene->editor()) return;
+                scene->editor()->setParameterValue(ps, ps->defaultValue());
             });
         }
     }
@@ -601,7 +602,10 @@ QWidget * ParameterView::createWidget_(Parameter * p)
         connect(breset, &QToolButton::pressed, [=]()
         {
             ptl->reset();
-            scene_->setParameterValue(ptl, ptl->getDefaultTimeline());
+            Scene * scene = p->object()->sceneObject();
+            MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
+            if (!scene || !scene->editor()) return;
+            scene->editor()->setParameterValue(ptl, ptl->getDefaultTimeline());
         });
     }
 
@@ -724,6 +728,10 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
 
 void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
 {
+    Scene * scene = param->object()->sceneObject();
+    MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << param->idName() << "'");
+    if (!scene || !scene->editor()) return;
+
     /*
     if (param->modulatorIds().size() == 1)
     {
@@ -747,7 +755,7 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
         a->setIcon(QIcon(":/icon/delete.png"));
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
-            param->object()->sceneObject()->removeModulator(param, a->data().toString());
+            scene->editor()->removeModulator(param, a->data().toString());
         });
     }
     // remove all
@@ -760,7 +768,7 @@ void ParameterView::addRemoveModMenu_(QMenu * menu, Parameter * param)
         menu->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            param->object()->sceneObject()->removeAllModulators(param);
+            scene->editor()->removeAllModulators(param);
         });
     }
 }
@@ -794,6 +802,8 @@ void ParameterView::addLinkModMenu_(
         QMenu * menu, Parameter * param, int objectTypeFlags)
 {
     Scene * scene = param->object()->sceneObject();
+    MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << param->idName() << "'");
+    if (!scene || !scene->editor()) return;
 
     QMenu * linkMenu = ObjectMenu::createObjectChildMenu(scene, objectTypeFlags, menu);
     if (linkMenu->isEmpty())
@@ -810,7 +820,7 @@ void ParameterView::addLinkModMenu_(
     a->setIcon(QIcon(":/icon/modulate_on.png"));
     connect(linkMenu, &QMenu::triggered, [=](QAction* a)
     {
-        scene->addModulator(param, a->data().toString());
+        scene->editor()->addModulator(param, a->data().toString());
     });
 
 }
