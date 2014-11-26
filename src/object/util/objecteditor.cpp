@@ -8,6 +8,8 @@
     <p>created 26.11.2014</p>
 */
 
+#include <QMessageBox>
+
 #include "objecteditor.h"
 #include "object/object.h"
 #include "object/scene.h"
@@ -61,10 +63,60 @@ void ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
     MO_DEBUG_TREE("ObjectEditor::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
     MO__CHECK_SCENE
 
+    QString error;
+    if (!parent->isSaveToAdd(newChild, error))
+    {
+        delete newChild;
+        QMessageBox::critical(0, tr("Can't add object"),
+                              tr("The object %1 could not be added to %2.\n%3")
+                              .arg(newChild->name())
+                              .arg(parent->name())
+                              .arg(error));
+        return;
+    }
+
     scene_->addObject(parent, newChild, insert_index);
 
     emit objectAdded(newChild);
 }
+
+void ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, int insert_index)
+{
+    MO_DEBUG_TREE("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
+    MO__CHECK_SCENE
+
+    QSet<Object*> saveAdd;
+
+    QString error;
+    for (auto o : newObjects)
+    {
+        QString err;
+        if (!parent->isSaveToAdd(o, err))
+            error += "\n" + err;
+        else
+            saveAdd.insert(o);
+    }
+
+    // XXX replace this with a more efficient version in Scene::addObjects..
+    // it locks and updates for every object
+    QString err;
+    for (auto o : newObjects)
+        if (!saveAdd.contains(o))
+            scene_->addObject(parent, o, insert_index++);
+        else
+            delete o;
+
+    if (!error.isEmpty())
+    {
+        QMessageBox::critical(0, tr("Can't add object"),
+                              (saveAdd.isEmpty()
+                                ? tr("None of the objects could be added to %1.%2")
+                                : tr("Some objects could not be added to %1.%2"))
+                              .arg(parent->name())
+                              .arg(error));
+    }
+}
+
 
 void ObjectEditor::deleteObject(Object *object)
 {

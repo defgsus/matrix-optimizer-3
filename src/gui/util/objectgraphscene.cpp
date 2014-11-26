@@ -50,6 +50,7 @@ public:
     Private(ObjectGraphScene * scene)
         :   gui     (0),
             scene   (scene),
+            editor  (0),
             zStack  (0),
             action  (A_NONE)
     { }
@@ -81,6 +82,7 @@ public:
     SceneSettings * gui;
     ObjectGraphScene * scene;
     Scene * root;
+    ObjectEditor * editor;
     std::map<Object*, AbstractObjectItem*> itemMap;
     std::map<Object*, QList<ModulatorItem*>> modItemMap;
     QList<ModulatorItem*> modItems;
@@ -98,6 +100,7 @@ ObjectGraphScene::ObjectGraphScene(QObject *parent)
     : QGraphicsScene    (parent),
       p_                (new Private(this))
 {
+    // capture changes to graphicsitems
     connect(this, SIGNAL(changed(QList<QRectF>)), this, SLOT(onChanged_()));
 }
 
@@ -154,11 +157,23 @@ void ObjectGraphScene::setRootObject(Object *root)
     if (p_->root)
     {
         MO_ASSERT(p_->root->editor(), "ObjectGraphScene given Scene without ObjectEditor");
+
+        // install editor
+        bool changed = (p_->root->editor() != p_->editor);
+        p_->editor = p_->root->editor();
+        if (changed)
+        {
+            connect(p_->editor, SIGNAL(objectAdded(MO::Object*)),
+                    this, SLOT(onObjectAdded_(MO::Object*)));
+            connect(p_->editor, SIGNAL(objectDeleted(const MO::Object*)),
+                    this, SLOT(onObjectDeleted_(MO::Object*)));
+        }
     }
 
     p_->createObjectChildItems(root, 0);
     p_->resolveLayout();
     p_->createModulatorItems(root);
+
 
     //for (auto & p : p_->itemMap)
     //    MO_DEBUG(p.first->name() << " :: " << p.second);
@@ -617,6 +632,8 @@ void ObjectGraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 
 
+
+
 // ------------------------------------- drawing -------------------------------
 
 void ObjectGraphScene::drawForeground(QPainter *p, const QRectF &)
@@ -831,12 +848,37 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_t
 }
 
 
+// ------------------------------- editor signals ----------------------------------------
+
+void ObjectGraphScene::onObjectAdded_(Object * o)
+{
+    p_->createObjectItem(o, QPoint(1,1));
+    p_->recreateModulatorItems();
+}
+
+void ObjectGraphScene::onObjectDeleted_(Object * o)
+{
+    // remove items and references
+    auto item = itemForObject(o);
+    if (item)
+    {
+        removeItem(item);
+        delete item;
+    }
+    p_->itemMap.erase(o);
+
+    // recreate all modulation items
+    p_->recreateModulatorItems();
+}
+
 // ----------------------------------- editing -------------------------------------------
 
 void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint& gridPos, int insert_index)
 {
-    MO_ASSERT(p_->root, "Can't edit");
+    MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
 
+    p_->root->editor()->addObject(parent, newObject, insert_index);
+    /*
     QString error;
     if (!parent->isSaveToAdd(newObject, error))
     {
@@ -853,35 +895,82 @@ void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint
     p_->root->addObject(parent, newObject, insert_index);
     // add to graphics scene
     p_->createObjectItem(newObject, gridPos);
+    */
 }
 
 void ObjectGraphScene::addObjects(Object *parent, const QList<Object *> newObjects, const QPoint &gridPos, int insert_index)
 {
-    MO_ASSERT(p_->root, "Can't edit");
+    MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
 
-    QString error;
-
-    int k = 0;
-    for (auto o : newObjects)
-    {
-        QString err;
-        if (!parent->isSaveToAdd(o, err))
-        {
-            delete o;
-            error += "\n" + err;
-        }
-        else
-            addObject(parent, o, gridPos + QPoint(0, k++), insert_index);
-    }
-
-    if (!error.isEmpty())
-    {
-        QMessageBox::critical(0, tr("can't add object"),
-                              tr("Some objects could not be added to %1.%2")
-                              .arg(parent->name())
-                              .arg(error));
-    }
+    p_->root->editor()->addObjects(parent, newObjects, insert_index);
 }
+
+void ObjectGraphScene::deleteObject(Object * o)
+{
+    MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
+
+    MO_ASSERT(o != p_->root, "Can't delete root here");
+
+    p_->root->editor()->deleteObject(o);
+/*
+    // remove items and references
+    auto item = itemForObject(o);
+    if (item)
+    {
+        removeItem(item);
+        delete item;
+    }
+    p_->itemMap.erase(o);
+
+    // delete for real
+    p_->root->deleteObject(o);
+
+    // recreate all modulation items
+    p_->recreateModulatorItems();
+*/
+}
+
+void ObjectGraphScene::deleteObjects(const QList<AbstractObjectItem *> items1)
+{
+    MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
+
+    auto items = items1;
+    reduceToTopLevel(items);
+
+    for (auto item : items)
+    {
+        Object * o = item->object();
+        MO_ASSERT(o != p_->root, "Can't delete root here");
+
+        p_->root->editor()->deleteObject(o);
+/*
+        // remove item and references
+        removeItem(item);
+        delete item;
+
+        p_->itemMap.erase(o);
+
+        // delete for real
+        p_->root->editor()->deleteObject(o);
+*/
+    }
+
+//    p_->recreateModulatorItems();
+}
+
+/*
+void ObjectGraphScene::addModulator(Parameter * p, const QString &idName)
+{
+    if (!p_->root)
+        return;
+
+    p_->root->editor()->addModulator(p, idName);
+
+    p_->recreateModulatorItems();
+}
+*/
+
+
 
 // ------------------------------- clipboard ---------------------------------------------
 
@@ -953,66 +1042,7 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
 
 }
 
-void ObjectGraphScene::deleteObject(Object * o)
-{
-    if (!o || !p_->root)
-        return;
 
-    MO_ASSERT(o != p_->root, "Can't delete root here");
-
-    // remove items and references
-    auto item = itemForObject(o);
-    if (item)
-    {
-        removeItem(item);
-        delete item;
-    }
-    p_->itemMap.erase(o);
-
-    // delete for real
-    p_->root->deleteObject(o);
-
-    // recreate all modulation items
-    p_->recreateModulatorItems();
-
-}
-
-void ObjectGraphScene::deleteObjects(const QList<AbstractObjectItem *> items1)
-{
-    if (!p_->root)
-        return;
-
-    auto items = items1;
-    reduceToTopLevel(items);
-
-    for (auto item : items)
-    {
-        Object * o = item->object();
-        MO_ASSERT(o != p_->root, "Can't delete root here");
-
-        // remove item and references
-        removeItem(item);
-        delete item;
-
-        p_->itemMap.erase(o);
-
-        // delete for real
-        p_->root->editor()->deleteObject(o);
-    }
-
-    p_->recreateModulatorItems();
-}
-
-
-void ObjectGraphScene::addModulator(Parameter * p, const QString &idName)
-{
-    if (!p_->root)
-        return;
-
-    p_->root->editor()->addModulator(p, idName);
-
-    p_->recreateModulatorItems();
-}
 
 
 

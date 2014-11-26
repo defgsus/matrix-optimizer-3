@@ -119,11 +119,16 @@ public slots:
 
     void deleteObjects(const QList<AbstractObjectItem*> o);
 
-    void addModulator(MO::Parameter *, const QString& idName);
+    //void addModulator(MO::Parameter *, const QString& idName);
 
 private slots:
 
     void onChanged_();
+
+    // ---------------- signals from editor -----------
+
+    void onObjectAdded_(MO::Object *);
+    void onObjectDeleted_(MO::Object *);
 
 protected:
 
