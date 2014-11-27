@@ -17,6 +17,7 @@
 #include <QObject>
 #include <QList>
 #include <QSet>
+#include <QMap>
 
 #include "types/int.h"
 #include "types/vector.h"
@@ -148,6 +149,14 @@ public:
         AS_ON           = AS_PREVIEW | AS_RENDER,
     };
 
+    enum DataType
+    {
+        /** Position in ObjectGraphView */
+        DT_GRAPH_POS,
+        /** Expanded-flag in ObjectGraphView */
+        DT_GRAPH_EXPANDED
+    };
+
     // -------------- ctor -------------------
 
     /** Constructs a new object.
@@ -256,6 +265,16 @@ public:
 
     /** Returns a priority for each object type */
     static int objectPriority(const Object *);
+
+    // ----------- attached data ------------------
+
+    /** Attaches data to the object.
+        The data is saved with the object.
+        A null QVariant removes the entry */
+    void attachData(DataType type, const QVariant& value, const QString& id = "");
+
+    /** Returns the attached data, or a null QVariant */
+    QVariant attachedData(DataType type, const QString& id = "");
 
     // ---------- activity (scope) ----------------
 
@@ -787,6 +806,8 @@ private:
     QString idName_, name_, orgIdName_;
 
     bool canBeDeleted_;
+
+    QMap<QString, QMap<qint64, QVariant>> attachedData_;
 
     // ----------- tree ----------------------
 

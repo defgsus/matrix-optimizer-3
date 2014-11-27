@@ -55,11 +55,12 @@ public:
             action  (A_NONE)
     { }
 
-    /// Creates the item for o and all of its children
+    /// Creates the items for o and all of its children
     void createObjectItem(Object * o, const QPoint &grid_pos);
-    /// Creates the items for all children of o and recusively
+    /// Creates the items for all children of o and recursively
     void createObjectChildItems(Object * o, AbstractObjectItem * item);
     void createModulatorItems(Object * root);
+    /// Completely recreates all cables (to nasty to do it selectively)
     void recreateModulatorItems();
     void addModItem(Modulator *);
     void addModItemMap(Object *, ModulatorItem *);
@@ -71,6 +72,7 @@ public:
     /// Recursively get the item below @p localGridPos
     AbstractObjectItem * childItemAt(AbstractObjectItem * parent, const QPoint& localGridPos);
     void raiseModItems(AbstractObjectItem*); ///< raise all ModulatorItems of the item and it's childs
+    /// Resizes the items to fit their children and updates cable positions
     void resolveLayout();
 
     void clearActions();
@@ -478,6 +480,8 @@ void ObjectGraphScene::Private::recreateModulatorItems()
     }
     modItems.clear();
     modItemMap.clear();
+
+    resolveLayout();
 
     if (root)
         createModulatorItems(root);

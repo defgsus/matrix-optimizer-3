@@ -422,6 +422,31 @@ bool Object::isAudioRelevant() const
     return false;
 }
 
+void Object::attachData(DataType type, const QVariant &value, const QString &id)
+{
+    // remove entry
+    if (value.isNull())
+    {
+        auto i = attachedData_.find(id);
+        if (i == attachedData_.end())
+            return;
+
+        auto map = &(*i);
+        auto j = map->find(type);
+        if (j != map->end())
+            map->erase(j);
+        return;
+    }
+
+    // create entry
+    auto i = attachedData_.find(id);
+    if (i == attachedData_.end())
+        i = attachedData_.insert(id, QMap<qint64, QVariant>());
+
+    auto map = &(*i);
+    map->insert(type, value);
+}
+
 Object::ActivityScope Object::activityScope() const
 {
     if (paramActiveScope_)
