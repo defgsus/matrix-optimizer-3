@@ -8,7 +8,9 @@
     <p>created 26.09.2014</p>
 */
 
-#include <xmmintrin.h>
+#ifdef __SSE__
+#   include <xmmintrin.h>
+#endif
 
 #include "denormals.h"
 
@@ -31,10 +33,12 @@ namespace MATH {
 
 void setDenormals(bool enable)
 {
+#ifdef __SSE__
     if (enable)
         _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_OFF);
     else
         _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+#endif
 }
 
 } // namespace MATH

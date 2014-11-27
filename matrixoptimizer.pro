@@ -26,6 +26,9 @@ DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
 #disable obsolete ObjectTreeModel
 DEFINES += MO_DISABLE_TREE
 
+#as long as it is not really used, avoid this dependency
+DEFINES += MO_DISABLE_GST
+
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
@@ -47,7 +50,7 @@ else: unix: {
 LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile \
-        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
+#        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
 else: win32 {
 LIBS += -lkernel32 -lpsapi \
