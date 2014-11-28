@@ -86,6 +86,7 @@ private:
     void addCreateModMenuFloat_(QMenu *, Parameter *);
 
     Scene * scene_;
+    ObjectEditor * editor_;
     SceneSettings * sceneSettings_;
     Object * object_;
     QList<Parameter*> parameters_;

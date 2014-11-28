@@ -53,6 +53,7 @@ namespace GUI {
 ParameterView::ParameterView(QWidget *parent) :
     QWidget         (parent),
     scene_          (0),
+    editor_         (0),
     sceneSettings_  (0),
     object_         (0),
     // config
@@ -94,9 +95,10 @@ void ParameterView::setObject(Object *object)
     if (scene != scene_)
     {
         scene_ = scene;
-        connect(scene, SIGNAL(parameterChanged(MO::Parameter*)),
+        editor_ = scene_->editor();
+        connect(editor_, SIGNAL(parameterChanged(MO::Parameter*)),
                 this, SLOT(updateWidgetValue_(MO::Parameter*)));
-        connect(scene, SIGNAL(sequenceChanged(MO::Sequence*)),
+        connect(editor_, SIGNAL(sequenceChanged(MO::Sequence*)),
                 this, SLOT(onSequenceChanged(MO::Sequence*)));
     }
 
@@ -344,21 +346,10 @@ QWidget * ParameterView::createWidget_(Parameter * p)
 
         connect(spin, static_cast<void(DoubleSpinBox::*)(double)>(&DoubleSpinBox::valueChanged), [=]()
         {
-            QObject * scene = p->object()->sceneObject();
+            Scene * scene = p->object()->sceneObject();
             MO_ASSERT(scene, "no Scene for Parameter '" << p->idName() << "'");
-            if (!scene) return;
-            // threadsafe send new parameter value
-            // XXX only testing syntax here,
-            //     Scene will have to handle more threads
-            bool r =
-                metaObject()->invokeMethod(scene,
-                                           "setParameterValue",
-                                           Qt::QueuedConnection,
-                                           Q_ARG(MO::ParameterFloat*, pf),
-                                           Q_ARG(Double, spin->value())
-                                           );
-            MO_ASSERT(r, "could not invoke Scene::setParameterValue");
-            Q_UNUSED(r);
+            if (!scene && !scene->editor()) return;
+            scene->editor()->setParameterValue(pf, spin->value());
         });
 
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue(), true); });
@@ -631,6 +622,8 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
     ObjectTreeModel * model = scene->model();
     MO_ASSERT(model, "No model assigned for Parameter");
 #endif
+    auto * editor = scene->editor();
+    MO_ASSERT(editor, "No ObjectEditor assigned for Parameter");
 
     QMenu * menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
@@ -664,13 +657,11 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
         menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
         connect(a, &QAction::triggered, [=]()
         {
-#ifndef MO_DISABLE_TREE
-            if (Object * o = model->createFloatTrack(pi))
+            if (Object * o = editor->createFloatTrack(pi))
             {
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
-#endif
         });
         // create modulation in clip
         menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float sequence"), menu) );

@@ -111,9 +111,9 @@ ObjectGraphScene::~ObjectGraphScene()
     delete p_;
 }
 
-AbstractObjectItem * ObjectGraphScene::itemForObject(Object *o) const
+AbstractObjectItem * ObjectGraphScene::itemForObject(const Object *o) const
 {
-    auto i = p_->itemMap.find(o);
+    auto i = p_->itemMap.find(const_cast<Object*>(o));
     return i == p_->itemMap.end() ? 0 : i->second;
 }
 
@@ -168,7 +168,7 @@ void ObjectGraphScene::setRootObject(Object *root)
             connect(p_->editor, SIGNAL(objectAdded(MO::Object*)),
                     this, SLOT(onObjectAdded_(MO::Object*)));
             connect(p_->editor, SIGNAL(objectDeleted(const MO::Object*)),
-                    this, SLOT(onObjectDeleted_(MO::Object*)));
+                    this, SLOT(onObjectDeleted_(const MO::Object*)));
         }
     }
 
@@ -717,6 +717,10 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
     if (!obj)
         obj = root;
 
+    QPoint objPos = QPoint(0, 0);
+    if (auto item = scene->itemForObject(obj))
+        objPos = item->gridPos() - QPoint(1,1);
+
     QAction * a;
 
     actions.append( a = new QAction(obj && obj != root ?
@@ -733,7 +737,7 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
         else
             onew = ObjectFactory::createObject(id);
         if (onew)
-            scene->addObject(obj, onew, popupGridPos);
+            scene->addObject(obj, onew, popupGridPos - objPos);
     });
 
 }
@@ -860,7 +864,7 @@ void ObjectGraphScene::onObjectAdded_(Object * o)
     p_->recreateModulatorItems();
 }
 
-void ObjectGraphScene::onObjectDeleted_(Object * o)
+void ObjectGraphScene::onObjectDeleted_(const Object *o)
 {
     // remove items and references
     auto item = itemForObject(o);
@@ -869,7 +873,7 @@ void ObjectGraphScene::onObjectDeleted_(Object * o)
         removeItem(item);
         delete item;
     }
-    p_->itemMap.erase(o);
+    p_->itemMap.erase(const_cast<Object*>(o));
 
     // recreate all modulation items
     p_->recreateModulatorItems();
@@ -880,6 +884,8 @@ void ObjectGraphScene::onObjectDeleted_(Object * o)
 void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint& gridPos, int insert_index)
 {
     MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
+
+    newObject->attachData(Object::DT_GRAPH_POS, gridPos);
 
     p_->root->editor()->addObject(parent, newObject, insert_index);
     /*
@@ -905,6 +911,10 @@ void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint
 void ObjectGraphScene::addObjects(Object *parent, const QList<Object *> newObjects, const QPoint &gridPos, int insert_index)
 {
     MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
+
+    int k = 0;
+    for (auto o : newObjects)
+        o->attachData(Object::DT_GRAPH_POS, gridPos + QPoint(0,k++));
 
     p_->root->editor()->addObjects(parent, newObjects, insert_index);
 }
@@ -1042,7 +1052,12 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
         if (pitem->object())
             root = pitem->object();
 
-    addObjects(root, copies, gridPos);
+    QPoint objPos = QPoint(0,0);
+    if (root != p_->root)
+        if (auto item = itemForObject(root))
+            objPos = item->gridPos() - QPoint(1,1);
+
+    addObjects(root, copies, gridPos - objPos);
 
 }
 

@@ -89,6 +89,17 @@ public slots:
     void removeModulator(MO::Parameter *, const QString& idName);
     void removeAllModulators(MO::Parameter *);
 
+    // ------------ modulator objects ----------
+
+    /** Creates a float track for the given parameter.
+        The track is placed at the next suitable position,
+        search the parameter's object and parents. */
+    TrackFloat * createFloatTrack(MO::Parameter * p);
+
+    /** Creates the object of @p className in the @p clip.
+        If @p clip is NULL, a clip (and maybe a ClipContainer are autimatically created).
+        @throws Exception if anything goes wrong. */
+    Object * createInClip(const QString& className, MO::Clip * clip = 0);
 private:
 
     Scene * scene_;

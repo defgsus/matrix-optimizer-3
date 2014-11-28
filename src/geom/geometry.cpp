@@ -624,7 +624,7 @@ void Geometry::convertToLines()
     lineIndex_.clear();
 
     // test for already-connected
-    typedef long unsigned int Hash;
+    typedef quint64 Hash;
     QSet<Hash> hash;
 
     for (uint i=0; i<numTriangles(); ++i)

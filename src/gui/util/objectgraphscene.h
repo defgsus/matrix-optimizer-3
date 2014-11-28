@@ -36,7 +36,7 @@ public:
     SceneSettings * guiSettings() const;
 
     /** Return the item for the object, or NULL */
-    AbstractObjectItem * itemForObject(Object * o) const;
+    AbstractObjectItem * itemForObject(const Object *o) const;
 
     /** Return the first visible item or one of it's parents for the object, or NULL */
     AbstractObjectItem * visibleItemForObject(Object * o) const;
@@ -103,7 +103,7 @@ public slots:
     /** Adds an object to object-tree and item-tree.
         @p newObject is completely given away. If it can't be added to parent, it will be deleted
         and a message is displayed to the user.
-        @p gridPos is global and will be retranslated to parent's local coords if necessary. */
+        @p gridPos is local inside parent. */
     void addObject(Object * parent, Object * newObject, const QPoint &gridPos = QPoint(1,1), int insert_index = -1);
 
     /** Adds an object to object-tree and item-tree.
@@ -128,7 +128,7 @@ private slots:
     // ---------------- signals from editor -----------
 
     void onObjectAdded_(MO::Object *);
-    void onObjectDeleted_(MO::Object *);
+    void onObjectDeleted_(const MO::Object *);
 
 protected:
 

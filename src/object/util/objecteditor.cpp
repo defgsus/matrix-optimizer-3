@@ -15,6 +15,8 @@
 #include "object/scene.h"
 #include "object/scenelock_p.h"
 #include "object/sequence.h"
+#include "object/clipcontainer.h"
+#include "object/objectfactory.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
@@ -233,6 +235,100 @@ void ObjectEditor::removeAllModulators(Parameter *p)
     }
     emit parameterChanged(p);
     scene_->render();
+}
+
+
+// ----------------------------------- modulator objects -----------------------------------
+
+TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
+{
+    MO_DEBUG_TREE("ObjectEditor::createFloatTrack('" << param->idName() << "')");
+
+    MO_ASSERT(scene_, "can't edit");
+
+    Object * obj = param->object();
+    MO_ASSERT(obj, "missing object for parameter '" << param->idName() << "'");
+
+    // construct name
+    QString name = obj->name() + "." + param->name();
+    // if the parent is not a "real object" then use the grandparent's name as well
+    if (!( (obj->type() & Object::TG_REAL_OBJECT)
+           || (obj->type() & Object::TG_SEQUENCE))
+        && obj->parentObject())
+            name.prepend(obj->parentObject()->name() + ".");
+
+    // find a place for the modulation track
+    while (obj && !obj->canHaveChildren(Object::T_TRACK_FLOAT))
+    {
+        obj = obj->parentObject();
+    }
+    MO_ASSERT(obj, "Could not find an object to create a float track in.");
+
+    // create track
+    auto track = ObjectFactory::createObject("TrackFloat");
+    track->setName(name);
+
+    // add to parent
+    addObject(obj, track, -1);
+
+    // modulate parameter
+    addModulator(param, track->idName());
+
+    return (TrackFloat*)track;
+}
+
+
+Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
+{
+    MO_DEBUG_TREE("ObjectEditor::createInClip('" << className << ", " << parent << "')");
+
+    MO_ASSERT(scene_, "can't edit");
+
+    Object * obj = ObjectFactory::createObject(className);
+    if (!obj)
+        MO_ERROR("Can't create object '" << className << "'");
+
+    if (parent && !parent->canHaveChildren(obj->type()))
+    {
+        delete obj;
+        MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
+    }
+
+    // create a clip
+    if (!parent)
+    {
+        ClipContainer * con = 0;
+
+        // take first found container
+        auto clipcons = scene_->findChildObjects<ClipContainer>(QString(), true);
+        if (!clipcons.isEmpty())
+            con = clipcons[0];
+        // or create new
+        else
+        {
+            con = static_cast<ClipContainer*>(ObjectFactory::createObject("ClipContainer"));
+            if (!con)
+                MO_ERROR("Could not create ClipContainer");
+            addObject(scene_, con, 0);
+        }
+
+        // create clip
+        parent = static_cast<Clip*>(ObjectFactory::createObject("Clip"));
+        if (!parent)
+            MO_ERROR("Could not create Clip");
+        addObject(con, parent);
+    }
+
+    if (!parent->canHaveChildren(obj->type()))
+    {
+        delete obj;
+        MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
+    }
+
+    // add to parent
+    addObject(parent, obj, -1);
+
+    return obj;
 }
 
 
