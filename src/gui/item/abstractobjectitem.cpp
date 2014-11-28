@@ -326,6 +326,11 @@ const QPoint& AbstractObjectItem::gridPos() const
     return p_oi_->pos;
 }
 
+QPoint AbstractObjectItem::globalGridPos() const
+{
+    auto p = parentObjectItem();
+    return p ? p_oi_->pos + p->globalGridPos() : p_oi_->pos;
+}
 
 
 const QSize& AbstractObjectItem::gridSize() const
@@ -483,6 +488,7 @@ QRectF AbstractObjectItem::rect() const
     return QRectF(pw, pw, size.width() * scale.width() - pw*2 - 1,
                           size.height() * scale.height() - pw*2 - 1);
 }
+
 
 QRectF AbstractObjectItem::boundingRect() const
 {

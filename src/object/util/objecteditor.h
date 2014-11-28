@@ -110,6 +110,9 @@ public slots:
         If @p clip is NULL, a clip (and maybe a ClipContainer are autimatically created).
         @throws Exception if anything goes wrong. */
     Object * createInClip(const QString& className, MO::Clip * clip = 0);
+
+    SequenceFloat * createFloatSequenceFor(MO::Parameter * p);
+
 private:
 
     Scene * scene_;

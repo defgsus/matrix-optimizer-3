@@ -253,16 +253,19 @@ QString ObjectEditor::modulatorName(Parameter *param, bool longName)
 {
     // construct name
     QString name( param->name() );
-    if (longName)
-        if (Object * obj = param->object())
+    if (Object * obj = param->object())
+    {
+        // always prepend the object of modulator
+        name.prepend( obj->name() + "." );
+        if (longName)
         {
-            name.prepend( obj->name() + "." );
             // if the parent is not a "real object" then use the grandparent's name as well
             if (!( (obj->type() & Object::TG_REAL_OBJECT)
                    || (obj->type() & Object::TG_SEQUENCE))
                 && obj->parentObject())
                     name.prepend(obj->parentObject()->name() + ".");
         }
+    }
 
     return ">" + name;
 }
@@ -352,5 +355,33 @@ Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
     return obj;
 }
 
+SequenceFloat * ObjectEditor::createFloatSequenceFor(MO::Parameter * param)
+{
+    MO_DEBUG_TREE("ObjectEditor::createFloatSequenceFor('" << param->idName() << "')");
+
+    MO_ASSERT(scene_ && param->object(), "can't edit");
+
+    // find insertion point
+    Object * parent = param->object();
+    if (parent->parentObject())
+        parent = parent->parentObject();
+    while (parent && !parent->canHaveChildren(Object::T_SEQUENCE_FLOAT))
+        parent = parent->parentObject();
+
+    if (!parent)
+    {
+        QMessageBox::critical(0, tr("Can't add object"),
+                              tr("No object found to place float sequence for parameter %1")
+                              .arg(param->name()));
+        return 0;
+    }
+
+    // creat sequence
+    auto seq = ObjectFactory::createSequenceFloat(modulatorName(param));
+
+    addObject(parent, (Object*)seq, -1);
+
+    return seq;
+}
 
 } // namespace MO

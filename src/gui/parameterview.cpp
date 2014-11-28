@@ -840,22 +840,19 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
     QMenu * sub = new QMenu(menu);
     a->setMenu(sub);
 
-#ifndef MO_DISABLE_TREE
         // right here
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("right here"), sub) );
         connect(a, &QAction::triggered, [=]()
         {
-            if (Object * o = model->createFloatSequenceFor(param->object()))
+            if (Object * o = editor->createFloatSequenceFor(param))
             {
                 // modulate
-                scene_->addModulator(param, o->idName());
-                o->setName(">" + param->infoName());
+                editor->addModulator(param, o->idName());
 
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
         });
-#endif
 
         sub->addSeparator();
 

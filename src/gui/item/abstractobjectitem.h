@@ -68,6 +68,9 @@ public:
     /** Returns the rectangle occupied in the grid */
     const QRect gridRect() const { return QRect(gridPos(), gridSize()); }
 
+    /** Returns the scene-global position in grid coordinates */
+    QPoint globalGridPos() const;
+
     /** Translates a global point into grid coordinates */
     QPoint mapToGrid(const QPointF&) const;
 

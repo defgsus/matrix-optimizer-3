@@ -84,7 +84,10 @@ public slots:
     void reduceToTopLevel(QList<AbstractObjectItem*>&);
 
     /** Returns the item at global grid position, or NULL */
-    AbstractObjectItem * objectItemAt(const QPoint& gridPos);
+    AbstractObjectItem * objectItemAt(const QPoint& globalPos);
+
+    /** Returns the next free position inside parent */
+    QPoint nextFreePosition(Object * parent, const QPoint& localPos) const;
 
     // ------------------- clipboard ------------------
 
@@ -128,7 +131,7 @@ private slots:
     void onObjectAdded_(MO::Object *);
     void onObjectDeleted_(const MO::Object *);
     void onModulatorAdded_(MO::Modulator *);
-    void onModulatorDeleted_(MO::Modulator *);
+    void onModulatorDeleted_(const MO::Modulator *);
 
 protected:
 

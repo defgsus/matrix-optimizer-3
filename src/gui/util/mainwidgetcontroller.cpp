@@ -1402,6 +1402,7 @@ void MainWidgetController::loadScene_(const QString &fn)
             if (QFileInfo(guifn).exists())
             {
                 sceneSettings.loadFile(guifn);
+                sceneSettings.updateTreeForCompatibility(scene);
             }
             else
                 MO_DEBUG_IO("No scene-settings " << guifn);

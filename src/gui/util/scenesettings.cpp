@@ -22,7 +22,6 @@
 #include "object/sequence.h"
 #include "object/sequencefloat.h"
 
-
 namespace MO {
 namespace GUI {
 
@@ -59,13 +58,14 @@ void SceneSettings::clear()
     paramGroupExpanded_.clear();
     treeExpanded_.clear();
     gridPos_.clear();
+    readVersion_ = -1;
 }
 
 void SceneSettings::serialize(IO::DataStream &io) const
 {
     MO_DEBUG_IO("SceneSettings::serialize(" << &io << ")");
 
-    io.writeHeader("scenesettings", 4);
+    io.writeHeader("scenesettings", 2);
 
     io << trackHeights_;
 
@@ -79,12 +79,6 @@ void SceneSettings::serialize(IO::DataStream &io) const
 
     // v2
     io << paramGroupExpanded_;
-
-    // v3
-    io << treeExpanded_;
-
-    // v4
-    io << gridPos_;
 }
 
 void SceneSettings::deserialize(IO::DataStream &io)
@@ -93,7 +87,7 @@ void SceneSettings::deserialize(IO::DataStream &io)
 
     clear();
 
-    const int ver = io.readHeader("scenesettings", 4);
+    const int ver = readVersion_ = io.readHeader("scenesettings", 4);
 
     io >> trackHeights_;
 
@@ -116,12 +110,13 @@ void SceneSettings::deserialize(IO::DataStream &io)
     if (ver >= 2)
         io >> paramGroupExpanded_;
 
-    if (ver >= 3)
+    if (ver >= 3 && ver <= 4)
         io >> treeExpanded_;
 
-    if (ver >= 4)
+    if (ver == 4)
         io >> gridPos_;
-//    qDebug() << gridPos_;
+
+//    qDebug() << treeExpanded_;
 }
 
 void SceneSettings::saveFile(const QString &filename) const
@@ -252,44 +247,6 @@ bool SceneSettings::getParameterGroupExpanded(const Object * obj, const QString 
     return paramGroupExpanded_.contains(id);
 }
 
-bool SceneSettings::hasLocalGridPos(const Object * o, const QString &groupId) const
-{
-    return gridPos_.contains(o->idName() + "/" + groupId);
-}
-
-const QPoint& SceneSettings::getLocalGridPos(const Object * o, const QString &groupId) const
-{
-    const QString id = o->idName() + "/" + groupId;
-    auto i = gridPos_.find(id);
-    if (i != gridPos_.end())
-        return i.value();
-
-    static const QPoint p(1,1);
-    return p;
-}
-
-void SceneSettings::setLocalGridPos(const Object * o, const QString &groupId, const QPoint& pos)
-{
-    const QString id = o->idName() + "/" + groupId;
-    gridPos_.insert(id, pos);
-}
-
-void SceneSettings::setExpanded(
-        const Object * obj, const QString &groupId, bool expanded)
-{
-    const QString id = groupId + "/" + obj->idName();
-//    MO_DEBUG("expanded " << id << " " << (int)expanded);
-    if (!expanded)
-        treeExpanded_.remove(id);
-    else
-        treeExpanded_.insert(id);
-}
-
-bool SceneSettings::getExpanded(const Object * obj, const QString &groupId) const
-{
-    const QString id = groupId + "/" + obj->idName();
-    return treeExpanded_.contains(id);
-}
 
 void SceneSettings::copySettings(const Object *dst, const Object *src)
 {
@@ -319,6 +276,21 @@ void SceneSettings::copySettings(const QString& dst, const QString& src)
     }
 }
 
+
+void SceneSettings::updateTreeForCompatibility(Object * o)
+{
+    auto i = gridPos_.find(o->idName() + "/0");
+    if (i != gridPos_.end())
+        o->setAttachedData(i.value(), Object::DT_GRAPH_POS);
+
+    auto j = treeExpanded_.find("0/" + o->idName());
+    if (j != treeExpanded_.end())
+        o->setAttachedData(true, Object::DT_GRAPH_EXPANDED);
+
+    // traverse childs
+    for (auto c : o->childObjects())
+        updateTreeForCompatibility(c);
+}
 
 } // namespace GUI
 } // namespace MO
