@@ -22,7 +22,6 @@
 #include "gui/item/abstractobjectitem.h"
 #include "gui/item/modulatoritem.h"
 #include "gui/util/objectgraphsettings.h"
-#include "gui/util/scenesettings.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/param/modulator.h"
@@ -48,15 +47,14 @@ public:
     };
 
     Private(ObjectGraphScene * scene)
-        :   gui     (0),
-            scene   (scene),
+        :   scene   (scene),
             editor  (0),
             zStack  (0),
             action  (A_NONE)
     { }
 
     /// Creates the items for o and all of its children
-    void createObjectItem(Object * o, const QPoint &grid_pos);
+    void createObjectItem(Object * o, const QPoint &local_pos);
     /// Creates the items for all children of o and recursively
     void createObjectChildItems(Object * o, AbstractObjectItem * item);
     void createModulatorItems(Object * root);
@@ -81,7 +79,6 @@ public:
     void createClipboardMenu(Object * parent, const QList<AbstractObjectItem*>& items);
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts);
 
-    SceneSettings * gui;
     ObjectGraphScene * scene;
     Scene * root;
     ObjectEditor * editor;
@@ -136,16 +133,6 @@ AbstractObjectItem * ObjectGraphScene::visibleItemForObject(Object *o) const
     return p;
 }
 
-void ObjectGraphScene::setGuiSettings(SceneSettings *set)
-{
-    p_->gui = set;
-}
-
-SceneSettings * ObjectGraphScene::guiSettings() const
-{
-    return p_->gui;
-}
-
 void ObjectGraphScene::setRootObject(Object *root)
 {
     clear();
@@ -169,6 +156,10 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onObjectAdded_(MO::Object*)));
             connect(p_->editor, SIGNAL(objectDeleted(const MO::Object*)),
                     this, SLOT(onObjectDeleted_(const MO::Object*)));
+            connect(p_->editor, SIGNAL(modulatorAdded(MO::Modulator*)),
+                    this, SLOT(onModulatorAdded_(MO::Modulator*)));
+            connect(p_->editor, SIGNAL(modulatorDeleted(const MO::Modulator*)),
+                    this, SLOT(onModulatorDeleted_(MO::Modulator*)));
         }
     }
 
@@ -186,9 +177,10 @@ void ObjectGraphScene::setRootObject(Object *root)
 void ObjectGraphScene::setGridPos(AbstractObjectItem * item, const QPoint &gridPos)
 {
     item->setGridPos(gridPos);
-    // save in gui
-    if (item->object() && guiSettings())
-        guiSettings()->setLocalGridPos(item->object(), "0", gridPos);
+    /*// save in object
+    if (item->object())
+        item->object()->setAttachedData(gridPos, Object::DT_GRAPH_POS);
+        */
 }
 
 QPoint ObjectGraphScene::mapToGrid(const QPointF & f) const
@@ -239,18 +231,19 @@ void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObject
         // save in map
         itemMap.insert(std::make_pair(c, item));
 
-        // set expanded according to gui settings
-        if (gui && gui->getExpanded(c, "0"))
-            item->setExpanded(true);
+        o->dumpAttachedData();
 
-        // set initial position (from gui settings or vertically)
-        if (gui && gui->hasLocalGridPos(c, "0"))
-        {
-            item->setGridPos(gui->getLocalGridPos(c, "0"));
-            y = std::max(y, item->gridPos().y());
-        }
+        // set expanded according to gui settings
+        if (c->hasAttachedData(Object::DT_GRAPH_EXPANDED))
+            item->setExpanded(c->getAttachedData(Object::DT_GRAPH_EXPANDED).toBool());
+
+        // set initial position (from gui settings or top-to-bottom)
+        if (c->hasAttachedData(Object::DT_GRAPH_POS))
+            item->setGridPos(c->getAttachedData(Object::DT_GRAPH_POS).toPoint());
         else
             item->setGridPos(QPoint(1, y));
+
+        y = std::max(y, item->gridRect().bottom() + 1);
 
         // install in item tree
         if (!pitem)
@@ -261,8 +254,6 @@ void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObject
 
         // add childs
         createObjectChildItems(c, item);
-
-        y ++;
     }
 }
 
@@ -275,6 +266,7 @@ void ObjectGraphScene::Private::createModulatorItems(Object *root)
     {
         ObjectGraphNode * n = i.second;
     }*/
+
     // add modulators
     auto mods = root->getModulators();
     for (Modulator * m : mods)
@@ -314,7 +306,7 @@ void ObjectGraphScene::Private::addModItemMap(Object * o, ModulatorItem * item)
     }
 }
 
-void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& pos1)
+void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& local_pos)
 {
     // create item
     auto item = new AbstractObjectItem(o);
@@ -324,20 +316,13 @@ void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& pos1)
     // item for parent
     auto pitem = scene->itemForObject(o->parentObject());
 
-    // make pos1 local to parent item
-    QPoint pos(pos1);
-    if (pitem)
-    {
-        pos = scene->mapToGrid(
-                    pitem->mapFromScene(
-                        scene->mapFromGrid(pos)));
-        pos.rx() = std::max(1, pos.x());
-        pos.ry() = std::max(1, pos.y());
-    }
-
     // set initial position
-    item->setGridPos(pos);
+    item->setGridPos(local_pos);
     item->setZValue(++zStack);
+
+    const bool isExpand = o->hasAttachedData(Object::DT_GRAPH_EXPANDED)
+                        && o->getAttachedData(Object::DT_GRAPH_EXPANDED).toBool();
+    item->setExpanded(isExpand);
 
     // install in item tree
     if (!pitem)
@@ -577,7 +562,6 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     if (event->button() == Qt::RightButton)
     {
-        // popup for empty space
         p_->lastMousePos = event->scenePos();
         popup(mapToGrid(p_->lastMousePos));
     }
@@ -719,7 +703,7 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 
     QPoint objPos = QPoint(0, 0);
     if (auto item = scene->itemForObject(obj))
-        objPos = item->gridPos() - QPoint(1,1);
+        objPos = item->gridPos();
 
     QAction * a;
 
@@ -779,9 +763,9 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
     if (!plural)
     {
         const auto data = application->clipboard()->mimeData();
-        const bool isClip = data->formats().contains(ObjectTreeMimeData::objectMimeType);
+        const bool isClipboard = data->formats().contains(ObjectTreeMimeData::objectMimeType);
 
-        if (isClip)
+        if (isClipboard)
         {
             const auto pitem = scene->objectItemAt(popupGridPos);
             const QString pname = pitem && pitem->object()
@@ -860,7 +844,12 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_t
 
 void ObjectGraphScene::onObjectAdded_(Object * o)
 {
-    p_->createObjectItem(o, QPoint(1,1));
+    o->dumpAttachedData();
+    const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
+                          ? o->getAttachedData(Object::DT_GRAPH_POS).toPoint()
+                          : QPoint(1,1);
+
+    p_->createObjectItem(o, pos);
     p_->recreateModulatorItems();
 }
 
@@ -879,42 +868,35 @@ void ObjectGraphScene::onObjectDeleted_(const Object *o)
     p_->recreateModulatorItems();
 }
 
+void ObjectGraphScene::onModulatorAdded_(Modulator *)
+{
+    p_->recreateModulatorItems();
+}
+
+void ObjectGraphScene::onModulatorDeleted_(Modulator *)
+{
+    p_->recreateModulatorItems();
+}
+
 // ----------------------------------- editing -------------------------------------------
 
 void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint& gridPos, int insert_index)
 {
     MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
 
-    newObject->attachData(Object::DT_GRAPH_POS, gridPos);
+    newObject->setAttachedData(gridPos, Object::DT_GRAPH_POS);
 
     p_->root->editor()->addObject(parent, newObject, insert_index);
-    /*
-    QString error;
-    if (!parent->isSaveToAdd(newObject, error))
-    {
-        delete newObject;
-        QMessageBox::critical(0, tr("can't add object"),
-                              tr("The object %1 could not be added to %2.\n%3")
-                              .arg(newObject->name())
-                              .arg(parent->name())
-                              .arg(error));
-        return;
-    }
-
-    // add to object tree
-    p_->root->addObject(parent, newObject, insert_index);
-    // add to graphics scene
-    p_->createObjectItem(newObject, gridPos);
-    */
 }
 
 void ObjectGraphScene::addObjects(Object *parent, const QList<Object *> newObjects, const QPoint &gridPos, int insert_index)
 {
     MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
 
-    int k = 0;
+    // set pos for all items
+    int k=0;
     for (auto o : newObjects)
-        o->attachData(Object::DT_GRAPH_POS, gridPos + QPoint(0,k++));
+        o->setAttachedData(gridPos + QPoint(0, k++), Object::DT_GRAPH_POS);
 
     p_->root->editor()->addObjects(parent, newObjects, insert_index);
 }
@@ -926,22 +908,6 @@ void ObjectGraphScene::deleteObject(Object * o)
     MO_ASSERT(o != p_->root, "Can't delete root here");
 
     p_->root->editor()->deleteObject(o);
-/*
-    // remove items and references
-    auto item = itemForObject(o);
-    if (item)
-    {
-        removeItem(item);
-        delete item;
-    }
-    p_->itemMap.erase(o);
-
-    // delete for real
-    p_->root->deleteObject(o);
-
-    // recreate all modulation items
-    p_->recreateModulatorItems();
-*/
 }
 
 void ObjectGraphScene::deleteObjects(const QList<AbstractObjectItem *> items1)
@@ -957,19 +923,7 @@ void ObjectGraphScene::deleteObjects(const QList<AbstractObjectItem *> items1)
         MO_ASSERT(o != p_->root, "Can't delete root here");
 
         p_->root->editor()->deleteObject(o);
-/*
-        // remove item and references
-        removeItem(item);
-        delete item;
-
-        p_->itemMap.erase(o);
-
-        // delete for real
-        p_->root->editor()->deleteObject(o);
-*/
     }
-
-//    p_->recreateModulatorItems();
 }
 
 /*
@@ -1022,6 +976,8 @@ QMimeData * ObjectGraphScene::mimeData(const QList<AbstractObjectItem *> & list)
 
 void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPos)
 {
+    MO_DEBUG_GUI("ObjectGraphScene::dropMimeData()");
+
     if (!p_->root)
     {
         MO_WARNING("ObjectGraphScene::dropMimeData() without root object")
@@ -1055,7 +1011,7 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
     QPoint objPos = QPoint(0,0);
     if (root != p_->root)
         if (auto item = itemForObject(root))
-            objPos = item->gridPos() - QPoint(1,1);
+            objPos = item->gridPos();
 
     addObjects(root, copies, gridPos - objPos);
 

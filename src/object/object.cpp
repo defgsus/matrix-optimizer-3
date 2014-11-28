@@ -9,7 +9,7 @@
 */
 
 
-//#include <QDebug>
+#include <QDebug>
 
 #include "object.h"
 #include "tool/stringmanip.h"
@@ -223,16 +223,22 @@ Object * Object::deserializeTree_(IO::DataStream & io)
 
 void Object::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("obj", 1);
+    io.writeHeader("obj", 2);
 
     io << canBeDeleted_;
+
+    // v2
+    io << attachedData_;
 }
 
 void Object::deserialize(IO::DataStream & io)
 {
-    io.readHeader("obj", 1);
+    const auto ver = io.readHeader("obj", 2);
 
     io >> canBeDeleted_;
+
+    if (ver >= 2)
+        io >> attachedData_;
 }
 
 void Object::serializeParameters_(IO::DataStream & io, const Object * o)
@@ -422,7 +428,7 @@ bool Object::isAudioRelevant() const
     return false;
 }
 
-void Object::attachData(DataType type, const QVariant &value, const QString &id)
+void Object::setAttachedData(const QVariant &value, DataType type, const QString &id)
 {
     // remove entry
     if (value.isNull())
@@ -446,6 +452,49 @@ void Object::attachData(DataType type, const QVariant &value, const QString &id)
     auto map = &(*i);
     map->insert(type, value);
 }
+
+QVariant Object::getAttachedData(DataType type, const QString &id) const
+{
+    // remove entry
+    auto i = attachedData_.find(id);
+    if (i == attachedData_.end())
+        return QVariant();
+
+    auto map = &(*i);
+    auto j = map->find(type);
+    if (j == map->end())
+        return QVariant();
+
+    return j.value();
+}
+
+bool Object::hasAttachedData(DataType type, const QString &id) const
+{
+    // remove entry
+    auto i = attachedData_.find(id);
+    if (i == attachedData_.end())
+        return false;
+
+    auto map = &(*i);
+    auto j = map->find(type);
+    return (j != map->end());
+}
+
+#ifdef QT_DEBUG
+void Object::dumpAttachedData() const
+{
+    qDebug() << "----- attached data for" << idName() << "/" << name();
+    for (auto i = attachedData_.begin(); i != attachedData_.end(); ++i)
+    {
+        qDebug() << "-- data id" << i.key();
+        for (auto j = i.value().begin(); j != i.value().end(); ++j)
+        {
+            qDebug() << "  " << j.key() << " " << j.value();
+        }
+    }
+}
+#endif
+
 
 Object::ActivityScope Object::activityScope() const
 {

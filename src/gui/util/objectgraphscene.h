@@ -18,6 +18,7 @@ class QMimeData;
 namespace MO {
 class Object;
 class Parameter;
+class Modulator;
 namespace GUI {
 
 class AbstractObjectItem;
@@ -59,9 +60,6 @@ signals:
     void objectSelected(MO::Object *);
 
 public slots:
-
-    /** Sets the gui-settings for the associated objects */
-    void setGuiSettings(SceneSettings * set);
 
     /** Sets the root object and completely
         (re-)initializes the QGraphicsScene */
@@ -129,6 +127,8 @@ private slots:
 
     void onObjectAdded_(MO::Object *);
     void onObjectDeleted_(const MO::Object *);
+    void onModulatorAdded_(MO::Modulator *);
+    void onModulatorDeleted_(MO::Modulator *);
 
 protected:
 

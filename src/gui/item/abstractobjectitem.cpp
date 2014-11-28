@@ -141,9 +141,8 @@ void AbstractObjectItem::setExpanded(bool enable)
     // set state
     p_oi_->expanded = enable;
     // store in gui settings
-    auto s = objectScene();
-    if (s && object() && s->guiSettings())
-        s->guiSettings()->setExpanded(object(), "0", enable);
+    if (object())
+        object()->setAttachedData(enable, Object::DT_GRAPH_EXPANDED);
 
     // set childs (in-)visible
     const auto list = childItems();
@@ -154,8 +153,9 @@ void AbstractObjectItem::setExpanded(bool enable)
     setLayoutDirty();
 
     // bring to front
-    if (enable && s)
-        s->toFront(this);
+    if (enable)
+        if (auto s = objectScene())
+            s->toFront(this);
 }
 
 bool AbstractObjectItem::isLayouted() const
@@ -317,10 +317,8 @@ QPoint AbstractObjectItem::mapToGrid(const QPointF & f) const
 QPointF AbstractObjectItem::mapFromGrid(const QPoint & p) const
 {
     const auto s = ObjectGraphSettings::gridSize();
-    const int ox = p.x() < 0 ? 0 : 0,
-              oy = p.y() < 0 ? 0 : 0;
-    return QPointF((p.x() + ox) * s.width(),
-                   (p.y() + oy) * s.height());
+    return QPointF(p.x() * s.width(),
+                   p.y() * s.height());
 }
 
 const QPoint& AbstractObjectItem::gridPos() const
@@ -336,14 +334,29 @@ const QSize& AbstractObjectItem::gridSize() const
     return isExpanded() ? p_oi_->size : unExpanded;
 }
 
-void AbstractObjectItem::setGridPos(const QPoint &pos)
+void AbstractObjectItem::setGridPos(const QPoint &pos1)
 {
+    // limit to positive parent area
+    QPoint pos(pos1);
+    if (parentObjectItem())
+    {
+        pos = QPoint(std::max(1, pos1.x()), std::max(1, pos1.y()));
+    }
+
+    // no change?
     if (pos == p_oi_->pos)
         return;
 
+    // tell QGraphicsScene
     prepareGeometryChange();
+    // save in item
     p_oi_->pos = pos;
+    // save in object
+    if (p_oi_->object)
+        p_oi_->object->setAttachedData(pos, Object::DT_GRAPH_POS);
+    // set actual item position
     setPos(mapFromGrid(pos));
+    // request layouter
     setLayoutDirty();
 }
 

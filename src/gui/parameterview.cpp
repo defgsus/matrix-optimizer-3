@@ -677,17 +677,15 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             Clip * parent = a->data().value<Clip*>();
-#ifndef MO_DISABLE_TREE
-            if (Object * o = model->createInClip("SequenceFloat", parent))
+            if (Object * o = editor->createInClip("SequenceFloat", parent))
             {
                 // modulate
-                scene_->addModulator(param, o->idName());
-                o->setName("mod: " + param->infoName());
+                editor->addModulator(param, o->idName());
+                o->setName(ObjectEditor::modulatorName(param));
 
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
-#endif
         });
 
         // link to existing modulator
@@ -821,26 +819,20 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
 {
     // get model
     MO_ASSERT(param->object() && param->object()->sceneObject()
-#ifndef MO_DISABLE_TREE
-              && param->object()->sceneObject()->model()
-#endif
-              , "missing model in modulator menu");
-#ifndef MO_DISABLE_TREE
-    ObjectTreeModel * model =
-        param->object()->sceneObject()->model();
-#endif
+              && param->object()->sceneObject()->editor()
+              , "missing ObjectEditor in modulator menu");
+    auto * editor = param->object()->sceneObject()->editor();
+
     // create track modulation
     QAction * a;
     menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
     connect(a, &QAction::triggered, [=]()
     {
-#ifndef MO_DISABLE_TREE
-        if (Object * o = model->createFloatTrack(param))
+        if (Object * o = editor->createFloatTrack(param))
         {
             if (doChangeToCreatedMod_)
                 emit objectSelected(o);
         }
-#endif
     });
 
     // create sequence
@@ -848,11 +840,11 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
     QMenu * sub = new QMenu(menu);
     a->setMenu(sub);
 
+#ifndef MO_DISABLE_TREE
         // right here
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("right here"), sub) );
         connect(a, &QAction::triggered, [=]()
         {
-#ifndef MO_DISABLE_TREE
             if (Object * o = model->createFloatSequenceFor(param->object()))
             {
                 // modulate
@@ -862,8 +854,8 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
-#endif
         });
+#endif
 
         sub->addSeparator();
 
@@ -871,17 +863,15 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
         connect(a, &QAction::triggered, [=]()
         {
-#ifndef MO_DISABLE_TREE
-            if (Object * o = model->createInClip("SequenceFloat", 0))
+            if (Object * o = editor->createInClip("SequenceFloat", 0))
             {
                 // modulate
-                scene_->addModulator(param, o->idName());
-                o->setName(">" + param->infoName());
+                editor->addModulator(param, o->idName());
+                o->setName(ObjectEditor::modulatorName(param, true));
 
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
-#endif
         });
 
         // in existing clip
@@ -898,18 +888,17 @@ void ParameterView::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
 
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
-#ifndef MO_DISABLE_TREE
             if (Clip * parent = a->data().value<Clip*>())
-            if (Object * o = model->createInClip("SequenceFloat", parent))
+            if (Object * o = editor->createInClip("SequenceFloat", parent))
             {
                 // modulate
-                scene_->addModulator(param, o->idName());
-                o->setName(">" + param->infoName());
+                editor->addModulator(param, o->idName());
+                o->setName(ObjectEditor::modulatorName(param, true));
 
                 if (doChangeToCreatedMod_)
                     emit objectSelected(o);
             }
-#endif
+
         });
 
 }

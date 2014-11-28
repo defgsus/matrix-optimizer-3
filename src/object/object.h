@@ -271,10 +271,18 @@ public:
     /** Attaches data to the object.
         The data is saved with the object.
         A null QVariant removes the entry */
-    void attachData(DataType type, const QVariant& value, const QString& id = "");
+    void setAttachedData(const QVariant& value, DataType type, const QString& id = "");
 
     /** Returns the attached data, or a null QVariant */
-    QVariant attachedData(DataType type, const QString& id = "");
+    QVariant getAttachedData(DataType type, const QString& id = "") const;
+
+    /** Returns true if there is a set entry */
+    bool hasAttachedData(DataType, const QString& id = "") const;
+
+#ifdef QT_DEBUG
+    /** Uses qDebug() */
+    void dumpAttachedData() const;
+#endif
 
     // ---------- activity (scope) ----------------
 

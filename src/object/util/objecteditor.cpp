@@ -84,7 +84,7 @@ void ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
 
 void ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, int insert_index)
 {
-    MO_DEBUG_TREE("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
+    MO_DEBUG("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
     MO__CHECK_SCENE
 
     QSet<Object*> saveAdd;
@@ -99,14 +99,17 @@ void ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
             saveAdd.insert(o);
     }
 
-    // XXX replace this with a more efficient version in Scene::addObjects..
-    // it locks and updates for every object
     QString err;
     for (auto o : newObjects)
-        if (!saveAdd.contains(o))
-            scene_->addObject(parent, o, insert_index++);
-        else
-            delete o;
+    if (saveAdd.contains(o))
+    {
+        // XXX replace this with a more efficient version in Scene::addObjects..
+        // it locks and updates for every object
+        scene_->addObject(parent, o, insert_index++);
+        emit objectAdded(o);
+    }
+    else
+        delete o;
 
     if (!error.isEmpty())
     {
@@ -200,26 +203,31 @@ void ObjectEditor::setParameterValue(ParameterTimeline1D *p, const MATH::Timelin
 
 void ObjectEditor::addModulator(Parameter *p, const QString &idName)
 {
+    Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
-        p->addModulator(idName);
+        m = p->addModulator(idName);
         p->collectModulators();
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
     }
+    emit modulatorAdded(m);
     emit parameterChanged(p);
     scene_->render();
 }
 
 void ObjectEditor::removeModulator(Parameter *p, const QString &idName)
 {
+    Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
+        m = p->findModulator(idName);
         p->removeModulator(idName);
         p->collectModulators();
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
     }
+    emit modulatorDeleted(m);
     emit parameterChanged(p);
     scene_->render();
 }
@@ -233,12 +241,31 @@ void ObjectEditor::removeAllModulators(Parameter *p)
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
     }
+    // XXX ModulatorDeleted signal(s)
     emit parameterChanged(p);
     scene_->render();
 }
 
 
 // ----------------------------------- modulator objects -----------------------------------
+
+QString ObjectEditor::modulatorName(Parameter *param, bool longName)
+{
+    // construct name
+    QString name( param->name() );
+    if (longName)
+        if (Object * obj = param->object())
+        {
+            name.prepend( obj->name() + "." );
+            // if the parent is not a "real object" then use the grandparent's name as well
+            if (!( (obj->type() & Object::TG_REAL_OBJECT)
+                   || (obj->type() & Object::TG_SEQUENCE))
+                && obj->parentObject())
+                    name.prepend(obj->parentObject()->name() + ".");
+        }
+
+    return ">" + name;
+}
 
 TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
 {
@@ -249,13 +276,7 @@ TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
     Object * obj = param->object();
     MO_ASSERT(obj, "missing object for parameter '" << param->idName() << "'");
 
-    // construct name
-    QString name = obj->name() + "." + param->name();
-    // if the parent is not a "real object" then use the grandparent's name as well
-    if (!( (obj->type() & Object::TG_REAL_OBJECT)
-           || (obj->type() & Object::TG_SEQUENCE))
-        && obj->parentObject())
-            name.prepend(obj->parentObject()->name() + ".");
+
 
     // find a place for the modulation track
     while (obj && !obj->canHaveChildren(Object::T_TRACK_FLOAT))
@@ -266,7 +287,7 @@ TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
 
     // create track
     auto track = ObjectFactory::createObject("TrackFloat");
-    track->setName(name);
+    track->setName(modulatorName(param, obj != param->object()));
 
     // add to parent
     addObject(obj, track, -1);

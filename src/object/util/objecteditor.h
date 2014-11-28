@@ -29,6 +29,10 @@ public:
     void setScene(Scene * s) { scene_ = s; }
     Scene * scene() const { return scene_; }
 
+    /** Returns a name for the object modulating the parameter.
+        @p longName expands the parameter with it's object's name(s) */
+    static QString modulatorName(Parameter * p, bool longName = false);
+
 signals:
 
     /** Emitted after a change to an object name */
@@ -52,6 +56,12 @@ signals:
 
     /** A sequence has been changed somehow */
     void sequenceChanged(MO::Sequence*);
+
+    /** Emitted when a Modulator has been added */
+    void modulatorAdded(MO::Modulator*);
+
+    /** Emitted when a Modulator has been deleted. */
+    void modulatorDeleted(const MO::Modulator*);
 
 public slots:
 
