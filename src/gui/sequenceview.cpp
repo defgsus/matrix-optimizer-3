@@ -24,6 +24,7 @@
 #include "object/sequence.h"
 #include "object/sequencefloat.h"
 #include "object/clip.h"
+#include "object/util/objecteditor.h"
 #include "io/error.h"
 #include "widget/doublespinbox.h"
 #include "widget/timebar.h"
@@ -119,12 +120,13 @@ SequenceView::SequenceView(QWidget *parent) :
 
 void SequenceView::setScene(Scene *scene)
 {
-    if (scene_ != scene)
+    if (scene && scene->editor()
+        && (!scene_ || scene->editor() != scene_->editor()))
     {
         scene_ = scene;
-        connect(scene_, SIGNAL(sequenceChanged(MO::Sequence*)),
+        connect(scene_->editor(), SIGNAL(sequenceChanged(MO::Sequence*)),
                 this, SLOT(onSequenceChanged_(MO::Sequence*)));
-        connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
+        connect(scene_->editor(), SIGNAL(parameterChanged(MO::Parameter*)),
                 this, SLOT(onParameterChanged_(MO::Parameter*)));
     }
 }

@@ -1007,10 +1007,7 @@ void MainWidgetController::onObjectSelectedClipView_(Object * o)
     // update object editor
     objectView_->setObject(o);
 
-    // jump to clip in tree view
-#ifndef MO_DISABLE_TREE
-    objectTreeView_->setFocusIndex(o);
-#endif
+    // jump to clip in graph view
     objectGraphView()->setFocusObject(o);
 
     // update sequence view
@@ -1026,9 +1023,6 @@ void MainWidgetController::onObjectSelectedObjectView_(Object * o)
     updateSequenceView_(o);
 
     // jump to modulator in tree view
-#ifndef MO_DISABLE_TREE
-    objectTreeView_->setFocusIndex(o);
-#endif
     objectGraphView()->setFocusObject(o);
 
     // update clipview
@@ -1054,9 +1048,6 @@ void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
     objectView_->setObject(o);
 
     // jump to sequence in tree view
-#ifndef MO_DISABLE_TREE
-    objectTreeView_->setFocusIndex(o);
-#endif
     objectGraphView()->setFocusObject(o);
 }
 
@@ -1066,12 +1057,7 @@ void MainWidgetController::onSequenceClicked_()
     if (objectView_->object() != seqView_->sequence())
         objectView_->setObject(seqView_->sequence());
 
-#ifndef MO_DISABLE_TREE
-    // focus in tree
-    const QModelIndex & idx = objectTreeView_->getIndexForObject(seqView_->sequence());
-    if (objectTreeView_->currentIndex() != idx)
-        objectTreeView_->setFocusIndex(idx);
-#endif
+    objectGraphView()->setFocusObject(seqView_->sequence());
 }
 
 

@@ -88,47 +88,14 @@ void MainWindow::createWidgets_()
 
         lv0->addWidget(controller_->transportWidget());
 
-        // main layout
+        // ------ main layout ------
         auto l0 = new QHBoxLayout();
         lv0->addLayout(l0);
         l0->setMargin(0);
         l0->setSpacing(1);
 
-            auto leftContainer = new QWidget(this);
-            l0->addWidget(leftContainer);
-            leftContainer->setObjectName("_left_container");
-            leftContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-#ifndef MO_DISABLE_TREE
-            leftContainer->setMinimumWidth(630);
-#else
-            leftContainer->setMinimumWidth(320);
-#endif
-
-            auto ll = new QHBoxLayout(leftContainer);
-            ll->setMargin(0);
-            //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
-
-                // object tree view
-#ifndef MO_DISABLE_TREE
-                ll->addWidget(controller_->objectTreeView());
-                controller_->objectTreeView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-                //objectTreeView_->setMinimumWidth(320);
-                //objectTreeView_->setMaximumWidth(450);
-#endif
-
-                // object editor
-                ll->addWidget(controller_->objectView());
-                controller_->objectView()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-                //objectView_->setMinimumWidth(320);
-            //l0->setStretchFactor(lv, -1);
-
+            // --- left container ----
             auto lv = new QVBoxLayout();
-            l0->addLayout(lv);
-
-                spacer_ = new Spacer(Qt::Vertical, this);
-                lv->addWidget(spacer_);
-
-            lv = new QVBoxLayout();
             l0->addLayout(lv);
 
                 // sequencer
@@ -146,8 +113,43 @@ void MainWindow::createWidgets_()
                 // Sequence view
                 lv->addWidget(controller_->sequenceView());
 
+            lv = new QVBoxLayout();
+            l0->addLayout(lv);
 
-        spacer_->setWidgets(leftContainer, controller_->sequencer());
+                spacer_ = new Spacer(Qt::Vertical, this);
+                lv->addWidget(spacer_);
+
+            // ------ right container -----
+            auto rightContainer = new QWidget(this);
+            l0->addWidget(rightContainer);
+            rightContainer->setObjectName("_right_container");
+            rightContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+#ifndef MO_DISABLE_TREE
+            leftContainer->setMinimumWidth(630);
+#else
+            rightContainer->setMinimumWidth(320);
+#endif
+
+            auto ll = new QHBoxLayout(rightContainer);
+            ll->setMargin(0);
+            //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
+
+                // object tree view
+#ifndef MO_DISABLE_TREE
+                ll->addWidget(controller_->objectTreeView());
+                controller_->objectTreeView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+                //objectTreeView_->setMinimumWidth(320);
+                //objectTreeView_->setMaximumWidth(450);
+#endif
+
+                // object editor
+                ll->addWidget(controller_->objectView());
+                controller_->objectView()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+                //objectView_->setMinimumWidth(320);
+            //l0->setStretchFactor(lv, -1);
+
+
+        spacer_->setWidgets(rightContainer, controller_->sequencer());
         //spacer2_->setWidgets(sequencer_, seqFloatView_);
 
 

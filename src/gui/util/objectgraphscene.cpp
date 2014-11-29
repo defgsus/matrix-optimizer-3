@@ -564,6 +564,24 @@ AbstractObjectItem * ObjectGraphScene::Private::childItemAt(AbstractObjectItem *
     return parent;
 }
 
+void ObjectGraphScene::setFocusObject(Object *o)
+{
+    auto item = itemForObject(o);
+    if (!item)
+        return;
+
+    // find the parent if not expanded
+    while (item && !item->isVisible())
+        item = item->parentObjectItem();
+
+    if (!item)
+        return;
+
+    clearSelection();
+    item->setSelected(true);
+    item->ensureVisible();
+}
+
 // ------------------------------ mouse events ----------------------------------
 
 void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -862,7 +880,10 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_t
 
 void ObjectGraphScene::onObjectAdded_(Object * o)
 {
-    o->dumpAttachedData();
+#ifdef QT_DEBUG
+    //o->dumpAttachedData();
+#endif
+
     const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
                           ? o->getAttachedData(Object::DT_GRAPH_POS).toPoint()
                           : QPoint(1,1);

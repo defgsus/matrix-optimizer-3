@@ -215,7 +215,6 @@ HEADERS += \
     src/engine/serverengine.h \
     src/object/oscillatorobject.h \
     src/object/object1.h \
-    src/object/util/object1tree.h \
     src/object/util/objecteditor.h
 
 
@@ -399,5 +398,4 @@ SOURCES += \
     src/engine/serverengine.cpp \
     src/object/oscillatorobject.cpp \
     src/object/object1.cpp \
-    src/object/util/object1tree.cpp \
     src/object/util/objecteditor.cpp

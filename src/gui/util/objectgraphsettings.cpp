@@ -13,6 +13,7 @@
 #include "objectgraphsettings.h"
 #include "gui/item/abstractobjectitem.h"
 #include "object/object.h"
+#include "object/clip.h"
 #include "object/objectfactory.h"
 #include "object/param/modulator.h"
 
@@ -86,8 +87,13 @@ const QPainterPath& ObjectGraphSettings::pathCollapsed()
 QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * item, bool sel)
 {
     QColor c(Qt::white);
-    if (item->object())
-        c = ObjectFactory::colorForObject(item->object()).darker(140);
+    if (Object * o = item->object())
+    {
+        c = ObjectFactory::colorForObject(o).darker(140);
+        if (o->type() == Object::T_CLIP)
+            c = static_cast<Clip*>(o)->color();
+    }
+
     if (sel)
         c = c.lighter(180);
 

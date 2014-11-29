@@ -60,11 +60,7 @@ void ObjectGraphView::onShitView_(const QPointF & )
 
 void ObjectGraphView::setFocusObject(Object * o)
 {
-    QGraphicsItem * item = gscene_->itemForObject(o);
-    if (!item)
-        return;
-
-    // XXX
+    gscene_->setFocusObject(o);
 }
 
 

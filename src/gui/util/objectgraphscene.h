@@ -33,17 +33,14 @@ public:
 
     // -------------- getter -------------------
 
-    /** Returns installed settings, or NULL */
-    SceneSettings * guiSettings() const;
-
-    /** Return the item for the object, or NULL */
+    /** Returns the item for the object, or NULL */
     AbstractObjectItem * itemForObject(const Object *o) const;
 
-    /** Return the first visible item or one of it's parents for the object, or NULL */
+    /** Returns the first visible item or one of it's parents for the object, or NULL */
     AbstractObjectItem * visibleItemForObject(Object * o) const;
 
-    /** Returns a list of all selected items that are AbstractObjectItems */
-    QList<AbstractObjectItem*> selectedObjectItems() const;
+    /** Returns the item at global grid position, or NULL */
+    AbstractObjectItem * objectItemAt(const QPoint& globalPos);
 
     // -------------- coords -------------------
 
@@ -53,10 +50,25 @@ public:
     /** Translates grid coordinates into global coordinates */
     QPointF mapFromGrid(const QPoint&) const;
 
+    /** Returns the next free position inside parent */
+    QPoint nextFreePosition(Object * parent, const QPoint& localPos) const;
+
+    // -------------- item getter --------------
+
+    /** Returns all top-level AbstractObjectItems */
+    QList<AbstractObjectItem*> topLevelObjectItems() const;
+
+    /** Returns a list of all selected items that are AbstractObjectItems */
+    QList<AbstractObjectItem*> selectedObjectItems() const;
+
+    /** Reduces the objects in the list to the ones at the top */
+    static void reduceToTopLevel(QList<AbstractObjectItem*>&);
+
 signals:
 
     void shiftView(const QPointF& delta);
 
+    /** An object has been selected */
     void objectSelected(MO::Object *);
 
 public slots:
@@ -77,17 +89,8 @@ public slots:
     /** Creates the edit menu, for scene or for selected items */
     void popup(const QPoint &gridPos);
 
-    /** Returns all top-level AbstractObjectItems */
-    QList<AbstractObjectItem*> topLevelObjectItems() const;
-
-    /** Reduces the objects in the list to the ones at the top */
-    void reduceToTopLevel(QList<AbstractObjectItem*>&);
-
-    /** Returns the item at global grid position, or NULL */
-    AbstractObjectItem * objectItemAt(const QPoint& globalPos);
-
-    /** Returns the next free position inside parent */
-    QPoint nextFreePosition(Object * parent, const QPoint& localPos) const;
+    /** Focus and select the item for the object. */
+    void setFocusObject(Object * o);
 
     // ------------------- clipboard ------------------
 
