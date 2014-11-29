@@ -84,15 +84,12 @@ const QPainterPath& ObjectGraphSettings::pathCollapsed()
     return *Private::ppCollapsed;
 }
 
-QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * item, bool sel)
+QPen ObjectGraphSettings::penOutline(const Object * o, bool sel)
 {
     QColor c(Qt::white);
-    if (Object * o = item->object())
-    {
-        c = ObjectFactory::colorForObject(o).darker(140);
-        if (o->type() == Object::T_CLIP)
-            c = static_cast<Clip*>(o)->color();
-    }
+    c = ObjectFactory::colorForObject(o).darker(140);
+    if (o->type() == Object::T_CLIP)
+        c = static_cast<const Clip*>(o)->color();
 
     if (sel)
         c = c.lighter(180);
@@ -105,6 +102,16 @@ QPen ObjectGraphSettings::penOutline(const AbstractObjectItem * item, bool sel)
 int ObjectGraphSettings::penOutlineWidth()
 {
     return 3;
+}
+
+QBrush ObjectGraphSettings::brushOutline(const Object *o, bool selected)
+{
+    QColor c = penOutline(o).color().darker(400 - 70 * selected);
+    if (o->type() == Object::T_CLIP)
+        c = QColor::fromHsl(c.hslHue(), c.hslSaturation() / 4,
+                            std::max(30, c.lightness()));
+
+    return QBrush(c);
 }
 
 QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool sel, bool active)

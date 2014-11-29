@@ -113,6 +113,14 @@ void ModulatorItem::updateFromTo_()
             to_ = s->visibleItemForObject(mod_->parent());
             //MO_DEBUG(mod_->modulator()->name() << " -> " << mod_->parent()->name() << ": "
             //            << from_ << " " << to_);
+
+            // don't show connections to self
+            // if they don't belong to the visible object
+            setVisible(
+                !( from_ == to_
+                && mod_->modulator() != from_->object()
+                && mod_->parent() != to_->object()));
+
         }
     }
 }
@@ -164,7 +172,8 @@ void ModulatorItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget
 {
     const bool sel = (from_ && from_->isSelected())
                   || (to_ && to_->isSelected());
-    const bool act = !from_ || (from_->object() && from_->object()->activeAtAll());
+    const bool act = (!from_ || (from_->object() && from_->object()->activeAtAll()))
+                  && (!to_ || (to_->object() && to_->object()->activeAtAll()));
     p->setPen(ObjectGraphSettings::penModulator(mod_, sel, isSelected(), act));
 
     p->drawPath(shape_);

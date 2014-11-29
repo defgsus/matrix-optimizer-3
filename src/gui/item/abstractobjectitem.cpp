@@ -75,10 +75,10 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
 
     // prepare private state
     p_oi_->object = object;
-    const QColor color = ObjectFactory::colorForObject(p_oi_->object);
-    p_oi_->brushBack = QBrush(color.darker(400));
-    p_oi_->brushBackSel = QBrush(p_oi_->brushBack.color().lighter(120));
-    p_oi_->icon = ObjectFactory::iconForObject(p_oi_->object, color);
+    p_oi_->brushBack = ObjectGraphSettings::brushOutline(object);
+    p_oi_->brushBackSel = ObjectGraphSettings::brushOutline(object, true);
+    p_oi_->icon = ObjectFactory::iconForObject(p_oi_->object,
+                                ObjectFactory::colorForObject(object));
     p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
     p_oi_->itemExp = new ObjectGraphExpandItem(this);
     p_oi_->itemExp->setVisible(false);
@@ -505,7 +505,7 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
     else
         p->setBrush(p_oi_->brushBack);
 
-    p->setPen(ObjectGraphSettings::penOutline(this, isSelected()));
+    p->setPen(ObjectGraphSettings::penOutline(object(), isSelected()));
 
     const auto r = rect();
     const qreal cornerRadius = 0.1 * ObjectGraphSettings::gridSize().width();

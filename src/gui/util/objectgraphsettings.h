@@ -16,6 +16,7 @@
 
 namespace MO {
 class Modulator;
+class Object;
 namespace GUI {
 
 class AbstractObjectItem;
@@ -35,8 +36,10 @@ public:
     static const QPainterPath& pathExpanded();
     static const QPainterPath& pathCollapsed();
 
-    static QPen penOutline(const AbstractObjectItem *, bool selected = false);
+    static QPen penOutline(const Object *o, bool selected = false);
     static int penOutlineWidth();
+    // stupid name but brushBackground() is already taken
+    static QBrush brushOutline(const Object * o, bool selected = false);
 
     static QPen penModulator(const Modulator *, bool highlight = false, bool selected = false, bool active = true);
 

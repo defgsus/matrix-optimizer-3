@@ -58,7 +58,7 @@ void ObjectGraphExpandItem::paint(QPainter *p, const QStyleOptionGraphicsItem *,
 
     //const auto s = ObjectGraphSettings::expandItemSize();
 
-    p->setPen(ObjectGraphSettings::penOutline(objectItem_));
+    p->setPen(ObjectGraphSettings::penOutline(objectItem_->object()));
     if (isHovered_)
         p->setBrush(QBrush(Qt::green));
     else

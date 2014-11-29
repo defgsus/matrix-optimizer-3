@@ -142,7 +142,7 @@ void MainWindow::createWidgets_()
                 //objectTreeView_->setMaximumWidth(450);
 #endif
 
-                // object editor
+                // object (parameter) editor
                 ll->addWidget(controller_->objectView());
                 controller_->objectView()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
                 //objectView_->setMinimumWidth(320);
