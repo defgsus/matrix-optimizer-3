@@ -55,10 +55,12 @@ private slots:
 
     void onDoubleClicked_(QListWidgetItem*);
     void onItemSelected_(QListWidgetItem*);
+    void onItemChanged_(QListWidgetItem*);
 
     void onObjectAdded_(MO::Object *);
     void onObjectChanged_(MO::Object *);
     void onObjectDeleted_(const MO::Object *);
+    void onObjectNamedChanged_(MO::Object *);
 
 private:
 

@@ -909,7 +909,8 @@ void MainWidgetController::onObjectNameChanged_(Object * o)
         clipView_->updateClip(static_cast<Clip*>(o));
 
     // update objectview
-    objectView_->setObject(o);
+    if (objectView_->object() == o)
+        objectView_->updateObjectName();
 
     // flag as change to scene
     onSceneChanged_();

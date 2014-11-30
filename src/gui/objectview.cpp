@@ -103,6 +103,11 @@ void ObjectView::updateParameterVisibility(Parameter * p)
     paramView_->updateParameterVisibility(p);
 }
 
+void ObjectView::updateObjectName()
+{
+    updateNameLabel_();
+}
+
 void ObjectView::updateNameLabel_()
 {
     if (object_)

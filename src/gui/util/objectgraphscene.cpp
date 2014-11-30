@@ -486,9 +486,16 @@ QList<AbstractObjectItem*> ObjectGraphScene::topLevelObjectItems() const
 {
     QList<AbstractObjectItem*> ret;
 
-    for (auto & i : p_->itemMap)
-        if (!i.second->parentItem())
-            ret << i.second;
+    // XXX This sometimes crashes during left-click popup
+    // because of an invalid item in p_->itemMap
+//    for (auto & i : p_->itemMap)
+//    if (!i.second->parentItem())
+//        ret << i.second;
+    auto list = items();
+    for (auto i : list)
+        if (i->type() >= AbstractObjectItem::T_BASE
+                && !i->parentItem())
+            ret << static_cast<AbstractObjectItem*>(i);
 
     return ret;
 }

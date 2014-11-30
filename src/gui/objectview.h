@@ -62,6 +62,8 @@ public slots:
         If the Parameter is not displayed, this function does nothing. */
     void updateParameterVisibility(MO::Parameter*);
 
+    void updateObjectName();
+
 protected slots:
 
     void infoPopup_();

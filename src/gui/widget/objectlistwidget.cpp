@@ -41,6 +41,8 @@ ObjectListWidget::ObjectListWidget(QWidget *parent)
             this, SLOT(onDoubleClicked_(QListWidgetItem*)));
     connect(this, SIGNAL(itemClicked(QListWidgetItem*)),
             this, SLOT(onItemSelected_(QListWidgetItem*)));
+    connect(this, SIGNAL(itemChanged(QListWidgetItem*)),
+            this, SLOT(onItemChanged_(QListWidgetItem*)));
 }
 
 
@@ -74,6 +76,8 @@ void ObjectListWidget::setParentObject(Object *parent)
                 this, SLOT(onObjectChanged_(MO::Object*)));
         connect(editor, SIGNAL(objectDeleted(const MO::Object*)),
                 this, SLOT(onObjectDeleted_(const MO::Object*)));
+        connect(editor, SIGNAL(objectNameChanged(MO::Object*)),
+                this, SLOT(onObjectNamedChanged_(MO::Object*)));
     }
     editor_ = editor;
 
@@ -120,14 +124,15 @@ void ObjectListWidget::updateList_()
         item->setFlags(Qt::ItemIsEnabled
                        | Qt::ItemIsSelectable
                        | Qt::ItemIsDragEnabled
-                       | Qt::ItemIsDropEnabled);
+                       | Qt::ItemIsDropEnabled
+                       | Qt::ItemIsEditable);
         addItem(item);
     }
 }
 
 Object * ObjectListWidget::objectForItem(const QListWidgetItem * item) const
 {
-    if (root_)
+    if (root_ && item->type() == IT_OBJECT)
     {
         return root_->findChildObject(
             item->data(Qt::UserRole).toString(),
@@ -167,6 +172,15 @@ void ObjectListWidget::onItemSelected_(QListWidgetItem * item)
         emit objectClicked(o);
 }
 
+void ObjectListWidget::onItemChanged_(QListWidgetItem * item)
+{
+    auto o = objectForItem(item);
+    if (!o)
+        return;
+    // XXX recurrent segfault!!
+    //editor_->setObjectName(o, item->text());
+}
+
 void ObjectListWidget::setSelectedObject(Object *o)
 {
     if (!o)
@@ -202,6 +216,11 @@ void ObjectListWidget::onObjectDeleted_(const Object *)
 {
     // XXX mhhh...
     setParentObject(0);
+}
+
+void ObjectListWidget::onObjectNamedChanged_(Object * )
+{
+    updateList_();
 }
 
 // ------------------------------- clipboard ---------------------------------
@@ -245,7 +264,7 @@ void ObjectListWidget::dropEvent(QDropEvent * e)
     // dropping serialized objects?
     if (e->mimeData()->formats().contains(ObjectTreeMimeData::objectMimeType))
     {
-        if (!dropObject && !dropObject->parentObject())
+        if (!dropObject || !dropObject->parentObject())
             return;
 
         auto data = static_cast<const ObjectTreeMimeData*>(e->mimeData());
