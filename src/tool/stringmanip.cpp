@@ -75,6 +75,19 @@ QString byte_to_string(unsigned long int byte)
     return QString("%1pb").arg(byte);
 }
 
+QString time_to_string(double sec)
+{
+    const int
+            minute = sec / 60,
+            hour = minute / 60;
+
+    return QString("%1:%2:%3.%4")
+        .arg(hour)
+        .arg(minute % 60, 2, 10, QChar('0'))
+        .arg(int(sec) % 60, 2, 10, QChar('0'))
+        .arg(int(sec * 1000) % 1000, 3, 10, QChar('0'));
+}
+
 
 
 

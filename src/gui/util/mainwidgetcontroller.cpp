@@ -713,6 +713,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             this, SLOT(updateNumberOutputEnvelopes_(uint)));
     connect(scene_, SIGNAL(outputEnvelopeChanged(const F32*)),
                     this, SLOT(updateOutputEnvelope_(const F32*)));
+    connect(scene_, SIGNAL(sceneTimeChanged(Double)),
+            this, SLOT(onSceneTimeChanged_(Double)));
 
     // update widgets
 
@@ -721,10 +723,6 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 #endif
     scene_->setObjectEditor(objectEditor_);
 
-    connect(scene_, SIGNAL(sceneTimeChanged(Double)),
-            seqView_, SLOT(setSceneTime(Double)));
-    connect(scene_, SIGNAL(sceneTimeChanged(Double)),
-            sequencer_, SLOT(setSceneTime(Double)));
 #ifndef MO_DISABLE_TREE
     connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
             objectTreeView_, SLOT(columnMoved()/* force update */));
@@ -1079,6 +1077,13 @@ void MainWidgetController::onSceneChanged_()
         sceneNotSaved_ = true;
         updateWindowTitle_();
     }
+}
+
+void MainWidgetController::onSceneTimeChanged_(Double time)
+{
+    seqView_->setSceneTime(time);
+    sequencer_->setSceneTime(time);
+    transportWidget_->setSceneTime(time);
 }
 
 void MainWidgetController::setEditActions_(const QObject *, QList<QAction *> actions)

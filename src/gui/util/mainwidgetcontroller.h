@@ -125,6 +125,7 @@ private slots:
     void onTreeChanged_();
     /** To trigger sceneNotSaved_ */
     void onSceneChanged_();
+    void onSceneTimeChanged_(Double time);
 
     void onProjectionSettingsChanged_();
     void updateSceneProjectionSettings_();

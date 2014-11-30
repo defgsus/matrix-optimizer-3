@@ -13,6 +13,10 @@
 
 #include <QWidget>
 
+#include "types/float.h"
+
+class QLabel;
+
 namespace MO {
 namespace GUI {
 
@@ -30,9 +34,12 @@ signals:
 
 public slots:
 
+    void setSceneTime(Double time);
+
 private:
 
     EnvelopeWidget * envWidget_;
+    QLabel * labelTime_;
 };
 
 } // namespace GUI

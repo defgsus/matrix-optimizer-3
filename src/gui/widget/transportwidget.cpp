@@ -9,9 +9,11 @@
 */
 
 #include <QLayout>
+#include <QLabel>
 
 #include "transportwidget.h"
 #include "envelopewidget.h"
+#include "tool/stringmanip.h"
 
 namespace MO {
 namespace GUI {
@@ -25,6 +27,15 @@ TransportWidget::TransportWidget(QWidget *parent) :
     auto lh = new QHBoxLayout(this);
     lh->setMargin(1);
 
+        labelTime_ = new QLabel(this);
+        auto font = labelTime_->font();
+        font.setPointSize(20);
+        labelTime_->setFont(font);
+        labelTime_->setText(time_to_string(0.0));
+        // XXX label size seems not to account for font size automatically
+        labelTime_->setMinimumWidth(QFontMetrics(font).width(
+                            time_to_string(60*60*1000)));
+
         lh->addStretch(1);
 
         envWidget_ = new EnvelopeWidget(this);
@@ -33,6 +44,10 @@ TransportWidget::TransportWidget(QWidget *parent) :
         envWidget_->setStatusTip(tr("Display of the microphone amplitudes"));
 }
 
+void TransportWidget::setSceneTime(Double time)
+{
+    labelTime_->setText(time_to_string(time));
+}
 
 
 } // namespace GUI

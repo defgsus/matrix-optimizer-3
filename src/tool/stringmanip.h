@@ -33,8 +33,11 @@ QString fit_in_length(const QString& str, int max_length);
     may get longer than @p max_width. */
 QString fit_text_block(const QString & s, int max_width, const QString& line_beginning = "");
 
-/** Returns humand readable memory count */
+/** Returns human readable memory count */
 QString byte_to_string(long unsigned int);
+
+/** Returns human readable time */
+QString time_to_string(double time_in_seconds);
 
 } // namespace MO
 
