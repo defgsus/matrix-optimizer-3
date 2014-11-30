@@ -24,6 +24,7 @@ namespace GUI {
 
 class SceneSettings;
 class ParameterView;
+class ObjectListWidget;
 
 class ObjectView : public QWidget
 {
@@ -60,6 +61,7 @@ public slots:
 protected slots:
 
     void infoPopup_();
+    void onObjectListSelected(MO::Object *);
 
 protected:
 
@@ -77,7 +79,7 @@ private:
     QVBoxLayout * layout_;
     QToolButton * icon_;
     QLabel * label_, *label2_;
-
+    ObjectListWidget * list_;
 };
 
 } // namespace GUI

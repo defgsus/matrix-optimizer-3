@@ -23,6 +23,7 @@
 #include "object/objectfactory.h"
 #include "object/trackfloat.h"
 #include "objectinfodialog.h"
+#include "widget/objectlistwidget.h"
 
 namespace MO {
 namespace GUI {
@@ -48,6 +49,12 @@ ObjectView::ObjectView(QWidget *parent) :
 
         label2_ = new QLabel(this);
         layout_->addWidget(label2_);
+
+        list_ = new ObjectListWidget(this);
+        list_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+        layout_->addWidget(list_);
+        connect(list_, SIGNAL(objectSelected(MO::Object*)),
+                this, SLOT(onObjectListSelected(MO::Object*)));
 
         paramView_ = new ParameterView(this);
         layout_->addWidget(paramView_);
@@ -81,6 +88,7 @@ void ObjectView::setObject(Object * object)
     updateNameLabel_();
 
     paramView_->setObject(object_);
+    list_->setParentObject(object_);
 }
 
 void ObjectView::updateParameterVisibility(Parameter * p)
@@ -145,6 +153,12 @@ void ObjectView::infoPopup_()
     diag.setObject(object_);
 
     diag.exec();
+}
+
+void ObjectView::onObjectListSelected(Object * o)
+{
+    setObject(o);
+    emit objectSelected(o);
 }
 
 } // namespace GUI
