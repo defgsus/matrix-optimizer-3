@@ -12,6 +12,7 @@
 #include <QDropEvent>
 
 #include "objectlistwidget.h"
+#include "objectlistwidgetitem.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
@@ -41,8 +42,6 @@ ObjectListWidget::ObjectListWidget(QWidget *parent)
             this, SLOT(onDoubleClicked_(QListWidgetItem*)));
     connect(this, SIGNAL(itemClicked(QListWidgetItem*)),
             this, SLOT(onItemSelected_(QListWidgetItem*)));
-    connect(this, SIGNAL(itemChanged(QListWidgetItem*)),
-            this, SLOT(onItemChanged_(QListWidgetItem*)));
 }
 
 
@@ -108,24 +107,8 @@ void ObjectListWidget::updateList_()
 
     for (auto c : obj_->childObjects())
     {
-        QColor col = ObjectFactory::colorForObject(c);
+        auto item = new ObjectListWidgetItem(c, this, IT_OBJECT);
 
-        auto item = new QListWidgetItem(
-                        ObjectFactory::iconForObject(c, col),
-                        c->name() + (c->childObjects().isEmpty() ? "" : " ..."),
-                        this,
-                        IT_OBJECT);
-        //QVariant var;
-        //var.setValue(c);
-        //item->setData(Qt::UserRole, var);
-        item->setData(Qt::UserRole, c->idName());
-        item->setForeground(QBrush(col));
-        item->setBackground(QBrush(Qt::black));
-        item->setFlags(Qt::ItemIsEnabled
-                       | Qt::ItemIsSelectable
-                       | Qt::ItemIsDragEnabled
-                       | Qt::ItemIsDropEnabled
-                       | Qt::ItemIsEditable);
         addItem(item);
     }
 }
@@ -170,15 +153,6 @@ void ObjectListWidget::onItemSelected_(QListWidgetItem * item)
     auto o = objectForItem(item);
     if (o)
         emit objectClicked(o);
-}
-
-void ObjectListWidget::onItemChanged_(QListWidgetItem * item)
-{
-    auto o = objectForItem(item);
-    if (!o)
-        return;
-    // XXX recurrent segfault!!
-    //editor_->setObjectName(o, item->text());
 }
 
 void ObjectListWidget::setSelectedObject(Object *o)

@@ -82,7 +82,8 @@ HEADERS += \
     src/gui/item/objectgraphexpanditem.h \
     src/gui/util/objectgraphscene.h \
     src/gui/item/modulatoritem.h \
-    src/gui/widget/objectlistwidget.h
+    src/gui/widget/objectlistwidget.h \
+    src/gui/widget/objectlistwidgetitem.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -164,4 +165,5 @@ SOURCES += \
     src/gui/item/objectgraphexpanditem.cpp \
     src/gui/util/objectgraphscene.cpp \
     src/gui/item/modulatoritem.cpp \
-    src/gui/widget/objectlistwidget.cpp
+    src/gui/widget/objectlistwidget.cpp \
+    src/gui/widget/objectlistwidgetitem.cpp

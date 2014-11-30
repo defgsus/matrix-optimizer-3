@@ -42,6 +42,9 @@ ObjectView::ObjectView(QWidget *parent) :
             icon_ = new QToolButton(this);
             lh->addWidget(icon_);
             icon_->setToolButtonStyle(Qt::ToolButtonIconOnly);
+            icon_->setFixedSize(devicePixelRatio() * QSize(48, 48));
+            icon_->setIconSize(devicePixelRatio() * QSize(42, 42));
+            //icon_->setAutoFillBackground(true);
             connect(icon_, SIGNAL(clicked()), this, SLOT(infoPopup_()));
 
             label_ = new QLabel(this);
@@ -80,6 +83,11 @@ void ObjectView::setObject(Object * object)
 
     if (object_)
     {
+        // XXX no f**ng working
+        /*auto p = icon_->palette();
+        p.setColor(QPalette::Window, ObjectFactory::colorForObject(object_));
+        icon_->setPalette(p);
+        */
         icon_->setIcon(ObjectFactory::iconForObject(object_));
     }
     else
