@@ -1009,6 +1009,7 @@ void MainWidgetController::onObjectSelectedClipView_(Object * o)
 
     // jump to clip in graph view
     objectGraphView()->setFocusObject(o);
+    objectView()->selectObject(o);
 
     // update sequence view
     updateSequenceView_(o);
@@ -1049,6 +1050,7 @@ void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
 
     // jump to sequence in tree view
     objectGraphView()->setFocusObject(o);
+    objectView()->selectObject(o);
 }
 
 void MainWidgetController::onSequenceClicked_()
@@ -1058,6 +1060,7 @@ void MainWidgetController::onSequenceClicked_()
         objectView_->setObject(seqView_->sequence());
 
     objectGraphView()->setFocusObject(seqView_->sequence());
+    objectView()->selectObject(seqView_->sequence());
 }
 
 

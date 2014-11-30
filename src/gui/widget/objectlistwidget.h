@@ -16,6 +16,7 @@
 
 namespace MO {
 class Object;
+class ObjectEditor;
 namespace GUI {
 
 class ObjectListWidget : public QListWidget
@@ -24,11 +25,15 @@ class ObjectListWidget : public QListWidget
 public:
     explicit ObjectListWidget(QWidget *parent = 0);
 
+    Object * objectForItem(const QListWidgetItem*) const;
+
 signals:
 
-    /** An object has been selected via double-click.
+    /** An object has been double-clicked.
         (The object can also be the scene itself) */
     void objectSelected(MO::Object *);
+    /** An object has been selected (no double-click) */
+    void objectClicked(MO::Object*);
 
 public slots:
 
@@ -36,15 +41,31 @@ public slots:
         Set to NULL, to disable the view. */
     void setParentObject(MO::Object * parent);
 
+    /** Selects the object if it's in child list.
+        If @p o is NULL, selection will be cleared. */
+    void setSelectedObject(MO::Object * o);
+
+protected:
+
+    QStringList mimeTypes() const Q_DECL_OVERRIDE;
+    QMimeData * mimeData(const QList<QListWidgetItem *> items) const Q_DECL_OVERRIDE;
+    void dropEvent(QDropEvent *) Q_DECL_OVERRIDE;
+
 private slots:
 
     void onDoubleClicked_(QListWidgetItem*);
+    void onItemSelected_(QListWidgetItem*);
+
+    void onObjectAdded_(MO::Object *);
+    void onObjectChanged_(MO::Object *);
+    void onObjectDeleted_(const MO::Object *);
 
 private:
 
     void updateList_();
 
-    Object * obj_;
+    Object * obj_, * root_;
+    ObjectEditor * editor_;
 };
 
 } // namespace GUI

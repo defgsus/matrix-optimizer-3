@@ -127,7 +127,7 @@ QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool s
         sat = 0;
 
     QPen pen(QColor::fromHsl(hue, sat, bright, active ? 196 : 64));
-    pen.setWidth(2);
+    pen.setWidth(2 + (highl ? 1 : 0));
     return pen;
 }
 

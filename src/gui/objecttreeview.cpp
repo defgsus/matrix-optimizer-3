@@ -589,7 +589,6 @@ void ObjectTreeView::createEditObjectActions_(Object * obj)
     {
         storeObjectTemplate_(obj);
     });
-
 }
 
 void ObjectTreeView::createNewObjectActions_(Object * obj)

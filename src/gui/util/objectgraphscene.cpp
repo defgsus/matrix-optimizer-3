@@ -22,8 +22,10 @@
 #include "gui/item/abstractobjectitem.h"
 #include "gui/item/modulatoritem.h"
 #include "gui/util/objectgraphsettings.h"
+#include "gui/geometrydialog.h"
 #include "object/object.h"
 #include "object/scene.h"
+#include "object/model3d.h"
 #include "object/param/modulator.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "object/objectfactory.h"
@@ -78,6 +80,7 @@ public:
     void createNewObjectMenu(Object * o);
     void createClipboardMenu(Object * parent, const QList<AbstractObjectItem*>& items);
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts);
+    void createObjectEditMenu(Object * o);
 
     ObjectGraphScene * scene;
     Scene * root;
@@ -156,10 +159,13 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onObjectAdded_(MO::Object*)));
             connect(p_->editor, SIGNAL(objectDeleted(const MO::Object*)),
                     this, SLOT(onObjectDeleted_(const MO::Object*)));
+            connect(p_->editor, SIGNAL(objectMoved(MO::Object*,MO::Object*)),
+                    this, SLOT(onObjectMoved_(MO::Object*,MO::Object*)));
             connect(p_->editor, SIGNAL(modulatorAdded(MO::Modulator*)),
                     this, SLOT(onModulatorAdded_(MO::Modulator*)));
             connect(p_->editor, SIGNAL(modulatorDeleted(const MO::Modulator*)),
                     this, SLOT(onModulatorDeleted_(const MO::Modulator*)));
+
         }
     }
 
@@ -713,9 +719,15 @@ void ObjectGraphScene::popup(const QPoint& gridPos)
                   : tr("%1 objects").arg(items.size()));
     p_->actions.addTitle(title, this);
 
-    // new object
+    // edit object
+    if (items.size() == 1)
+        p_->createObjectEditMenu(obj);
+
     if (items.size() < 2)
+    {
+        // new object
         p_->createNewObjectMenu(obj);
+    }
 
     // clipboard
     p_->createClipboardMenu(obj, items);
@@ -817,6 +829,36 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
     }
 }
 
+void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
+{
+    actions.addSeparator(scene);
+
+    QAction * a;
+
+    if (Model3d * m = qobject_cast<Model3d*>(obj))
+    {
+        a = actions.addAction(QIcon(":/icon/obj_3d.png"), tr("Edit model geometry"), scene);
+        a->setStatusTip(tr("Opens a dialog for editing the model geometry"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            GeometryDialog diag(&m->geometrySettings());
+
+            if (diag.exec() == QDialog::Accepted)
+            {
+                ScopedObjectChange lock(root, m);
+                m->setGeometrySettings(diag.getGeometrySettings());
+            }
+        });
+    }
+
+    a = actions.addAction(tr("Save as template ..."), scene);
+    a->setStatusTip(tr("Saves the object and it's sub-tree to a file for later reuse"));
+    connect(a, &QAction::triggered, [=]()
+    {
+        ObjectFactory::storeObjectTemplate(obj);
+    });
+}
+
 namespace {
 
     // for sorting the insert-object list
@@ -904,6 +946,26 @@ void ObjectGraphScene::onObjectDeleted_(const Object *o)
     p_->itemMap.erase(const_cast<Object*>(o));
 
     // recreate all modulation items
+    p_->recreateModulatorItems();
+}
+
+void ObjectGraphScene::onObjectMoved_(Object * o, Object *)
+{
+    // remove items and references of previous item
+    auto item = itemForObject(o);
+    if (item)
+    {
+        removeItem(item);
+        delete item;
+    }
+    p_->itemMap.erase(const_cast<Object*>(o));
+
+    // create new item
+    const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
+                          ? o->getAttachedData(Object::DT_GRAPH_POS).toPoint()
+                          : QPoint(1,1);
+    p_->createObjectItem(o, pos);
+
     p_->recreateModulatorItems();
 }
 

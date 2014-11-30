@@ -44,12 +44,13 @@ signals:
     /** Emitted when the given object was added to the scene. */
     void objectAdded(MO::Object *);
 
+    /** Emitted when the @p object moved from the children list of @p oldParent
+        to it's new parent */
+    void objectMoved(MO::Object * object, MO::Object * oldParent);
+
     /** Emitted when the object was deleted.
         The object pointer will not point to a valid object anymore. */
     void objectDeleted(const MO::Object *);
-
-    /** Emitted after swapChildren() */
-    void childrenSwapped(MO::Object *, int from, int to);
 
     /** A parameter has been changed with setParameterValue() */
     void parameterChanged(MO::Parameter*);
@@ -70,16 +71,21 @@ public slots:
     /** Adds the object @p newChild to the @p parent.
         @p newChild is completely given away. If it can't be added to parent, it will be deleted
         and a message is displayed to the user. */
-    void addObject(Object * parent, Object * newChild, int insert_index = -1);
+    bool addObject(Object * parent, Object * newChild, int insert_index = -1);
 
     /** Adds the list of objects to @p parent.
         The items in @p newObjects are completely given away. If they can't be added to parent,
         they will be deleted and a message is displayed to the user. */
-    void addObjects(Object * parent, const QList<Object*> newObjects, int insert_index = -1);
+    bool addObjects(Object * parent, const QList<Object*> newObjects, int insert_index = -1);
 
-    void deleteObject(Object * object);
+    bool deleteObject(Object * object);
 
-    void swapChildren(Object * parent, int from, int to);
+    bool setObjectIndex(Object * object, int newIndex);
+
+    /** Moves the @p object to a new position under @p newParent.
+        If the object's current parent and @p newParent are the same,
+        this call simplifies to setObjectIndex() */
+    bool moveObject(Object * object, Object * newParent, int newIndex);
 
     /** Changes the objects name, emits objectNameChanged() */
     void setObjectName(Object * object, const QString& name);

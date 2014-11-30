@@ -221,7 +221,8 @@ public slots:
 
     void addObject(Object * parent, Object * newChild, int insert_index = -1);
     void deleteObject(Object * object);
-    void swapChildren(Object * parent, int from, int to);
+    bool setObjectIndex(Object * object, int newIndex);
+    void moveObject(Object * object, Object * newParent, int newIndex);
 
     // --------------- tracks ------------------
 

@@ -352,6 +352,43 @@ QList<const Object*> ObjectFactory::objects(int types)
     return list;
 }
 
+int ObjectFactory::getBestInsertIndex(Object *parent, Object *newChild, int idx)
+{
+    if (parent->childObjects().isEmpty())
+        return 0;
+
+    const int num = parent->childObjects().size();
+
+    if (idx < 0 || idx >= num)
+        idx = num - 1;
+
+    // find place according to priority
+    const int p = Object::objectPriority(newChild);
+    for (int i = 0; i < num; ++i)
+    {
+        const int pi = Object::objectPriority( parent->childObjects()[i] );
+        if (idx <= i && pi <= p)
+            return i;
+        if (pi < p)
+            return i;
+    }
+    return num;
+
+#if (0)
+    for (int i = num - 1; i > 0; --i)
+    {
+        //const int pi = Object::objectPriority( parent->childObjects()[i] );
+        const int pim = Object::objectPriority( parent->childObjects()[i-1] );
+        // matches index and priority?
+        if (pim >= p && idx >= i)
+            return i;
+        /*const int pim = Object::objectPriority( parent->childObjects()[i-1] );
+        if (pim >= p && idx < i)
+            return i;*/
+    }
+    return 0;
+#endif
+}
 
 bool ObjectFactory::canHaveChildObjects(const Object * parent)
 {

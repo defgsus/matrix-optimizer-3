@@ -55,6 +55,8 @@ ObjectView::ObjectView(QWidget *parent) :
         layout_->addWidget(list_);
         connect(list_, SIGNAL(objectSelected(MO::Object*)),
                 this, SLOT(onObjectListSelected(MO::Object*)));
+        connect(list_, SIGNAL(objectClicked(MO::Object*)),
+                this, SLOT(onObjectListClicked(MO::Object*)));
 
         paramView_ = new ParameterView(this);
         layout_->addWidget(paramView_);
@@ -89,6 +91,11 @@ void ObjectView::setObject(Object * object)
 
     paramView_->setObject(object_);
     list_->setParentObject(object_);
+}
+
+void ObjectView::selectObject(Object * o)
+{
+    list_->setSelectedObject(o);
 }
 
 void ObjectView::updateParameterVisibility(Parameter * p)
@@ -158,6 +165,12 @@ void ObjectView::infoPopup_()
 void ObjectView::onObjectListSelected(Object * o)
 {
     setObject(o);
+    emit objectSelected(o);
+}
+
+void ObjectView::onObjectListClicked(Object * o)
+{
+    paramView_->setObject(o);
     emit objectSelected(o);
 }
 

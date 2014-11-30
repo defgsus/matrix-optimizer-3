@@ -474,6 +474,9 @@ private:
         Also childrenChanged_ is set to true for this class. */
     void deleteObject_(Object * child, bool destroy);
 
+    /** Sets a new index for the children object */
+    bool setChildrenObjectIndex_(Object * child, int newIndex);
+
 public:
     // --------------- modulators ------------------
 

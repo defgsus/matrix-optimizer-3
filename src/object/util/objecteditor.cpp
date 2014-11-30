@@ -34,7 +34,7 @@ namespace MO {
     if (!scene_)        \
     {                   \
         MO_WARNING("Use of ObjectEditor with no assigned scene object"); \
-        return; \
+        return false; \
     }
 
 
@@ -60,7 +60,7 @@ void ObjectEditor::setObjectName(Object *object, const QString &name)
         emit objectNameChanged(object);
 }
 
-void ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
+bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
 {
     MO_DEBUG_TREE("ObjectEditor::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
     MO__CHECK_SCENE
@@ -74,15 +74,18 @@ void ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
                               .arg(newChild->name())
                               .arg(parent->name())
                               .arg(error));
-        return;
+        return false;
     }
 
-    scene_->addObject(parent, newChild, insert_index);
+    scene_->addObject(parent, newChild,
+                      ObjectFactory::getBestInsertIndex(parent, newChild, insert_index)
+                      );
 
     emit objectAdded(newChild);
+    return true;
 }
 
-void ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, int insert_index)
+bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, int insert_index)
 {
     MO_DEBUG("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
     MO__CHECK_SCENE
@@ -103,9 +106,11 @@ void ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
     for (auto o : newObjects)
     if (saveAdd.contains(o))
     {
+        auto idx = ObjectFactory::getBestInsertIndex(parent, o, insert_index++);
+
         // XXX replace this with a more efficient version in Scene::addObjects..
         // it locks and updates for every object
-        scene_->addObject(parent, o, insert_index++);
+        scene_->addObject(parent, o, idx);
         emit objectAdded(o);
     }
     else
@@ -119,11 +124,13 @@ void ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
                                 : tr("Some objects could not be added to %1.%2"))
                               .arg(parent->name())
                               .arg(error));
+        return !saveAdd.isEmpty();
     }
+    return true;
 }
 
 
-void ObjectEditor::deleteObject(Object *object)
+bool ObjectEditor::deleteObject(Object *object)
 {
     MO_DEBUG_TREE("ObjectEditor::deleteObject(" << object << ")");
     MO__CHECK_SCENE
@@ -131,19 +138,56 @@ void ObjectEditor::deleteObject(Object *object)
     scene_->deleteObject(object);
 
     emit objectDeleted(object);
+
+    return true;
 }
 
-void ObjectEditor::swapChildren(Object *parent, int from, int to)
+bool ObjectEditor::setObjectIndex(Object * object, int newIndex)
 {
-    MO_DEBUG_TREE("ObjectEditor::swapChildren(" << parent << ", " << from << ", " << to << ")");
+    MO_DEBUG_TREE("ObjectEditor::setObjectIndex(" << object << ", " << newIndex << ")");
     MO__CHECK_SCENE
 
-    scene_->swapChildren(parent, from, to);
+    bool res = scene_->setObjectIndex(object, newIndex);
 
-    emit childrenSwapped(parent, from, to);
+    if (res)
+        emit objectChanged(object);
+
+    return res;
 }
 
+bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
+{
+    MO_DEBUG_TREE("ObjectEditor::moveObject(" << object << ", " << newParent << ", " << newIndex << ")");
+    MO__CHECK_SCENE
 
+    QString error;
+    if (!newParent->isSaveToAdd(object, error))
+    {
+        QMessageBox::critical(0, tr("Can't move object"),
+                              tr("The object %1 could not be added to %2.\n%3")
+                              .arg(object->name())
+                              .arg(newParent->name())
+                              .arg(error));
+        return false;
+    }
+
+    auto oldParent = object->parentObject();
+
+    if (oldParent == newParent)
+    {
+        bool res = scene_->setObjectIndex(object, newIndex);
+        if (res)
+            emit objectChanged(object);
+        return res;
+    }
+    else
+    {
+        scene_->moveObject(object, newParent, newIndex);
+        emit objectMoved(object, oldParent);
+    }
+
+    return true;
+}
 
 
 

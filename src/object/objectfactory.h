@@ -85,6 +85,9 @@ public:
     /** Returns a list of objects matching the Object::Type flags */
     static QList<const Object*> objects(int objectTypeFlags);
 
+    /** Returns the correct index to insert @p newChild into parent */
+    static int getBestInsertIndex(Object * parent, Object * newChild, int desired_index);
+
     // -------------- byte io ---------------------
 
     /** Stores the complete Scene object.

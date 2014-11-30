@@ -333,20 +333,53 @@ void Scene::deleteObject(Object *object)
     render_();
 }
 
-void Scene::swapChildren(Object *parent, int from, int to)
+bool Scene::setObjectIndex(Object * object, int newIndex)
 {
-    MO_DEBUG_TREE("Scene::swapChildren(" << parent << ", " << from << ", " << to << ")");
+    MO_DEBUG_TREE("Scene::setObjectIndex(" << object << ", " << newIndex << ")");
+
+    auto parent = object->parentObject();
+    if (!parent)
+        return false;
+
+    if (parent->childObjects().indexOf(object) == newIndex)
+        return false;
 
     {
         ScopedSceneLockWrite lock(this);
-        parent->swapChildren_(from, to);
+        if (!parent->setChildrenObjectIndex_(object, newIndex))
+            return false;
         parent->childrenChanged_();
         updateTree_();
 
-        if (parent->childObjects()[from]->isAudioUnit()
-            || parent->childObjects()[to]->isAudioUnit())
+        if (object->isAudioUnit())
             updateAudioUnitChannels_();
+    }
+    render_();
+    return true;
+}
 
+void Scene::moveObject(Object *object, Object *newParent, int newIndex)
+{
+    MO_DEBUG_TREE("Scene::moveObject(" << object << ", " << newParent << ", " << newIndex << ")");
+
+    auto oldParent = object->parentObject();
+    if (!oldParent)
+    {
+        addObject(newParent, object, newIndex);
+        return;
+    }
+
+    {
+        ScopedSceneLockWrite lock(this);
+        oldParent->takeChild_(object);
+        newParent->addObject_(object, newIndex);
+
+        oldParent->childrenChanged_();
+        newParent->childrenChanged_();
+        updateTree_();
+
+        if (object->isAudioUnit())
+            updateAudioUnitChannels_();
     }
     render_();
 }

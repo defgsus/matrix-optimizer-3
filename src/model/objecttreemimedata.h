@@ -68,6 +68,8 @@ public:
     Object * getObjectTree() const;
     /** Restore all trees/branches */
     QList<Object*> getObjectTrees() const;
+    /** Returns the top-level object IDs */
+    QList<QString> getObjectTreeIds() const;
 
     // ------ for drag/drop -------------
 

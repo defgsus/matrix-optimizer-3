@@ -39,7 +39,8 @@ public:
 
 signals:
 
-    /** When a modulation object was created */
+    /** Emitted when an object in the list view was double-clicked
+        or a modulation object was created */
     void objectSelected(MO::Object*);
 
     /** Emitted when the ActivityScope of an object has changed */
@@ -54,6 +55,9 @@ public slots:
         Can be NULL to disable it. */
     void setObject(MO::Object *);
 
+    /** Selects a specific child object in the list view */
+    void selectObject(MO::Object *);
+
     /** Call to change the visibility of a Parameter.
         If the Parameter is not displayed, this function does nothing. */
     void updateParameterVisibility(MO::Parameter*);
@@ -62,6 +66,7 @@ protected slots:
 
     void infoPopup_();
     void onObjectListSelected(MO::Object *);
+    void onObjectListClicked(MO::Object *);
 
 protected:
 

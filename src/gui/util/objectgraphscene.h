@@ -133,6 +133,7 @@ private slots:
 
     void onObjectAdded_(MO::Object *);
     void onObjectDeleted_(const MO::Object *);
+    void onObjectMoved_(MO::Object*, MO::Object * oldParent);
     void onModulatorAdded_(MO::Modulator *);
     void onModulatorDeleted_(const MO::Modulator *);
 

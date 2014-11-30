@@ -211,7 +211,7 @@ Object * Object::deserializeTree_(IO::DataStream & io)
     {
         Object * child = deserializeTree(io);
         MO_ASSERT(child, "duh?");
-        o->addObject_(child);
+        o->addObject_(child);//, ObjectFactory::getBestInsertIndex(o, child, -1));
     }
 
     // create audio objects
@@ -722,6 +722,34 @@ void Object::swapChildren_(int from, int to)
 
     childObjects_.swap(from, to);
     childrenHaveChanged_ = true;
+}
+
+bool Object::setChildrenObjectIndex_(Object *child, int newIndex)
+{
+    auto idx = childObjects_.indexOf(child);
+    if (idx < 0)
+        return false;
+
+    //MO_DEBUG("move " << idx << " to " << newIndex);
+
+    if (newIndex > 0
+        // dont move before self or to same position
+        && (newIndex == idx || newIndex == (idx+1)))
+        return false;
+
+    // if we delete 'child' before new insert position
+    if (newIndex > idx)
+        --newIndex;
+
+    // remove at old location
+    childObjects_.removeAt(idx);
+    // put at new location
+    if (newIndex >= 0)
+        childObjects_.insert(newIndex, child);
+    else
+        childObjects_.append(child);
+
+    return true;
 }
 
 QSet<QString> Object::getChildIds(bool recursive) const

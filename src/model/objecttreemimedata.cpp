@@ -230,6 +230,29 @@ QList<Object*> ObjectTreeMimeData::getObjectTrees() const
     return list;
 }
 
+QList<QString> ObjectTreeMimeData::getObjectTreeIds() const
+{
+    QByteArray a = data(objectMimeType);
+    if (a.isEmpty())
+        MO_IO_ERROR(READ, "No object data in clipboard");
+    IO::DataStream io(a);
+
+    // read number
+    qint32 num;
+    io >> num;
+    if (num < 1)
+        MO_IO_ERROR(READ, "No objects stored in clipboard");
+
+    QList<QString> list;
+    for (int i=0; i<num; ++i)
+    {
+        auto obj = Object::deserializeTree(io);
+        list.append( obj->idName() );
+        delete obj;
+    }
+    return list;
+}
+
 QList<int> ObjectTreeMimeData::getOrder() const
 {
     QByteArray a = data(orderMimeType);
