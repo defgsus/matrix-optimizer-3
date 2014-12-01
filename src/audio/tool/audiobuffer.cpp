@@ -35,7 +35,6 @@ void AudioBuffer::setSize(size_t blockSize, size_t numBlocks)
         s = 0;
 }
 
-
 F32 * AudioBuffer::insertPointer()
 {
     return &samples_[writeBlock_ * blockSize_];
@@ -49,6 +48,11 @@ const F32 * AudioBuffer::insertPointer() const
 void AudioBuffer::insert(F32 *block)
 {
     memcpy(insertPointer(), block, blockSize_ * sizeof(F32));
+    nextWriteBlock();
+}
+
+void AudioBuffer::nextWriteBlock()
+{
     // forward write pointer
     writeBlock_ = (writeBlock_ + 1) % numBlocks_;
 }

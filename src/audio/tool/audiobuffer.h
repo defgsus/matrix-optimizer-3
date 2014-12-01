@@ -37,9 +37,12 @@ class AudioBuffer
     F32 * insertPointer();
     const F32 * insertPointer() const;
 
-    /** Inserts one block of data into the buffer.
+    /** Inserts one block of data into the buffer and forwards write pointer.
         @p block must point to at least blockSize() floats */
     void insert(F32 * block);
+
+    /** Forwards the write pointer */
+    void nextWriteBlock();
 
 private:
 

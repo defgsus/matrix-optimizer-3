@@ -41,6 +41,8 @@ public:
 
     void calcTransformations(SamplePos pos, uint thread);
 
+    void calcAudio(SamplePos pos, uint thread);
+
 private:
 
     class Private;

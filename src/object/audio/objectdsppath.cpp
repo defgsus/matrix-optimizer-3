@@ -22,6 +22,7 @@
 
 #include "objectdsppath.h"
 #include "object/scene.h"
+#include "object/microphone.h"
 #include "object/util/objecttree.h"
 #include "audio/tool/audiobuffer.h"
 #include "graph/directedgraph.h"
@@ -41,6 +42,13 @@ public:
         ObjectBuffer * posParent;
         AUDIO::AudioBuffer * audioOutput;
         std::vector<Mat4> matrix, *parentMatrix;
+
+        void initMatrix(int s)
+        {
+            matrix.resize(s);
+            for (auto & m : matrix)
+                m = Mat4(1.);
+        }
     };
 
     Private(ObjectDspPath * path)
@@ -68,9 +76,8 @@ public:
 
     QList<ObjectBuffer*>
         transformationObjects,
-        microphoneObjects,
-        soundsourceObjects;
-
+        soundsourceObjects,
+        microphoneObjects;
 };
 
 ObjectDspPath::ObjectDspPath()
@@ -108,14 +115,22 @@ void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
     {
         if (b->parentMatrix)
         {
+            // copy from parent
             b->matrix = *b->parentMatrix;
-            for (uint i = 0; i < bufferSize(); ++i)
+            // apply transform for one sample block
+            for (SamplePos i = 0; i < bufferSize(); ++i)
                 b->object->calculateTransformation(b->matrix[i],
                                                    p_->invSampleRate * (pos + i),
                                                    thread);
         }
     }
 }
+
+void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
+{
+
+}
+
 
 std::ostream& ObjectDspPath::dump(std::ostream & out) const
 {
@@ -127,6 +142,19 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
         if (o->posParent)
             out << "(" << o->posParent->object->name() << ")";
     }
+
+    out << "\nmicrophone objects:";
+    for (auto o : p_->microphoneObjects)
+    {
+        out << " " << o->object->name();
+    }
+
+    out << "\nsoundsource objects:";
+    for (auto o : p_->soundsourceObjects)
+    {
+        out << " " << o->object->name();
+    }
+
 
     out << std::endl;
     return out;
@@ -164,10 +192,30 @@ void ObjectDspPath::Private::createPath(Scene * s)
             b->posParent = getObjectBuffer(n->parent()->object());
             b->parentMatrix = &b->posParent->matrix;
         }
-        b->matrix.resize(bufferSize);
+        b->initMatrix(bufferSize);
 
         transformationObjects.append(b);
     });
+
+    // --- get all soundsource objects ---
+
+    QList<Object*> soundsources;
+    tree->makeLinear(soundsources, [](const Object*o)
+    {
+        return !o->audioSources().isEmpty();
+    });
+    createObjectBuffers(soundsources, soundsourceObjects);
+
+
+    // --- get all microphone objects ---
+
+    QList<Object*> microphones;
+    tree->makeLinear(microphones, [](const Object*o)
+    {
+        return !o->microphones().isEmpty();
+    });
+    createObjectBuffers(microphones, microphoneObjects);
+
 
 }
 
