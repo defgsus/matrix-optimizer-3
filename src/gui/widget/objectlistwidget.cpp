@@ -168,7 +168,7 @@ void ObjectListWidget::setSelectedObject(Object *o)
         auto it = item(i);
         if (it->data(Qt::UserRole).toString() == o->idName())
         {
-            it->setSelected(true);
+            setCurrentItem(it);
             return;
         }
     }

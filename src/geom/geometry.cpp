@@ -21,6 +21,7 @@
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
 #include "math/functions.h"
+#include "math/vector.h"
 
 using namespace gl;
 
@@ -253,6 +254,9 @@ Geometry::IndexType Geometry::addVertexAlways(
 
 void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
 {
+    MO_ASSERT(p1 < numVertices(), "out of range " << p1 << "/" << numVertices());
+    MO_ASSERT(p2 < numVertices(), "out of range " << p2 << "/" << numVertices());
+    MO_ASSERT(p3 < numVertices(), "out of range " << p3 << "/" << numVertices());
     triIndex_.push_back(p1);
     triIndex_.push_back(p2);
     triIndex_.push_back(p3);
@@ -260,6 +264,9 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
 
 void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
 {
+    MO_ASSERT(p1 < numVertices(), "out of range " << p1 << "/" << numVertices());
+    MO_ASSERT(p2 < numVertices(), "out of range " << p2 << "/" << numVertices());
+    MO_ASSERT(p3 < numVertices(), "out of range " << p3 << "/" << numVertices());
     const Vec3
             pos1 = getVertex(p1),
             pos2 = getVertex(p2),
@@ -274,6 +281,8 @@ void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
 
 void Geometry::addLine(IndexType p1, IndexType p2)
 {
+    MO_ASSERT(p1 < numVertices(), "out of range " << p1 << "/" << numVertices());
+    MO_ASSERT(p2 < numVertices(), "out of range " << p2 << "/" << numVertices());
     lineIndex_.push_back(p1);
     lineIndex_.push_back(p2);
 }
@@ -467,7 +476,7 @@ void Geometry::calculateTriangleNormals()
             p3 = Vec3(vertex_[v3*3], vertex_[v3*3+1], vertex_[v3*3+2]);
 
         // calculate the normal of the triangle
-        Vec3 n = glm::normalize( glm::cross( p2-p1, p3-p1 ) );
+        Vec3 n = MATH::normalize_safe( glm::cross( p2-p1, p3-p1 ) );
 
         // copy/add to normals array
         normal_[v1*3  ] += n[0];

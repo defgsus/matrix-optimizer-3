@@ -235,6 +235,8 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
     {
         if (auto s = objectScene())
         {
+            if (!(e->modifiers() && Qt::CTRL))
+                    s->clearSelection();
             setSelected(true);
             s->toFront(this);
             s->popup(mapToGrid(e->scenePos()));

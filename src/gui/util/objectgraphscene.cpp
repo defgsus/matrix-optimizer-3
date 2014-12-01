@@ -553,7 +553,10 @@ QPoint ObjectGraphScene::nextFreePosition(Object *parent, const QPoint &pos1) co
 
     QPoint pos(pos1);
     while (p_->childItemAt(item, pos))
+    {
+        qDebug() << "failed for" << pos;
         ++pos.ry();
+    }
 
     return pos;
 }
@@ -567,7 +570,8 @@ AbstractObjectItem * ObjectGraphScene::Private::childItemAt(AbstractObjectItem *
         || pos.y() >= parent->gridSize().height())
         return 0;
 
-    for (auto i : parent->childItems())
+    const auto list = parent->childItems();
+    for (auto i : list)
     if (i->type() >= AbstractObjectItem::T_BASE)
     {
         auto o = static_cast<AbstractObjectItem*>(i);
@@ -576,7 +580,7 @@ AbstractObjectItem * ObjectGraphScene::Private::childItemAt(AbstractObjectItem *
             return ret;
     }
 
-    return parent;
+    return 0;
 }
 
 void ObjectGraphScene::setFocusObject(Object *o)

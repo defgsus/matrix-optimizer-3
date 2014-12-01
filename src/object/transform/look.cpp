@@ -11,6 +11,7 @@
 #include "look.h"
 #include "object/param/parameterfloat.h"
 #include "io/datastream.h"
+#include "math/vector.h"
 #include "io/log.h"
 
 namespace MO {
@@ -58,15 +59,15 @@ void Look::createParameters()
 void Look::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
     // forward vector
-    Vec3 f = glm::normalize(Vec3(x_->value(time, thread),
+    Vec3 f = MATH::normalize_safe(Vec3(x_->value(time, thread),
                                  y_->value(time, thread),
                                  z_->value(time, thread)));
     // up vector
-    Vec3 u = glm::normalize(Vec3(upX_->value(time, thread),
+    Vec3 u = MATH::normalize_safe(Vec3(upX_->value(time, thread),
                                  upY_->value(time, thread),
                                  upZ_->value(time, thread)));
     // right vector
-    Vec3 s = glm::normalize(glm::cross(f, u));
+    Vec3 s = MATH::normalize_safe(glm::cross(f, u));
     // rebuild up to avoid distortion
     u = glm::cross(s, f);
 

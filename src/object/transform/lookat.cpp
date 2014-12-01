@@ -12,6 +12,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "io/datastream.h"
+#include "math/vector.h"
 #include "io/log.h"
 
 namespace MO {
@@ -123,11 +124,11 @@ void LookAt::applyTransformation(Mat4 &matrix, Double time, uint thread) const
     if (std::abs(f.x) < 0.00001 && std::abs(f.y) < 0.00001
             && std::abs(f.z) < 0.00001)
         f.z = -1;
-    f = glm::normalize(f);
+    f = MATH::normalize_safe(f);
     // up vector
-    Vec3 u = glm::normalize(up);
+    Vec3 u = MATH::normalize_safe(up);
     // right vector
-    Vec3 s = glm::normalize(glm::cross(f, u));
+    Vec3 s = MATH::normalize_safe(glm::cross(f, u));
     // rebuild up to avoid distortion
     u = glm::cross(s, f);
 

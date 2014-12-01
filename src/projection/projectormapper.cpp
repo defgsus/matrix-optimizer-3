@@ -145,7 +145,7 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
     dirf.y += dirofs.y;
     */
 
-    Vec3 dir = glm::normalize(Vec3(dirf));
+    Vec3 dir = MATH::normalize_safe(Vec3(dirf));
 
     *ray_origin =    Vec3(trans_ * pos);
     *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));

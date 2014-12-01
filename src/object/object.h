@@ -225,7 +225,8 @@ public:
     /** Override to add some additional information. */
     virtual QString infoName() const { return name_; }
 
-    /** Returns the id of the object before it might have been changed through makeUniqueId() */
+    /** Returns the id of the object before it might have been changed through makeUniqueId()
+        XXX Will be changed to work with attachedData() !!! */
     const QString& originalIdName() const { return orgIdName_; }
 
     /** Return the path up to this object */
@@ -262,6 +263,9 @@ public:
 
     /** Returns true when the object can be deleted by the ObjectTreeView */
     bool canBeDeleted() const { return canBeDeleted_; }
+
+    /** Returns a name that is unique among the direct children of the object */
+    QString makeUniqueName(const QString& name) const;
 
     /** Returns a priority for each object type */
     static int objectPriority(const Object *);

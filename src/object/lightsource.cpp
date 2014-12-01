@@ -11,6 +11,7 @@
 #include "lightsource.h"
 #include "io/datastream.h"
 #include "param/parameterfloat.h"
+#include "math/vector.h"
 #include "io/log.h"
 
 namespace MO {
@@ -85,7 +86,7 @@ Vec4 LightSource::lightColor(uint thread, Double time) const
 Vec4 LightSource::lightDirection(uint thread, Double time) const
 {
     const Mat4& trans = glm::inverse(transformation(thread, 0));
-    const Vec3 dir = glm::normalize(
+    const Vec3 dir = MATH::normalize_safe(
                 Vec3(trans[0][2], trans[1][2], trans[2][2]));
     return Vec4(dir[0], dir[1], dir[2], directionExp_->value(time, thread));
 }

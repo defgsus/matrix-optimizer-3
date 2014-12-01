@@ -215,7 +215,8 @@ HEADERS += \
     src/engine/serverengine.h \
     src/object/oscillatorobject.h \
     src/object/object1.h \
-    src/object/util/objecteditor.h
+    src/object/util/objecteditor.h \
+    src/types/time.h
 
 
 SOURCES += \

@@ -276,6 +276,9 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
 {
     MO_DEBUG_TREE("Scene::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
 
+    // make the name unique
+    newChild->setName( parent->makeUniqueName(newChild->name()) );
+
     {
         ScopedSceneLockWrite lock(this);
         parent->addObject_(newChild, insert_index);

@@ -428,6 +428,19 @@ bool Object::isAudioRelevant() const
     return false;
 }
 
+QString Object::makeUniqueName(const QString &name) const
+{
+    QSet<QString> names;
+    for (auto c : childObjects())
+        names.insert(c->name());
+
+    QString ret(name);
+    while (names.contains(ret))
+        increase_id_number(ret, 1);
+
+    return ret;
+}
+
 void Object::setAttachedData(const QVariant &value, DataType type, const QString &id)
 {
     // remove entry

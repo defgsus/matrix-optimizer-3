@@ -650,7 +650,7 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
     segu = std::max((uint)3, segu);
     segv = std::max((uint)3, segv);
 
-    uint start = g->numVertices();
+    std::vector<Geometry::IndexType> verts;
 
     // create torus vertices
     for (uint y=0; y<segv; ++y)
@@ -668,7 +668,7 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
                         ang);
 
             g->setTexCoord(tx, ty);
-            g->addVertex(v[0], v[1], v[2]);
+            verts.push_back( g->addVertex(v[0], v[1], v[2]) );
         }
     }
 
@@ -681,11 +681,11 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
             for (uint x=0; x<segu; ++x)
             {
                 // connect to next column
-                g->addLine(start + y*segu + x,
-                           start + y*segu + (x+1) % segu);
+                g->addLine(verts[y*segu + x],
+                           verts[y*segu + ((x+1) % segu)]);
                 // connect to next row
-                g->addLine(start + y*segu + x,
-                           start + ((y+1)%segv)*segu + x);
+                g->addLine(verts[y*segu + x],
+                           verts[((y+1)%segv)*segu + x]);
             }
         }
 
@@ -697,13 +697,13 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
             for (uint x=0; x<segu; ++x)
             {
                 g->addTriangle(
-                            start + y*segu + x,
-                            start + y*segu + (x+1) % segu,
-                            start + ((y+1)%segv)*segu + (x+1) % segu);
+                            verts[y*segu + x],
+                            verts[y*segu + ((x+1) % segu)],
+                            verts[((y+1)%segv)*segu + ((x+1) % segu)]);
                 g->addTriangle(
-                            start + y*segu + x,
-                            start + ((y+1)%segv)*segu + (x+1) % segu,
-                            start + ((y+1)%segv)*segu + x);
+                            verts[y*segu + x],
+                            verts[((y+1)%segv)*segu + ((x+1) % segu)],
+                            verts[((y+1)%segv)*segu + x]);
             }
         }
 

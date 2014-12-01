@@ -59,7 +59,7 @@ GeometryModifierCreate::GeometryModifierCreate()
       segmentsX_        (10),
       segmentsY_        (10),
       segmentsZ_        (1),
-      smallRadius_      (0)
+      smallRadius_      (0.1)
 {
 
 }
