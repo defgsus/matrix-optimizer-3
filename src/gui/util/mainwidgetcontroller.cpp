@@ -76,6 +76,7 @@
 #include "object/clipcontainer.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "object/util/objecteditor.h"
+#include "object/audio/objectdsppath.h"
 #include "model/treemodel.h"
 #include "object/util/objecttree.h"
 #include "tool/commonresolutions.h"
@@ -90,10 +91,11 @@ namespace GUI {
 class TestThread : public QThread
 {
 public:
-    TestThread(Scene * scene, QObject * parent)
+    TestThread(Scene * scene, bool newVersion, QObject * parent)
         :   QThread(parent),
           scene_  (scene),
-          stop_   (false)
+          stop_   (false),
+          new_    (newVersion)
     {
 
     }
@@ -106,11 +108,22 @@ public:
     {
         setCurrentThreadName("AUDIOTEST");
 
+        ObjectDspPath dsp;
+        dsp.createPath(scene_, 44100, 2048);
+
         samplePos_ = 0;
         while (!stop_)
         {
-            scene_->calculateAudioBlock(samplePos_, MO_AUDIO_THREAD);
-            samplePos_ += scene_->bufferSize(MO_AUDIO_THREAD);
+            if (new_)
+            {
+                dsp.calcTransformations(samplePos_, MO_AUDIO_THREAD);
+                samplePos_ += dsp.bufferSize();
+            }
+            else
+            {
+                scene_->calculateAudioBlock(samplePos_, MO_AUDIO_THREAD);
+                samplePos_ += scene_->bufferSize(MO_AUDIO_THREAD);
+            }
 
         #ifndef NDEBUG
             // leave some room when in debug mode
@@ -123,6 +136,7 @@ private:
     Scene * scene_;
     volatile bool stop_;
     SamplePos samplePos_;
+    bool new_;
 };
 
 
@@ -541,7 +555,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction( a = new QAction(tr("Dump object tree"), m) );
         connect(a, &QAction::triggered, [=]()
         {
-            auto tree = getObjectTree(scene_);
+            auto tree = get_object_tree(scene_);
             tree->dumpTree(std::cout, "");
             delete tree;
         });
@@ -549,8 +563,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Dump needed files"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpNeededFiles_()));
 
-        m->addAction(a = new QAction(tr("Test transformation speed"), m));
-        connect(a, SIGNAL(triggered()), SLOT(testSceneTransform_()));
+        m->addAction(a = new QAction(tr("Test transformation speed (new)"), m));
+        connect(a, &QAction::triggered, [this](){ testSceneTransform_(true); });
+
+        m->addAction(a = new QAction(tr("Test transformation speed (old)"), m));
+        connect(a, &QAction::triggered, [this](){ testSceneTransform_(false); });
 
         m->addAction(a = new QAction(tr("Reset ObjectTreeModel"), m));
         connect(a, SIGNAL(triggered()), SLOT(resetTreeModel_()));
@@ -581,7 +598,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction( a = new QAction(tr("Dump modulation graph"), m) );
         connect(a, &QAction::triggered, [=]()
         {
-            auto tree = getObjectTree(scene_);
+            auto tree = get_object_tree(scene_);
             tree->dumpTree(std::cout);
 
             ObjectGraph graph;
@@ -1097,7 +1114,7 @@ void MainWidgetController::setEditActions_(const QObject *, QList<QAction *> act
 #endif
 }
 
-void MainWidgetController::testSceneTransform_()
+void MainWidgetController::testSceneTransform_(bool newVersion)
 {
     QTime t;
 
@@ -1105,34 +1122,66 @@ void MainWidgetController::testSceneTransform_()
     int i = 0;
     int e = 0;
 
-    t.start();
-    for (; i < num && e <= 1000; ++i)
+    if (!newVersion)
     {
-        for (int j=0; j<1000; ++j, ++i)
-            scene_->calculateSceneTransform(0, 0, 0.01 * i);
+        t.start();
+        for (; i < num && e <= 1000;)
+        {
+            for (int j=0; j<1000; ++j, ++i)
+                scene_->calculateSceneTransform(0, 0, scene_->sampleRateInv() * (i*1000+j));
 
-        e = t.elapsed();
+            e = t.elapsed();
+        }
+        num = i;
+        const Double elapsed = (Double)e / 1000.0;
+
+        QMessageBox::information(window_, tr("Scene transformation test"),
+            tr("Calculating %1 frames of transformation\n"
+               "which took %2 seconds.\n"
+               "This is %3 milli-seconds per frame\n"
+               "and %4 frames per second.")
+                                 .arg(num)
+                                 .arg(elapsed)
+                                 .arg((elapsed*1000)/num)
+                                 .arg((int)((Double)num/elapsed))
+               );
     }
-    num = i;
-    const Double elapsed = (Double)e / 1000.0;
+    else
+    {
+        const auto bufsize = scene_->bufferSize(MO_AUDIO_THREAD);
 
-    QMessageBox::information(window_, tr("Scene transformation test"),
-        tr("Calculating %1 frames of transformation\n"
-           "which took %2 seconds.\n"
-           "This is %3 milli-seconds per frame\n"
-           "and %4 frames per second.")
-                             .arg(num)
-                             .arg(elapsed)
-                             .arg((elapsed*1000)/num)
-                             .arg((int)((Double)num/elapsed))
-           );
+        ObjectDspPath dsp;
+        dsp.createPath(scene_, scene_->sampleRate(), bufsize);
+
+        t.start();
+        for (; i < num && e <= 1000; )
+        {
+            for (int j=0; j<20; ++j, i += bufsize)
+                dsp.calcTransformations(i*1000+j, MO_AUDIO_THREAD);
+
+            e = t.elapsed();
+        }
+        num = i;
+        const Double elapsed = (Double)e / 1000.0;
+
+        QMessageBox::information(window_, tr("Scene transformation test"),
+            tr("Calculating %1 frames of transformation\n"
+               "which took %2 seconds.\n"
+               "This is %3 milli-seconds per frame\n"
+               "and %4 frames per second.")
+                                 .arg(num)
+                                 .arg(elapsed)
+                                 .arg((elapsed*1000)/num)
+                                 .arg((int)((Double)num/elapsed))
+               );
+    }
 }
 
 void MainWidgetController::runTestThread_()
 {
     if (!testThread_)
     {
-        testThread_ = new TestThread(scene_, this);
+        testThread_ = new TestThread(scene_, true, this);
         testThread_->start();
     }
     else

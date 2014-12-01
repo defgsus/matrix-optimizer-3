@@ -88,6 +88,8 @@ public:
     /** Parent node */
     TreeNode * parent() const { return p_parent_; }
 
+    bool isRoot() const { return !p_parent_; }
+
     /** Number of direct children */
     size_t numChildren() const { return p_child_.size(); }
 
@@ -95,7 +97,7 @@ public:
     const std::vector<TreeNode*> & children() const { return p_child_; }
 
     /** Access to xth children.
-        Not range checked! */
+        @note No range checking */
     TreeNode * children(size_t index) const { return p_child_[index]; }
 
     /** Access to children node for associated object.
@@ -105,17 +107,25 @@ public:
     /** Index of children node, -1 or index */
     int indexOf(TreeNode * child) const;
 
+    /** Index of children node, -1 or index */
+    int indexOf(const TreeNode * child) const;
+
     /** Index of children node with associated object, -1 or index */
     int indexOf(T child) const;
 
     bool hasChild(T child) const { return indexOf(child) >= 0; }
     bool hasChild(TreeNode * child) const { return indexOf(child) >= 0; }
 
+    /** Returns the index of this node in the parents children list.
+        If there is no parent, 0 is returned. */
+    int indexInParent() const;
+
     // ------ iterative getter ------
 
     /** Will return the root of the hierarchy which can be
         the node itself */
-    TreeNode * root() const;
+    TreeNode * root();
+    const TreeNode * root() const;
 
     /** Returns the level below root.
         0 for root itself */
@@ -126,16 +136,25 @@ public:
 
     /** Returns the node for the object if it's in the hierarchy, including
         this node itself, or NULL */
-    TreeNode * find(T object, bool recursive) const;
+    TreeNode * find(T object, bool recursive);
+    const TreeNode * find(T object, bool recursive) const;
 
     /** Returns the node for the object if it's a parent of this node, or NULL */
     TreeNode * findParent(T object) const;
+
+    /** Returns true if @p node is a parent of this node */
+    bool hasParent(TreeNode * node) const;
 
     /** Linearizes the objects into @p objects in the given order to the given level.
         If @p max_level < 0, all levels will be considered, otherwise @p max_level states
         the number of levels to consider, e.g. 0 for none, 1 for the node itself,
         2 for all direct children, etc... */
-    void makeLinear(QList<T>& objects, Order order = O_DepthFirst, int max_level = -1) const;
+    void makeLinear(QList<T>& objects, int max_level = -1, Order order = O_DepthFirst) const;
+    /** Linearizes all objects that are dynamic_castable to U */
+    template <class U>
+    void makeLinear(QList<U>& objects, int max_level = -1, Order order = O_DepthFirst) const;
+
+
 
     // ------- getter with selector lambda -------
 
@@ -147,13 +166,17 @@ public:
 
     /** Returns the node for the first object for which @p selector returns true,
         including this node itself, or NULL */
-    TreeNode * find(bool recursive, std::function<bool(const T)> selector) const;
+    TreeNode * find(bool recursive, std::function<bool(const T)> selector);
+    const TreeNode * find(bool recursive, std::function<bool(const T)> selector) const;
 
     /** Puts all objects of the hierarchy depth-first into @p objects, if the @p selector
         function returns true.
         Same as makeLiner(objects, selector, O_DepthFirst, recursive ? -1 : 1) */
     void find(QList<T>& objects, bool recursive, std::function<bool(const T)> selector) const
-        { makeLinear(objects, selector, O_DepthFirst, recursive ? -1 : 1); }
+        { makeLinear(objects, selector, recursive ? -1 : 1, O_DepthFirst); }
+
+    /** Returns the parent node for which @p selector returns true, or NULL */
+    TreeNode * findParent(std::function<bool(const T)> selector) const;
 
     /** Linearizes the objects into @p objects in the given order to the given level,
         if @p selector returns true for the objects.
@@ -161,7 +184,11 @@ public:
         the number of levels to consider, e.g. 0 for none, 1 for the node itself,
         2 for all direct children, etc... */
     void makeLinear(QList<T>& objects, std::function<bool(const T)> selector,
-                    Order order = O_DepthFirst, int max_level = -1) const;
+                    int max_level = -1, Order order = O_DepthFirst) const;
+    /** Linearizes all objects that are dynamic_cast'able to U */
+    template <class U>
+    void makeLinear(QList<U>& objects, std::function<bool(const U)> selector,
+                    int max_level = -1, Order order = O_DepthFirst) const;
 
     // ------- setter --------
 
@@ -171,8 +198,9 @@ public:
     TreeNode * append(TreeNode * node);
 
     /** Inserts the node at the given index, -1 for append.
-        Adding the same node twice leads to undefined behaviour. */
-    void insert(int index, TreeNode * object);
+        Adding the same node twice leads to undefined behaviour.
+        The inserted node is returned. */
+    TreeNode * insert(int index, TreeNode * node);
 
     /** Adds a new children node with associated object.
         Adding the same object twice when this node is owning
@@ -182,6 +210,10 @@ public:
     /** Inserts a new children node with associated object at the given index,
         -1 for append */
     TreeNode * insert(int index, T object);
+
+    /** Exchanges the two nodes below this node.
+        @note No range checking. */
+    void swapChildren(size_t from, size_t to);
 
     /** Destroys the children node with the associated object,
         returns true if found and removed */
@@ -195,8 +227,21 @@ public:
         returns true if removed */
     bool remove(TreeNode * node);
 
-    /** Destroys and destroys the xth node */
+    /** Destroys the xth node.
+        @note No range checking */
     void remove(size_t index);
+
+    /** Removes this node from the parent's children list. */
+    void detachFromParent();
+
+    /** Takes the children node out of the children list.
+        @note No range checking */
+    TreeNode * takeChildren(size_t index);
+
+    // ---------- iterative setter ------------
+
+    /** Executes @p func once for each node */
+    void forEachNode(std::function<void(TreeNode*)> func);
 
     // ---------------- debug -----------------
 
@@ -255,6 +300,14 @@ inline int TreeNode<T>::indexOf(TreeNode * child) const
 }
 
 template <class T>
+inline int TreeNode<T>::indexOf(const TreeNode * child) const
+{
+    for (size_t i=0; i!=p_child_.size(); ++i)
+        if (child == p_child_[i]) return i;
+    return -1;
+}
+
+template <class T>
 inline int TreeNode<T>::indexOf(T child) const
 {
     for (size_t i=0; i!=p_child_.size(); ++i)
@@ -262,118 +315,42 @@ inline int TreeNode<T>::indexOf(T child) const
     return -1;
 }
 
+template <class T>
+inline int TreeNode<T>::indexInParent() const
+{
+    return parent() ? parent()->indexOf(this) : 0;
+}
+
 
 template <class T>
 inline TreeNode<T> * TreeNode<T>::children(T object) const
 {
-    const size_t i = indexOf(object);
+    const int i = indexOf(object);
     return i < 0 ? 0 : children(i);
 }
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::append(T object)
-{
-    MO_ASSERT(!isOwning() || indexOf(object) < 0, "TreeNode::append() duplicate object " << object);
 
-    auto node = new TreeNode(object, p_own_);
-    append(node);
-    return node;
-}
-
-template <class T>
-inline TreeNode<T> * TreeNode<T>::append(TreeNode * node)
-{
-    MO_ASSERT(indexOf(node) < 0, "TreeNode::append() duplicate node " << node);
-
-    p_child_.push_back(node);
-    p_install_node_(node);
-
-    return node;
-}
-
-template <class T>
-inline TreeNode<T> * TreeNode<T>::insert(int index, T object)
-{
-    MO_ASSERT(!isOwning() || indexOf(object) < 0, "TreeNode::insert() duplicate object " << object);
-
-    auto node = new TreeNode(object, p_own_);
-    insert(index, node);
-    return node;
-}
-
-template <class T>
-inline void TreeNode<T>::insert(int index, TreeNode * node)
-{
-    MO_ASSERT(indexOf(node) < 0, "TreeNode<T>::insert() duplicate node " << node);
-
-    if (index < 0 || p_child_.empty())
-        p_child_.push_back(node);
-    else
-        p_child_.insert(
-                p_child_.begin()
-                    + std::min((int)p_child_.size()-1, index)
-                , node);
-
-    p_install_node_(node);
-}
-
-template <class T>
-inline void TreeNode<T>::p_install_node_(TreeNode * node)
-{
-    node->p_parent_ = this;
-}
-
-template <class T>
-inline bool TreeNode<T>::remove(T object)
-{
-    const size_t i = indexOf(object);
-    if (i < 0)
-        return false;
-    remove(i);
-    return true;
-}
-
-template <class T>
-inline bool TreeNode<T>::removeAll(T object)
-{
-    size_t i = indexOf(object);
-    if (i < 0)
-        return false;
-    do
-    {
-        remove(i);
-        i = indexOf(object);
-    } while (i >= 0);
-
-    return true;
-}
-
-template <class T>
-inline bool TreeNode<T>::remove(TreeNode * node)
-{
-    const size_t i = indexOf(node);
-    if (i < 0)
-        return false;
-    remove(i);
-    return true;
-}
-
-template <class T>
-inline void TreeNode<T>::remove(size_t index)
-{
-    MO_ASSERT(index < p_child_.size(), "TreeNode<T>::remove(" << index << ") out of range");
-
-    p_child_.erase(p_child_.begin() + index);
-    delete p_child_[index];
-}
 
 
 // ----------------- iterative ----------------
 
 template <class T>
-inline TreeNode<T> * TreeNode<T>::root() const
+inline TreeNode<T> * TreeNode<T>::root()
 {
     TreeNode * p = parent();
+    if (!p)
+        return this;
+    while (p)
+        p = p->parent();
+    return p;
+}
+
+template <class T>
+inline const TreeNode<T> * TreeNode<T>::root() const
+{
+    TreeNode * p = parent();
+    if (!p)
+        return this;
     while (p)
         p = p->parent();
     return p;
@@ -438,8 +415,67 @@ inline TreeNode<T> * TreeNode<T>::copy(bool owning, std::function<bool(const T)>
 // ---------------------------- linear ------------------------------
 
 template <class T>
+template <class U>
+void TreeNode<T>::makeLinear(QList<U>& objects, std::function<bool(const U)> selector,
+                             int max_level, Order order) const
+{
+    if (max_level == 0)
+        return;
+
+    if (order == O_DepthFirst)
+    {
+        // add self
+        if (auto u = dynamic_cast<U>(object()))
+            if (selector(u))
+                objects.append(u);
+
+        if (max_level == 1)
+            return;
+
+        for (auto c : children())
+            c->makeLinear(objects, selector, max_level < 0 ? -1 : (max_level - 1), order);
+    }
+
+    // O_BreathFirst
+    else
+    {
+        std::queue<const TreeNode*> stack;
+        std::queue<int> levels;
+        stack.push(this);
+        levels.push(1);
+
+        while (!stack.empty())
+        {
+            // take off stack
+            const TreeNode * n = stack.front();
+            stack.pop();
+
+            // and level
+            int level = levels.front();
+            levels.pop();
+            if (max_level >= 0 && level > max_level)
+                break;
+
+            // add to output list
+            if (auto u = dynamic_cast<U>(n->object()))
+                if (selector(u))
+                    objects.append(u);
+
+            // push children
+            //   and their levels
+            ++level;
+            for (auto c : n->children())
+            {
+                stack.push(c);
+                levels.push(level);
+            }
+        }
+    }
+}
+
+template <class T>
 void TreeNode<T>::makeLinear(QList<T>& objects, std::function<bool(const T)> selector,
-                             Order order, int max_level) const
+                             int max_level, Order order) const
 {
     if (max_level == 0)
         return;
@@ -454,7 +490,7 @@ void TreeNode<T>::makeLinear(QList<T>& objects, std::function<bool(const T)> sel
             return;
 
         for (auto c : children())
-            c->makeLinear(objects, selector, order, max_level < 0 ? -1 : (max_level - 1));
+            c->makeLinear(objects, selector, max_level < 0 ? -1 : (max_level - 1), order);
     }
 
     // O_BreathFirst
@@ -495,7 +531,63 @@ void TreeNode<T>::makeLinear(QList<T>& objects, std::function<bool(const T)> sel
 
 
 template <class T>
-void TreeNode<T>::makeLinear(QList<T>& objects, Order order, int max_level) const
+template <class U>
+void TreeNode<T>::makeLinear(QList<U>& objects, int max_level, Order order) const
+{
+    if (max_level == 0)
+        return;
+
+    if (order == O_DepthFirst)
+    {
+        // add self
+        if (auto u = dynamic_cast<U>(object()))
+            objects.append(u);
+
+        if (max_level == 1)
+            return;
+
+        for (auto c : children())
+            c->makeLinear(objects, max_level < 0 ? -1 : (max_level - 1), order);
+    }
+
+    // O_BreathFirst
+    else
+    {
+        std::queue<const TreeNode*> stack;
+        std::queue<int> levels;
+        stack.push(this);
+        levels.push(1);
+
+        while (!stack.empty())
+        {
+            // take off stack
+            const TreeNode * n = stack.front();
+            stack.pop();
+
+            // and level
+            int level = levels.front();
+            levels.pop();
+            if (max_level >= 0 && level > max_level)
+                break;
+
+            // add to output list
+            if (auto u = dynamic_cast<U>(n->object()))
+                objects.append(u);
+
+            // push children
+            //   and their levels
+            ++level;
+            for (auto c : n->children())
+            {
+                stack.push(c);
+                levels.push(level);
+            }
+        }
+    }
+}
+
+template <class T>
+void TreeNode<T>::makeLinear(QList<T>& objects, int max_level, Order order) const
 {
     if (max_level == 0)
         return;
@@ -509,7 +601,7 @@ void TreeNode<T>::makeLinear(QList<T>& objects, Order order, int max_level) cons
             return;
 
         for (auto c : children())
-            c->makeLinear(objects, order, max_level < 0 ? -1 : (max_level - 1));
+            c->makeLinear(objects, max_level < 0 ? -1 : (max_level - 1), order);
     }
 
     // O_BreathFirst
@@ -561,7 +653,25 @@ inline TreeNode<T> * TreeNode<T>::findParent(T o) const
 }
 
 template <class T>
-inline TreeNode<T> * TreeNode<T>::find(T o, bool recursive) const
+inline bool TreeNode<T>::hasParent(TreeNode * node) const
+{
+    return parent() ?
+                parent() == node ? true
+                                 : parent()->hasParent(node)
+                    : false;
+}
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::findParent(std::function<bool(const T)> selector) const
+{
+    return parent() ?
+                selector(parent()->object()) ? parent()
+                                             : parent()->findParent(selector)
+                    : 0;
+}
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::find(T o, bool recursive)
 {
     if (object() == o)
         return this;
@@ -585,7 +695,31 @@ inline TreeNode<T> * TreeNode<T>::find(T o, bool recursive) const
 }
 
 template <class T>
-TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T)> selector) const
+inline const TreeNode<T> * TreeNode<T>::find(T o, bool recursive) const
+{
+    if (object() == o)
+        return this;
+
+    if (!recursive)
+    {
+        for (auto c : p_child_)
+            if (c->object() == o)
+                return c;
+    }
+    else
+    for (auto c : p_child_)
+    {
+        if (c->object() == o)
+            return c;
+        if (auto n = c->find(o, true))
+            return n;
+    }
+
+    return 0;
+}
+
+template <class T>
+TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T)> selector)
 {
     if (selector(object()))
         return this;
@@ -606,6 +740,172 @@ TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T)> sel
     return 0;
 }
 
+template <class T>
+const TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T)> selector) const
+{
+    if (selector(object()))
+        return this;
+
+    if (!recursive)
+    {
+        for (auto c : children())
+            if (selector(c->object()))
+                return c;
+    }
+    else
+    {
+        for (auto c : children())
+            if (auto n = c->find(true, selector))
+                return n;
+    }
+
+    return 0;
+}
+
+
+// --------------------------------- edit ---------------------------------
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::append(T object)
+{
+    MO_ASSERT(!isOwning() || indexOf(object) < 0, "TreeNode::append() duplicate object " << object);
+
+    auto node = new TreeNode(object, p_own_);
+    append(node);
+    return node;
+}
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::append(TreeNode * node)
+{
+    MO_ASSERT(indexOf(node) < 0, "TreeNode::append() duplicate node " << node);
+
+    p_child_.push_back(node);
+    p_install_node_(node);
+
+    return node;
+}
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::insert(int index, T object)
+{
+    MO_ASSERT(!isOwning() || indexOf(object) < 0, "TreeNode::insert() duplicate object " << object);
+
+    auto node = new TreeNode(object, p_own_);
+    insert(index, node);
+    return node;
+}
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::insert(int index, TreeNode * node)
+{
+    MO_ASSERT(indexOf(node) < 0, "TreeNode<T>::insert() duplicate node " << node);
+
+    if (index < 0 || index >= p_child_.size())
+        p_child_.push_back(node);
+    else
+        p_child_.insert(
+                p_child_.begin()
+                    + std::min((int)p_child_.size()-1, index)
+                , node);
+
+    p_install_node_(node);
+
+    return node;
+}
+
+template <class T>
+inline void TreeNode<T>::p_install_node_(TreeNode * node)
+{
+    node->p_parent_ = this;
+}
+
+template <class T>
+inline void TreeNode<T>::swapChildren(size_t from, size_t to)
+{
+    if (from == to)
+        return;
+
+    std::swap(p_child_[from], p_child_[to]);
+}
+
+
+template <class T>
+inline bool TreeNode<T>::remove(T object)
+{
+    const int i = indexOf(object);
+    if (i < 0)
+        return false;
+    remove(i);
+    return true;
+}
+
+template <class T>
+inline bool TreeNode<T>::removeAll(T object)
+{
+    int i = indexOf(object);
+    if (i < 0)
+        return false;
+    do
+    {
+        remove(i);
+        i = indexOf(object);
+    } while (i >= 0);
+
+    return true;
+}
+
+template <class T>
+inline bool TreeNode<T>::remove(TreeNode * node)
+{
+    const int i = indexOf(node);
+    if (i < 0)
+        return false;
+    remove(i);
+    return true;
+}
+
+template <class T>
+inline void TreeNode<T>::remove(size_t index)
+{
+    MO_ASSERT(index < p_child_.size(), "TreeNode<T>::remove(" << index << ") out of range");
+
+    auto node = p_child_[index];
+    p_child_.erase(p_child_.begin() + index);
+    delete node;
+}
+
+
+template <class T>
+inline TreeNode<T> * TreeNode<T>::takeChildren(size_t index)
+{
+    MO_ASSERT(index < p_child_.size(), "TreeNode<T>::takeChildren(" << index << ") out of range");
+
+    auto node = p_child_[index];
+    p_child_.erase(p_child_.begin() + index);
+    node->p_parent_ = 0;
+    return node;
+}
+
+template <class T>
+inline void TreeNode<T>::detachFromParent()
+{
+    if (parent())
+    {
+        int idx = parent()->indexOf(this);
+        MO_ASSERT(idx >= 0, "TreeNode<T>::detachFromParent() i'm not part of parent's children list !?");
+
+        parent()->takeChildren( idx );
+    }
+}
+
+template <class T>
+inline void TreeNode<T>::forEachNode(std::function<void(TreeNode*)> func)
+{
+    func(this);
+    for (auto c : p_child_)
+        c->forEachNode(func);
+}
 
 
 // --------------------------------- debug --------------------------------

@@ -12,8 +12,10 @@
 #define MOSRC_OBJECT_UTIL_OBJECTTREE_H
 
 #include "graph/tree.h"
-#include "graph/directedgraph.h"
-#include "model/treemodel.h"
+#include "object/object.h"
+
+//#include "graph/directedgraph.h"
+//#include "model/treemodel.h"
 
 namespace MO {
 
@@ -21,10 +23,25 @@ namespace MO {
 
     typedef TreeNode<Object*> ObjectTreeNode;
 
-    /** XXX Returns a copy of the current object tree structure.
-        Maybe i switch to hold Objects together with TreeNode<Object*> */
-    ObjectTreeNode * getObjectTree(Object* root_object);
+    /** Returns a copy of the current object tree structure.
+        XXX There is a lot of work in newobj branch that manages
+        the Object tree through ObjectTreeNode but it's not there yet.. */
+    ObjectTreeNode * get_object_tree(Object* root_object, bool own = false);
 
+    /** Specialization for Object* in TreeNode */
+    template <>
+    struct TreeNodeTraits<Object*>
+    {
+        typedef TreeNode<Object*> Node;
+
+        static void creator(Node * ) { }
+        static void destructor(Node * ) { }
+        static QString toString(const Node * node)
+            { if (node->object()) return node->object()->name();
+                else return "Object(null)"; }
+    };
+
+#if 0
 
     namespace Private
     {
@@ -49,7 +66,6 @@ namespace MO {
     };
 
 
-
     class ObjectTree
     {
     public:
@@ -66,6 +82,7 @@ namespace MO {
         class Private;
         Private * p_;
     };
+#endif
 
 
 } // namespace MO

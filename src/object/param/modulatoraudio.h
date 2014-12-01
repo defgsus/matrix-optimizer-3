@@ -1,22 +1,22 @@
-/** @file modulatorfloat.h
+/** @file modulatoraudio.h
 
-    @brief Float modulator
+    @brief
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 8/6/2014</p>
+    <p>created 01.12.2014</p>
 */
 
-#ifndef MOSRC_OBJECT_PARAM_MODULATORFLOAT_H
-#define MOSRC_OBJECT_PARAM_MODULATORFLOAT_H
+#ifndef MOSRC_OBJECT_PARAM_MODULATORAUDIO_H
+#define MOSRC_OBJECT_PARAM_MODULATORAUDIO_H
 
 #include "modulator.h"
 #include "types/float.h"
 
 namespace MO {
 
-class ModulatorFloat : public Modulator
+class ModulatorAudio : public Modulator
 {
 public:
 
@@ -31,7 +31,7 @@ public:
 
     /** Construct a modulator coming form object @p modulatorId
         and belonging to @p parent */
-    ModulatorFloat(const QString& name, const QString& modulatorId, Object * parent = 0);
+    ModulatorAudio(const QString& name, const QString& modulatorId, Object * parent = 0);
 
     // --------------- io ----------------
 
@@ -39,8 +39,6 @@ public:
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
     // ------------- getter --------------
-
-
 
     /** Returns if the object can be the modulating object */
     virtual bool canBeModulator(const Object *) const Q_DECL_OVERRIDE;
@@ -63,6 +61,13 @@ public:
     /** Returns the time offset to apply when reading from tracks or sequences. */
     Double timeOffset() const { return timeOffset_; }
 
+    /** Returns number of channels */
+    uint numChannels() const;
+
+    uint bufferSize() const;
+
+
+
     // ------------- setter ----------------
 
     virtual void copySettingsFrom(const Modulator * other) Q_DECL_OVERRIDE;
@@ -83,4 +88,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_PARAM_MODULATORFLOAT_H
+#endif // MOSRC_OBJECT_PARAM_MODULATORAUDIO_H

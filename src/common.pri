@@ -216,7 +216,10 @@ HEADERS += \
     src/object/oscillatorobject.h \
     src/object/object1.h \
     src/object/util/objecteditor.h \
-    src/types/time.h
+    src/types/time.h \
+    src/object/param/modulatoraudio.h \
+    src/audio/tool/audiobuffer.h \
+    src/object/audio/objectdsppath.h
 
 
 SOURCES += \
@@ -399,4 +402,7 @@ SOURCES += \
     src/engine/serverengine.cpp \
     src/object/oscillatorobject.cpp \
     src/object/object1.cpp \
-    src/object/util/objecteditor.cpp
+    src/object/util/objecteditor.cpp \
+    src/object/param/modulatoraudio.cpp \
+    src/audio/tool/audiobuffer.cpp \
+    src/object/audio/objectdsppath.cpp

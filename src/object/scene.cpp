@@ -29,6 +29,7 @@
 #include "object/microphone.h"
 #include "object/lightsource.h"
 #include "object/audio/audiounit.h"
+#include "object/audio/objectdsppath.h"
 #include "object/util/objecteditor.h"
 #include "model/objecttreemodel.h"
 #include "audio/audiodevice.h"
@@ -445,7 +446,7 @@ void Scene::updateTree_()
         if (i)
             i->updateTree();
 
-    // tell all objects if there children have changed
+    // tell all objects if their children have changed
     updateChildrenChanged_();
 
     // tell everyone how much lights we have
@@ -464,6 +465,11 @@ void Scene::updateTree_()
 
     // collect all modulators for each object
     updateModulators_();
+
+    // create the audio-dsp graph
+    ObjectDspPath path;
+    path.createPath(this, sampleRate(), 4096);
+    path.dump(std::cout);
 
     // update the rendermodes
     propagateRenderMode(0);

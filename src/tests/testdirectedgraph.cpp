@@ -182,11 +182,11 @@ namespace MO {
 
         MO_PRINT("make linear depth:");
         objs.clear();
-        root.makeLinear(objs, SomeNode::O_DepthFirst, 3);
+        root.makeLinear(objs, 3, SomeNode::O_DepthFirst);
         MO__PRINT_LIST(objs);
         MO_PRINT("make linear breath:");
         objs.clear();
-        root.makeLinear(objs, SomeNode::O_BreathFirst, 3);
+        root.makeLinear(objs, 3, SomeNode::O_BreathFirst);
         MO__PRINT_LIST(objs);
 
         auto selector = [](SomeObject * o) { return (o->id.toInt() & 1) != 0; };

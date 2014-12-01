@@ -73,6 +73,7 @@ namespace MO {
     class ObjectFilter;
 
     class ObjectEditor;
+    class ObjectDspPath;
 #ifndef MO_DISABLE_TREE
     class ObjectTreeModel;
 #endif

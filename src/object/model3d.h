@@ -76,7 +76,7 @@ private:
         *textureMorph_,
         *textureBumpMorph_;
 
-    ParameterFloat * cr_, *cg_, *cb_, *ca_,
+    ParameterFloat * cr_, *cg_, *cb_, *ca_, *cbright_,
         *diffExp_, *bumpScale_,
         *vertexExtrude_;
     ParameterSelect * lightMode_, *vertexFx_;

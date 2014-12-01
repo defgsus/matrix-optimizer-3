@@ -261,6 +261,12 @@ public:
         contains microphones or soundsources. */
     bool isAudioRelevant() const;
 
+    /** True for audio generating objects */
+    virtual bool hasAudioOutput() const { return false; }
+
+    /** Returns true when there are transformation objects among the children. */
+    bool hasTransformationObjects() const { return !transformationObjects_.isEmpty(); }
+
     /** Returns true when the object can be deleted by the ObjectTreeView */
     bool canBeDeleted() const { return canBeDeleted_; }
 

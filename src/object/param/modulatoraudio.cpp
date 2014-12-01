@@ -1,0 +1,142 @@
+/** @file modulatoraudio.cpp
+
+    @brief
+
+    <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
+
+    <p>created 01.12.2014</p>
+*/
+
+#include "modulatoraudio.h"
+#include "io/error.h"
+#include "io/datastream.h"
+#include "object/trackfloat.h"
+#include "object/sequencefloat.h"
+#include "object/modulatorobjectfloat.h"
+
+
+namespace MO {
+
+
+ModulatorAudio::ModulatorAudio(
+        const QString &name, const QString &modulatorId, Object *parent)
+    : Modulator     (name, modulatorId, parent),
+      sourceType_   (ST_NONE),
+      amplitude_    (1.0),
+      timeOffset_   (0.0)
+{
+}
+
+void ModulatorAudio::serialize(IO::DataStream & io) const
+{
+    Modulator::serialize(io);
+
+    io.writeHeader("modf", 1);
+
+    io << amplitude_ << timeOffset_;
+}
+
+void ModulatorAudio::deserialize(IO::DataStream & io)
+{
+    Modulator::deserialize(io);
+
+    io.readHeader("modf", 1);
+
+    io >> amplitude_ >> timeOffset_;
+}
+
+void ModulatorAudio::copySettingsFrom(const Modulator *other)
+{
+    const ModulatorAudio * f = dynamic_cast<const ModulatorAudio*>(other);
+    if (!f)
+    {
+        MO_WARNING("ModulatorAudio::copySettingsFrom(" << other << ") "
+                   "with non-float type");
+        return;
+    }
+
+    amplitude_ = f->amplitude();
+    timeOffset_ = f->timeOffset();
+}
+
+bool ModulatorAudio::canBeModulator(const Object * o) const
+{
+    MO_ASSERT(o, "ModulatorAudio::canBeModulator(NULL) called");
+
+    return o->type() == Object::T_TRACK_FLOAT
+        || o->type() == Object::T_SEQUENCE_FLOAT
+        || o->type() == Object::T_MODULATOR_OBJECT_FLOAT;
+}
+
+bool ModulatorAudio::hasAmplitude() const
+{
+    return     sourceType_ == ST_SEQUENCE_FLOAT
+            || sourceType_ == ST_TRACK_FLOAT
+            || sourceType_ == ST_MODULATOR_OBJECT_FLOAT;
+}
+
+bool ModulatorAudio::hasTimeOffset() const
+{
+    return     sourceType_ == ST_SEQUENCE_FLOAT
+            || sourceType_ == ST_TRACK_FLOAT
+            || sourceType_ == ST_MODULATOR_OBJECT_FLOAT;
+}
+
+
+void ModulatorAudio::modulatorChanged_()
+{
+    if (modulator() == 0)
+        sourceType_ = ST_NONE;
+    else
+    if (qobject_cast<TrackFloat*>(modulator()))
+        sourceType_ = ST_TRACK_FLOAT;
+    else
+    if (qobject_cast<SequenceFloat*>(modulator()))
+        sourceType_ = ST_SEQUENCE_FLOAT;
+    else
+    if (qobject_cast<ModulatorObjectFloat*>(modulator()))
+        sourceType_ = ST_MODULATOR_OBJECT_FLOAT;
+    else
+    {
+        sourceType_ = ST_NONE;
+        MO_ASSERT(false, "illegal assignment of modulator '" << modulator()->idName()
+                       << "' to ModulatorAudio");
+    }
+}
+
+Double ModulatorAudio::value(Double time, uint thread) const
+{
+    time += timeOffset_;
+
+    if (!modulator() || !modulator()->active(time, thread))
+        return 0.0;
+
+    switch (sourceType_)
+    {
+        case ST_TRACK_FLOAT:
+            return amplitude_ *
+                    static_cast<TrackFloat*>(modulator())->value(time, thread);
+
+        case ST_SEQUENCE_FLOAT:
+        {
+            auto seq = static_cast<SequenceFloat*>(modulator());
+            // sequences in clips need a playing clip
+            if (seq->parentClip() && !seq->parentClip()->isPlaying())
+                return 0.0;
+            return amplitude_ * seq->value(time, thread);
+        }
+
+        case ST_MODULATOR_OBJECT_FLOAT:
+            return amplitude_ *
+                    static_cast<ModulatorObjectFloat*>(modulator())->value(time, thread);
+
+        case ST_NONE:
+            return 0.0;
+    }
+
+    return 0.0;
+}
+
+
+} // namespace MO

@@ -108,7 +108,7 @@ public slots:
 private slots:
 
     void setEditActions_(const QObject * sender, QList<QAction*> actions);
-    void testSceneTransform_();
+    void testSceneTransform_(bool newVersion);
     void updateSystemInfo_();
     void updateDebugRender_();
 

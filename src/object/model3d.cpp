@@ -99,6 +99,7 @@ void Model3d::createParameters()
 
     beginParameterGroup("color", tr("color"));
 
+        cbright_ = createFloatParameter("bright", "bright", tr("Overall brightness of the color"), 1.0, 0.1);
         cr_ = createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
         cg_ = createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
         cb_ = createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
@@ -208,10 +209,11 @@ const GEOM::Geometry* Model3d::geometry() const
 
 Vec4 Model3d::modelColor(Double time, uint thread) const
 {
+    const auto b = cbright_->value(time, thread);
     return Vec4(
-        cr_->value(time, thread),
-        cg_->value(time, thread),
-        cb_->value(time, thread),
+        cr_->value(time, thread) * b,
+        cg_->value(time, thread) * b,
+        cb_->value(time, thread) * b,
         ca_->value(time, thread));
 }
 
@@ -358,10 +360,11 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         textureBump_->bind(1);
 
         // update uniforms
+        const auto bright = cbright_->value(time, thread);
         draw_->setAmbientColor(
-                    cr_->value(time, thread),
-                    cg_->value(time, thread),
-                    cb_->value(time, thread),
+                    cr_->value(time, thread) * bright,
+                    cg_->value(time, thread) * bright,
+                    cb_->value(time, thread) * bright,
                     ca_->value(time, thread));
 
         if (u_diff_exp_)

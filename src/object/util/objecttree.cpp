@@ -15,16 +15,19 @@
 namespace MO {
 
 
-ObjectTreeNode * getObjectTree(Object * root_object)
+ObjectTreeNode * get_object_tree(Object * root_object, bool own)
 {
-    auto node = new ObjectTreeNode(root_object);
+    auto node = new ObjectTreeNode(root_object, own);
 
     for (auto c : root_object->childObjects())
-        node->append( getObjectTree(c) );
+        node->append( get_object_tree(c, own) );
 
     return node;
 }
 
+
+
+#if 0
 
 namespace Private
 {
@@ -92,7 +95,7 @@ ObjectTree::~ObjectTree()
 
 
 
-
+#endif
 
 
 
