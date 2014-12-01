@@ -17,6 +17,7 @@
 #include "object/sequence.h"
 #include "object/clipcontainer.h"
 #include "object/objectfactory.h"
+#include "object/util/audioobjectconnections.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
@@ -290,6 +291,31 @@ void ObjectEditor::removeAllModulators(Parameter *p)
     emit parameterChanged(p);
     scene_->render();
 }
+
+
+
+
+// ---------------------------------- audio cons -------------------------------------------
+
+void ObjectEditor::connectAudioObjects(AudioObject *from, AudioObject *to,
+                                       uint outChannel, uint inChannel,
+                                       uint numChannels)
+{
+    scene_->audioConnections()->connect(from, to, outChannel, inChannel, numChannels);
+
+    emit audioConnectionsChanged();
+}
+
+void ObjectEditor::disconnectAudioObjects(AudioObject *from, AudioObject *to,
+                                       uint outChannel, uint inChannel,
+                                       uint numChannels)
+{
+    scene_->audioConnections()->disconnect(from, to, outChannel, inChannel, numChannels);
+
+    emit audioConnectionsChanged();
+}
+
+
 
 
 // ----------------------------------- modulator objects -----------------------------------

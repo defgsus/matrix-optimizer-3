@@ -221,7 +221,9 @@ HEADERS += \
     src/audio/tool/audiobuffer.h \
     src/object/audio/objectdsppath.h \
     src/object/audioobject.h \
-    src/object/param/parameters.h
+    src/object/param/parameters.h \
+    src/object/audio/oscillatorao.h \
+    src/object/util/audioobjectconnections.h
 
 
 SOURCES += \
@@ -409,4 +411,6 @@ SOURCES += \
     src/audio/tool/audiobuffer.cpp \
     src/object/audio/objectdsppath.cpp \
     src/object/audioobject.cpp \
-    src/object/param/parameters.cpp
+    src/object/param/parameters.cpp \
+    src/object/audio/oscillatorao.cpp \
+    src/object/util/audioobjectconnections.cpp

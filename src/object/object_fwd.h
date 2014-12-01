@@ -60,6 +60,9 @@ namespace MO {
 
     class AudioUnit;
     class FilterUnit;
+    class AudioObject;
+    class AudioObjectConnection;
+    class AudioObjectConnections;
 
     class Modulator;
     class ModulatorFloat;

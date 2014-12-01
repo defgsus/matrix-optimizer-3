@@ -17,6 +17,7 @@ class QMimeData;
 
 namespace MO {
 class Object;
+class AudioObject;
 class Parameter;
 class Modulator;
 namespace GUI {
@@ -92,6 +93,9 @@ public slots:
     /** Focus and select the item for the object. */
     void setFocusObject(Object * o);
 
+    /** Starts the connection drag mode */
+    void startConnection(AudioObject * o, uint outChannel = 0);
+
     // ------------------- clipboard ------------------
 
     /** Creates the QMimeData of the items in the list.
@@ -136,6 +140,7 @@ private slots:
     void onObjectMoved_(MO::Object*, MO::Object * oldParent);
     void onModulatorAdded_(MO::Modulator *);
     void onModulatorDeleted_();
+    void onConnectionsChanged_();
 
 protected:
 

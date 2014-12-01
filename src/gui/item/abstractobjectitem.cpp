@@ -20,7 +20,9 @@
 
 #include "abstractobjectitem.h"
 #include "objectgraphexpanditem.h"
+#include "objectgraphconnectitem.h"
 #include "object/object.h"
+#include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
@@ -44,8 +46,12 @@ public:
           layouted      (false),
           size          (3, 3), // expanded size minimum
           itemExp       (0),
+          inputItem     (0),
+          outputItem    (0),
           isMouseDown   (false)
     { }
+
+    void updateConnectors();
 
     AbstractObjectItem * item; ///< parent item class
     Object * object;
@@ -56,6 +62,7 @@ public:
     QPixmap iconPixmap;
     QBrush brushBack, brushBackSel;
     ObjectGraphExpandItem * itemExp;
+    ObjectGraphConnectItem * inputItem, * outputItem;
 
     bool isMouseDown;
     QPoint gridPosDown;
@@ -90,6 +97,14 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     setAcceptHoverEvents(true);
     setFlag(ItemIsSelectable, true);
     setToolTip(object->name());
+
+    // input items
+    if (qobject_cast<AudioObject*>(object))
+    {
+        p_oi_->inputItem = new ObjectGraphConnectItem(this);
+        p_oi_->outputItem = new ObjectGraphConnectItem(this);
+        p_oi_->updateConnectors();
+    }
 }
 
 AbstractObjectItem::~AbstractObjectItem()
@@ -151,6 +166,7 @@ void AbstractObjectItem::setExpanded(bool enable)
             i->setVisible(enable);
 
     setLayoutDirty();
+    p_oi_->updateConnectors();
 
     // bring to front
     if (enable)
@@ -187,13 +203,15 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
     else
     if (change == ItemChildAddedChange)
     {
-        if (p_oi_->itemExp)
-            p_oi_->itemExp->setVisible(true);
-
-        // set visibility of new child
         auto item = value.value<QGraphicsItem*>();
         if (item && item->type() >= T_BASE)
+        {
+            if (p_oi_->itemExp)
+                p_oi_->itemExp->setVisible(true);
+
+            // set visibility of new child
             item->setVisible(isExpanded());
+        }
 
         if (isExpanded())
             setLayoutDirty();
@@ -256,7 +274,10 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
         {
             s->toFront(this);
             if (object())
+            {
                 emit s->objectSelected(object());
+
+            }
         }
 
         e->accept();
@@ -377,6 +398,8 @@ void AbstractObjectItem::setGridSize(const QSize &size)
 
     p_oi_->size = size;
 
+    p_oi_->updateConnectors();
+
     if (isExpanded())
     {
         setLayoutDirty();
@@ -405,6 +428,14 @@ AbstractObjectItem * AbstractObjectItem::itemInGrid(const QPoint& p) const
 
 // --------------------------------------- layout ---------------------------------------------------
 
+void AbstractObjectItem::PrivateOI::updateConnectors()
+{
+    if (inputItem)
+        inputItem->setPos(item->inputPos());
+    if (outputItem)
+        outputItem->setPos(item->outputPos());
+}
+
 QRectF AbstractObjectItem::childrenBoundingRect(bool checkVisibilty)
 {
     if (!checkVisibilty)
@@ -413,7 +444,7 @@ QRectF AbstractObjectItem::childrenBoundingRect(bool checkVisibilty)
     QRectF rect;
     const auto list = childItems();
     for (QGraphicsItem * c : list)
-    if (c->isVisible())
+    if (c->isVisible() && c->type() >= T_BASE)
     {
         rect |= c->mapToParent(c->boundingRect()).boundingRect();
     }
@@ -477,6 +508,19 @@ void AbstractObjectItem::adjustRightItems()
 }
 
 // --------------------------------------- shape and draw -----------------------------------------
+
+QPointF AbstractObjectItem::inputPos(uint ) const
+{
+    const auto r = rect();
+    return QPointF(r.left(), r.center().y());
+}
+
+
+QPointF AbstractObjectItem::outputPos(uint ) const
+{
+    const auto r = rect();
+    return QPointF(r.right(), r.center().y());
+}
 
 QRectF AbstractObjectItem::rect() const
 {

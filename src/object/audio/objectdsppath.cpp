@@ -202,6 +202,10 @@ void ObjectDspPath::Private::createPath(Scene * s)
         transformationObjects.append(b);
     });
 
+    // --- get all audio processors ---
+
+
+
     // --- get all soundsource objects ---
 
     QList<Object*> soundsources;

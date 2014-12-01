@@ -55,4 +55,6 @@ private:
 };
 
 } // namespace MO
+
+
 #endif // AUDIOOBJECT_H

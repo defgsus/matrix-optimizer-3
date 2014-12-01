@@ -1,26 +1,26 @@
-/** @file modulatoritem.h
+/** @file audioconnectionitem.h
 
     @brief
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 24.11.2014</p>
+    <p>created 01.12.2014</p>
 */
 
-#ifndef MODULATORITEM_H
-#define MODULATORITEM_H
+#ifndef AUDIOCONNECTIONITEM_H
+#define AUDIOCONNECTIONITEM_H
 
 #include <QGraphicsItem>
 
 namespace MO {
-class Modulator;
+class AudioObjectConnection;
 namespace GUI {
 
 class AbstractObjectItem;
 class ObjectGraphScene;
 
-class ModulatorItem : public QGraphicsItem
+class AudioConnectionItem : public QGraphicsItem
 {
 public:
 
@@ -29,7 +29,7 @@ public:
         Type = UserType + 10
     };
 
-    ModulatorItem(Modulator *);
+    AudioConnectionItem(AudioObjectConnection * con);
 
     // ------------------- getter ----------------------
 
@@ -62,7 +62,7 @@ private:
     void updatePos_();
     void calcShape_();
 
-    Modulator * mod_;
+    AudioObjectConnection * con_;
     bool isHovered_;
     AbstractObjectItem * from_, * to_;
     QPointF fromPos_, toPos_;
@@ -73,4 +73,4 @@ private:
 } // namespace GUI
 } // namespace MO
 
-#endif // MODULATORITEM_H
+#endif // AUDIOCONNECTIONITEM_H

@@ -79,13 +79,6 @@ class Object : public QObject
     friend class ObjectFactory;
     // to edit the tree
     friend class Scene;
-    // to create parameters
-    // XXX need to refacture this
-    friend class TextureSetting;
-    friend class ColorPostProcessingSetting;
-    friend class TextureMorphSetting;
-    friend class SynthSetting;
-    friend class AlphaBlendSetting;
 public:
 
     // -------------- types ------------------
@@ -400,6 +393,9 @@ public:
     /** Returns the index of the last child object of type @p T */
     template <class T>
     int indexOfLastChild(int last = -1) const;
+
+    /** Adds the tree to the map */
+    void getIdMap(QMap<QString, Object*>& idMap) const;
 
     // ------------- tree stuff -----------------
 

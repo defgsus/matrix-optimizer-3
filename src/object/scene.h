@@ -32,6 +32,7 @@ class AudioInThread;
 template <typename T> class LocklessQueue;
 class ProjectionSystemSettings;
 
+
 /** Handles tree managment, locking, rendering and audio processing */
 class Scene : public Object
 {
@@ -139,6 +140,9 @@ public:
     uint projectorIndex() const { return projectorIndex_; }
 
     // ----------- audio info ------------------
+
+    AudioObjectConnections * audioConnections() { return audioCon_; }
+    const AudioObjectConnections * audioConnections() const { return audioCon_; }
 
     uint numberChannelsIn() const { return numInputChannels_; }
     uint numberChannelsOut() const { return numOutputChannels_; }
@@ -476,6 +480,8 @@ private:
     Sequence * changedSequence_;
 
     // ----------- audio ----------------------
+
+    AudioObjectConnections * audioCon_;
 
     AUDIO::AudioDevice * audioDevice_;
 

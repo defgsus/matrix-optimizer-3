@@ -1007,6 +1007,13 @@ void Object::setNumberThreads(uint num)
         m->setNumberThreads(num);
 }
 
+void Object::getIdMap(QMap<QString, Object *> &idMap) const
+{
+    idMap.insert(idName(), const_cast<Object*>(this));
+    for (auto c : childObjects())
+        c->getIdMap(idMap);
+}
+
 
 // ------------------------- 3d -----------------------
 

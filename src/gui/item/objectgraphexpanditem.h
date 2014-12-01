@@ -26,6 +26,8 @@ public:
 
     // ---------- QGraphicsItem interface --------------
 
+    virtual int type() const Q_DECL_OVERRIDE { return UserType + 1; }
+
     QRectF boundingRect() const Q_DECL_OVERRIDE;
 
     void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;

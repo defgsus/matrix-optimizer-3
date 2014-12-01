@@ -20,16 +20,19 @@
 
 #include "objectgraphscene.h"
 #include "gui/item/abstractobjectitem.h"
+#include "gui/item/audioconnectionitem.h"
 #include "gui/item/modulatoritem.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/geometrydialog.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/model3d.h"
+#include "object/audioobject.h"
+#include "object/objectfactory.h"
 #include "object/param/modulator.h"
 #include "object/util/objectmodulatorgraph.h"
-#include "object/objectfactory.h"
 #include "object/util/objecteditor.h"
+#include "object/util/audioobjectconnections.h"
 #include "model/objecttreemimedata.h"
 #include "tool/actionlist.h"
 #include "io/application.h"
@@ -38,6 +41,19 @@
 namespace MO {
 namespace GUI {
 
+namespace
+{
+    QRectF bounding_rect(const QPointF& one, const QPointF& two)
+    {
+        QRectF r;
+        r.setLeft(  std::min(one.x(), two.x()));
+        r.setRight( std::max(one.x(), two.x()));
+        r.setTop(   std::min(one.y(), two.y()));
+        r.setBottom(std::max(one.y(), two.y()));
+        return r;
+    }
+}
+
 class ObjectGraphScene::Private
 {
 public:
@@ -45,7 +61,8 @@ public:
     {
         A_NONE,
         A_DRAG_SPACE,
-        A_RECT_SELECT
+        A_RECT_SELECT,
+        A_DRAG_CONNECT
     };
 
     Private(ObjectGraphScene * scene)
@@ -62,6 +79,7 @@ public:
     void createModulatorItems(Object * root);
     /// Completely recreates all cables (to nasty to do it selectively)
     void recreateModulatorItems();
+    void addAudioCon(AudioObjectConnection*);
     void addModItem(Modulator *);
     void addModItemMap(Object *, ModulatorItem *);
     /// Removes all modulator items of object and it's children
@@ -88,6 +106,7 @@ public:
     std::map<Object*, AbstractObjectItem*> itemMap;
     std::map<Object*, QList<ModulatorItem*>> modItemMap;
     QList<ModulatorItem*> modItems;
+    QList<AudioConnectionItem*> audioConItems;
     int zStack; ///< highest current stack value
     Action action;
     QPointF lastMousePos;
@@ -95,6 +114,9 @@ public:
 
     ActionList actions;
     QPoint popupGridPos;
+    uint connectStartChannel;
+    AbstractObjectItem * connectStartItem, * connectEndItem;
+    QPointF connectStartPos, connectEndPos;
 };
 
 
@@ -167,6 +189,8 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onModulatorDeleted_()));
             connect(p_->editor, SIGNAL(modulatorsDeleted(QList<MO::Modulator*>)),
                     this, SLOT(onModulatorDeleted_()));
+            connect(p_->editor, SIGNAL(audioConnectionsChanged()),
+                    this, SLOT(onConnectionsChanged_()));
 
         }
     }
@@ -282,6 +306,14 @@ void ObjectGraphScene::Private::createModulatorItems(Object *root)
         addModItem(m);
     }
 
+    // add audio connections
+    if (auto ao = qobject_cast<AudioObject*>(root))
+    {
+        auto list = this->root->audioConnections()->getInputs(ao);
+        for (auto c : list)
+            addAudioCon(c);
+    }
+
     // process childs
     for (auto c : root->childObjects())
         createModulatorItems(c);
@@ -299,6 +331,20 @@ void ObjectGraphScene::Private::addModItem(Modulator * m)
     // ModulatorItems per object
     addModItemMap(m->parent(), item);
     addModItemMap(m->modulator(), item);
+}
+
+void ObjectGraphScene::Private::addAudioCon(AudioObjectConnection * c)
+{
+    auto item = new AudioConnectionItem(c);
+    scene->addItem( item );
+    item->setZValue(++zStack);
+    item->updateShape(); // calc arrow shape
+
+    // store in map
+    audioConItems.append( item );
+    // ModulatorItems per object
+    //addModItemMap(m->parent(), item);
+    //addModItemMap(m->modulator(), item);
 }
 
 void ObjectGraphScene::Private::addModItemMap(Object * o, ModulatorItem * item)
@@ -580,7 +626,7 @@ AbstractObjectItem * ObjectGraphScene::Private::childItemAt(AbstractObjectItem *
             return ret;
     }
 
-    return 0;
+    return parent;
 }
 
 void ObjectGraphScene::setFocusObject(Object *o)
@@ -601,6 +647,22 @@ void ObjectGraphScene::setFocusObject(Object *o)
     item->ensureVisible();
 }
 
+
+void ObjectGraphScene::startConnection(AudioObject *o, uint outChannel)
+{
+    p_->connectStartItem = itemForObject(o);
+    if (!p_->connectStartItem)
+        return;
+
+    p_->connectStartChannel = outChannel;
+    p_->connectStartPos = p_->connectEndPos =
+            p_->connectStartItem->globalOutputPos(outChannel);
+    p_->connectEndItem = 0;
+    p_->action = Private::A_DRAG_CONNECT;
+    update();
+}
+
+
 // ------------------------------ mouse events ----------------------------------
 
 void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -609,7 +671,28 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (it)
         MO_DEBUG(it->object()->name());
 */
+    // finish connection
+    if (p_->action == Private::A_DRAG_CONNECT)
+    {
+        if (event->button() == Qt::LeftButton
+            && p_->connectEndItem && p_->connectStartItem)
+        {
+            auto aoFrom = qobject_cast<AudioObject*>(p_->connectStartItem->object()),
+                 aoTo = qobject_cast<AudioObject*>(p_->connectEndItem->object());
+            if (aoFrom && aoTo)
+                p_->editor->connectAudioObjects(
+                            aoFrom, aoTo,
+                            p_->connectStartChannel, 0,
+                            1);
 
+        }
+        p_->action = Private::A_NONE;
+        update(sceneRect());
+        //update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-50,-50,50,50));
+        return;
+    }
+
+    // process items
     QGraphicsScene::mousePressEvent(event);
     if (event->isAccepted())
         return;
@@ -631,6 +714,24 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    // draw a connection
+    if (p_->action == Private::A_DRAG_CONNECT)
+    {
+        // find goal item
+        p_->connectEndPos = event->scenePos();
+        p_->connectEndItem = objectItemAt(mapToGrid(p_->connectEndPos));
+        if (p_->connectEndItem == p_->connectStartItem)
+            p_->connectEndItem = 0;
+
+        // snap to goal item
+        if (p_->connectEndItem)
+            p_->connectEndPos = p_->connectEndItem->globalInputPos(0);
+
+        update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-50,-50,50,50));
+        return;
+    }
+
+    // process childs
     QGraphicsScene::mouseMoveEvent(event);
     if (event->isAccepted())
         return;
@@ -645,10 +746,7 @@ void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         // update previous sel-area
         update(p_->selUpdateRect);
         // make new
-        p_->selUpdateRect.setLeft(  std::min(p_->lastMousePos.x(), event->scenePos().x()));
-        p_->selUpdateRect.setRight( std::max(p_->lastMousePos.x(), event->scenePos().x()));
-        p_->selUpdateRect.setTop(   std::min(p_->lastMousePos.y(), event->scenePos().y()));
-        p_->selUpdateRect.setBottom(std::max(p_->lastMousePos.y(), event->scenePos().y()));
+        p_->selUpdateRect = bounding_rect(  p_->lastMousePos, event->scenePos() );
         QPainterPath p;
         p.addRect(p_->selUpdateRect);
         setSelectionArea(p);
@@ -680,12 +778,22 @@ void ObjectGraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void ObjectGraphScene::drawForeground(QPainter *p, const QRectF &)
 {
+    // selection frame
     if (p_->action == Private::A_RECT_SELECT)
     {
         p->setBrush(Qt::NoBrush);
         p->setPen(ObjectGraphSettings::penSelectionFrame());
 
         p->drawPath(selectionArea());
+    }
+
+    if (p_->action == Private::A_DRAG_CONNECT)
+    {
+        p->setBrush(Qt::NoBrush);
+        p->setPen(QColor(255,128,128));
+        p->drawPath(ObjectGraphSettings::pathWire(
+                        p_->connectStartPos,
+                        p_->connectEndPos));
     }
 }
 
@@ -991,6 +1099,12 @@ void ObjectGraphScene::onModulatorDeleted_()
 {
     p_->recreateModulatorItems();
 }
+
+void ObjectGraphScene::onConnectionsChanged_()
+{
+    p_->recreateModulatorItems();
+}
+
 
 // ----------------------------------- editing -------------------------------------------
 

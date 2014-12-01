@@ -83,14 +83,17 @@ int ObjectFactory::hueForObject(int type)
     if (type & Object::TG_MODULATOR_OBJECT)
         return 170;
     else
+    if (type & Object::T_AUDIO_OBJECT)
+        return 350;
+    else
     if (type & Object::T_AUDIO_UNIT)
-        return 300;
+        return 350;
     else
     if (type & Object::T_SOUNDSOURCE)
-        return 340;
+        return 290;
     else
     if (type & Object::T_SOUND_OBJECT)
-        return 350;
+        return 290;
     else
         return -1;
 }
@@ -157,6 +160,11 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
             return iconLookAt;
         if (qobject_cast<const Mix*>(o))
             return iconMix;
+    }
+
+    if (o->isAudioObject())
+    {
+        return iconParameter;
     }
 
     if (o->isAudioUnit())

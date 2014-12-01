@@ -80,6 +80,20 @@ public:
     /** Returns the pixel rectangle */
     QRectF rect() const;
 
+    /** Returns the connector position in local coords */
+    QPointF inputPos(uint channel = 0) const;
+
+    /** Returns the connector position in local coords */
+    QPointF outputPos(uint channel = 0) const;
+
+    /** Returns the connector position in scene coords */
+    QPointF globalInputPos(uint channel = 0) const
+        { return mapToScene(inputPos(channel)); }
+
+    /** Returns the connector position in scene coords */
+    QPointF globalOutputPos(uint channel = 0) const
+        { return mapToScene(outputPos(channel)); }
+
     /** Returns true if mouse is over item */
     bool isHover() const;
 

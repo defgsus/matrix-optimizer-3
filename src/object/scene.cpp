@@ -32,6 +32,7 @@
 #include "object/audio/audiounit.h"
 #include "object/audio/objectdsppath.h"
 #include "object/util/objecteditor.h"
+#include "object/util/audioobjectconnections.h"
 #include "model/objecttreemodel.h"
 #include "audio/audiodevice.h"
 #include "audio/audiosource.h"
@@ -74,6 +75,7 @@ Scene::Scene(QObject *parent) :
     projectorIndex_     (0),
     sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
+    audioCon_           (new AudioObjectConnections()),
     audioDevice_        (new AUDIO::AudioDevice()),
     audioInThread_      (0),
     audioOutThread_     (0),
@@ -126,6 +128,7 @@ Scene::~Scene()
     delete readWriteLock_;
     delete audioOutQueue_;
     delete audioInQueue_;
+    delete audioCon_;
     delete projectionSettings_;
 }
 
@@ -305,6 +308,9 @@ void Scene::deleteObject(Object *object)
 
     {
         ScopedSceneLockWrite lock(this);
+
+        // remove audio connections
+        audioConnections()->remove(object);
 
         // get list of all objects that will be deleted
         dellist = object->findChildObjects<Object>(QString(), true);

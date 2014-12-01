@@ -67,6 +67,8 @@ signals:
     /** A bunch of modulators has been deleted */
     void modulatorsDeleted(const QList<MO::Modulator*>& mods);
 
+    void audioConnectionsChanged();
+
 public slots:
 
     // ------------ tree editing ---------------
@@ -101,6 +103,16 @@ public slots:
     void setParameterValue(MO::ParameterFilename *, const QString& value);
     void setParameterValue(MO::ParameterText *, const QString& value);
     void setParameterValue(MO::ParameterTimeline1D *, const MATH::Timeline1D& value);
+
+    // ----------- audio cons ------------------
+
+    void connectAudioObjects(MO::AudioObject * from, MO::AudioObject * to,
+                             uint outChannel = 0, uint inChannel = 0,
+                             uint numChannels = 1);
+
+    void disconnectAudioObjects(MO::AudioObject * from, MO::AudioObject * to,
+                                uint outChannel = 0, uint inChannel = 0,
+                                uint numChannels = 1);
 
     // ------------ modulators -----------------
 
