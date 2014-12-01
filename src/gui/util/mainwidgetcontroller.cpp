@@ -1081,8 +1081,11 @@ void MainWidgetController::onSceneChanged_()
 
 void MainWidgetController::onSceneTimeChanged_(Double time)
 {
-    seqView_->setSceneTime(time);
-    sequencer_->setSceneTime(time);
+    if (seqView_->isVisible())
+        seqView_->setSceneTime(time);
+    if (sequencer_->isVisible())
+        sequencer_->setSceneTime(time);
+
     transportWidget_->setSceneTime(time);
 }
 

@@ -64,6 +64,9 @@ signals:
     /** Emitted when a Modulator has been deleted. */
     void modulatorDeleted(const MO::Modulator*);
 
+    /** A bunch of modulators has been deleted */
+    void modulatorsDeleted(const QList<MO::Modulator*>& mods);
+
 public slots:
 
     // ------------ tree editing ---------------

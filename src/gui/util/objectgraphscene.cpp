@@ -164,7 +164,9 @@ void ObjectGraphScene::setRootObject(Object *root)
             connect(p_->editor, SIGNAL(modulatorAdded(MO::Modulator*)),
                     this, SLOT(onModulatorAdded_(MO::Modulator*)));
             connect(p_->editor, SIGNAL(modulatorDeleted(const MO::Modulator*)),
-                    this, SLOT(onModulatorDeleted_(const MO::Modulator*)));
+                    this, SLOT(onModulatorDeleted_()));
+            connect(p_->editor, SIGNAL(modulatorsDeleted(QList<MO::Modulator*>)),
+                    this, SLOT(onModulatorDeleted_()));
 
         }
     }
@@ -981,7 +983,7 @@ void ObjectGraphScene::onModulatorAdded_(Modulator *)
     p_->recreateModulatorItems();
 }
 
-void ObjectGraphScene::onModulatorDeleted_(const Modulator *)
+void ObjectGraphScene::onModulatorDeleted_()
 {
     p_->recreateModulatorItems();
 }

@@ -278,6 +278,7 @@ void ObjectEditor::removeModulator(Parameter *p, const QString &idName)
 
 void ObjectEditor::removeAllModulators(Parameter *p)
 {
+    auto mods = p->modulators();
     {
         ScopedSceneLockWrite lock(scene_);
         p->removeAllModulators();
@@ -285,7 +286,7 @@ void ObjectEditor::removeAllModulators(Parameter *p)
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
     }
-    // XXX ModulatorDeleted signal(s)
+    emit modulatorsDeleted(mods);
     emit parameterChanged(p);
     scene_->render();
 }
