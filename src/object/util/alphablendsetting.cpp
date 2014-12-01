@@ -13,6 +13,7 @@
 #include "alphablendsetting.h"
 #include "gl/opengl.h"
 #include "object/object.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterselect.h"
 
 // Does this even work with qlinguist?
@@ -56,7 +57,7 @@ void AlphaBlendSetting::createParameters(Mode defaultType, bool with_parent, con
 {
     MO_ASSERT(object_, "");
 
-    p_type_ = object_->createSelectParameter("_blendmode" + suff,
+    p_type_ = object_->params()->createSelectParameter("_blendmode" + suff,
                                     tr("alpha blending"),
                                     tr("Selects how succesive drawing actions are composed"),
                                    modeIds,

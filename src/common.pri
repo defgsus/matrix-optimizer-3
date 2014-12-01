@@ -219,7 +219,9 @@ HEADERS += \
     src/types/time.h \
     src/object/param/modulatoraudio.h \
     src/audio/tool/audiobuffer.h \
-    src/object/audio/objectdsppath.h
+    src/object/audio/objectdsppath.h \
+    src/object/audioobject.h \
+    src/object/param/parameters.h
 
 
 SOURCES += \
@@ -405,4 +407,6 @@ SOURCES += \
     src/object/util/objecteditor.cpp \
     src/object/param/modulatoraudio.cpp \
     src/audio/tool/audiobuffer.cpp \
-    src/object/audio/objectdsppath.cpp
+    src/object/audio/objectdsppath.cpp \
+    src/object/audioobject.cpp \
+    src/object/param/parameters.cpp

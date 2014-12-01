@@ -112,7 +112,8 @@ public:
         T_CLIP              = 1<<16,
         T_CLIP_CONTAINER    = 1<<17,
         T_SOUND_OBJECT      = 1<<18,
-        T_OSCILLATOR        = 1<<19
+        T_OSCILLATOR        = 1<<19,
+        T_AUDIO_OBJECT      = 1<<20
     };
     enum TypeGroups
     {
@@ -252,6 +253,7 @@ public:
     virtual bool isLightSource() const { return false; }
     virtual bool isAudioUnit() const { return false; }
     virtual bool isModulatorObject() const { return false; }
+    virtual bool isAudioObject() const { return false; }
 
     /** The base class method returns whether any of the Parameters of
         the object are modulated. */
@@ -529,10 +531,8 @@ protected:
 public:
 
     /** Returns the list of parameters for this object */
-    const QList<Parameter*>& parameters() const { return parameters_; }
-
-    /** Returns the parameter with the given id, or NULL. */
-    Parameter * findParameter(const QString& id);
+    const Parameters * params() const { return parameters_; }
+    Parameters * params() { return parameters_; }
 
     /** Override to create all parameters for your object.
         Always call the ancestor classes createParameters() in your derived function! */
@@ -549,98 +549,6 @@ public:
         XXX Right now it's a bit unclear, what is possible here except from lazy requests. */
     virtual void onParametersLoaded() { }
 
-protected:
-
-    /** Starts a new group which will contain all Parameters created afterwards.
-        @p id is the PERSITANT name, to keep the gui-settings between sessions. */
-    void beginParameterGroup(const QString& id, const QString& name);
-    /** Ends the current Parameter group */
-    void endParameterGroup();
-
-    /** Creates the desired parameter,
-        or returns an already created parameter object.
-        When the Parameter was present before, all it's settings are still overwritten.
-        If @p statusTip is empty, a default string will be set in the edit views. */
-    ParameterFloat * createFloatParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Double defaultValue, Double minValue, Double maxValue, Double smallStep,
-                bool editable = true, bool modulateable = true);
-
-    ParameterFloat * createFloatParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Double defaultValue, bool editable = true, bool modulateable = true);
-
-    ParameterFloat * createFloatParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Double defaultValue, Double smallStep,
-                bool editable = true, bool modulateable = true);
-
-
-    ParameterInt * createIntParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Int defaultValue, Int minValue, Int maxValue, Int smallStep,
-                bool editable, bool modulateable);
-
-    ParameterInt * createIntParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Int defaultValue, Int smallStep,
-                bool editable, bool modulateable);
-
-    ParameterInt * createIntParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Int defaultValue, bool editable, bool modulateable);
-
-    ParameterSelect * createBooleanParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const QString& offStatusTip, const QString& onStatusTip,
-                bool defaultValue, bool editable = true, bool modulateable = true);
-
-    ParameterSelect * createSelectParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const QStringList& valueIds, const QStringList& valueNames,
-                const QList<int>& valueList,
-                int defaultValue, bool editable = true, bool modulateable = true);
-
-    ParameterSelect * createSelectParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const QStringList& valueIds, const QStringList& valueNames,
-                const QStringList& statusTips,
-                const QList<int>& valueList,
-                int defaultValue, bool editable = true, bool modulateable = true);
-
-    ParameterText * createTextParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const QString& defaultValue,
-                bool editable = true, bool modulateable = true);
-
-    ParameterText * createTextParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                TextType textType,
-                const QString& defaultValue,
-                bool editable = true, bool modulateable = true);
-
-    ParameterFilename * createFilenameParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                IO::FileType fileType,
-                const QString& defaultValue = QString(), bool editable = true);
-
-
-    /** Creates a timeline parameter.
-        Ownership of @p defaultValue stays with caller. */
-    ParameterTimeline1D * createTimeline1DParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const MATH::Timeline1D * defaultValue = 0, bool editable = true);
-
-    ParameterTimeline1D * createTimeline1DParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const MATH::Timeline1D * defaultValue,
-                Double minTime, Double maxTime, bool editable = true);
-
-    ParameterTimeline1D * createTimeline1DParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const MATH::Timeline1D * defaultValue,
-                Double minTime, Double maxTime, Double minValue, Double maxValue,
-                bool editable = true);
 
     // ------------------- audio ------------------
 public:
@@ -814,11 +722,7 @@ private:
 
     // ---------- parameter s-----------------
 
-    /** Writes all parameters to the stream */
-    static void serializeParameters_(IO::DataStream&, const Object *);
-    /** Reads all parameters from stream.
-        @note The parameters MUST be created before! */
-    static void deserializeParameters_(IO::DataStream&, Object*);
+    Parameters * parameters_;
 
     void passDownActivityScope_(ActivityScope parent_scope);
 
@@ -841,12 +745,6 @@ private:
 
     uint numberThreads_;
     std::vector<uint> bufferSize_;
-
-    // ----------- parameter -----------------
-
-    QList<Parameter*> parameters_;
-    QString currentParameterGroupId_,
-            currentParameterGroupName_;
 
     // --------- default parameters ----------
 

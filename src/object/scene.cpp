@@ -18,6 +18,7 @@
 #include "io/log.h"
 #include "io/datastream.h"
 #include "object/objectfactory.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
@@ -569,7 +570,7 @@ void Scene::updateModulators_()
     {
         o->collectModulators();
         // check parameters as well
-        for (auto p : o->parameters())
+        for (auto p : o->params()->parameters())
             p->collectModulators();
     }
 }

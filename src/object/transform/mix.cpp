@@ -9,6 +9,7 @@
 */
 
 #include "mix.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 
@@ -39,13 +40,13 @@ void Mix::createParameters()
 {
     Transformation::createParameters();
 
-    beginParameterGroup("mixmix", tr("mix"));
+    params()->beginParameterGroup("mixmix", tr("mix"));
 
-    m_ = createFloatParameter("mix", "mix",
+        m_ = params()->createFloatParameter("mix", "mix",
                               tr("The contained transformations will be mixed-in by this value, range 0-1")
                               , 1, 0, 1, 0.05);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void Mix::childrenChanged()

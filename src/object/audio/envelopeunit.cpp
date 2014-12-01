@@ -11,6 +11,7 @@
 #include "envelopeunit.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/modulatorobjectfloat.h"
 #include "audio/tool/envelopefollower.h"
@@ -48,23 +49,23 @@ void EnvelopeUnit::createParameters()
 {
     AudioUnit::createParameters();
 
-    beginParameterGroup("envset", tr("envelope"));
+    params()->beginParameterGroup("envset", tr("envelope"));
 
-        amplitude_ = createFloatParameter("amp", tr("amplitude"),
+        amplitude_ = params()->createFloatParameter("amp", tr("amplitude"),
                                      tr("Multiplier for the generated envelope"),
                                      1.0, 0.1);
 
-        fadeIn_ = createFloatParameter("fadein", tr("time up"),
+        fadeIn_ = params()->createFloatParameter("fadein", tr("time up"),
                                      tr("Sets the time to follow rising signals in seconds"),
                                      0.01, 0.001);
         fadeIn_->setMinValue(0.00001);
 
-        fadeOut_ = createFloatParameter("fadeout", tr("time down"),
+        fadeOut_ = params()->createFloatParameter("fadeout", tr("time down"),
                                      tr("Sets the time to follow decaying signals in seconds"),
                                      0.5, 0.001);
         fadeOut_->setMinValue(0.00001);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void EnvelopeUnit::channelsChanged()

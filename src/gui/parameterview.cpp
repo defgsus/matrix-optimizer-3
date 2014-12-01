@@ -28,6 +28,7 @@
 #include "object/sequencefloat.h"
 #include "object/clip.h"
 #include "object/util/objecteditor.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
@@ -102,7 +103,7 @@ void ParameterView::setObject(Object *object)
                 this, SLOT(onSequenceChanged(MO::Sequence*)));
     }
 
-    parameters_ = object_->parameters();
+    parameters_ = object_->params()->parameters();
 
     createWidgets_();
 }

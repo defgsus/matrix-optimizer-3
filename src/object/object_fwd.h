@@ -40,6 +40,7 @@ namespace MO {
     class ClipContainer;
 
     class Parameter;
+    class Parameters;
     class ParameterInt;
     class ParameterFilename;
     class ParameterFloat;

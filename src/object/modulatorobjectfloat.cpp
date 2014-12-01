@@ -11,6 +11,7 @@
 #include "modulatorobjectfloat.h"
 #include "io/datastream.h"
 #include "io/log.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 
 namespace MO {
@@ -42,17 +43,17 @@ void ModulatorObjectFloat::createParameters()
 {
     ModulatorObject::createParameters();
 
-    beginParameterGroup("modval", tr("value"));
+    params()->beginParameterGroup("modval", tr("value"));
 
-    p_value_ = createFloatParameter("val", tr("value"),
+        p_value_ = params()->createFloatParameter("val", tr("value"),
                                        tr("A float value - sent to all receivers of the modulator"),
                                        0.0, 1.0);
 
-    p_amp_ = createFloatParameter("amp", tr("amplitude"),
+        p_amp_ = params()->createFloatParameter("amp", tr("amplitude"),
                                        tr("Output multiplier"),
                                        1.0, 0.1);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 Double ModulatorObjectFloat::value(Double time, uint thread) const

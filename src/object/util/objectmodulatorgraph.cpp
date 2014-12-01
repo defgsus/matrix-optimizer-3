@@ -12,6 +12,7 @@
 
 #include "object/object.h"
 #include "object/param/parameter.h"
+#include "object/param/parameters.h"
 #include "object/param/modulator.h"
 
 namespace MO {
@@ -22,7 +23,7 @@ namespace MO {
 void getObjectModulatorGraph(ObjectGraph &graph, Object * object)
 {
     // for all parameters
-    for (Parameter * param : object->parameters())
+    for (Parameter * param : object->params()->parameters())
     {
         // modulators of each parameter
         for (Modulator * mod : param->modulators())

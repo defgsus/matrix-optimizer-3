@@ -10,6 +10,7 @@
 
 #include "texturemorphsetting.h"
 #include "object/object.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "gl/shader.h"
@@ -28,7 +29,8 @@ TextureMorphSetting::TextureMorphSetting(Object * parent) :
 
 void TextureMorphSetting::createParameters(const QString &id_suffix)
 {
-    pTrans_ = object_->createBooleanParameter("_texmph_trans" + id_suffix,
+    auto params = object_->params();
+    pTrans_ = params->createBooleanParameter("_texmph_trans" + id_suffix,
                                     tr("transformation"),
                                     tr("Enables moving and scaling the texture"),
                                     tr("Disabled"),
@@ -36,24 +38,24 @@ void TextureMorphSetting::createParameters(const QString &id_suffix)
                                     false,
                                     true, false);
 
-    pTransX_ = object_->createFloatParameter("_texmph_transx" + id_suffix,
+    pTransX_ = params->createFloatParameter("_texmph_transx" + id_suffix,
                                     tr("x"),
                                     tr("The x translation"),
                                     0.0, 0.02);
-    pTransY_ = object_->createFloatParameter("_texmph_transy" + id_suffix,
+    pTransY_ = params->createFloatParameter("_texmph_transy" + id_suffix,
                                     tr("y"),
                                     tr("The y translation"),
                                     0.0, 0.02);
-    pTransSX_ = object_->createFloatParameter("_texmph_transsx" + id_suffix,
+    pTransSX_ = params->createFloatParameter("_texmph_transsx" + id_suffix,
                                     tr("scale x"),
                                     tr("The scale on x axis"),
                                     1.0, 0.02);
-    pTransSY_ = object_->createFloatParameter("_texmph_transsy" + id_suffix,
+    pTransSY_ = params->createFloatParameter("_texmph_transsy" + id_suffix,
                                     tr("scale y"),
                                     tr("The scale on y axis"),
                                     1.0, 0.02);
 
-    pSineMorph_ = object_->createBooleanParameter("_texmph_sinm" + id_suffix,
+    pSineMorph_ = params->createBooleanParameter("_texmph_sinm" + id_suffix,
                                     tr("sine morph"),
                                     tr("Enables morphing the texture coordinates by waves"),
                                     tr("Disabled"),
@@ -61,28 +63,28 @@ void TextureMorphSetting::createParameters(const QString &id_suffix)
                                     false,
                                     true, false);
 
-    pSineMorphAmpX_ = object_->createFloatParameter("_texmph_sinm_ax" + id_suffix,
+    pSineMorphAmpX_ = params->createFloatParameter("_texmph_sinm_ax" + id_suffix,
                                     tr("ampltiude"),
                                     tr("Amplitude of sine modulation on x axis"),
                                     0.25, 0.025);
-    pSineMorphFreqX_ = object_->createFloatParameter("_texmph_sinm_fx" + id_suffix,
+    pSineMorphFreqX_ = params->createFloatParameter("_texmph_sinm_fx" + id_suffix,
                                     tr("frequency"),
                                     tr("Frequency of sine modulation on x axis"),
                                     1.0, 0.125);
-    pSineMorphPhaseX_ = object_->createFloatParameter("_texmph_sinm_px" + id_suffix,
+    pSineMorphPhaseX_ = params->createFloatParameter("_texmph_sinm_px" + id_suffix,
                                     tr("phase"),
                                     tr("Phase/time of sine modulation on x axis"),
                                     0.0, 0.025);
 
-    pSineMorphAmpY_ = object_->createFloatParameter("_texmph_sinm_ay" + id_suffix,
+    pSineMorphAmpY_ = params->createFloatParameter("_texmph_sinm_ay" + id_suffix,
                                     tr("ampltiude"),
                                     tr("Amplitude of sine modulation on y axis"),
                                     0.25, 0.025);
-    pSineMorphFreqY_ = object_->createFloatParameter("_texmph_sinm_fy" + id_suffix,
+    pSineMorphFreqY_ = params->createFloatParameter("_texmph_sinm_fy" + id_suffix,
                                     tr("frequency"),
                                     tr("Frequency of sine modulation on y axis"),
                                     1.0, 0.125);
-    pSineMorphPhaseY_ = object_->createFloatParameter("_texmph_sinm_py" + id_suffix,
+    pSineMorphPhaseY_ = params->createFloatParameter("_texmph_sinm_py" + id_suffix,
                                     tr("phase"),
                                     tr("Phase/time of sine modulation on y axis"),
                                     0.0, 0.025);

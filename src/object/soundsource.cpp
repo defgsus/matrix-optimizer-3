@@ -11,6 +11,7 @@
 #include "soundsource.h"
 #include "io/datastream.h"
 #include "audio/audiosource.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 #include "io/log.h"
 
@@ -41,12 +42,12 @@ void SoundSource::createParameters()
 {
     Object::createParameters();
 
-    beginParameterGroup("audiotrack", tr("audio"));
+    params()->beginParameterGroup("audiotrack", tr("audio"));
 
-        audioTrack_ = createFloatParameter("audio_track", tr("audio"),
+        audioTrack_ = params()->createFloatParameter("audio_track", tr("audio"),
                                            tr("The audio signal of the sound source"),
                                            0.0, false);
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void SoundSource::createAudioSources()

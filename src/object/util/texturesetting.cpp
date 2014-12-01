@@ -13,6 +13,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "object/scene.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parameterint.h"
@@ -65,7 +66,9 @@ void TextureSetting::deserialize(IO::DataStream &io)
 void TextureSetting::createParameters(const QString &id_suffix, TextureType defaultType,
                 bool enableNone, bool normalMap)
 {
-    paramType_ = object_->createSelectParameter(
+    auto params = object_->params();
+
+    paramType_ = params->createSelectParameter(
             "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
             { "none", "file", "master", "masterd", "camera", "camerad" },
             textureTypeNames,
@@ -83,18 +86,18 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
         paramType_->removeByValue(TT_NONE);
 
 
-    paramFilename_ = object_->createFilenameParameter(
+    paramFilename_ = params->createFilenameParameter(
                 "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
                 normalMap? IO::FT_NORMAL_MAP : IO::FT_TEXTURE,
                 normalMap? ":/normalmap/01.png" : ":/texture/mo_black.png");
 
-    paramCamera_ = object_->createIntParameter(
+    paramCamera_ = params->createIntParameter(
                 "_imgcamidx" + id_suffix, tr("camera frame"),
                 tr("The index of the camera starting at 0"),
                 0, true, false);
     paramCamera_->setMinValue(0);
 
-    paramInterpol_ = object_->createBooleanParameter(
+    paramInterpol_ = params->createBooleanParameter(
                 "_imginterpol" + id_suffix, tr("interpolation"),
                 tr("The interpolation mode for pixel magnification"),
                 tr("No interpolation"),
@@ -102,7 +105,7 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
                 true,
                 true, false);
 
-    paramWrapX_ = object_->createSelectParameter(
+    paramWrapX_ = params->createSelectParameter(
             "_imgwrapx" + id_suffix, tr("on horiz. edges"),
             tr("Selects what happens on the horizontal edges of the texture"),
             { "clamp", "repeat" },
@@ -113,7 +116,7 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
             { WM_CLAMP, WM_REPEAT, WM_MIRROR },
             WM_REPEAT, true, false);
 
-    paramWrapY_ = object_->createSelectParameter(
+    paramWrapY_ = params->createSelectParameter(
             "_imgwrapy" + id_suffix, tr("on vert. edges"),
             tr("Selects what happens on the vertical edges of the texture"),
             { "clamp", "repeat", "repeatm" },

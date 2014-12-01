@@ -12,6 +12,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterselect.h"
 #include "object/scene.h"
 
@@ -50,10 +51,10 @@ void AudioUnit::createParameters()
     Object::createParameters();
 
     // add to object's active group
-    beginParameterGroup("active", tr("activity"));
+    params()->beginParameterGroup("active", tr("activity"));
 
-    processModeParameter_ = createSelectParameter(
-                        "processmode", tr("processing"),
+        processModeParameter_ = params()->createSelectParameter(
+                        "processmode", tr("audio processing"),
                         tr("Sets the processing mode"),
                         { "on", "off", "bypass" },
                         { tr("on"), tr("off"), tr("bypass") },
@@ -64,7 +65,7 @@ void AudioUnit::createParameters()
                         PM_ON,
                         true, false);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void AudioUnit::setNumberThreads(uint num)

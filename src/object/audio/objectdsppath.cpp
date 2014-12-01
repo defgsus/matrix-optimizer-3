@@ -128,7 +128,12 @@ void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
 
 void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
 {
+    for (Private::ObjectBuffer * b : p_->soundsourceObjects)
+    {
 
+        //b->object->performAudioBlock(pos, thread);
+
+    }
 }
 
 

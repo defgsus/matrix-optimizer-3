@@ -11,6 +11,7 @@
 #include "colorpostprocessingsetting.h"
 
 #include "object/object.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "gl/shader.h"
@@ -26,61 +27,63 @@ ColorPostProcessingSetting::ColorPostProcessingSetting(Object * parent) :
 
 void ColorPostProcessingSetting::createParameters(const QString &id_suffix)
 {
-    paramPost_ = object_->createBooleanParameter("postenable" + id_suffix, tr("color effects"),
+    auto params = object_->params();
+
+    paramPost_ = params->createBooleanParameter("postenable" + id_suffix, tr("color effects"),
                                     tr("Enables or disables color post-processing"),
                                     tr("Color-post-processing is disabled"),
                                     tr("Color-post-processing is enabled"),
                                     false,
                                     true, false);
 
-    postAlpha_ = object_->createFloatParameter("postalpha" + id_suffix,
+    postAlpha_ = params->createFloatParameter("postalpha" + id_suffix,
                                     tr("color to alpha"),
                                     tr("Makes the choosen color transparent"),
                                     0.0, 0.0, 1.0, 0.02);
-    postAlphaR_ = object_->createFloatParameter("postalphar" + id_suffix,
+    postAlphaR_ = params->createFloatParameter("postalphar" + id_suffix,
                                     tr("red"),
                                     tr("Red component of the color to make transparent"),
                                     0.0, 0.0, 1.0, 0.02);
-    postAlphaG_ = object_->createFloatParameter("postalphag" + id_suffix,
+    postAlphaG_ = params->createFloatParameter("postalphag" + id_suffix,
                                     tr("green"),
                                     tr("Green component of the color to make transparent"),
                                     0.0, 0.0, 1.0, 0.02);
-    postAlphaB_ = object_->createFloatParameter("postalphab" + id_suffix,
+    postAlphaB_ = params->createFloatParameter("postalphab" + id_suffix,
                                     tr("blue"),
                                     tr("Blue component of the color to make transparent"),
                                     0.0, 0.0, 1.0, 0.02);
-    postAlphaEdge_ = object_->createFloatParameter("postalphae" + id_suffix,
+    postAlphaEdge_ = params->createFloatParameter("postalphae" + id_suffix,
                                     tr("edge"),
                                     tr("Edge of the alpha transformation - the lower the smoother"),
                                     0.0, 0.0, 1.0, 0.02);
 
-    postBright_ = object_->createFloatParameter("postbright" + id_suffix,
+    postBright_ = params->createFloatParameter("postbright" + id_suffix,
                                     tr("brightness"),
                                     tr("Brightness (simply offset to all colors)"),
                                     0.0, -100000.0, 100000.0, 0.02);
 
-    postContrast_ = object_->createFloatParameter("postcontr" + id_suffix,
+    postContrast_ = params->createFloatParameter("postcontr" + id_suffix,
                                     tr("contrast"),
                                     tr("Contrast (a multiplier around threshold)"),
                                     1.0, 0.0, 100000.0, 0.02);
 
-    postContrastThresh_ = object_->createFloatParameter("postcontrt" + id_suffix,
+    postContrastThresh_ = params->createFloatParameter("postcontrt" + id_suffix,
                                     tr("threshold"),
                                     tr("The threshold or edge between dark and "
                                        "bright for contrast setting"),
                                     0.5, 0.0, 1.0, 0.02);
 
-    postShift_ = object_->createFloatParameter("postshift" + id_suffix,
+    postShift_ = params->createFloatParameter("postshift" + id_suffix,
                                     tr("rgb shift"),
                                     tr("Shifts the rgb colors right (postive) or left (negative)"),
                                     0.0, -1.0, 1.0, 0.05);
 
-    postInv_ = object_->createFloatParameter("postinv" + id_suffix,
+    postInv_ = params->createFloatParameter("postinv" + id_suffix,
                                     tr("negative"),
                                     tr("Mix between normal and negative colors [0,1]"),
                                     0.0, 0.0, 1.0, 0.05);
 
-    postGray_ = object_->createFloatParameter("postgray" + id_suffix,
+    postGray_ = params->createFloatParameter("postgray" + id_suffix,
                                     tr("grayscale"),
                                     tr("Removes the saturation [0,1]"),
                                     0.0, 0.0, 1.0, 0.05);

@@ -16,6 +16,7 @@
 #include "gl/context.h"
 #include "io/datastream.h"
 #include "scene.h"
+#include "param/parameters.h"
 #include "param/parameterselect.h"
 
 namespace MO {
@@ -61,9 +62,9 @@ void ObjectGl::createParameters()
 
     if (p_enableCreateRenderSettings_)
     {
-        beginParameterGroup("renderset", tr("render settings"));
+        params()->beginParameterGroup("renderset", tr("render settings"));
 
-        p_paramDepthTest_ = createSelectParameter("rendset_dtm", tr("depth testing"),
+        p_paramDepthTest_ = params()->createSelectParameter("rendset_dtm", tr("depth testing"),
             tr("Selects whether a test against the depth-map should be performed"),
             { "p", "on", "off" },
             depthTestModeNames,
@@ -74,7 +75,7 @@ void ObjectGl::createParameters()
             { DTM_PARENT, DTM_ON, DTM_OFF },
             p_defaultDepthTestMode_, true, false);
 
-        p_paramDepthWrite_ = createSelectParameter("rendset_dwm", tr("depth writing"),
+        p_paramDepthWrite_ = params()->createSelectParameter("rendset_dwm", tr("depth writing"),
             tr("Selects whether the depth information of the object should be written"),
             { "p", "on", "off" },
             depthWriteModeNames,
@@ -97,7 +98,7 @@ void ObjectGl::createParameters()
             { ABM_PARENT, ABM_OFF, ABM_MIX, ABM_ADD },
             defaultAlphaBlendMode_, true, false);
 */
-        endParameterGroup();
+        params()->endParameterGroup();
     }
 }
 

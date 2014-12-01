@@ -9,6 +9,7 @@
 */
 
 #include "axisrotation.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 #include "math/vector.h"
@@ -41,16 +42,16 @@ void AxisRotation::createParameters()
 {
     Transformation::createParameters();
 
-    beginParameterGroup("trans", tr("transformation"));
+    params()->beginParameterGroup("trans", tr("transformation"));
 
-    const QString axisTip = tr("Unit vector describing the axis to rotate around (internally normalized)");
-    angle_ = createFloatParameter("a", "angle",
-                                  tr("The rotation in degree"), 0);
-    x_ = createFloatParameter("x", "axis x", axisTip, 1);
-    y_ = createFloatParameter("y", "axis y", axisTip, 0);
-    z_ = createFloatParameter("z", "axis z", axisTip, 0);
+        const QString axisTip = tr("Unit vector describing the axis to rotate around (internally normalized)");
+        angle_ = params()->createFloatParameter("a", "angle",
+                                      tr("The rotation in degree"), 0);
+        x_ = params()->createFloatParameter("x", "axis x", axisTip, 1);
+        y_ = params()->createFloatParameter("y", "axis y", axisTip, 0);
+        z_ = params()->createFloatParameter("z", "axis z", axisTip, 0);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void AxisRotation::applyTransformation(Mat4 &matrix, Double time, uint thread) const

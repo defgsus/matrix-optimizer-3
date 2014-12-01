@@ -20,6 +20,7 @@
 #include "gl/screenquad.h"
 #include "gl/shader.h"
 #include "scene.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "param/parameterint.h"
@@ -71,86 +72,86 @@ void Camera::createParameters()
 {
     ObjectGl::createParameters();
 
-    beginParameterGroup("camera", tr("camera settings"));
+    params()->beginParameterGroup("camera", tr("camera settings"));
 
-    p_cameraMode_ = createSelectParameter("cammode", tr("render mode"),
-                                        tr("Selects the display/render mode for this camera"),
-    { "ortho", "persp", "fdcube", "slice" },
-    { tr("orthographic"), tr("perspective"), tr("fulldome cube"), tr("projector slice") },
-    { tr("Orthographic projection for flat screens"),
-      tr("Perspective projection for flat screens"),
-      tr("Fulldome projection by means of 5 (or 6) cameras"),
-      tr("Warped projector slice - for multi-machine/projector setups")},
-    { RM_ORTHOGRAPHIC, RM_PERSPECTIVE, RM_FULLDOME_CUBE, RM_PROJECTOR_SLICE },
-                                        RM_FULLDOME_CUBE,
-                                        true, false
-                                        );
-    p_cameraAngle_ = createFloatParameter("camangle", tr("field of view"),
-                                        tr("Specifies the vertical openening angle in degree"),
-                                        60.0,
-                                        0.001, 179.999, 1.0);
+        p_cameraMode_ = params()->createSelectParameter("cammode", tr("render mode"),
+                                            tr("Selects the display/render mode for this camera"),
+        { "ortho", "persp", "fdcube", "slice" },
+        { tr("orthographic"), tr("perspective"), tr("fulldome cube"), tr("projector slice") },
+        { tr("Orthographic projection for flat screens"),
+          tr("Perspective projection for flat screens"),
+          tr("Fulldome projection by means of 5 (or 6) cameras"),
+          tr("Warped projector slice - for multi-machine/projector setups")},
+        { RM_ORTHOGRAPHIC, RM_PERSPECTIVE, RM_FULLDOME_CUBE, RM_PROJECTOR_SLICE },
+                                            RM_FULLDOME_CUBE,
+                                            true, false
+                                            );
+        p_cameraAngle_ = params()->createFloatParameter("camangle", tr("field of view"),
+                                            tr("Specifies the vertical openening angle in degree"),
+                                            60.0,
+                                            0.001, 179.999, 1.0);
 
-    p_cameraFdAngle_ = createFloatParameter("camanglefd", tr("field of view"),
-                                        tr("Specifies the fisheye opening angle in degree"),
-                                        180.0,
-                                        1.0, 360.0, 1.0);
+        p_cameraFdAngle_ = params()->createFloatParameter("camanglefd", tr("field of view"),
+                                            tr("Specifies the fisheye opening angle in degree"),
+                                            180.0,
+                                            1.0, 360.0, 1.0);
 
-    p_cameraOrthoScale_ = createFloatParameter("camorthosc", tr("orthographic scale"),
-                                        tr("Visible area of the orthographic projection on x,y plane"),
-                                        10.0,
-                                        0.0001, 1000000.0, 0.1);
+        p_cameraOrthoScale_ = params()->createFloatParameter("camorthosc", tr("orthographic scale"),
+                                            tr("Visible area of the orthographic projection on x,y plane"),
+                                            10.0,
+                                            0.0001, 1000000.0, 0.1);
 
-    p_cameraOrthoMix_ = createFloatParameter("camorthomix", tr("orthographic mix"),
-                                        tr("Mix between perspective and orthographic projection, range [0,1]"),
-                                        0.0,
-                                        0.0, 1.0, 0.0125);
+        p_cameraOrthoMix_ = params()->createFloatParameter("camorthomix", tr("orthographic mix"),
+                                            tr("Mix between perspective and orthographic projection, range [0,1]"),
+                                            0.0,
+                                            0.0, 1.0, 0.0125);
 
-    p_near_ = createFloatParameter("camnear", tr("near plane"),
-                                        tr("Near plane of camera frustum - everything closer can not be drawn"),
-                                        0.001,
-                                        0.00001, 100000.0, 0.05);
-    p_far_ = createFloatParameter("camfar", tr("far plane"),
-                                        tr("Far plane of camera frustum - everything farther away can not be drawn"),
-                                        1000.0,
-                                        0.00002, 100000.0, 1.0);
+        p_near_ = params()->createFloatParameter("camnear", tr("near plane"),
+                                            tr("Near plane of camera frustum - everything closer can not be drawn"),
+                                            0.001,
+                                            0.00001, 100000.0, 0.05);
+        p_far_ = params()->createFloatParameter("camfar", tr("far plane"),
+                                            tr("Far plane of camera frustum - everything farther away can not be drawn"),
+                                            1000.0,
+                                            0.00002, 100000.0, 1.0);
 
 
-    p_width_ = createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
-                                  1024, 16, 4096*4, 16, true, false);
-    p_height_ = createIntParameter("fboheight", tr("height"), tr("Height of rendered frame in pixels"),
-                                  1024, 16, 4096*4, 16, true, false);
-    p_cubeRes_ = createIntParameter("fbocuberes", tr("size of cube map"), tr("Width and height of the rendered frame per cube map"),
-                                  1024, 16, 4096*4, 16, true, false);
+        p_width_ = params()->createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
+                                      1024, 16, 4096*4, 16, true, false);
+        p_height_ = params()->createIntParameter("fboheight", tr("height"), tr("Height of rendered frame in pixels"),
+                                      1024, 16, 4096*4, 16, true, false);
+        p_cubeRes_ = params()->createIntParameter("fbocuberes", tr("size of cube map"), tr("Width and height of the rendered frame per cube map"),
+                                      1024, 16, 4096*4, 16, true, false);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("camback", tr("background"));
+    params()->beginParameterGroup("camback", tr("background"));
 
-        p_backR_ = createFloatParameter("cambackr", tr("red"),
+        p_backR_ = params()->createFloatParameter("cambackr", tr("red"),
                                       tr("Red amount of background color"),
                                       0.0, 0.0, 1.0, 0.1);
-        p_backG_ = createFloatParameter("cambackg", tr("green"),
+        p_backG_ = params()->createFloatParameter("cambackg", tr("green"),
                                       tr("Red amount of background color"),
                                       0.0, 0.0, 1.0, 0.1);
-        p_backB_ = createFloatParameter("cambackb", tr("blue"),
+        p_backB_ = params()->createFloatParameter("cambackb", tr("blue"),
                                       tr("Red amount of background color"),
                                       0.0, 0.0, 1.0, 0.1);
-        p_backA_ = createFloatParameter("cambacka", tr("alpha"),
+        p_backA_ = params()->createFloatParameter("cambacka", tr("alpha"),
                                       tr("Alpha amount of background color"),
                                       1.0, 0.0, 1.0, 0.1);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("output", tr("output"));
+    params()->beginParameterGroup("output", tr("output"));
 
-        p_cameraMix_ = createFloatParameter("cammix", tr("camera mix"),
+        p_cameraMix_ = params()->createFloatParameter("cammix", tr("camera mix"),
                           tr("Defines the volume and visibility of the camera [0,1]"),
                           1.0,
                           0.0, 1.0, 0.05);
 
         alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_camout");
 
-        p_magInterpol_ = createBooleanParameter("cammaginterpol", tr("interpolation"),
+        p_magInterpol_ = params()->createBooleanParameter("cammaginterpol", tr("interpolation"),
                                                 tr("The interpolation mode for pixel magnification"),
                                                 tr("No interpolation"),
                                                 tr("Linear interpolation"),

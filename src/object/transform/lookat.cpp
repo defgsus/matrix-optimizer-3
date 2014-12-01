@@ -9,6 +9,7 @@
 */
 
 #include "lookat.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "io/datastream.h"
@@ -42,45 +43,45 @@ void LookAt::createParameters()
 {
     Transformation::createParameters();
 
-    beginParameterGroup("transmode", tr("transformation mode"));
+    params()->beginParameterGroup("transmode", tr("transformation mode"));
 
-    const QString lookTip = tr("Global position to look at"),
-                  upTip = tr("unit vector describing the up-axis (internally normalized)");
+        const QString lookTip = tr("Global position to look at"),
+                      upTip = tr("unit vector describing the up-axis (internally normalized)");
 
-    lookMode_ = createSelectParameter("lookmode", "look-at mode",
-        tr("Selects if the look-at point is local or global"),
-        { "local", "global" },
-        { tr("local"), tr("global") },
-        { tr("The look-at point is part of the transformation stack before the look-at transformation"),
-          tr("The look-at point is global (world coordinates)") },
-        { LM_LOCAL, LM_GLOBAL },
-        LM_LOCAL,
-        true, false
-        );
+        lookMode_ = params()->createSelectParameter("lookmode", "look-at mode",
+            tr("Selects if the look-at point is local or global"),
+            { "local", "global" },
+            { tr("local"), tr("global") },
+            { tr("The look-at point is part of the transformation stack before the look-at transformation"),
+              tr("The look-at point is global (world coordinates)") },
+            { LM_LOCAL, LM_GLOBAL },
+            LM_LOCAL,
+            true, false
+            );
 
-    upMode_ = createSelectParameter("upmode", "up mode",
-        tr("Selects if the up-axis is local or global"),
-        { "local", "global" },
-        { tr("local"), tr("global") },
-        { tr("The up-axis point is part of the transformation stack before the look-at transformation"),
-          tr("The up-axis point is global (world coordinates)") },
-        { LM_LOCAL, LM_GLOBAL },
-        LM_LOCAL,
-        true, false
-        );
+        upMode_ = params()->createSelectParameter("upmode", "up mode",
+            tr("Selects if the up-axis is local or global"),
+            { "local", "global" },
+            { tr("local"), tr("global") },
+            { tr("The up-axis point is part of the transformation stack before the look-at transformation"),
+              tr("The up-axis point is global (world coordinates)") },
+            { LM_LOCAL, LM_GLOBAL },
+            LM_LOCAL,
+            true, false
+            );
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("trans", tr("transformation"));
+    params()->beginParameterGroup("trans", tr("transformation"));
 
-    x_ = createFloatParameter("x", "look-at x", lookTip, 0);
-    y_ = createFloatParameter("y", "look-at y", lookTip, 0);
-    z_ = createFloatParameter("z", "look-at z", lookTip, 0);
-    upX_ = createFloatParameter("upx", "up x", upTip, 0);
-    upY_ = createFloatParameter("upy", "up y", upTip, 1);
-    upZ_ = createFloatParameter("upz", "up z", upTip, 0);
+        x_ = params()->createFloatParameter("x", "look-at x", lookTip, 0);
+        y_ = params()->createFloatParameter("y", "look-at y", lookTip, 0);
+        z_ = params()->createFloatParameter("z", "look-at z", lookTip, 0);
+        upX_ = params()->createFloatParameter("upx", "up x", upTip, 0);
+        upY_ = params()->createFloatParameter("upy", "up y", upTip, 1);
+        upZ_ = params()->createFloatParameter("upz", "up z", upTip, 0);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 

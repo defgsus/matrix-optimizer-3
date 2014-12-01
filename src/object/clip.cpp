@@ -13,6 +13,7 @@
 #include "io/error.h"
 #include "sequence.h"
 #include "clipcontainer.h"
+#include "param/parameters.h"
 #include "util/objectmodulatorgraph.h"
 
 #include "io/log.h"
@@ -61,13 +62,13 @@ void Clip::createParameters()
 {
     Object::createParameters();
 
-    beginParameterGroup("clip", tr("clip"));
+    params()->beginParameterGroup("clip", tr("clip"));
 
-        p_speed_ = createFloatParameter("speed", tr("speed"),
+        p_speed_ = params()->createFloatParameter("speed", tr("speed"),
                                         tr("The speed multiplier for all sequences in the clip"),
                                         1, 0.1, true, false);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 

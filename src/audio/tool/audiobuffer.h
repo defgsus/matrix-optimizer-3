@@ -34,19 +34,24 @@ class AudioBuffer
     // -------------- sampling ------------------------
 
     /** Returns a pointer to blockSize() floats to write to */
-    F32 * insertPointer();
-    const F32 * insertPointer() const;
+    F32 * insertPointer() { return &samples_[writeBlock_ * blockSize_]; }
+    const F32 * insertPointer() const { return &samples_[writeBlock_ * blockSize_]; }
+
+    /** Returns a read-pointer to the last written block */
+    const F32 * readPointer() const { return &samples_[readBlock_ * blockSize_]; }
 
     /** Inserts one block of data into the buffer and forwards write pointer.
         @p block must point to at least blockSize() floats */
-    void insert(F32 * block);
+    void insert(const F32 *block);
+
+    void insertNullBlock();
 
     /** Forwards the write pointer */
-    void nextWriteBlock();
+    void nextBlock();
 
 private:
 
-    size_t blockSize_, numBlocks_, writeBlock_;
+    size_t blockSize_, numBlocks_, writeBlock_, readBlock_;
     std::vector<F32> samples_;
 };
 
