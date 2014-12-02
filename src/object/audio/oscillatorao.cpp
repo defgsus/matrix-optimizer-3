@@ -47,11 +47,11 @@ void OscillatorAO::createParameters()
 
         paramOffset_ = params()->createFloatParameter("osc_offset", tr("offset"),
                                                    tr("The offset added to the oscillator output"),
-                                                   0.0, 0.1);
+                                                   0.0, 0.01);
 
         paramAmp_ = params()->createFloatParameter("osc_amp", tr("amplitude"),
                                                    tr("The amplitude of the oscillator output"),
-                                                   1.0, 0.1);
+                                                   1.0, 0.01);
         paramFreq_ = params()->createFloatParameter("osc_freq", tr("frequency"),
                                                    tr("The frequency of the oscillator in Hertz"),
                                                    100.0, 1.0);
