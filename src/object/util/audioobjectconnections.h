@@ -63,6 +63,15 @@ public:
     void serialize(IO::DataStream&) const;
     void deserialize(IO::DataStream&, Object * rootObject);
 
+    void dump(std::ostream&) const;
+
+    // ------------- stl container -------------------
+
+    std::set<AudioObjectConnection*>::iterator begin() { return cons_.begin(); }
+    std::set<AudioObjectConnection*>::iterator end() { return cons_.end(); }
+    std::set<AudioObjectConnection*>::const_iterator begin() const { return cons_.cbegin(); }
+    std::set<AudioObjectConnection*>::const_iterator end() const { return cons_.cend(); }
+
     // --------------- getter ------------------------
 
     bool contains(AudioObject * o) const { return toMap_.find(o) != toMap_.end()
@@ -74,6 +83,14 @@ public:
 
     QList<AudioObjectConnection*> getInputs(AudioObject*) const;
     QList<AudioObjectConnection*> getOutputs(AudioObject*) const;
+
+    /** Returns true when the graph contains a loop */
+    bool hasLoop() const;
+
+    /** Returns false if the connection would create a loop.
+        @note This also returns false when there is a loop
+        in the graph already! */
+    bool isSaveToAdd(AudioObject *from, AudioObject *to);
 
     // ----------------- edit ------------------------
 

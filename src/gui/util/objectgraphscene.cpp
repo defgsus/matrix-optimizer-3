@@ -421,11 +421,21 @@ void ObjectGraphScene::Private::resolveLayout()
 
     // update modulator items
     if (change)
-    for (QGraphicsItem * item : list)
-    if (item->type() == ModulatorItem::Type)
     {
-        auto m = static_cast<ModulatorItem*>(item);
-        m->updateShape();
+        for (QGraphicsItem * item : list)
+        {
+            if (item->type() == ModulatorItem::Type)
+            {
+                auto m = static_cast<ModulatorItem*>(item);
+                m->updateShape();
+            }
+
+            if (item->type() == AudioConnectionItem::Type)
+            {
+                auto m = static_cast<AudioConnectionItem*>(item);
+                m->updateShape();
+            }
+        }
     }
 }
 

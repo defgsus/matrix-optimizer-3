@@ -106,7 +106,10 @@ public slots:
 
     // ----------- audio cons ------------------
 
-    void connectAudioObjects(MO::AudioObject * from, MO::AudioObject * to,
+    /** Creates a connection between the Objects.
+        Displays message and returns false when the connection would
+        create a loop. */
+    bool connectAudioObjects(MO::AudioObject * from, MO::AudioObject * to,
                              uint outChannel = 0, uint inChannel = 0,
                              uint numChannels = 1);
 

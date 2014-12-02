@@ -16,6 +16,7 @@
 #include "object/scenelock_p.h"
 #include "object/sequence.h"
 #include "object/clipcontainer.h"
+#include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "object/util/audioobjectconnections.h"
 #include "object/param/parameterfloat.h"
@@ -297,10 +298,19 @@ void ObjectEditor::removeAllModulators(Parameter *p)
 
 // ---------------------------------- audio cons -------------------------------------------
 
-void ObjectEditor::connectAudioObjects(AudioObject *from, AudioObject *to,
+bool ObjectEditor::connectAudioObjects(AudioObject *from, AudioObject *to,
                                        uint outChannel, uint inChannel,
                                        uint numChannels)
 {
+    if (!scene_->audioConnections()->isSaveToAdd(from, to))
+    {
+        QMessageBox::critical(0, tr("Can't add connection"),
+                              tr("Connecting %1 and %2 would create an infinite loop")
+                              .arg(from->name())
+                              .arg(to->name()));
+        return false;
+    }
+
     scene_->audioConnections()->connect(from, to, outChannel, inChannel, numChannels);
 
     emit audioConnectionsChanged();

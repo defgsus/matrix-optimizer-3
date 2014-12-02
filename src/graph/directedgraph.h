@@ -145,6 +145,9 @@ public:
     /** Returns a QList filled with all objects */
     QList<T> toList() const;
 
+    /** Returns all nodes that have outputs but no inputs */
+    QList<T> beginnings() const;
+
     /** Transforms the graph into a linear list of node objects,
         ordered by input dependency,
         starting with the ones without inputs. */
@@ -326,7 +329,9 @@ bool DirectedGraph<T>::makeLinear(std::insert_iterator<U> insertit) const
 
     if (beginnings.empty())
     {
+#ifdef MO_GRAPH_DEBUG
         MO_WARNING("DirectedGraph: no input nodes for makeLinear");
+#endif
         return false;
     }
 
@@ -366,7 +371,9 @@ bool DirectedGraph<T>::makeLinear(std::insert_iterator<U> insertit) const
     {
         if (n.second->numInputs())
         {
+#ifdef MO_GRAPH_DEBUG
             MO_WARNING("DirectedGraph: detected loop in graph at node " << n.first);
+#endif
             return false;
         }
     }
@@ -374,7 +381,21 @@ bool DirectedGraph<T>::makeLinear(std::insert_iterator<U> insertit) const
     return true;
 }
 
+template <class T>
+QList<T> DirectedGraph<T>::beginnings() const
+{
+    QList<T> beginnings;
 
+    // collect them
+    for (auto & n : p_nodes_)
+    {
+        if (n.second->hasNoInputs()
+            && !n.second->hasNoOutputs())
+            beginnings.push_back(n.second->object());
+    }
+
+    return beginnings;
+}
 
 
 // --------------------------------- debug --------------------------------

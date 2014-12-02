@@ -8,8 +8,11 @@
     <p>created 01.12.2014</p>
 */
 
+#include <QStack>
+
 #include "audioobjectconnections.h"
 #include "object/audioobject.h"
+#include "graph/directedgraph.h"
 #include "io/datastream.h"
 #include "io/error.h"
 
@@ -89,9 +92,15 @@ void AudioObjectConnections::deserialize(IO::DataStream & io, Object * rootObjec
         }
     }
 
-
 }
 
+void AudioObjectConnections::dump(std::ostream & out) const
+{
+    out << "AudioObjectConnections:\n";
+    for (AudioObjectConnection * c : cons_)
+        out << " " << c->from()->name() << "->" << c->to()->name();
+    out << std::endl;
+}
 
 AudioObjectConnection * AudioObjectConnections::find(const AudioObjectConnection & c) const
 {
@@ -137,6 +146,47 @@ QList<AudioObjectConnection*> AudioObjectConnections::getOutputs(AudioObject * f
 }
 
 
+bool AudioObjectConnections::hasLoop() const
+{
+    if (cons_.empty())
+        return false;
+
+    // create a directed graph
+    DirectedGraph<AudioObject*> graph;
+    for (auto c : cons_)
+        graph.addEdge(c->from(), c->to());
+
+    if (graph.beginnings().isEmpty())
+        return false;
+
+    std::vector<AudioObject*> temp;
+    // makeLinear returns false when loop encountered
+    return !graph.makeLinear(temp);
+}
+
+bool AudioObjectConnections::isSaveToAdd(AudioObject * from, AudioObject * to)
+{
+    if (cons_.empty())
+        return true;
+
+    // create a directed graph
+    DirectedGraph<AudioObject*> graph;
+    for (auto c : cons_)
+        graph.addEdge(c->from(), c->to());
+
+    // add the desired connection
+    graph.addEdge(from, to);
+
+    // no beginnings after we added the edge?
+    // means we created a loop already
+    if (graph.beginnings().isEmpty())
+        return false;
+
+    std::vector<AudioObject*> temp;
+    // makeLinear returns false when loop encountered
+    return graph.makeLinear(temp);
+}
+
 // ------------------------------ edit ----------------------------------
 
 void AudioObjectConnections::clear()
@@ -167,6 +217,8 @@ AudioObjectConnection * AudioObjectConnections::connect(const AudioObjectConnect
     cons_.insert(con);
     toMap_.insert(std::make_pair(con->to(), con));
     fromMap_.insert(std::make_pair(con->from(), con));
+
+    hasLoop();
 
     return con;
 }

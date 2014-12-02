@@ -11,9 +11,6 @@
 /** @page dsp_path
 
 
-
-
-
   */
 
 #include <map>
@@ -23,9 +20,13 @@
 #include "objectdsppath.h"
 #include "object/scene.h"
 #include "object/microphone.h"
+#include "object/audioobject.h"
 #include "object/util/objecttree.h"
+#include "object/audio/objectdsppath.h"
+#include "object/util/audioobjectconnections.h"
 #include "audio/tool/audiobuffer.h"
 #include "graph/directedgraph.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -33,15 +34,32 @@ class ObjectDspPath::Private
 {
 public:
 
+    /** Wrapper for all objects
+        with temporary calculation space */
     struct ObjectBuffer
     {
-        ObjectBuffer() : object(0), posParent(0), audioOutput(0),
-                        parentMatrix(0) { }
+        ObjectBuffer()
+            : object(0), posParent(0),
+              parentMatrix(0)
+        { }
 
+        ~ObjectBuffer()
+        {
+            for (auto b : audioOutputs)
+                delete b;
+        }
+
+        /// Object associated to this buffer
         Object * object;
+        /// The translation parent
         ObjectBuffer * posParent;
-        AUDIO::AudioBuffer * audioOutput;
-        std::vector<Mat4> matrix, *parentMatrix;
+        /// Calculated matrix
+        std::vector<Mat4> matrix,
+        /// Link to parent translation
+            *parentMatrix;
+        /// Audio output buffers
+        std::vector<AUDIO::AudioBuffer*>
+            audioOutputs;
 
         void initMatrix(int s)
         {
@@ -77,7 +95,8 @@ public:
     QList<ObjectBuffer*>
         transformationObjects,
         soundsourceObjects,
-        microphoneObjects;
+        microphoneObjects,
+        audioObjects;
 };
 
 ObjectDspPath::ObjectDspPath()
@@ -128,12 +147,12 @@ void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
 
 void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
 {
-    for (Private::ObjectBuffer * b : p_->soundsourceObjects)
+    /*for (Private::ObjectBuffer * b : p_->soundsourceObjects)
     {
 
         //b->object->performAudioBlock(pos, thread);
 
-    }
+    }*/
 }
 
 
@@ -146,6 +165,12 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
         out << " " << o->object->name();
         if (o->posParent)
             out << "(" << o->posParent->object->name() << ")";
+    }
+
+    out << "\naudio objects:";
+    for (auto o : p_->audioObjects)
+    {
+        out << " " << o->object->name();
     }
 
     out << "\nmicrophone objects:";
@@ -174,6 +199,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
     transformationObjects.clear();
     microphoneObjects.clear();
     soundsourceObjects.clear();
+    audioObjects.clear();
 
     // convert to new tree structure
     auto tree = get_object_tree(scene);
@@ -204,7 +230,28 @@ void ObjectDspPath::Private::createPath(Scene * s)
 
     // --- get all audio processors ---
 
+    DirectedGraph<AudioObject*> dspgraph;
+    for (auto i : *scene->audioConnections())
+        dspgraph.addEdge(i->from(), i->to());
 
+    QList<AudioObject*> audioObjectList;
+    dspgraph.makeLinear(audioObjectList);
+
+    for (auto o : audioObjectList)
+    {
+        // ObjectBuffer for each audio object
+        auto b = getObjectBuffer(o);
+        audioObjects.append( b );
+        // prepare outputs
+        auto outs = scene->audioConnections()->getOutputs(o);
+        for (AudioObjectConnection * c : outs)
+        {
+            auto buf = new AUDIO::AudioBuffer(bufferSize);
+            b->audioOutputs.push_back( buf );
+        }
+        // prepare inputs
+
+    }
 
     // --- get all soundsource objects ---
 
