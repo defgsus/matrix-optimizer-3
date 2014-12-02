@@ -61,6 +61,13 @@ public slots:
         at config().numChannelsIn()/Out() times blocks of length config().bufferSize() */
     void process(const F32 * inputs, F32 * outputs);
 
+    /** Processes one audio block and advances position.
+        @p inputs is expected to point
+        @p inputs and @p outputs are expected to point
+        at config().numChannelsIn()/Out() times blocks of length config().bufferSize().
+        @p outputs order is ch1/s0,ch2/s0,ch3/s0,...ch1/s1,ch2/s1,ch3/s1...*/
+    void processForDevice(const F32 * inputs, F32 * outputs);
+
 private:
 
     class Private;

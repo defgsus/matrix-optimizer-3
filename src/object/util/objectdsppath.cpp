@@ -196,12 +196,6 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
             out << "(" << o->posParent->object->name() << ")";
     }
 
-    out << "\naudio objects:";
-    for (auto o : p_->audioObjects)
-    {
-        out << " " << o->object->name();
-    }
-
     out << "\nmicrophone objects:";
     for (auto o : p_->microphoneObjects)
     {
@@ -214,6 +208,28 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
         out << " " << o->object->name();
     }
 
+    out << "\naudio objects:";
+    for (auto o : p_->audioObjects)
+    {
+        out << " " << o->object->name();
+    }
+
+    out << "\naudio-out objects:";
+    for (auto o : p_->audioOutObjects)
+    {
+        out << " " << o->object->name();
+    }
+
+    out << "\naudio objects detail:\n";
+    for (auto o : p_->audioObjects)
+    {
+        auto ao = dynamic_cast<AudioObject*>(o->object);
+        out << o->object->name() << "(" << ao->numAudioOutputs() << " desired outs)\n";
+        for (auto b : o->audioInputs)
+            out << " " << b << "->\n";
+        for (auto b : o->audioOutputs)
+            out << " ->" << b << "\n";
+    }
 
     out << std::endl;
     return out;
@@ -346,7 +362,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
             }
 
             // remember audio-out objects separately
-            audioObjects.push_back( b );
+            audioOutObjects.push_back( b );
         }
 
         // prepare inputs

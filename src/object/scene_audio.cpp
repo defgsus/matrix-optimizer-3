@@ -181,7 +181,7 @@ private:
 
 bool Scene::isAudioInitialized() const
 {
-    return audioDevice_->ok();
+    return audioDevice_->isOk();
 }
 
 void Scene::initAudioDevice_()

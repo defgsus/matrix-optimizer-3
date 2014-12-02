@@ -125,6 +125,24 @@ void AudioEngine::process(const F32 *, F32 * outputs)
     }
 }
 
+void AudioEngine::processForDevice(const F32 *, F32 * outputs)
+{
+    // apply all transformations
+    p_->path.calcTransformations(p_->curSample, p_->threadIdx);
+
+    // run audio block
+    p_->path.calcAudio(p_->curSample, p_->threadIdx);
+
+    // advance scene time
+    p_->curSample += p_->conf.bufferSize();
+
+    // copy output buffers
+    for (const AUDIO::AudioBuffer * b : p_->path.audioOutputs())
+    {
+        b->readBlock(outputs, p_->conf.numChannelsOut());
+        ++outputs;
+    }
+}
 
 
 } // namespace MO

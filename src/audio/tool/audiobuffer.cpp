@@ -38,6 +38,13 @@ void AudioBuffer::setSize(size_t blockSize, size_t numBlocks)
         s = 0;
 }
 
+void AudioBuffer::readBlock(F32 *block, uint stepsize) const
+{
+    auto p = readPointer();
+    for (uint i = 0; i < blockSize(); ++i, block += stepsize, ++p)
+        *block = *p;
+}
+
 void AudioBuffer::bypass(const QList<AUDIO::AudioBuffer *> &inputs,
                          const QList<AUDIO::AudioBuffer *> &outputs, bool callNextBlock)
 {
@@ -78,7 +85,7 @@ void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &dst,
         {
             MO_ASSERT(src[i]->blockSize() == dst[i]->blockSize(), "unmatched buffersize "
                       << src[i]->blockSize() << "/" << dst[i]->blockSize());
-            dst[i]->addBlock( src[i]->readPointer() );
+            dst[i]->writeAddBlock( src[i]->readPointer() );
         }
     }
 

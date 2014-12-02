@@ -34,25 +34,29 @@ class AudioBuffer
     // -------------- sampling ------------------------
 
     /** Returns a pointer to blockSize() floats to write to */
-    F32 * insertPointer() { return &p_samples_[p_writeBlock_ * p_blockSize_]; }
-    const F32 * insertPointer() const { return &p_samples_[p_writeBlock_ * p_blockSize_]; }
+    F32 * writePointer() { return &p_samples_[p_writeBlock_ * p_blockSize_]; }
+    const F32 * writePointer() const { return &p_samples_[p_writeBlock_ * p_blockSize_]; }
 
     /** Returns a read-pointer to the last written block */
     const F32 * readPointer() const { return &p_samples_[p_readBlock_ * p_blockSize_]; }
 
     /** Inserts one block of data into the buffer.
         @p block must point to at least blockSize() floats */
-    void writeBlock(const F32 *block) { memcpy(insertPointer(), block, p_blockSize_ * sizeof(F32)); }
+    void writeBlock(const F32 *block) { memcpy(writePointer(), block, p_blockSize_ * sizeof(F32)); }
 
     /** Inserts one block of zeros into the buffer */
-    void writeNullBlock() { memset(insertPointer(), 0, p_blockSize_ * sizeof(F32)); }
+    void writeNullBlock() { memset(writePointer(), 0, p_blockSize_ * sizeof(F32)); }
 
     /** Adds one block of data to the buffer.
         @p block must point to at least blockSize() floats. */
-    void addBlock(const F32 * block) { auto p = insertPointer(); for (uint i=0; i < p_blockSize_; ++i) p[i] = block[i]; }
+    void writeAddBlock(const F32 * block) { auto p = writePointer(); for (uint i=0; i < p_blockSize_; ++i) p[i] = block[i]; }
 
     /** Copies the current read-block into @p block */
     void readBlock(F32 * block) const { memcpy(block, readPointer(), p_blockSize_ * sizeof(F32)); }
+
+    /** Copies the current read-block into @p block
+        while advancing @p stepsize samples for every written sample. */
+    void readBlock(F32 * block, uint stepsize) const;
 
     /** Forwards the write pointer */
     void nextBlock()

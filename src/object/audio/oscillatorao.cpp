@@ -72,7 +72,7 @@ void OscillatorAO::processAudio(const QList<AUDIO::AudioBuffer *> &,
 
     const Double freqFac = sampleRateInv() * TWO_PI;
 
-    F32 * write = out->insertPointer();
+    F32 * write = out->writePointer();
     for (uint i = 0; i < out->blockSize(); ++i, ++write)
     {
         Double time = sampleRateInv() * (pos + i);
