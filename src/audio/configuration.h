@@ -11,6 +11,8 @@
 #ifndef MOSRC_AUDIO_CONFIGURATION_H
 #define MOSRC_AUDIO_CONFIGURATION_H
 
+#include <iostream>
+
 #include "types/int.h"
 #include "types/float.h"
 
@@ -29,6 +31,15 @@ namespace AUDIO {
               numChannelsIn_(0),
               numChannelsOut_(0),
               sampleRateInv_(0.f)
+        { }
+
+        /** Constructor with initialization list */
+        Configuration(uint sampleRate, uint bufferSize, uint channelsIn, uint channelsOut)
+            : sampleRate_       (std::max(uint(1), sampleRate)),
+              bufferSize_       (bufferSize),
+              numChannelsIn_    (channelsIn),
+              numChannelsOut_   (channelsOut),
+              sampleRateInv_    (1.f / sampleRate_)
         { }
 
         // ---------- getter -----------
@@ -84,7 +95,13 @@ namespace AUDIO {
             && numChannelsIn_ == c.numChannelsIn_;
     }
 
-
+    template <typename T>
+    inline std::basic_ostream<T>& operator << (std::basic_ostream<T>& out, const Configuration& conf)
+    {
+        out << "rate=" << conf.sampleRate() << ", block=" << conf.bufferSize()
+            << "in=" << conf.numChannelsIn() << ", out=" << conf.numChannelsOut();
+        return out;
+    }
 
 } // namespace AUDIO
 } // namespace MO

@@ -1,25 +1,27 @@
-/** @file oscillatorao.h
+/** @file audiooutao.h
 
     @brief
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 01.12.2014</p>
+    <p>created 02.12.2014</p>
 */
 
-#ifndef OSCILLATORAO_H
-#define OSCILLATORAO_H
+#ifndef AUDIOOUTAO_H
+#define AUDIOOUTAO_H
+
+#include <QObject>
 
 #include "object/audioobject.h"
 
 namespace MO {
 
-class OscillatorAO : public AudioObject
+class AudioOutAO : public AudioObject
 {
     Q_OBJECT
 public:
-    MO_OBJECT_CONSTRUCTOR(OscillatorAO)
+    MO_OBJECT_CONSTRUCTOR(AudioOutAO)
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
@@ -34,16 +36,12 @@ protected:
                                                             Q_DECL_OVERRIDE;
 private:
 
-    Double phase_;
+    void clear_();
+
     ParameterFloat
-        * paramFreq_,
-        * paramPhase_,
-        * paramAmp_,
-        * paramOffset_,
-        * paramSync_;
+        * paramAmp_;
 };
 
 } // namespace MO
 
-
-#endif // OSCILLATORAO_H
+#endif // AUDIOOUTAO_H

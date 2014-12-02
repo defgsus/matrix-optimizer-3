@@ -311,7 +311,7 @@ int Object::objectPriority(const Object *o)
         return 3;
     if (o->isModulatorObject())
         return 2;
-    if (o->isAudioUnit())
+    if (o->isAudioUnit() || o->isAudioObject())
         return 1;
     return 0;
 }

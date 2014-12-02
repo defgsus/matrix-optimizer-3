@@ -13,12 +13,13 @@
 
 #include <iostream>
 
+#include <QList>
+
 #include "object/object_fwd.h"
 #include "types/int.h"
 #include "types/float.h"
 
 namespace MO {
-
 
 class ObjectDspPath
 {
@@ -28,20 +29,25 @@ public:
 
     // ---------------- getter ----------------
 
-    uint sampleRate() const;
-    uint bufferSize() const;
+    const AUDIO::Configuration & config() const;
 
     std::ostream& dump(std::ostream &) const;
 
     // --------------- creation ---------------
 
-    void createPath(Scene * scene, uint sampleRate, uint bufferSize);
+    void createPath(Scene * scene, const AUDIO::Configuration& conf);
 
     // ---------------- calc ------------------
 
     void calcTransformations(SamplePos pos, uint thread);
 
     void calcAudio(SamplePos pos, uint thread);
+
+    // ------------- audio io -----------------
+
+    /** The system audio output buffers.
+        Collected from AudioOutAO objects. */
+    const QList<AUDIO::AudioBuffer*> & audioOutputs();
 
 private:
 

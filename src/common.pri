@@ -219,11 +219,14 @@ HEADERS += \
     src/types/time.h \
     src/object/param/modulatoraudio.h \
     src/audio/tool/audiobuffer.h \
-    src/object/audio/objectdsppath.h \
     src/object/audioobject.h \
     src/object/param/parameters.h \
     src/object/audio/oscillatorao.h \
-    src/object/util/audioobjectconnections.h
+    src/object/util/audioobjectconnections.h \
+    src/object/audio/audiooutao.h \
+    src/engine/liveaudioengine.h \
+    src/engine/audioengine.h \
+    src/object/util/objectdsppath.h
 
 
 SOURCES += \
@@ -409,8 +412,11 @@ SOURCES += \
     src/object/util/objecteditor.cpp \
     src/object/param/modulatoraudio.cpp \
     src/audio/tool/audiobuffer.cpp \
-    src/object/audio/objectdsppath.cpp \
     src/object/audioobject.cpp \
     src/object/param/parameters.cpp \
     src/object/audio/oscillatorao.cpp \
-    src/object/util/audioobjectconnections.cpp
+    src/object/util/audioobjectconnections.cpp \
+    src/object/audio/audiooutao.cpp \
+    src/engine/liveaudioengine.cpp \
+    src/engine/audioengine.cpp \
+    src/object/util/objectdsppath.cpp

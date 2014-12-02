@@ -19,10 +19,12 @@ class AudioObject::PrivateAO
 {
 public:
     PrivateAO()
-        : numOutputs    (1)
+        : numOutputs        (1),
+          outputsVisible    (true)
     { }
 
     int numOutputs;
+    bool outputsVisible;
 };
 
 
@@ -61,6 +63,15 @@ void AudioObject::setNumberAudioOutputs(uint num)
     p_ao_->numOutputs = num;
 }
 
+void AudioObject::setAudioOutputsVisible(bool visible)
+{
+    p_ao_->outputsVisible = visible;
+}
+
+bool AudioObject::audioOutputsVisible() const
+{
+    return p_ao_->outputsVisible;
+}
 
 void AudioObject::processAudioBase(const QList<AUDIO::AudioBuffer *> &inputs,
                                    const QList<AUDIO::AudioBuffer *> &outputs,
@@ -72,7 +83,7 @@ void AudioObject::processAudioBase(const QList<AUDIO::AudioBuffer *> &inputs,
     // check activity
     if (!active(sampleRateInv() * pos, thread))
     {
-        bypass(inputs, outputs);
+        AUDIO::AudioBuffer::bypass(inputs, outputs);
         return;
     }
 
@@ -88,26 +99,6 @@ void AudioObject::processAudioBase(const QList<AUDIO::AudioBuffer *> &inputs,
     processAudio(inputs, outputs, bufferSize, pos, thread);
 }
 
-
-void AudioObject::bypass(const QList<AUDIO::AudioBuffer *> &inputs,
-                         const QList<AUDIO::AudioBuffer *> &outputs)
-{
-    const int num = std::min(inputs.size(), outputs.size());
-
-    // copy inputs
-    for (int i = 0; i<num; ++i)
-    {
-        MO_ASSERT(inputs[i]->blockSize() == outputs[i]->blockSize(), "unmatched buffersize "
-                  << inputs[i]->blockSize() << "/" << outputs[i]->blockSize());
-        outputs[i]->insert( inputs[i]->readPointer() );
-    }
-
-    // clear remaining
-    for (int i = num; i < outputs.size(); ++i)
-    {
-        outputs[i]->insertNullBlock();
-    }
-}
 
 
 } // namespace MO

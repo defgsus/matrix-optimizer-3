@@ -28,9 +28,11 @@ public:
 
     /** Returns the desired number of audio output channels */
     uint numAudioOutputs() const;
+    bool audioOutputsVisible() const;
 
     /** Processes dsp data.
-        Inputs and outputs must have the same buffer size */
+        Inputs and outputs must have the same buffer size.
+        @note Unused inputs and outputs contain a NULL pointer. */
     void processAudioBase(const QList<AUDIO::AudioBuffer*>& inputs,
                           const QList<AUDIO::AudioBuffer*>& outputs,
                           uint bufferSize, SamplePos pos, uint thread);
@@ -38,16 +40,16 @@ public:
 protected:
 
     /** Process dsp data here.
-        Inputs and outputs have the same buffer size */
+        Inputs and outputs have the same buffer size.
+        @note Unused inputs and outputs contain a NULL pointer. */
     virtual void processAudio(const QList<AUDIO::AudioBuffer*>& inputs,
                               const QList<AUDIO::AudioBuffer*>& outputs,
                               uint bufferSize, SamplePos pos, uint thread) = 0;
 
     void setNumberAudioOutputs(uint num);
 
-    /** Copies all input data to output data. */
-    void bypass(const QList<AUDIO::AudioBuffer*>& inputs,
-                const QList<AUDIO::AudioBuffer*>& outputs);
+    /** Call in constructor to disable connectable outputs */
+    void setAudioOutputsVisible(bool visible);
 
 private:
     class PrivateAO;

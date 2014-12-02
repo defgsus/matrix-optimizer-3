@@ -67,6 +67,7 @@
 #include "gl/manager.h"
 #include "gl/window.h"
 #include "gl/texture.h"
+#include "audio/configuration.h"
 #include "engine/renderer.h"
 #include "engine/serverengine.h"
 #include "object/objectfactory.h"
@@ -76,7 +77,7 @@
 #include "object/clipcontainer.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "object/util/objecteditor.h"
-#include "object/audio/objectdsppath.h"
+#include "object/util/objectdsppath.h"
 #include "model/treemodel.h"
 #include "object/util/objecttree.h"
 #include "tool/commonresolutions.h"
@@ -109,7 +110,7 @@ public:
         setCurrentThreadName("AUDIOTEST");
 
         ObjectDspPath dsp;
-        dsp.createPath(scene_, 44100, 2048);
+        dsp.createPath(scene_, AUDIO::Configuration(44100, 2048, 0, 2));
 
         samplePos_ = 0;
         while (!stop_)
@@ -117,7 +118,7 @@ public:
             if (new_)
             {
                 dsp.calcTransformations(samplePos_, MO_AUDIO_THREAD);
-                samplePos_ += dsp.bufferSize();
+                samplePos_ += dsp.config().bufferSize();
             }
             else
             {
@@ -1118,7 +1119,7 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
 {
     QTime t;
 
-    int num = 10000000;
+    int num = 50000000;
     int i = 0;
     int e = 0;
 
@@ -1151,7 +1152,7 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
         const auto bufsize = scene_->bufferSize(MO_AUDIO_THREAD);
 
         ObjectDspPath dsp;
-        dsp.createPath(scene_, scene_->sampleRate(), bufsize);
+        dsp.createPath(scene_, AUDIO::Configuration(scene_->sampleRate(), bufsize, 0, 2));
 
         t.start();
         for (; i < num && e <= 1000; )

@@ -39,26 +39,29 @@ void AudioBuffer::setSize(size_t blockSize, size_t numBlocks)
 }
 
 
-void AudioBuffer::insert(const F32 *block)
+void AudioBuffer::bypass(const QList<AUDIO::AudioBuffer *> &inputs,
+                         const QList<AUDIO::AudioBuffer *> &outputs, bool callNextBlock)
 {
-    memcpy(insertPointer(), block, blockSize_ * sizeof(F32));
-    nextBlock();
-}
+    const int num = std::min(inputs.size(), outputs.size());
 
-void AudioBuffer::insertNullBlock()
-{
-    memset(insertPointer(), 0, blockSize_ * sizeof(F32));
-    nextBlock();
-}
+    // copy inputs
+    for (int i = 0; i<num; ++i)
+    {
+        MO_ASSERT(inputs[i]->blockSize() == outputs[i]->blockSize(), "unmatched buffersize "
+                  << inputs[i]->blockSize() << "/" << outputs[i]->blockSize());
+        outputs[i]->writeBlock( inputs[i]->readPointer() );
+    }
 
-void AudioBuffer::nextBlock()
-{
-    // forward write pointer
-    writeBlock_ = (writeBlock_ + 1) % numBlocks_;
-    // forward read pointer
-    readBlock_ = (readBlock_ + 1) % numBlocks_;
-}
+    // clear remaining
+    for (int i = num; i < outputs.size(); ++i)
+    {
+        outputs[i]->writeNullBlock();
+    }
 
+    if (callNextBlock)
+        for (auto o : outputs)
+            o->nextBlock();
+}
 
 
 } // namespace AUDIO

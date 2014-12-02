@@ -67,6 +67,8 @@ void OscillatorAO::processAudio(const QList<AUDIO::AudioBuffer *> &,
                                 uint , SamplePos pos, uint thread)
 {
     AUDIO::AudioBuffer * out = outputs.first();
+    if (!out)
+        return;
 
     const Double freqFac = sampleRateInv() * TWO_PI;
 

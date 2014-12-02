@@ -30,7 +30,7 @@
 #include "object/microphone.h"
 #include "object/lightsource.h"
 #include "object/audio/audiounit.h"
-#include "object/audio/objectdsppath.h"
+#include "object/util/objectdsppath.h"
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
 #include "model/objecttreemodel.h"
@@ -473,9 +473,10 @@ void Scene::updateTree_()
     // collect all modulators for each object
     updateModulators_();
 
+    // XXX testing here
     // create the audio-dsp graph
     ObjectDspPath path;
-    path.createPath(this, sampleRate(), 4096);
+    path.createPath(this, AUDIO::Configuration(sampleRate(), 4096, 0, 2));
     path.dump(std::cout);
 
     // update the rendermodes

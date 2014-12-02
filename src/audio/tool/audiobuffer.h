@@ -40,14 +40,32 @@ class AudioBuffer
     /** Returns a read-pointer to the last written block */
     const F32 * readPointer() const { return &samples_[readBlock_ * blockSize_]; }
 
-    /** Inserts one block of data into the buffer and forwards write pointer.
+    /** Inserts one block of data into the buffer.
         @p block must point to at least blockSize() floats */
-    void insert(const F32 *block);
+    void writeBlock(const F32 *block) { memcpy(insertPointer(), block, blockSize_ * sizeof(F32)); }
 
-    void insertNullBlock();
+    /** Inserts one block of zeros into the buffer */
+    void writeNullBlock() { memset(insertPointer(), 0, blockSize_ * sizeof(F32)); }
 
     /** Forwards the write pointer */
-    void nextBlock();
+    void nextBlock()
+    {
+        // forward write pointer
+        writeBlock_ = (writeBlock_ + 1) % numBlocks_;
+        // forward read pointer
+        readBlock_ = (readBlock_ + 1) % numBlocks_;
+    }
+
+    // ------ static convenience functions ----------
+
+    /** Copies all input data to output data.
+        If @p outputs has more channels that @p inputs,
+        they will be zeroed.
+        @note The blocksize must match between each input and output channel! */
+    static void bypass(const QList<AUDIO::AudioBuffer *> &inputs,
+                       const QList<AUDIO::AudioBuffer *> &outputs,
+                       bool callNextBlock = false);
+
 
 private:
 

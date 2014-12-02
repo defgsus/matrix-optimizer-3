@@ -697,8 +697,8 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
         }
         p_->action = Private::A_NONE;
-        update(sceneRect());
-        //update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-50,-50,50,50));
+        //update(sceneRect());
+        update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-100,-100,100,100));
         return;
     }
 
@@ -737,7 +737,7 @@ void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if (p_->connectEndItem)
             p_->connectEndPos = p_->connectEndItem->globalInputPos(0);
 
-        update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-50,-50,50,50));
+        update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-100,-100,100,100));
         return;
     }
 

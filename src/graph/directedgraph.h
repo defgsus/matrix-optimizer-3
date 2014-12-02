@@ -11,9 +11,10 @@
 #ifndef MOSRC_GRAPH_DIRECTEDGRAPH_H
 #define MOSRC_GRAPH_DIRECTEDGRAPH_H
 
+#ifndef NDEBUG
 // for debug/dump functions
-#define MO_GRAPH_DEBUG
-
+#   define MO_GRAPH_DEBUG
+#endif
 
 #include <vector>
 #include <map>

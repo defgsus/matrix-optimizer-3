@@ -92,17 +92,18 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     p_oi_->itemExp->setPos(ObjectGraphSettings::penOutlineWidth() * 3.,
                            ObjectGraphSettings::penOutlineWidth() * 3.);
 
-    // setup graphicsItems
+    // setup QGraphicsItem
     setCursor(QCursor(Qt::SizeAllCursor));
     setAcceptHoverEvents(true);
     setFlag(ItemIsSelectable, true);
     setToolTip(object->name());
 
-    // input items
-    if (qobject_cast<AudioObject*>(object))
+    // input/output items
+    if (auto ao = qobject_cast<AudioObject*>(object))
     {
         p_oi_->inputItem = new ObjectGraphConnectItem(this);
-        p_oi_->outputItem = new ObjectGraphConnectItem(this);
+        if (ao->audioOutputsVisible())
+            p_oi_->outputItem = new ObjectGraphConnectItem(this);
         p_oi_->updateConnectors();
     }
 }
@@ -431,9 +432,9 @@ AbstractObjectItem * AbstractObjectItem::itemInGrid(const QPoint& p) const
 void AbstractObjectItem::PrivateOI::updateConnectors()
 {
     if (inputItem)
-        inputItem->setPos(item->inputPos());
+        inputItem->setPos(item->inputPos() + QPointF(2,0));
     if (outputItem)
-        outputItem->setPos(item->outputPos());
+        outputItem->setPos(item->outputPos() - QPointF(2,0));
 }
 
 QRectF AbstractObjectItem::childrenBoundingRect(bool checkVisibilty)
