@@ -33,6 +33,9 @@ public:
     /** Assigned scene */
     Scene * scene() const;
 
+    /** Assigned thread index */
+    uint thread() const;
+
     /** Assigned audio configuration */
     const AUDIO::Configuration& config() const;
 
@@ -46,8 +49,9 @@ signals:
 
 public slots:
 
-    /** Creates the dsp path for the given scene */
-    void setScene(Scene *, const AUDIO::Configuration&);
+    /** Creates the dsp path for the given scene.
+        @p thread is the thread-index for which to query Parameters in the scene. */
+    void setScene(Scene *, const AUDIO::Configuration&, uint thread);
 
     /** Seeks to a certain position in the scene */
     void seek(SamplePos pos);

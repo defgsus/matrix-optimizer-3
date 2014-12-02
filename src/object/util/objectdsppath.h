@@ -45,8 +45,7 @@ public:
 
     // ------------- audio io -----------------
 
-    /** The system audio output buffers.
-        Collected from AudioOutAO objects. */
+    /** The system audio output buffers. */
     const QList<AUDIO::AudioBuffer*> & audioOutputs();
 
 private:

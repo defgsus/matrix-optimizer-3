@@ -14,6 +14,7 @@
 #include "object/util/objectdsppath.h"
 #include "object/util/audioobjectconnections.h"
 #include "audio/configuration.h"
+#include "audio/tool/audiobuffer.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -28,6 +29,7 @@ public:
     Private(AudioEngine * e)
         : engine        (e),
           scene         (0),
+          threadIdx     (0),
           curSample     (0)
     { }
 
@@ -35,9 +37,9 @@ public:
 
     AudioEngine * engine;
     Scene * scene;
-
     AUDIO::Configuration conf;
     ObjectDspPath path;
+    uint threadIdx;
     SamplePos curSample;
 };
 
@@ -65,6 +67,11 @@ Scene * AudioEngine::scene() const
     return p_->scene;
 }
 
+uint AudioEngine::thread() const
+{
+    return p_->threadIdx;
+}
+
 const AUDIO::Configuration& AudioEngine::config() const
 {
     return p_->conf;
@@ -86,10 +93,11 @@ void AudioEngine::seek(SamplePos pos)
     p_->curSample = pos;
 }
 
-void AudioEngine::setScene(Scene * s, const AUDIO::Configuration & conf)
+void AudioEngine::setScene(Scene * s, const AUDIO::Configuration & conf, uint thread)
 {
     p_->conf = conf;
     p_->scene = s;
+    p_->threadIdx = thread;
     p_->setup();
 }
 
@@ -98,9 +106,23 @@ void AudioEngine::Private::setup()
     path.createPath(scene, conf);
 }
 
-void AudioEngine::process(const F32 *inputs, F32 *outputs)
+void AudioEngine::process(const F32 *, F32 * outputs)
 {
+    // apply all transformations
+    p_->path.calcTransformations(p_->curSample, p_->threadIdx);
 
+    // run audio block
+    p_->path.calcAudio(p_->curSample, p_->threadIdx);
+
+    // advance scene time
+    p_->curSample += p_->conf.bufferSize();
+
+    // copy output buffers
+    for (const AUDIO::AudioBuffer * b : p_->path.audioOutputs())
+    {
+        b->readBlock(outputs);
+        outputs += p_->conf.bufferSize();
+    }
 }
 
 

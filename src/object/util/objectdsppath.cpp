@@ -21,6 +21,7 @@
 #include "object/scene.h"
 #include "object/microphone.h"
 #include "object/audioobject.h"
+#include "object/audio/audiooutao.h"
 #include "object/util/objecttree.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/audioobjectconnections.h"
@@ -101,7 +102,8 @@ public:
         transformationObjects,
         soundsourceObjects,
         microphoneObjects,
-        audioObjects;
+        audioObjects,
+        audioOutObjects;
 
     QList<AUDIO::AudioBuffer*> audioOut;
 };
@@ -121,7 +123,10 @@ const AUDIO::Configuration & ObjectDspPath::config() const
     return p_->conf;
 }
 
-
+const QList<AUDIO::AudioBuffer*> & ObjectDspPath::audioOutputs()
+{
+    return p_->audioOut;
+}
 
 void ObjectDspPath::createPath(Scene *scene, const AUDIO::Configuration& conf)
 {
@@ -148,6 +153,11 @@ void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
 
 void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
 {
+    // clear system audio outputs
+    for (AUDIO::AudioBuffer * buf : p_->audioOut)
+        buf->writeNullBlock();
+
+    // process audio objects
     for (Private::ObjectBuffer * b : p_->audioObjects)
     {
         auto ao = static_cast<AudioObject*>(b->object);
@@ -155,10 +165,16 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
         ao->processAudioBase(
                     b->audioInputs, b->audioOutputs,
                     p_->conf.bufferSize(), pos, thread);
+
         // forward buffers
         for (AUDIO::AudioBuffer * buf : b->audioOutputs)
-            buf->nextBlock();
+            if (buf)
+                buf->nextBlock();
     }
+
+    // mix into system audio outputs
+    for (Private::ObjectBuffer * b : p_->audioOutObjects)
+        AUDIO::AudioBuffer::mix(p_->audioOut, b->audioOutputs);
 
     /*for (Private::ObjectBuffer * b : p_->soundsourceObjects)
     {
@@ -216,6 +232,7 @@ void ObjectDspPath::Private::clear()
     soundsourceObjects.clear();
     audioObjects.clear();
     audioOut.clear();
+    audioOutObjects.clear();
 }
 
 void ObjectDspPath::Private::createPath(Scene * s)
@@ -223,9 +240,19 @@ void ObjectDspPath::Private::createPath(Scene * s)
     clear();
     scene = s;
 
+    // -------------------- system io ---------------------------
+
+    // system-out-buffers
+    for (uint i = 0; i < conf.numChannelsOut(); ++i)
+        audioOut.push_back( new AUDIO::AudioBuffer(conf.bufferSize()) );
+
+
+    // ---------------- analyze object tree ---------------------
+
     // convert to new tree structure
     auto tree = get_object_tree(scene);
     std::auto_ptr<ObjectTreeNode> tree_delete(tree);
+
 
     // ---- find all objects that need translation calculated ---
 
@@ -253,7 +280,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
     });
 
 
-    // --- get all audio processors ---
+    // ---------------- get all audio processors ----------------
 
     DirectedGraph<AudioObject*> dspgraph;
     for (auto i : *scene->audioConnections())
@@ -268,23 +295,58 @@ void ObjectDspPath::Private::createPath(Scene * s)
         auto b = getObjectBuffer(o);
         audioObjects.append( b );
 
+        // special system-out object?
+        AudioOutAO * oout = qobject_cast<AudioOutAO*>(o);
+
         // prepare outputs
         // (create an entry in ObjectBuffer::audioOutputs for each output
         //  and set unused outputs to NULL)
-        auto outs = scene->audioConnections()->getOutputs(o);
-        for (uint i = 0; i < o->numAudioOutputs(); ++i)
+        if (!oout)
         {
-            bool used = false;
-            for (AudioObjectConnection * c : outs)
-            if (c->outputChannel() == i)
+            auto outs = scene->audioConnections()->getOutputs(o);
+            for (uint i = 0; i < o->numAudioOutputs(); ++i)
             {
-                auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
-                b->audioOutputs.push_back( buf );
-                used = true;
-                break;
+                bool used = false;
+                for (AudioObjectConnection * c : outs)
+                if (c->outputChannel() == i)
+                {
+                    auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
+                    b->audioOutputs.push_back( buf );
+                    used = true;
+                    break;
+                }
+                if (!used)
+                    b->audioOutputs.push_back( 0 );
             }
-            if (!used)
-                b->audioOutputs.push_back( 0 );
+        }
+        // perpare outputs of system-out object
+        else
+        {
+            // find highest input channel
+            auto ins = scene->audioConnections()->getInputs(o);
+            uint num = 0;
+            for (auto c : ins)
+                num = std::max(num, c->inputChannel());
+            // but limit to max system-outputs
+            num = std::min(num, conf.numChannelsOut());
+            // prepare an output for each input
+            for (uint i=0; i<num; ++i)
+            {
+                bool used = false;
+                for (AudioObjectConnection * c : ins)
+                if (c->inputChannel() == i)
+                {
+                    auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
+                    b->audioOutputs.push_back( buf );
+                    used = true;
+                    break;
+                }
+                if (!used)
+                    b->audioOutputs.push_back( 0 );
+            }
+
+            // remember audio-out objects separately
+            audioObjects.push_back( b );
         }
 
         // prepare inputs
@@ -299,12 +361,8 @@ void ObjectDspPath::Private::createPath(Scene * s)
         }
     }
 
-    // system-out-buffers
-    for (uint i = 0; i < conf.numChannelsOut(); ++i)
-        audioOut.push_back( new AUDIO::AudioBuffer(conf.bufferSize()) );
 
-
-    // --- get all soundsource objects ---
+    // ----------- get all soundsource objects ------------------
 
     QList<Object*> soundsources;
     tree->makeLinear(soundsources, [](const Object*o)
@@ -314,7 +372,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
     createObjectBuffers(soundsources, soundsourceObjects);
 
 
-    // --- get all microphone objects ---
+    // ----------- get all microphone objects -------------------
 
     QList<Object*> microphones;
     tree->makeLinear(microphones, [](const Object*o)
