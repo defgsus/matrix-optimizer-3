@@ -27,6 +27,7 @@ class QMainWindow;
 class QMenu;
 
 namespace MO {
+class LiveAudioEngine;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
@@ -154,6 +155,8 @@ private slots:
     void onResolutionCustom_();
     void onResolutionPredefined_(QAction*);
 
+    void onUpdateTimer_();
+
     // -- network --
 
     void sendSceneToClients_();
@@ -174,10 +177,14 @@ private:
 
     QMainWindow * window_;
     Scene * scene_;
+
+    QTimer * updateTimer_;
 #ifndef MO_DISABLE_TREE
     ObjectTreeModel * objectTreeModel_;
 #endif
     QSize outputSize_;
+
+    LiveAudioEngine * audioEngine_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;

@@ -77,9 +77,9 @@ void AudioObject::processAudioBase(const QList<AUDIO::AudioBuffer *> &inputs,
                                    const QList<AUDIO::AudioBuffer *> &outputs,
                                    uint bufferSize, SamplePos pos, uint thread)
 {
-    MO_ASSERT(outputs.size() == (int)numAudioOutputs(), "output size mismatch "
+/*    MO_ASSERT(outputs.size() == (int)numAudioOutputs(), "output size mismatch "
                         << outputs.size() << "/" << numAudioOutputs());
-
+*/
     // check activity
     if (!active(sampleRateInv() * pos, thread))
     {

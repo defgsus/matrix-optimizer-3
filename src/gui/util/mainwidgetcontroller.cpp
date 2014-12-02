@@ -69,6 +69,7 @@
 #include "gl/texture.h"
 #include "audio/configuration.h"
 #include "engine/renderer.h"
+#include "engine/liveaudioengine.h"
 #include "engine/serverengine.h"
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -170,10 +171,12 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
     : QObject           (win),
       window_           (win),
       scene_            (0),
+      updateTimer_      (0),
 #ifndef MO_DISABLE_TREE
       objectTreeModel_  (0),
 #endif
       outputSize_       (512, 512),
+      audioEngine_      (0),
       glManager_        (0),
       glWindow_         (0),
       objectEditor_     (0),
@@ -210,6 +213,11 @@ MainWidgetController::~MainWidgetController()
 
 void MainWidgetController::createObjects_()
 {
+    updateTimer_ = new QTimer(this);
+    updateTimer_->setInterval(1000 / 20);
+    updateTimer_->setSingleShot(false);
+    connect(updateTimer_, SIGNAL(timeout()), this, SLOT(onUpdateTimer_()));
+
     // scene settings class
     sceneSettings_ = new SceneSettings(this);
 
@@ -808,6 +816,11 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
 }
 
 
+void MainWidgetController::onUpdateTimer_()
+{
+    if (audioEngine_)
+        transportWidget_->setSceneTime(audioEngine_->second());
+}
 
 
 void MainWidgetController::onObjectAdded_(Object * o)
@@ -1289,7 +1302,18 @@ bool MainWidgetController::isPlayback() const
 
 void MainWidgetController::start()
 {
-    scene_->start();
+    //scene_->start();
+
+    // prepare audio engine
+    if (!audioEngine_)
+        audioEngine_ = new LiveAudioEngine(this);
+    if (audioEngine_->scene() != scene_)
+        audioEngine_->setScene(scene_, MO_AUDIO_THREAD);
+
+    // start engine
+    if (audioEngine_->start())
+        // start rythmic gui updates
+        updateTimer_->start();
 
     if (serverEngine().isRunning())
         serverEngine().setScenePlaying(true);
@@ -1297,7 +1321,21 @@ void MainWidgetController::start()
 
 void MainWidgetController::stop()
 {
-    scene_->stop();
+    if (audioEngine_)
+    {
+        if (audioEngine_->isPlayback())
+            audioEngine_->stop();
+        else
+        {
+            audioEngine_->seek(0);
+            // XXX hacky
+            onSceneTimeChanged_(0.0);
+        }
+    }
+
+    updateTimer_->stop();
+
+    //scene_->stop();
 
     if (serverEngine().isRunning())
         serverEngine().setScenePlaying(false);

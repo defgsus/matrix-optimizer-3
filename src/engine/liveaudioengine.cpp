@@ -42,11 +42,13 @@ public:
         : parent        (e),
           engine        (new AudioEngine()),
           audioDevice   (0),
-          defaultConf   (44100, 256, 0, 2)
+          defaultConf   (44100, 256, 0, 2),
+          audioOutThread(0)
     { }
 
     ~Private()
     {
+        delete audioDevice;
         delete engine;
     }
 
@@ -62,8 +64,8 @@ public:
 
     //AudioInThread * audioInThread;
     AudioEngineOutThread * audioOutThread;
-    LocklessQueue<const F32*> * audioInQueue;
-    LocklessQueue<const F32*> * audioOutQueue;
+    LocklessQueue<const F32*> audioInQueue;
+    LocklessQueue<const F32*> audioOutQueue;
 };
 
 
@@ -162,7 +164,7 @@ public:
     void run()
     {
         setCurrentThreadName("AUDIO_OUT");
-        MO_DEBUG_AUDIO("AudioOutThread::run()");
+        MO_DEBUG("AudioOutThread::run()");
 
         const uint
                 bufferSize = engine_->config().bufferSize(),
@@ -170,9 +172,10 @@ public:
                 bufferSizeChan = bufferSize * numChannelsOut,
                 numAhead = 4;
 
-        AUDIO::AudioBuffer bufferForDevice(bufferSizeChan, numAhead);
-        //std::vector<F32> bufferOutput(bufferSize * numAhead);
-        engine_->p_->audioOutQueue->reset();
+        AUDIO::AudioBuffer
+                bufferForDevice(bufferSizeChan, numAhead);
+
+        engine_->p_->audioOutQueue.reset();
 
         // length of a buffer in microseconds
         const unsigned long bufferTimeU =
@@ -182,23 +185,26 @@ public:
         {
             //std::cerr << scene_->audioQueue_->count() << std::endl;
 
-            if (engine_->p_->audioOutQueue->count() < numAhead)
+            if (engine_->p_->audioOutQueue.count() < numAhead)
             {
                 // calculate an audio block
                 engine_->p_->engine->processForDevice(
                             0,
                             bufferForDevice.writePointer());
+                /*memset(bufferForDevice.writePointer(), 0,
+                       bufferSizeChan * sizeof(F32));*/
 
                 // publish
                 bufferForDevice.nextBlock();
-                engine_->p_->audioOutQueue->produce(
+                engine_->p_->audioOutQueue.produce(
                             bufferForDevice.readPointer());
+
             }
             else
                 usleep(bufferTimeU);
         }
 
-        MO_DEBUG_AUDIO("AudioOutThread::run() finished");
+        MO_DEBUG("AudioOutThread::run() finished");
     }
 
 private:
@@ -308,6 +314,9 @@ bool LiveAudioEngine::initAudioDevice()
         return true;
     }
 
+    if (!p_->audioDevice)
+        p_->audioDevice = new AUDIO::AudioDevice();
+
     if (!p_->audioDevice->isAudioConfigured())
     {
         QMessageBox::information(0, tr("Audio device"),
@@ -352,7 +361,8 @@ bool LiveAudioEngine::start()
     p_->audioInThread = new AudioEngineInThread(this, this);
     p_->audioInThread->start();
     */
-    p_->audioOutThread = new AudioEngineOutThread(this, this);
+    if (!p_->audioOutThread)
+        p_->audioOutThread = new AudioEngineOutThread(this, this);
     p_->audioOutThread->start();
 
     try
@@ -364,8 +374,10 @@ bool LiveAudioEngine::start()
         QMessageBox::critical(0, tr("Audio device"),
                               tr("Could initialized but not start audio playback.\n%1")
                               .arg(e.what()));
-
+        return false;
     }
+
+    return true;
 }
 
 void LiveAudioEngine::stop()
@@ -378,6 +390,8 @@ void LiveAudioEngine::stop()
         p_->audioOutThread->deleteLater();
         p_->audioOutThread = 0;
     }
+
+    p_->audioDevice->stop();
 }
 
 void LiveAudioEngine::Private::audioCallback(const F32 * , F32 * out)
@@ -386,7 +400,7 @@ void LiveAudioEngine::Private::audioCallback(const F32 * , F32 * out)
 
     // get output from AudioOutThread
     const F32 * buf;
-    if (audioOutQueue->consume(buf))
+    if (audioOutQueue.consume(buf))
         memcpy(out, buf, engine->config().bufferSize()
                             * engine->config().numChannelsOut()
                             * sizeof(F32));

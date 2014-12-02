@@ -15,12 +15,12 @@ namespace MO {
 namespace AUDIO {
 
 AudioBuffer::AudioBuffer(size_t blockSize, size_t numBlocks)
-    : p_blockSize_    (blockSize),
-      p_numBlocks_    (numBlocks),
+    : p_blockSize_    (0),
+      p_numBlocks_    (0),
       p_writeBlock_   (0),
       p_readBlock_    (0)
 {
-    setSize(p_blockSize_, p_numBlocks_);
+    setSize(blockSize, numBlocks);
 }
 
 
@@ -33,7 +33,7 @@ void AudioBuffer::setSize(size_t blockSize, size_t numBlocks)
     p_readBlock_ = 0;
     p_writeBlock_ = 1 % p_numBlocks_;
 
-    p_samples_.resize(blockSize, numBlocks);
+    p_samples_.resize(blockSize * numBlocks);
     for (auto & s : p_samples_)
         s = 0;
 }

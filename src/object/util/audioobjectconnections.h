@@ -103,11 +103,11 @@ public:
                          uint outputChannel = 0, uint inputChannel = 0,
                          uint numChannels = 1);
 
-    void disconnect(AudioObject * from, AudioObject * to,
+    bool disconnect(AudioObject * from, AudioObject * to,
                     uint outputChannel = 0, uint inputChannel = 0,
                     uint numChannels = 1);
 
-    void disconnect(const AudioObjectConnection& con);
+    bool disconnect(const AudioObjectConnection& con);
     void disconnect(AudioObjectConnection *);
 
     /** Removes all objects recursively */

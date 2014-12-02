@@ -41,7 +41,9 @@ protected:
 
     /** Process dsp data here.
         Inputs and outputs have the same buffer size.
-        @note Unused inputs and outputs contain a NULL pointer. */
+        @note Unused inputs and outputs contain a NULL pointer.
+        Also note that the number of output channels might not match your desired
+        number of channels set with setNumberAudioOutputs(). */
     virtual void processAudio(const QList<AUDIO::AudioBuffer*>& inputs,
                               const QList<AUDIO::AudioBuffer*>& outputs,
                               uint bufferSize, SamplePos pos, uint thread) = 0;

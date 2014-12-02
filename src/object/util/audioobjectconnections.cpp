@@ -223,21 +223,26 @@ AudioObjectConnection * AudioObjectConnections::connect(const AudioObjectConnect
     return con;
 }
 
-void AudioObjectConnections::disconnect(AudioObject *from, AudioObject *to,
+bool AudioObjectConnections::disconnect(AudioObject *from, AudioObject *to,
                                         uint outputChannel, uint inputChannel,
                                         uint numChannels)
 {
-    disconnect(AudioObjectConnection(from, to, outputChannel, inputChannel, numChannels));
+    return disconnect(AudioObjectConnection(from, to, outputChannel, inputChannel, numChannels));
 }
 
-void AudioObjectConnections::disconnect(const AudioObjectConnection &con)
+bool AudioObjectConnections::disconnect(const AudioObjectConnection &con)
 {
     if (auto c = find(con))
+    {
         disconnect(c);
+        return true;
+    }
+    return false;
 }
 
 void AudioObjectConnections::disconnect(AudioObjectConnection * con)
 {
+    // remove here
     for (auto i = toMap_.begin(); i != toMap_.end(); ++i)
     {
         if (i->second == con)
@@ -247,6 +252,7 @@ void AudioObjectConnections::disconnect(AudioObjectConnection * con)
         }
     }
 
+    // remove there
     for (auto i = fromMap_.begin(); i != fromMap_.end(); ++i)
     {
         if (i->second == con)
@@ -256,6 +262,7 @@ void AudioObjectConnections::disconnect(AudioObjectConnection * con)
         }
     }
 
+    // and also
     cons_.erase(con);
 
     delete con;
