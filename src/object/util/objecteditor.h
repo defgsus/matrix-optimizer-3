@@ -35,6 +35,11 @@ public:
 
 signals:
 
+    /** Very broad signal.
+        Emitted for everything except
+            objectNameChanged() and parameterChanged(). */
+    void sceneChanged(MO::Scene*);
+
     /** Emitted after a change to an object name */
     void objectNameChanged(MO::Object *);
 

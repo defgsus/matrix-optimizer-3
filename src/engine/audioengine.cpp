@@ -103,7 +103,13 @@ void AudioEngine::setScene(Scene * s, const AUDIO::Configuration & conf, uint th
 
 void AudioEngine::Private::setup()
 {
+    MO_DEBUG("AudioEngine::setup()");
+
     path.createPath(scene, conf);
+
+#ifdef MO_ENABLE_DEBUG
+    path.dump(std::cout);
+#endif
 }
 
 void AudioEngine::process(const F32 *, F32 * outputs)
@@ -139,7 +145,9 @@ void AudioEngine::processForDevice(const F32 *, F32 * outputs)
     // copy output buffers
     for (const AUDIO::AudioBuffer * b : p_->path.audioOutputs())
     {
+        // write channel-interlaced
         b->readBlock(outputs, p_->conf.numChannelsOut());
+        // advance channel
         ++outputs;
     }
 }

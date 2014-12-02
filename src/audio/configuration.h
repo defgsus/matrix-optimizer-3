@@ -99,7 +99,7 @@ namespace AUDIO {
     inline std::basic_ostream<T>& operator << (std::basic_ostream<T>& out, const Configuration& conf)
     {
         out << "rate=" << conf.sampleRate() << ", block=" << conf.bufferSize()
-            << "in=" << conf.numChannelsIn() << ", out=" << conf.numChannelsOut();
+            << ", in=" << conf.numChannelsIn() << ", out=" << conf.numChannelsOut();
         return out;
     }
 

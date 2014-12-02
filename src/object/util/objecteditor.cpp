@@ -84,6 +84,7 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
                       );
 
     emit objectAdded(newChild);
+    emit sceneChanged(scene_);
     return true;
 }
 
@@ -118,6 +119,8 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
     else
         delete o;
 
+    emit sceneChanged(scene_);
+
     if (!error.isEmpty())
     {
         QMessageBox::critical(0, tr("Can't add object"),
@@ -140,6 +143,7 @@ bool ObjectEditor::deleteObject(Object *object)
     scene_->deleteObject(object);
 
     emit objectDeleted(object);
+    emit sceneChanged(scene_);
 
     return true;
 }
@@ -152,7 +156,10 @@ bool ObjectEditor::setObjectIndex(Object * object, int newIndex)
     bool res = scene_->setObjectIndex(object, newIndex);
 
     if (res)
+    {
         emit objectChanged(object);
+        emit sceneChanged(scene_);
+    }
 
     return res;
 }
@@ -179,13 +186,17 @@ bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
     {
         bool res = scene_->setObjectIndex(object, newIndex);
         if (res)
+        {
             emit objectChanged(object);
+            emit sceneChanged(scene_);
+        }
         return res;
     }
     else
     {
         scene_->moveObject(object, newParent, newIndex);
         emit objectMoved(object, oldParent);
+        emit sceneChanged(scene_);
     }
 
     return true;
@@ -207,11 +218,15 @@ namespace
             ScopedSceneLockWrite lock(edit->scene());
             p->setValue(v);
             p->object()->onParameterChanged(p);
-            p->object()->updateParameterVisibility();
         }
+        p->object()->updateParameterVisibility();
+
+        // signals
         emit edit->parameterChanged(p);
         if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
             emit edit->sequenceChanged(seq);
+
+        // repaint
         edit->scene()->render();
     }
 }
@@ -259,6 +274,7 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName)
     }
     emit modulatorAdded(m);
     emit parameterChanged(p);
+    emit sceneChanged(scene_);
     scene_->render();
 }
 
@@ -275,6 +291,7 @@ void ObjectEditor::removeModulator(Parameter *p, const QString &idName)
     }
     emit modulatorDeleted(m);
     emit parameterChanged(p);
+    emit sceneChanged(scene_);
     scene_->render();
 }
 
@@ -290,6 +307,7 @@ void ObjectEditor::removeAllModulators(Parameter *p)
     }
     emit modulatorsDeleted(mods);
     emit parameterChanged(p);
+    emit sceneChanged(scene_);
     scene_->render();
 }
 
@@ -314,6 +332,8 @@ bool ObjectEditor::connectAudioObjects(AudioObject *from, AudioObject *to,
     scene_->audioConnections()->connect(from, to, outChannel, inChannel, numChannels);
 
     emit audioConnectionsChanged();
+    emit sceneChanged(scene_);
+
     return true;
 }
 
@@ -323,6 +343,8 @@ void ObjectEditor::disconnectAudioObjects(AudioObject *from, AudioObject *to,
 {
     if (scene_->audioConnections()->disconnect(from, to, outChannel, inChannel, numChannels))
         emit audioConnectionsChanged();
+
+    emit sceneChanged(scene_);
 }
 
 

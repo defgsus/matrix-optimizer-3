@@ -54,19 +54,17 @@ void AudioOutAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
                               const QList<AUDIO::AudioBuffer *> &outputs,
                               uint , SamplePos , uint )
 {
-    const int num = std::min(inputs.size(), outputs.size());
+    const int num = std::max(inputs.size(), outputs.size());
 
     // copy inputs
     for (int i = 0; i<num; ++i)
+    if (outputs[i])
     {
-        // XXX missing amplitude here
-        outputs[i]->writeBlock( inputs[i]->readPointer() );
-    }
-
-    // clear remaining
-    for (int i = num; i < outputs.size(); ++i)
-    {
-        outputs[i]->writeNullBlock();
+        if (inputs[i])
+            // XXX missing amplitude here
+            outputs[i]->writeBlock( inputs[i]->readPointer() );
+        else
+            outputs[i]->writeNullBlock();
     }
 }
 

@@ -44,6 +44,9 @@ public:
     /** Skips the given number of bytes. */
     void skip(qint64 length);
 
+    qint64 reserveFutureValueInt();
+    void writeFutureValue(qint64 future, qint64 value);
+
     /** Writes the string and the version number to the stream. */
     void writeHeader(const QString& id, qint32 version);
 

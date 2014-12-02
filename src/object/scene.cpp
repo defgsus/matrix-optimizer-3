@@ -141,6 +141,14 @@ void Scene::serialize(IO::DataStream & io) const
     io << fbSize_ << doMatchOutputResolution_;
 }
 
+bool Scene::serializeAfterChilds(IO::DataStream & io) const
+{
+    io.writeHeader("scene_", 1);
+
+    audioCon_->serialize(io);
+    return true;
+}
+
 void Scene::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
@@ -148,6 +156,13 @@ void Scene::deserialize(IO::DataStream & io)
 
     if (ver >= 2)
         io >> fbSizeRequest_ >> doMatchOutputResolution_;
+}
+
+void Scene::deserializeAfterChilds(IO::DataStream & io)
+{
+    io.readHeader("scene_", 1);
+
+    audioCon_->deserialize(io, this);
 }
 
 #ifndef MO_DISABLE_TREE

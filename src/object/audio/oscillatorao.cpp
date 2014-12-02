@@ -62,11 +62,13 @@ void OscillatorAO::createParameters()
 }
 
 
-void OscillatorAO::processAudio(const QList<AUDIO::AudioBuffer *> &,
+void OscillatorAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
                                 const QList<AUDIO::AudioBuffer *> &outputs,
                                 uint , SamplePos pos, uint thread)
 {
-    AUDIO::AudioBuffer * out = outputs.first();
+    AUDIO::AudioBuffer
+            * out = outputs.isEmpty() ? 0 : outputs[0],
+            * inPhase = inputs.isEmpty() ? 0 : inputs[0];
     if (!out)
         return;
 
@@ -83,6 +85,9 @@ void OscillatorAO::processAudio(const QList<AUDIO::AudioBuffer *> &,
                     );
 
         phase_ += freqFac * paramFreq_->value(time, thread);
+
+        if (inPhase)
+            phase_ += inPhase->read(i);
 
         if (phase_ > TWO_PI)
             phase_ -= TWO_PI*2;

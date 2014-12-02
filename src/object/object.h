@@ -202,10 +202,17 @@ public:
         IO::DataStream::writeHeader() to write your specific object version.
         Adding the serialize function later will definitely break previously saved files! */
     virtual void serialize(IO::DataStream&) const;
+    /** Override to store custom data after the child object tree has been written.
+        If this function returns false, deserializeAfterChilds() will not be called
+        when reading the object - So never return false when you have written something.
+        Base implementation returns false. */
+    virtual bool serializeAfterChilds(IO::DataStream&) const { return false; }
 
     /** Override to restore custom data.
         @note See notes for serialize() function. */
     virtual void deserialize(IO::DataStream&);
+    /** Override to restore custom data after all object childs have been deserialized. */
+    virtual void deserializeAfterChilds(IO::DataStream&) { }
 
     // --------------- getter -------------------
 

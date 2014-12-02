@@ -102,7 +102,7 @@ void Object::serializeTree(IO::DataStream & io) const
     MO_DEBUG_IO("Object('"<<idName()<<"')::serializeTree_()");
 
     // default header
-    io.writeHeader("mo-tree", 1);
+    io.writeHeader("mo-tree", 2);
 
     // default object info
     io << className() << idName() << name();
@@ -127,6 +127,12 @@ void Object::serializeTree(IO::DataStream & io) const
     io << (qint32)childObjects_.size();
     for (auto o : childObjects_)
         o->serializeTree(io);
+
+    // v2
+    // serialize after child objects
+    auto future = io.reserveFutureValueInt();
+    bool did = serializeAfterChilds(io);
+    io.writeFutureValue(future, qint64(did ? 1 : 0));
 }
 
 Object * Object::deserializeTree(IO::DataStream & io)
@@ -144,7 +150,7 @@ Object * Object::deserializeTree_(IO::DataStream & io)
     MO_DEBUG_IO("Object::deserializeTree_()");
 
     // read default header
-    io.readHeader("mo-tree", 1);
+    const auto ver = io.readHeader("mo-tree", 2);
 
     // read default object info
     QString className, idName, name;
@@ -218,6 +224,14 @@ Object * Object::deserializeTree_(IO::DataStream & io)
         o->addObject_(child);//, ObjectFactory::getBestInsertIndex(o, child, -1));
     }
 
+    if (ver >= 2)
+    {
+        qint64 did;
+        io >> did;
+        if (did)
+            o->deserializeAfterChilds(io);
+    }
+
     // create audio objects
     o->createAudioSources();
     o->createMicrophones();
@@ -244,56 +258,7 @@ void Object::deserialize(IO::DataStream & io)
     if (ver >= 2)
         io >> attachedData_;
 }
-#if 0
-void Object::serializeParameters_(IO::DataStream & io, const Object * o)
-{
-    // write parameters
-    io.writeHeader("params", 1);
 
-    io << (qint32)o->parameters_.size();
-
-    for (auto p : o->parameters_)
-    {
-        io << p->idName();
-
-        auto pos = io.beginSkip();
-        p->serialize(io);
-        io.endSkip(pos);
-    }
-}
-
-void Object::deserializeParameters_(IO::DataStream & io, Object * o)
-{
-    // read parameters
-    io.readHeader("params", 1);
-
-    qint32 num;
-    io >> num;
-
-    for (int i=0; i<num; ++i)
-    {
-        QString id;
-        io >> id;
-
-        // length for skipping
-        qint64 length;
-        io >> length;
-
-        Parameter * p = o->findParameter(id);
-        if (!p)
-        {
-            MO_IO_WARNING(READ, "skipping unknown parameter '" << id << "' "
-                                "in input stream.");
-            io.skip(length);
-        }
-        else
-            p->deserialize(io);
-    }
-
-    o->onParametersLoaded();
-    o->updateParameterVisibility();
-}
-#endif
 
 // --------------- info ----------------------------
 

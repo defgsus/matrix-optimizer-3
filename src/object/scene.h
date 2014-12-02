@@ -59,6 +59,9 @@ public:
     MO_OBJECT_CONSTRUCTOR(Scene);
     ~Scene();
 
+    bool serializeAfterChilds(IO::DataStream&) const Q_DECL_OVERRIDE;
+    void deserializeAfterChilds(IO::DataStream&) Q_DECL_OVERRIDE;
+
     virtual Type type() const { return T_SCENE; }
     bool isScene() const { return true; }
 

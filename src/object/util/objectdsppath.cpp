@@ -105,7 +105,7 @@ public:
         audioObjects,
         audioOutObjects;
 
-    QList<AUDIO::AudioBuffer*> audioOut;
+    QList<AUDIO::AudioBuffer*> audioOuts;
 };
 
 ObjectDspPath::ObjectDspPath()
@@ -125,7 +125,7 @@ const AUDIO::Configuration & ObjectDspPath::config() const
 
 const QList<AUDIO::AudioBuffer*> & ObjectDspPath::audioOutputs()
 {
-    return p_->audioOut;
+    return p_->audioOuts;
 }
 
 void ObjectDspPath::createPath(Scene *scene, const AUDIO::Configuration& conf)
@@ -154,7 +154,7 @@ void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
 void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
 {
     // clear system audio outputs
-    for (AUDIO::AudioBuffer * buf : p_->audioOut)
+    for (AUDIO::AudioBuffer * buf : p_->audioOuts)
         buf->writeNullBlock();
 
     // process audio objects
@@ -174,8 +174,12 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
 
     // mix into system audio outputs
     for (Private::ObjectBuffer * b : p_->audioOutObjects)
-        AUDIO::AudioBuffer::mix(p_->audioOut, b->audioOutputs);
-
+        AUDIO::AudioBuffer::mix(p_->audioOuts, b->audioOutputs);
+/*
+    for (AUDIO::AudioBuffer * buf : p_->audioOuts)
+        for (uint i=0; i<buf->blockSize(); ++i)
+            buf->writePointer()[i] = std::sin(i * 6.28 * 400. / 44100);
+*/
     /*for (Private::ObjectBuffer * b : p_->soundsourceObjects)
     {
 
@@ -224,11 +228,13 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
     for (auto o : p_->audioObjects)
     {
         auto ao = dynamic_cast<AudioObject*>(o->object);
-        out << o->object->name() << "(" << ao->numAudioOutputs() << " desired outs)\n";
+        out << o->object->name() << " "
+            << o->audioInputs.size() << "/" << o->audioOutputs.size()
+            << "(" << ao->numAudioOutputs() << ")\n";
         for (auto b : o->audioInputs)
-            out << " " << b << "->\n";
+            out << "  in " << b << "\n";
         for (auto b : o->audioOutputs)
-            out << " ->" << b << "\n";
+            out << " out " << b << "\n";
     }
 
     out << std::endl;
@@ -238,7 +244,7 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
 
 void ObjectDspPath::Private::clear()
 {
-    for (auto b : audioOut)
+    for (auto b : audioOuts)
         delete b;
 
     scene = 0;
@@ -247,7 +253,7 @@ void ObjectDspPath::Private::clear()
     microphoneObjects.clear();
     soundsourceObjects.clear();
     audioObjects.clear();
-    audioOut.clear();
+    audioOuts.clear();
     audioOutObjects.clear();
 }
 
@@ -260,7 +266,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
 
     // system-out-buffers
     for (uint i = 0; i < conf.numChannelsOut(); ++i)
-        audioOut.push_back( new AUDIO::AudioBuffer(conf.bufferSize()) );
+        audioOuts.push_back( new AUDIO::AudioBuffer(conf.bufferSize()) );
 
 
     // ---------------- analyze object tree ---------------------
@@ -277,8 +283,9 @@ void ObjectDspPath::Private::createPath(Scene * s)
     {
         return (o->isAudioRelevant() && o->hasTransformationObjects());
     });
+
 #ifdef MO_GRAPH_DEBUG
-    audioPosTree->dumpTree(std::cout);
+    //audioPosTree->dumpTree(std::cout);
 #endif
 
     // create object buffers and assign position parents from tree
@@ -342,7 +349,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
             auto ins = scene->audioConnections()->getInputs(o);
             uint num = 0;
             for (auto c : ins)
-                num = std::max(num, c->inputChannel());
+                num = std::max(num, c->inputChannel() + 1);
             // but limit to max system-outputs
             num = std::min(num, conf.numChannelsOut());
             // prepare an output for each input

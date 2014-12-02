@@ -209,6 +209,8 @@ MainWidgetController::~MainWidgetController()
 {
     if (testThread_)
         testThread_->stop();
+    if (audioEngine_)
+        audioEngine_->stop();
 }
 
 void MainWidgetController::createObjects_()
@@ -229,6 +231,11 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(onTreeChanged_()));
     connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
+    connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
+    {
+        if (audioEngine_)
+            audioEngine_->setScene(s, MO_AUDIO_THREAD);
+    });
 
     // status bar
     statusBar_ = new QStatusBar(window_);

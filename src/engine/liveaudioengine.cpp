@@ -10,6 +10,9 @@
 
 #include <QThread>
 #include <QMessageBox>
+#include <QReadWriteLock>
+#include <QReadLocker>
+#include <QWriteLocker>
 
 #include "liveaudioengine.h"
 #include "object/scene.h"
@@ -41,6 +44,8 @@ public:
     Private(LiveAudioEngine * e)
         : parent        (e),
           engine        (new AudioEngine()),
+          nextEngine    (0),
+          disposeEngine (0),
           audioDevice   (0),
           defaultConf   (44100, 256, 0, 2),
           audioOutThread(0)
@@ -49,6 +54,8 @@ public:
     ~Private()
     {
         delete audioDevice;
+        delete disposeEngine;
+        delete nextEngine;
         delete engine;
     }
 
@@ -57,10 +64,12 @@ public:
     void audioCallback(const F32 *, F32 *);
 
     LiveAudioEngine * parent;
-    AudioEngine * engine;
+    AudioEngine * engine, * nextEngine, * disposeEngine;
 
     AUDIO::AudioDevice * audioDevice;
     AUDIO::Configuration defaultConf;
+
+    QReadWriteLock engineLock;
 
     //AudioInThread * audioInThread;
     AudioEngineOutThread * audioOutThread;
@@ -166,37 +175,60 @@ public:
         setCurrentThreadName("AUDIO_OUT");
         MO_DEBUG("AudioOutThread::run()");
 
-        const uint
-                bufferSize = engine_->config().bufferSize(),
-                numChannelsOut = engine_->config().numChannelsOut(),
-                bufferSizeChan = bufferSize * numChannelsOut,
-                numAhead = 4;
+        uint
+            bufferSize = engine_->config().bufferSize(),
+            numChannelsOut = engine_->config().numChannelsOut(),
+            bufferSizeChan = bufferSize * numChannelsOut,
+            numAhead = 4;
 
         AUDIO::AudioBuffer
                 bufferForDevice(bufferSizeChan, numAhead);
 
-        engine_->p_->audioOutQueue.reset();
+        auto live = engine_->p_;
 
         // length of a buffer in microseconds
-        const unsigned long bufferTimeU =
+        unsigned long bufferTimeU =
             1000000 * bufferSize * engine_->config().sampleRateInv();
 
         while (!stop_)
         {
-            //std::cerr << scene_->audioQueue_->count() << std::endl;
-
-            if (engine_->p_->audioOutQueue.count() < numAhead)
+            // check for engine swap
             {
-                // calculate an audio block
-                engine_->p_->engine->processForDevice(
-                            0,
-                            bufferForDevice.writePointer());
-                /*memset(bufferForDevice.writePointer(), 0,
-                       bufferSizeChan * sizeof(F32));*/
+                QReadLocker lock(&engine_->p_->engineLock);
+
+                // while in lock, swap engine
+                if (live->nextEngine)
+                {
+                    live->disposeEngine = live->engine;
+                    live->engine = live->nextEngine;
+                    live->nextEngine = 0;
+
+                    // update local settings
+                    bufferSize = engine_->config().bufferSize(),
+                    numChannelsOut = engine_->config().numChannelsOut(),
+                    bufferSizeChan = bufferSize * numChannelsOut,
+                    bufferTimeU = 1000000 *
+                            bufferSize * engine_->config().sampleRateInv();
+
+                    bufferForDevice.setSize(bufferSizeChan, numAhead);
+                }
+            }
+
+            // calc buffers for next system-out callback
+            if (live->audioOutQueue.count() < numAhead)
+            {
+                {
+                    ScopedSceneLockRead lock(engine_->scene());
+
+                    // calculate an audio block
+                    live->engine->processForDevice(
+                                0,
+                                bufferForDevice.writePointer());
+                }
 
                 // publish
                 bufferForDevice.nextBlock();
-                engine_->p_->audioOutQueue.produce(
+                live->audioOutQueue.produce(
                             bufferForDevice.readPointer());
 
             }
@@ -279,7 +311,26 @@ void LiveAudioEngine::seek(SamplePos pos)
 
 void LiveAudioEngine::setScene(Scene * s, uint thread)
 {
-    p_->engine->setScene(s, p_->defaultConf, thread);
+    // dont care for threads
+    if (!isPlayback())
+    {
+        // simply reassign
+        p_->engine->setScene(s, p_->defaultConf, thread);
+        return;
+    }
+
+    // create engine, blocking on caller thread
+    auto eng = new AudioEngine();
+    eng->setScene(s, p_->defaultConf, thread);
+
+    // lock access to p_->nextEngine
+    QWriteLocker lock(&p_->engineLock);
+
+    // already a request?
+    if (p_->nextEngine)
+        delete p_->nextEngine;
+
+    p_->nextEngine = eng;
 }
 
 void LiveAudioEngine::Private::updateScene()
@@ -354,17 +405,26 @@ bool LiveAudioEngine::start()
     if (isPlayback())
         return true;
 
+    // init device
     if (!isAudioInitialized())
         if (!initAudioDevice())
             return false;
+
+    // init communication stuff
+    p_->audioOutQueue.reset();
+
+    // init threads
     /*
     p_->audioInThread = new AudioEngineInThread(this, this);
     p_->audioInThread->start();
     */
     if (!p_->audioOutThread)
         p_->audioOutThread = new AudioEngineOutThread(this, this);
+
+    // start threads
     p_->audioOutThread->start();
 
+    // start device
     try
     {
         p_->audioDevice->start();

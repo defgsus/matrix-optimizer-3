@@ -85,6 +85,7 @@ void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &dst,
         {
             MO_ASSERT(src[i]->blockSize() == dst[i]->blockSize(), "unmatched buffersize "
                       << src[i]->blockSize() << "/" << dst[i]->blockSize());
+
             dst[i]->writeAddBlock( src[i]->readPointer() );
         }
     }
