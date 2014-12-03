@@ -128,7 +128,8 @@ void SceneRenderer::render()
         scene_->setGlContext(MO_GFX_THREAD, context_);
 
 #ifndef MO_DISABLE_AUDIO
-    Double time = scene_->sceneTime();
+    Double time = timeFunc_ ? timeFunc_() : 0.0;
+    //Double time = scene_->sceneTime();
 #else
     Double time = scene_->isPlayback()
             ? CurrentTime::time()

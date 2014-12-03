@@ -92,6 +92,7 @@ public slots:
     void popup(const QPoint &gridPos);
 
     void popup(AudioObjectConnection*);
+    void popup(Modulator*);
 
     /** Focus and select the item for the object. */
     void setFocusObject(Object * o);

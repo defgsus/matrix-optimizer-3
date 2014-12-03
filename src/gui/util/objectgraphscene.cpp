@@ -888,6 +888,26 @@ void ObjectGraphScene::popup(AudioObjectConnection * con)
     p_->showPopup();
 }
 
+void ObjectGraphScene::popup(Modulator * mod)
+{
+    p_->clearActions();
+
+    // title
+    QString title(tr("modulation"));
+    p_->actions.addTitle(title, this);
+
+    // delete
+    QAction * a = p_->actions.addAction(tr("remove modulation"), this);
+    a->setStatusTip(tr("Removes the selected modulation"));
+    connect(a, &QAction::triggered, [this, mod]()
+    {
+        p_->editor->removeModulator(mod->parameter(), mod->modulatorId());
+    });
+
+
+    p_->showPopup();
+}
+
 void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 {
     actions.addSeparator(scene);

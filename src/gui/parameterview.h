@@ -32,6 +32,7 @@ namespace GUI {
 class SpinBox;
 class DoubleSpinBox;
 class GroupWidget;
+class ParameterWidget;
 class SceneSettings;
 
 class ParameterView : public QWidget
@@ -63,7 +64,6 @@ public slots:
 
 private slots:
 
-    void updateWidgetValue_(MO::Parameter * );
     void onSequenceChanged(MO::Sequence *);
 
 private:
@@ -72,18 +72,9 @@ private:
 
     void squeezeView_();
     void createWidgets_();
-    QWidget * createWidget_(Parameter *);
-    void setNextTabWidget_(QWidget*);
     void clearWidgets_();
     /** update values of parameter widgets */
     void updateWidgetValues_();
-
-    void updateModulatorButton_(Parameter *, QToolButton *);
-    void openModulationPopup_(Parameter *, QToolButton *);
-    void addRemoveModMenu_(QMenu *, Parameter *);
-    void addLinkModMenu_(QMenu *, Parameter *, int objectTypeFlags);
-    void addEditModMenu_(QMenu *, Parameter *);
-    void addCreateModMenuFloat_(QMenu *, Parameter *);
 
     Scene * scene_;
     ObjectEditor * editor_;
@@ -92,21 +83,12 @@ private:
     QList<Parameter*> parameters_;
     QList<QWidget*> widgets_;
     QMap<QString, GroupWidget*> groups_;
-    QMap<Parameter*, QWidget*> paramMap_;
-    QList<SpinBox*> spinsInt_;
-    QList<DoubleSpinBox*> spinsFloat_;
-    QList<QComboBox*> combosSelect_;
-    QList<QCheckBox*> checkBoxes_;
-    QList<QLineEdit*> edits_;
-    QWidget * prevEditWidget_;
+    QMap<Parameter*, ParameterWidget*> paramMap_;
 
     QVBoxLayout * layout_;
     QScrollArea * scrollArea_;
     QWidget * container_;
 
-    // ------ config ------
-
-    bool doChangeToCreatedMod_;
 };
 
 } // namespace GUI

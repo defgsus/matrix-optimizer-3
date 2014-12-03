@@ -20,8 +20,8 @@ namespace MO {
 
 
 ModulatorAudio::ModulatorAudio(
-        const QString &name, const QString &modulatorId, Object *parent)
-    : Modulator     (name, modulatorId, parent),
+        const QString &name, const QString &modulatorId, Parameter * p, Object *parent)
+    : Modulator     (name, modulatorId, p, parent),
       sourceType_   (ST_NONE),
       amplitude_    (1.0),
       timeOffset_   (0.0)

@@ -17,10 +17,11 @@
 namespace MO {
 
 
-Modulator::Modulator(const QString &name, const QString &id, Object *parent)
+Modulator::Modulator(const QString &name, const QString &id, Parameter * p, Object *parent)
     : parent_       (parent),
       name_         (name),
-      modulatorId_  (id)
+      modulatorId_  (id),
+      param_        (p)
 {
     MO_DEBUG_MOD("Modulator::Modulator(" << id << ", " << parent << ")");
 }

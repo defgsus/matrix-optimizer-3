@@ -11,7 +11,10 @@
 #ifndef MOSRC_GL_MANAGER_H
 #define MOSRC_GL_MANAGER_H
 
+#include <functional>
+
 #include <QObject>
+
 #include "types/vector.h"
 
 namespace MO {
@@ -39,6 +42,8 @@ public:
 
     void setScene(Scene *);
 
+    void setTimeCallback(std::function<Double()> timeFunc);
+
 signals:
 
     /* This will signal the creation of a new Context */
@@ -53,9 +58,14 @@ signals:
 
 public slots:
 
+    void startAnimate();
+    void stopAnimate();
+
 private slots:
 
     void onCameraMatrixChanged_(const MO::Mat4&);
+
+    //void onRenderRequest_();
 
 private:
 
@@ -63,6 +73,7 @@ private:
     Window * window_;
     SceneRenderer * renderer_;
 
+    std::function<Double()> timeFunc_;
 };
 
 } // namespace GL

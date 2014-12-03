@@ -17,6 +17,7 @@ namespace MO {
 namespace IO { class DataStream; }
 
 class Object;
+class Parameter;
 
 /** @brief Internal class to link to modulating objects. */
 class Modulator
@@ -24,8 +25,8 @@ class Modulator
 public:
 
     /** Construct a modulator coming from object @p modulatorId
-        and belonging to @p parent */
-    Modulator(const QString& name, const QString& modulatorId, Object * parent = 0);
+        and belonging to @p parent / @p param */
+    Modulator(const QString& name, const QString& modulatorId, Parameter * parm, Object * parent = 0);
     virtual ~Modulator() { }
 
     // --------------- io ----------------
@@ -53,6 +54,8 @@ public:
     /** Returns the modulating object */
     Object * modulator() const { return modulator_; }
 
+    Parameter * parameter() const { return param_; }
+
     /** Returns if the object can be the modulating object */
     virtual bool canBeModulator(const Object *) const = 0;
 
@@ -77,6 +80,8 @@ private:
     Object * parent_, * modulator_;
 
     QString name_, modulatorId_;
+
+    Parameter * param_;
 };
 
 

@@ -200,6 +200,7 @@ void MainWidgetController::createObjects_()
     glManager_ = new GL::Manager(this);
     connect(glManager_, SIGNAL(outputSizeChanged(QSize)),
             this, SLOT(onOutputSizeChanged_(QSize)));
+    glManager_->setTimeCallback([this](){ return audioEngine_ ? audioEngine_->second() : 0.0; });
 
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
 
@@ -1154,12 +1155,17 @@ void MainWidgetController::start()
         // start rythmic gui updates
         updateTimer_->start();
 
+    glManager_->startAnimate();
+
     if (serverEngine().isRunning())
         serverEngine().setScenePlaying(true);
 }
 
 void MainWidgetController::stop()
 {
+    glManager_->stopAnimate();
+    updateTimer_->stop();
+
     if (audioEngine_)
     {
         if (audioEngine_->isPlayback())
@@ -1168,11 +1174,11 @@ void MainWidgetController::stop()
         {
             audioEngine_->seek(0);
             // XXX hacky
-            onSceneTimeChanged_(0.0);
+            //onSceneTimeChanged_(0.0);
+            scene_->setSceneTime(0.0);
         }
     }
 
-    updateTimer_->stop();
 
     //scene_->stop();
 

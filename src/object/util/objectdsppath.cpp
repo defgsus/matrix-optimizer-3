@@ -27,6 +27,7 @@
 #include "object/util/audioobjectconnections.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/configuration.h"
+#include "math/transformationbuffer.h"
 #include "graph/directedgraph.h"
 #include "io/log.h"
 
@@ -53,8 +54,10 @@ public:
     struct ObjectBuffer
     {
         ObjectBuffer()
-            : object(0), posParent(0),
-              parentMatrix(0)
+            : object        (0),
+              posParent     (0),
+              matrix        (0),
+              parentMatrix  (0)
         { }
 
         ~ObjectBuffer()
@@ -68,7 +71,7 @@ public:
         /// The translation parent
         ObjectBuffer * posParent;
         /// Calculated matrix
-        std::vector<Mat4> matrix,
+        TransformationBuffer matrix,
         /// Link to parent translation
             *parentMatrix;
         QList<AUDIO::AudioBuffer*>
@@ -79,14 +82,6 @@ public:
         QList<InputMixStep>
         /// input buffer mix space (memory managed)
             audioInputMix;
-
-
-        void initMatrix(int s)
-        {
-            matrix.resize(s);
-            for (auto & m : matrix)
-                m = Mat4(1.);
-        }
     };
 
     Private(ObjectDspPath * path)
@@ -163,7 +158,7 @@ void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
             b->matrix = *b->parentMatrix;
             // apply transform for one sample block
             for (SamplePos i = 0; i < p_->conf.bufferSize(); ++i)
-                b->object->calculateTransformation(b->matrix[i],
+                b->object->calculateTransformation(b->matrix.transformation(i),
                                                    p_->conf.sampleRateInv() * (pos + i),
                                                    thread);
         }
@@ -332,7 +327,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
             b->posParent = getObjectBuffer(n->parent()->object());
             b->parentMatrix = &b->posParent->matrix;
         }
-        b->initMatrix(conf.bufferSize());
+        b->matrix.resize(conf.bufferSize());
 
         transformationObjects.append(b);
     });

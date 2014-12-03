@@ -1062,7 +1062,7 @@ void Scene::setSceneTime(Double time, bool send_signal)
     if (send_signal)
         emit sceneTimeChanged(sceneTime_);
 
-    render_();
+//    render_();
 }
 
 void Scene::setSceneTime(SamplePos pos, bool send_signal)
@@ -1074,7 +1074,7 @@ void Scene::setSceneTime(SamplePos pos, bool send_signal)
 
     if (send_signal)
         emit sceneTimeChanged(sceneTime_);
-    render_();
+//    render_();
 }
 
 

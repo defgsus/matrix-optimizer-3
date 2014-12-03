@@ -17,6 +17,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsItemGroup>
 #include <QCursor>
+#include <QDrag>
+#include <QMimeData>
 
 #include "abstractobjectitem.h"
 #include "objectgraphexpanditem.h"
@@ -267,8 +269,6 @@ void AbstractObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 
 void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 {
-    QGraphicsItem::mousePressEvent(e);
-
     if (e->button() == Qt::RightButton)
     {
         if (auto s = objectScene())
@@ -285,6 +285,17 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 
     if (e->button() == Qt::LeftButton)
     {
+        if (e->modifiers() & Qt::CTRL)
+        {
+            auto drag = new QDrag(scene());
+            auto data = new QMimeData();
+            data->setData("mo-object-id", object()->idName().toLatin1());
+            drag->setMimeData(data);
+            drag->setPixmap(p_oi_->icon.pixmap(32, 32));
+            drag->exec(Qt::CopyAction);
+            return;
+        }
+
         // store current state on click
         p_oi_->isMouseDown = true;
         p_oi_->posMouseDown = e->pos();//mapToParent(e->pos());

@@ -87,6 +87,7 @@ AudioConnectionItem::AudioConnectionItem(AudioObjectConnection * con)
 {
     setCursor(QCursor(Qt::ArrowCursor));
     setFlag(ItemIsSelectable);
+    setAcceptHoverEvents(true);
 
     setToolTip(QString("%1:%2 -> %3:%4")
                .arg(con_->from()->name())

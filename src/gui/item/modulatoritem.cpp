@@ -10,6 +10,7 @@
 
 #include <QPainter>
 #include <QCursor>
+#include <QGraphicsSceneMouseEvent>
 
 #include "modulatoritem.h"
 #include "abstractobjectitem.h"
@@ -166,6 +167,15 @@ void ModulatorItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 {
     isHovered_ = false;
     update();
+}
+
+void ModulatorItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
+{
+    if (e->button() == Qt::RightButton)
+    {
+        setSelected(true);
+        objectScene()->popup(mod_);
+    }
 }
 
 void ModulatorItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
