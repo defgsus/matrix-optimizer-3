@@ -22,7 +22,6 @@ HEADERS += \
     src/doc.h \
     src/object/object.h \
     src/tool/stringmanip.h \
-    src/model/objecttreemodel.h \
     src/object/objectfactory.h \
     src/io/application.h \
     src/object/soundsource.h \
@@ -49,7 +48,6 @@ HEADERS += \
     src/math/funcparser/parser_program.h \
     src/object/track.h \
     src/tool/syntaxhighlighter.h \
-    src/model/objecttreesortproxy.h \
     src/object/trackfloat.h \
     src/object/object_fwd.h \
     src/object/transform/axisrotation.h \
@@ -98,8 +96,6 @@ HEADERS += \
     src/img/imagegenerator.h \
     src/object/lightsource.h \
     src/gl/lightsettings.h \
-    src/object/audio/audiounit.h \
-    src/object/audio/filterunit.h \
     src/audio/audio_fwd.h \
     src/object/scenelock_p.h \
     src/audio/tool/envelopefollower.h \
@@ -107,12 +103,10 @@ HEADERS += \
     src/audio/tool/waveform.h \
     src/audio/tool/wavetable.h \
     src/audio/tool/wavetablegenerator.h \
-    src/object/audio/envelopeunit.h \
     src/tool/locklessqueue.h \
     src/io/lockedoutput.h \
     src/object/modulatorobject.h \
     src/object/modulatorobjectfloat.h \
-    src/object/audio/filterbankunit.h \
     src/object/param/parameterint.h \
     src/audio/tool/chebychevfilter.h \
     src/object/textureoverlay.h \
@@ -197,8 +191,6 @@ HEADERS += \
     src/graph/directedgraph.h \
     src/object/util/objectmodulatorgraph.h \
     src/graph/tree.h \
-    src/model/treemodel.h \
-    src/object/util/objecttree.h \
     src/projection/projectorblender.h \
     src/video/videostreamreader.h \
     src/tool/commonresolutions.h \
@@ -214,7 +206,6 @@ HEADERS += \
     src/io/isclient.h \
     src/engine/serverengine.h \
     src/object/oscillatorobject.h \
-    src/object/object1.h \
     src/object/util/objecteditor.h \
     src/types/time.h \
     src/object/param/modulatoraudio.h \
@@ -239,7 +230,6 @@ SOURCES += \
     src/model/qobjecttreemodel.cpp \
     src/object/object.cpp \
     src/tool/stringmanip.cpp \
-    src/model/objecttreemodel.cpp \
     src/object/objectfactory.cpp \
     src/io/application.cpp \
     src/object/soundsource.cpp \
@@ -263,7 +253,6 @@ SOURCES += \
     src/math/funcparser/parser.cpp \
     src/object/track.cpp \
     src/tool/syntaxhighlighter.cpp \
-    src/model/objecttreesortproxy.cpp \
     src/object/trackfloat.cpp \
     src/object/transform/axisrotation.cpp \
     src/object/transform/transformation.cpp \
@@ -306,18 +295,13 @@ SOURCES += \
     src/img/imagegenerator.cpp \
     src/object/lightsource.cpp \
     src/gl/lightsettings.cpp \
-    src/object/audio/audiounit.cpp \
-    src/object/audio/filterunit.cpp \
-    src/object/scene_audio.cpp \
     src/audio/tool/envelopefollower.cpp \
     src/audio/tool/multifilter.cpp \
     src/audio/tool/waveform.cpp \
     src/audio/tool/wavetablegenerator.cpp \
-    src/object/audio/envelopeunit.cpp \
     src/io/lockedoutput.cpp \
     src/object/modulatorobject.cpp \
     src/object/modulatorobjectfloat.cpp \
-    src/object/audio/filterbankunit.cpp \
     src/object/param/parameterint.cpp \
     src/audio/tool/chebychevfilter.cpp \
     src/object/textureoverlay.cpp \
@@ -409,7 +393,6 @@ SOURCES += \
     src/main.cpp \
     src/engine/serverengine.cpp \
     src/object/oscillatorobject.cpp \
-    src/object/object1.cpp \
     src/object/util/objecteditor.cpp \
     src/object/param/modulatoraudio.cpp \
     src/audio/tool/audiobuffer.cpp \

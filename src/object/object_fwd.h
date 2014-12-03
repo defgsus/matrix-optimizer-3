@@ -58,8 +58,6 @@ namespace MO {
     class Track;
     class TrackFloat;
 
-    class AudioUnit;
-    class FilterUnit;
     class AudioObject;
     class AudioObjectConnection;
     class AudioObjectConnections;
@@ -78,9 +76,6 @@ namespace MO {
 
     class ObjectEditor;
     class ObjectDspPath;
-#ifndef MO_DISABLE_TREE
-    class ObjectTreeModel;
-#endif
     class ObjectTreeMimeData;
 
 } // namespace MO

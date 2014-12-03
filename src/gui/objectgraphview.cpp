@@ -32,6 +32,7 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
             this, SIGNAL(objectSelected(MO::Object*)));
 
     setBackgroundBrush(ObjectGraphSettings::brushBackground());
+    setSizeAdjustPolicy(AdjustToContents);
 }
 
 void ObjectGraphView::setGuiSettings(SceneSettings * )
@@ -61,6 +62,8 @@ void ObjectGraphView::onShitView_(const QPointF & )
 void ObjectGraphView::setFocusObject(Object * o)
 {
     gscene_->setFocusObject(o);
+    if (auto i = gscene_->itemForObject(o))
+        centerOn(i);
 }
 
 

@@ -24,9 +24,6 @@ class QReadWriteLock;
 namespace MO {
 namespace AUDIO { class AudioDevice; }
 
-#ifndef MO_DISABLE_TREE
-class ObjectTreeModel;
-#endif
 class AudioOutThread;
 class AudioInThread;
 template <typename T> class LocklessQueue;
@@ -69,12 +66,6 @@ public:
 
     // ------------- object model --------------
 
-#ifndef MO_DISABLE_TREE
-    /** Sets the model to edit the scene. */
-    void setObjectModel(ObjectTreeModel *);
-    /** Returns the model that is assigned to this scene. */
-    ObjectTreeModel * model() const { return model_; }
-#endif
     /** Sets the editor to edit the scene.
         This also assignes the scene to the editor. */
     void setObjectEditor(ObjectEditor * );
@@ -147,28 +138,11 @@ public:
     AudioObjectConnections * audioConnections() { return audioCon_; }
     const AudioObjectConnections * audioConnections() const { return audioCon_; }
 
-    uint numberChannelsIn() const { return numInputChannels_; }
-    uint numberChannelsOut() const { return numOutputChannels_; }
-    const F32 * outputLevels() const { return &outputEnvelopes_[0]; }
-
-    uint numMicrophones() const { return numMicrophones_; }
-    uint numAudioSources() const { return allAudioSources_.size(); }
-
-    const QList<AUDIO::AudioSource*>& allAudioSources() const { return allAudioSources_; }
-
     // --------------- runtime -----------------
 
     Double sceneTime() const { return sceneTime_; }
 
-    bool isPlayback() const { return isPlayback_; }
-
-    bool isAudioInitialized() const;
-
-    const AUDIO::AudioDevice * audioDevice() const { return audioDevice_; }
-
     void setNumberThreads(uint num) Q_DECL_OVERRIDE;
-
-    void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
     // --------- locking and updates -----------
 
@@ -231,21 +205,10 @@ public slots:
     bool setObjectIndex(Object * object, int newIndex);
     void moveObject(Object * object, Object * newParent, int newIndex);
 
+    /** @} */
+
     // --------------- tracks ------------------
 
-    // ------------- sequences -----------------
-
-    //SequenceFloat * createFloatSequence(MO::Track * track, Double time = 0.0);
-
-    /* Moves the Sequence @seq from Track @p from to different Track @p to.
-        The sequence will be removed from the previous track. */
-    //void moveSequence(MO::Sequence * seq, MO::Track * from, MO::Track * to);
-
-    // ------------- audiounits ----------------
-
-    /** Updates input/output channel sizes of all audiounits.
-        Locked version */
-    void updateAudioUnitChannels();
 
     // ------------- runtime -------------------
 
@@ -259,21 +222,6 @@ public slots:
 
     void setSceneTime(Double time, bool send_signal = true);
     void setSceneTime(SamplePos pos, bool send_signal = true);
-
-    // -------------- audio --------------------
-
-    /** Performs one audio block calculation of the whole scene. */
-    void calculateAudioBlock(SamplePos samplePos, uint thread);
-
-    /** @} */
-
-    /** Returns a pointer to the audio block previously calculated by calculateAudioBlock().
-        The format in the returned pointer is [microphone][buffersize]. */
-    const F32* getMicrophonesOutput(uint thread) const { return &sceneAudioOutput_[thread][0]; }
-
-    /** Returns the final audio output previously calculated by calculateAudioBlock() in @p buffer.
-        The format of buffer is [buffersize][channel]. */
-    void getAudioOutput(uint numChannels, uint thread, F32 * buffer) const;
 
     // ------------- open gl -------------------
 
@@ -311,14 +259,6 @@ public slots:
         If @p fbo is set, the scene will be rendered into the framebuffer object. */
     void renderScene(Double time, uint thread, GL::FrameBufferObject * fbo = 0);
 
-    /** Start realtime playback */
-    void start();
-    /** Stop realtime playback */
-    void stop();
-
-    /** Closes the audio device stream */
-    void closeAudio();
-
 private slots:
 
 private:
@@ -350,14 +290,7 @@ private:
     void updateBufferSize_();
     /** Tells the objects the samplerate */
     void updateSampleRate_();
-    /** Tells the objects' audio sources the delay size for each thread */
-    void updateDelaySize_();
 
-    /** Initializes the audio buffers needed to render the tree */
-    void updateAudioBuffers_();
-    /** Creates EnvelopeFollower for one thread only!
-        AudioDevice must be initialized */
-    void allocateAudioOutputEnvelopes_(uint thread);
     void updateModulators_();
 
     /** Tell everyone the number of light sources */
@@ -384,27 +317,6 @@ private:
 
     /** unlocked version */
     void calculateSceneTransform_(uint thread, uint sample, Double time);
-    void calculateAudioSceneTransform_(uint thread, uint sample, Double time);
-
-    // ------------ audio ----------------------
-
-    void initAudioDevice_();
-    void audioCallback_(const F32 *, F32 *);
-
-    /** Rearranges the input from audio api to internal buffer */
-    void prepareAudioInputBuffer_(uint thread);
-    /** Sets the number of input channels for all (top-level) audioUnits
-        and adjusts their children accordingly. */
-    void updateAudioUnitChannels_();
-
-    /** Transforms the channel-layout and fills internal buffer */
-    void transformAudioInput_(const F32 * in, uint thread);
-
-    /** Processes all top-level AudioUnits + their childs */
-    void processAudioInput_(uint thread);
-
-    /** Passes the internal audio output buffer to the envelope followers */
-    void updateOutputEnvelopes_(uint thread);
 
     // ---------- opengl -----------------------
 
@@ -422,9 +334,6 @@ private:
 
     // -------------- model --------------------
 
-#ifndef MO_DISABLE_TREE
-    ObjectTreeModel * model_;
-#endif
     ObjectEditor * editor_;
 
     // ---------- opengl -----------------------
@@ -459,13 +368,13 @@ private:
 
     QList<Object*> allObjects_;
     QList<Object*> posObjects_;
-    QList<Object*> posObjectsAudio_;
+    //QList<Object*> posObjectsAudio_;
     QList<Camera*> cameras_;
     QList<ObjectGl*> glObjects_;
-    QList<Object*> audioObjects_;
-    QList<Object*> microphoneObjects_;
+    //QList<Object*> audioObjects_;
+    //QList<Object*> microphoneObjects_;
     QList<LightSource*> lightSources_;
-    QList<AudioUnit*> topLevelAudioUnits_;
+    //QList<AudioUnit*> topLevelAudioUnits_;
     QList<Object*> deletedObjects_;
 
     // ---------- properties -------------------
@@ -486,38 +395,9 @@ private:
 
     AudioObjectConnections * audioCon_;
 
-    AUDIO::AudioDevice * audioDevice_;
-
-    AudioInThread * audioInThread_;
-    AudioOutThread * audioOutThread_;
-    LocklessQueue<const F32*> * audioInQueue_;
-    LocklessQueue<F32*> * audioOutQueue_;
-
-    uint numMicrophones_;
-
-    QList<AUDIO::AudioSource*> allAudioSources_;
-
-    /** [thread] [microphones][bufferSize] */
-    std::vector<std::vector<F32>> sceneAudioOutput_;
-    /** [channels][bufferSize] */
-    std::vector<F32> sceneAudioInput_,
-    /** [numInputBuffers][bufferSize][channels] */
-        apiAudioInputBuffer_;
-
-    bool isFirstAudioCallback_;
-    uint numInputChannels_,
-         numOutputChannels_,
-    /** How much buffer-blocks to store of input */
-         numInputBuffers_,
-         curInputBuffer_;
-
-    std::vector<AUDIO::EnvelopeFollower*> outputEnvelopeFollower_;
-    std::vector<F32> outputEnvelopes_;
-
     // ------------ runtime --------------------
 
     QReadWriteLock * readWriteLock_;
-    //QTimer timer_;
 
     bool isPlayback_;
 

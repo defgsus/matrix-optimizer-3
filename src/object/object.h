@@ -99,8 +99,8 @@ public:
         T_TRACK_FLOAT       = 1<<10,
         T_DUMMY             = 1<<11,
         T_LIGHTSOURCE       = 1<<12,
-        T_AUDIO_UNIT        = 1<<13,
-        T_MODULATOR_OBJECT_FLOAT   = 1<<14,
+                                // 13
+        T_MODULATOR_OBJECT_FLOAT = 1<<14,
         T_MICROPHONE_GROUP  = 1<<15,
         T_CLIP              = 1<<16,
         T_CLIP_CONTAINER    = 1<<17,

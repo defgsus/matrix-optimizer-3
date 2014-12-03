@@ -38,7 +38,6 @@
 #include "object/param/modulator.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "model/objecttreemodel.h"
 #include "util/objectmenu.h"
 #include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
@@ -619,10 +618,6 @@ void ParameterView::openModulationPopup_(Parameter * param, QToolButton * button
     MO_ASSERT(object, "No Object for edit Parameter");
     Scene * scene = object->sceneObject();
     MO_ASSERT(scene, "No Scene for object in Parameter");
-#ifndef MO_DISABLE_TREE
-    ObjectTreeModel * model = scene->model();
-    MO_ASSERT(model, "No model assigned for Parameter");
-#endif
     auto * editor = scene->editor();
     MO_ASSERT(editor, "No ObjectEditor assigned for Parameter");
 

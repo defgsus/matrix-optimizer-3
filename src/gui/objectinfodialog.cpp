@@ -21,9 +21,9 @@
 #include "object/objectgl.h"
 #include "object/transform/transformation.h"
 #include "object/scene.h"
-#include "object/audio/audiounit.h"
 #include "object/clip.h"
 #include "object/clipcontainer.h"
+#include "object/audioobject.h"
 #include "object/util/alphablendsetting.h"
 
 namespace MO {
@@ -127,18 +127,10 @@ void ObjectInfoDialog::setObject(Object * o)
 
     // ---------- audio unit -----------
 
-    if (AudioUnit * au = qobject_cast<AudioUnit*>(o))
+    if (AudioObject * au = qobject_cast<AudioObject*>(o))
     {
-        s << "<p>AudioUnit:<br/>channels: "
-          << au->numChannelsIn() << "/" << au->numChannelsOut()
-          << "<br/>max. channels: " << au->maxChannelsIn() << "/" << au->maxChannelsOut()
-          << "<br/>buffer size (per thread): ";
-        for (uint i=0; i<au->numberThreads(); ++i)
-        {
-            if (i > 0)
-                s << " / ";
-            s << au->bufferSize(i);
-        }
+        s << "<p>AudioObject:<br/>channels: "
+          << au->numAudioInputs() << "/" << au->numAudioOutputs();
         s  << "</p>";
     }
 

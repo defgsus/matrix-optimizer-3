@@ -21,11 +21,11 @@
 #include "object/clip.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
+#include "object/util/objecteditor.h"
 #include "io/error.h"
 #include "io/log.h"
 #include "io/application.h"
 #include "util/objectmenu.h"
-#include "model/objecttreemodel.h"
 #include "model/objecttreemimedata.h"
 #include "keepmodulatordialog.h"
 
@@ -737,15 +737,6 @@ void ClipView::openPopup_()
         return;
     }
 
-#ifndef MO_DISABLE_TREE
-    ObjectTreeModel * model = scene->model();
-    if (!model)
-    {
-        MO_WARNING("ClipView: Can't edit without ObjectTreeModel");
-        return;
-    }
-#endif
-
     ClipWidget * curWidget = widgetForClip_(curClip_);
 
     QMenu * menu = new QMenu(this);
@@ -763,10 +754,6 @@ void ClipView::openPopup_()
         {
             Clip * clip = static_cast<Clip*>(ObjectFactory::createObject("Clip"));
             clip->setPosition(curX_, curY_);
-#ifndef MO_DISABLE_TREE
-            if (!model->addObject(clipCon_, clip))
-                delete clip;
-#endif
         });
 
         // clips from clipboard
@@ -825,10 +812,6 @@ void ClipView::openPopup_()
         {
             Object * o = ObjectFactory::createObject(a->data().toString());
             MO_ASSERT(o, "ClipView: Could not create object class '" << a->data().toString() << "'");
-#ifndef MO_DISABLE_TREE
-            if (!model->addObject(curClip_, o))
-                delete o;
-#endif
         });
 
         menu->addSeparator();
@@ -869,10 +852,9 @@ void ClipView::openPopup_()
                 auto data = new ObjectTreeMimeData();
                 data->storeObjectTree(curClip_);
                 application->clipboard()->setMimeData(data);
-#ifndef MO_DISABLE_TREE
-                const QModelIndex idx = model->indexForObject(curClip_);
-                model->deleteObject(idx);
-#endif
+
+                //YYY delete
+
                 selection_.unselect(curWidget);
             });
 
@@ -880,10 +862,8 @@ void ClipView::openPopup_()
             menu->addAction(a = new QAction(tr("Delete clip"), menu));
             connect(a, &QAction::triggered, [=]()
             {
-#ifndef MO_DISABLE_TREE
-                const QModelIndex idx = model->indexForObject(curClip_);
-                model->deleteObject(idx);
-#endif
+                //YYY
+
                 selection_.unselect(curWidget);
             });
 
@@ -951,10 +931,7 @@ void ClipView::openPopup_()
                 for (auto w : selection_)
                 if (w->clip())
                 {
-#ifndef MO_DISABLE_TREE
-                    const QModelIndex idx = model->indexForObject(w->clip());
-                    model->deleteObject(idx);
-#endif
+                    scene->editor()->deleteObject(w->clip());
                 }
                 clearSelection_();
             });
@@ -966,10 +943,7 @@ void ClipView::openPopup_()
                 for (auto w : selection_)
                 if (w->clip())
                 {
-#ifndef MO_DISABLE_TREE
-                    const QModelIndex idx = model->indexForObject(w->clip());
-                    model->deleteObject(idx);
-#endif
+                    scene->editor()->deleteObject(w->clip());
                 }
                 clearSelection_();
             });
@@ -1005,15 +979,8 @@ void ClipView::pasteClips_(const QList<Object*>& list, uint x, uint y)
             delete obj;
     }
 
-    MO_ASSERT(clipCon_ && clipCon_->sceneObject()
-#ifndef MO_DISABLE_TREE
-              && clipCon_->sceneObject()->model()
-#endif
-              , "");
+    MO_ASSERT(clipCon_ && clipCon_->sceneObject(), "");
 
-#ifndef MO_DISABLE_TREE
-    auto model = clipCon_->sceneObject()->model();
-#endif
     KeepModulators keepmods(clipCon_->sceneObject());
 
     // paste clips
@@ -1034,14 +1001,14 @@ void ClipView::pasteClips_(const QList<Object*>& list, uint x, uint y)
         // place at new position
         clip->setPosition(col, row);
 
-#ifndef MO_DISABLE_TREE
+/*#ifndef MO_DISABLE_TREE
         if (!model->addObject(clipCon_, clip))
         {
             delete clip;
             clip = 0;
         }
         else
-#endif
+#endif*/
             // store the original and the new id
             keepmods.addNewObject(clip);
     }
@@ -1071,15 +1038,7 @@ void ClipView::pasteClips_(const QList<Object*>& list, uint x, uint y)
 
 void ClipView::pasteSubObjects_(const QList<Object*>& list, Clip * clip)
 {
-    MO_ASSERT(clipCon_ && clipCon_->sceneObject()
-#ifndef MO_DISABLE_TREE
-              && clipCon_->sceneObject()->model()
-#endif
-              , "");
-
-#ifndef MO_DISABLE_TREE
-    auto model = clipCon_->sceneObject()->model();
-#endif
+    MO_ASSERT(clipCon_ && clipCon_->sceneObject(), "");
 
     KeepModulators keepmods(clipCon_->sceneObject());
 
@@ -1090,12 +1049,12 @@ void ClipView::pasteSubObjects_(const QList<Object*>& list, Clip * clip)
         {
             keepmods.addOriginalObject(obj);
 
-#ifndef MO_DISABLE_TREE
+/*#ifndef MO_DISABLE_TREE
             if (model->addObject(clip, obj))
                 keepmods.addNewObject(obj);
             else
                 delete obj;
-#endif
+#endif*/
         }
         else
             delete obj;
@@ -1111,15 +1070,7 @@ void ClipView::pasteSubObjects_(const QList<Object*>& list, Clip * clip)
 
 void ClipView::pasteClipsInClip_(const QList<Object*>& list, Clip * parent)
 {
-    MO_ASSERT(clipCon_ && clipCon_->sceneObject()
-#ifndef MO_DISABLE_TREE
-              && clipCon_->sceneObject()->model()
-#endif
-              , "");
-
-#ifndef MO_DISABLE_TREE
-    auto model = clipCon_->sceneObject()->model();
-#endif
+    MO_ASSERT(clipCon_ && clipCon_->sceneObject(), "");
 
     KeepModulators keepmods(clipCon_->sceneObject());
 
@@ -1133,10 +1084,10 @@ void ClipView::pasteClipsInClip_(const QList<Object*>& list, Clip * parent)
             {
                 keepmods.addOriginalObject(c);
 
-#ifndef MO_DISABLE_TREE
+/*#ifndef MO_DISABLE_TREE
                 if (model->addObject(parent, c))
                     keepmods.addNewObject(c);
-#endif
+#endif*/
             }
         }
 
