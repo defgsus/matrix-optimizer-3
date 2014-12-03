@@ -39,6 +39,9 @@ public:
 
 signals:
 
+    void objectSelected(MO::Object*);
+    void statusTipChanged(const QString&);
+
 public slots:
 
     void updateModulatorButton();
@@ -53,6 +56,7 @@ protected:
 private:
 
     void emitObjectSelected_(Object*);
+    void emitStatusTipChanged_(const QString&);
 
     void createWidgets_();
     void addRemoveModMenu_(QMenu *, Parameter *);

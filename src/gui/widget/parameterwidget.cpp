@@ -19,6 +19,7 @@
 #include <QToolButton>
 #include <QDragEnterEvent>
 #include <QMenu>
+#include <QAbstractItemView>
 
 #include "parameterwidget.h"
 #include "spinbox.h"
@@ -33,6 +34,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
+#include "object/param/parametertimeline1d.h"
 #include "object/param/modulator.h"
 #include "gui/modulatordialog.h"
 #include "gui/util/objectmenu.h"
@@ -64,8 +66,13 @@ ParameterWidget::ParameterWidget(Parameter * p, QWidget *parent)
 
 void ParameterWidget::emitObjectSelected_(Object * o)
 {
-    //if (doChangeToCreatedMod_)
-        //emit objectSelected(o);
+    if (doChangeToCreatedMod_)
+        emit objectSelected(o);
+}
+
+void ParameterWidget::emitStatusTipChanged_(const QString & s)
+{
+    emit statusTipChanged(s);
 }
 
 void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
@@ -145,19 +152,15 @@ void ParameterWidget::createWidgets_()
 
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue(), true); });
     }
-#if 0
     else
 
     // --- int parameter ---
-    if (ParameterInt * pi = dynamic_cast<ParameterInt*>(p))
+    if (ParameterInt * pi = dynamic_cast<ParameterInt*>(param_))
     {
         defaultValueName = QString::number(pi->defaultValue());
 
-        SpinBox * spin = new SpinBox(w);
+        SpinBox * spin = spinInt_ = new SpinBox(this);
         l->addWidget(spin);
-        spinsInt_.append(spin);
-        // important for update
-        spin->setObjectName(p->idName());
 
         spin->setMinimum(pi->minValue());
         spin->setMaximum(pi->maxValue());
@@ -169,15 +172,11 @@ void ParameterWidget::createWidgets_()
                            ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")
                            : pi->statusTip());
 
-        w->setFocusProxy(spin);
-        setNextTabWidget_(spin);
+        setFocusProxy(spin);
 
         connect(spin, &SpinBox::valueChanged, [=](int value)
         {
-            Scene * scene = p->object()->sceneObject();
-            MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
-            if (!scene || !scene->editor()) return;
-            scene->editor()->setParameterValue(pi, value);
+            editor->setParameterValue(pi, value);
         });
 
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pi->defaultValue(), true); });
@@ -185,17 +184,14 @@ void ParameterWidget::createWidgets_()
     else
 
     // --- select parameter ---
-    if (ParameterSelect * ps = dynamic_cast<ParameterSelect*>(p))
+    if (ParameterSelect * ps = dynamic_cast<ParameterSelect*>(param_))
     {
         defaultValueName = ps->defaultValueName();
 
         if (!ps->isBoolean())
         {
-            QComboBox * combo = new QComboBox(w);
+            QComboBox * combo = comboSelect_ = new QComboBox(this);
             l->addWidget(combo);
-            combosSelect_.append(combo);
-            // important for update
-            combo->setObjectName(p->idName());
 
             combo->setEnabled(ps->isEditable());
 
@@ -208,8 +204,7 @@ void ParameterWidget::createWidgets_()
             if (combo->currentIndex() >= 0 && combo->currentIndex() < ps->statusTips().size())
                 combo->setStatusTip(ps->statusTips().at(combo->currentIndex()));
 
-            w->setFocusProxy(combo);
-            setNextTabWidget_(combo);
+            setFocusProxy(combo);
 
             connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=](int idx)
             {
@@ -221,10 +216,7 @@ void ParameterWidget::createWidgets_()
 
                 // get value
                 int value = ps->valueList().at(combo->currentIndex());
-                Scene * scene = p->object()->sceneObject();
-                MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
-                if (!scene || !scene->editor()) return;
-                scene->editor()->setParameterValue(ps, value);
+                editor->setParameterValue(ps, value);
             });
 
             // statustips from combobox items
@@ -234,7 +226,7 @@ void ParameterWidget::createWidgets_()
                 {
                     combo->view()->setStatusTip(ps->statusTips().at(idx));
                     // need to emit explicity for statusbar to update
-                    emit statusTipChanged(combo->view()->statusTip());
+                    emitStatusTipChanged_(combo->view()->statusTip());
                 }
             });
 
@@ -248,50 +240,37 @@ void ParameterWidget::createWidgets_()
         // boolean parameter
         else
         {
-            QCheckBox * cb = new QCheckBox(w);
+            QCheckBox * cb = checkBox_ = new QCheckBox(this);
             l->addWidget(cb);
-            checkBoxes_.append(cb);
-            // important for update
-            cb->setObjectName(p->idName());
 
             cb->setEnabled(ps->isEditable());
             cb->setStatusTip(ps->statusTip());
             cb->setChecked(ps->baseValue() != 0);
 
-            w->setFocusProxy(cb);
-            setNextTabWidget_(cb);
+            setFocusProxy(cb);
 
             connect(cb, &QCheckBox::clicked, [=]()
             {
-                Scene * scene = p->object()->sceneObject();
-                MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
-                if (!scene || !scene->editor()) return;
-                scene->editor()->setParameterValue(ps, cb->isChecked()? 1 : 0);
+                editor->setParameterValue(ps, cb->isChecked()? 1 : 0);
             });
 
             // reset to default
             connect(breset, &QToolButton::pressed, [=]()
             {
                 cb->setChecked(ps->defaultValue() != 0);
-                Scene * scene = p->object()->sceneObject();
-                MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
-                if (!scene || !scene->editor()) return;
-                scene->editor()->setParameterValue(ps, ps->defaultValue());
+                editor->setParameterValue(ps, ps->defaultValue());
             });
         }
     }
     else
 
     // --- filename parameter ---
-    if (ParameterFilename * pfn = dynamic_cast<ParameterFilename*>(p))
+    if (ParameterFilename * pfn = dynamic_cast<ParameterFilename*>(param_))
     {
         defaultValueName = pfn->defaultValue();
 
-        QLineEdit * edit = new QLineEdit(w);
+        QLineEdit * edit = lineEdit_ = new QLineEdit(this);
         l->addWidget(edit);
-        edits_.append(edit);
-        // important for update
-        edit->setObjectName(p->idName());
 
         // XXX
         breset->setVisible(false);
@@ -300,11 +279,10 @@ void ParameterWidget::createWidgets_()
         edit->setStatusTip(pfn->statusTip());
         edit->setText(pfn->value());
 
-        w->setFocusProxy(edit);
-        setNextTabWidget_(edit);
+        setFocusProxy(edit);
 
         // load button
-        QToolButton * butload = new QToolButton(w);
+        QToolButton * butload = new QToolButton(this);
         l->addWidget(butload);
         butload->setText("...");
         butload->setStatusTip(tr("Click to select a file"));
@@ -324,15 +302,12 @@ void ParameterWidget::createWidgets_()
     else
 
     // --- text parameter ---
-    if (ParameterText * ptxt = dynamic_cast<ParameterText*>(p))
+    if (ParameterText * ptxt = dynamic_cast<ParameterText*>(param_))
     {
         defaultValueName = ptxt->defaultValue();
 
-        QLineEdit * edit = new QLineEdit(w);
+        QLineEdit * edit = lineEdit_ = new QLineEdit(this);
         l->addWidget(edit);
-        edits_.append(edit);
-        // important for update
-        edit->setObjectName(p->idName());
 
         edit->setReadOnly(true);
         edit->setStatusTip(ptxt->statusTip());
@@ -341,11 +316,10 @@ void ParameterWidget::createWidgets_()
         // XXX
         breset->setVisible(false);
 
-        w->setFocusProxy(edit);
-        setNextTabWidget_(edit);
+        setFocusProxy(edit);
 
         // edit button
-        QToolButton * butedit = new QToolButton(w);
+        QToolButton * butedit = new QToolButton(this);
         l->addWidget(butedit);
         butedit->setText("...");
         butedit->setStatusTip(tr("Click to edit the text"));
@@ -365,12 +339,12 @@ void ParameterWidget::createWidgets_()
 
     else
     // --- timeline1d parameter ---
-    if (ParameterTimeline1D * ptl = dynamic_cast<ParameterTimeline1D*>(p))
+    if (ParameterTimeline1D * ptl = dynamic_cast<ParameterTimeline1D*>(param_))
     {
         defaultValueName = ptl->defaultTimeline() ? "..." : "empty";
 
         // edit button
-        QToolButton * butedit = new QToolButton(w);
+        QToolButton * butedit = new QToolButton(this);
         l->addWidget(butedit);
         butedit->setText("...");
         butedit->setStatusTip(tr("Click to edit the timeline"));
@@ -385,16 +359,13 @@ void ParameterWidget::createWidgets_()
         connect(breset, &QToolButton::pressed, [=]()
         {
             ptl->reset();
-            Scene * scene = p->object()->sceneObject();
-            MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << p->idName() << "'");
-            if (!scene || !scene->editor()) return;
-            scene->editor()->setParameterValue(ptl, ptl->getDefaultTimeline());
+            editor->setParameterValue(ptl, ptl->getDefaultTimeline());
         });
     }
 
     else
-        MO_ASSERT(false, "could not create widget for Parameter '" << p->idName() << "'");
-#endif
+        MO_ASSERT(false, "could not create widget for Parameter '" << param_->idName() << "'");
+
 
     if (defaultValueName.isEmpty())
         breset->setVisible(false);

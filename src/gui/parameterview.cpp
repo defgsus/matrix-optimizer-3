@@ -10,15 +10,9 @@
 
 #include <QLayout>
 #include <QLabel>
-#include <QFrame>
-#include <QToolButton>
-#include <QComboBox>
 #include <QAbstractItemView>
-#include <QMenu>
-#include <QLineEdit>
 #include <QScrollArea>
 #include <QScrollBar>
-#include <QCheckBox>
 
 #include "parameterview.h"
 #include "object/object.h"
@@ -195,6 +189,11 @@ void ParameterView::createWidgets_()
     {
         auto w = new ParameterWidget(p, this);
         paramMap_.insert(p, w);
+
+        connect(w, SIGNAL(objectSelected(MO::Object*)),
+                this, SIGNAL(objectSelected(MO::Object*)));
+        connect(w, SIGNAL(statusTipChanged(QString)),
+                this, SIGNAL(statusTipChanged(QString)));
 
         // visibility
         if (!p->isVisible())
