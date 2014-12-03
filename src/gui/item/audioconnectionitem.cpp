@@ -10,6 +10,7 @@
 
 #include <QPainter>
 #include <QCursor>
+#include <QGraphicsSceneMouseEvent>
 
 #include "audioconnectionitem.h"
 #include "abstractobjectitem.h"
@@ -86,6 +87,13 @@ AudioConnectionItem::AudioConnectionItem(AudioObjectConnection * con)
 {
     setCursor(QCursor(Qt::ArrowCursor));
     setFlag(ItemIsSelectable);
+
+    setToolTip(QString("%1:%2 -> %3:%4")
+               .arg(con_->from()->name())
+               .arg(con_->outputChannel())
+               .arg(con_->to()->name())
+               .arg(con_->inputChannel())
+               );
 }
 
 ObjectGraphScene * AudioConnectionItem::objectScene() const
@@ -130,10 +138,9 @@ void AudioConnectionItem::updatePos_()
 {
     // get positions of AudioObjectConnection and goal item
     if (from_)
-        fromPos_ = from_->mapToScene(QPointF(from_->rect().right(),
-                                             from_->rect().center().y()));
+        fromPos_ = from_->globalOutputPos(con_->outputChannel());
     if (to_)
-        toPos_ = to_->mapToScene(QPointF(to_->rect().left(), to_->rect().center().y()));
+        toPos_ = to_->globalInputPos(con_->inputChannel());
 
     // min/max rect
     rect_.setLeft(   std::min(fromPos_.x(), toPos_.x()) );
@@ -181,7 +188,14 @@ void AudioConnectionItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, Q
     p->drawPath(shape_);
 }
 
-//void AudioConnectionItem::mouseMoveEvent()
+void AudioConnectionItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
+{
+    if (e->button() == Qt::RightButton)
+    {
+        setSelected(true);
+        objectScene()->popup(con_);
+    }
+}
 
 } // namespace GUI
 } // namespace MO

@@ -24,10 +24,7 @@ class AudioConnectionItem : public QGraphicsItem
 {
 public:
 
-    enum
-    {
-        Type = UserType + 10
-    };
+    enum { Type = UserType + 11 };
 
     AudioConnectionItem(AudioObjectConnection * con);
 
@@ -54,7 +51,7 @@ protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent*);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent*);
 
-    //void mousePressEvent(QGraphicsSceneMouseEvent*);
+    void mousePressEvent(QGraphicsSceneMouseEvent*);
 
 private:
 

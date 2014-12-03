@@ -22,11 +22,16 @@ class ObjectGraphConnectItem : public QGraphicsEllipseItem
 {
 public:
 
-    ObjectGraphConnectItem(AbstractObjectItem * parent);
+    enum { Type = UserType + 2 };
+
+    ObjectGraphConnectItem(uint channel, AbstractObjectItem * parent);
+    ObjectGraphConnectItem(uint channel, const QString& toolTip, AbstractObjectItem * parent);
+
+    uint channel() const { return channel_; }
 
     // ---------- QGraphicsItem interface --------------
 
-    virtual int type() const Q_DECL_OVERRIDE { return UserType + 2; }
+    virtual int type() const Q_DECL_OVERRIDE { return Type; }
 
 protected:
 
@@ -38,6 +43,8 @@ protected:
 private:
 
     AbstractObjectItem * objectItem_;
+
+    uint channel_;
 };
 
 } // namespace GUI

@@ -19,12 +19,12 @@ class AudioObject::PrivateAO
 {
 public:
     PrivateAO()
-        : numOutputs        (1),
-          outputsVisible    (true)
+        : numInputs         (-1),
+          numOutputs        (1)
     { }
 
-    int numOutputs;
-    bool outputsVisible;
+    int numInputs;
+    uint numOutputs;
 };
 
 
@@ -58,19 +58,19 @@ uint AudioObject::numAudioOutputs() const
     return p_ao_->numOutputs;
 }
 
+int AudioObject::numAudioInputs() const
+{
+    return p_ao_->numInputs;
+}
+
 void AudioObject::setNumberAudioOutputs(uint num)
 {
     p_ao_->numOutputs = num;
 }
 
-void AudioObject::setAudioOutputsVisible(bool visible)
+void AudioObject::setNumberAudioInputs(int num)
 {
-    p_ao_->outputsVisible = visible;
-}
-
-bool AudioObject::audioOutputsVisible() const
-{
-    return p_ao_->outputsVisible;
+    p_ao_->numInputs = num;
 }
 
 void AudioObject::processAudioBase(const QList<AUDIO::AudioBuffer *> &inputs,
@@ -91,7 +91,8 @@ void AudioObject::processAudioBase(const QList<AUDIO::AudioBuffer *> &inputs,
     // test buffersize
     const int num = std::min(inputs.size(), outputs.size());
     for (int i = 0; i<num; ++i)
-        MO_ASSERT(inputs[i]->blockSize() == outputs[i]->blockSize(), "unmatched buffersize "
+        if (inputs[i] && outputs[i])
+            MO_ASSERT(inputs[i]->blockSize() == outputs[i]->blockSize(), "unmatched buffersize "
                   << inputs[i]->blockSize() << "/" << outputs[i]->blockSize());
 #endif
 

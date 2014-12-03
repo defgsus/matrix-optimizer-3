@@ -103,6 +103,10 @@ public:
     QRectF childrenBoundingRect(bool checkVisibilty);
     using QGraphicsItem::childrenBoundingRect;
 
+    /** Returns the channel of the input or output connectors for
+        item-local position, or -1 */
+    int channelForPosition(const QPointF &localPos);
+
     // ------------------ setter -----------------------
 
     /** Sets the item to be expanded/collapsed */
@@ -133,6 +137,8 @@ public:
     virtual void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
 
 protected:
+
+    void setUnexpandedSize(const QSize&);
 
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value) Q_DECL_OVERRIDE;
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;

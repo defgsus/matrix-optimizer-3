@@ -24,6 +24,7 @@
 #include "object/object.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
+#include "object/audio/audiooutao.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
 #include "gui/util/scenesettings.h"
@@ -45,9 +46,8 @@ public:
           hover         (false),
           layouted      (false),
           size          (3, 3), // expanded size minimum
+          unexpandedSize(1, 1),
           itemExp       (0),
-          inputItem     (0),
-          outputItem    (0),
           isMouseDown   (false)
     { }
 
@@ -57,12 +57,15 @@ public:
     Object * object;
     bool expanded, hover, layouted;
     QPoint pos; ///< pos in grid
-    QSize size; ///< size in grid coords
+    QSize size, ///< size in grid coords
+        unexpandedSize;
     QIcon icon;
     QPixmap iconPixmap;
     QBrush brushBack, brushBackSel;
     ObjectGraphExpandItem * itemExp;
-    ObjectGraphConnectItem * inputItem, * outputItem;
+    QList<ObjectGraphConnectItem*>
+        inputItems,
+        outputItems;
 
     bool isMouseDown;
     QPoint gridPosDown;
@@ -99,11 +102,21 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     setToolTip(object->name());
 
     // input/output items
-    if (auto ao = qobject_cast<AudioObject*>(object))
+    if (AudioObject * ao = qobject_cast<AudioObject*>(object))
     {
-        p_oi_->inputItem = new ObjectGraphConnectItem(this);
-        if (ao->audioOutputsVisible())
-            p_oi_->outputItem = new ObjectGraphConnectItem(this);
+        setUnexpandedSize(QSize(1, 2));
+        if (ao->numAudioInputs() >= 0)
+            for (int i=0; i<ao->numAudioInputs(); ++i)
+                p_oi_->inputItems.append( new ObjectGraphConnectItem(i, ao->getInputName(i), this) );
+        else
+            p_oi_->inputItems.append( new ObjectGraphConnectItem(0, ao->getInputName(0), this) );
+
+        if (!qobject_cast<AudioOutAO*>(ao))
+        {
+            for (uint i=0; i<ao->numAudioOutputs(); ++i)
+                p_oi_->outputItems.append( new ObjectGraphConnectItem(i, this) );
+        }
+
         p_oi_->updateConnectors();
     }
 }
@@ -145,6 +158,12 @@ bool AbstractObjectItem::isExpanded() const
 bool AbstractObjectItem::isHover() const
 {
     return p_oi_->hover;
+}
+
+void AbstractObjectItem::setUnexpandedSize(const QSize & s)
+{
+    prepareGeometryChange();
+    p_oi_->unexpandedSize = s;
 }
 
 void AbstractObjectItem::setExpanded(bool enable)
@@ -359,8 +378,7 @@ QPoint AbstractObjectItem::globalGridPos() const
 
 const QSize& AbstractObjectItem::gridSize() const
 {
-    static QSize unExpanded(1, 1);
-    return isExpanded() ? p_oi_->size : unExpanded;
+    return isExpanded() ? p_oi_->size : p_oi_->unexpandedSize;
 }
 
 void AbstractObjectItem::setGridPos(const QPoint &pos1)
@@ -431,10 +449,11 @@ AbstractObjectItem * AbstractObjectItem::itemInGrid(const QPoint& p) const
 
 void AbstractObjectItem::PrivateOI::updateConnectors()
 {
-    if (inputItem)
-        inputItem->setPos(item->inputPos() + QPointF(2,0));
-    if (outputItem)
-        outputItem->setPos(item->outputPos() - QPointF(2,0));
+    for (int i=0; i<inputItems.size(); ++i)
+        inputItems[i]->setPos(item->inputPos(i) + QPointF(2,0));
+
+    for (int i=0; i<outputItems.size(); ++i)
+        outputItems[i]->setPos(item->outputPos(i) - QPointF(2,0));
 }
 
 QRectF AbstractObjectItem::childrenBoundingRect(bool checkVisibilty)
@@ -450,6 +469,16 @@ QRectF AbstractObjectItem::childrenBoundingRect(bool checkVisibilty)
         rect |= c->mapToParent(c->boundingRect()).boundingRect();
     }
     return rect;
+}
+
+int AbstractObjectItem::channelForPosition(const QPointF &localPos)
+{
+    const auto list = childItems();
+    for (QGraphicsItem * c : list)
+    if (c->isVisible() && c->type() == ObjectGraphConnectItem::Type)
+        if (c->shape().contains(localPos - c->pos()))
+            return static_cast<ObjectGraphConnectItem*>(c)->channel();
+    return -1;
 }
 
 void AbstractObjectItem::adjustSizeToChildren()
@@ -510,17 +539,27 @@ void AbstractObjectItem::adjustRightItems()
 
 // --------------------------------------- shape and draw -----------------------------------------
 
-QPointF AbstractObjectItem::inputPos(uint ) const
+QPointF AbstractObjectItem::inputPos(uint c) const
 {
     const auto r = rect();
-    return QPointF(r.left(), r.center().y());
+    if (AudioObject * ao = qobject_cast<AudioObject*>(object()))
+        return QPointF(r.left(),
+                       r.top() + (c + 0.5) * r.height()
+                            / std::max(1, ao->numAudioInputs()));
+    else
+        return QPointF(r.left(), r.center().y());
 }
 
 
-QPointF AbstractObjectItem::outputPos(uint ) const
+QPointF AbstractObjectItem::outputPos(uint c) const
 {
     const auto r = rect();
-    return QPointF(r.right(), r.center().y());
+    if (AudioObject * ao = qobject_cast<AudioObject*>(object()))
+        return QPointF(r.right(),
+                       r.top() + (c + 0.5) * r.height()
+                            / std::max(1u, ao->numAudioOutputs()));
+    else
+        return QPointF(r.right(), r.center().y());
 }
 
 QRectF AbstractObjectItem::rect() const

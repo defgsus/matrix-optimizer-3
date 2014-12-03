@@ -555,6 +555,12 @@ struct math_func<double>
         RES = (p<B)? p * 2.0/ B - 1.0 : (1.0-p) * 2.0/(1.0-B) - 1.0;
     }
 
+    static void note2freq_1     (double ** v)
+    {
+        const double o = std::pow(2.0, 1.0 / 12.0);
+        RES = std::pow(o, A) * 16.35155;
+    }
+
     // -------------- random ------------------------------------
 
     static void rnd_0			(double ** v) { RES = (double)std::rand() / RAND_MAX; }

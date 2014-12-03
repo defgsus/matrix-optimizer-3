@@ -82,11 +82,7 @@ public:
     void addAudioCon(AudioObjectConnection*);
     void addModItem(Modulator *);
     void addModItemMap(Object *, ModulatorItem *);
-    /// Removes all modulator items of object and it's children
-    //void removeModItemsFor(Object *);
-    /// Returns all modulator items of object and it's children
-    QList<ModulatorItem*> getAllModItemsFor(Object *);
-    void getAllModItemsFor(Object * o, QSet<ModulatorItem*>& set);
+    void addConItemMap(Object *, AudioConnectionItem *);
     /// Recursively get the item below @p localGridPos
     AbstractObjectItem * childItemAt(AbstractObjectItem * parent, const QPoint& localGridPos);
     void raiseModItems(AbstractObjectItem*); ///< raise all ModulatorItems of the item and it's childs
@@ -105,6 +101,7 @@ public:
     ObjectEditor * editor;
     std::map<Object*, AbstractObjectItem*> itemMap;
     std::map<Object*, QList<ModulatorItem*>> modItemMap;
+    std::map<Object*, QList<AudioConnectionItem*>> conItemMap;
     QList<ModulatorItem*> modItems;
     QList<AudioConnectionItem*> audioConItems;
     int zStack; ///< highest current stack value
@@ -164,7 +161,9 @@ void ObjectGraphScene::setRootObject(Object *root)
 
     p_->itemMap.clear();
     p_->modItemMap.clear();
+    p_->conItemMap.clear();
     p_->modItems.clear();
+    p_->audioConItems.clear();
     p_->zStack = 0;
     p_->root = qobject_cast<Scene*>(root);
 
@@ -343,8 +342,8 @@ void ObjectGraphScene::Private::addAudioCon(AudioObjectConnection * c)
     // store in map
     audioConItems.append( item );
     // ModulatorItems per object
-    //addModItemMap(m->parent(), item);
-    //addModItemMap(m->modulator(), item);
+    addConItemMap(c->from(), item);
+    addConItemMap(c->to(), item);
 }
 
 void ObjectGraphScene::Private::addModItemMap(Object * o, ModulatorItem * item)
@@ -353,6 +352,19 @@ void ObjectGraphScene::Private::addModItemMap(Object * o, ModulatorItem * item)
     if (i == modItemMap.end())
     {
         modItemMap.insert(std::make_pair(o, QList<ModulatorItem*>() << item));
+    }
+    else
+    {
+        i->second << item;
+    }
+}
+
+void ObjectGraphScene::Private::addConItemMap(Object * o, AudioConnectionItem * item)
+{
+    auto i = conItemMap.find(o);
+    if (i == conItemMap.end())
+    {
+        conItemMap.insert(std::make_pair(o, QList<AudioConnectionItem*>() << item));
     }
     else
     {
@@ -470,8 +482,18 @@ void ObjectGraphScene::toFront(QGraphicsItem * item)
 void ObjectGraphScene::Private::raiseModItems(AbstractObjectItem * item)
 {
     // raise all connected ModulatorItems
-    auto i = modItemMap.find(item->object());
-    if (i != modItemMap.end())
+    {
+        auto i = modItemMap.find(item->object());
+        if (i != modItemMap.end())
+        {
+            for (auto mi : i->second)
+                mi->setZValue(++zStack);
+        }
+    }
+
+    // raise all connected AudioConnectionItems
+    auto i = conItemMap.find(item->object());
+    if (i != conItemMap.end())
     {
         for (auto mi : i->second)
             mi->setZValue(++zStack);
@@ -484,45 +506,7 @@ void ObjectGraphScene::Private::raiseModItems(AbstractObjectItem * item)
             raiseModItems(static_cast<AbstractObjectItem*>(c));
 }
 
-QList<ModulatorItem*> ObjectGraphScene::Private::getAllModItemsFor(Object * o)
-{
-    QSet<ModulatorItem*> set;
-    getAllModItemsFor(o, set);
-    return set.toList();
-}
 
-void ObjectGraphScene::Private::getAllModItemsFor(Object * o, QSet<ModulatorItem*>& set)
-{
-    auto i = modItemMap.find(o);
-    if (i != modItemMap.end())
-    {
-        for (auto mi : i->second)
-            set.insert(mi);
-    }
-
-    for (auto c : o->childObjects())
-        getAllModItemsFor(c, set);
-}
-/*
-void ObjectGraphScene::Private::removeModItemsFor(Object * o)
-{
-    auto moditems = getAllModItemsFor(o);
-
-    // remove entries in map
-    QList<Object*> allsubs = o->findChildObjects(Object::TG_ALL, true);
-    allsubs << o;
-    for (auto o : allsubs)
-        modItemMap.erase(o);
-
-    // delete items
-    for (auto mi : moditems)
-    {
-        modItems.removeAll(mi);
-        scene->removeItem(mi);
-        delete mi;
-    }
-}
-*/
 
 void ObjectGraphScene::Private::recreateModulatorItems()
 {
@@ -531,8 +515,15 @@ void ObjectGraphScene::Private::recreateModulatorItems()
         scene->removeItem(m);
         delete m;
     }
+    for (auto m : audioConItems)
+    {
+        scene->removeItem(m);
+        delete m;
+    }
     modItems.clear();
     modItemMap.clear();
+    audioConItems.clear();
+    conItemMap.clear();
 
     resolveLayout();
 
@@ -690,11 +681,16 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
             auto aoFrom = qobject_cast<AudioObject*>(p_->connectStartItem->object()),
                  aoTo = qobject_cast<AudioObject*>(p_->connectEndItem->object());
             if (aoFrom && aoTo)
+            {
+                // find channel of connector
+                int chan = p_->connectEndItem->channelForPosition(
+                            p_->connectEndItem->mapFromScene(p_->connectEndPos));
+                if (chan >= 0)
                 p_->editor->connectAudioObjects(
                             aoFrom, aoTo,
-                            p_->connectStartChannel, 0,
+                            p_->connectStartChannel, chan,
                             1);
-
+            }
         }
         p_->action = Private::A_NONE;
         //update(sceneRect());
@@ -727,6 +723,8 @@ void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     // draw a connection
     if (p_->action == Private::A_DRAG_CONNECT)
     {
+        update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-100,-100,100,100));
+
         // find goal item
         p_->connectEndPos = event->scenePos();
         p_->connectEndItem = objectItemAt(mapToGrid(p_->connectEndPos));
@@ -734,8 +732,12 @@ void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             p_->connectEndItem = 0;
 
         // snap to goal item
-        if (p_->connectEndItem)
-            p_->connectEndPos = p_->connectEndItem->globalInputPos(0);
+        if (p_->connectEndItem && p_->connectEndItem->object()->isAudioObject())
+        {
+            int chan = p_->connectEndItem->channelForPosition(
+                        p_->connectEndItem->mapFromScene(p_->connectEndPos));
+            p_->connectEndPos = p_->connectEndItem->globalInputPos(chan >= 0 ? chan : 0);
+        }
 
         update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-100,-100,100,100));
         return;
@@ -862,6 +864,26 @@ void ObjectGraphScene::popup(const QPoint& gridPos)
 
     // clipboard
     p_->createClipboardMenu(obj, items);
+
+    p_->showPopup();
+}
+
+void ObjectGraphScene::popup(AudioObjectConnection * con)
+{
+    p_->clearActions();
+
+    // title
+    QString title(tr("audio connection"));
+    p_->actions.addTitle(title, this);
+
+    // delete
+    QAction * a = p_->actions.addAction(tr("remove connection"), this);
+    a->setStatusTip(tr("Removes the selected connection"));
+    connect(a, &QAction::triggered, [this, con]()
+    {
+        p_->editor->disconnectAudioObjects(*con);
+    });
+
 
     p_->showPopup();
 }

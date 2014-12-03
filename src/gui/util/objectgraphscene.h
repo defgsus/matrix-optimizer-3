@@ -20,6 +20,7 @@ class Object;
 class AudioObject;
 class Parameter;
 class Modulator;
+class AudioObjectConnection;
 namespace GUI {
 
 class AbstractObjectItem;
@@ -89,6 +90,8 @@ public slots:
 
     /** Creates the edit menu, for scene or for selected items */
     void popup(const QPoint &gridPos);
+
+    void popup(AudioObjectConnection*);
 
     /** Focus and select the item for the object. */
     void setFocusObject(Object * o);

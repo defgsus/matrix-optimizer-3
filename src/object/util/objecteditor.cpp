@@ -337,14 +337,20 @@ bool ObjectEditor::connectAudioObjects(AudioObject *from, AudioObject *to,
     return true;
 }
 
+void ObjectEditor::disconnectAudioObjects(const AudioObjectConnection & c)
+{
+    disconnectAudioObjects(c.from(), c.to(), c.outputChannel(), c.inputChannel(), c.numChannels());
+}
+
 void ObjectEditor::disconnectAudioObjects(AudioObject *from, AudioObject *to,
                                        uint outChannel, uint inChannel,
                                        uint numChannels)
 {
     if (scene_->audioConnections()->disconnect(from, to, outChannel, inChannel, numChannels))
+    {
         emit audioConnectionsChanged();
-
-    emit sceneChanged(scene_);
+        emit sceneChanged(scene_);
+    }
 }
 
 

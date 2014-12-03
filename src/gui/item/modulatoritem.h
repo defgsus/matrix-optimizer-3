@@ -24,10 +24,7 @@ class ModulatorItem : public QGraphicsItem
 {
 public:
 
-    enum
-    {
-        Type = UserType + 10
-    };
+    enum { Type = UserType + 10 };
 
     ModulatorItem(Modulator *);
 

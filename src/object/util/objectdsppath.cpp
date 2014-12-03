@@ -36,6 +36,18 @@ class ObjectDspPath::Private
 {
 public:
 
+    struct InputMixStep
+    {
+        explicit InputMixStep(AUDIO::AudioBuffer * buf)
+            : buf(buf), buf_(buf)
+        { }
+
+        AUDIO::AudioBuffer * buf;
+        QList<AUDIO::AudioBuffer*> inputs;
+    private:
+        std::shared_ptr<AUDIO::AudioBuffer> buf_;
+    };
+
     /** Wrapper for all objects
         with temporary calculation space */
     struct ObjectBuffer
@@ -64,6 +76,9 @@ public:
             audioOutputs,
         /// Links connected audio output buffers
             audioInputs;
+        QList<InputMixStep>
+        /// input buffer mix space (memory managed)
+            audioInputMix;
 
 
         void initMatrix(int s)
@@ -97,6 +112,10 @@ public:
     std::map<Object *, std::shared_ptr<ObjectBuffer>> objects;
     /** Transforms a list of objects to it's coresponding buffers */
     void createObjectBuffers(const QList<Object*> & input, QList<ObjectBuffer*>& output);
+
+    /** Prepares the audio input buffers for the objectbuffer.
+        Must be called sequentially in dsp order */
+    void prepareAudioInputBuffers(ObjectBuffer * o);
 
     QList<ObjectBuffer*>
         transformationObjects,
@@ -153,6 +172,8 @@ void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
 
 void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
 {
+    // ----------- process audio objects ---------------
+
     // clear system audio outputs
     for (AUDIO::AudioBuffer * buf : p_->audioOuts)
         buf->writeNullBlock();
@@ -161,6 +182,15 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
     for (Private::ObjectBuffer * b : p_->audioObjects)
     {
         auto ao = static_cast<AudioObject*>(b->object);
+
+        // input-mix inbetweens
+        for (const Private::InputMixStep & mix : b->audioInputMix)
+        {
+            mix.buf->writeNullBlock();
+            AUDIO::AudioBuffer::mix(mix.inputs, mix.buf);
+            mix.buf->nextBlock();
+        }
+
         // process AudioObject
         ao->processAudioBase(
                     b->audioInputs, b->audioOutputs,
@@ -174,12 +204,10 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
 
     // mix into system audio outputs
     for (Private::ObjectBuffer * b : p_->audioOutObjects)
-        AUDIO::AudioBuffer::mix(p_->audioOuts, b->audioOutputs);
-/*
-    for (AUDIO::AudioBuffer * buf : p_->audioOuts)
-        for (uint i=0; i<buf->blockSize(); ++i)
-            buf->writePointer()[i] = std::sin(i * 6.28 * 400. / 44100);
-*/
+        AUDIO::AudioBuffer::mix(b->audioOutputs, p_->audioOuts);
+
+    // ---------- process virtual sound sources --------
+
     /*for (Private::ObjectBuffer * b : p_->soundsourceObjects)
     {
 
@@ -225,14 +253,21 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
     }
 
     out << "\naudio objects detail:\n";
-    for (auto o : p_->audioObjects)
+    for (Private::ObjectBuffer * o : p_->audioObjects)
     {
-        auto ao = dynamic_cast<AudioObject*>(o->object);
+        auto ao = static_cast<AudioObject*>(o->object);
         out << o->object->name() << " "
             << o->audioInputs.size() << "/" << o->audioOutputs.size()
-            << "(" << ao->numAudioOutputs() << ")\n";
+            << " (" << ao->numAudioInputs() << "/" << ao->numAudioOutputs() << ")\n";
         for (auto b : o->audioInputs)
             out << "  in " << b << "\n";
+        for (auto & mix : o->audioInputMix)
+        {
+            out << "  mix ";
+            for (auto b : mix.inputs)
+                out << " " << b;
+            out << "\n";
+        }
         for (auto b : o->audioOutputs)
             out << " out " << b << "\n";
     }
@@ -372,16 +407,8 @@ void ObjectDspPath::Private::createPath(Scene * s)
             audioOutObjects.push_back( b );
         }
 
-        // prepare inputs
-        auto ins = scene->audioConnections()->getInputs(o);
-        for (AudioObjectConnection * c : ins)
-        {
-            // find input module
-            auto inb = getObjectBuffer(c->from());
-            MO_ASSERT((int)c->outputChannel() < inb->audioOutputs.size(), "");
+        prepareAudioInputBuffers(b);
 
-            b->audioInputs.push_back( inb->audioOutputs[c->outputChannel()] );
-        }
     }
 
 
@@ -404,8 +431,61 @@ void ObjectDspPath::Private::createPath(Scene * s)
     });
     createObjectBuffers(microphones, microphoneObjects);
 
-
 }
+
+void ObjectDspPath::Private::prepareAudioInputBuffers(ObjectBuffer * buf)
+{
+    MO_ASSERT(dynamic_cast<AudioObject*>(buf->object),
+              "invalid object for audio preparation");
+
+    AudioObject * o = static_cast<AudioObject*>(buf->object);
+
+    // get input connections
+    auto ins = scene->audioConnections()->getInputs(o);
+
+    int numChannels = o->numAudioInputs();
+
+    // determine from inputs
+    if (numChannels < 0)
+        for (auto c : ins)
+            numChannels = std::max(numChannels, (int)c->inputChannel() + 1);
+
+    // for each channel
+    for (int i = 0; i < numChannels; ++i)
+    {
+        // collect all inputs
+        QList<AUDIO::AudioBuffer*> inputs;
+        for (AudioObjectConnection * c : ins)
+        if ((int)c->inputChannel() == i)
+        {
+            // find input module
+            auto inb = getObjectBuffer(c->from());
+            MO_ASSERT((int)c->outputChannel() < inb->audioOutputs.size(), "");
+
+            inputs.push_back( inb->audioOutputs[c->outputChannel()] );
+        }
+
+        // empty slot
+        if (inputs.isEmpty())
+            buf->audioInputs.push_back( 0 );
+        else
+        // pass through
+        if (inputs.size() == 1)
+            buf->audioInputs.push_back( inputs.first() );
+        else
+        // create mix step
+        {
+            InputMixStep mix(new AUDIO::AudioBuffer(conf.bufferSize()));
+            mix.inputs = inputs;
+            buf->audioInputMix.append( mix );
+
+            // and wire it's output to our input
+            buf->audioInputs.push_back( mix.buf );
+        }
+    }
+}
+
+
 
 ObjectDspPath::Private::ObjectBuffer * ObjectDspPath::Private::getObjectBuffer(Object * o)
 {

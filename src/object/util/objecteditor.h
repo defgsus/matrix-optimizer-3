@@ -118,6 +118,7 @@ public slots:
                              uint outChannel = 0, uint inChannel = 0,
                              uint numChannels = 1);
 
+    void disconnectAudioObjects(const AudioObjectConnection&);
     void disconnectAudioObjects(MO::AudioObject * from, MO::AudioObject * to,
                                 uint outChannel = 0, uint inChannel = 0,
                                 uint numChannels = 1);

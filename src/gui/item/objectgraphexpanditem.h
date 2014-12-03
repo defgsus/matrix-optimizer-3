@@ -22,11 +22,13 @@ class ObjectGraphExpandItem : public QGraphicsItem
 {
 public:
 
+    enum { Type = UserType + 1 };
+
     ObjectGraphExpandItem(AbstractObjectItem * parent);
 
     // ---------- QGraphicsItem interface --------------
 
-    virtual int type() const Q_DECL_OVERRIDE { return UserType + 1; }
+    virtual int type() const Q_DECL_OVERRIDE { return Type; }
 
     QRectF boundingRect() const Q_DECL_OVERRIDE;
 

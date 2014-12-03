@@ -23,7 +23,6 @@ AudioOutAO::AudioOutAO(QObject *parent)
     : AudioObject   (parent)
 {
     setName("AudioOut");
-    setAudioOutputsVisible(false);
 }
 
 void AudioOutAO::serialize(IO::DataStream & io) const
@@ -54,13 +53,11 @@ void AudioOutAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
                               const QList<AUDIO::AudioBuffer *> &outputs,
                               uint , SamplePos , uint )
 {
-    const int num = std::max(inputs.size(), outputs.size());
-
     // copy inputs
-    for (int i = 0; i<num; ++i)
+    for (int i = 0; i<outputs.size(); ++i)
     if (outputs[i])
     {
-        if (inputs[i])
+        if (i < inputs.size() && inputs[i])
             // XXX missing amplitude here
             outputs[i]->writeBlock( inputs[i]->readPointer() );
         else

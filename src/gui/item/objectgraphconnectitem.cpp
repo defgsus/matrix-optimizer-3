@@ -19,9 +19,10 @@
 namespace MO {
 namespace GUI {
 
-ObjectGraphConnectItem::ObjectGraphConnectItem(AbstractObjectItem *parent)
-    : QGraphicsEllipseItem (parent),
-      objectItem_   (parent)
+ObjectGraphConnectItem::ObjectGraphConnectItem(uint channel, const QString& toolTip, AbstractObjectItem *parent)
+    : QGraphicsEllipseItem  (parent),
+      objectItem_           (parent),
+      channel_              (channel)
 {
     setAcceptHoverEvents(true);
     setCursor(QCursor(Qt::ArrowCursor));
@@ -29,7 +30,13 @@ ObjectGraphConnectItem::ObjectGraphConnectItem(AbstractObjectItem *parent)
     setPen(Qt::NoPen);
 
     setRect(-6, -6, 12, 12);
+
+    setToolTip(toolTip);
 }
+
+ObjectGraphConnectItem::ObjectGraphConnectItem(uint channel, AbstractObjectItem *parent)
+    : ObjectGraphConnectItem(channel, QString::number(channel + 1), parent)
+{ }
 
 void ObjectGraphConnectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {

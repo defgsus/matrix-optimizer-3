@@ -56,7 +56,7 @@ class AudioBuffer
     /** Adds one block of data to the buffer.
         @p block must point to at least blockSize() floats. */
     void writeAddBlock(const F32 * block)
-        { auto p = writePointer(); for (uint i=0; i < p_blockSize_; ++i) p[i] = block[i]; }
+        { auto p = writePointer(); for (uint i=0; i < p_blockSize_; ++i) p[i] += block[i]; }
 
     /** Copies the current read-block into @p block */
     void readBlock(F32 * block) const { memcpy(block, readPointer(), p_blockSize_ * sizeof(F32)); }
@@ -81,16 +81,22 @@ class AudioBuffer
         they will be filled with zeros.
         Empty channels can be signaled with NULL and will be handled correctly.
         @note The blocksize must match between each input and output channel! */
-    static void bypass(const QList<AUDIO::AudioBuffer *> &inputs,
-                       const QList<AUDIO::AudioBuffer *> &outputs,
+    static void bypass(const QList<AudioBuffer*> &inputs,
+                       const QList<AudioBuffer*> &outputs,
                        bool callNextBlock = false);
 
     /** Adds @p src on top of @p dst.
         Same convenience logic as bypass(). */
-    static void mix(const QList<AUDIO::AudioBuffer *> &dst,
-                    const QList<AUDIO::AudioBuffer *> &src,
+    static void mix(const QList<AudioBuffer *> &src, const QList<AudioBuffer *> &dst,
                     bool callNextBlock = false);
 
+    /** Mixes the channels in @p src on top of @p dst */
+    static void mix(const QList<AudioBuffer *> &src, AudioBuffer * dst);
+
+    static void process(const QList<AudioBuffer *> &dst,
+                        const QList<AudioBuffer *> &src,
+                        std::function<void(const AudioBuffer*,AudioBuffer*)> func,
+                        bool callNextBlock = false);
 private:
 
     size_t p_blockSize_, p_numBlocks_, p_writeBlock_, p_readBlock_;

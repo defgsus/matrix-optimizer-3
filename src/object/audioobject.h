@@ -26,9 +26,13 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_AUDIO_OBJECT; }
     virtual bool isAudioObject() const Q_DECL_OVERRIDE { return true; }
 
+    /** Returns the desired number of audio input channels.
+        -1 for don't care. */
+    int numAudioInputs() const;
     /** Returns the desired number of audio output channels */
     uint numAudioOutputs() const;
-    bool audioOutputsVisible() const;
+
+    virtual QString getInputName(uint channel) const { return QString("in %1").arg(channel + 1); }
 
     /** Processes dsp data.
         Inputs and outputs must have the same buffer size.
@@ -48,10 +52,8 @@ protected:
                               const QList<AUDIO::AudioBuffer*>& outputs,
                               uint bufferSize, SamplePos pos, uint thread) = 0;
 
+    void setNumberAudioInputs(int num);
     void setNumberAudioOutputs(uint num);
-
-    /** Call in constructor to disable connectable outputs */
-    void setAudioOutputsVisible(bool visible);
 
 private:
     class PrivateAO;

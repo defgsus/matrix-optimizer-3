@@ -322,6 +322,9 @@ void LiveAudioEngine::setScene(Scene * s, uint thread)
     // create engine, blocking on caller thread
     auto eng = new AudioEngine();
     eng->setScene(s, p_->defaultConf, thread);
+    // reuse current scene time
+    if (p_->engine)
+        eng->seek(p_->engine->pos());
 
     // lock access to p_->nextEngine
     QWriteLocker lock(&p_->engineLock);

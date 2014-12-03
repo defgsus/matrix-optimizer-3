@@ -73,8 +73,8 @@ void AudioBuffer::bypass(const QList<AUDIO::AudioBuffer *> &inputs,
 }
 
 
-void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &dst,
-                      const QList<AUDIO::AudioBuffer *> &src, bool callNextBlock)
+void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &src,
+                      const QList<AUDIO::AudioBuffer *> &dst, bool callNextBlock)
 {
     const int num = std::max(dst.size(), src.size());
 
@@ -96,6 +96,44 @@ void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &dst,
                 o->nextBlock();
 }
 
+void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &src,
+                      AUDIO::AudioBuffer * dst)
+{
+    for (int i = 0; i<src.size(); ++i)
+    if (src[i])
+    {
+        MO_ASSERT(src[i]->blockSize() == dst->blockSize(), "unmatched buffersize "
+                  << src[i]->blockSize() << "/" << dst->blockSize());
+
+            dst->writeAddBlock( src[i]->readPointer() );
+    }
+}
+
+
+void AudioBuffer::process(const QList<AudioBuffer *> &src, const QList<AudioBuffer *> &dst,
+                          std::function<void (const AudioBuffer *, AudioBuffer *)> func, bool callNextBlock)
+{
+    const int num = std::max(dst.size(), src.size());
+
+    for (int i = 0; i<num; ++i)
+    if (dst[i])
+    {
+        if (i < src.size() && src[i] != 0)
+        {
+            MO_ASSERT(src[i]->blockSize() == dst[i]->blockSize(), "unmatched buffersize "
+                      << src[i]->blockSize() << "/" << dst[i]->blockSize());
+
+            func( src[i], dst[i] );
+        }
+        else
+            dst[i]->writeNullBlock();
+    }
+
+    if (callNextBlock)
+        for (auto o : dst)
+            if (o)
+                o->nextBlock();
+}
 
 } // namespace AUDIO
 } // namespace MO

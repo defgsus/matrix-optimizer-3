@@ -226,7 +226,8 @@ HEADERS += \
     src/object/audio/audiooutao.h \
     src/engine/liveaudioengine.h \
     src/engine/audioengine.h \
-    src/object/util/objectdsppath.h
+    src/object/util/objectdsppath.h \
+    src/object/audio/filterao.h
 
 
 SOURCES += \
@@ -419,4 +420,5 @@ SOURCES += \
     src/object/audio/audiooutao.cpp \
     src/engine/liveaudioengine.cpp \
     src/engine/audioengine.cpp \
-    src/object/util/objectdsppath.cpp
+    src/object/util/objectdsppath.cpp \
+    src/object/audio/filterao.cpp

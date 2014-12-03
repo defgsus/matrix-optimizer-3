@@ -280,7 +280,8 @@ void MainWidgetController::createObjects_()
     // sequencer
     sequencer_ = new Sequencer(window_);
     sequencer_->setSceneSettings(sceneSettings_);
-    sequencer_->setMinimumHeight(120);
+    sequencer_->setMinimumHeight(320);
+    sequencer_->setVisible(false);
     connect(sequencer_, SIGNAL(sequenceSelected(MO::Sequence*)),
             this, SLOT(onObjectSelectedSequencer_(MO::Sequence*)));
 
@@ -1304,7 +1305,7 @@ void MainWidgetController::updateDebugRender_()
 
 bool MainWidgetController::isPlayback() const
 {
-    return scene_ && scene_->isPlayback();
+    return audioEngine_ && audioEngine_->isPlayback();
 }
 
 void MainWidgetController::start()
