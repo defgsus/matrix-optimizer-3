@@ -235,7 +235,12 @@ void ParameterView::updateWidgetValues_()
     }
 }
 
-
+void ParameterView::updateWidgetValue_(Parameter * p)
+{
+    auto i = paramMap_.find(p);
+    if (i != paramMap_.end())
+        i.value()->updateWidgetValue();
+}
 
 
 

@@ -23,6 +23,7 @@ namespace MO {
 
 class Parameter;
 class Object;
+class ObjectEditor;
 
 namespace GUI {
 
@@ -52,6 +53,7 @@ public slots:
 protected:
 
     void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
+    void dropEvent(QDropEvent *) Q_DECL_OVERRIDE;
 
 private:
 
@@ -65,6 +67,7 @@ private:
     void addCreateModMenuFloat_(QMenu *, Parameter *);
 
     Parameter * param_;
+    ObjectEditor * editor_;
 
     QToolButton * bmod_;
 

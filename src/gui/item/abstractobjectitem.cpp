@@ -18,7 +18,6 @@
 #include <QGraphicsItemGroup>
 #include <QCursor>
 #include <QDrag>
-#include <QMimeData>
 
 #include "abstractobjectitem.h"
 #include "objectgraphexpanditem.h"
@@ -30,6 +29,7 @@
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
 #include "gui/util/scenesettings.h"
+#include "model/objectmimedata.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -285,13 +285,14 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 
     if (e->button() == Qt::LeftButton)
     {
+        // drag object id (not moving)
         if (e->modifiers() & Qt::CTRL)
         {
             auto drag = new QDrag(scene());
-            auto data = new QMimeData();
-            data->setData("mo-object-id", object()->idName().toLatin1());
+            auto data = new ObjectMimeData();
+            data->setObject(object());
             drag->setMimeData(data);
-            drag->setPixmap(p_oi_->icon.pixmap(32, 32));
+            drag->setPixmap(p_oi_->icon.pixmap(48, 48));
             drag->exec(Qt::CopyAction);
             return;
         }

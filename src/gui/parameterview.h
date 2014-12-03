@@ -65,6 +65,7 @@ public slots:
 private slots:
 
     void onSequenceChanged(MO::Sequence *);
+    void updateWidgetValue_(MO::Parameter*);
 
 private:
 
@@ -75,6 +76,7 @@ private:
     void clearWidgets_();
     /** update values of parameter widgets */
     void updateWidgetValues_();
+
 
     Scene * scene_;
     ObjectEditor * editor_;

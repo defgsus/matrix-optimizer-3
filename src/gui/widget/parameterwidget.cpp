@@ -17,9 +17,11 @@
 #include <QLineEdit>
 #include <QLayout>
 #include <QToolButton>
-#include <QDragEnterEvent>
 #include <QMenu>
 #include <QAbstractItemView>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMessageBox>
 
 #include "parameterwidget.h"
 #include "spinbox.h"
@@ -38,7 +40,9 @@
 #include "object/param/modulator.h"
 #include "gui/modulatordialog.h"
 #include "gui/util/objectmenu.h"
+#include "model/objectmimedata.h"
 #include "io/error.h"
+#include "io/log.h"
 
 Q_DECLARE_METATYPE(MO::Modulator*)
 
@@ -48,6 +52,7 @@ namespace GUI {
 ParameterWidget::ParameterWidget(Parameter * p, QWidget *parent)
     :   QFrame      (parent),
         param_      (p),
+        editor_     (0),
         bmod_       (0),
         spinInt_    (0),
         spinFloat_  (0),
@@ -60,6 +65,10 @@ ParameterWidget::ParameterWidget(Parameter * p, QWidget *parent)
     setFrameStyle(QFrame::Panel);
     setFrameShadow(QFrame::Sunken);
     setAcceptDrops(true);
+
+    if (param_->object()
+            && param_->object()->sceneObject())
+    editor_ = param_->object()->sceneObject()->editor();
 
     createWidgets_();
 }
@@ -77,20 +86,45 @@ void ParameterWidget::emitStatusTipChanged_(const QString & s)
 
 void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
 {
-    e->accept();
+    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+        e->accept();
 }
 
+void ParameterWidget::dropEvent(QDropEvent * e)
+{
+    // analyze mime data
+    if (!e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+        return;
+
+    // construct a wrapper
+    auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+    auto desc = data->getDescription();
+
+    // analyze further
+    if (!desc.isFromSameApplicationInstance())
+    {
+        QMessageBox::information(this, tr("drop object"),
+                                 tr("Can't drop an object from another application instance."));
+        return;
+    }
+
+    if (!editor_)
+        return;
+
+    // create modulation
+    MO_DEBUG("add " << desc.id());
+    editor_->addModulator(param_, desc.id());
+
+    // select the parameter's object
+    if (param_->object())
+        emitObjectSelected_(param_->object());
+}
 
 void ParameterWidget::createWidgets_()
 {
     static const QIcon resetIcon(":/icon/reset.png");
 
     const int butfs = 25;
-
-    MO_ASSERT(param_->object(), "no object assigned to parameter");
-    MO_ASSERT(param_->object()->sceneObject(), "no scene assigned to parameter object");
-    MO_ASSERT(param_->object()->sceneObject()->editor(), "no objec editor assigned to parameter object");
-    ObjectEditor * editor = param_->object()->sceneObject()->editor();
 
 
     QHBoxLayout * l = new QHBoxLayout(this);
@@ -104,6 +138,9 @@ void ParameterWidget::createWidgets_()
                         : param_->statusTip());
 
     QToolButton * but, * breset;
+
+    if (!editor_)
+        return;
 
     // modulate button
     bmod_ = new QToolButton(this);
@@ -145,9 +182,9 @@ void ParameterWidget::createWidgets_()
         setFocusProxy(spin);
 
         connect(spin, static_cast<void(DoubleSpinBox::*)(double)>(&DoubleSpinBox::valueChanged),
-            [this, editor, pf](Double value)
+            [this, pf](Double value)
             {
-                editor->setParameterValue(pf, value);
+                editor_->setParameterValue(pf, value);
             });
 
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue(), true); });
@@ -176,7 +213,7 @@ void ParameterWidget::createWidgets_()
 
         connect(spin, &SpinBox::valueChanged, [=](int value)
         {
-            editor->setParameterValue(pi, value);
+            editor_->setParameterValue(pi, value);
         });
 
         connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pi->defaultValue(), true); });
@@ -216,7 +253,7 @@ void ParameterWidget::createWidgets_()
 
                 // get value
                 int value = ps->valueList().at(combo->currentIndex());
-                editor->setParameterValue(ps, value);
+                editor_->setParameterValue(ps, value);
             });
 
             // statustips from combobox items
@@ -251,14 +288,14 @@ void ParameterWidget::createWidgets_()
 
             connect(cb, &QCheckBox::clicked, [=]()
             {
-                editor->setParameterValue(ps, cb->isChecked()? 1 : 0);
+                editor_->setParameterValue(ps, cb->isChecked()? 1 : 0);
             });
 
             // reset to default
             connect(breset, &QToolButton::pressed, [=]()
             {
                 cb->setChecked(ps->defaultValue() != 0);
-                editor->setParameterValue(ps, ps->defaultValue());
+                editor_->setParameterValue(ps, ps->defaultValue());
             });
         }
     }
@@ -359,7 +396,7 @@ void ParameterWidget::createWidgets_()
         connect(breset, &QToolButton::pressed, [=]()
         {
             ptl->reset();
-            editor->setParameterValue(ptl, ptl->getDefaultTimeline());
+            editor_->setParameterValue(ptl, ptl->getDefaultTimeline());
         });
     }
 
@@ -396,12 +433,8 @@ void ParameterWidget::updateModulatorButton()
 
 void ParameterWidget::openModulationPopup()
 {
-    Object * object = param_->object();
-    MO_ASSERT(object, "No Object for edit Parameter");
-    Scene * scene = object->sceneObject();
-    MO_ASSERT(scene, "No Scene for object in Parameter");
-    auto * editor = scene->editor();
-    MO_ASSERT(editor, "No ObjectEditor assigned for Parameter");
+    if (!editor_)
+        return;
 
     QMenu * menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
@@ -435,7 +468,7 @@ void ParameterWidget::openModulationPopup()
         menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
         connect(a, &QAction::triggered, [=]()
         {
-            if (Object * o = editor->createFloatTrack(pi))
+            if (Object * o = editor_->createFloatTrack(pi))
             {
                 emitObjectSelected_(o);
             }
@@ -454,10 +487,10 @@ void ParameterWidget::openModulationPopup()
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             Clip * parent = a->data().value<Clip*>();
-            if (Object * o = editor->createInClip("SequenceFloat", parent))
+            if (Object * o = editor_->createInClip("SequenceFloat", parent))
             {
                 // modulate
-                editor->addModulator(param_, o->idName());
+                editor_->addModulator(param_, o->idName());
                 o->setName(ObjectEditor::modulatorName(param_));
 
                 emitObjectSelected_(o);
@@ -494,9 +527,8 @@ void ParameterWidget::openModulationPopup()
 
 void ParameterWidget::addRemoveModMenu_(QMenu * menu, Parameter * param)
 {
-    Scene * scene = param->object()->sceneObject();
-    MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << param->idName() << "'");
-    if (!scene || !scene->editor()) return;
+    if (!editor_)
+        return;
 
     // remove single
     if (param->modulatorIds().size() > 0)
@@ -508,7 +540,7 @@ void ParameterWidget::addRemoveModMenu_(QMenu * menu, Parameter * param)
         a->setIcon(QIcon(":/icon/delete.png"));
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
-            scene->editor()->removeModulator(param, a->data().toString());
+            editor_->removeModulator(param, a->data().toString());
         });
     }
     // remove all
@@ -521,7 +553,7 @@ void ParameterWidget::addRemoveModMenu_(QMenu * menu, Parameter * param)
         menu->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            scene->editor()->removeAllModulators(param);
+            editor_->removeAllModulators(param);
         });
     }
 }
@@ -555,11 +587,11 @@ void ParameterWidget::addEditModMenu_(QMenu * menu, Parameter * param)
 void ParameterWidget::addLinkModMenu_(
         QMenu * menu, Parameter * param, int objectTypeFlags)
 {
-    Scene * scene = param->object()->sceneObject();
-    MO_ASSERT(scene && scene->editor(), "no Scene for Parameter '" << param->idName() << "'");
-    if (!scene || !scene->editor()) return;
+    if (!editor_)
+        return;
 
-    QMenu * linkMenu = ObjectMenu::createObjectChildMenu(scene, objectTypeFlags, menu);
+    QMenu * linkMenu = ObjectMenu::createObjectChildMenu(
+                param->object()->sceneObject(), objectTypeFlags, menu);
     if (linkMenu->isEmpty())
     {
         linkMenu->deleteLater();
@@ -574,7 +606,7 @@ void ParameterWidget::addLinkModMenu_(
     a->setIcon(QIcon(":/icon/modulate_on.png"));
     connect(linkMenu, &QMenu::triggered, [=](QAction* a)
     {
-        scene->editor()->addModulator(param, a->data().toString());
+        editor_->addModulator(param, a->data().toString());
     });
 
 }
@@ -582,18 +614,15 @@ void ParameterWidget::addLinkModMenu_(
 
 void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
 {
-    // get model
-    MO_ASSERT(param->object() && param->object()->sceneObject()
-              && param->object()->sceneObject()->editor()
-              , "missing ObjectEditor in modulator menu");
-    auto * editor = param->object()->sceneObject()->editor();
+    if (!editor_)
+        return;
 
     // create track modulation
     QAction * a;
     menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
     connect(a, &QAction::triggered, [=]()
     {
-        if (Object * o = editor->createFloatTrack(param))
+        if (Object * o = editor_->createFloatTrack(param))
         {
             emitObjectSelected_(o);
         }
@@ -608,10 +637,10 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("right here"), sub) );
         connect(a, &QAction::triggered, [=]()
         {
-            if (Object * o = editor->createFloatSequenceFor(param_))
+            if (Object * o = editor_->createFloatSequenceFor(param_))
             {
                 // modulate
-                editor->addModulator(param_, o->idName());
+                editor_->addModulator(param_, o->idName());
 
                 emitObjectSelected_(o);
             }
@@ -623,10 +652,10 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
         connect(a, &QAction::triggered, [=]()
         {
-            if (Object * o = editor->createInClip("SequenceFloat", 0))
+            if (Object * o = editor_->createInClip("SequenceFloat", 0))
             {
                 // modulate
-                editor->addModulator(param, o->idName());
+                editor_->addModulator(param, o->idName());
                 o->setName(ObjectEditor::modulatorName(param, true));
 
                 emitObjectSelected_(o);
@@ -648,10 +677,10 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             if (Clip * parent = a->data().value<Clip*>())
-            if (Object * o = editor->createInClip("SequenceFloat", parent))
+            if (Object * o = editor_->createInClip("SequenceFloat", parent))
             {
                 // modulate
-                editor->addModulator(param, o->idName());
+                editor_->addModulator(param, o->idName());
                 o->setName(ObjectEditor::modulatorName(param, true));
 
                 emitObjectSelected_(o);
