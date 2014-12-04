@@ -45,6 +45,9 @@ public:
         (typically the name of the Parameter that is modulated) */
     const QString& name() const { return name_; }
 
+    /** Returns some description of source and destination */
+    QString nameAutomatic() const;
+
     /** Returns parent object */
     Object * parent() const { return parent_; }
 

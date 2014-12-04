@@ -112,7 +112,6 @@ void ParameterWidget::dropEvent(QDropEvent * e)
         return;
 
     // create modulation
-    MO_DEBUG("add " << desc.id());
     editor_->addModulator(param_, desc.id());
 
     // select the parameter's object

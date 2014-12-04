@@ -24,6 +24,7 @@
 #include "gui/item/modulatoritem.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/geometrydialog.h"
+#include "gui/modulatordialog.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/model3d.h"
@@ -321,6 +322,7 @@ void ObjectGraphScene::Private::createModulatorItems(Object *root)
 void ObjectGraphScene::Private::addModItem(Modulator * m)
 {
     auto item = new ModulatorItem(m);
+    item->setToolTip(m->nameAutomatic());
     scene->addItem( item );
     item->setZValue(++zStack);
     item->updateShape(); // calc arrow shape
@@ -893,12 +895,25 @@ void ObjectGraphScene::popup(Modulator * mod)
     p_->clearActions();
 
     // title
-    QString title(tr("modulation"));
+    QString title(mod->nameAutomatic());
     p_->actions.addTitle(title, this);
 
+    // edit
+    QAction * a = p_->actions.addAction(tr("edit"), this);
+    a->setStatusTip(tr("Opens a dialog to edit the properties of the modulation"));
+    connect(a, &QAction::triggered, [this, mod]()
+    {
+        ModulatorDialog diag;
+        diag.setModulators(QList<Modulator*>() << mod, mod);
+        diag.move(QCursor::pos());
+        diag.exec();
+    });
+
+    p_->actions.addSeparator(this);
+
     // delete
-    QAction * a = p_->actions.addAction(tr("remove modulation"), this);
-    a->setStatusTip(tr("Removes the selected modulation"));
+    a = p_->actions.addAction(tr("remove modulation"), this);
+    a->setStatusTip(tr("Removes the selected modulation, eveything goes back to normal"));
     connect(a, &QAction::triggered, [this, mod]()
     {
         p_->editor->removeModulator(mod->parameter(), mod->modulatorId());

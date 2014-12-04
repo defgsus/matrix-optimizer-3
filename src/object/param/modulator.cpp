@@ -41,6 +41,14 @@ void Modulator::deserialize(IO::DataStream & io)
     io >> modulatorId_;
 }
 
+QString Modulator::nameAutomatic() const
+{
+    QString n = modulator() ? modulator()->name() : "NULL";
+    n += " -> ";
+    n += parent() ? parent()->name() : "NULL";
+    return n;
+}
+
 void Modulator::setModulator(Object * object)
 {
     MO_DEBUG_MOD("Modulator('" << (parent_? parent_->idName() : "NULL") << "')::setModulator('"
