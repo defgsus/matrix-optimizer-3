@@ -958,7 +958,7 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
             auto item = itemForObject(goal);
             if (item)
                 source->setAttachedData(
-                            QPoint(1,1),//mapToGrid(item->mapFromScene(dropPointF)),
+                            mapToGrid(item->mapFromScene(dropPointF)),
                             Object::DT_GRAPH_POS);
 
             p_->editor->moveObject(source, goal);
@@ -1209,7 +1209,12 @@ void ObjectGraphScene::onObjectDeleted_(const Object *o)
 
 void ObjectGraphScene::onObjectMoved_(Object * o, Object *)
 {
-    // remove items and references of previous item
+    // XXX Something's not right with below code
+    // segfaults in AbstractObjectItem::mapToScene
+    //  here's the shortcut
+    setRootObject(o->rootObject());
+
+/*  // remove items and references of previous item
     auto item = itemForObject(o);
     if (item)
     {
@@ -1217,6 +1222,8 @@ void ObjectGraphScene::onObjectMoved_(Object * o, Object *)
         delete item;
     }
     p_->itemMap.erase(const_cast<Object*>(o));
+    p_->modItemMap.erase(const_cast<Object*>(o));
+    p_->conItemMap.erase(const_cast<Object*>(o));
 
     // create new item
     const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
@@ -1224,7 +1231,7 @@ void ObjectGraphScene::onObjectMoved_(Object * o, Object *)
                           : QPoint(1,1);
     p_->createObjectItem(o, pos);
 
-    p_->recreateModulatorItems();
+    p_->recreateModulatorItems();*/
 }
 
 void ObjectGraphScene::onModulatorAdded_(Modulator *)
