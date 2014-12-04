@@ -49,6 +49,7 @@ public:
           hover         (false),
           dragHover     (false),
           layouted      (false),
+          dragging      (false),
           size          (3, 3), // expanded size minimum
           unexpandedSize(1, 1),
           itemExp       (0),
@@ -59,7 +60,7 @@ public:
 
     AbstractObjectItem * item; ///< parent item class
     Object * object;
-    bool expanded, hover, dragHover, layouted;
+    bool expanded, hover, dragHover, layouted, dragging;
     QPoint pos; ///< pos in grid
     QSize size, ///< size in grid coords
         unexpandedSize;
@@ -337,18 +338,6 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 
     if (e->button() == Qt::LeftButton)
     {
-        // drag object id (not moving)
-        if (e->modifiers() & Qt::CTRL)
-        {
-            auto drag = new QDrag(scene());
-            auto data = new ObjectMimeData();
-            data->setObject(object());
-            drag->setMimeData(data);
-            drag->setPixmap(p_oi_->icon.pixmap(48, 48));
-            drag->exec(Qt::CopyAction);
-            return;
-        }
-
         // store current state on click
         p_oi_->isMouseDown = true;
         p_oi_->posMouseDown = e->pos();//mapToParent(e->pos());
@@ -357,11 +346,8 @@ void AbstractObjectItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
         if (auto s = objectScene())
         {
             s->toFront(this);
-            if (object())
-            {
+            if (object() && !(e->modifiers() && Qt::CTRL))
                 emit s->objectSelected(object());
-
-            }
         }
 
         e->accept();
@@ -379,8 +365,29 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
     if (!sc)
         return;
 
+    // start dragging ?
+    if (p_oi_->isMouseDown && !p_oi_->dragging)
+    {
+        if ((e->pos() - p_oi_->posMouseDown).manhattanLength() > 4)
+        {
+            // drag object id (not position)
+            if (e->modifiers() & Qt::CTRL)
+            {
+                auto drag = new QDrag(scene());
+                auto data = new ObjectMimeData();
+                data->setObject(object());
+                drag->setMimeData(data);
+                drag->setPixmap(p_oi_->icon.pixmap(48, 48));
+                drag->exec(Qt::CopyAction);
+                return;
+            }
+
+            p_oi_->dragging = true;
+        }
+    }
+
     // drag position
-    if (p_oi_->isMouseDown)
+    if (p_oi_->dragging)
     {
         const QPointF p = mapToParent(e->pos());
         QPoint newGrid = mapToGrid(p) - p_oi_->gridPosDown;
@@ -410,6 +417,7 @@ void AbstractObjectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * e)
     QGraphicsItem::mouseReleaseEvent(e);
 
     p_oi_->isMouseDown = false;
+    p_oi_->dragging = false;
     update();
 }
 

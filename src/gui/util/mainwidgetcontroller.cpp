@@ -141,7 +141,6 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(objectNameChanged(MO::Object*)), this, SLOT(onObjectNameChanged_(MO::Object*)));
     connect(objectEditor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
     connect(objectEditor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
-    connect(objectEditor_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(onTreeChanged_()));
     connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
@@ -480,13 +479,6 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         m->addAction(a = new QAction(tr("Test transformation speed (old)"), m));
         connect(a, &QAction::triggered, [this](){ testSceneTransform_(false); });
-
-        m->addAction(a = new QAction(tr("Reset ObjectTreeModel"), m));
-        connect(a, SIGNAL(triggered()), SLOT(resetTreeModel_()));
-
-        m->addAction(a = new QAction(tr("Run test thread"), m));
-        a->setCheckable(true);
-        connect(a, SIGNAL(triggered()), SLOT(runTestThread_()));
 
         m->addAction(a = new QAction(tr("Export scene to povray"), m));
         connect(a, SIGNAL(triggered()), SLOT(exportPovray_()));

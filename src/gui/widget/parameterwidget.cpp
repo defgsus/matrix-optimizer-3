@@ -86,7 +86,22 @@ void ParameterWidget::emitStatusTipChanged_(const QString & s)
 
 void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
 {
-    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    // analyze mime data
+    if (!e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+        return;
+
+    // construct a wrapper
+    auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+    auto desc = data->getDescription();
+
+    // analyze further
+    if (!desc.isFromSameApplicationInstance())
+        return;
+
+    if (desc.pointer() == param_->object())
+        return;
+
+    if (param_->getModulatorTypes() & desc.type())
         e->accept();
 }
 
@@ -99,14 +114,6 @@ void ParameterWidget::dropEvent(QDropEvent * e)
     // construct a wrapper
     auto data = static_cast<const ObjectMimeData*>(e->mimeData());
     auto desc = data->getDescription();
-
-    // analyze further
-    if (!desc.isFromSameApplicationInstance())
-    {
-        QMessageBox::information(this, tr("drop object"),
-                                 tr("Can't drop an object from another application instance."));
-        return;
-    }
 
     if (!editor_)
         return;
@@ -734,6 +741,8 @@ void ParameterWidget::updateWidgetValue()
         if (ParameterText * ptxt = dynamic_cast<ParameterText*>(param_))
             lineEdit_->setText(ptxt->value());
     }
+
+    updateModulatorButton();
 }
 
 } // namespace GUI

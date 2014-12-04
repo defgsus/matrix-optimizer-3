@@ -964,6 +964,7 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
             p_->editor->moveObject(source, goal);
         });
 
+        p_->actions.addSeparator(this);
     }
 
     // --- modulator connect menu ---
