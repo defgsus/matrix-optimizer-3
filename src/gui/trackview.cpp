@@ -1166,7 +1166,7 @@ void TrackView::createEditActions_()
 
 bool TrackView::deleteObject_(Object * o)
 {
-    // YYY
+    return false;// YYY
 }
 
 bool TrackView::paste_(bool single_track)

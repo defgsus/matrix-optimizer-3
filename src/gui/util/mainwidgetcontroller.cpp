@@ -498,7 +498,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
             ObjectGraph graph;
             getObjectModulatorGraph(graph, scene_);
+#ifdef QT_DEBUG
             graph.dumpEdges(std::cout);
+#endif
             QVector<Object*> linear;
             graph.makeLinear(std::inserter(linear, linear.begin()));
             std::cout << "linear: ";
