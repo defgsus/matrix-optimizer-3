@@ -250,7 +250,7 @@ KeepModulatorDialog::KeepModulatorDialog(KeepModulators& mods, QWidget * parent)
 
 KeepModulatorDialog::~KeepModulatorDialog()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
 }
 
 

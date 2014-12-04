@@ -167,9 +167,9 @@ void MainWindow::adjustWidgets_()
 
 void MainWindow::saveAllGeometry_()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
     if (controller_->glWindow())
-        settings->saveGeometry(controller_->glWindow());
+        settings->storeGeometry(controller_->glWindow());
 }
 
 bool MainWindow::restoreAllGeometry_()

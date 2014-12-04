@@ -22,14 +22,17 @@
 #include "gui/item/abstractobjectitem.h"
 #include "gui/item/audioconnectionitem.h"
 #include "gui/item/modulatoritem.h"
-#include "gui/util/objectgraphsettings.h"
 #include "gui/geometrydialog.h"
 #include "gui/modulatordialog.h"
+#include "gui/util/objectgraphsettings.h"
+#include "gui/util/objectmenu.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/model3d.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
+#include "object/param/parameters.h"
+#include "object/param/parameter.h"
 #include "object/param/modulator.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "object/util/objecteditor.h"
@@ -388,6 +391,13 @@ void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& local_
     QPoint pos = o->parentObject()
             ? scene->nextFreePosition(o->parentObject(), local_pos)
             : local_pos;
+
+    // limit to parent rect
+    if (o->parent() && o->parent() != o->sceneObject())
+    {
+        if (pos.x() < 1) pos.setX(1);
+        if (pos.y() < 1) pos.setY(1);
+    }
 
     item->setGridPos(pos);
     item->setZValue(++zStack);
@@ -922,6 +932,65 @@ void ObjectGraphScene::popup(Modulator * mod)
 
     p_->showPopup();
 }
+
+
+void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPointF& dropPointF)
+{
+    if (!p_->editor)
+        return;
+
+    p_->clearActions();
+
+    // title
+    QString title(source->name());
+    p_->actions.addTitle(title, this);
+
+    p_->actions.addSeparator(this);
+
+    // --- move here ---
+
+    if (goal != source->parent())
+    {
+        QAction * a = p_->actions.addAction(tr("move into %1").arg(goal->name()), this);
+        connect(a, &QAction::triggered, [=]()
+        {
+            // set destination grid position
+            auto item = itemForObject(goal);
+            if (item)
+                source->setAttachedData(
+                            QPoint(1,1),//mapToGrid(item->mapFromScene(dropPointF)),
+                            Object::DT_GRAPH_POS);
+
+            p_->editor->moveObject(source, goal);
+        });
+
+    }
+
+    // --- modulator connect menu ---
+
+    QMenu * menu = ObjectMenu::createParameterMenu(goal,0,
+                        [=](Parameter * p)
+                        {
+                            return (p->getModulatorTypes() & goal->type())
+                                && !p->modulatorIds().contains(goal->idName());
+                        });
+
+    menu->setTitle(tr("connect to %1").arg(goal->name()));
+
+    p_->actions.addMenu(menu, this);
+
+    connect(menu, &QMenu::triggered, [=](QAction* a)
+    {
+        const QString id = a->data().toString();
+        auto param = goal->params()->findParameter(id);
+        if (param)
+            p_->editor->addModulator(param, source->idName());
+    });
+
+    p_->showPopup();
+}
+
+
 
 void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 {

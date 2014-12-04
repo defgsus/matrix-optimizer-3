@@ -77,7 +77,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
 
     delete copyOfCameraSettings_;
     delete cameraSettings_;

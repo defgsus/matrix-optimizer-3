@@ -444,7 +444,7 @@ void ClipView::clickSelect_(ClipWidget *w, Qt::KeyboardModifiers mod)
     }
 }
 
-void ClipView::onMoved_(ClipWidget * widget, const QPoint &wpos, Qt::MouseButtons b, Qt::KeyboardModifiers mod)
+void ClipView::onMoved_(ClipWidget * widget, const QPoint &wpos, Qt::MouseButtons b, Qt::KeyboardModifiers)
 {
     if (!clipCon_ || !dragWidget_ || selection_.isEmpty() || !(b & Qt::LeftButton))
         return;

@@ -40,7 +40,7 @@ ResolutionDialog::ResolutionDialog(const QSize& def, QWidget *parent)
 
 ResolutionDialog::~ResolutionDialog()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
 }
 
 

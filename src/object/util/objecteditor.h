@@ -95,7 +95,7 @@ public slots:
     /** Moves the @p object to a new position under @p newParent.
         If the object's current parent and @p newParent are the same,
         this call simplifies to setObjectIndex() */
-    bool moveObject(Object * object, Object * newParent, int newIndex);
+    bool moveObject(Object * object, Object * newParent, int newIndex = -1);
 
     /** Changes the objects name, emits objectNameChanged() */
     void setObjectName(Object * object, const QString& name);

@@ -18,9 +18,10 @@
 #include "object/object.h"
 #include "object/objectfactory.h"
 #include "object/param/parameter.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
-#include "object/trackfloat.h"
 #include "object/param/modulatorfloat.h"
+#include "object/trackfloat.h"
 #include "io/error.h"
 
 namespace MO {
@@ -171,6 +172,49 @@ void ObjectMenu::setEnabled(QMenu *menu, const QStringList& ids, bool enable)
     }
 }
 
+QMenu * ObjectMenu::createParameterMenu(Object *o, QWidget *parent)
+{
+    return createParameterMenu(o, parent, [](Parameter*){ return true; } );
+}
+
+QMenu * ObjectMenu::createParameterMenu(Object *o, QWidget *parent,
+                                        std::function<bool(Parameter*)> selector)
+{
+    QMenu * menu = new QMenu(parent);
+
+    // sort into groups
+    QMultiMap<QString, Parameter*> params;
+
+    for (Parameter * p : o->params()->parameters())
+        params.insert(p->groupId(), p);
+
+    QMenu * sub = menu;
+
+    QString curId = "-1";
+    for (auto i = params.begin(); i != params.end(); ++i)
+    {
+        // create new group
+        if (curId != i.key())
+        {
+            curId = i.key();
+
+            if (!curId.isEmpty())
+            {
+                sub = new QMenu(curId, menu);
+                menu->addMenu(sub);
+            }
+        }
+
+        QAction * a = new QAction(i.value()->name(), menu);
+        a->setData(i.value()->idName());
+        a->setEnabled(selector(i.value()));
+        sub->addAction(a);
+    }
+
+    return menu;
+}
+
+
 
 
 QMenu * ObjectMenu::createColorMenu(QWidget *parent)
@@ -246,6 +290,7 @@ QMenu * ObjectMenu::createColorMenu(QWidget *parent)
 
     return menu;
 }
+
 
 
 } // namespace GUI

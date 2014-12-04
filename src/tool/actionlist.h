@@ -33,6 +33,8 @@ public:
 
     QAction * addTitle(const QString& name, QObject * parent);
 
+    QAction * addMenu(QMenu * menu, QObject * parent);
+
 };
 
 

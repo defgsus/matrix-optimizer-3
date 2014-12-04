@@ -91,14 +91,19 @@ public slots:
     /** Creates the edit menu, for scene or for selected items */
     void popup(const QPoint &gridPos);
 
-    void popup(AudioObjectConnection*);
-    void popup(Modulator*);
+    /** Popup for connection */
+    void popup(MO::AudioObjectConnection*);
+    /** Popup for modulator */
+    void popup(MO::Modulator*);
+    /** Popup with parameter select to create a modulation.
+        @p dropPoint is in scene coords */
+    void popupObjectDrag(MO::Object * source, MO::Object * goal, const QPointF &dropPoint);
 
     /** Focus and select the item for the object. */
-    void setFocusObject(Object * o);
+    void setFocusObject(MO::Object * o);
 
     /** Starts the connection drag mode */
-    void startConnection(AudioObject * o, uint outChannel = 0);
+    void startConnection(MO::AudioObject * o, uint outChannel = 0);
 
     // ------------------- clipboard ------------------
 

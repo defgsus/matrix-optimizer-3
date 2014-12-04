@@ -44,7 +44,7 @@ HelpDialog::HelpDialog(const QString &url, QWidget *parent)
 
 HelpDialog::~HelpDialog()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
 }
 
 void HelpDialog::run(const QString &url)

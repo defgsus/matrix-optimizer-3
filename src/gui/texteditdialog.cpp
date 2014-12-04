@@ -16,6 +16,7 @@
 #include "texteditdialog.h"
 #include "widget/equationeditor.h"
 #include "helpdialog.h"
+#include "io/settings.h"
 
 namespace MO {
 namespace GUI {
@@ -47,6 +48,12 @@ TextEditDialog::TextEditDialog(TextType textType, QWidget *parent) :
     setWindowTitle(tr("editor"));
 
     setMinimumSize(320, 200);
+
+    // --- load user settings ---
+
+    settings->restoreGeometry(this);
+
+
     createWidgets_();
 }
 
@@ -58,6 +65,7 @@ TextEditDialog::TextEditDialog(const QString &text, TextType textType, QWidget *
 
 TextEditDialog::~TextEditDialog()
 {
+    settings->storeGeometry(this);
     delete p_;
 }
 
@@ -117,6 +125,7 @@ void TextEditDialog::createWidgets_()
         {
             case TT_PLAIN_TEXT:
                 p_->plainText = new QTextEdit(this);
+                p_->plainText->setTabChangesFocus(false);
                 lv->addWidget(p_->plainText);
                 connect(p_->plainText, &QTextEdit::textChanged, [=]()
                 {
@@ -126,6 +135,7 @@ void TextEditDialog::createWidgets_()
 
             case TT_EQUATION:
                 p_->equEdit = new EquationEditor(this);
+                p_->equEdit->setTabChangesFocus(false);
                 lv->addWidget(p_->equEdit);
                 connect(p_->equEdit, &EquationEditor::equationChanged, [=]()
                 {

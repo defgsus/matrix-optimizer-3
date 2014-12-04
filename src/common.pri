@@ -205,7 +205,6 @@ HEADERS += \
     src/io/helpexporterlatex.h \
     src/io/isclient.h \
     src/engine/serverengine.h \
-    src/object/oscillatorobject.h \
     src/object/util/objecteditor.h \
     src/types/time.h \
     src/object/param/modulatoraudio.h \
@@ -394,7 +393,6 @@ SOURCES += \
     src/io/isclient.cpp \
     src/main.cpp \
     src/engine/serverengine.cpp \
-    src/object/oscillatorobject.cpp \
     src/object/util/objecteditor.cpp \
     src/object/param/modulatoraudio.cpp \
     src/audio/tool/audiobuffer.cpp \

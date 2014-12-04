@@ -43,12 +43,12 @@ public:
 #endif
 
     /** Stores the geometry provided the QWidget::objectName() is set */
-    void saveGeometry(QWindow *);
+    void storeGeometry(QWindow *);
     /** Restores the geometry provided the QWidget::objectName() is set */
     bool restoreGeometry(QWindow *);
 
     /** Stores the geometry provided the QWidget::objectName() is set */
-    void saveGeometry(QWidget *);
+    void storeGeometry(QWidget *);
     /** Restores the geometry provided the QWidget::objectName() is set */
     bool restoreGeometry(QWidget *);
 

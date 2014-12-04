@@ -176,7 +176,7 @@ void EquationDisplayDialog::updateModeBox_()
 
 void EquationDisplayDialog::saveSettings_()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
     settings->setValue("EquEdit/equation", display_->equation());
     settings->setValue("EquEdit/paintmode", display_->paintMode());
     settings->setValue("EquEdit/x0", spinX0_->value());

@@ -71,10 +71,10 @@ public:
     /** Returns the scene-global position in grid coordinates */
     QPoint globalGridPos() const;
 
-    /** Translates a global point into grid coordinates */
+    /** Translates a global point into global grid coordinates */
     QPoint mapToGrid(const QPointF&) const;
 
-    /** Translates grid coordinates into global coordinates */
+    /** Translates global grid coordinates into global coordinates */
     QPointF mapFromGrid(const QPoint&) const;
 
     /** Returns the pixel rectangle */
@@ -98,7 +98,7 @@ public:
     bool isHover() const;
 
     /** Returns the item for the given grid-pos, or NULL */
-    AbstractObjectItem * itemInGrid(const QPoint& gridpos) const;
+    AbstractObjectItem * childItemAt(const QPoint& gridpos) const;
 
     QRectF childrenBoundingRect(bool checkVisibilty);
     using QGraphicsItem::childrenBoundingRect;
@@ -143,6 +143,10 @@ protected:
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value) Q_DECL_OVERRIDE;
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;
+
+    virtual void dragEnterEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dropEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
 
     virtual void mousePressEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;

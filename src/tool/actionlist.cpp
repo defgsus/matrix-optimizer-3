@@ -8,6 +8,8 @@
     <p>created 7/9/2014</p>
 */
 
+#include <QMenu>
+
 #include "actionlist.h"
 
 namespace MO {
@@ -60,5 +62,15 @@ QAction * ActionList::addTitle(const QString& name, QObject * parent)
     append(a);
     return a;
 }
+
+QAction * ActionList::addMenu(QMenu *menu, QObject * parent)
+{
+    QAction * a = new QAction(menu->title(), parent);
+    a->setMenu(menu);
+    append(a);
+    return a;
+}
+
+
 
 } // namespace MO

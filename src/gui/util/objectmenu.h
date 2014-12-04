@@ -43,6 +43,17 @@ public:
         @p enable */
     static void setEnabled(QMenu * menu, const QStringList& ids, bool enable);
 
+    /** Creates a menu with all parameters of the object in their groups.
+        The QAction::data() contains the Parameter::idName(). */
+    static QMenu * createParameterMenu(Object * o, QWidget * parent = 0);
+
+    /** Creates a menu with all parameters of the object in their groups.
+        @p selector enables or disables certain parameters.
+        The QAction::data() contains the Parameter::idName(). */
+    static QMenu * createParameterMenu(Object * o, QWidget * parent,
+                                       std::function<bool(Parameter*)> selector);
+
+
     /** Creates a menu to select a color.
         The QColor is stored in QAction::data() */
     static QMenu * createColorMenu(QWidget * parent = 0);

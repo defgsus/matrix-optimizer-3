@@ -146,7 +146,7 @@ void Settings::restoreGeometry(QMainWindow * win)
         win->restoreState( getValue(key).toByteArray() );
 }
 */
-void Settings::saveGeometry(QWindow * win)
+void Settings::storeGeometry(QWindow * win)
 {
     MO_DEBUG_GUI("Settings::saveGeometry(" << win << ", " << win->geometry());
 
@@ -211,7 +211,7 @@ bool Settings::restoreGeometry(QWindow * win)
     return found;
 }
 
-void Settings::saveGeometry(QWidget * win)
+void Settings::storeGeometry(QWidget * win)
 {
     MO_DEBUG_GUI("Settings::saveGeometry(" << win << ", " << win->geometry()
              << ", " << win->frameGeometry() << ")");
