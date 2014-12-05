@@ -98,7 +98,7 @@ void MainWindow::createWidgets_()
 
             // --- left container ----
             auto lv = new QVBoxLayout();
-            l0->addLayout(lv);
+            l0->addLayout(lv, 1);
             //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
                 // sequencer
@@ -109,10 +109,9 @@ void MainWindow::createWidgets_()
 
                 // object graph
                 lv->addWidget(controller_->objectGraphView());
-                //controller_->objectGraphView()->setSizePolicy(
-                //            QSizePolicy::Expanding, QSizePolicy::Minimum);
-                //controller_->objectGraphView()->viewport()->setSizePolicy(
-                //            QSizePolicy::Expanding, QSizePolicy::Minimum);
+                controller_->objectGraphView()->setMinimumWidth(320);
+                controller_->objectGraphView()->setSizePolicy(
+                            QSizePolicy::Expanding, QSizePolicy::Expanding);
 
                 //spacer2_ = new Spacer(Qt::Horizontal, this);
                 //lv->addWidget(spacer2_);
@@ -140,10 +139,10 @@ void MainWindow::createWidgets_()
 
                 // object (parameter) editor
                 ll->addWidget(controller_->objectView());
-                controller_->objectView()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+                controller_->objectView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
 
-        spacer_->setWidgets(rightContainer, controller_->sequencer());
+        spacer_->setWidgets(controller_->objectGraphView(), rightContainer, false);
         //spacer2_->setWidgets(sequencer_, seqFloatView_);
 
 

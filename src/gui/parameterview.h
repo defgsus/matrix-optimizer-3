@@ -67,6 +67,10 @@ private slots:
     void onSequenceChanged(MO::Sequence *);
     void updateWidgetValue_(MO::Parameter*);
 
+protected:
+
+    void resizeEvent(QResizeEvent *);
+
 private:
 
     GroupWidget * getGroupWidget_(const Parameter*);
