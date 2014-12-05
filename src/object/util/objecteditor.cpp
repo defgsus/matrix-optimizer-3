@@ -262,6 +262,14 @@ void ObjectEditor::setParameterValue(ParameterTimeline1D *p, const MATH::Timelin
     setParameterVal(this, p, v);
 }
 
+void ObjectEditor::setParameterVisibleInGraph(Parameter * p, bool enbale)
+{
+    if (enbale != p->isVisibleInGraph())
+    {
+        p->setVisibleGraph(enbale);
+        emit parameterVisibilityChanged(p);
+    }
+}
 
 void ObjectEditor::addModulator(Parameter *p, const QString &idName)
 {

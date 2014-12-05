@@ -71,7 +71,7 @@ void MVerbAO::deserialize(IO::DataStream & io)
 
 void MVerbAO::createParameters()
 {
-    params()->beginParameterGroup("osc", tr("Filter"));
+    params()->beginParameterGroup("_mverb", tr("Reverb"));
 
         MVERB::MVerb<F32> temp;
         temp.reset();

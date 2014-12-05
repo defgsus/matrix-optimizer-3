@@ -572,6 +572,12 @@ void Scene::updateSampleRate_()
 
 // -------------------- parameter ----------------------------
 
+void Scene::notifyParameterVisibility(Parameter *p)
+{
+    if (editor_)
+        emit editor_->parameterVisibilityChanged(p);
+    emit parameterVisibilityChanged(p);
+}
 
 // --------------------- tracks ------------------------------
 

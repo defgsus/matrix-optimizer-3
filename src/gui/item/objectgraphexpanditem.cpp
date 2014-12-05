@@ -14,6 +14,7 @@
 #include "objectgraphexpanditem.h"
 #include "abstractobjectitem.h"
 #include "gui/util/objectgraphsettings.h"
+#include "object/object.h"
 #include "io/log.h"
 
 namespace MO {
@@ -26,6 +27,8 @@ ObjectGraphExpandItem::ObjectGraphExpandItem(AbstractObjectItem *parent)
 {
     setAcceptHoverEvents(true);
     setCursor(QCursor(Qt::ArrowCursor));
+
+    setToolTip(QObject::tr("expand/collapse %1").arg(parent->object()->name()));
 }
 
 void ObjectGraphExpandItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)

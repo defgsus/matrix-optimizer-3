@@ -12,6 +12,7 @@
 
 #include "objectgraphsettings.h"
 #include "gui/item/abstractobjectitem.h"
+#include "gui/item/objectgraphconnectitem.h"
 #include "object/object.h"
 #include "object/clip.h"
 #include "object/audioobject.h"
@@ -40,6 +41,11 @@ QSize ObjectGraphSettings::gridSize()
 {
     //return QSize(64, 64);
     return QSize(54, 54);
+}
+
+int ObjectGraphSettings::connectorsPerGrid()
+{
+    return gridSize().height() / 18;
 }
 
 QSize ObjectGraphSettings::iconSize()
@@ -93,9 +99,14 @@ QColor ObjectGraphSettings::colorOutline(const Object * o, bool sel)
         c = static_cast<const Clip*>(o)->color();
 
     if (sel)
-        c = c.lighter(180);
+        c = c.lighter(150);
 
     return c;
+}
+
+QColor ObjectGraphSettings::colorObjectText(const Object *)
+{
+    return Qt::white;
 }
 
 QPen ObjectGraphSettings::penOutline(const Object * o, bool sel)
@@ -119,6 +130,24 @@ QBrush ObjectGraphSettings::brushOutline(const Object *o, bool selected)
 
     return QBrush(c);
 }
+
+
+QBrush ObjectGraphSettings::brushConnector(ObjectGraphConnectItem * i)
+{
+    int hue = -1;
+    if (i->isAudioConnector())
+        hue = 0;
+    if (i->isParameter())
+        hue = 120;
+    int sat = hue == -1 ? 0 : 100;
+    int bright = 150;
+
+    if (i->isHovered())
+        bright += 50;
+
+    return QBrush(QColor::fromHsl(hue, sat, bright));
+}
+
 
 QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool sel, bool active)
 {
@@ -161,7 +190,12 @@ QPen ObjectGraphSettings::penSelectionFrame()
     return p;
 }
 
-
+QFont ObjectGraphSettings::fontConnector()
+{
+    QFont f;
+    f.setPointSizeF(8);
+    return f;
+}
 
 
 
@@ -196,7 +230,7 @@ QPainterPath ObjectGraphSettings::pathWire(const QPointF &from, const QPointF &t
                  to.y() + p2.y);
 #else // arrow head
     shape.lineTo(to + QPointF(-5,-5));
-    shape.lineTo(to + QPointF(-5,5));
+    shape.lineTo(to + QPointF(-5, 5));
 #endif
     shape.lineTo(to);
 

@@ -59,6 +59,9 @@ public:
     /** Returns true if the parameter should be visible in the ParameterView */
     bool isVisible() const { return isVisible_; }
 
+    /** Returns true if the parameter should be visible in the ObjectGraphView */
+    bool isVisibleInGraph() const { return isVisibleGraph_; }
+
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }
@@ -68,7 +71,10 @@ public:
 
     void setGroup(const QString& id, const QString& name) { groupId_ = id; groupName_ = name; }
 
+    /** Notifies scene (XXX need to refacture into ObjectEditor) */
     void setVisible(bool visible);
+    /** Sets the flag for displaying the parameter in the ObjectGraphView */
+    void setVisibleGraph(bool visible) { isVisibleGraph_ = visible; }
 
     // ------------ modulators ------------------
 
@@ -127,7 +133,7 @@ private:
             groupId_, groupName_;
 
     bool isEditable_, isModulateable_,
-         isVisible_;
+         isVisible_, isVisibleGraph_;
 
     //QList<QString> modulatorIds_;
 

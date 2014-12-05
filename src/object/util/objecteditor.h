@@ -60,6 +60,9 @@ signals:
     /** A parameter has been changed with setParameterValue() */
     void parameterChanged(MO::Parameter*);
 
+    /** A parameters visibility has changed (with isVisible() or isVisibleInGraph()) */
+    void parameterVisibilityChanged(MO::Parameter*);
+
     /** A sequence has been changed somehow */
     void sequenceChanged(MO::Sequence*);
 
@@ -108,6 +111,8 @@ public slots:
     void setParameterValue(MO::ParameterFilename *, const QString& value);
     void setParameterValue(MO::ParameterText *, const QString& value);
     void setParameterValue(MO::ParameterTimeline1D *, const MATH::Timeline1D& value);
+
+    void setParameterVisibleInGraph(MO::Parameter *, bool enbale);
 
     // ----------- audio cons ------------------
 

@@ -222,7 +222,8 @@ HEADERS += \
     src/model/objectmimedata.h \
     src/object/audio/mverbao.h \
     src/audio/3rd/MVerb.h \
-    src/object/audio/fftao.h
+    src/object/audio/fftao.h \
+    src/audio/tool/resamplebuffer.h
 
 SOURCES += \
     src/math/timeline1d.cpp \

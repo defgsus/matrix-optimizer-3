@@ -159,8 +159,7 @@ public:
     // --------- parameters --------------------
 
     /** Used by Parameter to emit a parameterVisibilityChanged() */
-    void notifyParameterVisibility(Parameter * p)
-        { emit parameterVisibilityChanged(p); }
+    void notifyParameterVisibility(Parameter * p);
 
 signals:
 

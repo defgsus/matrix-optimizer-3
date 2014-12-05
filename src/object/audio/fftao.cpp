@@ -10,12 +10,14 @@
 
 #include "fftao.h"
 #include "audio/tool/audiobuffer.h"
+#include "audio/tool/resamplebuffer.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
 #include "math/fft.h"
 #include "io/datastream.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -29,6 +31,8 @@ class FftAO::Private
         * paramType;
 
     std::vector<MATH::Fft<F32>> ffts;
+    std::vector<AUDIO::ResampleBuffer<F32>> inbufs, outbufs;
+    std::vector<size_t> writtenOut;
 };
 
 FftAO::FftAO(QObject *parent)
@@ -78,18 +82,26 @@ void FftAO::setNumberThreads(uint count)
     AudioObject::setNumberThreads(count);
 
     p_->ffts.resize(count);
+    p_->inbufs.resize(count);
+    p_->outbufs.resize(count);
+    p_->writtenOut.resize(count);
 }
 
 void FftAO::setBufferSize(uint bufferSize, uint thread)
 {
     AudioObject::setBufferSize(bufferSize, thread);
 
-    p_->ffts[thread].setSize(bufferSize);
+    // XXX Not called yet,
+    // need new concept for buffersize signal from AudioEngine
+    p_->ffts[thread].setSize(1024);
+    p_->inbufs[thread].setSize(1024);
+    p_->outbufs[thread].setSize(bufferSize);
+    p_->writtenOut[thread] = 0;
 }
 
 void FftAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
                                 const QList<AUDIO::AudioBuffer *> &outputs,
-                                uint , SamplePos , uint thread)
+                                uint bSize, SamplePos pos, uint thread)
 {
 //    const Double time = sampleRateInv() * pos;
 
@@ -97,17 +109,60 @@ void FftAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
 
     // update filter
     MATH::Fft<F32> * fft = &p_->ffts[thread];
+    AUDIO::ResampleBuffer<F32>
+            * inbuf = &p_->inbufs[thread],
+            * outbuf = &p_->outbufs[thread];
+
+    // !!! THIS IS ILLEGAL (only debugging here)
+    if (outbuf->blockSize() != bSize)
+        outbuf->setSize(bSize);
 
     AUDIO::AudioBuffer::process(inputs, outputs,
-    [fft, forward](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+    [=](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
-        in->readBlock(fft->buffer());
-        if (forward)
-            fft->fft();
-        else
-            fft->ifft();
-        out->writeBlock(fft->buffer());
-        //filter->process(in->readPointer(), out->writePointer(), out->blockSize());
+        MO_DEBUG(idName() << " pos=" << pos);
+        size_t read = 0, written = 0;
+        bool dofft = true;
+        do
+        {
+            // copy partial or whole input buffer
+            read += inbuf->writeBlock(
+                        in->readPointer() + read, in->blockSize() - read);
+
+            MO_DEBUG("fft read=" << read << ", \twrit=" << written << ", \tin-left=" << inbuf->left() << ", \tout-left=" << outbuf->left());
+
+            // perform fft
+            if (inbuf->left() == 0 && dofft)
+            {
+                MO_DEBUG("FFT");
+                inbuf->readBlock(fft->buffer());
+                if (forward)
+                    fft->fft();
+                else
+                    fft->ifft();
+
+                dofft = false;
+            }
+
+            // send one fft (part) to output
+
+            // chop to output size
+            written += outbuf->writeBlock(
+                            fft->buffer() + written, fft->size() - written);
+
+            // and eventually send away
+            if (outbuf->left() == 0)
+            {
+                MO_DEBUG("OUT");
+                outbuf->readBlock(out->writePointer());
+            }
+
+        }
+        // make sure we insert all of input buffer
+        while (read < in->blockSize()
+               // and write one output buffer
+               && written < out->blockSize());
+
     });
 }
 

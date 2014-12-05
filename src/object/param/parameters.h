@@ -45,6 +45,9 @@ public:
     /** Returns the list of parameters for this object */
     const QList<Parameter*>& parameters() const { return parameters_; }
 
+    /** Returns a list of parameters that are visible in the ObjectGraphView */
+    QList<Parameter*> getVisibleGraphParameters() const;
+
     /** Returns the parameter with the given id, or NULL. */
     Parameter * findParameter(const QString& id);
 

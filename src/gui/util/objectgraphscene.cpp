@@ -89,9 +89,11 @@ public:
     void addConItemMap(Object *, AudioConnectionItem *);
     /// Recursively get the item below @p localGridPos
     AbstractObjectItem * childItemAt(AbstractObjectItem * parent, const QPoint& localGridPos);
-    void raiseModItems(AbstractObjectItem*); ///< raise all ModulatorItems of the item and it's childs
-    /// Resizes the items to fit their children and updates cable positions
-    void resolveLayout();
+    /// Raises all ModulatorItems of the item and it's childs
+    void raiseModItems(AbstractObjectItem*);
+    /** Resizes the items to fit their children and updates cable positions.
+        Also updates the connectors on each module */
+    void resolveLayout(bool updateConnections = false);
 
     void clearActions();
     void showPopup(); ///< Runs popup after actions have been created
@@ -194,6 +196,8 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onModulatorDeleted_()));
             connect(p_->editor, SIGNAL(audioConnectionsChanged()),
                     this, SLOT(onConnectionsChanged_()));
+            connect(p_->editor, SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
+                    this, SLOT(onParameterVisibilityChanged_(MO::Parameter*)));
 
         }
     }
@@ -325,7 +329,6 @@ void ObjectGraphScene::Private::createModulatorItems(Object *root)
 void ObjectGraphScene::Private::addModItem(Modulator * m)
 {
     auto item = new ModulatorItem(m);
-    item->setToolTip(m->nameAutomatic());
     scene->addItem( item );
     item->setZValue(++zStack);
     item->updateShape(); // calc arrow shape
@@ -422,9 +425,9 @@ void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& local_
     createModulatorItems(o);
 }
 
-void ObjectGraphScene::Private::resolveLayout()
+void ObjectGraphScene::Private::resolveLayout(bool updateConnections)
 {
-    const auto list = scene->items();
+    auto list = scene->items();
 
     bool change = false;
 
@@ -434,6 +437,9 @@ void ObjectGraphScene::Private::resolveLayout()
     {
         auto o = static_cast<AbstractObjectItem *>(item);
 
+        if (updateConnections)
+            o->updateConnectors();
+
         // get dirty root items
         if (!o->isLayouted() && !o->parentItem())
         {
@@ -442,6 +448,8 @@ void ObjectGraphScene::Private::resolveLayout()
             change = true;
         }
     }
+
+    list = scene->items();
 
     // update modulator items
     if (change)
@@ -1215,7 +1223,7 @@ void ObjectGraphScene::onObjectDeleted_(const Object *)
 #endif
 }
 
-void ObjectGraphScene::onObjectMoved_(Object * o, Object *)
+void ObjectGraphScene::onObjectMoved_(Object * , Object *)
 {
     // XXX Something's not right with below code
     // segfaults in AbstractObjectItem::mapToScene
@@ -1257,6 +1265,10 @@ void ObjectGraphScene::onConnectionsChanged_()
     p_->recreateModulatorItems();
 }
 
+void ObjectGraphScene::onParameterVisibilityChanged_(Parameter * )
+{
+    p_->resolveLayout(true);
+}
 
 // ----------------------------------- editing -------------------------------------------
 

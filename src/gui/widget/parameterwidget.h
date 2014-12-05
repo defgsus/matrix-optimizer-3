@@ -47,6 +47,7 @@ public slots:
 
     void updateModulatorButton();
     void openModulationPopup();
+    void openVisibilityPopup();
 
     void updateWidgetValue();
 
@@ -69,7 +70,7 @@ private:
     Parameter * param_;
     ObjectEditor * editor_;
 
-    QToolButton * bmod_;
+    QToolButton * bmod_, *bvis_;
 
     SpinBox * spinInt_;
     DoubleSpinBox * spinFloat_;

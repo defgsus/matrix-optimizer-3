@@ -15,6 +15,8 @@
 
 namespace MO {
 class Object;
+class Parameter;
+class Modulator;
 namespace GUI {
 
 class ObjectGraphScene;
@@ -59,7 +61,7 @@ public:
 
     /** Returns the size of the item in grid-cells.
         This changes with expanded() state. */
-    const QSize& gridSize() const;
+    QSize gridSize() const;
 
     /** Returns the position in the grid,
         which is derived from the pos(). */
@@ -80,7 +82,18 @@ public:
     /** Returns the pixel rectangle */
     QRectF rect() const;
 
-    /** Returns the connector position in local coords */
+    /** Returns true if mouse is over item */
+    bool isHover() const;
+
+    /** Returns the item for the given grid-pos, or NULL */
+    AbstractObjectItem * childItemAt(const QPoint& gridpos) const;
+
+    QRectF childrenBoundingRect(bool checkVisibilty);
+    using QGraphicsItem::childrenBoundingRect;
+
+    // ---------- connector positions ------------------
+
+    /** Returns the audio connector position in local coords */
     QPointF inputPos(uint channel = 0) const;
 
     /** Returns the connector position in local coords */
@@ -94,14 +107,12 @@ public:
     QPointF globalOutputPos(uint channel = 0) const
         { return mapToScene(outputPos(channel)); }
 
-    /** Returns true if mouse is over item */
-    bool isHover() const;
+    /** Returns the parameter's position in local coords.
+        If the parameter is not visible some common place is returned. */
+    QPointF inputPos(Parameter * p) const;
 
-    /** Returns the item for the given grid-pos, or NULL */
-    AbstractObjectItem * childItemAt(const QPoint& gridpos) const;
-
-    QRectF childrenBoundingRect(bool checkVisibilty);
-    using QGraphicsItem::childrenBoundingRect;
+    /** Returns the position in local coords for outgoing modulation edges. */
+    QPointF outputPos(Modulator * p) const;
 
     /** Returns the channel of the input or output connectors for
         item-local position, or -1 */
@@ -122,6 +133,9 @@ public:
     void setLayoutDirty(bool dirty = true);
 
     // ----------------- layout stuff ------------------
+
+    /** Re-creates all connection items */
+    void updateConnectors();
 
     /** Recursively adjust all sizes to fit in the children */
     void adjustSizeToChildren();

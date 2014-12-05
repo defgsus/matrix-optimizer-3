@@ -148,6 +148,14 @@ void ParameterWidget::createWidgets_()
     if (!editor_)
         return;
 
+    // visible (in graph) button
+    bvis_ = new QToolButton(this);
+    l->addWidget(bvis_);
+    bvis_->setStatusTip(tr("Click to open the context menu for the visibility of the parameter in other views"));
+    bvis_->setFixedSize(butfs, butfs);
+    connect(bvis_, SIGNAL(pressed()),
+            this, SLOT(openVisibilityPopup()));
+
     // modulate button
     bmod_ = new QToolButton(this);
     l->addWidget(bmod_);
@@ -695,6 +703,15 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         });
 
 }
+
+void ParameterWidget::openVisibilityPopup()
+{
+    if (!editor_)
+        return;
+
+    editor_->setParameterVisibleInGraph(param_, !param_->isVisibleInGraph());
+}
+
 
 void ParameterWidget::updateWidgetValue()
 {

@@ -150,6 +150,7 @@ private slots:
     void onModulatorAdded_(MO::Modulator *);
     void onModulatorDeleted_();
     void onConnectionsChanged_();
+    void onParameterVisibilityChanged_(MO::Parameter*);
 
 protected:
 

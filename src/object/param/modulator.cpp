@@ -13,6 +13,7 @@
 #include "io/log.h"
 #include "io/error.h"
 #include "object/object.h"
+#include "object/param/parameter.h"
 
 namespace MO {
 
@@ -45,7 +46,14 @@ QString Modulator::nameAutomatic() const
 {
     QString n = modulator() ? modulator()->name() : "NULL";
     n += " -> ";
-    n += parent() ? parent()->name() : "NULL";
+    if (!parent())
+        n += "NULL";
+    else
+    {
+        n += parent()->name();
+        if (param_)
+            n += "." + param_->name();
+    }
     return n;
 }
 

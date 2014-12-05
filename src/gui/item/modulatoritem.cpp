@@ -86,6 +86,8 @@ ModulatorItem::ModulatorItem(Modulator * mod)
 {
     setCursor(QCursor(Qt::ArrowCursor));
     setFlag(ItemIsSelectable);
+
+    setToolTip(mod->nameAutomatic());
 }
 
 ObjectGraphScene * ModulatorItem::objectScene() const
@@ -130,12 +132,11 @@ void ModulatorItem::updatePos_()
 {
     // get positions of modulator and goal item
     if (from_)
-        fromPos_ = from_->mapToScene(QPointF(from_->rect().right(),
-                                             from_->rect().center().y()));
+        fromPos_ = from_->mapToScene(from_->outputPos(mod_));
     if (to_)
-        toPos_ = to_->mapToScene(QPointF(to_->rect().left(), to_->rect().center().y()));
+        toPos_ = to_->mapToScene(to_->inputPos(mod_->parameter()));
 
-    // min/max rect
+    // bounding rect of the two positions
     rect_.setLeft(   std::min(fromPos_.x(), toPos_.x()) );
     rect_.setRight(  std::max(fromPos_.x(), toPos_.x()) );
     rect_.setTop(    std::min(fromPos_.y(), toPos_.y()) );

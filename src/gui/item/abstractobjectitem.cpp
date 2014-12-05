@@ -27,6 +27,7 @@
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "object/audio/audiooutao.h"
+#include "object/param/parameters.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
 #include "gui/util/scenesettings.h"
@@ -52,18 +53,22 @@ public:
           dragging      (false),
           size          (3, 3), // expanded size minimum
           unexpandedSize(1, 1),
+          minimumSize   (1, 1),
           itemExp       (0),
           isMouseDown   (false)
     { }
 
-    void updateConnectors();
+    void createConnectors();
+    void updateConnectorPositions();
+
 
     AbstractObjectItem * item; ///< parent item class
     Object * object;
     bool expanded, hover, dragHover, layouted, dragging;
     QPoint pos; ///< pos in grid
     QSize size, ///< size in grid coords
-        unexpandedSize;
+        unexpandedSize,
+        minimumSize;
     QIcon icon;
     QPixmap iconPixmap;
     QBrush brushBack, brushBackSel;
@@ -105,26 +110,10 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     setAcceptHoverEvents(true);
     setAcceptDrops(true);
     setFlag(ItemIsSelectable, true);
+    setFlag(ItemClipsChildrenToShape, true);
     setToolTip(object->name());
 
-    // input/output items
-    if (AudioObject * ao = qobject_cast<AudioObject*>(object))
-    {
-        setUnexpandedSize(QSize(1, 2));
-        if (ao->numAudioInputs() >= 0)
-            for (int i=0; i<ao->numAudioInputs(); ++i)
-                p_oi_->inputItems.append( new ObjectGraphConnectItem(i, ao->getInputName(i), this) );
-        else
-            p_oi_->inputItems.append( new ObjectGraphConnectItem(0, ao->getInputName(0), this) );
-
-        if (!qobject_cast<AudioOutAO*>(ao))
-        {
-            for (uint i=0; i<ao->numAudioOutputs(); ++i)
-                p_oi_->outputItems.append( new ObjectGraphConnectItem(i, this) );
-        }
-
-        p_oi_->updateConnectors();
-    }
+    p_oi_->createConnectors();
 }
 
 AbstractObjectItem::~AbstractObjectItem()
@@ -192,7 +181,7 @@ void AbstractObjectItem::setExpanded(bool enable)
             i->setVisible(enable);
 
     setLayoutDirty();
-    p_oi_->updateConnectors();
+    p_oi_->updateConnectorPositions();
 
     // bring to front
     if (enable)
@@ -453,9 +442,12 @@ QPoint AbstractObjectItem::globalGridPos() const
 }
 
 
-const QSize& AbstractObjectItem::gridSize() const
+QSize AbstractObjectItem::gridSize() const
 {
-    return isExpanded() ? p_oi_->size : p_oi_->unexpandedSize;
+    QSize s = isExpanded() ? p_oi_->size : p_oi_->unexpandedSize;
+
+    return QSize(std::max(s.width(),  p_oi_->minimumSize.width()),
+                 std::max(s.height(), p_oi_->minimumSize.height()));
 }
 
 void AbstractObjectItem::setGridPos(const QPoint &pos1)
@@ -494,7 +486,7 @@ void AbstractObjectItem::setGridSize(const QSize &size)
 
     p_oi_->size = size;
 
-    p_oi_->updateConnectors();
+    p_oi_->updateConnectorPositions();
 
     if (isExpanded())
     {
@@ -530,14 +522,91 @@ AbstractObjectItem * AbstractObjectItem::childItemAt(const QPoint& pos) const
 
 // --------------------------------------- layout ---------------------------------------------------
 
-void AbstractObjectItem::PrivateOI::updateConnectors()
+void AbstractObjectItem::PrivateOI::createConnectors()
 {
+    // visible parameters / modulator inputs
+    QList<Parameter*> params = object->params()->getVisibleGraphParameters();
+    for (Parameter * p : params)
+    {
+        inputItems.append( new ObjectGraphConnectItem(p, item) );
+    }
+
+    // audio input/output items
+    if (AudioObject * ao = qobject_cast<AudioObject*>(object))
+    {
+        item->setUnexpandedSize(QSize(1, 2));
+        if (ao->numAudioInputs() >= 0)
+            for (int i=0; i<ao->numAudioInputs(); ++i)
+                inputItems.append( new ObjectGraphConnectItem(i, ao->getInputName(i), item) );
+        else
+            inputItems.append( new ObjectGraphConnectItem(0, ao->getInputName(0), item) );
+
+        if (!qobject_cast<AudioOutAO*>(ao))
+        {
+            for (uint i=0; i<ao->numAudioOutputs(); ++i)
+                outputItems.append( new ObjectGraphConnectItem(i, item) );
+        }
+
+    }
+
+    int numCon = std::max(inputItems.size(), outputItems.size());
+
+    // set size accordingly to number of inputs
+    minimumSize.setWidth(numCon > 0 ? 2 : 1);
+    minimumSize.setHeight(numCon > 1 ? 2 : 1);
+    minimumSize.rheight() += numCon / ObjectGraphSettings::connectorsPerGrid();
+
+    updateConnectorPositions();
+}
+
+void AbstractObjectItem::PrivateOI::updateConnectorPositions()
+{
+    QRectF r(item->rect());
+
+    qreal top = 0;
+
+    if (item->gridSize().height() > 1)
+        top = ObjectGraphSettings::gridSize().height();
+
+    top += r.top();
+
+    qreal heightfac = (r.height() - top) / inputItems.size();
+
     for (int i=0; i<inputItems.size(); ++i)
-        inputItems[i]->setPos(item->inputPos(i) + QPointF(2,0));
+    {
+        inputItems[i]->setPos(r.left(), top + (i + 0.5) * heightfac);
+    }
 
     for (int i=0; i<outputItems.size(); ++i)
-        outputItems[i]->setPos(item->outputPos(i) - QPointF(2,0));
+    {
+        outputItems[i]->setPos(r.right(), top + (i + 0.5) * heightfac);
+    }
+
 }
+
+void AbstractObjectItem::updateConnectors()
+{
+    // clear previous items
+    for (auto i : p_oi_->inputItems)
+    {
+        scene()->removeItem(i);
+        delete i;
+    }
+    p_oi_->inputItems.clear();
+
+    for (auto i : p_oi_->outputItems)
+    {
+        scene()->removeItem(i);
+        delete i;
+    }
+    p_oi_->outputItems.clear();
+
+    // create new
+    p_oi_->createConnectors();
+
+    setLayoutDirty();
+}
+
 
 QRectF AbstractObjectItem::childrenBoundingRect(bool checkVisibilty)
 {
@@ -560,7 +629,8 @@ int AbstractObjectItem::channelForPosition(const QPointF &localPos)
     for (QGraphicsItem * c : list)
     if (c->isVisible() && c->type() == ObjectGraphConnectItem::Type)
         if (c->shape().contains(localPos - c->pos()))
-            return static_cast<ObjectGraphConnectItem*>(c)->channel();
+            if (static_cast<ObjectGraphConnectItem*>(c)->isAudioConnector())
+                return static_cast<ObjectGraphConnectItem*>(c)->channel();
     return -1;
 }
 
@@ -624,25 +694,39 @@ void AbstractObjectItem::adjustRightItems()
 
 QPointF AbstractObjectItem::inputPos(uint c) const
 {
-    const auto r = rect();
-    if (AudioObject * ao = qobject_cast<AudioObject*>(object()))
-        return QPointF(r.left(),
-                       r.top() + (c + 0.5) * r.height()
-                            / std::max(1, ao->numAudioInputs()));
-    else
-        return QPointF(r.left(), r.center().y());
+    for (auto i : p_oi_->inputItems)
+        if (i->isAudioConnector() && i->channel() == c)
+            return i->pos();
+
+    QRectF r(rect());
+    return QPointF(r.left(), 4);
 }
 
 
 QPointF AbstractObjectItem::outputPos(uint c) const
 {
-    const auto r = rect();
-    if (AudioObject * ao = qobject_cast<AudioObject*>(object()))
-        return QPointF(r.right(),
-                       r.top() + (c + 0.5) * r.height()
-                            / std::max(1u, ao->numAudioOutputs()));
-    else
-        return QPointF(r.right(), r.center().y());
+    for (auto i : p_oi_->outputItems)
+        if (i->isAudioConnector() && i->channel() == c)
+            return i->pos();
+
+    QRectF r(rect());
+    return QPointF(r.right(), 4);
+}
+
+QPointF AbstractObjectItem::inputPos(Parameter * p) const
+{
+    for (auto i : p_oi_->inputItems)
+        if (i->isParameter() && i->parameter() == p)
+            return i->pos();
+
+    QRectF r(rect());
+    return QPointF(r.left(), 4);
+}
+
+QPointF AbstractObjectItem::outputPos(Modulator *) const
+{
+    QRectF r(rect());
+    return QPointF(r.right(), r.bottom() - 4);
 }
 
 QRectF AbstractObjectItem::rect() const

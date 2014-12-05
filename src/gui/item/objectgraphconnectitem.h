@@ -14,6 +14,7 @@
 #include <QGraphicsItem>
 
 namespace MO {
+class Parameter;
 namespace GUI {
 
 class AbstractObjectItem;
@@ -27,7 +28,18 @@ public:
     ObjectGraphConnectItem(uint channel, AbstractObjectItem * parent);
     ObjectGraphConnectItem(uint channel, const QString& toolTip, AbstractObjectItem * parent);
 
+    ObjectGraphConnectItem(Parameter * , AbstractObjectItem * parent);
+
     uint channel() const { return channel_; }
+
+    Parameter * parameter() const { return param_; }
+
+    void setText(const QString&);
+
+    bool isAudioConnector() const { return !param_; }
+    bool isParameter() const { return param_; }
+
+    bool isHovered() const { return hovered_; }
 
     // ---------- QGraphicsItem interface --------------
 
@@ -40,12 +52,21 @@ protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent*);
 
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
 private:
 
     AbstractObjectItem * objectItem_;
 
     uint channel_;
+
+    Parameter * param_;
+
+    QGraphicsTextItem * text_;
+
+    bool hovered_;
 };
+
 
 } // namespace GUI
 } // namespace MO
