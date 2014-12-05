@@ -219,8 +219,9 @@ HEADERS += \
     src/object/util/objectdsppath.h \
     src/object/audio/filterao.h \
     src/math/transformationbuffer.h \
-    src/model/objectmimedata.h
-
+    src/model/objectmimedata.h \
+    src/object/audio/mverbao.h \
+    src/audio/3rd/MVerb.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -405,4 +406,5 @@ SOURCES += \
     src/engine/audioengine.cpp \
     src/object/util/objectdsppath.cpp \
     src/object/audio/filterao.cpp \
-    src/model/objectmimedata.cpp
+    src/model/objectmimedata.cpp \
+    src/object/audio/mverbao.cpp
