@@ -25,6 +25,7 @@
 #include "object/clipcontainer.h"
 #include "object/audioobject.h"
 #include "object/util/alphablendsetting.h"
+#include "object/util/audioobjectconnections.h"
 
 namespace MO {
 namespace GUI {
@@ -61,9 +62,11 @@ void ObjectInfoDialog::setObject(Object * o)
 {
     setWindowTitle(o->name());
 
+    Scene * scene = o->sceneObject();
+
     Double curTime = 0.0;
-    if (Scene * s = o->sceneObject())
-        curTime = s->sceneTime();
+    if (scene)
+        curTime = scene->sceneTime();
 
     std::stringstream s, s1;
     s << "<html><b>" << o->infoName() << "</b><br/>"
@@ -125,12 +128,21 @@ void ObjectInfoDialog::setObject(Object * o)
         s << "<p>" << tr("current transformation") << ":<br/>"
           << matrix2Html(o->transformation(MO_GFX_THREAD, 0)) << "</p>";
 
-    // ---------- audio unit -----------
+    // ---------- audio object -----------
 
     if (AudioObject * au = qobject_cast<AudioObject*>(o))
     {
         s << "<p>AudioObject:<br/>channels: "
           << au->numAudioInputs() << "/" << au->numAudioOutputs();
+        if (scene && scene->audioConnections())
+        {
+            auto list = scene->audioConnections()->getInputs(au);
+            for (auto c : list)
+                s << "\n<br/>" << c->from()->name() << " ->";
+            list = scene->audioConnections()->getOutputs(au);
+            for (auto c : list)
+                s << "\n<br/>-> " << c->to()->name();
+        }
         s  << "</p>";
     }
 

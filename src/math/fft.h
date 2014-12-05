@@ -55,7 +55,7 @@ public:
     // ------------ getter ----------------
 
     uint size() const { return buffer_.size(); }
-    uint half() const { return buffer_.size() >> 1; }
+    uint halfSize() const { return buffer_.size() >> 1; }
 
     /** Read access to the internal buffer.
         Contains size() real values and size() imaginary values. */

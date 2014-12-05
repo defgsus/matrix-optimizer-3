@@ -294,6 +294,7 @@ void Scene::deleteObject(Object *object)
 
         // remove audio connections
         audioConnections()->remove(object);
+        //audioConnections()->dump(std::cout);
 
         // get list of all objects that will be deleted
         dellist = object->findChildObjects<Object>(QString(), true);

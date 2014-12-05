@@ -47,6 +47,8 @@ private:
          p_numChannels_;
 };
 
+std::ostream& operator << (std::ostream& out, const AudioObjectConnection&);
+
 /** Container for holding the edges between AudioObjects */
 class AudioObjectConnections
 {

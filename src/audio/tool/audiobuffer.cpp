@@ -38,11 +38,31 @@ void AudioBuffer::setSize(size_t blockSize, size_t numBlocks)
         s = 0;
 }
 
-void AudioBuffer::readBlock(F32 *block, uint stepsize) const
+void AudioBuffer::readBlock(F32 *block, size_t stepsize) const
 {
     auto p = readPointer();
-    for (uint i = 0; i < blockSize(); ++i, block += stepsize, ++p)
+    for (size_t i = 0; i < blockSize(); ++i, block += stepsize, ++p)
         *block = *p;
+}
+
+void AudioBuffer::readBlockLength(F32 *block, size_t size) const
+{
+    MO_ASSERT(size < blockSize() * numBlocks(), size << " is out of range");
+
+    size_t j = 0;
+    size_t rp = p_readBlock_;
+    auto p = readPointer();
+    while (j < size)
+    {
+        // write current block
+        for (size_t i = 0; i < blockSize() && j < size; ++i, ++j)
+            block[j] = p[i];
+
+        // go backwards in time
+        rp = rp > 0 ? (rp - 1) : (p_numBlocks_ - 1);
+        p = &p_samples_[p_readBlock_ * p_blockSize_];
+    }
+
 }
 
 void AudioBuffer::bypass(const QList<AUDIO::AudioBuffer *> &inputs,

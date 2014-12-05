@@ -703,6 +703,10 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
                             p_->connectStartChannel, chan,
                             1);
             }
+            else
+            {
+                MO_WARNING("aoFrom/aoTo not found " << aoFrom << "/" << aoTo);
+            }
         }
         p_->action = Private::A_NONE;
         //update(sceneRect());
@@ -1192,8 +1196,11 @@ void ObjectGraphScene::onObjectAdded_(Object * o)
     p_->recreateModulatorItems();
 }
 
-void ObjectGraphScene::onObjectDeleted_(const Object *o)
+void ObjectGraphScene::onObjectDeleted_(const Object *)
 {
+#if 1
+    setRootObject(p_->root);
+#else
     // remove items and references
     auto item = itemForObject(o);
     if (item)
@@ -1205,6 +1212,7 @@ void ObjectGraphScene::onObjectDeleted_(const Object *o)
 
     // recreate all modulation items
     p_->recreateModulatorItems();
+#endif
 }
 
 void ObjectGraphScene::onObjectMoved_(Object * o, Object *)
@@ -1212,7 +1220,7 @@ void ObjectGraphScene::onObjectMoved_(Object * o, Object *)
     // XXX Something's not right with below code
     // segfaults in AbstractObjectItem::mapToScene
     //  here's the shortcut
-    setRootObject(o->rootObject());
+    setRootObject(p_->root);
 
 /*  // remove items and references of previous item
     auto item = itemForObject(o);
