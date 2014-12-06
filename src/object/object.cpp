@@ -577,6 +577,26 @@ Object * Object::findParentObject(int tflags) const
     return parentObject_->type() & tflags ? parentObject_ : parentObject_->findParentObject(tflags);
 }
 
+Object * Object::findCommonParentObject(Object *other) const
+{
+    // get list of parents
+    QList<Object*> par;
+    Object * o = parentObject();
+    while (o) { par << o; o = o->parentObject(); }
+
+    // get list of other's parents
+    QSet<Object*> opar;
+    o = other->parentObject();
+    while (o) { opar << o; o = o->parentObject(); }
+
+    // find commons
+    for (auto o : par)
+        if (opar.contains(o))
+            return o;
+
+    return 0;
+}
+
 bool Object::isSaveToAdd(Object *o, QString &error) const
 {
     if (!o)

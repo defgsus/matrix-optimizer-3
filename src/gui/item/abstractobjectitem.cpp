@@ -305,6 +305,7 @@ void AbstractObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 void AbstractObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 {
     p_oi_->hover = false;
+    p_oi_->dragHover = false;
     update();
 }
 
@@ -372,6 +373,8 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
             }
 
             p_oi_->dragging = true;
+            if (!isSelected())
+                setSelected(true);
         }
     }
 
@@ -555,7 +558,7 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     minimumSize.setWidth(numCon > 0 ? 2 : 1);
     minimumSize.setHeight(1);
     if (numCon)
-        minimumSize.rheight() += (numCon-1) / ObjectGraphSettings::connectorsPerGrid();
+        minimumSize.rheight() += 1 + (numCon-1) / ObjectGraphSettings::connectorsPerGrid();
 
     updateConnectorPositions();
 }
@@ -700,7 +703,7 @@ QPointF AbstractObjectItem::inputPos(uint c) const
             return i->pos();
 
     QRectF r(rect());
-    return QPointF(r.left(), 4);
+    return QPointF(r.left(), r.top() + 4);
 }
 
 
@@ -711,7 +714,7 @@ QPointF AbstractObjectItem::outputPos(uint c) const
             return i->pos();
 
     QRectF r(rect());
-    return QPointF(r.right(), 4);
+    return QPointF(r.right(), r.bottom() - 4);
 }
 
 QPointF AbstractObjectItem::inputPos(Parameter * p) const
@@ -721,7 +724,7 @@ QPointF AbstractObjectItem::inputPos(Parameter * p) const
             return i->pos();
 
     QRectF r(rect());
-    return QPointF(r.left(), 4);
+    return QPointF(r.left(), r.top() + 4);
 }
 
 QPointF AbstractObjectItem::outputPos(Modulator *) const
@@ -762,7 +765,7 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
     p->setPen(ObjectGraphSettings::penOutline(object(), isSelected()));
 
     const auto r = rect();
-    const qreal cornerRadius = (p_oi_->dragHover ? 0.01 : 0.1) *
+    const qreal cornerRadius = (p_oi_->dragHover ? 0.25 : 0.1) *
                         ObjectGraphSettings::gridSize().width();
 
     p->drawRoundedRect(r, cornerRadius, cornerRadius);

@@ -328,7 +328,10 @@ void ObjectGraphScene::Private::createModulatorItems(Object *root)
 
 void ObjectGraphScene::Private::addModItem(Modulator * m)
 {
-    auto item = new ModulatorItem(m);
+    // find parent for connection;
+    Object * parent = m->modulator()->findCommonParentObject(m->parent());
+
+    auto item = new ModulatorItem(m, scene->itemForObject(parent));
     scene->addItem( item );
     item->setZValue(++zStack);
     item->updateShape(); // calc arrow shape

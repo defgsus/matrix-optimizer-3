@@ -15,6 +15,7 @@
 
 namespace MO {
 class Parameter;
+class Object;
 namespace GUI {
 
 class AbstractObjectItem;
@@ -32,6 +33,8 @@ public:
 
     uint channel() const { return channel_; }
 
+    Object * object() const { return object_; }
+
     Parameter * parameter() const { return param_; }
 
     void setText(const QString&);
@@ -41,22 +44,29 @@ public:
 
     bool isHovered() const { return hovered_; }
 
+    bool acceptsModulator(Object *) const;
+
     // ---------- QGraphicsItem interface --------------
 
     virtual int type() const Q_DECL_OVERRIDE { return Type; }
 
 protected:
 
-    void hoverEnterEvent(QGraphicsSceneHoverEvent*);
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent*);
+    virtual void dragEnterEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dropEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
 
-    void mousePressEvent(QGraphicsSceneMouseEvent*);
+    void hoverEnterEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;
 
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void mousePressEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) Q_DECL_OVERRIDE;
 
 private:
 
     AbstractObjectItem * objectItem_;
+    Object * object_;
 
     uint channel_;
 
@@ -64,7 +74,7 @@ private:
 
     QGraphicsTextItem * text_;
 
-    bool hovered_;
+    bool hovered_, dragHovered_;
 };
 
 

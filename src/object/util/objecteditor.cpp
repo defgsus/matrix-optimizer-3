@@ -275,6 +275,8 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << idName << ")");
 
+    // XXX TODO: test sanity of connection!
+
     Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);

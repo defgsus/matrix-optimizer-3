@@ -345,6 +345,10 @@ public:
     /** Returns the first parent object matching given Type mask, or NULL */
     Object * findParentObject(int typeFlags) const;
 
+    /** Returns the common parent for this and @p other,
+        or NULL if at least one of them is root */
+    Object * findCommonParentObject(Object * other) const;
+
     /** Returns this object or the first parent that matches
         the Object::Type mask in @p typeFlags.
         If none matches, returns NULL */

@@ -33,6 +33,8 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
 
     setBackgroundBrush(ObjectGraphSettings::brushBackground());
     setSizeAdjustPolicy(AdjustToContents);
+
+    setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
 }
 
 void ObjectGraphView::setGuiSettings(SceneSettings * )
