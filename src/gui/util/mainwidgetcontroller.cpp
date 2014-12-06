@@ -735,6 +735,8 @@ void MainWidgetController::showClipView_(bool enable, Object * o)
 
 void MainWidgetController::showSequencer_(bool enable, Object * o)
 {
+    return; // XXX removed the sequencer for now, not working right anyway
+
     sequencer_->setVisible(enable);
     clipView_->setVisible(!enable);
     emit modeChanged();

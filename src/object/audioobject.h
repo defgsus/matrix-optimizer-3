@@ -33,6 +33,7 @@ public:
     uint numAudioOutputs() const;
 
     virtual QString getInputName(uint channel) const { return QString("in %1").arg(channel + 1); }
+    virtual QString getOutputName(uint channel) const { return QString("out %1").arg(channel + 1); }
 
     /** Processes dsp data.
         Inputs and outputs must have the same buffer size.

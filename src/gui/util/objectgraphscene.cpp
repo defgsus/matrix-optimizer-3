@@ -22,6 +22,7 @@
 #include "gui/item/abstractobjectitem.h"
 #include "gui/item/audioconnectionitem.h"
 #include "gui/item/modulatoritem.h"
+#include "gui/item/objectgraphconnectitem.h"
 #include "gui/geometrydialog.h"
 #include "gui/modulatordialog.h"
 #include "gui/util/objectgraphsettings.h"
@@ -102,6 +103,8 @@ public:
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts);
     void createObjectEditMenu(Object * o);
 
+    void endConnection();
+
     ObjectGraphScene * scene;
     Scene * root;
     ObjectEditor * editor;
@@ -117,7 +120,7 @@ public:
 
     ActionList actions;
     QPoint popupGridPos;
-    uint connectStartChannel;
+    ObjectGraphConnectItem * connectStartConnectItem;
     AbstractObjectItem * connectStartItem, * connectEndItem;
     QPointF connectStartPos, connectEndPos;
 };
@@ -172,6 +175,7 @@ void ObjectGraphScene::setRootObject(Object *root)
     p_->audioConItems.clear();
     p_->zStack = 0;
     p_->root = qobject_cast<Scene*>(root);
+    p_->action = Private::A_NONE;
 
     if (p_->root)
     {
@@ -188,6 +192,8 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onObjectDeleted_(const MO::Object*)));
             connect(p_->editor, SIGNAL(objectMoved(MO::Object*,MO::Object*)),
                     this, SLOT(onObjectMoved_(MO::Object*,MO::Object*)));
+            connect(p_->editor, SIGNAL(objectNameChanged(MO::Object*)),
+                    this, SLOT(onObjectNameChanged_(MO::Object*)));
             connect(p_->editor, SIGNAL(modulatorAdded(MO::Modulator*)),
                     this, SLOT(onModulatorAdded_(MO::Modulator*)));
             connect(p_->editor, SIGNAL(modulatorDeleted(const MO::Modulator*)),
@@ -672,18 +678,44 @@ void ObjectGraphScene::setFocusObject(Object *o)
 }
 
 
-void ObjectGraphScene::startConnection(AudioObject *o, uint outChannel)
+bool ObjectGraphScene::startConnection(ObjectGraphConnectItem * item)
 {
-    p_->connectStartItem = itemForObject(o);
+    p_->connectStartConnectItem = item;
+    p_->connectStartItem = itemForObject(item->object());
     if (!p_->connectStartItem)
-        return;
+        return false;
 
-    p_->connectStartChannel = outChannel;
-    p_->connectStartPos = p_->connectEndPos =
-            p_->connectStartItem->globalOutputPos(outChannel);
-    p_->connectEndItem = 0;
+    p_->connectStartPos = p_->connectEndPos = item->scenePos();
     p_->action = Private::A_DRAG_CONNECT;
+
     update();
+    return true;
+}
+
+void ObjectGraphScene::Private::endConnection()
+{
+    if (connectStartConnectItem->isAudioConnector())
+    {
+        auto aoFrom = qobject_cast<AudioObject*>(connectStartItem->object()),
+             aoTo = qobject_cast<AudioObject*>(connectEndItem->object());
+
+        if (aoFrom && aoTo)
+        {
+            // find channel of connector
+            int chan = connectEndItem->channelForPosition(
+                        connectEndItem->mapFromScene(connectEndPos));
+            if (chan >= 0)
+                editor->connectAudioObjects(
+                        aoFrom, aoTo,
+                        connectStartConnectItem->channel(), chan,
+                        1);
+        }
+        else
+        {
+            MO_WARNING("aoFrom/aoTo not found " << aoFrom << "/" << aoTo
+                       << ". Could not establish audio connection");
+        }
+    }
 }
 
 
@@ -700,28 +732,11 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     {
         if (event->button() == Qt::LeftButton
             && p_->connectEndItem && p_->connectStartItem)
-        {
-            auto aoFrom = qobject_cast<AudioObject*>(p_->connectStartItem->object()),
-                 aoTo = qobject_cast<AudioObject*>(p_->connectEndItem->object());
-            if (aoFrom && aoTo)
-            {
-                // find channel of connector
-                int chan = p_->connectEndItem->channelForPosition(
-                            p_->connectEndItem->mapFromScene(p_->connectEndPos));
-                if (chan >= 0)
-                p_->editor->connectAudioObjects(
-                            aoFrom, aoTo,
-                            p_->connectStartChannel, chan,
-                            1);
-            }
-            else
-            {
-                MO_WARNING("aoFrom/aoTo not found " << aoFrom << "/" << aoTo);
-            }
-        }
+            p_->endConnection();
         p_->action = Private::A_NONE;
         //update(sceneRect());
         update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-100,-100,100,100));
+        event->accept();
         return;
     }
 
@@ -1251,6 +1266,13 @@ void ObjectGraphScene::onObjectMoved_(Object * , Object *)
     p_->createObjectItem(o, pos);
 
     p_->recreateModulatorItems();*/
+}
+
+void ObjectGraphScene::onObjectNameChanged_(Object * o)
+{
+    auto item = itemForObject(o);
+    if (item)
+        item->updateLabels();
 }
 
 void ObjectGraphScene::onModulatorAdded_(Modulator *)

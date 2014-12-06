@@ -16,6 +16,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsItemGroup>
+#include <QGraphicsSimpleTextItem>
 #include <QCursor>
 #include <QDrag>
 #include <QMessageBox>
@@ -55,11 +56,13 @@ public:
           unexpandedSize(1, 1),
           minimumSize   (1, 1),
           itemExp       (0),
+          itemName      (0),
           isMouseDown   (false)
     { }
 
     void createConnectors();
     void updateConnectorPositions();
+    void layoutChildItems();
 
 
     AbstractObjectItem * item; ///< parent item class
@@ -73,6 +76,7 @@ public:
     QPixmap iconPixmap;
     QBrush brushBack, brushBackSel;
     ObjectGraphExpandItem * itemExp;
+    QGraphicsSimpleTextItem * itemName;
     QList<ObjectGraphConnectItem*>
         inputItems,
         outputItems;
@@ -100,6 +104,7 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     p_oi_->icon = ObjectFactory::iconForObject(p_oi_->object,
                                 ObjectFactory::colorForObject(object));
     p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
+    // 'expanded' triangle item
     p_oi_->itemExp = new ObjectGraphExpandItem(this);
     p_oi_->itemExp->setVisible(false);
     p_oi_->itemExp->setPos(ObjectGraphSettings::penOutlineWidth() * 3.,
@@ -114,6 +119,7 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     setToolTip(object->name());
 
     p_oi_->createConnectors();
+    p_oi_->layoutChildItems();
 }
 
 AbstractObjectItem::~AbstractObjectItem()
@@ -170,7 +176,7 @@ void AbstractObjectItem::setExpanded(bool enable)
 
     // set state
     p_oi_->expanded = enable;
-    // store in gui settings
+    // store gui state in object
     if (object())
         object()->setAttachedData(enable, Object::DT_GRAPH_EXPANDED);
 
@@ -180,10 +186,10 @@ void AbstractObjectItem::setExpanded(bool enable)
         if (i->type() >= T_BASE)
             i->setVisible(enable);
 
+    p_oi_->layoutChildItems();
     setLayoutDirty();
-    p_oi_->updateConnectorPositions();
 
-    // bring to front
+    // bring me to front
     if (enable)
         if (auto s = objectScene())
             s->toFront(this);
@@ -489,7 +495,7 @@ void AbstractObjectItem::setGridSize(const QSize &size)
 
     p_oi_->size = size;
 
-    p_oi_->updateConnectorPositions();
+    p_oi_->layoutChildItems();
 
     if (isExpanded())
     {
@@ -531,7 +537,7 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     QList<Parameter*> params = object->params()->getVisibleGraphParameters();
     for (Parameter * p : params)
     {
-        inputItems.append( new ObjectGraphConnectItem(p, item) );
+        inputItems.append( new ObjectGraphConnectItem(true, p, item) );
     }
 
     // audio input/output items
@@ -540,14 +546,14 @@ void AbstractObjectItem::PrivateOI::createConnectors()
         item->setUnexpandedSize(QSize(1, 2));
         if (ao->numAudioInputs() >= 0)
             for (int i=0; i<ao->numAudioInputs(); ++i)
-                inputItems.append( new ObjectGraphConnectItem(i, ao->getInputName(i), item) );
+                inputItems.append( new ObjectGraphConnectItem(true, i, ao->getInputName(i), item) );
         else
-            inputItems.append( new ObjectGraphConnectItem(0, ao->getInputName(0), item) );
+            inputItems.append( new ObjectGraphConnectItem(true, 0, ao->getInputName(0), item) );
 
         if (!qobject_cast<AudioOutAO*>(ao))
         {
             for (uint i=0; i<ao->numAudioOutputs(); ++i)
-                outputItems.append( new ObjectGraphConnectItem(i, item) );
+                outputItems.append( new ObjectGraphConnectItem(false, i, ao->getOutputName(i), item) );
         }
 
     }
@@ -561,6 +567,54 @@ void AbstractObjectItem::PrivateOI::createConnectors()
         minimumSize.rheight() += 1 + (numCon-1) / ObjectGraphSettings::connectorsPerGrid();
 
     updateConnectorPositions();
+}
+
+void AbstractObjectItem::PrivateOI::layoutChildItems()
+{
+    updateConnectorPositions();
+
+    const int boarder = ObjectGraphSettings::penOutlineWidth() + 2;
+    const auto
+            r = item->boundingRect(),
+            // inner space (right of expand item)
+            rr = QRectF(r.left() + ObjectGraphSettings::gridSize().width() * 0.3,
+                        r.top() + boarder,
+                        r.right() - boarder,
+                        r.bottom() - boarder);
+
+
+    if (item->gridSize().width() > 1)
+    {
+        // name label
+        if (!itemName)
+        {
+            itemName = new QGraphicsSimpleTextItem(object->name(), item);
+            itemName->setFont(ObjectGraphSettings::fontName());
+            itemName->setBrush(ObjectGraphSettings::brushText(object));
+        }
+
+        // center name label
+        itemName->setPos(QPointF(
+                            rr.left() + (rr.width() - itemName->boundingRect().width()) / 2,
+                            rr.top()
+                            ));
+
+        itemName->setVisible(true);
+    }
+    // when not large enough
+    else
+    {
+        if (itemName)
+            itemName->setVisible(false);
+    }
+}
+
+void AbstractObjectItem::updateLabels()
+{
+    if (p_oi_->itemName)
+        p_oi_->itemName->setText(object()->name());
+
+    p_oi_->layoutChildItems();
 }
 
 void AbstractObjectItem::PrivateOI::updateConnectorPositions()
@@ -608,6 +662,7 @@ void AbstractObjectItem::updateConnectors()
     // create new
     p_oi_->createConnectors();
 
+    p_oi_->layoutChildItems();
     setLayoutDirty();
 }
 

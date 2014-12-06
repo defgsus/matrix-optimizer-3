@@ -134,6 +134,9 @@ public:
 
     // ----------------- layout stuff ------------------
 
+    /** Currently updates the name label */
+    void updateLabels();
+
     /** Re-creates all connection items */
     void updateConnectors();
 

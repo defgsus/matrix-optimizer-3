@@ -24,6 +24,7 @@ class AudioObjectConnection;
 namespace GUI {
 
 class AbstractObjectItem;
+class ObjectGraphConnectItem;
 class SceneSettings;
 
 class ObjectGraphScene : public QGraphicsScene
@@ -103,7 +104,7 @@ public slots:
     void setFocusObject(MO::Object * o);
 
     /** Starts the connection drag mode */
-    void startConnection(MO::AudioObject * o, uint outChannel = 0);
+    bool startConnection(ObjectGraphConnectItem*);
 
     // ------------------- clipboard ------------------
 
@@ -147,6 +148,7 @@ private slots:
     void onObjectAdded_(MO::Object *);
     void onObjectDeleted_(const MO::Object *);
     void onObjectMoved_(MO::Object*, MO::Object * oldParent);
+    void onObjectNameChanged_(MO::Object *);
     void onModulatorAdded_(MO::Modulator *);
     void onModulatorDeleted_();
     void onConnectionsChanged_();

@@ -26,10 +26,9 @@ public:
 
     enum { Type = UserType + 2 };
 
-    ObjectGraphConnectItem(uint channel, AbstractObjectItem * parent);
-    ObjectGraphConnectItem(uint channel, const QString& toolTip, AbstractObjectItem * parent);
+    ObjectGraphConnectItem(bool isInput, uint channel, const QString& toolTip, AbstractObjectItem * parent);
 
-    ObjectGraphConnectItem(Parameter * , AbstractObjectItem * parent);
+    ObjectGraphConnectItem(bool isInput, Parameter * , AbstractObjectItem * parent);
 
     uint channel() const { return channel_; }
 
@@ -38,6 +37,9 @@ public:
     Parameter * parameter() const { return param_; }
 
     void setText(const QString&);
+
+    bool isInput() const { return isInput_; }
+    bool isOutput() const { return !isInput_; }
 
     bool isAudioConnector() const { return !param_; }
     bool isParameter() const { return param_; }
@@ -68,6 +70,7 @@ private:
     AbstractObjectItem * objectItem_;
     Object * object_;
 
+    bool isInput_;
     uint channel_;
 
     Parameter * param_;

@@ -42,8 +42,6 @@ public:
     static const QPainterPath& pathExpanded();
     static const QPainterPath& pathCollapsed();
 
-    static QColor colorObjectText(const Object * o);
-
     static QColor colorOutline(const Object *o, bool selected = false);
     static QPen penOutline(const Object *o, bool selected = false);
     static int penOutlineWidth();
@@ -54,7 +52,6 @@ public:
 
     static QBrush brushConnector(ObjectGraphConnectItem*);
 
-    static QPen penModulator(const Modulator *, bool highlight = false, bool selected = false, bool active = true);
     static QPen penAudioConnection(const AudioObjectConnection*,
                                    bool highlight = false, bool selected = false, bool active = true);
 
@@ -62,6 +59,15 @@ public:
 
     static QFont fontConnector();
 
+    // --- general text ---
+
+    static QColor colorText(const Object *);
+    static QBrush brushText(const Object * o) { return QBrush(colorText(o)); }
+    static QFont fontName();
+
+    // --- wires ------
+
+    static QPen penModulator(const Modulator *, bool highlight = false, bool selected = false, bool active = true);
     static QPainterPath pathWire(const QPointF& from, const QPointF& to);
 
 private:

@@ -28,11 +28,12 @@
 namespace MO {
 namespace GUI {
 
-ObjectGraphConnectItem::ObjectGraphConnectItem(uint channel, const QString& toolTip,
+ObjectGraphConnectItem::ObjectGraphConnectItem(bool isInput, uint channel, const QString& toolTip,
                                                AbstractObjectItem *object)
     : QGraphicsEllipseItem  (object),
       objectItem_           (object),
       object_               (object->object()),
+      isInput_              (isInput),
       channel_              (channel),
       param_                (0),
       text_                 (0),
@@ -51,14 +52,11 @@ ObjectGraphConnectItem::ObjectGraphConnectItem(uint channel, const QString& tool
     setText(toolTip);
 }
 
-ObjectGraphConnectItem::ObjectGraphConnectItem(uint channel, AbstractObjectItem *parent)
-    : ObjectGraphConnectItem(channel, QString::number(channel + 1), parent)
-{ }
-
-ObjectGraphConnectItem::ObjectGraphConnectItem(Parameter * p, AbstractObjectItem *object)
+ObjectGraphConnectItem::ObjectGraphConnectItem(bool isInput, Parameter * p, AbstractObjectItem *object)
     : QGraphicsEllipseItem  (object),
       objectItem_           (object),
       object_               (object->object()),
+      isInput_              (isInput),
       channel_              (0),
       param_                (p),
       text_                 (0),
@@ -91,7 +89,7 @@ void ObjectGraphConnectItem::setText(const QString & t)
                       rect().top() - text_->boundingRect().height()/3 );
 
         text_->setDefaultTextColor(
-                    ObjectGraphSettings::colorObjectText(objectItem_->object()));
+                    ObjectGraphSettings::colorText(objectItem_->object()));
 
         setFlag(ItemClipsToShape, false);
     }
@@ -173,8 +171,8 @@ void ObjectGraphConnectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 
 void ObjectGraphConnectItem::mousePressEvent(QGraphicsSceneMouseEvent *)
 {
-    if (auto ao = qobject_cast<AudioObject*>(objectItem_->object()))
-        objectItem_->objectScene()->startConnection(ao);
+    if (qobject_cast<AudioObject*>(objectItem_->object()))
+        objectItem_->objectScene()->startConnection(this);
 
     update();
 }

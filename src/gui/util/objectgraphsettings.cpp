@@ -104,10 +104,6 @@ QColor ObjectGraphSettings::colorOutline(const Object * o, bool sel)
     return c;
 }
 
-QColor ObjectGraphSettings::colorObjectText(const Object *)
-{
-    return Qt::white;
-}
 
 QPen ObjectGraphSettings::penOutline(const Object * o, bool sel)
 {
@@ -199,6 +195,26 @@ QFont ObjectGraphSettings::fontConnector()
 
 
 
+// ---------------------------- text ------------------------------
+
+QColor ObjectGraphSettings::colorText(const Object * o)
+{
+    auto c = ObjectFactory::colorForObject(o);
+    return QColor::fromHsl(c.hue(), c.saturation() / 2, 200);
+}
+
+
+QFont ObjectGraphSettings::fontName()
+{
+    QFont f;
+    f.setPointSizeF(10);
+    return f;
+}
+
+
+
+
+// ---------------------- modulators ------------------------------
 
 namespace {
 
