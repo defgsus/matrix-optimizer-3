@@ -114,7 +114,8 @@ void ParameterView::squeezeView_()
         g->layout()->activate();
     layout_->activate();
 
-    scrollArea_->widget()->setGeometry(QRect(0,0,width(),1));
+    scrollArea_->widget()->setGeometry(QRect(0,0,
+                            scrollArea_->viewport()->width(),1));
 
     scrollArea_->ensureWidgetVisible(scrollArea_->widget()->focusWidget());
 

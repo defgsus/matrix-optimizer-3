@@ -45,10 +45,10 @@ signals:
 
 public slots:
 
-    void updateModulatorButton();
     void openModulationPopup();
     void openVisibilityPopup();
 
+    void updateButtons();
     void updateWidgetValue();
 
 protected:

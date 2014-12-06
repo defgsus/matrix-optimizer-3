@@ -553,8 +553,9 @@ void AbstractObjectItem::PrivateOI::createConnectors()
 
     // set size accordingly to number of inputs
     minimumSize.setWidth(numCon > 0 ? 2 : 1);
-    minimumSize.setHeight(numCon > 1 ? 2 : 1);
-    minimumSize.rheight() += numCon / ObjectGraphSettings::connectorsPerGrid();
+    minimumSize.setHeight(1);
+    if (numCon)
+        minimumSize.rheight() += (numCon-1) / ObjectGraphSettings::connectorsPerGrid();
 
     updateConnectorPositions();
 }
