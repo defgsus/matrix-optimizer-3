@@ -390,12 +390,6 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
         const QPointF p = mapToParent(e->pos());
         QPoint newGrid = mapToGrid(p) - p_oi_->gridPosDown;
 
-        if (parentObjectItem())
-        {
-            newGrid.rx() = std::max(1, newGrid.x());
-            newGrid.ry() = std::max(1, newGrid.y());
-        }
-
         if (newGrid != gridPos())
         {
             // check if space is free
@@ -403,8 +397,10 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
             auto it = sc->objectItemAt(newGrid + (parentObjectItem()
                                        ? parentObjectItem()->globalGridPos()
                                        : QPoint(0,0)));
-            if (it == 0 || it == this || it == parentObjectItem())
-                sc->setGridPos(this, newGrid);
+            if (it == 0 || it == this || object()->hasParentObject(it->object()))
+            {
+                setGridPos(newGrid);
+            }
         }
 
     }

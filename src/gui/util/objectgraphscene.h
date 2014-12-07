@@ -80,9 +80,6 @@ public slots:
         (re-)initializes the QGraphicsScene */
     void setRootObject(Object * root);
 
-    /** Moves the given item to the given position */
-    void setGridPos(AbstractObjectItem *, const QPoint& gridPos);
-
     /** Calls update for all ModulatorItems connected to the given item */
     void repaintModulators(AbstractObjectItem *);
 

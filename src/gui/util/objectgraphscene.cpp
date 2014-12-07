@@ -219,15 +219,6 @@ void ObjectGraphScene::setRootObject(Object *root)
 
 
 
-void ObjectGraphScene::setGridPos(AbstractObjectItem * item, const QPoint &gridPos)
-{
-    item->setGridPos(gridPos);
-    /*// save in object
-    if (item->object())
-        item->object()->setAttachedData(gridPos, Object::DT_GRAPH_POS);
-        */
-}
-
 QPoint ObjectGraphScene::mapToGrid(const QPointF & f) const
 {
     const auto s = ObjectGraphSettings::gridSize();
