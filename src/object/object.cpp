@@ -1143,8 +1143,9 @@ void Object::calculateSoundSourceTransformation(
     MO_ASSERT(list.size() == (int)numberSoundSources(), "number of sound sources does not match "
               << list.size() << "/" << numberSoundSources());
 
-    for (auto s : list)
-        TransformationBuffer::copy(objectTransform, s->transformationBuffer());
+    if (objectTransform)
+        for (auto s : list)
+            TransformationBuffer::copy(objectTransform, s->transformationBuffer());
 }
 
 // -------------------- modulators ---------------------

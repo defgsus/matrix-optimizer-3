@@ -25,8 +25,9 @@
 #include "object/util/objecttree.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/audioobjectconnections.h"
-#include "audio/tool/audiobuffer.h"
 #include "audio/configuration.h"
+#include "audio/tool/audiobuffer.h"
+#include "audio/spatial/spatialsoundsource.h"
 #include "math/transformationbuffer.h"
 #include "graph/directedgraph.h"
 #include "io/log.h"
@@ -57,28 +58,43 @@ public:
         ObjectBuffer()
             : object        (0),
               posParent     (0),
-              matrix        (0),
-              parentMatrix  (0)
+              calcMatrix    (0),
+              parentMatrix  (0),
+              matrix        (0)
         { }
 
         ~ObjectBuffer()
         {
             for (auto b : audioOutputs)
                 delete b;
+            for (auto s : soundSources)
+            {
+                delete s->signal();
+                delete s;
+            }
         }
 
         /// Object associated to this buffer
         Object * object;
 
         // --- transformations ---
-        /// The translation parent
+        /// The translation parent (only assigned for translationObjects)
         ObjectBuffer * posParent;
+#ifdef MO_DO_DEBUG
+        /// Link to the ObjectBuffer that provides the matrix to use for this object.
+        /// Might be the object itself or one of it's parents. Only used for debugging.
+        ObjectBuffer * matrixParent;
+#endif
         /// Calculated matrix
-        TransformationBuffer matrix,
+        TransformationBuffer calcMatrix,
         /// Link to parent translation
-            *parentMatrix;
+            *parentMatrix,
+        /** Link to the matrix to use for the object.
+            Might link to this buffer's calcMatrix or to a parent */
+            *matrix;
 
-        // --- soundsources ---
+        // --- spatialization ---
+        /// Soundsources per object (memory managed)
         QList<AUDIO::SpatialSoundSource*>
             soundSources;
 
@@ -105,17 +121,25 @@ public:
 
     void clear();
     void createPath(Scene *);
-    ObjectBuffer * getObjectBuffer(Object *); ///< always returns a valid buffer
+    /** Always returns a valid buffer */
+    ObjectBuffer * getObjectBuffer(Object *);
+    /** Returns the buffer, or NULL */
+    ObjectBuffer * findObjectBuffer(Object *);
 
-
-    ObjectDspPath * path;
-    Scene * scene;
-    AUDIO::Configuration conf;
-
-    // all relevant objects
-    std::map<Object *, std::shared_ptr<ObjectBuffer>> objects;
     /** Transforms a list of objects to it's coresponding buffers */
     void createObjectBuffers(const QList<Object*> & input, QList<ObjectBuffer*>& output);
+
+    /** Returns the first parent of @p o (or @p o itself) for which
+        the matrix component is set.
+        Not all objects have a matrix defined, only audio-relevant objects
+        that contain transformations, and the scene.
+        This function always returns an object.
+        Must be called AFTER preparing the transformationObjects. */
+    ObjectBuffer * getParentTransformationObject(ObjectBuffer * o);
+    /** Use getParentTransformationObject() to assign the ObjectBuffer::matrix
+        to the next parent that actually calculates it's matrix, or to
+        the matrix of the scene. */
+    void assignMatrix(ObjectBuffer * o);
 
     /** Prepares the audio input buffers for the objectbuffer.
         Must be called sequentially in dsp order */
@@ -123,6 +147,13 @@ public:
     void prepareAudioOutputBuffers(ObjectBuffer * o);
 
     void prepareSoundSourceBuffer(ObjectBuffer * o);
+
+    ObjectDspPath * path;
+    Scene * scene;
+    AUDIO::Configuration conf;
+
+    // all relevant objects
+    std::map<Object *, std::shared_ptr<ObjectBuffer>> objects;
 
     QList<ObjectBuffer*>
         transformationObjects,
@@ -167,10 +198,10 @@ void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
         if (b->parentMatrix)
         {
             // copy from parent
-            b->matrix = *b->parentMatrix;
+            TransformationBuffer::copy(b->parentMatrix, &b->calcMatrix);
             // apply transform for one sample block
             for (SamplePos i = 0; i < p_->conf.bufferSize(); ++i)
-                b->object->calculateTransformation(b->matrix.transformation(i),
+                b->object->calculateTransformation(b->calcMatrix.transformation(i),
                                                    p_->conf.sampleRateInv() * (pos + i),
                                                    thread);
         }
@@ -214,14 +245,23 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
     for (Private::ObjectBuffer * b : p_->audioOutObjects)
         AUDIO::AudioBuffer::mix(b->audioOutputs, p_->audioOuts);
 
+
     // ---------- process virtual sound sources --------
 
-    /*for (Private::ObjectBuffer * b : p_->soundsourceObjects)
+    for (Private::ObjectBuffer * b : p_->soundsourceObjects)
     {
-
-        //b->object->performAudioBlock(pos, thread);
-
-    }*/
+        // get transformation-per-soundsource
+        b->object->calculateSoundSourceTransformation(
+                    b->matrix,
+                    b->soundSources,
+                    config().bufferSize(),
+                    pos, thread);
+        // get audio signal
+        b->object->calculateSoundSourceBuffer(
+                    b->soundSources,
+                    config().bufferSize(),
+                    pos, thread);
+    }
 }
 
 
@@ -246,6 +286,9 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
     for (auto o : p_->soundsourceObjects)
     {
         out << " " << o->object->name();
+#ifdef MO_DO_DEBUG
+        out << "(" << o->matrixParent->object->name() << ")";
+#endif
     }
 
     out << "\naudio objects:";
@@ -322,13 +365,15 @@ void ObjectDspPath::Private::createPath(Scene * s)
     // ---- find all objects that need translation calculated ---
 
     // make a tree of all audio-relevant translation objects
+    // [the copy function will always copy the root/scene object]
     auto audioPosTree = tree->copy(false, [](Object * o)
     {
         return (o->isAudioRelevant() && o->hasTransformationObjects());
     });
 
 #ifdef MO_GRAPH_DEBUG
-    //audioPosTree->dumpTree(std::cout);
+    MO_DEBUG("audioPosTree:");
+    audioPosTree->dumpTree(std::cout);
 #endif
 
     // create object buffers and assign position parents from tree
@@ -338,9 +383,11 @@ void ObjectDspPath::Private::createPath(Scene * s)
         if (n->parent())
         {
             b->posParent = getObjectBuffer(n->parent()->object());
-            b->parentMatrix = &b->posParent->matrix;
+            b->parentMatrix = &b->posParent->calcMatrix;
         }
-        b->matrix.resize(conf.bufferSize());
+        // only audio-relevant objects with transformations
+        // and the scene object get this matrix resized
+        b->calcMatrix.resize(conf.bufferSize());
 
         transformationObjects.append(b);
     });
@@ -363,8 +410,8 @@ void ObjectDspPath::Private::createPath(Scene * s)
         audioObjects.append( b );
 
         // create and link buffers
-        prepareAudioOutputBuffers(b);
         prepareAudioInputBuffers(b);
+        prepareAudioOutputBuffers(b);
     }
 
     // ----------- get all soundsource objects ------------------
@@ -378,9 +425,19 @@ void ObjectDspPath::Private::createPath(Scene * s)
     for (Object * obj : soundsources)
     {
         auto b = getObjectBuffer(obj);
-        audioObjects.append( b );
+        soundsourceObjects.append( b );
 
-        //for (auto s : obj->audioSources());
+        // find (parent) translation matrix
+        assignMatrix(b);
+
+        // create the soundsources
+        for (uint i = 0; i < obj->numberSoundSources(); ++i)
+        {
+            // direct signal buffer
+            auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
+            auto src = new AUDIO::SpatialSoundSource(buf);
+            b->soundSources.append( src );
+        }
     }
 
 
@@ -511,6 +568,30 @@ void ObjectDspPath::Private::prepareAudioInputBuffers(ObjectBuffer * buf)
 }
 
 
+ObjectDspPath::Private::ObjectBuffer * ObjectDspPath::Private::getParentTransformationObject(ObjectBuffer * buf)
+{
+    if (buf->calcMatrix.bufferSize())
+        return buf;
+
+    Object * o = buf->object->parentObject();
+    buf = findObjectBuffer(o);
+    while (!buf || !buf->calcMatrix.bufferSize())
+    {
+        o = o->parentObject();
+        buf = findObjectBuffer(o);
+    }
+    MO_ASSERT(buf, "no transformation parent found");
+    return buf;
+}
+
+void ObjectDspPath::Private::assignMatrix(ObjectBuffer * b)
+{
+    ObjectBuffer * buf = getParentTransformationObject(b);
+    b->matrix = &buf->calcMatrix;
+#ifdef MO_DO_DEBUG
+    b->matrixParent = buf;
+#endif
+}
 
 ObjectDspPath::Private::ObjectBuffer * ObjectDspPath::Private::getObjectBuffer(Object * o)
 {
@@ -525,6 +606,15 @@ ObjectDspPath::Private::ObjectBuffer * ObjectDspPath::Private::getObjectBuffer(O
     // remember
     objects.insert(std::make_pair(o, std::shared_ptr<ObjectBuffer>(buf)));
     return buf;
+}
+
+ObjectDspPath::Private::ObjectBuffer * ObjectDspPath::Private::findObjectBuffer(Object * o)
+{
+    auto i = objects.find(o);
+    if (i != objects.end())
+        return i->second.get();
+    else
+        return 0;
 }
 
 void ObjectDspPath::Private::createObjectBuffers(const QList<Object *> &input, QList<ObjectBuffer *> &output)
