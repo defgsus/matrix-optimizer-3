@@ -59,17 +59,17 @@ public:
 		};
 
     MVerb(){
-        DampingFreq = 18000.;
-        BandwidthFreq = 18000.;
+        DampingFreq = 0.5;
+        BandwidthFreq = 1.;
         SampleRate = 44100.;
         Decay = 0.5;
         Gain = 1.;
         Mix = 1.;
         Size = 1.;
-        EarlyMix = 1.;
+        EarlyMix = 0.1;
         PreviousLeftTank = 0.;
         PreviousRightTank = 0.;
-        PreDelayTime = 100 * (SampleRate / 1000);
+        PreDelayTime = 0.1;
         MixSmooth = EarlyLateSmooth = BandwidthSmooth = DampingSmooth = PredelaySmooth = SizeSmooth = DecaySmooth = DensitySmooth = 0.;
         ControlRate = SampleRate / 1000;
         ControlRateCounter = 0;

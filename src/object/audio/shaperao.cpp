@@ -39,17 +39,21 @@ class ShaperAO::Private
     {
         EquationObject()
         {
-            equ.variables().add("x", &input, ShaperAO::tr("The audio input value").toStdString());
+            equ.variables().add("x", &input, ShaperAO::tr("The current audio sample").toStdString());
+            equ.variables().add("x1", &input1, ShaperAO::tr("The previous audio sample").toStdString());
+            equ.variables().add("x2", &input2, ShaperAO::tr("The one-before-previous audio sample").toStdString());
         }
 
         F32 operator()(F32 in)
         {
+            input2 = input1;
+            input1 = input;
             input = in;
             return equ.eval();
         }
 
         PPP_NAMESPACE::Parser equ;
-        PPP_NAMESPACE::Float input;
+        PPP_NAMESPACE::Float input, input1, input2;
     };
 
     ShaperAO * shaper;
@@ -210,6 +214,7 @@ void ShaperAO::Private::updateEquations()
     const std::string text = paramEquation->baseValue().toStdString();
     for (auto & e : equations)
     {
+        e.input = e.input1 = e.input2 = 0;
         if (!e.equ.parse(text))
             MO_WARNING("parsing failed for equation in ShaperAO '" << shaper->idName() << "'"
                        " (text = '" << text << "')");
