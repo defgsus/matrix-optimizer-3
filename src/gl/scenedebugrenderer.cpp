@@ -53,13 +53,7 @@ void SceneDebugRenderer::updateTree()
     cameras_ = scene_->findChildObjects<Camera>(QString(), true);
     lightSources_ = scene_->findChildObjects<LightSource>(QString(), true);
 
-    QList<Object*> all = scene_->findChildObjects(Object::TG_ALL, true);
-    audioSources_.clear();
-    for (Object * o : all)
-        audioSources_.append( o->audioSources() );
-    microphones_.clear();
-    for (Object * o : all)
-        microphones_.append( o->microphones() );
+//    QList<Object*> all = scene_->findChildObjects(Object::TG_ALL, true);
 }
 
 void SceneDebugRenderer::initGl()
@@ -194,7 +188,7 @@ void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int opti
         const Mat4& trans = o->transformation(thread, 0);
         drawLightSource_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
-
+/*
     if (options & Scene::DD_MICROPHONES)
     for (AUDIO::AudioMicrophone * o : microphones_)
     {
@@ -208,7 +202,7 @@ void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int opti
         const Mat4& trans = a->transformation(thread, 0);
         drawMicrophone_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
-
+*/
 }
 
 

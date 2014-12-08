@@ -28,7 +28,7 @@ public:
 
     // ---------------- getter ---------------------
 
-    const Mat4& transformation(uint sample) const { return p_m_[sample]; }
+    const Mat4& transformation(SamplePos sample) const { return p_m_[sample]; }
 
     const Mat4 * transformations() const { return &p_m_[0]; }
 
@@ -40,11 +40,19 @@ public:
 
     void setIdentity() { for (auto & m : p_m_) m = Mat4(1); }
 
-    Mat4& transformation(uint sample) { return p_m_[sample]; }
+    Mat4& transformation(SamplePos sample) { return p_m_[sample]; }
 
     void setTransformation(const Mat4& t, uint sample) { p_m_[sample] = t; }
 
     void setTransformations(const Mat4 * t) { memcpy(&p_m_[0], t, bufferSize() * sizeof(Mat4)); }
+
+
+    // ------------ static helper -------------------
+
+    static void copy(const TransformationBuffer * src, TransformationBuffer * dst)
+    {
+        memcpy(&dst->p_m_[0], &src->p_m_[0], dst->bufferSize() * sizeof(Mat4));
+    }
 
 private:
     std::vector<Mat4> p_m_;

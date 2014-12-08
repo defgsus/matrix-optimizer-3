@@ -21,16 +21,20 @@ namespace MO {
     };
 
     namespace IO { class DataStream; }
-    namespace AUDIO { class AudioSource; class AudioMicrophone; class AudioBuffer; class Configuration; }
     namespace GL { class LightSettings; class CameraSpace; }
     namespace MATH { class Timeline1D; }
+    namespace AUDIO
+    {
+        class SpatialSoundSource;
+        class VirtualMicrophone;
+        class AudioBuffer;
+        class Configuration;
+    }
 
     class Object;
     class Scene;
     class Camera;
     class LightSource;
-    class Microphone;
-    class SoundSource;
     class ObjectGl;
     class Model3d;
     class Sequences;
@@ -38,6 +42,8 @@ namespace MO {
     class SequenceFloat;
     class Clip;
     class ClipContainer;
+    class Track;
+    class TrackFloat;
 
     class Parameter;
     class Parameters;
@@ -48,6 +54,7 @@ namespace MO {
     class ParameterText;
     class ParameterTimeline1D;
 
+    class TransformationBuffer;
     class Transformation;
     class Rotation;
     class Scale;
@@ -55,18 +62,16 @@ namespace MO {
     class Look;
     class LookAt;
     class Mix;
-    class Track;
-    class TrackFloat;
-
-    class AudioObject;
-    class AudioObjectConnection;
-    class AudioObjectConnections;
 
     class Modulator;
     class ModulatorFloat;
 
     class ModulatorObject;
     class ModulatorObjectFloat;
+
+    class AudioObject;
+    class AudioObjectConnection;
+    class AudioObjectConnections;
 
     class ColorPostProcessingSetting;
     class SynthSetting;

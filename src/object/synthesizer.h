@@ -8,6 +8,8 @@
     <p>created 26.09.2014</p>
 */
 
+#if 0
+
 #ifndef MOSRC_OBJECT_SYNTHESIZER_H
 #define MOSRC_OBJECT_SYNTHESIZER_H
 
@@ -103,3 +105,5 @@ protected:
 
 
 #endif // MOSRC_OBJECT_SYNTHESIZER_H
+
+#endif

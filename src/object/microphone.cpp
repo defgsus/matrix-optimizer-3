@@ -38,24 +38,6 @@ void Microphone::deserialize(IO::DataStream & io)
     io.readHeader("mic", 1);
 }
 
-void Microphone::createMicrophones()
-{
-    Object::createMicrophones();
-
-    microphone_ = createMicrophone();
-}
-
-void Microphone::updateAudioTransformations(Double, uint thread)
-{
-    microphone_->setTransformation(transformation(thread, 0), thread, 0);
-}
-
-void Microphone::updateAudioTransformations(Double , uint , uint thread)
-{
-    // copy the block of transformations
-    microphone_->setTransformation(transformations(thread), thread);
-}
-
 #if (0)
 void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, uint thread) const
 {

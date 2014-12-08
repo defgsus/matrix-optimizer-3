@@ -372,7 +372,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
     QList<Object*> soundsources;
     tree->makeLinear(soundsources, [](const Object*o)
     {
-        return !o->audioSources().isEmpty();
+        return o->numberSoundSources();
     });
     //createObjectBuffers(soundsources, soundsourceObjects);
     for (Object * obj : soundsources)
@@ -380,7 +380,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
         auto b = getObjectBuffer(obj);
         audioObjects.append( b );
 
-        for (auto s : obj->audioSources());
+        //for (auto s : obj->audioSources());
     }
 
 
@@ -389,7 +389,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
     QList<Object*> microphones;
     tree->makeLinear(microphones, [](const Object*o)
     {
-        return !o->microphones().isEmpty();
+        return o->numberMicrophones();
     });
     createObjectBuffers(microphones, microphoneObjects);
 

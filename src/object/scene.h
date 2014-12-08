@@ -273,12 +273,6 @@ private:
     /** Request from object @p o to call it's createOutputs() method. */
     void callCreateOutputs_(Object * o);
 
-    /** Request from object @p o to call it's createAudioSources() method. */
-    void callCreateAudioSources_(Object * o);
-
-    /** Request from object @p o to call it's createMicrophones() method. */
-    void callCreateMicrophones_(Object * o);
-
     /** Collects all special child objects */
     void findObjects_();
 

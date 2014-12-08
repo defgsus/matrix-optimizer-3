@@ -136,9 +136,9 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     static QIcon iconMusicNote(":/icon/music_note.png");
 
 
-    if (qobject_cast<const Synthesizer*>(o))
+/*    if (qobject_cast<const Synthesizer*>(o))
         return iconMusicNote;
-
+*/
     if (o->isTransformation())
     {
         if (qobject_cast<const Translation*>(o))
@@ -266,8 +266,6 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
     {
         obj->createParameters();
 
-        obj->createAudioSources();
-        obj->createMicrophones();
         //obj->createOutputs();
     }
 

@@ -26,13 +26,9 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
-    virtual void createAudioSources() Q_DECL_OVERRIDE;
-
-    virtual void updateAudioTransformations(Double time, uint thread) Q_DECL_OVERRIDE;
-    virtual void updateAudioTransformations(Double time, uint blockSize, uint thread)
-                                                                    Q_DECL_OVERRIDE;
-
-    virtual void performAudioBlock(SamplePos pos, uint thread) Q_DECL_OVERRIDE;
+    virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,
+                                            uint bufferSize, SamplePos pos, uint thread)
+                                            Q_DECL_OVERRIDE;
 signals:
 
 public slots:
@@ -40,8 +36,6 @@ public slots:
 private:
 
     ParameterFloat * audioTrack_;
-
-    AUDIO::AudioSource * audio_;
 };
 
 } // namespace MO

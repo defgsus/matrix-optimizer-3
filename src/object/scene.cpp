@@ -395,30 +395,6 @@ void Scene::callCreateOutputs_(Object *o)
                 emit editor_->objectAdded(c);
 }
 
-void Scene::callCreateAudioSources_(Object *o)
-{
-    const QList<AUDIO::AudioSource*> before = o->audioSources();
-
-    o->createAudioSources();
-
-    if (o->audioSources() != before)
-    {
-        updateTree_();
-    }
-}
-
-void Scene::callCreateMicrophones_(Object *o)
-{
-    const QList<AUDIO::AudioMicrophone*> before = o->microphones();
-
-    o->createMicrophones();
-
-    if (o->microphones() != before)
-    {
-        updateTree_();
-    }
-}
-
 void Scene::updateTree_()
 {
     MO_DEBUG_TREE("Scene::updateTree_()");
@@ -1015,8 +991,6 @@ void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
             }
             else
                 o->setTransformation(thread, sample, freeCameraMatrixGfx_);
-
-            o->updateAudioTransformations(time, thread);
         }
     }
 }

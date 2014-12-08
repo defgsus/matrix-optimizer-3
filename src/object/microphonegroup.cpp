@@ -8,6 +8,8 @@
     <p>created 9/1/2014</p>
 */
 
+#if 0
+
 #include "microphonegroup.h"
 
 
@@ -144,3 +146,5 @@ Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Double time, uint thre
 }
 
 } // namespace MO
+
+#endif

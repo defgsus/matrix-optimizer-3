@@ -95,13 +95,13 @@ void ObjectInfoDialog::setObject(Object * o)
 
     // ----- audiosources and microphones -----
 
-    if (!o->microphones().isEmpty() || !o->audioSources().isEmpty())
+    if (o->numberMicrophones() || o->numberSoundSources())
     {
         s << "<p>";
-        if (!o->audioSources().isEmpty())
-            s << "audio sources: " << o->audioSources().size() << "<br/>";
-        if (!o->microphones().isEmpty())
-            s << "microphones: " << o->microphones().size();
+        if (o->numberSoundSources())
+            s << "audio sources: " << o->numberSoundSources() << "<br/>";
+        if (o->numberMicrophones())
+            s << "microphones: " << o->numberMicrophones();
         s << "</p>";
     }
 

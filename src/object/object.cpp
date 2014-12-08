@@ -27,8 +27,8 @@
 #include "param/parameterfilename.h"
 #include "param/parametertext.h"
 #include "param/parametertimeline1d.h"
-#include "audio/audiosource.h"
-#include "audio/audiomicrophone.h"
+#include "audio/spatial/spatialsoundsource.h"
+#include "math/transformationbuffer.h"
 #include "modulatorobjectfloat.h"
 
 namespace MO {
@@ -46,6 +46,8 @@ Object::Object(QObject *parent) :
     numberThreads_          (1),
     bufferSize_             (1),
     paramActiveScope_       (0),
+    p_numberSoundSources_   (0),
+    p_numberMicrophones_    (0),
     sampleRate_             (44100),
     sampleRateInv_          (1.0/44100.0),
     parentActivityScope_    (AS_ON),
@@ -66,12 +68,6 @@ Object::Object(QObject *parent) :
 Object::~Object()
 {
     delete parameters_;
-
-    for (auto a : objAudioSources_)
-        delete a;
-
-    for (auto m : objMicrophones_)
-        delete m;
 }
 
 // --------------------- io ------------------------
@@ -232,10 +228,6 @@ Object * Object::deserializeTree_(IO::DataStream & io)
             o->deserializeAfterChilds(io);
     }
 
-    // create audio objects
-    o->createAudioSources();
-    o->createMicrophones();
-
     return o;
 }
 
@@ -387,7 +379,7 @@ bool Object::isModulated() const
 
 bool Object::isAudioRelevant() const
 {
-    if (!microphones().isEmpty() || !audioSources().isEmpty())
+    if (numberMicrophones() || numberSoundSources())
         return true;
 
     for (auto c : childObjects_)
@@ -961,14 +953,6 @@ bool Object::verifyNumberThreads(uint num)
     if (numberThreads_ != num)
         return false;
 
-    for (auto a : objAudioSources_)
-        if (a->numberThreads() != num)
-            return false;
-
-    for (auto m : objMicrophones_)
-        if (m->numberThreads() != num)
-            return false;
-
     return true;
 }
 
@@ -980,12 +964,6 @@ void Object::setNumberThreads(uint num)
 
     transformation_.resize(num);
     bufferSize_.resize(num);
-
-    for (auto a : objAudioSources_)
-        a->setNumberThreads(num);
-
-    for (auto m : objMicrophones_)
-        m->setNumberThreads(num);
 }
 
 void Object::getIdMap(QMap<QString, Object *> &idMap) const
@@ -1130,14 +1108,6 @@ bool Object::verifyBufferSize(uint thread, uint bufferSize)
         || bufferSize_[thread] != bufferSize)
         return false;
 
-    for (auto a : objAudioSources_)
-        if (a->bufferSize(thread) != bufferSize)
-            return false;
-
-    for (auto m : objMicrophones_)
-        if (m->bufferSize(thread) != bufferSize)
-            return false;
-
     return true;
 }
 
@@ -1145,12 +1115,6 @@ void Object::setBufferSize(uint bufferSize, uint thread)
 {
     bufferSize_[thread] = bufferSize;
     transformation_[thread].resize(bufferSize);
-
-    for (auto a : objAudioSources_)
-        a->setBufferSize(bufferSize, thread);
-
-    for (auto m : objMicrophones_)
-        m->setBufferSize(bufferSize, thread);
 }
 
 void Object::setSampleRate(uint samplerate)
@@ -1159,126 +1123,28 @@ void Object::setSampleRate(uint samplerate)
 
     sampleRate_ = std::max((uint)1, samplerate);
     sampleRateInv_ = 1.0 / sampleRate_;
-
-    for (auto m : objMicrophones_)
-        m->setSampleRate(sampleRate_);
 }
 
-void Object::requestCreateAudioSources()
+void Object::setNumberSoundSources(uint num)
 {
-    Scene * s = sceneObject();
-    if (!s)
-        createAudioSources();
-    else
-        s->callCreateAudioSources_(this);
+    p_numberSoundSources_ = num;
 }
 
-void Object::requestCreateMicrophones()
+void Object::setNumberMicrophones(uint num)
 {
-    Scene * s = sceneObject();
-    if (!s)
-        createMicrophones();
-    else
-        s->callCreateMicrophones_(this);
+    p_numberMicrophones_ = num;
 }
 
-
-AUDIO::AudioSource * Object::createAudioSource(const QString& id)
+void Object::calculateSoundSourceTransformation(
+        const TransformationBuffer * objectTransform,
+        const QList<AUDIO::SpatialSoundSource *> list,
+        uint , SamplePos , uint )
 {
-    auto a = new AUDIO::AudioSource(id, this);
+    MO_ASSERT(list.size() == (int)numberSoundSources(), "number of sound sources does not match "
+              << list.size() << "/" << numberSoundSources());
 
-    objAudioSources_.append(a);
-
-    return a;
-}
-
-QList<AUDIO::AudioSource*> Object::createOrDeleteAudioSources(const QString &id, uint number)
-{
-    //MO_DEBUG("Object::createOrDeleteAudioSources(" << id << ", " << number << ")");
-
-    // get all that exist with the given id
-    QMap<QString, AUDIO::AudioSource*> exist;
-    for (auto m : objAudioSources_)
-        if (m->idName().startsWith(id))
-            exist.insert(m->idName(), m);
-
-    QList<AUDIO::AudioSource*> list;
-
-    // create or reuse
-    for (uint i=0; i<number; ++i)
-    {
-        QString curid = QString("%1_%2").arg(id).arg(i+1);
-
-        if (exist.contains(curid))
-        {
-            list.append(exist[curid]);
-            exist.remove(curid);
-        }
-        else
-        {
-            list.append( createAudioSource(curid) );
-        }
-    }
-
-    // delete the ones not needed
-    for (auto m : exist)
-    {
-        objAudioSources_.removeOne(m);
-        delete m;
-    }
-
-    return list;
-}
-
-AUDIO::AudioMicrophone * Object::createMicrophone(const QString &id)
-{
-    auto m = new AUDIO::AudioMicrophone(id, this);
-
-    objMicrophones_.append(m);
-
-    // update with current buffer info
-    m->setSampleRate(sampleRate_);
-    m->setNumberThreads(numberThreads());
-    for (uint i=0; i<numberThreads(); ++i)
-        m->setBufferSize(bufferSize(i), i);
-
-    return m;
-}
-
-QList<AUDIO::AudioMicrophone*> Object::createOrDeleteMicrophones(const QString &id, uint number)
-{
-    // get all that exist with the given id
-    QMap<QString, AUDIO::AudioMicrophone*> exist;
-    for (auto m : objMicrophones_)
-        if (m->idName().startsWith(id))
-            exist.insert(m->idName(), m);
-
-    QList<AUDIO::AudioMicrophone*> list;
-
-    // create or reuse
-    for (uint i=0; i<number; ++i)
-    {
-        QString curid = QString("%1_%2").arg(id).arg(i+1);
-
-        if (exist.contains(curid))
-        {
-            list.append(exist[curid]);
-            exist.remove(curid);
-        }
-        else
-        {
-            list.append( createMicrophone(curid) );
-        }
-    }
-
-    // delete the ones not needed
-    for (auto m : exist)
-    {
-        objMicrophones_.removeOne(m);
-        delete m;
-    }
-
-    return list;
+    for (auto s : list)
+        TransformationBuffer::copy(objectTransform, s->transformationBuffer());
 }
 
 // -------------------- modulators ---------------------

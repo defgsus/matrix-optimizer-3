@@ -568,7 +568,6 @@ public:
     /** Returns the reciprocal of the set sample rate, e.g. 1.0 / sampleRate() */
     Double sampleRateInv() const { return sampleRateInv_; }
 
-protected:
 
     /** Returns true if the buffersize of the thread is matching @p bufferSize.
         This checks for all contained stuff like AudioSources as well.
@@ -588,68 +587,33 @@ protected:
         */
     virtual void setSampleRate(uint samplerate);
 
-    /** Override to create all audio sources for your object.
-        @note Be sure to call the ancestor class implementation before your derived code! */
-    virtual void createAudioSources() { };
+    // ------------------ spatial audio -------------------
+
+    uint numberSoundSources() const { return p_numberSoundSources_; }
 
     /** Override to create all microphones for your object.
         @note Be sure to call the ancestor class implementation before your derived code! */
-    virtual void createMicrophones() { };
-
-public:
-    /** Returns the audio sources of this object. */
-    const QList<AUDIO::AudioSource*>& audioSources() const { return objAudioSources_; }
-
-    /** Returns the microphones of this object. */
-    const QList<AUDIO::AudioMicrophone*>& microphones() const { return objMicrophones_; }
+    uint numberMicrophones() const { return p_numberMicrophones_; }
 
 protected:
 
-    /** Call this if you want to have createAudioSources() be called again. */
-    void requestCreateAudioSources();
+    void setNumberMicrophones(uint num);
+    void setNumberSoundSources(uint num);
 
-    /** Call this if you want to have createMicrophones() be called again. */
-    void requestCreateMicrophones();
+public:
 
-    /** Creates and returns a new audio source installed to this object.
-        The id is not really important, only for display purposes,
-        except when using createOrDeleteAudiosources(). */
-    AUDIO::AudioSource * createAudioSource(const QString& id = QString("audio"));
+    /** Override to update the transformations of the sound source objects.
+        The base implementation simply copies the object transformation. */
+    virtual void calculateSoundSourceTransformation(
+                                        const TransformationBuffer * objectTransformation,
+                                        const QList<AUDIO::SpatialSoundSource*>,
+                                        uint bufferSize, SamplePos pos, uint thread);
 
-    /** Creates @p number audiosources, destroys all others.
-        The id is appended with a digit and the audiosources are created and deleted as needed. */
-    QList<AUDIO::AudioSource*> createOrDeleteAudioSources(const QString& id, uint number);
-
-    /** Creates and returns a new microphone installed to this object.
-        The id is not really important, only for display purposes,
-        except when using createOrDeleteMicrophones(). */
-    AUDIO::AudioMicrophone* createMicrophone(const QString& id = QString("micro"));
-
-    /** Creates @p number microphones, destroys all others.
-        The id is appended with a digit and the microphones are created and deleted as needed. */
-    QList<AUDIO::AudioMicrophone*> createOrDeleteMicrophones(const QString& id, uint number);
-
-    /** Override to update the transformations of the AudioSource and Microphone objects
-        in the gfx thread.
-        The object's transformation is calculated before the call of this function.
-        @note Be sure to call the ancestor's method before in your derived method. */
-    virtual void updateAudioTransformations(Double time, uint thread)
-        { Q_UNUSED(time); Q_UNUSED(thread); };
-
-    /** Override to update the transformations of the AudioSource and Microphone objects
-        in the audio thread.
-        The object's transformation is calculated for the whole blocksize
-        before the call of this function.
-        @note Be sure to call the ancestor's method before in your derived method. */
-    virtual void updateAudioTransformations(Double time, uint blockSize, uint thread)
-        { Q_UNUSED(time); Q_UNUSED(blockSize); Q_UNUSED(thread); };
-
-    /** Perform all necessary audio calculations and fill the AUDIO::AudioSource class(es).
-        The block is given by bufferSize(thread).
-        The object transformation is calculated for the whole buffer size
-        before the call of this function.
-        */
-    virtual void performAudioBlock(SamplePos pos, uint thread) { Q_UNUSED(pos); Q_UNUSED(thread); };
+    /** Override to fill the audio buffers of the sound sources.
+        The base implementation does nothing. */
+    virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,
+                                            uint bufferSize, SamplePos pos, uint thread)
+    { Q_UNUSED(bufferSize); Q_UNUSED(pos); Q_UNUSED(thread); }
 
 public:
     // --------------- 3d --------------------------
@@ -759,8 +723,8 @@ private:
 
     // ------------ audio --------------------
 
-    QList<AUDIO::AudioSource*> objAudioSources_;
-    QList<AUDIO::AudioMicrophone*> objMicrophones_;
+    uint p_numberSoundSources_,
+         p_numberMicrophones_;
 
     uint sampleRate_;
     Double sampleRateInv_;
