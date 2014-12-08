@@ -22,8 +22,9 @@ public:
     MO_OBJECT_CONSTRUCTOR(ShaperAO)
 
     virtual void createParameters() Q_DECL_OVERRIDE;
-
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter * p) Q_DECL_OVERRIDE;
+    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
 protected:
 

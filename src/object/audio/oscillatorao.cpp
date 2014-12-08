@@ -45,6 +45,8 @@ void OscillatorAO::deserialize(IO::DataStream & io)
 
 void OscillatorAO::createParameters()
 {
+    AudioObject::createParameters();
+
     params()->beginParameterGroup("osc", tr("oscillator"));
 
         paramOffset_ = params()->createFloatParameter("osc_offset", tr("offset"),

@@ -71,20 +71,12 @@ void MVerbAO::deserialize(IO::DataStream & io)
 
 void MVerbAO::createParameters()
 {
+    AudioObject::createParameters();
+
     params()->beginParameterGroup("_mverb", tr("Reverb"));
 
         MVERB::MVerb<F32> temp;
         temp.reset();
-
-        /*setParameter(MVerb<float>::DAMPINGFREQ, 0.);
-        setParameter(MVerb<float>::DENSITY, 0.5);
-        setParameter(MVerb<float>::BANDWIDTHFREQ, 1.);
-        setParameter(MVerb<float>::DECAY, 0.5);
-        setParameter(MVerb<float>::PREDELAY, 0.);
-        setParameter(MVerb<float>::SIZE, 1.);
-        setParameter(MVerb<float>::GAIN, 1.);
-        setParameter(MVerb<float>::MIX, 0.35);
-        setParameter(MVerb<float>::EARLYMIX, 0.75);*/
 
         p_->pDampingFreq = params()->createFloatParameter("_mverb_dampingfreq", tr("damping frequency"),
                                                    tr(""),

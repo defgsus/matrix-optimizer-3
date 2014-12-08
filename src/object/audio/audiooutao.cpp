@@ -42,6 +42,8 @@ void AudioOutAO::deserialize(IO::DataStream & io)
 
 void AudioOutAO::createParameters()
 {
+    AudioObject::createParameters();
+
     params()->beginParameterGroup("out", tr("output"));
 
         paramAmp_ = params()->createFloatParameter("amp", tr("amplitude"),

@@ -70,6 +70,8 @@ void FilterAO::deserialize(IO::DataStream & io)
 
 void FilterAO::createParameters()
 {
+    AudioObject::createParameters();
+
     params()->beginParameterGroup("osc", tr("Filter"));
 
         p_->paramType = params()->createSelectParameter("_filter_type", tr("filter type"),
@@ -101,6 +103,8 @@ void FilterAO::createParameters()
 
 void FilterAO::updateParameterVisibility()
 {
+    AudioObject::updateParameterVisibility();
+
     auto type = (AUDIO::MultiFilter::FilterType)p_->paramType->baseValue();
 
     p_->paramOrder->setVisible(
@@ -111,6 +115,8 @@ void FilterAO::updateParameterVisibility()
 
 void FilterAO::onParameterChanged(Parameter * p)
 {
+    AudioObject::onParameterChanged(p);
+
     // Note: We change the filter type here
     // to avoid memory allocation in the audio thread!
     // Same goes for order
@@ -125,6 +131,8 @@ void FilterAO::onParameterChanged(Parameter * p)
 
 void FilterAO::onParametersLoaded()
 {
+    AudioObject::onParametersLoaded();
+
     p_->updateFilters();
 }
 

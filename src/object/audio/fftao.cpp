@@ -64,6 +64,8 @@ void FftAO::deserialize(IO::DataStream & io)
 
 void FftAO::createParameters()
 {
+    AudioObject::createParameters();
+
     params()->beginParameterGroup("fft", tr("fourier transform"));
 
         p_->paramType = params()->createSelectParameter("_fft_type", tr("mode"),

@@ -14,10 +14,14 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parametertimeline1d.h"
+#include "object/param/parametertext.h"
 #include "math/constants.h"
 #include "math/functions.h"
 #include "math/timeline1d.h"
+#include "math/funcparser/parser.h"
 #include "io/datastream.h"
+#include "io/error.h"
+
 
 namespace MO {
 
@@ -27,6 +31,29 @@ class ShaperAO::Private
 {
     public:
 
+    Private(ShaperAO * s) : shaper(s) { }
+
+    void updateEquations();
+
+    struct EquationObject
+    {
+        EquationObject()
+        {
+            equ.variables().add("x", &input, ShaperAO::tr("The audio input value").toStdString());
+        }
+
+        F32 operator()(F32 in)
+        {
+            input = in;
+            return equ.eval();
+        }
+
+        PPP_NAMESPACE::Parser equ;
+        PPP_NAMESPACE::Float input;
+    };
+
+    ShaperAO * shaper;
+
     ParameterFloat
         * paramInAmp,
         * paramOutAmp;
@@ -34,6 +61,10 @@ class ShaperAO::Private
         * paramType;
     ParameterTimeline1D
         * paramCurve;
+    ParameterText
+        * paramEquation;
+
+    std::vector<EquationObject> equations;
 };
 
 namespace {
@@ -42,34 +73,39 @@ namespace {
     {
         ST_TANH,
         ST_TANH_CHEAP,
-        ST_CURVE
+        ST_CURVE,
+        ST_EQUATION
     };
 
     static const QStringList valueIds =
     {
         "tanh", "tanhcheap",
-        "curve"
+        "curve",
+        "equ"
     };
 
     static const QStringList valueNames =
     {
         ShaperAO::tr("tangens hyperbolicus"),
         ShaperAO::tr("tangens hyperbolicus (fast)"),
-        ShaperAO::tr("adjustable curve")
+        ShaperAO::tr("adjustable curve"),
+        ShaperAO::tr("math equation")
     };
 
     static const QStringList valueStatusTips =
     {
         ShaperAO::tr("A saturating function"),
         ShaperAO::tr("A saturating function - tangens hyperbolicus is approximated with a cpu-friendly formula"),
-        ShaperAO::tr("A shaping function defined by a graphical curve")
+        ShaperAO::tr("A shaping function defined by a graphical curve"),
+        ShaperAO::tr("A mathematical function mapping input to output values")
     };
 
     static const QList<int> valueList =
     {
         ST_TANH,
         ST_TANH_CHEAP,
-        ST_CURVE
+        ST_CURVE,
+        ST_EQUATION
     };
 
 } // namespace
@@ -77,7 +113,7 @@ namespace {
 
 ShaperAO::ShaperAO(QObject *parent)
     : AudioObject   (parent),
-      p_            (new Private)
+      p_            (new Private(this))
 {
     setName("Shaper");
 }
@@ -98,6 +134,8 @@ void ShaperAO::deserialize(IO::DataStream & io)
 
 void ShaperAO::createParameters()
 {
+    AudioObject::createParameters();
+
     params()->beginParameterGroup("out", tr("output"));
 
         p_->paramType = params()->createSelectParameter("_shaper_type", tr("type"),
@@ -109,6 +147,8 @@ void ShaperAO::createParameters()
                                                         ST_TANH_CHEAP,
                                                         true, false);
 
+        // -- adjustable curve --
+
         MATH::Timeline1D deftl;
         deftl.add(-1, -1, MATH::Timeline1D::Point::SPLINE4_SYM);
         deftl.add(1, 1);
@@ -117,6 +157,17 @@ void ShaperAO::createParameters()
                                                     &deftl, true);
         // create timeline component now (instead of in audio-thread)
         p_->paramCurve->timeline();
+
+        // -- equation text --
+
+        p_->paramEquation = params()->createTextParameter("_shaper_equ", tr("equation"),
+                  tr("An equation mapping input to output values"),
+                  TT_EQUATION,
+                  "x", true, false);
+        Private::EquationObject tmpequ;
+        p_->paramEquation->setVariableNames(tmpequ.equ.variables().variableNames());
+        p_->paramEquation->setVariableDescriptions(tmpequ.equ.variables().variableDescriptions());
+
 
         p_->paramInAmp = params()->createFloatParameter("_shaper_inamp", tr("input amplitude"),
                                                    tr("The amplitude of the audio input"),
@@ -129,8 +180,42 @@ void ShaperAO::createParameters()
 
 void ShaperAO::updateParameterVisibility()
 {
-    p_->paramCurve->setVisible(p_->paramType->baseValue() == ST_CURVE);
+    AudioObject::updateParameterVisibility();
+
+    auto type = (ShaperTypes)p_->paramType->baseValue();
+
+    p_->paramCurve->setVisible(type == ST_CURVE);
+    p_->paramEquation->setVisible(type == ST_EQUATION);
 }
+
+void ShaperAO::onParameterChanged(Parameter *p)
+{
+    AudioObject::onParameterChanged(p);
+
+    if (p == p_->paramEquation)
+        p_->updateEquations();
+}
+
+void ShaperAO::setNumberThreads(uint num)
+{
+    AudioObject::setNumberThreads(num);
+
+    p_->equations.resize(num);
+    p_->updateEquations();
+}
+
+
+void ShaperAO::Private::updateEquations()
+{
+    const std::string text = paramEquation->baseValue().toStdString();
+    for (auto & e : equations)
+    {
+        if (!e.equ.parse(text))
+            MO_WARNING("parsing failed for equation in ShaperAO '" << shaper->idName() << "'"
+                       " (text = '" << text << "')");
+    }
+}
+
 
 void ShaperAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
                               const QList<AUDIO::AudioBuffer *> &outputs,
@@ -154,6 +239,7 @@ void ShaperAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
         case ST_TANH:       MO__PROCESS(tanh); break;
         case ST_TANH_CHEAP: MO__PROCESS(MATH::fast_tanh); break;
         case ST_CURVE:      MO__PROCESS(p_->paramCurve->timeline()->get); break;
+        case ST_EQUATION:   MO__PROCESS(p_->equations[thread]); break;
     }
 
 #undef MO__PROCESS

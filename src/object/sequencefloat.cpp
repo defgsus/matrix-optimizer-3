@@ -31,11 +31,10 @@
 
 namespace MO {
 
+/** Wrapper for equation parser to setup input variables */
 class SequenceFloat::SeqEquation
 {
 public:
-
-
 
     SeqEquation()
         : equation(new PPP_NAMESPACE::Parser())
@@ -885,8 +884,8 @@ void SequenceFloat::updateWavetable_()
     {
         PPP_NAMESPACE::Parser p;
         PPP_NAMESPACE::Float x, r;
-        p.variables().add("x", &x, "");
-        p.variables().add("r", &r, "");
+        p.variables().add("x", &x, tr("time").toStdString());
+        p.variables().add("xr", &r, tr("radians of time").toStdString());
 
         if (!p.parse(p_wtEquationText_->baseValue().toStdString()))
         {
