@@ -21,9 +21,11 @@ namespace MO {
 namespace AUDIO {
 
 
-/** 4th order Linkwitz-Riley filter.
+/** Very accurate Butterworth/Chebychev/Bessel filters.
 
-    Currently very over-exciting for frequencies < 200 and > nyquist - 200
+    Computation of coefficients is very demanding.
+    Not so much a filter for audio manipulation but rather for audio analyzation.
+
     */
 class FixedFilter
 {
@@ -100,24 +102,24 @@ public:
     void updateCoefficients();
 
     /** Consequently call this to filter the input signal */
-    void process(const F32 * input, F32 * output, uint blockSize)
-        { process(input, 1, output, 1, blockSize); }
+    void process(const F32 * input, F32 * output, uint blockSize, F32 amp = F32(1))
+        { process(input, 1, output, 1, blockSize, amp); }
 
     /** Consequently call this to filter the input signal.
         The strides define the spacing between consecutive samples. */
     void process(const F32 * input, uint inputStride,
                        F32 * output, uint outputStride,
-                       uint blockSize);
+                       uint blockSize, F32 amp = F32(1));
 
     /** Consequently call this to filter the input signal */
-    void process(const Double * input, Double * output, uint blockSize)
-        { process(input, 1, output, 1, blockSize); }
+    void process(const Double * input, Double * output, uint blockSize, Double amp = Double(1))
+        { process(input, 1, output, 1, blockSize, amp); }
 
     /** Consequently call this to filter the input signal.
         The strides define the spacing between consecutive samples. */
     void process(const Double * input, uint inputStride,
                        Double * output, uint outputStride,
-                       uint blockSize);
+                       uint blockSize, Double amp = Double(1));
 
 private:
 

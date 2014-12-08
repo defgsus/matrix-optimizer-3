@@ -130,7 +130,9 @@ public:
 
 
     /** Creates a timeline parameter.
-        Ownership of @p defaultValue stays with caller. */
+        Ownership of @p defaultValue stays with caller.
+        The @p defaultValue timeline is copied, if specified and can be deleted
+        when this call returns. */
     ParameterTimeline1D * createTimeline1DParameter(
                 const QString& id, const QString& name, const QString& statusTip,
                 const MATH::Timeline1D * defaultValue = 0, bool editable = true);

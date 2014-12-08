@@ -23,6 +23,7 @@ AudioOutAO::AudioOutAO(QObject *parent)
     : AudioObject   (parent)
 {
     setName("AudioOut");
+    setNumberAudioInputs(2);
 }
 
 void AudioOutAO::serialize(IO::DataStream & io) const
@@ -51,9 +52,19 @@ void AudioOutAO::createParameters()
 
 void AudioOutAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
                               const QList<AUDIO::AudioBuffer *> &outputs,
-                              uint , SamplePos , uint )
+                              uint bsize, SamplePos pos, uint thread)
 {
     // copy inputs
+    AUDIO::AudioBuffer::process(inputs, outputs,
+    [=](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+    {
+        for (SamplePos i=0; i<bsize; ++i)
+        {
+            F32 amp = paramAmp_->value(sampleRateInv() * (pos + i), thread);
+            out->write(i, amp * in->read(i));
+        }
+    });
+    /*
     for (int i = 0; i<outputs.size(); ++i)
     if (outputs[i])
     {
@@ -62,7 +73,7 @@ void AudioOutAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
             outputs[i]->writeBlock( inputs[i]->readPointer() );
         else
             outputs[i]->writeNullBlock();
-    }
+    }*/
 }
 
 } // namespace MO

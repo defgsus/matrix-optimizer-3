@@ -6,6 +6,8 @@
     <p>All rights reserved</p>
 
     <p>created 27.09.2014</p>
+
+    <p>adapted from: Dr Anthony J. Fisher / http://www-users.cs.york.ac.uk/~fisher/software/mkfilter</p>
 */
 
 #include <complex>
@@ -71,7 +73,7 @@ public:
 
     template <typename F>
     void process(const F * input, uint inputStride,
-                       F * output, uint outputStride, uint size);
+                       F * output, uint outputStride, uint size, F amp);
 
     void dumpCoeffs();
 
@@ -482,9 +484,11 @@ void FixedFilter::Private::dumpCoeffs()
 
 template <typename F>
 void FixedFilter::Private::process(const F *input, uint inputStride,
-                                         F *output, uint outputStride, uint size)
+                                         F *output, uint outputStride, uint size, F amp)
 {
 #define MO__CLIP(v__) std::max(-clip_,std::min(clip_, (v__) ))
+
+    amp /= maxgain;
 
     for (uint i=0; i<size; ++i, input += inputStride, output += outputStride)
     {
@@ -501,7 +505,7 @@ void FixedFilter::Private::process(const F *input, uint inputStride,
         for (uint j=0; j < numpoles; j++)
             yv[numpoles] += (xcoeffs[j] * xv[j]) + (ycoeffs[j] * yv[j]);
 
-        *output = yv[numpoles] / maxgain;
+        *output = yv[numpoles] * amp;
     }
 
 #undef MO__CLIP
@@ -558,15 +562,15 @@ void FixedFilter::updateCoefficients()
 }
 
 void FixedFilter::process(const F32 *input, uint inputStride,
-                                F32 *output, uint outputStride, uint blockSize)
+                                F32 *output, uint outputStride, uint blockSize, F32 amp)
 {
-    p_->process(input, inputStride, output, outputStride, blockSize);
+    p_->process(input, inputStride, output, outputStride, blockSize, amp);
 }
 
 void FixedFilter::process(const Double *input, uint inputStride,
-                                Double *output, uint outputStride, uint blockSize)
+                                Double *output, uint outputStride, uint blockSize, Double amp)
 {
-    p_->process(input, inputStride, output, outputStride, blockSize);
+    p_->process(input, inputStride, output, outputStride, blockSize, amp);
 }
 
 } // namespace AUDIO

@@ -62,7 +62,7 @@ void Filter24::updateCoefficients()
 }
 
 void Filter24::process(const F32 *input, uint inputStride,
-                                F32 *output, uint outputStride, uint blockSize)
+                                F32 *output, uint outputStride, uint blockSize, F32 amp)
 {
 #define MO__LIMIT(v__) std::min(F32(1),std::max(F32(-1), (v__) ))
 
@@ -88,7 +88,7 @@ void Filter24::process(const F32 *input, uint inputStride,
                 oldy3_ = y3_ + denorm;
                 oldy4_ = y4_;
 
-                *output = y4_;
+                *output = y4_ * amp;
             }
         break;
 
@@ -109,7 +109,7 @@ void Filter24::process(const F32 *input, uint inputStride,
                 oldy3_ = y3_ + denorm;
                 oldy4_ = y4_;
 
-                *output = *input - y4_;
+                *output = (*input - y4_) * amp;
             }
         break;
 
@@ -145,7 +145,7 @@ void Filter24::process(const F32 *input, uint inputStride,
                 boldy3_ = by3_ + denorm;
                 boldy4_ = by4_;
 
-                *output = by4_;
+                *output = by4_ * amp;
             }
         break;
     }

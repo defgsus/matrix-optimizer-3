@@ -26,9 +26,13 @@ class FilterAO::Private
 {
     public:
 
+    void updateFilters();
+
     ParameterFloat
         * paramFreq,
-        * paramReso;
+        * paramReso,
+        * paramAmp;
+        //* paramReset;
     ParameterInt
         * paramOrder;
     ParameterSelect
@@ -80,7 +84,7 @@ void FilterAO::createParameters()
                                                    tr("The order (sharpness) of the filter for the 'nth order' types"),
                                                    2,
                                                    1, 10,
-                                                   1, true, true);
+                                                   1, true, false);
 
         p_->paramFreq = params()->createFloatParameter("_filter_freq", tr("frequency"),
                                                    tr("The cutoff frequency of the filter in Hertz"),
@@ -88,7 +92,40 @@ void FilterAO::createParameters()
         p_->paramReso = params()->createFloatParameter("_filter_reso", tr("resonance"),
                                                    tr("The filter steepness [0,1]"),
                                                    0.0, 0.02);
+        p_->paramAmp = params()->createFloatParameter("_filter_amp", tr("amplitude"),
+                                                   tr("The output amplitude of the filter"),
+                                                   1.0, 0.05);
+        //p_->paramReset = params()->createGateParameter
     params()->endParameterGroup();
+}
+
+void FilterAO::updateParameterVisibility()
+{
+    auto type = (AUDIO::MultiFilter::FilterType)p_->paramType->baseValue();
+
+    p_->paramOrder->setVisible(
+                AUDIO::MultiFilter::supportsOrder(type));
+    p_->paramReso->setVisible(
+                AUDIO::MultiFilter::supportsResonance(type));
+}
+
+void FilterAO::onParameterChanged(Parameter * p)
+{
+    // Note: We change the filter type here
+    // to avoid memory allocation in the audio thread!
+    // Same goes for order
+    if (p == p_->paramType || p == p_->paramOrder)
+        for (auto & f : p_->filters)
+        {
+            f.setType((AUDIO::MultiFilter::FilterType)p_->paramType->baseValue());
+            f.setOrder(p_->paramOrder->baseValue());
+            f.updateCoefficients();
+        }
+}
+
+void FilterAO::onParametersLoaded()
+{
+    p_->updateFilters();
 }
 
 void FilterAO::setNumberThreads(uint count)
@@ -96,6 +133,19 @@ void FilterAO::setNumberThreads(uint count)
     AudioObject::setNumberThreads(count);
 
     p_->filters.resize(count);
+    p_->updateFilters();
+}
+
+void FilterAO::Private::updateFilters()
+{
+    for (auto & f : filters)
+    {
+        // set type and order
+        // other parameters can/will be set in audio thread
+        f.setType((AUDIO::MultiFilter::FilterType)paramType->baseValue());
+        f.setOrder(paramOrder->baseValue());
+        f.updateCoefficients();
+    }
 }
 
 void FilterAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
@@ -108,24 +158,22 @@ void FilterAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
     AUDIO::MultiFilter * filter = &p_->filters[thread];
 
     Float   freq = p_->paramFreq->value(time, thread),
-            res = p_->paramReso->value(time, thread);
-    uint    order = p_->paramOrder->value(time, thread);
-    auto    type = (AUDIO::MultiFilter::FilterType)
-                        p_->paramType->baseValue();
+            res = p_->paramReso->value(time, thread),
+            amp = p_->paramAmp->value(time, thread);
 
-    if (filter->type() != type
-            || filter->resonance() != res
-            || filter->frequency() != freq
-            || filter->order() != order
-            || filter->sampleRate() != sampleRate())
+    // update filter settings
+    // XXX Note that these are only updated at the beginning of one dsp block!
+    if (   filter->resonance() != res
+        || filter->frequency() != freq
+        || filter->sampleRate() != sampleRate())
     {
-        filter->setType(type);
         filter->setFrequency(freq);
         filter->setResonance(res);
         filter->setSampleRate(sampleRate());
-        filter->setOrder(order);
         filter->updateCoefficients();
     }
+    // does not need updateCoefficients()
+    filter->setOutputAmplitude(amp);
 
     AUDIO::AudioBuffer::process(inputs, outputs,
     [filter](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)

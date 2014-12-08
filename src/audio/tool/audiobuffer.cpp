@@ -136,7 +136,7 @@ void AudioBuffer::process(const QList<AudioBuffer *> &src, const QList<AudioBuff
     const int num = std::max(dst.size(), src.size());
 
     for (int i = 0; i<num; ++i)
-    if (dst[i])
+    if (i < dst.size() && dst[i])
     {
         if (i < src.size() && src[i] != 0)
         {

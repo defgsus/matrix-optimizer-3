@@ -19,8 +19,8 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierDuplicate)
 
 GeometryModifierDuplicate::GeometryModifierDuplicate()
     : GeometryModifier("Duplicate", QObject::tr("duplicate")),
-      equ_      ("x = 2 * dx + x;\n"
-                 "y = 2 * dy + y"),
+      equ_      ("x = x + 2 * dx;\n"
+                 "y = y + 2 * dy"),
       numX_     (2),
       numY_     (2),
       numZ_     (1)
@@ -66,6 +66,8 @@ void GeometryModifierDuplicate::deserialize(IO::DataStream &io)
 void GeometryModifierDuplicate::execute(Geometry *g)
 {
     Geometry copy(*g);
+
+    g->clear();
 
     QStringList constants =
     {
