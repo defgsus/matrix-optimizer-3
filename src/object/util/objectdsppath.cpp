@@ -32,6 +32,7 @@
 #include "io/log.h"
 
 namespace MO {
+namespace AUDIO { class SpatialSoundSource; }
 
 class ObjectDspPath::Private
 {
@@ -68,12 +69,20 @@ public:
 
         /// Object associated to this buffer
         Object * object;
+
+        // --- transformations ---
         /// The translation parent
         ObjectBuffer * posParent;
         /// Calculated matrix
         TransformationBuffer matrix,
         /// Link to parent translation
             *parentMatrix;
+
+        // --- soundsources ---
+        QList<AUDIO::SpatialSoundSource*>
+            soundSources;
+
+        // --- audio objects ---
         QList<AUDIO::AudioBuffer*>
         /// Audio output buffers (memory managed)
             audioOutputs,
@@ -111,6 +120,9 @@ public:
     /** Prepares the audio input buffers for the objectbuffer.
         Must be called sequentially in dsp order */
     void prepareAudioInputBuffers(ObjectBuffer * o);
+    void prepareAudioOutputBuffers(ObjectBuffer * o);
+
+    void prepareSoundSourceBuffer(ObjectBuffer * o);
 
     QList<ObjectBuffer*>
         transformationObjects,
@@ -178,7 +190,8 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
     {
         auto ao = static_cast<AudioObject*>(b->object);
 
-        // input-mix inbetweens
+        // mix input-inbetweens
+        // (multiple ins on one audio input)
         for (const Private::InputMixStep & mix : b->audioInputMix)
         {
             mix.buf->writeNullBlock();
@@ -332,13 +345,14 @@ void ObjectDspPath::Private::createPath(Scene * s)
         transformationObjects.append(b);
     });
 
-
     // ---------------- get all audio processors ----------------
 
+    // copy audio connections to DirectedGraph helper
     DirectedGraph<AudioObject*> dspgraph;
     for (auto i : *scene->audioConnections())
         dspgraph.addEdge(i->from(), i->to());
 
+    // create linear list in correct order
     QList<AudioObject*> audioObjectList;
     dspgraph.makeLinear(audioObjectList);
 
@@ -348,64 +362,10 @@ void ObjectDspPath::Private::createPath(Scene * s)
         auto b = getObjectBuffer(o);
         audioObjects.append( b );
 
-        // special system-out object?
-        AudioOutAO * oout = qobject_cast<AudioOutAO*>(o);
-
-        // prepare outputs
-        // (create an entry in ObjectBuffer::audioOutputs for each output
-        //  and set unused outputs to NULL)
-        if (!oout)
-        {
-            auto outs = scene->audioConnections()->getOutputs(o);
-            for (uint i = 0; i < o->numAudioOutputs(); ++i)
-            {
-                bool used = false;
-                for (AudioObjectConnection * c : outs)
-                if (c->outputChannel() == i)
-                {
-                    auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
-                    b->audioOutputs.push_back( buf );
-                    used = true;
-                    break;
-                }
-                if (!used)
-                    b->audioOutputs.push_back( 0 );
-            }
-        }
-        // perpare outputs of system-out object
-        else
-        {
-            // find highest input channel
-            auto ins = scene->audioConnections()->getInputs(o);
-            uint num = 0;
-            for (auto c : ins)
-                num = std::max(num, c->inputChannel() + 1);
-            // but limit to max system-outputs
-            num = std::min(num, conf.numChannelsOut());
-            // prepare an output for each input
-            for (uint i=0; i<num; ++i)
-            {
-                bool used = false;
-                for (AudioObjectConnection * c : ins)
-                if (c->inputChannel() == i)
-                {
-                    auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
-                    b->audioOutputs.push_back( buf );
-                    used = true;
-                    break;
-                }
-                if (!used)
-                    b->audioOutputs.push_back( 0 );
-            }
-
-            // remember audio-out objects separately
-            audioOutObjects.push_back( b );
-        }
-
+        // create and link buffers
+        prepareAudioOutputBuffers(b);
         prepareAudioInputBuffers(b);
-
     }
-
 
     // ----------- get all soundsource objects ------------------
 
@@ -414,7 +374,14 @@ void ObjectDspPath::Private::createPath(Scene * s)
     {
         return !o->audioSources().isEmpty();
     });
-    createObjectBuffers(soundsources, soundsourceObjects);
+    //createObjectBuffers(soundsources, soundsourceObjects);
+    for (Object * obj : soundsources)
+    {
+        auto b = getObjectBuffer(obj);
+        audioObjects.append( b );
+
+        for (auto s : obj->audioSources());
+    }
 
 
     // ----------- get all microphone objects -------------------
@@ -426,12 +393,75 @@ void ObjectDspPath::Private::createPath(Scene * s)
     });
     createObjectBuffers(microphones, microphoneObjects);
 
+
+}
+
+void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
+{
+    MO_ASSERT(dynamic_cast<AudioObject*>(buf->object),
+              "invalid object for audio output preparation");
+
+    AudioObject * o = static_cast<AudioObject*>(buf->object);
+
+    // special system-out object?
+    AudioOutAO * oout = qobject_cast<AudioOutAO*>(o);
+
+    // prepare outputs
+    // (create an entry in ObjectBuffer::audioOutputs for each output
+    //  and set unused outputs to NULL)
+    if (!oout)
+    {
+        auto outs = scene->audioConnections()->getOutputs(o);
+        for (uint i = 0; i < o->numAudioOutputs(); ++i)
+        {
+            bool used = false;
+            for (AudioObjectConnection * c : outs)
+            if (c->outputChannel() == i)
+            {
+                auto audiobuf = new AUDIO::AudioBuffer(conf.bufferSize());
+                buf->audioOutputs.push_back( audiobuf );
+                used = true;
+                break;
+            }
+            if (!used)
+                buf->audioOutputs.push_back( 0 );
+        }
+    }
+    // perpare outputs of system-out object
+    else
+    {
+        // find highest input channel
+        auto ins = scene->audioConnections()->getInputs(o);
+        uint num = 0;
+        for (auto c : ins)
+            num = std::max(num, c->inputChannel() + 1);
+        // but limit to max system-outputs
+        num = std::min(num, conf.numChannelsOut());
+        // prepare an output for each input
+        for (uint i=0; i<num; ++i)
+        {
+            bool used = false;
+            for (AudioObjectConnection * c : ins)
+            if (c->inputChannel() == i)
+            {
+                auto audiobuf = new AUDIO::AudioBuffer(conf.bufferSize());
+                buf->audioOutputs.push_back( audiobuf );
+                used = true;
+                break;
+            }
+            if (!used)
+                buf->audioOutputs.push_back( 0 );
+        }
+
+        // remember audio-out objects separately
+        audioOutObjects.push_back( buf );
+    }
 }
 
 void ObjectDspPath::Private::prepareAudioInputBuffers(ObjectBuffer * buf)
 {
     MO_ASSERT(dynamic_cast<AudioObject*>(buf->object),
-              "invalid object for audio preparation");
+              "invalid object for audio input preparation");
 
     AudioObject * o = static_cast<AudioObject*>(buf->object);
 
