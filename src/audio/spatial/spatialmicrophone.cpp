@@ -10,16 +10,18 @@
 
 #include "spatialmicrophone.h"
 #include "audio/tool/audiobuffer.h"
+#include "audio/tool/delay.h"
 #include "audio/spatial/spatialsoundsource.h"
 #include "io/error.h"
 
 namespace MO {
 namespace AUDIO {
 
-SpatialMicrophone::SpatialMicrophone(AudioBuffer * b, uint sampleRate)
+SpatialMicrophone::SpatialMicrophone(AudioBuffer * b, uint sampleRate, uint channel)
     : p_signal_             (b),
       p_transform_          (b->blockSize()),
       p_sampleRate_         (sampleRate),
+      p_channel_            (channel),
       p_sampleRateInv_      (1.f / std::max(uint(1), sampleRate))
 {
 }
@@ -50,7 +52,9 @@ void SpatialMicrophone::spatialize_(SpatialSoundSource * snd)
     // add-write here
     F32 * buffer = p_signal_->writePointer();
 
-    for (uint i=0; i<bufferSize(); ++i)
+    F32 delayReadPos = bufferSize();
+
+    for (uint i=0; i<bufferSize(); ++i, --delayReadPos)
     {
         // get transformation and position for mic/snd for each sample
         const Mat4&
@@ -80,8 +84,8 @@ void SpatialMicrophone::spatialize_(SpatialSoundSource * snd)
             const F32 delaySam = dist / 330.f * p_sampleRate_;
 
             // read delayed sample from snd
-#if (0)
-            const F32 sam = src->getDelaySample(thread, i, delaySam);
+#if (1)
+            const F32 sam = snd->delay()->read(delayReadPos + delaySam);
 #else
             const F32 sam = snd->signal()->read(i);
 #endif

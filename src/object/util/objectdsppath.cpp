@@ -27,6 +27,7 @@
 #include "object/util/audioobjectconnections.h"
 #include "audio/configuration.h"
 #include "audio/tool/audiobuffer.h"
+#include "audio/tool/delay.h"
 #include "audio/spatial/spatialsoundsource.h"
 #include "audio/spatial/spatialmicrophone.h"
 #include "math/transformationbuffer.h"
@@ -72,6 +73,7 @@ public:
             for (auto s : soundSources)
             {
                 delete s->signal();
+                delete s->delay();
                 delete s;
             }
 
@@ -276,6 +278,12 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
                     b->soundSources,
                     config().bufferSize(),
                     pos, thread);
+        // forward buffers and fill delay-lines
+        for (AUDIO::SpatialSoundSource * s : b->soundSources)
+        {
+            s->signal()->nextBlock();
+            s->delay()->writeBlock(s->signal()->readPointer(), config().bufferSize());
+        }
     }
 
     // ------- process virtual microphones -------------
@@ -299,10 +307,10 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
     // mix into system audio outputs
     for (Private::ObjectBuffer * b : p_->microphoneObjects)
     {
-        const uint num = std::min(p_->audioOuts.size(),
-                                  b->microphones.size());
-        for (uint i = 0; i < num; ++i)
-            p_->audioOuts[i]->writeAddBlock(b->microphones[i]->signal()->readPointer());
+        for (AUDIO::SpatialMicrophone * m : b->microphones)
+            if ((int)m->channel() < p_->audioOuts.size())
+                p_->audioOuts[m->channel()]->writeAddBlock(
+                            m->signal()->readPointer());
     }
 
 
@@ -331,6 +339,7 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
 #ifdef MO_DO_DEBUG
         out << "(" << o->matrixParent->object->name() << ")";
 #endif
+        out << "(" << o->microphoneInputSoundSources.size() << " ins)";
     }
 
     out << "\nsoundsource objects:";
@@ -398,6 +407,9 @@ void ObjectDspPath::Private::createPath(Scene * s)
 {
     clear();
     scene = s;
+
+    // little hack until concept for microphone routing
+    uint numGlobalMicrophone = 0;
 
     // -------------------- system io ---------------------------
 
@@ -486,7 +498,8 @@ void ObjectDspPath::Private::createPath(Scene * s)
         {
             // direct signal buffer (input to soundsource)
             auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
-            auto src = new AUDIO::SpatialSoundSource(buf);
+            auto delay = new AUDIO::AudioDelay(conf.sampleRate() * 2);
+            auto src = new AUDIO::SpatialSoundSource(buf, delay);
             b->soundSources.append( src );
         }
     }
@@ -513,7 +526,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
         {
             // direct signal buffer (output of microphone)
             auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
-            auto src = new AUDIO::SpatialMicrophone(buf, conf.sampleRate());
+            auto src = new AUDIO::SpatialMicrophone(buf, conf.sampleRate(), numGlobalMicrophone++);
             b->microphones.append( src );
         }
 

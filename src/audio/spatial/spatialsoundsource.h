@@ -18,12 +18,14 @@ namespace MO {
 namespace AUDIO {
 
 class AudioBuffer;
+template <typename F, typename I> class Delay;
+typedef Delay<F32, int> AudioDelay;
 
 class SpatialSoundSource
 {
 public:
     /** Constructs a sound source around an audio buffer */
-    SpatialSoundSource(AudioBuffer * buffer);
+    SpatialSoundSource(AudioBuffer * buffer, AudioDelay * delay);
 
     // ------------------ getter ---------------------
 
@@ -32,15 +34,18 @@ public:
     AudioBuffer * signal() { return p_signal_; }
     const AudioBuffer * signal() const { return p_signal_; }
 
+    AudioDelay * delay() { return p_delay_; }
+    const AudioDelay * delay() const { return p_delay_; }
+
     /** Access to the current block of transformations.
         This will have the same buffer size as the AudioBuffer given to the constructor. */
     TransformationBuffer * transformationBuffer() { return &p_transform_; }
     const TransformationBuffer * transformationBuffer() const { return &p_transform_; }
 
-
 private:
 
     AudioBuffer * p_signal_;
+    AudioDelay * p_delay_;
     TransformationBuffer p_transform_;
 };
 

@@ -226,7 +226,9 @@ HEADERS += \
     src/audio/tool/resamplebuffer.h \
     src/object/audio/shaperao.h \
     src/audio/spatial/spatialsoundsource.h \
-    src/audio/spatial/spatialmicrophone.h
+    src/audio/spatial/spatialmicrophone.h \
+    src/types/conversion.h \
+    src/audio/tool/delay.h
 
 SOURCES += \
     src/math/timeline1d.cpp \

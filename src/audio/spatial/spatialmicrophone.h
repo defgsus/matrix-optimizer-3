@@ -24,11 +24,13 @@ class SpatialMicrophone
 {
 public:
     /** Constructs a microphone around an audio buffer */
-    SpatialMicrophone(AudioBuffer * buffer, uint sampleRate);
+    SpatialMicrophone(AudioBuffer * buffer, uint sampleRate, uint channel = 0);
 
     // ------------------ getter ---------------------
 
     uint bufferSize() const;
+
+    uint channel() const { return p_channel_; }
 
     /** The recorded signal */
     AudioBuffer * signal() { return p_signal_; }
@@ -38,6 +40,10 @@ public:
         This will have the same buffer size as the AudioBuffer given to the constructor. */
     TransformationBuffer * transformationBuffer() { return &p_transform_; }
     const TransformationBuffer * transformationBuffer() const { return &p_transform_; }
+
+    // ----------------- setter ----------------------
+
+    void setChannel(uint channel) { p_channel_ = channel; }
 
     // -------------- spatialization -----------------
 
@@ -49,7 +55,7 @@ private:
 
     AudioBuffer * p_signal_;
     TransformationBuffer p_transform_;
-    uint p_sampleRate_;
+    uint p_sampleRate_, p_channel_;
     F32 p_sampleRateInv_;
 };
 

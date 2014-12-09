@@ -65,6 +65,8 @@ void AudioBuffer::readBlockLength(F32 *block, size_t size) const
 
 }
 
+// XXX All crap
+
 void AudioBuffer::bypass(const QList<AUDIO::AudioBuffer *> &inputs,
                          const QList<AUDIO::AudioBuffer *> &outputs, bool callNextBlock)
 {

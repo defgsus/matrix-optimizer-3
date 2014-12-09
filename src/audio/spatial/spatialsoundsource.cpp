@@ -14,8 +14,9 @@
 namespace MO {
 namespace AUDIO {
 
-SpatialSoundSource::SpatialSoundSource(AudioBuffer * b)
+SpatialSoundSource::SpatialSoundSource(AudioBuffer * b, AudioDelay * d)
     : p_signal_             (b),
+      p_delay_              (d),
       p_transform_          (b->blockSize())
 {
 }
