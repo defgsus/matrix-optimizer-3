@@ -1,14 +1,14 @@
-/** @file audiooutao.cpp
+/** @file audioinao.cpp
 
     @brief
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 02.12.2014</p>
+    <p>created 09.12.2014</p>
 */
 
-#include "audiooutao.h"
+#include "audioinao.h"
 #include "audio/tool/audiobuffer.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
@@ -17,44 +17,44 @@
 
 namespace MO {
 
-MO_REGISTER_OBJECT(AudioOutAO)
+MO_REGISTER_OBJECT(AudioInAO)
 
-AudioOutAO::AudioOutAO(QObject *parent)
+AudioInAO::AudioInAO(QObject *parent)
     : AudioObject   (parent)
 {
-    setName("AudioOut");
-    setNumberAudioInputs(2);
+    setName("AudioIn");
+    setNumberAudioOutputs(2);
 }
 
-void AudioOutAO::serialize(IO::DataStream & io) const
+void AudioInAO::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
 
-    io.writeHeader("aoout", 1);
+    io.writeHeader("aoin", 1);
 }
 
-void AudioOutAO::deserialize(IO::DataStream & io)
+void AudioInAO::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
 
-    io.readHeader("aoout", 1);
+    io.readHeader("aoin", 1);
 }
 
-void AudioOutAO::createParameters()
+void AudioInAO::createParameters()
 {
     AudioObject::createParameters();
 
-    params()->beginParameterGroup("out", tr("output"));
+    params()->beginParameterGroup("in", tr("input"));
 
         paramAmp_ = params()->createFloatParameter("amp", tr("amplitude"),
-                                                   tr("The amplitude of the audio output"),
-                                                   1.0, 0.1);
+                                                   tr("The amplitude of the audio input"),
+                                                   1.0, 0.05);
     params()->endParameterGroup();
 }
 
-void AudioOutAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
-                              const QList<AUDIO::AudioBuffer *> &outputs,
-                              uint bsize, SamplePos pos, uint thread)
+void AudioInAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
+                             const QList<AUDIO::AudioBuffer *> &outputs,
+                             uint bsize, SamplePos pos, uint thread)
 {
     // simply copy inputs to outputs here and apply amplitude
 

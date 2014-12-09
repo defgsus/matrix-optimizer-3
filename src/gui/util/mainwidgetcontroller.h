@@ -103,6 +103,8 @@ public slots:
 
     void renderToDisk();
 
+    void testAudioSpeed();
+
     // --------- private slots -----------------
 
 private slots:

@@ -228,7 +228,8 @@ HEADERS += \
     src/audio/spatial/spatialsoundsource.h \
     src/audio/spatial/spatialmicrophone.h \
     src/types/conversion.h \
-    src/audio/tool/delay.h
+    src/audio/tool/delay.h \
+    src/object/audio/audioinao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -418,4 +419,5 @@ SOURCES += \
     src/object/audio/fftao.cpp \
     src/object/audio/shaperao.cpp \
     src/audio/spatial/spatialsoundsource.cpp \
-    src/audio/spatial/spatialmicrophone.cpp
+    src/audio/spatial/spatialmicrophone.cpp \
+    src/object/audio/audioinao.cpp
