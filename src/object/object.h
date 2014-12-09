@@ -602,7 +602,7 @@ protected:
 
 public:
 
-    /** Override to update the transformations of the sound source objects.
+    /** Override to update the transformations of the soundsources.
         The base implementation simply copies the object transformation. */
     virtual void calculateSoundSourceTransformation(
                                         const TransformationBuffer * objectTransformation,
@@ -614,6 +614,13 @@ public:
     virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,
                                             uint bufferSize, SamplePos pos, uint thread)
     { Q_UNUSED(bufferSize); Q_UNUSED(pos); Q_UNUSED(thread); }
+
+    /** Override to update the transformations of each microphone.
+        The base implementation simply copies the object transformation. */
+    virtual void calculateMicrophoneTransformation(
+                                        const TransformationBuffer * objectTransformation,
+                                        const QList<AUDIO::SpatialMicrophone*>,
+                                        uint bufferSize, SamplePos pos, uint thread);
 
 public:
     // --------------- 3d --------------------------

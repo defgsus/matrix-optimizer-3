@@ -26,7 +26,7 @@ namespace MO {
     namespace AUDIO
     {
         class SpatialSoundSource;
-        class VirtualMicrophone;
+        class SpatialMicrophone;
         class AudioBuffer;
         class Configuration;
     }

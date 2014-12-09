@@ -26,10 +26,5 @@ uint SpatialSoundSource::bufferSize() const
 }
 
 
-void SpatialSoundSource::spatialize(AudioBuffer *output, const TransformationBuffer *sampleLocation)
-{
-
-}
-
 } // namespace AUDIO
 } // namespace MO

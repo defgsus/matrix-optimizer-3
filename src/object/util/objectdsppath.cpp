@@ -28,6 +28,7 @@
 #include "audio/configuration.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/spatial/spatialsoundsource.h"
+#include "audio/spatial/spatialmicrophone.h"
 #include "math/transformationbuffer.h"
 #include "graph/directedgraph.h"
 #include "io/log.h"
@@ -67,7 +68,14 @@ public:
         {
             for (auto b : audioOutputs)
                 delete b;
+
             for (auto s : soundSources)
+            {
+                delete s->signal();
+                delete s;
+            }
+
+            for (auto s : microphones)
             {
                 delete s->signal();
                 delete s;
@@ -94,9 +102,14 @@ public:
             *matrix;
 
         // --- spatialization ---
-        /// Soundsources per object (memory managed)
         QList<AUDIO::SpatialSoundSource*>
-            soundSources;
+        /// Soundsources per object (memory managed)
+            soundSources,
+        /// All sound sources that the microphones must record
+            microphoneInputSoundSources;
+        QList<AUDIO::SpatialMicrophone*>
+        /// Microphones per object (memory managed)
+            microphones;
 
         // --- audio objects ---
         QList<AUDIO::AudioBuffer*>
@@ -140,6 +153,8 @@ public:
         to the next parent that actually calculates it's matrix, or to
         the matrix of the scene. */
     void assignMatrix(ObjectBuffer * o);
+
+    //void assignMicrophoneInputSoundSources(ObjectBuffer * o);
 
     /** Prepares the audio input buffers for the objectbuffer.
         Must be called sequentially in dsp order */
@@ -256,12 +271,45 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
                     b->soundSources,
                     config().bufferSize(),
                     pos, thread);
-        // get audio signal
+        // get audio signal per soundsource
         b->object->calculateSoundSourceBuffer(
                     b->soundSources,
                     config().bufferSize(),
                     pos, thread);
     }
+
+    // ------- process virtual microphones -------------
+
+    for (Private::ObjectBuffer * b : p_->microphoneObjects)
+    {
+        // get transformation-per-microphone
+        b->object->calculateMicrophoneTransformation(
+                    b->matrix,
+                    b->microphones,
+                    config().bufferSize(),
+                    pos, thread);
+        // sample soundsources
+        for (AUDIO::SpatialMicrophone * m : b->microphones)
+        {
+            m->spatialize(b->microphoneInputSoundSources);
+            m->signal()->nextBlock();
+        }
+    }
+
+    // mix into system audio outputs
+    for (Private::ObjectBuffer * b : p_->microphoneObjects)
+    {
+        const uint num = std::min(p_->audioOuts.size(),
+                                  b->microphones.size());
+        for (uint i = 0; i < num; ++i)
+            p_->audioOuts[i]->writeAddBlock(b->microphones[i]->signal()->readPointer());
+    }
+
+
+    // ----- advance read/write pointer for system audio-outs -----
+
+    for (auto audiobuf : p_->audioOuts)
+        audiobuf->nextBlock();
 }
 
 
@@ -280,6 +328,9 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
     for (auto o : p_->microphoneObjects)
     {
         out << " " << o->object->name();
+#ifdef MO_DO_DEBUG
+        out << "(" << o->matrixParent->object->name() << ")";
+#endif
     }
 
     out << "\nsoundsource objects:";
@@ -421,7 +472,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
     {
         return o->numberSoundSources();
     });
-    //createObjectBuffers(soundsources, soundsourceObjects);
+    // for each object which has soundsources assigned
     for (Object * obj : soundsources)
     {
         auto b = getObjectBuffer(obj);
@@ -433,7 +484,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
         // create the soundsources
         for (uint i = 0; i < obj->numberSoundSources(); ++i)
         {
-            // direct signal buffer
+            // direct signal buffer (input to soundsource)
             auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
             auto src = new AUDIO::SpatialSoundSource(buf);
             b->soundSources.append( src );
@@ -448,7 +499,36 @@ void ObjectDspPath::Private::createPath(Scene * s)
     {
         return o->numberMicrophones();
     });
-    createObjectBuffers(microphones, microphoneObjects);
+    // for each object which has microphones assigned
+    for (Object * obj : microphones)
+    {
+        auto b = getObjectBuffer(obj);
+        microphoneObjects.append( b );
+
+        // find (parent) translation matrix
+        assignMatrix(b);
+
+        // create the microphones
+        for (uint i = 0; i < obj->numberMicrophones(); ++i)
+        {
+            // direct signal buffer (output of microphone)
+            auto buf = new AUDIO::AudioBuffer(conf.bufferSize());
+            auto src = new AUDIO::SpatialMicrophone(buf, conf.sampleRate());
+            b->microphones.append( src );
+        }
+
+        // create the list of soundsources that the above microphones
+        // should sample from
+        // [Right now these are all of them, but i want be able in the future
+        //  to just sample sources in the same branch and stuff like that]
+        for (Object * sobj : soundsources)
+        {
+            ObjectBuffer * sbuf = findObjectBuffer(sobj);
+            MO_ASSERT(sbuf, "duh?");
+
+            b->microphoneInputSoundSources.append( sbuf->soundSources );
+        }
+    }
 
 
 }

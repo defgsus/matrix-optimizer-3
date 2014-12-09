@@ -12,24 +12,19 @@
 #include <QDebug>
 
 #include "object.h"
-#include "tool/stringmanip.h"
-#include "io/error.h"
-#include "io/datastream.h"
-#include "io/log.h"
-
 #include "objectfactory.h"
 #include "scene.h"
 #include "transform/transformation.h"
 #include "param/parameters.h"
-#include "param/parameterint.h"
-#include "param/parameterfloat.h"
 #include "param/parameterselect.h"
-#include "param/parameterfilename.h"
-#include "param/parametertext.h"
-#include "param/parametertimeline1d.h"
 #include "audio/spatial/spatialsoundsource.h"
+#include "audio/spatial/spatialmicrophone.h"
 #include "math/transformationbuffer.h"
 #include "modulatorobjectfloat.h"
+#include "io/datastream.h"
+#include "io/error.h"
+#include "io/log.h"
+#include "tool/stringmanip.h"
 
 namespace MO {
 
@@ -1143,9 +1138,20 @@ void Object::calculateSoundSourceTransformation(
     MO_ASSERT(list.size() == (int)numberSoundSources(), "number of sound sources does not match "
               << list.size() << "/" << numberSoundSources());
 
-    if (objectTransform)
-        for (auto s : list)
-            TransformationBuffer::copy(objectTransform, s->transformationBuffer());
+    for (auto s : list)
+        TransformationBuffer::copy(objectTransform, s->transformationBuffer());
+}
+
+void Object::calculateMicrophoneTransformation(
+        const TransformationBuffer * objectTransform,
+        const QList<AUDIO::SpatialMicrophone*> list,
+        uint , SamplePos , uint )
+{
+    MO_ASSERT(list.size() == (int)numberMicrophones(), "number of microphones does not match "
+              << list.size() << "/" << numberMicrophones());
+
+    for (auto m : list)
+        TransformationBuffer::copy(objectTransform, m->transformationBuffer());
 }
 
 // -------------------- modulators ---------------------

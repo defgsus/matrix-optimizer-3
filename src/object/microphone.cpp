@@ -24,6 +24,7 @@ Microphone::Microphone(QObject *parent) :
     Object(parent)
 {
     setName("Microphone");
+    setNumberMicrophones(1);
 }
 
 void Microphone::serialize(IO::DataStream & io) const

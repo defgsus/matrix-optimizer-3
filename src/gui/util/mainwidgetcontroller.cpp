@@ -454,9 +454,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            if (!qobjectInspector_)
-                qobjectInspector_ = new QObjectInspector(application, window_);
-            qobjectInspector_->setRootObject(this);
+            qobjectInspector_ = new QObjectInspector(application, window_);
+            qobjectInspector_->setRootObject(window_);
+            qobjectInspector_->setAttribute(Qt::WA_DeleteOnClose);
             qobjectInspector_->show();
         });
 

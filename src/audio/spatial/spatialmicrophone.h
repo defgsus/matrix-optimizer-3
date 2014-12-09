@@ -1,15 +1,15 @@
-/** @file spatialsoundsource.h
+/** @file spatialmicrophone.h
 
     @brief
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 08.12.2014</p>
+    <p>created 09.12.2014</p>
 */
 
-#ifndef MOSRC_AUDIO_SPATIAL_SPATIALSOUNDSOURCE_H
-#define MOSRC_AUDIO_SPATIAL_SPATIALSOUNDSOURCE_H
+#ifndef MOSRC_AUDIO_SPATIAL_SPATIALMICROPHONE_H
+#define MOSRC_AUDIO_SPATIAL_SPATIALMICROPHONE_H
 
 #include "types/vector.h"
 #include "math/transformationbuffer.h"
@@ -18,17 +18,19 @@ namespace MO {
 namespace AUDIO {
 
 class AudioBuffer;
+class SpatialSoundSource;
 
-class SpatialSoundSource
+class SpatialMicrophone
 {
 public:
-    /** Constructs a sound source around an audio buffer */
-    SpatialSoundSource(AudioBuffer * buffer);
+    /** Constructs a microphone around an audio buffer */
+    SpatialMicrophone(AudioBuffer * buffer, uint sampleRate);
 
     // ------------------ getter ---------------------
 
     uint bufferSize() const;
 
+    /** The recorded signal */
     AudioBuffer * signal() { return p_signal_; }
     const AudioBuffer * signal() const { return p_signal_; }
 
@@ -37,14 +39,21 @@ public:
     TransformationBuffer * transformationBuffer() { return &p_transform_; }
     const TransformationBuffer * transformationBuffer() const { return &p_transform_; }
 
+    // -------------- spatialization -----------------
+
+    void spatialize(const QList<SpatialSoundSource*>& soundSources);
 
 private:
 
+    void spatialize_(SpatialSoundSource*);
+
     AudioBuffer * p_signal_;
     TransformationBuffer p_transform_;
+    uint p_sampleRate_;
+    F32 p_sampleRateInv_;
 };
 
 } // namespace AUDIO
 } // namespace MO
 
-#endif // MOSRC_AUDIO_SPATIAL_SPATIALSOUNDSOURCE_H
+#endif // MOSRC_AUDIO_SPATIAL_SPATIALMICROPHONE_H
