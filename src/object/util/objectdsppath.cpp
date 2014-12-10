@@ -22,6 +22,7 @@
 #include "object/microphone.h"
 #include "object/audioobject.h"
 #include "object/audio/audiooutao.h"
+#include "object/audio/audioinao.h"
 #include "object/util/objecttree.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/audioobjectconnections.h"
@@ -179,7 +180,9 @@ public:
         audioObjects,
         audioOutObjects;
 
-    QList<AUDIO::AudioBuffer*> audioOuts;
+    QList<AUDIO::AudioBuffer*>
+        audioIns,
+        audioOuts;
 };
 
 ObjectDspPath::ObjectDspPath()
@@ -195,6 +198,11 @@ ObjectDspPath::~ObjectDspPath()
 const AUDIO::Configuration & ObjectDspPath::config() const
 {
     return p_->conf;
+}
+
+const QList<AUDIO::AudioBuffer*> & ObjectDspPath::audioInputs()
+{
+    return p_->audioIns;
 }
 
 const QList<AUDIO::AudioBuffer*> & ObjectDspPath::audioOutputs()
@@ -392,6 +400,8 @@ void ObjectDspPath::Private::clear()
 {
     for (auto b : audioOuts)
         delete b;
+    for (auto b : audioIns)
+        delete b;
 
     scene = 0;
     objects.clear();
@@ -399,6 +409,7 @@ void ObjectDspPath::Private::clear()
     microphoneObjects.clear();
     soundsourceObjects.clear();
     audioObjects.clear();
+    audioIns.clear();
     audioOuts.clear();
     audioOutObjects.clear();
 }
@@ -412,6 +423,10 @@ void ObjectDspPath::Private::createPath(Scene * s)
     uint numGlobalMicrophone = 0;
 
     // -------------------- system io ---------------------------
+
+    // system-in-buffers
+    for (uint i = 0; i < conf.numChannelsIn(); ++i)
+        audioIns.push_back( new AUDIO::AudioBuffer(conf.bufferSize()) );
 
     // system-out-buffers
     for (uint i = 0; i < conf.numChannelsOut(); ++i)
@@ -468,6 +483,12 @@ void ObjectDspPath::Private::createPath(Scene * s)
 
     for (AudioObject * o : audioObjectList)
     {
+        // update sys io objects' channels
+        if (auto ao = qobject_cast<AudioInAO*>(o))
+            ao->setNumberAudioInputsOutputs(audioIns.size());
+        if (auto ao = qobject_cast<AudioOutAO*>(o))
+            ao->setNumberAudioInputsOutputs(audioOuts.size());
+
         // ObjectBuffer for each audio object
         auto b = getObjectBuffer(o);
         audioObjects.append( b );
@@ -475,6 +496,9 @@ void ObjectDspPath::Private::createPath(Scene * s)
         // create and link buffers
         prepareAudioInputBuffers(b);
         prepareAudioOutputBuffers(b);
+
+        std::cout << "---------------------------------------------------\n";
+        path->dump(std::cout);
     }
 
     // ----------- get all soundsource objects ------------------
@@ -546,6 +570,81 @@ void ObjectDspPath::Private::createPath(Scene * s)
 
 }
 
+
+
+
+void ObjectDspPath::Private::prepareAudioInputBuffers(ObjectBuffer * buf)
+{
+    MO_ASSERT(dynamic_cast<AudioObject*>(buf->object),
+              "invalid object for audio input preparation");
+
+    AudioObject * o = static_cast<AudioObject*>(buf->object);
+
+    // system-audio-in object?
+    if (qobject_cast<AudioInAO*>(o))
+    {
+        // copy the list of sys-inputs
+        buf->audioInputs = audioIns;
+
+        return;
+    }
+
+
+    // get input connections
+    auto ins = scene->audioConnections()->getInputs(o);
+
+    int numChannels = o->numAudioInputs();
+
+    // determine from inputs
+    if (numChannels < 0)
+        for (auto c : ins)
+            numChannels = std::max(numChannels, (int)c->inputChannel() + 1);
+
+    // for each channel
+    for (int i = 0; i < numChannels; ++i)
+    {
+        // collect all inputs
+        QList<AUDIO::AudioBuffer*> inputs;
+        for (AudioObjectConnection * c : ins)
+        if ((int)c->inputChannel() == i)
+        {
+            // find input module
+            auto inb = getObjectBuffer(c->from());
+#if (0)
+            MO_ASSERT((int)c->outputChannel() < inb->audioOutputs.size(),
+                      "connection requires illegal channel "
+                      << c->outputChannel() << "/" << inb->audioOutputs.size());
+#else
+            if ((int)c->outputChannel() >= inb->audioOutputs.size())
+                MO_WARNING("connection requires illegal channel "
+                           << c->outputChannel() << "/" << inb->audioOutputs.size())
+            else
+#endif
+            inputs.push_back( inb->audioOutputs[c->outputChannel()] );
+        }
+
+        // empty slot
+        if (inputs.isEmpty())
+            buf->audioInputs.push_back( 0 );
+        else
+        // pass through
+        if (inputs.size() == 1)
+            buf->audioInputs.push_back( inputs.first() );
+        else
+        // create mix step
+        {
+            InputMixStep mix(new AUDIO::AudioBuffer(conf.bufferSize()));
+            mix.inputs = inputs;
+            buf->audioInputMix.append( mix );
+
+            // and wire it's output to our input
+            buf->audioInputs.push_back( mix.buf );
+        }
+    }
+}
+
+
+
 void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
 {
     MO_ASSERT(dynamic_cast<AudioObject*>(buf->object),
@@ -608,57 +707,6 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
     }
 }
 
-void ObjectDspPath::Private::prepareAudioInputBuffers(ObjectBuffer * buf)
-{
-    MO_ASSERT(dynamic_cast<AudioObject*>(buf->object),
-              "invalid object for audio input preparation");
-
-    AudioObject * o = static_cast<AudioObject*>(buf->object);
-
-    // get input connections
-    auto ins = scene->audioConnections()->getInputs(o);
-
-    int numChannels = o->numAudioInputs();
-
-    // determine from inputs
-    if (numChannels < 0)
-        for (auto c : ins)
-            numChannels = std::max(numChannels, (int)c->inputChannel() + 1);
-
-    // for each channel
-    for (int i = 0; i < numChannels; ++i)
-    {
-        // collect all inputs
-        QList<AUDIO::AudioBuffer*> inputs;
-        for (AudioObjectConnection * c : ins)
-        if ((int)c->inputChannel() == i)
-        {
-            // find input module
-            auto inb = getObjectBuffer(c->from());
-            MO_ASSERT((int)c->outputChannel() < inb->audioOutputs.size(), "");
-
-            inputs.push_back( inb->audioOutputs[c->outputChannel()] );
-        }
-
-        // empty slot
-        if (inputs.isEmpty())
-            buf->audioInputs.push_back( 0 );
-        else
-        // pass through
-        if (inputs.size() == 1)
-            buf->audioInputs.push_back( inputs.first() );
-        else
-        // create mix step
-        {
-            InputMixStep mix(new AUDIO::AudioBuffer(conf.bufferSize()));
-            mix.inputs = inputs;
-            buf->audioInputMix.append( mix );
-
-            // and wire it's output to our input
-            buf->audioInputs.push_back( mix.buf );
-        }
-    }
-}
 
 
 ObjectDspPath::Private::ObjectBuffer * ObjectDspPath::Private::getParentTransformationObject(ObjectBuffer * buf)

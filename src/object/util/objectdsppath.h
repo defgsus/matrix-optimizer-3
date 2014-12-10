@@ -45,7 +45,10 @@ public:
 
     // ------------- audio io -----------------
 
-    /** The system audio output buffers. */
+    /** Audio input buffers, as requested by createPath() */
+    const QList<AUDIO::AudioBuffer*> & audioInputs();
+
+    /** Audio output buffers, as requested by createPath() */
     const QList<AUDIO::AudioBuffer*> & audioOutputs();
 
 private:

@@ -146,6 +146,7 @@ private slots:
     void onObjectDeleted_(const MO::Object *);
     void onObjectMoved_(MO::Object*, MO::Object * oldParent);
     void onObjectNameChanged_(MO::Object *);
+    void onObjectChanged_(MO::Object *);
     void onModulatorAdded_(MO::Modulator *);
     void onModulatorDeleted_();
     void onConnectionsChanged_();

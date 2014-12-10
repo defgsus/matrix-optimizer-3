@@ -413,12 +413,6 @@ void Scene::updateTree_()
     // collect all modulators for each object
     updateModulators_();
 
-    // XXX testing here
-    // create the audio-dsp graph
-    ObjectDspPath path;
-    path.createPath(this, AUDIO::Configuration(sampleRate(), 4096, 0, 2));
-    path.dump(std::cout);
-
     // update the rendermodes
     propagateRenderMode(0);
 

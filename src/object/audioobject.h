@@ -66,8 +66,12 @@ protected:
                               const QList<AUDIO::AudioBuffer*>& outputs,
                               uint bufferSize, SamplePos pos, uint thread) = 0;
 
+    /** Sets the desired number of channels and emits ObjectEditor::objectChanged() */
     void setNumberAudioInputs(int num);
+    /** Sets the desired number of channels and emits ObjectEditor::objectChanged() */
     void setNumberAudioOutputs(uint num);
+    /** Sets both input and output channels and emits ObjectEditor::objectChanged() */
+    void setNumberAudioInputsOutputs(uint num);
 
 private:
     class PrivateAO;

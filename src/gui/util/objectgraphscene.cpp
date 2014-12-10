@@ -192,6 +192,8 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onObjectDeleted_(const MO::Object*)));
             connect(p_->editor, SIGNAL(objectMoved(MO::Object*,MO::Object*)),
                     this, SLOT(onObjectMoved_(MO::Object*,MO::Object*)));
+            connect(p_->editor, SIGNAL(objectChanged(MO::Object*)),
+                    this, SLOT(onObjectChanged_(MO::Object*)));
             connect(p_->editor, SIGNAL(objectNameChanged(MO::Object*)),
                     this, SLOT(onObjectNameChanged_(MO::Object*)));
             connect(p_->editor, SIGNAL(modulatorAdded(MO::Modulator*)),
@@ -1264,6 +1266,16 @@ void ObjectGraphScene::onObjectNameChanged_(Object * o)
     auto item = itemForObject(o);
     if (item)
         item->updateLabels();
+}
+
+void ObjectGraphScene::onObjectChanged_(Object * o)
+{
+    auto item = itemForObject(o);
+    if (item)
+    {
+        item->updateConnectors();
+        item->updateLabels();
+    }
 }
 
 void ObjectGraphScene::onModulatorAdded_(Modulator *)

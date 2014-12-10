@@ -9,6 +9,7 @@
 */
 
 #include "audioobject.h"
+#include "util/objecteditor.h"
 #include "audio/tool/audiobuffer.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -66,11 +67,23 @@ int AudioObject::numAudioInputs() const
 void AudioObject::setNumberAudioOutputs(uint num)
 {
     p_ao_->numOutputs = num;
+    if (editor())
+        emit editor()->objectChanged(this);
 }
 
 void AudioObject::setNumberAudioInputs(int num)
 {
     p_ao_->numInputs = num;
+    if (editor())
+        emit editor()->objectChanged(this);
+}
+
+void AudioObject::setNumberAudioInputsOutputs(uint num)
+{
+    p_ao_->numOutputs =
+    p_ao_->numInputs = num;
+    if (editor())
+        emit editor()->objectChanged(this);
 }
 
 void AudioObject::processAudioBase(const QList<AUDIO::AudioBuffer *> &inputs,

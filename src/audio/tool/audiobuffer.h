@@ -50,6 +50,11 @@ class AudioBuffer
         @p block must point to at least blockSize() floats */
     void writeBlock(const F32 *block) { memcpy(writePointer(), block, p_blockSize_ * sizeof(F32)); }
 
+    /** Inserts one block of data into the buffer,
+        while advancing @p stride samples for every read sample.
+        @p block must point to at least blockSize() * @p stride floats */
+    void writeBlock(const F32 *block, size_t stride);
+
     /** Inserts one block of zeros into the buffer */
     void writeNullBlock() { memset(writePointer(), 0, p_blockSize_ * sizeof(F32)); }
 
@@ -62,8 +67,8 @@ class AudioBuffer
     void readBlock(F32 * block) const { memcpy(block, readPointer(), p_blockSize_ * sizeof(F32)); }
 
     /** Copies the current read-block into @p block
-        while advancing @p stepsize samples for every written sample. */
-    void readBlock(F32 * block, size_t stepsize) const;
+        while advancing @p stride samples for every written sample. */
+    void readBlock(F32 * block, size_t stride) const;
 
     /** Copies the current history of @p size samples into @p block.
         @p size MUST be smaller than blockSize() * numBlocks(). */

@@ -38,6 +38,13 @@ void AudioBuffer::setSize(size_t blockSize, size_t numBlocks)
         s = 0;
 }
 
+void AudioBuffer::writeBlock(const F32 *block, size_t stepsize)
+{
+    auto p = writePointer();
+    for (size_t i = 0; i < blockSize(); ++i, block += stepsize, ++p)
+        *p = *block;
+}
+
 void AudioBuffer::readBlock(F32 *block, size_t stepsize) const
 {
     auto p = readPointer();

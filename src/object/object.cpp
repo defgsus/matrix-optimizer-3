@@ -537,6 +537,14 @@ Scene * Object::sceneObject()
     return qobject_cast<Scene*>(rootObject());
 }
 
+ObjectEditor * Object::editor() const
+{
+    if (auto s = sceneObject())
+        return s->editor();
+    else
+        return 0;
+}
+
 int Object::numChildren(bool recursive) const
 {
     if (!recursive)

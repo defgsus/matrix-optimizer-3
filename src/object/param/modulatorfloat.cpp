@@ -14,7 +14,7 @@
 #include "object/trackfloat.h"
 #include "object/sequencefloat.h"
 #include "object/modulatorobjectfloat.h"
-
+#include "object/audioobject.h"
 
 namespace MO {
 

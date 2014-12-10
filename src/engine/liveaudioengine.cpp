@@ -47,7 +47,7 @@ public:
           nextEngine    (0),
           disposeEngine (0),
           audioDevice   (0),
-          defaultConf   (44100, 256, 0, 2),
+          defaultConf   (AUDIO::AudioDevice::defaultConfiguration()),
           audioOutThread(0)
     { }
 
@@ -217,12 +217,16 @@ public:
             // calc buffers for next system-out callback
             if (live->audioOutQueue.count() < numAhead)
             {
+                const F32 * inputFromDevice;
+                if (!live->audioInQueue.consume(inputFromDevice))
+                    inputFromDevice = 0;
+
                 {
                     ScopedSceneLockRead lock(engine_->scene());
 
                     // calculate an audio block
                     live->engine->processForDevice(
-                                0,
+                                inputFromDevice,
                                 bufferForDevice.writePointer());
                 }
 
@@ -457,8 +461,10 @@ void LiveAudioEngine::stop()
     p_->audioDevice->stop();
 }
 
-void LiveAudioEngine::Private::audioCallback(const F32 * , F32 * out)
+void LiveAudioEngine::Private::audioCallback(const F32 * in, F32 * out)
 {
+    audioInQueue.produce(in);
+
     // ---- process output ----
 
     // get output from AudioOutThread

@@ -24,6 +24,9 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
+    /** pull into public namespace */
+    void setNumberAudioInputsOutputs(int num) { AudioObject::setNumberAudioInputsOutputs(num); }
+
 protected:
 
     /** Process dsp data here.

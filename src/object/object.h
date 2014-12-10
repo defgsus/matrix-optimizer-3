@@ -336,6 +336,9 @@ public:
     const Scene * sceneObject() const;
           Scene * sceneObject();
 
+    /** Returns the editor attached to the tree, or NULL */
+    ObjectEditor * editor() const;
+
     /** Returns the parent Object, or NULL */
     Object * parentObject() const { return p_parentObject_; }
 

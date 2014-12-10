@@ -272,9 +272,13 @@ bool AudioDevice::isAudioConfigured()
     return !(name.isEmpty() || name == "None");
 }
 
-uint AudioDevice::numConfiguredInputChannels()
+Configuration AudioDevice::defaultConfiguration()
 {
-    return settings->value("Audio/channelsIn", 0).toInt();
+    return Configuration(
+            settings->value("Audio/samplerate", 44100).toInt(),
+            settings->value("Audio/buffersize", 256).toInt(),
+            settings->value("Audio/channelsIn", 0).toInt(),
+            settings->value("Audio/channelsOut", 0).toInt());
 }
 
 bool AudioDevice::initFromSettings()
