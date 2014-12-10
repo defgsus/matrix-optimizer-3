@@ -34,7 +34,7 @@ public:
 
     const QString& typeName() const { static QString s("timeline1d"); return s; }
 
-    virtual Modulator * getModulator(const QString &) Q_DECL_OVERRIDE { return 0; }
+    virtual Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE { return 0; }
 
     // ---------------- getter -----------------
 

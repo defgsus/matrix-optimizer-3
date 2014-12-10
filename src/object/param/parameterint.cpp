@@ -77,13 +77,13 @@ Int ParameterInt::getModulationValue(Double time, uint thread) const
 
 
 
-Modulator * ParameterInt::getModulator(const QString& id)
+Modulator * ParameterInt::getModulator(const QString& id, const QString& outputId)
 {
-    Modulator * m = findModulator(id);
+    Modulator * m = findModulator(id, outputId);
     if (m)
         return m;
 
-    m = new ModulatorFloat(idName(), id, this, object());
+    m = new ModulatorFloat(idName(), id, outputId, this, object());
     addModulator_(m);
 
     return m;

@@ -119,7 +119,7 @@ void ParameterWidget::dropEvent(QDropEvent * e)
         return;
 
     // create modulation
-    editor_->addModulator(param_, desc.id());
+    editor_->addModulator(param_, desc.id(), "");
 
     // select the parameter's object
     if (param_->object())
@@ -517,7 +517,7 @@ void ParameterWidget::openModulationPopup()
             if (Object * o = editor_->createInClip("SequenceFloat", parent))
             {
                 // modulate
-                editor_->addModulator(param_, o->idName());
+                editor_->addModulator(param_, o->idName(), "");
                 o->setName(ObjectEditor::modulatorName(param_));
 
                 emitObjectSelected_(o);
@@ -567,7 +567,7 @@ void ParameterWidget::addRemoveModMenu_(QMenu * menu, Parameter * param)
         a->setIcon(QIcon(":/icon/delete.png"));
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
-            editor_->removeModulator(param, a->data().toString());
+            editor_->removeModulator(param, a->data().toString(), "");
         });
     }
     // remove all
@@ -626,14 +626,17 @@ void ParameterWidget::addLinkModMenu_(
     }
 
     // disable the entries that are already modulators
-    ObjectMenu::setEnabled(linkMenu, param->modulatorIds(), false);
+    QStringList ids;
+    for (auto p : param->modulatorIds())
+        ids << p.first;
+    ObjectMenu::setEnabled(linkMenu, ids, false);
 
     QAction * a = menu->addMenu(linkMenu);
     a->setText(tr("Choose existing source"));
     a->setIcon(QIcon(":/icon/modulate_on.png"));
     connect(linkMenu, &QMenu::triggered, [=](QAction* a)
     {
-        editor_->addModulator(param, a->data().toString());
+        editor_->addModulator(param, a->data().toString(), "");
     });
 
 }
@@ -667,7 +670,7 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
             if (Object * o = editor_->createFloatSequenceFor(param_))
             {
                 // modulate
-                editor_->addModulator(param_, o->idName());
+                editor_->addModulator(param_, o->idName(), "");
 
                 emitObjectSelected_(o);
             }
@@ -682,7 +685,7 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
             if (Object * o = editor_->createInClip("SequenceFloat", 0))
             {
                 // modulate
-                editor_->addModulator(param, o->idName());
+                editor_->addModulator(param, o->idName(), "");
                 o->setName(ObjectEditor::modulatorName(param, true));
 
                 emitObjectSelected_(o);
@@ -707,7 +710,7 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
             if (Object * o = editor_->createInClip("SequenceFloat", parent))
             {
                 // modulate
-                editor_->addModulator(param, o->idName());
+                editor_->addModulator(param, o->idName(), "");
                 o->setName(ObjectEditor::modulatorName(param, true));
 
                 emitObjectSelected_(o);

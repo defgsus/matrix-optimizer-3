@@ -30,7 +30,7 @@ public:
 
     const QString& typeName() const { static QString s("text"); return s; }
 
-    Modulator * getModulator(const QString &) Q_DECL_OVERRIDE { return 0; }
+    Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE { return 0; }
 
     // ---------------- getter -----------------
 

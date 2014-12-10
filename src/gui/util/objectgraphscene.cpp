@@ -949,7 +949,7 @@ void ObjectGraphScene::popup(Modulator * mod)
     a->setStatusTip(tr("Removes the selected modulation, eveything goes back to normal"));
     connect(a, &QAction::triggered, [this, mod]()
     {
-        p_->editor->removeModulator(mod->parameter(), mod->modulatorId());
+        p_->editor->removeModulator(mod->parameter(), mod->modulatorId(), "");
     });
 
 
@@ -995,8 +995,8 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
     QMenu * menu = ObjectMenu::createParameterMenu(goal,0,
                         [=](Parameter * p)
                         {
-                            return (p->getModulatorTypes() & goal->type())
-                                && !p->modulatorIds().contains(goal->idName());
+                            return (p->getModulatorTypes() & source->type())
+                                && !p->findModulator(source->idName());
                         });
 
     menu->setTitle(tr("connect to %1").arg(goal->name()));
@@ -1008,7 +1008,7 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
         const QString id = a->data().toString();
         auto param = goal->params()->findParameter(id);
         if (param)
-            p_->editor->addModulator(param, source->idName());
+            p_->editor->addModulator(param, source->idName(), "");
     });
 
     p_->showPopup();

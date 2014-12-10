@@ -939,8 +939,7 @@ void Object::onObjectsAboutToDelete(const QList<Object *> & list)
     for (Parameter * p : params()->parameters())
     {
         for (const Object * o : list)
-            if (p->findModulator(o->idName()))
-                p->removeModulator(o->idName());
+            p->removeAllModulators(o->idName());
     }
 }
 

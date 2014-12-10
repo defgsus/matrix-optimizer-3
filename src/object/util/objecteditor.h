@@ -130,8 +130,8 @@ public slots:
 
     // ------------ modulators -----------------
 
-    void addModulator(MO::Parameter *, const QString& idName);
-    void removeModulator(MO::Parameter *, const QString& idName);
+    void addModulator(MO::Parameter *, const QString& idName, const QString &outputId);
+    void removeModulator(MO::Parameter *, const QString& idName, const QString& outputId);
     void removeAllModulators(MO::Parameter *);
 
     // ------------ modulator objects ----------

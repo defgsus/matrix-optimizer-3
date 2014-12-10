@@ -148,8 +148,9 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
     {
         for (auto id : param->modulatorIds())
         {
-            QAction * a = new QAction(id, menu);
-            a->setData(id);
+            // YYY no outputId
+            QAction * a = new QAction(id.first, menu);
+            a->setData(id.first);
             menu->addAction(a);
         }
     }

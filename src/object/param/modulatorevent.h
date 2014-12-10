@@ -40,7 +40,8 @@ public:
 
     /** Construct a modulator connectin object @p modulatorId
         with Parameter @p p belonging to object @p parent */
-    ModulatorEvent(const QString& name, const QString& modulatorId, Parameter * p, Object * parent = 0);
+    ModulatorEvent(const QString& name, const QString& modulatorId, const QString &outputId,
+                   Parameter * p, Object * parent = 0);
 
     // --------------- io ----------------
 

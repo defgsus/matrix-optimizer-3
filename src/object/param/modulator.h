@@ -26,7 +26,9 @@ public:
 
     /** Construct a modulator coming from object @p modulatorId
         and belonging to @p parent / @p param */
-    Modulator(const QString& name, const QString& modulatorId, Parameter * parm, Object * parent = 0);
+    Modulator(const QString& name,
+              const QString& modulatorId, const QString& outputId,
+              Parameter * parm, Object * parent = 0);
     virtual ~Modulator() { }
 
     // --------------- io ----------------
@@ -53,6 +55,7 @@ public:
 
     /** Returns the set idName for finding the modulating object */
     const QString& modulatorId() const { return modulatorId_; }
+    const QString& outputId() const { return outputId_; }
 
     /** Returns the modulating object */
     Object * modulator() const { return modulator_; }
@@ -82,7 +85,7 @@ private:
 
     Object * parent_, * modulator_;
 
-    QString name_, modulatorId_;
+    QString name_, modulatorId_, outputId_;
 
     Parameter * param_;
 };

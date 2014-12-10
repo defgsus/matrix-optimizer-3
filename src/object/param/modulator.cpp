@@ -18,33 +18,44 @@
 namespace MO {
 
 
-Modulator::Modulator(const QString &name, const QString &id, Parameter * p, Object *parent)
+Modulator::Modulator(const QString &name,
+                     const QString &id, const QString& outputId,
+                     Parameter * p, Object *parent)
     : parent_       (parent),
       name_         (name),
       modulatorId_  (id),
+      outputId_     (outputId),
       param_        (p)
 {
-    MO_DEBUG_MOD("Modulator::Modulator(" << id << ", " << parent << ")");
+    MO_DEBUG_MOD("Modulator::Modulator(" << id << ", " << outputId << ", " << parent << ")");
 }
 
 
 void Modulator::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("mod", 1);
+    io.writeHeader("mod", 2);
 
     io << modulatorId_;
+
+    // v2
+    io << outputId_;
 }
 
 void Modulator::deserialize(IO::DataStream & io)
 {
-    io.readHeader("mod", 1);
+    const auto ver = io.readHeader("mod", 2);
 
     io >> modulatorId_;
+
+    if (ver >= 2)
+        io >> outputId_;
 }
 
 QString Modulator::nameAutomatic() const
 {
     QString n = modulator() ? modulator()->name() : "NULL";
+    if (!outputId_.isEmpty())
+        n += ":" + outputId_;
     n += " -> ";
     if (!parent())
         n += "NULL";

@@ -74,7 +74,7 @@ public:
     // --------- modulation -----------
 
     // XXX
-    virtual Modulator * getModulator(const QString &/*modulatorId*/) Q_DECL_OVERRIDE { return 0; };
+    virtual Modulator * getModulator(const QString &/*modulatorId*/, const QString& /*outputId*/) Q_DECL_OVERRIDE { return 0; };
 
     //virtual QList<Object*> getFutureModulatingObjects(const Scene *) const
     //                                    Q_DECL_OVERRIDE { return QList<Object*>(); }
