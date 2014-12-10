@@ -1031,13 +1031,13 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
         const auto bufsize = 128;//scene_->bufferSize(MO_AUDIO_THREAD);
 
         ObjectDspPath dsp;
-        dsp.createPath(scene_, AUDIO::Configuration(scene_->sampleRate(), bufsize, 0, 2));
+        dsp.createPath(scene_, AUDIO::Configuration(scene_->sampleRate(), bufsize, 0, 2), MO_AUDIO_THREAD);
 
         t.start();
         for (; i < num && e <= 1000; )
         {
             for (int j=0; j<20; ++j, i += bufsize)
-                dsp.calcTransformations(i*1000+j, MO_AUDIO_THREAD);
+                dsp.calcTransformations(i*1000+j);
 
             e = t.elapsed();
         }

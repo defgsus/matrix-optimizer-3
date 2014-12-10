@@ -519,23 +519,15 @@ public:
         when it gets added to the scene. */
     virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
 
-    // --------------- outputs ---------------------
-
-    /** Call this to get createOutputs() to be called. */
-    void requestCreateOutputs();
-
-    /** Create your ModulatorObject classes here.
-        Use the createOutput...() functions! */
-    virtual void createOutputs() { };
+    /** Returns the list of modulator outputs of this object. */
+    const QStringList& outputIds() const { return p_outputIds_; }
 
 protected:
 
-    /** Creates a new (or reuses an existing) ModulatorObjectFloat as child
-        of this Object.
-        The @p id will be adjusted, so don't rely on it.
-        @note This function returns NULL, if another object with the same id
-        is found which is not of ModulatorObjectFloat class! */
-    ModulatorObjectFloat * createOutputFloat(const QString& id, const QString& name);
+    /** Sets the outputIds for this object.
+        An empty list creates one empty id for the output.
+        Emits ObjectEditor::objectChanged() when connected. */
+    virtual void setOutputIds(const QStringList&);
 
     // --------------- parameter -------------------
 public:
@@ -708,7 +700,11 @@ private:
     QList<Transformation*> p_transformationObjects_;
     bool p_childrenHaveChanged_;
 
-    // ---------- per-thread store ------
+    // ---------- outputs --------------------
+
+    QStringList p_outputIds_;
+
+    // ---------- per-thread store -----------
 
     uint p_numberThreads_;
 

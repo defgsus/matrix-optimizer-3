@@ -45,7 +45,6 @@ public:
         : parent        (e),
           engine        (new AudioEngine()),
           nextEngine    (0),
-          disposeEngine (0),
           audioDevice   (0),
           defaultConf   (AUDIO::AudioDevice::defaultConfiguration()),
           audioOutThread(0)
@@ -54,7 +53,6 @@ public:
     ~Private()
     {
         delete audioDevice;
-        delete disposeEngine;
         delete nextEngine;
         delete engine;
     }
@@ -64,12 +62,12 @@ public:
     void audioCallback(const F32 *, F32 *);
 
     LiveAudioEngine * parent;
-    AudioEngine * engine, * nextEngine, * disposeEngine;
+    AudioEngine * engine, * nextEngine;
 
     AUDIO::AudioDevice * audioDevice;
     AUDIO::Configuration defaultConf;
 
-    QReadWriteLock engineLock;
+    //QReadWriteLock engineLock;
 
     //AudioInThread * audioInThread;
     AudioEngineOutThread * audioOutThread;
@@ -83,7 +81,7 @@ public:
 
 
 
-
+#if 0
 // ################################ audio in worker thread #########################################
 
 class AudioEngineInThread : public QThread
@@ -150,7 +148,7 @@ private:
 
     volatile bool stop_;
 };
-
+#endif
 
 
 
@@ -192,28 +190,6 @@ public:
 
         while (!stop_)
         {
-            // check for engine swap
-            {
-                QReadLocker lock(&engine_->p_->engineLock);
-
-                // while in lock, swap engine
-                if (live->nextEngine)
-                {
-                    live->disposeEngine = live->engine;
-                    live->engine = live->nextEngine;
-                    live->nextEngine = 0;
-
-                    // update local settings
-                    bufferSize = engine_->config().bufferSize(),
-                    numChannelsOut = engine_->config().numChannelsOut(),
-                    bufferSizeChan = bufferSize * numChannelsOut,
-                    bufferTimeU = 1000000 *
-                            bufferSize * engine_->config().sampleRateInv();
-
-                    bufferForDevice.setSize(bufferSizeChan, numAhead);
-                }
-            }
-
             // calc buffers for next system-out callback
             if (live->audioOutQueue.count() < numAhead)
             {
@@ -228,6 +204,24 @@ public:
                     live->engine->processForDevice(
                                 inputFromDevice,
                                 bufferForDevice.writePointer());
+
+                    // check for engine swap
+                    if (live->nextEngine)
+                    {
+                        live->engine = live->nextEngine;
+                        live->nextEngine = 0;
+
+                        // update local settings
+                        bufferSize = engine_->config().bufferSize(),
+                        numChannelsOut = engine_->config().numChannelsOut(),
+                        bufferSizeChan = bufferSize * numChannelsOut,
+                        bufferTimeU = 1000000 *
+                                bufferSize * engine_->config().sampleRateInv();
+
+                        bufferForDevice.setSize(bufferSizeChan, numAhead);
+                        continue; //< dont send an invalid bufferForDevice
+                    }
+
                 }
 
                 // publish
@@ -315,6 +309,7 @@ void LiveAudioEngine::seek(SamplePos pos)
 
 void LiveAudioEngine::setScene(Scene * s, uint thread)
 {
+#ifdef xxx_this_does_not_work_because_the_audioobjects_are_touched_by_AudioEngine_setScene
     // dont care for threads
     if (!isPlayback())
     {
@@ -338,11 +333,44 @@ void LiveAudioEngine::setScene(Scene * s, uint thread)
         delete p_->nextEngine;
 
     p_->nextEngine = eng;
+#else
+
+    // dont care for threads
+    if (!isPlayback())
+    {
+        MO_DEBUG("LiveAudioEngine::setScene(" << s << ", " << thread << ") non-playback");
+        // simply reassign
+        p_->engine->setScene(s, p_->defaultConf, thread);
+        return;
+    }
+
+    // update the same scene?
+    if (scene() && s == scene())
+    {
+        ScopedSceneLockWrite lock(scene());
+
+        MO_DEBUG("LiveAudioEngine::setScene(" << s << ", " << thread << ") thread-safe swap");
+
+        if (!p_->nextEngine)
+            p_->nextEngine = new AudioEngine();
+        p_->nextEngine->setScene(scene(), config(), thread);
+        delete p_->engine;
+    }
+    else
+    {
+        MO_ASSERT(false, "Can't change scene during playback");
+    }
+
+#endif
 }
 
 void LiveAudioEngine::Private::updateScene()
 {
-    if (engine->scene())
+    MO_DEBUG("LiveAudioEngine::Private::updateScene() "
+             "engine->scene() == " << engine->scene()
+             << " playback == " << parent->isPlayback());
+
+    if (engine->scene() && engine->config() != defaultConf)
         engine->setScene(engine->scene(), defaultConf, engine->thread());
 }
 

@@ -43,7 +43,8 @@ signals:
     /** Emitted after a change to an object name */
     void objectNameChanged(MO::Object *);
 
-    /** Emitted after settings in an object have changed. */
+    /** Emitted after settings in an object have changed.
+        This includes number of audio channels, and the modulator outputs. */
     void objectChanged(MO::Object *);
 
     /** Emitted when the given object was added to the scene. */

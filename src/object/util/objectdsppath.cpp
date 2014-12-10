@@ -169,6 +169,7 @@ public:
     ObjectDspPath * path;
     Scene * scene;
     AUDIO::Configuration conf;
+    uint thread;
 
     // all relevant objects
     std::map<Object *, std::shared_ptr<ObjectBuffer>> objects;
@@ -210,13 +211,14 @@ const QList<AUDIO::AudioBuffer*> & ObjectDspPath::audioOutputs()
     return p_->audioOuts;
 }
 
-void ObjectDspPath::createPath(Scene *scene, const AUDIO::Configuration& conf)
+void ObjectDspPath::createPath(Scene *scene, const AUDIO::Configuration& conf, uint thread)
 {
+    p_->thread = thread;
     p_->conf = conf;
     p_->createPath(scene);
 }
 
-void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
+void ObjectDspPath::calcTransformations(SamplePos pos)
 {
     for (Private::ObjectBuffer * b : p_->transformationObjects)
     {
@@ -228,12 +230,12 @@ void ObjectDspPath::calcTransformations(SamplePos pos, uint thread)
             for (SamplePos i = 0; i < p_->conf.bufferSize(); ++i)
                 b->object->calculateTransformation(b->calcMatrix.transformation(i),
                                                    p_->conf.sampleRateInv() * (pos + i),
-                                                   thread);
+                                                   p_->thread);
         }
     }
 }
 
-void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
+void ObjectDspPath::calcAudio(SamplePos pos)
 {
     // ----------- process audio objects ---------------
 
@@ -256,9 +258,7 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
         }
 
         // process AudioObject
-        ao->processAudioBase(
-                    b->audioInputs, b->audioOutputs,
-                    p_->conf.bufferSize(), pos, thread);
+        ao->processAudioBase(p_->conf.bufferSize(), pos, p_->thread);
 
         // forward buffers
         for (AUDIO::AudioBuffer * buf : b->audioOutputs)
@@ -280,12 +280,12 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
                     b->matrix,
                     b->soundSources,
                     config().bufferSize(),
-                    pos, thread);
+                    pos, p_->thread);
         // get audio signal per soundsource
         b->object->calculateSoundSourceBuffer(
                     b->soundSources,
                     config().bufferSize(),
-                    pos, thread);
+                    pos, p_->thread);
         // forward buffers and fill delay-lines
         for (AUDIO::SpatialSoundSource * s : b->soundSources)
         {
@@ -303,7 +303,7 @@ void ObjectDspPath::calcAudio(SamplePos pos, uint thread)
                     b->matrix,
                     b->microphones,
                     config().bufferSize(),
-                    pos, thread);
+                    pos, p_->thread);
         // sample soundsources
         for (AUDIO::SpatialMicrophone * m : b->microphones)
         {
@@ -497,8 +497,8 @@ void ObjectDspPath::Private::createPath(Scene * s)
         prepareAudioInputBuffers(b);
         prepareAudioOutputBuffers(b);
 
-        std::cout << "---------------------------------------------------\n";
-        path->dump(std::cout);
+        // tell object
+        o->setAudioBuffersBase(thread, b->audioInputs, b->audioOutputs);
     }
 
     // ----------- get all soundsource objects ------------------

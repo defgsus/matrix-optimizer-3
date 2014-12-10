@@ -372,20 +372,6 @@ void Scene::tellObjectsAboutToDelete_(
         o->onObjectsAboutToDelete(deleted);
 }
 
-void Scene::callCreateOutputs_(Object *o)
-{
-    // keep list of childs
-    QList<Object*> list = o->childObjects();
-
-    o->createOutputs();
-
-    // emit changes
-    if (editor_)
-        for (auto c : o->childObjects())
-            if (!list.contains(c))
-                emit editor_->objectAdded(c);
-}
-
 void Scene::updateTree_()
 {
     MO_DEBUG_TREE("Scene::updateTree_()");

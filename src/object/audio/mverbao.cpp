@@ -129,9 +129,7 @@ void MVerbAO::setNumberThreads(uint count)
         reverb.reset();
 }
 
-void MVerbAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
-                                const QList<AUDIO::AudioBuffer *> &outputs,
-                                uint bsize, SamplePos pos, uint thread)
+void MVerbAO::processAudio(uint bsize, SamplePos pos, uint thread)
 {
     const Double time = sampleRateInv() * pos;
 
@@ -149,6 +147,10 @@ void MVerbAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
     reverb->setParameter(reverb->GAIN, p_->pGain->value(time, thread));
     reverb->setParameter(reverb->MIX, p_->pMix->value(time, thread));
     reverb->setParameter(reverb->EARLYMIX, p_->pEarlyMix->value(time, thread));
+
+    const QList<AUDIO::AudioBuffer*>&
+            inputs = audioInputs(thread),
+            outputs = audioOutputs(thread);
 
     reverb->process(inputs[0] ? inputs[0]->readPointer() : 0,
                     inputs[1] ? inputs[1]->readPointer() : 0,

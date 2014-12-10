@@ -101,10 +101,12 @@ void FftAO::setBufferSize(uint bufferSize, uint thread)
     p_->writtenOut[thread] = 0;
 }
 
-void FftAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
-                                const QList<AUDIO::AudioBuffer *> &outputs,
-                                uint bSize, SamplePos pos, uint thread)
+void FftAO::processAudio(uint bSize, SamplePos pos, uint thread)
 {
+    const QList<AUDIO::AudioBuffer*>&
+            inputs = audioInputs(thread),
+            outputs = audioOutputs(thread);
+
 //    const Double time = sampleRateInv() * pos;
 
     const bool forward = p_->paramType->baseValue() == FT_FFT;
@@ -120,7 +122,7 @@ void FftAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
         outbuf->setSize(bSize);
 
     AUDIO::AudioBuffer::process(inputs, outputs,
-    [=](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+    [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
         MO_DEBUG(idName() << " pos=" << pos);
         size_t read = 0, written = 0;

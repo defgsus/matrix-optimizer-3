@@ -51,16 +51,14 @@ void AudioOutAO::createParameters()
     params()->endParameterGroup();
 }
 
-void AudioOutAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
-                              const QList<AUDIO::AudioBuffer *> &outputs,
-                              uint bsize, SamplePos pos, uint thread)
+void AudioOutAO::processAudio(uint bsize, SamplePos pos, uint thread)
 {
     // simply copy inputs to outputs here and apply amplitude
 
     if (paramAmp_->isModulated())
     {
-        AUDIO::AudioBuffer::process(inputs, outputs,
-        [=](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+        AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+        [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
         {
             for (SamplePos i=0; i<bsize; ++i)
             {
@@ -74,8 +72,8 @@ void AudioOutAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
         // buffer parameter value
         const F32 amp = paramAmp_->value(sampleRateInv() * pos, thread);
         // for easier loop
-        AUDIO::AudioBuffer::process(inputs, outputs,
-        [=](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+        AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+        [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
         {
             for (SamplePos i=0; i<bsize; ++i)
                 out->write(i, amp * in->read(i));

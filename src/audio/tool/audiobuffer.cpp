@@ -140,7 +140,8 @@ void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &src,
 
 
 void AudioBuffer::process(const QList<AudioBuffer *> &src, const QList<AudioBuffer *> &dst,
-                          std::function<void (const AudioBuffer *, AudioBuffer *)> func, bool callNextBlock)
+                          std::function<void (uint channel, const AudioBuffer *, AudioBuffer *)> func,
+                          bool callNextBlock)
 {
     const int num = std::max(dst.size(), src.size());
 
@@ -152,7 +153,7 @@ void AudioBuffer::process(const QList<AudioBuffer *> &src, const QList<AudioBuff
             MO_ASSERT(src[i]->blockSize() == dst[i]->blockSize(), "unmatched buffersize "
                       << src[i]->blockSize() << "/" << dst[i]->blockSize());
 
-            func( src[i], dst[i] );
+            func( i, src[i], dst[i] );
         }
         else
             dst[i]->writeNullBlock();

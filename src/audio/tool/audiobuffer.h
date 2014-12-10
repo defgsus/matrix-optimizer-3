@@ -104,7 +104,7 @@ class AudioBuffer
 
     static void process(const QList<AudioBuffer *> &dst,
                         const QList<AudioBuffer *> &src,
-                        std::function<void(const AudioBuffer*,AudioBuffer*)> func,
+                        std::function<void(uint channel, const AudioBuffer*,AudioBuffer*)> func,
                         bool callNextBlock = false);
 private:
 

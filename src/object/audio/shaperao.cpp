@@ -8,6 +8,8 @@
     <p>created 08.12.2014</p>
 */
 
+#include <memory>
+
 #include "shaperao.h"
 #include "audio/tool/audiobuffer.h"
 #include "object/param/parameters.h"
@@ -38,10 +40,13 @@ class ShaperAO::Private
     struct EquationObject
     {
         EquationObject()
+            : equ       (new PPP_NAMESPACE::Parser()),
+              equPtr    (std::shared_ptr<PPP_NAMESPACE::Parser>(equ))
+
         {
-            equ.variables().add("x", &input, ShaperAO::tr("The current audio sample").toStdString());
-            equ.variables().add("x1", &input1, ShaperAO::tr("The previous audio sample").toStdString());
-            equ.variables().add("x2", &input2, ShaperAO::tr("The one-before-previous audio sample").toStdString());
+            equ->variables().add("x", &input, ShaperAO::tr("The current audio sample").toStdString());
+            equ->variables().add("x1", &input1, ShaperAO::tr("The previous audio sample").toStdString());
+            equ->variables().add("x2", &input2, ShaperAO::tr("The one-before-previous audio sample").toStdString());
         }
 
         F32 operator()(F32 in)
@@ -49,10 +54,11 @@ class ShaperAO::Private
             input2 = input1;
             input1 = input;
             input = in;
-            return equ.eval();
+            return equ->eval();
         }
 
-        PPP_NAMESPACE::Parser equ;
+        PPP_NAMESPACE::Parser * equ;
+        std::shared_ptr<PPP_NAMESPACE::Parser> equPtr;
         PPP_NAMESPACE::Float input, input1, input2;
     };
 
@@ -68,7 +74,8 @@ class ShaperAO::Private
     ParameterText
         * paramEquation;
 
-    std::vector<EquationObject> equations;
+    // per thread / per channel
+    std::vector<std::vector<EquationObject>> equations;
 };
 
 namespace {
@@ -120,6 +127,7 @@ ShaperAO::ShaperAO(QObject *parent)
       p_            (new Private(this))
 {
     setName("Shaper");
+    setNumberChannelsAdjustable(true);
 }
 
 void ShaperAO::serialize(IO::DataStream & io) const
@@ -169,8 +177,8 @@ void ShaperAO::createParameters()
                   TT_EQUATION,
                   "x", true, false);
         Private::EquationObject tmpequ;
-        p_->paramEquation->setVariableNames(tmpequ.equ.variables().variableNames());
-        p_->paramEquation->setVariableDescriptions(tmpequ.equ.variables().variableDescriptions());
+        p_->paramEquation->setVariableNames(tmpequ.equ->variables().variableNames());
+        p_->paramEquation->setVariableDescriptions(tmpequ.equ->variables().variableDescriptions());
 
 
         p_->paramInAmp = params()->createFloatParameter("_shaper_inamp", tr("input amplitude"),
@@ -205,38 +213,48 @@ void ShaperAO::setNumberThreads(uint num)
     AudioObject::setNumberThreads(num);
 
     p_->equations.resize(num);
-    p_->updateEquations();
 }
 
 
 void ShaperAO::Private::updateEquations()
 {
     const std::string text = paramEquation->baseValue().toStdString();
-    for (auto & e : equations)
+    for (auto & t : equations)
     {
-        e.input = e.input1 = e.input2 = 0;
-        if (!e.equ.parse(text))
-            MO_WARNING("parsing failed for equation in ShaperAO '" << shaper->idName() << "'"
-                       " (text = '" << text << "')");
+        for (auto & e : t)
+        {
+            e.input = e.input1 = e.input2 = 0;
+            if (!e.equ->parse(text))
+                MO_WARNING("parsing failed for equation in ShaperAO '" << shaper->idName() << "'"
+                           " (text = '" << text << "')");
+        }
     }
 }
 
-
-void ShaperAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
-                              const QList<AUDIO::AudioBuffer *> &outputs,
-                              uint bsize, SamplePos pos, uint thread)
+void ShaperAO::setAudioBuffers(uint thread,
+                               const QList<AUDIO::AudioBuffer *> &inputs,
+                               const QList<AUDIO::AudioBuffer *> &outputs)
 {
-#define MO__PROCESS(func__)                                             \
-    AUDIO::AudioBuffer::process(inputs, outputs,                        \
-    [=](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)        \
-    {                                                                   \
-        for (SamplePos i=0; i<bsize; ++i)                               \
-        {                                                               \
-            const Double time = sampleRateInv() * (pos + i);            \
-            const F32 inamp = p_->paramInAmp->value(time, thread);      \
-            const F32 outamp = p_->paramOutAmp->value(time, thread);    \
-            out->write(i, outamp * (func__(inamp * in->read(i))));      \
-        }                                                               \
+    // create EquationObject for each channel
+    int num = std::max(inputs.size(), outputs.size());
+    p_->equations[thread].resize(num);
+    p_->updateEquations();
+}
+
+void ShaperAO::processAudio(uint bsize, SamplePos pos, uint thread)
+{
+#define MO__PROCESS(func__)                                                     \
+    AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),      \
+    [=](uint channel, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)  \
+    {                                                                           \
+        Q_UNUSED(channel);                                                      \
+        for (SamplePos i=0; i<bsize; ++i)                                       \
+        {                                                                       \
+            const Double time = sampleRateInv() * (pos + i);                    \
+            const F32 inamp = p_->paramInAmp->value(time, thread);              \
+            const F32 outamp = p_->paramOutAmp->value(time, thread);            \
+            out->write(i, outamp * (func__(inamp * in->read(i))));              \
+        }                                                                       \
     });
 
     switch ((ShaperTypes)p_->paramType->baseValue())
@@ -244,7 +262,7 @@ void ShaperAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
         case ST_TANH:       MO__PROCESS(tanh); break;
         case ST_TANH_CHEAP: MO__PROCESS(MATH::fast_tanh); break;
         case ST_CURVE:      MO__PROCESS(p_->paramCurve->timeline()->get); break;
-        case ST_EQUATION:   MO__PROCESS(p_->equations[thread]); break;
+        case ST_EQUATION:   MO__PROCESS(p_->equations[thread][channel]); break;
     }
 
 #undef MO__PROCESS

@@ -166,7 +166,7 @@ void SceneDebugRenderer::releaseGl()
     }
 }
 
-void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int options)
+void SceneDebugRenderer::render(const RenderSettings & rs, uint , int options)
 {
     MO_ASSERT(glReady_, "drawables not defined for SceneDebugRenderer::render()");
 

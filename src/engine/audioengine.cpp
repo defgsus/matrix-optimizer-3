@@ -105,7 +105,7 @@ void AudioEngine::Private::setup()
 {
     MO_DEBUG("AudioEngine::setup()");
 
-    path.createPath(scene, conf);
+    path.createPath(scene, conf, threadIdx);
 
 #ifdef MO_ENABLE_DEBUG
     path.dump(std::cout);
@@ -122,10 +122,10 @@ void AudioEngine::process(const F32 * inputs, F32 * outputs)
     }
 
     // apply all transformations
-    p_->path.calcTransformations(p_->curSample, p_->threadIdx);
+    p_->path.calcTransformations(p_->curSample);
 
     // run audio block
-    p_->path.calcAudio(p_->curSample, p_->threadIdx);
+    p_->path.calcAudio(p_->curSample);
 
     // advance scene time
     p_->curSample += p_->conf.bufferSize();
@@ -151,10 +151,10 @@ void AudioEngine::processForDevice(const F32 * inputs, F32 * outputs)
     }
 
     // apply all transformations
-    p_->path.calcTransformations(p_->curSample, p_->threadIdx);
+    p_->path.calcTransformations(p_->curSample);
 
     // run audio block
-    p_->path.calcAudio(p_->curSample, p_->threadIdx);
+    p_->path.calcAudio(p_->curSample);
 
     // advance scene time
     p_->curSample += p_->conf.bufferSize();

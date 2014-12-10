@@ -13,6 +13,7 @@
 
 #include "object.h"
 #include "objectfactory.h"
+#include "object/util/objecteditor.h"
 #include "scene.h"
 #include "transform/transformation.h"
 #include "param/parameters.h"
@@ -660,9 +661,6 @@ void Object::setParentObject_(Object *parent, int index)
     // and add to child list
     p_parentObject_->p_addChildObjectHelper_(this, index);
 
-    // create any output objects
-    createOutputs();
-
     // signal this object
     this->onParentChanged();
 }
@@ -991,55 +989,6 @@ void Object::calculateTransformation(Mat4 &matrix, Double time, uint thread) con
             t->applyTransformation(matrix, time, thread);
 }
 
-// -------------------- outputs ------------------------------
-
-void Object::requestCreateOutputs()
-{
-    Scene * scene = sceneObject();
-    if (!scene)
-        MO_WARNING("Object('" << idName() << "')::requestCreateOutputs() "
-                   "called without scene object");
-
-    scene->callCreateOutputs_(this);
-}
-
-ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const QString &name)
-{
-    MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat('"
-             << given_id << "', '" << name << "')");
-
-    QString id = idName() + "_" + given_id;
-
-    Object * o = findChildObject(id);
-
-    // construct new
-    if (!o)
-    {
-        ModulatorObjectFloat * mod = ObjectFactory::createModulatorObjectFloat();
-        mod->p_canBeDeleted_ = false;
-        mod->p_idName_ = mod->p_orgIdName_ = id;
-        mod->p_name_ = name;
-        addObject_(mod);
-        MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat() created new '"
-                 << mod->idName() << "'");
-        return mod;
-    }
-
-    // see if already there
-    if (ModulatorObjectFloat * mod = qobject_cast<ModulatorObjectFloat*>(o))
-    {
-        mod->p_canBeDeleted_ = false;
-        mod->p_name_ = name;
-        MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat() reusing '"
-                 << mod->idName() << "'");
-        return mod;
-    }
-
-    MO_ASSERT(false, "Object::createOutputFloat() called, object '" << id << "' found "
-              "but it's not of ModulatorObject class, instead: " << o);
-
-    return 0;
-}
 
 
 
@@ -1189,5 +1138,11 @@ QList<QPair<Parameter*, Object*>> Object::getModulationPairs() const
     return pairs;
 }
 
+void Object::setOutputIds(const QStringList & ids)
+{
+    p_outputIds_ = ids;
+    if (editor())
+        emit editor()->objectChanged(this);
+}
 
 } // namespace MO

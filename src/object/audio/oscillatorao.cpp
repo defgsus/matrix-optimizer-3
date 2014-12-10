@@ -86,10 +86,12 @@ QString OscillatorAO::getInputName(uint channel) const
     return AudioObject::getInputName(channel);
 }
 
-void OscillatorAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
-                                const QList<AUDIO::AudioBuffer *> &outputs,
-                                uint , SamplePos pos, uint thread)
+void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
 {
+    const QList<AUDIO::AudioBuffer*>&
+            inputs = audioInputs(thread),
+            outputs = audioOutputs(thread);
+
     AUDIO::AudioBuffer
             * out = outputs.isEmpty() ? 0 : outputs[0];
     if (!out)

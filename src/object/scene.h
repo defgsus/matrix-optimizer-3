@@ -270,9 +270,6 @@ private:
     /** Does everything to update the tree */
     void updateTree_();
 
-    /** Request from object @p o to call it's createOutputs() method. */
-    void callCreateOutputs_(Object * o);
-
     /** Collects all special child objects */
     void findObjects_();
 
