@@ -589,7 +589,6 @@ void ObjectDspPath::Private::prepareAudioInputBuffers(ObjectBuffer * buf)
         return;
     }
 
-
     // get input connections
     auto ins = scene->audioConnections()->getInputs(o);
 
