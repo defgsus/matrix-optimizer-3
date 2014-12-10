@@ -722,6 +722,9 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
     return cameras_[camera_index]->fbo(thread);
 }
 
+
+/// @todo this is all to be moved out of this class anyway
+
 void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * outputFbo)
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");

@@ -166,7 +166,6 @@ void SceneDebugRenderer::releaseGl()
     }
 }
 
-/// @todo this is all to be moved out of this class anyway
 void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int options)
 {
     MO_ASSERT(glReady_, "drawables not defined for SceneDebugRenderer::render()");

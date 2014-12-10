@@ -104,6 +104,8 @@ SequenceFloat::SequenceFloat(QObject *parent)
 
         p_soundFile_    (0),
 
+        cacheValue_     (0.0),
+        cacheTime_      (-1.111),
         phaseMult_      (1.0)
 
 {
@@ -691,6 +693,9 @@ Double SequenceFloat::fade_(Double gtime, Double time, uint thread) const
 
 Double SequenceFloat::value(Double gtime, uint thread) const
 {
+    if (cacheTime_ == gtime)
+        return cacheValue_;
+
     Double timeNoLoop;
     if (p_loopOverlapMode_->baseValue() == LOT_OFF)
     {

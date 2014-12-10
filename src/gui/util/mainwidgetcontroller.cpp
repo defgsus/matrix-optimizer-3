@@ -1100,13 +1100,16 @@ void MainWidgetController::testAudioSpeed()
            "<br/>which took %2 seconds."
            "<br/>This is %3 milli-secs per sample"
            "<br/>%4 ms per dsp block(%5)"
-           "<br/>and <b>%6</b> samples per second.</html>")
+           "<br/>and <b>%6</b> samples per second"
+           "<br/>which is <b>%7</b> times realtime (@%8hz)</html>")
                              .arg(num)
                              .arg(elapsed)
                              .arg((elapsed*1000)/num)
                              .arg((elapsed*1000)/num*conf.bufferSize())
                              .arg(conf.bufferSize())
                              .arg((int)((Double)num/elapsed))
+                             .arg((Double)num / elapsed / conf.sampleRate())
+                             .arg(conf.sampleRate())
            );
 }
 

@@ -211,6 +211,11 @@ private:
 
     ParameterFilename * p_soundFile_;
 
+    // one cache value for all threads
+    Double cacheValue_, cacheTime_;
+
+    Double phaseMult_;
+
     ParameterFloat
         * p_offset_,
         * p_amplitude_,
@@ -260,7 +265,6 @@ private:
         * p_wtFreqs_,
         * p_wtPhases_;
 
-    Double phaseMult_;
 
 };
 
