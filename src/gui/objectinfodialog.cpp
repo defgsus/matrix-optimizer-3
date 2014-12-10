@@ -126,7 +126,7 @@ void ObjectInfoDialog::setObject(Object * o)
     }
     else if (o->type() & Object::TG_REAL_OBJECT)
         s << "<p>" << tr("current transformation") << ":<br/>"
-          << matrix2Html(o->transformation(MO_GFX_THREAD, 0)) << "</p>";
+          << matrix2Html(o->transformation()) << "</p>";
 
     // ---------- audio object -----------
 

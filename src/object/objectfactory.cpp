@@ -258,9 +258,9 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
 
     // --- prepare object ---
 
-    obj->idName_ = obj->orgIdName_ = obj->className();
-    if (obj->name_.isEmpty())
-        obj->name_ = className;
+    obj->p_idName_ = obj->p_orgIdName_ = obj->className();
+    if (obj->p_name_.isEmpty())
+        obj->p_name_ = className;
 
     if (createParametersAndObjects)
     {
@@ -285,7 +285,7 @@ TrackFloat * ObjectFactory::createTrackFloat(const QString &name)
     MO_ASSERT(t, "could not create TrackFloat object");
 
     if (!name.isEmpty())
-        t->name_ = t->idName_ = name;
+        t->p_name_ = t->p_idName_ = name;
 
     return t;
 }
@@ -295,7 +295,7 @@ SequenceFloat * ObjectFactory::createSequenceFloat(const QString& name)
     SequenceFloat * seq = qobject_cast<SequenceFloat*>(createObject("SequenceFloat"));
     MO_ASSERT(seq, "could not create SequenceFloat object");
     if (!name.isEmpty())
-        seq->name_ = seq->idName_ = name;
+        seq->p_name_ = seq->p_idName_ = name;
     return seq;
 }
 
@@ -306,7 +306,7 @@ ModulatorObjectFloat * ObjectFactory::createModulatorObjectFloat(const QString &
     MO_ASSERT(o, "could not create ModulatorObjectFloat object");
 
     if (!name.isEmpty())
-        o->name_ = o->idName_ = name;
+        o->p_name_ = o->p_idName_ = name;
 
     return o;
 }

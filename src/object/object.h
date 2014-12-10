@@ -220,15 +220,15 @@ public:
         MUST NOT CHANGE for compatibility with saved files! */
     virtual const QString& className() const = 0;
     /** Tree-unique id of the object. */
-    const QString& idName() const { return idName_; }
+    const QString& idName() const { return p_idName_; }
     /** User defined name of the object */
-    const QString& name() const { return name_; }
+    const QString& name() const { return p_name_; }
     /** Override to add some additional information. */
-    virtual QString infoName() const { return name_; }
+    virtual QString infoName() const { return p_name_; }
 
     /** Returns the id of the object before it might have been changed through makeUniqueId()
         XXX Will be changed to work with attachedData() !!! */
-    const QString& originalIdName() const { return orgIdName_; }
+    const QString& originalIdName() const { return p_orgIdName_; }
 
     /** Return the path up to this object */
     QString namePath() const;
@@ -267,10 +267,10 @@ public:
     virtual bool hasAudioOutput() const { return false; }
 
     /** Returns true when there are transformation objects among the children. */
-    bool hasTransformationObjects() const { return !transformationObjects_.isEmpty(); }
+    bool hasTransformationObjects() const { return !p_transformationObjects_.isEmpty(); }
 
     /** Returns true when the object can be deleted by the ObjectTreeView */
-    bool canBeDeleted() const { return canBeDeleted_; }
+    bool canBeDeleted() const { return p_canBeDeleted_; }
 
     /** Returns a name that is unique among the direct children of the object */
     QString makeUniqueName(const QString& name) const;
@@ -302,7 +302,7 @@ public:
     ActivityScope activityScope() const;
 
     /** Returns the currently set scope for the tree */
-    ActivityScope currentActivityScope() const { return currentActivityScope_; }
+    ActivityScope currentActivityScope() const { return p_currentActivityScope_; }
 
     /** Returns if the object is active at the given time */
     bool active(Double time, uint thread) const;
@@ -337,7 +337,7 @@ public:
           Scene * sceneObject();
 
     /** Returns the parent Object, or NULL */
-    Object * parentObject() const { return parentObject_; }
+    Object * parentObject() const { return p_parentObject_; }
 
     /** See if this object has a parent object @p o. */
     bool hasParentObject(Object * o) const;
@@ -373,7 +373,7 @@ public:
     virtual bool canHaveChildren(Type type) const;
 
     /** Read-access to the list of childs */
-    const QList<Object*> childObjects() const { return childObjects_; }
+    const QList<Object*> childObjects() const { return p_childObjects_; }
 
     /** Returns a set of all idNames */
     QSet<QString> getChildIds(bool recursive) const;
@@ -447,7 +447,7 @@ public:
 public:
 
     /** Returns the number of threads, this object is assigned for */
-    uint numberThreads() const { return numberThreads_; }
+    uint numberThreads() const { return p_numberThreads_; }
 
     /** Returns true if number of threads is matching @p num.
         This checks for all contained stuff like AudioSources as well.
@@ -538,8 +538,8 @@ protected:
 public:
 
     /** Returns the list of parameters for this object */
-    const Parameters * params() const { return parameters_; }
-    Parameters * params() { return parameters_; }
+    const Parameters * params() const { return p_parameters_; }
+    Parameters * params() { return p_parameters_; }
 
     /** Override to create all parameters for your object.
         Always call the ancestor classes createParameters() in your derived function! */
@@ -559,27 +559,11 @@ public:
 
     // ------------------- audio ------------------
 public:
-    /** Returns the set audio block size for each thread. */
-    uint bufferSize(uint thread) const { return bufferSize_[thread]; }
-
     /** Returns the set sample rate in samples per second. */
-    uint sampleRate() const { return sampleRate_; }
+    uint sampleRate() const { return p_sampleRate_; }
 
     /** Returns the reciprocal of the set sample rate, e.g. 1.0 / sampleRate() */
-    Double sampleRateInv() const { return sampleRateInv_; }
-
-
-    /** Returns true if the buffersize of the thread is matching @p bufferSize.
-        This checks for all contained stuff like AudioSources as well.
-        @note Call ancestor's implementation before your derived code! */
-    virtual bool verifyBufferSize(uint thread, uint bufferSize);
-
-    /** Sets the audio block size for this object and the given thread.
-        This function is only called <b>after</b> setNumberThreads().
-        Override to make your per-thread-storage of dsp blocks.
-        @note Be sure to call the ancestor class implementation in your derived method!
-    */
-    virtual void setBufferSize(uint bufferSize, uint thread);
+    Double sampleRateInv() const { return p_sampleRateInv_; }
 
     /** Sets the samplerate for the object.
         Override to initialize coefficients or stuff that depends on the samplerate.
@@ -625,31 +609,29 @@ public:
 public:
     // --------------- 3d --------------------------
 
+    // XXX transformations-per-object are just temporarily
+    //     before a generic render class wraps this
+
     /** Initialize transformation matrix */
-    void clearTransformation(uint thread, uint sample);
+    void clearTransformation() { p_transformation_ = Mat4(1); }
 
     /** Returns the transformation matrix of this object */
-    const Mat4& transformation(uint thread, uint sample) const
-        { return transformation_[thread][sample]; }
-
-    /** Returns a pointer to bufferSize(thread) number of matrices */
-    const Mat4* transformations(uint thread) const
-        { return &transformation_[thread][0]; }
+    const Mat4& transformation() const { return p_transformation_; }
 
     /** Returns the position of this object */
-    Vec3 position(uint thread, uint sample) const
-        { return Vec3(transformation_[thread][sample][3][0],
-                      transformation_[thread][sample][3][1],
-                      transformation_[thread][sample][3][2]); }
+    Vec3 position() const
+        { return Vec3(p_transformation_[3][0],
+                      p_transformation_[3][1],
+                      p_transformation_[3][2]); }
 
-    void setTransformation(int thread, int sample, const Mat4& mat)
-        { transformation_[thread][sample] = mat; }
+    void setTransformation(const Mat4& mat)
+        { p_transformation_ = mat; }
 
     /** Apply all transformations of this object to the given matrix. */
     void calculateTransformation(Mat4& matrix, Double time, uint thread) const;
 
     /** List of all direct transformation childs */
-    const QList<Transformation*> transformationObjects() const { return transformationObjects_; }
+    const QList<Transformation*> transformationObjects() const { return p_transformationObjects_; }
 
 
     // ------------------ files ----------------------
@@ -674,79 +656,79 @@ private:
     void operator=(const Object&);
 
     /** Implementation of deserializeTree() */
-    static Object * deserializeTree_(IO::DataStream&);
+    static Object * p_deserializeTree_(IO::DataStream&);
 
     /** Removes the child from the child list, nothing else. */
-    bool takeChild_(Object * child);
+    bool p_takeChild_(Object * child);
 
     /** Adds the object to child list, nothing else */
-    Object * addChildObjectHelper_(Object * object, int insert_index = -1);
+    Object * p_addChildObjectHelper_(Object * object, int insert_index = -1);
 
     /** Makes all idNames in the tree unique regarding the tree of @p root.
         The tree in @p root can be an actual parent of the object or not. */
-    void makeUniqueIds_(Object * root);
+    void p_makeUniqueIds_(Object * root);
 
     /** Makes all idNames in the tree unique regarding the @p existingNames.
         @p existingNames will be modified with the changed idNames. */
-    void makeUniqueIds_(QSet<QString>& existingNames);
+    void p_makeUniqueIds_(QSet<QString>& existingNames);
 
     /** Called on changes to the child list */
-    void childrenChanged_();
+    void p_childrenChanged_();
 
     /** Fills the transformationChilds() array */
-    void collectTransformationObjects_();
+    void p_collectTransformationObjects_();
 
     //void setNumberThreadsRecursive_(int threads);
 
     // ---------- parameter s-----------------
 
-    Parameters * parameters_;
+    Parameters * p_parameters_;
 
-    void passDownActivityScope_(ActivityScope parent_scope);
-
-    // ------------ properties ---------------
-
-    QString idName_, name_, orgIdName_;
-
-    bool canBeDeleted_;
-
-    QMap<QString, QMap<qint64, QVariant>> attachedData_;
-
-    // ----------- tree ----------------------
-
-    Object * parentObject_;
-    QList<Object*> childObjects_;
-    QList<Transformation*> transformationObjects_;
-    bool childrenHaveChanged_;
-
-    // ---------- threads and blocksize ------
-
-    uint numberThreads_;
-    std::vector<uint> bufferSize_;
+    void p_passDownActivityScope_(ActivityScope parent_scope);
 
     // --------- default parameters ----------
 
-    ParameterSelect * paramActiveScope_;
+    ParameterSelect * p_paramActiveScope_;
+
+    // ------------ properties ---------------
+
+    QString p_idName_, p_name_, p_orgIdName_;
+
+    bool p_canBeDeleted_;
+
+    QMap<QString, QMap<qint64, QVariant>> p_attachedData_;
+
+    // ----------- tree ----------------------
+
+    Object * p_parentObject_;
+    QList<Object*> p_childObjects_;
+    QList<Transformation*> p_transformationObjects_;
+    bool p_childrenHaveChanged_;
+
+    // ---------- per-thread store ------
+
+    uint p_numberThreads_;
 
     // ------------ audio --------------------
 
+    // requested count
     uint p_numberSoundSources_,
          p_numberMicrophones_;
 
-    uint sampleRate_;
-    Double sampleRateInv_;
+    uint p_sampleRate_;
+    Double p_sampleRateInv_;
 
     // ------------ runtime ------------------
 
     ActivityScope
     /** activity scope passed down from parents */
-        parentActivityScope_,
+        p_parentActivityScope_,
     /** current requested activity scope */
-        currentActivityScope_;
+        p_currentActivityScope_;
 
     // ----------- position ------------------
-
-    std::vector<std::vector<Mat4>> transformation_;
+    // XXX deprecated
+    Mat4 p_transformation_;
 
 };
 
@@ -765,7 +747,7 @@ QList<T*> Object::findChildObjects(const QString& id, bool recursive, Object * i
 {
     QList<T*> list;
 
-    for (auto o : childObjects_)
+    for (auto o : p_childObjects_)
     {
         if (o != ignore
             && (qobject_cast<T*>(o))
@@ -785,7 +767,7 @@ QList<T*> Object::findChildObjectsStopAt(
 {
     QList<T*> list;
 
-    for (auto o : childObjects_)
+    for (auto o : p_childObjects_)
     {
         if (o != stopAt
             && (qobject_cast<T*>(o))
@@ -803,15 +785,15 @@ QList<T*> Object::findChildObjectsStopAt(
 template <class T>
 int Object::indexOfLastChild(int last) const
 {
-    if (childObjects_.empty())
+    if (p_childObjects_.empty())
         return -1;
 
-    if (last < 0 || last >= childObjects_.size())
-        last = childObjects_.size() - 1;
+    if (last < 0 || last >= p_childObjects_.size())
+        last = p_childObjects_.size() - 1;
 
     for (int i = last; i>=0; --i)
     {
-        if (qobject_cast<T*>(childObjects_[i]))
+        if (qobject_cast<T*>(p_childObjects_[i]))
             return i;
     }
 

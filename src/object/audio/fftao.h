@@ -34,6 +34,7 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void setNumberThreads(uint count) Q_DECL_OVERRIDE;
+
     virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
 protected:

@@ -111,7 +111,7 @@ public:
 
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
-    void calculateSceneTransform(uint thread, uint sample, Double time);
+    void calculateSceneTransform(uint thread, Double time);
 
     /** Sets the options for the debug drawer.
         @p options can be an OR combination of DebugDrawOption enums */
@@ -279,8 +279,6 @@ private:
     void updateChildrenChanged_();
     /** Tells all objects how much threads we got */
     void updateNumberThreads_();
-    /** Tells the objects the buffersize for each thread */
-    void updateBufferSize_();
     /** Tells the objects the samplerate */
     void updateSampleRate_();
 
@@ -309,7 +307,7 @@ private:
     void unlock_();
 
     /** unlocked version */
-    void calculateSceneTransform_(uint thread, uint sample, Double time);
+    void calculateSceneTransform_(uint thread, Double time);
 
     // ---------- opengl -----------------------
 
@@ -373,9 +371,6 @@ private:
     // ---------- properties -------------------
 
     uint sceneNumberThreads_;
-    std::vector<uint>
-        sceneBufferSize_,
-        sceneDelaySize_;
     uint sceneSampleRate_;
 
     // ------------ threadstuff ----------------

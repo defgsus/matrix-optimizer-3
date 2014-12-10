@@ -166,6 +166,7 @@ void SceneDebugRenderer::releaseGl()
     }
 }
 
+/// @todo this is all to be moved out of this class anyway
 void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int options)
 {
     MO_ASSERT(glReady_, "drawables not defined for SceneDebugRenderer::render()");
@@ -178,14 +179,14 @@ void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int opti
     if (options & Scene::DD_CAMERAS)
     for (Camera * o : cameras_)
     {
-        const Mat4& trans = o->transformation(thread, 0);
+        const Mat4& trans = o->transformation();
         drawCamera_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 
     if (options & Scene::DD_LIGHT_SOURCES)
     for (LightSource * o : lightSources_)
     {
-        const Mat4& trans = o->transformation(thread, 0);
+        const Mat4& trans = o->transformation();
         drawLightSource_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 /*

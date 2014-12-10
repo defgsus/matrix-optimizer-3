@@ -26,6 +26,8 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_AUDIO_OBJECT; }
     virtual bool isAudioObject() const Q_DECL_OVERRIDE { return true; }
 
+    // --------- getter -------------
+
     /** Returns the desired number of audio input channels.
         -1 for don't care. */
     int numAudioInputs() const;
@@ -34,6 +36,17 @@ public:
 
     virtual QString getInputName(uint channel) const { return QString("in %1").arg(channel + 1); }
     virtual QString getOutputName(uint channel) const { return QString("out %1").arg(channel + 1); }
+
+
+    // ---------- dsp ---------------
+
+    /** Override to adjust to changes of buffersize.
+        Audio thread will be halted and a different thread
+        will call this function */
+    virtual void setBufferSize(uint bufferSize, uint thread) { Q_UNUSED(bufferSize); Q_UNUSED(thread); }
+
+    /** @todo Add sampleRate here as well??
+     *  Right now it's non-reentrant in Object base */
 
     /** Processes dsp data.
         Inputs and outputs must have the same buffer size.

@@ -217,11 +217,6 @@ void Camera::setNumberThreads(uint num)
     }
 }
 
-void Camera::setBufferSize(uint bufferSize, uint thread)
-{
-    ObjectGl::setBufferSize(bufferSize, thread);
-}
-
 void Camera::initGl(uint thread)
 {
     const Scene * scene = sceneObject();

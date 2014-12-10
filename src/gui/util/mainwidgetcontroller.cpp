@@ -1008,7 +1008,7 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
         for (; i < num && e <= 1000;)
         {
             for (int j=0; j<1000; ++j, ++i)
-                scene_->calculateSceneTransform(0, 0, scene_->sampleRateInv() * (i*1000+j));
+                scene_->calculateSceneTransform(MO_GFX_THREAD, scene_->sampleRateInv() * (i*1000+j));
 
             e = t.elapsed();
         }
@@ -1028,7 +1028,7 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
     }
     else
     {
-        const auto bufsize = scene_->bufferSize(MO_AUDIO_THREAD);
+        const auto bufsize = 128;//scene_->bufferSize(MO_AUDIO_THREAD);
 
         ObjectDspPath dsp;
         dsp.createPath(scene_, AUDIO::Configuration(scene_->sampleRate(), bufsize, 0, 2));
@@ -1062,7 +1062,7 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
 void MainWidgetController::testAudioSpeed()
 {
     AUDIO::Configuration conf(scene_->sampleRate(),
-                              scene_->bufferSize(MO_AUDIO_THREAD),
+                              128,//scene_->bufferSize(MO_AUDIO_THREAD),
                               2, 2);
 
     AudioEngine engine;
