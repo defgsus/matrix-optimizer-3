@@ -58,6 +58,11 @@ public:
         The QColor is stored in QAction::data() */
     static QMenu * createColorMenu(QWidget * parent = 0);
 
+    /** Creates a menu to select a color.
+        The hue int is stored in QAction::data().
+        -1 is considered gray. */
+    static QMenu * createHueMenu(QWidget * parent = 0);
+
 private:
 
     static void createObjectMenuRecursive_(QMenu *, Object * root, int objectTypeFlags);

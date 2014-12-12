@@ -151,12 +151,19 @@ public:
         AS_ON           = AS_PREVIEW | AS_RENDER,
     };
 
+    /** ORDER MUST NOT CHANGE! */
     enum DataType
     {
         /** Position in ObjectGraphView */
         DT_GRAPH_POS,
         /** Expanded-flag in ObjectGraphView */
-        DT_GRAPH_EXPANDED
+        DT_GRAPH_EXPANDED,
+        /** Object hue */
+        DT_HUE,
+        DT_CLIP_COLUMN,
+        DT_CLIP_ROW,
+        DT_PARAM_GROUP_EXPANDED,
+        DT_SELECTED_PARAM
     };
 
     // -------------- ctor -------------------
@@ -299,6 +306,9 @@ public:
     /** Uses qDebug() */
     void dumpAttachedData() const;
 #endif
+
+    /** Returns the default or adjusted color of the object */
+    QColor color() const;
 
     // ---------- activity (scope) ----------------
 

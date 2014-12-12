@@ -100,8 +100,11 @@ QColor ObjectFactory::colorForObject(const Object * o, bool darkSet)
 {
     const bool active = o->activeAtAll();
 
-          int bright = darkSet? 48 : 200;
-          int hue = hueForObject(o->type());
+    int bright = darkSet? 48 : 200;
+
+    int hue = (o->hasAttachedData(Object::DT_HUE))
+            ? o->getAttachedData(Object::DT_HUE).toInt()
+            : hueForObject(o->type());
 
     if (!active)
         bright += darkSet? 100 : -90;

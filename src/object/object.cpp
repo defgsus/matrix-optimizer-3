@@ -476,6 +476,12 @@ void Object::dumpAttachedData() const
 #endif
 
 
+QColor Object::color() const
+{
+    return ObjectFactory::colorForObject(this);
+}
+
+
 Object::ActivityScope Object::activityScope() const
 {
     if (p_paramActiveScope_)

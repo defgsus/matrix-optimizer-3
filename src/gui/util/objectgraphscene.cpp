@@ -198,6 +198,8 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onObjectChanged_(MO::Object*)));
             connect(p_->editor, SIGNAL(objectNameChanged(MO::Object*)),
                     this, SLOT(onObjectNameChanged_(MO::Object*)));
+            connect(p_->editor, SIGNAL(objectColorChanged(MO::Object*)),
+                    this, SLOT(onObjectColorChanged_(MO::Object*)));
             connect(p_->editor, SIGNAL(modulatorAdded(MO::Modulator*)),
                     this, SLOT(onModulatorAdded_(MO::Modulator*)));
             connect(p_->editor, SIGNAL(modulatorDeleted(const MO::Modulator*)),
@@ -1121,6 +1123,17 @@ void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
 
     QAction * a;
 
+    // set color
+    a = actions.addAction(tr("Change color"), scene);
+    auto sub = ObjectMenu::createHueMenu();
+    a->setMenu(sub);
+    connect(sub, &QMenu::triggered, [=](QAction * a)
+    {
+        int hue = a->data().toInt();
+        editor->setObjectHue(obj, hue);
+    });
+
+
     if (Model3d * m = qobject_cast<Model3d*>(obj))
     {
         a = actions.addAction(QIcon(":/icon/obj_3d.png"), tr("Edit model geometry"), scene);
@@ -1284,6 +1297,13 @@ void ObjectGraphScene::onObjectNameChanged_(Object * o)
     auto item = itemForObject(o);
     if (item)
         item->updateLabels();
+}
+
+void ObjectGraphScene::onObjectColorChanged_(Object * o)
+{
+    auto item = itemForObject(o);
+    if (item)
+        item->updateColors();
 }
 
 void ObjectGraphScene::onObjectChanged_(Object * o)

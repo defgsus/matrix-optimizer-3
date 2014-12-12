@@ -8,6 +8,8 @@
     <p>created 12.10.2014</p>
 */
 
+#include <QVariant>
+
 #include "clip.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -26,10 +28,7 @@ Clip::Clip(QObject *parent)
     : Object        (parent),
       p_clipContainer_(0),
       p_timeStarted_  (0),
-      p_running_      (false),
-      p_column_       (0),
-      p_row_          (0),
-      p_color_        (QColor(50,100,50))
+      p_running_      (false)
 {
     setName("Clip");
 }
@@ -38,24 +37,35 @@ void Clip::serialize(IO::DataStream &io) const
 {
     Object::serialize(io);
 
-    io.writeHeader("clip", 2);
+    io.writeHeader("clip", 3);
 
+#ifdef MO__PRE_V3
     io << p_column_ << p_row_;
 
     // v2
     io << p_color_;
+#endif
 }
 
 void Clip::deserialize(IO::DataStream &io)
 {
     Object::deserialize(io);
 
-    const int ver = io.readHeader("clip", 2);
+    const int ver = io.readHeader("clip", 3);
 
-    io >> p_column_ >> p_row_;
-
-    if (ver >= 2)
-        io >> p_color_;
+    if (ver < 3)
+    {
+        uint col, row;
+        io >> col >> row;
+        setAttachedData(col, DT_CLIP_ROW);
+        setAttachedData(row, DT_CLIP_ROW);
+        if (ver >= 2)
+        {
+            QColor co;
+            io >> co;
+            setAttachedData(co.hslHue(), DT_HUE);
+        }
+    }
 }
 
 void Clip::createParameters()
@@ -83,6 +93,11 @@ void Clip::childrenChanged()
     // get all sequences and sub-sequences
     p_sequences_ = findChildObjects<Sequence>(QString(), true);
 }
+
+uint Clip::column() const { return getAttachedData(DT_CLIP_COLUMN).toUInt(); }
+uint Clip::row() const { return getAttachedData(DT_CLIP_ROW).toUInt(); }
+void Clip::setRow(uint row) { setAttachedData(row, DT_CLIP_ROW); }
+void Clip::setColumn(uint col) { setAttachedData(col, DT_CLIP_COLUMN); }
 
 
 QList<Clip*> Clip::getAssociatedClips(Object *o)

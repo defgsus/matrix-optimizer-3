@@ -64,6 +64,9 @@ signals:
         This includes number of audio channels, and the modulator outputs. */
     void objectChanged(MO::Object *);
 
+    /** Emitted when the DT_HUE value has been changed */
+    void objectColorChanged(MO::Object *);
+
     /** Emitted when the given object was added to the scene. */
     void objectAdded(MO::Object *);
 
@@ -121,8 +124,13 @@ public slots:
         this call simplifies to setObjectIndex() */
     bool moveObject(Object * object, Object * newParent, int newIndex = -1);
 
+    // ----------- properties ------------------
+
     /** Changes the objects name, emits objectNameChanged() */
     void setObjectName(Object * object, const QString& name);
+
+    /** Sets the hue for the object color, -1 for gray */
+    void setObjectHue(Object * object, int hue);
 
     // ------------- parameter -----------------
 

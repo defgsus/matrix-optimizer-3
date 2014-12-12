@@ -56,10 +56,8 @@ public:
 
     // -------------- getter -------------------
 
-    uint column() const { return p_column_; }
-    uint row() const { return p_row_; }
-
-    const QColor color() const { return p_color_; }
+    uint column() const;
+    uint row() const;
 
     Double speed() const { return paramSpeed_->baseValue(); }
 
@@ -71,11 +69,9 @@ public:
     /** Sets the position in the ClipContainer.
         @note The ClipContainer does not get notified of this change!
               Call ClipContainer::updateClipPositions()! */
-    void setPosition(uint col, uint row) { p_column_ = col; p_row_ = row; }
-    void setRow(uint row) { setPosition(column(), row); }
-    void setColumn(uint col) { setPosition(col, row()); }
-
-    void setColor(const QColor& color) { p_color_ = color; }
+    void setPosition(uint col, uint row) { setRow(row); setColumn(col); }
+    void setRow(uint row);
+    void setColumn(uint col);
 
     // -------------- trigger ------------------
 
@@ -106,10 +102,6 @@ private:
 
     Double p_timeStarted_;
     bool p_running_;
-
-    uint p_column_, p_row_;
-
-    QColor p_color_;
 
     ParameterFloat
             * paramSpeed_;

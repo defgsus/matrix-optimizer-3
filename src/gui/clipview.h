@@ -86,6 +86,7 @@ private slots:
 
     void onObjectAdded_(MO::Object*);
     void onObjectDeleted_(MO::Object*);
+    void onObjectColorChanged_(MO::Object*);
 
 private:
 

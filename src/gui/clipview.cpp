@@ -174,6 +174,7 @@ void ClipView::setScene(Scene * scene)
         {
             connect(editor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
             connect(editor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+            connect(editor_, SIGNAL(objectColorChanged(MO::Object*)), this, SLOT(onObjectColorChanged_(MO::Object*)));
         }
     }
 
@@ -304,8 +305,9 @@ void ClipView::updateClipWidget_(uint x, uint y)
     if (clip)
     {
         // -- pass other parameters on change --
-        if (clip->color() != w->clipColor())
-            w->setClipColor(clip->color());
+        auto c = ObjectFactory::colorForObject(clip);
+        if (c != w->clipColor())
+            w->setClipColor(c);
 
         if (clip->name() != w->name())
             w->setName(clip->name());
@@ -613,6 +615,12 @@ void ClipView::onObjectDeleted_(Object * o)
     updateAllClips();
 }
 
+void ClipView::onObjectColorChanged_(Object * o)
+{
+    if (o->isClip())
+        updateClip(static_cast<Clip*>(o));
+}
+
 void ClipView::moveSelection_(int dx, int dy)
 {
     // temporary struct to remember the moves
@@ -848,17 +856,14 @@ void ClipView::openPopup_()
 
         // set color
         menu->addAction(a = new QAction(plural? tr("Change clip colors") : tr("Change clip color"), menu));
-        sub = ObjectMenu::createColorMenu(menu);
+        sub = ObjectMenu::createHueMenu(menu);
         a->setMenu(sub);
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
-            QColor c = a->data().value<QColor>();
+            int hue = a->data().toInt();
             for (auto w : selection_)
-            if (w->clip())
-            {
-                w->clip()->setColor(c);
-                updateClip(w->clip());
-            }
+                if (w->clip())
+                    editor_->setObjectHue(w->clip(), hue);
         });
 
         menu->addSeparator();

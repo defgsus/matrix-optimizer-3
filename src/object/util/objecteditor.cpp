@@ -165,6 +165,15 @@ void ObjectEditor::setObjectName(Object *object, const QString &name)
         emit objectNameChanged(object);
 }
 
+void ObjectEditor::setObjectHue(Object *object, int hue)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::setObjectHue(" << object << ", " << hue << ")");
+
+    object->setAttachedData(hue, Object::DT_HUE);
+
+    emit objectColorChanged(object);
+}
+
 bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");

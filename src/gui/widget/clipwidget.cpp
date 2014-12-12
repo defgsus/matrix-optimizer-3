@@ -46,7 +46,7 @@ ClipWidget::ClipWidget(Type type, Clip * clip, ClipView * parent)
     if (clip_)
     {
         name_ = clip_->name();
-        clipColor_ = clip_->color();
+        clipColor_ = clip_->color().darker(40);
     }
 
     updateColors_();
@@ -116,9 +116,9 @@ void ClipWidget::updateColors_()
     }
 
     brushBodyH_ = brushBodyS_ = brushBodySH_ = brushBody_;
-    brushBodyH_.setColor(brushBody_.color().lighter(120));
-    brushBodyS_.setColor(brushBody_.color().lighter(160));
-    brushBodySH_.setColor(brushBodyS_.color().lighter(120));
+    brushBodyH_.setColor(brushBody_.color().lighter(110));
+    brushBodyS_.setColor(brushBody_.color().lighter(120));
+    brushBodySH_.setColor(brushBodyS_.color().lighter(110));
 
     penOutlineS_ = penOutline_;
     penOutlineS_.setColor(QColor(200,200,200));
