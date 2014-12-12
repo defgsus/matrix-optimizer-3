@@ -305,12 +305,10 @@ void ClipView::updateClipWidget_(uint x, uint y)
     if (clip)
     {
         // -- pass other parameters on change --
-        auto c = ObjectFactory::colorForObject(clip);
-        if (c != w->clipColor())
-            w->setClipColor(c);
-
         if (clip->name() != w->name())
             w->setName(clip->name());
+
+        w->updateColors();
 
         // update widgetmap
         if (!widgetMap_.contains(clip))

@@ -57,7 +57,7 @@ void Clip::deserialize(IO::DataStream &io)
     {
         uint col, row;
         io >> col >> row;
-        setAttachedData(col, DT_CLIP_ROW);
+        setAttachedData(col, DT_CLIP_COLUMN);
         setAttachedData(row, DT_CLIP_ROW);
         if (ver >= 2)
         {

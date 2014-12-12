@@ -46,10 +46,9 @@ ClipWidget::ClipWidget(Type type, Clip * clip, ClipView * parent)
     if (clip_)
     {
         name_ = clip_->name();
-        clipColor_ = clip_->color().darker(40);
     }
 
-    updateColors_();
+    updateColors();
 }
 
 void ClipWidget::setClip(Clip * c)
@@ -59,20 +58,12 @@ void ClipWidget::setClip(Clip * c)
     if (clip_)
     {
         name_ = clip_->name();
-        clipColor_ = clip_->color();
     }
     else
         name_.clear();
 
-    updateColors_();
+    updateColors();
 
-    update();
-}
-
-void ClipWidget::setClipColor(const QColor &color)
-{
-    clipColor_ = color;
-    updateColors_();
     update();
 }
 
@@ -87,7 +78,7 @@ QSize ClipWidget::sizeForType(Type t)
     return QSize();
 }
 
-void ClipWidget::updateColors_()
+void ClipWidget::updateColors()
 {
     button_->setVisible(type_ != T_CLIP || clip_ != 0);
 
@@ -107,7 +98,7 @@ void ClipWidget::updateColors_()
 
         case T_CLIP:
             penOutline_ = QPen(QColor(40,40,40));
-            brushBody_ = clip_? QBrush(clipColor_)
+            brushBody_ = clip_? clip_->color()
                               : QBrush(QColor(20,20,20));
             penText_ = brushBody_.color().lightness() > 128
                                 ? QPen(Qt::black)
@@ -124,6 +115,8 @@ void ClipWidget::updateColors_()
     penOutlineS_.setColor(QColor(200,200,200));
     if (clip_)
         penOutlineS_.setWidth(penOutline_.width()+1);
+
+    update();
 }
 
 void ClipWidget::resizeEvent(QResizeEvent *)
