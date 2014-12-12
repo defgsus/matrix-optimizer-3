@@ -21,7 +21,7 @@ namespace MO {
     };
 
     namespace IO { class DataStream; }
-    namespace AUDIO { class AudioSource; class AudioMicrophone; }
+    namespace AUDIO { class AudioSource; class AudioMicrophone; class AudioBuffer; class Configuration; }
     namespace GL { class LightSettings; class CameraSpace; }
     namespace MATH { class Timeline1D; }
 
@@ -40,6 +40,7 @@ namespace MO {
     class ClipContainer;
 
     class Parameter;
+    class Parameters;
     class ParameterInt;
     class ParameterFilename;
     class ParameterFloat;
@@ -57,8 +58,9 @@ namespace MO {
     class Track;
     class TrackFloat;
 
-    class AudioUnit;
-    class FilterUnit;
+    class AudioObject;
+    class AudioObjectConnection;
+    class AudioObjectConnections;
 
     class Modulator;
     class ModulatorFloat;
@@ -74,9 +76,6 @@ namespace MO {
 
     class ObjectEditor;
     class ObjectDspPath;
-#ifndef MO_DISABLE_TREE
-    class ObjectTreeModel;
-#endif
     class ObjectTreeMimeData;
 
 } // namespace MO

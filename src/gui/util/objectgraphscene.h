@@ -17,11 +17,14 @@ class QMimeData;
 
 namespace MO {
 class Object;
+class AudioObject;
 class Parameter;
 class Modulator;
+class AudioObjectConnection;
 namespace GUI {
 
 class AbstractObjectItem;
+class ObjectGraphConnectItem;
 class SceneSettings;
 
 class ObjectGraphScene : public QGraphicsScene
@@ -77,9 +80,6 @@ public slots:
         (re-)initializes the QGraphicsScene */
     void setRootObject(Object * root);
 
-    /** Moves the given item to the given position */
-    void setGridPos(AbstractObjectItem *, const QPoint& gridPos);
-
     /** Calls update for all ModulatorItems connected to the given item */
     void repaintModulators(AbstractObjectItem *);
 
@@ -89,8 +89,19 @@ public slots:
     /** Creates the edit menu, for scene or for selected items */
     void popup(const QPoint &gridPos);
 
+    /** Popup for connection */
+    void popup(MO::AudioObjectConnection*);
+    /** Popup for modulator */
+    void popup(MO::Modulator*);
+    /** Popup with parameter select to create a modulation.
+        @p dropPoint is in scene coords */
+    void popupObjectDrag(MO::Object * source, MO::Object * goal, const QPointF &dropPoint);
+
     /** Focus and select the item for the object. */
-    void setFocusObject(Object * o);
+    void setFocusObject(MO::Object * o);
+
+    /** Starts the connection drag mode */
+    bool startConnection(ObjectGraphConnectItem*);
 
     // ------------------- clipboard ------------------
 
@@ -134,8 +145,11 @@ private slots:
     void onObjectAdded_(MO::Object *);
     void onObjectDeleted_(const MO::Object *);
     void onObjectMoved_(MO::Object*, MO::Object * oldParent);
+    void onObjectNameChanged_(MO::Object *);
     void onModulatorAdded_(MO::Modulator *);
     void onModulatorDeleted_();
+    void onConnectionsChanged_();
+    void onParameterVisibilityChanged_(MO::Parameter*);
 
 protected:
 

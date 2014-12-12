@@ -13,14 +13,16 @@
 #include "io/log.h"
 #include "io/error.h"
 #include "object/object.h"
+#include "object/param/parameter.h"
 
 namespace MO {
 
 
-Modulator::Modulator(const QString &name, const QString &id, Object *parent)
+Modulator::Modulator(const QString &name, const QString &id, Parameter * p, Object *parent)
     : parent_       (parent),
       name_         (name),
-      modulatorId_  (id)
+      modulatorId_  (id),
+      param_        (p)
 {
     MO_DEBUG_MOD("Modulator::Modulator(" << id << ", " << parent << ")");
 }
@@ -38,6 +40,21 @@ void Modulator::deserialize(IO::DataStream & io)
     io.readHeader("mod", 1);
 
     io >> modulatorId_;
+}
+
+QString Modulator::nameAutomatic() const
+{
+    QString n = modulator() ? modulator()->name() : "NULL";
+    n += " -> ";
+    if (!parent())
+        n += "NULL";
+    else
+    {
+        n += parent()->name();
+        if (param_)
+            n += "." + param_->name();
+    }
+    return n;
 }
 
 void Modulator::setModulator(Object * object)

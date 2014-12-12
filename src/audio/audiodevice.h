@@ -97,7 +97,7 @@ public:
     // ---------- info -------------------
 
     /** Returns true when an audio stream is initialized */
-    bool ok() const { return ok_; }
+    bool isOk() const { return ok_; }
     /** Returns true when the audio stream is running/playing */
     bool isPlaying() const { return play_; }
 

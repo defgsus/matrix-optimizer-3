@@ -29,14 +29,12 @@
 #include "transform/look.h"
 #include "transform/lookat.h"
 #include "transform/mix.h"
-#include "audio/envelopeunit.h"
-#include "audio/filterunit.h"
-#include "audio/filterbankunit.h"
 #include "scene.h"
 #include "trackfloat.h"
 #include "sequencefloat.h"
 #include "modulatorobjectfloat.h"
 #include "synthesizer.h"
+#include "audio/filterao.h"
 #include "io/files.h"
 
 namespace MO {
@@ -83,14 +81,14 @@ int ObjectFactory::hueForObject(int type)
     if (type & Object::TG_MODULATOR_OBJECT)
         return 170;
     else
-    if (type & Object::T_AUDIO_UNIT)
-        return 300;
+    if (type & Object::T_AUDIO_OBJECT)
+        return 350;
     else
     if (type & Object::T_SOUNDSOURCE)
-        return 340;
+        return 290;
     else
     if (type & Object::T_SOUND_OBJECT)
-        return 350;
+        return 290;
     else
         return -1;
 }
@@ -159,14 +157,19 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
             return iconMix;
     }
 
-    if (o->isAudioUnit())
+    if (o->isAudioObject())
     {
-        if (qobject_cast<const EnvelopeUnit*>(o))
-            return iconAUEnv;
-        if (qobject_cast<const FilterUnit*>(o))
+        return iconParameter;
+    }
+
+    if (o->isAudioObject())
+    {
+//        if (qobject_cast<const EnvelopeUnit*>(o))
+//            return iconAUEnv;
+        if (qobject_cast<const FilterAO*>(o))
             return iconAUFilter;
-        if (qobject_cast<const FilterBankUnit*>(o))
-            return iconAUFilterBank;
+        //if (qobject_cast<const FilterBankUnit*>(o))
+//            return iconAUFilterBank;
     }
 
 

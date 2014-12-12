@@ -20,6 +20,7 @@
 #include "objectfactory.h"
 #include "scene.h"
 #include "transform/transformation.h"
+#include "param/parameters.h"
 #include "param/parameterint.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
@@ -52,6 +53,8 @@ Object::Object(QObject *parent) :
 //    parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY)),
 //    currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
 {
+    parameters_ = new Parameters(this);
+
     // tie into Object hierarchy
     // NOTE: Has not been tested yet, and is actually never used
     if (auto o = qobject_cast<Object*>(parent))
@@ -62,8 +65,7 @@ Object::Object(QObject *parent) :
 
 Object::~Object()
 {
-    for (auto p : parameters_)
-        delete p;
+    delete parameters_;
 
     for (auto a : objAudioSources_)
         delete a;
@@ -100,7 +102,7 @@ void Object::serializeTree(IO::DataStream & io) const
     MO_DEBUG_IO("Object('"<<idName()<<"')::serializeTree_()");
 
     // default header
-    io.writeHeader("mo-tree", 1);
+    io.writeHeader("mo-tree", 2);
 
     // default object info
     io << className() << idName() << name();
@@ -117,7 +119,7 @@ void Object::serializeTree(IO::DataStream & io) const
                     "QIODevice error: '"<<io.device()->errorString()<<"'");
 
     // write parameters
-    serializeParameters_(io, this);
+    params()->serialize(io);
 
     io.endSkip(startPos);
 
@@ -125,6 +127,12 @@ void Object::serializeTree(IO::DataStream & io) const
     io << (qint32)childObjects_.size();
     for (auto o : childObjects_)
         o->serializeTree(io);
+
+    // v2
+    // serialize after child objects
+    auto future = io.reserveFutureValueInt();
+    bool did = serializeAfterChilds(io);
+    io.writeFutureValue(future, qint64(did ? 1 : 0));
 }
 
 Object * Object::deserializeTree(IO::DataStream & io)
@@ -142,7 +150,7 @@ Object * Object::deserializeTree_(IO::DataStream & io)
     MO_DEBUG_IO("Object::deserializeTree_()");
 
     // read default header
-    io.readHeader("mo-tree", 1);
+    const auto ver = io.readHeader("mo-tree", 2);
 
     // read default object info
     QString className, idName, name;
@@ -181,7 +189,9 @@ Object * Object::deserializeTree_(IO::DataStream & io)
         o->createParameters();
         try
         {
-            deserializeParameters_(io, o);
+            o->params()->deserialize(io);
+            o->onParametersLoaded();
+            o->updateParameterVisibility();
         }
         catch (Exception& e)
         {
@@ -214,6 +224,14 @@ Object * Object::deserializeTree_(IO::DataStream & io)
         o->addObject_(child);//, ObjectFactory::getBestInsertIndex(o, child, -1));
     }
 
+    if (ver >= 2)
+    {
+        qint64 did;
+        io >> did;
+        if (did)
+            o->deserializeAfterChilds(io);
+    }
+
     // create audio objects
     o->createAudioSources();
     o->createMicrophones();
@@ -241,55 +259,6 @@ void Object::deserialize(IO::DataStream & io)
         io >> attachedData_;
 }
 
-void Object::serializeParameters_(IO::DataStream & io, const Object * o)
-{
-    // write parameters
-    io.writeHeader("params", 1);
-
-    io << (qint32)o->parameters_.size();
-
-    for (auto p : o->parameters_)
-    {
-        io << p->idName();
-
-        auto pos = io.beginSkip();
-        p->serialize(io);
-        io.endSkip(pos);
-    }
-}
-
-void Object::deserializeParameters_(IO::DataStream & io, Object * o)
-{
-    // read parameters
-    io.readHeader("params", 1);
-
-    qint32 num;
-    io >> num;
-
-    for (int i=0; i<num; ++i)
-    {
-        QString id;
-        io >> id;
-
-        // length for skipping
-        qint64 length;
-        io >> length;
-
-        Parameter * p = o->findParameter(id);
-        if (!p)
-        {
-            MO_IO_WARNING(READ, "skipping unknown parameter '" << id << "' "
-                                "in input stream.");
-            io.skip(length);
-        }
-        else
-            p->deserialize(io);
-    }
-
-    o->onParametersLoaded();
-    o->updateParameterVisibility();
-}
-
 
 // --------------- info ----------------------------
 
@@ -307,7 +276,7 @@ int Object::objectPriority(const Object *o)
         return 3;
     if (o->isModulatorObject())
         return 2;
-    if (o->isAudioUnit())
+    if (o->isAudioUnit() || o->isAudioObject())
         return 1;
     return 0;
 }
@@ -409,7 +378,7 @@ QString Object::idNamePath() const
 
 bool Object::isModulated() const
 {
-    for (auto p : parameters_)
+    for (auto p : params()->parameters())
         if (p->isModulated())
             return true;
 
@@ -606,6 +575,26 @@ Object * Object::findParentObject(int tflags) const
         return 0;
 
     return parentObject_->type() & tflags ? parentObject_ : parentObject_->findParentObject(tflags);
+}
+
+Object * Object::findCommonParentObject(Object *other) const
+{
+    // get list of parents
+    QList<Object*> par;
+    Object * o = parentObject();
+    while (o) { par << o; o = o->parentObject(); }
+
+    // get list of other's parents
+    QSet<Object*> opar;
+    o = other->parentObject();
+    while (o) { opar << o; o = o->parentObject(); }
+
+    // find commons
+    for (auto o : par)
+        if (opar.contains(o))
+            return o;
+
+    return 0;
 }
 
 bool Object::isSaveToAdd(Object *o, QString &error) const
@@ -892,12 +881,8 @@ bool Object::canHaveChildren(Type t) const
     if (type() == T_MICROPHONE_GROUP)
         return t == T_MICROPHONE;
 
-    // audio-units can contain only audio-units
-    if (type() == T_AUDIO_UNIT)
-        return t == T_AUDIO_UNIT;
-
     // audio-units can be part of scene and any object
-    if (t == T_AUDIO_UNIT)
+    if (t == T_AUDIO_OBJECT)
         return type() == T_SCENE || (type() & TG_REAL_OBJECT);
 
     // transformations are child-less
@@ -956,7 +941,7 @@ void Object::childrenChanged_()
 
 void Object::onObjectsAboutToDelete(const QList<Object *> & list)
 {
-    for (Parameter * p : parameters_)
+    for (Parameter * p : params()->parameters())
     {
         for (const Object * o : list)
             if (p->findModulator(o->idName()))
@@ -1001,6 +986,13 @@ void Object::setNumberThreads(uint num)
 
     for (auto m : objMicrophones_)
         m->setNumberThreads(num);
+}
+
+void Object::getIdMap(QMap<QString, Object *> &idMap) const
+{
+    idMap.insert(idName(), const_cast<Object*>(this));
+    for (auto c : childObjects())
+        c->getIdMap(idMap);
 }
 
 
@@ -1081,14 +1073,6 @@ ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const 
 
 // ---------------------- parameter --------------------------
 
-Parameter * Object::findParameter(const QString &id)
-{
-    for (auto p : parameters_)
-        if (p->idName() == id)
-            return p;
-    return 0;
-}
-
 void Object::createParameters()
 {
     const static QString
@@ -1105,10 +1089,10 @@ void Object::createParameters()
             strPrev3r(tr("Object is only active in preview mode 3 and when rendering")),
             strRend(tr("Object is only active when rendering"));
 
-    beginParameterGroup("active", tr("activity"));
+    params()->beginParameterGroup("active", tr("activity"));
 
     paramActiveScope_ =
-    createSelectParameter("_activescope", tr("activity scope"),
+    params()->createSelectParameter("_activescope", tr("activity scope"),
                          strTip,
                          { "off", "on", "client", "prev", "ren", "prev1", "prev2", "prev3",
                            "prev1r", "prev2r", "prev3r" },
@@ -1122,7 +1106,7 @@ void Object::createParameters()
                            AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
                          AS_ON, true, false );
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void Object::onParameterChanged(Parameter * p)
@@ -1136,417 +1120,6 @@ void Object::onParameterChanged(Parameter * p)
 }
 
 
-void Object::beginParameterGroup(const QString &id, const QString &name)
-{
-    currentParameterGroupId_ = id;
-    currentParameterGroupName_ = name;
-}
-
-void Object::endParameterGroup()
-{
-    currentParameterGroupId_.clear();
-    currentParameterGroupName_.clear();
-}
-
-ParameterFloat * Object::createFloatParameter(
-        const QString& id, const QString& name, const QString& statusTip,
-        Double defaultValue, bool editable, bool modulateable)
-{
-    return createFloatParameter(id, name, statusTip, defaultValue,
-                                -ParameterFloat::infinity, ParameterFloat::infinity,
-                                1.0, editable, modulateable);
-}
-
-ParameterFloat * Object::createFloatParameter(
-        const QString& id, const QString& name, const QString &statusTip,
-        Double defaultValue, Double smallStep, bool editable, bool modulateable)
-{
-    return createFloatParameter(id, name, statusTip, defaultValue,
-                                -ParameterFloat::infinity, ParameterFloat::infinity,
-                                smallStep, editable, modulateable);
-}
-
-ParameterFloat * Object::createFloatParameter(
-        const QString& id, const QString& name, const QString& statusTip,
-        Double defaultValue, Double minValue, Double maxValue, Double smallStep,
-        bool editable, bool modulateable)
-{
-    ParameterFloat * param = 0;
-
-    // see if already there
-
-    if (auto p = findParameter(id))
-    {
-        if (auto pf = dynamic_cast<ParameterFloat*>(p))
-        {
-            param = pf;
-        }
-        else
-        {
-            MO_ASSERT(false, "object '" << idName() << "' requested float "
-                      "parameter '" << id << "' "
-                      "which is already present as parameter of type " << p->typeName());
-        }
-    }
-
-    // create new
-    if (!param)
-    {
-        param = new ParameterFloat(this, id, name);
-        parameters_.append(param);
-
-        // first time init
-        param->setValue(defaultValue);
-    }
-
-    // override potentially previous
-    param->setName(name);
-    param->setDefaultValue(std::min(maxValue, std::max(minValue, defaultValue )));
-    param->setMinValue(minValue);
-    param->setMaxValue(maxValue);
-    param->setSmallStep(smallStep);
-    param->setStatusTip(statusTip);
-    param->setEditable(editable);
-    param->setModulateable(modulateable);
-
-    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
-
-    return param;
-}
-
-
-
-
-ParameterInt * Object::createIntParameter(
-        const QString& id, const QString& name, const QString& statusTip,
-        Int defaultValue, bool editable, bool modulateable)
-{
-    return createIntParameter(id, name, statusTip, defaultValue,
-                                -ParameterInt::infinity, ParameterInt::infinity,
-                                1, editable, modulateable);
-}
-
-ParameterInt * Object::createIntParameter(
-        const QString& id, const QString& name, const QString &statusTip,
-        Int defaultValue, Int smallStep, bool editable, bool modulateable)
-{
-    return createIntParameter(id, name, statusTip, defaultValue,
-                                -ParameterInt::infinity, ParameterInt::infinity,
-                                smallStep, editable, modulateable);
-}
-
-ParameterInt * Object::createIntParameter(
-        const QString& id, const QString& name, const QString& statusTip,
-        Int defaultValue, Int minValue, Int maxValue, Int smallStep,
-        bool editable, bool modulateable)
-{
-    ParameterInt * param = 0;
-
-    // see if already there
-
-    if (auto p = findParameter(id))
-    {
-        if (auto pf = dynamic_cast<ParameterInt*>(p))
-        {
-            param = pf;
-        }
-        else
-        {
-            MO_ASSERT(false, "object '" << idName() << "' requested int "
-                      "parameter '" << id << "' "
-                      "which is already present as parameter of type " << p->typeName());
-        }
-    }
-
-    // create new
-    if (!param)
-    {
-        param = new ParameterInt(this, id, name);
-        parameters_.append(param);
-
-        // first time init
-        param->setValue(defaultValue);
-    }
-
-    // override potentially previous
-    param->setName(name);
-    param->setDefaultValue(std::min(maxValue, std::max(minValue, defaultValue )));
-    param->setMinValue(minValue);
-    param->setMaxValue(maxValue);
-    param->setSmallStep(smallStep);
-    param->setStatusTip(statusTip);
-    param->setEditable(editable);
-    param->setModulateable(modulateable);
-
-    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
-
-    return param;
-}
-
-
-
-ParameterSelect * Object::createBooleanParameter(
-            const QString& id, const QString& name, const QString& statusTip,
-            const QString& offStatusTip, const QString& onStatusTip,
-            bool defaultValue, bool editable, bool modulateable)
-{
-    ParameterSelect * p = createSelectParameter(
-            id, name, statusTip,
-            { "off", "on" },
-            { tr("off"), tr("on") },
-            { offStatusTip, onStatusTip },
-            { false, true },
-            defaultValue, editable, modulateable);
-
-    p->setBoolean(true);
-
-    return p;
-}
-
-ParameterSelect * Object::createSelectParameter(
-            const QString& id, const QString& name, const QString& statusTip,
-            const QStringList& valueIds, const QStringList& valueNames, const QList<int> &valueList,
-            int defaultValue, bool editable, bool modulateable)
-{
-    return createSelectParameter(id, name, statusTip,
-                                 valueIds, valueNames, QStringList(), valueList,
-                                 defaultValue, editable, modulateable);
-}
-
-ParameterSelect * Object::createSelectParameter(
-            const QString& id, const QString& name, const QString& statusTip,
-            const QStringList& valueIds, const QStringList& valueNames, const QStringList& statusTips,
-            const QList<int> &valueList,
-            int defaultValue, bool editable, bool modulateable)
-{
-    ParameterSelect * param = 0;
-
-    // see if already there
-
-    if (auto p = findParameter(id))
-    {
-        if (auto ps = dynamic_cast<ParameterSelect*>(p))
-        {
-            param = ps;
-        }
-        else
-        {
-            MO_ASSERT(false, "object '" << idName() << "' requested select "
-                      "parameter '" << id << "' "
-                      "which is already present as parameter of type " << p->typeName());
-        }
-    }
-
-    // create new
-    if (!param)
-    {
-        param = new ParameterSelect(this, id, name);
-        parameters_.append(param);
-
-        // first time init
-        param->setValueList(valueList);
-        param->setValueIds(valueIds);
-        param->setValueNames(valueNames);
-        param->setValue(defaultValue);
-    }
-
-    // override potentially previous
-    param->setName(name);
-    param->setModulateable(modulateable);
-    param->setStatusTip(statusTip);
-    param->setEditable(editable);
-    param->setValueList(valueList);
-    param->setValueIds(valueIds);
-    param->setValueNames(valueNames);
-    param->setStatusTips(statusTips);
-    param->setDefaultValue(defaultValue);
-
-    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
-
-    return param;
-}
-
-ParameterText * Object::createTextParameter(
-            const QString& id, const QString& name, const QString& statusTip,
-            const QString& defaultValue,
-            bool editable, bool modulateable)
-{
-    return createTextParameter(id, name, statusTip, TT_PLAIN_TEXT,
-                               defaultValue, editable, modulateable);
-}
-
-ParameterText * Object::createTextParameter(
-            const QString& id, const QString& name, const QString& statusTip,
-            TextType textType,
-            const QString& defaultValue,
-            bool editable, bool modulateable)
-{
-    ParameterText * param = 0;
-
-    // see if already there
-
-    if (auto p = findParameter(id))
-    {
-        if (auto ps = dynamic_cast<ParameterText*>(p))
-        {
-            param = ps;
-        }
-        else
-        {
-            MO_ASSERT(false, "object '" << idName() << "' requested text "
-                      "parameter '" << id << "' "
-                      "which is already present as parameter of type " << p->typeName());
-        }
-    }
-
-    // create new
-    if (!param)
-    {
-        param = new ParameterText(this, id, name);
-        parameters_.append(param);
-
-        // first time init
-        param->setValue(defaultValue);
-    }
-
-    // override potentially previous
-    param->setName(name);
-    param->setModulateable(modulateable);
-    param->setEditable(editable);
-    param->setTextType(textType);
-    param->setDefaultValue(defaultValue);
-    param->setStatusTip(statusTip);
-
-    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
-
-    return param;
-}
-
-
-ParameterFilename * Object::createFilenameParameter(
-            const QString& id, const QString& name, const QString& statusTip,
-            IO::FileType fileType, const QString& defaultValue, bool editable)
-{
-    ParameterFilename * param = 0;
-
-    // see if already there
-
-    if (auto p = findParameter(id))
-    {
-        if (auto ps = dynamic_cast<ParameterFilename*>(p))
-        {
-            param = ps;
-        }
-        else
-        {
-            MO_ASSERT(false, "object '" << idName() << "' requested filename "
-                      "parameter '" << id << "' "
-                      "which is already present as parameter of type " << p->typeName());
-        }
-    }
-
-    // create new
-    if (!param)
-    {
-        param = new ParameterFilename(this, id, name);
-        parameters_.append(param);
-
-        // first time init
-        param->setValue(defaultValue);
-    }
-
-    // override potentially previous
-    param->setName(name);
-    param->setModulateable(false);
-    param->setEditable(editable);
-    param->setFileType(fileType);
-    param->setDefaultValue(defaultValue);
-    param->setStatusTip(statusTip);
-
-    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
-
-    return param;
-}
-
-
-ParameterTimeline1D * Object::createTimeline1DParameter(
-        const QString& id, const QString& name, const QString& statusTip,
-        const MATH::Timeline1D * defaultValue,
-        bool editable)
-{
-    return createTimeline1DParameter(id, name, statusTip,
-                              defaultValue,
-                              -ParameterTimeline1D::infinity,
-                              +ParameterTimeline1D::infinity,
-                              -ParameterTimeline1D::infinity,
-                              +ParameterTimeline1D::infinity,
-                              editable);
-}
-
-ParameterTimeline1D * Object::createTimeline1DParameter(
-        const QString& id, const QString& name, const QString& statusTip,
-        const MATH::Timeline1D * defaultValue,
-        Double minTime, Double maxTime,
-        bool editable)
-{
-    return createTimeline1DParameter(id, name, statusTip,
-                              defaultValue,
-                              minTime, maxTime,
-                              -ParameterTimeline1D::infinity,
-                              +ParameterTimeline1D::infinity,
-                              editable);
-}
-
-ParameterTimeline1D * Object::createTimeline1DParameter(
-        const QString& id, const QString& name, const QString& statusTip,
-        const MATH::Timeline1D * defaultValue,
-        Double minTime, Double maxTime, Double minValue, Double maxValue,
-        bool editable)
-{
-    ParameterTimeline1D * param = 0;
-
-    // see if already there
-
-    if (auto p = findParameter(id))
-    {
-        if (auto pf = dynamic_cast<ParameterTimeline1D*>(p))
-        {
-            param = pf;
-        }
-        else
-        {
-            MO_ASSERT(false, "object '" << idName() << "' requested timeline1d "
-                      "parameter '" << id << "' "
-                      "which is already present as parameter of type " << p->typeName());
-        }
-    }
-
-    // create new
-    if (!param)
-    {
-        param = new ParameterTimeline1D(this, id, name);
-        parameters_.append(param);
-
-        // first time init
-        if (defaultValue)
-            param->setValue(*defaultValue);
-    }
-
-    // override potentially previous
-    param->setName(name);
-    if (defaultValue)
-        param->setDefaultTimeline(*defaultValue);
-    param->setMinTime(minTime);
-    param->setMaxTime(maxTime);
-    param->setMinValue(minValue);
-    param->setMaxValue(maxValue);
-    param->setStatusTip(statusTip);
-    param->setEditable(editable);
-
-    param->setGroup(currentParameterGroupId_, currentParameterGroupName_);
-
-    return param;
-}
 
 
 // ----------------- audio sources ---------------------
@@ -1713,7 +1286,7 @@ QList<AUDIO::AudioMicrophone*> Object::createOrDeleteMicrophones(const QString &
 QList<Modulator*> Object::getModulators() const
 {
     QList<Modulator*> mods;
-    for (auto p : parameters())
+    for (auto p : params()->parameters())
     {
         mods.append( p->modulators() );
     }
@@ -1724,7 +1297,7 @@ QList<Object*> Object::getModulatingObjects() const
 {
     QList<Object*> list;
 
-    for (auto p : parameters())
+    for (auto p : params()->parameters())
     {
         list.append(p->getModulatingObjects());
     }
@@ -1736,7 +1309,7 @@ QList<Object*> Object::getFutureModulatingObjects(const Scene *scene) const
 {
     QList<Object*> list;
 
-    for (auto p : parameters())
+    for (auto p : params()->parameters())
     {
         list.append(p->getFutureModulatingObjects(scene));
     }
@@ -1748,7 +1321,7 @@ QList<QPair<Parameter*, Object*>> Object::getModulationPairs() const
 {
     QList<QPair<Parameter*, Object*>> pairs;
 
-    for (auto p : parameters())
+    for (auto p : params()->parameters())
     {
         const QList<Object*> list = p->getModulatingObjects();
 

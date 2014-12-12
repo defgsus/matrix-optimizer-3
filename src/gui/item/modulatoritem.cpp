@@ -10,6 +10,7 @@
 
 #include <QPainter>
 #include <QCursor>
+#include <QGraphicsSceneMouseEvent>
 
 #include "modulatoritem.h"
 #include "abstractobjectitem.h"
@@ -62,8 +63,14 @@ namespace {
 
     QPainterPath createArrowOutline(const QPointF &from, const QPointF &to)
     {
-        QPoint p1(0, -2),
-               p2(0, 2);
+        QPointF dir = (to - from),
+                norm = dir / std::sqrt(std::max(1., QPointF::dotProduct(dir, dir)));
+
+        qreal ny = std::abs(norm.y()),
+              ofsy = 3 + 2 * ny;//5 * (ny + (ny+1));
+
+        QPointF p1(0, -ofsy),
+                p2(0,  ofsy);
 
         QPainterPath shape(from + p1);
 
@@ -77,14 +84,18 @@ namespace {
 
 
 
-ModulatorItem::ModulatorItem(Modulator * mod)
-    : mod_          (mod),
+ModulatorItem::ModulatorItem(Modulator * mod, QGraphicsItem * parent)
+    : QGraphicsItem (parent),
+      mod_          (mod),
       isHovered_    (false),
       from_         (0),
       to_           (0)
 {
     setCursor(QCursor(Qt::ArrowCursor));
     setFlag(ItemIsSelectable);
+    setFlag(ItemClipsToShape);
+
+    setToolTip(mod->nameAutomatic());
 }
 
 ObjectGraphScene * ModulatorItem::objectScene() const
@@ -129,21 +140,21 @@ void ModulatorItem::updatePos_()
 {
     // get positions of modulator and goal item
     if (from_)
-        fromPos_ = from_->mapToScene(QPointF(from_->rect().right(),
-                                             from_->rect().center().y()));
+        fromPos_ = mapToParent(mapFromScene(from_->mapToScene(from_->outputPos(mod_))));
     if (to_)
-        toPos_ = to_->mapToScene(QPointF(to_->rect().left(), to_->rect().center().y()));
+        toPos_ = mapToParent(mapFromScene(to_->mapToScene(to_->inputPos(mod_->parameter()))));
 
-    // min/max rect
-    rect_.setLeft(   std::min(fromPos_.x(), toPos_.x()) );
-    rect_.setRight(  std::max(fromPos_.x(), toPos_.x()) );
-    rect_.setTop(    std::min(fromPos_.y(), toPos_.y()) );
-    rect_.setBottom( std::max(fromPos_.y(), toPos_.y()) );
-    setPos(rect_.topLeft());
+    // bounding rect of the two positions
+    QRect rect( std::min(fromPos_.x(), toPos_.x()),
+                std::max(fromPos_.x(), toPos_.x()),
+                std::min(fromPos_.y(), toPos_.y()),
+                std::max(fromPos_.y(), toPos_.y()) );
+    setPos(rect.topLeft());
 
     // arrow
     shape_ = createArrow(fromPos_ - pos(), toPos_ - pos());
     boundingShape_ = createArrowOutline(fromPos_ - pos(), toPos_ - pos());
+    boundingRect_ = boundingShape_.boundingRect();
 }
 
 QPainterPath ModulatorItem::shape() const
@@ -153,7 +164,7 @@ QPainterPath ModulatorItem::shape() const
 
 QRectF ModulatorItem::boundingRect() const
 {
-    return shape_.boundingRect();
+    return boundingRect_;
 }
 
 void ModulatorItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
@@ -166,6 +177,15 @@ void ModulatorItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 {
     isHovered_ = false;
     update();
+}
+
+void ModulatorItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
+{
+    if (e->button() == Qt::RightButton)
+    {
+        setSelected(true);
+        objectScene()->popup(mod_);
+    }
 }
 
 void ModulatorItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)

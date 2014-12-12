@@ -27,6 +27,7 @@ class QMainWindow;
 class QMenu;
 
 namespace MO {
+class LiveAudioEngine;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
@@ -41,7 +42,6 @@ class SceneSettings;
 class TransportWidget;
 class ServerDialog;
 class ClipView;
-class TestThread;
 class ObjectGraphView;
 
 class MainWidgetController : public QObject
@@ -61,10 +61,6 @@ public:
     GL::Manager * glManager() const { return glManager_; }
     GL::Window * glWindow() const { return glWindow_; }
     ObjectView * objectView() const { return objectView_; }
-#ifndef MO_DISABLE_TREE
-    ObjectTreeView * objectTreeView() const { return objectTreeView_; }
-    ObjectTreeModel * objectTreeModel() const { return objectTreeModel_; }
-#endif
     ObjectEditor * objectEditor() const { return objectEditor_; }
     ObjectGraphView * objectGraphView() const { return objectGraphView_; }
     Sequencer * sequencer() const { return sequencer_; }
@@ -85,12 +81,16 @@ signals:
 
     void windowTitle(const QString& title);
 
+    /** Widgets might have appeared or disappeared */
+    void modeChanged();
+
     // ------------- actions -------------------
 
 public slots:
 
     void start();
     void stop();
+    void closeAudio();
 
     /** Loads last or creates new */
     void initScene();
@@ -132,8 +132,6 @@ private slots:
 
     void onOutputSizeChanged_(const QSize&);
 
-    void resetTreeModel_();
-    void runTestThread_();
     void dumpIdNames_();
     void dumpNeededFiles_();
     void exportPovray_();
@@ -153,6 +151,8 @@ private slots:
     void onResolutionOutput_();
     void onResolutionCustom_();
     void onResolutionPredefined_(QAction*);
+
+    void onUpdateTimer_();
 
     // -- network --
 
@@ -174,19 +174,19 @@ private:
 
     QMainWindow * window_;
     Scene * scene_;
-#ifndef MO_DISABLE_TREE
-    ObjectTreeModel * objectTreeModel_;
-#endif
+
+    QTimer * updateTimer_;
+
     QSize outputSize_;
+
+    LiveAudioEngine * audioEngine_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
 
     ObjectEditor * objectEditor_;
     ObjectView * objectView_;
-#ifndef MO_DISABLE_TREE
-    ObjectTreeView * objectTreeView_;
-#endif
+
     ObjectGraphView * objectGraphView_;
 
     SceneSettings * sceneSettings_;
@@ -206,8 +206,6 @@ private:
     QTimer * sysInfoTimer_;
 
     QString currentSceneFilename_;
-
-    TestThread * testThread_;
 
     QMenu * menuEdit_, * menuResolutions_,
           * menuProjectorIndex_;

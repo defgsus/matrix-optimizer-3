@@ -11,7 +11,6 @@ HEADERS += \
     src/gui/util/viewspace.h \
     src/gui/ruler.h \
     src/gui/qobjectinspector.h \
-    src/gui/objecttreeview.h \
     src/gui/parameterview.h \
     src/gui/sequenceview.h \
     src/gui/sequencefloatview.h \
@@ -44,12 +43,6 @@ HEADERS += \
     src/gui/widget/transportwidget.h \
     src/gui/widget/groupwidget.h \
     src/gui/widget/geometrymodifierwidget.h \
-    src/gui/widget/audiounitwidget.h \
-    src/gui/audiolinkwindow.h \
-    src/gui/audiolinkview.h \
-    src/gui/widget/audiounitconnectorwidget.h \
-    src/gui/painter/audiolinkviewoverpaint.h \
-    src/gui/painter/objecttreeviewoverpaint.h \
     src/gui/widget/doublespinboxclean.h \
     src/gui/geometryexportdialog.h \
     src/gui/texteditdialog.h \
@@ -83,7 +76,10 @@ HEADERS += \
     src/gui/util/objectgraphscene.h \
     src/gui/item/modulatoritem.h \
     src/gui/widget/objectlistwidget.h \
-    src/gui/widget/objectlistwidgetitem.h
+    src/gui/widget/objectlistwidgetitem.h \
+    src/gui/item/audioconnectionitem.h \
+    src/gui/item/objectgraphconnectitem.h \
+    src/gui/widget/parameterwidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -95,7 +91,6 @@ SOURCES += \
     src/gui/ruler.cpp \
     src/gui/timeline1drulerview.cpp \
     src/gui/util/viewspace.cpp \
-    src/gui/objecttreeview.cpp \
     src/gui/parameterview.cpp \
     src/gui/sequenceview.cpp \
     src/gui/sequencefloatview.cpp \
@@ -127,12 +122,6 @@ SOURCES += \
     src/gui/widget/transportwidget.cpp \
     src/gui/widget/groupwidget.cpp \
     src/gui/widget/geometrymodifierwidget.cpp \
-    src/gui/widget/audiounitwidget.cpp \
-    src/gui/audiolinkwindow.cpp \
-    src/gui/audiolinkview.cpp \
-    src/gui/widget/audiounitconnectorwidget.cpp \
-    src/gui/painter/audiolinkviewoverpaint.cpp \
-    src/gui/painter/objecttreeviewoverpaint.cpp \
     src/gui/widget/doublespinboxclean.cpp \
     src/gui/geometryexportdialog.cpp \
     src/gui/texteditdialog.cpp \
@@ -166,4 +155,7 @@ SOURCES += \
     src/gui/util/objectgraphscene.cpp \
     src/gui/item/modulatoritem.cpp \
     src/gui/widget/objectlistwidget.cpp \
-    src/gui/widget/objectlistwidgetitem.cpp
+    src/gui/widget/objectlistwidgetitem.cpp \
+    src/gui/item/audioconnectionitem.cpp \
+    src/gui/item/objectgraphconnectitem.cpp \
+    src/gui/widget/parameterwidget.cpp

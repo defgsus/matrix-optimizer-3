@@ -60,7 +60,7 @@ void Renderer::run()
 
     MO_ASSERT(scene_, "no scene to render");
     MO_ASSERT(!path_.isEmpty(), "no path given to render");
-
+#if 0
     QString wavName = path_ + "/audio.wav";
 
     const uint
@@ -107,7 +107,7 @@ void Renderer::run()
     MO_DEBUG_RENDER("Closing wave files");
 
     sf_close(wav);
-
+#endif
     MO_DEBUG_RENDER("Finished");
 }
 

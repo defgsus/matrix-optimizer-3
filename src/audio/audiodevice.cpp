@@ -93,7 +93,8 @@ AudioDevice::~AudioDevice()
 {
     MO_DEBUG_AUDIO("AudioDevice::~AudioDevice()");
 
-    if (ok_) close();
+    if (ok_)
+        close();
 
     delete p_;
 }

@@ -29,11 +29,11 @@
 #include "tool/syntaxhighlighter.h"
 #include "math/funcparser/parser.h"
 #include "gui/helpdialog.h"
+#include "gui/saveequationdialog.h"
 #include "io/equationpreset.h"
 #include "io/equationpresets.h"
 #include "io/files.h"
 #include "io/error.h"
-#include "gui/saveequationdialog.h"
 
 namespace MO {
 namespace GUI {
@@ -51,6 +51,8 @@ EquationEditor::EquationEditor(QWidget *parent) :
     isHighlight_    (false),
     ignoreNextTextChange_(false)
 {
+    setObjectName("_EquationEditor");
+
     // --- setup palette ---
 
     colorBase_ = QColor(50,50,50);

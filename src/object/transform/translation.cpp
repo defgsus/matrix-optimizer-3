@@ -9,6 +9,7 @@
 */
 
 #include "translation.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 
@@ -39,13 +40,13 @@ void Translation::createParameters()
 {
     Transformation::createParameters();
 
-    beginParameterGroup("trans", tr("transformation"));
+    params()->beginParameterGroup("trans", tr("transformation"));
 
-    x_ = createFloatParameter("x", tr("x"), tr("Offset on the x axis"), 0.0, 0.1);
-    y_ = createFloatParameter("y", tr("y"), tr("Offset on the y axis"), 0.0, 0.1);
-    z_ = createFloatParameter("z", tr("z"), tr("Offset on the z axis"), 0.0, 0.1);
+        x_ = params()->createFloatParameter("x", tr("x"), tr("Offset on the x axis"), 0.0, 0.1);
+        y_ = params()->createFloatParameter("y", tr("y"), tr("Offset on the y axis"), 0.0, 0.1);
+        z_ = params()->createFloatParameter("z", tr("z"), tr("Offset on the z axis"), 0.0, 0.1);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void Translation::applyTransformation(Mat4 &matrix, Double time, uint thread) const

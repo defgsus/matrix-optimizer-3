@@ -20,6 +20,7 @@
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
 #include "img/image.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 //#include "param/parameterselect.h"
 #include "util/texturesetting.h"
@@ -63,30 +64,30 @@ void Sprite::createParameters()
 {
     ObjectGl::createParameters();
 
-    beginParameterGroup("texture", tr("texture"));
+    params()->beginParameterGroup("texture", tr("texture"));
 
         texture_->createParameters("col");
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("color", tr("color"));
+    params()->beginParameterGroup("color", tr("color"));
 
-        cr_ = createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
-        cg_ = createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
-        cb_ = createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
-        ca_ = createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
+        cr_ = params()->createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
+        cg_ = params()->createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
+        cb_ = params()->createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
+        ca_ = params()->createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("repeat", tr("repeat"));
+    params()->beginParameterGroup("repeat", tr("repeat"));
 
-        numRep_ = createFloatParameter("numrep", "number instances",
+        numRep_ = params()->createFloatParameter("numrep", "number instances",
                                    tr("The number of instances of the sprite to draw"), 1.0, 1.0);
         numRep_->setMinValue(1.0);
-        timeSpan_ = createFloatParameter("timespan", "time span",
+        timeSpan_ = params()->createFloatParameter("timespan", "time span",
                                     tr("The time in seconds from the first to the last instance"),
                                     -1.0, 0.05);
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void Sprite::onParameterChanged(Parameter *p)

@@ -34,6 +34,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *);
+    void resizeEvent(QResizeEvent *);
 
 public slots:
 
@@ -41,6 +42,7 @@ private slots:
 
     void saveAllGeometry_();
     bool restoreAllGeometry_();
+    void adjustWidgets_();
 
 private:
 

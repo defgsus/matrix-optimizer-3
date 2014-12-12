@@ -45,7 +45,7 @@ AudioFilterDialog::AudioFilterDialog(QWidget *parent) :
 AudioFilterDialog::~AudioFilterDialog()
 {
     saveFilter_();
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
 
     delete filter_;
 }

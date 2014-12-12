@@ -12,10 +12,13 @@
 
 #include "objectgraphsettings.h"
 #include "gui/item/abstractobjectitem.h"
+#include "gui/item/objectgraphconnectitem.h"
 #include "object/object.h"
 #include "object/clip.h"
+#include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "object/param/modulator.h"
+#include "object/util/audioobjectconnections.h"
 
 namespace MO {
 namespace GUI {
@@ -38,6 +41,11 @@ QSize ObjectGraphSettings::gridSize()
 {
     //return QSize(64, 64);
     return QSize(54, 54);
+}
+
+int ObjectGraphSettings::connectorsPerGrid()
+{
+    return gridSize().height() / 18;
 }
 
 QSize ObjectGraphSettings::iconSize()
@@ -84,17 +92,22 @@ const QPainterPath& ObjectGraphSettings::pathCollapsed()
     return *Private::ppCollapsed;
 }
 
-QPen ObjectGraphSettings::penOutline(const Object * o, bool sel)
+QColor ObjectGraphSettings::colorOutline(const Object * o, bool sel)
 {
-    QColor c(Qt::white);
-    c = ObjectFactory::colorForObject(o).darker(140);
+    QColor c = ObjectFactory::colorForObject(o).darker(140);
     if (o->type() == Object::T_CLIP)
         c = static_cast<const Clip*>(o)->color();
 
     if (sel)
-        c = c.lighter(180);
+        c = c.lighter(150);
 
-    QPen pen(c);
+    return c;
+}
+
+
+QPen ObjectGraphSettings::penOutline(const Object * o, bool sel)
+{
+    QPen pen(colorOutline(o, sel));
     pen.setWidth(penOutlineWidth());
     return pen;
 }
@@ -114,6 +127,24 @@ QBrush ObjectGraphSettings::brushOutline(const Object *o, bool selected)
     return QBrush(c);
 }
 
+
+QBrush ObjectGraphSettings::brushConnector(ObjectGraphConnectItem * i)
+{
+    int hue = -1;
+    if (i->isAudioConnector())
+        hue = 0;
+    if (i->isParameter())
+        hue = 120;
+    int sat = hue == -1 ? 0 : 100;
+    int bright = 150;
+
+    if (i->isHovered())
+        bright += 50;
+
+    return QBrush(QColor::fromHsl(hue, sat, bright));
+}
+
+
 QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool sel, bool active)
 {
     int sat = 70 + highl * 110,
@@ -131,11 +162,95 @@ QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool s
     return pen;
 }
 
+QPen ObjectGraphSettings::penAudioConnection(const AudioObjectConnection * mod, bool highl, bool sel, bool active)
+{
+    int sat = 70 + highl * 110,
+        bright = 150 + sel * 70,
+        hue = 140;
+    if (mod->from())
+        hue = ObjectFactory::hueForObject(mod->from()->type());
+    if (!active)
+        sat /= 4;
+    if (hue == -1)
+        sat = 0;
+
+    QPen pen(QColor::fromHsl(hue, sat, bright, active ? 196 : 64));
+    pen.setWidth(2 + (highl ? 1 : 0));
+    return pen;
+}
+
 QPen ObjectGraphSettings::penSelectionFrame()
 {
     QPen p(Qt::DotLine);
     p.setColor(Qt::white);
     return p;
+}
+
+QFont ObjectGraphSettings::fontConnector()
+{
+    QFont f;
+    f.setPointSizeF(8);
+    return f;
+}
+
+
+
+// ---------------------------- text ------------------------------
+
+QColor ObjectGraphSettings::colorText(const Object * o)
+{
+    auto c = ObjectFactory::colorForObject(o);
+    return QColor::fromHsl(c.hue(), c.saturation() / 2, 200);
+}
+
+
+QFont ObjectGraphSettings::fontName()
+{
+    QFont f;
+    f.setPointSizeF(10);
+    return f;
+}
+
+
+
+
+// ---------------------- modulators ------------------------------
+
+namespace {
+
+    void addCubicPath(QPainterPath& shape, const QPointF &from, const QPointF &to, qreal forward = 1.0)
+    {
+        auto pd = to - from;
+        shape.cubicTo(from.x() + forward * std::abs(pd.x()) / 2,    from.y(),
+                      to.x() - forward * std::abs(pd.x()) / 2,      to.y(),
+                      to.x(), to.y());
+    }
+
+}
+
+QPainterPath ObjectGraphSettings::pathWire(const QPointF &from, const QPointF &to)
+{
+    QPainterPath shape(from);
+
+    addCubicPath(shape, from, to);
+
+    // arrow head
+#if (0) // arrow head in linear direction of path
+    const Vec2
+            dir = glm::normalize(Vec2(pd.x(), pd.y())) * 10.f,
+            p1 = MATH::rotate(dir, 140),
+            p2 = MATH::rotate(dir, 220);
+    shape.lineTo(to.x() + p1.x,
+                 to.y() + p1.y);
+    shape.lineTo(to.x() + p2.x,
+                 to.y() + p2.y);
+#else // arrow head
+    shape.lineTo(to + QPointF(-5,-5));
+    shape.lineTo(to + QPointF(-5, 5));
+#endif
+    shape.lineTo(to);
+
+    return shape;
 }
 
 } // namespace GUI

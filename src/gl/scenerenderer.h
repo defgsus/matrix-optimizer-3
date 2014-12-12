@@ -11,6 +11,8 @@
 #ifndef MOSRC_GL_SCENERENDERER_H
 #define MOSRC_GL_SCENERENDERER_H
 
+#include <functional>
+
 #include <QObject>
 #include <QSize>
 #include <QSurfaceFormat>
@@ -40,6 +42,8 @@ public:
 
     void setScene(Scene * scene);
 
+    void setTimeCallback(std::function<Double()> timeFunc) { timeFunc_ = timeFunc; }
+
     void setSize(const QSize& resolution);
 
     void createContext(QSurface *surface);
@@ -61,6 +65,8 @@ private:
     QSurface * surface_;
 
     QSize size_;
+
+    std::function<Double()> timeFunc_;
 };
 
 

@@ -16,7 +16,9 @@
 #include "object/scenelock_p.h"
 #include "object/sequence.h"
 #include "object/clipcontainer.h"
+#include "object/audioobject.h"
 #include "object/objectfactory.h"
+#include "object/util/audioobjectconnections.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
@@ -37,6 +39,7 @@ namespace MO {
         return false; \
     }
 
+#define MO_DEBUG_OBJ_EDITOR(arg__) MO_DEBUG(arg__)
 
 ObjectEditor::ObjectEditor(QObject *parent)
     : QObject       (parent),
@@ -50,7 +53,7 @@ ObjectEditor::ObjectEditor(QObject *parent)
 
 void ObjectEditor::setObjectName(Object *object, const QString &name)
 {
-    MO_DEBUG_TREE("ObjectEditor::setObjectName(" << object << ", " << name << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::setObjectName(" << object << ", " << name << ")");
 
     const bool changed = object->name() != name;
 
@@ -62,7 +65,7 @@ void ObjectEditor::setObjectName(Object *object, const QString &name)
 
 bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
 {
-    MO_DEBUG_TREE("ObjectEditor::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
     MO__CHECK_SCENE
 
     QString error;
@@ -82,12 +85,13 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
                       );
 
     emit objectAdded(newChild);
+    emit sceneChanged(scene_);
     return true;
 }
 
 bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, int insert_index)
 {
-    MO_DEBUG("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
     MO__CHECK_SCENE
 
     QSet<Object*> saveAdd;
@@ -116,6 +120,8 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
     else
         delete o;
 
+    emit sceneChanged(scene_);
+
     if (!error.isEmpty())
     {
         QMessageBox::critical(0, tr("Can't add object"),
@@ -132,32 +138,36 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
 
 bool ObjectEditor::deleteObject(Object *object)
 {
-    MO_DEBUG_TREE("ObjectEditor::deleteObject(" << object << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::deleteObject(" << object << ")");
     MO__CHECK_SCENE
 
     scene_->deleteObject(object);
 
     emit objectDeleted(object);
+    emit sceneChanged(scene_);
 
     return true;
 }
 
 bool ObjectEditor::setObjectIndex(Object * object, int newIndex)
 {
-    MO_DEBUG_TREE("ObjectEditor::setObjectIndex(" << object << ", " << newIndex << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::setObjectIndex(" << object << ", " << newIndex << ")");
     MO__CHECK_SCENE
 
     bool res = scene_->setObjectIndex(object, newIndex);
 
     if (res)
+    {
         emit objectChanged(object);
+        emit sceneChanged(scene_);
+    }
 
     return res;
 }
 
 bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
 {
-    MO_DEBUG_TREE("ObjectEditor::moveObject(" << object << ", " << newParent << ", " << newIndex << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::moveObject(" << object << ", " << newParent << ", " << newIndex << ")");
     MO__CHECK_SCENE
 
     QString error;
@@ -177,13 +187,17 @@ bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
     {
         bool res = scene_->setObjectIndex(object, newIndex);
         if (res)
+        {
             emit objectChanged(object);
+            emit sceneChanged(scene_);
+        }
         return res;
     }
     else
     {
         scene_->moveObject(object, newParent, newIndex);
         emit objectMoved(object, oldParent);
+        emit sceneChanged(scene_);
     }
 
     return true;
@@ -205,11 +219,15 @@ namespace
             ScopedSceneLockWrite lock(edit->scene());
             p->setValue(v);
             p->object()->onParameterChanged(p);
-            p->object()->updateParameterVisibility();
         }
+        p->object()->updateParameterVisibility();
+
+        // signals
         emit edit->parameterChanged(p);
         if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
             emit edit->sequenceChanged(seq);
+
+        // repaint
         edit->scene()->render();
     }
 }
@@ -244,9 +262,21 @@ void ObjectEditor::setParameterValue(ParameterTimeline1D *p, const MATH::Timelin
     setParameterVal(this, p, v);
 }
 
+void ObjectEditor::setParameterVisibleInGraph(Parameter * p, bool enbale)
+{
+    if (enbale != p->isVisibleInGraph())
+    {
+        p->setVisibleGraph(enbale);
+        emit parameterVisibilityChanged(p);
+    }
+}
 
 void ObjectEditor::addModulator(Parameter *p, const QString &idName)
 {
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << idName << ")");
+
+    // XXX TODO: test sanity of connection!
+
     Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
@@ -257,11 +287,14 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName)
     }
     emit modulatorAdded(m);
     emit parameterChanged(p);
+    emit sceneChanged(scene_);
     scene_->render();
 }
 
 void ObjectEditor::removeModulator(Parameter *p, const QString &idName)
 {
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeModulator(" << p << ", " << idName << ")");
+
     Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
@@ -273,11 +306,14 @@ void ObjectEditor::removeModulator(Parameter *p, const QString &idName)
     }
     emit modulatorDeleted(m);
     emit parameterChanged(p);
+    emit sceneChanged(scene_);
     scene_->render();
 }
 
 void ObjectEditor::removeAllModulators(Parameter *p)
 {
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeAllModulators(" << p << ")");
+
     auto mods = p->modulators();
     {
         ScopedSceneLockWrite lock(scene_);
@@ -288,8 +324,59 @@ void ObjectEditor::removeAllModulators(Parameter *p)
     }
     emit modulatorsDeleted(mods);
     emit parameterChanged(p);
+    emit sceneChanged(scene_);
     scene_->render();
 }
+
+
+
+
+// ---------------------------------- audio cons -------------------------------------------
+
+bool ObjectEditor::connectAudioObjects(AudioObject *from, AudioObject *to,
+                                       uint outChannel, uint inChannel,
+                                       uint numChannels)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::connectAudioObjects(" << from << ", " << to << ", "
+                        << outChannel << ", " << inChannel << ", " << numChannels << ")");
+
+    if (!scene_->audioConnections()->isSaveToAdd(from, to))
+    {
+        QMessageBox::critical(0, tr("Can't add connection"),
+                              tr("Connecting %1 and %2 would create an infinite loop")
+                              .arg(from->name())
+                              .arg(to->name()));
+        return false;
+    }
+
+    scene_->audioConnections()->connect(from, to, outChannel, inChannel, numChannels);
+
+    emit audioConnectionsChanged();
+    emit sceneChanged(scene_);
+
+    return true;
+}
+
+void ObjectEditor::disconnectAudioObjects(const AudioObjectConnection & c)
+{
+    disconnectAudioObjects(c.from(), c.to(), c.outputChannel(), c.inputChannel(), c.numChannels());
+}
+
+void ObjectEditor::disconnectAudioObjects(AudioObject *from, AudioObject *to,
+                                       uint outChannel, uint inChannel,
+                                       uint numChannels)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::disconnectAudioObjects(" << from << ", " << to << ", "
+                        << outChannel << ", " << inChannel << ", " << numChannels << ")");
+
+    if (scene_->audioConnections()->disconnect(from, to, outChannel, inChannel, numChannels))
+    {
+        emit audioConnectionsChanged();
+        emit sceneChanged(scene_);
+    }
+}
+
+
 
 
 // ----------------------------------- modulator objects -----------------------------------
@@ -317,7 +404,7 @@ QString ObjectEditor::modulatorName(Parameter *param, bool longName)
 
 TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
 {
-    MO_DEBUG_TREE("ObjectEditor::createFloatTrack('" << param->idName() << "')");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createFloatTrack('" << param->idName() << "')");
 
     MO_ASSERT(scene_, "can't edit");
 
@@ -349,7 +436,7 @@ TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
 
 Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
 {
-    MO_DEBUG_TREE("ObjectEditor::createInClip('" << className << ", " << parent << "')");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createInClip('" << className << ", " << parent << "')");
 
     MO_ASSERT(scene_, "can't edit");
 
@@ -402,7 +489,7 @@ Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
 
 SequenceFloat * ObjectEditor::createFloatSequenceFor(MO::Parameter * param)
 {
-    MO_DEBUG_TREE("ObjectEditor::createFloatSequenceFor('" << param->idName() << "')");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createFloatSequenceFor('" << param->idName() << "')");
 
     MO_ASSERT(scene_ && param->object(), "can't edit");
 

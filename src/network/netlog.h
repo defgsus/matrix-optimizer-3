@@ -8,9 +8,12 @@
     <p>created 9/6/2014</p>
 */
 
+#include <sstream>
+
 #include <QObject>
 #include <QList>
-#include <QTextStream>
+
+#include "io/streamoperators_qt.h"
 
 #ifndef MOSRC_NETWORK_NETLOG_H
 #define MOSRC_NETWORK_NETLOG_H
@@ -70,7 +73,7 @@ public:
     NetworkLogger& operator << (const T& stuff)
     {
         if (curLevel_ & acceptedLevels_)
-            *stream_ << stuff;
+            stream_ << stuff;
         return *this;
     }
 
@@ -83,9 +86,8 @@ private:
 
     static NetworkLogger * instance_;
     QList<LogLine> text_;
-    QString curText_;
     Level curLevel_;
-    QTextStream * stream_;
+    std::stringstream stream_;
     int acceptedLevels_;
 };
 

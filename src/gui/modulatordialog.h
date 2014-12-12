@@ -28,6 +28,11 @@ class ModulatorDialog : public QDialog
 public:
     explicit ModulatorDialog(QWidget *parent = 0);
 
+    /** Sets a single modulator to edit */
+    void setModulator(Modulator * mod)
+        { setModulators(QList<Modulator*>() << mod, mod); }
+
+    /** Sets a list of modulator to edit */
     void setModulators(const QList<Modulator*> mods, Modulator * select);
 
 signals:

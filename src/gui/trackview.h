@@ -204,9 +204,6 @@ private:
     UTIL::ViewSpace space_;
 
     Scene * scene_;
-#ifndef MO_DISABLE_TREE
-    ObjectTreeModel * omodel_;
-#endif
     SceneSettings * sceneSettings_;
     ObjectFilter * objectFilter_;
     Object * currentObject_;

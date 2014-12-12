@@ -11,6 +11,7 @@
 #include "synthesizer.h"
 #include "io/datastream.h"
 #include "audio/audiosource.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 #include "param/parameterint.h"
 #include "param/parameterselect.h"
@@ -97,34 +98,34 @@ void Synthesizer::createParameters()
 {
     Object::createParameters();
 
-    beginParameterGroup("synthesizer", tr("synthesizer"));
+    params()->beginParameterGroup("synthesizer", tr("synthesizer"));
 
         synth_->createParameters("");
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("audiosources", tr("audio sources"));
+    params()->beginParameterGroup("audiosources", tr("audio sources"));
 
-        p_polyAudio_ = createBooleanParameter("polyaudiosrc", tr("polyphonic audio sources"),
+        p_polyAudio_ = params()->createBooleanParameter("polyaudiosrc", tr("polyphonic audio sources"),
                                               tr("When enabled, each synthesizer voice will be an audio source"),
                                               tr("All voices are emitted through one audio source"),
                                               tr("Each voice is emitted through it's own audio source"),
                                               false,
                                               true, false);
 
-        p_audioX_ = createFloatParameter("vaudiox", tr("voice position x"),
+        p_audioX_ = params()->createFloatParameter("vaudiox", tr("voice position x"),
                                          tr("X position where the voice is emitted in space"),
                                          0.0, 0.1);
 
-        p_audioY_ = createFloatParameter("vaudioy", tr("voice position y"),
+        p_audioY_ = params()->createFloatParameter("vaudioy", tr("voice position y"),
                                          tr("Y position where the voice is emitted in space"),
                                          0.0, 0.1);
 
-        p_audioZ_ = createFloatParameter("vaudioz", tr("voice position z"),
+        p_audioZ_ = params()->createFloatParameter("vaudioz", tr("voice position z"),
                                          tr("Z position where the voice is emitted in space"),
                                          0.0, 0.1);
 
-        p_posEqu_ = createBooleanParameter("doposequ", tr("position equation"),
+        p_posEqu_ = params()->createBooleanParameter("doposequ", tr("position equation"),
                                            tr("Enables the position to be modified by equations"),
                                            tr("Off"),
                                            tr("On"),
@@ -132,25 +133,25 @@ void Synthesizer::createParameters()
                                            true, false);
 
         VoiceEqu_ tmp;
-        p_equX_ = createTextParameter("posequx", tr("x equation"),
+        p_equX_ = params()->createTextParameter("posequx", tr("x equation"),
                                       tr("Modifies the x position of where the voice is emitted"),
                                       TT_EQUATION, "0", true, false);
         p_equX_->setVariableDescriptions(tmp.parserX->variables().variableDescriptions());
         p_equX_->setVariableNames(tmp.parserX->variables().variableNames());
 
-        p_equY_ = createTextParameter("posequy", tr("y equation"),
+        p_equY_ = params()->createTextParameter("posequy", tr("y equation"),
                                       tr("Modifies the y position of where the voice is emitted"),
                                       TT_EQUATION, "0", true, false);
         p_equY_->setVariableDescriptions(tmp.parserX->variables().variableDescriptions());
         p_equY_->setVariableNames(tmp.parserX->variables().variableNames());
 
-        p_equZ_ = createTextParameter("posequz", tr("z equation"),
+        p_equZ_ = params()->createTextParameter("posequz", tr("z equation"),
                                       tr("Modifies the z position of where the voice is emitted"),
                                       TT_EQUATION, "0", true, false);
         p_equZ_->setVariableDescriptions(tmp.parserX->variables().variableDescriptions());
         p_equZ_->setVariableNames(tmp.parserX->variables().variableNames());
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void Synthesizer::updateParameterVisibility()

@@ -17,6 +17,7 @@
 #include "gl/cameraspace.h"
 #include "gl/shader.h"
 #include "geom/geometrycreator.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "util/texturesetting.h"
@@ -80,9 +81,9 @@ void Model3d::createParameters()
 {
     ObjectGl::createParameters();
 
-    beginParameterGroup("shaderset", "shader settings");
+    params()->beginParameterGroup("shaderset", "shader settings");
 
-        lightMode_ = createSelectParameter("lightmode", tr("lighting mode"),
+        lightMode_ = params()->createSelectParameter("lightmode", tr("lighting mode"),
             tr("Selects the way how the lighting is calculated"),
             { "none", "vertex", "fragment" },
             { tr("off"), tr("per vertex"), tr("per fragment") },
@@ -95,72 +96,72 @@ void Model3d::createParameters()
             LM_PER_FRAGMENT,
             true, false);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("color", tr("color"));
+    params()->beginParameterGroup("color", tr("color"));
 
-        cbright_ = createFloatParameter("bright", "bright", tr("Overall brightness of the color"), 1.0, 0.1);
-        cr_ = createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
-        cg_ = createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
-        cb_ = createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
-        ca_ = createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
+        cbright_ = params()->createFloatParameter("bright", "bright", tr("Overall brightness of the color"), 1.0, 0.1);
+        cr_ = params()->createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
+        cg_ = params()->createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
+        cb_ = params()->createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
+        ca_ = params()->createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("surface", tr("surface"));
+    params()->beginParameterGroup("surface", tr("surface"));
 
-        diffExp_ = createFloatParameter("diffuseexp", tr("diffuse exponent"),
+        diffExp_ = params()->createFloatParameter("diffuseexp", tr("diffuse exponent"),
                                    tr("Exponent for the diffuse lighting - the higher, the narrower "
                                       "is the light cone"),
                                    4.0, 0.1);
         diffExp_->setMinValue(0.001);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("texture", tr("texture"));
+    params()->beginParameterGroup("texture", tr("texture"));
 
         texture_->createParameters("col", TextureSetting::TT_NONE, true);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("texturepp", tr("texture post-processing"));
+    params()->beginParameterGroup("texturepp", tr("texture post-processing"));
 
         texturePostProc_->createParameters("tex");
 
         textureMorph_->createParameters("tex");
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("texturebump", tr("normal-map texture"));
+    params()->beginParameterGroup("texturebump", tr("normal-map texture"));
 
         textureBump_->createParameters("bump", TextureSetting::TT_NONE, true, true);
 
-        bumpScale_ = createFloatParameter("bumpdepth", tr("bump scale"),
+        bumpScale_ = params()->createFloatParameter("bumpdepth", tr("bump scale"),
                             tr("The influence of the normal-map"),
                             1.0, 0.05);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("texturebumppp", tr("normal-map post-proc"));
+    params()->beginParameterGroup("texturebumppp", tr("normal-map post-proc"));
 
         textureBumpMorph_->createParameters("bump");
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("vertexfx", tr("vertex effects"));
+    params()->beginParameterGroup("vertexfx", tr("vertex effects"));
 
-        vertexFx_ = createBooleanParameter("vertexfx", tr("enable effects"),
+        vertexFx_ = params()->createBooleanParameter("vertexfx", tr("enable effects"),
                                            tr("Enables realtime vertex processing effects"),
                                            tr("Vertex effects disabled"),
                                            tr("Vertex effects enabled"),
                                            false,
                                            true, false);
 
-        vertexExtrude_ = createFloatParameter("vertexextrude", tr("extrusion"),
+        vertexExtrude_ = params()->createFloatParameter("vertexextrude", tr("extrusion"),
                                               tr("All vertex positions of the model are moved along their "
                                                  "normals by this amount"),
                                               0.0, 0.05);
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void Model3d::onParameterChanged(Parameter *p)

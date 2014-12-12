@@ -28,7 +28,6 @@
 #include "object/trackfloat.h"
 #include "object/scene.h"
 #include "object/util/objectfilter.h"
-#include "model/objecttreemodel.h"
 #include "model/objecttreemimedata.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -43,9 +42,6 @@ namespace GUI {
 TrackView::TrackView(QWidget *parent) :
     QWidget         (parent),
     scene_          (0),
-#ifndef MO_DISABLE_TREE
-    omodel_         (0),
-#endif
     sceneSettings_  (0),
     objectFilter_   (new ObjectFilter()),
     currentObject_  (0),
@@ -256,9 +252,6 @@ void TrackView::setCurrentObject(Object * obj, bool send_signal)
                 this, SLOT(onParameterChanged_(MO::Parameter*)));
     }
     scene_ = scene;
-#ifndef MO_DISABLE_TREE
-    omodel_ = scene->model();
-#endif
     currentObject_ = obj;
 
     MO_ASSERT(scene_, "Scene not set in TrackView::setTracks()");
@@ -1129,10 +1122,10 @@ void TrackView::createEditActions_()
         {
             if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
             {
-#ifndef MO_DISABLE_TREE
+/*YYY#ifndef MO_DISABLE_TREE
                 nextFocusSequence_ =
                     scene_->model()->createFloatSequence(trackf, currentTime_);
-#endif
+#endif*/
                 updateTrack(selTrack_);
                 assignModulatingWidgets_();
             }
@@ -1173,20 +1166,12 @@ void TrackView::createEditActions_()
 
 bool TrackView::deleteObject_(Object * o)
 {
-#ifndef MO_DISABLE_TREE
-    if (!omodel_) return false;
-    QModelIndex idx = omodel_->indexForObject(o);
-    return omodel_->deleteObject(idx);
-#endif
+    return false;// YYY
 }
 
 bool TrackView::paste_(bool single_track)
 {
-    if (
-#ifndef MO_DISABLE_TREE
-        !omodel_ ||
-#endif
-        !selTrack_)
+    if (!selTrack_)
         return false;
 
     const ObjectTreeMimeData * data = qobject_cast<const ObjectTreeMimeData*>
@@ -1208,10 +1193,10 @@ bool TrackView::paste_(bool single_track)
             {
                 s->setStart(currentTime_);
                 nextFocusSequence_ = s;
-#ifndef MO_DISABLE_TREE
+/*YYY#ifndef MO_DISABLE_TREE
                 if (omodel_->addObject(selTrack_, s))
                     return true;
-#endif
+#endif*/
             }
             else
                 QMessageBox::warning(this, tr("Can not paste"), error);
@@ -1241,13 +1226,13 @@ bool TrackView::paste_(bool single_track)
                 else
                 {
                     s->setStart(time);
-#ifndef MO_DISABLE_TREE
+/*YYY#ifndef MO_DISABLE_TREE
                     if (omodel_->addObject(selTrack_, s))
                     {
                         time = s->end();
                         continue;
                     }
-#endif
+#endif*/
                 }
                 delete s;
                 objs[i] = 0;
@@ -1310,12 +1295,12 @@ bool TrackView::paste_(bool single_track)
                             {
                                 errors += error + "\n";
                             }
-#ifndef MO_DISABLE_TREE
+/*YYY#ifndef MO_DISABLE_TREE
                             else
                             // add
                             if (omodel_->addObject(tracks_[tracknum], s))
                                 continue;
-#endif
+#endif*/
                         }
                             else MO_WARNING("skipping sequence '" << s->name() << "' "
                                             "because there is no track left");

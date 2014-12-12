@@ -9,6 +9,7 @@
 */
 
 #include "look.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 #include "math/vector.h"
@@ -41,18 +42,18 @@ void Look::createParameters()
 {
     Transformation::createParameters();
 
-    beginParameterGroup("trans", tr("transformation"));
+    params()->beginParameterGroup("trans", tr("transformation"));
 
-    const QString lookTip = tr("unit vector describing the look axis (internally normalized)"),
-                  upTip = tr("unit vector describing the up-axis (internally normalized)");
-    x_ = createFloatParameter("x", "look x", lookTip, 0);
-    y_ = createFloatParameter("y", "look y", lookTip, 0);
-    z_ = createFloatParameter("z", "look z", lookTip, -1);
-    upX_ = createFloatParameter("upx", "up x", upTip, 0);
-    upY_ = createFloatParameter("upy", "up y", upTip, 1);
-    upZ_ = createFloatParameter("upz", "up z", upTip, 0);
+        const QString lookTip = tr("unit vector describing the look axis (internally normalized)"),
+                      upTip = tr("unit vector describing the up-axis (internally normalized)");
+        x_ = params()->createFloatParameter("x", "look x", lookTip, 0);
+        y_ = params()->createFloatParameter("y", "look y", lookTip, 0);
+        z_ = params()->createFloatParameter("z", "look z", lookTip, -1);
+        upX_ = params()->createFloatParameter("upx", "up x", upTip, 0);
+        upY_ = params()->createFloatParameter("upy", "up y", upTip, 1);
+        upZ_ = params()->createFloatParameter("upz", "up z", upTip, 0);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 

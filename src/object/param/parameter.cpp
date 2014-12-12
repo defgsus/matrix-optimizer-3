@@ -24,7 +24,8 @@ Parameter::Parameter(Object * object, const QString& id, const QString& name) :
     name_       (name),
     isEditable_ (false),
     isModulateable_(false),
-    isVisible_  (true)
+    isVisible_  (true),
+    isVisibleGraph_(false)
 {
 }
 
@@ -35,7 +36,7 @@ Parameter::~Parameter()
 
 void Parameter::serialize(IO::DataStream &io) const
 {
-    io.writeHeader("par", 2);
+    io.writeHeader("par", 3);
 
     io << idName_;
 
@@ -46,11 +47,14 @@ void Parameter::serialize(IO::DataStream &io) const
         io << m->modulatorId();
         m->serialize(io);
     }
+
+    // v3
+    io << isVisibleGraph_;
 }
 
 void Parameter::deserialize(IO::DataStream &io)
 {
-    int ver = io.readHeader("par", 2);
+    int ver = io.readHeader("par", 3);
 
     io >> idName_;
 
@@ -74,6 +78,11 @@ void Parameter::deserialize(IO::DataStream &io)
             m->deserialize(io);
         }
     }
+
+    if (ver >= 3)
+        io >> isVisibleGraph_;
+    else
+        isVisibleGraph_ = false;
 }
 
 QString Parameter::infoName() const
@@ -122,15 +131,11 @@ void Parameter::setVisible(bool visible)
 
         // notify scene/gui
         if (object())
-        {
-            Scene * scene = object()->sceneObject();
-            if (scene)
-            {
+            if (Scene * scene = object()->sceneObject())
                 scene->notifyParameterVisibility(this);
-            }
-        }
     }
 }
+
 
 QStringList Parameter::modulatorIds() const
 {

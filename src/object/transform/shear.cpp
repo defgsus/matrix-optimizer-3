@@ -9,6 +9,7 @@
 */
 
 #include "shear.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 
@@ -39,16 +40,16 @@ void Shear::createParameters()
 {
     Transformation::createParameters();
 
-    beginParameterGroup("trans", tr("transformation"));
+    params()->beginParameterGroup("trans", tr("transformation"));
 
-    xy_ = createFloatParameter("xy", "x -> y", tr("Shear influence of x axis on y axis"), 0);
-    xz_ = createFloatParameter("xz", "x -> z", tr("Shear influence of x axis on z axis"), 0);
-    yx_ = createFloatParameter("yx", "y -> x", tr("Shear influence of y axis on x axis"), 0);
-    yz_ = createFloatParameter("yz", "y -> z", tr("Shear influence of y axis on z axis"), 0);
-    zx_ = createFloatParameter("zx", "z -> x", tr("Shear influence of z axis on x axis"), 0);
-    zy_ = createFloatParameter("zy", "z -> y", tr("Shear influence of z axis on y axis"), 0);
+        xy_ = params()->createFloatParameter("xy", "x -> y", tr("Shear influence of x axis on y axis"), 0);
+        xz_ = params()->createFloatParameter("xz", "x -> z", tr("Shear influence of x axis on z axis"), 0);
+        yx_ = params()->createFloatParameter("yx", "y -> x", tr("Shear influence of y axis on x axis"), 0);
+        yz_ = params()->createFloatParameter("yz", "y -> z", tr("Shear influence of y axis on z axis"), 0);
+        zx_ = params()->createFloatParameter("zx", "z -> x", tr("Shear influence of z axis on x axis"), 0);
+        zy_ = params()->createFloatParameter("zy", "z -> y", tr("Shear influence of z axis on y axis"), 0);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void Shear::applyTransformation(Mat4 &matrix, Double time, uint thread) const

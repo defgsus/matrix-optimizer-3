@@ -20,7 +20,6 @@
 #include "io/settings.h"
 #include "gl/window.h"
 #include "gui/clipview.h"
-#include "gui/objecttreeview.h"
 #include "gui/objectview.h"
 #include "gui/sequencer.h"
 #include "gui/sequenceview.h"
@@ -60,7 +59,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // read previous geometry
     restoreAllGeometry_();
 
-    controller_->initScene();
+    connect(controller_, SIGNAL(modeChanged()),
+            this, SLOT(adjustWidgets_()));
+
+    controller_->initScene();    
 }
 
 MainWindow::~MainWindow()
@@ -96,7 +98,8 @@ void MainWindow::createWidgets_()
 
             // --- left container ----
             auto lv = new QVBoxLayout();
-            l0->addLayout(lv);
+            l0->addLayout(lv, 1);
+            //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
                 // sequencer
                 lv->addWidget(controller_->sequencer());
@@ -106,6 +109,9 @@ void MainWindow::createWidgets_()
 
                 // object graph
                 lv->addWidget(controller_->objectGraphView());
+                controller_->objectGraphView()->setMinimumWidth(320);
+                controller_->objectGraphView()->setSizePolicy(
+                            QSizePolicy::Expanding, QSizePolicy::Expanding);
 
                 //spacer2_ = new Spacer(Qt::Horizontal, this);
                 //lv->addWidget(spacer2_);
@@ -124,32 +130,19 @@ void MainWindow::createWidgets_()
             l0->addWidget(rightContainer);
             rightContainer->setObjectName("_right_container");
             rightContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-#ifndef MO_DISABLE_TREE
-            leftContainer->setMinimumWidth(630);
-#else
             rightContainer->setMinimumWidth(320);
-#endif
 
             auto ll = new QHBoxLayout(rightContainer);
             ll->setMargin(0);
             //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
-                // object tree view
-#ifndef MO_DISABLE_TREE
-                ll->addWidget(controller_->objectTreeView());
-                controller_->objectTreeView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-                //objectTreeView_->setMinimumWidth(320);
-                //objectTreeView_->setMaximumWidth(450);
-#endif
 
                 // object (parameter) editor
                 ll->addWidget(controller_->objectView());
-                controller_->objectView()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-                //objectView_->setMinimumWidth(320);
-            //l0->setStretchFactor(lv, -1);
+                controller_->objectView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
 
-        spacer_->setWidgets(rightContainer, controller_->sequencer());
+        spacer_->setWidgets(controller_->objectGraphView(), rightContainer, false);
         //spacer2_->setWidgets(sequencer_, seqFloatView_);
 
 
@@ -158,14 +151,24 @@ void MainWindow::createWidgets_()
 
 }
 
+void MainWindow::adjustWidgets_()
 
+{
+    float fac = 1.0;
+    if (controller_->sequenceView()->isVisible())
+        fac *= 0.6;
+    /*if (controller_->sequencer()->isVisible() ||
+        controller_->clipView()->isVisible())
+        fac *= 0.6;*/
+    controller_->objectGraphView()->setMaximumHeight(height() * fac);
+}
 
 
 void MainWindow::saveAllGeometry_()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
     if (controller_->glWindow())
-        settings->saveGeometry(controller_->glWindow());
+        settings->storeGeometry(controller_->glWindow());
 }
 
 bool MainWindow::restoreAllGeometry_()
@@ -176,6 +179,11 @@ bool MainWindow::restoreAllGeometry_()
     return r;
 }
 
+
+void MainWindow::resizeEvent(QResizeEvent *)
+{
+    adjustWidgets_();
+}
 
 void MainWindow::closeEvent(QCloseEvent * e)
 {

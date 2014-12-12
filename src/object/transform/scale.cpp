@@ -9,6 +9,7 @@
 */
 
 #include "scale.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 
@@ -40,14 +41,14 @@ void Scale::createParameters()
 {
     Transformation::createParameters();
 
-    beginParameterGroup("trans", tr("transformation"));
+    params()->beginParameterGroup("trans", tr("transformation"));
 
-    all_ = createFloatParameter("all", "scale", tr("Scale/multiplier for the whole"), 1, 0.1);
-    x_ = createFloatParameter("x", "x", tr("Additional scale for the x axis"), 1, 0.1);
-    y_ = createFloatParameter("y", "y", tr("Additional scale for the y axis"), 1, 0.1);
-    z_ = createFloatParameter("z", "z", tr("Additional scale for the z axis"), 1, 0.1);
+        all_ = params()->createFloatParameter("all", "scale", tr("Scale/multiplier for the whole"), 1, 0.1);
+        x_ = params()->createFloatParameter("x", "x", tr("Additional scale for the x axis"), 1, 0.1);
+        y_ = params()->createFloatParameter("y", "y", tr("Additional scale for the y axis"), 1, 0.1);
+        z_ = params()->createFloatParameter("z", "z", tr("Additional scale for the z axis"), 1, 0.1);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void Scale::applyTransformation(Mat4 &matrix, Double time, uint thread) const

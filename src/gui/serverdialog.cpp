@@ -52,7 +52,7 @@ ServerDialog::ServerDialog(QWidget *parent) :
 
 ServerDialog::~ServerDialog()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
 }
 
 void ServerDialog::createWidgets_()

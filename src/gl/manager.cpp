@@ -55,6 +55,7 @@ Window * Manager::createGlWindow(uint /*thread*/)
     if (!renderer_)
     {
         renderer_ = new SceneRenderer();
+        renderer_->setTimeCallback(timeFunc_);
 
         if (scene_)
             renderer_->setScene(scene_);
@@ -76,21 +77,43 @@ void Manager::setScene(Scene * scene)
     {
         // connect events from scene to window
         connect(scene_, SIGNAL(renderRequest()),
+                    //this, SLOT(onRenderRequest_()));
                     window_, SLOT(renderLater()));
-
-        connect(scene_, SIGNAL(playbackStarted()),
-                    window_, SLOT(startAnimation()));
-
-        connect(scene_, SIGNAL(playbackStopped()),
-                    window_, SLOT(stopAnimation()));
     }
 
     renderer_->setScene(scene);
 }
 
+void Manager::setTimeCallback(std::function<Double ()> timeFunc)
+{
+    timeFunc_ = timeFunc;
+    if (renderer_)
+        renderer_->setTimeCallback(timeFunc_);
+}
+
 void Manager::onCameraMatrixChanged_(const Mat4 & mat)
 {
     emit cameraMatrixChanged(mat);
+}
+/*
+void Manager::onRenderRequest_()
+{
+    if (timeFunc_)
+        scene_->setSceneTime(timeFunc_(), false);
+
+    window_->renderLater();
+}
+*/
+void Manager::startAnimate()
+{
+    if (window_)
+        window_->startAnimation();
+}
+
+void Manager::stopAnimate()
+{
+    if (window_)
+        window_->stopAnimation();
 }
 
 } // namespace GL

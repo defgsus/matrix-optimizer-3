@@ -73,7 +73,7 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
 
 GeometryDialog::~GeometryDialog()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
     delete settings_;
 }
 

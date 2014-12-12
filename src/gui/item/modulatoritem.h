@@ -13,8 +13,6 @@
 
 #include <QGraphicsItem>
 
-#include <QGraphicsItem>
-
 namespace MO {
 class Modulator;
 namespace GUI {
@@ -26,12 +24,9 @@ class ModulatorItem : public QGraphicsItem
 {
 public:
 
-    enum
-    {
-        Type = UserType + 10
-    };
+    enum { Type = UserType + 10 };
 
-    ModulatorItem(Modulator *);
+    ModulatorItem(Modulator *, QGraphicsItem * parent = 0);
 
     // ------------------- getter ----------------------
 
@@ -55,6 +50,7 @@ protected:
 
     void hoverEnterEvent(QGraphicsSceneHoverEvent*);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent*);
+    void mousePressEvent(QGraphicsSceneMouseEvent*);
 
     //void mousePressEvent(QGraphicsSceneMouseEvent*);
 
@@ -68,7 +64,7 @@ private:
     bool isHovered_;
     AbstractObjectItem * from_, * to_;
     QPointF fromPos_, toPos_;
-    QRectF rect_;
+    QRectF boundingRect_;
     QPainterPath shape_, boundingShape_;
 };
 

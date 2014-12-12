@@ -12,6 +12,7 @@
 
 #include "synthsetting.h"
 #include "object/object.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterfloat.h"
@@ -38,11 +39,13 @@ SynthSetting::~SynthSetting()
 
 void SynthSetting::createParameters(const QString &id_suffix)
 {
-    p_numVoices_ = o_->createIntParameter("num_voices" + id_suffix, tr("number voices"),
+    auto params = o_->params();
+
+    p_numVoices_ = params->createIntParameter("num_voices" + id_suffix, tr("number voices"),
                                        tr("The number of polyphonic voices"),
                                        synth_->numberVoices(), 1, 512, 1, true, false);
 
-    p_policy_ = o_->createSelectParameter("voice_policy", tr("voice reuse policy"),
+    p_policy_ = params->createSelectParameter("voice_policy", tr("voice reuse policy"),
                                           tr("Sets the policy to apply when the maximum polyphony "
                                              "is reached and a new note-on is requested"),
                                           AUDIO::Synth::voicePolicyIds,
@@ -51,64 +54,64 @@ void SynthSetting::createParameters(const QString &id_suffix)
                                           AUDIO::Synth::voicePolicyEnums,
                                           (int)synth_->voicePolicy(), true, false);
 
-    p_volume_ = o_->createFloatParameter("volume" + id_suffix, tr("volume"),
+    p_volume_ = params->createFloatParameter("volume" + id_suffix, tr("volume"),
                                        tr("Master volume of all played voices"),
                                        synth_->volume(), 0.0, 100000.0, 0.1);
 
-    p_gate_ = o_->createFloatParameter("gate" + id_suffix, tr("gate"),
+    p_gate_ = params->createFloatParameter("gate" + id_suffix, tr("gate"),
                                        tr("A positive value starts a new note with the value as amplitude "
                                           "- all parameters below take affect then"),
                                        0.0);
 
-    p_note_ = o_->createIntParameter("note" + id_suffix, tr("note"),
+    p_note_ = params->createIntParameter("note" + id_suffix, tr("note"),
                                  tr("The note that is triggered on a positive input to gate"),
                                  48, true, true);
 
-    p_numUnison_ = o_->createIntParameter("num_unison" + id_suffix, tr("number unisono voices"),
+    p_numUnison_ = params->createIntParameter("num_unison" + id_suffix, tr("number unisono voices"),
                                        tr("The number of unisono voices that will be played for one note"),
                                        synth_->unisonVoices(), 1, 512, 1, true, true);
 
-    p_combinedUnison_ = o_->createBooleanParameter("comb_unison" + id_suffix, tr("combined unisono voices"),
+    p_combinedUnison_ = params->createBooleanParameter("comb_unison" + id_suffix, tr("combined unisono voices"),
                                        tr("Should unisono voices be individual synthesizer voices "
                                           "or should they be combined into one."),
                                        tr("Each unisono voice is a different synthesizer voice."),
                                        tr("All unisono voices are combined into one synthesizer voice."),
                                        synth_->combinedUnison(), true, false);
 
-    p_unisonNoteStep_ = o_->createIntParameter("unison_notestep" + id_suffix, tr("unisono note step"),
+    p_unisonNoteStep_ = params->createIntParameter("unison_notestep" + id_suffix, tr("unisono note step"),
                                        tr("Note to be added/subtracted for each unisono voice"),
                                        synth_->unisonNoteStep(), true, true);
 
-    p_unisonDetune_ = o_->createFloatParameter("unison_detune" + id_suffix, tr("unisono detune"),
+    p_unisonDetune_ = params->createFloatParameter("unison_detune" + id_suffix, tr("unisono detune"),
                                        tr("The amount of random detuning for each individual "
                                           "unisono voice in cents (100 per full note)"),
                                        synth_->unisonDetune());
 
-    p_baseFreq_ = o_->createFloatParameter("base_freq" + id_suffix, tr("base frequency"),
+    p_baseFreq_ = params->createFloatParameter("base_freq" + id_suffix, tr("base frequency"),
                                        tr("The frequency in Hertz of the lowest C note"),
                                        synth_->baseFrequency());
 
-    p_notesPerOct_ = o_->createFloatParameter("notes_oct" + id_suffix, tr("notes per octave"),
+    p_notesPerOct_ = params->createFloatParameter("notes_oct" + id_suffix, tr("notes per octave"),
                                           tr("The number of notes per one octave"),
                                           synth_->notesPerOctave(), 0.00001, 256.0, 1.0);
 
-    p_attack_ = o_->createFloatParameter("attack" + id_suffix, tr("attack"),
+    p_attack_ = params->createFloatParameter("attack" + id_suffix, tr("attack"),
                                        tr("Attack time of envelope in seconds"),
                                        synth_->attack(), 0.0, 10000.0, 0.05);
 
-    p_decay_ = o_->createFloatParameter("decay" + id_suffix, tr("decay"),
+    p_decay_ = params->createFloatParameter("decay" + id_suffix, tr("decay"),
                                        tr("Decay time of envelope in seconds"),
                                        synth_->decay(), 0.0, 10000.0, 0.05);
 
-    p_sustain_ = o_->createFloatParameter("sustain" + id_suffix, tr("sustain"),
+    p_sustain_ = params->createFloatParameter("sustain" + id_suffix, tr("sustain"),
                                        tr("Sustain level of envelope"),
                                        synth_->sustain(), 0.05);
 
-    p_release_ = o_->createFloatParameter("release" + id_suffix, tr("release"),
+    p_release_ = params->createFloatParameter("release" + id_suffix, tr("release"),
                                        tr("Release time of envelope in seconds"),
                                        synth_->release(), 0.0, 10000.0, 0.05);
 
-    p_waveform_ = o_->createSelectParameter("waveform" + id_suffix, tr("oscillator type"),
+    p_waveform_ = params->createSelectParameter("waveform" + id_suffix, tr("oscillator type"),
                                     tr("Selects the type of the oscillator waveform"),
                                     AUDIO::Waveform::typeIds,
                                     AUDIO::Waveform::typeNames,
@@ -116,13 +119,13 @@ void SynthSetting::createParameters(const QString &id_suffix)
                                     AUDIO::Waveform::typeList,
                                     AUDIO::Waveform::T_SINE, true, false);
 
-    p_pulseWidth_ = o_->createFloatParameter("pulsewidth" + id_suffix, tr("pulse width"),
+    p_pulseWidth_ = params->createFloatParameter("pulsewidth" + id_suffix, tr("pulse width"),
                tr("Pulsewidth of the oscillator waveform - describes the width of the positive edge"),
                0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05);
 
     // ---- filter -----
 
-    p_filterType_ = o_->createSelectParameter("filtertype" + id_suffix, tr("filter type"),
+    p_filterType_ = params->createSelectParameter("filtertype" + id_suffix, tr("filter type"),
                                   tr("Selectes the type of filter"),
                                   AUDIO::MultiFilter::filterTypeIds,
                                   AUDIO::MultiFilter::filterTypeNames,
@@ -130,46 +133,46 @@ void SynthSetting::createParameters(const QString &id_suffix)
                                   AUDIO::MultiFilter::filterTypeEnums,
                                   synth_->filterType(), true, false);
 
-    p_filterOrder_ = o_->createIntParameter("filterorder" + id_suffix, tr("filter order"),
+    p_filterOrder_ = params->createIntParameter("filterorder" + id_suffix, tr("filter order"),
                                  tr("The order (sharpness) of the filter for the 'nth order' types"),
                                  synth_->filterOrder(),
                                  1, 10,
                                  1, true, true);
 
-    p_filterFreq_ = o_->createFloatParameter("filterfreq" + id_suffix, tr("filter frequency"),
+    p_filterFreq_ = params->createFloatParameter("filterfreq" + id_suffix, tr("filter frequency"),
                                  tr("Controls the filter frequency in Hertz"),
                                  synth_->filterFrequency(), 0.00001, 100000.0, 10.);
 
 
-    p_filterReso_ = o_->createFloatParameter("filterreso" + id_suffix, tr("filter resonance"),
+    p_filterReso_ = params->createFloatParameter("filterreso" + id_suffix, tr("filter resonance"),
                                  tr("Controls the filter resonance or quality - how steep the transition between passband and stopband is"),
                                  synth_->filterResonance(), 0.0, 1.0, 0.01);
 
-    p_filterKeyFollow_ = o_->createFloatParameter("filterkeyf" + id_suffix, tr("filter key follow"),
+    p_filterKeyFollow_ = params->createFloatParameter("filterkeyf" + id_suffix, tr("filter key follow"),
                                  tr("Factor for voice frequency to be added to the filter frequency."),
                                  synth_->filterKeyFollower(), 0.01);
 
-    p_filterEnv_ = o_->createFloatParameter("filterenv" + id_suffix, tr("filter envelope"),
+    p_filterEnv_ = params->createFloatParameter("filterenv" + id_suffix, tr("filter envelope"),
                                  tr("Frequency of filter envelope in Hertz"),
                                  synth_->filterEnvelopeAmount(), 10.0);
 
-    p_filterEnvKeyFollow_ = o_->createFloatParameter("filterenvkeyf" + id_suffix, tr("filter envelope key f."),
+    p_filterEnvKeyFollow_ = params->createFloatParameter("filterenvkeyf" + id_suffix, tr("filter envelope key f."),
                                  tr("Factor for voice frequency to be added to the filter envelope amount."),
                                  synth_->filterEnvelopeKeyFollower(), 0.01);
 
-    p_fattack_ = o_->createFloatParameter("fattack" + id_suffix, tr("filter attack"),
+    p_fattack_ = params->createFloatParameter("fattack" + id_suffix, tr("filter attack"),
                                        tr("Attack time of filter envelope in seconds"),
                                        synth_->filterAttack(), 0.0, 10000.0, 0.05);
 
-    p_fdecay_ = o_->createFloatParameter("fdecay" + id_suffix, tr("filter decay"),
+    p_fdecay_ = params->createFloatParameter("fdecay" + id_suffix, tr("filter decay"),
                                        tr("Decay time of filter envelope in seconds"),
                                        synth_->filterDecay(), 0.0, 10000.0, 0.05);
 
-    p_fsustain_ = o_->createFloatParameter("fsustain" + id_suffix, tr("filter sustain"),
+    p_fsustain_ = params->createFloatParameter("fsustain" + id_suffix, tr("filter sustain"),
                                        tr("Sustain level of filter envelope"),
                                        synth_->filterSustain(), 0.05);
 
-    p_frelease_ = o_->createFloatParameter("frelease" + id_suffix, tr("frelease"),
+    p_frelease_ = params->createFloatParameter("frelease" + id_suffix, tr("frelease"),
                                        tr("Release time of filter envelope in seconds"),
                                        synth_->filterRelease(), 0.0, 10000.0, 0.05);
 }

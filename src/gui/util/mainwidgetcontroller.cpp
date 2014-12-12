@@ -36,7 +36,6 @@
 #include "gui/timeline1drulerview.h"
 #include "gui/ruler.h"
 #include "gui/qobjectinspector.h"
-#include "gui/objecttreeview.h"
 #include "gui/objectview.h"
 #include "gui/sequenceview.h"
 #include "gui/sequencer.h"
@@ -45,7 +44,6 @@
 #include "gui/audiodialog.h"
 #include "gui/geometrydialog.h"
 #include "gui/equationdisplaydialog.h"
-#include "gui/audiolinkwindow.h"
 #include "gui/sceneconvertdialog.h"
 #include "gui/projectorsetupdialog.h"
 #include "gui/networkdialog.h"
@@ -60,14 +58,15 @@
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
 #include "gui/util/scenesettings.h"
-#include "model/objecttreemodel.h"
 #include "io/datastream.h"
 #include "io/files.h"
 #include "io/povrayexporter.h"
 #include "gl/manager.h"
 #include "gl/window.h"
 #include "gl/texture.h"
+#include "audio/configuration.h"
 #include "engine/renderer.h"
+#include "engine/liveaudioengine.h"
 #include "engine/serverengine.h"
 #include "object/objectfactory.h"
 #include "object/object.h"
@@ -76,8 +75,7 @@
 #include "object/clipcontainer.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "object/util/objecteditor.h"
-#include "object/audio/objectdsppath.h"
-#include "model/treemodel.h"
+#include "object/util/objectdsppath.h"
 #include "object/util/objecttree.h"
 #include "tool/commonresolutions.h"
 #include "engine/serverengine.h"
@@ -88,91 +86,13 @@ namespace GUI {
 
 
 
-class TestThread : public QThread
-{
-public:
-    TestThread(Scene * scene, bool newVersion, QObject * parent)
-        :   QThread(parent),
-          scene_  (scene),
-          stop_   (false),
-          new_    (newVersion)
-    {
-
-    }
-
-    Double time() const { return (1.0 / 44100.0) * samplePos_; }
-
-    void stop() { stop_ = true; wait(); }
-
-    void run()
-    {
-        setCurrentThreadName("AUDIOTEST");
-
-        ObjectDspPath dsp;
-        dsp.createPath(scene_, 44100, 2048);
-
-        samplePos_ = 0;
-        while (!stop_)
-        {
-            if (new_)
-            {
-                dsp.calcTransformations(samplePos_, MO_AUDIO_THREAD);
-                samplePos_ += dsp.bufferSize();
-            }
-            else
-            {
-                scene_->calculateAudioBlock(samplePos_, MO_AUDIO_THREAD);
-                samplePos_ += scene_->bufferSize(MO_AUDIO_THREAD);
-            }
-
-        #ifndef NDEBUG
-            // leave some room when in debug mode
-            usleep(1000);
-        #endif
-        }
-    }
-
-private:
-    Scene * scene_;
-    volatile bool stop_;
-    SamplePos samplePos_;
-    bool new_;
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 MainWidgetController::MainWidgetController(QMainWindow * win)
     : QObject           (win),
       window_           (win),
       scene_            (0),
-#ifndef MO_DISABLE_TREE
-      objectTreeModel_  (0),
-#endif
+      updateTimer_      (0),
       outputSize_       (512, 512),
+      audioEngine_      (0),
       glManager_        (0),
       glWindow_         (0),
       objectEditor_     (0),
@@ -186,7 +106,6 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       serverDialog_     (0),
       statusBar_        (0),
       sysInfoLabel_     (0),
-      testThread_       (0),
       sceneNotSaved_    (false),
       statusMessageTimeout_(7 * 1000)
 {
@@ -203,12 +122,17 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
 
 MainWidgetController::~MainWidgetController()
 {
-    if (testThread_)
-        testThread_->stop();
+    if (audioEngine_)
+        audioEngine_->stop();
 }
 
 void MainWidgetController::createObjects_()
 {
+    updateTimer_ = new QTimer(this);
+    updateTimer_->setInterval(1000 / 20);
+    updateTimer_->setSingleShot(false);
+    connect(updateTimer_, SIGNAL(timeout()), this, SLOT(onUpdateTimer_()));
+
     // scene settings class
     sceneSettings_ = new SceneSettings(this);
 
@@ -217,9 +141,13 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(objectNameChanged(MO::Object*)), this, SLOT(onObjectNameChanged_(MO::Object*)));
     connect(objectEditor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
     connect(objectEditor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
-    connect(objectEditor_, SIGNAL(childrenSwapped(MO::Object*,int,int)), this, SLOT(onTreeChanged_()));
     connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
+    connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
+    {
+        if (audioEngine_)
+            audioEngine_->setScene(s, MO_AUDIO_THREAD);
+    });
 
     // status bar
     statusBar_ = new QStatusBar(window_);
@@ -229,31 +157,12 @@ void MainWidgetController::createObjects_()
     transportWidget_ = new TransportWidget(window_);
 
 
-#ifndef MO_DISABLE_TREE
-    // object tree view
-    objectTreeView_ = new ObjectTreeView(window_);
-    objectTreeView_->setSceneSettings(sceneSettings_);
-    connect(objectTreeView_, SIGNAL(editActionsChanged(const QObject*,QList<QAction*>)),
-            SLOT(setEditActions_(const QObject*,QList<QAction*>)));
-    connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
-            SLOT(onObjectSelectedTree_(MO::Object*)));
-#endif
-
     // object graph view
     objectGraphView_ = new ObjectGraphView(window_);
     connect(objectGraphView_, SIGNAL(objectSelected(MO::Object*)),
             this, SLOT(onObjectSelectedGraphView_(MO::Object*)));
 
-#ifndef MO_DISABLE_TREE
-    // object tree model
-    objectTreeModel_ = new ObjectTreeModel(0, this);
-    //connect(objectTreeModel_, SIGNAL(sceneChanged()),
-    //        this, SLOT(onSceneChanged_()));
-    objectTreeView_->setObjectModel(objectTreeModel_);
-    objectTreeModel_->setSceneSettings(sceneSettings_);
-#endif
-
-    // object View
+    // object (parameter) View
     objectView_ = new ObjectView(window_);
     objectView_->setSceneSettings(sceneSettings_);
     connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
@@ -264,7 +173,8 @@ void MainWidgetController::createObjects_()
     // sequencer
     sequencer_ = new Sequencer(window_);
     sequencer_->setSceneSettings(sceneSettings_);
-    sequencer_->setMinimumHeight(120);
+    sequencer_->setMinimumHeight(320);
+    sequencer_->setVisible(false);
     connect(sequencer_, SIGNAL(sequenceSelected(MO::Sequence*)),
             this, SLOT(onObjectSelectedSequencer_(MO::Sequence*)));
 
@@ -289,6 +199,7 @@ void MainWidgetController::createObjects_()
     glManager_ = new GL::Manager(this);
     connect(glManager_, SIGNAL(outputSizeChanged(QSize)),
             this, SLOT(onOutputSizeChanged_(QSize)));
+    glManager_->setTimeCallback([this](){ return audioEngine_ ? audioEngine_->second() : 0.0; });
 
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
 
@@ -439,7 +350,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         a->setIcon(QIcon(":/icon/obj_soundsource.png"));
         connect(a, &QAction::triggered, [=]()
         {
-            scene_->closeAudio();
+            closeAudio();
             AudioDialog diag;
             diag.exec();
         });
@@ -449,7 +360,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         a->setIcon(QIcon(":/icon/midi.png"));
         connect(a, &QAction::triggered, [=]()
         {
-            scene_->closeAudio();
+            closeAudio();
             MidiSettingsDialog diag;
             diag.exec();
         });
@@ -569,24 +480,8 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Test transformation speed (old)"), m));
         connect(a, &QAction::triggered, [this](){ testSceneTransform_(false); });
 
-        m->addAction(a = new QAction(tr("Reset ObjectTreeModel"), m));
-        connect(a, SIGNAL(triggered()), SLOT(resetTreeModel_()));
-
-        m->addAction(a = new QAction(tr("Run test thread"), m));
-        a->setCheckable(true);
-        connect(a, SIGNAL(triggered()), SLOT(runTestThread_()));
-
         m->addAction(a = new QAction(tr("Export scene to povray"), m));
         connect(a, SIGNAL(triggered()), SLOT(exportPovray_()));
-
-        m->addAction( a = new QAction(tr("Audio-link window"), m) );
-        connect(a, &QAction::triggered, [=]()
-        {
-            auto win = new AudioLinkWindow(window_);
-            win->setAttribute(Qt::WA_DeleteOnClose, true);
-            win->setScene(scene_);
-            win->show();
-        });
 
         m->addAction( a = new QAction(tr("Info window"), m) );
         connect(a, &QAction::triggered, [=]()
@@ -603,7 +498,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
             ObjectGraph graph;
             getObjectModulatorGraph(graph, scene_);
+#ifdef QT_DEBUG
             graph.dumpEdges(std::cout);
+#endif
             QVector<Object*> linear;
             graph.makeLinear(std::inserter(linear, linear.begin()));
             std::cout << "linear: ";
@@ -612,27 +509,6 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             std::cout << std::endl;
         });
 
-#ifndef MO_DISABLE_TREE
-        m->addAction( a = new QAction(tr("Show modulation graph"), m) );
-        connect(a, &QAction::triggered, [=]()
-        {
-            ObjectGraph graph;
-            getObjectModulatorGraph(graph, scene_);
-            auto tree = new ObjectTreeNode(scene_);
-                        //getObjectTree(scene_);
-            //getModulationTree(tree, graph);
-
-            //linearizedGraphToTree(tree, graph);
-            TreeModel<Object*> model(tree);
-            QDialog diag;
-            auto l = new QVBoxLayout(&diag);
-            auto tv = new QTreeView(&diag);
-            l->addWidget(tv);
-            tv->setModel(&model);
-            diag.exec();
-            delete tree;
-        });
-#endif
 
     // ######### HELP MENU #########
     m = new QMenu(tr("Help"), menuBar);
@@ -687,9 +563,6 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
         *sceneSettings_ = *set;
     }
 
-#ifndef MO_DISABLE_TREE
-    objectTreeModel_->setSceneSettings(sceneSettings_);
-#endif
     objectGraphView_->setGuiSettings(sceneSettings_);
 
     // check for local filenames
@@ -735,15 +608,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     // update widgets
 
-#ifndef MO_DISABLE_TREE
-    scene_->setObjectModel(objectTreeModel_);
-#endif
     scene_->setObjectEditor(objectEditor_);
 
-#ifndef MO_DISABLE_TREE
-    connect(scene_, SIGNAL(parameterChanged(MO::Parameter*)),
-            objectTreeView_, SLOT(columnMoved()/* force update */));
-#endif
     connect(scene_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
             objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
 
@@ -774,12 +640,6 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
 
 
-void MainWidgetController::resetTreeModel_()
-{
-#ifndef MO_DISABLE_TREE
-    objectTreeModel_->setSceneObject(scene_);
-#endif
-}
 
 void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
 {
@@ -807,6 +667,11 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
 }
 
 
+void MainWidgetController::onUpdateTimer_()
+{
+    if (audioEngine_)
+        transportWidget_->setSceneTime(audioEngine_->second());
+}
 
 
 void MainWidgetController::onObjectAdded_(Object * o)
@@ -842,11 +707,15 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
 
 void MainWidgetController::showClipView_(bool enable, Object * o)
 {
-    sequencer_->setVisible(!enable);
+    if (enable)
+        sequencer_->setVisible(false);
     clipView_->setVisible(enable);
 
     if (!enable)
+    {
+        emit modeChanged();
         return;
+    }
 
     if (o->isClipContainer())
     {
@@ -860,17 +729,26 @@ void MainWidgetController::showClipView_(bool enable, Object * o)
 
         clipView_->selectObject(o);
     }
+
+    emit modeChanged();
 }
 
 void MainWidgetController::showSequencer_(bool enable, Object * o)
 {
+    return; // XXX removed the sequencer for now, not working right anyway
+
     sequencer_->setVisible(enable);
     clipView_->setVisible(!enable);
+    emit modeChanged();
 
     if (!enable)
+    {
+        emit modeChanged();
         return;
+    }
 
     sequencer_->setCurrentObject(o);
+    emit modeChanged();
 }
 
 void MainWidgetController::showSequence_(bool enable, Sequence * seq)
@@ -889,6 +767,7 @@ void MainWidgetController::showSequence_(bool enable, Sequence * seq)
         seqView_->setVisible(false);
     }
 
+    emit modeChanged();
 }
 
 /** Shows or hides the sequence view and selects a sequence to display */
@@ -986,10 +865,6 @@ void MainWidgetController::onObjectSelectedGraphView_(Object * o)
         showSequence_(false);
         return;
     }
-#ifndef MO_DISABLE_TREE
-    else
-        objectTreeView_->setFocusIndex(o);
-#endif
 
     // update sequence view
     updateSequenceView_(o);
@@ -1048,12 +923,13 @@ void MainWidgetController::onObjectSelectedObjectView_(Object * o)
     {
         showClipView_(true, o);
     }
-
+/*
     // update sequencer
     else
     {
         showSequencer_(true, o);
     }
+    */
 }
 
 
@@ -1118,7 +994,7 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
 {
     QTime t;
 
-    int num = 10000000;
+    int num = 50000000;
     int i = 0;
     int e = 0;
 
@@ -1151,7 +1027,7 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
         const auto bufsize = scene_->bufferSize(MO_AUDIO_THREAD);
 
         ObjectDspPath dsp;
-        dsp.createPath(scene_, scene_->sampleRate(), bufsize);
+        dsp.createPath(scene_, AUDIO::Configuration(scene_->sampleRate(), bufsize, 0, 2));
 
         t.start();
         for (; i < num && e <= 1000; )
@@ -1177,20 +1053,6 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
     }
 }
 
-void MainWidgetController::runTestThread_()
-{
-    if (!testThread_)
-    {
-        testThread_ = new TestThread(scene_, true, this);
-        testThread_->start();
-    }
-    else
-    {
-        testThread_->stop();
-        testThread_->deleteLater();
-        testThread_ = 0;
-    }
-}
 
 void MainWidgetController::dumpIdNames_()
 {
@@ -1222,18 +1084,6 @@ void MainWidgetController::updateSystemInfo_()
     QString info = tr("%1mb/%2mb")
             .arg(Memory::allocated()/1024/1024)
             .arg(GL::Texture::memoryAll()/1024/1024);
-
-    if (testThread_)
-    {
-        static Double lastTime = 0.0;
-        Double
-            time = testThread_->time(),
-            delta = time - lastTime,
-            realtime = delta / (0.001*sysInfoTimer_->interval());
-        lastTime = time;
-
-        info.append(" " + tr("%1s %2x").arg(time).arg(realtime));
-    }
 
     sysInfoLabel_->setText(info);
 }
@@ -1283,12 +1133,25 @@ void MainWidgetController::updateDebugRender_()
 
 bool MainWidgetController::isPlayback() const
 {
-    return scene_ && scene_->isPlayback();
+    return audioEngine_ && audioEngine_->isPlayback();
 }
 
 void MainWidgetController::start()
 {
-    scene_->start();
+    //scene_->start();
+
+    // prepare audio engine
+    if (!audioEngine_)
+        audioEngine_ = new LiveAudioEngine(this);
+    if (audioEngine_->scene() != scene_)
+        audioEngine_->setScene(scene_, MO_AUDIO_THREAD);
+
+    // start engine
+    if (audioEngine_->start())
+        // start rythmic gui updates
+        updateTimer_->start();
+
+    glManager_->startAnimate();
 
     if (serverEngine().isRunning())
         serverEngine().setScenePlaying(true);
@@ -1296,10 +1159,33 @@ void MainWidgetController::start()
 
 void MainWidgetController::stop()
 {
-    scene_->stop();
+    glManager_->stopAnimate();
+    updateTimer_->stop();
+
+    if (audioEngine_)
+    {
+        if (audioEngine_->isPlayback())
+            audioEngine_->stop();
+        else
+        {
+            audioEngine_->seek(0);
+            // XXX hacky
+            //onSceneTimeChanged_(0.0);
+            scene_->setSceneTime(0.0);
+        }
+    }
+
+
+    //scene_->stop();
 
     if (serverEngine().isRunning())
         serverEngine().setScenePlaying(false);
+}
+
+void MainWidgetController::closeAudio()
+{
+    if (audioEngine_)
+        audioEngine_->closeAudioDevice();
 }
 
 void MainWidgetController::updateNumberOutputEnvelopes_(uint num)

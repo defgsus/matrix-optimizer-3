@@ -35,6 +35,11 @@ public:
 
 signals:
 
+    /** Very broad signal.
+        Emitted for everything except
+            objectNameChanged() and parameterChanged(). */
+    void sceneChanged(MO::Scene*);
+
     /** Emitted after a change to an object name */
     void objectNameChanged(MO::Object *);
 
@@ -55,6 +60,9 @@ signals:
     /** A parameter has been changed with setParameterValue() */
     void parameterChanged(MO::Parameter*);
 
+    /** A parameters visibility has changed (with isVisible() or isVisibleInGraph()) */
+    void parameterVisibilityChanged(MO::Parameter*);
+
     /** A sequence has been changed somehow */
     void sequenceChanged(MO::Sequence*);
 
@@ -66,6 +74,8 @@ signals:
 
     /** A bunch of modulators has been deleted */
     void modulatorsDeleted(const QList<MO::Modulator*>& mods);
+
+    void audioConnectionsChanged();
 
 public slots:
 
@@ -88,7 +98,7 @@ public slots:
     /** Moves the @p object to a new position under @p newParent.
         If the object's current parent and @p newParent are the same,
         this call simplifies to setObjectIndex() */
-    bool moveObject(Object * object, Object * newParent, int newIndex);
+    bool moveObject(Object * object, Object * newParent, int newIndex = -1);
 
     /** Changes the objects name, emits objectNameChanged() */
     void setObjectName(Object * object, const QString& name);
@@ -101,6 +111,22 @@ public slots:
     void setParameterValue(MO::ParameterFilename *, const QString& value);
     void setParameterValue(MO::ParameterText *, const QString& value);
     void setParameterValue(MO::ParameterTimeline1D *, const MATH::Timeline1D& value);
+
+    void setParameterVisibleInGraph(MO::Parameter *, bool enbale);
+
+    // ----------- audio cons ------------------
+
+    /** Creates a connection between the Objects.
+        Displays message and returns false when the connection would
+        create a loop. */
+    bool connectAudioObjects(MO::AudioObject * from, MO::AudioObject * to,
+                             uint outChannel = 0, uint inChannel = 0,
+                             uint numChannels = 1);
+
+    void disconnectAudioObjects(const AudioObjectConnection&);
+    void disconnectAudioObjects(MO::AudioObject * from, MO::AudioObject * to,
+                                uint outChannel = 0, uint inChannel = 0,
+                                uint numChannels = 1);
 
     // ------------ modulators -----------------
 

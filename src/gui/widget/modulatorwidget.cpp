@@ -43,6 +43,7 @@ ModulatorWidget::ModulatorWidget(QWidget *parent) :
             lh->addWidget(spinAmplitude_);
             spinAmplitude_->setStatusTip(tr("The amplitude of the modulation"));
             spinAmplitude_->setDecimals(5);
+            spinAmplitude_->setSingleStep(0.1);
             spinAmplitude_->setRange(-99999999, 99999999);
             connect(spinAmplitude_, SIGNAL(valueChanged(double)),
                     this, SLOT(updateFromWidgets_()));
@@ -56,6 +57,7 @@ ModulatorWidget::ModulatorWidget(QWidget *parent) :
             spinTimeOffset_->setStatusTip(
                         tr("The time added to look up the modulation value for tracks"));
             spinTimeOffset_->setDecimals(5);
+            spinTimeOffset_->setSingleStep(0.1);
             spinTimeOffset_->setRange(-99999999, 99999999);
             connect(spinTimeOffset_, SIGNAL(valueChanged(double)),
                     this, SLOT(updateFromWidgets_()));
@@ -100,11 +102,9 @@ void ModulatorWidget::updateFromWidgets_()
 void ModulatorWidget::updateWidgets_()
 {
     if (!modulator_)
-        labelName_->setText("");
+        labelName_->setText("NULL");
     else
-        labelName_->setText(
-                    modulator_->modulatorId() + " -> "
-                       + object_->idName() + ":" + modulator_->name() );
+        labelName_->setText( modulator_->nameAutomatic() );
 
     ModulatorFloat * mf = dynamic_cast<ModulatorFloat*>(modulator_);
 

@@ -8,6 +8,8 @@
     <p>created 8/8/2014</p>
 */
 
+#if 0
+
 #include <QThread>
 #include <QTime>
 
@@ -181,7 +183,7 @@ private:
 
 bool Scene::isAudioInitialized() const
 {
-    return audioDevice_->ok();
+    return audioDevice_->isOk();
 }
 
 void Scene::initAudioDevice_()
@@ -609,3 +611,5 @@ void Scene::processAudioInput_(uint thread)
 }
 
 } // namespace MO
+
+#endif

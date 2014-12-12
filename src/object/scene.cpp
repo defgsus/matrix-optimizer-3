@@ -18,6 +18,7 @@
 #include "io/log.h"
 #include "io/datastream.h"
 #include "object/objectfactory.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
@@ -28,10 +29,9 @@
 #include "object/sequencefloat.h"
 #include "object/microphone.h"
 #include "object/lightsource.h"
-#include "object/audio/audiounit.h"
-#include "object/audio/objectdsppath.h"
+#include "object/util/objectdsppath.h"
 #include "object/util/objecteditor.h"
-#include "model/objecttreemodel.h"
+#include "object/util/audioobjectconnections.h"
 #include "audio/audiodevice.h"
 #include "audio/audiosource.h"
 #include "gl/context.h"
@@ -53,9 +53,6 @@ MO_REGISTER_OBJECT(Scene)
 
 Scene::Scene(QObject *parent) :
     Object              (parent),
-#ifndef MO_DISABLE_TREE
-    model_              (0),
-#endif
     editor_             (0),
     glContext_          (0),
     releaseAllGlRequested_(0),
@@ -73,18 +70,7 @@ Scene::Scene(QObject *parent) :
     projectorIndex_     (0),
     sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
-    audioDevice_        (new AUDIO::AudioDevice()),
-    audioInThread_      (0),
-    audioOutThread_     (0),
-    audioInQueue_       (new LocklessQueue<const F32*>()),
-    audioOutQueue_      (new LocklessQueue<F32*>()),
-    // set number input channels for AudioUnits to have some value
-    // XXX Device handling should be more global, so that we know
-    // for certain how many channels we're about to use.
-    numInputChannels_   (2),
-    numOutputChannels_  (0),
-    numInputBuffers_    (4),
-    curInputBuffer_     (0),
+    audioCon_           (new AudioObjectConnections()),
     isPlayback_         (false),
     sceneTime_          (0),
     samplePos_          (0)
@@ -111,8 +97,6 @@ Scene::~Scene()
 {
     MO_DEBUG_TREE("Scene::~Scene()");
 
-    stop();
-
     destroyDeletedObjects_(false);
 
     for (auto i : debugRenderer_)
@@ -121,10 +105,8 @@ Scene::~Scene()
         delete i;
     for (auto i : screenQuad_)
         delete i;
-    delete audioDevice_;
     delete readWriteLock_;
-    delete audioOutQueue_;
-    delete audioInQueue_;
+    delete audioCon_;
     delete projectionSettings_;
 }
 
@@ -137,6 +119,14 @@ void Scene::serialize(IO::DataStream & io) const
     io << fbSize_ << doMatchOutputResolution_;
 }
 
+bool Scene::serializeAfterChilds(IO::DataStream & io) const
+{
+    io.writeHeader("scene_", 1);
+
+    audioCon_->serialize(io);
+    return true;
+}
+
 void Scene::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
@@ -146,13 +136,13 @@ void Scene::deserialize(IO::DataStream & io)
         io >> fbSizeRequest_ >> doMatchOutputResolution_;
 }
 
-#ifndef MO_DISABLE_TREE
-void Scene::setObjectModel(ObjectTreeModel * model)
+void Scene::deserializeAfterChilds(IO::DataStream & io)
 {
-    model_ = model;
-    model_->setSceneObject(this);
+    io.readHeader("scene_", 1);
+
+    audioCon_->deserialize(io, this);
 }
-#endif
+
 
 void Scene::setObjectEditor(ObjectEditor * editor)
 {
@@ -180,7 +170,7 @@ void Scene::findObjects_()
     // not all objects need there transformation calculated
     // these are the ones that do
     posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
-
+#if 0
     // all transformation objects that are or include audio relevant objects
     posObjectsAudio_.clear();
     for (auto o : posObjects_)
@@ -210,6 +200,7 @@ void Scene::findObjects_()
 
     // toplevel audio units
     topLevelAudioUnits_ = findChildObjects<AudioUnit>(QString(), false);
+#endif
 
 #ifdef MO_DO_DEBUG_TREE
     for (auto o : allObjects_)
@@ -236,8 +227,7 @@ void Scene::initGlChilds_()
 
 void Scene::render_()
 {
-    if (!isPlayback())
-        emit renderRequest();
+    emit renderRequest();
 }
 
 
@@ -287,9 +277,6 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
         newChild->onParametersLoaded();
         newChild->updateParameterVisibility();
         updateTree_();
-
-        if (newChild->isAudioUnit())
-            updateAudioUnitChannels_();
     }
     render_();
 }
@@ -304,6 +291,10 @@ void Scene::deleteObject(Object *object)
 
     {
         ScopedSceneLockWrite lock(this);
+
+        // remove audio connections
+        audioConnections()->remove(object);
+        //audioConnections()->dump(std::cout);
 
         // get list of all objects that will be deleted
         dellist = object->findChildObjects<Object>(QString(), true);
@@ -355,8 +346,6 @@ bool Scene::setObjectIndex(Object * object, int newIndex)
         parent->childrenChanged_();
         updateTree_();
 
-        if (object->isAudioUnit())
-            updateAudioUnitChannels_();
     }
     render_();
     return true;
@@ -381,9 +370,6 @@ void Scene::moveObject(Object *object, Object *newParent, int newIndex)
         oldParent->childrenChanged_();
         newParent->childrenChanged_();
         updateTree_();
-
-        if (object->isAudioUnit())
-            updateAudioUnitChannels_();
     }
     render_();
 }
@@ -457,18 +443,14 @@ void Scene::updateTree_()
     updateNumberThreads_();
     updateBufferSize_();
     updateSampleRate_();
-    updateDelaySize_();
-
-    // get buffers for microphones
-    updateAudioBuffers_();
-    allocateAudioOutputEnvelopes_(MO_AUDIO_THREAD);
 
     // collect all modulators for each object
     updateModulators_();
 
+    // XXX testing here
     // create the audio-dsp graph
     ObjectDspPath path;
-    path.createPath(this, sampleRate(), 4096);
+    path.createPath(this, AUDIO::Configuration(sampleRate(), 4096, 0, 2));
     path.dump(std::cout);
 
     // update the rendermodes
@@ -569,7 +551,7 @@ void Scene::updateModulators_()
     {
         o->collectModulators();
         // check parameters as well
-        for (auto p : o->parameters())
+        for (auto p : o->params()->parameters())
             p->collectModulators();
     }
 }
@@ -590,6 +572,12 @@ void Scene::updateSampleRate_()
 
 // -------------------- parameter ----------------------------
 
+void Scene::notifyParameterVisibility(Parameter *p)
+{
+    if (editor_)
+        emit editor_->parameterVisibilityChanged(p);
+    emit parameterVisibilityChanged(p);
+}
 
 // --------------------- tracks ------------------------------
 
@@ -1033,49 +1021,6 @@ void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
     }
 }
 
-void Scene::calculateAudioSceneTransform_(uint thread, uint sample, Double time)
-{
-    // interpolate free camera matrix
-    if (freeCameraIndex_ >= 0)
-    {
-        freeCameraMatrixAudio_[thread] += (Float)20 / sampleRate_
-                * (glm::inverse(freeCameraMatrix_) - freeCameraMatrixAudio_[thread]);
-    }
-
-    // set the initial matrix for all objects in scene
-    clearTransformation(thread, sample);
-
-    int camcount = 0;
-
-    // calculate transformations
-    for (auto &o : posObjectsAudio_)
-    {
-        // see if this object is a user-controlled camera
-        bool freecam = false;
-        if (o->isCamera())
-        {
-            if (camcount == freeCameraIndex_)
-                freecam = true;
-            ++camcount;
-        }
-
-        if (o->active(time, thread))
-        {
-            if (!freecam)
-            {
-                // get parent transformation
-                Mat4 matrix(o->parentObject()->transformation(thread, sample));
-                // apply object's transformation
-                o->calculateTransformation(matrix, time, thread);
-                // write back
-                o->setTransformation(thread, sample, matrix);
-            }
-            else
-                o->setTransformation(thread, sample, freeCameraMatrixAudio_[thread]);
-        }
-    }
-}
-
 
 // ---------------------- runtime --------------------------
 
@@ -1096,8 +1041,6 @@ void Scene::unlock_()
 
 void Scene::kill()
 {
-    stop();
-
     if (!glContext_)
         return;
 
@@ -1126,7 +1069,7 @@ void Scene::setSceneTime(Double time, bool send_signal)
     if (send_signal)
         emit sceneTimeChanged(sceneTime_);
 
-    render_();
+//    render_();
 }
 
 void Scene::setSceneTime(SamplePos pos, bool send_signal)
@@ -1138,7 +1081,7 @@ void Scene::setSceneTime(SamplePos pos, bool send_signal)
 
     if (send_signal)
         emit sceneTimeChanged(sceneTime_);
-    render_();
+//    render_();
 }
 
 

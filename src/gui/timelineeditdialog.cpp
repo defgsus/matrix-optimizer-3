@@ -41,7 +41,7 @@ TimelineEditDialog::TimelineEditDialog(QWidget *parent)
 
 TimelineEditDialog::~TimelineEditDialog()
 {
-    settings->saveGeometry(this);
+    settings->storeGeometry(this);
     settings->setValue(objectName()+"/autoupdate", autoUpdate_);
     delete tl_;
 }

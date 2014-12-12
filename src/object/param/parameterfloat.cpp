@@ -81,7 +81,7 @@ Modulator * ParameterFloat::getModulator(const QString& id)
     if (m)
         return m;
 
-    m = new ModulatorFloat(idName(), id, object());
+    m = new ModulatorFloat(idName(), id, this, object());
     addModulator_(m);
 
     return m;

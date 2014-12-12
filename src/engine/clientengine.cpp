@@ -501,10 +501,10 @@ void ClientEngine::setPlayback_(bool play)
         if (!cc.isEmpty())
             cc[0]->triggerRow(0, 0);
 
-        scene_->start();
+        //YYY scene_->start();
     }
-    else
-        scene_->stop();
+    //else
+        //YYY scene_->stop();
 
     sendState_();
 }
@@ -595,7 +595,7 @@ void ClientEngine::sendState_()
     state.state_.isInfoWindow_ = infoWindow_ && infoWindow_->isVisible();
     state.state_.isRenderWindow_ = glWindow_ && glWindow_->isVisible();
     state.state_.isSceneReady_ = scene_ && !nextScene_;
-    state.state_.isPlayback_ = scene_ && scene_->isPlayback();
+    state.state_.isPlayback_ = scene_;//YYY && scene_->isPlayback();
     state.state_.isFilesReady_ = isFilesReady_;
 
     client_->sendEvent(state);
@@ -603,7 +603,7 @@ void ClientEngine::sendState_()
 
 void ClientEngine::render_()
 {
-    if (glWindow_ && scene_ && !scene_->isPlayback())
+    if (glWindow_ && scene_)//YYY && !scene_->isPlayback())
         glWindow_->renderLater();
 }
 
