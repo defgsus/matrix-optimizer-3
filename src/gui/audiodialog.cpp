@@ -59,12 +59,12 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
         inDeviceBox_ = new QComboBox(this);
         l0->addWidget(inDeviceBox_);
         connect(inDeviceBox_, SIGNAL(currentIndexChanged(int)),
-                this, SLOT(inDeviceSelected_()));
+                this, SLOT(DeviceSelected_()));
 
         outDeviceBox_ = new QComboBox(this);
         l0->addWidget(outDeviceBox_);
         connect(outDeviceBox_, SIGNAL(currentIndexChanged(int)),
-                this, SLOT(outDeviceSelected_()));
+                this, SLOT(DeviceSelected_()));
 
         // buffersize
         auto lh = new QHBoxLayout();
@@ -277,6 +277,7 @@ void AudioDialog::checkDevices_()
 
 void AudioDialog::fillInDeviceBox_()
 {
+    // MH: Backwardcompatibility???
     QString dev = settings->getValue("Audio/indevice").toString();
 
     inDeviceBox_->clear();
@@ -305,6 +306,7 @@ void AudioDialog::fillInDeviceBox_()
 
 void AudioDialog::fillOutDeviceBox_()
 {
+    // MH: Backwardcompatibility???
     QString dev = settings->getValue("Audio/outdevice").toString();
 
     outDeviceBox_->clear();
