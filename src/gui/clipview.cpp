@@ -139,26 +139,20 @@ void ClipView::createWidgets_()
 
 }
 
-void ClipView::setClipContainer(ClipContainer * con)
+void ClipView::setScene(Scene * scene)
 {
-    if (con && clipCon_ == con)
+    if (   scene_ && scene_ == scene
+        && clipCon_ && clipCon_ == scene_->clipContainer())
     {
         // don't update if all is same
-        if (curNumX_ == con->numberColumns()
-            && curNumY_ == con->numberRows())
+        if (curNumX_ == clipCon_->numberColumns()
+            && curNumY_ == clipCon_->numberRows())
             return;
     }
 
-    // disconnect previous
-    if (clipCon_)
-    {
-        disconnect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
-        disconnect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
-        disconnect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
-        disconnect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
-    }
-
-    clipCon_ = con;
+    scene_ = scene;
+    editor_ = scene_->editor();
+    clipCon_ = scene_->clipContainer();
 
     // connect
     if (clipCon_)
@@ -169,6 +163,17 @@ void ClipView::setClipContainer(ClipContainer * con)
         connect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
     }
 
+    if (editor_)
+    {
+        connect(editor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
+        connect(editor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+    }
+
+    createClipWidgets_();
+}
+
+void ClipView::updateAllClips()
+{
     createClipWidgets_();
 }
 
@@ -307,7 +312,7 @@ void ClipView::removeObject(const Object *o)
 {
     if (o == clipCon_)
     {
-        setClipContainer(0);
+        setScene(0);
         return;
     }
 
@@ -582,6 +587,22 @@ void ClipView::onClipStopped_(Clip * clip)
 {
     if (ClipWidget * w = widgetForClip_(clip))
         w->setStopped();
+}
+
+void ClipView::onObjectAdded_(Object * o)
+{
+    if (o->isClipContainer() && scene_)
+        clipCon_ = scene_->clipContainer();
+
+    updateAllClips();
+}
+
+void ClipView::onObjectDeleted_(Object * o)
+{
+    if (o->isClipContainer() && scene_)
+        clipCon_ = scene_->clipContainer();
+
+    updateAllClips();
 }
 
 void ClipView::moveSelection_(int dx, int dy)

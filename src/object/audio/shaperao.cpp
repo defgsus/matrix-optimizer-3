@@ -41,7 +41,8 @@ class ShaperAO::Private
     {
         EquationObject()
             : equ       (new PPP_NAMESPACE::Parser()),
-              equPtr    (std::shared_ptr<PPP_NAMESPACE::Parser>(equ))
+              equPtr    (std::shared_ptr<PPP_NAMESPACE::Parser>(equ)),
+              out       (0.0)
 
         {
             equ->variables().add("x", &input, ShaperAO::tr("The current audio sample").toStdString());

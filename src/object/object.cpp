@@ -846,21 +846,25 @@ bool Object::canHaveChildren(Type t) const
     if (t == T_DUMMY || type() == T_DUMMY)
         return true;
 
-    // XXX for now: ModulatorObjects can be anywhere
+    // ModulatorObjects can be anywhere
     if (t & TG_MODULATOR_OBJECT)
         return true;
 
-    // XXX test123: Let's place sequences everywhere
+    // Sequences can be everywhere
     if (t & TG_SEQUENCE)
         return true;
+
+    // Clips can be everywhere
+    if (t == T_CLIP)
+        return true;
+
+    // nothing goes into clip container, except maybe clips
+    if (type() == T_CLIP_CONTAINER)
+        return t == T_CLIP;
 
     // Clips belong into ClipContainer ...
     if (t == T_CLIP)
         return type() == T_CLIP_CONTAINER;
-
-    // and nothing else
-    if (type() == T_CLIP_CONTAINER)
-        return t == T_CLIP;
 
     // XXX Currently ClipContainer only into scene
     if (t == T_CLIP_CONTAINER)

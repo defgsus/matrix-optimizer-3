@@ -76,6 +76,9 @@ public:
 
     const QList<Camera*> cameras() const { return cameras_; }
 
+    /** Returns the one clip con, OR NULL */
+    ClipContainer * clipContainer() const { return clipContainer_; }
+
     // --------------- files -------------------
 
     /** Gets the needed files of ALL objects */
@@ -354,6 +357,7 @@ private:
 
     // ----------- special objects -------------
 
+    ClipContainer * clipContainer_;
     QList<Object*> allObjects_;
     QList<Object*> posObjects_;
     //QList<Object*> posObjectsAudio_;

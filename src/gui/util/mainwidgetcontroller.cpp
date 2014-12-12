@@ -624,7 +624,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     seqView_->setSequence(0);
 
     sequencer_->setCurrentObject(scene_);
-    clipView_->setClipContainer(0);
+    clipView_->setScene(scene_);
 
     glWindow_->renderLater();
 
@@ -721,18 +721,7 @@ void MainWidgetController::showClipView_(bool enable, Object * o)
         return;
     }
 
-    if (o->isClipContainer())
-    {
-        clipView_->setClipContainer(static_cast<ClipContainer*>(o));
-    }
-    else
-    {
-        Object * con = o->findParentObject(Object::T_CLIP_CONTAINER);
-        if (con)
-            clipView_->setClipContainer(static_cast<ClipContainer*>(con));
-
-        clipView_->selectObject(o);
-    }
+    clipView_->selectObject(o);
 
     emit modeChanged();
 }

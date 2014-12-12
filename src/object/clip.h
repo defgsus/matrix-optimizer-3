@@ -36,16 +36,14 @@ public:
     /** Collects all sequences */
     virtual void childrenChanged() Q_DECL_OVERRIDE;
 
-    virtual void onParentChanged() Q_DECL_OVERRIDE;
-
     // -------------- tree -------------------
 
-    /** The ClipContainer, this Clip is on, or NULL */
-    ClipContainer * clipContainer() const { return clipContainer_; }
+    /** The ClipContainer, this Clip assigned to, or NULL */
+    ClipContainer * clipContainer() const { return p_clipContainer_; }
 
     /** Returns the list of contained sequences.
         Counts sub-objects as well */
-    const QList<Sequence*> & sequences() const { return sequences_; }
+    const QList<Sequence*> & sequences() const { return p_sequences_; }
 
     /** Returns a list of all Clips that object @p o is influenced by. */
     static QList<Clip*> getAssociatedClips(Object * o);
@@ -58,23 +56,26 @@ public:
 
     // -------------- getter -------------------
 
-    uint column() const { return column_; }
-    uint row() const { return row_; }
+    uint column() const { return p_column_; }
+    uint row() const { return p_row_; }
 
-    const QColor color() const { return color_; }
+    const QColor color() const { return p_color_; }
 
-    Double speed() const { return p_speed_->baseValue(); }
+    Double speed() const { return paramSpeed_->baseValue(); }
 
     // -------------- setter -------------------
+
+    /** Sets the container that manages this clip */
+    void setClipContainer(ClipContainer * c) { p_clipContainer_ = c; }
 
     /** Sets the position in the ClipContainer.
         @note The ClipContainer does not get notified of this change!
               Call ClipContainer::updateClipPositions()! */
-    void setPosition(uint col, uint row) { column_ = col; row_ = row; }
+    void setPosition(uint col, uint row) { p_column_ = col; p_row_ = row; }
     void setRow(uint row) { setPosition(column(), row); }
     void setColumn(uint col) { setPosition(col, row()); }
 
-    void setColor(const QColor& color) { color_ = color; }
+    void setColor(const QColor& color) { p_color_ = color; }
 
     // -------------- trigger ------------------
 
@@ -85,14 +86,13 @@ public:
     /** Stops the clip */
     void stopClip();
 
-    // -------------- values -------------------
+    // ---------- values/timing ----------------
 
-    bool isPlaying() const { return running_; }
+    bool isPlaying() const { return p_running_; }
 
     /** Returns the global scene time when the clip was started */
-    Double timeStarted() const { return timeStarted_; }
+    Double timeStarted() const { return p_timeStarted_; }
 
-    //Double value(Double time, uint thread) const;
 
 signals:
 
@@ -100,19 +100,19 @@ public slots:
 
 private:
 
-    QList<Sequence*> sequences_;
+    QList<Sequence*> p_sequences_;
 
-    ClipContainer * clipContainer_;
+    ClipContainer * p_clipContainer_;
 
-    Double timeStarted_;
-    bool running_;
+    Double p_timeStarted_;
+    bool p_running_;
 
-    uint column_, row_;
+    uint p_column_, p_row_;
 
-    QColor color_;
+    QColor p_color_;
 
     ParameterFloat
-            * p_speed_;
+            * paramSpeed_;
 };
 
 

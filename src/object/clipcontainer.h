@@ -58,10 +58,17 @@ public:
 
     // -------------- clips -------------------
 
+    /** Find all clips in the scene and assign them to this container.
+        Also calls updateClipPositions(). */
+    void collectClips();
+
     /** Call this after changes to the positions of Clips.
         This might also change the size of the ClipContainer to fit in
         all the Clip positions. */
     void updateClipPositions();
+
+    /** Returns all clips in the scene */
+    const QList<Clip*>& clips() const { return clips_; }
 
     /** Returns the clip at the specific position, or NULL */
     Clip * clip(uint column, uint row) const;
@@ -99,7 +106,8 @@ private:
         maxRow_, maxCol_;
 
     /** [y][x] */
-    QVector<Clip*> clips_;
+    QVector<Clip*> clipGrid_;
+    QList<Clip*> clips_;
 
     QMap<SamplePos, Clip*> triggerStart_, triggerStop_;
 

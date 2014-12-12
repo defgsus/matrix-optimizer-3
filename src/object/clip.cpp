@@ -24,12 +24,12 @@ MO_REGISTER_OBJECT(Clip)
 
 Clip::Clip(QObject *parent)
     : Object        (parent),
-      clipContainer_(0),
-      timeStarted_  (0),
-      running_      (false),
-      column_       (0),
-      row_          (0),
-      color_        (QColor(50,100,50))
+      p_clipContainer_(0),
+      p_timeStarted_  (0),
+      p_running_      (false),
+      p_column_       (0),
+      p_row_          (0),
+      p_color_        (QColor(50,100,50))
 {
     setName("Clip");
 }
@@ -40,10 +40,10 @@ void Clip::serialize(IO::DataStream &io) const
 
     io.writeHeader("clip", 2);
 
-    io << column_ << row_;
+    io << p_column_ << p_row_;
 
     // v2
-    io << color_;
+    io << p_color_;
 }
 
 void Clip::deserialize(IO::DataStream &io)
@@ -52,10 +52,10 @@ void Clip::deserialize(IO::DataStream &io)
 
     const int ver = io.readHeader("clip", 2);
 
-    io >> column_ >> row_;
+    io >> p_column_ >> p_row_;
 
     if (ver >= 2)
-        io >> color_;
+        io >> p_color_;
 }
 
 void Clip::createParameters()
@@ -64,7 +64,7 @@ void Clip::createParameters()
 
     params()->beginParameterGroup("clip", tr("clip"));
 
-        p_speed_ = params()->createFloatParameter("speed", tr("speed"),
+        paramSpeed_ = params()->createFloatParameter("speed", tr("speed"),
                                         tr("The speed multiplier for all sequences in the clip"),
                                         1, 0.1, true, false);
 
@@ -77,21 +77,13 @@ void Clip::updateParameterVisibility()
     Object::updateParameterVisibility();
 }
 
-void Clip::onParentChanged()
-{
-    Object::onParentChanged();
-
-    clipContainer_ = qobject_cast<ClipContainer*>(parentObject());
-
-    if (clipContainer_)
-        clipContainer_->findNextFreeSlot(column_, row_, true);
-}
 
 void Clip::childrenChanged()
 {
     // get all sequences and sub-sequences
-    sequences_ = findChildObjects<Sequence>(QString(), true);
+    p_sequences_ = findChildObjects<Sequence>(QString(), true);
 }
+
 
 QList<Clip*> Clip::getAssociatedClips(Object *o)
 {
@@ -165,13 +157,13 @@ QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
 
 void Clip::startClip(Double gtime)
 {
-    timeStarted_ = gtime;
-    running_ = true;
+    p_timeStarted_ = gtime;
+    p_running_ = true;
 }
 
 void Clip::stopClip()
 {
-    running_ = false;
+    p_running_ = false;
 }
 
 

@@ -27,6 +27,7 @@
 #include "object/param/parametertimeline1d.h"
 #include "object/track.h"
 #include "object/sequencefloat.h"
+#include "object/clipcontainer.h"
 #include "object/microphone.h"
 #include "object/lightsource.h"
 #include "object/util/objectdsppath.h"
@@ -68,6 +69,7 @@ Scene::Scene(QObject *parent) :
     freeCameraMatrix_   (1.0),
     projectionSettings_ (new ProjectionSystemSettings()),
     projectorIndex_     (0),
+    clipContainer_      (0),
     sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
     audioCon_           (new AudioObjectConnections()),
@@ -161,6 +163,16 @@ void Scene::findObjects_()
     // not all objects need there transformation calculated
     // these are the ones that do
     posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
+
+    // assign clip container
+    clipContainer_ = 0;
+    for (auto o : allObjects_)
+        if (o->type() == T_CLIP_CONTAINER)
+            clipContainer_ = static_cast<ClipContainer*>(o);
+    // assign clips to it
+    if (clipContainer_)
+        clipContainer_->collectClips();
+
 #if 0
     // all transformation objects that are or include audio relevant objects
     posObjectsAudio_.clear();

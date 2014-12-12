@@ -31,8 +31,8 @@ ClipContainer::ClipContainer(QObject *parent) :
     setName("ClipContainer");
 
     // init grid vector
-    clips_.resize(cols_ * rows_);
-    for (auto & c : clips_)
+    clipGrid_.resize(cols_ * rows_);
+    for (auto & c : clipGrid_)
         c = 0;
 }
 
@@ -106,15 +106,34 @@ void ClipContainer::setNumber(uint cols, uint rows)
     updateClipPositions();
 }
 
+
+void ClipContainer::collectClips()
+{
+    Object * root = rootObject();
+    clips_ = root->findChildObjects<Clip>("", true);
+
+    for (Clip * c : clips_)
+    {
+        if (c->clipContainer() != this)
+        {
+            c->setClipContainer(this);
+            uint col = c->column(),
+                 row = c->row();
+            if (findNextFreeSlot(col, row, true))
+                c->setPosition(col, row);
+        }
+    }
+
+    updateClipPositions();
+}
+
+
 void ClipContainer::updateClipPositions()
 {
-    // get all clips
-    auto clips = findChildObjects<Clip>();
-
     // find maximum rows and columns of clips
     maxRow_ = 0;
     maxCol_ = 0;
-    for (auto c : clips)
+    for (auto c : clips_)
     {
         maxCol_ = std::max(maxCol_, c->column());
         maxRow_ = std::max(maxRow_, c->row());
@@ -124,19 +143,19 @@ void ClipContainer::updateClipPositions()
     cols_ = std::max(minimumColumns_, std::max(maxCol_, cols_));
 
     // resize grid vector
-    clips_.resize(cols_ * rows_);
-    for (auto & c : clips_)
+    clipGrid_.resize(cols_ * rows_);
+    for (auto & c : clipGrid_)
         c = 0;
 
     // put into grid vector
-    for (auto c : clips)
+    for (auto c : clips_)
     {
         const uint i = c->row() * cols_ + c->column();
-        if (clips_[i])
+        if (clipGrid_[i])
             MO_WARNING("Clip '" << c->idName() << "' on same position "
                        "(" << c->column() << ", " << c->row() << ") in ClipContainer as "
-                       "'" << clips_[i]->idName() << "'");
-        clips_[i] = c;
+                       "'" << clipGrid_[i]->idName() << "'");
+        clipGrid_[i] = c;
     }
 }
 
@@ -146,13 +165,13 @@ Clip * ClipContainer::clip(uint column, uint row) const
         return 0;
 
     const int i = row * cols_ + column;
-    if (i >= clips_.size())
+    if (i >= clipGrid_.size())
     {
         MO_WARNING("ClipContainer::clip(" << column << ", " << row << ") "
-                   "out of range for clips_ array " << i << "/" << clips_.size());
+                   "out of range for clips_ array " << i << "/" << clipGrid_.size());
         return 0;
     }
-    return clips_[i];
+    return clipGrid_[i];
 }
 
 Clip * ClipContainer::playingClip(uint column) const
@@ -185,7 +204,7 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
 
     // If clips_ array has not been initialized yet
     // it's probably XXX save to use the given position
-    if (clips_.isEmpty())
+    if (clipGrid_.isEmpty())
         return true;
 
     int ocolumn = column,
@@ -195,7 +214,7 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
     // search forward
     while (column < cols_)
     {
-        if (clips_[row * cols_ + column] == 0)
+        if (clipGrid_[row * cols_ + column] == 0)
             return true;
 
         row++;
@@ -209,7 +228,7 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
     // search backwards
     while (ocolumn >= 0)
     {
-        if (clips_[orow * cols_ + ocolumn] == 0)
+        if (clipGrid_[orow * cols_ + ocolumn] == 0)
         {
             column = ocolumn;
             row = orow;
@@ -256,7 +275,7 @@ void ClipContainer::triggerClip(Clip *clip, Double gtime)
     emit clipStarted(clip);
 }
 
-void ClipContainer::triggerStopClip(Clip *clip, Double )
+void ClipContainer::triggerStopClip(Clip *clip, Double gtime)
 {
     MO_DEBUG_CLIP("ClipContainer::triggerStopClip(" << clip << ", " << gtime << ")");
 
