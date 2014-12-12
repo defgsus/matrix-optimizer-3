@@ -101,7 +101,7 @@ void FftAO::setBufferSize(uint bufferSize, uint thread)
     p_->writtenOut[thread] = 0;
 }
 
-void FftAO::processAudio(uint bSize, SamplePos pos, uint thread)
+void FftAO::processAudio(uint bSize, SamplePos /*pos*/, uint thread)
 {
     const QList<AUDIO::AudioBuffer*>&
             inputs = audioInputs(thread),

@@ -106,18 +106,18 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
     {
         Double time = sampleRateInv() * (pos + i);
 
-        *write = paramOffset_->value(time, thread)
-                    + paramAmp_->value(time, thread) * (
-                        std::sin(phase_[thread] + paramPhase_->value(time, thread))
-                    );
-
         phase_[thread] += freqFac * paramFreq_->value(time, thread);
 
         if (phase_[thread] > TWO_PI)
             phase_[thread] -= TWO_PI*2;
-        else if (phase_[thread] < -TWO_PI)
+        else
+        if (phase_[thread] < -TWO_PI)
             phase_[thread] += TWO_PI*2;
 
+        *write = paramOffset_->value(time, thread)
+                    + paramAmp_->value(time, thread) * (
+                        std::sin(phase_[thread] + paramPhase_->value(time, thread))
+                    );
     }
 
     // version with audio input modulation
@@ -143,10 +143,6 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
             if (inFreq)
                 freq += inFreq->read(i);
 
-            *write = ofs + amp * (
-                            std::sin(phase_[thread] + paramPhase_->value(time, thread))
-                        );
-
             phase_[thread] += freqFac * freq;
 
             if (inPhase)
@@ -154,8 +150,13 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
 
             if (phase_[thread] > TWO_PI)
                 phase_[thread] -= TWO_PI*2;
-            else if (phase_[thread] < -TWO_PI)
+            else
+            if (phase_[thread] < -TWO_PI)
                 phase_[thread] += TWO_PI*2;
+
+            *write = ofs + amp * (
+                            std::sin(phase_[thread] + paramPhase_->value(time, thread))
+                        );
 
         }
     }

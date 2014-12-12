@@ -256,7 +256,7 @@ void ClipContainer::triggerClip(Clip *clip, Double gtime)
     emit clipStarted(clip);
 }
 
-void ClipContainer::triggerStopClip(Clip *clip, Double gtime)
+void ClipContainer::triggerStopClip(Clip *clip, Double )
 {
     MO_DEBUG_CLIP("ClipContainer::triggerStopClip(" << clip << ", " << gtime << ")");
 

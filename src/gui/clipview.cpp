@@ -812,6 +812,7 @@ void ClipView::openPopup_()
         {
             Object * o = ObjectFactory::createObject(a->data().toString());
             MO_ASSERT(o, "ClipView: Could not create object class '" << a->data().toString() << "'");
+            Q_UNUSED(o);
         });
 
         menu->addSeparator();
