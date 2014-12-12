@@ -63,7 +63,14 @@ private:
     void storeConfig_();
 
     AUDIO::AudioDevices * devices_;
+#ifdef __APPLE__
+    AUDIO::AudioDevices * inDevices_;
+#endif
     AUDIO::AudioDevice * device_;
+#ifdef __APPLE__
+    AUDIO::AudioDevice * inDevice_;
+#endif
+
 
     std::vector<AUDIO::EnvelopeFollower*> envFollower_;
 
