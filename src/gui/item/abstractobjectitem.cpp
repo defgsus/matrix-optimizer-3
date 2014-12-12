@@ -235,6 +235,17 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
         if (isExpanded())
             setLayoutDirty();
     }
+    else
+    if (change == ItemChildRemovedChange)
+    {
+        // collapse if no child left
+        if (isExpanded() && object()->childObjects().isEmpty())
+        {
+            setExpanded(false);
+            if (p_oi_->itemExp)
+                p_oi_->itemExp->setVisible(false);
+        }
+    }
 
     QVariant ret = QGraphicsItem::itemChange(change, value);
 

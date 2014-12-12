@@ -1085,7 +1085,7 @@ void Object::setNumberMicrophones(uint num)
 
 void Object::calculateSoundSourceTransformation(
         const TransformationBuffer * objectTransform,
-        const QList<AUDIO::SpatialSoundSource *> list,
+        const QList<AUDIO::SpatialSoundSource*>& list,
         uint , SamplePos , uint )
 {
     MO_ASSERT(list.size() == (int)numberSoundSources(), "number of sound sources does not match "
@@ -1097,7 +1097,7 @@ void Object::calculateSoundSourceTransformation(
 
 void Object::calculateMicrophoneTransformation(
         const TransformationBuffer * objectTransform,
-        const QList<AUDIO::SpatialMicrophone*> list,
+        const QList<AUDIO::SpatialMicrophone*>& list,
         uint , SamplePos , uint )
 {
     MO_ASSERT(list.size() == (int)numberMicrophones(), "number of microphones does not match "

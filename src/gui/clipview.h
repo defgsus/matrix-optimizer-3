@@ -85,7 +85,7 @@ private slots:
     void onClipStopped_(Clip*);
 
     void onObjectAdded_(MO::Object*);
-    void onObjectDeleted_(MO::Object*);
+    void onObjectDeleted_(const MO::Object*);
     void onObjectColorChanged_(MO::Object*);
 
 private:

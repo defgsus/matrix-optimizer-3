@@ -281,6 +281,19 @@ bool ObjectEditor::deleteObject(Object *object)
     return true;
 }
 
+bool ObjectEditor::deleteObjects(const QList<Object*>& list)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::deleteObjects(" << list.size() << ")");
+    MO__CHECK_SCENE
+
+    scene_->deleteObjects(list);
+
+    emit objectsDeleted(list);
+    emit sceneChanged(scene_);
+
+    return true;
+}
+
 bool ObjectEditor::setObjectIndex(Object * object, int newIndex)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::setObjectIndex(" << object << ", " << newIndex << ")");

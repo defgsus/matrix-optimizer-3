@@ -81,6 +81,10 @@ signals:
         The object pointer will not point to a valid object anymore. */
     void objectDeleted(const MO::Object *);
 
+    /** Emitted after all the objects where deleted.
+        The object pointers will not point to valid objects. */
+    void objectsDeleted(const QList<MO::Object*>&);
+
     /** A parameter has been changed with setParameterValue() */
     void parameterChanged(MO::Parameter*);
 
@@ -116,6 +120,8 @@ public slots:
     bool addObjects(Object * parent, const QList<Object*> newObjects, int insert_index = -1);
 
     bool deleteObject(Object * object);
+
+    bool deleteObjects(const QList<Object*>& list);
 
     bool setObjectIndex(Object * object, int newIndex);
 

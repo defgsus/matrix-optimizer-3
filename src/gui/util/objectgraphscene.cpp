@@ -192,6 +192,8 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onObjectsAdded_(QList<MO::Object*>)));
             connect(p_->editor, SIGNAL(objectDeleted(const MO::Object*)),
                     this, SLOT(onObjectDeleted_(const MO::Object*)));
+            connect(p_->editor, SIGNAL(objectsDeleted(QList<MO::Object*>)),
+                    this, SLOT(onObjectsDeleted_(QList<MO::Object*>)));
             connect(p_->editor, SIGNAL(objectMoved(MO::Object*,MO::Object*)),
                     this, SLOT(onObjectMoved_(MO::Object*,MO::Object*)));
             connect(p_->editor, SIGNAL(objectChanged(MO::Object*)),
@@ -338,7 +340,7 @@ void ObjectGraphScene::Private::addModItem(Modulator * m)
     Object * parent = m->modulator()->findCommonParentObject(m->parent());
 
     auto item = new ModulatorItem(m, scene->itemForObject(parent));
-    scene->addItem( item );
+    //scene->addItem( item );
     item->setZValue(++zStack);
     item->updateShape(); // calc arrow shape
 
@@ -1265,6 +1267,14 @@ void ObjectGraphScene::onObjectDeleted_(const Object *)
 #endif
 }
 
+void ObjectGraphScene::onObjectsDeleted_(const QList<Object*>& )
+{
+    // again, don't bother to modify existing structure
+    // just rebuild everything
+    setRootObject(p_->root);
+}
+
+
 void ObjectGraphScene::onObjectMoved_(Object * , Object *)
 {
     // XXX Something's not right with below code
@@ -1372,16 +1382,25 @@ void ObjectGraphScene::deleteObjects(const QList<AbstractObjectItem *> items1)
 {
     MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
 
+    if (items1.isEmpty())
+        return;
+
     auto items = items1;
     reduceToTopLevel(items);
+/*
+    qDebug() << "-------------\n"
+             << items << "\n"
+                << items1 << "\n"
+                   << selectedItems() << "\n"
+                      << selectedObjectItems() << "\n";
+*/
+    MO_ASSERT(items.first()->object() != p_->root, "Can't delete root here");
 
-    for (auto item : items)
-    {
-        Object * o = item->object();
-        MO_ASSERT(o != p_->root, "Can't delete root here");
+    QList<Object*> objs;
+    for (auto i : items)
+        objs << i->object();
 
-        p_->root->editor()->deleteObject(o);
-    }
+    p_->root->editor()->deleteObjects(objs);
 }
 
 /*

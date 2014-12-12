@@ -145,6 +145,7 @@ private slots:
     void onObjectAdded_(MO::Object *);
     void onObjectsAdded_(const QList<MO::Object*>&);
     void onObjectDeleted_(const MO::Object *);
+    void onObjectsDeleted_(const QList<MO::Object*>&);
     void onObjectMoved_(MO::Object*, MO::Object * oldParent);
     void onObjectNameChanged_(MO::Object *);
     void onObjectColorChanged_(MO::Object *);

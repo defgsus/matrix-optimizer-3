@@ -605,7 +605,7 @@ public:
         The base implementation simply copies the object transformation. */
     virtual void calculateSoundSourceTransformation(
                                         const TransformationBuffer * objectTransformation,
-                                        const QList<AUDIO::SpatialSoundSource*>,
+                                        const QList<AUDIO::SpatialSoundSource*>&,
                                         uint bufferSize, SamplePos pos, uint thread);
 
     /** Override to fill the audio buffers of the sound sources.
@@ -618,7 +618,7 @@ public:
         The base implementation simply copies the object transformation. */
     virtual void calculateMicrophoneTransformation(
                                         const TransformationBuffer * objectTransformation,
-                                        const QList<AUDIO::SpatialMicrophone*>,
+                                        const QList<AUDIO::SpatialMicrophone*>&,
                                         uint bufferSize, SamplePos pos, uint thread);
 
 public:

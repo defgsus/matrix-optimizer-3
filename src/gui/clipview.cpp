@@ -605,7 +605,7 @@ void ClipView::onObjectAdded_(Object * o)
     updateAllClips();
 }
 
-void ClipView::onObjectDeleted_(Object * o)
+void ClipView::onObjectDeleted_(const Object* o)
 {
     if (o->isClipController() && scene_)
         clipCon_ = scene_->clipController();
