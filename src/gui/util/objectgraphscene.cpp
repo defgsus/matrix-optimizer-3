@@ -188,6 +188,8 @@ void ObjectGraphScene::setRootObject(Object *root)
         {
             connect(p_->editor, SIGNAL(objectAdded(MO::Object*)),
                     this, SLOT(onObjectAdded_(MO::Object*)));
+            connect(p_->editor, SIGNAL(objectsAdded(QList<MO::Object*>)),
+                    this, SLOT(onObjectsAdded_(QList<MO::Object*>)));
             connect(p_->editor, SIGNAL(objectDeleted(const MO::Object*)),
                     this, SLOT(onObjectDeleted_(const MO::Object*)));
             connect(p_->editor, SIGNAL(objectMoved(MO::Object*,MO::Object*)),
@@ -309,7 +311,10 @@ void ObjectGraphScene::Private::createModulatorItems(Object *root)
     auto mods = root->getModulators();
     for (Modulator * m : mods)
     {
-        addModItem(m);
+        if (m->modulator())
+            addModItem(m);
+        else
+            MO_WARNING("unassigned modulator for item, id == " << m->modulatorId());
     }
 
     // add audio connections
@@ -1212,6 +1217,19 @@ void ObjectGraphScene::onObjectAdded_(Object * o)
                           : QPoint(1,1);
 
     p_->createObjectItem(o, pos);
+    p_->recreateModulatorItems();
+}
+
+void ObjectGraphScene::onObjectsAdded_(const QList<Object*>& list)
+{
+    for (auto o : list)
+    {
+        const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
+                          ? o->getAttachedData(Object::DT_GRAPH_POS).toPoint()
+                          : QPoint(1,1);
+
+        p_->createObjectItem(o, pos);
+    }
     p_->recreateModulatorItems();
 }
 

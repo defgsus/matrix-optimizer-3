@@ -203,6 +203,7 @@ public slots:
      */
 
     void addObject(Object * parent, Object * newChild, int insert_index = -1);
+    void addObjects(Object * parent, const QList<Object*>& newChilds, int insert_index = -1);
     void deleteObject(Object * object);
     bool setObjectIndex(Object * object, int newIndex);
     void moveObject(Object * object, Object * newParent, int newIndex);

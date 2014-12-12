@@ -284,6 +284,32 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
     render_();
 }
 
+void Scene::addObjects(Object *parent, const QList<Object*>& newChilds, int insert_index)
+{
+    MO_DEBUG_TREE("Scene::addObjects(" << parent << ", " << newChilds.size() << ", " << insert_index << ")");
+
+    {
+        ScopedSceneLockWrite lock(this);
+        for (auto n : newChilds)
+        {
+            // make the name unique
+            n->setName( parent->makeUniqueName(n->name()) );
+            // add (could be faster with a list version...)
+            parent->addObject_(n, insert_index++);
+        }
+
+        parent->p_childrenChanged_();
+
+        for (auto n : newChilds)
+        {
+            n->onParametersLoaded();
+            n->updateParameterVisibility();
+        }
+        updateTree_();
+    }
+    render_();
+}
+
 void Scene::deleteObject(Object *object)
 {
     MO_DEBUG_TREE("Scene::deleteObject(" << object << ")");

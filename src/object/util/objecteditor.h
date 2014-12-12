@@ -43,8 +43,12 @@ public:
     static QString getUniqueId(QString id, const QSet<QString> &existingNames, bool * existed = 0);
 
     /** Make all ids in newBranch unique among itself and the ids in root.
-        Also cares for modulator ids and all that. */
+        Also cares for modulator ids and all that (calls Object::idNamesChanged()). */
     static void makeUniqueIds(const Object * root, Object * newBranch);
+
+    /** Make all ids in all branches unique among themselves and the ids in root.
+        Also cares for modulator ids and all that Object::idNamesChanged(). */
+    static void makeUniqueIds(const Object* root, const QList<Object*> newBranches);
 
 signals:
 
@@ -62,6 +66,9 @@ signals:
 
     /** Emitted when the given object was added to the scene. */
     void objectAdded(MO::Object *);
+
+    /** Emitted after a bunch of objects have been added */
+    void objectsAdded(const QList<MO::Object*>&);
 
     /** Emitted when the @p object moved from the children list of @p oldParent
         to it's new parent */

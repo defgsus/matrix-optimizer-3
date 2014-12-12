@@ -110,6 +110,44 @@ void ObjectEditor::makeUniqueIds(const Object* root, Object* newBranch)
         newBranch->idNamesChanged(changedIds);
 }
 
+void ObjectEditor::makeUniqueIds(const Object* root, const QList<Object*> newBranches)
+{
+    // get set of existing ids
+    QSet<QString> existing = root->getChildIds(true);
+    existing.insert(root->idName());
+
+    // get all new objects
+    QList<Object*> list;
+    for (auto o : newBranches)
+    {
+        list << o;
+        list << o->findChildObjects(Object::TG_ALL, true);
+    }
+
+    // keep track of changes
+    QMap<QString, QString> changedIds;
+
+    // adjust id for each object
+    for (Object * o : list)
+    {
+        QString newid = getUniqueId(o->idName(), existing);
+
+        if (newid != o->idName())
+        {
+            // add new id to stock
+            existing.insert(newid);
+            // remember old id
+            changedIds.insert(o->idName(), newid);
+            // and change
+            Private::set_object_id_(o, newid);
+        }
+    }
+
+    // tell the branch about changed ids
+    if (!changedIds.isEmpty())
+        for (auto o : newBranches)
+            o->idNamesChanged(changedIds);
+}
 
 
 
@@ -170,6 +208,12 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
             saveAdd.insert(o);
     }
 
+    // we need to make all the branches unique at the same time
+    // so their idNamesChanged() functions get called with ALL
+    // changed ids from all branches.
+    makeUniqueIds(parent, newObjects);
+
+#if 0
     QString err;
     for (auto o : newObjects)
     if (saveAdd.contains(o))
@@ -183,7 +227,22 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
     }
     else
         delete o;
+#else
+    QList<Object*> actualObjects;
+    QString err;
+    for (auto o : newObjects)
+    if (saveAdd.contains(o))
+        actualObjects.append(o);
+    else
+        delete o;
 
+    if (!actualObjects.isEmpty())
+    {
+        scene_->addObjects(parent, actualObjects);
+        emit objectsAdded(actualObjects);
+    }
+
+#endif
     emit sceneChanged(scene_);
 
     if (!error.isEmpty())
