@@ -224,7 +224,13 @@ HEADERS += \
     src/audio/3rd/MVerb.h \
     src/object/audio/fftao.h \
     src/audio/tool/resamplebuffer.h \
-    src/object/audio/shaperao.h
+    src/object/audio/shaperao.h \
+    src/audio/spatial/spatialsoundsource.h \
+    src/audio/spatial/spatialmicrophone.h \
+    src/types/conversion.h \
+    src/audio/tool/delay.h \
+    src/object/audio/audioinao.h \
+    src/object/param/modulatorevent.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -412,4 +418,8 @@ SOURCES += \
     src/model/objectmimedata.cpp \
     src/object/audio/mverbao.cpp \
     src/object/audio/fftao.cpp \
-    src/object/audio/shaperao.cpp
+    src/object/audio/shaperao.cpp \
+    src/audio/spatial/spatialsoundsource.cpp \
+    src/audio/spatial/spatialmicrophone.cpp \
+    src/object/audio/audioinao.cpp \
+    src/object/param/modulatorevent.cpp

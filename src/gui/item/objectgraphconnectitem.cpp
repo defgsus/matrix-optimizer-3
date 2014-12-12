@@ -163,9 +163,8 @@ void ObjectGraphConnectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
         return;
     }
 
-    if (Scene * s = object_->sceneObject())
-        if (s->editor())
-            s->editor()->addModulator(parameter(), desc.pointer()->idName());
+    if (object_->editor())
+        object_->editor()->addModulator(parameter(), desc.pointer()->idName(), "");
 }
 
 

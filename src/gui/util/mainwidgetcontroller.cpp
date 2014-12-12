@@ -66,6 +66,7 @@
 #include "gl/texture.h"
 #include "audio/configuration.h"
 #include "engine/renderer.h"
+#include "engine/audioengine.h"
 #include "engine/liveaudioengine.h"
 #include "engine/serverengine.h"
 #include "object/objectfactory.h"
@@ -454,9 +455,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            if (!qobjectInspector_)
-                qobjectInspector_ = new QObjectInspector(application, window_);
-            qobjectInspector_->setRootObject(this);
+            qobjectInspector_ = new QObjectInspector(application, window_);
+            qobjectInspector_->setRootObject(window_);
+            qobjectInspector_->setAttribute(Qt::WA_DeleteOnClose);
             qobjectInspector_->show();
         });
 
@@ -479,6 +480,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         m->addAction(a = new QAction(tr("Test transformation speed (old)"), m));
         connect(a, &QAction::triggered, [this](){ testSceneTransform_(false); });
+
+        m->addAction(a = new QAction(tr("Test full audio speed"), m));
+        connect(a, &QAction::triggered, [this](){ testAudioSpeed(); });
 
         m->addAction(a = new QAction(tr("Export scene to povray"), m));
         connect(a, SIGNAL(triggered()), SLOT(exportPovray_()));
@@ -1004,7 +1008,7 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
         for (; i < num && e <= 1000;)
         {
             for (int j=0; j<1000; ++j, ++i)
-                scene_->calculateSceneTransform(0, 0, scene_->sampleRateInv() * (i*1000+j));
+                scene_->calculateSceneTransform(MO_GFX_THREAD, scene_->sampleRateInv() * (i*1000+j));
 
             e = t.elapsed();
         }
@@ -1024,16 +1028,16 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
     }
     else
     {
-        const auto bufsize = scene_->bufferSize(MO_AUDIO_THREAD);
+        const auto bufsize = 128;//scene_->bufferSize(MO_AUDIO_THREAD);
 
         ObjectDspPath dsp;
-        dsp.createPath(scene_, AUDIO::Configuration(scene_->sampleRate(), bufsize, 0, 2));
+        dsp.createPath(scene_, AUDIO::Configuration(scene_->sampleRate(), bufsize, 0, 2), MO_AUDIO_THREAD);
 
         t.start();
         for (; i < num && e <= 1000; )
         {
             for (int j=0; j<20; ++j, i += bufsize)
-                dsp.calcTransformations(i*1000+j, MO_AUDIO_THREAD);
+                dsp.calcTransformations(i*1000+j);
 
             e = t.elapsed();
         }
@@ -1051,6 +1055,62 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
                                  .arg((int)((Double)num/elapsed))
                );
     }
+}
+
+
+
+void MainWidgetController::testAudioSpeed()
+{
+    AUDIO::Configuration conf(scene_->sampleRate(),
+                              128,//scene_->bufferSize(MO_AUDIO_THREAD),
+                              2, 2);
+
+    AudioEngine engine;
+
+    engine.setScene(scene_, conf, MO_AUDIO_THREAD);
+
+    // temp in/out buffers
+    std::vector<F32>
+            fakeIns(conf.sampleRate() * conf.bufferSize() * 2),
+            fakeOuts(conf.sampleRate() * conf.bufferSize() * 2);
+
+    int     num = 50000000,
+            // number of dsp steps before messuring time
+            // to not trigger the clock at every block
+            // and in case the clock is too course
+            // [..which is true for QTime anyway]
+            numInFrames = std::max(1u, 30000 / conf.bufferSize()),
+
+            i = 0, e = 0;
+
+    QTime t;
+    t.start();
+    for (; i < num && e <= 1000; )
+    {
+        for (int j=0; j<numInFrames; ++j, i += conf.bufferSize())
+            engine.process(&fakeIns[0], &fakeOuts[0]);
+
+        e = t.elapsed();
+    }
+    num = i;
+    const Double elapsed = (Double)e / 1000.0;
+
+    QMessageBox::information(window_, tr("Scene audio benchmark"),
+        tr("<html>Processed %1 samples of audio/spatial dsp stuff"
+           "<br/>which took %2 seconds."
+           "<br/>This is %3 milli-secs per sample"
+           "<br/>%4 ms per dsp block(%5)"
+           "<br/>and <b>%6</b> samples per second"
+           "<br/>which is <b>%7</b> times realtime (@%8hz)</html>")
+                             .arg(num)
+                             .arg(elapsed)
+                             .arg((elapsed*1000)/num)
+                             .arg((elapsed*1000)/num*conf.bufferSize())
+                             .arg(conf.bufferSize())
+                             .arg((int)((Double)num/elapsed))
+                             .arg((Double)num / elapsed / conf.sampleRate())
+                             .arg(conf.sampleRate())
+           );
 }
 
 

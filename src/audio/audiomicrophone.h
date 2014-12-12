@@ -8,6 +8,8 @@
     <p>created 9/1/2014</p>
 */
 
+#if 0
+
 #ifndef MOSRC_AUDIO_AUDIOMICROPHONE_H
 #define MOSRC_AUDIO_AUDIOMICROPHONE_H
 
@@ -92,3 +94,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_AUDIO_AUDIOMICROPHONE_H
+
+#endif

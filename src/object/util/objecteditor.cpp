@@ -271,7 +271,7 @@ void ObjectEditor::setParameterVisibleInGraph(Parameter * p, bool enbale)
     }
 }
 
-void ObjectEditor::addModulator(Parameter *p, const QString &idName)
+void ObjectEditor::addModulator(Parameter *p, const QString &idName, const QString& outputId)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << idName << ")");
 
@@ -280,7 +280,7 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName)
     Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
-        m = p->addModulator(idName);
+        m = p->addModulator(idName, outputId);
         p->collectModulators();
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
@@ -291,7 +291,7 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName)
     scene_->render();
 }
 
-void ObjectEditor::removeModulator(Parameter *p, const QString &idName)
+void ObjectEditor::removeModulator(Parameter *p, const QString &idName, const QString &outputId)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeModulator(" << p << ", " << idName << ")");
 
@@ -299,7 +299,7 @@ void ObjectEditor::removeModulator(Parameter *p, const QString &idName)
     {
         ScopedSceneLockWrite lock(scene_);
         m = p->findModulator(idName);
-        p->removeModulator(idName);
+        p->removeModulator(idName, outputId);
         p->collectModulators();
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
@@ -428,7 +428,7 @@ TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
     addObject(obj, track, -1);
 
     // modulate parameter
-    addModulator(param, track->idName());
+    addModulator(param, track->idName(), "");
 
     return (TrackFloat*)track;
 }

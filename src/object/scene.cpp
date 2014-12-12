@@ -81,16 +81,7 @@ Scene::Scene(QObject *parent) :
 
     readWriteLock_ = new QReadWriteLock(QReadWriteLock::Recursive);
 
-    sceneBufferSize_.resize(sceneNumberThreads_);
     releaseAllGlRequested_.resize(sceneNumberThreads_);
-    sceneBufferSize_[MO_GUI_THREAD] =
-    sceneBufferSize_[MO_GFX_THREAD] = 1;
-    sceneBufferSize_[MO_AUDIO_THREAD] = 32;
-
-    sceneDelaySize_.resize(sceneNumberThreads_);
-    sceneDelaySize_[MO_GUI_THREAD] =
-    sceneDelaySize_[MO_GFX_THREAD] = 0;
-    sceneDelaySize_[MO_AUDIO_THREAD] = nextPowerOfTwo(96000);
 }
 
 Scene::~Scene()
@@ -273,7 +264,7 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
     {
         ScopedSceneLockWrite lock(this);
         parent->addObject_(newChild, insert_index);
-        parent->childrenChanged_();
+        parent->p_childrenChanged_();
         newChild->onParametersLoaded();
         newChild->updateParameterVisibility();
         updateTree_();
@@ -310,7 +301,7 @@ void Scene::deleteObject(Object *object)
         // execute
         Object * parent = object->parentObject();
         parent->deleteObject_(object, false);
-        parent->childrenChanged_();
+        parent->p_childrenChanged_();
 
         // finally update tree
         updateTree_();
@@ -343,7 +334,7 @@ bool Scene::setObjectIndex(Object * object, int newIndex)
         ScopedSceneLockWrite lock(this);
         if (!parent->setChildrenObjectIndex_(object, newIndex))
             return false;
-        parent->childrenChanged_();
+        parent->p_childrenChanged_();
         updateTree_();
 
     }
@@ -364,11 +355,11 @@ void Scene::moveObject(Object *object, Object *newParent, int newIndex)
 
     {
         ScopedSceneLockWrite lock(this);
-        oldParent->takeChild_(object);
+        oldParent->p_takeChild_(object);
         newParent->addObject_(object, newIndex);
 
-        oldParent->childrenChanged_();
-        newParent->childrenChanged_();
+        oldParent->p_childrenChanged_();
+        newParent->p_childrenChanged_();
         updateTree_();
     }
     render_();
@@ -379,44 +370,6 @@ void Scene::tellObjectsAboutToDelete_(
 {
     for (auto o : toTell)
         o->onObjectsAboutToDelete(deleted);
-}
-
-void Scene::callCreateOutputs_(Object *o)
-{
-    // keep list of childs
-    QList<Object*> list = o->childObjects();
-
-    o->createOutputs();
-
-    // emit changes
-    if (editor_)
-        for (auto c : o->childObjects())
-            if (!list.contains(c))
-                emit editor_->objectAdded(c);
-}
-
-void Scene::callCreateAudioSources_(Object *o)
-{
-    const QList<AUDIO::AudioSource*> before = o->audioSources();
-
-    o->createAudioSources();
-
-    if (o->audioSources() != before)
-    {
-        updateTree_();
-    }
-}
-
-void Scene::callCreateMicrophones_(Object *o)
-{
-    const QList<AUDIO::AudioMicrophone*> before = o->microphones();
-
-    o->createMicrophones();
-
-    if (o->microphones() != before)
-    {
-        updateTree_();
-    }
 }
 
 void Scene::updateTree_()
@@ -441,17 +394,10 @@ void Scene::updateTree_()
 
     // tell all objects how much thread data they need
     updateNumberThreads_();
-    updateBufferSize_();
     updateSampleRate_();
 
     // collect all modulators for each object
     updateModulators_();
-
-    // XXX testing here
-    // create the audio-dsp graph
-    ObjectDspPath path;
-    path.createPath(this, AUDIO::Configuration(sampleRate(), 4096, 0, 2));
-    path.dump(std::cout);
 
     // update the rendermodes
     propagateRenderMode(0);
@@ -471,8 +417,8 @@ void Scene::updateChildrenChanged_()
     MO_DEBUG_TREE("Scene::updateChildrenChanged_() ");
 
     for (auto o : allObjects_)
-        if (o->childrenHaveChanged_)
-            o->childrenChanged_();
+        if (o->p_childrenHaveChanged_)
+            o->p_childrenChanged_();
 }
 
 void Scene::updateNumberThreads_()
@@ -516,29 +462,6 @@ void Scene::updateNumberLights_()
         // don't notify if objects havn't even been initialized properly
         if (o->numberThreads() == sceneNumberThreads_)
             o->numberLightSourcesChanged(MO_GFX_THREAD);
-    }
-}
-
-void Scene::updateBufferSize_()
-{
-    MO_DEBUG_AUDIO("Scene::updateBufferSize_() numberThreads() == " << numberThreads());
-
-    for (uint i=0; i<sceneNumberThreads_; ++i)
-        if (!verifyBufferSize(i, sceneBufferSize_[i]))
-            setBufferSize(sceneBufferSize_[i], i);
-
-#ifdef MO_DO_DEBUG_AUDIO
-    for (uint i=0; i<sceneNumberThreads_; ++i)
-        MO_DEBUG_AUDIO("bufferSize("<<i<<") == " << bufferSize(i));
-#endif
-
-    for (auto o : allObjects_)
-    {
-        for (uint i=0; i<sceneNumberThreads_; ++i)
-        {
-            if (!o->verifyBufferSize(i, sceneBufferSize_[i]))
-                o->setBufferSize(sceneBufferSize_[i], i);
-        }
     }
 }
 
@@ -779,6 +702,9 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
     return cameras_[camera_index]->fbo(thread);
 }
 
+
+/// @todo this is all to be moved out of this class anyway
+
 void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * outputFbo)
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
@@ -833,7 +759,7 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
             }
 
         // position all objects
-        calculateSceneTransform(thread, 0, time);
+        calculateSceneTransform(thread, time);
 
         // update lighting settings
         updateLightSettings_(thread, time);
@@ -853,7 +779,7 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
             camera->initCameraSpace(camSpace, thread, time);
 
             // get camera view-matrix
-            const Mat4 viewm = glm::inverse(camera->transformation(thread, 0));
+            const Mat4 viewm = glm::inverse(camera->transformation());
             camSpace.setViewMatrix(viewm);
 
             // for each cubemap
@@ -945,7 +871,7 @@ void Scene::updateLightSettings_(uint thread, Double time)
     {
         if (lightSources_[i]->active(time, thread))
         {
-            const Vec3 pos = lightSources_[i]->position(thread, 0);
+            const Vec3 pos = lightSources_[i]->position();
             l->setPosition(i, pos[0], pos[1], pos[2]);
 
             const Vec4 col = lightSources_[i]->lightColor(thread, time);
@@ -969,13 +895,13 @@ void Scene::updateLightSettings_(uint thread, Double time)
     }
 }
 
-void Scene::calculateSceneTransform(uint thread, uint sample, Double time)
+void Scene::calculateSceneTransform(uint thread, Double time)
 {
     ScopedSceneLockRead lock(this);
-    calculateSceneTransform_(thread, sample, time);
+    calculateSceneTransform_(thread, time);
 }
 
-void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
+void Scene::calculateSceneTransform_(uint thread, Double time)
 {
     // interpolate free camera
     if (freeCameraIndex_ >= 0)
@@ -985,8 +911,8 @@ void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
         //        (glm::inverse(freeCameraMatrix_) - freeCameraMatrixGfx_);
     }
 
-    // set the initial matrix for all objects in scene
-    clearTransformation(thread, sample);
+    // init root matrix for all other objects below scene
+    clearTransformation();
 
     int camcount = 0;
 
@@ -1007,16 +933,14 @@ void Scene::calculateSceneTransform_(uint thread, uint sample, Double time)
             if (!freecam)
             {
                 // get parent transformation
-                Mat4 matrix(o->parentObject()->transformation(thread, sample));
+                Mat4 matrix(o->parentObject()->transformation());
                 // apply object's transformation
                 o->calculateTransformation(matrix, time, thread);
                 // write back
-                o->setTransformation(thread, sample, matrix);
+                o->setTransformation(matrix);
             }
             else
-                o->setTransformation(thread, sample, freeCameraMatrixGfx_);
-
-            o->updateAudioTransformations(time, thread);
+                o->setTransformation(freeCameraMatrixGfx_);
         }
     }
 }

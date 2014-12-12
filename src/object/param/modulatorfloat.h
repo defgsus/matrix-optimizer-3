@@ -27,11 +27,14 @@ public:
         ST_SEQUENCE_FLOAT,
         ST_TRACK_FLOAT,
         ST_MODULATOR_OBJECT_FLOAT
+        // for conversion XX not implemented yet
+        //,ST_AUDIO_OBJECT
     };
 
     /** Construct a modulator coming form object @p modulatorId
         and belonging to @p parent */
-    ModulatorFloat(const QString& name, const QString& modulatorId, Parameter * p, Object * parent = 0);
+    ModulatorFloat(const QString& name, const QString& modulatorId, const QString &outputId,
+                   Parameter * p, Object * parent = 0);
 
     // --------------- io ----------------
 

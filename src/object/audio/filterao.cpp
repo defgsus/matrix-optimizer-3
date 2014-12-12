@@ -156,9 +156,7 @@ void FilterAO::Private::updateFilters()
     }
 }
 
-void FilterAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
-                                const QList<AUDIO::AudioBuffer *> &outputs,
-                                uint , SamplePos pos, uint thread)
+void FilterAO::processAudio(uint , SamplePos pos, uint thread)
 {
     const Double time = sampleRateInv() * pos;
 
@@ -183,8 +181,8 @@ void FilterAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
     // does not need updateCoefficients()
     filter->setOutputAmplitude(amp);
 
-    AUDIO::AudioBuffer::process(inputs, outputs,
-    [filter](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+    AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+    [filter](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
         filter->process(in->readPointer(), out->writePointer(), out->blockSize());
     });

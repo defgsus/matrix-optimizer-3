@@ -102,7 +102,7 @@ void PovrayExporter::exportCameras_(QTextStream & out, Double) const
     {
         ++k;
 
-        const Mat4 mat = c->transformation(thread_, 0);
+        const Mat4 mat = c->transformation();
         const Vec3
                 right = Vec3(mat * Vec4(1,0,0,0)),
                 up =    Vec3(mat * Vec4(0,1,0,0)),
@@ -142,7 +142,7 @@ void PovrayExporter::exportLights_(QTextStream & out, Double time) const
             << "{\n"
                 << "\tlocation 0\n"
                 << "\tcolor rgb " << povStr(Vec3(l->lightColor(thread_, time))) << "\n"
-                << "\tmatrix " << povStr(l->transformation(thread_, 0)) << "\n"
+                << "\tmatrix " << povStr(l->transformation()) << "\n"
             << "}\n\n";
     }
 }
@@ -165,7 +165,7 @@ void PovrayExporter::exportModels_(QTextStream &out, Double time) const
             << "{\n";
         exportGeometry_(out, "\t", m->geometry());
         out     << "\tcolor rgbf " << povRgbf(m->modelColor(thread_, time)) << "\n"
-                << "\tmatrix " << povStr(m->transformation(thread_, 0)) << "\n"
+                << "\tmatrix " << povStr(m->transformation()) << "\n"
             << "}\n\n";
     }
 }

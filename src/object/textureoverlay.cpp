@@ -209,8 +209,8 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
 {
     const Mat4& trans =
             (actualPtype_ == PT_EQUIRECT || actualPtype_ == PT_FISHEYE)
-                ? transformation(thread, 0) * deg90_
-                : transformation(thread, 0);
+                ? transformation() * deg90_
+                : transformation();
     const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
     //const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
 

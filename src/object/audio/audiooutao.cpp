@@ -23,7 +23,6 @@ AudioOutAO::AudioOutAO(QObject *parent)
     : AudioObject   (parent)
 {
     setName("AudioOut");
-    setNumberAudioInputs(2);
 }
 
 void AudioOutAO::serialize(IO::DataStream & io) const
@@ -52,30 +51,34 @@ void AudioOutAO::createParameters()
     params()->endParameterGroup();
 }
 
-void AudioOutAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
-                              const QList<AUDIO::AudioBuffer *> &outputs,
-                              uint bsize, SamplePos pos, uint thread)
+void AudioOutAO::processAudio(uint bsize, SamplePos pos, uint thread)
 {
-    // copy inputs
-    AUDIO::AudioBuffer::process(inputs, outputs,
-    [=](const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+    // simply copy inputs to outputs here and apply amplitude
+
+    if (paramAmp_->isModulated())
     {
-        for (SamplePos i=0; i<bsize; ++i)
+        AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+        [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
         {
-            F32 amp = paramAmp_->value(sampleRateInv() * (pos + i), thread);
-            out->write(i, amp * in->read(i));
-        }
-    });
-    /*
-    for (int i = 0; i<outputs.size(); ++i)
-    if (outputs[i])
+            for (SamplePos i=0; i<bsize; ++i)
+            {
+                F32 amp = paramAmp_->value(sampleRateInv() * (pos + i), thread);
+                out->write(i, amp * in->read(i));
+            }
+        });
+    }
+    else
     {
-        if (i < inputs.size() && inputs[i])
-            // XXX missing amplitude here
-            outputs[i]->writeBlock( inputs[i]->readPointer() );
-        else
-            outputs[i]->writeNullBlock();
-    }*/
+        // buffer parameter value
+        const F32 amp = paramAmp_->value(sampleRateInv() * pos, thread);
+        // for easier loop
+        AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+        [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+        {
+            for (SamplePos i=0; i<bsize; ++i)
+                out->write(i, amp * in->read(i));
+        });
+    }
 }
 
 } // namespace MO

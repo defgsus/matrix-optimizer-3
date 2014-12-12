@@ -31,7 +31,8 @@ public:
 
     /** Construct a modulator coming form object @p modulatorId
         and belonging to @p parent */
-    ModulatorAudio(const QString& name, const QString& modulatorId, Parameter * p, Object * parent = 0);
+    ModulatorAudio(const QString& name, const QString& modulatorId, const QString &outputId,
+                   Parameter * p, Object * parent = 0);
 
     // --------------- io ----------------
 

@@ -28,12 +28,12 @@ public:
 
 protected:
 
-    /** Process dsp data here.
-        Inputs and outputs have the same buffer size.
-        @note Unused inputs and outputs contain a NULL pointer.*/
-    virtual void processAudio(const QList<AUDIO::AudioBuffer*>& inputs,
-                              const QList<AUDIO::AudioBuffer*>& outputs,
-                              uint bufferSize, SamplePos pos, uint thread)
+    virtual void setAudioBuffers(uint thread,
+                                 const QList<AUDIO::AudioBuffer*>& inputs,
+                                 const QList<AUDIO::AudioBuffer*>& outputs)
+                                                            Q_DECL_OVERRIDE;
+
+    virtual void processAudio(uint bufferSize, SamplePos pos, uint thread)
                                                             Q_DECL_OVERRIDE;
 private:
 

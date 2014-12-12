@@ -111,7 +111,7 @@ public:
 
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
-    void calculateSceneTransform(uint thread, uint sample, Double time);
+    void calculateSceneTransform(uint thread, Double time);
 
     /** Sets the options for the debug drawer.
         @p options can be an OR combination of DebugDrawOption enums */
@@ -270,23 +270,12 @@ private:
     /** Does everything to update the tree */
     void updateTree_();
 
-    /** Request from object @p o to call it's createOutputs() method. */
-    void callCreateOutputs_(Object * o);
-
-    /** Request from object @p o to call it's createAudioSources() method. */
-    void callCreateAudioSources_(Object * o);
-
-    /** Request from object @p o to call it's createMicrophones() method. */
-    void callCreateMicrophones_(Object * o);
-
     /** Collects all special child objects */
     void findObjects_();
 
     void updateChildrenChanged_();
     /** Tells all objects how much threads we got */
     void updateNumberThreads_();
-    /** Tells the objects the buffersize for each thread */
-    void updateBufferSize_();
     /** Tells the objects the samplerate */
     void updateSampleRate_();
 
@@ -315,7 +304,7 @@ private:
     void unlock_();
 
     /** unlocked version */
-    void calculateSceneTransform_(uint thread, uint sample, Double time);
+    void calculateSceneTransform_(uint thread, Double time);
 
     // ---------- opengl -----------------------
 
@@ -379,9 +368,6 @@ private:
     // ---------- properties -------------------
 
     uint sceneNumberThreads_;
-    std::vector<uint>
-        sceneBufferSize_,
-        sceneDelaySize_;
     uint sceneSampleRate_;
 
     // ------------ threadstuff ----------------

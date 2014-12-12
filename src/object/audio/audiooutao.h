@@ -23,14 +23,12 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
+    /** pull into public namespace */
+    void setNumberAudioInputsOutputs(int num) { AudioObject::setNumberAudioInputsOutputs(num); }
+
 protected:
 
-    /** Process dsp data here.
-        Inputs and outputs have the same buffer size.
-        @note Unused inputs and outputs contain a NULL pointer.*/
-    virtual void processAudio(const QList<AUDIO::AudioBuffer*>& inputs,
-                              const QList<AUDIO::AudioBuffer*>& outputs,
-                              uint bufferSize, SamplePos pos, uint thread)
+    virtual void processAudio(uint bufferSize, SamplePos pos, uint thread)
                                                             Q_DECL_OVERRIDE;
 private:
 

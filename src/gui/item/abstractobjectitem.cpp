@@ -28,6 +28,7 @@
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "object/audio/audiooutao.h"
+#include "object/audio/audioinao.h"
 #include "object/param/parameters.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
@@ -540,11 +541,15 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     if (AudioObject * ao = qobject_cast<AudioObject*>(object))
     {
         item->setUnexpandedSize(QSize(1, 2));
-        if (ao->numAudioInputs() >= 0)
-            for (int i=0; i<ao->numAudioInputs(); ++i)
-                inputItems.append( new ObjectGraphConnectItem(true, i, ao->getInputName(i), item) );
-        else
-            inputItems.append( new ObjectGraphConnectItem(true, 0, ao->getInputName(0), item) );
+
+        //if (!qobject_cast<AudioInAO*>(ao))
+        {
+            if (ao->numAudioInputs() >= 0)
+                for (int i=0; i<ao->numAudioInputs(); ++i)
+                    inputItems.append( new ObjectGraphConnectItem(true, i, ao->getInputName(i), item) );
+            else
+                inputItems.append( new ObjectGraphConnectItem(true, 0, ao->getInputName(0), item) );
+        }
 
         if (!qobject_cast<AudioOutAO*>(ao))
         {
@@ -624,7 +629,7 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
 
     top += r.top();
 
-    qreal heightfac = (r.height() - top) / inputItems.size();
+    qreal heightfac = (r.height() - top) / std::max(1, inputItems.size());
 
     for (int i=0; i<inputItems.size(); ++i)
     {

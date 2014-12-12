@@ -8,6 +8,8 @@
     <p>created 26.09.2014</p>
 */
 
+#if 0
+
 #include "synthesizer.h"
 #include "io/datastream.h"
 #include "audio/audiosource.h"
@@ -383,3 +385,4 @@ void Synthesizer::performAudioBlock(SamplePos pos, uint thread)
 
 } // namespace MO
 
+#endif

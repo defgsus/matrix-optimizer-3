@@ -8,9 +8,10 @@
     <p>created 9/1/2014</p>
 */
 
+#if 0
+
 #ifndef MOSRC_OBJECT_MICROPHONEGROUP_H
 #define MOSRC_OBJECT_MICROPHONEGROUP_H
-
 
 #include "object.h"
 
@@ -55,3 +56,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_OBJECT_MICROPHONEGROUP_H
+
+#endif

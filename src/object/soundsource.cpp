@@ -10,7 +10,8 @@
 
 #include "soundsource.h"
 #include "io/datastream.h"
-#include "audio/audiosource.h"
+#include "audio/tool/audiobuffer.h"
+#include "audio/spatial/spatialsoundsource.h"
 #include "param/parameters.h"
 #include "param/parameterfloat.h"
 #include "io/log.h"
@@ -24,6 +25,7 @@ SoundSource::SoundSource(QObject *parent) :
     Object(parent)
 {
     setName("Soundsource");
+    setNumberSoundSources(1);
 }
 
 void SoundSource::serialize(IO::DataStream & io) const
@@ -50,59 +52,14 @@ void SoundSource::createParameters()
     params()->endParameterGroup();
 }
 
-void SoundSource::createAudioSources()
+void SoundSource::calculateSoundSourceBuffer(
+        const QList<AUDIO::SpatialSoundSource *> list,
+        uint bufferSize, SamplePos pos, uint thread)
 {
-    Object::createAudioSources();
-
-    audio_ = createAudioSource();
+    // copy the float parameter into the soundsource buffer
+    for (SamplePos i = 0; i < bufferSize; ++i)
+        list[0]->signal()->write(i,
+                        audioTrack_->value(sampleRateInv() * (pos + i), thread));
 }
-
-void SoundSource::updateAudioTransformations(Double, uint thread)
-{
-    audio_->setTransformation(transformation(thread, 0), thread, 0);
-}
-
-void SoundSource::updateAudioTransformations(Double , uint /*size*/, uint thread)
-{
-#if (1)
-    // copy the block of transformations
-    audio_->setTransformation(transformations(thread), thread);
-#else
-    for (uint i=0; i<size; ++i)
-    {
-        const Float t = Float(i) / (size-1);
-        audio_->setTransformation(
-                    transformation(thread, 0)
-                    + t * (transformation(thread, size-1) - transformation(thread, 0))
-                    , thread, i);
-    }
-#endif
-}
-
-void SoundSource::performAudioBlock(SamplePos pos, uint thread)
-{
-    // copy the samples from the audiotrack
-
-    audioTrack_->getValues(pos, thread, sampleRateInv(), bufferSize(thread),
-                           audio_->samples(thread));
-
-
-    /*
-    for (uint i=0; i<bufferSize(thread); ++i)
-    {
-        const int sec = (pos + i) / sampleRate();
-        const int sam = (pos + i) % sampleRate();
-        audio_->setSample(0.5*sin((sec + sam * sampleRateInv())*6.28*437.0), thread, i);
-    }
-    */
-
-    /*
-    static SamplePos lastpos = 0;
-    if (pos - lastpos != bufferSize(thread))
-        MO_DEBUG("error " << lastpos << " - " << pos << " = " << (pos - lastpos));
-    lastpos = pos;
-    */
-}
-
 
 } // namespace MO

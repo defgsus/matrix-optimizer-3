@@ -122,8 +122,8 @@ public:
     /** Returns true when audio-settings are already made. */
     static bool isAudioConfigured();
 
-    /** Returns the number of input channels in configuration */
-    static uint numConfiguredInputChannels();
+    /** Returns the configuration as set by user previously */
+    static Configuration defaultConfiguration();
 
     /** Initializes a device/stream from the stored settings.
         Returns true when this worked.

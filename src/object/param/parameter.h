@@ -13,6 +13,7 @@
 
 #include <QString>
 #include <QList>
+#include <QPair>
 
 #include "object/object_fwd.h"
 
@@ -47,11 +48,11 @@ public:
         Goes up the branch until the first Object::TG_REAL_OBJECT */
     QString infoIdName() const;
 
-    bool isEditable() const { return isEditable_; }
-    bool isModulateable() const { return isModulateable_; }
-
     const QString& groupId() const { return groupId_; }
     const QString& groupName() const { return groupName_; }
+
+    bool isEditable() const { return isEditable_; }
+    bool isModulateable() const { return isModulateable_; }
 
     /** Returns true if the parameter has at least one modulation source assigned. */
     bool isModulated() const { return !modulators_.isEmpty(); }
@@ -82,17 +83,19 @@ public:
         that are supported as modulators */
     virtual int getModulatorTypes() const { return 0; }
 
-    /** Returns list of all modulator ids */
-    QStringList modulatorIds() const;
+    /** Returns list of all modulator ids and output ids */
+    QList<QPair<QString, QString>> modulatorIds() const;
 
     /** Adds an Object to the list of modulators.
         Modulators will be collected by
         collectModulators() in the derived class */
-    Modulator * addModulator(const QString& idName);
+    Modulator * addModulator(const QString& idName, const QString& outputId);
 
     /** Removes the Object from the list of modulators and
         deletes it. */
-    void removeModulator(const QString& idName);
+    void removeModulator(const QString& idName, const QString& outputId);
+    /** Removes all modulators coming from object @p idName */
+    void removeAllModulators(const QString& idName);
 
     /** Removes all modulators IDs */
     void removeAllModulators();
@@ -102,9 +105,11 @@ public:
 
     /** Returns a modulator for the given id.
         The Modulator is created or reused. */
-    virtual Modulator * getModulator(const QString& modulatorId) = 0;
+    virtual Modulator * getModulator(const QString& modulatorId, const QString& outputId) = 0;
 
     /** Returns the Modulator for the given id, or NULL */
+    Modulator * findModulator(const QString& modulatorId, const QString &outputId) const;
+    /** Returns the first matching Modulator (ignoring the outputId), or NULL */
     Modulator * findModulator(const QString& modulatorId) const;
 
     /** Returns all modulators (valid after collectModulators) */
