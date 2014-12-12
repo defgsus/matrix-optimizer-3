@@ -33,6 +33,19 @@ public:
         @p longName expands the parameter with it's object's name(s) */
     static QString modulatorName(Parameter * p, bool longName = false);
 
+    // --------------- ids & helper --------------
+
+    /** Returns a string that is unique among the @p existingNames.
+        If a match is found, a counter is added to the idName.
+        Also, any whitespace is relpaced with underscores.
+        If @p existed != NULL, it will be set to true, if
+        the id needed to be changed. */
+    static QString getUniqueId(QString id, const QSet<QString> &existingNames, bool * existed = 0);
+
+    /** Make all ids in newBranch unique among itself and the ids in root.
+        Also cares for modulator ids and all that. */
+    static void makeUniqueIds(const Object * root, Object * newBranch);
+
 signals:
 
     /** Very broad signal.
@@ -137,15 +150,19 @@ public slots:
 
     // ------------ modulator objects ----------
 
+    /** Returns an object for which to place a modulator for @p param in. */
+    Object * findAModulatorParent(MO::Parameter * parm);
+
     /** Creates a float track for the given parameter.
         The track is placed at the next suitable position,
         search the parameter's object and parents. */
     TrackFloat * createFloatTrack(MO::Parameter * p);
 
-    /** Creates the object of @p className in the @p clip.
-        If @p clip is NULL, a clip (and maybe a ClipContainer are autimatically created).
+    /** Creates the object of @p className in the @p clip and links to parameter.
+        If @p clip is NULL, a clip (and even a ClipContainer are automatically created).
+        The clip is placed at the next suitable position to the parameter,
         @throws Exception if anything goes wrong. */
-    Object * createInClip(const QString& className, MO::Clip * clip = 0);
+    Object * createInClip(MO::Parameter * p, const QString& className, MO::Clip * clip = 0);
 
     SequenceFloat * createFloatSequenceFor(MO::Parameter * p);
 

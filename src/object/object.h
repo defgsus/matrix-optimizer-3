@@ -40,10 +40,18 @@ namespace MO {
 namespace IO { class DataStream; }
 namespace MATH { class Timeline1D; }
 
+namespace Private {
+    /** hidden id access */
+    void set_object_id_(Object * o, const QString& id);
+    /** Installs the object in ObjectFactory.
+        @note Prefere to use MO_REGISTER_OBJECT to do the job */
+    bool register_object_(Object *);
+}
+
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
         static bool success_register_object_##class__ = \
-            ::MO::registerObject_( new class__((QObject*)0) ); \
+            ::MO::Private::register_object_( new class__((QObject*)0) ); \
     }
 
 #define MO_OBJECT_CONSTRUCTOR(Class__) \
@@ -76,7 +84,7 @@ class Object : public QObject
     Q_OBJECT
 
     // to set idName_
-    friend class ObjectFactory;
+    friend void Private::set_object_id_(Object*, const QString&);
     // to edit the tree
     friend class Scene;
 public:
@@ -103,7 +111,7 @@ public:
         T_MODULATOR_OBJECT_FLOAT = 1<<14,
         T_MICROPHONE_GROUP  = 1<<15,
         T_CLIP              = 1<<16,
-        T_CLIP_CONTAINER    = 1<<17,
+        T_CLIP_CONTROLLER    = 1<<17,
         T_SOUND_OBJECT      = 1<<18,
         T_OSCILLATOR        = 1<<19,
         T_AUDIO_OBJECT      = 1<<20
@@ -226,10 +234,6 @@ public:
     /** Override to add some additional information. */
     virtual QString infoName() const { return p_name_; }
 
-    /** Returns the id of the object before it might have been changed through makeUniqueId()
-        XXX Will be changed to work with attachedData() !!! */
-    const QString& originalIdName() const { return p_orgIdName_; }
-
     /** Return the path up to this object */
     QString namePath() const;
 
@@ -249,7 +253,7 @@ public:
     virtual bool isTrack() const { return false; }
     virtual bool isSequence() const { return false; }
     virtual bool isClip() const { return false; }
-    virtual bool isClipContainer() const { return false; }
+    virtual bool isClipController() const { return false; }
     virtual bool isLightSource() const { return false; }
     virtual bool isAudioUnit() const { return false; }
     virtual bool isModulatorObject() const { return false; }
@@ -413,18 +417,24 @@ public:
 
     // ------------- tree stuff -----------------
 
-    /** Returns a string that is unique among the @p existingNames.
-        If a match is found, a counter is added to the idName.
-        Also, any whitespace is relpaced with underscores.
-        If @p existed != NULL, it will be set to true, if
-        the id needed to be changed. */
-    static QString getUniqueId(QString id, const QSet<QString> &existingNames, bool *existed = 0);
-
     /** Needed for ObjectGl. Base implementation calls propagteRenderMode() for
         all children. */
     virtual void propagateRenderMode(ObjectGl * parent);
 
 //protected:
+
+    /** Tells the whole branch including the object itself about changed ids.
+        The map maps from old id to new id.
+        The idNames() of the objects in this branch will already be changed,
+        and each object gets onIdNamesChanged called. */
+    void idNamesChanged(const QMap<QString,QString>&);
+
+    /** Called when the idNames of objects have changed.
+        This happens if a new object/branch is inserted into an existing branch.
+        The map maps from old id to new id.
+        Call ancestor's code in your derived function!
+        Base implementation does nothing. */
+    virtual void onIdNamesChanged(const QMap<QString,QString>&) { }
 
     /** Called when the children list has changed */
     virtual void childrenChanged() { }
@@ -659,14 +669,6 @@ private:
     /** Adds the object to child list, nothing else */
     Object * p_addChildObjectHelper_(Object * object, int insert_index = -1);
 
-    /** Makes all idNames in the tree unique regarding the tree of @p root.
-        The tree in @p root can be an actual parent of the object or not. */
-    void p_makeUniqueIds_(Object * root);
-
-    /** Makes all idNames in the tree unique regarding the @p existingNames.
-        @p existingNames will be modified with the changed idNames. */
-    void p_makeUniqueIds_(QSet<QString>& existingNames);
-
     /** Called on changes to the child list */
     void p_childrenChanged_();
 
@@ -687,7 +689,7 @@ private:
 
     // ------------ properties ---------------
 
-    QString p_idName_, p_name_, p_orgIdName_;
+    QString p_idName_, p_name_;
 
     bool p_canBeDeleted_;
 
@@ -731,9 +733,6 @@ private:
 
 };
 
-/** Installs the object in ObjectFactory.
-    @note Prefere to use MO_REGISTER_OBJECT to do the job */
-extern bool registerObject_(Object *);
 
 
 

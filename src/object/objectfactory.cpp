@@ -66,6 +66,9 @@ ObjectFactory& ObjectFactory::instance()
 
 int ObjectFactory::hueForObject(int type)
 {
+    if (type == Object::T_DUMMY)
+        return 20;
+    else
     if (type & Object::TG_TRANSFORMATION)
         return 240;
     else
@@ -98,7 +101,7 @@ QColor ObjectFactory::colorForObject(const Object * o, bool darkSet)
     const bool active = o->activeAtAll();
 
           int bright = darkSet? 48 : 200;
-    const int hue = hueForObject(o->type());
+          int hue = hueForObject(o->type());
 
     if (!active)
         bright += darkSet? 100 : -90;
@@ -106,7 +109,13 @@ QColor ObjectFactory::colorForObject(const Object * o, bool darkSet)
     if (hue == -1)
         return QColor(bright, bright, bright);
 
-    const int sat = active ? 128 : 28;
+    int sat = active ? 128 : 28;
+
+    if (!o->isValid())
+    {
+        hue = 20;
+        sat = 200;
+    }
 
     return QColor::fromHsl(hue, sat, bright);
 }
@@ -134,11 +143,22 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     static QIcon iconAUFilter(":/icon/obj_au_filter.png");
     static QIcon iconAUFilterBank(":/icon/obj_au_filterbank.png");
     static QIcon iconMusicNote(":/icon/music_note.png");
-
+    static QIcon iconClip(":/icon/obj_clip.png");
+    static QIcon iconClipCont(":/icon/obj_clipcontroller.png");
+    static QIcon iconAudio(":/icon/obj_audio.png");
 
 /*    if (qobject_cast<const Synthesizer*>(o))
         return iconMusicNote;
 */
+    if (o->isClip())
+        return iconClip;
+
+    if (o->isClipController())
+        return iconClipCont;
+
+    if (o->isAudioObject())
+        return iconAudio;
+
     if (o->isTransformation())
     {
         if (qobject_cast<const Translation*>(o))
@@ -199,6 +219,9 @@ const QIcon& ObjectFactory::iconForObject(int type)
     static QIcon iconRotation(":/icon/obj_rotation.png");
     static QIcon iconScale(":/icon/obj_scale.png");
     static QIcon iconTrack(":/icon/obj_track.png");
+    static QIcon iconClip(":/icon/obj_clip.png");
+    static QIcon iconClipCont(":/icon/obj_clipcontroller.png");
+    static QIcon iconAudio(":/icon/obj_audio.png");
 
     switch (type)
     {
@@ -207,6 +230,9 @@ const QIcon& ObjectFactory::iconForObject(int type)
         case Object::T_MICROPHONE: return iconMicrophone;
         case Object::T_CAMERA: return iconCamera;
         case Object::T_SOUNDSOURCE: return iconSoundSource;
+        case Object::T_CLIP: return iconClip;
+        case Object::T_CLIP_CONTROLLER: return iconClipCont;
+        case Object::T_AUDIO_OBJECT: return iconAudio;
     }
     if (type & Object::TG_TRACK) return iconTrack;
     if (type & Object::TG_FLOAT) return iconParameter;
@@ -258,9 +284,9 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
 
     // --- prepare object ---
 
-    obj->p_idName_ = obj->p_orgIdName_ = obj->className();
-    if (obj->p_name_.isEmpty())
-        obj->p_name_ = className;
+    Private::set_object_id_(obj, obj->className());
+    if (obj->name().isEmpty())
+        obj->setName(className);
 
     if (createParametersAndObjects)
     {
@@ -285,7 +311,7 @@ TrackFloat * ObjectFactory::createTrackFloat(const QString &name)
     MO_ASSERT(t, "could not create TrackFloat object");
 
     if (!name.isEmpty())
-        t->p_name_ = t->p_idName_ = name;
+        t->setName(name);
 
     return t;
 }
@@ -295,7 +321,7 @@ SequenceFloat * ObjectFactory::createSequenceFloat(const QString& name)
     SequenceFloat * seq = qobject_cast<SequenceFloat*>(createObject("SequenceFloat"));
     MO_ASSERT(seq, "could not create SequenceFloat object");
     if (!name.isEmpty())
-        seq->p_name_ = seq->p_idName_ = name;
+        seq->setName(name);
     return seq;
 }
 
@@ -306,7 +332,7 @@ ModulatorObjectFloat * ObjectFactory::createModulatorObjectFloat(const QString &
     MO_ASSERT(o, "could not create ModulatorObjectFloat object");
 
     if (!name.isEmpty())
-        o->p_name_ = o->p_idName_ = name;
+        o->setName(name);
 
     return o;
 }

@@ -23,7 +23,7 @@ namespace MO {
 class Object;
 class Scene;
 class Clip;
-class ClipContainer;
+class ClipController;
 class ObjectEditor;
 namespace GUI {
 
@@ -35,7 +35,7 @@ class ClipView : public QWidget
 public:
     explicit ClipView(QWidget *parent = 0);
 
-    ClipContainer * clipContainer() const { return clipCon_; }
+    ClipController * clipContainer() const { return clipCon_; }
 
     /** Used by ClipWidget to show selection highlight */
     bool isSelected(ClipWidget * c) const;
@@ -111,7 +111,7 @@ private:
     ClipWidget * clipWidget_(uint x, uint y);
 
     Scene * scene_;
-    ClipContainer * clipCon_;
+    ClipController * clipCon_;
     ObjectEditor * editor_;
 
     QList<ClipWidget*> clipWidgets_;

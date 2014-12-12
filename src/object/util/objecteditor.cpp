@@ -15,7 +15,7 @@
 #include "object/scene.h"
 #include "object/scenelock_p.h"
 #include "object/sequence.h"
-#include "object/clipcontainer.h"
+#include "object/clipcontroller.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "object/util/audioobjectconnections.h"
@@ -26,6 +26,7 @@
 #include "object/param/parameterfilename.h"
 #include "object/param/parametertimeline1d.h"
 #include "math/timeline1d.h"
+#include "tool/stringmanip.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -46,6 +47,69 @@ ObjectEditor::ObjectEditor(QObject *parent)
       scene_        (0)
 {
 }
+
+
+// --------------------------------- ids ---------------------------------------
+
+QString ObjectEditor::getUniqueId(QString id, const QSet<QString> &existingNames, bool * existed)
+{
+    MO_ASSERT(!id.isEmpty(), "unset object idName detected");
+
+    if (existed)
+        *existed = false;
+
+    // create an id if necessary
+    if (id.isEmpty())
+        id = "Object";
+
+    // replace white char with underscore
+    id.replace(QRegExp("\\s\\s*"), "_");
+
+    while (existingNames.contains(id))
+    {
+        increase_id_number(id, 1);
+        if (existed)
+            *existed = true;
+    }
+
+    return id;
+}
+
+
+void ObjectEditor::makeUniqueIds(const Object* root, Object* newBranch)
+{
+    // get set of existing ids
+    QSet<QString> existing = root->getChildIds(true);
+    existing.insert(root->idName());
+
+    // get all new objects
+    QList<Object*> list = newBranch->findChildObjects(Object::TG_ALL, true);
+    list.prepend(newBranch);
+
+    // keep track of changes
+    QMap<QString, QString> changedIds;
+
+    // adjust id for each object
+    for (Object * o : list)
+    {
+        QString newid = getUniqueId(o->idName(), existing);
+
+        if (newid != o->idName())
+        {
+            // add new id to stock
+            existing.insert(newid);
+            // remember old id
+            changedIds.insert(o->idName(), newid);
+            // and change
+            Private::set_object_id_(o, newid);
+        }
+    }
+
+    // tell the branch about changed ids
+    if (!changedIds.isEmpty())
+        newBranch->idNamesChanged(changedIds);
+}
+
 
 
 
@@ -402,6 +466,18 @@ QString ObjectEditor::modulatorName(Parameter *param, bool longName)
     return ">" + name;
 }
 
+Object * ObjectEditor::findAModulatorParent(Parameter * param)
+{
+    Object * obj = param->object();
+    MO_ASSERT(obj, "missing object for parameter '" << param->idName() << "'");
+
+    if (obj->parentObject())
+        obj = obj->parentObject();
+
+    return obj;
+}
+
+
 TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::createFloatTrack('" << param->idName() << "')");
@@ -434,9 +510,9 @@ TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
 }
 
 
-Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
+Object * ObjectEditor::createInClip(Parameter *p, const QString& className, Clip * parent)
 {
-    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createInClip('" << className << ", " << parent << "')");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createInClip('" << p->name() << ", " << className << ", " << parent << "')");
 
     MO_ASSERT(scene_, "can't edit");
 
@@ -453,26 +529,13 @@ Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
     // create a clip
     if (!parent)
     {
-        ClipContainer * con = 0;
-
-        // take first found container
-        auto clipcons = scene_->findChildObjects<ClipContainer>(QString(), true);
-        if (!clipcons.isEmpty())
-            con = clipcons[0];
-        // or create new
-        else
-        {
-            con = static_cast<ClipContainer*>(ObjectFactory::createObject("ClipContainer"));
-            if (!con)
-                MO_ERROR("Could not create ClipContainer");
-            addObject(scene_, con, 0);
-        }
-
         // create clip
         parent = static_cast<Clip*>(ObjectFactory::createObject("Clip"));
         if (!parent)
             MO_ERROR("Could not create Clip");
-        addObject(con, parent);
+
+        Object * clipparent = findAModulatorParent(p);
+        addObject(clipparent, parent);
     }
 
     if (!parent->canHaveChildren(obj->type()))
@@ -481,7 +544,7 @@ Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
         MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
     }
 
-    // add to parent
+    // add to clip
     addObject(parent, obj, -1);
 
     return obj;

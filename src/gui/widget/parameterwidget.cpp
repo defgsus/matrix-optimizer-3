@@ -514,7 +514,7 @@ void ParameterWidget::openModulationPopup()
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             Clip * parent = a->data().value<Clip*>();
-            if (Object * o = editor_->createInClip("SequenceFloat", parent))
+            if (Object * o = editor_->createInClip(pi, "SequenceFloat", parent))
             {
                 // modulate
                 editor_->addModulator(param_, o->idName(), "");
@@ -682,7 +682,7 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
         connect(a, &QAction::triggered, [=]()
         {
-            if (Object * o = editor_->createInClip("SequenceFloat", 0))
+            if (Object * o = editor_->createInClip(param, "SequenceFloat", 0))
             {
                 // modulate
                 editor_->addModulator(param, o->idName(), "");
@@ -707,7 +707,7 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             if (Clip * parent = a->data().value<Clip*>())
-            if (Object * o = editor_->createInClip("SequenceFloat", parent))
+            if (Object * o = editor_->createInClip(param, "SequenceFloat", parent))
             {
                 // modulate
                 editor_->addModulator(param, o->idName(), "");

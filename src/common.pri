@@ -186,7 +186,6 @@ HEADERS += \
     src/io/commandlineparser.h \
     src/io/version.h \
     src/object/clip.h \
-    src/object/clipcontainer.h \
     src/tool/selection.h \
     src/graph/directedgraph.h \
     src/object/util/objectmodulatorgraph.h \
@@ -230,7 +229,8 @@ HEADERS += \
     src/types/conversion.h \
     src/audio/tool/delay.h \
     src/object/audio/audioinao.h \
-    src/object/param/modulatorevent.h
+    src/object/param/modulatorevent.h \
+    src/object/clipcontroller.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -385,7 +385,6 @@ SOURCES += \
     src/io/commandlineparser.cpp \
     src/io/version.cpp \
     src/object/clip.cpp \
-    src/object/clipcontainer.cpp \
     src/object/util/objectmodulatorgraph.cpp \
     src/object/util/objecttree.cpp \
     src/projection/projectorblender.cpp \
@@ -422,4 +421,5 @@ SOURCES += \
     src/audio/spatial/spatialsoundsource.cpp \
     src/audio/spatial/spatialmicrophone.cpp \
     src/object/audio/audioinao.cpp \
-    src/object/param/modulatorevent.cpp
+    src/object/param/modulatorevent.cpp \
+    src/object/clipcontroller.cpp

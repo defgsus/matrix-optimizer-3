@@ -39,7 +39,7 @@ public:
     // -------------- tree -------------------
 
     /** The ClipContainer, this Clip assigned to, or NULL */
-    ClipContainer * clipContainer() const { return p_clipContainer_; }
+    ClipController * clipContainer() const { return p_clipContainer_; }
 
     /** Returns the list of contained sequences.
         Counts sub-objects as well */
@@ -66,7 +66,7 @@ public:
     // -------------- setter -------------------
 
     /** Sets the container that manages this clip */
-    void setClipContainer(ClipContainer * c) { p_clipContainer_ = c; }
+    void setClipContainer(ClipController * c) { p_clipContainer_ = c; }
 
     /** Sets the position in the ClipContainer.
         @note The ClipContainer does not get notified of this change!
@@ -102,7 +102,7 @@ private:
 
     QList<Sequence*> p_sequences_;
 
-    ClipContainer * p_clipContainer_;
+    ClipController * p_clipContainer_;
 
     Double p_timeStarted_;
     bool p_running_;

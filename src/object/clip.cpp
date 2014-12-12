@@ -12,7 +12,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "sequence.h"
-#include "clipcontainer.h"
+#include "clipcontroller.h"
 #include "param/parameters.h"
 #include "util/objectmodulatorgraph.h"
 

@@ -22,7 +22,7 @@
 #include "object/transform/transformation.h"
 #include "object/scene.h"
 #include "object/clip.h"
-#include "object/clipcontainer.h"
+#include "object/clipcontroller.h"
 #include "object/audioobject.h"
 #include "object/util/alphablendsetting.h"
 #include "object/util/audioobjectconnections.h"
@@ -148,7 +148,7 @@ void ObjectInfoDialog::setObject(Object * o)
 
     // ------- clip container -------------
 
-    if (ClipContainer * clipcon = qobject_cast<ClipContainer*>(o))
+    if (ClipController * clipcon = qobject_cast<ClipController*>(o))
     {
         s << "<p>ClipContainer:<br/>size: "
           << clipcon->numberColumns() << "x"

@@ -17,7 +17,7 @@
 
 #include "clipview.h"
 #include "widget/clipwidget.h"
-#include "object/clipcontainer.h"
+#include "object/clipcontroller.h"
 #include "object/clip.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
@@ -142,7 +142,7 @@ void ClipView::createWidgets_()
 void ClipView::setScene(Scene * scene)
 {
     if (   scene_ && scene_ == scene
-        && clipCon_ && clipCon_ == scene_->clipContainer())
+        && clipCon_ && clipCon_ == scene_->clipController())
     {
         // don't update if all is same
         if (curNumX_ == clipCon_->numberColumns()
@@ -151,22 +151,30 @@ void ClipView::setScene(Scene * scene)
     }
 
     scene_ = scene;
-    editor_ = scene_->editor();
-    clipCon_ = scene_->clipContainer();
-
-    // connect
-    if (clipCon_)
+    if (!scene_)
     {
-        connect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
-        connect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
-        connect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
-        connect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
+        editor_ = 0;
+        clipCon_ = 0;
     }
-
-    if (editor_)
+    else
     {
-        connect(editor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
-        connect(editor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+        editor_ = scene_->editor();
+        clipCon_ = scene_->clipController();
+
+        // connect
+        if (clipCon_)
+        {
+            connect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
+            connect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
+            connect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
+            connect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
+        }
+
+        if (editor_)
+        {
+            connect(editor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
+            connect(editor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+        }
     }
 
     createClipWidgets_();
@@ -386,7 +394,7 @@ void ClipView::selectObject(Object *o)
         return;
     }
 
-    if (o->isClipContainer())
+    if (o->isClipController())
         return;
 
     // -- select specific clip --
@@ -591,16 +599,16 @@ void ClipView::onClipStopped_(Clip * clip)
 
 void ClipView::onObjectAdded_(Object * o)
 {
-    if (o->isClipContainer() && scene_)
-        clipCon_ = scene_->clipContainer();
+    if (o->isClipController() && scene_)
+        clipCon_ = scene_->clipController();
 
     updateAllClips();
 }
 
 void ClipView::onObjectDeleted_(Object * o)
 {
-    if (o->isClipContainer() && scene_)
-        clipCon_ = scene_->clipContainer();
+    if (o->isClipController() && scene_)
+        clipCon_ = scene_->clipController();
 
     updateAllClips();
 }

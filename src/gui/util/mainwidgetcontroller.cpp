@@ -73,7 +73,7 @@
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/sequencefloat.h"
-#include "object/clipcontainer.h"
+#include "object/clipcontroller.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "object/util/objecteditor.h"
 #include "object/util/objectdsppath.h"
@@ -824,8 +824,8 @@ void MainWidgetController::onObjectSelectedTree_(Object * o)
     updateSequenceView_(o);
 
     // update clipview
-    if (o->isClip() || o->isClipContainer() ||
-              o->findParentObject(Object::T_CLIP_CONTAINER))
+    if (o->isClip() || o->isClipController() ||
+              o->findParentObject(Object::T_CLIP_CONTROLLER))
     {
         showClipView_(true, o);
     }
@@ -863,8 +863,8 @@ void MainWidgetController::onObjectSelectedGraphView_(Object * o)
     updateSequenceView_(o);
 
     // update clipview
-    if (o->isClip() || o->isClipContainer() ||
-              o->findParentObject(Object::T_CLIP_CONTAINER))
+    if (o->isClip() || o->isClipController() ||
+              o->findParentObject(Object::T_CLIP_CONTROLLER))
     {
         showClipView_(true, o);
     }
@@ -911,8 +911,8 @@ void MainWidgetController::onObjectSelectedObjectView_(Object * o)
     objectGraphView()->setFocusObject(o);
 
     // update clipview
-    if (o && (o->isClip() || o->isClipContainer() ||
-              o->findParentObject(Object::T_CLIP_CONTAINER)))
+    if (o && (o->isClip() || o->isClipController() ||
+              o->findParentObject(Object::T_CLIP_CONTROLLER)))
     {
         showClipView_(true, o);
     }
@@ -1157,13 +1157,13 @@ void MainWidgetController::updateWidgetsActivity_()
     actionSaveScene_->setEnabled( !currentSceneFilename_.isEmpty() );
 }
 
-void MainWidgetController::copySceneSettings_(Object *o)
+void MainWidgetController::copySceneSettings_(Object *)
 {
-    if (o->idName() != o->originalIdName())
+    /*YYY if (o->idName() != o->originalIdName())
         sceneSettings_->copySettings(o->idName(), o->originalIdName());
 
     for (auto c : o->childObjects())
-        copySceneSettings_(c);
+        copySceneSettings_(c);*/
 }
 
 

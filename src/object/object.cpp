@@ -29,9 +29,18 @@
 
 namespace MO {
 
-bool registerObject_(Object * obj)
+namespace Private
 {
-    return ObjectFactory::registerObject(obj);
+    bool register_object_(Object * obj)
+    {
+        return ObjectFactory::registerObject(obj);
+    }
+
+    void set_object_id_(Object * o, const QString& id)
+    {
+        o->p_idName_ = id;
+    }
+
 }
 
 Object::Object(QObject *parent) :
@@ -199,10 +208,11 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
         io.skip(objLength);
 
         o = ObjectFactory::createDummy();
+        name = name + " *missing*";
     }
 
     // set default object info
-    o->p_idName_ = o->p_orgIdName_ = idName;
+    o->p_idName_ = idName;
     o->p_name_ = name;
 
     // iterate over childs
@@ -607,6 +617,15 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
         return false;
     }
 
+    // test for singleton clipcontroller
+    if (o->isClipController())
+        if (auto s = sceneObject())
+            if (s->clipController())
+            {
+                error = tr("Only one clipcontainer allowed");
+                return false;
+            }
+
     // test for modulation loops
     QList<Object*> mods = o->getFutureModulatingObjects(sceneObject());
 
@@ -653,7 +672,7 @@ void Object::setParentObject_(Object *parent, int index)
     p_parentObject_ = 0;
 
     // adjust idnames in new subtree
-    p_makeUniqueIds_(parent->rootObject());
+    ObjectEditor::makeUniqueIds(parent->rootObject(), this);
 
     // assign
     p_parentObject_ = parent;
@@ -759,30 +778,7 @@ QSet<QString> Object::getChildIds(bool recursive) const
     return ids;
 }
 
-QString Object::getUniqueId(QString id, const QSet<QString> &existingNames, bool * existed)
-{
-    MO_ASSERT(!id.isEmpty(), "unset object idName detected");
-
-    if (existed)
-        *existed = false;
-
-    // create an id if necessary
-    if (id.isEmpty())
-        id = "Object";
-
-    // replace white char with underscore
-    id.replace(QRegExp("\\s\\s*"), "_");
-
-    while (existingNames.contains(id))
-    {
-        increase_id_number(id, 1);
-        if (existed)
-            *existed = true;
-    }
-
-    return id;
-}
-
+/*
 void Object::p_makeUniqueIds_(Object * root)
 {
     // get all existing ids
@@ -811,7 +807,7 @@ void Object::p_makeUniqueIds_(QSet<QString> &existing)
     for (auto o : p_childObjects_)
         o->p_makeUniqueIds_(existing);
 }
-
+*/
 Object * Object::findChildObject(const QString &id, bool recursive, Object * ignore) const
 {
     for (auto o : p_childObjects_)
@@ -859,15 +855,15 @@ bool Object::canHaveChildren(Type t) const
         return true;
 
     // nothing goes into clip container, except maybe clips
-    if (type() == T_CLIP_CONTAINER)
+    if (type() == T_CLIP_CONTROLLER)
         return t == T_CLIP;
 
     // Clips belong into ClipContainer ...
     if (t == T_CLIP)
-        return type() == T_CLIP_CONTAINER;
+        return type() == T_CLIP_CONTROLLER;
 
     // XXX Currently ClipContainer only into scene
-    if (t == T_CLIP_CONTAINER)
+    if (t == T_CLIP_CONTROLLER)
         return type() == T_SCENE;
 
     // Clips only contain sequences
@@ -945,6 +941,20 @@ void Object::onObjectsAboutToDelete(const QList<Object *> & list)
     }
 }
 
+
+void Object::idNamesChanged(const QMap<QString, QString> & map)
+{
+    // tell parameters
+    for (Parameter * p : params()->parameters())
+        p->idNamesChanged(map);
+
+    // derived code
+    onIdNamesChanged(map);
+
+    // children
+    for (auto c : childObjects())
+        c->idNamesChanged(map);
+}
 
 void Object::propagateRenderMode(ObjectGl *parent)
 {
