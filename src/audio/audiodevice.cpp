@@ -280,8 +280,9 @@ void AudioDevice::stop()
 
 bool AudioDevice::isAudioConfigured()
 {
-    const QString name = settings->getValue("Audio/device").toString();
-    return !(name.isEmpty() || name == "None");
+    const QString inname = settings->getValue("Audio/indevice").toString();
+    const QString outname = settings->getValue("Audio/outdevice").toString();
+    return !(inname.isEmpty() || inname == "None" || outname.isEmpty() || outname == "None");
 }
 
 Configuration AudioDevice::defaultConfiguration()
@@ -299,8 +300,12 @@ bool AudioDevice::initFromSettings()
 
     // check config
 
-    QString deviceName = settings->getValue("Audio/device").toString();
-    if (deviceName.isEmpty())
+    QString inDeviceName = settings->getValue("Audio/indevice").toString();
+    if (inDeviceName.isEmpty())
+        return false;
+
+    QString outDeviceName = settings->getValue("Audio/outdevice").toString();
+    if (outDeviceName.isEmpty())
         return false;
 
     // get device list
@@ -320,21 +325,38 @@ bool AudioDevice::initFromSettings()
 
     // find configured device
 
-    int idx = -1;
+    int inidx = -1;
     for (uint i=0; i<devs.numDevices(); ++i)
     {
-        if (devs.getDeviceInfo(i)->name == deviceName)
+        if (devs.getDeviceInfo(i)->name == inDeviceName)
         {
-            idx = i;
+            inidx = i;
+            break;
+        }
+    }
+    int outidx = -1;
+    for (uint i=0; i<devs.numDevices(); ++i)
+    {
+        if (devs.getDeviceInfo(i)->name == outDeviceName)
+        {
+            outidx = i;
             break;
         }
     }
 
-    if (idx < 0)
+    if (inidx < 0)
     {
         QMessageBox::warning(0, QMessageBox::tr("Error"),
-                             QMessageBox::tr("The configured audio device '%1' could not be found.")
-                             .arg(deviceName)
+                             QMessageBox::tr("The configured audio input device '%1' could not be found.")
+                             .arg(inDeviceName)
+                             );
+        return false;
+    }
+    if (outidx < 0)
+    {
+        QMessageBox::warning(0, QMessageBox::tr("Error"),
+                             QMessageBox::tr("The configured audio output device '%1' could not be found.")
+                             .arg(outDeviceName)
                              );
         return false;
     }
@@ -349,13 +371,14 @@ bool AudioDevice::initFromSettings()
 
     try
     {
-        init(idx, numInputs, numOutputs, sampleRate, bufferSize);
+        init(inidx, outidx, numInputs, numOutputs, sampleRate, bufferSize);
     }
     catch (AudioException& e)
     {
         QMessageBox::warning(0, QMessageBox::tr("Error"),
-                             QMessageBox::tr("Failed to init audio device '%1'.\n%2")
-                             .arg(deviceName)
+                             QMessageBox::tr("Failed to init audio device '%1' or '%2'.\n%3")
+                             .arg(inDeviceName)
+                             .arg(outDeviceName)
                              .arg(e.what())
                              );
         return false;

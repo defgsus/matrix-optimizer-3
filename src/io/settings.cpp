@@ -77,7 +77,8 @@ void Settings::createDefaultValues_()
     // --- hardware settings ---
 
     defaultValues_["Audio/api"] = "";
-    defaultValues_["Audio/device"] = "";
+    defaultValues_["Audio/indevice"] = "";
+    defaultValues_["Audio/outdevice"] = "";
     defaultValues_["Audio/samplerate"] = 44100;
     defaultValues_["Audio/buffersize"] = 128;
     defaultValues_["Audio/channelsIn"] = 2;
