@@ -104,7 +104,8 @@ public:
     /** name of the audio device */
     const QString& name() const { return name_; }
     /** host-os index of the selected device */
-    uint deviceId() const { return deviceId_; }
+    uint inDeviceId() const { return inDeviceId_; }
+    uint outDeviceId() const { return outDeviceId_; }
 
     /** Returns the audio configuration */
     const Configuration configuration() const { return conf_; }
@@ -144,14 +145,15 @@ public:
         you actually need to generate 256 samples.
         @throws AudioException on any error.
         */
-    void init(uint deviceIndex,
+    void init(uint inDeviceIndex,
+              uint outDeviceIndex,
               uint numInputChannels,
               uint numOutputChannels,
               uint sampleRate = 0,
               uint bufferSize = 0);
 
     /** look for other init() function for description. */
-    void init(uint deviceIndex, const Configuration& props);
+    void init(uint inDeviceIndex, uint outDeviceIndex, const Configuration& props);
 
     /** close the audio stream.
         @throws AudioException on any error.
@@ -184,10 +186,10 @@ private:
 
     int callback_(const void * in, void * out);
 
-    uint deviceId_;
+    uint inDeviceId_, outDeviceId_;
     Configuration conf_;
 
-    QString name_;
+    QString name_, outName_;
 
     volatile bool ok_, play_;
 

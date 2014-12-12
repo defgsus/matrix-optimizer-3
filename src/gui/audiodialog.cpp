@@ -502,7 +502,8 @@ void AudioDialog::startTone_()
 
     try
     {
-        device_->init(idx, conf);
+        // MH: Change code here for audio input and output
+        device_->init(idx, idx, conf);
     }
     catch (AudioException& e)
     {
