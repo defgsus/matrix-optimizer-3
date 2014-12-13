@@ -93,6 +93,7 @@ public:
     void addConItemMap(Object *, AudioConnectionItem *);
     /// Recursively get the item below @p localGridPos
     AbstractObjectItem * childItemAt(AbstractObjectItem * parent, const QPoint& localGridPos);
+    ObjectGraphConnectItem * connectorAt(const QPointF& scenePos);
     /// Raises all ModulatorItems of the item and it's childs
     void raiseModItems(AbstractObjectItem*);
     /** Resizes the items to fit their children and updates cable positions.
@@ -106,6 +107,7 @@ public:
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts);
     void createObjectEditMenu(Object * o);
 
+    void snapToEndConnect(const QPointF& scenePos);
     void endConnection();
 
     ObjectGraphScene * scene;
@@ -123,7 +125,7 @@ public:
 
     ActionList actions;
     QPoint popupGridPos;
-    ObjectGraphConnectItem * connectStartConnectItem;
+    ObjectGraphConnectItem * connectStartConnectItem, * connectEndConnectItem;
     AbstractObjectItem * connectStartItem, * connectEndItem;
     QPointF connectStartPos, connectEndPos;
 };
@@ -696,12 +698,62 @@ bool ObjectGraphScene::startConnection(ObjectGraphConnectItem * item)
     p_->connectStartConnectItem = item;
     p_->connectStartItem = actual;
     p_->connectEndItem = 0;
+    p_->connectEndConnectItem = 0;
 
     p_->connectStartPos = p_->connectEndPos = item->scenePos();
     p_->action = Private::A_DRAG_CONNECT;
 
     update();
     return true;
+}
+
+ObjectGraphConnectItem * ObjectGraphScene::Private::connectorAt(const QPointF &scenePos)
+{
+    // XXX refine this (other items are in the way)
+    QGraphicsItem * some = scene->itemAt(scenePos, QTransform());
+
+    return qgraphicsitem_cast<ObjectGraphConnectItem*>(some);
+}
+
+void ObjectGraphScene::Private::snapToEndConnect(const QPointF& scenePos)
+{
+    connectEndPos = scenePos;
+
+    // find goal item
+    connectEndItem = scene->objectItemAt(scene->mapToGrid(connectEndPos));
+    if (connectEndItem == connectStartItem)
+        connectEndItem = 0;
+
+    if (!connectEndItem)
+    {
+        connectEndConnectItem = 0;
+        return;
+    }
+
+    connectEndConnectItem = connectorAt(scenePos);
+
+    if (connectEndConnectItem)
+        connectEndPos = connectEndConnectItem->mapToScene(0,0);
+/*
+    // snap to input of audioobject
+    if (connectEndItem->object()->isAudioObject())
+    {
+        int chan = connectEndItem->channelForPosition(
+                    connectEndItem->mapFromScene(connectEndPos));
+        connectEndPos = connectEndItem->globalInputPos(chan >= 0 ? chan : 0);
+    }
+    else
+    {
+        // snap to parameter connector
+        if (auto con = connectorAt(scenePos))
+        {
+            connectEndPos = con->mapToScene(0,0);
+            connectEndItem = con->objectItem();
+        }
+        else
+            connectEndPos = connectEndItem->globalInputPos(0);
+    }
+*/
 }
 
 void ObjectGraphScene::Private::endConnection()
@@ -723,6 +775,15 @@ void ObjectGraphScene::Private::endConnection()
                         1);
         }
         else
+        // create audio to parameter modulation
+        if (connectEndConnectItem && connectEndConnectItem->parameter())
+        {
+            editor->addModulator(
+                        connectEndConnectItem->parameter(),
+                        aoFrom->idName(),
+                        QString("_audio_%1").arg(connectStartConnectItem->channel()));
+        }
+        else
         {
             MO_WARNING("aoFrom/aoTo not found " << aoFrom << "/" << aoTo
                        << ". Could not establish audio connection");
@@ -731,6 +792,7 @@ void ObjectGraphScene::Private::endConnection()
 
     // reset those
     connectStartConnectItem = 0;
+    connectEndConnectItem = 0;
     connectStartItem = 0;
     connectEndItem = 0;
 }
@@ -785,19 +847,7 @@ void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     {
         update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-100,-100,100,100));
 
-        // find goal item
-        p_->connectEndPos = event->scenePos();
-        p_->connectEndItem = objectItemAt(mapToGrid(p_->connectEndPos));
-        if (p_->connectEndItem == p_->connectStartItem)
-            p_->connectEndItem = 0;
-
-        // snap to input of audioobject
-        if (p_->connectEndItem && p_->connectEndItem->object()->isAudioObject())
-        {
-            int chan = p_->connectEndItem->channelForPosition(
-                        p_->connectEndItem->mapFromScene(p_->connectEndPos));
-            p_->connectEndPos = p_->connectEndItem->globalInputPos(chan >= 0 ? chan : 0);
-        }
+        p_->snapToEndConnect(event->scenePos());
 
         update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-100,-100,100,100));
         return;
@@ -985,7 +1035,7 @@ void ObjectGraphScene::popup(Modulator * mod)
     a->setStatusTip(tr("Removes the selected modulation, eveything goes back to normal"));
     connect(a, &QAction::triggered, [this, mod]()
     {
-        p_->editor->removeModulator(mod->parameter(), mod->modulatorId(), "");
+        p_->editor->removeModulator(mod->parameter(), mod->modulatorId(), mod->outputId());
     });
 
 

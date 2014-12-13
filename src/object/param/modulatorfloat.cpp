@@ -110,7 +110,9 @@ void ModulatorFloat::modulatorChanged_()
     if (qobject_cast<AudioObject*>(modulator()))
     {
         sourceType_ = ST_AUDIO_OBJECT;
-        channel_ = modulatorId().toUInt();
+        // skip the '_audio_' part and read channel
+        channel_ = outputId().mid(7).toUInt();
+        //std::cout << "--- " << outputId() << " " << outputId().mid(7) << " " << channel_ << std::endl;
         //outStaticFloat_ = dynamic_cast<ModulatorOutputStaticFloat*>(modulator()->getModulatorOutput("0"));
         //MO_ASSERT(outStaticFloat_, "not even that?");
     }

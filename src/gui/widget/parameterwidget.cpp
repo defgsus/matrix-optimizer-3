@@ -567,7 +567,9 @@ void ParameterWidget::addRemoveModMenu_(QMenu * menu, Parameter * param)
         a->setIcon(QIcon(":/icon/delete.png"));
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
-            editor_->removeModulator(param, a->data().toString(), "");
+            QString ids = a->data().toString();
+            editor_->removeModulator(param, ObjectMenu::getModulatorId(ids),
+                                            ObjectMenu::getOutputId(ids));
         });
     }
     // remove all

@@ -221,7 +221,7 @@ void Parameter::removeAllModulators()
 
 void Parameter::addModulator_(Modulator * m)
 {
-    MO_ASSERT(!findModulator(m->modulatorId()), "duplicate modulator added");
+    MO_ASSERT(!findModulator(m->modulatorId(), m->outputId()), "duplicate modulator added");
     modulators_.append(m);
 }
 

@@ -150,7 +150,7 @@ QPen ObjectGraphSettings::penModulator(const Modulator * mod, bool highl, bool s
     int sat = 70 + highl * 110,
         bright = 150 + sel * 70,
         hue = 140;
-    if (mod->modulator())
+    if (mod->modulator() && !mod->modulator()->isAudioObject())
         hue = ObjectFactory::hueForObject(mod->modulator()->type());
     if (!active)
         sat /= 4;

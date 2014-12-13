@@ -125,6 +125,8 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
 }
 
 
+namespace { static QString stupid_separator("*^_m_sep_^*"); }
+
 QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *parent)
 {
     //static QIcon iconTrack(QIcon(":/icon/obj_track.png"));
@@ -138,7 +140,7 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
             Object * mo = m->modulator();
             MO_ASSERT(mo, "no object assigned to modulator of '" << pf->idName() << "'");
             QAction * a = new QAction(ObjectFactory::iconForObject(mo), mo->name(), menu);
-            a->setData(mo->idName());
+            a->setData(m->modulatorId() + stupid_separator + m->outputId());
             a->setToolTip(mo->namePath());
             a->setStatusTip(a->toolTip());
             menu->addAction(a);
@@ -150,7 +152,7 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
         {
             // YYY no outputId
             QAction * a = new QAction(id.first, menu);
-            a->setData(id.first);
+            a->setData(id.first + stupid_separator + id.second);
             menu->addAction(a);
         }
     }
@@ -158,7 +160,15 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
     return menu;
 }
 
+QString ObjectMenu::getModulatorId(const QString &modAndOutputId)
+{
+    return modAndOutputId.section(stupid_separator, 0);
+}
 
+QString ObjectMenu::getOutputId(const QString &modAndOutputId)
+{
+    return modAndOutputId.section(stupid_separator, 1);
+}
 
 void ObjectMenu::setEnabled(QMenu *menu, const QStringList& ids, bool enable)
 {

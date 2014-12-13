@@ -33,6 +33,7 @@ public:
     uint channel() const { return channel_; }
 
     Object * object() const { return object_; }
+    AbstractObjectItem * objectItem() const { return objectItem_; }
 
     Parameter * parameter() const { return param_; }
 

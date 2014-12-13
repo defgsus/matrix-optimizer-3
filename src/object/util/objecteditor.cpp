@@ -437,7 +437,7 @@ void ObjectEditor::setParameterVisibleInGraph(Parameter * p, bool enbale)
 
 void ObjectEditor::addModulator(Parameter *p, const QString &idName, const QString& outputId)
 {
-    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << idName << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << idName << "," << outputId << ")");
 
     // XXX TODO: test sanity of connection!
 
@@ -457,7 +457,7 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName, const QStri
 
 void ObjectEditor::removeModulator(Parameter *p, const QString &idName, const QString &outputId)
 {
-    MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeModulator(" << p << ", " << idName << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeModulator(" << p << ", " << idName << "," << outputId << ")");
 
     Modulator * m;
     {

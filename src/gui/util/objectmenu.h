@@ -36,8 +36,12 @@ public:
     static QMenu * createObjectChildMenu(Object * root, int objectTypeFlags, QWidget *parent = 0);
 
     /** Creates a menu with all modulators for the given Parameter.
-        The QAction::data() contains the Object::idName(). */
+        The QAction::data() contains the Object::idName() and Modulator::outputId()
+        as special format. Use getModulatorId() and getOutputId() to convert. */
     static QMenu * createRemoveModulationMenu(Parameter *, QWidget * parent = 0);
+
+    static QString getModulatorId(const QString& modAndOutputId);
+    static QString getOutputId(const QString& modAndOutputId);
 
     /** Sets the enabled state of each menu action matching one of the @p ids to
         @p enable */
