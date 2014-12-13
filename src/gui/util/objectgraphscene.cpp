@@ -913,16 +913,18 @@ void ObjectGraphScene::drawForeground(QPainter *p, const QRectF &)
     // audio connection dragging
     if (p_->action == Private::A_DRAG_CONNECT)
     {
+        // check current goal
         Object * goal = 0;
         if (p_->connectEndItem)
             goal = p_->connectEndItem->object();
 
+        // set pen
         QPen pen = QPen(goal
                         ? ObjectFactory::colorForObject(goal)
                         : QColor(255, 125, 125));
-        pen.setWidth(2);
-        p->setBrush(Qt::NoBrush);
+        pen.setWidth(p_->connectEndConnectItem ? 2.7 : 1.0);
         p->setPen(pen);
+        p->setBrush(Qt::NoBrush);
 
         p->drawPath(ObjectGraphSettings::pathWire(
                         p_->connectStartPos,

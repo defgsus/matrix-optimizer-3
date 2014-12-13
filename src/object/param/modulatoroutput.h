@@ -20,6 +20,10 @@ namespace MO {
 
 class Object;
 
+
+// **** XXX NOT USEd YET ****
+
+
 class ModulatorOutput
 {
     // to set p_channel_;
