@@ -87,8 +87,9 @@ FilterResponseWidget::~FilterResponseWidget()
 
 void FilterResponseWidget::setFilter(const AUDIO::MultiFilter & f, bool upd)
 {
-    *filter_ = f;
+    filter_->copySettingsFrom(f);
     filter_->setSampleRate(sampleRate_);
+    filter_->updateCoefficients();
     if (upd)
     {
         calcResponse_();
@@ -238,7 +239,8 @@ namespace
 {
     void ResponseCalc::run()
     {
-        filter = w->filter();
+        filter.copySettingsFrom(w->filter());
+        filter.updateCoefficients();
 
         if (doFft_)
             calcFft_();

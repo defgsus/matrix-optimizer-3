@@ -75,9 +75,6 @@ public:
 
     ~MultiFilter();
 
-    MultiFilter(const MultiFilter& other);
-    MultiFilter& operator = (const MultiFilter& other);
-
     // ----------- setter ----------------
 
     /** Sets the type of the filter.
@@ -107,6 +104,10 @@ public:
     /** Sets the output amplitude.
         Does NOT require updateCoefficients() to be called. */
     void setOutputAmplitude(F32 amp) { out_amp_ = amp; }
+
+    /** Copies the settings from other filter.
+        Requires updateCoefficients() to be called. */
+    void copySettingsFrom(const MultiFilter&);
 
     // ---------- getter ------------------
 
@@ -141,6 +142,11 @@ public:
                        uint blockSize);
 
 private:
+
+    // disable copy
+    MultiFilter(const MultiFilter& other);
+    MultiFilter& operator = (const MultiFilter& other);
+
 
     bool doReallocate_;
 

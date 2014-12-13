@@ -170,7 +170,7 @@ MultiFilter::~MultiFilter()
     delete filter24_;
     delete cheby_;
 }
-
+#if 0
 MultiFilter::MultiFilter(const MultiFilter &other)
 {
     *this = other;
@@ -183,6 +183,7 @@ MultiFilter& MultiFilter::operator = (const MultiFilter& other)
     freq_ = other.freq_;
     reso_ = other.reso_;
     order_ = other.order_;
+    amp_ = other.amp_;
 
     if (cheby_)
     {
@@ -208,6 +209,17 @@ MultiFilter& MultiFilter::operator = (const MultiFilter& other)
     updateCoefficients();
 
     return *this;
+}
+#endif
+
+void MultiFilter::copySettingsFrom(const MultiFilter& other)
+{
+    type_ = other.type_;
+    sr_ = other.sr_;
+    freq_ = other.freq_;
+    reso_ = other.reso_;
+    order_ = other.order_;
+    amp_ = other.amp_;
 }
 
 void MultiFilter::setType(const QString &id)
@@ -235,6 +247,8 @@ void MultiFilter::reset()
         filter24_->reset();
     if (butter_)
         butter_->reset();
+    if (fixed_)
+        fixed_->reset();
 }
 
 void MultiFilter::updateCoefficients()

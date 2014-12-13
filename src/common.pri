@@ -230,7 +230,8 @@ HEADERS += \
     src/audio/tool/delay.h \
     src/object/audio/audioinao.h \
     src/object/param/modulatorevent.h \
-    src/object/clipcontroller.h
+    src/object/clipcontroller.h \
+    src/object/audio/filterbankao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -422,4 +423,5 @@ SOURCES += \
     src/audio/spatial/spatialmicrophone.cpp \
     src/object/audio/audioinao.cpp \
     src/object/param/modulatorevent.cpp \
-    src/object/clipcontroller.cpp
+    src/object/clipcontroller.cpp \
+    src/object/audio/filterbankao.cpp

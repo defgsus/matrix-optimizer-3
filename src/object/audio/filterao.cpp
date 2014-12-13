@@ -8,6 +8,8 @@
     <p>created 02.12.2014</p>
 */
 
+#include <memory>
+
 #include "filterao.h"
 #include "audio/tool/audiobuffer.h"
 #include "object/param/parameters.h"
@@ -38,7 +40,7 @@ class FilterAO::Private
     ParameterSelect
         * paramType;
 
-    std::vector<AUDIO::MultiFilter> filters;
+    std::vector<std::shared_ptr<AUDIO::MultiFilter>> filters;
 };
 
 FilterAO::FilterAO(QObject *parent)
@@ -121,11 +123,12 @@ void FilterAO::onParameterChanged(Parameter * p)
     // to avoid memory allocation in the audio thread!
     // Same goes for order
     if (p == p_->paramType || p == p_->paramOrder)
-        for (auto & f : p_->filters)
+        for (auto & fp : p_->filters)
         {
-            f.setType((AUDIO::MultiFilter::FilterType)p_->paramType->baseValue());
-            f.setOrder(p_->paramOrder->baseValue());
-            f.updateCoefficients();
+            auto f = fp.get();
+            f->setType((AUDIO::MultiFilter::FilterType)p_->paramType->baseValue());
+            f->setOrder(p_->paramOrder->baseValue());
+            f->updateCoefficients();
         }
 }
 
@@ -140,19 +143,23 @@ void FilterAO::setNumberThreads(uint count)
 {
     AudioObject::setNumberThreads(count);
 
-    p_->filters.resize(count);
+    p_->filters.clear();
+    for (uint i=0; i<count; ++i)
+        p_->filters.push_back( std::shared_ptr<AUDIO::MultiFilter>(
+                                   new AUDIO::MultiFilter(true) ));
     p_->updateFilters();
 }
 
 void FilterAO::Private::updateFilters()
 {
-    for (auto & f : filters)
+    for (auto & fp : filters)
     {
+        auto f = fp.get();
         // set type and order
         // other parameters can/will be set in audio thread
-        f.setType((AUDIO::MultiFilter::FilterType)paramType->baseValue());
-        f.setOrder(paramOrder->baseValue());
-        f.updateCoefficients();
+        f->setType((AUDIO::MultiFilter::FilterType)paramType->baseValue());
+        f->setOrder(paramOrder->baseValue());
+        f->updateCoefficients();
     }
 }
 
@@ -161,7 +168,7 @@ void FilterAO::processAudio(uint , SamplePos pos, uint thread)
     const Double time = sampleRateInv() * pos;
 
     // update filter
-    AUDIO::MultiFilter * filter = &p_->filters[thread];
+    AUDIO::MultiFilter * filter = p_->filters[thread].get();
 
     Float   freq = p_->paramFreq->value(time, thread),
             res = p_->paramReso->value(time, thread),
