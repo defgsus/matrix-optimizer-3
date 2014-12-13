@@ -142,6 +142,7 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(objectNameChanged(MO::Object*)), this, SLOT(onObjectNameChanged_(MO::Object*)));
     connect(objectEditor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
     connect(objectEditor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+    connect(objectEditor_, SIGNAL(objectsDeleted(QList<MO::Object*>)), this, SLOT(onObjectsDeleted_(QList<MO::Object*>)));
     connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
@@ -698,11 +699,24 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
 {
     // update clipview
     clipView_->removeObject(o);
+    objectView_->setObject(0);
 
     // XXX refine this!
     onTreeChanged_();
 }
 
+void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
+{
+    MO_DEBUG("#################################################!!!!!!!!!!!");
+    objectView_->setObject(0);
+
+    // update clipview
+    for (auto o : l)
+        clipView_->removeObject(o);
+
+    // XXX refine this!
+    onTreeChanged_();
+}
 
 
 
