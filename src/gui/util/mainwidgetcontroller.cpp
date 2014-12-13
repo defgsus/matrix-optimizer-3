@@ -1384,6 +1384,8 @@ void MainWidgetController::loadScene_(const QString &fn)
                                   tr("Could not open project '%1'\n%2").arg(fn).arg(e.what()));
 
             statusBar()->showMessage(tr("Could not open project '%1'").arg(fn));
+
+            newScene();
             return;
         }
 

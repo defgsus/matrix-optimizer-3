@@ -27,6 +27,9 @@ DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
 #as long as it is not really used, avoid this dependency
 DEFINES += MO_DISABLE_GST
 
+#require audio input and output devices to be separate devices
+mac { DEFINES += MO_REQUIRE_SEPARATE_AUDIO }
+
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 

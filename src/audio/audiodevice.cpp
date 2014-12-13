@@ -107,7 +107,7 @@ AudioDevice::~AudioDevice()
 
 // --------- initialisation ----------
 
-void AudioDevice::init(uint inDeviceIndex, uint outDeviceIndex, const Configuration& props)
+void AudioDevice::init(int inDeviceIndex, int outDeviceIndex, const Configuration& props)
 {
     init(inDeviceIndex,
          outDeviceIndex,
@@ -117,14 +117,14 @@ void AudioDevice::init(uint inDeviceIndex, uint outDeviceIndex, const Configurat
          props.bufferSize());
 }
 
-void AudioDevice::init(uint inDeviceIndex,
-                       uint outDeviceIndex,
+void AudioDevice::init(int inDeviceIndex,
+                       int outDeviceIndex,
                        uint numInputChannels,
                        uint numOutputChannels,
                        uint sampleRate,
                        uint bufferSize)
 {
-    MO_DEBUG_AUDIO("AudioDevice::init(" << inDeviceIndex << ", " << numInputChannels <<
+    MO_DEBUG("AudioDevice::init(" << inDeviceIndex << ", " << numInputChannels <<
              ", " << outDeviceIndex << ", " << numOutputChannels << ", " << sampleRate << ", " << bufferSize << ")");
 
     // init portaudio if not already done
@@ -137,24 +137,41 @@ void AudioDevice::init(uint inDeviceIndex,
     // close previous session
     if (ok_) close();
 
-    // get some info of device
-    auto ipainf = Pa_GetDeviceInfo(inDeviceIndex);
-    if (!ipainf)
+    // get device infos
+    const PaDeviceInfo * ipainf = 0, * opainf = 0;
+
+    if (inDeviceIndex >= 0)
     {
-        MO_AUDIO_ERROR(API, "can not get audio device info for device " << inDeviceId_);
+        ipainf = Pa_GetDeviceInfo(inDeviceIndex);
+        if (!ipainf && numInputChannels > 0)
+        {
+            MO_AUDIO_ERROR(API, "can not get audio device info for input device " << inDeviceId_);
+        }
     }
-    auto opainf = Pa_GetDeviceInfo(outDeviceIndex);
-    if (!opainf)
+    else if (outDeviceIndex >= 0)
     {
-        MO_AUDIO_ERROR(API, "can not get audio device info for device " << outDeviceId_);
+        ipainf = Pa_GetDeviceInfo(outDeviceIndex);
+        if (!ipainf && numInputChannels > 0)
+        {
+            MO_AUDIO_ERROR(API, "can not get audio device info for input/output device " << inDeviceId_);
+        }
+    }
+
+    if (outDeviceIndex >= 0)
+    {
+        opainf = Pa_GetDeviceInfo(outDeviceIndex);
+        if (!opainf && numOutputChannels > 0)
+        {
+            MO_AUDIO_ERROR(API, "can not get audio device info for output device " << outDeviceId_);
+        }
     }
 
     // setup in/out params
 
     PaStreamParameters * pap_in = 0;
-    if (numInputChannels)
+    if (ipainf)
     {
-        p_->inputParam.device = inDeviceIndex;
+        p_->inputParam.device = inDeviceIndex >= 0 ? inDeviceIndex : outDeviceIndex;
         p_->inputParam.channelCount = numOutputChannels;
         p_->inputParam.sampleFormat = paFloat32;
         p_->inputParam.suggestedLatency = ipainf->defaultLowInputLatency;
@@ -163,7 +180,7 @@ void AudioDevice::init(uint inDeviceIndex,
     }
 
     PaStreamParameters * pap_out = 0;
-    if (numOutputChannels)
+    if (outDeviceIndex >= 0)
     {
         p_->outputParam.device = outDeviceIndex;
         p_->outputParam.channelCount = numOutputChannels;
@@ -176,7 +193,7 @@ void AudioDevice::init(uint inDeviceIndex,
     // ---- check default parameters ---
 
     if (sampleRate == 0) {
-        sampleRate = opainf->defaultSampleRate;
+        sampleRate = opainf ? opainf->defaultSampleRate : ipainf->defaultSampleRate;
     }
 
     if (bufferSize == 0)
@@ -189,8 +206,8 @@ void AudioDevice::init(uint inDeviceIndex,
     // ---- open stream ----
 
     MO_DEBUG("opening audio stream"
-                   << "\nindevice   " << inDeviceIndex << " " << ipainf->name
-                   << "\noutdevice  " << outDeviceIndex << " " << opainf->name
+                   << "\nindevice   " << inDeviceIndex << " " << (ipainf ? ipainf->name : "-")
+                   << "\noutdevice  " << outDeviceIndex << " " << (opainf ? opainf->name : "-")
                    << "\nsamplerate " << sampleRate
                    << "\nbuffersize " << bufferSize
                    << "\nchannels   " << numInputChannels << " / " << numOutputChannels
@@ -210,8 +227,8 @@ void AudioDevice::init(uint inDeviceIndex,
 
     // store parameters
 
-    name_ = ipainf->name;
-    outName_ = opainf->name;
+    name_ = ipainf ? ipainf->name : "-";
+    outName_ = opainf ? opainf->name : "-";
     inDeviceId_ = inDeviceIndex;
     outDeviceId_ = outDeviceIndex;
     conf_.setNumChannelsIn(numInputChannels);
@@ -282,7 +299,8 @@ bool AudioDevice::isAudioConfigured()
 {
     const QString inname = settings->getValue("Audio/indevice").toString();
     const QString outname = settings->getValue("Audio/outdevice").toString();
-    return !(inname.isEmpty() || inname == "None" || outname.isEmpty() || outname == "None");
+    // it's enough to have outputs defined
+    return !(outname.isEmpty() || outname == "None");
 }
 
 Configuration AudioDevice::defaultConfiguration()
@@ -301,8 +319,6 @@ bool AudioDevice::initFromSettings()
     // check config
 
     QString inDeviceName = settings->getValue("Audio/indevice").toString();
-    if (inDeviceName.isEmpty())
-        return false;
 
     QString outDeviceName = settings->getValue("Audio/outdevice").toString();
     if (outDeviceName.isEmpty())
@@ -344,7 +360,7 @@ bool AudioDevice::initFromSettings()
         }
     }
 
-    if (inidx < 0)
+    if (inidx < 0 && !(inDeviceName.isEmpty() || inDeviceName == "None"))
     {
         QMessageBox::warning(0, QMessageBox::tr("Error"),
                              QMessageBox::tr("The configured audio input device '%1' could not be found.")

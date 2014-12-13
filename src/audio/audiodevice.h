@@ -133,10 +133,10 @@ public:
     bool initFromSettings();
 
     /** Initializes a device/stream.
-        @p deviceIndex is the host-os device number as returned by CSMOD::AudioDevices.
+        @p inDeviceIndex and outDeviceIndex are the host-os device numbers as returned by CSMOD::AudioDevices.
+        One of them can be set to -1, if you do not need the particular stream.
         @p numInputChannels and @p numOutputChannels is the number of channels requested
-        for the input and output. One of them can be set to zero, if you do not need
-        the particular stream.
+        for the input and output.
         @p sampleRate sets the desired samples per second and can be left zero
         to use the device's default.
         @p bufferLength defines the desired samples in a buffer, and therefore the
@@ -145,15 +145,15 @@ public:
         you actually need to generate 256 samples.
         @throws AudioException on any error.
         */
-    void init(uint inDeviceIndex,
-              uint outDeviceIndex,
+    void init(int inDeviceIndex,
+              int outDeviceIndex,
               uint numInputChannels,
               uint numOutputChannels,
               uint sampleRate = 0,
               uint bufferSize = 0);
 
     /** look for other init() function for description. */
-    void init(uint inDeviceIndex, uint outDeviceIndex, const Configuration& props);
+    void init(int inDeviceIndex, int outDeviceIndex, const Configuration& props);
 
     /** close the audio stream.
         @throws AudioException on any error.
