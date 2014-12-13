@@ -72,15 +72,18 @@ void AudioBuffer::readBlockLength(F32 *block, size_t size) const
 
 }
 
-// XXX All crap
+
+
+
+
+
+// ------------------------ static helper --------------------------------
 
 void AudioBuffer::bypass(const QList<AUDIO::AudioBuffer *> &inputs,
                          const QList<AUDIO::AudioBuffer *> &outputs, bool callNextBlock)
 {
-    const int num = std::max(inputs.size(), outputs.size());
-
     // copy inputs
-    for (int i = 0; i<num; ++i)
+    for (int i = 0; i<outputs.size(); ++i)
     if (outputs[i])
     {
         // clear

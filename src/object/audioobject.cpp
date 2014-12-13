@@ -124,27 +124,27 @@ int AudioObject::numAudioInputs() const
     return p_ao_->numInputs;
 }
 
-void AudioObject::setNumberAudioOutputs(uint num)
+void AudioObject::setNumberAudioOutputs(uint num, bool emitSignal)
 {
     bool changed = p_ao_->numOutputs != num;
 
     p_ao_->numOutputs = num;
 
-    if (changed && editor())
+    if (changed && emitSignal && editor())
         editor()->emitAudioChannelsChanged(this);
 }
 
-void AudioObject::setNumberAudioInputs(int num)
+void AudioObject::setNumberAudioInputs(int num, bool emitSignal)
 {
     bool changed = p_ao_->numInputs != num;
 
     p_ao_->numInputs = num;
 
-    if (changed && editor())
+    if (changed && emitSignal && editor())
         editor()->emitAudioChannelsChanged(this);
 }
 
-void AudioObject::setNumberAudioInputsOutputs(uint num)
+void AudioObject::setNumberAudioInputsOutputs(uint num, bool emitSignal)
 {
     bool changed = p_ao_->numOutputs != num
             || p_ao_->numInputs != (int)num;
@@ -152,9 +152,10 @@ void AudioObject::setNumberAudioInputsOutputs(uint num)
     p_ao_->numOutputs =
     p_ao_->numInputs = num;
 
-    if (changed && editor())
+    if (changed && emitSignal && editor())
         editor()->emitAudioChannelsChanged(this);
 }
+
 
 void AudioObject::setAudioBuffersBase(uint thread,
                                       const QList<AUDIO::AudioBuffer *> &inputs,

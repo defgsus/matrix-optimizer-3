@@ -223,11 +223,11 @@ void FilterBankAO::Private::updateFilterCoeffs(Double time, uint thread)
 }
 
 void FilterBankAO::setAudioBuffers(uint /*thread*/,
-                                   const QList<AUDIO::AudioBuffer *> &inputs, const QList<AUDIO::AudioBuffer *> &outputs)
+                                   const QList<AUDIO::AudioBuffer *> &/*inputs*/,
+                                   const QList<AUDIO::AudioBuffer *> &outputs)
 {
-    uint num = std::min(inputs.size(), outputs.size());
-
-    p_->makeFilters(num);
+    // make a filter for each output
+    p_->makeFilters(outputs.size());
 }
 
 void FilterBankAO::processAudio(uint , SamplePos pos, uint thread)

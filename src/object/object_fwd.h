@@ -63,6 +63,7 @@ namespace MO {
     class LookAt;
     class Mix;
 
+    class ModulatorOutput;
     class Modulator;
     class ModulatorFloat;
 

@@ -26,9 +26,8 @@ public:
         ST_NONE,
         ST_SEQUENCE_FLOAT,
         ST_TRACK_FLOAT,
-        ST_MODULATOR_OBJECT_FLOAT
-        // for conversion XX not implemented yet
-        //,ST_AUDIO_OBJECT
+        ST_MODULATOR_OBJECT_FLOAT,
+        ST_AUDIO_OBJECT
     };
 
     /** Construct a modulator coming form object @p modulatorId

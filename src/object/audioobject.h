@@ -40,9 +40,8 @@ public:
     /** Returns the desired number of audio output channels */
     uint numAudioOutputs() const;
 
-    virtual QString getInputName(uint channel) const { return QString("in %1").arg(channel + 1); }
-    virtual QString getOutputName(uint channel) const { return QString("out %1").arg(channel + 1); }
-
+    virtual QString getAudioInputName(uint channel) const { return QString("in %1").arg(channel + 1); }
+    virtual QString getAudioOutputName(uint channel) const { return QString("out %1").arg(channel + 1); }
 
     // ---------- dsp ---------------
 
@@ -68,10 +67,32 @@ public:
     /** Processes dsp data. */
     void processAudioBase(uint bufferSize, SamplePos pos, uint thread);
 
-protected:
+    // ------------------ modulator outputs -------------------
+
+    /** Override to provide normal float values within the non-audio threads
+        as outputs of your object. */
+    virtual Double getModulatorOutput(uint channel, Double time, uint thread)
+        { Q_UNUSED(channel); Q_UNUSED(time); Q_UNUSED(thread); return 0.0; }
+
+protected: // ---------------- protected virtual interface -----------------------
 
     /** Call in constructor of derived class to enable a channel select parameter */
     void setNumberChannelsAdjustable(bool);
+
+    /** Sets the desired number of channels.
+        Call this in constructor or in onParameterChanged()/onParametersLoaded().
+        Calls ObjectEditor::emitAudioChannelsChanged() when connected. */
+    void setNumberAudioInputs(int num, bool emitSignal = true);
+    /** Sets the desired number of channels.
+        Call this in constructor or in onParameterChanged()/onParametersLoaded().
+        Calls ObjectEditor::emitAudioChannelsChanged() when connected. */
+    void setNumberAudioOutputs(uint num, bool emitSignal = true);
+    /** Sets the desired number of channels.
+        Call this in constructor or in onParameterChanged()/onParametersLoaded().
+        Calls ObjectEditor::emitAudioChannelsChanged() when connected. */
+    void setNumberAudioInputsOutputs(uint num, bool emitSignal = true);
+
+    // ------------------- runtime virtuals ------------------------------
 
     /** Override to adjust to the number of channels.
         Inputs and outputs have the same buffer size.
@@ -87,13 +108,6 @@ protected:
     /** Process dsp data here.
         The inputs and outputs are in audioInputs() and audioOutputs() respectively. */
     virtual void processAudio(uint bufferSize, SamplePos pos, uint thread) = 0;
-
-    /** Sets the desired number of channels and emits ObjectEditor::objectChanged() */
-    void setNumberAudioInputs(int num);
-    /** Sets the desired number of channels and emits ObjectEditor::objectChanged() */
-    void setNumberAudioOutputs(uint num);
-    /** Sets both input and output channels and emits ObjectEditor::objectChanged() */
-    void setNumberAudioInputsOutputs(uint num);
 
 private:
     class PrivateAO;

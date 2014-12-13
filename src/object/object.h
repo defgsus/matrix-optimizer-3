@@ -522,6 +522,8 @@ private:
 public:
     // --------------- modulators ------------------
 
+    /** Collect objects that you need here.
+        XXX Only used by TrackFloat a.t.m. */
     virtual void collectModulators() { };
 
     /** Returns all modulators of all parameters of this object */
@@ -539,15 +541,21 @@ public:
         when it gets added to the scene. */
     virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
 
-    /** Returns the list of modulator outputs of this object. */
-    const QStringList& outputIds() const { return p_outputIds_; }
+    // ------------ modulator outputs ----------------
+
+    /** Returns the modulator outputs of this object. */
+    const QList<ModulatorOutput*>& modulatorOutputs() const { return p_modulatorOuts_; }
+
+    /** Returns the value for the specific modulator output, or 0.0 */
+    Double getModulatorOutputValueFloat(uint channel, Double time, uint thread) const;
 
 protected:
 
-    /** Sets the outputIds for this object.
-        An empty list creates one empty id for the output.
+    /** Sets the desired outputs for the object.
+        Call this in your constructor or in onParametersChanged()/onParametersLoaded().
+        Ownership of the ModulatorOutput classes is taken.
         Emits ObjectEditor::objectChanged() when connected. */
-    virtual void setOutputIds(const QStringList&);
+    void setModulatorOutputs(const QList<ModulatorOutput*>& mods);
 
     // --------------- parameter -------------------
 public:
@@ -714,7 +722,7 @@ private:
 
     // ---------- outputs --------------------
 
-    QStringList p_outputIds_;
+    QList<ModulatorOutput*> p_modulatorOuts_;
 
     // ---------- per-thread store -----------
 

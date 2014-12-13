@@ -73,6 +73,9 @@ Object::Object(QObject *parent) :
 Object::~Object()
 {
     delete p_parameters_;
+
+    for (auto m : p_modulatorOuts_)
+        delete m;
 }
 
 // --------------------- io ------------------------
@@ -1158,11 +1161,17 @@ QList<QPair<Parameter*, Object*>> Object::getModulationPairs() const
     return pairs;
 }
 
-void Object::setOutputIds(const QStringList & ids)
+void Object::setModulatorOutputs(const QList<ModulatorOutput*>& mods)
 {
-    p_outputIds_ = ids;
+    // delete previous
+    for (auto m : p_modulatorOuts_)
+        delete m;
+
+    // update
+    p_modulatorOuts_ = mods;
+
     if (editor())
-        emit editor()->emitObjectChanged(this);
+        editor()->emitObjectChanged(this);
 }
 
 } // namespace MO

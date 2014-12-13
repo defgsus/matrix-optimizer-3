@@ -74,7 +74,7 @@ void OscillatorAO::setNumberThreads(uint num)
         f = 0.0;
 }
 
-QString OscillatorAO::getInputName(uint channel) const
+QString OscillatorAO::getAudioInputName(uint channel) const
 {
     switch (channel)
     {
@@ -83,7 +83,7 @@ QString OscillatorAO::getInputName(uint channel) const
         case 2: return tr("frequency");
         case 3: return tr("phase");
     }
-    return AudioObject::getInputName(channel);
+    return AudioObject::getAudioInputName(channel);
 }
 
 void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)

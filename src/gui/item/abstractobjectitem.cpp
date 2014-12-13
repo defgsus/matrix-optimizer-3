@@ -565,15 +565,15 @@ void AbstractObjectItem::PrivateOI::createConnectors()
         {
             if (ao->numAudioInputs() >= 0)
                 for (int i=0; i<ao->numAudioInputs(); ++i)
-                    inputItems.append( new ObjectGraphConnectItem(true, i, ao->getInputName(i), item) );
+                    inputItems.append( new ObjectGraphConnectItem(true, i, ao->getAudioInputName(i), item) );
             else
-                inputItems.append( new ObjectGraphConnectItem(true, 0, ao->getInputName(0), item) );
+                inputItems.append( new ObjectGraphConnectItem(true, 0, ao->getAudioInputName(0), item) );
         }
 
         if (!qobject_cast<AudioOutAO*>(ao))
         {
             for (uint i=0; i<ao->numAudioOutputs(); ++i)
-                outputItems.append( new ObjectGraphConnectItem(false, i, ao->getOutputName(i), item) );
+                outputItems.append( new ObjectGraphConnectItem(false, i, ao->getAudioOutputName(i), item) );
         }
 
     }

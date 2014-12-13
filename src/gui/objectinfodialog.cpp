@@ -133,17 +133,24 @@ void ObjectInfoDialog::setObject(Object * o)
     if (AudioObject * au = qobject_cast<AudioObject*>(o))
     {
         s << "<p>AudioObject:<br/>channels: "
-          << au->numAudioInputs() << "/" << au->numAudioOutputs();
+          << au->numAudioInputs() << "/" << au->numAudioOutputs()
+          << "<ul>";
         if (scene && scene->audioConnections())
         {
             auto list = scene->audioConnections()->getInputs(au);
             for (auto c : list)
-                s << "\n<br/>" << c->from()->name() << " ->";
+                s << "\n<li>" << c->from()->name()
+                  << " -&gt; " << c->to()->getAudioInputName(c->inputChannel())
+                  << "</li>";
+
             list = scene->audioConnections()->getOutputs(au);
             for (auto c : list)
-                s << "\n<br/>-> " << c->to()->name();
+                s << "\n<li>"
+                  << c->from()->getAudioOutputName(c->outputChannel())
+                  << " -&gt; " << c->to()->name()
+                  << "</li>";
         }
-        s  << "</p>";
+        s  << "</ul></p>";
     }
 
     // ------- clip container -------------

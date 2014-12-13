@@ -1199,7 +1199,12 @@ void MainWidgetController::start()
     if (!audioEngine_)
         audioEngine_ = new LiveAudioEngine(this);
     if (audioEngine_->scene() != scene_)
+    {
         audioEngine_->setScene(scene_, MO_AUDIO_THREAD);
+
+        // audio input/output channels may have changed
+        objectGraphView()->setRootObject(scene_);
+    }
 
     // start engine
     if (audioEngine_->start())
