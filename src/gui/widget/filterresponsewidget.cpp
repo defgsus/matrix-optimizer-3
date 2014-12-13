@@ -31,7 +31,8 @@ namespace
 
         ResponseCalc(FilterResponseWidget * w, std::vector<F32>& response)
             : QThread(w),
-              w(w), response(response), doStop(false)
+              w(w), response(response), doStop(false),
+              filter    (false)
         { }
 
         virtual void run() Q_DECL_OVERRIDE;

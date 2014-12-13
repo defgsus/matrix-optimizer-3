@@ -153,7 +153,7 @@ MultiFilter::MultiFilter(bool alloc)
       order_        (1),
       freq_         (1000),
       reso_         (0),
-      out_amp_      (0),
+      out_amp_      (1),
       cheby_        (doReallocate_? 0 : new ChebychevFilter()),
       filter24_     (doReallocate_? 0 : new Filter24()),
       butter_       (doReallocate_? 0 : new ButterworthFilter()),

@@ -232,7 +232,8 @@ HEADERS += \
     src/object/clipcontroller.h \
     src/object/audio/filterbankao.h \
     src/object/param/modulatoroutput.h \
-    src/object/audio/envelopefollowerao.h
+    src/object/audio/envelopefollowerao.h \
+    src/gl/bufferobject.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -426,4 +427,5 @@ SOURCES += \
     src/object/clipcontroller.cpp \
     src/object/audio/filterbankao.cpp \
     src/object/param/modulatoroutput.cpp \
-    src/object/audio/envelopefollowerao.cpp
+    src/object/audio/envelopefollowerao.cpp \
+    src/gl/bufferobject.cpp

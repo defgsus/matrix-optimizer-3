@@ -20,7 +20,8 @@
 namespace MO {
 namespace GL {
 
-// XXX Probably more meaningful to create separate BufferObjects at some point
+class BufferObject;
+
 class VertexArrayObject
 {
 public:
@@ -49,18 +50,18 @@ public:
     void unbind();
 
     /** Creates a vertex attribute array buffer.
-        Returns the opengl name of the buffer, or invalidGl on failure.
+        Returns the BufferObject, or NULL on failure.
         The vertex array object needs to be bound. */
-    gl::GLuint createAttribBuffer(
+    BufferObject * createAttribBuffer(
             gl::GLuint attributeLocation, gl::GLenum valueType, gl::GLint numberCoordinates,
             gl::GLuint sizeInBytes, const void * ptr,
             gl::GLenum storageType = gl::GL_STATIC_DRAW, gl::GLint stride = 0,
             gl::GLboolean normalized = gl::GL_FALSE);
 
     /** Creates an element array buffer.
-        Returns the opengl name of the buffer, or invalidGl on failure.
+        Returns the BufferObject, or NULL on failure.
         The vertex array object needs to be bound. */
-    gl::GLuint createIndexBuffer(
+    BufferObject * createIndexBuffer(
             gl::GLenum valueType,
             gl::GLuint numberVertices, const void * ptr,
             gl::GLenum storageType = gl::GL_STATIC_DRAW);
