@@ -105,9 +105,7 @@ void AudioBuffer::bypass(const QList<AUDIO::AudioBuffer *> &inputs,
 void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &src,
                       const QList<AUDIO::AudioBuffer *> &dst, bool callNextBlock)
 {
-    const int num = std::max(dst.size(), src.size());
-
-    for (int i = 0; i<num; ++i)
+    for (int i = 0; i<dst.size(); ++i)
     if (dst[i])
     {
         if (i < src.size() && src[i] != 0)
@@ -143,10 +141,8 @@ void AudioBuffer::process(const QList<AudioBuffer *> &src, const QList<AudioBuff
                           std::function<void (uint channel, const AudioBuffer *, AudioBuffer *)> func,
                           bool callNextBlock)
 {
-    const int num = std::max(dst.size(), src.size());
-
-    for (int i = 0; i<num; ++i)
-    if (i < dst.size() && dst[i])
+    for (int i = 0; i<dst.size(); ++i)
+    if (dst[i])
     {
         if (i < src.size() && src[i] != 0)
         {

@@ -151,6 +151,25 @@ void ObjectEditor::makeUniqueIds(const Object* root, const QList<Object*> newBra
 
 
 
+
+// ----------------------------- signal wrapper --------------------------------
+
+void ObjectEditor::emitObjectChanged(Object * o)
+{
+    emit objectChanged(o);
+    emit sceneChanged(scene_);
+}
+
+void ObjectEditor::emitAudioChannelsChanged(Object * o)
+{
+    emit objectChanged(o);
+    emit audioConnectionsChanged();
+    emit sceneChanged(scene_);
+}
+
+
+
+
 // --------------------------------- tree --------------------------------------
 
 void ObjectEditor::setObjectName(Object *object, const QString &name)

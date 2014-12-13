@@ -691,8 +691,9 @@ void MainWidgetController::onObjectAdded_(Object * o)
             clipView_->updateClip(clip);
     }
 
-    // XXX refine this!
-    onTreeChanged_();
+    updateSequenceView_(o);
+    objectGraphView()->setFocusObject(o);
+    objectView()->setObject(o);
 }
 
 void MainWidgetController::onObjectDeleted_(const Object * o)
@@ -702,20 +703,18 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
     objectView_->setObject(0);
 
     // XXX refine this!
-    onTreeChanged_();
+    updateSequenceView_(0);
 }
 
 void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
 {
-    MO_DEBUG("#################################################!!!!!!!!!!!");
-    objectView_->setObject(0);
-
     // update clipview
     for (auto o : l)
         clipView_->removeObject(o);
 
     // XXX refine this!
-    onTreeChanged_();
+    updateSequenceView_(0);
+    objectView_->setObject(0);
 }
 
 
@@ -962,13 +961,6 @@ void MainWidgetController::onSequenceClicked_()
     objectView()->selectObject(seqView_->sequence());
 }
 
-
-void MainWidgetController::onTreeChanged_()
-{
-    //objectTreeView_->updateFromModel();
-
-    sequencer_->setCurrentObject(scene_);
-}
 
 void MainWidgetController::onSceneChanged_()
 {

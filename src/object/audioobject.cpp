@@ -126,24 +126,34 @@ int AudioObject::numAudioInputs() const
 
 void AudioObject::setNumberAudioOutputs(uint num)
 {
+    bool changed = p_ao_->numOutputs != num;
+
     p_ao_->numOutputs = num;
-    if (editor())
-        emit editor()->objectChanged(this);
+
+    if (changed && editor())
+        editor()->emitAudioChannelsChanged(this);
 }
 
 void AudioObject::setNumberAudioInputs(int num)
 {
+    bool changed = p_ao_->numInputs != num;
+
     p_ao_->numInputs = num;
-    if (editor())
-        emit editor()->objectChanged(this);
+
+    if (changed && editor())
+        editor()->emitAudioChannelsChanged(this);
 }
 
 void AudioObject::setNumberAudioInputsOutputs(uint num)
 {
+    bool changed = p_ao_->numOutputs != num
+            || p_ao_->numInputs != (int)num;
+
     p_ao_->numOutputs =
     p_ao_->numInputs = num;
-    if (editor())
-        emit editor()->objectChanged(this);
+
+    if (changed && editor())
+        editor()->emitAudioChannelsChanged(this);
 }
 
 void AudioObject::setAudioBuffersBase(uint thread,

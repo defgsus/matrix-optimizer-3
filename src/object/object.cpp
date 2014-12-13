@@ -1162,7 +1162,7 @@ void Object::setOutputIds(const QStringList & ids)
 {
     p_outputIds_ = ids;
     if (editor())
-        emit editor()->objectChanged(this);
+        emit editor()->emitObjectChanged(this);
 }
 
 } // namespace MO

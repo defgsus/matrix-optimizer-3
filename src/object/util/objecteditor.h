@@ -52,7 +52,7 @@ public:
 
 signals:
 
-    /** Very broad signal.
+    /** Very broard signal.
         Emitted for everything except
             objectNameChanged() and parameterChanged(). */
     void sceneChanged(MO::Scene*);
@@ -103,9 +103,18 @@ signals:
     /** A bunch of modulators has been deleted */
     void modulatorsDeleted(const QList<MO::Modulator*>& mods);
 
+    /** Emitted in response to connectAudioObjects() or disconnectAudioObjects() */
     void audioConnectionsChanged();
 
 public slots:
+
+    // ----------- signal wrapper --------------
+
+    /** Emits the appropriate signals */
+    void emitObjectChanged(Object * );
+
+    /** Emits the appropriate signals */
+    void emitAudioChannelsChanged(Object * );
 
     // ------------ tree editing ---------------
 
@@ -123,6 +132,7 @@ public slots:
 
     bool deleteObjects(const QList<Object*>& list);
 
+    /** Changes the position of an object among it's siblings */
     bool setObjectIndex(Object * object, int newIndex);
 
     /** Moves the @p object to a new position under @p newParent.

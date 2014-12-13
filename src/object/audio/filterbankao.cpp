@@ -196,6 +196,7 @@ void FilterBankAO::Private::updateFilterCoeffs(Double time, uint thread)
     {
         auto f = fp.get();
 
+        // test for changes (to avoid updateCoefficients())
         if (
                f->frequency() != freq
             || f->resonance() != res
@@ -210,6 +211,7 @@ void FilterBankAO::Private::updateFilterCoeffs(Double time, uint thread)
             f->setOrder(order);
             f->updateCoefficients();
         }
+
         // does not need MultiFilter::updateCoefficients()
         f->setOutputAmplitude( amp );
 
@@ -233,6 +235,8 @@ void FilterBankAO::processAudio(uint , SamplePos pos, uint thread)
     const Double time = sampleRateInv() * pos;
 
     // update filter
+    // XXX Note: This is once per dsp-block,
+    // not ideal for modulation but much more cpu and cache friendly
     p_->updateFilterCoeffs(time, thread);
 
     auto filters = &p_->filters[thread];
