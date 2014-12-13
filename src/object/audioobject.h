@@ -53,7 +53,7 @@ public:
     /** Sets the audio buffers to use for the particular thread.
         Inputs and outputs must have the same buffer size.
         @note Unused inputs and outputs contain a NULL pointer.
-        Calls setAudioBuffers(). */
+        Calls virtual setAudioBuffers(). */
     virtual void setAudioBuffersBase(uint thread,
                                      const QList<AUDIO::AudioBuffer*>& inputs,
                                      const QList<AUDIO::AudioBuffer*>& outputs);
@@ -69,10 +69,11 @@ public:
 
     // ------------------ modulator outputs -------------------
 
-    /** Override to provide normal float values within the non-audio threads
-        as outputs of your object. */
-    virtual Double getModulatorOutput(uint channel, Double time, uint thread)
-        { Q_UNUSED(channel); Q_UNUSED(time); Q_UNUSED(thread); return 0.0; }
+    /** Provides normal float values for the non-audio threads
+        of each output channel.
+        //XXX should: Work by looking up the previous output buffer. but thread issue here
+        Returns 0.0 for unknown or empty channels. */
+    Double getAudioOutputAsFloat(uint channel, uint thread) const;
 
 protected: // ---------------- protected virtual interface -----------------------
 
@@ -99,14 +100,16 @@ protected: // ---------------- protected virtual interface ---------------------
         @note Unused inputs and outputs contain a NULL pointer.
         Also note that the number of output channels might not match your desired
         number of channels set with setNumberAudioOutputs().
-        Will be called by a non-audio thread. */
+        Will be called by a non-audio thread.
+        @note Can't emit change signals here, so no changes to the object allowed! */
     virtual void setAudioBuffers(uint thread,
                                  const QList<AUDIO::AudioBuffer*>& inputs,
                                  const QList<AUDIO::AudioBuffer*>& outputs)
     { Q_UNUSED(thread); Q_UNUSED(inputs); Q_UNUSED(outputs); }
 
     /** Process dsp data here.
-        The inputs and outputs are in audioInputs() and audioOutputs() respectively. */
+        The inputs and outputs are in audioInputs() and audioOutputs() respectively.
+        Called by audio thread. */
     virtual void processAudio(uint bufferSize, SamplePos pos, uint thread) = 0;
 
 private:

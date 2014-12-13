@@ -1,29 +1,29 @@
-/** @file shaperao.h
+/** @file envelopefollowerao.h
 
     @brief
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 08.12.2014</p>
+    <p>created 13.12.2014</p>
 */
 
-#ifndef MOSRC_OBJECT_AUDIO_SHAPERAO_H
-#define MOSRC_OBJECT_AUDIO_SHAPERAO_H
+#ifndef MOSRC_OBJECT_AUDIO_ENVELOPEFOLLOWERAO_H
+#define MOSRC_OBJECT_AUDIO_ENVELOPEFOLLOWERAO_H
 
 #include "object/audioobject.h"
 
 namespace MO {
 
-class ShaperAO : public AudioObject
+class EnvelopeFollowerAO : public AudioObject
 {
     Q_OBJECT
 public:
-    MO_OBJECT_CONSTRUCTOR(ShaperAO)
-    ~ShaperAO();
+    MO_OBJECT_CONSTRUCTOR(EnvelopeFollowerAO)
+    ~EnvelopeFollowerAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
-    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter * p) Q_DECL_OVERRIDE;
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
@@ -38,10 +38,12 @@ protected:
                                                             Q_DECL_OVERRIDE;
 private:
 
+    void createEnvOuts_();
+
     class Private;
     Private * p_;
 };
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_AUDIO_SHAPERAO_H
+#endif // MOSRC_OBJECT_AUDIO_ENVELOPEFOLLOWERAO_H

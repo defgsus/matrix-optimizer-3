@@ -74,7 +74,10 @@ public:
         :   scene   (scene),
             editor  (0),
             zStack  (0),
-            action  (A_NONE)
+            action  (A_NONE),
+            connectStartConnectItem (0),
+            connectStartItem    (0),
+            connectEndItem      (0)
     { }
 
     /// Creates the items for o and all of its children
@@ -339,8 +342,12 @@ void ObjectGraphScene::Private::addModItem(Modulator * m)
     // find parent for connection;
     Object * parent = m->modulator()->findCommonParentObject(m->parent());
 
-    auto item = new ModulatorItem(m, scene->itemForObject(parent));
-    //scene->addItem( item );
+    QGraphicsItem * pitem = scene->itemForObject(parent);
+
+    auto item = new ModulatorItem(m, pitem);
+    if (!pitem)
+        scene->addItem( item );
+
     item->setZValue(++zStack);
     item->updateShape(); // calc arrow shape
 
@@ -682,10 +689,13 @@ void ObjectGraphScene::setFocusObject(Object *o)
 
 bool ObjectGraphScene::startConnection(ObjectGraphConnectItem * item)
 {
-    p_->connectStartConnectItem = item;
-    p_->connectStartItem = itemForObject(item->object());
-    if (!p_->connectStartItem)
+    auto actual = itemForObject(item->object());
+    if (!actual)
         return false;
+
+    p_->connectStartConnectItem = item;
+    p_->connectStartItem = actual;
+    p_->connectEndItem = 0;
 
     p_->connectStartPos = p_->connectEndPos = item->scenePos();
     p_->action = Private::A_DRAG_CONNECT;
@@ -718,6 +728,11 @@ void ObjectGraphScene::Private::endConnection()
                        << ". Could not establish audio connection");
         }
     }
+
+    // reset those
+    connectStartConnectItem = 0;
+    connectStartItem = 0;
+    connectEndItem = 0;
 }
 
 
@@ -738,6 +753,7 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
         p_->action = Private::A_NONE;
         //update(sceneRect());
         update(bounding_rect(p_->connectStartPos, p_->connectEndPos).adjusted(-100,-100,100,100));
+
         event->accept();
         return;
     }
@@ -775,7 +791,7 @@ void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if (p_->connectEndItem == p_->connectStartItem)
             p_->connectEndItem = 0;
 
-        // snap to goal item
+        // snap to input of audioobject
         if (p_->connectEndItem && p_->connectEndItem->object()->isAudioObject())
         {
             int chan = p_->connectEndItem->channelForPosition(
@@ -813,6 +829,7 @@ void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void ObjectGraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
+
     QGraphicsScene::mouseReleaseEvent(event);
     if (event->isAccepted())
         return;
@@ -843,10 +860,20 @@ void ObjectGraphScene::drawForeground(QPainter *p, const QRectF &)
         p->drawPath(selectionArea());
     }
 
+    // audio connection dragging
     if (p_->action == Private::A_DRAG_CONNECT)
     {
+        Object * goal = 0;
+        if (p_->connectEndItem)
+            goal = p_->connectEndItem->object();
+
+        QPen pen = QPen(goal
+                        ? ObjectFactory::colorForObject(goal)
+                        : QColor(255, 125, 125));
+        pen.setWidth(2);
         p->setBrush(Qt::NoBrush);
-        p->setPen(QColor(255,128,128));
+        p->setPen(pen);
+
         p->drawPath(ObjectGraphSettings::pathWire(
                         p_->connectStartPos,
                         p_->connectEndPos));
@@ -968,20 +995,20 @@ void ObjectGraphScene::popup(Modulator * mod)
 
 void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPointF& dropPointF)
 {
-    if (!p_->editor)
+    if (!p_->editor || source == goal)
         return;
 
     p_->clearActions();
 
     // title
-    QString title(source->name());
+    QString title(source->name() + " > " + goal->name());
     p_->actions.addTitle(title, this);
 
     p_->actions.addSeparator(this);
 
     // --- move here ---
 
-    if (goal != source->parent())
+    if (goal != source->parent() && !goal->hasParentObject(source))
     {
         QAction * a = p_->actions.addAction(tr("move into %1").arg(goal->name()), this);
         connect(a, &QAction::triggered, [=]()
@@ -1007,18 +1034,20 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
                             return (p->getModulatorTypes() & source->type())
                                 && !p->findModulator(source->idName());
                         });
-
-    menu->setTitle(tr("connect to %1").arg(goal->name()));
-
-    p_->actions.addMenu(menu, this);
-
-    connect(menu, &QMenu::triggered, [=](QAction* a)
+    if (menu)
     {
-        const QString id = a->data().toString();
-        auto param = goal->params()->findParameter(id);
-        if (param)
-            p_->editor->addModulator(param, source->idName(), "");
-    });
+        menu->setTitle(tr("connect to %1").arg(goal->name()));
+
+        p_->actions.addMenu(menu, this);
+
+        connect(menu, &QMenu::triggered, [=](QAction* a)
+        {
+            const QString id = a->data().toString();
+            auto param = goal->params()->findParameter(id);
+            if (param)
+                p_->editor->addModulator(param, source->idName(), "");
+        });
+    }
 
     p_->showPopup();
 }

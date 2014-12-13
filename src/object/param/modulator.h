@@ -65,6 +65,10 @@ public:
     /** Returns if the object can be the modulating object */
     virtual bool canBeModulator(const Object *) const = 0;
 
+    /** Returns true if this sticks to an audio output of a module.
+        Only valid after setModulator(). */
+    bool isAudioToFloatConverter() const;
+
     // ------------- setter --------------
 
     /** Changes the modulator id - only used to update new inserted branches */

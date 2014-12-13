@@ -13,6 +13,7 @@
 
 #include "modulator.h"
 #include "types/float.h"
+#include "modulatoroutput.h"
 
 namespace MO {
 
@@ -30,8 +31,9 @@ public:
         ST_AUDIO_OBJECT
     };
 
-    /** Construct a modulator coming form object @p modulatorId
-        and belonging to @p parent */
+    /** Construct a modulator coming from object @p modulatorId
+        and belonging to @p parent.
+        @p outputId should be an int for each audio channel in case case of conversion from AudioObject. */
     ModulatorFloat(const QString& name, const QString& modulatorId, const QString &outputId,
                    Parameter * p, Object * parent = 0);
 
@@ -50,6 +52,8 @@ public:
     /** Returns the type of the assigned modulator object.
         Valid after Modulator::setModulator() */
     SourceType sourceType() const { return sourceType_; }
+
+    uint channel() const { return channel_; }
 
     /** Returns true if the SourceType supports amplitude modulations */
     bool hasAmplitude() const;
@@ -79,6 +83,8 @@ protected:
 private:
 
     SourceType sourceType_;
+    uint channel_;
+    ModulatorOutputStaticFloat * outStaticFloat_;
 
     Double amplitude_, timeOffset_;
 };

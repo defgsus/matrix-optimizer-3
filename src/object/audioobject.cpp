@@ -15,6 +15,7 @@
 #include "audio/tool/audiobuffer.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -156,6 +157,17 @@ void AudioObject::setNumberAudioInputsOutputs(uint num, bool emitSignal)
         editor()->emitAudioChannelsChanged(this);
 }
 
+Double AudioObject::getAudioOutputAsFloat(uint channel, uint thread) const
+{
+    auto outs = audioOutputs(thread);
+    //MO_DEBUG("++++++++++++++++++++++++ " << channel << "/" << outs.size());
+
+    if ((int)channel >= outs.size() || outs[channel] == 0)
+        return 0;
+
+    // first sample in current read block
+    return outs[channel]->read(0);
+}
 
 void AudioObject::setAudioBuffersBase(uint thread,
                                       const QList<AUDIO::AudioBuffer *> &inputs,

@@ -546,8 +546,8 @@ public:
     /** Returns the modulator outputs of this object. */
     const QList<ModulatorOutput*>& modulatorOutputs() const { return p_modulatorOuts_; }
 
-    /** Returns the value for the specific modulator output, or 0.0 */
-    Double getModulatorOutputValueFloat(uint channel, Double time, uint thread) const;
+    /** Returns the ModulatorOutput matching the output id, or NULL */
+    ModulatorOutput * getModulatorOutput(const QString& id) const;
 
 protected:
 

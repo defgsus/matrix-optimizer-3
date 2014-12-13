@@ -29,6 +29,8 @@
 #include "object/objectfactory.h"
 #include "object/audio/audiooutao.h"
 #include "object/audio/audioinao.h"
+#include "object/param/modulator.h"
+#include "object/param/modulatorfloat.h"
 #include "object/param/parameters.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
@@ -270,7 +272,10 @@ void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
         // avoid self-drop
         auto data = static_cast<const ObjectMimeData*>(e->mimeData());
         if (data->getDescription().pointer() == object())
+        {
+            e->ignore();
             return;
+        }
 
         p_oi_->dragHover = true;
         update();
@@ -309,6 +314,8 @@ void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 
     if (desc.pointer() && objectScene())
         objectScene()->popupObjectDrag(desc.pointer(), object(), e->scenePos());
+
+    p_oi_->dragHover = false;
 }
 
 void AbstractObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
@@ -561,6 +568,8 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     {
         item->setUnexpandedSize(QSize(1, 2));
 
+        /// @todo Somehow this disables the correct number of output items
+        /// for the graphics item
         //if (!qobject_cast<AudioInAO*>(ao))
         {
             if (ao->numAudioInputs() >= 0)
@@ -802,8 +811,11 @@ QPointF AbstractObjectItem::inputPos(Parameter * p) const
     return QPointF(r.left(), r.top() + 4);
 }
 
-QPointF AbstractObjectItem::outputPos(Modulator *) const
+QPointF AbstractObjectItem::outputPos(Modulator * m) const
 {
+    if (m->isAudioToFloatConverter())
+        return outputPos(static_cast<ModulatorFloat*>(m)->channel());
+
     QRectF r(rect());
     return QPointF(r.right(), r.bottom() - 4);
 }

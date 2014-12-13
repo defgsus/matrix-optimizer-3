@@ -17,6 +17,8 @@
 
 namespace MO {
 
+// XXX NOT USED YET
+
 class ModulatorEvent : public Modulator
 {
 public:

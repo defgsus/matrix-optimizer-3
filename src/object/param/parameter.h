@@ -95,7 +95,8 @@ public:
 
     /** Adds an Object to the list of modulators.
         Modulators will be collected by
-        collectModulators() in the derived class */
+        collectModulators() in the derived class.
+        XXX @p outputId is currently only used for AudioObject output conversion. */
     Modulator * addModulator(const QString& idName, const QString& outputId);
 
     /** Removes the Object from the list of modulators and

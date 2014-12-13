@@ -68,6 +68,13 @@ QString Modulator::nameAutomatic() const
     return n;
 }
 
+bool Modulator::isAudioToFloatConverter() const
+{
+    return modulator_ && modulator_->isAudioObject()
+            // and connecting to an audio output (should be in outputId)
+            ;
+}
+
 void Modulator::setModulator(Object * object)
 {
     MO_DEBUG_MOD("Modulator('" << (parent_? parent_->idName() : "NULL") << "')::setModulator('"

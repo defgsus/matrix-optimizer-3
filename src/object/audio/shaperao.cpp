@@ -132,6 +132,11 @@ ShaperAO::ShaperAO(QObject *parent)
     setNumberChannelsAdjustable(true);
 }
 
+ShaperAO::~ShaperAO()
+{
+    delete p_;
+}
+
 void ShaperAO::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

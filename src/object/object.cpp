@@ -18,6 +18,7 @@
 #include "transform/transformation.h"
 #include "param/parameters.h"
 #include "param/parameterselect.h"
+#include "param/modulatoroutput.h"
 #include "audio/spatial/spatialsoundsource.h"
 #include "audio/spatial/spatialmicrophone.h"
 #include "math/transformationbuffer.h"
@@ -620,9 +621,15 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
         return false;
     }
 
+    if (hasParentObject(o))
+    {
+        error = tr("Trying to add '%1' to itself").arg(o->name());
+        return false;
+    }
+
     if (!canHaveChildren(o->type()))
     {
-        error = tr("'%1' can not have a child of this type").arg(idName());
+        error = tr("'%1' can not have a child of this type").arg(name());
         return false;
     }
 
@@ -647,7 +654,7 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
     if (mods.contains((Object*)this))
     {
         error = tr("Adding '%1' as a child to '%2' would cause an infinite "
-                   "modulation loop!").arg(o->idName()).arg(idName());
+                   "modulation loop!").arg(o->name()).arg(name());
         return false;
     }
 
@@ -1161,8 +1168,11 @@ QList<QPair<Parameter*, Object*>> Object::getModulationPairs() const
     return pairs;
 }
 
+
 void Object::setModulatorOutputs(const QList<ModulatorOutput*>& mods)
 {
+    MO_DEBUG_MOD("Object::setModulatorOutputs(size=" << mods.size() << ")");
+
     // delete previous
     for (auto m : p_modulatorOuts_)
         delete m;
@@ -1170,8 +1180,28 @@ void Object::setModulatorOutputs(const QList<ModulatorOutput*>& mods)
     // update
     p_modulatorOuts_ = mods;
 
+    // set channel indices
+    uint k = 0;
+    for (auto m : p_modulatorOuts_)
+        m->p_channel_ = k++;
+
     if (editor())
         editor()->emitObjectChanged(this);
+}
+
+ModulatorOutput * Object::getModulatorOutput(const QString &id) const
+{
+    MO_DEBUG_MOD("Object::getModulatorOutput(" << id << ")");
+
+    for (auto m : p_modulatorOuts_)
+        if (m->id() == id)
+        {
+            MO_DEBUG_MOD("found");
+            return m;
+        }
+
+    MO_DEBUG_MOD("not found among " << p_modulatorOuts_.size() << " outputs");
+    return 0;
 }
 
 } // namespace MO

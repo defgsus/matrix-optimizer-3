@@ -703,7 +703,7 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
     objectView_->setObject(0);
 
     // XXX refine this!
-    updateSequenceView_(0);
+    //updateSequenceView_(0);
 }
 
 void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
@@ -713,7 +713,7 @@ void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
         clipView_->removeObject(o);
 
     // XXX refine this!
-    updateSequenceView_(0);
+    //updateSequenceView_(0);
     objectView_->setObject(0);
 }
 
@@ -1201,10 +1201,12 @@ void MainWidgetController::start()
     if (audioEngine_->scene() != scene_)
     {
         audioEngine_->setScene(scene_, MO_AUDIO_THREAD);
-
-        // audio input/output channels may have changed
-        objectGraphView()->setRootObject(scene_);
     }
+
+    // audio input/output channels may have changed
+    // XXX hacky but reliable
+    objectGraphView()->setRootObject(scene_);
+
 
     // start engine
     if (audioEngine_->start())

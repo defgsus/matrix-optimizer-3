@@ -21,6 +21,8 @@ EnvelopeFollower::EnvelopeFollower()
     : sr_       (44100),
       fadeIn_   (0.02),
       fadeOut_  (0.5),
+      ampIn_    (1.0),
+      ampOut_   (1.0),
       env_      (0)
 
 {
@@ -44,7 +46,7 @@ F32 EnvelopeFollower::process(const F32 *input, uint inputStride, uint blockSize
 {
     for (uint i=0; i<blockSize; ++i, input += inputStride)
     {
-        const F32 in = std::abs(*input);
+        const F32 in = ampIn_ * std::abs(*input);
 
         if (in >= 0.99)
             // always indicate clipping
@@ -55,7 +57,30 @@ F32 EnvelopeFollower::process(const F32 *input, uint inputStride, uint blockSize
             env_ += qOut_ * (in - env_);
     }
 
-    return env_;
+    return env_ * ampOut_;
+}
+
+F32 EnvelopeFollower::process(const F32 *input, uint inputStride,
+                              F32 *output, uint outputStride, uint blockSize)
+{
+    for (uint i=0; i<blockSize; ++i,
+            input += inputStride,
+            output += outputStride)
+    {
+        const F32 in = ampIn_ * std::abs(*input);
+
+        if (in >= 0.99)
+            // always indicate clipping
+            env_ = 1;
+        else if (in >= env_)
+            env_ += qIn_ * (in - env_);
+        else
+            env_ += qOut_ * (in - env_);
+
+        *output = ampOut_ * env_;
+    }
+
+    return env_ * ampOut_;
 }
 
 } // namespace AUDIO

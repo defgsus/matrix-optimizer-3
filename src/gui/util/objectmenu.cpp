@@ -191,6 +191,8 @@ QMenu * ObjectMenu::createParameterMenu(Object *o, QWidget *parent,
 
     QMenu * sub = menu;
 
+    bool anyone = false;
+
     QString curId = "-1";
     for (auto i = params.begin(); i != params.end(); ++i)
     {
@@ -210,9 +212,20 @@ QMenu * ObjectMenu::createParameterMenu(Object *o, QWidget *parent,
         a->setData(i.value()->idName());
         a->setEnabled(selector(i.value()));
         sub->addAction(a);
+
+        anyone |= a->isEnabled();
     }
 
-    return menu;
+    if (anyone)
+        return menu;
+
+    // otherwise dispose
+    if (parent)
+        menu->deleteLater();
+    else
+        delete menu;
+
+    return 0;
 }
 
 

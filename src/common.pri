@@ -206,7 +206,6 @@ HEADERS += \
     src/engine/serverengine.h \
     src/object/util/objecteditor.h \
     src/types/time.h \
-    src/object/param/modulatoraudio.h \
     src/audio/tool/audiobuffer.h \
     src/object/audioobject.h \
     src/object/param/parameters.h \
@@ -231,7 +230,9 @@ HEADERS += \
     src/object/audio/audioinao.h \
     src/object/param/modulatorevent.h \
     src/object/clipcontroller.h \
-    src/object/audio/filterbankao.h
+    src/object/audio/filterbankao.h \
+    src/object/param/modulatoroutput.h \
+    src/object/audio/envelopefollowerao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -404,7 +405,6 @@ SOURCES += \
     src/main.cpp \
     src/engine/serverengine.cpp \
     src/object/util/objecteditor.cpp \
-    src/object/param/modulatoraudio.cpp \
     src/audio/tool/audiobuffer.cpp \
     src/object/audioobject.cpp \
     src/object/param/parameters.cpp \
@@ -424,4 +424,6 @@ SOURCES += \
     src/object/audio/audioinao.cpp \
     src/object/param/modulatorevent.cpp \
     src/object/clipcontroller.cpp \
-    src/object/audio/filterbankao.cpp
+    src/object/audio/filterbankao.cpp \
+    src/object/param/modulatoroutput.cpp \
+    src/object/audio/envelopefollowerao.cpp

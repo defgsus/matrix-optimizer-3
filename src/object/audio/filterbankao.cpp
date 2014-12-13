@@ -73,14 +73,14 @@ void FilterBankAO::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
 
-    io.writeHeader("aoosc", 1);
+    io.writeHeader("aofbank", 1);
 }
 
 void FilterBankAO::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
 
-    io.readHeader("aoosc", 1);
+    io.readHeader("aofbank", 1);
 }
 
 void FilterBankAO::createParameters()

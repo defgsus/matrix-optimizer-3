@@ -38,15 +38,25 @@ public:
         Requires updateCoefficients() to be called. */
     void setFadeOut(F32 speed) { fadeOut_ = speed; }
 
+    /** Sets the amplitude of the input signal before enveloping.
+        No updateCoefficients() required. */
+    void setInputAmplitude(F32 amp) { ampIn_ = amp; }
+
+    /** Sets the amplitude of the input signal before enveloping.
+        No updateCoefficients() required. */
+    void setOutputAmplitude(F32 amp) { ampOut_ = amp; }
+
     // ---------- getter ------------------
 
     uint sampleRate() const { return sr_; }
 
     F32 fadeIn() const { return fadeIn_; }
     F32 fadeOut() const { return fadeOut_; }
+    F32 inputAmplitude() const { return ampIn_; }
+    F32 outputAmplitude() const { return ampOut_; }
 
     /** Returns current envelope (after last processing step) */
-    F32 envelope() const { return env_; }
+    F32 envelope() const { return env_ * ampOut_; }
 
     // ---------- processing --------------
 
@@ -68,10 +78,26 @@ public:
     F32 process(const F32 * input, uint inputStride,
                        uint blockSize);
 
+    /** Also puts the envelope into @p output.
+        Consequently call this to follow the input signal.
+        Returns the current envelope.
+        The strides define the spacing between consecutive samples. */
+    F32 process(const F32 * input, F32 * output, uint blockSize)
+        { return process(input, 1, output, 1, blockSize); }
+
+    /** Also puts the envelope into @p output.
+        Consequently call this to follow the input signal.
+        Returns the current envelope.
+        The strides define the spacing between consecutive samples. */
+    F32 process(const F32 * input, uint inputStride,
+                F32 * output, uint outputStride,
+                       uint blockSize);
+
 private:
 
     uint sr_;
     F32 fadeIn_, fadeOut_,
+        ampIn_, ampOut_,
         qIn_, qOut_,
         env_;
 };

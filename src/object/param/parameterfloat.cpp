@@ -60,7 +60,8 @@ int ParameterFloat::getModulatorTypes() const
 {
     return Object::T_TRACK_FLOAT
          | Object::T_SEQUENCE_FLOAT
-         | Object::T_MODULATOR_OBJECT_FLOAT;
+         | Object::T_MODULATOR_OBJECT_FLOAT
+         | Object::T_AUDIO_OBJECT;
 }
 
 Double ParameterFloat::getModulationValue(Double time, uint thread) const

@@ -49,7 +49,8 @@ public:
 
     /** Creates a menu with all parameters of the object in their groups.
         @p selector enables or disables certain parameters.
-        The QAction::data() contains the Parameter::idName(). */
+        The QAction::data() contains the Parameter::idName().
+        @note A NULL pointer is returned if none of the parameters satisfied the selector. */
     static QMenu * createParameterMenu(Object * o, QWidget * parent,
                                        std::function<bool(Parameter*)> selector);
 
