@@ -127,7 +127,7 @@ void ModulatorItem::updateFromTo_()
 
             // don't show connections to self
             // if they don't belong to the visible object
-            setVisible(
+            setVisible( from_ && to_ &&
                 !( from_ == to_
                 && mod_->modulator() != from_->object()
                 && mod_->parent() != to_->object()));

@@ -8,8 +8,8 @@
     <p>created 12.10.2014</p>
 */
 
-#ifndef MOSRC_OBJECT_CLIPCONTAINER_H
-#define MOSRC_OBJECT_CLIPCONTAINER_H
+#ifndef MOSRC_OBJECT_CLIPCONTROLLER_H
+#define MOSRC_OBJECT_CLIPCONTROLLER_H
 
 #include <QVector>
 #include <QMap>
@@ -18,15 +18,15 @@
 
 namespace MO {
 
-class ClipContainer : public Object
+class ClipController : public Object
 {
     Q_OBJECT
 public:
-    MO_OBJECT_CONSTRUCTOR(ClipContainer)
+    MO_OBJECT_CONSTRUCTOR(ClipController)
 
-    bool isClipContainer() const Q_DECL_OVERRIDE { return true; }
+    bool isClipController() const Q_DECL_OVERRIDE { return true; }
 
-    Type type() const Q_DECL_OVERRIDE { return T_CLIP_CONTAINER; }
+    Type type() const Q_DECL_OVERRIDE { return T_CLIP_CONTROLLER; }
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
@@ -58,10 +58,17 @@ public:
 
     // -------------- clips -------------------
 
+    /** Find all clips in the scene and assign them to this container.
+        Also calls updateClipPositions(). */
+    void collectClips();
+
     /** Call this after changes to the positions of Clips.
         This might also change the size of the ClipContainer to fit in
         all the Clip positions. */
     void updateClipPositions();
+
+    /** Returns all clips in the scene */
+    const QList<Clip*>& clips() const { return clips_; }
 
     /** Returns the clip at the specific position, or NULL */
     Clip * clip(uint column, uint row) const;
@@ -99,7 +106,8 @@ private:
         maxRow_, maxCol_;
 
     /** [y][x] */
-    QVector<Clip*> clips_;
+    QVector<Clip*> clipGrid_;
+    QList<Clip*> clips_;
 
     QMap<SamplePos, Clip*> triggerStart_, triggerStop_;
 
@@ -112,4 +120,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_CLIPCONTAINER_H
+#endif // MOSRC_OBJECT_CLIPCONTROLLER_H

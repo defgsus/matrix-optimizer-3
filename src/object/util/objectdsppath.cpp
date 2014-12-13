@@ -239,10 +239,6 @@ void ObjectDspPath::calcAudio(SamplePos pos)
 {
     // ----------- process audio objects ---------------
 
-    // clear system audio outputs
-    for (AUDIO::AudioBuffer * buf : p_->audioOuts)
-        buf->writeNullBlock();
-
     // process audio objects
     for (Private::ObjectBuffer * b : p_->audioObjects)
     {
@@ -265,6 +261,10 @@ void ObjectDspPath::calcAudio(SamplePos pos)
             if (buf)
                 buf->nextBlock();
     }
+
+    // clear system audio outputs
+    for (AUDIO::AudioBuffer * buf : p_->audioOuts)
+        buf->writeNullBlock();
 
     // mix into system audio outputs
     for (Private::ObjectBuffer * b : p_->audioOutObjects)

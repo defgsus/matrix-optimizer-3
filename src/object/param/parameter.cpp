@@ -141,6 +141,18 @@ void Parameter::setVisible(bool visible)
 }
 
 
+void Parameter::idNamesChanged(const QMap<QString, QString> & map)
+{
+    // adjust modulator ids
+    for (Modulator * m : modulators_)
+    {
+        auto i = map.find(m->modulatorId());
+        if (i != map.end())
+            m->setModulatorId(i.value());
+    }
+}
+
+
 QList<QPair<QString, QString>> Parameter::modulatorIds() const
 {
     QList<QPair<QString, QString>> list;

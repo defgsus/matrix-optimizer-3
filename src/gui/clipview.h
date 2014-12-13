@@ -21,8 +21,10 @@ class QScrollArea;
 
 namespace MO {
 class Object;
+class Scene;
 class Clip;
-class ClipContainer;
+class ClipController;
+class ObjectEditor;
 namespace GUI {
 
 class ClipWidget;
@@ -33,7 +35,7 @@ class ClipView : public QWidget
 public:
     explicit ClipView(QWidget *parent = 0);
 
-    ClipContainer * clipContainer() const { return clipCon_; }
+    ClipController * clipContainer() const { return clipCon_; }
 
     /** Used by ClipWidget to show selection highlight */
     bool isSelected(ClipWidget * c) const;
@@ -52,7 +54,7 @@ public slots:
         If the new container is the same as the previous one,
         it will be updated for rows/columns.
         Set to NULL to clear this view. */
-    void setClipContainer(ClipContainer *);
+    void setScene(Scene *);
 
     /** Selects the clip or clips belonging to @p o.
         If @p o is NULL the selection is cleared.
@@ -63,6 +65,9 @@ public slots:
     void updateClip(Clip *);
     /** Update the widget for this ClipContainer position */
     void updateClip(uint x, uint y);
+
+    /** Recreates everything */
+    void updateAllClips();
 
     /** For a destroyed object @p o, remove any widgets */
     void removeObject(const Object *o);
@@ -78,6 +83,10 @@ private slots:
     void onClipStopTriggered_(Clip*);
     void onClipStarted_(Clip*);
     void onClipStopped_(Clip*);
+
+    void onObjectAdded_(MO::Object*);
+    void onObjectDeleted_(const MO::Object*);
+    void onObjectColorChanged_(MO::Object*);
 
 private:
 
@@ -102,7 +111,9 @@ private:
     ClipWidget * widgetForClip_(const Clip *);
     ClipWidget * clipWidget_(uint x, uint y);
 
-    ClipContainer * clipCon_;
+    Scene * scene_;
+    ClipController * clipCon_;
+    ObjectEditor * editor_;
 
     QList<ClipWidget*> clipWidgets_;
     QMap<const Clip*, ClipWidget*> widgetMap_;

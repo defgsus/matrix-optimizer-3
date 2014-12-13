@@ -8,11 +8,13 @@
     <p>created 12.10.2014</p>
 */
 
+#include <QVariant>
+
 #include "clip.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "sequence.h"
-#include "clipcontainer.h"
+#include "clipcontroller.h"
 #include "param/parameters.h"
 #include "util/objectmodulatorgraph.h"
 
@@ -24,12 +26,9 @@ MO_REGISTER_OBJECT(Clip)
 
 Clip::Clip(QObject *parent)
     : Object        (parent),
-      clipContainer_(0),
-      timeStarted_  (0),
-      running_      (false),
-      column_       (0),
-      row_          (0),
-      color_        (QColor(50,100,50))
+      p_clipContainer_(0),
+      p_timeStarted_  (0),
+      p_running_      (false)
 {
     setName("Clip");
 }
@@ -38,24 +37,35 @@ void Clip::serialize(IO::DataStream &io) const
 {
     Object::serialize(io);
 
-    io.writeHeader("clip", 2);
+    io.writeHeader("clip", 3);
 
-    io << column_ << row_;
+#ifdef MO__PRE_V3
+    io << p_column_ << p_row_;
 
     // v2
-    io << color_;
+    io << p_color_;
+#endif
 }
 
 void Clip::deserialize(IO::DataStream &io)
 {
     Object::deserialize(io);
 
-    const int ver = io.readHeader("clip", 2);
+    const int ver = io.readHeader("clip", 3);
 
-    io >> column_ >> row_;
-
-    if (ver >= 2)
-        io >> color_;
+    if (ver < 3)
+    {
+        uint col, row;
+        io >> col >> row;
+        setAttachedData(col, DT_CLIP_COLUMN);
+        setAttachedData(row, DT_CLIP_ROW);
+        if (ver >= 2)
+        {
+            QColor co;
+            io >> co;
+            setAttachedData(co.hslHue(), DT_HUE);
+        }
+    }
 }
 
 void Clip::createParameters()
@@ -64,7 +74,7 @@ void Clip::createParameters()
 
     params()->beginParameterGroup("clip", tr("clip"));
 
-        p_speed_ = params()->createFloatParameter("speed", tr("speed"),
+        paramSpeed_ = params()->createFloatParameter("speed", tr("speed"),
                                         tr("The speed multiplier for all sequences in the clip"),
                                         1, 0.1, true, false);
 
@@ -77,21 +87,18 @@ void Clip::updateParameterVisibility()
     Object::updateParameterVisibility();
 }
 
-void Clip::onParentChanged()
-{
-    Object::onParentChanged();
-
-    clipContainer_ = qobject_cast<ClipContainer*>(parentObject());
-
-    if (clipContainer_)
-        clipContainer_->findNextFreeSlot(column_, row_, true);
-}
 
 void Clip::childrenChanged()
 {
     // get all sequences and sub-sequences
-    sequences_ = findChildObjects<Sequence>(QString(), true);
+    p_sequences_ = findChildObjects<Sequence>(QString(), true);
 }
+
+uint Clip::column() const { return getAttachedData(DT_CLIP_COLUMN).toUInt(); }
+uint Clip::row() const { return getAttachedData(DT_CLIP_ROW).toUInt(); }
+void Clip::setRow(uint row) { setAttachedData(row, DT_CLIP_ROW); }
+void Clip::setColumn(uint col) { setAttachedData(col, DT_CLIP_COLUMN); }
+
 
 QList<Clip*> Clip::getAssociatedClips(Object *o)
 {
@@ -165,13 +172,13 @@ QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
 
 void Clip::startClip(Double gtime)
 {
-    timeStarted_ = gtime;
-    running_ = true;
+    p_timeStarted_ = gtime;
+    p_running_ = true;
 }
 
 void Clip::stopClip()
 {
-    running_ = false;
+    p_running_ = false;
 }
 
 

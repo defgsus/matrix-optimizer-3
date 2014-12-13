@@ -100,16 +100,12 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
 
     // prepare private state
     p_oi_->object = object;
-    p_oi_->brushBack = ObjectGraphSettings::brushOutline(object);
-    p_oi_->brushBackSel = ObjectGraphSettings::brushOutline(object, true);
-    p_oi_->icon = ObjectFactory::iconForObject(p_oi_->object,
-                                ObjectFactory::colorForObject(object));
-    p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
     // 'expanded' triangle item
     p_oi_->itemExp = new ObjectGraphExpandItem(this);
     p_oi_->itemExp->setVisible(false);
     p_oi_->itemExp->setPos(ObjectGraphSettings::penOutlineWidth() * 3.,
                            ObjectGraphSettings::penOutlineWidth() * 3.);
+    updateColors();
 
     // setup QGraphicsItem
     setCursor(QCursor(Qt::SizeAllCursor));
@@ -129,6 +125,7 @@ AbstractObjectItem::~AbstractObjectItem()
 }
 
 // -------------------------- state ----------------------------------
+
 
 ObjectGraphScene * AbstractObjectItem::objectScene() const
 {
@@ -237,6 +234,17 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
 
         if (isExpanded())
             setLayoutDirty();
+    }
+    else
+    if (change == ItemChildRemovedChange)
+    {
+        // collapse if no child left
+        if (isExpanded() && object()->childObjects().isEmpty())
+        {
+            setExpanded(false);
+            if (p_oi_->itemExp)
+                p_oi_->itemExp->setVisible(false);
+        }
     }
 
     QVariant ret = QGraphicsItem::itemChange(change, value);
@@ -527,6 +535,17 @@ AbstractObjectItem * AbstractObjectItem::childItemAt(const QPoint& pos) const
 
 
 // --------------------------------------- layout ---------------------------------------------------
+
+void AbstractObjectItem::updateColors()
+{
+    p_oi_->brushBack = ObjectGraphSettings::brushOutline(object());
+    p_oi_->brushBackSel = ObjectGraphSettings::brushOutline(object(), true);
+    p_oi_->icon = ObjectFactory::iconForObject(object(),
+                                ObjectFactory::colorForObject(object()));
+    p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
+
+    update();
+}
 
 void AbstractObjectItem::PrivateOI::createConnectors()
 {

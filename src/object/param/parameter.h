@@ -14,6 +14,7 @@
 #include <QString>
 #include <QList>
 #include <QPair>
+#include <QMap>
 
 #include "object/object_fwd.h"
 
@@ -78,6 +79,12 @@ public:
     void setVisibleGraph(bool visible) { isVisibleGraph_ = visible; }
 
     // ------------ modulators ------------------
+
+    /** Called when the idNames of objects have changed.
+        This happens if a new object/branch is inserted into an existing branch.
+        The map maps from old id to new id.
+        Call ancestor's code in your derived function! */
+    virtual void idNamesChanged(const QMap<QString, QString>& );
 
     /** Should return an OR combination of all Object types
         that are supported as modulators */

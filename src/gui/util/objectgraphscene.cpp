@@ -188,14 +188,20 @@ void ObjectGraphScene::setRootObject(Object *root)
         {
             connect(p_->editor, SIGNAL(objectAdded(MO::Object*)),
                     this, SLOT(onObjectAdded_(MO::Object*)));
+            connect(p_->editor, SIGNAL(objectsAdded(QList<MO::Object*>)),
+                    this, SLOT(onObjectsAdded_(QList<MO::Object*>)));
             connect(p_->editor, SIGNAL(objectDeleted(const MO::Object*)),
                     this, SLOT(onObjectDeleted_(const MO::Object*)));
+            connect(p_->editor, SIGNAL(objectsDeleted(QList<MO::Object*>)),
+                    this, SLOT(onObjectsDeleted_(QList<MO::Object*>)));
             connect(p_->editor, SIGNAL(objectMoved(MO::Object*,MO::Object*)),
                     this, SLOT(onObjectMoved_(MO::Object*,MO::Object*)));
             connect(p_->editor, SIGNAL(objectChanged(MO::Object*)),
                     this, SLOT(onObjectChanged_(MO::Object*)));
             connect(p_->editor, SIGNAL(objectNameChanged(MO::Object*)),
                     this, SLOT(onObjectNameChanged_(MO::Object*)));
+            connect(p_->editor, SIGNAL(objectColorChanged(MO::Object*)),
+                    this, SLOT(onObjectColorChanged_(MO::Object*)));
             connect(p_->editor, SIGNAL(modulatorAdded(MO::Modulator*)),
                     this, SLOT(onModulatorAdded_(MO::Modulator*)));
             connect(p_->editor, SIGNAL(modulatorDeleted(const MO::Modulator*)),
@@ -309,7 +315,10 @@ void ObjectGraphScene::Private::createModulatorItems(Object *root)
     auto mods = root->getModulators();
     for (Modulator * m : mods)
     {
-        addModItem(m);
+        if (m->modulator())
+            addModItem(m);
+        else
+            MO_WARNING("unassigned modulator for item, id == " << m->modulatorId());
     }
 
     // add audio connections
@@ -331,7 +340,7 @@ void ObjectGraphScene::Private::addModItem(Modulator * m)
     Object * parent = m->modulator()->findCommonParentObject(m->parent());
 
     auto item = new ModulatorItem(m, scene->itemForObject(parent));
-    scene->addItem( item );
+    //scene->addItem( item );
     item->setZValue(++zStack);
     item->updateShape(); // calc arrow shape
 
@@ -1116,6 +1125,17 @@ void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
 
     QAction * a;
 
+    // set color
+    a = actions.addAction(tr("Change color"), scene);
+    auto sub = ObjectMenu::createHueMenu();
+    a->setMenu(sub);
+    connect(sub, &QMenu::triggered, [=](QAction * a)
+    {
+        int hue = a->data().toInt();
+        editor->setObjectHue(obj, hue);
+    });
+
+
     if (Model3d * m = qobject_cast<Model3d*>(obj))
     {
         a = actions.addAction(QIcon(":/icon/obj_3d.png"), tr("Edit model geometry"), scene);
@@ -1215,6 +1235,19 @@ void ObjectGraphScene::onObjectAdded_(Object * o)
     p_->recreateModulatorItems();
 }
 
+void ObjectGraphScene::onObjectsAdded_(const QList<Object*>& list)
+{
+    for (auto o : list)
+    {
+        const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
+                          ? o->getAttachedData(Object::DT_GRAPH_POS).toPoint()
+                          : QPoint(1,1);
+
+        p_->createObjectItem(o, pos);
+    }
+    p_->recreateModulatorItems();
+}
+
 void ObjectGraphScene::onObjectDeleted_(const Object *)
 {
 #if 1
@@ -1233,6 +1266,14 @@ void ObjectGraphScene::onObjectDeleted_(const Object *)
     p_->recreateModulatorItems();
 #endif
 }
+
+void ObjectGraphScene::onObjectsDeleted_(const QList<Object*>& )
+{
+    // again, don't bother to modify existing structure
+    // just rebuild everything
+    setRootObject(p_->root);
+}
+
 
 void ObjectGraphScene::onObjectMoved_(Object * , Object *)
 {
@@ -1266,6 +1307,13 @@ void ObjectGraphScene::onObjectNameChanged_(Object * o)
     auto item = itemForObject(o);
     if (item)
         item->updateLabels();
+}
+
+void ObjectGraphScene::onObjectColorChanged_(Object * o)
+{
+    auto item = itemForObject(o);
+    if (item)
+        item->updateColors();
 }
 
 void ObjectGraphScene::onObjectChanged_(Object * o)
@@ -1334,16 +1382,25 @@ void ObjectGraphScene::deleteObjects(const QList<AbstractObjectItem *> items1)
 {
     MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
 
+    if (items1.isEmpty())
+        return;
+
     auto items = items1;
     reduceToTopLevel(items);
+/*
+    qDebug() << "-------------\n"
+             << items << "\n"
+                << items1 << "\n"
+                   << selectedItems() << "\n"
+                      << selectedObjectItems() << "\n";
+*/
+    MO_ASSERT(items.first()->object() != p_->root, "Can't delete root here");
 
-    for (auto item : items)
-    {
-        Object * o = item->object();
-        MO_ASSERT(o != p_->root, "Can't delete root here");
+    QList<Object*> objs;
+    for (auto i : items)
+        objs << i->object();
 
-        p_->root->editor()->deleteObject(o);
-    }
+    p_->root->editor()->deleteObjects(objs);
 }
 
 /*

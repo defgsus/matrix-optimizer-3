@@ -41,12 +41,14 @@ class ShaperAO::Private
     {
         EquationObject()
             : equ       (new PPP_NAMESPACE::Parser()),
-              equPtr    (std::shared_ptr<PPP_NAMESPACE::Parser>(equ))
+              equPtr    (std::shared_ptr<PPP_NAMESPACE::Parser>(equ)),
+              out       (0.0)
 
         {
             equ->variables().add("x", &input, ShaperAO::tr("The current audio sample").toStdString());
             equ->variables().add("x1", &input1, ShaperAO::tr("The previous audio sample").toStdString());
             equ->variables().add("x2", &input2, ShaperAO::tr("The one-before-previous audio sample").toStdString());
+            equ->variables().add("out", &out, ShaperAO::tr("The last output sample").toStdString());
         }
 
         F32 operator()(F32 in)
@@ -54,12 +56,12 @@ class ShaperAO::Private
             input2 = input1;
             input1 = input;
             input = in;
-            return equ->eval();
+            return out = equ->eval();
         }
 
         PPP_NAMESPACE::Parser * equ;
         std::shared_ptr<PPP_NAMESPACE::Parser> equPtr;
-        PPP_NAMESPACE::Float input, input1, input2;
+        PPP_NAMESPACE::Float input, input1, input2, out;
     };
 
     ShaperAO * shaper;

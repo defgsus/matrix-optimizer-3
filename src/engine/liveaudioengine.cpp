@@ -44,7 +44,7 @@ public:
     Private(LiveAudioEngine * e)
         : parent        (e),
           engine        (new AudioEngine()),
-          nextEngine    (0),
+          engineChanged (false),
           audioDevice   (0),
           defaultConf   (AUDIO::AudioDevice::defaultConfiguration()),
           audioOutThread(0)
@@ -53,7 +53,6 @@ public:
     ~Private()
     {
         delete audioDevice;
-        delete nextEngine;
         delete engine;
     }
 
@@ -62,7 +61,8 @@ public:
     void audioCallback(const F32 *, F32 *);
 
     LiveAudioEngine * parent;
-    AudioEngine * engine, * nextEngine;
+    AudioEngine * engine;
+    bool engineChanged;
 
     AUDIO::AudioDevice * audioDevice;
     AUDIO::Configuration defaultConf;
@@ -206,10 +206,9 @@ public:
                                 bufferForDevice.writePointer());
 
                     // check for engine swap
-                    if (live->nextEngine)
+                    if (live->engineChanged)
                     {
-                        live->engine = live->nextEngine;
-                        live->nextEngine = 0;
+                        live->engineChanged = false;
 
                         // update local settings
                         bufferSize = engine_->config().bufferSize(),
@@ -351,10 +350,12 @@ void LiveAudioEngine::setScene(Scene * s, uint thread)
 
         MO_DEBUG("LiveAudioEngine::setScene(" << s << ", " << thread << ") thread-safe swap");
 
-        if (!p_->nextEngine)
+        p_->engine->setScene(scene(), config(), thread);
+        p_->engineChanged = true;
+        /*if (!p_->nextEngine)
             p_->nextEngine = new AudioEngine();
         p_->nextEngine->setScene(scene(), config(), thread);
-        delete p_->engine;
+        delete p_->engine;*/
     }
     else
     {

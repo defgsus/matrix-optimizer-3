@@ -27,6 +27,7 @@
 #include "object/param/parametertimeline1d.h"
 #include "object/track.h"
 #include "object/sequencefloat.h"
+#include "object/clipcontroller.h"
 #include "object/microphone.h"
 #include "object/lightsource.h"
 #include "object/util/objectdsppath.h"
@@ -68,6 +69,7 @@ Scene::Scene(QObject *parent) :
     freeCameraMatrix_   (1.0),
     projectionSettings_ (new ProjectionSystemSettings()),
     projectorIndex_     (0),
+    clipController_      (0),
     sceneNumberThreads_ (3),
     sceneSampleRate_    (44100),
     audioCon_           (new AudioObjectConnections()),
@@ -161,6 +163,16 @@ void Scene::findObjects_()
     // not all objects need there transformation calculated
     // these are the ones that do
     posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
+
+    // assign clip container
+    clipController_ = 0;
+    for (auto o : allObjects_)
+        if (o->type() == T_CLIP_CONTROLLER)
+            clipController_ = static_cast<ClipController*>(o);
+    // assign clips to it
+    if (clipController_)
+        clipController_->collectClips();
+
 #if 0
     // all transformation objects that are or include audio relevant objects
     posObjectsAudio_.clear();
@@ -272,6 +284,32 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
     render_();
 }
 
+void Scene::addObjects(Object *parent, const QList<Object*>& newChilds, int insert_index)
+{
+    MO_DEBUG_TREE("Scene::addObjects(" << parent << ", " << newChilds.size() << ", " << insert_index << ")");
+
+    {
+        ScopedSceneLockWrite lock(this);
+        for (auto n : newChilds)
+        {
+            // make the name unique
+            n->setName( parent->makeUniqueName(n->name()) );
+            // add (could be faster with a list version...)
+            parent->addObject_(n, insert_index++);
+        }
+
+        parent->p_childrenChanged_();
+
+        for (auto n : newChilds)
+        {
+            n->onParametersLoaded();
+            n->updateParameterVisibility();
+        }
+        updateTree_();
+    }
+    render_();
+}
+
 void Scene::deleteObject(Object *object)
 {
     MO_DEBUG_TREE("Scene::deleteObject(" << object << ")");
@@ -290,6 +328,8 @@ void Scene::deleteObject(Object *object)
         // get list of all objects that will be deleted
         dellist = object->findChildObjects<Object>(QString(), true);
         dellist.prepend(object);
+        // memorize so we can free resources later
+        deletedObjects_.append(dellist);
 
         // get list of all remaining objects
         QList<Object*> remainList = findChildObjectsStopAt<Object>(QString(), true, object);
@@ -307,17 +347,54 @@ void Scene::deleteObject(Object *object)
         updateTree_();
     }
 
-    // memorize so we can free resources later
-    deletedObjects_.append(dellist);
+    render_();
+}
 
-    // XXX right now GUI does not listen to the specific
-    // object but rather updates everything.
-    // So rather not call this repeatedly.
-    //for (auto o : dellist)
-        //emit objectDeleted(o);
+
+void Scene::deleteObjects(const QList<Object*>& objects)
+{
+    MO_DEBUG_TREE("Scene::deleteObjects(" << objects.size() << ")");
+
+    QList<Object*> dellist;
+
+    {
+        ScopedSceneLockWrite lock(this);
+
+        for (auto object : objects)
+        {
+            MO_ASSERT(object->parentObject(), "Scene::deleteObjects(): "<<object<<" without parent");
+
+            // remove audio connections
+            audioConnections()->remove(object);
+            //audioConnections()->dump(std::cout);
+
+            // get list of all objects that will be deleted
+            dellist = object->findChildObjects<Object>(QString(), true);
+            dellist.prepend(object);
+            // memorize so we can free resources later
+            deletedObjects_.append(dellist);
+
+            // get list of all remaining objects
+            QList<Object*> remainList = findChildObjectsStopAt<Object>(QString(), true, object);
+            remainList.prepend(this);
+
+            // tell everyone about deletions
+            tellObjectsAboutToDelete_(remainList, dellist);
+
+            // execute
+            Object * parent = object->parentObject();
+            parent->deleteObject_(object, false);
+            parent->p_childrenChanged_();
+        }
+
+        // finally update tree
+        updateTree_();
+    }
 
     render_();
 }
+
+
 
 bool Scene::setObjectIndex(Object * object, int newIndex)
 {

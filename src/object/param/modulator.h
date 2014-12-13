@@ -67,6 +67,9 @@ public:
 
     // ------------- setter --------------
 
+    /** Changes the modulator id - only used to update new inserted branches */
+    void setModulatorId(const QString& id) { modulatorId_ = id; }
+
     /** Sets the modulating object (from where the modulation comes from).
         Set to NULL to remove the modulator temporarily.
         @note Use canBeModulator() to see if the object fits the requirements. */

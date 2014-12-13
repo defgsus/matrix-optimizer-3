@@ -293,6 +293,43 @@ QMenu * ObjectMenu::createColorMenu(QWidget *parent)
 }
 
 
+QMenu * ObjectMenu::createHueMenu(QWidget *parent)
+{
+    QMenu * menu = new QMenu(parent);
+
+    // --- create icon lists ---
+
+    static QList<QIcon> icons;
+    static QList<int> hues;
+    if (icons.isEmpty())
+    {
+        for (int i = -23; i < 359; i += 23)
+        {
+            QColor col = i < 0 ? QColor::fromHsl(0, 0, 100)
+                               : QColor::fromHsl(i, 200, 100);
+
+            QPixmap pixmap(32, 32);
+            QPainter painter(&pixmap);
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(QBrush(col));
+            painter.drawRect(pixmap.rect());
+
+            icons << QIcon(pixmap);
+            hues << std::max(-1, i);
+        }
+    }
+
+    // create menu
+    for (int i=0; i<icons.size(); ++i)
+    {
+        QAction * a = new QAction(icons[i], "", menu);
+        a->setData(hues[i]);
+        menu->addAction(a);
+    }
+
+    return menu;
+}
+
 
 } // namespace GUI
 } // namespace MO

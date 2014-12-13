@@ -273,6 +273,10 @@ namespace PPP_NAMESPACE {
     {
         struct Detail;
 
+        // disable copy
+        Parser(const Parser& );
+        Parser& operator = (const Parser&);
+
         public:
 
         // ---------- ctor -------------

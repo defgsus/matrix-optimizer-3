@@ -73,7 +73,7 @@
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/sequencefloat.h"
-#include "object/clipcontainer.h"
+#include "object/clipcontroller.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "object/util/objecteditor.h"
 #include "object/util/objectdsppath.h"
@@ -142,6 +142,7 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(objectNameChanged(MO::Object*)), this, SLOT(onObjectNameChanged_(MO::Object*)));
     connect(objectEditor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
     connect(objectEditor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+    connect(objectEditor_, SIGNAL(objectsDeleted(QList<MO::Object*>)), this, SLOT(onObjectsDeleted_(QList<MO::Object*>)));
     connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
@@ -624,7 +625,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     seqView_->setSequence(0);
 
     sequencer_->setCurrentObject(scene_);
-    clipView_->setClipContainer(0);
+    clipView_->setScene(scene_);
 
     glWindow_->renderLater();
 
@@ -698,11 +699,24 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
 {
     // update clipview
     clipView_->removeObject(o);
+    objectView_->setObject(0);
 
     // XXX refine this!
     onTreeChanged_();
 }
 
+void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
+{
+    MO_DEBUG("#################################################!!!!!!!!!!!");
+    objectView_->setObject(0);
+
+    // update clipview
+    for (auto o : l)
+        clipView_->removeObject(o);
+
+    // XXX refine this!
+    onTreeChanged_();
+}
 
 
 
@@ -721,18 +735,7 @@ void MainWidgetController::showClipView_(bool enable, Object * o)
         return;
     }
 
-    if (o->isClipContainer())
-    {
-        clipView_->setClipContainer(static_cast<ClipContainer*>(o));
-    }
-    else
-    {
-        Object * con = o->findParentObject(Object::T_CLIP_CONTAINER);
-        if (con)
-            clipView_->setClipContainer(static_cast<ClipContainer*>(con));
-
-        clipView_->selectObject(o);
-    }
+    clipView_->selectObject(o);
 
     emit modeChanged();
 }
@@ -835,8 +838,8 @@ void MainWidgetController::onObjectSelectedTree_(Object * o)
     updateSequenceView_(o);
 
     // update clipview
-    if (o->isClip() || o->isClipContainer() ||
-              o->findParentObject(Object::T_CLIP_CONTAINER))
+    if (o->isClip() || o->isClipController() ||
+              o->findParentObject(Object::T_CLIP_CONTROLLER))
     {
         showClipView_(true, o);
     }
@@ -874,8 +877,8 @@ void MainWidgetController::onObjectSelectedGraphView_(Object * o)
     updateSequenceView_(o);
 
     // update clipview
-    if (o->isClip() || o->isClipContainer() ||
-              o->findParentObject(Object::T_CLIP_CONTAINER))
+    if (o->isClip() || o->isClipController() ||
+              o->findParentObject(Object::T_CLIP_CONTROLLER))
     {
         showClipView_(true, o);
     }
@@ -922,8 +925,8 @@ void MainWidgetController::onObjectSelectedObjectView_(Object * o)
     objectGraphView()->setFocusObject(o);
 
     // update clipview
-    if (o && (o->isClip() || o->isClipContainer() ||
-              o->findParentObject(Object::T_CLIP_CONTAINER)))
+    if (o && (o->isClip() || o->isClipController() ||
+              o->findParentObject(Object::T_CLIP_CONTROLLER)))
     {
         showClipView_(true, o);
     }
@@ -1168,13 +1171,13 @@ void MainWidgetController::updateWidgetsActivity_()
     actionSaveScene_->setEnabled( !currentSceneFilename_.isEmpty() );
 }
 
-void MainWidgetController::copySceneSettings_(Object *o)
+void MainWidgetController::copySceneSettings_(Object *)
 {
-    if (o->idName() != o->originalIdName())
+    /*YYY if (o->idName() != o->originalIdName())
         sceneSettings_->copySettings(o->idName(), o->originalIdName());
 
     for (auto c : o->childObjects())
-        copySceneSettings_(c);
+        copySceneSettings_(c);*/
 }
 
 

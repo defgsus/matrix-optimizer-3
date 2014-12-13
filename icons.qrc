@@ -48,5 +48,8 @@
         <file alias="stop_small.png">assets/icon/stop_small.png</file>
         <file alias="visibility.png">assets/icon/visibility.png</file>
         <file alias="visibility_on.png">assets/icon/visibility_on.png</file>
+        <file alias="obj_clip.png">assets/icon/obj_clip.png</file>
+        <file alias="obj_clipcontroller.png">assets/icon/obj_clipcontroller.png</file>
+        <file alias="obj_audio.png">assets/icon/obj_audio.png</file>
     </qresource>
 </RCC>

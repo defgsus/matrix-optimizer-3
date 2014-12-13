@@ -41,7 +41,7 @@ namespace MO {
     class Sequence;
     class SequenceFloat;
     class Clip;
-    class ClipContainer;
+    class ClipController;
     class Track;
     class TrackFloat;
 

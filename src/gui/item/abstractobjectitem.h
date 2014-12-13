@@ -134,6 +134,9 @@ public:
 
     // ----------------- layout stuff ------------------
 
+    /** Updates all brushes/pens from object hue */
+    void updateColors();
+
     /** Currently updates the name label */
     void updateLabels();
 

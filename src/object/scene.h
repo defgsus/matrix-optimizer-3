@@ -76,6 +76,9 @@ public:
 
     const QList<Camera*> cameras() const { return cameras_; }
 
+    /** Returns the one clip con, OR NULL */
+    ClipController * clipController() const { return clipController_; }
+
     // --------------- files -------------------
 
     /** Gets the needed files of ALL objects */
@@ -200,7 +203,9 @@ public slots:
      */
 
     void addObject(Object * parent, Object * newChild, int insert_index = -1);
+    void addObjects(Object * parent, const QList<Object*>& newChilds, int insert_index = -1);
     void deleteObject(Object * object);
+    void deleteObjects(const QList<Object*>& objects);
     bool setObjectIndex(Object * object, int newIndex);
     void moveObject(Object * object, Object * newParent, int newIndex);
 
@@ -354,6 +359,7 @@ private:
 
     // ----------- special objects -------------
 
+    ClipController * clipController_;
     QList<Object*> allObjects_;
     QList<Object*> posObjects_;
     //QList<Object*> posObjectsAudio_;

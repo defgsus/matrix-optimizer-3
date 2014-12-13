@@ -8,7 +8,7 @@
     <p>created 12.10.2014</p>
 */
 
-#include "clipcontainer.h"
+#include "clipcontroller.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -16,27 +16,27 @@
 
 namespace MO {
 
-MO_REGISTER_OBJECT(ClipContainer)
+MO_REGISTER_OBJECT(ClipController)
 
 namespace {
     const uint minimumRows_ = 12;
     const uint minimumColumns_ = 12;
 }
 
-ClipContainer::ClipContainer(QObject *parent) :
+ClipController::ClipController(QObject *parent) :
     Object          (parent),
     rows_           (minimumRows_),
     cols_           (minimumColumns_)
 {
-    setName("ClipContainer");
+    setName("ClipController");
 
     // init grid vector
-    clips_.resize(cols_ * rows_);
-    for (auto & c : clips_)
+    clipGrid_.resize(cols_ * rows_);
+    for (auto & c : clipGrid_)
         c = 0;
 }
 
-void ClipContainer::serialize(IO::DataStream &io) const
+void ClipController::serialize(IO::DataStream &io) const
 {
     Object::serialize(io);
 
@@ -45,7 +45,7 @@ void ClipContainer::serialize(IO::DataStream &io) const
     io << rows_ << cols_;
 }
 
-void ClipContainer::deserialize(IO::DataStream &io)
+void ClipController::deserialize(IO::DataStream &io)
 {
     Object::deserialize(io);
 
@@ -57,23 +57,23 @@ void ClipContainer::deserialize(IO::DataStream &io)
     rows_ = std::max(minimumRows_, rows_);
 }
 
-void ClipContainer::createParameters()
+void ClipController::createParameters()
 {
     Object::createParameters();
 }
 
 
-void ClipContainer::updateParameterVisibility()
+void ClipController::updateParameterVisibility()
 {
     Object::updateParameterVisibility();
 }
 
-void ClipContainer::childrenChanged()
+void ClipController::childrenChanged()
 {
     setNumber(cols_, rows_);
 }
 
-QString ClipContainer::columnName(uint index) const
+QString ClipController::columnName(uint index) const
 {
     // return set name
     auto i = columnNames_.find(index);
@@ -90,7 +90,7 @@ QString ClipContainer::columnName(uint index) const
     return ret;
 }
 
-QString ClipContainer::rowName(uint index) const
+QString ClipController::rowName(uint index) const
 {
     auto i = rowNames_.find(index);
     if (i != rowNames_.end())
@@ -99,22 +99,41 @@ QString ClipContainer::rowName(uint index) const
         return QString::number(index);
 }
 
-void ClipContainer::setNumber(uint cols, uint rows)
+void ClipController::setNumber(uint cols, uint rows)
 {
     cols_ = cols;
     rows_ = rows;
     updateClipPositions();
 }
 
-void ClipContainer::updateClipPositions()
-{
-    // get all clips
-    auto clips = findChildObjects<Clip>();
 
+void ClipController::collectClips()
+{
+    Object * root = rootObject();
+    clips_ = root->findChildObjects<Clip>("", true);
+
+    for (Clip * c : clips_)
+    {
+        if (c->clipContainer() != this)
+        {
+            c->setClipContainer(this);
+            uint col = c->column(),
+                 row = c->row();
+            if (findNextFreeSlot(col, row, true))
+                c->setPosition(col, row);
+        }
+    }
+
+    updateClipPositions();
+}
+
+
+void ClipController::updateClipPositions()
+{
     // find maximum rows and columns of clips
     maxRow_ = 0;
     maxCol_ = 0;
-    for (auto c : clips)
+    for (auto c : clips_)
     {
         maxCol_ = std::max(maxCol_, c->column());
         maxRow_ = std::max(maxRow_, c->row());
@@ -124,38 +143,38 @@ void ClipContainer::updateClipPositions()
     cols_ = std::max(minimumColumns_, std::max(maxCol_, cols_));
 
     // resize grid vector
-    clips_.resize(cols_ * rows_);
-    for (auto & c : clips_)
+    clipGrid_.resize(cols_ * rows_);
+    for (auto & c : clipGrid_)
         c = 0;
 
     // put into grid vector
-    for (auto c : clips)
+    for (auto c : clips_)
     {
         const uint i = c->row() * cols_ + c->column();
-        if (clips_[i])
+        if (clipGrid_[i])
             MO_WARNING("Clip '" << c->idName() << "' on same position "
                        "(" << c->column() << ", " << c->row() << ") in ClipContainer as "
-                       "'" << clips_[i]->idName() << "'");
-        clips_[i] = c;
+                       "'" << clipGrid_[i]->idName() << "'");
+        clipGrid_[i] = c;
     }
 }
 
-Clip * ClipContainer::clip(uint column, uint row) const
+Clip * ClipController::clip(uint column, uint row) const
 {
     if (column >= cols_ || row >= rows_)
         return 0;
 
     const int i = row * cols_ + column;
-    if (i >= clips_.size())
+    if (i >= clipGrid_.size())
     {
         MO_WARNING("ClipContainer::clip(" << column << ", " << row << ") "
-                   "out of range for clips_ array " << i << "/" << clips_.size());
+                   "out of range for clips_ array " << i << "/" << clipGrid_.size());
         return 0;
     }
-    return clips_[i];
+    return clipGrid_[i];
 }
 
-Clip * ClipContainer::playingClip(uint column) const
+Clip * ClipController::playingClip(uint column) const
 {
     if (column >= cols_)
     {
@@ -175,7 +194,7 @@ Clip * ClipContainer::playingClip(uint column) const
 }
 
 
-bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNecessary, bool* resized)
+bool ClipController::findNextFreeSlot(uint &column, uint &row, bool resizeIfNecessary, bool* resized)
 {
     if (resized)
         *resized = false;
@@ -185,7 +204,7 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
 
     // If clips_ array has not been initialized yet
     // it's probably XXX save to use the given position
-    if (clips_.isEmpty())
+    if (clipGrid_.isEmpty())
         return true;
 
     int ocolumn = column,
@@ -195,7 +214,7 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
     // search forward
     while (column < cols_)
     {
-        if (clips_[row * cols_ + column] == 0)
+        if (clipGrid_[row * cols_ + column] == 0)
             return true;
 
         row++;
@@ -209,7 +228,7 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
     // search backwards
     while (ocolumn >= 0)
     {
-        if (clips_[orow * cols_ + ocolumn] == 0)
+        if (clipGrid_[orow * cols_ + ocolumn] == 0)
         {
             column = ocolumn;
             row = orow;
@@ -240,7 +259,7 @@ bool ClipContainer::findNextFreeSlot(uint &column, uint &row, bool resizeIfNeces
 }
 
 
-void ClipContainer::triggerClip(Clip *clip, Double gtime)
+void ClipController::triggerClip(Clip *clip, Double gtime)
 {
     MO_DEBUG_CLIP("ClipContainer::triggerClip(" << clip << ", " << gtime << ")");
 
@@ -256,7 +275,7 @@ void ClipContainer::triggerClip(Clip *clip, Double gtime)
     emit clipStarted(clip);
 }
 
-void ClipContainer::triggerStopClip(Clip *clip, Double gtime)
+void ClipController::triggerStopClip(Clip *clip, Double gtime)
 {
     MO_DEBUG_CLIP("ClipContainer::triggerStopClip(" << clip << ", " << gtime << ")");
 
@@ -267,7 +286,7 @@ void ClipContainer::triggerStopClip(Clip *clip, Double gtime)
     emit clipStopped(clip);
 }
 
-void ClipContainer::triggerRow(uint index, Double gtime)
+void ClipController::triggerRow(uint index, Double gtime)
 {
     MO_DEBUG_CLIP("ClipContainer::triggerRow(" << index << ", " << gtime << ")");
 
@@ -294,7 +313,7 @@ void ClipContainer::triggerRow(uint index, Double gtime)
     }
 }
 
-void ClipContainer::triggerStopColumn(uint index, Double gtime)
+void ClipController::triggerStopColumn(uint index, Double gtime)
 {
     MO_DEBUG("ClipContainer::triggerStopColumn(" << index << ", " << gtime << ")");
 
