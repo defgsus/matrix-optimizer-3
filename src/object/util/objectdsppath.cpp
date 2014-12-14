@@ -670,7 +670,7 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
             {
                 auto audiobuf = new AUDIO::AudioBuffer(conf.bufferSize(),
                                         // XXX at least a second of buffer time
-                                        conf.sampleRate() / conf.bufferSize());
+                                        (conf.sampleRate() * 1.2) / conf.bufferSize() + 1);
                 buf->audioOutputs.push_back( audiobuf );
                 used = true;
                 break;

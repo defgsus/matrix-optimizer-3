@@ -20,15 +20,9 @@ class Oscillograph : public ObjectGl
 {
     Q_OBJECT
 public:
-    enum LightMode
-    {
-        LM_NONE,
-        LM_PER_VERTEX,
-        LM_PER_FRAGMENT
-    };
-
 
     MO_OBJECT_CONSTRUCTOR(Oscillograph);
+    ~Oscillograph();
 
     const GEOM::Geometry * geometry() const;
     Vec4 modelColor(Double time, uint thread) const;
@@ -43,28 +37,15 @@ protected:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
-//    virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
+    virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 
 
 private:
 
-    void setupDrawable_();
-    void calcVaoBuffer_(Double time, uint thread);
-
-    GL::Drawable * draw_;
-    GEOM::Geometry * nextGeometry_;
-
-    ParameterFloat * paramR_, *paramG_, *paramB_, *paramA_, *paramBright_,
-                    * paramTimeSpan_,
-                    * paramValue_,
-                    * paramWidth_,
-                    * paramLineWidth_;
-    ParameterInt * paramNumPoints_;
-
-    bool doRecompile_;
-
-    std::vector<gl::GLfloat> vaoBuffer_;
+    class Private;
+    Private * p_;
 };
 
 } // namespace MO

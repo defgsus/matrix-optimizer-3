@@ -53,6 +53,10 @@ public:
         Buffer must be bound. */
     bool upload(const void* ptr);
 
+    /** Uploads to previously defined size and resets storage.
+        Buffer must be bound. */
+    bool upload(const void* ptr, gl::GLenum storage);
+
 private:
 
     gl::GLuint p_handle_;

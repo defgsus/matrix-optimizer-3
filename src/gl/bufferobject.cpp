@@ -93,6 +93,12 @@ bool BufferObject::upload(const void* ptr, gl::GLsizeiptr sizeInBytes)
     return upload(ptr);
 }
 
+bool BufferObject::upload(const void* ptr, GLenum storage)
+{
+    p_storage_ = storage;
+    return upload(ptr);
+}
+
 bool BufferObject::upload(const void* ptr)
 {
     MO__CHECK_OK("upload()");
@@ -104,6 +110,7 @@ bool BufferObject::upload(const void* ptr)
 
     return true;
 }
+
 
 
 } // namespace GL

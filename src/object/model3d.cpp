@@ -197,6 +197,8 @@ void Model3d::updateParameterVisibility()
 
 void Model3d::getNeededFiles(IO::FileList &files)
 {
+    ObjectGl::getNeededFiles(files);
+
     texture_->getNeededFiles(files, IO::FT_TEXTURE);
     textureBump_->getNeededFiles(files, IO::FT_NORMAL_MAP);
 
