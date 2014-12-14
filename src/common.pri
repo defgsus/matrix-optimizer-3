@@ -233,7 +233,8 @@ HEADERS += \
     src/object/audio/filterbankao.h \
     src/object/param/modulatoroutput.h \
     src/object/audio/envelopefollowerao.h \
-    src/gl/bufferobject.h
+    src/gl/bufferobject.h \
+    src/object/oscillograph.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -428,4 +429,5 @@ SOURCES += \
     src/object/audio/filterbankao.cpp \
     src/object/param/modulatoroutput.cpp \
     src/object/audio/envelopefollowerao.cpp \
-    src/gl/bufferobject.cpp
+    src/gl/bufferobject.cpp \
+    src/object/oscillograph.cpp

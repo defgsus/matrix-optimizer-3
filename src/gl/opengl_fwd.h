@@ -25,6 +25,7 @@ namespace GL {
     };
 
     // some forwards
+    class BufferObject;
     class Context;
     class Drawable;
     class FrameBufferObject;

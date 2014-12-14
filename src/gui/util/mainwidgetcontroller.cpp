@@ -701,6 +701,8 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
     // update clipview
     clipView_->removeObject(o);
     objectView_->setObject(0);
+    sequenceView()->setSequence(0);
+    sequencer()->setCurrentObject(0);
 
     // XXX refine this!
     //updateSequenceView_(0);
@@ -715,6 +717,9 @@ void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
     // XXX refine this!
     //updateSequenceView_(0);
     objectView_->setObject(0);
+    sequenceView()->setSequence(0);
+    sequencer()->setCurrentObject(0);
+
 }
 
 

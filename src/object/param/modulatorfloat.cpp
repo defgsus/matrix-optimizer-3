@@ -156,7 +156,7 @@ Double ModulatorFloat::value(Double time, uint thread) const
         case ST_AUDIO_OBJECT:
             //return amplitude_ * (outStaticFloat_ ? outStaticFloat_->value() : 0.0);
             return amplitude_ *
-                    static_cast<AudioObject*>(modulator())->getAudioOutputAsFloat(channel_, MO_AUDIO_THREAD);
+                    static_cast<AudioObject*>(modulator())->getAudioOutputAsFloat(channel_, time, MO_AUDIO_THREAD);
     }
 
     return 0.0;

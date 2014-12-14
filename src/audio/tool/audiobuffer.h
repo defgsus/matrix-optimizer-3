@@ -43,6 +43,11 @@ class AudioBuffer
     /** Returns the sample in current read-block + @p offset */
     F32 read(SamplePos offset) const { return readPointer()[offset]; }
 
+    /** Reads @p samples sample in the past, starting at last written sample.
+        If @p samples is greater than blockSize() * numBlocks(),
+        the last sample is repeated. */
+    F32 readHistory(SamplePos samples) const;
+
     /** Write a sample in the current write-block + @p offset */
     void write(SamplePos offset, F32 value) { writePointer()[offset] = value; }
 

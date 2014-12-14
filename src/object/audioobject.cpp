@@ -39,6 +39,8 @@ public:
     // audio buffers per thread
     QVector<QList<AUDIO::AudioBuffer*>>
         inputs, outputs;
+
+    QVector<SamplePos> lastOutputSamplePos;
 };
 
 
@@ -72,6 +74,9 @@ void AudioObject::setNumberThreads(uint num)
     Object::setNumberThreads(num);
     p_ao_->inputs.resize(num);
     p_ao_->outputs.resize(num);
+    p_ao_->lastOutputSamplePos.resize(num);
+    for (auto & p : p_ao_->lastOutputSamplePos)
+        p = 0;
 }
 
 void AudioObject::createParameters()
@@ -157,17 +162,7 @@ void AudioObject::setNumberAudioInputsOutputs(uint num, bool emitSignal)
         editor()->emitAudioChannelsChanged(this);
 }
 
-Double AudioObject::getAudioOutputAsFloat(uint channel, uint thread) const
-{
-    auto outs = audioOutputs(thread);
-    //MO_DEBUG("++++++++++++++++++++++++ " << channel << "/" << outs.size());
 
-    if ((int)channel >= outs.size() || outs[channel] == 0)
-        return 0;
-
-    // first sample in current read block
-    return outs[channel]->read(0);
-}
 
 void AudioObject::setAudioBuffersBase(uint thread,
                                       const QList<AUDIO::AudioBuffer *> &inputs,
@@ -223,8 +218,39 @@ void AudioObject::processAudioBase(uint bufferSize, SamplePos pos, uint thread)
 
     // call virtual function
     processAudio(bufferSize, pos, thread);
+
+    p_ao_->lastOutputSamplePos[thread] = pos + bufferSize - 1;
 }
 
+
+
+
+Double AudioObject::getAudioOutputAsFloat(uint channel, Double time, uint thread) const
+{
+    auto outs = audioOutputs(thread);
+
+    if ((int)channel >= outs.size() || outs[channel] == 0)
+        return 0;
+
+    SamplePosDiff pos =
+              p_ao_->lastOutputSamplePos[thread]
+              - SamplePosDiff(time * sampleRate());
+                 //- outs[channel]->blockSize() * (outs[channel]->numBlocks() - 1));
+
+    // repeat first sample in current read block
+    if (pos < 0)
+        return outs[channel]->read(0);
+
+    return outs[channel]->readHistory(pos);
+    /*
+    // repeat last sample in current read block
+    if (pos > (SamplePosDiff)outs[channel]->blockSize())
+        return outs[channel]->read(
+                    outs[channel]->blockSize()-1);
+
+    return outs[channel]->read(pos);
+    */
+}
 
 
 } // namespace MO

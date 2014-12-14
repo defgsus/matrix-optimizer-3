@@ -73,7 +73,7 @@ public:
         of each output channel.
         //XXX should: Work by looking up the previous output buffer. but thread issue here
         Returns 0.0 for unknown or empty channels. */
-    Double getAudioOutputAsFloat(uint channel, uint thread) const;
+    Double getAudioOutputAsFloat(uint channel, Double time, uint thread) const;
 
 protected: // ---------------- protected virtual interface -----------------------
 

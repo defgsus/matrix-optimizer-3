@@ -24,6 +24,7 @@ struct VertexArrayObject::Buffer_
 {
     BufferObject * buf;
 
+    Attribute attribute;
     GLenum valueType;
     GLuint numVertices,
            attribLocation;
@@ -46,6 +47,11 @@ VertexArrayObject::~VertexArrayObject()
         MO_GL_WARNING("destruction of unreleased vertex array object '" << name_ << "'");
 
     delete elementBuffer_;
+}
+
+gl::GLuint VertexArrayObject::numVertices() const
+{
+    return elementBuffer_ ? elementBuffer_->numVertices : 0;
 }
 
 bool VertexArrayObject::create()
@@ -73,8 +79,8 @@ void VertexArrayObject::release()
 
     for (auto &b : buffers_)
     {
-        b.buf->release();
-        delete b.buf;
+        b.second.buf->release();
+        delete b.second.buf;
     }
     buffers_.clear();
 
@@ -87,8 +93,20 @@ void VertexArrayObject::release()
 
 }
 
+BufferObject * VertexArrayObject::getBufferObject(Attribute a)
+{
+    if (a == A_INDEX)
+        return elementBuffer_->buf;
+
+    auto i = buffers_.find(a);
+    if (i != buffers_.end())
+        return i->second.buf;
+
+    return 0;
+}
 
 BufferObject * VertexArrayObject::createAttribBuffer(
+        Attribute attribute,
         GLuint location, GLenum valueType, GLint numberCoordinates,
         GLuint sizeInBytes, const void * ptr,
         GLenum storageType, GLint stride, GLboolean normalized)
@@ -98,7 +116,13 @@ BufferObject * VertexArrayObject::createAttribBuffer(
     if (!isCreated())
     {
         MO_GL_ERROR_COND(rep_, "createAttribBuffer() on uninitialized vertex array object '" << name_ << "'");
-        return buf;
+        return 0;
+    }
+
+    if (getBufferObject(attribute))
+    {
+        MO_GL_ERROR_COND(rep_, "createAttributeBuffer() for duplicate attribute " << attribute);
+        return 0;
     }
 
     GLenum e;
@@ -139,9 +163,10 @@ BufferObject * VertexArrayObject::createAttribBuffer(
 
     // keep track
     Buffer_ b;
+    b.attribute = attribute;
     b.buf = buf;
     b.attribLocation = location;
-    buffers_.push_back(b);
+    buffers_.insert( std::make_pair(attribute, b) );
 
     bufDeleter.release();
 

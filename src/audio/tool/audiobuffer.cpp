@@ -72,7 +72,20 @@ void AudioBuffer::readBlockLength(F32 *block, size_t size) const
 
 }
 
+F32 AudioBuffer::readHistory(SamplePos history) const
+{
+    const SamplePos
+            size = numBlocks() * blockSize();
+    const SamplePosDiff
+            read = (p_readBlock_ + 1) * blockSize() - 1;
 
+    SamplePosDiff offset = read - std::min(history, size - 1);
+
+    if (offset < 0)
+        offset += size;
+
+    return p_samples_[offset];
+}
 
 
 

@@ -1621,7 +1621,8 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
     // --- position ---
     if (auto a = s->getAttribute(s->source()->attribNamePosition()))
     {
-        vao->createAttribBuffer(a->location(),
+        vao->createAttribBuffer(GL::VertexArrayObject::A_POSITION,
+                                a->location(),
                                 vertexEnum, numVertexComponents(),
                                 numVertexBytes(),
                                 vertices());
@@ -1630,7 +1631,8 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
     // --- color ---
     if (auto a = s->getAttribute(s->source()->attribNameColor()))
     {
-        vao->createAttribBuffer(a->location(),
+        vao->createAttribBuffer(GL::VertexArrayObject::A_COLOR,
+                                a->location(),
                                 colorEnum, numColorComponents(),
                                 numColorBytes(),
                                 colors());
@@ -1639,7 +1641,8 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
     // --- normal ---
     if (auto a = s->getAttribute(s->source()->attribNameNormal()))
     {
-        vao->createAttribBuffer(a->location(),
+        vao->createAttribBuffer(GL::VertexArrayObject::A_NORMAL,
+                                a->location(),
                                 normalEnum, numNormalComponents(),
                                 numNormalBytes(),
                                 normals());
@@ -1648,7 +1651,8 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
     // --- texcoord ---
     if (auto a = s->getAttribute(s->source()->attribNameTexCoord()))
     {
-        vao->createAttribBuffer(a->location(),
+        vao->createAttribBuffer(GL::VertexArrayObject::A_TEX_COORD,
+                                a->location(),
                                 textureCoordEnum, numTextureCoordComponents(),
                                 numTextureCoordBytes(),
                                 textureCoords());

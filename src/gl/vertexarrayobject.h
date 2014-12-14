@@ -11,7 +11,7 @@
 #ifndef MOSRC_GL_VERTEXARRAYOBJECT_H
 #define MOSRC_GL_VERTEXARRAYOBJECT_H
 
-#include <vector>
+#include <map>
 
 #include <QString>
 
@@ -25,6 +25,15 @@ class BufferObject;
 class VertexArrayObject
 {
 public:
+    enum Attribute
+    {
+        A_POSITION = 1,
+        A_COLOR,
+        A_NORMAL,
+        A_TEX_COORD,
+        A_INDEX
+    };
+
     /** @p name is for debugging purposes */
     explicit VertexArrayObject(const QString& name, ErrorReporting = ER_THROW);
     ~VertexArrayObject();
@@ -36,6 +45,12 @@ public:
 
     /** Returns true, when a vertex array object has been created */
     bool isCreated() const { return vao_ != invalidGl; }
+
+    /** Returns the buffer object for the given attribute, or NULL */
+    BufferObject * getBufferObject(Attribute a);
+
+    /** Returns the number of vertices as defined in the element buffer */
+    gl::GLuint numVertices() const;
 
     // --------- opengl -----------
 
@@ -52,7 +67,7 @@ public:
     /** Creates a vertex attribute array buffer.
         Returns the BufferObject, or NULL on failure.
         The vertex array object needs to be bound. */
-    BufferObject * createAttribBuffer(
+    BufferObject * createAttribBuffer(Attribute attribute,
             gl::GLuint attributeLocation, gl::GLenum valueType, gl::GLint numberCoordinates,
             gl::GLuint sizeInBytes, const void * ptr,
             gl::GLenum storageType = gl::GL_STATIC_DRAW, gl::GLint stride = 0,
@@ -80,7 +95,7 @@ private:
     gl::GLuint vao_;
 
     struct Buffer_;
-    std::vector<Buffer_> buffers_;
+    std::map<Attribute, Buffer_> buffers_;
     Buffer_ * elementBuffer_;
 };
 

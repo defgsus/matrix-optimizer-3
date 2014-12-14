@@ -437,7 +437,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
 
     // convert to new tree structure
     auto tree = get_object_tree(scene);
-    std::auto_ptr<ObjectTreeNode> tree_delete(tree);
+    std::unique_ptr<ObjectTreeNode> tree_delete(tree);
 
 
     // ---- find all objects that need translation calculated ---
@@ -470,6 +470,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
         transformationObjects.append(b);
     });
 
+
     // ---------------- get all audio processors ----------------
 
     // copy audio connections to DirectedGraph helper
@@ -500,6 +501,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
         // tell object
         o->setAudioBuffersBase(thread, b->audioInputs, b->audioOutputs);
     }
+
 
     // ----------- get all soundsource objects ------------------
 
@@ -666,7 +668,9 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
             for (AudioObjectConnection * c : outs)
             if (c->outputChannel() == i)
             {
-                auto audiobuf = new AUDIO::AudioBuffer(conf.bufferSize());
+                auto audiobuf = new AUDIO::AudioBuffer(conf.bufferSize(),
+                                        // XXX at least a second of buffer time
+                                        conf.sampleRate() / conf.bufferSize());
                 buf->audioOutputs.push_back( audiobuf );
                 used = true;
                 break;
