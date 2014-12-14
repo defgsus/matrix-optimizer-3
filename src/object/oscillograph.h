@@ -46,10 +46,12 @@ protected:
 
 //    virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 
-    void setupDrawable_();
-
 
 private:
+
+    void setupDrawable_();
+    void calcVaoBuffer_(Double time, uint thread);
+
     GL::Drawable * draw_;
     GEOM::Geometry * nextGeometry_;
 

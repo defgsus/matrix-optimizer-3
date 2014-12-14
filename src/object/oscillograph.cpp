@@ -72,9 +72,9 @@ void Oscillograph::createParameters()
                                         0.0,
                                         0.01, true, true);
 
-        paramNumPoints_ = params()->createIntParameter("numverts", tr("number vertices"),
+        paramNumPoints_ = params()->createIntParameter("numverts", tr("number points"),
                                             tr("The number of points on the oscillograph"),
-                                            100, 1, 10000000,
+                                            100, 2, 999999,
                                             1, true, false);
 
         paramTimeSpan_ = params()->createFloatParameter("timeshift", tr("time span"),
@@ -141,11 +141,11 @@ void Oscillograph::initGl(uint /*thread*/)
 
     g->setColor(1,1,1,1);
 
-    int num = std::max(2, paramNumPoints_->baseValue() + 1);
+    int num = std::max(2, paramNumPoints_->baseValue());
     for (int i=0; i<num; ++i)
     {
         g->addVertexAlways(i, 0, 0);
-        if (i > 1)
+        if (i > 0)
             g->addLine(i - 1, i);
     }
 
@@ -176,9 +176,32 @@ void Oscillograph::setupDrawable_()
 
     draw_->createOpenGl();
 
-    vaoBuffer_.resize(draw_->vao()->numVertices() * 3);
+    vaoBuffer_.resize(draw_->geometry()->numVertices() * 3);
 
     // get uniforms
+}
+
+void Oscillograph::calcVaoBuffer_(Double time, uint thread)
+{
+    const uint numPoints = vaoBuffer_.size() / 3;
+
+    const Double
+            timeSpan = paramTimeSpan_->value(time, thread),
+            scalex = paramWidth_->value(time, thread),
+
+            fac = 1.0 / (numPoints - 1);
+
+    // calculate osci positions
+    gl::GLfloat * pos = &vaoBuffer_[0];
+    for (uint i = 0; i < numPoints; ++i)
+    {
+        const Double t = Double(i) * fac;
+
+        *pos++ = (0.5f - t) * scalex;
+        *pos++ = paramValue_->value(time + t * timeSpan, thread);
+        *pos++ = 0.0f;
+    }
+
 }
 
 void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
@@ -199,21 +222,9 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
 
         GL::BufferObject * buf = draw_->vao()->getBufferObject(
                     GL::VertexArrayObject::A_POSITION);
-        if (buf && vaoBuffer_.size() > 1)
+        if (buf && vaoBuffer_.size() > 3)
         {
-            const Double
-                    timeSpan = paramTimeSpan_->value(time, thread),
-                    fac = 1.0 / (vaoBuffer_.size() - 1),
-                    scalex = 2.f * paramWidth_->value(time, thread);
-
-            // calculate osci positions
-            for (uint i = 0; i < vaoBuffer_.size(); i += 3)
-            {
-                const Double t = Double(i) * fac;
-                vaoBuffer_[i] = (0.25 - t) * scalex;
-                vaoBuffer_[i + 1] = paramValue_->value(time + t * timeSpan, thread);
-                vaoBuffer_[i + 2] = 0.0;
-            }
+            calcVaoBuffer_(time, thread);
 
             // move to device
             buf->bind();
