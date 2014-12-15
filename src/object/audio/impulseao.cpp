@@ -82,7 +82,7 @@ void ImpulseAO::createParameters()
     p_->paramFreq = params()->createFloatParameter("impulse_freq", tr("frequency"),
                                                    tr("The Frequency of the impulses in Hz"),
                                                    100.0, 1.0);
-    p_->paramFreq = params()->createFloatParameter("impulse_phase", tr("phase"),
+    p_->paramPhase = params()->createFloatParameter("impulse_phase", tr("phase"),
                                                    tr("The phase modulation in units [-1,1]"),
                                                    0.0, 0.0625);
     params()->endParameterGroup();
