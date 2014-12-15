@@ -50,6 +50,33 @@ const QStringList Waveform::typeStatusTips =
 };
 
 
+const QList<int> Waveform::typeAudioList =
+{ T_SINE, T_COSINE, T_SAW_RISE, T_SAW_DECAY, T_TRIANGLE, T_SQUARE };
+
+const QStringList Waveform::typeAudioIds =
+{
+    "sin", "cos", "saw", "sawd", "tri", "sqr"
+};
+
+const QStringList Waveform::typeAudioNames =
+{
+    QObject::tr("Sine"), QObject::tr("Cosine"),
+    QObject::tr("Sawtooth up"), QObject::tr("Sawtooth down"),
+    QObject::tr("Triangle"), QObject::tr("Square")
+};
+
+const QStringList Waveform::typeAudioStatusTips =
+{
+    QObject::tr("A sine oscillator [-1,1]"),
+    QObject::tr("A cosine oscillator [-1,1]"),
+    QObject::tr("A sawtooth oscillator with rising edge [-1,1]"),
+    QObject::tr("A sawtooth oscillator with decaying edge [-1,1]"),
+    QObject::tr("A triangle oscillator [-1,1]"),
+    QObject::tr("A square-wave oscillator [-1,1]"),
+};
+
+
+
 bool Waveform::supportsPulseWidth(Type t)
 {
     return //t == T_RAMP

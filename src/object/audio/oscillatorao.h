@@ -20,8 +20,13 @@ class OscillatorAO : public AudioObject
     Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(OscillatorAO)
+    ~OscillatorAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     virtual QString getAudioInputName(uint channel) const Q_DECL_OVERRIDE;
@@ -32,13 +37,8 @@ protected:
                                                             Q_DECL_OVERRIDE;
 private:
 
-    std::vector<Double> phase_;
-    ParameterFloat
-        * paramFreq_,
-        * paramPhase_,
-        * paramAmp_,
-        * paramOffset_,
-        * paramSync_;
+    class Private;
+    Private * p_;
 };
 
 } // namespace MO
