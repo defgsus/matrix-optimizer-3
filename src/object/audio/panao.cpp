@@ -25,13 +25,24 @@ class PanAO::Private
 {
     public:
 
+    enum Mode {
+        M_SIMPLE,
+        M_EQUAL,
+        M_SQRT,
+        M_ADVANCED
+    };
+
     Private(PanAO *ao) : ao(ao) {}
+
+    Mode mode() const { return (Mode)paramMode->baseValue(); }
 
     void processAudio(uint size, SamplePos pos, uint thread);
 
     PanAO * ao;
     ParameterFloat
             * paramPan;
+    ParameterSelect
+            * paramMode;
 };
 
 PanAO::PanAO(QObject *parent)
@@ -67,6 +78,16 @@ void PanAO::createParameters()
     p_->paramPan = params()->createFloatParameter("pan_pan", tr("panning"),
                                                   tr("The panning position in the range [-1,1], 0 is center."),
                                                   0.0, 0.1);
+    p_->paramMode = params()->createSelectParameter("pan_mode", tr("panning mode"),
+                                                    tr("Selects the panning mode"),
+                                                    { "simple", "equal", "sqrt", "advanced"},
+                                                    { tr("Simple"), tr("Equal power"), tr("Sqrt"), tr("Advanced")},
+                                                    { tr("Simple linear panning"),
+                                                      tr("Left and right channel have the same loudness"),
+                                                      tr("Square root panning mode"),
+                                                      tr("Alternative equal power pan")},
+                                                    {Private::M_SIMPLE, Private::M_EQUAL, Private::M_SQRT, Private::M_ADVANCED},
+                                                    Private::M_SIMPLE);
     params()->endParameterGroup();
 }
 
@@ -95,6 +116,8 @@ QString PanAO::getAudioInputName(uint channel) const
     }
     return AudioObject::getAudioInputName(channel);
 }
+
+static const Double SQRT2 = sqrt(2.0);
 
 void PanAO::processAudio(uint, SamplePos pos, uint thread)
 {
@@ -127,8 +150,36 @@ void PanAO::processAudio(uint, SamplePos pos, uint thread)
             if(pan < -1.0) pan = -1.0;
             else if(pan > 1.0) pan = 1.0;
 
-            if(left)  left->write(i, (1.0-(pan+1.0)/2.0)*in->read(i));
-            if(right) right->write(i, (    (pan+1.0)/2.0)*in->read(i));
+            pan = (pan+1.0)/2.0;
+
+            switch(p_->mode()) {
+            case Private::M_EQUAL:
+            {
+                Double angle = M_PI * 0.5 * pan;
+                if(left)  left->write(i, cos(angle)*in->read(i));
+                if(right) right->write(i, sin(angle)*in->read(i));
+            }
+                break;
+            case Private::M_SQRT:
+                if(left)  left->write(i, sqrt(1.0-pan)*in->read(i));
+                if(right) right->write(i, sqrt(pan)*in->read(i));
+                break;
+            case Private::M_ADVANCED:
+            {
+                Double angle = M_PI * 0.5 * pan;
+                Double  cc = cos(angle),
+                        ss = sin(angle),
+                        l  = SQRT2 * (cc + ss) * 0.5,
+                        r  = SQRT2 * (cc - ss) * 0.5;
+                if(left)  left->write(i, l*in->read(i));
+                if(right) right->write(i, r*in->read(i));
+            }
+                break;
+            case Private::M_SIMPLE:
+            default:
+            if(left)  left->write(i, (1.0-pan)*in->read(i));
+            if(right) right->write(i, pan*in->read(i));
+            }
         }
     }
 
