@@ -62,7 +62,14 @@ F fast_tanh(F x)
         return x * ( F(27) + x * x ) / ( F(27) + F(9) * x * x );
 }
 
-
+/** Fast atan aproximation
+    XXX not tested yet
+    https://github.com/micknoise/Maximilian/blob/master/maximilian.h */
+template <typename F>
+F fast_atan(F x)
+{
+    return (x / (F(1) + F(0.28) * (x * x)));
+}
 
 
 /* below (max/min/clip) is from

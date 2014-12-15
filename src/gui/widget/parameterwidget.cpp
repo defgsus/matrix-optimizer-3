@@ -436,8 +436,8 @@ void ParameterWidget::updateButtons()
     static QIcon iconVisibility(":/icon/visibility.png");
     static QIcon iconVisibilityOn(":/icon/visibility_on.png");
 
-    bmod_->setVisible(param_->isModulateable());
-    bvis_->setVisible(param_->isModulateable());
+    bmod_->setEnabled(param_->isModulateable());
+    bvis_->setEnabled(param_->isModulateable());
 
     if (param_->modulatorIds().size())
     {

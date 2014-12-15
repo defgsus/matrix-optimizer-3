@@ -103,7 +103,7 @@ class Oscillograph::Private
                     * paramLineWidth,
                     * paramPointSize;
     ParameterInt * paramNumPoints;
-    ParameterSelect * paramMode, * paramDrawMode;
+    ParameterSelect * paramMode, * paramDrawMode, * paramLineSmooth;
     ParameterText * paramEquation;
 
     bool doRecompile;
@@ -173,10 +173,7 @@ void Oscillograph::createParameters()
                                             -0.1,
                                             0.01, true, true);
 
-        p_->paramLineWidth = params()->createFloatParameter("linewidth", tr("line width"),
-                                            tr("The width of the line - currently in pixels"),
-                                            2, 1, 10000,
-                                            0.01, true, true);
+// scope mode
 
         p_->paramMode = params()->createSelectParameter("oscmode", tr("scope type"),
                                             tr("Selects the scope type"),
@@ -187,7 +184,7 @@ void Oscillograph::createParameters()
                                             { Private::O_LINEAR, Private::O_EQUATION },
                                             Private::O_LINEAR,
                                             true, false);
-
+    // equation
         p_->paramEquation = params()->createTextParameter("oscgequ", tr("equation"),
                     tr("An equation mapping the input samples to positions"),
                     TT_EQUATION,
@@ -201,21 +198,39 @@ void Oscillograph::createParameters()
         p_->paramEquation->setVariableNames(tmpequ.equation->variables().variableNames());
         p_->paramEquation->setVariableDescriptions(tmpequ.equation->variables().variableDescriptions());
 
-        // draw mode
+    // width for linear
+        p_->paramWidth = params()->createFloatParameter("scalex", tr("width"),
+                                            tr("The width or scale on x-axis"),
+                                            1.0,
+                                            0.1, true, true);
+
+// draw mode
+
         p_->paramDrawMode = params()->createSelectParameter("oscdrawmode", tr("draw mode"),
                                             tr("Selects how the points will be drawn"),
                                             { "oneline", "points" },
                                             { tr("lines"), tr("points") },
                                             { tr("All points are connected to neighbours by lines"),
-                                              tr("Each point is a sprite") },
+                                              tr("Each point is a sprite (using GL_POINTS)") },
                                             { Private::D_LINES, Private::D_POINTS },
                                             Private::D_LINES,
                                             true, false);
 
-        p_->paramWidth = params()->createFloatParameter("scalex", tr("width"),
-                                            tr("The width or scale on x-axis"),
-                                            1.0,
-                                            0.1, true, true);
+        p_->paramLineSmooth = params()->createBooleanParameter(
+                    "linesmooth", tr("antialiased lines"),
+                    tr("Should lines be drawn with smoothed edges"),
+                    tr("The lines are drawn edgy"),
+                    tr("The lines are drawn smoothly (maximum line width might change)"),
+                    true,
+                    true, false);
+
+        p_->paramLineWidth = params()->createFloatParameter("linewidth", tr("line width"),
+                                            tr("The width of the line - currently in pixels - your driver supports maximally %1 and %2 (anti-aliased)")
+                                                            // XXX Not initialized before first gl context
+                                                            .arg(GL::Properties::maxLineWidth())
+                                                            .arg(GL::Properties::maxLineWidthSmooth()),
+                                            2, 1, 10000,
+                                            0.01, true, true);
 
         p_->paramPointSize = params()->createFloatParameter("pointsize", tr("point size"),
                                             tr("The size of the points in pixels"),
@@ -318,6 +333,8 @@ void Oscillograph::initGl(uint /*thread*/)
         if (i > 0)
             g->addLine(i - 1, i);
     }
+    // force p_->calcVaoBuffer()
+    p_->vaoUpdateTime = -1000000.123456;
 
     p_->recompile();
 }
@@ -467,6 +484,7 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
         {
             case Private::D_LINES:
                 p_->draw->setDrawType(gl::GL_LINE_STRIP);
+                GL::setLineSmooth(p_->paramLineSmooth->value(time, thread) != 0);
                 GL::setLineWidth(p_->paramLineWidth->value(time, thread));
             break;
 

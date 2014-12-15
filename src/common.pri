@@ -234,7 +234,8 @@ HEADERS += \
     src/object/param/modulatoroutput.h \
     src/object/audio/envelopefollowerao.h \
     src/gl/bufferobject.h \
-    src/object/oscillograph.h
+    src/object/oscillograph.h \
+    src/object/audio/delayao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -430,4 +431,5 @@ SOURCES += \
     src/object/param/modulatoroutput.cpp \
     src/object/audio/envelopefollowerao.cpp \
     src/gl/bufferobject.cpp \
-    src/object/oscillograph.cpp
+    src/object/oscillograph.cpp \
+    src/object/audio/delayao.cpp

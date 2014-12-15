@@ -36,6 +36,13 @@ class Delay
     static_assert(std::is_signed<I>::value, "I must be signed");
 
 public:
+
+    /** Creates an invalid delay, use resize() */
+    Delay()
+        : p_mask_   (0),
+          p_pos_    (0)
+    { }
+
     /** Creates a delay with a particular history size.
         @p bufferSize will be rounded to the next power-of-two if necessary. */
     Delay(I bufferSize)
@@ -56,8 +63,18 @@ public:
 
     // ------------- setter -----------------------
 
-    /** Inserts @p num samples from @p data into the delay history */
-    void writeBlock(const F * data, I num);
+    /** Inserts @p bufferSize samples from @p data into the delay history */
+    void writeBlock(const F * data, I bufferSize);
+
+    /** Resizes the delay memory.
+        @p bufferSize will be rounded to the next power-of-two if necessary. */
+    void resize(I bufferSize)
+    {
+        assert(bufferSize > 2 && "invalid buffersize for Delay class");
+        p_buffer_.resize(nextPowerOfTwo(bufferSize));
+        p_mask_ = p_buffer_.size() - 1;
+        p_pos_ = 0;
+    }
 
 private:
 
@@ -82,6 +99,14 @@ inline void Delay<F, I>::writeBlock(const F * data, I num)
     }
 }
 
+#define MO__DELAY_INTERPOL(t__, pos__)                          \
+    MATH::interpol_6(t__, p_buffer_[((pos__) - 2) & p_mask_],   \
+                          p_buffer_[((pos__) - 1) & p_mask_],   \
+                          p_buffer_[((pos__)    ) & p_mask_],   \
+                          p_buffer_[((pos__) + 1) & p_mask_],   \
+                          p_buffer_[((pos__) + 2) & p_mask_],   \
+                          p_buffer_[((pos__) + 3) & p_mask_])
+
 template <typename F, typename I>
 inline F Delay<F, I>::read(F foffset) const
 {
@@ -89,20 +114,13 @@ inline F Delay<F, I>::read(F foffset) const
         offset = convert<F, I>(foffset),
         dpos = p_pos_ - offset;
 
-#ifdef MO_DISABLE_DELAY_INTERPOLATION
+#ifndef MO_DISABLE_DELAY_INTERPOLATION
     // no interpolation
-    return p_buffer_[dpos & mask];
+    return p_buffer_[dpos & p_mask_];
 #else
     const F fade = F(1) - MATH::frac(foffset);
 
-    return MATH::interpol_6(fade,
-                            p_buffer_[(dpos - 2) & p_mask_],
-                            p_buffer_[(dpos - 1) & p_mask_],
-                            p_buffer_[(dpos    ) & p_mask_],
-                            p_buffer_[(dpos + 1) & p_mask_],
-                            p_buffer_[(dpos + 2) & p_mask_],
-                            p_buffer_[(dpos + 3) & p_mask_]
-                            );
+    return MO__DELAY_INTERPOL(fade, dpos);
 #endif
 }
 

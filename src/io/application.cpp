@@ -38,7 +38,7 @@ Application * application;
 Application::Application(int& argc, char** args)
     : QApplication  (argc, args)
 {
-    //updateStyle();
+    updateStyle();
 }
 
 
@@ -111,6 +111,7 @@ QRect Application::screenGeometry(uint screenIndex) const
 void Application::updateStyle()
 {
     // XXX some test for styles
+    // (call in constructor)
 
     setStyleSheet(
                 "* { background-color: #202020; color: #a0a0a0; "

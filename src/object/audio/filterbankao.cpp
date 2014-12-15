@@ -111,7 +111,7 @@ void FilterBankAO::createParameters()
                                                    0.0, 10.0);
         p_->paramFreqMul = params()->createFloatParameter("_filter_freq_mul", tr("* frequency"),
                                                    tr("The factor to multiply the current frequency for the next channel"),
-                                                   1.0, 0.06125);
+                                                   1.0, 0.0625);
 
         p_->paramReso = params()->createFloatParameter("_filter_reso", tr("resonance"),
                                                    tr("The filter steepness [0,1]"),

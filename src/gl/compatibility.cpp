@@ -39,6 +39,9 @@ namespace
     }
 }
 
+GLint Properties::maxLineWidth() { return lineRangeA[1]; }
+GLint Properties::maxLineWidthSmooth() { return lineRangeS[1]; }
+
 void checkCompatibility()
 {
     const QString
