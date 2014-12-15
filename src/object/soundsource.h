@@ -21,6 +21,7 @@ class SoundSource : public Object
 public:
     MO_OBJECT_CONSTRUCTOR(SoundSource);
 
+    /** @todo This is a stupid type */
     virtual Type type() const Q_DECL_OVERRIDE { return T_SOUNDSOURCE; }
     virtual bool isSoundSource() const Q_DECL_OVERRIDE { return true; }
 
