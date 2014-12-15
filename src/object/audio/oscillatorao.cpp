@@ -16,6 +16,7 @@
 #include "audio/tool/audiobuffer.h"
 #include "audio/tool/wavetable.h"
 #include "audio/tool/bandlimitwavetablegenerator.h"
+#include "audio/tool/floatgate.h"
 #include "math/constants.h"
 #include "io/datastream.h"
 
@@ -48,7 +49,8 @@ class OscillatorAO::Private
         * paramPhase,
         * paramAmp,
         * paramOffset,
-        * paramPulseWidth;
+        * paramPulseWidth,
+        * paramSync;
         //* paramSync;
     ParameterSelect
         * paramMode,
@@ -59,6 +61,7 @@ class OscillatorAO::Private
         * paramEquation;
 
     AUDIO::Wavetable<F32> wtable;
+    std::vector<AUDIO::FloatGate<Double>> gates;
 };
 
 
@@ -108,13 +111,16 @@ void OscillatorAO::createParameters()
 
         p_->paramAmp = params()->createFloatParameter("osc_amp", tr("amplitude"),
                                                    tr("The amplitude of the oscillator output"),
-                                                   1.0, 0.01);
+                                                   1.0, 0.05);
         p_->paramFreq = params()->createFloatParameter("osc_freq", tr("frequency"),
                                                    tr("The frequency of the oscillator in Hertz"),
                                                    100.0, 1.0);
         p_->paramPhase = params()->createFloatParameter("osc_phase", tr("phase"),
                                                    tr("The phase modulation in units [-1,1]"),
                                                    0.0, 0.0625);
+        p_->paramSync = params()->createFloatParameter("osc_sync", tr("hard sync"),
+                                                   tr("A signal >= 0 resets the phase of the oscillator"),
+                                                   0.0);
 
         p_->paramMode = params()->createSelectParameter("osc_mode", tr("oscillator mode"),
                                             tr("Selects the type of waveform"),
@@ -198,6 +204,7 @@ void OscillatorAO::setNumberThreads(uint num)
 {
     AudioObject::setNumberThreads(num);
 
+    p_->gates.resize(num);
     p_->phase.resize(num);
     for (auto & f : p_->phase)
         f = 0.0;
@@ -245,6 +252,10 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
         if (p_->phase[thread] < -1)
             p_->phase[thread] += 2;
 
+        // check for sync
+        if (p_->gates[thread].input(p_->paramSync->value(time, thread)))
+            p_->phase[thread] = 0.0;
+
         // get sample
         *write = p_->paramOffset->value(time, thread)
                     + p_->paramAmp->value(time, thread) * (
@@ -289,6 +300,10 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
             else
             if (p_->phase[thread] < -1)
                 p_->phase[thread] += 2;
+
+            // check for sync
+            if (p_->gates[thread].input(p_->paramSync->value(time, thread)))
+                p_->phase[thread] = 0.0;
 
             // get wavetable at phase
             *write = ofs + amp * (
