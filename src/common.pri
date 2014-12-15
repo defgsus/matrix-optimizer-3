@@ -238,7 +238,8 @@ HEADERS += \
     src/object/audio/delayao.h \
     src/object/audio/soundsourceao.h \
     src/object/audio/parameterao.h \
-    $$PWD/object/audio/impulseao.h
+    $$PWD/object/audio/impulseao.h \
+    $$PWD/object/audio/panao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -438,4 +439,5 @@ SOURCES += \
     src/object/audio/delayao.cpp \
     src/object/audio/soundsourceao.cpp \
     src/object/audio/parameterao.cpp \
-    $$PWD/object/audio/impulseao.cpp
+    $$PWD/object/audio/impulseao.cpp \
+    $$PWD/object/audio/panao.cpp

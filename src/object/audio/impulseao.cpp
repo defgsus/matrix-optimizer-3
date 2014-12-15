@@ -1,6 +1,6 @@
 /** @file impulseao.cpp
 
-    @brief
+    @brief A simple impulse generator
 
     <p>(c) 2014, martin.huenniger@yahoo.de</p>
     <p>All rights reserved</p>
@@ -26,7 +26,8 @@ class ImpulseAO::Private
     public:
 
     enum Mode {
-        M_OSCILLATOR
+        M_OSCILLATOR //,
+        //M_GENERATOR
     };
 
     Private(ImpulseAO *ao) : ao(ao) { }
