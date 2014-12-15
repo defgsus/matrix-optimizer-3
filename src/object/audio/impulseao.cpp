@@ -177,7 +177,7 @@ void ImpulseAO::processAudio(uint, SamplePos pos, uint thread)
             if(inPhase)
                 phase += inPhase->read(i);
 
-            p_->phase[thread] += sampleRate() * freq;
+            p_->phase[thread] += sampleRateInv() * freq;
 
             *write = 0.0;
 
