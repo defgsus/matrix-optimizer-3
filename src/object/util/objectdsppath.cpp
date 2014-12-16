@@ -710,7 +710,7 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
             uint numBlocks = 1;
             if (isModOut)
                 // at least a second of buffer time for mod-outs
-                numBlocks = (conf.sampleRate() * 1.2) / conf.bufferSize() + 1;
+                numBlocks = (conf.sampleRate() * 3) / conf.bufferSize() + 1;
 
             AUDIO::AudioBuffer * audiobuf = 0;
 

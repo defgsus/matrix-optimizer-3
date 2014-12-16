@@ -78,7 +78,7 @@ OscillatorAO::OscillatorAO(QObject *parent)
 {
     setName("Oscillator");
 
-    setNumberAudioInputs(4);
+    setNumberAudioInputs(5);
     setNumberAudioOutputs(1);
 }
 
@@ -223,6 +223,7 @@ QString OscillatorAO::getAudioInputName(uint channel) const
         case 1: return tr("amplitude");
         case 2: return tr("frequency");
         case 3: return tr("phase");
+        case 4: return tr("sync");
     }
     return AudioObject::getAudioInputName(channel);
 }
@@ -276,7 +277,8 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
             * inOfs = inputs[0],
             * inAmp = inputs.size() < 2 ? 0 : inputs[1],
             * inFreq = inputs.size() < 3 ? 0 : inputs[2],
-            * inPhase = inputs.size() < 4 ? 0 : inputs[3];
+            * inPhase = inputs.size() < 4 ? 0 : inputs[3],
+            * inSync = inputs.size() < 5 ? 0 : inputs[4];;
 
         for (uint i = 0; i < out->blockSize(); ++i, ++write)
         {
@@ -295,6 +297,9 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
             Double phase = p_->paramPhase->value(time, thread);
             if (inPhase)
                 phase += inPhase->read(i);
+            Double sync = p_->paramSync->value(time, thread);
+            if (inSync)
+                sync += inSync->read(i);
 
             // advance phase
             p_->phase[thread] += sampleRateInv() * freq;
@@ -307,7 +312,7 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
                 p_->phase[thread] += 2;
 
             // check for sync
-            if (p_->gates[thread].input(p_->paramSync->value(time, thread)))
+            if (p_->gates[thread].input(sync))
                 p_->phase[thread] = 0.0;
 
             // get wavetable at phase
