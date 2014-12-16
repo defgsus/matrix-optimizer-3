@@ -113,7 +113,7 @@ void DustAO::setNumberThreads(uint num)
     p_->rand.resize(num);
     p_->scale.resize(num);
     p_->threshold.resize(num);
-    for(int i=0; i<num; ++i) {
+    for(uint i=0; i<num; ++i) {
         p_->density0[i]  = 0.0;
         p_->rand[i]      = rand();
         p_->scale[i]     = 0.0;
