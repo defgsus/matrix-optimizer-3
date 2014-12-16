@@ -161,6 +161,8 @@ public:
 
     /** Adds the audioToFloatConverter type modulator to the audioToModulator set */
     void addAudioToModulator(Modulator * m);
+    /** Returns true if output channel of ao links to a Modulator */
+    bool hasAudioToModulator(AudioObject * ao, uint channel);
 
     //void assignMicrophoneInputSoundSources(ObjectBuffer * o);
 
@@ -419,6 +421,7 @@ void ObjectDspPath::Private::clear()
     audioIns.clear();
     audioOuts.clear();
     audioOutObjects.clear();
+    audioToModulator.clear();
 }
 
 void ObjectDspPath::Private::createPath(Scene * s)
@@ -457,12 +460,9 @@ void ObjectDspPath::Private::createPath(Scene * s)
     // mapped to modulator inputs
     // [So we know which audio objects to process even if they are
     //  not connected to other audio objects]
-
-    /*for (Modulator * m : all_modulators)
+    for (Modulator * m : all_modulators)
         if (m->isAudioToFloatConverter())
-            audioToModulator.insert()*/
-
-
+            addAudioToModulator(m);
 
 
     // ---- find all objects that need translation calculated ---
@@ -508,7 +508,18 @@ void ObjectDspPath::Private::createPath(Scene * s)
 
     // create linear list in correct order
     QList<AudioObject*> audioObjectList;
-    dspgraph.makeLinear(audioObjectList);
+    {
+        dspgraph.makeLinear(audioObjectList);
+
+        // also add the dsp objects that don't have audio-outputs
+        // but modulator-outputs
+        // [can be safely added to the back because they don't depend on one another]
+        for (Modulator * m : all_modulators)
+            if (m->isAudioToFloatConverter())
+                // if the graph does not contain it already
+                if (!dspgraph.node(static_cast<AudioObject*>(m->modulator())))
+                    audioObjectList << static_cast<AudioObject*>(m->modulator());
+    }
 
     for (AudioObject * o : audioObjectList)
     {
@@ -679,39 +690,53 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
     MO_ASSERT(dynamic_cast<AudioObject*>(buf->object),
               "invalid object for audio output preparation");
 
-    AudioObject * o = static_cast<AudioObject*>(buf->object);
+    AudioObject * ao = static_cast<AudioObject*>(buf->object);
 
     // special system-out object?
-    AudioOutAO * oout = qobject_cast<AudioOutAO*>(o);
+    AudioOutAO * oout = qobject_cast<AudioOutAO*>(ao);
 
     // prepare outputs
     // (create an entry in ObjectBuffer::audioOutputs for each output
     //  and set unused outputs to NULL)
     if (!oout)
     {
-        auto outs = scene->audioConnections()->getOutputs(o);
-        for (uint i = 0; i < o->numAudioOutputs(); ++i)
+        auto outs = scene->audioConnections()->getOutputs(ao);
+        for (uint i = 0; i < ao->numAudioOutputs(); ++i)
         {
-            bool used = false;
+            // links (also) to a modulator?
+            const bool isModOut = hasAudioToModulator(ao, i);
+
+            // number of buffers in output (dsp block size times this number)
+            uint numBlocks = 1;
+            if (isModOut)
+                // at least a second of buffer time for mod-outs
+                numBlocks = (conf.sampleRate() * 1.2) / conf.bufferSize() + 1;
+
+            AUDIO::AudioBuffer * audiobuf = 0;
+
             for (AudioObjectConnection * c : outs)
-            if (c->outputChannel() == i)
+            // for each audio or mod-out connection
+            if (c->outputChannel() == i || isModOut)
             {
-                auto audiobuf = new AUDIO::AudioBuffer(conf.bufferSize(),
-                                        // XXX at least a second of buffer time
-                                        (conf.sampleRate() * 1.2) / conf.bufferSize() + 1);
-                buf->audioOutputs.push_back( audiobuf );
-                used = true;
+                audiobuf = new AUDIO::AudioBuffer(conf.bufferSize(), numBlocks);
                 break;
             }
-            if (!used)
-                buf->audioOutputs.push_back( 0 );
+            // in case no audio-out is present
+            if (!audiobuf && isModOut)
+            {
+                audiobuf = new AUDIO::AudioBuffer(conf.bufferSize(), numBlocks);
+            }
+
+            // otherwise keep NULL buffer
+            buf->audioOutputs.push_back( audiobuf );
         }
     }
     // perpare outputs of system-out object
+    // [invisible to the user]
     else
     {
         // find highest input channel
-        auto ins = scene->audioConnections()->getInputs(o);
+        auto ins = scene->audioConnections()->getInputs(ao);
         uint num = 0;
         for (auto c : ins)
             num = std::max(num, c->inputChannel() + 1);
@@ -763,6 +788,41 @@ void ObjectDspPath::Private::assignMatrix(ObjectBuffer * b)
 #ifdef MO_DO_DEBUG
     b->matrixParent = buf;
 #endif
+}
+
+void ObjectDspPath::Private::addAudioToModulator(Modulator * m)
+{
+    MO_ASSERT(m->isAudioToFloatConverter(), "");
+    AudioObject * ao = static_cast<AudioObject*>(m->modulator());
+    if (!ao)
+    {
+        MO_WARNING("unassigned Modulator in ObjectDspPath::addAudioToModulator()");
+        return;
+    }
+
+    auto i = audioToModulator.find(ao);
+    if (i == audioToModulator.end())
+    {
+        // create new entry
+        QSet<uint> cons;
+        cons.insert( m->getAudioOutputChannel() );
+        audioToModulator.insert( ao, cons );
+    }
+    else
+    {
+        // add to exisiting entry
+        i.value().insert( m->getAudioOutputChannel() );
+    }
+}
+
+bool ObjectDspPath::Private::hasAudioToModulator(AudioObject * ao, uint channel)
+{
+    auto i = audioToModulator.find(ao);
+    if (i != audioToModulator.end())
+    {
+        return i.value().contains(channel);
+    }
+    return false;
 }
 
 ObjectDspPath::Private::ObjectBuffer * ObjectDspPath::Private::getObjectBuffer(Object * o)
