@@ -38,6 +38,15 @@ public:
         Requires updateCoefficients() to be called. */
     void setFadeOut(F32 speed) { fadeOut_ = speed; }
 
+    /** Sets the speed to follow the signal average.
+        Requires updateCoefficients() to be called. */
+    void setAverageSpeed(F32 speed) { fadeAv_ = speed; }
+
+    /** Sets the step value of how much the input signal
+        must raise above the current average, default == 0.
+        No updateCoefficients() required. */
+    void setThreshold(F32 t) { threshold_ = t; }
+
     /** Sets the amplitude of the input signal before enveloping.
         No updateCoefficients() required. */
     void setInputAmplitude(F32 amp) { ampIn_ = amp; }
@@ -52,11 +61,15 @@ public:
 
     F32 fadeIn() const { return fadeIn_; }
     F32 fadeOut() const { return fadeOut_; }
+    F32 averageSpeed() const { return fadeAv_; }
+    F32 threshold() const { return threshold_; }
     F32 inputAmplitude() const { return ampIn_; }
     F32 outputAmplitude() const { return ampOut_; }
 
     /** Returns current envelope (after last processing step) */
     F32 envelope() const { return env_ * ampOut_; }
+    /** Returns the current signal average (after last processing step) */
+    F32 average() const { return av_ * ampOut_; }
 
     // ---------- processing --------------
 
@@ -96,10 +109,11 @@ public:
 private:
 
     uint sr_;
-    F32 fadeIn_, fadeOut_,
+    F32 fadeIn_, fadeOut_, fadeAv_,
+        threshold_,
         ampIn_, ampOut_,
-        qIn_, qOut_,
-        env_;
+        qIn_, qOut_, qAv_,
+        env_, av_;
 };
 
 } // namespace AUDIO

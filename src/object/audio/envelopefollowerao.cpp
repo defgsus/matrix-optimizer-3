@@ -34,7 +34,9 @@ class EnvelopeFollowerAO::Private
         * paramInAmp,
         * paramOutAmp,
         * paramTimeUp,
-        * paramTimeDown;
+        * paramTimeDown,
+        * paramThreshold,
+        * paramAverage;
 
     // per thread / per channel
     std::vector<std::vector<AUDIO::EnvelopeFollower>> envs;
@@ -87,7 +89,16 @@ void EnvelopeFollowerAO::createParameters()
         p_->paramTimeDown = params()->createFloatParameter("_envf_timedown", tr("time down"),
                                                    tr("The time in seconds to follow a falling signal volume"),
                                                    .5, 0.05);
-    params()->endParameterGroup();
+
+        p_->paramThreshold = params()->createFloatParameter("_envf_thresh", tr("input threshold"),
+                                                   tr("The value of how much the input signal "
+                                                      "must raise above the current average to cause a raise in the output"),
+                                                   0.0, 0.025);
+        p_->paramAverage = params()->createFloatParameter("_envf_timeav", tr("time average"),
+                                                   tr("The time in seconds to gather the average amplitude used for thresholding"),
+                                                   1.0, 0.05);
+
+        params()->endParameterGroup();
 }
 
 void EnvelopeFollowerAO::onParametersLoaded()
@@ -137,7 +148,9 @@ void EnvelopeFollowerAO::processAudio(uint , SamplePos pos, uint thread)
     F32 fadeIn = p_->paramTimeUp->value(time, thread),
         fadeOut = p_->paramTimeDown->value(time, thread),
         ampIn = p_->paramInAmp->value(time, thread),
-        ampOut = p_->paramOutAmp->value(time, thread);
+        ampOut = p_->paramOutAmp->value(time, thread),
+        thres = p_->paramThreshold->value(time, thread),
+        average = p_->paramAverage->value(time, thread);
 
     AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
     [=](uint channel, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
@@ -147,13 +160,16 @@ void EnvelopeFollowerAO::processAudio(uint , SamplePos pos, uint thread)
         // update envelope follower settings
         if (   env->fadeIn() != fadeIn
             || env->fadeOut() != fadeOut
+            || env->averageSpeed() != average
             || env->sampleRate() != sampleRate())
         {
             env->setSampleRate(sampleRate());
             env->setFadeIn(fadeIn);
             env->setFadeOut(fadeOut);
+            env->setAverageSpeed(average);
             env->updateCoefficients();
         }
+        env->setThreshold(thres);
         env->setInputAmplitude(ampIn);
         env->setOutputAmplitude(ampOut);
 
