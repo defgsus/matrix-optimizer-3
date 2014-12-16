@@ -166,7 +166,7 @@ void PanAO::processAudio(uint, SamplePos pos, uint thread)
                 break;
             case Private::M_ADVANCED:
             {
-                Double angle = M_PI * 0.5 * pan;
+                Double angle = M_PI * 0.5 *(2.0*pan-1.0);
                 Double  cc = cos(angle),
                         ss = sin(angle),
                         l  = SQRT2 * (cc + ss) * 0.5,
