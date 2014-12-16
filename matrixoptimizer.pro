@@ -2,6 +2,7 @@
 #################### qt stuff #########################
 
 TARGET = matrixoptimizer
+
 !host_build:QMAKE_MAC_SDK = macosx10.10
 
 QT += core gui widgets opengl network xml
