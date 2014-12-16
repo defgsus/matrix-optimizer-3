@@ -38,6 +38,8 @@ class OscillatorAO::Private
     Private(OscillatorAO * ao) : ao(ao) { }
 
     Mode mode() const { return (Mode)paramMode->baseValue(); }
+    AUDIO::Waveform::Type oscType() const
+        { return (AUDIO::Waveform::Type)paramOscType->baseValue(); }
 
     void updateWavetable();
     void processAudio(uint size, SamplePos pos, uint thread);
@@ -182,6 +184,7 @@ void OscillatorAO::onParameterChanged(Parameter * p)
     if (p == p_->paramTableSize
         || p == p_->paramMode
         || p == p_->paramOscType
+        || p == p_->paramPulseWidth
         || p == p_->paramEquation
         || p == p_->paramNormalize)
         p_->updateWavetable();
@@ -193,11 +196,13 @@ void OscillatorAO::updateParameterVisibility()
 
     const bool
             isosc = p_->mode() == Private::M_OSCILLATOR,
-            isequ = p_->mode() == Private::M_EQUATION;
+            isequ = p_->mode() == Private::M_EQUATION,
+            ispw = isosc && AUDIO::Waveform::supportsPulseWidth(p_->oscType());
 
     p_->paramOscType->setVisible(isosc);
     p_->paramPulseWidth->setVisible(isosc);
     p_->paramEquation->setVisible(isequ);
+    p_->paramPulseWidth->setVisible(ispw);
 }
 
 void OscillatorAO::setNumberThreads(uint num)
@@ -322,7 +327,7 @@ void OscillatorAO::Private::updateWavetable()
 {
     AUDIO::BandlimitWavetableGenerator gen;
     gen.setTableSize(paramTableSize->baseValue());
-    gen.setWaveform((AUDIO::Waveform::Type)paramOscType->baseValue());
+    gen.setWaveform(oscType());
     gen.setPulseWidth(paramPulseWidth->baseValue());
     gen.setMode(mode() == M_OSCILLATOR ? AUDIO::BandlimitWavetableGenerator::M_WAVEFORM
                                        : AUDIO::BandlimitWavetableGenerator::M_EQUATION);
