@@ -49,7 +49,13 @@ private:
 
 std::ostream& operator << (std::ostream& out, const AudioObjectConnection&);
 
-/** Container for holding the edges between AudioObjects */
+
+
+/** Container for holding the edges between AudioObjects.
+    <p>This is the actual data structure used by Scene to store the
+    connections between audio objects. The information is [de]serailized in
+    Scene::[de]serializeAfterChilds().
+    */
 class AudioObjectConnections
 {
 public:
@@ -112,7 +118,7 @@ public:
     bool disconnect(const AudioObjectConnection& con);
     void disconnect(AudioObjectConnection *);
 
-    /** Removes all objects recursively */
+    /** Removes all objects and their edges recursively */
     void remove(Object *);
 
 private:

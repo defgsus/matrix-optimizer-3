@@ -25,7 +25,7 @@ namespace MO {
 
     /** Puts all modulation dependencies into the graph object.
         @p graph is not cleared. */
-    void getObjectModulatorGraph(ObjectGraph& graph, Object * root);
+    void get_object_modulator_graph(ObjectGraph& graph, Object * root);
 
 
     // XXX belongs into graph/conversion.h or something

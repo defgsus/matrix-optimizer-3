@@ -23,9 +23,11 @@
 #include "object/audioobject.h"
 #include "object/audio/audiooutao.h"
 #include "object/audio/audioinao.h"
+#include "object/param/modulator.h"
 #include "object/util/objecttree.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/audioobjectconnections.h"
+#include "object/util/objectmodulatorgraph.h"
 #include "audio/configuration.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/tool/delay.h"
@@ -157,6 +159,9 @@ public:
         the matrix of the scene. */
     void assignMatrix(ObjectBuffer * o);
 
+    /** Adds the audioToFloatConverter type modulator to the audioToModulator set */
+    void addAudioToModulator(Modulator * m);
+
     //void assignMicrophoneInputSoundSources(ObjectBuffer * o);
 
     /** Prepares the audio input buffers for the objectbuffer.
@@ -173,6 +178,8 @@ public:
 
     // all relevant objects
     std::map<Object *, std::shared_ptr<ObjectBuffer>> objects;
+    // all audio outputs mapping to modulator inputs
+    QMap<AudioObject*, QSet<uint>> audioToModulator;
 
     QList<ObjectBuffer*>
         transformationObjects,
@@ -436,14 +443,33 @@ void ObjectDspPath::Private::createPath(Scene * s)
     // ---------------- analyze object tree ---------------------
 
     // convert to new tree structure
+    // XXX There is almost finished work in the newobj branch
+    // that uses the ObjectTreeNode for the actual Object tree
+    // Here we only use it temporarily because of the
+    // nice functionality of TreeNode
     auto tree = get_object_tree(scene);
     std::unique_ptr<ObjectTreeNode> tree_delete(tree);
+
+    // get all modulators in the scene
+    QList<Modulator*> all_modulators = scene->getModulators(true);
+
+    // Make a lookup table of all audio outputs that are
+    // mapped to modulator inputs
+    // [So we know which audio objects to process even if they are
+    //  not connected to other audio objects]
+
+    /*for (Modulator * m : all_modulators)
+        if (m->isAudioToFloatConverter())
+            audioToModulator.insert()*/
+
+
 
 
     // ---- find all objects that need translation calculated ---
 
     // make a tree of all audio-relevant translation objects
-    // [the copy function will always copy the root/scene object]
+    // [the copy function will always copy the root/scene object
+    //  so it can serve as the root transformation (identity)]
     auto audioPosTree = tree->copy(false, [](Object * o)
     {
         return (o->isAudioRelevant() && o->hasTransformationObjects());
@@ -475,6 +501,8 @@ void ObjectDspPath::Private::createPath(Scene * s)
 
     // copy audio connections to DirectedGraph helper
     DirectedGraph<AudioObject*> dspgraph;
+    // this only inserts objects that have audio connections
+    // all others are ignored.
     for (auto i : *scene->audioConnections())
         dspgraph.addEdge(i->from(), i->to());
 

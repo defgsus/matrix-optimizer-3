@@ -75,6 +75,12 @@ bool Modulator::isAudioToFloatConverter() const
             ;
 }
 
+uint Modulator::getAudioOutputChannel() const
+{
+    // skip the '_audio_' part and read channel
+    return outputId().mid(7).toUInt();
+}
+
 void Modulator::setModulator(Object * object)
 {
     MO_DEBUG_MOD("Modulator('" << (parent_? parent_->idName() : "NULL") << "')::setModulator('"

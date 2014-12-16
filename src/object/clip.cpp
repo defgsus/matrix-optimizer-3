@@ -150,7 +150,7 @@ QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
     else
     {
         ObjectGraph mods;
-        getObjectModulatorGraph(mods, obj);
+        get_object_modulator_graph(mods, obj);
 
         mod << mods.toList();
     }

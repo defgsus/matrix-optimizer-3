@@ -69,6 +69,9 @@ public:
         Only valid after setModulator(). */
     bool isAudioToFloatConverter() const;
 
+    /** Returns the channel number if this isAudioToFloatConverter() */
+    uint getAudioOutputChannel() const;
+
     // ------------- setter --------------
 
     /** Changes the modulator id - only used to update new inserted branches */

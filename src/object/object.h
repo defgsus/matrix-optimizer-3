@@ -526,8 +526,9 @@ public:
         XXX Only used by TrackFloat a.t.m. */
     virtual void collectModulators() { };
 
-    /** Returns all modulators of all parameters of this object */
-    QList<Modulator*> getModulators() const;
+    /** Returns all modulators of all parameters of this object.
+        If @p recursive is true, all childs will add their Modulators too. */
+    QList<Modulator*> getModulators(bool recursive = false) const;
 
     /** Returns a list of objects that modulate this object. */
     virtual QList<Object*> getModulatingObjects() const;

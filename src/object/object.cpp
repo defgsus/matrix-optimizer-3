@@ -1119,13 +1119,18 @@ void Object::calculateMicrophoneTransformation(
 
 // -------------------- modulators ---------------------
 
-QList<Modulator*> Object::getModulators() const
+QList<Modulator*> Object::getModulators(bool recursive) const
 {
     QList<Modulator*> mods;
+    // params
     for (auto p : params()->parameters())
-    {
-        mods.append( p->modulators() );
-    }
+        mods << p->modulators();
+
+    // childs
+    if (recursive)
+        for (auto c : childObjects())
+            mods << c->getModulators(true);
+
     return mods;
 }
 

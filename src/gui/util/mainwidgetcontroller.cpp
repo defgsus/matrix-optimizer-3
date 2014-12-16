@@ -502,7 +502,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             tree->dumpTree(std::cout);
 
             ObjectGraph graph;
-            getObjectModulatorGraph(graph, scene_);
+            get_object_modulator_graph(graph, scene_);
 #ifdef QT_DEBUG
             graph.dumpEdges(std::cout);
 #endif
