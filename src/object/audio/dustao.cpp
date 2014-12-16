@@ -28,7 +28,8 @@ class DustAO::Private
     public:
 
     enum Mode {
-        M_DUST
+        M_DUST,
+        M_DUST2
     };
 
     Private(DustAO *ao) : ao(ao) { }
@@ -87,7 +88,13 @@ void DustAO::createParameters()
     p_->paramDensity = params()->createFloatParameter("dust_dens", tr("density"),
                                                       tr("The density of the impulses"),
                                                       0.5, 0.05);
-    //p_->paramMode    = params()->createSelectParameter();
+    p_->paramMode    = params()->createSelectParameter("dust_mode", tr("generator mode"),
+                                                       tr("Selects the type of random generator"),
+                                                       {"dust", "dust2"},
+                                                       {tr("dust"), tr("dust2")},
+                                                       {tr("Creates impulses from 0 to 1"), tr("Creates impulses from -1 to 1")},
+                                                       {Private::M_DUST, Private::M_DUST2},
+                                                       Private::M_DUST);
     params()->endParameterGroup();
 }
 
@@ -133,7 +140,53 @@ QString DustAO::getAudioInputName(uint channel) const
 
 static const Double dv2_31 = 4.656612873077392578125e-10;
 
-void DustAO::processAudio(uint, SamplePos pos, uint thread)
+void DustAO::processDust(uint, SamplePos pos, uint thread)
+{
+    const QList<AUDIO::AudioBuffer*> &
+            inputs  = audioInputs(thread),
+            outputs = audioOutputs(thread);
+
+    AUDIO::AudioBuffer
+            * out    = outputs.isEmpty() ? 0 : outputs[0],
+            * inAmp  = inputs.size() < 2 ? 0 : inputs[1],
+            * inDens = inputs.size() < 3 ? 0 : inputs[2];
+
+    if(!out) return;
+
+    Double  time   = sampleRateInv() * pos;
+
+    Double
+            thresh, scale,
+            dens0  = p_->density0[thread],
+            dens   = p_->paramDensity->value(time,thread);
+
+    if(inDens)
+        dens += inDens->read(0);
+
+    if(dens != dens0) {
+        thresh = p_->threshold[thread] = dens * sampleRateInv();
+        scale  = p_->scale[thread] = (thresh > 0.0 ? 1.0/thresh : 0.0);
+        p_->density0[thread] = dens;
+    } else {
+        thresh = p_->threshold[thread];
+        scale  = p_->scale[thread];
+    }
+
+    for(uint i=0; i<out->blockSize(); ++i) {
+        Double  time = sampleRateInv() * (pos + i);
+        Double  amp  = p_->paramAmp->value(time,thread);
+
+        if(inAmp)
+            amp += inAmp->read(i);
+
+        p_->rand[thread] = rand();
+        Double r = p_->rand[thread] * dv2_31;
+
+        out->write(i, amp * ((r < thresh) ? r * scale : 0.0));
+    }
+}
+
+void DustAO::processDust2(uint, SamplePos pos, uint thread)
 {
     const QList<AUDIO::AudioBuffer*> &
             inputs  = audioInputs(thread),
@@ -175,9 +228,21 @@ void DustAO::processAudio(uint, SamplePos pos, uint thread)
         p_->rand[thread] = rand();
         Double r = p_->rand[thread] * dv2_31;
 
-        out->write(i, amp * ((r < thresh) ? r * scale : 0.0));
+        out->write(i, amp * ((r < thresh) ? r * scale -1.0 : 0.0));
     }
 
+}
+
+void DustAO::processAudio(uint i, SamplePos pos, uint thread)
+{
+    switch(p_->mode()) {
+    case Private::M_DUST2:
+        processDust2(i, pos, thread);
+        break;
+    case Private::M_DUST:
+    default:
+    processDust(i, pos, thread);
+    }
 }
 
 

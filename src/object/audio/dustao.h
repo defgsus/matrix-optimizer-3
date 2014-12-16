@@ -23,6 +23,8 @@ public:
 
 protected:
 
+    void processDust(uint, SamplePos pos, uint thread);
+    void processDust2(uint, SamplePos pos, uint thread);
     virtual void processAudio(uint, SamplePos pos, uint thread) Q_DECL_OVERRIDE;
 
 private:
