@@ -238,7 +238,7 @@ void ShaperAO::Private::updateEquations()
     }
 }
 
-void ShaperAO::setAudioBuffers(uint thread,
+void ShaperAO::setAudioBuffers(uint thread, uint ,
                                const QList<AUDIO::AudioBuffer *> &inputs,
                                const QList<AUDIO::AudioBuffer *> &outputs)
 {

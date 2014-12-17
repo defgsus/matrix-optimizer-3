@@ -222,7 +222,7 @@ void FilterBankAO::Private::updateFilterCoeffs(Double time, uint thread)
     }
 }
 
-void FilterBankAO::setAudioBuffers(uint /*thread*/,
+void FilterBankAO::setAudioBuffers(uint /*thread*/, uint /*bufferSize*/,
                                    const QList<AUDIO::AudioBuffer *> &/*inputs*/,
                                    const QList<AUDIO::AudioBuffer *> &outputs)
 {

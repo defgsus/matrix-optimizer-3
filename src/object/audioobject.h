@@ -54,7 +54,7 @@ public:
         Inputs and outputs must have the same buffer size.
         @note Unused inputs and outputs contain a NULL pointer.
         Calls virtual setAudioBuffers(). */
-    virtual void setAudioBuffersBase(uint thread,
+    virtual void setAudioBuffersBase(uint thread, uint bufferSize,
                                      const QList<AUDIO::AudioBuffer*>& inputs,
                                      const QList<AUDIO::AudioBuffer*>& outputs);
 
@@ -102,10 +102,10 @@ protected: // ---------------- protected virtual interface ---------------------
         number of channels set with setNumberAudioOutputs().
         Will be called by a non-audio thread.
         @note Can't emit change signals here, so no changes to the object allowed! */
-    virtual void setAudioBuffers(uint thread,
+    virtual void setAudioBuffers(uint thread, uint bufferSize,
                                  const QList<AUDIO::AudioBuffer*>& inputs,
                                  const QList<AUDIO::AudioBuffer*>& outputs)
-    { Q_UNUSED(thread); Q_UNUSED(inputs); Q_UNUSED(outputs); }
+    { Q_UNUSED(thread); Q_UNUSED(bufferSize); Q_UNUSED(inputs); Q_UNUSED(outputs); }
 
     /** Process dsp data here.
         The inputs and outputs are in audioInputs() and audioOutputs() respectively.

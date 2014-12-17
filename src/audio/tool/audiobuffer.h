@@ -90,6 +90,10 @@ class AudioBuffer
 
     // ------ static convenience functions ----------
 
+    /* Copies @p size samples from @p src to @p dst */
+    //static void copy(const AudioBuffer * src, AudioBuffer * dst, size_t size)
+
+
     /** Copies all input data to output data.
         If @p outputs has more channels that @p inputs,
         they will be filled with zeros.

@@ -538,7 +538,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
         prepareAudioOutputBuffers(b);
 
         // tell object
-        o->setAudioBuffersBase(thread, b->audioInputs, b->audioOutputs);
+        o->setAudioBuffersBase(thread, conf.bufferSize(), b->audioInputs, b->audioOutputs);
     }
 
 

@@ -27,7 +27,7 @@
 #include "util/texturesetting.h"
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
-
+#include "math/fft.h"
 
 namespace MO {
 
@@ -48,6 +48,13 @@ class Oscillograph::Private
         //delete textureSet;
     }
 
+    enum SourceMode
+    {
+        S_AMPLITUDE,
+        S_SPECTRUM,
+        S_SPECTRUM_PHASE
+    };
+
     enum OsciMode
     {
         O_LINEAR,
@@ -57,6 +64,7 @@ class Oscillograph::Private
     enum DrawMode
     {
         D_LINES,
+        D_BARS,
         D_POINTS
     };
 
@@ -88,8 +96,11 @@ class Oscillograph::Private
                 time, rtime, t, rt, value, x, y, z;
     };
 
+    SourceMode sourceMode() const { return (SourceMode)paramSourceMode->baseValue(); }
+    DrawMode drawMode() const { return (DrawMode)paramDrawMode->baseValue(); }
     void updateEquations();
     void recompile();
+    void calcValueBuffer(Double time, uint thread);
     void calcVaoBuffer(Double time, uint thread);
 
     Oscillograph * obj;
@@ -99,18 +110,23 @@ class Oscillograph::Private
     ParameterFloat * paramR, *paramG, *paramB, *paramA, *paramBright,
                     * paramTimeSpan,
                     * paramValue,
+                    * paramAmp,
                     * paramWidth,
                     * paramLineWidth,
                     * paramPointSize;
     ParameterInt * paramNumPoints;
-    ParameterSelect * paramMode, * paramDrawMode, * paramLineSmooth;
+    ParameterSelect * paramMode, * paramSourceMode,
+                    * paramDrawMode, * paramLineSmooth,
+                    * paramFftSize;
     ParameterText * paramEquation;
 
     bool doRecompile;
 
     Double vaoUpdateTime;
-    std::vector<gl::GLfloat> vaoBuffer;
+    std::vector<gl::GLfloat> vaoBuffer, valueBuffer;
     std::vector<EquationObject> equs;
+    std::vector<MATH::Fft<gl::GLfloat>> ffts;
+
 };
 
 
@@ -163,6 +179,11 @@ void Oscillograph::createParameters()
                                         0.0,
                                         0.01, true, true);
 
+        p_->paramAmp = params()->createFloatParameter("oscamp", tr("amplitude"),
+                                        tr("The amplitude of the oscillograph/scope"),
+                                        1.0,
+                                        0.1, true, true);
+
         p_->paramNumPoints = params()->createIntParameter("numverts", tr("number points"),
                                             tr("The number of points on the oscillograph path"),
                                             100, 2, 999999,
@@ -174,6 +195,25 @@ void Oscillograph::createParameters()
                                             0.01, true, true);
 
 // scope mode
+
+        p_->paramSourceMode = params()->createSelectParameter("oscsrcmode", tr("source type"),
+                                            tr("Selects the scope type"),
+                                            { "amp", "fft", "fftph" },
+                                            { tr("ampltude"), tr("spectrum"), tr("spectral phase") },
+                                            { tr("The amplitude of the signal over the time range"),
+                                              tr("A frequency spectrum over the number of samples"),
+                                              tr("The phase spectrum over the number of samples") },
+                                            { Private::S_AMPLITUDE, Private::S_SPECTRUM, Private::S_SPECTRUM_PHASE },
+                                            Private::S_AMPLITUDE,
+                                            true, false);
+
+        p_->paramFftSize = params()->createSelectParameter("osc_fftsize", tr("fft size"),
+                    tr("The size of the fourier window in samples"),
+                    { "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" },
+                    { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
+                    { "", "", "", "", "", "", "", "", "", "", "", "", "" },
+                    { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
+                    512, true, false);
 
         p_->paramMode = params()->createSelectParameter("oscmode", tr("scope type"),
                                             tr("Selects the scope type"),
@@ -208,11 +248,12 @@ void Oscillograph::createParameters()
 
         p_->paramDrawMode = params()->createSelectParameter("oscdrawmode", tr("draw mode"),
                                             tr("Selects how the points will be drawn"),
-                                            { "oneline", "points" },
-                                            { tr("lines"), tr("points") },
+                                            { "oneline", "bar", "points" },
+                                            { tr("line"), tr("solid"), tr("points") },
                                             { tr("All points are connected to neighbours by lines"),
+                                              tr("The envlope is drawn as a solid shape"),
                                               tr("Each point is a sprite (using GL_POINTS)") },
-                                            { Private::D_LINES, Private::D_POINTS },
+                                            { Private::D_LINES, Private::D_BARS, Private::D_POINTS },
                                             Private::D_LINES,
                                             true, false);
 
@@ -250,7 +291,10 @@ void Oscillograph::onParameterChanged(Parameter *p)
 {
     ObjectGl::onParameterChanged(p);
 
-    if (p == p_->paramNumPoints)
+    if (p == p_->paramSourceMode
+        || p == p_->paramFftSize
+        || p == p_->paramNumPoints
+        || p == p_->paramDrawMode)
         requestReinitGl();
 
     if (p_->textureSet->needsReinit(p))
@@ -271,6 +315,12 @@ void Oscillograph::updateParameterVisibility()
     auto dmode = Private::DrawMode(p_->paramDrawMode->baseValue());
     p_->paramPointSize->setVisible(dmode == Private::D_POINTS);
     p_->paramLineWidth->setVisible(dmode == Private::D_LINES);
+
+    auto smode = p_->sourceMode();
+    bool spec = smode == Private::S_SPECTRUM || smode == Private::S_SPECTRUM_PHASE;
+    p_->paramFftSize->setVisible(spec);
+    p_->paramNumPoints->setVisible(!spec);
+    p_->paramTimeSpan->setVisible(!spec);
 }
 
 void Oscillograph::setNumberThreads(uint num)
@@ -279,6 +329,7 @@ void Oscillograph::setNumberThreads(uint num)
 
     p_->equs.resize(num);
     p_->updateEquations();
+    p_->ffts.resize(num);
 }
 
 
@@ -315,24 +366,66 @@ Vec4 Oscillograph::modelColor(Double time, uint thread) const
         p_->paramA->value(time, thread));
 }
 
-void Oscillograph::initGl(uint /*thread*/)
+void Oscillograph::initGl(uint thread)
 {
     p_->textureSet->initGl();
 
     p_->draw = new GL::Drawable(idName());
 
-    // create a line
-    auto g = p_->draw->geometry();
+    // choose number of points on path
+    int num = std::max(2, p_->paramNumPoints->baseValue());
+    if (p_->sourceMode() == Private::S_SPECTRUM)
+    {
+        num = p_->paramFftSize->baseValue();
+        p_->ffts[thread].setSize(num);
+        num /= 2;
+    }
+    p_->valueBuffer.resize(num);
 
+    // build geometry
+    auto g = p_->draw->geometry();
     g->setColor(1,1,1,1);
 
-    int num = std::max(2, p_->paramNumPoints->baseValue());
-    for (int i=0; i<num; ++i)
+    switch (p_->drawMode())
     {
-        g->addVertexAlways(i, 0, 0);
-        if (i > 0)
-            g->addLine(i - 1, i);
+        // create a line
+        case Private::D_LINES:
+        case Private::D_POINTS:
+            for (int i=0; i<num; ++i)
+            {
+                g->addVertexAlways(i, 0, 0);
+                if (i > 0)
+                    g->addLine(i - 1, i);
+            }
+        break;
+
+        case Private::D_BARS:
+        {
+            // top
+            for (int i=0; i<num; ++i)
+            {
+                g->setTexCoord(float(i) / (num-1), 1);
+                g->addVertexAlways(i, 1, 0);
+            }
+            // bottom
+            for (int i=0; i<num; ++i)
+            {
+                g->setTexCoord(float(i) / (num-1), 0);
+                g->addVertexAlways(i, 0, 0);
+            }
+            // tris
+            for (int i=0; i<num-1; ++i)
+            {
+                g->addTriangle(num + i, i + 1, i);
+                g->addTriangle(num + i, num + i + 1, i + 1);
+            }
+        }
+        break;
     }
+
+    // space to upload new position data
+    p_->vaoBuffer.resize(g->numVertices() * 3);
+
     // force p_->calcVaoBuffer()
     p_->vaoUpdateTime = -1000000.123456;
 
@@ -348,15 +441,14 @@ void Oscillograph::Private::recompile()
     if (textureSet->isEnabled())
     {
         src->addDefine("#define MO_ENABLE_TEXTURE");
-        src->addDefine("#define MO_USE_POINT_COORD");
+        if (drawMode() == D_POINTS)
+            src->addDefine("#define MO_USE_POINT_COORD");
     }
     if (textureSet->isCube())
         src->addDefine("#define MO_TEXTURE_IS_FULLDOME_CUBE");
 
     draw->setShaderSource(src);
     draw->createOpenGl();
-
-    vaoBuffer.resize(draw->geometry()->numVertices() * 3);
 
 }
 
@@ -376,13 +468,49 @@ void Oscillograph::releaseGl(uint /*thread*/)
     doRecompile_ = true;
 }*/
 
+void Oscillograph::Private::calcValueBuffer(Double time, uint thread)
+{
+    if (sourceMode() == Private::S_AMPLITUDE)
+    {
+        const Double
+                timeSpan = paramTimeSpan->value(time, thread),
+                fac = 1.0 / (valueBuffer.size() - 1);
+
+        for (uint i = 0; i < valueBuffer.size(); ++i)
+        {
+            const Double t = Double(i) * fac;
+            valueBuffer[i] = paramValue->value(time + (1.0-t) * timeSpan, thread);
+        }
+    }
+    else
+    {
+        MATH::Fft<Float> * fft = &ffts[thread];
+
+        // fill fft buffer
+        for (uint i = 0; i < fft->size(); ++i)
+            fft->buffer()[i] = paramValue->value(
+                        (obj->sampleRate() * time - i) * obj->sampleRateInv(), thread);
+
+        // perform it
+        fft->fft();
+        fft->getAmplitudeAndPhase();
+
+        // copy
+        uint offset = (sourceMode() == Private::S_SPECTRUM_PHASE)
+                ? (fft->size() / 2) : 0;
+
+        for (uint i=0; i<valueBuffer.size(); ++i)
+            valueBuffer[i] = fft->buffer()[i + offset];
+    }
+}
+
 void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
 {
-    const uint numPoints = vaoBuffer.size() / 3;
+    const uint numPoints = valueBuffer.size();
 
     const Double
-            timeSpan = paramTimeSpan->value(time, thread),
-            fac = 1.0 / (numPoints - 1);
+            fac = 1.0 / (numPoints - 1),
+            amp = paramAmp->value(time, thread);
 
     // calculate osci positions
     switch (OsciMode(paramMode->value(time, thread)))
@@ -397,7 +525,18 @@ void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
                 const Double t = Double(i) * fac;
 
                 *pos++ = (t - 0.5) * scalex;
-                *pos++ = paramValue->value(time + (1.0-t) * timeSpan, thread);
+                *pos++ = valueBuffer[i] * amp;
+                *pos++ = 0.0f;
+            }
+
+            // bars have a second line of points at the bottom
+            if (drawMode() == D_BARS)
+            for (uint i = 0; i <numPoints; ++i)
+            {
+                const Double t = Double(i) * fac;
+
+                *pos++ = (t - 0.5) * scalex;
+                *pos++ = 0.0f;
                 *pos++ = 0.0f;
             }
         }
@@ -418,7 +557,31 @@ void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
                 // update equation variables
                 equ->t = t;
                 equ->rt = t * TWO_PI;
-                equ->value = paramValue->value(time + (1.0-t) * timeSpan, thread);
+                equ->value = valueBuffer[i] * amp;
+                // don't allow physics ;)
+                // would drift on clients
+                equ->x = equ->y = equ->z = 0.0;
+
+                // calc
+                equ->equation.get()->eval();
+
+                // get output
+                *pos++ = equ->x;
+                *pos++ = equ->y;
+                *pos++ = equ->z;
+            }
+
+            // bars have a second line of points at the bottom
+            // XXX hacky.
+            if (drawMode() == D_BARS)
+            for (uint i = 0; i <numPoints; ++i)
+            {
+                const Double t = Double(i) * fac;
+
+                // update equation variables
+                equ->t = t;
+                equ->rt = t * TWO_PI;
+                equ->value = 0;
                 // don't allow physics ;)
                 // would drift on clients
                 equ->x = equ->y = equ->z = 0.0;
@@ -432,9 +595,12 @@ void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
                 *pos++ = equ->z;
             }
         }
+        break;
     }
-
 }
+
+
+
 
 void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
@@ -459,6 +625,7 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
                         GL::VertexArrayObject::A_POSITION);
             if (buf && p_->vaoBuffer.size() > 3)
             {
+                p_->calcValueBuffer(time, thread);
                 p_->calcVaoBuffer(time, thread);
 
                 // move to device
@@ -486,6 +653,10 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
                 p_->draw->setDrawType(gl::GL_LINE_STRIP);
                 GL::setLineSmooth(p_->paramLineSmooth->value(time, thread) != 0);
                 GL::setLineWidth(p_->paramLineWidth->value(time, thread));
+            break;
+
+            case Private::D_BARS:
+                p_->draw->setDrawType(gl::GL_TRIANGLES);
             break;
 
             case Private::D_POINTS:

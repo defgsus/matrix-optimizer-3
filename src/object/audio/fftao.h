@@ -33,11 +33,15 @@ public:
     ~FftAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
     virtual void setNumberThreads(uint count) Q_DECL_OVERRIDE;
 
-    virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
-
 protected:
+
+    virtual void setAudioBuffers(uint thread, uint bufferSize,
+                                 const QList<AUDIO::AudioBuffer*>& inputs,
+                                 const QList<AUDIO::AudioBuffer*>& outputs)
+                                                            Q_DECL_OVERRIDE;
 
     virtual void processAudio(uint bufferSize, SamplePos pos, uint thread)
                                                             Q_DECL_OVERRIDE;

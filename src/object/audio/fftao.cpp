@@ -15,6 +15,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
+#include "object/util/objecteditor.h"
 #include "math/fft.h"
 #include "io/datastream.h"
 #include "io/log.h"
@@ -28,7 +29,8 @@ class FftAO::Private
     public:
 
     ParameterSelect
-        * paramType;
+        * paramType,
+        * paramSize;
 
     std::vector<MATH::Fft<F32>> ffts;
     std::vector<AUDIO::ResampleBuffer<F32>> inbufs, outbufs;
@@ -76,7 +78,26 @@ void FftAO::createParameters()
                                                   { FT_FFT, FT_IFFT },
                                                   FT_FFT,
                                                   true, false);
+
+        p_->paramSize = params()->createSelectParameter("_fft_size", tr("size"),
+                    tr("The size of the fourier window in samples"),
+                    { "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" },
+                    { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
+                    { "", "", "", "", "", "", "", "", "", "", "", "", "" },
+                    { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
+                    1024, true, false);
+
     params()->endParameterGroup();
+}
+
+void FftAO::onParameterChanged(Parameter * p)
+{
+    AudioObject::onParameterChanged(p);
+
+    if (p == p_->paramSize)
+        // hack to get called setAudioBuffers again
+        if (editor())
+            editor()->emitAudioChannelsChanged(this);
 }
 
 void FftAO::setNumberThreads(uint count)
@@ -89,38 +110,53 @@ void FftAO::setNumberThreads(uint count)
     p_->writtenOut.resize(count);
 }
 
-void FftAO::setBufferSize(uint bufferSize, uint thread)
+void FftAO::setAudioBuffers(uint thread, uint bufferSize,
+                            const QList<AUDIO::AudioBuffer*>&,
+                            const QList<AUDIO::AudioBuffer*>&)
 {
-    AudioObject::setBufferSize(bufferSize, thread);
-
-    // XXX Not called yet,
-    // need new concept for buffersize signal from AudioEngine
-    p_->ffts[thread].setSize(1024);
-    p_->inbufs[thread].setSize(1024);
+    // fftsize must at least be the current buffer length
+    uint fftsize = nextPowerOfTwo(std::max((uint)p_->paramSize->baseValue(),
+                                           bufferSize));
+    p_->ffts[thread].setSize(fftsize);
+    p_->inbufs[thread].setSize(p_->paramSize->baseValue());
     p_->outbufs[thread].setSize(bufferSize);
     p_->writtenOut[thread] = 0;
 }
 
-void FftAO::processAudio(uint bSize, SamplePos pos, uint thread)
+void FftAO::processAudio(uint , SamplePos , uint )
 {
-    const QList<AUDIO::AudioBuffer*>&
-            inputs = audioInputs(thread),
-            outputs = audioOutputs(thread);
+//    const QList<AUDIO::AudioBuffer*>&
+//            inputs = audioInputs(thread),
+//            outputs = audioOutputs(thread);
 
 //    const Double time = sampleRateInv() * pos;
 
-    const bool forward = p_->paramType->baseValue() == FT_FFT;
+//    const bool forward = p_->paramType->baseValue() == FT_FFT;
 
-    // update filter
-    MATH::Fft<F32> * fft = &p_->ffts[thread];
+//    MATH::Fft<F32> * fft = &p_->ffts[thread];
+
+#ifdef MO__fft_and_buffersize_equal_is_easy_
+
     AUDIO::ResampleBuffer<F32>
             * inbuf = &p_->inbufs[thread],
             * outbuf = &p_->outbufs[thread];
 
-    // !!! THIS IS ILLEGAL (only debugging here)
-    if (outbuf->blockSize() != bSize)
-        outbuf->setSize(bSize);
+    AUDIO::AudioBuffer::process(inputs, outputs,
+    [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+    {
+        inbuf->writeBlock( in->readPointer(), in->blockSize() );
 
+        inbuf->readBlock(fft->buffer());
+        if (forward)
+            fft->fft();
+        else
+            fft->ifft();
+        out->writeBlock(fft->buffer());
+    });
+
+#endif
+
+#if 0
     AUDIO::AudioBuffer::process(inputs, outputs,
     [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
@@ -168,6 +204,7 @@ void FftAO::processAudio(uint bSize, SamplePos pos, uint thread)
                && written < out->blockSize());
 
     });
+#endif
 }
 
 } // namespace MO
