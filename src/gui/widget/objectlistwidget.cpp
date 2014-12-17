@@ -95,13 +95,13 @@ void ObjectListWidget::updateList_()
     if (obj_->parentObject())
     {
         auto item = new QListWidgetItem("/", this, IT_ROOT);
-        item->setForeground(QBrush(Qt::white));
-        item->setBackground(QBrush(Qt::black));
+//        item->setForeground(QBrush(Qt::white));
+//        item->setBackground(QBrush(Qt::black));
         addItem(item);
 
         item = new QListWidgetItem("..", this, IT_DOTDOT);
-        item->setForeground(QBrush(Qt::white));
-        item->setBackground(QBrush(Qt::black));
+//        item->setForeground(QBrush(Qt::white));
+//        item->setBackground(QBrush(Qt::black));
         addItem(item);
     }
 

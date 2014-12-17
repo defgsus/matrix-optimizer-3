@@ -1,0 +1,110 @@
+QWidget {
+        background-color: #111;
+        alternate-background-color: #181;
+        selection-background-color: #555;
+        selection-color: #fff;
+        color: #aaa;
+        dialogbuttonbox-buttons-have-icons: 1;
+}
+
+QScrollBar {
+        background-color: #111;
+}
+
+QFrame {
+        background-color: #181818;
+}
+
+QPushButton, QToolButton {
+        background-color: #444;
+        color: #fff;
+}
+
+QPushButton:disabled, QToolButton:disabled {
+        background-color: #222;
+}
+
+/** ---- main window styles ----- */
+
+QMainWindow::separator {
+        background-color: #202830;
+        width: 5px; /* when vertical */
+        height: 5px; /* when horizontal */
+}
+
+QDockWidget { color: #88a; }
+
+/* ----- group widget header ---- */
+
+QWidget [GroupHeader="true"] {
+        background-color: #202830;
+        color: #ddd;
+}
+QToolButton[GroupHeader="true"] {
+        background-color: #344350;
+}
+
+
+/* ------- edits ----------- */
+
+QSpinBox, QDoubleSpinBox, QLineEdit {
+        background-color: #383838;
+        selection-background-color: #338;
+        color: #ddd;
+        border: 1px solid #888;
+}
+
+/*QDoubleSpinBox::up-arrow { margin:-4; background-color: #555; color: #fff; }*/
+
+
+
+/* ---- lists ---- */
+
+QListView::item:selected {
+        background-color: #444;
+        border: 1px solid #aaa;
+}
+
+
+/* ---- hover states ------ */
+
+QPushButton:hover, QToolButton:hover {
+        background-color: #666;
+        font: bold;
+}
+
+QMainWindow::separator:hover { background-color: #404860; }
+
+QToolButton[GroupHeader="true"]:hover {
+        background-color: #546370;
+}
+
+QSpinBox:hover, QDoubleSpinBox:hover, QLineEdit:hover {
+        background-color: #555;
+}
+
+QListView::item:hover { background-color: #333; }
+QListView::item:selected:hover { background-color: #555; }
+
+
+
+/*
+* {
+        background-color: #202020; color: #a0a0a0;
+        border: 1px solid #404040;
+        selection-background-color: #505060;
+        selection-color: #ffffff
+}
+
+*:hover {
+        background-color: #242424
+}
+
+*:pressed {
+        background-color: #121212
+}
+
+QLabel { border: 0px } * { show-decoration-selected: 0 }
+QAbstractItemView { background-color: #808080 }
+QAbstractItemView:hover { background-color: #868686 }
+*/

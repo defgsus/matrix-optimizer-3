@@ -27,7 +27,7 @@ ObjectListWidgetItem::ObjectListWidgetItem(Object *o, ObjectListWidget *parent, 
     setIcon(ObjectFactory::iconForObject(object_, col));
     setData(Qt::UserRole, object_->idName());
     setForeground(QBrush(col));
-    setBackground(QBrush(Qt::black));
+//    setBackground(QBrush(Qt::black));
     setFlags(Qt::ItemIsEnabled
            | Qt::ItemIsSelectable
            | Qt::ItemIsDragEnabled

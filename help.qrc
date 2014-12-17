@@ -9,4 +9,7 @@
         <file alias="opengldrawing.html">assets/help/en/opengldrawing.html</file>
         <file alias="commandlinehelp.txt">assets/help/en/commandlinehelp.txt</file>
     </qresource>
+    <qresource prefix="/">
+        <file alias="stylesheet.css">assets/stylesheet.css</file>
+    </qresource>
 </RCC>

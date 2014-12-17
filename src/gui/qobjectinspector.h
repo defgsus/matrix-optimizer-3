@@ -14,6 +14,7 @@
 #include <QMainWindow>
 
 class QTreeView;
+class QListWidget;
 
 namespace MO {
 class QObjectTreeModel;
@@ -24,6 +25,7 @@ class QObjectInspector : public QMainWindow
     Q_OBJECT
 public:
     explicit QObjectInspector(QObject * rootObject, QWidget *parent = 0);
+    ~QObjectInspector();
 
 signals:
 
@@ -33,8 +35,11 @@ public slots:
 
 protected:
 
+    void updateList_(QObject *);
+
     QObjectTreeModel * model_;
     QTreeView * treeView_;
+    QListWidget * listView_;
 };
 
 } // namespace GUI

@@ -117,9 +117,37 @@ void SyntaxHighlighter::highlightBlock(const QString &text)
 void SyntaxHighlighter::initForStyleSheet()
 {
     QStringList vars;
-    vars << "background-color";
+    vars
+            << "color"
+            << "background-color"
+            << "subcontrol-origin"
+            << "selection-color"
+            << "selection-background-color"
+            << "border"
+            << "image"
+            << "margin"
+            << "padding"
+            << "position"
+            << "top"
+            << "left"
+               ;
 
-    setNames(vars, QStringList());
+    QStringList selects;
+    selects
+            << ":hover"
+            << ":checked"
+            << ":pressed"
+            << ":enabled"
+            << ":active"
+            << ":alternate"
+            << "::drop-down"
+            << "::up-arrow"
+            << "::down-arrow"
+            << "::item"
+            << "GroupHeader="
+               ;
+
+    setNames(vars, selects);
 }
 
 } // namespace MO

@@ -11,6 +11,8 @@
 #include <QMainWindow>
 #include <QWindow>
 #include <QDesktopWidget>
+#include <QFile>
+#include <QTextStream>
 
 #include "settings.h"
 #include "io/error.h"
@@ -325,17 +327,12 @@ void Settings::setDesktop(uint index)
 
 QString Settings::styleSheet() const
 {
-    return value("Application/styleSheet",
-                 "* { background-color: #202020; color: #a0a0a0; "
-                 "    border: 1px solid #404040; "
-                 "    selection-background-color: #505060; "
-                 "    selection-color: #ffffff } "
-                 "*:hover { background-color: #242424 } "
-                 "*:pressed { background-color: #121212 } "
-                 "QLabel { border: 0px } "
-                 "* { show-decoration-selected: 0 } "
-                 "QAbstractItemView { background-color: #808080 } "
-                 "QAbstractItemView:hover { background-color: #868686 } ").toString();
+    if (contains("Application/styleSheet"))
+        return value("Application/styleSheet").toString();
+
+    QFile f(":/stylesheet.css");
+    QTextStream s(&f);
+    return s.readAll();
 }
 
 void Settings::setStyleSheet(const QString & s)

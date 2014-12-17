@@ -24,4 +24,5 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/equationfunctions.html \
     assets/help/en/sequence.html \
     assets/help/en/opengldrawing.html \
-    assets/help/en/commandlinehelp.txt
+    assets/help/en/commandlinehelp.txt \
+    assets/stylesheet.css
