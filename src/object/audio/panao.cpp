@@ -1,4 +1,4 @@
-/** @file impulseao.cpp
+/** @file panao.cpp
 
     @brief a simple stereo panner
 

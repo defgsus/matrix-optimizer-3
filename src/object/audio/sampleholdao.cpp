@@ -1,6 +1,6 @@
-/** @file impulseao.cpp
+/** @file sampleholdao.cpp
 
-    @brief A simple impulse generator
+    @brief A sample and hold module
 
     <p>(c) 2014, martin.huenniger@yahoo.de</p>
     <p>All rights reserved</p>

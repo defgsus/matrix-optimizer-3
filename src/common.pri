@@ -241,7 +241,9 @@ HEADERS += \
     $$PWD/object/audio/impulseao.h \
     $$PWD/object/audio/panao.h \
     $$PWD/object/audio/dustao.h \
-    $$PWD/object/audio/sampleholdao.h
+    $$PWD/object/audio/sampleholdao.h \
+    $$PWD/object/audio/phasorao.h \
+    $$PWD/object/audio/noiseao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -444,4 +446,6 @@ SOURCES += \
     $$PWD/object/audio/impulseao.cpp \
     $$PWD/object/audio/panao.cpp \
     $$PWD/object/audio/dustao.cpp \
-    $$PWD/object/audio/sampleholdao.cpp
+    $$PWD/object/audio/sampleholdao.cpp \
+    $$PWD/object/audio/phasorao.cpp \
+    $$PWD/object/audio/noiseao.cpp
