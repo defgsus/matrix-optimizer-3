@@ -226,6 +226,12 @@ void Settings::storeGeometry(QWidget * win)
     setValue("Geometry/Geom/" + win->objectName(), win->geometry());
     setValue("Geometry/Frame/" + win->objectName(), win->frameGeometry());
 #endif
+
+    // write dockwidget/toolbar state
+    if (QMainWindow * main = qobject_cast<QMainWindow*>(win))
+    {
+        setValue("Geometry/WinState/" + win->objectName(), main->saveState(1));
+    }
 }
 
 bool Settings::restoreGeometry(QWidget * win)
@@ -272,6 +278,17 @@ bool Settings::restoreGeometry(QWidget * win)
     }
     else
         MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());
+
+    // restore dockwidgets state
+    if (QMainWindow * main = qobject_cast<QMainWindow*>(win))
+    {
+        const QString key = "Geometry/WinState/" + win->objectName();
+        if (contains(key))
+        {
+            const QByteArray data = getValue(key).toByteArray();
+            main->restoreState(data, 1);
+        }
+    }
 
     return found;
 }

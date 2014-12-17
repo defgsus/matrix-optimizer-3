@@ -25,6 +25,8 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
     : QGraphicsView (parent),
       gscene_       (new ObjectGraphScene(this))
 {
+    setObjectName("_ObjectGraphView");
+
     setScene(gscene_);
     connect(gscene_, SIGNAL(shiftView(QPointF)),
             this, SLOT(onShitView_(QPointF)));

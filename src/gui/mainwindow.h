@@ -21,7 +21,6 @@ class QMenu;
 namespace MO {
 namespace GUI {
 
-class Spacer;
 class MainWidgetController;
 
 class MainWindow : public QMainWindow
@@ -34,7 +33,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *);
-    void resizeEvent(QResizeEvent *);
+    //void resizeEvent(QResizeEvent *);
 
 public slots:
 
@@ -42,15 +41,20 @@ private slots:
 
     void saveAllGeometry_();
     bool restoreAllGeometry_();
-    void adjustWidgets_();
 
 private:
 
     void createWidgets_();
+    void createDockWidgets_();
+    void createMenus_();
+
+    /** Creates and returns a default dockwidget for @p widget.
+        @p widget must have an object name! */
+    QDockWidget * createDockWidget_(const QString& name, QWidget * widget);
 
     MainWidgetController * controller_;
 
-    Spacer * spacer_, * spacer2_;
+    QMenu * viewMenu_;
 
 };
 

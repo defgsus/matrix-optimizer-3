@@ -14,6 +14,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QCloseEvent>
+#include <QDockWidget>
 
 #include "mainwindow.h"
 #include "util/mainwidgetcontroller.h"
@@ -27,7 +28,7 @@
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
 #include "object/scene.h"
-
+#include "io/error.h"
 
 namespace MO {
 namespace GUI {
@@ -54,7 +55,11 @@ MainWindow::MainWindow(QWidget *parent) :
     // create controller with all main widgets
     controller_ = new MainWidgetController(this);
 
-    createWidgets_();
+    createMenus_();
+
+    //createWidgets_();
+    createDockWidgets_();
+
 
     // read previous geometry
     restoreAllGeometry_();
@@ -113,8 +118,8 @@ void MainWindow::createWidgets_()
                 controller_->objectGraphView()->setSizePolicy(
                             QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-                //spacer2_ = new Spacer(Qt::Horizontal, this);
-                //lv->addWidget(spacer2_);
+//                spacer2_ = new Spacer(Qt::Horizontal, this);
+//                lv->addWidget(spacer2_);
 
                 // Sequence view
                 lv->addWidget(controller_->sequenceView());
@@ -122,8 +127,8 @@ void MainWindow::createWidgets_()
             lv = new QVBoxLayout();
             l0->addLayout(lv);
 
-                spacer_ = new Spacer(Qt::Vertical, this);
-                lv->addWidget(spacer_);
+//                spacer_ = new Spacer(Qt::Vertical, this);
+//                lv->addWidget(spacer_);
 
             // ------ right container -----
             auto rightContainer = new QWidget(this);
@@ -141,9 +146,8 @@ void MainWindow::createWidgets_()
                 ll->addWidget(controller_->objectView());
                 controller_->objectView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-
-        spacer_->setWidgets(controller_->objectGraphView(), rightContainer, false);
-        //spacer2_->setWidgets(sequencer_, seqFloatView_);
+//        spacer_->setWidgets(controller_->objectGraphView(), rightContainer, false);
+//        spacer2_->setWidgets(controller_->objectGraphView(), controller_->sequenceView());
 
 
 
@@ -151,18 +155,51 @@ void MainWindow::createWidgets_()
 
 }
 
-void MainWindow::adjustWidgets_()
-
+void MainWindow::createDockWidgets_()
 {
-    float fac = 1.0;
-    if (controller_->sequenceView()->isVisible())
-        fac *= 0.6;
-    /*if (controller_->sequencer()->isVisible() ||
-        controller_->clipView()->isVisible())
-        fac *= 0.6;*/
-    controller_->objectGraphView()->setMaximumHeight(height() * fac);
+    auto dock = createDockWidget_(tr("Transport"), controller_->transportWidget());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+
+    dock = createDockWidget_(tr("Patch"), controller_->objectGraphView());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+
+    dock = createDockWidget_(tr("Sequence"), controller_->sequenceView());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+
+    dock = createDockWidget_(tr("Clips"), controller_->clipView());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+
+    dock = createDockWidget_(tr("Object"), controller_->objectView());
+    addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
 }
 
+QDockWidget * MainWindow::createDockWidget_(const QString &name, QWidget *widget)
+{
+    MO_ASSERT(!widget->objectName().isEmpty(), "need name for layout reload");
+
+    auto dock = new QDockWidget(name, this);
+    dock->setObjectName(widget->objectName() + "_Dock");
+    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    dock->setWidget(widget);
+    viewMenu_->addAction( dock->toggleViewAction() );
+
+    return dock;
+}
+
+
+void MainWindow::createMenus_()
+{
+    // menu and statusbar
+    controller_->createMainMenu(menuBar());
+    setStatusBar(controller_->statusBar());
+
+    // window title
+    connect(controller_, SIGNAL(windowTitle(QString)),
+            this, SLOT(setWindowTitle(QString)));
+
+    viewMenu_ = new QMenu("View", menuBar());
+    menuBar()->addMenu(viewMenu_);
+}
 
 void MainWindow::saveAllGeometry_()
 {
@@ -179,11 +216,6 @@ bool MainWindow::restoreAllGeometry_()
     return r;
 }
 
-
-void MainWindow::resizeEvent(QResizeEvent *)
-{
-    adjustWidgets_();
-}
 
 void MainWindow::closeEvent(QCloseEvent * e)
 {

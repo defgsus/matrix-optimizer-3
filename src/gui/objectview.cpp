@@ -33,6 +33,8 @@ ObjectView::ObjectView(QWidget *parent) :
     QWidget (parent),
     object_ (0)
 {
+    setObjectName("_ObjectView");
+
     layout_ = new QVBoxLayout(this);
     layout_->setMargin(1);
 

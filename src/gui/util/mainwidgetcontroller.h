@@ -48,6 +48,7 @@ class MainWidgetController : public QObject
 {
     Q_OBJECT
 public:
+
     explicit MainWidgetController(QMainWindow * window);
     ~MainWidgetController();
 
@@ -187,17 +188,20 @@ private:
     GL::Window * glWindow_;
 
     ObjectEditor * objectEditor_;
-    ObjectView * objectView_;
-
-    ObjectGraphView * objectGraphView_;
 
     SceneSettings * sceneSettings_;
 
+    ObjectView * objectView_;
+    ObjectGraphView * objectGraphView_;
     Sequencer * sequencer_;
     ClipView * clipView_;
     SequenceView * seqView_;
 
     TransportWidget * transportWidget_;
+
+    bool isVisibleSequencer_,
+         isVisibleClipView_,
+         isVisibleSeqView_;
 
     QObjectInspector * qobjectInspector_;
 

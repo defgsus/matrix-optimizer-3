@@ -44,6 +44,8 @@ SequenceView::SequenceView(QWidget *parent) :
     rulerY_         (new Ruler(this)),
     seqFloatView_   (0)
 {
+    setObjectName("_SequenceView");
+
     setFocusPolicy(Qt::StrongFocus);
 
     grid_->setMargin(1);
