@@ -163,7 +163,6 @@ void AudioObject::setNumberAudioInputsOutputs(uint num, bool emitSignal)
 }
 
 
-
 void AudioObject::setAudioBuffersBase(uint thread,
                                       const QList<AUDIO::AudioBuffer *> &inputs,
                                       const QList<AUDIO::AudioBuffer *> &outputs)

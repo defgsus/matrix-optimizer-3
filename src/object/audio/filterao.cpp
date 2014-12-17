@@ -95,7 +95,7 @@ void FilterAO::createParameters()
                                                    1000.0, 10.0);
         p_->paramReso = params()->createFloatParameter("_filter_reso", tr("resonance"),
                                                    tr("The filter steepness [0,1]"),
-                                                   0.0, 0.02);
+                                                   0.0, 0.0, 1.0, 0.02);
         p_->paramAmp = params()->createFloatParameter("_filter_amp", tr("amplitude"),
                                                    tr("The output amplitude of the filter"),
                                                    1.0, 0.05);

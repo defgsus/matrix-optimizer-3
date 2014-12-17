@@ -38,6 +38,8 @@ class OscillatorAO::Private
     Private(OscillatorAO * ao) : ao(ao) { }
 
     Mode mode() const { return (Mode)paramMode->baseValue(); }
+    AUDIO::Waveform::Type oscType() const
+        { return (AUDIO::Waveform::Type)paramOscType->baseValue(); }
 
     void updateWavetable();
     void processAudio(uint size, SamplePos pos, uint thread);
@@ -76,7 +78,7 @@ OscillatorAO::OscillatorAO(QObject *parent)
 {
     setName("Oscillator");
 
-    setNumberAudioInputs(4);
+    setNumberAudioInputs(5);
     setNumberAudioOutputs(1);
 }
 
@@ -182,6 +184,7 @@ void OscillatorAO::onParameterChanged(Parameter * p)
     if (p == p_->paramTableSize
         || p == p_->paramMode
         || p == p_->paramOscType
+        || p == p_->paramPulseWidth
         || p == p_->paramEquation
         || p == p_->paramNormalize)
         p_->updateWavetable();
@@ -193,11 +196,13 @@ void OscillatorAO::updateParameterVisibility()
 
     const bool
             isosc = p_->mode() == Private::M_OSCILLATOR,
-            isequ = p_->mode() == Private::M_EQUATION;
+            isequ = p_->mode() == Private::M_EQUATION,
+            ispw = isosc && AUDIO::Waveform::supportsPulseWidth(p_->oscType());
 
     p_->paramOscType->setVisible(isosc);
     p_->paramPulseWidth->setVisible(isosc);
     p_->paramEquation->setVisible(isequ);
+    p_->paramPulseWidth->setVisible(ispw);
 }
 
 void OscillatorAO::setNumberThreads(uint num)
@@ -218,6 +223,7 @@ QString OscillatorAO::getAudioInputName(uint channel) const
         case 1: return tr("amplitude");
         case 2: return tr("frequency");
         case 3: return tr("phase");
+        case 4: return tr("sync");
     }
     return AudioObject::getAudioInputName(channel);
 }
@@ -271,7 +277,8 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
             * inOfs = inputs[0],
             * inAmp = inputs.size() < 2 ? 0 : inputs[1],
             * inFreq = inputs.size() < 3 ? 0 : inputs[2],
-            * inPhase = inputs.size() < 4 ? 0 : inputs[3];
+            * inPhase = inputs.size() < 4 ? 0 : inputs[3],
+            * inSync = inputs.size() < 5 ? 0 : inputs[4];;
 
         for (uint i = 0; i < out->blockSize(); ++i, ++write)
         {
@@ -290,6 +297,9 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
             Double phase = p_->paramPhase->value(time, thread);
             if (inPhase)
                 phase += inPhase->read(i);
+            Double sync = p_->paramSync->value(time, thread);
+            if (inSync)
+                sync += inSync->read(i);
 
             // advance phase
             p_->phase[thread] += sampleRateInv() * freq;
@@ -302,7 +312,7 @@ void OscillatorAO::processAudio(uint , SamplePos pos, uint thread)
                 p_->phase[thread] += 2;
 
             // check for sync
-            if (p_->gates[thread].input(p_->paramSync->value(time, thread)))
+            if (p_->gates[thread].input(sync))
                 p_->phase[thread] = 0.0;
 
             // get wavetable at phase
@@ -322,7 +332,7 @@ void OscillatorAO::Private::updateWavetable()
 {
     AUDIO::BandlimitWavetableGenerator gen;
     gen.setTableSize(paramTableSize->baseValue());
-    gen.setWaveform((AUDIO::Waveform::Type)paramOscType->baseValue());
+    gen.setWaveform(oscType());
     gen.setPulseWidth(paramPulseWidth->baseValue());
     gen.setMode(mode() == M_OSCILLATOR ? AUDIO::BandlimitWavetableGenerator::M_WAVEFORM
                                        : AUDIO::BandlimitWavetableGenerator::M_EQUATION);
