@@ -58,6 +58,7 @@
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
 #include "gui/util/scenesettings.h"
+#include "gui/texteditdialog.h"
 #include "io/datastream.h"
 #include "io/files.h"
 #include "io/povrayexporter.h"
@@ -451,9 +452,25 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             diag.exec();
         });
 
-    // ######### DEBUG MENU #########
+    // ####################### DEBUG MENU #####################
+
     m = new QMenu(tr("Debug"), menuBar);
     menuBar->addMenu(m);
+
+        a = new QAction(tr("StyleSheet editor"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new TextEditDialog(settings->styleSheet(), TT_APP_STYLESHEET, qApp->activeWindow());
+            diag->setAttribute(Qt::WA_DeleteOnClose);
+            diag->setModal(false);
+            connect(diag, &TextEditDialog::textChanged, [=]()
+            {
+                settings->setStyleSheet(diag->getText());
+                application->setStyleSheet(diag->getText());
+            });
+            diag->show();
+        });
 
         a = new QAction(tr("QObject inspector"), m);
         m->addAction(a);

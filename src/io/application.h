@@ -33,7 +33,6 @@ signals:
 
 public slots:
 
-    void updateStyle();
     void setPaletteFor(QWidget*);
 protected:
 

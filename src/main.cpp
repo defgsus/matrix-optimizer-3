@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
             splash->raise();
     #endif
 
-        MO::application->setPaletteFor(mainwin);
+        MO::application->setStyleSheet(MO::settings->styleSheet());
 
         //MO::GUI::QObjectInspector oi(&w);
         //oi.show();

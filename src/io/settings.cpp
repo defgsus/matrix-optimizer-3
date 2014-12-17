@@ -323,6 +323,26 @@ void Settings::setDesktop(uint index)
     setValue("Client/desktopIndex", index);
 }
 
+QString Settings::styleSheet() const
+{
+    return value("Application/styleSheet",
+                 "* { background-color: #202020; color: #a0a0a0; "
+                 "    border: 1px solid #404040; "
+                 "    selection-background-color: #505060; "
+                 "    selection-color: #ffffff } "
+                 "*:hover { background-color: #242424 } "
+                 "*:pressed { background-color: #121212 } "
+                 "QLabel { border: 0px } "
+                 "* { show-decoration-selected: 0 } "
+                 "QAbstractItemView { background-color: #808080 } "
+                 "QAbstractItemView:hover { background-color: #868686 } ").toString();
+}
+
+void Settings::setStyleSheet(const QString & s)
+{
+    setValue("Application/styleSheet", s);
+}
+
 void Settings::setDefaultProjectionSettings(const ProjectionSystemSettings &p)
 {
     QByteArray data;

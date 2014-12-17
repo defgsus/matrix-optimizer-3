@@ -64,6 +64,10 @@ public:
     uint desktop();
     void setDesktop(uint index);
 
+    /** Application style sheet */
+    QString styleSheet() const;
+    void setStyleSheet(const QString&);
+
     /** Sets the ProjectionSystemSettings as default for the application */
     void setDefaultProjectionSettings(const ProjectionSystemSettings&);
 

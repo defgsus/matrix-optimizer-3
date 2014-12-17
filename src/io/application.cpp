@@ -20,6 +20,7 @@
 #include "io/application.h"
 #include "io/error.h"
 #include "io/isclient.h"
+#include "io/settings.h"
 
 // usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
@@ -38,7 +39,7 @@ Application * application;
 Application::Application(int& argc, char** args)
     : QApplication  (argc, args)
 {
-    updateStyle();
+
 }
 
 
@@ -107,25 +108,6 @@ QRect Application::screenGeometry(uint screenIndex) const
 
 
 
-
-void Application::updateStyle()
-{
-    // XXX some test for styles
-    // (call in constructor)
-
-    setStyleSheet(
-                "* { background-color: #202020; color: #a0a0a0; "
-                "    border: 1px solid #404040; "
-                "    selection-background-color: #505060; "
-                "    selection-color: #ffffff } "
-                "*:hover { background-color: #242424 } "
-                "*:pressed { background-color: #121212 } "
-                "QLabel { border: 0px } "
-                "* { show-decoration-selected: 0 } "
-                "QAbstractItemView { background-color: #808080 } "
-                "QAbstractItemView:hover { background-color: #868686 } "
-                );
-}
 
 void Application::setPaletteFor(QWidget * w)
 {

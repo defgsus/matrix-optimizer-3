@@ -112,4 +112,14 @@ void SyntaxHighlighter::highlightBlock(const QString &text)
 
 
 
+
+
+void SyntaxHighlighter::initForStyleSheet()
+{
+    QStringList vars;
+    vars << "background-color";
+
+    setNames(vars, QStringList());
+}
+
 } // namespace MO

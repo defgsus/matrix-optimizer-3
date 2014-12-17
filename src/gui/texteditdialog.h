@@ -62,8 +62,6 @@ protected:
 
 private:
 
-    void createWidgets_();
-
     class Private;
     Private * p_;
 };

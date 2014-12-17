@@ -35,6 +35,9 @@ public slots:
             const QStringList& variables,
             const QStringList& functions);
 
+    /** Sets reserved words for qt stylesheet syntax */
+    void initForStyleSheet();
+
 protected:
 
     void highlightBlock(const QString &text);

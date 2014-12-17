@@ -17,7 +17,8 @@ namespace MO {
     enum TextType
     {
         TT_PLAIN_TEXT,
-        TT_EQUATION
+        TT_EQUATION,
+        TT_APP_STYLESHEET
     };
 
     namespace IO { class DataStream; }
