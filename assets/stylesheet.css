@@ -1,3 +1,5 @@
+/* ----- general background ----- */
+
 QWidget {
         background-color: #111;
         alternate-background-color: #181;
@@ -7,21 +9,18 @@ QWidget {
         dialogbuttonbox-buttons-have-icons: 1;
 }
 
-QScrollBar {
-        background-color: #111;
-}
-
 QFrame {
         background-color: #181818;
 }
 
-QPushButton, QToolButton {
-        background-color: #444;
-        color: #fff;
+QTabBar {
+        background-color: #111;
+        color: #000;
 }
 
-QPushButton:disabled, QToolButton:disabled {
+QStatusBar{
         background-color: #222;
+        border: 2 solid #000;
 }
 
 /** ---- main window styles ----- */
@@ -34,15 +33,33 @@ QMainWindow::separator {
 
 QDockWidget { color: #88a; }
 
+QScrollArea, QListView, QGraphicsView {
+        border: 1px solid #444;
+}
+
 /* ----- group widget header ---- */
 
-QWidget [GroupHeader="true"] {
+QWidget[GroupHeader="true"] {
         background-color: #202830;
         color: #ddd;
 }
+
 QToolButton[GroupHeader="true"] {
         background-color: #344350;
 }
+
+
+/* ---- buttons --------- */
+
+QPushButton, QToolButton {
+        background-color: #444;
+        color: #fff;
+}
+
+QPushButton:disabled, QToolButton:disabled {
+        background-color: #222;
+}
+
 
 
 /* ------- edits ----------- */
@@ -56,6 +73,9 @@ QSpinBox, QDoubleSpinBox, QLineEdit {
 
 /*QDoubleSpinBox::up-arrow { margin:-4; background-color: #555; color: #fff; }*/
 
+QSpinBox[readOnly="true"],
+QDoubleSpinBox[readOnly="true"],
+QLineEdit[readOnly="true"] { color: #888; border-color: #555; }
 
 
 /* ---- lists ---- */
@@ -64,6 +84,29 @@ QListView::item:selected {
         background-color: #444;
         border: 1px solid #aaa;
 }
+
+QComboBox {
+        color: #fff;
+        border: 1px solid #777;
+}
+
+/*QComboBox::drop-down { background-color: #333; }*/
+
+
+
+/* ----- scollbars ------ */
+
+QScrollBar {
+        background-color: #101c28;
+        width: 10 px;
+        height: 10 px;
+}
+
+QScrollBar::handle {
+        background-color: #456;
+}
+
+/* XXX arrows? */
 
 
 /* ---- hover states ------ */
@@ -86,9 +129,16 @@ QSpinBox:hover, QDoubleSpinBox:hover, QLineEdit:hover {
 QListView::item:hover { background-color: #333; }
 QListView::item:selected:hover { background-color: #555; }
 
+QScrollBar::handle:hover { background-color: #587080; }
 
 
-/*
+
+
+
+
+
+
+/* early tries
 * {
         background-color: #202020; color: #a0a0a0;
         border: 1px solid #404040;
