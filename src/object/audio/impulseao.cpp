@@ -116,9 +116,9 @@ QString ImpulseAO::getAudioInputName(uint channel) const
 {
     switch(channel)
     {
-        case 0: return tr("amplitude");
-        case 1: return tr("frequency");
-        case 2: return tr("phase");
+    case 0: return tr("amplitude");
+    case 1: return tr("frequency");
+    case 2: return tr("phase");
     }
     return AudioObject::getAudioInputName(channel);
 }

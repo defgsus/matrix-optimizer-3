@@ -130,9 +130,7 @@ void PanAO::processAudio(uint, SamplePos pos, uint thread)
             * left  = outputs.isEmpty() ? 0 : outputs[0],
             * right = outputs.isEmpty() ? 0 : outputs[1];
 
-    uint blockSize = 0;
-    if(left) blockSize = left->blockSize();
-    else if(right) blockSize = right->blockSize();
+    uint blockSize = inputs[0]->blockSize();
 
     if(inputs.isEmpty()) {
         for(uint i=0;i<blockSize; ++i) {
