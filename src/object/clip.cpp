@@ -118,7 +118,7 @@ QList<Clip*> Clip::getAssociatedClips(Object *o)
 QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
 {    
     // list of all modulating objects to the parameter
-    QList<Object*> mod;
+    QList<Object*> mods;
 
     // check parent object?
     Object * obj = 0;
@@ -144,29 +144,25 @@ QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
 
     // get all objects modulating this parameter
     if (!obj)
-        mod << p->getModulatingObjects();
+        mods << p->getModulatingObjects();
 
-    // get clips of all objects around and inclusive parameter
+    // get all objects around and inclusive parameter
     else
     {
-        ObjectGraph mods;
-        get_object_modulator_graph(mods, obj);
+        ObjectGraph modg;
+        get_object_modulator_graph(modg, obj);
 
-        mod << mods.toList();
+        mods << modg.toList();
     }
-
 
     QSet<Clip*> clips;
 
     // and keep the clips, the modulators are in
-    for (auto m : mod)
+    for (auto m : mods)
         if (Object * clip = m->findParentObject(T_CLIP))
             clips.insert(static_cast<Clip*>(clip));
 
-    QList<Clip*> ret;
-    for (auto c : clips)
-        ret << c;
-    return ret;
+    return clips.toList();
 }
 
 

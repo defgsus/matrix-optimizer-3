@@ -29,7 +29,11 @@ void get_object_modulator_graph(ObjectGraph &graph, Object * object)
         for (Modulator * mod : param->modulators())
         {
             // add incoming edge from modulator object to this object
-            graph.addEdge(mod->modulator(), object);
+            if (mod->modulator())
+                graph.addEdge(mod->modulator(), object);
+            else
+                MO_WARNING("unassigned modulator " << mod->nameAutomatic() <<
+                           " detected in get_object_modulator_graph()");
         }
     }
 

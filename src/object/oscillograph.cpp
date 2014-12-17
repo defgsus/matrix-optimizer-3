@@ -113,8 +113,10 @@ class Oscillograph::Private
                     * paramAmp,
                     * paramWidth,
                     * paramLineWidth,
-                    * paramPointSize;
-    ParameterInt * paramNumPoints;
+                    * paramPointSize,
+                    * paramBlurWidth;
+    ParameterInt * paramNumPoints,
+                 * paramBlurFrames;
     ParameterSelect * paramMode, * paramSourceMode,
                     * paramDrawMode, * paramLineSmooth,
                     * paramFftSize;
@@ -278,6 +280,18 @@ void Oscillograph::createParameters()
                                             10.0,
                                             1, true, true);
 
+// motion blur
+
+        p_->paramBlurFrames = params()->createIntParameter("blurframes", tr("motion blur frames"),
+                                            tr("The number of frames for motion blur multi-sampling"),
+                                            0, 0, 1000,
+                                            1, true, true);
+
+        p_->paramBlurWidth = params()->createFloatParameter("blurwidth", tr("aperture time"),
+                                            tr("The time range in seconds in which to blur the graphic"),
+                                            0.01, 0.0, 1000.0,
+                                            0.01, true, true);
+
     params()->endParameterGroup();
 
     params()->beginParameterGroup("texture", "texture");
@@ -315,6 +329,7 @@ void Oscillograph::updateParameterVisibility()
     auto dmode = Private::DrawMode(p_->paramDrawMode->baseValue());
     p_->paramPointSize->setVisible(dmode == Private::D_POINTS);
     p_->paramLineWidth->setVisible(dmode == Private::D_LINES);
+    p_->paramLineSmooth->setVisible(dmode == Private::D_LINES);
 
     auto smode = p_->sourceMode();
     bool spec = smode == Private::S_SPECTRUM || smode == Private::S_SPECTRUM_PHASE;
@@ -602,7 +617,7 @@ void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
 
 
 
-void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
+void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rtime)
 {
     const Mat4& trans = transformation();
     const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
@@ -616,57 +631,66 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
 
     if (p_->draw->isReady())
     {
-        // update geometry
-        if (p_->vaoUpdateTime != time)
-        {
-            p_->vaoUpdateTime = time;
+        const int mbframes = p_->paramBlurFrames->value(rtime, thread) + 1;
+        const Double mbtimefac = 1.0 / Double(std::max(1, mbframes - 1))
+                * p_->paramBlurWidth->value(rtime, thread);
 
-            GL::BufferObject * buf = p_->draw->vao()->getBufferObject(
-                        GL::VertexArrayObject::A_POSITION);
-            if (buf && p_->vaoBuffer.size() > 3)
+        for (int mb = 0; mb < mbframes; ++mb)
+        {
+            Double time = rtime - Double(mb) * mbtimefac;
+
+            // update geometry
+            if (p_->vaoUpdateTime != time)
             {
-                p_->calcValueBuffer(time, thread);
-                p_->calcVaoBuffer(time, thread);
+                p_->vaoUpdateTime = time;
 
-                // move to device
-                buf->bind();
-                buf->upload(&p_->vaoBuffer[0], gl::GL_DYNAMIC_DRAW);
+                GL::BufferObject * buf = p_->draw->vao()->getBufferObject(
+                            GL::VertexArrayObject::A_POSITION);
+                if (buf && p_->vaoBuffer.size() > 3)
+                {
+                    p_->calcValueBuffer(time, thread);
+                    p_->calcVaoBuffer(time, thread);
+
+                    // move to device
+                    buf->bind();
+                    buf->upload(&p_->vaoBuffer[0], gl::GL_DYNAMIC_DRAW);
+                }
             }
+
+
+            // update uniforms
+            const auto bright = p_->paramBright->value(time, thread);
+            p_->draw->setAmbientColor(
+                        p_->paramR->value(time, thread) * bright,
+                        p_->paramG->value(time, thread) * bright,
+                        p_->paramB->value(time, thread) * bright,
+                        p_->paramA->value(time, thread));
+
+            // -- render the thing --
+
+            p_->textureSet->bind();
+
+            switch (Private::DrawMode(p_->paramDrawMode->baseValue()))
+            {
+                case Private::D_LINES:
+                    p_->draw->setDrawType(gl::GL_LINE_STRIP);
+                    GL::setLineSmooth(p_->paramLineSmooth->value(time, thread) != 0);
+                    GL::setLineWidth(p_->paramLineWidth->value(time, thread));
+                break;
+
+                case Private::D_BARS:
+                    p_->draw->setDrawType(gl::GL_TRIANGLES);
+                break;
+
+                case Private::D_POINTS:
+                    p_->draw->setDrawType(gl::GL_POINTS);
+                    MO_CHECK_GL( gl::glPointSize(p_->paramPointSize->value(time, thread)) );
+                break;
+            }
+
+            p_->draw->renderShader(rs.cameraSpace().projectionMatrix(),
+                                cubeViewTrans, viewTrans, trans, &rs.lightSettings());
         }
-
-
-        // update uniforms
-        const auto bright = p_->paramBright->value(time, thread);
-        p_->draw->setAmbientColor(
-                    p_->paramR->value(time, thread) * bright,
-                    p_->paramG->value(time, thread) * bright,
-                    p_->paramB->value(time, thread) * bright,
-                    p_->paramA->value(time, thread));
-
-        // -- render the thing --
-
-        p_->textureSet->bind();
-
-        switch (Private::DrawMode(p_->paramDrawMode->baseValue()))
-        {
-            case Private::D_LINES:
-                p_->draw->setDrawType(gl::GL_LINE_STRIP);
-                GL::setLineSmooth(p_->paramLineSmooth->value(time, thread) != 0);
-                GL::setLineWidth(p_->paramLineWidth->value(time, thread));
-            break;
-
-            case Private::D_BARS:
-                p_->draw->setDrawType(gl::GL_TRIANGLES);
-            break;
-
-            case Private::D_POINTS:
-                p_->draw->setDrawType(gl::GL_POINTS);
-                MO_CHECK_GL( gl::glPointSize(p_->paramPointSize->value(time, thread)) );
-            break;
-        }
-
-        p_->draw->renderShader(rs.cameraSpace().projectionMatrix(),
-                            cubeViewTrans, viewTrans, trans, &rs.lightSettings());
     }
 }
 

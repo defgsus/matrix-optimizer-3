@@ -133,7 +133,7 @@ void EnvelopeFollowerAO::createEnvOuts_()
     */
 }
 
-void EnvelopeFollowerAO::setAudioBuffers(uint thread, uint bufferSize,
+void EnvelopeFollowerAO::setAudioBuffers(uint thread, uint /*bufferSize*/,
                                const QList<AUDIO::AudioBuffer *> &inputs,
                                const QList<AUDIO::AudioBuffer *> &/*outputs*/)
 {

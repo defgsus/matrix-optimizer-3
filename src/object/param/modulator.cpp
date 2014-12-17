@@ -53,12 +53,12 @@ void Modulator::deserialize(IO::DataStream & io)
 
 QString Modulator::nameAutomatic() const
 {
-    QString n = modulator() ? modulator()->name() : "NULL";
+    QString n = modulator() ? modulator()->name() : (modulatorId() + "(NULL)");
     if (!outputId_.isEmpty())
         n += ":" + outputId_;
     n += " -> ";
     if (!parent())
-        n += "NULL";
+        n += name() + "(NULL)";
     else
     {
         n += parent()->name();
