@@ -38,6 +38,8 @@ void setDenormals(bool enable)
         _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_OFF);
     else
         _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+#else
+    enable = enable;
 #endif
 }
 

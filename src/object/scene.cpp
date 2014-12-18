@@ -714,17 +714,26 @@ void Scene::releaseSceneGl_(uint thread)
 {
     MO_DEBUG_GL("Scene::releaseSceneGl_(" << thread << ")");
 
-    fboFinal_[thread]->release();
-    delete fboFinal_[thread];
-    fboFinal_[thread] = 0;
+    if (fboFinal_[thread])
+    {
+        fboFinal_[thread]->release();
+        delete fboFinal_[thread];
+        fboFinal_[thread] = 0;
+    }
 
-    screenQuad_[thread]->release();
-    delete screenQuad_[thread];
-    screenQuad_[thread] = 0;
+    if (screenQuad_[thread])
+    {
+        screenQuad_[thread]->release();
+        delete screenQuad_[thread];
+        screenQuad_[thread] = 0;
+    }
 
-    debugRenderer_[thread]->releaseGl();
-    delete debugRenderer_[thread];
-    debugRenderer_[thread] = 0;
+    if (debugRenderer_[thread])
+    {
+        debugRenderer_[thread]->releaseGl();
+        delete debugRenderer_[thread];
+        debugRenderer_[thread] = 0;
+    }
 }
 
 void Scene::setResolution(const QSize &r)
