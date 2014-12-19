@@ -57,8 +57,9 @@ class Oscillograph::Private
 
     enum OsciMode
     {
-        O_LINEAR,
-        O_XY,
+        O_1D,
+        O_2D,
+        O_3D,
         O_EQUATION
     };
 
@@ -222,8 +223,8 @@ void Oscillograph::createParameters()
         p_->paramSourceMode = params()->createSelectParameter("oscsrcmode", tr("source type"),
                                             tr("Selects the scope type"),
                                             { "amp", "fft", "fftph" },
-                                            { tr("ampltude"), tr("spectrum"), tr("spectral phase") },
-                                            { tr("The amplitude of the signal over the time range"),
+                                            { tr("amplitude"), tr("spectral amplitude"), tr("spectral phase") },
+                                            { tr("The amplitude of the signal over the number of samples"),
                                               tr("A frequency spectrum over the number of samples"),
                                               tr("The phase spectrum over the number of samples") },
                                             { Private::S_AMPLITUDE, Private::S_SPECTRUM, Private::S_SPECTRUM_PHASE },
@@ -240,13 +241,14 @@ void Oscillograph::createParameters()
 
         p_->paramMode = params()->createSelectParameter("oscmode", tr("scope type"),
                                             tr("Selects the scope type"),
-                                            { "lin", "xy", "equ" },
-                                            { tr("linear"), tr("stereo"), tr("equation") },
+                                            { "1d", "2d", "3d", "equ" },
+                                            { tr("1-dimensional"), tr("2-dimensional"), tr("3-dimensional"), tr("equation") },
                                             { tr("Linear right-to-left display on x/y-plane"),
                                               tr("Two channels on the x/y-plane, like e.g. a phase difference scope"),
+                                              tr("Each channel is mapped to an axis in 3d space"),
                                               tr("An equation controlls the position of each oscillograph point") },
-                                            { Private::O_LINEAR, Private::O_XY, Private::O_EQUATION },
-                                            Private::O_LINEAR,
+                                            { Private::O_1D, Private::O_2D, Private::O_3D, Private::O_EQUATION },
+                                            Private::O_1D,
                                             true, false);
     // equation
         p_->paramEquation = params()->createTextParameter("oscgequ", tr("equation"),
@@ -255,7 +257,8 @@ void Oscillograph::createParameters()
                     "x = (t - 0.5) * 2;\n"
                     "y = value\n"
                     "\n// " + tr("you can also use 'time', 'rtime' and 'rt'") +
-                    "\n// " + tr("'t' is the position on the path") + "[0,1]"
+                    "\n// " + tr("'t' is the position on the path") + " [0,1]"
+                    "\n// " + tr("input values are") + " value or value1, value2 and value3"
                     , true, false);
 
         Private::EquationObject tmpequ;
@@ -330,7 +333,8 @@ void Oscillograph::onParameterChanged(Parameter *p)
     if (p == p_->paramSourceMode
         || p == p_->paramFftSize
         || p == p_->paramNumPoints
-        || p == p_->paramDrawMode)
+        || p == p_->paramDrawMode
+        || p == p_->paramMode)
         requestReinitGl();
 
     if (p_->textureSet->needsReinit(p))
@@ -345,7 +349,7 @@ void Oscillograph::updateParameterVisibility()
     ObjectGl::updateParameterVisibility();
 
     auto mode = Private::OsciMode(p_->paramMode->baseValue());
-    p_->paramWidth->setVisible(mode == Private::O_LINEAR);
+    p_->paramWidth->setVisible(mode == Private::O_1D);
     p_->paramEquation->setVisible(mode == Private::O_EQUATION);
 
     auto dmode = Private::DrawMode(p_->paramDrawMode->baseValue());
@@ -360,8 +364,8 @@ void Oscillograph::updateParameterVisibility()
     p_->paramTimeSpan->setVisible(!spec);
 
     bool manyInputs = mode == Private::O_EQUATION;
-    p_->paramValue[1]->setVisible(manyInputs || mode == Private::O_XY);
-    p_->paramValue[2]->setVisible(manyInputs);
+    p_->paramValue[1]->setVisible(manyInputs || mode == Private::O_2D);
+    p_->paramValue[2]->setVisible(manyInputs || mode == Private::O_3D);
 }
 
 void Oscillograph::setNumberThreads(uint num)
@@ -415,9 +419,10 @@ void Oscillograph::initGl(uint thread)
 
     // get number of input channels
     p_->numChannels = 1;
-    if (p_->osciMode() == Private::O_XY)
+    if (p_->osciMode() == Private::O_2D)
         p_->numChannels = 2;
-    if (p_->osciMode() == Private::O_EQUATION)
+    if (p_->osciMode() == Private::O_3D
+        || p_->osciMode() == Private::O_EQUATION)
         p_->numChannels = 3;
 
     // choose number of points on path
@@ -569,7 +574,7 @@ void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
     // calculate osci positions
     switch (osciMode())
     {
-        case O_LINEAR:
+        case O_1D:
         {
             const gl::GLfloat scalex = paramWidth->value(time, thread);
 
@@ -596,7 +601,7 @@ void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
         }
         break;
 
-        case O_XY:
+        case O_2D:
         {
             gl::GLfloat * pos = &vaoBuffer[0];
             for (uint i = 0; i < numPoints; ++i)
@@ -604,6 +609,27 @@ void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
                 *pos++ = valueBuffer[i] * amp;
                 *pos++ = valueBuffer[i + numPoints] * amp;
                 *pos++ = 0.0f;
+            }
+
+            // bars have a second line of points at the bottom
+            if (drawMode() == D_BARS)
+            for (uint i = 0; i <numPoints; ++i)
+            {
+                *pos++ = 0.0f;
+                *pos++ = 0.0f;
+                *pos++ = 0.0f;
+            }
+        }
+        break;
+
+        case O_3D:
+        {
+            gl::GLfloat * pos = &vaoBuffer[0];
+            for (uint i = 0; i < numPoints; ++i)
+            {
+                *pos++ = valueBuffer[i] * amp;
+                *pos++ = valueBuffer[i + numPoints] * amp;
+                *pos++ = valueBuffer[i + (numPoints<<1)] * amp;
             }
 
             // bars have a second line of points at the bottom
