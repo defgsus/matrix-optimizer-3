@@ -364,7 +364,7 @@ void Oscillograph::updateParameterVisibility()
     p_->paramTimeSpan->setVisible(!spec);
 
     bool manyInputs = mode == Private::O_EQUATION;
-    p_->paramValue[1]->setVisible(manyInputs || mode == Private::O_2D);
+    p_->paramValue[1]->setVisible(manyInputs || mode == Private::O_2D || mode == Private::O_3D);
     p_->paramValue[2]->setVisible(manyInputs || mode == Private::O_3D);
 }
 

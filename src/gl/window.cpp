@@ -142,7 +142,7 @@ void Window::renderLater()
     if (!updatePending_)
     {
         updatePending_ = true;
-        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest), Qt::LowEventPriority);
     }
 }
 
