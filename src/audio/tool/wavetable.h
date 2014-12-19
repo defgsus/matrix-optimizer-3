@@ -16,6 +16,7 @@
 #include "types/int.h"
 #include "math/functions.h"
 #include "math/interpol.h"
+#include "types/conversion.h"
 
 namespace MO {
 namespace AUDIO {
@@ -106,7 +107,7 @@ F Wavetable<F>::value(F t) const
 {
     t = MATH::moduloSigned(t, F(1)) * size();
 
-    const uint pos = t;
+    const uint pos = convert<F, uint>(t);
     const F frac = (t - pos);
     const uint dpos = pos + data_.size();
 

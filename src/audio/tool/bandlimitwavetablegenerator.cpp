@@ -35,12 +35,13 @@ class BandlimitWavetableGenerator::Private
 public:
 
     Private()
-        : tableSize        (nextPowerOfTwo(32000)),
-          oversampling     (4),
-          waveType         (Waveform::T_SQUARE),
-          pulseWidth       (0.5),
-          needRecalc       (true),
-          needWaveCalc     (true)
+        : mode              (M_WAVEFORM),
+          tableSize         (nextPowerOfTwo(32000)),
+          oversampling      (4),
+          waveType          (Waveform::T_SQUARE),
+          pulseWidth        (0.5),
+          needRecalc        (true),
+          needWaveCalc      (true)
     { }
 
     void updateTable();

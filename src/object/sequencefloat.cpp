@@ -97,8 +97,6 @@ SequenceFloat::SequenceFloat(QObject *parent)
 
         timeline_       (0),
         wavetable_      (0),
-        wavetableGen_   (0),
-        waveformGen_    (0),
         soundFile_      (0),
         equation_       (0),
 
@@ -116,7 +114,6 @@ SequenceFloat::~SequenceFloat()
 {
     delete timeline_;
     delete wavetable_;
-    delete wavetableGen_;
     if (soundFile_)
         AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
 
@@ -208,8 +205,13 @@ void SequenceFloat::createParameters()
                   << tr("wavetable second [0,1]") << tr("radians of wavetable second [0,TWO_PI]"));
 
         p_soundFile_ = params()->createFilenameParameter("sndfilen", tr("filename"),
-                                                  tr("The filename of the audio file"),
+                                                  tr("The filename of the audio file"
+                                                     " - Note that the file will be buffered in memory completely"),
                                                   IO::FT_SOUND_FILE);
+        p_soundFileChannel_ = params()->createIntParameter("sndfilechan", tr("channel"),
+                      tr("Selects which channel to play from the sound file"),
+                      0, true, true);
+        p_soundFileChannel_->setMinValue(0);
 
         p_wtSize_ = params()->createSelectParameter("wtsize", tr("wavetable size"),
                    tr("Number of samples in the wavetable"),
@@ -572,28 +574,12 @@ void SequenceFloat::updateValueObjects_()
         if (!wavetable_)
             wavetable_ = new AUDIO::Wavetable<Double>();
 
-        if (sequenceType() == ST_ADD_WT)
-        {
-            if (!wavetableGen_)
-                wavetableGen_ = new AUDIO::WavetableGenerator();
-        }
-
-        if (sequenceType() == ST_OSCILLATOR_WT)
-        {
-            if (!waveformGen_)
-                waveformGen_ = new AUDIO::BandlimitWavetableGenerator();
-        }
-
         updateWavetable_();
     }    
     else
     {
         delete wavetable_;
         wavetable_ = 0;
-        delete wavetableGen_;
-        wavetableGen_ = 0;
-        delete waveformGen_;
-        waveformGen_ = 0;
     }
 
     // update timeline object
@@ -795,7 +781,8 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
         case ST_SOUNDFILE:
             MO_ASSERT(soundFile_, "SequenceFloat('" << idName() << "')::value() without soundfile");
             return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
-                * soundFile_->value(time);
+                * soundFile_->value(time,
+                                    std::min(soundFile_->numberChannels(), (uint)p_soundFileChannel_->value(gtime, thread)) );
 
         case ST_EQUATION:
             MO_ASSERT(equation_[thread], "SequenceFloat('" << idName() << "')::value() without equation "
@@ -855,26 +842,25 @@ void SequenceFloat::updateWavetable_()
 
     if (sequenceType() == ST_OSCILLATOR_WT)
     {
-        MO_ASSERT(waveformGen_, "updateWavetable() without bandlimited wavetable generator");
-        waveformGen_->setTableSize(p_oscWtSize_->baseValue());
-        waveformGen_->setWaveform((AUDIO::Waveform::Type)p_oscMode_->baseValue());
-        waveformGen_->setPulseWidth(p_oscWtPulseWidth_->baseValue());
-        waveformGen_->createWavetable(*wavetable_);
+        AUDIO::BandlimitWavetableGenerator gen;
+        gen.setTableSize(p_oscWtSize_->baseValue());
+        gen.setWaveform((AUDIO::Waveform::Type)p_oscMode_->baseValue());
+        gen.setPulseWidth(p_oscWtPulseWidth_->baseValue());
+        gen.createWavetable(*wavetable_);
     }
 
     if (sequenceType() == ST_ADD_WT)
     {
-        MO_ASSERT(wavetableGen_, "updateWavetable() without wavetable generator");
+        AUDIO::WavetableGenerator gen;
+        gen.setSize(p_wtSpecSize_->baseValue());
+        gen.setNumPartials(p_wtSpecNum_->baseValue());
+        gen.setBaseOctave(p_wtSpecOct_->baseValue());
+        gen.setOctaveStep(p_wtSpecOctStep_->baseValue());
+        gen.setBasePhase(p_wtSpecPhase_->baseValue() * phaseMult_);
+        gen.setPhaseShift(p_wtSpecPhaseShift_->baseValue() * phaseMult_);
+        gen.setAmplitudeMultiplier(p_wtSpecAmp_->baseValue());
 
-        wavetableGen_->setSize(p_wtSpecSize_->baseValue());
-        wavetableGen_->setNumPartials(p_wtSpecNum_->baseValue());
-        wavetableGen_->setBaseOctave(p_wtSpecOct_->baseValue());
-        wavetableGen_->setOctaveStep(p_wtSpecOctStep_->baseValue());
-        wavetableGen_->setBasePhase(p_wtSpecPhase_->baseValue() * phaseMult_);
-        wavetableGen_->setPhaseShift(p_wtSpecPhaseShift_->baseValue() * phaseMult_);
-        wavetableGen_->setAmplitudeMultiplier(p_wtSpecAmp_->baseValue());
-
-        wavetableGen_->getWavetable(wavetable_);
+        gen.getWavetable(wavetable_);
     }
 
     if (sequenceType() == ST_SPECTRAL_WT)
@@ -887,6 +873,13 @@ void SequenceFloat::updateWavetable_()
 
     if (sequenceType() == ST_EQUATION_WT)
     {
+        AUDIO::BandlimitWavetableGenerator gen;
+
+        gen.setTableSize(p_oscWtSize_->baseValue());
+        gen.setMode(AUDIO::BandlimitWavetableGenerator::M_EQUATION);
+        gen.setEquation(p_wtEquationText_->baseValue());
+        gen.createWavetable(*wavetable_);
+        /*
         PPP_NAMESPACE::Parser p;
         PPP_NAMESPACE::Float x, r;
         p.variables().add("x", &x, tr("time").toStdString());
@@ -907,6 +900,7 @@ void SequenceFloat::updateWavetable_()
             r = x * TWO_PI;
             wavetable_->data()[i] = p.eval();
         }
+        */
     }
 
 }

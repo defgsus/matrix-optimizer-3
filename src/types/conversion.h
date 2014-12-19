@@ -25,6 +25,12 @@ namespace Private {
     };
 
     template <>
+    struct conversion_traits<Double, unsigned int>
+    {
+        static unsigned int convert(Double x) { return x; /* TODO */ }
+    };
+
+    template <>
     struct conversion_traits<Double, long>
     {
         static long convert(Double x) { return lrint(x); }
@@ -40,6 +46,12 @@ namespace Private {
     struct conversion_traits<float, int>
     {
         static int convert(float x) { return x; /* TODO */ }
+    };
+
+    template <>
+    struct conversion_traits<float, unsigned int>
+    {
+        static unsigned int convert(float x) { return x; /* TODO */ }
     };
 
 

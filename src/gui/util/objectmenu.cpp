@@ -125,7 +125,7 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
 }
 
 
-namespace { static QString stupid_separator("*^_m_sep_^*"); }
+namespace { static QString stupid_separator("*^_mo_sep_^*"); }
 
 QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *parent)
 {
@@ -213,7 +213,7 @@ QMenu * ObjectMenu::createParameterMenu(Object *o, QWidget *parent,
 
             if (!curId.isEmpty())
             {
-                sub = new QMenu(curId, menu);
+                sub = new QMenu(i.value()->groupName(), menu);
                 menu->addMenu(sub);
             }
         }

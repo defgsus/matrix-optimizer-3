@@ -138,13 +138,13 @@ public:
     /** Returns the minimum and maximum values across the time range (local) */
     void getMinMaxValue(Double localStart, Double localEnd,
                         Double& minValue, Double& maxValue, uint thread) const;
-
+#if 0
     /** Returns access to the wavetable generator, or NULL if not initialized */
     AUDIO::WavetableGenerator * wavetableGenerator() const { return wavetableGen_; }
 
     /** Returns access to the wavetable, or NULL if not initialized */
     AUDIO::Wavetable<Double> * wavetable() const { return wavetable_; }
-
+#endif
     // ------------ setter --------------
 
     void setMode(SequenceType m) { p_mode_->setValue(m); updateValueObjects_(); }
@@ -202,8 +202,6 @@ private:
 
     MATH::Timeline1D * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
-    AUDIO::WavetableGenerator * wavetableGen_;
-    AUDIO::BandlimitWavetableGenerator * waveformGen_;
     AUDIO::SoundFile * soundFile_;
 
     class SeqEquation;
@@ -244,7 +242,8 @@ private:
     ParameterInt
         * p_wtSpecNum_,
         * p_wtSpecOct_,
-        * p_wtSpecOctStep_;
+        * p_wtSpecOctStep_,
+        * p_soundFileChannel_;
 
     ParameterSelect
         * p_wtSize_,
