@@ -238,12 +238,13 @@ HEADERS += \
     src/object/audio/delayao.h \
     src/object/audio/soundsourceao.h \
     src/object/audio/parameterao.h \
-    $$PWD/object/audio/impulseao.h \
-    $$PWD/object/audio/panao.h \
-    $$PWD/object/audio/dustao.h \
-    $$PWD/object/audio/sampleholdao.h \
-    $$PWD/object/audio/phasorao.h \
-    $$PWD/object/audio/noiseao.h
+    src/object/audio/impulseao.h \
+    src/object/audio/panao.h \
+    src/object/audio/dustao.h \
+    src/object/audio/sampleholdao.h \
+    src/object/audio/phasorao.h \
+    src/object/audio/noiseao.h \
+    src/object/audio/playbufferao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -443,9 +444,10 @@ SOURCES += \
     src/object/audio/delayao.cpp \
     src/object/audio/soundsourceao.cpp \
     src/object/audio/parameterao.cpp \
-    $$PWD/object/audio/impulseao.cpp \
-    $$PWD/object/audio/panao.cpp \
-    $$PWD/object/audio/dustao.cpp \
-    $$PWD/object/audio/sampleholdao.cpp \
-    $$PWD/object/audio/phasorao.cpp \
-    $$PWD/object/audio/noiseao.cpp
+    src/object/audio/impulseao.cpp \
+    src/object/audio/panao.cpp \
+    src/object/audio/dustao.cpp \
+    src/object/audio/sampleholdao.cpp \
+    src/object/audio/phasorao.cpp \
+    src/object/audio/noiseao.cpp \
+    src/object/audio/playbufferao.cpp
