@@ -240,7 +240,8 @@ HEADERS += \
     src/object/audio/parameterao.h \
     $$PWD/object/audio/impulseao.h \
     $$PWD/object/audio/panao.h \
-    $$PWD/object/audio/dustao.h
+    $$PWD/object/audio/dustao.h \
+    src/object/audio/bandfilterbankao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -442,4 +443,5 @@ SOURCES += \
     src/object/audio/parameterao.cpp \
     $$PWD/object/audio/impulseao.cpp \
     $$PWD/object/audio/panao.cpp \
-    $$PWD/object/audio/dustao.cpp
+    $$PWD/object/audio/dustao.cpp \
+    src/object/audio/bandfilterbankao.cpp

@@ -91,6 +91,7 @@ public:
     BandType bandType() const;
     Double chebychevRipple() const;
     Double clipping() const;
+    Double amplitude() const;
 
     // ---------- processing --------------
 

@@ -540,7 +540,7 @@ Double FixedFilter::clipping() const { return p_->clip; }
 void FixedFilter::setSampleRate(uint sr) { p_->sr = std::max(uint(1), sr); }
 void FixedFilter::setOrder(uint order) { p_->order = std::max(uint(1), std::min(uint(10), order )); }
 void FixedFilter::setFrequency(Double freq) { p_->freq = std::max(Double(0.001), freq); }
-void FixedFilter::setBandpassSize(Double freq) { p_->freqRange = std::max(Double(0.001), freq); }
+void FixedFilter::setBandpassSize(Double freq) { p_->freqRange = std::max(Double(0.00001), freq); }
 void FixedFilter::setType(FilterType type) { p_->type = type; }
 void FixedFilter::setBandType(BandType type) { p_->bandType = type; }
 void FixedFilter::setChebychevRipple(Double db) { p_->chebrip = db; }
