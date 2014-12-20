@@ -12,6 +12,9 @@
 
 #include <QFile>
 #include <QBuffer>
+#include <QReadWriteLock>
+#include <QReadLocker>
+#include <QWriteLocker>
 
 #include "dumbfile.h"
 #include "audiobuffer.h"
@@ -30,6 +33,7 @@ public:
           conf  (),
           duh   (0),
           render(0),
+          nextRender(0),
           buffer(0),
 
           tempo(0),
@@ -51,9 +55,14 @@ public:
     DUMBFILE * file;
     DUH * duh;
     DUH_SIGRENDERER * render;
+    DUH_SIGRENDERER * nextRender;
     sample_t ** buffer;
 
     int tempo, speed;
+
+    long lastPos;
+
+    QReadWriteLock mutex;
 };
 
 bool DumbFile::Private::static_init = false;
@@ -144,6 +153,7 @@ void DumbFile::Private::open(const QString &filename)
 
     this->duh = duh;
     this->filename = filename;
+    lastPos = 0;
 
     if (conf.isValid())
         createRenderer();
@@ -194,7 +204,7 @@ void DumbFile::Private::createRenderer()
         return;
     }
 
-    render = duh_start_sigrenderer(duh, 0, conf.numChannelsOut(), 0);
+    render = duh_start_sigrenderer(duh, 0, conf.numChannelsOut(), lastPos);
     if (!render)
     {
         MO_WARNING("Can't create dumb renderer for '" << filename << "'");
@@ -222,6 +232,44 @@ void DumbFile::Private::createRenderer()
 
     MO_DEBUG("DumbFile::createRenderer() okay, channels == "
              << duh_sigrenderer_get_n_channels(render));
+}
+
+
+void DumbFile::setPosition(long pos)
+{
+    if (p_->render && p_->duh)
+    {
+        QWriteLocker lock(&p_->mutex);
+
+        duh_end_sigrenderer(p_->nextRender);
+
+        p_->render = duh_start_sigrenderer(p_->duh, 0, p_->conf.numChannelsOut(), pos);
+
+        if (!p_->render)
+        {
+            MO_WARNING("DumbFile::setPosition(): Can't create dumb renderer for '" << p_->filename << "'");
+            return;
+        }
+
+        p_->lastPos = pos;
+    }
+    /*
+    // remove previous request
+    if (p_->nextRender)
+        duh_end_sigrenderer(p_->nextRender);
+
+    // create renderer at new position
+    p_->nextRender = duh_start_sigrenderer(p_->duh, 0, p_->conf.numChannelsOut(), pos);
+
+    if (!p_->nextRender)
+    {
+        MO_WARNING("DumbFile::setPosition(): Can't create dumb renderer for '" << p_->filename << "'");
+        return;
+    }
+
+    // insert in system
+    std::swap(p_->render, p_->nextRender);
+    */
 }
 
 
@@ -254,13 +302,21 @@ void DumbFile::process(const QList<AudioBuffer*>& outs, F32 amp)
         dumb_silence(p_->buffer[0], p_->conf.bufferSize() * p_->conf.numChannelsOut());
 
     // render song
-    uint ret =
-        duh_sigrenderer_generate_samples(
-                p_->render,
-                amp,
-                65536.f * p_->conf.sampleRateInv(),
-                p_->conf.bufferSize(),
-                p_->buffer );
+    uint ret;
+    {
+        // lock access to renderer
+        QReadLocker lock(&p_->mutex);
+
+        ret = duh_sigrenderer_generate_samples(
+                    p_->render,
+                    amp,
+                    65536.f * p_->conf.sampleRateInv(),
+                    p_->conf.bufferSize(),
+                    p_->buffer );
+    }
+
+    // store the last position
+    p_->lastPos = position();
 
     // copy to float buffer
     // XXX Does not work for >2 channels !!

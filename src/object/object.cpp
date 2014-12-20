@@ -145,7 +145,13 @@ Object * Object::deserializeTree(IO::DataStream & io)
     Object * obj = p_deserializeTree_(io);
 
     if (Scene * scene = qobject_cast<Scene*>(obj))
+    {
         scene->updateTree_();
+
+        //YYY Something like below would be useful at the moment
+        //But modulator storage will be changed anyway
+        //scene->removeUninitializedModulators();
+    }
 
     return obj;
 }

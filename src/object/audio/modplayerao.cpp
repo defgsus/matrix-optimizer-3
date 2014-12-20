@@ -32,7 +32,9 @@ class ModPlayerAO::Private
         M_EQUATION
     };
 
-    Private(ModPlayerAO * ao) : ao(ao) { }
+    Private(ModPlayerAO * ao)
+        : ao        (ao)
+    { }
 
     void updateTrackerFile();
     void updateTracker(uint bufferSize);
@@ -159,7 +161,10 @@ void ModPlayerAO::Private::updateTrackerFile()
 
 void ModPlayerAO::Private::updateTracker(uint bufferSize)
 {
-    dumb.setConfig(AUDIO::Configuration(ao->sampleRate(), bufferSize, 0, 2));
+    AUDIO::Configuration conf(ao->sampleRate(), bufferSize, 0, 2);
+
+    if (dumb.config() != conf)
+        dumb.setConfig(conf);
 }
 
 
