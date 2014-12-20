@@ -10,6 +10,9 @@
 
 #include <dumb.h>
 
+#include <QFile>
+#include <QBuffer>
+
 #include "dumbfile.h"
 #include "audiobuffer.h"
 #include "io/error.h"
@@ -30,6 +33,7 @@ public:
           buffer(0)
     { }
 
+    void open(const QString& filename);
     void createRenderer();
 
     static bool static_init;
@@ -96,47 +100,48 @@ const AUDIO::Configuration& DumbFile::config() const
 void DumbFile::open(const QString &filename)
 {
     MO_DEBUG("DumbFile::open(" << filename << ")");
+    p_->open(filename);
+}
 
-    // initialize dumb
-    if (!p_->static_init)
+void DumbFile::Private::open(const QString &filename)
+{
+    // open file
+    // (rely on Qt here)
+
+    QFile file(filename);
+    if (!file.open(QFile::ReadOnly))
     {
-        MO_DEBUG("DumbFile: initializing dump filesystem");
-
-        p_->static_init = true;
-        dumb_register_stdfiles();
+        MO_IO_ERROR(READ, "Can't open dumbfile '" << filename << "'\n"
+                    << file.errorString());
     }
 
-    const char * fn = filename.toStdString().c_str();
+    QByteArray data = file.readAll();
 
-    DUH * duh = load_duh(fn);
+    DUMBFILE * dfile = dumbfile_open_memory(data.constData(), data.size());
+
+    // get the DUH
+
+    DUH * duh = dumb_read_s3m(dfile);
+    if (!duh)
+        duh = dumb_read_it(dfile);
+    if (!duh)
+        duh = dumb_read_mod(dfile);
+    if (!duh)
+        duh = dumb_read_xm(dfile);
+
     if (!duh)
     {
-        duh = dumb_load_it(fn);
-        if (!duh)
-        {
-            duh = dumb_load_xm(fn);
-            if (!duh)
-            {
-                duh = dumb_load_s3m(fn);
-                if (!duh)
-                {
-                    duh = dumb_load_mod(fn);
-                    if (!duh)
-                    {
-                        MO_IO_ERROR(READ, "Can't open dumbfile '" << filename << "'");
-                    }
-                }
-            }
-        }
+        MO_IO_ERROR(READ, "Dumb can't comprehent '" << filename << "'");
     }
 
-    close();
 
-    p_->duh = duh;
-    p_->filename = filename;
+    dumb->close();
 
-    if (p_->conf.isValid())
-        p_->createRenderer();
+    this->duh = duh;
+    this->filename = filename;
+
+    if (conf.isValid())
+        createRenderer();
 }
 
 void DumbFile::close()
@@ -221,7 +226,9 @@ void DumbFile::process(const QList<AudioBuffer*>& outs, F32 amp)
 {
     if (!isReady())
     {
+#ifdef MO_DO_DEBUG
         MO_WARNING("DumbFile::process() but !isReady()");
+#endif
         return;
     }
 
