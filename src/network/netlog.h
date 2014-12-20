@@ -15,6 +15,8 @@
 
 #include "io/streamoperators_qt.h"
 
+#undef ERROR // something in windows
+
 #ifndef MOSRC_NETWORK_NETLOG_H
 #define MOSRC_NETWORK_NETLOG_H
 
