@@ -242,7 +242,8 @@ HEADERS += \
     $$PWD/object/audio/panao.h \
     $$PWD/object/audio/dustao.h \
     src/object/audio/bandfilterbankao.h \
-    src/audio/tool/dumbfile.h
+    src/audio/tool/dumbfile.h \
+    src/object/audio/modplayerao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -446,4 +447,5 @@ SOURCES += \
     $$PWD/object/audio/panao.cpp \
     $$PWD/object/audio/dustao.cpp \
     src/object/audio/bandfilterbankao.cpp \
-    src/audio/tool/dumbfile.cpp
+    src/audio/tool/dumbfile.cpp \
+    src/object/audio/modplayerao.cpp

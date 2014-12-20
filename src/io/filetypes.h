@@ -28,6 +28,8 @@ namespace IO {
         FT_MODEL,
         FT_GEOMETRY_SETTINGS,
         FT_SOUND_FILE,
+        /** Like .mod and .s3m */
+        FT_TRACKER,
         FT_PROJECTION_SETTINGS,
         FT_POVRAY,
         FT_EQUATION_PRESET,

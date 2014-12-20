@@ -35,7 +35,10 @@ public:
 
     // ----------------- getter -----------------
 
+    bool isOpen() const;
     bool isReady() const;
+
+    const QString& filename() const;
 
     long position() const;
 
@@ -51,7 +54,7 @@ public:
     /** Call before processing */
     void setConfig(const AUDIO::Configuration&);
 
-    void process(const QList<AudioBuffer*>& outputs);
+    void process(const QList<AudioBuffer*>& outputs, F32 amp = 1.f);
 
 private:
 
