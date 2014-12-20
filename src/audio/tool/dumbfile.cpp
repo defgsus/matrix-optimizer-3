@@ -30,7 +30,10 @@ public:
           conf  (),
           duh   (0),
           render(0),
-          buffer(0)
+          buffer(0),
+
+          tempo(0),
+          speed(0)
     { }
 
     void open(const QString& filename);
@@ -49,6 +52,8 @@ public:
     DUH * duh;
     DUH_SIGRENDERER * render;
     sample_t ** buffer;
+
+    int tempo, speed;
 };
 
 bool DumbFile::Private::static_init = false;
@@ -195,6 +200,18 @@ void DumbFile::Private::createRenderer()
         MO_WARNING("Can't create dumb renderer for '" << filename << "'");
         return;
     }
+/*
+    duh_sigrenderer_set_sample_analyser_callback(render,
+                        [=](void *data, const sample_t *const *samples, int n_channels, long length)
+    {
+        MO_DEBUG(n_channels << " " << length);
+    }, 0);
+*/
+    DUMB_IT_SIGRENDERER * itrender = duh_get_it_sigrenderer(render);
+
+    tempo = dumb_it_sr_get_tempo(itrender);
+    speed = dumb_it_sr_get_speed(itrender);
+
 
     buffer = allocate_sample_buffer(conf.numChannelsOut(), conf.bufferSize());
     if (!buffer)
@@ -246,6 +263,7 @@ void DumbFile::process(const QList<AudioBuffer*>& outs, F32 amp)
                 p_->buffer );
 
     // copy to float buffer
+    // XXX Does not work for >2 channels !!
     for (int j=0; j<outs.size(); ++j)
     if (outs[j])
     {

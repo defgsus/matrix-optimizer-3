@@ -568,9 +568,7 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     {
         item->setUnexpandedSize(QSize(1, 2));
 
-        /// @todo Somehow this disables the correct number of output items
-        /// for the graphics item
-        //if (!qobject_cast<AudioInAO*>(ao))
+        if (!qobject_cast<AudioInAO*>(ao))
         {
             if (ao->numAudioInputs() >= 0)
                 for (int i=0; i<ao->numAudioInputs(); ++i)
@@ -663,6 +661,8 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
     {
         inputItems[i]->setPos(r.left(), top + (i + 0.5) * heightfac);
     }
+
+    heightfac = (r.height() - top) / std::max(1, outputItems.size());
 
     for (int i=0; i<outputItems.size(); ++i)
     {
