@@ -51,7 +51,7 @@ LIBS += -L/opt/local/lib/ \
 else: unix: {
 LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
-        -lportaudio -lportmidi -lsndfile \
+        -lportaudio -lportmidi -lsndfile -ldumb \
 #        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
 else: win32 {
