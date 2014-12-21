@@ -547,6 +547,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             auto l = new QVBoxLayout(diag);
             auto script = new AngelScriptWidget(diag);
             l->addWidget(script);
+            script->setScriptText(settings->value("tmp/AngelScript", "//angelscript").toString());
+            connect(script, &AngelScriptWidget::scriptTextChanged, [=]()
+            {
+                settings->setValue("tmp/AngelScript", script->scriptText());
+            });
             diag->show();
         });
 #endif

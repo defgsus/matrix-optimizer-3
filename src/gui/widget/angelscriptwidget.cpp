@@ -14,6 +14,7 @@
 
 
 #include "angelscriptwidget.h"
+#include "tool/syntaxhighlighter.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -26,9 +27,18 @@ class AngelScriptWidget::Private
 {
 public:
     Private(AngelScriptWidget * widget)
-        : widget    (widget)
+        : widget    (widget),
+          engine    (0),
+          syn       (0)
     {
 
+    }
+
+    ~Private()
+    {
+        if (engine)
+            engine->Release();
+        //delete engine;
     }
 
     void createObjects();
@@ -41,6 +51,8 @@ public:
 
     asIScriptEngine * engine;
     asIScriptModule * module;
+
+    SyntaxHighlighter * syn;
 };
 
 
@@ -68,16 +80,24 @@ void AngelScriptWidget::Private::createObjects()
     module = engine->GetModule("module", asGM_ALWAYS_CREATE);
     MO_ASSERT(module, "");
 
+    syn = new SyntaxHighlighter(widget);
+    syn->initForAngelScript(module);
 
+    widget->setSyntaxHighlighter(syn);
 }
 
 void AngelScriptWidget::Private::messageCallback(const asSMessageInfo *msg)
 {
     if (msg->type == asMSGTYPE_ERROR)
-        widget->addScriptError(msg->row, msg->message);
-
-    MO_DEBUG("anglescript: " << msg->row << ":" << msg->col
+        widget->addCompileMessage(msg->row-1, M_ERROR, msg->message);
+    if (msg->type == asMSGTYPE_WARNING)
+        widget->addCompileMessage(msg->row-1, M_WARNING, msg->message);
+    if (msg->type == asMSGTYPE_INFORMATION)
+        widget->addCompileMessage(msg->row-1, M_INFO, msg->message);
+    /*
+    MO_DEBUG("angelscript: " << msg->row << ":" << msg->col
              << " " << msg->message);
+    */
 }
 
 
@@ -85,10 +105,20 @@ bool AngelScriptWidget::Private::compile()
 {
     const auto script = widget->scriptText().toStdString();
 
+    module->BindAllImportedFunctions();
+
     module->AddScriptSection("script",
                              script.c_str(), script.size());
 
-    return module->Build() >= 0;
+    bool ret = (module->Build() >= 0);
+
+    if (ret)
+    {
+        syn->initForAngelScript(module);
+        widget->setSyntaxHighlighter(syn);
+    }
+
+    return ret;
 }
 
 

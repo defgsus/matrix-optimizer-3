@@ -13,8 +13,12 @@
 #include <QTimer>
 #include <QStyle>
 #include <QListWidget>
+#include <QSyntaxHighlighter>
 
 #include "abstractscriptwidget.h"
+#include "io/settings.h"
+#include "io/log.h"
+
 
 namespace MO {
 namespace GUI {
@@ -26,7 +30,8 @@ public:
 
     PrivateSW(AbstractScriptWidget * widget)
         : widget    (widget),
-          isValid   (false)
+          isValid   (false),
+          ignoreTextChange(false)
     { }
 
     void createWidgets();
@@ -35,26 +40,31 @@ public:
 
     void onTextChanged();
 
-    struct Error
+    /** Returns the position for the line number */
+    int posForLine(int line) const;
+
+    struct Message
     {
-        Error() : line(0) { }
-        Error(int l, const QString& t) : line(l), text(t) { }
+        Message() : line(0) { }
+        Message(int l, MessageType ty, const QString& t)
+            : line(l), type(ty), text(t) { }
 
         int line;
+        MessageType type;
         QString text;
     };
 
     AbstractScriptWidget * widget;
 
     QPlainTextEdit * editor;
-    QListWidget * errorList;
+    QListWidget * messageList;
     QTimer * timer;
 
-    bool isValid;
+    bool isValid, ignoreTextChange;
 
     QString curText;
 
-    QList<Error> errors;
+    QList<Message> messages;
 };
 
 
@@ -87,6 +97,17 @@ void AbstractScriptWidget::setScriptText(const QString & t)
     p_sw_->editor->setPlainText(t);
 }
 
+void AbstractScriptWidget::setSyntaxHighlighter(QSyntaxHighlighter * s)
+{
+    p_sw_->ignoreTextChange = true;
+
+    if (s->document() != p_sw_->editor->document())
+        s->setDocument( p_sw_->editor->document() );
+
+    s->rehighlight();
+
+    p_sw_->ignoreTextChange = false;
+}
 
 void AbstractScriptWidget::PrivateSW::createWidgets()
 {
@@ -95,8 +116,9 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         // --- editor ---
 
         editor = new QPlainTextEdit(widget);
+        editor->setProperty("code", true);
         lv->addWidget(editor, 10);
-        connect(editor, &QPlainTextEdit::textChanged, [=]() { timer->start(); } );
+        connect(editor, &QPlainTextEdit::textChanged, [=]() { if (!ignoreTextChange) timer->start(); } );
 
         // --- setup font ---
 
@@ -104,12 +126,23 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         QFont f("Monospace");
         f.setStyleHint(QFont::Monospace);
         editor->setFont(f);
-        editor->setTabStopWidth(QFontMetrics(f).width("    "));
+        editor->setTabStopWidth(QFontMetrics(editor->font()).width("    "));
 
 
-        errorList = new QListWidget(widget);
-        errorList->setVisible(false);
-        lv->addWidget(errorList);
+        // --- bottom display ----
+
+        messageList = new QListWidget(widget);
+        messageList->setVisible(false);
+        messageList->setSizeAdjustPolicy(QListWidget::AdjustToContents);
+        lv->addWidget(messageList);
+        connect(messageList, &QListWidget::itemClicked, [=](QListWidgetItem*item)
+        {
+            int line = item->data(Qt::UserRole + 1).toInt();
+            QTextCursor curs(editor->textCursor());
+            curs.setPosition(posForLine(line));
+            curs.select(QTextCursor::LineUnderCursor);
+            editor->setTextCursor(curs);
+        });
 
         /*
         auto but = new QPushButton(tr("run"), widget);
@@ -120,7 +153,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
 
         timer = new QTimer(widget);
         timer->setSingleShot(true);
-        timer->setInterval(250);
+        timer->setInterval(600);
         connect(timer, &QTimer::timeout, [=]() { onTextChanged(); } );
 }
 
@@ -129,11 +162,14 @@ void AbstractScriptWidget::PrivateSW::onTextChanged()
 {
     curText = editor->toPlainText();
 
-    errors.clear();
+    messages.clear();
     isValid = widget->compile();
 
     updateEditorColor();
     updateErrorWidget();
+
+    if (isValid)
+        emit widget->scriptTextChanged();
 }
 
 void AbstractScriptWidget::PrivateSW::updateEditorColor()
@@ -150,33 +186,60 @@ void AbstractScriptWidget::PrivateSW::updateEditorColor()
 
 void AbstractScriptWidget::PrivateSW::updateErrorWidget()
 {
-    if (errors.isEmpty())
+    if (messages.isEmpty())
     {
-        errorList->setVisible(false);
+        messageList->setVisible(false);
         return;
     }
 
-    errorList->clear();
-    errorList->setVisible(true);
+    messageList->clear();
+    messageList->setVisible(true);
 
     // build list items
-    for (const Error& e : errors)
+    for (const Message& e : messages)
     {
-        auto item = new QListWidgetItem(errorList);
-        item->setText(QString(tr("error line %1: %2")
-                              .arg(e.line)
-                              .arg(e.text)));
+        // construct displayed text
+        QString n;
+        if (e.type == M_INFO)
+            n = tr("info");
+        if (e.type == M_WARNING)
+            n = tr("warning");
+        if (e.type == M_ERROR)
+            n = tr("error");
+        n += " " + tr("line") + " " + QString::number(e.line + 1) + ": " + e.text;
+
+        auto item = new QListWidgetItem(messageList);
+        item->setText(n);
         item->setData(Qt::UserRole + 1, e.line);
-        errorList->addItem(item);
+        messageList->addItem(item);
     }
 }
 
 
-void AbstractScriptWidget::addScriptError(int line, const QString &text)
+void AbstractScriptWidget::addCompileMessage(int line, MessageType type, const QString &text)
 {
-    p_sw_->errors << PrivateSW::Error(line, text);
+    p_sw_->messages << PrivateSW::Message(line, type, text);
 }
 
+
+int AbstractScriptWidget::PrivateSW::posForLine(int line) const
+{
+    MO_DEBUG("posforline " << line);
+
+    auto str = editor->toPlainText();
+
+    int pos = 0, l = 0;
+    while (l < line)
+    {
+        int idx = str.indexOf('\n', pos);
+        MO_DEBUG(" c = " << idx << " pos = " << pos);
+        if (idx < 0)
+            return pos + 1;
+        pos = idx + 1;
+        ++l;
+    }
+    return pos;
+}
 
 } // namespace GUI
 } // namespace MO

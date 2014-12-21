@@ -8,9 +8,25 @@
     <p>created 7/5/2014</p>
 */
 
+#ifndef MO_DISABLE_ANGELSCRIPT
+#include <angelscript.h>
+#endif
+
+//#include <QDebug>
+
 #include "syntaxhighlighter.h"
+//#include "io/log.h"
 
 namespace MO {
+
+SyntaxHighlighter::SyntaxHighlighter(QObject * parent) :
+    QSyntaxHighlighter  (parent)
+{
+    // setup multiline comments
+    commentStartExpression_ = QRegExp("/\\*");
+    commentEndExpression_ = QRegExp("\\*/");
+    commentFormat_.setForeground(QBrush(QColor(140,140,140)));
+}
 
 SyntaxHighlighter::SyntaxHighlighter(QTextDocument *parent) :
     QSyntaxHighlighter(parent)
@@ -23,6 +39,8 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument *parent) :
 
 void SyntaxHighlighter::setNames(const QStringList &variables, const QStringList &functions)
 {
+    //qDebug() << "SyntaxHighligher::setNames:\nvars " << variables << "\nfuncs " << functions;
+
     rules_.clear();
 
     HighlightingRule rule;
@@ -149,5 +167,52 @@ void SyntaxHighlighter::initForStyleSheet()
 
     setNames(vars, selects);
 }
+
+
+#ifndef MO_DISABLE_ANGELSCRIPT
+
+void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
+{
+    QStringList vars, funcs;
+#if 0
+    for (int i=0; i<ctx->GetVarCount(); ++i)
+    {
+        vars << QString( ctx->GetVarName(i) );
+    }
+
+#else
+    for (asUINT i=0; i<mod->GetEnumCount(); ++i)
+    {
+        vars << QString( mod->GetEnumByIndex(i, 0) );
+    }
+
+    for (asUINT i=0; i<mod->GetGlobalVarCount(); ++i)
+    {
+        const char * name;
+        mod->GetGlobalVar(i, &name);
+        vars << QString( name );
+    }
+
+    for (asUINT i=0; i<mod->GetObjectTypeCount(); ++i)
+    {
+        funcs << QString( mod->GetObjectTypeByIndex(i)->GetName() );
+    }
+
+
+    for (asUINT i=0; i<mod->GetTypedefCount(); ++i)
+    {
+        funcs << QString( mod->GetTypedefByIndex(i, 0) );
+    }
+
+    for (asUINT i=0; i<mod->GetFunctionCount(); ++i)
+    {
+        funcs << QString( mod->GetFunctionByIndex(i)->GetName() );
+    }
+#endif
+    setNames(vars, funcs);
+}
+
+#endif
+
 
 } // namespace MO
