@@ -333,6 +333,9 @@ struct advanced
 {
     // ---------------------- 'logic' -----------------------------
 
+    static F abs            (F A) { return std::abs(A); }
+    static F floor			(F A) { return std::floor(A); }
+    static F ceil			(F A) { return std::ceil(A); }
     static F round  		(F A) { return std::floor(A + F(0.5)); }
     static F frac			(F A) { return A - std::floor(A); }
     static F min			(F A, F B) { return std::min(A, B); }

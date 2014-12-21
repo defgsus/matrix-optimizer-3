@@ -44,7 +44,7 @@ GroupWidget::GroupWidget(const QString& title, bool expanded, QWidget *parent) :
 
 void GroupWidget::createLayout_()
 {
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     auto lv = new QVBoxLayout(this);
     lv->setMargin(1);
@@ -178,12 +178,12 @@ bool GroupWidget::isVisible(QWidget * w) const
 
 void GroupWidget::addWidget(QWidget * w)
 {
+    w->setVisible(expanded_);
+
     layout()->addWidget(w);
 
     containedWidgets_.push_back(w);
     w->setParent(this);
-
-    w->setVisible(expanded_);
 }
 
 void GroupWidget::addLayout(QLayout * l)

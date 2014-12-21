@@ -54,7 +54,7 @@ GeometryModifierWidget::GeometryModifierWidget(GEOM::GeometryModifier * geom, bo
     funcUpdateFromWidgets_  (0),
     funcUpdateWidgets_      (0)
 {
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     createWidgets_(expanded);
 
@@ -675,6 +675,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     if (auto script = dynamic_cast<GEOM::GeometryModifierAngelScript*>(modifier_))
     {
         auto edit = new AngelScriptWidget(this);
+        //edit->setMinimumHeight(500);
         group_->addWidget(edit);
         edit->setScriptEngine( GEOM::GeometryAngelScript::createNullEngine() );
         connect(edit, SIGNAL(scriptTextChanged()), this, SLOT(updateFromWidgets_()));

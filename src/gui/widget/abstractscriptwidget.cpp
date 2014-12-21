@@ -72,6 +72,8 @@ AbstractScriptWidget::AbstractScriptWidget(QWidget *parent)
     : QWidget       (parent),
       p_sw_         (new PrivateSW(this))
 {
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     p_sw_->createWidgets();
 }
 
@@ -112,13 +114,18 @@ void AbstractScriptWidget::setSyntaxHighlighter(QSyntaxHighlighter * s)
 void AbstractScriptWidget::PrivateSW::createWidgets()
 {
     auto lv = new QVBoxLayout(widget);
+    //lv->setSizeConstraint(QLayout::SetMaximumSize);
 
         // --- editor ---
 
         editor = new QPlainTextEdit(widget);
         editor->setProperty("code", true);
+        editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        // XXX
+        editor->setMinimumHeight(600);
         lv->addWidget(editor, 10);
         connect(editor, &QPlainTextEdit::textChanged, [=]() { if (!ignoreTextChange) timer->start(); } );
+        //editor->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
         // --- setup font ---
 

@@ -145,7 +145,7 @@ static void registerAngelScript_vector_native(asIScriptEngine *engine)
     MO__REG_FUNC("vec3 rotateY(const vec3 &in, float)", vecfunc<Vec3>::rotateY);
     MO__REG_FUNC("vec3 rotateZ(const vec3 &in, float)", vecfunc<Vec3>::rotateZ);
     MO__REG_FUNC("vec3 normalize(const vec3 &in)", vecfunc<Vec3>::normalize);
-    MO__REG_FUNC("vec3 cross(const vec3 &in)", vecfunc<Vec3>::cross);
+    MO__REG_FUNC("vec3 cross(const vec3 &in, const vec3& in)", vecfunc<Vec3>::cross);
     MO__REG_FUNC("vec3 reflect(const vec3 &in, const vec3 &in)", vecfunc<Vec3>::reflect);
     MO__REG_FUNC("vec3 refract(const vec3 &in, const vec3 &in, float)", vecfunc<Vec3>::refract);
 
@@ -162,7 +162,7 @@ static void registerAngelScript_vector_native(asIScriptEngine *engine)
 
     MO__REG_FUNC("float dot(const vec3 &in)", vecfunc<Vec3>::dot);
     MO__REG_FUNC("float length(const vec3 &in)", vecfunc<Vec3>::length);
-    MO__REG_FUNC("float distance(const vec3 &in, const vec3 &out)", vecfunc<Vec3>::length);
+    MO__REG_FUNC("float distance(const vec3 &in, const vec3 &in)", vecfunc<Vec3>::distance);
     MO__REG_FUNC("float noise(const vec3 &in)", vecfunc<Vec3>::noise);
 
 #undef MO__REG_FUNC

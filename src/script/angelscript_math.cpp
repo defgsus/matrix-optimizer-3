@@ -52,6 +52,18 @@ static void registerAngelScript_math_native(asIScriptEngine *engine)
 #define MO__REG_FUNC(decl__, name__) \
     r = engine->RegisterGlobalFunction(decl__, asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
 
+    MO__REG_FUNC("float abs(float)", MATH::advanced<float>::abs);
+    MO__REG_FUNC("float floor(float)", MATH::advanced<float>::floor);
+    MO__REG_FUNC("float ceil(float)", MATH::advanced<float>::ceil);
+    MO__REG_FUNC("float round(float)", MATH::advanced<float>::round);
+    MO__REG_FUNC("float frac(float)", MATH::advanced<float>::frac);
+    MO__REG_FUNC("float min(float, float)", MATH::advanced<float>::min);
+    MO__REG_FUNC("float max(float, float)", MATH::advanced<float>::max);
+    MO__REG_FUNC("float clamp(float, float, float)", MATH::advanced<float>::clamp);
+    MO__REG_FUNC("float quant(float, float)", MATH::advanced<float>::quant);
+    MO__REG_FUNC("float mod(float, float)", MATH::advanced<float>::mod);
+    MO__REG_FUNC("float smod(float, float)", MATH::advanced<float>::smod);
+
     MO__REG_FUNC("float sin(float)", MATH::advanced<float>::sin);
     MO__REG_FUNC("float sinh(float)", MATH::advanced<float>::sinh);
     MO__REG_FUNC("float asin(float)", MATH::advanced<float>::asin);

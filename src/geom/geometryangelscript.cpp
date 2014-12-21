@@ -33,7 +33,7 @@ public:
     void createEngine();
     void messageCallback(const asSMessageInfo *msg);
 
-    void line(float x, float y, float z, float x1, float y1, float z1)
+    void addLine(float x, float y, float z, float x1, float y1, float z1)
     {
         Geometry::IndexType
                     v1 = g->addVertex(x,y,z),
@@ -41,13 +41,27 @@ public:
         g->addLine(v1, v2);
     }
 
-    void line(const Vec3& a, const Vec3& b)
+    void addLine(const Vec3& a, const Vec3& b)
     {
         Geometry::IndexType
                     v1 = g->addVertex(a.x, a.y, a.z),
                     v2 = g->addVertex(b.x, b.y, b.z);
         g->addLine(v1, v2);
     }
+
+    void addTriangle(const Vec3& a, const Vec3& b, const Vec3& c)
+    {
+        Geometry::IndexType
+                    v1 = g->addVertex(a.x, a.y, a.z),
+                    v2 = g->addVertex(b.x, b.y, b.z),
+                    v3 = g->addVertex(c.x, c.y, c.z);
+        g->addTriangle(v1, v2, v3);
+    }
+
+    void setColor(float r_, float g_, float b_, float a_) { g->setColor(r_, g_, b_, a_); }
+    void setColor(float r_, float a_) { g->setColor(r_, r_, r_, a_); }
+    void setColor(float r_) { g->setColor(r_, r_, r_, 1); }
+    void setColor(const Vec3& v) { g->setColor(v.x, v.y, v.z, 1.f); }
 
     Geometry * g;
     asIScriptEngine * engine;
@@ -97,12 +111,32 @@ void GeometryAngelScript::Private::createEngine()
 
     registerDefaultAngelscript(engine);
 
-    r = engine->RegisterGlobalFunction("void line(float x, float y, float z, float x2, float y2, float z2)",
-                                        asMETHODPR(Private, line, (float,float,float,float,float,float),void),
+    r = engine->RegisterGlobalFunction("void addLine(float x, float y, float z, float x2, float y2, float z2)",
+                                        asMETHODPR(Private, addLine, (float,float,float,float,float,float),void),
                                         asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
 
-    r = engine->RegisterGlobalFunction("void line(const vec3& in, const vec3& in)",
-                                        asMETHODPR(Private, line, (const Vec3&, const Vec3&), void),
+    r = engine->RegisterGlobalFunction("void addLine(const vec3& in, const vec3& in)",
+                                        asMETHODPR(Private, addLine, (const Vec3&, const Vec3&), void),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
+
+    r = engine->RegisterGlobalFunction("void addTriangle(const vec3& in, const vec3& in, const vec3& in)",
+                                        asMETHODPR(Private, addTriangle, (const Vec3&, const Vec3&, const Vec3&), void),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
+
+    r = engine->RegisterGlobalFunction("void setColor(const vec3& in)",
+                                        asMETHODPR(Private, setColor, (const Vec3&), void),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
+
+    r = engine->RegisterGlobalFunction("void setColor(float r, float g, float b, float a)",
+                                        asMETHODPR(Private, setColor, (float,float,float,float),void),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
+
+    r = engine->RegisterGlobalFunction("void setColor(float bright, float a)",
+                                        asMETHODPR(Private, setColor, (float,float),void),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
+
+    r = engine->RegisterGlobalFunction("void setColor(float bright)",
+                                        asMETHODPR(Private, setColor, (float),void),
                                         asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
 
 }
@@ -138,6 +172,7 @@ void GeometryAngelScript::execute(const QString &qscript)
 
     p_->errors.clear();
     p_->engine->SetMessageCallback(asMETHOD(Private, messageCallback), this, asCALL_THISCALL);
+    //p_->engine->set
 
     // compile
     int r = module->Build();
