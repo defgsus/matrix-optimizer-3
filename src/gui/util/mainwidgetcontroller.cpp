@@ -58,6 +58,7 @@
 #include "gui/widget/transportwidget.h"
 #ifndef MO_DISABLE_ANGLESCRIPT
 #include "gui/widget/angelscriptwidget.h"
+#include "script/angelscript.h"
 #endif
 #include "gui/util/scenesettings.h"
 #include "gui/texteditdialog.h"
@@ -546,6 +547,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             diag->setAttribute(Qt::WA_DeleteOnClose);
             auto l = new QVBoxLayout(diag);
             auto script = new AngelScriptWidget(diag);
+            registerDefaultAngelscript( script->scriptEngine() );
             l->addWidget(script);
             script->setScriptText(settings->value("tmp/AngelScript", "//angelscript").toString());
             connect(script, &AngelScriptWidget::scriptTextChanged, [=]()

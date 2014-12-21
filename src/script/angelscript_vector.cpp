@@ -16,50 +16,62 @@
 
 #include <angelscript.h>
 
+#include <QString>
+
 #include "angelscript_vector.h"
 #include "types/vector.h"
+#include "math/constants.h"
+#include "math/vector.h"
+#include "math/advanced.h"
 
 
 namespace MO {
+
+namespace {
 
 //-----------------------
 // AngelScript functions
 //-----------------------
 
-static void Vec3DefaultConstructor(Vec3 *self)
+/** Wraps some functions and makes them non-overloading
+    to avoid nasty syntax when registering */
+template <typename Vec>
+struct vecfunc
 {
-    new(self) Vec3();
-}
+    static void VecDefaultConstructor(Vec *self) { new(self) Vec(); }
+    static void VecCopyConstructor(const Vec &other, Vec *self) { new(self) Vec(other); }
+    static void VecConvConstructor(Float x, Vec *self) { new(self) Vec(x); }
+    static void VecInitConstructor(Float x, Float y, Float z, Vec *self) { new(self) Vec(x,y,z); }
+    static void VecListConstructor(Float *list, Vec *self) { new(self) Vec(list[0], list[1], list[2]); }
 
-static void Vec3CopyConstructor(const Vec3 &other, Vec3 *self)
-{
-    new(self) Vec3(other);
-}
+    static bool VecEqualsVec(Vec * self, const Vec& v) { return *self == v; }
+    static Vec VecAddVec(Vec * self, const Vec& v) { return *self + v; }
+    static Vec VecSubVec(Vec * self, const Vec& v) { return *self - v; }
+    static Vec VecMulVec(Vec * self, const Vec& v) { return *self * v; }
+    static Vec VecDivVec(Vec * self, const Vec& v) { return *self / v; }
 
-static void Vec3ConvConstructor(float x, Vec3 *self)
-{
-    new(self) Vec3(x);
-}
+    static Vec VecAddFloat(Vec * self, Float v) { return *self + v; }
+    static Vec VecSubFloat(Vec * self, Float v) { return *self - v; }
+    static Vec VecMulFloat(Vec * self, Float v) { return *self * v; }
+    static Vec VecDivFloat(Vec * self, Float v) { return *self / v; }
 
-static void Vec3InitConstructor(float x, float y, float z, Vec3 *self)
-{
-    new(self) Vec3(x,y,z);
-}
+    static Vec VecRotated(Vec * self, const Vec& a, Float deg) { return MATH::rotate(*self, a, deg); }
+    static Vec VecRotatedX(Vec * self, Float deg) { return MATH::rotateX(*self, deg); }
+    static Vec VecRotatedY(Vec * self, Float deg) { return MATH::rotateX(*self, deg); }
+    static Vec VecRotatedZ(Vec * self, Float deg) { return MATH::rotateX(*self, deg); }
 
-static void Vec3ListConstructor(float *list, Vec3 *self)
-{
-    new(self) Vec3(list[0], list[1], list[2]);
-}
+    // -- nonmembers --
+    static Vec rotate(const Vec& v, const Vec& a, Float deg) { return MATH::rotate(v, a, deg); }
+    static Vec rotateX(const Vec& v, Float deg) { return MATH::rotateX(v, deg); }
+    static Vec rotateY(const Vec& v, Float deg) { return MATH::rotateY(v, deg); }
+    static Vec rotateZ(const Vec& v, Float deg) { return MATH::rotateZ(v, deg); }
 
-static Vec3 Vec3AddVec3(Vec3 * self, const Vec3& v) { return *self + v; }
-static Vec3 Vec3SubVec3(Vec3 * self, const Vec3& v) { return *self - v; }
-static Vec3 Vec3MulVec3(Vec3 * self, const Vec3& v) { return *self * v; }
-static Vec3 Vec3DivVec3(Vec3 * self, const Vec3& v) { return *self / v; }
+    static Vec normalize(const Vec& v) { return MATH::normalize_safe(v); }
+    static Float length(const Vec& v) { return glm::length(v); }
+    static Float dot(const Vec& a, const Vec& b) { return glm::dot(a, b); }
 
-static Vec3 Vec3AddFloat(Vec3 * self, float v) { return *self + v; }
-static Vec3 Vec3SubFloat(Vec3 * self, float v) { return *self - v; }
-static Vec3 Vec3MulFloat(Vec3 * self, float v) { return *self * v; }
-static Vec3 Vec3DivFloat(Vec3 * self, float v) { return *self / v; }
+    static Float noise(const Vec3& v) { return MATH::advanced<float>::noise_3(v.x, v.y, v.z); }
+};
 
 //--------------------------------
 // Registration
@@ -78,34 +90,45 @@ static void registerAngelScript_vector_native(asIScriptEngine *engine)
     r = engine->RegisterObjectProperty("vec3", "float z", asOFFSET(Vec3, z)); assert( r >= 0 );
 
     // Register the constructors
-    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,      "void f()",                             asFUNCTION(Vec3DefaultConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,      "void f(const vec3 &in)",               asFUNCTION(Vec3CopyConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,      "void f(float)",                        asFUNCTION(Vec3ConvConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,      "void f(float, float, float)",          asFUNCTION(Vec3InitConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_LIST_CONSTRUCT, "void f(const int &in) {float, float, float}", asFUNCTION(Vec3ListConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,      "void f()",                             asFUNCTION(vecfunc<Vec3>::VecDefaultConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,      "void f(const vec3 &in)",               asFUNCTION(vecfunc<Vec3>::VecCopyConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,      "void f(float)",                        asFUNCTION(vecfunc<Vec3>::VecConvConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,      "void f(float, float, float)",          asFUNCTION(vecfunc<Vec3>::VecInitConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_LIST_CONSTRUCT, "void f(const int &in) {float, float, float}", asFUNCTION(vecfunc<Vec3>::VecListConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 
     // Register the operator overloads
     r = engine->RegisterObjectMethod("vec3", "vec3 &opAddAssign(const vec3 &in)", asMETHODPR(Vec3, operator+=, (const Vec3 &), Vec3&), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("vec3", "vec3 &opSubAssign(const vec3 &in)", asMETHODPR(Vec3, operator-=, (const Vec3 &), Vec3&), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("vec3", "vec3 &opMulAssign(const vec3 &in)", asMETHODPR(Vec3, operator*=, (const Vec3 &), Vec3&), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("vec3", "vec3 &opDivAssign(const vec3 &in)", asMETHODPR(Vec3, operator/=, (const Vec3 &), Vec3&), asCALL_THISCALL); assert( r >= 0 );
-//    r = engine->RegisterObjectMethod("vec3", "bool opEquals(const vec3 &in) const", asMETHODPR(Vec3, operator==, (const Vec3 &) const, bool), asCALL_THISCALL); assert( r >= 0 );
-    //r = engine->RegisterObjectMethod("vec3", "vec3 opAdd(const vec3 &in) const", asFUNCTIONPR(glm::detail::operator+, (const Vec3 &), Vec3), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "bool opEquals(const vec3 &in) const", asFUNCTION(vecfunc<Vec3>::VecEqualsVec), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
-    r = engine->RegisterObjectMethod("vec3", "vec3 opAdd(const vec3 &in) const", asFUNCTION(Vec3AddVec3), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-    r = engine->RegisterObjectMethod("vec3", "vec3 opSub(const vec3 &in) const", asFUNCTION(Vec3SubVec3), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-    r = engine->RegisterObjectMethod("vec3", "vec3 opMul(const vec3 &in) const", asFUNCTION(Vec3MulVec3), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-    r = engine->RegisterObjectMethod("vec3", "vec3 opDiv(const vec3 &in) const", asFUNCTION(Vec3DivVec3), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 opAdd(const vec3 &in) const", asFUNCTION(vecfunc<Vec3>::VecAddVec), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 opSub(const vec3 &in) const", asFUNCTION(vecfunc<Vec3>::VecSubVec), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 opMul(const vec3 &in) const", asFUNCTION(vecfunc<Vec3>::VecMulVec), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 opDiv(const vec3 &in) const", asFUNCTION(vecfunc<Vec3>::VecDivVec), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
-    r = engine->RegisterObjectMethod("vec3", "vec3 opAdd(float) const", asFUNCTION(Vec3AddFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-    r = engine->RegisterObjectMethod("vec3", "vec3 opSub(float) const", asFUNCTION(Vec3SubFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-    r = engine->RegisterObjectMethod("vec3", "vec3 opMul(float) const", asFUNCTION(Vec3MulFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-    r = engine->RegisterObjectMethod("vec3", "vec3 opDiv(float) const", asFUNCTION(Vec3DivFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-//    r = engine->RegisterObjectMethod("vec3", "vec3 opSub(const vec3 &in) const", asMETHODPR(Vec3, operator-, (const Vec3 &) const, Vec3), asCALL_THISCALL); assert( r >= 0 );
-//    r = engine->RegisterObjectMethod("vec3", "vec3 opMul(const vec3 &in) const", asMETHODPR(Vec3, operator*, (const Vec3 &) const, Vec3), asCALL_THISCALL); assert( r >= 0 );
-//    r = engine->RegisterObjectMethod("vec3", "vec3 opDiv(const vec3 &in) const", asMETHODPR(Vec3, operator/, (const Vec3 &) const, Vec3), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 opAdd(float) const", asFUNCTION(vecfunc<Vec3>::VecAddFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 opSub(float) const", asFUNCTION(vecfunc<Vec3>::VecSubFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 opMul(float) const", asFUNCTION(vecfunc<Vec3>::VecMulFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 opDiv(float) const", asFUNCTION(vecfunc<Vec3>::VecDivFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     // Register the object methods
+    r = engine->RegisterObjectMethod("vec3", "vec3 rotated(const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::VecRotated), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 rotatedX(float)", asFUNCTION(vecfunc<Vec3>::VecRotatedX), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 rotatedY(float)", asFUNCTION(vecfunc<Vec3>::VecRotatedY), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("vec3", "vec3 rotatedZ(float)", asFUNCTION(vecfunc<Vec3>::VecRotatedZ), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+
+    // non-member object functions
+    r = engine->RegisterGlobalFunction("vec3 rotate(const vec3 &in, const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::rotate), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("vec3 rotateX(const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::rotateX), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("vec3 rotateY(const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::rotateY), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("vec3 rotateZ(const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::rotateZ), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("vec3 normalize(const vec3 &in)", asFUNCTION(vecfunc<Vec3>::normalize), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("float dot(const vec3 &in)", asFUNCTION(vecfunc<Vec3>::dot), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("float length(const vec3 &in)", asFUNCTION(vecfunc<Vec3>::length), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterGlobalFunction("float noise(const vec3 &in)", asFUNCTION(vecfunc<Vec3>::noise), asCALL_CDECL); assert( r >= 0 );
+
 //    r = engine->RegisterObjectMethod("vec3", "float abs() const", asMETHOD(Vec3,length), asCALL_THISCALL); assert( r >= 0 );
 
     // Register the swizzle operators
@@ -115,6 +138,8 @@ static void registerAngelScript_vector_native(asIScriptEngine *engine)
 //    r = engine->RegisterObjectMethod("vec3", "void set_ir(const Vec3 &in)", asMETHOD(Vec3, set_ir), asCALL_THISCALL); assert( r >= 0 );
 }
 
+
+} // namespace
 
 void registerAngelScript_vector(asIScriptEngine *engine)
 {

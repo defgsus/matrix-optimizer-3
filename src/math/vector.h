@@ -134,6 +134,19 @@ namespace MATH {
                     v.x * s + v.y * c);
     }
 
+    /** 3D rotation */
+    template <typename T, glm::precision P>
+    inline glm::detail::tvec3<T, P> rotate(const glm::detail::tvec3<T, P> & v,
+                                           const glm::detail::tvec3<T, P> & axis, Float angle_degree)
+    {
+        const glm::detail::tvec4<T, P> v4 =
+        #ifndef MO_GLM_RADIANS
+            glm::rotate(Mat4(1), angle_degree, axis) * glm::detail::tvec4<T, P>(v, 1.0);
+        #else
+            glm::rotate(Mat4(1), deg_to_rad(angle_degree), axis) * glm::detail::tvec4<T, P>(v, 1.0);
+        #endif
+        return glm::detail::tvec3<T, P>(v4);
+    }
 
 /** Returns a point on a unit sphere (radius = 1.0). <br>
     Given a point P = <0,1,0>, and v = rotation around z, and u = rotation around y <br>

@@ -38,7 +38,9 @@ public slots:
     /** Set all reserved words */
     void setNames(
             const QStringList& variables,
-            const QStringList& functions);
+            const QStringList& functions,
+            const QStringList& types = QStringList(),
+            const QStringList& reserved = QStringList());
 
     /** Sets reserved words for qt stylesheet syntax */
     void initForStyleSheet();

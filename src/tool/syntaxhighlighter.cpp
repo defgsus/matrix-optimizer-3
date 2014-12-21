@@ -37,9 +37,12 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument *parent) :
     commentFormat_.setForeground(QBrush(QColor(140,140,140)));
 }
 
-void SyntaxHighlighter::setNames(const QStringList &variables, const QStringList &functions)
+void SyntaxHighlighter::setNames(const QStringList &variables,
+                                 const QStringList &functions,
+                                 const QStringList &types,
+                                 const QStringList &reserved)
 {
-    qDebug() << "SyntaxHighligher::setNames:\nvars " << variables << "\nfuncs " << functions;
+    //qDebug() << "SyntaxHighligher::setNames:\nvars " << variables << "\nfuncs " << functions;
 
     rules_.clear();
 
@@ -54,14 +57,22 @@ void SyntaxHighlighter::setNames(const QStringList &variables, const QStringList
 
     QTextCharFormat
         functionFormat,
-        variableFormat;
+        variableFormat,
+        reservedFormat,
+        typesFormat;
 
     // functions
     functionFormat.setFontWeight(QFont::Bold);
-    functionFormat.setForeground(QBrush(QColor(200,200,220)));
+    functionFormat.setForeground(QBrush(QColor(200,200,210)));
     // variables
     variableFormat.setFontWeight(QFont::Bold);
-    variableFormat.setForeground(QBrush(QColor(200,220,200)));
+    variableFormat.setForeground(QBrush(QColor(200,210,200)));
+    // variables
+    typesFormat.setFontWeight(QFont::Bold);
+    typesFormat.setForeground(QBrush(QColor(200,210,210)));
+    // reserved words
+    reservedFormat.setFontWeight(QFont::Bold);
+    reservedFormat.setForeground(QBrush(QColor(200,200,200)));
 
     // create rules for each reserved word
 
@@ -77,6 +88,20 @@ void SyntaxHighlighter::setNames(const QStringList &variables, const QStringList
     {
         rule.pattern = QRegExp( "\\b" + k + "\\b" );
         rule.format = functionFormat;
+        rules_.append(rule);
+    }
+
+    for (auto &k : types)
+    {
+        rule.pattern = QRegExp( "\\b" + k + "\\b" );
+        rule.format = typesFormat;
+        rules_.append(rule);
+    }
+
+    for (auto &k : reserved)
+    {
+        rule.pattern = QRegExp( "\\b" + k + "\\b" );
+        rule.format = reservedFormat;
         rules_.append(rule);
     }
 }
@@ -173,14 +198,8 @@ void SyntaxHighlighter::initForStyleSheet()
 
 void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
 {
-    QStringList vars, funcs;
-#if 0
-    for (int i=0; i<ctx->GetVarCount(); ++i)
-    {
-        vars << QString( ctx->GetVarName(i) );
-    }
+    QStringList vars, funcs, types, reserved;
 
-#else
     for (asUINT i=0; i<mod->GetEnumCount(); ++i)
     {
         vars << QString( mod->GetEnumByIndex(i, 0) );
@@ -195,18 +214,26 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
 
     for (asUINT i=0; i<mod->GetObjectTypeCount(); ++i)
     {
-        funcs << QString( mod->GetObjectTypeByIndex(i)->GetName() );
+        types << QString( mod->GetObjectTypeByIndex(i)->GetName() );
     }
 
     for (asUINT i=0; i<mod->GetEngine()->GetObjectTypeCount(); ++i)
     {
-        funcs << QString( mod->GetEngine()->GetObjectTypeByIndex(i)->GetName() );
+        types << QString( mod->GetEngine()->GetObjectTypeByIndex(i)->GetName() );
+    }
+
+    for (asUINT i=0; i<mod->GetEngine()->GetGlobalPropertyCount(); ++i)
+    {
+        const char * name;
+        //bool isConst;
+        mod->GetEngine()->GetGlobalPropertyByIndex(i, &name);//, 0, 0, &isConst);
+        vars << name;
     }
 
 
     for (asUINT i=0; i<mod->GetTypedefCount(); ++i)
     {
-        funcs << QString( mod->GetTypedefByIndex(i, 0) );
+        types << QString( mod->GetTypedefByIndex(i, 0) );
     }
 
     for (asUINT i=0; i<mod->GetFunctionCount(); ++i)
@@ -219,8 +246,19 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
         funcs << QString( mod->GetEngine()->GetGlobalFunctionByIndex(i)->GetName() );
     }
 
-#endif
-    setNames(vars, funcs);
+    types << "void" << "float" << "double" << "bool"
+          << "int" << "int8" << "int16" << "int" << "int64"
+          << "uint" << "uint8" << "uint16" << "uint" << "uint64";
+
+    reserved << "and" << "abstract" << "auto" << "break"
+            << "case" << "cast" << "class" << "const" << "continue" << "default"
+            << "do" << "else" << "enum" << "false" << "final" << "for" << "from"
+            << "funcdef" << "get" << "if" << "import" << "in" << "inout" << "interface"
+            << "is" << "mixin" << "namespace" << "not" << "null" << "or" << "out"
+            << "override" << "private" << "return" << "set" << "shared" << "super"
+            << "switch" << "this" << "true" << "typedef" << "while" << "xor";
+
+    setNames(vars, funcs, types, reserved);
 }
 
 #endif

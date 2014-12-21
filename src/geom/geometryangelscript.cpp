@@ -10,15 +10,11 @@
 
 #ifndef MO_DISABLE_ANGELSCRIPT
 
-#include <angelscript.h>
-
 #include <QString>
 
 #include "geometryangelscript.h"
 #include "geometry.h"
-#include "3rd/angelscript/scriptmath.h"
-#include "3rd/angelscript/scriptmathcomplex.h"
-#include "script/angelscript_vector.h"
+#include "script/angelscript.h"
 #include "io/error.h"
 
 namespace MO {
@@ -42,6 +38,14 @@ public:
         Geometry::IndexType
                     v1 = g->addVertex(x,y,z),
                     v2 = g->addVertex(x1,y1,z1);
+        g->addLine(v1, v2);
+    }
+
+    void line(const Vec3& a, const Vec3& b)
+    {
+        Geometry::IndexType
+                    v1 = g->addVertex(a.x, a.y, a.z),
+                    v2 = g->addVertex(b.x, b.y, b.z);
         g->addLine(v1, v2);
     }
 
@@ -91,14 +95,15 @@ void GeometryAngelScript::Private::createEngine()
     engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
     MO_ASSERT(engine, "");
 
-    RegisterScriptMath(engine);
-    RegisterScriptMathComplex(engine);
-    registerAngelScript_vector(engine);
+    registerDefaultAngelscript(engine);
 
     r = engine->RegisterGlobalFunction("void line(float x, float y, float z, float x2, float y2, float z2)",
-                                        asMETHOD(Private, line),
-                                        asCALL_THISCALL_ASGLOBAL, this);
-    MO_ASSERT(r >= 0, "registerGlobalFunction");
+                                        asMETHODPR(Private, line, (float,float,float,float,float,float),void),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
+
+    r = engine->RegisterGlobalFunction("void line(const vec3& in, const vec3& in)",
+                                        asMETHODPR(Private, line, (const Vec3&, const Vec3&), void),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
 
 }
 
