@@ -67,7 +67,21 @@ struct vecfunc
     static Vec rotateZ(const Vec& v, Float deg) { return MATH::rotateZ(v, deg); }
 
     static Vec normalize(const Vec& v) { return MATH::normalize_safe(v); }
+    static Vec cross(const Vec& v, const Vec& n) { return glm::cross(v, n); }
+    static Vec reflect(const Vec& v, const Vec& n) { return glm::reflect(v, n); }
+    static Vec refract(const Vec& v, const Vec& n, Float eta) { return glm::refract(v, n, eta); }
+
+    static Vec min_vv(const Vec& v, const Vec& n) { return glm::min(v, n); }
+    static Vec min_vf(const Vec& v, Float f) { return glm::min(v, f); }
+    static Vec min_fv(Float f, const Vec& v) { return glm::min(v, f); }
+    static Vec max_vv(const Vec& v, const Vec& n) { return glm::max(v, n); }
+    static Vec max_vf(const Vec& v, Float f) { return glm::max(v, f); }
+    static Vec max_fv(Float f, const Vec& v) { return glm::max(v, f); }
+    static Vec clamp(const Vec& v, float mi, float ma) { return glm::clamp(v, mi, ma); }
+    static Vec abs(const Vec& v) { return glm::abs(v); }
+
     static Float length(const Vec& v) { return glm::length(v); }
+    static Float distance(const Vec& v, const Vec& n) { return glm::distance(v, n); }
     static Float dot(const Vec& a, const Vec& b) { return glm::dot(a, b); }
 
     static Float noise(const Vec3& v) { return MATH::advanced<float>::noise_3(v.x, v.y, v.z); }
@@ -114,20 +128,44 @@ static void registerAngelScript_vector_native(asIScriptEngine *engine)
     r = engine->RegisterObjectMethod("vec3", "vec3 opDiv(float) const", asFUNCTION(vecfunc<Vec3>::VecDivFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     // Register the object methods
-    r = engine->RegisterObjectMethod("vec3", "vec3 rotated(const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::VecRotated), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-    r = engine->RegisterObjectMethod("vec3", "vec3 rotatedX(float)", asFUNCTION(vecfunc<Vec3>::VecRotatedX), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-    r = engine->RegisterObjectMethod("vec3", "vec3 rotatedY(float)", asFUNCTION(vecfunc<Vec3>::VecRotatedY), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-    r = engine->RegisterObjectMethod("vec3", "vec3 rotatedZ(float)", asFUNCTION(vecfunc<Vec3>::VecRotatedZ), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+#define MO__REG_METHOD(decl__, name__) \
+    r = engine->RegisterObjectMethod("vec3", decl__, asFUNCTION(name__), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+
+    MO__REG_METHOD("vec3 rotated(const vec3 &in, float)", vecfunc<Vec3>::VecRotated);
+    MO__REG_METHOD("vec3 rotatedX(float)", vecfunc<Vec3>::VecRotatedX);
+    MO__REG_METHOD("vec3 rotatedY(float)", vecfunc<Vec3>::VecRotatedY);
+    MO__REG_METHOD("vec3 rotatedZ(float)", vecfunc<Vec3>::VecRotatedZ);
 
     // non-member object functions
-    r = engine->RegisterGlobalFunction("vec3 rotate(const vec3 &in, const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::rotate), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("vec3 rotateX(const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::rotateX), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("vec3 rotateY(const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::rotateY), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("vec3 rotateZ(const vec3 &in, float)", asFUNCTION(vecfunc<Vec3>::rotateZ), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("vec3 normalize(const vec3 &in)", asFUNCTION(vecfunc<Vec3>::normalize), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("float dot(const vec3 &in)", asFUNCTION(vecfunc<Vec3>::dot), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("float length(const vec3 &in)", asFUNCTION(vecfunc<Vec3>::length), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterGlobalFunction("float noise(const vec3 &in)", asFUNCTION(vecfunc<Vec3>::noise), asCALL_CDECL); assert( r >= 0 );
+#define MO__REG_FUNC(decl__, name__) \
+    r = engine->RegisterGlobalFunction(decl__, asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
+
+    MO__REG_FUNC("vec3 rotate(const vec3 &in, const vec3 &in, float)", vecfunc<Vec3>::rotate);
+    MO__REG_FUNC("vec3 rotateX(const vec3 &in, float)", vecfunc<Vec3>::rotateX);
+    MO__REG_FUNC("vec3 rotateY(const vec3 &in, float)", vecfunc<Vec3>::rotateY);
+    MO__REG_FUNC("vec3 rotateZ(const vec3 &in, float)", vecfunc<Vec3>::rotateZ);
+    MO__REG_FUNC("vec3 normalize(const vec3 &in)", vecfunc<Vec3>::normalize);
+    MO__REG_FUNC("vec3 cross(const vec3 &in)", vecfunc<Vec3>::cross);
+    MO__REG_FUNC("vec3 reflect(const vec3 &in, const vec3 &in)", vecfunc<Vec3>::reflect);
+    MO__REG_FUNC("vec3 refract(const vec3 &in, const vec3 &in, float)", vecfunc<Vec3>::refract);
+
+    MO__REG_FUNC("vec3 abs(const vec3 &in)", vecfunc<Vec3>::abs);
+    MO__REG_FUNC("vec3 min(const vec3 &in, const vec3 &in)", vecfunc<Vec3>::min_vv);
+    MO__REG_FUNC("vec3 min(const vec3 &in, float)", vecfunc<Vec3>::min_vf);
+    MO__REG_FUNC("vec3 min(float, const vec3 &in)", vecfunc<Vec3>::min_fv);
+    MO__REG_FUNC("vec3 max(const vec3 &in, const vec3 &in)", vecfunc<Vec3>::max_vv);
+    MO__REG_FUNC("vec3 max(const vec3 &in, float)", vecfunc<Vec3>::max_vf);
+    MO__REG_FUNC("vec3 max(float, const vec3 &in)", vecfunc<Vec3>::max_fv);
+    MO__REG_FUNC("vec3 clamp(const vec3 &in, float, float)", vecfunc<Vec3>::clamp);
+
+
+
+    MO__REG_FUNC("float dot(const vec3 &in)", vecfunc<Vec3>::dot);
+    MO__REG_FUNC("float length(const vec3 &in)", vecfunc<Vec3>::length);
+    MO__REG_FUNC("float distance(const vec3 &in, const vec3 &out)", vecfunc<Vec3>::length);
+    MO__REG_FUNC("float noise(const vec3 &in)", vecfunc<Vec3>::noise);
+
+#undef MO__REG_FUNC
 
 //    r = engine->RegisterObjectMethod("vec3", "float abs() const", asMETHOD(Vec3,length), asCALL_THISCALL); assert( r >= 0 );
 

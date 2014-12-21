@@ -10,22 +10,38 @@
 
 #ifndef MO_DISABLE_ANGELSCRIPT
 
+#include <cassert>
+
+#include <QString>
+
 #include "angelscript.h"
 #include "angelscript_vector.h"
 #include "angelscript_math.h"
-//#include "3rd/angelscript/scriptmath.h"
-#include "3rd/angelscript/scriptmathcomplex.h"
+#include "3rd/angelscript/scriptmath/scriptmathcomplex.h"
+#include "3rd/angelscript/scriptarray/scriptarray.h"
+#include "3rd/angelscript/scriptstdstring/scriptstdstring.h"
+#include "io/log.h"
 
 namespace MO {
 
-/** Registers default types and functions.
-    Mainly mathematics */
+namespace {
+
+    void angelPrint(const std::string& s)
+    {
+        MO_DEBUG("angelscript: " << QString::fromUtf8(&s[0]));
+    }
+
+} // namespace
+
 void registerDefaultAngelscript(asIScriptEngine * engine)
 {
-    //RegisterScriptMath(engine);
+    RegisterScriptArray(engine, true);
+    RegisterStdString(engine);
     RegisterScriptMathComplex(engine);
     registerAngelScript_math(engine);
     registerAngelScript_vector(engine);
+
+    int r = engine->RegisterGlobalFunction("void print(const string & in)", asFUNCTION(angelPrint), asCALL_CDECL); assert( r >= 0 );
 }
 
 } // namespace MO

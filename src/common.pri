@@ -238,16 +238,17 @@ HEADERS += \
     src/object/audio/delayao.h \
     src/object/audio/soundsourceao.h \
     src/object/audio/parameterao.h \
-    $$PWD/object/audio/impulseao.h \
-    $$PWD/object/audio/panao.h \
-    $$PWD/object/audio/dustao.h \
+    src/object/audio/impulseao.h \
+    src/object/audio/panao.h \
+    src/object/audio/dustao.h \
     src/object/audio/bandfilterbankao.h \
     src/audio/tool/dumbfile.h \
     src/object/audio/modplayerao.h \
     src/geom/geometrymodifierangelscript.h \
     src/geom/geometryangelscript.h \
-    src/3rd/angelscript/scriptmath.h \
-    src/3rd/angelscript/scriptmathcomplex.h \
+    src/script/3rd/angelscript/scriptmath/scriptmathcomplex.h \
+    src/script/3rd/angelscript/scriptarray/scriptarray.h \
+    src/script/3rd/angelscript/scriptstdstring/scriptstdstring.h \
     src/script/angelscript_vector.h \
     src/script/angelscript.h \
     src/math/advanced.h \
@@ -451,16 +452,18 @@ SOURCES += \
     src/object/audio/delayao.cpp \
     src/object/audio/soundsourceao.cpp \
     src/object/audio/parameterao.cpp \
-    $$PWD/object/audio/impulseao.cpp \
-    $$PWD/object/audio/panao.cpp \
-    $$PWD/object/audio/dustao.cpp \
+    src/object/audio/impulseao.cpp \
+    src/object/audio/panao.cpp \
+    src/object/audio/dustao.cpp \
     src/object/audio/bandfilterbankao.cpp \
     src/audio/tool/dumbfile.cpp \
     src/object/audio/modplayerao.cpp \
     src/geom/geometrymodifierangelscript.cpp \
     src/geom/geometryangelscript.cpp \
-    src/3rd/angelscript/scriptmath.cpp \
-    src/3rd/angelscript/scriptmathcomplex.cpp \
+    src/script/3rd/angelscript/scriptmath/scriptmathcomplex.cpp \
+    src/script/3rd/angelscript/scriptarray/scriptarray.cpp \
+    src/script/3rd/angelscript/scriptstdstring/scriptstdstring.cpp \
+    src/script/3rd/angelscript/scriptstdstring/scriptstdstring_utils.cpp \
     src/script/angelscript_vector.cpp \
     src/script/angelscript.cpp \
     src/math/advanced.cpp \

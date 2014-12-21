@@ -26,13 +26,15 @@ class NoisePerlin
 {
 public:
 
+    typedef int64_t Int;
+
     /** constructor with optional seed. <br>
         seed can be later (re-)set with seed() */
-    NoisePerlin(unsigned int seed = 1007);
+    NoisePerlin(Int seed = 1007);
     ~NoisePerlin();
 
     /** sets the initial seed value */
-    void seed(unsigned int seed);
+    void seed(Int seed);
 
     /** Returns the noise value for a given number */
     Double noise(Double arg_x) const;
@@ -66,16 +68,16 @@ private:
     void normalize2_(Double v[2]) const;
     void normalize3_(Double v[3]) const;
 
-    void prepare_(Double arg, Double& t, int& b0, int& b1, Double& r0, Double& r1) const
+    void prepare_(Double arg, Double& t, Int& b0, Int& b1, Double& r0, Double& r1) const
     {
         t = arg + N;
-        b0 = ((int)t) & BM;
+        b0 = ((Int)t) & BM;
         b1 = (b0+1) & BM;
-        r0 = t - (int)t;
+        r0 = t - (Int)t;
         r1 = r0 - 1.0;
     }
 
-    int *p,
+    Int *p,
         B, BM,
         N, NP, NM;
     Double *g1, *g2, *g3;
