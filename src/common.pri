@@ -245,7 +245,10 @@ HEADERS += \
     src/audio/tool/dumbfile.h \
     src/object/audio/modplayerao.h \
     src/geom/geometrymodifierangelscript.h \
-    src/geom/geometryangelscript.h
+    src/geom/geometryangelscript.h \
+    src/3rd/angelscript/scriptmath.h \
+    src/3rd/angelscript/scriptmathcomplex.h \
+    src/script/angelscript_vector.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -452,4 +455,7 @@ SOURCES += \
     src/audio/tool/dumbfile.cpp \
     src/object/audio/modplayerao.cpp \
     src/geom/geometrymodifierangelscript.cpp \
-    src/geom/geometryangelscript.cpp
+    src/geom/geometryangelscript.cpp \
+    src/3rd/angelscript/scriptmath.cpp \
+    src/3rd/angelscript/scriptmathcomplex.cpp \
+    src/script/angelscript_vector.cpp

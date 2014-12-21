@@ -17,7 +17,7 @@
 
 #include "abstractscriptwidget.h"
 #include "io/settings.h"
-#include "io/log.h"
+//#include "io/log.h"
 
 
 namespace MO {
@@ -224,15 +224,12 @@ void AbstractScriptWidget::addCompileMessage(int line, MessageType type, const Q
 
 int AbstractScriptWidget::PrivateSW::posForLine(int line) const
 {
-    MO_DEBUG("posforline " << line);
-
     auto str = editor->toPlainText();
 
     int pos = 0, l = 0;
     while (l < line)
     {
         int idx = str.indexOf('\n', pos);
-        MO_DEBUG(" c = " << idx << " pos = " << pos);
         if (idx < 0)
             return pos + 1;
         pos = idx + 1;

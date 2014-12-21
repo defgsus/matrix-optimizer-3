@@ -16,6 +16,9 @@
 
 #include "geometryangelscript.h"
 #include "geometry.h"
+#include "3rd/angelscript/scriptmath.h"
+#include "3rd/angelscript/scriptmathcomplex.h"
+#include "script/angelscript_vector.h"
 #include "io/error.h"
 
 namespace MO {
@@ -67,10 +70,15 @@ asIScriptEngine * GeometryAngelScript::scriptEngine()
     return p_->engine;
 }
 
+namespace { void dummy_callback(asSMessageInfo*,void*) { } }
+
 asIScriptEngine * GeometryAngelScript::createNullEngine()
 {
     GeometryAngelScript g(0);
     auto engine = g.scriptEngine();
+    // unconnect
+    //engine->SetMessageCallback(asFUNCTION(dummy_callback), 0, asCALL_CDECL);
+    engine->ClearMessageCallback();
     g.p_->engine = 0;
     return engine;
 }
@@ -83,6 +91,10 @@ void GeometryAngelScript::Private::createEngine()
     engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
     MO_ASSERT(engine, "");
 
+    RegisterScriptMath(engine);
+    RegisterScriptMathComplex(engine);
+    registerAngelScript_vector(engine);
+
     r = engine->RegisterGlobalFunction("void line(float x, float y, float z, float x2, float y2, float z2)",
                                         asMETHOD(Private, line),
                                         asCALL_THISCALL_ASGLOBAL, this);
@@ -92,7 +104,8 @@ void GeometryAngelScript::Private::createEngine()
 
 void GeometryAngelScript::Private::messageCallback(const asSMessageInfo *msg)
 {
-    errors += QString("\n%1:%2 %3").arg(msg->row).arg(msg->col).arg(msg->message);
+    // XXX sometimes segfaults
+    //errors += QString("\n%1:%2 %3").arg(msg->row).arg(msg->col).arg(msg->message);
 }
 
 void GeometryAngelScript::execute(const QString &qscript)

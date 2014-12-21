@@ -198,6 +198,11 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
         funcs << QString( mod->GetObjectTypeByIndex(i)->GetName() );
     }
 
+    for (asUINT i=0; i<mod->GetEngine()->GetObjectTypeCount(); ++i)
+    {
+        funcs << QString( mod->GetEngine()->GetObjectTypeByIndex(i)->GetName() );
+    }
+
 
     for (asUINT i=0; i<mod->GetTypedefCount(); ++i)
     {
