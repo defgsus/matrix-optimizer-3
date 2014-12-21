@@ -39,6 +39,11 @@
 #include "geom/geometrymodifiertexcoords.h"
 #include "geom/geometrymodifierduplicate.h"
 #include "geom/geometrymodifiercreate.h"
+#ifndef MO_DISABLE_ANGELSCRIPT
+#include "geom/geometrymodifierangelscript.h"
+#include "geom/geometryangelscript.h"
+#include "angelscriptwidget.h"
+#endif
 
 namespace MO {
 namespace GUI {
@@ -666,6 +671,25 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         };
     }
 
+#ifndef MO_DISABLE_ANGELSCRIPT
+    if (auto script = dynamic_cast<GEOM::GeometryModifierAngelScript*>(modifier_))
+    {
+        auto edit = new AngelScriptWidget(this);
+        group_->addWidget(edit);
+        edit->setScriptEngine( GEOM::GeometryAngelScript::createNullEngine() );
+        connect(edit, SIGNAL(scriptTextChanged()), this, SLOT(updateFromWidgets_()));
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            script->setScript(edit->scriptText());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            edit->setScriptText(script->script());
+        };
+    }
+#endif
 
 }
 

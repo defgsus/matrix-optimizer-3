@@ -15,6 +15,8 @@
 
 #include "abstractscriptwidget.h"
 
+class asIScriptEngine;
+class asIScriptModule;
 
 namespace MO {
 namespace GUI {
@@ -27,9 +29,16 @@ public:
     explicit AngelScriptWidget(QWidget *parent = 0);
     ~AngelScriptWidget();
 
+    asIScriptEngine * scriptEngine() const;
+    asIScriptModule * scriptModule() const;
+
 signals:
 
 public slots:
+
+    void updateSyntaxHighlighter();
+
+    void setScriptEngine(asIScriptEngine * engine) const;
 
 protected:
 

@@ -16,6 +16,11 @@
 #include "gl/opengl.h"
 #include "types/vector.h"
 
+#ifndef MO_DISABLE_ANGELSCRIPT
+class asIScriptEngine;
+#endif
+
+
 namespace MO {
 namespace GEOM {
 
@@ -323,6 +328,8 @@ public:
     void extrudeTriangles(Geometry & geom, VertexType constant, VertexType factor,
                           VertexType shift_center,
                           bool createNewFaces, bool recognizeEdges) const;
+
+
 
     // ------------- opengl -----------------
 

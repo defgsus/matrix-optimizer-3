@@ -537,7 +537,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         });
 
 #ifndef MO_DISABLE_ANGELSCRIPT
-        a = new QAction(tr("Anglescript test"), m);
+        a = new QAction(tr("Angelscript test"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {

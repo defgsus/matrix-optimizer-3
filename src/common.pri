@@ -243,7 +243,9 @@ HEADERS += \
     $$PWD/object/audio/dustao.h \
     src/object/audio/bandfilterbankao.h \
     src/audio/tool/dumbfile.h \
-    src/object/audio/modplayerao.h
+    src/object/audio/modplayerao.h \
+    src/geom/geometrymodifierangelscript.h \
+    src/geom/geometryangelscript.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -448,4 +450,6 @@ SOURCES += \
     $$PWD/object/audio/dustao.cpp \
     src/object/audio/bandfilterbankao.cpp \
     src/audio/tool/dumbfile.cpp \
-    src/object/audio/modplayerao.cpp
+    src/object/audio/modplayerao.cpp \
+    src/geom/geometrymodifierangelscript.cpp \
+    src/geom/geometryangelscript.cpp

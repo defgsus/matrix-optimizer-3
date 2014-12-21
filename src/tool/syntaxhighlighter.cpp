@@ -12,7 +12,7 @@
 #include <angelscript.h>
 #endif
 
-//#include <QDebug>
+#include <QDebug>
 
 #include "syntaxhighlighter.h"
 //#include "io/log.h"
@@ -39,7 +39,7 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument *parent) :
 
 void SyntaxHighlighter::setNames(const QStringList &variables, const QStringList &functions)
 {
-    //qDebug() << "SyntaxHighligher::setNames:\nvars " << variables << "\nfuncs " << functions;
+    qDebug() << "SyntaxHighligher::setNames:\nvars " << variables << "\nfuncs " << functions;
 
     rules_.clear();
 
@@ -208,6 +208,12 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
     {
         funcs << QString( mod->GetFunctionByIndex(i)->GetName() );
     }
+
+    for (asUINT i=0; i<mod->GetEngine()->GetGlobalFunctionCount(); ++i)
+    {
+        funcs << QString( mod->GetEngine()->GetGlobalFunctionByIndex(i)->GetName() );
+    }
+
 #endif
     setNames(vars, funcs);
 }

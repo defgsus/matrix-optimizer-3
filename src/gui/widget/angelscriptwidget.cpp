@@ -69,18 +69,41 @@ AngelScriptWidget::~AngelScriptWidget()
     delete p_;
 }
 
+asIScriptEngine * AngelScriptWidget::scriptEngine() const
+{
+    return p_->engine;
+}
+
+asIScriptModule * AngelScriptWidget::scriptModule() const
+{
+    return p_->module;
+}
+
+void AngelScriptWidget::setScriptEngine(asIScriptEngine *eng) const
+{
+    MO_ASSERT(eng, "NULL engine");
+
+    if (p_->engine)
+        p_->engine->Release();
+
+    p_->engine = eng;
+
+    p_->createObjects();
+}
 
 void AngelScriptWidget::Private::createObjects()
 {
-    engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+    if (!engine)
+        engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
     MO_ASSERT(engine, "");
 
     engine->SetMessageCallback(asMETHOD(Private, messageCallback), this, asCALL_THISCALL);
 
-    module = engine->GetModule("module", asGM_ALWAYS_CREATE);
+    module = engine->GetModule("_editor_module", asGM_ALWAYS_CREATE);
     MO_ASSERT(module, "");
 
-    syn = new SyntaxHighlighter(widget);
+    if (!syn)
+        syn = new SyntaxHighlighter(widget);
     syn->initForAngelScript(module);
 
     widget->setSyntaxHighlighter(syn);
@@ -105,7 +128,7 @@ bool AngelScriptWidget::Private::compile()
 {
     const auto script = widget->scriptText().toStdString();
 
-    module->BindAllImportedFunctions();
+    //module->BindAllImportedFunctions();
 
     module->AddScriptSection("script",
                              script.c_str(), script.size());
@@ -113,14 +136,16 @@ bool AngelScriptWidget::Private::compile()
     bool ret = (module->Build() >= 0);
 
     if (ret)
-    {
-        syn->initForAngelScript(module);
-        widget->setSyntaxHighlighter(syn);
-    }
+        widget->updateSyntaxHighlighter();
 
     return ret;
 }
 
+void AngelScriptWidget::updateSyntaxHighlighter()
+{
+    p_->syn->initForAngelScript(p_->module);
+    setSyntaxHighlighter(p_->syn);
+}
 
 bool AngelScriptWidget::compile()
 {
