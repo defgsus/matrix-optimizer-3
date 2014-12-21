@@ -253,24 +253,15 @@ void DumbFile::setPosition(long pos)
 
         p_->lastPos = pos;
     }
-    /*
-    // remove previous request
-    if (p_->nextRender)
-        duh_end_sigrenderer(p_->nextRender);
-
-    // create renderer at new position
-    p_->nextRender = duh_start_sigrenderer(p_->duh, 0, p_->conf.numChannelsOut(), pos);
-
-    if (!p_->nextRender)
-    {
-        MO_WARNING("DumbFile::setPosition(): Can't create dumb renderer for '" << p_->filename << "'");
-        return;
-    }
-
-    // insert in system
-    std::swap(p_->render, p_->nextRender);
-    */
 }
+
+void DumbFile::setPositionThreadsafe(long pos)
+{
+    QWriteLocker lock(&p_->mutex);
+
+    setPosition(pos);
+}
+
 
 
 /* from http://dumb.sourceforge.net/index.php?page=docs&doc=dumb

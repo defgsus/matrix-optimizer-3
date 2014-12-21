@@ -29,7 +29,7 @@ DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
 DEFINES += MO_DISABLE_GST
 
 #require audio input and output devices to be separate devices
-mac { DEFINES += MO_REQUIRE_SEPARATE_AUDIO }
+mac { DEFINES += MO_REQUIRE_SEPARATE_AUDIO MO_DISABLE_ANGELSCRIPT }
 
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
@@ -52,6 +52,7 @@ else: unix: {
 LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
+        -langelscript \
 #        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
 else: win32 {

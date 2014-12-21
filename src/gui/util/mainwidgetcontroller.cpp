@@ -56,7 +56,9 @@
 #include "gui/objectgraphview.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
-#include "gui/widget/spacer.h"
+#ifndef MO_DISABLE_ANGLESCRIPT
+#include "gui/widget/angelscriptwidget.h"
+#endif
 #include "gui/util/scenesettings.h"
 #include "gui/texteditdialog.h"
 #include "io/datastream.h"
@@ -534,6 +536,20 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             std::cout << std::endl;
         });
 
+#ifndef MO_DISABLE_ANGELSCRIPT
+        a = new QAction(tr("Anglescript test"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new QDialog(application->mainWindow());
+            diag->setMinimumSize(480,640);
+            diag->setAttribute(Qt::WA_DeleteOnClose);
+            auto l = new QVBoxLayout(diag);
+            auto script = new AngelScriptWidget(diag);
+            l->addWidget(script);
+            diag->show();
+        });
+#endif
 
     // ######### HELP MENU #########
     m = new QMenu(tr("Help"), menuBar);

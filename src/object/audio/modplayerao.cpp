@@ -13,6 +13,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterfilename.h"
 #include "audio/tool/dumbfile.h"
+#include "audio/tool/floatgate.h"
 #include "io/datastream.h"
 #include "io/error.h"
 
@@ -41,11 +42,15 @@ class ModPlayerAO::Private
 
     ModPlayerAO * ao;
     ParameterFloat
-        * paramAmp;
+        * paramAmp,
+        * paramPlayGate,
+        * paramPlayPos;
     ParameterFilename
         * paramFilename;
 
     AUDIO::DumbFile dumb;
+
+    AUDIO::FloatGate<Double> gate;
 };
 
 
@@ -96,6 +101,16 @@ void ModPlayerAO::createParameters()
         p_->paramFilename = params()->createFilenameParameter("dumb_fn", tr("filename"),
                                                               tr("The location of the tracker file"),
                                                               IO::FT_TRACKER);
+
+        p_->paramPlayGate = params()->createFloatParameter("dumb_gate", tr("start gate"),
+                                                    tr("A gate signal to start playing at a new position"),
+                                                    0.0);
+
+        p_->paramPlayPos = params()->createFloatParameter("dumb_pos", tr("start position"),
+                                                    tr("Where to start the playback on a gate signal"),
+                                                    0.0);
+        p_->paramPlayPos->setMinValue(0);
+
     params()->endParameterGroup();
 }
 
@@ -136,7 +151,18 @@ void ModPlayerAO::processAudio(uint , SamplePos pos, uint thread)
     const QList<AUDIO::AudioBuffer*>&
             outputs = audioOutputs(thread);
 
-    p_->dumb.process(outputs, p_->paramAmp->value(sampleRateInv() * pos, thread));
+    const Double
+            time = sampleRateInv() * pos,
+            gate = p_->gate.input(p_->paramPlayGate->value(time, thread));
+
+    // retrigger
+    if (gate)
+    {
+        p_->dumb.setPosition(
+                    p_->paramPlayPos->value(time, thread));
+    }
+
+    p_->dumb.process(outputs, p_->paramAmp->value(time, thread));
 }
 
 

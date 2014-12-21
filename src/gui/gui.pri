@@ -79,7 +79,9 @@ HEADERS += \
     src/gui/widget/objectlistwidgetitem.h \
     src/gui/item/audioconnectionitem.h \
     src/gui/item/objectgraphconnectitem.h \
-    src/gui/widget/parameterwidget.h
+    src/gui/widget/parameterwidget.h \
+    src/gui/widget/angelscriptwidget.h \
+    src/gui/widget/abstractscriptwidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -158,4 +160,6 @@ SOURCES += \
     src/gui/widget/objectlistwidgetitem.cpp \
     src/gui/item/audioconnectionitem.cpp \
     src/gui/item/objectgraphconnectitem.cpp \
-    src/gui/widget/parameterwidget.cpp
+    src/gui/widget/parameterwidget.cpp \
+    src/gui/widget/angelscriptwidget.cpp \
+    src/gui/widget/abstractscriptwidget.cpp

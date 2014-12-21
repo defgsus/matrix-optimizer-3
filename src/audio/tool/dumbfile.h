@@ -57,6 +57,7 @@ public:
     void process(const QList<AudioBuffer*>& outputs, F32 amp = 1.f);
 
     void setPosition(long pos);
+    void setPositionThreadsafe(long pos);
 
 private:
 
