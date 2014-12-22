@@ -8,6 +8,7 @@
     <p>created 20.12.2014</p>
 */
 
+#error ("<dumb.h> not present on mac")
 #include <dumb.h>
 
 #include <QFile>
