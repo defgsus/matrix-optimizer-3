@@ -16,12 +16,19 @@
 class asIScriptEngine;
 
 namespace MO {
+namespace GEOM { class Geometry; }
 
 class Object;
 class Scene;
 
+/** The internal type to wrap Geometry for AngelScript */
+class GeometryAS;
+
 /** Put the object type and related functions into the namespace */
 void registerAngelScript_geometry(asIScriptEngine *engine);
+
+/** Returns the assigned geometry widget of the script object */
+GEOM::Geometry * getGeometry(const GeometryAS*);
 
 } // namespace MO
 

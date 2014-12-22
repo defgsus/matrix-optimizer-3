@@ -15,6 +15,7 @@
 #include "geometryangelscript.h"
 #include "geometry.h"
 #include "script/angelscript.h"
+#include "script/angelscript_geometry.h"
 #include "io/error.h"
 
 namespace MO {
@@ -32,6 +33,11 @@ public:
 
     void createEngine();
     void messageCallback(const asSMessageInfo *msg);
+
+    void addGeometry(const GeometryAS& o)
+    {
+        g->addGeometry( *getGeometry(&o) );
+    }
 
     void addLine(float x, float y, float z, float x1, float y1, float z1)
     {
@@ -139,6 +145,10 @@ void GeometryAngelScript::Private::createEngine()
                                         asMETHODPR(Private, setColor, (float),void),
                                         asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
 
+    r = engine->RegisterGlobalFunction("void addGeometry(const Geometry &in)",
+                                        asMETHODPR(Private, addGeometry, (const GeometryAS&),void),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
+
 }
 
 void GeometryAngelScript::Private::messageCallback(const asSMessageInfo *msg)
@@ -155,7 +165,7 @@ void GeometryAngelScript::execute(const QString &qscript)
     if (!module)
         MO_ERROR("Could not create script module");
 
-    AngelScriptAutoPtr deleter_(module->GetEngine(), module);
+//    AngelScriptAutoPtr deleter_(module->GetEngine(), module);
 
     QByteArray script = qscript.toUtf8();
     module->AddScriptSection("script", script.data(), script.size());

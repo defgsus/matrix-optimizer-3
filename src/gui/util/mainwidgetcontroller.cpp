@@ -546,7 +546,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         {
             auto diag = new QDialog(application->mainWindow());
             diag->setObjectName("_AngelScriptTest");
-            diag->setMinimumSize(480,740);
+            diag->setMinimumSize(580,740);
             diag->setAttribute(Qt::WA_DeleteOnClose);
             //settings->restoreGeometry(diag);
             auto l = new QVBoxLayout(diag);
