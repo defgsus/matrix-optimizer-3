@@ -13,12 +13,12 @@
 #include <cassert>
 #include <cstring> // strstr
 #include <cmath>
-
-#include <angelscript.h>
+#include <sstream>
 
 #include <QString>
 
 #include "angelscript_vector.h"
+#include "script/angelscript.h"
 #include "types/vector.h"
 #include "math/constants.h"
 #include "math/vector.h"
@@ -43,6 +43,13 @@ struct vecfunc
     static void VecConvConstructor(Float x, Vec *self) { new(self) Vec(x); }
     static void VecInitConstructor(Float x, Float y, Float z, Vec *self) { new(self) Vec(x,y,z); }
     static void VecListConstructor(Float *list, Vec *self) { new(self) Vec(list[0], list[1], list[2]); }
+
+    static AngelScriptString VecToString(Vec * self)
+    {
+        std::stringstream s;
+        s << "<" << self->x << ", " << self->y << ", " << self->z << ">";
+        return s.str();
+    }
 
     static bool VecEqualsVec(Vec * self, const Vec& v) { return *self == v; }
     static Vec VecAddVec(Vec * self, const Vec& v) { return *self + v; }
@@ -127,6 +134,8 @@ static void registerAngelScript_vector_native(asIScriptEngine *engine)
     r = engine->RegisterObjectMethod("vec3", "vec3 opMul(float) const", asFUNCTION(vecfunc<Vec3>::VecMulFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
     r = engine->RegisterObjectMethod("vec3", "vec3 opDiv(float) const", asFUNCTION(vecfunc<Vec3>::VecDivFloat), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
+    r = engine->RegisterObjectMethod("vec3", "string opImplConv() const", asFUNCTION(vecfunc<Vec3>::VecToString), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+
     // Register the object methods
 #define MO__REG_METHOD(decl__, name__) \
     r = engine->RegisterObjectMethod("vec3", decl__, asFUNCTION(name__), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
@@ -157,7 +166,6 @@ static void registerAngelScript_vector_native(asIScriptEngine *engine)
     MO__REG_FUNC("vec3 max(const vec3 &in, float)", vecfunc<Vec3>::max_vf);
     MO__REG_FUNC("vec3 max(float, const vec3 &in)", vecfunc<Vec3>::max_fv);
     MO__REG_FUNC("vec3 clamp(const vec3 &in, float, float)", vecfunc<Vec3>::clamp);
-
 
 
     MO__REG_FUNC("float dot(const vec3 &in)", vecfunc<Vec3>::dot);

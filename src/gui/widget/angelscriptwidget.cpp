@@ -10,10 +10,8 @@
 
 #ifndef MO_DISABLE_ANGELSCRIPT
 
-#include <angelscript.h>
-
-
 #include "angelscriptwidget.h"
+#include "script/angelscript.h"
 #include "tool/syntaxhighlighter.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -46,6 +44,8 @@ public:
     bool compile();
 
     void messageCallback(const asSMessageInfo *msg);
+
+    void execute();
 
     AngelScriptWidget * widget;
 
@@ -152,7 +152,56 @@ bool AngelScriptWidget::compile()
     return p_->compile();
 }
 
+void AngelScriptWidget::executeScript()
+{
+    p_->execute();
+}
 
+void AngelScriptWidget::Private::execute()
+{
+    // --- create a module ---
+
+    auto module = widget->scriptEngine()->GetModule("_test_module", asGM_ALWAYS_CREATE);
+    if (!module)
+        MO_ERROR("Could not create script module");
+
+    AngelScriptAutoPtr deleter_(module->GetEngine(), module);
+
+    QByteArray script = widget->scriptText().toUtf8();
+    module->AddScriptSection("script", script.data(), script.size());
+
+    //p_->errors.clear();
+    //p_->engine->SetMessageCallback(asMETHOD(Private, messageCallback), this, asCALL_THISCALL);
+    //p_->engine->set
+
+    // compile
+    int r = module->Build();
+
+    if (r < 0)
+        MO_ERROR(QObject::tr("Error parsing script")/* + ":" + p_->errors*/);
+
+    // --- get main function ---
+
+    asIScriptFunction *func = module->GetFunctionByDecl("void main()");
+    if( func == 0 )
+        MO_ERROR("The script must have the function 'void main()'\n");
+
+    // Create our context, prepare it, and then execute
+    asIScriptContext *ctx = engine->CreateContext();
+    if (!ctx)
+        MO_ERROR("Could not create script context");
+
+    AngelScriptAutoPtr deleter2_(ctx);
+
+    ctx->Prepare(func);
+    r = ctx->Execute();
+
+    if( r == asEXECUTION_EXCEPTION )
+        MO_ERROR("An exception occured in the script: " << ctx->GetExceptionString());
+
+    if( r != asEXECUTION_FINISHED )
+        MO_ERROR("The script ended prematurely");
+}
 
 } // namespace GUI
 } // namespace MO

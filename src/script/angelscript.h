@@ -17,9 +17,43 @@
 
 namespace MO {
 
+typedef std::string AngelScriptString;
+
 /** Registers default types and functions.
     Mainly mathematics */
 void registerDefaultAngelscript(asIScriptEngine *);
+
+class AngelScriptAutoPtr
+{
+public:
+    /** Binds a module for DiscardModule() */
+    AngelScriptAutoPtr(asIScriptEngine * e, asIScriptModule*m)
+        : p_engine  (e),
+          p_module  (m),
+          p_context (0)
+    { }
+
+    /** Binds a module for DiscardModule() */
+    AngelScriptAutoPtr(asIScriptContext * c)
+        : p_engine  (0),
+          p_module  (0),
+          p_context (c)
+    { }
+
+    ~AngelScriptAutoPtr()
+    {
+        if (p_module && p_engine)
+            p_engine->DiscardModule(p_module->GetName());
+        if (p_context)
+            p_context->Release();
+    }
+
+private:
+    asIScriptEngine * p_engine;
+    asIScriptModule * p_module;
+    asIScriptContext * p_context;
+};
+
 
 } // namespace MO
 

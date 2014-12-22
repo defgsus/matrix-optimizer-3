@@ -149,23 +149,13 @@ void GeometryAngelScript::Private::messageCallback(const asSMessageInfo *msg)
 
 void GeometryAngelScript::execute(const QString &qscript)
 {
-    class Deleter
-    {
-    public:
-        Deleter(asIScriptEngine * e, asIScriptModule*m) : e(e), m(m) { }
-        ~Deleter() { e->DiscardModule(m->GetName()); }
-        asIScriptEngine * e;
-        asIScriptModule * m;
-    };
-
-
     // --- create a module ---
 
     auto module = scriptEngine()->GetModule("_geom_module", asGM_ALWAYS_CREATE);
     if (!module)
         MO_ERROR("Could not create script module");
 
-    Deleter deleter_(module->GetEngine(), module);
+    AngelScriptAutoPtr deleter_(module->GetEngine(), module);
 
     QByteArray script = qscript.toUtf8();
     module->AddScriptSection("script", script.data(), script.size());
@@ -190,6 +180,8 @@ void GeometryAngelScript::execute(const QString &qscript)
     asIScriptContext *ctx = scriptEngine()->CreateContext();
     if (!ctx)
         MO_ERROR("Could not create script context");
+
+    //AngelScriptAutoPtr deleter2_(ctx);
 
     ctx->Prepare(func);
     r = ctx->Execute();

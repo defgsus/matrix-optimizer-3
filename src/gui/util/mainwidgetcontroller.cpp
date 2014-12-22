@@ -22,6 +22,7 @@
 #include <QKeyEvent>
 #include <QTime>
 #include <QActionGroup>
+#include <QPushButton>
 
 #include "mainwidgetcontroller.h"
 #include "io/error.h"
@@ -543,8 +544,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         connect(a, &QAction::triggered, [=]()
         {
             auto diag = new QDialog(application->mainWindow());
+            diag->setObjectName("_AngelScriptTest");
             diag->setMinimumSize(480,640);
             diag->setAttribute(Qt::WA_DeleteOnClose);
+            //settings->restoreGeometry(diag);
             auto l = new QVBoxLayout(diag);
             auto script = new AngelScriptWidget(diag);
             registerDefaultAngelscript( script->scriptEngine() );
@@ -554,6 +557,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             {
                 settings->setValue("tmp/AngelScript", script->scriptText());
             });
+            auto but = new QPushButton(tr("&Run"), diag);
+            //but->setShortcut(Qt::CTRL + Qt::Key_B);
+            l->addWidget(but);
+            connect(but, SIGNAL(clicked()), script, SLOT(executeScript()));
             diag->show();
         });
 #endif

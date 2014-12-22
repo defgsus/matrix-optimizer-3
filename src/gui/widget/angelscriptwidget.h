@@ -40,6 +40,9 @@ public slots:
 
     void setScriptEngine(asIScriptEngine * engine) const;
 
+    /** @throws everything */
+    void executeScript();
+
 protected:
 
     bool compile() Q_DECL_OVERRIDE;
