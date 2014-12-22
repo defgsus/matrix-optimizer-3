@@ -56,3 +56,68 @@ void registerDefaultAngelscript(asIScriptEngine * engine)
 
 
 #endif // #ifndef MO_DISABLE_ANGELSCRIPT
+
+
+
+
+/**************************************************************************
+
+    // --- some working examples ---
+
+
+    void dumpTree(Object@ o, string pre = "")
+    {
+        print(pre + o.name());
+        pre += " ";
+        for (int i=0; i<o.childrenCount(); ++i)
+            dumpTree(o.children(i), pre);
+    }
+
+    void testObject()
+    {
+        Object@ o = Root;
+        print(o.name() + " " + o + " " + o.childrenCount());
+        if (o.childrenCount() >= 1)
+            print(o.children(0));
+
+        dumpTree(Root);
+    }
+
+    void testArray()
+    {
+        array<int> a = { 5, 4, 3, 2, 1 };
+
+        for (uint i = 0; i < a.length(); ++i)
+            print(""+i);
+    }
+
+    void testVec()
+    {
+        vec2 v2(1,2);
+        vec3 v3(3,4,5);
+        vec4 v4(6,7,8,9);
+        print(""+v2+" "+v3+" "+v4);
+        v2 = v2 + 1.f;
+        v3 = v3 + 1.f;
+        v4 = v4 + 1.f;
+        print(""+v2+" "+v3+" "+v4);
+    }
+
+    void testGeometry()
+    {
+        Geometry g;
+        Geometry@ g2 = g;
+        print(""+g + " " + g2);
+        g.addLine(vec3(0,0,0), vec3(1,1,1));
+        print(""+g.vertexCount());
+    }
+
+    void main()
+    {
+        print("----------------------------");
+
+        testVec();
+    }
+
+
+*************************************************************************/

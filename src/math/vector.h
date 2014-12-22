@@ -134,6 +134,12 @@ namespace MATH {
                     v.x * s + v.y * c);
     }
 
+    template <typename T, glm::precision P>
+    inline glm::detail::tvec2<T, P> rotateZ(const glm::detail::tvec2<T, P> & v, Float angle_degree)
+    {
+        return rotate(v, angle_degree);
+    }
+
     /** 3D rotation */
     template <typename T, glm::precision P>
     inline glm::detail::tvec3<T, P> rotate(const glm::detail::tvec3<T, P> & v,
@@ -146,6 +152,19 @@ namespace MATH {
             glm::rotate(Mat4(1), deg_to_rad(angle_degree), axis) * glm::detail::tvec4<T, P>(v, 1.0);
         #endif
         return glm::detail::tvec3<T, P>(v4);
+    }
+
+    /** rotation of 4D vector */
+    template <typename T, glm::precision P>
+    inline glm::detail::tvec4<T, P> rotate(const glm::detail::tvec4<T, P> & v,
+                                           const glm::detail::tvec3<T, P> & axis, Float angle_degree)
+    {
+        return
+        #ifndef MO_GLM_RADIANS
+            glm::rotate(Mat4(1), angle_degree, axis) * v;
+        #else
+            glm::rotate(Mat4(1), deg_to_rad(angle_degree), axis) * v;
+        #endif
     }
 
 /** Returns a point on a unit sphere (radius = 1.0). <br>
@@ -178,6 +197,16 @@ namespace MATH {
             return v;
     }
 
+    template <typename F, glm::precision P>
+    inline glm::detail::tvec4<F, P> normalize_safe(
+            const glm::detail::tvec4<F, P>& v)
+    {
+        F sqr = v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
+        if (sqr > 0)
+            return v / std::sqrt(sqr);
+        else
+            return v;
+    }
 
 #else // GLM_VERSION
 

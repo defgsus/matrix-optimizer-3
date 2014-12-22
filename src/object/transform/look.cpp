@@ -61,8 +61,8 @@ void Look::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
     // forward vector
     Vec3 f = MATH::normalize_safe(Vec3(x_->value(time, thread),
-                                 y_->value(time, thread),
-                                 z_->value(time, thread)));
+                                       y_->value(time, thread),
+                                       z_->value(time, thread)));
     // up vector
     Vec3 u = MATH::normalize_safe(Vec3(upX_->value(time, thread),
                                  upY_->value(time, thread),

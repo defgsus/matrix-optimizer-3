@@ -63,9 +63,13 @@ public:
     uint vertexCount() const { return g->numVertices(); }
 
     void setRGBA(float r_, float g_, float b_, float a_) { g->setColor(r_, g_, b_, a_); }
+    void setRGB(float r_, float g_, float b_) { g->setColor(r_, g_, b_, 1); }
     void setBrightAlpha(float r_, float a_) { g->setColor(r_, r_, r_, a_); }
     void setBright(float r_) { g->setColor(r_, r_, r_, 1); }
-    void setColor3(const Vec3& v) { g->setColor(v.x, v.y, v.z, 1.f); }
+    void setColorV3(const Vec3& v) { g->setColor(v.x, v.y, v.z, 1); }
+
+    void setTexCoord(float s, float t) { g->setTexCoord(s, t); }
+    //void setTexCoordV2(const Vec3& v) { g->setTexCoord(v.x, v.y); }
 
     void addLine(const Vec3& a, const Vec3& b)
     {
@@ -95,6 +99,7 @@ public:
     void translateY(Float v) { g->translate(0, v, 0); }
     void translateZ(Float v) { g->translate(0, 0, v); }
 
+    void clear() { g->clear(); }
 };
 
 
@@ -134,9 +139,12 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
 
     // setter
     MO__REG_METHOD("void setColor(float, float, float, float)", setRGBA);
+    MO__REG_METHOD("void setColor(float, float, float)", setRGB);
     MO__REG_METHOD("void setColor(float, float)", setBrightAlpha);
     MO__REG_METHOD("void setColor(float)", setBright);
-    MO__REG_METHOD("void setColor(const vec3 &in)", setColor3);
+    MO__REG_METHOD("void setColor(const vec3 &in)", setColorV3);
+    MO__REG_METHOD("void setTexCoord(float s, float t)", setTexCoord);
+    //MO__REG_METHOD("void setTexCoord(const vec3 &in st)", setTexCoordV3);
     MO__REG_METHOD("void addLine(const vec3 &in, const vec3 &in)", addLine);
     MO__REG_METHOD("void addTriangle(const vec3 &in, const vec3 &in, const vec3 &in)", addTriangle);
     MO__REG_METHOD("void addGeometry(const Geometry &in)", addGeometry);
@@ -151,6 +159,8 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("void translateX(float)", translateX);
     MO__REG_METHOD("void translateY(float)", translateY);
     MO__REG_METHOD("void translateZ(float)", translateZ);
+
+    MO__REG_METHOD("void clear()", clear);
 
 #undef MO__REG_METHOD
 
