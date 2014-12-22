@@ -54,6 +54,8 @@ public:
     /** Returns value at @p time (in seconds) */
     Double value(Double time, uint channel = 0) const;
 
+    /** Return value at @p frame position */
+    Double value(uint frame, uint channel = 0) const;
 
 private:
 

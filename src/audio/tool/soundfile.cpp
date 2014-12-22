@@ -114,6 +114,27 @@ Double SoundFile::value(Double time, uint channel) const
 
 }
 
+Double SoundFile::value(uint frame, uint channel) const
+{
+    if (!p_->ok)
+        return 0.0;
+
+    // 31bit gives around 13 hours of seekable samples (in mono!)
+    // const int frame = time * sampleRate();
+    if (frame < 0 || frame >= (uint)p_->lenSam)
+        return 0.0;
+
+    if (p_->bitSize == 16)
+    {
+        const int16_t * ptr = (const int16_t*)
+                &p_->data[(frame * p_->channels + channel) << 1];
+        return (Double)*ptr / 32768;
+    }
+    else
+        return 0.0;
+
+}
+
 
 void SoundFile::loadFile_(const QString & fn)
 {
