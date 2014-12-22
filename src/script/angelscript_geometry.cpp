@@ -42,12 +42,12 @@ public:
         : g     (new GEOM::Geometry()),
           ref   (1)
     {
-        MO_DEBUG("GeometryAS("<<this<<")::GeometryAS()");
+        //MO_DEBUG("GeometryAS("<<this<<")::GeometryAS()");
     }
 
     ~GeometryAS()
     {
-        MO_DEBUG("GeometryAS("<<this<<")::~GeometryAS()")
+        //MO_DEBUG("GeometryAS("<<this<<")::~GeometryAS()")
         delete g;
     }
 
@@ -55,33 +55,17 @@ public:
 
     void addRef() { ++ref; }
 
-    void releaseRef()
-    {
-        if (--ref == 0)
-            delete this;
-    }
+    void releaseRef() { if (--ref == 0) delete this; }
 
-/*
-
-    static void constructGeometry(GEOM::Geometry * thisPointer)
-    {
-        new(thisPointer) GEOM::Geometry();
-    }
-
-    static void copyConstructGeometry(const GEOM::Geometry &other, GEOM::Geometry * thisPointer)
-    {
-        new(thisPointer) GEOM::Geometry(other);
-    }
-
-    static void destructGeometry(GEOM::Geometry * thisPointer)
-    {
-        thisPointer->~Geometry();
-    }
-*/
     std::string toString() const { std::stringstream s; s << "Geometry(" << (void*)this << ")"; return s.str(); }
 
     std::string name() const { return "geometry"; }
     uint vertexCount() const { return g->numVertices(); }
+
+    void setRGBA(float r_, float g_, float b_, float a_) { g->setColor(r_, g_, b_, a_); }
+    void setBrightAlpha(float r_, float a_) { g->setColor(r_, r_, r_, a_); }
+    void setBright(float r_) { g->setColor(r_, r_, r_, 1); }
+    void setColor3(const Vec3& v) { g->setColor(v.x, v.y, v.z, 1.f); }
 
     void addLine(const Vec3& a, const Vec3& b)
     {
@@ -98,7 +82,18 @@ public:
         g->addTriangle(v1, v2, v3);
     }
 
-    void rotate(Vec3& a, Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, a) ); }
+    void addGeometry(const GeometryAS& o) { g->addGeometry( *o.g ); }
+
+    void rotate(const Vec3& a, Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, a) ); }
+    void rotateX(Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(1, 0, 0)) ); }
+    void rotateY(Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(0, 1, 0)) ); }
+    void rotateZ(Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(0, 0, 1)) ); }
+    void scaleV(const Vec3& s) { g->applyMatrix( glm::scale(Mat4(1), s) ); }
+    void scale(Float s) { g->applyMatrix( glm::scale(Mat4(1), Vec3(s,s,s)) ); }
+    void translate(const Vec3& v) { g->translate(v.x, v.y, v.z); }
+    void translateX(Float v) { g->translate(v, 0, 0); }
+    void translateY(Float v) { g->translate(0, v, 0); }
+    void translateZ(Float v) { g->translate(0, 0, v); }
 
 };
 
@@ -138,9 +133,24 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("int vertexCount() const", vertexCount);
 
     // setter
+    MO__REG_METHOD("void setColor(float, float, float, float)", setRGBA);
+    MO__REG_METHOD("void setColor(float, float)", setBrightAlpha);
+    MO__REG_METHOD("void setColor(float)", setBright);
+    MO__REG_METHOD("void setColor(const vec3 &in)", setColor3);
     MO__REG_METHOD("void addLine(const vec3 &in, const vec3 &in)", addLine);
     MO__REG_METHOD("void addTriangle(const vec3 &in, const vec3 &in, const vec3 &in)", addTriangle);
+    MO__REG_METHOD("void addGeometry(const Geometry &in)", addGeometry);
+    MO__REG_METHOD("void add(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void rotate(const vec3 &in axis, float degree)", rotate);
+    MO__REG_METHOD("void rotateX(float degree)", rotateX);
+    MO__REG_METHOD("void rotateY(float degree)", rotateY);
+    MO__REG_METHOD("void rotateZ(float degree)", rotateZ);
+    MO__REG_METHOD("void scale(float)", scale);
+    MO__REG_METHOD("void scale(const vec3 &in)", scaleV);
+    MO__REG_METHOD("void translate(const vec3 &in)", translate);
+    MO__REG_METHOD("void translateX(float)", translateX);
+    MO__REG_METHOD("void translateY(float)", translateY);
+    MO__REG_METHOD("void translateZ(float)", translateZ);
 
 #undef MO__REG_METHOD
 
