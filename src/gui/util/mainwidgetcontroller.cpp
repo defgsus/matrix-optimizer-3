@@ -60,6 +60,7 @@
 #ifndef MO_DISABLE_ANGLESCRIPT
 #include "gui/widget/angelscriptwidget.h"
 #include "script/angelscript.h"
+#include "script/angelscript_object.h"
 #endif
 #include "gui/util/scenesettings.h"
 #include "gui/texteditdialog.h"
@@ -545,12 +546,15 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         {
             auto diag = new QDialog(application->mainWindow());
             diag->setObjectName("_AngelScriptTest");
-            diag->setMinimumSize(480,640);
+            diag->setMinimumSize(480,740);
             diag->setAttribute(Qt::WA_DeleteOnClose);
             //settings->restoreGeometry(diag);
             auto l = new QVBoxLayout(diag);
+
             auto script = new AngelScriptWidget(diag);
             registerDefaultAngelscript( script->scriptEngine() );
+            registerAngelScript_rootObject( script->scriptEngine(), scene_ );
+
             l->addWidget(script);
             script->setScriptText(settings->value("tmp/AngelScript", "//angelscript").toString());
             connect(script, &AngelScriptWidget::scriptTextChanged, [=]()

@@ -17,6 +17,7 @@
 #include "angelscript.h"
 #include "angelscript_vector.h"
 #include "angelscript_math.h"
+#include "angelscript_object.h"
 #include "3rd/angelscript/scriptmath/scriptmathcomplex.h"
 #include "3rd/angelscript/scriptarray/scriptarray.h"
 #include "3rd/angelscript/scriptstdstring/scriptstdstring.h"
@@ -38,8 +39,12 @@ void registerDefaultAngelscript(asIScriptEngine * engine)
     RegisterScriptArray(engine, true);
     RegisterStdString(engine);
     RegisterScriptMathComplex(engine);
+
     registerAngelScript_math(engine);
     registerAngelScript_vector(engine);
+    registerAngelScript_object(engine);
+    //if (object)
+    //    registerAngelScript_rootObject(engine, object);
 
     int r = engine->RegisterGlobalFunction("void print(const string & in)", asFUNCTION(angelPrint), asCALL_CDECL); assert( r >= 0 );
 }

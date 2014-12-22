@@ -252,7 +252,8 @@ HEADERS += \
     src/script/angelscript_vector.h \
     src/script/angelscript.h \
     src/math/advanced.h \
-    src/script/angelscript_math.h
+    src/script/angelscript_math.h \
+    src/script/angelscript_object.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -467,4 +468,5 @@ SOURCES += \
     src/script/angelscript_vector.cpp \
     src/script/angelscript.cpp \
     src/math/advanced.cpp \
-    src/script/angelscript_math.cpp
+    src/script/angelscript_math.cpp \
+    src/script/angelscript_object.cpp

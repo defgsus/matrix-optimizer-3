@@ -13,14 +13,18 @@
 #ifndef MOSRC_SCRIPT_ANGELSCRIPT_H
 #define MOSRC_SCRIPT_ANGELSCRIPT_H
 
+#include <string>
 #include <angelscript.h>
 
 namespace MO {
 
+class Object;
+
 typedef std::string AngelScriptString;
 
 /** Registers default types and functions.
-    Mainly mathematics */
+    //If @p root is not NULL it will be installed as well
+    */
 void registerDefaultAngelscript(asIScriptEngine *);
 
 class AngelScriptAutoPtr
