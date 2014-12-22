@@ -453,7 +453,7 @@ struct advanced
 
     // -------------- random ------------------------------------
 
-    static F rnd_0			 (F A) { return (F)std::rand() / RAND_MAX; }
+    static F rnd_0			 (F A) { return (F)rand() / RAND_MAX; }
 
     static F noise           (F A) { return AdvancedPrivate::noise.noise(A); }
     static F noise_2         (F A, F B) { return AdvancedPrivate::noise.noise(A, B); }
@@ -613,40 +613,40 @@ struct advanced
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::isPrime( std::abs((int)A) ),
-                    (F)advanced_int<int>::isPrime( std::abs((int)A + 1) ));
+                    (F)advanced_int<int>::isPrime( (int)std::abs(A) ),
+                    (F)advanced_int<int>::isPrime( (int)std::abs(A + 1) ));
     }
 
     static F s_numdiv			(F A)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::num_div( std::abs((int)A) ),
-                    (F)advanced_int<int>::num_div( std::abs((int)A+1) ));
+                    (F)advanced_int<int>::num_div( (int)std::abs(A) ),
+                    (F)advanced_int<int>::num_div( (int)std::abs(A+1) ));
     }
 
     static F s_divisor			(F A, int B)
     {
         return MO::MATH::interpol_smooth(
             MO::MATH::frac(A),
-            (F)advanced_int<int>::divisor( std::abs((int)A), std::abs(B) ),
-            (F)advanced_int<int>::divisor( std::abs((int)A+1), std::abs(B) ));
+            (F)advanced_int<int>::divisor( (int)std::abs(A), (int)std::abs((Double)B) ),
+            (F)advanced_int<int>::divisor( (int)std::abs(A+1), (int)std::abs((Double)B) ));
     }
 
     static F s_sumdiv       		(F A)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::sum_div( std::abs((int)A) ),
-                    (F)advanced_int<int>::sum_div( std::abs((int)A + 1) ));
+                    (F)advanced_int<int>::sum_div( (int)std::abs(A) ),
+                    (F)advanced_int<int>::sum_div( (int)std::abs(A + 1) ));
     }
 
     static F s_proddiv  			(F A)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::prod_div( std::abs((int)A) ),
-                    (F)advanced_int<int>::prod_div( std::abs((int)A + 1) ));
+                    (F)advanced_int<int>::prod_div( (int)std::abs(A) ),
+                    (F)advanced_int<int>::prod_div( (int)std::abs(A + 1) ));
     }
 
     static F s_nextdiv  			(F A, uint B)
