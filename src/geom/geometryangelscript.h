@@ -23,6 +23,7 @@ namespace GEOM {
 
 class Geometry;
 
+/** For immediate access to one Geometry */
 class GeometryAngelScript
 {
 public:

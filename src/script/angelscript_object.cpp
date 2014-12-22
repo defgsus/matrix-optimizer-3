@@ -42,7 +42,9 @@ namespace
     AngelScriptString objectName(Object * o) { return o->name().toUtf8().constData(); }
     AngelScriptString objectId(Object * o) { return o->idName().toUtf8().constData(); }
 
-    int objectNumChildren(Object * o) { return o->childObjects().size(); }
+    int objectChildrenCount(Object * o) { return o->childObjects().size(); }
+
+    Object * objectChildren(Object* o, int i) { return o->childObjects()[i]; }
 }
 
 //--------------------------------
@@ -56,18 +58,20 @@ static void registerAngelScript_object_native(asIScriptEngine *engine)
     // register the type
     r = engine->RegisterObjectType("Object", 0, asOBJ_REF | asOBJ_NOCOUNT); assert( r >= 0 );
 
-
     // --------------- the object methods ----------------------
 
 #define MO__REG_METHOD(decl__, name__) \
     r = engine->RegisterObjectMethod("Object", decl__, asFUNCTION(name__), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
-    MO__REG_METHOD("int numChildren() const", objectNumChildren);
-
     // strings
     MO__REG_METHOD("string opImplConv() const", objectToString);
     MO__REG_METHOD("string name() const", objectName);
     MO__REG_METHOD("string id() const", objectId);
+
+    // other
+    MO__REG_METHOD("int childrenCount() const", objectChildrenCount);
+    MO__REG_METHOD("Object@ children(int) const", objectChildren);
+
 
 #undef MO__REG_METHOD
 
