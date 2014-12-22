@@ -69,8 +69,12 @@ public:
     void setColorV3(const Vec3& v) { g->setColor(v.x, v.y, v.z, 1); }
 
     void setTexCoord(float s, float t) { g->setTexCoord(s, t); }
-    //void setTexCoordV2(const Vec3& v) { g->setTexCoord(v.x, v.y); }
+    void setTexCoordV2(const Vec2& v) { g->setTexCoord(v.x, v.y); }
 
+    uint addVertex(const Vec3& v) { return g->addVertex(v.x, v.y, v.z); }
+    uint addVertexF(float x, float y, float z) { return g->addVertex(x, y, z); }
+
+    void addLineI(uint v1, uint v2) { g->addLine(v1, v2); }
     void addLine(const Vec3& a, const Vec3& b)
     {
         auto    v1 = g->addVertex(a.x, a.y, a.z),
@@ -78,12 +82,24 @@ public:
         g->addLine(v1, v2);
     }
 
+    void addTriangleI(uint v1, uint v2, uint v3) { g->addTriangle(v1, v2, v3); }
     void addTriangle(const Vec3& a, const Vec3& b, const Vec3& c)
     {
         auto    v1 = g->addVertex(a.x, a.y, a.z),
                 v2 = g->addVertex(b.x, b.y, b.z),
                 v3 = g->addVertex(c.x, c.y, c.z);
         g->addTriangle(v1, v2, v3);
+    }
+
+    void addQuadI(uint bl, uint br, uint tr, uint tl) { g->addTriangle(bl, tr, tl); g->addTriangle(bl, br, tr); }
+    void addQuad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d)
+    {
+        auto    bl = g->addVertex(a.x, a.y, a.z),
+                br = g->addVertex(b.x, b.y, b.z),
+                tr = g->addVertex(c.x, c.y, c.z),
+                tl = g->addVertex(d.x, d.y, d.z);
+        g->addTriangle(bl, tr, tl);
+        g->addTriangle(bl, br, tr);
     }
 
     void addGeometry(const GeometryAS& o) { g->addGeometry( *o.g ); }
@@ -144,9 +160,15 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("void setColor(float)", setBright);
     MO__REG_METHOD("void setColor(const vec3 &in)", setColorV3);
     MO__REG_METHOD("void setTexCoord(float s, float t)", setTexCoord);
-    //MO__REG_METHOD("void setTexCoord(const vec3 &in st)", setTexCoordV3);
+    MO__REG_METHOD("void setTexCoord(const vec2 &in st)", setTexCoordV2);
+    MO__REG_METHOD("uint addVertex(const vec3 &in)", addVertex);
+    MO__REG_METHOD("uint addVertex(float, float, float)", addVertexF);
     MO__REG_METHOD("void addLine(const vec3 &in, const vec3 &in)", addLine);
+    MO__REG_METHOD("void addLine(uint, uint)", addLineI);
     MO__REG_METHOD("void addTriangle(const vec3 &in, const vec3 &in, const vec3 &in)", addTriangle);
+    MO__REG_METHOD("void addTriangle(uint, uint, uint)", addTriangleI);
+    MO__REG_METHOD("void addQuad(const vec3 &in, const vec3 &in, const vec3 &in, const vec3 &in)", addQuad);
+    MO__REG_METHOD("void addQuad(uint bl, uint br, uint tr, uint tl)", addQuadI);
     MO__REG_METHOD("void addGeometry(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void add(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void rotate(const vec3 &in axis, float degree)", rotate);
