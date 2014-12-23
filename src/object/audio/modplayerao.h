@@ -8,6 +8,8 @@
     <p>created 20.12.2014</p>
 */
 
+#ifndef MO_DISABLE_DUMB
+
 #ifndef MOSRC_OBJECT_AUDIO_MODPLAYERAO_H
 #define MOSRC_OBJECT_AUDIO_MODPLAYERAO_H
 
@@ -47,3 +49,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_OBJECT_AUDIO_MODPLAYERAO_H
+
+#endif // #ifndef MO_DISABLE_DUMB

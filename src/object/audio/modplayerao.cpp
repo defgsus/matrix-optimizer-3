@@ -8,6 +8,9 @@
     <p>created 20.12.2014</p>
 */
 
+#ifndef MO_DISABLE_DUMB
+
+
 #include "modplayerao.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
@@ -199,3 +202,5 @@ void ModPlayerAO::Private::updateTracker(uint bufferSize)
 
 
 } // namespace MO
+
+#endif // #ifndef MO_DISABLE_DUMB
