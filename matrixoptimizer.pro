@@ -29,7 +29,10 @@ DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
 DEFINES += MO_DISABLE_GST
 
 #require audio input and output devices to be separate devices
-mac { DEFINES += MO_REQUIRE_SEPARATE_AUDIO MO_DISABLE_ANGELSCRIPT }
+mac { DEFINES += MO_REQUIRE_SEPARATE_AUDIO \
+                MO_DISABLE_ANGELSCRIPT \
+                MO_DISABLE_DUMB
+}
 
 # for optirun bug
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }

@@ -8,6 +8,8 @@
     <p>created 20.12.2014</p>
 */
 
+#ifndef MO_DISABLE_DUMB
+
 #include <dumb.h>
 
 #include <QFile>
@@ -328,3 +330,4 @@ void DumbFile::process(const QList<AudioBuffer*>& outs, F32 amp)
 } // namespace AUDIO
 } // namespace MO
 
+#endif // #ifndef MO_DISABLE_DUMB

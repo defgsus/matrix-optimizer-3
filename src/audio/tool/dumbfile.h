@@ -8,6 +8,8 @@
     <p>created 20.12.2014</p>
 */
 
+#ifndef MO_DISABLE_DUMB
+
 #ifndef MOSRC_AUDIO_TOOL_DUMBFILE_H
 #define MOSRC_AUDIO_TOOL_DUMBFILE_H
 
@@ -71,3 +73,5 @@ private:
 
 
 #endif // MOSRC_AUDIO_TOOL_DUMBFILE_H
+
+#endif // #ifndef MO_DISABLE_DUMB
