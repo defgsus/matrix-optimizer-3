@@ -15,6 +15,7 @@
 #include "math/noiseperlin.h"
 #include "math/interpol.h"
 #include "math/constants.h"
+#include "types/conversion.h"
 
 namespace MO {
 namespace MATH {
@@ -667,85 +668,92 @@ struct advanced
 
     // ------------ smoothed number theory --------------
 
+    // the int type used here
+    typedef int INT;
+    #define MO__INT(f__) convert<F, INT>(f__)
+
     static F s_prime			(F A)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::is_prime( std::abs((int)A) ),
-                    (F)advanced_int<int>::is_prime( std::abs((int)A + 1) ));
+                    (F)advanced_int<INT>::is_prime( MO__INT(A) ),
+                    (F)advanced_int<INT>::is_prime( MO__INT(A) + 1 ));
     }
 
     static F s_numdiv			(F A)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::num_div( (int)std::abs(A) ),
-                    (F)advanced_int<int>::num_div( (int)std::abs(A+1) ));
+                    (F)advanced_int<INT>::num_div( MO__INT(A) ),
+                    (F)advanced_int<INT>::num_div( MO__INT(A) + 1 ));
     }
 
-    static F s_divisor			(F A, int B)
+    static F s_divisor			(F A, INT B)
     {
         return MO::MATH::interpol_smooth(
             MO::MATH::frac(A),
-            (F)advanced_int<int>::divisor( (int)std::abs(A), (int)std::abs((Double)B) ),
-            (F)advanced_int<int>::divisor( (int)std::abs(A+1), (int)std::abs((Double)B) ));
+            (F)advanced_int<INT>::divisor( MO__INT(A), MO__INT(std::abs((F)B)) ),
+            (F)advanced_int<INT>::divisor( MO__INT(A) + 1, MO__INT(std::abs((F)B)) ));
+                                                            // XXX todo: this cast is for non-integer std::abs() implementations
     }
 
     static F s_sumdiv       		(F A)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::sum_div( (int)std::abs(A) ),
-                    (F)advanced_int<int>::sum_div( (int)std::abs(A + 1) ));
+                    (F)advanced_int<INT>::sum_div( MO__INT(A) ),
+                    (F)advanced_int<INT>::sum_div( MO__INT(A) + 1 ));
     }
 
     static F s_proddiv  			(F A)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::prod_div( (int)std::abs(A) ),
-                    (F)advanced_int<int>::prod_div( (int)std::abs(A + 1) ));
+                    (F)advanced_int<INT>::prod_div( MO__INT(A) ),
+                    (F)advanced_int<INT>::prod_div( MO__INT(A) + 1 ));
     }
 
-    static F s_nextdiv  			(F A, uint B)
+    static F s_nextdiv  			(F A, INT B)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::next_div( A, B ),
-                    (F)advanced_int<int>::next_div( A + 1, B ) );
+                    (F)advanced_int<INT>::next_div( MO__INT(A), MO__INT(B) ),
+                    (F)advanced_int<INT>::next_div( MO__INT(A) + 1, MO__INT(B) ) );
     }
 
-    static F s_gcd  				(F A, uint B)
+    static F s_gcd  				(F A, INT B)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::gcd( A, B ),
-                    (F)advanced_int<int>::gcd( A + 1, B ) );
+                    (F)advanced_int<INT>::gcd( A, B ),
+                    (F)advanced_int<INT>::gcd( A + 1, B ) );
     }
 
-    static F s_congruent			(F A, int B, int C)
+    static F s_congruent			(F A, INT B, INT C)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::congruent( A, B, C ),
-                    (F)advanced_int<int>::congruent( A + 1, B, C ) );
+                    (F)advanced_int<INT>::congruent( A, B, C ),
+                    (F)advanced_int<INT>::congruent( A + 1, B, C ) );
     }
 
     static F s_factorial			(F A)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::factorial( A ),
-                    (F)advanced_int<int>::factorial( A + 1 ));
+                    (F)advanced_int<INT>::factorial( A ),
+                    (F)advanced_int<INT>::factorial( A + 1 ));
     }
 
     static F s_digits       		(F A)
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::num_digits( A ),
-                    (F)advanced_int<int>::num_digits( A + 1 ));
+                    (F)advanced_int<INT>::num_digits( A ),
+                    (F)advanced_int<INT>::num_digits( A + 1 ));
     }
+
+#undef MO__INT
 
     // ------------- float number theory ----------------
 
@@ -767,32 +775,6 @@ struct advanced
         } while (k > B && ++i <= 200000);
     }
 
-
-    static F harmo_2			(F A, F B)
-    {
-        if (A == F(0) || B == F(0)) { return F(0); return; }
-        F f = A / B;
-        if (f == floor(f)) { return f; return; }
-        f = B / A;
-        return (f == floor(f))? f : F(0);
-    }
-
-    static F harmo_3  			(F A, F B, F C)
-    {
-        if (A == F(0) || B == F(0) || C == F(0)) { return F(0); return; }
-        F f = A / B / C;
-        if (f == floor(f)) { return f; return; }
-        f = A / C / B;
-        if (f == floor(f)) { return f; return; }
-        f = B / A / C;
-        if (f == floor(f)) { return f; return; }
-        f = B / C / A;
-        if (f == floor(f)) { return f; return; }
-        f = C / A / B;
-        if (f == floor(f)) { return f; return; }
-        f = C / B / A;
-        return (f == floor(f))? f : F(0);
-    }
 };
 
 } // namespace MATH
