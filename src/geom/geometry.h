@@ -237,7 +237,7 @@ public:
         Previous contents stay as they are.
         If vertex sharing is enabled, the vertices area shared regardless
         of the setting in @p other */
-    void addGeometry(const Geometry& other);
+    void addGeometry(const Geometry& other, const Vec3& offset = Vec3(0));
 
     /** Scale all geometry */
     void scale(VertexType x, VertexType y, VertexType z);

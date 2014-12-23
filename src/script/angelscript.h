@@ -15,16 +15,20 @@
 
 #include <string>
 #include <angelscript.h>
+#include <QString>
 
 namespace MO {
 
 class Object;
 
-typedef std::string AngelScriptString;
+/** The utf8 string type currently used in communication with angelscript */
+typedef std::string StringAS;
 
-/** Registers default types and functions.
-    //If @p root is not NULL it will be installed as well
-    */
+QString toString(const StringAS&);
+StringAS toStringAS(const QString&);
+
+
+/** Registers all default types and functions. */
 void registerDefaultAngelscript(asIScriptEngine *);
 
 class AngelScriptAutoPtr

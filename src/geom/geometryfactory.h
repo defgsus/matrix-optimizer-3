@@ -14,7 +14,7 @@
 #include <QStringList>
 
 #include "types/int.h"
-#include "types/float.h"
+#include "types/vector.h"
 
 namespace MO {
 namespace GEOM {
@@ -65,6 +65,10 @@ public:
     static void createGridXZ(Geometry *, int sizeX, int sizeZ, bool with_coordinate_system);
     static void createLineGrid(Geometry *, int sizeX, int sizeY, int sizeZ);
 
+    /** mono-spaced line font [0,1] */
+    static void createFont(Geometry *, const Mat4& matrix, uint16_t utf16);
+
+    static void createText(Geometry *, Mat4 matrix, const QString& text);
 };
 
 

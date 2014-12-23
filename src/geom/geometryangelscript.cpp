@@ -34,6 +34,8 @@ public:
     void createEngine();
     void messageCallback(const asSMessageInfo *msg);
 
+    void setShared(bool b) { g->setSharedVertices(b); }
+
     void addGeometry(const GeometryAS& o)
     {
         g->addGeometry( *getGeometry(&o) );
@@ -116,6 +118,10 @@ void GeometryAngelScript::Private::createEngine()
     MO_ASSERT(engine, "");
 
     registerDefaultAngelscript(engine);
+
+    r = engine->RegisterGlobalFunction("void setShared(bool b)",
+                                        asMETHODPR(Private, setShared, (bool), void),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
 
     r = engine->RegisterGlobalFunction("void addLine(float x, float y, float z, float x2, float y2, float z2)",
                                         asMETHODPR(Private, addLine, (float,float,float,float,float,float),void),

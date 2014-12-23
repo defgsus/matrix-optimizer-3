@@ -22,13 +22,13 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierAngelScript)
 
 GeometryModifierAngelScript::GeometryModifierAngelScript()
-    : GeometryModifier  ("CreateAS", QObject::tr("create angelscript"))
+    : GeometryModifier  ("CreateAS", QObject::tr("angelscript"))
 {
     script_ =
             "// angelscript test\n\n"
             "void main()\n"
             "{\n"
-                "\tline(0,0,0, 1,1,1);\n"
+                "\taddLine(vec3(0), vec3(1));\n"
             "}\n"
             ;
 }
@@ -64,8 +64,15 @@ void GeometryModifierAngelScript::execute(Geometry * g)
     // initial color
     g->setColor(1, 1, 1, 1);
 
-    GeometryAngelScript script(g);
-    script.execute(script_);
+    try
+    {
+        GeometryAngelScript script(g);
+        script.execute(script_);
+    }
+    catch (...)
+    {
+        // XXX Exceptions disturb the editor right now
+    }
 }
 
 

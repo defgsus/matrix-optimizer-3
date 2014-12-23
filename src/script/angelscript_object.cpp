@@ -30,7 +30,7 @@ namespace {
 
 namespace
 {
-    AngelScriptString objectToString(Object * o)
+    StringAS objectToString(Object * o)
     {
         if (o == 0)
             return "null";
@@ -39,8 +39,8 @@ namespace
         return s.str();
     }
 
-    AngelScriptString objectName(Object * o) { return o->name().toUtf8().constData(); }
-    AngelScriptString objectId(Object * o) { return o->idName().toUtf8().constData(); }
+    StringAS objectName(Object * o) { return toStringAS(o->name()); }
+    StringAS objectId(Object * o) { return toStringAS(o->idName()); }
 
     int objectChildrenCount(Object * o) { return o->childObjects().size(); }
 

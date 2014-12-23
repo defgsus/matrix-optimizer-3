@@ -26,6 +26,27 @@
 
 namespace MO {
 
+
+
+QString toString(const StringAS& as)
+{
+    return QString::fromUtf8(as.c_str());
+}
+
+StringAS toStringAS(const QString& s)
+{
+    return s.toUtf8().constData();
+}
+
+
+
+
+
+
+
+
+
+
 namespace {
 
     void angelPrint(const std::string& s)

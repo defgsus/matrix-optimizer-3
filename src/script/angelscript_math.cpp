@@ -57,12 +57,16 @@ static void registerAngelScript_math_native(asIScriptEngine *engine)
     MO__REG_FUNC("float ceil(float)", MATH::advanced<float>::ceil);
     MO__REG_FUNC("float round(float)", MATH::advanced<float>::round);
     MO__REG_FUNC("float frac(float)", MATH::advanced<float>::frac);
-    MO__REG_FUNC("float min(float, float)", MATH::advanced<float>::min);
-    MO__REG_FUNC("float max(float, float)", MATH::advanced<float>::max);
     MO__REG_FUNC("float clamp(float, float, float)", MATH::advanced<float>::clamp);
     MO__REG_FUNC("float quant(float, float)", MATH::advanced<float>::quant);
     MO__REG_FUNC("float mod(float, float)", MATH::advanced<float>::mod);
     MO__REG_FUNC("float smod(float, float)", MATH::advanced<float>::smod);
+    MO__REG_FUNC("float min(float, float)", MATH::advanced<float>::min);
+    MO__REG_FUNC("float min(float, float, float)", MATH::advanced<float>::min2);
+    MO__REG_FUNC("float min(float, float, float, float)", MATH::advanced<float>::min3);
+    MO__REG_FUNC("float max(float, float)", MATH::advanced<float>::max);
+    MO__REG_FUNC("float max(float, float, float)", MATH::advanced<float>::max2);
+    MO__REG_FUNC("float max(float, float, float, float)", MATH::advanced<float>::max3);
 
     MO__REG_FUNC("float sin(float)", MATH::advanced<float>::sin);
     MO__REG_FUNC("float sinh(float)", MATH::advanced<float>::sinh);
@@ -100,7 +104,6 @@ static void registerAngelScript_math_native(asIScriptEngine *engine)
     MO__REG_FUNC("float smootherstep(float, float, float)", MATH::advanced<float>::smoothstep);
     MO__REG_FUNC("float smootherladder(float, float)", MATH::advanced<float>::smootherladder);
 
-
     MO__REG_FUNC("float beta(float)", MATH::advanced<float>::beta);
     MO__REG_FUNC("float beta(float, float)", MATH::advanced<float>::beta_2);
     MO__REG_FUNC("float beta(float, float, float)", MATH::advanced<float>::beta_3);
@@ -113,6 +116,23 @@ static void registerAngelScript_math_native(asIScriptEngine *engine)
     MO__REG_FUNC("float noise(float)", MATH::advanced<float>::noise);
     MO__REG_FUNC("float noise(float, float)", MATH::advanced<float>::noise_2);
     MO__REG_FUNC("float noise(float, float, float)", MATH::advanced<float>::noise_3);
+
+
+    MO__REG_FUNC("int num_div(int)", MATH::advanced_int<int>::num_div);
+    MO__REG_FUNC("int sum_div(int)", MATH::advanced_int<int>::sum_div);
+    MO__REG_FUNC("int prod_div(int)", MATH::advanced_int<int>::prod_div);
+    MO__REG_FUNC("int next_div(int x, int d)", MATH::advanced_int<int>::next_div);
+    MO__REG_FUNC("int is_prime(int)", MATH::advanced_int<int>::is_prime);
+    MO__REG_FUNC("int harmonic(int, int)", MATH::advanced_int<int>::harmonic_2);
+    MO__REG_FUNC("int harmonic(int, int, int)", MATH::advanced_int<int>::harmonic_3);
+    MO__REG_FUNC("int gcd(int, int)", MATH::advanced_int<int>::gcd);
+    MO__REG_FUNC("int congruent(int a, int b, int m)", MATH::advanced_int<int>::congruent);
+    MO__REG_FUNC("int factorial(int)", MATH::advanced_int<int>::factorial);
+    MO__REG_FUNC("int num_digits(int x, int base)", MATH::advanced_int<int>::num_digits);
+    MO__REG_FUNC("int ulam_spiral(int x, int y)", MATH::advanced_int<int>::ulam_spiral);
+    MO__REG_FUNC("int ulam_spiral(int x, int y, int w)", MATH::advanced_int<int>::ulam_spiral_width);
+    MO__REG_FUNC("int tri_spiral(int x, int y)", MATH::advanced_int<int>::ulam_spiral);
+    MO__REG_FUNC("int fibonacci(int x)", MATH::advanced_int<int>::fibonacci);
 
 #undef MO__REG_FUNC
 

@@ -18,6 +18,7 @@
 #include "script/angelscript.h"
 #include "object/object.h"
 #include "geom/geometry.h"
+#include "geom/geometryfactory.h"
 #include "math/vector.h"
 #include "io/log.h"
 
@@ -38,6 +39,8 @@ public:
     GEOM::Geometry * g;
     int ref;
 
+    // -------------- factory for script -----------
+
     GeometryAS()
         : g     (new GEOM::Geometry()),
           ref   (1)
@@ -57,6 +60,12 @@ public:
 
     void releaseRef() { if (--ref == 0) delete this; }
 
+    // ----------------- interface ----------------
+
+    void clear() { g->clear(); }
+
+    void setShared(bool b) { g->setSharedVertices(b); }
+
     std::string toString() const { std::stringstream s; s << "Geometry(" << (void*)this << ")"; return s.str(); }
 
     std::string name() const { return "geometry"; }
@@ -74,7 +83,12 @@ public:
     uint addVertex(const Vec3& v) { return g->addVertex(v.x, v.y, v.z); }
     uint addVertexF(float x, float y, float z) { return g->addVertex(x, y, z); }
 
-    void addLineI(uint v1, uint v2) { g->addLine(v1, v2); }
+    void createBox() { GEOM::GeometryFactory::createBox(g, 1, 1, 1, true); }
+    void createSphere() { GEOM::GeometryFactory::createUVSphere(g, 1, 12, 12, true); }
+
+#define MO__IDX(i__) (i__ < g->numVertices())
+
+    void addLineI(uint v1, uint v2) { if (MO__IDX(v1) && MO__IDX(v2)) g->addLine(v1, v2); }
     void addLine(const Vec3& a, const Vec3& b)
     {
         auto    v1 = g->addVertex(a.x, a.y, a.z),
@@ -82,7 +96,7 @@ public:
         g->addLine(v1, v2);
     }
 
-    void addTriangleI(uint v1, uint v2, uint v3) { g->addTriangle(v1, v2, v3); }
+    void addTriangleI(uint v1, uint v2, uint v3) { if (MO__IDX(v1) && MO__IDX(v2) && MO__IDX(v3)) g->addTriangle(v1, v2, v3); }
     void addTriangle(const Vec3& a, const Vec3& b, const Vec3& c)
     {
         auto    v1 = g->addVertex(a.x, a.y, a.z),
@@ -91,7 +105,11 @@ public:
         g->addTriangle(v1, v2, v3);
     }
 
-    void addQuadI(uint bl, uint br, uint tr, uint tl) { g->addTriangle(bl, tr, tl); g->addTriangle(bl, br, tr); }
+    void addQuadI(uint bl, uint br, uint tr, uint tl)
+    {
+        if (MO__IDX(bl) && MO__IDX(br) && MO__IDX(tr) && MO__IDX(tl))
+            { g->addTriangle(bl, tr, tl); g->addTriangle(bl, br, tr); }
+    }
     void addQuad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d)
     {
         auto    bl = g->addVertex(a.x, a.y, a.z),
@@ -101,8 +119,14 @@ public:
         g->addTriangle(bl, tr, tl);
         g->addTriangle(bl, br, tr);
     }
+#undef MO__IDX
+
+    void addText(const StringAS& text) { GEOM::GeometryFactory::createText(g, Mat4(1), QString::fromUtf8(text.c_str())); }
+    void addTextP(const StringAS& text, const Vec3& p)
+        { GEOM::GeometryFactory::createText(g, glm::translate(Mat4(1), p), QString::fromUtf8(text.c_str())); }
 
     void addGeometry(const GeometryAS& o) { g->addGeometry( *o.g ); }
+    void addGeometryP(const GeometryAS& o, const Vec3& p) { g->addGeometry( *o.g, p ); }
 
     void rotate(const Vec3& a, Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, a) ); }
     void rotateX(Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(1, 0, 0)) ); }
@@ -115,8 +139,33 @@ public:
     void translateY(Float v) { g->translate(0, v, 0); }
     void translateZ(Float v) { g->translate(0, 0, v); }
 
-    void clear() { g->clear(); }
+    uint getClosestVertex(const Vec3& v);
 };
+
+
+uint GeometryAS::getClosestVertex(const Vec3& v)
+{
+    if (!g->numVertices())
+        return 0;
+
+    int best = 0;
+    Float bestd = 1000000000000.f,
+        dx, dy, dz;
+    auto ptr = g->vertices();
+    for (uint i=0; i<g->numVertices(); ++i)
+    {
+        dx = v.x - *ptr++;
+        dy = v.y - *ptr++;
+        dz = v.z - *ptr++;
+        dx += dx * dx + dy * dy + dz * dz;
+        if (dx < bestd)
+        {
+            bestd = dx;
+            best = i;
+        }
+    }
+    return best;
+}
 
 
 //--------------------------------
@@ -154,6 +203,8 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("int vertexCount() const", vertexCount);
 
     // setter
+    MO__REG_METHOD("void clear()", clear);
+    MO__REG_METHOD("void setShared(bool)", setShared);
     MO__REG_METHOD("void setColor(float, float, float, float)", setRGBA);
     MO__REG_METHOD("void setColor(float, float, float)", setRGB);
     MO__REG_METHOD("void setColor(float, float)", setBrightAlpha);
@@ -170,6 +221,12 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("void addQuad(const vec3 &in, const vec3 &in, const vec3 &in, const vec3 &in)", addQuad);
     MO__REG_METHOD("void addQuad(uint bl, uint br, uint tr, uint tl)", addQuadI);
     MO__REG_METHOD("void addGeometry(const Geometry &in)", addGeometry);
+    MO__REG_METHOD("void addGeometry(const Geometry &in, const vec3 &in)", addGeometryP);
+    MO__REG_METHOD("void addText(const string &in)", addText);
+    MO__REG_METHOD("void addText(const string &in, const vec3 &in)", addTextP);
+    MO__REG_METHOD("void createBox()", createBox);
+    MO__REG_METHOD("void createSphere()", createSphere);
+
     MO__REG_METHOD("void add(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void rotate(const vec3 &in axis, float degree)", rotate);
     MO__REG_METHOD("void rotateX(float degree)", rotateX);
@@ -181,8 +238,8 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("void translateX(float)", translateX);
     MO__REG_METHOD("void translateY(float)", translateY);
     MO__REG_METHOD("void translateZ(float)", translateZ);
+    MO__REG_METHOD("uint closestVertex(const vec3 &in)", getClosestVertex);
 
-    MO__REG_METHOD("void clear()", clear);
 
 #undef MO__REG_METHOD
 
@@ -227,3 +284,152 @@ void registerAngelScript_geometry(asIScriptEngine *engine)
 
 
 #endif // #ifndef MO_DISABLE_ANGELSCRIPT
+
+
+
+#ifdef _stuff_that_was_tried_in_the_geometry_editor_
+
+// angelscript test
+
+/* deterministic noise function */
+vec3 randomVec(const vec3 &in v)
+{
+    return vec3(noise(v.x, v.y, v.z),
+                noise(v.x+3, 3-v.y, v.z+5),
+                noise(3-v.x, v.y+7, 7-v.z));
+}
+
+
+/* like a local rnd generator */
+
+float r_seed = 0;
+float r_step = 1.1319834543;
+
+vec3 randomVec(float mi, float ma)
+{
+    return vec3(noise(r_seed += r_step),
+                noise(r_seed += r_step),
+                noise(r_seed += r_step));
+}
+
+
+
+// ---------------------------- scene description --------------------------
+
+float dist_helix(const vec3 &in pos)
+{
+    vec3 h = vec3(sin(pos.y), pos.y, cos(pos.y));
+    return distance(pos, h) - 1;
+}
+
+float scene_dist(const vec3 &in pos)
+{
+    float d = 100000.0;
+
+    // sphere
+//	d = min(d, distance(pos, vec3(0,0,0)) - 1 );
+//	d = min(d, distance(pos, vec3(5,0,0)) - 2 );
+    // box
+    d = min(d, max(abs(pos.x-4), max(abs(pos.y),abs(pos.z))) - 1 );
+
+    d = min(d, dist_helix(pos));
+
+    // morph space :D
+    //d -= 0.2 * sin(pos.x * 4);
+
+    return d;
+}
+
+vec3 scene_normal(const vec3 &in pos)
+{
+    const float e = 0.1;
+    return normalize(vec3(
+        scene_dist(pos + vec3(e,0,0)) - scene_dist(pos - vec3(e,0,0)),
+        scene_dist(pos + vec3(0,e,0)) - scene_dist(pos - vec3(0,e,0)),
+        scene_dist(pos + vec3(0,0,e)) - scene_dist(pos - vec3(0,0,e))));
+}
+
+
+
+// ----------------------------- renderer -------------------------------
+
+/* get a somehow closer position to the surface,
+    d must be abs(scene_dist(pos)) */
+vec3 getCloser(vec3 pos, float d)
+{
+    for (int i=0; i<5; ++i)
+    {
+        vec3 npos = pos + randomVec(-1,1);
+        float nd = abs(scene_dist(npos));
+        if (nd < d)
+        {
+            nd = d;
+            pos = npos;
+        }
+    }
+    return pos;
+}
+
+/** Creates points close to the 'surface' of the scene,
+    by checking a quadratic region */
+void createGrid(Geometry@ g, const vec3 &in c1, const vec3 &in c2, float st = 1)
+{
+    st = max(0.001, st);
+    float s = st;
+    for (float z = c1.z; z <= c2.z; z += s)
+    for (float y = c1.y; y <= c2.y; y += s)
+    for (float x = c1.x; x <= c2.x; x += s)
+    {
+        vec3 pos = vec3(x, y, z);
+        //pos += randomVec(pos*33.13) * st * 2;
+
+        // distance to scene at current point
+        float d = scene_dist(pos);
+
+        if (abs(d) < 0.1)
+            g.addVertex(pos);
+    }
+}
+
+/** Connects the grid points somehow */
+void createLines(Geometry@ g, const vec3 &in c1, const vec3 &in c2, float st = 1)
+{
+    st = max(0.001, st);
+    float s = st;
+    for (float z = c1.z; z <= c2.z; z += s)
+    for (float y = c1.y; y <= c2.y; y += s)
+    for (float x = c1.x; x <= c2.x; x += s)
+    {
+        vec3 pos = vec3(x, y, z);
+        //pos += randomVec(pos*33.13) * st * 2;
+
+        // distance to scene at current point
+        float d = scene_dist(pos);
+
+        if (abs(d) < 0.1)
+        {
+            uint v1 = g.closestVertex(pos),
+                 v2 = g.closestVertex(pos + randomVec(-1,1));
+            if (v1 != v2)
+                g.addLine(v1, v2);
+        }
+    }
+}
+
+
+void main()
+{
+    Geometry g;
+    g.setColor(0.5, 0.5, 0.5, 1);
+
+    vec3 start=vec3(-4,-4,-4),
+         end=  vec3(5,4,4);
+
+    createGrid(g, start, end, 0.2);
+    createLines(g, start, end, 0.1);
+
+    addGeometry(g);
+}
+
+
+#endif

@@ -32,13 +32,22 @@ namespace MATH {
 
 // ------------------------- generic math functions ------------------------
 
+#if 1
+#	define MO__SAVE_MOD(a__, b__) ( ((a__)!=0 && (b__)!=0)? (a__) % (b__) : 0 )
+#else
+#	define MO__SAVE_MOD(a__, b__) ((a__) % (b__))
+#endif
+
 
 /** reoccuring procedures for integer arithmetic */
 template <typename I>
 struct advanced_int
 {
+    static I sign(I x) { return x > 0 ? 1 : x < 0 ? -1 : 0; }
+
     static I num_div(I x)
     {
+        x = std::abs(x);
 #ifdef PPP_USE_NDIV_TABLE
         if (x==0) return 0;
         x = std::abs(x);
@@ -61,6 +70,8 @@ struct advanced_int
         or 0 if 'index' is out of range */
     static I divisor(I x, I index)
     {
+        I sgn = sign(x);
+        x = std::abs(x);
         if (x==0 || index < 0) return 0;
         if (index==0) return 1;
         if (x==1) return 0; /* already out of range (index!=0) */
@@ -75,7 +86,7 @@ struct advanced_int
             // out of range?
             if (index > n) return 0;
             // number itself?
-            if (index == n) return x;
+            if (index == n) return x * sgn;
         }
 #endif
 
@@ -87,12 +98,12 @@ struct advanced_int
             I k = 1;
             while (*t)
             {
-                if (k == index) return *t;
+                if (k == index) return *t * sgn;
                 ++k;
                 ++t;
             }
             // number itself
-            if (k == index) return x;
+            if (k == index) return x * sgn;
             return 0;
         }
 #endif
@@ -101,17 +112,18 @@ struct advanced_int
         for (I i = x>>1; i >= 2; --i)
         if (x % i == 0)
         {
-            if (k == index) return x / i;
+            if (k == index) return (x / i) * sgn;
             ++k;
         }
-        if (k == index) return x;
+        if (k == index) return x * sgn;
         return 0;
     }
 
     static I sum_div(I x)
     {
-        if (x==0) return 0;
-        if (x<4) return 1;
+        I sgn = sign(x);
+        x = std::abs(x);
+        if (x<4) return sgn;
 
 #ifdef PPP_USE_NDIV_TABLE
         // early test against number-divisors-table
@@ -133,7 +145,7 @@ struct advanced_int
                 sum += *t;
                 ++t;
             }
-            return sum;
+            return sum * sgn;
         }
 #endif
         // brute force
@@ -143,14 +155,15 @@ struct advanced_int
         {
             sum += i;
         }
-        return sum;
+        return sum * sgn;
     }
 
 
     static I prod_div(I x)
     {
-        if (x==0) return 0;
-        if (x<4) return 1;
+        I sgn = sign(x);
+        x = std::abs(x);
+        if (x<4) return sgn;
 
 #ifdef PPP_USE_NDIV_TABLE
         // early test against number-divisors-table
@@ -172,7 +185,7 @@ struct advanced_int
                 sum *= *t;
                 ++t;
             }
-            return sum;
+            return sum * sgn;
         }
 #endif
         // brute force
@@ -182,22 +195,26 @@ struct advanced_int
         {
             sum *= i;
         }
-        return sum;
+        return sum * sgn;
     }
 
 
     static I next_div(I x, I d)
     {
-        if (d >= x) return x;
+        I sgn = sign(x);
+        x = std::abs(x);
+        d = std::abs(d); // XXX not perfect
+        if (d >= x) return x * sgn;
 
         for (I i = d; i < x; ++i)
-            if (x % i == 0) return i;
-        return x;
+            if (x % i == 0) return i * sgn;
+        return x * sgn;
     }
 
 
-    static bool isPrime(I k)
+    static bool is_prime(I k)
     {
+        k = std::abs(k);
         if (k < 2 || k == 4) { return false; } else
         if (k == 2) { return true; } else
         // even?
@@ -226,17 +243,17 @@ struct advanced_int
         b = std::abs(b);
         while (true)
         {
-            a = PPP_SAVE_MOD(a , b);
+            a = MO__SAVE_MOD(a , b);
             if (a == 0)	return b;
 
-            b = PPP_SAVE_MOD(b , a);
+            b = MO__SAVE_MOD(b , a);
             if (b == 0) return a;
         }
     }
 
     static I congruent(I a, I b, I m)
     {
-        return PPP_SAVE_MOD(b-a, m) == 0;
+        return MO__SAVE_MOD(b-a, m) == 0;
     }
 
     static I factorial(I n)
@@ -266,7 +283,7 @@ struct advanced_int
         }
     }
 
-    static I ulam_spiral(I x, I y, I w)
+    static I ulam_spiral_width(I x, I y, I w)
     {
         I d;
         const I wr = w >> 1, wl = w - wr, w2 = w << 1;
@@ -296,6 +313,7 @@ struct advanced_int
 
     static I quer(I k)
     {
+        k = std::abs(k);
         I q = 0;
         do
         {
@@ -319,6 +337,42 @@ struct advanced_int
         for (I i=1; i<index; ++i, f1 = f, f += f0, f0 = f1);
         return f;
     }
+
+    static I harmonic_2(I A, I B)
+    {
+        if (A == 0 || B == 0) return 0;
+        if (A % B == 0) return (A / B);
+        if (B % A == 0) return (B / A);
+        return 0;
+    }
+
+    static I harmonic_3(I A, I B, I C)
+    {
+        if (A == 0 || B == 0 || C == 0) return 0;
+        /* XXX seems to be wrong
+        if (A % B == 0) { I D = A / B; if (D % C == 0) return (D / C);
+                                       if (C % D == 0) return (C / D); }
+        if (B % A == 0) { I D = B / A; if (D % C == 0) return (D / C);
+                                       if (C % D == 0) return (C / D); }
+        if (A % C == 0) { I D = A / C; if (D % B == 0) return (D / B);
+                                       if (B % D == 0) return (B / D); }
+        if (C % A == 0) { I D = C / A; if (D % B == 0) return (D / B);
+                                       if (B % D == 0) return (B / D); }
+        if (C % B == 0) { I D = C / B; if (D % A == 0) return (D / A);
+                                       if (A % D == 0) return (A / D); }
+        if (B % C == 0) { I D = B / C; if (D % A == 0) return (D / A);
+                                       if (A % D == 0) return (A / D); }
+        */
+        I
+        D = A / B / C; if (float(A) / B / C == D) return D;
+        D = A / C / B; if (float(A) / C / B == D) return D;
+        D = B / A / C; if (float(B) / A / C == D) return D;
+        D = B / C / A; if (float(B) / C / A == D) return D;
+        D = C / A / B; if (float(C) / A / B == D) return D;
+        D = C / B / A; if (float(C) / B / A == D) return D;
+        return 0;
+    }
+
 };
 
 class AdvancedPrivate
@@ -338,12 +392,16 @@ struct advanced
     static F ceil			(F A) { return std::ceil(A); }
     static F round  		(F A) { return std::floor(A + F(0.5)); }
     static F frac			(F A) { return A - std::floor(A); }
-    static F min			(F A, F B) { return std::min(A, B); }
-    static F max			(F A, F B) { return std::max(A, B); }
     static F clamp          (F A, F B, F C) { return std::min(std::max(A, B), C); }
     static F quant          (F A, F B) { return std::floor(A / B) * B; }
     static F mod  			(F A, F B) { return std::fmod(A, B); }
     static F smod  			(F A, F B) { return (A<F(0))? std::fmod(A, B) : B - std::fmod(-A, B); }
+    static F min			(F A, F B) { return std::min(A, B); }
+    static F min2			(F A, F B, F C) { return std::min(A, std::min(B, C)); }
+    static F min3			(F A, F B, F C, F D) { return std::min(A, std::min(B, std::min(C, D))); }
+    static F max			(F A, F B) { return std::max(A, B); }
+    static F max2			(F A, F B, F C) { return std::max(A, std::max(B, C)); }
+    static F max3			(F A, F B, F C, F D) { return std::max(A, std::max(B, std::max(C, D))); }
 
     // ------------------- 'scientific' --------------------------
 
@@ -613,8 +671,8 @@ struct advanced
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<int>::isPrime( std::abs((int)A) ),
-                    (F)advanced_int<int>::isPrime( std::abs((int)A + 1) ));
+                    (F)advanced_int<int>::is_prime( std::abs((int)A) ),
+                    (F)advanced_int<int>::is_prime( std::abs((int)A + 1) ));
     }
 
     static F s_numdiv			(F A)

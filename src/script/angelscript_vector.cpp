@@ -16,6 +16,7 @@
 #include <sstream>
 
 #include <QString>
+#include <QColor> // for hsv stuff
 
 #include "angelscript_vector.h"
 #include "script/angelscript.h"
@@ -60,9 +61,9 @@ static void VecListConstructor4(Float *list, Vec4 *self) { new(self) Vec4(list[0
 template <typename Vec>
 struct vecfunc
 {
-    static AngelScriptString VecToString2(Vec * self) { std::stringstream s; s << "<" << self->x << ", " << self->y << ">"; return s.str(); }
-    static AngelScriptString VecToString3(Vec * self) { std::stringstream s; s << "<" << self->x << ", " << self->y << ", " << self->z << ">"; return s.str(); }
-    static AngelScriptString VecToString4(Vec * self) { std::stringstream s; s << "<" << self->x << ", " << self->y << ", " << self->z << ", " << self->w << ">"; return s.str(); }
+    static StringAS VecToString2(Vec * self) { std::stringstream s; s << "<" << self->x << ", " << self->y << ">"; return s.str(); }
+    static StringAS VecToString3(Vec * self) { std::stringstream s; s << "<" << self->x << ", " << self->y << ", " << self->z << ">"; return s.str(); }
+    static StringAS VecToString4(Vec * self) { std::stringstream s; s << "<" << self->x << ", " << self->y << ", " << self->z << ", " << self->w << ">"; return s.str(); }
 
     static void VecDefaultConstructor(Vec *self) { new(self) Vec(); }
     static void VecConvConstructor(Float x, Vec *self) { new(self) Vec(x); }
@@ -124,6 +125,17 @@ struct vecfunc
     static Float largest(const Vec& v) { Float m = v[0]; for (int i=1; i<vectraits<Vec>::num; ++i) m = std::max(m, v[i]); return m; }
 
     static Float noise(const Vec3& v) { return MATH::advanced<float>::noise_3(v.x, v.y, v.z); }
+
+    // ------- color conv -------
+
+    static Vec toVecRgb3(const QColor& c) { return Vec(c.redF(), c.greenF(), c.blueF()); }
+    static Vec toVecHsv3(const QColor& c) { return Vec(c.hueF(), c.saturationF(), c.valueF()); }
+    static Vec hsv2rgb_3(const Vec& c) { return toVecRgb3(QColor::fromHsvF(MATH::moduloSigned(c.x, Float(1)),
+                                                                           glm::clamp(c.y, Float(0), Float(1)),
+                                                                           glm::clamp(c.z, Float(0), Float(1)))); }
+    static Vec rgb2hsv_3(const Vec& c) { return toVecHsv3(QColor::fromRgbF(glm::clamp(c.x, Float(0), Float(1)),
+                                                                           glm::clamp(c.y, Float(0), Float(1)),
+                                                                           glm::clamp(c.z, Float(0), Float(1)))); }
 };
 
 //--------------------------------
@@ -147,7 +159,6 @@ struct vecfunc
 template <class Vec>
 void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 {
-
     int r;
 
     // Register the type
@@ -237,11 +248,26 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
     MO__REG_FUNC("%1 rotateZ(%1 &in, float)", vecfunc<Vec2>::rotateZ);
 }
 
+/** Specific stuff for 3 */
+void register_vector_3(asIScriptEngine *engine, const char * typ = "vec2")
+{
+    int r;
+
+    // --------------------- methods ------------------
+
+    // ------------------ non-member functions --------
+
+    MO__REG_FUNC("%1 hsv2rgb(const %1 &in)", vecfunc<Vec3>::hsv2rgb_3);
+    MO__REG_FUNC("%1 rgb2hsv(const %1 &in)", vecfunc<Vec3>::rgb2hsv_3);
+}
+
+
 /** Registers stuff for 3 and 4 only */
 template <class Vec>
 void register_vector_34_tmpl(asIScriptEngine *engine, const char * typ)
 {
     int r;
+
     // --------------------- methods ------------------
     MO__REG_METHOD("%1 rotated(const vec3 &in, float)", vecfunc<Vec>::VecRotated);
     MO__REG_METHOD("%1 rotatedX(float)", vecfunc<Vec>::VecRotatedX);
@@ -286,6 +312,7 @@ void registerAngelScript_vector(asIScriptEngine *engine)
 
     register_vector_tmpl<Vec3>(engine, "vec3");
     register_vector_34_tmpl<Vec3>(engine, "vec3");
+    register_vector_3(engine, "vec3");
 
     r = engine->RegisterObjectProperty("vec3", "float z", asOFFSET(Vec3, z)); assert( r >= 0 );
     r = engine->RegisterObjectProperty("vec3", "float b", asOFFSET(Vec3, z)); assert( r >= 0 );

@@ -13,6 +13,7 @@
 
 #include "geometryfactory.h"
 #include "geometry.h"
+#include "builtinlinefont.h"
 #include "math/vector.h"
 #include "math/hash.h"
 #include "io/log.h"
@@ -994,9 +995,33 @@ void GeometryFactory::createDodecahedron(Geometry * g, Float scale, bool asTrian
 
 
 
+void GeometryFactory::createFont(Geometry * g, const Mat4 &matrix, uint16_t utf16)
+{
+    auto font = BuiltInLineFont::getFont(utf16);
 
+    if (font)
+    for (uint i=0; i<font->num; ++i)
+    {
+        const Vec4
+                a = matrix * Vec4(font->data[i*4  ], font->data[i*4+1], 0.f, 1.f),
+                b = matrix * Vec4(font->data[i*4+2], font->data[i*4+3], 0.f, 1.f);
+        const auto
+                v1 = g->addVertex(a.x, a.y, a.z),
+                v2 = g->addVertex(b.x, b.y, b.z);
 
+        g->addLine(v1, v2);
+    }
+}
 
+void GeometryFactory::createText(Geometry * g, Mat4 matrix, const QString &text)
+{
+    for (int i=0; i<text.size(); ++i)
+    {
+        createFont(g, matrix, text.at(i).unicode());
+
+        matrix = glm::translate(matrix, Vec3(1.f,0.f,0.f));
+    }
+}
 
 
 } // namespace GEOM

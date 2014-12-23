@@ -140,6 +140,7 @@ void Geometry::clear()
     color_.clear();
     texcoord_.clear();
     triIndex_.clear();
+    lineIndex_.clear();
     indexMap_.clear();
 }
 
@@ -323,7 +324,7 @@ const Geometry::VertexType * Geometry::line(
 }
 
 
-void Geometry::addGeometry(const Geometry &other)
+void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 {
     if (other.numTriangles())
     for (uint i=0; i<other.numTriangles(); ++i)
@@ -334,9 +335,9 @@ void Geometry::addGeometry(const Geometry &other)
                 ot3 = other.triIndex_[i * 3 + 2],
 
                 t1 = addVertex(
-                    other.vertex_[ot1 * other.numVertexComponents()],
-                    other.vertex_[ot1 * other.numVertexComponents() + 1],
-                    other.vertex_[ot1 * other.numVertexComponents() + 2],
+                    other.vertex_[ot1 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ot1 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ot1 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ot1 * other.numNormalComponents()],
                     other.normal_[ot1 * other.numNormalComponents() + 1],
                     other.normal_[ot1 * other.numNormalComponents() + 2],
@@ -347,9 +348,9 @@ void Geometry::addGeometry(const Geometry &other)
                     other.texcoord_[ot1 * other.numTextureCoordComponents()],
                     other.texcoord_[ot1 * other.numTextureCoordComponents() + 1]),
                 t2 = addVertex(
-                    other.vertex_[ot2 * other.numVertexComponents()],
-                    other.vertex_[ot2 * other.numVertexComponents() + 1],
-                    other.vertex_[ot2 * other.numVertexComponents() + 2],
+                    other.vertex_[ot2 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ot2 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ot2 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ot2 * other.numNormalComponents()],
                     other.normal_[ot2 * other.numNormalComponents() + 1],
                     other.normal_[ot2 * other.numNormalComponents() + 2],
@@ -360,9 +361,9 @@ void Geometry::addGeometry(const Geometry &other)
                     other.texcoord_[ot2 * other.numTextureCoordComponents()],
                     other.texcoord_[ot2 * other.numTextureCoordComponents() + 1]),
                 t3 = addVertex(
-                    other.vertex_[ot3 * other.numVertexComponents()],
-                    other.vertex_[ot3 * other.numVertexComponents() + 1],
-                    other.vertex_[ot3 * other.numVertexComponents() + 2],
+                    other.vertex_[ot3 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ot3 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ot3 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ot3 * other.numNormalComponents()],
                     other.normal_[ot3 * other.numNormalComponents() + 1],
                     other.normal_[ot3 * other.numNormalComponents() + 2],
@@ -383,9 +384,9 @@ void Geometry::addGeometry(const Geometry &other)
                 ol2 = other.lineIndex_[i * 2 + 1],
 
                 l1 = addVertex(
-                    other.vertex_[ol1 * other.numVertexComponents()],
-                    other.vertex_[ol1 * other.numVertexComponents() + 1],
-                    other.vertex_[ol1 * other.numVertexComponents() + 2],
+                    other.vertex_[ol1 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ol1 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ol1 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ol1 * other.numNormalComponents()],
                     other.normal_[ol1 * other.numNormalComponents() + 1],
                     other.normal_[ol1 * other.numNormalComponents() + 2],
@@ -396,9 +397,9 @@ void Geometry::addGeometry(const Geometry &other)
                     other.texcoord_[ol1 * other.numTextureCoordComponents()],
                     other.texcoord_[ol1 * other.numTextureCoordComponents() + 1]),
                 l2 = addVertex(
-                    other.vertex_[ol2 * other.numVertexComponents()],
-                    other.vertex_[ol2 * other.numVertexComponents() + 1],
-                    other.vertex_[ol2 * other.numVertexComponents() + 2],
+                    other.vertex_[ol2 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ol2 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ol2 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ol2 * other.numNormalComponents()],
                     other.normal_[ol2 * other.numNormalComponents() + 1],
                     other.normal_[ol2 * other.numNormalComponents() + 2],
