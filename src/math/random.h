@@ -14,6 +14,7 @@
 
 #include <limits>
 #include <cstdlib>
+#include <random>
 
 namespace MO {
 namespace MATH {
@@ -64,6 +65,30 @@ class Random
     private:
 
     UI seed_;
+};
+
+
+
+class Twister
+{
+    std::mt19937 twister;
+    int ref;
+
+    Twister(const Twister&);
+    void operator = (Twister&);
+
+public:
+
+    Twister(uint32_t seed = 0) : twister(seed) { }
+
+    // --- interface ---
+
+    void setSeed(uint32_t s) { twister.seed(s); }
+
+    // [0,1]
+    float operator()() { return float(twister()) / twister.max(); }
+    //float operator()() { return *(float*)&(twister() >> 9) | 0x3f800000); }
+    float operator()(float r) { return float(twister()) / twister.max() * r; }
 };
 
 } // namespace MATH

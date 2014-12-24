@@ -15,6 +15,7 @@
 #include "geometry.h"
 #include "geometryfactory.h"
 #include "geometryangelscript.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GEOM {
@@ -69,9 +70,10 @@ void GeometryModifierAngelScript::execute(Geometry * g)
         GeometryAngelScript script(g);
         script.execute(script_);
     }
-    catch (...)
+    catch (const Exception&e)
     {
         // XXX Exceptions disturb the editor right now
+        MO_DEBUG("GeometryModifierAngelScript: XXX EXCEPTION: " << e.what());
     }
 }
 

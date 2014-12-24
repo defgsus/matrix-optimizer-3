@@ -26,9 +26,38 @@ namespace MO {
 
 namespace {
 
+
+
 //--------------------------------
 // Registration
 //-------------------------------------
+
+static void registerAngelScript_rnd_native(asIScriptEngine *engine)
+{
+    int r;
+
+    r = engine->RegisterObjectType("Random", 0, asOBJ_REF); assert( r >= 0 );
+
+    // ----------------- constructor ---------------------------
+
+    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_FACTORY, "Random@ f()", asFUNCTION(RandomAS::factory), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_ADDREF, "void f()", asMETHOD(RandomAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_RELEASE, "void f()", asMETHOD(RandomAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+
+    // --- interface ---
+
+#define MO__REG_METHOD(decl__, name__) \
+    r = engine->RegisterObjectMethod("Random", decl__, asMETHOD(RandomAS,name__), asCALL_THISCALL); assert( r >= 0 );
+
+    //MO__REG_METHOD("string opImplConv() const", toString);
+    MO__REG_METHOD("void setSeed(uint32)", setSeed);
+    MO__REG_METHOD("float opCall() const", get);
+    MO__REG_METHOD("float opCall(float range) const", getRange);
+    MO__REG_METHOD("float opCall(float min, float max) const", getMinMax);
+}
+
+
+
 
 static void registerAngelScript_math_native(asIScriptEngine *engine)
 {
@@ -122,13 +151,13 @@ static void registerAngelScript_math_native(asIScriptEngine *engine)
     MO__REG_FUNC("int sum_div(int)", MATH::advanced_int<int>::sum_div);
     MO__REG_FUNC("int prod_div(int)", MATH::advanced_int<int>::prod_div);
     MO__REG_FUNC("int next_div(int x, int d)", MATH::advanced_int<int>::next_div);
-    MO__REG_FUNC("bool is_prime(int)", MATH::advanced_int<int>::is_prime);
     MO__REG_FUNC("int harmonic(int, int)", MATH::advanced_int<int>::harmonic_2);
     MO__REG_FUNC("int harmonic(int, int, int)", MATH::advanced_int<int>::harmonic_3);
+    MO__REG_FUNC("bool is_prime(int)", MATH::advanced_int<int>::is_prime);
     MO__REG_FUNC("bool is_harmonic(int, int)", MATH::advanced_int<int>::is_harmonic_2);
     MO__REG_FUNC("bool is_harmonic(int, int, int)", MATH::advanced_int<int>::is_harmonic_3);
+    MO__REG_FUNC("bool is_congruent(int a, int b, int m)", MATH::advanced_int<int>::is_congruent);
     MO__REG_FUNC("int gcd(int, int)", MATH::advanced_int<int>::gcd);
-    MO__REG_FUNC("int congruent(int a, int b, int m)", MATH::advanced_int<int>::congruent);
     MO__REG_FUNC("int factorial(int)", MATH::advanced_int<int>::factorial);
     MO__REG_FUNC("int num_digits(int x, int base)", MATH::advanced_int<int>::num_digits);
     MO__REG_FUNC("int ulam_spiral(int x, int y)", MATH::advanced_int<int>::ulam_spiral);
@@ -149,7 +178,10 @@ void registerAngelScript_math(asIScriptEngine *engine)
         assert(!"math for Angelscript currently not supported on this platform");
     }
     else
+    {
         registerAngelScript_math_native(engine);
+        registerAngelScript_rnd_native(engine);
+    }
 }
 
 } // namespace MO

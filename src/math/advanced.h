@@ -252,7 +252,7 @@ struct advanced_int
         }
     }
 
-    static I congruent(I a, I b, I m)
+    static bool is_congruent(I a, I b, I m)
     {
         return MO__SAVE_MOD(b-a, m) == 0;
     }
@@ -739,8 +739,8 @@ struct advanced
     {
         return MO::MATH::interpol_smooth(
                     MO::MATH::frac(A),
-                    (F)advanced_int<INT>::congruent( A, B, C ),
-                    (F)advanced_int<INT>::congruent( A + 1, B, C ) );
+                    (F)advanced_int<INT>::is_congruent( A, B, C ),
+                    (F)advanced_int<INT>::is_congruent( A + 1, B, C ) );
     }
 
     static F s_factorial			(F A)
