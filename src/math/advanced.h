@@ -374,6 +374,12 @@ struct advanced_int
         return 0;
     }
 
+    static bool is_harmonic_2(I A, I B)
+    {
+        return (A != 0 && B != 0 && ((A % B == 0) || (B % A == 0)));
+    }
+
+    static bool is_harmonic_3(I A, I B, I C) { return harmonic_3(A, B, C) != 0; }
 };
 
 class AdvancedPrivate

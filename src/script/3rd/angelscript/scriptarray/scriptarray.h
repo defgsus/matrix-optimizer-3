@@ -1,7 +1,13 @@
+/** Orginal code from AngelScript add-ons
+ *
+ *  def.gsus- added print support
+ */
 #ifndef MO_DISABLE_ANGELSCRIPT
 
 #ifndef SCRIPTARRAY_H
 #define SCRIPTARRAY_H
+
+#include <string>
 
 #ifndef ANGELSCRIPT_H 
 // Avoid having to inform include path if header is already include before
@@ -16,7 +22,7 @@
 //  1 = on
 
 #ifndef AS_USE_STLNAMES
-#define AS_USE_STLNAMES 0
+#define AS_USE_STLNAMES 1
 #endif
 
 BEGIN_AS_NAMESPACE
@@ -44,6 +50,8 @@ public:
 	asIObjectType *GetArrayObjectType() const;
 	int            GetArrayTypeId() const;
 	int            GetElementTypeId() const;
+
+    std::string toStdString() const;
 
 	// Get the current size
 	asUINT GetSize() const;

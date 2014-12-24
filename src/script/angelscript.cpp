@@ -49,23 +49,25 @@ StringAS toStringAS(const QString& s)
 
 namespace {
 
-    void angelPrint(const std::string& s)
+    void angelPrint(const StringAS& s)
     {
-        MO_DEBUG("angelscript: " << QString::fromUtf8(&s[0]));
+        MO_DEBUG("angelscript: " << toString(s));
     }
 
 } // namespace
 
 void registerDefaultAngelscript(asIScriptEngine * engine)
 {
-    RegisterScriptArray(engine, true);
     RegisterStdString(engine);
+    RegisterScriptArray(engine, true);
     RegisterScriptMathComplex(engine);
 
     registerAngelScript_math(engine);
     registerAngelScript_vector(engine);
     registerAngelScript_object(engine);
     registerAngelScript_geometry(engine);
+
+
     //if (object)
     //    registerAngelScript_rootObject(engine, object);
 
@@ -86,59 +88,93 @@ void registerDefaultAngelscript(asIScriptEngine * engine)
     // --- some working examples ---
 
 
-    void dumpTree(Object@ o, string pre = "")
-    {
-        print(pre + o.name());
-        pre += " ";
-        for (int i=0; i<o.childrenCount(); ++i)
-            dumpTree(o.children(i), pre);
-    }
+void dumpTree(Object@ o, string pre = "")
+{
+    print(pre + o.name());
+    pre += " ";
+    for (int i=0; i<o.childrenCount(); ++i)
+        dumpTree(o.children(i), pre);
+}
 
-    void testObject()
-    {
-        Object@ o = Root;
-        print(o.name() + " " + o + " " + o.childrenCount());
-        if (o.childrenCount() >= 1)
-            print(o.children(0));
+void testObject()
+{
+    Object@ o = Root;
+    print(o.name() + " " + o + " " + o.childrenCount());
+    if (o.childrenCount() >= 1)
+        print(o.children(0));
 
-        dumpTree(Root);
-    }
+    dumpTree(Root);
+}
 
-    void testArray()
-    {
-        array<int> a = { 5, 4, 3, 2, 1 };
 
-        for (uint i = 0; i < a.length(); ++i)
-            print(""+i);
-    }
+void printArray(const array<int> &in a)
+{
+    string s;
+    for (uint i = 0; i < a.length(); ++i)
+        s += a[i] + " ";
+    print(s);
+}
 
-    void testVec()
-    {
-        vec2 v2(1,2);
-        vec3 v3(3,4,5);
-        vec4 v4(6,7,8,9);
-        print(""+v2+" "+v3+" "+v4);
-        v2 = v2 + 1.f;
-        v3 = v3 + 1.f;
-        v4 = v4 + 1.f;
-        print(""+v2+" "+v3+" "+v4);
-    }
+void printArray(const array<vec3> &in a)
+{
+    string s;
+    for (uint i = 0; i < a.length(); ++i)
+        s += " " + a[i];
+    print(s);
+}
 
-    void testGeometry()
-    {
-        Geometry g;
-        Geometry@ g2 = g;
-        print(""+g + " " + g2);
-        g.addLine(vec3(0,0,0), vec3(1,1,1));
-        print(""+g.vertexCount());
-    }
+void testArray()
+{
+    array<int> a = { 5, 4, 3, 2, 1 };
 
-    void main()
-    {
-        print("----------------------------");
+    print(a.toString());
 
-        testVec();
-    }
+    a.resize(23);
+    print(a.toString());
+
+    array<string> as = { "hallo", "welt" };
+    print(as.toString());
+
+    array<vec3> b = { vec3(1), vec3(2) };
+    print(b.toString());
+
+    array<array<int>> aa = { a, a };
+    print(aa.toString());
+}
+
+void testVec()
+{
+    vec2 v2(1,2);
+    vec3 v3(3,4,5);
+    vec4 v4(6,7,8,9);
+    print(""+v2+" "+v3+" "+v4);
+    v2 = v2 + 1.f;
+    v3 = v3 + 1.f;
+    v4 = v4 + 1.f;
+    print(""+v2+" "+v3+" "+v4);
+    print(""+smallest(v2)+" "+smallest(v3)+" "+smallest(v4));
+    print(""+largest(v2)+" "+largest(v3)+" "+largest(v4));
+
+    print(rgb2hsv(vec3(0.5,0.2,0.2)));
+    print(hsv2rgb(vec3(0.8,1,1)));
+}
+
+void testGeometry()
+{
+    Geometry g;
+    Geometry@ g2 = g;
+    print(""+g + " " + g2);
+    g.addLine(vec3(0,0,0), vec3(1,1,1));
+    print(""+g.vertexCount());
+}
+
+void main()
+{
+    print("----------------------------");
+
+    testArray();
+    //testVec();
+}
 
 
 *************************************************************************/
