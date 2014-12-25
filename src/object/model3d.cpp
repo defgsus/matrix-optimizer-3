@@ -197,6 +197,8 @@ void Model3d::updateParameterVisibility()
 
 void Model3d::getNeededFiles(IO::FileList &files)
 {
+    ObjectGl::getNeededFiles(files);
+
     texture_->getNeededFiles(files, IO::FT_TEXTURE);
     textureBump_->getNeededFiles(files, IO::FT_NORMAL_MAP);
 
@@ -337,7 +339,7 @@ void Model3d::setupDrawable_()
 
 void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
-    const Mat4& trans = transformation(thread, 0);
+    const Mat4& trans = transformation();
     const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
     const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
 

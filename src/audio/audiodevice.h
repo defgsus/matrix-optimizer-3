@@ -104,7 +104,8 @@ public:
     /** name of the audio device */
     const QString& name() const { return name_; }
     /** host-os index of the selected device */
-    uint deviceId() const { return deviceId_; }
+    uint inDeviceId() const { return inDeviceId_; }
+    uint outDeviceId() const { return outDeviceId_; }
 
     /** Returns the audio configuration */
     const Configuration configuration() const { return conf_; }
@@ -122,8 +123,8 @@ public:
     /** Returns true when audio-settings are already made. */
     static bool isAudioConfigured();
 
-    /** Returns the number of input channels in configuration */
-    static uint numConfiguredInputChannels();
+    /** Returns the configuration as set by user previously */
+    static Configuration defaultConfiguration();
 
     /** Initializes a device/stream from the stored settings.
         Returns true when this worked.
@@ -132,10 +133,10 @@ public:
     bool initFromSettings();
 
     /** Initializes a device/stream.
-        @p deviceIndex is the host-os device number as returned by CSMOD::AudioDevices.
+        @p inDeviceIndex and outDeviceIndex are the host-os device numbers as returned by CSMOD::AudioDevices.
+        One of them can be set to -1, if you do not need the particular stream.
         @p numInputChannels and @p numOutputChannels is the number of channels requested
-        for the input and output. One of them can be set to zero, if you do not need
-        the particular stream.
+        for the input and output.
         @p sampleRate sets the desired samples per second and can be left zero
         to use the device's default.
         @p bufferLength defines the desired samples in a buffer, and therefore the
@@ -144,14 +145,15 @@ public:
         you actually need to generate 256 samples.
         @throws AudioException on any error.
         */
-    void init(uint deviceIndex,
+    void init(int inDeviceIndex,
+              int outDeviceIndex,
               uint numInputChannels,
               uint numOutputChannels,
               uint sampleRate = 0,
               uint bufferSize = 0);
 
     /** look for other init() function for description. */
-    void init(uint deviceIndex, const Configuration& props);
+    void init(int inDeviceIndex, int outDeviceIndex, const Configuration& props);
 
     /** close the audio stream.
         @throws AudioException on any error.
@@ -184,10 +186,10 @@ private:
 
     int callback_(const void * in, void * out);
 
-    uint deviceId_;
+    uint inDeviceId_, outDeviceId_;
     Configuration conf_;
 
-    QString name_;
+    QString name_, outName_;
 
     volatile bool ok_, play_;
 

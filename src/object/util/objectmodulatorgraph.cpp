@@ -20,7 +20,7 @@ namespace MO {
 
 
 
-void getObjectModulatorGraph(ObjectGraph &graph, Object * object)
+void get_object_modulator_graph(ObjectGraph &graph, Object * object)
 {
     // for all parameters
     for (Parameter * param : object->params()->parameters())
@@ -58,7 +58,7 @@ void getObjectModulatorGraph(ObjectGraph &graph, Object * object)
 
     // for all children
     for (auto c : object->childObjects())
-        getObjectModulatorGraph(graph, c);
+        get_object_modulator_graph(graph, c);
 }
 
 

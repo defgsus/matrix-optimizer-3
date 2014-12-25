@@ -65,6 +65,9 @@ public:
         The ownership is taken and the previous class is deleted. */
     void setShader(Shader * s);
 
+    /** Overrides the default type GL_TRIANGLES or GL_LINES */
+    void setDrawType(gl::GLenum type);
+
     // ------------ opengl -------------------
 
     /** Creates the buffer objects.
@@ -105,6 +108,8 @@ private:
 
     VertexArrayObject * vao_;
 
+    bool drawTypeSet_;
+    gl::GLenum drawType_;
     gl::GLuint
         uniformProj_,
         uniformCVT_,

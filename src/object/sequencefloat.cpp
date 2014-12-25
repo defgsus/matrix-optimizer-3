@@ -31,11 +31,10 @@
 
 namespace MO {
 
+/** Wrapper for equation parser to setup input variables */
 class SequenceFloat::SeqEquation
 {
 public:
-
-
 
     SeqEquation()
         : equation(new PPP_NAMESPACE::Parser())
@@ -105,6 +104,8 @@ SequenceFloat::SequenceFloat(QObject *parent)
 
         p_soundFile_    (0),
 
+        cacheValue_     (0.0),
+        cacheTime_      (-1.111),
         phaseMult_      (1.0)
 
 {
@@ -692,6 +693,9 @@ Double SequenceFloat::fade_(Double gtime, Double time, uint thread) const
 
 Double SequenceFloat::value(Double gtime, uint thread) const
 {
+    if (cacheTime_ == gtime)
+        return cacheValue_;
+
     Double timeNoLoop;
     if (p_loopOverlapMode_->baseValue() == LOT_OFF)
     {
@@ -885,8 +889,8 @@ void SequenceFloat::updateWavetable_()
     {
         PPP_NAMESPACE::Parser p;
         PPP_NAMESPACE::Float x, r;
-        p.variables().add("x", &x, "");
-        p.variables().add("r", &r, "");
+        p.variables().add("x", &x, tr("time").toStdString());
+        p.variables().add("xr", &r, tr("radians of time").toStdString());
 
         if (!p.parse(p_wtEquationText_->baseValue().toStdString()))
         {

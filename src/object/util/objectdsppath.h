@@ -35,17 +35,20 @@ public:
 
     // --------------- creation ---------------
 
-    void createPath(Scene * scene, const AUDIO::Configuration& conf);
+    void createPath(Scene * scene, const AUDIO::Configuration& conf, uint thread);
 
     // ---------------- calc ------------------
 
-    void calcTransformations(SamplePos pos, uint thread);
+    void calcTransformations(SamplePos pos);
 
-    void calcAudio(SamplePos pos, uint thread);
+    void calcAudio(SamplePos pos);
 
     // ------------- audio io -----------------
 
-    /** The system audio output buffers. */
+    /** Audio input buffers, as requested by createPath() */
+    const QList<AUDIO::AudioBuffer*> & audioInputs();
+
+    /** Audio output buffers, as requested by createPath() */
     const QList<AUDIO::AudioBuffer*> & audioOutputs();
 
 private:

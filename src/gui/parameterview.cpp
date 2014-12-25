@@ -43,6 +43,7 @@ ParameterView::ParameterView(QWidget *parent) :
 
     auto layout = new QVBoxLayout(this);
     layout->setMargin(0);
+    layout->setSizeConstraint(QLayout::SetMaximumSize);//SetMinAndMaxSize);
 
         scrollArea_ = new QScrollArea(this);
         layout->addWidget(scrollArea_);
@@ -104,6 +105,7 @@ void ParameterView::updateParameterVisibility(Parameter * p)
     }
 }
 
+// XXX That's probably not like Qt people imagined
 void ParameterView::squeezeView_()
 {
     const int h = scrollArea_->verticalScrollBar()->sliderPosition();
@@ -112,7 +114,8 @@ void ParameterView::squeezeView_()
         g->layout()->activate();
     layout_->activate();
 
-    scrollArea_->widget()->setGeometry(QRect(0,0,1,1));
+    scrollArea_->widget()->setGeometry(QRect(0,0,
+                            scrollArea_->viewport()->width(),1));
 
     scrollArea_->ensureWidgetVisible(scrollArea_->widget()->focusWidget());
 
@@ -120,6 +123,13 @@ void ParameterView::squeezeView_()
     // (it won't do it without)
     scrollArea_->verticalScrollBar()->setSliderPosition(h-1);
     scrollArea_->verticalScrollBar()->setSliderPosition(h);
+}
+
+void ParameterView::resizeEvent(QResizeEvent *)
+{
+    QRect r = scrollArea_->widget()->geometry();
+    r.setWidth(scrollArea_->viewport()->width());
+    scrollArea_->widget()->setGeometry(r);
 }
 
 

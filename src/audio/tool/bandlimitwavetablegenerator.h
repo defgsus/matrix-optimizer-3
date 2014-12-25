@@ -11,8 +11,6 @@
 #ifndef MOSRC_AUDIO_TOOL_BANDLIMITWAVETABLEGENERATOR_H
 #define MOSRC_AUDIO_TOOL_BANDLIMITWAVETABLEGENERATOR_H
 
-#include <vector>
-
 #include "wavetable.h"
 #include "waveform.h"
 #include "types/float.h"
@@ -21,19 +19,24 @@
 namespace MO {
 namespace AUDIO {
 
-class FixedFilter;
-
 /** Generator for wavetables with bandlimited common waveforms */
 class BandlimitWavetableGenerator
 {
 public:
+
+    enum Mode
+    {
+        M_WAVEFORM,
+        M_EQUATION
+    };
+
     BandlimitWavetableGenerator();
     ~BandlimitWavetableGenerator();
 
     // ------------- getter ----------------
 
-    uint tableSize() const { return tableSize_; }
-    uint oversampling() const { return oversampling_; }
+    uint tableSize() const;
+    uint oversampling() const;
 
     // ------------- setter ----------------
 
@@ -44,11 +47,18 @@ public:
     /** Sets the amount of oversampling */
     void setOversampling(uint over);
 
+    /** Sets the mode of the generator, either oscillator waveform or equation */
+    void setMode(Mode mode);
+
     /** Sets the type of waveform to render */
     void setWaveform(Waveform::Type);
 
     /** Sets the pulsewidth for Waveform types that support it. */
     void setPulseWidth(Double pw);
+
+    /** Sets the equation to use in M_EQUATION mode.
+        Variables are 'x' [0,1] and 'xr' [0,TWO_PI] */
+    void setEquation(const QString&);
 
     // ------------ wavetables -------------
 
@@ -58,18 +68,12 @@ public:
 
 private:
 
-    void recalc_();
-    void generateTable_();
+    void p_update_();
 
-    uint tableSize_, oversampling_;
-    std::vector<Double> table_, ftable_;
+    Double * p_table_();
 
-    Waveform::Type waveType_;
-    Double pulseWidth_;
-
-    bool needRecalc_,
-         needWaveCalc_;
-    FixedFilter * filter_;
+    class Private;
+    Private * p_;
 };
 
 
@@ -79,23 +83,23 @@ private:
 template <typename F>
 void BandlimitWavetableGenerator::createWavetable(Wavetable<F> &wt)
 {
-    recalc_();
-    generateTable_();
+    // call implementation code (if necessary)
+    p_update_();
 
     // downsample into wavetable
 
-    wt.setSize(tableSize_);
+    wt.setSize(tableSize());
 
-    Double * in = &ftable_[0];
+    Double * in = p_table_();
     F      * out = wt.data();
 
-    for (uint i=0; i<tableSize_; ++i, ++out)
+    for (uint i=0; i<tableSize(); ++i, ++out)
     {
         Double sum = 0.0;
-        for (uint j=0; j<oversampling_; ++j, ++in)
+        for (uint j=0; j<oversampling(); ++j, ++in)
             sum += *in;
 
-        *out = sum / oversampling_;
+        *out = sum / oversampling();
     }
 }
 

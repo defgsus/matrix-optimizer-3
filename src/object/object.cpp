@@ -12,48 +12,56 @@
 #include <QDebug>
 
 #include "object.h"
-#include "tool/stringmanip.h"
-#include "io/error.h"
-#include "io/datastream.h"
-#include "io/log.h"
-
 #include "objectfactory.h"
+#include "object/util/objecteditor.h"
 #include "scene.h"
 #include "transform/transformation.h"
 #include "param/parameters.h"
-#include "param/parameterint.h"
-#include "param/parameterfloat.h"
 #include "param/parameterselect.h"
-#include "param/parameterfilename.h"
-#include "param/parametertext.h"
-#include "param/parametertimeline1d.h"
-#include "audio/audiosource.h"
-#include "audio/audiomicrophone.h"
+#include "param/modulatoroutput.h"
+#include "audio/spatial/spatialsoundsource.h"
+#include "audio/spatial/spatialmicrophone.h"
+#include "math/transformationbuffer.h"
 #include "modulatorobjectfloat.h"
+#include "io/datastream.h"
+#include "io/error.h"
+#include "io/log.h"
+#include "tool/stringmanip.h"
 
 namespace MO {
 
-bool registerObject_(Object * obj)
+namespace Private
 {
-    return ObjectFactory::registerObject(obj);
+    bool register_object_(Object * obj)
+    {
+        return ObjectFactory::registerObject(obj);
+    }
+
+    void set_object_id_(Object * o, const QString& id)
+    {
+        o->p_idName_ = id;
+    }
+
 }
 
 Object::Object(QObject *parent) :
-    QObject                 (parent),
-    canBeDeleted_           (true),
-    parentObject_           (0),
-    childrenHaveChanged_    (false),
-    numberThreads_          (1),
-    bufferSize_             (1),
-    paramActiveScope_       (0),
-    sampleRate_             (44100),
-    sampleRateInv_          (1.0/44100.0),
-    parentActivityScope_    (AS_ON),
-    currentActivityScope_   (AS_ON)
+    QObject                   (parent),
+    p_parameters_             (0),
+    p_paramActiveScope_       (0),
+    p_canBeDeleted_           (true),
+    p_parentObject_           (0),
+    p_childrenHaveChanged_    (false),
+    p_numberThreads_          (1),
+    p_numberSoundSources_     (0),
+    p_numberMicrophones_      (0),
+    p_sampleRate_             (44100),
+    p_sampleRateInv_          (1.0/44100.0),
+    p_parentActivityScope_    (AS_ON),
+    p_currentActivityScope_   (AS_ON)
 //    parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY)),
 //    currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
 {
-    parameters_ = new Parameters(this);
+    p_parameters_ = new Parameters(this);
 
     // tie into Object hierarchy
     // NOTE: Has not been tested yet, and is actually never used
@@ -65,12 +73,9 @@ Object::Object(QObject *parent) :
 
 Object::~Object()
 {
-    delete parameters_;
+    delete p_parameters_;
 
-    for (auto a : objAudioSources_)
-        delete a;
-
-    for (auto m : objMicrophones_)
+    for (auto m : p_modulatorOuts_)
         delete m;
 }
 
@@ -124,8 +129,8 @@ void Object::serializeTree(IO::DataStream & io) const
     io.endSkip(startPos);
 
     // write childs
-    io << (qint32)childObjects_.size();
-    for (auto o : childObjects_)
+    io << (qint32)p_childObjects_.size();
+    for (auto o : p_childObjects_)
         o->serializeTree(io);
 
     // v2
@@ -137,7 +142,7 @@ void Object::serializeTree(IO::DataStream & io) const
 
 Object * Object::deserializeTree(IO::DataStream & io)
 {
-    Object * obj = deserializeTree_(io);
+    Object * obj = p_deserializeTree_(io);
 
     if (Scene * scene = qobject_cast<Scene*>(obj))
         scene->updateTree_();
@@ -145,7 +150,7 @@ Object * Object::deserializeTree(IO::DataStream & io)
     return obj;
 }
 
-Object * Object::deserializeTree_(IO::DataStream & io)
+Object * Object::p_deserializeTree_(IO::DataStream & io)
 {
     MO_DEBUG_IO("Object::deserializeTree_()");
 
@@ -207,11 +212,12 @@ Object * Object::deserializeTree_(IO::DataStream & io)
         io.skip(objLength);
 
         o = ObjectFactory::createDummy();
+        name = name + " *missing*";
     }
 
     // set default object info
-    o->idName_ = o->orgIdName_ = idName;
-    o->name_ = name;
+    o->p_idName_ = idName;
+    o->p_name_ = name;
 
     // iterate over childs
     quint32 numChilds;
@@ -232,10 +238,6 @@ Object * Object::deserializeTree_(IO::DataStream & io)
             o->deserializeAfterChilds(io);
     }
 
-    // create audio objects
-    o->createAudioSources();
-    o->createMicrophones();
-
     return o;
 }
 
@@ -243,20 +245,20 @@ void Object::serialize(IO::DataStream & io) const
 {
     io.writeHeader("obj", 2);
 
-    io << canBeDeleted_;
+    io << p_canBeDeleted_;
 
     // v2
-    io << attachedData_;
+    io << p_attachedData_;
 }
 
 void Object::deserialize(IO::DataStream & io)
 {
     const auto ver = io.readHeader("obj", 2);
 
-    io >> canBeDeleted_;
+    io >> p_canBeDeleted_;
 
     if (ver >= 2)
-        io >> attachedData_;
+        io >> p_attachedData_;
 }
 
 
@@ -266,7 +268,7 @@ void Object::dumpTreeIds(std::ostream &out, const std::string& prefix) const
 {
     out << prefix << idName() << std::endl;
 
-    for (const Object * c : childObjects_)
+    for (const Object * c : p_childObjects_)
         c->dumpTreeIds(out, " " + prefix);
 }
 
@@ -387,10 +389,10 @@ bool Object::isModulated() const
 
 bool Object::isAudioRelevant() const
 {
-    if (!microphones().isEmpty() || !audioSources().isEmpty())
+    if (numberMicrophones() || numberSoundSources())
         return true;
 
-    for (auto c : childObjects_)
+    for (auto c : p_childObjects_)
         if (c->isAudioRelevant())
             return true;
 
@@ -415,8 +417,8 @@ void Object::setAttachedData(const QVariant &value, DataType type, const QString
     // remove entry
     if (value.isNull())
     {
-        auto i = attachedData_.find(id);
-        if (i == attachedData_.end())
+        auto i = p_attachedData_.find(id);
+        if (i == p_attachedData_.end())
             return;
 
         auto map = &(*i);
@@ -427,9 +429,9 @@ void Object::setAttachedData(const QVariant &value, DataType type, const QString
     }
 
     // create entry
-    auto i = attachedData_.find(id);
-    if (i == attachedData_.end())
-        i = attachedData_.insert(id, QMap<qint64, QVariant>());
+    auto i = p_attachedData_.find(id);
+    if (i == p_attachedData_.end())
+        i = p_attachedData_.insert(id, QMap<qint64, QVariant>());
 
     auto map = &(*i);
     map->insert(type, value);
@@ -438,8 +440,8 @@ void Object::setAttachedData(const QVariant &value, DataType type, const QString
 QVariant Object::getAttachedData(DataType type, const QString &id) const
 {
     // remove entry
-    auto i = attachedData_.find(id);
-    if (i == attachedData_.end())
+    auto i = p_attachedData_.find(id);
+    if (i == p_attachedData_.end())
         return QVariant();
 
     auto map = &(*i);
@@ -453,8 +455,8 @@ QVariant Object::getAttachedData(DataType type, const QString &id) const
 bool Object::hasAttachedData(DataType type, const QString &id) const
 {
     // remove entry
-    auto i = attachedData_.find(id);
-    if (i == attachedData_.end())
+    auto i = p_attachedData_.find(id);
+    if (i == p_attachedData_.end())
         return false;
 
     auto map = &(*i);
@@ -466,7 +468,7 @@ bool Object::hasAttachedData(DataType type, const QString &id) const
 void Object::dumpAttachedData() const
 {
     qDebug() << "----- attached data for" << idName() << "/" << name();
-    for (auto i = attachedData_.begin(); i != attachedData_.end(); ++i)
+    for (auto i = p_attachedData_.begin(); i != p_attachedData_.end(); ++i)
     {
         qDebug() << "-- data id" << i.key();
         for (auto j = i.value().begin(); j != i.value().end(); ++j)
@@ -478,53 +480,59 @@ void Object::dumpAttachedData() const
 #endif
 
 
-Object::ActivityScope Object::activityScope() const
+QColor Object::color() const
 {
-    if (paramActiveScope_)
-        return (ActivityScope)(
-                    paramActiveScope_->baseValue() & parentActivityScope_);
-    else
-        return parentActivityScope_;
+    return ObjectFactory::colorForObject(this);
 }
 
-void Object::passDownActivityScope_(ActivityScope parent_scope)
+
+Object::ActivityScope Object::activityScope() const
+{
+    if (p_paramActiveScope_)
+        return (ActivityScope)(
+                    p_paramActiveScope_->baseValue() & p_parentActivityScope_);
+    else
+        return p_parentActivityScope_;
+}
+
+void Object::p_passDownActivityScope_(ActivityScope parent_scope)
 {
     ActivityScope scope = parent_scope;
-    if (paramActiveScope_)
-        scope = (ActivityScope)(scope & paramActiveScope_->baseValue());
+    if (p_paramActiveScope_)
+        scope = (ActivityScope)(scope & p_paramActiveScope_->baseValue());
 
-    for (auto c : childObjects_)
+    for (auto c : p_childObjects_)
     {
-        c->parentActivityScope_ = scope;
-        c->passDownActivityScope_(scope);
+        c->p_parentActivityScope_ = scope;
+        c->p_passDownActivityScope_(scope);
     }
 }
 
 bool Object::active(Double /*time*/, uint /*thread*/) const
 {
     // XXX active parameter not there yet
-    return activityScope() & currentActivityScope_;
+    return activityScope() & p_currentActivityScope_;
 }
 
 bool Object::activeAtAll() const
 {
-    return activityScope() & currentActivityScope_;
+    return activityScope() & p_currentActivityScope_;
 }
 
 // ------------------ setter -----------------------
 
 void Object::setName(const QString & n)
 {
-    name_ = n;
+    p_name_ = n;
 }
 
 void Object::setCurrentActivityScope(ActivityScope scope)
 {
-    currentActivityScope_ = scope;
+    p_currentActivityScope_ = scope;
 
     // currentActivityScope_ = ActivityScope(currentActivityScope_ | AS_CLIENT_ONLY);
 
-    for (auto o : childObjects_)
+    for (auto o : p_childObjects_)
         o->setCurrentActivityScope(scope);
 }
 
@@ -532,12 +540,12 @@ void Object::setCurrentActivityScope(ActivityScope scope)
 
 const Object * Object::rootObject() const
 {
-    return parentObject_ ? parentObject_->rootObject() : this;
+    return p_parentObject_ ? p_parentObject_->rootObject() : this;
 }
 
 Object * Object::rootObject()
 {
-    return parentObject_ ? parentObject_->rootObject() : this;
+    return p_parentObject_ ? p_parentObject_->rootObject() : this;
 }
 
 const Scene * Object::sceneObject() const
@@ -550,31 +558,59 @@ Scene * Object::sceneObject()
     return qobject_cast<Scene*>(rootObject());
 }
 
+ObjectEditor * Object::editor() const
+{
+    if (auto s = sceneObject())
+        return s->editor();
+    else
+        return 0;
+}
+
 int Object::numChildren(bool recursive) const
 {
     if (!recursive)
         return childObjects().size();
 
     int n = childObjects().size();
-    for (auto o : childObjects_)
+    for (auto o : p_childObjects_)
         n += o->numChildren(true);
     return n;
 }
 
 bool Object::hasParentObject(Object *o) const
 {
-    if (!parentObject_)
+    if (!p_parentObject_)
         return false;
 
-    return parentObject_ == o? true : parentObject_->hasParentObject(o);
+    return p_parentObject_ == o? true : p_parentObject_->hasParentObject(o);
 }
 
 Object * Object::findParentObject(int tflags) const
 {
-    if (!parentObject_)
+    if (!p_parentObject_)
         return 0;
 
-    return parentObject_->type() & tflags ? parentObject_ : parentObject_->findParentObject(tflags);
+    return p_parentObject_->type() & tflags ? p_parentObject_ : p_parentObject_->findParentObject(tflags);
+}
+
+Object * Object::findCommonParentObject(Object *other) const
+{
+    // get list of parents
+    QList<Object*> par;
+    Object * o = parentObject();
+    while (o) { par << o; o = o->parentObject(); }
+
+    // get list of other's parents
+    QSet<Object*> opar;
+    o = other->parentObject();
+    while (o) { opar << o; o = o->parentObject(); }
+
+    // find commons
+    for (auto o : par)
+        if (opar.contains(o))
+            return o;
+
+    return 0;
 }
 
 bool Object::isSaveToAdd(Object *o, QString &error) const
@@ -585,11 +621,26 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
         return false;
     }
 
-    if (!canHaveChildren(o->type()))
+    if (hasParentObject(o))
     {
-        error = tr("'%1' can not have a child of this type").arg(idName());
+        error = tr("Trying to add '%1' to itself").arg(o->name());
         return false;
     }
+
+    if (!canHaveChildren(o->type()))
+    {
+        error = tr("'%1' can not have a child of this type").arg(name());
+        return false;
+    }
+
+    // test for singleton clipcontroller
+    if (o->isClipController())
+        if (auto s = sceneObject())
+            if (s->clipController())
+            {
+                error = tr("Only one clipcontainer allowed");
+                return false;
+            }
 
     // test for modulation loops
     QList<Object*> mods = o->getFutureModulatingObjects(sceneObject());
@@ -603,7 +654,7 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
     if (mods.contains((Object*)this))
     {
         error = tr("Adding '%1' as a child to '%2' would cause an infinite "
-                   "modulation loop!").arg(o->idName()).arg(idName());
+                   "modulation loop!").arg(o->name()).arg(name());
         return false;
     }
 
@@ -617,36 +668,33 @@ void Object::setParentObject_(Object *parent, int index)
 
     MO_DEBUG_TREE("Object("<<idName()<<")::SetParentObject("<<parent->idName()<<")");
 
-    MO_ASSERT(parentObject_ != parent, "trying to add object to same parent");
+    MO_ASSERT(p_parentObject_ != parent, "trying to add object to same parent");
     MO_ASSERT(!hasParentObject(this), "trying to add object to it's own hierarchy");
     MO_ASSERT(parent->canHaveChildren(type()), "invalid child '" << idName() << "' "
                               "for object '" << parent->idName() << "'");
 
     // silently ignore in release mode
-    if (parent == parentObject_ || hasParentObject(this))
+    if (parent == p_parentObject_ || hasParentObject(this))
         return;
 
     // install in QObject tree (handle memory)
     setParent(parent);
 
     // remove from previous parent
-    if (parentObject_)
+    if (p_parentObject_)
     {
-        parentObject_->takeChild_(this);
+        p_parentObject_->p_takeChild_(this);
     }
-    parentObject_ = 0;
+    p_parentObject_ = 0;
 
     // adjust idnames in new subtree
-    makeUniqueIds_(parent->rootObject());
+    ObjectEditor::makeUniqueIds(parent->rootObject(), this);
 
     // assign
-    parentObject_ = parent;
+    p_parentObject_ = parent;
 
     // and add to child list
-    parentObject_->addChildObjectHelper_(this, index);
-
-    // create any output objects
-    createOutputs();
+    p_parentObject_->p_addChildObjectHelper_(this, index);
 
     // signal this object
     this->onParentChanged();
@@ -656,43 +704,43 @@ void Object::setParentObject_(Object *parent, int index)
 Object * Object::addObject_(Object * o, int index)
 {
     MO_ASSERT(o, "trying to add a NULL child");
-    MO_ASSERT(!childObjects_.contains(o), "duplicate addChild for '" << o->idName());
+    MO_ASSERT(!p_childObjects_.contains(o), "duplicate addChild for '" << o->idName());
 
     o->setParentObject_(this, index);
 
-    childrenHaveChanged_ = true;
+    p_childrenHaveChanged_ = true;
     return o;
 }
 
-Object * Object::addChildObjectHelper_(Object * o, int index)
+Object * Object::p_addChildObjectHelper_(Object * o, int index)
 {
     MO_ASSERT(o, "trying to add a NULL child");
 
     if (index < 0)
-        childObjects_.append(o);
+        p_childObjects_.append(o);
     else
-        childObjects_.insert(index, o);
+        p_childObjects_.insert(index, o);
 
-    childrenHaveChanged_ = true;
+    p_childrenHaveChanged_ = true;
     return o;
 }
 
 void Object::deleteObject_(Object * child, bool destroy)
 {
-    if (takeChild_(child))
+    if (p_takeChild_(child))
     {
         child->setParent(0);
         if (destroy)
             delete child;
-        childrenHaveChanged_ = true;
+        p_childrenHaveChanged_ = true;
     }
 }
 
-bool Object::takeChild_(Object *child)
+bool Object::p_takeChild_(Object *child)
 {
-    if (childObjects_.removeOne(child))
+    if (p_childObjects_.removeOne(child))
     {
-        return childrenHaveChanged_ = true;
+        return p_childrenHaveChanged_ = true;
     }
     return false;
 }
@@ -702,13 +750,13 @@ void Object::swapChildren_(int from, int to)
     if (from >= 0 && from < numChildren()
         && to >= 0 && to < numChildren())
 
-    childObjects_.swap(from, to);
-    childrenHaveChanged_ = true;
+    p_childObjects_.swap(from, to);
+    p_childrenHaveChanged_ = true;
 }
 
 bool Object::setChildrenObjectIndex_(Object *child, int newIndex)
 {
-    auto idx = childObjects_.indexOf(child);
+    auto idx = p_childObjects_.indexOf(child);
     if (idx < 0)
         return false;
 
@@ -724,12 +772,12 @@ bool Object::setChildrenObjectIndex_(Object *child, int newIndex)
         --newIndex;
 
     // remove at old location
-    childObjects_.removeAt(idx);
+    p_childObjects_.removeAt(idx);
     // put at new location
     if (newIndex >= 0)
-        childObjects_.insert(newIndex, child);
+        p_childObjects_.insert(newIndex, child);
     else
-        childObjects_.append(child);
+        p_childObjects_.append(child);
 
     return true;
 }
@@ -746,31 +794,8 @@ QSet<QString> Object::getChildIds(bool recursive) const
     return ids;
 }
 
-QString Object::getUniqueId(QString id, const QSet<QString> &existingNames, bool * existed)
-{
-    MO_ASSERT(!id.isEmpty(), "unset object idName detected");
-
-    if (existed)
-        *existed = false;
-
-    // create an id if necessary
-    if (id.isEmpty())
-        id = "Object";
-
-    // replace white char with underscore
-    id.replace(QRegExp("\\s\\s*"), "_");
-
-    while (existingNames.contains(id))
-    {
-        increase_id_number(id, 1);
-        if (existed)
-            *existed = true;
-    }
-
-    return id;
-}
-
-void Object::makeUniqueIds_(Object * root)
+/*
+void Object::p_makeUniqueIds_(Object * root)
 {
     // get all existing ids
     QSet<QString> existing = root->getChildIds(true);
@@ -780,33 +805,33 @@ void Object::makeUniqueIds_(Object * root)
         existing.remove(idName());
 
     // call string version
-    makeUniqueIds_(existing);
+    p_makeUniqueIds_(existing);
 }
 
-void Object::makeUniqueIds_(QSet<QString> &existing)
+void Object::p_makeUniqueIds_(QSet<QString> &existing)
 {
     bool changed = false;
 
     // make this object's id unique
-    idName_ = getUniqueId(idName_, existing, &changed);
+    p_idName_ = getUniqueId(p_idName_, existing, &changed);
 
     // add to existing ids
     if (changed)
-        existing.insert(idName_);
+        existing.insert(p_idName_);
 
     // go through childs
-    for (auto o : childObjects_)
-        o->makeUniqueIds_(existing);
+    for (auto o : p_childObjects_)
+        o->p_makeUniqueIds_(existing);
 }
-
+*/
 Object * Object::findChildObject(const QString &id, bool recursive, Object * ignore) const
 {
-    for (auto o : childObjects_)
+    for (auto o : p_childObjects_)
         if (o != ignore && o->idName() == id)
             return o;
 
     if (recursive)
-        for (auto i : childObjects_)
+        for (auto i : p_childObjects_)
             if (Object * o = i->findChildObject(id, recursive, ignore))
                 return o;
 
@@ -816,12 +841,12 @@ Object * Object::findChildObject(const QString &id, bool recursive, Object * ign
 QList<Object*> Object::findChildObjects(int typeFlags, bool recursive) const
 {
     QList<Object*> list;
-    for (auto o : childObjects_)
+    for (auto o : p_childObjects_)
         if (o->type() & typeFlags)
             list.append(o);
 
     if (recursive)
-        for (auto o : childObjects_)
+        for (auto o : p_childObjects_)
             list.append( o->findChildObjects(typeFlags, true) );
 
     return list;
@@ -833,24 +858,28 @@ bool Object::canHaveChildren(Type t) const
     if (t == T_DUMMY || type() == T_DUMMY)
         return true;
 
-    // XXX for now: ModulatorObjects can be anywhere
+    // ModulatorObjects can be anywhere
     if (t & TG_MODULATOR_OBJECT)
         return true;
 
-    // XXX test123: Let's place sequences everywhere
+    // Sequences can be everywhere
     if (t & TG_SEQUENCE)
         return true;
 
-    // Clips belong into ClipContainer ...
+    // Clips can be everywhere
     if (t == T_CLIP)
-        return type() == T_CLIP_CONTAINER;
+        return true;
 
-    // and nothing else
-    if (type() == T_CLIP_CONTAINER)
+    // nothing goes into clip container, except maybe clips
+    if (type() == T_CLIP_CONTROLLER)
         return t == T_CLIP;
 
+    // Clips belong into ClipContainer ...
+    if (t == T_CLIP)
+        return type() == T_CLIP_CONTROLLER;
+
     // XXX Currently ClipContainer only into scene
-    if (t == T_CLIP_CONTAINER)
+    if (t == T_CLIP_CONTROLLER)
         return type() == T_SCENE;
 
     // Clips only contain sequences
@@ -903,19 +932,19 @@ bool Object::canHaveChildren(Type t) const
     return true;
 }
 
-void Object::childrenChanged_()
+void Object::p_childrenChanged_()
 {
     MO_DEBUG_TREE("Object('" << idName() << "')::childrenChanged_()");
 
     // collect special sub-objects
-    collectTransformationObjects_();
+    p_collectTransformationObjects_();
 
     // notify derived classes
     childrenChanged();
 
-    passDownActivityScope_(activityScope());
+    p_passDownActivityScope_(activityScope());
 
-    childrenHaveChanged_ = false;
+    p_childrenHaveChanged_ = false;
 }
 
 
@@ -924,30 +953,35 @@ void Object::onObjectsAboutToDelete(const QList<Object *> & list)
     for (Parameter * p : params()->parameters())
     {
         for (const Object * o : list)
-            if (p->findModulator(o->idName()))
-                p->removeModulator(o->idName());
+            p->removeAllModulators(o->idName());
     }
 }
 
 
+void Object::idNamesChanged(const QMap<QString, QString> & map)
+{
+    // tell parameters
+    for (Parameter * p : params()->parameters())
+        p->idNamesChanged(map);
+
+    // derived code
+    onIdNamesChanged(map);
+
+    // children
+    for (auto c : childObjects())
+        c->idNamesChanged(map);
+}
+
 void Object::propagateRenderMode(ObjectGl *parent)
 {
-    for (auto c : childObjects_)
+    for (auto c : p_childObjects_)
         c->propagateRenderMode(parent);
 }
 
 bool Object::verifyNumberThreads(uint num)
 {
-    if (numberThreads_ != num)
+    if (p_numberThreads_ != num)
         return false;
-
-    for (auto a : objAudioSources_)
-        if (a->numberThreads() != num)
-            return false;
-
-    for (auto m : objMicrophones_)
-        if (m->numberThreads() != num)
-            return false;
 
     return true;
 }
@@ -956,16 +990,7 @@ void Object::setNumberThreads(uint num)
 {
     MO_DEBUG_TREE("Object('" << idName() << "')::setNumberThreads(" << num << ")");
 
-    numberThreads_ = num;
-
-    transformation_.resize(num);
-    bufferSize_.resize(num);
-
-    for (auto a : objAudioSources_)
-        a->setNumberThreads(num);
-
-    for (auto m : objMicrophones_)
-        m->setNumberThreads(num);
+    p_numberThreads_ = num;
 }
 
 void Object::getIdMap(QMap<QString, Object *> &idMap) const
@@ -978,76 +1003,22 @@ void Object::getIdMap(QMap<QString, Object *> &idMap) const
 
 // ------------------------- 3d -----------------------
 
-void Object::clearTransformation(uint thread, uint sample)
+void Object::p_collectTransformationObjects_()
 {
-    transformation_[thread][sample] = Mat4(1.0);
-}
+    p_transformationObjects_.clear();
 
-void Object::collectTransformationObjects_()
-{
-    transformationObjects_.clear();
-
-    for (auto o : childObjects_)
+    for (auto o : p_childObjects_)
         if (auto t = qobject_cast<Transformation*>(o))
-            transformationObjects_.append(t);
+            p_transformationObjects_.append(t);
 }
 
 void Object::calculateTransformation(Mat4 &matrix, Double time, uint thread) const
 {
-    for (auto t : transformationObjects_)
+    for (auto t : p_transformationObjects_)
         if (t->active(time, thread))
             t->applyTransformation(matrix, time, thread);
 }
 
-// -------------------- outputs ------------------------------
-
-void Object::requestCreateOutputs()
-{
-    Scene * scene = sceneObject();
-    if (!scene)
-        MO_WARNING("Object('" << idName() << "')::requestCreateOutputs() "
-                   "called without scene object");
-
-    scene->callCreateOutputs_(this);
-}
-
-ModulatorObjectFloat * Object::createOutputFloat(const QString &given_id, const QString &name)
-{
-    MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat('"
-             << given_id << "', '" << name << "')");
-
-    QString id = idName() + "_" + given_id;
-
-    Object * o = findChildObject(id);
-
-    // construct new
-    if (!o)
-    {
-        ModulatorObjectFloat * mod = ObjectFactory::createModulatorObjectFloat();
-        mod->canBeDeleted_ = false;
-        mod->idName_ = mod->orgIdName_ = id;
-        mod->name_ = name;
-        addObject_(mod);
-        MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat() created new '"
-                 << mod->idName() << "'");
-        return mod;
-    }
-
-    // see if already there
-    if (ModulatorObjectFloat * mod = qobject_cast<ModulatorObjectFloat*>(o))
-    {
-        mod->canBeDeleted_ = false;
-        mod->name_ = name;
-        MO_DEBUG_MOD("Object('" << idName() << "')::createOutputFloat() reusing '"
-                 << mod->idName() << "'");
-        return mod;
-    }
-
-    MO_ASSERT(false, "Object::createOutputFloat() called, object '" << id << "' found "
-              "but it's not of ModulatorObject class, instead: " << o);
-
-    return 0;
-}
 
 
 
@@ -1071,7 +1042,7 @@ void Object::createParameters()
 
     params()->beginParameterGroup("active", tr("activity"));
 
-    paramActiveScope_ =
+    p_paramActiveScope_ =
     params()->createSelectParameter("_activescope", tr("activity scope"),
                          strTip,
                          { "off", "on", "client", "prev", "ren", "prev1", "prev2", "prev3",
@@ -1094,8 +1065,8 @@ void Object::onParameterChanged(Parameter * p)
     MO_DEBUG_PARAM("Object::parameterChanged('" << p->idName() << "')");
 
     // activity scope changed
-    if (p == paramActiveScope_)
-        passDownActivityScope_(activityScope());
+    if (p == p_paramActiveScope_)
+        p_passDownActivityScope_(activityScope());
 
 }
 
@@ -1104,172 +1075,62 @@ void Object::onParameterChanged(Parameter * p)
 
 // ----------------- audio sources ---------------------
 
-bool Object::verifyBufferSize(uint thread, uint bufferSize)
-{
-    if (bufferSize_.size() < thread
-        || bufferSize_[thread] != bufferSize)
-        return false;
-
-    for (auto a : objAudioSources_)
-        if (a->bufferSize(thread) != bufferSize)
-            return false;
-
-    for (auto m : objMicrophones_)
-        if (m->bufferSize(thread) != bufferSize)
-            return false;
-
-    return true;
-}
-
-void Object::setBufferSize(uint bufferSize, uint thread)
-{
-    bufferSize_[thread] = bufferSize;
-    transformation_[thread].resize(bufferSize);
-
-    for (auto a : objAudioSources_)
-        a->setBufferSize(bufferSize, thread);
-
-    for (auto m : objMicrophones_)
-        m->setBufferSize(bufferSize, thread);
-}
-
 void Object::setSampleRate(uint samplerate)
 {
     MO_ASSERT(samplerate>0, "bogus samplerate");
 
-    sampleRate_ = std::max((uint)1, samplerate);
-    sampleRateInv_ = 1.0 / sampleRate_;
-
-    for (auto m : objMicrophones_)
-        m->setSampleRate(sampleRate_);
+    p_sampleRate_ = std::max((uint)1, samplerate);
+    p_sampleRateInv_ = 1.0 / p_sampleRate_;
 }
 
-void Object::requestCreateAudioSources()
+void Object::setNumberSoundSources(uint num)
 {
-    Scene * s = sceneObject();
-    if (!s)
-        createAudioSources();
-    else
-        s->callCreateAudioSources_(this);
+    p_numberSoundSources_ = num;
 }
 
-void Object::requestCreateMicrophones()
+void Object::setNumberMicrophones(uint num)
 {
-    Scene * s = sceneObject();
-    if (!s)
-        createMicrophones();
-    else
-        s->callCreateMicrophones_(this);
+    p_numberMicrophones_ = num;
 }
 
-
-AUDIO::AudioSource * Object::createAudioSource(const QString& id)
+void Object::calculateSoundSourceTransformation(
+        const TransformationBuffer * objectTransform,
+        const QList<AUDIO::SpatialSoundSource*>& list,
+        uint , SamplePos , uint )
 {
-    auto a = new AUDIO::AudioSource(id, this);
+    MO_ASSERT(list.size() == (int)numberSoundSources(), "number of sound sources does not match "
+              << list.size() << "/" << numberSoundSources());
 
-    objAudioSources_.append(a);
-
-    return a;
+    for (auto s : list)
+        TransformationBuffer::copy(objectTransform, s->transformationBuffer());
 }
 
-QList<AUDIO::AudioSource*> Object::createOrDeleteAudioSources(const QString &id, uint number)
+void Object::calculateMicrophoneTransformation(
+        const TransformationBuffer * objectTransform,
+        const QList<AUDIO::SpatialMicrophone*>& list,
+        uint , SamplePos , uint )
 {
-    //MO_DEBUG("Object::createOrDeleteAudioSources(" << id << ", " << number << ")");
+    MO_ASSERT(list.size() == (int)numberMicrophones(), "number of microphones does not match "
+              << list.size() << "/" << numberMicrophones());
 
-    // get all that exist with the given id
-    QMap<QString, AUDIO::AudioSource*> exist;
-    for (auto m : objAudioSources_)
-        if (m->idName().startsWith(id))
-            exist.insert(m->idName(), m);
-
-    QList<AUDIO::AudioSource*> list;
-
-    // create or reuse
-    for (uint i=0; i<number; ++i)
-    {
-        QString curid = QString("%1_%2").arg(id).arg(i+1);
-
-        if (exist.contains(curid))
-        {
-            list.append(exist[curid]);
-            exist.remove(curid);
-        }
-        else
-        {
-            list.append( createAudioSource(curid) );
-        }
-    }
-
-    // delete the ones not needed
-    for (auto m : exist)
-    {
-        objAudioSources_.removeOne(m);
-        delete m;
-    }
-
-    return list;
-}
-
-AUDIO::AudioMicrophone * Object::createMicrophone(const QString &id)
-{
-    auto m = new AUDIO::AudioMicrophone(id, this);
-
-    objMicrophones_.append(m);
-
-    // update with current buffer info
-    m->setSampleRate(sampleRate_);
-    m->setNumberThreads(numberThreads());
-    for (uint i=0; i<numberThreads(); ++i)
-        m->setBufferSize(bufferSize(i), i);
-
-    return m;
-}
-
-QList<AUDIO::AudioMicrophone*> Object::createOrDeleteMicrophones(const QString &id, uint number)
-{
-    // get all that exist with the given id
-    QMap<QString, AUDIO::AudioMicrophone*> exist;
-    for (auto m : objMicrophones_)
-        if (m->idName().startsWith(id))
-            exist.insert(m->idName(), m);
-
-    QList<AUDIO::AudioMicrophone*> list;
-
-    // create or reuse
-    for (uint i=0; i<number; ++i)
-    {
-        QString curid = QString("%1_%2").arg(id).arg(i+1);
-
-        if (exist.contains(curid))
-        {
-            list.append(exist[curid]);
-            exist.remove(curid);
-        }
-        else
-        {
-            list.append( createMicrophone(curid) );
-        }
-    }
-
-    // delete the ones not needed
-    for (auto m : exist)
-    {
-        objMicrophones_.removeOne(m);
-        delete m;
-    }
-
-    return list;
+    for (auto m : list)
+        TransformationBuffer::copy(objectTransform, m->transformationBuffer());
 }
 
 // -------------------- modulators ---------------------
 
-QList<Modulator*> Object::getModulators() const
+QList<Modulator*> Object::getModulators(bool recursive) const
 {
     QList<Modulator*> mods;
+    // params
     for (auto p : params()->parameters())
-    {
-        mods.append( p->modulators() );
-    }
+        mods << p->modulators();
+
+    // childs
+    if (recursive)
+        for (auto c : childObjects())
+            mods << c->getModulators(true);
+
     return mods;
 }
 
@@ -1312,5 +1173,40 @@ QList<QPair<Parameter*, Object*>> Object::getModulationPairs() const
     return pairs;
 }
 
+
+void Object::setModulatorOutputs(const QList<ModulatorOutput*>& mods)
+{
+    MO_DEBUG_MOD("Object::setModulatorOutputs(size=" << mods.size() << ")");
+
+    // delete previous
+    for (auto m : p_modulatorOuts_)
+        delete m;
+
+    // update
+    p_modulatorOuts_ = mods;
+
+    // set channel indices
+    uint k = 0;
+    for (auto m : p_modulatorOuts_)
+        m->p_channel_ = k++;
+
+    if (editor())
+        editor()->emitObjectChanged(this);
+}
+
+ModulatorOutput * Object::getModulatorOutput(const QString &id) const
+{
+    MO_DEBUG_MOD("Object::getModulatorOutput(" << id << ")");
+
+    for (auto m : p_modulatorOuts_)
+        if (m->id() == id)
+        {
+            MO_DEBUG_MOD("found");
+            return m;
+        }
+
+    MO_DEBUG_MOD("not found among " << p_modulatorOuts_.size() << " outputs");
+    return 0;
+}
 
 } // namespace MO

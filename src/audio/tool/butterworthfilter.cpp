@@ -94,9 +94,11 @@ void ButterworthFilter::updateCoefficients()
 }
 
 void ButterworthFilter::process(const F32 *input, uint inputStride,
-                                F32 *output, uint outputStride, uint blockSize)
+                                F32 *output, uint outputStride, uint blockSize, F32 amp)
 {
 #define MO__CLIP(v__) std::max(-clip_,std::min(clip_, (v__) ))
+
+    amp *= amp_;
 
     for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
     {
@@ -125,7 +127,7 @@ void ButterworthFilter::process(const F32 *input, uint inputStride,
         ym2_ = ym1_;
         ym1_ = tempy;
 
-        *output = tempy * amp_;
+        *output = tempy * amp;
     }
 
 #undef MO__CLIP

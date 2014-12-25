@@ -13,6 +13,8 @@
 
 #include <QString>
 #include <QList>
+#include <QPair>
+#include <QMap>
 
 #include "object/object_fwd.h"
 
@@ -47,17 +49,20 @@ public:
         Goes up the branch until the first Object::TG_REAL_OBJECT */
     QString infoIdName() const;
 
-    bool isEditable() const { return isEditable_; }
-    bool isModulateable() const { return isModulateable_; }
-
     const QString& groupId() const { return groupId_; }
     const QString& groupName() const { return groupName_; }
+
+    bool isEditable() const { return isEditable_; }
+    bool isModulateable() const { return isModulateable_; }
 
     /** Returns true if the parameter has at least one modulation source assigned. */
     bool isModulated() const { return !modulators_.isEmpty(); }
 
     /** Returns true if the parameter should be visible in the ParameterView */
     bool isVisible() const { return isVisible_; }
+
+    /** Returns true if the parameter should be visible in the ObjectGraphView */
+    bool isVisibleInGraph() const { return isVisibleGraph_; }
 
     // -------------- setter --------------------
 
@@ -68,25 +73,37 @@ public:
 
     void setGroup(const QString& id, const QString& name) { groupId_ = id; groupName_ = name; }
 
+    /** Notifies scene (XXX need to refacture into ObjectEditor) */
     void setVisible(bool visible);
+    /** Sets the flag for displaying the parameter in the ObjectGraphView */
+    void setVisibleGraph(bool visible) { isVisibleGraph_ = visible; }
 
     // ------------ modulators ------------------
+
+    /** Called when the idNames of objects have changed.
+        This happens if a new object/branch is inserted into an existing branch.
+        The map maps from old id to new id.
+        Call ancestor's code in your derived function! */
+    virtual void idNamesChanged(const QMap<QString, QString>& );
 
     /** Should return an OR combination of all Object types
         that are supported as modulators */
     virtual int getModulatorTypes() const { return 0; }
 
-    /** Returns list of all modulator ids */
-    QStringList modulatorIds() const;
+    /** Returns list of all modulator ids and output ids */
+    QList<QPair<QString, QString>> modulatorIds() const;
 
     /** Adds an Object to the list of modulators.
         Modulators will be collected by
-        collectModulators() in the derived class */
-    Modulator * addModulator(const QString& idName);
+        collectModulators() in the derived class.
+        XXX @p outputId is currently only used for AudioObject output conversion. */
+    Modulator * addModulator(const QString& idName, const QString& outputId);
 
     /** Removes the Object from the list of modulators and
         deletes it. */
-    void removeModulator(const QString& idName);
+    void removeModulator(const QString& idName, const QString& outputId);
+    /** Removes all modulators coming from object @p idName */
+    void removeAllModulators(const QString& idName);
 
     /** Removes all modulators IDs */
     void removeAllModulators();
@@ -96,9 +113,11 @@ public:
 
     /** Returns a modulator for the given id.
         The Modulator is created or reused. */
-    virtual Modulator * getModulator(const QString& modulatorId) = 0;
+    virtual Modulator * getModulator(const QString& modulatorId, const QString& outputId) = 0;
 
     /** Returns the Modulator for the given id, or NULL */
+    Modulator * findModulator(const QString& modulatorId, const QString &outputId) const;
+    /** Returns the first matching Modulator (ignoring the outputId), or NULL */
     Modulator * findModulator(const QString& modulatorId) const;
 
     /** Returns all modulators (valid after collectModulators) */
@@ -127,7 +146,7 @@ private:
             groupId_, groupName_;
 
     bool isEditable_, isModulateable_,
-         isVisible_;
+         isVisible_, isVisibleGraph_;
 
     //QList<QString> modulatorIds_;
 

@@ -85,6 +85,15 @@ const QString& Parameters::idName() const
     return object() ? object()->idName() : s;
 }
 
+QList<Parameter*> Parameters::getVisibleGraphParameters() const
+{
+    QList<Parameter*> list;
+    for (auto p : parameters_)
+        if (p->isVisibleInGraph())
+            list << p;
+    return list;
+}
+
 Parameter * Parameters::findParameter(const QString &id)
 {
     for (auto p : parameters_)

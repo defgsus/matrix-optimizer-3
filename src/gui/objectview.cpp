@@ -62,6 +62,7 @@ ObjectView::ObjectView(QWidget *parent) :
                 this, SLOT(onObjectListClicked(MO::Object*)));
 
         paramView_ = new ParameterView(this);
+        paramView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         layout_->addWidget(paramView_);
         connect(paramView_, SIGNAL(objectSelected(MO::Object*)),
                 this, SIGNAL(objectSelected(MO::Object*)));

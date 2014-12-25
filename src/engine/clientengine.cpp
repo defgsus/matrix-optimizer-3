@@ -19,7 +19,7 @@
 #include "gl/window.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
-#include "object/clipcontainer.h"
+#include "object/clipcontroller.h"
 #include "network/tcpserver.h"
 #include "network/netlog.h"
 #include "network/networkmanager.h"
@@ -497,7 +497,7 @@ void ClientEngine::setPlayback_(bool play)
     if (play)
     {
         // XXX hack: trigger first clip row
-        auto cc = scene_->findChildObjects<ClipContainer>(QString(), true);
+        auto cc = scene_->findChildObjects<ClipController>(QString(), true);
         if (!cc.isEmpty())
             cc[0]->triggerRow(0, 0);
 

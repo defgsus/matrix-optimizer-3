@@ -37,6 +37,8 @@ Drawable::Drawable(const QString &name)
       doRecompile_      (true),
       geometryChanged_  (false),
       vao_              (0),
+      drawTypeSet_      (false),
+      drawType_         (GL_LINES),
       uniColor_         (0)
 {
     MO_DEBUG_GL("Drawable(" << name_ << ")::Drawable()");
@@ -113,6 +115,11 @@ void Drawable::setShader(Shader *s)
     doRecompile_ = true;
 }
 
+void Drawable::setDrawType(GLenum type)
+{
+    drawType_ = type;
+    drawTypeSet_ = true;
+}
 
 void Drawable::createOpenGl()
 {
@@ -327,6 +334,9 @@ void Drawable::renderShader(const Mat4 &proj,
 
     }
 
+    if (drawTypeSet_)
+        vao_->drawElements(drawType_);
+    else
     if (geometry_->numTriangles())
         vao_->drawElements(GL_TRIANGLES);
     else
@@ -345,6 +355,9 @@ void Drawable::renderShader()
 
     shader_->sendUniforms();
 
+    if (drawTypeSet_)
+        vao_->drawElements(drawType_);
+    else
     if (geometry_->numTriangles())
         vao_->drawElements(GL_TRIANGLES);
     else

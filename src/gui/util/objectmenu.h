@@ -36,8 +36,12 @@ public:
     static QMenu * createObjectChildMenu(Object * root, int objectTypeFlags, QWidget *parent = 0);
 
     /** Creates a menu with all modulators for the given Parameter.
-        The QAction::data() contains the Object::idName(). */
+        The QAction::data() contains the Object::idName() and Modulator::outputId()
+        as special format. Use getModulatorId() and getOutputId() to convert. */
     static QMenu * createRemoveModulationMenu(Parameter *, QWidget * parent = 0);
+
+    static QString getModulatorId(const QString& modAndOutputId);
+    static QString getOutputId(const QString& modAndOutputId);
 
     /** Sets the enabled state of each menu action matching one of the @p ids to
         @p enable */
@@ -49,7 +53,8 @@ public:
 
     /** Creates a menu with all parameters of the object in their groups.
         @p selector enables or disables certain parameters.
-        The QAction::data() contains the Parameter::idName(). */
+        The QAction::data() contains the Parameter::idName().
+        @note A NULL pointer is returned if none of the parameters satisfied the selector. */
     static QMenu * createParameterMenu(Object * o, QWidget * parent,
                                        std::function<bool(Parameter*)> selector);
 
@@ -57,6 +62,11 @@ public:
     /** Creates a menu to select a color.
         The QColor is stored in QAction::data() */
     static QMenu * createColorMenu(QWidget * parent = 0);
+
+    /** Creates a menu to select a color.
+        The hue int is stored in QAction::data().
+        -1 is considered gray. */
+    static QMenu * createHueMenu(QWidget * parent = 0);
 
 private:
 

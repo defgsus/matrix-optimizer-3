@@ -25,7 +25,17 @@ void setLineSmooth(bool enable);
 /** Sets the line-width */
 void setLineWidth(gl::GLfloat width);
 
+class Properties
+{
+public:
 
+    /** The maximum (aliased) line width */
+    static gl::GLint maxLineWidth();
+
+    /** The maximum (anti-aliased) line width */
+    static gl::GLint maxLineWidthSmooth();
+
+};
 
 } // namespace GL
 } // namespace MO

@@ -80,11 +80,12 @@ int AudioDevice::callback_(const void * in, void * out)
 // ---------------- ctor -------------
 
 AudioDevice::AudioDevice()
-    :   deviceId_   (0),
-        ok_         (0),
-        play_       (0),
-        func_       (0),
-        p_          (new Private)
+    :   inDeviceId_  (0),
+        outDeviceId_ (0),
+        ok_          (0),
+        play_        (0),
+        func_        (0),
+        p_           (new Private)
 {
     MO_DEBUG_AUDIO("AudioDevice::AudioDevice()");
 }
@@ -106,23 +107,25 @@ AudioDevice::~AudioDevice()
 
 // --------- initialisation ----------
 
-void AudioDevice::init(uint deviceIndex, const Configuration& props)
+void AudioDevice::init(int inDeviceIndex, int outDeviceIndex, const Configuration& props)
 {
-    init(deviceIndex,
+    init(inDeviceIndex,
+         outDeviceIndex,
          props.numChannelsIn(),
          props.numChannelsOut(),
          props.sampleRate(),
          props.bufferSize());
 }
 
-void AudioDevice::init(uint deviceIndex,
+void AudioDevice::init(int inDeviceIndex,
+                       int outDeviceIndex,
                        uint numInputChannels,
                        uint numOutputChannels,
                        uint sampleRate,
                        uint bufferSize)
 {
-    MO_DEBUG_AUDIO("AudioDevice::init(" << deviceIndex << ", " << numInputChannels <<
-             ", " << numOutputChannels << ", " << sampleRate << ", " << bufferSize << ")");
+    MO_DEBUG("AudioDevice::init(" << inDeviceIndex << ", " << numInputChannels <<
+             ", " << outDeviceIndex << ", " << numOutputChannels << ", " << sampleRate << ", " << bufferSize << ")");
 
     // init portaudio if not already done
     if (!AudioDevices::pa_initialized_)
@@ -134,41 +137,64 @@ void AudioDevice::init(uint deviceIndex,
     // close previous session
     if (ok_) close();
 
-    // get some info of device
-    auto painf = Pa_GetDeviceInfo(deviceIndex);
-    if (!painf)
+    // get device infos
+    const PaDeviceInfo * ipainf = 0, * opainf = 0;
+
+    if (inDeviceIndex >= 0)
     {
-        MO_AUDIO_ERROR(API, "can not get audio device info for device " << deviceId_);
+        ipainf = Pa_GetDeviceInfo(inDeviceIndex);
+        if (!ipainf && numInputChannels > 0)
+        {
+            MO_AUDIO_ERROR(API, "can not get audio device info for input device " << inDeviceId_);
+        }
+    }
+    else if (outDeviceIndex >= 0)
+    {
+        ipainf = Pa_GetDeviceInfo(outDeviceIndex);
+        if (!ipainf && numInputChannels > 0)
+        {
+            MO_AUDIO_ERROR(API, "can not get audio device info for input/output device " << inDeviceId_);
+        }
+    }
+
+    if (outDeviceIndex >= 0)
+    {
+        opainf = Pa_GetDeviceInfo(outDeviceIndex);
+        if (!opainf && numOutputChannels > 0)
+        {
+            MO_AUDIO_ERROR(API, "can not get audio device info for output device " << outDeviceId_);
+        }
     }
 
     // setup in/out params
 
     PaStreamParameters * pap_in = 0;
-    if (numInputChannels)
+    if (ipainf)
     {
-        p_->inputParam.device = deviceIndex;
+        p_->inputParam.device = inDeviceIndex >= 0 ? inDeviceIndex : outDeviceIndex;
         p_->inputParam.channelCount = numOutputChannels;
         p_->inputParam.sampleFormat = paFloat32;
-        p_->inputParam.suggestedLatency = painf->defaultLowInputLatency;
+        p_->inputParam.suggestedLatency = ipainf->defaultLowInputLatency;
         p_->inputParam.hostApiSpecificStreamInfo = 0;
         pap_in = &p_->inputParam;
     }
 
     PaStreamParameters * pap_out = 0;
-    if (numOutputChannels)
+    if (outDeviceIndex >= 0)
     {
-        p_->outputParam.device = deviceIndex;
+        p_->outputParam.device = outDeviceIndex;
         p_->outputParam.channelCount = numOutputChannels;
         p_->outputParam.sampleFormat = paFloat32;
-        p_->outputParam.suggestedLatency = painf->defaultLowOutputLatency;
+        p_->outputParam.suggestedLatency = opainf->defaultLowOutputLatency;
         p_->outputParam.hostApiSpecificStreamInfo = 0;
         pap_out = &p_->outputParam;
     }
 
     // ---- check default parameters ---
 
-    if (sampleRate == 0)
-        sampleRate = painf->defaultSampleRate;
+    if (sampleRate == 0) {
+        sampleRate = opainf ? opainf->defaultSampleRate : ipainf->defaultSampleRate;
+    }
 
     if (bufferSize == 0)
         bufferSize = p_->outputParam.suggestedLatency * sampleRate;
@@ -180,7 +206,8 @@ void AudioDevice::init(uint deviceIndex,
     // ---- open stream ----
 
     MO_DEBUG("opening audio stream"
-                   << "\ndevice     " << deviceIndex << " " << painf->name
+                   << "\nindevice   " << inDeviceIndex << " " << (ipainf ? ipainf->name : "-")
+                   << "\noutdevice  " << outDeviceIndex << " " << (opainf ? opainf->name : "-")
                    << "\nsamplerate " << sampleRate
                    << "\nbuffersize " << bufferSize
                    << "\nchannels   " << numInputChannels << " / " << numOutputChannels
@@ -196,12 +223,14 @@ void AudioDevice::init(uint deviceIndex,
                   mo_pa_callback,
                   static_cast<void*>(this)
                   ),
-        "could not init audiodevice '" << painf->name << "'");
+        "could not init audiodevice '" << ipainf->name << "'' or '" << opainf->name << "'");
 
     // store parameters
 
-    name_ = painf->name;
-    deviceId_ = deviceIndex;
+    name_ = ipainf ? ipainf->name : "-";
+    outName_ = opainf ? opainf->name : "-";
+    inDeviceId_ = inDeviceIndex;
+    outDeviceId_ = outDeviceIndex;
     conf_.setNumChannelsIn(numInputChannels);
     conf_.setNumChannelsOut(numOutputChannels);
     conf_.setSampleRate(sampleRate);
@@ -268,13 +297,19 @@ void AudioDevice::stop()
 
 bool AudioDevice::isAudioConfigured()
 {
-    const QString name = settings->getValue("Audio/device").toString();
-    return !(name.isEmpty() || name == "None");
+    const QString inname = settings->getValue("Audio/indevice").toString();
+    const QString outname = settings->getValue("Audio/outdevice").toString();
+    // it's enough to have outputs defined
+    return !(outname.isEmpty() || outname == "None");
 }
 
-uint AudioDevice::numConfiguredInputChannels()
+Configuration AudioDevice::defaultConfiguration()
 {
-    return settings->value("Audio/channelsIn", 0).toInt();
+    return Configuration(
+            settings->value("Audio/samplerate", 44100).toInt(),
+            settings->value("Audio/buffersize", 256).toInt(),
+            settings->value("Audio/channelsIn", 0).toInt(),
+            settings->value("Audio/channelsOut", 0).toInt());
 }
 
 bool AudioDevice::initFromSettings()
@@ -283,8 +318,10 @@ bool AudioDevice::initFromSettings()
 
     // check config
 
-    QString deviceName = settings->getValue("Audio/device").toString();
-    if (deviceName.isEmpty())
+    QString inDeviceName = settings->getValue("Audio/indevice").toString();
+
+    QString outDeviceName = settings->getValue("Audio/outdevice").toString();
+    if (outDeviceName.isEmpty())
         return false;
 
     // get device list
@@ -304,21 +341,38 @@ bool AudioDevice::initFromSettings()
 
     // find configured device
 
-    int idx = -1;
+    int inidx = -1;
     for (uint i=0; i<devs.numDevices(); ++i)
     {
-        if (devs.getDeviceInfo(i)->name == deviceName)
+        if (devs.getDeviceInfo(i)->name == inDeviceName)
         {
-            idx = i;
+            inidx = i;
+            break;
+        }
+    }
+    int outidx = -1;
+    for (uint i=0; i<devs.numDevices(); ++i)
+    {
+        if (devs.getDeviceInfo(i)->name == outDeviceName)
+        {
+            outidx = i;
             break;
         }
     }
 
-    if (idx < 0)
+    if (inidx < 0 && !(inDeviceName.isEmpty() || inDeviceName == "None"))
     {
         QMessageBox::warning(0, QMessageBox::tr("Error"),
-                             QMessageBox::tr("The configured audio device '%1' could not be found.")
-                             .arg(deviceName)
+                             QMessageBox::tr("The configured audio input device '%1' could not be found.")
+                             .arg(inDeviceName)
+                             );
+        return false;
+    }
+    if (outidx < 0)
+    {
+        QMessageBox::warning(0, QMessageBox::tr("Error"),
+                             QMessageBox::tr("The configured audio output device '%1' could not be found.")
+                             .arg(outDeviceName)
                              );
         return false;
     }
@@ -333,13 +387,14 @@ bool AudioDevice::initFromSettings()
 
     try
     {
-        init(idx, numInputs, numOutputs, sampleRate, bufferSize);
+        init(inidx, outidx, numInputs, numOutputs, sampleRate, bufferSize);
     }
     catch (AudioException& e)
     {
         QMessageBox::warning(0, QMessageBox::tr("Error"),
-                             QMessageBox::tr("Failed to init audio device '%1'.\n%2")
-                             .arg(deviceName)
+                             QMessageBox::tr("Failed to init audio device '%1' or '%2'.\n%3")
+                             .arg(inDeviceName)
+                             .arg(outDeviceName)
                              .arg(e.what())
                              );
         return false;

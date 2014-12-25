@@ -35,7 +35,6 @@ public:
     virtual bool isCamera() const Q_DECL_OVERRIDE { return true; }
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
-    virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

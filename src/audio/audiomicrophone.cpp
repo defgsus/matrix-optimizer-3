@@ -8,6 +8,8 @@
     <p>created 9/1/2014</p>
 */
 
+#if 0
+
 #include "audiomicrophone.h"
 #include "io/log.h"
 #include "io/error.h"
@@ -172,3 +174,5 @@ void AudioMicrophone::sampleAudioSource(
 
 } // namespace AUDIO
 } // namespace MO
+
+#endif

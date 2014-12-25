@@ -15,7 +15,7 @@
 #include "object/scene.h"
 #include "object/scenelock_p.h"
 #include "object/sequence.h"
-#include "object/clipcontainer.h"
+#include "object/clipcontroller.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "object/util/audioobjectconnections.h"
@@ -26,6 +26,7 @@
 #include "object/param/parameterfilename.h"
 #include "object/param/parametertimeline1d.h"
 #include "math/timeline1d.h"
+#include "tool/stringmanip.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -39,6 +40,7 @@ namespace MO {
         return false; \
     }
 
+#define MO_DEBUG_OBJ_EDITOR(arg__) MO_DEBUG(arg__)
 
 ObjectEditor::ObjectEditor(QObject *parent)
     : QObject       (parent),
@@ -47,12 +49,132 @@ ObjectEditor::ObjectEditor(QObject *parent)
 }
 
 
+// --------------------------------- ids ---------------------------------------
+
+QString ObjectEditor::getUniqueId(QString id, const QSet<QString> &existingNames, bool * existed)
+{
+    MO_ASSERT(!id.isEmpty(), "unset object idName detected");
+
+    if (existed)
+        *existed = false;
+
+    // create an id if necessary
+    if (id.isEmpty())
+        id = "Object";
+
+    // replace white char with underscore
+    id.replace(QRegExp("\\s\\s*"), "_");
+
+    while (existingNames.contains(id))
+    {
+        increase_id_number(id, 1);
+        if (existed)
+            *existed = true;
+    }
+
+    return id;
+}
+
+
+void ObjectEditor::makeUniqueIds(const Object* root, Object* newBranch)
+{
+    // get set of existing ids
+    QSet<QString> existing = root->getChildIds(true);
+    existing.insert(root->idName());
+
+    // get all new objects
+    QList<Object*> list = newBranch->findChildObjects(Object::TG_ALL, true);
+    list.prepend(newBranch);
+
+    // keep track of changes
+    QMap<QString, QString> changedIds;
+
+    // adjust id for each object
+    for (Object * o : list)
+    {
+        QString newid = getUniqueId(o->idName(), existing);
+
+        if (newid != o->idName())
+        {
+            // add new id to stock
+            existing.insert(newid);
+            // remember old id
+            changedIds.insert(o->idName(), newid);
+            // and change
+            Private::set_object_id_(o, newid);
+        }
+    }
+
+    // tell the branch about changed ids
+    if (!changedIds.isEmpty())
+        newBranch->idNamesChanged(changedIds);
+}
+
+void ObjectEditor::makeUniqueIds(const Object* root, const QList<Object*> newBranches)
+{
+    // get set of existing ids
+    QSet<QString> existing = root->getChildIds(true);
+    existing.insert(root->idName());
+
+    // get all new objects
+    QList<Object*> list;
+    for (auto o : newBranches)
+    {
+        list << o;
+        list << o->findChildObjects(Object::TG_ALL, true);
+    }
+
+    // keep track of changes
+    QMap<QString, QString> changedIds;
+
+    // adjust id for each object
+    for (Object * o : list)
+    {
+        QString newid = getUniqueId(o->idName(), existing);
+
+        if (newid != o->idName())
+        {
+            // add new id to stock
+            existing.insert(newid);
+            // remember old id
+            changedIds.insert(o->idName(), newid);
+            // and change
+            Private::set_object_id_(o, newid);
+        }
+    }
+
+    // tell the branch about changed ids
+    if (!changedIds.isEmpty())
+        for (auto o : newBranches)
+            o->idNamesChanged(changedIds);
+}
+
+
+
+
+// ----------------------------- signal wrapper --------------------------------
+
+void ObjectEditor::emitObjectChanged(Object * o)
+{
+    emit objectChanged(o);
+    emit sceneChanged(scene_);
+}
+
+void ObjectEditor::emitAudioChannelsChanged(Object * o)
+{
+    emit objectChanged(o);
+    emit audioConnectionsChanged();
+    emit sceneChanged(scene_);
+}
+
+
+
 
 // --------------------------------- tree --------------------------------------
 
 void ObjectEditor::setObjectName(Object *object, const QString &name)
 {
-    MO_DEBUG_TREE("ObjectEditor::setObjectName(" << object << ", " << name << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::setObjectName(" << object << ", " << name << ")");
 
     const bool changed = object->name() != name;
 
@@ -62,9 +184,18 @@ void ObjectEditor::setObjectName(Object *object, const QString &name)
         emit objectNameChanged(object);
 }
 
+void ObjectEditor::setObjectHue(Object *object, int hue)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::setObjectHue(" << object << ", " << hue << ")");
+
+    object->setAttachedData(hue, Object::DT_HUE);
+
+    emit objectColorChanged(object);
+}
+
 bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
 {
-    MO_DEBUG_TREE("ObjectEditor::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObject(" << parent << ", " << newChild << ", " << insert_index << ")");
     MO__CHECK_SCENE
 
     QString error;
@@ -90,7 +221,7 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
 
 bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, int insert_index)
 {
-    MO_DEBUG("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
     MO__CHECK_SCENE
 
     QSet<Object*> saveAdd;
@@ -105,6 +236,12 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
             saveAdd.insert(o);
     }
 
+    // we need to make all the branches unique at the same time
+    // so their idNamesChanged() functions get called with ALL
+    // changed ids from all branches.
+    makeUniqueIds(parent, newObjects);
+
+#if 0
     QString err;
     for (auto o : newObjects)
     if (saveAdd.contains(o))
@@ -118,7 +255,22 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
     }
     else
         delete o;
+#else
+    QList<Object*> actualObjects;
+    QString err;
+    for (auto o : newObjects)
+    if (saveAdd.contains(o))
+        actualObjects.append(o);
+    else
+        delete o;
 
+    if (!actualObjects.isEmpty())
+    {
+        scene_->addObjects(parent, actualObjects);
+        emit objectsAdded(actualObjects);
+    }
+
+#endif
     emit sceneChanged(scene_);
 
     if (!error.isEmpty())
@@ -137,7 +289,7 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
 
 bool ObjectEditor::deleteObject(Object *object)
 {
-    MO_DEBUG_TREE("ObjectEditor::deleteObject(" << object << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::deleteObject(" << object << ")");
     MO__CHECK_SCENE
 
     scene_->deleteObject(object);
@@ -148,9 +300,22 @@ bool ObjectEditor::deleteObject(Object *object)
     return true;
 }
 
+bool ObjectEditor::deleteObjects(const QList<Object*>& list)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::deleteObjects(" << list.size() << ")");
+    MO__CHECK_SCENE
+
+    scene_->deleteObjects(list);
+
+    emit objectsDeleted(list);
+    emit sceneChanged(scene_);
+
+    return true;
+}
+
 bool ObjectEditor::setObjectIndex(Object * object, int newIndex)
 {
-    MO_DEBUG_TREE("ObjectEditor::setObjectIndex(" << object << ", " << newIndex << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::setObjectIndex(" << object << ", " << newIndex << ")");
     MO__CHECK_SCENE
 
     bool res = scene_->setObjectIndex(object, newIndex);
@@ -166,7 +331,7 @@ bool ObjectEditor::setObjectIndex(Object * object, int newIndex)
 
 bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
 {
-    MO_DEBUG_TREE("ObjectEditor::moveObject(" << object << ", " << newParent << ", " << newIndex << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::moveObject(" << object << ", " << newParent << ", " << newIndex << ")");
     MO__CHECK_SCENE
 
     QString error;
@@ -261,13 +426,25 @@ void ObjectEditor::setParameterValue(ParameterTimeline1D *p, const MATH::Timelin
     setParameterVal(this, p, v);
 }
 
-
-void ObjectEditor::addModulator(Parameter *p, const QString &idName)
+void ObjectEditor::setParameterVisibleInGraph(Parameter * p, bool enbale)
 {
+    if (enbale != p->isVisibleInGraph())
+    {
+        p->setVisibleGraph(enbale);
+        emit parameterVisibilityChanged(p);
+    }
+}
+
+void ObjectEditor::addModulator(Parameter *p, const QString &idName, const QString& outputId)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << idName << "," << outputId << ")");
+
+    // XXX TODO: test sanity of connection!
+
     Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
-        m = p->addModulator(idName);
+        m = p->addModulator(idName, outputId);
         p->collectModulators();
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
@@ -278,13 +455,15 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName)
     scene_->render();
 }
 
-void ObjectEditor::removeModulator(Parameter *p, const QString &idName)
+void ObjectEditor::removeModulator(Parameter *p, const QString &idName, const QString &outputId)
 {
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeModulator(" << p << ", " << idName << "," << outputId << ")");
+
     Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
         m = p->findModulator(idName);
-        p->removeModulator(idName);
+        p->removeModulator(idName, outputId);
         p->collectModulators();
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
@@ -297,6 +476,8 @@ void ObjectEditor::removeModulator(Parameter *p, const QString &idName)
 
 void ObjectEditor::removeAllModulators(Parameter *p)
 {
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeAllModulators(" << p << ")");
+
     auto mods = p->modulators();
     {
         ScopedSceneLockWrite lock(scene_);
@@ -320,6 +501,9 @@ bool ObjectEditor::connectAudioObjects(AudioObject *from, AudioObject *to,
                                        uint outChannel, uint inChannel,
                                        uint numChannels)
 {
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::connectAudioObjects(" << from << ", " << to << ", "
+                        << outChannel << ", " << inChannel << ", " << numChannels << ")");
+
     if (!scene_->audioConnections()->isSaveToAdd(from, to))
     {
         QMessageBox::critical(0, tr("Can't add connection"),
@@ -346,6 +530,9 @@ void ObjectEditor::disconnectAudioObjects(AudioObject *from, AudioObject *to,
                                        uint outChannel, uint inChannel,
                                        uint numChannels)
 {
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::disconnectAudioObjects(" << from << ", " << to << ", "
+                        << outChannel << ", " << inChannel << ", " << numChannels << ")");
+
     if (scene_->audioConnections()->disconnect(from, to, outChannel, inChannel, numChannels))
     {
         emit audioConnectionsChanged();
@@ -379,9 +566,21 @@ QString ObjectEditor::modulatorName(Parameter *param, bool longName)
     return ">" + name;
 }
 
+Object * ObjectEditor::findAModulatorParent(Parameter * param)
+{
+    Object * obj = param->object();
+    MO_ASSERT(obj, "missing object for parameter '" << param->idName() << "'");
+
+    if (obj->parentObject())
+        obj = obj->parentObject();
+
+    return obj;
+}
+
+
 TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
 {
-    MO_DEBUG_TREE("ObjectEditor::createFloatTrack('" << param->idName() << "')");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createFloatTrack('" << param->idName() << "')");
 
     MO_ASSERT(scene_, "can't edit");
 
@@ -405,15 +604,15 @@ TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
     addObject(obj, track, -1);
 
     // modulate parameter
-    addModulator(param, track->idName());
+    addModulator(param, track->idName(), "");
 
     return (TrackFloat*)track;
 }
 
 
-Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
+Object * ObjectEditor::createInClip(Parameter *p, const QString& className, Clip * parent)
 {
-    MO_DEBUG_TREE("ObjectEditor::createInClip('" << className << ", " << parent << "')");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createInClip('" << p->name() << ", " << className << ", " << parent << "')");
 
     MO_ASSERT(scene_, "can't edit");
 
@@ -430,26 +629,13 @@ Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
     // create a clip
     if (!parent)
     {
-        ClipContainer * con = 0;
-
-        // take first found container
-        auto clipcons = scene_->findChildObjects<ClipContainer>(QString(), true);
-        if (!clipcons.isEmpty())
-            con = clipcons[0];
-        // or create new
-        else
-        {
-            con = static_cast<ClipContainer*>(ObjectFactory::createObject("ClipContainer"));
-            if (!con)
-                MO_ERROR("Could not create ClipContainer");
-            addObject(scene_, con, 0);
-        }
-
         // create clip
         parent = static_cast<Clip*>(ObjectFactory::createObject("Clip"));
         if (!parent)
             MO_ERROR("Could not create Clip");
-        addObject(con, parent);
+
+        Object * clipparent = findAModulatorParent(p);
+        addObject(clipparent, parent);
     }
 
     if (!parent->canHaveChildren(obj->type()))
@@ -458,7 +644,7 @@ Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
         MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
     }
 
-    // add to parent
+    // add to clip
     addObject(parent, obj, -1);
 
     return obj;
@@ -466,7 +652,7 @@ Object * ObjectEditor::createInClip(const QString& className, Clip * parent)
 
 SequenceFloat * ObjectEditor::createFloatSequenceFor(MO::Parameter * param)
 {
-    MO_DEBUG_TREE("ObjectEditor::createFloatSequenceFor('" << param->idName() << "')");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createFloatSequenceFor('" << param->idName() << "')");
 
     MO_ASSERT(scene_ && param->object(), "can't edit");
 

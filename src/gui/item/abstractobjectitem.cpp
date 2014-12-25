@@ -16,6 +16,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsItemGroup>
+#include <QGraphicsSimpleTextItem>
 #include <QCursor>
 #include <QDrag>
 #include <QMessageBox>
@@ -27,6 +28,10 @@
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "object/audio/audiooutao.h"
+#include "object/audio/audioinao.h"
+#include "object/param/modulator.h"
+#include "object/param/modulatorfloat.h"
+#include "object/param/parameters.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
 #include "gui/util/scenesettings.h"
@@ -52,22 +57,29 @@ public:
           dragging      (false),
           size          (3, 3), // expanded size minimum
           unexpandedSize(1, 1),
+          minimumSize   (1, 1),
           itemExp       (0),
+          itemName      (0),
           isMouseDown   (false)
     { }
 
-    void updateConnectors();
+    void createConnectors();
+    void updateConnectorPositions();
+    void layoutChildItems();
+
 
     AbstractObjectItem * item; ///< parent item class
     Object * object;
     bool expanded, hover, dragHover, layouted, dragging;
     QPoint pos; ///< pos in grid
     QSize size, ///< size in grid coords
-        unexpandedSize;
+        unexpandedSize,
+        minimumSize;
     QIcon icon;
     QPixmap iconPixmap;
     QBrush brushBack, brushBackSel;
     ObjectGraphExpandItem * itemExp;
+    QGraphicsSimpleTextItem * itemName;
     QList<ObjectGraphConnectItem*>
         inputItems,
         outputItems;
@@ -90,41 +102,23 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
 
     // prepare private state
     p_oi_->object = object;
-    p_oi_->brushBack = ObjectGraphSettings::brushOutline(object);
-    p_oi_->brushBackSel = ObjectGraphSettings::brushOutline(object, true);
-    p_oi_->icon = ObjectFactory::iconForObject(p_oi_->object,
-                                ObjectFactory::colorForObject(object));
-    p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
+    // 'expanded' triangle item
     p_oi_->itemExp = new ObjectGraphExpandItem(this);
     p_oi_->itemExp->setVisible(false);
     p_oi_->itemExp->setPos(ObjectGraphSettings::penOutlineWidth() * 3.,
                            ObjectGraphSettings::penOutlineWidth() * 3.);
+    updateColors();
 
     // setup QGraphicsItem
     setCursor(QCursor(Qt::SizeAllCursor));
     setAcceptHoverEvents(true);
     setAcceptDrops(true);
     setFlag(ItemIsSelectable, true);
+    setFlag(ItemClipsChildrenToShape, true);
     setToolTip(object->name());
 
-    // input/output items
-    if (AudioObject * ao = qobject_cast<AudioObject*>(object))
-    {
-        setUnexpandedSize(QSize(1, 2));
-        if (ao->numAudioInputs() >= 0)
-            for (int i=0; i<ao->numAudioInputs(); ++i)
-                p_oi_->inputItems.append( new ObjectGraphConnectItem(i, ao->getInputName(i), this) );
-        else
-            p_oi_->inputItems.append( new ObjectGraphConnectItem(0, ao->getInputName(0), this) );
-
-        if (!qobject_cast<AudioOutAO*>(ao))
-        {
-            for (uint i=0; i<ao->numAudioOutputs(); ++i)
-                p_oi_->outputItems.append( new ObjectGraphConnectItem(i, this) );
-        }
-
-        p_oi_->updateConnectors();
-    }
+    p_oi_->createConnectors();
+    p_oi_->layoutChildItems();
 }
 
 AbstractObjectItem::~AbstractObjectItem()
@@ -133,6 +127,7 @@ AbstractObjectItem::~AbstractObjectItem()
 }
 
 // -------------------------- state ----------------------------------
+
 
 ObjectGraphScene * AbstractObjectItem::objectScene() const
 {
@@ -181,7 +176,7 @@ void AbstractObjectItem::setExpanded(bool enable)
 
     // set state
     p_oi_->expanded = enable;
-    // store in gui settings
+    // store gui state in object
     if (object())
         object()->setAttachedData(enable, Object::DT_GRAPH_EXPANDED);
 
@@ -191,10 +186,10 @@ void AbstractObjectItem::setExpanded(bool enable)
         if (i->type() >= T_BASE)
             i->setVisible(enable);
 
+    p_oi_->layoutChildItems();
     setLayoutDirty();
-    p_oi_->updateConnectors();
 
-    // bring to front
+    // bring me to front
     if (enable)
         if (auto s = objectScene())
             s->toFront(this);
@@ -242,6 +237,17 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
         if (isExpanded())
             setLayoutDirty();
     }
+    else
+    if (change == ItemChildRemovedChange)
+    {
+        // collapse if no child left
+        if (isExpanded() && object()->childObjects().isEmpty())
+        {
+            setExpanded(false);
+            if (p_oi_->itemExp)
+                p_oi_->itemExp->setVisible(false);
+        }
+    }
 
     QVariant ret = QGraphicsItem::itemChange(change, value);
 
@@ -266,7 +272,10 @@ void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
         // avoid self-drop
         auto data = static_cast<const ObjectMimeData*>(e->mimeData());
         if (data->getDescription().pointer() == object())
+        {
+            e->ignore();
             return;
+        }
 
         p_oi_->dragHover = true;
         update();
@@ -305,6 +314,8 @@ void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 
     if (desc.pointer() && objectScene())
         objectScene()->popupObjectDrag(desc.pointer(), object(), e->scenePos());
+
+    p_oi_->dragHover = false;
 }
 
 void AbstractObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
@@ -316,6 +327,7 @@ void AbstractObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 void AbstractObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 {
     p_oi_->hover = false;
+    p_oi_->dragHover = false;
     update();
 }
 
@@ -383,6 +395,8 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
             }
 
             p_oi_->dragging = true;
+            if (!isSelected())
+                setSelected(true);
         }
     }
 
@@ -392,12 +406,6 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
         const QPointF p = mapToParent(e->pos());
         QPoint newGrid = mapToGrid(p) - p_oi_->gridPosDown;
 
-        if (parentObjectItem())
-        {
-            newGrid.rx() = std::max(1, newGrid.x());
-            newGrid.ry() = std::max(1, newGrid.y());
-        }
-
         if (newGrid != gridPos())
         {
             // check if space is free
@@ -405,8 +413,10 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
             auto it = sc->objectItemAt(newGrid + (parentObjectItem()
                                        ? parentObjectItem()->globalGridPos()
                                        : QPoint(0,0)));
-            if (it == 0 || it == this || it == parentObjectItem())
-                sc->setGridPos(this, newGrid);
+            if (it == 0 || it == this || object()->hasParentObject(it->object()))
+            {
+                setGridPos(newGrid);
+            }
         }
 
     }
@@ -453,9 +463,12 @@ QPoint AbstractObjectItem::globalGridPos() const
 }
 
 
-const QSize& AbstractObjectItem::gridSize() const
+QSize AbstractObjectItem::gridSize() const
 {
-    return isExpanded() ? p_oi_->size : p_oi_->unexpandedSize;
+    QSize s = isExpanded() ? p_oi_->size : p_oi_->unexpandedSize;
+
+    return QSize(std::max(s.width(),  p_oi_->minimumSize.width()),
+                 std::max(s.height(), p_oi_->minimumSize.height()));
 }
 
 void AbstractObjectItem::setGridPos(const QPoint &pos1)
@@ -494,7 +507,7 @@ void AbstractObjectItem::setGridSize(const QSize &size)
 
     p_oi_->size = size;
 
-    p_oi_->updateConnectors();
+    p_oi_->layoutChildItems();
 
     if (isExpanded())
     {
@@ -530,14 +543,158 @@ AbstractObjectItem * AbstractObjectItem::childItemAt(const QPoint& pos) const
 
 // --------------------------------------- layout ---------------------------------------------------
 
-void AbstractObjectItem::PrivateOI::updateConnectors()
+void AbstractObjectItem::updateColors()
 {
+    p_oi_->brushBack = ObjectGraphSettings::brushOutline(object());
+    p_oi_->brushBackSel = ObjectGraphSettings::brushOutline(object(), true);
+    p_oi_->icon = ObjectFactory::iconForObject(object(),
+                                ObjectFactory::colorForObject(object()));
+    p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
+
+    update();
+}
+
+void AbstractObjectItem::PrivateOI::createConnectors()
+{
+    // visible parameters / modulator inputs
+    QList<Parameter*> params = object->params()->getVisibleGraphParameters();
+    for (Parameter * p : params)
+    {
+        inputItems.append( new ObjectGraphConnectItem(true, p, item) );
+    }
+
+    // audio input/output items
+    if (AudioObject * ao = qobject_cast<AudioObject*>(object))
+    {
+        item->setUnexpandedSize(QSize(1, 2));
+
+        /// @todo Somehow this disables the correct number of output items
+        /// for the graphics item
+        //if (!qobject_cast<AudioInAO*>(ao))
+        {
+            if (ao->numAudioInputs() >= 0)
+                for (int i=0; i<ao->numAudioInputs(); ++i)
+                    inputItems.append( new ObjectGraphConnectItem(true, i, ao->getAudioInputName(i), item) );
+            else
+                inputItems.append( new ObjectGraphConnectItem(true, 0, ao->getAudioInputName(0), item) );
+        }
+
+        if (!qobject_cast<AudioOutAO*>(ao))
+        {
+            for (uint i=0; i<ao->numAudioOutputs(); ++i)
+                outputItems.append( new ObjectGraphConnectItem(false, i, ao->getAudioOutputName(i), item) );
+        }
+
+    }
+
+    int numCon = std::max(inputItems.size(), outputItems.size());
+
+    // set size accordingly to number of inputs
+    minimumSize.setWidth(numCon > 0 ? 2 : 1);
+    minimumSize.setHeight(1);
+    if (numCon)
+        minimumSize.rheight() += 1 + (numCon-1) / ObjectGraphSettings::connectorsPerGrid();
+
+    updateConnectorPositions();
+}
+
+void AbstractObjectItem::PrivateOI::layoutChildItems()
+{
+    updateConnectorPositions();
+
+    const int boarder = ObjectGraphSettings::penOutlineWidth() + 2;
+    const auto
+            r = item->boundingRect(),
+            // inner space (right of expand item)
+            rr = QRectF(r.left() + ObjectGraphSettings::gridSize().width() * 0.3,
+                        r.top() + boarder,
+                        r.right() - boarder,
+                        r.bottom() - boarder);
+
+
+    if (item->gridSize().width() > 1)
+    {
+        // name label
+        if (!itemName)
+        {
+            itemName = new QGraphicsSimpleTextItem(object->name(), item);
+            itemName->setFont(ObjectGraphSettings::fontName());
+            itemName->setBrush(ObjectGraphSettings::brushText(object));
+        }
+
+        // center name label
+        itemName->setPos(QPointF(
+                            rr.left() + (rr.width() - itemName->boundingRect().width()) / 2,
+                            rr.top()
+                            ));
+
+        itemName->setVisible(true);
+    }
+    // when not large enough
+    else
+    {
+        if (itemName)
+            itemName->setVisible(false);
+    }
+}
+
+void AbstractObjectItem::updateLabels()
+{
+    if (p_oi_->itemName)
+        p_oi_->itemName->setText(object()->name());
+
+    p_oi_->layoutChildItems();
+}
+
+void AbstractObjectItem::PrivateOI::updateConnectorPositions()
+{
+    QRectF r(item->rect());
+
+    qreal top = 0;
+
+    if (item->gridSize().height() > 1)
+        top = ObjectGraphSettings::gridSize().height();
+
+    top += r.top();
+
+    qreal heightfac = (r.height() - top) / std::max(1, inputItems.size());
+
     for (int i=0; i<inputItems.size(); ++i)
-        inputItems[i]->setPos(item->inputPos(i) + QPointF(2,0));
+    {
+        inputItems[i]->setPos(r.left(), top + (i + 0.5) * heightfac);
+    }
 
     for (int i=0; i<outputItems.size(); ++i)
-        outputItems[i]->setPos(item->outputPos(i) - QPointF(2,0));
+    {
+        outputItems[i]->setPos(r.right(), top + (i + 0.5) * heightfac);
+    }
+
 }
+
+void AbstractObjectItem::updateConnectors()
+{
+    // clear previous items
+    for (auto i : p_oi_->inputItems)
+    {
+        scene()->removeItem(i);
+        delete i;
+    }
+    p_oi_->inputItems.clear();
+
+    for (auto i : p_oi_->outputItems)
+    {
+        scene()->removeItem(i);
+        delete i;
+    }
+    p_oi_->outputItems.clear();
+
+    // create new
+    p_oi_->createConnectors();
+
+    p_oi_->layoutChildItems();
+    setLayoutDirty();
+}
+
 
 QRectF AbstractObjectItem::childrenBoundingRect(bool checkVisibilty)
 {
@@ -560,7 +717,8 @@ int AbstractObjectItem::channelForPosition(const QPointF &localPos)
     for (QGraphicsItem * c : list)
     if (c->isVisible() && c->type() == ObjectGraphConnectItem::Type)
         if (c->shape().contains(localPos - c->pos()))
-            return static_cast<ObjectGraphConnectItem*>(c)->channel();
+            if (static_cast<ObjectGraphConnectItem*>(c)->isAudioConnector())
+                return static_cast<ObjectGraphConnectItem*>(c)->channel();
     return -1;
 }
 
@@ -624,25 +782,42 @@ void AbstractObjectItem::adjustRightItems()
 
 QPointF AbstractObjectItem::inputPos(uint c) const
 {
-    const auto r = rect();
-    if (AudioObject * ao = qobject_cast<AudioObject*>(object()))
-        return QPointF(r.left(),
-                       r.top() + (c + 0.5) * r.height()
-                            / std::max(1, ao->numAudioInputs()));
-    else
-        return QPointF(r.left(), r.center().y());
+    for (auto i : p_oi_->inputItems)
+        if (i->isAudioConnector() && i->channel() == c)
+            return i->pos();
+
+    QRectF r(rect());
+    return QPointF(r.left(), r.top() + 4);
 }
 
 
 QPointF AbstractObjectItem::outputPos(uint c) const
 {
-    const auto r = rect();
-    if (AudioObject * ao = qobject_cast<AudioObject*>(object()))
-        return QPointF(r.right(),
-                       r.top() + (c + 0.5) * r.height()
-                            / std::max(1u, ao->numAudioOutputs()));
-    else
-        return QPointF(r.right(), r.center().y());
+    for (auto i : p_oi_->outputItems)
+        if (i->isAudioConnector() && i->channel() == c)
+            return i->pos();
+
+    QRectF r(rect());
+    return QPointF(r.right(), r.bottom() - 4);
+}
+
+QPointF AbstractObjectItem::inputPos(Parameter * p) const
+{
+    for (auto i : p_oi_->inputItems)
+        if (i->isParameter() && i->parameter() == p)
+            return i->pos();
+
+    QRectF r(rect());
+    return QPointF(r.left(), r.top() + 4);
+}
+
+QPointF AbstractObjectItem::outputPos(Modulator * m) const
+{
+    if (m->isAudioToFloatConverter())
+        return outputPos(static_cast<ModulatorFloat*>(m)->channel());
+
+    QRectF r(rect());
+    return QPointF(r.right(), r.bottom() - 4);
 }
 
 QRectF AbstractObjectItem::rect() const
@@ -677,7 +852,7 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
     p->setPen(ObjectGraphSettings::penOutline(object(), isSelected()));
 
     const auto r = rect();
-    const qreal cornerRadius = (p_oi_->dragHover ? 0.01 : 0.1) *
+    const qreal cornerRadius = (p_oi_->dragHover ? 0.25 : 0.1) *
                         ObjectGraphSettings::gridSize().width();
 
     p->drawRoundedRect(r, cornerRadius, cornerRadius);

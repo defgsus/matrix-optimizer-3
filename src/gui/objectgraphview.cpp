@@ -35,6 +35,8 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
 #if QT_VERSION >= 0x050300
     setSizeAdjustPolicy(AdjustToContents);
 #endif
+
+    setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
 }
 
 void ObjectGraphView::setGuiSettings(SceneSettings * )

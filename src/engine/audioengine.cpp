@@ -105,20 +105,27 @@ void AudioEngine::Private::setup()
 {
     MO_DEBUG("AudioEngine::setup()");
 
-    path.createPath(scene, conf);
+    path.createPath(scene, conf, threadIdx);
 
 #ifdef MO_ENABLE_DEBUG
     path.dump(std::cout);
 #endif
 }
 
-void AudioEngine::process(const F32 *, F32 * outputs)
+void AudioEngine::process(const F32 * inputs, F32 * outputs)
 {
+    // copy into input buffers
+    for (AUDIO::AudioBuffer * b : p_->path.audioInputs())
+    {
+        b->writeBlock(inputs);
+        inputs += config().bufferSize();
+    }
+
     // apply all transformations
-    p_->path.calcTransformations(p_->curSample, p_->threadIdx);
+    p_->path.calcTransformations(p_->curSample);
 
     // run audio block
-    p_->path.calcAudio(p_->curSample, p_->threadIdx);
+    p_->path.calcAudio(p_->curSample);
 
     // advance scene time
     p_->curSample += p_->conf.bufferSize();
@@ -127,17 +134,27 @@ void AudioEngine::process(const F32 *, F32 * outputs)
     for (const AUDIO::AudioBuffer * b : p_->path.audioOutputs())
     {
         b->readBlock(outputs);
-        outputs += p_->conf.bufferSize();
+        outputs += config().bufferSize();
     }
 }
 
-void AudioEngine::processForDevice(const F32 *, F32 * outputs)
+void AudioEngine::processForDevice(const F32 * inputs, F32 * outputs)
 {
+    // copy into input buffers
+    if (inputs)
+    for (AUDIO::AudioBuffer * b : p_->path.audioInputs())
+    {
+        // write channel-deinterlaced
+        b->writeBlock(inputs, config().numChannelsIn());
+        // advance channel
+        ++inputs;
+    }
+
     // apply all transformations
-    p_->path.calcTransformations(p_->curSample, p_->threadIdx);
+    p_->path.calcTransformations(p_->curSample);
 
     // run audio block
-    p_->path.calcAudio(p_->curSample, p_->threadIdx);
+    p_->path.calcAudio(p_->curSample);
 
     // advance scene time
     p_->curSample += p_->conf.bufferSize();
@@ -146,7 +163,7 @@ void AudioEngine::processForDevice(const F32 *, F32 * outputs)
     for (const AUDIO::AudioBuffer * b : p_->path.audioOutputs())
     {
         // write channel-interlaced
-        b->readBlock(outputs, p_->conf.numChannelsOut());
+        b->readBlock(outputs, config().numChannelsOut());
         // advance channel
         ++outputs;
     }

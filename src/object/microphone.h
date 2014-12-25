@@ -24,23 +24,11 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_MICROPHONE; }
     virtual bool isMicrophone() const Q_DECL_OVERRIDE { return true; }
 
-    virtual void createMicrophones() Q_DECL_OVERRIDE;
-
-    virtual void updateAudioTransformations(Double time, uint thread) Q_DECL_OVERRIDE;
-    virtual void updateAudioTransformations(Double time, uint blockSize, uint thread)
-                                                                    Q_DECL_OVERRIDE;
-
-    /** Spatially sample the audio source and add the result to buffer */
-    //void sampleAudioSource(const AUDIO::AudioSource* src, F32* buffer, uint thread) const;
-
-
 signals:
 
 public slots:
 
 private:
-
-    AUDIO::AudioMicrophone * microphone_;
 
 };
 

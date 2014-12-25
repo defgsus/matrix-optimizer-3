@@ -38,20 +38,65 @@ void AudioBuffer::setSize(size_t blockSize, size_t numBlocks)
         s = 0;
 }
 
-void AudioBuffer::readBlock(F32 *block, uint stepsize) const
+void AudioBuffer::writeBlock(const F32 *block, size_t stepsize)
+{
+    auto p = writePointer();
+    for (size_t i = 0; i < blockSize(); ++i, block += stepsize, ++p)
+        *p = *block;
+}
+
+void AudioBuffer::readBlock(F32 *block, size_t stepsize) const
 {
     auto p = readPointer();
-    for (uint i = 0; i < blockSize(); ++i, block += stepsize, ++p)
+    for (size_t i = 0; i < blockSize(); ++i, block += stepsize, ++p)
         *block = *p;
 }
+
+void AudioBuffer::readBlockLength(F32 *block, size_t size) const
+{
+    MO_ASSERT(size < blockSize() * numBlocks(), size << " is out of range");
+
+    size_t j = 0;
+    size_t rp = p_readBlock_;
+    auto p = readPointer();
+    while (j < size)
+    {
+        // write current block
+        for (size_t i = 0; i < blockSize() && j < size; ++i, ++j)
+            block[j] = p[i];
+
+        // go backwards in time
+        rp = rp > 0 ? (rp - 1) : (p_numBlocks_ - 1);
+        p = &p_samples_[p_readBlock_ * p_blockSize_];
+    }
+
+}
+
+F32 AudioBuffer::readHistory(SamplePos history) const
+{
+    const SamplePos
+            size = numBlocks() * blockSize();
+    const SamplePosDiff
+            read = (p_readBlock_ + 1) * blockSize() - 1;
+
+    SamplePosDiff offset = read - std::min(history, size - 1);
+
+    if (offset < 0)
+        offset += size;
+
+    return p_samples_[offset];
+}
+
+
+
+
+// ------------------------ static helper --------------------------------
 
 void AudioBuffer::bypass(const QList<AUDIO::AudioBuffer *> &inputs,
                          const QList<AUDIO::AudioBuffer *> &outputs, bool callNextBlock)
 {
-    const int num = std::max(inputs.size(), outputs.size());
-
     // copy inputs
-    for (int i = 0; i<num; ++i)
+    for (int i = 0; i<outputs.size(); ++i)
     if (outputs[i])
     {
         // clear
@@ -76,9 +121,7 @@ void AudioBuffer::bypass(const QList<AUDIO::AudioBuffer *> &inputs,
 void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &src,
                       const QList<AUDIO::AudioBuffer *> &dst, bool callNextBlock)
 {
-    const int num = std::max(dst.size(), src.size());
-
-    for (int i = 0; i<num; ++i)
+    for (int i = 0; i<dst.size(); ++i)
     if (dst[i])
     {
         if (i < src.size() && src[i] != 0)
@@ -111,11 +154,10 @@ void AudioBuffer::mix(const QList<AUDIO::AudioBuffer *> &src,
 
 
 void AudioBuffer::process(const QList<AudioBuffer *> &src, const QList<AudioBuffer *> &dst,
-                          std::function<void (const AudioBuffer *, AudioBuffer *)> func, bool callNextBlock)
+                          std::function<void (uint channel, const AudioBuffer *, AudioBuffer *)> func,
+                          bool callNextBlock)
 {
-    const int num = std::max(dst.size(), src.size());
-
-    for (int i = 0; i<num; ++i)
+    for (int i = 0; i<dst.size(); ++i)
     if (dst[i])
     {
         if (i < src.size() && src[i] != 0)
@@ -123,7 +165,7 @@ void AudioBuffer::process(const QList<AudioBuffer *> &src, const QList<AudioBuff
             MO_ASSERT(src[i]->blockSize() == dst[i]->blockSize(), "unmatched buffersize "
                       << src[i]->blockSize() << "/" << dst[i]->blockSize());
 
-            func( src[i], dst[i] );
+            func( i, src[i], dst[i] );
         }
         else
             dst[i]->writeNullBlock();

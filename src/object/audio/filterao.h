@@ -23,16 +23,15 @@ public:
     ~FilterAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter*) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+
     virtual void setNumberThreads(uint count) Q_DECL_OVERRIDE;
 
 protected:
 
-    /** Process dsp data here.
-        Inputs and outputs have the same buffer size.
-        @note Unused inputs and outputs contain a NULL pointer.*/
-    virtual void processAudio(const QList<AUDIO::AudioBuffer*>& inputs,
-                              const QList<AUDIO::AudioBuffer*>& outputs,
-                              uint bufferSize, SamplePos pos, uint thread)
+    virtual void processAudio(uint bufferSize, SamplePos pos, uint thread)
                                                             Q_DECL_OVERRIDE;
 private:
 

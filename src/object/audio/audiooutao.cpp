@@ -41,6 +41,8 @@ void AudioOutAO::deserialize(IO::DataStream & io)
 
 void AudioOutAO::createParameters()
 {
+    AudioObject::createParameters();
+
     params()->beginParameterGroup("out", tr("output"));
 
         paramAmp_ = params()->createFloatParameter("amp", tr("amplitude"),
@@ -49,19 +51,33 @@ void AudioOutAO::createParameters()
     params()->endParameterGroup();
 }
 
-void AudioOutAO::processAudio(const QList<AUDIO::AudioBuffer *> &inputs,
-                              const QList<AUDIO::AudioBuffer *> &outputs,
-                              uint , SamplePos , uint )
+void AudioOutAO::processAudio(uint bsize, SamplePos pos, uint thread)
 {
-    // copy inputs
-    for (int i = 0; i<outputs.size(); ++i)
-    if (outputs[i])
+    // simply copy inputs to outputs here and apply amplitude
+
+    if (paramAmp_->isModulated())
     {
-        if (i < inputs.size() && inputs[i])
-            // XXX missing amplitude here
-            outputs[i]->writeBlock( inputs[i]->readPointer() );
-        else
-            outputs[i]->writeNullBlock();
+        AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+        [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+        {
+            for (SamplePos i=0; i<bsize; ++i)
+            {
+                F32 amp = paramAmp_->value(sampleRateInv() * (pos + i), thread);
+                out->write(i, amp * in->read(i));
+            }
+        });
+    }
+    else
+    {
+        // buffer parameter value
+        const F32 amp = paramAmp_->value(sampleRateInv() * pos, thread);
+        // for easier loop
+        AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+        [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+        {
+            for (SamplePos i=0; i<bsize; ++i)
+                out->write(i, amp * in->read(i));
+        });
     }
 }
 

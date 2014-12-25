@@ -202,7 +202,7 @@ void KeepModulators::createNewModulators()
         MO_DEBUG_MOD("KeepModulators: creating path " << m.newId
                  << " -> " << m.param->infoName());
 
-        p_->scene->editor()->addModulator(m.param, m.newId);
+        p_->scene->editor()->addModulator(m.param, m.newId, "");
 
         // copy modulator settings
         Modulator

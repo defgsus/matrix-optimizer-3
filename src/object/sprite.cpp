@@ -156,7 +156,7 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 #if (1) // billboarding on cpu
 
             // get parent transformation
-            Mat4 orgtrans = parentObject()->transformation(thread, 0);
+            Mat4 orgtrans = parentObject()->transformation();
             // apply local transformation with time-offset
             calculateTransformation(orgtrans, time, thread);
 

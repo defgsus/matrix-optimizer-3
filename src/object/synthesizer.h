@@ -35,17 +35,18 @@ public:
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
-    virtual void createAudioSources() Q_DECL_OVERRIDE;
-
     virtual void setSampleRate(uint samplerate) Q_DECL_OVERRIDE;
     virtual void setNumberThreads(uint numThreads) Q_DECL_OVERRIDE;
-    virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
-    virtual void updateAudioTransformations(Double time, uint thread) Q_DECL_OVERRIDE;
-    virtual void updateAudioTransformations(Double time, uint blockSize, uint thread)
-                                                                    Q_DECL_OVERRIDE;
 
-    virtual void performAudioBlock(SamplePos pos, uint thread) Q_DECL_OVERRIDE;
+    virtual void calculateSoundSourceTransformation(
+                                        const TransformationBuffer * objectTransformation,
+                                        const QList<AUDIO::SpatialSoundSource*>&,
+                                        uint bufferSize, SamplePos pos, uint thread)
+                                            Q_DECL_OVERRIDE;
+    virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,
+                                            uint bufferSize, SamplePos pos, uint thread)
+                                            Q_DECL_OVERRIDE;
 
 protected:
 
@@ -73,10 +74,6 @@ protected:
 
     SynthSetting * synth_;
 
-    QList<AUDIO::AudioSource*> audios_;
-
-    /** [thread][audiosource] */
-    std::vector<std::vector<F32*>> audioBuffers_;
     /** [thread][audiosource] */
     std::vector<std::vector<Mat4>> audioPos_;
     /** [thread][audiosource][voice-in-time] */

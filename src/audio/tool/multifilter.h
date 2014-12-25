@@ -75,9 +75,6 @@ public:
 
     ~MultiFilter();
 
-    MultiFilter(const MultiFilter& other);
-    MultiFilter& operator = (const MultiFilter& other);
-
     // ----------- setter ----------------
 
     /** Sets the type of the filter.
@@ -103,6 +100,14 @@ public:
     /** Sets the resonance [0,1].
         Requires updateCoefficients() to be called. */
     void setResonance(F32 reso) { reso_ = std::max(0.f,std::min(1.f, reso )); }
+
+    /** Sets the output amplitude.
+        Does NOT require updateCoefficients() to be called. */
+    void setOutputAmplitude(F32 amp) { out_amp_ = amp; }
+
+    /** Copies the settings from other filter.
+        Requires updateCoefficients() to be called. */
+    void copySettingsFrom(const MultiFilter&);
 
     // ---------- getter ------------------
 
@@ -138,12 +143,17 @@ public:
 
 private:
 
+    // disable copy
+    MultiFilter(const MultiFilter& other);
+    MultiFilter& operator = (const MultiFilter& other);
+
+
     bool doReallocate_;
 
     FilterType type_;
 
     uint sr_, order_;
-    F32 freq_, reso_, amp_,
+    F32 freq_, reso_, amp_, out_amp_,
         q1_, q2_, s1_, s2_, p0_, p1_;
     std::vector<F32> so1_, so2_, po0_, po1_;
 

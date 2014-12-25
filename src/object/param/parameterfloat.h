@@ -73,7 +73,7 @@ public:
     /** Receives modulation value at time */
     Double getModulationValue(Double time, uint thread) const;
 
-    virtual Modulator * getModulator(const QString &modulatorId) Q_DECL_OVERRIDE;
+    virtual Modulator * getModulator(const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
 
 private:
 

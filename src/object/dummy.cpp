@@ -33,5 +33,4 @@ void Dummy::deserialize(IO::DataStream & io)
     io.readHeader("dummy", 1);
 }
 
-
 } // namespace MO

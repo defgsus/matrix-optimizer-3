@@ -153,6 +153,7 @@ MultiFilter::MultiFilter(bool alloc)
       order_        (1),
       freq_         (1000),
       reso_         (0),
+      out_amp_      (1),
       cheby_        (doReallocate_? 0 : new ChebychevFilter()),
       filter24_     (doReallocate_? 0 : new Filter24()),
       butter_       (doReallocate_? 0 : new ButterworthFilter()),
@@ -169,7 +170,7 @@ MultiFilter::~MultiFilter()
     delete filter24_;
     delete cheby_;
 }
-
+#if 0
 MultiFilter::MultiFilter(const MultiFilter &other)
 {
     *this = other;
@@ -182,6 +183,7 @@ MultiFilter& MultiFilter::operator = (const MultiFilter& other)
     freq_ = other.freq_;
     reso_ = other.reso_;
     order_ = other.order_;
+    amp_ = other.amp_;
 
     if (cheby_)
     {
@@ -207,6 +209,17 @@ MultiFilter& MultiFilter::operator = (const MultiFilter& other)
     updateCoefficients();
 
     return *this;
+}
+#endif
+
+void MultiFilter::copySettingsFrom(const MultiFilter& other)
+{
+    type_ = other.type_;
+    sr_ = other.sr_;
+    freq_ = other.freq_;
+    reso_ = other.reso_;
+    order_ = other.order_;
+    amp_ = other.amp_;
 }
 
 void MultiFilter::setType(const QString &id)
@@ -234,6 +247,8 @@ void MultiFilter::reset()
         filter24_->reset();
     if (butter_)
         butter_->reset();
+    if (fixed_)
+        fixed_->reset();
 }
 
 void MultiFilter::updateCoefficients()
@@ -324,6 +339,7 @@ void MultiFilter::updateCoefficients()
             amp_ += MATH::smoothstep(F32(.94), F32(1), q2_) * (F32(1./250) - amp_);
         }
         break;
+
         case T_FIRST_ORDER_HIGH:
         case T_NTH_ORDER_HIGH:
         {
@@ -333,7 +349,9 @@ void MultiFilter::updateCoefficients()
             amp_ = F32(1) + fac * F32(1./8 - 1);
             amp_ += MATH::smoothstep(F32(.90), F32(1), q2_) * (F32(1./250) - amp_);
         }
+
         default:
+            amp_ = F32(1);
         break;
     }
 
@@ -479,6 +497,8 @@ void MultiFilter::updateCoefficients()
 void MultiFilter::process(const F32 *input, uint inputStride,
                                 F32 *output, uint outputStride, uint blockSize)
 {
+    F32 amp = amp_ * out_amp_;
+
     switch (type_)
     {
         case T_BYPASS:
@@ -500,7 +520,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                     p0_ = p1_;
                     p1_ = s1_;
                     *output = (s1_ += q1_ * (*input - s1_)
-                                    + q2_ * (s1_ - p0_)) * amp_;
+                                    + q2_ * (s1_ - p0_)) * amp;
                 }
         break;
 
@@ -520,7 +540,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                     s1_ += q1_ * (*input - s1_)
                          + q2_ * (s1_ - p0_);
                     // highpass == input minus lowpass
-                    *output = (*input - s1_) * amp_;
+                    *output = (*input - s1_) * amp;
                 }
         break;
 
@@ -542,7 +562,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                     p1_ = s2_;
                     s2_ += q1_ * ((*input - s1_) - s2_)
                          + q2_ * (s2_ - p0_);
-                    *output = s2_ * amp_;
+                    *output = s2_ * amp;
                 }
         break;
 
@@ -574,7 +594,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                         so1_[j] += (q1_ * (so1_[j-1] - so1_[j])
                                   + q2_ * (so1_[j] - po0_[j])) * amp_;
                     }
-                    *output = so1_[order_-1] * amp_;
+                    *output = so1_[order_-1] * amp;
                 }
         break;
 
@@ -591,7 +611,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                         so1_[j] += q1_ * (tmp - so1_[j]);
                         tmp = tmp - so1_[j];
                     }
-                    *output = tmp;
+                    *output = tmp * amp;
                 }
             else
                 for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
@@ -611,7 +631,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                                  + q2_ * (so1_[j] - po0_[j]);
                         tmp = (tmp - so1_[j]) * amp_;
                     }
-                    *output = tmp * amp_;
+                    *output = tmp * amp;
                 }
         break;
 
@@ -628,7 +648,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                         so1_[j] += q1_ * (so2_[j-1] - so1_[j]);
                         so2_[j] += q1_ * ((so2_[j-1] - so1_[j]) - so2_[j]);
                     }
-                    *output = so2_[order_-1];
+                    *output = so2_[order_-1] * amp;
                 }
             else
                 for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
@@ -648,7 +668,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
                         so2_[j] += (q1_ * ((so2_[j-1] - so1_[j]) - so2_[j])
                                   + q2_ * (so2_[j] - po0_[j])) * amp_;
                     }
-                    *output = so2_[order_-1] * amp_;
+                    *output = so2_[order_-1] * amp;
                 }
         break;
 
@@ -656,20 +676,20 @@ void MultiFilter::process(const F32 *input, uint inputStride,
         case T_CHEBYCHEV_HIGH:
         case T_CHEBYCHEV_BAND:
             MO_ASSERT(cheby_, "forgot to call MultiFilter::updateCoefficients() ?");
-            cheby_->process(input, inputStride, output, outputStride, blockSize);
+            cheby_->process(input, inputStride, output, outputStride, blockSize, out_amp_);
         break;
 
         case T_24_LOW:
         case T_24_HIGH:
         case T_24_BAND:
             MO_ASSERT(filter24_, "forgot to call MultiFilter::updateCoefficients() ?");
-            filter24_->process(input, inputStride, output, outputStride, blockSize);
+            filter24_->process(input, inputStride, output, outputStride, blockSize, out_amp_);
         break;
 
         case T_BUTTERWORTH_LOW:
         case T_BUTTERWORTH_HIGH:
             MO_ASSERT(butter_, "forgot to call MultiFilter::updateCoefficients() ?");
-            butter_->process(input, inputStride, output, outputStride, blockSize);
+            butter_->process(input, inputStride, output, outputStride, blockSize, out_amp_);
         break;
 
         case T_NTH_BESSEL_LOW:
@@ -682,7 +702,7 @@ void MultiFilter::process(const F32 *input, uint inputStride,
         case T_NTH_BUTTERWORTH_HIGH:
         case T_NTH_BUTTERWORTH_BAND:
             MO_ASSERT(fixed_, "forgot to call MultiFilter::updateCoefficients() ?");
-            fixed_->process(input, inputStride, output, outputStride, blockSize);
+            fixed_->process(input, inputStride, output, outputStride, blockSize, out_amp_);
         break;
 
     }

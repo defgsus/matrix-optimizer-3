@@ -26,7 +26,7 @@ public:
 
     enum { Type = UserType + 10 };
 
-    ModulatorItem(Modulator *);
+    ModulatorItem(Modulator *, QGraphicsItem * parent = 0);
 
     // ------------------- getter ----------------------
 
@@ -64,7 +64,7 @@ private:
     bool isHovered_;
     AbstractObjectItem * from_, * to_;
     QPointF fromPos_, toPos_;
-    QRectF rect_;
+    QRectF boundingRect_;
     QPainterPath shape_, boundingShape_;
 };
 

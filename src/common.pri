@@ -186,7 +186,6 @@ HEADERS += \
     src/io/commandlineparser.h \
     src/io/version.h \
     src/object/clip.h \
-    src/object/clipcontainer.h \
     src/tool/selection.h \
     src/graph/directedgraph.h \
     src/object/util/objectmodulatorgraph.h \
@@ -207,7 +206,6 @@ HEADERS += \
     src/engine/serverengine.h \
     src/object/util/objecteditor.h \
     src/types/time.h \
-    src/object/param/modulatoraudio.h \
     src/audio/tool/audiobuffer.h \
     src/object/audioobject.h \
     src/object/param/parameters.h \
@@ -219,8 +217,34 @@ HEADERS += \
     src/object/util/objectdsppath.h \
     src/object/audio/filterao.h \
     src/math/transformationbuffer.h \
-    src/model/objectmimedata.h
-
+    src/model/objectmimedata.h \
+    src/object/audio/mverbao.h \
+    src/audio/3rd/MVerb.h \
+    src/object/audio/fftao.h \
+    src/audio/tool/resamplebuffer.h \
+    src/object/audio/shaperao.h \
+    src/audio/spatial/spatialsoundsource.h \
+    src/audio/spatial/spatialmicrophone.h \
+    src/types/conversion.h \
+    src/audio/tool/delay.h \
+    src/object/audio/audioinao.h \
+    src/object/param/modulatorevent.h \
+    src/object/clipcontroller.h \
+    src/object/audio/filterbankao.h \
+    src/object/param/modulatoroutput.h \
+    src/object/audio/envelopefollowerao.h \
+    src/gl/bufferobject.h \
+    src/object/oscillograph.h \
+    src/object/audio/delayao.h \
+    src/object/audio/soundsourceao.h \
+    src/object/audio/parameterao.h \
+    src/object/audio/impulseao.h \
+    src/object/audio/panao.h \
+    src/object/audio/dustao.h \
+    src/object/audio/sampleholdao.h \
+    src/object/audio/phasorao.h \
+    src/object/audio/noiseao.h \
+    src/object/audio/playbufferao.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -375,7 +399,6 @@ SOURCES += \
     src/io/commandlineparser.cpp \
     src/io/version.cpp \
     src/object/clip.cpp \
-    src/object/clipcontainer.cpp \
     src/object/util/objectmodulatorgraph.cpp \
     src/object/util/objecttree.cpp \
     src/projection/projectorblender.cpp \
@@ -394,7 +417,6 @@ SOURCES += \
     src/main.cpp \
     src/engine/serverengine.cpp \
     src/object/util/objecteditor.cpp \
-    src/object/param/modulatoraudio.cpp \
     src/audio/tool/audiobuffer.cpp \
     src/object/audioobject.cpp \
     src/object/param/parameters.cpp \
@@ -405,4 +427,27 @@ SOURCES += \
     src/engine/audioengine.cpp \
     src/object/util/objectdsppath.cpp \
     src/object/audio/filterao.cpp \
-    src/model/objectmimedata.cpp
+    src/model/objectmimedata.cpp \
+    src/object/audio/mverbao.cpp \
+    src/object/audio/fftao.cpp \
+    src/object/audio/shaperao.cpp \
+    src/audio/spatial/spatialsoundsource.cpp \
+    src/audio/spatial/spatialmicrophone.cpp \
+    src/object/audio/audioinao.cpp \
+    src/object/param/modulatorevent.cpp \
+    src/object/clipcontroller.cpp \
+    src/object/audio/filterbankao.cpp \
+    src/object/param/modulatoroutput.cpp \
+    src/object/audio/envelopefollowerao.cpp \
+    src/gl/bufferobject.cpp \
+    src/object/oscillograph.cpp \
+    src/object/audio/delayao.cpp \
+    src/object/audio/soundsourceao.cpp \
+    src/object/audio/parameterao.cpp \
+    src/object/audio/impulseao.cpp \
+    src/object/audio/panao.cpp \
+    src/object/audio/dustao.cpp \
+    src/object/audio/sampleholdao.cpp \
+    src/object/audio/phasorao.cpp \
+    src/object/audio/noiseao.cpp \
+    src/object/audio/playbufferao.cpp

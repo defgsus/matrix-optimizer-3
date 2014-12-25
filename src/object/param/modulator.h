@@ -26,7 +26,9 @@ public:
 
     /** Construct a modulator coming from object @p modulatorId
         and belonging to @p parent / @p param */
-    Modulator(const QString& name, const QString& modulatorId, Parameter * parm, Object * parent = 0);
+    Modulator(const QString& name,
+              const QString& modulatorId, const QString& outputId,
+              Parameter * parm, Object * parent = 0);
     virtual ~Modulator() { }
 
     // --------------- io ----------------
@@ -53,6 +55,7 @@ public:
 
     /** Returns the set idName for finding the modulating object */
     const QString& modulatorId() const { return modulatorId_; }
+    const QString& outputId() const { return outputId_; }
 
     /** Returns the modulating object */
     Object * modulator() const { return modulator_; }
@@ -62,7 +65,17 @@ public:
     /** Returns if the object can be the modulating object */
     virtual bool canBeModulator(const Object *) const = 0;
 
+    /** Returns true if this sticks to an audio output of a module.
+        Only valid after setModulator(). */
+    bool isAudioToFloatConverter() const;
+
+    /** Returns the channel number if this isAudioToFloatConverter() */
+    uint getAudioOutputChannel() const;
+
     // ------------- setter --------------
+
+    /** Changes the modulator id - only used to update new inserted branches */
+    void setModulatorId(const QString& id) { modulatorId_ = id; }
 
     /** Sets the modulating object (from where the modulation comes from).
         Set to NULL to remove the modulator temporarily.
@@ -82,7 +95,7 @@ private:
 
     Object * parent_, * modulator_;
 
-    QString name_, modulatorId_;
+    QString name_, modulatorId_, outputId_;
 
     Parameter * param_;
 };

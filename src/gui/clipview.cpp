@@ -17,7 +17,7 @@
 
 #include "clipview.h"
 #include "widget/clipwidget.h"
-#include "object/clipcontainer.h"
+#include "object/clipcontroller.h"
 #include "object/clip.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
@@ -139,36 +139,50 @@ void ClipView::createWidgets_()
 
 }
 
-void ClipView::setClipContainer(ClipContainer * con)
+void ClipView::setScene(Scene * scene)
 {
-    if (con && clipCon_ == con)
+    if (   scene_ && scene_ == scene
+        && clipCon_ && clipCon_ == scene_->clipController())
     {
         // don't update if all is same
-        if (curNumX_ == con->numberColumns()
-            && curNumY_ == con->numberRows())
+        if (curNumX_ == clipCon_->numberColumns()
+            && curNumY_ == clipCon_->numberRows())
             return;
     }
 
-    // disconnect previous
-    if (clipCon_)
+    scene_ = scene;
+    if (!scene_)
     {
-        disconnect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
-        disconnect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
-        disconnect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
-        disconnect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
+        editor_ = 0;
+        clipCon_ = 0;
+    }
+    else
+    {
+        editor_ = scene_->editor();
+        clipCon_ = scene_->clipController();
+
+        // connect
+        if (clipCon_)
+        {
+            connect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
+            connect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
+            connect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
+            connect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
+        }
+
+        if (editor_)
+        {
+            connect(editor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
+            connect(editor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+            connect(editor_, SIGNAL(objectColorChanged(MO::Object*)), this, SLOT(onObjectColorChanged_(MO::Object*)));
+        }
     }
 
-    clipCon_ = con;
+    createClipWidgets_();
+}
 
-    // connect
-    if (clipCon_)
-    {
-        connect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
-        connect(clipCon_, SIGNAL(clipStopTriggered(Clip*)), this, SLOT(onClipStopTriggered_(Clip*)));
-        connect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
-        connect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
-    }
-
+void ClipView::updateAllClips()
+{
     createClipWidgets_();
 }
 
@@ -291,11 +305,10 @@ void ClipView::updateClipWidget_(uint x, uint y)
     if (clip)
     {
         // -- pass other parameters on change --
-        if (clip->color() != w->clipColor())
-            w->setClipColor(clip->color());
-
         if (clip->name() != w->name())
             w->setName(clip->name());
+
+        w->updateColors();
 
         // update widgetmap
         if (!widgetMap_.contains(clip))
@@ -307,7 +320,7 @@ void ClipView::removeObject(const Object *o)
 {
     if (o == clipCon_)
     {
-        setClipContainer(0);
+        setScene(0);
         return;
     }
 
@@ -381,7 +394,7 @@ void ClipView::selectObject(Object *o)
         return;
     }
 
-    if (o->isClipContainer())
+    if (o->isClipController())
         return;
 
     // -- select specific clip --
@@ -582,6 +595,28 @@ void ClipView::onClipStopped_(Clip * clip)
 {
     if (ClipWidget * w = widgetForClip_(clip))
         w->setStopped();
+}
+
+void ClipView::onObjectAdded_(Object * o)
+{
+    if (o->isClipController() && scene_)
+        clipCon_ = scene_->clipController();
+
+    updateAllClips();
+}
+
+void ClipView::onObjectDeleted_(const Object* o)
+{
+    if (o->isClipController() && scene_)
+        clipCon_ = scene_->clipController();
+
+    updateAllClips();
+}
+
+void ClipView::onObjectColorChanged_(Object * o)
+{
+    if (o->isClip())
+        updateClip(static_cast<Clip*>(o));
 }
 
 void ClipView::moveSelection_(int dx, int dy)
@@ -812,23 +847,21 @@ void ClipView::openPopup_()
         {
             Object * o = ObjectFactory::createObject(a->data().toString());
             MO_ASSERT(o, "ClipView: Could not create object class '" << a->data().toString() << "'");
+            Q_UNUSED(o);
         });
 
         menu->addSeparator();
 
         // set color
         menu->addAction(a = new QAction(plural? tr("Change clip colors") : tr("Change clip color"), menu));
-        sub = ObjectMenu::createColorMenu(menu);
+        sub = ObjectMenu::createHueMenu(menu);
         a->setMenu(sub);
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
-            QColor c = a->data().value<QColor>();
+            int hue = a->data().toInt();
             for (auto w : selection_)
-            if (w->clip())
-            {
-                w->clip()->setColor(c);
-                updateClip(w->clip());
-            }
+                if (w->clip())
+                    editor_->setObjectHue(w->clip(), hue);
         });
 
         menu->addSeparator();

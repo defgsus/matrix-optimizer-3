@@ -119,7 +119,7 @@ void ParameterWidget::dropEvent(QDropEvent * e)
         return;
 
     // create modulation
-    editor_->addModulator(param_, desc.id());
+    editor_->addModulator(param_, desc.id(), "");
 
     // select the parameter's object
     if (param_->object())
@@ -128,15 +128,36 @@ void ParameterWidget::dropEvent(QDropEvent * e)
 
 void ParameterWidget::createWidgets_()
 {
+    if (!editor_)
+        return;
+
     static const QIcon resetIcon(":/icon/reset.png");
-
-    const int butfs = 25;
-
 
     QHBoxLayout * l = new QHBoxLayout(this);
     l->setMargin(0);
     l->setSpacing(4);
 
+    const int butfs = 25;
+
+    // modulate button
+    bmod_ = new QToolButton(this);
+    l->addWidget(bmod_);
+    bmod_->setStatusTip(tr("Click to open the context menu for modulating the parameter"));
+    bmod_->setFixedSize(butfs, butfs);
+    if (param_->isModulateable())
+        connect(bmod_, SIGNAL(pressed()),
+                this, SLOT(openModulationPopup()));
+
+    // visible (in graph) button
+    bvis_ = new QToolButton(this);
+    l->addWidget(bvis_);
+    bvis_->setStatusTip(tr("Click to open the context menu for the visibility of the parameter in other views"));
+    bvis_->setFixedSize(butfs, butfs);
+    bvis_->setCheckable(true);
+    connect(bvis_, SIGNAL(pressed()),
+            this, SLOT(openVisibilityPopup()));
+
+    // label
     QLabel * label = new QLabel(param_->name(), this);
     l->addWidget(label);
     label->setStatusTip(param_->statusTip().isEmpty()
@@ -145,18 +166,6 @@ void ParameterWidget::createWidgets_()
 
     QToolButton * but, * breset;
 
-    if (!editor_)
-        return;
-
-    // modulate button
-    bmod_ = new QToolButton(this);
-    l->addWidget(bmod_);
-    bmod_->setStatusTip(tr("Click to open the context menu for modulating the parameter"));
-    bmod_->setFixedSize(butfs, butfs);
-    updateModulatorButton();
-    if (param_->isModulateable())
-        connect(bmod_, SIGNAL(pressed()),
-                this, SLOT(openModulationPopup()));
 
     // reset-to-default button
     but = breset = new QToolButton(this);
@@ -415,15 +424,20 @@ void ParameterWidget::createWidgets_()
     else
         breset->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")
                       .arg(defaultValueName));
+
+    updateButtons();
 }
 
 
-void ParameterWidget::updateModulatorButton()
+void ParameterWidget::updateButtons()
 {
     static QIcon iconModulateOn(":/icon/modulate_on.png");
     static QIcon iconModulateOff(":/icon/modulate_off.png");
+    static QIcon iconVisibility(":/icon/visibility.png");
+    static QIcon iconVisibilityOn(":/icon/visibility_on.png");
 
-    bmod_->setVisible(param_->isModulateable());
+    bmod_->setEnabled(param_->isModulateable());
+    bvis_->setEnabled(param_->isModulateable());
 
     if (param_->modulatorIds().size())
     {
@@ -435,6 +449,11 @@ void ParameterWidget::updateModulatorButton()
         bmod_->setDown(false);
         bmod_->setIcon(iconModulateOff);
     }
+
+    if (param_->isVisibleInGraph())
+        bvis_->setIcon(iconVisibilityOn);
+    else
+        bvis_->setIcon(iconVisibility);
 }
 
 void ParameterWidget::openModulationPopup()
@@ -445,6 +464,8 @@ void ParameterWidget::openModulationPopup()
     QMenu * menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
     QAction * a;
+
+    menu->addSection(tr("modulation for %1").arg(param_->name()));
 
     // --- parameter float ---
 
@@ -493,10 +514,10 @@ void ParameterWidget::openModulationPopup()
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             Clip * parent = a->data().value<Clip*>();
-            if (Object * o = editor_->createInClip("SequenceFloat", parent))
+            if (Object * o = editor_->createInClip(pi, "SequenceFloat", parent))
             {
                 // modulate
-                editor_->addModulator(param_, o->idName());
+                editor_->addModulator(param_, o->idName(), "");
                 o->setName(ObjectEditor::modulatorName(param_));
 
                 emitObjectSelected_(o);
@@ -527,7 +548,7 @@ void ParameterWidget::openModulationPopup()
         return;
     }
 
-    connect(menu, SIGNAL(destroyed()), this, SLOT(updateModulatorButton()));
+    connect(menu, SIGNAL(destroyed()), this, SLOT(updateButtons()));
     menu->popup(bmod_->mapToGlobal(QPoint(0,0)));
 }
 
@@ -546,7 +567,9 @@ void ParameterWidget::addRemoveModMenu_(QMenu * menu, Parameter * param)
         a->setIcon(QIcon(":/icon/delete.png"));
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
-            editor_->removeModulator(param, a->data().toString());
+            QString ids = a->data().toString();
+            editor_->removeModulator(param, ObjectMenu::getModulatorId(ids),
+                                            ObjectMenu::getOutputId(ids));
         });
     }
     // remove all
@@ -605,14 +628,17 @@ void ParameterWidget::addLinkModMenu_(
     }
 
     // disable the entries that are already modulators
-    ObjectMenu::setEnabled(linkMenu, param->modulatorIds(), false);
+    QStringList ids;
+    for (auto p : param->modulatorIds())
+        ids << p.first;
+    ObjectMenu::setEnabled(linkMenu, ids, false);
 
     QAction * a = menu->addMenu(linkMenu);
     a->setText(tr("Choose existing source"));
     a->setIcon(QIcon(":/icon/modulate_on.png"));
     connect(linkMenu, &QMenu::triggered, [=](QAction* a)
     {
-        editor_->addModulator(param, a->data().toString());
+        editor_->addModulator(param, a->data().toString(), "");
     });
 
 }
@@ -646,7 +672,7 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
             if (Object * o = editor_->createFloatSequenceFor(param_))
             {
                 // modulate
-                editor_->addModulator(param_, o->idName());
+                editor_->addModulator(param_, o->idName(), "");
 
                 emitObjectSelected_(o);
             }
@@ -658,10 +684,10 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
         connect(a, &QAction::triggered, [=]()
         {
-            if (Object * o = editor_->createInClip("SequenceFloat", 0))
+            if (Object * o = editor_->createInClip(param, "SequenceFloat", 0))
             {
                 // modulate
-                editor_->addModulator(param, o->idName());
+                editor_->addModulator(param, o->idName(), "");
                 o->setName(ObjectEditor::modulatorName(param, true));
 
                 emitObjectSelected_(o);
@@ -683,10 +709,10 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             if (Clip * parent = a->data().value<Clip*>())
-            if (Object * o = editor_->createInClip("SequenceFloat", parent))
+            if (Object * o = editor_->createInClip(param, "SequenceFloat", parent))
             {
                 // modulate
-                editor_->addModulator(param, o->idName());
+                editor_->addModulator(param, o->idName(), "");
                 o->setName(ObjectEditor::modulatorName(param, true));
 
                 emitObjectSelected_(o);
@@ -695,6 +721,17 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         });
 
 }
+
+void ParameterWidget::openVisibilityPopup()
+{
+    if (!editor_)
+        return;
+
+    editor_->setParameterVisibleInGraph(param_, !param_->isVisibleInGraph());
+
+    updateButtons();
+}
+
 
 void ParameterWidget::updateWidgetValue()
 {
@@ -742,7 +779,7 @@ void ParameterWidget::updateWidgetValue()
             lineEdit_->setText(ptxt->value());
     }
 
-    updateModulatorButton();
+    updateButtons();
 }
 
 } // namespace GUI

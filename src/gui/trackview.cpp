@@ -1120,15 +1120,16 @@ void TrackView::createEditActions_()
         a->setStatusTip(tr("Creates a new sequence at the current time"));
         connect(a, &QAction::triggered, [this]()
         {
-            if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
+/*YYY            if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
             {
-/*YYY#ifndef MO_DISABLE_TREE
+#ifndef MO_DISABLE_TREE
                 nextFocusSequence_ =
                     scene_->model()->createFloatSequence(trackf, currentTime_);
-#endif*/
+#endif
                 updateTrack(selTrack_);
                 assignModulatingWidgets_();
             }
+            */
         });
 
         editActions_.addSeparator(this);
@@ -1164,9 +1165,9 @@ void TrackView::createEditActions_()
     }
 }
 
-bool TrackView::deleteObject_(Object * o)
+bool TrackView::deleteObject_(Object * )
 {
-    // YYY
+    return false;// YYY
 }
 
 bool TrackView::paste_(bool single_track)

@@ -103,6 +103,8 @@ public slots:
 
     void renderToDisk();
 
+    void testAudioSpeed();
+
     // --------- private slots -----------------
 
 private slots:
@@ -122,7 +124,7 @@ private slots:
     void onObjectNameChanged_(MO::Object*);
     void onObjectAdded_(MO::Object*);
     void onObjectDeleted_(const MO::Object*);
-    void onTreeChanged_();
+    void onObjectsDeleted_(const QList<MO::Object*>&);
     /** To trigger sceneNotSaved_ */
     void onSceneChanged_();
     void onSceneTimeChanged_(Double time);

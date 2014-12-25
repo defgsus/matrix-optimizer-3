@@ -125,6 +125,8 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
 }
 
 
+namespace { static QString stupid_separator("*^_m_sep_^*"); }
+
 QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *parent)
 {
     //static QIcon iconTrack(QIcon(":/icon/obj_track.png"));
@@ -138,7 +140,7 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
             Object * mo = m->modulator();
             MO_ASSERT(mo, "no object assigned to modulator of '" << pf->idName() << "'");
             QAction * a = new QAction(ObjectFactory::iconForObject(mo), mo->name(), menu);
-            a->setData(mo->idName());
+            a->setData(m->modulatorId() + stupid_separator + m->outputId());
             a->setToolTip(mo->namePath());
             a->setStatusTip(a->toolTip());
             menu->addAction(a);
@@ -148,8 +150,9 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
     {
         for (auto id : param->modulatorIds())
         {
-            QAction * a = new QAction(id, menu);
-            a->setData(id);
+            // YYY no outputId
+            QAction * a = new QAction(id.first, menu);
+            a->setData(id.first + stupid_separator + id.second);
             menu->addAction(a);
         }
     }
@@ -157,7 +160,15 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
     return menu;
 }
 
+QString ObjectMenu::getModulatorId(const QString &modAndOutputId)
+{
+    return modAndOutputId.section(stupid_separator, 0);
+}
 
+QString ObjectMenu::getOutputId(const QString &modAndOutputId)
+{
+    return modAndOutputId.section(stupid_separator, 1);
+}
 
 void ObjectMenu::setEnabled(QMenu *menu, const QStringList& ids, bool enable)
 {
@@ -190,6 +201,8 @@ QMenu * ObjectMenu::createParameterMenu(Object *o, QWidget *parent,
 
     QMenu * sub = menu;
 
+    bool anyone = false;
+
     QString curId = "-1";
     for (auto i = params.begin(); i != params.end(); ++i)
     {
@@ -209,9 +222,20 @@ QMenu * ObjectMenu::createParameterMenu(Object *o, QWidget *parent,
         a->setData(i.value()->idName());
         a->setEnabled(selector(i.value()));
         sub->addAction(a);
+
+        anyone |= a->isEnabled();
     }
 
-    return menu;
+    if (anyone)
+        return menu;
+
+    // otherwise dispose
+    if (parent)
+        menu->deleteLater();
+    else
+        delete menu;
+
+    return 0;
 }
 
 
@@ -291,6 +315,43 @@ QMenu * ObjectMenu::createColorMenu(QWidget *parent)
     return menu;
 }
 
+
+QMenu * ObjectMenu::createHueMenu(QWidget *parent)
+{
+    QMenu * menu = new QMenu(parent);
+
+    // --- create icon lists ---
+
+    static QList<QIcon> icons;
+    static QList<int> hues;
+    if (icons.isEmpty())
+    {
+        for (int i = -23; i < 359; i += 23)
+        {
+            QColor col = i < 0 ? QColor::fromHsl(0, 0, 100)
+                               : QColor::fromHsl(i, 200, 100);
+
+            QPixmap pixmap(32, 32);
+            QPainter painter(&pixmap);
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(QBrush(col));
+            painter.drawRect(pixmap.rect());
+
+            icons << QIcon(pixmap);
+            hues << std::max(-1, i);
+        }
+    }
+
+    // create menu
+    for (int i=0; i<icons.size(); ++i)
+    {
+        QAction * a = new QAction(icons[i], "", menu);
+        a->setData(hues[i]);
+        menu->addAction(a);
+    }
+
+    return menu;
+}
 
 
 } // namespace GUI

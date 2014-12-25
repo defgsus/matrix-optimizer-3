@@ -22,9 +22,10 @@
 #include "object/transform/transformation.h"
 #include "object/scene.h"
 #include "object/clip.h"
-#include "object/clipcontainer.h"
+#include "object/clipcontroller.h"
 #include "object/audioobject.h"
 #include "object/util/alphablendsetting.h"
+#include "object/util/audioobjectconnections.h"
 
 namespace MO {
 namespace GUI {
@@ -61,9 +62,11 @@ void ObjectInfoDialog::setObject(Object * o)
 {
     setWindowTitle(o->name());
 
+    Scene * scene = o->sceneObject();
+
     Double curTime = 0.0;
-    if (Scene * s = o->sceneObject())
-        curTime = s->sceneTime();
+    if (scene)
+        curTime = scene->sceneTime();
 
     std::stringstream s, s1;
     s << "<html><b>" << o->infoName() << "</b><br/>"
@@ -92,13 +95,13 @@ void ObjectInfoDialog::setObject(Object * o)
 
     // ----- audiosources and microphones -----
 
-    if (!o->microphones().isEmpty() || !o->audioSources().isEmpty())
+    if (o->numberMicrophones() || o->numberSoundSources())
     {
         s << "<p>";
-        if (!o->audioSources().isEmpty())
-            s << "audio sources: " << o->audioSources().size() << "<br/>";
-        if (!o->microphones().isEmpty())
-            s << "microphones: " << o->microphones().size();
+        if (o->numberSoundSources())
+            s << "audio sources: " << o->numberSoundSources() << "<br/>";
+        if (o->numberMicrophones())
+            s << "microphones: " << o->numberMicrophones();
         s << "</p>";
     }
 
@@ -123,20 +126,36 @@ void ObjectInfoDialog::setObject(Object * o)
     }
     else if (o->type() & Object::TG_REAL_OBJECT)
         s << "<p>" << tr("current transformation") << ":<br/>"
-          << matrix2Html(o->transformation(MO_GFX_THREAD, 0)) << "</p>";
+          << matrix2Html(o->transformation()) << "</p>";
 
-    // ---------- audio unit -----------
+    // ---------- audio object -----------
 
     if (AudioObject * au = qobject_cast<AudioObject*>(o))
     {
         s << "<p>AudioObject:<br/>channels: "
-          << au->numAudioInputs() << "/" << au->numAudioOutputs();
-        s  << "</p>";
+          << au->numAudioInputs() << "/" << au->numAudioOutputs()
+          << "<ul>";
+        if (scene && scene->audioConnections())
+        {
+            auto list = scene->audioConnections()->getInputs(au);
+            for (auto c : list)
+                s << "\n<li>" << c->from()->name()
+                  << " -&gt; " << c->to()->getAudioInputName(c->inputChannel())
+                  << "</li>";
+
+            list = scene->audioConnections()->getOutputs(au);
+            for (auto c : list)
+                s << "\n<li>"
+                  << c->from()->getAudioOutputName(c->outputChannel())
+                  << " -&gt; " << c->to()->name()
+                  << "</li>";
+        }
+        s  << "</ul></p>";
     }
 
     // ------- clip container -------------
 
-    if (ClipContainer * clipcon = qobject_cast<ClipContainer*>(o))
+    if (ClipController * clipcon = qobject_cast<ClipController*>(o))
     {
         s << "<p>ClipContainer:<br/>size: "
           << clipcon->numberColumns() << "x"

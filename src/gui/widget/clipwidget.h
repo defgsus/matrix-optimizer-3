@@ -45,8 +45,6 @@ public:
 
     Clip * clip() const { return clip_; }
 
-    const QColor& clipColor() const { return clipColor_; }
-
     uint posX() const { return x_; }
     uint posY() const { return y_; }
     void setPos(uint x, uint y) { x_=x; y_=y; }
@@ -59,7 +57,7 @@ public slots:
     /** Sets a new or no Clip */
     void setClip(Clip *);
 
-    void setClipColor(const QColor& color);
+    void updateColors();
 
     void setTriggered();
     void setStopTriggered();
@@ -77,7 +75,6 @@ signals:
 
 protected:
 
-    void updateColors_();
     void resizeEvent(QResizeEvent *);
     void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
 
@@ -100,8 +97,6 @@ protected:
     bool hasFocus_;
 
     uint x_, y_;
-
-    QColor clipColor_;
 
     QPen penOutline_, penOutlineS_, penText_;
     QBrush brushBody_, brushBodyH_, brushBodyS_, brushBodySH_;

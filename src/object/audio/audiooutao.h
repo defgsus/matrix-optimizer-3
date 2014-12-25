@@ -8,10 +8,8 @@
     <p>created 02.12.2014</p>
 */
 
-#ifndef AUDIOOUTAO_H
-#define AUDIOOUTAO_H
-
-#include <QObject>
+#ifndef MOSRC_OBJECT_AUDIO_AUDIOOUTAO_H
+#define MOSRC_OBJECT_AUDIO_AUDIOOUTAO_H
 
 #include "object/audioobject.h"
 
@@ -25,18 +23,14 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
+    /** pull into public namespace */
+    void setNumberAudioInputsOutputs(int num) { AudioObject::setNumberAudioInputsOutputs(num, false); }
+
 protected:
 
-    /** Process dsp data here.
-        Inputs and outputs have the same buffer size.
-        @note Unused inputs and outputs contain a NULL pointer.*/
-    virtual void processAudio(const QList<AUDIO::AudioBuffer*>& inputs,
-                              const QList<AUDIO::AudioBuffer*>& outputs,
-                              uint bufferSize, SamplePos pos, uint thread)
+    virtual void processAudio(uint bufferSize, SamplePos pos, uint thread)
                                                             Q_DECL_OVERRIDE;
 private:
-
-    void clear_();
 
     ParameterFloat
         * paramAmp_;
@@ -44,4 +38,4 @@ private:
 
 } // namespace MO
 
-#endif // AUDIOOUTAO_H
+#endif // MOSRC_OBJECT_AUDIO_AUDIOOUTAO_H

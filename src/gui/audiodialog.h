@@ -37,7 +37,8 @@ public:
     ~AudioDialog();
 
     /** Returns the selected device index, or -1 */
-    int selectedDeviceIndex() const;
+    int selectedInDeviceIndex() const;
+    int selectedOutDeviceIndex() const;
 
 signals:
 
@@ -47,6 +48,8 @@ private slots:
     void toggleTesttone_();
     void apiSelected_();
     void deviceSelected_();
+//    void inDeviceSelected_();
+//    void outDeviceSelected_();
     void setDefaultSamplerate_();
     void setDefaultBuffersize_();
     void setDefaultChannelsIn_();
@@ -54,7 +57,8 @@ private slots:
 
 private:
 
-    void fillDeviceBox_();
+    void fillInDeviceBox_();
+    void fillOutDeviceBox_();
     void checkDevices_();
     void setWidgetChannelLimits_();
     void startTone_();
@@ -63,11 +67,18 @@ private:
     void storeConfig_();
 
     AUDIO::AudioDevices * devices_;
+#ifdef __APPLE__
+    AUDIO::AudioDevices * inDevices_;
+#endif
     AUDIO::AudioDevice * device_;
+#ifdef __APPLE__
+    AUDIO::AudioDevice * inDevice_;
+#endif
+
 
     std::vector<AUDIO::EnvelopeFollower*> envFollower_;
 
-    QComboBox *apiBox_, *deviceBox_;
+    QComboBox *apiBox_, *inDeviceBox_, *outDeviceBox_;
     QSpinBox *sampleRate_, *bufferSize_, *numInputs_, *numOutputs_;
     QToolButton * testButt_;
     EnvelopeWidget * envWidget_;

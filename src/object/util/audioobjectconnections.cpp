@@ -15,6 +15,10 @@
 #include "graph/directedgraph.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
+
+#define MO__DEBUG(arg__) MO_DEBUG("AudioObjectConnection::" << arg__);
+
 
 namespace MO {
 
@@ -40,6 +44,13 @@ bool AudioObjectConnection::operator == (const AudioObjectConnection& o) const
             && numChannels() == o.numChannels();
 }
 
+std::ostream& operator << (std::ostream& out, const AudioObjectConnection& c)
+{
+    out << "Con(" << c.from()->name() << ":" << c.outputChannel()
+           << ", " << c.to()->name() << ":" << c.inputChannel()
+           << ", " << c.numChannels() << ")";
+    return out;
+}
 
 AudioObjectConnections::AudioObjectConnections()
 {
@@ -99,6 +110,12 @@ void AudioObjectConnections::dump(std::ostream & out) const
     out << "AudioObjectConnections:\n";
     for (AudioObjectConnection * c : cons_)
         out << " " << c->from()->name() << "->" << c->to()->name();
+    out << "\n--fromMap--\n";
+    for (auto i = fromMap_.begin(); i!=fromMap_.end(); ++i)
+        out << i->first << ", " << i->second << "\n";
+    out << "--toMap--\n";
+    for (auto i = toMap_.begin(); i!=toMap_.end(); ++i)
+        out << i->first << ", " << i->second << "\n";
     out << std::endl;
 }
 
@@ -124,8 +141,9 @@ AudioObjectConnection * AudioObjectConnections::find(const AudioObjectConnection
 QList<AudioObjectConnection*> AudioObjectConnections::getInputs(AudioObject * to) const
 {
     QList<AudioObjectConnection*> list;
-    auto i = toMap_.find(to);
-    while (i != toMap_.end() && i->second->to() == to)
+    auto range = toMap_.equal_range(to);
+    auto i = range.first;
+    while (i != toMap_.end() && i != range.second)
     {
         list << i->second;
         ++i;
@@ -136,8 +154,9 @@ QList<AudioObjectConnection*> AudioObjectConnections::getInputs(AudioObject * to
 QList<AudioObjectConnection*> AudioObjectConnections::getOutputs(AudioObject * from) const
 {
     QList<AudioObjectConnection*> list;
-    auto i = fromMap_.find(from);
-    while (i != fromMap_.end() && i->second->from() == from)
+    auto range = fromMap_.equal_range(from);
+    auto i = range.first;
+    while (i != fromMap_.end() && i != range.second)
     {
         list << i->second;
         ++i;
@@ -207,8 +226,13 @@ AudioObjectConnection *AudioObjectConnections::connect(AudioObject *from,
 
 AudioObjectConnection * AudioObjectConnections::connect(const AudioObjectConnection &connection)
 {
-    if (auto con = find(connection))
+    MO__DEBUG("connect(" << connection << ")");
+
+    if (AudioObjectConnection * con = find(connection))
+    {
+        MO_WARNING("AudioObjectConnections::connect() duplicate connection requested " << connection);
         return con;
+    }
 
     // create
     auto con = new AudioObjectConnection(connection);
@@ -242,6 +266,8 @@ bool AudioObjectConnections::disconnect(const AudioObjectConnection &con)
 
 void AudioObjectConnections::disconnect(AudioObjectConnection * con)
 {
+    MO__DEBUG("disconnect(" << *con << ")");
+
     // remove here
     for (auto i = toMap_.begin(); i != toMap_.end(); ++i)
     {
@@ -268,15 +294,28 @@ void AudioObjectConnections::disconnect(AudioObjectConnection * con)
     delete con;
 }
 
-void AudioObjectConnections::remove(Object * obj)
+void AudioObjectConnections::remove(Object *obj)
 {
+    MO__DEBUG("remove(" << obj << ")");
+
     if (auto o = qobject_cast<AudioObject*>(obj))
     {
-        toMap_.erase(o);
-        fromMap_.erase(o);
+        // remove from maps
+        std::multimap<AudioObject*, AudioObjectConnection*>
+                toMap, fromMap;
+        for (auto i : toMap_)
+            if (i.second->from() != o && i.second->to() != o)
+                toMap.insert(i);
+        if (toMap.size() != toMap_.size())
+            toMap_.swap(toMap);
+
+        for (auto i : fromMap_)
+            if (i.second->from() != o && i.second->to() != o)
+                fromMap.insert(i);
+        if (fromMap.size() != fromMap_.size())
+            fromMap_.swap(fromMap);
 
         // remove from set
-
         std::set<AudioObjectConnection*> cons;
 
         for (auto i : cons_)
@@ -286,7 +325,8 @@ void AudioObjectConnections::remove(Object * obj)
             else
                 cons.insert(i);
         }
-        cons_.swap(cons);
+        if (cons.size() != cons_.size())
+            cons_.swap(cons);
     }
 
     // children

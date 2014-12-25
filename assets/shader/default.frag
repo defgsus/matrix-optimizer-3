@@ -11,6 +11,7 @@
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
  * MO_TEXTURE_IS_FULLDOME_CUBE
+ * MO_USE_POINT_COORD // use gl_PointCoord instead of v_texCoord
  * MO_ENABLE_TEXTURE_TRANSFORMATION
  * MO_ENABLE_TEXTURE_SINE_MORPH
  * MO_ENABLE_NORMALMAP_TRANSFORMATION
@@ -195,8 +196,14 @@ vec4 mo_texture_cube(in samplerCube tex, vec2 st, float angle)
 
 vec4 mo_ambient_color()
 {
+#ifdef MO_USE_POINT_COORD
+    vec2 texCoord = gl_PointCoord;
+#else
+    vec2 texCoord = v_texCoord;
+#endif
+
     // transform tex-coord
-    vec2 tc = mo_texture_lookup( v_texCoord );
+    vec2 tc = mo_texture_lookup( texCoord );
 
     return u_color * v_color
 #ifdef MO_ENABLE_TEXTURE

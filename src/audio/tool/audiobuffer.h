@@ -43,6 +43,11 @@ class AudioBuffer
     /** Returns the sample in current read-block + @p offset */
     F32 read(SamplePos offset) const { return readPointer()[offset]; }
 
+    /** Reads @p samples sample in the past, starting at last written sample.
+        If @p samples is greater than blockSize() * numBlocks(),
+        the last sample is repeated. */
+    F32 readHistory(SamplePos samples) const;
+
     /** Write a sample in the current write-block + @p offset */
     void write(SamplePos offset, F32 value) { writePointer()[offset] = value; }
 
@@ -50,20 +55,29 @@ class AudioBuffer
         @p block must point to at least blockSize() floats */
     void writeBlock(const F32 *block) { memcpy(writePointer(), block, p_blockSize_ * sizeof(F32)); }
 
+    /** Inserts one block of data into the buffer,
+        while advancing @p stride samples for every read sample.
+        @p block must point to at least blockSize() * @p stride floats */
+    void writeBlock(const F32 *block, size_t stride);
+
     /** Inserts one block of zeros into the buffer */
     void writeNullBlock() { memset(writePointer(), 0, p_blockSize_ * sizeof(F32)); }
 
     /** Adds one block of data to the buffer.
         @p block must point to at least blockSize() floats. */
     void writeAddBlock(const F32 * block)
-        { auto p = writePointer(); for (uint i=0; i < p_blockSize_; ++i) p[i] += block[i]; }
+        { auto p = writePointer(); for (size_t i=0; i < p_blockSize_; ++i) p[i] += block[i]; }
 
     /** Copies the current read-block into @p block */
     void readBlock(F32 * block) const { memcpy(block, readPointer(), p_blockSize_ * sizeof(F32)); }
 
     /** Copies the current read-block into @p block
-        while advancing @p stepsize samples for every written sample. */
-    void readBlock(F32 * block, uint stepsize) const;
+        while advancing @p stride samples for every written sample. */
+    void readBlock(F32 * block, size_t stride) const;
+
+    /** Copies the current history of @p size samples into @p block.
+        @p size MUST be smaller than blockSize() * numBlocks(). */
+    void readBlockLength(F32 * block, size_t size) const;
 
     /** Forwards the write pointer */
     void nextBlock()
@@ -95,7 +109,7 @@ class AudioBuffer
 
     static void process(const QList<AudioBuffer *> &dst,
                         const QList<AudioBuffer *> &src,
-                        std::function<void(const AudioBuffer*,AudioBuffer*)> func,
+                        std::function<void(uint channel, const AudioBuffer*,AudioBuffer*)> func,
                         bool callNextBlock = false);
 private:
 
