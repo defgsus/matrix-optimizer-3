@@ -140,7 +140,9 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
 
         messageList = new QListWidget(widget);
         messageList->setVisible(false);
+#if QT_VERSION >= 0x050300
         messageList->setSizeAdjustPolicy(QListWidget::AdjustToContents);
+#endif
         lv->addWidget(messageList);
         connect(messageList, &QListWidget::itemClicked, [=](QListWidgetItem*item)
         {
