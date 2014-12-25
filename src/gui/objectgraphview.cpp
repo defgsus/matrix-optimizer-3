@@ -32,7 +32,9 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
             this, SIGNAL(objectSelected(MO::Object*)));
 
     setBackgroundBrush(ObjectGraphSettings::brushBackground());
+#if QT_VERSION >= 0x050300
     setSizeAdjustPolicy(AdjustToContents);
+#endif
 }
 
 void ObjectGraphView::setGuiSettings(SceneSettings * )
