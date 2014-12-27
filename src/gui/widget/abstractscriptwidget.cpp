@@ -115,6 +115,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
 {
     auto lv = new QVBoxLayout(widget);
     //lv->setSizeConstraint(QLayout::SetMaximumSize);
+    lv->setMargin(0);
 
         // --- editor ---
 
@@ -122,7 +123,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         editor->setProperty("code", true);
         editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         // XXX
-        editor->setMinimumHeight(600);
+        editor->setMinimumHeight(500);
         lv->addWidget(editor, 10);
         connect(editor, &QPlainTextEdit::textChanged, [=]() { if (!ignoreTextChange) timer->start(); } );
         //editor->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
