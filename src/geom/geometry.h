@@ -169,6 +169,13 @@ public:
     ColorType currentBlue() const { return curB_; }
     ColorType currentAlpha() const { return curA_; }
 
+    NormalType currentNormalX() const { return curNx_; }
+    NormalType currentNormalY() const { return curNy_; }
+    NormalType currentNormalZ() const { return curNz_; }
+
+    TextureCoordType currentTexCoordX() const { return curU_; }
+    TextureCoordType currentTexCoordY() const { return curV_; }
+
     // -------- vertex/triangle handling -----
 
     /** Clear ALL contents */
@@ -212,6 +219,15 @@ public:
 
     /** Connects two previously created indices to form a line */
     void addLine(IndexType p1, IndexType p2);
+
+    /** Changes the vertex point */
+    void setVertex(uint i, const Vec3& v) { auto p = &vertices()[i * numVertexComponents()]; *p++ = v.x; *p++ = v.y; *p = v.z; }
+    /** Changes the texcoord point */
+    void setTexCoord(uint i, const Vec2& v) { auto p = &texcoord_[i * numTextureCoordComponents()]; *p++ = v.x; *p = v.y; }
+    /** Changes the normal */
+    void setNormal(uint i, const Vec3& v) { auto p = &normal_[i * numNormalComponents()]; *p++ = v.x; *p++ = v.y; *p = v.z; }
+    /** Changes the color */
+    void setColor(uint i, const Vec4& v) { auto p = &color_[i * numColorComponents()]; *p++ = v.x; *p++ = v.y; *p++ = v.z; *p = v.w; }
 
     // ------- shared vertices -------------
 

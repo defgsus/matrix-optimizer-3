@@ -38,6 +38,7 @@ public:
 
     GEOM::Geometry * g;
     int ref;
+    StringAS p_name;
 
     // -------------- factory for script -----------
 
@@ -62,29 +63,55 @@ public:
 
     // ----------------- interface ----------------
 
-    void clear() { g->clear(); }
-
-    void setShared(bool b) { g->setSharedVertices(b); }
-
     std::string toString() const { std::stringstream s; s << "Geometry(" << (void*)this << ")"; return s.str(); }
 
-    std::string name() const { return "geometry"; }
-    uint vertexCount() const { return g->numVertices(); }
+    // ----- getter -----
+    uint getClosestVertex(const Vec3& v);
 
-    void setRGBA(float r_, float g_, float b_, float a_) { g->setColor(r_, g_, b_, a_); }
-    void setRGB(float r_, float g_, float b_) { g->setColor(r_, g_, b_, 1); }
-    void setBrightAlpha(float r_, float a_) { g->setColor(r_, r_, r_, a_); }
-    void setBright(float r_) { g->setColor(r_, r_, r_, 1); }
+    const StringAS& name() const { return p_name; }
+    uint vertexCount() const { return g->numVertices(); }
+    uint lineCount() const { return g->numLines(); }
+    uint triangleCount() const { return g->numTriangles(); }
+
+    Vec4 color() const { return Vec4(g->currentRed(), g->currentGreen(), g->currentBlue(), g->currentAlpha()); }
+    Vec3 normal() const { return Vec3(g->currentNormalX(), g->currentNormalY(), g->currentNormalZ()); }
+    Vec2 texCoord() const { return Vec2(g->currentTexCoordX(), g->currentTexCoordY()); }
+
+    Vec3 vertexI(uint i) const { return i >= g->numVertices() ? Vec3(0) : g->getVertex(i); }
+    Vec3 normalI(uint i) const { return i >= g->numVertices() ? Vec3(0,0,1) : g->getNormal(i); }
+    Vec2 texCoordI(uint i) const { return i >= g->numVertices() ? Vec2(0) : g->getTexCoord(i); }
+    Vec4 colorI(uint i) const { return i >= g->numVertices() ? Vec4(0) : g->getColor(i); }
+
+    // ---- setter ----
+
+    void setName(const StringAS& n) { p_name = n; }
+
+    void setColor4(float r_, float g_, float b_, float a_) { g->setColor(r_, g_, b_, a_); }
+    void setColor3(float r_, float g_, float b_) { g->setColor(r_, g_, b_, 1); }
+    void setColor2(float r_, float a_) { g->setColor(r_, r_, r_, a_); }
+    void setColor1(float r_) { g->setColor(r_, r_, r_, 1); }
     void setColorV3(const Vec3& v) { g->setColor(v.x, v.y, v.z, 1); }
+    void setColorV4(const Vec4& v) { g->setColor(v.x, v.y, v.z, v.w); }
 
     void setTexCoord(float s, float t) { g->setTexCoord(s, t); }
     void setTexCoordV2(const Vec2& v) { g->setTexCoord(v.x, v.y); }
 
+    void setNormal(float x, float y, float z) { g->setNormal(x, y, z); }
+    void setNormalV3(const Vec3& v) { g->setNormal(v.x, v.y, v.z); }
+
     uint addVertex(const Vec3& v) { return g->addVertex(v.x, v.y, v.z); }
     uint addVertexF(float x, float y, float z) { return g->addVertex(x, y, z); }
 
-    void createBox() { GEOM::GeometryFactory::createBox(g, 1, 1, 1, true); }
-    void createSphere() { GEOM::GeometryFactory::createUVSphere(g, 1, 12, 12, true); }
+    void setVertexIV(uint i, const Vec3& v) const { if (i < g->numVertices()) g->setVertex(i, v); }
+    void setNormalIV(uint i, const Vec3& v) const { if (i < g->numVertices()) g->setNormal(i, v); }
+    void setTexCoordIV(uint i, const Vec2& v) const { if (i < g->numVertices()) g->setTexCoord(i, v); }
+    void setColorIV(uint i, const Vec4& v) const { if (i < g->numVertices()) g->setColor(i, v); }
+
+    void createBox1(float sl) { GEOM::GeometryFactory::createBox(g, sl, sl, sl, true); }
+    void createBox3(float x, float y, float z) { GEOM::GeometryFactory::createBox(g, x, y, z, true); }
+    void createBox3v(const Vec3& s) { GEOM::GeometryFactory::createBox(g, s.x, s.y, s.z, true); }
+    void createSphere2(uint segu, uint segv) { GEOM::GeometryFactory::createUVSphere(g, 1, segu, segv, true); }
+    void createSphere3(float rad, uint segu, uint segv) { GEOM::GeometryFactory::createUVSphere(g, rad, segu, segv, true); }
 
 #define MO__IDX(i__) (i__ < g->numVertices())
 
@@ -139,7 +166,12 @@ public:
     void translateY(Float v) { g->translate(0, v, 0); }
     void translateZ(Float v) { g->translate(0, 0, v); }
 
-    uint getClosestVertex(const Vec3& v);
+    void clear() { g->clear(); }
+    void setShared(bool b) { g->setSharedVertices(b); }
+    void tesselate(uint level) { g->tesselate(level); }
+    void calculateNormals() { g->calculateTriangleNormals(); }
+    void invertNormals() { g->invertNormals(); }
+    void convertToLines() { if (g->numLines()) g->convertToLines(); }
 };
 
 
@@ -177,41 +209,57 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     int r;
 
     // register the type
-    //r = engine->RegisterObjectType("Geometry", sizeof(GEOM::Geometry), asOBJ_VALUE | asOBJ_APP_CLASS_CD); assert( r >= 0 );
     r = engine->RegisterObjectType("Geometry", 0, asOBJ_REF); assert( r >= 0 );
 
     // ----------------- constructor ---------------------------
 
-
-//    r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_CONSTRUCT,  "void f()",                    asFUNCTION(constructGeometry), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    //r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_CONSTRUCT,  "void f(const Geometry &in)",  asFUNCTION(copyConstructGeometry), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-//    r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_DESTRUCT,   "void f()",                    asFUNCTION(destructGeometry),  asCALL_CDECL_OBJLAST); assert( r >= 0 );
-
-    r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_FACTORY, "Geometry@ f()", asFUNCTION(GeometryAS::factory), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_ADDREF, "void f()", asMETHOD(GeometryAS,addRef), asCALL_THISCALL); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_RELEASE, "void f()", asMETHOD(GeometryAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_FACTORY,
+        "Geometry@ f()", asFUNCTION(GeometryAS::factory), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_ADDREF,
+        "void f()", asMETHOD(GeometryAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_RELEASE,
+        "void f()", asMETHOD(GeometryAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
 
     // --------------- the object methods ----------------------
 
 #define MO__REG_METHOD(decl__, name__) \
     r = engine->RegisterObjectMethod("Geometry", decl__, asMETHOD(GeometryAS,name__), asCALL_THISCALL); assert( r >= 0 );
-    //r = engine->RegisterObjectMethod("Geometry", decl__, asFUNCTION(name__), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     // getter
     MO__REG_METHOD("string opImplConv() const", toString);
-    MO__REG_METHOD("string name() const", name);
-    MO__REG_METHOD("int vertexCount() const", vertexCount);
+    MO__REG_METHOD("const string& name() const", name);
+    MO__REG_METHOD("uint vertexCount() const", vertexCount);
+    MO__REG_METHOD("uint lineCount() const", lineCount);
+    MO__REG_METHOD("uint triangleCount() const", triangleCount);
+    MO__REG_METHOD("vec4 color() const", color);
+    MO__REG_METHOD("vec3 normal() const", normal);
+    MO__REG_METHOD("vec2 texCoord() const", texCoord);
+
+    MO__REG_METHOD("vec3 vertex(uint vertex_index) const", vertexI);
+    MO__REG_METHOD("vec4 color(uint vertex_index) const", colorI);
+    MO__REG_METHOD("vec3 normal(uint vertex_index) const", normalI);
+    MO__REG_METHOD("vec2 texCoord(uint vertex_index) const", texCoordI);
 
     // setter
     MO__REG_METHOD("void clear()", clear);
-    MO__REG_METHOD("void setShared(bool)", setShared);
-    MO__REG_METHOD("void setColor(float, float, float, float)", setRGBA);
-    MO__REG_METHOD("void setColor(float, float, float)", setRGB);
-    MO__REG_METHOD("void setColor(float, float)", setBrightAlpha);
-    MO__REG_METHOD("void setColor(float)", setBright);
+    MO__REG_METHOD("void calculateNormals()", calculateNormals);
+    MO__REG_METHOD("void invertNormals()", invertNormals);
+    MO__REG_METHOD("void tesselate(uint level = 1)", tesselate);
+    MO__REG_METHOD("void convertToLines()", convertToLines);
+
+    MO__REG_METHOD("void setShared(bool = true)", setShared);
+    MO__REG_METHOD("void setName(const string& in)", setName);
+    MO__REG_METHOD("void setColor(float, float, float, float)", setColor4);
+    MO__REG_METHOD("void setColor(float, float, float)", setColor3);
+    MO__REG_METHOD("void setColor(float, float)", setColor2);
+    MO__REG_METHOD("void setColor(float)", setColor1);
     MO__REG_METHOD("void setColor(const vec3 &in)", setColorV3);
+    MO__REG_METHOD("void setColor(const vec4 &in)", setColorV4);
     MO__REG_METHOD("void setTexCoord(float s, float t)", setTexCoord);
     MO__REG_METHOD("void setTexCoord(const vec2 &in st)", setTexCoordV2);
+    MO__REG_METHOD("void setNormal(float x, float y, float z)", setNormal);
+    MO__REG_METHOD("void setNormal(const vec3 &in)", setNormalV3);
+
     MO__REG_METHOD("uint addVertex(const vec3 &in)", addVertex);
     MO__REG_METHOD("uint addVertex(float, float, float)", addVertexF);
     MO__REG_METHOD("void addLine(const vec3 &in, const vec3 &in)", addLine);
@@ -224,8 +272,17 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("void addGeometry(const Geometry &in, const vec3 &in)", addGeometryP);
     MO__REG_METHOD("void addText(const string &in)", addText);
     MO__REG_METHOD("void addText(const string &in, const vec3 &in)", addTextP);
-    MO__REG_METHOD("void createBox()", createBox);
-    MO__REG_METHOD("void createSphere()", createSphere);
+
+    MO__REG_METHOD("void setVertex(uint vertex_index, const vec3 &in)", setVertexIV);
+    MO__REG_METHOD("void setNormal(uint vertex_index, const vec3 &in)", setNormalIV);
+    MO__REG_METHOD("void setTexCoord(uint vertex_index, const vec2 &in)", setTexCoordIV);
+    MO__REG_METHOD("void setColor(uint vertex_index, const vec4 &in)", setColorIV);
+
+    MO__REG_METHOD("void createBox(float sidelength = 1)", createBox1);
+    MO__REG_METHOD("void createBox(float sidelength_x, float sidelength_y, float sidelength_z)", createBox3);
+    MO__REG_METHOD("void createBox(const vec3 &in sidelengths)", createBox3v);
+    MO__REG_METHOD("void createSphere(uint segments_u = 12, uint segments_v = 12)", createSphere2);
+    MO__REG_METHOD("void createSphere(float radius, uint segments_u = 12, uint segments_v = 12)", createSphere3);
 
     MO__REG_METHOD("void add(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void rotate(const vec3 &in axis, float degree)", rotate);
