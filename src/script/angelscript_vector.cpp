@@ -28,10 +28,18 @@
 /** @todo NEEDS ALL BE TESTED PROPERLY */
 
 
+/* Here we register vec2,vec3,vec4 and (currently) mat3 and mat4 types
+   and their associated functions for AngelScript.
+   The structure of this file is a littlebit complicated. There's a lot
+   of template and macro magic, simpily to not having to write the same stuff
+   over and over again. */
+
 namespace MO {
 
 namespace {
 
+/** Simple traits class to unify some functions for all vector types.
+    (Sure there is something in glm for this as well */
 template <class V> struct vectraits;
 template <>
 struct vectraits<Vec2> { static const int num = 2; };
@@ -40,7 +48,8 @@ struct vectraits<Vec3> { static const int num = 3; };
 template <>
 struct vectraits<Vec4> { static const int num = 4; };
 
-
+/** Native function binding.
+    XXX I'll never rewrite this for generic function binding!! */
 namespace native {
 
 //-----------------------
@@ -48,7 +57,10 @@ namespace native {
 //-----------------------
 
 /** Wraps some functions and makes them non-overloading
-    to avoid nasty syntax when registering */
+    to avoid nasty syntax when registering.
+
+    XXX This struct is a bit messy, not all of it's functions can be instantiated for all types.
+    To avoid conflicts with overly paranoid compilers the specific types are declared explicitly. */
 template <typename Vec>
 struct vecfunc
 {
@@ -110,7 +122,6 @@ struct vecfunc
     static Vec max_vf(const Vec& v, Float f) { return glm::max(v, f); }
     static Vec max_fv(Float f, const Vec& v) { return glm::max(v, f); }
     static Vec clamp(const Vec& v, float mi, float ma) { return glm::clamp(v, mi, ma); }
-    static Vec abs(const Vec& v) { return glm::abs(v); }
 
     static Vec mix(const Vec& a, const Vec& b, float x) { return glm::mix(a, b, x); }
 
@@ -154,10 +165,10 @@ struct vecfunc
 // Registration
 //-------------------------------------
 
-// replaces %1 with typ and returns const char*
+// replaces %1 with typ (const char*) and returns utf8 as const char*
 #define MO__STR(str__) (QString(str__).arg(typ).toUtf8().constData())
 
-// to register one of the above statics as class method
+// to register a static function as class method for typ
 #define MO__REG_METHOD(decl__, name__) \
     r = engine->RegisterObjectMethod(typ, MO__STR(decl__), asFUNCTION(name__), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 // same but without the string replacement
@@ -171,6 +182,9 @@ struct vecfunc
 // reg a non-member function
 #define MO__REG_FUNC(decl__, name__) \
     r = engine->RegisterGlobalFunction(MO__STR(decl__), asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
+// same without string replacement
+#define MO__REG_FuNC(decl__, name__) \
+    r = engine->RegisterGlobalFunction((decl__), asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
 
 
 /** Registers constructors, functions and operators common to all vec types (e.g. 2 - 4). */
@@ -239,7 +253,6 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
     MO__REG_FUNC("%1 reflect(const %1 &in, const %1 &in)", vecfunc<Vec>::reflect);
     MO__REG_FUNC("%1 refract(const %1 &in, const %1 &in, float)", vecfunc<Vec>::refract);
 
-    MO__REG_FUNC("%1 abs(const %1 &in)", vecfunc<Vec>::abs);
     MO__REG_FUNC("%1 min(const %1 &in, const %1 &in)", vecfunc<Vec>::min_vv);
     MO__REG_FUNC("%1 min(const %1 &in, float)", vecfunc<Vec>::min_vf);
     MO__REG_FUNC("%1 min(float, const %1 &in)", vecfunc<Vec>::min_fv);
@@ -248,7 +261,6 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
     MO__REG_FUNC("%1 max(float, const %1 &in)", vecfunc<Vec>::max_fv);
     MO__REG_FUNC("%1 clamp(const %1 &in, float, float)", vecfunc<Vec>::clamp);
     MO__REG_FUNC("%1 mix(const %1 &in, const %1 &in, float t)", vecfunc<Vec>::mix);
-
 
     MO__REG_FUNC("float dot(const %1 &in)", vecfunc<Vec>::dot);
     MO__REG_FUNC("float length(const %1 &in)", vecfunc<Vec>::length);
@@ -366,6 +378,65 @@ void register_vector_4(asIScriptEngine *engine)
 
 
 
+template <class Vec>
+void register_vector_mathwrapper_tmpl(asIScriptEngine *engine, const char * typ)
+{
+    // creates a function 'name__'(const Vec3 &in) calling 'func__' for each component
+    // XXX a bit hard on the compiler but good for us people
+#define MO__MATHWRAP(name__, func__)                    \
+    struct _mathwrap##name__                            \
+    {                                                   \
+        static Vec func(const Vec& v)                   \
+        {                                               \
+            Vec r;                                      \
+            for (uint i=0; i<vectraits<Vec>::num; ++i)  \
+                r[i] = func__(v[i]); return r;          \
+        }                                               \
+    };                                                  \
+    MO__REG_FUNC("%1 " #name__ "(const %1 &in)",         \
+        _mathwrap##name__::func);
+
+
+    int r;
+    MO__MATHWRAP(abs, MATH::advanced<Float>::abs);
+    MO__MATHWRAP(acos, MATH::advanced<Float>::acos);
+    MO__MATHWRAP(acosh, MATH::advanced<Float>::acosh);
+    MO__MATHWRAP(asin, MATH::advanced<Float>::asin);
+    MO__MATHWRAP(asinh, MATH::advanced<Float>::asinh);
+    MO__MATHWRAP(atan, MATH::advanced<Float>::atan);
+    MO__MATHWRAP(atanh, MATH::advanced<Float>::atanh);
+    MO__MATHWRAP(ceil, MATH::advanced<Float>::ceil);
+    MO__MATHWRAP(cos, MATH::advanced<Float>::cos);
+    MO__MATHWRAP(cosh, MATH::advanced<Float>::cosh);
+    MO__MATHWRAP(erf, MATH::advanced<Float>::erf);
+    MO__MATHWRAP(erfc, MATH::advanced<Float>::erfc);
+    MO__MATHWRAP(exp, MATH::advanced<Float>::exp);
+    MO__MATHWRAP(floor, MATH::advanced<Float>::floor);
+    MO__MATHWRAP(frac, MATH::advanced<Float>::frac);
+    MO__MATHWRAP(log, MATH::advanced<Float>::log);
+    MO__MATHWRAP(log2, MATH::advanced<Float>::log2);
+    MO__MATHWRAP(log10, MATH::advanced<Float>::log10);
+    MO__MATHWRAP(logistic, MATH::advanced<Float>::logistic);
+    MO__MATHWRAP(note2freq, MATH::advanced<Float>::note2freq_1);
+    MO__MATHWRAP(ramp, MATH::advanced<Float>::ramp);
+    MO__MATHWRAP(round, MATH::advanced<Float>::round);
+    MO__MATHWRAP(saw, MATH::advanced<Float>::saw);
+    MO__MATHWRAP(sin, MATH::advanced<Float>::sin);
+    MO__MATHWRAP(sinc, MATH::advanced<Float>::sinc);
+    MO__MATHWRAP(sinh, MATH::advanced<Float>::sinh);
+    MO__MATHWRAP(sqrt, MATH::advanced<Float>::sqrt);
+    MO__MATHWRAP(square, MATH::advanced<Float>::square);
+    MO__MATHWRAP(tan, MATH::advanced<Float>::tan);
+    MO__MATHWRAP(tanh, MATH::advanced<Float>::tanh);
+    MO__MATHWRAP(tri, MATH::advanced<Float>::tri);
+    MO__MATHWRAP(zeta, MATH::advanced<Float>::zeta);
+
+
+#undef MO__MATHWRAP
+}
+
+
+
 
 /** Registers the three vector types */
 void registerAngelScript_vector(asIScriptEngine *engine)
@@ -373,11 +444,13 @@ void registerAngelScript_vector(asIScriptEngine *engine)
     // ---------------- vec2 ---------------
 
     register_vector_tmpl<Vec2>(engine, "vec2");
+    register_vector_mathwrapper_tmpl<Vec2>(engine, "vec2");
     register_vector_2(engine);
 
     // ---------------- vec3 ---------------
 
     register_vector_tmpl<Vec3>(engine, "vec3");
+    register_vector_mathwrapper_tmpl<Vec3>(engine, "vec3");
     register_vector_34_tmpl<Vec3>(engine, "vec3");
     register_vector_3(engine);
 
@@ -385,6 +458,7 @@ void registerAngelScript_vector(asIScriptEngine *engine)
     // ---------------- vec4 ---------------
 
     register_vector_tmpl<Vec4>(engine, "vec4");
+    register_vector_mathwrapper_tmpl<Vec4>(engine, "vec4");
     register_vector_34_tmpl<Vec4>(engine, "vec4");
     register_vector_4(engine);
 
@@ -396,26 +470,32 @@ void registerAngelScript_vector(asIScriptEngine *engine)
 
 // ###################################### once again for matrix types #####################################
 
-
+// mat3 and mat4 have not much in common,
+// so we specialize for each type
 template <class Mat>
 struct matfunc
 {
-    typedef typename Mat::value_type T;
+};
 
-    static StringAS toString(Mat * self) { std::stringstream s; s << *self; return s.str(); }
+template <>
+struct matfunc<Mat4>
+{
+    typedef typename Mat4::value_type T;
 
-    static void defaultConstructor(Mat *self) { new(self) Mat(); }
-    static void convConstructor(Mat *self, Float x) { new(self) Mat(x); }
-    static void copyConstructor(Mat *self, const Mat &other) { new(self) Mat(other); }
+    static StringAS toString(Mat4 * self) { std::stringstream s; s << *self; return s.str(); }
 
-    static void initConstructor4F(  Mat4 * self,
+    static void defaultConstructor(Mat4 *self) { new(self) Mat4(); }
+    static void convConstructor(Mat4 *self, Float x) { new(self) Mat4(x); }
+    static void copyConstructor(Mat4 *self, const Mat4 &other) { new(self) Mat4(other); }
+
+    static void initConstructorF(   Mat4 * self,
                                     T const & x0, T const & y0, T const & z0, T const & w0,
                                     T const & x1, T const & y1, T const & z1, T const & w1,
                                     T const & x2, T const & y2, T const & z2, T const & w2,
                                     T const & x3, T const & y3, T const & z3, T const & w3)
     { new(self) Mat4(x0,y0,z0,w0, x1,y1,z1,w1, x2,y2,z2,w2, x3,y3,z3,w3); }
 
-    static void initConstructor4V(  Mat4 * self,
+    static void initConstructorV(   Mat4 * self,
                                     Vec4 const & v0,
                                     Vec4 const & v1,
                                     Vec4 const & v2,
@@ -424,27 +504,108 @@ struct matfunc
 
     // vector multiplication
 
-    static Vec4 mat4MulVec4(Mat4 * self, const Vec4& v) { return *self * v; }
-    static Vec4 vec4MulMat4(const Mat4& m, const Vec4& v) { return v * m; }
+    static Vec4 matMulVec4(Mat4 * self, const Vec4& v) { return *self * v; }
+    static Vec4 vec4MulMat(const Mat4& m, const Vec4& v) { return v * m; }
+    static Vec3 matMulVec3(Mat4 * self, const Vec3& v) { return Vec3(*self * Vec4(v,1)); }
+    static Vec3 vec3MulMat(const Mat4& m, const Vec3& v) { return Vec3(Vec4(v,1) * m); }
 
     // convenience stuff (member)
-    static Mat4& mat_rotate4(Mat4 * self, const Vec3& axis, Float degree) { return *self = MATH::rotate(*self, degree, axis); }
-    static Mat4& mat_rotateX4(Mat4 * self, Float degree) { return *self = MATH::rotate(*self, degree, Vec3(1,0,0)); }
-    static Mat4& mat_rotateY4(Mat4 * self, Float degree) { return *self = MATH::rotate(*self, degree, Vec3(0,1,0)); }
-    static Mat4& mat_rotateZ4(Mat4 * self, Float degree) { return *self = MATH::rotate(*self, degree, Vec3(0,0,1)); }
-    static Mat4& mat_translate4(Mat4 * self, const Vec3& p) { return *self = glm::translate(*self, p); }
-    static Mat4& mat_scale4(Mat4 * self, const Vec3& s) { return *self = glm::scale(*self, s); }
-    static Mat4& mat_scaleF4(Mat4 * self, Float s) { return *self = glm::scale(*self, Vec3(s,s,s)); }
+    static Mat4& mat_rotate(Mat4 * self, const Vec3& axis, Float degree) { return *self = MATH::rotate(*self, degree, axis); }
+    static Mat4& mat_rotateX(Mat4 * self, Float degree) { return *self = MATH::rotate(*self, degree, Vec3(1,0,0)); }
+    static Mat4& mat_rotateY(Mat4 * self, Float degree) { return *self = MATH::rotate(*self, degree, Vec3(0,1,0)); }
+    static Mat4& mat_rotateZ(Mat4 * self, Float degree) { return *self = MATH::rotate(*self, degree, Vec3(0,0,1)); }
+    static Mat4& mat_translate(Mat4 * self, const Vec3& p) { return *self = glm::translate(*self, p); }
+    static Mat4& mat_scale(Mat4 * self, const Vec3& s) { return *self = glm::scale(*self, s); }
+    static Mat4& mat_scaleF(Mat4 * self, Float s) { return *self = glm::scale(*self, Vec3(s,s,s)); }
 
 
     // convenience stuff (non-member)
-    static Mat4 rotate4(const Mat4& m, const Vec3& axis, Float degree) { return MATH::rotate(m, degree, axis); }
-    static Mat4 rotateX4(const Mat4& m, Float degree) { return MATH::rotate(m, degree, Vec3(1,0,0)); }
-    static Mat4 rotateY4(const Mat4& m, Float degree) { return MATH::rotate(m, degree, Vec3(0,1,0)); }
-    static Mat4 rotateZ4(const Mat4& m, Float degree) { return MATH::rotate(m, degree, Vec3(0,0,1)); }
-    static Mat4 translate4(const Mat4& m, const Vec3& pos) { return glm::translate(m, pos); }
-    static Mat4 scale4(const Mat4& m, const Vec3& s) { return glm::scale(m, s); }
-    static Mat4 scaleF4(const Mat4& m, Float s) { return glm::scale(m, Vec3(s,s,s)); }
+    static Mat4 rotate(const Mat4& m, const Vec3& axis, Float degree) { return MATH::rotate(m, degree, axis); }
+    static Mat4 rotateX(const Mat4& m, Float degree) { return MATH::rotate(m, degree, Vec3(1,0,0)); }
+    static Mat4 rotateY(const Mat4& m, Float degree) { return MATH::rotate(m, degree, Vec3(0,1,0)); }
+    static Mat4 rotateZ(const Mat4& m, Float degree) { return MATH::rotate(m, degree, Vec3(0,0,1)); }
+    static Mat4 translate(const Mat4& m, const Vec3& pos) { return glm::translate(m, pos); }
+    static Mat4 scale(const Mat4& m, const Vec3& s) { return glm::scale(m, s); }
+    static Mat4 scaleF(const Mat4& m, Float s) { return glm::scale(m, Vec3(s,s,s)); }
+
+    static Mat4 inverse(const Mat4& m) { return glm::inverse(m); }
+    static Mat4 transpose(const Mat4& m) { return glm::transpose(m); }
+
+    static Mat4 ortho(Float l, Float r, Float b, Float t, Float n, Float f) { return glm::ortho(l,r,b,t,n,f); }
+    static Mat4 perspective(Float fovy_degree, Float aspect, Float znear, Float zfar)
+        { return MATH::perspective(fovy_degree, aspect, znear, zfar); }
+};
+
+
+template <>
+struct matfunc<Mat3>
+{
+    typedef typename Mat3::value_type T;
+
+    static StringAS toString(Mat3 * self) { std::stringstream s; s << *self; return s.str(); }
+
+    static void defaultConstructor(Mat3 *self) { new(self) Mat3(); }
+    static void convConstructor(Mat3 *self, Float x) { new(self) Mat3(x); }
+    static void copyConstructor(Mat3 *self, const Mat3 &other) { new(self) Mat3(other); }
+
+    static void initConstructorF(   Mat3 * self,
+                                    T const & x0, T const & y0, T const & z0,
+                                    T const & x1, T const & y1, T const & z1,
+                                    T const & x2, T const & y2, T const & z2)
+    { new(self) Mat3(x0,y0,z0, x1,y1,z1, x2,y2,z2); }
+
+    static void initConstructorV(   Mat3 * self,
+                                    Vec3 const & v0,
+                                    Vec3 const & v1,
+                                    Vec3 const & v2)
+    { new(self) Mat3(v0, v1, v2); }
+
+    // vector multiplication
+    static Vec4 matMulVec4(Mat3 * self, const Vec4& v)
+    {
+        return Vec4((*self)[0][0] * v.x + (*self)[1][0] * v.y + (*self)[2][0] * v.z,
+                    (*self)[0][1] * v.x + (*self)[1][1] * v.y + (*self)[2][1] * v.z,
+                    (*self)[0][2] * v.x + (*self)[1][2] * v.y + (*self)[2][2] * v.z, v.w);
+    }
+    static Vec4 vec4MulMat(const Mat3& m, const Vec4& v)
+    {
+        return Vec4(m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z,
+                    m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z,
+                    m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z, v.w);
+    }
+    static Vec3 matMulVec3(Mat3 * self, const Vec3& v)
+    {
+        return Vec3((*self)[0][0] * v.x + (*self)[1][0] * v.y + (*self)[2][0] * v.z,
+                    (*self)[0][1] * v.x + (*self)[1][1] * v.y + (*self)[2][1] * v.z,
+                    (*self)[0][2] * v.x + (*self)[1][2] * v.y + (*self)[2][2] * v.z);
+    }
+    static Vec3 vec3MulMat(const Mat3& m, const Vec3& v)
+    {
+        return Vec3(m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z,
+                    m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z,
+                    m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z);
+    }
+
+    // convenience stuff (member)
+    // XXX two conversions: Mat3>Mat4 and back is not very cool
+    // maybe reimplement these functions someday
+    static Mat3& mat_rotate(Mat3 * self, const Vec3& axis, Float degree) { return *self = Mat3(matfunc<Mat4>::rotate(Mat4(*self), axis, degree)); }
+    static Mat3& mat_rotateX(Mat3 * self, Float degree) { return *self = Mat3(matfunc<Mat4>::rotateX(Mat4(*self), degree)); }
+    static Mat3& mat_rotateY(Mat3 * self, Float degree) { return *self = Mat3(matfunc<Mat4>::rotateY(Mat4(*self), degree)); }
+    static Mat3& mat_rotateZ(Mat3 * self, Float degree) { return *self = Mat3(matfunc<Mat4>::rotateZ(Mat4(*self), degree)); }
+    static Mat3& mat_scale(Mat3 * self, const Vec3& s) { return *self = Mat3(matfunc<Mat4>::scale(Mat4(*self), s)); }
+    static Mat3& mat_scaleF(Mat3 * self, Float s) { return *self = Mat3(matfunc<Mat4>::scaleF(Mat4(*self), s)); }
+
+    // convenience stuff (non-member)
+    static Mat3 rotate(const Mat3& m, const Vec3& axis, Float degree) { return Mat3(MATH::rotate(Mat4(m), degree, axis)); }
+    static Mat3 rotateX(const Mat3& m, Float degree) { return Mat3(MATH::rotate(Mat4(m), degree, Vec3(1,0,0))); }
+    static Mat3 rotateY(const Mat3& m, Float degree) { return Mat3(MATH::rotate(Mat4(m), degree, Vec3(0,1,0))); }
+    static Mat3 rotateZ(const Mat3& m, Float degree) { return Mat3(MATH::rotate(Mat4(m), degree, Vec3(0,0,1))); }
+    static Mat3 scale(const Mat3& m, const Vec3& s) { return Mat3(glm::scale(Mat4(m), s)); }
+    static Mat3 scaleF(const Mat3& m, Float s) { return Mat3(glm::scale(Mat4(m), Vec3(s,s,s))); }
+
+    static Mat4 inverse(const Mat4& m) { return glm::inverse(m); }
+    static Mat4 transpose(const Mat4& m) { return glm::transpose(m); }
 };
 
 
@@ -453,9 +614,6 @@ template <class Mat>
 void register_matrix_tmpl(asIScriptEngine *engine, const char * typ)
 {
     int r;
-
-    // Register the type
-    r = engine->RegisterObjectType(typ, sizeof(Mat), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS); assert( r >= 0 );
 
     // ----------- object properties ------------
 
@@ -486,7 +644,60 @@ void register_matrix_tmpl(asIScriptEngine *engine, const char * typ)
     MO__REG_TRUE_METHOD("%1 &opSubAssign(float)", asMETHODPR(Mat, operator-=, (float), Mat&));
     MO__REG_TRUE_METHOD("%1 &opMulAssign(float)", asMETHODPR(Mat, operator*=, (float), Mat&));
     MO__REG_TRUE_METHOD("%1 &opDivAssign(float)", asMETHODPR(Mat, operator/=, (float), Mat&));
+
+    MO__REG_METHoD("vec4 opMul(const vec4& in)", matfunc<Mat>::matMulVec4);
+    MO__REG_FuNC("vec4 opMul(const vec4& in, const %1 &in)", matfunc<Mat>::vec4MulMat);
+    MO__REG_METHoD("vec3 opMul(const vec3& in)", matfunc<Mat>::matMulVec3);
+    MO__REG_FuNC("vec3 opMul(const vec3& in, const %1 &in)", matfunc<Mat>::vec3MulMat);
+
+    // ------------ members -------------------
+
+    MO__REG_METHOD("%1& rotate(const vec3 &in axis, float degree)", matfunc<Mat4>::mat_rotate);
+    MO__REG_METHOD("%1& rotateX(float degree)", matfunc<Mat4>::mat_rotateX);
+    MO__REG_METHOD("%1& rotateY(float degree)", matfunc<Mat4>::mat_rotateY);
+    MO__REG_METHOD("%1& rotateZ(float degree)", matfunc<Mat4>::mat_rotateZ);
+    MO__REG_METHOD("%1& scale(const vec3 &in)", matfunc<Mat4>::mat_scale);
+    MO__REG_METHOD("%1& scale(float)", matfunc<Mat4>::mat_scaleF);
+
+    // ---- non-members -------
+
+    MO__REG_FUNC("%1 rotate(const %1 &in, const vec3 &in axis, float degree)", matfunc<Mat4>::rotate);
+    MO__REG_FUNC("%1 rotateX(const %1 &in, float degree)", matfunc<Mat4>::rotateX);
+    MO__REG_FUNC("%1 rotateY(const %1 &in, float degree)", matfunc<Mat4>::rotateY);
+    MO__REG_FUNC("%1 rotateZ(const %1 &in, float degree)", matfunc<Mat4>::rotateZ);
+    MO__REG_FUNC("%1 scale(const %1 &in, const vec3 &in)", matfunc<Mat4>::scale);
+    MO__REG_FUNC("%1 scale(const %1 &in, float)", matfunc<Mat4>::scaleF);
+
+    MO__REG_FUNC("%1 inverse(const %1 &in)", matfunc<Mat>::inverse);
+    MO__REG_FUNC("%1 transpose(const %1 &in)", matfunc<Mat>::transpose);
 }
+
+
+/** Stuff for 3x3 matrix only */
+void register_matrix3(asIScriptEngine * engine)
+{
+    const char * typ = "mat3";
+    int r;
+
+    // -------- constructors ----------
+
+    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,
+        ("void f(float, float, float, float, float, float, float, float, float)"),
+        asFUNCTION(matfunc<Mat3>::initConstructorF), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,
+        ("void f(const vec3 &in column0, const vec3 &in column1, const vec3 &in column2)"),
+        asFUNCTION(matfunc<Mat3>::initConstructorV), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+
+    // -------- member funcs ---------------------
+
+
+    // -------- non-member operators -------------
+
+
+    // -------- non-member funcs -----------------
+
+}
+
 
 /** Stuff for 4x4 matrix only */
 void register_matrix4(asIScriptEngine * engine)
@@ -498,42 +709,40 @@ void register_matrix4(asIScriptEngine * engine)
 
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,
         ("void f(float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float)"),
-        asFUNCTION(matfunc<Mat4>::initConstructor4F), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+        asFUNCTION(matfunc<Mat4>::initConstructorF), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,
         ("void f(const vec4 &in column0, const vec4 &in column1, const vec4 &in column2, const vec4 &in column3)"),
-        asFUNCTION(matfunc<Mat4>::initConstructor4V), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+        asFUNCTION(matfunc<Mat4>::initConstructorV), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     // -------- member funcs ---------------------
 
-    MO__REG_METHOD("%1& rotate(const vec3 &in axis, float degree)", matfunc<Mat4>::mat_rotate4);
-    MO__REG_METHOD("%1& rotateX(float degree)", matfunc<Mat4>::mat_rotateX4);
-    MO__REG_METHOD("%1& rotateY(float degree)", matfunc<Mat4>::mat_rotateY4);
-    MO__REG_METHOD("%1& rotateZ(float degree)", matfunc<Mat4>::mat_rotateZ4);
-    MO__REG_METHOD("%1& translate(const vec3 &in)", matfunc<Mat4>::mat_translate4);
-    MO__REG_METHOD("%1& scale(const vec3 &in)", matfunc<Mat4>::mat_scale4);
-    MO__REG_METHOD("%1& scale(float)", matfunc<Mat4>::mat_scaleF4);
+    MO__REG_METHOD("%1& translate(const vec3 &in)", matfunc<Mat4>::mat_translate);
 
-    // -------- non-member operators -------------
+    // -------- operators -------------
 
-    MO__REG_METHOD("vec4 opMul(const vec4& in)", matfunc<Mat4>::mat4MulVec4);
-    MO__REG_FUNC("vec4 opMul(const vec4& in, const %1 &in)", matfunc<Mat4>::vec4MulMat4);
 
     // -------- non-member funcs -----------------
 
-    MO__REG_FUNC("%1 rotate(const %1 &in, const vec3 &in axis, float degree)", matfunc<Mat4>::rotate4);
-    MO__REG_FUNC("%1 rotateX(const %1 &in, float degree)", matfunc<Mat4>::rotateX4);
-    MO__REG_FUNC("%1 rotateY(const %1 &in, float degree)", matfunc<Mat4>::rotateY4);
-    MO__REG_FUNC("%1 rotateZ(const %1 &in, float degree)", matfunc<Mat4>::rotateZ4);
-    MO__REG_FUNC("%1 translate(const %1 &in, const vec3 &in)", matfunc<Mat4>::translate4);
-    MO__REG_FUNC("%1 scale(const %1 &in, const vec3 &in)", matfunc<Mat4>::scale4);
-    MO__REG_FUNC("%1 scale(const %1 &in, float)", matfunc<Mat4>::scaleF4);
+    MO__REG_FUNC("%1 translate(const %1 &in, const vec3 &in)", matfunc<Mat4>::translate);
 
+    MO__REG_FUNC("%1 ortho(float left, float right, float bottom, float top, float znear, float zfar)", matfunc<Mat4>::ortho);
+    MO__REG_FUNC("%1 perspective(float fovy_degree, float aspect, float znear, float zfar)", matfunc<Mat4>::perspective);
 }
 
 void registerAngelScript_matrix(asIScriptEngine * engine)
 {
-    register_matrix_tmpl<Mat4>(engine, "mat4");
+    int r;
 
+    // forward-declare the types
+    r = engine->RegisterObjectType("mat3", sizeof(Mat3), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS);
+    assert( r >= 0 );
+    r = engine->RegisterObjectType("mat4", sizeof(Mat4), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS);
+    assert( r >= 0 );
+
+
+    register_matrix_tmpl<Mat3>(engine, "mat3");
+    register_matrix3(engine);
+    register_matrix_tmpl<Mat4>(engine, "mat4");
     register_matrix4(engine);
 }
 
@@ -543,7 +752,7 @@ void registerAngelScript_matrix(asIScriptEngine * engine)
 
 
 
-
+#undef MO__REF_FuNC
 #undef MO__REG_FUNC
 #undef MO__REG_METHOD
 #undef MO__REG_METHoD
@@ -557,7 +766,7 @@ void registerAngelScript_vector(asIScriptEngine *engine)
 {
     if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
     {
-        assert(!"vector for Angelscript currently not supported on this platform");
+        assert(!"vector & matrix for AngelScript definitely not supported on this platform");
     }
     else
     {

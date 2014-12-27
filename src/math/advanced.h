@@ -518,7 +518,7 @@ struct advanced
 
     // -------------- random ------------------------------------
 
-    static F rnd_0			 (F A) { return (F)rand() / RAND_MAX; }
+    static F rnd_0			 () { return (F)rand() / RAND_MAX; }
 
     static F noise           (F A) { return AdvancedPrivate::noise.noise(A); }
     static F noise_2         (F A, F B) { return AdvancedPrivate::noise.noise(A, B); }
