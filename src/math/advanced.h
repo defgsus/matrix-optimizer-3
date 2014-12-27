@@ -523,6 +523,7 @@ struct advanced
     static F noise           (F A) { return AdvancedPrivate::noise.noise(A); }
     static F noise_2         (F A, F B) { return AdvancedPrivate::noise.noise(A, B); }
     static F noise_3         (F A, F B, F C) { return AdvancedPrivate::noise.noise(A, B, C); }
+
     static F noiseoct        (F A, uint oct)
         { return AdvancedPrivate::noise.noiseoct(A, std::min((uint)10, oct)); }
     static F noiseoct_2      (F A, F B, uint oct)

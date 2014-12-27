@@ -258,6 +258,18 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
             << "override" << "private" << "return" << "set" << "shared" << "super"
             << "switch" << "this" << "true" << "typedef" << "while" << "xor";
 
+    // all operator overloads
+    funcs << "opNeg" << "opCom" /* ~ */ << "opPreInc" << "opPreDec" << "opPostInc" << "opPostDec"
+          << "opEquals" << "opEquals" << "opCmp"
+          << "opAssign" << "opAddAssign" << "opSubAssign" << "opMulAssign" << "opDivAssign"
+          << "opPowAssign" << "opModAssign" << "opAndAssign" << "opOrAssign" << "opXorAssign"
+          << "opShlAssign" << "opShrAssign" << "opUShrAssign"
+          << "opAdd" << "opSub" << "opMul" << "opDiv" << "opMod" << "opPow"
+          << "opAnd" << "opOr" << "opXor" << "opShl" << "opShr" << "opUShr"
+          << "opAdd_r" << "opSub_r" << "opMul_r" << "opDiv_r" << "opMod_r" << "opPow_r"
+          << "opAnd_r" << "opOr_r" << "opXor_r" << "opShl_r" << "opShr_r" << "opUShr_r"
+          << "opIndex" << "opCall" << "opConv" << "opImplConv";
+
     setNames(vars, funcs, types, reserved);
 }
 

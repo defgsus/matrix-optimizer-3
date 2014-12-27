@@ -64,37 +64,43 @@ namespace native {
 template <typename Vec>
 struct vecfunc
 {
-    static StringAS VecToString(Vec * self) { std::stringstream s; s << *self; return s.str(); }
+    static StringAS toString(Vec * self) { std::stringstream s; s << *self; return s.str(); }
 
-    static void VecDefaultConstructor(Vec *self) { new(self) Vec(); }
-    static void VecConvConstructor(Float x, Vec *self) { new(self) Vec(x); }
-    static void VecCopyConstructor(const Vec &other, Vec *self) { new(self) Vec(other); }
-    //static void VecCopyConstructor32(const Vec3 &other, Vec2 *self) { new(self) Vec3(other); }
-    static void VecListConstructor2(Float *list, Vec2 *self) { new(self) Vec2(list[0], list[1]); }
-    static void VecListConstructor3(Float *list, Vec3 *self) { new(self) Vec3(list[0], list[1], list[2]); }
-    static void VecListConstructor4(Float *list, Vec4 *self) { new(self) Vec4(list[0], list[1], list[2], list[3]); }
+    static void vecDefaultConstructor(Vec *self) { new(self) Vec(); }
+    static void vecCopyConstructor(Vec *self, const Vec &other) { new(self) Vec(other); }
 
-    static void VecInitConstructor2(Float x, Float y, Vec2 *self) { new(self) Vec2(x,y); }
-    static void VecInitConstructor3(Float x, Float y, Float z, Vec3 *self) { new(self) Vec3(x,y,z); }
-    static void VecInitConstructor4(Float x, Float y, Float z, Float w, Vec4 *self) { new(self) Vec4(x,y,z,w); }
+    static void vecListConstructor2(Vec2 *self, Float *list) { new(self) Vec2(list[0], list[1]); }
+    static void vecListConstructor3(Vec3 *self, Float *list) { new(self) Vec3(list[0], list[1], list[2]); }
+    static void vecListConstructor4(Vec4 *self, Float *list) { new(self) Vec4(list[0], list[1], list[2], list[3]); }
 
-    static Vec& assignFloat(Vec * self, Float f) { *self = Vec(f); return *self; }
+    static void vecInitConstructor2(Vec2 *self, Float x, Float y) { new(self) Vec2(x,y); }
+    static void vecInitConstructor3(Vec3 *self, Float x, Float y, Float z) { new(self) Vec3(x,y,z); }
+    static void vecInitConstructor4(Vec4 *self, Float x, Float y, Float z, Float w) { new(self) Vec4(x,y,z,w); }
 
-    static bool VecEqualsVec(Vec * self, const Vec& v) { return *self == v; }
-    static Vec VecAddVec(Vec * self, const Vec& v) { return *self + v; }
-    static Vec VecSubVec(Vec * self, const Vec& v) { return *self - v; }
-    static Vec VecMulVec(Vec * self, const Vec& v) { return *self * v; }
-    static Vec VecDivVec(Vec * self, const Vec& v) { return *self / v; }
+    static void vecConvConstructor(Vec *self, Float x) { new(self) Vec(x); }
+    template <typename V>
+    static void vecConvConstructorVec(Vec *self, const V& v) { new(self) Vec(v); }
+    static void vecConvConstructorVec32(Vec3 *self, const Vec2& v) { new(self) Vec3(v.x, v.y, 0); }
+    static void vecConvConstructorVec42(Vec4 *self, const Vec2& v) { new(self) Vec4(v.x, v.y, 0, 0); }
+    static void vecConvConstructorVec43(Vec4 *self, const Vec3& v) { new(self) Vec4(v.x, v.y, v.z, 0); }
 
-    static Vec VecAddFloat(Vec * self, Float v) { return *self + v; }
-    static Vec VecSubFloat(Vec * self, Float v) { return *self - v; }
-    static Vec VecMulFloat(Vec * self, Float v) { return *self * v; }
-    static Vec VecDivFloat(Vec * self, Float v) { return *self / v; }
+    static Vec& assignFloat(Vec * self, Float f) { for (int i=0; i<vectraits<Vec>::num; ++i) (*self)[i] = f; return *self; }
 
-    static Vec VecRotated(Vec * self, const Vec3& a, Float deg) { return MATH::rotate(*self, a, deg); }
-    static Vec VecRotatedX(Vec * self, Float deg) { return MATH::rotateX(*self, deg); }
-    static Vec VecRotatedY(Vec * self, Float deg) { return MATH::rotateY(*self, deg); }
-    static Vec VecRotatedZ(Vec * self, Float deg) { return MATH::rotateZ(*self, deg); }
+    static bool vecEqualsVec(Vec * self, const Vec& v) { return *self == v; }
+    static Vec vecAddVec(Vec * self, const Vec& v) { return *self + v; }
+    static Vec vecSubVec(Vec * self, const Vec& v) { return *self - v; }
+    static Vec vecMulVec(Vec * self, const Vec& v) { return *self * v; }
+    static Vec vecDivVec(Vec * self, const Vec& v) { return *self / v; }
+
+    static Vec vecAddFloat(Vec * self, Float v) { return *self + v; }
+    static Vec vecSubFloat(Vec * self, Float v) { return *self - v; }
+    static Vec vecMulFloat(Vec * self, Float v) { return *self * v; }
+    static Vec vecDivFloat(Vec * self, Float v) { return *self / v; }
+
+    static Vec vecRotated(Vec * self, const Vec3& a, Float deg) { return MATH::rotate(*self, a, deg); }
+    static Vec vecRotatedX(Vec * self, Float deg) { return MATH::rotateX(*self, deg); }
+    static Vec vecRotatedY(Vec * self, Float deg) { return MATH::rotateY(*self, deg); }
+    static Vec vecRotatedZ(Vec * self, Float deg) { return MATH::rotateZ(*self, deg); }
 
     // not clear yet if this should be a member
     // not used yet
@@ -135,7 +141,17 @@ struct vecfunc
     static Float largest(const Vec& v)
         { Float m = v[0]; for (int i=1; i<vectraits<Vec>::num; ++i) m = std::max(m, v[i]); return m; }
 
-    static Float noise(const Vec3& v) { return MATH::advanced<float>::noise_3(v.x, v.y, v.z); }
+    static Float noisef_2(const Vec3& v) { return MATH::advanced<float>::noise_2(v.x, v.y); }
+    static Float noisef_3(const Vec3& v) { return MATH::advanced<float>::noise_3(v.x, v.y, v.z); }
+    static Vec2 noisev2_1(float f) { return Vec2(MATH::advanced<float>::noise(f),
+                                                 MATH::advanced<float>::noise(-f - 57.f)); }
+    static Vec3 noisev3_1(float f) { return Vec3(MATH::advanced<float>::noise(f),
+                                                 MATH::advanced<float>::noise(-f - 57.f),
+                                                 MATH::advanced<float>::noise(f + 1007.f)); }
+    static Vec4 noisev4_1(float f) { return Vec4(MATH::advanced<float>::noise(f),
+                                                 MATH::advanced<float>::noise(-f - 57.f),
+                                                 MATH::advanced<float>::noise(f + 1007.f),
+                                                 MATH::advanced<float>::noise(-f - 885.f)); }
 
     // ------- color conv -------
 
@@ -193,9 +209,6 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 {
     int r;
 
-    // Register the type
-    r = engine->RegisterObjectType(typ, sizeof(Vec), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS); assert( r >= 0 );
-
     // ----------- object properties ------------
 
     r = engine->RegisterObjectProperty(typ, "float x", asOFFSET(Vec, x)); assert( r >= 0 );
@@ -213,13 +226,19 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 
     // ------------- constructors ---------------------
 
-    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,             ("void f()"),                      asFUNCTION(vecfunc<Vec>::VecDefaultConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,      MO__STR("void f(const %1 &in)"),          asFUNCTION(vecfunc<Vec>::VecCopyConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,             ("void f(float)"),                 asFUNCTION(vecfunc<Vec>::VecConvConstructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,
+        "void f()",
+        asFUNCTION(vecfunc<Vec>::vecDefaultConstructor), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,
+        MO__STR("void f(const %1 &in)"),
+        asFUNCTION(vecfunc<Vec>::vecCopyConstructor), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_CONSTRUCT,
+        "void f(float)",
+        asFUNCTION(vecfunc<Vec>::vecConvConstructor), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     // -------------- operator overloads ---------------
 
-    MO__REG_METHoD("string opImplConv() const", vecfunc<Vec>::VecToString);
+    MO__REG_METHoD("string opImplConv() const", vecfunc<Vec>::toString);
 
     MO__REG_TRUE_METHOD("%1 &opAssign(const %1 &in)", asMETHODPR(Vec, operator=, (const Vec &), Vec&));
     MO__REG_METHOD("%1 &opAssign(float)", vecfunc<Vec>::assignFloat);
@@ -233,16 +252,21 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
     MO__REG_TRUE_METHOD("%1 &opSubAssign(float)", asMETHODPR(Vec, operator-=, (float), Vec&));
     MO__REG_TRUE_METHOD("%1 &opMulAssign(float)", asMETHODPR(Vec, operator*=, (float), Vec&));
     MO__REG_TRUE_METHOD("%1 &opDivAssign(float)", asMETHODPR(Vec, operator/=, (float), Vec&));
-
-    MO__REG_METHOD("%1 opAdd(const %1 &in) const", vecfunc<Vec>::VecAddVec);
-    MO__REG_METHOD("%1 opSub(const %1 &in) const", vecfunc<Vec>::VecSubVec);
-    MO__REG_METHOD("%1 opMul(const %1 &in) const", vecfunc<Vec>::VecMulVec);
-    MO__REG_METHOD("%1 opDiv(const %1 &in) const", vecfunc<Vec>::VecDivVec);
-
-    MO__REG_METHOD("%1 opAdd(float) const", vecfunc<Vec>::VecAddFloat);
-    MO__REG_METHOD("%1 opSub(float) const", vecfunc<Vec>::VecSubFloat);
-    MO__REG_METHOD("%1 opMul(float) const", vecfunc<Vec>::VecMulFloat);
-    MO__REG_METHOD("%1 opDiv(float) const", vecfunc<Vec>::VecDivFloat);
+    // vec + vec
+    MO__REG_METHOD("%1 opAdd(const %1 &in) const", vecfunc<Vec>::vecAddVec);
+    MO__REG_METHOD("%1 opSub(const %1 &in) const", vecfunc<Vec>::vecSubVec);
+    MO__REG_METHOD("%1 opMul(const %1 &in) const", vecfunc<Vec>::vecMulVec);
+    MO__REG_METHOD("%1 opDiv(const %1 &in) const", vecfunc<Vec>::vecDivVec);
+    // vec + float
+    MO__REG_METHOD("%1 opAdd(float) const", vecfunc<Vec>::vecAddFloat);
+    MO__REG_METHOD("%1 opSub(float) const", vecfunc<Vec>::vecSubFloat);
+    MO__REG_METHOD("%1 opMul(float) const", vecfunc<Vec>::vecMulFloat);
+    MO__REG_METHOD("%1 opDiv(float) const", vecfunc<Vec>::vecDivFloat);
+    // float + vec
+    MO__REG_METHOD("%1 opAdd_r(float) const", vecfunc<Vec>::vecAddFloat);
+    MO__REG_METHOD("%1 opSub_r(float) const", vecfunc<Vec>::vecSubFloat);
+    MO__REG_METHOD("%1 opMul_r(float) const", vecfunc<Vec>::vecMulFloat);
+    MO__REG_METHOD("%1 opDiv_r(float) const", vecfunc<Vec>::vecDivFloat);
 
     // ---------- methods -----------------------
 
@@ -268,9 +292,6 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 
     MO__REG_FUNC("float smallest(const %1 &in)", vecfunc<Vec>::smallest);
     MO__REG_FUNC("float largest(const %1 &in)", vecfunc<Vec>::largest);
-
-    MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec>::noise);
-
 }
 
 /** Specific stuff for 2 */
@@ -279,18 +300,29 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
     int r;
 
     // ---------- constructors ----------
-    r = engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT,      ("void f(float, float)"),
-                                        asFUNCTION(vecfunc<Vec2>::VecInitConstructor2), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("vec2", asBEHAVE_LIST_CONSTRUCT, ("void f(const int &in) {float, float}"),
-                                        asFUNCTION(vecfunc<Vec2>::VecListConstructor2), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT,
+        "void f(float, float)",
+        asFUNCTION(vecfunc<Vec2>::vecInitConstructor2), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec2", asBEHAVE_LIST_CONSTRUCT,
+        "void f(const int &in) { float, float }",
+        asFUNCTION(vecfunc<Vec2>::vecListConstructor2), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT,
+        "void f(const vec3 &in)",
+        asFUNCTION(vecfunc<Vec2>::vecConvConstructorVec<Vec3>), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT,
+        "void f(const vec4 &in)",
+        asFUNCTION(vecfunc<Vec2>::vecConvConstructorVec<Vec4>), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     // --------------------- methods ------------------
-    MO__REG_METHOD("%1 rotated(float)", vecfunc<Vec2>::VecRotatedZ);
-    MO__REG_METHOD("%1 rotatedZ(float)", vecfunc<Vec2>::VecRotatedZ);
+    MO__REG_METHOD("%1 rotated(float)", vecfunc<Vec2>::vecRotatedZ);
+    MO__REG_METHOD("%1 rotatedZ(float)", vecfunc<Vec2>::vecRotatedZ);
 
     // ------------------ non-member functions --------
     MO__REG_FUNC("%1 rotate(%1 &in, float)", vecfunc<Vec2>::rotateZ);
     MO__REG_FUNC("%1 rotateZ(%1 &in, float)", vecfunc<Vec2>::rotateZ);
+
+    MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec2>::noisef_2);
+    MO__REG_FUNC("%1 noise2(float)", vecfunc<Vec2>::noisev2_1);
 }
 
 /** Specific stuff for 3 */
@@ -301,10 +333,18 @@ void register_vector_3(asIScriptEngine *engine)
 
     // --------- constructors ----------
 
-    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,      ("void f(float, float, float)"),
-                                        asFUNCTION(vecfunc<Vec3>::VecInitConstructor3), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_LIST_CONSTRUCT, ("void f(const int &in) {float, float, float}"),
-                                            asFUNCTION(vecfunc<Vec3>::VecListConstructor3), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,
+        "void f(float, float, float)",
+        asFUNCTION(vecfunc<Vec3>::vecInitConstructor3), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_LIST_CONSTRUCT,
+        "void f(const int &in) {float, float, float}",
+        asFUNCTION(vecfunc<Vec3>::vecListConstructor3), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,
+        "void f(const vec2 &in)",
+        asFUNCTION(vecfunc<Vec3>::vecConvConstructorVec32), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,
+        "void f(const vec4 &in)",
+        asFUNCTION(vecfunc<Vec3>::vecConvConstructorVec<Vec4>), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     // ------------ properties ---------
 
@@ -319,6 +359,9 @@ void register_vector_3(asIScriptEngine *engine)
     MO__REG_FUNC("%1 hsv2rgb(const %1 &in)", vecfunc<Vec3>::hsv2rgb_3);
     MO__REG_FUNC("%1 rgb2hsv(const %1 &in)", vecfunc<Vec3>::rgb2hsv_3);
     MO__REG_FUNC("%1 cross(const %1 &in, const %1 &in)", vecfunc<Vec3>::cross);
+
+    MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec3>::noisef_3);
+    MO__REG_FUNC("%1 noise3(float)", vecfunc<Vec3>::noisev3_1);
 }
 
 
@@ -330,10 +373,10 @@ void register_vector_34_tmpl(asIScriptEngine *engine, const char * typ)
 
     // --------------------- methods ------------------
 
-    MO__REG_METHOD("%1 rotated(const vec3 &in, float)", vecfunc<Vec>::VecRotated);
-    MO__REG_METHOD("%1 rotatedX(float)", vecfunc<Vec>::VecRotatedX);
-    MO__REG_METHOD("%1 rotatedY(float)", vecfunc<Vec>::VecRotatedY);
-    MO__REG_METHOD("%1 rotatedZ(float)", vecfunc<Vec>::VecRotatedZ);
+    MO__REG_METHOD("%1 rotated(const vec3 &in, float)", vecfunc<Vec>::vecRotated);
+    MO__REG_METHOD("%1 rotatedX(float)", vecfunc<Vec>::vecRotatedX);
+    MO__REG_METHOD("%1 rotatedY(float)", vecfunc<Vec>::vecRotatedY);
+    MO__REG_METHOD("%1 rotatedZ(float)", vecfunc<Vec>::vecRotatedZ);
 
     // ------------------ non-member functions --------
 
@@ -352,10 +395,18 @@ void register_vector_4(asIScriptEngine *engine)
 
     // --------- constructors ----------
 
-    r = engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT,      ("void f(float, float, float, float)"),
-                                        asFUNCTION(vecfunc<Vec4>::VecInitConstructor4), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("vec4", asBEHAVE_LIST_CONSTRUCT, ("void f(const int &in) {float, float, float, float }"),
-                                        asFUNCTION(vecfunc<Vec4>::VecListConstructor4), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT,
+        "void f(float, float, float, float)",
+        asFUNCTION(vecfunc<Vec4>::vecInitConstructor4), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec4", asBEHAVE_LIST_CONSTRUCT,
+        "void f(const int &in) { float, float, float, float }",
+        asFUNCTION(vecfunc<Vec4>::vecListConstructor4), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT,
+        "void f(const vec2 &in)",
+        asFUNCTION(vecfunc<Vec4>::vecConvConstructorVec42), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT,
+        "void f(const vec3 &in)",
+        asFUNCTION(vecfunc<Vec4>::vecConvConstructorVec43), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     // ------------ properties ---------
 
@@ -373,6 +424,7 @@ void register_vector_4(asIScriptEngine *engine)
 
     // ------------------ non-member functions --------
 
+    MO__REG_FUNC("%1 noise4(float)", vecfunc<Vec3>::noisev4_1);
 }
 
 
@@ -441,6 +493,16 @@ void register_vector_mathwrapper_tmpl(asIScriptEngine *engine, const char * typ)
 /** Registers the three vector types */
 void registerAngelScript_vector(asIScriptEngine *engine)
 {
+    int r;
+
+    // forward-declare types
+    r = engine->RegisterObjectType("vec2", sizeof(Vec2), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS);
+    assert( r >= 0 );
+    r = engine->RegisterObjectType("vec3", sizeof(Vec3), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS);
+    assert( r >= 0 );
+    r = engine->RegisterObjectType("vec4", sizeof(Vec4), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS);
+    assert( r >= 0 );
+
     // ---------------- vec2 ---------------
 
     register_vector_tmpl<Vec2>(engine, "vec2");
@@ -646,9 +708,9 @@ void register_matrix_tmpl(asIScriptEngine *engine, const char * typ)
     MO__REG_TRUE_METHOD("%1 &opDivAssign(float)", asMETHODPR(Mat, operator/=, (float), Mat&));
 
     MO__REG_METHoD("vec4 opMul(const vec4& in)", matfunc<Mat>::matMulVec4);
-    MO__REG_FuNC("vec4 opMul(const vec4& in, const %1 &in)", matfunc<Mat>::vec4MulMat);
+    MO__REG_FUNC("vec4 opMul(const vec4& in, const %1 &in)", matfunc<Mat>::vec4MulMat);
     MO__REG_METHoD("vec3 opMul(const vec3& in)", matfunc<Mat>::matMulVec3);
-    MO__REG_FuNC("vec3 opMul(const vec3& in, const %1 &in)", matfunc<Mat>::vec3MulMat);
+    MO__REG_FUNC("vec3 opMul(const vec3& in, const %1 &in)", matfunc<Mat>::vec3MulMat);
 
     // ------------ members -------------------
 
