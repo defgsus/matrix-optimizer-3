@@ -634,7 +634,7 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
     tess.getGeometry(geom);
 
     // make finer resolution
-    geom.tesselate(3);
+    geom.tesselateTriangles(3);
 
 #define MO__EDGE_DIST(vec__)                                    \
     std::min(std::min(MATH::smoothstep(0.f,edge,vec__[0]),      \

@@ -153,6 +153,32 @@ struct vecfunc
                                                  MATH::advanced<float>::noise(f + 1007.f),
                                                  MATH::advanced<float>::noise(-f - 885.f)); }
 
+    static Vec3 euclidean2polar(const Vec3& euclidean)
+    {
+        const Float length = glm::length(euclidean);
+        if (length < std::numeric_limits<Float>::epsilon())
+            return Vec3(0);
+        const Vec3 tmp = euclidean / length;
+        const Float xz_dist = std::sqrt(tmp.x * tmp.x + tmp.z * tmp.z);
+
+        return Vec3(
+            MATH::rad_to_deg(std::atan2(xz_dist, tmp.y)),	// latitude
+            MATH::rad_to_deg(std::atan2(tmp.x, tmp.z)),     // longitude
+            xz_dist);                                       // xz distance
+    }
+
+    static Vec3 polar2euclidean(const Vec3& polar)
+    {
+        const Float
+                latitude = MATH::deg_to_rad(polar.x),
+                longitude = MATH::deg_to_rad(polar.y);
+        return Vec3(
+            std::cos(latitude) * std::sin(longitude),
+            std::sin(latitude),
+            std::cos(latitude) * std::cos(longitude));
+    }
+
+
     // ------- color conv -------
 
     static Vec toVecRgb3(const QColor& c) { return Vec(c.redF(), c.greenF(), c.blueF()); }
@@ -362,6 +388,9 @@ void register_vector_3(asIScriptEngine *engine)
 
     MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec3>::noisef_3);
     MO__REG_FUNC("%1 noise3(float)", vecfunc<Vec3>::noisev3_1);
+
+    MO__REG_FUNC("%1 euclidean2polar(const %1 &in)", vecfunc<Vec3>::euclidean2polar);
+    MO__REG_FUNC("%1 polar2euclidean(const %1 &in)", vecfunc<Vec3>::polar2euclidean);
 }
 
 

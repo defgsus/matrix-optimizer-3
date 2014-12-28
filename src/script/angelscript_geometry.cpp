@@ -128,9 +128,13 @@ public:
         g->addLine(v1, v2);
     }
 
-    void addTriangleI(uint v1, uint v2, uint v3) { if (MO__IDX(v1) && MO__IDX(v2) && MO__IDX(v3)) g->addTriangle(v1, v2, v3); }
+    void addTriangleI(uint v1, uint v2, uint v3)
+        { if (MO__IDX(v1) && MO__IDX(v2) && MO__IDX(v3)) g->addTriangleChecked(v1, v2, v3); }
     void addTriangle(const Vec3& a, const Vec3& b, const Vec3& c)
     {
+        // check degenerate triangles before creating the vertices
+        if (!GEOM::Geometry::checkTriangle(a, b, c))
+            return;
         auto    v1 = g->addVertex(a.x, a.y, a.z),
                 v2 = g->addVertex(b.x, b.y, b.z),
                 v3 = g->addVertex(c.x, c.y, c.z);
@@ -173,7 +177,8 @@ public:
 
     void clear() { g->clear(); }
     void setShared(bool b) { g->setSharedVertices(b); }
-    void tesselate(uint level) { g->tesselate(level); }
+    void tesselateTriangles(uint level) { g->tesselateTriangles(level); }
+    void tesselateLines(uint level) { g->tesselateLines(level); }
     void calculateNormals() { g->calculateTriangleNormals(); }
     void invertNormals() { g->invertNormals(); }
     void convertToLines() { if (g->numLines()) g->convertToLines(); }
@@ -252,7 +257,8 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("void clear()", clear);
     MO__REG_METHOD("void calculateNormals()", calculateNormals);
     MO__REG_METHOD("void invertNormals()", invertNormals);
-    MO__REG_METHOD("void tesselate(uint level = 1)", tesselate);
+    MO__REG_METHOD("void tesselateTriangles(uint level = 1)", tesselateTriangles);
+    MO__REG_METHOD("void tesselateLines(uint level = 1)", tesselateLines);
     MO__REG_METHOD("void convertToLines()", convertToLines);
 
     MO__REG_METHOD("void setShared(bool = true)", setShared);

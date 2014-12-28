@@ -253,7 +253,7 @@ void Drawable::createVAO_()
     if (!vao_)
         vao_ = new VertexArrayObject(name_);
 
-    geometry_->getVertexArrayObject(vao_, shader_, geometry_->numTriangles() != 0);
+    geometry_->getVertexArrayObject(vao_, shader_);
 
 }
 
@@ -286,10 +286,7 @@ void Drawable::render()
 
     checkGeometryChanged_();
 
-    if (geometry_->numTriangles())
-        vao_->drawElements(GL_TRIANGLES);
-    else
-        vao_->drawElements(GL_LINES);
+    vao_->drawElements();
 }
 
 
@@ -334,13 +331,10 @@ void Drawable::renderShader(const Mat4 &proj,
 
     }
 
-    if (drawTypeSet_)
+    /* XXX if (drawTypeSet_)
         vao_->drawElements(drawType_);
-    else
-    if (geometry_->numTriangles())
-        vao_->drawElements(GL_TRIANGLES);
-    else
-        vao_->drawElements(GL_LINES);
+    else*/
+        vao_->drawElements();
 
     shader_->deactivate();
 }
@@ -355,13 +349,10 @@ void Drawable::renderShader()
 
     shader_->sendUniforms();
 
-    if (drawTypeSet_)
+    /* XXX if (drawTypeSet_)
         vao_->drawElements(drawType_);
-    else
-    if (geometry_->numTriangles())
-        vao_->drawElements(GL_TRIANGLES);
-    else
-        vao_->drawElements(GL_LINES);
+    else*/
+        vao_->drawElements();
 
     shader_->deactivate();
 }

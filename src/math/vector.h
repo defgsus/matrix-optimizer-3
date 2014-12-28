@@ -25,6 +25,7 @@
 namespace MO {
 namespace MATH {
 
+
     // ------- wrapper for glm functions that take an angle ---------
 
 #if GLM_VERSION >= 95
@@ -327,12 +328,8 @@ glm::detail::tvec3<F> pointOnSphere(F u, F v)
 {
     u *= TWO_PI,
     v *= PI;
-#if GLM_VERSION >= 95
-    auto P = glm::detail::tvec3<F,glm::defaultp>(
-#else
     auto P = glm::detail::tvec3<F>(
-#endif
-    // rotate a point (0,1,0) around z
+        // rotate a point (0,1,0) around z
         -sin(v), std::cos(v), 0 );
     // rotate this point around y
     P.z = -P.x * std::sin(u);
@@ -351,9 +348,6 @@ inline glm::detail::tvec3<F> normalize_safe(
     else
         return v;
 }
-
-
-
 
 
 #endif

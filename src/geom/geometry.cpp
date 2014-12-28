@@ -171,7 +171,7 @@ void Geometry::setSharedVertices(bool enable, VertexType threshold)
     if (!enable)
     {
         std::map<Key_, MapStruct_> tmp;
-        indexMap_.swap(tmp);
+        indexMap_.swap(tmp); // the seriously-clear method
     }
 
 }
@@ -346,7 +346,7 @@ const Geometry::VertexType * Geometry::line(
 
 void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 {
-    if (other.numTriangles())
+    // copy triangles
     for (uint i=0; i<other.numTriangles(); ++i)
     {
         IndexType
@@ -396,7 +396,7 @@ void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 
         addTriangle(t1, t2, t3);
     }
-    else
+    // copy lines
     for (uint i=0; i<other.numLines(); ++i)
     {
         IndexType
@@ -535,7 +535,7 @@ void Geometry::invertNormals()
 
 void Geometry::invertTextureCoords(bool invX, bool invY)
 {
-    MO_ASSERT(numTextureCoordComponents() == 2, "something changed");
+    MO_ASSERT(numTextureCoordComponents() == 2, "code not up-to-date");
 
     const uint si = texcoord_.size()/2;
     if (invX)
@@ -554,7 +554,7 @@ void Geometry::invertTextureCoords(bool invX, bool invY)
 
 void Geometry::shiftTextureCoords(TextureCoordType offsetX, TextureCoordType offsetY)
 {
-    MO_ASSERT(numTextureCoordComponents() == 2, "something changed");
+    MO_ASSERT(numTextureCoordComponents() == 2, "code not up-to-date");
 
     for (uint i=0; i<texcoord_.size(); i+=2)
     {
@@ -565,7 +565,7 @@ void Geometry::shiftTextureCoords(TextureCoordType offsetX, TextureCoordType off
 
 void Geometry::scaleTextureCoords(TextureCoordType scaleX, TextureCoordType scaleY)
 {
-    MO_ASSERT(numTextureCoordComponents() == 2, "something changed");
+    MO_ASSERT(numTextureCoordComponents() == 2, "code not up-to-date");
 
     for (uint i=0; i<texcoord_.size(); i+=2)
     {
@@ -619,7 +619,8 @@ void Geometry::unGroupVertices()
             addTriangle(t1, t2, t3);
         }
     }
-    else
+
+    if (numLines())
     {
         auto index = lineIndex_;
         lineIndex_.clear();
@@ -651,7 +652,7 @@ void Geometry::convertToLines()
     if (!numTriangles())
         return;
 
-    lineIndex_.clear();
+    //lineIndex_.clear();
 
     // test for already-connected
     typedef quint64 Hash;
@@ -897,7 +898,6 @@ bool Geometry::transformPrimitivesWithEquation(
     if (!equ[2].parse(equationZ.toStdString()))
         return false;
 
-    if (!numTriangles())
     for (uint i=0; i<numLines(); ++i)
     {
         // get vertex indices
@@ -950,7 +950,6 @@ bool Geometry::transformPrimitivesWithEquation(
         progress_ = (i * 100) / numLines();
     }
 
-    else // triangles
     for (uint i=0; i<numTriangles(); ++i)
     {
         // get vertex indices
@@ -1084,7 +1083,6 @@ bool Geometry::transformPrimitivesWithEquation(
     if (!equ.parse(equation.toStdString()))
         return false;
 
-    if (!numTriangles())
     for (uint i=0; i<numLines(); ++i)
     {
         // get vertex indices
@@ -1158,7 +1156,6 @@ bool Geometry::transformPrimitivesWithEquation(
         progress_ = (i * 100) / numLines();
     }
 
-    else // triangles
     for (uint i=0; i<numTriangles(); ++i)
     {
         // get vertex indices
@@ -1445,48 +1442,50 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
 #undef MO__MAKEHASH
 }
 
-void Geometry::tesselate(uint level)
+void Geometry::tesselateLines(uint level)
 {
-    if (!numTriangles())
+    if (!numLines())
+        return;
+    // XXX TODO: color/texcoord handling
+
+    Geometry tess;
+    tess.sharedVertices_ = sharedVertices_;
+    tess.threshold_ = threshold_;
+
+    level = std::pow(2,level);
+
+    for (uint i=0; i<numLines(); ++i)
     {
-        // XXX TODO: color/texcoord handling
+        const IndexType
+                t1 = lineIndex_[i*2],
+                t2 = lineIndex_[i*2+1];
 
-        Geometry tess;
-        tess.sharedVertices_ = sharedVertices_;
-        tess.threshold_ = threshold_;
+        const Vec3
+                p1 = getVertex(t1),
+                p2 = getVertex(t2);
 
-        level = std::pow(2,level);
-
-        for (uint i=0; i<numLines(); ++i)
+        std::vector<IndexType> n;
+        n.push_back(tess.addVertex(p1[0], p1[1], p1[2]));
+        for (uint l = 0; l<level; ++l)
         {
-            const IndexType
-                    t1 = lineIndex_[i*2],
-                    t2 = lineIndex_[i*2+1];
-
-            const Vec3
-                    p1 = getVertex(t1),
-                    p2 = getVertex(t2);
-
-            std::vector<IndexType> n;
-            n.push_back(tess.addVertex(p1[0], p1[1], p1[2]));
-            for (uint l = 0; l<level; ++l)
-            {
-                Vec3 p12 = p1 + (p2 - p1) * (float(l+1) / (level+1));
-                n.push_back(tess.addVertex(p12[0], p12[1], p12[2]));
-            }
-            n.push_back(tess.addVertex(p2[0], p2[1], p2[2]));
-
-            for (uint l = 1; l<n.size(); ++l)
-                tess.addLine(n[l-1], n[l]);
-
-            progress_ = (i * 100) / numLines();
+            Vec3 p12 = p1 + (p2 - p1) * (float(l+1) / (level+1));
+            n.push_back(tess.addVertex(p12[0], p12[1], p12[2]));
         }
+        n.push_back(tess.addVertex(p2[0], p2[1], p2[2]));
 
-        *this = tess;
+        for (uint l = 1; l<n.size(); ++l)
+            tess.addLine(n[l-1], n[l]);
+
+        progress_ = (i * 100) / numLines();
     }
 
-    else
-    // tesselate triangles
+    *this = tess;
+}
+
+void Geometry::tesselateTriangles(uint level)
+{
+    if (!numTriangles())
+        return;
     for (uint l = 0; l<level; ++l)
     {
         Geometry tess;
@@ -1573,7 +1572,8 @@ void Geometry::removePrimitivesRandomly(float probability, int seed)
 
         triIndex_ = index;
     }
-    else
+
+    if (numLines())
     {
         std::vector<IndexType> index;
 
@@ -1628,7 +1628,7 @@ void Geometry::groupVertices(Geometry &dst, VertexType range) const
 
 
 
-void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s, bool triangles)
+void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
 {
     if (vao->isCreated())
         vao->release();
@@ -1680,12 +1680,14 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
     }
 
     // --- indices ---
-    if (triangles)
-        vao->createIndexBuffer(indexEnum,
+    if (numTriangles())
+        vao->createIndexBuffer(GL_TRIANGLES,
+                               indexEnum,
                                numTriangles() * numTriangleIndexComponents(),
                                triangleIndices());
-    else
-        vao->createIndexBuffer(indexEnum,
+    if (numLines())
+        vao->createIndexBuffer(GL_LINES,
+                               indexEnum,
                                numLines() * numLineIndexComponents(),
                                lineIndices());
 

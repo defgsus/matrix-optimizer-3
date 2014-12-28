@@ -55,11 +55,6 @@ public:
 
     Geometry();
 
-    // -------- file io ------
-
-    /** Throws IoException on errors */
-//    void loadOBJ(const QString& filename);
-
     // ------- query ---------
 
     /** Returns the progress during certain intense functions [0,100] */
@@ -148,7 +143,7 @@ public:
     /** Returns a pointer to numTriangles() * 3 indices */
     IndexType * lineIndices() { return &lineIndex_[0]; }
 
-    /** Returns false if the triangle is degenerate */
+    /** Returns false if the triangle is degenerate (e.g. on of the edges is too small) */
     static bool checkTriangle(const Vec3&, const Vec3&, const Vec3&);
 
     // --------- state -----------------------
@@ -293,7 +288,9 @@ public:
     void unGroupVertices();
 
     /** Split all triangles into smaller ones. */
-    void tesselate(uint level = 1);
+    void tesselateTriangles(uint level = 1);
+    /** Split all lines into smaller ones. */
+    void tesselateLines(uint level = 1);
 
     /** Normalize all vertex positions.
         @p normalization is the amount of normalization [0,1] */
@@ -355,10 +352,11 @@ public:
     // ------------- opengl -----------------
 
     /** Fills the vertex array object with the data from the geometry.
+        Triangles and lines will create a separate element buffer if present.
         The shader provides the locations of the vertex attributes.
         The Shader must be compiled.
         The VAO will be released if it was created previously. */
-    void getVertexArrayObject(GL::VertexArrayObject *, GL::Shader *, bool triangles = true);
+    void getVertexArrayObject(GL::VertexArrayObject *, GL::Shader *);
 
 private:
 

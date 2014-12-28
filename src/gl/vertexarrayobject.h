@@ -30,8 +30,7 @@ public:
         A_POSITION = 1,
         A_COLOR,
         A_NORMAL,
-        A_TEX_COORD,
-        A_INDEX
+        A_TEX_COORD
     };
 
     /** @p name is for debugging purposes */
@@ -46,11 +45,13 @@ public:
     /** Returns true, when a vertex array object has been created */
     bool isCreated() const { return vao_ != invalidGl; }
 
-    /** Returns the buffer object for the given attribute, or NULL */
-    BufferObject * getBufferObject(Attribute a);
+    /** Returns the attribute buffer object for the given attribute, or NULL */
+    BufferObject * getAttributeBufferObject(Attribute a);
 
-    /** Returns the number of vertices as defined in the element buffer */
-    gl::GLuint numVertices() const;
+    /** Returns the number of vertices as defined in the element buffers.
+        @p index represents the xth element buffer added with createIndexBuffer().
+        If @p index is out of range, 0 will be returned. */
+    gl::GLuint numVertices(uint index = 0) const;
 
     // --------- opengl -----------
 
@@ -74,17 +75,23 @@ public:
             gl::GLboolean normalized = gl::GL_FALSE);
 
     /** Creates an element array buffer.
+        You can create multiple element buffers with multiple calls.
         Returns the BufferObject, or NULL on failure.
         The vertex array object needs to be bound. */
     BufferObject * createIndexBuffer(
+            gl::GLenum primitiveType,
             gl::GLenum valueType,
             gl::GLuint numberVertices, const void * ptr,
             gl::GLenum storageType = gl::GL_STATIC_DRAW);
 
-    /** Draws the vertex array object.
+    /** Consecutively draws all element arrays added with createIndexBuffer() */
+    bool drawElements() const;
+
+    /** Draws the vertex array object and overrides the settings from createIndexBuffer().
         If @p numberVertices <= 0, the number from createIndexBuffer() is used.
         Objects are unbound on return. */
-    bool drawElements(gl::GLenum primitiveType, gl::GLuint numberVertices = 0,
+    bool drawElements(uint elementBufferIndex,
+                      gl::GLenum primitiveType, gl::GLuint numberVertices = 0,
                       gl::GLuint offset = 0) const;
 
 private:
@@ -96,7 +103,8 @@ private:
 
     struct Buffer_;
     std::map<Attribute, Buffer_> buffers_;
-    Buffer_ * elementBuffer_;
+    /** Buffer for each index type (e.g. triangles or lines) */
+    std::vector<Buffer_> elementBuffers_;
 };
 
 } // namespace GL

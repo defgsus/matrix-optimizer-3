@@ -732,7 +732,7 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rt
             {
                 p_->vaoUpdateTime = time;
 
-                GL::BufferObject * buf = p_->draw->vao()->getBufferObject(
+                GL::BufferObject * buf = p_->draw->vao()->getAttributeBufferObject(
                             GL::VertexArrayObject::A_POSITION);
                 if (buf && p_->vaoBuffer.size() > 3)
                 {
