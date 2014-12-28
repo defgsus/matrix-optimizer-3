@@ -22,12 +22,67 @@
 #include "math/vector.h"
 #include "io/log.h"
 
+
+#if 1
+#   define MO_DEBUG_GAS(arg__) MO_DEBUG(arg__)
+#else
+#   define MO_DEBUG_GAS(unused__)
+#endif
+
+
+
 namespace MO {
 
+/** Wrapper around triangle data */
+class TriangleAS
+{
+public:
+    // --- properties ---
+    uint i1, i2, i3;
+    Vec3 v1, v2, v3;
 
-//-----------------------
-// AngelScript functions
-//-----------------------
+    // --- factory ---
+    static void constructor(TriangleAS * self) { new(self) TriangleAS(); }
+    static void constructorVec(TriangleAS * self, const Vec3& v1, const Vec3& v2, const Vec3& v3)
+        { new(self) TriangleAS(v1, v2, v3); }
+
+    // --- ctor ---
+
+    TriangleAS() : i1(0), i2(0), i3(0) { }
+    TriangleAS(const Vec3& v1, const Vec3& v2, const Vec3& v3)
+        : v1(v1), v2(v2), v3(v3) { }
+    // construct by taking the vectors from the Geometry
+    TriangleAS(GEOM::Geometry * g, uint i1, uint i2, uint i3)
+        : i1(i1), i2(i2), i3(i3)
+    {
+        if (i1 < g->numVertices()) v1 = g->getVertex(i1);
+        if (i2 < g->numVertices()) v2 = g->getVertex(i2);
+        if (i3 < g->numVertices()) v3 = g->getVertex(i3);
+    }
+    TriangleAS(GEOM::Geometry *g, uint triIndex)
+        : i1(0), i2(0), i3(0)
+    {
+        if (triIndex < g->numTriangles())
+        {
+            i1 = g->triangleIndex(triIndex, 0); if (i1 < g->numVertices()) v1 = g->getVertex(i1);
+            i2 = g->triangleIndex(triIndex, 1); if (i2 < g->numVertices()) v2 = g->getVertex(i2);
+            i3 = g->triangleIndex(triIndex, 2); if (i3 < g->numVertices()) v3 = g->getVertex(i3);
+        }
+    }
+
+    // --- interface ---
+
+    std::string toString() const
+        { std::stringstream s; s << "Triangle(" << v1 << ", " << v2 << ", " << v3 << ")"; return s.str(); }
+
+    bool isValid() const { return (i1 != i2 && i1 != i3 && i2 != i3) || GEOM::Geometry::checkTriangle(v1, v2, v3); }
+
+    Vec3 normal() const { return isValid() ? glm::normalize(glm::cross(v2-v1, v3-v1)) : Vec3(0,0,1); }
+    Vec3 center() const { return (v1 + v2 + v3) / 3.f; }
+};
+
+
+
 
 class GeometryAS
 {
@@ -49,7 +104,7 @@ public:
           owner (true),
           ref   (1)
     {
-        MO_DEBUG("GeometryAS("<<this<<")::GeometryAS()");
+        MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS() owning");
     }
 
     /** Creates an instance for an existing Geometry (not bound to this instance) */
@@ -58,27 +113,29 @@ public:
           owner (false),
           ref   (1)
     {
-        MO_DEBUG("GeometryAS("<<this<<")::GeometryAS(" << g << ")");
+        MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS(" << g << ") non-owning");
     }
 
     ~GeometryAS()
     {
-        MO_DEBUG("GeometryAS("<<this<<")::~GeometryAS()")
+        MO_DEBUG_GAS("GeometryAS("<<this<<")::~GeometryAS()")
         if (owner)
             delete g;
     }
 
-    static GeometryAS * factory() { return new GeometryAS(); }
+    static GeometryAS * factory() { MO_DEBUG_GAS("GeometryAS::factory()"); return new GeometryAS(); }
 
-    void addRef() { ++ref; }
+    void addRef() { ++ref; MO_DEBUG_GAS("GeometryAS("<<this<<")::addRef() now = " << ref); }
 
-    void releaseRef() { if (--ref == 0) delete this; }
+    void releaseRef() { MO_DEBUG_GAS("GeometryAS("<<this<<")::releaseRef() now = " << (ref-1)); if (--ref == 0) delete this; }
 
     // ----------------- interface ----------------
 
-    std::string toString() const { std::stringstream s; s << "Geometry(" << (void*)this << ")"; return s.str(); }
+    std::string toString() const
+        { std::stringstream s; s << "Geometry(" << (void*)this << "/" << p_name << ")"; return s.str(); }
 
     // ----- getter -----
+
     uint getClosestVertex(const Vec3& v);
 
     const StringAS& name() const { return p_name; }
@@ -95,8 +152,11 @@ public:
     Vec2 texCoordI(uint i) const { return i >= g->numVertices() ? Vec2(0) : g->getTexCoord(i); }
     Vec4 colorI(uint i) const { return i >= g->numVertices() ? Vec4(0) : g->getColor(i); }
 
-    bool intersects(const Vec3& ray, const Vec3& dir) { return g->intersects(ray, dir); }
-    bool intersects_p(const Vec3& ray, const Vec3& dir, Vec3& pos) { return g->intersects(ray, dir, &pos); }
+    // returns invalid Triangle when index out of range
+    TriangleAS triangle(uint index) const { return TriangleAS(g, index); }
+
+    bool intersects(const Vec3& ray, const Vec3& dir) const { return g->intersects(ray, dir); }
+    bool intersects_p(const Vec3& ray, const Vec3& dir, Vec3& pos) const { return g->intersects(ray, dir, &pos); }
 
     // ---- setter ----
 
@@ -223,11 +283,51 @@ uint GeometryAS::getClosestVertex(const Vec3& v)
 }
 
 
-//--------------------------------
-// Registration
-//-------------------------------------
 
-static void registerAngelScript_geometry_native(asIScriptEngine *engine)
+namespace native {
+
+static void registerAngelScript_triangle(asIScriptEngine *engine)
+{
+    int r;
+
+    // register the type
+    r = engine->RegisterObjectType("Triangle", sizeof(TriangleAS),
+                                   asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK); assert( r >= 0 );
+
+    // ----------- object properties ------------
+
+    r = engine->RegisterObjectProperty("Triangle", "vec3 v1", asOFFSET(TriangleAS, v1)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty("Triangle", "vec3 v2", asOFFSET(TriangleAS, v2)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty("Triangle", "vec3 v3", asOFFSET(TriangleAS, v3)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty("Triangle", "uint i1", asOFFSET(TriangleAS, i1)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty("Triangle", "uint i2", asOFFSET(TriangleAS, i2)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty("Triangle", "uint i3", asOFFSET(TriangleAS, i3)); assert( r >= 0 );
+
+    // ------------- constructors ---------------------
+
+    r = engine->RegisterObjectBehaviour("Triangle", asBEHAVE_CONSTRUCT,
+        "void f()",
+        asFUNCTION(TriangleAS::constructor), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Triangle", asBEHAVE_CONSTRUCT,
+        "void f(const vec3 &in, const vec3& in, const vec3 &in)",
+        asFUNCTION(TriangleAS::constructorVec), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+
+    // ------------ methods ---------------------------
+
+#define MO__REG_TRUE_METHOD(decl__, asMETHOD__) \
+    r = engine->RegisterObjectMethod("Triangle", decl__, asMETHOD__, asCALL_THISCALL); assert( r >= 0 );
+
+    MO__REG_TRUE_METHOD("string opImplConv() const", asMETHOD(TriangleAS, toString));
+    MO__REG_TRUE_METHOD("string toString() const", asMETHOD(TriangleAS, toString));
+    MO__REG_TRUE_METHOD("bool isValid() const", asMETHOD(TriangleAS, isValid));
+    MO__REG_TRUE_METHOD("vec3 normal() const", asMETHOD(TriangleAS, normal));
+    MO__REG_TRUE_METHOD("vec3 center() const", asMETHOD(TriangleAS, center));
+
+#undef MO__REG_TRUE_METHOD
+}
+
+
+static void registerAngelScript_geometry(asIScriptEngine *engine)
 {
     int r;
 
@@ -262,6 +362,8 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("vec4 color(uint vertex_index) const", colorI);
     MO__REG_METHOD("vec3 normal(uint vertex_index) const", normalI);
     MO__REG_METHOD("vec2 texCoord(uint vertex_index) const", texCoordI);
+
+    MO__REG_METHOD("Triangle triangle(uint triangle_index) const", triangle);
 
     MO__REG_METHOD("bool intersects(const vec3 &in ray_pos, const vec3 &in ray_dir) const", intersects);
     MO__REG_METHOD("bool intersects(const vec3 &in ray_pos, const vec3 &in ray_dir, vec3 &out hit_pos) const", intersects_p);
@@ -344,15 +446,20 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
 }
 
 
+} // namespace native
+
+
 
 
 // ----------------------------------------------
+
 /*
 GEOM::Geometry * getGeometry(const GeometryAS * as)
 {
     return as ? as->g : 0;
 }
 */
+
 void registerAngelScript_geometry(asIScriptEngine *engine)
 {
     if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
@@ -360,7 +467,10 @@ void registerAngelScript_geometry(asIScriptEngine *engine)
         assert(!"Geometry type for Angelscript currently not supported on this platform");
     }
     else
-        registerAngelScript_geometry_native(engine);
+    {
+        native::registerAngelScript_triangle(engine);
+        native::registerAngelScript_geometry(engine);
+    }
 }
 
 
@@ -455,6 +565,8 @@ void GeometryEngineAS::Private::messageCallback(const asSMessageInfo *msg)
 
 void GeometryEngineAS::execute(const QString &qscript)
 {
+    MO_DEBUG_GAS("GeometryEngineAS("<<this<<")::execute()");
+
     MO_ASSERT(p_->g, "no Geometry given to GeometryEngineAS");
 
     // --- create a module ---

@@ -1,6 +1,6 @@
 /** @file angelscript_geometry.h
 
-    @brief
+    @brief Total script access to GEOM::Geometry
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -22,7 +22,9 @@ namespace GEOM { class Geometry; }
 class Object;
 class Scene;
 
-    /** The internal type to wrap Geometry for AngelScript */
+    /** The internal type to wrap Geometry for AngelScript.
+        General access to this class is not public.
+        The interface is designed to be used by scripts only. */
     class GeometryAS;
 
     /* Returns the assigned geometry widget of the script object */
@@ -32,7 +34,18 @@ class Scene;
     void registerAngelScript_geometry(asIScriptEngine *engine);
 
 
-    /** For immediate script access to one Geometry instance */
+    /** For immediate script-access to one Geometry instance.
+        The usage is easy:
+        @code
+        // create an instance to wrap a GEOM::Geometry
+        GeometryEngineAS script(geometry);
+        // compile and run the script (QString)
+        script.execute(scriptText);
+        @endcode
+        To check a script for errors, call createNullEngine(),
+        to receive an engine with the full namespace defined
+        but without the assigned geometry.
+        */
     class GeometryEngineAS
     {
     public:
