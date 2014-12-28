@@ -41,7 +41,7 @@
 #include "geom/geometrymodifiercreate.h"
 #ifndef MO_DISABLE_ANGELSCRIPT
 #include "geom/geometrymodifierangelscript.h"
-#include "geom/geometryangelscript.h"
+#include "script/angelscript_geometry.h"
 #include "angelscriptwidget.h"
 #endif
 
@@ -677,7 +677,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         auto edit = new AngelScriptWidget(this);
         //edit->setMinimumHeight(500);
         group_->addWidget(edit);
-        edit->setScriptEngine( GEOM::GeometryAngelScript::createNullEngine() );
+        edit->setScriptEngine( GeometryEngineAS::createNullEngine() );
         connect(edit, SIGNAL(scriptTextChanged()), this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()

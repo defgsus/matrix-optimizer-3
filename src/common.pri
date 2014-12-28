@@ -245,7 +245,6 @@ HEADERS += \
     src/audio/tool/dumbfile.h \
     src/object/audio/modplayerao.h \
     src/geom/geometrymodifierangelscript.h \
-    src/geom/geometryangelscript.h \
     src/script/3rd/angelscript/scriptmath/scriptmathcomplex.h \
     src/script/3rd/angelscript/scriptarray/scriptarray.h \
     src/script/3rd/angelscript/scriptstdstring/scriptstdstring.h \
@@ -462,7 +461,6 @@ SOURCES += \
     src/audio/tool/dumbfile.cpp \
     src/object/audio/modplayerao.cpp \
     src/geom/geometrymodifierangelscript.cpp \
-    src/geom/geometryangelscript.cpp \
     src/script/3rd/angelscript/scriptmath/scriptmathcomplex.cpp \
     src/script/3rd/angelscript/scriptarray/scriptarray.cpp \
     src/script/3rd/angelscript/scriptstdstring/scriptstdstring.cpp \

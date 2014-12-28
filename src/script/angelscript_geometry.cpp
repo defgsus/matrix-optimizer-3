@@ -37,22 +37,35 @@ class GeometryAS
 public:
 
     GEOM::Geometry * g;
+    bool owner;
     int ref;
     StringAS p_name;
 
     // -------------- factory for script -----------
 
+    /** Creates an instance for a new Geometry (bound to this instance) */
     GeometryAS()
         : g     (new GEOM::Geometry()),
+          owner (true),
           ref   (1)
     {
-        //MO_DEBUG("GeometryAS("<<this<<")::GeometryAS()");
+        MO_DEBUG("GeometryAS("<<this<<")::GeometryAS()");
+    }
+
+    /** Creates an instance for an existing Geometry (not bound to this instance) */
+    GeometryAS(GEOM::Geometry * g)
+        : g     (g),
+          owner (false),
+          ref   (1)
+    {
+        MO_DEBUG("GeometryAS("<<this<<")::GeometryAS(" << g << ")");
     }
 
     ~GeometryAS()
     {
-        //MO_DEBUG("GeometryAS("<<this<<")::~GeometryAS()")
-        delete g;
+        MO_DEBUG("GeometryAS("<<this<<")::~GeometryAS()")
+        if (owner)
+            delete g;
     }
 
     static GeometryAS * factory() { return new GeometryAS(); }
@@ -334,12 +347,12 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
 
 
 // ----------------------------------------------
-
+/*
 GEOM::Geometry * getGeometry(const GeometryAS * as)
 {
     return as ? as->g : 0;
 }
-
+*/
 void registerAngelScript_geometry(asIScriptEngine *engine)
 {
     if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
@@ -349,6 +362,152 @@ void registerAngelScript_geometry(asIScriptEngine *engine)
     else
         registerAngelScript_geometry_native(engine);
 }
+
+
+
+
+
+
+
+// ---------------------- GeometryEngineAS -----------------------------
+
+class GeometryEngineAS::Private
+{
+public:
+
+    Private(GEOM::Geometry * g)
+        : g         (g),
+          gas       (new GeometryAS(g)),
+          engine    (0),
+          context   (0)
+    { }
+
+    ~Private()
+    {
+        if (engine)
+            engine->Release();
+        if (context)
+            context->Release();
+        gas->releaseRef();
+    }
+
+    void createEngine();
+    void messageCallback(const asSMessageInfo *msg);
+
+    // global script function
+    GeometryAS * getGeometryAS() { gas->addRef(); return gas; }
+
+    GEOM::Geometry * g;
+    GeometryAS * gas;
+    asIScriptEngine * engine;
+    asIScriptContext * context;
+    QString errors;
+};
+
+
+GeometryEngineAS::GeometryEngineAS(GEOM::Geometry * g)
+    : p_    (new Private(g))
+{
+}
+
+GeometryEngineAS::~GeometryEngineAS()
+{
+    delete p_;
+}
+
+asIScriptEngine * GeometryEngineAS::scriptEngine()
+{
+    if (!p_->engine)
+        p_->createEngine();
+    return p_->engine;
+}
+
+asIScriptEngine * GeometryEngineAS::createNullEngine()
+{
+    GeometryEngineAS g(0);
+    auto engine = g.scriptEngine();
+    // unconnect
+    engine->ClearMessageCallback();
+    g.p_->engine = 0;
+    return engine;
+}
+
+
+void GeometryEngineAS::Private::createEngine()
+{
+    int r;
+
+    engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+    MO_ASSERT(engine, "");
+
+    registerDefaultAngelScript(engine);
+
+    r = engine->RegisterGlobalFunction("Geometry@ geometry()",
+                                        asMETHODPR(Private, getGeometryAS, (void), GeometryAS*),
+                                        asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
+}
+
+void GeometryEngineAS::Private::messageCallback(const asSMessageInfo *msg)
+{
+    // XXX sometimes segfaults
+    //errors += QString("\n%1:%2 %3").arg(msg->row).arg(msg->col).arg(msg->message);
+}
+
+void GeometryEngineAS::execute(const QString &qscript)
+{
+    MO_ASSERT(p_->g, "no Geometry given to GeometryEngineAS");
+
+    // --- create a module ---
+
+    auto module = scriptEngine()->GetModule("_geom_module", asGM_ALWAYS_CREATE);
+    if (!module)
+        MO_ERROR("Could not create script module");
+
+//    AngelScriptAutoPtr deleter_(module->GetEngine(), module);
+
+    QByteArray script = qscript.toUtf8();
+    module->AddScriptSection("script", script.data(), script.size());
+
+    p_->errors.clear();
+    p_->engine->SetMessageCallback(asMETHOD(Private, messageCallback), this, asCALL_THISCALL);
+
+    // compile
+    int r = module->Build();
+
+    if (r < 0)
+        MO_ERROR(QObject::tr("Error parsing script") + ":" + p_->errors);
+
+    // --- get main function ---
+
+    asIScriptFunction *func = module->GetFunctionByDecl("void main()");
+    if( func == 0 )
+        MO_ERROR("The script must have the function 'void main()'\n");
+
+    // --- get context for execution
+    if (!p_->context)
+        p_->context = scriptEngine()->CreateContext();
+    else
+        p_->context->Unprepare();
+
+    if (!p_->context)
+        MO_ERROR("Could not create script context");
+
+    //AngelScriptAutoPtr deleter2_(ctx);
+
+    p_->context->Prepare(func);
+    r = p_->context->Execute();
+
+    if( r == asEXECUTION_EXCEPTION )
+        MO_ERROR("An exception occured in the script: " << p_->context->GetExceptionString());
+
+    if( r != asEXECUTION_FINISHED )
+        MO_ERROR("The script ended prematurely");
+}
+
+
+
+
+
 
 
 

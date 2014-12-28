@@ -14,7 +14,7 @@
 #include "io/datastream.h"
 #include "geometry.h"
 #include "geometryfactory.h"
-#include "geometryangelscript.h"
+#include "script/angelscript_geometry.h"
 #include "io/log.h"
 
 namespace MO {
@@ -29,7 +29,10 @@ GeometryModifierAngelScript::GeometryModifierAngelScript()
             "// angelscript test\n\n"
             "void main()\n"
             "{\n"
-                "\taddLine(vec3(0), vec3(1));\n"
+                "\t// get the handle to the current geometry\n"
+                "\tGeometry@ g = geometry();\n"
+                "\t//and do something with it\n"
+                "\tg.addLine(vec3(0), vec3(1));\n"
             "}\n"
             ;
 }
@@ -67,7 +70,7 @@ void GeometryModifierAngelScript::execute(Geometry * g)
 
     try
     {
-        GeometryAngelScript script(g);
+        GeometryEngineAS script(g);
         script.execute(script_);
     }
     catch (const Exception&e)
