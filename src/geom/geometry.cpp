@@ -22,6 +22,7 @@
 #include "math/constants.h"
 #include "math/functions.h"
 #include "math/vector.h"
+#include "math/intersection.h"
 
 using namespace gl;
 
@@ -132,6 +133,25 @@ void Geometry::getExtent(Vec3 * minimum, Vec3 * maximum) const
         *maximum = glm::max(*maximum, getVertex(i));
     }
 }
+
+bool Geometry::intersects(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec3 *pos) const
+{
+    // XXX todo: Test against bounding-box first!
+
+    for (uint i=0; i<numTriangles(); ++i)
+    {
+        const Vec3 t0 = getVertex(triIndex_[i * numTriangleIndexComponents()]),
+                   t1 = getVertex(triIndex_[i * numTriangleIndexComponents() + 1]),
+                   t2 = getVertex(triIndex_[i * numTriangleIndexComponents() + 2]);
+
+        if (MATH::intersect_ray_triangle(ray_origin, ray_direction,
+                                         t0, t1, t2, pos))
+            return true;
+    }
+
+    return false;
+}
+
 
 void Geometry::clear()
 {

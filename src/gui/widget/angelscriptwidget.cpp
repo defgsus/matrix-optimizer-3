@@ -51,6 +51,7 @@ public:
 
     asIScriptEngine * engine;
     asIScriptModule * module;
+    asIScriptContext * context;
 
     SyntaxHighlighter * syn;
 };
@@ -101,6 +102,11 @@ void AngelScriptWidget::Private::createObjects()
 
     module = engine->GetModule("_editor_module", asGM_ALWAYS_CREATE);
     MO_ASSERT(module, "");
+
+    // get a context to execute the prog
+    context = engine->CreateContext();
+    if (!context)
+        MO_ERROR("Could not create script context");
 
     if (!syn)
         syn = new SyntaxHighlighter(widget);
@@ -165,14 +171,13 @@ void AngelScriptWidget::Private::execute()
     if (!module)
         MO_ERROR("Could not create script module");
 
-    AngelScriptAutoPtr deleter_(module->GetEngine(), module);
+//    AngelScriptAutoPtr deleter_(module->GetEngine(), module);
 
     QByteArray script = widget->scriptText().toUtf8();
     module->AddScriptSection("script", script.data(), script.size());
 
     //p_->errors.clear();
     //p_->engine->SetMessageCallback(asMETHOD(Private, messageCallback), this, asCALL_THISCALL);
-    //p_->engine->set
 
     // compile
     int r = module->Build();
@@ -186,18 +191,14 @@ void AngelScriptWidget::Private::execute()
     if( func == 0 )
         MO_ERROR("The script must have the function 'void main()'\n");
 
-    // Create our context, prepare it, and then execute
-    asIScriptContext *ctx = engine->CreateContext();
-    if (!ctx)
-        MO_ERROR("Could not create script context");
+//    AngelScriptAutoPtr deleter2_(ctx);
 
-    AngelScriptAutoPtr deleter2_(ctx);
-
-    ctx->Prepare(func);
-    r = ctx->Execute();
+    context->Unprepare();
+    context->Prepare(func);
+    r = context->Execute();
 
     if( r == asEXECUTION_EXCEPTION )
-        MO_ERROR("An exception occured in the script: " << ctx->GetExceptionString());
+        MO_ERROR("An exception occured in the script: " << context->GetExceptionString());
 
     if( r != asEXECUTION_FINISHED )
         MO_ERROR("The script ended prematurely");

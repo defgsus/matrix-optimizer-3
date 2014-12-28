@@ -271,7 +271,7 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
     // ---------- methods -----------------------
 
 
-    // ------ non-member object functions -------
+    // ------ non-member functions -------
 
     //MO__REG_FUNC("%1 cross(const %1 &in, const %1& in)", vecfunc<Vec>::cross);
     MO__REG_FUNC("%1 reflect(const %1 &in, const %1 &in)", vecfunc<Vec>::reflect);
@@ -286,7 +286,7 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
     MO__REG_FUNC("%1 clamp(const %1 &in, float, float)", vecfunc<Vec>::clamp);
     MO__REG_FUNC("%1 mix(const %1 &in, const %1 &in, float t)", vecfunc<Vec>::mix);
 
-    MO__REG_FUNC("float dot(const %1 &in)", vecfunc<Vec>::dot);
+    MO__REG_FUNC("float dot(const %1 &in, const %1 &in)", vecfunc<Vec>::dot);
     MO__REG_FUNC("float length(const %1 &in)", vecfunc<Vec>::length);
     MO__REG_FUNC("float distance(const %1 &in, const %1 &in)", vecfunc<Vec>::distance);
 

@@ -20,19 +20,17 @@
 
 #include "angelscript_math.h"
 #include "math/advanced.h"
-
+#include "math/intersection.h"
 
 namespace MO {
 
 namespace {
 
+namespace native {
 
 
-//--------------------------------
-// Registration
-//-------------------------------------
 
-static void registerAngelScript_rnd_native(asIScriptEngine *engine)
+static void registerAngelScript_rnd(asIScriptEngine *engine)
 {
     int r;
 
@@ -40,9 +38,14 @@ static void registerAngelScript_rnd_native(asIScriptEngine *engine)
 
     // ----------------- constructor ---------------------------
 
-    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_FACTORY, "Random@ f()", asFUNCTION(RandomAS::factory), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_ADDREF, "void f()", asMETHOD(RandomAS,addRef), asCALL_THISCALL); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_RELEASE, "void f()", asMETHOD(RandomAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_FACTORY,
+        "Random@ f()", asFUNCTION(RandomAS::factory), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_FACTORY,
+        "Random@ f(uint32 seed)", asFUNCTION(RandomAS::factorySeed), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_ADDREF,
+        "void f()", asMETHOD(RandomAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Random", asBEHAVE_RELEASE,
+        "void f()", asMETHOD(RandomAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
 
     // --- interface ---
 
@@ -54,12 +57,53 @@ static void registerAngelScript_rnd_native(asIScriptEngine *engine)
     MO__REG_METHOD("float opCall() const", get);
     MO__REG_METHOD("float opCall(float range) const", getRange);
     MO__REG_METHOD("float opCall(float min, float max) const", getMinMax);
+    MO__REG_METHOD("vec2 vec2() const", getVec3);
+    MO__REG_METHOD("vec2 vec2(float range) const", getVec3Range);
+    MO__REG_METHOD("vec2 vec2(float min, float max) const", getVec3MinMax);
+    MO__REG_METHOD("vec3 vec3() const", getVec3);
+    MO__REG_METHOD("vec3 vec3(float range) const", getVec3Range);
+    MO__REG_METHOD("vec3 vec3(float min, float max) const", getVec3MinMax);
+    MO__REG_METHOD("vec4 vec4() const", getVec3);
+    MO__REG_METHOD("vec4 vec4(float range) const", getVec3Range);
+    MO__REG_METHOD("vec4 vec4(float min, float max) const", getVec3MinMax);
 }
 
 
 
+struct wrapper
+{
+    static bool intersect_ray_sphere(const Vec3& ray_origin,
+                                     const Vec3& ray_direction,
+                                     const Vec3& sphere_center,
+                                     Float sphere_radius)
+    { return MATH::intersect_ray_sphere(ray_origin, ray_direction, sphere_center, sphere_radius); }
 
-static void registerAngelScript_math_native(asIScriptEngine *engine)
+    static bool intersect_ray_sphere_dd(const Vec3& ray_origin,
+                                     const Vec3& ray_direction,
+                                     const Vec3& sphere_center,
+                                     Float sphere_radius,
+                                     Float & depth1,
+                                     Float & depth2)
+    { return MATH::intersect_ray_sphere(ray_origin, ray_direction, sphere_center, sphere_radius, &depth1, &depth2); }
+
+    static bool intersect_ray_triangle(const Vec3& ray_origin,
+                                       const Vec3& ray_direction,
+                                       const Vec3& t0, const Vec3& t1, const Vec3& t2)
+    { return MATH::intersect_ray_triangle(ray_origin, ray_direction, t0,t1,t2); }
+
+    static bool intersect_ray_triangle_p(const Vec3& ray_origin,
+                                         const Vec3& ray_direction,
+                                         const Vec3& t0, const Vec3& t1, const Vec3& t2,
+                                         Vec3& pos)
+    { return MATH::intersect_ray_triangle(ray_origin, ray_direction, t0,t1,t2, &pos); }
+
+    static Vec3 closest_point_on_line(const Vec3& p, const Vec3& a, const Vec3& b)
+        { return MATH::closest_point_on_line(p, a, b); }
+};
+
+
+
+static void registerAngelScript_math(asIScriptEngine *engine)
 {
     int r;
 
@@ -146,18 +190,41 @@ static void registerAngelScript_math_native(asIScriptEngine *engine)
     MO__REG_FUNC("float noise(float, float)", MATH::advanced<float>::noise_2);
     MO__REG_FUNC("float noise(float, float, float)", MATH::advanced<float>::noise_3);
 
+    MO__REG_FUNC("vec3 closest_point_on_line(const vec3 &in point, const vec3 &in lineA, const vec3 &in lineB)",
+                                         wrapper::closest_point_on_line);
+    MO__REG_FUNC("bool intersect_ray_triangle(const vec3 &in ray_origin, "
+                                         "const vec3 &in ray_direction, "
+                                         "const vec3 &in t0, const vec3 &in t1, const vec3 &in t2)",
+                                         wrapper::intersect_ray_triangle);
+    MO__REG_FUNC("bool intersect_ray_triangle(const vec3 &in ray_origin, "
+                                         "const vec3 &in ray_direction, "
+                                         "const vec3 &in t0, const vec3 &in t1, const vec3 &in t2, "
+                                         "vec3 &out pos)",
+                                         wrapper::intersect_ray_triangle_p);
+    MO__REG_FUNC("bool intersect_ray_sphere(const vec3 &in ray_origin, "
+                                         "const vec3 &in ray_direction, "
+                                         "const vec3 &in sphere_center, "
+                                         "float sphere_radius, float &out depth1, float &out depth2)",
+                                         wrapper::intersect_ray_sphere_dd);
+    MO__REG_FUNC("bool intersect_ray_sphere(const vec3 &in ray_origin, "
+                                         "const vec3 &in ray_direction, "
+                                         "const vec3 &in sphere_center, "
+                                         "float sphere_radius)",
+                                         wrapper::intersect_ray_sphere);
 
-    MO__REG_FUNC("int num_div(int)", MATH::advanced_int<int>::num_div);
-    MO__REG_FUNC("int sum_div(int)", MATH::advanced_int<int>::sum_div);
-    MO__REG_FUNC("int prod_div(int)", MATH::advanced_int<int>::prod_div);
-    MO__REG_FUNC("int next_div(int x, int d)", MATH::advanced_int<int>::next_div);
-    MO__REG_FUNC("int harmonic(int, int)", MATH::advanced_int<int>::harmonic_2);
-    MO__REG_FUNC("int harmonic(int, int, int)", MATH::advanced_int<int>::harmonic_3);
+    // ------- integer functions ----------
+
     MO__REG_FUNC("bool is_prime(int)", MATH::advanced_int<int>::is_prime);
     MO__REG_FUNC("bool is_harmonic(int, int)", MATH::advanced_int<int>::is_harmonic_2);
     MO__REG_FUNC("bool is_harmonic(int, int, int)", MATH::advanced_int<int>::is_harmonic_3);
     MO__REG_FUNC("bool is_congruent(int a, int b, int m)", MATH::advanced_int<int>::is_congruent);
+    MO__REG_FUNC("int num_div(int)", MATH::advanced_int<int>::num_div);
+    MO__REG_FUNC("int sum_div(int)", MATH::advanced_int<int>::sum_div);
+    MO__REG_FUNC("int prod_div(int)", MATH::advanced_int<int>::prod_div);
+    MO__REG_FUNC("int next_div(int x, int d)", MATH::advanced_int<int>::next_div);
     MO__REG_FUNC("int gcd(int, int)", MATH::advanced_int<int>::gcd);
+    MO__REG_FUNC("int harmonic(int, int)", MATH::advanced_int<int>::harmonic_2);
+    MO__REG_FUNC("int harmonic(int, int, int)", MATH::advanced_int<int>::harmonic_3);
     MO__REG_FUNC("int factorial(int)", MATH::advanced_int<int>::factorial);
     MO__REG_FUNC("int num_digits(int x, int base)", MATH::advanced_int<int>::num_digits);
     MO__REG_FUNC("int ulam_spiral(int x, int y)", MATH::advanced_int<int>::ulam_spiral);
@@ -169,6 +236,8 @@ static void registerAngelScript_math_native(asIScriptEngine *engine)
 
 }
 
+} // namespace native
+
 } // namespace
 
 void registerAngelScript_math(asIScriptEngine *engine)
@@ -179,8 +248,8 @@ void registerAngelScript_math(asIScriptEngine *engine)
     }
     else
     {
-        registerAngelScript_math_native(engine);
-        registerAngelScript_rnd_native(engine);
+        native::registerAngelScript_math(engine);
+        native::registerAngelScript_rnd(engine);
     }
 }
 

@@ -82,6 +82,9 @@ public:
     Vec2 texCoordI(uint i) const { return i >= g->numVertices() ? Vec2(0) : g->getTexCoord(i); }
     Vec4 colorI(uint i) const { return i >= g->numVertices() ? Vec4(0) : g->getColor(i); }
 
+    bool intersects(const Vec3& ray, const Vec3& dir) { return g->intersects(ray, dir); }
+    bool intersects_p(const Vec3& ray, const Vec3& dir, Vec3& pos) { return g->intersects(ray, dir, &pos); }
+
     // ---- setter ----
 
     void setName(const StringAS& n) { p_name = n; }
@@ -112,6 +115,8 @@ public:
     void createBox3v(const Vec3& s) { GEOM::GeometryFactory::createBox(g, s.x, s.y, s.z, true); }
     void createSphere2(uint segu, uint segv) { GEOM::GeometryFactory::createUVSphere(g, 1, segu, segv, true); }
     void createSphere3(float rad, uint segu, uint segv) { GEOM::GeometryFactory::createUVSphere(g, rad, segu, segv, true); }
+    void createTorus4(float rad_outer, float rad_inner, uint segu, uint segv)
+        { GEOM::GeometryFactory::createTorus(g, rad_outer, rad_inner, segu, segv, true); }
 
 #define MO__IDX(i__) (i__ < g->numVertices())
 
@@ -240,6 +245,9 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("vec3 normal(uint vertex_index) const", normalI);
     MO__REG_METHOD("vec2 texCoord(uint vertex_index) const", texCoordI);
 
+    MO__REG_METHOD("bool intersects(const vec3 &in ray_pos, const vec3 &in ray_dir) const", intersects);
+    MO__REG_METHOD("bool intersects(const vec3 &in ray_pos, const vec3 &in ray_dir, vec3 &out hit_pos) const", intersects_p);
+
     // setter
     MO__REG_METHOD("void clear()", clear);
     MO__REG_METHOD("void calculateNormals()", calculateNormals);
@@ -270,6 +278,8 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("void addQuad(uint bl, uint br, uint tr, uint tl)", addQuadI);
     MO__REG_METHOD("void addGeometry(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void addGeometry(const Geometry &in, const vec3 &in)", addGeometryP);
+    MO__REG_METHOD("void add(const Geometry &in)", addGeometry);
+    MO__REG_METHOD("void add(const Geometry &in, const vec3 &in)", addGeometryP);
     MO__REG_METHOD("void addText(const string &in)", addText);
     MO__REG_METHOD("void addText(const string &in, const vec3 &in)", addTextP);
 
@@ -283,8 +293,9 @@ static void registerAngelScript_geometry_native(asIScriptEngine *engine)
     MO__REG_METHOD("void createBox(const vec3 &in sidelengths)", createBox3v);
     MO__REG_METHOD("void createSphere(uint segments_u = 12, uint segments_v = 12)", createSphere2);
     MO__REG_METHOD("void createSphere(float radius, uint segments_u = 12, uint segments_v = 12)", createSphere3);
+    MO__REG_METHOD("void createTorus(float radius_outer, float radius_inner, uint segments_u = 12, uint segments_v = 12)",
+                   createTorus4);
 
-    MO__REG_METHOD("void add(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void rotate(const vec3 &in axis, float degree)", rotate);
     MO__REG_METHOD("void rotateX(float degree)", rotateX);
     MO__REG_METHOD("void rotateY(float degree)", rotateY);

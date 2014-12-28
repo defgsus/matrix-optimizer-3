@@ -117,7 +117,7 @@ void GeometryAngelScript::Private::createEngine()
     engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
     MO_ASSERT(engine, "");
 
-    registerDefaultAngelscript(engine);
+    registerDefaultAngelScript(engine);
 
     r = engine->RegisterGlobalFunction("void setShared(bool b)",
                                         asMETHODPR(Private, setShared, (bool), void),

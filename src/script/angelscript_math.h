@@ -15,6 +15,8 @@
 
 #include <random>
 
+#include "types/vector.h"
+
 class asIScriptEngine;
 
 namespace MO {
@@ -30,10 +32,11 @@ class RandomAS
 
 public:
 
-    RandomAS() : twister(0), ref(1) { }
+    RandomAS(uint32_t seed = 0) : twister(seed), ref(1) { }
 
     // --- factory ---
     static RandomAS * factory() { return new RandomAS(); }
+    static RandomAS * factorySeed(uint32_t s) { return new RandomAS(s); }
     void addRef() { ++ref; }
     void releaseRef() { if (--ref == 0) delete this; }
 
@@ -46,6 +49,16 @@ public:
     float get() { return float(twister()) / twister.max(); }
     float getRange(float r) { return float(twister()) / twister.max() * r; }
     float getMinMax(float mi, float ma) { return mi + float(twister()) / twister.max() * (ma - mi); }
+
+    Vec2 getVec2() { return Vec2(get(), get()); }
+    Vec2 getVec2Range(float r) { return Vec2(getRange(r), getRange(r)); }
+    Vec2 getVec2MinMax(float mi, float ma) { return Vec2(getMinMax(mi,ma), getMinMax(mi,ma)); }
+    Vec3 getVec3() { return Vec3(get(), get(), get()); }
+    Vec3 getVec3Range(float r) { return Vec3(getRange(r), getRange(r), getRange(r)); }
+    Vec3 getVec3MinMax(float mi, float ma) { return Vec3(getMinMax(mi,ma), getMinMax(mi,ma), getMinMax(mi,ma)); }
+    Vec4 getVec4() { return Vec4(get(), get(), get(), get()); }
+    Vec4 getVec4Range(float r) { return Vec4(getRange(r), getRange(r), getRange(r), getRange(r)); }
+    Vec4 getVec4MinMax(float mi, float ma) { return Vec4(getMinMax(mi,ma), getMinMax(mi,ma), getMinMax(mi,ma), getMinMax(mi,ma)); }
 };
 
 

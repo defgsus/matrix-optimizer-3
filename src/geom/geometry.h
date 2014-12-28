@@ -128,6 +128,11 @@ public:
     /** Returns the minimum and maximum vertex coordinates */
     void getExtent(Vec3 * minimum, Vec3 * maximum) const;
 
+    /** Returns true when the ray intersects with a triangle of the geometry.
+        If @p pos is given, it will be set to the intersection position.
+        @note Not terribly efficient */
+    bool intersects(const Vec3& ray_origin, const Vec3& ray_direction, Vec3 * pos = 0) const;
+
     // -------------- setter -----------------
 
     /** Returns a pointer to numVertices() * 3 coordinates */

@@ -23,6 +23,8 @@
 #include "3rd/angelscript/scriptarray/scriptarray.h"
 #include "3rd/angelscript/scriptstdstring/scriptstdstring.h"
 #include "io/log.h"
+#include "io/error.h"
+#include "io/xmlstream.h"
 
 namespace MO {
 
@@ -56,14 +58,15 @@ namespace {
 
 } // namespace
 
-void registerDefaultAngelscript(asIScriptEngine * engine)
+void registerDefaultAngelScript(asIScriptEngine * engine)
 {
     RegisterStdString(engine);
     RegisterScriptArray(engine, true);
     RegisterScriptMathComplex(engine);
 
-    registerAngelScript_math(engine);
+    //engine->SetDefaultNamespace("MO");
     registerAngelScript_vector(engine);
+    registerAngelScript_math(engine);
     registerAngelScript_object(engine);
     registerAngelScript_geometry(engine);
 
@@ -73,6 +76,107 @@ void registerDefaultAngelscript(asIScriptEngine * engine)
 
     int r = engine->RegisterGlobalFunction("void print(const string & in)", asFUNCTION(angelPrint), asCALL_CDECL); assert( r >= 0 );
 }
+
+
+namespace {
+
+    void exportFunc(IO::XmlStream & xml, asIScriptFunction * func)
+    {
+        const QString
+                name = QString::fromUtf8(func->GetName()),
+                decl = QString::fromUtf8(func->GetDeclaration(true, false, true)),
+                doc = "";
+
+        xml.newSection("function");
+        xml.write("name", name);
+        xml.write("decl", decl);
+        xml.write("doc", doc);
+        xml.endSection();
+    }
+
+}
+
+void exportAngelScriptFunctions(const QString & filename)
+{
+    IO::XmlStream xml;
+    /*
+    QFile file(filename);
+    if (!file.open(QFile::WriteOnly))
+    {
+        MO_IO_ERROR(WRITE, "Can't open for writing '" << filename << "'\n" << file.errorString());
+    }
+
+    QTextStream stream(&file);
+    */
+
+    xml.startWriting("mo-angelscript-doc");
+
+    asIScriptEngine * engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+    AngelScriptAutoPtr deleter_(engine);
+
+    registerDefaultAngelScript(engine);
+
+    //auto module = engine->GetModule();
+
+    // global functions
+    for (asUINT i=0; i<engine->GetGlobalFunctionCount(); ++i)
+    {
+        asIScriptFunction * func = engine->GetGlobalFunctionByIndex(i);
+        MO_ASSERT(func, "function " << i << " not found");
+        exportFunc(xml, func);
+    }
+
+    // object types
+    for (asUINT i=0; i<engine->GetObjectTypeCount(); ++i)
+    {
+        asIObjectType* obj = engine->GetObjectTypeByIndex(i);
+        const QString
+                name = QString::fromUtf8(obj->GetName()),
+                doc = "";
+
+        xml.newSection("object");
+        xml.write("name", name);
+        xml.write("doc", doc);
+
+        // object properties
+        for (asUINT j=0; j<obj->GetPropertyCount(); ++j)
+        {
+            const char * name, * decl;
+            obj->GetProperty(j, &name);
+            decl = obj->GetPropertyDeclaration(j);
+            const QString doc = "";
+
+            xml.newSection("property");
+            xml.write("name", QString::fromUtf8(name));
+            xml.write("decl", QString::fromUtf8(decl));
+            xml.write("doc", doc);
+            xml.endSection();
+        }
+
+        // object behaviours (c/dtors)
+        for (asUINT j=0; j<obj->GetBehaviourCount(); ++j)
+        {
+            asIScriptFunction * func = obj->GetBehaviourByIndex(j, 0);
+            MO_ASSERT(func, "behaviour " << i << " not found");
+            exportFunc(xml, func);
+        }
+
+        // object methods
+        for (asUINT j=0; j<obj->GetMethodCount(); ++j)
+        {
+            asIScriptFunction * func = obj->GetMethodByIndex(j);
+            MO_ASSERT(func, "function " << i << " not found");
+            exportFunc(xml, func);
+        }
+
+
+        xml.endSection();
+    }
+
+    xml.stopWriting();
+    xml.save(filename);
+}
+
 
 } // namespace MO
 

@@ -540,7 +540,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         });
 
 #ifndef MO_DISABLE_ANGELSCRIPT
-        a = new QAction(tr("Angelscript test"), m);
+        a = new QAction(tr("AngelScript test"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
@@ -552,7 +552,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             auto l = new QVBoxLayout(diag);
 
             auto script = new AngelScriptWidget(diag);
-            registerDefaultAngelscript( script->scriptEngine() );
+            registerDefaultAngelScript( script->scriptEngine() );
             registerAngelScript_rootObject( script->scriptEngine(), scene_ );
 
             l->addWidget(script);
@@ -566,6 +566,13 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             l->addWidget(but);
             connect(but, SIGNAL(clicked()), script, SLOT(executeScript()));
             diag->show();
+        });
+
+        a = new QAction(tr("export AngelScript namespace"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            exportAngelScriptFunctions("./angelscript_export.xml");
         });
 #endif
 

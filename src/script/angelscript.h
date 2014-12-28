@@ -29,7 +29,10 @@ StringAS toStringAS(const QString&);
 
 
 /** Registers all default types and functions. */
-void registerDefaultAngelscript(asIScriptEngine *);
+void registerDefaultAngelScript(asIScriptEngine *);
+
+/** Exports all functions available to a xml file */
+void exportAngelScriptFunctions(const QString& filename);
 
 class AngelScriptAutoPtr
 {
@@ -38,6 +41,13 @@ public:
     AngelScriptAutoPtr(asIScriptEngine * e, asIScriptModule*m)
         : p_engine  (e),
           p_module  (m),
+          p_context (0)
+    { }
+
+    /** Binds an engine for Release() */
+    AngelScriptAutoPtr(asIScriptEngine * e)
+        : p_engine  (e),
+          p_module  (0),
           p_context (0)
     { }
 
@@ -52,6 +62,8 @@ public:
     {
         if (p_module && p_engine)
             p_engine->DiscardModule(p_module->GetName());
+        if (p_engine)
+            p_engine->Release();
         if (p_context)
             p_context->Release();
     }
