@@ -13,6 +13,7 @@
 #include <cassert>
 #include <cstring> // strstr
 #include <string>
+#include <sstream>
 
 #include <QString>
 
@@ -32,11 +33,14 @@ namespace MO {
 
 namespace {
 
+/** Ref-counted wrapper of MATH::Timeline1D for AngelScript */
 class Timeline1AS
 {
     MATH::Timeline1D * tl;
     int ref;
 public:
+
+    typedef MATH::Timeline1D WrappedClass;
 
     // --- factory ---
 
@@ -63,13 +67,42 @@ public:
 
     // ------ interface -------
 
-    std::string toString() const { return "Timeline()"; }
+    std::string toString() const
+    {
+        std::stringstream s;
+        s << "Timeline(";
+        auto data = tl->getData();
+        int type = -1;
+        bool first = true;
+        for (auto & p : data)
+        {
+            if (!first)
+                s << ", ";
+            first = false;
+            s << p.second.t << ":" << p.second.val;
+            if (int(p.second.type) != type)
+            {
+                type = p.second.type;
+                s << " " << WrappedClass::Point::getName(p.second.type);
+            }
+        }
+        s << ")";
+        return s.str();
+    }
     uint count() const { return tl->size(); }
     double value(double time) const { return tl->get(time); }
 
     void clear() { tl->clear(); }
     void add(double time, double value) { tl->add(time, value); }
+    void addType(double time, double value, WrappedClass::Point::Type type) { tl->add(time, value, type); }
+    void changeType(WrappedClass::Point::Type type)
+    {
+        auto & data = tl->getData();
+        for (auto & p : data)
+            p.second.type = type;
+    }
 };
+
 
 namespace native {
 
@@ -82,12 +115,28 @@ namespace native {
     r = engine->RegisterObjectMethod(typ, MO__STR(decl__), asMETHOD(Class,name__), asCALL_THISCALL); assert( r >= 0 );
 
 
+void register_timeline_enums(asIScriptEngine * engine)
+{
+    std::string enumType = "TimelinePointType";
+    int r;
+    r = engine->RegisterEnum(enumType.c_str()); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_CONSTANT",  MATH::Timeline1D::Point::CONSTANT); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_LINEAR",    MATH::Timeline1D::Point::LINEAR); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SMOOTH",    MATH::Timeline1D::Point::SMOOTH); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SYMMETRIC", MATH::Timeline1D::Point::SYMMETRIC); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_HERMITE",   MATH::Timeline1D::Point::SYMMETRIC2); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4",   MATH::Timeline1D::Point::SPLINE4_SYM); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4_2", MATH::Timeline1D::Point::SPLINE4); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE6",   MATH::Timeline1D::Point::SPLINE6); assert( r >= 0 );
+}
+
 template <class Class>
 void register_timeline_tmpl(asIScriptEngine * engine, const char * typ, const char * holdtyp)
 {
     int r;
 
-    // register the type
+    // ------- register the type -------------------------------
+
     r = engine->RegisterObjectType(typ, 0, asOBJ_REF); assert( r >= 0 );
 
     // ----------------- constructor ---------------------------
@@ -109,7 +158,9 @@ void register_timeline_tmpl(asIScriptEngine * engine, const char * typ, const ch
 
     // setter
     MO__REG_METHOD("void clear()", clear);
-    MO__REG_METHOD("void add(double time, %2 value) const", add);
+    MO__REG_METHOD("void add(double time, %2 value)", add);
+    MO__REG_METHOD("void add(double time, %2 value, TimelinePointType type)", addType);
+    MO__REG_METHOD("void changeType(TimelinePointType type)", changeType);
 }
 
 #undef MO__REG_METHOD
@@ -128,6 +179,7 @@ void registerAngelScript_timeline(asIScriptEngine *engine)
     }
     else
     {
+        native::register_timeline_enums(engine);
         native::register_timeline_tmpl<Timeline1AS>(engine, "Timeline1", "double");
     }
 }

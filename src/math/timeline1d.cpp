@@ -28,10 +28,10 @@ const char *Timeline1D::Point::getName(Point::Type type)
         case Timeline1D::Point::DEFAULT:     return "default";    break;
         case Timeline1D::Point::CONSTANT:    return "constant";   break;
         case Timeline1D::Point::LINEAR:      return "linear";     break;
-        case Timeline1D::Point::SMOOTH:      return "smooth";     break;
-        case Timeline1D::Point::SYMMETRIC:   return "symmetric";  break;
+        case Timeline1D::Point::SMOOTH:      return "smooth*";    break;
+        case Timeline1D::Point::SYMMETRIC:   return "symmetric*"; break;
         case Timeline1D::Point::SYMMETRIC2:  return "hermite";    break;
-        case Timeline1D::Point::SPLINE4_SYM: return "symmetric4"; break;
+        case Timeline1D::Point::SPLINE4_SYM: return "symmetric4*";break;
         case Timeline1D::Point::SPLINE4:     return "spline4";    break;
         case Timeline1D::Point::SPLINE6:     return "spline6";    break;
     }
@@ -478,7 +478,7 @@ Timeline1D::Point* Timeline1D::add(Point &p)
 
 Timeline1D::Point::Type Timeline1D::currentType_(Double time)
 {
-    if (data_.empty()) return Point::SYMMETRIC;
+    if (data_.empty()) return Point::SPLINE4_SYM;
 
     TpList::iterator i = first(time);
     if (i==data_.end()) i--;

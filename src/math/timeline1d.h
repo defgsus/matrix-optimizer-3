@@ -168,6 +168,7 @@ class Timeline1D
 
     /** return the reference on the data point structure */
     TpList &getData() { return data_; }
+    const TpList &getData() const { return data_; }
 
     /** returns the TpList::iterator for a point at time 't',
         or data_.end() if there is no point */

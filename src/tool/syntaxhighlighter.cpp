@@ -200,9 +200,15 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
 {
     QStringList vars, funcs, types, reserved;
 
-    for (asUINT i=0; i<mod->GetEnumCount(); ++i)
+    asIScriptEngine * engine = mod->GetEngine();
+
+    for (asUINT i=0; i<engine->GetEnumCount(); ++i)
     {
-        vars << QString( mod->GetEnumByIndex(i, 0) );
+        int typeId;
+        types << QString( engine->GetEnumByIndex(i, &typeId) );
+
+        for (int j=0; j < engine->GetEnumValueCount(typeId); ++j)
+            vars << QString( engine->GetEnumValueByIndex(typeId, j, 0) );
     }
 
     for (asUINT i=0; i<mod->GetGlobalVarCount(); ++i)
@@ -217,16 +223,16 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
         types << QString( mod->GetObjectTypeByIndex(i)->GetName() );
     }
 
-    for (asUINT i=0; i<mod->GetEngine()->GetObjectTypeCount(); ++i)
+    for (asUINT i=0; i<engine->GetObjectTypeCount(); ++i)
     {
-        types << QString( mod->GetEngine()->GetObjectTypeByIndex(i)->GetName() );
+        types << QString( engine->GetObjectTypeByIndex(i)->GetName() );
     }
 
-    for (asUINT i=0; i<mod->GetEngine()->GetGlobalPropertyCount(); ++i)
+    for (asUINT i=0; i<engine->GetGlobalPropertyCount(); ++i)
     {
         const char * name;
         //bool isConst;
-        mod->GetEngine()->GetGlobalPropertyByIndex(i, &name);//, 0, 0, &isConst);
+        engine->GetGlobalPropertyByIndex(i, &name);//, 0, 0, &isConst);
         vars << name;
     }
 
@@ -241,9 +247,9 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
         funcs << QString( mod->GetFunctionByIndex(i)->GetName() );
     }
 
-    for (asUINT i=0; i<mod->GetEngine()->GetGlobalFunctionCount(); ++i)
+    for (asUINT i=0; i < engine->GetGlobalFunctionCount(); ++i)
     {
-        funcs << QString( mod->GetEngine()->GetGlobalFunctionByIndex(i)->GetName() );
+        funcs << QString( engine->GetGlobalFunctionByIndex(i)->GetName() );
     }
 
     types << "void" << "float" << "double" << "bool"
