@@ -26,9 +26,24 @@ namespace MO {
 namespace MATH {
 
 
-    // ------- wrapper for glm functions that take an angle ---------
 
 #if GLM_VERSION >= 95
+
+    /** Returns the area of a triangle given by three corners */
+    template <typename T, glm::precision P>
+    T triangle_area(const glm::detail::tvec3<T, P>& v1,
+                    const glm::detail::tvec3<T, P>& v2,
+                    const glm::detail::tvec3<T, P>& v3)
+    {
+        const T edge1 = glm::distance(v1, v2),
+                edge2 = glm::distance(v2, v3),
+                edge3 = glm::distance(v3, v1),
+                s = (edge1 + edge2 + edge3) * T(0.5);
+        return std::sqrt( s * (s-edge1) * (s-edge2) * (s-edge3) );
+    }
+
+
+    // ------- wrapper for glm functions that take an angle ---------
 
     template <typename T, glm::precision P>
     glm::detail::tmat4x4<T, P> rotate(glm::detail::tmat4x4<T, P> const & m,

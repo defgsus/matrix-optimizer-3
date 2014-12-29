@@ -29,17 +29,17 @@
 
 
 /* Here we register vec2,vec3,vec4 and (currently) mat3 and mat4 types
-   and their associated functions for AngelScript.
+   and their associated functions for AngelScript (a.t.m. float only).
    The structure of this file is a littlebit complicated. There's a lot
-   of template and macro magic, simpily to not having to write the same stuff
-   over and over again. */
+   of template and macro magic, simpily to not having to write almost the
+   same stuff multiple times. */
 
 namespace MO {
 
 namespace {
 
 /** Simple traits class to unify some functions for all vector types.
-    (Sure there is something in glm for this as well */
+    (Sure there is something in glm for this as well) */
 template <class V> struct vectraits;
 template <>
 struct vectraits<Vec2> { static const int num = 2; };
@@ -181,17 +181,23 @@ struct vecfunc
 
     // ------- color conv -------
 
-    static Vec toVecRgb3(const QColor& c) { return Vec(c.redF(), c.greenF(), c.blueF()); }
-    static Vec toVecHsv3(const QColor& c) { return Vec(c.hueF(), c.saturationF(), c.valueF()); }
-    static Vec hsv2rgb_3(const Vec& c) { return toVecRgb3(QColor::fromHsvF(MATH::moduloSigned(c.x, Float(1)),
-                                                                           glm::clamp(c.y, Float(0), Float(1)),
-                                                                           glm::clamp(c.z, Float(0), Float(1)))); }
-    static Vec rgb2hsv_3(const Vec& c) { return toVecHsv3(QColor::fromRgbF(glm::clamp(c.x, Float(0), Float(1)),
-                                                                           glm::clamp(c.y, Float(0), Float(1)),
-                                                                           glm::clamp(c.z, Float(0), Float(1)))); }
-
+    static Vec3 toVecRgb3(const QColor& c) { return Vec(c.redF(), c.greenF(), c.blueF()); }
+    static Vec3 toVecHsv3(const QColor& c) { return Vec(c.hueF(), c.saturationF(), c.valueF()); }
     static Vec4 toVecRgb4(const QColor& c) { return Vec4(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
     static Vec4 toVecHsv4(const QColor& c) { return Vec4(c.hueF(), c.saturationF(), c.valueF(), c.alphaF()); }
+
+    static Vec3 hsv2rgb_3f(float r, float g, float b) { return hsv2rgb_3(Vec3(r,g,b)); }
+    static Vec4 hsv2rgb_4f(float r, float g, float b, float a) { return hsv2rgb_4(Vec4(r,g,b,a)); }
+    static Vec3 rgb2hsv_3f(float r, float g, float b) { return rgb2hsv_3(Vec3(r,g,b)); }
+    static Vec4 rgb2hsv_4f(float r, float g, float b, float a) { return rgb2hsv_4(Vec4(r,g,b,a)); }
+
+    static Vec3 hsv2rgb_3(const Vec3& c) { return toVecRgb3(QColor::fromHsvF(MATH::moduloSigned(c.x, Float(1)),
+                                                                            glm::clamp(c.y, Float(0), Float(1)),
+                                                                            glm::clamp(c.z, Float(0), Float(1)))); }
+    static Vec3 rgb2hsv_3(const Vec3& c) { return toVecHsv3(QColor::fromRgbF(glm::clamp(c.x, Float(0), Float(1)),
+                                                                            glm::clamp(c.y, Float(0), Float(1)),
+                                                                            glm::clamp(c.z, Float(0), Float(1)))); }
+
     static Vec4 hsv2rgb_4(const Vec4& c) { return toVecRgb4(QColor::fromHsvF(MATH::moduloSigned(c.x, Float(1)),
                                                                            glm::clamp(c.y, Float(0), Float(1)),
                                                                            glm::clamp(c.z, Float(0), Float(1)),
@@ -384,6 +390,11 @@ void register_vector_3(asIScriptEngine *engine)
 
     MO__REG_FUNC("%1 hsv2rgb(const %1 &in)", vecfunc<Vec3>::hsv2rgb_3);
     MO__REG_FUNC("%1 rgb2hsv(const %1 &in)", vecfunc<Vec3>::rgb2hsv_3);
+    MO__REG_FUNC("%1 hsv2rgb(float h, float s, float v)", vecfunc<Vec3>::hsv2rgb_3f);
+    MO__REG_FUNC("%1 hsv2rgb(float h, float s, float v, float alpha)", vecfunc<Vec3>::hsv2rgb_4f);
+    MO__REG_FUNC("%1 rgb2hsv(float r, float g, float b)", vecfunc<Vec3>::rgb2hsv_3f);
+    MO__REG_FUNC("%1 rgb2hsv(float r, float g, float b, float alpha)", vecfunc<Vec3>::rgb2hsv_4f);
+
     MO__REG_FUNC("%1 cross(const %1 &in, const %1 &in)", vecfunc<Vec3>::cross);
 
     MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec3>::noisef_3);

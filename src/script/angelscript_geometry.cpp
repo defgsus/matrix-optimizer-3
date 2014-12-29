@@ -79,6 +79,19 @@ public:
 
     Vec3 normal() const { return isValid() ? glm::normalize(glm::cross(v2-v1, v3-v1)) : Vec3(0,0,1); }
     Vec3 center() const { return (v1 + v2 + v3) / 3.f; }
+    float area() const { return MATH::triangle_area(v1, v2, v3); }
+
+    const Vec3& vertex(uint i) const { return i == 1 ? v2 : i == 2 ? v3 : v1; }
+
+    uint longestEdge() const
+    {
+        uint l = 0;
+        Float d0 = glm::distance(v1, v2),
+              d1 = glm::distance(v2, v3);
+        if (d1 > d0) { l = 1; d0 = d1; }
+              d1 = glm::distance(v3, v1);
+        return (d1 > d0) ? 2 : l;
+    }
 };
 
 
@@ -322,6 +335,9 @@ static void registerAngelScript_triangle(asIScriptEngine *engine)
     MO__REG_TRUE_METHOD("bool isValid() const", asMETHOD(TriangleAS, isValid));
     MO__REG_TRUE_METHOD("vec3 normal() const", asMETHOD(TriangleAS, normal));
     MO__REG_TRUE_METHOD("vec3 center() const", asMETHOD(TriangleAS, center));
+    MO__REG_TRUE_METHOD("float area() const", asMETHOD(TriangleAS, area));
+    MO__REG_TRUE_METHOD("const vec3& vertex(uint i) const", asMETHOD(TriangleAS, vertex));
+    MO__REG_TRUE_METHOD("uint longestEdge() const", asMETHOD(TriangleAS, longestEdge));
 
 #undef MO__REG_TRUE_METHOD
 }
