@@ -183,6 +183,17 @@ class Timeline1D
             i = data_.find(h-1);
         return i;
     }
+    TpList::const_iterator find(Double t) const
+    {
+        const TpHash h = hash(t);
+        auto i = data_.find(h);
+        // must check left and right because of rounding
+        if (i==data_.end())
+            i = data_.find(h+1);
+        if (i==data_.end())
+            i = data_.find(h-1);
+        return i;
+    }
 
     /** return the TpList::iterator of the next point after time 't',
         or data_.end() if none there. <br>

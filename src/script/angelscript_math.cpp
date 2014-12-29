@@ -57,6 +57,12 @@ static void registerAngelScript_rnd(asIScriptEngine *engine)
     MO__REG_METHOD("float opCall() const", get);
     MO__REG_METHOD("float opCall(float range) const", getRange);
     MO__REG_METHOD("float opCall(float min, float max) const", getMinMax);
+    MO__REG_METHOD("uint32 uint() const", getUInt);
+    MO__REG_METHOD("uint32 uint(uint32 range) const", getUIntRange);
+    MO__REG_METHOD("uint32 uint(uint32 min, uint32 max) const", getUIntMinMax);
+    MO__REG_METHOD("int32 int() const", getInt);
+    MO__REG_METHOD("int32 int(uint32 range) const", getIntRange);
+    MO__REG_METHOD("int32 int(int32 min, int32 max) const", getIntMinMax);
     MO__REG_METHOD("vec2 vec2() const", getVec3);
     MO__REG_METHOD("vec2 vec2(float range) const", getVec3Range);
     MO__REG_METHOD("vec2 vec2(float min, float max) const", getVec3MinMax);
@@ -218,6 +224,7 @@ static void registerAngelScript_math(asIScriptEngine *engine)
     MO__REG_FUNC("bool is_harmonic(int, int)", MATH::advanced_int<int>::is_harmonic_2);
     MO__REG_FUNC("bool is_harmonic(int, int, int)", MATH::advanced_int<int>::is_harmonic_3);
     MO__REG_FUNC("bool is_congruent(int a, int b, int m)", MATH::advanced_int<int>::is_congruent);
+    MO__REG_FUNC("int quant(int, int)", MATH::advanced_int<int>::quant);
     MO__REG_FUNC("int num_div(int)", MATH::advanced_int<int>::num_div);
     MO__REG_FUNC("int sum_div(int)", MATH::advanced_int<int>::sum_div);
     MO__REG_FUNC("int prod_div(int)", MATH::advanced_int<int>::prod_div);

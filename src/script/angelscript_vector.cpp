@@ -80,9 +80,9 @@ struct vecfunc
     static void vecConvConstructor(Vec *self, Float x) { new(self) Vec(x); }
     template <typename V>
     static void vecConvConstructorVec(Vec *self, const V& v) { new(self) Vec(v); }
-    static void vecConvConstructorVec32(Vec3 *self, const Vec2& v) { new(self) Vec3(v.x, v.y, 0); }
-    static void vecConvConstructorVec42(Vec4 *self, const Vec2& v) { new(self) Vec4(v.x, v.y, 0, 0); }
-    static void vecConvConstructorVec43(Vec4 *self, const Vec3& v) { new(self) Vec4(v.x, v.y, v.z, 0); }
+    static void vecConvConstructorVec32(Vec3 *self, const Vec2& v, float z) { new(self) Vec3(v.x, v.y, z); }
+    static void vecConvConstructorVec42(Vec4 *self, const Vec2& v, float z, float w) { new(self) Vec4(v.x, v.y, z, w); }
+    static void vecConvConstructorVec43(Vec4 *self, const Vec3& v, float w) { new(self) Vec4(v.x, v.y, v.z, w); }
 
     static Vec& assignFloat(Vec * self, Float f) { for (int i=0; i<vectraits<Vec>::num; ++i) (*self)[i] = f; return *self; }
 
@@ -372,7 +372,7 @@ void register_vector_3(asIScriptEngine *engine)
         "void f(const int &in) {float, float, float}",
         asFUNCTION(vecfunc<Vec3>::vecListConstructor3), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,
-        "void f(const vec2 &in)",
+        "void f(const vec2 &in xy, float z = 0)",
         asFUNCTION(vecfunc<Vec3>::vecConvConstructorVec32), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("vec3", asBEHAVE_CONSTRUCT,
         "void f(const vec4 &in)",
@@ -389,11 +389,11 @@ void register_vector_3(asIScriptEngine *engine)
     // ------------------ non-member functions --------
 
     MO__REG_FUNC("%1 hsv2rgb(const %1 &in)", vecfunc<Vec3>::hsv2rgb_3);
-    MO__REG_FUNC("%1 rgb2hsv(const %1 &in)", vecfunc<Vec3>::rgb2hsv_3);
     MO__REG_FUNC("%1 hsv2rgb(float h, float s, float v)", vecfunc<Vec3>::hsv2rgb_3f);
-    MO__REG_FUNC("%1 hsv2rgb(float h, float s, float v, float alpha)", vecfunc<Vec3>::hsv2rgb_4f);
+    MO__REG_FUNC("%1 rgb2hsv(const %1 &in)", vecfunc<Vec3>::rgb2hsv_3);
     MO__REG_FUNC("%1 rgb2hsv(float r, float g, float b)", vecfunc<Vec3>::rgb2hsv_3f);
-    MO__REG_FUNC("%1 rgb2hsv(float r, float g, float b, float alpha)", vecfunc<Vec3>::rgb2hsv_4f);
+    MO__REG_FUNC("%1 hsv(const %1 &in)", vecfunc<Vec3>::rgb2hsv_3);
+    MO__REG_FUNC("%1 hsv(float r, float g, float b)", vecfunc<Vec3>::rgb2hsv_3f);
 
     MO__REG_FUNC("%1 cross(const %1 &in, const %1 &in)", vecfunc<Vec3>::cross);
 
@@ -442,10 +442,10 @@ void register_vector_4(asIScriptEngine *engine)
         "void f(const int &in) { float, float, float, float }",
         asFUNCTION(vecfunc<Vec4>::vecListConstructor4), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT,
-        "void f(const vec2 &in)",
+        "void f(const vec2 &in xy, float z = 0, float w = 0)",
         asFUNCTION(vecfunc<Vec4>::vecConvConstructorVec42), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("vec4", asBEHAVE_CONSTRUCT,
-        "void f(const vec3 &in)",
+        "void f(const vec3 &in xyz, float w = 0)",
         asFUNCTION(vecfunc<Vec4>::vecConvConstructorVec43), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
     // ------------ properties ---------
@@ -459,12 +459,16 @@ void register_vector_4(asIScriptEngine *engine)
 
     // --------------------- methods ------------------
 
-    MO__REG_FUNC("%1 hsv2rgb(const %1 &in)", vecfunc<Vec3>::hsv2rgb_4);
-    MO__REG_FUNC("%1 rgb2hsv(const %1 &in)", vecfunc<Vec3>::rgb2hsv_4);
+    MO__REG_FUNC("%1 hsv2rgb(const %1 &in)", vecfunc<Vec4>::hsv2rgb_4);
+    MO__REG_FUNC("%1 hsv2rgb(float h, float s, float v, float alpha)", vecfunc<Vec4>::hsv2rgb_4f);
+    MO__REG_FUNC("%1 rgb2hsv(const %1 &in)", vecfunc<Vec4>::rgb2hsv_4);
+    MO__REG_FUNC("%1 rgb2hsv(float r, float g, float b, float alpha)", vecfunc<Vec4>::rgb2hsv_4f);
+    MO__REG_FUNC("%1 hsv(const %1 &in)", vecfunc<Vec4>::rgb2hsv_4);
+    MO__REG_FUNC("%1 hsv(float r, float g, float b, float alpha)", vecfunc<Vec4>::rgb2hsv_4f);
 
     // ------------------ non-member functions --------
 
-    MO__REG_FUNC("%1 noise4(float)", vecfunc<Vec3>::noisev4_1);
+    MO__REG_FUNC("%1 noise4(float)", vecfunc<Vec4>::noisev4_1);
 }
 
 

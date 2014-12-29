@@ -20,6 +20,7 @@
 #include "angelscript_timeline.h"
 #include "angelscript.h"
 #include "math/timeline1d.h"
+#include "types/vector.h"
 #include "io/log.h"
 
 
@@ -70,8 +71,8 @@ public:
     std::string toString() const
     {
         std::stringstream s;
-        s << "Timeline(";
-        auto data = tl->getData();
+        s << "Timeline1(";
+        const auto & data = tl->getData();
         int type = -1;
         bool first = true;
         for (auto & p : data)
@@ -93,6 +94,7 @@ public:
     double value(double time) const { return tl->get(time); }
 
     void clear() { tl->clear(); }
+    void update() { tl->setAutoDerivative(); }
     void add(double time, double value) { tl->add(time, value); }
     void addType(double time, double value, WrappedClass::Point::Type type) { tl->add(time, value, type); }
     void changeType(WrappedClass::Point::Type type)
@@ -102,6 +104,91 @@ public:
             p.second.type = type;
     }
 };
+
+
+/** Ref-counted wrapper of MATH::Timeline1D for AngelScript.
+    This class supports Vec as value type.
+    So long as we don't have this timeline natively we cheat by using x timelines */
+template <class Vec, uint NUM>
+class TimelineXAS
+{
+    MATH::Timeline1D tl[NUM];
+    int ref;
+public:
+
+    typedef MATH::Timeline1D WrappedClass;
+
+    // --- factory ---
+
+    static TimelineXAS<Vec,NUM> * factory() { return new TimelineXAS<Vec,NUM>; }
+
+    void addRef() { ++ref; MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::addRef() now = " << ref); }
+    void releaseRef() { MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::releaseRef() now = " << (ref-1));
+                        if (--ref == 0) delete this; }
+
+    // ----- ctor -----
+
+    TimelineXAS()
+        : ref   (1)
+    {
+        MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::Timeline1AS()");
+    }
+
+    ~TimelineXAS()
+    {
+        MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::~Timeline1AS()");
+    }
+
+    // ------ interface -------
+
+    std::string toString() const
+    {
+        std::stringstream s;
+        s << "Timeline" << NUM << "(";
+        const auto & data = tl[0].getData();
+        int type = -1;
+        bool first = true;
+        for (auto & p : data)
+        {
+            if (!first)
+                s << ", ";
+            first = false;
+            s << p.second.t << ":(" << p.second.val;
+            for (uint i=1; i<NUM; ++i)
+            {
+                auto it = tl[i].find(p.second.t);
+                if (it != tl[i].getData().end())
+                    s << "," << it->second.val;
+            }
+            s << ")";
+            if (int(p.second.type) != type)
+            {
+                type = p.second.type;
+                s << " " << WrappedClass::Point::getName(p.second.type);
+            }
+        }
+        s << ")";
+        return s.str();
+    }
+    uint count() const { return tl->size(); }
+    Vec value(double time) const { Vec v; for (uint i=0; i<NUM; ++i) v[i] = tl[i].get(time); return v; }
+
+    void clear() { for (uint i=0; i<NUM; ++i) tl[i].clear(); }
+    void update() { for (uint i=0; i<NUM; ++i) tl[i].setAutoDerivative(); }
+    void add(double time, const Vec& v) { for (uint i=0; i<NUM; ++i) tl[i].add(time, v[i]); }
+    void addType(double time, const Vec& v, WrappedClass::Point::Type type)
+        { for (uint i=0; i<NUM; ++i) tl[i].add(time, v[i], type); }
+    void changeType(WrappedClass::Point::Type type)
+    {
+        for (uint i=0; i<NUM; ++i)
+        {
+            auto & data = tl[i].getData();
+            for (auto & p : data)
+                p.second.type = type;
+        }
+    }
+};
+
 
 
 namespace native {
@@ -158,6 +245,7 @@ void register_timeline_tmpl(asIScriptEngine * engine, const char * typ, const ch
 
     // setter
     MO__REG_METHOD("void clear()", clear);
+    MO__REG_METHOD("void update()", update);
     MO__REG_METHOD("void add(double time, %2 value)", add);
     MO__REG_METHOD("void add(double time, %2 value, TimelinePointType type)", addType);
     MO__REG_METHOD("void changeType(TimelinePointType type)", changeType);
@@ -181,6 +269,9 @@ void registerAngelScript_timeline(asIScriptEngine *engine)
     {
         native::register_timeline_enums(engine);
         native::register_timeline_tmpl<Timeline1AS>(engine, "Timeline1", "double");
+        native::register_timeline_tmpl<TimelineXAS<Vec2,2>>(engine, "Timeline2", "vec2");
+        native::register_timeline_tmpl<TimelineXAS<Vec3,3>>(engine, "Timeline3", "vec3");
+        native::register_timeline_tmpl<TimelineXAS<Vec4,4>>(engine, "Timeline4", "vec4");
     }
 }
 

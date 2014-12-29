@@ -50,6 +50,15 @@ public:
     float getRange(float r) { return float(twister()) / twister.max() * r; }
     float getMinMax(float mi, float ma) { return mi + float(twister()) / twister.max() * (ma - mi); }
 
+    uint32_t getUInt() { return twister(); }
+    uint32_t getUIntRange(uint32_t r) { return r > 0 ? (twister() % r) : 0; }
+    uint32_t getUIntMinMax(uint32_t min, uint32_t max)
+        { if (min>=max) return 0; uint32_t r = max-min; return min + (twister() % r); }
+
+    int32_t getInt() { return int32_t(twister() & 0x7fffffff); }
+    int32_t getIntRange(uint32_t r) { return r > 0 ? (getInt() % r) : 0; }
+    int32_t getIntMinMax(int32_t min, int32_t max) { int32_t r = max-min; return r > 0 ? (min + (getInt() % r)) : 0; }
+
     Vec2 getVec2() { return Vec2(get(), get()); }
     Vec2 getVec2Range(float r) { return Vec2(getRange(r), getRange(r)); }
     Vec2 getVec2MinMax(float mi, float ma) { return Vec2(getMinMax(mi,ma), getMinMax(mi,ma)); }

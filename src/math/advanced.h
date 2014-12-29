@@ -46,6 +46,8 @@ struct advanced_int
 {
     static I sign(I x) { return x > 0 ? 1 : x < 0 ? -1 : 0; }
 
+    static I quant(I x, I q) { return (x / q) * q; }
+
     static I num_div(I x)
     {
         x = std::abs(x);
