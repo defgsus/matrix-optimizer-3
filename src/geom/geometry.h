@@ -126,6 +126,11 @@ public:
     /** Returns true when the ray intersects with a triangle of the geometry.
         If @p pos is given, it will be set to the intersection position.
         @note Not terribly efficient */
+    bool intersects_any(const Vec3& ray_origin, const Vec3& ray_direction, Vec3 * pos = 0) const;
+
+    /** Returns the closest intersection point of the ray with a triangle of the geometry.
+        If @p pos is given, it will be set to the intersection position.
+        @note Not terribly efficient */
     bool intersects(const Vec3& ray_origin, const Vec3& ray_direction, Vec3 * pos = 0) const;
 
     // -------------- setter -----------------

@@ -170,6 +170,8 @@ public:
 
     bool intersects(const Vec3& ray, const Vec3& dir) const { return g->intersects(ray, dir); }
     bool intersects_p(const Vec3& ray, const Vec3& dir, Vec3& pos) const { return g->intersects(ray, dir, &pos); }
+    bool intersects_any(const Vec3& ray, const Vec3& dir) const { return g->intersects_any(ray, dir); }
+    bool intersects_any_p(const Vec3& ray, const Vec3& dir, Vec3& pos) const { return g->intersects_any(ray, dir, &pos); }
 
     // ---- setter ----
 
@@ -383,6 +385,8 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
 
     MO__REG_METHOD("bool intersects(const vec3 &in ray_pos, const vec3 &in ray_dir) const", intersects);
     MO__REG_METHOD("bool intersects(const vec3 &in ray_pos, const vec3 &in ray_dir, vec3 &out hit_pos) const", intersects_p);
+    MO__REG_METHOD("bool intersects_any(const vec3 &in ray_pos, const vec3 &in ray_dir) const", intersects_any);
+    MO__REG_METHOD("bool intersects_any(const vec3 &in ray_pos, const vec3 &in ray_dir, vec3 &out hit_pos) const", intersects_any_p);
 
     // setter
     MO__REG_METHOD("void clear()", clear);

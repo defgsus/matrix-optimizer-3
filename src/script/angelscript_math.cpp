@@ -72,6 +72,15 @@ static void registerAngelScript_rnd(asIScriptEngine *engine)
     MO__REG_METHOD("vec4 get_vec4() const", getVec3);
     MO__REG_METHOD("vec4 get_vec4(float range) const", getVec3Range);
     MO__REG_METHOD("vec4 get_vec4(float min, float max) const", getVec3MinMax);
+    MO__REG_METHOD("vec2 vec2() const", getVec3);
+    MO__REG_METHOD("vec2 vec2(float range) const", getVec3Range);
+    MO__REG_METHOD("vec2 vec2(float min, float max) const", getVec3MinMax);
+    MO__REG_METHOD("vec3 vec3() const", getVec3);
+    MO__REG_METHOD("vec3 vec3(float range) const", getVec3Range);
+    MO__REG_METHOD("vec3 vec3(float min, float max) const", getVec3MinMax);
+    MO__REG_METHOD("vec4 vec4() const", getVec3);
+    MO__REG_METHOD("vec4 vec4(float range) const", getVec3Range);
+    MO__REG_METHOD("vec4 vec4(float min, float max) const", getVec3MinMax);
 }
 
 

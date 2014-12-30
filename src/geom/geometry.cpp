@@ -134,7 +134,7 @@ void Geometry::getExtent(Vec3 * minimum, Vec3 * maximum) const
     }
 }
 
-bool Geometry::intersects(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec3 *pos) const
+bool Geometry::intersects_any(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec3 *pos) const
 {
     // XXX todo: Test against bounding-box first!
 
@@ -150,6 +150,38 @@ bool Geometry::intersects(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec
     }
 
     return false;
+}
+
+bool Geometry::intersects(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec3 *outpos) const
+{
+    // XXX todo: Test against bounding-box first!
+
+    Float closest = -1;
+    Vec3 pos;
+
+    for (uint i=0; i<numTriangles(); ++i)
+    {
+        const Vec3 t0 = getVertex(triIndex_[i * numTriangleIndexComponents()]),
+                   t1 = getVertex(triIndex_[i * numTriangleIndexComponents() + 1]),
+                   t2 = getVertex(triIndex_[i * numTriangleIndexComponents() + 2]);
+
+        if (MATH::intersect_ray_triangle(ray_origin, ray_direction,
+                                         t0, t1, t2, &pos))
+        {
+            // no need to look further, outpos is not used
+            if (!outpos)
+                return true;
+
+            Float dist = glm::distance(ray_origin, pos);
+            if (dist < closest || closest < 0)
+            {
+                closest = dist;
+                *outpos = pos;
+            }
+        }
+    }
+
+    return closest >= 0;
 }
 
 
