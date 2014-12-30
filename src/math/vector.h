@@ -203,6 +203,17 @@ namespace MATH {
 
 
     template <typename F, glm::precision P>
+    inline glm::detail::tvec2<F, P> normalize_safe(
+            const glm::detail::tvec2<F, P>& v)
+    {
+        F sqr = v.x * v.x + v.y * v.y;
+        if (sqr > 0)
+            return v / std::sqrt(sqr);
+        else
+            return v;
+    }
+
+    template <typename F, glm::precision P>
     inline glm::detail::tvec3<F, P> normalize_safe(
             const glm::detail::tvec3<F, P>& v)
     {

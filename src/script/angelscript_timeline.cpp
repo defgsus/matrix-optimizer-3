@@ -91,7 +91,13 @@ public:
         return s.str();
     }
     uint count() const { return tl->size(); }
+    double start() const { return tl->empty() ? 0.0 : tl->getData().begin()->second.t; }
+    double end() const { return tl->empty() ? 0.0 : tl->getData().rbegin()->second.t; }
+    double length() const { return tl->empty() ? 0.0 : tl->getData().rbegin()->second.t - tl->getData().begin()->second.t; }
+
     double value(double time) const { return tl->get(time); }
+    double derivative(double time, double range)
+    { range = std::max(range, tl->timeQuantum()) * 0.5; return (value(time+range) - value(time-range)) / range; }
 
     void clear() { tl->clear(); }
     void update() { tl->setAutoDerivative(); }
@@ -170,8 +176,14 @@ public:
         s << ")";
         return s.str();
     }
-    uint count() const { return tl->size(); }
+    uint count() const { return tl[0].size(); }
+    double start() const { return tl[0].empty() ? 0.0 : tl[0].getData().begin()->second.t; }
+    double end() const { return tl[0].empty() ? 0.0 : tl[0].getData().rbegin()->second.t; }
+    double length() const { return tl[0].empty() ? 0.0 : tl[0].getData().rbegin()->second.t - tl[0].getData().begin()->second.t; }
+
     Vec value(double time) const { Vec v; for (uint i=0; i<NUM; ++i) v[i] = tl[i].get(time); return v; }
+    Vec derivative(double time, double range)
+    { range = std::max(range, tl[0].timeQuantum()) * 0.5; return (value(time+range) - value(time-range)) / Float(range); }
 
     void clear() { for (uint i=0; i<NUM; ++i) tl[i].clear(); }
     void update() { for (uint i=0; i<NUM; ++i) tl[i].setAutoDerivative(); }
@@ -241,7 +253,11 @@ void register_timeline_tmpl(asIScriptEngine * engine, const char * typ, const ch
     MO__REG_METHOD("string opImplConv() const", toString);
     MO__REG_METHOD("string toString() const", toString);
     MO__REG_METHOD("uint count() const", count);
+    MO__REG_METHOD("double start() const", start);
+    MO__REG_METHOD("double end() const", end);
+    MO__REG_METHOD("double length() const", length);
     MO__REG_METHOD("%2 value(double time) const", value);
+    MO__REG_METHOD("%2 derivative(double time, double range = 0.01) const", derivative);
 
     // setter
     MO__REG_METHOD("void clear()", clear);

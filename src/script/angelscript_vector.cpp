@@ -305,7 +305,7 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 
     // ------ non-member functions -------
 
-    //MO__REG_FUNC("%1 cross(const %1 &in, const %1& in)", vecfunc<Vec>::cross);
+    MO__REG_FUNC("%1 normalize(const %1 &in)", vecfunc<Vec>::normalize);
     MO__REG_FUNC("%1 reflect(const %1 &in, const %1 &in)", vecfunc<Vec>::reflect);
     MO__REG_FUNC("%1 refract(const %1 &in, const %1 &in, float)", vecfunc<Vec>::refract);
 
@@ -424,7 +424,6 @@ void register_vector_34_tmpl(asIScriptEngine *engine, const char * typ)
     MO__REG_FUNC("%1 rotateX(const %1 &in, float)", vecfunc<Vec>::rotateX);
     MO__REG_FUNC("%1 rotateY(const %1 &in, float)", vecfunc<Vec>::rotateY);
     MO__REG_FUNC("%1 rotateZ(const %1 &in, float)", vecfunc<Vec>::rotateZ);
-    MO__REG_FUNC("%1 normalize(const %1 &in)", vecfunc<Vec>::normalize);
 }
 
 /** Specific stuff for 4 */

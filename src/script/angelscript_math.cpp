@@ -57,21 +57,21 @@ static void registerAngelScript_rnd(asIScriptEngine *engine)
     MO__REG_METHOD("float opCall() const", get);
     MO__REG_METHOD("float opCall(float range) const", getRange);
     MO__REG_METHOD("float opCall(float min, float max) const", getMinMax);
-    MO__REG_METHOD("uint32 uint() const", getUInt);
-    MO__REG_METHOD("uint32 uint(uint32 range) const", getUIntRange);
-    MO__REG_METHOD("uint32 uint(uint32 min, uint32 max) const", getUIntMinMax);
-    MO__REG_METHOD("int32 int() const", getInt);
-    MO__REG_METHOD("int32 int(uint32 range) const", getIntRange);
-    MO__REG_METHOD("int32 int(int32 min, int32 max) const", getIntMinMax);
-    MO__REG_METHOD("vec2 vec2() const", getVec3);
-    MO__REG_METHOD("vec2 vec2(float range) const", getVec3Range);
-    MO__REG_METHOD("vec2 vec2(float min, float max) const", getVec3MinMax);
-    MO__REG_METHOD("vec3 vec3() const", getVec3);
-    MO__REG_METHOD("vec3 vec3(float range) const", getVec3Range);
-    MO__REG_METHOD("vec3 vec3(float min, float max) const", getVec3MinMax);
-    MO__REG_METHOD("vec4 vec4() const", getVec3);
-    MO__REG_METHOD("vec4 vec4(float range) const", getVec3Range);
-    MO__REG_METHOD("vec4 vec4(float min, float max) const", getVec3MinMax);
+    MO__REG_METHOD("uint32 get_uint() const", getUInt);
+    MO__REG_METHOD("uint32 get_uint(uint32 range) const", getUIntRange);
+    MO__REG_METHOD("uint32 get_uint(uint32 min, uint32 max) const", getUIntMinMax);
+    MO__REG_METHOD("int32 get_int() const", getInt);
+    MO__REG_METHOD("int32 get_int(uint32 range) const", getIntRange);
+    MO__REG_METHOD("int32 get_int(int32 min, int32 max) const", getIntMinMax);
+    MO__REG_METHOD("vec2 get_vec2() const", getVec3);
+    MO__REG_METHOD("vec2 get_vec2(float range) const", getVec3Range);
+    MO__REG_METHOD("vec2 get_vec2(float min, float max) const", getVec3MinMax);
+    MO__REG_METHOD("vec3 get_vec3() const", getVec3);
+    MO__REG_METHOD("vec3 get_vec3(float range) const", getVec3Range);
+    MO__REG_METHOD("vec3 get_vec3(float min, float max) const", getVec3MinMax);
+    MO__REG_METHOD("vec4 get_vec4() const", getVec3);
+    MO__REG_METHOD("vec4 get_vec4(float range) const", getVec3Range);
+    MO__REG_METHOD("vec4 get_vec4(float min, float max) const", getVec3MinMax);
 }
 
 
