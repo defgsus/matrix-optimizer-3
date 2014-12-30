@@ -58,7 +58,7 @@ void GeometryFactory::createQuad(Geometry * g, Float sx, Float sy, bool asTriang
 
 void GeometryFactory::createBox(
         Geometry * g, Float side_length_x, Float side_length_y, Float side_length_z,
-        bool asTriangles)
+        bool asTriangles, const Vec3& o)
 {
     Float
         sx = side_length_x * 0.5f,
@@ -69,27 +69,27 @@ void GeometryFactory::createBox(
 
     // front-bottom-left
     g->setTexCoord(0,0);
-    int fbl = g->addVertex(-sx, -sy,  sz);
+    int fbl = g->addVertex(-sx+o.x, -sy+o.y,  sz+o.z);
     // front-bottom-right
     g->setTexCoord(1,0);
-    int fbr = g->addVertex( sx, -sy,  sz);
+    int fbr = g->addVertex( sx+o.x, -sy+o.y,  sz+o.z);
     // front-top-right
     g->setTexCoord(1,1);
-    int ftr = g->addVertex( sx,  sy,  sz);
+    int ftr = g->addVertex( sx+o.x,  sy+o.y,  sz+o.z);
     // front-top-left
     g->setTexCoord(0,1);
-    int ftl = g->addVertex(-sx,  sy,  sz);
+    int ftl = g->addVertex(-sx+o.x,  sy+o.y,  sz+o.z);
 
     // back-bottom-left
     g->setTexCoord(0,1);
-    int bbl = g->addVertex(-sx, -sy, -sz);
+    int bbl = g->addVertex(-sx+o.x, -sy+o.y, -sz+o.z);
     // aso..
     g->setTexCoord(1,1);
-    int bbr = g->addVertex( sx, -sy, -sz);
+    int bbr = g->addVertex( sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,0);
-    int btr = g->addVertex( sx,  sy, -sz);
+    int btr = g->addVertex( sx+o.x,  sy+o.y, -sz+o.z);
     g->setTexCoord(0,0);
-    int btl = g->addVertex(-sx,  sy, -sz);
+    int btl = g->addVertex(-sx+o.x,  sy+o.y, -sz+o.z);
 
     if (asTriangles)
     {
@@ -137,7 +137,8 @@ void GeometryFactory::createBox(
 }
 
 void GeometryFactory::createTexturedBox(
-        Geometry * g, Float side_length_x, Float side_length_y, Float side_length_z)
+        Geometry * g, Float side_length_x, Float side_length_y, Float side_length_z,
+        const Vec3& o)
 {
     Float
         sx = side_length_x * 0.5f,
@@ -160,73 +161,73 @@ void GeometryFactory::createTexturedBox(
 
     // back
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(+sx, -sy, -sz);
+    a = g->addVertexAlways(+sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(-sx, -sy, -sz);
+    b = g->addVertexAlways(-sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(-sx, +sy, -sz);
+    c = g->addVertexAlways(-sx+o.x, +sy+o.y, -sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(+sx, +sy, -sz);
+    d = g->addVertexAlways(+sx+o.x, +sy+o.y, -sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // bottom
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(-sx, -sy, -sz);
+    a = g->addVertexAlways(-sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(+sx, -sy, -sz);
+    b = g->addVertexAlways(+sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(+sx, -sy, +sz);
+    c = g->addVertexAlways(+sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(-sx, -sy, +sz);
+    d = g->addVertexAlways(-sx+o.x, -sy+o.y, +sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // top
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(-sx, +sy, +sz);
+    a = g->addVertexAlways(-sx+o.x, +sy+o.y, +sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(+sx, +sy, +sz);
+    b = g->addVertexAlways(+sx+o.x, +sy+o.y, +sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(+sx, +sy, -sz);
+    c = g->addVertexAlways(+sx+o.x, +sy+o.y, -sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(-sx, +sy, -sz);
+    d = g->addVertexAlways(-sx+o.x, +sy+o.y, -sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // right
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(-sx, -sy, -sz);
+    a = g->addVertexAlways(-sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(-sx, -sy, +sz);
+    b = g->addVertexAlways(-sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(-sx, +sy, +sz);
+    c = g->addVertexAlways(-sx+o.x, +sy+o.y, +sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(-sx, +sy, -sz);
+    d = g->addVertexAlways(-sx+o.x, +sy+o.y, -sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // left
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(+sx, -sy, +sz);
+    a = g->addVertexAlways(+sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(+sx, -sy, -sz);
+    b = g->addVertexAlways(+sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(+sx, +sy, -sz);
+    c = g->addVertexAlways(+sx+o.x, +sy+o.y, -sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(+sx, +sy, +sz);
+    d = g->addVertexAlways(+sx+o.x, +sy+o.y, +sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // front
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(-sx, -sy, +sz);
+    a = g->addVertexAlways(-sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(+sx, -sy, +sz);
+    b = g->addVertexAlways(+sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(+sx, +sy, +sz);
+    c = g->addVertexAlways(+sx+o.x, +sy+o.y, +sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(-sx, +sy, +sz);
+    d = g->addVertexAlways(-sx+o.x, +sy+o.y, +sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
@@ -336,8 +337,7 @@ void GeometryFactory::createLineGrid(Geometry * g, int sizeX, int sizeY, int siz
 
 
 
-void GeometryFactory::createUVSphere(
-        Geometry * g, Float rad, uint segu, uint segv, bool asTriangles)
+void GeometryFactory::createUVSphere(Geometry * g, Float rad, uint segu, uint segv, bool asTriangles, const Vec3 & o)
 {
     if (!asTriangles)
     {
@@ -347,7 +347,7 @@ void GeometryFactory::createUVSphere(
 
     // top point
     g->setTexCoord(0,1);
-    g->addVertex(0, rad, 0);
+    g->addVertex(o.x, o.y+rad, o.z);
 
     for (uint v = 1; v<segv; ++v)
     {
@@ -360,7 +360,7 @@ void GeometryFactory::createUVSphere(
             Vec3 p = MATH::pointOnSphere((Float)u / segu, (Float)v / segv);
 
             g->setTexCoord((Float)(u+1) / (segu+1), 1.f - (Float)(v+1) / (segv+1));
-            g->addVertex(p.x * rad, p.y * rad, p.z * rad);
+            g->addVertex(p.x * rad + o.x, p.y * rad + o.y, p.z * rad + o.z);
         }
 
         // triangles on each 'row'
@@ -391,7 +391,7 @@ void GeometryFactory::createUVSphere(
 
     // bottom point
     g->setTexCoord(0,0);
-    g->addVertex(0, -rad, 0);
+    g->addVertex(o.x, o.y-rad, o.z);
 
     // connect to bottom point
     for (unsigned int u = 0; u<segu; ++u)
@@ -646,7 +646,7 @@ void GeometryFactory::createCylinder(Geometry * g, Float rad, Float height,
 
 
 void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
-                                     uint segu, uint segv, bool asTriangles)
+                                  uint segu, uint segv, bool asTriangles, const Vec3 & offset)
 {
     segu = std::max((uint)3, segu);
     segv = std::max((uint)3, segv);
@@ -666,7 +666,7 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
 
             const Vec3 v = MATH::rotateY(
                         Vec3(rad_out + rad_in*sin(a), rad_in*cos(a), 0),
-                        ang);
+                        ang) + offset;
 
             g->setTexCoord(tx, ty);
             verts.push_back( g->addVertex(v[0], v[1], v[2]) );

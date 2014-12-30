@@ -198,13 +198,13 @@ public:
     void setTexCoordIV(uint i, const Vec2& v) const { if (i < g->numVertices()) g->setTexCoord(i, v); }
     void setColorIV(uint i, const Vec4& v) const { if (i < g->numVertices()) g->setColor(i, v); }
 
-    void createBox1(float sl) { GEOM::GeometryFactory::createBox(g, sl, sl, sl, true); }
-    void createBox3(float x, float y, float z) { GEOM::GeometryFactory::createBox(g, x, y, z, true); }
-    void createBox3v(const Vec3& s) { GEOM::GeometryFactory::createBox(g, s.x, s.y, s.z, true); }
-    void createSphere2(uint segu, uint segv) { GEOM::GeometryFactory::createUVSphere(g, 1, segu, segv, true); }
-    void createSphere3(float rad, uint segu, uint segv) { GEOM::GeometryFactory::createUVSphere(g, rad, segu, segv, true); }
-    void createTorus4(float rad_outer, float rad_inner, uint segu, uint segv)
-        { GEOM::GeometryFactory::createTorus(g, rad_outer, rad_inner, segu, segv, true); }
+    void createBox1(float sl, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, sl, sl, sl, true, pos); }
+    void createBox3(float x, float y, float z, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, x, y, z, true, pos); }
+    void createBox3v(const Vec3& s, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, s.x, s.y, s.z, true, pos); }
+    void createSphere2(uint segu, uint segv, const Vec3& pos) { GEOM::GeometryFactory::createUVSphere(g, 1, segu, segv, true, pos); }
+    void createSphere3(float rad, uint segu, uint segv, const Vec3& pos) { GEOM::GeometryFactory::createUVSphere(g, rad, segu, segv, true, pos); }
+    void createTorus4(float rad_outer, float rad_inner, uint segu, uint segv, const Vec3& pos)
+        { GEOM::GeometryFactory::createTorus(g, rad_outer, rad_inner, segu, segv, true, pos); }
 
 #define MO__IDX(i__) (i__ < g->numVertices())
 
@@ -253,12 +253,15 @@ public:
     void addGeometryP(const GeometryAS& o, const Vec3& p) { g->addGeometry( *o.g, p ); }
 
     void rotate(const Vec3& a, Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, a) ); }
+    void rotate3f(Float x, Float y, Float z, Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(x,y,z)) ); }
     void rotateX(Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(1, 0, 0)) ); }
     void rotateY(Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(0, 1, 0)) ); }
     void rotateZ(Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(0, 0, 1)) ); }
     void scaleV(const Vec3& s) { g->applyMatrix( glm::scale(Mat4(1), s) ); }
     void scale(Float s) { g->applyMatrix( glm::scale(Mat4(1), Vec3(s,s,s)) ); }
+    void scale3f(Float x, Float y, Float z) { g->applyMatrix( glm::scale(Mat4(1), Vec3(x,y,z)) ); }
     void translate(const Vec3& v) { g->translate(v.x, v.y, v.z); }
+    void translate3f(Float x, Float y, Float z) { g->translate(x, y, z); }
     void translateX(Float v) { g->translate(v, 0, 0); }
     void translateY(Float v) { g->translate(0, v, 0); }
     void translateZ(Float v) { g->translate(0, 0, v); }
@@ -383,6 +386,7 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
 
     MO__REG_METHOD("Triangle triangle(uint triangle_index) const", triangle);
 
+    MO__REG_METHOD("uint closestVertex(const vec3 &in)", getClosestVertex);
     MO__REG_METHOD("bool intersects(const vec3 &in ray_pos, const vec3 &in ray_dir) const", intersects);
     MO__REG_METHOD("bool intersects(const vec3 &in ray_pos, const vec3 &in ray_dir, vec3 &out hit_pos) const", intersects_p);
     MO__REG_METHOD("bool intersects_any(const vec3 &in ray_pos, const vec3 &in ray_dir) const", intersects_any);
@@ -429,25 +433,27 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void setTexCoord(uint vertex_index, const vec2 &in)", setTexCoordIV);
     MO__REG_METHOD("void setColor(uint vertex_index, const vec4 &in)", setColorIV);
 
-    MO__REG_METHOD("void createBox(float sidelength = 1)", createBox1);
-    MO__REG_METHOD("void createBox(float sidelength_x, float sidelength_y, float sidelength_z)", createBox3);
-    MO__REG_METHOD("void createBox(const vec3 &in sidelengths)", createBox3v);
-    MO__REG_METHOD("void createSphere(uint segments_u = 12, uint segments_v = 12)", createSphere2);
-    MO__REG_METHOD("void createSphere(float radius, uint segments_u = 12, uint segments_v = 12)", createSphere3);
-    MO__REG_METHOD("void createTorus(float radius_outer, float radius_inner, uint segments_u = 12, uint segments_v = 12)",
+    MO__REG_METHOD("void createBox(float sidelength = 1, const vec3 &in pos = vec3(0))", createBox1);
+    MO__REG_METHOD("void createBox(float sidelength_x, float sidelength_y, float sidelength_z, const vec3 &in pos = vec3(0))", createBox3);
+    MO__REG_METHOD("void createBox(const vec3 &in sidelengths, const vec3 &in pos = vec3(0))", createBox3v);
+    MO__REG_METHOD("void createSphere(uint segments_u = 12, uint segments_v = 12, const vec3 &in pos = vec3(0))", createSphere2);
+    MO__REG_METHOD("void createSphere(float radius, uint segments_u = 12, uint segments_v = 12, const vec3 &in pos = vec3(0))", createSphere3);
+    MO__REG_METHOD("void createTorus(float radius_outer, float radius_inner, uint segments_u = 12, uint segments_v = 12, const vec3 &in pos = vec3(0))",
                    createTorus4);
 
     MO__REG_METHOD("void rotate(const vec3 &in axis, float degree)", rotate);
+    MO__REG_METHOD("void rotate(float axis_x, float axis_y, float axis_z, float degree)", rotate3f);
     MO__REG_METHOD("void rotateX(float degree)", rotateX);
     MO__REG_METHOD("void rotateY(float degree)", rotateY);
     MO__REG_METHOD("void rotateZ(float degree)", rotateZ);
     MO__REG_METHOD("void scale(float)", scale);
+    MO__REG_METHOD("void scale(float x, float y, float z)", scale3f);
     MO__REG_METHOD("void scale(const vec3 &in)", scaleV);
     MO__REG_METHOD("void translate(const vec3 &in)", translate);
+    MO__REG_METHOD("void translate(float x, float y, float z)", translate3f);
     MO__REG_METHOD("void translateX(float)", translateX);
     MO__REG_METHOD("void translateY(float)", translateY);
     MO__REG_METHOD("void translateZ(float)", translateZ);
-    MO__REG_METHOD("uint closestVertex(const vec3 &in)", getClosestVertex);
 
 
 #undef MO__REG_METHOD
