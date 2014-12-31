@@ -18,6 +18,7 @@
 #include "io/filetypes.h"
 
 namespace MO {
+class Object;
 namespace IO { class DataStream; }
 namespace GEOM {
 
@@ -27,7 +28,7 @@ class GeometryModifierChain;
 class GeometryFactorySettings
 {
 public:
-    GeometryFactorySettings();
+    GeometryFactorySettings(Object * o);
     ~GeometryFactorySettings();
 
     GeometryFactorySettings(const GeometryFactorySettings& other);
@@ -46,10 +47,18 @@ public:
 
     // ---- settings ----
 
+    /** Assigns an object */
+    void setObject(Object*o) { object_ = o; }
+
+    /** Returns assigned object */
+    Object * object() const { return object_; }
+
     /** Access to the create/modify chain */
     GeometryModifierChain * modifierChain() const { return modifierChain_; }
 
 private:
+
+    Object * object_;
 
     GeometryModifierChain * modifierChain_;
 

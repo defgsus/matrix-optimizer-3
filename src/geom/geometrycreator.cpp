@@ -30,7 +30,7 @@ GeometryCreator::GeometryCreator(QObject *parent) :
     QThread     (parent),
     geometry_   (0),
     curGeometry_(0),
-    settings_   (new GeometryFactorySettings()),
+    settings_   (new GeometryFactorySettings(0)),
     timer_      (new QTimer(this)),
     mutex_      (new QMutex())
 {
@@ -51,7 +51,6 @@ GeometryCreator::~GeometryCreator()
 void GeometryCreator::setSettings(const GeometryFactorySettings & s)
 {
     QMutexLocker lock(mutex_);
-
     *settings_ = s;
 }
 
@@ -78,7 +77,7 @@ void GeometryCreator::run()
 
     MO_DEBUG_GL("GeometryCreator::run()");
 
-    GeometryFactorySettings settings;
+    GeometryFactorySettings settings(0);
 
     {
         QMutexLocker lock(mutex_);
@@ -95,7 +94,7 @@ void GeometryCreator::run()
     {
         //curGeometry_->setColor(1,1,1,1);
         //GeometryFactory::createCube(curGeometry_, true);
-        settings.modifierChain()->execute(curGeometry_);
+        settings.modifierChain()->execute(curGeometry_, settings.object());
 
         success = true;
     }

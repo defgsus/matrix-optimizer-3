@@ -33,10 +33,11 @@ namespace MO {
 namespace GEOM {
 
 
-GeometryFactorySettings::GeometryFactorySettings()
-    : modifierChain_ (new GeometryModifierChain())
+GeometryFactorySettings::GeometryFactorySettings(Object * o)
+    : object_           (o),
+      modifierChain_    (new GeometryModifierChain())
 {
-    MO_DEBUG_GEOM("GeometryFactorySettings::GeometryFactorySettings()");
+    MO_DEBUG_GEOM("GeometryFactorySettings::GeometryFactorySettings(" << o << ")");
 
     // default: create and calculate normals
     modifierChain_->addModifier(new GeometryModifierCreate());
@@ -63,6 +64,7 @@ GeometryFactorySettings& GeometryFactorySettings::operator =(
         const GeometryFactorySettings& other)
 {
     *modifierChain_ = *other.modifierChain_;
+    object_ = other.object_;
 
     return *this;
 }

@@ -17,6 +17,7 @@
 #include "types/float.h"
 
 namespace MO {
+class Object;
 namespace IO { class DataStream; }
 namespace GEOM {
 
@@ -58,6 +59,11 @@ public:
 
     void setEnabled(bool enable) { enabled_ = enable; }
 
+    /** Applies the (virtual) modification/creation */
+    void executeBase(Geometry * g, Object * o);
+
+    Object * currentObject() const { return curObject_; }
+
     // ----------- virtual interface ---------
 
     /** Always call ancestor's method before your derived code. */
@@ -79,6 +85,8 @@ private:
     QString className_, guiName_;
 
     bool enabled_;
+
+    Object * curObject_;
 };
 
 bool registerGeometryModifier_(GeometryModifier *);

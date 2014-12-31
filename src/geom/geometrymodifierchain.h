@@ -16,6 +16,7 @@
 #include "io/filetypes.h"
 
 namespace MO {
+class Object;
 namespace IO { class DataStream; }
 namespace GEOM {
 
@@ -97,8 +98,9 @@ public:
 
     // ----------- execution --------------
 
-    /** Execute the whole chain */
-    void execute(Geometry * g) const;
+    /** Execute the whole chain.
+        If an object is given, it is made available to scripts */
+    void execute(Geometry * g, Object* o = 0) const;
 
 private:
 

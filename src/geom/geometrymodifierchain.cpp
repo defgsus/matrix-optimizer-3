@@ -259,11 +259,13 @@ bool GeometryModifierChain::deleteModifier(GeometryModifier *g)
     return true;
 }
 
-void GeometryModifierChain::execute(Geometry *g) const
+void GeometryModifierChain::execute(Geometry *g, Object * o) const
 {
     for (auto m : modifiers_)
+    {
         if (m->isEnabled())
-            m->execute(g);
+            m->executeBase(g, o);
+    }
 }
 
 } // namespace GEOM

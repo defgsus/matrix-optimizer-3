@@ -31,7 +31,7 @@ MO_REGISTER_OBJECT(Model3d)
 Model3d::Model3d(QObject * parent)
     : ObjectGl      (parent),
       creator_      (0),
-      geomSettings_ (new GEOM::GeometryFactorySettings),
+      geomSettings_ (new GEOM::GeometryFactorySettings(this)),
       nextGeometry_ (0),
       texture_      (new TextureSetting(this)),
       textureBump_  (new TextureSetting(this)),
@@ -220,6 +220,12 @@ Vec4 Model3d::modelColor(Double time, uint thread) const
         ca_->value(time, thread));
 }
 
+const GEOM::GeometryFactorySettings& Model3d::geometrySettings() const
+{
+    geomSettings_->setObject(const_cast<Model3d*>(this));
+    return *geomSettings_;
+}
+
 void Model3d::initGl(uint /*thread*/)
 {
     texture_->initGl();
@@ -231,6 +237,7 @@ void Model3d::initGl(uint /*thread*/)
     connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
     connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
 
+    geomSettings_->setObject(this);
     creator_->setSettings(*geomSettings_);
     creator_->start();
 }
@@ -273,6 +280,7 @@ void Model3d::geometryFailed_()
 void Model3d::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 {
     *geomSettings_ = s;
+    geomSettings_->setObject(this);
     requestReinitGl();
 }
 

@@ -553,7 +553,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
             auto script = new AngelScriptWidget(diag);
             registerDefaultAngelScript( script->scriptEngine() );
-            registerAngelScript_rootObject( script->scriptEngine(), scene_ );
+            registerAngelScript_rootObject( script->scriptEngine(), scene_, true );
 
             l->addWidget(script);
             script->setScriptText(settings->value("tmp/AngelScript", "//angelscript").toString());

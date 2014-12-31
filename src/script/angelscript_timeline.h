@@ -16,8 +16,32 @@
 class asIScriptEngine;
 
 namespace MO {
+namespace MATH { class Timeline1D; }
 
+// Ref-counted wrapper of MATH::Timeline1D for AngelScript
+class Timeline1AS;
+
+// Ref-counted wrapper of multiple MATH::Timeline1Ds for AngelScript (Timeline2 - Timeline4) */
+template <class Vec, unsigned int NUM>
+class TimelineXAS;
+
+/** Registers the timeline namespace.
+    Dependency: string, vector */
 void registerAngelScript_timeline(asIScriptEngine *engine);
+
+/** Wraps the timeline into the AngelScript representation.
+    Ownership is on caller.
+    Timeline1D must stay valid during the lifetime of Timeline1AS, of course.
+*/
+Timeline1AS * timeline_to_angelscript(MATH::Timeline1D * );
+
+/** Wraps the timeline into the AngelScript representation.
+    Ownership is on caller.
+    The timeline data will be copied to the internal angelscript timeline. */
+Timeline1AS * timeline_to_angelscript(const MATH::Timeline1D& );
+
+/** Returns the associated timeline for the angelscript object */
+const MATH::Timeline1D& get_timeline(const Timeline1AS*);
 
 } // namespace MO
 

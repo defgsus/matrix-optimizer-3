@@ -32,16 +32,17 @@
 
 namespace MO {
 
-namespace {
-
 /** Ref-counted wrapper of MATH::Timeline1D for AngelScript */
 class Timeline1AS
 {
+public:
     MATH::Timeline1D * tl;
     int ref;
-public:
+    bool owning;
 
     typedef MATH::Timeline1D WrappedClass;
+
+    static const unsigned int num = 1;
 
     // --- factory ---
 
@@ -55,15 +56,25 @@ public:
 
     Timeline1AS()
         : tl    (new MATH::Timeline1D),
-          ref   (1)
+          ref   (1),
+          owning(true)
     {
         MO_DEBUG_TAS("Timeline1AS("<<this<<")::Timeline1AS()");
     }
 
+    Timeline1AS(MATH::Timeline1D * tl)
+        : tl    (tl),
+          ref   (1),
+          owning(false)
+    {
+        MO_DEBUG_TAS("Timeline1AS("<<this<<")::Timeline1AS(" << tl << ")");
+    }
+
     ~Timeline1AS()
     {
-        MO_DEBUG_TAS("Timeline1AS("<<this<<")::~Timeline1AS()");
-        delete tl;
+        MO_DEBUG_TAS("Timeline1AS("<<this<<")::~Timeline1AS() owning=" << owning);
+        if (owning)
+            delete tl;
     }
 
     // ------ interface -------
@@ -109,13 +120,15 @@ public:
         for (auto & p : data)
             p.second.type = type;
     }
+
+    void set(Timeline1AS * other) { *tl = *other->tl; }
 };
 
 
 /** Ref-counted wrapper of MATH::Timeline1D for AngelScript.
     This class supports Vec as value type.
     So long as we don't have this timeline natively we cheat by using x timelines */
-template <class Vec, uint NUM>
+template <class Vec, unsigned int NUM>
 class TimelineXAS
 {
     MATH::Timeline1D tl[NUM];
@@ -123,6 +136,8 @@ class TimelineXAS
 public:
 
     typedef MATH::Timeline1D WrappedClass;
+
+    static const unsigned int num = NUM;
 
     // --- factory ---
 
@@ -176,10 +191,22 @@ public:
         s << ")";
         return s.str();
     }
-    uint count() const { return tl[0].size(); }
-    double start() const { return tl[0].empty() ? 0.0 : tl[0].getData().begin()->second.t; }
-    double end() const { return tl[0].empty() ? 0.0 : tl[0].getData().rbegin()->second.t; }
-    double length() const { return tl[0].empty() ? 0.0 : tl[0].getData().rbegin()->second.t - tl[0].getData().begin()->second.t; }
+    uint count() const { uint c = tl[0].size(); for (uint i=1; i<NUM; ++i) c = std::max(c, tl[i].size()); return c; }
+    double start() const
+    {
+        double st = tl[0].empty() ? 0.0 : tl[0].getData().begin()->second.t;
+        for (uint i=1; i<NUM; ++i)
+            if (!tl[i].empty()) st = std::min(st, tl[i].getData().begin()->second.t);
+        return st;
+    }
+    double end() const
+    {
+        double st = tl[0].empty() ? 0.0 : tl[0].getData().rbegin()->second.t;
+        for (uint i=1; i<NUM; ++i)
+            if (!tl[i].empty()) st = std::max(st, tl[i].getData().rbegin()->second.t);
+        return st;
+    }
+    double length() const { return (end() - start()); }
 
     Vec value(double time) const { Vec v; for (uint i=0; i<NUM; ++i) v[i] = tl[i].get(time); return v; }
     Vec derivative(double time, double range)
@@ -199,17 +226,47 @@ public:
                 p.second.type = type;
         }
     }
+
+    void set(TimelineXAS<Vec,NUM> * other) { for (uint i=0; i<NUM; ++i) tl[i] = other->tl[i]; }
+
+/*
+    void set_from_(Timeline1AS * other[])
+    {
+        // copy first
+        tl[0] = *(other[0]->tl);
+        // reassign others (at que times of first one)
+        for (uint i=1; i<NUM; ++i)
+        {
+            tl[i].clear();
+            const auto & data = tl[0].getData();
+            for (const auto & j : data)
+            {
+                float t = j->second.t;
+                tl[i].add(j, other[i]->tl->get(...))...
+            }
+        }
+    }
+*/
+
+    // --- these are NUM dependent (not for every instantiation) ---
+
+    void set_1_1(Timeline1AS * a, Timeline1AS * b) { assert(NUM == 2); tl[0] = *a->tl; tl[1] = *b->tl; }
+    void set_1_1_1(Timeline1AS * a, Timeline1AS * b, Timeline1AS * c) { assert(NUM == 3); tl[0] = *a->tl; tl[1] = *b->tl; tl[2] = *c->tl; }
+    void set_1_1_1_1(Timeline1AS * a, Timeline1AS * b, Timeline1AS * c, Timeline1AS * d)
+        { assert(NUM == 4); tl[0] = *a->tl; tl[1] = *b->tl; tl[2] = *c->tl; tl[3] = *d->tl; }
+
+
 };
 
 
-
+namespace {
 namespace native {
 
 // -------------------------------- registration ------------------------------------
 
 // replaces %1 with typ, %2 with holdtyp (const char*) and returns utf8 as const char*
 #define MO__STR(str__) (QString(str__).replace("%1", typ).replace("%2", holdtyp).toUtf8().constData())
-// registers a method of class Class for typ (replaces %1 in decl__ with typ)
+// registers a method of class Class for typ (applies MO__STR to decl__)
 #define MO__REG_METHOD(decl__, name__) \
     r = engine->RegisterObjectMethod(typ, MO__STR(decl__), asMETHOD(Class,name__), asCALL_THISCALL); assert( r >= 0 );
 
@@ -265,6 +322,33 @@ void register_timeline_tmpl(asIScriptEngine * engine, const char * typ, const ch
     MO__REG_METHOD("void add(double time, %2 value)", add);
     MO__REG_METHOD("void add(double time, %2 value, TimelinePointType type)", addType);
     MO__REG_METHOD("void changeType(TimelinePointType type)", changeType);
+
+    MO__REG_METHOD("void set(%1@)", set);
+
+}
+
+
+// ---- unique per NUM vectors -----
+
+template <class Class>
+void register_timeline_tmpl_2(asIScriptEngine * engine, const char * typ, const char * holdtyp)
+{
+    int r;
+    MO__REG_METHOD("void set(Timeline1@ x, Timeline1@ y)", set_1_1);
+}
+
+template <class Class>
+void register_timeline_tmpl_3(asIScriptEngine * engine, const char * typ, const char * holdtyp)
+{
+    int r;
+    MO__REG_METHOD("void set(Timeline1@ x, Timeline1@ y, Timeline1@ z)", set_1_1_1);
+}
+
+template <class Class>
+void register_timeline_tmpl_4(asIScriptEngine * engine, const char * typ, const char * holdtyp)
+{
+    int r;
+    MO__REG_METHOD("void set(Timeline1@ x, Timeline1@ y, Timeline1@ z, Timeline1@ w)", set_1_1_1_1);
 }
 
 #undef MO__REG_METHOD
@@ -288,10 +372,29 @@ void registerAngelScript_timeline(asIScriptEngine *engine)
         native::register_timeline_tmpl<TimelineXAS<Vec2,2>>(engine, "Timeline2", "vec2");
         native::register_timeline_tmpl<TimelineXAS<Vec3,3>>(engine, "Timeline3", "vec3");
         native::register_timeline_tmpl<TimelineXAS<Vec4,4>>(engine, "Timeline4", "vec4");
+
+        native::register_timeline_tmpl_2<TimelineXAS<Vec2,2>>(engine, "Timeline2", "vec2");
+        native::register_timeline_tmpl_3<TimelineXAS<Vec3,3>>(engine, "Timeline3", "vec3");
+        native::register_timeline_tmpl_4<TimelineXAS<Vec4,4>>(engine, "Timeline4", "vec4");
     }
 }
 
+Timeline1AS * timeline_to_angelscript(MATH::Timeline1D * tl)
+{
+    return new Timeline1AS(tl);
+}
 
+Timeline1AS * timeline_to_angelscript(const MATH::Timeline1D & tl)
+{
+    auto as = new Timeline1AS();
+    *as->tl = tl;
+    return as;
+}
+
+const MATH::Timeline1D& get_timeline(const Timeline1AS*as)
+{
+    return *(as->tl);
+}
 
 } // namespace MO
 

@@ -23,7 +23,8 @@ bool registerGeometryModifier_(GeometryModifier * g)
 GeometryModifier::GeometryModifier(const QString &className, const QString &guiName)
     : className_    (className),
       guiName_      (guiName),
-      enabled_      (true)
+      enabled_      (true),
+      curObject_    (0)
 {
 
 }
@@ -40,6 +41,13 @@ void GeometryModifier::deserialize(IO::DataStream &io)
     io.readHeader("geommod", 1);
 
     io >> enabled_;
+}
+
+
+void GeometryModifier::executeBase(Geometry *g, MO::Object * o)
+{
+    curObject_ = o;
+    execute(g);
 }
 
 } // namespace GEOM

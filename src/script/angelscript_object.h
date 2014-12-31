@@ -20,11 +20,15 @@ namespace MO {
 class Object;
 class Scene;
 
-/** Put the object type and related functions into the namespace */
+/** Put the object type and related functions into the namespace.
+    Dependency: string, timeline */
 void registerAngelScript_object(asIScriptEngine *engine);
 
+/** Make any object accessible to the script. */
+void registerAngelScript_object(asIScriptEngine * engine, Object * object, bool writeable);
+
 /** Make the root object accessible to the script. */
-void registerAngelScript_rootObject(asIScriptEngine * engine, Scene* root);
+void registerAngelScript_rootObject(asIScriptEngine * engine, Scene* root, bool writeable);
 
 } // namespace MO
 

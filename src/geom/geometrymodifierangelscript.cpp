@@ -70,13 +70,15 @@ void GeometryModifierAngelScript::execute(Geometry * g)
 
     try
     {
-        GeometryEngineAS script(g);
+        MO_DEBUG("---------------"  << currentObject());
+        GeometryEngineAS script(g, currentObject());
         script.execute(script_);
     }
     catch (const Exception&e)
     {
         // XXX Exceptions disturb the editor right now
-        MO_DEBUG("GeometryModifierAngelScript: XXX EXCEPTION: " << e.what());
+        // E.g. somehow the code get's compiled again leading to endless error windows
+        MO_DEBUG("GeometryModifierAngelScript: XXX EXCEPTION: \"" << e.what() << "\"");
     }
 }
 

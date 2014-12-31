@@ -677,7 +677,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         auto edit = new AngelScriptWidget(this);
         //edit->setMinimumHeight(500);
         group_->addWidget(edit);
-        edit->setScriptEngine( GeometryEngineAS::createNullEngine() );
+        edit->setScriptEngine( GeometryEngineAS::createNullEngine(true) );
         connect(edit, SIGNAL(scriptTextChanged()), this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()

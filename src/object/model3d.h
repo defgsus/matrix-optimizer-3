@@ -33,7 +33,7 @@ public:
     MO_OBJECT_CONSTRUCTOR(Model3d);
 
     /** Returns the current geometry settings. */
-    const GEOM::GeometryFactorySettings& geometrySettings() const { return *geomSettings_; }
+    const GEOM::GeometryFactorySettings& geometrySettings() const;
 
     /** Sets new geometry settings and creates the geometry on next render */
     void setGeometrySettings(const GEOM::GeometryFactorySettings&);

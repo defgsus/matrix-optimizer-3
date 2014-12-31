@@ -147,7 +147,7 @@ public:
 #endif
     // ------------ setter --------------
 
-    void setMode(SequenceType m) { p_mode_->setValue(m); updateValueObjects_(); }
+    void setSequenceType(SequenceType m) { p_mode_->setValue(m); updateValueObjects_(); }
 
     void setOscillatorMode(AUDIO::Waveform::Type mode) { p_oscMode_->setValue(mode); }
 
@@ -177,6 +177,9 @@ public:
     void setUseFrequency(bool enable) { p_useFreq_->setValue(enable); }
 
     // ------------ values --------------
+
+    /** Sets the sequenceType to ST_TIMELINE if necessary and copies the timeline data */
+    void setTimeline(const MATH::Timeline1D&);
 
     MATH::Timeline1D * timeline() { return timeline_; }
     const MATH::Timeline1D * timeline() const { return timeline_; }

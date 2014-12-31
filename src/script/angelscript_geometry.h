@@ -51,6 +51,9 @@ class Scene;
     public:
         /** Creates a script engine wrapper for the given geometry */
         GeometryEngineAS(GEOM::Geometry * );
+        /** Creates a script engine wrapper for the given geometry with READ access to the object */
+        GeometryEngineAS(GEOM::Geometry *, Object * o);
+
         ~GeometryEngineAS();
 
         /** Returns the script engine with all the functionality
@@ -64,7 +67,7 @@ class Scene;
             Must not be executed!
             This is used by the editor for syntax highlighting.
             Ownership is on caller. */
-        static asIScriptEngine * createNullEngine();
+        static asIScriptEngine * createNullEngine(bool withObject);
 
     private:
 

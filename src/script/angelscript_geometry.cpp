@@ -15,6 +15,7 @@
 #include <sstream>
 
 #include "angelscript_geometry.h"
+#include "angelscript_object.h"
 #include "script/angelscript.h"
 #include "object/object.h"
 #include "geom/geometry.h"
@@ -515,8 +516,9 @@ class GeometryEngineAS::Private
 {
 public:
 
-    Private(GEOM::Geometry * g)
-        : g         (g),
+    Private(GEOM::Geometry * g, Object * o = 0)
+        : object    (o),
+          g         (g),
           gas       (new GeometryAS(g)),
           engine    (0),
           context   (0)
@@ -524,10 +526,13 @@ public:
 
     ~Private()
     {
-        if (engine)
-            engine->Release();
         if (context)
             context->Release();
+
+        // XXX context seem to release engine sometimes
+//        if (engine)
+//            engine->Release();
+
         gas->releaseRef();
     }
 
@@ -537,6 +542,7 @@ public:
     // global script function
     GeometryAS * getGeometryAS() { gas->addRef(); return gas; }
 
+    Object * object;
     GEOM::Geometry * g;
     GeometryAS * gas;
     asIScriptEngine * engine;
@@ -547,6 +553,11 @@ public:
 
 GeometryEngineAS::GeometryEngineAS(GEOM::Geometry * g)
     : p_    (new Private(g))
+{
+}
+
+GeometryEngineAS::GeometryEngineAS(GEOM::Geometry * g, Object * o)
+    : p_    (new Private(g, o))
 {
 }
 
@@ -562,12 +573,19 @@ asIScriptEngine * GeometryEngineAS::scriptEngine()
     return p_->engine;
 }
 
-asIScriptEngine * GeometryEngineAS::createNullEngine()
+asIScriptEngine * GeometryEngineAS::createNullEngine(bool withObject)
 {
     GeometryEngineAS g(0);
     auto engine = g.scriptEngine();
     // unconnect
     engine->ClearMessageCallback();
+    // add object namespace
+    if (withObject)
+    {
+        registerAngelScript_object(engine, 0, false);
+        registerAngelScript_rootObject(engine, 0, false);
+    }
+    // unbind ownership
     g.p_->engine = 0;
     return engine;
 }
@@ -582,13 +600,24 @@ void GeometryEngineAS::Private::createEngine()
 
     registerDefaultAngelScript(engine);
 
+    // access to geometry
     r = engine->RegisterGlobalFunction("Geometry@ geometry()",
                                         asMETHODPR(Private, getGeometryAS, (void), GeometryAS*),
                                         asCALL_THISCALL_ASGLOBAL, this); assert(r >= 0);
+    if (object)
+    {
+        // read access to object (parent of geometry)
+        registerAngelScript_object(engine, object, false);
+
+        // read access to root object
+        if (auto scene = object->sceneObject())
+            registerAngelScript_rootObject(engine, scene, false);
+    }
 }
 
 void GeometryEngineAS::Private::messageCallback(const asSMessageInfo *msg)
 {
+    MO_WARNING(QString("\n%1:%2 %3").arg(msg->row).arg(msg->col).arg(msg->message));
     // XXX sometimes segfaults
     //errors += QString("\n%1:%2 %3").arg(msg->row).arg(msg->col).arg(msg->message);
 }
@@ -618,6 +647,8 @@ void GeometryEngineAS::execute(const QString &qscript)
 
     if (r < 0)
         MO_ERROR(QObject::tr("Error parsing script") + ":" + p_->errors);
+
+    p_->engine->ClearMessageCallback();
 
     // --- get main function ---
 

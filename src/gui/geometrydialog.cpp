@@ -46,7 +46,7 @@ namespace GUI {
 GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
                                QWidget *parent, Qt::WindowFlags flags) :
     QDialog         (parent, flags),
-    settings_       (new GEOM::GeometryFactorySettings()),
+    settings_       (new GEOM::GeometryFactorySettings(0)),
     creator_        (0),
     geometry_       (0),
     updateGeometryLater_(false),
@@ -622,7 +622,7 @@ void GeometryDialog::presetSelected_()
 
     const QString filename = comboPreset_->itemData(index).toString();
 
-    GEOM::GeometryFactorySettings set;
+    GEOM::GeometryFactorySettings set(0);
 
     if (!filename.isEmpty())
         set.loadFile(filename);

@@ -245,12 +245,6 @@ void SequenceFloat::createParameters()
                   tr("Frequency is applied to non-oscillators as well"),
                   false, true, false);
 
-        p_doPhaseDegree_ = params()->createBooleanParameter("phase_deg", tr("phase in degree"),
-                  tr("Selects whether the phase value has a range of [0,1] or [0,360]"),
-                  tr("Phase is in the range of [0,1]"),
-                  tr("Phase is in the range of [0,360]"),
-                  false, true, false);
-
         p_offset_ = params()->createFloatParameter("value_offset", tr("value offset"),
                    tr("This value is always added to the output of the sequence"),
                    0.0, 0.1);
@@ -266,6 +260,12 @@ void SequenceFloat::createParameters()
         p_phase_ = params()->createFloatParameter("phase", tr("phase"),
                   tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
                   0.0, 0.05);
+
+        p_doPhaseDegree_ = params()->createBooleanParameter("phase_deg", tr("phase in degree"),
+                  tr("Selects whether the phase value has a range of [0,1] or [0,360]"),
+                  tr("Phase is in the range of [0,1]"),
+                  tr("Phase is in the range of [0,360]"),
+                  false, true, false);
 
         p_pulseWidth_ = params()->createFloatParameter("pulsewidth", tr("pulse width"),
                    tr("Pulsewidth of the waveform, describes the width of the positive edge"),
@@ -466,6 +466,7 @@ void SequenceFloat::updateParameterVisibility()
     p_doPhaseDegree_->setVisible(freq);
     p_equationText_->setVisible(equ);
     p_soundFile_->setVisible(wave);
+    p_soundFileChannel_->setVisible(wave);
 
     p_wtFreqs_->setVisible(specwt);
     p_wtPhases_->setVisible(specwt);
@@ -561,6 +562,14 @@ void SequenceFloat::updatePhaseInDegree_()
     phaseMult_ = p_doPhaseDegree_->baseValue()? 1.0 / 360.0 : 1.0;
     if (sequenceType() == ST_ADD_WT)
         updateWavetable_();
+}
+
+void SequenceFloat::setTimeline(const MATH::Timeline1D & tl)
+{
+    if (sequenceType() != ST_TIMELINE)
+        setSequenceType(ST_TIMELINE);
+
+    *timeline_ = tl;
 }
 
 void SequenceFloat::updateValueObjects_()

@@ -39,6 +39,8 @@ signals:
 
     void viewSpaceChanged(const UTIL::ViewSpace&);
 
+    void statusTipChanged(const QString&);
+
 public slots:
 
     /** Sets the ViewSpace for the shown sequence */
