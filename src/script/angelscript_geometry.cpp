@@ -248,6 +248,8 @@ public:
     void addText(const StringAS& text) { GEOM::GeometryFactory::createText(g, Mat4(1), QString::fromUtf8(text.c_str())); }
     void addTextP(const StringAS& text, const Vec3& p)
         { GEOM::GeometryFactory::createText(g, glm::translate(Mat4(1), p), QString::fromUtf8(text.c_str())); }
+    void addTextM(const StringAS& text, const Mat4& m)
+        { GEOM::GeometryFactory::createText(g, m, QString::fromUtf8(text.c_str())); }
 
     void addGeometry(const GeometryAS& o) { g->addGeometry( *o.g ); }
     void addGeometryP(const GeometryAS& o, const Vec3& p) { g->addGeometry( *o.g, p ); }
@@ -265,6 +267,7 @@ public:
     void translateX(Float v) { g->translate(v, 0, 0); }
     void translateY(Float v) { g->translate(0, v, 0); }
     void translateZ(Float v) { g->translate(0, 0, v); }
+    void applyMatrix(const Mat4& m) { g->applyMatrix(m); }
 
     void clear() { g->clear(); }
     void setShared(bool b) { g->setSharedVertices(b); }
@@ -426,7 +429,8 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void add(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void add(const Geometry &in, const vec3 &in)", addGeometryP);
     MO__REG_METHOD("void addText(const string &in)", addText);
-    MO__REG_METHOD("void addText(const string &in, const vec3 &in)", addTextP);
+    MO__REG_METHOD("void addText(const string &in, const vec3 &in pos)", addTextP);
+    MO__REG_METHOD("void addText(const string &in, const mat4 &in transform)", addTextM);
 
     MO__REG_METHOD("void setVertex(uint vertex_index, const vec3 &in)", setVertexIV);
     MO__REG_METHOD("void setNormal(uint vertex_index, const vec3 &in)", setNormalIV);
@@ -454,7 +458,7 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void translateX(float)", translateX);
     MO__REG_METHOD("void translateY(float)", translateY);
     MO__REG_METHOD("void translateZ(float)", translateZ);
-
+    MO__REG_METHOD("void applyMatrix(const mat4 &in)", applyMatrix);
 
 #undef MO__REG_METHOD
 
