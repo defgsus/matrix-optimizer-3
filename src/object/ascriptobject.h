@@ -32,6 +32,9 @@ signals:
 
 public slots:
 
+    /** Run the script. To be called by GUI thread only! */
+    void runScript();
+
 private:
 
     class Private;

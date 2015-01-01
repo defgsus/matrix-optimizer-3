@@ -25,7 +25,7 @@ class AScriptObject::Private
 {
     public:
     Private(AScriptObject * o)
-        : obj(o), engine(0), module(0), context(0), mainFunc(0), ok(false) { }
+        : obj(o), isCompiled(false), engine(0), module(0), context(0), mainFunc(0), ok(false) { }
 
     ~Private()
     {
@@ -40,6 +40,7 @@ class AScriptObject::Private
 
     AScriptObject * obj;
     ParameterText * scriptText;
+    bool isCompiled;
 
     asIScriptEngine * engine;
     asIScriptModule * module;
@@ -104,6 +105,7 @@ void AScriptObject::onParameterChanged(Parameter *p)
 void AScriptObject::Private::compile()
 {
     ok = false;
+    isCompiled = false;
 
     // get engine
     if (!engine)
@@ -148,6 +150,7 @@ void AScriptObject::Private::compile()
         MO_ERROR(tr("The context could not be initialized"));
 
     ok = true;
+    isCompiled = true;
 }
 
 void AScriptObject::Private::run()
@@ -162,7 +165,15 @@ void AScriptObject::Private::run()
 
 void AScriptObject::Private::messageCallback(const asSMessageInfo * msg)
 {
-    MO_WARNING("angelscript: " << msg->message);
+    MO_WARNING("angelscript('" << obj->name() << "'): " << msg->message);
+}
+
+void AScriptObject::runScript()
+{
+    if (!p_->ok || !p_->isCompiled)
+        p_->compile();
+
+    p_->run();
 }
 
 } // namespace MO

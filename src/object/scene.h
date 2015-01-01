@@ -147,6 +147,9 @@ public:
 
     void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
+    /** Executes all script objects */
+    void runScripts();
+
     // --------- locking and updates -----------
 
     void beginSequenceChange(MO::Sequence *);

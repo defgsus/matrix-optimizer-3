@@ -618,6 +618,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     scene_ = s;
 
+    scene_->runScripts();
+
     // manage memory
     scene_->setParent(this);
 

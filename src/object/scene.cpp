@@ -30,6 +30,7 @@
 #include "object/clipcontroller.h"
 #include "object/microphone.h"
 #include "object/lightsource.h"
+#include "object/ascriptobject.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
@@ -1033,6 +1034,13 @@ void Scene::calculateSceneTransform_(uint thread, Double time)
 
 
 // ---------------------- runtime --------------------------
+
+void Scene::runScripts()
+{
+    for (auto o : allObjects_)
+        if (auto script = qobject_cast<AScriptObject*>(o))
+            script->runScript();
+}
 
 void Scene::lockRead_()
 {
