@@ -91,6 +91,8 @@ public:
 
     // -------------- types ------------------
 
+    /** must be bits!
+        order can change between runs. */
     enum Type
     {
         T_NONE              = 0,
@@ -114,7 +116,8 @@ public:
         T_CLIP_CONTROLLER    = 1<<17,
         T_SOUND_OBJECT      = 1<<18,
         T_OSCILLATOR        = 1<<19,
-        T_AUDIO_OBJECT      = 1<<20
+        T_AUDIO_OBJECT      = 1<<20,
+        T_ANGELSCRIPT       = 1<<21
     };
     enum TypeGroups
     {
@@ -135,6 +138,8 @@ public:
                                 | T_OSCILLATOR,
 
         TG_TRANSFORMATION   = T_TRANSFORMATION | T_TRANSFORMATION_MIX,
+
+        TG_SCRIPT           = T_ANGELSCRIPT,
 
         TG_ALL = 0xffffffff
     };
@@ -265,6 +270,7 @@ public:
     virtual bool isAudioUnit() const { return false; }
     virtual bool isModulatorObject() const { return false; }
     virtual bool isAudioObject() const { return false; }
+    virtual bool isScript() const { return false; }
 
     /** The base class method returns whether any of the Parameters of
         the object are modulated. */

@@ -243,16 +243,10 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 
     // ----------- object properties ------------
 
-    r = engine->RegisterObjectProperty(typ, "float x", asOFFSET(Vec, x)); assert( r >= 0 );
-    r = engine->RegisterObjectProperty(typ, "float y", asOFFSET(Vec, y)); assert( r >= 0 );
     //r = engine->RegisterObjectProperty(typ, "float z", asOFFSET(Vec, z)); assert( r >= 0 );
     //r = engine->RegisterObjectProperty(typ, "float w", asOFFSET(Vec, w)); assert( r >= 0 );
-    r = engine->RegisterObjectProperty(typ, "float r", asOFFSET(Vec, x)); assert( r >= 0 );
-    r = engine->RegisterObjectProperty(typ, "float g", asOFFSET(Vec, y)); assert( r >= 0 );
     //r = engine->RegisterObjectProperty(typ, "float b", asOFFSET(Vec, z)); assert( r >= 0 );
     //r = engine->RegisterObjectProperty(typ, "float a", asOFFSET(Vec, w)); assert( r >= 0 );
-    r = engine->RegisterObjectProperty(typ, "float s", asOFFSET(Vec, x)); assert( r >= 0 );
-    r = engine->RegisterObjectProperty(typ, "float t", asOFFSET(Vec, y)); assert( r >= 0 );
     //r = engine->RegisterObjectProperty(typ, "float u", asOFFSET(Vec, z)); assert( r >= 0 );
     //r = engine->RegisterObjectProperty(typ, "float v", asOFFSET(Vec, w)); assert( r >= 0 );
 
@@ -345,6 +339,15 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
         "void f(const vec4 &in)",
         asFUNCTION(vecfunc<Vec2>::vecConvConstructorVec<Vec4>), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
+    // ------------------ properties ------------------
+
+    r = engine->RegisterObjectProperty(typ, "float x", asOFFSET(Vec2, x)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float y", asOFFSET(Vec2, y)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float r", asOFFSET(Vec2, x)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float g", asOFFSET(Vec2, y)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float s", asOFFSET(Vec2, x)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float t", asOFFSET(Vec2, y)); assert( r >= 0 );
+
     // --------------------- methods ------------------
     MO__REG_METHOD("%1 rotated(float)", vecfunc<Vec2>::vecRotatedZ);
     MO__REG_METHOD("%1 rotatedZ(float)", vecfunc<Vec2>::vecRotatedZ);
@@ -380,6 +383,12 @@ void register_vector_3(asIScriptEngine *engine)
 
     // ------------ properties ---------
 
+    r = engine->RegisterObjectProperty(typ, "float x", asOFFSET(Vec3, x)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float y", asOFFSET(Vec3, y)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float r", asOFFSET(Vec3, x)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float g", asOFFSET(Vec3, y)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float s", asOFFSET(Vec3, x)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float t", asOFFSET(Vec3, y)); assert( r >= 0 );
     r = engine->RegisterObjectProperty("vec3", "float z", asOFFSET(Vec3, z)); assert( r >= 0 );
     r = engine->RegisterObjectProperty("vec3", "float b", asOFFSET(Vec3, z)); assert( r >= 0 );
     r = engine->RegisterObjectProperty("vec3", "float u", asOFFSET(Vec3, z)); assert( r >= 0 );
@@ -449,6 +458,12 @@ void register_vector_4(asIScriptEngine *engine)
 
     // ------------ properties ---------
 
+    r = engine->RegisterObjectProperty(typ, "float x", asOFFSET(Vec4, x)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float y", asOFFSET(Vec4, y)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float r", asOFFSET(Vec4, x)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float g", asOFFSET(Vec4, y)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float s", asOFFSET(Vec4, x)); assert( r >= 0 );
+    r = engine->RegisterObjectProperty(typ, "float t", asOFFSET(Vec4, y)); assert( r >= 0 );
     r = engine->RegisterObjectProperty("vec4", "float z", asOFFSET(Vec4, z)); assert( r >= 0 );
     r = engine->RegisterObjectProperty("vec4", "float w", asOFFSET(Vec4, w)); assert( r >= 0 );
     r = engine->RegisterObjectProperty("vec4", "float b", asOFFSET(Vec4, z)); assert( r >= 0 );

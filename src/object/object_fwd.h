@@ -18,7 +18,8 @@ namespace MO {
     {
         TT_PLAIN_TEXT,
         TT_EQUATION,
-        TT_APP_STYLESHEET
+        TT_APP_STYLESHEET,
+        TT_ANGELSCRIPT
     };
 
     namespace IO { class DataStream; }

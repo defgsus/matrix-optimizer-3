@@ -255,7 +255,8 @@ HEADERS += \
     src/script/angelscript_object.h \
     src/script/angelscript_geometry.h \
     src/geom/builtinlinefont.h \
-    src/script/angelscript_timeline.h
+    src/script/angelscript_timeline.h \
+    src/object/ascriptobject.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -473,4 +474,5 @@ SOURCES += \
     src/script/angelscript_object.cpp \
     src/script/angelscript_geometry.cpp \
     src/geom/builtinlinefont.cpp \
-    src/script/angelscript_timeline.cpp
+    src/script/angelscript_timeline.cpp \
+    src/object/ascriptobject.cpp

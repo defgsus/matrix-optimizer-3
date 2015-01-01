@@ -10,14 +10,17 @@
 
 #include <QLayout>
 #include <QPushButton>
+#include <QCheckBox>
 #include <QTextEdit>
 #include <QKeyEvent>
 #include <QTimer>
 
 #include "texteditdialog.h"
-#include "widget/equationeditor.h"
 #include "helpdialog.h"
+#include "widget/equationeditor.h"
+#include "widget/angelscriptwidget.h"
 #include "tool/syntaxhighlighter.h"
+#include "script/angelscript.h"
 #include "io/settings.h"
 
 namespace MO {
@@ -37,17 +40,19 @@ public:
     }
 
     void createWidgets();
-    void emitTextChanged() { timer.start(); }
+    void emitTextChanged() { if (cbAlways->isChecked()) timer.start(); }
 
     TextEditDialog * dialog;
     TextType textType;
 
     QTextEdit * plainText;
     EquationEditor * equEdit;
+    AbstractScriptWidget * scriptEdit;
 
     QString defaultText;
 
     QTimer timer;
+    QCheckBox * cbAlways;
 
     bool rejected;
 };
@@ -99,6 +104,7 @@ QString TextEditDialog::getText() const
         case TT_PLAIN_TEXT:
         case TT_APP_STYLESHEET: return p_->plainText->toPlainText();
         case TT_EQUATION: return p_->equEdit->toPlainText();
+        case TT_ANGELSCRIPT: return p_->scriptEdit->scriptText();
     }
 
     return QString();
@@ -115,6 +121,7 @@ void TextEditDialog::setText(const QString & text, bool send_signal)
         case TT_PLAIN_TEXT:
         case TT_APP_STYLESHEET: p_->plainText->setText(text); break;
         case TT_EQUATION: p_->equEdit->setPlainText(text); break;
+        case TT_ANGELSCRIPT: p_->scriptEdit->setScriptText(text); break;
     }
 
     if (send_signal)
@@ -166,11 +173,29 @@ void TextEditDialog::Private::createWidgets()
                     emitTextChanged();
                 });
                 break;
+
+            case TT_ANGELSCRIPT:
+            {
+                auto as = new AngelScriptWidget(dialog);
+                lv->addWidget(as);
+                registerDefaultAngelScript( as->scriptEngine() );
+//                registerAngelScript_rootObject( script->scriptEngine(), scene_, true );
+                scriptEdit = as;
+                connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
+                {
+                    emitTextChanged();
+                });
+            }
         }
 
         auto lh = new QHBoxLayout();
         lv->addLayout(lh);
 
+            // alway update?
+            cbAlways = new QCheckBox(tr("auto update"), dialog);
+            lh->addWidget(cbAlways);
+
+            // ok
             auto butOk = new QPushButton(tr("Ok"), dialog);
             lh->addWidget(butOk);
             butOk->setDefault(true);
@@ -180,6 +205,13 @@ void TextEditDialog::Private::createWidgets()
                 dialog->accept();
             });
 
+            // run
+            auto butRun = new QPushButton(tr("Up&date"), dialog);
+            lh->addWidget(butRun);
+
+            connect(butRun, SIGNAL(clicked()), dialog, SIGNAL(textChanged()));
+
+            // cancel
             auto butCancel = new QPushButton(tr("Cancel"), dialog);
             lh->addWidget(butCancel);
 
