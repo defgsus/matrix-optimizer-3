@@ -20,6 +20,9 @@ namespace MO {
 class Object;
 class Scene;
 
+/** AngelScript wrapper for an Object */
+class ObjectAS;
+
 /** Put the object type and related functions into the namespace.
     Dependency: string, timeline, geometry */
 void registerAngelScript_object(asIScriptEngine *engine);

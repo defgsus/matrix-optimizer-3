@@ -12,6 +12,7 @@
 #define MOSRC_OBJECT_OBJECT_H
 
 #include <vector>
+#include <functional>
 
 #include <QByteArray>
 #include <QObject>
@@ -401,6 +402,10 @@ public:
     /** Returns a set of all idNames */
     QSet<QString> getChildIds(bool recursive) const;
 
+    /** Returns the first object, including self, for which @p selector returns true,
+        or NULL. */
+    Object * findChildObject(std::function<bool(Object*)> selector);
+
     /** Returns the children with the given id, or NULL.
         If @p ignore is not NULL, this object will be ignored by search. */
     Object * findChildObject(const QString& id, bool recursive = false, Object * ignore = 0) const;
@@ -764,6 +769,7 @@ private:
 
 
 // ---------------------- template impl -------------------
+
 
 template <class T>
 QList<T*> Object::findChildObjects(const QString& id, bool recursive, Object * ignore) const

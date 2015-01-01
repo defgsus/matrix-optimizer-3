@@ -619,6 +619,16 @@ Object * Object::findCommonParentObject(Object *other) const
     return 0;
 }
 
+Object * Object::findChildObject(std::function<bool (Object *)> selector)
+{
+    if (selector(this))
+        return this;
+    for (auto c : childObjects())
+        if (auto o = c->findChildObject(selector))
+            return o;
+    return 0;
+}
+
 bool Object::isSaveToAdd(Object *o, QString &error) const
 {
     if (!o)

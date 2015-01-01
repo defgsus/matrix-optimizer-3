@@ -28,17 +28,42 @@
 
 namespace MO {
 
-namespace {
-
 //------------------------------
 // AngelScript functions wrapper
 //------------------------------
 
-struct objectfunc
+
+class ObjectAS
 {
+public:
+    Object * o;
+    int ref;
+    bool owning;
+    ObjectAS * self;
+
+    /** Create a non-owning wrapper */
+    ObjectAS(Object * o)
+        : o         (o),
+          ref       (1),
+          owning    (false),
+          self      (this)
+    { }
+
+    ~ObjectAS()
+    {
+        if (owning)
+            delete o;
+    }
+
+    static ObjectAS * factory(Object * o) { return new ObjectAS(o); }
+    void addRef() { ++ref; }
+    void releaseRef() { if (--ref == 0) delete this; }
+
+    // --------------- interface -----------------
+
     // ------ getter ------
 
-    static StringAS toString(Object * o)
+    StringAS toString()
     {
         if (o == 0)
             return "null";
@@ -47,29 +72,28 @@ struct objectfunc
         return s.str();
     }
 
-    static StringAS name(Object * o) { return toStringAS(o->name()); }
-    static StringAS id(Object * o) { return toStringAS(o->idName()); }
+    StringAS name() { return toStringAS(o->name()); }
+    StringAS id() { return toStringAS(o->idName()); }
 
-    static int childrenCount(Object * o) { return o->childObjects().size(); }
-    static Object * children(Object* o, int i) { return o->childObjects()[i]; }
+    int childrenCount() { return o->childObjects().size(); }
+    ObjectAS * children(int i) { return factory(o->childObjects()[i]); }
 
-    static Object * findName(Object * o, const StringAS& n)
+    ObjectAS * findName(const StringAS& n)
     {
-        if (o->name().toStdString() == n)
-            return o;
-        for (auto c : o->childObjects())
-            if (auto f = findName(c, n))
-                return f;
+        QString qn = QString::fromUtf8(n.c_str());
+        auto obj = o->findChildObject([=](Object * o){ return o->name() == qn; });
+        if (obj)
+            return factory(obj);
         return 0;
     }
 
     // ------ setter ------
 
-    static ObjectEditor * editor(Object * o) { auto s = o->sceneObject(); return s ? s->editor() : 0; }
+    ObjectEditor * editor() { auto s = o->sceneObject(); return s ? s->editor() : 0; }
 
-    static void setName(Object * o, const StringAS& n) { auto e = editor(o); if (e) e->setObjectName(o, QString::fromUtf8(n.c_str())); }
+    void setName(const StringAS& n) { auto e = editor(); if (e) e->setObjectName(o, QString::fromUtf8(n.c_str())); }
 
-    static Timeline1AS * timeline(Object * o)
+    Timeline1AS * timeline()
     {
         if (auto seq = qobject_cast<SequenceFloat*>(o))
             if (seq->timeline())
@@ -77,19 +101,19 @@ struct objectfunc
         return 0;
     }
 
-    static void setTimeline(Object * o, Timeline1AS * tl)
+    void setTimeline(Timeline1AS * tl)
     {
         if (tl)
         if (auto seq = qobject_cast<SequenceFloat*>(o))
         {
             seq->setTimeline(get_timeline(tl));
             // gui signal
-            if (auto e = editor(seq))
+            if (auto e = editor())
                 emit e->sequenceChanged(seq);
         }
     }
 
-    static void setGeometry(Object * o, GeometryAS * gas)
+    void setGeometry(GeometryAS * gas)
     {
         Model3d * model = qobject_cast<Model3d*>(o);
         if (!model)
@@ -107,7 +131,12 @@ struct objectfunc
 
         model->setGeometry(*g);
     }
+
 };
+
+
+namespace {
+
 
 
 //--------------------------------
@@ -117,7 +146,7 @@ struct objectfunc
 namespace native {
 
 #define MO__REG_METHOD(decl__, name__) \
-    r = engine->RegisterObjectMethod("Object", decl__, asFUNCTION(name__), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("Object", decl__, asMETHOD(ObjectAS, name__), asCALL_THISCALL); assert( r >= 0 );
 #define MO__REG_FUNC(decl__, name__) \
     r = engine->RegisterGlobalFunction(decl__, asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
 
@@ -127,28 +156,37 @@ static void register_object(asIScriptEngine *engine)
     int r;
 
     // register the type
-    r = engine->RegisterObjectType("Object", 0, asOBJ_REF | asOBJ_NOCOUNT); assert( r >= 0 );
+    r = engine->RegisterObjectType("Object", 0, asOBJ_REF); assert( r >= 0 );
+
+    // ----------------- constructor ---------------------------
+
+    //r = engine->RegisterObjectBehaviour(typ, asBEHAVE_FACTORY,
+    //    MO__STR("ObjectAS@ f()"), asFUNCTION(ObjectAS::factory), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Object", asBEHAVE_ADDREF,
+        "void f()", asMETHOD(ObjectAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("Object", asBEHAVE_RELEASE,
+        "void f()", asMETHOD(ObjectAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
 
     // --------------- the object methods ----------------------
 
     // strings
-    MO__REG_METHOD("string opImplConv() const", objectfunc::toString);
-    MO__REG_METHOD("string name() const", objectfunc::name);
-    MO__REG_METHOD("string id() const", objectfunc::id);
+    MO__REG_METHOD("string opImplConv() const", toString);
+    MO__REG_METHOD("string name() const", name);
+    MO__REG_METHOD("string id() const", id);
 
     // getter
-    MO__REG_METHOD("int childrenCount() const", objectfunc::childrenCount);
-    MO__REG_METHOD("Object@ children(int)", objectfunc::children);
-    MO__REG_METHOD("const Object@ children(int) const", objectfunc::children);
-    MO__REG_METHOD("Object@ find(const string &in name)", objectfunc::findName);
-    MO__REG_METHOD("const Object@ find(const string &in name) const", objectfunc::findName);
+    MO__REG_METHOD("int childrenCount() const", childrenCount);
+    MO__REG_METHOD("Object@ children(int)", children);
+    MO__REG_METHOD("const Object@ children(int) const", children);
+    MO__REG_METHOD("Object@ find(const string &in name)", findName);
+    MO__REG_METHOD("const Object@ find(const string &in name) const", findName);
 
-    MO__REG_METHOD("Timeline1@ getTimeline() const", objectfunc::timeline);
+    MO__REG_METHOD("Timeline1@ getTimeline() const", timeline);
 
     // setter
-    MO__REG_METHOD("void setName(const string &in)", objectfunc::setName);
-    MO__REG_METHOD("void setTimeline(const Timeline1@)", objectfunc::setTimeline);
-    MO__REG_METHOD("void setGeometry(const Geometry@)", objectfunc::setGeometry);
+    MO__REG_METHOD("void setName(const string &in)", setName);
+    MO__REG_METHOD("void setTimeline(const Timeline1@)", setTimeline);
+    MO__REG_METHOD("void setGeometry(const Geometry@)", setGeometry);
 
 
 
@@ -181,32 +219,29 @@ void registerAngelScript_object(asIScriptEngine *engine)
 
 void registerAngelScript_rootObject(asIScriptEngine *engine, Scene* root, bool writeable)
 {
-    // XXX BIG TODO! remove this static!!
-    static void * ptr;
-    ptr = root;
-    int r = 0;
+    int r;
+    ObjectAS * as = ObjectAS::factory(root);
     if (writeable)
     {
-        r = engine->RegisterGlobalProperty("Object@ scene", &ptr); assert( r >= 0 );
+        r = engine->RegisterGlobalProperty("Object@ scene", &as->self); assert( r >= 0 );
     }
     else
     {
-        r = engine->RegisterGlobalProperty("const Object@ scene", &ptr); assert( r >= 0 );
+        r = engine->RegisterGlobalProperty("const Object@ scene", &as->self); assert( r >= 0 );
     }
 }
 
 void registerAngelScript_object(asIScriptEngine *engine, Object * obj, bool writeable, bool withRoot)
 {
-    static void * ptr;
-    ptr = obj;
-    int r = 0;
+    int r;
+    ObjectAS * as = ObjectAS::factory(obj);
     if (writeable)
     {
-        r = engine->RegisterGlobalProperty("Object@ object", &ptr); assert( r >= 0 );
+        r = engine->RegisterGlobalProperty("Object@ object", &as->self); assert( r >= 0 );
     }
     else
     {
-        r = engine->RegisterGlobalProperty("const Object@ object", &ptr); assert( r >= 0 );
+        r = engine->RegisterGlobalProperty("const Object@ object", &as->self); assert( r >= 0 );
     }
 
     if (withRoot)

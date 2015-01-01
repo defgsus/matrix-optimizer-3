@@ -110,6 +110,8 @@ public:
     double derivative(double time, double range)
     { range = std::max(range, tl->timeQuantum()) * 0.5; return (value(time+range) - value(time-range)) / range; }
 
+    // --- setter ---
+
     void clear() { tl->clear(); }
     void update() { tl->setAutoDerivative(); }
     void add(double time, double value) { tl->add(time, value); }
@@ -162,6 +164,8 @@ public:
 
     // ------ interface -------
 
+    // --- getter ---
+
     std::string toString() const
     {
         std::stringstream s;
@@ -211,6 +215,16 @@ public:
     Vec value(double time) const { Vec v; for (uint i=0; i<NUM; ++i) v[i] = tl[i].get(time); return v; }
     Vec derivative(double time, double range)
     { range = std::max(range, tl[0].timeQuantum()) * 0.5; return (value(time+range) - value(time-range)) / Float(range); }
+
+    Timeline1AS * getTimeline1(uint idx)
+    {
+        idx = std::min(NUM-1, idx);
+        auto tl1 = Timeline1AS::factory();
+        *tl1->tl = tl[idx];
+        return tl1;
+    }
+
+    // --- setter ---
 
     void clear() { for (uint i=0; i<NUM; ++i) tl[i].clear(); }
     void update() { for (uint i=0; i<NUM; ++i) tl[i].setAutoDerivative(); }
@@ -324,9 +338,16 @@ void register_timeline_tmpl(asIScriptEngine * engine, const char * typ, const ch
     MO__REG_METHOD("void changeType(TimelinePointType type)", changeType);
 
     MO__REG_METHOD("void set(%1@)", set);
-
 }
 
+// ---- for Timeline>1 only --------
+
+template <class Class>
+void register_timeline_tmpl_1plus(asIScriptEngine * engine, const char * typ, const char * holdtyp)
+{
+    int r;
+    MO__REG_METHOD("Timeline1@ getTimeline1(uint index)", getTimeline1);
+}
 
 // ---- unique per NUM vectors -----
 
@@ -335,6 +356,7 @@ void register_timeline_tmpl_2(asIScriptEngine * engine, const char * typ, const 
 {
     int r;
     MO__REG_METHOD("void set(Timeline1@ x, Timeline1@ y)", set_1_1);
+    register_timeline_tmpl_1plus<Class>(engine, typ, holdtyp);
 }
 
 template <class Class>
@@ -342,6 +364,7 @@ void register_timeline_tmpl_3(asIScriptEngine * engine, const char * typ, const 
 {
     int r;
     MO__REG_METHOD("void set(Timeline1@ x, Timeline1@ y, Timeline1@ z)", set_1_1_1);
+    register_timeline_tmpl_1plus<Class>(engine, typ, holdtyp);
 }
 
 template <class Class>
@@ -349,6 +372,7 @@ void register_timeline_tmpl_4(asIScriptEngine * engine, const char * typ, const 
 {
     int r;
     MO__REG_METHOD("void set(Timeline1@ x, Timeline1@ y, Timeline1@ z, Timeline1@ w)", set_1_1_1_1);
+    register_timeline_tmpl_1plus<Class>(engine, typ, holdtyp);
 }
 
 #undef MO__REG_METHOD
