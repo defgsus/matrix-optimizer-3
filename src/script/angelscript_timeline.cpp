@@ -24,7 +24,7 @@
 #include "io/log.h"
 
 
-#if 1
+#if 0
 #   define MO_DEBUG_TAS(arg__) MO_DEBUG(arg__)
 #else
 #   define MO_DEBUG_TAS(unused__)

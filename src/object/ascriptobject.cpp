@@ -13,6 +13,7 @@
 #include "param/parameters.h"
 #include "param/parametertext.h"
 #include "script/angelscript.h"
+#include "script/angelscript_object.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -34,6 +35,8 @@ class AScriptObject::Private
 
     void compile();
     void run();
+
+    void messageCallback(const asSMessageInfo * msg);
 
     AScriptObject * obj;
     ParameterText * scriptText;
@@ -104,17 +107,21 @@ void AScriptObject::Private::compile()
 
     // get engine
     if (!engine)
+    {
         engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-    if (!engine)
-        MO_ERROR(tr("The script engine could not be created"));
+        if (!engine)
+            MO_ERROR(tr("The script engine could not be created"));
 
-   // engine->SetMessageCallback(asMETHOD(Private, messageCallback), this, asCALL_THISCALL);
-    // install namespace
-    registerDefaultAngelScript(engine);
+        engine->SetMessageCallback(asMETHOD(Private, messageCallback), this, asCALL_THISCALL);
+
+        // install namespace
+        registerDefaultAngelScript(engine);
+        registerAngelScript_object(engine, obj, true, true);
+    }
 
     // get module
     if (!module)
-        module = engine->GetModule(("_" + obj->idName()).toUtf8().constData(), asGM_CREATE_IF_NOT_EXISTS);
+        module = engine->GetModule(("_exec_" + obj->idName()).toUtf8().constData(), asGM_CREATE_IF_NOT_EXISTS);
     if (!module)
         MO_ERROR(tr("The script module could not be created"));
 
@@ -153,5 +160,9 @@ void AScriptObject::Private::run()
     context->Execute();
 }
 
+void AScriptObject::Private::messageCallback(const asSMessageInfo * msg)
+{
+    MO_WARNING("angelscript: " << msg->message);
+}
 
 } // namespace MO

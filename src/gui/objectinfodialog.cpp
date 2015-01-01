@@ -24,8 +24,10 @@
 #include "object/clip.h"
 #include "object/clipcontroller.h"
 #include "object/audioobject.h"
+#include "object/model3d.h"
 #include "object/util/alphablendsetting.h"
 #include "object/util/audioobjectconnections.h"
+#include "geom/geometry.h"
 
 namespace MO {
 namespace GUI {
@@ -127,6 +129,22 @@ void ObjectInfoDialog::setObject(Object * o)
     else if (o->type() & Object::TG_REAL_OBJECT)
         s << "<p>" << tr("current transformation") << ":<br/>"
           << matrix2Html(o->transformation()) << "</p>";
+
+    // ------- geometry ------------------
+
+    if (Model3d * model = qobject_cast<Model3d*>(o))
+    {
+        s << "<p>" << tr("geometry") << ": ";
+        if (!model->geometry())
+            s << "null";
+        else
+        {
+            s << "<br/>" << "vertices:  " << model->geometry()->numVertices()
+              << "<br/>" << "lines:     " << model->geometry()->numLines()
+              << "<br/>" << "triangles: " << model->geometry()->numTriangles();
+        }
+        s << "</p>";
+    }
 
     // ---------- audio object -----------
 

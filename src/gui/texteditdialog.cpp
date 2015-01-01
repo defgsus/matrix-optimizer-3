@@ -21,6 +21,7 @@
 #include "widget/angelscriptwidget.h"
 #include "tool/syntaxhighlighter.h"
 #include "script/angelscript.h"
+#include "script/angelscript_object.h"
 #include "io/settings.h"
 
 namespace MO {
@@ -179,7 +180,7 @@ void TextEditDialog::Private::createWidgets()
                 auto as = new AngelScriptWidget(dialog);
                 lv->addWidget(as);
                 registerDefaultAngelScript( as->scriptEngine() );
-//                registerAngelScript_rootObject( script->scriptEngine(), scene_, true );
+                registerAngelScript_object( as->scriptEngine(), 0, true, true);
                 scriptEdit = as;
                 connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
                 {
@@ -202,6 +203,8 @@ void TextEditDialog::Private::createWidgets()
 
             connect(butOk, &QPushButton::pressed, [=]()
             {
+                if (!cbAlways->isChecked())
+                    emit dialog->textChanged();
                 dialog->accept();
             });
 

@@ -69,8 +69,8 @@ void registerDefaultAngelScript(asIScriptEngine * engine)
     registerAngelScript_vector(engine);
     registerAngelScript_math(engine);
     registerAngelScript_timeline(engine);
-    registerAngelScript_object(engine);
     registerAngelScript_geometry(engine);
+    registerAngelScript_object(engine);
 
 
     //if (object)

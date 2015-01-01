@@ -16,6 +16,7 @@
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
 #include "gl/shader.h"
+#include "geom/geometry.h"
 #include "geom/geometrycreator.h"
 #include "param/parameters.h"
 #include "param/parameterfloat.h"
@@ -233,13 +234,16 @@ void Model3d::initGl(uint /*thread*/)
 
     draw_ = new GL::Drawable(idName());
 
-    creator_ = new GEOM::GeometryCreator(this);
-    connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
-    connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
+    if (!nextGeometry_)
+    {
+        creator_ = new GEOM::GeometryCreator(this);
+        connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
+        connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
 
-    geomSettings_->setObject(this);
-    creator_->setSettings(*geomSettings_);
-    creator_->start();
+        geomSettings_->setObject(this);
+        creator_->setSettings(*geomSettings_);
+        creator_->start();
+    }
 }
 
 void Model3d::releaseGl(uint /*thread*/)
@@ -282,6 +286,14 @@ void Model3d::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
     *geomSettings_ = s;
     geomSettings_->setObject(this);
     requestReinitGl();
+}
+
+void Model3d::setGeometry(const GEOM::Geometry & g)
+{
+    if (!nextGeometry_)
+        nextGeometry_ = new GEOM::Geometry;
+    *nextGeometry_ = g;
+    requestRender();
 }
 
 void Model3d::setupDrawable_()

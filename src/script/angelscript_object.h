@@ -21,11 +21,11 @@ class Object;
 class Scene;
 
 /** Put the object type and related functions into the namespace.
-    Dependency: string, timeline */
+    Dependency: string, timeline, geometry */
 void registerAngelScript_object(asIScriptEngine *engine);
 
 /** Make any object accessible to the script. */
-void registerAngelScript_object(asIScriptEngine * engine, Object * object, bool writeable);
+void registerAngelScript_object(asIScriptEngine * engine, Object * object, bool writeable, bool withRoot = false);
 
 /** Make the root object accessible to the script. */
 void registerAngelScript_rootObject(asIScriptEngine * engine, Scene* root, bool writeable);

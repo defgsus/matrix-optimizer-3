@@ -16,10 +16,12 @@
 
 #include "angelscript_object.h"
 #include "angelscript_timeline.h"
+#include "angelscript_geometry.h"
 #include "script/angelscript.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/sequencefloat.h"
+#include "object/model3d.h"
 #include "object/util/objecteditor.h"
 #include "io/log.h"
 
@@ -86,6 +88,25 @@ struct objectfunc
                 emit e->sequenceChanged(seq);
         }
     }
+
+    static void setGeometry(Object * o, GeometryAS * gas)
+    {
+        Model3d * model = qobject_cast<Model3d*>(o);
+        if (!model)
+        {
+            MO_WARNING("Object " << o << " has no Geometry to set");
+            return;
+        }
+
+        GEOM::Geometry * g = getGeometry(gas);
+        if (!g)
+        {
+            MO_WARNING("No Geometry to set for object " << o);
+            return;
+        }
+
+        model->setGeometry(*g);
+    }
 };
 
 
@@ -126,7 +147,8 @@ static void register_object(asIScriptEngine *engine)
 
     // setter
     MO__REG_METHOD("void setName(const string &in)", objectfunc::setName);
-    MO__REG_METHOD("void setTimeline(Timeline1@)", objectfunc::setTimeline);
+    MO__REG_METHOD("void setTimeline(const Timeline1@)", objectfunc::setTimeline);
+    MO__REG_METHOD("void setGeometry(const Geometry@)", objectfunc::setGeometry);
 
 
 
@@ -173,7 +195,7 @@ void registerAngelScript_rootObject(asIScriptEngine *engine, Scene* root, bool w
     }
 }
 
-void registerAngelScript_object(asIScriptEngine *engine, Object * obj, bool writeable)
+void registerAngelScript_object(asIScriptEngine *engine, Object * obj, bool writeable, bool withRoot)
 {
     static void * ptr;
     ptr = obj;
@@ -185,6 +207,14 @@ void registerAngelScript_object(asIScriptEngine *engine, Object * obj, bool writ
     else
     {
         r = engine->RegisterGlobalProperty("const Object@ object", &ptr); assert( r >= 0 );
+    }
+
+    if (withRoot)
+    {
+        if (!obj || !obj->sceneObject())
+            registerAngelScript_rootObject(engine, 0, writeable);
+        else
+            registerAngelScript_rootObject(engine, obj->sceneObject(), writeable);
     }
 }
 

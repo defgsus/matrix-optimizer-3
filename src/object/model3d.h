@@ -38,6 +38,9 @@ public:
     /** Sets new geometry settings and creates the geometry on next render */
     void setGeometrySettings(const GEOM::GeometryFactorySettings&);
 
+    /** Overwrite current geometry */
+    void setGeometry(const GEOM::Geometry& );
+
     const GEOM::Geometry * geometry() const;
     Vec4 modelColor(Double time, uint thread) const;
 

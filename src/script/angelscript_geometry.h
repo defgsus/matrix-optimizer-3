@@ -27,8 +27,8 @@ class Scene;
         The interface is designed to be used by scripts only. */
     class GeometryAS;
 
-    /* Returns the assigned geometry widget of the script object */
-    //GEOM::Geometry * getGeometry(const GeometryAS*);
+    /** Returns the assigned geometry widget of the script object, or NULL */
+    GEOM::Geometry * getGeometry(const GeometryAS*);
 
     /** Put the object type and related functions into the namespace */
     void registerAngelScript_geometry(asIScriptEngine *engine);

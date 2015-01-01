@@ -24,7 +24,7 @@
 #include "io/log.h"
 
 
-#if 1
+#if 0
 #   define MO_DEBUG_GAS(arg__) MO_DEBUG(arg__)
 #else
 #   define MO_DEBUG_GAS(unused__)
@@ -484,12 +484,11 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
 
 // ----------------------------------------------
 
-/*
 GEOM::Geometry * getGeometry(const GeometryAS * as)
 {
     return as ? as->g : 0;
 }
-*/
+
 
 void registerAngelScript_geometry(asIScriptEngine *engine)
 {
