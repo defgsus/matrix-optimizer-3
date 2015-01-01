@@ -21,6 +21,7 @@
 #include "param/parameters.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "param/parametertext.h"
 #include "util/texturesetting.h"
 #include "util/colorpostprocessingsetting.h"
 #include "util/texturemorphsetting.h"
@@ -162,6 +163,12 @@ void Model3d::createParameters()
                                               tr("All vertex positions of the model are moved along their "
                                                  "normals by this amount"),
                                               0.0, 0.05);
+
+        glslVertex_ = params()->createTextParameter("glslvertex", tr("glsl function"),
+                                                    tr("A piece of glsl code to modify vertex positions"),
+                                                    TT_GLSL,
+                                                    "vec3 mo_modify_position(in vec3 pos) {\n\treturn pos;\n}\n"
+                                                    , true, false);
     params()->endParameterGroup();
 }
 
@@ -171,10 +178,14 @@ void Model3d::onParameterChanged(Parameter *p)
 
     if (p == lightMode_
             || p == vertexFx_
+            || p == glslVertex_
             || texturePostProc_->needsRecompile(p)
             || textureMorph_->needsRecompile(p)
             || textureBumpMorph_->needsRecompile(p))
+    {
         doRecompile_ = true;
+        requestRender();
+    }
 
     if (texture_->needsReinit(p) || textureBump_->needsReinit(p))
         requestReinitGl();
@@ -194,6 +205,7 @@ void Model3d::updateParameterVisibility()
 
     bool vertfx = vertexFx_->baseValue();
     vertexExtrude_->setVisible(vertfx);
+    glslVertex_->setVisible(vertfx);
 }
 
 void Model3d::getNeededFiles(IO::FileList &files)
@@ -327,8 +339,10 @@ void Model3d::setupDrawable_()
     if (textureBumpMorph_->isSineMorphEnabled())
         src->addDefine("#define MO_ENABLE_NORMALMAP_SINE_MORPH");
     if (vertexFx_->baseValue())
+    {
         src->addDefine("#define MO_ENABLE_VERTEX_EFFECTS");
-
+        src->replace("%mo_modify_position%", glslVertex_->value());
+    }
     draw_->setShaderSource(src);
 
     draw_->createOpenGl();
@@ -413,7 +427,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         // render the thing
 
         draw_->renderShader(rs.cameraSpace().projectionMatrix(),
-                            cubeViewTrans, viewTrans, trans, &rs.lightSettings());
+                            cubeViewTrans, viewTrans, trans, &rs.lightSettings(),
+                            time);
     }
 }
 

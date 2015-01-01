@@ -24,6 +24,7 @@ in vec2 a_texCoord;
 
 // --- shader uniforms ---
 
+uniform float u_time;                       // scene time
 uniform mat4 u_projection;                  // projection matrix
 uniform mat4 u_cubeViewTransform;           // cube-map * view * transform
 uniform mat4 u_viewTransform;               // view * transform
@@ -122,10 +123,15 @@ vec4 mo_pos_to_fulldome_scr(in vec3 pos)
         );
 }
 
+#ifdef MO_ENABLE_VERTEX_EFFECTS
+%mo_modify_position%
+#endif
+
 vec4 mo_ftransform(in vec4 pos)
 {
 #ifdef MO_ENABLE_VERTEX_EFFECTS
     pos.xyz += u_vertex_extrude * a_normal;
+    pos.xyz = mo_modify_position(pos.xyz);
 #endif
 
 #ifndef MO_FULLDOME_BEND

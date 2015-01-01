@@ -240,6 +240,11 @@ void Drawable::compileShader_()
         uniformLightDirectionMix_ = u->location();
     else
         uniformLightDirectionMix_ = invalidGl;
+
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameSceneTime()))
+        uniformSceneTime_ = u->location();
+    else
+        uniformSceneTime_ = invalidGl;
 }
 
 void Drawable::createVAO_()
@@ -294,7 +299,8 @@ void Drawable::renderShader(const Mat4 &proj,
                             const Mat4 &cubeViewTrans,
                             const Mat4 &viewTrans,
                             const Mat4 &trans,
-                            const LightSettings * lights)
+                            const LightSettings * lights,
+                            Double time)
 {
     MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
     //MO_ASSERT(uniformProj_ != invalidGl, "");
@@ -315,6 +321,10 @@ void Drawable::renderShader(const Mat4 &proj,
     MO_CHECK_GL( glUniformMatrix4fv(uniformVT_, 1, GL_FALSE, &viewTrans[0][0]) );
     MO_CHECK_GL( glUniformMatrix4fv(uniformT_, 1, GL_FALSE, &trans[0][0]) );
 
+    if (uniformSceneTime_ != invalidGl)
+    {
+        MO_CHECK_GL( glUniform1f(uniformSceneTime_, time) );
+    }
 
     if (lights && lights->count())
     {

@@ -88,7 +88,7 @@ public:
                       const Mat4& cubeViewTrans,
                       const Mat4& viewTrans,
                       const Mat4& trans,
-                      const LightSettings * lights = 0);
+                      const LightSettings * lights = 0, Double time = 0);
 
     void renderImmediate();
 
@@ -119,7 +119,8 @@ private:
         uniformLightColor_,
         uniformLightDirection_,
         uniformLightDirectionMix_,
-        uniformLightDiffuseExp_;
+        uniformLightDiffuseExp_,
+        uniformSceneTime_;
 
     Uniform * uniColor_;
 

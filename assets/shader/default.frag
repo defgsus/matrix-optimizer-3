@@ -46,6 +46,7 @@ out vec4 color;
 
 // --- uniforms ---
 
+uniform float u_time;
 uniform vec4 u_color;
 
 #ifdef MO_ENABLE_LIGHTING

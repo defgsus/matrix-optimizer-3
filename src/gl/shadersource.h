@@ -29,6 +29,7 @@ public:
     const QString& vertexSource() const { return vert_; }
     const QString& fragmentSource() const { return frag_; }
 
+    const QString& uniformNameSceneTime() const { return unSceneTime_; }
     const QString& uniformNameProjection() const { return unProj_; }
     const QString& uniformNameCubeViewTransformation() const { return unCVT_; }
     const QString& uniformNameViewTransformation() const { return unVT_; }
@@ -71,11 +72,15 @@ public:
         An #undef can also be added that way. */
     void addDefine(const QString& defineCommand);
 
+    /** Replaces a piece of text */
+    void replace(const QString& before, const QString& after);
+
 private:
 
     void addDefine_(QString& src, const QString& def_line) const;
 
     QString vert_, frag_,
+        unSceneTime_,
         unProj_, unCVT_, unVT_, unT_,
         unDiffuseExp_, unBumpScale_,
         unLightPos_, unLightColor_, unLightDir_, unLightDirMix_,

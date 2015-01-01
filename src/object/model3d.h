@@ -83,6 +83,7 @@ private:
         *diffExp_, *bumpScale_,
         *vertexExtrude_;
     ParameterSelect * lightMode_, *vertexFx_;
+    ParameterText * glslVertex_;
 
     GL::Uniform * u_diff_exp_, * u_bump_scale_,
                 * u_vertex_extrude_;
