@@ -37,11 +37,32 @@ public:
     typedef gl::GLfloat ColorType;
     typedef gl::GLfloat TextureCoordType;
     typedef gl::GLuint  IndexType;
+    typedef gl::GLfloat AttributeType;
 
     static const IndexType invalidIndex = (IndexType)-1;
 
     /** Smallest possible threshold for vertex sharing */
     static const VertexType minimumThreshold;
+
+    struct UserAttribute
+    {
+        /** Creates an attribute with shader name @p attributeName and @p numComponents per vertex */
+        UserAttribute(const QString& attributeName, unsigned int numComponents)
+            : attributeName     (attributeName),
+              numComponents     (numComponents)
+        { curValue.resize(numComponents, 0.f); }
+
+        unsigned long int numBytes() const { return data.size() * numComponents * sizeof(AttributeType); }
+        /** Returns the type as string */
+        QString typeName() const;
+        /** Returns the glsl declaration */
+        QString declaration() const;
+
+        QString attributeName;
+        unsigned int numComponents;
+        std::vector<AttributeType>
+            data, curValue;
+    };
 
     // ------ enums ----------
 
@@ -50,10 +71,17 @@ public:
     static const gl::GLenum colorEnum;
     static const gl::GLenum textureCoordEnum;
     static const gl::GLenum indexEnum;
+    static const gl::GLenum attributeEnum;
 
     // -------- ctor ---------
 
     Geometry();
+    ~Geometry();
+
+    Geometry(const Geometry& other) { copyFrom(other); }
+    Geometry& operator = (const Geometry& other) { copyFrom(other); return *this; }
+
+    void copyFrom(const Geometry& other);
 
     // ------- query ---------
 
@@ -75,6 +103,9 @@ public:
 
     /** Returns number of lines in the Model */
     unsigned int numLines() const { return lineIndex_.size() / numLineIndexComponents(); }
+
+    /** Returns the number of user attributes */
+    unsigned int numAttributes() const { return attributes_.size(); }
 
     /** Returns a pointer to numVertices() * 3 coordinates */
     const VertexType * vertices() const { return &vertex_[0]; }
@@ -133,6 +164,18 @@ public:
         @note Not terribly efficient */
     bool intersects(const Vec3& ray_origin, const Vec3& ray_direction, Vec3 * pos = 0) const;
 
+    // ----------- user attributes -----------
+
+    /** Returns access to the user attribute, or NULL */
+    UserAttribute * getAttribute(const QString& name);
+    const UserAttribute * getAttribute(const QString& name) const;
+
+    /** Returns a reference to the specific attribute data, or NULL */
+    const AttributeType * attributes(const QString& name) const;
+
+    /** Returns the list of installed attributes */
+    QStringList getAttributeNames() const;
+
     // -------------- setter -----------------
 
     /** Returns a pointer to numVertices() * 3 coordinates */
@@ -147,6 +190,9 @@ public:
     IndexType * triangleIndices() { return &triIndex_[0]; }
     /** Returns a pointer to numTriangles() * 3 indices */
     IndexType * lineIndices() { return &lineIndex_[0]; }
+
+    /** Adds a float attribute with @p numComponents per vertex. */
+    UserAttribute * addAttribute(const QString& name, unsigned int numComponents);
 
     /** Returns false if the triangle is degenerate (e.g. on of the edges is too small) */
     static bool checkTriangle(const Vec3&, const Vec3&, const Vec3&);
@@ -168,6 +214,9 @@ public:
         addVertex() will use this coords. */
     void setTexCoord(TextureCoordType u, TextureCoordType v)
         { curU_ = u; curV_ = v; }
+
+    /** Sets the current attribute. Any subsequent call to addVertex() will use this attribute. */
+    void setAttribute(const QString& name, AttributeType x, AttributeType y = 0, AttributeType z = 0, AttributeType w = 0);
 
     ColorType currentRed() const { return curR_; }
     ColorType currentGreen() const { return curG_; }
@@ -370,6 +419,7 @@ private:
     std::vector<ColorType>        color_;
     std::vector<TextureCoordType> texcoord_;
     std::vector<IndexType>        triIndex_, lineIndex_;
+    std::map<QString, UserAttribute*> attributes_;
 
     ColorType
         curR_, curG_, curB_, curA_;

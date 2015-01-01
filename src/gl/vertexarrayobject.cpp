@@ -26,7 +26,7 @@ struct VertexArrayObject::Buffer_
 {
     BufferObject * buf;
 
-    Attribute attribute;
+    int attribute;
     GLenum valueType, primitiveType;
     GLuint numVertices,
            attribLocation;
@@ -91,7 +91,7 @@ void VertexArrayObject::release()
     elementBuffers_.clear();
 }
 
-BufferObject * VertexArrayObject::getAttributeBufferObject(Attribute a)
+BufferObject * VertexArrayObject::getAttributeBufferObject(int a)
 {
     auto i = buffers_.find(a);
     if (i != buffers_.end())
@@ -101,7 +101,7 @@ BufferObject * VertexArrayObject::getAttributeBufferObject(Attribute a)
 }
 
 BufferObject * VertexArrayObject::createAttribBuffer(
-        Attribute attribute,
+        int attribute,
         GLuint location, GLenum valueType, GLint numberCoordinates,
         GLuint sizeInBytes, const void * ptr,
         GLenum storageType, GLint stride, GLboolean normalized)

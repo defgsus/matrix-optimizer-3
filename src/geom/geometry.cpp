@@ -36,6 +36,7 @@ const GLenum Geometry::normalEnum       = GL_FLOAT;
 const GLenum Geometry::colorEnum        = GL_FLOAT;
 const GLenum Geometry::textureCoordEnum = GL_FLOAT;
 const GLenum Geometry::indexEnum        = GL_UNSIGNED_INT;
+const GLenum Geometry::attributeEnum    = GL_FLOAT;
 
 
 namespace
@@ -93,14 +94,141 @@ Geometry::Geometry()
 {
 }
 
+Geometry::~Geometry()
+{
+    clear();
+}
+
+void Geometry::clear()
+{
+    vertex_.clear();
+    normal_.clear();
+    color_.clear();
+    texcoord_.clear();
+    triIndex_.clear();
+    lineIndex_.clear();
+    indexMap_.clear();
+    for (auto i : attributes_)
+        delete i.second;
+    attributes_.clear();
+}
+
+void Geometry::copyFrom(const Geometry &o)
+{
+    clear();
+
+    vertex_ = o.vertex_;
+    normal_ = o.normal_;
+    color_ = o.color_;
+    texcoord_ = o.texcoord_;
+    triIndex_ = o.triIndex_;
+    lineIndex_ = o.lineIndex_;
+    indexMap_ = o.indexMap_;
+
+    for (auto i : o.attributes_)
+        attributes_.insert( std::make_pair(i.first, new UserAttribute(*i.second)) );
+}
+
+
+// ---------------- attributes --------------
+
+Geometry::UserAttribute * Geometry::getAttribute(const QString &name)
+{
+    auto i = attributes_.find(name);
+    if (i == attributes_.end())
+        return 0;
+    return i->second;
+}
+
+const Geometry::UserAttribute * Geometry::getAttribute(const QString &name) const
+{
+    const auto i = attributes_.find(name);
+    if (i == attributes_.end())
+        return 0;
+    return i->second;
+}
+
+const Geometry::AttributeType * Geometry::attributes(const QString& name) const
+{
+    auto a = getAttribute(name);
+    return a ? &a->data[0] : 0;
+}
+
+QString Geometry::UserAttribute::typeName() const
+{
+    switch (numComponents)
+    {
+        default: return "float";
+        case 2: return "vec2";
+        case 3: return "vec3";
+        case 4: return "vec4";
+    }
+}
+
+QString Geometry::UserAttribute::declaration() const
+{
+    return "in " + typeName() + " " + attributeName + ";\n";
+}
+
+QStringList Geometry::getAttributeNames() const
+{
+    QStringList list;
+    for (auto i : attributes_)
+        list << i.first;
+    return list;
+}
+
+Geometry::UserAttribute * Geometry::addAttribute(const QString &name, unsigned int numComponents)
+{
+    auto a = getAttribute(name);
+    if (!a)
+    {
+        a = new UserAttribute(name, numComponents);
+        attributes_.insert( std::make_pair(name, a) );
+    }
+
+    if (a->numComponents != numComponents)
+    {
+        a->numComponents = numComponents;
+        a->curValue.resize(numComponents, 0.f);
+    }
+
+    // reserve as much data as currently needed
+    a->data.resize(numVertices() * a->numComponents);
+
+    return a;
+}
+
+void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType y, AttributeType z, AttributeType w)
+{
+    auto a = getAttribute(name);
+    if (!a)
+        return;
+
+    a->curValue[0] = x;
+    if (a->curValue.size() >= 2)
+        a->curValue[1] = y;
+    if (a->curValue.size() >= 3)
+        a->curValue[2] = z;
+    if (a->curValue.size() >= 4)
+        a->curValue[3] = w;
+}
+
+
 long unsigned int Geometry::memory() const
 {
-    return numVertexBytes()
+    long unsigned int bytes =
+              numVertexBytes()
             + numNormalBytes()
             + numColorBytes()
             + numTextureCoordBytes()
             + numTriangleIndexBytes()
             + numLineIndexBytes();
+
+    for (auto i : attributes_)
+        bytes += i.second->data.size() * sizeof(AttributeType);
+
+    return bytes;
 }
 
 void Geometry::getExtent(VertexType * minX, VertexType * maxX,
@@ -185,16 +313,6 @@ bool Geometry::intersects(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec
 }
 
 
-void Geometry::clear()
-{
-    vertex_.clear();
-    normal_.clear();
-    color_.clear();
-    texcoord_.clear();
-    triIndex_.clear();
-    lineIndex_.clear();
-    indexMap_.clear();
-}
 
 void Geometry::setSharedVertices(bool enable, VertexType threshold)
 {
@@ -268,6 +386,14 @@ Geometry::IndexType Geometry::addVertex(
     *tex = m1 * *tex + m2 * u; ++tex;
     *tex = m1 * *tex + m2 * v;
 
+    for (auto i : attributes_)
+    {
+        UserAttribute * ua = i.second;
+        AttributeType * a = &ua->data[idx * ua->numComponents];
+        for (uint j=0; j<ua->numComponents; ++j)
+            a[j] = m1 * a[j] + m2 * ua->curValue[j];
+    }
+
     return idx;
 }
 
@@ -301,6 +427,13 @@ Geometry::IndexType Geometry::addVertexAlways(
 
     texcoord_.push_back(u);
     texcoord_.push_back(v);
+
+    for (auto i : attributes_)
+    {
+        UserAttribute * a = i.second;
+        for (uint j = 0; j < a->numComponents; ++j)
+            a->data.push_back(a->curValue[j]);
+    }
 
     return numVertices() - 1;
 }
@@ -1709,6 +1842,21 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
                                 textureCoordEnum, numTextureCoordComponents(),
                                 numTextureCoordBytes(),
                                 textureCoords());
+    }
+
+    // --- user attributes ---
+    int k=0;
+    for (auto i : attributes_)
+    {
+        UserAttribute * ua = i.second;
+        if (auto a = s->getAttribute(ua->attributeName))
+        {
+            vao->createAttribBuffer(GL::VertexArrayObject::A_USER + k++,
+                                    a->location(),
+                                    attributeEnum, ua->numComponents,
+                                    ua->numBytes(),
+                                    &ua->data[0]);
+        }
     }
 
     // --- indices ---

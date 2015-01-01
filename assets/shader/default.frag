@@ -21,6 +21,10 @@
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
 
+// --- attributes ---
+
+//%user_attributes%
+
 // --- input from vertex shader ---
 
 in vec3 v_pos;

@@ -199,6 +199,12 @@ public:
     void setTexCoordIV(uint i, const Vec2& v) const { if (i < g->numVertices()) g->setTexCoord(i, v); }
     void setColorIV(uint i, const Vec4& v) const { if (i < g->numVertices()) g->setColor(i, v); }
 
+    void addAttribute(const StringAS& name, uint comps) { g->addAttribute(MO::toString(name), comps); }
+    void setAttribute4f(const StringAS& name, float x, float y, float z, float w) { g->setAttribute(MO::toString(name), x, y, z, w); }
+    void setAttribute2(const StringAS& name, const Vec2& v) { g->setAttribute(MO::toString(name), v.x, v.y); }
+    void setAttribute3(const StringAS& name, const Vec3& v) { g->setAttribute(MO::toString(name), v.x, v.y, v.z); }
+    void setAttribute4(const StringAS& name, const Vec4& v) { g->setAttribute(MO::toString(name), v.x, v.y, v.z, v.w); }
+
     void createBox1(float sl, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, sl, sl, sl, true, pos); }
     void createBox3(float x, float y, float z, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, x, y, z, true, pos); }
     void createBox3v(const Vec3& s, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, s.x, s.y, s.z, true, pos); }
@@ -437,6 +443,13 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void setNormal(uint vertex_index, const vec3 &in)", setNormalIV);
     MO__REG_METHOD("void setTexCoord(uint vertex_index, const vec2 &in)", setTexCoordIV);
     MO__REG_METHOD("void setColor(uint vertex_index, const vec4 &in)", setColorIV);
+
+    MO__REG_METHOD("void addAttribute(const string &in name, uint numComponents)", addAttribute);
+    MO__REG_METHOD("void setAttribute(const string &in name, float x, float y = 0, float z = 0, float w = 0)", setAttribute4f);
+    MO__REG_METHOD("void addAttribute(const string &in name, const vec2 &in)", setAttribute2);
+    MO__REG_METHOD("void addAttribute(const string &in name, const vec3 &in)", setAttribute3);
+    MO__REG_METHOD("void addAttribute(const string &in name, const vec4 &in)", setAttribute4);
+
 
     MO__REG_METHOD("void createBox(float sidelength = 1, const vec3 &in pos = vec3(0))", createBox1);
     MO__REG_METHOD("void createBox(float sidelength_x, float sidelength_y, float sidelength_z, const vec3 &in pos = vec3(0))", createBox3);

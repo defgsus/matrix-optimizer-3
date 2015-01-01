@@ -149,6 +149,20 @@ void Drawable::compileShader_()
         doRecompile_ = true;
     }
 
+    // --- add user attribute declarations ---
+    if (geometry_->numAttributes())
+    {
+        QString text = "// geometry user-attributes\n";
+        const QStringList list = geometry_->getAttributeNames();
+        for (auto & name : list)
+        {
+            GEOM::Geometry::UserAttribute * attr = geometry_->getAttribute(name);
+            MO_ASSERT(attr, "Declared Attribute '" << name << "' not found in Geometry, Drawable '" << this->name_ << "'");
+            text += attr->declaration();
+        }
+        shaderSource_->replace("//%user_attributes%", text);
+    }
+
     // --- create shader class ---
 
     if (!shader_)

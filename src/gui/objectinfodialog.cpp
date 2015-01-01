@@ -139,9 +139,17 @@ void ObjectInfoDialog::setObject(Object * o)
             s << "null";
         else
         {
-            s << "<br/>" << "vertices:  " << model->geometry()->numVertices()
-              << "<br/>" << "lines:     " << model->geometry()->numLines()
-              << "<br/>" << "triangles: " << model->geometry()->numTriangles();
+            const GEOM::Geometry * geom = model->geometry();
+            s << "<br/>" << "vertices:  " << geom->numVertices()
+              << "<br/>" << "lines:     " << geom->numLines()
+              << "<br/>" << "triangles: " << geom->numTriangles()
+              << "<br/>" << "user attributes:";
+            const QStringList list = geom->getAttributeNames();
+            if (list.isEmpty())
+                s << " none";
+            else
+                for (auto & n : list)
+                    s << " " << n;
         }
         s << "</p>";
     }

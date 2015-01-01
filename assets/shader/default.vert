@@ -21,6 +21,8 @@ in vec4 a_color;
 in vec3 a_normal;
 in vec2 a_texCoord;
 
+//%user_attributes%
+
 
 // --- shader uniforms ---
 
