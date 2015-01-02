@@ -369,6 +369,9 @@ void Shader::getAttributes_()
 
 void Shader::sendUniform(const Uniform * u)
 {
+    MO_DEBUG_GL("Shader('" << name_ << ")::sendUniform(" << u->name() << ", " << u->floats[0]
+            << ", " << u->floats[1] << ", " << u->floats[2] << ", " << u->floats[3] << ")");
+
     switch (u->type())
     {
     case GL_SAMPLER_2D:

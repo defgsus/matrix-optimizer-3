@@ -19,6 +19,7 @@
 #include "helpdialog.h"
 #include "widget/equationeditor.h"
 #include "widget/angelscriptwidget.h"
+#include "widget/glslwidget.h"
 #include "tool/syntaxhighlighter.h"
 #include "script/angelscript.h"
 #include "script/angelscript_object.h"
@@ -103,9 +104,9 @@ QString TextEditDialog::getText() const
     switch (p_->textType)
     {
         case TT_PLAIN_TEXT:
-        case TT_GLSL:
         case TT_APP_STYLESHEET: return p_->plainText->toPlainText();
         case TT_EQUATION: return p_->equEdit->toPlainText();
+        case TT_GLSL:
         case TT_ANGELSCRIPT: return p_->scriptEdit->scriptText();
     }
 
@@ -121,9 +122,9 @@ void TextEditDialog::setText(const QString & text, bool send_signal)
     switch (p_->textType)
     {
         case TT_PLAIN_TEXT:
-        case TT_GLSL:
         case TT_APP_STYLESHEET: p_->plainText->setText(text); break;
         case TT_EQUATION: p_->equEdit->setPlainText(text); break;
+        case TT_GLSL:
         case TT_ANGELSCRIPT: p_->scriptEdit->setScriptText(text); break;
     }
 
@@ -151,7 +152,6 @@ void TextEditDialog::Private::createWidgets()
         switch (textType)
         {
             case TT_APP_STYLESHEET:
-            case TT_GLSL:
             case TT_PLAIN_TEXT:
                 plainText = new QTextEdit(dialog);
                 plainText->setTabChangesFocus(false);
@@ -184,6 +184,18 @@ void TextEditDialog::Private::createWidgets()
                 });
                 break;
 
+            case TT_GLSL:
+            {
+                auto glsl = new GlslWidget(dialog);
+                lv->addWidget(glsl);
+                scriptEdit = glsl;
+                connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
+                {
+                    emitTextChanged();
+                });
+            }
+            break;
+
             case TT_ANGELSCRIPT:
             {
                 auto as = new AngelScriptWidget(dialog);
@@ -196,6 +208,7 @@ void TextEditDialog::Private::createWidgets()
                     emitTextChanged();
                 });
             }
+            break;
         }
 
         auto lh = new QHBoxLayout();

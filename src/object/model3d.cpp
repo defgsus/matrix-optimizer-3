@@ -25,6 +25,9 @@
 #include "util/texturesetting.h"
 #include "util/colorpostprocessingsetting.h"
 #include "util/texturemorphsetting.h"
+#include "util/useruniformsetting.h"
+#include "io/log.h"
+
 
 namespace MO {
 
@@ -40,6 +43,7 @@ Model3d::Model3d(QObject * parent)
       texturePostProc_(new ColorPostProcessingSetting(this)),
       textureMorph_ (new TextureMorphSetting(this)),
       textureBumpMorph_(new TextureMorphSetting(this)),
+      uniformSetting_(new UserUniformSetting(this)),
       u_diff_exp_   (0),
       u_bump_scale_ (0),
       u_vertex_extrude_(0),
@@ -170,6 +174,13 @@ void Model3d::createParameters()
                                                     "vec3 mo_modify_position(in vec3 pos) {\n\treturn pos;\n}\n"
                                                     , true, false);
     params()->endParameterGroup();
+
+    params()->beginParameterGroup("useruniforms", tr("user uniforms"));
+
+        uniformSetting_->createParameters("g");
+
+    params()->endParameterGroup();
+
 }
 
 void Model3d::onParameterChanged(Parameter *p)
@@ -187,7 +198,8 @@ void Model3d::onParameterChanged(Parameter *p)
         requestRender();
     }
 
-    if (texture_->needsReinit(p) || textureBump_->needsReinit(p))
+    if (texture_->needsReinit(p) || textureBump_->needsReinit(p)
+        || uniformSetting_->needsReinit(p))
         requestReinitGl();
 }
 
@@ -200,6 +212,7 @@ void Model3d::updateParameterVisibility()
     texturePostProc_->updateParameterVisibility();
     textureMorph_->updateParameterVisibility();
     textureBumpMorph_->updateParameterVisibility();
+    uniformSetting_->updateParameterVisibility();
 
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
 
@@ -341,8 +354,13 @@ void Model3d::setupDrawable_()
     if (vertexFx_->baseValue())
     {
         src->addDefine("#define MO_ENABLE_VERTEX_EFFECTS");
-        src->replace("%mo_modify_position%", glslVertex_->value());
+        // user vertex transform function
+        src->replace("//%mo_modify_position%", glslVertex_->value());
     }
+    // declare user uniforms
+    src->replace("//%user_uniforms%", "// runtime user uniforms\n" + uniformSetting_->getDeclarations());
+    MO_DEBUG_GL("Model3d(" << name() << "): user uniforms:\n" << uniformSetting_->getDeclarations());
+
     draw_->setShaderSource(src);
 
     draw_->createOpenGl();
@@ -369,6 +387,7 @@ void Model3d::setupDrawable_()
         textureBumpMorph_->getUniforms(draw_->shader(), "_bump");
     }
 
+    uniformSetting_->tieToShader(draw_->shader());
 }
 
 void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
@@ -379,9 +398,10 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 
     if (nextGeometry_)
     {
-        draw_->setGeometry(nextGeometry_);
-        setupDrawable_();
+        auto g = nextGeometry_;
         nextGeometry_ = 0;
+        draw_->setGeometry(g);
+        setupDrawable_();
     }
 
     if (doRecompile_)
@@ -410,6 +430,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
             u_bump_scale_->floats[0] = bumpScale_->value(time, thread);
         if (u_vertex_extrude_)
             u_vertex_extrude_->floats[0] = vertexExtrude_->value(time, thread);
+
+        uniformSetting_->updateUniforms(time, thread);
 
         if (texture_->isEnabled())
         {

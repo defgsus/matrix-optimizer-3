@@ -81,7 +81,8 @@ HEADERS += \
     src/gui/item/objectgraphconnectitem.h \
     src/gui/widget/parameterwidget.h \
     src/gui/widget/angelscriptwidget.h \
-    src/gui/widget/abstractscriptwidget.h
+    src/gui/widget/abstractscriptwidget.h \
+    src/gui/widget/glslwidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -162,4 +163,5 @@ SOURCES += \
     src/gui/item/objectgraphconnectitem.cpp \
     src/gui/widget/parameterwidget.cpp \
     src/gui/widget/angelscriptwidget.cpp \
-    src/gui/widget/abstractscriptwidget.cpp
+    src/gui/widget/abstractscriptwidget.cpp \
+    src/gui/widget/glslwidget.cpp

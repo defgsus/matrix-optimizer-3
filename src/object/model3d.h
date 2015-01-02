@@ -17,6 +17,7 @@
 namespace MO {
 
 class TextureMorphSetting;
+class UserUniformSetting;
 
 class Model3d : public ObjectGl
 {
@@ -78,6 +79,7 @@ private:
     TextureMorphSetting
         *textureMorph_,
         *textureBumpMorph_;
+    UserUniformSetting * uniformSetting_;
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_, *cbright_,
         *diffExp_, *bumpScale_,

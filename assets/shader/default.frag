@@ -95,6 +95,8 @@ uniform vec4 u_color;
 #endif
 
 
+//%user_uniforms%
+
 
 // ------------------- functions ------------------------
 

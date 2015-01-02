@@ -45,6 +45,8 @@ public slots:
     /** Sets reserved words for qt stylesheet syntax */
     void initForStyleSheet();
 
+    void initForGlsl();
+
 #ifndef MO_DISABLE_ANGELSCRIPT
     /** Gathers all installed names from the angelscript module */
     void initForAngelScript(asIScriptModule*);

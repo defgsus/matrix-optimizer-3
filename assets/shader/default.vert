@@ -42,6 +42,8 @@ uniform mat4 u_transform;                   // transformation only
     uniform float u_vertex_extrude;
 #endif
 
+//%user_uniforms%
+
 // --- output of vertex shader ---
 
 out vec3 v_pos;
@@ -126,7 +128,7 @@ vec4 mo_pos_to_fulldome_scr(in vec3 pos)
 }
 
 #ifdef MO_ENABLE_VERTEX_EFFECTS
-%mo_modify_position%
+//%mo_modify_position%
 #endif
 
 vec4 mo_ftransform(in vec4 pos)

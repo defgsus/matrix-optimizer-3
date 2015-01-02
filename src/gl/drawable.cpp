@@ -150,6 +150,7 @@ void Drawable::compileShader_()
     }
 
     // --- add user attribute declarations ---
+
     if (geometry_->numAttributes())
     {
         QString text = "// geometry user-attributes\n";
@@ -161,6 +162,7 @@ void Drawable::compileShader_()
             text += attr->declaration();
         }
         shaderSource_->replace("//%user_attributes%", text);
+        MO_DEBUG_GL("Drawable(" << name_ << ") added user attributes:\n" << text);
     }
 
     // --- create shader class ---
