@@ -70,7 +70,6 @@ void GeometryModifierAngelScript::execute(Geometry * g)
 
     try
     {
-        MO_DEBUG("---------------"  << currentObject());
         GeometryEngineAS script(g, currentObject());
         script.execute(script_);
     }

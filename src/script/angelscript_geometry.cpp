@@ -208,7 +208,7 @@ public:
     void createBox1(float sl, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, sl, sl, sl, true, pos); }
     void createBox3(float x, float y, float z, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, x, y, z, true, pos); }
     void createBox3v(const Vec3& s, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, s.x, s.y, s.z, true, pos); }
-    void createSphere2(uint segu, uint segv, const Vec3& pos) { GEOM::GeometryFactory::createUVSphere(g, 1, segu, segv, true, pos); }
+    void createSphere1(float rad, const Vec3& pos) { GEOM::GeometryFactory::createUVSphere(g, rad, 12, 12, true, pos); }
     void createSphere3(float rad, uint segu, uint segv, const Vec3& pos) { GEOM::GeometryFactory::createUVSphere(g, rad, segu, segv, true, pos); }
     void createTorus4(float rad_outer, float rad_inner, uint segu, uint segv, const Vec3& pos)
         { GEOM::GeometryFactory::createTorus(g, rad_outer, rad_inner, segu, segv, true, pos); }
@@ -454,8 +454,8 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void createBox(float sidelength = 1, const vec3 &in pos = vec3(0))", createBox1);
     MO__REG_METHOD("void createBox(float sidelength_x, float sidelength_y, float sidelength_z, const vec3 &in pos = vec3(0))", createBox3);
     MO__REG_METHOD("void createBox(const vec3 &in sidelengths, const vec3 &in pos = vec3(0))", createBox3v);
-    MO__REG_METHOD("void createSphere(uint segments_u = 12, uint segments_v = 12, const vec3 &in pos = vec3(0))", createSphere2);
-    MO__REG_METHOD("void createSphere(float radius, uint segments_u = 12, uint segments_v = 12, const vec3 &in pos = vec3(0))", createSphere3);
+    MO__REG_METHOD("void createSphere(float radius = 1, const vec3 &in pos = vec3(0))", createSphere1);
+    MO__REG_METHOD("void createSphere(float radius, uint segments_u, uint segments_v, const vec3 &in pos = vec3(0))", createSphere3);
     MO__REG_METHOD("void createTorus(float radius_outer, float radius_inner, uint segments_u = 12, uint segments_v = 12, const vec3 &in pos = vec3(0))",
                    createTorus4);
 
