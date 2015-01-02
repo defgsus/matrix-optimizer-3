@@ -10,6 +10,8 @@ const float PI = 3.14159265358979;
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
  * MO_ENABLE_VERTEX_EFFECTS
+ * MO_ENABLE_POINT_SIZE_DISTANCE
+ * MO_ENABLE_VERTEX_OVERRIDE
  */
 
 //#define MO_FULLDOME_BEND
@@ -40,6 +42,10 @@ uniform mat4 u_transform;                   // transformation only
 
 #ifdef MO_ENABLE_VERTEX_EFFECTS
     uniform float u_vertex_extrude;
+#endif
+
+#ifdef MO_ENABLE_POINT_SIZE_DISTANCE
+    uniform vec3 u_pointsize_dist; // x = min, y = (max-min), z = distance factor
 #endif
 
 //%user_uniforms%
@@ -127,17 +133,23 @@ vec4 mo_pos_to_fulldome_scr(in vec3 pos)
         );
 }
 
-#ifdef MO_ENABLE_VERTEX_EFFECTS
-//%mo_modify_position%
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+//%mo_override%
 #endif
 
 vec4 mo_ftransform(in vec4 pos)
 {
+    // gui-controlled modifier
 #ifdef MO_ENABLE_VERTEX_EFFECTS
     pos.xyz += u_vertex_extrude * a_normal;
+#endif
+
+    // user overrides
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
     pos.xyz = mo_modify_position(pos.xyz);
 #endif
 
+    // projection
 #ifndef MO_FULLDOME_BEND
     return u_projection * u_cubeViewTransform * pos;
 #else
@@ -163,7 +175,11 @@ void main()
     v_pos_eye = (u_viewTransform * vertex_pos).xyz;
     v_normal = a_normal;
     v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+    v_color = mo_modify_color(a_color, vertex_pos.xyz, a_normal);
+#else
     v_color = a_color;
+#endif
     v_texCoord = a_texCoord;
     v_cam_dir = normalize(v_pos_eye);
 
@@ -206,7 +222,11 @@ void main()
     v_pos_eye = (u_viewTransform * a_position).xyz;
     v_normal = a_normal;
     v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+    v_color = mo_modify_color(a_color, a_position.xyz, a_normal);
+#else
     v_color = a_color;
+#endif
     v_texCoord = a_texCoord;
     v_cam_dir = normalize(v_pos_eye);
 
@@ -241,7 +261,7 @@ void main()
             float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
 
             // attenuation from direction
-            if (u_light_dirmix[i]>0)
+            if (u_light_dirmix[i]>0.)
             {
                 float diratt = pow( max(0.0, dot(u_light_direction[i].xyz, lightvecn)),
                                     u_light_direction[i].w);
@@ -253,5 +273,12 @@ void main()
     #endif
 
 #endif // MO_ENABLE_LIGHTING
+
+    // adjust pointsize
+#ifdef MO_ENABLE_POINT_SIZE_DISTANCE
+    float di = length(gl_Position.xyz);
+    float difac = 1. / (1. + u_pointsize_dist.z * di);
+    gl_PointSize = u_pointsize_dist.x + difac * u_pointsize_dist.y;
+#endif
 
 }

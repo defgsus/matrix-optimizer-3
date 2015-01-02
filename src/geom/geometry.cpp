@@ -107,6 +107,7 @@ void Geometry::clear()
     texcoord_.clear();
     triIndex_.clear();
     lineIndex_.clear();
+    pointIndex_.clear();
     indexMap_.clear();
     for (auto i : attributes_)
         delete i.second;
@@ -123,6 +124,7 @@ void Geometry::copyFrom(const Geometry &o)
     texcoord_ = o.texcoord_;
     triIndex_ = o.triIndex_;
     lineIndex_ = o.lineIndex_;
+    pointIndex_ = o.pointIndex_;
     indexMap_ = o.indexMap_;
 
     for (auto i : o.attributes_)
@@ -223,7 +225,8 @@ long unsigned int Geometry::memory() const
             + numColorBytes()
             + numTextureCoordBytes()
             + numTriangleIndexBytes()
-            + numLineIndexBytes();
+            + numLineIndexBytes()
+            + numPointIndexBytes();
 
     for (auto i : attributes_)
         bytes += i.second->data.size() * sizeof(AttributeType);
@@ -472,6 +475,13 @@ void Geometry::addLine(IndexType p1, IndexType p2)
     lineIndex_.push_back(p1);
     lineIndex_.push_back(p2);
 }
+
+void Geometry::addPoint(IndexType p1)
+{
+    MO_ASSERT(p1 < numVertices(), "out of range " << p1 << "/" << numVertices());
+    pointIndex_.push_back(p1);
+}
+
 
 
 Vec3 Geometry::getVertex(const IndexType i) const
@@ -1870,6 +1880,12 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
                                indexEnum,
                                numLines() * numLineIndexComponents(),
                                lineIndices());
+
+    if (numPoints())
+        vao->createIndexBuffer(GL_POINTS,
+                               indexEnum,
+                               numPoints(),
+                               pointIndices());
 
     vao->unbind();
 }

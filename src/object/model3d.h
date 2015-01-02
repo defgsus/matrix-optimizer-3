@@ -83,12 +83,14 @@ private:
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_, *cbright_,
         *diffExp_, *bumpScale_,
-        *vertexExtrude_;
-    ParameterSelect * lightMode_, *vertexFx_;
-    ParameterText * glslVertex_;
+        *vertexExtrude_, *paramLineWidth_,
+        *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_;
+    ParameterSelect * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
+                    * usePointCoord_, *pointSizeAuto_;
+    ParameterText * glslVertex_, *glslColor_;
 
     GL::Uniform * u_diff_exp_, * u_bump_scale_,
-                * u_vertex_extrude_;
+                * u_vertex_extrude_, * u_pointsize_;
 
     bool doRecompile_;
 };

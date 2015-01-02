@@ -215,6 +215,9 @@ public:
 
 #define MO__IDX(i__) (i__ < g->numVertices())
 
+    void addPointI(uint v1) { if (MO__IDX(v1)) g->addPoint(v1); }
+    void addPoint(const Vec3& a) { g->addPoint( g->addVertex(a.x, a.y, a.z) ); }
+
     void addLineI(uint v1, uint v2) { if (MO__IDX(v1) && MO__IDX(v2)) g->addLine(v1, v2); }
     void addLine(const Vec3& a, const Vec3& b)
     {
@@ -425,6 +428,8 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
 
     MO__REG_METHOD("uint addVertex(const vec3 &in)", addVertex);
     MO__REG_METHOD("uint addVertex(float, float, float)", addVertexF);
+    MO__REG_METHOD("void addPoint(const vec3 &in)", addPoint);
+    MO__REG_METHOD("void addPoint(uint index)", addPointI);
     MO__REG_METHOD("void addLine(const vec3 &in, const vec3 &in)", addLine);
     MO__REG_METHOD("void addLine(uint, uint)", addLineI);
     MO__REG_METHOD("void addTriangle(const vec3 &in, const vec3 &in, const vec3 &in)", addTriangle);

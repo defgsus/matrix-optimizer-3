@@ -52,7 +52,7 @@ public:
               numComponents     (numComponents)
         { curValue.resize(numComponents, 0.f); }
 
-        unsigned long int numBytes() const { return data.size() * numComponents * sizeof(AttributeType); }
+        unsigned long int numBytes() const { return data.size() * sizeof(AttributeType); }
         /** Returns the type as string */
         QString typeName() const;
         /** Returns the glsl declaration */
@@ -104,6 +104,9 @@ public:
     /** Returns number of lines in the Model */
     unsigned int numLines() const { return lineIndex_.size() / numLineIndexComponents(); }
 
+    /** Returns number of points in the Model */
+    unsigned int numPoints() const { return pointIndex_.size(); }
+
     /** Returns the number of user attributes */
     unsigned int numAttributes() const { return attributes_.size(); }
 
@@ -119,6 +122,8 @@ public:
     const IndexType * triangleIndices() const { return &triIndex_[0]; }
     /** Returns a pointer to numTriangles() * 3 indices */
     const IndexType * lineIndices() const { return &lineIndex_[0]; }
+    /** Returns a pointer to numTriangles() * 3 indices */
+    const IndexType * pointIndices() const { return &pointIndex_[0]; }
 
     int numVertexBytes() const { return vertex_.size() * sizeof(VertexType); }
     int numNormalBytes() const { return normal_.size() * sizeof(NormalType); }
@@ -126,6 +131,7 @@ public:
     int numTextureCoordBytes() const { return texcoord_.size() * sizeof(TextureCoordType); }
     int numTriangleIndexBytes() const { return triIndex_.size() * sizeof(IndexType); }
     int numLineIndexBytes() const { return lineIndex_.size() * sizeof(IndexType); }
+    int numPointIndexBytes() const { return pointIndex_.size() * sizeof(IndexType); }
 
     IndexType triangleIndex(uint triangleIndex, uint cornerIndex) const
         { return triIndex_[triangleIndex * numTriangleIndexComponents() + cornerIndex]; }
@@ -274,6 +280,9 @@ public:
     /** Connects two previously created indices to form a line */
     void addLine(IndexType p1, IndexType p2);
 
+    /** Create a point sprite for the vertex */
+    void addPoint(IndexType idx);
+
     /** Changes the vertex point */
     void setVertex(uint i, const Vec3& v) { auto p = &vertices()[i * numVertexComponents()]; *p++ = v.x; *p++ = v.y; *p = v.z; }
     /** Changes the texcoord point */
@@ -418,7 +427,7 @@ private:
     std::vector<NormalType>       normal_;
     std::vector<ColorType>        color_;
     std::vector<TextureCoordType> texcoord_;
-    std::vector<IndexType>        triIndex_, lineIndex_;
+    std::vector<IndexType>        triIndex_, lineIndex_, pointIndex_;
     std::map<QString, UserAttribute*> attributes_;
 
     ColorType

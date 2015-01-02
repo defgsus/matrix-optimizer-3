@@ -16,6 +16,7 @@
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
 #include "gl/shader.h"
+#include "gl/compatibility.h"
 #include "geom/geometry.h"
 #include "geom/geometrycreator.h"
 #include "param/parameters.h"
@@ -87,6 +88,49 @@ void Model3d::createParameters()
 {
     ObjectGl::createParameters();
 
+    params()->beginParameterGroup("renderset", tr("render settings"));
+
+        paramLineSmooth_ = params()->createBooleanParameter(
+                    "linesmooth", tr("antialiased lines"),
+                    tr("Should lines be drawn with smoothed edges"),
+                    tr("The lines are drawn edgy"),
+                    tr("The lines are drawn smoothly (maximum line width might change)"),
+                    true,
+                    true, false);
+
+        paramLineWidth_ = params()->createFloatParameter("linewidth", tr("line width"),
+                                            tr("The width of the line - currently in pixels - your driver supports maximally %1 and %2 (anti-aliased)")
+                                                            // XXX Not initialized before first gl context
+                                                            .arg(GL::Properties::staticInstance().lineWidth[0])
+                                                            .arg(GL::Properties::staticInstance().lineWidth[1]),
+                                            2, 1, 10000,
+                                            0.1, true, true);
+
+        paramPointSize_ = params()->createFloatParameter("pointsize", tr("pointsize"),
+                                            tr("The size of the points in pixels"),
+                                            10.0,
+                                            1, true, true);
+
+        paramPointSizeMax_ = params()->createFloatParameter("pointsizemax", tr("pointsize max"),
+                                            tr("The size of the closest points in pixels"),
+                                            200.0,
+                                            1, true, true);
+
+        paramPointSizeDistFac_ = params()->createFloatParameter("pointsize_distfac", tr("pointsize distance factor"),
+                                            tr("Approximately the distance after which the pointsize decreases by half"),
+                                            10,
+                                            0.1, true, true);
+        paramPointSizeDistFac_->setMinValue(0.0001);
+
+        pointSizeAuto_ = params()->createBooleanParameter("pointsize_auto", tr("pointsize distance control"),
+                                         tr("Selects if the distance to camera should control the point size"),
+                                         tr("The point size is uniform"),
+                                         tr("The point size is between size and max size depending on distance to camera"),
+                                         false, true, false);
+
+    params()->endParameterGroup();
+
+
     params()->beginParameterGroup("shaderset", "shader settings");
 
         lightMode_ = params()->createSelectParameter("lightmode", tr("lighting mode"),
@@ -102,7 +146,43 @@ void Model3d::createParameters()
             LM_PER_FRAGMENT,
             true, false);
 
+        diffExp_ = params()->createFloatParameter("diffuseexp", tr("diffuse exponent"),
+                                   tr("Exponent for the diffuse lighting - the higher, the narrower "
+                                      "is the light cone"),
+                                   4.0, 0.1);
+        diffExp_->setMinValue(0.001);
+
+        // --- glsl ---
+
+        glslDoOverride_ = params()->createBooleanParameter("glsl_write", tr("glsl access"),
+                                         tr("Enables overrides for specific functions in the shader code"),
+                                         tr("Overrides are enabled for the shader of the model"),
+                                         tr("No overrides"),
+                                         false,
+                                         true, false);
+
+
+        glslVertex_ = params()->createTextParameter("glslvertex", tr("glsl position"),
+                                                    tr("A piece of glsl code to modify vertex positions"),
+                                                    TT_GLSL,
+                                                    "vec3 mo_modify_position(in vec3 pos) {\n\treturn pos;\n}\n"
+                                                    , true, false);
+
+        glslColor_ = params()->createTextParameter("glsl_color", tr("glsl color"),
+                                                    tr("A piece of glsl code to modify vertex color"),
+                                                    TT_GLSL,
+                                                    "vec4 mo_modify_color(in vec4 color, in vec3 pos, in vec3 normal) {\n\treturn color;\n}\n"
+                                                    , true, false);
+
     params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("useruniforms", tr("user uniforms"));
+
+        uniformSetting_->createParameters("g");
+
+    params()->endParameterGroup();
+
 
     params()->beginParameterGroup("color", tr("color"));
 
@@ -114,21 +194,19 @@ void Model3d::createParameters()
 
     params()->endParameterGroup();
 
-    params()->beginParameterGroup("surface", tr("surface"));
-
-        diffExp_ = params()->createFloatParameter("diffuseexp", tr("diffuse exponent"),
-                                   tr("Exponent for the diffuse lighting - the higher, the narrower "
-                                      "is the light cone"),
-                                   4.0, 0.1);
-        diffExp_->setMinValue(0.001);
-
-    params()->endParameterGroup();
 
     params()->beginParameterGroup("texture", tr("texture"));
 
         texture_->createParameters("col", TextureSetting::TT_NONE, true);
 
+        usePointCoord_ = params()->createBooleanParameter("tex_use_pointcoord", tr("map on points"),
+                                         tr("Currently you have to decide wether to map the texture on triangles or on point sprites"),
+                                         tr("The texture coordinates are used as defined by the vertices in the geometry"),
+                                         tr("Calculated texture coordinates will be used for point sprites."),
+                                         false, true, false);
+
     params()->endParameterGroup();
+
 
     params()->beginParameterGroup("texturepp", tr("texture post-processing"));
 
@@ -137,6 +215,7 @@ void Model3d::createParameters()
         textureMorph_->createParameters("tex");
 
     params()->endParameterGroup();
+
 
     params()->beginParameterGroup("texturebump", tr("normal-map texture"));
 
@@ -148,11 +227,13 @@ void Model3d::createParameters()
 
     params()->endParameterGroup();
 
+
     params()->beginParameterGroup("texturebumppp", tr("normal-map post-proc"));
 
         textureBumpMorph_->createParameters("bump");
 
     params()->endParameterGroup();
+
 
     params()->beginParameterGroup("vertexfx", tr("vertex effects"));
 
@@ -168,18 +249,9 @@ void Model3d::createParameters()
                                                  "normals by this amount"),
                                               0.0, 0.05);
 
-        glslVertex_ = params()->createTextParameter("glslvertex", tr("glsl function"),
-                                                    tr("A piece of glsl code to modify vertex positions"),
-                                                    TT_GLSL,
-                                                    "vec3 mo_modify_position(in vec3 pos) {\n\treturn pos;\n}\n"
-                                                    , true, false);
     params()->endParameterGroup();
 
-    params()->beginParameterGroup("useruniforms", tr("user uniforms"));
 
-        uniformSetting_->createParameters("g");
-
-    params()->endParameterGroup();
 
 }
 
@@ -189,10 +261,14 @@ void Model3d::onParameterChanged(Parameter *p)
 
     if (p == lightMode_
             || p == vertexFx_
+            || p == glslDoOverride_
             || p == glslVertex_
+            || p == glslColor_
+            || p == usePointCoord_
+            || p == pointSizeAuto_
             || texturePostProc_->needsRecompile(p)
             || textureMorph_->needsRecompile(p)
-            || textureBumpMorph_->needsRecompile(p))
+            || textureBumpMorph_->needsRecompile(p) )
     {
         doRecompile_ = true;
         requestRender();
@@ -218,7 +294,14 @@ void Model3d::updateParameterVisibility()
 
     bool vertfx = vertexFx_->baseValue();
     vertexExtrude_->setVisible(vertfx);
-    glslVertex_->setVisible(vertfx);
+
+    bool glsl = glslDoOverride_->baseValue();
+    glslVertex_->setVisible(glsl);
+    glslColor_->setVisible(glsl);
+
+    bool psdist = pointSizeAuto_->baseValue() != 0;
+    paramPointSizeMax_->setVisible(psdist);
+    paramPointSizeDistFac_->setVisible(psdist);
 }
 
 void Model3d::getNeededFiles(IO::FileList &files)
@@ -351,11 +434,20 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_ENABLE_NORMALMAP_TRANSFORMATION");
     if (textureBumpMorph_->isSineMorphEnabled())
         src->addDefine("#define MO_ENABLE_NORMALMAP_SINE_MORPH");
+    if (usePointCoord_->baseValue() != 0)
+        src->addDefine("#define MO_USE_POINT_COORD");
+    if (pointSizeAuto_->baseValue() != 0)
+        src->addDefine("#define MO_ENABLE_POINT_SIZE_DISTANCE");
     if (vertexFx_->baseValue())
-    {
         src->addDefine("#define MO_ENABLE_VERTEX_EFFECTS");
-        // user vertex transform function
-        src->replace("//%mo_modify_position%", glslVertex_->value());
+    // glsl
+    if (glslDoOverride_->baseValue())
+    {
+        QString text =
+                  glslVertex_->value() + "\n"
+                + glslColor_->value() + "\n";
+        src->replace("//%mo_override%", text);
+        src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
     }
     // declare user uniforms
     src->replace("//%user_uniforms%", "// runtime user uniforms\n" + uniformSetting_->getDeclarations());
@@ -370,6 +462,8 @@ void Model3d::setupDrawable_()
 
     const bool isvertfx = vertexFx_->baseValue();
     u_vertex_extrude_ = draw_->shader()->getUniform("u_vertex_extrude", isvertfx);
+
+    u_pointsize_ = draw_->shader()->getUniform("u_pointsize_dist", false);
 
     if (texture_->isEnabled())
     {
@@ -446,10 +540,34 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
             textureBumpMorph_->updateUniforms(time, thread);
         }
 
+        // draw state
+
+        GL::Properties::staticInstance().setLineSmooth(paramLineSmooth_->value(time, thread) != 0);
+        GL::Properties::staticInstance().setLineWidth(paramLineWidth_->value(time, thread));
+        GL::Properties::staticInstance().setPointSize(paramPointSize_->value(time, thread));
+
+        if (pointSizeAuto_->baseValue())
+        {
+            MO_CHECK_GL( gl::glEnable(gl::GL_PROGRAM_POINT_SIZE) );
+            if (u_pointsize_)
+            {
+                float mi = paramPointSize_->value(time, thread);
+                u_pointsize_->setFloats(mi,
+                                        paramPointSizeMax_->value(time, thread) - mi,
+                                        1.f / paramPointSizeDistFac_->value(time, thread),
+                                        0);
+            }
+        }
+        else
+            MO_CHECK_GL( gl::glDisable(gl::GL_PROGRAM_POINT_SIZE) );
+
         // render the thing
 
         draw_->renderShader(rs.cameraSpace().projectionMatrix(),
-                            cubeViewTrans, viewTrans, trans, &rs.lightSettings(),
+                            cubeViewTrans,
+                            viewTrans,
+                            trans,
+                            &rs.lightSettings(),
                             time);
     }
 }
