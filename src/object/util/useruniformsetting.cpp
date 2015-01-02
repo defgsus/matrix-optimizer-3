@@ -21,6 +21,12 @@
 
 namespace MO {
 
+
+bool UserUniformSetting::Uniform::isUsed() const
+{
+    return p_type->baseValue() != 0;
+}
+
 UserUniformSetting::UserUniformSetting(Object * object, uint maxUnis)
     : QObject   (object),
       object_   (object),
@@ -51,6 +57,7 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
         Uniform u;
         u.uniform = 0;
 
+
         u.p_name = params->createTextParameter(("uniformname%1_" + id_suffix).arg(i),
                                                tr("uniform%1 name").arg(i + 1),
                                                tr("The name of the uniform variable as it should go into the header of the shader"),
@@ -62,11 +69,11 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
                                                 ("uniformtype%1_" + id_suffix).arg(i),
                                                 tr("uniform%1 type").arg(i + 1),
                                                 tr("The type of the uniform variable "),
-                                                { "float", "vec2", "vec3", "vec4" },
-                                                { "float", "vec2", "vec3", "vec4" },
-                                                { "float", "vec2", "vec3", "vec4" },
-                                                { int(gl::GL_FLOAT), int(gl::GL_FLOAT_VEC2), int(gl::GL_FLOAT_VEC3), int(gl::GL_FLOAT_VEC4) },
-                                                int(gl::GL_FLOAT),
+                                                { "none", "float", "vec2", "vec3", "vec4" },
+                                                { tr("none"), "float", "vec2", "vec3", "vec4" },
+                                                { tr("none"), "float", "vec2", "vec3", "vec4" },
+                                                { 0, int(gl::GL_FLOAT), int(gl::GL_FLOAT_VEC2), int(gl::GL_FLOAT_VEC3), int(gl::GL_FLOAT_VEC4) },
+                                                0,
                                                 true, false);
 
         static QString compName[] = { "x", "y", "z", "w" };
@@ -102,7 +109,9 @@ void UserUniformSetting::updateParameterVisibility()
     {
         uint type = u.p_type->baseValue();
 
-        uint num = 1;
+        uint num = 0;
+        if (type == gl::GL_FLOAT)
+            num = 1;
         if (type == gl::GL_FLOAT_VEC2)
             num = 2;
         if (type == gl::GL_FLOAT_VEC3)
@@ -110,17 +119,22 @@ void UserUniformSetting::updateParameterVisibility()
         if (type == gl::GL_FLOAT_VEC4)
             num = 4;
 
-        for (uint i = 1; i<4; ++i)
+        for (uint i = 0; i<4; ++i)
             u.p_float[i]->setVisible(i < num);
+        u.p_name->setVisible(num > 0);
     }
 }
 
 QString UserUniformSetting::getDeclarations() const
 {
     QString decl;
-
+    /*
+    layout(std140) uniform MyArray
+     {
+      float myDataArray[size];
+     };*/
     for (const Uniform & u : uniforms_)
-    if (!u.p_name->value().isEmpty())
+    if (u.isUsed() && !u.p_name->value().isEmpty())
     {
         QString typestr;
         switch (u.p_type->baseValue())
@@ -140,7 +154,7 @@ QString UserUniformSetting::getDeclarations() const
 void UserUniformSetting::tieToShader(GL::Shader * s)
 {
     for (Uniform & u : uniforms_)
-    if (!u.p_name->value().isEmpty())
+    if (u.isUsed() && !u.p_name->value().isEmpty())
     {
         u.uniform = s->getUniform(u.p_name->value(), false);
 

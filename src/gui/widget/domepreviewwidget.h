@@ -83,6 +83,8 @@ private:
     void setCurrentCameraMatrix_();
     void createTexture_(GL::Texture ** , int index);
 
+    GL::Properties * glProps_;
+
     ProjectionSystemSettings * settings_;
 
     std::function<GL::Texture*(int index)> textureFunc_;

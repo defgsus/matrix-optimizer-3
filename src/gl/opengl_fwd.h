@@ -39,6 +39,7 @@ namespace GL {
     class Uniform;
     class VertexArrayObject;
     class Window;
+    class Properties;
 
     class CameraSpace;
     class LightSettings;

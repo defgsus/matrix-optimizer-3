@@ -281,7 +281,7 @@ void Shader::getUniforms_()
     MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &labelLength) );
 
     // don't expose these to user
-    QStringList specialUniforms;// YYY = appSettings->getShaderUniforms();
+    QStringList specialUniforms;// XXX = appSettings->getShaderUniforms();
 
     // get each uniform data
     for (int i=0; i<numu; ++i)
@@ -306,6 +306,8 @@ void Shader::getUniforms_()
 
         // find location of uniform
         MO_CHECK_GL_COND(rep_, u->location_ = glGetUniformLocation(prog_, &name[0]) );
+
+        //MO_CHECK_GL_COND(rep_, glGetUniformBlockIndex())
 
         // keep in list
         uniforms_.push_back(std::shared_ptr<Uniform>(u, privateUniformDeleter));

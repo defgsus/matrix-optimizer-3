@@ -295,8 +295,8 @@ void Oscillograph::createParameters()
         p_->paramLineWidth = params()->createFloatParameter("linewidth", tr("line width"),
                                             tr("The width of the line - currently in pixels - your driver supports maximally %1 and %2 (anti-aliased)")
                                                             // XXX Not initialized before first gl context
-                                                            .arg(GL::Properties::maxLineWidth())
-                                                            .arg(GL::Properties::maxLineWidthSmooth()),
+                                                            .arg(GL::Properties::staticInstance().lineWidth[0])
+                                                            .arg(GL::Properties::staticInstance().lineWidth[1]),
                                             2, 1, 10000,
                                             0.01, true, true);
 
@@ -762,8 +762,8 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rt
             {
                 case Private::D_LINES:
                     p_->draw->setDrawType(gl::GL_LINE_STRIP);
-                    GL::setLineSmooth(p_->paramLineSmooth->value(time, thread) != 0);
-                    GL::setLineWidth(p_->paramLineWidth->value(time, thread));
+                    GL::Properties::staticInstance().setLineSmooth(p_->paramLineSmooth->value(time, thread) != 0);
+                    GL::Properties::staticInstance().setLineWidth(p_->paramLineWidth->value(time, thread));
                 break;
 
                 case Private::D_BARS:
@@ -772,7 +772,7 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rt
 
                 case Private::D_POINTS:
                     p_->draw->setDrawType(gl::GL_POINTS);
-                    MO_CHECK_GL( gl::glPointSize(p_->paramPointSize->value(time, thread)) );
+                    GL::Properties::staticInstance().setPointSize(p_->paramPointSize->value(time, thread));
                 break;
             }
 

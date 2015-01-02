@@ -181,13 +181,14 @@ struct vecfunc
 
     // ------- color conv -------
 
+    // wrapper for QColor (not directly used by script)
     static Vec3 toVecRgb3(const QColor& c) { return Vec(c.redF(), c.greenF(), c.blueF()); }
     static Vec3 toVecHsv3(const QColor& c) { return Vec(c.hueF(), c.saturationF(), c.valueF()); }
     static Vec4 toVecRgb4(const QColor& c) { return Vec4(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
     static Vec4 toVecHsv4(const QColor& c) { return Vec4(c.hueF(), c.saturationF(), c.valueF(), c.alphaF()); }
 
-    static Vec3 hsv2rgb_3f(float r, float g, float b) { return hsv2rgb_3(Vec3(r,g,b)); }
-    static Vec4 hsv2rgb_4f(float r, float g, float b, float a) { return hsv2rgb_4(Vec4(r,g,b,a)); }
+    static Vec3 hsv2rgb_3f(float h, float s, float v) { return hsv2rgb_3(Vec3(h,s,v)); }
+    static Vec4 hsv2rgb_4f(float h, float s, float v, float a) { return hsv2rgb_4(Vec4(h,s,v,a)); }
     static Vec3 rgb2hsv_3f(float r, float g, float b) { return rgb2hsv_3(Vec3(r,g,b)); }
     static Vec4 rgb2hsv_4f(float r, float g, float b, float a) { return rgb2hsv_4(Vec4(r,g,b,a)); }
 

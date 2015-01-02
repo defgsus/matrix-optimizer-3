@@ -32,6 +32,7 @@ namespace GUI {
 
 DomePreviewWidget::DomePreviewWidget(QWidget *parent)
     : Basic3DWidget (Basic3DWidget::RM_DIRECT, parent),
+      glProps_      (new GL::Properties),
       settings_     (new ProjectionSystemSettings()),
       textureFunc_  (0),
       domeGeometry_ (0),
@@ -64,6 +65,8 @@ DomePreviewWidget::~DomePreviewWidget()
     MO::settings->setValue(objectName()+"/showRays", showRays_);
     MO::settings->setValue(objectName()+"/showTex", showSliceTexture_);
     MO::settings->setValue(objectName()+"/showHighlight", showHighlight_);
+
+    delete glProps_;
 
     for (auto i : ptextureGeom_)
         delete i;
@@ -398,6 +401,7 @@ void DomePreviewWidget::createProjectorGeometry_()
 
 void DomePreviewWidget::initGL()
 {
+    glProps_->getProperties();
     domeDrawable_ = new GL::Drawable(objectName() + "_dome");
     projectorDrawable_ = new GL::Drawable(objectName() + "_proj");
 }
@@ -550,8 +554,8 @@ void DomePreviewWidget::drawGL(const Mat4 &projection,
     MO_CHECK_GL( gl::glDisable(gl::GL_DEPTH_TEST) );
     MO_CHECK_GL( gl::glEnable(gl::GL_BLEND) );
     MO_CHECK_GL( gl::glBlendFunc(gl::GL_SRC_ALPHA, gl::GL_ONE) );
-    GL::setLineSmooth(true);
-    GL::setLineWidth((GLfloat)fboSize().height() / 512);
+    glProps_->setLineSmooth(true);
+    glProps_->setLineWidth((GLfloat)fboSize().height() / 512);
 
     if (domeDrawable_->isReady() && showDome_)
         domeDrawable_->renderShader(projection, cubeViewTrans, viewTrans, trans);
