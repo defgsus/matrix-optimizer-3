@@ -15,6 +15,7 @@
 #include "gl/shader.h"
 #include "gl/texture.h"
 #include "gl/lightsettings.h"
+#include "gl/compatibility.h"
 #include "geom/geometry.h"
 #include "img/image.h"
 #include "img/imagegenerator.h"
@@ -28,6 +29,7 @@ namespace GUI {
 
 GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     Basic3DWidget   (mode, parent),
+    glprops_        (0),
     drawable_       (new GL::Drawable("geomwidget")),
     tex_            (0),
     texNorm_        (0),
@@ -35,7 +37,8 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     showGrid_       (settings->value("GeometryWidget/showGrid", false).toBool()),
     showTexture_    (settings->value("GeometryWidget/showTexture", false).toBool()),
     showNormalMap_  (settings->value("GeometryWidget/showNormalMap", false).toBool()),
-    showLights_     (settings->value("GeometryWidget/showLights", false).toBool())
+    showLights_     (settings->value("GeometryWidget/showLights", false).toBool()),
+    pointsize_      (settings->value("GeometryWidget/pointsize", 4).toInt())
 {
     setMinimumSize(128, 128);
 
@@ -62,15 +65,28 @@ GeometryWidget::~GeometryWidget()
     settings->setValue("GeometryWidget/showTexture", showTexture_);
     settings->setValue("GeometryWidget/showNormalMap", showNormalMap_);
     settings->setValue("GeometryWidget/showLights", showLights_);
+    settings->setValue("GeometryWidget/pointsize", pointsize_);
 
     delete drawable_;
     delete lights_;
+    delete glprops_;
 }
 
 void GeometryWidget::setGeometry(GEOM::Geometry * g)
 {
     drawable_->setGeometry(g);
     update();
+}
+
+void GeometryWidget::initGL()
+{
+    Basic3DWidget::initGL();
+
+    if (!glprops_)
+    {
+        glprops_ = new GL::Properties;
+        glprops_->getProperties();
+    }
 }
 
 void GeometryWidget::releaseGL()
@@ -86,6 +102,8 @@ void GeometryWidget::drawGL(const Mat4& projection,
                             const Mat4& viewTrans,
                             const Mat4& trans)
 {
+    MO_ASSERT(glprops_, "missing initGL");
+
     using namespace gl;
 
     MO_CHECK_GL( gl::glClearColor(0.1, 0.2, 0.3, 1.0) );
@@ -163,6 +181,8 @@ void GeometryWidget::drawGL(const Mat4& projection,
 
         // compile
         drawable_->createOpenGl();
+
+        glprops_->setPointSize(pointsize_);
 
         // bind normal texture slot
         if (texNorm_)

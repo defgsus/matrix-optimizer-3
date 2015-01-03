@@ -28,6 +28,9 @@ DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
 #as long as it is not really used, avoid this dependency
 DEFINES += MO_DISABLE_GST
 
+#thought would be nice, but the dependencies are a bit broken for ubuntu 14
+DEFINES += MO_DISABLE_CGAL
+
 #require audio input and output devices to be separate devices
 mac { DEFINES += MO_REQUIRE_SEPARATE_AUDIO \
 #                MO_DISABLE_ANGELSCRIPT \
@@ -57,6 +60,7 @@ LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
         -langelscript \
+        -lCGAL \
 #        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
 else: win32 {

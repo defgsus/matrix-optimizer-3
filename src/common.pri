@@ -257,7 +257,8 @@ HEADERS += \
     src/geom/builtinlinefont.h \
     src/script/angelscript_timeline.h \
     src/object/ascriptobject.h \
-    src/object/util/useruniformsetting.h
+    src/object/util/useruniformsetting.h \
+    src/geom/pointcloud.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -477,4 +478,5 @@ SOURCES += \
     src/geom/builtinlinefont.cpp \
     src/script/angelscript_timeline.cpp \
     src/object/ascriptobject.cpp \
-    src/object/util/useruniformsetting.cpp
+    src/object/util/useruniformsetting.cpp \
+    src/geom/pointcloud.cpp

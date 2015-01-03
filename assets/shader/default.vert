@@ -160,6 +160,8 @@ vec4 mo_ftransform(in vec4 pos)
 
 void main()
 {
+    // ---------------- experimental billboard ---------------------
+
 #ifdef MO_ENABLE_BILLBOARD
     vec3 normal_eye = //transpose(inverse(mat3(u_viewTransform))) *
             //mat3(u_viewTransform) *
@@ -175,45 +177,21 @@ void main()
     v_pos_eye = (u_viewTransform * vertex_pos).xyz;
     v_normal = a_normal;
     v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
-#ifdef MO_ENABLE_VERTEX_OVERRIDE
-    v_color = mo_modify_color(a_color, vertex_pos.xyz, a_normal);
-#else
-    v_color = a_color;
-#endif
     v_texCoord = a_texCoord;
     v_cam_dir = normalize(v_pos_eye);
 
     // set final vertex position
     gl_Position = mo_ftransform(vertex_pos);
-    //gl_Position = vertex_pos + vec4(u_cubeViewTransform[3].xyz, 0.0);
 
-    /*
-    // eye-to-center normal
-    vec3 eyen = normalize(u_viewTransform[3].xyz);
-    // rotated/transformed vertex coords
-    vec4 trans_pos = u_transform * vec4(a_position.xyz, 0.0);
-    // it's not entirely correct - but fast
-    vec4 vertex_pos = vec4(
-                trans_pos.x,
-                trans_pos.y,
-                eyen.x * trans_pos.x + eyen.y * trans_pos.y,
-                1.0);
-
-    // pass attributes to fragment shader
-    v_pos = vertex_pos.xyz;
-    v_pos_world = u_transform[3].xyz + vertex_pos.xyz;
-    v_pos_eye = u_viewTransform[3].xyz + vertex_pos.xyz;
-    v_normal = a_normal;
-    v_normal_eye = a_normal;
+    // attributes that might be modified by user code
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+    v_color = mo_modify_color(a_color, vertex_pos.xyz, a_normal);
+#else
     v_color = a_color;
-    v_texCoord = a_texCoord;
-    v_cam_dir = normalize(v_pos_eye);
+#endif
 
-    // set final vertex position
-    //gl_Position = mo_ftransform(vertex_pos);
-    //gl_Position = vec4(v_pos_eye, 1.0);
-    gl_Position = mo_ftransform(inverse(u_viewTransform)*vec4(v_pos_eye,1.0));
-    */
+
+    // ------------------- normal vertex stage ----------------
 #else
 
     // pass attributes to fragment shader
@@ -222,16 +200,18 @@ void main()
     v_pos_eye = (u_viewTransform * a_position).xyz;
     v_normal = a_normal;
     v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
-#ifdef MO_ENABLE_VERTEX_OVERRIDE
-    v_color = mo_modify_color(a_color, a_position.xyz, a_normal);
-#else
-    v_color = a_color;
-#endif
     v_texCoord = a_texCoord;
     v_cam_dir = normalize(v_pos_eye);
 
     // set final vertex position
     gl_Position = mo_ftransform(a_position);
+
+    // attributes that might be modified by user code
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+    v_color = mo_modify_color(a_color, a_position.xyz, a_normal);
+#else
+    v_color = a_color;
+#endif
 
 #endif // !MO_ENABLE_BILLBOARD
 

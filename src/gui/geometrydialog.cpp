@@ -145,36 +145,42 @@ void GeometryDialog::createMainWidgets_()
 
                     auto tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("front"));
                     tbut->setIcon(QIcon(":/icon/view_front.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_FRONT); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("back"));
                     tbut->setIcon(QIcon(":/icon/view_back.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_BACK); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("left"));
                     tbut->setIcon(QIcon(":/icon/view_left.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_LEFT); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("right"));
                     tbut->setIcon(QIcon(":/icon/view_right.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_RIGHT); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("top"));
                     tbut->setIcon(QIcon(":/icon/view_top.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_TOP); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("bottom"));
                     tbut->setIcon(QIcon(":/icon/view_bottom.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_BOTTOM); });
@@ -213,6 +219,23 @@ void GeometryDialog::createMainWidgets_()
                     {
                         geoWidget_->setShowNormalMap(state == Qt::Checked);
                     });
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    auto label = new QLabel(tr("pointsize"), this);
+                    lh2->addWidget(label);
+
+                    auto spin = new SpinBox(this);
+                    lh2->addWidget(spin);
+                    spin->setRange(1, 1000);
+                    spin->setValue(geoWidget_->pointsize());
+                    connect(spin, &SpinBox::valueChanged, [this](int v)
+                    {
+                        geoWidget_->setPointsize(v);
+                    });
+
+                    lh2->addStretch(1);
 
             lv = new QVBoxLayout();
             lh->addLayout(lv);

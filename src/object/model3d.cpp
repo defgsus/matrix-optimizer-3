@@ -200,7 +200,7 @@ void Model3d::createParameters()
         texture_->createParameters("col", TextureSetting::TT_NONE, true);
 
         usePointCoord_ = params()->createBooleanParameter("tex_use_pointcoord", tr("map on points"),
-                                         tr("Currently you have to decide wether to map the texture on triangles or on point sprites"),
+                                         tr("Currently you need to decide wether to map the texture on triangles or on point sprites"),
                                          tr("The texture coordinates are used as defined by the vertices in the geometry"),
                                          tr("Calculated texture coordinates will be used for point sprites."),
                                          false, true, false);
