@@ -44,6 +44,8 @@ public:
 
     void setTimeCallback(std::function<Double()> timeFunc);
 
+    SceneRenderer * renderer() const { return renderer_; }
+
 signals:
 
     /* This will signal the creation of a new Context */

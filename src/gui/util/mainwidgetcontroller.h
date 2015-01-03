@@ -28,6 +28,7 @@ class QMenu;
 
 namespace MO {
 class LiveAudioEngine;
+class RenderEngine;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
@@ -183,6 +184,7 @@ private:
     QSize outputSize_;
 
     LiveAudioEngine * audioEngine_;
+    RenderEngine * renderEngine_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;

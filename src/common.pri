@@ -258,7 +258,9 @@ HEADERS += \
     src/script/angelscript_timeline.h \
     src/object/ascriptobject.h \
     src/object/util/useruniformsetting.h \
-    src/geom/pointcloud.h
+    src/geom/pointcloud.h \
+    src/object/util/objectglpath.h \
+    src/engine/renderengine.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -479,4 +481,6 @@ SOURCES += \
     src/script/angelscript_timeline.cpp \
     src/object/ascriptobject.cpp \
     src/object/util/useruniformsetting.cpp \
-    src/geom/pointcloud.cpp
+    src/geom/pointcloud.cpp \
+    src/object/util/objectglpath.cpp \
+    src/engine/renderengine.cpp

@@ -25,7 +25,6 @@
 #include "object/audio/audioinao.h"
 #include "object/param/modulator.h"
 #include "object/util/objecttree.h"
-#include "object/util/objectdsppath.h"
 #include "object/util/audioobjectconnections.h"
 #include "object/util/objectmodulatorgraph.h"
 #include "audio/configuration.h"

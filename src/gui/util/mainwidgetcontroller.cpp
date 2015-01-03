@@ -70,8 +70,10 @@
 #include "gl/manager.h"
 #include "gl/window.h"
 #include "gl/texture.h"
+#include "gl/scenerenderer.h" // deprecated
 #include "audio/configuration.h"
-#include "engine/renderer.h"
+#include "engine/renderer.h" // should be (audio) disk renderer
+#include "engine/renderengine.h"
 #include "engine/audioengine.h"
 #include "engine/liveaudioengine.h"
 #include "engine/serverengine.h"
@@ -100,6 +102,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       updateTimer_      (0),
       outputSize_       (512, 512),
       audioEngine_      (0),
+      renderEngine_     (0),
       glManager_        (0),
       glWindow_         (0),
       objectEditor_     (0),
@@ -132,6 +135,9 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
 
 MainWidgetController::~MainWidgetController()
 {
+    if (renderEngine_)
+        renderEngine_->release();
+
     if (audioEngine_)
         audioEngine_->stop();
 }
@@ -610,6 +616,9 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     MO_ASSERT(s, "MainWidgetController::setScene_() with NULL scene");
     MO_ASSERT(s != scene_, "MainWidgetController::setScene_() with same scene");
 
+    if (renderEngine_)
+        renderEngine_->release();
+
     if (scene_)
     {
         scene_->kill();
@@ -654,6 +663,11 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     // update render settings from MainWidgetController
     updateDebugRender_();
+
+    // XXX debug
+    if (!renderEngine_)
+        renderEngine_ = new RenderEngine(this);
+    renderEngine_->setScene(scene_, glManager_->renderer()->context(), MO_GFX_THREAD);
 
     // connect to render window
     glManager_->setScene(scene_);
