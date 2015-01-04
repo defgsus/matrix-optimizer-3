@@ -381,6 +381,11 @@ namespace
     {
         {
             ScopedSceneLockWrite lock(edit->scene());
+
+            // only apply if different
+            if (p->baseValue() == v)
+                return;
+
             p->setValue(v);
             p->object()->onParameterChanged(p);
         }

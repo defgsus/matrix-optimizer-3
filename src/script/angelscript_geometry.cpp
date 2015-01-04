@@ -121,7 +121,7 @@ public:
         MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS() owning");
     }
 
-    /** Creates an instance for an existing Geometry (not bound to this instance) */
+    /** Creates an instance for an existing Geometry (not owned by this instance) */
     GeometryAS(GEOM::Geometry * g)
         : g     (g),
           owner (false),
@@ -205,9 +205,9 @@ public:
     void setAttribute3(const StringAS& name, const Vec3& v) { g->setAttribute(MO::toString(name), v.x, v.y, v.z); }
     void setAttribute4(const StringAS& name, const Vec4& v) { g->setAttribute(MO::toString(name), v.x, v.y, v.z, v.w); }
 
-    void createBox1(float sl, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, sl, sl, sl, true, pos); }
-    void createBox3(float x, float y, float z, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, x, y, z, true, pos); }
-    void createBox3v(const Vec3& s, const Vec3& pos) { GEOM::GeometryFactory::createBox(g, s.x, s.y, s.z, true, pos); }
+    void createBox1(float sl, const Vec3& pos) { GEOM::GeometryFactory::createTexturedBox(g, sl, sl, sl, pos); }
+    void createBox3(float x, float y, float z, const Vec3& pos) { GEOM::GeometryFactory::createTexturedBox(g, x, y, z, pos); }
+    void createBox3v(const Vec3& s, const Vec3& pos) { GEOM::GeometryFactory::createTexturedBox(g, s.x, s.y, s.z, pos); }
     void createSphere1(float rad, const Vec3& pos) { GEOM::GeometryFactory::createUVSphere(g, rad, 12, 12, true, pos); }
     void createSphere3(float rad, uint segu, uint segv, const Vec3& pos) { GEOM::GeometryFactory::createUVSphere(g, rad, segu, segv, true, pos); }
     void createTorus4(float rad_outer, float rad_inner, uint segu, uint segv, const Vec3& pos)
@@ -263,6 +263,7 @@ public:
 
     void addGeometry(const GeometryAS& o) { g->addGeometry( *o.g ); }
     void addGeometryP(const GeometryAS& o, const Vec3& p) { g->addGeometry( *o.g, p ); }
+    void addGeometryM(const GeometryAS& o, const Mat4& m) { GEOM::Geometry tmp(*o.g); tmp.applyMatrix(m); g->addGeometry(tmp); }
 
     void rotate(const Vec3& a, Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, a) ); }
     void rotate3f(Float x, Float y, Float z, Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(x,y,z)) ); }
@@ -313,6 +314,12 @@ uint GeometryAS::getClosestVertex(const Vec3& v)
     return best;
 }
 
+GeometryAS * geometry_to_angelscript(const GEOM::Geometry *g)
+{
+    auto as = GeometryAS::factory();
+    *as->g = *g;
+    return as;
+}
 
 
 namespace native {
@@ -438,8 +445,10 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void addQuad(uint bl, uint br, uint tr, uint tl)", addQuadI);
     MO__REG_METHOD("void addGeometry(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void addGeometry(const Geometry &in, const vec3 &in)", addGeometryP);
+    MO__REG_METHOD("void addGeometry(const Geometry &in, const mat4 &in)", addGeometryM);
     MO__REG_METHOD("void add(const Geometry &in)", addGeometry);
     MO__REG_METHOD("void add(const Geometry &in, const vec3 &in)", addGeometryP);
+    MO__REG_METHOD("void add(const Geometry &in, const mat4 &in)", addGeometryM);
     MO__REG_METHOD("void addText(const string &in)", addText);
     MO__REG_METHOD("void addText(const string &in, const vec3 &in pos)", addTextP);
     MO__REG_METHOD("void addText(const string &in, const mat4 &in transform)", addTextM);

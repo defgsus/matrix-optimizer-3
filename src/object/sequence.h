@@ -161,7 +161,7 @@ private:
 inline Double Sequence::getSequenceTime(Double time, uint thread,
                                         Double &timeWithoutLoop) const
 {
-    Double speed = p_speed_->baseValue();
+    Double speed = p_speed_->value(time, thread);
 
     if (parentClip_)
     {
@@ -169,7 +169,7 @@ inline Double Sequence::getSequenceTime(Double time, uint thread,
         speed *= parentClip_->speed();
     }
 
-    time = (time - p_start_->baseValue()) * speed;
+    time = (time - p_start_->value(time, thread)) * speed;
     time += p_timeOffset_->value(time, thread);
 
     timeWithoutLoop = time;
@@ -191,7 +191,7 @@ inline Double Sequence::getSequenceTime(Double time, uint thread,
                                         Double& lStart, Double& lLength, bool& isInLoop,
                                         Double& timeWithoutLoop) const
 {
-    Double speed = p_speed_->baseValue();
+    Double speed = p_speed_->value(time, thread);
 
     if (parentClip_)
     {
@@ -199,7 +199,7 @@ inline Double Sequence::getSequenceTime(Double time, uint thread,
         speed *= parentClip_->speed();
     }
 
-    time = (time - p_start_->baseValue()) * speed;
+    time = (time - p_start_->value(time, thread)) * speed;
     time += p_timeOffset_->value(time, thread);
 
     timeWithoutLoop = time;

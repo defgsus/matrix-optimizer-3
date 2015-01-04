@@ -113,6 +113,14 @@ public:
         }
     }
 
+    GeometryAS * geometry()
+    {
+        if (auto model = qobject_cast<Model3d*>(o))
+            if (model->geometry())
+                return geometry_to_angelscript(model->geometry());
+        return 0;
+    }
+
     void setGeometry(GeometryAS * gas)
     {
         Model3d * model = qobject_cast<Model3d*>(o);
@@ -182,6 +190,7 @@ static void register_object(asIScriptEngine *engine)
     MO__REG_METHOD("const Object@ find(const string &in name) const", findName);
 
     MO__REG_METHOD("Timeline1@ getTimeline() const", timeline);
+    MO__REG_METHOD("Geometry@ getGeometry() const", geometry);
 
     // setter
     MO__REG_METHOD("void setName(const string &in)", setName);

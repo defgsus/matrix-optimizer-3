@@ -49,6 +49,8 @@ public:
     /** Always returns the default timeline and creates one if neccessary. */
     const MATH::Timeline1D & getDefaultTimeline();
 
+    const MATH::Timeline1D & baseValue() { return tl_ ? (const MATH::Timeline1D &)*tl_ : getDefaultTimeline(); }
+
     // ---------------- setter -----------------
 
     /** Read/Write access to timeline.

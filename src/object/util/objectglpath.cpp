@@ -330,7 +330,7 @@ void ObjectGlPath::Private::createPath(Scene * s)
     });
 
 #ifdef MO_GRAPH_DEBUG
-    MO_DEBUG("renderTree:");
+    MO_DEBUG("transformTree:");
     transformTree->dumpTree(std::cout);
 #endif
 
@@ -369,13 +369,16 @@ void ObjectGlPath::Private::createPath(Scene * s)
         if (cam->parentObject())
             rroot = cam->parentObject();
 
-        // add dependency of camera to render objects
+        // add dependency: camera <- render objects
         auto rtree = get_object_tree(rroot);
+
         rtree->forEachNode([&rendergraph, buf, cam](ObjectTreeNode * n)
         {
             if (n->object()->isGl() && !n->object()->isCamera())
             {
+                // dependency to graph edge
                 rendergraph.addEdge(n->object(), cam);
+
                 // store renderlist per camera
                 buf->renderCamList.append(static_cast<ObjectGl*>(n->object()));
             }

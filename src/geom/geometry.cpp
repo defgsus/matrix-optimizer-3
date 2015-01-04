@@ -521,6 +521,8 @@ const Geometry::VertexType * Geometry::line(
 
 void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 {
+    // XXX Doesn't copy attributes!
+
     // copy triangles
     for (uint i=0; i<other.numTriangles(); ++i)
     {
@@ -608,6 +610,7 @@ void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
         addLine(l1, l2);
     }
 }
+
 
 
 void Geometry::scale(VertexType x, VertexType y, VertexType z)

@@ -89,6 +89,8 @@ class Timeline1D
 
         /** type of this que-point, see Timeline1D::Point::Type */
         Type type;
+
+        bool operator == (const Point& o) const { return t == o.t && val == o.val && d1 == o.d1 && type == o.type; }
     };
 
     /** the type of hash-value generated for the time of a point. <br>
@@ -139,6 +141,9 @@ class Timeline1D
     void loadFile(const QString& filename);
 
     // ---------- get ----------------
+
+    /** Comparison */
+    bool operator == (const Timeline1D& other) const;
 
     /** return number of que points */
     unsigned int size() const { return data_.size(); }

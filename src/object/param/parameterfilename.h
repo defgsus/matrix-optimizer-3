@@ -35,6 +35,7 @@ public:
     // ---------------- getter -----------------
 
     QString value() const { return value_; }
+    const QString& baseValue() const { return value_; }
     QString defaultValue() const { return defaultValue_; }
 
     IO::FileType fileType() const { return fileType_; }

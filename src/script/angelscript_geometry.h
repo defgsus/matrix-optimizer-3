@@ -30,6 +30,9 @@ class Scene;
     /** Returns the assigned geometry widget of the script object, or NULL */
     GEOM::Geometry * getGeometry(const GeometryAS*);
 
+    /** Makes a copy */
+    GeometryAS * geometry_to_angelscript(const GEOM::Geometry* g);
+
     /** Put the object type and related functions into the namespace */
     void registerAngelScript_geometry(asIScriptEngine *engine);
 

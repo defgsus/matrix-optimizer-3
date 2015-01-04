@@ -178,6 +178,12 @@ struct vecfunc
             std::cos(latitude) * std::cos(longitude));
     }
 
+    static Vec2 ulam_spiral(int i)
+    {
+        int x,y;
+        MATH::advanced_int<int>::ulam_spiral_inv(i, x, y);
+        return Vec2(x,y);
+    }
 
     // ------- color conv -------
 
@@ -359,6 +365,9 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
 
     MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec2>::noisef_2);
     MO__REG_FUNC("%1 noise2(float)", vecfunc<Vec2>::noisev2_1);
+
+    MO__REG_FUNC("%1 ulam_spiral(int n)", vecfunc<Vec2>::ulam_spiral);
+
 }
 
 /** Specific stuff for 3 */
@@ -504,7 +513,7 @@ void register_vector_mathwrapper_tmpl(asIScriptEngine *engine, const char * typ)
                 r[i] = func__(v[i]); return r;          \
         }                                               \
     };                                                  \
-    MO__REG_FUNC("%1 " #name__ "(const %1 &in)",         \
+    MO__REG_FUNC("%1 " #name__ "(const %1 &in)",        \
         _mathwrap##name__::func);
 
 

@@ -299,6 +299,37 @@ struct advanced_int
         }
     }
 
+    /** generate x,y for n */
+    static void ulam_spiral_inv(I n, I& xx, I& yy)
+    {
+        const I mm = I(0.5 * (std::sqrt(n) + 1.0)),
+                kk = n - 4 * mm * (mm - 1);
+        if (kk < 1 || kk > 8 * mm)
+        {
+            xx = yy = 0;
+        }
+        else if (kk <= 2 * mm)
+        {
+            xx = mm;
+            yy = kk - mm;
+        }
+        else if (kk <= 4 * mm)
+        {
+            xx = 3 * mm - kk;
+            yy = mm;
+        }
+        else if (kk <= 6 * mm)
+        {
+            xx = -mm;
+            yy = 5 * mm - kk;
+        }
+        else //if (kk <= 8 * mm)
+        {
+            xx = kk - 7 * mm;
+            yy = -mm;
+        }
+    }
+
     static I tri_spiral(I x, I y)
     {
         I d;

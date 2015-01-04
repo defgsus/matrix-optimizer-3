@@ -102,6 +102,11 @@ const Timeline1D& Timeline1D::operator = (const Timeline1D& other)
     return *this;
 }
 
+bool Timeline1D::operator == (const Timeline1D& other) const
+{
+    return data_ == other.data_;
+}
+
 Double Timeline1D::get(Double time) const
 {
     return limit_(getNoLimit(time));
