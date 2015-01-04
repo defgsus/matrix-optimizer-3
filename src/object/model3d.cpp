@@ -171,7 +171,7 @@ void Model3d::createParameters()
         glslColor_ = params()->createTextParameter("glsl_color", tr("glsl color"),
                                                     tr("A piece of glsl code to modify vertex color"),
                                                     TT_GLSL,
-                                                    "vec4 mo_modify_color(in vec4 color, in vec3 pos, in vec3 normal) {\n\treturn color;\n}\n"
+                                                    "void mo_modify_color(inout vec4& color, inout vec4& ambient_color, vec3 pos, in vec3 normal) {\n\t\n}\n"
                                                     , true, false);
 
     params()->endParameterGroup();

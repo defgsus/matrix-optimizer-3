@@ -33,6 +33,7 @@ uniform mat4 u_projection;                  // projection matrix
 uniform mat4 u_cubeViewTransform;           // cube-map * view * transform
 uniform mat4 u_viewTransform;               // view * transform
 uniform mat4 u_transform;                   // transformation only
+uniform vec4 u_color;
 #ifdef MO_ENABLE_LIGHTING
     uniform vec3 u_light_pos[MO_NUM_LIGHTS];
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
@@ -59,6 +60,7 @@ out vec3 v_cam_dir;
 out vec3 v_normal;
 out vec3 v_normal_eye;
 out vec4 v_color;
+out vec4 v_ambient_color;
 out vec2 v_texCoord;
 #ifdef MO_ENABLE_LIGHTING
     #ifdef MO_FRAGMENT_LIGHTING
@@ -179,17 +181,16 @@ void main()
     v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
     v_texCoord = a_texCoord;
     v_cam_dir = normalize(v_pos_eye);
+    v_color = vec4(1.);
+    v_ambient_color = a_color * u_color;
 
     // set final vertex position
     gl_Position = mo_ftransform(vertex_pos);
 
     // attributes that might be modified by user code
 #ifdef MO_ENABLE_VERTEX_OVERRIDE
-    v_color = mo_modify_color(a_color, vertex_pos.xyz, a_normal);
-#else
-    v_color = a_color;
+    mo_modify_color(v_color, v_ambient_color, vertex_pos.xyz, a_normal);
 #endif
-
 
     // ------------------- normal vertex stage ----------------
 #else
@@ -202,15 +203,15 @@ void main()
     v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
     v_texCoord = a_texCoord;
     v_cam_dir = normalize(v_pos_eye);
+    v_color = vec4(1.);
+    v_ambient_color = a_color * u_color;
 
     // set final vertex position
     gl_Position = mo_ftransform(a_position);
 
     // attributes that might be modified by user code
 #ifdef MO_ENABLE_VERTEX_OVERRIDE
-    v_color = mo_modify_color(a_color, a_position.xyz, a_normal);
-#else
-    v_color = a_color;
+    mo_modify_color(v_color, v_ambient_color, a_position.xyz, a_normal);
 #endif
 
 #endif // !MO_ENABLE_BILLBOARD

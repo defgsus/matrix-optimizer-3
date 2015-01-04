@@ -34,6 +34,7 @@ in vec3 v_cam_dir;
 in vec3 v_normal;
 in vec3 v_normal_eye;
 in vec4 v_color;
+in vec4 v_ambient_color;
 in vec2 v_texCoord;
 #ifdef MO_ENABLE_LIGHTING
     #ifndef MO_FRAGMENT_LIGHTING
@@ -51,7 +52,6 @@ out vec4 color;
 // --- uniforms ---
 
 uniform float u_time;
-uniform vec4 u_color;
 
 #ifdef MO_ENABLE_LIGHTING
     uniform float u_diffuse_exp;
@@ -212,7 +212,7 @@ vec4 mo_ambient_color()
     // transform tex-coord
     vec2 tc = mo_texture_lookup( texCoord );
 
-    return u_color * v_color
+    return v_ambient_color
 #ifdef MO_ENABLE_TEXTURE
     #ifndef MO_ENABLE_TEXTURE_POST_PROCESS
         #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
@@ -339,7 +339,7 @@ void main()
     //col *= mo_toon_color();
 
     // final color
-    color = vec4(clamp(col, 0.0, 1.0));
+    color = vec4(clamp(col * v_color, 0.0, 1.0));
 
     //gl_DepthRangeParameters.
 }
