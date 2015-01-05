@@ -16,6 +16,7 @@
 #include "gl/opengl_fwd.h"
 #include "network/network_fwd.h"
 #include "io/filetypes.h"
+#include "types/float.h"
 
 namespace MO {
 class Scene;
@@ -45,6 +46,8 @@ public:
 
     /** Runs the complete client event loop */
     int run(int argc, char ** argv, int skip);
+
+    Double curTime() const;
 
 signals:
 

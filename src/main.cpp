@@ -131,10 +131,13 @@ int main(int argc, char *argv[])
 
     int ret;
 
+    // --- client engine ---
     if (MO::isClient())
     {
         ret = MO::clientEngine().run(argc, argv, 2);
     }
+
+    // --- server/gui engine ---
     else
     {
 

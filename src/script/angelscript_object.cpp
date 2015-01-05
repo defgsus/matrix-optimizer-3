@@ -19,6 +19,7 @@
 #include "angelscript_geometry.h"
 #include "script/angelscript.h"
 #include "object/object.h"
+#include "object/objectfactory.h"
 #include "object/scene.h"
 #include "object/sequencefloat.h"
 #include "object/model3d.h"
@@ -47,7 +48,10 @@ public:
           ref       (1),
           owning    (false),
           self      (this)
-    { }
+    {
+        // The syntax checker needs a null object..
+        //MO_ASSERT(o, "Can't create wrapper for NULL Object");
+    }
 
     ~ObjectAS()
     {
@@ -60,6 +64,8 @@ public:
     void releaseRef() { if (--ref == 0) delete this; }
 
     // --------------- interface -----------------
+
+    SequenceAS * toSequence();
 
     // ------ getter ------
 
@@ -76,7 +82,11 @@ public:
     StringAS id() { return toStringAS(o->idName()); }
 
     int childrenCount() { return o->childObjects().size(); }
-    ObjectAS * children(int i) { return factory(o->childObjects()[i]); }
+    ObjectAS * children(int i) { return (i>=0 && i<o->childObjects().size()) ? factory(o->childObjects()[i]) : 0; }
+
+    ObjectAS * parent() { return o->parentObject() ? factory(o->parentObject()) : 0; }
+    ObjectAS * root() { return o->rootObject() ? factory(o->rootObject()) : 0; }
+
 
     ObjectAS * findName(const StringAS& n)
     {
@@ -143,6 +153,87 @@ public:
 };
 
 
+
+
+
+
+
+class SequenceAS
+{
+public:
+    SequenceFloat * o;
+    int ref;
+    bool owning;
+    SequenceAS * self;
+
+    /** Create an owning wrapper */
+    SequenceAS()
+        : o         (ObjectFactory::createSequenceFloat()),
+          ref       (1),
+          owning    (true),
+          self      (this)
+    { }
+
+    /** Create a non-owning wrapper */
+    SequenceAS(SequenceFloat * o)
+        : o         (o),
+          ref       (1),
+          owning    (false),
+          self      (this)
+    {
+        MO_ASSERT(o, "Can't create wrapper for NULL Object");
+    }
+
+    ~SequenceAS()
+    {
+        if (owning)
+            delete o;
+    }
+
+    static SequenceAS * factory(SequenceFloat * o) { return new SequenceAS(o); }
+    static SequenceAS * factoryNew() { return new SequenceAS(); }
+
+    void addRef() { ++ref; }
+    void releaseRef() { if (--ref == 0) delete this; }
+
+    ObjectEditor * editor() { auto s = o->sceneObject(); return s ? s->editor() : 0; }
+
+    // --------------- interface -----------------
+
+    // ------ getter ------
+
+    Double start() const { return o->start(); }
+    Double end() const { return o->end(); }
+    Double length() const { return o->length(); }
+    Double loopStart() const { return o->loopStart(); }
+    Double loopEnd() const { return o->loopEnd(); }
+    Double loopLength() const { return o->loopLength(); }
+
+    // ------ setter ------
+
+#define MO__EMIT if (auto e = editor()) emit e->sequenceChanged(o)
+
+    void setStart(Double t) { o->setStart(t); MO__EMIT; }
+    void setEnd(Double t) { o->setEnd(t); MO__EMIT; }
+    void setLength(Double t) { o->setLength(t); MO__EMIT; }
+    void setLoopStart(Double t) { o->setLoopStart(t); MO__EMIT; }
+    void setLoopEnd(Double t) { o->setLoopEnd(t); MO__EMIT; }
+    void setLoopLength(Double t) { o->setLoopLength(t); MO__EMIT; }
+
+#undef MO__EMIT
+
+};
+
+
+
+
+// ---- cast -----
+
+SequenceAS * ObjectAS::toSequence() { if (auto c = qobject_cast<SequenceFloat*>(o)) return SequenceAS::factory(c); return 0; }
+
+
+
+
 namespace {
 
 
@@ -153,27 +244,33 @@ namespace {
 
 namespace native {
 
-#define MO__REG_METHOD(decl__, name__) \
-    r = engine->RegisterObjectMethod("Object", decl__, asMETHOD(ObjectAS, name__), asCALL_THISCALL); assert( r >= 0 );
-#define MO__REG_FUNC(decl__, name__) \
-    r = engine->RegisterGlobalFunction(decl__, asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
+#define MO__REG_METHOD(decl__, func__) \
+    r = engine->RegisterObjectMethod(typ, decl__, asMETHOD(Wrapper, func__), asCALL_THISCALL); assert( r >= 0 );
+#define MO__REG_METHOD_F(decl__, func__) \
+    r = engine->RegisterObjectMethod(typ, decl__, asFUNCTION(func__), asCALL_CDECL); assert( r >= 0 );
+#define MO__REG_FUNC(decl__, func__) \
+    r = engine->RegisterGlobalFunction(decl__, asFUNCTION(func__), asCALL_CDECL); assert( r >= 0 );
 
 
-static void register_object(asIScriptEngine *engine)
+
+// --- base object interface ---
+template <class Wrapper>
+static void register_object_base(asIScriptEngine *engine, const char * typ)
 {
     int r;
 
-    // register the type
-    r = engine->RegisterObjectType("Object", 0, asOBJ_REF); assert( r >= 0 );
+    // -------------------- types ------------------------------
+
+    r = engine->RegisterObjectType(typ, 0, asOBJ_REF); assert( r >= 0 );
 
     // ----------------- constructor ---------------------------
 
     //r = engine->RegisterObjectBehaviour(typ, asBEHAVE_FACTORY,
-    //    MO__STR("ObjectAS@ f()"), asFUNCTION(ObjectAS::factory), asCALL_CDECL); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("Object", asBEHAVE_ADDREF,
-        "void f()", asMETHOD(ObjectAS,addRef), asCALL_THISCALL); assert( r >= 0 );
-    r = engine->RegisterObjectBehaviour("Object", asBEHAVE_RELEASE,
-        "void f()", asMETHOD(ObjectAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+    //    MO__STR("Wrapper@ f()"), asFUNCTION(Wrapper::factory), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_ADDREF,
+        "void f()", asMETHOD(Wrapper,addRef), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_RELEASE,
+        "void f()", asMETHOD(Wrapper,releaseRef), asCALL_THISCALL); assert( r >= 0 );
 
     // --------------- the object methods ----------------------
 
@@ -185,7 +282,12 @@ static void register_object(asIScriptEngine *engine)
     // getter
     MO__REG_METHOD("int childrenCount() const", childrenCount);
     MO__REG_METHOD("Object@ children(int)", children);
-    MO__REG_METHOD("const Object@ children(int) const", children);
+    MO__REG_METHOD("const Object@ children(int) const", children);    
+    MO__REG_METHOD("Object@ parent()", parent);
+    MO__REG_METHOD("const Object@ parent() const", parent);
+    MO__REG_METHOD("Object@ root()", root);
+    MO__REG_METHOD("const Object@ root() const", root);
+
     MO__REG_METHOD("Object@ find(const string &in name)", findName);
     MO__REG_METHOD("const Object@ find(const string &in name) const", findName);
 
@@ -201,12 +303,55 @@ static void register_object(asIScriptEngine *engine)
 
     // ------------ non-member object functions ----------------
 
-
 //    MO__REG_FUNC("", );
-
 
 }
 
+// -- basic sequence interface --
+template <class Wrapper>
+static void register_sequence_base(asIScriptEngine *engine, const char * typ)
+{
+    int r;
+
+    // ---------------- constructor ----------------------------
+
+    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_FACTORY,
+        "Sequence@ f()", asFUNCTION(Wrapper::factoryNew), asCALL_CDECL); assert( r >= 0 );
+
+    // --------------- the object methods ----------------------
+
+    // getter
+    MO__REG_METHOD("double start() const", start);
+    MO__REG_METHOD("double end() const", end);
+    MO__REG_METHOD("double length() const", length);
+    MO__REG_METHOD("double loopStart() const", loopStart);
+    MO__REG_METHOD("double loopEnd() const", loopEnd);
+    MO__REG_METHOD("double loopLength() const", loopLength);
+
+    // setter
+
+
+    // ------------ non-member object functions ----------------
+
+    MO__REG_METHOD("void setStart(double second) const", setStart);
+    MO__REG_METHOD("void setEnd(double second) const", setEnd);
+    MO__REG_METHOD("void setLength(double second) const", setLength);
+    MO__REG_METHOD("void setLoopStart(double second) const", setLoopStart);
+    MO__REG_METHOD("void setLoopEnd(double second) const", setLoopEnd);
+    MO__REG_METHOD("void setLoopLength(double second) const", setLoopLength);
+
+}
+
+template <class Wrapper>
+static void register_casts(asIScriptEngine * engine, const char * typ)
+{
+    int r;
+
+    // cast
+    //MO__REG_METHOD_F("const Sequence@ toSequence() const", (object_to_<SequenceFloat, SequenceAS>));
+    MO__REG_METHOD("Sequence@ toSequence()", toSequence);
+
+}
 
 #undef MO__REG_FUNC
 #undef MO__REG_METHOD
@@ -223,8 +368,22 @@ void registerAngelScript_object(asIScriptEngine *engine)
         assert(!"Object type for Angelscript currently not supported on this platform");
     }
     else
-        native::register_object(engine);
+    {
+        // base object type for each class
+        native::register_object_base<ObjectAS>(engine, "Object");
+        native::register_object_base<ObjectAS>(engine, "Sequence");
+
+        // specialized types
+        native::register_sequence_base<SequenceAS>(engine, "Sequence");
+
+        native::register_casts<ObjectAS>(engine, "Object");
+    }
 }
+
+
+
+// ---------------------------- instantiations ---------------------------------
+
 
 void registerAngelScript_rootObject(asIScriptEngine *engine, Scene* root, bool writeable)
 {

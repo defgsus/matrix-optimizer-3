@@ -16,10 +16,12 @@
 
 #include "angelscript_geometry.h"
 #include "angelscript_object.h"
-#include "script/angelscript.h"
+#include "angelscript.h"
+#include "3rd/angelscript/scriptarray/scriptarray.h"
 #include "object/object.h"
 #include "geom/geometry.h"
 #include "geom/geometryfactory.h"
+#include "geom/marchingcubes.h"
 #include "math/vector.h"
 #include "io/log.h"
 
@@ -265,6 +267,44 @@ public:
     void addGeometryP(const GeometryAS& o, const Vec3& p) { g->addGeometry( *o.g, p ); }
     void addGeometryM(const GeometryAS& o, const Mat4& m) { GEOM::Geometry tmp(*o.g); tmp.applyMatrix(m); g->addGeometry(tmp); }
 
+    /*
+    void marchingCubesFunc(const asIScriptFunction * f, uint w, uint h, uint d, float isolevel, const Vec3& mine, const Vec3& maxe)
+    {
+        GEOM::MarchingCubes mc;
+        mc.renderScalarField(*g, mine, maxe, Vec3(w,h,d), isolevel, [f](const Vec3& p)
+        {
+            asIScriptContext * ctx = asGetActiveContext();
+            ctx->PushState();
+            ctx->Prepare(f);
+            ctx->Execute();
+            ctx->PopState();
+        });
+    }
+    */
+    void marchingCubesArrayi8(const CScriptArray& map, int w, int h, int d, const Mat4 & trans, float isolevel)
+    {
+        std::vector<int8_t> data;
+        for (int z = 0; z < int(d); ++z)
+        for (int y = 0; y < int(h); ++y)
+        for (int x = 0; x < int(w); ++x)
+            data.push_back(*static_cast<const int8_t*>(map.At((z*d+y)*h+w)));
+        GEOM::MarchingCubes mc;
+        mc.renderGrid(*g, &data[0], w, h, d, trans, isolevel);
+    }
+
+    void marchingCubesArrayi32(const CScriptArray& map, int w, int h, int d, const Mat4 & trans, float isolevel)
+    {
+        std::vector<int8_t> data;
+        for (int z = 0; z < int(d); ++z)
+        for (int y = 0; y < int(h); ++y)
+        for (int x = 0; x < int(w); ++x)
+            data.push_back(*static_cast<const int32_t*>(map.At((z*d+y)*h+x)));
+        GEOM::MarchingCubes mc;
+        mc.renderGrid(*g, &data[0], w, h, d, trans, isolevel);
+    }
+
+
+
     void rotate(const Vec3& a, Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, a) ); }
     void rotate3f(Float x, Float y, Float z, Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(x,y,z)) ); }
     void rotateX(Float deg) { g->applyMatrix( MATH::rotate(Mat4(1), deg, Vec3(1, 0, 0)) ); }
@@ -287,6 +327,16 @@ public:
     void calculateNormals() { g->calculateTriangleNormals(); }
     void invertNormals() { g->invertNormals(); }
     void convertToLines() { if (g->numLines()) g->convertToLines(); }
+
+    void mapTriangles(const Vec2& a, const Vec2& b, const Vec2& c)
+    {
+        for (uint i=0; i<g->numTriangles(); ++i)
+        {
+            g->setTexCoord(g->triangleIndex(i, 0), a);
+            g->setTexCoord(g->triangleIndex(i, 1), b);
+            g->setTexCoord(g->triangleIndex(i, 2), c);
+        }
+    }
 };
 
 
@@ -322,9 +372,161 @@ GeometryAS * geometry_to_angelscript(const GEOM::Geometry *g)
 }
 
 
+
+class ScalarFieldAS
+{
+    ScalarFieldAS(const ScalarFieldAS&);
+    void operator = (ScalarFieldAS&);
+
+public:
+
+    enum ShapeType
+    {
+        S_SPHERE,
+        S_BOX,
+        S_LINE,
+        S_ASF
+    };
+
+    struct Shape
+    {
+        Shape() : context(0) { }
+        ~Shape() { if (context) context->Release(); }
+        Shape(ShapeType type, const Vec3& pos, const Vec3& param1, const Vec3& param2 = Vec3(0))
+            : pos(pos), param1(param1), param2(param2), type(type), context(0) { }
+        Shape(asIScriptFunction * f) : type(S_ASF), asfunc(f), context(0) { }
+
+        Shape(const Shape& o) { copyFrom(o); }
+        Shape& operator = (const Shape& o) { copyFrom(o); return *this; }
+        void copyFrom(const Shape& o)
+        {
+            pos = o.pos;
+            param1 = o.param1;
+            param2 = o.param2;
+            type = o.type;
+            asfunc = o.asfunc;
+            context = o.context;
+            if (context)
+                context->AddRef();
+        }
+
+        Vec3 pos;
+        Vec3 param1, param2;
+        ShapeType type;
+
+        asIScriptFunction * asfunc;
+        asIScriptContext * context;
+    };
+
+    int ref;
+    std::vector<Shape> shapes;
+
+    // -------------- factory for script -----------
+
+    ScalarFieldAS()
+        : ref       (1)
+    {
+        MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::ScalarFieldAS()");
+    }
+
+    ~ScalarFieldAS()
+    {
+        MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::~ScalarFieldAS()")
+    }
+
+    static ScalarFieldAS * factory() { MO_DEBUG_GAS("ScalarFieldAS::factory()"); return new ScalarFieldAS(); }
+
+    void addRef() { ++ref; MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::addRef() now = " << ref); }
+
+    void releaseRef() { MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::releaseRef() now = " << (ref-1)); if (--ref == 0) delete this; }
+
+    // -------- helper --------------
+
+    void addShape(const Shape& s) { shapes.push_back(s); }
+
+    float distance(const Vec3& pos, const Shape& s)
+    {
+        switch (s.type)
+        {
+            case S_SPHERE: return glm::distance(pos, s.pos) - s.param1.x;
+            case S_BOX: return glm::length(glm::max(Vec3(0), glm::abs(pos - s.pos) - s.param1));
+            case S_LINE:
+            {
+                Vec3 pa = pos - s.pos, ba = s.param1 - s.pos;
+                float h = glm::clamp( glm::dot(pa, ba) / glm::dot(ba, ba), 0.f, 1.f );
+                return glm::length( pa - ba * h ) - s.param2.x;
+            }
+            case S_ASF:
+            if (s.context)
+            {
+                Vec3 tmp(pos);
+                s.context->Prepare(s.asfunc);
+                s.context->SetArgAddress(0, &tmp);
+                int r = s.context->Execute();
+                if( r == asEXECUTION_EXCEPTION )
+                    MO_WARNING("An exception occured in the distance function: " << s.context->GetExceptionString());
+                if( r != asEXECUTION_FINISHED )
+                    MO_WARNING("Execution of distance angelscript function failed " << s.context->GetReturnFloat())
+                else
+                    return s.context->GetReturnFloat();
+            }
+        }
+        return 10000000.f;
+    }
+
+    // ---------------- interface -----------------
+
+    float value(const Vec3& p)
+    {
+        float d = 100000000.f;
+
+        for (const auto & s : shapes)
+            d = std::min(d, distance(p, s));
+
+        //return glm::distance(p, Vec3(0,0,0)) - 1.f;
+        return d;
+    }
+
+    Vec3 normal(const Vec3& p, Float e)
+    {
+        const Vec3 px(e,0,0), py(0,e,0), pz(0,0,e);
+        return MATH::normalize_safe(Vec3(
+                    value(p+px) - value(p-px),
+                    value(p+py) - value(p-py),
+                    value(p+pz) - value(p-pz)
+                    ));
+    }
+
+    // ------- setter --------
+
+    void clear() { shapes.clear(); }
+
+    void addSphere(float radius, const Vec3& pos) { addShape(Shape(S_SPHERE, pos, Vec3(radius,radius,radius))); }
+    void addBox(float sl, const Vec3& pos) { addShape(Shape(S_BOX, pos, Vec3(sl,sl,sl))); }
+    void addLine(float radius, const Vec3& pos, const Vec3& pos2) { addShape(Shape(S_LINE, pos, pos2, Vec3(radius,radius,radius))); }
+
+    void addFunc(asIScriptFunction * f)
+    {
+        Shape s(f);
+        s.context = f->GetEngine()->CreateContext();
+        addShape(s);
+    }
+    void marchingCubes(GeometryAS * g, int size, const Vec3& minE, const Vec3& maxE, float isolevel) { marchingCubes3(g,size,size,size,minE,maxE,isolevel); }
+    void marchingCubes3(GeometryAS * g, int w, int h, int d, const Vec3& minE, const Vec3& maxE, float isolevel)
+    {
+        GEOM::MarchingCubes mc;
+        mc.renderScalarField(*g->g, minE, maxE, Vec3(w,h,d), isolevel, [=](const Vec3& p) { return value(p); });
+    }
+};
+
+
+
+
+
+
 namespace native {
 
-static void registerAngelScript_triangle(asIScriptEngine *engine)
+static void register_triangle(asIScriptEngine *engine)
 {
     int r;
 
@@ -368,7 +570,7 @@ static void registerAngelScript_triangle(asIScriptEngine *engine)
 }
 
 
-static void registerAngelScript_geometry(asIScriptEngine *engine)
+static void register_geometry(asIScriptEngine *engine)
 {
     int r;
 
@@ -473,6 +675,12 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void createTorus(float radius_outer, float radius_inner, uint segments_u = 12, uint segments_v = 12, const vec3 &in pos = vec3(0))",
                    createTorus4);
 
+//    r = engine->RegisterFuncdef("float ScalarFieldFunc(const vec3 &in pos)"); assert( r >= 0 );
+//    MO__REG_METHOD("void marchingCubes(ScalarFieldFunc@ func, uint width, uint height, int depth, float isolevel = 0, "
+//                   "const vec3 &in minExtend, const vec3 &in maxExtend)", marchingCubesFunc);
+    MO__REG_METHOD("void marchingCubes(const array<int8> &in map3d, int w, int h, int d, const mat4 &in trans, float isolevel = 0.f)", marchingCubesArrayi8);
+    MO__REG_METHOD("void marchingCubes(const array<int32> &in map3d, int w, int h, int d, const mat4 &in trans, float isolevel = 0.f)", marchingCubesArrayi32);
+
     MO__REG_METHOD("void rotate(const vec3 &in axis, float degree)", rotate);
     MO__REG_METHOD("void rotate(float axis_x, float axis_y, float axis_z, float degree)", rotate3f);
     MO__REG_METHOD("void rotateX(float degree)", rotateX);
@@ -487,6 +695,8 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void translateY(float)", translateY);
     MO__REG_METHOD("void translateZ(float)", translateZ);
     MO__REG_METHOD("void applyMatrix(const mat4 &in)", applyMatrix);
+
+    MO__REG_METHOD("void mapTriangles(const vec2 &in st1, const vec2 &in st2, const vec2 &in st3)", mapTriangles);
 
 #undef MO__REG_METHOD
 
@@ -504,7 +714,64 @@ static void registerAngelScript_geometry(asIScriptEngine *engine)
 }
 
 
+
+static void register_scalarField(asIScriptEngine *engine)
+{
+    int r;
+
+    // --------------- types --------------------
+
+    r = engine->RegisterObjectType("ScalarField", 0, asOBJ_REF); assert( r >= 0 );
+
+    r = engine->RegisterFuncdef("float ScalarFieldFunc(const vec3 &in pos)"); assert( r >= 0 );
+
+    // ----------- object properties ------------
+
+    // ------------- constructors ---------------------
+
+    r = engine->RegisterObjectBehaviour("ScalarField", asBEHAVE_FACTORY,
+        "ScalarField@ f()", asFUNCTION(ScalarFieldAS::factory), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("ScalarField", asBEHAVE_ADDREF,
+        "void f()", asMETHOD(ScalarFieldAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectBehaviour("ScalarField", asBEHAVE_RELEASE,
+        "void f()", asMETHOD(ScalarFieldAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+
+    // ------------ methods ---------------------------
+
+#define MO__REG_TRUE_METHOD(decl__, meth__) \
+    r = engine->RegisterObjectMethod("ScalarField", decl__, asMETHOD(ScalarFieldAS, meth__), asCALL_THISCALL); assert( r >= 0 );
+
+    // ---- getter ----
+
+    MO__REG_TRUE_METHOD("float distance(const vec3 &in pos) const", value);
+    MO__REG_TRUE_METHOD("float value(const vec3 &in pos) const", value);
+    MO__REG_TRUE_METHOD("vec3 normal(const vec3 &in pos, float epsilon = 0.01f) const", normal);
+
+    // ---- setter ----
+
+    MO__REG_TRUE_METHOD("void clear()", clear);
+    MO__REG_TRUE_METHOD("void addSphere(float radius, const vec3 &in pos = vec3(0))", addSphere);
+    MO__REG_TRUE_METHOD("void addBox(float sidelength, const vec3 &in pos = vec3(0))", addBox);
+    MO__REG_TRUE_METHOD("void addLine(const vec3 &in pos1, const vec3 &in pos2, float radius = 0.1f)", addLine);
+    MO__REG_TRUE_METHOD("void addFunction(ScalarFieldFunc@ distance_function)", addFunc);
+
+    MO__REG_TRUE_METHOD("void marchingCubes(Geometry@ g, int size, "
+                        "const vec3 &in minExtend = vec3(-1), const vec3 &in maxExtend = vec3(1), float isolevel = 0.f)",
+                        marchingCubes);
+    MO__REG_TRUE_METHOD("void marchingCubes(Geometry@ g, int w, int h, int d, "
+                        "const vec3 &in minExtend = vec3(-1), const vec3 &in maxExtend = vec3(1), float isolevel = 0.f)",
+                        marchingCubes3);
+
+
+
+#undef MO__REG_TRUE_METHOD
+}
+
+
+
 } // namespace native
+
+
 
 
 
@@ -525,8 +792,9 @@ void registerAngelScript_geometry(asIScriptEngine *engine)
     }
     else
     {
-        native::registerAngelScript_triangle(engine);
-        native::registerAngelScript_geometry(engine);
+        native::register_triangle(engine);
+        native::register_geometry(engine);
+        native::register_scalarField(engine);
     }
 }
 

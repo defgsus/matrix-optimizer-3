@@ -17,8 +17,11 @@
 #include "io/error.h"
 #include "io/log.h"
 
-#define MO__DEBUG(arg__) MO_DEBUG("AudioObjectConnection::" << arg__);
-
+#if 0
+#   define MO__DEBUG(arg__) MO_DEBUG("AudioObjectConnection::" << arg__);
+#else
+#   define MO__DEBUG(arg__)
+#endif
 
 namespace MO {
 

@@ -64,9 +64,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // read previous geometry
     restoreAllGeometry_();
 
-    connect(controller_, SIGNAL(modeChanged()),
-            this, SLOT(adjustWidgets_()));
-
     controller_->initScene();    
 }
 
@@ -179,7 +176,7 @@ QDockWidget * MainWindow::createDockWidget_(const QString &name, QWidget *widget
 
     auto dock = new QDockWidget(name, this);
     dock->setObjectName(widget->objectName() + "_Dock");
-    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    dock->setAllowedAreas(Qt::AllDockWidgetAreas);
     dock->setWidget(widget);
     viewMenu_->addAction( dock->toggleViewAction() );
 

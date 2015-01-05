@@ -260,7 +260,8 @@ HEADERS += \
     src/object/util/useruniformsetting.h \
     src/geom/pointcloud.h \
     src/object/util/objectglpath.h \
-    src/engine/renderengine.h
+    src/engine/renderengine.h \
+    src/geom/marchingcubes.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -483,4 +484,5 @@ SOURCES += \
     src/object/util/useruniformsetting.cpp \
     src/geom/pointcloud.cpp \
     src/object/util/objectglpath.cpp \
-    src/engine/renderengine.cpp
+    src/engine/renderengine.cpp \
+    src/geom/marchingcubes.cpp

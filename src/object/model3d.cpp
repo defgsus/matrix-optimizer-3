@@ -36,6 +36,7 @@ MO_REGISTER_OBJECT(Model3d)
 
 Model3d::Model3d(QObject * parent)
     : ObjectGl      (parent),
+      draw_         (0),
       creator_      (0),
       geomSettings_ (new GEOM::GeometryFactorySettings(this)),
       nextGeometry_ (0),

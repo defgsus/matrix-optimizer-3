@@ -22,6 +22,7 @@ class Scene;
 
 /** AngelScript wrapper for an Object */
 class ObjectAS;
+class SequenceAS;
 
 /** Put the object type and related functions into the namespace.
     Dependency: string, timeline, geometry */

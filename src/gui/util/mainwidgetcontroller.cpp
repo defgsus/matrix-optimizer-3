@@ -665,10 +665,10 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     updateDebugRender_();
 
     // XXX debug
-    if (!renderEngine_)
+/*    if (!renderEngine_)
         renderEngine_ = new RenderEngine(this);
     renderEngine_->setScene(scene_, glManager_->renderer()->context(), MO_GFX_THREAD);
-
+*/
     // connect to render window
     glManager_->setScene(scene_);
     connect(glManager_, SIGNAL(cameraMatrixChanged(MO::Mat4)),

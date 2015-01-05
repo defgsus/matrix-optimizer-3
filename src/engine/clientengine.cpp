@@ -12,29 +12,29 @@
 #include <QUrl>
 
 #include "clientengine.h"
-#include "io/error.h"
-#include "io/log.h"
-#include "io/application.h"
-#include "gl/manager.h"
-#include "gl/window.h"
+#include "clientenginecommandline.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
 #include "object/clipcontroller.h"
 #include "network/tcpserver.h"
 #include "network/netlog.h"
-#include "network/networkmanager.h"
+//#include "network/networkmanager.h"
 #include "network/netevent.h"
 #include "network/client.h"
-#include "io/systeminfo.h"
-#include "gui/infowindow.h"
-#include "io/settings.h"
 #include "projection/projectionsystemsettings.h"
+#include "gui/infowindow.h"
+#include "gl/manager.h"
+#include "gl/window.h"
+#include "io/systeminfo.h"
+#include "io/settings.h"
 #include "io/clientfiles.h"
 #include "io/filemanager.h"
 #include "tool/deleter.h"
 #include "io/version.h"
-#include "clientenginecommandline.h"
 #include "io/currenttime.h"
+#include "io/application.h"
+#include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -45,6 +45,12 @@ ClientEngine & clientEngine()
         instance_ = new ClientEngine(application);
 
     return *instance_;
+}
+
+
+double ClientEngine::curTime() const
+{
+    return CurrentTime::time();
 }
 
 
@@ -70,6 +76,9 @@ ClientEngine::~ClientEngine()
     MO_NETLOG(CTOR, "ClientEngine::~ClientEngine()");
 
     delete nextScene_;
+
+//    if (scene_)
+//        scene_->kill();
 }
 
 
@@ -501,10 +510,11 @@ void ClientEngine::setPlayback_(bool play)
         if (!cc.isEmpty())
             cc[0]->triggerRow(0, 0);
 
-        //YYY scene_->start();
+        glManager_->setTimeCallback([this](){ return curTime(); });
+        glManager_->startAnimate();
     }
-    //else
-        //YYY scene_->stop();
+    else
+        glManager_->stopAnimate();
 
     sendState_();
 }
