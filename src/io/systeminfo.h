@@ -45,6 +45,9 @@ public:
 
     const QSize& resolution(int screen) const { return screenSizes_.at(screen); }
 
+    /** The network address of this computer */
+    const QString& localAddress() const { return localIp_; }
+
 private:
 
     QString appPath_, localIp_;

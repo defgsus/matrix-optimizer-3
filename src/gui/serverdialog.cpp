@@ -14,13 +14,13 @@
 #include <QCheckBox>
 
 #include "serverdialog.h"
-#include "io/application.h"
+#include "widget/netlogwidget.h"
+#include "gui/widget/spinbox.h"
 #include "engine/serverengine.h"
 #include "network/netevent.h"
-#include "widget/netlogwidget.h"
+#include "io/application.h"
 #include "io/settings.h"
 #include "io/log.h"
-#include "gui/widget/spinbox.h"
 
 namespace MO {
 namespace GUI {

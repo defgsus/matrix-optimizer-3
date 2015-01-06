@@ -21,6 +21,7 @@
 #include "io/settings.h"
 #include "io/log.h"
 #include "io/error.h"
+#include "io/systeminfo.h"
 
 #if 1
 #   define MO_DEBUG_NAS(arg__) MO_DEBUG(arg__)
@@ -74,13 +75,15 @@ public:
           ref       (1)
     {
         MO_DEBUG_NAS("UdpConnectionAS::UdpConnectionAS(" << con << ")");
-        con->addRef();
         MO_ASSERT(con, "Can't create wrapper for NULL Connection");
+        con->addRef();
+        connectListen_();
     }
 
     UdpConnectionAS() : con(new UdpConnection), ref(1)
     {
         MO_DEBUG_NAS("UdpConnectionAS::UdpConnectionAS() created " << con);
+        connectListen_();
     }
 
     ~UdpConnectionAS()
@@ -115,6 +118,7 @@ public:
     // ------ setter ------
 
     bool open(const StringAS& addr, uint16_t port) { return con->open(QHostAddress(MO::toString(addr)), port); }
+    bool openAny(uint16_t port) { return con->open(port); }
     void close() { con->close(); }
 
     bool sendString(const StringAS& s) { return con->sendDatagram(s.c_str(), s.size()); }
@@ -162,6 +166,13 @@ void UdpConnectionAS::connectListen_()
 {
     UdpConnection::connect(con, &UdpConnection::dataReady, [=]()
     {
+        QByteArray data = con->readData();
+        if (data.isEmpty())
+        {
+            MO_WARNING("UdpConnectionAS received null data from UdpConnection");
+            return;
+        }
+
         for (auto & i : callbacks)
         {
             Callback * cb = i.get();
@@ -169,7 +180,7 @@ void UdpConnectionAS::connectListen_()
             cb->context->Prepare(cb->function);
 
             // construct data type
-            StringAS s = con->readData().constData();
+            StringAS s = data.constData();
             cb->context->SetArgAddress(0, &s);
 
             // run
@@ -192,7 +203,7 @@ struct netfuncs
     static bool isServer() { return !MO::isClient(); }
     static int clientIndex() { return settings->clientIndex(); }
     static StringAS serverAddress() { return toStringAS(settings->serverAddress()); }
-    static StringAS localAddress() { return toStringAS(settings->serverAddress()); }
+    static StringAS localAddress() { SystemInfo inf; inf.get(); return toStringAS(inf.localAddress()); }
 };
 
 
@@ -242,6 +253,7 @@ static void register_connection(asIScriptEngine *engine, const char * typ)
 
     // setter
     MO__REG_METHOD("bool open(const string &in addr, uint16 port)", open);
+    MO__REG_METHOD("bool open(uint16 port)", openAny);
     MO__REG_METHOD("void close()", close);
 
     MO__REG_METHOD("void addCallback(UdpStringCallback@ cb)", addStringCallback);
@@ -340,3 +352,45 @@ void registerAngelScript_object(asIScriptEngine *engine, Object * obj, bool writ
 
 
 #endif // #ifndef MO_DISABLE_ANGELSCRIPT
+
+
+
+
+
+/* ------  stuff that works ---------
+
+
+void printNetwork()
+{
+    print("---- network -----");
+    print("server         " + (isServer() ? "yes" : "no"));
+    print("local address  " + localAddress());
+    print("server address  " + serverAddress());
+}
+
+void udpReceive(const string &in msg)
+{
+    print("udp message " + msg.length() + " bytes "
+        " [" + msg + "]");
+}
+
+void testUDPReceive()
+{
+    print("---- udp receive ----");
+
+    UdpConnection udp;
+    if (!udp.open(//"192.168.1.35",
+             51000))
+    {
+        print("Can't open");
+        return;
+    }
+
+    udp.addCallback(udpReceive);
+    udp.keepAlive();
+    print("Installed listener");
+}
+
+
+
+---------------------- */

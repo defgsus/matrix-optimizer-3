@@ -49,9 +49,10 @@ bool UdpConnection::open(const QHostAddress &addr, uint16_t port)
 {
     MO_DEBUG_UDP("UdpConnection::open(" << addr.toString() << ":" << port << ")");
 
-    if (socket_->bind(addr, port))
+    if (!socket_->bind(addr, port))
     {
-        MO_WARNING("UdpConnection::open(" << addr.toString() << ":" << port << ") failed");
+        MO_WARNING("UdpConnection::open(" << addr.toString() << ":" << port << ") failed: "
+                   << socket_->errorString());
         addr_.clear();
         port_ = 0;
         return false;
@@ -61,6 +62,24 @@ bool UdpConnection::open(const QHostAddress &addr, uint16_t port)
     port_ = port;
     return true;
 }
+
+bool UdpConnection::open(uint16_t port)
+{
+    MO_DEBUG_UDP("UdpConnection::open(" << port << ")");
+
+    if (!socket_->bind(port, QUdpSocket::ShareAddress))
+    {
+        MO_WARNING("UdpConnection::open(" << port << ") failed: " << socket_->errorString());
+        addr_.clear();
+        port_ = 0;
+        return false;
+    }
+
+    addr_ = "any";
+    port_ = port;
+    return true;
+}
+
 
 void UdpConnection::close()
 {
@@ -109,7 +128,7 @@ void UdpConnection::receive_()
         socket_->readDatagram(datagram.data(), datagram.size(),
                               &sender, &senderPort);
 
-        MO_DEBUG_UDP("UdpConnection::received " << datagram.data() << ", " << datagram.size() << ", " << addr_.toString() << ":" << port_ << ")");
+        MO_DEBUG_UDP("UdpConnection::received " << datagram.size() << " bytes from " << addr_.toString() << ":" << port_ << ")");
 
         data_.append(datagram);
         emit dataReady();

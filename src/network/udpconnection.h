@@ -54,6 +54,7 @@ signals:
 public slots:
 
     bool open(const QHostAddress& addr, uint16_t port);
+    bool open(uint16_t port);
     void close();
 
     bool sendDatagram(const char * data, uint64_t len);
