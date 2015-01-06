@@ -89,21 +89,6 @@ void UdpConnection::close()
 }
 
 
-bool UdpConnection::sendDatagram(const char * data, uint64_t len)
-{
-    MO_DEBUG_UDP("UdpConnection::sendDatagram(" << data << ", " << len
-                 << ", " << addr_.toString() << ":" << port_ << ")");
-
-    int64_t sent = socket_->writeDatagram(data, len, addr_, port_);
-
-    if (sent<0 || sent != (int64_t)len)
-    {
-        MO_WARNING("udp writing failed: " << socket_->errorString());
-        return false;
-    }
-
-    return true;
-}
 
 QByteArray UdpConnection::readData()
 {
@@ -133,6 +118,56 @@ void UdpConnection::receive_()
         data_.append(datagram);
         emit dataReady();
     }
+}
+
+
+
+bool UdpConnection::sendDatagram(const char * data, uint64_t len)
+{
+    MO_DEBUG_UDP("UdpConnection::sendDatagram(" << data << ", " << len
+                 << ", " << addr_.toString() << ":" << port_ << ")");
+
+    int64_t sent = socket_->writeDatagram(data, len, addr_, port_);
+
+    if (sent<0 || sent != (int64_t)len)
+    {
+        MO_WARNING("udp writing failed: " << socket_->errorString());
+        return false;
+    }
+
+    return true;
+}
+
+bool UdpConnection::sendDatagram(const QByteArray& data)
+{
+    MO_DEBUG_UDP("UdpConnection::sendDatagram(size=" << data.size()
+                 << ", " << addr_.toString() << ":" << port_ << ")");
+
+    int64_t sent = socket_->writeDatagram(data, addr_, port_);
+
+    if (sent<0 || sent != (int64_t)data.length())
+    {
+        MO_WARNING("udp writing failed: " << socket_->errorString());
+        return false;
+    }
+
+    return true;
+}
+
+bool UdpConnection::sendDatagram(const char * data, uint64_t len, const QHostAddress& addr, uint16_t port)
+{
+    MO_DEBUG_UDP("UdpConnection::sendDatagram(" << data << ", " << len
+                 << ", " << addr.toString() << ":" << port << ")");
+
+    int64_t sent = socket_->writeDatagram(data, len, addr, port);
+
+    if (sent<0 || sent != (int64_t)len)
+    {
+        MO_WARNING("udp writing failed: " << socket_->errorString());
+        return false;
+    }
+
+    return true;
 }
 
 

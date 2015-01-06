@@ -263,7 +263,8 @@ HEADERS += \
     src/engine/renderengine.h \
     src/geom/marchingcubes.h \
     src/network/udpconnection.h \
-    src/script/angelscript_network.h
+    src/script/angelscript_network.h \
+    src/network/udpaudioconnection.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -489,4 +490,5 @@ SOURCES += \
     src/engine/renderengine.cpp \
     src/geom/marchingcubes.cpp \
     src/network/udpconnection.cpp \
-    src/script/angelscript_network.cpp
+    src/script/angelscript_network.cpp \
+    src/network/udpaudioconnection.cpp

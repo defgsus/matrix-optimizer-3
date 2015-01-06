@@ -19,6 +19,8 @@
 #include "angelscript.h"
 #include "network/udpconnection.h"
 #include "io/settings.h"
+#include "io/applicationtime.h"
+#include "io/currenttime.h"
 #include "io/log.h"
 #include "io/error.h"
 #include "io/systeminfo.h"
@@ -122,6 +124,8 @@ public:
     void close() { con->close(); }
 
     bool sendString(const StringAS& s) { return con->sendDatagram(s.c_str(), s.size()); }
+    bool sendStringAP(const StringAS& s, const StringAS& addr, uint16_t port)
+        { return con->sendDatagram(s.c_str(), s.size(), QHostAddress(MO::toString(addr)), port); }
 
     // ----- callbacks -----
 
@@ -204,6 +208,9 @@ struct netfuncs
     static int clientIndex() { return settings->clientIndex(); }
     static StringAS serverAddress() { return toStringAS(settings->serverAddress()); }
     static StringAS localAddress() { SystemInfo inf; inf.get(); return toStringAS(inf.localAddress()); }
+
+    static Double applicationTime() { return MO::applicationTime(); }
+    static Double sceneTime() { return CurrentTime::time(); }
 };
 
 
@@ -259,7 +266,8 @@ static void register_connection(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("void addCallback(UdpStringCallback@ cb)", addStringCallback);
     MO__REG_METHOD("void removeCallback(UdpStringCallback@ cb)", removeStringCallback);
 
-    MO__REG_METHOD("bool send(const string &in)", sendString);
+    MO__REG_METHOD("bool send(const string &in data)", sendString);
+    MO__REG_METHOD("bool send(const string &in data, const string &in addr, uint16 port)", sendStringAP);
 
     MO__REG_METHOD("void keepAlive()", addRef);
 
@@ -278,6 +286,10 @@ void register_network(asIScriptEngine * engine)
     MO__REG_FUNC("int clientIndex()", netfuncs::clientIndex);
     MO__REG_FUNC("string localAddress()", netfuncs::localAddress);
     MO__REG_FUNC("string serverAddress()", netfuncs::serverAddress);
+
+    MO__REG_FUNC("double applicationTime()", netfuncs::applicationTime);
+    MO__REG_FUNC("double sceneTime()", netfuncs::sceneTime);
+
 }
 
 

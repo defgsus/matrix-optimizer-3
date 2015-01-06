@@ -29,6 +29,7 @@ class AudioBuffer
     // ---------------- getter ------------------------
 
     size_t blockSize() const { return p_blockSize_; }
+    size_t blockSizeBytes() const { return p_blockSize_ * sizeof(F32); }
     size_t numBlocks() const { return p_numBlocks_; }
 
     // -------------- sampling ------------------------

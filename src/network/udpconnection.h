@@ -54,10 +54,19 @@ signals:
 public slots:
 
     bool open(const QHostAddress& addr, uint16_t port);
+
+    /** Starts listening on port for any incomming datagrams */
     bool open(uint16_t port);
+
     void close();
 
+    /** Sends to the default location specified with open() */
+    bool sendDatagram(const QByteArray&);
+    /** Sends to the default location specified with open() */
     bool sendDatagram(const char * data, uint64_t len);
+    /** Sends to the specified address and port */
+    bool sendDatagram(const char * data, uint64_t len, const QHostAddress& addr, uint16_t port);
+
 
 private slots:
 

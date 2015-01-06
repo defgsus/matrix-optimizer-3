@@ -36,9 +36,9 @@ namespace MO {
     Q_STATIC_ASSERT(sizeof(F64) == 8);
 
     /** Sample position (unsigned) */
-    typedef long unsigned int SamplePos;
+    typedef quint64 SamplePos;
     /** Sample position difference type */
-    typedef long int SamplePosDiff;
+    typedef qint64 SamplePosDiff;
 
     /** An audio sample */
     typedef F32 Sample;
