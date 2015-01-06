@@ -356,6 +356,7 @@ static void register_casts(asIScriptEngine * engine, const char * typ)
 
 #undef MO__REG_FUNC
 #undef MO__REG_METHOD
+#undef MO__REG_METHOD_F
 
 } // namespace native
 
