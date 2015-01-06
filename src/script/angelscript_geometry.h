@@ -26,6 +26,8 @@ class Scene;
         General access to this class is not public.
         The interface is designed to be used by scripts only. */
     class GeometryAS;
+    class TriangleAS;
+    class ScalarFieldAS;
 
     /** Returns the assigned geometry widget of the script object, or NULL */
     GEOM::Geometry * getGeometry(const GeometryAS*);

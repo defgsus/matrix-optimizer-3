@@ -169,10 +169,21 @@ void Model3d::createParameters()
                                                     "vec3 mo_modify_position(in vec3 pos) {\n\treturn pos;\n}\n"
                                                     , true, false);
 
-        glslColor_ = params()->createTextParameter("glsl_color", tr("glsl color"),
+        glslVertexOut_ = params()->createTextParameter("glsl_color", tr("glsl vertex output"),
                                                     tr("A piece of glsl code to modify vertex color"),
                                                     TT_GLSL,
-                                                    "void mo_modify_color(inout vec4& color, inout vec4& ambient_color, vec3 pos, in vec3 normal) {\n\t\n}\n"
+                                                       "// + " + tr("You have access to these attributes") + ":\n"
+                                                       "// v_pos\n"
+                                                       "// v_pos_world\n"
+                                                       "// v_pos_eye\n"
+                                                       "// v_normal\n"
+                                                       "// v_normal_eye\n"
+                                                       "// v_texCoord\n"
+                                                       "// v_cam_dir\n"
+                                                       "// v_color\n"
+                                                       "// v_ambient_color\n"
+                                                       "//\n"
+                                                       "void mo_modify_vertex_output()\n{\n\t\n}\n"
                                                     , true, false);
 
     params()->endParameterGroup();
@@ -264,7 +275,7 @@ void Model3d::onParameterChanged(Parameter *p)
             || p == vertexFx_
             || p == glslDoOverride_
             || p == glslVertex_
-            || p == glslColor_
+            || p == glslVertexOut_
             || p == usePointCoord_
             || p == pointSizeAuto_
             || texturePostProc_->needsRecompile(p)
@@ -298,7 +309,7 @@ void Model3d::updateParameterVisibility()
 
     bool glsl = glslDoOverride_->baseValue();
     glslVertex_->setVisible(glsl);
-    glslColor_->setVisible(glsl);
+    glslVertexOut_->setVisible(glsl);
 
     bool psdist = pointSizeAuto_->baseValue() != 0;
     paramPointSizeMax_->setVisible(psdist);
@@ -446,7 +457,7 @@ void Model3d::setupDrawable_()
     {
         QString text =
                   glslVertex_->value() + "\n"
-                + glslColor_->value() + "\n";
+                + glslVertexOut_->value() + "\n";
         src->replace("//%mo_override%", text);
         src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
     }

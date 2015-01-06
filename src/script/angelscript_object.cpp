@@ -208,6 +208,7 @@ public:
     Double loopStart() const { return o->loopStart(); }
     Double loopEnd() const { return o->loopEnd(); }
     Double loopLength() const { return o->loopLength(); }
+    Double speed() const { return o->speed(); }
 
     // ------ setter ------
 
@@ -219,6 +220,7 @@ public:
     void setLoopStart(Double t) { o->setLoopStart(t); MO__EMIT; }
     void setLoopEnd(Double t) { o->setLoopEnd(t); MO__EMIT; }
     void setLoopLength(Double t) { o->setLoopLength(t); MO__EMIT; }
+    void setSpeed(Double t) { o->setSpeed(t); MO__EMIT; }
 
 #undef MO__EMIT
 
@@ -327,18 +329,17 @@ static void register_sequence_base(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("double loopStart() const", loopStart);
     MO__REG_METHOD("double loopEnd() const", loopEnd);
     MO__REG_METHOD("double loopLength() const", loopLength);
+    MO__REG_METHOD("double speed() const", speed);
 
     // setter
 
-
-    // ------------ non-member object functions ----------------
-
-    MO__REG_METHOD("void setStart(double second) const", setStart);
-    MO__REG_METHOD("void setEnd(double second) const", setEnd);
-    MO__REG_METHOD("void setLength(double second) const", setLength);
-    MO__REG_METHOD("void setLoopStart(double second) const", setLoopStart);
-    MO__REG_METHOD("void setLoopEnd(double second) const", setLoopEnd);
-    MO__REG_METHOD("void setLoopLength(double second) const", setLoopLength);
+    MO__REG_METHOD("void setStart(double second)", setStart);
+    MO__REG_METHOD("void setEnd(double second)", setEnd);
+    MO__REG_METHOD("void setLength(double second)", setLength);
+    MO__REG_METHOD("void setLoopStart(double second)", setLoopStart);
+    MO__REG_METHOD("void setLoopEnd(double second)", setLoopEnd);
+    MO__REG_METHOD("void setLoopLength(double second)", setLoopLength);
+    MO__REG_METHOD("void setSpeed(double speed)", setSpeed);
 
 }
 

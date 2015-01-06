@@ -189,7 +189,7 @@ void main()
 
     // attributes that might be modified by user code
 #ifdef MO_ENABLE_VERTEX_OVERRIDE
-    mo_modify_color(v_color, v_ambient_color, vertex_pos.xyz, a_normal);
+    mo_modify_vertex_output();
 #endif
 
     // ------------------- normal vertex stage ----------------
@@ -211,7 +211,7 @@ void main()
 
     // attributes that might be modified by user code
 #ifdef MO_ENABLE_VERTEX_OVERRIDE
-    mo_modify_color(v_color, v_ambient_color, a_position.xyz, a_normal);
+    mo_modify_vertex_output();
 #endif
 
 #endif // !MO_ENABLE_BILLBOARD

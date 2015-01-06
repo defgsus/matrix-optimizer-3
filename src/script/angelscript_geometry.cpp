@@ -337,6 +337,35 @@ public:
             g->setTexCoord(g->triangleIndex(i, 2), c);
         }
     }
+
+    void applySpringForce(Float restd, Float delta)
+    {
+        applySpringForceTriangles(restd, delta);
+    }
+
+    void applySpringForceTriangles(Float restd, Float delta)
+    {
+        for (uint i=0; i<g->numTriangles(); ++i)
+        {
+            auto    i0 = g->triangleIndex(i, 0),
+                    i1 = g->triangleIndex(i, 1),
+                    i2 = g->triangleIndex(i, 2);
+            Vec3    p0 = g->getVertex(i0),
+                    p1 = g->getVertex(i1),
+                    p2 = g->getVertex(i2),
+                    p01 = p1 - p0,
+                    p02 = p2 - p0,
+                    p12 = p2 - p1;
+            Vec3    l01 = (glm::length(p01) - restd) * delta * p01,
+                    l02 = (glm::length(p02) - restd) * delta * p02,
+                    l12 = (glm::length(p12) - restd) * delta * p12;
+            g->setVertex(i0, p0 + l01 + l02);
+            g->setVertex(i1, p1 - l01 + l12);
+            g->setVertex(i2, p2 - l02 - l12);
+        }
+    }
+
+    void applyScalarForce(const ScalarFieldAS& sf, Float delta, Float level, Float epsilon);
 };
 
 
@@ -444,7 +473,7 @@ public:
 
     void addShape(const Shape& s) { shapes.push_back(s); }
 
-    float distance(const Vec3& pos, const Shape& s)
+    float distance(const Vec3& pos, const Shape& s) const
     {
         switch (s.type)
         {
@@ -476,7 +505,7 @@ public:
 
     // ---------------- interface -----------------
 
-    float value(const Vec3& p)
+    float value(const Vec3& p) const
     {
         float d = 100000000.f;
 
@@ -487,7 +516,7 @@ public:
         return d;
     }
 
-    Vec3 normal(const Vec3& p, Float e)
+    Vec3 normal(const Vec3& p, Float e) const
     {
         const Vec3 px(e,0,0), py(0,e,0), pz(0,0,e);
         return MATH::normalize_safe(Vec3(
@@ -520,6 +549,15 @@ public:
 };
 
 
+void GeometryAS::applyScalarForce(const ScalarFieldAS& sf, Float delta, Float level, Float epsilon)
+{
+    for (uint i=0; i<g->numVertices(); ++i)
+    {
+        Vec3 p = g->getVertex(i);
+        p -= sf.normal(p, epsilon) * (sf.value(p) - level) * delta;
+        g->setVertex(i, p);
+    }
+}
 
 
 
@@ -528,7 +566,7 @@ namespace native {
 
 static void register_triangle(asIScriptEngine *engine)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // register the type
     r = engine->RegisterObjectType("Triangle", sizeof(TriangleAS),
@@ -572,10 +610,13 @@ static void register_triangle(asIScriptEngine *engine)
 
 static void register_geometry(asIScriptEngine *engine)
 {
-    int r;
+    int r; Q_UNUSED(r)
 
     // register the type
     r = engine->RegisterObjectType("Geometry", 0, asOBJ_REF); assert( r >= 0 );
+
+    // forward
+    r = engine->RegisterObjectType("ScalarField", 0, asOBJ_REF); assert( r >= 0 );
 
     // ----------------- constructor ---------------------------
 
@@ -662,9 +703,9 @@ static void register_geometry(asIScriptEngine *engine)
 
     MO__REG_METHOD("void addAttribute(const string &in name, uint numComponents)", addAttribute);
     MO__REG_METHOD("void setAttribute(const string &in name, float x, float y = 0, float z = 0, float w = 0)", setAttribute4f);
-    MO__REG_METHOD("void addAttribute(const string &in name, const vec2 &in)", setAttribute2);
-    MO__REG_METHOD("void addAttribute(const string &in name, const vec3 &in)", setAttribute3);
-    MO__REG_METHOD("void addAttribute(const string &in name, const vec4 &in)", setAttribute4);
+    MO__REG_METHOD("void setAttribute(const string &in name, const vec2 &in)", setAttribute2);
+    MO__REG_METHOD("void setAttribute(const string &in name, const vec3 &in)", setAttribute3);
+    MO__REG_METHOD("void setAttribute(const string &in name, const vec4 &in)", setAttribute4);
 
 
     MO__REG_METHOD("void createBox(float sidelength = 1, const vec3 &in pos = vec3(0))", createBox1);
@@ -697,6 +738,8 @@ static void register_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void applyMatrix(const mat4 &in)", applyMatrix);
 
     MO__REG_METHOD("void mapTriangles(const vec2 &in st1, const vec2 &in st2, const vec2 &in st3)", mapTriangles);
+    MO__REG_METHOD("void applySpringForce(float rest_distance, float delta)", applySpringForce);
+    MO__REG_METHOD("void applyScalarForce(const ScalarField &in sf, float delta, float isolevel = 0.f, float epsilon = 0.01f)", applyScalarForce);
 
 #undef MO__REG_METHOD
 
@@ -717,11 +760,9 @@ static void register_geometry(asIScriptEngine *engine)
 
 static void register_scalarField(asIScriptEngine *engine)
 {
-    int r;
+    int r; Q_UNUSED(r)
 
     // --------------- types --------------------
-
-    r = engine->RegisterObjectType("ScalarField", 0, asOBJ_REF); assert( r >= 0 );
 
     r = engine->RegisterFuncdef("float ScalarFieldFunc(const vec3 &in pos)"); assert( r >= 0 );
 
@@ -887,7 +928,7 @@ asIScriptEngine * GeometryEngineAS::createNullEngine(bool withObject)
 
 void GeometryEngineAS::Private::createEngine()
 {
-    int r;
+    int r; Q_UNUSED(r)
 
     engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
     MO_ASSERT(engine, "");

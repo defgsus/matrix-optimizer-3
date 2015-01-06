@@ -486,7 +486,8 @@ int triTable[256][16] =
             auto i1 = g.addVertex(po.x, po.y, po.z);
                  po = vertlist[triTable[cubeindex][i+2]];
             auto i2 = g.addVertex(po.x, po.y, po.z);
-            g.addTriangle(i0, i1, i2);
+            //g.addTriangle(i0, i1, i2);
+            g.addTriangle(i0, i2, i1);
 
             ntriang++;
        }
@@ -578,7 +579,6 @@ void MarchingCubes::renderScalarField(Geometry& g,
             c.p[i] *= scale;
             c.p[i] += minExtend;
             c.val[i] = func(c.p[i]);
-            c.p[i].z = -c.p[i].z;
         }
         Polygonise(c, isolevel, g);
     }
