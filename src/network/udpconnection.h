@@ -15,6 +15,14 @@
 
 #include <QObject>
 
+
+#if 1
+#   define MO_DEBUG_UDP(arg__) MO_DEBUG(arg__)
+#else
+#   define MO_DEBUG_UDP(unused__)
+#endif
+
+
 namespace MO {
 
 class UdpConnection : public QObject

@@ -23,13 +23,15 @@ UdpConnection::UdpConnection(QObject *parent)
       ref_      (1),
       socket_   (new QUdpSocket(this))
 {
-    MO_DEBUG("UdpConnection::UdpConnection()");
+    MO_DEBUG_UDP("UdpConnection::UdpConnection()");
+
     connect(socket_, SIGNAL(readyRead()), this, SLOT(receive_()));
 }
 
 UdpConnection::~UdpConnection()
 {
-    MO_DEBUG("UdpConnection::~UdpConnection()");
+    MO_DEBUG_UDP("UdpConnection::~UdpConnection()");
+
     close();
 }
 
@@ -45,6 +47,8 @@ bool UdpConnection::isData() const
 
 bool UdpConnection::open(const QHostAddress &addr, uint16_t port)
 {
+    MO_DEBUG_UDP("UdpConnection::open(" << addr.toString() << ":" << port << ")");
+
     if (socket_->bind(addr, port))
     {
         MO_WARNING("UdpConnection::open(" << addr.toString() << ":" << port << ") failed");
@@ -68,13 +72,14 @@ void UdpConnection::close()
 
 bool UdpConnection::sendDatagram(const char * data, uint64_t len)
 {
-    MO_DEBUG("UdpConnection::send(" << data << ", " << len << ", " << addr_.toString() << ":" << port_ << ")");
+    MO_DEBUG_UDP("UdpConnection::sendDatagram(" << data << ", " << len
+                 << ", " << addr_.toString() << ":" << port_ << ")");
 
     int64_t sent = socket_->writeDatagram(data, len, addr_, port_);
 
     if (sent<0 || sent != (int64_t)len)
     {
-        MO_WARNING("writing failed: " << socket_->errorString());
+        MO_WARNING("udp writing failed: " << socket_->errorString());
         return false;
     }
 
@@ -104,7 +109,7 @@ void UdpConnection::receive_()
         socket_->readDatagram(datagram.data(), datagram.size(),
                               &sender, &senderPort);
 
-        MO_DEBUG("UdpConnection::received " << datagram.data() << ", " << datagram.size() << ", " << addr_.toString() << ":" << port_ << ")");
+        MO_DEBUG_UDP("UdpConnection::received " << datagram.data() << ", " << datagram.size() << ", " << addr_.toString() << ":" << port_ << ")");
 
         data_.append(datagram);
         emit dataReady();

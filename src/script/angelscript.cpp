@@ -37,12 +37,10 @@ QString toString(const StringAS& as)
     return QString::fromUtf8(as.c_str());
 }
 
-StringAS toStringAS(const QString& s)
+StringAS toStringAS(const QString& qs)
 {
-    return s.toUtf8().constData();
+    return StringAS( qs.toUtf8().constData() );
 }
-
-
 
 
 

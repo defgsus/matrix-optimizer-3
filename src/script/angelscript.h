@@ -27,7 +27,6 @@ typedef std::string StringAS;
 QString toString(const StringAS&);
 StringAS toStringAS(const QString&);
 
-
 /** Registers all default types and functions. */
 void registerDefaultAngelScript(asIScriptEngine *);
 

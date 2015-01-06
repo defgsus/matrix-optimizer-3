@@ -610,7 +610,7 @@ static void register_triangle(asIScriptEngine *engine)
 
 static void register_geometry(asIScriptEngine *engine)
 {
-    int r; Q_UNUSED(r)
+    int r; Q_UNUSED(r);
 
     // register the type
     r = engine->RegisterObjectType("Geometry", 0, asOBJ_REF); assert( r >= 0 );
@@ -760,7 +760,7 @@ static void register_geometry(asIScriptEngine *engine)
 
 static void register_scalarField(asIScriptEngine *engine)
 {
-    int r; Q_UNUSED(r)
+    int r; Q_UNUSED(r);
 
     // --------------- types --------------------
 
@@ -928,7 +928,7 @@ asIScriptEngine * GeometryEngineAS::createNullEngine(bool withObject)
 
 void GeometryEngineAS::Private::createEngine()
 {
-    int r; Q_UNUSED(r)
+    int r; Q_UNUSED(r);
 
     engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
     MO_ASSERT(engine, "");

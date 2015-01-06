@@ -18,8 +18,16 @@
 #include "angelscript_network.h"
 #include "angelscript.h"
 #include "network/udpconnection.h"
+#include "io/settings.h"
 #include "io/log.h"
 #include "io/error.h"
+
+#if 1
+#   define MO_DEBUG_NAS(arg__) MO_DEBUG(arg__)
+#else
+#   define MO_DEBUG_NAS(unused__)
+#endif
+
 
 namespace MO {
 
@@ -38,7 +46,7 @@ public:
             : function  (f),
               context   (0)
         {
-            MO_DEBUG("UdpCallback::UdpCallback(" << f << ")");
+            MO_DEBUG_NAS("UdpCallback::UdpCallback(" << f << ")");
 
             if (f)
             {
@@ -48,7 +56,7 @@ public:
         }
         ~Callback()
         {
-            MO_DEBUG("UdpCallback::~UdpCallback(" << function << ")");
+            MO_DEBUG_NAS("UdpCallback::~UdpCallback(" << function << ")");
 
             if (function)
                 function->Release();
@@ -65,16 +73,19 @@ public:
         : con       (con),
           ref       (1)
     {
+        MO_DEBUG_NAS("UdpConnectionAS::UdpConnectionAS(" << con << ")");
         con->addRef();
         MO_ASSERT(con, "Can't create wrapper for NULL Connection");
     }
 
     UdpConnectionAS() : con(new UdpConnection), ref(1)
     {
+        MO_DEBUG_NAS("UdpConnectionAS::UdpConnectionAS() created " << con);
     }
 
     ~UdpConnectionAS()
     {
+        MO_DEBUG_NAS("UdpConnectionAS::~UdpConnectionAS() con = " << con);
         callbacks.clear();
         con->releaseRef();
     }
@@ -106,12 +117,11 @@ public:
     bool open(const StringAS& addr, uint16_t port) { return con->open(QHostAddress(MO::toString(addr)), port); }
     void close() { con->close(); }
 
-    void writeString(const StringAS& s) { con->sendDatagram(s.c_str(), s.size()); }
+    bool sendString(const StringAS& s) { return con->sendDatagram(s.c_str(), s.size()); }
 
     // ----- callbacks -----
 
     void removeStringCallback(asIScriptFunction * f) { removeCallback_(f); }
-
     void addStringCallback(asIScriptFunction * f) { addCallback_(f); }
 
     // --- helper ---
@@ -176,6 +186,14 @@ void UdpConnectionAS::connectListen_()
 
 namespace {
 
+struct netfuncs
+{
+    static bool isClient() { return MO::isClient(); }
+    static bool isServer() { return !MO::isClient(); }
+    static int clientIndex() { return settings->clientIndex(); }
+    static StringAS serverAddress() { return toStringAS(settings->serverAddress()); }
+    static StringAS localAddress() { return toStringAS(settings->serverAddress()); }
+};
 
 
 //--------------------------------
@@ -196,7 +214,7 @@ namespace native {
 // --- base object interface ---
 static void register_connection(asIScriptEngine *engine, const char * typ)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // -------------------- types ------------------------------
 
@@ -229,14 +247,25 @@ static void register_connection(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("void addCallback(UdpStringCallback@ cb)", addStringCallback);
     MO__REG_METHOD("void removeCallback(UdpStringCallback@ cb)", removeStringCallback);
 
-    MO__REG_METHOD("bool write(const string &in)", writeString);
+    MO__REG_METHOD("bool send(const string &in)", sendString);
 
-
+    MO__REG_METHOD("void keepAlive()", addRef);
 
     // ------------ non-member object functions ----------------
 
-//    MO__REG_FUNC("", );
+}
 
+void register_network(asIScriptEngine * engine)
+{
+    int r; Q_UNUSED(r);
+
+    // ------------ non-member object functions ----------------
+
+    MO__REG_FUNC("bool isClient()", netfuncs::isClient);
+    MO__REG_FUNC("bool isServer()", netfuncs::isServer);
+    MO__REG_FUNC("int clientIndex()", netfuncs::clientIndex);
+    MO__REG_FUNC("string localAddress()", netfuncs::localAddress);
+    MO__REG_FUNC("string serverAddress()", netfuncs::serverAddress);
 }
 
 
@@ -257,7 +286,7 @@ void registerAngelScript_network(asIScriptEngine *engine)
     }
     else
     {
-        // base object type for each class
+        native::register_network(engine);
         native::register_connection(engine, "UdpConnection");
     }
 }
