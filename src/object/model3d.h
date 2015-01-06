@@ -16,6 +16,9 @@
 
 namespace MO {
 
+class TextureMorphSetting;
+class UserUniformSetting;
+
 class Model3d : public ObjectGl
 {
     Q_OBJECT
@@ -31,10 +34,13 @@ public:
     MO_OBJECT_CONSTRUCTOR(Model3d);
 
     /** Returns the current geometry settings. */
-    const GEOM::GeometryFactorySettings& geometrySettings() const { return *geomSettings_; }
+    const GEOM::GeometryFactorySettings& geometrySettings() const;
 
     /** Sets new geometry settings and creates the geometry on next render */
     void setGeometrySettings(const GEOM::GeometryFactorySettings&);
+
+    /** Overwrite current geometry */
+    void setGeometry(const GEOM::Geometry& );
 
     const GEOM::Geometry * geometry() const;
     Vec4 modelColor(Double time, uint thread) const;
@@ -70,12 +76,21 @@ private:
 
     TextureSetting * texture_, *textureBump_;
     ColorPostProcessingSetting * texturePostProc_;
+    TextureMorphSetting
+        *textureMorph_,
+        *textureBumpMorph_;
+    UserUniformSetting * uniformSetting_;
 
-    ParameterFloat * cr_, *cg_, *cb_, *ca_,
-        *diffExp_, *bumpScale_;
-    ParameterSelect * lightMode_;
+    ParameterFloat * cr_, *cg_, *cb_, *ca_, *cbright_,
+        *diffExp_, *bumpScale_,
+        *vertexExtrude_, *paramLineWidth_,
+        *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_;
+    ParameterSelect * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
+                    * usePointCoord_, *pointSizeAuto_;
+    ParameterText * glslVertex_, *glslVertexOut_;
 
-    GL::Uniform * u_diff_exp_, * u_bump_scale_;
+    GL::Uniform * u_diff_exp_, * u_bump_scale_,
+                * u_vertex_extrude_, * u_pointsize_;
 
     bool doRecompile_;
 };

@@ -31,6 +31,8 @@ EquationDisplayDialog::EquationDisplayDialog(QWidget *parent) :
 
     setMinimumSize(640,800);
 
+    settings->restoreGeometry(this);
+
     createWidgets_();
 
     loadSettings_();
@@ -174,6 +176,7 @@ void EquationDisplayDialog::updateModeBox_()
 
 void EquationDisplayDialog::saveSettings_()
 {
+    settings->storeGeometry(this);
     settings->setValue("EquEdit/equation", display_->equation());
     settings->setValue("EquEdit/paintmode", display_->paintMode());
     settings->setValue("EquEdit/x0", spinX0_->value());

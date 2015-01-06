@@ -74,12 +74,13 @@ void ChebychevFilter::updateCoefficients()
 }
 
 void ChebychevFilter::process(const F32 *input, uint inputStride,
-                                F32 *output, uint outputStride, uint blockSize)
+                                F32 *output, uint outputStride, uint blockSize, F32 amp)
 {
 #define MO__CLIP(v__) std::max(-clip_,std::min(clip_, (v__) ))
 
     if (type_ == T_LOWPASS)
     {
+        F32 out;
         for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
         {
             const F32 inp = MO__CLIP( *input );
@@ -87,9 +88,11 @@ void ChebychevFilter::process(const F32 *input, uint inputStride,
             stage1_ = MO__CLIP( b0_ * inp + state0_ );
             state0_ = MO__CLIP( b1_ * inp + a1_ * stage1_ + state1_ );
             state1_ = MO__CLIP( b2_ * inp + a2_ * stage1_ );
-            *output = MO__CLIP( b3_ * stage1_ + state2_ );
-            state2_ = MO__CLIP( b4_ * stage1_ + a4_ * *output + state3_ );
-            state3_ = MO__CLIP( b5_ * stage1_ + a5_ * *output );
+            out     = MO__CLIP( b3_ * stage1_ + state2_ );
+            state2_ = MO__CLIP( b4_ * stage1_ + a4_ * out + state3_ );
+            state3_ = MO__CLIP( b5_ * stage1_ + a5_ * out );
+
+            *output = out * amp;
         }
     }
     else if (type_ == T_HIGHPASS)
@@ -106,11 +109,12 @@ void ChebychevFilter::process(const F32 *input, uint inputStride,
             state3_ = MO__CLIP( b5_ * stage1_ + a5_ * stage0_ );
 
             // high pass == signal minus low pass
-            *output = inp - stage0_;
+            *output = (inp - stage0_) * amp;
         }
     }
     else // bandpass
     {
+        F32 out;
         for (uint i=0; i<blockSize; ++i, input += inputStride, output += outputStride)
         {
             F32 inp = MO__CLIP( *input );
@@ -123,15 +127,17 @@ void ChebychevFilter::process(const F32 *input, uint inputStride,
             state3_ = MO__CLIP( b5_ * stage1_ + a5_ * stage0_ );
 
             // high pass == signal minus low pass
-            inp -= stage0_;
+            inp -= stage0_ * F32(0.5);
 
             // now lowpass on top
             bstage1_ = MO__CLIP( b0_ * inp + bstate0_ );
             bstate0_ = MO__CLIP( b1_ * inp + a1_ * bstage1_ + bstate1_ );
             bstate1_ = MO__CLIP( b2_ * inp + a2_ * bstage1_ );
-            *output  = MO__CLIP( b3_ * bstage1_ + bstate2_ );
-            bstate2_ = MO__CLIP( b4_ * bstage1_ + a4_ * *output + bstate3_ );
-            bstate3_ = MO__CLIP( b5_ * bstage1_ + a5_ * *output );
+            out      = MO__CLIP( (b3_ * bstage1_ + bstate2_) * F32(0.75) );
+            bstate2_ = MO__CLIP( b4_ * bstage1_ + a4_ * out + bstate3_ );
+            bstate3_ = MO__CLIP( b5_ * bstage1_ + a5_ * out );
+
+            *output = out * amp;
         }
     }
 

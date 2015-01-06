@@ -29,7 +29,8 @@ class Waveform
         T_SINE,
         T_COSINE,
         T_RAMP,
-        T_SAW,
+        T_SAW_RISE,
+        T_SAW_DECAY,
         T_TRIANGLE,
         T_SQUARE,
         T_NOISE
@@ -49,6 +50,13 @@ class Waveform
     /** All Type enums in order */
     const static QList<int> typeList;
 
+    /* Again for audio-only types.
+        XXX Actually it's more for wavetable types to exclude noise */
+    const static QStringList typeAudioIds;
+    const static QStringList typeAudioNames;
+    const static QStringList typeAudioStatusTips;
+    const static QList<int> typeAudioList;
+
     static Double minPulseWidth() { return 0.00001; }
     static Double maxPulseWidth() { return 0.99999; }
 
@@ -66,7 +74,7 @@ class Waveform
         @p pulseWidth is only used by types that support it.
         @note pulseWidth must be between minPulseWidth() and maxPulseWidth() !
         @see supportsPulseWidth() */
-    static Double waveform(Double time, Type type, Double pulseWidth = 0.5);
+    static Double waveform(Double time, Type type, Double pulseWidth);
 
     static Double spectralWave(Double time,
                                Double numPartials,

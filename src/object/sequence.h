@@ -12,11 +12,13 @@
 #define MOSRC_OBJECT_SEQUENCE_H
 
 #include <QList>
+#include <QColor>
 
 #include "object.h"
 #include "math/functions.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "clip.h"
 
 namespace MO {
 
@@ -33,18 +35,31 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
-    // -------------- tracks -------------------
+    virtual void onParentChanged() Q_DECL_OVERRIDE;
 
-    /** The track, this sequence is on (actually the parent) */
-    Track * track() const;
+    // -------------- parents -------------------
+
+    /** The track, this sequence is on, or NULL */
+    Track * parentTrack() const;
+
+    /** The clip, this sequence is on, or NULL */
+    Clip * parentClip() const;
 
     // -------------- getter -------------------
+
+    const QColor& color() const { return color_; }
 
     static Double minimumSpeed() { return 0.001; }
     static Double minimumLength() { return 0.005; }
 
     /** Start time in seconds */
     Double start() const { return p_start_->baseValue(); }
+
+    /** Return actual start time in seconds,
+        including the start time of the parentClip() */
+    Double realStart() const { return parentClip_
+                ? p_start_->baseValue() + parentClip_->timeStarted()
+                : p_start_->baseValue(); }
 
     /** End time in seconds */
     Double end() const
@@ -76,6 +91,8 @@ public:
     Double speed() const { return p_speed_->baseValue(); }
 
     // --------------- setter ---------------------
+
+    void setColor(const QColor& color) { color_ = color; }
 
     void setStart(Double t)
         { p_start_->setValue(t); }
@@ -110,10 +127,12 @@ public:
         { p_speed_->setValue(std::max(minimumSpeed(), t)); }
 
     /** Translates global time to sequence-local time (with loop) */
-    Double getSequenceTime(Double global_time, uint thread) const;
-    /** Translates global time to sequence-local time and returnd the current loop settings */
+    Double getSequenceTime(Double global_time, uint thread, Double &timeWithoutLoop) const;
+    /** Translates global time to sequence-local time (with loop)
+        and returns the current loop settings */
     Double getSequenceTime(Double global_time, uint thread,
-                           Double& loopStart, Double& loopLength, bool& isInLoop) const;
+                           Double& loopStart, Double& loopLength, bool& isInLoop,
+                           Double &timeWithoutLoop) const;
 
 signals:
 
@@ -132,14 +151,28 @@ private:
         * p_looping_;
 
     /** The track, this sequence is on */
-    Track* track_;
+    Track* parentTrack_;
+    Clip * parentClip_;
+
+    QColor color_;
 };
 
 
-inline Double Sequence::getSequenceTime(Double time, uint thread) const
+inline Double Sequence::getSequenceTime(Double time, uint thread,
+                                        Double &timeWithoutLoop) const
 {
-    time = (time - p_start_->baseValue()) * p_speed_->baseValue();
+    Double speed = p_speed_->value(time, thread);
+
+    if (parentClip_)
+    {
+        time -= parentClip_->timeStarted();
+        speed *= parentClip_->speed();
+    }
+
+    time = (time - p_start_->value(time, thread)) * speed;
     time += p_timeOffset_->value(time, thread);
+
+    timeWithoutLoop = time;
 
     if (p_looping_->baseValue())
     {
@@ -155,10 +188,21 @@ inline Double Sequence::getSequenceTime(Double time, uint thread) const
 }
 
 inline Double Sequence::getSequenceTime(Double time, uint thread,
-                                        Double& lStart, Double& lLength, bool& isInLoop) const
+                                        Double& lStart, Double& lLength, bool& isInLoop,
+                                        Double& timeWithoutLoop) const
 {
-    time = (time - p_start_->baseValue()) * p_speed_->baseValue();
+    Double speed = p_speed_->value(time, thread);
+
+    if (parentClip_)
+    {
+        time -= parentClip_->timeStarted();
+        speed *= parentClip_->speed();
+    }
+
+    time = (time - p_start_->value(time, thread)) * speed;
     time += p_timeOffset_->value(time, thread);
+
+    timeWithoutLoop = time;
 
     if (p_looping_->baseValue())
     {

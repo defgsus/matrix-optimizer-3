@@ -27,67 +27,32 @@
 #include "geom/geometrymodifiervertexequation.h"
 #include "geom/geometrymodifierprimitiveequation.h"
 #include "geom/geometrymodifierextrude.h"
+#include "geom/geometrymodifiercreate.h"
 
 namespace MO {
 namespace GEOM {
 
 
-const QStringList GeometryFactorySettings::typeIds =
+GeometryFactorySettings::GeometryFactorySettings(Object * o)
+    : object_           (o),
+      modifierChain_    (new GeometryModifierChain())
 {
-    "file", "quad",
-    "tetra", "hexa", "hexauv", "octa", "icosa", "dodeca",
-    "cyl", "cylo", "torus", "uvsphere",
-    "gridxz", "lgrid"
-};
+    MO_DEBUG_GEOM("GeometryFactorySettings::GeometryFactorySettings(" << o << ")");
 
-const QStringList GeometryFactorySettings::typeNames =
-{
-    QObject::tr("file"),
-    QObject::tr("quad"),
-    QObject::tr("tetrahedron"),
-    QObject::tr("hexahedron (cube)"),
-    QObject::tr("hexahedron (cube) uv-mapped"),
-    QObject::tr("octahedron"),
-    QObject::tr("icosahedron"),
-    QObject::tr("dodecahedron"),
-    QObject::tr("cylinder (closed)"),
-    QObject::tr("cylinder (open)"),
-    QObject::tr("torus"),
-    QObject::tr("uv-sphere"),
-    QObject::tr("coordinate system"),
-    QObject::tr("line-grid")
-};
-
-GeometryFactorySettings::GeometryFactorySettings()
-    : modifierChain (new GeometryModifierChain()),
-      type          (T_BOX),
-      asTriangles   (true),
-      sharedVertices(true),
-      smallRadius   (0.2f),
-      colorR        (0.5f),
-      colorG        (0.5f),
-      colorB        (0.5f),
-      colorA        (1.0f),
-      segmentsX     (10),
-      segmentsY     (10),
-      segmentsZ     (10)
-{
-    MO_DEBUG_GEOM("GeometryFactorySettings::GeometryFactorySettings()");
-
-    // default: calculate normals
-    modifierChain->addModifier(new GeometryModifierNormals());
+    // default: create and calculate normals
+    modifierChain_->addModifier(new GeometryModifierCreate());
+    modifierChain_->addModifier(new GeometryModifierNormals());
 }
 
 void GeometryFactorySettings::getNeededFiles(IO::FileList &files)
 {
-    if (type == T_FILE)
-        files.append(IO::FileListEntry(filename, IO::FT_MODEL));
+    modifierChain_->getNeededFiles(files);
 }
 
 GeometryFactorySettings::~GeometryFactorySettings()
 {
     MO_DEBUG_GEOM("GeometryFactorySettings::~GeometryFactorySettings()");
-    delete modifierChain;
+    delete modifierChain_;
 }
 
 GeometryFactorySettings::GeometryFactorySettings(const GeometryFactorySettings &other)
@@ -98,19 +63,8 @@ GeometryFactorySettings::GeometryFactorySettings(const GeometryFactorySettings &
 GeometryFactorySettings& GeometryFactorySettings::operator =(
         const GeometryFactorySettings& other)
 {
-    *modifierChain = *other.modifierChain;
-    filename = other.filename;
-    type = other.type;
-    asTriangles = other.asTriangles;
-    sharedVertices = other.sharedVertices;
-    smallRadius = other.smallRadius;
-    colorR = other.colorR;
-    colorG = other.colorG;
-    colorB = other.colorB;
-    colorA = other.colorA;
-    segmentsX = other.segmentsX;
-    segmentsY = other.segmentsY;
-    segmentsZ = other.segmentsZ;
+    *modifierChain_ = *other.modifierChain_;
+    object_ = other.object_;
 
     return *this;
 }
@@ -120,9 +74,11 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
 {
     MO_DEBUG_GEOM("GeometryFactorySettings::serialize()");
 
-    io.writeHeader("geomfacset", 10);
+    io.writeHeader("geomfacset", 11);
 
+#if 0 && defined( THAT_WAS_VERSION_8_TO_10__ )
     io << typeIds[type];
+#endif
 
 #if 0 && defined( THAT_WAS_VERSION_BELOW_8__ )
 
@@ -156,41 +112,52 @@ void GeometryFactorySettings::serialize(IO::DataStream & io) const
 
 #endif
 
+#if 0 && defined( THAT_WAS_VERSION_8_TO_10__ )
     // v8
     io << asTriangles << sharedVertices
           << segmentsX << segmentsY << segmentsZ
              << smallRadius;
 
-    modifierChain->serialize(io);
+    modifierChain_->serialize(io);
 
     // v9
     io << colorR << colorG << colorB << colorA;
 
     // v10
     io << filename;
+#endif
+
+    modifierChain_->serialize(io);
 }
 
 void GeometryFactorySettings::deserialize(IO::DataStream & io)
 {
     MO_DEBUG_GEOM("GeometryFactorySettings::deserialize()");
 
-    const int ver = io.readHeader("geomfacset", 10);
+    const int ver = io.readHeader("geomfacset", 11);
 
-    io.readEnum(type, T_BOX, typeIds);
+    GeometryModifierCreate::Type pre11Type;
+    if (ver >= 8 && ver <= 10)
+        io.readEnum(pre11Type, GeometryModifierCreate::T_BOX_UV,
+                            GeometryModifierCreate::typeIds);
 
-    // convert old files to new GeometryModifierChain version
+    // convert old files to new GeometrymodifierChain_ version
     if (ver <= 7)
     {
-        QString equationX, equationY, equationZ,
-                pEquationX, pEquationY, pEquationZ;
-        bool calcNormals, invertNormals, convertToLines, tesselate,
-            normalizeVertices, removeRandomly, transformWithEquation,
-            transformPrimitivesWithEquation, calcNormalsBeforePrimitiveEquation,
-            extrude, withCoords;
+        QString equationX="x", equationY="y", equationZ="z",
+                pEquationX="x", pEquationY="y", pEquationZ="z";
+        bool calcNormals = false, invertNormals = false, convertToLines = false, tesselate = false,
+            normalizeVertices = false, removeRandomly = false, transformWithEquation = false,
+            transformPrimitivesWithEquation = false, calcNormalsBeforePrimitiveEquation = false,
+            extrude = false, withCoords = true;
         Float colorR, colorG, colorB, colorA;
         Float scale, scaleX, scaleY, scaleZ, removeProb, normalization,
             extrudeConstant, extrudeFactor;
         uint gridSize, tessLevel, removeSeed;
+
+        bool asTriangles, sharedVertices;
+        uint segmentsX, segmentsY, segmentsZ;
+        Float smallRadius;
 
         io >> calcNormals >> asTriangles >> convertToLines >> sharedVertices
             >> tesselate >> normalizeVertices >> removeRandomly
@@ -224,47 +191,48 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         if (tesselate)
         {
             auto geom = new GeometryModifierTesselate();
-            modifierChain->addModifier(geom);
+            modifierChain_->addModifier(geom);
             geom->setTesselationLevel(tessLevel);
         }
 
         if (normalizeVertices)
         {
             auto geom = new GeometryModifierNormalize();
-            modifierChain->addModifier(geom);
+            modifierChain_->addModifier(geom);
             geom->setNormalization(normalization);
         }
 
         if (!sharedVertices)
         {
             auto geom = new GeometryModifierVertexGroup();
-            modifierChain->addModifier(geom);
+            modifierChain_->addModifier(geom);
             geom->setShared(false);
         }
 
         if (transformWithEquation)
         {
             auto geom = new GeometryModifierVertexEquation();
-            modifierChain->addModifier(geom);
-            geom->setEquationX(equationX);
-            geom->setEquationY(equationY);
-            geom->setEquationZ(equationZ);
+            modifierChain_->addModifier(geom);
+            geom->setEquation("x = " + equationX + ";\n"
+                              "y = " + equationY + ";\n"
+                              "z = " + equationZ);
+
         }
 
         if (calcNormalsBeforePrimitiveEquation)
         {
             auto geom = new GeometryModifierNormals();
-            modifierChain->addModifier(geom);
+            modifierChain_->addModifier(geom);
             geom->setCalcNormals(true);
         }
 
         if (transformPrimitivesWithEquation)
         {
             auto geom = new GeometryModifierPrimitiveEquation();
-            modifierChain->addModifier(geom);
-            geom->setEquationX(pEquationX);
-            geom->setEquationY(pEquationY);
-            geom->setEquationZ(pEquationZ);
+            modifierChain_->addModifier(geom);
+            geom->setEquation("x = " + pEquationX + ";\n"
+                              "y = " + pEquationY + ";\n"
+                              "z = " + pEquationZ);
         }
 
         if (extrude)
@@ -272,11 +240,11 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
             if (calcNormals)
             {
                 auto geom = new GeometryModifierNormals();
-                modifierChain->addModifier(geom);
+                modifierChain_->addModifier(geom);
                 geom->setCalcNormals(true);
             }
             auto geom = new GeometryModifierExtrude();
-            modifierChain->addModifier(geom);
+            modifierChain_->addModifier(geom);
             geom->setConstant(extrudeConstant);
             geom->setFactor(extrudeFactor);
         }
@@ -284,13 +252,13 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         if (convertToLines)
         {
             auto geom = new GeometryModifierConvertLines();
-            modifierChain->addModifier(geom);
+            modifierChain_->addModifier(geom);
         }
 
         if (removeRandomly)
         {
             auto geom = new GeometryModifierRemove();
-            modifierChain->addModifier(geom);
+            modifierChain_->addModifier(geom);
             geom->setRandomSeed(removeSeed);
             geom->setRemoveProbability(removeProb);
         }
@@ -298,14 +266,14 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         if (calcNormals || invertNormals)
         {
             auto geom = new GeometryModifierNormals();
-            modifierChain->addModifier(geom);
+            modifierChain_->addModifier(geom);
             geom->setCalcNormals(calcNormals);
             geom->setInvertNormals(invertNormals);
         }
 
         {
             auto geom = new GeometryModifierScale();
-            modifierChain->addModifier(geom);
+            modifierChain_->addModifier(geom);
             geom->setScaleAll(scale);
             geom->setScaleX(scaleX);
             geom->setScaleX(scaleY);
@@ -314,20 +282,52 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
 
     }
 
-    if (ver>=8)
+    // convert 8 to 10
+    if (ver >= 8 && ver <= 10)
     {
+        bool asTriangles, sharedVertices;
+        uint segmentsX, segmentsY, segmentsZ;
+        Float smallRadius;
+
         io >> asTriangles >> sharedVertices
               >> segmentsX >> segmentsY >> segmentsZ
                  >> smallRadius;
 
-        modifierChain->deserialize(io);
+        modifierChain_->deserialize(io);
+
+        Float colorR=0.5, colorG=0.5, colorB=0.5, colorA=1.0;
+        QString filename;
+
+        if (ver>=9)
+            io >> colorR >> colorG >> colorB >> colorA;
+
+        if (ver>=10)
+            io >> filename;
+
+        // convert above stuff
+
+        auto geom = new GeometryModifierCreate();
+        geom->setType(pre11Type);
+        geom->setAsTriangles(asTriangles);
+        geom->setSharedVertices(sharedVertices);
+        geom->setSegmentsX(segmentsX);
+        geom->setSegmentsY(segmentsY);
+        geom->setSegmentsZ(segmentsZ);
+        geom->setSmallRadius(smallRadius);
+        geom->setRed(colorR);
+        geom->setGreen(colorG);
+        geom->setBlue(colorB);
+        geom->setAlpha(colorA);
+        geom->setFilename(filename);
+
+        modifierChain_->insertModifier(geom, 0);
+
     }
 
-    if (ver>=9)
-        io >> colorR >> colorG >> colorB >> colorA;
-
-    if (ver>=10)
-        io >> filename;
+    if (ver >= 11)
+    {
+        modifierChain_->deserialize(io);
+    }
 }
 
 void GeometryFactorySettings::saveFile(const QString &filename) const

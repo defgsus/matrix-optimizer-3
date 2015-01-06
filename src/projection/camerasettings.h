@@ -32,6 +32,7 @@ public:
 
     int   width() const { return width_; }
     int   height() const { return height_; }
+    Float aspect() const { return Float(width_) / height_; }
     Float fov() const { return fov_; }
     Float posX() const { return posX_; }
     Float posY() const { return posY_; }

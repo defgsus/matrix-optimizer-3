@@ -38,7 +38,8 @@ public:
     Int maxValue() const { return maxValue_; }
     Int smallStep() const { return smallStep_; }
 
-    Int value(Double time, uint thread) const { return value_ + getModulationValue(time, thread); }
+    Int value(Double time, uint thread) const
+        { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time, thread) )); }
     Int baseValue() const { return value_; }
 
     // ---------------- setter -----------------
@@ -57,10 +58,12 @@ public:
 
     // --------- modulation -----------
 
+    int getModulatorTypes() const Q_DECL_OVERRIDE;
+
     /** Receives modulation value at time */
     Int getModulationValue(Double time, uint thread) const;
 
-    virtual Modulator * getModulator(const QString &modulatorId) Q_DECL_OVERRIDE;
+    virtual Modulator * getModulator(const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
 
 private:
 

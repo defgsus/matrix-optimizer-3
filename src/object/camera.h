@@ -15,8 +15,6 @@
 
 namespace MO {
 
-class CameraSettings;
-
 class Camera : public ObjectGl
 {
     Q_OBJECT
@@ -37,7 +35,6 @@ public:
     virtual bool isCamera() const Q_DECL_OVERRIDE { return true; }
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
-    virtual void setBufferSize(uint bufferSize, uint thread) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
@@ -86,22 +83,30 @@ public slots:
 
 private:
 
+    void updateFboSize_();
+
     //std::vector<std::vector<Mat4>> projection_;
     std::vector<GL::FrameBufferObject*> fbo_;
 
     std::vector<GL::ScreenQuad*> screenQuad_;
 
-    ParameterFloat * cameraMix_, *cameraAngle_, *cameraOrthoScale_,
-        *backR_, *backG_, *backB_, *backA_;
-    ParameterSelect * cameraMode_;
+    ParameterFloat * p_cameraMix_,
+        *p_cameraAngle_, *p_cameraFdAngle_,
+        *p_cameraOrthoScale_, *p_cameraOrthoMix_,
+        *p_backR_, *p_backG_, *p_backB_, *p_backA_,
+        *p_near_, *p_far_;
+    ParameterSelect * p_cameraMode_, *p_magInterpol_;
+    ParameterInt * p_width_, * p_height_,
+                 * p_cubeRes_;
     GL::Uniform * uColor_, * uAngle_;
 
     Float aspectRatio_;
     RenderMode renderMode_;
+    AlphaBlendSetting alphaBlend_;
 
     Mat4 sliceMatrix_;
 
-    CameraSettings * sliceCameraSettings_;
+    GL::Texture * blendTexture_;
 };
 
 } // namespace MO

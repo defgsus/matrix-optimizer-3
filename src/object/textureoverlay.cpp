@@ -10,6 +10,7 @@
 
 #include "textureoverlay.h"
 #include "io/datastream.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "param/parameterfilename.h"
@@ -67,18 +68,18 @@ void TextureOverlay::createParameters()
 {
     ObjectGl::createParameters();
 
-    beginParameterGroup("texture", tr("texture"));
+    params()->beginParameterGroup("texture", tr("texture"));
 
         texture_->createParameters("col");
         /*
         paramFilename_ = createFilenameParameter("imgfile", tr("image"), tr("Filename of the image"),
                                                  IO::FT_TEXTURE, ":/texture/mo_black.png");
         */
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("textureproj", tr("projection"));
+    params()->beginParameterGroup("textureproj", tr("projection"));
 
-        paramPType_ = createSelectParameter("projtype", tr("projection"),
+        paramPType_ = params()->createSelectParameter("projtype", tr("projection"),
             tr("Selects the type of projection for the texture overlay"),
             { "flat", "fish", "equirect" },
             { tr("flat on screen"), tr("fish-eye"), tr("equi-rect") },
@@ -88,29 +89,29 @@ void TextureOverlay::createParameters()
             { PT_FLAT, PT_FISHEYE, PT_EQUIRECT },
               ptype_, true, false);
 
-        pos_influence_ = createFloatParameter("posinf", tr("position influence"),
+        pos_influence_ = params()->createFloatParameter("posinf", tr("position influence"),
             tr("A multiplier for influencing the texture offset by the transformation position"),
                                           0.0, 0.01);
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("texturecolor", tr("color"));
+    params()->beginParameterGroup("texturecolor", tr("color"));
 
-        cr_ = createFloatParameter("red", tr("red"), tr("Red amount of color multiplier"), 1.0, 0.1);
+        cr_ = params()->createFloatParameter("red", tr("red"), tr("Red amount of color multiplier"), 1.0, 0.1);
         cr_->setMinValue(0.0);
-        cg_ = createFloatParameter("green", tr("green"), tr("Green amount of color multiplier"), 1.0, 0.1);
+        cg_ = params()->createFloatParameter("green", tr("green"), tr("Green amount of color multiplier"), 1.0, 0.1);
         cg_->setMinValue(0.0);
-        cb_ = createFloatParameter("blue", tr("blue"), tr("Blue amount of color multiplier"), 1.0, 0.1);
+        cb_ = params()->createFloatParameter("blue", tr("blue"), tr("Blue amount of color multiplier"), 1.0, 0.1);
         cb_->setMinValue(0.0);
-        ca_ = createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of color multiplier"), 1.0, 0.1);
+        ca_ = params()->createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of color multiplier"), 1.0, 0.1);
         ca_->setMinValue(0.0);
 
-    endParameterGroup();
+   params()-> endParameterGroup();
 
-    beginParameterGroup("texturepost", tr("color post-processing"));
+    params()->beginParameterGroup("texturepost", tr("color post-processing"));
 
         postProc_->createParameters("");
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void TextureOverlay::onParameterChanged(Parameter *p)
@@ -188,7 +189,6 @@ void TextureOverlay::initGl(uint /*thread*/)
         u_dir_matrix_ = quad_->shader()->getUniform("u_cvt", true);
         u_cam_angle_ = quad_->shader()->getUniform("u_cam_angle", true);
         u_sphere_offset_ = quad_->shader()->getUniform("u_sphere_offset", true);
-        u_cube_hack_ = quad_->shader()->getUniform("u_cube_hack", true);
     }
 
     if (postProc_->isEnabled())
@@ -209,8 +209,8 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
 {
     const Mat4& trans =
             (actualPtype_ == PT_EQUIRECT || actualPtype_ == PT_FISHEYE)
-                ? transformation(thread, 0) * deg90_
-                : transformation(thread, 0);
+                ? transformation() * deg90_
+                : transformation();
     const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
     //const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
 
@@ -223,8 +223,6 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
 
     if (actualPtype_ == PT_EQUIRECT || actualPtype_ == PT_FISHEYE)
     {
-        u_cube_hack_->floats[0] = rs.cameraSpace().isCubemap() ? 1.f : 0.f;
-
         u_cam_angle_->floats[0] = rs.cameraSpace().isCubemap() ?
                                     90.f : rs.cameraSpace().fieldOfView();
 

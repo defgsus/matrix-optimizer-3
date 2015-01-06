@@ -53,13 +53,7 @@ void SceneDebugRenderer::updateTree()
     cameras_ = scene_->findChildObjects<Camera>(QString(), true);
     lightSources_ = scene_->findChildObjects<LightSource>(QString(), true);
 
-    QList<Object*> all = scene_->findChildObjects(Object::TG_ALL, true);
-    audioSources_.clear();
-    for (Object * o : all)
-        audioSources_.append( o->audioSources() );
-    microphones_.clear();
-    for (Object * o : all)
-        microphones_.append( o->microphones() );
+//    QList<Object*> all = scene_->findChildObjects(Object::TG_ALL, true);
 }
 
 void SceneDebugRenderer::initGl()
@@ -172,7 +166,7 @@ void SceneDebugRenderer::releaseGl()
     }
 }
 
-void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int options)
+void SceneDebugRenderer::render(const RenderSettings & rs, uint , int options)
 {
     MO_ASSERT(glReady_, "drawables not defined for SceneDebugRenderer::render()");
 
@@ -184,17 +178,17 @@ void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int opti
     if (options & Scene::DD_CAMERAS)
     for (Camera * o : cameras_)
     {
-        const Mat4& trans = o->transformation(thread, 0);
+        const Mat4& trans = o->transformation();
         drawCamera_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 
     if (options & Scene::DD_LIGHT_SOURCES)
     for (LightSource * o : lightSources_)
     {
-        const Mat4& trans = o->transformation(thread, 0);
+        const Mat4& trans = o->transformation();
         drawLightSource_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
-
+/*
     if (options & Scene::DD_MICROPHONES)
     for (AUDIO::AudioMicrophone * o : microphones_)
     {
@@ -208,7 +202,7 @@ void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int opti
         const Mat4& trans = a->transformation(thread, 0);
         drawMicrophone_->renderShader(proj, cubeView * trans, view * trans, trans);
     }
-
+*/
 }
 
 

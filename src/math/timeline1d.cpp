@@ -28,10 +28,10 @@ const char *Timeline1D::Point::getName(Point::Type type)
         case Timeline1D::Point::DEFAULT:     return "default";    break;
         case Timeline1D::Point::CONSTANT:    return "constant";   break;
         case Timeline1D::Point::LINEAR:      return "linear";     break;
-        case Timeline1D::Point::SMOOTH:      return "smooth";     break;
-        case Timeline1D::Point::SYMMETRIC:   return "symmetric";  break;
+        case Timeline1D::Point::SMOOTH:      return "smooth*";    break;
+        case Timeline1D::Point::SYMMETRIC:   return "symmetric*"; break;
         case Timeline1D::Point::SYMMETRIC2:  return "hermite";    break;
-        case Timeline1D::Point::SPLINE4_SYM: return "symmetric4"; break;
+        case Timeline1D::Point::SPLINE4_SYM: return "symmetric4*";break;
         case Timeline1D::Point::SPLINE4:     return "spline4";    break;
         case Timeline1D::Point::SPLINE6:     return "spline6";    break;
     }
@@ -102,18 +102,23 @@ const Timeline1D& Timeline1D::operator = (const Timeline1D& other)
     return *this;
 }
 
-Double Timeline1D::get(Double time)
+bool Timeline1D::operator == (const Timeline1D& other) const
+{
+    return data_ == other.data_;
+}
+
+Double Timeline1D::get(Double time) const
 {
     return limit_(getNoLimit(time));
 }
 
-Double Timeline1D::getNoLimit(Double time)
+Double Timeline1D::getNoLimit(Double time) const
 {
     if (data_.empty()) return 0.0;
 
     const TpHash htime = hash(time);
 
-    TpList::iterator i1 = data_.upper_bound(htime);
+    TpList::const_iterator i1 = data_.upper_bound(htime);
 
     bool
         isFirst = (i1==data_.begin()),
@@ -164,12 +169,12 @@ Double Timeline1D::getNoLimit(Double time)
 
         case Point::LINEAR:
         {
-            TpList::iterator i2 = i1; i2++;
+            auto i2 = i1; i2++;
             if (i2==data_.end()) {
                 ret = i1->second.val;
                 return ret;
             }
-            Timeline1D::Point
+            const Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double f = (time-t1->t)/(t2->t - t1->t);
@@ -181,13 +186,13 @@ Double Timeline1D::getNoLimit(Double time)
 
         case Point::SMOOTH:
         {
-            TpList::iterator i2 = i1; i2++;
+            auto i2 = i1; i2++;
             if (i2==data_.end())
             {
                 ret = i1->second.val;
                 return ret;
             }
-            Timeline1D::Point
+            const Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double f = (time-t1->t)/(t2->t - t1->t);
@@ -200,13 +205,13 @@ Double Timeline1D::getNoLimit(Double time)
 
         case Point::SYMMETRIC:
         {
-            TpList::iterator i2 = i1; i2++;
+            auto i2 = i1; i2++;
             if (i2==data_.end())
             {
                 ret = i1->second.val;
                 return ret;
             }
-            Timeline1D::Point
+            const Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double
@@ -226,13 +231,13 @@ Double Timeline1D::getNoLimit(Double time)
             http://paulbourke.net/miscellaneous/interpolation/ */
         case Point::SYMMETRIC2:
         {
-            TpList::iterator i2 = i1; i2++;
+            auto i2 = i1; i2++;
             if (i2==data_.end())
             {
                 ret = i1->second.val;
                 return ret;
             }
-            Timeline1D::Point
+            const Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double
@@ -254,7 +259,7 @@ Double Timeline1D::getNoLimit(Double time)
 
         case Point::SPLINE4_SYM:
         {
-            TpList::iterator i0=i1, i2 = i1; i2++;
+            auto i0=i1, i2 = i1; i2++;
             if (i2==data_.end())
             {
                 ret = i1->second.val;
@@ -268,13 +273,13 @@ Double Timeline1D::getNoLimit(Double time)
                 i0--;
                 d1 = (i2->second.val-i0->second.val)/(i2->second.t-i0->second.t);
             }
-            TpList::iterator i3=i2; i3++;
+            auto i3=i2; i3++;
             if (i3!=data_.end())
             {
                 d2 = (i3->second.val-i1->second.val)/(i3->second.t-i1->second.t);
             }
 
-            Timeline1D::Point
+            const Timeline1D::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double
@@ -294,7 +299,7 @@ Double Timeline1D::getNoLimit(Double time)
         case Point::SPLINE4:
         {
             // get adjacent points
-            TpList::iterator i0,i2,i3;
+            TpList::const_iterator i0,i2,i3;
 
             // only one point?
             if (isFirst && isLast)
@@ -368,7 +373,7 @@ Double Timeline1D::getNoLimit(Double time)
             }
 
             // get adjacent points
-            TpList::iterator im;
+            TpList::const_iterator im;
             // we want to interpolate between y2 and y3
             Double
                 y2 = i1->second.val,y0=y2,y1=y2,y3=y2,y4=y2,y5=y2,
@@ -478,7 +483,7 @@ Timeline1D::Point* Timeline1D::add(Point &p)
 
 Timeline1D::Point::Type Timeline1D::currentType_(Double time)
 {
-    if (data_.empty()) return Point::SYMMETRIC;
+    if (data_.empty()) return Point::SPLINE4_SYM;
 
     TpList::iterator i = first(time);
     if (i==data_.end()) i--;

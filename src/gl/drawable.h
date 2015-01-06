@@ -65,6 +65,9 @@ public:
         The ownership is taken and the previous class is deleted. */
     void setShader(Shader * s);
 
+    /** Overrides the default type GL_TRIANGLES or GL_LINES */
+    void setDrawType(gl::GLenum type);
+
     // ------------ opengl -------------------
 
     /** Creates the buffer objects.
@@ -85,7 +88,7 @@ public:
                       const Mat4& cubeViewTrans,
                       const Mat4& viewTrans,
                       const Mat4& trans,
-                      const LightSettings * lights = 0);
+                      const LightSettings * lights = 0, Double time = 0);
 
     void renderImmediate();
 
@@ -105,6 +108,8 @@ private:
 
     VertexArrayObject * vao_;
 
+    bool drawTypeSet_;
+    gl::GLenum drawType_;
     gl::GLuint
         uniformProj_,
         uniformCVT_,
@@ -113,7 +118,9 @@ private:
         uniformLightPos_,
         uniformLightColor_,
         uniformLightDirection_,
-        uniformLightDirectionMix_;
+        uniformLightDirectionMix_,
+        uniformLightDiffuseExp_,
+        uniformSceneTime_;
 
     Uniform * uniColor_;
 

@@ -20,6 +20,7 @@
 #include "io/systeminfo.h"
 #include "object/objectfactory.h"
 #include "object/scene.h"
+#include "tool/stringmanip.h"
 
 namespace MO {
 
@@ -113,10 +114,15 @@ QString NetEventRequest::requestName(Request r)
     {
         case NONE: return "NONE";
         case GET_SYSTEM_INFO: return "GET_SYSTEM_INFO";
-        case GET_CLIENT_INDEX: return "GET_CLIENT_INDEX";
+        case GET_CLIENT_STATE: return "GET_CLIENT_STATE";
         case SET_CLIENT_INDEX: return "SET_CLIENT_INDEX";
+        case SET_DESKTOP_INDEX: return "SET_DESKTOP_INDEX";
         case SHOW_INFO_WINDOW: return "SHOW_INFO_WINDOW";
         case HIDE_INFO_WINDOW: return "HIDE_INFO_WINDOW";
+        case SHOW_RENDER_WINDOW: return "SHOW_RENDER_WINDOW";
+        case HIDE_RENDER_WINDOW: return "HIDE_RENDER_WINDOW";
+        case START_RENDER: return "START_RENDER";
+        case STOP_RENDER: return "STOP_RENDER";
         case SET_PROJECTION_SETTINGS: return "SET_PROJECTION_SETTINGS";
         case GET_SERVER_FILE_TIME: return "GET_SERVER_FILE_TIME";
         case GET_SERVER_FILE: return "GET_SERVER_FILE";
@@ -135,6 +141,35 @@ void NetEventRequest::deserialize(IO::DataStream &io)
     io >> r >> data_;
     request_ = (Request)r;
 }
+
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventLog)
+
+NetEventLog::NetEventLog()
+{
+}
+
+QString NetEventLog::infoName() const
+{
+    return AbstractNetEvent::infoName();
+}
+
+void NetEventLog::serialize(IO::DataStream &io) const
+{
+    io << (qint64)level_ << message_;
+}
+
+void NetEventLog::deserialize(IO::DataStream &io)
+{
+    qint64 l;
+    io >> l >> message_;
+    level_ = (NetworkLogger::Level)l;
+}
+
+
 
 
 
@@ -271,6 +306,7 @@ void NetEventFile::loadFile(const QString &fn)
 
     present_ = true;
     data_ = f.readAll();
+    time_ = QFileInfo(fn).lastModified();
 }
 
 bool NetEventFile::saveFile(const QString &fn) const
@@ -299,7 +335,7 @@ NetEventScene::NetEventScene()
 
 QString NetEventScene::infoName() const
 {
-    return AbstractNetEvent::infoName() + "(" + data_.size() + "b)";
+    return AbstractNetEvent::infoName() + "(" + byte_to_string(data_.size()) + ")";
 }
 
 void NetEventScene::serialize(IO::DataStream &io) const
@@ -342,5 +378,63 @@ Scene * NetEventScene::getScene() const
     }
     return 0;
 }
+
+
+
+
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventClientState)
+
+NetEventClientState::NetEventClientState()
+{
+}
+
+QString NetEventClientState::infoName() const
+{
+    return AbstractNetEvent::infoName();
+}
+
+void NetEventClientState::serialize(IO::DataStream &io) const
+{
+    state_.serialize(io);
+}
+
+void NetEventClientState::deserialize(IO::DataStream &io)
+{
+    state_.deserialize(io);
+}
+
+
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventTime)
+
+NetEventTime::NetEventTime()
+{
+}
+
+QString NetEventTime::infoName() const
+{
+    return AbstractNetEvent::infoName() + "(" + QString::number(time_) + ")";
+}
+
+void NetEventTime::serialize(IO::DataStream &io) const
+{
+    io << time_;
+}
+
+void NetEventTime::deserialize(IO::DataStream &io)
+{
+    io >> time_;
+}
+
+
+
+
 
 } // namespace MO

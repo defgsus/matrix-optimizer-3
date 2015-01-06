@@ -13,6 +13,7 @@
 
 #include "wavetable.h"
 #include "types/float.h"
+#include "types/int.h"
 
 namespace MO {
 namespace IO { class DataStream; }
@@ -49,7 +50,7 @@ public:
     // ---------- setter ---------------
 
     /** Sets the size of the wavetable, which will be matched to the next power of two. */
-    void setSize(uint size) { size_ = size; }
+    void setSize(uint size) { size_ = nextPowerOfTwo(size); }
 
     /** Sets the number of voices */
     void setNumPartials(uint num) { numPartials_ = num; }
@@ -99,10 +100,10 @@ template <typename F>
 void WavetableGenerator::getWavetable(Wavetable<F> * w) const
 {
     w->setSize(size_);
-    w->clearData();
+    w->clear();
 
     uint oct = baseOctave_;
-    Double amp = F(1),
+    Double amp = F(1), amp2 = F(1),
            phase = phaseFac_;
 
     for (uint j=0; j<numPartials_; ++j)
@@ -112,11 +113,12 @@ void WavetableGenerator::getWavetable(Wavetable<F> * w) const
         for (uint i=0; i<size_; ++i)
         {
             F t = F(i) / size_;
-            w->data()[i] += amp * std::sin(t * fac + phase);
+            w->data()[i] += amp2 * std::sin(t * fac + phase);
         }
 
         oct += octaveStep_;
         amp *= amplitudeMult_;
+        amp2 = amp / oct;
         phase += phaseShiftFac_;
     }
 

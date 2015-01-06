@@ -8,12 +8,15 @@
     <p>created 9/1/2014</p>
 */
 
+#if 0
+
 #include "microphonegroup.h"
 
 
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "param/parameters.h"
 #include "param/parameterint.h"
 #include "param/parameterfloat.h"
 #include "audio/audiomicrophone.h"
@@ -46,16 +49,16 @@ void MicrophoneGroup::createParameters()
 {
     Object::createParameters();
 
-    beginParameterGroup("mics", "microphones");
+    params()->beginParameterGroup("mics", "microphones");
 
-        pNumMics_ = createIntParameter("nummic", tr("number microphones"),
+        pNumMics_ = params()->createIntParameter("nummic", tr("number microphones"),
                                        tr("The number of microphones to create in the group"),
                                        1, 1, 256, 1, true, false);
 
-        pDistance_ = createFloatParameter("micdist", tr("distance from center"),
+        pDistance_ = params()->createFloatParameter("micdist", tr("distance from center"),
                             tr("The distance of the microphones from the center of the group"),
                                           0.0, 0.02);
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void MicrophoneGroup::onParameterChanged(Parameter *p)
@@ -143,3 +146,5 @@ Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Double time, uint thre
 }
 
 } // namespace MO
+
+#endif

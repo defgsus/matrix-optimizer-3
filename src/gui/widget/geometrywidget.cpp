@@ -15,9 +15,11 @@
 #include "gl/shader.h"
 #include "gl/texture.h"
 #include "gl/lightsettings.h"
+#include "gl/compatibility.h"
 #include "geom/geometry.h"
 #include "img/image.h"
 #include "img/imagegenerator.h"
+#include "io/settings.h"
 
 #include "gl/opengl_undef.h"
 
@@ -27,35 +29,64 @@ namespace GUI {
 
 GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     Basic3DWidget   (mode, parent),
+    glprops_        (0),
     drawable_       (new GL::Drawable("geomwidget")),
     tex_            (0),
     texNorm_        (0),
     lights_         (new GL::LightSettings()),
-    showGrid_       (false),
-    showTexture_    (false),
-    showNormalMap_  (false)
+    showGrid_       (settings->value("GeometryWidget/showGrid", false).toBool()),
+    showTexture_    (settings->value("GeometryWidget/showTexture", false).toBool()),
+    showNormalMap_  (settings->value("GeometryWidget/showNormalMap", false).toBool()),
+    showLights_     (settings->value("GeometryWidget/showLights", false).toBool()),
+    pointsize_      (settings->value("GeometryWidget/pointsize", 4).toInt())
 {
     setMinimumSize(128, 128);
 
+    setLights_(showLights_ ? 1 : 0);
+}
+
+void GeometryWidget::setLights_(Float amp)
+{
     lights_->resize(3);
     lights_->setPosition(0, 1000.f, 2000.f, 800.f);
     lights_->setPosition(1, -2000.f, 1000.f, 1200.f);
     lights_->setPosition(2, 2000.f, -500.f, 1500.f);
-    lights_->setColor(0, 1.f, 1.f, 1.f);
-    lights_->setColor(1, 0.2f, 0.5f, 1.f);
-    lights_->setColor(2, 0.5f, 0.25f, 0.1f);
+    lights_->setColor(0, 0.7f*amp, 0.7f*amp, 0.7f*amp);
+    lights_->setColor(1, 0.2f*amp, 0.5f*amp, 0.8f*amp);
+    lights_->setColor(2, 0.5f*amp, 0.25f*amp, 0.1f*amp);
+    lights_->setDiffuseExponent(0, 4);
+    lights_->setDiffuseExponent(1, 3);
+    lights_->setDiffuseExponent(2, 2);
 }
 
 GeometryWidget::~GeometryWidget()
 {
+    settings->setValue("GeometryWidget/showGrid", showGrid_);
+    settings->setValue("GeometryWidget/showTexture", showTexture_);
+    settings->setValue("GeometryWidget/showNormalMap", showNormalMap_);
+    settings->setValue("GeometryWidget/showLights", showLights_);
+    settings->setValue("GeometryWidget/pointsize", pointsize_);
+
     delete drawable_;
     delete lights_;
+    delete glprops_;
 }
 
 void GeometryWidget::setGeometry(GEOM::Geometry * g)
 {
     drawable_->setGeometry(g);
     update();
+}
+
+void GeometryWidget::initGL()
+{
+    Basic3DWidget::initGL();
+
+    if (!glprops_)
+    {
+        glprops_ = new GL::Properties;
+        glprops_->getProperties();
+    }
 }
 
 void GeometryWidget::releaseGL()
@@ -71,6 +102,8 @@ void GeometryWidget::drawGL(const Mat4& projection,
                             const Mat4& viewTrans,
                             const Mat4& trans)
 {
+    MO_ASSERT(glprops_, "missing initGL");
+
     using namespace gl;
 
     MO_CHECK_GL( gl::glClearColor(0.1, 0.2, 0.3, 1.0) );
@@ -138,7 +171,8 @@ void GeometryWidget::drawGL(const Mat4& projection,
         GL::ShaderSource * src = new GL::ShaderSource();
         src->loadDefaultSource();
         src->addDefine("#define MO_ENABLE_LIGHTING");
-        src->addDefine("#define MO_NUM_LIGHTS 3");
+        src->addDefine("#define MO_FRAGMENT_LIGHTING");
+        src->addDefine(QString("#define MO_NUM_LIGHTS %1").arg(lights_->count()));
         if (tex_)
             src->addDefine("#define MO_ENABLE_TEXTURE");
         if (texNorm_)
@@ -148,17 +182,24 @@ void GeometryWidget::drawGL(const Mat4& projection,
         // compile
         drawable_->createOpenGl();
 
+        glprops_->setPointSize(pointsize_);
+
         // bind normal texture slot
         if (texNorm_)
         {
             GL::Uniform * u = drawable_->shader()->getUniform("tex_norm_0");
             if (u)
                 u->ints[0] = 1;
+            u = drawable_->shader()->getUniform(drawable_->shader()->source()->uniformNameBumpScale());
+            if (u)
+                u->floats[0] = 1.0;
         }
     }
 
     if (drawable_->isReady())
+    {
         drawable_->renderShader(projection, cubeViewTrans, viewTrans, trans, lights_);
+    }
 }
 
 

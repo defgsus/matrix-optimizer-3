@@ -22,7 +22,7 @@ WavetableGenerator::WavetableGenerator()
       octaveStep_   (1),
       basePhase_    (0.0),
       phaseShift_   (0.0),
-      amplitudeMult_(0.5),
+      amplitudeMult_(1.0),
 
       freqFac_      (TWO_PI),
       phaseFac_     (0.0),

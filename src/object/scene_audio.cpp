@@ -8,6 +8,8 @@
     <p>created 8/8/2014</p>
 */
 
+#if 0
+
 #include <QThread>
 #include <QTime>
 
@@ -22,6 +24,7 @@
 #include "object/audio/audiounit.h"
 #include "object/microphone.h"
 #include "tool/locklessqueue.h"
+#include "io/currenttime.h"
 
 namespace MO {
 
@@ -62,6 +65,7 @@ public:
 
         while (!stop_)
         {
+            // XXX sometimes crash on load-new-scene
             if (scene_->audioInQueue_->consume(buf))
             {
                 // process audio input
@@ -179,7 +183,7 @@ private:
 
 bool Scene::isAudioInitialized() const
 {
-    return audioDevice_->ok();
+    return audioDevice_->isOk();
 }
 
 void Scene::initAudioDevice_()
@@ -286,6 +290,11 @@ void Scene::audioCallback_(const F32 * in, F32 * out)
 
 void Scene::start()
 {
+    if (isPlayback())
+        return;
+
+#ifndef MO_DISABLE_AUDIO
+
     ScopedSceneLockWrite lock(this);
 
     if (!isAudioInitialized())
@@ -297,6 +306,9 @@ void Scene::start()
     {
         isPlayback_ = true;
 
+        audioInQueue_->reset();
+        audioOutQueue_->reset();
+
         audioInThread_ = new AudioInThread(this, this);
         audioInThread_->start();
         audioOutThread_ = new AudioOutThread(this, this);
@@ -306,6 +318,19 @@ void Scene::start()
 
         emit playbackStarted();
     }
+#else
+    ScopedSceneLockWrite lock(this);
+
+    updateAudioUnitChannels_();
+
+    isPlayback_ = true;
+
+    // XXX NAH, this time thing is all hacky right now
+    // lets wait for the hamburg visit...
+    //CurrentTime::setTime(sceneTime());
+
+    emit playbackStarted();
+#endif
 }
 
 void Scene::stop()
@@ -313,9 +338,13 @@ void Scene::stop()
     if (isPlayback())
     {
         isPlayback_ = false;
+#ifndef MO_DISABLE_AUDIO
         if (isAudioInitialized())
             audioDevice_->stop();
-
+#else
+        // XXX hack
+        setSceneTime(CurrentTime::time());
+#endif
         emit playbackStopped();
     }
     else
@@ -323,6 +352,7 @@ void Scene::stop()
         setSceneTime(0.0);
     }
 
+#ifndef MO_DISABLE_AUDIO
     // kill audio-in thread
     if (audioInThread_)
     {
@@ -340,13 +370,7 @@ void Scene::stop()
         audioOutThread_->deleteLater();
         audioOutThread_ = 0;
     }
-
-    /*
-    if (timer_.isActive())
-        timer_.stop();
-    else
-        setSceneTime(0);
-    */
+#endif
 }
 
 
@@ -490,8 +514,8 @@ void Scene::calculateAudioBlock(SamplePos samplePos, uint thread)
     // calculate audio objects
     for (auto o : audioObjects_)
     {
-        o->updateAudioTransformations(time, size, thread);
         o->performAudioBlock(samplePos, thread);
+        o->updateAudioTransformations(time, size, thread);
 
         // fill delay lines
         for (auto a : o->audioSources())
@@ -587,3 +611,5 @@ void Scene::processAudioInput_(uint thread)
 }
 
 } // namespace MO
+
+#endif

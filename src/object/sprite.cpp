@@ -11,6 +11,7 @@
 #include "sprite.h"
 #include "io/datastream.h"
 #include "io/log.h"
+#include "math/vector.h"
 #include "geom/geometryfactory.h"
 #include "gl/drawable.h"
 #include "gl/shader.h"
@@ -19,6 +20,7 @@
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
 #include "img/image.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 //#include "param/parameterselect.h"
 #include "util/texturesetting.h"
@@ -62,30 +64,30 @@ void Sprite::createParameters()
 {
     ObjectGl::createParameters();
 
-    beginParameterGroup("texture", tr("texture"));
+    params()->beginParameterGroup("texture", tr("texture"));
 
         texture_->createParameters("col");
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("color", tr("color"));
+    params()->beginParameterGroup("color", tr("color"));
 
-        cr_ = createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
-        cg_ = createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
-        cb_ = createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
-        ca_ = createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
+        cr_ = params()->createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
+        cg_ = params()->createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
+        cb_ = params()->createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
+        ca_ = params()->createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
-    beginParameterGroup("repeat", tr("repeat"));
+    params()->beginParameterGroup("repeat", tr("repeat"));
 
-        numRep_ = createFloatParameter("numrep", "number instances",
+        numRep_ = params()->createFloatParameter("numrep", "number instances",
                                    tr("The number of instances of the sprite to draw"), 1.0, 1.0);
         numRep_->setMinValue(1.0);
-        timeSpan_ = createFloatParameter("timespan", "time span",
+        timeSpan_ = params()->createFloatParameter("timespan", "time span",
                                     tr("The time in seconds from the first to the last instance"),
                                     -1.0, 0.05);
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void Sprite::onParameterChanged(Parameter *p)
@@ -154,31 +156,38 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 #if (1) // billboarding on cpu
 
             // get parent transformation
-            Mat4 orgtrans = parentObject()->transformation(thread, 0);
+            Mat4 orgtrans = parentObject()->transformation();
             // apply local transformation with time-offset
             calculateTransformation(orgtrans, time, thread);
 
-            const Mat4 viewtrans = rs.cameraSpace().viewMatrix() * orgtrans;
-
+            const Mat4 cam = rs.cameraSpace().viewMatrix();
+            /*adj_cam[0] = Vec4(1,0,0,0);
+            adj_cam[1] = Vec4(0,1,0,0);
+            adj_cam[2] = Vec4(0,0,1,0);
+            const Mat4 viewtrans = adj_cam * orgtrans;//rs.cameraSpace().viewMatrix() * orgtrans;
+            */
             // -------- billboard matrix ----------
 
             // extract current position
-            Vec3 pos = Vec3(viewtrans[3][0], viewtrans[3][1], viewtrans[3][2]);
+            Vec3 pos = Vec3(orgtrans[3][0], orgtrans[3][1], orgtrans[3][2])
+                       + Vec3(cam[3][0], cam[3][1], cam[3][2]);
+                        //Vec3(viewtrans * Vec4(0,0,0,1));
+                        //Vec3(viewtrans[3][0], viewtrans[3][1], viewtrans[3][2]);
 
             // forward vector
-            Vec3 f = glm::normalize(pos);
+            Vec3 f = MATH::normalize_safe(pos);
             // up vector
-            Vec3 u = Vec3(viewtrans[0][1], viewtrans[1][1], viewtrans[2][1]);
+            Vec3 u = Vec3(0,1,0);//Vec3(viewtrans[0][1], viewtrans[1][1], viewtrans[2][1]);
             // right vector
-            Vec3 s = glm::normalize(glm::cross(f, u));
+            Vec3 s = MATH::normalize_safe(glm::cross(f, u));
             // rebuild up to avoid distortion
             u = glm::cross(s, f);
 
             Mat4 lookm(1);
 
             const Float
-                    scalex = glm::length(viewtrans[0]),
-                    scaley = glm::length(viewtrans[1]);
+                    scalex = glm::length(orgtrans[0]),
+                    scaley = glm::length(orgtrans[1]);
 
             lookm[0][0] = s.x * scalex;
             lookm[0][1] = s.y * scalex;

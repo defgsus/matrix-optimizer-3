@@ -39,6 +39,7 @@ private slots:
 
     void onTimer_();
     void onTest_(bool go);
+    void onTestSynth_(bool go);
     void onApiChoosen_();
     void onDeviceChoosen_();
     void onOk_();
@@ -52,6 +53,8 @@ private:
     void checkDevices_();
     void updateDeviceBox_();
     void updateWidgets_();
+    void startTest_(bool start, bool audio);
+    void startAudio_(bool start);
 
     QString curApiName_, curDeviceName_;
     int curId_;
@@ -61,9 +64,12 @@ private:
 
     QComboBox *comboApi_, *comboDevice_;
     QPlainTextEdit *textBuffer_;
-    QToolButton * butTest_;
+    QToolButton * butTest_, *butTestSynth_;
 
     QTimer * timer_;
+
+    class Private;
+    Private * p_;
 };
 
 } // namespace GUI

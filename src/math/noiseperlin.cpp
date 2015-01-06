@@ -19,7 +19,7 @@
 namespace MO {
 namespace MATH {
 
-NoisePerlin::NoisePerlin(unsigned int seed)
+NoisePerlin::NoisePerlin(Int seed)
 {
     p = 0;
     g1 = g2 = g3 = 0;
@@ -47,7 +47,7 @@ void NoisePerlin::init_()
 
     NP = 12;
 
-    p = (int*) realloc(p, (B + B + 2) * sizeof(int));
+    p = (Int*) realloc(p, (B + B + 2) * sizeof(Int));
     g1 = (Double*) realloc(g1, (B + B + 2) * sizeof(Double));
     g2 = (Double*) realloc(g2, ((B + B + 2) * 2) * sizeof(Double));
     g3 = (Double*) realloc(g3, ((B + B + 2) * 3) * sizeof(Double));
@@ -56,24 +56,24 @@ void NoisePerlin::init_()
 
 
 
-void NoisePerlin::seed(unsigned int seed)
+void NoisePerlin::seed(Int seed)
 {
     std::mt19937 rnd(seed);
 
-    int i, j, k;
+    Int i, j, k;
 
     for (i = 0 ; i < B ; i++)
     {
         p[i] = i;
 
-        g1[i] = (Double)(((int)rnd() % (B + B)) - B) / B;
+        g1[i] = (Double)(((Int)rnd() % (B + B)) - B) / B;
 
         for (j = 0 ; j < 2 ; j++)
-            g2[i*2+j] = (Double)(((int)rnd() % (B + B)) - B) / B;
+            g2[i*2+j] = (Double)(((Int)rnd() % (B + B)) - B) / B;
         normalize2_(&g2[i*2]);
 
         for (j = 0 ; j < 3 ; j++)
-            g3[i*3+j] = (Double)(((int)rnd() % (B + B)) - B) / B;
+            g3[i*3+j] = (Double)(((Int)rnd() % (B + B)) - B) / B;
         normalize3_(&g3[i*3]);
     }
 
@@ -119,7 +119,7 @@ void NoisePerlin::normalize3_(Double v[3]) const
 
 Double NoisePerlin::noise(Double arg_x) const
 {
-    int bx0, bx1;
+    Int bx0, bx1;
     Double rx0, rx1, sx, t, u, v;
 
     prepare_(arg_x, t, bx0,bx1, rx0,rx1);
@@ -136,9 +136,9 @@ Double NoisePerlin::noise(Double arg_x) const
 
 Double NoisePerlin::noise(Double arg_x, Double arg_y) const
 {
-    int bx0, bx1, by0, by1, b00, b10, b01, b11;
+    Int bx0, bx1, by0, by1, b00, b10, b01, b11;
     Double rx0, rx1, ry0, ry1, *q, sx, sy, a, b, t, u, v;
-    register int i, j;
+    Int i, j;
 
     prepare_(arg_x, t, bx0,bx1, rx0,rx1);
     prepare_(arg_y, t, by0,by1, ry0,ry1);
@@ -168,9 +168,9 @@ Double NoisePerlin::noise(Double arg_x, Double arg_y) const
 
 Double NoisePerlin::noise(Double arg_x, Double arg_y, Double arg_z) const
 {
-    int bx0, bx1, by0, by1, bz0, bz1, b00, b10, b01, b11;
+    Int bx0, bx1, by0, by1, bz0, bz1, b00, b10, b01, b11;
     Double rx0, rx1, ry0, ry1, rz0, rz1, *q, sy, sz, a, b, c, d, t, u, v;
-    register int i, j;
+    Int i, j;
 
     prepare_(arg_x, t, bx0,bx1, rx0,rx1);
     prepare_(arg_y, t, by0,by1, ry0,ry1);

@@ -15,6 +15,10 @@
 #include <QTextCharFormat>
 
 class QTextDocument;
+#ifndef MO_DISABLE_ANGELSCRIPT
+class asIScriptModule;
+class asIScriptContext;
+#endif
 
 namespace MO {
 
@@ -24,6 +28,7 @@ class SyntaxHighlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
 public:
+    explicit SyntaxHighlighter(QObject * parent);
     explicit SyntaxHighlighter(QTextDocument * parent);
 
 signals:
@@ -33,7 +38,19 @@ public slots:
     /** Set all reserved words */
     void setNames(
             const QStringList& variables,
-            const QStringList& functions);
+            const QStringList& functions,
+            const QStringList& types = QStringList(),
+            const QStringList& reserved = QStringList());
+
+    /** Sets reserved words for qt stylesheet syntax */
+    void initForStyleSheet();
+
+    void initForGlsl();
+
+#ifndef MO_DISABLE_ANGELSCRIPT
+    /** Gathers all installed names from the angelscript module */
+    void initForAngelScript(asIScriptModule*);
+#endif
 
 protected:
 

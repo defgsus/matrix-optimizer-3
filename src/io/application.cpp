@@ -15,13 +15,22 @@
 #include <QWidget>
 #include <QHostInfo>
 #include <QHostAddress>
+#include <QScreen>
 
 #include "io/application.h"
 #include "io/error.h"
+#include "io/isclient.h"
+#include "io/settings.h"
 
 // usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
 
+#define MO_APP_PRINT(text__)            \
+{                                       \
+    std::cout << text__ << std::endl;   \
+    if (isClient())                     \
+        MO_NETLOG(ERROR, text__);       \
+}
 
 namespace MO {
 
@@ -30,7 +39,7 @@ Application * application;
 Application::Application(int& argc, char** args)
     : QApplication  (argc, args)
 {
-    //updateStyle();
+
 }
 
 
@@ -43,60 +52,62 @@ bool Application::notify(QObject * o, QEvent * e)
     }
     catch (const MO::AudioException& e)
     {
-        std::cout << "AudioException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("AudioException in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const MO::LogicException& e)
     {
-        std::cout << "LogicException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("LogicException in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const MO::IoException& e)
     {
-        std::cout << "IoException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("IoException in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const MO::GlException& e)
     {
-        std::cout << "GlException in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("GlException in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const MO::Exception& e)
     {
-        std::cout << "Exception in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("Exception in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (const std::exception& e)
     {
-        std::cout << "std::exception in notify [" << e.what() << "]" << std::endl;
+        MO_APP_PRINT("std::exception in notify [" << e.what() << "]");
         MO_APP_EXCEPTIONS_ABORT
     }
     catch (...)
     {
-        std::cout << "unrecognized exception in notify" << std::endl;
+        MO_APP_PRINT("unknown exception in notify");
         MO_APP_EXCEPTIONS_ABORT
     }
     return false;
 }
 
-
-void Application::updateStyle()
+QRect Application::screenGeometry(uint screenIndex) const
 {
-    // XXX some test for styles
+    // check desktop index
+    auto scr = screens();
+    if (screenIndex >= (uint)scr.size())
+    {
+        MO_WARNING("screen index " << screenIndex
+                   << " is out of range ("
+                   << scr.size() << ")");
+        // XXX Does not check for ZERO screens..
+        screenIndex = scr.size() - 1;
+    }
 
-    setStyleSheet(
-                "* { background-color: #202020; color: #a0a0a0; "
-                "    border: 1px solid #404040; "
-                "    selection-background-color: #505060; "
-                "    selection-color: #ffffff } "
-                "*:hover { background-color: #242424 } "
-                "*:pressed { background-color: #121212 } "
-                "QLabel { border: 0px } "
-                "* { show-decoration-selected: 0 } "
-                "QAbstractItemView { background-color: #808080 } "
-                "QAbstractItemView:hover { background-color: #868686 } "
-                );
+    // XXX workaround because setScreen() is not very reliable right now
+    // ( https://bugreports.qt-project.org/browse/QTBUG-33138 )
+    return scr[screenIndex]->geometry();
 }
+
+
+
 
 void Application::setPaletteFor(QWidget * w)
 {

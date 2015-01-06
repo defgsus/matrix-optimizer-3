@@ -43,7 +43,9 @@ private:
 
     //Double getOffset_(Double time);
 
-    ParameterFloat * valueParam_;
+    ParameterFloat
+            * p_value_,
+            * p_amp_;
 
     Double timeStamp_, offset_;
 };

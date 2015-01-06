@@ -72,6 +72,21 @@ void DataStream::skip(qint64 length)
     device()->seek( device()->pos() + length );
 }
 
+qint64 DataStream::reserveFutureValueInt()
+{
+    const qint64 pos = device()->pos();
+    *this << qint64(0);
+    return pos;
+}
+
+void DataStream::writeFutureValue(qint64 future, qint64 value)
+{
+    const qint64 pos = device()->pos();
+    device()->seek( future );
+    *this << value;
+    device()->seek( pos );
+}
+
 void DataStream::writeHeader(const QString& id, qint32 version)
 {
     *this << id << version;

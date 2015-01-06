@@ -20,13 +20,44 @@
 #include "midisettingsdialog.h"
 #include "audio/mididevices.h"
 #include "audio/mididevice.h"
+#include "audio/audiodevice.h"
+#include "audio/tool/synth.h"
 #include "io/error.h"
 #include "io/applicationtime.h"
 #include "io/settings.h"
 #include "io/log.h"
+#include "tool/locklessqueue.h"
 
 namespace MO {
 namespace GUI {
+
+// Enables polyphonic output of Synth
+#define MO_MS_SYNTH_POLYOUT
+
+
+class MidiSettingsDialog::Private
+{
+public:
+
+    Private()
+        : device(new AUDIO::AudioDevice()),
+          synth(new AUDIO::Synth())
+    { }
+
+    ~Private()
+    {
+        delete synth;
+        delete device;
+    }
+
+    AUDIO::AudioDevice * device;
+    AUDIO::Synth * synth;
+    std::vector<F32> buffer;
+#ifdef MO_MS_SYNTH_POLYOUT
+    std::vector<F32*> buffers;
+#endif
+    LocklessQueue<AUDIO::MidiEvent> queue;
+};
 
 
 MidiSettingsDialog::MidiSettingsDialog(QWidget *parent)
@@ -34,11 +65,13 @@ MidiSettingsDialog::MidiSettingsDialog(QWidget *parent)
       curId_    (-1),
       curDevice_(0),
       devices_  (0),
-      timer_    (new QTimer(this))
+      timer_    (new QTimer(this)),
+      p_        (0)
 {
-    setObjectName("_MidiSettingsDialig");
+    setObjectName("_MidiSettingsDialog");
     setWindowTitle(tr("Midi settings"));
-    setMinimumSize(640,480);
+    setWindowIcon(QIcon(":/icon/midi.png"));
+    setMinimumSize(640,280);
 
     timer_->setSingleShot(false);
     timer_->setInterval(1000 / 30);
@@ -51,6 +84,9 @@ MidiSettingsDialog::MidiSettingsDialog(QWidget *parent)
 
 MidiSettingsDialog::~MidiSettingsDialog()
 {
+    if (p_ && p_->device->isPlaying())
+        p_->device->close();
+    delete p_;
     delete devices_;
     delete curDevice_;
 }
@@ -89,11 +125,22 @@ void MidiSettingsDialog::createWidgets_()
         lh = new QHBoxLayout();
         lv->addLayout(lh);
 
-            butTest_ = new QToolButton(this);
-            lh->addWidget(butTest_);
-            butTest_->setText(tr("test input"));
-            butTest_->setCheckable(true);
-            connect(butTest_, SIGNAL(toggled(bool)), this, SLOT(onTest_(bool)));
+            auto lv2 = new QVBoxLayout();
+            lh->addLayout(lv2);
+
+                butTest_ = new QToolButton(this);
+                lv2->addWidget(butTest_);
+                butTest_->setText(tr("test input"));
+                butTest_->setCheckable(true);
+                connect(butTest_, SIGNAL(toggled(bool)), this, SLOT(onTest_(bool)));
+
+                butTestSynth_ = new QToolButton(this);
+                lv2->addWidget(butTestSynth_);
+                butTestSynth_->setText(tr("test synthesizer"));
+                butTestSynth_->setCheckable(true);
+                connect(butTestSynth_, SIGNAL(toggled(bool)), this, SLOT(onTestSynth_(bool)));
+
+                lv2->addStretch(1);
 
             textBuffer_ = new QPlainTextEdit(this);
             lh->addWidget(textBuffer_);
@@ -175,6 +222,8 @@ void MidiSettingsDialog::updateDeviceBox_()
 void MidiSettingsDialog::updateWidgets_()
 {
     butTest_->setEnabled(curId_ >= 0);
+    butTestSynth_->setEnabled(curId_ >= 0
+                              && AUDIO::AudioDevice::isAudioConfigured());
 }
 
 void MidiSettingsDialog::onApiChoosen_()
@@ -205,12 +254,27 @@ void MidiSettingsDialog::onDeviceChoosen_()
 
 void MidiSettingsDialog::onTest_(bool go)
 {
+    butTestSynth_->setEnabled(!go);
+    startTest_(go, false);
+}
+
+void MidiSettingsDialog::onTestSynth_(bool go)
+{
+    butTest_->setDown(go);
+    butTest_->setEnabled(!go);
+    startTest_(go, true);
+}
+
+void MidiSettingsDialog::startTest_(bool go, bool audio)
+{
     if (go)
     {
         curDevice_ = new AUDIO::MidiDevice();
         try
         {
             curDevice_->openInput(curId_);
+            if (audio)
+                startAudio_(true);
             timer_->start();
             return;
         }
@@ -219,10 +283,12 @@ void MidiSettingsDialog::onTest_(bool go)
             QMessageBox::critical(this, tr("midi"),
                                   tr("Could not open the midi input device\n%1")
                                   .arg(e.what()));
-            butTest_->setChecked(false);
+            butTest_->setDown(false);
+            butTestSynth_->setDown(false);
         }
     }
 
+    startAudio_(false);
     delete curDevice_;
     curDevice_ = 0;
 }
@@ -238,6 +304,13 @@ void MidiSettingsDialog::onTimer_()
         AUDIO::MidiEvent e = curDevice_->read();
         textBuffer_->appendPlainText(
                     "[" + applicationTimeString() + "] " + e.toString());
+
+        if (p_ && p_->device->isPlaying())
+        {
+            // send all midi events to audio thread
+            p_->queue.produce(e);
+        }
+
     }
 }
 
@@ -279,6 +352,93 @@ void MidiSettingsDialog::onOk_()
     saveSettings_();
     accept();
 }
+
+void MidiSettingsDialog::startAudio_(bool start)
+{
+    if (!start && p_)
+    {
+        if (p_->device->isPlaying())
+            p_->device->close();
+        return;
+    }
+
+    if (!p_)
+    {
+        p_ = new Private();
+
+        p_->device->setCallback([this](const F32 *, F32 * out)
+        {
+            AUDIO::MidiEvent event;
+            while (p_->queue.consume(event))
+            {
+                if (event.command() == AUDIO::MidiEvent::C_NOTE_ON)
+                    p_->synth->noteOn(event.key(), (Float)event.velocity()/127);
+                else if (event.command() == AUDIO::MidiEvent::C_NOTE_OFF)
+                    p_->synth->noteOff(event.key());
+                else if (event.command() == AUDIO::MidiEvent::C_CONTROL_CHANGE)
+                {
+                    if (event.controller() == 1)
+                         p_->synth->setFilterFrequency(
+                             100.f + (Float)event.value() / 127 * 5000.f);
+                }
+
+            }
+
+#ifndef MO_MS_SYNTH_POLYOUT
+
+            // monophonic output
+            F32 * buf = &p_->buffer[0];
+            p_->synth->process(buf, p_->buffer.size());
+
+            for (uint i=0; i<p_->buffer.size(); ++i, ++buf)
+                for (uint j=0; j<p_->device->numOutputChannels(); ++j, ++out)
+                    *out = *buf;
+#else
+            // polyphonic output
+            p_->synth->process(&p_->buffers[0], p_->device->bufferSize());
+
+            // mix back together
+            memset(out, 0, sizeof(F32) * p_->device->bufferSize() * p_->device->numOutputChannels());
+            for (uint i=0; i<p_->device->bufferSize(); ++i)
+            {
+                for (uint j=0; j<p_->synth->numberVoices(); ++j)
+                {
+                    const F32 * buf = p_->buffers[j];
+                    out[i * p_->device->numOutputChannels()
+                          + (j % p_->device->numOutputChannels())] += buf[i];
+                }
+            }
+#endif
+
+        });
+    }
+
+    if (p_->device->initFromSettings())
+    {
+        p_->synth->setNumberVoices(16);
+        p_->synth->setSustain(1);
+        p_->synth->setRelease(3);
+        p_->synth->setWaveform(AUDIO::Waveform::T_TRIANGLE);
+        p_->synth->setFilterFrequency(100);
+        p_->synth->setFilterType(AUDIO::MultiFilter::T_24_LOW);
+        p_->synth->setFilterResonance(0.6);
+        p_->synth->setFilterKeyFollower(0.5);
+        p_->synth->setFilterEnvelopeKeyFollower(2);
+        p_->synth->setFilterDecay(3.5);
+
+        p_->synth->setFilterSustain(0.5);
+#ifndef MO_MS_SYNTH_POLYOUT
+        p_->buffer.resize(p_->device->bufferSize());
+#else
+        p_->buffer.resize(p_->device->bufferSize() * p_->synth->numberVoices());
+        p_->buffers.resize(p_->synth->numberVoices());
+        for (uint i=0; i<p_->synth->numberVoices(); ++i)
+            p_->buffers[i] = &p_->buffer[i * p_->device->bufferSize()];
+#endif
+        p_->device->start();
+    }
+}
+
 
 } // namespace GUI
 } // namespace MO

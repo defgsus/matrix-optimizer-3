@@ -44,18 +44,19 @@ GroupWidget::GroupWidget(const QString& title, bool expanded, QWidget *parent) :
 
 void GroupWidget::createLayout_()
 {
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     auto lv = new QVBoxLayout(this);
     lv->setMargin(1);
 
         // create header
         header_ = new QWidget(this);
+        header_->setProperty("GroupHeader", true);
         lv->addWidget(header_);
-        header_->setAutoFillBackground(true);
+        /*header_->setAutoFillBackground(true);
         QPalette p(header_->palette());
         p.setColor(QPalette::Background, p.color(QPalette::Background).darker(120));
-        header_->setPalette(p);
+        header_->setPalette(p);*/
         header_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         auto lh = new QHBoxLayout(header_);
@@ -63,6 +64,7 @@ void GroupWidget::createLayout_()
         lh->setSpacing(1);
 
             button_ = new QToolButton(header_);
+            button_->setProperty("GroupHeader", true);
             lh->addWidget(button_);
             button_->setFixedSize(20,20);
             button_->setStatusTip(tr("Expands or collapses the contents of the group"));
@@ -73,6 +75,7 @@ void GroupWidget::createLayout_()
             });
 
             label_ = new QLabel(title_, header_);
+            label_->setProperty("GroupHeader", true);
             lh->addWidget(label_);
             lh->setStretch(lh->indexOf(label_), 2);
 
@@ -175,12 +178,12 @@ bool GroupWidget::isVisible(QWidget * w) const
 
 void GroupWidget::addWidget(QWidget * w)
 {
+    w->setVisible(expanded_);
+
     layout()->addWidget(w);
 
     containedWidgets_.push_back(w);
     w->setParent(this);
-
-    w->setVisible(expanded_);
 }
 
 void GroupWidget::addLayout(QLayout * l)

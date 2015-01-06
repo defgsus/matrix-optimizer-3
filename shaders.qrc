@@ -10,5 +10,7 @@
         <file alias="test.vert">assets/shader/test.vert</file>
         <file alias="textureoverlay.frag">assets/shader/textureoverlay.frag</file>
         <file alias="textureoverlay.vert">assets/shader/textureoverlay.vert</file>
+        <file alias="edgeblend.vert">assets/shader/edgeblend.vert</file>
+        <file alias="edgeblend.frag">assets/shader/edgeblend.frag</file>
     </qresource>
 </RCC>

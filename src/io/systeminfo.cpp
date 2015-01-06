@@ -12,6 +12,7 @@
 #include <QTextStream>
 #include <QNetworkInterface>
 #include <QHostAddress>
+#include <QScreen>
 
 #include "systeminfo.h"
 #include "io/datastream.h"
@@ -56,11 +57,19 @@ void SystemInfo::get()
     }
 
     // screen geometries
+#ifdef THATS_THE_QDESKTOPWIDGET_METHOD_
     auto desk = application->desktop();
     for (int i=0; i<desk->screenCount(); ++i)
     {
         screenSizes_.append(desk->screenGeometry(i).size());
     }
+#else
+    auto screens = qApp->screens();
+    for (int i=0; i<screens.count(); ++i)
+    {
+        screenSizes_.append(screens[i]->geometry().size());
+    }
+#endif
 }
 
 QString SystemInfo::toString() const

@@ -8,13 +8,15 @@
     <p>created 6/28/2014</p>
 */
 
-//#include <QDebug>
 #include <QStringList>
+#include <QClipboard>
 
 #include "objecttreemimedata.h"
 #include "object/object.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
+#include "io/application.h"
 
 namespace MO {
 
@@ -27,7 +29,7 @@ const QString ObjectTreeMimeData::orderMimeType = "matrixoptimizer/object-tree-o
 ObjectTreeMimeData::ObjectTreeMimeData() :
     QMimeData   ()
 {
-    //setParent(parent);
+
 }
 
 QStringList ObjectTreeMimeData::formats() const
@@ -35,7 +37,32 @@ QStringList ObjectTreeMimeData::formats() const
     return QStringList() << objectMimeType;
 }
 
+bool ObjectTreeMimeData::isObjectInClipboard()
+{
+    return application->clipboard()->mimeData()->formats()
+            .contains(objectMimeType);
+}
 
+int ObjectTreeMimeData::numObjectsInClipboard()
+{
+    if (!isObjectInClipboard())
+        return 0;
+
+    return static_cast<const ObjectTreeMimeData*>(
+                application->clipboard()->mimeData())->getNumObjects();
+}
+
+bool ObjectTreeMimeData::isObjectTypeInClipboard(int typeFlags)
+{
+    if (!application->clipboard()->mimeData()->formats()
+                .contains(objectMimeType))
+        return false;
+
+    Object::Type type = static_cast<const ObjectTreeMimeData*>(
+                application->clipboard()->mimeData())->getObjectType();
+
+    return type & typeFlags;
+}
 
 void ObjectTreeMimeData::storeObjectTree(const Object * obj)
 {
@@ -199,6 +226,29 @@ QList<Object*> ObjectTreeMimeData::getObjectTrees() const
     for (int i=0; i<num; ++i)
     {
         list.append( Object::deserializeTree(io) );
+    }
+    return list;
+}
+
+QList<QString> ObjectTreeMimeData::getObjectTreeIds() const
+{
+    QByteArray a = data(objectMimeType);
+    if (a.isEmpty())
+        MO_IO_ERROR(READ, "No object data in clipboard");
+    IO::DataStream io(a);
+
+    // read number
+    qint32 num;
+    io >> num;
+    if (num < 1)
+        MO_IO_ERROR(READ, "No objects stored in clipboard");
+
+    QList<QString> list;
+    for (int i=0; i<num; ++i)
+    {
+        auto obj = Object::deserializeTree(io);
+        list.append( obj->idName() );
+        delete obj;
     }
     return list;
 }

@@ -30,11 +30,12 @@ public:
 
     const QString& typeName() const { static QString s("filename"); return s; }
 
-    Modulator * getModulator(const QString &) Q_DECL_OVERRIDE { return 0; }
+    Modulator * getModulator(const QString &, const QString &) Q_DECL_OVERRIDE { return 0; }
 
     // ---------------- getter -----------------
 
     QString value() const { return value_; }
+    const QString& baseValue() const { return value_; }
     QString defaultValue() const { return defaultValue_; }
 
     IO::FileType fileType() const { return fileType_; }

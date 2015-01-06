@@ -13,13 +13,16 @@
 
 #include <QList>
 #include <QMap>
+#include "io/filetypes.h"
 
 namespace MO {
+class Object;
 namespace IO { class DataStream; }
 namespace GEOM {
 
 class Geometry;
 class GeometryModifier;
+class ObjLoader;
 
 class GeometryModifierChain
 {
@@ -62,6 +65,10 @@ public:
         Ownership is taken */
     void addModifier(GeometryModifier * g);
 
+    /** Inserts a modifier to the execution chain.
+        Ownership is taken */
+    void insertModifier(GeometryModifier * g, uint index);
+
     /** Adds a new modifier to the execution chain.
         Returns the created instance, or NULL if @p className is not defined. */
     GeometryModifier * addModifier(const QString& className);
@@ -69,6 +76,10 @@ public:
     /** Inserts a new modifier to the execution chain before the modifier @p before.
         Returns the created instance, or NULL if @p className is not defined. */
     GeometryModifier * insertModifier(const QString& className, GeometryModifier * before);
+
+    /** Inserts a new modifier to the execution chain at given index.
+        Returns the created instance, or NULL if @p className is not defined. */
+    GeometryModifier * insertModifier(const QString& className, uint index);
 
     /** Moves the modifier up in the chain, returns true if moved */
     bool moveModifierUp(GeometryModifier * g);
@@ -81,10 +92,15 @@ public:
         The class is only destroyed when it was part of the chain! */
     bool deleteModifier(GeometryModifier * g);
 
+    // ----------- info -------------------
+
+    void getNeededFiles(IO::FileList & files) const;
+
     // ----------- execution --------------
 
-    /** Execute the whole chain */
-    void execute(Geometry * g) const;
+    /** Execute the whole chain.
+        If an object is given, it is made available to scripts */
+    void execute(Geometry * g, Object* o = 0) const;
 
 private:
 

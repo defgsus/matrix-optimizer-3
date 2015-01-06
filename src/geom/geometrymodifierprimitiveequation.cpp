@@ -19,9 +19,7 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierPrimitiveEquation)
 
 GeometryModifierPrimitiveEquation::GeometryModifierPrimitiveEquation()
     : GeometryModifier("PrimitiveEquation", QObject::tr("primitive equation")),
-      equX_     ("x"),
-      equY_     ("y"),
-      equZ_     ("z")
+      equ_     ("x = x;\ny = y;\nz = z")
 {
 
 }
@@ -36,23 +34,36 @@ void GeometryModifierPrimitiveEquation::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geoequprim", 1);
+    io.writeHeader("geoequprim", 2);
 
-    io << equX_ << equY_ << equZ_;
+    io << equ_;
 }
 
 void GeometryModifierPrimitiveEquation::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geoequprim", 1);
+    const int ver = io.readHeader("geoequprim", 2);
 
-    io >> equX_ >> equY_ >> equZ_;
+    if (ver<2)
+    {
+        QString equx, equy, equz;
+        io >> equx >> equy >> equz;
+        if (equx.isEmpty())
+            equx = "x";
+        if (equy.isEmpty())
+            equy = "y";
+        if (equz.isEmpty())
+            equz = "z";
+        equ_ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
+    }
+    else
+        io >> equ_;
 }
 
 void GeometryModifierPrimitiveEquation::execute(Geometry *g)
 {
-    g->transformPrimitivesWithEquation(equX_, equY_, equZ_);
+    g->transformPrimitivesWithEquation(equ_);
 }
 
 } // namespace GEOM

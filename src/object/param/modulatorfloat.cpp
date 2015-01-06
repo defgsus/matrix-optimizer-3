@@ -14,15 +14,17 @@
 #include "object/trackfloat.h"
 #include "object/sequencefloat.h"
 #include "object/modulatorobjectfloat.h"
-
+#include "object/audioobject.h"
 
 namespace MO {
 
 
-ModulatorFloat::ModulatorFloat(
-        const QString &name, const QString &modulatorId, Object *parent)
-    : Modulator     (name, modulatorId, parent),
+ModulatorFloat::ModulatorFloat(const QString &name, const QString &modulatorId, const QString& outputId,
+                               Parameter * p, Object *parent)
+    : Modulator     (name, modulatorId, outputId, p, parent),
       sourceType_   (ST_NONE),
+      channel_      (0),
+      outStaticFloat_   (0),
       amplitude_    (1.0),
       timeOffset_   (0.0)
 {
@@ -46,20 +48,39 @@ void ModulatorFloat::deserialize(IO::DataStream & io)
     io >> amplitude_ >> timeOffset_;
 }
 
+void ModulatorFloat::copySettingsFrom(const Modulator *other)
+{
+    const ModulatorFloat * f = dynamic_cast<const ModulatorFloat*>(other);
+    if (!f)
+    {
+        MO_WARNING("ModulatorFloat::copySettingsFrom(" << other << ") "
+                   "with non-float type");
+        return;
+    }
+
+    amplitude_ = f->amplitude();
+    timeOffset_ = f->timeOffset();
+}
+
 bool ModulatorFloat::canBeModulator(const Object * o) const
 {
     MO_ASSERT(o, "ModulatorFloat::canBeModulator(NULL) called");
 
     return o->type() == Object::T_TRACK_FLOAT
         || o->type() == Object::T_SEQUENCE_FLOAT
-        || o->type() == Object::T_MODULATOR_OBJECT_FLOAT;
+        || o->type() == Object::T_MODULATOR_OBJECT_FLOAT
+        || (o->type() == Object::T_AUDIO_OBJECT)
+            //&& !o->modulatorOutputs().isEmpty())
+
+            ;
 }
 
 bool ModulatorFloat::hasAmplitude() const
 {
     return     sourceType_ == ST_SEQUENCE_FLOAT
             || sourceType_ == ST_TRACK_FLOAT
-            || sourceType_ == ST_MODULATOR_OBJECT_FLOAT;
+            || sourceType_ == ST_MODULATOR_OBJECT_FLOAT
+            || sourceType_ == ST_AUDIO_OBJECT;
 }
 
 bool ModulatorFloat::hasTimeOffset() const
@@ -72,6 +93,8 @@ bool ModulatorFloat::hasTimeOffset() const
 
 void ModulatorFloat::modulatorChanged_()
 {
+    outStaticFloat_ = 0;
+
     if (modulator() == 0)
         sourceType_ = ST_NONE;
     else
@@ -83,6 +106,15 @@ void ModulatorFloat::modulatorChanged_()
     else
     if (qobject_cast<ModulatorObjectFloat*>(modulator()))
         sourceType_ = ST_MODULATOR_OBJECT_FLOAT;
+    else
+    if (qobject_cast<AudioObject*>(modulator()))
+    {
+        sourceType_ = ST_AUDIO_OBJECT;
+        channel_ = getAudioOutputChannel();
+        //std::cout << "--- " << outputId() << " " << outputId().mid(7) << " " << channel_ << std::endl;
+        //outStaticFloat_ = dynamic_cast<ModulatorOutputStaticFloat*>(modulator()->getModulatorOutput("0"));
+        //MO_ASSERT(outStaticFloat_, "not even that?");
+    }
     else
     {
         sourceType_ = ST_NONE;
@@ -100,20 +132,30 @@ Double ModulatorFloat::value(Double time, uint thread) const
 
     switch (sourceType_)
     {
+        case ST_NONE:
+            return 0.0;
+
         case ST_TRACK_FLOAT:
             return amplitude_ *
                     static_cast<TrackFloat*>(modulator())->value(time, thread);
 
         case ST_SEQUENCE_FLOAT:
-            return amplitude_ *
-                    static_cast<SequenceFloat*>(modulator())->value(time, thread);
+        {
+            auto seq = static_cast<SequenceFloat*>(modulator());
+            // sequences in clips need a playing clip
+            if (seq->parentClip() && !seq->parentClip()->isPlaying())
+                return 0.0;
+            return amplitude_ * seq->value(time, thread);
+        }
 
         case ST_MODULATOR_OBJECT_FLOAT:
             return amplitude_ *
                     static_cast<ModulatorObjectFloat*>(modulator())->value(time, thread);
 
-        case ST_NONE:
-            return 0.0;
+        case ST_AUDIO_OBJECT:
+            //return amplitude_ * (outStaticFloat_ ? outStaticFloat_->value() : 0.0);
+            return amplitude_ *
+                    static_cast<AudioObject*>(modulator())->getAudioOutputAsFloat(channel_, time, MO_AUDIO_THREAD);
     }
 
     return 0.0;

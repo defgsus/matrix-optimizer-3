@@ -24,6 +24,7 @@ namespace GUI {
 
 class SceneSettings;
 class ParameterView;
+class ObjectListWidget;
 
 class ObjectView : public QWidget
 {
@@ -33,9 +34,13 @@ public:
 
     void setSceneSettings(SceneSettings * s);
 
+    /** The currently edited object */
+    Object * object() const { return object_; }
+
 signals:
 
-    /** When a modulation track was created */
+    /** Emitted when an object in the list view was double-clicked
+        or a modulation object was created */
     void objectSelected(MO::Object*);
 
     /** Emitted when the ActivityScope of an object has changed */
@@ -50,13 +55,20 @@ public slots:
         Can be NULL to disable it. */
     void setObject(MO::Object *);
 
+    /** Selects a specific child object in the list view */
+    void selectObject(MO::Object *);
+
     /** Call to change the visibility of a Parameter.
         If the Parameter is not displayed, this function does nothing. */
     void updateParameterVisibility(MO::Parameter*);
 
+    void updateObjectName();
+
 protected slots:
 
     void infoPopup_();
+    void onObjectListSelected(MO::Object *);
+    void onObjectListClicked(MO::Object *);
 
 protected:
 
@@ -74,7 +86,7 @@ private:
     QVBoxLayout * layout_;
     QToolButton * icon_;
     QLabel * label_, *label2_;
-
+    ObjectListWidget * list_;
 };
 
 } // namespace GUI

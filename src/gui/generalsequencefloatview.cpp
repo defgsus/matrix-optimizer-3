@@ -17,6 +17,7 @@
 #include "painter/valuecurve.h"
 #include "painter/sequenceoverpaint.h"
 #include "object/sequencefloat.h"
+#include "object/clip.h"
 
 namespace MO {
 namespace GUI {
@@ -27,7 +28,9 @@ namespace {
     public:
         const SequenceFloat * sequence;
         Double value(Double time) const
-            { return sequence->value(sequence->start() + time, MO_GUI_THREAD); }
+        {
+            return sequence->value(sequence->realStart() + time, MO_GUI_THREAD);
+        }
     };
 }
 

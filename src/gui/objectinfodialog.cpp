@@ -21,7 +21,13 @@
 #include "object/objectgl.h"
 #include "object/transform/transformation.h"
 #include "object/scene.h"
-#include "object/audio/audiounit.h"
+#include "object/clip.h"
+#include "object/clipcontroller.h"
+#include "object/audioobject.h"
+#include "object/model3d.h"
+#include "object/util/alphablendsetting.h"
+#include "object/util/audioobjectconnections.h"
+#include "geom/geometry.h"
 
 namespace MO {
 namespace GUI {
@@ -58,24 +64,46 @@ void ObjectInfoDialog::setObject(Object * o)
 {
     setWindowTitle(o->name());
 
+    Scene * scene = o->sceneObject();
+
     Double curTime = 0.0;
-    if (Scene * s = o->sceneObject())
-        curTime = s->sceneTime();
+    if (scene)
+        curTime = scene->sceneTime();
 
     std::stringstream s, s1;
-    s << "<html><b>" << o->name() << "</b><br/>"
-      << o->idNamePath() << "/" << o->idName() << "<br/>";
+    s << "<html><b>" << o->infoName() << "</b><br/>"
+      << o->idNamePath() << "<br/>";
+
+    // ----- children -----
 
     s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>";
 
-    // audiosources and microphones
-    if (!o->microphones().isEmpty() || !o->audioSources().isEmpty())
+    // ----- modulators -----
+
+    auto mods = o->getModulatingObjects();
+    if (!mods.isEmpty())
+    {
+        s << "<p>modulators:";
+        for (auto mod : mods)
+        {
+            // once again, don't display sequence-on-track modulators
+            if (mod->isSequence()
+                    && mod->parentObject() && mod->parentObject()->isTrack())
+                continue;
+            s << "<br/>" << mod->idNamePath();
+        }
+        s << "</p>";
+    }
+
+    // ----- audiosources and microphones -----
+
+    if (o->numberMicrophones() || o->numberSoundSources())
     {
         s << "<p>";
-        if (!o->audioSources().isEmpty())
-            s << "audio sources: " << o->audioSources().size() << "<br/>";
-        if (!o->microphones().isEmpty())
-            s << "microphones: " << o->microphones().size();
+        if (o->numberSoundSources())
+            s << "audio sources: " << o->numberSoundSources() << "<br/>";
+        if (o->numberMicrophones())
+            s << "microphones: " << o->numberMicrophones();
         s << "</p>";
     }
 
@@ -85,7 +113,7 @@ void ObjectInfoDialog::setObject(Object * o)
     {
         s << "<p>depth test: " << gl->depthTestModeNames[gl->depthTestMode()]
           << "<br/>depth write: " << gl->depthWriteModeNames[gl->depthWriteMode()]
-          << "<br/>alpha blend: " << gl->alphaBlendModeNames[gl->alphaBlendMode()]
+          << "<br/>alpha blend: " << AlphaBlendSetting::modeNames[gl->alphaBlendMode()]
           << "</p>";
     }
 
@@ -100,23 +128,79 @@ void ObjectInfoDialog::setObject(Object * o)
     }
     else if (o->type() & Object::TG_REAL_OBJECT)
         s << "<p>" << tr("current transformation") << ":<br/>"
-          << matrix2Html(o->transformation(MO_GFX_THREAD, 0)) << "</p>";
+          << matrix2Html(o->transformation()) << "</p>";
 
-    // ---------- audio unit -----------
+    // ------- geometry ------------------
 
-    if (AudioUnit * au = qobject_cast<AudioUnit*>(o))
+    if (Model3d * model = qobject_cast<Model3d*>(o))
     {
-        s << "<p>AudioUnit:<br/>channels: "
-          << au->numChannelsIn() << "/" << au->numChannelsOut()
-          << "<br/>max. channels: " << au->maxChannelsIn() << "/" << au->maxChannelsOut()
-          << "<br/>buffer size (per thread): ";
-        for (uint i=0; i<au->numberThreads(); ++i)
+        s << "<p>" << tr("geometry") << ": ";
+        if (!model->geometry())
+            s << "null";
+        else
         {
-            if (i > 0)
-                s << " / ";
-            s << au->bufferSize(i);
+            const GEOM::Geometry * geom = model->geometry();
+            s << "<br/>" << "vertices:  " << geom->numVertices()
+              << "<br/>" << "lines:     " << geom->numLines()
+              << "<br/>" << "triangles: " << geom->numTriangles()
+              << "<br/>" << "user attributes:";
+            const QStringList list = geom->getAttributeNames();
+            if (list.isEmpty())
+                s << " none";
+            else
+                for (auto & n : list)
+                    s << " " << n;
         }
-        s  << "</p>";
+        s << "</p>";
+    }
+
+    // ---------- audio object -----------
+
+    if (AudioObject * au = qobject_cast<AudioObject*>(o))
+    {
+        s << "<p>AudioObject:<br/>channels: "
+          << au->numAudioInputs() << "/" << au->numAudioOutputs()
+          << "<ul>";
+        if (scene && scene->audioConnections())
+        {
+            auto list = scene->audioConnections()->getInputs(au);
+            for (auto c : list)
+                s << "\n<li>" << c->from()->name()
+                  << " -&gt; " << c->to()->getAudioInputName(c->inputChannel())
+                  << "</li>";
+
+            list = scene->audioConnections()->getOutputs(au);
+            for (auto c : list)
+                s << "\n<li>"
+                  << c->from()->getAudioOutputName(c->outputChannel())
+                  << " -&gt; " << c->to()->name()
+                  << "</li>";
+        }
+        s  << "</ul></p>";
+    }
+
+    // ------- clip container -------------
+
+    if (ClipController * clipcon = qobject_cast<ClipController*>(o))
+    {
+        s << "<p>ClipContainer:<br/>size: "
+          << clipcon->numberColumns() << "x"
+          << clipcon->numberRows()
+          << "</p>";
+    }
+
+    // ------------ clip ---------------
+
+    if (Clip * clip = qobject_cast<Clip*>(o))
+    {
+        s << "<p>Clip:<br/>position: " << clip->column() << ", " << clip->row()
+          << "<br/>Contained sequences: " << clip->sequences().size()
+          << "<br/>playing: ";
+        if (clip->isPlaying())
+            s << "since " << clip->timeStarted();
+        else
+            s << "no";
+        s << "</p>";
     }
 
     s << "</html>";

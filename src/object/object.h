@@ -12,11 +12,13 @@
 #define MOSRC_OBJECT_OBJECT_H
 
 #include <vector>
+#include <functional>
 
 #include <QByteArray>
 #include <QObject>
 #include <QList>
 #include <QSet>
+#include <QMap>
 
 #include "types/int.h"
 #include "types/vector.h"
@@ -37,12 +39,20 @@
 
 namespace MO {
 namespace IO { class DataStream; }
+namespace MATH { class Timeline1D; }
 
+namespace Private {
+    /** hidden id access */
+    void set_object_id_(Object * o, const QString& id);
+    /** Installs the object in ObjectFactory.
+        @note Prefere to use MO_REGISTER_OBJECT to do the job */
+    bool register_object_(Object *);
+}
 
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
         static bool success_register_object_##class__ = \
-            ::MO::registerObject_( new class__((QObject*)0) ); \
+            ::MO::Private::register_object_( new class__((QObject*)0) ); \
     }
 
 #define MO_OBJECT_CONSTRUCTOR(Class__) \
@@ -75,16 +85,15 @@ class Object : public QObject
     Q_OBJECT
 
     // to set idName_
-    friend class ObjectFactory;
+    friend void Private::set_object_id_(Object*, const QString&);
     // to edit the tree
     friend class Scene;
-    // to create parameters
-    friend class TextureSetting;
-    friend class ColorPostProcessingSetting;
 public:
 
     // -------------- types ------------------
 
+    /** must be bits!
+        order can change between runs. */
     enum Type
     {
         T_NONE              = 0,
@@ -101,24 +110,37 @@ public:
         T_TRACK_FLOAT       = 1<<10,
         T_DUMMY             = 1<<11,
         T_LIGHTSOURCE       = 1<<12,
-        T_AUDIO_UNIT        = 1<<13,
-        T_MODULATOR_OBJECT_FLOAT   = 1<<14,
-        T_MICROPHONE_GROUP  = 1<<15
+                                // 13
+        T_MODULATOR_OBJECT_FLOAT = 1<<14,
+        T_MICROPHONE_GROUP  = 1<<15,
+        T_CLIP              = 1<<16,
+        T_CLIP_CONTROLLER    = 1<<17,
+        T_SOUND_OBJECT      = 1<<18,
+        T_OSCILLATOR        = 1<<19,
+        T_AUDIO_OBJECT      = 1<<20,
+        T_ANGELSCRIPT       = 1<<21
     };
     enum TypeGroups
     {
         /** Objects that have a definite position */
         TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE
-                                | T_CAMERA | T_LIGHTSOURCE | T_MICROPHONE_GROUP,
+                                | T_CAMERA | T_LIGHTSOURCE | T_MICROPHONE_GROUP
+                                | T_SOUND_OBJECT,
+
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
 
         TG_FLOAT            = T_TRACK_FLOAT | T_SEQUENCE_FLOAT,
-
+        /** All explicit modulator objects */
         TG_MODULATOR_OBJECT = T_MODULATOR_OBJECT_FLOAT,
-        TG_MODULATION       = TG_MODULATOR_OBJECT | TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP,
+        /** All objects that can serve as a modulator source */
+        TG_MODULATOR        = TG_MODULATOR_OBJECT
+                                | TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP
+                                | T_OSCILLATOR,
 
         TG_TRANSFORMATION   = T_TRANSFORMATION | T_TRANSFORMATION_MIX,
+
+        TG_SCRIPT           = T_ANGELSCRIPT,
 
         TG_ALL = 0xffffffff
     };
@@ -133,6 +155,21 @@ public:
         AS_CLIENT_ONLY  = 1<<4,
         AS_PREVIEW      = AS_PREVIEW_1 | AS_PREVIEW_2 | AS_PREVIEW_3,
         AS_ON           = AS_PREVIEW | AS_RENDER,
+    };
+
+    /** ORDER MUST NOT CHANGE! */
+    enum DataType
+    {
+        /** Position in ObjectGraphView */
+        DT_GRAPH_POS,
+        /** Expanded-flag in ObjectGraphView */
+        DT_GRAPH_EXPANDED,
+        /** Object hue */
+        DT_HUE,
+        DT_CLIP_COLUMN,
+        DT_CLIP_ROW,
+        DT_PARAM_GROUP_EXPANDED,
+        DT_SELECTED_PARAM
     };
 
     // -------------- ctor -------------------
@@ -186,10 +223,17 @@ public:
         IO::DataStream::writeHeader() to write your specific object version.
         Adding the serialize function later will definitely break previously saved files! */
     virtual void serialize(IO::DataStream&) const;
+    /** Override to store custom data after the child object tree has been written.
+        If this function returns false, deserializeAfterChilds() will not be called
+        when reading the object - So never return false when you have written something.
+        Base implementation returns false. */
+    virtual bool serializeAfterChilds(IO::DataStream&) const { return false; }
 
     /** Override to restore custom data.
         @note See notes for serialize() function. */
     virtual void deserialize(IO::DataStream&);
+    /** Override to restore custom data after all object childs have been deserialized. */
+    virtual void deserializeAfterChilds(IO::DataStream&) { }
 
     // --------------- getter -------------------
 
@@ -197,11 +241,11 @@ public:
         MUST NOT CHANGE for compatibility with saved files! */
     virtual const QString& className() const = 0;
     /** Tree-unique id of the object. */
-    const QString& idName() const { return idName_; }
+    const QString& idName() const { return p_idName_; }
     /** User defined name of the object */
-    const QString& name() const { return name_; }
+    const QString& name() const { return p_name_; }
     /** Override to add some additional information. */
-    virtual QString infoName() const { return name_; }
+    virtual QString infoName() const { return p_name_; }
 
     /** Return the path up to this object */
     QString namePath() const;
@@ -221,9 +265,13 @@ public:
     virtual bool isParameter() const { return false; }
     virtual bool isTrack() const { return false; }
     virtual bool isSequence() const { return false; }
+    virtual bool isClip() const { return false; }
+    virtual bool isClipController() const { return false; }
     virtual bool isLightSource() const { return false; }
     virtual bool isAudioUnit() const { return false; }
     virtual bool isModulatorObject() const { return false; }
+    virtual bool isAudioObject() const { return false; }
+    virtual bool isScript() const { return false; }
 
     /** The base class method returns whether any of the Parameters of
         the object are modulated. */
@@ -233,13 +281,41 @@ public:
         contains microphones or soundsources. */
     bool isAudioRelevant() const;
 
+    /** True for audio generating objects */
+    virtual bool hasAudioOutput() const { return false; }
+
+    /** Returns true when there are transformation objects among the children. */
+    bool hasTransformationObjects() const { return !p_transformationObjects_.isEmpty(); }
+
+    /** Returns true when the object can be deleted by the ObjectTreeView */
+    bool canBeDeleted() const { return p_canBeDeleted_; }
+
+    /** Returns a name that is unique among the direct children of the object */
+    QString makeUniqueName(const QString& name) const;
+
     /** Returns a priority for each object type */
     static int objectPriority(const Object *);
 
-    // ---------- tree editing --------------------
+    // ----------- attached data ------------------
 
-    /** Returns true when the object can be deleted by the ObjectTreeView */
-    bool canBeDeleted() const { return canBeDeleted_; }
+    /** Attaches data to the object.
+        The data is saved with the object.
+        A null QVariant removes the entry */
+    void setAttachedData(const QVariant& value, DataType type, const QString& id = "");
+
+    /** Returns the attached data, or a null QVariant */
+    QVariant getAttachedData(DataType type, const QString& id = "") const;
+
+    /** Returns true if there is a set entry */
+    bool hasAttachedData(DataType, const QString& id = "") const;
+
+#ifdef QT_DEBUG
+    /** Uses qDebug() */
+    void dumpAttachedData() const;
+#endif
+
+    /** Returns the default or adjusted color of the object */
+    QColor color() const;
 
     // ---------- activity (scope) ----------------
 
@@ -247,7 +323,7 @@ public:
     ActivityScope activityScope() const;
 
     /** Returns the currently set scope for the tree */
-    ActivityScope currentActivityScope() const { return currentActivityScope_; }
+    ActivityScope currentActivityScope() const { return p_currentActivityScope_; }
 
     /** Returns if the object is active at the given time */
     bool active(Double time, uint thread) const;
@@ -265,18 +341,12 @@ public:
         will be reflected in their active() method. */
     void setCurrentActivityScope(ActivityScope scope);
 
-    // ------------- tree stuff -----------------
+    // ---------- tree getter --------------------
 
-    /** Returns the parent Object, or NULL */
-    Object * parentObject() const { return parentObject_; }
-
-    /** See if this object has a parent object @p o. */
-    bool hasParentObject(Object * o) const;
-
-    /** Test if object @p o can be added to this object.
+    /** Test if object @p newChild can be added to this object.
         This checks for type compatibility as well as for
         potential loops in the modulation path. */
-    bool isSaveToAdd(Object * o, QString& error) const;
+    bool isSaveToAdd(Object * newChild, QString& error) const;
 
     /** Returns the root object of this hierarchy, which may
         be the object itself. */
@@ -287,12 +357,38 @@ public:
     const Scene * sceneObject() const;
           Scene * sceneObject();
 
-    /** Returns a string that is unique among the @p existingNames.
-        If a match is found, a counter is added to the idName.
-        Also, any whitespace is relpaced with underscores.
-        If @p existed != NULL, it will be set to true, if
-        the id needed to be changed. */
-    static QString getUniqueId(QString id, const QSet<QString> &existingNames, bool *existed = 0);
+    /** Returns the editor attached to the tree, or NULL */
+    ObjectEditor * editor() const;
+
+    /** Returns the parent Object, or NULL */
+    Object * parentObject() const { return p_parentObject_; }
+
+    /** See if this object has a parent object @p o. */
+    bool hasParentObject(Object * o) const;
+
+    /** Returns the first parent object matching given Type mask, or NULL */
+    Object * findParentObject(int typeFlags) const;
+
+    /** Returns the common parent for this and @p other,
+        or NULL if at least one of them is root */
+    Object * findCommonParentObject(Object * other) const;
+
+    /** Returns this object or the first parent that matches
+        the Object::Type mask in @p typeFlags.
+        If none matches, returns NULL */
+    Object * findContainingObject(int typeFlags);
+    /** Returns this object or the first parent that matches
+        the Object::Type mask in @p typeFlags.
+        If none matches, returns NULL */
+    const Object * findContainingObject(int typeFlags) const;
+
+    /** Returns true if this object or any of it's children match
+        the Object::Type mask in @p typeFlags */
+    bool containsTypes(int typeFlags) const;
+
+    /** Returns true if this object or any of it's childs are
+        equal to @p o */
+    bool containsObject(Object * o) const;
 
     /** Returns number of direct childs or number of all sub-childs. */
     int numChildren(bool recursive = false) const;
@@ -301,10 +397,14 @@ public:
     virtual bool canHaveChildren(Type type) const;
 
     /** Read-access to the list of childs */
-    const QList<Object*> childObjects() const { return childObjects_; }
+    const QList<Object*> childObjects() const { return p_childObjects_; }
 
     /** Returns a set of all idNames */
     QSet<QString> getChildIds(bool recursive) const;
+
+    /** Returns the first object, including self, for which @p selector returns true,
+        or NULL. */
+    Object * findChildObject(std::function<bool(Object*)> selector);
 
     /** Returns the children with the given id, or NULL.
         If @p ignore is not NULL, this object will be ignored by search. */
@@ -333,11 +433,29 @@ public:
     template <class T>
     int indexOfLastChild(int last = -1) const;
 
+    /** Adds the tree to the map */
+    void getIdMap(QMap<QString, Object*>& idMap) const;
+
+    // ------------- tree stuff -----------------
+
     /** Needed for ObjectGl. Base implementation calls propagteRenderMode() for
         all children. */
     virtual void propagateRenderMode(ObjectGl * parent);
 
-protected:
+//protected:
+
+    /** Tells the whole branch including the object itself about changed ids.
+        The map maps from old id to new id.
+        The idNames() of the objects in this branch will already be changed,
+        and each object gets onIdNamesChanged called. */
+    void idNamesChanged(const QMap<QString,QString>&);
+
+    /** Called when the idNames of objects have changed.
+        This happens if a new object/branch is inserted into an existing branch.
+        The map maps from old id to new id.
+        Call ancestor's code in your derived function!
+        Base implementation does nothing. */
+    virtual void onIdNamesChanged(const QMap<QString,QString>&) { }
 
     /** Called when the children list has changed */
     virtual void childrenChanged() { }
@@ -363,10 +481,16 @@ protected:
 public:
 
     /** Returns the number of threads, this object is assigned for */
-    uint numberThreads() const { return numberThreads_; }
+    uint numberThreads() const { return p_numberThreads_; }
+
+    /** Returns true if number of threads is matching @p num.
+        This checks for all contained stuff like AudioSources as well.
+        @note Call ancestor's implementation before your derived code! */
+    virtual bool verifyNumberThreads(uint num);
 
     /** Sets the number of threads that will run on this object.
-        Any mutable values of the object must be present @p num times! */
+        Any mutable values of the object must be present @p num times!
+        @note Call ancestor's implementation before your derived code! */
     virtual void setNumberThreads(uint num);
 #if (0)
     /** Sets the thread and dsp-block storage for the object.
@@ -403,50 +527,59 @@ private:
         Also childrenChanged_ is set to true for this class. */
     void deleteObject_(Object * child, bool destroy);
 
+    /** Sets a new index for the children object */
+    bool setChildrenObjectIndex_(Object * child, int newIndex);
+
 public:
     // --------------- modulators ------------------
 
+    /** Collect objects that you need here.
+        XXX Only used by TrackFloat a.t.m. */
     virtual void collectModulators() { };
+
+    /** Returns all modulators of all parameters of this object.
+        If @p recursive is true, all childs will add their Modulators too. */
+    QList<Modulator*> getModulators(bool recursive = false) const;
 
     /** Returns a list of objects that modulate this object. */
     virtual QList<Object*> getModulatingObjects() const;
+
+    /** Returns the list of all Parameters that are modulated.
+        Each entry is a pair of the Parameter and the modulating object.
+        Multiple modulations on the same Parameter have multiply entries in the list. */
+    virtual QList<QPair<Parameter*, Object*>> getModulationPairs() const;
 
     /** Returns a list of objects that will modulate this object
         when it gets added to the scene. */
     virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
 
-    // --------------- outputs ---------------------
+    // ------------ modulator outputs ----------------
 
-    /** Call this to get createOutputs() to be called. */
-    void requestCreateOutputs();
+    /** Returns the modulator outputs of this object. */
+    const QList<ModulatorOutput*>& modulatorOutputs() const { return p_modulatorOuts_; }
 
-    /** Create your ModulatorObject classes here.
-        Use the createOutput...() functions! */
-    virtual void createOutputs() { };
+    /** Returns the ModulatorOutput matching the output id, or NULL */
+    ModulatorOutput * getModulatorOutput(const QString& id) const;
 
 protected:
 
-    /** Creates a new (or reuses an existing) ModulatorObjectFloat as child
-        of this Object.
-        The @p id will be adjusted, so don't rely on it.
-        @note This function returns NULL, if another object with the same id
-        is found which is not of ModulatorObjectFloat class! */
-    ModulatorObjectFloat * createOutputFloat(const QString& id, const QString& name);
+    /** Sets the desired outputs for the object.
+        Call this in your constructor or in onParametersChanged()/onParametersLoaded().
+        Ownership of the ModulatorOutput classes is taken.
+        Emits ObjectEditor::objectChanged() when connected. */
+    void setModulatorOutputs(const QList<ModulatorOutput*>& mods);
 
     // --------------- parameter -------------------
 public:
 
     /** Returns the list of parameters for this object */
-    const QList<Parameter*>& parameters() const { return parameters_; }
-
-    /** Returns the parameter with the given id, or NULL. */
-    Parameter * findParameter(const QString& id);
+    const Parameters * params() const { return p_parameters_; }
+    Parameters * params() { return p_parameters_; }
 
     /** Override to create all parameters for your object.
         Always call the ancestor classes createParameters() in your derived function! */
     virtual void createParameters();
 
-protected:
 
     /** Called when a parameter has changed it's value (from the gui).
         Be sure to call the ancestor class implementation before your derived code! */
@@ -458,98 +591,14 @@ protected:
         XXX Right now it's a bit unclear, what is possible here except from lazy requests. */
     virtual void onParametersLoaded() { }
 
-    /** Starts a new group which will contain all Parameters created afterwards.
-        @p id is the PERSITANT name, to keep the gui-settings between sessions. */
-    void beginParameterGroup(const QString& id, const QString& name);
-    /** Ends the current Parameter group */
-    void endParameterGroup();
-
-    /** Creates the desired parameter,
-        or returns an already created parameter object.
-        When the Parameter was present before, all it's settings are still overwritten.
-        If @p statusTip is empty, a default string will be set in the edit views. */
-    ParameterFloat * createFloatParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Double defaultValue, Double minValue, Double maxValue, Double smallStep,
-                bool editable = true, bool modulateable = true);
-
-    ParameterFloat * createFloatParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Double defaultValue, bool editable = true, bool modulateable = true);
-
-    ParameterFloat * createFloatParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Double defaultValue, Double smallStep,
-                bool editable = true, bool modulateable = true);
-
-
-    ParameterInt * createIntParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Int defaultValue, Int minValue, Int maxValue, Int smallStep,
-                bool editable, bool modulateable);
-
-    ParameterInt * createIntParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Int defaultValue, Int smallStep,
-                bool editable, bool modulateable);
-
-    ParameterInt * createIntParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                Int defaultValue, bool editable, bool modulateable);
-
-    ParameterSelect * createBooleanParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const QString& offStatusTip, const QString& onStatusTip,
-                bool defaultValue, bool editable = true, bool modulateable = true);
-
-    ParameterSelect * createSelectParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const QStringList& valueIds, const QStringList& valueNames,
-                const QList<int>& valueList,
-                int defaultValue, bool editable = true, bool modulateable = true);
-
-    ParameterSelect * createSelectParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const QStringList& valueIds, const QStringList& valueNames,
-                const QStringList& statusTips,
-                const QList<int>& valueList,
-                int defaultValue, bool editable = true, bool modulateable = true);
-
-    ParameterText * createTextParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const QString& defaultValue,
-                bool editable = true, bool modulateable = true);
-
-    ParameterText * createTextParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                TextType textType,
-                const QString& defaultValue,
-                bool editable = true, bool modulateable = true);
-
-    ParameterFilename * createFilenameParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                IO::FileType fileType,
-                const QString& defaultValue = QString(), bool editable = true);
 
     // ------------------- audio ------------------
 public:
-    /** Returns the set audio block size for each thread. */
-    uint bufferSize(uint thread) const { return bufferSize_[thread]; }
-
     /** Returns the set sample rate in samples per second. */
-    uint sampleRate() const { return sampleRate_; }
+    uint sampleRate() const { return p_sampleRate_; }
 
     /** Returns the reciprocal of the set sample rate, e.g. 1.0 / sampleRate() */
-    Double sampleRateInv() const { return sampleRateInv_; }
-
-protected:
-
-    /** Sets the audio block size for this object and the given thread.
-        This function is only called <b>after</b> setNumberThreads().
-        Override to make your per-thread-storage of dsp blocks.
-        @note Be sure to call the ancestor class implementation in your derived method!
-    */
-    virtual void setBufferSize(uint bufferSize, uint thread);
+    Double sampleRateInv() const { return p_sampleRateInv_; }
 
     /** Sets the samplerate for the object.
         Override to initialize coefficients or stuff that depends on the samplerate.
@@ -557,88 +606,67 @@ protected:
         */
     virtual void setSampleRate(uint samplerate);
 
-    /** Override to create all audio sources for your object.
-        @note Be sure to call the ancestor class implementation before your derived code! */
-    virtual void createAudioSources() { };
+    // ------------------ spatial audio -------------------
+
+    uint numberSoundSources() const { return p_numberSoundSources_; }
 
     /** Override to create all microphones for your object.
         @note Be sure to call the ancestor class implementation before your derived code! */
-    virtual void createMicrophones() { };
-
-public:
-    /** Returns the audio sources of this object. */
-    const QList<AUDIO::AudioSource*>& audioSources() const { return objAudioSources_; }
-
-    /** Returns the microphones of this object. */
-    const QList<AUDIO::AudioMicrophone*>& microphones() const { return objMicrophones_; }
+    uint numberMicrophones() const { return p_numberMicrophones_; }
 
 protected:
 
-    /** Call this if you want to have createMicrophones() be called again. */
-    void requestCreateMicrophones();
+    void setNumberMicrophones(uint num);
+    void setNumberSoundSources(uint num);
 
-    /** Creates and returns a new audio source installed to this object.
-        The id is not really important, only for display purposes. */
-    AUDIO::AudioSource * createAudioSource(const QString& id = QString("audio"));
+public:
 
-    /** Creates and returns a new microphone installed to this object.
-        The id is not really important, only for display purposes. */
-    AUDIO::AudioMicrophone* createMicrophone(const QString& id = QString("micro"));
+    /** Override to update the transformations of the soundsources.
+        The base implementation simply copies the object transformation. */
+    virtual void calculateSoundSourceTransformation(
+                                        const TransformationBuffer * objectTransformation,
+                                        const QList<AUDIO::SpatialSoundSource*>&,
+                                        uint bufferSize, SamplePos pos, uint thread);
 
-    /** Creates @p number microphones.
-        The id is appended with a digit and the microphones are created and deleted as needed. */
-    QList<AUDIO::AudioMicrophone*> createOrDeleteMicrophones(const QString& id, uint number);
+    /** Override to fill the audio buffers of the sound sources.
+        The base implementation does nothing. */
+    virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,
+                                            uint bufferSize, SamplePos pos, uint thread)
+    { Q_UNUSED(bufferSize); Q_UNUSED(pos); Q_UNUSED(thread); }
 
-    /** Override to update the transformations of the AudioSource and Microphone objects
-        in the gfx thread.
-        The object's transformation is calculated before the call of this function.
-        @note Be sure to call the ancestor's method before in your derived method. */
-    virtual void updateAudioTransformations(Double time, uint thread)
-        { Q_UNUSED(time); Q_UNUSED(thread); };
-
-    /** Override to update the transformations of the AudioSource and Microphone objects
-        in the audio thread.
-        The object's transformation is calculated for the whole blocksize
-        before the call of this function.
-        @note Be sure to call the ancestor's method before in your derived method. */
-    virtual void updateAudioTransformations(Double time, uint blockSize, uint thread)
-        { Q_UNUSED(time); Q_UNUSED(blockSize); Q_UNUSED(thread); };
-
-    /** Perform all necessary audio calculations and fill the AUDIO::AudioSource class(es).
-        The block is given by bufferSize(thread).
-        The object transformation is calculated for the whole buffer size
-        before the call of this function.
-        */
-    virtual void performAudioBlock(SamplePos pos, uint thread) { Q_UNUSED(pos); Q_UNUSED(thread); };
+    /** Override to update the transformations of each microphone.
+        The base implementation simply copies the object transformation. */
+    virtual void calculateMicrophoneTransformation(
+                                        const TransformationBuffer * objectTransformation,
+                                        const QList<AUDIO::SpatialMicrophone*>&,
+                                        uint bufferSize, SamplePos pos, uint thread);
 
 public:
     // --------------- 3d --------------------------
 
+    // XXX transformations-per-object are just temporarily
+    //     before a generic render class wraps this
+
     /** Initialize transformation matrix */
-    void clearTransformation(uint thread, uint sample);
+    void clearTransformation() { p_transformation_ = Mat4(1); }
 
     /** Returns the transformation matrix of this object */
-    const Mat4& transformation(uint thread, uint sample) const
-        { return transformation_[thread][sample]; }
-
-    /** Returns a pointer to bufferSize(thread) number of matrices */
-    const Mat4* transformations(uint thread) const
-        { return &transformation_[thread][0]; }
+    const Mat4& transformation() const { return p_transformation_; }
 
     /** Returns the position of this object */
-    Vec3 position(uint thread, uint sample) const
-        { return Vec3(transformation_[thread][sample][3][0],
-                      transformation_[thread][sample][3][1],
-                      transformation_[thread][sample][3][2]); }
+    Vec3 position() const
+        { return Vec3(p_transformation_[3][0],
+                      p_transformation_[3][1],
+                      p_transformation_[3][2]); }
 
-    void setTransformation(int thread, int sample, const Mat4& mat)
-        { transformation_[thread][sample] = mat; }
+    void setTransformation(const Mat4& mat)
+        { p_transformation_ = mat; }
 
     /** Apply all transformations of this object to the given matrix. */
     void calculateTransformation(Mat4& matrix, Double time, uint thread) const;
 
     /** List of all direct transformation childs */
-    const QList<Transformation*> transformationObjects() const { return transformationObjects_; }
+    const QList<Transformation*> transformationObjects() const { return p_transformationObjects_; }
 
 
     // ------------------ files ----------------------
@@ -663,93 +691,78 @@ private:
     void operator=(const Object&);
 
     /** Implementation of deserializeTree() */
-    static Object * deserializeTree_(IO::DataStream&);
+    static Object * p_deserializeTree_(IO::DataStream&);
 
     /** Removes the child from the child list, nothing else. */
-    bool takeChild_(Object * child);
+    bool p_takeChild_(Object * child);
 
     /** Adds the object to child list, nothing else */
-    Object * addChildObjectHelper_(Object * object, int insert_index = -1);
-
-    /** Makes all idNames in the tree unique regarding the tree of @p root.
-        The tree in @p root can be an actual parent of the object or not. */
-    void makeUniqueIds_(Object * root);
-
-    /** Makes all idNames in the tree unique regarding the @p existingNames.
-        @p existingNames will be modified with the changed idNames. */
-    void makeUniqueIds_(QSet<QString>& existingNames);
+    Object * p_addChildObjectHelper_(Object * object, int insert_index = -1);
 
     /** Called on changes to the child list */
-    void childrenChanged_();
+    void p_childrenChanged_();
 
     /** Fills the transformationChilds() array */
-    void collectTransformationObjects_();
+    void p_collectTransformationObjects_();
 
     //void setNumberThreadsRecursive_(int threads);
 
     // ---------- parameter s-----------------
 
-    /** Writes all parameters to the stream */
-    static void serializeParameters_(IO::DataStream&, const Object *);
-    /** Reads all parameters from stream.
-        @note The parameters MUST be created before! */
-    static void deserializeParameters_(IO::DataStream&, Object*);
+    Parameters * p_parameters_;
 
-    void passDownActivityScope_(ActivityScope parent_scope);
-
-    // ------------ properties ---------------
-
-    QString idName_, name_;
-
-    bool canBeDeleted_;
-
-    // ----------- tree ----------------------
-
-    Object * parentObject_;
-    QList<Object*> childObjects_;
-    QList<Transformation*> transformationObjects_;
-    bool childrenHaveChanged_;
-
-    // ---------- threads and blocksize ------
-
-    uint numberThreads_;
-    std::vector<uint> bufferSize_;
-
-    // ----------- parameter -----------------
-
-    QList<Parameter*> parameters_;
-    QString currentParameterGroupId_,
-            currentParameterGroupName_;
+    void p_passDownActivityScope_(ActivityScope parent_scope);
 
     // --------- default parameters ----------
 
-    ParameterSelect * paramActiveScope_;
+    ParameterSelect * p_paramActiveScope_;
+
+    // ------------ properties ---------------
+
+    QString p_idName_, p_name_;
+
+    bool p_canBeDeleted_;
+
+    QMap<QString, QMap<qint64, QVariant>> p_attachedData_;
+
+    // ----------- tree ----------------------
+
+    Object * p_parentObject_;
+    QList<Object*> p_childObjects_;
+    QList<Transformation*> p_transformationObjects_;
+    bool p_childrenHaveChanged_;
+
+    // ---------- outputs --------------------
+
+    QList<ModulatorOutput*> p_modulatorOuts_;
+
+    // ---------- per-thread store -----------
+
+    uint p_numberThreads_;
 
     // ------------ audio --------------------
 
-    QList<AUDIO::AudioSource*> objAudioSources_;
-    QList<AUDIO::AudioMicrophone*> objMicrophones_;
+    // requested count
+    uint p_numberSoundSources_,
+         p_numberMicrophones_;
 
-    uint sampleRate_;
-    Double sampleRateInv_;
+    uint p_sampleRate_;
+    Double p_sampleRateInv_;
 
     // ------------ runtime ------------------
 
     ActivityScope
     /** activity scope passed down from parents */
-        parentActivityScope_,
+        p_parentActivityScope_,
     /** current requested activity scope */
-        currentActivityScope_;
+        p_currentActivityScope_;
 
     // ----------- position ------------------
-
-    std::vector<std::vector<Mat4>> transformation_;
+    // XXX deprecated
+    Mat4 p_transformation_;
 
 };
 
-/** Installs the object in ObjectFactory.
-    @note Prefere to use MO_REGISTER_OBJECT to do the job */
-extern bool registerObject_(Object *);
 
 
 
@@ -757,12 +770,13 @@ extern bool registerObject_(Object *);
 
 // ---------------------- template impl -------------------
 
+
 template <class T>
 QList<T*> Object::findChildObjects(const QString& id, bool recursive, Object * ignore) const
 {
     QList<T*> list;
 
-    for (auto o : childObjects_)
+    for (auto o : p_childObjects_)
     {
         if (o != ignore
             && (qobject_cast<T*>(o))
@@ -782,7 +796,7 @@ QList<T*> Object::findChildObjectsStopAt(
 {
     QList<T*> list;
 
-    for (auto o : childObjects_)
+    for (auto o : p_childObjects_)
     {
         if (o != stopAt
             && (qobject_cast<T*>(o))
@@ -800,15 +814,15 @@ QList<T*> Object::findChildObjectsStopAt(
 template <class T>
 int Object::indexOfLastChild(int last) const
 {
-    if (childObjects_.empty())
+    if (p_childObjects_.empty())
         return -1;
 
-    if (last < 0 || last >= childObjects_.size())
-        last = childObjects_.size() - 1;
+    if (last < 0 || last >= p_childObjects_.size())
+        last = p_childObjects_.size() - 1;
 
     for (int i = last; i>=0; --i)
     {
-        if (qobject_cast<T*>(childObjects_[i]))
+        if (qobject_cast<T*>(p_childObjects_[i]))
             return i;
     }
 

@@ -6,11 +6,10 @@
     <p>All rights reserved</p>
 
     <p>created 8/12/2014</p>
-*/
 
-/* resources:
-    http://musicdsp.org/archive.php?classid=3#229
-    http://musicdsp.org/showArchiveComment.php?ArchiveID=229
+    adapted from:
+        http://musicdsp.org/archive.php?classid=3#229
+        http://musicdsp.org/showArchiveComment.php?ArchiveID=229
 */
 
 #ifndef MOSRC_AUDIO_TOOL_CHEBYCHEVFILTER_H
@@ -74,14 +73,14 @@ public:
     void updateCoefficients();
 
     /** Consequently call this to filter the input signal */
-    void process(const F32 * input, F32 * output, uint blockSize)
-        { process(input, 1, output, 1, blockSize); }
+    void process(const F32 * input, F32 * output, uint blockSize, F32 amp = F32(1))
+        { process(input, 1, output, 1, blockSize, amp); }
 
     /** Consequently call this to filter the input signal.
         The strides define the spacing between consecutive samples. */
     void process(const F32 * input, uint inputStride,
                        F32 * output, uint outputStride,
-                       uint blockSize);
+                       uint blockSize, F32 amp = F32(1));
 
 private:
 

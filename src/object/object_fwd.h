@@ -17,32 +17,47 @@ namespace MO {
     enum TextType
     {
         TT_PLAIN_TEXT,
-        TT_EQUATION
+        TT_EQUATION,
+        TT_APP_STYLESHEET,
+        TT_ANGELSCRIPT,
+        TT_GLSL
     };
 
     namespace IO { class DataStream; }
-    namespace AUDIO { class AudioSource; class AudioMicrophone; }
     namespace GL { class LightSettings; class CameraSpace; }
+    namespace MATH { class Timeline1D; }
+    namespace AUDIO
+    {
+        class SpatialSoundSource;
+        class SpatialMicrophone;
+        class AudioBuffer;
+        class Configuration;
+    }
 
     class Object;
     class Scene;
     class Camera;
     class LightSource;
-    class Microphone;
-    class SoundSource;
     class ObjectGl;
     class Model3d;
     class Sequences;
     class Sequence;
     class SequenceFloat;
+    class Clip;
+    class ClipController;
+    class Track;
+    class TrackFloat;
 
     class Parameter;
+    class Parameters;
     class ParameterInt;
     class ParameterFilename;
     class ParameterFloat;
     class ParameterSelect;
     class ParameterText;
+    class ParameterTimeline1D;
 
+    class TransformationBuffer;
     class Transformation;
     class Rotation;
     class Scale;
@@ -50,22 +65,26 @@ namespace MO {
     class Look;
     class LookAt;
     class Mix;
-    class Track;
-    class TrackFloat;
 
-    class AudioUnit;
-    class FilterUnit;
-
+    class ModulatorOutput;
     class Modulator;
     class ModulatorFloat;
 
     class ModulatorObject;
     class ModulatorObjectFloat;
 
+    class AudioObject;
+    class AudioObjectConnection;
+    class AudioObjectConnections;
+
     class ColorPostProcessingSetting;
+    class SynthSetting;
     class TextureSetting;
 
-    class ObjectTreeModel;
+    class ObjectFilter;
+
+    class ObjectEditor;
+    class ObjectDspPath;
     class ObjectTreeMimeData;
 
 } // namespace MO

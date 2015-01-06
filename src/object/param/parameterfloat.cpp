@@ -56,6 +56,13 @@ void ParameterFloat::deserialize(IO::DataStream &io)
     io >> value_;
 }
 
+int ParameterFloat::getModulatorTypes() const
+{
+    return Object::T_TRACK_FLOAT
+         | Object::T_SEQUENCE_FLOAT
+         | Object::T_MODULATOR_OBJECT_FLOAT
+         | Object::T_AUDIO_OBJECT;
+}
 
 Double ParameterFloat::getModulationValue(Double time, uint thread) const
 {
@@ -69,13 +76,13 @@ Double ParameterFloat::getModulationValue(Double time, uint thread) const
 
 
 
-Modulator * ParameterFloat::getModulator(const QString& id)
+Modulator * ParameterFloat::getModulator(const QString& id, const QString& outputId)
 {
-    Modulator * m = findModulator(id);
+    Modulator * m = findModulator(id, outputId);
     if (m)
         return m;
 
-    m = new ModulatorFloat(idName(), id, object());
+    m = new ModulatorFloat(idName(), id, outputId, this, object());
     addModulator_(m);
 
     return m;

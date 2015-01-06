@@ -29,15 +29,25 @@
 namespace MO {
 namespace GUI {
 
+namespace
+{
+    QGLFormat createFormat() {
+        QGLFormat format;
+        format.setVersion(3, 3);
+        format.setProfile(QGLFormat::CoreProfile);
+        return format;
+    }
+}
 
 Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
-    QGLWidget       (parent),
+    QGLWidget       (createFormat(), parent),
     renderMode_     (mode),
     cameraMode_     (CM_FREE),
     isGlInitialized_(false),
     closeRequest_   (false),
     modeChangeRequest_(false),
-    orthoScale_     (3.f),
+    orthoScaleX_    (3.f),
+    orthoScaleY_    (3.f),
     fboSize_        (512, 512),
     camera_         (new GEOM::FreeCamera()),
     fbo_            (0),
@@ -48,9 +58,6 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
 
     //if (mode == RM_DIRECT)
     {
-        QGLFormat f(format());
-        f.setDepth(true);
-        setFormat(f);
     }
 
     viewSet(VD_FRONT, 10);
@@ -71,6 +78,8 @@ Basic3DWidget::~Basic3DWidget()
 
 void Basic3DWidget::setFboSize(const QSize & s)
 {
+    MO_DEBUG_GL("Basic3DWidget::setFboSize(" << s.width() << ", " << s.height() << ")");
+
     // XXX fbo_ and fboSize_ might be different when modeChangeRequest_ is pending
     //     need to think about that ...
     if (fbo_ && (int)fbo_->width() == s.width() && (int)fbo_->height() == s.height())
@@ -313,8 +322,17 @@ void Basic3DWidget::closeEvent(QCloseEvent * e)
 void Basic3DWidget::initializeGL()
 {
     MO_DEBUG_GL("Basic3DWidget::initializeGL()");
-
     makeCurrent();
+    //glbinding::Binding::initialize(false);
+
+    const QString
+            vendor = (const char *)glGetString(gl::GL_VENDOR),
+            version = (const char *)glGetString(gl::GL_VERSION),
+            renderer = (const char *)glGetString(gl::GL_RENDERER);
+
+    MO_DEBUG(     "vendor   " << vendor
+                << "\nversion  " << version
+                << "\nrenderer " << renderer);
 
     MO_EXTEND_EXCEPTION(
         createGLStuff_(),
@@ -350,7 +368,9 @@ void Basic3DWidget::releaseGL_()
 
 void Basic3DWidget::createGLStuff_()
 {
-    if (renderMode_ == RM_FULLDOME_CUBE || renderMode_ == RM_FRAMEBUFFER)
+    if (renderMode_ == RM_FULLDOME_CUBE
+        || renderMode_ == RM_FRAMEBUFFER
+        || renderMode_ == RM_FRAMEBUFFER_ORTHO)
     {
         screenQuad_ = new GL::ScreenQuad("basic3dwidget", GL::ER_THROW);
         screenQuad_->setAntialiasing(3);
@@ -393,7 +413,12 @@ void Basic3DWidget::releaseGLStuff_()
     }
 }
 
-void Basic3DWidget::resizeGL(int w, int h)
+void Basic3DWidget::resizeGL(int , int )
+{
+    updateProjection_();
+}
+
+void Basic3DWidget::updateProjection_()
 {
     float angle = 63;
 
@@ -411,15 +436,23 @@ void Basic3DWidget::resizeGL(int w, int h)
     else
     if (renderMode_ == RM_DIRECT_ORTHO)
     {
-        const float aspect = (float)w/h;
-        const float scale = orthoScale_;
-        projectionMatrix_ = glm::ortho(-scale*aspect, scale*aspect, -scale, scale, 0.01f, 1000.f);
+        const float aspect = (float)width()/height();
+        projectionMatrix_ = glm::ortho(-orthoScaleX_*aspect, orthoScaleX_*aspect,
+                                       -orthoScaleY_, orthoScaleY_, 0.001f, 1000.f);
+    }
+    else
+    if (renderMode_ == RM_FRAMEBUFFER_ORTHO)
+    {
+        const float aspect = (float)fbo_->width()/fbo_->height();
+        projectionMatrix_ = glm::ortho(-orthoScaleX_*aspect, orthoScaleX_*aspect,
+                                       -orthoScaleY_, orthoScaleY_, 0.001f, 1000.f);
     }
     else
         projectionMatrix_ =
-                MATH::perspective(angle, (float)w/h, 0.01f, 1000.0f);
+                MATH::perspective(angle, (float)width()/height(), 0.01f, 1000.0f);
 
-    MO_CHECK_GL( glViewport(0,0,w,h) );
+    int pixelsize = 1; //devicePixelRatio(); //Retina support
+    MO_CHECK_GL( glViewport(0,0,pixelsize*width(),pixelsize*height()) );
 }
 
 void Basic3DWidget::paintGL()
@@ -442,6 +475,8 @@ void Basic3DWidget::paintGL()
         resizeGL(width(), height());
     }
 
+    prepareDrawGL();
+
     Mat4 identity(1.0);
 
     using namespace gl;
@@ -457,7 +492,7 @@ void Basic3DWidget::paintGL()
         return;
     }
 
-    if (renderMode_ == RM_FRAMEBUFFER)
+    if (renderMode_ == RM_FRAMEBUFFER || renderMode_ == RM_FRAMEBUFFER_ORTHO)
     {
         fbo_->bind();
         fbo_->setViewport();
@@ -472,7 +507,9 @@ void Basic3DWidget::paintGL()
         fbo_->unbind();
 
         // draw to screen
-        MO_CHECK_GL( gl::glViewport(0,0,width(), height()) );
+        int pixelsize = devicePixelRatio(); // Retina support
+        MO_DEBUG_GL("Basic3DWidget::paintGL()")
+        MO_CHECK_GL( gl::glViewport(0,0,width()*pixelsize, height()*pixelsize) );
         MO_CHECK_GL( gl::glClearColor(0.1, 0.1, 0.1, 1.0) );
         MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
         MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
@@ -515,7 +552,9 @@ void Basic3DWidget::paintGL()
         fbo_->unbind();
 
         // draw to screen
-        MO_CHECK_GL( gl::glViewport(0,0,width(), height()) );
+        int pixelsize = devicePixelRatio(); // Retina support
+        MO_DEBUG_GL("Basic3DWidget::paintGL()")
+        MO_CHECK_GL( gl::glViewport(0,0,width()*pixelsize, height()*pixelsize) );
         MO_CHECK_GL( gl::glClearColor(0, 0, 0, 1.0) );
         MO_CHECK_GL( gl::glClear(GL_COLOR_BUFFER_BIT) );
         MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );

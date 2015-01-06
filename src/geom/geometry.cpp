@@ -21,6 +21,8 @@
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
 #include "math/functions.h"
+#include "math/vector.h"
+#include "math/intersection.h"
 
 using namespace gl;
 
@@ -34,6 +36,7 @@ const GLenum Geometry::normalEnum       = GL_FLOAT;
 const GLenum Geometry::colorEnum        = GL_FLOAT;
 const GLenum Geometry::textureCoordEnum = GL_FLOAT;
 const GLenum Geometry::indexEnum        = GL_UNSIGNED_INT;
+const GLenum Geometry::attributeEnum    = GL_FLOAT;
 
 
 namespace
@@ -91,14 +94,144 @@ Geometry::Geometry()
 {
 }
 
+Geometry::~Geometry()
+{
+    clear();
+}
+
+void Geometry::clear()
+{
+    vertex_.clear();
+    normal_.clear();
+    color_.clear();
+    texcoord_.clear();
+    triIndex_.clear();
+    lineIndex_.clear();
+    pointIndex_.clear();
+    indexMap_.clear();
+    for (auto i : attributes_)
+        delete i.second;
+    attributes_.clear();
+}
+
+void Geometry::copyFrom(const Geometry &o)
+{
+    clear();
+
+    vertex_ = o.vertex_;
+    normal_ = o.normal_;
+    color_ = o.color_;
+    texcoord_ = o.texcoord_;
+    triIndex_ = o.triIndex_;
+    lineIndex_ = o.lineIndex_;
+    pointIndex_ = o.pointIndex_;
+    indexMap_ = o.indexMap_;
+
+    for (auto i : o.attributes_)
+        attributes_.insert( std::make_pair(i.first, new UserAttribute(*i.second)) );
+}
+
+
+// ---------------- attributes --------------
+
+Geometry::UserAttribute * Geometry::getAttribute(const QString &name)
+{
+    auto i = attributes_.find(name);
+    if (i == attributes_.end())
+        return 0;
+    return i->second;
+}
+
+const Geometry::UserAttribute * Geometry::getAttribute(const QString &name) const
+{
+    const auto i = attributes_.find(name);
+    if (i == attributes_.end())
+        return 0;
+    return i->second;
+}
+
+const Geometry::AttributeType * Geometry::attributes(const QString& name) const
+{
+    auto a = getAttribute(name);
+    return a ? &a->data[0] : 0;
+}
+
+QString Geometry::UserAttribute::typeName() const
+{
+    switch (numComponents)
+    {
+        default: return "float";
+        case 2: return "vec2";
+        case 3: return "vec3";
+        case 4: return "vec4";
+    }
+}
+
+QString Geometry::UserAttribute::declaration() const
+{
+    return "in " + typeName() + " " + attributeName + ";\n";
+}
+
+QStringList Geometry::getAttributeNames() const
+{
+    QStringList list;
+    for (auto i : attributes_)
+        list << i.first;
+    return list;
+}
+
+Geometry::UserAttribute * Geometry::addAttribute(const QString &name, unsigned int numComponents)
+{
+    auto a = getAttribute(name);
+    if (!a)
+    {
+        a = new UserAttribute(name, numComponents);
+        attributes_.insert( std::make_pair(name, a) );
+    }
+
+    if (a->numComponents != numComponents)
+    {
+        a->numComponents = numComponents;
+        a->curValue.resize(numComponents, 0.f);
+    }
+
+    // reserve as much data as currently needed
+    a->data.resize(numVertices() * a->numComponents);
+
+    return a;
+}
+
+void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType y, AttributeType z, AttributeType w)
+{
+    auto a = getAttribute(name);
+    if (!a)
+        return;
+
+    a->curValue[0] = x;
+    if (a->curValue.size() >= 2)
+        a->curValue[1] = y;
+    if (a->curValue.size() >= 3)
+        a->curValue[2] = z;
+    if (a->curValue.size() >= 4)
+        a->curValue[3] = w;
+}
+
+
 long unsigned int Geometry::memory() const
 {
-    return numVertexBytes()
+    long unsigned int bytes =
+              numVertexBytes()
             + numNormalBytes()
             + numColorBytes()
             + numTextureCoordBytes()
             + numTriangleIndexBytes()
-            + numLineIndexBytes();
+            + numLineIndexBytes()
+            + numPointIndexBytes();
+
+    for (auto i : attributes_)
+        bytes += i.second->data.size() * sizeof(AttributeType);
+
+    return bytes;
 }
 
 void Geometry::getExtent(VertexType * minX, VertexType * maxX,
@@ -132,14 +265,57 @@ void Geometry::getExtent(Vec3 * minimum, Vec3 * maximum) const
     }
 }
 
-void Geometry::clear()
+bool Geometry::intersects_any(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec3 *pos) const
 {
-    vertex_.clear();
-    normal_.clear();
-    color_.clear();
-    texcoord_.clear();
-    triIndex_.clear();
+    // XXX todo: Test against bounding-box first!
+
+    for (uint i=0; i<numTriangles(); ++i)
+    {
+        const Vec3 t0 = getVertex(triIndex_[i * numTriangleIndexComponents()]),
+                   t1 = getVertex(triIndex_[i * numTriangleIndexComponents() + 1]),
+                   t2 = getVertex(triIndex_[i * numTriangleIndexComponents() + 2]);
+
+        if (MATH::intersect_ray_triangle(ray_origin, ray_direction,
+                                         t0, t1, t2, pos))
+            return true;
+    }
+
+    return false;
 }
+
+bool Geometry::intersects(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec3 *outpos) const
+{
+    // XXX todo: Test against bounding-box first!
+
+    Float closest = -1;
+    Vec3 pos;
+
+    for (uint i=0; i<numTriangles(); ++i)
+    {
+        const Vec3 t0 = getVertex(triIndex_[i * numTriangleIndexComponents()]),
+                   t1 = getVertex(triIndex_[i * numTriangleIndexComponents() + 1]),
+                   t2 = getVertex(triIndex_[i * numTriangleIndexComponents() + 2]);
+
+        if (MATH::intersect_ray_triangle(ray_origin, ray_direction,
+                                         t0, t1, t2, &pos))
+        {
+            // no need to look further, outpos is not used
+            if (!outpos)
+                return true;
+
+            Float dist = glm::distance(ray_origin, pos);
+            if (dist < closest || closest < 0)
+            {
+                closest = dist;
+                *outpos = pos;
+            }
+        }
+    }
+
+    return closest >= 0;
+}
+
+
 
 void Geometry::setSharedVertices(bool enable, VertexType threshold)
 {
@@ -148,9 +324,18 @@ void Geometry::setSharedVertices(bool enable, VertexType threshold)
     if (!enable)
     {
         std::map<Key_, MapStruct_> tmp;
-        indexMap_.swap(tmp);
+        indexMap_.swap(tmp); // the seriously-clear method
     }
 
+}
+
+bool Geometry::checkTriangle(const Vec3 & a, const Vec3 & b, const Vec3 & c)
+{
+    const Float small = 0.00001;
+    return !(glm::distance(a, b) < small
+          || glm::distance(a, c) < small
+          || glm::distance(b, c) < small
+           );
 }
 
 Geometry::IndexType Geometry::addVertex(
@@ -204,6 +389,14 @@ Geometry::IndexType Geometry::addVertex(
     *tex = m1 * *tex + m2 * u; ++tex;
     *tex = m1 * *tex + m2 * v;
 
+    for (auto i : attributes_)
+    {
+        UserAttribute * ua = i.second;
+        AttributeType * a = &ua->data[idx * ua->numComponents];
+        for (uint j=0; j<ua->numComponents; ++j)
+            a[j] = m1 * a[j] + m2 * ua->curValue[j];
+    }
+
     return idx;
 }
 
@@ -238,21 +431,57 @@ Geometry::IndexType Geometry::addVertexAlways(
     texcoord_.push_back(u);
     texcoord_.push_back(v);
 
+    for (auto i : attributes_)
+    {
+        UserAttribute * a = i.second;
+        for (uint j = 0; j < a->numComponents; ++j)
+            a->data.push_back(a->curValue[j]);
+    }
+
     return numVertices() - 1;
 }
 
 void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
 {
+    MO_ASSERT(p1 < numVertices(), "out of range " << p1 << "/" << numVertices());
+    MO_ASSERT(p2 < numVertices(), "out of range " << p2 << "/" << numVertices());
+    MO_ASSERT(p3 < numVertices(), "out of range " << p3 << "/" << numVertices());
     triIndex_.push_back(p1);
     triIndex_.push_back(p2);
     triIndex_.push_back(p3);
 }
 
+void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
+{
+    MO_ASSERT(p1 < numVertices(), "out of range " << p1 << "/" << numVertices());
+    MO_ASSERT(p2 < numVertices(), "out of range " << p2 << "/" << numVertices());
+    MO_ASSERT(p3 < numVertices(), "out of range " << p3 << "/" << numVertices());
+    const Vec3
+            pos1 = getVertex(p1),
+            pos2 = getVertex(p2),
+            pos3 = getVertex(p3);
+    if (checkTriangle(pos1, pos2, pos3))
+    {
+        triIndex_.push_back(p1);
+        triIndex_.push_back(p2);
+        triIndex_.push_back(p3);
+    }
+}
+
 void Geometry::addLine(IndexType p1, IndexType p2)
 {
+    MO_ASSERT(p1 < numVertices(), "out of range " << p1 << "/" << numVertices());
+    MO_ASSERT(p2 < numVertices(), "out of range " << p2 << "/" << numVertices());
     lineIndex_.push_back(p1);
     lineIndex_.push_back(p2);
 }
+
+void Geometry::addPoint(IndexType p1)
+{
+    MO_ASSERT(p1 < numVertices(), "out of range " << p1 << "/" << numVertices());
+    pointIndex_.push_back(p1);
+}
+
 
 
 Vec3 Geometry::getVertex(const IndexType i) const
@@ -290,9 +519,11 @@ const Geometry::VertexType * Geometry::line(
 }
 
 
-void Geometry::copyFrom(const Geometry &other)
+void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 {
-    if (other.numTriangles())
+    // XXX Doesn't copy attributes!
+
+    // copy triangles
     for (uint i=0; i<other.numTriangles(); ++i)
     {
         IndexType
@@ -301,9 +532,9 @@ void Geometry::copyFrom(const Geometry &other)
                 ot3 = other.triIndex_[i * 3 + 2],
 
                 t1 = addVertex(
-                    other.vertex_[ot1 * other.numVertexComponents()],
-                    other.vertex_[ot1 * other.numVertexComponents() + 1],
-                    other.vertex_[ot1 * other.numVertexComponents() + 2],
+                    other.vertex_[ot1 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ot1 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ot1 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ot1 * other.numNormalComponents()],
                     other.normal_[ot1 * other.numNormalComponents() + 1],
                     other.normal_[ot1 * other.numNormalComponents() + 2],
@@ -314,9 +545,9 @@ void Geometry::copyFrom(const Geometry &other)
                     other.texcoord_[ot1 * other.numTextureCoordComponents()],
                     other.texcoord_[ot1 * other.numTextureCoordComponents() + 1]),
                 t2 = addVertex(
-                    other.vertex_[ot2 * other.numVertexComponents()],
-                    other.vertex_[ot2 * other.numVertexComponents() + 1],
-                    other.vertex_[ot2 * other.numVertexComponents() + 2],
+                    other.vertex_[ot2 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ot2 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ot2 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ot2 * other.numNormalComponents()],
                     other.normal_[ot2 * other.numNormalComponents() + 1],
                     other.normal_[ot2 * other.numNormalComponents() + 2],
@@ -327,9 +558,9 @@ void Geometry::copyFrom(const Geometry &other)
                     other.texcoord_[ot2 * other.numTextureCoordComponents()],
                     other.texcoord_[ot2 * other.numTextureCoordComponents() + 1]),
                 t3 = addVertex(
-                    other.vertex_[ot3 * other.numVertexComponents()],
-                    other.vertex_[ot3 * other.numVertexComponents() + 1],
-                    other.vertex_[ot3 * other.numVertexComponents() + 2],
+                    other.vertex_[ot3 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ot3 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ot3 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ot3 * other.numNormalComponents()],
                     other.normal_[ot3 * other.numNormalComponents() + 1],
                     other.normal_[ot3 * other.numNormalComponents() + 2],
@@ -342,7 +573,7 @@ void Geometry::copyFrom(const Geometry &other)
 
         addTriangle(t1, t2, t3);
     }
-    else
+    // copy lines
     for (uint i=0; i<other.numLines(); ++i)
     {
         IndexType
@@ -350,9 +581,9 @@ void Geometry::copyFrom(const Geometry &other)
                 ol2 = other.lineIndex_[i * 2 + 1],
 
                 l1 = addVertex(
-                    other.vertex_[ol1 * other.numVertexComponents()],
-                    other.vertex_[ol1 * other.numVertexComponents() + 1],
-                    other.vertex_[ol1 * other.numVertexComponents() + 2],
+                    other.vertex_[ol1 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ol1 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ol1 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ol1 * other.numNormalComponents()],
                     other.normal_[ol1 * other.numNormalComponents() + 1],
                     other.normal_[ol1 * other.numNormalComponents() + 2],
@@ -363,9 +594,9 @@ void Geometry::copyFrom(const Geometry &other)
                     other.texcoord_[ol1 * other.numTextureCoordComponents()],
                     other.texcoord_[ol1 * other.numTextureCoordComponents() + 1]),
                 l2 = addVertex(
-                    other.vertex_[ol2 * other.numVertexComponents()],
-                    other.vertex_[ol2 * other.numVertexComponents() + 1],
-                    other.vertex_[ol2 * other.numVertexComponents() + 2],
+                    other.vertex_[ol2 * other.numVertexComponents()] + offset.x,
+                    other.vertex_[ol2 * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[ol2 * other.numVertexComponents() + 2] + offset.z,
                     other.normal_[ol2 * other.numNormalComponents()],
                     other.normal_[ol2 * other.numNormalComponents() + 1],
                     other.normal_[ol2 * other.numNormalComponents() + 2],
@@ -379,6 +610,7 @@ void Geometry::copyFrom(const Geometry &other)
         addLine(l1, l2);
     }
 }
+
 
 
 void Geometry::scale(VertexType x, VertexType y, VertexType z)
@@ -443,7 +675,7 @@ void Geometry::calculateTriangleNormals()
             p3 = Vec3(vertex_[v3*3], vertex_[v3*3+1], vertex_[v3*3+2]);
 
         // calculate the normal of the triangle
-        Vec3 n = glm::normalize( glm::cross( p2-p1, p3-p1 ) );
+        Vec3 n = MATH::normalize_safe( glm::cross( p2-p1, p3-p1 ) );
 
         // copy/add to normals array
         normal_[v1*3  ] += n[0];
@@ -481,7 +713,7 @@ void Geometry::invertNormals()
 
 void Geometry::invertTextureCoords(bool invX, bool invY)
 {
-    MO_ASSERT(numTextureCoordComponents() == 2, "something changed");
+    MO_ASSERT(numTextureCoordComponents() == 2, "code not up-to-date");
 
     const uint si = texcoord_.size()/2;
     if (invX)
@@ -500,7 +732,7 @@ void Geometry::invertTextureCoords(bool invX, bool invY)
 
 void Geometry::shiftTextureCoords(TextureCoordType offsetX, TextureCoordType offsetY)
 {
-    MO_ASSERT(numTextureCoordComponents() == 2, "something changed");
+    MO_ASSERT(numTextureCoordComponents() == 2, "code not up-to-date");
 
     for (uint i=0; i<texcoord_.size(); i+=2)
     {
@@ -511,7 +743,7 @@ void Geometry::shiftTextureCoords(TextureCoordType offsetX, TextureCoordType off
 
 void Geometry::scaleTextureCoords(TextureCoordType scaleX, TextureCoordType scaleY)
 {
-    MO_ASSERT(numTextureCoordComponents() == 2, "something changed");
+    MO_ASSERT(numTextureCoordComponents() == 2, "code not up-to-date");
 
     for (uint i=0; i<texcoord_.size(); i+=2)
     {
@@ -565,7 +797,8 @@ void Geometry::unGroupVertices()
             addTriangle(t1, t2, t3);
         }
     }
-    else
+
+    if (numLines())
     {
         auto index = lineIndex_;
         lineIndex_.clear();
@@ -597,10 +830,10 @@ void Geometry::convertToLines()
     if (!numTriangles())
         return;
 
-    lineIndex_.clear();
+    //lineIndex_.clear();
 
     // test for already-connected
-    typedef long unsigned int Hash;
+    typedef quint64 Hash;
     QSet<Hash> hash;
 
     for (uint i=0; i<numTriangles(); ++i)
@@ -666,9 +899,11 @@ void Geometry::normalizeSphere(VertexType scale, VertexType normalization)
     }
 }
 
-bool Geometry::transformWithEquation(const QString &equationX,
-                                     const QString &equationY,
-                                     const QString &equationZ)
+bool Geometry::transformWithEquation(const QString& equationX,
+                                     const QString& equationY,
+                                     const QString& equationZ,
+                                     const QStringList &constantNames,
+                                     const QList<Double> &constantValues)
 {
     Double vx, vy, vz, vindex;
 
@@ -679,6 +914,9 @@ bool Geometry::transformWithEquation(const QString &equationX,
         equ[i].variables().add("y", &vy, "");
         equ[i].variables().add("z", &vz, "");
         equ[i].variables().add("i", &vindex, "");
+
+        for (auto j=0; j<constantNames.size(); ++j)
+            equ[i].variables().add(constantNames[j].toStdString(), constantValues[j], "");
     }
 
     if (!equ[0].parse(equationX.toStdString()))
@@ -711,10 +949,78 @@ bool Geometry::transformWithEquation(const QString &equationX,
     return true;
 }
 
+
+bool Geometry::transformWithEquation(const QString& equation,
+                                     const QStringList &constantNames,
+                                     const QList<Double> &constantValues)
+{
+    Double vx, vy, vz, vindex, vs, vt,
+            red,green,blue,alpha,bright;
+
+    PPP_NAMESPACE::Parser equ;
+    equ.variables().add("x", &vx, "");
+    equ.variables().add("y", &vy, "");
+    equ.variables().add("z", &vz, "");
+    equ.variables().add("i", &vindex, "");
+    equ.variables().add("s", &vs, "");
+    equ.variables().add("t", &vt, "");
+    equ.variables().add("red", &red, "");
+    equ.variables().add("green", &green, "");
+    equ.variables().add("blue", &blue, "");
+    equ.variables().add("alpha", &alpha, "");
+    equ.variables().add("bright", &bright, "");
+
+    for (auto j=0; j<constantNames.size(); ++j)
+        equ.variables().add(constantNames[j].toStdString(), constantValues[j], "");
+
+    if (!equ.parse(equation.toStdString()))
+        return false;
+
+    for (uint i=0; i<numVertices(); ++i)
+    {
+        // copy input variables
+        VertexType * v = &vertex_[i * numVertexComponents()];
+        vx = v[0];
+        vy = v[1];
+        vz = v[2];
+        vindex = i;
+        TextureCoordType * t = &texcoord_[i * numTextureCoordComponents()];
+        vs = t[0];
+        vt = t[1];
+        vindex = i;
+        ColorType * c = &color_[i * numColorComponents()];
+        red = c[0];
+        green = c[1];
+        blue = c[2];
+        alpha = c[3];
+        bright = 1;
+
+        equ.eval();
+
+        // assign result from equation
+        v[0] = vx;
+        v[1] = vy;
+        v[2] = vz;
+        t[0] = vs;
+        t[1] = vt;
+        c[0] = std::max(0.0, std::min(1.0, red * bright ));
+        c[1] = std::max(0.0, std::min(1.0, green * bright ));
+        c[2] = std::max(0.0, std::min(1.0, blue * bright ));
+        c[3] = std::max(0.0, std::min(1.0, alpha ));
+
+        progress_ = (i * 100) / numVertices();
+    }
+
+    return true;
+}
+
+
 bool Geometry::transformPrimitivesWithEquation(
                     const QString &equationX,
                     const QString &equationY,
-                    const QString &equationZ)
+                    const QString &equationZ,
+                    const QStringList& constantNames,
+                    const QList<Double>& constantValues)
 {
     Double vx, vy, vz, vnx, vny, vnz, vs, vt,
            vpx[3], vpy[3], vpz[3],
@@ -759,6 +1065,8 @@ bool Geometry::transformPrimitivesWithEquation(
         equ[i].variables().add("t3", &vpt[2], "");
         equ[i].variables().add("i", &vi, "");
         equ[i].variables().add("p", &vp, "");
+        for (auto j=0; j<constantNames.size(); ++j)
+            equ[i].variables().add(constantNames[j].toStdString(), constantValues[j], "");
     }
 
     if (!equ[0].parse(equationX.toStdString()))
@@ -768,7 +1076,6 @@ bool Geometry::transformPrimitivesWithEquation(
     if (!equ[2].parse(equationZ.toStdString()))
         return false;
 
-    if (!numTriangles())
     for (uint i=0; i<numLines(); ++i)
     {
         // get vertex indices
@@ -821,7 +1128,6 @@ bool Geometry::transformPrimitivesWithEquation(
         progress_ = (i * 100) / numLines();
     }
 
-    else // triangles
     for (uint i=0; i<numTriangles(); ++i)
     {
         // get vertex indices
@@ -883,59 +1189,241 @@ bool Geometry::transformPrimitivesWithEquation(
     return true;
 }
 
-bool Geometry::transformTexCoordsWithEquation(
-                                        const QString &equationS,
-                                        const QString &equationT)
+
+bool Geometry::transformPrimitivesWithEquation(
+                    const QString &equation,
+                    const QStringList& constantNames,
+                    const QList<Double>& constantValues)
 {
-    Double vx, vy, vz, vindex, vs, vt;
+    Double vx, vy, vz, vnx, vny, vnz, vs, vt,
+           red,green,blue,alpha,bright,
+           vpx[3], vpy[3], vpz[3],
+           vpnx[3], vpny[3], vpnz[3],
+           vps[3], vpt[3],
+           vred[3], vgreen[3], vblue[3], valpha[3],
+           vp, vi;
 
-    std::vector<PPP_NAMESPACE::Parser> equ(2);
-    for (uint i=0; i<2; ++i)
+    PPP_NAMESPACE::Parser equ;
+    equ.variables().add("x", &vx, "");
+    equ.variables().add("y", &vy, "");
+    equ.variables().add("z", &vz, "");
+    equ.variables().add("nx", &vnx, "");
+    equ.variables().add("ny", &vny, "");
+    equ.variables().add("nz", &vnz, "");
+    equ.variables().add("s", &vs, "");
+    equ.variables().add("t", &vt, "");
+    equ.variables().add("red", &red, "");
+    equ.variables().add("green", &green, "");
+    equ.variables().add("blue", &blue, "");
+    equ.variables().add("alpha", &alpha, "");
+    equ.variables().add("bright", &bright, "");
+    equ.variables().add("x1", &vpx[0], "");
+    equ.variables().add("y1", &vpy[0], "");
+    equ.variables().add("z1", &vpz[0], "");
+    equ.variables().add("x2", &vpx[1], "");
+    equ.variables().add("y2", &vpy[1], "");
+    equ.variables().add("z2", &vpz[1], "");
+    equ.variables().add("x3", &vpx[2], "");
+    equ.variables().add("y3", &vpy[2], "");
+    equ.variables().add("z3", &vpz[2], "");
+    equ.variables().add("nx1", &vpnx[0], "");
+    equ.variables().add("ny1", &vpny[0], "");
+    equ.variables().add("nz1", &vpnz[0], "");
+    equ.variables().add("nx2", &vpnx[1], "");
+    equ.variables().add("ny2", &vpny[1], "");
+    equ.variables().add("nz2", &vpnz[1], "");
+    equ.variables().add("nx3", &vpnx[2], "");
+    equ.variables().add("ny3", &vpny[2], "");
+    equ.variables().add("nz3", &vpnz[2], "");
+    equ.variables().add("s1", &vps[0], "");
+    equ.variables().add("t1", &vpt[0], "");
+    equ.variables().add("s2", &vps[1], "");
+    equ.variables().add("t2", &vpt[1], "");
+    equ.variables().add("s3", &vps[2], "");
+    equ.variables().add("t3", &vpt[2], "");
+    equ.variables().add("red1", &vred[0], "");
+    equ.variables().add("red2", &vred[1], "");
+    equ.variables().add("red3", &vred[2], "");
+    equ.variables().add("green1", &vgreen[0], "");
+    equ.variables().add("green2", &vgreen[1], "");
+    equ.variables().add("green3", &vgreen[2], "");
+    equ.variables().add("blue1", &vblue[0], "");
+    equ.variables().add("blue2", &vblue[1], "");
+    equ.variables().add("blue3", &vblue[2], "");
+    equ.variables().add("alpha1", &valpha[0], "");
+    equ.variables().add("alpha2", &valpha[1], "");
+    equ.variables().add("alpha3", &valpha[2], "");
+    equ.variables().add("i", &vi, "");
+    equ.variables().add("p", &vp, "");
+    for (auto j=0; j<constantNames.size(); ++j)
+        equ.variables().add(constantNames[j].toStdString(), constantValues[j], "");
+
+    if (!equ.parse(equation.toStdString()))
+        return false;
+
+    for (uint i=0; i<numLines(); ++i)
     {
-        equ[i].variables().add("x", &vx, "");
-        equ[i].variables().add("y", &vy, "");
-        equ[i].variables().add("z", &vz, "");
-        equ[i].variables().add("i", &vindex, "");
-        equ[i].variables().add("s", &vs, "");
-        equ[i].variables().add("t", &vt, "");
-    }
+        // get vertex indices
+        int i1 = lineIndex_[i*2],
+            i2 = lineIndex_[i*2+1];
 
-    if (!equ[0].parse(equationS.toStdString()))
-        return false;
-    if (!equ[1].parse(equationT.toStdString()))
-        return false;
+        // copy primitive input variables
+        VertexType * vert[] = { &vertex_[i1 * numVertexComponents()],
+                                &vertex_[i2 * numVertexComponents()] };
+        NormalType * norm[] = { &normal_[i1 * numNormalComponents()],
+                                &normal_[i2 * numNormalComponents()] };
+        TextureCoordType * tex[] = { &texcoord_[i1 * numTextureCoordComponents()],
+                                     &texcoord_[i2 * numTextureCoordComponents()] };
+        ColorType * color[] = { &color_[i1 * numColorComponents()],
+                                &color_[i2 * numColorComponents()] };
+
+        // assign all primitive vertex data
+        vi = i;
+        for (int j=0; j<2; ++j)
+        {
+            vpx[j] = vert[j][0];
+            vpy[j] = vert[j][1];
+            vpz[j] = vert[j][2];
+            vpnx[j] = norm[j][0];
+            vpny[j] = norm[j][1];
+            vpnz[j] = norm[j][2];
+            vps[j] = tex[j][0];
+            vpt[j] = tex[j][1];
+            vred[j] = color[j][0];
+            vgreen[j] = color[j][1];
+            vblue[j] = color[j][2];
+            valpha[j] = color[j][3];
+        }
+
+        // execute per primitive vertex
+        for (int j=0; j<2; ++j)
+        {
+            // copy 'current' variables
+            vp = j;
+            vx = vpx[j];
+            vy = vpy[j];
+            vz = vpz[j];
+            vnx = vpnx[j];
+            vny = vpny[j];
+            vnz = vpnz[j];
+            vs = vps[j];
+            vt = vpt[j];
+            red = vred[j];
+            green = vgreen[j];
+            blue = vblue[j];
+            alpha = valpha[j];
+            bright = 1;
+
+            equ.eval();
+
+            // assign result back
+            vert[j][0] = vx;
+            vert[j][1] = vy;
+            vert[j][2] = vz;
+            norm[j][0] = vnx;
+            norm[j][1] = vny;
+            norm[j][2] = vnz;
+            tex[j][0] = vs;
+            tex[j][1] = vt;
+            color[j][0] = std::max(0.0,std::min(1.0, red * bright ));
+            color[j][1] = std::max(0.0,std::min(1.0, green * bright ));
+            color[j][2] = std::max(0.0,std::min(1.0, blue * bright ));
+            color[j][3] = std::max(0.0,std::min(1.0, alpha ));
+        }
+
+        progress_ = (i * 100) / numLines();
+    }
 
     for (uint i=0; i<numTriangles(); ++i)
     {
-        for (uint j=0; j<numTriangleIndexComponents(); ++j)
+        // get vertex indices
+        int i1 = triIndex_[i*3],
+            i2 = triIndex_[i*3+1],
+            i3 = triIndex_[i*3+2];
+
+        // copy primitive input variables
+        VertexType * vert[] = { &vertex_[i1 * numVertexComponents()],
+                                &vertex_[i2 * numVertexComponents()],
+                                &vertex_[i3 * numVertexComponents()] };
+        NormalType * norm[] = { &normal_[i1 * numNormalComponents()],
+                                &normal_[i2 * numNormalComponents()],
+                                &normal_[i3 * numVertexComponents()] };
+        TextureCoordType * tex[] = { &texcoord_[i1 * numTextureCoordComponents()],
+                                     &texcoord_[i2 * numTextureCoordComponents()],
+                                     &texcoord_[i3 * numTextureCoordComponents()] };
+        ColorType * color[] = { &color_[i1 * numColorComponents()],
+                                &color_[i2 * numColorComponents()],
+                                &color_[i3 * numColorComponents()] };
+
+        vi = i;
+        for (int j=0; j<3; ++j)
         {
-            const int idx = triIndex_[i * numTriangleIndexComponents() + j];
-
-            // copy input variables
-            const VertexType * v = &vertex_[idx * numVertexComponents()];
-            vx = v[0];
-            vy = v[1];
-            vz = v[2];
-            vindex = i;
-            TextureCoordType * t = &texcoord_[idx * numTextureCoordComponents()];
-            vs = t[0];
-            vt = t[1];
-
-            // assign result from equation
-            if (equationS != "s")
-                t[0] = equ[0].eval();
-            if (equationT != "t")
-                t[1] = equ[1].eval();
+            vpx[j] = vert[j][0];
+            vpy[j] = vert[j][1];
+            vpz[j] = vert[j][2];
+            vpnx[j] = norm[j][0];
+            vpny[j] = norm[j][1];
+            vpnz[j] = norm[j][2];
+            vps[j] = tex[j][0];
+            vpt[j] = tex[j][1];
+            vred[j] = color[j][0];
+            vgreen[j] = color[j][1];
+            vblue[j] = color[j][2];
+            valpha[j] = color[j][3];
         }
 
-        progress_ = (i * 100) / numTriangles();
+        // execute per primitive vertex
+        for (int j=0; j<3; ++j)
+        {
+            // copy 'current' variables
+            vp = j;
+            vx = vpx[j];
+            vy = vpy[j];
+            vz = vpz[j];
+            vnx = vpnx[j];
+            vny = vpny[j];
+            vnz = vpnz[j];
+            vs = vps[j];
+            vt = vpt[j];
+            red = vred[j];
+            green = vgreen[j];
+            blue = vblue[j];
+            alpha = valpha[j];
+            bright = 1;
+
+            equ.eval();
+
+            // assign result from equation
+            vert[j][0] = vx;
+            vert[j][1] = vy;
+            vert[j][2] = vz;
+            norm[j][0] = vnx;
+            norm[j][1] = vny;
+            norm[j][2] = vnz;
+            tex[j][0] = vs;
+            tex[j][1] = vt;
+            color[j][0] = std::max(0.0,std::min(1.0, red * bright ));
+            color[j][1] = std::max(0.0,std::min(1.0, green * bright ));
+            color[j][2] = std::max(0.0,std::min(1.0, blue * bright ));
+            color[j][3] = std::max(0.0,std::min(1.0, alpha ));
+        }
+
+        progress_ = (i * 100) / numVertices();
     }
+
 
     return true;
 }
 
 
-void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor,
+
+
+
+
+
+
+
+void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor, VertexType eshift,
                                 bool createNewFaces, bool recognizeEdges) const
 {
     // for edge recognition
@@ -968,9 +1456,14 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
 
         const Vec3
                 // extruded points
-                pe1 = p1 + pn1 * (constant + factor * (dist12 + dist13)),
-                pe2 = p2 + pn2 * (constant + factor * (dist12 + dist23)),
-                pe3 = p3 + pn3 * (constant + factor * (dist13 + dist23));
+                pe_1 = p1 + pn1 * (constant + factor * (dist12 + dist13)),
+                pe_2 = p2 + pn2 * (constant + factor * (dist12 + dist23)),
+                pe_3 = p3 + pn3 * (constant + factor * (dist13 + dist23)),
+                pe_mid = (pe_1 + pe_2 + pe_3) / 3.f,
+                // with shift
+                pe1 = pe_1 + eshift * (pe_mid - pe_1),
+                pe2 = pe_2 + eshift * (pe_mid - pe_2),
+                pe3 = pe_3 + eshift * (pe_mid - pe_3);
 
         const Vec4
                 pc1 = getColor(t1),
@@ -991,7 +1484,7 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
                 d6 = geom.addVertex(pe3[0], pe3[1], pe3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]);
 
         // create extruded triangle in geom
-        geom.addTriangle(d4,d5,d6);
+        geom.addTriangleChecked(d4,d5,d6);
 
         // count number of extruded vertices use
         if (createNewFaces && recognizeEdges)
@@ -1033,12 +1526,13 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
                 d3 = geom.addVertex(p3[0], p3[1], p3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]);
 
             // create side faces
-            geom.addTriangle(d1,d2,d5);
-            geom.addTriangle(d1,d5,d4);
-            geom.addTriangle(d2,d3,d6);
-            geom.addTriangle(d2,d6,d5);
-            geom.addTriangle(d3,d1,d4);
-            geom.addTriangle(d3,d4,d6);
+            geom.addTriangleChecked(d1,d2,d5);
+            geom.addTriangleChecked(d1,d5,d4);
+            geom.addTriangleChecked(d2,d3,d6);
+            geom.addTriangleChecked(d2,d6,d5);
+            geom.addTriangleChecked(d3,d1,d4);
+            geom.addTriangleChecked(d3,d4,d6);
+
         }
     }
 
@@ -1100,21 +1594,25 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
                 d5 = extVerts[i*3+1],
                 d6 = extVerts[i*3+2];
 
-            // create side faces
-            if (count1 < 2 || count2 < 2)
+
+            if (geom.checkTriangle(p1,p2,p3))
             {
-                geom.addTriangle(d1,d2,d5);
-                geom.addTriangle(d1,d5,d4);
-            }
-            if (count2 < 2 || count3 < 2)
-            {
-                geom.addTriangle(d2,d3,d6);
-                geom.addTriangle(d2,d6,d5);
-            }
-            if (count3 < 2 || count1 < 2)
-            {
-                geom.addTriangle(d3,d1,d4);
-                geom.addTriangle(d3,d4,d6);
+                // create side faces
+                if (count1 < 2 || count2 < 2)
+                {
+                    geom.addTriangleChecked(d1,d2,d5);
+                    geom.addTriangleChecked(d1,d5,d4);
+                }
+                if (count2 < 2 || count3 < 2)
+                {
+                    geom.addTriangleChecked(d2,d3,d6);
+                    geom.addTriangleChecked(d2,d6,d5);
+                }
+                if (count3 < 2 || count1 < 2)
+                {
+                    geom.addTriangleChecked(d3,d1,d4);
+                    geom.addTriangleChecked(d3,d4,d6);
+                }
             }
         }
     }
@@ -1122,48 +1620,50 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
 #undef MO__MAKEHASH
 }
 
-void Geometry::tesselate(uint level)
+void Geometry::tesselateLines(uint level)
 {
-    if (!numTriangles())
+    if (!numLines())
+        return;
+    // XXX TODO: color/texcoord handling
+
+    Geometry tess;
+    tess.sharedVertices_ = sharedVertices_;
+    tess.threshold_ = threshold_;
+
+    level = std::pow(2,level);
+
+    for (uint i=0; i<numLines(); ++i)
     {
-        // XXX TODO: color/texcoord handling
+        const IndexType
+                t1 = lineIndex_[i*2],
+                t2 = lineIndex_[i*2+1];
 
-        Geometry tess;
-        tess.sharedVertices_ = sharedVertices_;
-        tess.threshold_ = threshold_;
+        const Vec3
+                p1 = getVertex(t1),
+                p2 = getVertex(t2);
 
-        level = std::pow(2,level);
-
-        for (uint i=0; i<numLines(); ++i)
+        std::vector<IndexType> n;
+        n.push_back(tess.addVertex(p1[0], p1[1], p1[2]));
+        for (uint l = 0; l<level; ++l)
         {
-            const IndexType
-                    t1 = lineIndex_[i*2],
-                    t2 = lineIndex_[i*2+1];
-
-            const Vec3
-                    p1 = getVertex(t1),
-                    p2 = getVertex(t2);
-
-            std::vector<IndexType> n;
-            n.push_back(tess.addVertex(p1[0], p1[1], p1[2]));
-            for (uint l = 0; l<level; ++l)
-            {
-                Vec3 p12 = p1 + (p2 - p1) * (float(l+1) / (level+1));
-                n.push_back(tess.addVertex(p12[0], p12[1], p12[2]));
-            }
-            n.push_back(tess.addVertex(p2[0], p2[1], p2[2]));
-
-            for (uint l = 1; l<n.size(); ++l)
-                tess.addLine(n[l-1], n[l]);
-
-            progress_ = (i * 100) / numLines();
+            Vec3 p12 = p1 + (p2 - p1) * (float(l+1) / (level+1));
+            n.push_back(tess.addVertex(p12[0], p12[1], p12[2]));
         }
+        n.push_back(tess.addVertex(p2[0], p2[1], p2[2]));
 
-        *this = tess;
+        for (uint l = 1; l<n.size(); ++l)
+            tess.addLine(n[l-1], n[l]);
+
+        progress_ = (i * 100) / numLines();
     }
 
-    else
-    // tesselate triangles
+    *this = tess;
+}
+
+void Geometry::tesselateTriangles(uint level)
+{
+    if (!numTriangles())
+        return;
     for (uint l = 0; l<level; ++l)
     {
         Geometry tess;
@@ -1250,7 +1750,8 @@ void Geometry::removePrimitivesRandomly(float probability, int seed)
 
         triIndex_ = index;
     }
-    else
+
+    if (numLines())
     {
         std::vector<IndexType> index;
 
@@ -1305,7 +1806,7 @@ void Geometry::groupVertices(Geometry &dst, VertexType range) const
 
 
 
-void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s, bool triangles)
+void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
 {
     if (vao->isCreated())
         vao->release();
@@ -1319,7 +1820,8 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
     // --- position ---
     if (auto a = s->getAttribute(s->source()->attribNamePosition()))
     {
-        vao->createAttribBuffer(a->location(),
+        vao->createAttribBuffer(GL::VertexArrayObject::A_POSITION,
+                                a->location(),
                                 vertexEnum, numVertexComponents(),
                                 numVertexBytes(),
                                 vertices());
@@ -1328,7 +1830,8 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
     // --- color ---
     if (auto a = s->getAttribute(s->source()->attribNameColor()))
     {
-        vao->createAttribBuffer(a->location(),
+        vao->createAttribBuffer(GL::VertexArrayObject::A_COLOR,
+                                a->location(),
                                 colorEnum, numColorComponents(),
                                 numColorBytes(),
                                 colors());
@@ -1337,7 +1840,8 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
     // --- normal ---
     if (auto a = s->getAttribute(s->source()->attribNameNormal()))
     {
-        vao->createAttribBuffer(a->location(),
+        vao->createAttribBuffer(GL::VertexArrayObject::A_NORMAL,
+                                a->location(),
                                 normalEnum, numNormalComponents(),
                                 numNormalBytes(),
                                 normals());
@@ -1346,21 +1850,45 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s,
     // --- texcoord ---
     if (auto a = s->getAttribute(s->source()->attribNameTexCoord()))
     {
-        vao->createAttribBuffer(a->location(),
+        vao->createAttribBuffer(GL::VertexArrayObject::A_TEX_COORD,
+                                a->location(),
                                 textureCoordEnum, numTextureCoordComponents(),
                                 numTextureCoordBytes(),
                                 textureCoords());
     }
 
+    // --- user attributes ---
+    int k=0;
+    for (auto i : attributes_)
+    {
+        UserAttribute * ua = i.second;
+        if (auto a = s->getAttribute(ua->attributeName))
+        {
+            vao->createAttribBuffer(GL::VertexArrayObject::A_USER + k++,
+                                    a->location(),
+                                    attributeEnum, ua->numComponents,
+                                    ua->numBytes(),
+                                    &ua->data[0]);
+        }
+    }
+
     // --- indices ---
-    if (triangles)
-        vao->createIndexBuffer(indexEnum,
+    if (numTriangles())
+        vao->createIndexBuffer(GL_TRIANGLES,
+                               indexEnum,
                                numTriangles() * numTriangleIndexComponents(),
                                triangleIndices());
-    else
-        vao->createIndexBuffer(indexEnum,
+    if (numLines())
+        vao->createIndexBuffer(GL_LINES,
+                               indexEnum,
                                numLines() * numLineIndexComponents(),
                                lineIndices());
+
+    if (numPoints())
+        vao->createIndexBuffer(GL_POINTS,
+                               indexEnum,
+                               numPoints(),
+                               pointIndices());
 
     vao->unbind();
 }

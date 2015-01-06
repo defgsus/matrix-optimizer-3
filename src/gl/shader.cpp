@@ -281,7 +281,7 @@ void Shader::getUniforms_()
     MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &labelLength) );
 
     // don't expose these to user
-    QStringList specialUniforms;// YYY = appSettings->getShaderUniforms();
+    QStringList specialUniforms;// XXX = appSettings->getShaderUniforms();
 
     // get each uniform data
     for (int i=0; i<numu; ++i)
@@ -306,6 +306,8 @@ void Shader::getUniforms_()
 
         // find location of uniform
         MO_CHECK_GL_COND(rep_, u->location_ = glGetUniformLocation(prog_, &name[0]) );
+
+        //MO_CHECK_GL_COND(rep_, glGetUniformBlockIndex())
 
         // keep in list
         uniforms_.push_back(std::shared_ptr<Uniform>(u, privateUniformDeleter));
@@ -369,6 +371,9 @@ void Shader::getAttributes_()
 
 void Shader::sendUniform(const Uniform * u)
 {
+    MO_DEBUG_GL("Shader('" << name_ << ")::sendUniform(" << u->name() << ", " << u->floats[0]
+            << ", " << u->floats[1] << ", " << u->floats[2] << ", " << u->floats[3] << ")");
+
     switch (u->type())
     {
     case GL_SAMPLER_2D:
@@ -419,6 +424,17 @@ void Shader::releaseGL()
     ready_ = activated_ = false;
 }
 
+
+void Shader::dumpUniforms(std::ostream &out) const
+{
+    for (Uniform * u : uniformList_)
+    {
+        out << "[" << u->name() << "] @ " << u->location() << "\n"
+            << "ints(" << u->ints[0] << ", " << u->ints[1] << ", " << u->ints[2] << ", " << u->ints[3] << ") "
+            << "floats(" << u->floats[0] << ", " << u->floats[1] << ", " << u->floats[2] << ", " << u->floats[3] << ")"
+            << std::endl;
+    }
+}
 
 } // namespace GL
 } // namespace MO

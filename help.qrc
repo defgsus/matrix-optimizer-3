@@ -6,5 +6,10 @@
         <file alias="style.css">assets/help/en/style.css</file>
         <file alias="equationfunctions.html">assets/help/en/equationfunctions.html</file>
         <file alias="sequence.html">assets/help/en/sequence.html</file>
+        <file alias="opengldrawing.html">assets/help/en/opengldrawing.html</file>
+        <file alias="commandlinehelp.txt">assets/help/en/commandlinehelp.txt</file>
+    </qresource>
+    <qresource prefix="/">
+        <file alias="stylesheet.css">assets/stylesheet.css</file>
     </qresource>
 </RCC>

@@ -8,6 +8,7 @@
     <p>created 6/25/2014</p>
 */
 
+#include <QDebug>
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QTextStream>
@@ -295,6 +296,8 @@ void XmlStream::write(const QString& key, const QDateTime& v)
 {
     if (!xmlw_)
         MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+
+    //qDebug() << "writing " << v << " " << v.toString(datetime_format);
 
     xmlw_->writeAttribute(key, v.toString(datetime_format));
 }

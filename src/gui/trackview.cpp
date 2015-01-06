@@ -17,6 +17,8 @@
 #include <QPainter>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QHBoxLayout>
+#include <QAction>
 
 #include "trackview.h"
 #include "trackviewoverpaint.h"
@@ -25,14 +27,14 @@
 #include "object/sequencefloat.h"
 #include "object/trackfloat.h"
 #include "object/scene.h"
-#include "model/objecttreemodel.h"
+#include "object/util/objectfilter.h"
 #include "model/objecttreemimedata.h"
 #include "io/error.h"
 #include "io/log.h"
 #include "io/application.h"
 #include "tool/enumnames.h"
 #include "util/scenesettings.h"
-
+#include "util/objectmenu.h"
 
 namespace MO {
 namespace GUI {
@@ -40,7 +42,9 @@ namespace GUI {
 TrackView::TrackView(QWidget *parent) :
     QWidget         (parent),
     scene_          (0),
-    omodel_         (0),
+    sceneSettings_  (0),
+    objectFilter_   (new ObjectFilter()),
+    currentObject_  (0),
     header_         (0),
 
     offsetY_                (0),
@@ -51,6 +55,10 @@ TrackView::TrackView(QWidget *parent) :
     nextFocusSequence_      (0),
     currentTime_            (0),
     hoverWidget_            (0),
+
+    filterCurrentObjectOnly_(true),
+    filterAddModulatingObjects_(true),
+    alwaysFullObject_       (true),
 
     trackSpacing_           (2),
     modifierMultiSelect_    (Qt::CTRL),
@@ -90,6 +98,11 @@ TrackView::TrackView(QWidget *parent) :
     penFramedWidget_ = QPen(QColor(200,200,200));
     penFramedWidget_.setStyle(Qt::DotLine);
     penCurrentTime_ = QPen(QColor(255,255,255,60));
+}
+
+TrackView::~TrackView()
+{
+    delete objectFilter_;
 }
 
 void TrackView::setViewSpace(const UTIL::ViewSpace & s)
@@ -188,6 +201,13 @@ bool TrackView::updateWidgetViewSpace_(SequenceWidget * s)
 
 void TrackView::clearTracks()
 {
+    clearTracks_(false);
+}
+
+void TrackView::clearTracks_(bool keep_alltracks)
+{
+    if (!keep_alltracks)
+        allObjects_.clear();
     tracks_.clear();
     trackY_.clear();
 
@@ -204,17 +224,24 @@ void TrackView::clearTracks()
 }
 
 
-void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
+void TrackView::setCurrentObject(Object * obj, bool send_signal)
 {
-    MO_ASSERT(sceneSettings_, "TrackView::setTracks() without SceneSettings");
+    MO_ASSERT(sceneSettings_, "TrackView::setObjects() without SceneSettings");
 
-    // removed previous content
+//    if (obj == currentObject_)
+//        return;
+
+    // remove previous content
     clearTracks();
-    if (tracks.empty())
+
+    if (!obj)
+    {
+        currentObject_ = 0;
         return;
+    }
 
     // determine scene
-    Scene * scene = tracks[0]->sceneObject();
+    Scene * scene = obj->sceneObject();
     if (scene != scene_)
     {
         connect(scene, SIGNAL(objectChanged(MO::Object*)),
@@ -225,11 +252,12 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
                 this, SLOT(onParameterChanged_(MO::Parameter*)));
     }
     scene_ = scene;
-    omodel_ = scene->model();
+    currentObject_ = obj;
 
     MO_ASSERT(scene_, "Scene not set in TrackView::setTracks()");
 
-    tracks_ = tracks;
+    // filter visible tracks
+    getFilteredTracks_(tracks_);
 
     calcTrackY_();
 
@@ -240,11 +268,108 @@ void TrackView::setTracks(const QList<Track *> &tracks, bool send_signal)
     updateWidgetsViewSpace_();
     update();
 
+    header_->setTracks(tracks_);
+
     if (send_signal)
         emit tracksChanged();
-
-    header_->setTracks(tracks);
 }
+
+
+void TrackView::getFilteredTracks_(QList<Track *> &list)
+{
+    if (filterCurrentObjectOnly_ && currentObject_) // belong-to-object
+    {
+        Object * o = getContainerObject_(currentObject_);
+
+        QList<Object*> list = o->findChildObjects(Object::TG_ALL, true);
+        list.prepend(o);
+
+        allObjects_ = list;
+
+        if (filterAddModulatingObjects_)
+            for (auto o : list)
+                allObjects_.append( o->getModulatingObjects() );
+
+    }
+    else
+    {
+        // copy tracks
+        allObjects_ = scene_->findChildObjects(Object::TG_ALL, true);
+        // expand by modulators
+        //objectFilter_->addAllModulators(obj, allObjects_);
+    }
+
+    // setup filter
+    //objectFilter_->setBelongToFilter(currentObject_);
+    //objectFilter_->setExpandObjects(true);
+
+    // transform
+    list.clear();
+    objectFilter_->transform(allObjects_, list);
+}
+
+Object * TrackView::getContainerObject_(Object * o)
+{
+    int mask = Object::TG_REAL_OBJECT;
+
+    // at least the track
+    if (!alwaysFullObject_)
+        mask |= Object::TG_TRACK;
+
+    while (!(o->type() & mask))
+    {
+        if (!o->parentObject())
+            return o;
+
+        o = o->parentObject();
+    }
+    return o;
+}
+
+
+QMenu * TrackView::createFilterMenu()
+{
+    QMenu * m = new QMenu(this);
+    QAction * a;
+
+    QAction * curA = a = new QAction(tr("only show current object"), m);
+    m->addAction(a);
+    a->setCheckable(true);
+    a->setChecked(filterCurrentObjectOnly_);
+
+    QAction * fullA = a = new QAction(tr("always show full object"), m);
+    m->addAction(a);
+    a->setCheckable(true);
+    a->setChecked(alwaysFullObject_);
+    a->setEnabled(filterCurrentObjectOnly_);
+    connect(a, &QAction::triggered, [=]()
+    {
+        alwaysFullObject_ = a->isChecked();
+        setCurrentObject(currentObject_);
+    });
+
+    QAction * modA = a = new QAction(tr("include modulators"), m);
+    m->addAction(a);
+    a->setCheckable(true);
+    a->setChecked(filterAddModulatingObjects_);
+    a->setEnabled(filterCurrentObjectOnly_);
+    connect(a, &QAction::triggered, [=]()
+    {
+        filterAddModulatingObjects_ = a->isChecked();
+        setCurrentObject(currentObject_);
+    });
+
+    connect(curA, &QAction::triggered, [=]()
+    {
+        filterCurrentObjectOnly_ = curA->isChecked();
+        fullA->setEnabled(filterCurrentObjectOnly_);
+        modA->setEnabled(filterCurrentObjectOnly_);
+        setCurrentObject(currentObject_);
+    });
+
+    return m;
+}
+
 
 void TrackView::calcTrackY_()
 {
@@ -314,6 +439,8 @@ void TrackView::createSequenceWidgets_(Track * t)
     // create SequenceWidgets
     for (Sequence * seq : seqs)
     {
+        MO_ASSERT(seq->parentTrack(), "No parent track for sequence in TrackView");
+
         // create the widget
         auto w = new SequenceWidget(t, seq, this);
         sequenceWidgets_.insert( w );
@@ -831,14 +958,17 @@ int TrackView::trackIndex_(Track * t)
     return tracks_.indexOf(t);
 }
 
+
+
+
 void TrackView::createEditActions_()
 {
     // remove old actions
     for (auto a : editActions_)
         if (!actions().contains(a))
         {
-            if (a->menu())
-                a->menu()->deleteLater();
+//            if (a->menu())
+//                a->menu()->deleteLater();
             a->deleteLater();
         }
 
@@ -852,9 +982,26 @@ void TrackView::createEditActions_()
     if (hoverWidget_ && selectedWidgets_.size() < 2)
     {
         Sequence * seq = hoverWidget_->sequence();
+        // local copy of hoverWidget_
+        // ('cause it goes away in lambdas)
+        SequenceWidget * widget = hoverWidget_;
 
         // title
         editActions_.addTitle(seq->name(), this);
+
+        editActions_.addSeparator(this);
+
+        // set color
+        a = editActions_.addAction(tr("Change color"), this);
+        a->setStatusTip(tr("Sets a custom color for the sequence"));
+        QMenu * sub = ObjectMenu::createColorMenu(this);
+        a->setMenu(sub);
+        connect(sub, &QMenu::triggered, [this, seq, widget](QAction*a)
+        {
+            QColor col = a->data().value<QColor>();
+            seq->setColor(col);
+            widget->updateColors();
+        });
 
         editActions_.addSeparator(this);
 
@@ -913,7 +1060,7 @@ void TrackView::createEditActions_()
             for (auto w : selectedWidgets_)
             {
                 seqs.append(w->sequence());
-                order.append(trackIndex_(w->sequence()->track()));
+                order.append(trackIndex_(w->sequence()->parentTrack()));
             }
 
             auto data = new ObjectTreeMimeData();
@@ -932,7 +1079,7 @@ void TrackView::createEditActions_()
             for (auto w : selectedWidgets_)
             {
                 seqs.append(w->sequence());
-                order.append(trackIndex_(w->sequence()->track()));
+                order.append(trackIndex_(w->sequence()->parentTrack()));
             }
 
             auto data = new ObjectTreeMimeData();
@@ -973,13 +1120,16 @@ void TrackView::createEditActions_()
         a->setStatusTip(tr("Creates a new sequence at the current time"));
         connect(a, &QAction::triggered, [this]()
         {
-            if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
+/*YYY            if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
             {
+#ifndef MO_DISABLE_TREE
                 nextFocusSequence_ =
                     scene_->model()->createFloatSequence(trackf, currentTime_);
+#endif
                 updateTrack(selTrack_);
                 assignModulatingWidgets_();
             }
+            */
         });
 
         editActions_.addSeparator(this);
@@ -1015,16 +1165,14 @@ void TrackView::createEditActions_()
     }
 }
 
-bool TrackView::deleteObject_(Object * o)
+bool TrackView::deleteObject_(Object * )
 {
-    if (!omodel_) return false;
-    QModelIndex idx = omodel_->indexForObject(o);
-    return omodel_->deleteObject(idx);
+    return false;// YYY
 }
 
 bool TrackView::paste_(bool single_track)
 {
-    if (!omodel_ || !selTrack_)
+    if (!selTrack_)
         return false;
 
     const ObjectTreeMimeData * data = qobject_cast<const ObjectTreeMimeData*>
@@ -1046,8 +1194,10 @@ bool TrackView::paste_(bool single_track)
             {
                 s->setStart(currentTime_);
                 nextFocusSequence_ = s;
+/*YYY#ifndef MO_DISABLE_TREE
                 if (omodel_->addObject(selTrack_, s))
                     return true;
+#endif*/
             }
             else
                 QMessageBox::warning(this, tr("Can not paste"), error);
@@ -1077,11 +1227,13 @@ bool TrackView::paste_(bool single_track)
                 else
                 {
                     s->setStart(time);
+/*YYY#ifndef MO_DISABLE_TREE
                     if (omodel_->addObject(selTrack_, s))
                     {
                         time = s->end();
                         continue;
                     }
+#endif*/
                 }
                 delete s;
                 objs[i] = 0;
@@ -1144,10 +1296,12 @@ bool TrackView::paste_(bool single_track)
                             {
                                 errors += error + "\n";
                             }
+/*YYY#ifndef MO_DISABLE_TREE
                             else
                             // add
                             if (omodel_->addObject(tracks_[tracknum], s))
                                 continue;
+#endif*/
                         }
                             else MO_WARNING("skipping sequence '" << s->name() << "' "
                                             "because there is no track left");

@@ -11,6 +11,7 @@
 #include "modulatorobjectfloat.h"
 #include "io/datastream.h"
 #include "io/log.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 
 namespace MO {
@@ -19,7 +20,7 @@ MO_REGISTER_OBJECT(ModulatorObjectFloat)
 
 ModulatorObjectFloat::ModulatorObjectFloat(QObject *parent) :
     ModulatorObject(parent),
-    valueParam_ (0),
+    p_value_ (0),
     timeStamp_  (0.0),
     offset_     (0.0)
 {
@@ -42,18 +43,23 @@ void ModulatorObjectFloat::createParameters()
 {
     ModulatorObject::createParameters();
 
-    beginParameterGroup("modval", tr("value"));
+    params()->beginParameterGroup("modval", tr("value"));
 
-    valueParam_ = createFloatParameter("val", tr("value"),
+        p_value_ = params()->createFloatParameter("val", tr("value"),
                                        tr("A float value - sent to all receivers of the modulator"),
                                        0.0, 1.0);
 
-    endParameterGroup();
+        p_amp_ = params()->createFloatParameter("amp", tr("amplitude"),
+                                       tr("Output multiplier"),
+                                       1.0, 0.1);
+
+    params()->endParameterGroup();
 }
 
 Double ModulatorObjectFloat::value(Double time, uint thread) const
 {
-    return offset_ + valueParam_->value(time, thread);
+    return offset_ + p_value_->value(time, thread)
+                     * p_amp_->value(time, thread);
 }
 
 void ModulatorObjectFloat::setValue(Double timeStamp, Double value)

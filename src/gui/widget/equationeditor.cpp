@@ -29,11 +29,11 @@
 #include "tool/syntaxhighlighter.h"
 #include "math/funcparser/parser.h"
 #include "gui/helpdialog.h"
+#include "gui/saveequationdialog.h"
 #include "io/equationpreset.h"
 #include "io/equationpresets.h"
 #include "io/files.h"
 #include "io/error.h"
-#include "gui/saveequationdialog.h"
 
 namespace MO {
 namespace GUI {
@@ -48,8 +48,11 @@ EquationEditor::EquationEditor(QWidget *parent) :
     timer_          (new QTimer(this)),
     hoverTimer_     (new QTimer(this)),
     ok_             (false),
-    isHighlight_    (false)
+    isHighlight_    (false),
+    ignoreNextTextChange_(false)
 {
+    setObjectName("_EquationEditor");
+
     // --- setup palette ---
 
     colorBase_ = QColor(50,50,50);
@@ -78,10 +81,12 @@ EquationEditor::EquationEditor(QWidget *parent) :
     timer_->setInterval(200); /* some interval for fast writers */
     connect(timer_, SIGNAL(timeout()), this, SLOT(checkEquation_()));
 
-    setMouseTracking(true);
     hoverTimer_->setSingleShot(true);
     hoverTimer_->setInterval(500);
     connect(hoverTimer_, SIGNAL(timeout()), this, SLOT(onHover_()));
+
+    setMouseTracking(true);
+    setTabChangesFocus(true);
 
     // ---- context menu ----
 
@@ -231,24 +236,33 @@ void EquationEditor::onTextChanged_()
     if (!parser_)
         return;
 
-    // get the word under cursor
-    QTextCursor c = textCursor();
-    c.select(QTextCursor::WordUnderCursor);
-    QString word = c.selectedText();
-
-    // ignore '(' and get the left word of it
-    if (word.startsWith('('))
+    // XXX seems that for some reason, onTextChanged_() is
+    // called to often and we need to make shure that the
+    // completer pop-up does not break the rest of the gui
+    if (!ignoreNextTextChange_
+        && toPlainText() != lastText_)
     {
-        // for some reason we need to move two chars
-        c.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 2);
+
+        // get the word under cursor
+        QTextCursor c = textCursor();
         c.select(QTextCursor::WordUnderCursor);
-        word = c.selectedText();
+        QString word = c.selectedText();
+
+        // ignore '(' and get the left word of it
+        if (word.startsWith('('))
+        {
+            // for some reason we need to move two chars
+            c.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 2);
+            c.select(QTextCursor::WordUnderCursor);
+            word = c.selectedText();
+        }
+
+        // and test for auto-completion
+        if (!word.isEmpty())
+            performCompletion_(word);
     }
-
-    // and test for auto-completion
-    if (!word.isEmpty())
-        performCompletion_(word);
-
+    ignoreNextTextChange_ = false;
+    lastText_ = toPlainText();
 
     // trigger parsing
     timer_->start();
@@ -311,12 +325,21 @@ void EquationEditor::keyPressEvent(QKeyEvent * e)
 
 void EquationEditor::onCursorChanged_()
 {
-    QTextCursor c = textCursor();
+    //QTextCursor c = textCursor();
+
     // hide the auto-completer
     if (completer_ && completer_->popup()->isVisible())
         completer_->popup()->hide();
 }
 
+void EquationEditor::leaveEvent(QEvent * e)
+{
+    QPlainTextEdit::leaveEvent(e);
+
+    // hide the auto-completer
+    if (completer_ && completer_->popup()->isVisible())
+        completer_->popup()->hide();
+}
 
 void EquationEditor::insertCompletion_(const QString &word)
 {
@@ -330,6 +353,7 @@ void EquationEditor::insertCompletion_(const QString &word)
     //c.setPosition(pos);
     //c.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
 
+    ignoreNextTextChange_ = true;
     setTextCursor(c);
 }
 
@@ -339,6 +363,7 @@ void EquationEditor::insertVariable_(QAction * a)
 
     QTextCursor c = textCursor();
     c.insertText(varname);
+    ignoreNextTextChange_ = true;
     setTextCursor(c);
 }
 

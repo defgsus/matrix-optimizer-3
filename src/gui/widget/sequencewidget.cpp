@@ -53,16 +53,6 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
 
     setMouseTracking(true);
 
-    colorBody_ = QColor(80, 120, 80);
-    colorBodySel_ = colorBody_.lighter(150);
-
-    colorOutline_ = QColor(0,0,0);
-    colorOutlineSel_ = colorBody_.lighter(200);
-
-    penText_ = QPen(QColor(255,255,255));
-    penStart_ = QPen(QColor(255,255,255,50));
-    penLoop_ = QPen(penStart_);
-
     // prepare a float curve painter
     if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(seq))
     {
@@ -74,6 +64,7 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
         curvePainter_->setCurveData(curveData_);
     }
 
+    updateColors();
     updateValueRange();
     updateName();
 }
@@ -105,6 +96,31 @@ void SequenceWidget::updateValueRange()
                              MO_GUI_THREAD);
         updateViewSpace();
     }
+}
+
+void SequenceWidget::updateColors()
+{
+    colorBody_ = sequence_->color();
+    colorBodySel_ = colorBody_.lighter(150);
+
+    colorOutline_ = QColor(0,0,0);
+    colorOutlineSel_ = colorBody_.lighter(200);
+
+    // make text and curve darker or brighter than body?
+    const bool dark = colorBody_.lightness() > 100;
+
+    penText_ = dark ? QPen(Qt::black) : QPen(Qt::white);
+    penStart_ = dark ? QPen(QColor(0,0,0,50)) : QPen(QColor(255,255,255,50));
+    penLoop_ = QPen(penStart_);
+
+    if (curvePainter_)
+    {
+        QPen pen = curvePainter_->pen();
+        pen.setColor(dark ? colorBody_.darker(150) : colorBody_.lighter(250));
+        curvePainter_->setPen(pen);
+    }
+
+    update();
 }
 
 void SequenceWidget::resizeEvent(QResizeEvent *)

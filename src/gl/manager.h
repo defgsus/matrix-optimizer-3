@@ -11,14 +11,19 @@
 #ifndef MOSRC_GL_MANAGER_H
 #define MOSRC_GL_MANAGER_H
 
+#include <functional>
+
 #include <QObject>
+
 #include "types/vector.h"
 
 namespace MO {
+class Scene;
 namespace GL {
 
 class Window;
 class Context;
+class SceneRenderer;
 
 class Manager : public QObject
 {
@@ -30,30 +35,47 @@ public:
     // ---------------- opengl ---------------------
 
     /** Creates an OpenGL Window.
+        The window is initally hidden.
         When the window is shown, it's Context will be created
         and Manager::contextCreated() will be emitted. */
     Window * createGlWindow(uint thread);
 
+    void setScene(Scene *);
+
+    void setTimeCallback(std::function<Double()> timeFunc);
+
+    SceneRenderer * renderer() const { return renderer_; }
 
 signals:
 
-    /** This will signal the creation of a new Context */
-    void contextCreated(uint thread, MO::GL::Context *);
+    /* This will signal the creation of a new Context */
+    //void contextCreated(uint thread, MO::GL::Context *);
 
     /** Context is current, please render. */
     void renderRequest(uint thread);
 
     void cameraMatrixChanged(const MO::Mat4&);
 
+    void outputSizeChanged(const QSize&);
+
 public slots:
+
+    void startAnimate();
+    void stopAnimate();
 
 private slots:
 
-    void onContextCreated_(uint thread, MO::GL::Context *);
     void onCameraMatrixChanged_(const MO::Mat4&);
+
+    //void onRenderRequest_();
+
 private:
 
+    Scene * scene_;
     Window * window_;
+    SceneRenderer * renderer_;
+
+    std::function<Double()> timeFunc_;
 };
 
 } // namespace GL

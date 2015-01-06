@@ -7,8 +7,18 @@ libglm-dev
 portaudio19-dev
 libportmidi-dev
 
+libgstreamer1.0-dev
+libgstreamer-plugins-base1.0-dev
+
+libsndfile1-dev
+libdumb1-dev
+
+eventuell:
+libglu1-mesa-dev
+
+
 --- other libraries:
 
 https://github.com/hpicgs/glbinding.git
-
+http://www.angelcode.com (AngelScript)
 

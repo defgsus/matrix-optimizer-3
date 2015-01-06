@@ -8,6 +8,8 @@
     <p>created 9/1/2014</p>
 */
 
+#if 0
+
 #include "audiomicrophone.h"
 #include "io/log.h"
 #include "io/error.h"
@@ -103,11 +105,18 @@ void AudioMicrophone::sampleAudioSource(
         const Mat4&
                 mmic = transformation(thread, i),
                 msnd = src->transformation(thread, i);
+        const Vec4
+                posMic = mmic * Vec4(0,0,0,1),
+                posSnd = msnd * Vec4(0,0,0,1);
 
         // direction towards sound
-        F32 dx = msnd[3][0] - mmic[3][0],
+        /*F32 dx = msnd[3][0] - mmic[3][0],
             dy = msnd[3][1] - mmic[3][1],
             dz = msnd[3][2] - mmic[3][2];
+            */
+        F32 dx = posSnd.x - posMic.x,
+            dy = posSnd.y - posMic.y,
+            dz = posSnd.z - posMic.z;
 
         // distance to sound
         const F32 dist = std::sqrt(dx*dx + dy*dy + dz*dz);
@@ -165,3 +174,5 @@ void AudioMicrophone::sampleAudioSource(
 
 } // namespace AUDIO
 } // namespace MO
+
+#endif

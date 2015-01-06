@@ -16,9 +16,11 @@
 #include "gl/opengl_fwd.h"
 #include "network/network_fwd.h"
 #include "io/filetypes.h"
+#include "types/float.h"
 
 namespace MO {
 class Scene;
+class ClientEngineCommandLine;
 namespace GUI { class InfoWindow; }
 
 class Client;
@@ -27,14 +29,25 @@ class ClientEngine;
 /** Returns singleton instance */
 ClientEngine & clientEngine();
 
+
+/**
+    The client engine basically creates an GL::Manager and GL::Window,
+    a network Client and connects all the signals.
+
+ */
 class ClientEngine : public QObject
 {
     Q_OBJECT
 public:
     explicit ClientEngine(QObject *parent = 0);
+    ~ClientEngine();
+
+    bool isRunning() const;
 
     /** Runs the complete client event loop */
-    int run(int argc, char ** argv);
+    int run(int argc, char ** argv, int skip);
+
+    Double curTime() const;
 
 signals:
 
@@ -49,16 +62,34 @@ public slots:
 
 private slots:
 
+    void onConnected_();
     void onNetEvent_(AbstractNetEvent *);
     void showInfoWindow_(bool enable);
     void showRenderWindow_(bool enable);
+    void renderWindowSizeChanged_(const QSize&);
+    void onNetLog_(int level, const QString& text);
+
+    void onSceneReceived_(Scene *);
+    void onFilesReady_();
+    void onFilesNotReady_();
+    /** Sends a NetEventClientState to server */
+    void sendState_();
+
+    /** Renders the scene if not running */
+    void render_();
+
 
 private:
 
     void createGlObjects_();
+    void updateDesktopIndex_();
     void startNetwork_();
     void shutDown_();
     void setProjectionSettings_(NetEventRequest*);
+    bool loadSceneFile_(const QString& fn);
+    void setPlayback_(bool play);
+    void setClientIndex_(int index);
+    void setNextScene_();
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;
@@ -66,7 +97,11 @@ private:
 
     Client * client_;
 
-    Scene * scene_;
+    Scene * scene_, * nextScene_;
+
+    ClientEngineCommandLine * cl_;
+
+    bool isFilesReady_;
 };
 
 } // namespace MO

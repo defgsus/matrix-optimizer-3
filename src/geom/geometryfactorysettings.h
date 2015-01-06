@@ -18,36 +18,17 @@
 #include "io/filetypes.h"
 
 namespace MO {
+class Object;
 namespace IO { class DataStream; }
 namespace GEOM {
 
 class GeometryModifierChain;
 
+/** Container of settings to create a Geometry */
 class GeometryFactorySettings
 {
 public:
-    enum Type
-    {
-        T_FILE,
-        T_QUAD,
-        T_TETRAHEDRON,
-        T_BOX,
-        T_BOX_UV,
-        T_OCTAHEDRON,
-        T_ICOSAHEDRON,
-        T_DODECAHEDRON,
-        T_CYLINDER_CLOSED,
-        T_CYLINDER_OPEN,
-        T_TORUS,
-        T_UV_SPHERE,
-        T_GRID_XZ,
-        T_LINE_GRID
-    };
-    static const uint numTypes = T_LINE_GRID + 1;
-    static const QStringList typeIds;
-    static const QStringList typeNames;
-
-    GeometryFactorySettings();
+    GeometryFactorySettings(Object * o);
     ~GeometryFactorySettings();
 
     GeometryFactorySettings(const GeometryFactorySettings& other);
@@ -64,15 +45,23 @@ public:
     /** Appends the geometry file to the list if type is T_FILE */
     void getNeededFiles(IO::FileList &files);
 
-    // ---- public member ----
+    // ---- settings ----
 
-    GeometryModifierChain * modifierChain;
+    /** Assigns an object */
+    void setObject(Object*o) { object_ = o; }
 
-    Type type;
-    QString filename;
-    bool asTriangles, sharedVertices;
-    Float smallRadius, colorR, colorG, colorB, colorA;
-    uint segmentsX, segmentsY, segmentsZ;
+    /** Returns assigned object */
+    Object * object() const { return object_; }
+
+    /** Access to the create/modify chain */
+    GeometryModifierChain * modifierChain() const { return modifierChain_; }
+
+private:
+
+    Object * object_;
+
+    GeometryModifierChain * modifierChain_;
+
 };
 
 

@@ -52,6 +52,11 @@ Client::~Client()
         socket_->close();
 }
 
+bool Client::isRunning() const
+{
+    return socket_->isOpen();
+}
+
 bool Client::connectToMaster()
 {
     //const QString name = "_tcp.matrixoptimizer.master";
@@ -126,7 +131,7 @@ void Client::onError_()
     MO_NETLOG(ERROR, "Client: connection error:\n"
               << socket_->errorString());
 
-    reconnect_(1000);
+    reconnect_(2000);
 }
 
 void Client::onConnected_()
@@ -144,7 +149,7 @@ void Client::onDisconnected_()
 
     emit disconnected();
 
-    reconnect_(1000);
+    reconnect_(2000);
 }
 
 void Client::onData_()

@@ -1,4 +1,4 @@
-#version 130
+#version 330
 #extension GL_ARB_gpu_shader5 : enable // for inverse()
 
 
@@ -9,6 +9,9 @@ const float PI = 3.14159265358979;
  * MO_ENABLE_TEXTURE
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
+ * MO_ENABLE_VERTEX_EFFECTS
+ * MO_ENABLE_POINT_SIZE_DISTANCE
+ * MO_ENABLE_VERTEX_OVERRIDE
  */
 
 //#define MO_FULLDOME_BEND
@@ -20,19 +23,33 @@ in vec4 a_color;
 in vec3 a_normal;
 in vec2 a_texCoord;
 
+//%user_attributes%
+
 
 // --- shader uniforms ---
 
+uniform float u_time;                       // scene time
 uniform mat4 u_projection;                  // projection matrix
 uniform mat4 u_cubeViewTransform;           // cube-map * view * transform
 uniform mat4 u_viewTransform;               // view * transform
 uniform mat4 u_transform;                   // transformation only
+uniform vec4 u_color;
 #ifdef MO_ENABLE_LIGHTING
     uniform vec3 u_light_pos[MO_NUM_LIGHTS];
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
     uniform vec4 u_light_direction[MO_NUM_LIGHTS];
     uniform float u_light_dirmix[MO_NUM_LIGHTS];
 #endif
+
+#ifdef MO_ENABLE_VERTEX_EFFECTS
+    uniform float u_vertex_extrude;
+#endif
+
+#ifdef MO_ENABLE_POINT_SIZE_DISTANCE
+    uniform vec3 u_pointsize_dist; // x = min, y = (max-min), z = distance factor
+#endif
+
+//%user_uniforms%
 
 // --- output of vertex shader ---
 
@@ -43,6 +60,7 @@ out vec3 v_cam_dir;
 out vec3 v_normal;
 out vec3 v_normal_eye;
 out vec4 v_color;
+out vec4 v_ambient_color;
 out vec2 v_texCoord;
 #ifdef MO_ENABLE_LIGHTING
     #ifdef MO_FRAGMENT_LIGHTING
@@ -117,8 +135,23 @@ vec4 mo_pos_to_fulldome_scr(in vec3 pos)
         );
 }
 
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+//%mo_override%
+#endif
+
 vec4 mo_ftransform(in vec4 pos)
 {
+    // gui-controlled modifier
+#ifdef MO_ENABLE_VERTEX_EFFECTS
+    pos.xyz += u_vertex_extrude * a_normal;
+#endif
+
+    // user overrides
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+    pos.xyz = mo_modify_position(pos.xyz);
+#endif
+
+    // projection
 #ifndef MO_FULLDOME_BEND
     return u_projection * u_cubeViewTransform * pos;
 #else
@@ -129,6 +162,8 @@ vec4 mo_ftransform(in vec4 pos)
 
 void main()
 {
+    // ---------------- experimental billboard ---------------------
+
 #ifdef MO_ENABLE_BILLBOARD
     vec3 normal_eye = //transpose(inverse(mat3(u_viewTransform))) *
             //mat3(u_viewTransform) *
@@ -144,41 +179,20 @@ void main()
     v_pos_eye = (u_viewTransform * vertex_pos).xyz;
     v_normal = a_normal;
     v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
-    v_color = a_color;
     v_texCoord = a_texCoord;
     v_cam_dir = normalize(v_pos_eye);
+    v_color = vec4(1.);
+    v_ambient_color = a_color * u_color;
 
     // set final vertex position
     gl_Position = mo_ftransform(vertex_pos);
-    //gl_Position = vertex_pos + vec4(u_cubeViewTransform[3].xyz, 0.0);
 
-    /*
-    // eye-to-center normal
-    vec3 eyen = normalize(u_viewTransform[3].xyz);
-    // rotated/transformed vertex coords
-    vec4 trans_pos = u_transform * vec4(a_position.xyz, 0.0);
-    // it's not entirely correct - but fast
-    vec4 vertex_pos = vec4(
-                trans_pos.x,
-                trans_pos.y,
-                eyen.x * trans_pos.x + eyen.y * trans_pos.y,
-                1.0);
+    // attributes that might be modified by user code
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+    mo_modify_vertex_output();
+#endif
 
-    // pass attributes to fragment shader
-    v_pos = vertex_pos.xyz;
-    v_pos_world = u_transform[3].xyz + vertex_pos.xyz;
-    v_pos_eye = u_viewTransform[3].xyz + vertex_pos.xyz;
-    v_normal = a_normal;
-    v_normal_eye = a_normal;
-    v_color = a_color;
-    v_texCoord = a_texCoord;
-    v_cam_dir = normalize(v_pos_eye);
-
-    // set final vertex position
-    //gl_Position = mo_ftransform(vertex_pos);
-    //gl_Position = vec4(v_pos_eye, 1.0);
-    gl_Position = mo_ftransform(inverse(u_viewTransform)*vec4(v_pos_eye,1.0));
-    */
+    // ------------------- normal vertex stage ----------------
 #else
 
     // pass attributes to fragment shader
@@ -187,12 +201,18 @@ void main()
     v_pos_eye = (u_viewTransform * a_position).xyz;
     v_normal = a_normal;
     v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
-    v_color = a_color;
     v_texCoord = a_texCoord;
     v_cam_dir = normalize(v_pos_eye);
+    v_color = vec4(1.);
+    v_ambient_color = a_color * u_color;
 
     // set final vertex position
     gl_Position = mo_ftransform(a_position);
+
+    // attributes that might be modified by user code
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+    mo_modify_vertex_output();
+#endif
 
 #endif // !MO_ENABLE_BILLBOARD
 
@@ -222,7 +242,7 @@ void main()
             float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
 
             // attenuation from direction
-            if (u_light_dirmix[i]>0)
+            if (u_light_dirmix[i]>0.)
             {
                 float diratt = pow( max(0.0, dot(u_light_direction[i].xyz, lightvecn)),
                                     u_light_direction[i].w);
@@ -234,5 +254,12 @@ void main()
     #endif
 
 #endif // MO_ENABLE_LIGHTING
+
+    // adjust pointsize
+#ifdef MO_ENABLE_POINT_SIZE_DISTANCE
+    float di = length(gl_Position.xyz);
+    float difac = 1. / (1. + u_pointsize_dist.z * di);
+    gl_PointSize = u_pointsize_dist.x + difac * u_pointsize_dist.y;
+#endif
 
 }

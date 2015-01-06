@@ -218,6 +218,10 @@ public:
     /** Releases GPU resources. */
     void releaseGL();
 
+    // ------------ debug ----------------
+
+    void dumpUniforms(std::ostream& out = std::cout) const;
+
 private:
 
     /** Gets the standardized attributes and uniforms. */

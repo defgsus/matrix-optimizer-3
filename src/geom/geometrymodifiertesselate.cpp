@@ -52,7 +52,7 @@ void GeometryModifierTesselate::deserialize(IO::DataStream &io)
 
 void GeometryModifierTesselate::execute(Geometry *g)
 {
-    g->tesselate(level_);
+    g->tesselateTriangles(level_);
 }
 
 

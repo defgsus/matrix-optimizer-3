@@ -47,10 +47,13 @@ void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
 {
     if (sequence_)
     {
-        // -- outside --
+        // -- inside / outside indicator --
 
         int left = viewspace_.mapXFrom(0.0) * p.window().width(),
-            right = viewspace_.mapXFrom(sequence_->length() / sequence_->speed()) * p.window().width();
+            // Sequences in Clips are unbounded
+            right = sequence_->parentClip() ?
+                    rect.right()
+                  : viewspace_.mapXFrom(sequence_->length() / sequence_->speed()) * p.window().width();
 
         if (left > rect.left() || right < rect.right())
         {

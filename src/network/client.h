@@ -31,6 +31,8 @@ public:
 
     EventCom & eventCom() { return *eventCom_; }
 
+    bool isRunning() const;
+
 signals:
 
     void connected();

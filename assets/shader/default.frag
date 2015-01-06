@@ -1,4 +1,4 @@
-#version 130
+#version 330
 
 
 /* defines
@@ -6,13 +6,24 @@
  * MO_NUM_LIGHTS x
  * MO_ENABLE_TEXTURE
  * MO_ENABLE_TEXTURE_POST_PROCESS
+ * MO_ENABLE_TEXTURE_TRANSFORMATION
+ * MO_ENABLE_TEXTURE_SINE_MORPH
  * MO_ENABLE_NORMALMAP
  * MO_FRAGMENT_LIGHTING
  * MO_TEXTURE_IS_FULLDOME_CUBE
+ * MO_USE_POINT_COORD // use gl_PointCoord instead of v_texCoord
+ * MO_ENABLE_TEXTURE_TRANSFORMATION
+ * MO_ENABLE_TEXTURE_SINE_MORPH
+ * MO_ENABLE_NORMALMAP_TRANSFORMATION
+ * MO_ENABLE_NORMALMAP_SINE_MORPH
  */
 
 const float PI = 3.14159265358979;
 const float HALF_PI = 1.5707963268;
+
+// --- attributes ---
+
+//%user_attributes%
 
 // --- input from vertex shader ---
 
@@ -23,6 +34,7 @@ in vec3 v_cam_dir;
 in vec3 v_normal;
 in vec3 v_normal_eye;
 in vec4 v_color;
+in vec4 v_ambient_color;
 in vec2 v_texCoord;
 #ifdef MO_ENABLE_LIGHTING
     #ifndef MO_FRAGMENT_LIGHTING
@@ -39,9 +51,11 @@ out vec4 color;
 
 // --- uniforms ---
 
-uniform vec4 u_color;
+uniform float u_time;
+
 #ifdef MO_ENABLE_LIGHTING
     uniform float u_diffuse_exp;
+    uniform float u_light_diffuse_exp[MO_NUM_LIGHTS];
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
     uniform vec3 u_light_pos[MO_NUM_LIGHTS];
     #ifdef MO_FRAGMENT_LIGHTING
@@ -65,19 +79,70 @@ uniform vec4 u_color;
     uniform float u_post_alpha_edge;
 #endif
 
+
+// texture transform and morph
+    uniform vec4 u_tex_transform; // x,y, scalex, scaley
+    uniform vec3 u_tex_morphx;    // amp, freq, phase [0,2pi]
+    uniform vec3 u_tex_morphy;
+// same for normalmap
+    uniform vec4 u_tex_transform_bump;
+    uniform vec3 u_tex_morphx_bump;
+    uniform vec3 u_tex_morphy_bump;
+
 #ifdef MO_ENABLE_NORMALMAP
-uniform sampler2D tex_norm_0;
-uniform float u_bump_scale;
+    uniform sampler2D tex_norm_0;
+    uniform float u_bump_scale;
+#endif
+
+
+//%user_uniforms%
+
+
+// ------------------- functions ------------------------
+
+// morphs the texture coordinates
+vec2 mo_texture_lookup(in vec2 st)
+{
+    return st
+#ifdef MO_ENABLE_TEXTURE_TRANSFORMATION
+            * u_tex_transform.zw
+            + u_tex_transform.xy
+#endif
+
+#ifdef MO_ENABLE_TEXTURE_SINE_MORPH
+            + vec2(
+                  u_tex_morphx.x * sin(st.y * u_tex_morphx.y + u_tex_morphx.z),
+                  u_tex_morphy.x * sin(st.x * u_tex_morphy.y + u_tex_morphy.z))
+#endif
+            ;
+}
+
+// same for normalmap coordinates
+vec2 mo_normalmap_lookup(in vec2 st)
+{
+    return st
+#ifdef MO_ENABLE_NORMALMAP_TRANSFORMATION
+            * u_tex_transform_bump.zw
+            + u_tex_transform_bump.xy
+#endif
+
+#ifdef MO_ENABLE_NORMALMAP_SINE_MORPH
+            + vec2(
+                  u_tex_morphx_bump.x * sin(st.y * u_tex_morphx_bump.y + u_tex_morphx_bump.z),
+                  u_tex_morphy_bump.x * sin(st.x * u_tex_morphy_bump.y + u_tex_morphy_bump.z))
+#endif
+            ;
+}
+
+#ifdef MO_ENABLE_NORMALMAP
+// calculate the normal map influence
 vec3 normalmap = mix(
             vec3(0., 0., 1.),
-            texture(tex_norm_0, v_texCoord).xyz * 2.0 - 1.0,
+            texture(tex_norm_0, mo_normalmap_lookup(v_texCoord)).xyz * 2.0 - 1.0,
             u_bump_scale
         );
 #endif
 
-
-
-// ------------------- functions ------------------------
 
 #ifdef MO_ENABLE_TEXTURE_POST_PROCESS
 vec4 mo_color_post_process(in vec4 col)
@@ -106,6 +171,8 @@ vec4 mo_color_post_process(in vec4 col)
     return col;
 }
 #endif
+
+
 
 /* read from cubemap as if stiched to a fulldome master
    st = [0,1]
@@ -136,19 +203,28 @@ vec4 mo_texture_cube(in samplerCube tex, vec2 st, float angle)
 
 vec4 mo_ambient_color()
 {
-    return u_color * v_color
+#ifdef MO_USE_POINT_COORD
+    vec2 texCoord = gl_PointCoord;
+#else
+    vec2 texCoord = v_texCoord;
+#endif
+
+    // transform tex-coord
+    vec2 tc = mo_texture_lookup( texCoord );
+
+    return v_ambient_color
 #ifdef MO_ENABLE_TEXTURE
     #ifndef MO_ENABLE_TEXTURE_POST_PROCESS
         #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
-                * texture(tex_0, v_texCoord)
+                * texture(tex_0, tc)
         #else
-                * mo_texture_cube(tex_0, v_texCoord, 180.0)
+                * mo_texture_cube(tex_0, tc, 180.0)
         #endif
     #else
         #ifndef MO_TEXTURE_IS_FULLDOME_CUBE
-                * mo_color_post_process( texture(tex_0, v_texCoord) )
+                * mo_color_post_process( texture(tex_0, tc) )
         #else
-                * mo_color_post_process( mo_texture_cube(tex_0, v_texCoord, 180.0) )
+                * mo_color_post_process( mo_texture_cube(tex_0, tc, 180.0) )
         #endif
     #endif
 #endif
@@ -192,7 +268,8 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
 
         for (int i=0; i<MO_NUM_LIGHTS; ++i)
             c += mo_calc_light_color(
-                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i], u_diffuse_exp);
+                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i],
+                            u_diffuse_exp * u_light_diffuse_exp[i]);
 
         return c;
     }
@@ -225,7 +302,8 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
                 att *= mix(1.0, diratt, u_light_dirmix[i]);
             }
 
-            c += mo_calc_light_color(ldir, att * u_light_color[i], u_diffuse_exp);
+            c += mo_calc_light_color(ldir, att * u_light_color[i],
+                                     u_diffuse_exp * u_light_diffuse_exp[i]);
         }
 
         return c;
@@ -261,7 +339,7 @@ void main()
     //col *= mo_toon_color();
 
     // final color
-    color = vec4(clamp(col, 0.0, 1.0));
+    color = vec4(clamp(col * v_color, 0.0, 1.0));
 
     //gl_DepthRangeParameters.
 }

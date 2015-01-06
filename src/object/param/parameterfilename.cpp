@@ -14,6 +14,7 @@
 #include "io/log.h"
 #include "object/trackfloat.h"
 #include "object/scene.h"
+#include "object/util/objecteditor.h"
 #include "modulator.h"
 #include "io/files.h"
 
@@ -56,6 +57,7 @@ bool ParameterFilename::openFileDialog(QWidget * parent)
 {
     MO_ASSERT(object(), "no object for ParameterFilename::openFileDialog()");
     MO_ASSERT(object()->sceneObject(), "no scene for ParameterFilename::openFileDialog()");
+    MO_ASSERT(object()->sceneObject()->editor(), "no Editor for ParameterFilename::openFileDialog()");
 
     if (!object() || !object()->sceneObject())
         return false;
@@ -64,7 +66,7 @@ bool ParameterFilename::openFileDialog(QWidget * parent)
     if (fn.isEmpty())
         return false;
 
-    object()->sceneObject()->setParameterValue(this, fn);
+    object()->sceneObject()->editor()->setParameterValue(this, fn);
     return true;
 }
 

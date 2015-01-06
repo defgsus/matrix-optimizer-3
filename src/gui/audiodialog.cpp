@@ -8,6 +8,8 @@
     <p>created 7/22/2014</p>
 */
 
+#include <cmath>
+
 #include <QLayout>
 #include <QComboBox>
 #include <QMessageBox>
@@ -21,10 +23,11 @@
 #include "audio/audiodevices.h"
 #include "audio/audiodevice.h"
 #include "audio/tool/envelopefollower.h"
-#include "io/error.h"
 #include "math/constants.h"
 #include "io/settings.h"
 #include "widget/envelopewidget.h"
+#include "io/error.h"
+#include "io/log.h"
 
 
 namespace MO {
@@ -50,21 +53,49 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
 
     auto l0 = new QVBoxLayout(this);
 
-        apiBox_ = new QComboBox(this);
-        l0->addWidget(apiBox_);
-        connect(apiBox_, SIGNAL(currentIndexChanged(int)),
-                this, SLOT(apiSelected_()));
-
-        deviceBox_ = new QComboBox(this);
-        l0->addWidget(deviceBox_);
-        connect(deviceBox_, SIGNAL(currentIndexChanged(int)),
-                this, SLOT(deviceSelected_()));
-
-        // buffersize
+        // api
         auto lh = new QHBoxLayout();
         l0->addLayout(lh);
 
-            auto label = new QLabel(tr("buffer size"), this);
+            auto label = new QLabel(tr("driver/api"), this);
+            lh->addWidget(label);
+
+            apiBox_ = new QComboBox(this);
+            lh->addWidget(apiBox_);
+            connect(apiBox_, SIGNAL(currentIndexChanged(int)),
+                    this, SLOT(apiSelected_()));
+
+        lh = new QHBoxLayout();
+        l0->addLayout(lh);
+
+            label = new QLabel(tr("input "), this);
+            lh->addWidget(label);
+
+            inDeviceBox_ = new QComboBox(this);
+            lh->addWidget(inDeviceBox_);
+            connect(inDeviceBox_, SIGNAL(currentIndexChanged(int)),
+                    this, SLOT(deviceSelected_()));
+
+        lh = new QHBoxLayout();
+        l0->addLayout(lh);
+
+#ifdef MO_REQUIRE_SEPARATE_AUDIO
+            label = new QLabel(tr("output"), this);
+#else
+            label = new QLabel(tr("input/output"), this);
+#endif
+            lh->addWidget(label);
+
+            outDeviceBox_ = new QComboBox(this);
+            lh->addWidget(outDeviceBox_);
+            connect(outDeviceBox_, SIGNAL(currentIndexChanged(int)),
+                    this, SLOT(deviceSelected_()));
+
+        // buffersize
+        lh = new QHBoxLayout();
+        l0->addLayout(lh);
+
+            label = new QLabel(tr("buffer size"), this);
             lh->addWidget(label);
 
             bufferSize_ = new QSpinBox(this);
@@ -235,8 +266,10 @@ void AudioDialog::checkDevices_()
 {
     apiBox_->clear();
     apiBox_->addItem(tr("None"), QVariant(-1));
-    deviceBox_->clear();
-    deviceBox_->addItem(tr("None"), QVariant(-1));
+    inDeviceBox_->clear();
+    inDeviceBox_->addItem(tr("None"), QVariant(-1));
+    outDeviceBox_->clear();
+    outDeviceBox_->addItem(tr("None"), QVariant(-1));
 
     try
     {
@@ -262,16 +295,18 @@ void AudioDialog::checkDevices_()
     }
 
 
-    fillDeviceBox_();
+    fillInDeviceBox_();
+    fillOutDeviceBox_();
 }
 
 
-void AudioDialog::fillDeviceBox_()
+void AudioDialog::fillInDeviceBox_()
 {
-    QString dev = settings->getValue("Audio/device").toString();
+    // MH: Backwardcompatibility???
+    QString dev = settings->getValue("Audio/indevice").toString();
 
-    deviceBox_->clear();
-    deviceBox_->addItem(tr("None"), QVariant(-1));
+    inDeviceBox_->clear();
+    inDeviceBox_->addItem(tr("No input device"), QVariant(-1));
 
     if (apiBox_->currentIndex() <= 0)
         return;
@@ -284,76 +319,134 @@ void AudioDialog::fillDeviceBox_()
         if (inf->apiIndex != apiIndex)
             continue;
 
-        deviceBox_->addItem(QString("%1:%2 %3")
+        inDeviceBox_->addItem(QString("%1:%2 %3")
                             .arg(inf->numInputChannels)
                             .arg(inf->numOutputChannels)
                             .arg(inf->name), QVariant(i));
 
         if (inf->name == dev)
-            deviceBox_->setCurrentIndex(i + 1);
+            inDeviceBox_->setCurrentIndex(i + 1);
+    }
+}
+
+void AudioDialog::fillOutDeviceBox_()
+{
+    // MH: Backwardcompatibility???
+    QString dev = settings->getValue("Audio/outdevice").toString();
+
+    outDeviceBox_->clear();
+    outDeviceBox_->addItem(tr("No output device"), QVariant(-1));
+
+    if (apiBox_->currentIndex() <= 0)
+        return;
+
+    uint apiIndex = apiBox_->currentIndex() - 1;
+
+    for (uint i=0; i<devices_->numDevices(); ++i)
+    {
+        auto inf = devices_->getDeviceInfo(i);
+        if (inf->apiIndex != apiIndex)
+            continue;
+
+        outDeviceBox_->addItem(QString("%1:%2 %3")
+                            .arg(inf->numInputChannels)
+                            .arg(inf->numOutputChannels)
+                            .arg(inf->name), QVariant(i));
+
+        if (inf->name == dev)
+            outDeviceBox_->setCurrentIndex(i + 1);
     }
 }
 
 void AudioDialog::apiSelected_()
 {
-    fillDeviceBox_();
+    fillInDeviceBox_();
+    fillOutDeviceBox_();
 }
 
 void AudioDialog::deviceSelected_()
 {
-    int idx = selectedDeviceIndex();
-    bool works = idx >= 0 && devices_->getDeviceInfo(idx)->numOutputChannels;
-    testButt_->setEnabled( works );
-    okButt_->setEnabled( works );
+    int inidx = selectedInDeviceIndex();
+    int outidx = selectedOutDeviceIndex();
+
+    bool haveOutput = outidx >= 0 && devices_->getDeviceInfo(outidx)->numOutputChannels,
+         haveOutputIns = outidx >= 0 && devices_->getDeviceInfo(outidx)->numInputChannels,
+         haveInput = inidx >= 0 && devices_->getDeviceInfo(inidx)->numInputChannels,
+    // only enable when ouptut channels are present and
+         works = haveOutput;
+    // mutually exclude inputs or inputs-in-2nd-device
+    if (haveInput && haveOutputIns)
+        works = false;
+
+    // fill widgets with default values
     if (works)
     {
+        // be sure to read from correct device
+        if (haveOutputIns)
+            inidx = outidx;
+
+        // MH: Do something about samplerates of input and output...
+        // maybe match them or allow only matching samplerates...
         if (!settings->contains("Audio/samplerate"))
-            sampleRate_->setValue(devices_->getDeviceInfo(idx)->defaultSampleRate);
+            sampleRate_->setValue(devices_->getDeviceInfo(outidx)->defaultSampleRate);
         if (!settings->contains("Audio/buffersize"))
-            bufferSize_->setValue(devices_->getDeviceInfo(idx)->defaultBufferLength);
+            bufferSize_->setValue(devices_->getDeviceInfo(outidx)->defaultBufferLength);
         if (!settings->contains("Audio/channelsIn"))
-            numInputs_->setValue(devices_->getDeviceInfo(idx)->numInputChannels);
+            numInputs_->setValue(devices_->getDeviceInfo(inidx)->numInputChannels);
         if (!settings->contains("Audio/channelsOut"))
-            numOutputs_->setValue(devices_->getDeviceInfo(idx)->numOutputChannels);
+            numOutputs_->setValue(devices_->getDeviceInfo(outidx)->numOutputChannels);
     }
+
+    // update widgets
+    testButt_->setEnabled( works );
+    okButt_->setEnabled( works );
     setWidgetChannelLimits_();
 }
 
 void AudioDialog::setWidgetChannelLimits_()
 {
-    int idx = selectedDeviceIndex();
-    if (idx < 0)
+    int inidx = selectedInDeviceIndex();
+    if (inidx < 0)
     {
-        numInputs_->setMaximum(256);
-        numOutputs_->setMaximum(256);
+        numInputs_->setMaximum(1024);
+        numOutputs_->setMaximum(1024);
         return;
     }
-    numInputs_->setMaximum(devices_->getDeviceInfo(idx)->numInputChannels);
-    numOutputs_->setMaximum(devices_->getDeviceInfo(idx)->numOutputChannels);
+    numInputs_->setMaximum(devices_->getDeviceInfo(inidx)->numInputChannels);
+    int outidx = selectedOutDeviceIndex();
+    if (outidx < 0)
+    {
+        numInputs_->setMaximum(1024);
+        numOutputs_->setMaximum(1024);
+        return;
+    }
+    numOutputs_->setMaximum(devices_->getDeviceInfo(outidx)->numOutputChannels);
 }
 
 void AudioDialog::setDefaultSamplerate_()
 {
-    int idx = selectedDeviceIndex();
-    if (idx >= 0)
+    // MH: Do something about matching samplerates in Input and output...
+    int outidx = selectedOutDeviceIndex();
+    if (outidx >= 0)
     {
-        sampleRate_->setValue(devices_->getDeviceInfo(idx)->defaultSampleRate);
+        sampleRate_->setValue(devices_->getDeviceInfo(outidx)->defaultSampleRate);
     }
 }
 
 
 void AudioDialog::setDefaultBuffersize_()
 {
-    int idx = selectedDeviceIndex();
-    if (idx >= 0)
+    // MH: Do something about matching samplerates in Input and output...
+    int outidx = selectedOutDeviceIndex();
+    if (outidx >= 0)
     {
-        bufferSize_->setValue(devices_->getDeviceInfo(idx)->defaultBufferLength);
+        bufferSize_->setValue(devices_->getDeviceInfo(outidx)->defaultBufferLength);
     }
 }
 
 void AudioDialog::setDefaultChannelsIn_()
 {
-    int idx = selectedDeviceIndex();
+    int idx = selectedInDeviceIndex();
     if (idx >= 0)
     {
         numInputs_->setValue(devices_->getDeviceInfo(idx)->numInputChannels);
@@ -362,28 +455,41 @@ void AudioDialog::setDefaultChannelsIn_()
 
 void AudioDialog::setDefaultChannelsOut_()
 {
-    int idx = selectedDeviceIndex();
+    int idx = selectedOutDeviceIndex();
     if (idx >= 0)
     {
         numOutputs_->setValue(devices_->getDeviceInfo(idx)->numOutputChannels);
     }
 }
 
-int AudioDialog::selectedDeviceIndex() const
+int AudioDialog::selectedInDeviceIndex() const
 {
-    int idx = deviceBox_->currentIndex();
+    int idx = inDeviceBox_->currentIndex();
     if (idx < 1)
         return -1;
 
-    return deviceBox_->itemData(idx).toInt();
+    return inDeviceBox_->itemData(idx).toInt();
+}
+
+int AudioDialog::selectedOutDeviceIndex() const
+{
+    int idx = outDeviceBox_->currentIndex();
+    if (idx < 1)
+        return -1;
+
+    return outDeviceBox_->itemData(idx).toInt();
 }
 
 void AudioDialog::storeConfig_()
 {
-    int idx = apiBox_->currentIndex();
-    settings->setValue("Audio/api", idx < 1? "None" : devices_->getApiInfo(idx-1)->name );
-    idx = deviceBox_->currentIndex();
-    settings->setValue("Audio/device", idx < 1? "None" : devices_->getDeviceInfo(idx-1)->name );
+    int inidx =  apiBox_->currentIndex();
+    int outidx = apiBox_->currentIndex();
+//    settings->setValue("Audio/api", inidx < 1? "None" : devices_->getApiInfo(inidx-1)->name );
+    settings->setValue("Audio/api", outidx < 1? "None" : devices_->getApiInfo(outidx-1)->name );
+    inidx  = inDeviceBox_->currentIndex();
+    outidx = outDeviceBox_->currentIndex();
+    settings->setValue("Audio/indevice", inidx < 1? "None" : devices_->getDeviceInfo(inidx-1)->name );
+    settings->setValue("Audio/outdevice", outidx < 1? "None" : devices_->getDeviceInfo(outidx-1)->name );
     settings->setValue("Audio/samplerate", sampleRate_->value());
     settings->setValue("Audio/buffersize", bufferSize_->value());
     settings->setValue("Audio/channelsIn", numInputs_->value());
@@ -404,6 +510,8 @@ void AudioDialog::toggleTesttone_()
 
 void AudioDialog::startTone_()
 {
+    MO_DEBUG("testing audio");
+
     if (!device_)
         device_ = new AUDIO::AudioDevice();
     else
@@ -412,11 +520,19 @@ void AudioDialog::startTone_()
         device_->close();
     }
 
-    int idx = selectedDeviceIndex();
-    if (idx < 0)
+    // output device
+    int outidx = selectedOutDeviceIndex();
+    if (outidx < 0)
         return;
 
-    auto inf = devices_->getDeviceInfo(idx);
+    auto outinf = devices_->getDeviceInfo(outidx);
+
+    // input device
+    int inidx = selectedInDeviceIndex();
+    
+    AUDIO::AudioDevices::DeviceInfo * ininf = 0;
+    if (inidx >= 0)
+        devices_->getDeviceInfo(inidx);
 
     AUDIO::Configuration conf;
     conf.setNumChannelsIn(numInputs_->value());
@@ -501,13 +617,16 @@ void AudioDialog::startTone_()
 
     try
     {
-        device_->init(idx, conf);
+        MO_DEBUG("audio config == " << conf);
+        // MH: Change code here for audio input and output
+        device_->init(inidx, outidx, conf);
     }
     catch (AudioException& e)
     {
         QMessageBox::warning(this, tr("Error"),
-                             tr("Failed to init audio device '%1'.\n%2")
-                             .arg(inf->name)
+                             tr("Failed to init audio device '%1' or '%2'.\n%3")
+                             .arg(ininf ? ininf->name : tr("None"))
+                             .arg(outinf->name)
                              .arg(e.what())
                              );
         testButt_->setChecked(false);
@@ -520,12 +639,14 @@ void AudioDialog::startTone_()
         device_->start();
         timer_->start();
         envWidget_->setVisible(true);
+        envWidget_->setAnimating(true);
     }
     catch (AudioException& e)
     {
         QMessageBox::warning(this, tr("Error"),
-                             tr("Failed to start audio device '%1'.\n%2")
-                             .arg(inf->name)
+                             tr("Failed to start audio device '%1' or '%2'.\n%3")
+                             .arg(ininf->name)
+                             .arg(outinf->name)
                              .arg(e.what())
                              );
         device_->close();
@@ -540,6 +661,7 @@ void AudioDialog::stopTone_()
     timer_->stop();
     if (device_)
     {
+        envWidget_->setAnimating(false);
         envWidget_->setVisible(false);
         device_->stop();
         device_->close();

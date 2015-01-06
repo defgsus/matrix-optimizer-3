@@ -10,7 +10,9 @@
 
 #include <QDebug>
 #include <QIcon>
+#include <QBitmap>
 #include <QFile>
+#include <QMessageBox>
 
 #include "objectfactory.h"
 #include "io/datastream.h"
@@ -27,13 +29,13 @@
 #include "transform/look.h"
 #include "transform/lookat.h"
 #include "transform/mix.h"
-#include "audio/envelopeunit.h"
-#include "audio/filterunit.h"
-#include "audio/filterbankunit.h"
 #include "scene.h"
 #include "trackfloat.h"
 #include "sequencefloat.h"
 #include "modulatorobjectfloat.h"
+#include "synthesizer.h"
+#include "audio/filterao.h"
+#include "io/files.h"
 
 namespace MO {
 
@@ -41,6 +43,9 @@ namespace {
 
     static QString MO_SCENEFILE_HEADER( "matrix-optimizer-scene" );
     static int     MO_SCENEFILE_VERSION( 1 );
+
+    static QString MO_OBJECTFILE_HEADER( "matrix-optimizer-object" );
+    static int     MO_OBJECTFILE_VERSION( 1 );
 
 }
 
@@ -57,6 +62,65 @@ ObjectFactory& ObjectFactory::instance()
         instance_ = new ObjectFactory();
 
     return *instance_;
+}
+
+int ObjectFactory::hueForObject(int type)
+{
+    if (type == Object::T_DUMMY)
+        return 20;
+    else
+    if (type & Object::TG_TRANSFORMATION)
+        return 240;
+    else
+    if (type == Object::T_LIGHTSOURCE)
+        return 60;
+    else
+    if (type & Object::TG_TRACK)
+        return 100;
+    else
+    if (type & Object::TG_SEQUENCE)
+        return 140;
+    else
+    if (type & Object::TG_MODULATOR_OBJECT)
+        return 170;
+    else
+    if (type & Object::T_AUDIO_OBJECT)
+        return 350;
+    else
+    if (type & Object::T_SOUNDSOURCE)
+        return 290;
+    else
+    if (type & Object::T_SOUND_OBJECT)
+        return 290;
+    else
+        return -1;
+}
+
+QColor ObjectFactory::colorForObject(const Object * o, bool darkSet)
+{
+    const bool active = o->activeAtAll();
+
+    int bright = darkSet? 48 : 200;
+
+    int hue = (o->hasAttachedData(Object::DT_HUE))
+            ? o->getAttachedData(Object::DT_HUE).toInt()
+            : hueForObject(o->type());
+
+    if (!active)
+        bright += darkSet? 100 : -90;
+
+    if (hue == -1)
+        return QColor(bright, bright, bright);
+
+    int sat = active ? 128 : 28;
+
+    if (!o->isValid())
+    {
+        hue = 20;
+        sat = 200;
+    }
+
+    return QColor::fromHsl(hue, sat, bright);
 }
 
 const QIcon& ObjectFactory::iconForObject(const Object * o)
@@ -81,6 +145,22 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
     static QIcon iconAUEnv(":/icon/obj_au_env.png");
     static QIcon iconAUFilter(":/icon/obj_au_filter.png");
     static QIcon iconAUFilterBank(":/icon/obj_au_filterbank.png");
+    static QIcon iconMusicNote(":/icon/music_note.png");
+    static QIcon iconClip(":/icon/obj_clip.png");
+    static QIcon iconClipCont(":/icon/obj_clipcontroller.png");
+    static QIcon iconAudio(":/icon/obj_audio.png");
+
+/*    if (qobject_cast<const Synthesizer*>(o))
+        return iconMusicNote;
+*/
+    if (o->isClip())
+        return iconClip;
+
+    if (o->isClipController())
+        return iconClipCont;
+
+    if (o->isAudioObject())
+        return iconAudio;
 
     if (o->isTransformation())
     {
@@ -100,14 +180,19 @@ const QIcon& ObjectFactory::iconForObject(const Object * o)
             return iconMix;
     }
 
-    if (o->isAudioUnit())
+    if (o->isAudioObject())
     {
-        if (qobject_cast<const EnvelopeUnit*>(o))
-            return iconAUEnv;
-        if (qobject_cast<const FilterUnit*>(o))
+        return iconParameter;
+    }
+
+    if (o->isAudioObject())
+    {
+//        if (qobject_cast<const EnvelopeUnit*>(o))
+//            return iconAUEnv;
+        if (qobject_cast<const FilterAO*>(o))
             return iconAUFilter;
-        if (qobject_cast<const FilterBankUnit*>(o))
-            return iconAUFilterBank;
+        //if (qobject_cast<const FilterBankUnit*>(o))
+//            return iconAUFilterBank;
     }
 
 
@@ -137,6 +222,9 @@ const QIcon& ObjectFactory::iconForObject(int type)
     static QIcon iconRotation(":/icon/obj_rotation.png");
     static QIcon iconScale(":/icon/obj_scale.png");
     static QIcon iconTrack(":/icon/obj_track.png");
+    static QIcon iconClip(":/icon/obj_clip.png");
+    static QIcon iconClipCont(":/icon/obj_clipcontroller.png");
+    static QIcon iconAudio(":/icon/obj_audio.png");
 
     switch (type)
     {
@@ -145,6 +233,9 @@ const QIcon& ObjectFactory::iconForObject(int type)
         case Object::T_MICROPHONE: return iconMicrophone;
         case Object::T_CAMERA: return iconCamera;
         case Object::T_SOUNDSOURCE: return iconSoundSource;
+        case Object::T_CLIP: return iconClip;
+        case Object::T_CLIP_CONTROLLER: return iconClipCont;
+        case Object::T_AUDIO_OBJECT: return iconAudio;
     }
     if (type & Object::TG_TRACK) return iconTrack;
     if (type & Object::TG_FLOAT) return iconParameter;
@@ -152,6 +243,17 @@ const QIcon& ObjectFactory::iconForObject(int type)
     return iconNone;
 }
 
+QIcon ObjectFactory::iconForObject(const Object * obj, QColor color, const QSize& size)
+{
+    QSize si = size;
+    QIcon org = iconForObject(obj);
+    if (si.isEmpty())
+        si = QSize(128, 128);
+    QPixmap pix(si);
+    pix.fill(color);
+    pix.setMask(org.pixmap(si).mask());
+    return QIcon(pix);
+}
 
 bool ObjectFactory::registerObject(Object * obj)
 {
@@ -185,16 +287,14 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
 
     // --- prepare object ---
 
-    obj->idName_ = obj->className();
-    if (obj->name_.isEmpty())
-        obj->name_ = className;
+    Private::set_object_id_(obj, obj->className());
+    if (obj->name().isEmpty())
+        obj->setName(className);
 
     if (createParametersAndObjects)
     {
         obj->createParameters();
 
-        obj->createAudioSources();
-        obj->createMicrophones();
         //obj->createOutputs();
     }
 
@@ -214,7 +314,7 @@ TrackFloat * ObjectFactory::createTrackFloat(const QString &name)
     MO_ASSERT(t, "could not create TrackFloat object");
 
     if (!name.isEmpty())
-        t->name_ = t->idName_ = name;
+        t->setName(name);
 
     return t;
 }
@@ -224,7 +324,7 @@ SequenceFloat * ObjectFactory::createSequenceFloat(const QString& name)
     SequenceFloat * seq = qobject_cast<SequenceFloat*>(createObject("SequenceFloat"));
     MO_ASSERT(seq, "could not create SequenceFloat object");
     if (!name.isEmpty())
-        seq->name_ = seq->idName_ = name;
+        seq->setName(name);
     return seq;
 }
 
@@ -235,7 +335,7 @@ ModulatorObjectFloat * ObjectFactory::createModulatorObjectFloat(const QString &
     MO_ASSERT(o, "could not create ModulatorObjectFloat object");
 
     if (!name.isEmpty())
-        o->name_ = o->idName_ = name;
+        o->setName(name);
 
     return o;
 }
@@ -265,6 +365,59 @@ QList<const Object*> ObjectFactory::possibleChildObjects(const Object * parent)
     }
 
     return list;
+}
+
+QList<const Object*> ObjectFactory::objects(int types)
+{
+    QList<const Object*> list;
+
+    for (auto &i : instance().objectMap_)
+    {
+        Object * o = i.second.get();
+
+        if (o->type() & types)
+            list.append(o);
+    }
+
+    return list;
+}
+
+int ObjectFactory::getBestInsertIndex(Object *parent, Object *newChild, int idx)
+{
+    if (parent->childObjects().isEmpty())
+        return 0;
+
+    const int num = parent->childObjects().size();
+
+    if (idx < 0 || idx >= num)
+        idx = num - 1;
+
+    // find place according to priority
+    const int p = Object::objectPriority(newChild);
+    for (int i = 0; i < num; ++i)
+    {
+        const int pi = Object::objectPriority( parent->childObjects()[i] );
+        if (idx <= i && pi <= p)
+            return i;
+        if (pi < p)
+            return i;
+    }
+    return num;
+
+#if (0)
+    for (int i = num - 1; i > 0; --i)
+    {
+        //const int pi = Object::objectPriority( parent->childObjects()[i] );
+        const int pim = Object::objectPriority( parent->childObjects()[i-1] );
+        // matches index and priority?
+        if (pim >= p && idx >= i)
+            return i;
+        /*const int pim = Object::objectPriority( parent->childObjects()[i-1] );
+        if (pim >= p && idx < i)
+            return i;*/
+    }
+    return 0;
+#endif
 }
 
 bool ObjectFactory::canHaveChildObjects(const Object * parent)
@@ -367,4 +520,121 @@ Scene * ObjectFactory::loadScene(IO::DataStream &io)
     }
 }
 
+
+
+
+
+void ObjectFactory::saveObject(const QString &fn, const Object * obj)
+{
+    QFile file(fn);
+
+    if (!file.open(QFile::WriteOnly))
+        MO_IO_ERROR(WRITE, "could not create object file '" << fn << "'\n"
+                    << file.errorString());
+
+    IO::DataStream io(&file);
+
+    saveObject(io, obj);
+}
+
+void ObjectFactory::saveObject(IO::DataStream & io, const Object * obj)
+{
+    io.writeHeader(MO_OBJECTFILE_HEADER, MO_OBJECTFILE_VERSION);
+
+    io << (quint8)useCompression_;
+
+    if (!useCompression_)
+        obj->serializeTree(io);
+    else
+    {
+        QByteArray data = obj->serializeTreeCompressed();
+        io << data;
+    }
+}
+
+Object * ObjectFactory::loadObject(const QString &fn)
+{
+    QFile file(fn);
+
+    if (!file.open(QFile::ReadOnly))
+        MO_IO_ERROR(READ, "could not open object file '" << fn << "'\n"
+                    << file.errorString());
+
+    IO::DataStream io(&file);
+
+    return loadObject(io);
+}
+
+Object * ObjectFactory::loadObject(IO::DataStream &io)
+{
+    try
+    {
+        io.readHeader(MO_OBJECTFILE_HEADER, MO_OBJECTFILE_VERSION);
+    }
+    catch (const IoException &e)
+    {
+        MO_IO_WARNING(VERSION_MISMATCH,
+                      "error reading object\n"
+                      << e.what());
+        return 0;
+    }
+
+    quint8 compressed;
+    io >> compressed;
+
+    Object * o;
+
+    if (!compressed)
+        o = Object::deserializeTree(io);
+    else
+    {
+        QByteArray data;
+        io >> data;
+        o = Object::deserializeTreeCompressed(data);
+    }
+
+    return o;
+}
+
+
+void ObjectFactory::storeObjectTemplate(Object * obj)
+{
+    QString fn = IO::Files::getSaveFileName(IO::FT_OBJECT_TEMPLATE, 0);
+    if (fn.isEmpty())
+        return;
+
+    try
+    {
+        saveObject(fn, obj);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("io error"),
+                              tr("Could not save the object template\n%1\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+}
+
+Object * ObjectFactory::loadObjectTemplate()
+{
+    QString fn = IO::Files::getOpenFileName(IO::FT_OBJECT_TEMPLATE, 0);
+    if (fn.isEmpty())
+        return 0;
+
+    try
+    {
+        Object * o = ObjectFactory::loadObject(fn);
+        return o;
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("io error"),
+                              tr("Could not load the object template\n%1\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+    return 0;
+}
+
+
 } // namespace MO
+

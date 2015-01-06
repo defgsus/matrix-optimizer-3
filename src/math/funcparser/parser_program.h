@@ -183,6 +183,8 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,		1, "tri",		math_func<Float>::tri_1         );
         f.add(Function::FUNCTION,		2, "tri",		math_func<Float>::tri_2         );
 
+        f.add(Function::FUNCTION,		1, "note2freq",	math_func<Float>::note2freq_1   );
+
         f.setCurrentGroup("random");
 
         f.add(Function::FUNCTION,		0, "rnd",		math_func<Float>::rnd_0			);

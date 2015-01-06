@@ -12,7 +12,7 @@
 #include <QGridLayout>
 #include <QScrollBar>
 #include <QWheelEvent>
-
+#include <QToolButton>
 
 #include "sequencer.h"
 #include "trackheader.h"
@@ -61,6 +61,12 @@ void Sequencer::createWidgets_()
         gridLayout_->addWidget(trackView_, 1, 2);
         connect(trackView_, SIGNAL(sequenceSelected(Sequence*)),
                 this, SLOT(onSequenceSelected_(Sequence*)));
+
+        // trackview filter
+        auto filterBut = new QToolButton(this);
+        gridLayout_->addWidget(filterBut, 0, 0);
+        filterBut->setText(tr("F"));
+        filterBut->setMenu(trackView_->createFilterMenu());
 
         // track header
         trackHeader_ = trackView_->trackHeader();
@@ -200,20 +206,12 @@ void Sequencer::clearTracks()
     trackView_->clearTracks();
 }
 
-void Sequencer::setTracks(const QList<Track *> &tracks)
+void Sequencer::setCurrentObject(Object * o)
 {
-    MO_DEBUG_GUI("Sequencer::setTracks(tracks.size()=" << tracks.size() << ")");
+    MO_DEBUG_GUI("Sequencer::setCurrentObject(" << o << ")");
 
-    trackView_->setTracks(tracks);
+    trackView_->setCurrentObject(o);
 }
-
-void Sequencer::setTracks(Object * o, bool recursive)
-{
-    MO_DEBUG_GUI("Sequencer::setTracks(" << o << ", " << recursive << ")");
-
-    setTracks( o->findChildObjects<Track>(QString(), recursive) );
-}
-
 
 
 

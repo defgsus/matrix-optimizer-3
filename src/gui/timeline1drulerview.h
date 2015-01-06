@@ -32,7 +32,10 @@ public:
 
     // -------------- components ------------------
 
+    MATH::Timeline1D * timeline() const;
+
     Timeline1DView * timelineView() { return timelineView_; }
+
     Ruler * rulerX() { return rulerX_; }
     Ruler * rulerY() { return rulerY_; }
 
@@ -50,6 +53,9 @@ signals:
 
     /** Send when viewspace was changed by user */
     void viewSpaceChanged(const UTIL::ViewSpace&);
+
+    /** Emitted after a change to the timeline data */
+    void timelineChanged();
 
 public slots:
 

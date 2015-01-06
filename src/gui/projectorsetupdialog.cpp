@@ -27,6 +27,7 @@
 #include "widget/spinbox.h"
 #include "widget/doublespinbox.h"
 #include "widget/groupwidget.h"
+#include "widget/overlapareaeditwidget.h"
 #include "projection/projectionsystemsettings.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
@@ -34,6 +35,8 @@
 #include "io/settings.h"
 #include "engine/serverengine.h"
 #include "projection/projectormapper.h"
+#include "projection/testprojectionrenderer.h"
+#include "projection/projectorblender.h"
 
 namespace MO {
 namespace GUI {
@@ -49,10 +52,13 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
       projectorSettings_(new ProjectorSettings()),
       copyOfProjectorSettings_(0),
       cameraSettings_   (new CameraSettings()),
-      copyOfCameraSettings_   (0)
+      copyOfCameraSettings_   (0),
+      testRenderer_ (0)
 {
-    setObjectName("_ProjectorSetupDialog");
+    setObjectName("ProjectorSetupDialog");
     setMinimumSize(760,600);
+
+    settings->restoreGeometry(this);
 
     createWidgets_();
     createMenu_();
@@ -60,11 +66,19 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     // init default settings
     loadDefault_();
 
+    // XXX MH Temporary Fix for disabled menus:
+    //loadPreset_();
+
+    // fixes problems on MAC
+    setWindowModality(Qt::WindowModal);
+
     setViewDirection(Basic3DWidget::VD_FRONT);
 }
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
 {
+    settings->storeGeometry(this);
+
     delete copyOfCameraSettings_;
     delete cameraSettings_;
     delete copyOfProjectorSettings_;
@@ -72,6 +86,8 @@ ProjectorSetupDialog::~ProjectorSetupDialog()
     delete domeSettings_;
     delete orgSettings_;
     delete settings_;
+
+    //delete mainMenu_;
 }
 
 void ProjectorSetupDialog::createMenu_()
@@ -109,6 +125,7 @@ void ProjectorSetupDialog::createMenu_()
         connect(a, SIGNAL(triggered()), this, SLOT(loadDefault_()));
 
         menu->addAction(a = new QAction(tr("Save as default"), menu));
+        a->setShortcut(Qt::CTRL + Qt::Key_D);
         connect(a, SIGNAL(triggered()), this, SLOT(saveDefault_()));
 
 
@@ -143,6 +160,18 @@ void ProjectorSetupDialog::createMenu_()
         menu->addAction(a = new QAction(tr("Paste camera settings"), menu));
         connect(a, SIGNAL(triggered()), this, SLOT(pasteCamera_()));
         aPasteCamera_ = a;
+
+    // ############### CLIENT ###############
+
+    mainMenu_->addMenu(menu = new QMenu(tr("Clients"), mainMenu_));
+
+        menu->addAction(a = new QAction(tr("Create setup from connected clients"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(createFromClients_()));
+
+
+#ifdef __APPLE__
+    mainMenu_->setNativeMenuBar(false);
+#endif
 
     updateActions_();
 }
@@ -202,12 +231,15 @@ void ProjectorSetupDialog::createWidgets_()
                 gr->setExpanded(true);
                 lv->addWidget(gr);
 
-                auto label = new QLabel(tr("view"), this);
-                projectorGroup_->addWidget(label);
+                editId_ = createEdit_(gr, tr("id"), tr("The internal id of the projector - don't bother"),
+                                      "0", 0, true);
 
                 editName_ = createEdit_(gr, tr("name"),
                                             tr("Some name to identify the projector"),
                                         "projector", SLOT(updateProjectorName_()));
+
+                auto label = new QLabel(tr("view"), this);
+                projectorGroup_->addWidget(label);
 
                 spinWidth_ = createSpin_(gr, tr("width"),
                                              tr("Projector's horizontal resolution in pixels"),
@@ -223,12 +255,12 @@ void ProjectorSetupDialog::createWidgets_()
                                              tr("Projector's (vertical) projection angle in degree"),
                                              60, 1, 1, 180, SLOT(updateProjectorSettings_()));
                 spinFov_->setSuffix(" " + tr("°"));
-
+#ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
                 spinLensRad_ = createDoubleSpin_(gr, tr("lens radius"),
                                              tr("The radius of the projector's lens in centimeters"),
                                              0, 0.1, 0, 1000, SLOT(updateProjectorSettings_()));
                 spinLensRad_->setSuffix(" " + tr(" cm"));
-
+#endif
                 label = new QLabel(tr("position"), this);
                 gr->addWidget(label);
 
@@ -239,13 +271,13 @@ void ProjectorSetupDialog::createWidgets_()
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
                 spinDist_->setSuffix(" " + tr("cm"));
 
-                spinLat_ = createDoubleSpin_(gr, tr("latitude"),
+                spinLat_ = createDoubleSpin_(gr, tr("latitude / azimuth"),
                                              tr("Projector's position around the dome"),
                                              0, 1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinLat_->setSuffix(" " + tr("°"));
 
-                spinLong_ = createDoubleSpin_(gr, tr("longitude"),
-                                             tr("Projector's height"),
+                spinLong_ = createDoubleSpin_(gr, tr("longitude / elevation"),
+                                             tr("Projector's height in the dome"),
                                              0, 1, -90, 90, SLOT(updateProjectorSettings_()));
                 spinLong_->setSuffix(" " + tr("°"));
 
@@ -269,6 +301,13 @@ void ProjectorSetupDialog::createWidgets_()
                                                 "- turn left and turn right"),
                                              0, 0.1, -360, 360, SLOT(updateProjectorSettings_()));
                 spinRoll_->setSuffix(" " + tr("°"));
+
+                spinOffsetX_ = createDoubleSpin_(gr, tr("offset x"),
+                                             tr("Shift of projection on x axis"),
+                                             0, 0.05, -1000, 1000, SLOT(updateProjectorSettings_()));
+                spinOffsetY_ = createDoubleSpin_(gr, tr("offset y"),
+                                             tr("Shift of projection on y axis"),
+                                             0, 0.05, -1000, 1000, SLOT(updateProjectorSettings_()));
 
                 // ------- camera settings --------
 
@@ -345,7 +384,50 @@ void ProjectorSetupDialog::createWidgets_()
                                                 "normally zero"),
                                              0, 0.1, -100000, 100000, SLOT(updateProjectorSettings_()));
 
-            lv0->addStretch(2);
+                // ------- overlap area --------
+
+                /*areaGroup_ = gr = new GroupWidget(tr("overlap area blending"), this);
+                lv->addWidget(gr);
+                gr->setExpanded(true);
+                */
+
+                areaEdit_ = new OverlapAreaEditWidget(this);
+                areaEdit_->setMinimumSize(160,90);
+                lv->addWidget(areaEdit_);
+                areaEdit_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+                connect(areaEdit_, SIGNAL(glReleased()), this, SLOT(onGlReleased_()));
+
+                //areaGroup_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+                // ------- blend settings ------
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    label = new QLabel(tr("Blend method"), this);
+                    lh2->addWidget(label);
+
+                    spinBlendMethod_ = new SpinBox(this);
+                    lh2->addWidget(spinBlendMethod_);
+                    spinBlendMethod_->setRange(0,1);
+                    connect(spinBlendMethod_, SIGNAL(valueChanged(int)),
+                            this, SLOT(updateProjectorSettings_()));
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    label = new QLabel(tr("Blend margin"), this);
+                    lh2->addWidget(label);
+
+                    spinBlendMargin_ = new DoubleSpinBox(this);
+                    lh2->addWidget(spinBlendMargin_);
+                    spinBlendMargin_->setRange(0,1);
+                    spinBlendMargin_->setSingleStep(0.025);
+                    connect(spinBlendMargin_, SIGNAL(valueChanged(double)),
+                            this, SLOT(updateProjectorSettings_()));
+
+
+            //lv0->addStretch(2);
 
         // --- preview display ---
 
@@ -356,6 +438,9 @@ void ProjectorSetupDialog::createWidgets_()
             display_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
             lv->addWidget(display_);
             connect(display_, SIGNAL(glReleased()), this, SLOT(onGlReleased_()));
+
+            display_->setTextureCallback(
+                        std::bind(&ProjectorSetupDialog::createTexture_, this, std::placeholders::_1));
 
             // --- display settings ---
 
@@ -428,6 +513,25 @@ void ProjectorSetupDialog::createWidgets_()
                 lh2->addWidget(cb);
                 cb->setChecked(display_->getShowRays());
                 connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowRays(bool)));
+
+            lh2 = new QHBoxLayout();
+            lv->addLayout(lh2);
+
+                cb = new QCheckBox(tr("highlight current projector"), this);
+                lh2->addWidget(cb);
+                cb->setChecked(display_->getShowHighlight());
+                connect(cb, SIGNAL(clicked(bool)), display_, SLOT(setShowHighlight(bool)));
+
+                comboContent_ = new QComboBox(this);
+                lh2->addWidget(comboContent_);
+                comboContent_->addItem(tr("no content"));
+                comboContent_->addItem(tr("display blendings"));
+                comboContent_->addItem(tr("display test scene"));
+                //comboContent_->addItem(tr("display current scene"));
+                comboContent_->setCurrentIndex(settings->value(objectName() + "/displayContent", 0).toInt());
+                connect(comboContent_, SIGNAL(currentIndexChanged(int)),
+                        this, SLOT(onComboContent_()));
+
 
             // --- dome settings ---
 
@@ -503,7 +607,8 @@ void ProjectorSetupDialog::createWidgets_()
 QLineEdit * ProjectorSetupDialog::createEdit_(GroupWidget * group,
                     const QString& desc, const QString& statusTip,
                     const QString& value,
-                    const char * slot)
+                    const char * slot,
+                    bool readOnly)
 {
     auto w = new QWidget(this);
     w->setAutoFillBackground(true);
@@ -521,6 +626,8 @@ QLineEdit * ProjectorSetupDialog::createEdit_(GroupWidget * group,
 
             auto edit = new QLineEdit(value, this);
             lh->addWidget(edit);
+            edit->setReadOnly(readOnly);
+            edit->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
 
             if (slot)
                 connect(edit, SIGNAL(textChanged(QString)), this, slot);
@@ -598,9 +705,26 @@ void ProjectorSetupDialog::closeEvent(QCloseEvent * e)
         return;
     }
 
-    if (display_->isGlInitialized())
+    // release gl resources from testrenderer
+    if (testRenderer_)
     {
-        display_->shutDownGL();
+        // XXX this one is a bit hacky
+        // we need a current context, and don't have it anywhere
+        // in this dialog... so pull it in here
+        if (display_ && display_->context())
+            display_->context()->makeCurrent();
+        // this will throw an exception if context is not ready
+        try { testRenderer_->releaseGl(); } catch(...) { }
+    }
+
+    if (display_->isGlInitialized() || areaEdit_->isGlInitialized())
+    {
+        if (display_->isGlInitialized())
+            display_->shutDownGL();
+
+        if (areaEdit_->isGlInitialized())
+            areaEdit_->shutDownGL();
+
         closeRequest_ = true;
         e->ignore();
     }
@@ -630,7 +754,9 @@ void ProjectorSetupDialog::changeView_()
 
 void ProjectorSetupDialog::setViewDirection(int dir)
 {
-    Float distance = domeSettings_->radius() * 2;
+    Float distance = domeSettings_->radius() * 2.0;
+    if (display_->isVisible())
+        distance *= display_->height() / display_->width();
     if (dir == Basic3DWidget::VD_BOTTOM
         && display_->renderMode() == Basic3DWidget::RM_FULLDOME_CUBE)
         distance = 0;
@@ -668,7 +794,7 @@ void ProjectorSetupDialog::updateProjectorName_()
     projectorSettings_->setName(editName_->text());
 
     const int idx = comboProj_->currentIndex();
-    if (idx >= 0 && idx < settings_->numProjectors())
+    if (idx >= 0 && idx < (int)settings_->numProjectors())
     {
         settings_->setProjectorSettings(idx, *projectorSettings_);
 
@@ -694,13 +820,17 @@ void ProjectorSetupDialog::updateProjectorSettings_()
     projectorSettings_->setWidth(spinWidth_->value());
     projectorSettings_->setHeight(spinHeight_->value());
     projectorSettings_->setFov(spinFov_->value());
+#ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     projectorSettings_->setLensRadius(spinLensRad_->value() / 100);
+#endif
     projectorSettings_->setDistance(spinDist_->value() / 100);
     projectorSettings_->setLatitude(spinLat_->value());
     projectorSettings_->setLongitude(spinLong_->value());
     projectorSettings_->setPitch(spinPitch_->value());
     projectorSettings_->setYaw(spinYaw_->value());
     projectorSettings_->setRoll(spinRoll_->value());
+    projectorSettings_->setOffsetX(spinOffsetX_->value());
+    projectorSettings_->setOffsetY(spinOffsetY_->value());
 
     cameraSettings_->setWidth(spinCamWidth_->value());
     cameraSettings_->setHeight(spinCamHeight_->value());
@@ -715,18 +845,20 @@ void ProjectorSetupDialog::updateProjectorSettings_()
     cameraSettings_->setZFar(spinCamZFar_->value());
 
     // update system settings as well
+
+    settings_->setBlendMethod(spinBlendMethod_->value());
+    settings_->setBlendMargin(spinBlendMargin_->value());
+
     int idx = comboProj_->currentIndex();
-    if (idx >= 0 && idx < settings_->numProjectors())
+    if (idx >= 0 && idx < (int)settings_->numProjectors())
     {
         settings_->setProjectorSettings(idx, *projectorSettings_);
         settings_->setCameraSettings(idx, *cameraSettings_);
         updateWindowTitle_();
     }
 
-/*    ProjectorMapper m;
-    m.setSettings(*domeSettings_, *projectorSettings_);
-    m.getWarpImage(*cameraSettings_);
-*/
+    settings_->calculateOverlapAreas();
+
     updateDisplay_();
 }
 
@@ -735,16 +867,27 @@ void ProjectorSetupDialog::updateDisplay_()
     if (display_->renderMode() == Basic3DWidget::RM_DIRECT_ORTHO)
         display_->viewSetOrthoScale(domeSettings_->radius());
 
-    display_->setProjectionSettings(*settings_, comboProj_->currentIndex());
+    const int idx = comboProj_->currentIndex();
+    if (idx < 0 || idx >= (int)settings_->numProjectors())
+        return;
+
+    display_->setProjectionSettings(*settings_, idx);
+
+    areaEdit_->setSettings(*settings_, idx);
 }
 
 void ProjectorSetupDialog::updateProjectorWidgets_()
 {
+    editId_->setText( QString::number(projectorSettings_->id()) );
     editName_->setText( projectorSettings_->name() );
     spinWidth_->setValue( projectorSettings_->width() );
     spinHeight_->setValue( projectorSettings_->height() );
+    spinOffsetX_->setValue( projectorSettings_->offsetX() );
+    spinOffsetY_->setValue( projectorSettings_->offsetY() );
     spinFov_->setValue( projectorSettings_->fov() );
+#ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     spinLensRad_->setValue( projectorSettings_->lensRadius() );
+#endif
     spinDist_->setValue( projectorSettings_->distance() );
     spinLat_->setValue( projectorSettings_->latitude() );
     spinLong_->setValue( projectorSettings_->longitude() );
@@ -763,12 +906,15 @@ void ProjectorSetupDialog::updateProjectorWidgets_()
     spinCamRoll_->setValue( cameraSettings_->roll() );
     spinCamZNear_->setValue( cameraSettings_->zNear() );
     spinCamZFar_->setValue( cameraSettings_->zFar() );
+
+    spinBlendMethod_->setValue( settings_->blendMethod() );
+    spinBlendMargin_->setValue( settings_->blendMargin() );
 }
 
 void ProjectorSetupDialog::projectorSelected_()
 {
     int idx = comboProj_->currentIndex();
-    if (idx < 0 || idx >= settings_->numProjectors())
+    if (idx < 0 || idx >= (int)settings_->numProjectors())
         return;
 
     *projectorSettings_ = settings_->projectorSettings(idx);
@@ -791,7 +937,7 @@ void ProjectorSetupDialog::newProjector_()
 void ProjectorSetupDialog::duplicateProjector_()
 {
     int idx = comboProj_->currentIndex();
-    if (idx < 0 || idx >= settings_->numProjectors())
+    if (idx < 0 || idx >= (int)settings_->numProjectors())
         return;
 
     settings_->appendProjector(settings_->projectorSettings(idx));
@@ -808,10 +954,12 @@ void ProjectorSetupDialog::duplicateProjector_()
 void ProjectorSetupDialog::deleteProjector_()
 {
     int idx = comboProj_->currentIndex();
-    if (idx < 0 || idx >= settings_->numProjectors())
+    if (idx < 0 || idx >= (int)settings_->numProjectors())
         return;
 
     settings_->removeProjector(idx);
+    settings_->calculateOverlapAreas();
+
     updateProjectorList_();
     updateActions_();
 }
@@ -823,13 +971,13 @@ void ProjectorSetupDialog::updateProjectorList_()
 
     comboProj_->clear();
 
-    for (int i=0; i<settings_->numProjectors(); ++i)
+    for (uint i=0; i<settings_->numProjectors(); ++i)
         comboProj_->addItem(settings_->projectorSettings(i).name());
 
     tbRemove_->setEnabled(settings_->numProjectors() > 1);
 
     // restore index
-    if (idx >= 0 && idx < settings_->numProjectors())
+    if (idx >= 0 && idx < (int)settings_->numProjectors())
     {
         comboProj_->setCurrentIndex(idx);
     }
@@ -849,11 +997,13 @@ void ProjectorSetupDialog::clearPreset_()
     *cameraSettings_ = settings_->cameraSettings(0);
     *domeSettings_ = settings_->domeSettings();
 
+    settings_->calculateOverlapAreas();
+
     updateDomeWidgets_();
     updateProjectorWidgets_();
     updateProjectorList_();
-    updateDisplay_();
     updateActions_();
+    updateDisplay_();
 }
 
 void ProjectorSetupDialog::loadDefault_()
@@ -868,11 +1018,13 @@ void ProjectorSetupDialog::loadDefault_()
     *domeSettings_ = settings_->domeSettings();
     filename_.clear();
 
+    settings_->calculateOverlapAreas();
+
     updateDomeWidgets_();
     updateProjectorWidgets_();
     updateProjectorList_();
-    updateDisplay_();
     updateActions_();
+    updateDisplay_();
 }
 
 void ProjectorSetupDialog::saveDefault_()
@@ -882,6 +1034,9 @@ void ProjectorSetupDialog::saveDefault_()
     // update clients
     if (serverEngine().isRunning())
         serverEngine().sendProjectionSettings();
+
+    // update everyone else
+    emit projectionSettingsChanged();
 }
 
 bool ProjectorSetupDialog::savePresetAuto_()
@@ -935,6 +1090,8 @@ void ProjectorSetupDialog::loadPreset_()
         *projectorSettings_ = settings_->projectorSettings(0);
         *cameraSettings_ = settings_->cameraSettings(0);
         *domeSettings_ = settings_->domeSettings();
+
+        settings_->calculateOverlapAreas();
 
         updateProjectorList_();
         updateDomeWidgets_();
@@ -1049,7 +1206,7 @@ void ProjectorSetupDialog::pasteProjector_()
     *projectorSettings_ = *copyOfProjectorSettings_;
 
     int idx = comboProj_->currentIndex();
-    if (idx > 0 || idx < settings_->numProjectors())
+    if (idx >= 0 || idx < (int)settings_->numProjectors())
     {
         settings_->setProjectorSettings(idx, *projectorSettings_);
     }
@@ -1067,7 +1224,7 @@ void ProjectorSetupDialog::pasteCamera_()
     *cameraSettings_ = *copyOfCameraSettings_;
 
     int idx = comboProj_->currentIndex();
-    if (idx > 0 || idx < settings_->numProjectors())
+    if (idx >= 0 || idx < (int)settings_->numProjectors())
     {
         settings_->setCameraSettings(idx, *cameraSettings_);
     }
@@ -1076,6 +1233,76 @@ void ProjectorSetupDialog::pasteCamera_()
     updateDisplay_();
 }
 
+void ProjectorSetupDialog::createFromClients_()
+{
+    if (!serverEngine().isRunning())
+    {
+        QMessageBox::information(this, tr("Creation from clients"),
+                                 tr("The server is not running."));
+        return;
+    }
+
+    if (!saveToClear_())
+        return;
+
+    *settings_ = serverEngine().createProjectionSystemSettings();
+
+    *projectorSettings_ = settings_->projectorSettings(0);
+    *cameraSettings_ = settings_->cameraSettings(0);
+    // keep the dome settings
+    settings_->setDomeSettings(*domeSettings_);
+
+    settings_->calculateOverlapAreas();
+
+    updateDomeWidgets_();
+    updateProjectorWidgets_();
+    updateProjectorList_();
+    updateActions_();
+    updateDisplay_();
+}
+
+void ProjectorSetupDialog::onComboContent_()
+{
+    int idx = comboContent_->currentIndex();
+    if (idx < 0 || idx >= comboContent_->count())
+        idx = 0;
+
+    // store in settings
+    settings->setValue(objectName() + "/displayContent", idx);
+
+    if (idx == 0)
+        display_->setShowTexture(false);
+    else
+    {
+        display_->setShowTexture(true);
+        display_->updateTextures();
+    }
+}
+
+GL::Texture * ProjectorSetupDialog::createTexture_(int index)
+{
+    // test render
+    if (comboContent_->currentIndex() == 2)
+    {
+        if (!testRenderer_)
+            testRenderer_ = new TestProjectionRenderer();
+
+        testRenderer_->setSettings(*settings_);
+
+        return testRenderer_->renderSliceTexture(index);
+    }
+
+    // render current scene
+    else
+    if (comboContent_->currentIndex() == 3)
+    {
+        // XXX
+    }
+
+    // blendings only
+    ProjectorBlender blender(settings_);
+    return blender.renderBlendTexture(index, 320);
+}
 
 } // namespace GUI
 } // namespace MO

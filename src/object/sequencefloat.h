@@ -31,7 +31,9 @@ public:
         ST_CONSTANT,
         ST_TIMELINE,
         ST_OSCILLATOR,
-        ST_SPECTRAL_OSC,
+        ST_OSCILLATOR_WT,
+        ST_ADD_OSC,
+        ST_ADD_WT,
         ST_SPECTRAL_WT,
         ST_SOUNDFILE,
         ST_EQUATION,
@@ -47,7 +49,9 @@ public:
     static bool typeUsesFrequency(SequenceType t)
     {
         return     t == ST_OSCILLATOR
-                || t == ST_SPECTRAL_OSC
+                || t == ST_OSCILLATOR_WT
+                || t == ST_ADD_OSC
+                || t == ST_ADD_WT
                 || t == ST_SPECTRAL_WT
                 || t == ST_EQUATION_WT;
     }
@@ -134,16 +138,16 @@ public:
     /** Returns the minimum and maximum values across the time range (local) */
     void getMinMaxValue(Double localStart, Double localEnd,
                         Double& minValue, Double& maxValue, uint thread) const;
-
+#if 0
     /** Returns access to the wavetable generator, or NULL if not initialized */
     AUDIO::WavetableGenerator * wavetableGenerator() const { return wavetableGen_; }
 
     /** Returns access to the wavetable, or NULL if not initialized */
     AUDIO::Wavetable<Double> * wavetable() const { return wavetable_; }
-
+#endif
     // ------------ setter --------------
 
-    void setMode(SequenceType m) { p_mode_->setValue(m); updateValueObjects_(); }
+    void setSequenceType(SequenceType m) { p_mode_->setValue(m); updateValueObjects_(); }
 
     void setOscillatorMode(AUDIO::Waveform::Type mode) { p_oscMode_->setValue(mode); }
 
@@ -174,6 +178,9 @@ public:
 
     // ------------ values --------------
 
+    /** Sets the sequenceType to ST_TIMELINE if necessary and copies the timeline data */
+    void setTimeline(const MATH::Timeline1D&);
+
     MATH::Timeline1D * timeline() { return timeline_; }
     const MATH::Timeline1D * timeline() const { return timeline_; }
     PPP_NAMESPACE::Parser * equation(uint thread);
@@ -194,16 +201,21 @@ private:
     void updatePhaseInDegree_();
 
     Double value_(Double gtime, Double time, uint thread) const;
+    Double fade_(Double gtime, Double localTime, uint thread) const;
 
     MATH::Timeline1D * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
-    AUDIO::WavetableGenerator * wavetableGen_;
     AUDIO::SoundFile * soundFile_;
 
     class SeqEquation;
     std::vector<SeqEquation *> equation_;
 
     ParameterFilename * p_soundFile_;
+
+    // one cache value for all threads
+    Double cacheValue_, cacheTime_;
+
+    Double phaseMult_;
 
     ParameterFloat
         * p_offset_,
@@ -212,6 +224,7 @@ private:
         * p_frequency_,
         * p_phase_,
         * p_pulseWidth_,
+        * p_oscWtPulseWidth_,
 
         * p_specNum_,
         * p_specOct_,
@@ -224,27 +237,36 @@ private:
         * p_wtSpecAmp_,
 
         * p_loopOverlap_,
-        * p_loopOverlapOffset_;
+        * p_loopOverlapOffset_,
+
+        * p_fadeIn_,
+        * p_fadeOut_;
 
     ParameterInt
         * p_wtSpecNum_,
         * p_wtSpecOct_,
-        * p_wtSpecOctStep_;
+        * p_wtSpecOctStep_,
+        * p_soundFileChannel_;
 
     ParameterSelect
         * p_wtSize_,
+        * p_oscWtSize_,
         * p_wtSpecSize_,
         * p_mode_,
         * p_oscMode_,
         * p_loopOverlapMode_,
         * p_useFreq_,
-        * p_doPhaseDegree_;
+        * p_doPhaseDegree_,
+        * p_fadeMode_;
 
     ParameterText
         * p_equationText_,
         * p_wtEquationText_;
 
-    Double phaseMult_;
+    ParameterTimeline1D
+        * p_wtFreqs_,
+        * p_wtPhases_;
+
 
 };
 

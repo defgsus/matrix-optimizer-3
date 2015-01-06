@@ -18,7 +18,8 @@ namespace MO {
 namespace GL {
 
 ShaderSource::ShaderSource()
-    : unProj_       ("u_projection"),
+    : unSceneTime_  ("u_time"),
+      unProj_       ("u_projection"),
       unCVT_        ("u_cubeViewTransform"),
       unVT_         ("u_viewTransform"),
       unT_          ("u_transform"),
@@ -28,6 +29,7 @@ ShaderSource::ShaderSource()
       unLightColor_ ("u_light_color[0]"),
       unLightDir_   ("u_light_direction[0]"),
       unLightDirMix_("u_light_dirmix[0]"),
+      unLightDiffExp_("u_light_diffuse_exp[0]"),
       unColor_      ("u_color"),
       anPos_        ("a_position"),
       anCol_        ("a_color"),
@@ -74,6 +76,11 @@ void ShaderSource::addDefine(const QString &defineCommand)
     addDefine_(frag_, defineCommand);
 }
 
+void ShaderSource::replace(const QString &before, const QString &after)
+{
+    vert_.replace(before, after);
+    frag_.replace(before, after);
+}
 
 void ShaderSource::addDefine_(QString &src, const QString &def_line) const
 {

@@ -1,4 +1,12 @@
 
+--- stuff after hamburg ---
+
+* synchronizing clients! Either with ltc timecode (libltcsmpte) or by clever networking
+* (completely) free mesh adjustments for projector setup
+* better oversight for multiple clients in ServerDialog
+* preview / "monitor" editing of scene before sending to clients
+
+
 ---- files ----
 
 * project-files manager
@@ -7,7 +15,7 @@
 
 ---- geometry ----
 
-* make GeometryFactory/Dialog accessible through simple building/modifications blocks, yah!!
+- OK make GeometryFactory/Dialog accessible through simple building/modifications blocks, yah!!
 
 ----- GUI -----
 
@@ -24,12 +32,12 @@
 * application settings dialog
     * especially colors, fonts, pens and brushes
 
-* SequenceFloatView: fix difference in update of phaseInDegree between oscillators and wavetable
+- OK SequenceFloatView: fix difference in update of phaseInDegree between oscillators and wavetable
 
 ---- math ----
 
 * fix negative time issue in Spectral Oscillator mode
-* BUG fix microphone transformation (not working correctly, when e.g. a sound is attached to
+- OK fix microphone transformation (not working correctly, when e.g. a sound is attached to
     microphone and the microphone rotates around)
 
 ---- Objects ----
@@ -60,7 +68,7 @@
 
 --- rendermodes ---
 
-* fix difference between fulldome cube and projector slice camera transform, if possible
+- OK fix difference between fulldome cube and projector slice camera transform, if possible
 * fix TextureOverlay equi-rect and fisheye projections angle-of-view to work with non-quadratic fbos
 
 ---- threading -----
@@ -71,6 +79,8 @@
 
 ---- OpenGL -----
 
+* BUG: scale transformation screws normals/lighting
+
 * BUG: QImage conversion of certain texture-sizes is buggy and texture-upload crashes!
 
 * fix TextureOverlay::PT_EQUIRECT mode for cube-mapped render
@@ -80,7 +90,7 @@
 
 - OK concept and implementation of a generic Model container and a Model renderer
 
-* multi-projection
+- Ok multi-projection
 
 
 ---- Networking ----
@@ -93,3 +103,115 @@
 * adjustable derivatives
 * display time/value
 * numerically edit time/value
+
+---- clips -----
+
+- OK clips and clip containers :D
+
+
+
+
+
+
+
+
+
+
+
+
+
+unknown bugs
+
+got this stupid backtrace when opening GroupWidget for texture setting
+
+0	__GI_raise		56	0x7ffff3584bb9
+1	__GI_abort		89	0x7ffff3587fc8
+2	__libc_message		175	0x7ffff35c1e14
+3	malloc_printerr		4996	0x7ffff35ccb77
+4	_int_malloc		3359	0x7ffff35cf884
+5	__GI___libc_malloc		2891	0x7ffff35d1230
+6	g_malloc	/lib/x86_64-linux-gnu/libglib-2.0.so.0		0x7ffff634b611
+7	g_strdup	/lib/x86_64-linux-gnu/libglib-2.0.so.0		0x7ffff6362b0f
+8	??	/usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0		0x7ffff663c59d
+9	??	/usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0		0x7fffe876dd2a
+10	g_object_get_valist	/usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0		0x7ffff661d005
+11	g_object_get	/usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0		0x7ffff661d497
+12	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5a81a5c
+13	QAbstractButton::iconSize() const	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5aa50bf
+14	QToolButton::initStyleOption(QStyleOptionToolButton*) const	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5b69e20
+15	QToolButton::paintEvent(QPaintEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5b6a0d1
+16	QWidget::event(QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dee54
+17	QToolButton::event(QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5b6a7b0
+18	QApplicationPrivate::notify_helper(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59a6a94
+19	QApplication::notify(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59aa0b6
+20	MO::Application::notify	application.cpp	42	0x8a6584
+21	QCoreApplication::notifyInternal(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Core.so.5		0x7ffff4735f04
+22	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dbc0c
+23	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+24	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+25	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+26	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+27	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+28	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc4ff
+29	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc4ff
+30	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+31	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+32	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+33	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+34	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+35	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+36	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+37	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+38	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+39	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+40	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+41	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+42	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+43	QWidgetPrivate::paintSiblingsRecursive(QPaintDevice*, QList<QObject*> const&, int, QRegion const&, QPoint const&, int, QPainter*, QWidgetBackingStore*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dc764
+44	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59db9d0
+45	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59b2e91
+46	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59b3224
+47	QWidgetPrivate::syncBackingStore()	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59d36ae
+48	QWidget::event(QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59df21b
+49	QMainWindow::event(QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5b005fb
+50	QApplicationPrivate::notify_helper(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59a6a94
+51	QApplication::notify(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59aa0b6
+52	MO::Application::notify	application.cpp	42	0x8a6584
+53	QCoreApplication::notifyInternal(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Core.so.5		0x7ffff4735f04
+54	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59ae836
+55	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59affbe
+56	QWidget::repaint(QRect const&)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59d3095
+57	QWidget::repaint()	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59d3143
+58	QAbstractButton::mousePressEvent(QMouseEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5aa5f8d
+59	QToolButton::mousePressEvent(QMouseEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5b6bcb6
+60	QWidget::event(QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59dec0d
+61	QToolButton::event(QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5b6a7b0
+62	QApplicationPrivate::notify_helper(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59a6a94
+63	QApplication::notify(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59a9e8c
+64	MO::Application::notify	application.cpp	42	0x8a6584
+65	QCoreApplication::notifyInternal(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Core.so.5		0x7ffff4735f04
+66	QApplicationPrivate::sendMouseEvent(QWidget*, QMouseEvent*, QWidget*, QWidget*, QWidget**, QPointer<QWidget>&, bool)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59a8ffa
+67	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59fee87
+68	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff5a019d8
+69	QApplicationPrivate::notify_helper(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59a6a94
+70	QApplication::notify(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Widgets.so.5		0x7ffff59aa0b6
+71	MO::Application::notify	application.cpp	42	0x8a6584
+72	QCoreApplication::notifyInternal(QObject*, QEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Core.so.5		0x7ffff4735f04
+73	QGuiApplicationPrivate::processMouseEvent(QWindowSystemInterfacePrivate::MouseEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Gui.so.5		0x7ffff4c83537
+74	QGuiApplicationPrivate::processWindowSystemEvent(QWindowSystemInterfacePrivate::WindowSystemEvent*)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Gui.so.5		0x7ffff4c83f75
+75	QWindowSystemInterface::sendWindowSystemEvents(QFlags<QEventLoop::ProcessEventsFlag>)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Gui.so.5		0x7ffff4c69208
+76	??	/home/defgsus/prog/5.3.1/5.3/gcc_64/plugins/platforms/libqxcb.so		0x7fffeb4fe460
+77	g_main_context_dispatch	/lib/x86_64-linux-gnu/libglib-2.0.so.0		0x7ffff6345e04
+78	??	/lib/x86_64-linux-gnu/libglib-2.0.so.0		0x7ffff6346048
+79	g_main_context_iteration	/lib/x86_64-linux-gnu/libglib-2.0.so.0		0x7ffff63460ec
+80	QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Core.so.5		0x7ffff4790574
+81	QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>)	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Core.so.5		0x7ffff473411b
+82	QCoreApplication::exec()	/home/defgsus/prog/5.3.1/5.3/gcc_64/lib/libQt5Core.so.5		0x7ffff4738fe5
+83	main	main.cpp	105	0x1823f09
+
+
+
+
+
+
+

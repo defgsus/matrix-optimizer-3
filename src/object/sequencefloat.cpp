@@ -14,24 +14,27 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
+#include "param/parameters.h"
 #include "param/parameterfilename.h"
 #include "param/parametertext.h"
 #include "param/parameterint.h"
+#include "param/parametertimeline1d.h"
 #include "math/timeline1d.h"
 #include "math/funcparser/parser.h"
 #include "math/constants.h"
 #include "audio/tool/waveform.h"
 #include "audio/tool/wavetablegenerator.h"
+#include "audio/tool/bandlimitwavetablegenerator.h"
+#include "audio/tool/fftwavetablegenerator.h"
 #include "audio/tool/soundfile.h"
 #include "audio/tool/soundfilemanager.h"
 
 namespace MO {
 
+/** Wrapper for equation parser to setup input variables */
 class SequenceFloat::SeqEquation
 {
 public:
-
-
 
     SeqEquation()
         : equation(new PPP_NAMESPACE::Parser())
@@ -72,11 +75,14 @@ public:
 MO_REGISTER_OBJECT(SequenceFloat)
 
 QStringList SequenceFloat::sequenceTypeId =
-{ "c", "tl", "osc", "spec", "specwt", "audiof", "eq", "eqwt" };
+{ "c", "tl", "osc", "oscwt", "add", "addwt", "specwt", "audiof", "eq", "eqwt" };
 
 QStringList SequenceFloat::sequenceTypeName =
-{ tr("Constant"), tr("Timeline"), tr("Oscillator"),
-  tr("Spectral Osc."), tr("Spectral WT"), tr("Audio file"),
+{ tr("Constant"), tr("Timeline"),
+  tr("Oscillator"), tr("Oscillator WT"),
+  tr("Additive Osc."), tr("Additive WT"),
+  tr("Spectral WT"),
+  tr("Audio file"),
   tr("Equation"), tr("Equation wavetable") };
 
 QStringList SequenceFloat::loopOverlapModeId =
@@ -91,12 +97,13 @@ SequenceFloat::SequenceFloat(QObject *parent)
 
         timeline_       (0),
         wavetable_      (0),
-        wavetableGen_   (0),
         soundFile_      (0),
         equation_       (0),
 
         p_soundFile_    (0),
 
+        cacheValue_     (0.0),
+        cacheTime_      (-1.111),
         phaseMult_      (1.0)
 
 {
@@ -107,7 +114,6 @@ SequenceFloat::~SequenceFloat()
 {
     delete timeline_;
     delete wavetable_;
-    delete wavetableGen_;
     if (soundFile_)
         AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
 
@@ -119,31 +125,61 @@ void SequenceFloat::createParameters()
 {
     Sequence::createParameters();
 
-    beginParameterGroup("value", tr("value"));
+    // ----- fade ------------
 
-        p_mode_ = createSelectParameter("seq_mode", tr("sequence type"),
+    params()->beginParameterGroup("fade", tr("fade in/out"));
+
+        p_fadeIn_ = params()->createFloatParameter("fadein", tr("fade in"),
+                      tr("Time in seconds to fade from zero to the actual value"),
+                      0.0, 0.1);
+        p_fadeIn_->setMinValue(0.0);
+
+        p_fadeOut_ = params()->createFloatParameter("fadeout", tr("fade out"),
+                      tr("Time in seconds to fade to zero at the end of the sequence"),
+                      0.0, 0.1);
+        p_fadeOut_->setMinValue(0.0);
+
+        p_fadeMode_ = params()->createSelectParameter("fademode", tr("fade derivative"),
+                                            tr("Selects the type of fade function"),
+                                            { "lin", "quad" },
+                                            { tr("linear"), tr("quadratic") },
+                                            { tr("Linear fade"), tr("Smooth quadratic fade") },
+                                            { 0, 1 },
+                                            1, true, false);
+
+    params()->endParameterGroup();
+
+    // ------ value ----------
+
+    params()->beginParameterGroup("value", tr("value"));
+
+        p_mode_ = params()->createSelectParameter("seq_mode", tr("sequence type"),
                 tr("Selects the type of the sequence content"),
                 sequenceTypeId,
                 sequenceTypeName,
                 { tr("A constant value"),
                   tr("A editable timeline with que-points"),
                   tr("An oscillator with different waveforms"),
-                  tr("A spectral oscillator build from several harmonic sine tones"),
-                  tr("A spectral oscillator wavetable"),
+                  tr("A wavetable oscillator with different bandlimited waveforms"),
+                  tr("A additive oscillator build from several harmonic sine tones"),
+                  tr("A additive oscillator sine wavetable"),
+                  tr("A spectral waveform table controlled by a frequency band curve"),
                   tr("An audio-file"),
                   tr("A mathematical equation"),
                   tr("A wavetable from a mathematical equation") },
                 { ST_CONSTANT,
                   ST_TIMELINE,
                   ST_OSCILLATOR,
-                  ST_SPECTRAL_OSC,
+                  ST_OSCILLATOR_WT,
+                  ST_ADD_OSC,
+                  ST_ADD_WT,
                   ST_SPECTRAL_WT,
                   ST_SOUNDFILE,
                   ST_EQUATION,
                   ST_EQUATION_WT },
                   ST_CONSTANT, true, false);
 
-        p_oscMode_ = createSelectParameter("osc_mode", tr("oscillator type"),
+        p_oscMode_ = params()->createSelectParameter("osc_mode", tr("oscillator type"),
                 tr("Selects the type of the oscillator waveform"),
                 AUDIO::Waveform::typeIds,
                 AUDIO::Waveform::typeNames,
@@ -151,7 +187,7 @@ void SequenceFloat::createParameters()
                 AUDIO::Waveform::typeList,
                 AUDIO::Waveform::T_SINE, true, false);
 
-        p_equationText_ = createTextParameter("equ_text", tr("equation"),
+        p_equationText_ = params()->createTextParameter("equ_text", tr("equation"),
                   tr("The equation is interpreted as a function of time"),
                   TT_EQUATION,
                   "sin(xr)", true, false);
@@ -159,20 +195,25 @@ void SequenceFloat::createParameters()
         p_equationText_->setVariableNames(tmpequ.equation->variables().variableNames());
         p_equationText_->setVariableDescriptions(tmpequ.equation->variables().variableDescriptions());
 
-        p_wtEquationText_ = createTextParameter("equwt_text", tr("wavetable equation"),
+        p_wtEquationText_ = params()->createTextParameter("equwt_text", tr("wavetable equation"),
                   tr("The equation is interpreted as a function of time and should be periodic "
                      "in the range [0,1]"),
                   TT_EQUATION,
                   "sin(xr)", true, false);
         p_wtEquationText_->setVariableNames(QStringList() << "x" << "xr");
         p_wtEquationText_->setVariableDescriptions(QStringList()
-                << tr("wavetable second [0,1]") << tr("radians of wavetable second [0,TWO_PI]"));
+                  << tr("wavetable second [0,1]") << tr("radians of wavetable second [0,TWO_PI]"));
 
-        p_soundFile_ = createFilenameParameter("sndfilen", tr("filename"),
-                                                  tr("The filename of the audio file"),
+        p_soundFile_ = params()->createFilenameParameter("sndfilen", tr("filename"),
+                                                  tr("The filename of the audio file"
+                                                     " - Note that the file will be buffered in memory completely"),
                                                   IO::FT_SOUND_FILE);
+        p_soundFileChannel_ = params()->createIntParameter("sndfilechan", tr("channel"),
+                      tr("Selects which channel to play from the sound file"),
+                      0, true, true);
+        p_soundFileChannel_->setMinValue(0);
 
-        p_wtSize_ = createSelectParameter("wtsize", tr("wavetable size"),
+        p_wtSize_ = params()->createSelectParameter("wtsize", tr("wavetable size"),
                    tr("Number of samples in the wavetable"),
         { "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" },
         { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
@@ -180,71 +221,92 @@ void SequenceFloat::createParameters()
         { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
         1024, true, false);
 
-        p_useFreq_ = createBooleanParameter("use_freq", tr("use frequency"),
+        p_oscWtSize_ = params()->createSelectParameter("oscwtsize", tr("wavetable size"),
+                   tr("Number of samples in the wavetable"),
+        { "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" },
+        { "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
+        { "", "", "", "", "", "", "", "", "", "" },
+        { 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
+        4096, true, false);
+
+        p_wtFreqs_ = params()->createTimeline1DParameter("wtfreqs", tr("frequency spectrum"),
+                    tr("Editable curve for the amplitude of each frequency band"),
+                    0,
+                    0.0, 100.0);
+        p_wtPhases_ = params()->createTimeline1DParameter("wtphases", tr("phase spectrum"),
+                    tr("Editable curve for the phase of each frequency band"),
+                    0,
+                    0.0, 100.0, -1, 1);
+
+        p_useFreq_ = params()->createBooleanParameter("use_freq", tr("use frequency"),
                   tr("Selects whether some types of sequence which don't need a frequency "
                      "will still use it"),
                   tr("No frequency for non-oscillators"),
                   tr("Frequency is applied to non-oscillators as well"),
                   false, true, false);
 
-        p_doPhaseDegree_ = createBooleanParameter("phase_deg", tr("phase in degree"),
+        p_offset_ = params()->createFloatParameter("value_offset", tr("value offset"),
+                   tr("This value is always added to the output of the sequence"),
+                   0.0, 0.1);
+
+        p_amplitude_ = params()->createFloatParameter("amp", tr("amplitude"),
+                  tr("The output of the sequence (before the offset) is multiplied by this value"),
+                  1.0, 0.1);
+
+        p_frequency_ = params()->createFloatParameter("freq", tr("frequency"),
+                  tr("The frequency of the function in hertz (periods per second)"),
+                  1.0, 0.1);
+
+        p_phase_ = params()->createFloatParameter("phase", tr("phase"),
+                  tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
+                  0.0, 0.05);
+
+        p_doPhaseDegree_ = params()->createBooleanParameter("phase_deg", tr("phase in degree"),
                   tr("Selects whether the phase value has a range of [0,1] or [0,360]"),
                   tr("Phase is in the range of [0,1]"),
                   tr("Phase is in the range of [0,360]"),
                   false, true, false);
 
-        p_offset_ = createFloatParameter("value_offset", tr("value offset"),
-                   tr("This value is always added to the output of the sequence"),
-                   0.0, 0.1);
-
-        p_amplitude_ = createFloatParameter("amp", tr("amplitude"),
-                  tr("The output of the sequence (before the offset) is multiplied by this value"),
-                  1.0, 0.1);
-
-        p_frequency_ = createFloatParameter("freq", tr("frequency"),
-                  tr("The frequency of the function in hertz (periods per second)"),
-                  1.0, 0.1);
-
-        p_phase_ = createFloatParameter("phase", tr("phase"),
-                  tr("Phase (time shift) of the function, either in degree [0,360] or periods [0,1]"),
-                  0.0, 0.05);
-
-        p_pulseWidth_ = createFloatParameter("pulsewidth", tr("pulse width"),
+        p_pulseWidth_ = params()->createFloatParameter("pulsewidth", tr("pulse width"),
                    tr("Pulsewidth of the waveform, describes the width of the positive edge"),
-                   0.5, 0.05);
+                   0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05);
 
-    endParameterGroup();
+        p_oscWtPulseWidth_ = params()->createFloatParameter("oscwtpulsewidth", tr("pulse width"),
+                   tr("Pulsewidth of the waveform, describes the width of the positive edge"),
+                   0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05,
+                   true, false);
 
+    params()->endParameterGroup();
 
     // ---- spectral osc -----
 
-    beginParameterGroup("spectral", tr("spectral osc."));
+    params()->beginParameterGroup("spectral", tr("spectral osc."));
 
-        p_specNum_ = createFloatParameter("specnum", tr("partial voices"),
+        p_specNum_ = params()->createFloatParameter("specnum", tr("partial voices"),
                    tr("Number of partial voices of the spectral oscillator. Does not have to be an integer"),
                    1.0);
         p_specNum_->setMinValue(1.0);
         p_specNum_->setMaxValue(64.0);
 
-        p_specOct_ = createFloatParameter("specoct", tr("octave step"),
+        p_specOct_ = params()->createFloatParameter("specoct", tr("octave step"),
                    tr("The step in octaves between each partial voice"),
                    1.0, 0.5);
 
-        p_specAmp_ = createFloatParameter("specamp", tr("amplitude mul."),
+        p_specAmp_ = params()->createFloatParameter("specamp", tr("amplitude mul."),
                    tr("Multiplier for the amplitude after each partial voice"),
                    0.5, 0.1);
 
-        p_specPhase_ = createFloatParameter("specphase", tr("base phase"),
+        p_specPhase_ = params()->createFloatParameter("specphase", tr("base phase"),
                    tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
                    0.0, 0.05);
 
-        p_specPhaseShift_ = createFloatParameter("specphaseshift", tr("phase shift"),
+        p_specPhaseShift_ = params()->createFloatParameter("specphaseshift", tr("phase shift"),
                    tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"),
                    0.0, 0.05);
 
         // wavetable spectral
 
-        p_wtSpecSize_ = createSelectParameter("wtspecsize", tr("wavetable size"),
+        p_wtSpecSize_ = params()->createSelectParameter("wtspecsize", tr("wavetable size"),
                    tr("Number of samples in the wavetable"),
         { "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" },
         { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
@@ -252,37 +314,37 @@ void SequenceFloat::createParameters()
         { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
         1024, true, false);
 
-        p_wtSpecNum_ = createIntParameter("wtspecnum", tr("partial voices"),
+        p_wtSpecNum_ = params()->createIntParameter("wtspecnum", tr("partial voices"),
                    tr("Number of partial voices of the spectral oscillator"),
-                   1, 1, 128, 1);
+                   1, 1, 128, 1, true, false);
 
-        p_wtSpecOct_ = createIntParameter("wtspecoct", tr("base octave"),
+        p_wtSpecOct_ = params()->createIntParameter("wtspecoct", tr("base octave"),
                    tr("The fundamental octave of the voice"),
-                   1, 1, 128, 1);
+                   1, 1, 128, 1, true, false);
 
-        p_wtSpecOctStep_ = createIntParameter("wtspecoct", tr("octave step"),
+        p_wtSpecOctStep_ = params()->createIntParameter("wtspecoctst", tr("octave step"),
                    tr("The step in octaves between each partial voice"),
-                   1, 1, 128, 1);
+                   1, 1, 128, 1, true, false);
 
-        p_wtSpecAmp_ = createFloatParameter("wtspecamp", tr("amplitude mul."),
-                   tr("Multiplier for the amplitude after each partial voice"),
-                   0.5, 0.1);
+        p_wtSpecAmp_ = params()->createFloatParameter("wtspecamp", tr("amplitude mul."),
+                   tr("Additional multiplier for the amplitude after each partial voice"),
+                   1.0, 0.0025, true, false);
 
-        p_wtSpecPhase_ = createFloatParameter("wtspecphase", tr("base phase"),
+        p_wtSpecPhase_ = params()->createFloatParameter("wtspecphase", tr("base phase"),
                    tr("Phase of the fundamental voice in periods [0,1] or degree [0,360]"),
-                   0.0, 0.05);
+                   0.0, 0.05, true, false);
 
-        p_wtSpecPhaseShift_ = createFloatParameter("wtspecphaseshift", tr("phase shift"),
+        p_wtSpecPhaseShift_ = params()->createFloatParameter("wtspecphaseshift", tr("phase shift"),
                    tr("Shift of phase per partial voice in periods [0,1] or degree [0,360]"),
-                   0.0, 0.05);
+                   0.0, 0.05, true, false);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 
     // ----- loop overlap ------
 
-    beginParameterGroup("loop", tr("looping"));
+    params()->beginParameterGroup("loop", tr("looping"));
 
-        p_loopOverlapMode_ = createSelectParameter("loopoverlapmode", tr("loop overlap mode"),
+        p_loopOverlapMode_ = params()->createSelectParameter("loopoverlapmode", tr("loop overlap mode"),
                 tr("Selects the loop overlapping mode, that is, if and how values are mixed at "
                    "the edge of a loop"),
                 loopOverlapModeId,
@@ -293,15 +355,15 @@ void SequenceFloat::createParameters()
                 { LOT_OFF, LOT_BEGIN, LOT_END },
                 LOT_OFF, true, false);
 
-        p_loopOverlap_ = createFloatParameter("loopoverlap", tr("loop overlap"),
+        p_loopOverlap_ = params()->createFloatParameter("loopoverlap", tr("loop overlap"),
                    tr("Overlap of the loop window for smooth transitions (seconds)"),
                    0.1, 0.05);
 
-        p_loopOverlapOffset_ = createFloatParameter("loopoverlapofs", tr("overlap value offset"),
+        p_loopOverlapOffset_ = params()->createFloatParameter("loopoverlapofs", tr("overlap value offset"),
                    tr("A value that is added to the blended value in the transition window"),
                    0.0);
 
-    endParameterGroup();
+    params()->endParameterGroup();
 }
 
 void SequenceFloat::onParameterChanged(Parameter *p)
@@ -330,7 +392,7 @@ void SequenceFloat::onParameterChanged(Parameter *p)
         }
     }
 
-    if (sequenceType() == ST_SPECTRAL_WT)
+    if (sequenceType() == ST_ADD_WT)
     {
         if (p == p_wtSpecSize_
             || p == p_wtSpecNum_
@@ -342,10 +404,26 @@ void SequenceFloat::onParameterChanged(Parameter *p)
                 updateWavetable_();
     }
 
+    if (sequenceType() == ST_SPECTRAL_WT)
+    {
+        if (p == p_wtSize_
+            || p == p_wtFreqs_
+            || p == p_wtPhases_)
+            updateWavetable_();
+    }
+
     if (sequenceType() == ST_EQUATION_WT)
     {
         if (p == p_wtSize_
             || p == p_wtEquationText_)
+                updateWavetable_();
+    }
+
+    if (sequenceType() == ST_OSCILLATOR_WT)
+    {
+        if (p == p_oscWtSize_
+            || p == p_oscMode_
+            || p == p_oscWtPulseWidth_)
                 updateWavetable_();
     }
 }
@@ -365,12 +443,15 @@ void SequenceFloat::updateParameterVisibility()
     const bool equ = sequenceType() == ST_EQUATION;
     const bool equwt = sequenceType() == ST_EQUATION_WT;
     const bool osc = sequenceType() == ST_OSCILLATOR;
+    const bool oscwt = sequenceType() == ST_OSCILLATOR_WT;
     const bool freq = useFrequency() || typeUsesFrequency() || equ;
     const bool loop = looping();
-    const bool looplap = loop && p_loopOverlap_->baseValue() != LOT_OFF;
+    const bool looplap = loop && p_loopOverlapMode_->baseValue() != LOT_OFF;
     const bool pw = (osc && AUDIO::Waveform::supportsPulseWidth(oscillatorMode())) || equ;
-    const bool spec = sequenceType() == ST_SPECTRAL_OSC;
-    const bool wtspec = sequenceType() == ST_SPECTRAL_WT;
+    const bool oscwtpw = (oscwt && AUDIO::Waveform::supportsPulseWidth(oscillatorMode()));
+    const bool add = sequenceType() == ST_ADD_OSC;
+    const bool addwt = sequenceType() == ST_ADD_WT;
+    const bool specwt = sequenceType() == ST_SPECTRAL_WT;
     const bool wave = sequenceType() == ST_SOUNDFILE;
 
     p_amplitude_->setVisible(sequenceType() != ST_CONSTANT);
@@ -380,28 +461,34 @@ void SequenceFloat::updateParameterVisibility()
     p_loopOverlapMode_->setVisible(loop);
     p_loopOverlap_->setVisible(looplap);
     p_loopOverlapOffset_->setVisible(looplap);
-    p_oscMode_->setVisible(sequenceType() == ST_OSCILLATOR);
+    p_oscMode_->setVisible(osc || oscwt);
     p_useFreq_->setVisible(!typeUsesFrequency());
     p_doPhaseDegree_->setVisible(freq);
     p_equationText_->setVisible(equ);
     p_soundFile_->setVisible(wave);
+    p_soundFileChannel_->setVisible(wave);
+
+    p_wtFreqs_->setVisible(specwt);
+    p_wtPhases_->setVisible(specwt);
 
     p_wtEquationText_->setVisible(equwt);
-    p_wtSize_->setVisible(equwt);
+    p_wtSize_->setVisible(equwt || specwt);
+    p_oscWtSize_->setVisible(oscwt);
+    p_oscWtPulseWidth_->setVisible(oscwtpw);
 
-    p_specNum_->setVisible(spec);
-    p_specOct_->setVisible(spec);
-    p_specPhase_->setVisible(spec);
-    p_specPhaseShift_->setVisible(spec);
-    p_specAmp_->setVisible(spec);
+    p_specNum_->setVisible(add);
+    p_specOct_->setVisible(add);
+    p_specPhase_->setVisible(add);
+    p_specPhaseShift_->setVisible(add);
+    p_specAmp_->setVisible(add);
 
-    p_wtSpecSize_->setVisible(wtspec);
-    p_wtSpecNum_->setVisible(wtspec);
-    p_wtSpecOct_->setVisible(wtspec);
-    p_wtSpecOctStep_->setVisible(wtspec);
-    p_wtSpecPhase_->setVisible(wtspec);
-    p_wtSpecPhaseShift_->setVisible(wtspec);
-    p_wtSpecAmp_->setVisible(wtspec);
+    p_wtSpecSize_->setVisible(addwt);
+    p_wtSpecNum_->setVisible(addwt);
+    p_wtSpecOct_->setVisible(addwt);
+    p_wtSpecOctStep_->setVisible(addwt);
+    p_wtSpecPhase_->setVisible(addwt);
+    p_wtSpecPhaseShift_->setVisible(addwt);
+    p_wtSpecAmp_->setVisible(addwt);
 
 }
 
@@ -473,40 +560,45 @@ void SequenceFloat::setNumberThreads(uint num)
 void SequenceFloat::updatePhaseInDegree_()
 {
     phaseMult_ = p_doPhaseDegree_->baseValue()? 1.0 / 360.0 : 1.0;
-    if (sequenceType() == ST_SPECTRAL_WT)
+    if (sequenceType() == ST_ADD_WT)
         updateWavetable_();
+}
+
+void SequenceFloat::setTimeline(const MATH::Timeline1D & tl)
+{
+    if (sequenceType() != ST_TIMELINE)
+        setSequenceType(ST_TIMELINE);
+
+    *timeline_ = tl;
 }
 
 void SequenceFloat::updateValueObjects_()
 {
-    if (sequenceType() == ST_SPECTRAL_WT
-     || sequenceType() == ST_EQUATION_WT)
+    // update wavetable
+    if (sequenceType() == ST_ADD_WT
+     || sequenceType() == ST_EQUATION_WT
+     || sequenceType() == ST_OSCILLATOR_WT
+     || sequenceType() == ST_SPECTRAL_WT)
     {
         if (!wavetable_)
             wavetable_ = new AUDIO::Wavetable<Double>();
-        if (sequenceType() == ST_SPECTRAL_WT)
-        {
-            if (!wavetableGen_)
-                wavetableGen_ = new AUDIO::WavetableGenerator();
-        }
+
         updateWavetable_();
     }    
     else
     {
-        if (wavetable_)
-            delete wavetable_;
+        delete wavetable_;
         wavetable_ = 0;
-        if (wavetableGen_)
-            delete wavetableGen_;
-        wavetableGen_ = 0;
     }
 
+    // update timeline object
     if (sequenceType() == ST_TIMELINE)
     {
         if (!timeline_)
             timeline_ = new MATH::Timeline1D;
     }
 
+    // update equation parser
     if (sequenceType() == ST_EQUATION)
     {
         for (auto &e : equation_)
@@ -525,6 +617,7 @@ void SequenceFloat::updateValueObjects_()
         }
     }
 
+    // update soundfile
     if (sequenceType() == ST_SOUNDFILE)
     {
         // release previous, if filename changed
@@ -571,28 +664,58 @@ void SequenceFloat::setEquationText(const QString & t)
     }
 }
 
+Double SequenceFloat::fade_(Double gtime, Double time, uint thread) const
+{
+    // fade in/out
+    Double fade = 1.0;
+    const Double fadein = p_fadeIn_->value(gtime, thread);
+    if (time >= 0 && time < fadein)
+        fade = time / fadein;
+    // fadeout only for non-clip sequences
+    if (!parentClip())
+    {
+        const Double fadeout = p_fadeOut_->value(gtime, thread);
+        if (fadeout > 0 && time > (length() - fadeout)
+                && time <= length())
+            fade *= (length() - time) / fadeout;
+    }
+    // fade shape
+    if (p_fadeMode_->baseValue())
+        return fade * fade * (3.0 - 2.0 * fade);
+    else
+        return fade;
+}
+
 Double SequenceFloat::value(Double gtime, uint thread) const
 {
+    if (cacheTime_ == gtime)
+        return cacheValue_;
+
+    Double timeNoLoop;
     if (p_loopOverlapMode_->baseValue() == LOT_OFF)
     {
-        const Double time = getSequenceTime(gtime, thread);
-        return value_(gtime, time, thread);
+        const Double
+                time = getSequenceTime(gtime, thread, timeNoLoop),
+                fade = fade_(gtime, timeNoLoop, thread);
+        return fade * value_(gtime, time, thread);
     }
 
     bool inLoop;
-    Double lStart, lLength;
-    Double time = getSequenceTime(gtime, thread, lStart, lLength, inLoop);
+    Double lStart=0, lLength=0;
+    Double time = getSequenceTime(gtime, thread, lStart, lLength, inLoop, timeNoLoop);
+
+    const Double fade = fade_(gtime, timeNoLoop, thread);
 
     // XXX strange: inLoop comes to late, e.g. after the loop end
     if (!inLoop && p_loopOverlapMode_->baseValue() == LOT_BEGIN)
-        return value_(gtime, time, thread);
+        return fade * value_(gtime, time, thread);
 
     Double overlap = std::max(minimumLength(), p_loopOverlap_->value(gtime, thread));
 
     if (p_loopOverlapMode_->baseValue() == LOT_BEGIN)
     {
         if ((time - lStart) > overlap)
-            return value_(gtime, time, thread);
+            return fade * value_(gtime, time, thread);
 
         const Double
                 v = value_(gtime, time, thread),
@@ -602,12 +725,12 @@ Double SequenceFloat::value(Double gtime, uint thread) const
                 t = (time - lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
-        return (1.0 - ts) * v0 + ts * v;
+        return fade * ((1.0 - ts) * v0 + ts * v);
     }
     else if (p_loopOverlapMode_->baseValue() == LOT_END)
     {
         if ((time - lStart) < lLength - overlap)
-            return value_(gtime, time, thread);
+            return fade * value_(gtime, time, thread);
 
         const Double
                 v = value_(gtime, time, thread),
@@ -617,7 +740,7 @@ Double SequenceFloat::value(Double gtime, uint thread) const
                 t = (lLength - time + lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
-        return (1.0 - ts) * v0 + ts * v;
+        return fade * ( (1.0 - ts) * v0 + ts * v );
     }
 
     MO_ASSERT(false, "unhandled loopOverlapMode " << p_loopOverlapMode_->baseValue()
@@ -634,15 +757,19 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
                 + p_phase_->value(gtime, thread) * phaseMult_;
     }
 
+    // return value
     switch ((SequenceType)p_mode_->baseValue())
     {
+        case ST_CONSTANT:
+            return p_offset_->value(gtime, thread);
+
         case ST_OSCILLATOR:
             return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
                 * AUDIO::Waveform::waveform(time,
                             (AUDIO::Waveform::Type)p_oscMode_->baseValue(),
                         AUDIO::Waveform::limitPulseWidth(p_pulseWidth_->value(gtime, thread)));
 
-        case ST_SPECTRAL_OSC:
+        case ST_ADD_OSC:
             return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
                 * AUDIO::Waveform::spectralWave(time,
                                     p_specNum_->value(gtime, thread),
@@ -653,6 +780,8 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
                         );
 
         case ST_EQUATION_WT:
+        case ST_ADD_WT:
+        case ST_OSCILLATOR_WT:
         case ST_SPECTRAL_WT:
             MO_ASSERT(wavetable_, "SequenceFloat('" << idName() << "')::value() without wavetable");
             return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
@@ -661,7 +790,8 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
         case ST_SOUNDFILE:
             MO_ASSERT(soundFile_, "SequenceFloat('" << idName() << "')::value() without soundfile");
             return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
-                * soundFile_->value(time);
+                * soundFile_->value(time,
+                                    std::min(soundFile_->numberChannels(), (uint)p_soundFileChannel_->value(gtime, thread)) );
 
         case ST_EQUATION:
             MO_ASSERT(equation_[thread], "SequenceFloat('" << idName() << "')::value() without equation "
@@ -683,9 +813,9 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
         case ST_TIMELINE: return p_offset_->value(gtime, thread)
                                 + p_amplitude_->value(gtime, thread)
                                     * timeline_->get(time);
-
-        default: return p_offset_->value(gtime, thread);
     }
+
+    return 0.0;
 }
 
 
@@ -719,32 +849,55 @@ void SequenceFloat::updateWavetable_()
 {
     MO_ASSERT(wavetable_, "updateWavetable() without wavetable");
 
+    if (sequenceType() == ST_OSCILLATOR_WT)
+    {
+        AUDIO::BandlimitWavetableGenerator gen;
+        gen.setTableSize(p_oscWtSize_->baseValue());
+        gen.setWaveform((AUDIO::Waveform::Type)p_oscMode_->baseValue());
+        gen.setPulseWidth(p_oscWtPulseWidth_->baseValue());
+        gen.createWavetable(*wavetable_);
+    }
+
+    if (sequenceType() == ST_ADD_WT)
+    {
+        AUDIO::WavetableGenerator gen;
+        gen.setSize(p_wtSpecSize_->baseValue());
+        gen.setNumPartials(p_wtSpecNum_->baseValue());
+        gen.setBaseOctave(p_wtSpecOct_->baseValue());
+        gen.setOctaveStep(p_wtSpecOctStep_->baseValue());
+        gen.setBasePhase(p_wtSpecPhase_->baseValue() * phaseMult_);
+        gen.setPhaseShift(p_wtSpecPhaseShift_->baseValue() * phaseMult_);
+        gen.setAmplitudeMultiplier(p_wtSpecAmp_->baseValue());
+
+        gen.getWavetable(wavetable_);
+    }
+
     if (sequenceType() == ST_SPECTRAL_WT)
     {
-        MO_ASSERT(wavetableGen_, "updateWavetable() without wavetable generator");
-
-        wavetableGen_->setSize(p_wtSpecSize_->baseValue());
-        wavetableGen_->setNumPartials(p_wtSpecNum_->baseValue());
-        wavetableGen_->setBaseOctave(p_wtSpecOct_->baseValue());
-        wavetableGen_->setOctaveStep(p_wtSpecOctStep_->baseValue());
-        wavetableGen_->setBasePhase(p_wtSpecPhase_->baseValue() * phaseMult_);
-        wavetableGen_->setPhaseShift(p_wtSpecPhaseShift_->baseValue() * phaseMult_);
-        wavetableGen_->setAmplitudeMultiplier(p_wtSpecAmp_->baseValue());
-
-        wavetableGen_->getWavetable(wavetable_);
+        AUDIO::FftWavetableGenerator<Double> gen(p_wtSize_->baseValue());
+        gen.setFrequencies(*p_wtFreqs_->timeline());
+        gen.setPhases(*p_wtPhases_->timeline());
+        gen.getWavetable(wavetable_);
     }
 
     if (sequenceType() == ST_EQUATION_WT)
     {
+        AUDIO::BandlimitWavetableGenerator gen;
+
+        gen.setTableSize(p_oscWtSize_->baseValue());
+        gen.setMode(AUDIO::BandlimitWavetableGenerator::M_EQUATION);
+        gen.setEquation(p_wtEquationText_->baseValue());
+        gen.createWavetable(*wavetable_);
+        /*
         PPP_NAMESPACE::Parser p;
         PPP_NAMESPACE::Float x, r;
-        p.variables().add("x", &x, "");
-        p.variables().add("r", &r, "");
+        p.variables().add("x", &x, tr("time").toStdString());
+        p.variables().add("xr", &r, tr("radians of time").toStdString());
 
         if (!p.parse(p_wtEquationText_->baseValue().toStdString()))
         {
             MO_WARNING("Parsing of wavetable equation failed");
-            wavetable_->clearData();
+            wavetable_->clear();
             return;
         }
 
@@ -756,8 +909,9 @@ void SequenceFloat::updateWavetable_()
             r = x * TWO_PI;
             wavetable_->data()[i] = p.eval();
         }
-
+        */
     }
+
 }
 
 

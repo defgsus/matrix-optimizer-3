@@ -11,16 +11,20 @@
 #include "geometrymodifiercreate.h"
 #include "io/datastream.h"
 #include "geometry.h"
+#include "geometryfactory.h"
+#include "objloader.h"
+#include "tool/deleter.h"
+#include "io/filemanager.h"
 
 namespace MO {
 namespace GEOM {
 
-//MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierCreate)
+MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierCreate)
 
 const QStringList GeometryModifierCreate::typeIds =
 {
     "file", "quad",
-    "tetra", "hexa", "octa", "icosa", "dodeca",
+    "tetra", "hexa", "hexauv", "octa", "icosa", "dodeca",
     "cyl", "cylo", "torus", "uvsphere",
     "gridxz", "lgrid"
 };
@@ -31,6 +35,7 @@ const QStringList GeometryModifierCreate::typeNames =
     QObject::tr("quad"),
     QObject::tr("tetrahedron"),
     QObject::tr("hexahedron (cube)"),
+    QObject::tr("hexahedron (cube) uv-mapped"),
     QObject::tr("octahedron"),
     QObject::tr("icosahedron"),
     QObject::tr("dodecahedron"),
@@ -43,15 +48,25 @@ const QStringList GeometryModifierCreate::typeNames =
 };
 
 GeometryModifierCreate::GeometryModifierCreate()
-    : GeometryModifier("Create", QObject::tr("create")),
-      type_     (T_BOX)
+    : GeometryModifier  ("Create", QObject::tr("create")),
+      type_             (T_BOX_UV),
+      asTriangles_      (true),
+      sharedVertices_   (true),
+      colorR_           (0.5),
+      colorG_           (0.5),
+      colorB_           (0.5),
+      colorA_           (1.0),
+      segmentsX_        (10),
+      segmentsY_        (10),
+      segmentsZ_        (1),
+      smallRadius_      (0.3)
 {
 
 }
 
 QString GeometryModifierCreate::statusTip() const
 {
-    return QObject::tr("Creates new geometry XXX not working yet");
+    return QObject::tr("Creates a new geometry");
 }
 
 void GeometryModifierCreate::serialize(IO::DataStream &io) const
@@ -61,7 +76,10 @@ void GeometryModifierCreate::serialize(IO::DataStream &io) const
     io.writeHeader("geocreate", 1);
 
     io << typeIds[type_];
-    io << filename_ << asTriangles_ << sharedVertices_;
+    io << filename_ << asTriangles_ << sharedVertices_
+       << colorR_ << colorG_ << colorB_ << colorA_
+       << segmentsX_ << segmentsY_ << segmentsZ_
+       << smallRadius_;
 }
 
 void GeometryModifierCreate::deserialize(IO::DataStream &io)
@@ -70,81 +88,93 @@ void GeometryModifierCreate::deserialize(IO::DataStream &io)
 
     io.readHeader("geocreate", 1);
 
-    io.readEnum(type_, T_BOX, typeIds);
-    io >> filename_ >> asTriangles_ >> sharedVertices_;
+    io.readEnum(type_, T_BOX_UV, typeIds);
+    io >> filename_ >> asTriangles_ >> sharedVertices_
+       >> colorR_ >> colorG_ >> colorB_ >> colorA_
+       >> segmentsX_ >> segmentsY_ >> segmentsZ_
+       >> smallRadius_;
 }
 
-void GeometryModifierCreate::execute(Geometry *g)
+void GeometryModifierCreate::execute(Geometry * g)
 {
-#if (0)
-    // XXX
+    //Geometry * g = new Geometry();
+    //ScopedDeleter<Geometry> auto_remove(g);
+
+    // shared vertices?
     g->setSharedVertices(sharedVertices_);
 
     // initial color
-    g->setColor(1,1,1,1);
+    g->setColor(colorR_, colorG_, colorB_, colorA_);
 
     // create mesh
     switch (type_)
     {
-    // XXX
     case T_FILE:
-        if (!filename_.isEmpty() && loader_)
-        {
-            loader_->loadFile(filename_);
-            loader_->getGeometry(g);
-        }
+        if (!filename_.isEmpty())
+            ObjLoader::getGeometry(IO::fileManager().localFilename(filename_), g);
     break;
     case T_QUAD:
-        createQuad(g, 1.f, 1.f, set->asTriangles);
+        GeometryFactory::createQuad(g, 1.f, 1.f, asTriangles_);
     break;
 
     case T_BOX:
-        createCube(g, 1.f, set->asTriangles);
+        GeometryFactory::createCube(g, 1.f, asTriangles_);
+    break;
+
+    case T_BOX_UV:
+        GeometryFactory::createTexturedBox(g, 1.f, 1.f, 1.f);
+        if (!asTriangles())
+            g->convertToLines();
     break;
 
     case T_GRID_XZ:
-        createGridXZ(g, set->segmentsX, set->segmentsY, set->withCoords);
+        GeometryFactory::createGridXZ(g, segmentsX_, segmentsY_, false);
     break;
 
     case T_LINE_GRID:
-        createLineGrid(g, set->segmentsX, set->segmentsY, set->segmentsZ);
+        GeometryFactory::createLineGrid(g, segmentsX_, segmentsY_, segmentsZ_);
     break;
 
     case T_UV_SPHERE:
-        createUVSphere(g, 1.f, std::max((uint)3, set->segmentsX),
-                               std::max((uint)2, set->segmentsY), set->asTriangles);
+        GeometryFactory::createUVSphere(g, 1.f, std::max((uint)3, segmentsX_),
+                               std::max((uint)2, segmentsY_), asTriangles_);
     break;
 
     case T_TETRAHEDRON:
-        createTetrahedron(g, 1.f, set->asTriangles);
+        GeometryFactory::createTetrahedron(g, 1.f, asTriangles_);
     break;
 
     case T_OCTAHEDRON:
-        createOctahedron(g, 1.f, set->asTriangles);
+        GeometryFactory::createOctahedron(g, 1.f, asTriangles_);
     break;
 
     case T_ICOSAHEDRON:
-        createIcosahedron(g, 1.f, set->asTriangles);
+        GeometryFactory::createIcosahedron(g, 1.f, asTriangles_);
     break;
 
     case T_DODECAHEDRON:
-        createDodecahedron(g, 1.f, set->asTriangles);
+        GeometryFactory::createDodecahedron(g, 1.f, asTriangles_);
     break;
 
     case T_CYLINDER_CLOSED:
-        createCylinder(g, 1.f, 1.f, set->segmentsX, set->segmentsY, false, set->asTriangles);
+        GeometryFactory::createCylinder(g, 1.f, 1.f, segmentsX_, segmentsY_, false, asTriangles_);
     break;
 
     case T_CYLINDER_OPEN:
-        createCylinder(g, 1.f, 1.f, set->segmentsX, set->segmentsY, true, set->asTriangles);
+        GeometryFactory::createCylinder(g, 1.f, 1.f, segmentsX_, segmentsY_, true, asTriangles_);
     break;
 
     case T_TORUS:
-        createTorus(g, 1.f, set->smallRadius, set->segmentsX, set->segmentsY, set->asTriangles);
+        GeometryFactory::createTorus(g, 1.f, smallRadius_, segmentsX_, segmentsY_, asTriangles_);
     break;
 
     }
-#endif
+
+    // unshared-vertices for non-files
+    if (!sharedVertices_ && type_ != T_FILE)
+        g->unGroupVertices();
+
+    //geometry->addGeometry(*g);
 }
 
 

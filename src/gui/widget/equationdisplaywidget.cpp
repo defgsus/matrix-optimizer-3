@@ -79,15 +79,16 @@ EquationDisplayWidget::~EquationDisplayWidget()
 
 void EquationDisplayWidget::resetViewSpace()
 {
+    Double aspect = Double(width()) / height();
     switch (mode_)
     {
         case PM_F_OF_X:
         case PM_F_OF_XY:
-            setViewSpace(UTIL::ViewSpace(-1,-1,2,2));
+            setViewSpace(UTIL::ViewSpace(-1*aspect,-1,2*aspect,2));
             break;
         case PM_2D_INTEGER_NUM:
         case PM_2D_INTEGER_SQUARE:
-            setViewSpace(UTIL::ViewSpace(-10,-10,20,20));
+            setViewSpace(UTIL::ViewSpace(-10*aspect,-10,20*aspect,20));
             break;
     }
 }

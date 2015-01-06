@@ -15,6 +15,7 @@
 #include <QHash>
 #include <QSet>
 #include <QString>
+#include <QPoint>
 
 #include "object/object_fwd.h"
 #include "viewspace.h"
@@ -43,26 +44,59 @@ public:
     /** Clear everything */
     void clear();
 
+    // --------------- compatibility ---------------------
+
+    /** Attach old loaded data to objects directly */
+    void updateTreeForCompatibility(Object * root);
+
+    // -------- ViewSpaces accociated to Objects ---------
+
     void setViewSpace(const Object *obj, const UTIL::ViewSpace &viewspace);
     UTIL::ViewSpace getViewSpace(const Object * obj);
+
+    // --------------- Track heights ---------------------
 
     void setTrackHeight(const Track *, int);
     int getTrackHeight(const Track *) const;
 
+    // ------ expanded-flag of ParameterGroups -----------
+
     void setParameterGroupExpanded(const Object *, const QString& groupId, bool expanded);
     bool getParameterGroupExpanded(const Object *, const QString& groupId) const;
+
+    // ------------- ObjectGraphView ---------------------
+#if (0)
+    bool hasLocalGridPos(const Object*, const QString& groupId) const;
+    const QPoint &getLocalGridPos(const Object*, const QString& groupId) const;
+    void setLocalGridPos(const Object*, const QString& groupdId, const QPoint&);
+
+    void setExpanded(const Object *, const QString& groupdId, bool expanded);
+    bool getExpanded(const Object *, const QString& groupdId) const;
+#endif
+
+    // -------------------- copy -------------------------
+
+    /** Copies all settings from @p src to @p dst */
+    void copySettings(const Object * dst, const Object * src);
+    void copySettings(const QString& dstId, const QString& srcId);
 
 private:
 
     QHash<QString, UTIL::ViewSpace> viewSpaces_;
     QHash<QString, int> trackHeights_;
-    QSet<QString> paramGroupExpanded_;
+    /** @deprecated */
+    QHash<QString, QPoint> gridPos_;
+    QSet<QString>
+        paramGroupExpanded_,
+    /** @deprecated */
+        treeExpanded_;
+
+    int readVersion_;
 
     // ---- config ----
 
     bool useCompression_;
     int defaultTrackHeight_;
-
 };
 
 

@@ -16,6 +16,7 @@
 #include "types/int.h"
 #include "math/functions.h"
 #include "math/interpol.h"
+#include "types/conversion.h"
 
 namespace MO {
 namespace AUDIO {
@@ -47,7 +48,7 @@ public:
         It will also be at least 2! */
     void setSize(uint size);
 
-    /** Sets the data of the wavetable.
+    /** Copies the data in @p ptr into the wavetable.
         @p ptr is expected to point at size() consecutive entries of type F */
     void setData(const F * ptr);
 
@@ -55,7 +56,7 @@ public:
     F * data() { return &data_[0]; }
 
     /** Sets all data to zero */
-    void clearData();
+    void clear();
 
     /** Puts everything in the range of [-1,1] */
     void normalize();
@@ -75,7 +76,13 @@ void Wavetable<F>::setSize(uint size)
 }
 
 template <typename F>
-void Wavetable<F>::clearData()
+void Wavetable<F>::setData(const F * p)
+{
+    memcpy(&data_[0], p, data_.size() * sizeof(F));
+}
+
+template <typename F>
+void Wavetable<F>::clear()
 {
     for (auto &d : data_)
         d = F(0);
@@ -100,7 +107,7 @@ F Wavetable<F>::value(F t) const
 {
     t = MATH::moduloSigned(t, F(1)) * size();
 
-    const uint pos = t;
+    const uint pos = convert<F, uint>(t);
     const F frac = (t - pos);
     const uint dpos = pos + data_.size();
 

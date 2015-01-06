@@ -13,13 +13,10 @@
 
 #include "geometryfactory.h"
 #include "geometry.h"
-#include "geometryfactorysettings.h"
-#include "geometrymodifierchain.h"
-#include "objloader.h"
+#include "builtinlinefont.h"
 #include "math/vector.h"
 #include "math/hash.h"
 #include "io/log.h"
-#include "io/filemanager.h"
 
 namespace MO {
 namespace GEOM {
@@ -61,7 +58,7 @@ void GeometryFactory::createQuad(Geometry * g, Float sx, Float sy, bool asTriang
 
 void GeometryFactory::createBox(
         Geometry * g, Float side_length_x, Float side_length_y, Float side_length_z,
-        bool asTriangles)
+        bool asTriangles, const Vec3& o)
 {
     Float
         sx = side_length_x * 0.5f,
@@ -72,27 +69,27 @@ void GeometryFactory::createBox(
 
     // front-bottom-left
     g->setTexCoord(0,0);
-    int fbl = g->addVertex(-sx, -sy,  sz);
+    int fbl = g->addVertex(-sx+o.x, -sy+o.y,  sz+o.z);
     // front-bottom-right
     g->setTexCoord(1,0);
-    int fbr = g->addVertex( sx, -sy,  sz);
+    int fbr = g->addVertex( sx+o.x, -sy+o.y,  sz+o.z);
     // front-top-right
     g->setTexCoord(1,1);
-    int ftr = g->addVertex( sx,  sy,  sz);
+    int ftr = g->addVertex( sx+o.x,  sy+o.y,  sz+o.z);
     // front-top-left
     g->setTexCoord(0,1);
-    int ftl = g->addVertex(-sx,  sy,  sz);
+    int ftl = g->addVertex(-sx+o.x,  sy+o.y,  sz+o.z);
 
     // back-bottom-left
     g->setTexCoord(0,1);
-    int bbl = g->addVertex(-sx, -sy, -sz);
+    int bbl = g->addVertex(-sx+o.x, -sy+o.y, -sz+o.z);
     // aso..
     g->setTexCoord(1,1);
-    int bbr = g->addVertex( sx, -sy, -sz);
+    int bbr = g->addVertex( sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,0);
-    int btr = g->addVertex( sx,  sy, -sz);
+    int btr = g->addVertex( sx+o.x,  sy+o.y, -sz+o.z);
     g->setTexCoord(0,0);
-    int btl = g->addVertex(-sx,  sy, -sz);
+    int btl = g->addVertex(-sx+o.x,  sy+o.y, -sz+o.z);
 
     if (asTriangles)
     {
@@ -140,7 +137,8 @@ void GeometryFactory::createBox(
 }
 
 void GeometryFactory::createTexturedBox(
-        Geometry * g, Float side_length_x, Float side_length_y, Float side_length_z)
+        Geometry * g, Float side_length_x, Float side_length_y, Float side_length_z,
+        const Vec3& o)
 {
     Float
         sx = side_length_x * 0.5f,
@@ -163,73 +161,73 @@ void GeometryFactory::createTexturedBox(
 
     // back
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(+sx, -sy, -sz);
+    a = g->addVertexAlways(+sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(-sx, -sy, -sz);
+    b = g->addVertexAlways(-sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(-sx, +sy, -sz);
+    c = g->addVertexAlways(-sx+o.x, +sy+o.y, -sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(+sx, +sy, -sz);
+    d = g->addVertexAlways(+sx+o.x, +sy+o.y, -sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // bottom
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(-sx, -sy, -sz);
+    a = g->addVertexAlways(-sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(+sx, -sy, -sz);
+    b = g->addVertexAlways(+sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(+sx, -sy, +sz);
+    c = g->addVertexAlways(+sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(-sx, -sy, +sz);
+    d = g->addVertexAlways(-sx+o.x, -sy+o.y, +sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // top
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(-sx, +sy, +sz);
+    a = g->addVertexAlways(-sx+o.x, +sy+o.y, +sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(+sx, +sy, +sz);
+    b = g->addVertexAlways(+sx+o.x, +sy+o.y, +sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(+sx, +sy, -sz);
+    c = g->addVertexAlways(+sx+o.x, +sy+o.y, -sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(-sx, +sy, -sz);
+    d = g->addVertexAlways(-sx+o.x, +sy+o.y, -sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // right
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(-sx, -sy, -sz);
+    a = g->addVertexAlways(-sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(-sx, -sy, +sz);
+    b = g->addVertexAlways(-sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(-sx, +sy, +sz);
+    c = g->addVertexAlways(-sx+o.x, +sy+o.y, +sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(-sx, +sy, -sz);
+    d = g->addVertexAlways(-sx+o.x, +sy+o.y, -sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // left
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(+sx, -sy, +sz);
+    a = g->addVertexAlways(+sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(+sx, -sy, -sz);
+    b = g->addVertexAlways(+sx+o.x, -sy+o.y, -sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(+sx, +sy, -sz);
+    c = g->addVertexAlways(+sx+o.x, +sy+o.y, -sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(+sx, +sy, +sz);
+    d = g->addVertexAlways(+sx+o.x, +sy+o.y, +sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
     // front
     g->setTexCoord(0,0);
-    a = g->addVertexAlways(-sx, -sy, +sz);
+    a = g->addVertexAlways(-sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(1,0);
-    b = g->addVertexAlways(+sx, -sy, +sz);
+    b = g->addVertexAlways(+sx+o.x, -sy+o.y, +sz+o.z);
     g->setTexCoord(1,1);
-    c = g->addVertexAlways(+sx, +sy, +sz);
+    c = g->addVertexAlways(+sx+o.x, +sy+o.y, +sz+o.z);
     g->setTexCoord(0,1);
-    d = g->addVertexAlways(-sx, +sy, +sz);
+    d = g->addVertexAlways(-sx+o.x, +sy+o.y, +sz+o.z);
     g->addTriangle(a,b,c);
     g->addTriangle(a,c,d);
 
@@ -339,8 +337,7 @@ void GeometryFactory::createLineGrid(Geometry * g, int sizeX, int sizeY, int siz
 
 
 
-void GeometryFactory::createUVSphere(
-        Geometry * g, Float rad, uint segu, uint segv, bool asTriangles)
+void GeometryFactory::createUVSphere(Geometry * g, Float rad, uint segu, uint segv, bool asTriangles, const Vec3 & o)
 {
     if (!asTriangles)
     {
@@ -350,7 +347,7 @@ void GeometryFactory::createUVSphere(
 
     // top point
     g->setTexCoord(0,1);
-    g->addVertex(0, rad, 0);
+    g->addVertex(o.x, o.y+rad, o.z);
 
     for (uint v = 1; v<segv; ++v)
     {
@@ -363,7 +360,7 @@ void GeometryFactory::createUVSphere(
             Vec3 p = MATH::pointOnSphere((Float)u / segu, (Float)v / segv);
 
             g->setTexCoord((Float)(u+1) / (segu+1), 1.f - (Float)(v+1) / (segv+1));
-            g->addVertex(p.x * rad, p.y * rad, p.z * rad);
+            g->addVertex(p.x * rad + o.x, p.y * rad + o.y, p.z * rad + o.z);
         }
 
         // triangles on each 'row'
@@ -394,7 +391,7 @@ void GeometryFactory::createUVSphere(
 
     // bottom point
     g->setTexCoord(0,0);
-    g->addVertex(0, -rad, 0);
+    g->addVertex(o.x, o.y-rad, o.z);
 
     // connect to bottom point
     for (unsigned int u = 0; u<segu; ++u)
@@ -649,12 +646,12 @@ void GeometryFactory::createCylinder(Geometry * g, Float rad, Float height,
 
 
 void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
-                                     uint segu, uint segv, bool asTriangles)
+                                  uint segu, uint segv, bool asTriangles, const Vec3 & offset)
 {
     segu = std::max((uint)3, segu);
     segv = std::max((uint)3, segv);
 
-    uint start = g->numVertices();
+    std::vector<Geometry::IndexType> verts;
 
     // create torus vertices
     for (uint y=0; y<segv; ++y)
@@ -669,10 +666,10 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
 
             const Vec3 v = MATH::rotateY(
                         Vec3(rad_out + rad_in*sin(a), rad_in*cos(a), 0),
-                        ang);
+                        ang) + offset;
 
             g->setTexCoord(tx, ty);
-            g->addVertex(v[0], v[1], v[2]);
+            verts.push_back( g->addVertex(v[0], v[1], v[2]) );
         }
     }
 
@@ -685,11 +682,11 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
             for (uint x=0; x<segu; ++x)
             {
                 // connect to next column
-                g->addLine(start + y*segu + x,
-                           start + y*segu + (x+1) % segu);
+                g->addLine(verts[y*segu + x],
+                           verts[y*segu + ((x+1) % segu)]);
                 // connect to next row
-                g->addLine(start + y*segu + x,
-                           start + ((y+1)%segv)*segu + x);
+                g->addLine(verts[y*segu + x],
+                           verts[((y+1)%segv)*segu + x]);
             }
         }
 
@@ -701,13 +698,13 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
             for (uint x=0; x<segu; ++x)
             {
                 g->addTriangle(
-                            start + y*segu + x,
-                            start + y*segu + (x+1) % segu,
-                            start + ((y+1)%segv)*segu + (x+1) % segu);
+                            verts[y*segu + x],
+                            verts[y*segu + ((x+1) % segu)],
+                            verts[((y+1)%segv)*segu + ((x+1) % segu)]);
                 g->addTriangle(
-                            start + y*segu + x,
-                            start + ((y+1)%segv)*segu + (x+1) % segu,
-                            start + ((y+1)%segv)*segu + x);
+                            verts[y*segu + x],
+                            verts[((y+1)%segv)*segu + ((x+1) % segu)],
+                            verts[((y+1)%segv)*segu + x]);
             }
         }
 
@@ -998,96 +995,33 @@ void GeometryFactory::createDodecahedron(Geometry * g, Float scale, bool asTrian
 
 
 
-
-
-void GeometryFactory::createFromSettings(Geometry * g,
-                                         const GeometryFactorySettings * set,
-                                         ObjLoader * loader_)
+void GeometryFactory::createFont(Geometry * g, const Mat4 &matrix, uint16_t utf16)
 {
-    // shared vertices?
-    g->setSharedVertices(set->sharedVertices);
+    auto font = BuiltInLineFont::getFont(utf16);
 
-    // initial color
-    g->setColor(set->colorR, set->colorG, set->colorB, set->colorA);
-
-    // create mesh
-    switch (set->type)
+    if (font)
+    for (uint i=0; i<font->num; ++i)
     {
-    case GeometryFactorySettings::T_FILE:
-        //MO_DEBUG(set->filename << ", " << loader_);
-        if (!set->filename.isEmpty() && loader_)
-        {
-            const QString& filename = IO::fileManager().localFilename(set->filename);
-            loader_->loadFile(filename);
-            loader_->getGeometry(g);
-        }
-    break;
+        const Vec4
+                a = matrix * Vec4(font->data[i*4  ], font->data[i*4+1], 0.f, 1.f),
+                b = matrix * Vec4(font->data[i*4+2], font->data[i*4+3], 0.f, 1.f);
+        const auto
+                v1 = g->addVertex(a.x, a.y, a.z),
+                v2 = g->addVertex(b.x, b.y, b.z);
 
-    case GeometryFactorySettings::T_QUAD:
-        createQuad(g, 1.f, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_BOX:
-        createCube(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_BOX_UV:
-        createTexturedBox(g, 1.f, 1.f, 1.f);
-    break;
-
-    case GeometryFactorySettings::T_GRID_XZ:
-        createGridXZ(g, set->segmentsX, set->segmentsY, true);
-    break;
-
-    case GeometryFactorySettings::T_LINE_GRID:
-        createLineGrid(g, set->segmentsX, set->segmentsY, set->segmentsZ);
-    break;
-
-    case GeometryFactorySettings::T_UV_SPHERE:
-        createUVSphere(g, 1.f, std::max((uint)3, set->segmentsX),
-                               std::max((uint)2, set->segmentsY), set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_TETRAHEDRON:
-        createTetrahedron(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_OCTAHEDRON:
-        createOctahedron(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_ICOSAHEDRON:
-        createIcosahedron(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_DODECAHEDRON:
-        createDodecahedron(g, 1.f, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_CYLINDER_CLOSED:
-        createCylinder(g, 1.f, 1.f, set->segmentsX, set->segmentsY, false, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_CYLINDER_OPEN:
-        createCylinder(g, 1.f, 1.f, set->segmentsX, set->segmentsY, true, set->asTriangles);
-    break;
-
-    case GeometryFactorySettings::T_TORUS:
-        createTorus(g, 1.f, set->smallRadius, set->segmentsX, set->segmentsY, set->asTriangles);
-    break;
-
+        g->addLine(v1, v2);
     }
-
-    if (!set->sharedVertices && set->type != GeometryFactorySettings::T_FILE)
-        g->unGroupVertices();
-
-    // --- modify ---
-
-    set->modifierChain->execute(g);
 }
 
+void GeometryFactory::createText(Geometry * g, Mat4 matrix, const QString &text)
+{
+    for (int i=0; i<text.size(); ++i)
+    {
+        createFont(g, matrix, text.at(i).unicode());
 
-
+        matrix = glm::translate(matrix, Vec3(1.f,0.f,0.f));
+    }
+}
 
 
 } // namespace GEOM

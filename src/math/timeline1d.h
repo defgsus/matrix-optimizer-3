@@ -89,6 +89,8 @@ class Timeline1D
 
         /** type of this que-point, see Timeline1D::Point::Type */
         Type type;
+
+        bool operator == (const Point& o) const { return t == o.t && val == o.val && d1 == o.d1 && type == o.type; }
     };
 
     /** the type of hash-value generated for the time of a point. <br>
@@ -140,6 +142,9 @@ class Timeline1D
 
     // ---------- get ----------------
 
+    /** Comparison */
+    bool operator == (const Timeline1D& other) const;
+
     /** return number of que points */
     unsigned int size() const { return data_.size(); }
 
@@ -147,10 +152,10 @@ class Timeline1D
     bool empty() const { return data_.empty(); }
 
     /** get value at time (with limits) */
-    Double get(Double time);
+    Double get(Double time) const;
 
     /** get value at time (without limits) */
-    Double getNoLimit(Double time);
+    Double getNoLimit(Double time) const;
 
     /** return smallest time */
     Double tmin() const
@@ -168,10 +173,22 @@ class Timeline1D
 
     /** return the reference on the data point structure */
     TpList &getData() { return data_; }
+    const TpList &getData() const { return data_; }
 
     /** returns the TpList::iterator for a point at time 't',
         or data_.end() if there is no point */
     TpList::iterator find(Double t)
+    {
+        const TpHash h = hash(t);
+        auto i = data_.find(h);
+        // must check left and right because of rounding
+        if (i==data_.end())
+            i = data_.find(h+1);
+        if (i==data_.end())
+            i = data_.find(h-1);
+        return i;
+    }
+    TpList::const_iterator find(Double t) const
     {
         const TpHash h = hash(t);
         auto i = data_.find(h);
@@ -306,7 +323,14 @@ class Timeline1D
     Point::Type currentType_(Double time);
 
     /** returns true if the iterator 'i' is the LAST element in data */
-    bool isLastElement_(TpList::iterator i)
+    bool isLastElement_(TpList::iterator i) const
+    {
+        if (i==data_.end()) return false;
+        i++;
+        return (i==data_.end());
+    }
+
+    bool isLastElement_(TpList::const_iterator i) const
     {
         if (i==data_.end()) return false;
         i++;
@@ -315,14 +339,14 @@ class Timeline1D
 
     /** linearly fade between the two points. <br>
         'time' must be <b>between</b> 'p1's and 'p2's time */
-    Double fadeLinear_(Point &p1, Point &p2, Double time)
+    Double fadeLinear_(Point &p1, Point &p2, Double time) const
     {
         Double f = (time - p1.t) / (p2.t - p1.t);
         return p1.val*(1.0-f) + f*p2.val;
     }
 
     /** limit the value according to limit-settings */
-    Double limit_(Double val)
+    Double limit_(Double val) const
     {
         if (lowerLimit_) val = std::max(lmin_, val);
         if (upperLimit_) val = std::min(lmax_, val);

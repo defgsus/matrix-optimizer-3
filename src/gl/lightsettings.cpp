@@ -25,6 +25,16 @@ void LightSettings::resize(uint num)
     colors_.resize(num*4);
     directions_.resize(num*4);
     directionMix_.resize(num);
+    diffuseExp_.resize(num);
+
+    for (uint i=0; i<num; ++i)
+    {
+        setPosition(i, 10,10,10);
+        setColor(i, 1,1,1,1);
+        setDirection(i, 0,0,-1, 4);
+        setDirectionMix(i, 0);
+        setDiffuseExponent(i, 4);
+    }
 }
 
 
@@ -50,6 +60,11 @@ void LightSettings::setDirection(uint index, Float nx, Float ny, Float nz, Float
 void LightSettings::setDirectionMix(uint index, Float mix)
 {
     directionMix_[index] = mix;
+}
+
+void LightSettings::setDiffuseExponent(uint index, Float e)
+{
+    diffuseExp_[index] = e;
 }
 
 

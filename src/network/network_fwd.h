@@ -21,14 +21,11 @@ namespace MO
     class NetEventFile;
     class NetworkManager;
     class EventCom;
-#ifndef MO_CLIENT
     class TcpServer;
     class ServerEngine;
     class ClientInfo;
-#else
     class Client;
     class ClientEngine;
-#endif
 
 } // namespace MO
 

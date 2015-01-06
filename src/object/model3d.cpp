@@ -16,11 +16,19 @@
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
 #include "gl/shader.h"
+#include "gl/compatibility.h"
+#include "geom/geometry.h"
 #include "geom/geometrycreator.h"
+#include "param/parameters.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
+#include "param/parametertext.h"
 #include "util/texturesetting.h"
 #include "util/colorpostprocessingsetting.h"
+#include "util/texturemorphsetting.h"
+#include "util/useruniformsetting.h"
+#include "io/log.h"
+
 
 namespace MO {
 
@@ -28,14 +36,19 @@ MO_REGISTER_OBJECT(Model3d)
 
 Model3d::Model3d(QObject * parent)
     : ObjectGl      (parent),
+      draw_         (0),
       creator_      (0),
-      geomSettings_ (new GEOM::GeometryFactorySettings),
+      geomSettings_ (new GEOM::GeometryFactorySettings(this)),
       nextGeometry_ (0),
       texture_      (new TextureSetting(this)),
       textureBump_  (new TextureSetting(this)),
       texturePostProc_(new ColorPostProcessingSetting(this)),
+      textureMorph_ (new TextureMorphSetting(this)),
+      textureBumpMorph_(new TextureMorphSetting(this)),
+      uniformSetting_(new UserUniformSetting(this)),
       u_diff_exp_   (0),
       u_bump_scale_ (0),
+      u_vertex_extrude_(0),
       doRecompile_  (false)
 {
     setName("Model3D");
@@ -76,9 +89,52 @@ void Model3d::createParameters()
 {
     ObjectGl::createParameters();
 
-    beginParameterGroup("shaderset", "shader settings");
+    params()->beginParameterGroup("renderset", tr("render settings"));
 
-        lightMode_ = createSelectParameter("lightmode", tr("lighting mode"),
+        paramLineSmooth_ = params()->createBooleanParameter(
+                    "linesmooth", tr("antialiased lines"),
+                    tr("Should lines be drawn with smoothed edges"),
+                    tr("The lines are drawn edgy"),
+                    tr("The lines are drawn smoothly (maximum line width might change)"),
+                    true,
+                    true, false);
+
+        paramLineWidth_ = params()->createFloatParameter("linewidth", tr("line width"),
+                                            tr("The width of the line - currently in pixels - your driver supports maximally %1 and %2 (anti-aliased)")
+                                                            // XXX Not initialized before first gl context
+                                                            .arg(GL::Properties::staticInstance().lineWidth[0])
+                                                            .arg(GL::Properties::staticInstance().lineWidth[1]),
+                                            2, 1, 10000,
+                                            0.1, true, true);
+
+        paramPointSize_ = params()->createFloatParameter("pointsize", tr("pointsize"),
+                                            tr("The size of the points in pixels"),
+                                            10.0,
+                                            1, true, true);
+
+        paramPointSizeMax_ = params()->createFloatParameter("pointsizemax", tr("pointsize max"),
+                                            tr("The size of the closest points in pixels"),
+                                            200.0,
+                                            1, true, true);
+
+        paramPointSizeDistFac_ = params()->createFloatParameter("pointsize_distfac", tr("pointsize distance factor"),
+                                            tr("Approximately the distance after which the pointsize decreases by half"),
+                                            10,
+                                            0.1, true, true);
+        paramPointSizeDistFac_->setMinValue(0.0001);
+
+        pointSizeAuto_ = params()->createBooleanParameter("pointsize_auto", tr("pointsize distance control"),
+                                         tr("Selects if the distance to camera should control the point size"),
+                                         tr("The point size is uniform"),
+                                         tr("The point size is between size and max size depending on distance to camera"),
+                                         false, true, false);
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("shaderset", "shader settings");
+
+        lightMode_ = params()->createSelectParameter("lightmode", tr("lighting mode"),
             tr("Selects the way how the lighting is calculated"),
             { "none", "vertex", "fragment" },
             { tr("off"), tr("per vertex"), tr("per fragment") },
@@ -91,59 +147,147 @@ void Model3d::createParameters()
             LM_PER_FRAGMENT,
             true, false);
 
-    endParameterGroup();
-
-    beginParameterGroup("color", tr("color"));
-
-        cr_ = createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
-        cg_ = createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
-        cb_ = createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
-        ca_ = createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
-
-    endParameterGroup();
-
-    beginParameterGroup("texture", tr("texture"));
-
-        texture_->createParameters("col", TextureSetting::TT_NONE, true);
-
-    endParameterGroup();
-
-    beginParameterGroup("texturepp", tr("texture post-processing"));
-
-        texturePostProc_->createParameters("tex");
-
-    endParameterGroup();
-
-    beginParameterGroup("texturebump", tr("normal-map texture"));
-
-        textureBump_->createParameters("bump", TextureSetting::TT_NONE, true, true);
-
-        bumpScale_ = createFloatParameter("bumpdepth", tr("bump scale"),
-                            tr("The influence of the normal-map"),
-                            1.0, 0.05);
-        //bumpDepth_->setMinValue(0.);
-
-    endParameterGroup();
-
-    beginParameterGroup("surface", tr("surface"));
-
-        diffExp_ = createFloatParameter("diffuseexp", tr("diffuse exponent"),
+        diffExp_ = params()->createFloatParameter("diffuseexp", tr("diffuse exponent"),
                                    tr("Exponent for the diffuse lighting - the higher, the narrower "
                                       "is the light cone"),
                                    4.0, 0.1);
         diffExp_->setMinValue(0.001);
 
-    endParameterGroup();
+        // --- glsl ---
+
+        glslDoOverride_ = params()->createBooleanParameter("glsl_write", tr("glsl access"),
+                                         tr("Enables overrides for specific functions in the shader code"),
+                                         tr("Overrides are enabled for the shader of the model"),
+                                         tr("No overrides"),
+                                         false,
+                                         true, false);
+
+
+        glslVertex_ = params()->createTextParameter("glslvertex", tr("glsl position"),
+                                                    tr("A piece of glsl code to modify vertex positions"),
+                                                    TT_GLSL,
+                                                    "vec3 mo_modify_position(in vec3 pos) {\n\treturn pos;\n}\n"
+                                                    , true, false);
+
+        glslVertexOut_ = params()->createTextParameter("glsl_color", tr("glsl vertex output"),
+                                                    tr("A piece of glsl code to modify vertex color"),
+                                                    TT_GLSL,
+                                                       "// + " + tr("You have access to these attributes") + ":\n"
+                                                       "// v_pos\n"
+                                                       "// v_pos_world\n"
+                                                       "// v_pos_eye\n"
+                                                       "// v_normal\n"
+                                                       "// v_normal_eye\n"
+                                                       "// v_texCoord\n"
+                                                       "// v_cam_dir\n"
+                                                       "// v_color\n"
+                                                       "// v_ambient_color\n"
+                                                       "//\n"
+                                                       "void mo_modify_vertex_output()\n{\n\t\n}\n"
+                                                    , true, false);
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("useruniforms", tr("user uniforms"));
+
+        uniformSetting_->createParameters("g");
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("color", tr("color"));
+
+        cbright_ = params()->createFloatParameter("bright", "bright", tr("Overall brightness of the color"), 1.0, 0.1);
+        cr_ = params()->createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
+        cg_ = params()->createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
+        cb_ = params()->createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
+        ca_ = params()->createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("texture", tr("texture"));
+
+        texture_->createParameters("col", TextureSetting::TT_NONE, true);
+
+        usePointCoord_ = params()->createBooleanParameter("tex_use_pointcoord", tr("map on points"),
+                                         tr("Currently you need to decide wether to map the texture on triangles or on point sprites"),
+                                         tr("The texture coordinates are used as defined by the vertices in the geometry"),
+                                         tr("Calculated texture coordinates will be used for point sprites."),
+                                         false, true, false);
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("texturepp", tr("texture post-processing"));
+
+        texturePostProc_->createParameters("tex");
+
+        textureMorph_->createParameters("tex");
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("texturebump", tr("normal-map texture"));
+
+        textureBump_->createParameters("bump", TextureSetting::TT_NONE, true, true);
+
+        bumpScale_ = params()->createFloatParameter("bumpdepth", tr("bump scale"),
+                            tr("The influence of the normal-map"),
+                            1.0, 0.05);
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("texturebumppp", tr("normal-map post-proc"));
+
+        textureBumpMorph_->createParameters("bump");
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("vertexfx", tr("vertex effects"));
+
+        vertexFx_ = params()->createBooleanParameter("vertexfx", tr("enable effects"),
+                                           tr("Enables realtime vertex processing effects"),
+                                           tr("Vertex effects disabled"),
+                                           tr("Vertex effects enabled"),
+                                           false,
+                                           true, false);
+
+        vertexExtrude_ = params()->createFloatParameter("vertexextrude", tr("extrusion"),
+                                              tr("All vertex positions of the model are moved along their "
+                                                 "normals by this amount"),
+                                              0.0, 0.05);
+
+    params()->endParameterGroup();
+
+
+
 }
 
 void Model3d::onParameterChanged(Parameter *p)
 {
     ObjectGl::onParameterChanged(p);
 
-    if (p == lightMode_ || texturePostProc_->needsRecompile(p))
+    if (p == lightMode_
+            || p == vertexFx_
+            || p == glslDoOverride_
+            || p == glslVertex_
+            || p == glslVertexOut_
+            || p == usePointCoord_
+            || p == pointSizeAuto_
+            || texturePostProc_->needsRecompile(p)
+            || textureMorph_->needsRecompile(p)
+            || textureBumpMorph_->needsRecompile(p) )
+    {
         doRecompile_ = true;
+        requestRender();
+    }
 
-    if (texture_->needsReinit(p) || textureBump_->needsReinit(p))
+    if (texture_->needsReinit(p) || textureBump_->needsReinit(p)
+        || uniformSetting_->needsReinit(p))
         requestReinitGl();
 }
 
@@ -154,12 +298,28 @@ void Model3d::updateParameterVisibility()
     texture_->updateParameterVisibility();
     textureBump_->updateParameterVisibility();
     texturePostProc_->updateParameterVisibility();
+    textureMorph_->updateParameterVisibility();
+    textureBumpMorph_->updateParameterVisibility();
+    uniformSetting_->updateParameterVisibility();
 
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
+
+    bool vertfx = vertexFx_->baseValue();
+    vertexExtrude_->setVisible(vertfx);
+
+    bool glsl = glslDoOverride_->baseValue();
+    glslVertex_->setVisible(glsl);
+    glslVertexOut_->setVisible(glsl);
+
+    bool psdist = pointSizeAuto_->baseValue() != 0;
+    paramPointSizeMax_->setVisible(psdist);
+    paramPointSizeDistFac_->setVisible(psdist);
 }
 
 void Model3d::getNeededFiles(IO::FileList &files)
 {
+    ObjectGl::getNeededFiles(files);
+
     texture_->getNeededFiles(files, IO::FT_TEXTURE);
     textureBump_->getNeededFiles(files, IO::FT_NORMAL_MAP);
 
@@ -173,11 +333,18 @@ const GEOM::Geometry* Model3d::geometry() const
 
 Vec4 Model3d::modelColor(Double time, uint thread) const
 {
+    const auto b = cbright_->value(time, thread);
     return Vec4(
-        cr_->value(time, thread),
-        cg_->value(time, thread),
-        cb_->value(time, thread),
+        cr_->value(time, thread) * b,
+        cg_->value(time, thread) * b,
+        cb_->value(time, thread) * b,
         ca_->value(time, thread));
+}
+
+const GEOM::GeometryFactorySettings& Model3d::geometrySettings() const
+{
+    geomSettings_->setObject(const_cast<Model3d*>(this));
+    return *geomSettings_;
 }
 
 void Model3d::initGl(uint /*thread*/)
@@ -187,12 +354,16 @@ void Model3d::initGl(uint /*thread*/)
 
     draw_ = new GL::Drawable(idName());
 
-    creator_ = new GEOM::GeometryCreator(this);
-    connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
-    connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
+    if (!nextGeometry_)
+    {
+        creator_ = new GEOM::GeometryCreator(this);
+        connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
+        connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
 
-    creator_->setSettings(*geomSettings_);
-    creator_->start();
+        geomSettings_->setObject(this);
+        creator_->setSettings(*geomSettings_);
+        creator_->start();
+    }
 }
 
 void Model3d::releaseGl(uint /*thread*/)
@@ -233,15 +404,23 @@ void Model3d::geometryFailed_()
 void Model3d::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 {
     *geomSettings_ = s;
+    geomSettings_->setObject(this);
     requestReinitGl();
+}
+
+void Model3d::setGeometry(const GEOM::Geometry & g)
+{
+    if (!nextGeometry_)
+        nextGeometry_ = new GEOM::Geometry;
+    *nextGeometry_ = g;
+    requestRender();
 }
 
 void Model3d::setupDrawable_()
 {
     GL::ShaderSource * src = new GL::ShaderSource();
 
-    src->loadVertexSource(":/shader/default.vert");
-    src->loadFragmentSource(":/shader/default.frag");
+    src->loadDefaultSource();
 
     if (numberLightSources() > 0 && lightMode_->baseValue() != LM_NONE)
     {
@@ -259,6 +438,32 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_TEXTURE_IS_FULLDOME_CUBE");
     if (textureBump_->isEnabled())
         src->addDefine("#define MO_ENABLE_NORMALMAP");
+    if (textureMorph_->isTransformEnabled())
+        src->addDefine("#define MO_ENABLE_TEXTURE_TRANSFORMATION");
+    if (textureMorph_->isSineMorphEnabled())
+        src->addDefine("#define MO_ENABLE_TEXTURE_SINE_MORPH");
+    if (textureBumpMorph_->isTransformEnabled())
+        src->addDefine("#define MO_ENABLE_NORMALMAP_TRANSFORMATION");
+    if (textureBumpMorph_->isSineMorphEnabled())
+        src->addDefine("#define MO_ENABLE_NORMALMAP_SINE_MORPH");
+    if (usePointCoord_->baseValue() != 0)
+        src->addDefine("#define MO_USE_POINT_COORD");
+    if (pointSizeAuto_->baseValue() != 0)
+        src->addDefine("#define MO_ENABLE_POINT_SIZE_DISTANCE");
+    if (vertexFx_->baseValue())
+        src->addDefine("#define MO_ENABLE_VERTEX_EFFECTS");
+    // glsl
+    if (glslDoOverride_->baseValue())
+    {
+        QString text =
+                  glslVertex_->value() + "\n"
+                + glslVertexOut_->value() + "\n";
+        src->replace("//%mo_override%", text);
+        src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
+    }
+    // declare user uniforms
+    src->replace("//%user_uniforms%", "// runtime user uniforms\n" + uniformSetting_->getDeclarations());
+    MO_DEBUG_GL("Model3d(" << name() << "): user uniforms:\n" << uniformSetting_->getDeclarations());
 
     draw_->setShaderSource(src);
 
@@ -266,23 +471,43 @@ void Model3d::setupDrawable_()
 
     // get uniforms
     u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());
-    if (texture_->isEnabled() && texturePostProc_->isEnabled())
-        texturePostProc_->getUniforms(draw_->shader());
+
+    const bool isvertfx = vertexFx_->baseValue();
+    u_vertex_extrude_ = draw_->shader()->getUniform("u_vertex_extrude", isvertfx);
+
+    u_pointsize_ = draw_->shader()->getUniform("u_pointsize_dist", false);
+
+    if (texture_->isEnabled())
+    {
+        if (texturePostProc_->isEnabled())
+            texturePostProc_->getUniforms(draw_->shader());
+
+        // (checks for itself)
+        textureMorph_->getUniforms(draw_->shader());
+    }
+
     if (textureBump_->isEnabled())
+    {
         u_bump_scale_ = draw_->shader()->getUniform(src->uniformNameBumpScale());
+
+        textureBumpMorph_->getUniforms(draw_->shader(), "_bump");
+    }
+
+    uniformSetting_->tieToShader(draw_->shader());
 }
 
 void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
-    const Mat4& trans = transformation(thread, 0);
+    const Mat4& trans = transformation();
     const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
     const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
 
     if (nextGeometry_)
     {
-        draw_->setGeometry(nextGeometry_);
-        setupDrawable_();
+        auto g = nextGeometry_;
         nextGeometry_ = 0;
+        draw_->setGeometry(g);
+        setupDrawable_();
     }
 
     if (doRecompile_)
@@ -298,24 +523,64 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         textureBump_->bind(1);
 
         // update uniforms
+        const auto bright = cbright_->value(time, thread);
         draw_->setAmbientColor(
-                    cr_->value(time, thread),
-                    cg_->value(time, thread),
-                    cb_->value(time, thread),
+                    cr_->value(time, thread) * bright,
+                    cg_->value(time, thread) * bright,
+                    cb_->value(time, thread) * bright,
                     ca_->value(time, thread));
 
         if (u_diff_exp_)
             u_diff_exp_->floats[0] = diffExp_->value(time, thread);
         if (u_bump_scale_)
             u_bump_scale_->floats[0] = bumpScale_->value(time, thread);
+        if (u_vertex_extrude_)
+            u_vertex_extrude_->floats[0] = vertexExtrude_->value(time, thread);
 
-        if (texture_->isEnabled() && texturePostProc_->isEnabled())
-            texturePostProc_->updateUniforms(time, thread);
+        uniformSetting_->updateUniforms(time, thread);
+
+        if (texture_->isEnabled())
+        {
+            if (texturePostProc_->isEnabled())
+                texturePostProc_->updateUniforms(time, thread);
+
+            textureMorph_->updateUniforms(time, thread);
+        }
+
+        if (textureBump_->isEnabled())
+        {
+            textureBumpMorph_->updateUniforms(time, thread);
+        }
+
+        // draw state
+
+        GL::Properties::staticInstance().setLineSmooth(paramLineSmooth_->value(time, thread) != 0);
+        GL::Properties::staticInstance().setLineWidth(paramLineWidth_->value(time, thread));
+        GL::Properties::staticInstance().setPointSize(paramPointSize_->value(time, thread));
+
+        if (pointSizeAuto_->baseValue())
+        {
+            MO_CHECK_GL( gl::glEnable(gl::GL_PROGRAM_POINT_SIZE) );
+            if (u_pointsize_)
+            {
+                float mi = paramPointSize_->value(time, thread);
+                u_pointsize_->setFloats(mi,
+                                        paramPointSizeMax_->value(time, thread) - mi,
+                                        1.f / paramPointSizeDistFac_->value(time, thread),
+                                        0);
+            }
+        }
+        else
+            MO_CHECK_GL( gl::glDisable(gl::GL_PROGRAM_POINT_SIZE) );
 
         // render the thing
 
         draw_->renderShader(rs.cameraSpace().projectionMatrix(),
-                            cubeViewTrans, viewTrans, trans, &rs.lightSettings());
+                            cubeViewTrans,
+                            viewTrans,
+                            trans,
+                            &rs.lightSettings(),
+                            time);
     }
 }
 

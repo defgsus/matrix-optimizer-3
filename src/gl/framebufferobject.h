@@ -23,10 +23,22 @@ class FrameBufferObject
 {
 public:
 
+    enum Attachment
+    {
+        A_DEPTH = 1
+    };
+
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
-            bool cubemap,
+            bool cubemap = false,
+            ErrorReporting reporting = ER_THROW);
+
+    explicit FrameBufferObject(
+            gl::GLsizei width, gl::GLsizei height,
+            gl::GLenum format, gl::GLenum type,
+            int attachmentMask,
+            bool cubemap = false,
             ErrorReporting reporting = ER_THROW);
 
     ~FrameBufferObject();
@@ -41,9 +53,19 @@ public:
 
     /** Returns the associated color texture */
     const Texture * colorTexture() const { return colorTex_; }
+    /** Returns the associated color texture, or NULL */
+    const Texture * depthTexture() const { return depthTex_; }
+
+    /** Returns the associated color texture.
+        The texture is detached from the fbo and will not be released or used further.
+        You need to call create() to make the fbo useable again. */
+    Texture * takeColorTexture();
+    Texture * takeDepthTexture();
 
     uint width() const;
     uint height() const;
+
+    float aspect() { return float(width()) / std::max(1u, height()); }
 
     // ------------- setter ----------------------
 
@@ -68,6 +90,7 @@ public:
     /** Downloads the color texture from the device.
         NOT available for cubemap textures. */
     bool downloadColorTexture(void * ptr);
+    bool downloadDepthTexture(void * ptr);
 
     /** Convenience function sets opengl viewport to (0,0, width, height) */
     void setViewport() const;
@@ -79,10 +102,11 @@ private:
 
     ErrorReporting rep_;
 
-    Texture * colorTex_;
+    Texture * colorTex_, * depthTex_;
 
     gl::GLuint fbo_, rbo_;
 
+    int attachments_;
     bool cubemap_;
 };
 

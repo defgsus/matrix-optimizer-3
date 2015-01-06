@@ -63,6 +63,7 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void contextMenuEvent(QContextMenuEvent *);
+    void leaveEvent(QEvent *);
 
 protected slots:
 
@@ -94,10 +95,11 @@ private:
     PPP_NAMESPACE::Parser * parser_;
     const PPP_NAMESPACE::Parser * extParser_;
 
-    QString presetName_, equationName_;
+    QString presetName_, equationName_,
+            lastText_;
 
     QTimer * timer_, * hoverTimer_;
-    bool ok_, isHighlight_;
+    bool ok_, isHighlight_, ignoreNextTextChange_;
 
     QMenu
         * contextMenu_,

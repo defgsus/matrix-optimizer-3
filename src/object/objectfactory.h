@@ -15,6 +15,7 @@
 #include <memory>
 
 #include <QObject>
+#include <QSize>
 
 #include "object/object_fwd.h"
 
@@ -60,17 +61,32 @@ public:
 
     // ----------- object infos -------------------
 
+    /** Hue value for object type (Object::Type).
+        Returns hue for a defined object group, or -1 if undefined! */
+    static int hueForObject(int type);
+
+    static QColor colorForObject(const Object *, bool darkSet = false);
+
     /** Returns an icon for the object type */
     static const QIcon& iconForObject(const Object *);
 
     /** Returns an icon for the object type (Object::Type) */
-    static const QIcon& iconForObject(int);
+    static const QIcon& iconForObject(int objectType);
+
+    /** Returns an icon for the object with given color. */
+    static QIcon iconForObject(const Object *, QColor color, const QSize& size = QSize());
 
     /** Returns a list of objects, possible to add to given object @p parent */
     static QList<const Object*> possibleChildObjects(const Object * parent);
 
     /** Returns true of the object can have children at all. */
     static bool canHaveChildObjects(const Object * parent);
+
+    /** Returns a list of objects matching the Object::Type flags */
+    static QList<const Object*> objects(int objectTypeFlags);
+
+    /** Returns the correct index to insert @p newChild into parent */
+    static int getBestInsertIndex(Object * parent, Object * newChild, int desired_index);
 
     // -------------- byte io ---------------------
 
@@ -83,6 +99,14 @@ public:
         On other IO errors an IoException will be thrown. */
     static Scene * loadScene(IO::DataStream& io);
 
+    /** Stores the complete Object and it's subtree object.
+        On IO errors, an IoException will be thrown. */
+    static void saveObject(IO::DataStream& io, const Object*);
+
+    /** Tries to load an object and returns a the object tree.
+        On IO errors an IoException will be thrown. */
+    static Object * loadObject(IO::DataStream& io);
+
     // ------------- file io ----------------------
 
     /** Stores the complete Scene object to disk.
@@ -93,6 +117,22 @@ public:
         If the saved object was no Scene, NULL is returned.
         On other IO errors an IoException will be thrown. */
     static Scene * loadScene(const QString& filename);
+
+    /** Stores the object and it's subtree to disk.
+        On IO errors, an IoException will be thrown. */
+    static void saveObject(const QString& filename, const Object*);
+
+    /** Tries to load an object from disk and returns a the object tree.
+        On any IO errors an IoException will be thrown. */
+    static Object * loadObject(const QString& filename);
+
+    /** Opens filedialog, saves the object,
+        no exceptions. */
+    static void storeObjectTemplate(Object * obj);
+
+    /** Opens filedialog, returns an object or NULL,
+        no exceptions. */
+    static Object * loadObjectTemplate();
 
 signals:
 
@@ -106,6 +146,9 @@ private:
 
     std::map<QString, std::shared_ptr<Object>> objectMap_;
 };
+
+
+
 
 } // namespace MO
 

@@ -1,6 +1,6 @@
-/** @file
+/** @file main.cpp
 
-    @brief main.cpp
+    @brief Main duty dispatcher or whatever
 
     <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -8,25 +8,47 @@
     <p>created 2014/04/21</p>
 */
 
-
-
-#include <qglobal.h>
-#include <QDesktopWidget>
-
 #include <iostream>
+
+#include <QFile>
+#include <QTextStream>
 
 #include "io/init.h"
 #include "io/application.h"
 #include "io/settings.h"
+#include "io/isclient.h"
 #include "io/currentthread.h"
+#include "io/log.h"
+#include "io/version.h"
 #include "gui/mainwindow.h"
-#include "gui/audiolinkwindow.h"
 #include "gui/splashscreen.h"
+#include "engine/clientengine.h"
+
+
+void showHelp()
+{
+    QFile f(":/help/commandlinehelp.txt");
+    f.open(QFile::ReadOnly);
+    QTextStream s(&f);
+
+    MO_PRINT(
+           "\n"
+        << MO::applicationName()
+        << "\n\n"
+        << s.readAll()
+        );
+}
+
+
+
 
 //#include "tests/testtimeline.h"
 //#include "tests/testxmlstream.h"
 //#include "tests/testhelpsystem.h"
 //#include "tests/testequation.h"
+//#include "tests/testtesselator.h"
+//#include "tests/testcommandlineparser.h"
+//#include "tests/testdirectedgraph.h"
 
 //#include "types/vector.h"
 //#include "tool/stringmanip.h"
@@ -38,7 +60,10 @@ int main(int argc, char *argv[])
 {
     MO::setCurrentThreadName("GUI");
 
+    // tests without QApplication
     //MO::TestEquation t; return t.run();
+    //MO::TestTesselator t; return t.run();
+    //MO::TestDirectedGraph t; return t.run();
 
 #if (0)
     using namespace MO;
@@ -64,37 +89,89 @@ int main(int argc, char *argv[])
     return 0;
     */
 
+    // get major command switch
+    QString command;
+    if (argc > 1)
+        command = argv[1];
+
+    // determine what to do
+    if (0 == command.compare("-h", Qt::CaseInsensitive)
+     || command.contains("help", Qt::CaseInsensitive))
+    {
+        showHelp();
+        return 0;
+    }
+    else
+    if (0 == command.compare("client", Qt::CaseInsensitive))
+    {
+        MO::setThisApplicationToClient();
+    }
+    else
+    if (!command.isEmpty())
+    {
+        showHelp();
+        MO_PRINT("Unrecognized command '" << command << "'");
+        return 1;
+    }
+
+    // any 3rd library code that needs global initialization
+    // goes in here
     MO::startOfProgram();
 
-    MO::application = new MO::Application(argc, argv);
+    int dummy;
+    MO::application = new MO::Application(dummy, 0);
     MO::settings = new MO::Settings(MO::application);
 
-    // tests
+    // tests with QApplication
     //{ MO::TestHelpSystem test; return test.run(); }
+    //{ MO::TestCommandLineParser test; return test.run(argc, argv, 1); }
 
-#ifdef NDEBUG
-    auto splash = new MO::GUI::SplashScreen();
-    splash->show();
-#endif
 
-    auto mainwin = new MO::GUI::MainWindow;
-    MO::application->setMainWindow(mainwin);
+    // ------ start program ---------
 
-    mainwin->show();
+    int ret;
 
-    //auto audiowin = new MO::GUI::AudioLinkWindow;
-    //audiowin->show();
+    // --- client engine ---
+    if (MO::isClient())
+    {
+        ret = MO::clientEngine().run(argc, argv, 2);
+    }
 
-#ifdef NDEBUG
-    splash->raise();
-#endif
+    // --- server/gui engine ---
+    else
+    {
 
-    MO::application->setPaletteFor(mainwin);
+    #ifdef NDEBUG
+        MO::GUI::SplashScreen * splash = 0;
+        if (1)
+        {
+            splash = new MO::GUI::SplashScreen();
+            splash->show();
+        }
+    #endif
 
-    //MO::GUI::QObjectInspector oi(&w);
-    //oi.show();
+        auto mainwin = new MO::GUI::MainWindow;
+        MO::application->setMainWindow(mainwin);
 
-    int ret = MO::application->exec();
+        mainwin->show();
+
+        //auto audiowin = new MO::GUI::AudioLinkWindow;
+        //audiowin->show();
+
+    #ifdef NDEBUG
+        if (splash)
+            splash->raise();
+    #endif
+
+        MO::application->setStyleSheet(MO::settings->styleSheet());
+
+        //MO::GUI::QObjectInspector oi(&w);
+        //oi.show();
+
+        ret = MO::application->exec();
+    }
+
+    // ----- end of program ------
 
     delete MO::application;
 

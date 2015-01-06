@@ -25,11 +25,13 @@ namespace GL {
     };
 
     // some forwards
+    class BufferObject;
     class Context;
     class Drawable;
     class FrameBufferObject;
     class Manager;
     class SceneDebugRenderer;
+    class SceneRenderer;
     class ScreenQuad;
     class Shader;
     class ShaderSource;
@@ -37,6 +39,7 @@ namespace GL {
     class Uniform;
     class VertexArrayObject;
     class Window;
+    class Properties;
 
     class CameraSpace;
     class LightSettings;

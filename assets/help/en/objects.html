@@ -1,5 +1,100 @@
 
 <h1>Matrix Optimizer Objects</h1>
 
-<p>Detailed description of object stuff.</p>
+<h2>Introduction</h2>
 
+<p>Objects in this software are all things that can be put into the <b>object tree</b>. They can roughly be categorized into the following types:</p>
+<ul>
+<li><a href="#transformations">transformations</a></li>
+<li><a href="#controlobjects">control objects</a></li>
+<li><a href="#visibleobjects">visible objects</a></li>
+<li>sound objects</li>
+</ul>
+
+<p>The object tree has the <b>Scene</b> object as it's root. All other objects are placed into the scene as children. Most objects can have children and therefore can create a hierarchy of objects. In general, in this software, an object placed inside another objects is called it's <b>children</b> and the object in which is is placed is called the <b>parent</b>. Objects can have multiple children but only one parent.</p>
+
+<p>In general, the tree hierarchy is a means to group objects together. Some object positions in the tree, however, have a special meaning, as e.g. <a href="#transformations">transformation objects</a>.</p>
+
+<p>The properties or settings of an object, for example, the color of a 3D-model, or the resolution of a camera, are controlled by <a href="parameters">parameters</a>. Parameters themselves do not appear in the object tree. They are displayed and edited in the <a href="parameterview.html">parameter view</a>.</p>
+
+
+<a name="transformations"/>
+<h2>Transformations</h2>
+
+<p>Transformations are all objects that change the position, scale, rotation or other things related to space. Placing a transformation object as children into, e.g., a visible object, applies the set transformation to the visible object and all other children of it. This way, a hierarchy of transformations can be archieved, by adding transformation objects at different sub-levels in the tree. Transformations on the same tree level are applied in the order of appearence, starting at the top. </p>
+
+<p>Not all objects have a position in space, like control objects. The ones which have are the visible objects and sound objects. These objects have a position and an orientation which can be altered by transformation objects.</p>
+
+<p>To understand the possible transformations, it's important to understand the coordinate system used in this software. It is the standard <i>left-handed</i> OpenGL coordinate system with <b>+x = right</b>, <b>+y = up</b> and <b>+z = back</b>.</p>
+
+<a name="unitvector"/>
+<p>It's also helpful to understand the concept of a <b>unit vector</b>. A <b>direction</b> in space can be expressed with three values, x, y and z respectively. Every transformable object in this software has a position and a direction (or orientation). A direction describes only the direction (as the name suggests) and not a distance or length. So the x,y,z-vector describing the direction generally has a length of 1.0. That makes it a unit vector. Any non-zero vector can be transformed into a unit vector by dividing it's components by the length of the vector. This is called normalizing. Generally, at all places in this software where an <b>axis</b> or <b>direction</b> can be entered, the values are internally normalized to form the unit vector.</p>
+<p>Note that an axis or direction vector with all components set to zero, is illegal and will cause undesired behaviour.</p>
+
+
+<p>The different transformation objects are:</p>
+
+<h3>translation</h3>
+<p>This changes the x, y and z position of it's parent. The values for the three coordinates are <b>added</b> to the current position of the object.</p>
+
+<h3>scale</h3>
+<p>This changes the size of the parent object, which can be done separately or uniformly for each axis.</p>
+
+<h3>rotation</h3>
+<p>This rotates the parent around a given axis. The rotation angle is given in degree, and in the mathematical world, positive rotations are always counter-clockwise.</p>
+<p>The axis is given with the three axis parameters. For example: 1, 0, 0, means rotation around the x axis. A rotation around the diagonal xy-axis would be: 1, 1, 0 (more precisely it would be 0.707, 0.707, 0 but the three values are internally normalized to a <a href="#unitvector">unit vector</a>).</p>
+
+<h3>shear</h3>
+<p>A shear or skew transform deforms an object by shearing it on a certain axis. This transformation has 6 parameters which control the influence of each axis onto the other. For example, the <b>x -&gt; y</b> parameter shears the objects on the y-axis depending on the x-axis multiplied by the parameter.</p>
+
+<h3>look at</h3>
+<p>The look-at transformation changes the orientation (rotation) of it's parent. The parent's negative z-axis (this is, for example, the direction the camera object points at without any transformation applied) will point into the direction of the 3-D position given in the look-at parameters. The <b>up</b> parameter is a <a href="#unitvector">unit vector</a> axis that similiarily defines where the positive y-axis of the parent object will point at after the transformation.</p>
+<p>Care must be taken to avoid degenerate transformations! For example if the look-at position is the same as the current object position, the resulting transformation will be illegal. The visual object and all of it's children will probably disappear and audio objects might emit a loud clipping signal. The same happens when the up-axis is equal to the look-axis.</p>
+
+<h3>look</h3>
+<p>The look transformation does essentially the same as the look-at transformation but instead of a position, it's input is a <a href="#unitvector">unit vector</a> axis. In other words, the look transformation aligns the negative z direction of it's parent to the given axis.</p>
+
+<h3>mix</h3>
+<p>This is no transformation in itself but rather a container for transformations. All children transformations can be mixed in or out with the <b>mix</b> parameter.</p>
+<p>Note that 'mixing' between transformations does not always make sense. It works without problem for scale and position. But mixing into a 180 degree rotation will not rotate the object during the transition, instead it will look like a scale transformation. Think of the mix transformation as only mixing between the <b>result</b> of two transformations.</p>
+
+
+
+
+<a name="soundobjects"></a>
+<h2>Sound objects</h2>
+
+<p>Sound objects are currently not part of this package . . .</p>
+
+
+
+
+
+<a name="visibleobjects"/>
+<h2>Visible objects</h2>
+
+<p>Visible objects generally are drawn in some way into the graphic output buffer. The order in which they are drawn is the order in which they are placed in the object tree, starting at the top.</p>
+
+<p>For 3D objects like the <a href="#model3d">model</a>, the order is more important if the object is translucent, that is, if it's color's alpha value is less than 1. See the <a href="opengldrawing.html">OpenGL drawing</a> chapter for more information.</p>
+
+
+<a name="lightsource"></a>
+<h3>Light source</h3>
+<p>...</p>
+
+<a name="model3d"></a>
+<h3>3D Model</h3>
+<p>...</p>
+
+<a name="textureoverlay"></a>
+<h3>Texture overlay</h3>
+<p>...</p>
+
+<a name="sprite"></a>
+<h3>Sprite</h3>
+<p>...</p>
+
+
+<a name="controlobjects"/>
+<h2>Control objects</h2>
+<p>...</p>

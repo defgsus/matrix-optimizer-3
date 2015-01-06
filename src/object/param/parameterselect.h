@@ -14,6 +14,7 @@
 #include <QStringList>
 
 #include "parameter.h"
+#include "types/float.h"
 
 namespace MO {
 
@@ -35,7 +36,7 @@ public:
 
     int defaultValue() const { return defaultValue_; }
 
-    //int value(Double time) const { return value_ }
+    int value(Double time, uint thread) const { Q_UNUSED(time); Q_UNUSED(thread); return value_; }
     int baseValue() const { return value_; }
 
     const QList<int>& valueList() const { return valueList_; }
@@ -73,7 +74,7 @@ public:
     // --------- modulation -----------
 
     // XXX
-    virtual Modulator * getModulator(const QString &/*modulatorId*/) Q_DECL_OVERRIDE { return 0; };
+    virtual Modulator * getModulator(const QString &/*modulatorId*/, const QString& /*outputId*/) Q_DECL_OVERRIDE { return 0; };
 
     //virtual QList<Object*> getFutureModulatingObjects(const Scene *) const
     //                                    Q_DECL_OVERRIDE { return QList<Object*>(); }

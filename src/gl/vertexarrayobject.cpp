@@ -8,7 +8,10 @@
     <p>created 7/27/2014</p>
 */
 
+#include <memory>
+
 #include "vertexarrayobject.h"
+#include "bufferobject.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -17,11 +20,16 @@ using namespace gl;
 namespace MO {
 namespace GL {
 
+/** A structure holding some additional infos to the BufferObject.
+    Used for attributes and element buffers as well */
 struct VertexArrayObject::Buffer_
 {
-    GLuint id;
-    GLenum target, valueType;
-    GLuint numVertices;
+    BufferObject * buf;
+
+    int attribute;
+    GLenum valueType, primitiveType;
+    GLuint numVertices,
+           attribLocation;
 };
 
 
@@ -30,8 +38,7 @@ struct VertexArrayObject::Buffer_
 VertexArrayObject::VertexArrayObject(const QString& name, ErrorReporting errorReport)
     : name_         (name),
       rep_          (errorReport),
-      vao_          (invalidGl),
-      elementBuffer_(0)
+      vao_          (invalidGl)
 {
 }
 
@@ -39,8 +46,11 @@ VertexArrayObject::~VertexArrayObject()
 {
     if (isCreated())
         MO_GL_WARNING("destruction of unreleased vertex array object '" << name_ << "'");
+}
 
-    delete elementBuffer_;
+gl::GLuint VertexArrayObject::numVertices(uint index) const
+{
+    return index < elementBuffers_.size() ? elementBuffers_[index].numVertices : 0;
 }
 
 bool VertexArrayObject::create()
@@ -67,115 +77,144 @@ void VertexArrayObject::release()
     vao_ = invalidGl;
 
     for (auto &b : buffers_)
-        MO_CHECK_GL( glDeleteBuffers(1, &b.id) );
+    {
+        b.second.buf->release();
+        delete b.second.buf;
+    }
     buffers_.clear();
 
-    if (elementBuffer_)
+    for (auto &b : elementBuffers_)
     {
-        MO_CHECK_GL( glDeleteBuffers(1, &elementBuffer_->id) );
-        delete elementBuffer_;
-        elementBuffer_ = 0;
+        b.buf->release();
+        delete b.buf;
     }
-
+    elementBuffers_.clear();
 }
 
+BufferObject * VertexArrayObject::getAttributeBufferObject(int a)
+{
+    auto i = buffers_.find(a);
+    if (i != buffers_.end())
+        return i->second.buf;
 
-GLuint VertexArrayObject::createAttribBuffer(
+    return 0;
+}
+
+BufferObject * VertexArrayObject::createAttribBuffer(
+        int attribute,
         GLuint location, GLenum valueType, GLint numberCoordinates,
         GLuint sizeInBytes, const void * ptr,
         GLenum storageType, GLint stride, GLboolean normalized)
 {
-    GLuint buf = invalidGl;
+    BufferObject * buf = 0;
 
     if (!isCreated())
     {
         MO_GL_ERROR_COND(rep_, "createAttribBuffer() on uninitialized vertex array object '" << name_ << "'");
-        return buf;
+        return 0;
+    }
+
+    if (getAttributeBufferObject(attribute))
+    {
+        MO_GL_ERROR_COND(rep_, "createAttributeBuffer() for duplicate attribute " << attribute);
+        return 0;
     }
 
     GLenum e;
 
-    MO_CHECK_GL_RET_COND(rep_, glGenBuffers(1, &buf), e);
-    if (e != GL_NO_ERROR) return invalidGl;
+    buf = new BufferObject(name_ + "_attrib", rep_);
+    std::unique_ptr<BufferObject*> bufDeleter;
 
-    MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ARRAY_BUFFER, buf), e);
-    if (e != GL_NO_ERROR) goto fail;
+    if (!buf->create(GL_ARRAY_BUFFER, storageType))
+        return 0;
 
-    MO_CHECK_GL_RET_COND(rep_, glBufferData(GL_ARRAY_BUFFER,
-                    sizeInBytes, ptr, storageType), e);
-    if (e != GL_NO_ERROR) goto fail;
+    if (!buf->bind())
+    {
+        buf->release();
+        return 0;
+    }
+
+    if (!buf->upload(ptr, sizeInBytes))
+    {
+        buf->release();
+        return 0;
+    }
 
     MO_CHECK_GL_RET_COND(rep_, glEnableVertexAttribArray(location), e);
-    if (e != GL_NO_ERROR) goto fail;
-
+    if (e != GL_NO_ERROR)
+    {
+        buf->release();
+        return 0;
+    }
     //MO_DEBUG("glVertexAttribPointer("<<location<<", "<<numberCoordinates
     //         <<", "<<valueType<<", "<<(int)normalized<<", "<<stride<<", "<<0<<")");
     MO_CHECK_GL_RET_COND(rep_, glVertexAttribPointer(
             location, numberCoordinates, valueType, normalized, stride, NULL), e);
-    if (e != GL_NO_ERROR) goto fail;
+    if (e != GL_NO_ERROR)
+    {
+        buf->release();
+        return 0;
+    }
 
     // keep track
     Buffer_ b;
-    b.id = buf;
-    b.target = GL_ARRAY_BUFFER;
-    buffers_.push_back(b);
+    b.attribute = attribute;
+    b.buf = buf;
+    b.attribLocation = location;
+    buffers_.insert( std::make_pair(attribute, b) );
+
+    bufDeleter.release();
 
     return buf;
-
-fail:
-    MO_CHECK_GL(glDeleteBuffers(1, &buf));
-    return invalidGl;
 }
 
 
-
-GLuint VertexArrayObject::createIndexBuffer(
+BufferObject * VertexArrayObject::createIndexBuffer(
+        GLenum primitiveType,
         GLenum valueType,
-        GLuint numberVertices, const void * ptr,
+        GLuint numberVertices,
+        const void * ptr,
         GLenum storageType)
 {
-    GLuint buf = invalidGl;
-
     if (!isCreated())
     {
         MO_GL_ERROR_COND(rep_, "createIndexBuffer() on uninitialized vertex array object '" << name_ << "'");
-        return buf;
+        return 0;
     }
 
-    GLenum e;
+    BufferObject * buf = new BufferObject(name_ + "_idx", rep_);
+    // temporarily bind for deletion
+    std::unique_ptr<BufferObject> bufDeleter(buf);
 
-    MO_CHECK_GL_RET_COND(rep_, glGenBuffers(1, &buf), e);
-    if (e != GL_NO_ERROR) return invalidGl;
+    if (!buf->create(GL_ELEMENT_ARRAY_BUFFER, storageType))
+        return 0;
 
-    MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf), e);
-    if (e != GL_NO_ERROR) goto fail;
-
-    //MO_DEBUG("glBufferData("<<GL_ELEMENT_ARRAY_BUFFER
-    //         <<", "<<(numberVertices * typeSize(valueType))
-    //         <<", "<<ptr<<", "<<storageType<<")");
-    MO_CHECK_GL_RET_COND(rep_, glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-        numberVertices * typeSize(valueType), ptr, storageType), e);
-    if (e != GL_NO_ERROR) goto fail;
-
-    // delete previous
-    if (elementBuffer_)
+    if (!buf->bind())
     {
-        MO_CHECK_GL( glDeleteBuffers(1, &elementBuffer_->id) );
+        buf->release();
+        return 0;
     }
-    else elementBuffer_ = new Buffer_;
+
+    if (!buf->upload(ptr, numberVertices * typeSize(valueType)))
+    {
+        buf->release();
+        return 0;
+    }
+
+    // create new storage instance
+    Buffer_ buffer;
 
     // keep track
-    elementBuffer_->id = buf;
-    elementBuffer_->target = GL_ELEMENT_ARRAY_BUFFER;
-    elementBuffer_->valueType = valueType;
-    elementBuffer_->numVertices = numberVertices;
+    buffer.buf = buf;
+    buffer.valueType = valueType;
+    buffer.numVertices = numberVertices;
+    buffer.primitiveType = primitiveType;
+    elementBuffers_.push_back(buffer);
+
+    // all ok, don't delete the buffer
+    bufDeleter.release();
 
     return buf;
-
-fail:
-    MO_CHECK_GL(glDeleteBuffers(1, &buf));
-    return invalidGl;
-
 }
 
 bool VertexArrayObject::bind()
@@ -184,34 +223,65 @@ bool VertexArrayObject::bind()
     MO_CHECK_GL_RET_COND(rep_, glBindVertexArray(vao_), e);
     if (e != GL_NO_ERROR) { return false; }
 
-    if (elementBuffer_)
-    {
-        MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_->id), e);
-        if (e != GL_NO_ERROR) { MO_CHECK_GL(glBindVertexArray(0)); return false; }
-    }
 
     return true;
 }
 
 void VertexArrayObject::unbind()
 {
-    if (elementBuffer_)
-        MO_CHECK_GL_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
     MO_CHECK_GL_COND(rep_, glBindVertexArray(0));
 }
 
-bool VertexArrayObject::drawElements(
+
+bool VertexArrayObject::drawElements() const
+{
+    if (elementBuffers_.empty())
+    {
+        MO_GL_ERROR_COND(rep_, "No element buffers defined for "
+                         "VertexArrayObject('" << name_ << "')::drawElements()");
+        return false;
+    }
+
+    // bind the vao;
+    GLenum e;
+    MO_CHECK_GL_RET_COND(rep_, glBindVertexArray(vao_), e);
+    if (e != GL_NO_ERROR) { return false; }
+
+    // for each element buffer
+    for (auto & ebuffer : elementBuffers_)
+    {
+        if (!ebuffer.buf->bind())
+        {
+            MO_CHECK_GL(glBindVertexArray(0));
+            return false;
+        }
+
+        MO_CHECK_GL_RET_COND(rep_, glDrawElements(
+                                    ebuffer.primitiveType,
+                                    ebuffer.numVertices,
+                                    ebuffer.valueType,
+                                    (void*)0), e);
+    }
+
+    MO_CHECK_GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    MO_CHECK_GL(glBindVertexArray(0));
+
+    return e != GL_NO_ERROR;
+}
+
+
+bool VertexArrayObject::drawElements(uint eIndex,
         GLenum primitiveType, GLuint numberVertices, GLuint offset) const
 {
-    if (!elementBuffer_)
+    if (eIndex >= elementBuffers_.size())
     {
-        MO_GL_ERROR_COND(rep_, "no element buffer defined for "
+        MO_GL_ERROR_COND(rep_, "element buffer index " << eIndex << " out of range for "
                          "VertexArrayObject('" << name_ << "')::drawElements()");
         return false;
     }
 
     if (numberVertices <= 0)
-        numberVertices = elementBuffer_->numVertices;
+        numberVertices = elementBuffers_[eIndex].numVertices;
 
     GLenum e;
     MO_CHECK_GL_RET_COND(rep_, glBindVertexArray(vao_), e);
@@ -219,15 +289,18 @@ bool VertexArrayObject::drawElements(
 
     // Some drivers don't seem to store the element array in the vao state!!
     // http://stackoverflow.com/questions/8973690/vao-and-element-array-buffer-state
-    MO_CHECK_GL_RET_COND(rep_, glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_->id), e);
-    if (e != GL_NO_ERROR) { MO_CHECK_GL(glBindVertexArray(0)); return false; }
+    if (!elementBuffers_[eIndex].buf->bind())
+    {
+        MO_CHECK_GL(glBindVertexArray(0));
+        return false;
+    }
 
     //MO_DEBUG("glDrawElements("<<primitiveType<<", "<<numberVertices<<", "<<elementBuffer_->valueType
     //         <<", "<<reinterpret_cast<void*>(offset)<<")");
     MO_CHECK_GL_RET_COND(rep_, glDrawElements(
                                 primitiveType,
                                 numberVertices,
-                                elementBuffer_->valueType,
+                                elementBuffers_[eIndex].valueType,
                                 reinterpret_cast<void*>(offset)), e);
 
     MO_CHECK_GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));

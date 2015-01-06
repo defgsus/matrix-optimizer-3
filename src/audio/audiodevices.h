@@ -18,6 +18,8 @@
 
 #include "types/int.h"
 
+#include <vector>
+
 namespace MO {
 namespace AUDIO {
 

@@ -13,6 +13,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "object/scene.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parameterint.h"
@@ -26,7 +27,8 @@ using namespace gl;
 namespace MO {
 
 const QStringList TextureSetting::textureTypeNames =
-{ tr("none"), tr("file"), tr("master frame"), tr("camera frame") };
+{ tr("none"), tr("file"), tr("master frame"), tr("master frame depth"),
+  tr("camera frame"), tr("camera frame depth") };
 
 
 TextureSetting::TextureSetting(Object *parent, GL::ErrorReporting rep)
@@ -64,43 +66,83 @@ void TextureSetting::deserialize(IO::DataStream &io)
 void TextureSetting::createParameters(const QString &id_suffix, TextureType defaultType,
                 bool enableNone, bool normalMap)
 {
-    paramType_ = object_->createSelectParameter(
+    auto params = object_->params();
+
+    paramType_ = params->createSelectParameter(
             "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
-            { "none", "file", "master", "camera" },
+            { "none", "file", "master", "masterd", "camera", "camerad" },
             textureTypeNames,
             { tr("No texture will be used"),
               tr("An image will be loaded from a file"),
               tr("The previous master frame is the source of the image"),
-              tr("The previous frame of one of the cameras is the source of the image") },
-            { TT_NONE, TT_FILE, TT_MASTER_FRAME, TT_CAMERA_FRAME },
+              tr("The depth information in the previous master frame is the source of the image"),
+              tr("The previous frame of one of the cameras is the source of the image"),
+              tr("The depth information in the previous frame of one of the cameras is the source of the image")},
+            { TT_NONE, TT_FILE,
+              TT_MASTER_FRAME, TT_MASTER_FRAME_DEPTH,
+              TT_CAMERA_FRAME, TT_CAMERA_FRAME_DEPTH },
             defaultType, true, false);
     if (!enableNone)
         paramType_->removeByValue(TT_NONE);
 
 
-    paramFilename_ = object_->createFilenameParameter(
+    paramFilename_ = params->createFilenameParameter(
                 "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
                 normalMap? IO::FT_NORMAL_MAP : IO::FT_TEXTURE,
                 normalMap? ":/normalmap/01.png" : ":/texture/mo_black.png");
 
-    paramCamera_ = object_->createIntParameter(
+    paramCamera_ = params->createIntParameter(
                 "_imgcamidx" + id_suffix, tr("camera frame"),
                 tr("The index of the camera starting at 0"),
                 0, true, false);
     paramCamera_->setMinValue(0);
+
+    paramInterpol_ = params->createBooleanParameter(
+                "_imginterpol" + id_suffix, tr("interpolation"),
+                tr("The interpolation mode for pixel magnification"),
+                tr("No interpolation"),
+                tr("Linear interpolation"),
+                true,
+                true, false);
+
+    paramWrapX_ = params->createSelectParameter(
+            "_imgwrapx" + id_suffix, tr("on horiz. edges"),
+            tr("Selects what happens on the horizontal edges of the texture"),
+            { "clamp", "repeat" },
+            { tr("clamp"), tr("repeat"), tr("mirror") },
+            { tr("Colors stay the same"),
+              tr("The texture repeats"),
+              tr("The texture repeats mirrored") },
+            { WM_CLAMP, WM_REPEAT, WM_MIRROR },
+            WM_REPEAT, true, false);
+
+    paramWrapY_ = params->createSelectParameter(
+            "_imgwrapy" + id_suffix, tr("on vert. edges"),
+            tr("Selects what happens on the vertical edges of the texture"),
+            { "clamp", "repeat", "repeatm" },
+            { tr("clamp"), tr("repeat"), tr("mirror") },
+            { tr("Colors stay the same"),
+              tr("The texture repeats"),
+              tr("The texture repeats mirrored") },
+            { WM_CLAMP, WM_REPEAT, WM_MIRROR },
+            WM_REPEAT, true, false);
+
 }
 
 bool TextureSetting::needsReinit(Parameter *p) const
 {
     return (p == paramType_
         || (p == paramFilename_ && paramType_->baseValue() == TT_FILE)
-        || (p == paramCamera_ && paramType_->baseValue() == TT_CAMERA_FRAME));
+        || (p == paramCamera_ && (   paramType_->baseValue() == TT_CAMERA_FRAME
+                                  || paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH)));
 }
 
 void TextureSetting::updateParameterVisibility()
 {
     paramFilename_->setVisible( paramType_->baseValue() == TT_FILE );
-    paramCamera_->setVisible( paramType_->baseValue() == TT_CAMERA_FRAME );
+    paramCamera_->setVisible(
+                   paramType_->baseValue() == TT_CAMERA_FRAME
+                || paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH );
 }
 
 void TextureSetting::getNeededFiles(IO::FileList &files, IO::FileType ft)
@@ -140,21 +182,14 @@ bool TextureSetting::initGl()
 
     if (paramType_->baseValue() == TT_FILE)
     {
-        Image img;
         const QString fn = IO::fileManager().localFilename(paramFilename_->value());
 
-        if (!img.loadImage(fn))
-        {
-            img.loadImage(":/texture/error.png");
-        }
-
-        texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
-        if (!texture_)
-            return false;
-        constTexture_ = texture_;
+        if (setTextureFromImage_(fn))
+            return true;
     }
 
-    if (paramType_->baseValue() == TT_MASTER_FRAME)
+    if (paramType_->baseValue() == TT_MASTER_FRAME
+     || paramType_->baseValue() == TT_MASTER_FRAME_DEPTH)
     {
         Scene * scene = object_->sceneObject();
         if (!scene)
@@ -163,13 +198,16 @@ bool TextureSetting::initGl()
             return 0;
         }
 
-        GL::FrameBufferObject * fbo = scene->fboMaster(MO_GFX_THREAD);
-        if (fbo)
-            constTexture_ = fbo->colorTexture();
+        connect(scene, SIGNAL(sceneFboChanged()),
+                this, SLOT(updateSceneFbo_()));
+
+        if (updateSceneFbo_())
+            return true;
     }
 
 
-    if (paramType_->baseValue() == TT_CAMERA_FRAME)
+    if (paramType_->baseValue() == TT_CAMERA_FRAME
+     || paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH)
     {
         Scene * scene = object_->sceneObject();
         if (!scene)
@@ -178,27 +216,11 @@ bool TextureSetting::initGl()
             return 0;
         }
 
+        connect(scene, SIGNAL(CameraFboChanged(Camera*)),
+                this, SLOT(updateCameraFbo_()));
 
-        GL::FrameBufferObject * fbo = scene->fboCamera(MO_GFX_THREAD, paramCamera_->baseValue());
-
-        // special:
-        // when camera index out-of-range, don't throw error
-        // but load an error image
-        if (!fbo)
-        {
-            MO_WARNING("no camera fbo received from scene");
-
-            Image img;
-            img.loadImage(":/texture/error.png");
-            texture_ = GL::Texture::createFromImage(img, GL_RGB, rep_);
-            if (!texture_)
-                return false;
-            constTexture_ = texture_;
+        if (updateCameraFbo_())
             return true;
-        }
-
-        constTexture_ = fbo->colorTexture();
-
     }
 
     if (!constTexture_)
@@ -209,6 +231,15 @@ bool TextureSetting::initGl()
 
 void TextureSetting::releaseGl()
 {
+    Scene * scene = object_->sceneObject();
+    if (scene)
+    {
+        connect(scene, SIGNAL(sceneFboChanged()),
+                this, SLOT(updateSceneFbo_()));
+        disconnect(scene, SIGNAL(CameraFboChanged(Camera*)),
+                   this, SLOT(updateCameraFbo_()));
+    }
+
     if (texture_)
     {
         texture_->release();
@@ -217,6 +248,92 @@ void TextureSetting::releaseGl()
     }
 
     constTexture_ = 0;
+}
+
+bool TextureSetting::updateCameraFbo_()
+{
+    MO_DEBUG_GL("TextureSetting::updateCameraFbo_");
+
+    Scene * scene = object_->sceneObject();
+    if (!scene)
+    {
+        MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_CAMERA_FRAME");
+        return 0;
+    }
+
+    GL::FrameBufferObject * fbo = scene->fboCamera(MO_GFX_THREAD, paramCamera_->baseValue());
+
+    // special:
+    // when camera index out-of-range, don't throw error
+    // but load an error image
+    if (!fbo)
+    {
+        MO_WARNING("no camera fbo received from scene");
+
+        return setTextureFromImage_(":/texture/error.png");
+    }
+
+    if (paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH )
+    {
+        constTexture_ = fbo->depthTexture();
+        if (constTexture_ == 0)
+            MO_GL_WARNING("no depth texture in TT_CAMERA_FRAME_DEPTH");
+    }
+    else
+        constTexture_ = fbo->colorTexture();
+
+
+    return constTexture_ != 0;
+}
+
+bool TextureSetting::updateSceneFbo_()
+{
+    MO_DEBUG_GL("TextureSetting::updateSceneFbo_");
+
+    Scene * scene = object_->sceneObject();
+    if (!scene)
+    {
+        MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_MASTER_FRAME");
+        return 0;
+    }
+
+    GL::FrameBufferObject * fbo = scene->fboMaster(MO_GFX_THREAD);
+    if (fbo)
+    {
+        if (paramType_->baseValue() == TT_MASTER_FRAME_DEPTH )
+        {
+            constTexture_ = fbo->depthTexture();
+            if (constTexture_ == 0)
+                MO_GL_WARNING("no depth texture in TT_MASTER_FRAME_DEPTH");
+        }
+        else
+            constTexture_ = fbo->colorTexture();
+    }
+
+    return constTexture_ != 0;
+}
+
+bool TextureSetting::setTextureFromImage_(const QString& fn)
+{
+    if (texture_ && texture_->isAllocated())
+        texture_->release();
+    delete texture_;
+    texture_ = 0;
+    constTexture_ = 0;
+
+    Image img;
+    if (!img.loadImage(fn) &&
+        !img.loadImage(":/texture/error.png"))
+        return false;
+
+    texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
+
+    if (!texture_)
+        return false;
+
+    constTexture_ = texture_;
+    return true;
+
 }
 
 bool TextureSetting::bind(uint slot)
@@ -238,6 +355,27 @@ bool TextureSetting::bind(uint slot)
         MO_CHECK_GL( glActiveTexture(GLenum(slot)) );
 
     bool r = constTexture_->bind();
+
+    // set interpolation mode
+    if (paramInterpol_->baseValue())
+        constTexture_->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
+    else
+        constTexture_->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
+
+    // wrapmode
+    if (paramWrapX_->baseValue() == WM_CLAMP)
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE)) )
+    else if (paramWrapX_->baseValue() == WM_MIRROR)
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_MIRRORED_REPEAT)) )
+    else
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_REPEAT)) );
+
+    if (paramWrapY_->baseValue() == WM_CLAMP)
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE)) )
+    else if (paramWrapY_->baseValue() == WM_MIRROR)
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_MIRRORED_REPEAT)) )
+    else
+        MO_CHECK_GL( constTexture_->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_REPEAT)) );
 
     // set back
     if ((GLint)slot != act)

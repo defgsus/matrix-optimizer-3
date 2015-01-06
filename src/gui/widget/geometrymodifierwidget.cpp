@@ -14,9 +14,11 @@
 #include <QIcon>
 #include <QComboBox>
 #include <QCheckBox>
+#include <QLineEdit>
 
 #include "geometrymodifierwidget.h"
 #include "io/error.h"
+#include "io/files.h"
 #include "doublespinbox.h"
 #include "spinbox.h"
 #include "groupwidget.h"
@@ -33,9 +35,15 @@
 #include "geom/geometrymodifiervertexgroup.h"
 #include "geom/geometrymodifiervertexequation.h"
 #include "geom/geometrymodifierprimitiveequation.h"
-#include "geom/geometrymodifiertexcoordequation.h"
 #include "geom/geometrymodifierextrude.h"
 #include "geom/geometrymodifiertexcoords.h"
+#include "geom/geometrymodifierduplicate.h"
+#include "geom/geometrymodifiercreate.h"
+#ifndef MO_DISABLE_ANGELSCRIPT
+#include "geom/geometrymodifierangelscript.h"
+#include "script/angelscript_geometry.h"
+#include "angelscriptwidget.h"
+#endif
 
 namespace MO {
 namespace GUI {
@@ -46,7 +54,7 @@ GeometryModifierWidget::GeometryModifierWidget(GEOM::GeometryModifier * geom, bo
     funcUpdateFromWidgets_  (0),
     funcUpdateWidgets_      (0)
 {
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     createWidgets_(expanded);
 
@@ -146,6 +154,11 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
             this, SLOT(updateFromWidgets_()));
 
     // -------- create widgets for specific modifier class -----------
+
+    if (auto creator = dynamic_cast<GEOM::GeometryModifierCreate*>(modifier_))
+    {
+        createCreatorWidgets_(creator);
+    }
 
     if (auto scale = dynamic_cast<GEOM::GeometryModifierScale*>(modifier_))
     {
@@ -511,6 +524,17 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
                            0.05, -1000000, 1000000);
             lh->addWidget(spinfac);
 
+        lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            label = new QLabel(tr("shift"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            MO__DOUBLESPIN(spinshift, tr("Shifts the extruded vertices towards the center of the triangles"),
+                           0.05, -1000000, 1000000);
+            lh->addWidget(spinshift);
+
         MO__CHECKBOX(cbFaces, tr("create orthogonal faces"),
                      tr("Enables the creation of the outside faces, "
                         "orthogonal to extruded faces"),
@@ -525,6 +549,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         {
             extrude->setConstant(spinconst->value());
             extrude->setFactor(spinfac->value());
+            extrude->setShiftCenter(spinshift->value());
             extrude->setDoOuterFaces(cbFaces->isChecked());
             extrude->setDoRecognizeEdges(cbQuads->isChecked());
         };
@@ -533,6 +558,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         {
             spinconst->setValue(extrude->getConstant());
             spinfac->setValue(extrude->getFactor());
+            spinshift->setValue(extrude->getShiftCenter());
             cbFaces->setChecked(extrude->getDoOuterFaces());
             cbQuads->setChecked(extrude->getDoRecognizeEdges());
         };
@@ -542,38 +568,24 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 
     if (auto equ = dynamic_cast<GEOM::GeometryModifierVertexEquation*>(modifier_))
     {
-        QStringList vars = { "x", "y", "z", "i" };
+        QStringList vars = {
+            "x", "y", "z", "i", "s", "t",
+            "red", "green", "blue", "alpha", "bright" };
 
-        auto editEquX = new EquationEditor(this);
-        group_->addWidget(editEquX);
-        editEquX->addVariables(vars);
-        editEquX->setPlainText(equ->getEquationX());
-        connect(editEquX, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquY = new EquationEditor(this);
-        group_->addWidget(editEquY);
-        editEquY->addVariables(vars);
-        editEquY->setPlainText(equ->getEquationY());
-        connect(editEquY, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquZ = new EquationEditor(this);
-        group_->addWidget(editEquZ);
-        editEquZ->addVariables(vars);
-        editEquZ->setPlainText(equ->getEquationZ());
-        connect(editEquZ, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+        auto editEqu = new EquationEditor(this);
+        group_->addWidget(editEqu);
+        editEqu->addVariables(vars);
+        editEqu->setPlainText(equ->getEquation());
+        connect(editEqu, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()
         {
-            equ->setEquationX(editEquX->toPlainText());
-            equ->setEquationY(editEquY->toPlainText());
-            equ->setEquationZ(editEquZ->toPlainText());
+            equ->setEquation(editEqu->toPlainText());
         };
 
         funcUpdateWidgets_ = [=]()
         {
-            editEquX->setPlainText(equ->getEquationX());
-            editEquY->setPlainText(equ->getEquationY());
-            editEquZ->setPlainText(equ->getEquationZ());
+            editEqu->setPlainText(equ->getEquation());
         };
     }
 
@@ -584,75 +596,367 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     {
         QStringList vars = {
             "x", "y", "z", "nx", "ny", "nz", "s", "t", "i", "p",
+            "red", "green", "blue", "alpha", "bright",
             "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3",
             "nx1", "ny1", "nz1", "nx2", "ny2", "nz2", "nx3", "ny3", "nz3",
-            "s1", "t1", "s2", "t2", "s3", "t3" };
+            "s1", "t1", "s2", "t2", "s3", "t3",
+            "red1", "green1", "blue1", "alpha1",
+            "red2", "green2", "blue2", "alpha2",
+            "red3", "green3", "blue3", "alpha3" };
 
-        auto editEquX = new EquationEditor(this);
-        group_->addWidget(editEquX);
-        editEquX->addVariables(vars);
-        editEquX->setPlainText(equ->getEquationX());
-        connect(editEquX, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquY = new EquationEditor(this);
-        group_->addWidget(editEquY);
-        editEquY->addVariables(vars);
-        editEquY->setPlainText(equ->getEquationY());
-        connect(editEquY, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
-
-        auto editEquZ = new EquationEditor(this);
-        group_->addWidget(editEquZ);
-        editEquZ->addVariables(vars);
-        editEquZ->setPlainText(equ->getEquationZ());
-        connect(editEquZ, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+        auto editEqu = new EquationEditor(this);
+        group_->addWidget(editEqu);
+        editEqu->addVariables(vars);
+        editEqu->setPlainText(equ->getEquation());
+        connect(editEqu, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()
         {
-            equ->setEquationX(editEquX->toPlainText());
-            equ->setEquationY(editEquY->toPlainText());
-            equ->setEquationZ(editEquZ->toPlainText());
+            equ->setEquation(editEqu->toPlainText());
         };
 
         funcUpdateWidgets_ = [=]()
         {
-            editEquX->setPlainText(equ->getEquationX());
-            editEquY->setPlainText(equ->getEquationY());
-            editEquZ->setPlainText(equ->getEquationZ());
+            editEqu->setPlainText(equ->getEquation());
         };
     }
 
 
 
-    if (auto equ = dynamic_cast<GEOM::GeometryModifierTexCoordEquation*>(modifier_))
+    if (auto dupli = dynamic_cast<GEOM::GeometryModifierDuplicate*>(modifier_))
     {
-        QStringList vars = { "x", "y", "z", "i", "s", "t" };
+        auto label = new QLabel(tr("number duplicates"), this);
+        group_->addWidget(label);
 
-        auto editEquS = new EquationEditor(this);
-        group_->addWidget(editEquS);
-        editEquS->addVariables(vars);
-        editEquS->setPlainText(equ->getEquationS());
-        connect(editEquS, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
 
-        auto editEquT = new EquationEditor(this);
-        group_->addWidget(editEquT);
-        editEquT->addVariables(vars);
-        editEquT->setPlainText(equ->getEquationT());
-        connect(editEquT, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
+            MO__SPIN(spinx, tr("Number of duplicates on x axis"),
+                           1, 1000000);
+            lh->addWidget(spinx);
+
+            MO__SPIN(spiny, tr("Number of duplicates on y axis"),
+                           1, 1000000);
+            lh->addWidget(spiny);
+
+            MO__SPIN(spinz, tr("Number of duplicates on z axis"),
+                           1, 1000000);
+            lh->addWidget(spinz);
+
+        QStringList vars = {
+            "x", "y", "z", "i", "s", "t",
+            "red", "green", "blue", "alpha",
+            "d", "dx", "dy", "dz" };
+
+        auto editEqu = new EquationEditor(this);
+        group_->addWidget(editEqu);
+        editEqu->addVariables(vars);
+        editEqu->setPlainText(dupli->getEquation());
+        connect(editEqu, SIGNAL(equationChanged()), this, SLOT(updateFromWidgets_()));
 
         funcUpdateFromWidgets_ = [=]()
         {
-            equ->setEquationS(editEquS->toPlainText());
-            equ->setEquationT(editEquT->toPlainText());
+            dupli->setDuplicatesX(spinx->value());
+            dupli->setDuplicatesY(spiny->value());
+            dupli->setDuplicatesZ(spinz->value());
+            dupli->setEquation(editEqu->toPlainText());
         };
 
         funcUpdateWidgets_ = [=]()
         {
-            editEquS->setPlainText(equ->getEquationS());
-            editEquT->setPlainText(equ->getEquationT());
+            spinx->setValue(dupli->duplicatesX());
+            spiny->setValue(dupli->duplicatesY());
+            spinz->setValue(dupli->duplicatesZ());
+            editEqu->setPlainText(dupli->getEquation());
         };
     }
+
+#ifndef MO_DISABLE_ANGELSCRIPT
+    if (auto script = dynamic_cast<GEOM::GeometryModifierAngelScript*>(modifier_))
+    {
+        auto edit = new AngelScriptWidget(this);
+        //edit->setMinimumHeight(500);
+        group_->addWidget(edit);
+        edit->setScriptEngine( GeometryEngineAS::createNullEngine(true) );
+        connect(edit, SIGNAL(scriptTextChanged()), this, SLOT(updateFromWidgets_()));
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            script->setScript(edit->scriptText());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            edit->setScriptText(script->script());
+        };
+    }
+#endif
 
 }
+
+void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate * settings)
+{
+    // geometry type
+    auto comboType = new QComboBox(this);
+    group_->addWidget(comboType);
+    comboType->setStatusTip("Selects the type of geometry");
+
+    for (uint i=0; i<settings->numTypes; ++i)
+    {
+        comboType->addItem(settings->typeNames[i], i);
+        if (settings->type() == (GEOM::GeometryModifierCreate::Type)i)
+            comboType->setCurrentIndex(i);
+    }
+
+    connect(comboType, SIGNAL(currentIndexChanged(QString)),
+            this, SLOT(updateFromWidgets_()));
+
+    auto lh2 = new QHBoxLayout();
+    group_->addLayout(lh2);
+
+        // filename
+        auto editFilename = new QLineEdit(this);
+        group_->addWidget(editFilename);
+        lh2->addWidget(editFilename);
+        editFilename->setText(settings->filename());
+        editFilename->setReadOnly(true);
+
+        auto butLoadModelFile = new QToolButton(this);
+        group_->addWidget(butLoadModelFile);
+        lh2->addWidget(butLoadModelFile);
+        butLoadModelFile->setText("...");
+        connect(butLoadModelFile, &QToolButton::clicked, [=]()
+        {
+            QString filename =
+                IO::Files::getOpenFileName(IO::FT_MODEL, this);
+
+            if (filename.isEmpty())
+                return;
+
+            editFilename->setText(filename);
+            updateFromWidgets_();
+        });
+
+
+    lh2 = new QHBoxLayout();
+    group_->addLayout(lh2);
+
+        // create triangles
+        auto cbTriangles = new QCheckBox(tr("create triangles"), this);
+        group_->addWidget(cbTriangles);
+        lh2->addWidget(cbTriangles);
+        cbTriangles->setChecked(settings->asTriangles());
+        connect(cbTriangles, SIGNAL(stateChanged(int)),
+                this, SLOT(updateFromWidgets_()));
+
+        // shared vertices
+        auto cbSharedVert = new QCheckBox(tr("shared vertices"), this);
+        group_->addWidget(cbSharedVert);
+        lh2->addWidget(cbSharedVert);
+        cbSharedVert->setChecked(settings->sharedVertices());
+        connect(cbSharedVert, SIGNAL(stateChanged(int)),
+                this, SLOT(updateFromWidgets_()));
+
+    // small radius
+    lh2 = new QHBoxLayout();
+    group_->addLayout(lh2);
+
+        auto labelSmallRadius = new QLabel(tr("small radius"), this);
+        group_->addWidget(labelSmallRadius);
+        lh2->addWidget(labelSmallRadius);
+
+        auto spinSmallRadius = new DoubleSpinBox(this);
+        group_->addWidget(spinSmallRadius);
+        lh2->addWidget(spinSmallRadius);
+        spinSmallRadius->setStatusTip("Smaller radius");
+        spinSmallRadius->setDecimals(5);
+        spinSmallRadius->setSingleStep(0.02);
+        spinSmallRadius->setRange(0.0001, 100000);
+        spinSmallRadius->setValue(settings->smallRadius());
+        connect(spinSmallRadius, SIGNAL(valueChanged(double)),
+                this, SLOT(updateFromWidgets_()));
+
+    // segments
+    auto labelSeg = new QLabel(tr("segments"), this);
+    group_->addWidget(labelSeg);
+    group_->addWidget(labelSeg);
+
+    lh2 = new QHBoxLayout();
+    group_->addLayout(lh2);
+
+        auto spinSegX = new SpinBox(this);
+        group_->addWidget(spinSegX);
+        lh2->addWidget(spinSegX);
+        spinSegX->setStatusTip("Number of segments (X)");
+        spinSegX->setRange(1, 10000);
+        spinSegX->setValue(settings->segmentsX());
+        connect(spinSegX, SIGNAL(valueChanged(int)),
+                this, SLOT(updateFromWidgets_()));
+
+        auto spinSegY = new SpinBox(this);
+        group_->addWidget(spinSegY);
+        lh2->addWidget(spinSegY);
+        spinSegY->setStatusTip("Number of segments (Y)");
+        spinSegY->setRange(1, 10000);
+        spinSegY->setValue(settings->segmentsY());
+        connect(spinSegY, SIGNAL(valueChanged(int)),
+                this, SLOT(updateFromWidgets_()));
+
+        auto spinSegZ = new SpinBox(this);
+        group_->addWidget(spinSegZ);
+        lh2->addWidget(spinSegZ);
+        spinSegZ->setStatusTip("Number of segments (Z)");
+        spinSegZ->setRange(0, 10000);
+        spinSegZ->setValue(settings->segmentsZ());
+        connect(spinSegZ, SIGNAL(valueChanged(int)),
+                this, SLOT(updateFromWidgets_()));
+
+    // color
+    lh2 = new QHBoxLayout();
+    group_->addLayout(lh2);
+
+        auto spinR = new DoubleSpinBox(this);
+        group_->addWidget(spinR);
+        lh2->addWidget(spinR);
+        spinR->setStatusTip("Red amount of initital color");
+        spinR->setDecimals(5);
+        spinR->setSingleStep(0.1);
+        spinR->setRange(0.0, 1);
+        spinR->setValue(settings->red());
+        QPalette pal(spinR->palette());
+        pal.setColor(QPalette::Text, QColor(100,0,0));
+        spinR->setPalette(pal);
+        connect(spinR, SIGNAL(valueChanged(double)),
+                this, SLOT(updateFromWidgets_()));
+
+        auto spinG = new DoubleSpinBox(this);
+        group_->addWidget(spinG);
+        lh2->addWidget(spinG);
+        spinG->setStatusTip("Green amount of initital color");
+        spinG->setDecimals(5);
+        spinG->setSingleStep(0.1);
+        spinG->setRange(0.0, 1);
+        spinG->setValue(settings->green());
+        pal.setColor(QPalette::Text, QColor(0,70,0));
+        spinG->setPalette(pal);
+        connect(spinG, SIGNAL(valueChanged(double)),
+                this, SLOT(updateFromWidgets_()));
+
+        auto spinB = new DoubleSpinBox(this);
+        group_->addWidget(spinB);
+        lh2->addWidget(spinB);
+        spinB->setStatusTip("Blue amount of initital color");
+        spinB->setDecimals(5);
+        spinB->setSingleStep(0.1);
+        spinB->setRange(0.0, 1);
+        spinB->setValue(settings->blue());
+        pal.setColor(QPalette::Text, QColor(0,0,140));
+        spinB->setPalette(pal);
+        connect(spinB, SIGNAL(valueChanged(double)),
+                this, SLOT(updateFromWidgets_()));
+
+        auto spinA = new DoubleSpinBox(this);
+        group_->addWidget(spinA);
+        lh2->addWidget(spinA);
+        spinA->setStatusTip("Alpha amount of initital color");
+        spinA->setDecimals(5);
+        spinA->setSingleStep(0.1);
+        spinA->setRange(0.0, 1);
+        spinA->setValue(settings->alpha());
+        connect(spinA, SIGNAL(valueChanged(double)),
+                this, SLOT(updateFromWidgets_()));
+
+    auto funcUpdateVisibility = [=]()
+    {
+        const bool
+                isFile = settings->type() ==
+                        GEOM::GeometryModifierCreate::T_FILE,
+                canOnlyTriangle = isFile
+                        || settings->type() == GEOM::GeometryModifierCreate::T_BOX_UV,
+                canTriangle = (settings->type() !=
+                                GEOM::GeometryModifierCreate::T_GRID_XZ
+                                && settings->type() !=
+                                GEOM::GeometryModifierCreate::T_LINE_GRID),
+    //            hasTriangle = (canTriangle && (settings_->asTriangles || isFile)),
+                has2Segments = (settings->type() ==
+                                GEOM::GeometryModifierCreate::T_UV_SPHERE
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_GRID_XZ
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_LINE_GRID
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_CYLINDER_CLOSED
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_CYLINDER_OPEN
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_TORUS),
+                has3Segments = (has2Segments && settings->type() ==
+                                GEOM::GeometryModifierCreate::T_LINE_GRID),
+                hasSmallRadius = (settings->type() ==
+                                GEOM::GeometryModifierCreate::T_TORUS);
+
+        group_->setVisible(editFilename, isFile);
+        group_->setVisible(butLoadModelFile, isFile);
+
+        group_->setVisible(labelSeg, has2Segments );
+        group_->setVisible(spinSegX, has2Segments );
+        group_->setVisible(spinSegY, has2Segments );
+        group_->setVisible(spinSegZ, has3Segments );
+
+        group_->setVisible(labelSmallRadius, hasSmallRadius );
+        group_->setVisible(spinSmallRadius, hasSmallRadius );
+
+        group_->setVisible(cbTriangles, canTriangle && !canOnlyTriangle);
+    };
+
+    //bool ignoreUpdates = false;
+
+    funcUpdateFromWidgets_ = [=]()
+    {
+        //if (ignoreUpdates)
+        //    return;
+
+        settings->setAsTriangles(cbTriangles->isChecked());
+        settings->setSharedVertices(cbSharedVert->isChecked());
+        settings->setRed(spinR->value());
+        settings->setGreen(spinG->value());
+        settings->setBlue(spinB->value());
+        settings->setAlpha(spinA->value());
+        settings->setSegmentsX(spinSegX->value());
+        settings->setSegmentsY(spinSegY->value());
+        settings->setSegmentsZ(spinSegZ->value());
+        settings->setFilename(editFilename->text());
+        settings->setSmallRadius(spinSmallRadius->value());
+        if (comboType->currentIndex() >= 0)
+            settings->setType((GEOM::GeometryModifierCreate::Type)
+                comboType->itemData(comboType->currentIndex()).toInt());
+
+        funcUpdateVisibility();
+    };
+
+    funcUpdateWidgets_ = [=]()
+    {
+        funcUpdateVisibility();
+
+        //ignoreUpdates = true;
+
+        editFilename->setText(settings->filename());
+        cbTriangles->setChecked(settings->asTriangles());
+        cbSharedVert->setChecked(settings->sharedVertices());
+        spinSmallRadius->setValue(settings->smallRadius());
+        spinSegX->setValue(settings->segmentsX());
+        spinSegY->setValue(settings->segmentsY());
+        spinSegZ->setValue(settings->segmentsZ());
+        spinR->setValue(settings->red());
+        spinG->setValue(settings->green());
+        spinB->setValue(settings->blue());
+        spinA->setValue(settings->alpha());
+
+        //ignoreUpdates = false;
+    };
+
+}
+
 
 void GeometryModifierWidget::updateWidgetValues()
 {

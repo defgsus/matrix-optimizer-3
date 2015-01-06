@@ -11,7 +11,6 @@ HEADERS += \
     src/gui/util/viewspace.h \
     src/gui/ruler.h \
     src/gui/qobjectinspector.h \
-    src/gui/objecttreeview.h \
     src/gui/parameterview.h \
     src/gui/sequenceview.h \
     src/gui/sequencefloatview.h \
@@ -44,12 +43,6 @@ HEADERS += \
     src/gui/widget/transportwidget.h \
     src/gui/widget/groupwidget.h \
     src/gui/widget/geometrymodifierwidget.h \
-    src/gui/widget/audiounitwidget.h \
-    src/gui/audiolinkwindow.h \
-    src/gui/audiolinkview.h \
-    src/gui/widget/audiounitconnectorwidget.h \
-    src/gui/painter/audiolinkviewoverpaint.h \
-    src/gui/painter/objecttreeviewoverpaint.h \
     src/gui/widget/doublespinboxclean.h \
     src/gui/geometryexportdialog.h \
     src/gui/texteditdialog.h \
@@ -57,11 +50,7 @@ HEADERS += \
     src/gui/widget/domepreviewwidget.h \
     src/gui/projectorsetupdialog.h \
     src/gui/helpdialog.h \
-    src/io/helpsystem.h \
-    src/tests/testhelpsystem.h \
     src/gui/widget/helptextbrowser.h \
-    src/io/helpexporterhtml.h \
-    src/io/helpexporterlatex.h \
     src/gui/widget/equationdisplaywidget.h \
     src/gui/equationdisplaydialog.h \
     src/gui/networkdialog.h \
@@ -69,7 +58,31 @@ HEADERS += \
     src/gui/saveequationdialog.h \
     src/gui/infowindow.h \
     src/gui/serverdialog.h \
-    src/gui/widget/netlogwidget.h
+    src/gui/widget/netlogwidget.h \
+    src/gui/widget/overlapareaeditwidget.h \
+    src/gui/widget/filterresponsewidget.h \
+    src/gui/audiofilterdialog.h \
+    src/gui/timelineeditdialog.h \
+    src/gui/clipview.h \
+    src/gui/widget/clipwidget.h \
+    src/gui/widget/clipwidgetbutton.h \
+    src/gui/keepmodulatordialog.h \
+    src/gui/util/mainwidgetcontroller.h \
+    src/gui/resolutiondialog.h \
+    src/gui/objectgraphview.h \
+    src/gui/item/abstractobjectitem.h \
+    src/gui/util/objectgraphsettings.h \
+    src/gui/item/objectgraphexpanditem.h \
+    src/gui/util/objectgraphscene.h \
+    src/gui/item/modulatoritem.h \
+    src/gui/widget/objectlistwidget.h \
+    src/gui/widget/objectlistwidgetitem.h \
+    src/gui/item/audioconnectionitem.h \
+    src/gui/item/objectgraphconnectitem.h \
+    src/gui/widget/parameterwidget.h \
+    src/gui/widget/angelscriptwidget.h \
+    src/gui/widget/abstractscriptwidget.h \
+    src/gui/widget/glslwidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -81,7 +94,6 @@ SOURCES += \
     src/gui/ruler.cpp \
     src/gui/timeline1drulerview.cpp \
     src/gui/util/viewspace.cpp \
-    src/gui/objecttreeview.cpp \
     src/gui/parameterview.cpp \
     src/gui/sequenceview.cpp \
     src/gui/sequencefloatview.cpp \
@@ -113,12 +125,6 @@ SOURCES += \
     src/gui/widget/transportwidget.cpp \
     src/gui/widget/groupwidget.cpp \
     src/gui/widget/geometrymodifierwidget.cpp \
-    src/gui/widget/audiounitwidget.cpp \
-    src/gui/audiolinkwindow.cpp \
-    src/gui/audiolinkview.cpp \
-    src/gui/widget/audiounitconnectorwidget.cpp \
-    src/gui/painter/audiolinkviewoverpaint.cpp \
-    src/gui/painter/objecttreeviewoverpaint.cpp \
     src/gui/widget/doublespinboxclean.cpp \
     src/gui/geometryexportdialog.cpp \
     src/gui/texteditdialog.cpp \
@@ -126,16 +132,36 @@ SOURCES += \
     src/gui/widget/domepreviewwidget.cpp \
     src/gui/projectorsetupdialog.cpp \
     src/gui/helpdialog.cpp \
-    src/io/helpsystem.cpp \
-    src/tests/testhelpsystem.cpp \
     src/gui/widget/helptextbrowser.cpp \
     src/gui/widget/equationdisplaywidget.cpp \
     src/gui/equationdisplaydialog.cpp \
-    src/io/helpexporterhtml.cpp \
-    src/io/helpexporterlatex.cpp \
     src/gui/networkdialog.cpp \
     src/gui/midisettingsdialog.cpp \
     src/gui/saveequationdialog.cpp \
     src/gui/infowindow.cpp \
     src/gui/serverdialog.cpp \
-    src/gui/widget/netlogwidget.cpp
+    src/gui/widget/netlogwidget.cpp \
+    src/gui/widget/overlapareaeditwidget.cpp \
+    src/gui/widget/filterresponsewidget.cpp \
+    src/gui/audiofilterdialog.cpp \
+    src/gui/timelineeditdialog.cpp \
+    src/gui/clipview.cpp \
+    src/gui/widget/clipwidget.cpp \
+    src/gui/widget/clipwidgetbutton.cpp \
+    src/gui/keepmodulatordialog.cpp \
+    src/gui/util/mainwidgetcontroller.cpp \
+    src/gui/resolutiondialog.cpp \
+    src/gui/objectgraphview.cpp \
+    src/gui/item/abstractobjectitem.cpp \
+    src/gui/util/objectgraphsettings.cpp \
+    src/gui/item/objectgraphexpanditem.cpp \
+    src/gui/util/objectgraphscene.cpp \
+    src/gui/item/modulatoritem.cpp \
+    src/gui/widget/objectlistwidget.cpp \
+    src/gui/widget/objectlistwidgetitem.cpp \
+    src/gui/item/audioconnectionitem.cpp \
+    src/gui/item/objectgraphconnectitem.cpp \
+    src/gui/widget/parameterwidget.cpp \
+    src/gui/widget/angelscriptwidget.cpp \
+    src/gui/widget/abstractscriptwidget.cpp \
+    src/gui/widget/glslwidget.cpp

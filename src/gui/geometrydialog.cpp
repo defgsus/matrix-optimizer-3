@@ -36,7 +36,9 @@
 #include "widget/equationeditor.h"
 #include "io/files.h"
 #include "io/log.h"
+#include "io/settings.h"
 #include "geometryexportdialog.h"
+#include "gl/lightsettings.h"
 
 namespace MO {
 namespace GUI {
@@ -44,7 +46,7 @@ namespace GUI {
 GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
                                QWidget *parent, Qt::WindowFlags flags) :
     QDialog         (parent, flags),
-    settings_       (new GEOM::GeometryFactorySettings()),
+    settings_       (new GEOM::GeometryFactorySettings(0)),
     creator_        (0),
     geometry_       (0),
     updateGeometryLater_(false),
@@ -55,13 +57,12 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     setWindowTitle(tr("geometry editor"));
 
     setMinimumSize(960,600);
+    settings->restoreGeometry(this);
 
     if (set)
         *settings_ = *set;
 
     createMainWidgets_();
-
-    modifiers_ = settings_->modifierChain;
 
     createModifierWidgets_();
 
@@ -72,6 +73,7 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
 
 GeometryDialog::~GeometryDialog()
 {
+    settings->storeGeometry(this);
     delete settings_;
 }
 
@@ -143,36 +145,42 @@ void GeometryDialog::createMainWidgets_()
 
                     auto tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("front"));
                     tbut->setIcon(QIcon(":/icon/view_front.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_FRONT); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("back"));
                     tbut->setIcon(QIcon(":/icon/view_back.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_BACK); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("left"));
                     tbut->setIcon(QIcon(":/icon/view_left.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_LEFT); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("right"));
                     tbut->setIcon(QIcon(":/icon/view_right.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_RIGHT); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("top"));
                     tbut->setIcon(QIcon(":/icon/view_top.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_TOP); });
 
                     tbut = new QToolButton(this);
                     lh2->addWidget(tbut);
+                    tbut->setStatusTip(tr("bottom"));
                     tbut->setIcon(QIcon(":/icon/view_bottom.png"));
                     connect(tbut, &QToolButton::clicked,
                             [=]{ setViewDirection(Basic3DWidget::VD_BOTTOM); });
@@ -180,12 +188,20 @@ void GeometryDialog::createMainWidgets_()
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
-                    auto cb = new QCheckBox(tr("show coordinates"), this);
+                    auto cb = new QCheckBox(tr("coordinates"), this);
                     lh2->addWidget(cb);
                     cb->setChecked(geoWidget_->isShowGrid());
                     connect(cb, &QCheckBox::stateChanged, [this](int state)
                     {
                         geoWidget_->setShowGrid(state == Qt::Checked);
+                    });
+
+                    cb = new QCheckBox(tr("lights"), this);
+                    lh2->addWidget(cb);
+                    cb->setChecked(geoWidget_->isShowLights());
+                    connect(cb, &QCheckBox::stateChanged, [this](int state)
+                    {
+                        geoWidget_->setShowLights(state == Qt::Checked);
                     });
 
                     cb = new QCheckBox(tr("textured"), this);
@@ -203,6 +219,23 @@ void GeometryDialog::createMainWidgets_()
                     {
                         geoWidget_->setShowNormalMap(state == Qt::Checked);
                     });
+
+                lh2 = new QHBoxLayout();
+                lv->addLayout(lh2);
+
+                    auto label = new QLabel(tr("pointsize"), this);
+                    lh2->addWidget(label);
+
+                    auto spin = new SpinBox(this);
+                    lh2->addWidget(spin);
+                    spin->setRange(1, 1000);
+                    spin->setValue(geoWidget_->pointsize());
+                    connect(spin, &SpinBox::valueChanged, [this](int v)
+                    {
+                        geoWidget_->setPointsize(v);
+                    });
+
+                    lh2->addStretch(1);
 
             lv = new QVBoxLayout();
             lh->addLayout(lv);
@@ -235,153 +268,7 @@ void GeometryDialog::createMainWidgets_()
                     connect(butDeletePreset_, SIGNAL(clicked()),
                             this, SLOT(deletePreset_()));
 
-                // geometry type
 
-                comboType_ = new QComboBox(this);
-                lv->addWidget(comboType_);
-                comboType_->setStatusTip("Selects the type of geometry");
-
-                for (uint i=0; i<settings_->numTypes; ++i)
-                {
-                    comboType_->addItem(settings_->typeNames[i], i);
-                    if (settings_->type == (GEOM::GeometryFactorySettings::Type)i)
-                        comboType_->setCurrentIndex(i);
-                }
-
-                connect(comboType_, SIGNAL(currentIndexChanged(QString)),
-                        this, SLOT(updateFromWidgets_()));
-
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    // filename
-                    editFilename_ = new QLineEdit(this);
-                    lh2->addWidget(editFilename_);
-                    editFilename_->setText(settings_->filename);
-                    editFilename_->setReadOnly(true);
-
-                    butLoadModelFile_ = new QToolButton(this);
-                    lh2->addWidget(butLoadModelFile_);
-                    butLoadModelFile_->setText("...");
-                    connect(butLoadModelFile_, SIGNAL(clicked()), this, SLOT(loadModelFile_()));
-
-
-
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    // create triangles
-                    cbTriangles_ = new QCheckBox(tr("create triangles"), this);
-                    lh2->addWidget(cbTriangles_);
-                    cbTriangles_->setChecked(settings_->asTriangles);
-                    connect(cbTriangles_, SIGNAL(stateChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    // shared vertices
-                    cbSharedVert_ = new QCheckBox(tr("shared vertices"), this);
-                    lh2->addWidget(cbSharedVert_);
-                    cbSharedVert_->setChecked(settings_->sharedVertices);
-                    connect(cbSharedVert_, SIGNAL(stateChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
-
-                // small radius
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    labelSmallRadius_ = new QLabel(tr("small radius"), this);
-                    lh2->addWidget(labelSmallRadius_);
-
-                    spinSmallRadius_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinSmallRadius_);
-                    spinSmallRadius_->setStatusTip("Smaller radius");
-                    spinSmallRadius_->setDecimals(5);
-                    spinSmallRadius_->setSingleStep(0.02);
-                    spinSmallRadius_->setRange(0.0001, 100000);
-                    spinSmallRadius_->setValue(settings_->smallRadius);
-                    connect(spinSmallRadius_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                // segments
-                labelSeg_ = new QLabel(tr("segments"), this);
-                lv->addWidget(labelSeg_);
-
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    spinSegX_ = new SpinBox(this);
-                    lh2->addWidget(spinSegX_);
-                    spinSegX_->setStatusTip("Number of segments (X)");
-                    spinSegX_->setRange(1, 10000);
-                    spinSegX_->setValue(settings_->segmentsX);
-                    connect(spinSegX_, SIGNAL(valueChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinSegY_ = new SpinBox(this);
-                    lh2->addWidget(spinSegY_);
-                    spinSegY_->setStatusTip("Number of segments (Y)");
-                    spinSegY_->setRange(1, 10000);
-                    spinSegY_->setValue(settings_->segmentsY);
-                    connect(spinSegY_, SIGNAL(valueChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinSegZ_ = new SpinBox(this);
-                    lh2->addWidget(spinSegZ_);
-                    spinSegZ_->setStatusTip("Number of segments (Z)");
-                    spinSegZ_->setRange(0, 10000);
-                    spinSegZ_->setValue(settings_->segmentsZ);
-                    connect(spinSegZ_, SIGNAL(valueChanged(int)),
-                            this, SLOT(updateFromWidgets_()));
-
-                // color
-                lh2 = new QHBoxLayout();
-                lv->addLayout(lh2);
-
-                    spinR_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinR_);
-                    spinR_->setStatusTip("Red amount of initital color");
-                    spinR_->setDecimals(5);
-                    spinR_->setSingleStep(0.1);
-                    spinR_->setRange(0.0, 1);
-                    spinR_->setValue(settings_->colorR);
-                    QPalette pal(spinR_->palette());
-                    pal.setColor(QPalette::Text, QColor(100,0,0));
-                    spinR_->setPalette(pal);
-                    connect(spinR_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinG_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinG_);
-                    spinG_->setStatusTip("Green amount of initital color");
-                    spinG_->setDecimals(5);
-                    spinG_->setSingleStep(0.1);
-                    spinG_->setRange(0.0, 1);
-                    spinG_->setValue(settings_->colorG);
-                    pal.setColor(QPalette::Text, QColor(0,70,0));
-                    spinG_->setPalette(pal);
-                    connect(spinG_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinB_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinB_);
-                    spinB_->setStatusTip("Blue amount of initital color");
-                    spinB_->setDecimals(5);
-                    spinB_->setSingleStep(0.1);
-                    spinB_->setRange(0.0, 1);
-                    spinB_->setValue(settings_->colorB);
-                    pal.setColor(QPalette::Text, QColor(0,0,140));
-                    spinB_->setPalette(pal);
-                    connect(spinB_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
-
-                    spinA_ = new DoubleSpinBox(this);
-                    lh2->addWidget(spinA_);
-                    spinA_->setStatusTip("Alpha amount of initital color");
-                    spinA_->setDecimals(5);
-                    spinA_->setSingleStep(0.1);
-                    spinA_->setRange(0.0, 1);
-                    spinA_->setValue(settings_->colorA);
-                    connect(spinA_, SIGNAL(valueChanged(double)),
-                            this, SLOT(updateFromWidgets_()));
 
 
 
@@ -464,7 +351,7 @@ void GeometryDialog::createModifierWidgets_()
     modifierWidgets_.clear();
 
     // create widgets for geometry modifiers
-    for (auto m : modifiers_->modifiers())
+    for (auto m : settings_->modifierChain()->modifiers())
     {
         auto w = new GeometryModifierWidget(m, expandedModifiers_.contains(m), this);
         modifierLayout_->addWidget(w);
@@ -527,7 +414,7 @@ void GeometryDialog::modifierMuteChange_(GEOM::GeometryModifier * g, bool mute)
 
 void GeometryDialog::modifierUp_(GEOM::GeometryModifier * g)
 {
-    if ( modifiers_->moveModifierUp(g) )
+    if ( settings_->modifierChain()->moveModifierUp(g) )
     {
         createModifierWidgets_();
         updateFromWidgets_();
@@ -536,7 +423,7 @@ void GeometryDialog::modifierUp_(GEOM::GeometryModifier * g)
 
 void GeometryDialog::modifierDown_(GEOM::GeometryModifier * g)
 {
-    if ( modifiers_->moveModifierDown(g) )
+    if ( settings_->modifierChain()->moveModifierDown(g) )
     {
         createModifierWidgets_();
         updateFromWidgets_();
@@ -545,7 +432,7 @@ void GeometryDialog::modifierDown_(GEOM::GeometryModifier * g)
 
 void GeometryDialog::modifierDelete_(GEOM::GeometryModifier * g)
 {
-    if ( modifiers_->deleteModifier(g) )
+    if ( settings_->modifierChain()->deleteModifier(g) )
     {
         createModifierWidgets_();
         updateFromWidgets_();
@@ -568,9 +455,9 @@ void GeometryDialog::newModifierPopup_(GEOM::GeometryModifier *before)
     {
         const QString classname = a->data().toString();
         if (!before)
-            modifiers_->addModifier(classname);
+            settings_->modifierChain()->addModifier(classname);
         else
-            modifiers_->insertModifier(classname, before);
+            settings_->modifierChain()->insertModifier(classname, before);
 
         createModifierWidgets_();
         updateFromWidgets_();
@@ -657,66 +544,6 @@ void GeometryDialog::updateFromWidgets_()
     if (ignoreUpdate_)
         return;
 
-    // update settings
-
-    if (comboType_->currentIndex() >= 0)
-    settings_->type = (GEOM::GeometryFactorySettings::Type)
-                        comboType_->itemData(comboType_->currentIndex()).toInt();
-
-    settings_->filename = editFilename_->text();
-    settings_->asTriangles = cbTriangles_->isChecked();
-    settings_->sharedVertices = cbSharedVert_->isChecked();
-    settings_->smallRadius = spinSmallRadius_->value();
-    settings_->segmentsX = spinSegX_->value();
-    settings_->segmentsY = spinSegY_->value();
-    settings_->segmentsZ = spinSegZ_->value();
-    settings_->colorR = spinR_->value();
-    settings_->colorG = spinG_->value();
-    settings_->colorB = spinB_->value();
-    settings_->colorA = spinA_->value();
-
-    // update widgets visibility
-
-    const bool
-            isFile = settings_->type ==
-                    GEOM::GeometryFactorySettings::T_FILE,
-            canOnlyTriangle = isFile
-                    || settings_->type == GEOM::GeometryFactorySettings::T_BOX_UV,
-            canTriangle = (settings_->type !=
-                            GEOM::GeometryFactorySettings::T_GRID_XZ
-                            && settings_->type !=
-                            GEOM::GeometryFactorySettings::T_LINE_GRID),
-//            hasTriangle = (canTriangle && (settings_->asTriangles || isFile)),
-            has2Segments = (settings_->type ==
-                            GEOM::GeometryFactorySettings::T_UV_SPHERE
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_GRID_XZ
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_LINE_GRID
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_CYLINDER_CLOSED
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_CYLINDER_OPEN
-                           || settings_->type ==
-                            GEOM::GeometryFactorySettings::T_TORUS),
-            has3Segments = (has2Segments && settings_->type ==
-                            GEOM::GeometryFactorySettings::T_LINE_GRID),
-            hasSmallRadius = (settings_->type ==
-                            GEOM::GeometryFactorySettings::T_TORUS);
-
-    editFilename_->setVisible(isFile);
-    butLoadModelFile_->setVisible(isFile);
-
-    labelSeg_->setVisible( has2Segments );
-    spinSegX_->setVisible( has2Segments );
-    spinSegY_->setVisible( has2Segments );
-    spinSegZ_->setVisible( has3Segments );
-
-    labelSmallRadius_->setVisible( hasSmallRadius );
-    spinSmallRadius_->setVisible( hasSmallRadius );
-
-    cbTriangles_->setVisible( canTriangle && !canOnlyTriangle);
-
     updateGeometry_();
 }
 
@@ -724,39 +551,9 @@ void GeometryDialog::updateWidgets_()
 {
     ignoreUpdate_ = true;
 
-    comboType_->clear();
-    for (uint i=0; i<settings_->numTypes; ++i)
-    {
-        comboType_->addItem(settings_->typeNames[i], i);
-        if (settings_->type == (GEOM::GeometryFactorySettings::Type)i)
-            comboType_->setCurrentIndex(i);
-    }
-    editFilename_->setText(settings_->filename);
-    cbTriangles_->setChecked(settings_->asTriangles);
-    cbSharedVert_->setChecked(settings_->sharedVertices);
-    spinSmallRadius_->setValue(settings_->smallRadius);
-    spinSegX_->setValue(settings_->segmentsX);
-    spinSegY_->setValue(settings_->segmentsY);
-    spinSegZ_->setValue(settings_->segmentsZ);
-    spinR_->setValue(settings_->colorR);
-    spinG_->setValue(settings_->colorG);
-    spinB_->setValue(settings_->colorB);
-    spinA_->setValue(settings_->colorA);
-
     ignoreUpdate_ = false;
 }
 
-void GeometryDialog::loadModelFile_()
-{
-    QString filename =
-        IO::Files::getOpenFileName(IO::FT_MODEL, this);
-
-    if (filename.isEmpty())
-        return;
-
-    editFilename_->setText(filename);
-    updateFromWidgets_();
-}
 
 void GeometryDialog::updatePresetList_(const QString &selectFilename)
 {
@@ -848,7 +645,7 @@ void GeometryDialog::presetSelected_()
 
     const QString filename = comboPreset_->itemData(index).toString();
 
-    GEOM::GeometryFactorySettings set;
+    GEOM::GeometryFactorySettings set(0);
 
     if (!filename.isEmpty())
         set.loadFile(filename);
@@ -859,7 +656,6 @@ void GeometryDialog::presetSelected_()
 void GeometryDialog::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 {
     *settings_ = s;
-    modifiers_ = settings_->modifierChain;
 
     updateWidgets_();
     createModifierWidgets_();

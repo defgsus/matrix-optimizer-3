@@ -58,7 +58,6 @@ protected slots:
     void changeView_();
     void updateGeometry_();
     void updateFromWidgets_();
-    void loadModelFile_();
     void savePreset_();
     void savePresetAs_();
     void deletePreset_();
@@ -92,7 +91,6 @@ protected:
     GeometryWidget * geoWidget_;
     GEOM::GeometryFactorySettings * settings_;
     GEOM::GeometryCreator * creator_;
-    GEOM::GeometryModifierChain * modifiers_;
     GEOM::Geometry * geometry_;
     bool updateGeometryLater_,
          ignoreUpdate_,
@@ -104,15 +102,9 @@ protected:
 
     QStatusBar * statusBar_;
     QProgressBar * progressBar_;
-    QLabel * labelInfo_, *labelSeg_, *labelSmallRadius_;
-    QLineEdit * editFilename_;
-    QToolButton *butSavePreset_, *butSavePresetAs_, *butDeletePreset_,
-                *butLoadModelFile_;
+    QLabel * labelInfo_;
+    QToolButton *butSavePreset_, *butSavePresetAs_, *butDeletePreset_;
     QComboBox * comboPreset_, *comboView_, * comboType_;
-    QCheckBox * cbTriangles_, *cbSharedVert_;
-    DoubleSpinBox *spinR_, *spinG_, *spinB_, *spinA_,
-                  *spinSmallRadius_;
-    SpinBox * spinSegX_, *spinSegY_, *spinSegZ_;
 };
 
 

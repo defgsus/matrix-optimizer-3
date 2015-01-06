@@ -16,6 +16,11 @@
 #include "gl/opengl.h"
 #include "types/vector.h"
 
+#ifndef MO_DISABLE_ANGELSCRIPT
+class asIScriptEngine;
+#endif
+
+
 namespace MO {
 namespace GEOM {
 
@@ -32,11 +37,32 @@ public:
     typedef gl::GLfloat ColorType;
     typedef gl::GLfloat TextureCoordType;
     typedef gl::GLuint  IndexType;
+    typedef gl::GLfloat AttributeType;
 
     static const IndexType invalidIndex = (IndexType)-1;
 
     /** Smallest possible threshold for vertex sharing */
     static const VertexType minimumThreshold;
+
+    struct UserAttribute
+    {
+        /** Creates an attribute with shader name @p attributeName and @p numComponents per vertex */
+        UserAttribute(const QString& attributeName, unsigned int numComponents)
+            : attributeName     (attributeName),
+              numComponents     (numComponents)
+        { curValue.resize(numComponents, 0.f); }
+
+        unsigned long int numBytes() const { return data.size() * sizeof(AttributeType); }
+        /** Returns the type as string */
+        QString typeName() const;
+        /** Returns the glsl declaration */
+        QString declaration() const;
+
+        QString attributeName;
+        unsigned int numComponents;
+        std::vector<AttributeType>
+            data, curValue;
+    };
 
     // ------ enums ----------
 
@@ -45,15 +71,17 @@ public:
     static const gl::GLenum colorEnum;
     static const gl::GLenum textureCoordEnum;
     static const gl::GLenum indexEnum;
+    static const gl::GLenum attributeEnum;
 
     // -------- ctor ---------
 
     Geometry();
+    ~Geometry();
 
-    // -------- file io ------
+    Geometry(const Geometry& other) { copyFrom(other); }
+    Geometry& operator = (const Geometry& other) { copyFrom(other); return *this; }
 
-    /** Throws IoException on errors */
-//    void loadOBJ(const QString& filename);
+    void copyFrom(const Geometry& other);
 
     // ------- query ---------
 
@@ -76,6 +104,12 @@ public:
     /** Returns number of lines in the Model */
     unsigned int numLines() const { return lineIndex_.size() / numLineIndexComponents(); }
 
+    /** Returns number of points in the Model */
+    unsigned int numPoints() const { return pointIndex_.size(); }
+
+    /** Returns the number of user attributes */
+    unsigned int numAttributes() const { return attributes_.size(); }
+
     /** Returns a pointer to numVertices() * 3 coordinates */
     const VertexType * vertices() const { return &vertex_[0]; }
     /** Returns a pointer to numVertices() * 3 coordinates */
@@ -88,6 +122,8 @@ public:
     const IndexType * triangleIndices() const { return &triIndex_[0]; }
     /** Returns a pointer to numTriangles() * 3 indices */
     const IndexType * lineIndices() const { return &lineIndex_[0]; }
+    /** Returns a pointer to numTriangles() * 3 indices */
+    const IndexType * pointIndices() const { return &pointIndex_[0]; }
 
     int numVertexBytes() const { return vertex_.size() * sizeof(VertexType); }
     int numNormalBytes() const { return normal_.size() * sizeof(NormalType); }
@@ -95,6 +131,7 @@ public:
     int numTextureCoordBytes() const { return texcoord_.size() * sizeof(TextureCoordType); }
     int numTriangleIndexBytes() const { return triIndex_.size() * sizeof(IndexType); }
     int numLineIndexBytes() const { return lineIndex_.size() * sizeof(IndexType); }
+    int numPointIndexBytes() const { return pointIndex_.size() * sizeof(IndexType); }
 
     IndexType triangleIndex(uint triangleIndex, uint cornerIndex) const
         { return triIndex_[triangleIndex * numTriangleIndexComponents() + cornerIndex]; }
@@ -123,6 +160,49 @@ public:
     /** Returns the minimum and maximum vertex coordinates */
     void getExtent(Vec3 * minimum, Vec3 * maximum) const;
 
+    /** Returns true when the ray intersects with a triangle of the geometry.
+        If @p pos is given, it will be set to the intersection position.
+        @note Not terribly efficient */
+    bool intersects_any(const Vec3& ray_origin, const Vec3& ray_direction, Vec3 * pos = 0) const;
+
+    /** Returns the closest intersection point of the ray with a triangle of the geometry.
+        If @p pos is given, it will be set to the intersection position.
+        @note Not terribly efficient */
+    bool intersects(const Vec3& ray_origin, const Vec3& ray_direction, Vec3 * pos = 0) const;
+
+    // ----------- user attributes -----------
+
+    /** Returns access to the user attribute, or NULL */
+    UserAttribute * getAttribute(const QString& name);
+    const UserAttribute * getAttribute(const QString& name) const;
+
+    /** Returns a reference to the specific attribute data, or NULL */
+    const AttributeType * attributes(const QString& name) const;
+
+    /** Returns the list of installed attributes */
+    QStringList getAttributeNames() const;
+
+    // -------------- setter -----------------
+
+    /** Returns a pointer to numVertices() * 3 coordinates */
+    VertexType * vertices() { return &vertex_[0]; }
+    /** Returns a pointer to numVertices() * 3 coordinates */
+    NormalType * normals() { return &normal_[0]; }
+    /** Returns a pointer to numVertices() * 4 entries */
+    ColorType * colors() { return &color_[0]; }
+    /** Returns a pointer to numVertices() * 2 coordinates */
+    TextureCoordType * textureCoords() { return &texcoord_[0]; }
+    /** Returns a pointer to numTriangles() * 3 indices */
+    IndexType * triangleIndices() { return &triIndex_[0]; }
+    /** Returns a pointer to numTriangles() * 3 indices */
+    IndexType * lineIndices() { return &lineIndex_[0]; }
+
+    /** Adds a float attribute with @p numComponents per vertex. */
+    UserAttribute * addAttribute(const QString& name, unsigned int numComponents);
+
+    /** Returns false if the triangle is degenerate (e.g. on of the edges is too small) */
+    static bool checkTriangle(const Vec3&, const Vec3&, const Vec3&);
+
     // --------- state -----------------------
 
     /** Sets the current color. Any subsequent call to the
@@ -140,6 +220,21 @@ public:
         addVertex() will use this coords. */
     void setTexCoord(TextureCoordType u, TextureCoordType v)
         { curU_ = u; curV_ = v; }
+
+    /** Sets the current attribute. Any subsequent call to addVertex() will use this attribute. */
+    void setAttribute(const QString& name, AttributeType x, AttributeType y = 0, AttributeType z = 0, AttributeType w = 0);
+
+    ColorType currentRed() const { return curR_; }
+    ColorType currentGreen() const { return curG_; }
+    ColorType currentBlue() const { return curB_; }
+    ColorType currentAlpha() const { return curA_; }
+
+    NormalType currentNormalX() const { return curNx_; }
+    NormalType currentNormalY() const { return curNy_; }
+    NormalType currentNormalZ() const { return curNz_; }
+
+    TextureCoordType currentTexCoordX() const { return curU_; }
+    TextureCoordType currentTexCoordY() const { return curV_; }
 
     // -------- vertex/triangle handling -----
 
@@ -178,8 +273,24 @@ public:
     /** Connects three previously created indices to form a triangle. */
     void addTriangle(IndexType p1, IndexType p2, IndexType p3);
 
+    /** Connects three previously created indices to form a triangle.
+        Uses checkTriangle() to discard degenerate triangles. */
+    void addTriangleChecked(IndexType p1, IndexType p2, IndexType p3);
+
     /** Connects two previously created indices to form a line */
     void addLine(IndexType p1, IndexType p2);
+
+    /** Create a point sprite for the vertex */
+    void addPoint(IndexType idx);
+
+    /** Changes the vertex point */
+    void setVertex(uint i, const Vec3& v) { auto p = &vertices()[i * numVertexComponents()]; *p++ = v.x; *p++ = v.y; *p = v.z; }
+    /** Changes the texcoord point */
+    void setTexCoord(uint i, const Vec2& v) { auto p = &texcoord_[i * numTextureCoordComponents()]; *p++ = v.x; *p = v.y; }
+    /** Changes the normal */
+    void setNormal(uint i, const Vec3& v) { auto p = &normal_[i * numNormalComponents()]; *p++ = v.x; *p++ = v.y; *p = v.z; }
+    /** Changes the color */
+    void setColor(uint i, const Vec4& v) { auto p = &color_[i * numColorComponents()]; *p++ = v.x; *p++ = v.y; *p++ = v.z; *p = v.w; }
 
     // ------- shared vertices -------------
 
@@ -201,10 +312,11 @@ public:
 
     // --------- manipulation --------------
 
-    /** Copies all data, step by step.
-        If vertex sharing is enabled, the vertices get shared even
-        if they are not in @p other */
-    void copyFrom(const Geometry& other);
+    /** Copies all data, step by step from @p other.
+        Previous contents stay as they are.
+        If vertex sharing is enabled, the vertices area shared regardless
+        of the setting in @p other */
+    void addGeometry(const Geometry& other, const Vec3& offset = Vec3(0));
 
     /** Scale all geometry */
     void scale(VertexType x, VertexType y, VertexType z);
@@ -239,7 +351,9 @@ public:
     void unGroupVertices();
 
     /** Split all triangles into smaller ones. */
-    void tesselate(uint level = 1);
+    void tesselateTriangles(uint level = 1);
+    /** Split all lines into smaller ones. */
+    void tesselateLines(uint level = 1);
 
     /** Normalize all vertex positions.
         @p normalization is the amount of normalization [0,1] */
@@ -253,44 +367,59 @@ public:
                             int seedX, int seedY, int seedZ);
 
     /** Applies the equation to the each vertex.
+        Variables are x, y, z and i (for vertex index),
+        red, green, blue, alpha, bright. */
+    bool transformWithEquation(const QString& equation,
+                               const QStringList &constantNames = QStringList(),
+                               const QList<Double> &constantValues = QList<Double>());
+
+    /** Applies the equation to the each vertex.
         Variables are x, y, z and i (for vertex index). */
     bool transformWithEquation(const QString& equationX,
                                const QString& equationY,
-                               const QString& equationZ);
+                               const QString& equationZ,
+                               const QStringList &constantNames = QStringList(),
+                               const QList<Double> &constantValues = QList<Double>());
 
     /** Applies the equation to the each vertex of each primitive.
         Variables are x, y, z (position), nx, ny, nz (normal), s, t (tex-coords),
+        red, green, blue, alpha, bright (colors).
         x1, y1, z1, x2, y2, z2, x3, y3, z3 (position of each primitive vertex),
         nx1, ny1, nz1, nx2, ny2, nz2, nx3, ny3, nz3 (normal of each primitive vertex),
         s1, t1, s2, t2, s3, t3 (tex-coord of each primitive),
         i (primitive index) and p (for index of vertex in primitive). */
-    bool transformPrimitivesWithEquation(
-                               const QString& equationX,
-                               const QString& equationY,
-                               const QString& equationZ);
-
-    /** Applies the equation to the texture coordinates.
-        Variables are x, y, z, s, t and i (for vertex index). */
-    bool transformTexCoordsWithEquation(
-                                const QString& equationS,
-                                const QString& equationT);
+    bool transformPrimitivesWithEquation(const QString& equation,
+                                         const QStringList &constantNames = QStringList(),
+                                         const QList<Double> &constantValues = QList<Double>());
+    bool transformPrimitivesWithEquation(const QString& equationX,
+                                         const QString& equationY,
+                                         const QString& equationZ,
+                                         const QStringList &constantNames = QStringList(),
+                                         const QList<Double> &constantValues = QList<Double>());
 
     /** Extrudes all triangles along their normals -> into @p geom.
         If @p createNewFaces is true, the orthogonal or orthonormals side faces
         are created.
         If also @p recognizeEdges is true, then only those side faces will be created
         that don't circumvent original triangles with the same normal. E.g.
-        a quad will have 4 side faces and the inner triangle edge face is not created. */
+        a quad will have 4 side faces and the inner triangle edge face is not created.
+        @p shift_center is a factor [0,1] of moving the extruded triangled vertices
+        into the center of the extruded triangle and can be negative for experimental
+        reasons. */
     void extrudeTriangles(Geometry & geom, VertexType constant, VertexType factor,
+                          VertexType shift_center,
                           bool createNewFaces, bool recognizeEdges) const;
+
+
 
     // ------------- opengl -----------------
 
     /** Fills the vertex array object with the data from the geometry.
+        Triangles and lines will create a separate element buffer if present.
         The shader provides the locations of the vertex attributes.
         The Shader must be compiled.
         The VAO will be released if it was created previously. */
-    void getVertexArrayObject(GL::VertexArrayObject *, GL::Shader *, bool triangles = true);
+    void getVertexArrayObject(GL::VertexArrayObject *, GL::Shader *);
 
 private:
 
@@ -298,7 +427,8 @@ private:
     std::vector<NormalType>       normal_;
     std::vector<ColorType>        color_;
     std::vector<TextureCoordType> texcoord_;
-    std::vector<IndexType>        triIndex_, lineIndex_;
+    std::vector<IndexType>        triIndex_, lineIndex_, pointIndex_;
+    std::map<QString, UserAttribute*> attributes_;
 
     ColorType
         curR_, curG_, curB_, curA_;

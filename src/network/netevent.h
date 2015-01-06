@@ -19,6 +19,9 @@
 #include <QDateTime>
 
 #include "io/systeminfo.h"
+#include "clientstate.h"
+#include "types/float.h"
+#include "network/netlog.h"
 
 class QIODevice;
 class QAbstractSocket;
@@ -134,14 +137,20 @@ public:
         NONE,
         /** Requests a NetEventSysInfo event */
         GET_SYSTEM_INFO,
-        /** Requests a NetEventInfo with the current index (int) */
-        GET_CLIENT_INDEX,
+        /** Requests a NetEventClientState event from the client */
+        GET_CLIENT_STATE,
         /** Sets the client index (int) */
         SET_CLIENT_INDEX,
+        /** Sets the index of the screen to be used for windows */
+        SET_DESKTOP_INDEX,
         /** Shows the fullscreen info window */
         SHOW_INFO_WINDOW,
         /** Hides the fullscreen info window */
         HIDE_INFO_WINDOW,
+        SHOW_RENDER_WINDOW,
+        HIDE_RENDER_WINDOW,
+        START_RENDER,
+        STOP_RENDER,
         /** Sets the default ProjectionSystemSettings (QByteArray) */
         SET_PROJECTION_SETTINGS,
         /** Tells server to send a NetEventFileInfo for filename (QString) */
@@ -171,6 +180,31 @@ private:
     Request request_;
     QVariant data_;
 };
+
+
+/** Logging event */
+class NetEventLog : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventLog)
+
+    // --------- getter -------------------
+
+    NetworkLogger::Level level() const { return level_; }
+    const QString& message() const { return message_; }
+
+    // --------- setter -------------------
+
+    void setMessage(NetworkLogger::Level level,
+                    const QString& message)
+        { level_ = level; message_ = message; }
+
+private:
+
+    NetworkLogger::Level level_;
+    QString message_;
+};
+
 
 
 /** General info event - typically an answer to NetEventRequest */
@@ -325,6 +359,43 @@ private:
     QByteArray data_;
 };
 
+
+/** Clients current state info event - typically an answer to NetEventRequest */
+class NetEventClientState : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventClientState)
+
+    // --------- getter -------------------
+
+    ClientState & state() { return state_; }
+
+private:
+
+    friend class ClientEngine;
+
+    ClientState state_;
+};
+
+
+/** Clients current state info event - typically an answer to NetEventRequest */
+class NetEventTime : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventTime)
+
+    // --------- getter -------------------
+
+    Double time() { return time_; }
+
+    // --------- setter -------------------
+
+    void setTime(Double t) { time_ = t; }
+
+private:
+
+    Double time_;
+};
 
 } // namespace MO
 

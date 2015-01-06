@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<equations version="1" name="todo">
+    <equation name="next_prime" text="next_prime(a) { p = prime(a); p? a : next_prime(a+1) };&#10;next_prime(floor(x))"/>
+</equations>

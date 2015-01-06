@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="4096"
+   height="1024"
+   id="svg4320"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="fulldomeuk14.svg"
+   inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/data/graphic/tables/fulldomeuk14.png"
+   inkscape:export-xdpi="73.760002"
+   inkscape:export-ydpi="73.760002">
+  <defs
+     id="defs4322">
+    <filter
+       inkscape:collect="always"
+       id="filter3860"
+       x="-0.067150466"
+       width="1.1343009"
+       y="-0.56346357"
+       height="2.1269271"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="24.239265"
+         id="feGaussianBlur3862" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       id="filter3901"
+       x="-0.044318825"
+       width="1.0886377"
+       y="-0.6053594"
+       height="2.2107188">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="63.586133"
+         id="feGaussianBlur3903" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#000000"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="1"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="1167.5117"
+     inkscape:cy="455.58893"
+     inkscape:document-units="px"
+     inkscape:current-layer="g5008"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1056"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata4325">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="font"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-28.3622)">
+    <g
+       id="g5008"
+       transform="translate(-42.886892,-397.1849)"
+       style="fill:#ffffff;fill-opacity:1">
+      <text
+         sodipodi:linespacing="125%"
+         id="text4328"
+         y="1085.7849"
+         x="312.22089"
+         style="font-size:385.86395264px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Padauk;-inkscape-font-specification:Padauk"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;fill-opacity:1;font-family:Padauk;-inkscape-font-specification:Padauk"
+           y="1085.7849"
+           x="312.22089"
+           id="tspan4330"
+           sodipodi:role="line">FULLDOME UK 0x7dc</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-size:385.86395263999997951px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Padauk;-inkscape-font-specification:Padauk;filter:url(#filter3901)"
+         x="309.36374"
+         y="1091.4991"
+         id="text3117"
+         sodipodi:linespacing="125%"><tspan
+           sodipodi:role="line"
+           id="tspan3119"
+           x="309.36374"
+           y="1091.4991"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;fill-opacity:1;font-family:Padauk;-inkscape-font-specification:Padauk">FULLDOME UK 0x7dc</tspan></text>
+    </g>
+  </g>
+</svg>

@@ -10,12 +10,20 @@
 
 #include <QLayout>
 #include <QPushButton>
+#include <QCheckBox>
 #include <QTextEdit>
 #include <QKeyEvent>
+#include <QTimer>
 
 #include "texteditdialog.h"
-#include "widget/equationeditor.h"
 #include "helpdialog.h"
+#include "widget/equationeditor.h"
+#include "widget/angelscriptwidget.h"
+#include "widget/glslwidget.h"
+#include "tool/syntaxhighlighter.h"
+#include "script/angelscript.h"
+#include "script/angelscript_object.h"
+#include "io/settings.h"
 
 namespace MO {
 namespace GUI {
@@ -23,15 +31,30 @@ namespace GUI {
 class TextEditDialog::Private
 {
 public:
-    Private(TextEditDialog * dialog) : dialog(dialog) { }
+    Private(TextEditDialog * dialog)
+        : dialog(dialog),
+          rejected(false)
+    {
+        // wait before text-changed
+        timer.setInterval(350);
+        timer.setSingleShot(true);
+        connect(&timer, SIGNAL(timeout()), dialog, SIGNAL(textChanged()));
+    }
+
+    void createWidgets();
+    void emitTextChanged() { if (cbAlways->isChecked()) timer.start(); }
 
     TextEditDialog * dialog;
     TextType textType;
 
     QTextEdit * plainText;
     EquationEditor * equEdit;
+    AbstractScriptWidget * scriptEdit;
 
     QString defaultText;
+
+    QTimer timer;
+    QCheckBox * cbAlways;
 
     bool rejected;
 };
@@ -47,7 +70,13 @@ TextEditDialog::TextEditDialog(TextType textType, QWidget *parent) :
     setWindowTitle(tr("editor"));
 
     setMinimumSize(320, 200);
-    createWidgets_();
+
+    // --- load user settings ---
+
+    settings->restoreGeometry(this);
+
+
+    p_->createWidgets();
 }
 
 TextEditDialog::TextEditDialog(const QString &text, TextType textType, QWidget *parent)
@@ -58,6 +87,7 @@ TextEditDialog::TextEditDialog(const QString &text, TextType textType, QWidget *
 
 TextEditDialog::~TextEditDialog()
 {
+    settings->storeGeometry(this);
     delete p_;
 }
 
@@ -73,8 +103,11 @@ QString TextEditDialog::getText() const
 
     switch (p_->textType)
     {
-        case TT_PLAIN_TEXT: return p_->plainText->toPlainText();
+        case TT_PLAIN_TEXT:
+        case TT_APP_STYLESHEET: return p_->plainText->toPlainText();
         case TT_EQUATION: return p_->equEdit->toPlainText();
+        case TT_GLSL:
+        case TT_ANGELSCRIPT: return p_->scriptEdit->scriptText();
     }
 
     return QString();
@@ -88,8 +121,11 @@ void TextEditDialog::setText(const QString & text, bool send_signal)
 
     switch (p_->textType)
     {
-        case TT_PLAIN_TEXT: p_->plainText->setText(text); break;
+        case TT_PLAIN_TEXT:
+        case TT_APP_STYLESHEET: p_->plainText->setText(text); break;
         case TT_EQUATION: p_->equEdit->setPlainText(text); break;
+        case TT_GLSL:
+        case TT_ANGELSCRIPT: p_->scriptEdit->setScriptText(text); break;
     }
 
     if (send_signal)
@@ -109,51 +145,106 @@ void TextEditDialog::addVariableNames(const QStringList & vars,
         p_->equEdit->addVariables(vars, descs);
 }
 
-void TextEditDialog::createWidgets_()
+void TextEditDialog::Private::createWidgets()
 {
-    auto lv = new QVBoxLayout(this);
+    auto lv = new QVBoxLayout(dialog);
 
-        switch (p_->textType)
+        switch (textType)
         {
+            case TT_APP_STYLESHEET:
             case TT_PLAIN_TEXT:
-                p_->plainText = new QTextEdit(this);
-                lv->addWidget(p_->plainText);
-                connect(p_->plainText, &QTextEdit::textChanged, [=]()
+                plainText = new QTextEdit(dialog);
+                plainText->setTabChangesFocus(false);
+                lv->addWidget(plainText);
+                connect(plainText, &QTextEdit::textChanged, [=]()
                 {
-                    emit textChanged();
+                    emitTextChanged();
                 });
-                break;
+
+                if (textType == TT_APP_STYLESHEET)
+                {
+                    auto s = new SyntaxHighlighter(plainText->document());
+                    s->initForStyleSheet();
+                }
+
+                if (textType == TT_GLSL)
+                {
+//                    auto s = new SyntaxHighlighter(plainText->document());
+//                    s->initForGlsl();
+                }
+            break;
 
             case TT_EQUATION:
-                p_->equEdit = new EquationEditor(this);
-                lv->addWidget(p_->equEdit);
-                connect(p_->equEdit, &EquationEditor::equationChanged, [=]()
+                equEdit = new EquationEditor(dialog);
+                equEdit->setTabChangesFocus(false);
+                lv->addWidget(equEdit);
+                connect(equEdit, &EquationEditor::equationChanged, [=]()
                 {
-                    emit textChanged();
+                    emitTextChanged();
                 });
                 break;
+
+            case TT_GLSL:
+            {
+                auto glsl = new GlslWidget(dialog);
+                lv->addWidget(glsl);
+                scriptEdit = glsl;
+                connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
+                {
+                    emitTextChanged();
+                });
+            }
+            break;
+
+            case TT_ANGELSCRIPT:
+            {
+                auto as = new AngelScriptWidget(dialog);
+                lv->addWidget(as);
+                registerDefaultAngelScript( as->scriptEngine() );
+                registerAngelScript_object( as->scriptEngine(), 0, true, true);
+                scriptEdit = as;
+                connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
+                {
+                    emitTextChanged();
+                });
+            }
+            break;
         }
 
         auto lh = new QHBoxLayout();
         lv->addLayout(lh);
 
-            auto butOk = new QPushButton(tr("Ok"), this);
+            // alway update?
+            cbAlways = new QCheckBox(tr("auto update"), dialog);
+            lh->addWidget(cbAlways);
+
+            // ok
+            auto butOk = new QPushButton(tr("Ok"), dialog);
             lh->addWidget(butOk);
             butOk->setDefault(true);
 
             connect(butOk, &QPushButton::pressed, [=]()
             {
-                accept();
+                if (!cbAlways->isChecked())
+                    emit dialog->textChanged();
+                dialog->accept();
             });
 
-            auto butCancel = new QPushButton(tr("Cancel"), this);
+            // run
+            auto butRun = new QPushButton(tr("Up&date"), dialog);
+            lh->addWidget(butRun);
+
+            connect(butRun, SIGNAL(clicked()), dialog, SIGNAL(textChanged()));
+
+            // cancel
+            auto butCancel = new QPushButton(tr("Cancel"), dialog);
             lh->addWidget(butCancel);
 
             connect(butCancel, &QPushButton::pressed, [=]()
             {
-                p_->rejected = true;
-                emit textChanged();
-                reject();
+                rejected = true;
+                emit dialog->textChanged();
+                dialog->reject();
             });
 
 }

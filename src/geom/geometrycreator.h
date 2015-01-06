@@ -22,6 +22,7 @@ namespace MO {
 namespace GEOM {
 
 
+/** Thread to create a geometry from a GeometryFactorySettings class */
 class GeometryCreator : public QThread
 {
     Q_OBJECT
@@ -59,7 +60,6 @@ protected:
 
     Geometry * geometry_, * curGeometry_;
     GeometryFactorySettings * settings_;
-    ObjLoader * loader_;
     QTimer * timer_;
     /** Mutex around settings_ and geometry_ */
     QMutex * mutex_;

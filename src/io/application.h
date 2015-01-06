@@ -16,6 +16,7 @@
 
 namespace MO {
 
+
 class Application : public QApplication
 {
     Q_OBJECT
@@ -25,11 +26,13 @@ public:
     QMainWindow * mainWindow() const { return mainWindow_; }
     void setMainWindow(QMainWindow * win) { mainWindow_ = win; }
 
+    /** Returns the geometry of the given screen */
+    QRect screenGeometry(uint screenIndex) const;
+
 signals:
 
 public slots:
 
-    void updateStyle();
     void setPaletteFor(QWidget*);
 protected:
 

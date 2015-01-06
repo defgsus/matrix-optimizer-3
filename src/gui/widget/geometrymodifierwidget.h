@@ -16,7 +16,7 @@
 #include <QWidget>
 
 namespace MO {
-namespace GEOM { class GeometryModifier; }
+namespace GEOM { class GeometryModifier; class GeometryModifierCreate; }
 namespace GUI {
 
 class GroupWidget;
@@ -52,6 +52,8 @@ private slots:
 private:
 
     void createWidgets_(bool expanded);
+    void createCreatorWidgets_(GEOM::GeometryModifierCreate * settings);
+
     void updateWidgets_();
 
     GEOM::GeometryModifier * modifier_;

@@ -91,7 +91,7 @@ public:
     void unbind() const;
 
     /** Convenience function for glTexParameteri(target, param, value) */
-    void texParameter(gl::GLenum param, gl::GLint value) const;
+    void setTexParameter(gl::GLenum param, gl::GLint value) const;
 
     /** @{ */
     /** create() (re-)defines the piece of data that Texture should work with.

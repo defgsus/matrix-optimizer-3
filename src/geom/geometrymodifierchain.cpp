@@ -13,6 +13,7 @@
 #include "io/error.h"
 #include "io/log.h"
 #include "geometrymodifier.h"
+#include "geometrymodifiercreate.h"
 
 namespace MO {
 namespace GEOM {
@@ -131,6 +132,14 @@ QList<QString> GeometryModifierChain::modifierGuiNames()
     return list;
 }
 
+void GeometryModifierChain::getNeededFiles(IO::FileList &files) const
+{
+    for (auto m : modifiers())
+        if (auto mc = dynamic_cast<GeometryModifierCreate*>(m))
+            if (mc->type() == GeometryModifierCreate::T_FILE)
+                files.append(IO::FileListEntry(mc->filename(), IO::FT_MODEL));
+}
+
 GeometryModifier * GeometryModifierChain::createModifier(const QString &className)
 {
     if (!registeredModifiers_)
@@ -160,6 +169,12 @@ bool GeometryModifierChain::registerModifier(GeometryModifier *g)
 void GeometryModifierChain::addModifier(GeometryModifier *g)
 {
     modifiers_.append(g);
+}
+
+void GeometryModifierChain::insertModifier(
+        GeometryModifier * geom, uint index)
+{
+    modifiers_.insert(index, geom);
 }
 
 GeometryModifier * GeometryModifierChain::addModifier(const QString &className)
@@ -193,6 +208,22 @@ GeometryModifier * GeometryModifierChain::insertModifier(
 
     return geom;
 }
+
+GeometryModifier * GeometryModifierChain::insertModifier(
+        const QString &className, uint index)
+{
+    GeometryModifier * geom = createModifier(className);
+    if (!geom)
+    {
+        MO_WARNING("request for unknown GeometryModifier '" << className << "'");
+        return 0;
+    }
+
+    modifiers_.insert(index, geom);
+
+    return geom;
+}
+
 
 bool GeometryModifierChain::moveModifierUp(GeometryModifier *g)
 {
@@ -228,11 +259,13 @@ bool GeometryModifierChain::deleteModifier(GeometryModifier *g)
     return true;
 }
 
-void GeometryModifierChain::execute(Geometry *g) const
+void GeometryModifierChain::execute(Geometry *g, Object * o) const
 {
     for (auto m : modifiers_)
+    {
         if (m->isEnabled())
-            m->execute(g);
+            m->executeBase(g, o);
+    }
 }
 
 } // namespace GEOM

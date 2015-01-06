@@ -13,6 +13,8 @@
 
 #include <QDialog>
 
+#include "gl/opengl.h"
+
 class QComboBox;
 class QLineEdit;
 class QToolButton;
@@ -24,12 +26,14 @@ class DomeSettings;
 class ProjectorSettings;
 class CameraSettings;
 class ProjectionSystemSettings;
+class TestProjectionRenderer;
 namespace GUI {
 
 class DomePreviewWidget;
 class DoubleSpinBox;
 class SpinBox;
 class GroupWidget;
+class OverlapAreaEditWidget;
 
 class ProjectorSetupDialog : public QDialog
 {
@@ -39,6 +43,9 @@ public:
     ~ProjectorSetupDialog();
 
 signals:
+
+    /** Emitted when the default projection settings have been set */
+    void projectionSettingsChanged();
 
 public slots:
 
@@ -85,7 +92,12 @@ private slots:
     void copyCamera_();
     void pasteCamera_();
 
+    void createFromClients_();
+    void onComboContent_();
+
 private:
+
+    GL::Texture * createTexture_(int index);
 
     void updateWindowTitle_();
     void updateActions_();
@@ -99,7 +111,7 @@ private:
     QLineEdit * createEdit_(GroupWidget * group,
                         const QString& desc, const QString& statusTip,
                         const QString& value,
-                        const char * slot = 0);
+                        const char * slot = 0, bool readOnly = false);
     SpinBox * createSpin_(GroupWidget * group,
                         const QString& desc, const QString& statusTip,
                         int value, int smallstep=1, int minv=-9999999, int maxv=9999999,
@@ -121,22 +133,28 @@ private:
     ProjectorSettings * projectorSettings_, *copyOfProjectorSettings_;
     CameraSettings * cameraSettings_, *copyOfCameraSettings_;
 
+    TestProjectionRenderer * testRenderer_;
+
     DomePreviewWidget * display_;
+    OverlapAreaEditWidget * areaEdit_;
 
     QMenuBar * mainMenu_;
 
-    GroupWidget * projectorGroup_, * cameraGroup_;
+    GroupWidget * projectorGroup_, * cameraGroup_, * areaGroup_;
 
     QLineEdit
         * editName_,
-        * editDomeName_;
+        * editDomeName_,
+        * editId_;
 
     SpinBox
         * spinWidth_,
         * spinHeight_,
 
         * spinCamWidth_,
-        * spinCamHeight_;
+        * spinCamHeight_,
+
+        * spinBlendMethod_;
 
     DoubleSpinBox
         * spinDomeRad_,
@@ -145,7 +163,9 @@ private:
         * spinDomeTiltZ_,
 
         * spinFov_,
+#ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
         * spinLensRad_,
+#endif
         * spinDist_,
         * spinLat_,
         * spinLong_,
@@ -161,11 +181,17 @@ private:
         * spinCamYaw_,
         * spinCamRoll_,
         * spinCamZNear_,
-        * spinCamZFar_;
+        * spinCamZFar_,
+
+        * spinOffsetX_,
+        * spinOffsetY_,
+
+        * spinBlendMargin_;
 
     QComboBox
         * comboProj_,
-        * comboView_;
+        * comboView_,
+        * comboContent_;
 
     QToolButton
         * tbAdd_,

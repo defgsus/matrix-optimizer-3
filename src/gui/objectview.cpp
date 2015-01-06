@@ -23,6 +23,7 @@
 #include "object/objectfactory.h"
 #include "object/trackfloat.h"
 #include "objectinfodialog.h"
+#include "widget/objectlistwidget.h"
 
 namespace MO {
 namespace GUI {
@@ -32,6 +33,8 @@ ObjectView::ObjectView(QWidget *parent) :
     QWidget (parent),
     object_ (0)
 {
+    setObjectName("_ObjectView");
+
     layout_ = new QVBoxLayout(this);
     layout_->setMargin(1);
 
@@ -41,6 +44,9 @@ ObjectView::ObjectView(QWidget *parent) :
             icon_ = new QToolButton(this);
             lh->addWidget(icon_);
             icon_->setToolButtonStyle(Qt::ToolButtonIconOnly);
+            icon_->setFixedSize(devicePixelRatio() * QSize(48, 48));
+            icon_->setIconSize(devicePixelRatio() * QSize(42, 42));
+            //icon_->setAutoFillBackground(true);
             connect(icon_, SIGNAL(clicked()), this, SLOT(infoPopup_()));
 
             label_ = new QLabel(this);
@@ -49,7 +55,16 @@ ObjectView::ObjectView(QWidget *parent) :
         label2_ = new QLabel(this);
         layout_->addWidget(label2_);
 
+        list_ = new ObjectListWidget(this);
+        list_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+        layout_->addWidget(list_);
+        connect(list_, SIGNAL(objectSelected(MO::Object*)),
+                this, SLOT(onObjectListSelected(MO::Object*)));
+        connect(list_, SIGNAL(objectClicked(MO::Object*)),
+                this, SLOT(onObjectListClicked(MO::Object*)));
+
         paramView_ = new ParameterView(this);
+        paramView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         layout_->addWidget(paramView_);
         connect(paramView_, SIGNAL(objectSelected(MO::Object*)),
                 this, SIGNAL(objectSelected(MO::Object*)));
@@ -71,6 +86,11 @@ void ObjectView::setObject(Object * object)
 
     if (object_)
     {
+        // XXX no f**ng working
+        /*auto p = icon_->palette();
+        p.setColor(QPalette::Window, ObjectFactory::colorForObject(object_));
+        icon_->setPalette(p);
+        */
         icon_->setIcon(ObjectFactory::iconForObject(object_));
     }
     else
@@ -81,11 +101,22 @@ void ObjectView::setObject(Object * object)
     updateNameLabel_();
 
     paramView_->setObject(object_);
+    list_->setParentObject(object_);
+}
+
+void ObjectView::selectObject(Object * o)
+{
+    list_->setSelectedObject(o);
 }
 
 void ObjectView::updateParameterVisibility(Parameter * p)
 {
     paramView_->updateParameterVisibility(p);
+}
+
+void ObjectView::updateObjectName()
+{
+    updateNameLabel_();
 }
 
 void ObjectView::updateNameLabel_()
@@ -145,6 +176,18 @@ void ObjectView::infoPopup_()
     diag.setObject(object_);
 
     diag.exec();
+}
+
+void ObjectView::onObjectListSelected(Object * o)
+{
+    setObject(o);
+    emit objectSelected(o);
+}
+
+void ObjectView::onObjectListClicked(Object * o)
+{
+    paramView_->setObject(o);
+    emit objectSelected(o);
 }
 
 } // namespace GUI

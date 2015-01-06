@@ -14,26 +14,21 @@
 #include <QStringList>
 
 #include "types/int.h"
-#include "types/float.h"
-
-#include "geometrymodifierchain.h"
+#include "types/vector.h"
 
 namespace MO {
-namespace IO { class DataStream; }
 namespace GEOM {
 
 class Geometry;
-class GeometryFactorySettings;
-class GeometryModifierChain;
-class ObjLoader;
 
+/** Collection of static functions to add basic models to a Geometry class.
+
+    All functions ADD data to exisiting geometries! */
 class GeometryFactory
 {
 public:
 
     // --------------------- static functions ------------------
-
-    static void createFromSettings(Geometry *, const GeometryFactorySettings *, ObjLoader *);
 
     static void createQuad(Geometry *, Float side_length_x, Float side_length_y,
                            bool asTriangles = true);
@@ -41,14 +36,15 @@ public:
     static void createCube(Geometry *, Float side_length, bool asTriangles = true);
     static void createBox(Geometry *,
             Float side_length_x, Float side_length_y, Float side_length_z,
-                          bool asTriangles = true);
+                          bool asTriangles = true, const Vec3 & offset = Vec3(0));
 
-    /** Creates a correctly uv-mapped box */
+    /** Creates a 'correctly' uv-mapped box */
     static void createTexturedBox(Geometry *,
-            Float side_length_x, Float side_length_y, Float side_length_z);
+            Float side_length_x, Float side_length_y, Float side_length_z,
+            const Vec3 & offset = Vec3(0));
 
     static void createUVSphere(Geometry *, Float rad, uint segu, uint segv,
-                               bool asTriangles = true);
+                               bool asTriangles = true, const Vec3 & offset = Vec3(0));
     static void createUVSphereLines(Geometry *, Float rad, uint segu, uint segv);
 
     static void createDome(Geometry *, Float radius, Float coverage, uint segu, uint segv,
@@ -59,9 +55,9 @@ public:
                                bool asTriangles);
 
     static void createTorus(Geometry *, Float rad_outer, Float rad_inner, uint segu, uint segv,
-                            bool asTriangles);
+                            bool asTriangles, const Vec3 & offset = Vec3(0));
 
-
+    // XXX some normals are wrong in some platonics and no uv-mapping in general
     static void createTetrahedron(Geometry *, Float scale, bool asTriangles = true);
     static void createOctahedron(Geometry *, Float scale, bool asTriangles = true);
     static void createIcosahedron(Geometry *, Float scale, bool asTriangles = true);
@@ -70,6 +66,10 @@ public:
     static void createGridXZ(Geometry *, int sizeX, int sizeZ, bool with_coordinate_system);
     static void createLineGrid(Geometry *, int sizeX, int sizeY, int sizeZ);
 
+    /** mono-spaced line font [0,1] */
+    static void createFont(Geometry *, const Mat4& matrix, uint16_t utf16);
+
+    static void createText(Geometry *, Mat4 matrix, const QString& text);
 };
 
 

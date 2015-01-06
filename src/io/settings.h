@@ -30,6 +30,9 @@ class Settings : public QSettings
 public:
     explicit Settings(QObject *parent = 0);
 
+    /** Returns the value for key.
+        If key is unknown, warning is printed
+        and empty QVariant() returned. */
     QVariant getValue(const QString& key);
 
 #if (0)
@@ -38,20 +41,32 @@ public:
     /** Restores the geometry provided the QWidget::objectName() is set */
     void restoreGeometry(QMainWindow *);
 #endif
+
     /** Stores the geometry provided the QWidget::objectName() is set */
-    void saveGeometry(QWindow *);
+    void storeGeometry(QWindow *);
     /** Restores the geometry provided the QWidget::objectName() is set */
     bool restoreGeometry(QWindow *);
 
     /** Stores the geometry provided the QWidget::objectName() is set */
-    void saveGeometry(QWidget *);
+    void storeGeometry(QWidget *);
     /** Restores the geometry provided the QWidget::objectName() is set */
     bool restoreGeometry(QWidget *);
 
+    /** Returns address of the server */
+    QString serverAddress();
+    void setServerAddress(const QString&);
 
     /** Returns the index of the client */
     int clientIndex();
     void setClientIndex(int);
+
+    /** Selected desktop index */
+    uint desktop();
+    void setDesktop(uint index);
+
+    /** Application style sheet */
+    QString styleSheet() const;
+    void setStyleSheet(const QString&);
 
     /** Sets the ProjectionSystemSettings as default for the application */
     void setDefaultProjectionSettings(const ProjectionSystemSettings&);

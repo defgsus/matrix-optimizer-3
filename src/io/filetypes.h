@@ -22,14 +22,18 @@ namespace IO {
     {
         FT_ANY,
         FT_SCENE,
+        FT_OBJECT_TEMPLATE,
         FT_TEXTURE,
         FT_NORMAL_MAP,
         FT_MODEL,
         FT_GEOMETRY_SETTINGS,
         FT_SOUND_FILE,
+        /** Like .mod and .s3m */
+        FT_TRACKER,
         FT_PROJECTION_SETTINGS,
         FT_POVRAY,
-        FT_EQUATION_PRESET
+        FT_EQUATION_PRESET,
+        FT_HELP_EXPORT
     };
 
     extern const QStringList fileTypeIds;

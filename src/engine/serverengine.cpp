@@ -17,7 +17,6 @@
 #include "network/eventcom.h"
 #include "io/application.h"
 #include "io/settings.h"
-#include "projection/projectionsystemsettings.h"
 #include "tool/deleter.h"
 
 namespace MO {
@@ -212,7 +211,7 @@ void ServerEngine::getClientIndex_(ClientInfo & inf)
 {
     // construct event
     NetEventRequest r;
-    r.setRequest(NetEventRequest::GET_CLIENT_INDEX);
+    r.setRequest(NetEventRequest::GET_CLIENT_STATE);
 
     // send off to client
     eventCom_->sendEvent(inf.tcpSocket, &r);
@@ -265,10 +264,17 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
         return;
     }
 
-    if (NetEventInfo * info = netevent_cast<NetEventInfo>(event))
+    if (NetEventLog * log = netevent_cast<NetEventLog>(event))
     {
-        if (info->request() == NetEventRequest::GET_CLIENT_INDEX)
-            client.index = info->data().toInt();
+        emit clientMessage(client, log->level(), log->message());
+        return;
+    }
+
+    if (NetEventClientState * state = netevent_cast<NetEventClientState>(event))
+    {
+        client.state = state->state();
+        client.index = client.state.clientIndex();
+        emit clientStateChanged(client.index);
         return;
     }
 
@@ -302,7 +308,17 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
 void ServerEngine::showInfoWindow(int index, bool show)
 {
     NetEventRequest r;
-    r.setRequest(show? NetEventRequest::SHOW_INFO_WINDOW : NetEventRequest::HIDE_INFO_WINDOW);
+    r.setRequest(show? NetEventRequest::SHOW_INFO_WINDOW
+                     : NetEventRequest::HIDE_INFO_WINDOW);
+
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
+}
+
+void ServerEngine::showRenderWindow(int index, bool show)
+{
+    NetEventRequest r;
+    r.setRequest(show? NetEventRequest::SHOW_RENDER_WINDOW
+                     : NetEventRequest::HIDE_RENDER_WINDOW);
 
     eventCom_->sendEvent(clients_[index].tcpSocket, &r);
 }
@@ -316,6 +332,16 @@ void ServerEngine::setClientIndex(int index, int cindex)
     eventCom_->sendEvent(clients_[index].tcpSocket, &r);
 }
 
+void ServerEngine::setDesktopIndex(int index, int desk)
+{
+    NetEventRequest r;
+    r.setRequest(NetEventRequest::SET_DESKTOP_INDEX);
+    r.setData(desk);
+
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
+}
+
+
 bool ServerEngine::sendScene(Scene *scene)
 {
     auto e = new NetEventScene();
@@ -328,6 +354,50 @@ bool ServerEngine::sendScene(Scene *scene)
     return sendEvent(e);
 }
 
+void ServerEngine::setScenePlaying(bool enabled)
+{
+    NetEventRequest r;
+    if (enabled)
+        r.setRequest(NetEventRequest::START_RENDER);
+    else
+        r.setRequest(NetEventRequest::STOP_RENDER);
+
+    for (int i=0; i<numClients(); ++i)
+        eventCom_->sendEvent(clients_[i].tcpSocket, &r);
+}
+
+
+ProjectionSystemSettings ServerEngine::createProjectionSystemSettings()
+{
+    ProjectionSystemSettings set;
+
+    for (int i = 0; i < clients_.size(); ++i)
+    {
+        const ClientInfo & client = clients_[i];
+
+        // the set desktop
+        int desktop = client.state.desktop();
+        // resolution
+        QSize size = client.sysinfo.resolution(desktop);
+
+        // create a projector
+        ProjectorSettings proj;
+        proj.setName(client.tcpSocket->peerName());
+        proj.setWidth(size.width());
+        proj.setHeight(size.height());
+
+        set.appendProjector(proj);
+
+        // create camera
+        CameraSettings cam;
+        cam.setWidth(size.width());
+        cam.setHeight(size.height());
+
+        set.setCameraSettings(set.numProjectors()-1, cam);
+    }
+
+    return set;
+}
 
 
 } // namespace MO

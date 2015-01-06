@@ -1,11 +1,16 @@
-#version 130
+#version 330
 
 in vec4 v_texCoord;
+out vec4 fragColor;
 
 #ifndef MO_FULLDOME_CUBE
 uniform sampler2D tex_framebuffer;
 #else
 uniform samplerCube tex_framebuffer;
+#endif
+
+#ifdef MO_BLEND_TEXTURE
+uniform sampler2D tex_blend;
 #endif
 
 #ifdef MO_ANTIALIAS
@@ -21,7 +26,7 @@ const float HALF_PI = 1.5707963268;
 vec4 mo_pixel(in vec2 texCoord)
 {
 #ifndef MO_FULLDOME_CUBE
-    return texture2D(tex_framebuffer, texCoord);
+    return texture(tex_framebuffer, texCoord);
 
 #else
     // cube to fulldome
@@ -53,7 +58,7 @@ vec4 mo_pixel(in vec2 texCoord)
 void main(void)
 {
 #ifndef MO_ANTIALIAS
-    gl_FragColor = u_color * mo_pixel(v_texCoord.xy);
+    vec4 outColor = u_color * mo_pixel(v_texCoord.xy);
 #else
 
     vec4 col = vec4(0., 0., 0., 0.);
@@ -70,6 +75,12 @@ void main(void)
         }
     }
 
-    gl_FragColor = u_color * (col / float(MO_ANTIALIAS * MO_ANTIALIAS));
+    vec4 outColor = u_color * (col / float(MO_ANTIALIAS * MO_ANTIALIAS));
+#endif
+
+#ifdef MO_BLEND_TEXTURE
+    fragColor = outColor * texture(tex_blend, v_texCoord.xy);
+#else
+    fragColor = outColor;
 #endif
 }

@@ -20,6 +20,9 @@ namespace MO {
 namespace AUDIO {
 
 class ChebychevFilter;
+class Filter24;
+class ButterworthFilter;
+class FixedFilter;
 
 class MultiFilter
 {
@@ -27,21 +30,42 @@ public:
 
     enum FilterType
     {
+        T_BYPASS,
         T_FIRST_ORDER_LOW,
         T_FIRST_ORDER_HIGH,
         T_FIRST_ORDER_BAND,
         T_NTH_ORDER_LOW,
         T_NTH_ORDER_HIGH,
         T_NTH_ORDER_BAND,
+        T_24_LOW,
+        T_24_HIGH,
+        T_24_BAND,
         T_CHEBYCHEV_LOW,
         T_CHEBYCHEV_HIGH,
         T_CHEBYCHEV_BAND,
+        T_BUTTERWORTH_LOW,
+        T_BUTTERWORTH_HIGH,
+        T_NTH_BESSEL_LOW,
+        T_NTH_BESSEL_HIGH,
+        T_NTH_BESSEL_BAND,
+        T_NTH_CHEBYCHEV_LOW,
+        T_NTH_CHEBYCHEV_HIGH,
+        T_NTH_CHEBYCHEV_BAND,
+        T_NTH_BUTTERWORTH_LOW,
+        T_NTH_BUTTERWORTH_HIGH,
+        T_NTH_BUTTERWORTH_BAND
     };
 
     static const QStringList filterTypeIds;
     static const QStringList filterTypeNames;
     static const QStringList filterTypeStatusTips;
     static const QList<int>  filterTypeEnums;
+
+    /** Returns true when the given filter-type is an 'nth order type' */
+    static bool supportsOrder(FilterType);
+
+    /** Returns true when the given filter-type has a resonance setting */
+    static bool supportsResonance(FilterType);
 
     /** If @p dynamicAllocation is false, individual sub-classes
         like the ChebychevFilter will be created in the constructor,
@@ -57,6 +81,10 @@ public:
         Requires updateCoefficients() to be called. */
     void setType(FilterType type) { type_ = type; }
 
+    /** Sets the type of the filter, if id is known.
+        Requires updateCoefficients() to be called. */
+    void setType(const QString& id);
+
     /** Sets the order of the T_NTH_ORDER type filters.
         Requires updateCoefficients() to be called. */
     void setOrder(uint order) { order_ = std::max((uint)1, order); }
@@ -71,11 +99,21 @@ public:
 
     /** Sets the resonance [0,1].
         Requires updateCoefficients() to be called. */
-    void setResonance(F32 reso) { reso_ = reso; }
+    void setResonance(F32 reso) { reso_ = std::max(0.f,std::min(1.f, reso )); }
+
+    /** Sets the output amplitude.
+        Does NOT require updateCoefficients() to be called. */
+    void setOutputAmplitude(F32 amp) { out_amp_ = amp; }
+
+    /** Copies the settings from other filter.
+        Requires updateCoefficients() to be called. */
+    void copySettingsFrom(const MultiFilter&);
 
     // ---------- getter ------------------
 
     FilterType type() const { return type_; }
+    const QString& typeName() const { return filterTypeNames[type_]; }
+    const QString& typeId() const { return filterTypeIds[type_]; }
 
     uint order() const { return order_; }
 
@@ -105,16 +143,24 @@ public:
 
 private:
 
+    // disable copy
+    MultiFilter(const MultiFilter& other);
+    MultiFilter& operator = (const MultiFilter& other);
+
+
     bool doReallocate_;
 
     FilterType type_;
 
     uint sr_, order_;
-    F32 freq_, reso_,
+    F32 freq_, reso_, amp_, out_amp_,
         q1_, q2_, s1_, s2_, p0_, p1_;
     std::vector<F32> so1_, so2_, po0_, po1_;
 
     ChebychevFilter * cheby_;
+    Filter24 * filter24_;
+    ButterworthFilter * butter_;
+    FixedFilter * fixed_;
 };
 
 } // namespace AUDIO

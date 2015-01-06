@@ -28,11 +28,16 @@ public:
 
     bool isInContainingRect() const;
 
+    bool isActive() const { return active_; }
+
 signals:
 
     void timeChanged(Double time);
 
 public slots:
+
+    /** Use this instead of setVisible() to change visibility */
+    void setActive(bool enable);
 
     void setContainingRect(const QRect& containing_rect);
 
@@ -59,7 +64,7 @@ protected:
     QRect rect_;
     QPoint dragStart_;
     Double timeStart_;
-    bool dragging_;
+    bool active_, dragging_;
 
     // --- config ---
 

@@ -3,22 +3,6 @@ RESOURCES += \
     shaders.qrc \
     models.qrc
 
-BISON_FILES = \
-    src/math/funcparser/grammar.y
-
-OTHER_FILES += $$BISON_FILES \
-    TODO.txt \
-    assets/shader/default.vert \
-    assets/shader/default.frag \
-    assets/shader/framebufferdraw.vert \
-    assets/shader/framebufferdraw.frag \
-    assets/shader/framebuffercamera.vert \
-    assets/shader/framebuffercamera.frag \
-    assets/shader/test.vert \
-    assets/shader/test.frag \
-    assets/shader/textureoverlay.vert \
-    assets/shader/textureoverlay.frag
-
 HEADERS += \
     src/types/vector.h \
     src/math/vector.h \
@@ -38,7 +22,6 @@ HEADERS += \
     src/doc.h \
     src/object/object.h \
     src/tool/stringmanip.h \
-    src/model/objecttreemodel.h \
     src/object/objectfactory.h \
     src/io/application.h \
     src/object/soundsource.h \
@@ -65,7 +48,6 @@ HEADERS += \
     src/math/funcparser/parser_program.h \
     src/object/track.h \
     src/tool/syntaxhighlighter.h \
-    src/model/objecttreesortproxy.h \
     src/object/trackfloat.h \
     src/object/object_fwd.h \
     src/object/transform/axisrotation.h \
@@ -114,8 +96,6 @@ HEADERS += \
     src/img/imagegenerator.h \
     src/object/lightsource.h \
     src/gl/lightsettings.h \
-    src/object/audio/audiounit.h \
-    src/object/audio/filterunit.h \
     src/audio/audio_fwd.h \
     src/object/scenelock_p.h \
     src/audio/tool/envelopefollower.h \
@@ -123,12 +103,10 @@ HEADERS += \
     src/audio/tool/waveform.h \
     src/audio/tool/wavetable.h \
     src/audio/tool/wavetablegenerator.h \
-    src/object/audio/envelopeunit.h \
     src/tool/locklessqueue.h \
     src/io/lockedoutput.h \
     src/object/modulatorobject.h \
     src/object/modulatorobjectfloat.h \
-    src/object/audio/filterbankunit.h \
     src/object/param/parameterint.h \
     src/audio/tool/chebychevfilter.h \
     src/object/textureoverlay.h \
@@ -154,7 +132,6 @@ HEADERS += \
     src/object/sprite.h \
     src/object/util/texturesetting.h \
     src/geom/geometrymodifiertexcoords.h \
-    src/geom/geometrymodifiertexcoordequation.h \
     src/geom/objexporter.h \
     src/object/util/colorpostprocessingsetting.h \
     src/audio/tool/soundfile.h \
@@ -186,8 +163,107 @@ HEADERS += \
     src/io/streamoperators_glbinding.h \
     src/io/filemanager.h \
     src/tool/deleter.h \
-    src/network/eventcom.h
-
+    src/network/eventcom.h \
+    src/geom/tesselator.h \
+    src/audio/tool/notefreq.h \
+    src/object/synthesizer.h \
+    src/audio/tool/floatgate.h \
+    src/audio/tool/synth.h \
+    src/audio/tool/envelopegenerator.h \
+    src/audio/tool/filter24.h \
+    src/math/denormals.h \
+    src/audio/tool/butterworthfilter.h \
+    src/audio/tool/fixedfilter.h \
+    src/object/util/synthsetting.h \
+    src/object/util/objectfilter.h \
+    src/geom/geometrymodifierduplicate.h \
+    src/math/polygon.h \
+    src/audio/tool/bandlimitwavetablegenerator.h \
+    src/math/fft.h \
+    src/object/param/parametertimeline1d.h \
+    src/audio/tool/fftwavetablegenerator.h \
+    src/projection/testprojectionrenderer.h \
+    src/io/commandlineparser.h \
+    src/io/version.h \
+    src/object/clip.h \
+    src/tool/selection.h \
+    src/graph/directedgraph.h \
+    src/object/util/objectmodulatorgraph.h \
+    src/graph/tree.h \
+    src/projection/projectorblender.h \
+    src/video/videostreamreader.h \
+    src/tool/commonresolutions.h \
+    src/gl/scenerenderer.h \
+    src/object/util/alphablendsetting.h \
+    src/object/util/texturemorphsetting.h \
+    src/io/currenttime.h \
+    src/network/clientstate.h \
+    src/io/qtextstreamoperators.h \
+    src/io/helpsystem.h \
+    src/io/helpexporterhtml.h \
+    src/io/helpexporterlatex.h \
+    src/io/isclient.h \
+    src/engine/serverengine.h \
+    src/object/util/objecteditor.h \
+    src/types/time.h \
+    src/audio/tool/audiobuffer.h \
+    src/object/audioobject.h \
+    src/object/param/parameters.h \
+    src/object/audio/oscillatorao.h \
+    src/object/util/audioobjectconnections.h \
+    src/object/audio/audiooutao.h \
+    src/engine/liveaudioengine.h \
+    src/engine/audioengine.h \
+    src/object/util/objectdsppath.h \
+    src/object/audio/filterao.h \
+    src/math/transformationbuffer.h \
+    src/model/objectmimedata.h \
+    src/object/audio/mverbao.h \
+    src/audio/3rd/MVerb.h \
+    src/object/audio/fftao.h \
+    src/audio/tool/resamplebuffer.h \
+    src/object/audio/shaperao.h \
+    src/audio/spatial/spatialsoundsource.h \
+    src/audio/spatial/spatialmicrophone.h \
+    src/types/conversion.h \
+    src/audio/tool/delay.h \
+    src/object/audio/audioinao.h \
+    src/object/param/modulatorevent.h \
+    src/object/clipcontroller.h \
+    src/object/audio/filterbankao.h \
+    src/object/param/modulatoroutput.h \
+    src/object/audio/envelopefollowerao.h \
+    src/gl/bufferobject.h \
+    src/object/oscillograph.h \
+    src/object/audio/delayao.h \
+    src/object/audio/soundsourceao.h \
+    src/object/audio/parameterao.h \
+    src/object/audio/impulseao.h \
+    src/object/audio/panao.h \
+    src/object/audio/dustao.h \
+    src/object/audio/bandfilterbankao.h \
+    src/audio/tool/dumbfile.h \
+    src/object/audio/modplayerao.h \
+    src/geom/geometrymodifierangelscript.h \
+    src/script/3rd/angelscript/scriptmath/scriptmathcomplex.h \
+    src/script/3rd/angelscript/scriptarray/scriptarray.h \
+    src/script/3rd/angelscript/scriptstdstring/scriptstdstring.h \
+    src/script/angelscript_vector.h \
+    src/script/angelscript.h \
+    src/math/advanced.h \
+    src/script/angelscript_math.h \
+    src/script/angelscript_object.h \
+    src/script/angelscript_geometry.h \
+    src/geom/builtinlinefont.h \
+    src/script/angelscript_timeline.h \
+    src/object/ascriptobject.h \
+    src/object/util/useruniformsetting.h \
+    src/geom/pointcloud.h \
+    src/object/util/objectglpath.h \
+    src/engine/renderengine.h \
+    src/geom/marchingcubes.h \
+    src/network/udpconnection.h \
+    src/script/angelscript_network.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -198,7 +274,6 @@ SOURCES += \
     src/model/qobjecttreemodel.cpp \
     src/object/object.cpp \
     src/tool/stringmanip.cpp \
-    src/model/objecttreemodel.cpp \
     src/object/objectfactory.cpp \
     src/io/application.cpp \
     src/object/soundsource.cpp \
@@ -222,7 +297,6 @@ SOURCES += \
     src/math/funcparser/parser.cpp \
     src/object/track.cpp \
     src/tool/syntaxhighlighter.cpp \
-    src/model/objecttreesortproxy.cpp \
     src/object/trackfloat.cpp \
     src/object/transform/axisrotation.cpp \
     src/object/transform/transformation.cpp \
@@ -265,18 +339,13 @@ SOURCES += \
     src/img/imagegenerator.cpp \
     src/object/lightsource.cpp \
     src/gl/lightsettings.cpp \
-    src/object/audio/audiounit.cpp \
-    src/object/audio/filterunit.cpp \
-    src/object/scene_audio.cpp \
     src/audio/tool/envelopefollower.cpp \
     src/audio/tool/multifilter.cpp \
     src/audio/tool/waveform.cpp \
     src/audio/tool/wavetablegenerator.cpp \
-    src/object/audio/envelopeunit.cpp \
     src/io/lockedoutput.cpp \
     src/object/modulatorobject.cpp \
     src/object/modulatorobjectfloat.cpp \
-    src/object/audio/filterbankunit.cpp \
     src/object/param/parameterint.cpp \
     src/audio/tool/chebychevfilter.cpp \
     src/object/textureoverlay.cpp \
@@ -302,7 +371,6 @@ SOURCES += \
     src/object/sprite.cpp \
     src/object/util/texturesetting.cpp \
     src/geom/geometrymodifiertexcoords.cpp \
-    src/geom/geometrymodifiertexcoordequation.cpp \
     src/geom/objexporter.cpp \
     src/object/util/colorpostprocessingsetting.cpp \
     src/audio/tool/soundfile.cpp \
@@ -330,4 +398,95 @@ SOURCES += \
     src/network/netevent.cpp \
     src/io/systeminfo.cpp \
     src/io/filemanager.cpp \
-    src/network/eventcom.cpp
+    src/network/eventcom.cpp \
+    src/geom/tesselator.cpp \
+    src/object/synthesizer.cpp \
+    src/audio/tool/synth.cpp \
+    src/audio/tool/filter24.cpp \
+    src/math/denormals.cpp \
+    src/audio/tool/butterworthfilter.cpp \
+    src/audio/tool/fixedfilter.cpp \
+    src/object/util/synthsetting.cpp \
+    src/object/util/objectfilter.cpp \
+    src/geom/geometrymodifierduplicate.cpp \
+    src/math/polygon.cpp \
+    src/projection/projectormapper_gl.cpp \
+    src/audio/tool/bandlimitwavetablegenerator.cpp \
+    src/math/fft.cpp \
+    src/object/param/parametertimeline1d.cpp \
+    src/projection/testprojectionrenderer.cpp \
+    src/io/commandlineparser.cpp \
+    src/io/version.cpp \
+    src/object/clip.cpp \
+    src/object/util/objectmodulatorgraph.cpp \
+    src/object/util/objecttree.cpp \
+    src/projection/projectorblender.cpp \
+    src/video/videostreamreader.cpp \
+    src/tool/commonresolutions.cpp \
+    src/gl/scenerenderer.cpp \
+    src/object/util/alphablendsetting.cpp \
+    src/object/util/texturemorphsetting.cpp \
+    src/io/currenttime.cpp \
+    src/network/clientstate.cpp \
+    src/io/qtextstreamoperators.cpp \
+    src/io/helpsystem.cpp \
+    src/io/helpexporterhtml.cpp \
+    src/io/helpexporterlatex.cpp \
+    src/io/isclient.cpp \
+    src/main.cpp \
+    src/engine/serverengine.cpp \
+    src/object/util/objecteditor.cpp \
+    src/audio/tool/audiobuffer.cpp \
+    src/object/audioobject.cpp \
+    src/object/param/parameters.cpp \
+    src/object/audio/oscillatorao.cpp \
+    src/object/util/audioobjectconnections.cpp \
+    src/object/audio/audiooutao.cpp \
+    src/engine/liveaudioengine.cpp \
+    src/engine/audioengine.cpp \
+    src/object/util/objectdsppath.cpp \
+    src/object/audio/filterao.cpp \
+    src/model/objectmimedata.cpp \
+    src/object/audio/mverbao.cpp \
+    src/object/audio/fftao.cpp \
+    src/object/audio/shaperao.cpp \
+    src/audio/spatial/spatialsoundsource.cpp \
+    src/audio/spatial/spatialmicrophone.cpp \
+    src/object/audio/audioinao.cpp \
+    src/object/param/modulatorevent.cpp \
+    src/object/clipcontroller.cpp \
+    src/object/audio/filterbankao.cpp \
+    src/object/param/modulatoroutput.cpp \
+    src/object/audio/envelopefollowerao.cpp \
+    src/gl/bufferobject.cpp \
+    src/object/oscillograph.cpp \
+    src/object/audio/delayao.cpp \
+    src/object/audio/soundsourceao.cpp \
+    src/object/audio/parameterao.cpp \
+    src/object/audio/impulseao.cpp \
+    src/object/audio/panao.cpp \
+    src/object/audio/dustao.cpp \
+    src/object/audio/bandfilterbankao.cpp \
+    src/audio/tool/dumbfile.cpp \
+    src/object/audio/modplayerao.cpp \
+    src/geom/geometrymodifierangelscript.cpp \
+    src/script/3rd/angelscript/scriptmath/scriptmathcomplex.cpp \
+    src/script/3rd/angelscript/scriptarray/scriptarray.cpp \
+    src/script/3rd/angelscript/scriptstdstring/scriptstdstring.cpp \
+    src/script/3rd/angelscript/scriptstdstring/scriptstdstring_utils.cpp \
+    src/script/angelscript_vector.cpp \
+    src/script/angelscript.cpp \
+    src/math/advanced.cpp \
+    src/script/angelscript_math.cpp \
+    src/script/angelscript_object.cpp \
+    src/script/angelscript_geometry.cpp \
+    src/geom/builtinlinefont.cpp \
+    src/script/angelscript_timeline.cpp \
+    src/object/ascriptobject.cpp \
+    src/object/util/useruniformsetting.cpp \
+    src/geom/pointcloud.cpp \
+    src/object/util/objectglpath.cpp \
+    src/engine/renderengine.cpp \
+    src/geom/marchingcubes.cpp \
+    src/network/udpconnection.cpp \
+    src/script/angelscript_network.cpp

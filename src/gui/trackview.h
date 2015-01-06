@@ -36,7 +36,20 @@ class TrackView : public QWidget
     Q_OBJECT
     friend class TrackViewOverpaint;
 public:
+
+    // XXX needs thought..
+    enum TrackFilter_notusedyet
+    {
+        TF_ALL,
+        TF_CURRENT_OBJECT,
+        TF_CURRENT_OBJECT_AND_MOD,
+        TF_CUSTOM_OBJECTS,
+        TF_CUSTOM_OBJECTS_AND_MOD
+    };
+
+
     explicit TrackView(QWidget *parent = 0);
+    ~TrackView();
 
     void setSceneSettings(SceneSettings * s) { sceneSettings_ = s; }
     SceneSettings * sceneSettings() const { return sceneSettings_; }
@@ -61,6 +74,9 @@ public:
 
     QPointF screenToView(const QPoint& screen) const;
     QPoint viewToScreen(const QPointF& view) const;
+
+    /** Returns a menu with the filter settings */
+    QMenu * createFilterMenu();
 
 signals:
 
@@ -91,9 +107,11 @@ public slots:
 
     /** Remove everything from this view. */
     void clearTracks();
-    /** Insert the list of tracks and their sequences into the view.
-        Previous content will be removed. */
-    void setTracks(const QList<Track*>& tracks, bool send_signal = false);
+
+    /** Tell the sequencer which object is currently selected.
+        This will update the track list according to filter settings.
+        If @p send_signal is true, a tracksChanged() signal will be emitted on change. */
+    void setCurrentObject(Object * o, bool send_signal = false);
 
     /** Updates the view for the given Track */
     void updateTrack(Track *);
@@ -170,18 +188,26 @@ private:
     /** Returns index number for track, or -1 */
     int trackIndex_(Track *);
 
+    void clearTracks_(bool keep_alltracks);
+
+    /** Tries to find the object that contains the tracks */
+    Object * getContainerObject_(Object*);
+    /** Transforms alltracks_ into a changed list according to ObjectFilter */
+    void getFilteredTracks_(QList<Track*>& list);
+
     // editing
     bool deleteObject_(Object * seq);
     bool paste_(bool single_track = false);
-
 
     // _______________ MEMBER _________________
 
     UTIL::ViewSpace space_;
 
     Scene * scene_;
-    ObjectTreeModel * omodel_;
     SceneSettings * sceneSettings_;
+    ObjectFilter * objectFilter_;
+    Object * currentObject_;
+    QList<Object*> allObjects_;
     QList<Track*> tracks_;
 
     TrackViewOverpaint * overpaint_;
@@ -214,6 +240,11 @@ private:
 
     QString statusSeqNormal,
             statusSeqLeftEdge;
+
+    bool
+        filterCurrentObjectOnly_,
+        filterAddModulatingObjects_,
+        alwaysFullObject_;
 
     // ---- config ----
 
