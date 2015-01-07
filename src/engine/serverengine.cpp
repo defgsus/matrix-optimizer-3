@@ -15,6 +15,7 @@
 #include "network/netevent.h"
 #include "network/netlog.h"
 #include "network/eventcom.h"
+#include "network/udpaudioconnection.h"
 #include "io/application.h"
 #include "io/settings.h"
 #include "tool/deleter.h"
@@ -78,6 +79,18 @@ bool ServerEngine::open()
 {
     return server_->open();
 }
+
+UdpAudioConnection * ServerEngine::getAudioStream()
+{
+    if (!audioOut_)
+    {
+        audioOut_ = new UdpAudioConnection(this);
+        // XXX link
+    }
+
+    return audioOut_;
+}
+
 
 void ServerEngine::close()
 {

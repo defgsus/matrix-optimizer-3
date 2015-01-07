@@ -56,6 +56,11 @@ public:
     QString serverAddress();
     void setServerAddress(const QString&);
 
+    QString udpAudioMulticastAddress();
+    void setUdpAudioMulticastAddress(const QString&);
+    uint16_t udpAudioMulticastPort();
+    void setUdpAudioMulticastPort(uint16_t);
+
     /** Returns the index of the client */
     int clientIndex();
     void setClientIndex(int);

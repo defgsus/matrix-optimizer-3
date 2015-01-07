@@ -26,6 +26,7 @@ namespace MO
     class ClientInfo;
     class Client;
     class ClientEngine;
+    class UdpAudioConnection;
 
 } // namespace MO
 

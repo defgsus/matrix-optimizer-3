@@ -15,10 +15,16 @@ namespace MO {
 
 /** Returns true when the programm runs in client mode */
 bool isClient();
+/** Returns true when the programm runs in server mode */
+bool isServer();
 
+
+#ifndef MO_DISABLE_CLIENT
 /** Sets the application to client mode.
     Only callable before creation of Application */
 void setThisApplicationToClient();
+#endif
+
 
 } // namespace MO
 

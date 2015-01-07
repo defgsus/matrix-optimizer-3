@@ -20,14 +20,30 @@ namespace { static bool isClient_ = false; }
 
 bool isClient()
 {
+#ifdef MO_DISABLE_CLIENT
+    return false;
+#else
     return isClient_;
+#endif
 }
 
+bool isServer()
+{
+#ifdef MO_DISABLE_SERVER
+    return false;
+#else
+    return !isClient_;
+#endif
+}
+
+
+#ifndef MO_DISABLE_CLIENT
 void setThisApplicationToClient()
 {
     MO_ASSERT(!application, "Can't set to client mode after creation of Application");
 
     isClient_ = true;
 }
+#endif
 
 } // namespace MO

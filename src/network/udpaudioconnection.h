@@ -29,10 +29,14 @@ public:
     explicit UdpAudioConnection(QObject *parent = 0);
     ~UdpAudioConnection();
 
+    bool isOpen() const;
 
 signals:
 
 public slots:
+
+    bool openForRead();
+    void close();
 
     /** Forgets all buffers */
     void clear();
@@ -44,6 +48,9 @@ public slots:
     /** Broadcasts the current sample block in @p buffer for the given global sample time @p pos.
         @note Buffer needs to be added with addBuffer(). */
     bool sendAudioBuffer(AUDIO::AudioBuffer * buffer, SamplePos pos);
+
+    /** Adds a connection to the list of receivers */
+    //void addConnection(const QString& address, uint16_t port);
 
 private slots:
 

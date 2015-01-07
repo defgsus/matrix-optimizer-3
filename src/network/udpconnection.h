@@ -58,6 +58,9 @@ public slots:
     /** Starts listening on port for any incomming datagrams */
     bool open(uint16_t port);
 
+    /** Open for multicast receiving from group address @p addr */
+    bool openMulticastRead(const QString& groupAddress, uint16_t port);
+
     void close();
 
     /** Sends to the default location specified with open() */

@@ -103,6 +103,8 @@ void Settings::createDefaultValues_()
     defaultValues_["Network/name"] = "";
     defaultValues_["Network/tcpport"] = 50000;
     defaultValues_["Network/udpport"] = 50001;
+    defaultValues_["Network/udpAudioMulticastAddress"] = "239.255.43.21";
+    defaultValues_["Network/udpAudioMulticastPort"] = "50005";
 
     defaultValues_["Client/index"] = 0;
     defaultValues_["Client/serverAddress"] = "192.168.1.33";
@@ -303,6 +305,26 @@ QString Settings::serverAddress()
 void Settings::setServerAddress(const QString & a)
 {
     setValue("Client/serverAddress", a);
+}
+
+QString Settings::udpAudioMulticastAddress()
+{
+    return getValue("Client/udpAudioMulticastAddress").toString();
+}
+
+void Settings::setUdpAudioMulticastAddress(const QString & a)
+{
+    setValue("Client/udpAudioMulticastAddress", a);
+}
+
+uint16_t Settings::udpAudioMulticastPort()
+{
+    return getValue("Client/udpAudioMulticastPort").toUInt();
+}
+
+void Settings::setUdpAudioMulticastPort(uint16_t p)
+{
+    setValue("Client/udpAudioMulticastPort", p);
 }
 
 int Settings::clientIndex()

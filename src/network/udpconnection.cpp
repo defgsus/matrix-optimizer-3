@@ -13,7 +13,7 @@
 #include "udpconnection.h"
 #include "io/error.h"
 #include "io/log.h"
-
+#include "network/netlog.h"
 
 namespace MO {
 
@@ -21,9 +21,10 @@ namespace MO {
 UdpConnection::UdpConnection(QObject *parent)
     : QObject   (parent),
       ref_      (1),
-      socket_   (new QUdpSocket(this))
+      socket_   (new QUdpSocket(0))
 {
     MO_DEBUG_UDP("UdpConnection::UdpConnection()");
+    MO_NETLOG(CTOR, "UdpConnection::UdpConnection()");
 
     connect(socket_, SIGNAL(readyRead()), this, SLOT(receive_()));
 }
@@ -31,8 +32,11 @@ UdpConnection::UdpConnection(QObject *parent)
 UdpConnection::~UdpConnection()
 {
     MO_DEBUG_UDP("UdpConnection::~UdpConnection()");
+    MO_NETLOG(CTOR, "UdpConnection::~UdpConnection()");
 
     close();
+
+    delete socket_;
 }
 
 bool UdpConnection::isOpen() const
@@ -60,6 +64,9 @@ bool UdpConnection::open(const QHostAddress &addr, uint16_t port)
 
     addr_ = addr;
     port_ = port;
+
+    MO_NETLOG(EVENT, "udp connection bound " << addr_.toString() << ":" << port_);
+
     return true;
 }
 
@@ -75,11 +82,44 @@ bool UdpConnection::open(uint16_t port)
         return false;
     }
 
-    addr_ = "any";
+    addr_ = socket_->peerAddress();
     port_ = port;
+
+    MO_NETLOG(EVENT, "udp connection bound " << addr_.toString() << ":" << port_);
+
     return true;
 }
 
+bool UdpConnection::openMulticastRead(const QString& addr, uint16_t port)
+{
+    MO_DEBUG_UDP("UdpConnection::openMulticastRead(" << addr << ":" << port << ")");
+
+    if (!socket_->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress))
+    {
+        MO_WARNING("UdpConnection: bind(AnyIPv4:" << port << ") failed: "
+                   << socket_->errorString());
+        addr_.clear();
+        port_ = 0;
+        return false;
+    }
+
+    if (!socket_->joinMulticastGroup(QHostAddress(addr)))
+    {
+        MO_WARNING("UdpConnection: joinMulticastGroup(" << addr << ") failed: "
+                   << socket_->errorString());
+        socket_->close();
+        addr_.clear();
+        port_ = 0;
+        return false;
+    }
+
+    addr_ = addr;
+    port_ = port;
+
+    MO_NETLOG(EVENT, "udp multicast connection bound " << addr_.toString() << ":" << port_);
+
+    return true;
+}
 
 void UdpConnection::close()
 {

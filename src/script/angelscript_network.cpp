@@ -204,7 +204,7 @@ namespace {
 struct netfuncs
 {
     static bool isClient() { return MO::isClient(); }
-    static bool isServer() { return !MO::isClient(); }
+    static bool isServer() { return MO::isServer(); }
     static int clientIndex() { return settings->clientIndex(); }
     static StringAS serverAddress() { return toStringAS(settings->serverAddress()); }
     static StringAS localAddress() { SystemInfo inf; inf.get(); return toStringAS(inf.localAddress()); }

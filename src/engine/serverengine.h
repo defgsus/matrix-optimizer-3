@@ -22,7 +22,6 @@ class QTcpSocket;
 
 namespace MO {
 
-class ServerEngine;
 class Scene;
 
 /** Returns a singleton instance of the server */
@@ -69,6 +68,9 @@ public:
 
     /** Returns the one tcp server */
     TcpServer * tcpServer() const { return server_; }
+
+    /** Returns the audio stream to send audio buffers to clients */
+    UdpAudioConnection * getAudioStream();
 
     /** Creates a new projection set from the info of the
         connected clients.
@@ -146,6 +148,7 @@ private:
 
     TcpServer * server_;
     EventCom * eventCom_;
+    UdpAudioConnection * audioOut_;
 };
 
 } // namespace MO

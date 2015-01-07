@@ -15,6 +15,8 @@
 #include "udpconnection.h"
 #include "audio/tool/audiobuffer.h"
 #include "object/audioobject.h"
+#include "network/netlog.h"
+#include "io/settings.h"
 #include "io/log.h"
 #include "io/error.h"
 
@@ -43,11 +45,11 @@ struct UdpAudioConnection::Private
 
     ~Private()
     {
-
+        udp->close();
     }
 
-    static void constructSignal_(QByteArray&, Buffer* b);
-    void deconstructSignal_(const QByteArray& data);
+    static void constructPacket_(QByteArray&, Buffer* b);
+    void deconstructPacket_(const QByteArray& data);
 
     void createBuffer(AUDIO::AudioBuffer * buf, AudioObject * obj, uint channel);
     Buffer * bufferFor(AUDIO::AudioBuffer * );
@@ -66,6 +68,7 @@ UdpAudioConnection::UdpAudioConnection(QObject *parent)
         p_      (new Private(this))
 {
     MO_DEBUG_UDP("UdpAudioConnection::UdpAudioConnection(" << parent << ")");
+    MO_NETLOG(CTOR, "UdpAudioConnection::UdpAudioConnection()");
 
     connect(p_->udp, SIGNAL(dataReady()), this, SLOT(receive_()));
 }
@@ -73,6 +76,8 @@ UdpAudioConnection::UdpAudioConnection(QObject *parent)
 UdpAudioConnection::~UdpAudioConnection()
 {
     MO_DEBUG_UDP("UdpAudioConnection::~UdpAudioConnection()");
+    MO_NETLOG(CTOR, "UdpAudioConnection::~UdpAudioConnection()");
+
     delete p_;
 }
 
@@ -96,6 +101,24 @@ bool UdpAudioConnection::addBuffer(AUDIO::AudioBuffer *buffer, AudioObject *obj,
     return true;
 }
 
+bool UdpAudioConnection::isOpen() const
+{
+    return p_->udp->isOpen();
+}
+
+
+bool UdpAudioConnection::openForRead()
+{
+    MO_ASSERT(isClient(), "wrong request");
+
+    return p_->udp->openMulticastRead(settings->udpAudioMulticastAddress(),
+                                      settings->udpAudioMulticastPort());
+}
+
+void UdpAudioConnection::close()
+{
+    p_->udp->close();
+}
 
 bool UdpAudioConnection::sendAudioBuffer(AUDIO::AudioBuffer * buf, SamplePos pos)
 {
@@ -110,7 +133,7 @@ bool UdpAudioConnection::sendAudioBuffer(AUDIO::AudioBuffer * buf, SamplePos pos
 
     // repackage
     QByteArray data;
-    Private::constructSignal_(data, b);
+    Private::constructPacket_(data, b);
 
     // send off
     return p_->udp->sendDatagram(data);
@@ -121,7 +144,7 @@ void UdpAudioConnection::receive_()
     MO_DEBUG_UDP("UdpAudioConnection::receive()");
 
     QByteArray data = p_->udp->readData();
-    p_->deconstructSignal_(data);
+    p_->deconstructPacket_(data);
 }
 
 
@@ -130,7 +153,7 @@ void UdpAudioConnection::receive_()
 
 
 
-void UdpAudioConnection::Private::constructSignal_(QByteArray & data, Buffer * b)
+void UdpAudioConnection::Private::constructPacket_(QByteArray & data, Buffer * b)
 {
     QDataStream s(&data, QIODevice::WriteOnly);
 
@@ -138,11 +161,11 @@ void UdpAudioConnection::Private::constructSignal_(QByteArray & data, Buffer * b
     s.writeRawData((const char*)b->buf->readPointer(), b->buf->blockSizeBytes());
 }
 
-void UdpAudioConnection::Private::deconstructSignal_(const QByteArray& data)
+void UdpAudioConnection::Private::deconstructPacket_(const QByteArray& data)
 {
     if (data.startsWith("_audio_"))
     {
-        MO_WARNING("UdpAudioConnection: received unknown data (" << data.size() << " bytes)");
+        MO_NETLOG(WARNING, "UdpAudioConnection: received unknown data (" << data.size() << " bytes)");
         return;
     }
 
@@ -160,19 +183,19 @@ void UdpAudioConnection::Private::deconstructSignal_(const QByteArray& data)
     Buffer * b = bufferFor(idName);
     if (!b)
     {
-        MO_WARNING("UdpAudioConnection: received unknown buffer " << idName);
+        MO_NETLOG(WARNING, "UdpAudioConnection: received unknown buffer " << idName);
         return;
     }
 
     if (blockSize != b->buf->blockSize())
     {
-        MO_WARNING("UdpAudioConnection: blocksize mismatch, received " << blockSize << ", should be " << b->buf->blockSize());
+        MO_NETLOG(WARNING, "UdpAudioConnection: blocksize mismatch, received " << blockSize << ", should be " << b->buf->blockSize());
         return;
     }
 
     if (channel != b->channel)
     {
-        MO_WARNING("UdpAudioConnection: channel mismatch, received " << channel << ", should be " << b->channel);
+        MO_NETLOG(WARNING, "UdpAudioConnection: channel mismatch, received " << channel << ", should be " << b->channel);
         /*return; not really an error, is it?*/
     }
 
