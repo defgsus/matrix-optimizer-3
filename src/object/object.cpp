@@ -49,6 +49,7 @@ Object::Object(QObject *parent) :
     p_parameters_             (0),
     p_paramActiveScope_       (0),
     p_canBeDeleted_           (true),
+    p_ref_                    (1),
     p_parentObject_           (0),
     p_childrenHaveChanged_    (false),
     p_numberThreads_          (1),
@@ -73,10 +74,31 @@ Object::Object(QObject *parent) :
 
 Object::~Object()
 {
+    // release references on childs
+    for (auto c : p_childObjects_)
+        c->releaseRef();
+
+    if (p_ref_ > 1)
+    {
+        MO_WARNING("Object(" << idName() << ")::~Object() with a ref-count of "
+                   << p_ref_ << ". NOTE: ref-counting is not fully implemented yet.");
+    }
+
     delete p_parameters_;
 
     for (auto m : p_modulatorOuts_)
         delete m;
+}
+
+void Object::addRef()
+{
+    p_ref_++;
+}
+
+void Object::releaseRef()
+{
+    if (--p_ref_ == 0)
+        delete this;
 }
 
 // --------------------- io ------------------------
@@ -637,7 +659,13 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
         return false;
     }
 
-    if (hasParentObject(o))
+    if (childObjects().contains(o))
+    {
+        error = tr("Object '%1' is already a children of '%2'.").arg(o->name()).arg(name());
+        return false;
+    }
+
+    if (hasParentObject(o) || o == this)
     {
         error = tr("Trying to add '%1' to itself").arg(o->name());
         return false;
@@ -654,7 +682,7 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
         if (auto s = sceneObject())
             if (s->clipController())
             {
-                error = tr("Only one clipcontainer allowed");
+                error = tr("Only one clipcontainer allowed per scene");
                 return false;
             }
 
@@ -695,6 +723,7 @@ void Object::setParentObject_(Object *parent, int index)
 
     // install in QObject tree (handle memory)
     setParent(parent);
+    addRef();
 
     // remove from previous parent
     if (p_parentObject_)

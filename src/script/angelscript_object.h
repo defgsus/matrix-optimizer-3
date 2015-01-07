@@ -25,7 +25,7 @@ class ObjectAS;
 class SequenceAS;
 
 /** Put the object type and related functions into the namespace.
-    Dependency: string, timeline, geometry */
+    Dependency: string, timeline, geometry, vector */
 void registerAngelScript_object(asIScriptEngine *engine);
 
 /** Make any object accessible to the script. */

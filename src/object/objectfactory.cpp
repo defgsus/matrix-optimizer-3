@@ -390,7 +390,7 @@ int ObjectFactory::getBestInsertIndex(Object *parent, Object *newChild, int idx)
     const int num = parent->childObjects().size();
 
     if (idx < 0 || idx >= num)
-        idx = num - 1;
+        idx = num;
 
     // find place according to priority
     const int p = Object::objectPriority(newChild);

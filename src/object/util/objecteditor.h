@@ -132,6 +132,8 @@ public slots:
 
     bool deleteObjects(const QList<Object*>& list);
 
+    bool deleteChildren(Object * object);
+
     /** Changes the position of an object among it's siblings */
     bool setObjectIndex(Object * object, int newIndex);
 

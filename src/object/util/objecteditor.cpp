@@ -201,12 +201,15 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
     QString error;
     if (!parent->isSaveToAdd(newChild, error))
     {
+        QString errtext = tr("The object %1 could not be added to %2.\n%3")
+                            .arg(newChild->name())
+                            .arg(parent->name())
+                            .arg(error);
         delete newChild;
-        QMessageBox::critical(0, tr("Can't add object"),
-                              tr("The object %1 could not be added to %2.\n%3")
-                              .arg(newChild->name())
-                              .arg(parent->name())
-                              .arg(error));
+        QMessageBox::critical(0, tr("Can't add object"), errtext);
+
+        MO_DEBUG(errtext);
+
         return false;
     }
 
@@ -311,6 +314,15 @@ bool ObjectEditor::deleteObjects(const QList<Object*>& list)
     emit sceneChanged(scene_);
 
     return true;
+}
+
+bool ObjectEditor::deleteChildren(Object *object)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::deleteChildren(" << object << ")");
+    MO__CHECK_SCENE
+
+    auto list = object->childObjects();
+    return deleteObjects(list);
 }
 
 bool ObjectEditor::setObjectIndex(Object * object, int newIndex)

@@ -58,7 +58,8 @@ namespace Private {
 #define MO_OBJECT_CONSTRUCTOR(Class__) \
     explicit Class__(QObject *parent = 0); \
     virtual Class__ * cloneClass() const Q_DECL_OVERRIDE { return new Class__(); } \
-    virtual const QString& className() const Q_DECL_OVERRIDE { static QString s(#Class__); return s; } \
+    static const QString& staticClassName() { static QString s(#Class__); return s; } \
+    virtual const QString& className() const Q_DECL_OVERRIDE { return staticClassName(); } \
     virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
@@ -185,6 +186,12 @@ public:
     explicit Object(QObject *parent = 0);
 
     ~Object();
+
+    /** Increase the reference counter */
+    void addRef();
+
+    /** Release the reference counter. Deletes the Object if it goes to 0. */
+    void releaseRef();
 
     /** Creates a new instance of the class.
         In derived classes this will be defined via the MO_OBJECT_CONSTRUCTOR() macro.
@@ -722,6 +729,8 @@ private:
     QString p_idName_, p_name_;
 
     bool p_canBeDeleted_;
+
+    int p_ref_;
 
     QMap<QString, QMap<qint64, QVariant>> p_attachedData_;
 
