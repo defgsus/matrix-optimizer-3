@@ -122,21 +122,26 @@ void UdpAudioConnection::close()
 
 bool UdpAudioConnection::sendAudioBuffer(AUDIO::AudioBuffer * buf, SamplePos pos)
 {
-    MO_DEBUG_UDP("UdpAudioConnection::sendBuffer(" << buf << ", " << pos << ")");
-    MO_ASSERT( !isClient(), "UdpAudioConnection: send not sensible for clients");
+    MO_ASSERT( isServer(), "UdpAudioConnection: send not sensible for clients");
 
+    MO_DEBUG_UDP("UdpAudioConnection::sendBuffer(" << buf << ", " << pos << ")");
     MO_ASSERT( p_->bufferFor(buf), "audio buffer " << buf << " unknown to UdpAudioConnection");
 
     Private::Buffer * b = p_->bufferFor(buf);
     if (!b)
+    {
+        MO_NETLOG(WARNING, "UdpAudioConnection::sendAudioBuffer("
+                  << buf << ", " << pos << ") for unknown buffer");
         return false;
+    }
 
     // repackage
     QByteArray data;
     Private::constructPacket_(data, b);
 
     // send off
-    return p_->udp->sendDatagram(data);
+    return p_->udp->sendDatagram(data, QHostAddress(settings->udpAudioMulticastAddress()),
+                                       settings->udpAudioMulticastPort());
 }
 
 void UdpAudioConnection::receive_()

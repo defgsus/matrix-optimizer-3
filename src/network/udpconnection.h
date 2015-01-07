@@ -65,6 +65,8 @@ public slots:
 
     /** Sends to the default location specified with open() */
     bool sendDatagram(const QByteArray&);
+    /** Sends to the specified address and port */
+    bool sendDatagram(const QByteArray&, const QHostAddress& addr, uint16_t port);
     /** Sends to the default location specified with open() */
     bool sendDatagram(const char * data, uint64_t len);
     /** Sends to the specified address and port */

@@ -21,7 +21,8 @@ namespace MO {
 UdpConnection::UdpConnection(QObject *parent)
     : QObject   (parent),
       ref_      (1),
-      socket_   (new QUdpSocket(0))
+      socket_   (new QUdpSocket(0)),
+      port_     (0)
 {
     MO_DEBUG_UDP("UdpConnection::UdpConnection()");
     MO_NETLOG(CTOR, "UdpConnection::UdpConnection()");
@@ -171,7 +172,8 @@ bool UdpConnection::sendDatagram(const char * data, uint64_t len)
 
     if (sent<0 || sent != (int64_t)len)
     {
-        MO_WARNING("udp writing failed: " << socket_->errorString());
+        MO_NETLOG(WARNING, "udp writing failed for " << addr_.toString() << ":" << port_
+                  << ": " << socket_->errorString());
         return false;
     }
 
@@ -187,7 +189,25 @@ bool UdpConnection::sendDatagram(const QByteArray& data)
 
     if (sent<0 || sent != (int64_t)data.length())
     {
-        MO_WARNING("udp writing failed: " << socket_->errorString());
+        MO_NETLOG(WARNING, "udp writing failed for " << addr_.toString() << ":" << port_
+                  << ": " << socket_->errorString());
+        return false;
+    }
+
+    return true;
+}
+
+bool UdpConnection::sendDatagram(const QByteArray& data, const QHostAddress& addr, uint16_t port)
+{
+    MO_DEBUG_UDP("UdpConnection::sendDatagram(size=" << data.size()
+                 << ", " << addr.toString() << ":" << port << ")");
+
+    int64_t sent = socket_->writeDatagram(data, addr, port);
+
+    if (sent<0 || sent != (int64_t)data.length())
+    {
+        MO_NETLOG(WARNING, "udp writing failed for " << addr.toString() << ":" << port
+                  << ": " << socket_->errorString());
         return false;
     }
 
@@ -203,7 +223,8 @@ bool UdpConnection::sendDatagram(const char * data, uint64_t len, const QHostAdd
 
     if (sent<0 || sent != (int64_t)len)
     {
-        MO_WARNING("udp writing failed: " << socket_->errorString());
+        MO_NETLOG(WARNING, "udp writing failed for " << addr.toString() << ":" << port
+                  << ": " << socket_->errorString());
         return false;
     }
 

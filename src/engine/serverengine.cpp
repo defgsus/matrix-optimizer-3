@@ -42,7 +42,8 @@ struct ClientInfo::Private
 ServerEngine::ServerEngine(QObject *parent)
     : QObject       (parent),
       server_       (new TcpServer(this)),
-      eventCom_     (new EventCom(this))
+      eventCom_     (new EventCom(this)),
+      audioOut_     (0)
 {
     MO_NETLOG(CTOR, "ServerEngine::ServerEngine(" << parent << ")");
 

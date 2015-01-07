@@ -942,7 +942,10 @@ UdpAudioConnection * ObjectDspPath::Private::getUdpOutput()
 {
     MO_ASSERT(!isClient(), "wrong request");
     if (!udpOutput)
+    {
+        MO_DEBUG("UdpAudioConnection: creating udp output object");
         udpOutput = serverEngine().getAudioStream();
+    }
     return udpOutput;
 }
 #endif
