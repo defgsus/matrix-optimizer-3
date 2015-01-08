@@ -434,6 +434,8 @@ QString Object::makeUniqueName(const QString &name) const
         names.insert(c->name());
 
     QString ret(name);
+    ret.replace("/", "");
+    ret.replace("\\", "");
     while (names.contains(ret))
         increase_id_number(ret, 1);
 
@@ -551,7 +553,7 @@ bool Object::activeAtAll() const
 
 void Object::setName(const QString & n)
 {
-    p_name_ = n;
+    p_name_ = makeUniqueName(n);
 }
 
 void Object::setCurrentActivityScope(ActivityScope scope)

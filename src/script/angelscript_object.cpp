@@ -70,12 +70,14 @@ public:
     {
         // The syntax checker needs a null object..
         //MO_ASSERT(o, "Can't create wrapper for NULL Object");
-        o->addRef();
+        if (o)
+            o->addRef();
     }
 
     ~ObjectAS()
     {
-        o->releaseRef();
+        if (o)
+            o->releaseRef();
     }
 
     void addRef() { ++ref; }
@@ -139,7 +141,7 @@ public:
 
     // ------ setter ------
 
-    void setName(const StringAS& n) { if (auto e = editor()) e->setObjectName(o, MO::toString(n)); else o->setName(MO::toString(n)); }
+    void setName(const StringAS& n) { QString name = MO::toString(n); if (auto e = editor()) e->setObjectName(o, name); else o->setName(name); }
     void setHue(int degree) { o->setAttachedData(degree, Object::DT_HUE); if (auto e = editor()) emit e->objectColorChanged(o); }
     void setExpanded(bool exp) { o->setAttachedData(exp, Object::DT_GRAPH_EXPANDED); if (auto e = editor()) emit e->objectChanged(o); }
     void setPosition(int x, int y) { o->setAttachedData(QPoint(x, y), Object::DT_GRAPH_POS); if (auto e = editor()) emit e->objectChanged(o); }
@@ -148,6 +150,8 @@ public:
 
     bool addObject(ObjectAS * as, int index = -1) { return addObject_(as->o, index); }
     void deleteChildren() { if (auto e = editor()) { e->deleteChildren(o); } else MO__EDITOR_WARNING; }
+
+
 
     // --------- internal objects --------
 
@@ -165,6 +169,8 @@ public:
         if (auto seq = qobject_cast<SequenceFloat*>(o))
         {
             seq->setTimeline(get_timeline(tl));
+            if (!seq->sequenceType() == SequenceFloat::ST_TIMELINE)
+                seq->setSequenceType(SequenceFloat::ST_TIMELINE);
             // gui signal
             if (auto e = editor())
                 emit e->sequenceChanged(seq);
