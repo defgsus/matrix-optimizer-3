@@ -53,9 +53,9 @@ OverlapAreaEditWidget::~OverlapAreaEditWidget()
     delete blends_;
     delete lines_;
     delete triangles_;
-    delete blendGeom_;
-    delete lineGeom_;
-    delete triangleGeom_;
+    blendGeom_->releaseRef();
+    lineGeom_->releaseRef();
+    triangleGeom_->releaseRef();
     delete settings_;
 }
 

@@ -264,7 +264,8 @@ HEADERS += \
     src/geom/marchingcubes.h \
     src/network/udpconnection.h \
     src/script/angelscript_network.h \
-    src/network/udpaudioconnection.h
+    src/network/udpaudioconnection.h \
+    src/types/refcounted.h
 
 SOURCES += \
     src/math/timeline1d.cpp \

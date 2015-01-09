@@ -23,6 +23,7 @@
 #include "geom/geometryfactory.h"
 #include "geom/marchingcubes.h"
 #include "math/vector.h"
+#include "types/refcounted.h"
 #include "io/log.h"
 
 
@@ -100,7 +101,7 @@ public:
 
 
 
-class GeometryAS
+class GeometryAS : public RefCounted
 {
     GeometryAS(const GeometryAS&);
     void operator = (GeometryAS&);
@@ -108,42 +109,38 @@ class GeometryAS
 public:
 
     GEOM::Geometry * g;
-    bool owner;
-    int ref;
     StringAS p_name;
 
     // -------------- factory for script -----------
 
-    /** Creates an instance for a new Geometry (bound to this instance) */
+    /** Creates an instance for a new Geometry */
     GeometryAS()
-        : g     (new GEOM::Geometry()),
-          owner (true),
-          ref   (1)
+        : g     (new GEOM::Geometry())
     {
-        MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS() owning");
+        MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS()");
     }
 
-    /** Creates an instance for an existing Geometry (not owned by this instance) */
+    /** Creates an instance for an existing Geometry */
     GeometryAS(GEOM::Geometry * g)
-        : g     (g),
-          owner (false),
-          ref   (1)
+        : g     (g)
     {
-        MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS(" << g << ") non-owning");
+        MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS(" << g << ")");
+        // Syntax checker needs NULL object
+        if (g)
+            g->addRef();
     }
 
+private:
     ~GeometryAS()
     {
         MO_DEBUG_GAS("GeometryAS("<<this<<")::~GeometryAS()")
-        if (owner)
-            delete g;
+        if (g)
+            g->releaseRef();
     }
 
+public:
+
     static GeometryAS * factory() { MO_DEBUG_GAS("GeometryAS::factory()"); return new GeometryAS(); }
-
-    void addRef() { ++ref; MO_DEBUG_GAS("GeometryAS("<<this<<")::addRef() now = " << ref); }
-
-    void releaseRef() { MO_DEBUG_GAS("GeometryAS("<<this<<")::releaseRef() now = " << (ref-1)); if (--ref == 0) delete this; }
 
     // ----------------- interface ----------------
 
@@ -265,7 +262,7 @@ public:
 
     void addGeometry(const GeometryAS& o) { g->addGeometry( *o.g ); }
     void addGeometryP(const GeometryAS& o, const Vec3& p) { g->addGeometry( *o.g, p ); }
-    void addGeometryM(const GeometryAS& o, const Mat4& m) { GEOM::Geometry tmp(*o.g); tmp.applyMatrix(m); g->addGeometry(tmp); }
+    void addGeometryM(const GeometryAS& o, const Mat4& m) { auto tmp = new GEOM::Geometry(*o.g); tmp->applyMatrix(m); g->addGeometry(*tmp); tmp->releaseRef(); }
 
     /*
     void marchingCubesFunc(const asIScriptFunction * f, uint w, uint h, uint d, float isolevel, const Vec3& mine, const Vec3& maxe)
@@ -402,7 +399,7 @@ GeometryAS * geometry_to_angelscript(const GEOM::Geometry *g)
 
 
 
-class ScalarFieldAS
+class ScalarFieldAS : public RefCounted
 {
     ScalarFieldAS(const ScalarFieldAS&);
     void operator = (ScalarFieldAS&);
@@ -447,27 +444,24 @@ public:
         asIScriptContext * context;
     };
 
-    int ref;
     std::vector<Shape> shapes;
 
     // -------------- factory for script -----------
 
     ScalarFieldAS()
-        : ref       (1)
     {
         MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::ScalarFieldAS()");
     }
 
+private:
     ~ScalarFieldAS()
     {
         MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::~ScalarFieldAS()")
     }
 
+public:
+
     static ScalarFieldAS * factory() { MO_DEBUG_GAS("ScalarFieldAS::factory()"); return new ScalarFieldAS(); }
-
-    void addRef() { ++ref; MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::addRef() now = " << ref); }
-
-    void releaseRef() { MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::releaseRef() now = " << (ref-1)); if (--ref == 0) delete this; }
 
     // -------- helper --------------
 

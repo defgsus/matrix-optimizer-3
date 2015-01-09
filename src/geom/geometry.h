@@ -15,6 +15,7 @@
 
 #include "gl/opengl.h"
 #include "types/vector.h"
+#include "types/refcounted.h"
 
 #ifndef MO_DISABLE_ANGELSCRIPT
 class asIScriptEngine;
@@ -26,7 +27,7 @@ namespace GEOM {
 
 /** XXX This is not very generic
     - but let's get started and see later.. */
-class Geometry
+class Geometry : public RefCounted
 {
 public:
 
@@ -76,7 +77,9 @@ public:
     // -------- ctor ---------
 
     Geometry();
+private:
     ~Geometry();
+public:
 
     Geometry(const Geometry& other) { copyFrom(other); }
     Geometry& operator = (const Geometry& other) { copyFrom(other); return *this; }

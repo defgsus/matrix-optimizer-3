@@ -43,7 +43,8 @@ GeometryCreator::GeometryCreator(QObject *parent) :
 
 GeometryCreator::~GeometryCreator()
 {
-    delete geometry_;
+    if (geometry_)
+        geometry_->releaseRef();
     delete settings_;
     delete mutex_;
 }
@@ -105,13 +106,15 @@ void GeometryCreator::run()
 
         QMutexLocker lock(mutex_);
 
-        delete curGeometry_;
+        if (curGeometry_)
+            curGeometry_->releaseRef();
         curGeometry_ = 0;
     }
 
     QMutexLocker lock(mutex_);
 
-    delete geometry_;
+    if (geometry_)
+        geometry_->releaseRef();
     geometry_ = curGeometry_;
 
     MO_DEBUG_GL("GeometryCreator::run() finished");

@@ -630,11 +630,11 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
     tess.tesselate(overlap, true);
 
     // create geometry
-    GEOM::Geometry geom;
-    tess.getGeometry(geom);
+    GEOM::Geometry * geom = new GEOM::Geometry();
+    tess.getGeometry(*geom);
 
     // make finer resolution
-    geom.tesselateTriangles(3);
+    geom->tesselateTriangles(3);
 
 #define MO__EDGE_DIST(vec__)                                    \
     std::min(std::min(MATH::smoothstep(0.f,edge,vec__[0]),      \
@@ -643,12 +643,12 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
                       MATH::smoothstep(1.f,1.f-edge,vec__[1])))
 
     // set color
-    for (uint i=0; i<geom.numVertices(); ++i)
+    for (uint i=0; i<geom->numVertices(); ++i)
     {
-        const Vec2 pos = Vec2(geom.vertices()[i * geom.numVertexComponents()],
-                              geom.vertices()[i * geom.numVertexComponents()+1]),
+        const Vec2 pos = Vec2(geom->vertices()[i * geom->numVertexComponents()],
+                              geom->vertices()[i * geom->numVertexComponents()+1]),
                    opos = other.mapFromDome(mapToDome(pos));
-        auto color = &geom.colors()[i * geom.numColorComponents()];
+        auto color = &geom->colors()[i * geom->numColorComponents()];
 
         const Float edged = MO__EDGE_DIST(pos),
                     oedged = MO__EDGE_DIST(opos)
@@ -683,7 +683,8 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
 
 #undef MO__EDGE_DIST
 
-    g->addGeometry(geom);
+    g->addGeometry(*geom);
+    geom->releaseRef();
 
     return true;
 }

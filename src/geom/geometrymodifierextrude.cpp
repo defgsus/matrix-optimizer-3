@@ -69,16 +69,17 @@ void GeometryModifierExtrude::execute(Geometry *g)
     if (!g->numTriangles())
         return;
 
-    Geometry geom;
-    geom.setSharedVertices(g->sharedVertices(), g->sharedVerticesThreshold());
+    Geometry * geom = new Geometry();
+    geom->setSharedVertices(g->sharedVertices(), g->sharedVerticesThreshold());
 
-    g->extrudeTriangles(geom, constant_, factor_, shiftCenter_, doOuterFaces_, doRecogEdges_);
+    g->extrudeTriangles(*geom, constant_, factor_, shiftCenter_, doOuterFaces_, doRecogEdges_);
 
     // explicitly ungroup vertices if so desired
     if (!g->sharedVertices())
-        geom.unGroupVertices();
+        geom->unGroupVertices();
 
-    *g = geom;
+    *g = *geom;
+    geom->releaseRef();
 }
 
 } // namespace GEOM

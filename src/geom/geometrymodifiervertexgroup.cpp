@@ -54,10 +54,11 @@ void GeometryModifierVertexGroup::execute(Geometry *g)
 {
     if (share_ && (!g->sharedVertices() || g->sharedVerticesThreshold() != threshold_))
     {
-        Geometry geo(*g);
+        Geometry * geo = new Geometry(*g);
         g->clear();
         g->setSharedVertices(true, threshold_);
-        g->addGeometry(geo);
+        g->addGeometry(*geo);
+        geo->releaseRef();
     }
 
     if (!share_)

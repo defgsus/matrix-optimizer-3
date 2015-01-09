@@ -16,29 +16,27 @@
 #include <random>
 
 #include "types/vector.h"
+#include "types/refcounted.h"
 
 class asIScriptEngine;
 
 namespace MO {
 
 /** A ref counted rng for AngelScript */
-class RandomAS
+class RandomAS : public RefCounted
 {
     std::mt19937 twister;
-    int ref;
 
     RandomAS(const RandomAS&);
     void operator = (RandomAS&);
 
 public:
 
-    RandomAS(uint32_t seed = 0) : twister(seed), ref(1) { }
+    RandomAS(uint32_t seed = 0) : twister(seed) { }
 
     // --- factory ---
     static RandomAS * factory() { return new RandomAS(); }
     static RandomAS * factorySeed(uint32_t s) { return new RandomAS(s); }
-    void addRef() { ++ref; }
-    void releaseRef() { if (--ref == 0) delete this; }
 
     // --- interface ---
 

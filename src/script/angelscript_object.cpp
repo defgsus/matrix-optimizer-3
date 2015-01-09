@@ -34,6 +34,7 @@
 #include "object/param/parametertimeline1d.h"
 #include "object/param/parameterselect.h"
 #include "object/util/objecteditor.h"
+#include "types/refcounted.h"
 #include "io/log.h"
 
 
@@ -55,17 +56,15 @@ class ParameterAS;
     MO_WARNING("Operation on object without attached scene currently not supported")
 
 
-class ObjectAS
+class ObjectAS : public RefCounted
 {
 public:
     Object * o;
-    int ref;
     ObjectAS * self;
 
     /** Create a wrapper for existing object */
     ObjectAS(Object * o)
         : o         (o),
-          ref       (1),
           self      (this)
     {
         // The syntax checker needs a null object..
@@ -74,14 +73,13 @@ public:
             o->addRef();
     }
 
+private:
     ~ObjectAS()
     {
         if (o)
             o->releaseRef();
     }
-
-    void addRef() { ++ref; }
-    void releaseRef() { if (--ref == 0) delete this; }
+public:
 
     // ---------------- helper -------------------
 
@@ -209,17 +207,15 @@ public:
 
 // Wrapper for types that don't have special functions
 template <class OBJ>
-class ObjectAnyAS
+class ObjectAnyAS : public RefCounted
 {
 public:
     OBJ * o;
-    int ref;
     ObjectAnyAS * self;
 
     /** Create a wrapper for new object */
     ObjectAnyAS()
         : o         (MO::createObject<OBJ>()),
-          ref       (1),
           self      (this)
     {
 
@@ -228,55 +224,47 @@ public:
     /** Create a wrapper for existing object */
     ObjectAnyAS(OBJ * o)
         : o         (o),
-          ref       (1),
           self      (this)
     {
         MO_ASSERT(o, "Can't create wrapper for NULL Object");
         o->addRef();
     }
 
+private:
     ~ObjectAnyAS()
     {
         o->releaseRef();
     }
-
-    void addRef() { ++ref; }
-    void releaseRef() { if (--ref == 0) delete this; }
 };
 
 
 
-class SequenceAS
+class SequenceAS : public RefCounted
 {
 public:
     SequenceFloat * o;
-    int ref;
     SequenceAS * self;
 
     /** Create a wrapper for new object */
     SequenceAS()
         : o         (MO::createObject<SequenceFloat>()),
-          ref       (1),
           self      (this)
     { }
 
     /** Create a wrapper for existing object */
     SequenceAS(SequenceFloat * o)
         : o         (o),
-          ref       (1),
           self      (this)
     {
         MO_ASSERT(o, "Can't create wrapper for NULL Object");
         o->addRef();
     }
-
+private:
     ~SequenceAS()
     {
         o->releaseRef();
     }
-
-    void addRef() { ++ref; }
-    void releaseRef() { if (--ref == 0) delete this; }
+public:
 
     // ------------ helper -----------------------
 
@@ -317,19 +305,17 @@ public:
 
 
 
-class ParameterAS
+class ParameterAS : public RefCounted
 {
 public:
     Object * o;
     Parameter * p;
-    int ref;
     ParameterAS * self;
 
     /** Create a wrapper for existing object */
     ParameterAS(Parameter * p)
         : o         (p->object()),
           p         (p),
-          ref       (1),
           self      (this)
     {
         MO_ASSERT(p, "Can't create wrapper for NULL Parameter");
@@ -337,13 +323,13 @@ public:
         o->addRef();
     }
 
+private:
     ~ParameterAS()
     {
         o->releaseRef();
     }
 
-    void addRef() { ++ref; }
-    void releaseRef() { if (--ref == 0) delete this; }
+public:
 
     // ---------------- helper -------------------
 

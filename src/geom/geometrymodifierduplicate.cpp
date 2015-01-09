@@ -65,7 +65,7 @@ void GeometryModifierDuplicate::deserialize(IO::DataStream &io)
 
 void GeometryModifierDuplicate::execute(Geometry *g)
 {
-    Geometry copy(*g);
+    Geometry *copy = new Geometry(*g);
 
     g->clear();
 
@@ -78,16 +78,20 @@ void GeometryModifierDuplicate::execute(Geometry *g)
     for (uint y=0; y<numY_; ++y)
     for (uint x=0; x<numX_; ++x)
     {
-        Geometry geom(copy);
-        geom.transformWithEquation(
+        Geometry * geom = new Geometry(*copy);
+        geom->transformWithEquation(
                     equ_,
                     constants,
                     QList<Double>()
                         << ((z*numY_+y)*numX_+x) << x << y << z
                     );
 
-        g->addGeometry(geom);
+        g->addGeometry(*geom);
+
+        geom->releaseRef();
     }
+
+    copy->releaseRef();
 }
 
 } // namespace GEOM
