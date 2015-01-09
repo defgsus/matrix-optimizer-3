@@ -244,12 +244,14 @@ void TrackView::setCurrentObject(Object * obj, bool send_signal)
     Scene * scene = obj->sceneObject();
     if (scene != scene_)
     {
+        /* YYY
         connect(scene, SIGNAL(objectChanged(MO::Object*)),
                 this, SLOT(onObjectChanged_(MO::Object*)));
         connect(scene, SIGNAL(sequenceChanged(MO::Sequence*)),
                 this, SLOT(onSequenceChanged_(MO::Sequence*)));
         connect(scene, SIGNAL(parameterChanged(MO::Parameter*)),
                 this, SLOT(onParameterChanged_(MO::Parameter*)));
+        */
     }
     scene_ = scene;
     currentObject_ = obj;

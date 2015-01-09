@@ -20,7 +20,6 @@
 
 #include "angelscript_math.h"
 #include "math/advanced.h"
-#include "math/intersection.h"
 
 namespace MO {
 
@@ -30,7 +29,7 @@ namespace native {
 
 
 
-static void registerAngelScript_rnd(asIScriptEngine *engine)
+static void register_rnd(asIScriptEngine *engine)
 {
     int r;
 
@@ -84,173 +83,180 @@ static void registerAngelScript_rnd(asIScriptEngine *engine)
 }
 
 
+#define MO__STR(decl__) QString(decl__).replace("%1", floattyp).replace("%2", suffix).toUtf8().constData()
+#define MO__REG_PROPERTY(decl__, ptr__) \
+    r = engine->RegisterGlobalProperty(MO__STR(decl__), ptr__); assert( r>=0 );
+#define MO__REG_FUNC(decl__, name__) \
+    r = engine->RegisterGlobalFunction(MO__STR(decl__), asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
 
-struct wrapper
+template <typename F>
+static void register_math_funcs(asIScriptEngine *engine, const char * floattyp, const char * suffix)
 {
-    static bool intersect_ray_sphere(const Vec3& ray_origin,
-                                     const Vec3& ray_direction,
-                                     const Vec3& sphere_center,
-                                     Float sphere_radius)
-    { return MATH::intersect_ray_sphere(ray_origin, ray_direction, sphere_center, sphere_radius); }
-
-    static bool intersect_ray_sphere_dd(const Vec3& ray_origin,
-                                     const Vec3& ray_direction,
-                                     const Vec3& sphere_center,
-                                     Float sphere_radius,
-                                     Float & depth1,
-                                     Float & depth2)
-    { return MATH::intersect_ray_sphere(ray_origin, ray_direction, sphere_center, sphere_radius, &depth1, &depth2); }
-
-    static bool intersect_ray_triangle(const Vec3& ray_origin,
-                                       const Vec3& ray_direction,
-                                       const Vec3& t0, const Vec3& t1, const Vec3& t2)
-    { return MATH::intersect_ray_triangle(ray_origin, ray_direction, t0,t1,t2); }
-
-    static bool intersect_ray_triangle_p(const Vec3& ray_origin,
-                                         const Vec3& ray_direction,
-                                         const Vec3& t0, const Vec3& t1, const Vec3& t2,
-                                         Vec3& pos)
-    { return MATH::intersect_ray_triangle(ray_origin, ray_direction, t0,t1,t2, &pos); }
-
-    static Vec3 closest_point_on_line(const Vec3& p, const Vec3& a, const Vec3& b)
-        { return MATH::closest_point_on_line(p, a, b); }
-};
-
-
-
-static void registerAngelScript_math(asIScriptEngine *engine)
-{
-    int r;
+    int r; Q_UNUSED(r);
 
     // constants
     {
-        static float pi = PI;
-        static float two_pi = TWO_PI;
-        static float half_pi = HALF_PI;
-        static float sqrt2 = SQRT_2;
-        static float sqrt3 = std::sqrt(3.f);
-        r = engine->RegisterGlobalProperty("const float PI", &pi); assert( r>=0 );
-        r = engine->RegisterGlobalProperty("const float TWO_PI", &two_pi); assert( r>=0 );
-        r = engine->RegisterGlobalProperty("const float TAU", &two_pi); assert( r>=0 );
-        r = engine->RegisterGlobalProperty("const float HALF", &half_pi); assert( r>=0 );
-        r = engine->RegisterGlobalProperty("const float SQRT2", &sqrt2); assert( r>=0 );
-        r = engine->RegisterGlobalProperty("const float SQRT3", &sqrt3); assert( r>=0 );
+        static F pi = PI;
+        static F two_pi = TWO_PI;
+        static F half_pi = HALF_PI;
+        static F sqrt2 = SQRT_2;
+        static F sqrt3 = std::sqrt(F(3));
+        static F sqrt4 = std::sqrt(F(4));
+        static F sqrt5 = std::sqrt(F(5));
+        static F sqrt6 = std::sqrt(F(6));
+        MO__REG_PROPERTY("const %1 PI%2", &pi);
+        MO__REG_PROPERTY("const %1 TWO_PI%2", &two_pi);
+        MO__REG_PROPERTY("const %1 TAU%2", &two_pi);
+        MO__REG_PROPERTY("const %1 HALF_PI%2", &half_pi);
+        MO__REG_PROPERTY("const %1 SQRT2%2", &sqrt2);
+        MO__REG_PROPERTY("const %1 SQRT3%2", &sqrt3);
+        MO__REG_PROPERTY("const %1 SQRT4%2", &sqrt4);
+        MO__REG_PROPERTY("const %1 SQRT5%2", &sqrt5);
+        MO__REG_PROPERTY("const %1 SQRT6%2", &sqrt6);
     }
+
+    MO__REG_FUNC("%1 abs(%1)", MATH::advanced<F>::abs);
+    MO__REG_FUNC("%1 floor(%1)", MATH::advanced<F>::floor);
+    MO__REG_FUNC("%1 ceil(%1)", MATH::advanced<F>::ceil);
+    MO__REG_FUNC("%1 round(%1)", MATH::advanced<F>::round);
+    MO__REG_FUNC("%1 frac(%1)", MATH::advanced<F>::frac);
+    MO__REG_FUNC("%1 clamp(%1, %1, %1)", MATH::advanced<F>::clamp);
+    MO__REG_FUNC("%1 quant(%1, %1)", MATH::advanced<F>::quant);
+    MO__REG_FUNC("%1 mod(%1, %1)", MATH::advanced<F>::mod);
+    MO__REG_FUNC("%1 smod(%1, %1)", MATH::advanced<F>::smod);
+    MO__REG_FUNC("%1 min(%1, %1)", MATH::advanced<F>::min);
+    MO__REG_FUNC("%1 min(%1, %1, %1)", MATH::advanced<F>::min3);
+    MO__REG_FUNC("%1 min(%1, %1, %1, %1)", MATH::advanced<F>::min4);
+    MO__REG_FUNC("%1 min(%1, %1, %1, %1, %1)", MATH::advanced<F>::min5);
+    MO__REG_FUNC("%1 max(%1, %1)", MATH::advanced<F>::max);
+    MO__REG_FUNC("%1 max(%1, %1, %1)", MATH::advanced<F>::max3);
+    MO__REG_FUNC("%1 max(%1, %1, %1, %1)", MATH::advanced<F>::max4);
+    MO__REG_FUNC("%1 max(%1, %1, %1, %1, %1)", MATH::advanced<F>::max5);
+
+    MO__REG_FUNC("%1 sin(%1)", MATH::advanced<F>::sin);
+    MO__REG_FUNC("%1 sinh(%1)", MATH::advanced<F>::sinh);
+    MO__REG_FUNC("%1 asin(%1)", MATH::advanced<F>::asin);
+    MO__REG_FUNC("%1 asinh(%1)", MATH::advanced<F>::asinh);
+    MO__REG_FUNC("%1 cos(%1)", MATH::advanced<F>::cos);
+    MO__REG_FUNC("%1 cosh(%1)", MATH::advanced<F>::cosh);
+    MO__REG_FUNC("%1 acos(%1)", MATH::advanced<F>::acos);
+    MO__REG_FUNC("%1 acosh(%1)", MATH::advanced<F>::acosh);
+    MO__REG_FUNC("%1 tan(%1)", MATH::advanced<F>::tan);
+    MO__REG_FUNC("%1 tanh(%1)", MATH::advanced<F>::tanh);
+    MO__REG_FUNC("%1 atan(%1)", MATH::advanced<F>::atan);
+    MO__REG_FUNC("%1 atan(%1, %1)", MATH::advanced<F>::atan_2);
+    MO__REG_FUNC("%1 atanh(%1)", MATH::advanced<F>::atanh);
+    MO__REG_FUNC("%1 sinc(%1)", MATH::advanced<F>::sinc);
+    MO__REG_FUNC("%1 exp(%1)", MATH::advanced<F>::exp);
+    MO__REG_FUNC("%1 log(%1)", MATH::advanced<F>::log);
+    MO__REG_FUNC("%1 log2(%1)", MATH::advanced<F>::log2);
+    MO__REG_FUNC("%1 log10(%1)", MATH::advanced<F>::log10);
+    MO__REG_FUNC("%1 pow(%1 v, %1 exponent)", MATH::advanced<F>::pow);
+    MO__REG_FUNC("%1 sqrt(%1)", MATH::advanced<F>::sqrt);
+    MO__REG_FUNC("%1 root(%1 v, %1 root_number)", MATH::advanced<F>::root);
+
+    MO__REG_FUNC("%1 logistic(%1)", MATH::advanced<F>::logistic);
+    MO__REG_FUNC("%1 erf(%1)", MATH::advanced<F>::erf);
+    MO__REG_FUNC("%1 erfc(%1)", MATH::advanced<F>::erfc);
+    MO__REG_FUNC("%1 gauss(%1 x, %1 deviation)", MATH::advanced<F>::gauss);
+    MO__REG_FUNC("%1 gauss(%1 x, %1 deviation, %1 center)", MATH::advanced<F>::gauss_3);
+    MO__REG_FUNC("%1 cauchy(%1 x, %1 deviation)", MATH::advanced<F>::cauchy);
+    MO__REG_FUNC("%1 cauchy(%1 x, %1 deviation, %1 center)", MATH::advanced<F>::cauchy_3);
+
+    MO__REG_FUNC("%1 mix(%1 v0, %1 v1, %1 mix_val)", MATH::advanced<F>::mix);
+    MO__REG_FUNC("%1 step(%1 edge0, %1 edge1, %1 v)", MATH::advanced<F>::smoothstep);
+    MO__REG_FUNC("%1 smoothstep(%1 edge0, %1 edge1, %1 v)", MATH::advanced<F>::smoothstep);
+    MO__REG_FUNC("%1 smoothladder(%1 v, %1 step)", MATH::advanced<F>::smoothladder);
+    MO__REG_FUNC("%1 smootherstep(%1 edge0, %1 edge1, %1 v)", MATH::advanced<F>::smoothstep);
+    MO__REG_FUNC("%1 smootherladder(%1 v, %1 step)", MATH::advanced<F>::smootherladder);
+
+    MO__REG_FUNC("%1 beta(%1 x)", MATH::advanced<F>::beta);
+    MO__REG_FUNC("%1 beta(%1 x, %1 y)", MATH::advanced<F>::beta_2);
+    MO__REG_FUNC("%1 beta(%1 x, %1 y, %1 z)", MATH::advanced<F>::beta_3);
+    MO__REG_FUNC("%1 beta(%1 x, %1 y, %1 z, %1 w)", MATH::advanced<F>::beta_4);
+
+    MO__REG_FUNC("%1 length(%1 x, %1 y)", MATH::advanced<F>::mag);
+    MO__REG_FUNC("%1 length(%1 x, %1 y, %1 z)", MATH::advanced<F>::mag_3);
+    MO__REG_FUNC("%1 length(%1 x, %1 y, %1 z, %1 w)", MATH::advanced<F>::mag_4);
+
+    MO__REG_FUNC("%1 noise(%1 x)", MATH::advanced<F>::noise);
+    MO__REG_FUNC("%1 noise(%1 x, %1 y)", MATH::advanced<F>::noise_2);
+    MO__REG_FUNC("%1 noise(%1 x, %1 y, %1 z)", MATH::advanced<F>::noise_3);
+
+    MO__REG_FUNC("%1 mandel(%1 real, %1 imag)", MATH::advanced<F>::mandel);
+    MO__REG_FUNC("%1 mandel(%1 real, %1 imag, uint max_iterations)", MATH::advanced<F>::mandel_3);
+    MO__REG_FUNC("uint mandeli(%1 real, %1 imag)", MATH::advanced<F>::mandeli);
+    MO__REG_FUNC("uint mandeli(%1 real, %1 imag, uint max_iterations)", MATH::advanced<F>::mandeli_3);
+    MO__REG_FUNC("%1 julia(%1 real_start, %1 imag_start, %1 real, %1 imag)", MATH::advanced<F>::julia);
+    MO__REG_FUNC("uint juliai(%1 real_start, %1 imag_start, %1 real, %1 imag)", MATH::advanced<F>::juliai);
+}
+
+#undef MO__REG_FUNC
+#undef MO__REG_PROPERTY
+#undef MO__STR
 
 #define MO__REG_FUNC(decl__, name__) \
     r = engine->RegisterGlobalFunction(decl__, asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
 
-    MO__REG_FUNC("float abs(float)", MATH::advanced<float>::abs);
-    MO__REG_FUNC("float floor(float)", MATH::advanced<float>::floor);
-    MO__REG_FUNC("float ceil(float)", MATH::advanced<float>::ceil);
-    MO__REG_FUNC("float round(float)", MATH::advanced<float>::round);
-    MO__REG_FUNC("float frac(float)", MATH::advanced<float>::frac);
-    MO__REG_FUNC("float clamp(float, float, float)", MATH::advanced<float>::clamp);
-    MO__REG_FUNC("float quant(float, float)", MATH::advanced<float>::quant);
-    MO__REG_FUNC("float mod(float, float)", MATH::advanced<float>::mod);
-    MO__REG_FUNC("float smod(float, float)", MATH::advanced<float>::smod);
-    MO__REG_FUNC("float min(float, float)", MATH::advanced<float>::min);
-    MO__REG_FUNC("float min(float, float, float)", MATH::advanced<float>::min2);
-    MO__REG_FUNC("float min(float, float, float, float)", MATH::advanced<float>::min3);
-    MO__REG_FUNC("float max(float, float)", MATH::advanced<float>::max);
-    MO__REG_FUNC("float max(float, float, float)", MATH::advanced<float>::max2);
-    MO__REG_FUNC("float max(float, float, float, float)", MATH::advanced<float>::max3);
 
-    MO__REG_FUNC("float sin(float)", MATH::advanced<float>::sin);
-    MO__REG_FUNC("float sinh(float)", MATH::advanced<float>::sinh);
-    MO__REG_FUNC("float asin(float)", MATH::advanced<float>::asin);
-    MO__REG_FUNC("float asinh(float)", MATH::advanced<float>::asinh);
-    MO__REG_FUNC("float cos(float)", MATH::advanced<float>::cos);
-    MO__REG_FUNC("float cosh(float)", MATH::advanced<float>::cosh);
-    MO__REG_FUNC("float acos(float)", MATH::advanced<float>::acos);
-    MO__REG_FUNC("float acosh(float)", MATH::advanced<float>::acosh);
-    MO__REG_FUNC("float tan(float)", MATH::advanced<float>::tan);
-    MO__REG_FUNC("float tanh(float)", MATH::advanced<float>::tanh);
-    MO__REG_FUNC("float atan(float)", MATH::advanced<float>::atan);
-    MO__REG_FUNC("float atan(float, float)", MATH::advanced<float>::atan_2);
-    MO__REG_FUNC("float atanh(float)", MATH::advanced<float>::atanh);
-    MO__REG_FUNC("float sinc(float)", MATH::advanced<float>::sinc);
-    MO__REG_FUNC("float exp(float)", MATH::advanced<float>::exp);
-    MO__REG_FUNC("float log(float)", MATH::advanced<float>::log);
-    MO__REG_FUNC("float log2(float)", MATH::advanced<float>::log2);
-    MO__REG_FUNC("float log10(float)", MATH::advanced<float>::log10);
-    MO__REG_FUNC("float pow(float, float)", MATH::advanced<float>::pow);
-    MO__REG_FUNC("float sqrt(float)", MATH::advanced<float>::sqrt);
-    MO__REG_FUNC("float root(float, float)", MATH::advanced<float>::root);
-
-    MO__REG_FUNC("float logistic(float)", MATH::advanced<float>::logistic);
-    MO__REG_FUNC("float erf(float)", MATH::advanced<float>::erf);
-    MO__REG_FUNC("float erfc(float)", MATH::advanced<float>::erfc);
-    MO__REG_FUNC("float gauss(float, float)", MATH::advanced<float>::gauss);
-    MO__REG_FUNC("float gauss(float, float, float)", MATH::advanced<float>::gauss_3);
-    MO__REG_FUNC("float cauchy(float, float)", MATH::advanced<float>::cauchy);
-    MO__REG_FUNC("float cauchy(float, float, float)", MATH::advanced<float>::cauchy_3);
-
-    MO__REG_FUNC("float mix(float, float, float)", MATH::advanced<float>::mix);
-    MO__REG_FUNC("float smoothstep(float, float, float)", MATH::advanced<float>::smoothstep);
-    MO__REG_FUNC("float smoothladder(float, float)", MATH::advanced<float>::smootherladder);
-    MO__REG_FUNC("float smootherstep(float, float, float)", MATH::advanced<float>::smoothstep);
-    MO__REG_FUNC("float smootherladder(float, float)", MATH::advanced<float>::smootherladder);
-
-    MO__REG_FUNC("float beta(float)", MATH::advanced<float>::beta);
-    MO__REG_FUNC("float beta(float, float)", MATH::advanced<float>::beta_2);
-    MO__REG_FUNC("float beta(float, float, float)", MATH::advanced<float>::beta_3);
-    MO__REG_FUNC("float beta(float, float, float, float)", MATH::advanced<float>::beta_4);
-
-    MO__REG_FUNC("float length(float, float)", MATH::advanced<float>::mag);
-    MO__REG_FUNC("float length(float, float, float)", MATH::advanced<float>::mag_3);
-    MO__REG_FUNC("float length(float, float, float, float)", MATH::advanced<float>::mag_4);
-
-    MO__REG_FUNC("float noise(float)", MATH::advanced<float>::noise);
-    MO__REG_FUNC("float noise(float, float)", MATH::advanced<float>::noise_2);
-    MO__REG_FUNC("float noise(float, float, float)", MATH::advanced<float>::noise_3);
-
-    MO__REG_FUNC("vec3 closest_point_on_line(const vec3 &in point, const vec3 &in lineA, const vec3 &in lineB)",
-                                         wrapper::closest_point_on_line);
-    MO__REG_FUNC("bool intersect_ray_triangle(const vec3 &in ray_origin, "
-                                         "const vec3 &in ray_direction, "
-                                         "const vec3 &in t0, const vec3 &in t1, const vec3 &in t2)",
-                                         wrapper::intersect_ray_triangle);
-    MO__REG_FUNC("bool intersect_ray_triangle(const vec3 &in ray_origin, "
-                                         "const vec3 &in ray_direction, "
-                                         "const vec3 &in t0, const vec3 &in t1, const vec3 &in t2, "
-                                         "vec3 &out pos)",
-                                         wrapper::intersect_ray_triangle_p);
-    MO__REG_FUNC("bool intersect_ray_sphere(const vec3 &in ray_origin, "
-                                         "const vec3 &in ray_direction, "
-                                         "const vec3 &in sphere_center, "
-                                         "float sphere_radius, float &out depth1, float &out depth2)",
-                                         wrapper::intersect_ray_sphere_dd);
-    MO__REG_FUNC("bool intersect_ray_sphere(const vec3 &in ray_origin, "
-                                         "const vec3 &in ray_direction, "
-                                         "const vec3 &in sphere_center, "
-                                         "float sphere_radius)",
-                                         wrapper::intersect_ray_sphere);
+static void register_math_int_funcs(asIScriptEngine *engine)
+{
+    int r; Q_UNUSED(r);
 
     // ------- integer functions ----------
 
     MO__REG_FUNC("bool is_prime(int)", MATH::advanced_int<int>::is_prime);
-    MO__REG_FUNC("bool is_harmonic(int, int)", MATH::advanced_int<int>::is_harmonic_2);
-    MO__REG_FUNC("bool is_harmonic(int, int, int)", MATH::advanced_int<int>::is_harmonic_3);
+    MO__REG_FUNC("bool is_harmonic(int x, int y)", MATH::advanced_int<int>::is_harmonic_2);
+    MO__REG_FUNC("bool is_harmonic(int x, int y, int z)", MATH::advanced_int<int>::is_harmonic_3);
     MO__REG_FUNC("bool is_congruent(int a, int b, int m)", MATH::advanced_int<int>::is_congruent);
-    MO__REG_FUNC("int quant(int, int)", MATH::advanced_int<int>::quant);
+    MO__REG_FUNC("int sign(int x)", MATH::advanced_int<int>::sign);
+    MO__REG_FUNC("int quant(int x, int step)", MATH::advanced_int<int>::quant);
     MO__REG_FUNC("int num_div(int)", MATH::advanced_int<int>::num_div);
     MO__REG_FUNC("int sum_div(int)", MATH::advanced_int<int>::sum_div);
     MO__REG_FUNC("int prod_div(int)", MATH::advanced_int<int>::prod_div);
     MO__REG_FUNC("int next_div(int x, int d)", MATH::advanced_int<int>::next_div);
     MO__REG_FUNC("int gcd(int, int)", MATH::advanced_int<int>::gcd);
-    MO__REG_FUNC("int harmonic(int, int)", MATH::advanced_int<int>::harmonic_2);
-    MO__REG_FUNC("int harmonic(int, int, int)", MATH::advanced_int<int>::harmonic_3);
+    MO__REG_FUNC("int harmonic(int x, int y)", MATH::advanced_int<int>::harmonic_2);
+    MO__REG_FUNC("int harmonic(int x, int y, int z)", MATH::advanced_int<int>::harmonic_3);
     MO__REG_FUNC("int factorial(int)", MATH::advanced_int<int>::factorial);
-    MO__REG_FUNC("int num_digits(int x, int base)", MATH::advanced_int<int>::num_digits);
+    MO__REG_FUNC("int num_digits(int x, int base = 10)", MATH::advanced_int<int>::num_digits);
     MO__REG_FUNC("int ulam_spiral(int x, int y)", MATH::advanced_int<int>::ulam_spiral);
-    MO__REG_FUNC("int ulam_spiral(int x, int y, int w)", MATH::advanced_int<int>::ulam_spiral_width);
+    MO__REG_FUNC("int ulam_spiral(int x, int y, int width)", MATH::advanced_int<int>::ulam_spiral_width);
     MO__REG_FUNC("int tri_spiral(int x, int y)", MATH::advanced_int<int>::ulam_spiral);
-    MO__REG_FUNC("int fibonacci(int x)", MATH::advanced_int<int>::fibonacci);
-
-#undef MO__REG_FUNC
+    MO__REG_FUNC("int fibonacci(int num)", MATH::advanced_int<int>::fibonacci);
 
 }
+
+/* XXX to be moved to vector
+static void register_math_funcs_vec(asIScriptEngine *engine)
+{
+    int r;
+
+#define MO__REG_FUNC(decl__, name__) \
+    r = engine->RegisterGlobalFunction(decl__, asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
+
+    MO__REG_FUNC("float beta(float x, float y)", MATH::advanced<float>::beta_2);
+    MO__REG_FUNC("float beta(float x, float y, float z)", MATH::advanced<float>::beta_3);
+    MO__REG_FUNC("float beta(float x, float y, float z, float w)", MATH::advanced<float>::beta_4);
+
+    MO__REG_FUNC("float length(float x, float y)", MATH::advanced<float>::mag);
+    MO__REG_FUNC("float length(float x, float y, float z)", MATH::advanced<float>::mag_3);
+    MO__REG_FUNC("float length(float x, float y, float z, float w)", MATH::advanced<float>::mag_4);
+
+    MO__REG_FUNC("float noise(float x)", MATH::advanced<float>::noise);
+    MO__REG_FUNC("float noise(float x, float y)", MATH::advanced<float>::noise_2);
+    MO__REG_FUNC("float noise(float x, float y, float z)", MATH::advanced<float>::noise_3);
+
+    MO__REG_FUNC("float mandel(float real, float imag)", MATH::advanced<float>::mandel);
+    MO__REG_FUNC("float mandel(float real, float imag, uint max_iterations)", MATH::advanced<float>::mandel_3);
+    MO__REG_FUNC("uint mandeli(float real, float imag)", MATH::advanced<float>::mandeli);
+    MO__REG_FUNC("uint mandeli(float real, float imag, uint max_iterations)", MATH::advanced<float>::mandeli_3);
+    MO__REG_FUNC("float julia(float real_start, float imag_start, float real, float imag)", MATH::advanced<float>::julia);
+    MO__REG_FUNC("uint juliai(float real_start, float imag_start, float real, float imag)", MATH::advanced<float>::juliai);
+
+#undef MO__REG_FUNC
+}
+*/
 
 } // namespace native
 
@@ -264,8 +270,10 @@ void registerAngelScript_math(asIScriptEngine *engine)
     }
     else
     {
-        native::registerAngelScript_math(engine);
-        native::registerAngelScript_rnd(engine);
+        native::register_math_funcs<float>(engine, "float", "");
+        native::register_math_funcs<double>(engine, "double", "d");
+        native::register_math_int_funcs(engine);
+        native::register_rnd(engine);
     }
 }
 

@@ -1038,8 +1038,18 @@ void Scene::calculateSceneTransform_(uint thread, Double time)
 void Scene::runScripts()
 {
     for (auto o : allObjects_)
-        if (auto script = qobject_cast<AScriptObject*>(o))
+    if (auto script = qobject_cast<AScriptObject*>(o))
+    {
+        try
+        {
             script->runScript();
+        }
+        catch (const Exception & e)
+        {
+            MO_WARNING("The script object '" << script->name() << "' failed:\n"
+                       << e.what());
+        }
+    }
 }
 
 void Scene::lockRead_()

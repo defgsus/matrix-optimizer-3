@@ -24,6 +24,7 @@
 #include "math/constants.h"
 #include "math/vector.h"
 #include "math/advanced.h"
+#include "math/intersection.h"
 
 /** @todo NEEDS ALL BE TESTED PROPERLY */
 
@@ -214,6 +215,42 @@ struct vecfunc
                                                                            glm::clamp(c.z, Float(0), Float(1)),
                                                                            glm::clamp(c.w, Float(0), Float(1)))); }
 
+    static bool intersect_ray_sphere(const Vec3& ray_origin,
+                                     const Vec3& ray_direction,
+                                     const Vec3& sphere_center,
+                                     Float sphere_radius)
+    { return MATH::intersect_ray_sphere(ray_origin, ray_direction, sphere_center, sphere_radius); }
+
+    static bool intersect_ray_sphere_dd(const Vec3& ray_origin,
+                                     const Vec3& ray_direction,
+                                     const Vec3& sphere_center,
+                                     Float sphere_radius,
+                                     Float & depth1,
+                                     Float & depth2)
+    { return MATH::intersect_ray_sphere(ray_origin, ray_direction, sphere_center, sphere_radius, &depth1, &depth2); }
+
+    static bool intersect_ray_triangle(const Vec3& ray_origin,
+                                       const Vec3& ray_direction,
+                                       const Vec3& t0, const Vec3& t1, const Vec3& t2)
+    { return MATH::intersect_ray_triangle(ray_origin, ray_direction, t0,t1,t2); }
+
+    static bool intersect_ray_triangle_p(const Vec3& ray_origin,
+                                         const Vec3& ray_direction,
+                                         const Vec3& t0, const Vec3& t1, const Vec3& t2,
+                                         Vec3& pos)
+    { return MATH::intersect_ray_triangle(ray_origin, ray_direction, t0,t1,t2, &pos); }
+
+    static Vec3 closest_point_on_line(const Vec3& p, const Vec3& a, const Vec3& b)
+        { return MATH::closest_point_on_line(p, a, b); }
+
+    static float mandel(const Vec2& ri) { return MATH::advanced<Float>::mandel(ri.x, ri.y); }
+    static uint mandeli(const Vec2& ri) { return MATH::advanced<Float>::mandeli(ri.x, ri.y); }
+    static float mandel3(const Vec2& ri, uint maxiter) { return MATH::advanced<Float>::mandel_3(ri.x, ri.y, maxiter); }
+    static uint mandeli3(const Vec2& ri, uint maxiter) { return MATH::advanced<Float>::mandeli_3(ri.x, ri.y, maxiter); }
+
+    static float julia(const Vec2& start, const Vec2& ri) { return MATH::advanced<Float>::julia(start.x, start.y, ri.x, ri.y); }
+    static uint juliai(const Vec2& start, const Vec2& ri) { return MATH::advanced<Float>::juliai(start.x, start.y, ri.x, ri.y); }
+
 };
 
 //--------------------------------
@@ -368,6 +405,12 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
 
     MO__REG_FUNC("%1 ulam_spiral(int n)", vecfunc<Vec2>::ulam_spiral);
 
+    MO__REG_FUNC("float mandel(const %1 &in real_and_imag)", vecfunc<Vec2>::mandel);
+    MO__REG_FUNC("float mandel(const %1 &in real_and_imag, uint max_iterations)", vecfunc<Vec2>::mandel3);
+    MO__REG_FUNC("uint mandeli(const %1 &in real_and_imag)", vecfunc<Vec2>::mandeli);
+    MO__REG_FUNC("uint mandeli(const %1 &in real_and_imag, uint max_iterations)", vecfunc<Vec2>::mandeli3);
+    MO__REG_FUNC("float julia(const %1 &in start, const %1 &in real_and_imag)", vecfunc<Vec2>::julia);
+    MO__REG_FUNC("uint juliai(const %1 &in start, const %1 &in real_and_imag)", vecfunc<Vec2>::juliai);
 }
 
 /** Specific stuff for 3 */
@@ -421,6 +464,28 @@ void register_vector_3(asIScriptEngine *engine)
 
     MO__REG_FUNC("%1 euclidean2polar(const %1 &in)", vecfunc<Vec3>::euclidean2polar);
     MO__REG_FUNC("%1 polar2euclidean(const %1 &in)", vecfunc<Vec3>::polar2euclidean);
+
+    MO__REG_FUNC("%1 closest_point_on_line(const %1 &in point, const %1 &in lineA, const %1 &in lineB)",
+                                         vecfunc<Vec3>::closest_point_on_line);
+    MO__REG_FUNC("bool intersect_ray_triangle(const %1 &in ray_origin, "
+                                         "const %1 &in ray_direction, "
+                                         "const %1 &in t0, const %1 &in t1, const %1 &in t2)",
+                                         vecfunc<Vec3>::intersect_ray_triangle);
+    MO__REG_FUNC("bool intersect_ray_triangle(const %1 &in ray_origin, "
+                                         "const %1 &in ray_direction, "
+                                         "const %1 &in t0, const %1 &in t1, const %1 &in t2, "
+                                         "%1 &out pos)",
+                                         vecfunc<Vec3>::intersect_ray_triangle_p);
+    MO__REG_FUNC("bool intersect_ray_sphere(const %1 &in ray_origin, "
+                                         "const %1 &in ray_direction, "
+                                         "const %1 &in sphere_center, "
+                                         "float sphere_radius, float &out depth1, float &out depth2)",
+                                         vecfunc<Vec3>::intersect_ray_sphere_dd);
+    MO__REG_FUNC("bool intersect_ray_sphere(const %1 &in ray_origin, "
+                                         "const %1 &in ray_direction, "
+                                         "const %1 &in sphere_center, "
+                                         "float sphere_radius)",
+                                         vecfunc<Vec3>::intersect_ray_sphere);
 }
 
 

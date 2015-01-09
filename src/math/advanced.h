@@ -434,14 +434,17 @@ struct advanced
     static F frac			(F A) { return A - std::floor(A); }
     static F clamp          (F A, F B, F C) { return std::min(std::max(A, B), C); }
     static F quant          (F A, F B) { return std::floor(A / B) * B; }
-    static F mod  			(F A, F B) { return std::fmod(A, B); }
-    static F smod  			(F A, F B) { return (A<F(0))? std::fmod(A, B) : B - std::fmod(-A, B); }
+    static F sign           (F A) { return A > F(0) ? F(1) : A < F(0) ? F(-1) : F(0); }
+    static F mod  			(F A, F B) { return B == F(0) ? F(0) : std::fmod(A, B); }
+    static F smod  			(F A, F B) { return B == F(0) ? F(0) : ( A > F(0) ? std::fmod(A, B) : B - std::fmod(-A, B) ); }
     static F min			(F A, F B) { return std::min(A, B); }
-    static F min2			(F A, F B, F C) { return std::min(A, std::min(B, C)); }
-    static F min3			(F A, F B, F C, F D) { return std::min(A, std::min(B, std::min(C, D))); }
+    static F min3			(F A, F B, F C) { return std::min(A, std::min(B, C)); }
+    static F min4			(F A, F B, F C, F D) { return std::min(A, std::min(B, std::min(C, D))); }
+    static F min5			(F A, F B, F C, F D, F E) { return std::min(A, std::min(B, std::min(C, std::min(D, E)))); }
     static F max			(F A, F B) { return std::max(A, B); }
-    static F max2			(F A, F B, F C) { return std::max(A, std::max(B, C)); }
-    static F max3			(F A, F B, F C, F D) { return std::max(A, std::max(B, std::max(C, D))); }
+    static F max3			(F A, F B, F C) { return std::max(A, std::max(B, C)); }
+    static F max4			(F A, F B, F C, F D) { return std::max(A, std::max(B, std::max(C, D))); }
+    static F max5			(F A, F B, F C, F D, F E) { return std::max(A, std::max(B, std::max(C, std::max(D, E)))); }
 
     // ------------------- 'scientific' --------------------------
 
@@ -488,6 +491,7 @@ struct advanced
 
     static F mix             (F A, F B, F C) { return A + C * (B - A); }
 
+    static F step            (F A, F B, F C) { return MO::MATH::linearstep(A, B, C); }
     static F smoothstep      (F A, F B, F C) { return MO::MATH::smoothstep(A, B, C); }
     static F smootherstep    (F A, F B, F C) { return MO::MATH::smootherstep(A, B, C); }
 
@@ -591,15 +595,14 @@ struct advanced
     }
 
     // takes x,y position, returns iteration
-    static F mandeli          (F A, F B)
+    static uint mandeli          (F A, F B)
     {
-        F
-            x0 = A,
+        F   x0 = A,
             y0 = B,
             x = 0.0,
             y = 0.0,
             tmp = 0.0;
-        int iter = 0;
+        uint iter = 0;
         while (iter < 1000)
         {
             const F x2 = x*x,
@@ -638,7 +641,7 @@ struct advanced
     }
 
     // takes x,y position and maxiter, returns iteration
-    static F mandeli_3        (F A, F B, uint maxiter)
+    static uint mandeli_3        (F A, F B, uint maxiter)
     {
         F
             x0 = A,
@@ -684,7 +687,7 @@ struct advanced
         return sqrt(z);
     }
 
-    static F juliai          (F A, F B, F C, F D)
+    static uint juliai          (F A, F B, F C, F D)
     {
         F
             x0 = C,
@@ -692,7 +695,7 @@ struct advanced
             x = A,
             y = B,
             tmp = 0.0;
-        int iter = 0;
+        uint iter = 0;
         while (iter < 1000)
         {
             const F x2 = x*x,
