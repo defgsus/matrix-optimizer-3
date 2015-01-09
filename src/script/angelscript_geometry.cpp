@@ -487,9 +487,9 @@ public:
                 s.context->SetArgAddress(0, &tmp);
                 int r = s.context->Execute();
                 if( r == asEXECUTION_EXCEPTION )
-                    MO_WARNING("An exception occured in the distance function: " << s.context->GetExceptionString());
-                if( r != asEXECUTION_FINISHED )
-                    MO_WARNING("Execution of distance angelscript function failed " << s.context->GetReturnFloat())
+                    MO_WARNING("An exception occured in the distance function: " << s.context->GetExceptionString())
+                else if( r != asEXECUTION_FINISHED )
+                    MO_WARNING("Execution of distance ended prematurely (result = " << s.context->GetReturnFloat() << ")")
                 else
                     return s.context->GetReturnFloat();
             }
