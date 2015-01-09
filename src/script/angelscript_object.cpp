@@ -34,6 +34,7 @@
 #include "object/param/parametertimeline1d.h"
 #include "object/param/parameterselect.h"
 #include "object/util/objecteditor.h"
+#include "audio/tool/waveform.h"
 #include "types/refcounted.h"
 #include "io/log.h"
 
@@ -48,13 +49,43 @@ template <class OBJ>
 class ObjectAnyAS;
 
 typedef ObjectAnyAS<Group> GroupAS;
+typedef ObjectAnyAS<Model3d> ModelAS;
 
 class ParameterAS;
+
+// helper to find an object by name
+// (XXX needs to be extended to accept paths)
+Object * find_name(Object * root, const QString& n)
+{
+    if (root->name() == n)
+        return root;
+
+    for (auto c : root->childObjects())
+        if (auto o = find_name(c, n))
+            return o;
+
+    return 0;
+}
+
+// helper to find a specific object class with specific name
+// (XXX needs to be extended to accept paths)
+template <class OBJ>
+OBJ * find_type_name(Object * root, const QString& n)
+{
+    if (root->name() == n)
+        if (auto o = qobject_cast<OBJ*>(root))
+            return o;
+
+    for (auto c : root->childObjects())
+        if (auto o = find_type_name<OBJ>(c, n))
+            return o;
+
+    return 0;
+}
 
 
 #define MO__EDITOR_WARNING \
     MO_WARNING("Operation on object without attached scene currently not supported")
-
 
 class ObjectAS : public RefCounted
 {
@@ -117,14 +148,7 @@ public:
     ObjectAS * parent() { return o->parentObject() ? wrap_(o->parentObject()) : 0; }
     ObjectAS * root() { return o->rootObject() ? wrap_(o->rootObject()) : 0; }
 
-    ObjectAS * findName(const StringAS& n)
-    {
-        QString qn = QString::fromUtf8(n.c_str());
-        auto obj = o->findChildObject([=](Object * o){ return o->name() == qn; });
-        if (obj)
-            return wrap_(obj);
-        return 0;
-    }
+    ObjectAS * findName(const StringAS& n) { auto obj = find_name(o, MO::toString(n)); return obj ? wrap_(obj) : 0; }
 
     bool isSequence() const { return qobject_cast<Sequence*>(o) != 0; }
     bool isGroup() const { return qobject_cast<Group*>(o) != 0; }
@@ -215,7 +239,7 @@ public:
 
     /** Create a wrapper for new object */
     ObjectAnyAS()
-        : o         (MO::createObject<OBJ>()),
+        : o         (MO::create_object<OBJ>()),
           self      (this)
     {
 
@@ -247,7 +271,7 @@ public:
 
     /** Create a wrapper for new object */
     SequenceAS()
-        : o         (MO::createObject<SequenceFloat>()),
+        : o         (MO::create_object<SequenceFloat>()),
           self      (this)
     { }
 
@@ -283,6 +307,14 @@ public:
     Double loopEnd() const { return o->loopEnd(); }
     Double loopLength() const { return o->loopLength(); }
     Double speed() const { return o->speed(); }
+    Double frequency() const { return o->frequency(); }
+    Double amplitude() const { return o->amplitude(); }
+    Double offset() const { return o->offset(); }
+    Double phase() const { return o->phase(); }
+    Double pulsewidth() const { return o->pulseWidth(); }
+
+    int type() const { return o->sequenceType(); }
+    int oscillatorType() const { return o->oscillatorMode(); }
 
     // ------ setter ------
 
@@ -295,6 +327,14 @@ public:
     void setLoopEnd(Double t) { o->setLoopEnd(t); MO__EMIT; }
     void setLoopLength(Double t) { o->setLoopLength(t); MO__EMIT; }
     void setSpeed(Double t) { o->setSpeed(t); MO__EMIT; }
+    void setFrequency(Double t) { o->setFrequency(t); MO__EMIT; }
+    void setAmplitude(Double t) { o->setAmplitude(t); MO__EMIT; }
+    void setOffset(Double t) { o->setOffset(t); MO__EMIT; }
+    void setPhase(Double t) { o->setPhase(t); MO__EMIT; }
+    void setPulsewidth(Double t) { o->setPulseWidth(t); MO__EMIT; }
+
+    void setType(int type) { if (type>=0 && type <SequenceFloat::ST_MAX) { o->setSequenceType((SequenceFloat::SequenceType)type); MO__EMIT; } }
+    void setOscillatorType(int type) { if (type>=0 && type <AUDIO::Waveform::T_MAX_TYPES) { o->setOscillatorMode((AUDIO::Waveform::Type)type); MO__EMIT; } }
 
 #undef MO__EMIT
 
@@ -471,6 +511,28 @@ struct obj_cast
 //    static ObjectAS * castToObjectAS(From * as) { return obj_factory<Object, ObjectAS>::factory(as->o); }
 };
 
+// template to get or create a specific instance
+template <class OBJ>
+struct obj_getcreate
+{
+    template <class Wrapper>
+    static Wrapper * get(ObjectAS * self, const StringAS& nas)
+    {
+        QString n = MO::toString(nas);
+
+        // return existing
+        if (auto obj = find_type_name<OBJ>(self->o, n))
+            return new Wrapper(obj);
+
+        // create new
+        auto e = self->editor();
+        if (!e) { MO__EDITOR_WARNING; return 0; }
+        OBJ * newobj = create_object<OBJ>(n);
+        MO_ASSERT(newobj, "wrong class? " << typeid(OBJ).name());
+        e->addObject(self->o, newobj);
+        return new Wrapper(newobj);
+    }
+};
 
 // ------- nonmembers -----
 
@@ -490,7 +552,7 @@ namespace native {
 #define MO__REG_METHOD(decl__, func__) \
     r = engine->RegisterObjectMethod(typ, decl__, asMETHOD(Wrapper, func__), asCALL_THISCALL); assert( r >= 0 );
 #define MO__REG_METHOD_F(decl__, func__) \
-    r = engine->RegisterObjectMethod(typ, decl__, asFUNCTION(func__), asCALL_CDECL); assert( r >= 0 );
+    r = engine->RegisterObjectMethod(typ, decl__, asFUNCTION(func__), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 #define MO__REG_FUNC(decl__, func__) \
     r = engine->RegisterGlobalFunction(decl__, asFUNCTION(func__), asCALL_CDECL); assert( r >= 0 );
 
@@ -544,6 +606,10 @@ static void register_object_base(asIScriptEngine *engine, const char * typ)
 
     MO__REG_METHOD("Object@ find(const string &in name)", findName);
     MO__REG_METHOD("const Object@ find(const string &in name) const", findName);
+
+    MO__REG_METHOD_F("Sequence@ getSequence(const string &in name)", obj_getcreate<SequenceFloat>::get<SequenceAS>);
+    MO__REG_METHOD_F("Model@ getModel(const string &in name)", obj_getcreate<Model3d>::get<ModelAS>);
+    MO__REG_METHOD_F("Group@ getGroup(const string &in name)", obj_getcreate<Group>::get<GroupAS>);
 
     MO__REG_METHOD("uint parameterCount() const", parameterCount);
     MO__REG_METHOD("Parameter@ parameter(uint index) const", parameter);
@@ -623,10 +689,39 @@ static void register_sequence_base(asIScriptEngine *engine, const char * typ)
 //    r = engine->RegisterObjectBehaviour(typ, asBEHAVE_FACTORY,
 //        "Sequence@ f()", asFUNCTION(Wrapper::factoryNew), asCALL_CDECL); assert( r >= 0 );
 
+    // -------------------- enums ------------------------------
+
+    {
+        const char * enumType = "SequenceType";
+        r = engine->RegisterEnum(enumType); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_CONSTANT",  SequenceFloat::ST_CONSTANT); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_TIMELINE",  SequenceFloat::ST_TIMELINE); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_OSCILLATOR",  SequenceFloat::ST_OSCILLATOR); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_OSCILLATOR_WT",  SequenceFloat::ST_OSCILLATOR_WT); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_OSCILLATOR_ADD",  SequenceFloat::ST_ADD_OSC); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_OSCILLATOR_ADD_WT",  SequenceFloat::ST_ADD_WT); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_SPECTRAL",  SequenceFloat::ST_SPECTRAL_WT); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_SOUNDFILE",  SequenceFloat::ST_SOUNDFILE); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_EQUATION",  SequenceFloat::ST_EQUATION); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "SEQ_EQUATION_WT",  SequenceFloat::ST_EQUATION_WT); assert( r >= 0 );
+    }
+
+    {
+        const char * enumType = "WaveformType";
+        r = engine->RegisterEnum(enumType); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "WF_SINE",  AUDIO::Waveform::T_SINE); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "WF_COSINE",  AUDIO::Waveform::T_COSINE); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "WF_RAMP",  AUDIO::Waveform::T_RAMP); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "WF_SAW_UP",  AUDIO::Waveform::T_SAW_RISE); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "WF_SAW_DOWN",  AUDIO::Waveform::T_SAW_DECAY); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "WF_TRIANGLE",  AUDIO::Waveform::T_TRIANGLE); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "WF_SQUARE",  AUDIO::Waveform::T_SQUARE); assert( r >= 0 );
+        r = engine->RegisterEnumValue(enumType, "WF_NOISE",  AUDIO::Waveform::T_NOISE); assert( r >= 0 );
+    }
+
     // --------------- the object methods ----------------------
 
     // getter
-
 
     MO__REG_METHOD("double start() const", start);
     MO__REG_METHOD("double end() const", end);
@@ -635,6 +730,14 @@ static void register_sequence_base(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("double loopEnd() const", loopEnd);
     MO__REG_METHOD("double loopLength() const", loopLength);
     MO__REG_METHOD("double speed() const", speed);
+    MO__REG_METHOD("double frequency() const", frequency);
+    MO__REG_METHOD("double amplitude() const", amplitude);
+    MO__REG_METHOD("double offset() const", offset);
+    MO__REG_METHOD("double phase() const", phase);
+    MO__REG_METHOD("double pulsewidth() const", pulsewidth);
+
+    MO__REG_METHOD("SequenceType type() const", type);
+    MO__REG_METHOD("WaveformType waveformType() const", oscillatorType);
 
     // setter
 
@@ -645,7 +748,15 @@ static void register_sequence_base(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("void setLoopEnd(double second)", setLoopEnd);
     MO__REG_METHOD("void setLoopLength(double second)", setLoopLength);
     MO__REG_METHOD("void setSpeed(double speed)", setSpeed);
+    MO__REG_METHOD("void setFrequency(double hz)", setFrequency);
+    MO__REG_METHOD("void setAmpltide(double )", setAmplitude);
+    MO__REG_METHOD("void setOffset(double )", setOffset);
+    MO__REG_METHOD("void setPhase(double )", setPhase);
+    MO__REG_METHOD("void setPulsewidth(double )", setPulsewidth);
 
+    MO__REG_METHOD("void setType(SequenceType type)", setType);
+    MO__REG_METHOD("void setType(WaveformType type)", setOscillatorType);
+    MO__REG_METHOD("void setWaveformType(WaveformType type)", setOscillatorType);
 }
 
 template <class Wrapper>
@@ -704,18 +815,22 @@ void registerAngelScript_object(asIScriptEngine *engine)
         r = engine->RegisterObjectType("Object", 0, asOBJ_REF); assert( r >= 0 );
         r = engine->RegisterObjectType("Sequence", 0, asOBJ_REF); assert( r >= 0 );
         r = engine->RegisterObjectType("Group", 0, asOBJ_REF); assert( r >= 0 );
+        r = engine->RegisterObjectType("Model", 0, asOBJ_REF); assert( r >= 0 );
 
         // base object type for each class
         native::register_object_base<ObjectAS>(engine, "Object");
         native::register_object_base<ObjectAS>(engine, "Sequence");
         native::register_object_base<ObjectAS>(engine, "Group");
+        native::register_object_base<ObjectAS>(engine, "Model");
 
         native::register_object_construct<Sequence, SequenceAS>(engine, "Sequence");
         native::register_object_construct<Group, GroupAS>(engine, "Group");
+        native::register_object_construct<Model3d, ModelAS>(engine, "Model");
 
         native::register_casts<ObjectAS>(engine, "Object");
         native::register_casts<SequenceAS>(engine, "Sequence");
         native::register_casts<GroupAS>(engine, "Group");
+        native::register_casts<ModelAS>(engine, "Model");
 
         // specialized types
         native::register_sequence_base<SequenceAS>(engine, "Sequence");

@@ -150,7 +150,7 @@ private:
 
 /** Creates an object of specific type, or NULL if something goes wrong (which it shouldn't) */
 template <class OBJ>
-OBJ * createObject(const QString& name = "")
+OBJ * create_object(const QString& name = "")
 {
     Object * o = ObjectFactory::createObject(OBJ::staticClassName());
     if (OBJ * obj = qobject_cast<OBJ*>(o))

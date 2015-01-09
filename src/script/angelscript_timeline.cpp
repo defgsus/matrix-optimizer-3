@@ -21,8 +21,9 @@
 #include "angelscript.h"
 #include "math/timeline1d.h"
 #include "types/vector.h"
+#include "types/refcounted.h"
 #include "io/log.h"
-
+#include "io/error.h"
 
 #if 0
 #   define MO_DEBUG_TAS(arg__) MO_DEBUG(arg__)
@@ -33,12 +34,10 @@
 namespace MO {
 
 /** Ref-counted wrapper of MATH::Timeline1D for AngelScript */
-class Timeline1AS
+class Timeline1AS : public RefCounted
 {
 public:
     MATH::Timeline1D * tl;
-    int ref;
-    bool owning;
 
     typedef MATH::Timeline1D WrappedClass;
 
@@ -48,33 +47,25 @@ public:
 
     static Timeline1AS * factory() { return new Timeline1AS; }
 
-    void addRef() { ++ref; MO_DEBUG_TAS("Timeline1AS("<<this<<")::addRef() now = " << ref); }
-
-    void releaseRef() { MO_DEBUG_TAS("Timeline1AS("<<this<<")::releaseRef() now = " << (ref-1)); if (--ref == 0) delete this; }
-
     // ----- ctor -----
 
     Timeline1AS()
-        : tl    (new MATH::Timeline1D),
-          ref   (1),
-          owning(true)
+        : tl    (new MATH::Timeline1D)
     {
         MO_DEBUG_TAS("Timeline1AS("<<this<<")::Timeline1AS()");
     }
 
     Timeline1AS(MATH::Timeline1D * tl)
-        : tl    (tl),
-          ref   (1),
-          owning(false)
+        : tl    (tl)
     {
         MO_DEBUG_TAS("Timeline1AS("<<this<<")::Timeline1AS(" << tl << ")");
+        MO_ASSERT(tl, "Can't create wrapper for NULL timeline");
     }
 
     ~Timeline1AS()
     {
-        MO_DEBUG_TAS("Timeline1AS("<<this<<")::~Timeline1AS() owning=" << owning);
-        if (owning)
-            delete tl;
+        MO_DEBUG_TAS("Timeline1AS("<<this<<")::~Timeline1AS()");
+        tl->releaseRef();
     }
 
     // ------ interface -------
@@ -131,10 +122,9 @@ public:
     This class supports Vec as value type.
     So long as we don't have this timeline natively we cheat by using x timelines */
 template <class Vec, unsigned int NUM>
-class TimelineXAS
+class TimelineXAS : public RefCounted
 {
     MATH::Timeline1D tl[NUM];
-    int ref;
 public:
 
     typedef MATH::Timeline1D WrappedClass;
@@ -145,14 +135,9 @@ public:
 
     static TimelineXAS<Vec,NUM> * factory() { return new TimelineXAS<Vec,NUM>; }
 
-    void addRef() { ++ref; MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::addRef() now = " << ref); }
-    void releaseRef() { MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::releaseRef() now = " << (ref-1));
-                        if (--ref == 0) delete this; }
-
     // ----- ctor -----
 
     TimelineXAS()
-        : ref   (1)
     {
         MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::Timeline1AS()");
     }

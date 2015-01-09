@@ -18,6 +18,7 @@
 #include <QString>
 
 #include "types/float.h"
+#include "types/refcounted.h"
 
 namespace MO {
 namespace IO { class DataStream; }
@@ -29,7 +30,7 @@ namespace MATH {
     that means you can set 4096 different points per one-second-of-timeline and time can be maximally
     +/- 524287 seconds or ~8738 minutes or ~145 hours.</p>
 */
-class Timeline1D
+class Timeline1D : public RefCounted
 {
     public:
 
@@ -117,9 +118,7 @@ class Timeline1D
 
     /** default constructor, no parameters */
     Timeline1D();
-
-    /** default destructor, wipes out everything */
-    virtual ~Timeline1D();
+    ~Timeline1D();
 
     // ------ copy assignment --------
 
