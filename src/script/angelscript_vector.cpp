@@ -137,6 +137,12 @@ struct vecfunc
     static Float distance(const Vec& v, const Vec& n) { return glm::distance(v, n); }
     static Float dot(const Vec& a, const Vec& b) { return glm::dot(a, b); }
 
+    static Float beta(const Vec& v)
+    {
+        Float x = v[0]*v[0]; for (int i=1; i<vectraits<Vec>::num; ++i) x += v[i]*v[i];
+        x = Float(1) - x; return x > 0 ? std::sqrt(x) : 0;
+    }
+
     static Float smallest(const Vec& v)
         { Float m = v[0]; for (int i=1; i<vectraits<Vec>::num; ++i) m = std::min(m, v[i]); return m; }
     static Float largest(const Vec& v)
@@ -362,6 +368,8 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 
     MO__REG_FUNC("float smallest(const %1 &in)", vecfunc<Vec>::smallest);
     MO__REG_FUNC("float largest(const %1 &in)", vecfunc<Vec>::largest);
+
+    MO__REG_FUNC("float beta(const %1 &in)", vecfunc<Vec>::beta);
 }
 
 /** Specific stuff for 2 */
@@ -648,7 +656,6 @@ void registerAngelScript_vector(asIScriptEngine *engine)
     register_vector_mathwrapper_tmpl<Vec3>(engine, "vec3");
     register_vector_34_tmpl<Vec3>(engine, "vec3");
     register_vector_3(engine);
-
 
     // ---------------- vec4 ---------------
 

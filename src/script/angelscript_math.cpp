@@ -227,36 +227,7 @@ static void register_math_int_funcs(asIScriptEngine *engine)
 
 }
 
-/* XXX to be moved to vector
-static void register_math_funcs_vec(asIScriptEngine *engine)
-{
-    int r;
 
-#define MO__REG_FUNC(decl__, name__) \
-    r = engine->RegisterGlobalFunction(decl__, asFUNCTION(name__), asCALL_CDECL); assert( r >= 0 );
-
-    MO__REG_FUNC("float beta(float x, float y)", MATH::advanced<float>::beta_2);
-    MO__REG_FUNC("float beta(float x, float y, float z)", MATH::advanced<float>::beta_3);
-    MO__REG_FUNC("float beta(float x, float y, float z, float w)", MATH::advanced<float>::beta_4);
-
-    MO__REG_FUNC("float length(float x, float y)", MATH::advanced<float>::mag);
-    MO__REG_FUNC("float length(float x, float y, float z)", MATH::advanced<float>::mag_3);
-    MO__REG_FUNC("float length(float x, float y, float z, float w)", MATH::advanced<float>::mag_4);
-
-    MO__REG_FUNC("float noise(float x)", MATH::advanced<float>::noise);
-    MO__REG_FUNC("float noise(float x, float y)", MATH::advanced<float>::noise_2);
-    MO__REG_FUNC("float noise(float x, float y, float z)", MATH::advanced<float>::noise_3);
-
-    MO__REG_FUNC("float mandel(float real, float imag)", MATH::advanced<float>::mandel);
-    MO__REG_FUNC("float mandel(float real, float imag, uint max_iterations)", MATH::advanced<float>::mandel_3);
-    MO__REG_FUNC("uint mandeli(float real, float imag)", MATH::advanced<float>::mandeli);
-    MO__REG_FUNC("uint mandeli(float real, float imag, uint max_iterations)", MATH::advanced<float>::mandeli_3);
-    MO__REG_FUNC("float julia(float real_start, float imag_start, float real, float imag)", MATH::advanced<float>::julia);
-    MO__REG_FUNC("uint juliai(float real_start, float imag_start, float real, float imag)", MATH::advanced<float>::juliai);
-
-#undef MO__REG_FUNC
-}
-*/
 
 } // namespace native
 
