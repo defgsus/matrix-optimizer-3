@@ -8,26 +8,30 @@
     <p>created 8/21/2014</p>
 */
 
+#include <QImage>
+
 #include "texturesetting.h"
-#include "io/datastream.h"
-#include "io/error.h"
-#include "io/log.h"
 #include "object/scene.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parameterint.h"
+#include "object/param/parametertext.h"
 #include "gl/texture.h"
 #include "gl/framebufferobject.h"
 #include "img/image.h"
+#include "script/angelscript_image.h"
 #include "io/filemanager.h"
+#include "io/datastream.h"
+#include "io/error.h"
+#include "io/log.h"
 
 using namespace gl;
 
 namespace MO {
 
 const QStringList TextureSetting::textureTypeNames =
-{ tr("none"), tr("file"), tr("master frame"), tr("master frame depth"),
+{ tr("none"), tr("file"), tr("angelscript"), tr("master frame"), tr("master frame depth"),
   tr("camera frame"), tr("camera frame depth") };
 
 
@@ -74,22 +78,28 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
             textureTypeNames,
             { tr("No texture will be used"),
               tr("An image will be loaded from a file"),
+              tr("An image will be created via AngelScript"),
               tr("The previous master frame is the source of the image"),
               tr("The depth information in the previous master frame is the source of the image"),
               tr("The previous frame of one of the cameras is the source of the image"),
               tr("The depth information in the previous frame of one of the cameras is the source of the image")},
-            { TT_NONE, TT_FILE,
-              TT_MASTER_FRAME, TT_MASTER_FRAME_DEPTH,
-              TT_CAMERA_FRAME, TT_CAMERA_FRAME_DEPTH },
+            { TEX_NONE, TEX_FILE, TEX_ANGELSCRIPT,
+              TEX_MASTER_FRAME, TEX_MASTER_FRAME_DEPTH,
+              TEX_CAMERA_FRAME, TEX_CAMERA_FRAME_DEPTH },
             defaultType, true, false);
     if (!enableNone)
-        paramType_->removeByValue(TT_NONE);
+        paramType_->removeByValue(TEX_NONE);
 
 
     paramFilename_ = params->createFilenameParameter(
                 "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
                 normalMap? IO::FT_NORMAL_MAP : IO::FT_TEXTURE,
                 normalMap? ":/normalmap/01.png" : ":/texture/mo_black.png");
+
+    paramAngelScript_ = params->createTextParameter(
+                "_img_angelscript" + id_suffix, tr("angelscript"), tr("Script"),
+                TT_ANGELSCRIPT,
+                "\nvoid main()\n{\n\timage.fill(1,0,0);\n}\n");
 
     paramCamera_ = params->createIntParameter(
                 "_imgcamidx" + id_suffix, tr("camera frame"),
@@ -132,22 +142,25 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
 bool TextureSetting::needsReinit(Parameter *p) const
 {
     return (p == paramType_
-        || (p == paramFilename_ && paramType_->baseValue() == TT_FILE)
-        || (p == paramCamera_ && (   paramType_->baseValue() == TT_CAMERA_FRAME
-                                  || paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH)));
+        ||  p == paramAngelScript_
+        || (p == paramFilename_ && paramType_->baseValue() == TEX_FILE)
+        || (p == paramCamera_ && (   paramType_->baseValue() == TEX_CAMERA_FRAME
+                                  || paramType_->baseValue() == TEX_CAMERA_FRAME_DEPTH)));
 }
 
 void TextureSetting::updateParameterVisibility()
 {
-    paramFilename_->setVisible( paramType_->baseValue() == TT_FILE );
+    paramFilename_->setVisible( paramType_->baseValue() == TEX_FILE );
     paramCamera_->setVisible(
-                   paramType_->baseValue() == TT_CAMERA_FRAME
-                || paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH );
+                   paramType_->baseValue() == TEX_CAMERA_FRAME
+                || paramType_->baseValue() == TEX_CAMERA_FRAME_DEPTH );
+
+    paramAngelScript_->setVisible(paramType_->baseValue() == TEX_ANGELSCRIPT);
 }
 
 void TextureSetting::getNeededFiles(IO::FileList &files, IO::FileType ft)
 {
-    if (paramType_->baseValue() == TT_FILE)
+    if (paramType_->baseValue() == TEX_FILE)
         files.append(IO::FileListEntry(paramFilename_->value(), ft));
 }
 
@@ -155,7 +168,7 @@ void TextureSetting::getNeededFiles(IO::FileList &files, IO::FileType ft)
 
 bool TextureSetting::isEnabled() const
 {
-    return paramType_? paramType_->baseValue() != TT_NONE : false;
+    return paramType_? paramType_->baseValue() != TEX_NONE : false;
 }
 
 bool TextureSetting::isCube() const
@@ -177,10 +190,10 @@ uint TextureSetting::height() const
 
 bool TextureSetting::initGl()
 {
-    if (paramType_->baseValue() == TT_NONE)
+    if (paramType_->baseValue() == TEX_NONE)
         return true;
 
-    if (paramType_->baseValue() == TT_FILE)
+    if (paramType_->baseValue() == TEX_FILE)
     {
         const QString fn = IO::fileManager().localFilename(paramFilename_->value());
 
@@ -188,8 +201,14 @@ bool TextureSetting::initGl()
             return true;
     }
 
-    if (paramType_->baseValue() == TT_MASTER_FRAME
-     || paramType_->baseValue() == TT_MASTER_FRAME_DEPTH)
+    if (paramType_->baseValue() == TEX_ANGELSCRIPT)
+    {
+        if (setTextureFromAS_(paramAngelScript_->baseValue()))
+            return true;
+    }
+
+    if (paramType_->baseValue() == TEX_MASTER_FRAME
+     || paramType_->baseValue() == TEX_MASTER_FRAME_DEPTH)
     {
         Scene * scene = object_->sceneObject();
         if (!scene)
@@ -206,8 +225,8 @@ bool TextureSetting::initGl()
     }
 
 
-    if (paramType_->baseValue() == TT_CAMERA_FRAME
-     || paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH)
+    if (paramType_->baseValue() == TEX_CAMERA_FRAME
+     || paramType_->baseValue() == TEX_CAMERA_FRAME_DEPTH)
     {
         Scene * scene = object_->sceneObject();
         if (!scene)
@@ -273,7 +292,7 @@ bool TextureSetting::updateCameraFbo_()
         return setTextureFromImage_(":/texture/error.png");
     }
 
-    if (paramType_->baseValue() == TT_CAMERA_FRAME_DEPTH )
+    if (paramType_->baseValue() == TEX_CAMERA_FRAME_DEPTH )
     {
         constTexture_ = fbo->depthTexture();
         if (constTexture_ == 0)
@@ -300,7 +319,7 @@ bool TextureSetting::updateSceneFbo_()
     GL::FrameBufferObject * fbo = scene->fboMaster(MO_GFX_THREAD);
     if (fbo)
     {
-        if (paramType_->baseValue() == TT_MASTER_FRAME_DEPTH )
+        if (paramType_->baseValue() == TEX_MASTER_FRAME_DEPTH )
         {
             constTexture_ = fbo->depthTexture();
             if (constTexture_ == 0)
@@ -336,9 +355,54 @@ bool TextureSetting::setTextureFromImage_(const QString& fn)
 
 }
 
+bool TextureSetting::setTextureFromAS_(const QString& script)
+{
+#ifdef MO_DISABLE_ANGELSCRIPT
+    Q_UNUSED(script);
+    return false;
+
+#else
+
+    if (texture_ && texture_->isAllocated())
+        texture_->release();
+    delete texture_;
+    texture_ = 0;
+    constTexture_ = 0;
+
+    QImage img;
+    ImageEngineAS engine(&img);
+    try
+    {
+        engine.execute(script);
+
+        texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
+
+        if (!texture_)
+            return false;
+
+        constTexture_ = texture_;
+    }
+    catch (Exception& e)
+    {
+        if (rep_ == GL::ER_THROW)
+        {
+            e << "\nin TextureFromAS of " << object_->name();
+            throw;
+        }
+        else
+        {
+            MO_WARNING(e.what() << "\nin TextureFromAS of " << object_->name());
+            return false;
+        }
+    }
+
+    return true;
+#endif
+}
+
 bool TextureSetting::bind(uint slot)
 {
-    if (paramType_->baseValue() == TT_NONE)
+    if (paramType_->baseValue() == TEX_NONE)
         return true;
 
     if (!constTexture_)
@@ -386,7 +450,7 @@ bool TextureSetting::bind(uint slot)
 
 void TextureSetting::unbind(uint slot)
 {
-    if (paramType_->baseValue() == TT_NONE)
+    if (paramType_->baseValue() == TEX_NONE)
         return;
 
     if (constTexture_)

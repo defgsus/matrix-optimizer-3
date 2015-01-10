@@ -209,7 +209,7 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("texture", tr("texture"));
 
-        texture_->createParameters("col", TextureSetting::TT_NONE, true);
+        texture_->createParameters("col", TextureSetting::TEX_NONE, true);
 
         usePointCoord_ = params()->createBooleanParameter("tex_use_pointcoord", tr("map on points"),
                                          tr("Currently you need to decide wether to map the texture on triangles or on point sprites"),
@@ -231,7 +231,7 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("texturebump", tr("normal-map texture"));
 
-        textureBump_->createParameters("bump", TextureSetting::TT_NONE, true, true);
+        textureBump_->createParameters("bump", TextureSetting::TEX_NONE, true, true);
 
         bumpScale_ = params()->createFloatParameter("bumpdepth", tr("bump scale"),
                             tr("The influence of the normal-map"),

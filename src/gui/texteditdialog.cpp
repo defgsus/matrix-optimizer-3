@@ -23,6 +23,7 @@
 #include "tool/syntaxhighlighter.h"
 #include "script/angelscript.h"
 #include "script/angelscript_object.h"
+#include "script/angelscript_image.h"
 #include "io/settings.h"
 
 namespace MO {
@@ -166,12 +167,6 @@ void TextEditDialog::Private::createWidgets()
                     auto s = new SyntaxHighlighter(plainText->document());
                     s->initForStyleSheet();
                 }
-
-                if (textType == TT_GLSL)
-                {
-//                    auto s = new SyntaxHighlighter(plainText->document());
-//                    s->initForGlsl();
-                }
             break;
 
             case TT_EQUATION:
@@ -202,6 +197,7 @@ void TextEditDialog::Private::createWidgets()
                 lv->addWidget(as);
                 registerDefaultAngelScript( as->scriptEngine() );
                 registerAngelScript_object( as->scriptEngine(), 0, true, true);
+                registerAngelScript_image( as->scriptEngine(), 0, true);
                 scriptEdit = as;
                 connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
                 {

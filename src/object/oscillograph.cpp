@@ -321,7 +321,7 @@ void Oscillograph::createParameters()
 
     params()->beginParameterGroup("texture", "texture");
 
-        p_->textureSet->createParameters("_col", TextureSetting::TT_NONE, true);
+        p_->textureSet->createParameters("_col", TextureSetting::TEX_NONE, true);
 
     params()->endParameterGroup();
 }
