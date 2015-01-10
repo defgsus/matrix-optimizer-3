@@ -265,7 +265,8 @@ HEADERS += \
     src/network/udpconnection.h \
     src/script/angelscript_network.h \
     src/network/udpaudioconnection.h \
-    src/types/refcounted.h
+    src/types/refcounted.h \
+    src/script/angelscript_image.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -492,4 +493,5 @@ SOURCES += \
     src/geom/marchingcubes.cpp \
     src/network/udpconnection.cpp \
     src/script/angelscript_network.cpp \
-    src/network/udpaudioconnection.cpp
+    src/network/udpaudioconnection.cpp \
+    src/script/angelscript_image.cpp

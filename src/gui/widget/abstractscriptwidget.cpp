@@ -14,6 +14,8 @@
 #include <QStyle>
 #include <QListWidget>
 #include <QSyntaxHighlighter>
+#include <QCheckBox>
+#include <QPushButton>
 
 #include "abstractscriptwidget.h"
 #include "io/settings.h"
@@ -31,7 +33,8 @@ public:
     PrivateSW(AbstractScriptWidget * widget)
         : widget    (widget),
           isValid   (false),
-          ignoreTextChange(false)
+          ignoreTextChange(false),
+          isUpdateOptional(false)
     { }
 
     void createWidgets();
@@ -58,9 +61,11 @@ public:
 
     QPlainTextEdit * editor;
     QListWidget * messageList;
+    QCheckBox * cbAlwaysUpdate;
+    QPushButton * butUpdate;
     QTimer * timer;
 
-    bool isValid, ignoreTextChange;
+    bool isValid, ignoreTextChange, isUpdateOptional;
 
     QString curText;
 
@@ -85,6 +90,13 @@ AbstractScriptWidget::~AbstractScriptWidget()
 bool AbstractScriptWidget::isScriptValid() const
 {
     return p_sw_->isValid;
+}
+
+void AbstractScriptWidget::setUpdateOptional(bool enable)
+{
+    p_sw_->isUpdateOptional = enable;
+    p_sw_->butUpdate->setVisible(enable);
+    p_sw_->cbAlwaysUpdate->setVisible(enable);
 }
 
 const QString AbstractScriptWidget::scriptText() const
@@ -125,7 +137,11 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         // XXX
         editor->setMinimumHeight(500);
         lv->addWidget(editor, 10);
-        connect(editor, &QPlainTextEdit::textChanged, [=]() { if (!ignoreTextChange) timer->start(); } );
+        connect(editor, &QPlainTextEdit::textChanged, [this]()
+        {
+            if (!ignoreTextChange)
+                timer->start();
+        });
         //editor->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
         // --- setup font ---
@@ -154,12 +170,21 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
             editor->setTextCursor(curs);
         });
 
-        /*
-        auto but = new QPushButton(tr("run"), widget);
-        lv->addWidget(but);
-        but->setShortcut(Qt::CTRL + Qt::Key_R);
-        connect(but, &QPushButton::pressed, [=]() { run(); } );
-        */
+        // -- optional update --
+
+        auto lh = new QHBoxLayout();
+        lv->addLayout(lh);
+
+            cbAlwaysUpdate = new QCheckBox(tr("always update"), widget);
+            cbAlwaysUpdate->setVisible(isUpdateOptional);
+            lh->addWidget(cbAlwaysUpdate);
+
+
+            butUpdate = new QPushButton(tr("up&date"), widget);
+            butUpdate->setVisible(isUpdateOptional);
+            lh->addWidget(butUpdate);
+            connect(butUpdate, SIGNAL(pressed()), widget, SIGNAL(scriptTextChanged()));
+
 
         timer = new QTimer(widget);
         timer->setSingleShot(true);
@@ -179,7 +204,8 @@ void AbstractScriptWidget::PrivateSW::onTextChanged()
     updateErrorWidget();
 
     if (isValid)
-        emit widget->scriptTextChanged();
+        if (!isUpdateOptional || cbAlwaysUpdate->isChecked())
+            emit widget->scriptTextChanged();
 }
 
 void AbstractScriptWidget::PrivateSW::updateEditorColor()

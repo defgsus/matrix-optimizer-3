@@ -9,6 +9,7 @@
 */
 
 #include <QByteArray>
+#include <QTextStream>
 
 #include "test_angelscript.h"
 #include "script/angelscript.h"
@@ -112,6 +113,15 @@ int TestAngelScript::Private::run()
 
 int TestAngelScript::Private::test_vector()
 {
+    QTextStream s;
+
+    s << "int main()\n{\n";
+
+//    "vec3 p"
+
+    s << "}\n";
+
+
     return 0;
 }
 

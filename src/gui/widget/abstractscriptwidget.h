@@ -53,6 +53,11 @@ public slots:
         avoids the internal textChanged() signal. */
     void setSyntaxHighlighter(QSyntaxHighlighter * );
 
+    /** If updates are optional, a checkbox and/or an update button is visible.
+        Updates, e.g. scriptTextChanged() signal is then only emitted on user's request.
+        Default is false. */
+    void setUpdateOptional(bool enable = true);
+
 signals:
 
     /** Only emitted when the changed script is valid */

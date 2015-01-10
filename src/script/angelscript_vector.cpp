@@ -847,10 +847,10 @@ void register_matrix_tmpl(asIScriptEngine *engine, const char * typ)
     MO__REG_TRUE_METHOD("%1 &opMulAssign(float)", asMETHODPR(Mat, operator*=, (float), Mat&));
     MO__REG_TRUE_METHOD("%1 &opDivAssign(float)", asMETHODPR(Mat, operator/=, (float), Mat&));
 
-    MO__REG_METHoD("vec4 opMul(const vec4& in)", matfunc<Mat>::matMulVec4);
-    MO__REG_FUNC("vec4 opMul(const vec4& in, const %1 &in)", matfunc<Mat>::vec4MulMat);
-    MO__REG_METHoD("vec3 opMul(const vec3& in)", matfunc<Mat>::matMulVec3);
+    MO__REG_METHoD("vec3 opMul(const vec3& in) const", matfunc<Mat>::matMulVec3);
+    MO__REG_METHoD("vec4 opMul(const vec4& in) const", matfunc<Mat>::matMulVec4);
     MO__REG_FUNC("vec3 opMul(const vec3& in, const %1 &in)", matfunc<Mat>::vec3MulMat);
+    MO__REG_FUNC("vec4 opMul(const vec4& in, const %1 &in)", matfunc<Mat>::vec4MulMat);
 
     // ------------ members -------------------
 

@@ -21,6 +21,7 @@
 #include "angelscript_geometry.h"
 #include "angelscript_timeline.h"
 #include "angelscript_network.h"
+#include "angelscript_image.h"
 #include "3rd/angelscript/scriptmath/scriptmathcomplex.h" // XXX deprecated: will be replaced
 #include "3rd/angelscript/scriptarray/scriptarray.h"
 #include "3rd/angelscript/scriptstdstring/scriptstdstring.h"
@@ -67,6 +68,7 @@ void registerDefaultAngelScript(asIScriptEngine * engine)
     //engine->SetDefaultNamespace("MO");
     registerAngelScript_vector(engine);
     registerAngelScript_math(engine);
+    registerAngelScript_image(engine);
     registerAngelScript_timeline(engine);
     registerAngelScript_geometry(engine);
     registerAngelScript_object(engine);
