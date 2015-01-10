@@ -242,8 +242,11 @@ void registerAngelScript_math(asIScriptEngine *engine)
     else
     {
         native::register_math_funcs<float>(engine, "float", "");
-        native::register_math_funcs<double>(engine, "double", "d");
+        // XXXthis should be optional
+        // as it complicates function resolving when mixing floats and doubles in one call
+        //native::register_math_funcs<double>(engine, "double", "d");
         native::register_math_int_funcs(engine);
+
         native::register_rnd(engine);
     }
 }

@@ -42,15 +42,18 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
 {
     setMinimumSize(128, 128);
 
-    setLights_(showLights_ ? 1 : 0);
+    setLights_(showLights_ ? 0.8f : 1.f, Mat4(1));
 }
 
-void GeometryWidget::setLights_(Float amp)
+void GeometryWidget::setLights_(Float amp, const Mat4& trans)
 {
     lights_->resize(3);
-    lights_->setPosition(0, 1000.f, 2000.f, 800.f);
-    lights_->setPosition(1, -2000.f, 1000.f, 1200.f);
-    lights_->setPosition(2, 2000.f, -500.f, 1500.f);
+    Vec4 pos = trans * Vec4(1000.f, 2000.f, 800.f, 1.f);
+    lights_->setPosition(0, pos.x, pos.y, pos.z);
+    pos = trans * Vec4(-2000.f, 1000.f, 1200.f, 1.f);
+    lights_->setPosition(1, pos.x, pos.y, pos.z);
+    pos = trans * Vec4(2000.f, -500.f, 1500.f, 1.f);
+    lights_->setPosition(2, pos.x, pos.y, pos.z);
     lights_->setColor(0, 0.7f*amp, 0.7f*amp, 0.7f*amp);
     lights_->setColor(1, 0.2f*amp, 0.5f*amp, 0.8f*amp);
     lights_->setColor(2, 0.5f*amp, 0.25f*amp, 0.1f*amp);
@@ -198,6 +201,7 @@ void GeometryWidget::drawGL(const Mat4& projection,
 
     if (drawable_->isReady())
     {
+        setLights_(showLights_ ? 0.8f : 0.f, glm::inverse(viewTrans));
         drawable_->renderShader(projection, cubeViewTrans, viewTrans, trans, lights_);
     }
 }

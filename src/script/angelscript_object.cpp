@@ -458,7 +458,7 @@ bool ObjectAS::addObject_(Object * newChild, int index)
     bool ret = e->addObject(o, newChild, index);
     MO_ASSERT(ret, "");
 
-    return true;
+    return ret;
 }
 
 ParameterAS * ObjectAS::parameter(uint index)
@@ -847,7 +847,7 @@ void registerAngelScript_object(asIScriptEngine *engine)
 
 void registerAngelScript_rootObject(asIScriptEngine *engine, Scene* root, bool writeable)
 {
-    int r;
+    int r; Q_UNUSED(r);
     ObjectAS * as = ObjectAS::wrap_(root);
     if (writeable)
     {
@@ -861,7 +861,7 @@ void registerAngelScript_rootObject(asIScriptEngine *engine, Scene* root, bool w
 
 void registerAngelScript_object(asIScriptEngine *engine, Object * obj, bool writeable, bool withRoot)
 {
-    int r;
+    int r; Q_UNUSED(r);
     ObjectAS * as = ObjectAS::wrap_(obj);
     if (writeable)
     {

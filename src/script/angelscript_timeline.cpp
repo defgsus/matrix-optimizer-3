@@ -273,7 +273,7 @@ namespace native {
 void register_timeline_enums(asIScriptEngine * engine)
 {
     std::string enumType = "TimelinePointType";
-    int r;
+    int r; Q_UNUSED(r);
     r = engine->RegisterEnum(enumType.c_str()); assert( r >= 0 );
     r = engine->RegisterEnumValue(enumType.c_str(), "TL_CONSTANT",  MATH::Timeline1D::Point::CONSTANT); assert( r >= 0 );
     r = engine->RegisterEnumValue(enumType.c_str(), "TL_LINEAR",    MATH::Timeline1D::Point::LINEAR); assert( r >= 0 );
@@ -288,7 +288,7 @@ void register_timeline_enums(asIScriptEngine * engine)
 template <class Class>
 void register_timeline_tmpl(asIScriptEngine * engine, const char * typ, const char * holdtyp)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // ------- register the type -------------------------------
 
@@ -330,7 +330,7 @@ void register_timeline_tmpl(asIScriptEngine * engine, const char * typ, const ch
 template <class Class>
 void register_timeline_tmpl_1plus(asIScriptEngine * engine, const char * typ, const char * holdtyp)
 {
-    int r;
+    int r; Q_UNUSED(r);
     MO__REG_METHOD("Timeline1@ getTimeline1(uint index)", getTimeline1);
 }
 
@@ -339,7 +339,7 @@ void register_timeline_tmpl_1plus(asIScriptEngine * engine, const char * typ, co
 template <class Class>
 void register_timeline_tmpl_2(asIScriptEngine * engine, const char * typ, const char * holdtyp)
 {
-    int r;
+    int r; Q_UNUSED(r);
     MO__REG_METHOD("void set(Timeline1@ x, Timeline1@ y)", set_1_1);
     register_timeline_tmpl_1plus<Class>(engine, typ, holdtyp);
 }
@@ -347,7 +347,7 @@ void register_timeline_tmpl_2(asIScriptEngine * engine, const char * typ, const 
 template <class Class>
 void register_timeline_tmpl_3(asIScriptEngine * engine, const char * typ, const char * holdtyp)
 {
-    int r;
+    int r; Q_UNUSED(r);
     MO__REG_METHOD("void set(Timeline1@ x, Timeline1@ y, Timeline1@ z)", set_1_1_1);
     register_timeline_tmpl_1plus<Class>(engine, typ, holdtyp);
 }
@@ -355,7 +355,7 @@ void register_timeline_tmpl_3(asIScriptEngine * engine, const char * typ, const 
 template <class Class>
 void register_timeline_tmpl_4(asIScriptEngine * engine, const char * typ, const char * holdtyp)
 {
-    int r;
+    int r; Q_UNUSED(r);
     MO__REG_METHOD("void set(Timeline1@ x, Timeline1@ y, Timeline1@ z, Timeline1@ w)", set_1_1_1_1);
     register_timeline_tmpl_1plus<Class>(engine, typ, holdtyp);
 }

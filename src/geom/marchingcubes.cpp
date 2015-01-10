@@ -368,14 +368,23 @@ int triTable[256][16] =
     {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-
-
-    struct TRIANGLE
-    {
-       Vec3 p[3];
-    };
+    static int corner_v[][3] =
+      { { 0, 0, 0 },
+        { 1, 0, 0 },
+        { 1, 1, 0 },
+        { 0, 1, 0 },
+        { 0, 0, 1 },
+        { 1, 0, 1 },
+        { 1, 1, 1 },
+        { 0, 1, 1 } };
 
     struct GRIDCELL
+    {
+       Vec3 p;
+       Float val;
+    };
+
+    struct CUBECELL
     {
        Vec3 p[8];
        Float val[8];
@@ -414,7 +423,7 @@ int triTable[256][16] =
         0 will be returned if the grid cell is either totally above
        of totally below the isolevel.
     */
-    int Polygonise(const GRIDCELL& grid, Float isolevel, Geometry& g)
+    int Polygonise(const CUBECELL& grid, Float isolevel, Geometry& g)
     {
        int i,ntriang;
        int cubeindex;
@@ -519,7 +528,7 @@ void MarchingCubes::renderGrid(Geometry &g, const int8_t *data, int w, int h, in
         for (int x1 = -3; x1 <= 3; ++x1)
         {
             if (x>x1 && y>y1 && z>z1 && (x+x1)<w && (y+y1)<h && (z+z1)<d)
-                if (data[((z+z1)*h+y+y1)*w+x+y1] != 0)
+                if (data[((z+z1)*h+y+y1)*w+x+x1] != 0)
                     d = std::min(d, glm::length(Vec3(x1,y1,z1)));
         }
 
@@ -530,7 +539,7 @@ void MarchingCubes::renderGrid(Geometry &g, const int8_t *data, int w, int h, in
     for (int y = 0; y < h; ++y)
     for (int x = 0; x < w; ++x)
     {
-        GRIDCELL c;
+        CUBECELL c;
         c.p[0] = Vec3(x  , y  , z  );
         c.p[1] = Vec3(x+1, y  , z  );
         c.p[2] = Vec3(x+1, y+1, z  );
@@ -542,7 +551,7 @@ void MarchingCubes::renderGrid(Geometry &g, const int8_t *data, int w, int h, in
 
         for (int i=0; i<8; ++i)
         {
-            c.val[i] = dist[(c.p[i].z*d+c.p[i].y)*h+c.p[i].x];
+            c.val[i] = dist[(c.p[i].z*h+c.p[i].y)*w+c.p[i].x];
             c.p[i] = Vec3(trans * Vec4(c.p[i], 1));
         }
 
@@ -560,11 +569,14 @@ void MarchingCubes::renderScalarField(Geometry& g,
     const Vec3 scale = (maxExtend - minExtend) / numCubes;
     const uint w = numCubes.x, h = numCubes.y, d = numCubes.z;
 
+#if 0
+    // simple low efficiency version
+    // the scalar function for corners is called multiple times
     for (uint z = 0; z < d; ++z)
     for (uint y = 0; y < h; ++y)
     for (uint x = 0; x < w; ++x)
     {
-        GRIDCELL c;
+        CUBECELL c;
         c.p[0] = Vec3(x  , y  , z  );
         c.p[1] = Vec3(x+1, y  , z  );
         c.p[2] = Vec3(x+1, y+1, z  );
@@ -582,6 +594,39 @@ void MarchingCubes::renderScalarField(Geometry& g,
         }
         Polygonise(c, isolevel, g);
     }
+#else
+    // XXX Produces crap !?
+
+    const uint W=w+1, H=h+1, D=d+1;
+    std::vector<GRIDCELL> grid(W*H*D);
+    GRIDCELL * c = &grid[0];
+    for (uint z = 0; z < D; ++z)
+    for (uint y = 0; y < H; ++y)
+    for (uint x = 0; x < W; ++x, ++c)
+    {
+        c->p = Vec3(x, y, z);
+        c->p *= scale;
+        c->p += minExtend;
+
+        // sample at x,y,z + 0 vertex
+        c->val = func(c->p);
+    }
+
+    CUBECELL cube;
+    for (uint z = 0; z < d; ++z)
+    for (uint y = 0; y < h; ++y)
+    for (uint x = 0; x < w; ++x, ++c)
+    {
+        for (int i=0; i<8; ++i)
+        {
+            uint grididx = ((z + corner_v[i][2]) * H + y + corner_v[i][1]) * W + x + corner_v[i][0];
+            cube.p[i] = grid[grididx].p;
+            cube.val[i] = grid[grididx].val;
+        }
+
+        Polygonise(cube, isolevel, g);
+    }
+#endif
 }
 
 

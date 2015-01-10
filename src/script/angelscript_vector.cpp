@@ -289,7 +289,7 @@ struct vecfunc
 template <class Vec>
 void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // ----------- object properties ------------
 
@@ -375,7 +375,7 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 /** Specific stuff for 2 */
 void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // ---------- constructors ----------
     r = engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT,
@@ -425,7 +425,7 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
 void register_vector_3(asIScriptEngine *engine)
 {
     const char * typ = "vec3";
-    int r;
+    int r; Q_UNUSED(r);
 
     // --------- constructors ----------
 
@@ -501,7 +501,7 @@ void register_vector_3(asIScriptEngine *engine)
 template <class Vec>
 void register_vector_34_tmpl(asIScriptEngine *engine, const char * typ)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // --------------------- methods ------------------
 
@@ -522,7 +522,7 @@ void register_vector_34_tmpl(asIScriptEngine *engine, const char * typ)
 void register_vector_4(asIScriptEngine *engine)
 {
     const char * typ = "vec4";
-    int r;
+    int r; Q_UNUSED(r);
 
     // --------- constructors ----------
 
@@ -590,7 +590,7 @@ void register_vector_mathwrapper_tmpl(asIScriptEngine *engine, const char * typ)
         _mathwrap##name__::func);
 
 
-    int r;
+    int r; Q_UNUSED(r);
     MO__MATHWRAP(abs, MATH::advanced<Float>::abs);
     MO__MATHWRAP(acos, MATH::advanced<Float>::acos);
     MO__MATHWRAP(acosh, MATH::advanced<Float>::acosh);
@@ -634,7 +634,7 @@ void register_vector_mathwrapper_tmpl(asIScriptEngine *engine, const char * typ)
 /** Registers the three vector types */
 void registerAngelScript_vector(asIScriptEngine *engine)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // forward-declare types
     r = engine->RegisterObjectType("vec2", sizeof(Vec2), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS);
@@ -815,7 +815,7 @@ struct matfunc<Mat3>
 template <class Mat>
 void register_matrix_tmpl(asIScriptEngine *engine, const char * typ)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // ----------- object properties ------------
 
@@ -879,7 +879,7 @@ void register_matrix_tmpl(asIScriptEngine *engine, const char * typ)
 void register_matrix3(asIScriptEngine * engine)
 {
     const char * typ = "mat3";
-    int r;
+    int r; Q_UNUSED(r);
 
     // -------- constructors ----------
 
@@ -905,7 +905,7 @@ void register_matrix3(asIScriptEngine * engine)
 void register_matrix4(asIScriptEngine * engine)
 {
     const char * typ = "mat4";
-    int r;
+    int r; Q_UNUSED(r);
 
     // -------- constructors ----------
 
@@ -933,7 +933,7 @@ void register_matrix4(asIScriptEngine * engine)
 
 void registerAngelScript_matrix(asIScriptEngine * engine)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // forward-declare the types
     r = engine->RegisterObjectType("mat3", sizeof(Mat3), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS);

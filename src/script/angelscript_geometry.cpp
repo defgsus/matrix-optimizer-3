@@ -342,6 +342,7 @@ public:
 
     void applySpringForceTriangles(Float restd, Float delta)
     {
+        const Float enough = 10.0;
         for (uint i=0; i<g->numTriangles(); ++i)
         {
             auto    i0 = g->triangleIndex(i, 0),
@@ -353,9 +354,9 @@ public:
                     p01 = p1 - p0,
                     p02 = p2 - p0,
                     p12 = p2 - p1;
-            Vec3    l01 = (glm::length(p01) - restd) * delta * p01,
-                    l02 = (glm::length(p02) - restd) * delta * p02,
-                    l12 = (glm::length(p12) - restd) * delta * p12;
+            Vec3    l01 = glm::clamp((glm::length(p01) - restd) * delta * p01, -enough, enough),
+                    l02 = glm::clamp((glm::length(p02) - restd) * delta * p02, -enough, enough),
+                    l12 = glm::clamp((glm::length(p12) - restd) * delta * p12, -enough, enough);
             g->setVertex(i0, p0 + l01 + l02);
             g->setVertex(i1, p1 - l01 + l12);
             g->setVertex(i2, p2 - l02 - l12);
