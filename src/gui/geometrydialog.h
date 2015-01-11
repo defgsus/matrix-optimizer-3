@@ -53,6 +53,9 @@ public slots:
     /** One of Basic3DWidget::ViewDirection enums */
     void setViewDirection(int);
 
+    /** Save the current settings under the given filename */
+    void saveGeometrySettings(const QString& filename);
+
 protected slots:
 
     void changeView_();

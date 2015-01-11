@@ -148,7 +148,7 @@ struct vecfunc
     static Float largest(const Vec& v)
         { Float m = v[0]; for (int i=1; i<vectraits<Vec>::num; ++i) m = std::max(m, v[i]); return m; }
 
-    static Float noisef_2(const Vec3& v) { return MATH::advanced<float>::noise_2(v.x, v.y); }
+    static Float noisef_2(const Vec2& v) { return MATH::advanced<float>::noise_2(v.x, v.y); }
     static Float noisef_3(const Vec3& v) { return MATH::advanced<float>::noise_3(v.x, v.y, v.z); }
     static Vec2 noisev2_1(float f) { return Vec2(MATH::advanced<float>::noise(f),
                                                  MATH::advanced<float>::noise(-f - 57.f)); }
@@ -159,6 +159,12 @@ struct vecfunc
                                                  MATH::advanced<float>::noise(-f - 57.f),
                                                  MATH::advanced<float>::noise(f + 1007.f),
                                                  MATH::advanced<float>::noise(-f - 885.f)); }
+
+    static Float voronoi_2(const Vec2& v) { return MATH::advanced<float>::voronoi_2(v.x, v.y); }
+    static Float voronoi_3(const Vec3& v) { return MATH::advanced<float>::voronoi_3(v.x, v.y, v.z); }
+
+    static Float svoronoi_2(const Vec2& v, Float sm) { return MATH::advanced<float>::svoronoi_2(v.x, v.y, sm); }
+    static Float svoronoi_3(const Vec3& v, Float sm) { return MATH::advanced<float>::svoronoi_3(v.x, v.y, v.z, sm); }
 
     static Vec3 euclidean2polar(const Vec3& euclidean)
     {
@@ -410,6 +416,8 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
 
     MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec2>::noisef_2);
     MO__REG_FUNC("%1 noise2(float)", vecfunc<Vec2>::noisev2_1);
+    MO__REG_FUNC("float voronoi(const %1 &in)", vecfunc<Vec2>::voronoi_2);
+    MO__REG_FUNC("float svoronoi(const %1 &in, float sm = 32.f)", vecfunc<Vec2>::svoronoi_2);
 
     MO__REG_FUNC("%1 ulam_spiral(int n)", vecfunc<Vec2>::ulam_spiral);
 
@@ -469,6 +477,8 @@ void register_vector_3(asIScriptEngine *engine)
 
     MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec3>::noisef_3);
     MO__REG_FUNC("%1 noise3(float)", vecfunc<Vec3>::noisev3_1);
+    MO__REG_FUNC("float voronoi(const %1 &in)", vecfunc<Vec3>::voronoi_3);
+    MO__REG_FUNC("float svoronoi(const %1 &in, float sm = 32.f)", vecfunc<Vec3>::svoronoi_3);
 
     MO__REG_FUNC("%1 euclidean2polar(const %1 &in)", vecfunc<Vec3>::euclidean2polar);
     MO__REG_FUNC("%1 polar2euclidean(const %1 &in)", vecfunc<Vec3>::polar2euclidean);

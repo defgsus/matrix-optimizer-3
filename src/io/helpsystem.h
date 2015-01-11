@@ -65,6 +65,7 @@ private:
 
     void loadEquationFunctions_();
     void addEquationInfo_(QString& doc);
+    void addAngelScriptInfo_(QString& doc);
 
     QStringList searchPaths_;
 

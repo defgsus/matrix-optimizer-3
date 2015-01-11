@@ -170,6 +170,9 @@ bool HelpSystem::loadXhtml(const QString &partial_url, QDomDocument &doc)
     if (url.contains("equation.html"))
         addEquationInfo_(xhtml);
 
+    if (url.contains("angelscript.html"))
+        addAngelScriptInfo_(xhtml);
+
     // get dom tree
     QString error;
     int line, column;
@@ -453,5 +456,15 @@ void HelpSystem::addEquationInfo_(QString& doc)
 
     doc.replace("!FUNCTIONS!", str);
 }
+
+
+void HelpSystem::addAngelScriptInfo_(QString& doc)
+{
+    QString str;
+
+
+    doc.replace("!FUNCTIONS!", str);
+}
+
 
 } // namespace MO

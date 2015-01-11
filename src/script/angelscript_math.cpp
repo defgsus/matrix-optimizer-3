@@ -182,6 +182,10 @@ static void register_math_funcs(asIScriptEngine *engine, const char * floattyp, 
     MO__REG_FUNC("%1 noise(%1 x)", MATH::advanced<F>::noise);
     MO__REG_FUNC("%1 noise(%1 x, %1 y)", MATH::advanced<F>::noise_2);
     MO__REG_FUNC("%1 noise(%1 x, %1 y, %1 z)", MATH::advanced<F>::noise_3);
+    MO__REG_FUNC("%1 voronoi(%1 x, %1 y)", MATH::advanced<F>::voronoi_2);
+    MO__REG_FUNC("%1 voronoi(%1 x, %1 y, %1 z)", MATH::advanced<F>::voronoi_3);
+    MO__REG_FUNC("%1 svoronoi(%1 x, %1 y, %1 smooth = 32)", MATH::advanced<F>::svoronoi_2);
+    MO__REG_FUNC("%1 svoronoi(%1 x, %1 y, %1 z, %1 smooth = 32)", MATH::advanced<F>::svoronoi_3);
 
     MO__REG_FUNC("%1 mandel(%1 real, %1 imag)", MATH::advanced<F>::mandel);
     MO__REG_FUNC("%1 mandel(%1 real, %1 imag, uint max_iterations)", MATH::advanced<F>::mandel_3);
@@ -224,6 +228,10 @@ static void register_math_int_funcs(asIScriptEngine *engine)
     MO__REG_FUNC("int ulam_spiral(int x, int y, int width)", MATH::advanced_int<int>::ulam_spiral_width);
     MO__REG_FUNC("int tri_spiral(int x, int y)", MATH::advanced_int<int>::ulam_spiral);
     MO__REG_FUNC("int fibonacci(int num)", MATH::advanced_int<int>::fibonacci);
+
+    MO__REG_FUNC("float noise(int x)", MATH::advanced<float>::noisei);
+    MO__REG_FUNC("float noise(int x, int y)", MATH::advanced<float>::noisei_2);
+    MO__REG_FUNC("float noise(int x, int y, int z)", MATH::advanced<float>::noisei_3);
 
 }
 

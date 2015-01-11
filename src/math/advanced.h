@@ -561,12 +561,21 @@ struct advanced
     static F noise_2         (F A, F B) { return AdvancedPrivate::noise.noise(A, B); }
     static F noise_3         (F A, F B, F C) { return AdvancedPrivate::noise.noise(A, B, C); }
 
+    static F noisei          (int A) { return AdvancedPrivate::noise.random(A); }
+    static F noisei_2        (int A, int B) { return AdvancedPrivate::noise.random(A, B); }
+    static F noisei_3        (int A, int B, int C) { return AdvancedPrivate::noise.random(A, B, C); }
+
     static F noiseoct        (F A, uint oct)
         { return AdvancedPrivate::noise.noiseoct(A, std::min((uint)10, oct)); }
     static F noiseoct_2      (F A, F B, uint oct)
         { return AdvancedPrivate::noise.noiseoct(A, B, std::min((uint)10, oct)); }
     static F noiseoct_3      (F A, F B, F C,uint oct)
         { return AdvancedPrivate::noise.noiseoct(A, B, C, std::min((uint)10, oct)); }
+
+    static F voronoi_2       (F A, F B) { return AdvancedPrivate::noise.voronoi(A, B); }
+    static F voronoi_3       (F A, F B, F C) { return AdvancedPrivate::noise.voronoi(A, B, C); }
+    static F svoronoi_2      (F A, F B, F C) { return AdvancedPrivate::noise.s_voronoi(A, B, C); }
+    static F svoronoi_3      (F A, F B, F C, F D) { return AdvancedPrivate::noise.s_voronoi(A, B, C, D); }
 
     // -------------- fractal ----------------------------------
 

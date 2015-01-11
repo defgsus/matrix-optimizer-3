@@ -33,7 +33,8 @@ class Waveform
         T_SAW_DECAY,
         T_TRIANGLE,
         T_SQUARE,
-        T_NOISE
+        T_NOISE,
+        T_VORONOI_NOISE
     };
     /** Number of waveform types Waveform::Type */
     const static int T_MAX_TYPES = T_NOISE + 1;

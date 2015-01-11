@@ -21,11 +21,11 @@ namespace AUDIO {
 MATH::NoisePerlin Waveform::noise_;
 
 const QList<int> Waveform::typeList =
-{ T_SINE, T_COSINE, T_RAMP, T_SAW_RISE, T_SAW_DECAY, T_TRIANGLE, T_SQUARE, T_NOISE };
+{ T_SINE, T_COSINE, T_RAMP, T_SAW_RISE, T_SAW_DECAY, T_TRIANGLE, T_SQUARE, T_NOISE, T_VORONOI_NOISE };
 
 const QStringList Waveform::typeIds =
 {
-    "sin", "cos", "ramp", "saw", "sawd", "tri", "sqr", "noise"
+    "sin", "cos", "ramp", "saw", "sawd", "tri", "sqr", "noise", "voronoi"
 };
 
 const QStringList Waveform::typeNames =
@@ -34,7 +34,8 @@ const QStringList Waveform::typeNames =
     QObject::tr("Ramp"),
     QObject::tr("Sawtooth up"), QObject::tr("Sawtooth down"),
     QObject::tr("Triangle"), QObject::tr("Square"),
-    QObject::tr("Noise")
+    QObject::tr("Noise"),
+    QObject::tr("Voronoi noise"),
 };
 
 const QStringList Waveform::typeStatusTips =
@@ -46,7 +47,8 @@ const QStringList Waveform::typeStatusTips =
     QObject::tr("A sawtooth oscillator with decaying edge [-1,1]"),
     QObject::tr("A triangle oscillator [-1,1]"),
     QObject::tr("A square-wave oscillator [-1,1]"),
-    QObject::tr("A continous noise function [-1,1]")
+    QObject::tr("A continous noise function [-1,1]"),
+    QObject::tr("A continous distance function to points in a jittered grid [0,1]")
 };
 
 
@@ -116,6 +118,9 @@ Double Waveform::waveform(Double t, Type type)
         case T_NOISE:
             return noise_.noise(t);
 
+        case T_VORONOI_NOISE:
+            return noise_.voronoi(t, 0);
+
         default:
             return 0.0;
     }
@@ -153,6 +158,9 @@ Double Waveform::waveform(Double t, Type type, Double pw)
 
         case T_NOISE:
             return noise_.noise(t);
+
+        case T_VORONOI_NOISE:
+            return noise_.voronoi(t, 0);
 
         default:
             return 0.0;

@@ -11,10 +11,11 @@
 */
 
 #include <cmath>
+#include <random>
 
 #include "noiseperlin.h"
-//#include "random.h"
-#include <random>
+
+#include "functions.h"
 
 namespace MO {
 namespace MATH {
@@ -264,6 +265,178 @@ Double NoisePerlin::noisef(Double arg_x, Double arg_y, Double scale, int oct) co
     n = noise(arg_x, arg_y);
     return n;
 }
+
+
+
+
+Double NoisePerlin::random(int arg_x) const
+{
+    Int bx0 = (arg_x + N) & BM;
+    // shuffle one more
+    bx0 = (p[ bx0 ] + arg_x) & BM;
+    return g1[ p[ bx0 ] ];
+}
+
+Double NoisePerlin::random(int x, int y) const
+{
+    return random(x + 323 * y);
+}
+
+Double NoisePerlin::random(int x, int y, int z) const
+{
+    return random((x + 323 * y) * 147 + z);
+}
+
+Vec2 NoisePerlin::random2(int x, int y) const
+{
+    return Vec2(random(x, y),
+                random(y+11, x+22));
+}
+
+Vec3 NoisePerlin::random3(int x, int y, int z) const
+{
+    return Vec3(random(x,       y,  z),
+                random(y+11,    z,  x+22),
+                random(z+111,   x,  y+33));
+}
+
+Vec3 NoisePerlin::voronoiCellPos(int x, int y, int z)
+{
+#ifdef MO_NP_VORONOI_BUFFER
+    int key = (x * 1771) ^ (y * 4781) ^ (z * 17923);
+
+    auto celli = voro_.find(key);
+    if (celli == voro_.end())
+    {
+        Vec3 p = random3(x, y, z) * 0.5f + 0.5f;
+        voro_.insert(key, p);
+        return p;
+    }
+
+    return celli.value();
+#else
+    return random3(x, y, z) * 0.5f + 0.5f;
+#endif
+}
+
+
+
+Double NoisePerlin::s_voronoi(Double x, Double y, Double sm)
+{
+    // cell index
+    int    cx = std::floor(x),
+           cy = std::floor(y);
+    // fractional part in cell
+    Double fx = MATH::frac(x),
+           fy = MATH::frac(y);
+
+    Double res = 0.0;
+    for (int j=-1; j<=1; ++j)
+    for (int i=-1; i<=1; ++i)
+    {
+        Vec3 vc = voronoiCellPos(cx + i, cy + j, 0);
+
+        //Vec2 n = random2(cx + i, cy + j);
+        Double  rx = i + vc.x - fx,
+                ry = j + vc.y - fy;
+
+        Double d = std::sqrt(rx * rx + ry * ry);
+
+        res += std::exp( -sm * d );
+    }
+
+    return -(1.0 / sm) * std::log(res);
+}
+
+Double NoisePerlin::s_voronoi(Double x, Double y, Double z, Double sm)
+{
+    // cell index
+    int    cx = std::floor(x),
+           cy = std::floor(y),
+           cz = std::floor(z);
+    // fractional part in cell
+    Double fx = MATH::frac(x),
+           fy = MATH::frac(y),
+           fz = MATH::frac(z);
+
+    Double res = 0.0;
+    for (int k=-1; k<=1; ++k)
+    for (int j=-1; j<=1; ++j)
+    for (int i=-1; i<=1; ++i)
+    {
+        Vec3 vc = voronoiCellPos(cx + i, cy + j, cz + k);
+
+        Double  rx = i + vc.x - fx,
+                ry = j + vc.y - fy,
+                rz = k + vc.z - fz;
+
+        Double d = std::sqrt(rx * rx + ry * ry + rz * rz);
+
+        res += std::exp( -sm * d );
+    }
+
+    return -(1.0 / sm) * std::log(res);
+}
+
+
+
+Double NoisePerlin::voronoi(Double x, Double y)
+{
+    // cell index
+    int    cx = std::floor(x),
+           cy = std::floor(y);
+    // fractional part in cell
+    Double fx = MATH::frac(x),
+           fy = MATH::frac(y);
+
+    Double res = 8.0;
+    for (int j=-1; j<=1; ++j)
+    for (int i=-1; i<=1; ++i)
+    {
+        Vec3 vc = voronoiCellPos(cx + i, cy + j, 0);
+
+        //Vec2 n = random2(cx + i, cy + j);
+        Double  rx = i + vc.x - fx,
+                ry = j + vc.y - fy;
+
+        Double d = rx * rx + ry * ry;
+        res = std::min(res, d);
+    }
+
+    return std::sqrt(res) / std::sqrt(2.0);
+}
+
+Double NoisePerlin::voronoi(Double x, Double y, Double z)
+{
+    // cell index
+    int    cx = std::floor(x),
+           cy = std::floor(y),
+           cz = std::floor(z);
+    // fractional part in cell
+    Double fx = MATH::frac(x),
+           fy = MATH::frac(y),
+           fz = MATH::frac(z);
+
+    Double res = 12.0;
+    for (int k=-1; k<=1; ++k)
+    for (int j=-1; j<=1; ++j)
+    for (int i=-1; i<=1; ++i)
+    {
+        Vec3 vc = voronoiCellPos(cx + i, cy + j, cz + k);
+
+        Double  rx = i + vc.x - fx,
+                ry = j + vc.y - fy,
+                rz = k + vc.z - fz;
+
+        Double d = rx * rx + ry * ry + rz * rz;
+        res = std::min(res, d);
+    }
+
+    return std::sqrt(res) / std::sqrt(3.0);
+}
+
+
+
 
 } // namespace MATH
 } // namespace MO

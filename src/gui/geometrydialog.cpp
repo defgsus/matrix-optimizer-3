@@ -133,6 +133,8 @@ void GeometryDialog::setChanged_(bool c)
         if (isChanged_)
             title.prepend("* ");
         setWindowTitle(title);
+
+        updatePresetButtons_();
     }
 }
 
@@ -642,7 +644,7 @@ void GeometryDialog::updatePresetList_()
         comboPreset_->addItem(display, filename);
 
         if (curPresetFile_ == filename)
-            sel = comboPreset_->count();
+            sel = comboPreset_->count() - 1;
     }
 
     // select desired
@@ -657,7 +659,7 @@ void GeometryDialog::updatePresetList_()
 void GeometryDialog::updatePresetButtons_()
 {
     const bool isPreset = comboPreset_->currentIndex() > 0;
-    butSavePreset_->setEnabled( isPreset );
+    butSavePreset_->setEnabled( isPreset && isChanged_ );
     butDeletePreset_->setEnabled( isPreset );
 }
 
@@ -667,7 +669,9 @@ void GeometryDialog::savePreset_()
     if (index < 1)
         return;
 
-    settings_->saveFile(comboPreset_->itemData(index).toString());
+    const QString fn = comboPreset_->itemData(index).toString();
+
+    saveGeometrySettings(fn);
 }
 
 
@@ -679,9 +683,24 @@ void GeometryDialog::savePresetAs_()
     if (filename.isEmpty())
         return;
 
-    settings_->saveFile(filename);
+    saveGeometrySettings(filename);
+}
 
-    updatePresetList_();
+void GeometryDialog::saveGeometrySettings(const QString& fn)
+{
+    try
+    {
+        settings_->saveFile(fn);
+
+        setChanged_(false);
+        curPresetFile_ = fn;
+        updatePresetList_();
+    }
+    catch (const Exception & e)
+    {
+        QMessageBox::critical(this, tr("save preset failed"),
+                              tr("There was an error saving the preset\n%1\n&2").arg(fn).arg(e.what()));
+    }
 }
 
 void GeometryDialog::deletePreset_()
