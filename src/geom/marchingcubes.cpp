@@ -504,6 +504,131 @@ int triTable[256][16] =
        return ntriang;
     }
 
+
+    /*
+       Polygonise a tetrahedron given its vertices within a cube
+       This is an alternative algorithm to polygonisegrid.
+       It results in a smoother surface but more triangular facets.
+
+                          + 0
+                         /|\
+                        / | \
+                       /  |  \
+                      /   |   \
+                     /    |    \
+                    /     |     \
+                   +-------------+ 1
+                  3 \     |     /
+                     \    |    /
+                      \   |   /
+                       \  |  /
+                        \ | /
+                         \|/
+                          + 2
+
+       It's main purpose is still to polygonise a gridded dataset and
+       would normally be called 6 times, one for each tetrahedron making
+       up the grid cell.
+       Given the grid labelling as in PolygniseGrid one would call
+          PolygoniseTri(grid,iso,triangles,0,2,3,7);
+          PolygoniseTri(grid,iso,triangles,0,2,6,7);
+          PolygoniseTri(grid,iso,triangles,0,4,6,7);
+          PolygoniseTri(grid,iso,triangles,0,6,1,2);
+          PolygoniseTri(grid,iso,triangles,0,6,1,4);
+          PolygoniseTri(grid,iso,triangles,5,6,1,4);
+    */
+    void PolygoniseTri(const CUBECELL& g, Float iso, Geometry& geom, int v0,int v1,int v2,int v3)
+    {
+       int triindex;
+
+       /*
+          Determine which of the 16 cases we have given which vertices
+          are above or below the isosurface
+       */
+       triindex = 0;
+       if (g.val[v0] < iso) triindex |= 1;
+       if (g.val[v1] < iso) triindex |= 2;
+       if (g.val[v2] < iso) triindex |= 4;
+       if (g.val[v3] < iso) triindex |= 8;
+
+       Vec3 p1, p2, p3;
+
+       /* Form the vertices of the triangles for each case */
+       switch (triindex) {
+       case 0x00:
+       case 0x0F:
+          break;
+       case 0x0E:
+       case 0x01:
+          p1 = VertexInterp(iso,g.p[v0],g.p[v1],g.val[v0],g.val[v1]);
+          p2 = VertexInterp(iso,g.p[v0],g.p[v2],g.val[v0],g.val[v2]);
+          p3 = VertexInterp(iso,g.p[v0],g.p[v3],g.val[v0],g.val[v3]);
+          geom.addTriangle(p1, p2, p3);
+          break;
+       case 0x0D:
+       case 0x02:
+          p1 = VertexInterp(iso,g.p[v1],g.p[v0],g.val[v1],g.val[v0]);
+          p2 = VertexInterp(iso,g.p[v1],g.p[v3],g.val[v1],g.val[v3]);
+          p3 = VertexInterp(iso,g.p[v1],g.p[v2],g.val[v1],g.val[v2]);
+          geom.addTriangle(p1, p2, p3);
+          break;
+       case 0x0C:
+       case 0x03:
+          p1 = VertexInterp(iso,g.p[v0],g.p[v3],g.val[v0],g.val[v3]);
+          p2 = VertexInterp(iso,g.p[v0],g.p[v2],g.val[v0],g.val[v2]);
+          p3 = VertexInterp(iso,g.p[v1],g.p[v3],g.val[v1],g.val[v3]);
+          geom.addTriangle(p1, p2, p3);
+          p1 = p3;
+          p3 = p2;
+          p2 = VertexInterp(iso,g.p[v1],g.p[v2],g.val[v1],g.val[v2]);
+          geom.addTriangle(p1, p2, p3);
+          break;
+       case 0x0B:
+       case 0x04:
+          p1 = VertexInterp(iso,g.p[v2],g.p[v0],g.val[v2],g.val[v0]);
+          p2 = VertexInterp(iso,g.p[v2],g.p[v1],g.val[v2],g.val[v1]);
+          p3 = VertexInterp(iso,g.p[v2],g.p[v3],g.val[v2],g.val[v3]);
+          geom.addTriangle(p1, p2, p3);
+          break;
+       case 0x0A:
+       case 0x05:
+          p1 = VertexInterp(iso,g.p[v0],g.p[v1],g.val[v0],g.val[v1]);
+          p2 = VertexInterp(iso,g.p[v2],g.p[v3],g.val[v2],g.val[v3]);
+          p3 = VertexInterp(iso,g.p[v0],g.p[v3],g.val[v0],g.val[v3]);
+          geom.addTriangle(p1, p2, p3);
+          p3 = p2;
+          p2 = VertexInterp(iso,g.p[v1],g.p[v2],g.val[v1],g.val[v2]);
+          geom.addTriangle(p1, p2, p3);
+          break;
+       case 0x09:
+       case 0x06:
+          p1 = VertexInterp(iso,g.p[v0],g.p[v1],g.val[v0],g.val[v1]);
+          p2 = VertexInterp(iso,g.p[v1],g.p[v3],g.val[v1],g.val[v3]);
+          p3 = VertexInterp(iso,g.p[v2],g.p[v3],g.val[v2],g.val[v3]);
+          geom.addTriangle(p1, p2, p3);
+          p2 = VertexInterp(iso,g.p[v0],g.p[v2],g.val[v0],g.val[v2]);
+          geom.addTriangle(p1, p2, p3);
+          break;
+       case 0x07:
+       case 0x08:
+          p1 = VertexInterp(iso,g.p[v3],g.p[v0],g.val[v3],g.val[v0]);
+          p2 = VertexInterp(iso,g.p[v3],g.p[v2],g.val[v3],g.val[v2]);
+          p3 = VertexInterp(iso,g.p[v3],g.p[v1],g.val[v3],g.val[v1]);
+          geom.addTriangle(p1, p2, p3);
+          break;
+       }
+    }
+
+    void PolygoniseTetra(const CUBECELL& grid, Float iso, Geometry& geom)
+    {
+        PolygoniseTri(grid,iso,geom,0,2,3,7);
+        PolygoniseTri(grid,iso,geom,0,2,6,7);
+        PolygoniseTri(grid,iso,geom,0,4,6,7);
+        PolygoniseTri(grid,iso,geom,0,6,1,2);
+        PolygoniseTri(grid,iso,geom,0,6,1,4);
+        PolygoniseTri(grid,iso,geom,5,6,1,4);
+    }
+
 } // namespace
 
 
@@ -595,8 +720,6 @@ void MarchingCubes::renderScalarField(Geometry& g,
         Polygonise(c, isolevel, g);
     }
 #else
-    // XXX Produces crap !?
-
     const uint W=w+1, H=h+1, D=d+1;
     std::vector<GRIDCELL> grid(W*H*D);
     GRIDCELL * c = &grid[0];
@@ -629,6 +752,48 @@ void MarchingCubes::renderScalarField(Geometry& g,
 #endif
 }
 
+
+
+
+void MarchingCubes::renderScalarFieldTetra(Geometry& g,
+                                      const Vec3& minExtend, const Vec3& maxExtend,
+                                      const Vec3& numCubes,
+                                      float isolevel,
+                                      std::function<float(const Vec3& pos)> func) const
+{
+    const Vec3 scale = (maxExtend - minExtend) / numCubes;
+    const uint w = numCubes.x, h = numCubes.y, d = numCubes.z;
+
+    const uint W=w+1, H=h+1, D=d+1;
+    std::vector<GRIDCELL> grid(W*H*D);
+    GRIDCELL * c = &grid[0];
+    for (uint z = 0; z < D; ++z)
+    for (uint y = 0; y < H; ++y)
+    for (uint x = 0; x < W; ++x, ++c)
+    {
+        c->p = Vec3(x, y, z);
+        c->p *= scale;
+        c->p += minExtend;
+
+        // sample at x,y,z + 0 vertex
+        c->val = func(c->p);
+    }
+
+    CUBECELL cube;
+    for (uint z = 0; z < d; ++z)
+    for (uint y = 0; y < h; ++y)
+    for (uint x = 0; x < w; ++x, ++c)
+    {
+        for (int i=0; i<8; ++i)
+        {
+            uint grididx = ((z + corner_v[i][2]) * H + y + corner_v[i][1]) * W + x + corner_v[i][0];
+            cube.p[i] = grid[grididx].p;
+            cube.val[i] = grid[grididx].val;
+        }
+
+        PolygoniseTetra(cube, isolevel, g);
+    }
+}
 
 
 } // namespace GEOM

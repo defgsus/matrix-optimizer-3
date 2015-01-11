@@ -275,6 +275,7 @@ public:
 
     /** Connects three previously created indices to form a triangle. */
     void addTriangle(IndexType p1, IndexType p2, IndexType p3);
+    void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3);
 
     /** Connects three previously created indices to form a triangle.
         Uses checkTriangle() to discard degenerate triangles. */

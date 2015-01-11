@@ -347,7 +347,7 @@ bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
     MO__CHECK_SCENE
 
     QString error;
-    if (!newParent->isSaveToAdd(object, error))
+    if (newParent != object->parentObject() && !newParent->isSaveToAdd(object, error))
     {
         QMessageBox::critical(0, tr("Can't move object"),
                               tr("The object %1 could not be added to %2.\n%3")

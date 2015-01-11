@@ -39,6 +39,14 @@ public:
                          float isolevel,
                          std::function<float(const Vec3& pos)> func) const;
 
+    /** Creates the triangles from the marching tetrahedrons algorithm in @p g.
+        @todo winding is wrong for some triangles. */
+    void renderScalarFieldTetra(Geometry& g,
+                         const Vec3& minExtend, const Vec3& maxExtend,
+                         const Vec3& numCubes,
+                         float isolevel,
+                         std::function<float(const Vec3& pos)> func) const;
+
 private:
 
 };
