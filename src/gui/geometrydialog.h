@@ -57,6 +57,7 @@ protected slots:
 
     void changeView_();
     void updateGeometry_();
+    void onChanged_();
     void updateFromWidgets_();
     void savePreset_();
     void savePresetAs_();
@@ -76,16 +77,20 @@ protected slots:
 
     void onGlReleased();
 
+    void setChanged_(bool c);
+    bool isSaveToDiscard_() const;
+
 protected:
     //void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
     bool event(QEvent *);
 
     void closeEvent(QCloseEvent *);
+    void keyPressEvent(QKeyEvent*);
 
     void createMainWidgets_();
     void createModifierWidgets_();
     void updateWidgets_();
-    void updatePresetList_(const QString& selectFilename = QString());
+    void updatePresetList_();
     void updatePresetButtons_();
 
     GeometryWidget * geoWidget_;
@@ -94,7 +99,10 @@ protected:
     GEOM::Geometry * geometry_;
     bool updateGeometryLater_,
          ignoreUpdate_,
-         closeRequest_;
+         closeRequest_,
+         isChanged_,
+         isAttached_;
+    QString curPresetFile_;
 
     QList<QWidget*> modifierWidgets_;
     QVBoxLayout * modifierLayout_;

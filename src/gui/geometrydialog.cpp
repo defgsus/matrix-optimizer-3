@@ -51,10 +51,11 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     geometry_       (0),
     updateGeometryLater_(false),
     ignoreUpdate_   (false),
-    closeRequest_   (false)
+    closeRequest_   (false),
+    isChanged_      (false),
+    isAttached_     (set != 0)
 {
     setObjectName("_GeometryWidget");
-    setWindowTitle(tr("geometry editor"));
 
     setMinimumSize(960,600);
     settings->restoreGeometry(this);
@@ -67,6 +68,8 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     createModifierWidgets_();
 
     updatePresetList_();
+
+    setChanged_(false);
 
 //    geomChanged_ = true;
 }
@@ -103,11 +106,48 @@ void GeometryDialog::closeEvent(QCloseEvent * e)
     setResult(r);
 }
 
+void GeometryDialog::keyPressEvent(QKeyEvent * e)
+{
+    if (e->key() == Qt::Key_Escape && !isSaveToDiscard_())
+    {
+        e->ignore();
+        return;
+    }
+    QDialog::keyPressEvent(e);
+}
+
 void GeometryDialog::onGlReleased()
 {
     MO_DEBUG_GL("GeometryDialog::onGlReleased()");
     if (closeRequest_)
         close();
+}
+
+void GeometryDialog::setChanged_(bool c)
+{
+    if (c != isChanged_)
+    {
+        isChanged_ = c;
+
+        QString title = tr("geometry editor");
+        if (isChanged_)
+            title.prepend("* ");
+        setWindowTitle(title);
+    }
+}
+
+bool GeometryDialog::isSaveToDiscard_() const
+{
+    if (!isChanged_)
+        return true;
+
+    int r = QMessageBox::question(0, tr("changes to geometry"),
+                          tr("There are changes to the current geometry that would get lost."),
+                          tr("Discard changes"), tr("Cancel operation"));
+    if (r == 0)
+        return true;
+
+    return false;
 }
 
 void GeometryDialog::createMainWidgets_()
@@ -298,22 +338,31 @@ void GeometryDialog::createMainWidgets_()
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
-                    but = new QPushButton(tr("Ok"), this);
-                    lh2->addWidget(but);
-                    but->setDefault(true);
-                    connect(but, &QPushButton::clicked, [=]()
+                    if (isAttached_)
                     {
-                        setResult(Accepted);
-                        close();
-                    });
+                        but = new QPushButton(tr("Ok"), this);
+                        lh2->addWidget(but);
+                        but->setDefault(true);
+                        connect(but, &QPushButton::clicked, [=]()
+                        {
+                            setResult(Accepted);
+                            close();
+                        });
+                    }
 
                     but = new QPushButton(tr("Cancel"), this);
+                    if (!isAttached_)
+                        but->setText(tr("Close"));
                     lh2->addWidget(but);
                     connect(but, &QPushButton::clicked, [=]()
                     {
+                        // ask user
+                        if (!isSaveToDiscard_())
+                            return;
                         setResult(Rejected);
                         close();
                     });
+
 
                 // Export
 
@@ -369,7 +418,7 @@ void GeometryDialog::createModifierWidgets_()
         connect(w, SIGNAL(expandedChange(GEOM::GeometryModifier*,bool)),
                 this, SLOT(modifierExpandedChanged_(GEOM::GeometryModifier*,bool)));
         connect(w, SIGNAL(valueChanged(GEOM::GeometryModifier*)),
-                this, SLOT(updateFromWidgets_()));
+                this, SLOT(onChanged_()));
     }
 
     // a "stretch" that can be deleted later
@@ -409,7 +458,7 @@ void GeometryDialog::modifierExpandedChanged_(GEOM::GeometryModifier * g, bool e
 void GeometryDialog::modifierMuteChange_(GEOM::GeometryModifier * g, bool mute)
 {
     g->setEnabled(!mute);
-    updateFromWidgets_();
+    onChanged_();
 }
 
 void GeometryDialog::modifierUp_(GEOM::GeometryModifier * g)
@@ -417,7 +466,7 @@ void GeometryDialog::modifierUp_(GEOM::GeometryModifier * g)
     if ( settings_->modifierChain()->moveModifierUp(g) )
     {
         createModifierWidgets_();
-        updateFromWidgets_();
+        onChanged_();
     }
 }
 
@@ -426,7 +475,7 @@ void GeometryDialog::modifierDown_(GEOM::GeometryModifier * g)
     if ( settings_->modifierChain()->moveModifierDown(g) )
     {
         createModifierWidgets_();
-        updateFromWidgets_();
+        onChanged_();
     }
 }
 
@@ -435,7 +484,7 @@ void GeometryDialog::modifierDelete_(GEOM::GeometryModifier * g)
     if ( settings_->modifierChain()->deleteModifier(g) )
     {
         createModifierWidgets_();
-        updateFromWidgets_();
+        onChanged_();
     }
 }
 
@@ -460,7 +509,7 @@ void GeometryDialog::newModifierPopup_(GEOM::GeometryModifier *before)
             settings_->modifierChain()->insertModifier(classname, before);
 
         createModifierWidgets_();
-        updateFromWidgets_();
+        onChanged_();
     });
 
     connect(menu, SIGNAL(aboutToHide()), menu, SLOT(deleteLater()));
@@ -539,6 +588,12 @@ void GeometryDialog::creationFinished_()
         updateGeometry_();
 }
 
+void GeometryDialog::onChanged_()
+{
+    setChanged_(true);
+    updateFromWidgets_();
+}
+
 void GeometryDialog::updateFromWidgets_()
 {
     if (ignoreUpdate_)
@@ -555,7 +610,7 @@ void GeometryDialog::updateWidgets_()
 }
 
 
-void GeometryDialog::updatePresetList_(const QString &selectFilename)
+void GeometryDialog::updatePresetList_()
 {
     ignoreUpdate_ = true;
 
@@ -581,11 +636,13 @@ void GeometryDialog::updatePresetList_(const QString &selectFilename)
     int sel = -1;
     for (auto &n : names)
     {
-        if (selectFilename == n)
-            sel = comboPreset_->count();
+        QString filename = path + QDir::separator() + n;
         QString display = n;
         display.replace("."+IO::fileTypeExtensions[IO::FT_GEOMETRY_SETTINGS][0], "");
-        comboPreset_->addItem(display, path + QDir::separator() + n);
+        comboPreset_->addItem(display, filename);
+
+        if (curPresetFile_ == filename)
+            sel = comboPreset_->count();
     }
 
     // select desired
@@ -624,12 +681,12 @@ void GeometryDialog::savePresetAs_()
 
     settings_->saveFile(filename);
 
-    updatePresetList_(filename);
+    updatePresetList_();
 }
 
 void GeometryDialog::deletePreset_()
 {
-
+    // XXX
 }
 
 void GeometryDialog::presetSelected_()
@@ -637,25 +694,43 @@ void GeometryDialog::presetSelected_()
     if (ignoreUpdate_)
         return;
 
+    if (!isSaveToDiscard_())
+        return;
+
     updatePresetButtons_();
 
     const int index = comboPreset_->currentIndex();
     if (index < 0)
+    {
+        curPresetFile_.clear();
         return;
+    }
 
     const QString filename = comboPreset_->itemData(index).toString();
 
     GEOM::GeometryFactorySettings set(0);
 
     if (!filename.isEmpty())
-        set.loadFile(filename);
-
-    setGeometrySettings(set);
+    {
+        try
+        {
+            set.loadFile(filename);
+            setGeometrySettings(set);
+            curPresetFile_ = filename;
+        }
+        catch (const Exception& e)
+        {
+            QMessageBox::critical(this, tr("loading preset failed"),
+                                  tr("The geometry preset\n%1\ncould not be loaded.\n%2").arg(filename).arg(e.what()));
+        }
+    }
 }
 
 void GeometryDialog::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
 {
     *settings_ = s;
+
+    setChanged_(false);
 
     updateWidgets_();
     createModifierWidgets_();
