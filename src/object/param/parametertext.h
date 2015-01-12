@@ -58,9 +58,10 @@ public:
         Depending on the textType(), the dialog will be structured.
         If a (valid) text change was done, the scene object will be called with
         Scene::setParameterValue().
-        @note The scene MUST be present for this call!
-        Returns true, when a change was made. */
-    bool openEditDialog(QWidget * parent = 0);
+        This call immediately returns after opening the dialog.
+        XXX Right now, it's modal - otherwise the parameter must take down all it's dialogs on destruction!
+        @note The scene MUST be present in the object tree for this call! */
+    void openEditDialog(QWidget * parent = 0);
 
 private:
 

@@ -66,37 +66,35 @@ void ParameterText::setVariableDescriptions(const std::vector<std::string> &desc
         varDescs_ << QString::fromStdString(n);
 }
 
-bool ParameterText::openEditDialog(QWidget *parent)
+void ParameterText::openEditDialog(QWidget *parent)
 {
     MO_ASSERT(object(), "no object for ParameterText::openFileDialog()");
     MO_ASSERT(object()->sceneObject(), "no scene for ParameterText::openFileDialog()");
     MO_ASSERT(object()->sceneObject()->editor(), "no editor for ParameterText::openFileDialog()");
 
-    if (!object() || !object()->sceneObject())
-        return false;
-
-    QString oldText = value_;
+    if (!object() || !object()->sceneObject() || !object()->sceneObject()->editor())
+        return;
 
     const QString parName = QString("%1.%2").arg(object()->name()).arg(name());
 
     // prepare default dialog
-    GUI::TextEditDialog diag(value_, textType_, parent);
+    auto diag = new GUI::TextEditDialog(value_, textType_, parent);
+    diag->setAttribute(Qt::WA_DeleteOnClose, true);
+    //diag->setModal(false);
 
     // copy equation namespace
     if (textType_ == TT_EQUATION)
     {
-        diag.addVariableNames(varNames_, varDescs_);
-        diag.setWindowTitle(QObject::tr("equation for %1").arg(parName));
+        diag->addVariableNames(varNames_, varDescs_);
+        diag->setWindowTitle(QObject::tr("equation for %1").arg(parName));
     }
 
-    diag.connect(&diag, &GUI::TextEditDialog::textChanged, [this, &diag]()
+    diag->connect(diag, &GUI::TextEditDialog::textChanged, [this, diag]()
     {
-        object()->sceneObject()->editor()->setParameterValue(this, diag.getText());
+        object()->sceneObject()->editor()->setParameterValue(this, diag->getText());
     });
 
-    diag.exec();
-
-    return oldText != value_;
+    diag->exec();
 }
 
 

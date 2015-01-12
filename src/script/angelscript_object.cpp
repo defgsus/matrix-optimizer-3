@@ -303,6 +303,7 @@ public:
     Double start() const { return o->start(); }
     Double end() const { return o->end(); }
     Double length() const { return o->length(); }
+    bool looping() const { return o->looping(); }
     Double loopStart() const { return o->loopStart(); }
     Double loopEnd() const { return o->loopEnd(); }
     Double loopLength() const { return o->loopLength(); }
@@ -323,6 +324,7 @@ public:
     void setStart(Double t) { o->setStart(t); MO__EMIT; }
     void setEnd(Double t) { o->setEnd(t); MO__EMIT; }
     void setLength(Double t) { o->setLength(t); MO__EMIT; }
+    void setLooping(bool b) { o->setLooping(b); MO__EMIT; }
     void setLoopStart(Double t) { o->setLoopStart(t); MO__EMIT; }
     void setLoopEnd(Double t) { o->setLoopEnd(t); MO__EMIT; }
     void setLoopLength(Double t) { o->setLoopLength(t); MO__EMIT; }
@@ -726,6 +728,7 @@ static void register_sequence_base(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("double start() const", start);
     MO__REG_METHOD("double end() const", end);
     MO__REG_METHOD("double length() const", length);
+    MO__REG_METHOD("bool looping() const", looping);
     MO__REG_METHOD("double loopStart() const", loopStart);
     MO__REG_METHOD("double loopEnd() const", loopEnd);
     MO__REG_METHOD("double loopLength() const", loopLength);
@@ -744,6 +747,7 @@ static void register_sequence_base(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("void setStart(double second)", setStart);
     MO__REG_METHOD("void setEnd(double second)", setEnd);
     MO__REG_METHOD("void setLength(double second)", setLength);
+    MO__REG_METHOD("void setLooping(bool)", setLooping);
     MO__REG_METHOD("void setLoopStart(double second)", setLoopStart);
     MO__REG_METHOD("void setLoopEnd(double second)", setLoopEnd);
     MO__REG_METHOD("void setLoopLength(double second)", setLoopLength);

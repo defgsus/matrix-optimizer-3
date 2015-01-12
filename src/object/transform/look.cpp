@@ -65,8 +65,8 @@ void Look::applyTransformation(Mat4 &matrix, Double time, uint thread) const
                                        z_->value(time, thread)));
     // up vector
     Vec3 u = MATH::normalize_safe(Vec3(upX_->value(time, thread),
-                                 upY_->value(time, thread),
-                                 upZ_->value(time, thread)));
+                                       upY_->value(time, thread),
+                                       upZ_->value(time, thread)));
     // right vector
     Vec3 s = MATH::normalize_safe(glm::cross(f, u));
     // rebuild up to avoid distortion

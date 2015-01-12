@@ -41,6 +41,7 @@
 #include "gui/modulatordialog.h"
 #include "gui/util/objectmenu.h"
 #include "model/objectmimedata.h"
+#include "io/application.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -379,7 +380,7 @@ void ParameterWidget::createWidgets_()
         // load button click
         connect(butedit, &QToolButton::clicked, [=]()
         {
-            ptxt->openEditDialog(this);
+            ptxt->openEditDialog( application->mainWindow() );
         });
 
         // reset to default
