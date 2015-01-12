@@ -34,6 +34,10 @@ signals:
 public slots:
 
     void setPaletteFor(QWidget*);
+
+    /** Creates a dockwidget for the widget and installs it in the mainwindow */
+    QDockWidget * createDockWidget(const QString& name, QWidget * w);
+
 protected:
 
     virtual bool notify(QObject * o, QEvent * e);

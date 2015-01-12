@@ -39,6 +39,7 @@
 #include "object/param/parametertimeline1d.h"
 #include "object/param/modulator.h"
 #include "gui/modulatordialog.h"
+#include "gui/widget/texteditwidget.h"
 #include "gui/util/objectmenu.h"
 #include "model/objectmimedata.h"
 #include "io/application.h"
@@ -380,7 +381,13 @@ void ParameterWidget::createWidgets_()
         // load button click
         connect(butedit, &QToolButton::clicked, [=]()
         {
+#if 1
             ptxt->openEditDialog( application->mainWindow() );
+#else
+            // XXX works but is not fully integrated yet
+            auto w = ptxt->createEditWidget( application->mainWindow() );
+            application->createDockWidget("parameter " + ptxt->infoName(), w);
+#endif
         });
 
         // reset to default

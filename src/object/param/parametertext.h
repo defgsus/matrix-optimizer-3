@@ -17,13 +17,14 @@
 #include "object/object_fwd.h"
 
 namespace MO {
-
+namespace GUI { class TextEditWidget; class TextEditDialog; }
 
 class ParameterText : public Parameter
 {
 public:
 
     ParameterText(Object * object, const QString& idName, const QString& name);
+    ~ParameterText();
 
     virtual void serialize(IO::DataStream&) const;
     virtual void deserialize(IO::DataStream&);
@@ -59,15 +60,30 @@ public:
         If a (valid) text change was done, the scene object will be called with
         Scene::setParameterValue().
         This call immediately returns after opening the dialog.
-        XXX Right now, it's modal - otherwise the parameter must take down all it's dialogs on destruction!
-        @note The scene MUST be present in the object tree for this call! */
-    void openEditDialog(QWidget * parent = 0);
+        The parameter takes down the dialog on Parameter's destruction!
+        @note The scene MUST be present in the object tree for this call!
+        @note Don't let parent be the ParameterWidget as it would destroy the
+        Dialog when selecting another object. */
+    GUI::TextEditDialog * openEditDialog(QWidget * parent = 0);
+
+    /** Creates a widget for editing the text.
+        Depending on the textType(), the dialog will be structured.
+        If a (valid) text change was done, the scene object will be called with
+        Scene::setParameterValue().
+        The returned widget will issue a closeRequest() signal when the parameter disappears.
+        @note The scene MUST be present in the object tree for this call!
+        @note Don't let parent be the ParameterWidget as it would destroy the
+        Dialog when selecting another object. */
+    GUI::TextEditWidget * createEditWidget(QWidget * parent = 0);
 
 private:
 
     QString value_, defaultValue_;
     TextType textType_;
     QStringList varNames_, varDescs_;
+
+    GUI::TextEditDialog * diag_;
+    GUI::TextEditWidget * editor_;
 };
 
 } // namespace MO

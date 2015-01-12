@@ -16,11 +16,13 @@
 #include <QHostInfo>
 #include <QHostAddress>
 #include <QScreen>
+#include <QDockWidget>
 
 #include "io/application.h"
 #include "io/error.h"
 #include "io/isclient.h"
 #include "io/settings.h"
+#include "gui/mainwindow.h"
 
 // usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
@@ -42,6 +44,19 @@ Application::Application(int& argc, char** args)
 
 }
 
+
+QDockWidget * Application::createDockWidget(const QString& name, QWidget *w)
+{
+    auto main = qobject_cast<GUI::MainWindow*>(mainWindow());
+    MO_ASSERT(main, "wrong main window " << mainWindow());
+
+    auto dw = main->createDockWidget(name, w);
+
+    main->addDockWidget(Qt::LeftDockWidgetArea, dw, Qt::Vertical);
+    dw->setFloating(true);
+
+    return dw;
+}
 
 
 bool Application::notify(QObject * o, QEvent * e)

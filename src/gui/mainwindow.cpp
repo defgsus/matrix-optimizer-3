@@ -37,12 +37,6 @@ namespace GUI {
 
 
 
-
-
-
-
-
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow     (parent),
     controller_     (0)
@@ -154,31 +148,36 @@ void MainWindow::createWidgets_()
 
 void MainWindow::createDockWidgets_()
 {
-    auto dock = createDockWidget_(tr("Transport"), controller_->transportWidget());
+    auto dock = createDockWidget(tr("Transport"), controller_->transportWidget());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
-    dock = createDockWidget_(tr("Patch"), controller_->objectGraphView());
+    dock = createDockWidget(tr("Patch"), controller_->objectGraphView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
-    dock = createDockWidget_(tr("Sequence"), controller_->sequenceView());
+    dock = createDockWidget(tr("Sequence"), controller_->sequenceView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
-    dock = createDockWidget_(tr("Clips"), controller_->clipView());
+    dock = createDockWidget(tr("Clips"), controller_->clipView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
-    dock = createDockWidget_(tr("Object"), controller_->objectView());
+    dock = createDockWidget(tr("Object"), controller_->objectView());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
 }
 
-QDockWidget * MainWindow::createDockWidget_(const QString &name, QWidget *widget)
+QDockWidget * MainWindow::createDockWidget(const QString &name, QWidget *widget)
 {
     MO_ASSERT(!widget->objectName().isEmpty(), "need name for layout reload");
+
+    if (dockMap_.contains(widget))
+        return dockMap_.value(widget);
 
     auto dock = new QDockWidget(name, this);
     dock->setObjectName(widget->objectName() + "_Dock");
     dock->setAllowedAreas(Qt::AllDockWidgetAreas);
     dock->setWidget(widget);
     viewMenu_->addAction( dock->toggleViewAction() );
+
+    dockMap_.insert(widget, dock);
 
     return dock;
 }
