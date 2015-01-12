@@ -27,6 +27,7 @@
 #include "gui/modulatordialog.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectmenu.h"
+#include "gui/util/appicons.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/model3d.h"
@@ -1281,7 +1282,7 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_t
                 curprio = Object::objectPriority(o);
             }
 
-            QAction * a = new QAction(ObjectFactory::iconForObject(o), o->name(), scene);
+            QAction * a = new QAction(AppIcons::iconForObject(o), o->name(), scene);
             a->setData(o->className());
             if (with_shortcuts)
             {

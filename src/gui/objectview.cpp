@@ -17,6 +17,7 @@
 
 
 #include "objectview.h"
+#include "util/appicons.h"
 #include "tool/stringmanip.h"
 #include "parameterview.h"
 #include "object/object.h"
@@ -91,7 +92,7 @@ void ObjectView::setObject(Object * object)
         p.setColor(QPalette::Window, ObjectFactory::colorForObject(object_));
         icon_->setPalette(p);
         */
-        icon_->setIcon(ObjectFactory::iconForObject(object_));
+        icon_->setIcon(AppIcons::iconForObject(object_));
     }
     else
     {

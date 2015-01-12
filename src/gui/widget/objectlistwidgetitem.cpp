@@ -10,6 +10,7 @@
 #include <QDebug>
 #include "objectlistwidgetitem.h"
 #include "objectlistwidget.h"
+#include "gui/util/appicons.h"
 #include "object/object.h"
 #include "object/objectfactory.h"
 #include "object/scene.h"
@@ -24,7 +25,7 @@ ObjectListWidgetItem::ObjectListWidgetItem(Object *o, ObjectListWidget *parent, 
 {
     const auto col = ObjectFactory::colorForObject(object_);
 
-    setIcon(ObjectFactory::iconForObject(object_, col));
+    setIcon(AppIcons::iconForObject(object_, col));
     setData(Qt::UserRole, object_->idName());
     setForeground(QBrush(col));
 //    setBackground(QBrush(Qt::black));

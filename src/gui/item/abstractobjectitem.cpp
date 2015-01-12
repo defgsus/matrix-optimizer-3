@@ -24,6 +24,7 @@
 #include "abstractobjectitem.h"
 #include "objectgraphexpanditem.h"
 #include "objectgraphconnectitem.h"
+#include "gui/util/appicons.h"
 #include "object/object.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
@@ -547,7 +548,7 @@ void AbstractObjectItem::updateColors()
 {
     p_oi_->brushBack = ObjectGraphSettings::brushOutline(object());
     p_oi_->brushBackSel = ObjectGraphSettings::brushOutline(object(), true);
-    p_oi_->icon = ObjectFactory::iconForObject(object(),
+    p_oi_->icon = AppIcons::iconForObject(object(),
                                 ObjectFactory::colorForObject(object()));
     p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
 

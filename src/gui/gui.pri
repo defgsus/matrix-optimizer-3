@@ -83,7 +83,8 @@ HEADERS += \
     src/gui/widget/angelscriptwidget.h \
     src/gui/widget/abstractscriptwidget.h \
     src/gui/widget/glslwidget.h \
-    src/gui/widget/texteditwidget.h
+    src/gui/widget/texteditwidget.h \
+    src/gui/util/appicons.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -166,4 +167,5 @@ SOURCES += \
     src/gui/widget/angelscriptwidget.cpp \
     src/gui/widget/abstractscriptwidget.cpp \
     src/gui/widget/glslwidget.cpp \
-    src/gui/widget/texteditwidget.cpp
+    src/gui/widget/texteditwidget.cpp \
+    src/gui/util/appicons.cpp

@@ -15,6 +15,7 @@
 #include <QPainter>
 
 #include "objectmenu.h"
+#include "appicons.h"
 #include "object/object.h"
 #include "object/objectfactory.h"
 #include "object/param/parameter.h"
@@ -58,7 +59,7 @@ QMenu * ObjectMenu::createObjectMenu(int objectTypeFlags, QWidget *parent)
             curprio = Object::objectPriority(o);
         }
 
-        QAction * a = new QAction(ObjectFactory::iconForObject(o), o->name(), parent);
+        QAction * a = new QAction(AppIcons::iconForObject(o), o->name(), parent);
         a->setData(o->className());
         menu->addAction(a);
     }
@@ -92,7 +93,7 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
         if (list.isEmpty() && !match)
             continue;
 
-        QAction * a = new QAction(ObjectFactory::iconForObject(c), c->name(), menu);
+        QAction * a = new QAction(AppIcons::iconForObject(c), c->name(), menu);
         if (match)
             a->setData(c->idName());
 
@@ -111,7 +112,7 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
                 if (match)
                 {
                     menu->addAction(a);
-                    a = new QAction(ObjectFactory::iconForObject(c), c->name(), menu);
+                    a = new QAction(AppIcons::iconForObject(c), c->name(), menu);
                     a->setData(c->idName());
                 }
                 a->setMenu(m);
@@ -139,7 +140,7 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
         {
             Object * mo = m->modulator();
             MO_ASSERT(mo, "no object assigned to modulator of '" << pf->idName() << "'");
-            QAction * a = new QAction(ObjectFactory::iconForObject(mo), mo->name(), menu);
+            QAction * a = new QAction(AppIcons::iconForObject(mo), mo->name(), menu);
             a->setData(m->modulatorId() + stupid_separator + m->outputId());
             a->setToolTip(mo->namePath());
             a->setStatusTip(a->toolTip());

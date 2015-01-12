@@ -122,7 +122,7 @@ QColor ObjectFactory::colorForObject(const Object * o, bool darkSet)
 
     return QColor::fromHsl(hue, sat, bright);
 }
-
+#if 0
 const QIcon& ObjectFactory::iconForObject(const Object * o)
 {
     static QIcon iconNone(":/icon/obj_none.png");
@@ -254,7 +254,7 @@ QIcon ObjectFactory::iconForObject(const Object * obj, QColor color, const QSize
     pix.setMask(org.pixmap(si).mask());
     return QIcon(pix);
 }
-
+#endif
 bool ObjectFactory::registerObject(Object * obj)
 {
     if (instance().objectMap_.find(obj->className())

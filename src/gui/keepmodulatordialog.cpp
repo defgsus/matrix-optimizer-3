@@ -14,6 +14,7 @@
 #include <QPushButton>
 
 #include "keepmodulatordialog.h"
+#include "util/appicons.h"
 #include "object/scene.h"
 #include "object/param/parameter.h"
 #include "object/param/modulator.h"
@@ -314,7 +315,7 @@ void KeepModulatorDialog::createList_()
                       );
         item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
         item->setCheckState(m.createCopy ? Qt::Checked : Qt::Unchecked);
-        item->setIcon(ObjectFactory::iconForObject(m.object));
+        item->setIcon(AppIcons::iconForObject(m.object));
         list_->addItem(item);
     }
 }
