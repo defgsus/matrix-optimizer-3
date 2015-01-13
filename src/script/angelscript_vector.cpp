@@ -265,6 +265,19 @@ struct vecfunc
 
     static float duckball(const Vec2& ri, const Vec2& start, Float bailout) { return MATH::fractal<Float,uint>::duckball(ri.x, ri.y, start.x, start.y, bailout); }
 
+    static Vec3 duckball3(const Vec3& pos, const Vec3& param = Vec3(-.5f, -.4f, -1.578f), uint iter = 32)
+    {
+        Vec3 p = pos;
+        for (int i = 0; i < iter; ++i)
+        {
+            Float mag = glm::dot(p, p);
+            p = glm::abs(p);
+            if (mag != 0)
+                 p /= mag;
+            p += param;
+        }
+        return p;
+    }
 };
 
 //--------------------------------
@@ -483,6 +496,8 @@ void register_vector_3(asIScriptEngine *engine)
     MO__REG_FUNC("%1 noise3(float)", vecfunc<Vec3>::noisev3_1);
     MO__REG_FUNC("float voronoi(const %1 &in)", vecfunc<Vec3>::voronoi_3);
     MO__REG_FUNC("float svoronoi(const %1 &in, float sm = 32.f)", vecfunc<Vec3>::svoronoi_3);
+
+    MO__REG_FUNC("%1 duckball3(const %1 &in pos, const %1 &in param = %1(-.5, -.4, -1.578), uint iterations = 32)", vecfunc<Vec3>::duckball3);
 
     MO__REG_FUNC("%1 euclidean2polar(const %1 &in)", vecfunc<Vec3>::euclidean2polar);
     MO__REG_FUNC("%1 polar2euclidean(const %1 &in)", vecfunc<Vec3>::polar2euclidean);

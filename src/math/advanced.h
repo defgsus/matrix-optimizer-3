@@ -838,7 +838,7 @@ struct fractal
     {
         F z;
         I iter = 0;
-        while (iter < 1000)
+        while (iter < 100)
         {
             z = x*x + y*y;
             if (z < 0.0001 || z >= bailout) break;
@@ -848,6 +848,7 @@ struct fractal
         }
         return std::sqrt(z);
     }
+
 };
 
 
