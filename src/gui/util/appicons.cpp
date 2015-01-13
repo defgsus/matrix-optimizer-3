@@ -205,8 +205,6 @@ QIcon AppIcons::Private::getIcon(IconId id, const QColor& color, const QSize& si
 
     QString name = nameMap_.value(id);
 
-    std::cout << "--------" << name << size.width() << "x" << size.height() << std::endl;
-
     QIcon org(name);
 
     QPixmap pix(size);

@@ -187,12 +187,13 @@ static void register_math_funcs(asIScriptEngine *engine, const char * floattyp, 
     MO__REG_FUNC("%1 svoronoi(%1 x, %1 y, %1 smooth = 32)", MATH::advanced<F>::svoronoi_2);
     MO__REG_FUNC("%1 svoronoi(%1 x, %1 y, %1 z, %1 smooth = 32)", MATH::advanced<F>::svoronoi_3);
 
-    MO__REG_FUNC("%1 mandel(%1 real, %1 imag)", MATH::advanced<F>::mandel);
-    MO__REG_FUNC("%1 mandel(%1 real, %1 imag, uint max_iterations)", MATH::advanced<F>::mandel_3);
-    MO__REG_FUNC("uint mandeli(%1 real, %1 imag)", MATH::advanced<F>::mandeli);
-    MO__REG_FUNC("uint mandeli(%1 real, %1 imag, uint max_iterations)", MATH::advanced<F>::mandeli_3);
-    MO__REG_FUNC("%1 julia(%1 real_start, %1 imag_start, %1 real, %1 imag)", MATH::advanced<F>::julia);
-    MO__REG_FUNC("uint juliai(%1 real_start, %1 imag_start, %1 real, %1 imag)", MATH::advanced<F>::juliai);
+    MO__REG_FUNC("%1 mandel(%1 real, %1 imag)", (MATH::fractal<F,int>::mandel));
+    MO__REG_FUNC("%1 mandel(%1 real, %1 imag, uint max_iterations)", (MATH::fractal<F,uint>::mandel_3));
+    MO__REG_FUNC("uint mandeli(%1 real, %1 imag)", (MATH::fractal<F,uint>::mandeli));
+    MO__REG_FUNC("uint mandeli(%1 real, %1 imag, uint max_iterations)", (MATH::fractal<F,uint>::mandeli_3));
+    MO__REG_FUNC("%1 julia(%1 real_start, %1 imag_start, %1 real, %1 imag)", (MATH::fractal<F,uint>::julia));
+    MO__REG_FUNC("uint juliai(%1 real_start, %1 imag_start, %1 real, %1 imag)", (MATH::fractal<F,uint>::juliai));
+    MO__REG_FUNC("%1 duckball(%1 real, %1 imag, %1 real_start = 0.5, %1 imag_start = 0.5, float bailout = 10)", (MATH::fractal<F,uint>::duckball));
 }
 
 #undef MO__REG_FUNC

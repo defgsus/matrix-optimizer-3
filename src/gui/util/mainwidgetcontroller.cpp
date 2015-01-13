@@ -115,7 +115,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       isVisibleSequencer_(true),
       isVisibleClipView_(true),
       isVisibleSeqView_ (true),
-      qobjectInspector_ (0),
+      //qobjectInspector_ (0),
       serverDialog_     (0),
       statusBar_        (0),
       sysInfoLabel_     (0),
@@ -483,14 +483,22 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             diag->show();
         });
 
-        a = new QAction(tr("QObject inspector"), m);
+        a = new QAction(tr("QObject inspector (mainwindow)"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            qobjectInspector_ = new QObjectInspector(application, window_);
-            qobjectInspector_->setRootObject(window_);
-            qobjectInspector_->setAttribute(Qt::WA_DeleteOnClose);
-            qobjectInspector_->show();
+            auto o = new QObjectInspector(window_, window_);
+            o->setAttribute(Qt::WA_DeleteOnClose);
+            o->show();
+        });
+
+        a = new QAction(tr("QObject inspector (application)"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto o = new QObjectInspector(application, window_);
+            o->setAttribute(Qt::WA_DeleteOnClose);
+            o->show();
         });
 
         m->addAction(a = new QAction(tr("Dump id names"), m));

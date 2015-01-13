@@ -87,7 +87,7 @@ private:
         *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_;
     ParameterSelect * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
                     * usePointCoord_, *pointSizeAuto_;
-    ParameterText * glslVertex_, *glslVertexOut_;
+    ParameterText * glslVertex_, *glslVertexOut_, *glslFragmentOut_;
 
     GL::Uniform * u_diff_exp_, * u_bump_scale_,
                 * u_vertex_extrude_, * u_pointsize_;

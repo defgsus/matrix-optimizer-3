@@ -12,6 +12,7 @@
  * MO_FRAGMENT_LIGHTING
  * MO_TEXTURE_IS_FULLDOME_CUBE
  * MO_USE_POINT_COORD // use gl_PointCoord instead of v_texCoord
+ * MO_ENABLE_FRAGMENT_OVERRIDE
  * MO_ENABLE_TEXTURE_TRANSFORMATION
  * MO_ENABLE_TEXTURE_SINE_MORPH
  * MO_ENABLE_NORMALMAP_TRANSFORMATION
@@ -46,7 +47,7 @@ in vec2 v_texCoord;
 
 // --- output to rasterizer ---
 
-out vec4 color;
+out vec4 out_color;
 
 
 // --- uniforms ---
@@ -327,6 +328,10 @@ vec4 mo_toon_color()
 }
 
 
+#ifdef MO_ENABLE_FRAGMENT_OVERRIDE
+//%mo_override_frag%
+#endif
+
 void main()
 {
     // 'ambient' or base color
@@ -339,7 +344,11 @@ void main()
     //col *= mo_toon_color();
 
     // final color
-    color = vec4(clamp(col * v_color, 0.0, 1.0));
+    out_color = vec4(clamp(col * v_color, 0.0, 1.0));
+
+#ifdef MO_ENABLE_FRAGMENT_OVERRIDE
+    mo_modify_fragment_output();
+#endif
 
     //gl_DepthRangeParameters.
 }

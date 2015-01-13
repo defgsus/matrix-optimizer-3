@@ -186,6 +186,23 @@ void Model3d::createParameters()
                                                        "void mo_modify_vertex_output()\n{\n\t\n}\n"
                                                     , true, false);
 
+        glslFragmentOut_ = params()->createTextParameter("glsl_fragment", tr("glsl fragment output"),
+                                                    tr("A piece of glsl code to set or modify the output fragment color"),
+                                                    TT_GLSL,
+                                                       "// + " + tr("You have access to these attributes") + ":\n"
+                                                       "// v_pos\n"
+                                                       "// v_pos_world\n"
+                                                       "// v_pos_eye\n"
+                                                       "// v_normal\n"
+                                                       "// v_normal_eye\n"
+                                                       "// v_texCoord\n"
+                                                       "// v_cam_dir\n"
+                                                       "// v_color\n"
+                                                       "// v_ambient_color\n"
+                                                       "//\n"
+                                                       "void mo_modify_fragment_output()\n{\n\t\n}\n"
+                                                    , true, false);
+
     params()->endParameterGroup();
 
 
@@ -276,6 +293,7 @@ void Model3d::onParameterChanged(Parameter *p)
             || p == glslDoOverride_
             || p == glslVertex_
             || p == glslVertexOut_
+            || p == glslFragmentOut_
             || p == usePointCoord_
             || p == pointSizeAuto_
             || texturePostProc_->needsRecompile(p)
@@ -310,6 +328,7 @@ void Model3d::updateParameterVisibility()
     bool glsl = glslDoOverride_->baseValue();
     glslVertex_->setVisible(glsl);
     glslVertexOut_->setVisible(glsl);
+    glslFragmentOut_->setVisible(glsl);
 
     bool psdist = pointSizeAuto_->baseValue() != 0;
     paramPointSizeMax_->setVisible(psdist);
@@ -455,11 +474,14 @@ void Model3d::setupDrawable_()
     // glsl
     if (glslDoOverride_->baseValue())
     {
+        src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
+        src->addDefine("#define MO_ENABLE_FRAGMENT_OVERRIDE");
         QString text =
                   glslVertex_->value() + "\n"
                 + glslVertexOut_->value() + "\n";
-        src->replace("//%mo_override%", text);
-        src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
+        src->replace("//%mo_override_vert%", text);
+        src->replace("//%mo_override_frag%", glslFragmentOut_->value() + "\n");
+
     }
     // declare user uniforms
     src->replace("//%user_uniforms%", "// runtime user uniforms\n" + uniformSetting_->getDeclarations());

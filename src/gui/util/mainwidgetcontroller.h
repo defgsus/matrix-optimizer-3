@@ -69,7 +69,7 @@ public:
     ClipView * clipView() const { return clipView_; }
     SequenceView * sequenceView() const { return seqView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
-    QObjectInspector * objectInspector() const { return qobjectInspector_; }
+    //QObjectInspector * objectInspector() const { return qobjectInspector_; }
     ServerDialog * serverDialog() const { return serverDialog_; }
     QStatusBar * statusBar() const { return statusBar_; }
 
@@ -204,8 +204,6 @@ private:
     bool isVisibleSequencer_,
          isVisibleClipView_,
          isVisibleSeqView_;
-
-    QObjectInspector * qobjectInspector_;
 
     ServerDialog * serverDialog_;
 

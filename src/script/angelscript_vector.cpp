@@ -255,13 +255,15 @@ struct vecfunc
     static Vec3 closest_point_on_line(const Vec3& p, const Vec3& a, const Vec3& b)
         { return MATH::closest_point_on_line(p, a, b); }
 
-    static float mandel(const Vec2& ri) { return MATH::advanced<Float>::mandel(ri.x, ri.y); }
-    static uint mandeli(const Vec2& ri) { return MATH::advanced<Float>::mandeli(ri.x, ri.y); }
-    static float mandel3(const Vec2& ri, uint maxiter) { return MATH::advanced<Float>::mandel_3(ri.x, ri.y, maxiter); }
-    static uint mandeli3(const Vec2& ri, uint maxiter) { return MATH::advanced<Float>::mandeli_3(ri.x, ri.y, maxiter); }
+    static float mandel(const Vec2& ri) { return MATH::fractal<Float,uint>::mandel(ri.x, ri.y); }
+    static uint mandeli(const Vec2& ri) { return MATH::fractal<Float,uint>::mandeli(ri.x, ri.y); }
+    static float mandel3(const Vec2& ri, uint maxiter) { return MATH::fractal<Float,uint>::mandel_3(ri.x, ri.y, maxiter); }
+    static uint mandeli3(const Vec2& ri, uint maxiter) { return MATH::fractal<Float,uint>::mandeli_3(ri.x, ri.y, maxiter); }
 
-    static float julia(const Vec2& start, const Vec2& ri) { return MATH::advanced<Float>::julia(start.x, start.y, ri.x, ri.y); }
-    static uint juliai(const Vec2& start, const Vec2& ri) { return MATH::advanced<Float>::juliai(start.x, start.y, ri.x, ri.y); }
+    static float julia(const Vec2& ri, const Vec2& start) { return MATH::fractal<Float,uint>::julia(start.x, start.y, ri.x, ri.y); }
+    static uint juliai(const Vec2& ri, const Vec2& start) { return MATH::fractal<Float,uint>::juliai(start.x, start.y, ri.x, ri.y); }
+
+    static float duckball(const Vec2& ri, const Vec2& start, Float bailout) { return MATH::fractal<Float,uint>::duckball(ri.x, ri.y, start.x, start.y, bailout); }
 
 };
 
@@ -425,8 +427,10 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
     MO__REG_FUNC("float mandel(const %1 &in real_and_imag, uint max_iterations)", vecfunc<Vec2>::mandel3);
     MO__REG_FUNC("uint mandeli(const %1 &in real_and_imag)", vecfunc<Vec2>::mandeli);
     MO__REG_FUNC("uint mandeli(const %1 &in real_and_imag, uint max_iterations)", vecfunc<Vec2>::mandeli3);
-    MO__REG_FUNC("float julia(const %1 &in start, const %1 &in real_and_imag)", vecfunc<Vec2>::julia);
-    MO__REG_FUNC("uint juliai(const %1 &in start, const %1 &in real_and_imag)", vecfunc<Vec2>::juliai);
+    MO__REG_FUNC("float julia(const %1 &in real_and_imag, const %1 &in start)", vecfunc<Vec2>::julia);
+    MO__REG_FUNC("uint juliai(const %1 &in real_and_imag, const %1 &in start)", vecfunc<Vec2>::juliai);
+    MO__REG_FUNC("float duckball(const %1 &in pos, const %1 &in start = vec2(0.5), float bailout = 10)", vecfunc<Vec2>::duckball);
+
 }
 
 /** Specific stuff for 3 */

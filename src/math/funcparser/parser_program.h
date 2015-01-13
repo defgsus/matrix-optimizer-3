@@ -249,6 +249,8 @@ namespace PPP_NAMESPACE
         f.add(Function::FUNCTION,       4, "julia",     math_func<Float>::julia_4       );
         f.add(Function::FUNCTION,       4, "juliai",    math_func<Float>::juliai_4      );
 
+        f.add(Function::FUNCTION,       4, "duckball",  math_func<Float>::duckball_4    );
+
         f.setCurrentGroup("lambda");
 
         f.add(							4, "series",	lambda_func<Float>::series_4	);

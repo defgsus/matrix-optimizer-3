@@ -136,7 +136,7 @@ vec4 mo_pos_to_fulldome_scr(in vec3 pos)
 }
 
 #ifdef MO_ENABLE_VERTEX_OVERRIDE
-//%mo_override%
+//%mo_override_vert%
 #endif
 
 vec4 mo_ftransform(in vec4 pos)
