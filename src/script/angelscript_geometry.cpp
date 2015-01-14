@@ -534,7 +534,7 @@ public:
     float trace(const Vec3& pos, const Vec3& dir, float max_t) const { return trace_p(pos, dir, max_t, trace_precission); }
     float trace_p(const Vec3& pos, const Vec3& dir, float max_t, float prec) const
     {
-        float t = 0.0011;
+        float t = 0.0;
         for (uint i=0; i<max_steps && t<max_t; ++i)
         {
             const Vec3 p = pos + dir * t;
