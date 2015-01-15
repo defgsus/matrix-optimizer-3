@@ -47,10 +47,10 @@ public:
                         bool updateDirectory = true);
 
     static void findFiles(FileType ft, bool recursive,
-                          QStringList& entryList);
+                          QStringList& entryList, bool include_directory = true);
 
     static void findFiles(FileType ft, const QString& directory, bool recursive,
-                          QStringList& entryList);
+                          QStringList& entryList, bool include_directory = true);
 
     static void getDirectories(const QString& basePath, QStringList& directoryList,
                                bool recursive);

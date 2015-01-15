@@ -54,7 +54,7 @@ namespace IO {
 
     const QList<QStringList> fileTypeDialogFilters =
     {
-        { QObject::tr("all files") + " ( * )" },
+        { QObject::tr("all files") + " ( * *.* )" },
         { QObject::tr("scene files") + " ( *.mo3 )" },
         { QObject::tr("object files") + " ( *.mo3-obj )" },
         { QObject::tr("all image files") + " ( *.png *.jpg *.jpeg *.bmp *.tif *.tiff *.pbm *.pgm *.xbm *.xpm )",

@@ -57,6 +57,7 @@
 #include "gui/objectgraphview.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
+#include "gui/bulkrenamedialog.h"
 #ifndef MO_DISABLE_ANGLESCRIPT
 #include "gui/widget/angelscriptwidget.h"
 #include "script/angelscript.h"
@@ -438,15 +439,6 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             diag->show();
         });
 
-
-        a = new QAction(tr("Batch scene converter"), m);
-        m->addAction(a);
-        connect(a, &QAction::triggered, [=]()
-        {
-            SceneConvertDialog diag;
-            diag.exec();
-        });
-
         a = new QAction(tr("Audio-filter tester"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
@@ -460,6 +452,22 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         connect(a, &QAction::triggered, [=]()
         {
             TimelineEditDialog diag;
+            diag.exec();
+        });
+
+        a = new QAction(tr("Batch scene converter"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            SceneConvertDialog diag;
+            diag.exec();
+        });
+
+        a = new QAction(tr("Bulk file renamer"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            BulkRenameDialog diag;
             diag.exec();
         });
 
