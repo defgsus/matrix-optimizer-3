@@ -193,13 +193,13 @@ QString Files::getOpenDirectory(FileType ft, QWidget *parent, bool updateDirecto
     return fn;
 }
 
-void Files::findFiles(FileType ft, bool recursive, QStringList &entryList)
+void Files::findFiles(FileType ft, bool recursive, QStringList &entryList, bool include_directory)
 {
-    findFiles(ft, directory(ft), recursive, entryList);
+    findFiles(ft, directory(ft), recursive, entryList, include_directory);
 }
 
 void Files::findFiles(FileType ft, const QString &directory,
-                      bool recursive, QStringList &entryList)
+                      bool recursive, QStringList &entryList, bool include_directory)
 {
     MO_DEBUG_IO("Files::findFiles(" << ft << ", " << directory << ", "
              << recursive << ")");
@@ -216,8 +216,12 @@ void Files::findFiles(FileType ft, const QString &directory,
     dir.setNameFilters(filters);
 
     QStringList files = dir.entryList();
-    for (auto & f : files)
-        entryList << (directory + QDir::separator() + f);
+    if (include_directory)
+        for (auto & f : files)
+            entryList << (directory + QDir::separator() + f);
+    else
+        for (auto & f : files)
+            entryList << f;
 
     if (recursive)
     {
