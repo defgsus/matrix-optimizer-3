@@ -34,6 +34,7 @@ uniform mat4 u_cubeViewTransform;           // cube-map * view * transform
 uniform mat4 u_viewTransform;               // view * transform
 uniform mat4 u_transform;                   // transformation only
 uniform vec4 u_color;
+uniform vec3 u_cam_pos;
 #ifdef MO_ENABLE_LIGHTING
     uniform vec3 u_light_pos[MO_NUM_LIGHTS];
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
@@ -180,6 +181,7 @@ void main()
     v_normal = a_normal;
     v_normal_eye = transpose(inverse(mat3(u_viewTransform))) * a_normal;
     v_texCoord = a_texCoord;
+    v_cam_pos = u_camera_pos;
     v_cam_dir = normalize(v_pos_eye);
     v_color = vec4(1.);
     v_ambient_color = a_color * u_color;

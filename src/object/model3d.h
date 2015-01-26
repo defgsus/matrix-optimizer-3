@@ -85,11 +85,11 @@ private:
         *diffExp_, *bumpScale_,
         *vertexExtrude_, *paramLineWidth_,
         *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_;
-    ParameterSelect * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
+    ParameterSelect * fixPosition_, * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
                     * usePointCoord_, *pointSizeAuto_;
     ParameterText * glslVertex_, *glslVertexOut_, *glslFragmentOut_;
 
-    GL::Uniform * u_diff_exp_, * u_bump_scale_,
+    GL::Uniform * u_cam_pos_, * u_diff_exp_, * u_bump_scale_,
                 * u_vertex_extrude_, * u_pointsize_;
 
     bool doRecompile_;

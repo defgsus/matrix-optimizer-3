@@ -53,6 +53,7 @@ out vec4 out_color;
 // --- uniforms ---
 
 uniform float u_time;
+uniform vec3 u_cam_pos;
 
 #ifdef MO_ENABLE_LIGHTING
     uniform float u_diffuse_exp;

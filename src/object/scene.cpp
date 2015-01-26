@@ -859,14 +859,16 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
         renderSet.setFinalFramebuffer(fboFinal_[thread]);
 
         // render scene from each camera
-        for (auto camera : cameras_)
+        for (Camera * camera : cameras_)
         if (camera->active(time, thread))
         {
             // get camera viewspace
             camera->initCameraSpace(camSpace, thread, time);
 
             // get camera view-matrix
-            const Mat4 viewm = glm::inverse(camera->transformation());
+            const Mat4& cammat = camera->transformation();
+            camSpace.setPosition(Vec3(cammat[3][0], cammat[3][1], cammat[3][2]));
+            const Mat4 viewm = glm::inverse(cammat);
             camSpace.setViewMatrix(viewm);
 
             // for each cubemap
