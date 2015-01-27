@@ -195,10 +195,15 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
 
 void AbstractScriptWidget::PrivateSW::onTextChanged()
 {
+    QString tmp = curText;
     curText = editor->toPlainText();
 
-    messages.clear();
-    isValid = widget->compile();
+    // only compile when new
+    if (tmp != curText)
+    {
+        messages.clear();
+        isValid = widget->compile();
+    }
 
     updateEditorColor();
     updateErrorWidget();
@@ -255,6 +260,7 @@ void AbstractScriptWidget::PrivateSW::updateErrorWidget()
 void AbstractScriptWidget::addCompileMessage(int line, MessageType type, const QString &text)
 {
     p_sw_->messages << PrivateSW::Message(line, type, text);
+    p_sw_->updateErrorWidget();
 }
 
 

@@ -58,6 +58,10 @@ public slots:
         Default is false. */
     void setUpdateOptional(bool enable = true);
 
+    /** Emit this from compile() generally.
+        @p line is zero-based */
+    void addCompileMessage(int line, MessageType t, const QString & text);
+
 signals:
 
     /** Only emitted when the changed script is valid */
@@ -68,10 +72,6 @@ protected:
 
     /** Override to compile the script and check for errors */
     virtual bool compile() = 0;
-
-    /** Emit this from compile().
-        @p line is zero-based */
-    void addCompileMessage(int line, MessageType t, const QString & text);
 
 private:
     class PrivateSW;

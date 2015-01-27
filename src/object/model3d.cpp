@@ -218,7 +218,7 @@ void Model3d::createParameters()
                                                        "// -- uniforms:\n"
                                                        "// float u_time\n"
                                                        "// vec3 u_cam_pos\n"
-                                                       "// sampler2D tex_0 (if available)"
+                                                       "// sampler2D tex_0 (if available)\n"
                                                        "// -- input from vertex stage:\n"
                                                        "// vec3 v_pos\n"
                                                        "// vec3 v_pos_world\n"
@@ -509,10 +509,11 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
         src->addDefine("#define MO_ENABLE_FRAGMENT_OVERRIDE");
         QString text =
-                  glslVertex_->value() + "\n"
+                  "#line 0\n"
+                + glslVertex_->value() + "\n#line 0\n"
                 + glslVertexOut_->value() + "\n";
         src->replace("//%mo_override_vert%", text);
-        src->replace("//%mo_override_frag%", glslFragmentOut_->value() + "\n");
+        src->replace("//%mo_override_frag%", "#line 0\n" + glslFragmentOut_->value() + "\n");
 
     }
     // declare user uniforms
@@ -521,7 +522,26 @@ void Model3d::setupDrawable_()
 
     draw_->setShaderSource(src);
 
-    draw_->createOpenGl();
+    try
+    {
+        draw_->createOpenGl();
+    }
+    catch (const Exception& e)
+    {
+        MO_WARNING("Error on initializing model for '" << name() << "'\n" << e.what());
+        for (const GL::Shader::CompileMessage & msg : draw_->shader()->compileMessages())
+        {
+            if (msg.program == GL::Shader::P_VERTEX
+                || msg.program == GL::Shader::P_LINKER)
+            {
+                glslVertex_->addErrorMessage(msg.line, msg.text);
+                glslVertexOut_->addErrorMessage(msg.line, msg.text);
+            }
+            if (msg.program == GL::Shader::P_FRAGMENT
+                || msg.program == GL::Shader::P_LINKER)
+                glslFragmentOut_->addErrorMessage(msg.line, msg.text);
+        }
+    }
 
     // get uniforms
     u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());

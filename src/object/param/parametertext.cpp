@@ -160,5 +160,12 @@ GUI::TextEditWidget * ParameterText::createEditWidget(QWidget *parent)
     return editor_;
 }
 
+void ParameterText::addErrorMessage(int line, const QString &text)
+{
+    if (editor_)
+        editor_->addErrorMessage(line, text);
+    if (diag_)
+        diag_->addErrorMessage(line, text);
+}
 
 } // namespace MO

@@ -55,6 +55,10 @@ public:
     void setVariableDescriptions(const QStringList& descs) { varDescs_ = descs; }
     void setVariableDescriptions(const std::vector<std::string>& descs);
 
+    /** Implemented for scripts.
+        Posts messages into the script edit window when open. */
+    void addErrorMessage(int line, const QString & text);
+
     /** Opens a dialog to edit the text.
         Depending on the textType(), the dialog will be structured.
         If a (valid) text change was done, the scene object will be called with

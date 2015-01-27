@@ -122,6 +122,7 @@ bool Shader::compile()
     ready_ = false;
     sourceChanged_ = false;
     log_ = "";
+    msg_.clear();
     uniforms_.clear();
     uniformList_.clear();
     attribs_.clear();
@@ -141,11 +142,11 @@ bool Shader::compile()
     }
 
     // compile the vertex shader
-    if (!compileShader_(GL_VERTEX_SHADER, "vertex shader", source_->vertexSource()))
+    if (!compileShader_(GL_VERTEX_SHADER, P_VERTEX, "vertex shader", source_->vertexSource()))
         return false;
 
     // compile the fragment shader
-    if (!compileShader_(GL_FRAGMENT_SHADER, "fragment shader", source_->fragmentSource()))
+    if (!compileShader_(GL_FRAGMENT_SHADER, P_FRAGMENT, "fragment shader", source_->fragmentSource()))
         return false;
 
     // link program object
@@ -155,7 +156,7 @@ bool Shader::compile()
     MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_LINK_STATUS, &linked) );
     if (!linked)
     {
-        log_ += "shader programm link error\n";
+        addMessage_(P_LINKER, "shader programm link error");
         prog_ = -1;
     }
 
@@ -190,7 +191,7 @@ bool Shader::compile()
 }
 
 
-bool Shader::compileShader_(GLenum type, const QString& typeName, const QString &source)
+bool Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName, const QString &source)
 {
     if (source.isEmpty())
         return false;
@@ -199,7 +200,7 @@ bool Shader::compileShader_(GLenum type, const QString& typeName, const QString 
     MO_CHECK_GL_COND(rep_, shadername = glCreateShader(type) );
     if (glIsShader(shadername) == GL_FALSE)
     {
-        log_ += "error creating " + typeName + " ShaderObject\n";
+        addMessage_(pt, "error creating " + typeName + " ShaderObject");
         return false;
     }
 
@@ -241,7 +242,9 @@ bool Shader::compileShader_(GLenum type, const QString& typeName, const QString 
     {
         std::vector<GLchar> compiler_log(blen+1);
         MO_CHECK_GL_COND(rep_, glGetShaderInfoLog(shadername, blen, &slen, &compiler_log[0]) );
-        log_ += "compiler log:\n" + QString(&compiler_log[0]) + "\n";
+        QString log = QString(&compiler_log[0]);
+        parseLog_(log, pt);
+        log_ += "compiler log:\n" + log + "\n";
     }
 
     // attach to programObject
@@ -250,6 +253,37 @@ bool Shader::compileShader_(GLenum type, const QString& typeName, const QString 
     return compiled;
 }
 
+void Shader::addMessage_(ProgramType pt, const QString &msg)
+{
+    log_ += msg + '\n';
+    msg_.append( CompileMessage(pt, 0, msg));
+}
+
+void Shader::parseLog_(const QString &log, ProgramType pt)
+{
+    auto lines = log.split('\n', QString::SkipEmptyParts);
+    for (const QString& line : lines)
+    {
+        if (!line.contains("error", Qt::CaseInsensitive))
+            continue;
+
+        CompileMessage cm;
+        cm.line = 0;
+        cm.program = pt;
+
+        // get line number
+        int x1 = line.indexOf('('),
+            x2 = line.indexOf(')');
+        if (x1 >= 0 && x2 > x1 + 1)
+            cm.line = line.mid(x1+1, x2-x1-1).toInt();
+
+        // get text
+        x1 = line.indexOf(':');
+        cm.text = line.mid(x1 + 1);
+
+        msg_.append( cm );
+    }
+}
 
 void Shader::activate()
 {

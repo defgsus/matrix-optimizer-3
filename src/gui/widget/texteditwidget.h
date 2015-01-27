@@ -60,6 +60,9 @@ public slots:
 
     void openHelp();
 
+    /** Implemented for scripts */
+    void addErrorMessage(int line, const QString & text);
+
 protected:
 
     void keyPressEvent(QKeyEvent *);

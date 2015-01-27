@@ -33,8 +33,11 @@ class TextEditWidget::Private
 {
 public:
     Private(TextEditWidget * dialog)
-        : widget(dialog),
-          rejected(false)
+        : widget        (dialog),
+          plainText     (0),
+          equEdit       (0),
+          scriptEdit    (0),
+          rejected      (false)
     {
         // wait before text-changed
         timer.setInterval(350);
@@ -242,6 +245,12 @@ void TextEditWidget::Private::createWidgets()
                 emit widget->closeRequest();
             });
 
+}
+
+void TextEditWidget::addErrorMessage(int line, const QString &text)
+{
+    if (p_->scriptEdit)
+        p_->scriptEdit->addCompileMessage(line, AbstractScriptWidget::M_ERROR, text);
 }
 
 void TextEditWidget::keyPressEvent(QKeyEvent * e)
