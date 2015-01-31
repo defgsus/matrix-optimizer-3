@@ -40,10 +40,10 @@ FrontScene::FrontScene(QObject *parent)
     , p_                (new Private(this))
 {
 
-    auto i = new AbstractFrontItem(FIT_GROUP, 0, 0);
+    auto i = new AbstractFrontItem(0, 0);
     addItem(i);
-    addItem(new AbstractFrontItem(FIT_FLOAT, 0, i));
-    addItem(new AbstractFrontItem(FIT_FLOAT, 0, 0));
+            new AbstractFrontItem(0, i);
+    addItem(new AbstractFrontItem(0, 0));
 }
 
 FrontScene::~FrontScene()

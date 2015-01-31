@@ -43,13 +43,9 @@ class AbstractFrontItem : public QGraphicsItem
 {
 public:
 
-    enum { Type = FIT_ABSTRACT };
-
-    AbstractFrontItem(FrontItemType type, Parameter * p = 0, QGraphicsItem * parent = 0);
+    AbstractFrontItem(Parameter * p = 0, QGraphicsItem * parent = 0);
 
     // ---------------- getter ------------------
-
-    int type() const { return FIT_ABSTRACT; }
 
     /** Returns a pointer to the connected Parameter, or NULL if there is none. */
     Parameter * parameter() const { return p_param_; }
@@ -70,9 +66,16 @@ public:
 
     // --------------- layout -------------------
 
-    QRectF rect() const;
+    /** Rectangle of the whole area (including border) */
+    QRectF outerRect() const;
+
+    /** Rectangle of child area */
+    QRectF innerRect() const;
 
     // ----------- QGraphicsItem ----------------
+
+    enum { Type = FIT_ABSTRACT };
+    virtual int type() const { return FIT_ABSTRACT; }
 
     virtual QRectF boundingRect() const Q_DECL_OVERRIDE;
     virtual void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
@@ -81,7 +84,6 @@ private:
 
     void p_update_from_properties_();
 
-    FrontItemType p_type_;
     Parameter * p_param_;
     QStaticText * p_statictext_name_;
     QMap<QString, QVariant> p_props_;

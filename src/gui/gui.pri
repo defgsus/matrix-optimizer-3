@@ -88,7 +88,9 @@ HEADERS += \
     src/gui/bulkrenamedialog.h \
     src/gui/util/frontscene.h \
     src/gui/item/abstractfrontitem.h \
-    src/gui/frontview.h
+    src/gui/frontview.h \
+    src/gui/item/faderitem.h \
+    src/gui/item/abstractguiitem.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -176,4 +178,6 @@ SOURCES += \
     src/gui/bulkrenamedialog.cpp \
     src/gui/util/frontscene.cpp \
     src/gui/item/abstractfrontitem.cpp \
-    src/gui/frontview.cpp
+    src/gui/frontview.cpp \
+    src/gui/item/faderitem.cpp \
+    src/gui/item/abstractguiitem.cpp
