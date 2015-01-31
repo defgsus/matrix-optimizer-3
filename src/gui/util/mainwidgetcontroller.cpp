@@ -55,6 +55,7 @@
 #include "gui/serverdialog.h"
 #include "gui/resolutiondialog.h"
 #include "gui/objectgraphview.h"
+#include "gui/frontview.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
@@ -187,6 +188,9 @@ void MainWidgetController::createObjects_()
             this, SLOT(onObjectSelectedObjectView_(MO::Object*)));
     connect(objectView_, SIGNAL(statusTipChanged(QString)),
             statusBar_, SLOT(showMessage(QString)));
+
+    // front-end view
+    frontView_ = new FrontView(window_);
 
     // sequencer
     sequencer_ = new Sequencer(window_);

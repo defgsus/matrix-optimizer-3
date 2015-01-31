@@ -44,6 +44,7 @@ class TransportWidget;
 class ServerDialog;
 class ClipView;
 class ObjectGraphView;
+class FrontView;
 
 class MainWidgetController : public QObject
 {
@@ -67,6 +68,7 @@ public:
     ObjectGraphView * objectGraphView() const { return objectGraphView_; }
     Sequencer * sequencer() const { return sequencer_; }
     ClipView * clipView() const { return clipView_; }
+    FrontView * frontView() const { return frontView_; }
     SequenceView * sequenceView() const { return seqView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
     //QObjectInspector * objectInspector() const { return qobjectInspector_; }
@@ -198,6 +200,7 @@ private:
     Sequencer * sequencer_;
     ClipView * clipView_;
     SequenceView * seqView_;
+    FrontView * frontView_;
 
     TransportWidget * transportWidget_;
 

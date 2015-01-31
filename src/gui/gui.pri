@@ -85,7 +85,10 @@ HEADERS += \
     src/gui/widget/glslwidget.h \
     src/gui/widget/texteditwidget.h \
     src/gui/util/appicons.h \
-    src/gui/bulkrenamedialog.h
+    src/gui/bulkrenamedialog.h \
+    src/gui/util/frontscene.h \
+    src/gui/item/abstractfrontitem.h \
+    src/gui/frontview.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -170,4 +173,7 @@ SOURCES += \
     src/gui/widget/glslwidget.cpp \
     src/gui/widget/texteditwidget.cpp \
     src/gui/util/appicons.cpp \
-    src/gui/bulkrenamedialog.cpp
+    src/gui/bulkrenamedialog.cpp \
+    src/gui/util/frontscene.cpp \
+    src/gui/item/abstractfrontitem.cpp \
+    src/gui/frontview.cpp

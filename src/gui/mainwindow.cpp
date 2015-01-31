@@ -25,6 +25,7 @@
 #include "gui/sequencer.h"
 #include "gui/sequenceview.h"
 #include "gui/objectgraphview.h"
+#include "gui/frontview.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
 #include "object/scene.h"
@@ -152,6 +153,9 @@ void MainWindow::createDockWidgets_()
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
     dock = createDockWidget(tr("Patch"), controller_->objectGraphView());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+
+    dock = createDockWidget(tr("Frontend"), controller_->frontView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
     dock = createDockWidget(tr("Sequence"), controller_->sequenceView());
