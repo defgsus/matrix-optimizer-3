@@ -164,6 +164,14 @@ bool intersect_ray_sphere(const Vec3& ray_origin,
 
 
 
+/*
+float intersect_plane(in vec3 ro, in vec3 rd, in vec4 plane)
+{
+    float dir = dot(plane.xyz, rd);
+    if (abs(dir) < EPSILON) return INTERSECT_MAX;
+    return dot(plane.xyz, plane.xyz * plane.w - ro) / dir;
+}
+*/
 
 
 
