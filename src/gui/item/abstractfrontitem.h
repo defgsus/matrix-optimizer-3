@@ -67,7 +67,7 @@ public:
     // --------------- layout -------------------
 
     /** Rectangle of the whole area (including border) */
-    QRectF outerRect() const;
+    QRectF rect() const;
 
     /** Rectangle of child area */
     QRectF innerRect() const;

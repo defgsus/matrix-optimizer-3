@@ -45,6 +45,11 @@ void FreeCamera::moveZ(Float steps)
     matrix_ = glm::translate(Mat4(1.0), Vec3(0,0,steps)) * matrix_;
 }
 
+void FreeCamera::move(const Vec3& steps)
+{
+    matrix_ = glm::translate(Mat4(1.0), steps) * matrix_;
+}
+
 void FreeCamera::rotateX(Float degree)
 {
     matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(1,0,0)) * matrix_;
@@ -60,12 +65,32 @@ void FreeCamera::rotateZ(Float degree)
     matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(0,0,1)) * matrix_;
 }
 
-void FreeCamera::moveTo(const Vec3 & v)
+void FreeCamera::setPosition(const Vec3 & v)
 {
     matrix_[3][0] = v.x;
     matrix_[3][1] = v.y;
     matrix_[3][2] = v.z;
 }
+
+
+
+
+void FreeFloatCamera::applyVelocity(Float delta)
+{
+    cam_.move(velo_ * delta);
+    cam_.rotateZ(veloRot_.z * delta);
+    cam_.rotateY(veloRot_.y * delta);
+    cam_.rotateX(veloRot_.x * delta);
+}
+
+void FreeFloatCamera::applyDamping(Float delta)
+{
+    velo_ -= 0.2f * delta * velo_;
+    veloRot_ -= 0.2f * delta * veloRot_;
+}
+
+
+
 
 } // namespace GEOM
 } // namespace MO

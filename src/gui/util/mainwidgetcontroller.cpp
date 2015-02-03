@@ -768,6 +768,9 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
         scene_->setFreeCameraIndex(e->key() - Qt::Key_0 - 1);
     }
 
+//    if (!e->isAccepted())
+//        scene_->keyDown(e->key());
+
     //if (!e->isAccepted())
     //    window_->keyPressEvent(e);
 }

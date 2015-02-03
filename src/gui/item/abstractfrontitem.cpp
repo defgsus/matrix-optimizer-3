@@ -49,7 +49,6 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
 
     auto f = new FaderItem(this);
     f->setRect(innerRect());
-    //scene()->addItem(f);
 }
 
 
@@ -90,7 +89,7 @@ QRectF AbstractFrontItem::innerRect() const
                        getProperty("height", 64).toInt());
 }
 
-QRectF AbstractFrontItem::outerRect() const
+QRectF AbstractFrontItem::rect() const
 {
     int pad = getProperty("padding").toInt();
     return innerRect().adjusted(-pad, -pad, pad, pad);
@@ -117,7 +116,7 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
     else
         p->setPen(Qt::NoPen);
 
-    auto rec = outerRect();
+    auto rec = rect();
     p->drawRoundedRect(rec, 10., 10.);
 
     // label

@@ -43,6 +43,8 @@ public:
 
     /** Is smoothed lines possible */
     bool canLineSmooth,
+    /** Is line-width possible at all (tested) */
+         canLineWidth,
     /** Is this a mesa driver? */
          isMesa;
 

@@ -232,7 +232,10 @@ void MainWindow::closeEvent(QCloseEvent * e)
         e->ignore();
 }
 
-
+void MainWindow::keyPressEvent(QKeyEvent * e)
+{
+    controller_->scene()->keyDown(e->key());
+}
 
 
 } // namespace GUI
