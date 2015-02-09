@@ -181,7 +181,7 @@ void Model3d::createParameters()
                                                        "// " + tr("Please be aware that this interface is likely to change in the future!") +
                                                        "\n\n"
                                                        "// " + tr("You have access to these values") + ":\n"
-                                                       "// -- uniforms:\n"
+                                                       "// -- uniforms --\n"
                                                        "// float u_time\n"
                                                        "// vec3 u_cam_pos\n"
                                                        "// vec4 u_color\n"
@@ -189,12 +189,12 @@ void Model3d::createParameters()
                                                        "// mat4 u_cubeViewTransform\n"
                                                        "// mat4 u_viewTransform\n"
                                                        "// mat4 u_transform\n"
-                                                       "// -- vertex attributes:\n"
+                                                       "// -- vertex attributes --\n"
                                                        "// vec4 a_position\n"
                                                        "// vec4 a_color\n"
                                                        "// vec3 a_normal\n"
                                                        "// vec2 a_texCoord\n"
-                                                       "// -- input to fragment stage (changeable):\n"
+                                                       "// -- input to fragment stage (changeable) --\n"
                                                        "// vec3 v_pos\n"
                                                        "// vec3 v_pos_world\n"
                                                        "// vec3 v_pos_eye\n"
@@ -260,7 +260,7 @@ void Model3d::createParameters()
                                                        "// -- lighting --\n"
                                                        "// vec3 mo_normal()\n"
                                                        "// ... todo\n"
-                                                       "// -- output to rasterizer --"
+                                                       "// -- output to rasterizer --\n"
                                                        "// vec4 out_color\n"
                                                        "\n"
                                                        "void mo_modify_fragment_output()\n{\n\t\n}\n"
@@ -454,6 +454,7 @@ void Model3d::releaseGl(uint /*thread*/)
 {
     texture_->releaseGl();
     textureBump_->releaseGl();
+    uniformSetting_->releaseGl();
 
     if (draw_->isReady())
         draw_->releaseOpenGl();

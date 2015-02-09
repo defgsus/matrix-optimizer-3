@@ -19,7 +19,7 @@
 
 
 namespace MO {
-namespace GL { class Shader; class Uniform; }
+namespace GL { class Shader; class Uniform; class Texture; }
 
 class UserUniformSetting : public QObject
 {
@@ -64,6 +64,8 @@ public:
     /** Update all found uniform values */
     void updateUniforms(Double time, uint thread);
 
+    void releaseGl();
+
 protected slots:
 
 private:
@@ -74,11 +76,16 @@ private:
     struct Uniform
     {
         bool isUsed() const;
+        uint gltype;
+
         ParameterText * p_name;
         ParameterSelect * p_type;
-        uint gltype;
+        ParameterInt * p_length;
+        ParameterFloat * p_timerange;
         QVector<ParameterFloat*> p_float;
+
         GL::Uniform * uniform;
+        GL::Texture * texture;
     };
 
     QVector<Uniform> uniforms_;
