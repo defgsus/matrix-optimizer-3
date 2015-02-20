@@ -120,6 +120,7 @@ void UdpAudioConnection::close()
     p_->udp->close();
 }
 
+#ifndef MO_DISABLE_SERVER
 bool UdpAudioConnection::sendAudioBuffer(AUDIO::AudioBuffer * buf, SamplePos pos)
 {
     MO_ASSERT( isServer(), "UdpAudioConnection: send not sensible for clients");
@@ -143,6 +144,7 @@ bool UdpAudioConnection::sendAudioBuffer(AUDIO::AudioBuffer * buf, SamplePos pos
     return p_->udp->sendDatagram(data, QHostAddress(settings->udpAudioMulticastAddress()),
                                        settings->udpAudioMulticastPort());
 }
+#endif
 
 void UdpAudioConnection::receive_()
 {

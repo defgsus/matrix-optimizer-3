@@ -203,15 +203,17 @@ public:
         Must be called sequentially in dsp order */
     void prepareAudioInputBuffers(ObjectBuffer * o);
     void prepareAudioOutputBuffers(ObjectBuffer * o);
+    /** Separate setup of udp buffers to create them from within the audio thread */
+    void prepareUdpOutputs(ObjectBuffer * o);
 
     void prepareSoundSourceBuffer(ObjectBuffer * o);
 
 #ifndef MO_DISABLE_SERVER
-    /** Returns the associated client input stream */
+    /** Creates and/or returns the single associated to-client output stream */
     UdpAudioConnection * getUdpOutput();
 #endif
 #ifndef MO_DISABLE_CLIENT
-    /** Returns the associated client input stream */
+    /** Creates and/or returns the single associated from-server input stream */
     UdpAudioConnection * getUdpInput();
 #endif
 
@@ -276,6 +278,14 @@ void ObjectDspPath::createPath(Scene *scene, const AUDIO::Configuration& conf, u
     p_->createPath(scene);
 }
 
+void ObjectDspPath::preparePath()
+{
+    MO_DEBUG("ObjectDspPath::preparePath()");
+
+    for (Private::ObjectBuffer * b : p_->audioObjects)
+        p_->prepareUdpOutputs(b);
+}
+
 void ObjectDspPath::calcTransformations(SamplePos pos)
 {
     for (Private::ObjectBuffer * b : p_->transformationObjects)
@@ -295,7 +305,11 @@ void ObjectDspPath::calcTransformations(SamplePos pos)
 
 void ObjectDspPath::calcAudio(SamplePos pos)
 {
+#ifndef MO_DISABLE_SERVER
     auto serv = serverEngine().isRunning();
+#else
+    bool serv = false;
+#endif
 
     // ----------- process audio objects ---------------
 
@@ -303,6 +317,7 @@ void ObjectDspPath::calcAudio(SamplePos pos)
     for (Private::ObjectBuffer * b : p_->audioObjects)
     {
 #ifndef MO_DISABLE_CLIENT
+        // unless they are sent from server
         if (!b->udpInput)
         {
 #endif
@@ -612,7 +627,8 @@ void ObjectDspPath::Private::createPath(Scene * s)
         // for clients, init only the audio -> modulator objects
         if (!isClient() || hasAudioToModulator(o))
         {
-            // XXX this is a problem
+            /** @todo this is a problem.
+                Changing the number of channels touches through to the gui */
             // update sys io objects' channels
             if (auto ao = qobject_cast<AudioInAO*>(o))
                 ao->setNumberAudioInputsOutputs(audioIns.size());
@@ -622,7 +638,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
             // ObjectBuffer for each audio object
             auto b = getObjectBuffer(o);
             audioObjects.append( b );
-
+/*
 #ifndef MO_DISABLE_CLIENT
             if (isClient())
             {
@@ -639,6 +655,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
                 b->udpOutput = getUdpOutput();
             }
 #endif
+*/
             // create and link buffers
             prepareAudioInputBuffers(b);
             prepareAudioOutputBuffers(b);
@@ -822,7 +839,8 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
             // number of buffers in output (dsp block size times this number)
             uint numBlocks = 1;
             if (isModOut)
-                // at least a second of buffer time for mod-outs
+                // at least three seconds of buffer time for mod-outs
+                /** @todo make configurable */
                 numBlocks = (conf.sampleRate() * 3) / conf.bufferSize() + 1;
 
             AUDIO::AudioBuffer * audiobuf = 0;
@@ -848,8 +866,8 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
 
             // otherwise keep NULL buffer
             buf->audioOutputs.push_back( audiobuf );
-
-            // link buffer to udp stream
+/*
+            // link buffer to udp audio-input stream
             // [so streams can fill the output buffers of the object]
 #ifndef MO_DISABLE_CLIENT
             if (buf->udpInput && audiobuf)
@@ -858,7 +876,8 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
                 buf->udpInputBuffers.append(audiobuf);
             }
 #endif
-            // link to audio-out streams
+            // link to udp audio-out stream
+            // for outputs that clients need
 #ifndef MO_DISABLE_SERVER
             if (buf->udpOutput && audiobuf && isModOut)
             {
@@ -866,6 +885,7 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
                 buf->udpOutputBuffers.append(audiobuf);
             }
 #endif
+*/
         }
     }
     // perpare outputs of system-out object
@@ -899,6 +919,63 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
         audioOutObjects.push_back( buf );
     }
 }
+
+void ObjectDspPath::Private::prepareUdpOutputs(ObjectBuffer * buf)
+{
+    MO_ASSERT(dynamic_cast<AudioObject*>(buf->object),
+              "invalid object for udp output preparation");
+
+    AudioObject * ao = static_cast<AudioObject*>(buf->object);
+
+    // special system-out object?
+    AudioOutAO * oout = qobject_cast<AudioOutAO*>(ao);
+
+    // prepare outputs
+    // (create an entry in ObjectBuffer::audioOutputs for each output
+    //  and set unused outputs to NULL)
+    if (!oout)
+    {
+        auto outs = scene->audioConnections()->getOutputs(ao);
+        for (uint i = 0; i < ao->numAudioOutputs(); ++i)
+        {
+            // get prepared output buffer
+            auto audiobuf = ao->audioOutputs(thread).at(i);
+            // just an output without connection??
+            if (!audiobuf)
+                continue;
+
+            // audio channel needed by a modulator?
+            bool isModOut = hasAudioToModulator(ao, i);
+
+            //MO_ASSERT(audiobuf, "unprepared audio buffer in DspPath::prepareUdpOutputs ("
+            //          << ao->namePath() << ", out " << i << ")");
+
+#ifndef MO_DISABLE_CLIENT
+            // link buffer to udp audio-input stream
+            // [so streams can fill the output buffers of the object]
+            if (isModOut && isClient() && !buf->udpInput)
+            {
+                buf->udpInput = getUdpInput();
+                buf->udpInput->addBuffer(audiobuf, ao, i);
+                buf->udpInputBuffers.append(audiobuf);
+            }
+#endif
+
+#ifndef MO_DISABLE_SERVER
+            // link to udp audio-out stream
+            // for outputs that clients need
+            if (isModOut && isServer() && !buf->udpOutput)
+            {
+                buf->udpOutput = getUdpOutput();
+                buf->udpOutput->addBuffer(audiobuf, ao, i);
+                buf->udpOutputBuffers.append(audiobuf);
+            }
+#endif
+        }
+    }
+}
+
+
 
 
 

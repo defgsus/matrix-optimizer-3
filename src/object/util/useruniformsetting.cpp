@@ -126,28 +126,28 @@ void UserUniformSetting::updateParameterVisibility()
     {
         uint type = u.p_type->baseValue();
 
-        uint num = 0;
+        u.num_floats = 0;
         if (type == gl::GL_FLOAT)
-            num = 1;
+            u.num_floats = 1;
         if (type == gl::GL_FLOAT_VEC2)
-            num = 2;
+            u.num_floats = 2;
         if (type == gl::GL_FLOAT_VEC3)
-            num = 3;
+            u.num_floats = 3;
         if (type == gl::GL_FLOAT_VEC4)
-            num = 4;
+            u.num_floats = 4;
 
         if (type == gl::GL_TEXTURE_1D)
         {
             u.p_length->setVisible(true);
-            num = 1;
+            u.num_floats = 1;
         }
         else
             u.p_length->setVisible(false);
 
         for (uint i = 0; i<4; ++i)
-            u.p_float[i]->setVisible(i < num);
+            u.p_float[i]->setVisible(i < u.num_floats);
 
-        u.p_name->setVisible(num > 0);
+        u.p_name->setVisible(u.num_floats > 0);
     }
 }
 
@@ -218,7 +218,7 @@ void UserUniformSetting::updateUniforms(Double time, uint thread)
     {
         if (!u.texture)
         {
-            for (int i=0; i<4; ++i)
+            for (uint i=0; i<u.num_floats; ++i)
                 u.uniform->floats[i] = u.p_float[i]->value(time, thread);
         }
         else
@@ -226,11 +226,15 @@ void UserUniformSetting::updateUniforms(Double time, uint thread)
             //if (!u.texture->isCreated())
             //    u.texture->create();
             uint len = u.texture->width();
-            gl::GLfloat
-                    range = u.p_timerange->value(time, thread) / std::max(1, int(len)-1),
-                    data[len];
-            for (uint i=0; i<len; ++i)
-                data[i] = u.p_float[0]->value(time - range * i, thread);
+            gl::GLfloat data[len];
+            const Double range = u.p_timerange->value(time, thread) / std::max(1, int(len)-1);
+            for (uint j=0; j<len; ++j)
+            {
+                const Double ti = time - range * j;
+                for (uint i=0; i<u.num_floats; ++i)
+                    data[j] = u.p_float[i]->value(ti, thread);
+            }
+            /** @todo Need to incorporate texture slots!! */
             u.texture->upload(data);
         }
     }

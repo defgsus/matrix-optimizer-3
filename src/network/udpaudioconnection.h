@@ -45,9 +45,11 @@ public slots:
         If the buffer was added already, false is returned. */
     bool addBuffer(AUDIO::AudioBuffer * buffer, AudioObject * obj, uint channel);
 
+#ifndef MO_DISABLE_SERVER
     /** Broadcasts the current sample block in @p buffer for the given global sample time @p pos.
         @note Buffer needs to be added with addBuffer(). */
     bool sendAudioBuffer(AUDIO::AudioBuffer * buffer, SamplePos pos);
+#endif
 
     /** Adds a connection to the list of receivers */
     //void addConnection(const QString& address, uint16_t port);

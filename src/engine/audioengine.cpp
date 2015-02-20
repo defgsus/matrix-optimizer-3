@@ -30,7 +30,8 @@ public:
         : engine        (e),
           scene         (0),
           threadIdx     (0),
-          curSample     (0)
+          curSample     (0),
+          isPathPrepared(false)
     { }
 
     void setup();
@@ -41,6 +42,8 @@ public:
     ObjectDspPath path;
     uint threadIdx;
     SamplePos curSample;
+
+    bool isPathPrepared;
 };
 
 
@@ -95,6 +98,7 @@ void AudioEngine::seek(SamplePos pos)
 
 void AudioEngine::setScene(Scene * s, const AUDIO::Configuration & conf, uint thread)
 {
+    p_->isPathPrepared = false;
     p_->conf = conf;
     p_->scene = s;
     p_->threadIdx = thread;
@@ -114,6 +118,13 @@ void AudioEngine::Private::setup()
 
 void AudioEngine::process(const F32 * inputs, F32 * outputs)
 {
+    // update network objects
+    if (!p_->isPathPrepared)
+    {
+        p_->path.preparePath();
+        p_->isPathPrepared = true;
+    }
+
     // copy into input buffers
     for (AUDIO::AudioBuffer * b : p_->path.audioInputs())
     {
@@ -140,6 +151,13 @@ void AudioEngine::process(const F32 * inputs, F32 * outputs)
 
 void AudioEngine::processForDevice(const F32 * inputs, F32 * outputs)
 {
+    // update network objects
+    if (!p_->isPathPrepared)
+    {
+        p_->path.preparePath();
+        p_->isPathPrepared = true;
+    }
+
     // copy into input buffers
     if (inputs)
     for (AUDIO::AudioBuffer * b : p_->path.audioInputs())

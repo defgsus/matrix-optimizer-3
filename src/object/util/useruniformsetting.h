@@ -76,7 +76,8 @@ private:
     struct Uniform
     {
         bool isUsed() const;
-        uint gltype;
+        uint gltype,
+             num_floats;
 
         ParameterText * p_name;
         ParameterSelect * p_type;
