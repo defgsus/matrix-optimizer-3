@@ -790,7 +790,7 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
 }
 
 
-/// @todo this is all to be moved out of this class anyway
+/// @todo this is all to be moved out of this class REALLY!
 
 void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * outputFbo)
 {
@@ -880,7 +880,7 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
 
                 camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
 
-                // render all opengl objects
+                // render each opengl object per camera (per cube-face)
                 for (auto o : glObjects_)
                 if (o->active(time, thread))
                 {

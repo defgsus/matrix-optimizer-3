@@ -8,23 +8,20 @@
     <p>created 6/30/2014</p>
 */
 
-
-#include <QTime>
-
 #include "applicationtime.h"
+#include "time.h"
 
 namespace MO {
 
-struct AppTime
-{
-    QTime time;
-    AppTime() { time.start(); }
-};
-static AppTime appTime;
+namespace {
+
+    static TimeMessure appTime;
+
+} // namespace
 
 double applicationTime()
 {
-    return 0.001 * appTime.time.elapsed();
+    return appTime.time();
 }
 
 

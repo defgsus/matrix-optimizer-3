@@ -32,6 +32,7 @@ namespace native {
 static void register_rnd(asIScriptEngine *engine)
 {
     int r;
+    Q_UNUSED(r)
 
     r = engine->RegisterObjectType("Random", 0, asOBJ_REF); assert( r >= 0 );
 

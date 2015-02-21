@@ -269,7 +269,7 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
 
     if (!actualObjects.isEmpty())
     {
-        scene_->addObjects(parent, actualObjects);
+        scene_->addObjects(parent, actualObjects, insert_index);
         emit objectsAdded(actualObjects);
     }
 

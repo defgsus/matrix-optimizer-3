@@ -55,6 +55,7 @@ namespace {
     void angelPrint(const StringAS& s)
     {
         MO_DEBUG("angelscript: " << toString(s));
+        Q_UNUSED(s)
     }
 
 } // namespace
@@ -79,6 +80,7 @@ void registerDefaultAngelScript(asIScriptEngine * engine)
     //    registerAngelScript_rootObject(engine, object);
 
     int r = engine->RegisterGlobalFunction("void print(const string & in)", asFUNCTION(angelPrint), asCALL_CDECL); assert( r >= 0 );
+    Q_UNUSED(r)
 }
 
 

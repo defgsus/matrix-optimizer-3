@@ -19,7 +19,10 @@ namespace IO { class DataStream; }
 class Object;
 class Parameter;
 
-/** @brief Internal class to link to modulating objects. */
+/** @brief Internal abstract base class to link to modulating objects.
+    This is the runtime structure that connects an object:output -> parameter.
+    The class is derived from, for each type of modulation.
+*/
 class Modulator
 {
 public:
