@@ -46,9 +46,10 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
     setProperty("background-color", QColor(40,40,50));
 
     p_update_from_properties_();
-
+/*
     auto f = new FaderItem(this);
     f->setRect(innerRect());
+*/
 }
 
 

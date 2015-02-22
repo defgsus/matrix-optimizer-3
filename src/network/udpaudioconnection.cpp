@@ -223,13 +223,15 @@ void UdpAudioConnection::Private::deconstructPacket_(const QByteArray& data)
         /*return; not really an error, is it?*/
     }
 
-    MO_DEBUG("UdpAudioConnection: received buffer "
-             << idName << ", " << blockSize << ", " << channel << ", " << pos);
-
     // read and forward pointer
     s.readRawData((char *)b->buf->writePointer(), b->buf->blockSizeBytes());
     b->buf->nextBlock();
     b->curPos = pos;
+
+    MO_DEBUG_UDP("UdpAudioConnection: received buffer "
+             << idName << ", " << blockSize << ", " << channel << ", " << pos
+             //<< "\n" << b->buf->toAscii()
+             );
 }
 
 

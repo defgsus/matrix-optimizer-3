@@ -11,7 +11,10 @@
 #ifndef MOSRC_AUDIO_TOOL_AUDIOBUFFER_H
 #define MOSRC_AUDIO_TOOL_AUDIOBUFFER_H
 
+#include <QString>
 #include "types/float.h"
+
+
 
 namespace MO {
 namespace AUDIO {
@@ -31,6 +34,9 @@ class AudioBuffer
     size_t blockSize() const { return p_blockSize_; }
     size_t blockSizeBytes() const { return p_blockSize_ * sizeof(F32); }
     size_t numBlocks() const { return p_numBlocks_; }
+
+    /** Returns an ascii dump of the current buffer contents */
+    QString toAscii(uint w = 70, uint h = 15) const;
 
     // -------------- sampling ------------------------
 

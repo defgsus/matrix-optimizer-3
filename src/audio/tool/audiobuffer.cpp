@@ -10,6 +10,7 @@
 
 #include "audiobuffer.h"
 #include "io/error.h"
+#include "tool/asciirect.h"
 
 namespace MO {
 namespace AUDIO {
@@ -23,6 +24,18 @@ AudioBuffer::AudioBuffer(size_t blockSize, size_t numBlocks)
     setSize(blockSize, numBlocks);
 }
 
+QString AudioBuffer::toAscii(uint w, uint h) const
+{
+    AsciiRect r(w, h);
+    float val = float(w) / blockSize();
+    for (uint i=0; i<blockSize(); ++i)
+    {
+        r.addPixelF(float(i) / blockSize() * w,
+                    h - h * (readPointer()[i] + 1.f) / 2.f, val);
+    }
+    r.clip();
+    return r.toString();
+}
 
 void AudioBuffer::setSize(size_t blockSize, size_t numBlocks)
 {

@@ -18,9 +18,11 @@
 class QStaticText;
 
 namespace MO {
+
 class Object;
 class Parameter;
 class Modulator;
+
 namespace GUI {
 
 enum FrontItemType
@@ -31,7 +33,9 @@ enum FrontItemType
     FIT_TEXT
 };
 
-/**
+/** Base class for scene interface objects.
+    This is basically a group with fancy css-like properties,
+    which can be filled with other control items.
 
   Property ids are:
   (int) width, height, padding, border
@@ -43,7 +47,7 @@ class AbstractFrontItem : public QGraphicsItem
 {
 public:
 
-    AbstractFrontItem(Parameter * p = 0, QGraphicsItem * parent = 0);
+    explicit AbstractFrontItem(Parameter * p = 0, QGraphicsItem * parent = 0);
 
     // ---------------- getter ------------------
 

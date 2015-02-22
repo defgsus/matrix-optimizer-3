@@ -16,7 +16,8 @@
 namespace MO {
 namespace GUI {
 
-/**
+/** Very general (normally rectangular) interface item,
+    connecting some value/object with some gui control.
 */
 class AbstractGuiItem : public QGraphicsItem
 {
