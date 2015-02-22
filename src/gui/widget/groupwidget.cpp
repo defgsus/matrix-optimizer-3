@@ -44,7 +44,7 @@ GroupWidget::GroupWidget(const QString& title, bool expanded, QWidget *parent) :
 
 void GroupWidget::createLayout_()
 {
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     auto lv = new QVBoxLayout(this);
     lv->setMargin(1);

@@ -153,7 +153,7 @@ ClientEngineCommandLine::ReturnValue
     {
         SystemInfo info;
         info.get();
-        MO_PRINT(tr("Info") << ":\n" << info.toString());
+        MO_PRINT(tr("Info") << ":\n" << info.toString() << "\n" << settings->infoString());
         return Quit;
     }
 

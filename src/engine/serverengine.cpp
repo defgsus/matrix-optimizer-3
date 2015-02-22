@@ -80,18 +80,18 @@ bool ServerEngine::open()
 {
     return server_->open();
 }
-
-UdpAudioConnection * ServerEngine::getAudioStream()
+#if 0
+UdpAudioConnection * ServerEngine::getAudioOutStream()
 {
     if (!audioOut_)
     {
-        audioOut_ = new UdpAudioConnection(this);
+        audioOut_ = new UdpAudioConnection();
         // XXX link
     }
 
     return audioOut_;
 }
-
+#endif
 
 void ServerEngine::close()
 {
@@ -379,6 +379,15 @@ void ServerEngine::setScenePlaying(bool enabled)
     for (int i=0; i<numClients(); ++i)
         eventCom_->sendEvent(clients_[i].tcpSocket, &r);
 }
+
+bool ServerEngine::sendAudioConfig(const AUDIO::Configuration& c)
+{
+    auto e = new NetEventAudioConfig();
+    e->setConfig(c);
+
+    return sendEvent(e);
+}
+
 
 
 ProjectionSystemSettings ServerEngine::createProjectionSystemSettings()

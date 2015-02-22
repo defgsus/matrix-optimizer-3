@@ -22,6 +22,7 @@
 #include "gl/window.h"
 #include "gui/clipview.h"
 #include "gui/objectview.h"
+#include "gui/serverview.h"
 #include "gui/sequencer.h"
 #include "gui/sequenceview.h"
 #include "gui/objectgraphview.h"
@@ -166,6 +167,10 @@ void MainWindow::createDockWidgets_()
 
     dock = createDockWidget(tr("Object"), controller_->objectView());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+
+    dock = createDockWidget(tr("Server/Client"), controller_->serverView());
+    addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Vertical);
+
 }
 
 QDockWidget * MainWindow::createDockWidget(const QString &name, QWidget *widget)

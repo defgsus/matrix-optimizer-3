@@ -116,6 +116,16 @@ void AudioEngine::Private::setup()
 #endif
 }
 
+void AudioEngine::prepareUdp()
+{
+    // update network objects
+    if (!p_->isPathPrepared)
+    {
+        p_->path.preparePath();
+        p_->isPathPrepared = true;
+    }
+}
+
 void AudioEngine::process(const F32 * inputs, F32 * outputs)
 {
     // update network objects

@@ -57,7 +57,6 @@ HEADERS += \
     src/gui/midisettingsdialog.h \
     src/gui/saveequationdialog.h \
     src/gui/infowindow.h \
-    src/gui/serverdialog.h \
     src/gui/widget/netlogwidget.h \
     src/gui/widget/overlapareaeditwidget.h \
     src/gui/widget/filterresponsewidget.h \
@@ -90,7 +89,8 @@ HEADERS += \
     src/gui/item/abstractfrontitem.h \
     src/gui/frontview.h \
     src/gui/item/faderitem.h \
-    src/gui/item/abstractguiitem.h
+    src/gui/item/abstractguiitem.h \
+    src/gui/serverview.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -147,7 +147,6 @@ SOURCES += \
     src/gui/midisettingsdialog.cpp \
     src/gui/saveequationdialog.cpp \
     src/gui/infowindow.cpp \
-    src/gui/serverdialog.cpp \
     src/gui/widget/netlogwidget.cpp \
     src/gui/widget/overlapareaeditwidget.cpp \
     src/gui/widget/filterresponsewidget.cpp \
@@ -180,4 +179,5 @@ SOURCES += \
     src/gui/item/abstractfrontitem.cpp \
     src/gui/frontview.cpp \
     src/gui/item/faderitem.cpp \
-    src/gui/item/abstractguiitem.cpp
+    src/gui/item/abstractguiitem.cpp \
+    src/gui/serverview.cpp

@@ -958,6 +958,7 @@ void ObjectDspPath::Private::prepareUdpOutputs(ObjectBuffer * buf)
                 buf->udpInput = getUdpInput();
                 buf->udpInput->addBuffer(audiobuf, ao, i);
                 buf->udpInputBuffers.append(audiobuf);
+                buf->udpInput->openForRead();
             }
 #endif
 
@@ -1009,7 +1010,10 @@ UdpAudioConnection * ObjectDspPath::Private::getUdpInput()
 {
     MO_ASSERT(isClient(), "wrong request");
     if (!udpInput)
+    {
+        MO_DEBUG("ObjectDspPath: creating udp input object");
         udpInput = new UdpAudioConnection();
+    }
     return udpInput;
 }
 #endif
@@ -1020,8 +1024,9 @@ UdpAudioConnection * ObjectDspPath::Private::getUdpOutput()
     MO_ASSERT(!isClient(), "wrong request");
     if (!udpOutput)
     {
-        MO_DEBUG("UdpAudioConnection: creating udp output object");
-        udpOutput = serverEngine().getAudioStream();
+        MO_DEBUG("ObjectDspPath: creating udp output object");
+        udpOutput = //serverEngine().getAudioOutStream();
+                    new UdpAudioConnection();
     }
     return udpOutput;
 }

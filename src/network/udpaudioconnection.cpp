@@ -8,6 +8,9 @@
     <p>created 06.01.2015</p>
 */
 
+#include <memory>
+#include <vector>
+
 #include <QDataStream>
 #include <QMap>
 
@@ -55,8 +58,9 @@ struct UdpAudioConnection::Private
     Buffer * bufferFor(AUDIO::AudioBuffer * );
     Buffer * bufferFor(const QString& id);
 
-    QMap<AUDIO::AudioBuffer*, Buffer> buffers;
-    QMap<QString, Buffer> buffersId;
+    std::vector<std::shared_ptr<Buffer>> bufferStore;
+    QMap<AUDIO::AudioBuffer*, Buffer*> buffers;
+    QMap<QString, Buffer*> buffersId;
 
     UdpAudioConnection * p;
     UdpConnection * udp;
@@ -86,13 +90,18 @@ void UdpAudioConnection::clear()
 {
     p_->buffers.clear();
     p_->buffersId.clear();
+    p_->bufferStore.clear();
 }
 
 bool UdpAudioConnection::addBuffer(AUDIO::AudioBuffer *buffer, AudioObject *obj, uint channel)
 {
+    MO_DEBUG_UDP("UdpAudioConnection::addBuffer("
+             << buffer << ", " << obj->idName() << ", " << channel << ")");
+
     if (p_->bufferFor(buffer))
     {
-        MO_WARNING("UdpAudioConnection: add of duplicate buffer " << buffer << ", forgot clear() ? fix : check");
+        MO_WARNING("UdpAudioConnection: add of duplicate buffer "
+                   << buffer << ", forgot clear() ? fix : check");
         return false;
     }
 
@@ -128,6 +137,7 @@ bool UdpAudioConnection::sendAudioBuffer(AUDIO::AudioBuffer * buf, SamplePos pos
     MO_DEBUG_UDP("UdpAudioConnection::sendBuffer(" << buf << ", " << pos << ")");
     MO_ASSERT( p_->bufferFor(buf), "audio buffer " << buf << " unknown to UdpAudioConnection");
 
+    // get buffer
     Private::Buffer * b = p_->bufferFor(buf);
     if (!b)
     {
@@ -135,6 +145,8 @@ bool UdpAudioConnection::sendAudioBuffer(AUDIO::AudioBuffer * buf, SamplePos pos
                   << buf << ", " << pos << ") for unknown buffer");
         return false;
     }
+    // update buffer info
+    b->curPos = pos;
 
     // repackage
     QByteArray data;
@@ -164,7 +176,7 @@ void UdpAudioConnection::Private::constructPacket_(QByteArray & data, Buffer * b
 {
     QDataStream s(&data, QIODevice::WriteOnly);
 
-    s << "_audio_" << b->ao->idName() << quint32(b->channel) << quint64(b->curPos) << (quint32)b->buf->blockSize();
+    s << "_audio_" << b->id << quint32(b->channel) << quint64(b->curPos) << quint32(b->buf->blockSize());
     s.writeRawData((const char*)b->buf->readPointer(), b->buf->blockSizeBytes());
 }
 
@@ -178,19 +190,24 @@ void UdpAudioConnection::Private::deconstructPacket_(const QByteArray& data)
 
     QDataStream s(data);
 
-    // skip header
-    s.skipRawData(7);
     // reconstruct
     QString idName;
     quint32 channel;
     quint64 pos;
     quint32 blockSize;
+    // skip header
+    s >> idName;
+    // read stuff
     s >> idName >> channel >> pos >> blockSize;
 
     Buffer * b = bufferFor(idName);
     if (!b)
     {
-        MO_NETLOG(WARNING, "UdpAudioConnection: received unknown buffer " << idName);
+        MO_NETLOG(WARNING, "UdpAudioConnection: received unknown buffer '" << idName << "'");
+#ifdef MO_DO_DEBUG
+        for (auto b : buffers)
+            MO_PRINT(b->id);
+#endif
         return;
     }
 
@@ -206,6 +223,9 @@ void UdpAudioConnection::Private::deconstructPacket_(const QByteArray& data)
         /*return; not really an error, is it?*/
     }
 
+    MO_DEBUG("UdpAudioConnection: received buffer "
+             << idName << ", " << blockSize << ", " << channel << ", " << pos);
+
     // read and forward pointer
     s.readRawData((char *)b->buf->writePointer(), b->buf->blockSizeBytes());
     b->buf->nextBlock();
@@ -217,29 +237,32 @@ void UdpAudioConnection::Private::createBuffer(AUDIO::AudioBuffer *buf, AudioObj
 {
     MO_ASSERT(!bufferFor(buf), "");
 
-    Buffer b;
-    b.ao = obj;
-    b.buf = buf;
-    b.channel = channel;
-    b.curPos = 0;
-    b.id = QString("%1_%2").arg(obj->idName()).arg(channel);
+    auto b = new Buffer();
+    auto shp = std::shared_ptr<Buffer>(b);
 
-    buffers.insert(b.buf, b);
-    buffersId.insert(b.id, b);
+    b->ao = obj;
+    b->buf = buf;
+    b->channel = channel;
+    b->curPos = 0;
+    b->id = QString("%1_%2").arg(obj->idName()).arg(channel);
+
+    buffers.insert(b->buf, b);
+    buffersId.insert(b->id, b);
+    bufferStore.push_back(shp);
 }
 
 UdpAudioConnection::Private::Buffer *
 UdpAudioConnection::Private::bufferFor(AUDIO::AudioBuffer * ab)
 {
     auto i = buffers.find(ab);
-    return (i == buffers.end()) ? 0 : &i.value();
+    return (i == buffers.end()) ? 0 : i.value();
 }
 
 UdpAudioConnection::Private::Buffer *
 UdpAudioConnection::Private::bufferFor(const QString& id)
 {
     auto i = buffersId.find(id);
-    return (i == buffersId.end()) ? 0 : &i.value();
+    return (i == buffersId.end()) ? 0 : i.value();
 }
 
 } // namespace MO

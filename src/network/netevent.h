@@ -21,6 +21,7 @@
 #include "io/systeminfo.h"
 #include "clientstate.h"
 #include "types/float.h"
+#include "audio/configuration.h"
 #include "network/netlog.h"
 
 class QIODevice;
@@ -375,6 +376,26 @@ private:
     friend class ClientEngine;
 
     ClientState state_;
+};
+
+
+/** Sends audio config to clients */
+class NetEventAudioConfig: public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventAudioConfig)
+
+    // --------- getter -------------------
+
+    const AUDIO::Configuration & config() { return config_; }
+
+    // --------- setter -------------------
+
+    void setConfig(const AUDIO::Configuration& c) { config_ = c; }
+
+private:
+
+    AUDIO::Configuration config_;
 };
 
 

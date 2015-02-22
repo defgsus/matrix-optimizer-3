@@ -25,6 +25,7 @@
 #include "gui/infowindow.h"
 #include "gl/manager.h"
 #include "gl/window.h"
+#include "engine/audioengine.h"
 #include "io/systeminfo.h"
 #include "io/settings.h"
 #include "io/clientfiles.h"
@@ -62,6 +63,8 @@ ClientEngine::ClientEngine(QObject *parent) :
     client_     (0),
     scene_      (0),
     nextScene_  (0),
+    audioEngine_(0),
+    audioConfig_(44100, 256, 0, 2),
     cl_         (new ClientEngineCommandLine(this)),
     isFilesReady_(false)
 {
@@ -413,6 +416,12 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         return;
     }
 
+    if (NetEventAudioConfig * e = netevent_cast<NetEventAudioConfig>(event))
+    {
+        setAudioConfig(e->config());
+        return;
+    }
+
     MO_NETLOG(WARNING, "unhandled NetEvent " << event->infoName() << " in ClientEngine");
 }
 
@@ -439,6 +448,16 @@ void ClientEngine::setProjectionSettings_(NetEventRequest * e)
     {
         MO_NETLOG(ERROR, "Failed to deserialize ProjectionSystemSettings\n"
                   << e.what());
+    }
+}
+
+void ClientEngine::setAudioConfig(const AUDIO::Configuration & c)
+{
+    audioConfig_ = c;
+    if (audioEngine_ && scene_)
+    {
+        audioEngine_->setScene(scene_, audioConfig_, MO_AUDIO_THREAD);
+        audioEngine_->prepareUdp();
     }
 }
 
@@ -474,6 +493,12 @@ void ClientEngine::setSceneObject(Scene * scene)
     // update projection settings
     scene_->setProjectionSettings(settings->getDefaultProjectionSettings());
     scene_->setProjectorIndex(settings->clientIndex());
+
+    // create audio engine
+    if (!audioEngine_)
+        audioEngine_ = new AudioEngine(this);
+    audioEngine_->setScene(scene_, audioConfig_, MO_AUDIO_THREAD);
+    audioEngine_->prepareUdp();
 }
 
 

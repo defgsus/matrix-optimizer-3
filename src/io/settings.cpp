@@ -44,6 +44,33 @@ Settings::Settings(QObject *parent) :
     createDefaultValues_();
 }
 
+QString Settings::infoString() const
+{
+    QString str;
+    QTextStream s(&str);
+    s
+        << "mode : " << (isClient() ? "CLIENT" : isServer() ? "SERVER" : "DESKTOP")
+        << "\nnum. runs  : " << getValue("Status/desktopRuns").toString()
+#ifndef MO_DISABLE_SERVER
+                    << " / " << getValue("Status/serverRuns").toString() << " server"
+#endif
+#ifndef MO_DISABLE_CLIENT
+                    << " / " << getValue("Status/clientRuns").toString() << " client"
+#endif
+#ifndef MO_DISABLE_CLIENT
+        << "\nserver     : " << serverAddress()
+#endif
+#if !defined(MO_DISABLE_CLIENT) || !defined(MO_DISABLE_SERVER)
+        << "\ntcp comm.  : " << getValue("Network/tcpport").toString()
+        << "\nudp comm.  : " << getValue("Network/udpport").toString()
+        << "\nudp-audio  : " << settings->udpAudioMulticastAddress() << ":"
+                             << settings->udpAudioMulticastPort()
+#endif
+    ;
+
+    return str;
+}
+
 void Settings::createDefaultValues_()
 {
     // --- application stats ---
@@ -114,7 +141,7 @@ void Settings::createDefaultValues_()
     defaultValues_["Client/desktopIndex"] = 0;
 }
 
-QVariant Settings::getValue(const QString &key)
+QVariant Settings::getValue(const QString &key) const
 {
     // return from settings
 
@@ -297,7 +324,7 @@ bool Settings::restoreGeometry(QWidget * win)
     return found;
 }
 
-QString Settings::serverAddress()
+QString Settings::serverAddress() const
 {
     return getValue("Client/serverAddress").toString();
 }
@@ -307,7 +334,7 @@ void Settings::setServerAddress(const QString & a)
     setValue("Client/serverAddress", a);
 }
 
-QString Settings::udpAudioMulticastAddress()
+QString Settings::udpAudioMulticastAddress() const
 {
     return getValue("Network/udpAudioMulticastAddress").toString();
 }
@@ -317,7 +344,7 @@ void Settings::setUdpAudioMulticastAddress(const QString & a)
     setValue("Network/udpAudioMulticastAddress", a);
 }
 
-uint16_t Settings::udpAudioMulticastPort()
+uint16_t Settings::udpAudioMulticastPort() const
 {
     return getValue("Network/udpAudioMulticastPort").toUInt();
 }
@@ -327,7 +354,7 @@ void Settings::setUdpAudioMulticastPort(uint16_t p)
     setValue("Network/udpAudioMulticastPort", p);
 }
 
-int Settings::clientIndex()
+int Settings::clientIndex() const
 {
     return getValue("Client/index").toInt();
 }
@@ -337,7 +364,7 @@ void Settings::setClientIndex(int i)
     setValue("Client/index", i);
 }
 
-uint Settings::desktop()
+uint Settings::desktop() const
 {
     return getValue("Client/desktopIndex").toInt();
 }

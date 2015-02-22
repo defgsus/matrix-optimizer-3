@@ -1,4 +1,4 @@
-/** @file serverdialog.h
+/** @file serverview.h
 
     @brief Dialog for controlling clients
 
@@ -8,28 +8,29 @@
     <p>created 10.09.2014</p>
 */
 
-#ifndef MOSRC_GUI_SERVERDIALOG_H
-#define MOSRC_GUI_SERVERDIALOG_H
+#ifndef MOSRC_GUI_SERVERVIEW_H
+#define MOSRC_GUI_SERVERVIEW_H
 
-#include <QDialog>
+#include <QWidget>
 
 #include "network/network_fwd.h"
 
 
 class QCheckBox;
 class QLabel;
+class QPushButton;
 
 namespace MO {
 namespace GUI {
 
 class NetLogWidget;
 
-class ServerDialog : public QDialog
+class ServerView : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ServerDialog(QWidget *parent = 0);
-    ~ServerDialog();
+    explicit ServerView(QWidget *parent = 0);
+    ~ServerView();
 
 signals:
 
@@ -63,4 +64,4 @@ private:
 } // namespace GUI
 } // namespace MO
 
-#endif // MOSRC_GUI_SERVERDIALOG_H
+#endif // MOSRC_GUI_SERVERVIEW_H

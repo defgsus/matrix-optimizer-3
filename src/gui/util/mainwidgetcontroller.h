@@ -41,7 +41,7 @@ class SequenceView;
 class Sequencer;
 class SceneSettings;
 class TransportWidget;
-class ServerDialog;
+class ServerView;
 class ClipView;
 class ObjectGraphView;
 class FrontView;
@@ -72,7 +72,7 @@ public:
     SequenceView * sequenceView() const { return seqView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
     //QObjectInspector * objectInspector() const { return qobjectInspector_; }
-    ServerDialog * serverDialog() const { return serverDialog_; }
+    ServerView * serverView() const { return serverView_; }
     QStatusBar * statusBar() const { return statusBar_; }
 
     void createMainMenu(QMenuBar * menuBar);
@@ -208,7 +208,7 @@ private:
          isVisibleClipView_,
          isVisibleSeqView_;
 
-    ServerDialog * serverDialog_;
+    ServerView * serverView_;
 
     QStatusBar * statusBar_;
     QLabel * sysInfoLabel_;

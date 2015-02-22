@@ -1,4 +1,4 @@
-/** @file serverdialog.cpp
+/** @file serverview.cpp
 
     @brief Dialog for controlling clients
 
@@ -13,7 +13,7 @@
 #include <QPushButton>
 #include <QCheckBox>
 
-#include "serverdialog.h"
+#include "serverview.h"
 #include "widget/netlogwidget.h"
 #include "gui/widget/spinbox.h"
 #include "engine/serverengine.h"
@@ -25,16 +25,16 @@
 namespace MO {
 namespace GUI {
 
-ServerDialog::ServerDialog(QWidget *parent) :
-    QDialog(parent)
+ServerView::ServerView(QWidget *parent)
+    : QWidget       (parent)
 {
-    setObjectName("_ServerDialog");
-    setWindowTitle("Server/client settings");
+    setObjectName("_ServerView");
+    //setWindowTitle("Server/client settings");
 
-    setMinimumSize(640,640);
-    setModal(false);
+    setMinimumSize(320,320);
+//    setModal(false);
 
-    settings->restoreGeometry(this);
+//    settings->restoreGeometry(this);
 
     server_ = &serverEngine();
 
@@ -50,12 +50,12 @@ ServerDialog::ServerDialog(QWidget *parent) :
             this, SLOT(onClientMessage_(ClientInfo,int,QString)));
 }
 
-ServerDialog::~ServerDialog()
+ServerView::~ServerView()
 {
-    settings->storeGeometry(this);
+//    settings->storeGeometry(this);
 }
 
-void ServerDialog::createWidgets_()
+void ServerView::createWidgets_()
 {
     auto lv = new QVBoxLayout(this);
 
@@ -95,22 +95,22 @@ void ServerDialog::createWidgets_()
         lv->addWidget(logger_);
 }
 
-void ServerDialog::onClientsChanged_()
+void ServerView::onClientsChanged_()
 {
-    MO_DEBUG("ServerDialog::onClientsChanged() "
+    MO_DEBUG("ServerView::onClientsChanged() "
              << server_->numClients());
 
     updateClientWidgets_();
 }
 
-void ServerDialog::onClientMessage_(const ClientInfo & c, int level, const QString & msg)
+void ServerView::onClientMessage_(const ClientInfo & c, int level, const QString & msg)
 {
     logger_->addLine(level, QString("Client[%1]: %2")
                      .arg(c.index)
                      .arg(msg));
 }
 
-void ServerDialog::updateClientWidgets_()
+void ServerView::updateClientWidgets_()
 {
     // delete previous
     for (auto w : clientWidgets_)
@@ -132,7 +132,7 @@ void ServerDialog::updateClientWidgets_()
     }
 }
 
-QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
+QWidget * ServerView::createClientWidget_(int index, const ClientInfo & inf)
 {
     QWidget * w = new QWidget(this);
     auto lv = new QVBoxLayout(w);
@@ -200,7 +200,7 @@ QWidget * ServerDialog::createClientWidget_(int index, const ClientInfo & inf)
     return w;
 }
 
-void ServerDialog::startServer_(bool run)
+void ServerView::startServer_(bool run)
 {
     if (run)
         server_->open();
