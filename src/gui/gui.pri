@@ -93,7 +93,8 @@ HEADERS += \
     src/gui/serverview.h \
     src/gui/widget/qvariantwidget.h \
     src/gui/propertiesview.h \
-    src/gui/frontitemeditor.h
+    src/gui/frontitemeditor.h \
+    src/gui/widget/coloreditwidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -186,4 +187,5 @@ SOURCES += \
     src/gui/serverview.cpp \
     src/gui/widget/qvariantwidget.cpp \
     src/gui/propertiesview.cpp \
-    src/gui/frontitemeditor.cpp
+    src/gui/frontitemeditor.cpp \
+    src/gui/widget/coloreditwidget.cpp

@@ -10,7 +10,6 @@
 
 #include <QLayout>
 #include <QLabel>
-#include <QDebug>
 
 #include "frontitemeditor.h"
 #include "item/abstractfrontitem.h"
@@ -42,7 +41,9 @@ void FrontItemEditor::createWidgets_()
     auto lv = new QVBoxLayout(this);
 
         p_label_ = new QLabel(this);
+        p_label_->setProperty("GroupHeader", true);
         lv->addWidget(p_label_);
+
 
         p_props_ = new PropertiesView(this);
         lv->addWidget(p_props_);
@@ -75,7 +76,6 @@ void FrontItemEditor::onPropertyChanged_(const QString &id)
 
     // send new property value to graphics item
     p_item_->setProperty(id, p_props_->properties().get(id));
-    qDebug() << id << p_props_->properties().get(id);
 }
 
 

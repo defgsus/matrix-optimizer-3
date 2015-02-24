@@ -43,10 +43,13 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
 
     p_props_->set("padding", 5);
     p_props_->set("show-label", true);
-    p_props_->set("border", 2);
+    p_props_->set("border", 2.);
 
     p_props_->set("border-color", QColor(200,200,220));
     p_props_->set("background-color", QColor(40,40,50));
+
+    p_props_->set("width", 64);
+    p_props_->set("height", 64);
 
     p_update_from_properties_();
 /*
@@ -76,6 +79,11 @@ void AbstractFrontItem::setProperty(const QString &id, const QVariant &v)
 
 void AbstractFrontItem::p_update_from_properties_()
 {
+    // keep track of size changes
+    if (p_oldSize_ != innerRect().size())
+        prepareGeometryChange();
+    p_oldSize_ = innerRect().size();
+
     update();
 }
 

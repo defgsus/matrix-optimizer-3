@@ -18,6 +18,7 @@
 #include "qvariantwidget.h"
 #include "spinbox.h"
 #include "doublespinbox.h"
+#include "coloreditwidget.h"
 #include "io/error.h"
 
 
@@ -162,8 +163,19 @@ void QVariantWidget::Private::createWidgets()
             auto e = new QLineEdit(widget);
             edit = e;
             e->setReadOnly(false);
+            e->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
             f_update_widget = [=](){ e->setText(v.toString()); };
             f_update_value = [=](){ v = e->text(); };
+            connect(e, SIGNAL(textChanged(QString)), widget, SLOT(onValueChange_()));
+        }
+        break;
+
+        case QVariant::Color:
+        {
+            auto e = new ColorEditWidget(widget);
+            edit = e;
+            f_update_widget = [=](){ e->setCurrentColor(v.value<QColor>()); };
+            f_update_value = [=](){ v = e->currentColor(); };
             connect(e, SIGNAL(textChanged(QString)), widget, SLOT(onValueChange_()));
         }
         break;

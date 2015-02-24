@@ -87,6 +87,7 @@ private:
     Properties * p_props_;
     Parameter * p_param_;
     QStaticText * p_statictext_name_;
+    QSizeF p_oldSize_;
 };
 
 } // namespace GUI
