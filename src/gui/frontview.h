@@ -21,6 +21,7 @@ class Modulator;
 namespace GUI {
 
 class FrontScene;
+class AbstractFrontItem;
 
 class FrontView : public QGraphicsView
 {
@@ -29,6 +30,9 @@ public:
     explicit FrontView(QWidget *parent = 0);
 
 signals:
+
+    /** When an item was selected */
+    void itemSelected(AbstractFrontItem*);
 
 public slots:
 

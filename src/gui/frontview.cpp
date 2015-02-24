@@ -30,6 +30,9 @@ FrontView::FrontView(QWidget *parent)
 #endif
 
   setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+
+  connect(gscene_, SIGNAL(itemSelected(AbstractFrontItem*)),
+          this, SIGNAL(itemSelected(AbstractFrontItem*)));
 }
 
 void FrontView::setRootObject(Object *root)

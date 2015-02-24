@@ -17,6 +17,7 @@ namespace MO {
 class Object;
 class Parameter;
 namespace GUI {
+class AbstractFrontItem;
 
 class FrontScene : public QGraphicsScene
 {
@@ -27,11 +28,18 @@ public:
 
 signals:
 
+    /** When an item was selected */
+    void itemSelected(AbstractFrontItem*);
+
 public slots:
 
     /** Sets the root object and completely
         (re-)initializes the QGraphicsScene */
     void setRootObject(Object * root);
+
+private slots:
+
+    void onSelectionChanged_();
 
 private:
     struct Private;

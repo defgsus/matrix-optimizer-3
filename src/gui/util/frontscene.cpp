@@ -39,6 +39,9 @@ FrontScene::FrontScene(QObject *parent)
     : QGraphicsScene    (parent)
     , p_                (new Private(this))
 {
+    connect(this, SIGNAL(selectionChanged()),
+            this, SLOT(onSelectionChanged_()));
+
 
     auto i = new AbstractFrontItem(0, 0);
     addItem(i);
@@ -55,6 +58,19 @@ FrontScene::~FrontScene()
 void FrontScene::setRootObject(Object *root)
 {
 
+}
+
+void FrontScene::onSelectionChanged_()
+{
+    /** @todo multi-select signal */
+
+    auto list = selectedItems();
+    for (QGraphicsItem * item : list)
+        if (auto a = qgraphicsitem_cast<AbstractFrontItem*>(item))
+        {
+            emit itemSelected(a);
+            break;
+        }
 }
 
 

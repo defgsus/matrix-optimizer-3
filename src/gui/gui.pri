@@ -90,7 +90,10 @@ HEADERS += \
     src/gui/frontview.h \
     src/gui/item/faderitem.h \
     src/gui/item/abstractguiitem.h \
-    src/gui/serverview.h
+    src/gui/serverview.h \
+    src/gui/widget/qvariantwidget.h \
+    src/gui/propertiesview.h \
+    src/gui/frontitemeditor.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -180,4 +183,7 @@ SOURCES += \
     src/gui/frontview.cpp \
     src/gui/item/faderitem.cpp \
     src/gui/item/abstractguiitem.cpp \
-    src/gui/serverview.cpp
+    src/gui/serverview.cpp \
+    src/gui/widget/qvariantwidget.cpp \
+    src/gui/propertiesview.cpp \
+    src/gui/frontitemeditor.cpp

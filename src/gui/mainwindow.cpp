@@ -27,6 +27,7 @@
 #include "gui/sequenceview.h"
 #include "gui/objectgraphview.h"
 #include "gui/frontview.h"
+#include "gui/frontitemeditor.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
 #include "object/scene.h"
@@ -167,6 +168,9 @@ void MainWindow::createDockWidgets_()
 
     dock = createDockWidget(tr("Object"), controller_->objectView());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+
+    dock = createDockWidget(tr("Frontend settings"), controller_->frontItemEditor());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Horizontal);
 
     dock = createDockWidget(tr("Server/Client"), controller_->serverView());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Vertical);

@@ -56,6 +56,7 @@
 #include "gui/resolutiondialog.h"
 #include "gui/objectgraphview.h"
 #include "gui/frontview.h"
+#include "gui/frontitemeditor.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
@@ -191,6 +192,10 @@ void MainWidgetController::createObjects_()
 
     // front-end view
     frontView_ = new FrontView(window_);
+    // front-end properties
+    frontItemEditor_ = new FrontItemEditor(window_);
+    connect(frontView_, SIGNAL(itemSelected(AbstractFrontItem*)),
+            frontItemEditor_, SLOT(setItem(AbstractFrontItem*)));
 
     // sequencer
     sequencer_ = new Sequencer(window_);

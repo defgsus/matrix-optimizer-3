@@ -12,9 +12,11 @@
 #include <QStaticText>
 
 #include "abstractfrontitem.h"
-#include "faderitem.h"
+#include "types/properties.h"
 #include "object/param/parameter.h"
 #include "io/log.h"
+
+#include "faderitem.h"
 
 namespace MO {
 namespace GUI {
@@ -22,6 +24,7 @@ namespace GUI {
 
 AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
     : QGraphicsItem     (parent)
+    , p_props_          (new Properties)
     , p_param_          (p)
     , p_statictext_name_(0)
 {
@@ -32,18 +35,18 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
 
     if (p)
     {
-        setProperty("parameter-id", p->idName());
-        setProperty("name", p->name());
+        p_props_->set("parameter-id", p->idName());
+        p_props_->set("name", p->name());
     }
     else
-        setProperty("name", "new");
+        p_props_->set("name", "new");
 
-    setProperty("padding", 5);
-    setProperty("show-label", true);
-    setProperty("border", 2);
+    p_props_->set("padding", 5);
+    p_props_->set("show-label", true);
+    p_props_->set("border", 2);
 
-    setProperty("border-color", QColor(200,200,220));
-    setProperty("background-color", QColor(40,40,50));
+    p_props_->set("border-color", QColor(200,200,220));
+    p_props_->set("background-color", QColor(40,40,50));
 
     p_update_from_properties_();
 /*
@@ -52,33 +55,28 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
 */
 }
 
+AbstractFrontItem::~AbstractFrontItem()
+{
+    delete p_props_;
+}
 
 // -------------------------------- properties ---------------------------------
 
-QVariant AbstractFrontItem::getProperty(const QString &id) const
+void AbstractFrontItem::setProperties(const Properties & p)
 {
-    auto i = p_props_.find(id);
-#ifdef MO_DO_DEBUG
-    if (i == p_props_.end())
-        MO_DEBUG("AbstractFrontItem: unknown property '" << id << "' requested.")
-#endif
-    return i == p_props_.end() ? QVariant() : i.value();
+    *p_props_ = p;
+    p_update_from_properties_();
 }
 
-QVariant AbstractFrontItem::getProperty(const QString &id, const QVariant& def) const
+void AbstractFrontItem::setProperty(const QString &id, const QVariant &v)
 {
-    auto i = p_props_.find(id);
-    return i == p_props_.end() ? def : i.value();
-}
-
-void AbstractFrontItem::setProperty(const QString &id, const QVariant & v)
-{
-    p_props_.insert(id, v);
+    p_props_->set(id, v);
+    p_update_from_properties_();
 }
 
 void AbstractFrontItem::p_update_from_properties_()
 {
-
+    update();
 }
 
 // ---------------------------------- layout -----------------------------------
@@ -86,31 +84,31 @@ void AbstractFrontItem::p_update_from_properties_()
 
 QRectF AbstractFrontItem::innerRect() const
 {
-    return QRectF(0,0, getProperty("width", 64).toInt(),
-                       getProperty("height", 64).toInt());
+    return QRectF(0,0, p_props_->get("width", 64).toInt(),
+                       p_props_->get("height", 64).toInt());
 }
 
 QRectF AbstractFrontItem::rect() const
 {
-    int pad = getProperty("padding").toInt();
+    int pad = p_props_->get("padding").toInt();
     return innerRect().adjusted(-pad, -pad, pad, pad);
 }
 
 QRectF AbstractFrontItem::boundingRect() const
 {
-    qreal pad = getProperty("padding").toInt()
-                + getProperty("border").toInt();
+    qreal pad = p_props_->get("padding").toInt()
+                + p_props_->get("border").toInt();
     return innerRect().adjusted(-pad, -pad, pad, pad);
 }
 
 void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , QWidget * )
 {
     // set colors/pens
-    p->setBrush(QBrush(getProperty("background-color").value<QColor>()));
-    int bor = getProperty("border").toInt();
+    p->setBrush(QBrush(p_props_->get("background-color").value<QColor>()));
+    int bor = p_props_->get("border").toInt();
     if (bor > 0)
     {
-        QPen pen( getProperty("border-color").value<QColor>() );
+        QPen pen( p_props_->get("border-color").value<QColor>() );
         pen.setWidth( bor );
         p->setPen(pen);
     }
@@ -121,12 +119,12 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
     p->drawRoundedRect(rec, 10., 10.);
 
     // label
-    if (getProperty("show-label").toBool())
+    if (p_props_->get("show-label").toBool())
     {
         if (!p_statictext_name_)
             p_statictext_name_ = new QStaticText();
 
-        const QString name = getProperty("name").toString();
+        const QString name = p_props_->get("name").toString();
         if (p_statictext_name_->text() != name)
             p_statictext_name_->setText(name);
 

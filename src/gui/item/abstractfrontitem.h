@@ -22,6 +22,7 @@ namespace MO {
 class Object;
 class Parameter;
 class Modulator;
+class Properties;
 
 namespace GUI {
 
@@ -48,25 +49,20 @@ class AbstractFrontItem : public QGraphicsItem
 public:
 
     explicit AbstractFrontItem(Parameter * p = 0, QGraphicsItem * parent = 0);
+    ~AbstractFrontItem();
 
     // ---------------- getter ------------------
 
     /** Returns a pointer to the connected Parameter, or NULL if there is none. */
     Parameter * parameter() const { return p_param_; }
 
-    /** Returns the given property, or an invalid QVariant */
-    QVariant getProperty(const QString& id) const;
+    /** Read access to properties */
+    const Properties& properties() const { return *p_props_; }
 
-    /** Returns the given property, or the default value. */
-    QVariant getProperty(const QString& id, const QVariant& def) const;
+    // -------------- setter --------------------
 
-    /** Returns true, when there is a property named @p id */
-    bool hasProperty(const QString& id) const { return p_props_.contains(id); }
-
-    // --------------- setter -------------------
-
-    /** Sets the given property */
-    void setProperty(const QString& id, const QVariant&);
+    void setProperties(const Properties&);
+    void setProperty(const QString& id, const QVariant& v);
 
     // --------------- layout -------------------
 
@@ -88,9 +84,9 @@ private:
 
     void p_update_from_properties_();
 
+    Properties * p_props_;
     Parameter * p_param_;
     QStaticText * p_statictext_name_;
-    QMap<QString, QVariant> p_props_;
 };
 
 } // namespace GUI
