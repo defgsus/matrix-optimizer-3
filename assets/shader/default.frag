@@ -17,6 +17,8 @@
  * MO_ENABLE_TEXTURE_SINE_MORPH
  * MO_ENABLE_NORMALMAP_TRANSFORMATION
  * MO_ENABLE_NORMALMAP_SINE_MORPH
+ * MO_ENABLE_FRAGMENT_OVERRIDE
+ * MO_ENABLE_NORMAL_OVERRIDE
  */
 
 const float PI = 3.14159265358979;
@@ -53,6 +55,7 @@ out vec4 out_color;
 // --- uniforms ---
 
 uniform float u_time;
+uniform vec3 u_cam_pos;
 
 #ifdef MO_ENABLE_LIGHTING
     uniform float u_diffuse_exp;
@@ -135,10 +138,14 @@ vec2 mo_normalmap_lookup(in vec2 st)
             ;
 }
 
-#ifdef MO_ENABLE_NORMALMAP
-// calculate the normal map influence
-vec3 normalmap = mix(
-            vec3(0., 0., 1.),
+/** Light directions are already in surface normal space,
+    so this is either the normal-map or <0,0,1> */
+vec3 mo_normal =
+#ifndef MO_ENABLE_NORMALMAP
+    vec3(0., 0., 1.);
+#else
+// mix-in texture normal map
+    mix(    vec3(0., 0., 1.),
             texture(tex_norm_0, mo_normalmap_lookup(v_texCoord)).xyz * 2.0 - 1.0,
             u_bump_scale
         );
@@ -232,16 +239,6 @@ vec4 mo_ambient_color()
             ;
 }
 
-/** Light directions are already in surface normal space,
-    so this either returns the normal-map or <0,0,1> */
-vec3 mo_normal()
-{
-#ifndef MO_ENABLE_NORMALMAP
-    return vec3(0., 0., 1.);
-#else
-    return normalmap;
-#endif
-}
 
 
 #ifdef MO_ENABLE_LIGHTING
@@ -249,7 +246,7 @@ vec3 mo_normal()
 vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness)
 {
     // dot-product of light normal and vertex normal gives linear light influence
-    float d = max(0.0, dot(mo_normal(), light_normal) );
+    float d = max(0.0, dot(mo_normal, light_normal) );
     // shaping the linear light influence
     float diffuse = pow(d, shinyness);
 
@@ -332,12 +329,20 @@ vec4 mo_toon_color()
 //%mo_override_frag%
 #endif
 
+#ifdef MO_ENABLE_NORMAL_OVERRIDE
+//%mo_override_normal%
+#endif
+
 void main()
 {
     // 'ambient' or base color
     vec4 ambcol = mo_ambient_color();
 
-    // adding the light to the base color
+#ifdef MO_ENABLE_FRAGMENT_OVERRIDE
+    mo_normal = mo_modify_normal(mo_normal);
+#endif
+
+    // add light to the base color
     vec4 col = ambcol + mo_light_color();
     //vec4 col = vec4(v_cam_dir, 1.0);
     //vec4 col = vec4(v_pos * 0.5 + 0.5, 1.0);

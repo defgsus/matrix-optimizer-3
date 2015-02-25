@@ -16,7 +16,7 @@
 #include <QObject>
 
 
-#if 1
+#if 0
 #   define MO_DEBUG_UDP(arg__) MO_DEBUG(arg__)
 #else
 #   define MO_DEBUG_UDP(unused__)

@@ -230,6 +230,11 @@ public slots:
     void setSceneTime(Double time, bool send_signal = true);
     void setSceneTime(SamplePos pos, bool send_signal = true);
 
+    /** Send keydown into system.
+        XXX a hack basically - and not used yet */
+    void keyDown(int key);
+    void keyUp(int key);
+
     // ------------- open gl -------------------
 
     bool isShutDown() const { return isShutDown_; }

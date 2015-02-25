@@ -266,7 +266,10 @@ HEADERS += \
     src/script/angelscript_network.h \
     src/network/udpaudioconnection.h \
     src/types/refcounted.h \
-    src/script/angelscript_image.h
+    src/script/angelscript_image.h \
+    src/io/time.h \
+    src/tool/asciirect.h \
+    src/types/properties.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -494,4 +497,7 @@ SOURCES += \
     src/network/udpconnection.cpp \
     src/script/angelscript_network.cpp \
     src/network/udpaudioconnection.cpp \
-    src/script/angelscript_image.cpp
+    src/script/angelscript_image.cpp \
+    src/io/time.cpp \
+    src/tool/asciirect.cpp \
+    src/types/properties.cpp

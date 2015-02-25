@@ -411,6 +411,33 @@ void NetEventClientState::deserialize(IO::DataStream &io)
 
 
 
+MO_REGISTER_NETEVENT(NetEventAudioConfig)
+
+NetEventAudioConfig::NetEventAudioConfig()
+{
+}
+
+QString NetEventAudioConfig::infoName() const
+{
+    std::stringstream s; s << config_;
+    return AbstractNetEvent::infoName() + QString("[%1]").arg(s.str().c_str());
+}
+
+void NetEventAudioConfig::serialize(IO::DataStream &io) const
+{
+    io << config_.sampleRate() << config_.bufferSize()
+       << config_.numChannelsIn() << config_.numChannelsOut();
+}
+
+void NetEventAudioConfig::deserialize(IO::DataStream &io)
+{
+    uint sr, bs, nin, nout;
+    io >> sr >> bs >> nin >> nout;
+    config_ = AUDIO::Configuration(sr, bs, nin, nout);
+}
+
+
+
 
 MO_REGISTER_NETEVENT(NetEventTime)
 

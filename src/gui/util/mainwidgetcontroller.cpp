@@ -52,9 +52,11 @@
 #include "gui/infowindow.h"
 #include "gui/timelineeditdialog.h"
 #include "gui/audiofilterdialog.h"
-#include "gui/serverdialog.h"
+#include "gui/serverview.h"
 #include "gui/resolutiondialog.h"
 #include "gui/objectgraphview.h"
+#include "gui/frontview.h"
+#include "gui/frontitemeditor.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
@@ -117,7 +119,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       isVisibleClipView_(true),
       isVisibleSeqView_ (true),
       //qobjectInspector_ (0),
-      serverDialog_     (0),
+      serverView_       (0),
       statusBar_        (0),
       sysInfoLabel_     (0),
       sceneNotSaved_    (false),
@@ -161,6 +163,7 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(objectsDeleted(QList<MO::Object*>)), this, SLOT(onObjectsDeleted_(QList<MO::Object*>)));
     connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
+    connect(objectEditor_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)), this, SLOT(onParamVisChanged_()));
     connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
     {
         if (audioEngine_)
@@ -188,6 +191,13 @@ void MainWidgetController::createObjects_()
     connect(objectView_, SIGNAL(statusTipChanged(QString)),
             statusBar_, SLOT(showMessage(QString)));
 
+    // front-end view
+    frontView_ = new FrontView(window_);
+    // front-end properties
+    frontItemEditor_ = new FrontItemEditor(window_);
+    connect(frontView_, SIGNAL(itemSelected(AbstractFrontItem*)),
+            frontItemEditor_, SLOT(setItem(AbstractFrontItem*)));
+
     // sequencer
     sequencer_ = new Sequencer(window_);
     sequencer_->setSceneSettings(sceneSettings_);
@@ -212,6 +222,11 @@ void MainWidgetController::createObjects_()
             statusBar_, SLOT(showMessage(QString)));
     connect(seqView_, SIGNAL(clicked()),
             this, SLOT(onSequenceClicked_()));
+
+    // server/client view
+    serverView_ = new ServerView(window_);
+    connect(serverView_, SIGNAL(sendScene()),
+            this, SLOT(sendSceneToClients_()));
 
     // gl manager and window
     glManager_ = new GL::Manager(this);
@@ -381,20 +396,6 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             closeAudio();
             MidiSettingsDialog diag;
             diag.exec();
-        });
-
-        a = new QAction(tr("Server/client settings"), m);
-        m->addAction(a);
-        connect(a, &QAction::triggered, [=]()
-        {
-            if (!serverDialog_)
-            {
-                serverDialog_ = new ServerDialog(window_);
-                connect(serverDialog_, SIGNAL(sendScene()),
-                        this, SLOT(sendSceneToClients_()));
-            }
-            if (serverDialog_->isHidden())
-                serverDialog_->show();
         });
 
         a = new QAction(tr("Network settings"), m);
@@ -687,7 +688,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 */
 
     // create the udp stream
-    serverEngine().getAudioStream();
+    // YYY serverEngine().getAudioOutStream();
 
     // connect to render window
     glManager_->setScene(scene_);
@@ -763,6 +764,9 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
         e->accept();
         scene_->setFreeCameraIndex(e->key() - Qt::Key_0 - 1);
     }
+
+//    if (!e->isAccepted())
+//        scene_->keyDown(e->key());
 
     //if (!e->isAccepted())
     //    window_->keyPressEvent(e);
@@ -1063,6 +1067,13 @@ void MainWidgetController::onSequenceClicked_()
     objectView()->selectObject(seqView_->sequence());
 }
 
+void MainWidgetController::onParamVisChanged_()
+{
+    // rebuild interface items
+    frontItemEditor_->setItem(0);
+    if (scene_)
+        frontView_->setRootObject(scene_);
+}
 
 void MainWidgetController::onSceneChanged_()
 {
@@ -1304,6 +1315,10 @@ void MainWidgetController::start()
     {
         audioEngine_->setScene(scene_, MO_AUDIO_THREAD);
     }
+
+    // update audio config for clients
+    if (serverEngine().isRunning())
+        serverEngine().sendAudioConfig( audioEngine_->config() );
 
     // audio input/output channels may have changed
     // XXX hacky but reliable

@@ -22,9 +22,12 @@
 #include "gl/window.h"
 #include "gui/clipview.h"
 #include "gui/objectview.h"
+#include "gui/serverview.h"
 #include "gui/sequencer.h"
 #include "gui/sequenceview.h"
 #include "gui/objectgraphview.h"
+#include "gui/frontview.h"
+#include "gui/frontitemeditor.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
 #include "object/scene.h"
@@ -154,6 +157,9 @@ void MainWindow::createDockWidgets_()
     dock = createDockWidget(tr("Patch"), controller_->objectGraphView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
+    dock = createDockWidget(tr("Frontend"), controller_->frontView());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+
     dock = createDockWidget(tr("Sequence"), controller_->sequenceView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
@@ -162,6 +168,13 @@ void MainWindow::createDockWidgets_()
 
     dock = createDockWidget(tr("Object"), controller_->objectView());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+
+    dock = createDockWidget(tr("Frontend settings"), controller_->frontItemEditor());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Horizontal);
+
+    dock = createDockWidget(tr("Server/Client"), controller_->serverView());
+    addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Vertical);
+
 }
 
 QDockWidget * MainWindow::createDockWidget(const QString &name, QWidget *widget)
@@ -228,7 +241,10 @@ void MainWindow::closeEvent(QCloseEvent * e)
         e->ignore();
 }
 
-
+void MainWindow::keyPressEvent(QKeyEvent * e)
+{
+    controller_->scene()->keyDown(e->key());
+}
 
 
 } // namespace GUI

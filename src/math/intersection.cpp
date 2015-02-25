@@ -164,10 +164,71 @@ bool intersect_ray_sphere(const Vec3& ray_origin,
 
 
 
+/*
+float intersect_plane(in vec3 ro, in vec3 rd, in vec4 plane)
+{
+    float dir = dot(plane.xyz, rd);
+    if (abs(dir) < EPSILON) return INTERSECT_MAX;
+    return dot(plane.xyz, plane.xyz * plane.w - ro) / dir;
+}
+*/
 
 
 
 
+#if 0
+
+#define QA Square_Terms[X]
+#define QE Square_Terms[Y]
+#define QH Square_Terms[Z]
+
+#define QB Mixed_Terms[X]
+#define QC Mixed_Terms[Y]
+#define QF Mixed_Terms[Z]
+
+#define QD Terms[X]
+#define QG Terms[Y]
+#define QI Terms[Z]
+
+#define QJ Constant*/
+float intersect_quadric(in vec3 ro, in vec3 rd,
+                        in vec3 term, in vec3, term1, in vec3 term2)
+{
+    float a, b, c, d;
+
+    a = rd.x * (QA * Xd + QB * Yd + QC * Zd) +
+        Yd * (QE * Yd + QF * Zd) +
+        Zd *  QH * Zd;
+
+    b = Xd * (QA * Xo + 0.5 * (QB * Yo + QC * Zo + QD)) +
+        Yd * (QE * Yo + 0.5 * (QB * Xo + QF * Zo + QG)) +
+        Zd * (QH * Zo + 0.5 * (QC * Xo + QF * Yo + QI));
+
+    c = Xo * (QA * Xo + QB * Yo + QC * Zo + QD) +
+        Yo * (QE * Yo + QF * Zo + QG) +
+        Zo * (QH * Zo + QI) +
+        QJ;
+
+
+#define QJ Constant*/
+float intersect_quadric(in vec3 ro, in vec3 rd,
+                        in vec3 term, in vec3, term1, in vec3 term2)
+{
+    float a, b, c, d;
+
+    a = rd.x * (term2.x * rd.x + term1.x * rd.y + term1.y * rd.z) +
+        rd.y * (term2.y * rd.y + term1.z * rd.z) +
+        rd.z *  term2.z * rd.z;
+
+    b = rd.x * (term2.x * ro.x + 0.5 * (term1.x * ro.y + term1.y * ro.z + term.x)) +
+        rd.y * (term2.y * ro.y + 0.5 * (term1.x * ro.x + term1.z * ro.z + term.y)) +
+        rd.z * (term2.z * ro.z + 0.5 * (term1.y * ro.x + term1.z * ro.y + term.z));
+
+    c = ro.x * (term2.x * ro.x + term1.x * ro.y + term1.y * ro.z + term.x) +
+        ro.y * (term2.y * ro.y + term1.z * ro.z + term.y) +
+        ro.z * (term2.z * ro.z + term.z);
+
+#endif
 
 
 

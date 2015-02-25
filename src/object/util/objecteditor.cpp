@@ -269,7 +269,7 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
 
     if (!actualObjects.isEmpty())
     {
-        scene_->addObjects(parent, actualObjects);
+        scene_->addObjects(parent, actualObjects, insert_index);
         emit objectsAdded(actualObjects);
     }
 
@@ -448,6 +448,15 @@ void ObjectEditor::setParameterVisibleInGraph(Parameter * p, bool enbale)
     if (enbale != p->isVisibleInGraph())
     {
         p->setVisibleGraph(enbale);
+        emit parameterVisibilityChanged(p);
+    }
+}
+
+void ObjectEditor::setParameterVisibleInterface(Parameter * p, bool enbale)
+{
+    if (enbale != p->isVisibleInterface())
+    {
+        p->setVisibleInterface(enbale);
         emit parameterVisibilityChanged(p);
     }
 }

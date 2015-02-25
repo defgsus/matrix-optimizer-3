@@ -91,6 +91,12 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("renderset", tr("render settings"));
 
+        fixPosition_ = params()->createBooleanParameter("fixposition", tr("fixed position (skybox)"),
+                                     tr("When fixed, the model will always be around the camera"),
+                                     tr("The model behaves normally"),
+                                     tr("The model will always be centered around the camera position, like a skybox"),
+                                     false, true, false);
+
         paramLineSmooth_ = params()->createBooleanParameter(
                     "linesmooth", tr("antialiased lines"),
                     tr("Should lines be drawn with smoothed edges"),
@@ -170,36 +176,93 @@ void Model3d::createParameters()
                                                     , true, false);
 
         glslVertexOut_ = params()->createTextParameter("glsl_color", tr("glsl vertex output"),
-                                                    tr("A piece of glsl code to modify vertex color"),
+                                                    tr("A piece of glsl code to modify vertex output"),
                                                     TT_GLSL,
-                                                       "// + " + tr("You have access to these attributes") + ":\n"
-                                                       "// v_pos\n"
-                                                       "// v_pos_world\n"
-                                                       "// v_pos_eye\n"
-                                                       "// v_normal\n"
-                                                       "// v_normal_eye\n"
-                                                       "// v_texCoord\n"
-                                                       "// v_cam_dir\n"
-                                                       "// v_color\n"
-                                                       "// v_ambient_color\n"
-                                                       "//\n"
+                                                       "// " + tr("Please be aware that this interface is likely to change in the future!") +
+                                                       "\n\n"
+                                                       "// " + tr("You have access to these values") + ":\n"
+                                                       "// -- uniforms --\n"
+                                                       "// float u_time\n"
+                                                       "// vec3 u_cam_pos\n"
+                                                       "// vec4 u_color\n"
+                                                       "// mat4 u_projection\n"
+                                                       "// mat4 u_cubeViewTransform\n"
+                                                       "// mat4 u_viewTransform\n"
+                                                       "// mat4 u_transform\n"
+                                                       "// -- vertex attributes --\n"
+                                                       "// vec4 a_position\n"
+                                                       "// vec4 a_color\n"
+                                                       "// vec3 a_normal\n"
+                                                       "// vec2 a_texCoord\n"
+                                                       "// -- input to fragment stage (changeable) --\n"
+                                                       "// vec3 v_pos\n"
+                                                       "// vec3 v_pos_world\n"
+                                                       "// vec3 v_pos_eye\n"
+                                                       "// vec3 v_normal\n"
+                                                       "// vec3 v_normal_eye\n"
+                                                       "// vec3 v_texCoord\n"
+                                                       "// vec3 v_cam_dir\n"
+                                                       "// vec4 v_color\n"
+                                                       "// vec4 v_ambient_color\n"
+                                                       "// vec4 gl_Position\n"
+                                                       "\n"
                                                        "void mo_modify_vertex_output()\n{\n\t\n}\n"
+                                                    , true, false);
+
+        glslNormal_ = params()->createTextParameter("glsl_normal", tr("glsl fragment normal "),
+                                                    tr("A piece of glsl code to change the fragment normal before lighting"),
+                                                    TT_GLSL,
+                                                       "// " + tr("Please be aware that this interface is likely to change in the future!") +
+                                                       "\n\n"
+                                                       "// " + tr("You have access to these values (! means: if available)") + ":\n"
+                                                       "// -- uniforms --\n"
+                                                       "// float u_time\n"
+                                                       "// vec3 u_cam_pos\n"
+                                                       "// float u_bump_scale\n"
+                                                       "// sampler2D tex_0 !\n"
+                                                       "// sampler2D tex_norm_0 !\n"
+                                                       "// -- input from vertex stage --\n"
+                                                       "// vec3 v_pos\n"
+                                                       "// vec3 v_pos_world\n"
+                                                       "// vec3 v_pos_eye\n"
+                                                       "// vec3 v_normal\n"
+                                                       "// vec3 v_normal_eye\n"
+                                                       "// vec3 v_texCoord\n"
+                                                       "// vec3 v_cam_dir\n"
+                                                       "// vec4 v_color\n"
+                                                       "// vec4 v_ambient_color\n"
+                                                       "\n"
+                                                       "vec3 mo_modify_normal(in vec3 n)\n{\n\treturn n;\n}\n"
                                                     , true, false);
 
         glslFragmentOut_ = params()->createTextParameter("glsl_fragment", tr("glsl fragment output"),
                                                     tr("A piece of glsl code to set or modify the output fragment color"),
                                                     TT_GLSL,
-                                                       "// + " + tr("You have access to these attributes") + ":\n"
-                                                       "// v_pos\n"
-                                                       "// v_pos_world\n"
-                                                       "// v_pos_eye\n"
-                                                       "// v_normal\n"
-                                                       "// v_normal_eye\n"
-                                                       "// v_texCoord\n"
-                                                       "// v_cam_dir\n"
-                                                       "// v_color\n"
-                                                       "// v_ambient_color\n"
-                                                       "//\n"
+                                                       "// " + tr("Please be aware that this interface is likely to change in the future!") +
+                                                       "\n\n"
+                                                       "// " + tr("You have access to these values (! means: if available)") + ":\n"
+                                                       "// -- uniforms --\n"
+                                                       "// float u_time\n"
+                                                       "// vec3 u_cam_pos\n"
+                                                       "// float u_bump_scale\n"
+                                                       "// sampler2D tex_0 !\n"
+                                                       "// sampler2D tex_norm_0 !\n"
+                                                       "// -- input from vertex stage --\n"
+                                                       "// vec3 v_pos\n"
+                                                       "// vec3 v_pos_world\n"
+                                                       "// vec3 v_pos_eye\n"
+                                                       "// vec3 v_normal\n"
+                                                       "// vec3 v_normal_eye\n"
+                                                       "// vec3 v_texCoord\n"
+                                                       "// vec3 v_cam_dir\n"
+                                                       "// vec4 v_color\n"
+                                                       "// vec4 v_ambient_color\n"
+                                                       "// -- lighting --\n"
+                                                       "// vec3 mo_normal()\n"
+                                                       "// ... todo\n"
+                                                       "// -- output to rasterizer --\n"
+                                                       "// vec4 out_color\n"
+                                                       "\n"
                                                        "void mo_modify_fragment_output()\n{\n\t\n}\n"
                                                     , true, false);
 
@@ -294,6 +357,7 @@ void Model3d::onParameterChanged(Parameter *p)
             || p == glslVertex_
             || p == glslVertexOut_
             || p == glslFragmentOut_
+            || p == glslNormal_
             || p == usePointCoord_
             || p == pointSizeAuto_
             || texturePostProc_->needsRecompile(p)
@@ -329,6 +393,7 @@ void Model3d::updateParameterVisibility()
     glslVertex_->setVisible(glsl);
     glslVertexOut_->setVisible(glsl);
     glslFragmentOut_->setVisible(glsl);
+    glslNormal_->setVisible(glsl);
 
     bool psdist = pointSizeAuto_->baseValue() != 0;
     paramPointSizeMax_->setVisible(psdist);
@@ -389,6 +454,7 @@ void Model3d::releaseGl(uint /*thread*/)
 {
     texture_->releaseGl();
     textureBump_->releaseGl();
+    uniformSetting_->releaseGl();
 
     if (draw_->isReady())
         draw_->releaseOpenGl();
@@ -476,12 +542,14 @@ void Model3d::setupDrawable_()
     {
         src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
         src->addDefine("#define MO_ENABLE_FRAGMENT_OVERRIDE");
+        src->addDefine("#define MO_ENABLE_NORMAL_OVERRIDE");
         QString text =
-                  glslVertex_->value() + "\n"
+                  "#line 0\n"
+                + glslVertex_->value() + "\n#line 0\n"
                 + glslVertexOut_->value() + "\n";
         src->replace("//%mo_override_vert%", text);
-        src->replace("//%mo_override_frag%", glslFragmentOut_->value() + "\n");
-
+        src->replace("//%mo_override_frag%", "#line 0\n" + glslFragmentOut_->value() + "\n");
+        src->replace("//%mo_override_normal%", "#line 0\n" + glslNormal_->value() + "\n");
     }
     // declare user uniforms
     src->replace("//%user_uniforms%", "// runtime user uniforms\n" + uniformSetting_->getDeclarations());
@@ -489,10 +557,34 @@ void Model3d::setupDrawable_()
 
     draw_->setShaderSource(src);
 
-    draw_->createOpenGl();
+    try
+    {
+        draw_->createOpenGl();
+    }
+    catch (const Exception& e)
+    {
+        MO_WARNING("Error on initializing model for '" << name() << "'\n" << e.what());
+        for (const GL::Shader::CompileMessage & msg : draw_->shader()->compileMessages())
+        {
+            if (msg.program == GL::Shader::P_VERTEX
+                || msg.program == GL::Shader::P_LINKER)
+            {
+                glslVertex_->addErrorMessage(msg.line, msg.text);
+                glslVertexOut_->addErrorMessage(msg.line, msg.text);
+            }
+            if (msg.program == GL::Shader::P_FRAGMENT
+                || msg.program == GL::Shader::P_LINKER)
+            {
+                glslFragmentOut_->addErrorMessage(msg.line, msg.text);
+                glslNormal_->addErrorMessage(msg.line, msg.text);
+            }
+        }
+    }
 
     // get uniforms
     u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());
+
+    u_cam_pos_ = draw_->shader()->getUniform("u_cam_pos");
 
     const bool isvertfx = vertexFx_->baseValue();
     u_vertex_extrude_ = draw_->shader()->getUniform("u_vertex_extrude", isvertfx);
@@ -520,9 +612,24 @@ void Model3d::setupDrawable_()
 
 void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
-    const Mat4& trans = transformation();
-    const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
-    const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
+    Mat4 trans = transformation();
+    Mat4 cubeViewTrans, viewTrans;
+    if (fixPosition_->baseValue() == 0)
+    {
+        cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
+        viewTrans = rs.cameraSpace().viewMatrix() * trans;
+    }
+    else
+    {
+        trans[3] = Vec4(0., 0., 0., 1.);
+        Mat4 vm = rs.cameraSpace().cubeViewMatrix();
+        vm[3] = Vec4(0., 0., 0, 1.);
+        cubeViewTrans = vm * trans;
+
+        vm = rs.cameraSpace().viewMatrix();
+        vm[3] = Vec4(0., 0., 0, 1.);
+        viewTrans = vm * trans;
+    }
 
     if (nextGeometry_)
     {
@@ -572,6 +679,12 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         if (textureBump_->isEnabled())
         {
             textureBumpMorph_->updateUniforms(time, thread);
+        }
+
+        if (u_cam_pos_)
+        {
+            const Vec3& pos = rs.cameraSpace().position();
+            u_cam_pos_->setFloats(pos.x, pos.y, pos.z, 0.);
         }
 
         // draw state

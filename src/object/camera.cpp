@@ -286,7 +286,7 @@ void Camera::initGl(uint thread)
     if (cubeMapped)
         uAngle_ = screenQuad_[thread]->shader()->getUniform("u_angle", true);
 
-    // blendtexture slot
+    // set edgeblend-texture slot
     if (sliced)
     {
         auto btex = screenQuad_[thread]->shader()->getUniform("tex_blend", true);
@@ -314,7 +314,7 @@ void Camera::initGl(uint thread)
         sliceMatrix_ = projcam.getViewMatrix();
         // but we need to turn it because the setup was done
         // assuming a dome with it's top/middle in the y direction
-        // while the camera usually points in the -z direction
+        // while the camera usually points -z
         sliceMatrix_ = MATH::rotate(sliceMatrix_, 90.f, Vec3(1.f, 0.f, 0.f));
     }
 

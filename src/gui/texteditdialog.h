@@ -56,6 +56,10 @@ public slots:
 
     void openHelp();
 
+    /** Implemented for scripts.
+        Posts messages into the script edit window when open. */
+    void addErrorMessage(int line, const QString & text);
+
 protected:
 
     void keyPressEvent(QKeyEvent *);

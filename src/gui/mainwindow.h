@@ -36,6 +36,8 @@ protected:
     void closeEvent(QCloseEvent *);
     //void resizeEvent(QResizeEvent *);
 
+    void keyPressEvent(QKeyEvent *);
+
 public slots:
 
 

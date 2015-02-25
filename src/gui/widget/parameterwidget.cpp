@@ -458,7 +458,7 @@ void ParameterWidget::updateButtons()
         bmod_->setIcon(iconModulateOff);
     }
 
-    if (param_->isVisibleInGraph())
+    if (param_->isVisibleInGraph() || param_->isVisibleInterface())
         bvis_->setIcon(iconVisibilityOn);
     else
         bvis_->setIcon(iconVisibility);
@@ -735,9 +735,29 @@ void ParameterWidget::openVisibilityPopup()
     if (!editor_)
         return;
 
-    editor_->setParameterVisibleInGraph(param_, !param_->isVisibleInGraph());
+    QMenu * menu = new QMenu(this);
+    menu->setAttribute(Qt::WA_DeleteOnClose);
+    QAction * a;
 
-    updateButtons();
+    a = menu->addAction(tr("show connector"));
+    a->setCheckable(true);
+    a->setChecked(param_->isVisibleInGraph());
+    connect(a, &QAction::triggered, [=]()
+    {
+        editor_->setParameterVisibleInGraph(param_, !param_->isVisibleInGraph());
+        updateButtons();
+    });
+
+    a = menu->addAction(tr("show in interface"));
+    a->setCheckable(true);
+    a->setChecked(param_->isVisibleInterface());
+    connect(a, &QAction::triggered, [=]()
+    {
+        editor_->setParameterVisibleInterface(param_, !param_->isVisibleInterface());
+        updateButtons();
+    });
+
+    menu->popup(QCursor::pos());
 }
 
 

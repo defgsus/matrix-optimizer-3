@@ -17,6 +17,7 @@
 #include "object/param/parameterfilename.h"
 #include "audio/tool/dumbfile.h"
 #include "audio/tool/floatgate.h"
+#include "io/filemanager.h"
 #include "io/datastream.h"
 #include "io/error.h"
 
@@ -135,6 +136,13 @@ void ModPlayerAO::updateParameterVisibility()
     AudioObject::updateParameterVisibility();
 }
 
+void ModPlayerAO::getNeededFiles(IO::FileList &files)
+{
+    AudioObject::getNeededFiles(files);
+
+    files.append(IO::FileListEntry( p_->paramFilename->baseValue(), IO::FT_TRACKER) );
+}
+
 void ModPlayerAO::setNumberThreads(uint num)
 {
     AudioObject::setNumberThreads(num);
@@ -179,7 +187,7 @@ void ModPlayerAO::Private::updateTrackerFile()
     {
         try
         {
-            dumb.open(paramFilename->value());
+            dumb.open(IO::fileManager().localFilename( paramFilename->value() ));
         }
         catch (const Exception& e)
         {

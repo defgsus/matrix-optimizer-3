@@ -18,6 +18,7 @@
 #include <QPushButton>
 
 #include "abstractscriptwidget.h"
+#include "gui/helpdialog.h"
 #include "io/settings.h"
 //#include "io/log.h"
 
@@ -195,10 +196,15 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
 
 void AbstractScriptWidget::PrivateSW::onTextChanged()
 {
+    QString tmp = curText;
     curText = editor->toPlainText();
 
-    messages.clear();
-    isValid = widget->compile();
+    // only compile when new
+    if (tmp != curText)
+    {
+        messages.clear();
+        isValid = widget->compile();
+    }
 
     updateEditorColor();
     updateErrorWidget();
@@ -206,6 +212,25 @@ void AbstractScriptWidget::PrivateSW::onTextChanged()
     if (isValid)
         if (!isUpdateOptional || cbAlwaysUpdate->isChecked())
             emit widget->scriptTextChanged();
+}
+
+void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
+{
+    if (e->key() == Qt::Key_F1)
+    {
+        // get word under cursor
+        auto c = p_sw_->editor->textCursor();
+        c.select(QTextCursor::WordUnderCursor);
+        // get help url
+        QString url = getHelpUrl( c.selectedText() );
+
+        HelpDialog::run(url);
+
+        e->accept();
+        return;
+    }
+
+    QWidget::keyPressEvent(e);
 }
 
 void AbstractScriptWidget::PrivateSW::updateEditorColor()
@@ -255,6 +280,7 @@ void AbstractScriptWidget::PrivateSW::updateErrorWidget()
 void AbstractScriptWidget::addCompileMessage(int line, MessageType type, const QString &text)
 {
     p_sw_->messages << PrivateSW::Message(line, type, text);
+    p_sw_->updateErrorWidget();
 }
 
 

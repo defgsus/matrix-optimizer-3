@@ -255,6 +255,7 @@ void registerAngelScript_image(asIScriptEngine *engine)
 void registerAngelScript_image(asIScriptEngine *engine, QImage * img, bool writeable)
 {
     int r;
+    Q_UNUSED(r)
 
     std::string decl = "Image@ image";
     if (!writeable)

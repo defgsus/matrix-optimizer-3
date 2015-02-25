@@ -790,7 +790,7 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
 }
 
 
-/// @todo this is all to be moved out of this class anyway
+/// @todo this is all to be moved out of this class REALLY!
 
 void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * outputFbo)
 {
@@ -859,14 +859,16 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
         renderSet.setFinalFramebuffer(fboFinal_[thread]);
 
         // render scene from each camera
-        for (auto camera : cameras_)
+        for (Camera * camera : cameras_)
         if (camera->active(time, thread))
         {
             // get camera viewspace
             camera->initCameraSpace(camSpace, thread, time);
 
             // get camera view-matrix
-            const Mat4 viewm = glm::inverse(camera->transformation());
+            const Mat4& cammat = camera->transformation();
+            camSpace.setPosition(Vec3(cammat[3][0], cammat[3][1], cammat[3][2]));
+            const Mat4 viewm = glm::inverse(cammat);
             camSpace.setViewMatrix(viewm);
 
             // for each cubemap
@@ -878,7 +880,7 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
 
                 camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
 
-                // render all opengl objects
+                // render each opengl object per camera (per cube-face)
                 for (auto o : glObjects_)
                 if (o->active(time, thread))
                 {
@@ -1112,6 +1114,15 @@ void Scene::setSceneTime(SamplePos pos, bool send_signal)
 //    render_();
 }
 
+void Scene::keyDown(int )
+{
+    //MO_DEBUG("down " << key);
+}
+
+void Scene::keyUp(int )
+{
+    //MO_DEBUG("up " << key);
+}
 
 void Scene::setProjectionSettings(const ProjectionSystemSettings & p)
 {

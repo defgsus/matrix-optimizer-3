@@ -116,6 +116,42 @@ bool Texture::isCube() const
      return target_ == GL_TEXTURE_CUBE_MAP;
 }
 
+bool Texture::create(GLsizei width,
+                GLenum format, GLenum input_format,
+                GLenum type,
+                void* ptr_to_data)
+{
+    MO_DEBUG_IMG("Texture::create(" << width
+                << ", " << format << ", " << input_format
+                << ", " << type << ", " << ptr_to_data << ")");
+
+    releaseTexture_();
+
+    target_ = GL_TEXTURE_1D;
+    width_ = width;
+    height_ = 0;
+    handle_ = genTexture_();
+    uploaded_ = false;
+    format_ = format;
+    input_format_ = input_format;
+    type_ = type;
+    ptr_ = ptr_to_data;
+    ptr_px_ =
+    ptr_nx_ =
+    ptr_py_ =
+    ptr_ny_ =
+    ptr_pz_ =
+    ptr_nz_ = 0;
+
+    if (!bind())
+    {
+        MO_GL_WARNING("Could not bind 1D-texture for creation");
+        return false;
+    }
+
+    return upload_(ptr_, 0);
+}
+
 bool Texture::create(GLsizei width, GLsizei height,
                 GLenum format, GLenum input_format,
                 GLenum type,

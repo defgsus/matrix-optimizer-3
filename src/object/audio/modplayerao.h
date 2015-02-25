@@ -31,6 +31,8 @@ public:
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
+    virtual void getNeededFiles(IO::FileList & files) Q_DECL_OVERRIDE;
+
 protected:
 
     virtual void setAudioBuffers(uint thread, uint bufferSize,

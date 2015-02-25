@@ -18,6 +18,9 @@ namespace MO {
 
 class CurrentTime
 {
+    CurrentTime() { }
+    ~CurrentTime() { }
+
 public:
 
     /** Should return the current project/scene time according to timecode or some other

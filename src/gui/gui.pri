@@ -57,7 +57,6 @@ HEADERS += \
     src/gui/midisettingsdialog.h \
     src/gui/saveequationdialog.h \
     src/gui/infowindow.h \
-    src/gui/serverdialog.h \
     src/gui/widget/netlogwidget.h \
     src/gui/widget/overlapareaeditwidget.h \
     src/gui/widget/filterresponsewidget.h \
@@ -85,7 +84,17 @@ HEADERS += \
     src/gui/widget/glslwidget.h \
     src/gui/widget/texteditwidget.h \
     src/gui/util/appicons.h \
-    src/gui/bulkrenamedialog.h
+    src/gui/bulkrenamedialog.h \
+    src/gui/util/frontscene.h \
+    src/gui/item/abstractfrontitem.h \
+    src/gui/frontview.h \
+    src/gui/item/faderitem.h \
+    src/gui/item/abstractguiitem.h \
+    src/gui/serverview.h \
+    src/gui/widget/qvariantwidget.h \
+    src/gui/propertiesview.h \
+    src/gui/frontitemeditor.h \
+    src/gui/widget/coloreditwidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -142,7 +151,6 @@ SOURCES += \
     src/gui/midisettingsdialog.cpp \
     src/gui/saveequationdialog.cpp \
     src/gui/infowindow.cpp \
-    src/gui/serverdialog.cpp \
     src/gui/widget/netlogwidget.cpp \
     src/gui/widget/overlapareaeditwidget.cpp \
     src/gui/widget/filterresponsewidget.cpp \
@@ -170,4 +178,14 @@ SOURCES += \
     src/gui/widget/glslwidget.cpp \
     src/gui/widget/texteditwidget.cpp \
     src/gui/util/appicons.cpp \
-    src/gui/bulkrenamedialog.cpp
+    src/gui/bulkrenamedialog.cpp \
+    src/gui/util/frontscene.cpp \
+    src/gui/item/abstractfrontitem.cpp \
+    src/gui/frontview.cpp \
+    src/gui/item/faderitem.cpp \
+    src/gui/item/abstractguiitem.cpp \
+    src/gui/serverview.cpp \
+    src/gui/widget/qvariantwidget.cpp \
+    src/gui/propertiesview.cpp \
+    src/gui/frontitemeditor.cpp \
+    src/gui/widget/coloreditwidget.cpp

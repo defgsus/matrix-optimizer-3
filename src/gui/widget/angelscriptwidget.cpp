@@ -129,6 +129,11 @@ void AngelScriptWidget::Private::messageCallback(const asSMessageInfo *msg)
     */
 }
 
+QString AngelScriptWidget::getHelpUrl(const QString& token) const
+{
+    QString url = "angelscript.html";
+    return url;
+}
 
 bool AngelScriptWidget::Private::compile()
 {

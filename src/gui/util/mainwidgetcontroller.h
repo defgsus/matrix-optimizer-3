@@ -41,9 +41,11 @@ class SequenceView;
 class Sequencer;
 class SceneSettings;
 class TransportWidget;
-class ServerDialog;
+class ServerView;
 class ClipView;
 class ObjectGraphView;
+class FrontView;
+class FrontItemEditor;
 
 class MainWidgetController : public QObject
 {
@@ -67,10 +69,12 @@ public:
     ObjectGraphView * objectGraphView() const { return objectGraphView_; }
     Sequencer * sequencer() const { return sequencer_; }
     ClipView * clipView() const { return clipView_; }
+    FrontView * frontView() const { return frontView_; }
+    FrontItemEditor * frontItemEditor() const { return frontItemEditor_; }
     SequenceView * sequenceView() const { return seqView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
     //QObjectInspector * objectInspector() const { return qobjectInspector_; }
-    ServerDialog * serverDialog() const { return serverDialog_; }
+    ServerView * serverView() const { return serverView_; }
     QStatusBar * statusBar() const { return statusBar_; }
 
     void createMainMenu(QMenuBar * menuBar);
@@ -127,6 +131,7 @@ private slots:
     void onObjectAdded_(MO::Object*);
     void onObjectDeleted_(const MO::Object*);
     void onObjectsDeleted_(const QList<MO::Object*>&);
+    void onParamVisChanged_();
     /** To trigger sceneNotSaved_ */
     void onSceneChanged_();
     void onSceneTimeChanged_(Double time);
@@ -198,6 +203,8 @@ private:
     Sequencer * sequencer_;
     ClipView * clipView_;
     SequenceView * seqView_;
+    FrontView * frontView_;
+    FrontItemEditor * frontItemEditor_;
 
     TransportWidget * transportWidget_;
 
@@ -205,7 +212,7 @@ private:
          isVisibleClipView_,
          isVisibleSeqView_;
 
-    ServerDialog * serverDialog_;
+    ServerView * serverView_;
 
     QStatusBar * statusBar_;
     QLabel * sysInfoLabel_;

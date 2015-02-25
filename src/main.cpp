@@ -180,7 +180,10 @@ int main(int argc, char *argv[])
         << "peak memory: " << MO::Memory::peak()
         << ", lost = " << MO::Memory::lost() << "\n"
 #endif
-        << "bis später" << std::endl;
+#ifndef NDEBUG
+        << "bis später"
+#endif
+        << std::endl;
 
     return ret;
 }

@@ -104,6 +104,14 @@ void Properties::getProperties()
     MO_CHECK_GL( glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_BLOCKS, &maxUniformBlocksFragment) );
     MO_CHECK_GL( glGetIntegerv(GL_MAX_GEOMETRY_UNIFORM_BLOCKS, &maxUniformBlocksGeometry) );
     MO_CHECK_GL( glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBlockBytes) );
+
+    // ------- emperical tests ---------
+
+    glGetError();
+
+    // some drivers complain, even if they report a possible range
+    glLineWidth(lineWidth[1]);
+    canLineWidth = glGetError() == GL_NO_ERROR;
 }
 
 QString Properties::toString() const
@@ -148,6 +156,9 @@ void Properties::setLineSmooth(bool enable)
 
 void Properties::setLineWidth(GLfloat width)
 {
+    if (!canLineWidth)
+        return;
+
     GLboolean isSmooth;
     MO_CHECK_GL( glGetBooleanv(GL_LINE_SMOOTH, &isSmooth) );
 

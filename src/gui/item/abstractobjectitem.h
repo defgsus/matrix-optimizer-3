@@ -21,6 +21,9 @@ namespace GUI {
 
 class ObjectGraphScene;
 
+/** Base class for representing MO::Object in the ObjectGraphScene.
+    @note Right now this class is not abstract, but rather handles every
+    object type by itself, ... */
 class AbstractObjectItem : public QGraphicsItem
 {
 public:
