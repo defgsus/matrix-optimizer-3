@@ -217,7 +217,8 @@ QString BulkRenameDialog::rename_(const QString &fn, int index) const
     s = s.replace("%name%", f.baseName());
     s = s.replace("%.ext%", "." + ext);
     s = s.replace("%ext%", ext);
-    s = s.replace("%n%", QString("%1").arg(index, digitCount_->value(), 10, QChar('0')));
+    s = s.replace("%n%",
+            QString("%1").arg(index + seqStart_->value(), digitCount_->value(), 10, QChar('0')));
 
     return s;
 }

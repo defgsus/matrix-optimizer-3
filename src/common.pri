@@ -269,7 +269,8 @@ HEADERS += \
     src/script/angelscript_image.h \
     src/io/time.h \
     src/tool/asciirect.h \
-    src/types/properties.h
+    src/types/properties.h \
+    src/io/docbookexporter.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -500,4 +501,5 @@ SOURCES += \
     src/script/angelscript_image.cpp \
     src/io/time.cpp \
     src/tool/asciirect.cpp \
-    src/types/properties.cpp
+    src/types/properties.cpp \
+    src/io/docbookexporter.cpp
