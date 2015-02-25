@@ -84,6 +84,10 @@ void registerDefaultAngelScript(asIScriptEngine * engine)
 }
 
 
+
+
+// -------------------------------- namespace export -----------------------
+
 namespace {
 
     void exportFunc(IO::XmlStream & xml, asIScriptFunction * func)

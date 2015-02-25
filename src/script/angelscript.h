@@ -62,7 +62,7 @@ public:
           p_context (0)
     { }
 
-    /** Binds a module for DiscardModule() */
+    /** Binds a context for Release() */
     AngelScriptAutoPtr(asIScriptContext * c)
         : p_engine  (0),
           p_module  (0),

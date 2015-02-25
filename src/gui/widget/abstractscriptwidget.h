@@ -67,11 +67,18 @@ signals:
     /** Only emitted when the changed script is valid */
     void scriptTextChanged();
 
-    // -------------- protected interface ------------------
 protected:
+
+    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
+
+    // -------------- protected interface ------------------
 
     /** Override to compile the script and check for errors */
     virtual bool compile() = 0;
+
+    /** Override to return an internal html reference for the type of script.
+        Optionally return an anchor using the word under cursor */
+    virtual QString getHelpUrl(const QString& token) const = 0;
 
 private:
     class PrivateSW;

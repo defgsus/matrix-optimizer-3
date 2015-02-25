@@ -9,6 +9,7 @@
 */
 
 #include "properties.h"
+#include "io/datastream.h"
 #include "io/log.h"
 
 namespace MO {
@@ -18,6 +19,17 @@ Properties::Properties()
 {
 }
 
+void Properties::serialize(IO::DataStream & io) const
+{
+    io.writeHeader("props", 1);
+    io << p_props_;
+}
+
+void Properties::deserialize(IO::DataStream & io)
+{
+    io.readHeader("props", 1);
+    io >> p_props_;
+}
 
 QVariant Properties::get(const QString &id) const
 {
@@ -43,5 +55,10 @@ void Properties::set(const QString &id, const QVariant & v)
     p_props_.insert(id, v);
 }
 
+void Properties::merge(const Properties &other)
+{
+    for (auto i = other.p_props_.begin(); i != other.p_props_.end(); ++i)
+        p_props_.insert(i.key(), i.value());
+}
 
 } // namespace MO

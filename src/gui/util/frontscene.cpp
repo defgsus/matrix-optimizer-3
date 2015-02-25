@@ -27,6 +27,9 @@ struct FrontScene::Private
 {
     Private(FrontScene * s) : gscene(s) { }
 
+    /** Recusively creates all items for the object(s) */
+    void createItems(Object * root, const QPointF& pos = QPointF(0,0),
+                                    AbstractFrontItem * parent = 0);
 
     FrontScene * gscene;
 
@@ -41,12 +44,12 @@ FrontScene::FrontScene(QObject *parent)
 {
     connect(this, SIGNAL(selectionChanged()),
             this, SLOT(onSelectionChanged_()));
-
-
+    /*
     auto i = new AbstractFrontItem(0, 0);
     addItem(i);
             new AbstractFrontItem(0, i);
     addItem(new AbstractFrontItem(0, 0));
+    */
 }
 
 FrontScene::~FrontScene()
@@ -57,8 +60,38 @@ FrontScene::~FrontScene()
 
 void FrontScene::setRootObject(Object *root)
 {
+    clear();
 
+    p_->createItems(root);
 }
+
+void FrontScene::Private::createItems(Object *root, const QPointF& pos, AbstractFrontItem *parent)
+{
+    qreal maxh = pos.y();
+    auto localPos = pos;
+    for (Parameter * p : root->params()->parameters())
+    {
+        if (!p->isVisibleInterface())
+            continue;
+
+        // create/add item
+        auto item = new AbstractFrontItem(p, parent);
+        item->setPos(localPos);
+        if (!parent || parent->scene() != gscene)
+            gscene->addItem(item);
+
+        // keep track of insert pos
+        localPos.rx() += item->rect().width() + 4.;
+        maxh = std::max(maxh, item->rect().bottom() + 4.);
+    }
+
+    localPos.ry() = maxh;
+
+    // recurse
+    for (Object * c : root->childObjects())
+        createItems(c, pos, 0);
+}
+
 
 void FrontScene::onSelectionChanged_()
 {

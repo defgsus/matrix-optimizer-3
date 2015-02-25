@@ -51,6 +51,10 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
     p_props_->set("width", 64);
     p_props_->set("height", 64);
 
+    // merge with actual Parameter's properties
+    if (p_param_)
+        p_props_->merge(p_param_->interfaceProperties());
+
     p_update_from_properties_();
 /*
     auto f = new FaderItem(this);
@@ -79,6 +83,10 @@ void AbstractFrontItem::setProperty(const QString &id, const QVariant &v)
 
 void AbstractFrontItem::p_update_from_properties_()
 {
+    // tell parameter (which does the actual disk io)
+    if (p_param_)
+        p_param_->setInterfaceProperties(*p_props_);
+
     // keep track of size changes
     if (p_oldSize_ != innerRect().size())
         prepareGeometryChange();

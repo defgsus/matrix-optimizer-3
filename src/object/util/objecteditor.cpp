@@ -452,6 +452,15 @@ void ObjectEditor::setParameterVisibleInGraph(Parameter * p, bool enbale)
     }
 }
 
+void ObjectEditor::setParameterVisibleInterface(Parameter * p, bool enbale)
+{
+    if (enbale != p->isVisibleInterface())
+    {
+        p->setVisibleInterface(enbale);
+        emit parameterVisibilityChanged(p);
+    }
+}
+
 void ObjectEditor::addModulator(Parameter *p, const QString &idName, const QString& outputId)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << idName << "," << outputId << ")");

@@ -15,6 +15,7 @@
 #include <QMap>
 
 namespace MO {
+namespace IO { class DataStream; }
 
 /** Generic property container */
 class Properties
@@ -24,6 +25,11 @@ public:
     typedef QMap<QString, QVariant> Map;
 
     Properties();
+
+    // ------------------ io --------------------
+
+    void serialize(IO::DataStream&) const;
+    void deserialize(IO::DataStream&);
 
     // ---------------- getter ------------------
 
@@ -48,6 +54,9 @@ public:
 
     /** Sets the given property */
     void set(const QString& id, const QVariant&);
+
+    /** Merge the settings from another container */
+    void merge(const Properties& other);
 
 private:
 

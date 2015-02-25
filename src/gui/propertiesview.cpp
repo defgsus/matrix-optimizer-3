@@ -90,11 +90,12 @@ void PropertiesView::createWidgtes_()
         p_lv_->addWidget(widget);
 
         // connect signals
+        QString key = i.key();
         connect(widget, &QVariantWidget::valueChanged, [=]()
         {
             // copy to internal properties
-            p_props_->set(i.key(), widget->value());
-            emit propertyChanged(i.key());
+            p_props_->set(key, widget->value());
+            emit propertyChanged(key);
         });
     }
 

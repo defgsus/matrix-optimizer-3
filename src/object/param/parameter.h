@@ -19,7 +19,7 @@
 #include "object/object_fwd.h"
 
 namespace MO {
-
+class Properties;
 
 class Parameter
 {
@@ -64,6 +64,12 @@ public:
     /** Returns true if the parameter should be visible in the ObjectGraphView */
     bool isVisibleInGraph() const { return isVisibleGraph_; }
 
+    /** Returns true if the parameter should be visible in the FrontEndView */
+    bool isVisibleInterface() const { return isVisibleInterface_; }
+
+    /** Read access to the interface settings */
+    const Properties& interfaceProperties() const { return *iProps_; }
+
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }
@@ -77,6 +83,11 @@ public:
     void setVisible(bool visible);
     /** Sets the flag for displaying the parameter in the ObjectGraphView */
     void setVisibleGraph(bool visible) { isVisibleGraph_ = visible; }
+    /** Sets the flag for displaying the parameter in the Interface */
+    void setVisibleInterface(bool visible) { isVisibleInterface_ = visible; }
+
+    /** Sets the interface properties. Initially empty */
+    void setInterfaceProperties(const Properties& p);
 
     // ------------ modulators ------------------
 
@@ -146,12 +157,13 @@ private:
             groupId_, groupName_;
 
     bool isEditable_, isModulateable_,
-         isVisible_, isVisibleGraph_;
+         isVisible_, isVisibleGraph_, isVisibleInterface_;
 
     //QList<QString> modulatorIds_;
 
     QList<Modulator*> modulators_;
 
+    Properties * iProps_;
 };
 
 } // namespace MO

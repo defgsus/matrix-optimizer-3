@@ -10,11 +10,12 @@
 
 
 #include "parameter.h"
+#include "modulator.h"
 #include "object/scene.h"
+#include "types/properties.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "modulator.h"
 
 namespace MO {
 
@@ -25,18 +26,21 @@ Parameter::Parameter(Object * object, const QString& id, const QString& name) :
     isEditable_ (false),
     isModulateable_(false),
     isVisible_  (true),
-    isVisibleGraph_(false)
+    isVisibleGraph_(false),
+    isVisibleInterface_(false),
+    iProps_     (new Properties)
 {
 }
 
 Parameter::~Parameter()
 {
     clearModulators_();
+    delete iProps_;
 }
 
 void Parameter::serialize(IO::DataStream &io) const
 {
-    io.writeHeader("par", 4);
+    io.writeHeader("par", 5);
 
     io << idName_;
 
@@ -52,11 +56,14 @@ void Parameter::serialize(IO::DataStream &io) const
 
     // v3
     io << isVisibleGraph_;
+    // v5
+    io << isVisibleInterface_;
+    iProps_->serialize(io);
 }
 
 void Parameter::deserialize(IO::DataStream &io)
 {
-    const int ver = io.readHeader("par", 4);
+    const int ver = io.readHeader("par", 5);
 
     io >> idName_;
 
@@ -87,6 +94,14 @@ void Parameter::deserialize(IO::DataStream &io)
         io >> isVisibleGraph_;
     else
         isVisibleGraph_ = false;
+
+    if (ver >= 5)
+    {
+        io >> isVisibleInterface_;
+        iProps_->deserialize(io);
+    }
+    else
+        isVisibleInterface_ = false;
 }
 
 QString Parameter::infoName() const
@@ -140,6 +155,10 @@ void Parameter::setVisible(bool visible)
     }
 }
 
+void Parameter::setInterfaceProperties(const Properties &p)
+{
+    *iProps_ = p;
+}
 
 void Parameter::idNamesChanged(const QMap<QString, QString> & map)
 {

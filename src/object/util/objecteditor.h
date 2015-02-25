@@ -160,6 +160,7 @@ public slots:
     void setParameterValue(MO::ParameterTimeline1D *, const MATH::Timeline1D& value);
 
     void setParameterVisibleInGraph(MO::Parameter *, bool enbale);
+    void setParameterVisibleInterface(MO::Parameter *, bool enbale);
 
     // ----------- audio cons ------------------
 

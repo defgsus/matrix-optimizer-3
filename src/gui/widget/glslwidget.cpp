@@ -31,6 +31,10 @@ bool GlslWidget::compile()
     return true;
 }
 
+QString GlslWidget::getHelpUrl(const QString& /*token*/) const
+{
+    return "glsl.html";
+}
 
 } // namespace GUI
 } // namespace MO
