@@ -86,7 +86,7 @@ void QVariantWidget::Private::updateWidget()
     }
 }
 
-void QVariantWidget::onValueChange_()
+void QVariantWidget::onValueChanged_()
 {
     if (p_->ignore_widget)
         return;
@@ -127,19 +127,13 @@ void QVariantWidget::Private::createWidgets()
 
     // ----- create appropriate sub-widgets -----
 
-    MO_DEBUG("qvariantwidget '" << name << "': type '" << v.typeName() << "' (" << v.type() << ")");
+    //MO_DEBUG("qvariantwidget '" << name << "': type '" << v.typeName() << "' (" << v.type() << ")");
 
-    // Note: The following types are runtime variables,
-    // so we can't use them in switch
-    if (v.type() == Properties::AlignmentType)
-    {
-        auto cb = new QComboBox(widget);
-        edit = cb;
-        for (uint i=0; i<Properties::A_CENTER; ++i)
-            cb->addItem(Properties::alignmentToName(i), i);
-    }
+#define MO__SUBLAYOUT(Layout__) \
+    edit = new QWidget(widget); \
+    auto layout = new Layout__(edit); \
+    layout->setMargin(0);
 
-    if (!edit)
     switch (v.type())
     {
         case QMetaType::Bool:
@@ -148,7 +142,7 @@ void QVariantWidget::Private::createWidgets()
             edit = cb;
             f_update_widget = [=](){ cb->setChecked(v.toBool()); };
             f_update_value = [=](){ v = cb->isChecked(); };
-            connect(cb, SIGNAL(stateChanged(int)), widget, SLOT(onValueChange_()));
+            connect(cb, SIGNAL(stateChanged(int)), widget, SLOT(onValueChanged_()));
         }
         break;
 
@@ -159,7 +153,7 @@ void QVariantWidget::Private::createWidgets()
             sb->setRange(-9999999, 9999999);
             f_update_widget = [=](){ sb->setValue(v.toInt()); };
             f_update_value = [=](){ v = sb->value(); };
-            connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(onValueChange_()));
+            connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(onValueChanged_()));
         }
         break;
 
@@ -170,7 +164,7 @@ void QVariantWidget::Private::createWidgets()
             sb->setRange(-9999999, 9999999);
             f_update_widget = [=](){ sb->setValue(v.toDouble()); };
             f_update_value = [=](){ v = sb->value(); };
-            connect(sb, SIGNAL(valueChanged(double)), widget, SLOT(onValueChange_()));
+            connect(sb, SIGNAL(valueChanged(double)), widget, SLOT(onValueChanged_()));
         }
         break;
 
@@ -182,7 +176,23 @@ void QVariantWidget::Private::createWidgets()
             e->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
             f_update_widget = [=](){ e->setText(v.toString()); };
             f_update_value = [=](){ v = e->text(); };
-            connect(e, SIGNAL(textChanged(QString)), widget, SLOT(onValueChange_()));
+            connect(e, SIGNAL(textChanged(QString)), widget, SLOT(onValueChanged_()));
+        }
+        break;
+
+        case QMetaType::QSize:
+        {
+            MO__SUBLAYOUT(QHBoxLayout);
+            auto sb1 = new SpinBox(widget),
+                 sb2 = new SpinBox(widget);
+            sb1->setRange(0, 9999999);
+            sb2->setRange(0, 9999999);
+            layout->addWidget(sb1);
+            layout->addWidget(sb2);
+            f_update_widget = [=](){ auto s = v.toSize(); sb1->setValue(s.width()); sb2->setValue(s.height()); };
+            f_update_value = [=](){ v = QSize(sb1->value(), sb2->value()); };
+            connect(sb1, SIGNAL(valueChanged(int)), widget, SLOT(onValueChanged_()));
+            connect(sb2, SIGNAL(valueChanged(int)), widget, SLOT(onValueChanged_()));
         }
         break;
 
@@ -192,7 +202,7 @@ void QVariantWidget::Private::createWidgets()
             edit = e;
             f_update_widget = [=](){ e->setCurrentColor(v.value<QColor>()); };
             f_update_value = [=](){ v = e->currentColor(); };
-            connect(e, SIGNAL(textChanged(QString)), widget, SLOT(onValueChange_()));
+            connect(e, SIGNAL(textChanged(QString)), widget, SLOT(onValueChanged_()));
         }
         break;
 
@@ -200,9 +210,27 @@ void QVariantWidget::Private::createWidgets()
         break;
     }
 
+    // Following are QMetaTypes that are runtime constants
+    // and can't be used in switch(), e.g. stuff in Q_DECLARE_METATYPE()
+    if (!edit)
+    {
+        // Generic approach for Properties::NamedStates
+        if (auto ns = Properties::getNamedStates(v))
+        {
+            auto cb = new QComboBox(widget);
+            edit = cb;
+            for (auto & i : *ns)
+                cb->addItem(ns->id(i), i);
+            f_update_widget = [=](){ cb->setCurrentText(ns->id(v)); };
+            f_update_value = [=](){ v = cb->itemData(cb->currentIndex()); };
+            connect(cb, SIGNAL(currentIndexChanged(int)), widget, SLOT(onValueChanged_()));
+        }
+    }
 
     if (edit)
     {
+        MO_ASSERT(f_update_widget, "No widget update defined for type '" << v.typeName() << "'");
+        MO_ASSERT(f_update_value, "No value update defined for type '" << v.typeName() << "'");
         updateWidget();
         l->addWidget(edit);
     }
@@ -210,6 +238,8 @@ void QVariantWidget::Private::createWidgets()
     {
         MO_WARNING("QVariantWidget: unhandled type '" << v.typeName() << "'");
     }
+
+#undef MO__SUBLAYOUT
 }
 
 

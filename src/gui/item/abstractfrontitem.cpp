@@ -35,23 +35,24 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
 
     if (p)
     {
-        p_props_->set("parameter-id", p->idName());
+        //p_props_->set("parameter-id", p->idName());
         p_props_->set("name", p->name());
     }
     else
         p_props_->set("name", QString("new"));
 
     p_props_->set("padding", 5);
-    p_props_->set("border", 2.);
+    p_props_->set("border", 3);
 
     p_props_->set("label-visible", true);
-    p_props_->set("label-align", Properties::A_RIGHT);
+    p_props_->set("label-align", Properties::Alignment(Properties::A_TOP | Properties::A_HCENTER));
+    p_props_->set("label-margin", 0);
 
     p_props_->set("background-color", QColor(40,40,50));
     p_props_->set("border-color", QColor(200,200,220));
 
-    p_props_->set("width", 64);
-    p_props_->set("height", 64);
+    p_props_->set("size", QSize(64, 64));
+    p_props_->set("rounded-size", QSize(6, 6));
 
     // merge with actual Parameter's properties
     if (p_param_)
@@ -103,8 +104,8 @@ void AbstractFrontItem::p_update_from_properties_()
 
 QRectF AbstractFrontItem::innerRect() const
 {
-    return QRectF(0,0, p_props_->get("width", 64).toInt(),
-                       p_props_->get("height", 64).toInt());
+    QSize s = p_props_->get("size", QSize(64, 64)).toSize();
+    return QRectF(0,0, s.width(), s.height());
 }
 
 QRectF AbstractFrontItem::rect() const
@@ -123,23 +124,28 @@ QRectF AbstractFrontItem::boundingRect() const
 void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , QWidget * )
 {
     // set colors/pens
+    QPen bpen( p_props_->get("border-color").value<QColor>() );
     p->setBrush(QBrush(p_props_->get("background-color").value<QColor>()));
+    // border
     int bor = p_props_->get("border").toInt();
     if (bor > 0)
     {
-        QPen pen( p_props_->get("border-color").value<QColor>() );
+        QPen pen(bpen);
         pen.setWidth( bor );
         p->setPen(pen);
     }
     else
         p->setPen(Qt::NoPen);
 
+    // -- background and frame --
     auto rec = rect();
-    p->drawRoundedRect(rec, 10., 10.);
+    auto rr = p_props_->get("rounded-size").toSize();
+    p->drawRoundedRect(rec, rr.width(), rr.height());
 
-    // label
+    // -- label --
     if (p_props_->get("label-visible").toBool())
     {
+        // update QStaticText
         if (!p_statictext_name_)
             p_statictext_name_ = new QStaticText();
 
@@ -147,7 +153,14 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
         if (p_statictext_name_->text() != name)
             p_statictext_name_->setText(name);
 
-        p->drawStaticText(rec.topLeft(), *p_statictext_name_);
+        // alignment
+        QRectF lr(rec);
+        lr.setSize( p_statictext_name_->size() );
+        lr = Properties::align(lr, rec, p_props_->get("label-align").toInt(),
+                                        p_props_->get("label-margin").toInt());
+        // draw
+        p->setPen(bpen);
+        p->drawStaticText(lr.topLeft(), *p_statictext_name_);
     }
 }
 

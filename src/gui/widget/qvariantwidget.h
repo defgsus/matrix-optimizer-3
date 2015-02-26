@@ -17,7 +17,8 @@ namespace MO {
 namespace GUI {
 
 /** Generic editor for a QVariant.
-    Most common types supported */
+    Most common types supported.
+    It also handles stuff specific to MO::Properties. */
 class QVariantWidget : public QWidget
 {
     Q_OBJECT
@@ -31,14 +32,14 @@ public:
 
 signals:
 
-    /** Emitted when the user changed the value */
+    /** Emitted when the user changed the value (and only then). */
     void valueChanged();
 
 public slots:
 
 private slots:
 
-    void onValueChange_();
+    void onValueChanged_();
 
 private:
 

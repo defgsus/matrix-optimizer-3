@@ -18,17 +18,94 @@
 namespace MO {
 namespace IO { class DataStream; }
 
-/** Generic property container */
+/** Generic property container.
+    This thing supports all QVariant types.
+    Extending QVariant types is a bit tricky though.
+
+    In general, it's not clear whether it was a good idea,
+    to directly use QVariant as storage type.
+    Pro: It's a generic type so should work with everything else in Qt.
+    Contra: No default values, no tranlated name, etc...
+            (but can be added via methods in this class)
+*/
 class Properties
 {
 public:
 
     // --------------- types --------------------
 
-    enum Types
+    /** The default key/value map used for all Properties */
+    typedef QMap<QString, QVariant> Map;
+
+    /** Helper for value lists,
+        e.g. enums and such.
+        Adding instances of this class to the Properties framework
+        only requires updating code in properties.h/cpp.
+        (search for "// [add new NamedStates here]") */
+    struct NamedStates
     {
-        T_ALIGNMENT = QMetaType::User + 1024
+        /** Helper struct to feed in static values to NamedStates constructor */
+        struct NamedStateHelper
+        {
+            QString id;
+            QVariant v;
+            NamedStateHelper(const QString& id, const QVariant& v) : id(id), v(v) { }
+        };
+
+        /** Construct a set by supplying tuples, e.g.:
+            @code
+            const NamedStates states("the-states",
+            {
+                { "state-1", 1 },
+                { "state-2", QColor(Qt::red) }
+            });
+            @endcode
+            Both @p persistent_name and the IDs in @p tuples
+            must not change for file persistence. */
+        NamedStates(const QString& persitent_name, const QList<NamedStateHelper>& tuples);
+        /** Construct a set by supplying two separate lists for keys and values.
+            Both @p persistent_name and the @p ids
+            must not change for file persistence.*/
+        NamedStates(const QString& persistent_name, const QList<QString>& ids, const QList<QVariant> values);
+
+        // ----------- getter ----------
+
+        /** Returns the name of the state set */
+        const QString& name() const { return p_name_; }
+
+        /** Returns value for id, or invalid QVariant */
+        const QVariant& value(const QString& id) const;
+        /** Returns id for value, or null QString */
+        const QString& id(const QVariant& value) const;
+
+        /** Number of different values */
+        uint size() const { return p_sv_.size(); }
+
+        /** Const iterator through all possible values */
+        Map::const_iterator begin() const { return p_sv_.constBegin(); }
+        /** Const iterator through all possible values */
+        Map::const_iterator end() const { return p_sv_.constEnd(); }
+
+        private:
+        Map p_sv_;
+        QString p_name_;
     };
+
+    /** Returns true when the variant wraps a value belonging to a
+        NamedStates set. */
+    static bool isNamedStates(const QVariant&);
+    /** Returns a pointer to the static instance of NamedStated which
+        belongs to the value wrapped in the QVariant,
+        or NULL if the value does not belong to such a class. */
+    static const NamedStates * getNamedStates(const QVariant&);
+
+    /** Returns a pointer to the static instance of NamedStated
+        with the given @p name, or NULL if that name doesn't exists. */
+    static const NamedStates * getNamedStates(const QString& name);
+
+    // ------------------- enums ------------------
+
+    // [add new NamedStates here]
 
     enum Alignment
     {
@@ -40,12 +117,9 @@ public:
         A_VCENTER = A_TOP | A_BOTTOM,
         A_CENTER = A_HCENTER | A_VCENTER
     };
-    static const uint AlignmentType;
-    static QString alignmentToName(uint a);
-    static uint alignmentFromName(const QString&);
+    static const NamedStates alignmentStates;
+    static bool isAlignment(const QVariant&);
 
-
-    typedef QMap<QString, QVariant> Map;
 
     // -------------- ctor ----------------------
 
@@ -67,7 +141,7 @@ public:
     /** Returns true, when there is a property named @p id */
     bool has(const QString& id) const { return p_props_.contains(id); }
 
-    /** Returns a css-sytle list of all properties */
+    /** Returns a css-style list of all properties */
     QString toString(const QString& indent = "") const;
 
     // -------------- iterator ------------------
@@ -95,7 +169,8 @@ public:
 
     /** Returns the aligned version of @p rect within @p parent.
         @p alignment is an OR combination of Alignment flags. */
-    static QRectF align(const QRectF& rect, const QRectF& parent, int alignment);
+    static QRectF align(const QRectF& rect, const QRectF& parent,
+                        int alignment = A_CENTER, qreal margin = 0.0);
 
 private:
 
@@ -106,6 +181,11 @@ private:
 
 } // namespace MO
 
+
+
+// [add new NamedStates here]
+
 Q_DECLARE_METATYPE(MO::Properties::Alignment)
+
 
 #endif // MOSRC_TYPES_PROPERTIES_H
