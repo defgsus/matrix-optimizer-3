@@ -725,6 +725,9 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     sequencer_->setCurrentObject(scene_);
     clipView_->setScene(scene_);
 
+    frontItemEditor_->setItem(0);
+    frontView_->setRootObject(scene_);
+
     glWindow_->renderLater();
 
     updateSystemInfo_();

@@ -16,7 +16,6 @@
 #include "propertiesview.h"
 #include "types/properties.h"
 
-
 namespace MO {
 namespace GUI {
 

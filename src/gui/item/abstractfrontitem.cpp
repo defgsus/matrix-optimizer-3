@@ -16,7 +16,7 @@
 #include "object/param/parameter.h"
 #include "io/log.h"
 
-#include "faderitem.h"
+//#include "faderitem.h"
 
 namespace MO {
 namespace GUI {
@@ -39,14 +39,16 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
         p_props_->set("name", p->name());
     }
     else
-        p_props_->set("name", "new");
+        p_props_->set("name", QString("new"));
 
     p_props_->set("padding", 5);
-    p_props_->set("show-label", true);
     p_props_->set("border", 2.);
 
-    p_props_->set("border-color", QColor(200,200,220));
+    p_props_->set("label-visible", true);
+    p_props_->set("label-align", Properties::A_RIGHT);
+
     p_props_->set("background-color", QColor(40,40,50));
+    p_props_->set("border-color", QColor(200,200,220));
 
     p_props_->set("width", 64);
     p_props_->set("height", 64);
@@ -56,6 +58,7 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
         p_props_->merge(p_param_->interfaceProperties());
 
     p_update_from_properties_();
+
 /*
     auto f = new FaderItem(this);
     f->setRect(innerRect());
@@ -135,7 +138,7 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
     p->drawRoundedRect(rec, 10., 10.);
 
     // label
-    if (p_props_->get("show-label").toBool())
+    if (p_props_->get("label-visible").toBool())
     {
         if (!p_statictext_name_)
             p_statictext_name_ = new QStaticText();

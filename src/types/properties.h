@@ -13,6 +13,7 @@
 
 #include <QVariant>
 #include <QMap>
+#include <QRectF>
 
 namespace MO {
 namespace IO { class DataStream; }
@@ -22,7 +23,31 @@ class Properties
 {
 public:
 
+    // --------------- types --------------------
+
+    enum Types
+    {
+        T_ALIGNMENT = QMetaType::User + 1024
+    };
+
+    enum Alignment
+    {
+        A_LEFT = 1,
+        A_RIGHT = 1<<1,
+        A_TOP = 1<<2,
+        A_BOTTOM = 1<<3,
+        A_HCENTER = A_LEFT | A_RIGHT,
+        A_VCENTER = A_TOP | A_BOTTOM,
+        A_CENTER = A_HCENTER | A_VCENTER
+    };
+    static const uint AlignmentType;
+    static QString alignmentToName(uint a);
+    static uint alignmentFromName(const QString&);
+
+
     typedef QMap<QString, QVariant> Map;
+
+    // -------------- ctor ----------------------
 
     Properties();
 
@@ -42,6 +67,9 @@ public:
     /** Returns true, when there is a property named @p id */
     bool has(const QString& id) const { return p_props_.contains(id); }
 
+    /** Returns a css-sytle list of all properties */
+    QString toString(const QString& indent = "") const;
+
     // -------------- iterator ------------------
 
     Map::const_iterator begin() const { return p_props_.constBegin(); }
@@ -52,17 +80,32 @@ public:
     /** Wipes out everything */
     void clear() { p_props_.clear(); }
 
+    /** Removes a single item */
+    void clear(const QString& id) { p_props_.remove(id); }
+
     /** Sets the given property */
-    void set(const QString& id, const QVariant&);
+    template <class T>
+    void set(const QString& id, const T& v) { p_set_(id, QVariant::fromValue(v)); }
 
     /** Merge the settings from another container */
     void merge(const Properties& other);
 
+
+    // -------------- static helper --------------------
+
+    /** Returns the aligned version of @p rect within @p parent.
+        @p alignment is an OR combination of Alignment flags. */
+    static QRectF align(const QRectF& rect, const QRectF& parent, int alignment);
+
 private:
+
+    void p_set_(const QString& id, const QVariant& v);
 
     Map p_props_;
 };
 
 } // namespace MO
+
+Q_DECLARE_METATYPE(MO::Properties::Alignment)
 
 #endif // MOSRC_TYPES_PROPERTIES_H

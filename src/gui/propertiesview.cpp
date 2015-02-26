@@ -37,6 +37,7 @@ PropertiesView::~PropertiesView()
 void PropertiesView::setProperties(const Properties & p)
 {
     *p_props_ = p;
+
     createWidgtes_();
 }
 

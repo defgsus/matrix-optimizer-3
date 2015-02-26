@@ -14,13 +14,15 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QCheckBox>
+#include <QComboBox>
 
 #include "qvariantwidget.h"
 #include "spinbox.h"
 #include "doublespinbox.h"
 #include "coloreditwidget.h"
+#include "types/properties.h"
 #include "io/error.h"
-
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -123,10 +125,24 @@ void QVariantWidget::Private::createWidgets()
         f_update_widget = 0;
     }
 
-    // create appropriate sub-widgets
+    // ----- create appropriate sub-widgets -----
+
+    MO_DEBUG("qvariantwidget '" << name << "': type '" << v.typeName() << "' (" << v.type() << ")");
+
+    // Note: The following types are runtime variables,
+    // so we can't use them in switch
+    if (v.type() == Properties::AlignmentType)
+    {
+        auto cb = new QComboBox(widget);
+        edit = cb;
+        for (uint i=0; i<Properties::A_CENTER; ++i)
+            cb->addItem(Properties::alignmentToName(i), i);
+    }
+
+    if (!edit)
     switch (v.type())
     {
-        case QVariant::Bool:
+        case QMetaType::Bool:
         {
             auto cb = new QCheckBox(widget);
             edit = cb;
@@ -136,7 +152,7 @@ void QVariantWidget::Private::createWidgets()
         }
         break;
 
-        case QVariant::Int:
+        case QMetaType::Int:
         {
             auto sb = new SpinBox(widget);
             edit = sb;
@@ -147,7 +163,7 @@ void QVariantWidget::Private::createWidgets()
         }
         break;
 
-        case QVariant::Double:
+        case QMetaType::Double:
         {
             auto sb = new DoubleSpinBox(widget);
             edit = sb;
@@ -158,7 +174,7 @@ void QVariantWidget::Private::createWidgets()
         }
         break;
 
-        case QVariant::String:
+        case QMetaType::QString:
         {
             auto e = new QLineEdit(widget);
             edit = e;
@@ -170,7 +186,7 @@ void QVariantWidget::Private::createWidgets()
         }
         break;
 
-        case QVariant::Color:
+        case QMetaType::QColor:
         {
             auto e = new ColorEditWidget(widget);
             edit = e;
@@ -181,14 +197,18 @@ void QVariantWidget::Private::createWidgets()
         break;
 
         default:
-            MO_WARNING("QVariantWidget: unhandled type '" << v.typeName() << "'");
         break;
     }
+
 
     if (edit)
     {
         updateWidget();
         l->addWidget(edit);
+    }
+    else
+    {
+        MO_WARNING("QVariantWidget: unhandled type '" << v.typeName() << "'");
     }
 }
 
