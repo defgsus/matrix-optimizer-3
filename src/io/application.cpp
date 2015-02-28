@@ -8,7 +8,7 @@
     <p>created 6/27/2014</p>
 */
 
-#include <espeak/speak_lib.h>
+//#include <espeak/speak_lib.h>
 #include <iostream>
 
 #include <QPalette>

@@ -12,7 +12,7 @@
 #include "parameter.h"
 #include "modulator.h"
 #include "object/scene.h"
-//#include "types/properties.h"
+#include "types/properties.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -63,7 +63,7 @@ void Parameter::serialize(IO::DataStream &io) const
 
 void Parameter::deserialize(IO::DataStream &io)
 {
-    const int ver = io.readHeader("par", 4);
+    const int ver = io.readHeader("par", 5);
 
     io >> idName_;
 
@@ -94,15 +94,17 @@ void Parameter::deserialize(IO::DataStream &io)
         io >> isVisibleGraph_;
     else
         isVisibleGraph_ = false;
-    /*
-    if (ver >= 5)
+
+    if (ver >= 5) // dummy
     {
         io >> isVisibleInterface_;
-        iProps_->deserialize(io);
+        Properties tmp;
+        tmp.deserialize(io);
+        //iProps_->deserialize(io);
     }
     else
         isVisibleInterface_ = false;
-    */
+
 }
 
 QString Parameter::infoName() const

@@ -36,7 +36,7 @@ struct FrontScene::Private
 {
     Private(FrontScene * s)
         : gscene    (s)
-        , editMode  (false)
+        , editMode  (true)
     { }
 
     void createDefaultActions();
