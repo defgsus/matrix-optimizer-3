@@ -32,6 +32,14 @@ FrontItemEditor::FrontItemEditor(QWidget *parent)
 void FrontItemEditor::setItem(AbstractFrontItem *item)
 {
     p_item_ = item;
+    p_items_.clear();
+    updateWidgets_();
+}
+
+void FrontItemEditor::setItems(const QList<AbstractFrontItem *> &items)
+{
+    p_item_ = 0;
+    p_items_ = items;
     updateWidgets_();
 }
 
@@ -56,25 +64,42 @@ void FrontItemEditor::updateWidgets_()
     if (!p_label_)
         createWidgets_();
 
-    if (!p_item_)
+    // unassign
+    if (!isAssigned())
     {
         p_label_->clear();
         p_props_->clear();
     }
     else
     {
-        p_label_->setText("XXX item");
-        p_props_->setProperties(p_item_->properties());
+        // single item
+        if (p_item_)
+        {
+            p_label_->setText(p_item_->name());
+            p_props_->setProperties(p_item_->properties());
+        }
+        // multiple items
+        else
+        {
+            p_label_->setText(tr("[%1 items]").arg(p_items_.size()));
+            // extract properties list
+            QList<Properties> props;
+            for (auto i : p_items_)
+                props << i->properties();
+            p_props_->setProperties(props);
+        }
     }
 }
 
 void FrontItemEditor::onPropertyChanged_(const QString &id)
 {
-    if (!p_item_)
-        return;
-
-    // send new property value to graphics item
-    p_item_->setProperty(id, p_props_->properties().get(id));
+    // send new property value to graphics item(s)
+    if (p_item_)
+        p_item_->setProperty(id, p_props_->properties().get(id));
+    else
+        // for multi-items, only change the property if existing
+        for (auto i : p_items_)
+            i->changeProperty(id, p_props_->properties().get(id));
 }
 
 

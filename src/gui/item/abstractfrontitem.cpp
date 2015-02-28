@@ -12,8 +12,10 @@
 #include <QStaticText>
 
 #include "abstractfrontitem.h"
+#include "gui/util/frontscene.h"
 #include "types/properties.h"
 #include "object/param/parameter.h"
+#include "io/xmlstream.h"
 #include "io/log.h"
 
 //#include "faderitem.h"
@@ -27,38 +29,39 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
     , p_props_          (new Properties)
     , p_param_          (p)
     , p_statictext_name_(0)
+    , p_editMode_       (false)
 {
-    setFlag(ItemIsMovable, true);
-    setFlag(ItemIsSelectable, true);
     setFlag(ItemIsFocusable, true);
     setFlag(ItemSendsGeometryChanges, true);
 
     if (p)
     {
-        //p_props_->set("parameter-id", p->idName());
-        p_props_->set("name", p->name());
+        //initProperty("parameter-id", p->idName());
+        initProperty("label-text", p->name());
     }
     else
-        p_props_->set("name", QString("new"));
+        initProperty("label-text", QString("new"));
 
-    p_props_->set("padding", 5);
-    p_props_->set("border", 3);
+    initProperty("padding", 5);
+    initProperty("border", 1.5);
 
-    p_props_->set("label-visible", true);
-    p_props_->set("label-align", Properties::Alignment(Properties::A_TOP | Properties::A_HCENTER));
-    p_props_->set("label-margin", 0);
+    initProperty("label-visible", true);
+    initProperty("label-outside", true);
+    initProperty("label-align", Properties::Alignment(Properties::A_TOP | Properties::A_HCENTER));
+    initProperty("label-margin", 0);
 
-    p_props_->set("background-color", QColor(40,40,50));
-    p_props_->set("border-color", QColor(200,200,220));
+    initProperty("background-color", QColor(40,40,50));
+    initProperty("border-color", QColor(200,200,220));
 
-    p_props_->set("size", QSize(64, 64));
-    p_props_->set("rounded-size", QSize(6, 6));
+    initProperty("size", QSize(64, 64));
+    initProperty("rounded-size", QSize(6, 6));
 
-    // merge with actual Parameter's properties
-    if (p_param_)
-        p_props_->merge(p_param_->interfaceProperties());
+    // pull in Parameter's properties
+//    if (p_param_)
+//        p_props_->unify(p_param_->interfaceProperties());
 
-    p_update_from_properties_();
+
+    //p_update_from_properties_();
 
 /*
     auto f = new FaderItem(this);
@@ -69,6 +72,62 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
 AbstractFrontItem::~AbstractFrontItem()
 {
     delete p_props_;
+}
+
+QString AbstractFrontItem::name() const
+{
+    if (p_param_)
+        return "-> " + p_param_->infoName();
+
+    return QString("Item[%1]").arg(p_props_->get("label-text").toString());
+}
+
+// -------------------------------- io -----------------------------------------
+
+void AbstractFrontItem::serialize(IO::XmlStream& io) const
+{
+    io.newSection("interface-item");
+
+        io.write("version", 1);
+
+        p_props_->serialize(io);
+
+        // write children
+        auto childs = childFrontItems();
+        for (auto c : childs)
+            c->serialize(io);
+
+    io.endSection();
+}
+
+AbstractFrontItem * AbstractFrontItem::deserialize(IO::XmlStream & io)
+{
+    io.verifySection("interface-item");
+
+        const int ver = io.expectInt("version");
+        Q_UNUSED(ver);
+
+        /** @todo class factory */
+        auto item = new AbstractFrontItem();
+        /** @todo auto_ptr or something to avoid leeks on read-errors */
+
+        while (io.nextSubSection())
+        {
+            // properties
+            if (io.section() == "properties")
+                item->p_props_->deserialize(io);
+            else
+            // children
+            if (io.section() == "interface-item")
+            {
+                auto child = deserialize(io);
+                child->setParentItem(item);
+            }
+
+            io.leaveSection();
+        }
+
+    return item;
 }
 
 // -------------------------------- properties ---------------------------------
@@ -85,22 +144,79 @@ void AbstractFrontItem::setProperty(const QString &id, const QVariant &v)
     p_update_from_properties_();
 }
 
+void AbstractFrontItem::initProperty(const QString &id, const QVariant &v)
+{
+    p_props_->set(id, v);
+    p_prop_changed_ = true;
+}
+
+void AbstractFrontItem::changeProperty(const QString &id, const QVariant &v)
+{
+    p_props_->change(id, v);
+    p_update_from_properties_();
+}
+
 void AbstractFrontItem::p_update_from_properties_()
 {
     // tell parameter (which does the actual disk io)
-    if (p_param_)
-        p_param_->setInterfaceProperties(*p_props_);
+    // also bull XXX
+    //if (p_param_)
+    //    p_param_->setInterfaceProperties(*p_props_);
 
-    // keep track of size changes
-    if (p_oldSize_ != innerRect().size())
+    // keep track of bounding-rect changes
+    if (p_oldRect_ != boundingRect())
         prepareGeometryChange();
-    p_oldSize_ = innerRect().size();
+    p_oldRect_ = boundingRect();
+
+    p_prop_changed_ = false;
+
+    // derived code
+    onPropertiesChanged();
 
     update();
 }
 
+// -------------------------------- tree ---------------------------------------
+
+QList<AbstractFrontItem*> AbstractFrontItem::childFrontItems() const
+{
+    QList<AbstractFrontItem*> list;
+
+    auto childs = childItems();
+    for (auto c : childs)
+        if (auto a = dynamic_cast<AbstractFrontItem*>(c))
+            list << a;
+
+    return list;
+}
+
 // ---------------------------------- layout -----------------------------------
 
+FrontScene * AbstractFrontItem::frontScene() const
+{
+    if (auto s = qobject_cast<FrontScene*>(scene()))
+        return s;
+    return 0;
+}
+
+void AbstractFrontItem::setEditMode(bool e)
+{
+    p_editMode_ = e;
+    setFlag(ItemIsMovable, e);
+    setFlag(ItemIsSelectable, e);
+    // derived code
+    onEditModeChanged();
+}
+
+void AbstractFrontItem::setSize(const QSizeF & r)
+{
+    setProperty("size", r.toSize()); // let's keep it int for now
+}
+
+void AbstractFrontItem::setInsidePos(const QPointF & p)
+{
+    setPos(p + rect().topLeft());
+}
 
 QRectF AbstractFrontItem::innerRect() const
 {
@@ -118,14 +234,36 @@ QRectF AbstractFrontItem::boundingRect() const
 {
     qreal pad = p_props_->get("padding").toInt()
                 + p_props_->get("border").toInt();
-    return innerRect().adjusted(-pad, -pad, pad, pad);
+    return innerRect().adjusted(-pad, -pad, pad, pad)
+            | p_labelRect_;
+}
+
+QColor AbstractFrontItem::borderColor() const
+{
+    QColor c = p_props_->get("border-color").value<QColor>();
+    if (isSelected())
+       c = c.lighter();
+    return c;
+}
+
+QColor AbstractFrontItem::backgroundColor() const
+{
+    QColor c = p_props_->get("background-color").value<QColor>();
+    if (isSelected())
+       c = c.lighter();
+    return c;
 }
 
 void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , QWidget * )
 {
+    // XXX Not sure if a potential resize should be executed
+    // in the paint event... no warnings in the doc at least
+    if (p_prop_changed_)
+        p_update_from_properties_();
+
     // set colors/pens
-    QPen bpen( p_props_->get("border-color").value<QColor>() );
-    p->setBrush(QBrush(p_props_->get("background-color").value<QColor>()));
+    QPen bpen( borderColor() );
+    p->setBrush(QBrush(backgroundColor()));
     // border
     int bor = p_props_->get("border").toInt();
     if (bor > 0)
@@ -149,18 +287,21 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
         if (!p_statictext_name_)
             p_statictext_name_ = new QStaticText();
 
-        const QString name = p_props_->get("name").toString();
-        if (p_statictext_name_->text() != name)
-            p_statictext_name_->setText(name);
+        const QString text = p_props_->get("label-text").toString();
+        if (p_statictext_name_->text() != text)
+            p_statictext_name_->setText(text);
 
         // alignment
-        QRectF lr(rec);
-        lr.setSize( p_statictext_name_->size() );
-        lr = Properties::align(lr, rec, p_props_->get("label-align").toInt(),
-                                        p_props_->get("label-margin").toInt());
+        p_labelRect_ = rec;
+        p_labelRect_.setSize( p_statictext_name_->size() );
+        p_labelRect_ = Properties::align(p_labelRect_, rec,
+                                         p_props_->get("label-align").value<Properties::Alignment>(),
+                                         p_props_->get("label-margin").toInt(),
+                                         p_props_->get("label-outside").toBool());
+
         // draw
         p->setPen(bpen);
-        p->drawStaticText(lr.topLeft(), *p_statictext_name_);
+        p->drawStaticText(p_labelRect_.topLeft(), *p_statictext_name_);
     }
 }
 

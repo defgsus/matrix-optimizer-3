@@ -67,8 +67,8 @@ public:
     /** Returns true if the parameter should be visible in the FrontEndView */
     bool isVisibleInterface() const { return isVisibleInterface_; }
 
-    /** Read access to the interface settings */
-    const Properties& interfaceProperties() const { return *iProps_; }
+    /* Read access to the interface settings */
+    //const Properties& interfaceProperties() const { return *iProps_; }
 
     // -------------- setter --------------------
 
@@ -86,8 +86,8 @@ public:
     /** Sets the flag for displaying the parameter in the Interface */
     void setVisibleInterface(bool visible) { isVisibleInterface_ = visible; }
 
-    /** Sets the interface properties. Initially empty */
-    void setInterfaceProperties(const Properties& p);
+    /* Sets the interface properties. Initially empty */
+    //void setInterfaceProperties(const Properties& p);
 
     // ------------ modulators ------------------
 
@@ -163,7 +163,7 @@ private:
 
     QList<Modulator*> modulators_;
 
-    Properties * iProps_;
+//    Properties * iProps_;
 };
 
 } // namespace MO

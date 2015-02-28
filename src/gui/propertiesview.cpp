@@ -41,6 +41,15 @@ void PropertiesView::setProperties(const Properties & p)
     createWidgtes_();
 }
 
+void PropertiesView::setProperties(const QList<Properties>& list)
+{
+    p_props_->clear();
+    for (auto & p : list)
+        p_props_->unify(p);
+
+    createWidgtes_();
+}
+
 void PropertiesView::clear()
 {
     p_props_->clear();
@@ -49,12 +58,10 @@ void PropertiesView::clear()
 
 void PropertiesView::createWidgtes_()
 {
+    setUpdatesEnabled(false);
     // delete previous widgets
     for (auto w : p_widgets_)
-    {
-        w->setVisible(false);
         w->deleteLater();
-    }
     p_widgets_.clear();
     if (p_stretch_)
         p_stretch_->deleteLater();
@@ -104,6 +111,8 @@ void PropertiesView::createWidgtes_()
     p_stretch_ = new QWidget(this);
     p_lv_->addWidget(p_stretch_);
     p_lv_->setStretch(p_lv_->indexOf(p_stretch_), 2);
+
+    setUpdatesEnabled(true);
 }
 
 

@@ -16,7 +16,7 @@
 #include <QRectF>
 
 namespace MO {
-namespace IO { class DataStream; }
+namespace IO { class DataStream; class XmlStream; }
 
 /** Generic property container.
     This thing supports all QVariant types.
@@ -125,10 +125,25 @@ public:
 
     Properties();
 
+    void swap(Properties& other);
+
     // ------------------ io --------------------
 
     void serialize(IO::DataStream&) const;
     void deserialize(IO::DataStream&);
+
+    /** Writes the properties to an xml stream.
+        The stream must be writeable.
+        The section "properties" is created.
+        On return, the section is the same as on entry. */
+    void serialize(IO::XmlStream&) const;
+
+    /** Reads the properties from an xml stream.
+        The stream must be readable and current section
+        must be "properties".
+        On return, the section is the same as on entry.
+        @throws IoException. This class' data is left unchanged on errors. */
+    void deserialize(IO::XmlStream&);
 
     // ---------------- getter ------------------
 
@@ -158,11 +173,26 @@ public:
     void clear(const QString& id) { p_props_.remove(id); }
 
     /** Sets the given property */
+    void set(const QString& id, const QVariant& v);
+    /** Sets the given property.
+        Helper to make sure, to user-extended QVariants get caught. */
     template <class T>
-    void set(const QString& id, const T& v) { p_set_(id, QVariant::fromValue(v)); }
+    void set(const QString& id, const T& v) { set(id, QVariant::fromValue(v)); }
 
-    /** Merge the settings from another container */
-    void merge(const Properties& other);
+    /** Sets the given property if existing. */
+    bool change(const QString& id, const QVariant& v);
+    /** Sets the given property if existing.
+        Helper to make sure, to user-extended QVariants get caught. */
+    template <class T>
+    bool change(const QString& id, const T& v) { return change(id, QVariant::fromValue(v)); }
+
+    /** Copy all values from @p other.
+        This creates or overwrites valus for each value contained in @p other. */
+    void unify(const Properties& other);
+
+    /** Create a union of this and @p other,
+        while prefering other's values over own. */
+    Properties unified(const Properties& other) const { Properties p(*this); p.unify(other); return p; }
 
 
     // -------------- static helper --------------------
@@ -170,11 +200,9 @@ public:
     /** Returns the aligned version of @p rect within @p parent.
         @p alignment is an OR combination of Alignment flags. */
     static QRectF align(const QRectF& rect, const QRectF& parent,
-                        int alignment = A_CENTER, qreal margin = 0.0);
+                        int alignment = A_CENTER, qreal margin = 0.0, bool outside = false);
 
 private:
-
-    void p_set_(const QString& id, const QVariant& v);
 
     Map p_props_;
 };

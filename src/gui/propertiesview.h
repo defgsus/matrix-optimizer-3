@@ -43,8 +43,12 @@ public slots:
     /** Destroys all property widgets */
     void clear();
 
-    /** Assigns a new set of properties to edit */
+    /** Assigns a new set of Properties to edit */
     void setProperties(const Properties& );
+
+    /** Assigns new multiple sets of Properties to edit.
+        A widget is created for each unique id in all Properties. */
+    void setProperties(const QList<Properties>& );
 
 private:
 

@@ -17,7 +17,7 @@ namespace IO {
 
     const QStringList fileTypeIds =
     { "any", "scene", "object", "texture", "ntexture", "model",
-      "geom-set", "sound", "s3m", "projection-set",
+      "geom-set", "interface", "sound", "s3m", "projection-set",
       "povray", "equpreset", "helpexp" };
 
     const QStringList fileTypeNames =
@@ -28,6 +28,7 @@ namespace IO {
       QObject::tr("Normal-map texture"),
       QObject::tr("Model"),
       QObject::tr("Geometry settings"),
+      QObject::tr("Interface description"),
       QObject::tr("Audio file"),
       QObject::tr("Tracker file"),
       QObject::tr("Projection settings"),
@@ -44,6 +45,7 @@ namespace IO {
         { "png", "jpg", "jpeg", "bmp", "tif", "tiff", "pbm", "pgm", "xbm", "xpm" },
         { "obj" },
         { "mo3-geom" },
+        { "xml-iface" },
         { "wav", "voc", "au", "snd", "aiff", "aifc", "w64", "flac" },
         { "mod", "s3m", "xm", "it" },
         { "xml-proj" },
@@ -73,13 +75,14 @@ namespace IO {
           QObject::tr("X11 bitmap/pixmap") + " ( *.xbm *.xpm )" },
         { QObject::tr("Wavefront Object") + " ( *.obj )" },
         { QObject::tr("geometry presets") + " ( *.mo3-geom )" },
+        { QObject::tr("interface xml") + " ( *.xml *.xml-iface )" },
         { QObject::tr("all audio files")
                     + " ( *.wav *.voc *.au *.snd *.aiff *.aifc *.w64 *.flac )" },
         { QObject::tr("tracker files s3m/mod/xm/it")
                     + " ( *.S3M *.mod *.xm *.it )" },
-        { QObject::tr("projector xml files") + " ( *.xml-proj )" },
+        { QObject::tr("projector xml files") + " ( *.xml *.xml-proj )" },
         { QObject::tr("povray files") + " ( *.pov )" },
-        { QObject::tr("equation xml files") + " ( *.xml-equ )" },
+        { QObject::tr("equation xml files") + " ( *.xml *.xml-equ )" },
         { QObject::tr("* (*)") }
     };
 

@@ -31,14 +31,10 @@ public:
 
 signals:
 
-    /** When an item was selected */
-    void itemSelected(AbstractFrontItem*);
-
 public slots:
 
-    /** Sets the root object and completely
-        (re-)initializes the QGraphicsScene */
-    void setRootObject(Object * root);
+    /** Assigns the scene to display. */
+    void setFrontScene(FrontScene *);
 
     /** Focuses the view on the object */
     void setFocusObject(Object * o);

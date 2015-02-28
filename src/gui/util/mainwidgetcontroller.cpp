@@ -57,6 +57,7 @@
 #include "gui/objectgraphview.h"
 #include "gui/frontview.h"
 #include "gui/frontitemeditor.h"
+#include "gui/util/frontscene.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
@@ -191,12 +192,17 @@ void MainWidgetController::createObjects_()
     connect(objectView_, SIGNAL(statusTipChanged(QString)),
             statusBar_, SLOT(showMessage(QString)));
 
+    // front-end scene
+    frontScene_ = new FrontScene(window_);
     // front-end view
     frontView_ = new FrontView(window_);
+    frontView_->setFrontScene(frontScene_);
     // front-end properties
     frontItemEditor_ = new FrontItemEditor(window_);
-    connect(frontView_, SIGNAL(itemSelected(AbstractFrontItem*)),
+    connect(frontScene_, SIGNAL(itemSelected(AbstractFrontItem*)),
             frontItemEditor_, SLOT(setItem(AbstractFrontItem*)));
+    connect(frontScene_, SIGNAL(itemsSelected(QList<AbstractFrontItem*>)),
+            frontItemEditor_, SLOT(setItems(QList<AbstractFrontItem*>)));
 
     // sequencer
     sequencer_ = new Sequencer(window_);
@@ -373,6 +379,19 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
     m->addAction(a = new QAction(tr("Render to disk"), menuBar));
     ag->addAction(a);
     connect(a, SIGNAL(triggered()), this, SLOT(renderToDisk()));
+
+
+    // ######### INTERFACE MENU #########
+    m = new QMenu(tr("Interface"), menuBar);
+    menuBar->addMenu(m);
+
+    m->addAction(a = new QAction(tr("Load ..."), menuBar));
+    ag->addAction(a);
+    connect(a, SIGNAL(triggered()), this, SLOT(loadInterface()));
+
+    m->addAction(a = new QAction(tr("Save As ..."), menuBar));
+    ag->addAction(a);
+    connect(a, SIGNAL(triggered()), this, SLOT(saveInterfaceAs()));
 
     // ######### OPTIONS MENU #########
     m = new QMenu(tr("Options"), menuBar);
@@ -726,7 +745,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     clipView_->setScene(scene_);
 
     frontItemEditor_->setItem(0);
-    frontView_->setRootObject(scene_);
+    frontScene_->setRootObject(scene_);
 
     glWindow_->renderLater();
 
@@ -1075,7 +1094,7 @@ void MainWidgetController::onParamVisChanged_()
     // rebuild interface items
     frontItemEditor_->setItem(0);
     if (scene_)
-        frontView_->setRootObject(scene_);
+        frontScene_->setRootObject(scene_);
 }
 
 void MainWidgetController::onSceneChanged_()
@@ -1565,6 +1584,42 @@ bool MainWidgetController::saveScene_(const QString &fn)
 
     statusBar()->showMessage(tr("saving cancelled"), statusMessageTimeout_);
     return false;
+}
+
+void MainWidgetController::saveInterfaceAs()
+{
+    QString fn = IO::Files::getSaveFileName(IO::FT_INTERFACE_XML, window_);
+    if (fn.isEmpty())
+        return;
+
+    try
+    {
+        frontScene_->saveXml(fn);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(window_, tr("interface i/o"),
+                              tr("Could not save the interface xml\n'%1'\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+}
+
+void MainWidgetController::loadInterface()
+{
+    QString fn = IO::Files::getOpenFileName(IO::FT_INTERFACE_XML, window_);
+    if (fn.isEmpty())
+        return;
+
+    try
+    {
+        frontScene_->loadXml(fn);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(window_, tr("interface i/o"),
+                              tr("Could not load the interface xml\n'%1'\n%2")
+                              .arg(fn).arg(e.what()));
+    }
 }
 
 

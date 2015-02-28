@@ -12,7 +12,7 @@
 #include "parameter.h"
 #include "modulator.h"
 #include "object/scene.h"
-#include "types/properties.h"
+//#include "types/properties.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -27,20 +27,20 @@ Parameter::Parameter(Object * object, const QString& id, const QString& name) :
     isModulateable_(false),
     isVisible_  (true),
     isVisibleGraph_(false),
-    isVisibleInterface_(false),
-    iProps_     (new Properties)
+    isVisibleInterface_(false)
+    //iProps_     (new Properties)
 {
 }
 
 Parameter::~Parameter()
 {
     clearModulators_();
-    delete iProps_;
+    //delete iProps_;
 }
 
 void Parameter::serialize(IO::DataStream &io) const
 {
-    io.writeHeader("par", 5);
+    io.writeHeader("par", 4);
 
     io << idName_;
 
@@ -57,13 +57,13 @@ void Parameter::serialize(IO::DataStream &io) const
     // v3
     io << isVisibleGraph_;
     // v5
-    io << isVisibleInterface_;
-    iProps_->serialize(io);
+//    io << isVisibleInterface_;
+//    iProps_->serialize(io);
 }
 
 void Parameter::deserialize(IO::DataStream &io)
 {
-    const int ver = io.readHeader("par", 5);
+    const int ver = io.readHeader("par", 4);
 
     io >> idName_;
 
@@ -94,7 +94,7 @@ void Parameter::deserialize(IO::DataStream &io)
         io >> isVisibleGraph_;
     else
         isVisibleGraph_ = false;
-
+    /*
     if (ver >= 5)
     {
         io >> isVisibleInterface_;
@@ -102,14 +102,19 @@ void Parameter::deserialize(IO::DataStream &io)
     }
     else
         isVisibleInterface_ = false;
+    */
 }
 
 QString Parameter::infoName() const
 {
-    if (!object_)
-        return name_;
+    QString s = name_;
+    if (!groupName().isEmpty())
+        s.prepend(QString("(%1)").arg(groupName()));
 
-    QString s = object_->name() + "." + name_;
+    if (!object_)
+        return s;
+
+    s.prepend(object_->name() + ".");
     Object * o = object_;
     while (o && !(o->type() & Object::TG_REAL_OBJECT
                   || o->type() & Object::T_CLIP))
@@ -155,10 +160,10 @@ void Parameter::setVisible(bool visible)
     }
 }
 
-void Parameter::setInterfaceProperties(const Properties &p)
-{
-    *iProps_ = p;
-}
+//void Parameter::setInterfaceProperties(const Properties &p)
+//{
+//    *iProps_ = p;
+//}
 
 void Parameter::idNamesChanged(const QMap<QString, QString> & map)
 {

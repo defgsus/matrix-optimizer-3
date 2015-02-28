@@ -196,6 +196,22 @@ void QVariantWidget::Private::createWidgets()
         }
         break;
 
+        case QMetaType::QSizeF:
+        {
+            MO__SUBLAYOUT(QHBoxLayout);
+            auto sb1 = new DoubleSpinBox(widget),
+                 sb2 = new DoubleSpinBox(widget);
+            sb1->setRange(0, 9999999);
+            sb2->setRange(0, 9999999);
+            layout->addWidget(sb1);
+            layout->addWidget(sb2);
+            f_update_widget = [=](){ auto s = v.toSize(); sb1->setValue(s.width()); sb2->setValue(s.height()); };
+            f_update_value = [=](){ v = QSizeF(sb1->value(), sb2->value()); };
+            connect(sb1, SIGNAL(valueChanged(double)), widget, SLOT(onValueChanged_()));
+            connect(sb2, SIGNAL(valueChanged(double)), widget, SLOT(onValueChanged_()));
+        }
+        break;
+
         case QMetaType::QColor:
         {
             auto e = new ColorEditWidget(widget);

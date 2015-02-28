@@ -31,12 +31,12 @@ XmlStream::XmlStream()
     :   xmlw_   (0),
         xmlr_   (0)
 {
-    MO_DEBUGF("Io::Io");
+    MO_DEBUGF("XmlStream::Io");
 }
 
 XmlStream::~XmlStream()
 {
-    MO_DEBUGF("Io::~Io");
+    MO_DEBUGF("XmlStream::~Io");
 
     if (xmlw_)
     {
@@ -51,7 +51,7 @@ XmlStream::~XmlStream()
 
 void XmlStream::save(const QString& filename)
 {
-    MO_DEBUGF("Io::save("<<filename<<")");
+    MO_DEBUGF("XmlStream::save("<<filename<<")");
 
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -68,7 +68,7 @@ void XmlStream::save(const QString& filename)
 
 void XmlStream::load(const QString& filename)
 {
-    MO_DEBUGF("Io::load("<<filename<<")");
+    MO_DEBUGF("XmlStream::load("<<filename<<")");
 
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -88,7 +88,7 @@ void XmlStream::load(const QString& filename)
 
 void XmlStream::startWriting(const QString & main_section)
 {
-    MO_DEBUGF("Io::startWriting()");
+    MO_DEBUGF("XmlStream::startWriting()");
 
     data_.clear();
     if (xmlw_) delete xmlw_;
@@ -102,7 +102,7 @@ void XmlStream::startWriting(const QString & main_section)
 
 void XmlStream::stopWriting()
 {
-    MO_DEBUGF("Io::stopWriting()");
+    MO_DEBUGF("XmlStream::stopWriting()");
 
     if (!xmlw_) return;
 
@@ -119,7 +119,7 @@ bool XmlStream::isWriteable() { return xmlw_ != 0; }
 
 void XmlStream::startReading(const QString & main_section)
 {
-    MO_DEBUGF("Io::startReading()");
+    MO_DEBUGF("XmlStream::startReading()");
 
     if (xmlr_) delete xmlr_;
 
@@ -127,7 +127,7 @@ void XmlStream::startReading(const QString & main_section)
 
     if (!(xmlr_->readNextStartElement() &&
           xmlr_->name() == main_section))
-        MO_IO_ERROR(VERSION_MISMATCH, "Io::startReading() on unknown xml stream, "
+        MO_IO_ERROR(VERSION_MISMATCH, "XmlStream::startReading() on unknown xml stream, "
                     "expected '" << main_section << "' section");
 
     cur_section_ = main_section;
@@ -137,7 +137,7 @@ void XmlStream::startReading(const QString & main_section)
 
 void XmlStream::stopReading()
 {
-    MO_DEBUGF("Io::stopReading()");
+    MO_DEBUGF("XmlStream::stopReading()");
 
     if (!xmlr_) return;
 
@@ -150,13 +150,19 @@ bool XmlStream::isReadable() { return xmlr_ != 0; }
 
 // -------------- verification ------------------
 
-void XmlStream::verifySection(const QString &name)
+void XmlStream::verifySection(const QString &name) const
 {
     if (!isSection(name))
         MO_IO_ERROR(VERSION_MISMATCH, "expected section '" << name << "' in xml but "
                     "found " << section());
 }
 
+bool XmlStream::hasAttribute(const QString &name) const
+{
+    if (!xmlr_)
+        return false;
+    return xmlr_->attributes().hasAttribute(name);
+}
 
 
 // ------------------ sections ------------------
@@ -164,7 +170,7 @@ void XmlStream::verifySection(const QString &name)
 void XmlStream::newSection(const QString& name)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::newSection('"<<name<<"') on unitialized stream");
+        MO_IO_ERROR(WRITE, "XmlStream::newSection('"<<name<<"') on unitialized stream");
 
     xmlw_->writeStartElement(name);
 
@@ -176,7 +182,7 @@ void XmlStream::newSection(const QString& name)
 void XmlStream::endSection()
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::endSection() on unitialized stream");
+        MO_IO_ERROR(WRITE, "XmlStream::endSection() on unitialized stream");
 
     xmlw_->writeEndElement();
 
@@ -202,7 +208,7 @@ const QString& XmlStream::section() const
 bool XmlStream::nextSubSection()
 {
     if (!xmlr_)
-        MO_IO_ERROR(READ, "Io::nextSubSection() on non-readable stream");
+        MO_IO_ERROR(READ, "XmlStream::nextSubSection() on non-readable stream");
 
     cur_section_ = "";
     //qDebug() << ":: " << xmlr_->name().toString() << "\n";
@@ -217,7 +223,7 @@ bool XmlStream::nextSubSection()
 void XmlStream::leaveSection()
 {
     if (!xmlr_)
-        MO_IO_ERROR(READ, "Io::leaveSection() on non-readable stream");
+        MO_IO_ERROR(READ, "XmlStream::leaveSection() on non-readable stream");
 
     if (!xmlr_->isEndElement())
         xmlr_->skipCurrentElement();
@@ -231,7 +237,7 @@ void XmlStream::leaveSection()
 void XmlStream::write(const QString& key, const QString& v)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
 
     xmlw_->writeAttribute(key, v);
 }
@@ -239,7 +245,7 @@ void XmlStream::write(const QString& key, const QString& v)
 void XmlStream::write(const QString& key, bool v)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
 
     xmlw_->writeAttribute(key, QString::number(v));
 }
@@ -247,7 +253,7 @@ void XmlStream::write(const QString& key, bool v)
 void XmlStream::write(const QString& key, int v)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
 
     xmlw_->writeAttribute(key, QString::number(v));
 }
@@ -255,7 +261,7 @@ void XmlStream::write(const QString& key, int v)
 void XmlStream::write(const QString& key, unsigned int v)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
 
     xmlw_->writeAttribute(key, QString::number(v));
 }
@@ -263,7 +269,7 @@ void XmlStream::write(const QString& key, unsigned int v)
 void XmlStream::write(const QString& key, long int v)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
 
     xmlw_->writeAttribute(key, QString::number(v));
 }
@@ -271,7 +277,7 @@ void XmlStream::write(const QString& key, long int v)
 void XmlStream::write(const QString& key, long unsigned int v)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
 
     xmlw_->writeAttribute(key, QString::number(v));
 }
@@ -279,7 +285,7 @@ void XmlStream::write(const QString& key, long unsigned int v)
 void XmlStream::write(const QString& key, float v)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
 
     xmlw_->writeAttribute(key, QString::number(v));
 }
@@ -287,7 +293,7 @@ void XmlStream::write(const QString& key, float v)
 void XmlStream::write(const QString& key, double v)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
 
     xmlw_->writeAttribute(key, QString::number(v));
 }
@@ -295,25 +301,52 @@ void XmlStream::write(const QString& key, double v)
 void XmlStream::write(const QString& key, const QDateTime& v)
 {
     if (!xmlw_)
-        MO_IO_ERROR(WRITE, "Io::write('"<<key<<"') on non-writeable stream");
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
 
     //qDebug() << "writing " << v << " " << v.toString(datetime_format);
 
     xmlw_->writeAttribute(key, v.toString(datetime_format));
 }
 
+void XmlStream::write(const QString& key, const QVariant& v)
+{
+    if (!xmlw_)
+        MO_IO_ERROR(WRITE, "XmlStream::write('"<<key<<"') on non-writeable stream");
+
+    QString vs;
+    // handle compound types
+    if (v.type() == QVariant::Size)
+    {
+        const auto val = v.toSize();
+        vs = QString("%1,%2").arg(val.width()).arg(val.height());
+    }
+    else
+    if (v.type() == QVariant::SizeF)
+    {
+        const auto val = v.toSizeF();
+        vs = QString("%1,%2").arg(val.width()).arg(val.height());
+    }
+    else
+        vs = v.toString();
+
+    if (vs.isEmpty() && v.type() != QVariant::String)
+        MO_IO_WARNING(LOGIC, "XmlStream::write(" << key
+                      << "): unsupported variant type " << v.typeName());
+
+    xmlw_->writeAttribute(key, QString("%1#%2").arg(v.typeName()).arg(vs));
+}
 
 // ----------------- data read ------------------
 
 #define MO_IO_CHECK_ATTRIBUTE(key__, value__, default__) \
     if (!xmlr_) \
-        MO_IO_ERROR(READ, "Io::read('"<<key<<"') on non-readable stream"); \
+        MO_IO_ERROR(READ, "XmlStream::read('"<<key<<"') on non-readable stream"); \
     if (!xmlr_->attributes().hasAttribute(key__)) \
     { \
         value__ = default__; \
         return false; \
     } \
-    const auto a = xmlr_->attributes().value(key__);
+    const QStringRef a = xmlr_->attributes().value(key__);
 
 bool XmlStream::read(const QString& key, QString& v, const QString& def) const
 {
@@ -379,6 +412,44 @@ bool XmlStream::read(const QString& key, QDateTime& v, const QDateTime& def) con
     return true;
 }
 
+bool XmlStream::read(const QString& key, QVariant& v, const QVariant& def) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key, v, def);
+
+    // extract type info
+    int idx = a.indexOf("#");
+    if (idx <= 0) { v = def; return false; }
+
+    QStringRef typeName = a.left(idx);
+    QStringRef value = a.right(idx+1);
+
+    int typeId = QVariant::nameToType(typeName.toLatin1().constData());
+    if (typeId == QVariant::Invalid) { v = def; return false; }
+
+    // handle compound types
+    if (typeId == QVariant::Size)
+    {
+        auto list = value.toString().split(",");
+        if (list.size() < 2) { v = def; return false; }
+        v = QSize(list[0].toInt(), list[1].toInt());
+    }
+    else
+    if (typeId == QVariant::SizeF)
+    {
+        auto list = value.toString().split(",");
+        if (list.size() < 2) { v = def; return false; }
+        v = QSizeF(list[0].toDouble(), list[1].toDouble());
+    }
+    else
+    {
+        QVariant var;
+        var = value.toString();
+        if (!var.convert(typeId)) { v = def; return false; }
+        v = var;
+    }
+
+    return true;
+}
 
 
 #undef MO_IO_CHECK_ATTRIBUTE
@@ -387,9 +458,9 @@ bool XmlStream::read(const QString& key, QDateTime& v, const QDateTime& def) con
 // ----------------- expect read ------------------
 
 
-#define MO_IO_CHECK_ATTRIBUTE(key__, value__) \
+#define MO_IO_CHECK_ATTRIBUTE(key__) \
     if (!xmlr_)                                                                         \
-        MO_IO_ERROR(READ, "Io::read('"<<key<<"') on non-readable stream");              \
+        MO_IO_ERROR(READ, "XmlStream::read('"<<key__<<"') on non-readable stream");     \
     if (!xmlr_->attributes().hasAttribute(key__))                                       \
     {                                                                                   \
         MO_IO_ERROR(VERSION_MISMATCH, "Expected key '" << key__ << "' in xml, section " \
@@ -399,57 +470,64 @@ bool XmlStream::read(const QString& key, QDateTime& v, const QDateTime& def) con
 
 void XmlStream::expect(const QString& key, QString& v) const
 {
-    MO_IO_CHECK_ATTRIBUTE(key, v);
+    MO_IO_CHECK_ATTRIBUTE(key);
     v = a.toString();
 }
 
 void XmlStream::expect(const QString& key, bool& v) const
 {
-    MO_IO_CHECK_ATTRIBUTE(key, v);
+    MO_IO_CHECK_ATTRIBUTE(key);
     v = a.toInt();
 }
 
 void XmlStream::expect(const QString& key, int& v) const
 {
-    MO_IO_CHECK_ATTRIBUTE(key, v);
+    MO_IO_CHECK_ATTRIBUTE(key);
     v = a.toInt();
 }
 
 void XmlStream::expect(const QString& key, unsigned int& v) const
 {
-    MO_IO_CHECK_ATTRIBUTE(key, v);
+    MO_IO_CHECK_ATTRIBUTE(key);
     v = a.toUInt();
 }
 
 void XmlStream::expect(const QString& key, long int& v) const
 {
-    MO_IO_CHECK_ATTRIBUTE(key, v);
+    MO_IO_CHECK_ATTRIBUTE(key);
     v = a.toInt();
 }
 
 void XmlStream::expect(const QString& key, long unsigned int& v) const
 {
-    MO_IO_CHECK_ATTRIBUTE(key, v);
+    MO_IO_CHECK_ATTRIBUTE(key);
     v = a.toUInt();
 }
 
 void XmlStream::expect(const QString& key, float& v) const
 {
-    MO_IO_CHECK_ATTRIBUTE(key, v);
+    MO_IO_CHECK_ATTRIBUTE(key);
     v = a.toFloat();
 }
 
 void XmlStream::expect(const QString& key, double& v) const
 {
-    MO_IO_CHECK_ATTRIBUTE(key, v);
+    MO_IO_CHECK_ATTRIBUTE(key);
     v = a.toDouble();
 }
 
 
 void XmlStream::expect(const QString& key, QDateTime& v) const
 {
-    MO_IO_CHECK_ATTRIBUTE(key, v);
+    MO_IO_CHECK_ATTRIBUTE(key);
     v = QDateTime::fromString(a.toString(), datetime_format);
+}
+
+void XmlStream::expect(const QString& key, QVariant& v) const
+{
+    MO_IO_CHECK_ATTRIBUTE(key);
+
+    v = readVariant(key);
 }
 
 

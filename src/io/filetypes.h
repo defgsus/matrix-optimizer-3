@@ -27,6 +27,7 @@ namespace IO {
         FT_NORMAL_MAP,
         FT_MODEL,
         FT_GEOMETRY_SETTINGS,
+        FT_INTERFACE_XML,
         FT_SOUND_FILE,
         /** Like .mod and .s3m */
         FT_TRACKER,

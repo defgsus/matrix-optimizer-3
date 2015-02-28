@@ -18,28 +18,30 @@ namespace GUI {
 
 FrontView::FrontView(QWidget *parent)
     : QGraphicsView (parent)
-    , gscene_       (new FrontScene(this))
+    , gscene_       (0)
 {
-  setObjectName("_FrontView");
+    setObjectName("_FrontView");
 
-  setScene(gscene_);
-
-  //setBackgroundBrush(ObjectGraphSettings::brushBackground());
 #if QT_VERSION >= 0x050300
-  setSizeAdjustPolicy(AdjustToContents);
+    setSizeAdjustPolicy(AdjustToContents);
 #endif
 
-  setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+    setRubberBandSelectionMode(Qt::IntersectsItemShape);
+    setDragMode(RubberBandDrag);
+    setMouseTracking(true);
 
-  connect(gscene_, SIGNAL(itemSelected(AbstractFrontItem*)),
-          this, SIGNAL(itemSelected(AbstractFrontItem*)));
+    setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
 }
 
-void FrontView::setRootObject(Object *root)
+void FrontView::setFrontScene(FrontScene * s)
 {
-    gscene_->setRootObject(root);
-}
+    bool changed = gscene_ != s;
+    setScene(gscene_ = s);
 
+    // install default actions
+    if (changed)
+        addActions(gscene_->createDefaultActions());
+}
 
 void FrontView::setFocusObject(Object * o)
 {

@@ -44,6 +44,7 @@ class TransportWidget;
 class ServerView;
 class ClipView;
 class ObjectGraphView;
+class FrontScene;
 class FrontView;
 class FrontItemEditor;
 
@@ -106,6 +107,9 @@ public slots:
     void loadScene();
     //void loadScene(const QString& fn);
     void newScene();
+
+    void loadInterface();
+    void saveInterfaceAs();
 
     void renderToDisk();
 
@@ -203,6 +207,7 @@ private:
     Sequencer * sequencer_;
     ClipView * clipView_;
     SequenceView * seqView_;
+    FrontScene * frontScene_;
     FrontView * frontView_;
     FrontItemEditor * frontItemEditor_;
 
