@@ -327,6 +327,12 @@ void XmlStream::write(const QString& key, const QVariant& v)
         vs = QString("%1,%2").arg(val.width()).arg(val.height());
     }
     else
+    if (v.type() == QVariant::Point)
+    {
+        const auto val = v.toPoint();
+        vs = QString("%1,%2").arg(val.x()).arg(val.y());
+    }
+    else
         vs = v.toString();
 
     if (vs.isEmpty() && v.type() != QVariant::String)
@@ -439,6 +445,13 @@ bool XmlStream::read(const QString& key, QVariant& v, const QVariant& def) const
         auto list = value.toString().split(",");
         if (list.size() < 2) { v = def; return false; }
         v = QSizeF(list[0].toDouble(), list[1].toDouble());
+    }
+    else
+    if (typeId == QVariant::Point)
+    {
+        auto list = value.toString().split(",");
+        if (list.size() < 2) { v = def; return false; }
+        v = QPoint(list[0].toInt(), list[1].toInt());
     }
     else
     {

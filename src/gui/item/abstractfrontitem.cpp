@@ -17,30 +17,28 @@
 #include "object/param/parameter.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
+#include "io/error.h"
 
-//#include "faderitem.h"
 
 namespace MO {
 namespace GUI {
 
+QMap<QString, AbstractFrontItem*> AbstractFrontItem::p_reg_items_;
 
-AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
+AbstractFrontItem::AbstractFrontItem(QGraphicsItem* parent)
     : QGraphicsItem     (parent)
     , p_props_          (new Properties)
-    , p_param_          (p)
     , p_statictext_name_(0)
     , p_editMode_       (false)
 {
     setFlag(ItemIsFocusable, true);
     setFlag(ItemSendsGeometryChanges, true);
 
-    if (p)
-    {
-        //initProperty("parameter-id", p->idName());
-        initProperty("label-text", p->name());
-    }
-    else
-        initProperty("label-text", QString("new"));
+    initProperty("position", QPoint(0, 0));
+    initProperty("size", QSize(64, 64));
+    initProperty("rounded-size", QSize(6, 6));
+
+    initProperty("label-text", QObject::tr("new"));
 
     initProperty("padding", 5);
     initProperty("border", 1.5);
@@ -52,9 +50,6 @@ AbstractFrontItem::AbstractFrontItem(Parameter* p, QGraphicsItem* parent)
 
     initProperty("background-color", QColor(40,40,50));
     initProperty("border-color", QColor(200,200,220));
-
-    initProperty("size", QSize(64, 64));
-    initProperty("rounded-size", QSize(6, 6));
 
     // pull in Parameter's properties
 //    if (p_param_)
@@ -74,10 +69,41 @@ AbstractFrontItem::~AbstractFrontItem()
     delete p_props_;
 }
 
+// ------------------------ factory --------------------------------------------
+
+bool AbstractFrontItem::registerFrontItem(AbstractFrontItem * i)
+{
+    if (p_reg_items_.contains(i->className()))
+    {
+        MO_WARNING("AbstractFrontItem::registerFrontItem('"
+                   << i->className() << "'): duplicate call!");
+        delete i;
+        return false;
+    }
+
+    p_reg_items_.insert(i->className(), i);
+
+    return true;
+}
+
+AbstractFrontItem * AbstractFrontItem::factory(const QString &className)
+{
+    auto i = p_reg_items_.find(className);
+    if (i == p_reg_items_.end())
+    {
+        MO_WARNING("Request for unknown FrontItem class '" << className << "'");
+        return 0;
+    }
+
+    return i.value()->cloneClass();
+}
+
+// ------------------------ getter ---------------------------------------------
+
 QString AbstractFrontItem::name() const
 {
-    if (p_param_)
-        return "-> " + p_param_->infoName();
+    //if (p_param_)
+    //    return "-> " + p_param_->infoName();
 
     return QString("Item[%1]").arg(p_props_->get("label-text").toString());
 }
@@ -89,6 +115,7 @@ void AbstractFrontItem::serialize(IO::XmlStream& io) const
     io.newSection("interface-item");
 
         io.write("version", 1);
+        io.write("class", className());
 
         p_props_->serialize(io);
 
@@ -107,9 +134,12 @@ AbstractFrontItem * AbstractFrontItem::deserialize(IO::XmlStream & io)
         const int ver = io.expectInt("version");
         Q_UNUSED(ver);
 
-        /** @todo class factory */
-        auto item = new AbstractFrontItem();
-        /** @todo auto_ptr or something to avoid leeks on read-errors */
+        QString classn = io.expectString("class");
+
+        auto item = factory(classn);
+        if (!item)
+            return 0;
+        /** @todo auto_ptr or something to avoid leaks on read-errors */
 
         while (io.nextSubSection())
         {
@@ -162,6 +192,11 @@ void AbstractFrontItem::p_update_from_properties_()
     // also bull XXX
     //if (p_param_)
     //    p_param_->setInterfaceProperties(*p_props_);
+
+    // update item position
+    QPointF p = p_props_->get("position").toPoint();
+    if (p != pos())
+        setPos(p);
 
     // keep track of bounding-rect changes
     if (p_oldRect_ != boundingRect())
@@ -252,6 +287,19 @@ QColor AbstractFrontItem::backgroundColor() const
     if (isSelected())
        c = c.lighter();
     return c;
+}
+
+QVariant AbstractFrontItem::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+    if (change == ItemPositionChange)
+    {
+        QPoint newPos = value.toPoint(); // keep it int
+        // XXX could do grid snapping here
+        // update properties
+        p_props_->set("position", newPos);
+        return QPointF(newPos);
+    }
+    return QGraphicsItem::itemChange(change, value);
 }
 
 void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , QWidget * )

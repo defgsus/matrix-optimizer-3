@@ -95,7 +95,8 @@ HEADERS += \
     src/gui/propertiesview.h \
     src/gui/frontitemeditor.h \
     src/gui/widget/coloreditwidget.h \
-    src/gui/item/frontfloatitem.h
+    src/gui/item/frontfloatitem.h \
+    src/gui/item/frontgroupitem.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -190,4 +191,5 @@ SOURCES += \
     src/gui/propertiesview.cpp \
     src/gui/frontitemeditor.cpp \
     src/gui/widget/coloreditwidget.cpp \
-    src/gui/item/frontfloatitem.cpp
+    src/gui/item/frontfloatitem.cpp \
+    src/gui/item/frontgroupitem.cpp

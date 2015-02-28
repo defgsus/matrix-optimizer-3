@@ -212,6 +212,22 @@ void QVariantWidget::Private::createWidgets()
         }
         break;
 
+        case QMetaType::QPoint:
+        {
+            MO__SUBLAYOUT(QHBoxLayout);
+            auto sb1 = new SpinBox(widget),
+                 sb2 = new SpinBox(widget);
+            sb1->setRange(0, 9999999);
+            sb2->setRange(0, 9999999);
+            layout->addWidget(sb1);
+            layout->addWidget(sb2);
+            f_update_widget = [=](){ auto s = v.toPoint(); sb1->setValue(s.x()); sb2->setValue(s.y()); };
+            f_update_value = [=](){ v = QPoint(sb1->value(), sb2->value()); };
+            connect(sb1, SIGNAL(valueChanged(int)), widget, SLOT(onValueChanged_()));
+            connect(sb2, SIGNAL(valueChanged(int)), widget, SLOT(onValueChanged_()));
+        }
+        break;
+
         case QMetaType::QColor:
         {
             auto e = new ColorEditWidget(widget);

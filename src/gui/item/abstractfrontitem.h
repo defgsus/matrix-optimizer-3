@@ -38,6 +38,10 @@ enum FrontItemType
     FIT_TEXT
 };
 
+/** Call this in your derived .cpp to make the class known to the factory */
+#define MO_REGISTER_FRONT_ITEM(Class__) \
+    namespace { static const bool havereg##Class_ = AbstractFrontItem::registerFrontItem(new Class__); }
+
 /** Base class for scene interface objects.
     This is basically a group with fancy css-like properties,
     that can be filled with other control items.
@@ -46,8 +50,17 @@ class AbstractFrontItem : public QGraphicsItem
 {
 public:
 
-    explicit AbstractFrontItem(Parameter * p = 0, QGraphicsItem * parent = 0);
+    explicit AbstractFrontItem(QGraphicsItem * parent = 0);
     ~AbstractFrontItem();
+
+    // ----------------- factory ----------------
+
+    /** Returns a fresh instance of the known class, or NULL
+        @see className() and MO_REGISTER_FRONT_ITEM() */
+    static AbstractFrontItem * factory(const QString& className);
+
+    /** Use MO_REGISTER_FRONT_ITEM() instead */
+    static bool registerFrontItem(AbstractFrontItem*);
 
     // ------------------ io --------------------
 
@@ -59,13 +72,14 @@ public:
     /** Creates an item from the xml stream.
         The stream is expected to be readable
         and the current section must be "interface-item".
-        The section on return is the same as on entry. */
+        The section on return is the same as on entry.
+        NULL is returned for an unknown class. */
     static AbstractFrontItem * deserialize(IO::XmlStream&);
 
     // ---------------- getter ------------------
 
-    /** Returns a pointer to the connected Parameter, or NULL if there is none. */
-    Parameter * parameter() const { return p_param_; }
+    /* Returns a pointer to the connected Parameter, or NULL if there is none. */
+    //Parameter * parameter() const { return p_param_; }
 
     /** Returns the parent FrontScene, or NULL */
     FrontScene * frontScene() const;
@@ -121,6 +135,13 @@ public:
 
     // ---------- virtual interface -------------
 protected:
+
+    /** Reimplement to supply a persistent class name for the derived item. */
+    virtual const QString& className() const = 0;
+
+    /** Reimplement to return a new instance of your derived item. */
+    virtual AbstractFrontItem * cloneClass() const = 0;
+
     /** Called whenever the Properties have changed.
         Do all necessary changes here. */
     virtual void onPropertiesChanged() { }
@@ -137,12 +158,15 @@ public:
     virtual QRectF boundingRect() const Q_DECL_OVERRIDE;
     virtual void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
 
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value) Q_DECL_OVERRIDE;
+
 private:
 
     void p_update_from_properties_();
 
+    static QMap<QString, AbstractFrontItem*> p_reg_items_;
+
     Properties * p_props_;
-    Parameter * p_param_;
     QStaticText * p_statictext_name_;
     QRectF p_oldRect_;
     QRectF p_labelRect_;

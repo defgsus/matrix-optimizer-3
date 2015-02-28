@@ -23,7 +23,7 @@ class FrontFloatItem : public AbstractFrontItem
 {
 public:
 
-    explicit FrontFloatItem(Parameter * p = 0, QGraphicsItem * parent = 0);
+    explicit FrontFloatItem(QGraphicsItem * parent = 0);
     ~FrontFloatItem();
 
     // ---------------- getter ------------------
@@ -35,6 +35,13 @@ public:
     void setValue(Float v);
 
     // --------------- layout -------------------
+
+    // ----------- virtual interface ------------
+protected:
+
+    const QString& className() const { static QString s("Float"); return s; }
+
+    FrontFloatItem * cloneClass() const { return new FrontFloatItem; }
 
     void onPropertiesChanged() Q_DECL_OVERRIDE;
     void onEditModeChanged() Q_DECL_OVERRIDE;

@@ -15,6 +15,7 @@
 #include <QGraphicsSceneMouseEvent>
 
 #include "frontscene.h"
+#include "gui/item/frontgroupitem.h"
 #include "gui/item/frontfloatitem.h"
 #include "object/object.h"
 #include "object/param/parameters.h"
@@ -42,6 +43,7 @@ struct FrontScene::Private
 
     /** Adds the item to the graphicsscene if necessary
         and most importantly initializes the item to the current settings.
+        Also recurses through children.
         @note Always use this function to add items! */
     void addItem(AbstractFrontItem * item);
 
@@ -157,8 +159,14 @@ void FrontScene::Private::addItem(AbstractFrontItem *item)
 {
     if (!item->parentItem() || item->parentItem()->scene() != gscene)
         gscene->addItem(item);
+
     // init
     item->setEditMode(editMode);
+
+    // children
+    auto childs = item->childFrontItems();
+    for (auto c : childs)
+        addItem(c);
 }
 
 void FrontScene::Private::createItems(Object *root, const QPointF& pos, AbstractFrontItem *parent)
@@ -169,7 +177,7 @@ void FrontScene::Private::createItems(Object *root, const QPointF& pos, Abstract
     {
         if (!p->isVisibleInterface())
             continue;
-
+/*
         // create/add item
         auto item = new AbstractFrontItem(p, parent);
         item->setPos(localPos);
@@ -179,6 +187,7 @@ void FrontScene::Private::createItems(Object *root, const QPointF& pos, Abstract
         // XXX bullshit))
         localPos.rx() += item->rect().width() + 4.;
         maxh = std::max(maxh, item->rect().bottom() + 4.);
+        */
     }
 
     localPos.ry() = maxh;
@@ -196,8 +205,8 @@ AbstractFrontItem * FrontScene::createNew(FrontItemType type,
     switch (type)
     {
         default:
-        case FIT_GROUP: item = new AbstractFrontItem(0, parent); break;
-        case FIT_FLOAT: item = new FrontFloatItem(0, parent); break;
+        case FIT_GROUP: item = new FrontGroupItem(parent); break;
+        case FIT_FLOAT: item = new FrontFloatItem(parent); break;
     }
 
     item->setPos(pos);
@@ -320,44 +329,15 @@ QList<QAction*> FrontScene::createDefaultActions()
 
     list.push_back( a = new QAction(tr("New group"), this) );
     a->setShortcut(Qt::CTRL + Qt::Key_1);
-    connect(a, &QAction::triggered, [=]() { createNew(FIT_GROUP, 0, cursorPos()); });
+    connect(a, &QAction::triggered, [=]() { if (editMode()) createNew(FIT_GROUP, 0, cursorPos()); });
 
     list.push_back( a = new QAction(tr("New float control"), this) );
     a->setShortcut(Qt::CTRL + Qt::Key_2);
-    connect(a, &QAction::triggered, [=]() { createNew(FIT_FLOAT, 0, cursorPos()); });
+    connect(a, &QAction::triggered, [=]() { if (editMode()) createNew(FIT_FLOAT, 0, cursorPos()); });
 
     list.push_back( a = new QAction(tr("Group selected items"), this) );
     a->setShortcut(Qt::ALT + Qt::Key_G);
-    connect(a, &QAction::triggered, [=]() { groupItems(selectedFrontItems()); });
-
-    list.push_back( a = new QAction(tr("Serialize"), this) );
-    a->setShortcut(Qt::ALT + Qt::Key_S);
-    connect(a, &QAction::triggered, [=]()
-    {
-        IO::XmlStream s;
-        s.startWriting();
-        serialize(s);
-        s.stopWriting();
-        MO_DEBUG(s.data());
-    });
-
-    list.push_back( a = new QAction(tr("Deserialize"), this) );
-    a->setShortcut(Qt::ALT + Qt::Key_L);
-    connect(a, &QAction::triggered, [=]()
-    {
-        IO::XmlStream s;
-        s.startWriting();
-        serialize(s);
-        s.stopWriting();
-        MO_DEBUG(s.data());
-
-        FrontScene scene;
-        s.startReading();
-        s.nextSubSection();
-        scene.deserialize(s);
-        s.stopReading();
-    });
-
+    connect(a, &QAction::triggered, [=]() { if (editMode()) groupItems(selectedFrontItems()); });
 
     return list;
 }

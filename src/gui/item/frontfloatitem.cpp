@@ -16,6 +16,8 @@
 namespace MO {
 namespace GUI {
 
+MO_REGISTER_FRONT_ITEM(FrontFloatItem);
+
 struct FrontFloatItem::Private
 {
     Private(FrontFloatItem * i)
@@ -27,8 +29,8 @@ struct FrontFloatItem::Private
     FaderItem * fader;
 };
 
-FrontFloatItem::FrontFloatItem(Parameter * p, QGraphicsItem * parent)
-    : AbstractFrontItem (p, parent)
+FrontFloatItem::FrontFloatItem(QGraphicsItem * parent)
+    : AbstractFrontItem (parent)
     , p_                (new Private(this))
 {
     initProperty("size", QSize(16, 64));
