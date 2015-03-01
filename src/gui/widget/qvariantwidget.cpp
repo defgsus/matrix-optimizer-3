@@ -162,6 +162,7 @@ void QVariantWidget::Private::createWidgets()
             auto sb = new DoubleSpinBox(widget);
             edit = sb;
             sb->setRange(-9999999, 9999999);
+            sb->setDecimals(7);
             f_update_widget = [=](){ sb->setValue(v.toDouble()); };
             f_update_value = [=](){ v = sb->value(); };
             connect(sb, SIGNAL(valueChanged(double)), widget, SLOT(onValueChanged_()));
@@ -201,8 +202,8 @@ void QVariantWidget::Private::createWidgets()
             MO__SUBLAYOUT(QHBoxLayout);
             auto sb1 = new DoubleSpinBox(widget),
                  sb2 = new DoubleSpinBox(widget);
-            sb1->setRange(0, 9999999);
-            sb2->setRange(0, 9999999);
+            sb1->setRange(0, 9999999); sb1->setDecimals(4);
+            sb2->setRange(0, 9999999); sb2->setDecimals(4);
             layout->addWidget(sb1);
             layout->addWidget(sb2);
             f_update_widget = [=](){ auto s = v.toSize(); sb1->setValue(s.width()); sb2->setValue(s.height()); };
@@ -217,8 +218,8 @@ void QVariantWidget::Private::createWidgets()
             MO__SUBLAYOUT(QHBoxLayout);
             auto sb1 = new SpinBox(widget),
                  sb2 = new SpinBox(widget);
-            sb1->setRange(0, 9999999);
-            sb2->setRange(0, 9999999);
+            sb1->setRange(-9999999, 9999999);
+            sb2->setRange(-9999999, 9999999);
             layout->addWidget(sb1);
             layout->addWidget(sb2);
             f_update_widget = [=](){ auto s = v.toPoint(); sb1->setValue(s.x()); sb2->setValue(s.y()); };

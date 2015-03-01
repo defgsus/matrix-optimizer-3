@@ -19,6 +19,8 @@ namespace GUI {
 FaderItem::FaderItem(QGraphicsItem * p)
     : AbstractGuiItem   (p)
     , do_drag_          (false)
+    , colorOn_          (QColor(100,150,100))
+    , colorOff_         (QColor(30,70,30))
 {
     min_ = 0.; max_ = 100.;
     value_ = 25.;
@@ -41,7 +43,8 @@ void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
     {
         Float dm = e->buttonDownScenePos(Qt::LeftButton).y() - e->scenePos().y();
 
-        value_ = drag_start_value_ + dm;
+        value_ = std::max(min_,std::min(max_,
+                        drag_start_value_ + dm ));
 
         update();
         e->accept();
@@ -51,6 +54,7 @@ void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 void FaderItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     do_drag_ = false;
+    AbstractGuiItem::mouseReleaseEvent(event);
 }
 
 void FaderItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
@@ -60,9 +64,9 @@ void FaderItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
     QRectF r = rect();
     qreal y = (1.0 - (value_ - min_) / (max_ - min_)) * r.height();
 
-    p->setBrush(QBrush(QColor(50,50,0)));
+    p->setBrush(QBrush(colorOff_));
     p->drawRect(r.left(), r.top(), r.width(), y);
-    p->setBrush(QBrush(Qt::yellow));
+    p->setBrush(QBrush(colorOn_));
     p->drawRect(r.left(), r.top() + y, r.width(), r.height() - y);
 }
 

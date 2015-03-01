@@ -315,6 +315,14 @@ void XmlStream::write(const QString& key, const QVariant& v)
 
     QString vs;
     // handle compound types
+    if (v.type() == QVariant::Color)
+    {
+        // Note: QColor -> QVariant -> QString ignores the alpha value
+        // hence the selfmade conversion..
+        const auto c = v.value<QColor>();
+        vs = QString("%1").arg(c.rgba(), 8, 16);
+    }
+    else
     if (v.type() == QVariant::Size)
     {
         const auto val = v.toSize();
@@ -433,6 +441,15 @@ bool XmlStream::read(const QString& key, QVariant& v, const QVariant& def) const
     if (typeId == QVariant::Invalid) { v = def; return false; }
 
     // handle compound types
+    if (typeId == QVariant::Color)
+    {
+        if (value.size() < 8) { v = def; return false; }
+        v = QColor(value.mid(6,2).toInt(0,16),
+                   value.mid(4,2).toInt(0,16),
+                   value.mid(2,2).toInt(0,16),
+                   value.mid(0,2).toInt(0,16));
+    }
+    else
     if (typeId == QVariant::Size)
     {
         auto list = value.toString().split(",");

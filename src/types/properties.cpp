@@ -384,19 +384,35 @@ QRectF Properties::align(const QRectF &rect, const QRectF &parent,
                          int alignment, qreal margin, bool outside)
 {
     QRectF r(rect);
-    r.moveTopLeft(parent.topLeft() + QPointF(margin, margin));
+
+    // h&v center (ignore outside flag and margin)
+    if ((alignment & A_CENTER) == A_CENTER)
+    {
+        r.moveLeft( parent.left() + (parent.width() - rect.width()) / 2.);
+        r.moveTop( parent.top() + (parent.height() - rect.height()) / 2.);
+        return r;
+    }
+
+    if (outside)
+        margin = -margin;
+
+    r.moveTopLeft(parent.topLeft() + QPointF(
+                      margin - (outside ? rect.width() : 0),
+                      margin - (outside ? rect.height() : 0)));
 
     // hcenter or right (it's already left)
     if ((alignment & A_HCENTER) == A_HCENTER)
         r.moveLeft( parent.left() + (parent.width() - rect.width()) / 2.);
     else if (alignment & A_RIGHT)
-        r.moveRight( parent.right() - margin );
+        r.moveRight( parent.right() - margin
+                     + (outside ? rect.width() : 0));
 
     // vcenter or bottom (it's already top)
     if ((alignment & A_VCENTER) == A_VCENTER)
         r.moveTop( parent.top() + (parent.height() - rect.height()) / 2.);
     else if (alignment & A_BOTTOM)
-        r.moveBottom( parent.bottom() - margin );
+        r.moveBottom( parent.bottom() - margin
+                      + (outside ? rect.height() : 0));
 
     return r;
 }

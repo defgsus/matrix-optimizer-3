@@ -34,8 +34,12 @@ FrontFloatItem::FrontFloatItem(QGraphicsItem * parent)
     , p_                (new Private(this))
 {
     initProperty("size", QSize(16, 64));
-    initProperty("value-on-color", QColor(0xa0, 0xb0, 0xa0));
-    initProperty("value-off-color", QColor(0x20, 0x30, 0x20));
+    initProperty("label-text", QString("X"));
+    initProperty("padding", 2);
+    initProperty("label-outside", true);
+    initProperty("background-color", QColor(0x30, 0x50, 0x30));
+    initProperty("value-on-color", QColor(0xff,0xff,0xff,0x60));
+    initProperty("value-off-color", QColor(0,0,0,0x60));
 }
 
 FrontFloatItem::~FrontFloatItem()
@@ -53,6 +57,8 @@ void FrontFloatItem::onPropertiesChanged()
     }
 
     p_->fader->setRect(innerRect());
+    p_->fader->setOnColor(properties().get("value-on-color").value<QColor>());
+    p_->fader->setOffColor(properties().get("value-off-color").value<QColor>());
 }
 
 void FrontFloatItem::onEditModeChanged()

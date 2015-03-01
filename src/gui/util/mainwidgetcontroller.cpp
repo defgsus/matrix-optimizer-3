@@ -194,6 +194,10 @@ void MainWidgetController::createObjects_()
 
     // front-end scene
     frontScene_ = new FrontScene(window_);
+    connect(frontScene_, &FrontScene::actionsChanged, [=](const QList<QAction*>& a)
+    {
+        setEditActions_(frontScene_, a);
+    });
     // front-end view
     frontView_ = new FrontView(window_);
     frontView_->setFrontScene(frontScene_);
@@ -203,6 +207,10 @@ void MainWidgetController::createObjects_()
             frontItemEditor_, SLOT(setItem(AbstractFrontItem*)));
     connect(frontScene_, SIGNAL(itemsSelected(QList<AbstractFrontItem*>)),
             frontItemEditor_, SLOT(setItems(QList<AbstractFrontItem*>)));
+    connect(frontScene_, &FrontScene::itemUnselected, [=]()
+    {
+        frontItemEditor_->setItem(0);
+    });
 
     // sequencer
     sequencer_ = new Sequencer(window_);

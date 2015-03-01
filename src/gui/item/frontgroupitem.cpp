@@ -20,7 +20,14 @@ MO_REGISTER_FRONT_ITEM(FrontGroupItem);
 FrontGroupItem::FrontGroupItem(QGraphicsItem * parent)
     : AbstractFrontItem (parent)
 {
+    initProperty("rounded-size", QSize(6, 6));
+
+    initProperty("label-text", QObject::tr("group"));
+
+    initProperty("padding", 8);
+    initProperty("border", 3.);
 }
+
 
 FrontGroupItem::~FrontGroupItem()
 {

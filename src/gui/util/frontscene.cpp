@@ -13,6 +13,9 @@
 #include <QGraphicsView>
 #include <QPainter>
 #include <QGraphicsSceneMouseEvent>
+#include <QMimeData>
+#include <QClipboard>
+#include <QMessageBox>
 
 #include "frontscene.h"
 #include "gui/item/frontgroupitem.h"
@@ -25,7 +28,10 @@
 #include "object/param/parametertext.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parametertimeline1d.h"
+#include "math/functions.h"
+#include "io/application.h"
 #include "io/xmlstream.h"
+#include "io/error.h"
 #include "io/log.h"
 
 namespace MO {
@@ -47,14 +53,18 @@ struct FrontScene::Private
         @note Always use this function to add items! */
     void addItem(AbstractFrontItem * item);
 
-    /** Recusively creates all items for the object(s) */
-    void createItems(Object * root, const QPointF& pos = QPointF(0,0),
-                                    AbstractFrontItem * parent = 0);
+    /* Recusively creates all items for the object(s) */
+    //void createItems(Object * root, const QPointF& pos = QPointF(0,0),
+    //                                AbstractFrontItem * parent = 0);
+
+    /** (Re-)Creates all context menu edit actions for the current selection */
+    void createEditActions();
 
     FrontScene * gscene;
 
     bool editMode;
 
+    QList<QAction*> editActions;
 };
 
 
@@ -74,11 +84,19 @@ FrontScene::~FrontScene()
 
 void FrontScene::serialize(IO::XmlStream & io) const
 {
+    auto list = topLevelFrontItems();
+    serialize(io, list);
+}
+
+void FrontScene::serialize(IO::XmlStream & io, const QList<AbstractFrontItem*>& list) const
+{
+    MO_ASSERT(list.size() == reduceToCommonParent(list).size(),
+              "Only top-level items allowed in FrontScene::serialize");
+
     io.newSection("user-interface");
 
         io.write("version", 1);
 
-        auto list = topLevelFrontItems();
         for (AbstractFrontItem * i : list)
         {
             i->serialize(io);
@@ -89,9 +107,20 @@ void FrontScene::serialize(IO::XmlStream & io) const
 
 void FrontScene::deserialize(IO::XmlStream & io)
 {
-    io.verifySection("user-interface");
+    QList<AbstractFrontItem*> list;
 
-        clear();
+    deserialize(io, list);
+
+    clear();
+
+    // add the items to scene
+    for (auto i : list)
+        p_->addItem(i);
+}
+
+void FrontScene::deserialize(IO::XmlStream& io, QList<AbstractFrontItem*>& list) const
+{
+    io.verifySection("user-interface");
 
         const int ver = io.expectInt("version");
         Q_UNUSED(ver);
@@ -101,7 +130,7 @@ void FrontScene::deserialize(IO::XmlStream & io)
             if (io.section() == "interface-item")
             {
                 auto item = AbstractFrontItem::deserialize(io);
-                p_->addItem(item);
+                list << item;
             }
 
             io.leaveSection();
@@ -168,7 +197,7 @@ void FrontScene::Private::addItem(AbstractFrontItem *item)
     for (auto c : childs)
         addItem(c);
 }
-
+/*
 void FrontScene::Private::createItems(Object *root, const QPointF& pos, AbstractFrontItem *parent)
 {
     qreal maxh = pos.y();
@@ -177,7 +206,7 @@ void FrontScene::Private::createItems(Object *root, const QPointF& pos, Abstract
     {
         if (!p->isVisibleInterface())
             continue;
-/*
+
         // create/add item
         auto item = new AbstractFrontItem(p, parent);
         item->setPos(localPos);
@@ -187,7 +216,6 @@ void FrontScene::Private::createItems(Object *root, const QPointF& pos, Abstract
         // XXX bullshit))
         localPos.rx() += item->rect().width() + 4.;
         maxh = std::max(maxh, item->rect().bottom() + 4.);
-        */
     }
 
     localPos.ry() = maxh;
@@ -196,6 +224,7 @@ void FrontScene::Private::createItems(Object *root, const QPointF& pos, Abstract
     for (Object * c : root->childObjects())
         createItems(c, pos, 0);
 }
+*/
 
 AbstractFrontItem * FrontScene::createNew(FrontItemType type,
                                           QGraphicsItem * parent, const QPointF& pos)
@@ -209,9 +238,19 @@ AbstractFrontItem * FrontScene::createNew(FrontItemType type,
         case FIT_FLOAT: item = new FrontFloatItem(parent); break;
     }
 
-    item->setPos(pos);
+    item->setPos(snapGrid(pos));
     p_->addItem(item);
     return item;
+}
+
+AbstractFrontItem * FrontScene::createNew(FrontItemType type, const QPointF &pos)
+{
+    AbstractFrontItem * parent;
+    QPointF p(pos);
+
+    getLocalPos(p, &parent);
+
+    return createNew(type, parent, p);
 }
 
 void FrontScene::groupItems(const QList<AbstractFrontItem *> &items)
@@ -219,14 +258,20 @@ void FrontScene::groupItems(const QList<AbstractFrontItem *> &items)
     if (items.isEmpty())
         return;
 
-    /** @todo find common parent */
-    auto group = createNew(FIT_GROUP, 0);
+    auto topitems = reduceToCommonParent(items);
+    if (topitems.isEmpty())
+        return;
+
+    auto parent = dynamic_cast<AbstractFrontItem*>( topitems.at(0)->parentItem() );
+
+    auto group = createNew(FIT_GROUP, parent);
 
     QRectF r;
     for (AbstractFrontItem * i : items)
     {
         QRectF b = i->mapToScene( i->boundingRect() ).boundingRect();
         r |= b;
+        // !! not final position, only temporary store
         i->setPos(b.topLeft());
     }
 
@@ -260,6 +305,34 @@ QRectF FrontScene::viewsRect() const
     for (QGraphicsView * v : list)
         r |= v->sceneRect();
     return r;
+}
+
+QRectF FrontScene::snapGrid(const QRectF & rect) const
+{
+    QRectF r(rect);
+    r.setLeft(MATH::quant(r.left(), 8.));
+    r.setRight(MATH::quant(r.right(), 8.));
+    return r;
+}
+
+QPointF FrontScene::snapGrid(const QPointF & po) const
+{
+    return QPointF(
+                MATH::quant(po.x(), 8.),
+                MATH::quant(po.y(), 8.));
+}
+
+void FrontScene::getLocalPos(QPointF& inout, AbstractFrontItem** item) const
+{
+    auto qi = itemAt(inout, QTransform());
+    if (auto ai = dynamic_cast<AbstractFrontItem*>(qi))
+    {
+        *item = ai;
+        inout = ai->mapFromScene(inout);
+        return;
+    }
+
+    *item = 0;
 }
 
 QList<AbstractFrontItem*> FrontScene::selectedFrontItems() const
@@ -302,7 +375,47 @@ QList<AbstractFrontItem*> FrontScene::topLevelFrontItems() const
     return fitems;
 }
 
+/** @todo This will probably fail for some edge-cases,
+    e.g. items in group in group... Should also look out for
+    the parent closest to scene. */
+QList<AbstractFrontItem*> FrontScene::reduceToCommonParent(const QList<AbstractFrontItem*>& l)
+{
+    // find and count common parents
+    QMap<QGraphicsItem*, int> map;
+    for (AbstractFrontItem * i : l)
+    {
+        auto j = map.find(i);
+        if (j == map.end())
+            map.insert(i->parentItem(), 1);
+        else
+            j.value()++;
+    }
+    // all have the same parent? (or list was empty)
+    if (map.size() <= 1)
+        return l;
 
+    // the most common parent is last in the map
+    QGraphicsItem * par = (--map.end()).key();
+
+    QList<AbstractFrontItem*> list;
+    for (AbstractFrontItem * i : l)
+        if (i->parentItem() == par)
+            list << i;
+    return list;
+}
+
+QPointF FrontScene::getTopLeftPosition(const QList<AbstractFrontItem*>& list)
+{
+    if (list.isEmpty())
+        return QPointF();
+    QPointF p = list.at(0)->pos();
+    for (auto i : list)
+    {
+        p.rx() = std::min(p.x(), i->pos().x());
+        p.ry() = std::min(p.y(), i->pos().y());
+    }
+    return p;
+}
 
 void FrontScene::onSelectionChanged_()
 {
@@ -313,6 +426,8 @@ void FrontScene::onSelectionChanged_()
         emit itemSelected(fitems[0]);
     else
         emit itemsSelected(fitems);
+
+    p_->createEditActions();
 }
 
 
@@ -329,11 +444,11 @@ QList<QAction*> FrontScene::createDefaultActions()
 
     list.push_back( a = new QAction(tr("New group"), this) );
     a->setShortcut(Qt::CTRL + Qt::Key_1);
-    connect(a, &QAction::triggered, [=]() { if (editMode()) createNew(FIT_GROUP, 0, cursorPos()); });
+    connect(a, &QAction::triggered, [=]() { if (editMode()) createNew(FIT_GROUP, cursorPos()); });
 
     list.push_back( a = new QAction(tr("New float control"), this) );
     a->setShortcut(Qt::CTRL + Qt::Key_2);
-    connect(a, &QAction::triggered, [=]() { if (editMode()) createNew(FIT_FLOAT, 0, cursorPos()); });
+    connect(a, &QAction::triggered, [=]() { if (editMode()) createNew(FIT_FLOAT, cursorPos()); });
 
     list.push_back( a = new QAction(tr("Group selected items"), this) );
     a->setShortcut(Qt::ALT + Qt::Key_G);
@@ -341,6 +456,191 @@ QList<QAction*> FrontScene::createDefaultActions()
 
     return list;
 }
+
+void FrontScene::Private::createEditActions()
+{
+    for (QAction * a : editActions)
+        a->deleteLater();
+    editActions.clear();
+
+    auto sel = gscene->selectedFrontItems();
+    auto seltop = gscene->reduceToCommonParent(sel);
+
+    QAction * a;
+
+    // single item actions
+    if (seltop.size() == 1)
+    {
+        AbstractFrontItem * item = seltop[0];
+
+        // COPY
+        editActions.append( a = new QAction(tr("copy \"%1\"").arg(item->name()), gscene) );
+        a->setShortcut(Qt::CTRL + Qt::Key_C);
+        connect(a, &QAction::triggered, [=]()
+        {
+            gscene->copyToClipboard(seltop);
+        });
+
+        // CUT
+        editActions.append( a = new QAction(tr("cut \"%1\"").arg(item->name()), gscene) );
+        a->setShortcut(Qt::CTRL + Qt::Key_X);
+        connect(a, &QAction::triggered, [=]()
+        {
+            if (!gscene->copyToClipboard(seltop))
+                return;
+            emit gscene->itemUnselected();
+            gscene->removeItem(item);
+            delete item;
+        });
+
+        // DELETE
+        editActions.append( a = new QAction(tr("delete \"%1\"").arg(item->name()), gscene) );
+        a->setShortcut(Qt::Key_Delete);
+        connect(a, &QAction::triggered, [=]()
+        {
+            emit gscene->itemUnselected();
+            gscene->removeItem(item);
+            delete item;
+        });
+
+        // PASTE
+        if (gscene->isItemsInClipboard())
+        {
+            editActions.append( a = new QAction(tr("paste into \"%1\"").arg(item->name()), gscene) );
+            a->setShortcut(Qt::CTRL + Qt::Key_V);
+            connect(a, &QAction::triggered, [=]()
+            {
+                auto list = gscene->pasteFromClipboard();
+                if (list.isEmpty())
+                    return;
+                QPointF tl = getTopLeftPosition(list);
+                for (auto i : list)
+                {
+                    item->setPos(item->pos() - tl);
+                    i->setParentItem(item);
+                    addItem(i);
+                }
+            });
+        }
+    }
+
+    // multi-item actions
+    if (seltop.size() > 1)
+    {
+        // COPY
+        editActions.append( a = new QAction(tr("copy %1 items").arg(seltop.size()), gscene) );
+        a->setShortcut(Qt::CTRL + Qt::Key_C);
+        connect(a, &QAction::triggered, [=]()
+        {
+            gscene->copyToClipboard(seltop);
+        });
+
+        // CUT
+        editActions.append( a = new QAction(tr("cut %1 items").arg(seltop.size()), gscene) );
+        a->setShortcut(Qt::CTRL + Qt::Key_X);
+        connect(a, &QAction::triggered, [=]()
+        {
+            if (!gscene->copyToClipboard(seltop))
+                return;
+            emit gscene->itemUnselected();
+            for (auto i : seltop)
+            {
+                gscene->removeItem(i);
+                delete i;
+            }
+        });
+
+        // DELETE
+        editActions.append( a = new QAction(tr("delete %1 items").arg(seltop.size()), gscene) );
+        a->setShortcut(Qt::Key_Delete);
+        connect(a, &QAction::triggered, [=]()
+        {
+            emit gscene->itemUnselected();
+            for (auto i : seltop)
+            {
+                gscene->removeItem(i);
+                delete i;
+            }
+        });
+    }
+
+    emit gscene->actionsChanged(editActions);
+}
+
+
+
+// ----------------------------- clipboard ---------------------------------
+
+const QString FrontScene::FrontItemMimeType = "matrixoptimizer/frontitems-xml";
+
+bool FrontScene::isItemsInClipboard() const
+{
+    return application->clipboard()->mimeData()->hasFormat(FrontItemMimeType);
+}
+
+bool FrontScene::copyToClipboard(const QList<AbstractFrontItem *> & list) const
+{
+    MO_ASSERT(list.size() == reduceToCommonParent(list).size(),
+              "Only top-level items allowed in FrontScene::copyToClipboard!");
+
+    // serialize the items
+    IO::XmlStream xml;
+    xml.startWriting();
+    try
+    {
+        serialize(xml, list);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("item clipboard"),
+                              tr("Failed to copy the items to the clipboard.\n%1")
+                              .arg(e.what()));
+        xml.stopWriting();
+        return false;
+    }
+
+    xml.stopWriting();
+
+    // create the mimedata
+    auto data = new QMimeData;
+    data->setData(FrontItemMimeType, xml.data().toUtf8());
+    // put into clipboard
+    application->clipboard()->setMimeData(data);
+
+    return true;
+}
+
+QList<AbstractFrontItem*> FrontScene::pasteFromClipboard() const
+{
+    QList<AbstractFrontItem*> list;
+
+    auto data = application->clipboard()->mimeData();
+    if (!data->hasFormat(FrontItemMimeType))
+        return list;
+
+    // deserialize
+    IO::XmlStream xml;
+    xml.setData(QString::fromUtf8(data->data(FrontItemMimeType)));
+    xml.startReading();
+    try
+    {
+        while (xml.nextSubSection())
+        {
+            if (xml.section() == "user-interface")
+                deserialize(xml, list);
+            xml.leaveSection();
+        }
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("item clipboard"),
+                              tr("Failed to paste the items from the clipboard.\n%1")
+                              .arg(e.what()));
+    }
+
+    return list;
+}
+
 
 namespace { const qreal FAR = 10000000.; }
 

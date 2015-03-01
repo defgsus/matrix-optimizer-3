@@ -36,12 +36,12 @@ AbstractFrontItem::AbstractFrontItem(QGraphicsItem* parent)
 
     initProperty("position", QPoint(0, 0));
     initProperty("size", QSize(64, 64));
-    initProperty("rounded-size", QSize(6, 6));
+    initProperty("rounded-size", QSize(0, 0));
 
-    initProperty("label-text", QObject::tr("new"));
+    initProperty("label-text", QString());
 
     initProperty("padding", 5);
-    initProperty("border", 1.5);
+    initProperty("border", 0);
 
     initProperty("label-visible", true);
     initProperty("label-outside", true);
@@ -293,10 +293,13 @@ QVariant AbstractFrontItem::itemChange(GraphicsItemChange change, const QVariant
 {
     if (change == ItemPositionChange)
     {
-        QPoint newPos = value.toPoint(); // keep it int
-        // XXX could do grid snapping here
+        QPointF newPos = value.toPointF();
+        // grid snapping
+        auto scene = frontScene();
+        if (scene)
+            newPos = scene->snapGrid(newPos);
         // update properties
-        p_props_->set("position", newPos);
+        p_props_->set("position", newPos.toPoint()); // keep it int
         return QPointF(newPos);
     }
     return QGraphicsItem::itemChange(change, value);

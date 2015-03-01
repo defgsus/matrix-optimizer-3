@@ -27,7 +27,13 @@ public:
 
     // ---------------- getter ------------------
 
+    const QColor onColor() const { return colorOn_; }
+    const QColor offColor() const { return colorOff_; }
+
     // --------------- setter -------------------
+
+    void setOnColor(const QColor& c) { colorOn_ = c; update(); }
+    void setOffColor(const QColor& c) { colorOff_ = c; update(); }
 
     // --------------- layout -------------------
 
@@ -46,6 +52,8 @@ private:
     Float value_, min_, max_,
         drag_start_value_;
     bool do_drag_;
+
+    QColor colorOn_, colorOff_;
 };
 
 } // namespace GUI
