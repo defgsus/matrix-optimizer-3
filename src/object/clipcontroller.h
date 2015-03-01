@@ -1,4 +1,4 @@
-/** @file clipcontainer.h
+/** @file clipcontroller.h
 
     @brief
 

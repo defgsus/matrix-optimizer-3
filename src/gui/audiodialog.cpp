@@ -1,4 +1,4 @@
-/** @file audiosettings.cpp
+/** @file audiodialog.cpp
 
     @brief Audio settings dialog
 

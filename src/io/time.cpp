@@ -154,12 +154,16 @@ Double systemTime()
 
     return mts.tv_sec + Double(0.000000001) * mts.tv_nsec;
 
-#else
+#elif defined(Q_OS_UNIX)
 
     timespec cls;
     clock_gettime(CLOCK_MONOTONIC, &cls);
     // second + nanoseconds
     return cls.tv_sec + Double(0.000000001) * cls.tv_nsec;
+
+#else
+
+#   error Platform not supported
 
 #endif
 }

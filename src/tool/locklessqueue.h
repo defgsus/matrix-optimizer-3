@@ -1,4 +1,4 @@
-/** @file locklessque.h
+/** @file locklessqueue.h
 
     @brief Lockless 2-thread producer/consumer que
 
@@ -6,14 +6,13 @@
     <p>All rights reserved</p>
 
     <p>created 8/9/2014</p>
-*/
 
-/*
-    some references:
-    http://www.drdobbs.com/parallel/writing-lock-free-code-a-corrected-queue/210604448
-    http://www.ogre3d.org/addonforums/viewtopic.php?f=19&t=10975&start=0
-    http://www.cplusplus.com/forum/general/76068/
-    http://cbloomrants.blogspot.ca/2009/01/01-25-09-low-level-threading-junk-part.html
+    <p>some references:<ul>
+    <li>http://www.drdobbs.com/parallel/writing-lock-free-code-a-corrected-queue/210604448</li>
+    <li>http://www.ogre3d.org/addonforums/viewtopic.php?f=19&t=10975&start=0</li>
+    <li>http://www.cplusplus.com/forum/general/76068/</li>
+    <li>http://cbloomrants.blogspot.ca/2009/01/01-25-09-low-level-threading-junk-part.html</li>
+    </ul></p>
 */
 
 #ifndef MOSRC_TOOL_LOCKLESSQUE_H

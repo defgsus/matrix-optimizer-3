@@ -1,4 +1,4 @@
-/** @file io.h
+/** @file xmlstream.h
 
     @brief Text/XML Serializer and deserializer
 

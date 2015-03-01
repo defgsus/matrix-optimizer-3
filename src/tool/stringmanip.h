@@ -28,7 +28,7 @@ QString fit_in_length(const QString& str, int max_length);
     is not longer than @p max_width.
     Line-breaks are inserted before and after tokens (consecutive non-whitspace)
     unless the token would not fit on a line in which case it is broken at @p max_width.
-    @note @p line_beginning should not contain the '\t' character or stuff like that,
+    @note @p line_beginning should not contain the tab character or stuff like that,
     since then it's width in actual characters can not be determined and the lines
     may get longer than @p max_width. */
 QString fit_text_block(const QString & s, int max_width, const QString& line_beginning = "");

@@ -1,4 +1,4 @@
-/** @file Files.cpp
+/** @file files.cpp
 
     @brief default / configured Files and filetypes
 

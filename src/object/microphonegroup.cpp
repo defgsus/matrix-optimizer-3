@@ -1,4 +1,4 @@
-/** @file MicrophoneGroupgroup.cpp
+/** @file microphonegroup.cpp
 
     @brief Group for uniformly setup microphones
 

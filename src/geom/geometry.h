@@ -1,4 +1,4 @@
-/** @file model.h
+/** @file geometry.h
 
     @brief Geometry container
 

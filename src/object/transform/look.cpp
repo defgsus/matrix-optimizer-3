@@ -1,4 +1,4 @@
-/** @file Look.cpp
+/** @file look.cpp
 
     @brief Look-axis transformation object
 

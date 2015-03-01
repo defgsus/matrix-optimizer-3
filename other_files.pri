@@ -26,4 +26,5 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/opengldrawing.html \
     assets/help/en/commandlinehelp.txt \
     assets/stylesheet.css \
-    assets/help/en/angelscript.html
+    assets/help/en/angelscript.html \
+    doc/doxygen/Doxyfile

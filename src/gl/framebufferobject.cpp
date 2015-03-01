@@ -19,16 +19,16 @@ using namespace gl;
 namespace MO {
 namespace GL {
 
-FrameBufferObject::FrameBufferObject(GLsizei width, GLsizei height,
-            GLenum format, GLenum type, bool cubemap,
+FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
+            gl::GLenum format, gl::GLenum type, bool cubemap,
             ErrorReporting report)
     : FrameBufferObject(width, height, format, type, 0, cubemap, report)
 {
 }
 
 
-FrameBufferObject::FrameBufferObject(GLsizei width, GLsizei height,
-            GLenum format, GLenum type,
+FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
+            gl::GLenum format, gl::GLenum type,
             int attachmentMask, bool cubemap,
             ErrorReporting report)
     : rep_          (report),
@@ -201,7 +201,7 @@ void FrameBufferObject::release()
     release_();
 }
 
-bool FrameBufferObject::attachCubeTexture(GLenum target)
+bool FrameBufferObject::attachCubeTexture(gl::GLenum target)
 {
     if (!cubemap_)
     {

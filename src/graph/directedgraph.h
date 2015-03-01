@@ -1,4 +1,4 @@
-/** @file graph.h
+/** @file directedgraph.h
 
     @brief Templated directed graph structure
 

@@ -1,4 +1,4 @@
-/** @file streamoperators.h
+/** @file streamoperators_qt.h
 
     @brief Enable specific Qt types for streaming (<<) with std::basic_(i/o)stream
 

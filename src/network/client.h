@@ -1,4 +1,4 @@
-/** @file tcpclient.h
+/** @file client.h
 
     @brief client for general tcp messages
 
@@ -8,8 +8,8 @@
     <p>created 09.09.2014</p>
 */
 
-#ifndef MOSRC_NETWORK_TCPCLIENT_H
-#define MOSRC_NETWORK_TCPCLIENT_H
+#ifndef MOSRC_NETWORK_CLIENT_H
+#define MOSRC_NETWORK_CLIENT_H
 
 #include <QObject>
 #include <QHostAddress>
@@ -22,6 +22,7 @@ class QTimer;
 namespace MO {
 
 
+/** The network implementation of MO::ClientEngine */
 class Client : public QObject
 {
     Q_OBJECT
@@ -78,4 +79,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_NETWORK_TCPCLIENT_H
+#endif // MOSRC_NETWORK_CLIENT_H

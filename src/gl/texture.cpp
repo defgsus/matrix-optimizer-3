@@ -45,9 +45,9 @@ Texture::Texture(ErrorReporting report)
     MO_DEBUG_IMG("Texture::Texture()");
 }
 
-Texture::Texture(GLsizei width, GLsizei height,
-                 GLenum format, GLenum input_format,
-                 GLenum type, void *ptr_to_data,
+Texture::Texture(gl::GLsizei width, gl::GLsizei height,
+                 gl::GLenum format, gl::GLenum input_format,
+                 gl::GLenum type, void *ptr_to_data,
                  ErrorReporting report)
     : rep_          (report),
       ptr_			(ptr_to_data),
@@ -72,9 +72,9 @@ Texture::Texture(GLsizei width, GLsizei height,
                 << ", " << type << ", " << ptr_to_data << ")");
 }
 
-Texture::Texture(GLsizei width, GLsizei height,
-                 GLenum format, GLenum input_format,
-                 GLenum type,
+Texture::Texture(gl::GLsizei width, gl::GLsizei height,
+                 gl::GLenum format, gl::GLenum input_format,
+                 gl::GLenum type,
                  void * ptr_px, void * ptr_nx,
                  void * ptr_py, void * ptr_ny,
                  void * ptr_pz, void * ptr_nz,
@@ -116,9 +116,9 @@ bool Texture::isCube() const
      return target_ == GL_TEXTURE_CUBE_MAP;
 }
 
-bool Texture::create(GLsizei width,
-                GLenum format, GLenum input_format,
-                GLenum type,
+bool Texture::create(gl::GLsizei width,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
                 void* ptr_to_data)
 {
     MO_DEBUG_IMG("Texture::create(" << width
@@ -152,9 +152,9 @@ bool Texture::create(GLsizei width,
     return upload_(ptr_, 0);
 }
 
-bool Texture::create(GLsizei width, GLsizei height,
-                GLenum format, GLenum input_format,
-                GLenum type,
+bool Texture::create(gl::GLsizei width, gl::GLsizei height,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
                 void* ptr_to_data)
 {
     MO_DEBUG_IMG("Texture::create(" << width << ", " << height
@@ -189,9 +189,9 @@ bool Texture::create(GLsizei width, GLsizei height,
 }
 
 
-bool Texture::create(GLsizei width, GLsizei height,
-                GLenum format, GLenum input_format,
-                GLenum type,
+bool Texture::create(gl::GLsizei width, gl::GLsizei height,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
                 void * ptr_px, void * ptr_nx,
                 void * ptr_py, void * ptr_ny,
                 void * ptr_pz, void * ptr_nz)
@@ -327,7 +327,7 @@ bool Texture::create()
 }
 
 
-bool Texture::upload(GLint mipmap_level)
+bool Texture::upload(gl::GLint mipmap_level)
 {
     MO_DEBUG_IMG("Texture::upload(mipmap=" << mipmap_level << ")");
 
@@ -344,7 +344,7 @@ bool Texture::upload(GLint mipmap_level)
     }
 }
 
-bool Texture::upload(void * ptr, GLint mipmap_level)
+bool Texture::upload(void * ptr, gl::GLint mipmap_level)
 {
     MO_DEBUG_IMG("Texture::upload(" << ptr << ", mipmap=" << mipmap_level << ")");
 
@@ -594,7 +594,7 @@ QImage Texture::getImage()
 // ------------------------ static ----------------------------
 
 
-Texture * Texture::createFromImage(const Image & img, GLenum gpu_format, ErrorReporting rep)
+Texture * Texture::createFromImage(const Image & img, gl::GLenum gpu_format, ErrorReporting rep)
 {
     MO_DEBUG_IMG("Texture::createFromImage(" << img << ", " << gpu_format << ")");
 
@@ -649,7 +649,7 @@ Texture * Texture::createFromImage(const Image & img, GLenum gpu_format, ErrorRe
 }
 
 
-Texture * Texture::createFromImage(const QImage & input_img, GLenum gpu_format, ErrorReporting rep)
+Texture * Texture::createFromImage(const QImage & input_img, gl::GLenum gpu_format, ErrorReporting rep)
 {
     MO_DEBUG_IMG("Texture::createFromImage(QImage&, " << gpu_format << ")");
 

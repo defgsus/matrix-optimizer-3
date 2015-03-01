@@ -1,4 +1,4 @@
-/** @file functions.h
+/** @file math/functions.h
 
     @brief generic math functions
 
@@ -8,8 +8,8 @@
     <p>created 6/24/2014</p>
 */
 
-#ifndef MOSCR_FUNCTIONS_H
-#define MOSCR_FUNCTIONS_H
+#ifndef MOSCR_MATH_FUNCTIONS_H
+#define MOSCR_MATH_FUNCTIONS_H
 
 #include <cmath>
 
@@ -119,4 +119,4 @@ F bl_clip(F x, F a, F b)
 } // namespace MATH
 } // namespace MO
 
-#endif // MOSRC_FUNCTIONS_H
+#endif // MOSRC_MATH_FUNCTIONS_H

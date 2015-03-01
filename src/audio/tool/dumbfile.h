@@ -1,4 +1,4 @@
-/** @file dumpfile.h
+/** @file dumbfile.h
 
     @brief
 
@@ -24,6 +24,7 @@ namespace AUDIO {
 
 class AudioBuffer;
 
+/** Tracker file loader/player using libdumb */
 class DumbFile
 {
     DumbFile(const DumbFile&);

@@ -1,4 +1,4 @@
-/** @file clipcontainer.cpp
+/** @file clipcontroller.cpp
 
     @brief
 

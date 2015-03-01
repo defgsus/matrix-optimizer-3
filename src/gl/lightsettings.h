@@ -1,4 +1,4 @@
-/** @file LightSettings.h
+/** @file lightsettings.h
 
     @brief Scene lighting settings container for use with OpenGL
 

@@ -1,4 +1,4 @@
-/** @file moapplication.cpp
+/** @file application.cpp
 
     @brief QApplication wrapper
 

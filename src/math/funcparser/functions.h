@@ -1,4 +1,4 @@
-/**	@file functions.h
+/**	@file funcparser/functions.h
 
     @brief static functions for use with math parser
 

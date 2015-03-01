@@ -1,4 +1,4 @@
-/** @file moapplication.h
+/** @file application.h
 
     @brief QApplication wrapper
 
@@ -8,8 +8,8 @@
     <p>created 6/27/2014</p>
 */
 
-#ifndef MOSRC_IO_MOAPPLICATION_H
-#define MOSRC_IO_MOAPPLICATION_H
+#ifndef MOSRC_IO_APPLICATION_H
+#define MOSRC_IO_APPLICATION_H
 
 #include <QApplication>
 #include <QMainWindow>
@@ -50,4 +50,4 @@ extern Application * application;
 
 } // namespace MO
 
-#endif // MOSRC_IO_MOAPPLICATION_H
+#endif // MOSRC_IO_APPLICATION_H

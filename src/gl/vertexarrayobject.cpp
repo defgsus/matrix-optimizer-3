@@ -271,7 +271,7 @@ bool VertexArrayObject::drawElements() const
 
 
 bool VertexArrayObject::drawElements(uint eIndex,
-        GLenum primitiveType, GLuint numberVertices, GLuint offset) const
+        gl::GLenum primitiveType, gl::GLuint numberVertices, gl::GLuint offset) const
 {
     if (eIndex >= elementBuffers_.size())
     {

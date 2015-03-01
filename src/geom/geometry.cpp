@@ -1,4 +1,4 @@
-/** @file model.cpp
+/** @file geometry.cpp
 
     @brief Geometry container
 

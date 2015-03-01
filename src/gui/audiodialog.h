@@ -1,4 +1,4 @@
-/** @file audiosettings.h
+/** @file audiodialog.h
 
     @brief Audio settings dialog
 

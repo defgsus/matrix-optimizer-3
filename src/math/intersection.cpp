@@ -66,7 +66,7 @@ bool intersect_line_line(const Vec2& A1,
 }
 
 
-/** Build after @ref http://geomalgorithms.com/a06-_intersect-2.html#intersect3D_RayTriangle%28%29 */
+/** Build after http://geomalgorithms.com/a06-_intersect-2.html#intersect3D_RayTriangle%28%29 */
 bool intersect_ray_triangle(const Vec3& ray_origin,
                             const Vec3& ray_direction,
                             const Vec3& v0,

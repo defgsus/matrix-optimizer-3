@@ -1,4 +1,4 @@
-/** @file CameraSpace.h
+/** @file cameraspace.h
 
     @brief Camera matrix container
 

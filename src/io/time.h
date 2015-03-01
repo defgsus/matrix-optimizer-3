@@ -1,4 +1,4 @@
-/** @file time.h
+/** @file io/time.h
 
     @brief
 
@@ -8,8 +8,8 @@
     <p>created 20.02.2015</p>
 */
 
-#ifndef TIME_H
-#define TIME_H
+#ifndef MOSRC_IO_TIME_H
+#define MOSRC_IO_TIME_H
 
 #include "types/float.h"
 
@@ -42,4 +42,4 @@ private:
 
 } // namespace MO
 
-#endif // TIME_H
+#endif // MOSRC_IO_TIME_H

@@ -1,4 +1,4 @@
-/** @file FloatGate.h
+/** @file floatgate.h
 
     @brief Simple float-stream to gate converter
 
@@ -14,6 +14,7 @@
 namespace MO {
 namespace AUDIO {
 
+/** Convenience class to gate/threshold a continous float stream */
 template <typename F>
 class FloatGate
 {

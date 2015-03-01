@@ -1,4 +1,4 @@
-/** @file directories.h
+/** @file files.h
 
     @brief default / configured directories and filetypes
 

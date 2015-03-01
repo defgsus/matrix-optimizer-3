@@ -1,4 +1,4 @@
-/** @file tcpclient.cpp
+/** @file client.cpp
 
     @brief client for general tcp messages
 

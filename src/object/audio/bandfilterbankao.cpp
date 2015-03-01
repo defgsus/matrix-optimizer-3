@@ -1,4 +1,4 @@
-/** @file bandBandFilterBankao.cpp
+/** @file bandfilterbankao.cpp
 
     @brief
 

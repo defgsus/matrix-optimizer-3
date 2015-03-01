@@ -1,4 +1,4 @@
-/** @file commonresultions.cpp
+/** @file commonresolutions.cpp
 
     @brief
 
