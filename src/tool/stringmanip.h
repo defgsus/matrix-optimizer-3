@@ -15,17 +15,17 @@
 
 namespace MO {
 
-/** Increases the last number found in @p str.
+/** Increases the last (right-most) number found in @p str.
     If there is no number in the string and @p init is >= 0,
     the number @p init will be appended.
     Nothing is done for an empty string. */
 void increase_id_number(QString& str, int init = -1);
 
-
+/** Shortens the string, if necessary, and appends the usual "..." at the end. */
 QString fit_in_length(const QString& str, int max_length);
 
 /** Returns a string where every new line starts with @p line_beginning and
-    is not longer than @p max_width.
+    is no longer than @p max_width.
     Line-breaks are inserted before and after tokens (consecutive non-whitspace)
     unless the token would not fit on a line in which case it is broken at @p max_width.
     @note @p line_beginning should not contain the tab character or stuff like that,

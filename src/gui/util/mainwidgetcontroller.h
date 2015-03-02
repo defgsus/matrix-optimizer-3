@@ -88,12 +88,15 @@ signals:
 
     void windowTitle(const QString& title);
 
-    /** Widgets might have appeared or disappeared */
+    /** Widgets might have appeared or disappeared.
+        XXX Not used yet. */
     void modeChanged();
 
     // ------------- actions -------------------
 
 public slots:
+
+    void quit();
 
     void start();
     void stop();
@@ -108,6 +111,7 @@ public slots:
     //void loadScene(const QString& fn);
     void newScene();
 
+    void newInterface();
     void loadInterface();
     void saveInterfaceAs();
 

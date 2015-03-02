@@ -8,13 +8,20 @@
     <p>created 31.01.2015</p>
 */
 
+#include <memory>
+
 #include <QPainter>
 #include <QStaticText>
+#include <QDrag>
+#include <QMimeData>
+#include <QGraphicsSceneMouseEvent>
+#include <QGraphicsSceneDragDropEvent>
 
 #include "abstractfrontitem.h"
 #include "gui/util/frontscene.h"
 #include "types/properties.h"
 #include "object/param/parameter.h"
+#include "io/application.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
 #include "io/error.h"
@@ -23,7 +30,67 @@
 namespace MO {
 namespace GUI {
 
+// ---------------------------- FrontItemMimeData ------------------------------
+
+const QString FrontItemMimeData::ItemIdMimeType = "matrixoptimizer/ui-item-id";
+const QString FrontItemMimeData::ItemPtrMimeType = "matrixoptimizer/ui-item-ptr";
+const QString FrontItemMimeData::AppPtrMimeType = "matrixoptimizer/app-ptr";
+
+FrontItemMimeData * FrontItemMimeData::frontItemMimeData(QMimeData* data)
+{
+    return data->hasFormat(ItemIdMimeType) ?
+        static_cast<FrontItemMimeData*>(data) : 0;
+}
+
+const FrontItemMimeData * FrontItemMimeData::frontItemMimeData(const QMimeData* data)
+{
+    return data->hasFormat(ItemIdMimeType) ?
+        static_cast<const FrontItemMimeData*>(data) : 0;
+}
+
+void FrontItemMimeData::setItem(AbstractFrontItem* item)
+{
+    setData(ItemIdMimeType, item->idName().toUtf8());
+    setData(ItemPtrMimeType,
+            QByteArray::fromRawData(reinterpret_cast<const char*>(item), sizeof(item)) );
+    setData(AppPtrMimeType,
+            QByteArray::fromRawData(reinterpret_cast<const char*>(application), sizeof(application)) );
+}
+
+QString FrontItemMimeData::getItemId() const
+{
+    if (!hasFormat(ItemIdMimeType))
+        return QString();
+    return QString::fromUtf8(data(ItemIdMimeType));
+}
+
+AbstractFrontItem * FrontItemMimeData::getItem() const
+{
+    if (!hasFormat(ItemPtrMimeType))
+        return 0;
+    const char * d = data(ItemPtrMimeType).constData();
+    auto item = reinterpret_cast<const AbstractFrontItem*>(d);
+    return const_cast<AbstractFrontItem*>(item);
+}
+
+bool FrontItemMimeData::isSameApplicationInstance() const
+{
+    if (!hasFormat(AppPtrMimeType))
+        return true;
+    const char * d = data(AppPtrMimeType).constData();
+    auto app = reinterpret_cast<const Application*>(d);
+    return app == application;
+}
+
+
+
+
+
+// -------------------------------- AbstractFrontItem --------------------------
+
+
 QMap<QString, AbstractFrontItem*> AbstractFrontItem::p_reg_items_;
+int AbstractFrontItem::p_id_count_ = 0;
 
 AbstractFrontItem::AbstractFrontItem(QGraphicsItem* parent)
     : QGraphicsItem     (parent)
@@ -31,25 +98,30 @@ AbstractFrontItem::AbstractFrontItem(QGraphicsItem* parent)
     , p_statictext_name_(0)
     , p_editMode_       (false)
 {
+    p_id_ = QString("item%1").arg(p_id_count_++);
+
     setFlag(ItemIsFocusable, true);
     setFlag(ItemSendsGeometryChanges, true);
+    setAcceptDrops(true);
 
     initProperty("position", QPoint(0, 0));
     initProperty("size", QSize(64, 64));
     initProperty("rounded-size", QSize(0, 0));
 
-    initProperty("label-text", QString());
-
     initProperty("padding", 5);
-    initProperty("border", 0);
 
+    initProperty("border", 0);
+    initProperty("border-color", QColor(0xa0, 0xa0, 0xa0));
+
+    initProperty("background-color", QColor(0x20, 0x20, 0x20));
+    initProperty("background-visible", true);
+
+    initProperty("label-text", QString());
     initProperty("label-visible", true);
     initProperty("label-outside", true);
     initProperty("label-align", Properties::Alignment(Properties::A_TOP | Properties::A_HCENTER));
     initProperty("label-margin", 0);
 
-    initProperty("background-color", QColor(40,40,50));
-    initProperty("border-color", QColor(200,200,220));
 
     // pull in Parameter's properties
 //    if (p_param_)
@@ -105,7 +177,9 @@ QString AbstractFrontItem::name() const
     //if (p_param_)
     //    return "-> " + p_param_->infoName();
 
-    return QString("Item[%1]").arg(p_props_->get("label-text").toString());
+    return QString("%1[%2]")
+            .arg(className())
+            .arg(p_props_->get("label-text").toString());
 }
 
 // -------------------------------- io -----------------------------------------
@@ -136,10 +210,13 @@ AbstractFrontItem * AbstractFrontItem::deserialize(IO::XmlStream & io)
 
         QString classn = io.expectString("class");
 
+        // create the item
         auto item = factory(classn);
         if (!item)
             return 0;
-        /** @todo auto_ptr or something to avoid leaks on read-errors */
+
+        // avoid leaks on read-errors
+        std::unique_ptr<AbstractFrontItem> aptr(item);
 
         while (io.nextSubSection())
         {
@@ -151,13 +228,14 @@ AbstractFrontItem * AbstractFrontItem::deserialize(IO::XmlStream & io)
             if (io.section() == "interface-item")
             {
                 auto child = deserialize(io);
-                child->setParentItem(item);
+                if (child)
+                    child->setParentItem(item);
             }
 
             io.leaveSection();
         }
 
-    return item;
+    return aptr.release();
 }
 
 // -------------------------------- properties ---------------------------------
@@ -224,6 +302,114 @@ QList<AbstractFrontItem*> AbstractFrontItem::childFrontItems() const
 
     return list;
 }
+
+bool AbstractFrontItem::hasParent(const QGraphicsItem *parent) const
+{
+    auto p = parentItem();
+    while (p)
+    {
+        if (p == parent)
+            return true;
+        p = p->parentItem();
+    }
+    return false;
+}
+
+// -------------------------------- editing ------------------------------------
+
+void AbstractFrontItem::startDragging()
+{
+    auto drag = new QDrag(scene());
+    auto data = new FrontItemMimeData();
+    data->setItem(this);
+    drag->setMimeData(data);
+    drag->setPixmap(getPixmap(48));
+    drag->exec(Qt::MoveAction);
+}
+
+QPixmap AbstractFrontItem::getPixmap(uint max_size)
+{
+    // if something has not been updated yet
+    if (p_prop_changed_)
+        p_update_from_properties_();
+
+    // Need to use the bounding rect, which contains
+    // outside labels and stuff like that
+    QRectF r(boundingRect());
+
+    // render
+    QPixmap pix(r.width(), r.height());
+    QPainter p(&pix);
+    p.translate(-r.topLeft());
+    p.fillRect(r, Qt::black);
+    paint(&p, 0, 0);
+    /** @todo Would be nice to paint the children as well */
+
+    return pix.scaled(QSize(max_size, max_size), Qt::KeepAspectRatio);
+}
+
+// ---------------------------------- events -----------------------------------
+
+void AbstractFrontItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
+{
+    QGraphicsItem::mousePressEvent(e);
+
+    if ((e->buttons() & Qt::LeftButton)
+        && (e->modifiers() & Qt::SHIFT))
+    {
+        startDragging();
+    }
+}
+
+void AbstractFrontItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // generally ignore
+    e->ignore();
+
+    // another item?
+    if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
+    {
+        if (!idata->isSameApplicationInstance())
+            return;
+
+        QString id = idata->getItemId();
+        // accept the even if it's not ourselves
+        if (id != idName())
+            e->accept();
+    }
+}
+
+void AbstractFrontItem::dropEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // generally ignore
+    e->ignore();
+
+    // another item? then move into ourselves
+    if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
+    {
+        if (!idata->isSameApplicationInstance())
+            return;
+
+        QString id = idata->getItemId();
+        // accept the even if it's not ourselves
+        if (id == idName())
+            return;
+
+        auto s = frontScene();
+        if (!s)
+            return;
+        // get the item
+        auto item = s->itemForId(id);
+        // avoid invalid ancestry
+        if (hasParent(item))
+            return;
+        // move here
+        item->setParentItem(this);
+        item->setPos(e->pos());
+        e->accept();
+    }
+}
+
 
 // ---------------------------------- layout -----------------------------------
 
@@ -314,7 +500,10 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
 
     // set colors/pens
     QPen bpen( borderColor() );
-    p->setBrush(QBrush(backgroundColor()));
+    if (p_props_->get("background-visible").toBool())
+        p->setBrush(QBrush(backgroundColor()));
+    else
+        p->setBrush(Qt::NoBrush);
     // border
     int bor = p_props_->get("border").toInt();
     if (bor > 0)

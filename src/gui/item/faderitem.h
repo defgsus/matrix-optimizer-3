@@ -29,11 +29,13 @@ public:
 
     const QColor onColor() const { return colorOn_; }
     const QColor offColor() const { return colorOff_; }
+    bool vertical() const { return vertical_; }
 
     // --------------- setter -------------------
 
     void setOnColor(const QColor& c) { colorOn_ = c; update(); }
     void setOffColor(const QColor& c) { colorOff_ = c; update(); }
+    void setVertical(bool v) { vertical_ = v; update(); }
 
     // --------------- layout -------------------
 
@@ -54,6 +56,7 @@ private:
     bool do_drag_;
 
     QColor colorOn_, colorOff_;
+    bool vertical_;
 };
 
 } // namespace GUI

@@ -14,6 +14,7 @@
 #include <QGraphicsItem>
 #include <QVariant>
 #include <QMap>
+#include <QMimeData>
 
 class QStaticText;
 
@@ -37,6 +38,45 @@ enum FrontItemType
     FIT_FLOAT,
     FIT_TEXT
 };
+
+class AbstractFrontItem;
+
+/** Wrapper around QMimeData to store instances of
+    AbstractFrontItem for drag/drop */
+class FrontItemMimeData : public QMimeData
+{
+public:
+    FrontItemMimeData() : QMimeData() { }
+
+    /** The mimedata string for an item id */
+    static const QString ItemIdMimeType;
+    /** The mimedata string for the item pointer. */
+    static const QString ItemPtrMimeType;
+    /** The mimedata string for the application pointer. */
+    static const QString AppPtrMimeType;
+
+    /** Returns the instance of this class, if QMimeData is convertible. */
+    static FrontItemMimeData * frontItemMimeData(QMimeData*);
+    static const FrontItemMimeData * frontItemMimeData(const QMimeData*);
+
+    // --------- getter -----------
+
+    /** Returns the stored item, or NULL */
+    AbstractFrontItem * getItem() const;
+
+    /** Returns the stored AbstractFrontItem::idName() */
+    QString getItemId() const;
+
+    bool isSameApplicationInstance() const;
+
+    // --------- setter -----------
+
+    /** Stores the item (id/ptr) */
+    void setItem(AbstractFrontItem*);
+
+};
+
+
 
 /** Call this in your derived .cpp to make the class known to the factory */
 #define MO_REGISTER_FRONT_ITEM(Class__) \
@@ -73,7 +113,8 @@ public:
         The stream is expected to be readable
         and the current section must be "interface-item".
         The section on return is the same as on entry.
-        NULL is returned for an unknown class. */
+        @returns The new item, or NULL for an unknown class.
+        @throws IoException on any other errors. */
     static AbstractFrontItem * deserialize(IO::XmlStream&);
 
     // ---------------- getter ------------------
@@ -93,19 +134,22 @@ public:
     /** A name for the property editor */
     QString name() const;
 
+    /** Unique id to describe the item */
+    QString idName() const { return p_id_; }
+
     // -------------- setter --------------------
 
     // ----- replic. of Properties interface ----
 
     void setProperties(const Properties&);
-    void setProperty(const QString& id, const QVariant& v);
+    void setProperty(const QString& idName, const QVariant& v);
     template <class T> void setProperty(const QString& id, const T& v) { setProperty(id, QVariant::fromValue(v)); }
-    void changeProperty(const QString& id, const QVariant& v);
+    void changeProperty(const QString& idName, const QVariant& v);
     template <class T> void changeProperty(const QString& id, const T& v) { changeProperty(id, QVariant::fromValue(v)); }
 protected:
     /** Same as setProperty() but does not call updateFromProperties().
         Should be used in constructor of derived classes. */
-    void initProperty(const QString& id, const QVariant& v);
+    void initProperty(const QString& idName, const QVariant& v);
     template <class T> void initProperty(const QString& id, const T& v) { initProperty(id, QVariant::fromValue(v)); }
 public:
 
@@ -132,6 +176,18 @@ public:
 
     /** All direct children that are AbstractFrontItem castable */
     QList<AbstractFrontItem*> childFrontItems() const;
+
+    /** Returns true when @p parent is a parent of this item or any
+        of it's parents. */
+    bool hasParent(const QGraphicsItem* parent) const;
+
+    // ----------------- editing ----------------
+
+    /** Starts a QDrag action with the item's id */
+    void startDragging();
+
+    /** Creates a pixmap from the item as it looks right now. */
+    QPixmap getPixmap(uint max_size);
 
     // ---------- virtual interface -------------
 protected:
@@ -160,12 +216,21 @@ public:
 
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value) Q_DECL_OVERRIDE;
 
+protected:
+
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
+
+    virtual void dragEnterEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dropEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+
 private:
 
     void p_update_from_properties_();
 
     static QMap<QString, AbstractFrontItem*> p_reg_items_;
+    static int p_id_count_;
 
+    QString p_id_;
     Properties * p_props_;
     QStaticText * p_statictext_name_;
     QRectF p_oldRect_;

@@ -444,9 +444,9 @@ bool XmlStream::read(const QString& key, QVariant& v, const QVariant& def) const
     if (typeId == QVariant::Color)
     {
         if (value.size() < 8) { v = def; return false; }
-        v = QColor(value.mid(6,2).toInt(0,16),
+        v = QColor(value.mid(2,2).toInt(0,16),
                    value.mid(4,2).toInt(0,16),
-                   value.mid(2,2).toInt(0,16),
+                   value.mid(6,2).toInt(0,16),
                    value.mid(0,2).toInt(0,16));
     }
     else

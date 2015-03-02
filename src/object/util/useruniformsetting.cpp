@@ -139,10 +139,14 @@ void UserUniformSetting::updateParameterVisibility()
         if (type == gl::GL_TEXTURE_1D)
         {
             u.p_length->setVisible(true);
+            u.p_timerange->setVisible(true);
             u.num_floats = 1;
         }
         else
+        {
             u.p_length->setVisible(false);
+            u.p_timerange->setVisible(false);
+        }
 
         for (uint i = 0; i<4; ++i)
             u.p_float[i]->setVisible(i < u.num_floats);

@@ -9,6 +9,7 @@
 */
 
 #include <QAction>
+#include <QMenu>
 #include <QCursor>
 #include <QGraphicsView>
 #include <QPainter>
@@ -29,6 +30,7 @@
 #include "object/param/parameterfilename.h"
 #include "object/param/parametertimeline1d.h"
 #include "math/functions.h"
+#include "tool/actionlist.h"
 #include "io/application.h"
 #include "io/xmlstream.h"
 #include "io/error.h"
@@ -43,9 +45,11 @@ struct FrontScene::Private
     Private(FrontScene * s)
         : gscene    (s)
         , editMode  (true)
-    { }
+    {
+    }
 
-    void createDefaultActions();
+    //void createDefaultActions();
+    QMenu * createNewItemMenu(const QPointF& insertPos);
 
     /** Adds the item to the graphicsscene if necessary
         and most importantly initializes the item to the current settings.
@@ -64,7 +68,7 @@ struct FrontScene::Private
 
     bool editMode;
 
-    QList<QAction*> editActions;
+    ActionList editActions;
 };
 
 
@@ -335,6 +339,15 @@ void FrontScene::getLocalPos(QPointF& inout, AbstractFrontItem** item) const
     *item = 0;
 }
 
+AbstractFrontItem * FrontScene::itemForId(const QString &id) const
+{
+    auto list = frontItems();
+    for (auto i : list)
+        if (i->idName() == id)
+            return i;
+    return 0;
+}
+
 QList<AbstractFrontItem*> FrontScene::selectedFrontItems() const
 {
     auto list = selectedItems();
@@ -375,32 +388,55 @@ QList<AbstractFrontItem*> FrontScene::topLevelFrontItems() const
     return fitems;
 }
 
-/** @todo This will probably fail for some edge-cases,
-    e.g. items in group in group... Should also look out for
-    the parent closest to scene. */
+/** @todo This might fail for some edge-cases, not completely tested yet. */
 QList<AbstractFrontItem*> FrontScene::reduceToCommonParent(const QList<AbstractFrontItem*>& l)
 {
     // find and count common parents
     QMap<QGraphicsItem*, int> map;
     for (AbstractFrontItem * i : l)
     {
-        auto j = map.find(i);
+        auto j = map.find(i->parentItem());
         if (j == map.end())
             map.insert(i->parentItem(), 1);
         else
             j.value()++;
     }
+
+//    MO_DEBUG("P---");
+//    for (auto i = map.begin(); i != map.end(); ++i)
+//        MO_DEBUG(i.key() << " " << i.value());
+
     // all have the same parent? (or list was empty)
     if (map.size() <= 1)
         return l;
 
-    // the most common parent is last in the map
-    QGraphicsItem * par = (--map.end()).key();
+    // find the topmost parent
+    QGraphicsItem * par = 0;
+    int count = 100000000;
+    for (auto i = map.begin(); i != map.end(); ++i)
+    {
+        // count upwards
+        QGraphicsItem * p = i.key();
+        if (p == 0) { par = 0; break; } // scene is the topmost really
+        int c = 0;
+        while (p->parentItem()) { ++c; p = p->parentItem(); }
+        // find the least
+        if (c < count)
+        {
+            par = p;
+            count = c;
+        }
+    }
 
     QList<AbstractFrontItem*> list;
     for (AbstractFrontItem * i : l)
         if (i->parentItem() == par)
             list << i;
+
+//    MO_DEBUG("---");
+//    for (auto i : list)
+//        MO_DEBUG(i->name());
+
     return list;
 }
 
@@ -457,10 +493,32 @@ QList<QAction*> FrontScene::createDefaultActions()
     return list;
 }
 
+QMenu* FrontScene::Private::createNewItemMenu(const QPointF& insertPos)
+{
+    auto m = new QMenu(tr("create new"));
+    QAction * a;
+
+    a = m->addAction(tr("Group"));
+    a->setShortcut(Qt::ALT + Qt::Key_1);
+    a->setStatusTip(tr("Creates a new group item"));
+    connect(a, &QAction::triggered, [=]() { gscene->createNew(FIT_GROUP, insertPos); });
+
+    a = m->addAction(tr("Float value"));
+    a->setShortcut(Qt::ALT + Qt::Key_2);
+    a->setStatusTip(tr("Creates a new float controller"));
+    connect(a, &QAction::triggered, [=]() { gscene->createNew(FIT_FLOAT, insertPos); });
+
+    return m;
+}
+
 void FrontScene::Private::createEditActions()
 {
     for (QAction * a : editActions)
+    {
+        if (a->menu() && !a->menu()->parent() && !a->menu()->parentWidget())
+            delete a->menu();
         a->deleteLater();
+    }
     editActions.clear();
 
     auto sel = gscene->selectedFrontItems();
@@ -468,10 +526,33 @@ void FrontScene::Private::createEditActions()
 
     QAction * a;
 
+    // clicked into empty space
+    if (sel.size() == 0)
+    {
+        // NEW
+        editActions.addMenu(createNewItemMenu(QPointF(0,0)), gscene);
+        editActions.addSeparator(gscene);
+    }
+
     // single item actions
     if (seltop.size() == 1)
     {
         AbstractFrontItem * item = seltop[0];
+
+        // NEW
+        editActions.addMenu(createNewItemMenu(item->mapToScene(0,0)), gscene);
+
+        editActions.addSeparator(gscene);
+
+        // GROUP
+        editActions.append( a = new QAction(tr("group \"%1\"").arg(item->name()), gscene) );
+        a->setShortcut(Qt::ALT + Qt::Key_G);
+        connect(a, &QAction::triggered, [=]()
+        {
+            gscene->groupItems(seltop);
+        });
+
+        editActions.addSeparator(gscene);
 
         // COPY
         editActions.append( a = new QAction(tr("copy \"%1\"").arg(item->name()), gscene) );
@@ -527,6 +608,18 @@ void FrontScene::Private::createEditActions()
     // multi-item actions
     if (seltop.size() > 1)
     {
+        // GROUP
+        editActions.append( a = new QAction(tr("group %1 items").arg(seltop.size()), gscene) );
+        a->setShortcut(Qt::ALT + Qt::Key_G);
+        connect(a, &QAction::triggered, [=]()
+        {
+            gscene->groupItems(seltop);
+        });
+
+
+        editActions.addSeparator(gscene);
+
+
         // COPY
         editActions.append( a = new QAction(tr("copy %1 items").arg(seltop.size()), gscene) );
         a->setShortcut(Qt::CTRL + Qt::Key_C);
@@ -562,6 +655,7 @@ void FrontScene::Private::createEditActions()
                 delete i;
             }
         });
+
     }
 
     emit gscene->actionsChanged(editActions);

@@ -41,6 +41,7 @@
 #include "gui/modulatordialog.h"
 #include "gui/widget/texteditwidget.h"
 #include "gui/util/objectmenu.h"
+#include "gui/item/frontfloatitem.h"
 #include "model/objectmimedata.h"
 #include "io/application.h"
 #include "io/error.h"
@@ -88,44 +89,52 @@ void ParameterWidget::emitStatusTipChanged_(const QString & s)
 
 void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
 {
-    // analyze mime data
-    if (!e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
-        return;
+    // another object?
+    if (e->mimeData()->hasFormat(ObjectMimeData::mimeTypeString))
+    {
+        // construct a wrapper
+        auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+        auto desc = data->getDescription();
 
-    // construct a wrapper
-    auto data = static_cast<const ObjectMimeData*>(e->mimeData());
-    auto desc = data->getDescription();
+        // analyze further
+        if (!desc.isFromSameApplicationInstance())
+            return;
 
-    // analyze further
-    if (!desc.isFromSameApplicationInstance())
-        return;
+        if (desc.pointer() == param_->object())
+            return;
 
-    if (desc.pointer() == param_->object())
-        return;
+        if (param_->getModulatorTypes() & desc.type())
+            e->accept();
+    }
 
-    if (param_->getModulatorTypes() & desc.type())
-        e->accept();
+    if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
+    {
+        if (!idata->isSameApplicationInstance())
+            return;
+
+        MO_DEBUG("item " << idata->getItemId() << " -> param " << param_->name());
+    }
 }
 
 void ParameterWidget::dropEvent(QDropEvent * e)
 {
     // analyze mime data
-    if (!e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
-        return;
+    if (e->mimeData()->hasFormat(ObjectMimeData::mimeTypeString))
+    {
+        // construct a wrapper
+        auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+        auto desc = data->getDescription();
 
-    // construct a wrapper
-    auto data = static_cast<const ObjectMimeData*>(e->mimeData());
-    auto desc = data->getDescription();
+        if (!editor_)
+            return;
 
-    if (!editor_)
-        return;
+        // create modulation
+        editor_->addModulator(param_, desc.id(), "");
 
-    // create modulation
-    editor_->addModulator(param_, desc.id(), "");
-
-    // select the parameter's object
-    if (param_->object())
-        emitObjectSelected_(param_->object());
+        // select the parameter's object
+        if (param_->object())
+            emitObjectSelected_(param_->object());
+    }
 }
 
 void ParameterWidget::createWidgets_()

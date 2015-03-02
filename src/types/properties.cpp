@@ -317,7 +317,8 @@ void Properties::deserialize(IO::XmlStream& io)
             io.leaveSection();
         }
 
-    swap(tmp);
+    // get all new values
+    unify(tmp);
 }
 
 

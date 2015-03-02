@@ -91,7 +91,7 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("renderset", tr("render settings"));
 
-        fixPosition_ = params()->createBooleanParameter("fixposition", tr("fixed position (skybox)"),
+        fixPosition_ = params()->createBooleanParameter("fixposition", tr("\"skybox\" (fixed position)"),
                                      tr("When fixed, the model will always be around the camera"),
                                      tr("The model behaves normally"),
                                      tr("The model will always be centered around the camera position, like a skybox"),

@@ -139,6 +139,8 @@ public:
     void serialize(IO::XmlStream&) const;
 
     /** Reads the properties from an xml stream.
+        This will overwrite all values contained in the xml
+        and leave all other values untouched (like unify()).
         The stream must be readable and current section
         must be "properties".
         On return, the section is the same as on entry.
@@ -187,7 +189,7 @@ public:
     bool change(const QString& id, const T& v) { return change(id, QVariant::fromValue(v)); }
 
     /** Copy all values from @p other.
-        This creates or overwrites valus for each value contained in @p other. */
+        This creates or overwrites values for each value contained in @p other. */
     void unify(const Properties& other);
 
     /** Create a union of this and @p other,

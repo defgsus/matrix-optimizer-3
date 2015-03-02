@@ -80,6 +80,9 @@ public:
 
     // ------------ items ------------------
 
+    /** Returns the matching item, or NULL */
+    AbstractFrontItem * itemForId(const QString& id) const;
+
     /** Like selectedItems() but only AbstractFrontItem castables. */
     QList<AbstractFrontItem*> selectedFrontItems() const;
 
@@ -93,9 +96,10 @@ public:
         or to the ones that have the most common parent.
         For example, if the list contains items that all have the
         same parent, the list is returned unchanged. Additional items,
-        that have another parent would be disregarded. In general,
+        that have another parent would be disregarded unless, their
+        common parent is higher (closer to scene). In general,
         the returned list contains the children items of the parent
-        that has the most children in the supplied list. */
+        that is highest. */
     static QList<AbstractFrontItem*> reduceToCommonParent(const QList<AbstractFrontItem*>&);
 
     /** Returns the most top-left point of all item positions */
@@ -130,13 +134,15 @@ signals:
     void itemSelected(AbstractFrontItem*);
     /** When multiple items where selected */
     void itemsSelected(const QList<AbstractFrontItem*>&);
-    /** When the selection has changed to nothing */
+    /** When the selection has changed to nothing,
+        or when an item was deleted. */
     void itemUnselected();
 
 public slots:
 
     /** Sets the root object and completely
-        (re-)initializes the QGraphicsScene */
+        (re-)initializes the QGraphicsScene
+        @todo Not used yet and will have a different function later. */
     void setRootObject(Object * root);
 
     /** Change to/from edit/interaction mode */
@@ -144,7 +150,7 @@ public slots:
 
     // ---------------- editing ------------------
 
-    // xxx getting there..
+    /** Creates a new item of @p type. */
     AbstractFrontItem* createNew(FrontItemType type, QGraphicsItem* parent,
                                  const QPointF& pos = QPointF());
 
@@ -152,7 +158,7 @@ public slots:
         rect of another AbstractFrontItem, the new item will be a child of this. */
     AbstractFrontItem* createNew(FrontItemType type, const QPointF& pos);
 
-    /** Create a group and put all @p items inside */
+    /** Creates a group and puts all @p items inside */
     void groupItems(const QList<AbstractFrontItem*>& items);
 
 private slots:

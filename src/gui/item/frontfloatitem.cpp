@@ -40,6 +40,7 @@ FrontFloatItem::FrontFloatItem(QGraphicsItem * parent)
     initProperty("background-color", QColor(0x30, 0x50, 0x30));
     initProperty("value-on-color", QColor(0xff,0xff,0xff,0x60));
     initProperty("value-off-color", QColor(0,0,0,0x60));
+    initProperty("fader-vertical", true);
 }
 
 FrontFloatItem::~FrontFloatItem()
@@ -59,6 +60,7 @@ void FrontFloatItem::onPropertiesChanged()
     p_->fader->setRect(innerRect());
     p_->fader->setOnColor(properties().get("value-on-color").value<QColor>());
     p_->fader->setOffColor(properties().get("value-off-color").value<QColor>());
+    p_->fader->setVertical(properties().get("fader-vertical").toBool());
 }
 
 void FrontFloatItem::onEditModeChanged()

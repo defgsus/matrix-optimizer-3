@@ -21,6 +21,7 @@ FaderItem::FaderItem(QGraphicsItem * p)
     , do_drag_          (false)
     , colorOn_          (QColor(100,150,100))
     , colorOff_         (QColor(30,70,30))
+    , vertical_         (true)
 {
     min_ = 0.; max_ = 100.;
     value_ = 25.;
@@ -41,7 +42,9 @@ void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 {
     if (do_drag_)
     {
-        Float dm = e->buttonDownScenePos(Qt::LeftButton).y() - e->scenePos().y();
+        Float dm = vertical_ ?
+                      e->buttonDownScenePos(Qt::LeftButton).y() - e->scenePos().y()
+                  : -(e->buttonDownScenePos(Qt::LeftButton).x() - e->scenePos().x());
 
         value_ = std::max(min_,std::min(max_,
                         drag_start_value_ + dm ));
@@ -62,12 +65,25 @@ void FaderItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
     p->setPen(Qt::NoPen);
 
     QRectF r = rect();
-    qreal y = (1.0 - (value_ - min_) / (max_ - min_)) * r.height();
 
-    p->setBrush(QBrush(colorOff_));
-    p->drawRect(r.left(), r.top(), r.width(), y);
-    p->setBrush(QBrush(colorOn_));
-    p->drawRect(r.left(), r.top() + y, r.width(), r.height() - y);
+    if (vertical_)
+    {
+        qreal y = (1.0 - (value_ - min_) / (max_ - min_)) * r.height();
+
+        p->setBrush(QBrush(colorOff_));
+        p->drawRect(r.left(), r.top(), r.width(), y);
+        p->setBrush(QBrush(colorOn_));
+        p->drawRect(r.left(), r.top() + y, r.width(), r.height() - y);
+    }
+    else
+    {
+        qreal x = (value_ - min_) / (max_ - min_) * r.width();
+
+        p->setBrush(QBrush(colorOn_));
+        p->drawRect(r.left(), r.top(), x, r.height());
+        p->setBrush(QBrush(colorOff_));
+        p->drawRect(r.left() + x, r.top(), r.width() - x, r.height());
+    }
 }
 
 

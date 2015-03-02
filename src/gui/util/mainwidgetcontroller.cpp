@@ -270,136 +270,146 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
     QMenu * m;
     QAction * a;
 
-    // ######### FILE MENU #########
-    m = new QMenu(tr("File"), menuBar);
+    // ######### SCENE MENU #########
+    m = new QMenu(tr("Scene"), menuBar);
     menuBar->addMenu(m);
 
-    m->addAction(a = new QAction(tr("New scene"), menuBar));
-    connect(a, SIGNAL(triggered()), this, SLOT(newScene()));
+        m->addAction(a = new QAction(tr("New scene"), menuBar));
+        connect(a, SIGNAL(triggered()), this, SLOT(newScene()));
 
-    m->addSeparator();
+        m->addSeparator();
 
-    m->addAction(a = new QAction(tr("Load scene"), menuBar));
-    a->setShortcut(Qt::CTRL + Qt::Key_L);
-    connect(a, SIGNAL(triggered()), this, SLOT(loadScene()));
+        m->addAction(a = new QAction(tr("Load scene ..."), menuBar));
+        a->setShortcut(Qt::CTRL + Qt::Key_L);
+        connect(a, SIGNAL(triggered()), this, SLOT(loadScene()));
 
-    m->addAction(a = actionSaveScene_ = new QAction(tr("Save scene"), menuBar));
-    a->setShortcut(Qt::CTRL + Qt::Key_S);
-    connect(a, SIGNAL(triggered()), this, SLOT(saveScene()));
+        m->addAction(a = actionSaveScene_ = new QAction(tr("Save scene"), menuBar));
+        a->setShortcut(Qt::CTRL + Qt::Key_S);
+        connect(a, SIGNAL(triggered()), this, SLOT(saveScene()));
 
-    m->addAction(a = new QAction(tr("Save scene as ..."), menuBar));
-    a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
-    connect(a, SIGNAL(triggered()), this, SLOT(saveSceneAs()));
+        m->addAction(a = new QAction(tr("Save scene as ..."), menuBar));
+        a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
+        connect(a, SIGNAL(triggered()), this, SLOT(saveSceneAs()));
 
-    // ######### EDIT MENU #########
-    m = menuEdit_ = new QMenu(tr("Edit"), menuBar);
-    menuBar->addMenu(m);
-    // will be updated from child widgets
+        m->addSeparator();
 
-
-    // ######### RENDER MENU #########
-    m = new QMenu(tr("Render"), menuBar);
-    menuBar->addMenu(m);
-
-    QActionGroup * ag = new QActionGroup(menuBar);
-    m->addAction(a = new QAction(tr("Start"), menuBar));
-    ag->addAction(a);
-    a->setShortcut(Qt::Key_F7);
-    a->setCheckable(true);
-    connect(a, SIGNAL(triggered()), this, SLOT(start()));
-
-    m->addAction(a = new QAction(tr("Stop"), menuBar));
-    ag->addAction(a);
-    a->setShortcut(Qt::Key_F8);
-    a->setCheckable(true);
-    a->setChecked(true);
-    connect(a, SIGNAL(triggered()), this, SLOT(stop()));
-
-    m->addSeparator();
-
-    // ##### RESOLUTION SUBMENU #####
-    auto sub = new QMenu(tr("Resolution"), menuBar);
-    m->addMenu(sub);
-
-        ag = new QActionGroup(sub);
-        sub->addAction( a = aResolutionOutput_ = new QAction(tr("Same as output window"), sub) );
-        a->setCheckable(true);
-        connect(a, SIGNAL(triggered()), this, SLOT(onResolutionOutput_()));
-        ag->addAction(a);
-
-        sub->addAction( a = aResolutionCustom_ = new QAction(tr("Custom ... "), sub) );
-        a->setCheckable(true);
-        connect(a, SIGNAL(triggered()), this, SLOT(onResolutionCustom_()));
-        ag->addAction(a);
-
-        auto sub2 = menuResolutions_ = new QMenu(tr("Predefined"), sub);
-        a = aResolutionPredefined_ = sub->addMenu(sub2);
-        a->setCheckable(true);
-        ag->addAction(a);
-
-            CommonResolutions::addResolutionActions(sub2, true);
-            connect(sub2, SIGNAL(triggered(QAction*)),
-                    this, SLOT(onResolutionPredefined_(QAction*)));
-
-
-    m->addSeparator();
-
-        // ##### DEBUG VISIBILITY SUBMENU #####
-        sub = new QMenu(tr("Visibility"), menuBar);
-        m->addMenu(sub);
-
-        sub->addAction(a = aDrawCameras_ = new QAction(tr("Show cameras"), sub));
-        a->setCheckable(true);
-        a->setShortcut(Qt::ALT + Qt::Key_1);
-        connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
-
-        sub->addAction(a = aDrawLightSources_= new QAction(tr("Show lights"), sub));
-        a->setCheckable(true);
-        a->setShortcut(Qt::ALT + Qt::Key_2);
-        connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
-
-        sub->addAction(a = aDrawMicrophones_ = new QAction(tr("Show microphones"), sub));
-        a->setCheckable(true);
-        a->setShortcut(Qt::ALT + Qt::Key_3);
-        connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
-
-        sub->addAction(a = aDrawAudioSources_ = new QAction(tr("Show soundsources"), sub));
-        a->setCheckable(true);
-        a->setShortcut(Qt::ALT + Qt::Key_4);
-        connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
-
-    m->addSeparator();
-
-        // ##### PROJECTOR INDEX SUBMENU #####
-        sub = menuProjectorIndex_ = new QMenu(tr("Projector index"), menuBar);
-        m->addMenu(sub);
-        // will be updated by onProjectionSettingsChanged_();
-
-        connect(sub, &QMenu::triggered, [=](QAction*a)
-        {
-            settings->setClientIndex(a->data().toInt());
-            updateSceneProjectionSettings_();
-        });
-
-
-    m->addSeparator();
-
-    m->addAction(a = new QAction(tr("Render to disk"), menuBar));
-    ag->addAction(a);
-    connect(a, SIGNAL(triggered()), this, SLOT(renderToDisk()));
+        m->addAction(a = new QAction(tr("Quit"), menuBar));
+        a->setShortcut(Qt::ALT + Qt::Key_F4);
+        connect(a, SIGNAL(triggered()), this, SLOT(quit()));
 
 
     // ######### INTERFACE MENU #########
     m = new QMenu(tr("Interface"), menuBar);
     menuBar->addMenu(m);
 
-    m->addAction(a = new QAction(tr("Load ..."), menuBar));
-    ag->addAction(a);
-    connect(a, SIGNAL(triggered()), this, SLOT(loadInterface()));
+        m->addAction(a = new QAction(tr("New interface"), menuBar));
+        connect(a, SIGNAL(triggered()), this, SLOT(newInterface()));
 
-    m->addAction(a = new QAction(tr("Save As ..."), menuBar));
-    ag->addAction(a);
-    connect(a, SIGNAL(triggered()), this, SLOT(saveInterfaceAs()));
+        m->addSeparator();
+
+        m->addAction(a = new QAction(tr("Import ..."), menuBar));
+        connect(a, SIGNAL(triggered()), this, SLOT(loadInterface()));
+
+        m->addAction(a = new QAction(tr("Export As ..."), menuBar));
+        connect(a, SIGNAL(triggered()), this, SLOT(saveInterfaceAs()));
+
+
+    // ######### EDIT MENU #########
+    m = menuEdit_ = new QMenu(tr("Edit"), menuBar);
+    menuBar->addMenu(m);
+    // will be updated from other widgets
+
+
+    // ######### RENDER MENU #########
+    m = new QMenu(tr("Render"), menuBar);
+    menuBar->addMenu(m);
+
+        QActionGroup * ag = new QActionGroup(menuBar);
+        m->addAction(a = new QAction(tr("Start"), menuBar));
+        ag->addAction(a);
+        a->setShortcut(Qt::Key_F7);
+        a->setCheckable(true);
+        connect(a, SIGNAL(triggered()), this, SLOT(start()));
+
+        m->addAction(a = new QAction(tr("Stop"), menuBar));
+        ag->addAction(a);
+        a->setShortcut(Qt::Key_F8);
+        a->setCheckable(true);
+        a->setChecked(true);
+        connect(a, SIGNAL(triggered()), this, SLOT(stop()));
+
+        m->addSeparator();
+
+        // ##### RESOLUTION SUBMENU #####
+        auto sub = new QMenu(tr("Resolution"), menuBar);
+        m->addMenu(sub);
+
+            ag = new QActionGroup(sub);
+            sub->addAction( a = aResolutionOutput_ = new QAction(tr("Same as output window"), sub) );
+            a->setCheckable(true);
+            connect(a, SIGNAL(triggered()), this, SLOT(onResolutionOutput_()));
+            ag->addAction(a);
+
+            sub->addAction( a = aResolutionCustom_ = new QAction(tr("Custom ... "), sub) );
+            a->setCheckable(true);
+            connect(a, SIGNAL(triggered()), this, SLOT(onResolutionCustom_()));
+            ag->addAction(a);
+
+            auto sub2 = menuResolutions_ = new QMenu(tr("Predefined"), sub);
+            a = aResolutionPredefined_ = sub->addMenu(sub2);
+            a->setCheckable(true);
+            ag->addAction(a);
+
+                CommonResolutions::addResolutionActions(sub2, true);
+                connect(sub2, SIGNAL(triggered(QAction*)),
+                        this, SLOT(onResolutionPredefined_(QAction*)));
+
+        m->addSeparator();
+
+
+        // ##### DEBUG VISIBILITY SUBMENU #####
+        sub = new QMenu(tr("Visibility"), menuBar);
+        m->addMenu(sub);
+
+            sub->addAction(a = aDrawCameras_ = new QAction(tr("Show cameras"), sub));
+            a->setCheckable(true);
+            a->setShortcut(Qt::ALT + Qt::Key_1);
+            connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
+
+            sub->addAction(a = aDrawLightSources_= new QAction(tr("Show lights"), sub));
+            a->setCheckable(true);
+            a->setShortcut(Qt::ALT + Qt::Key_2);
+            connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
+
+            sub->addAction(a = aDrawMicrophones_ = new QAction(tr("Show microphones"), sub));
+            a->setCheckable(true);
+            a->setShortcut(Qt::ALT + Qt::Key_3);
+            connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
+
+            sub->addAction(a = aDrawAudioSources_ = new QAction(tr("Show soundsources"), sub));
+            a->setCheckable(true);
+            a->setShortcut(Qt::ALT + Qt::Key_4);
+            connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
+
+        m->addSeparator();
+
+        // ##### PROJECTOR INDEX SUBMENU #####
+        sub = menuProjectorIndex_ = new QMenu(tr("Projector index"), menuBar);
+        m->addMenu(sub);
+        // will be updated by onProjectionSettingsChanged_();
+
+            connect(sub, &QMenu::triggered, [=](QAction*a)
+            {
+                settings->setClientIndex(a->data().toInt());
+                updateSceneProjectionSettings_();
+            });
+
+        m->addSeparator();
+
+        m->addAction(a = new QAction(tr("Render to disk"), menuBar));
+        ag->addAction(a);
+        connect(a, SIGNAL(triggered()), this, SLOT(renderToDisk()));
+
 
     // ######### OPTIONS MENU #########
     m = new QMenu(tr("Options"), menuBar);
@@ -444,6 +454,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
                     this, SLOT(onProjectionSettingsChanged_()));
             diag->show();
         });
+
 
     // ######### TOOLS MENU #########
     m = new QMenu(tr("Tools"), menuBar);
@@ -498,6 +509,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             BulkRenameDialog diag;
             diag.exec();
         });
+
 
     // ####################### DEBUG MENU #####################
 
@@ -1334,6 +1346,11 @@ bool MainWidgetController::isPlayback() const
     return audioEngine_ && audioEngine_->isPlayback();
 }
 
+void MainWidgetController::quit()
+{
+    window_->close();
+}
+
 void MainWidgetController::start()
 {
     //scene_->start();
@@ -1610,6 +1627,11 @@ void MainWidgetController::saveInterfaceAs()
                               tr("Could not save the interface xml\n'%1'\n%2")
                               .arg(fn).arg(e.what()));
     }
+}
+
+void MainWidgetController::newInterface()
+{
+    frontScene_->clear();
 }
 
 void MainWidgetController::loadInterface()
