@@ -18,6 +18,7 @@
 #include "types/float.h"
 
 namespace MO {
+namespace GUI { class AbstractFrontItem; }
 
 class ObjectEditor : public QObject
 {
@@ -181,6 +182,10 @@ public slots:
     void addModulator(MO::Parameter *, const QString& idName, const QString &outputId);
     void removeModulator(MO::Parameter *, const QString& idName, const QString& outputId);
     void removeAllModulators(MO::Parameter *);
+
+    /** Creates a connection between an ui-item and a parameter,
+        if types do match. */
+    void addModulator(MO::Parameter *, MO::GUI::AbstractFrontItem * item);
 
     // ------------ modulator objects ----------
 

@@ -104,7 +104,11 @@ void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
             return;
 
         if (param_->getModulatorTypes() & desc.type())
+        {
+            e->setDropAction(Qt::LinkAction);
             e->accept();
+            return;
+        }
     }
 
     if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
@@ -112,7 +116,9 @@ void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
         if (!idata->isSameApplicationInstance())
             return;
 
-        MO_DEBUG("item " << idata->getItemId() << " -> param " << param_->name());
+        e->setDropAction(Qt::LinkAction);
+        e->accept();
+        return;
     }
 }
 
@@ -134,6 +140,23 @@ void ParameterWidget::dropEvent(QDropEvent * e)
         // select the parameter's object
         if (param_->object())
             emitObjectSelected_(param_->object());
+
+        e->accept();
+        return;
+    }
+
+    // drop of a ui-item
+    if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
+    {
+        if (!idata->isSameApplicationInstance())
+            return;
+
+        auto item = idata->getItem();
+
+        editor_->addModulator(param_, item);
+
+        e->accept();
+        //MO_DEBUG("ui-item " << idata->getItemId() << " -> param " << param_->name());
     }
 }
 

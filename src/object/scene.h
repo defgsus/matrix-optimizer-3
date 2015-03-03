@@ -30,13 +30,15 @@ template <typename T> class LocklessQueue;
 class ProjectionSystemSettings;
 
 
-/** Handles tree managment, locking, rendering and audio processing */
+/** Handles tree managment, locking and rendering.
+    Audio processing is moved to ObjectDspPath.
+    @todo Rendering will be moved to ObjectGlPath some day...
+*/
 class Scene : public Object
 {
     Q_OBJECT
 
-    // for updateTree_()
-    friend class Object;
+    friend class Object; // for updateTree_()
     friend class ScopedSceneLockRead;
     friend class ScopedSceneLockWrite;
     friend class AudioOutThread;
@@ -88,6 +90,14 @@ public:
 
     /** Returns a list of all objects that currently serve as modulator */
     QSet<Object*> getAllModulators() const;
+
+    /** Returns (and creates, if necessary) a ModulatorObject as proxy for
+        an GUI::AbstractFrontItem. The ModulatorObject will be invisible to
+        the user. */
+    ModulatorObject * createUiModulator(const QString& uiId);
+
+    /** Propagates a value from an ui-item to the appropriate ModulatorObjectFloat */
+    void setUiValue(const QString& uiId, Double timeStamp, Float value);
 
     // ------------- open gl -------------------
 
@@ -378,6 +388,7 @@ private:
     QList<LightSource*> lightSources_;
     //QList<AudioUnit*> topLevelAudioUnits_;
     QList<Object*> deletedObjects_;
+    QMap<QString, ModulatorObjectFloat*> uiModsFloat_;
 
     // ---------- properties -------------------
 

@@ -264,17 +264,21 @@ QList<AbstractObjectItem*> ObjectGraphScene::selectedObjectItems() const
 }
 
 
+/** @todo this happens quite too often, even for button-less mouse-moves!! */
 void ObjectGraphScene::onChanged_()
 {
-    // XXX this comes quite often, even for button-less mouse-moves!!
     //MO_DEBUG("changed");
     p_->resolveLayout();
 }
 
 void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObjectItem * pitem)
 {
+    if (!o->isVisible())
+        return;
+
     int y = 1;
     for (Object * c : o->childObjects())
+    if (c->isVisible())
     {
         // create item
         auto item = new AbstractObjectItem(c);
@@ -1308,6 +1312,8 @@ void ObjectGraphScene::onObjectAdded_(Object * o)
 #ifdef QT_DEBUG
     //o->dumpAttachedData();
 #endif
+    if (!o->isVisible())
+        return;
 
     const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
                           ? o->getAttachedData(Object::DT_GRAPH_POS).toPoint()
@@ -1320,6 +1326,7 @@ void ObjectGraphScene::onObjectAdded_(Object * o)
 void ObjectGraphScene::onObjectsAdded_(const QList<Object*>& list)
 {
     for (auto o : list)
+    if (o->isVisible())
     {
         const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
                           ? o->getAttachedData(Object::DT_GRAPH_POS).toPoint()

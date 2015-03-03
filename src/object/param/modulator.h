@@ -53,7 +53,7 @@ public:
     /** Returns some description of source and destination */
     QString nameAutomatic() const;
 
-    /** Returns parent object */
+    /** Returns parent object (The parent of the Parameter) */
     Object * parent() const { return parent_; }
 
     /** Returns the set idName for finding the modulating object */
@@ -63,6 +63,7 @@ public:
     /** Returns the modulating object */
     Object * modulator() const { return modulator_; }
 
+    /** Returns the parameter who owns this Modulator connection */
     Parameter * parameter() const { return param_; }
 
     /** Returns if the object can be the modulating object */
@@ -77,7 +78,8 @@ public:
 
     // ------------- setter --------------
 
-    /** Changes the modulator id - only used to update new inserted branches */
+    /** Changes the modulator id
+        - only used to update new inserted object branches */
     void setModulatorId(const QString& id) { modulatorId_ = id; }
 
     /** Sets the modulating object (from where the modulation comes from).
@@ -85,7 +87,7 @@ public:
         @note Use canBeModulator() to see if the object fits the requirements. */
     void setModulator(Object * object);
 
-    /** Reimplement this to copy addition parameter settings.
+    /** Reimplement this to copy additional parameter settings.
         This does not include the id or something like that. */
     virtual void copySettingsFrom(const Modulator * other) = 0;
 

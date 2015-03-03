@@ -261,6 +261,8 @@ public:
     QString idNamePath() const;
 
     virtual bool isValid() const { return true; }
+    /** Returns whether the Object should be displayed to the user. */
+    virtual bool isVisible() const { return p_visible_; }
 
     virtual Type type() const { return T_NONE; }
     virtual bool isScene() const { return false; }
@@ -348,6 +350,10 @@ public:
         will be reflected in their active() method. */
     void setCurrentActivityScope(ActivityScope scope);
 
+    /** Sets the visibility flag, nothing else.
+        This flag should be set before the object is exposed to any views. */
+    void setVisible(bool v) { p_visible_ = v; }
+
     // ---------- tree getter --------------------
 
     /** Test if object @p newChild can be added to this object.
@@ -404,7 +410,7 @@ public:
     virtual bool canHaveChildren(Type type) const;
 
     /** Read-access to the list of childs */
-    const QList<Object*> childObjects() const { return p_childObjects_; }
+    const QList<Object*>& childObjects() const { return p_childObjects_; }
 
     /** Returns a set of all idNames */
     QSet<QString> getChildIds(bool recursive) const;
@@ -728,7 +734,7 @@ private:
 
     QString p_idName_, p_name_;
 
-    bool p_canBeDeleted_;
+    bool p_canBeDeleted_, p_visible_;
 
     int p_ref_;
 
@@ -767,7 +773,8 @@ private:
         p_currentActivityScope_;
 
     // ----------- position ------------------
-    // XXX deprecated
+
+    /** @deprecated */
     Mat4 p_transformation_;
 
 };

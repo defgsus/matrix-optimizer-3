@@ -31,6 +31,7 @@
 #include "object/microphone.h"
 #include "object/lightsource.h"
 #include "object/ascriptobject.h"
+#include "object/modulatorobjectfloat.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
@@ -174,37 +175,18 @@ void Scene::findObjects_()
     if (clipController_)
         clipController_->collectClips();
 
-#if 0
-    // all transformation objects that are or include audio relevant objects
-    posObjectsAudio_.clear();
-    for (auto o : posObjects_)
+    // ui-proxies
+    uiModsFloat_.clear();
+    for (Object * c : allObjects_)
+    if (c->type() & TG_MODULATOR_OBJECT)
     {
-        if (o->isAudioRelevant())
-            posObjectsAudio_.append(o);
+        auto m = static_cast<ModulatorObject*>(c);
+        if (!m->isUiProxy())
+            continue;
+
+        if (m->type() == T_MODULATOR_OBJECT_FLOAT)
+            uiModsFloat_.insert(m->uiId(), static_cast<ModulatorObjectFloat*>(m));
     }
-
-    // all objects with audio sources
-    audioObjects_.clear();
-    for (auto o : allObjects_)
-        if (!o->audioSources().isEmpty())
-        {
-            audioObjects_.append(o);
-            allAudioSources_.append( o->audioSources() );
-        }
-
-    // all objects with microphones
-    numMicrophones_ = 0;
-    microphoneObjects_.clear();
-    for (auto o : allObjects_)
-        if (!o->microphones().isEmpty())
-        {
-            microphoneObjects_.append(o);
-            numMicrophones_ += o->microphones().size();
-        }
-
-    // toplevel audio units
-    topLevelAudioUnits_ = findChildObjects<AudioUnit>(QString(), false);
-#endif
 
 #ifdef MO_DO_DEBUG_TREE
     for (auto o : allObjects_)
@@ -263,6 +245,34 @@ QSet<Object*> Scene::getAllModulators() const
     }
 
     return set;
+}
+
+ModulatorObject * Scene::createUiModulator(const QString &uiId)
+{
+    // return existing?
+    for (auto o : childObjects())
+        if (auto m = dynamic_cast<ModulatorObject*>(o))
+            if (m->uiId() == uiId)
+                return m;
+    // create
+    /** @todo create the appropriate type */
+    auto m = ObjectFactory::createModulatorObjectFloat("uiproxy_" + uiId);
+    m->setUiId(uiId);
+    addObject(this, m);
+    return m;
+}
+
+void Scene::setUiValue(const QString &uiId, Double timeStamp, Float value)
+{
+    auto i = uiModsFloat_.find(uiId);
+    if (i == uiModsFloat_.end())
+    {
+        MO_WARNING("Scene::setUiValue(" << uiId << ", " << value << ") "
+                   "no such ModulatorObject found");
+        return;
+    }
+
+    i.value()->setValue(timeStamp, value);
 }
 
 // ----------------------- tree ------------------------------

@@ -18,6 +18,7 @@
 #include "object/clipcontroller.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
+#include "object/modulatorobject.h"
 #include "object/util/audioobjectconnections.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
@@ -27,6 +28,7 @@
 #include "object/param/parametertimeline1d.h"
 #include "math/timeline1d.h"
 #include "tool/stringmanip.h"
+#include "gui/item/abstractfrontitem.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -465,7 +467,7 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName, const QStri
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << idName << "," << outputId << ")");
 
-    // XXX TODO: test sanity of connection!
+    /** @todo test sanity of connection! */
 
     Modulator * m;
     {
@@ -476,6 +478,29 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName, const QStri
         p->object()->updateParameterVisibility();
     }
     emit modulatorAdded(m);
+    emit parameterChanged(p);
+    emit sceneChanged(scene_);
+    scene_->render();
+}
+
+void ObjectEditor::addModulator(Parameter *p, GUI::AbstractFrontItem * item)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << item << ")");
+
+    ModulatorObject * mo;
+    Modulator * m;
+    {
+        ScopedSceneLockWrite lock(scene_);
+        // create proxy object
+        mo = scene_->createUiModulator(item->idName());
+        // connect to parameter
+        m = p->addModulator(mo->idName(), "");
+        p->collectModulators();
+        p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
+    }
+    emit modulatorAdded(m);
+
     emit parameterChanged(p);
     emit sceneChanged(scene_);
     scene_->render();

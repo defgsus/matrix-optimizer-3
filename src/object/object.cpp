@@ -44,23 +44,24 @@ namespace Private
 
 }
 
-Object::Object(QObject *parent) :
-    QObject                   (parent),
-    p_parameters_             (0),
-    p_paramActiveScope_       (0),
-    p_canBeDeleted_           (true),
-    p_ref_                    (1),
-    p_parentObject_           (0),
-    p_childrenHaveChanged_    (false),
-    p_numberThreads_          (1),
-    p_numberSoundSources_     (0),
-    p_numberMicrophones_      (0),
-    p_sampleRate_             (44100),
-    p_sampleRateInv_          (1.0/44100.0),
-    p_parentActivityScope_    (AS_ON),
-    p_currentActivityScope_   (AS_ON)
-//    parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY)),
-//    currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
+Object::Object(QObject *parent)
+    : QObject                   (parent)
+    , p_parameters_             (0)
+    , p_paramActiveScope_       (0)
+    , p_canBeDeleted_           (true)
+    , p_visible_                (true)
+    , p_ref_                    (1)
+    , p_parentObject_           (0)
+    , p_childrenHaveChanged_    (false)
+    , p_numberThreads_          (1)
+    , p_numberSoundSources_     (0)
+    , p_numberMicrophones_      (0)
+    , p_sampleRate_             (44100)
+    , p_sampleRateInv_          (1.0/44100.0)
+    , p_parentActivityScope_    (AS_ON)
+    , p_currentActivityScope_   (AS_ON)
+//  , parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY))
+//  , currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
 {
     p_parameters_ = new Parameters(this);
 
@@ -81,7 +82,7 @@ Object::~Object()
     if (p_ref_ > 1)
     {
         MO_WARNING("Object(" << idName() << ")::~Object() with a ref-count of "
-                   << p_ref_ << ". NOTE: ref-counting is not fully implemented yet.");
+                   << p_ref_ << ". NOTE: ref-counting for Objects is not fully implemented yet.");
     }
 
     delete p_parameters_;
@@ -271,22 +272,27 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
 
 void Object::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("obj", 2);
+    io.writeHeader("obj", 3);
 
     io << p_canBeDeleted_;
 
     // v2
     io << p_attachedData_;
+    // v3
+    io << p_visible_;
 }
 
 void Object::deserialize(IO::DataStream & io)
 {
-    const auto ver = io.readHeader("obj", 2);
+    const auto ver = io.readHeader("obj", 3);
 
     io >> p_canBeDeleted_;
 
     if (ver >= 2)
         io >> p_attachedData_;
+
+    if (ver >= 3)
+        io >> p_visible_;
 }
 
 
@@ -303,12 +309,14 @@ void Object::dumpTreeIds(std::ostream &out, const std::string& prefix) const
 int Object::objectPriority(const Object *o)
 {
     if (o->isTransformation())
+        return 4;
+    if (o->isGl() || o->isLightSource())
         return 3;
-    if (o->isModulatorObject())
-        return 2;
-    if (o->isAudioUnit() || o->isAudioObject())
+    if (o->type() & TG_MODULATOR)
         return 1;
-    return 0;
+    if (o->isAudioUnit() || o->isAudioObject())
+        return 0;
+    return 2;
 }
 
 Object * Object::findContainingObject(const int typeFlags)

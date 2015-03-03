@@ -18,7 +18,7 @@ class Object;
 namespace GUI {
 class ObjectListWidget;
 
-/** Overload of data() and setData() to for handling object names */
+/** Overload of data() and setData() for handling object names */
 class ObjectListWidgetItem : public QListWidgetItem
 {
 public:

@@ -189,7 +189,8 @@ QList<QPair<QString, QString>> Parameter::modulatorIds() const
 
 Modulator * Parameter::addModulator(const QString &idName, const QString &outputId)
 {
-    MO_DEBUG_MOD("Parameter("<<this->idName()<<")::addModulator(" << idName << ", " << outputId << ")");
+    MO_DEBUG_MOD("Parameter(" << this->idName()
+                 << ")::addModulator(" << idName << ", " << outputId << ")");
 
     if (Modulator * m = findModulator(idName, outputId))
     {

@@ -28,6 +28,7 @@
 #include "object/modulatorobjectfloat.h"
 #include "object/synthesizer.h"
 #include "object/audio/filterao.h"
+#include "object/ascriptobject.h"
 #include "io/error.h"
 
 namespace MO {
@@ -59,7 +60,8 @@ struct AppIcons::Private
         I_AU_FILTERBANK,
         I_MUSIC_NOTE,
         I_CLIP,
-        I_CLIP_CONTROL
+        I_CLIP_CONTROL,
+        I_ANGELSCRIPT
     };
 
     struct IconDesc { IconId id; QString name; };
@@ -124,6 +126,7 @@ void AppIcons::Private::init()
     nameMap_.insert(I_CLIP, ":/icon/obj_clip.png");
     nameMap_.insert(I_CLIP_CONTROL, ":/icon/obj_clipcontroller.png");
     nameMap_.insert(I_AUDIO, ":/icon/obj_audio.png");
+    nameMap_.insert(I_ANGELSCRIPT, ":/icon/obj_angelscript.png");
 }
 
 
@@ -175,6 +178,9 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
     if (o->isParameter()) return I_PARAMETER;
     if (o->isLightSource()) return I_LIGHT;
     if (o->isModulatorObject()) return I_MODULATOR;
+
+    if (qobject_cast<const AScriptObject*>(o))
+        return I_ANGELSCRIPT;
 
     return I_NONE;
 }
