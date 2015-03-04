@@ -11,6 +11,8 @@
 #ifndef MOSRC_GUI_ITEM_FADERITEM_H
 #define MOSRC_GUI_ITEM_FADERITEM_H
 
+#include <functional>
+
 #include "abstractguiitem.h"
 #include "types/float.h"
 
@@ -31,11 +33,17 @@ public:
     const QColor offColor() const { return colorOff_; }
     bool vertical() const { return vertical_; }
 
+    Float value() const { return value_; }
+
     // --------------- setter -------------------
 
     void setOnColor(const QColor& c) { colorOn_ = c; update(); }
     void setOffColor(const QColor& c) { colorOff_ = c; update(); }
     void setVertical(bool v) { vertical_ = v; update(); }
+
+    void setValue(Float value) { value_ = value; update(); }
+
+    void setCallback(std::function<void(Float)> cb) { callback_ = cb; }
 
     // --------------- layout -------------------
 
@@ -54,6 +62,8 @@ private:
     Float value_, min_, max_,
         drag_start_value_;
     bool do_drag_;
+
+    std::function<void(Float)> callback_;
 
     QColor colorOn_, colorOff_;
     bool vertical_;

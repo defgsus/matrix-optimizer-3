@@ -41,10 +41,13 @@ QVariant ObjectListWidgetItem::data(int role) const
 {
     if (role == Qt::DisplayRole)
     {
+        QString t = object_->isVisible() ?
+                    object_->name()
+                  : QString("{%1}").arg(object_->name());
         if (object_->childObjects().isEmpty())
-            return object_->name();
+            return t;
         else
-            return object_->name() + " ...";
+            return t + " ...";
     }
     if (role == Qt::EditRole)
         return object_->name();

@@ -46,8 +46,15 @@ void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
                       e->buttonDownScenePos(Qt::LeftButton).y() - e->scenePos().y()
                   : -(e->buttonDownScenePos(Qt::LeftButton).x() - e->scenePos().x());
 
-        value_ = std::max(min_,std::min(max_,
+        Float newValue = std::max(min_,std::min(max_,
                         drag_start_value_ + dm ));
+
+        // see if value changed
+        bool changed = newValue != value_;
+        value_ = newValue;
+
+        if (changed && callback_)
+            emit callback_(value_);
 
         update();
         e->accept();

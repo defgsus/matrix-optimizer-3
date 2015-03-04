@@ -44,9 +44,11 @@
 #include "gl/texture.h"
 #include "gl/rendersettings.h"
 #include "gl/scenedebugrenderer.h"
-#include "tool/locklessqueue.h"
 #include "io/currenttime.h"
+#include "io/xmlstream.h"
+#include "tool/locklessqueue.h"
 #include "projection/projectionsystemsettings.h"
+#include "gui/util/frontscene.h"
 
 namespace MO {
 
@@ -57,6 +59,7 @@ MO_REGISTER_OBJECT(Scene)
 Scene::Scene(QObject *parent) :
     Object              (parent),
     editor_             (0),
+    frontScene_         (0),
     glContext_          (0),
     releaseAllGlRequested_(0),
     fbSize_             (1024, 1024),
@@ -116,9 +119,13 @@ void Scene::serialize(IO::DataStream & io) const
 
 bool Scene::serializeAfterChilds(IO::DataStream & io) const
 {
-    io.writeHeader("scene_", 1);
+    io.writeHeader("scene_", 2);
 
     audioCon_->serialize(io);
+
+    // v2
+    io << (frontScene_ ? frontScene_->toXml() : QString());
+
     return true;
 }
 
@@ -133,9 +140,14 @@ void Scene::deserialize(IO::DataStream & io)
 
 void Scene::deserializeAfterChilds(IO::DataStream & io)
 {
-    io.readHeader("scene_", 1);
+    const int ver = io.readHeader("scene_", 2);
 
     audioCon_->deserialize(io, this);
+
+    if (ver>=2)
+    {
+        io >> frontSceneXml_;
+    }
 }
 
 
@@ -262,6 +274,21 @@ ModulatorObject * Scene::createUiModulator(const QString &uiId)
     return m;
 }
 
+
+QList<ModulatorObject*> Scene::getUiModulators(const QList<QString>& uiIds) const
+{
+    // find all modulators matching any of the ids
+    QList<ModulatorObject*> list;
+    for (auto & id : uiIds)
+    {
+        auto i = uiModsFloat_.find(id);
+        if (i != uiModsFloat_.end())
+            list << i.value();
+    }
+
+    return list;
+}
+
 void Scene::setUiValue(const QString &uiId, Double timeStamp, Float value)
 {
     auto i = uiModsFloat_.find(uiId);
@@ -273,6 +300,7 @@ void Scene::setUiValue(const QString &uiId, Double timeStamp, Float value)
     }
 
     i.value()->setValue(timeStamp, value);
+    render_();
 }
 
 // ----------------------- tree ------------------------------

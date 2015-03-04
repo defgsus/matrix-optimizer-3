@@ -10,6 +10,7 @@
 
 #include "frontfloatitem.h"
 #include "faderitem.h"
+#include "gui/util/frontscene.h"
 #include "types/properties.h"
 
 
@@ -54,6 +55,12 @@ void FrontFloatItem::onPropertiesChanged()
     if (!p_->fader)
     {
         p_->fader = new FaderItem(this);
+        p_->fader->setCallback([=](Float v)
+        {
+            auto s = frontScene();
+            if (s)
+                s->sendValue(idName(), v);
+        });
         onEditModeChanged();
     }
 

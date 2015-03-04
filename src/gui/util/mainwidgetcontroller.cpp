@@ -194,6 +194,7 @@ void MainWidgetController::createObjects_()
 
     // front-end scene
     frontScene_ = new FrontScene(window_);
+    frontScene_->setObjectEditor(objectEditor_);
     connect(frontScene_, &FrontScene::actionsChanged, [=](const QList<QAction*>& a)
     {
         setEditActions_(frontScene_, a);
@@ -210,6 +211,11 @@ void MainWidgetController::createObjects_()
     connect(frontScene_, &FrontScene::itemUnselected, [=]()
     {
         frontItemEditor_->setItem(0);
+    });
+    connect(frontScene_, &FrontScene::itemsDeleted, [=](const QList<QString>& ids)
+    {
+        frontItemEditor_->setItem(0);
+        objectEditor_->removeUiModulators(ids);
     });
 
     // sequencer
@@ -683,10 +689,11 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     scene_ = s;
 
-    scene_->runScripts();
-
     // manage memory
     scene_->setParent(this);
+
+    /** @todo When to run startup scripts? */
+    scene_->runScripts();
 
     // clear or init scene gui settings
     if (!set)
@@ -698,6 +705,28 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     objectGraphView_->setGuiSettings(sceneSettings_);
 
+    // --- get the interface ---
+    QString xml = scene_->frontSceneXml();
+    if (xml.isEmpty())
+    {
+        // XXX We can use the non-signalling version here
+        // because we are rebuilding the gui and scene anyway
+        frontScene_->clear();
+    }
+    else
+    {
+        try
+        {
+            frontScene_->setXml(xml);
+        }
+        catch (const Exception& e)
+        {
+            QMessageBox::critical(window_, tr("Interface"),
+                                  tr("Failed to load the interface\n%1").arg(e.what()));
+            frontScene_->clear();
+        }
+    }
+
     // check for local filenames
 
     IO::FileList files;
@@ -707,6 +736,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     IO::fileManager().addFilenames(files);
     IO::fileManager().acquireFiles();
     IO::fileManager().dumpStatus();
+
+    // ---------- opengl stuff ----------
 
     MO_ASSERT(glManager_ && glWindow_, "");
 
@@ -1588,6 +1619,7 @@ bool MainWidgetController::saveScene_(const QString &fn)
     {
         try
         {
+            scene_->setFrontScene(frontScene_);
             // actually save the scene
             ObjectFactory::saveScene(fn, scene_);
             // save the gui settings for the scene
@@ -1631,7 +1663,7 @@ void MainWidgetController::saveInterfaceAs()
 
 void MainWidgetController::newInterface()
 {
-    frontScene_->clear();
+    frontScene_->clearInterface();
 }
 
 void MainWidgetController::loadInterface()

@@ -14,12 +14,14 @@
 #include <QGraphicsScene>
 
 #include "gui/item/abstractfrontitem.h"
+#include "types/float.h"
 
 class QAction;
 
 namespace MO {
 class Object;
 class Parameter;
+class ObjectEditor;
 namespace IO { class XmlStream; }
 namespace GUI {
 
@@ -44,7 +46,9 @@ public:
     void serialize(IO::XmlStream&, const QList<AbstractFrontItem*>&) const;
     /** Reconstructs all items from xml.
         The stream is expected to be readable
-        and current section must be "user-interface" */
+        and current section must be "user-interface".
+        @throws IoException on any stream errors,
+        while the current scene is left unchanged. */
     void deserialize(IO::XmlStream&);
     /** Reconstructs all items from xml and appends them to the given list.
         Ownership is with caller.
@@ -54,6 +58,14 @@ public:
 
     void saveXml(const QString& filename) const;
     void loadXml(const QString& filename);
+
+    /** Returns the xml representation of the scene.
+        @throws IoException on any errors. */
+    QString toXml() const;
+
+    /** Recreates the scene according to xml.
+        @throws IoException on any errors. */
+    void setXml(const QString&);
 
     // ------------ getter -----------------
 
@@ -78,6 +90,14 @@ public:
         to item-coords. */
     void getLocalPos(QPointF& inout, AbstractFrontItem ** item) const;
 
+    /** Returns the assigned ObjectEditor */
+    ObjectEditor * objectEditor() const;
+
+    // ------------ setter -----------------
+
+    /** Connects the ObjectEditor to the FrontScene */
+    void setObjectEditor(ObjectEditor * e);
+
     // ------------ items ------------------
 
     /** Returns the matching item, or NULL */
@@ -101,6 +121,9 @@ public:
         the returned list contains the children items of the parent
         that is highest. */
     static QList<AbstractFrontItem*> reduceToCommonParent(const QList<AbstractFrontItem*>&);
+
+    /** Returns a copy of the list plus any contained items as well. */
+    static QList<AbstractFrontItem*> getAllItems(const QList<AbstractFrontItem*>&);
 
     /** Returns the most top-left point of all item positions */
     static QPointF getTopLeftPosition(const QList<AbstractFrontItem*>&);
@@ -134,9 +157,11 @@ signals:
     void itemSelected(AbstractFrontItem*);
     /** When multiple items where selected */
     void itemsSelected(const QList<AbstractFrontItem*>&);
-    /** When the selection has changed to nothing,
-        or when an item was deleted. */
+    /** When the selection has changed to nothing. */
     void itemUnselected();
+    /** When items have been deleted.
+        The list will conveniently include all child items as well. */
+    void itemsDeleted(const QList<QString>&);
 
 public slots:
 
@@ -150,6 +175,11 @@ public slots:
 
     // ---------------- editing ------------------
 
+    /** Removes everything and sends appropriate signals.
+        @note Always use this function instead of QGraphicsScene::clear()
+        to update scene and gui. */
+    void clearInterface();
+
     /** Creates a new item of @p type. */
     AbstractFrontItem* createNew(FrontItemType type, QGraphicsItem* parent,
                                  const QPointF& pos = QPointF());
@@ -160,6 +190,18 @@ public slots:
 
     /** Creates a group and puts all @p items inside */
     void groupItems(const QList<AbstractFrontItem*>& items);
+
+    /** Removes (deletes) all the items.
+        @note Make sure that the list of items only contains top-level-items
+        via reduceToCommonParent()!
+        @warning Always use this function, instead of QGraphicsScene::removeItem().
+        It will signal the gui and remove associated ModulatorObjects from Scene. */
+    void removeItems(const QList<AbstractFrontItem*>& items);
+
+    // --------------- values --------------------
+
+    /** Sends a float value to the scene, coming from interface item @p idName */
+    void sendValue(const QString& idName, Float value);
 
 private slots:
 

@@ -29,9 +29,11 @@
 #include "object/param/parametertext.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parametertimeline1d.h"
+#include "object/util/objecteditor.h"
 #include "math/functions.h"
 #include "tool/actionlist.h"
 #include "io/application.h"
+#include "io/currenttime.h"
 #include "io/xmlstream.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -44,6 +46,7 @@ struct FrontScene::Private
 {
     Private(FrontScene * s)
         : gscene    (s)
+        , editor    (0)
         , editMode  (true)
     {
     }
@@ -57,6 +60,9 @@ struct FrontScene::Private
         @note Always use this function to add items! */
     void addItem(AbstractFrontItem * item);
 
+    /** Puts the @p item and all of it's children and sub-children into @p set */
+    static void getAllItems(AbstractFrontItem * item, QSet<AbstractFrontItem*>& set);
+
     /* Recusively creates all items for the object(s) */
     //void createItems(Object * root, const QPointF& pos = QPointF(0,0),
     //                                AbstractFrontItem * parent = 0);
@@ -66,8 +72,8 @@ struct FrontScene::Private
 
     FrontScene * gscene;
 
+    ObjectEditor * editor;
     bool editMode;
-
     ActionList editActions;
 };
 
@@ -115,7 +121,7 @@ void FrontScene::deserialize(IO::XmlStream & io)
 
     deserialize(io, list);
 
-    clear();
+    clearInterface();
 
     // add the items to scene
     for (auto i : list)
@@ -164,6 +170,28 @@ void FrontScene::loadXml(const QString &filename)
     xml.stopReading();
 }
 
+QString FrontScene::toXml() const
+{
+    IO::XmlStream xml;
+    xml.startWriting();
+    serialize(xml);
+    xml.stopWriting();
+    return xml.data();
+}
+
+void FrontScene::setXml(const QString & xmls)
+{
+    IO::XmlStream xml;
+    xml.setData(xmls);
+    xml.startReading();
+    while (xml.nextSubSection())
+    {
+        if (xml.section() == "user-interface")
+            deserialize(xml);
+        xml.leaveSection();
+    }
+    xml.stopReading();
+}
 
 bool FrontScene::editMode() const
 {
@@ -187,6 +215,23 @@ void FrontScene::setRootObject(Object *root)
 
     //p_->createItems(root);
 }
+
+void FrontScene::setObjectEditor(ObjectEditor *e)
+{
+    p_->editor = e;
+}
+
+ObjectEditor * FrontScene::objectEditor() const
+{
+    return p_->editor;
+}
+
+void FrontScene::sendValue(const QString &idName, Float value)
+{
+    if (p_->editor)
+        p_->editor->setUiValue(idName, CurrentTime::time(), value);
+}
+
 
 void FrontScene::Private::addItem(AbstractFrontItem *item)
 {
@@ -230,6 +275,19 @@ void FrontScene::Private::createItems(Object *root, const QPointF& pos, Abstract
 }
 */
 
+void FrontScene::clearInterface()
+{
+    // get the all IDs
+    QStringList ids;
+    auto list = frontItems();
+    for (auto i : list)
+        ids << i->idName();
+
+    clear();
+    emit itemsDeleted(ids);
+    emit itemUnselected();
+}
+
 AbstractFrontItem * FrontScene::createNew(FrontItemType type,
                                           QGraphicsItem * parent, const QPointF& pos)
 {
@@ -255,6 +313,23 @@ AbstractFrontItem * FrontScene::createNew(FrontItemType type, const QPointF &pos
     getLocalPos(p, &parent);
 
     return createNew(type, parent, p);
+}
+
+void FrontScene::removeItems(const QList<AbstractFrontItem *> &items)
+{
+    // get all items affected
+    QList<AbstractFrontItem*> all = getAllItems(items);
+    // get their IDs
+    QList<QString> allIds;
+    for (auto i : all)
+        allIds << i->idName();
+
+    // remove top-level items
+    for (auto i : items)
+        removeItem(i);
+
+    // signal gui and scene
+    emit itemsDeleted(allIds);
 }
 
 void FrontScene::groupItems(const QList<AbstractFrontItem *> &items)
@@ -440,6 +515,23 @@ QList<AbstractFrontItem*> FrontScene::reduceToCommonParent(const QList<AbstractF
     return list;
 }
 
+QList<AbstractFrontItem*> FrontScene::getAllItems(const QList<AbstractFrontItem*>& items)
+{
+    QSet<AbstractFrontItem*> set;
+    for (auto i : items)
+        Private::getAllItems(i, set);
+    return set.toList();
+}
+
+void FrontScene::Private::getAllItems(AbstractFrontItem *item, QSet<AbstractFrontItem *> &set)
+{
+    set << item;
+
+    auto list = item->childFrontItems();
+    for (auto i : list)
+        getAllItems(i, set);
+}
+
 QPointF FrontScene::getTopLeftPosition(const QList<AbstractFrontItem*>& list)
 {
     if (list.isEmpty())
@@ -569,8 +661,7 @@ void FrontScene::Private::createEditActions()
         {
             if (!gscene->copyToClipboard(seltop))
                 return;
-            emit gscene->itemUnselected();
-            gscene->removeItem(item);
+            gscene->removeItems(QList<AbstractFrontItem*>() << item);
             delete item;
         });
 
@@ -579,8 +670,7 @@ void FrontScene::Private::createEditActions()
         a->setShortcut(Qt::Key_Delete);
         connect(a, &QAction::triggered, [=]()
         {
-            emit gscene->itemUnselected();
-            gscene->removeItem(item);
+            gscene->removeItems(QList<AbstractFrontItem*>() << item);
             delete item;
         });
 
@@ -635,12 +725,7 @@ void FrontScene::Private::createEditActions()
         {
             if (!gscene->copyToClipboard(seltop))
                 return;
-            emit gscene->itemUnselected();
-            for (auto i : seltop)
-            {
-                gscene->removeItem(i);
-                delete i;
-            }
+            gscene->removeItems(seltop);
         });
 
         // DELETE
@@ -649,11 +734,7 @@ void FrontScene::Private::createEditActions()
         connect(a, &QAction::triggered, [=]()
         {
             emit gscene->itemUnselected();
-            for (auto i : seltop)
-            {
-                gscene->removeItem(i);
-                delete i;
-            }
+            gscene->removeItems(seltop);
         });
 
     }

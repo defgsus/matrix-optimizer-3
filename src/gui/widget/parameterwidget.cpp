@@ -153,7 +153,7 @@ void ParameterWidget::dropEvent(QDropEvent * e)
 
         auto item = idata->getItem();
 
-        editor_->addModulator(param_, item);
+        editor_->addUiModulator(param_, item);
 
         e->accept();
         //MO_DEBUG("ui-item " << idata->getItemId() << " -> param " << param_->name());

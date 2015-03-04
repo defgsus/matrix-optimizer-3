@@ -172,20 +172,32 @@ public slots:
                              uint outChannel = 0, uint inChannel = 0,
                              uint numChannels = 1);
 
-    void disconnectAudioObjects(const AudioObjectConnection&);
-    void disconnectAudioObjects(MO::AudioObject * from, MO::AudioObject * to,
+    bool disconnectAudioObjects(const AudioObjectConnection&);
+    bool disconnectAudioObjects(MO::AudioObject * from, MO::AudioObject * to,
                                 uint outChannel = 0, uint inChannel = 0,
                                 uint numChannels = 1);
 
     // ------------ modulators -----------------
 
-    void addModulator(MO::Parameter *, const QString& idName, const QString &outputId);
-    void removeModulator(MO::Parameter *, const QString& idName, const QString& outputId);
-    void removeAllModulators(MO::Parameter *);
+    bool addModulator(MO::Parameter *, const QString& idName, const QString &outputId);
+    bool removeModulator(MO::Parameter *, const QString& idName, const QString& outputId);
+    bool removeAllModulators(MO::Parameter *);
+
+    // ---------- ui modulators ----------------
 
     /** Creates a connection between an ui-item and a parameter,
         if types do match. */
-    void addModulator(MO::Parameter *, MO::GUI::AbstractFrontItem * item);
+    bool addUiModulator(MO::Parameter *, MO::GUI::AbstractFrontItem * item);
+
+    /** Removes the ModulatorObject previously created for the ui item with id @p uiId. */
+    bool removeUiModulator(const QString& uiId);
+
+    /** Removes the ModulatorObjects that belong to the ui items. */
+    bool removeUiModulators(const QList<QString>& uiIds);
+
+    /** Propagates a value from an ui-item to the appropriate ModulatorObjectFloat */
+    bool setUiValue(const QString& uiId, Double timeStamp, Float value);
+
 
     // ------------ modulator objects ----------
 

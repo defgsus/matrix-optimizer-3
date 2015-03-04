@@ -188,8 +188,10 @@ void AbstractFrontItem::serialize(IO::XmlStream& io) const
 {
     io.newSection("interface-item");
 
-        io.write("version", 1);
+        io.write("version", 2);
         io.write("class", className());
+        // v2
+        io.write("id", idName());
 
         p_props_->serialize(io);
 
@@ -205,35 +207,42 @@ AbstractFrontItem * AbstractFrontItem::deserialize(IO::XmlStream & io)
 {
     io.verifySection("interface-item");
 
-        const int ver = io.expectInt("version");
-        Q_UNUSED(ver);
+    const int ver = io.expectInt("version");
 
-        QString classn = io.expectString("class");
+    QString classn = io.expectString("class");
+    QString idn;
+    if (ver >= 2)
+        idn = io.expectString("id");
 
-        // create the item
-        auto item = factory(classn);
-        if (!item)
-            return 0;
+    // create the item
+    auto item = factory(classn);
+    if (!item)
+        return 0;
 
-        // avoid leaks on read-errors
-        std::unique_ptr<AbstractFrontItem> aptr(item);
+    // avoid leaks on read-errors
+    std::unique_ptr<AbstractFrontItem> aptr(item);
 
-        while (io.nextSubSection())
+    // set id
+    if (!idn.isEmpty())
+        item->p_id_ = idn;
+
+    // properties and children
+    while (io.nextSubSection())
+    {
+        // properties
+        if (io.section() == "properties")
+            item->p_props_->deserialize(io);
+        else
+        // children
+        if (io.section() == "interface-item")
         {
-            // properties
-            if (io.section() == "properties")
-                item->p_props_->deserialize(io);
-            else
-            // children
-            if (io.section() == "interface-item")
-            {
-                auto child = deserialize(io);
-                if (child)
-                    child->setParentItem(item);
-            }
-
-            io.leaveSection();
+            auto child = deserialize(io);
+            if (child)
+                child->setParentItem(item);
         }
+
+        io.leaveSection();
+    }
 
     return aptr.release();
 }

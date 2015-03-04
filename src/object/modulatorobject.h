@@ -16,6 +16,8 @@
 
 namespace MO {
 
+/** Base class for an Object that encapsulates a value.
+    Derived classes specialize for possible value types. */
 class ModulatorObject : public Object
 {
     Q_OBJECT
@@ -27,10 +29,11 @@ public:
     /** Sets the id of an GUI::AbstractFrontItem for which this
         ModulatorObject should serve as a proxy.
         The object will be set invisible then. */
-    void setUiId(const QString& id) { p_uiId_ = id; setVisible(isUiProxy()); }
+    void setUiId(const QString& id) { p_uiId_ = id; setVisible(!isUiProxy()); }
 
     /** Returns the id of an GUI::AbstractFrontItem, if this
-        ModulatorObject is a proxy for the ui item. */
+        ModulatorObject is a proxy for the ui item,
+        an empty string otherwise. */
     const QString& uiId() const { return p_uiId_; }
 
     /** Returns true when this ModulatorObject is a proxy for
