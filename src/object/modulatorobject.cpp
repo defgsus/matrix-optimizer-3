@@ -10,7 +10,7 @@
 
 #include "modulatorobject.h"
 #include "io/datastream.h"
-
+#include "io/log.h"
 
 namespace MO {
 

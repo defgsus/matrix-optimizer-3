@@ -32,7 +32,14 @@ public:
     const QColor onColor() const { return colorOn_; }
     const QColor offColor() const { return colorOff_; }
     bool vertical() const { return vertical_; }
+    /* Length of value range in pixels */
+    //int length() const;
 
+    /** Returns the range (rangeMax() - rangeMin()).
+        Value is clipped to lower range 0.000001 */
+    Float range() const { return std::max(Float(0.000001), max_ - min_); }
+    Float rangeMin() const { return min_; }
+    Float rangeMax() const { return max_; }
     Float value() const { return value_; }
 
     // --------------- setter -------------------
@@ -41,6 +48,7 @@ public:
     void setOffColor(const QColor& c) { colorOff_ = c; update(); }
     void setVertical(bool v) { vertical_ = v; update(); }
 
+    void setRange(Float mi, Float ma);
     void setValue(Float value) { value_ = value; update(); }
 
     void setCallback(std::function<void(Float)> cb) { callback_ = cb; }
@@ -52,12 +60,15 @@ public:
     enum { Type = Qt::UserRole + 2048 };
     int type() const { return Type; }
 
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent * event) Q_DECL_OVERRIDE;
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event) Q_DECL_OVERRIDE;
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) Q_DECL_OVERRIDE;
+    virtual void wheelEvent(QGraphicsSceneWheelEvent*) Q_DECL_OVERRIDE;
     virtual void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
 
 private:
+
+    void setEmit_(Float v);
 
     Float value_, min_, max_,
         drag_start_value_;

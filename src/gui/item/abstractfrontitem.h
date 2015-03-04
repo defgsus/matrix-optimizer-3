@@ -139,6 +139,10 @@ public:
 
     // -------------- setter --------------------
 
+    /** Sets a new idName() for this item.
+        The id will be unique for the current session/project. */
+    void setNewId();
+
     // ----- replic. of Properties interface ----
 
     void setProperties(const Properties&);
@@ -181,6 +185,18 @@ public:
         of it's parents. */
     bool hasParent(const QGraphicsItem* parent) const;
 
+    /** Returns the parent if it's an AbstractFrontItem
+        (which it should be). */
+    AbstractFrontItem * parentFrontItem() const;
+
+    /** Returns true if this item is allowed to group other items.
+        Default value is false.
+        @see setCanHaveChildren() */
+    bool canHaveChildren() const { return p_canHaveChildren_; }
+
+    /** Enables or disables the use of this item as a group. */
+    void setCanHaveChildren(bool e) { p_canHaveChildren_ = e; }
+
     // ----------------- editing ----------------
 
     /** Starts a QDrag action with the item's id */
@@ -219,6 +235,8 @@ public:
 protected:
 
     virtual void mousePressEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
 
     virtual void dragEnterEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
     virtual void dropEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
@@ -236,7 +254,9 @@ private:
     QRectF p_oldRect_;
     QRectF p_labelRect_;
     bool p_prop_changed_,
-         p_editMode_;
+         p_editMode_,
+         p_canHaveChildren_,
+         p_startDrag_;
 };
 
 } // namespace GUI

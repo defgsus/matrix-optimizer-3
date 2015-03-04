@@ -97,8 +97,10 @@ AbstractFrontItem::AbstractFrontItem(QGraphicsItem* parent)
     , p_props_          (new Properties)
     , p_statictext_name_(0)
     , p_editMode_       (false)
+    , p_canHaveChildren_(false)
+    , p_startDrag_      (false)
 {
-    p_id_ = QString("item%1").arg(p_id_count_++);
+    setNewId();
 
     setFlag(ItemIsFocusable, true);
     setFlag(ItemSendsGeometryChanges, true);
@@ -298,7 +300,13 @@ void AbstractFrontItem::p_update_from_properties_()
     update();
 }
 
+void AbstractFrontItem::setNewId()
+{
+    p_id_ = QString("item%1").arg(p_id_count_++);
+}
+
 // -------------------------------- tree ---------------------------------------
+
 
 QList<AbstractFrontItem*> AbstractFrontItem::childFrontItems() const
 {
@@ -322,6 +330,11 @@ bool AbstractFrontItem::hasParent(const QGraphicsItem *parent) const
         p = p->parentItem();
     }
     return false;
+}
+
+AbstractFrontItem* AbstractFrontItem::parentFrontItem() const
+{
+    return dynamic_cast<AbstractFrontItem*>(parentItem());
 }
 
 // -------------------------------- editing ------------------------------------
@@ -366,8 +379,27 @@ void AbstractFrontItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
     if ((e->buttons() & Qt::LeftButton)
         && (e->modifiers() & Qt::SHIFT))
     {
+        p_startDrag_ = true;
+    }
+}
+
+void AbstractFrontItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
+{
+    if (!p_startDrag_)
+        QGraphicsItem::mouseMoveEvent(e);
+
+    if (p_startDrag_
+        && (e->pos() - e->buttonDownPos(Qt::LeftButton)).manhattanLength() > 4)
+    {
+        p_startDrag_ = false;
         startDragging();
     }
+}
+
+void AbstractFrontItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * e)
+{
+    p_startDrag_ = false;
+    QGraphicsItem::mouseReleaseEvent(e);
 }
 
 void AbstractFrontItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
@@ -381,9 +413,14 @@ void AbstractFrontItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
         if (!idata->isSameApplicationInstance())
             return;
 
+        if (!canHaveChildren())
+            return;
+
         QString id = idata->getItemId();
-        // accept the even if it's not ourselves
-        if (id != idName())
+        // accept the event if it's not ourselves
+        if (id != idName()
+                // and not already a direct child
+                && !childItems().contains(idata->getItem()))
             e->accept();
     }
 }

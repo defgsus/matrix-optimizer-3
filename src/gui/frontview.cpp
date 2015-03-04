@@ -35,12 +35,12 @@ FrontView::FrontView(QWidget *parent)
 
 void FrontView::setFrontScene(FrontScene * s)
 {
-    bool changed = gscene_ != s;
+//    bool changed = gscene_ != s;
     setScene(gscene_ = s);
 
     // install default actions
-    if (changed)
-        addActions(gscene_->createDefaultActions());
+//    if (changed)
+//        addActions(gscene_->createDefaultActions());
 }
 
 void FrontView::setFocusObject(Object * o)

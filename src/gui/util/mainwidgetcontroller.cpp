@@ -215,7 +215,8 @@ void MainWidgetController::createObjects_()
     connect(frontScene_, &FrontScene::itemsDeleted, [=](const QList<QString>& ids)
     {
         frontItemEditor_->setItem(0);
-        objectEditor_->removeUiModulators(ids);
+        if (objectEditor_->scene())
+            objectEditor_->removeUiModulators(ids);
     });
 
     // sequencer
@@ -319,6 +320,13 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Export As ..."), menuBar));
         connect(a, SIGNAL(triggered()), this, SLOT(saveInterfaceAs()));
 
+        m->addSeparator();
+
+        m->addAction(a = new QAction(tr("Edit mode"), menuBar));
+        a->setCheckable(true);
+        a->setChecked(frontScene_->isEditMode());
+        a->setShortcut(Qt::ALT + Qt::Key_E);
+        connect(a, SIGNAL(triggered(bool)), frontScene_, SLOT(setEditMode(bool)));
 
     // ######### EDIT MENU #########
     m = menuEdit_ = new QMenu(tr("Edit"), menuBar);

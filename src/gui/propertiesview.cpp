@@ -61,7 +61,9 @@ void PropertiesView::createWidgtes_()
     setUpdatesEnabled(false);
     // delete previous widgets
     for (auto w : p_widgets_)
+    {
         w->deleteLater();
+    }
     p_widgets_.clear();
     if (p_stretch_)
         p_stretch_->deleteLater();

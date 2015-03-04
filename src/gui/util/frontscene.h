@@ -68,12 +68,12 @@ public:
     void setXml(const QString&);
 
     // ------------ getter -----------------
-
+#if 0
     /** List of actions for popups and views */
     QList<QAction*> createDefaultActions();
-
+#endif
     /** Returns true when layout editing is enabled */
-    bool editMode() const;
+    bool isEditMode() const;
 
     /** Returns the position of the mouse over one of the connected views, or 0,0 */
     QPointF cursorPos() const;
@@ -93,15 +93,11 @@ public:
     /** Returns the assigned ObjectEditor */
     ObjectEditor * objectEditor() const;
 
-    // ------------ setter -----------------
-
-    /** Connects the ObjectEditor to the FrontScene */
-    void setObjectEditor(ObjectEditor * e);
-
     // ------------ items ------------------
 
-    /** Returns the matching item, or NULL */
-    AbstractFrontItem * itemForId(const QString& id) const;
+    /** Returns the matching item, or NULL.
+        The item in @p ignore will be ignored. */
+    AbstractFrontItem * itemForId(const QString& id, const AbstractFrontItem* ignore = 0) const;
 
     /** Like selectedItems() but only AbstractFrontItem castables. */
     QList<AbstractFrontItem*> selectedFrontItems() const;
@@ -128,6 +124,18 @@ public:
     /** Returns the most top-left point of all item positions */
     static QPointF getTopLeftPosition(const QList<AbstractFrontItem*>&);
 
+    // ------------ setter -----------------
+
+    /** Connects the ObjectEditor to the FrontScene */
+    void setObjectEditor(ObjectEditor * e);
+
+    /** Adds the items in @p list to @p parent.
+        If parent is NULL, the items are added to the scene.
+        If grouping for @p parent is disabled, it's parents will
+        be tried, until eventually the items are added to the scene as root.
+        @note <b>Always use this function</b> to add items. */
+    void addItems(const QList<AbstractFrontItem*>& list, AbstractFrontItem * parent = 0);
+
     // ------------ clipboard --------------
 
     /** The mime-type string for FrontScene/FrontItems */
@@ -146,7 +154,7 @@ public:
     /** Returns new instances of FrontItems from the clipboard.
         Ownership is with caller.
         On failure, an empty list is returned. */
-    QList<AbstractFrontItem*> pasteFromClipboard() const;
+    QList<AbstractFrontItem*> getItemsFromClipboard() const;
 
 signals:
 

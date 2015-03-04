@@ -75,7 +75,11 @@ void FrontItemEditor::updateWidgets_()
         // single item
         if (p_item_)
         {
-            p_label_->setText(p_item_->name());
+            p_label_->setText(p_item_->name()
+#ifndef NDEBUG
+                            + " (" + p_item_->idName() + ")"
+#endif
+                              );
             p_props_->setProperties(p_item_->properties());
         }
         // multiple items

@@ -174,6 +174,13 @@ public:
     /** Removes a single item */
     void clear(const QString& id) { p_props_.remove(id); }
 
+    /** Starts a new group. Adding a new property with set() will assign
+        the property to this group */
+    void beginGroup(const QString&);
+
+    /** Ends a property group. Same as calling beginGroup(""); */
+    void endGroup() { beginGroup(""); }
+
     /** Sets the given property */
     void set(const QString& id, const QVariant& v);
     /** Sets the given property.
@@ -207,6 +214,7 @@ public:
 private:
 
     Map p_props_;
+    //QMap<QString, QString> p_groups_;
 };
 
 } // namespace MO

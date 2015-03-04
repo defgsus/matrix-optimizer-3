@@ -51,6 +51,10 @@ protected:
     enum { Type = FIT_FLOAT };
     virtual int type() const { return Type; }
 
+    virtual QRectF boundingRect() const Q_DECL_OVERRIDE;
+
+    virtual void paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;
+
 private:
 
     struct Private;

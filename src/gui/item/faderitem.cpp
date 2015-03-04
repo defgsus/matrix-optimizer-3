@@ -10,6 +10,7 @@
 
 #include <QPainter>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsSceneWheelEvent>
 
 #include "faderitem.h"
 
@@ -18,13 +19,22 @@ namespace GUI {
 
 FaderItem::FaderItem(QGraphicsItem * p)
     : AbstractGuiItem   (p)
+    , value_            (0.)
+    , min_              (0.)
+    , max_              (100.)
     , do_drag_          (false)
     , colorOn_          (QColor(100,150,100))
     , colorOff_         (QColor(30,70,30))
     , vertical_         (true)
 {
-    min_ = 0.; max_ = 100.;
-    value_ = 25.;
+}
+
+void FaderItem::setRange(Float mi, Float ma)
+{
+    min_ = mi;
+    max_ = ma;
+    value_ = std::max(min_, std::min(max_, value_ ));
+    update();
 }
 
 void FaderItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
@@ -42,21 +52,17 @@ void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 {
     if (do_drag_)
     {
+        // get mouse delta
         Float dm = vertical_ ?
-                      e->buttonDownScenePos(Qt::LeftButton).y() - e->scenePos().y()
-                  : -(e->buttonDownScenePos(Qt::LeftButton).x() - e->scenePos().x());
+                      (e->buttonDownScenePos(Qt::LeftButton).y() - e->scenePos().y()) / height()
+                  : -((e->buttonDownScenePos(Qt::LeftButton).x() - e->scenePos().x()) / width());
 
-        Float newValue = std::max(min_,std::min(max_,
-                        drag_start_value_ + dm ));
+        // get value change factor
+        dm *= range();
+        if (e->modifiers() && Qt::SHIFT)
+            dm /= 10.;
 
-        // see if value changed
-        bool changed = newValue != value_;
-        value_ = newValue;
-
-        if (changed && callback_)
-            emit callback_(value_);
-
-        update();
+        setEmit_(drag_start_value_ + dm);
         e->accept();
     }
 }
@@ -65,6 +71,34 @@ void FaderItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     do_drag_ = false;
     AbstractGuiItem::mouseReleaseEvent(event);
+}
+
+void FaderItem::wheelEvent(QGraphicsSceneWheelEvent * e)
+{
+    // get value change factor
+    Float dm = range() / 500.;
+    if (e->modifiers() && Qt::SHIFT)
+        dm /= 10.;
+
+    if (e->delta()<0)
+        dm = -dm;
+
+    setEmit_(value_ + dm);
+}
+
+void FaderItem::setEmit_(Float v)
+{
+    Float newValue = std::max(min_,std::min(max_, v ));
+
+    // see if value changed
+    bool changed = newValue != value_;
+    value_ = newValue;
+
+    if (changed && callback_)
+    {
+        emit callback_(value_);
+        update();
+    }
 }
 
 void FaderItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)

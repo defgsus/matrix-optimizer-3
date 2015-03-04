@@ -38,7 +38,8 @@ namespace MO {
 #define MO__CHECK_SCENE \
     if (!scene_)        \
     {                   \
-        MO_WARNING("Use of ObjectEditor with no assigned scene object"); \
+        MO_WARNING("Use of ObjectEditor with no assigned scene object\n" \
+                    __FILE__ << ":" << __LINE__); \
         return false; \
     }
 

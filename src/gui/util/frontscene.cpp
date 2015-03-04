@@ -47,7 +47,7 @@ struct FrontScene::Private
     Private(FrontScene * s)
         : gscene    (s)
         , editor    (0)
-        , editMode  (true)
+        , editMode  (false)
     {
     }
 
@@ -55,9 +55,10 @@ struct FrontScene::Private
     QMenu * createNewItemMenu(const QPointF& insertPos);
 
     /** Adds the item to the graphicsscene if necessary
-        and most importantly initializes the item to the current settings.
+        and most importantly initializes the item to the current scene and settings.
         Also recurses through children.
-        @note Always use this function to add items! */
+        @note Always use this function to add items!
+        It's save to set the item's parent beforehand. */
     void addItem(AbstractFrontItem * item);
 
     /** Puts the @p item and all of it's children and sub-children into @p set */
@@ -75,6 +76,8 @@ struct FrontScene::Private
     ObjectEditor * editor;
     bool editMode;
     ActionList editActions;
+
+    QSet<QString> usedIds;
 };
 
 
@@ -132,19 +135,19 @@ void FrontScene::deserialize(IO::XmlStream& io, QList<AbstractFrontItem*>& list)
 {
     io.verifySection("user-interface");
 
-        const int ver = io.expectInt("version");
-        Q_UNUSED(ver);
+    const int ver = io.expectInt("version");
+    Q_UNUSED(ver);
 
-        while (io.nextSubSection())
+    while (io.nextSubSection())
+    {
+        if (io.section() == "interface-item")
         {
-            if (io.section() == "interface-item")
-            {
-                auto item = AbstractFrontItem::deserialize(io);
-                list << item;
-            }
-
-            io.leaveSection();
+            auto item = AbstractFrontItem::deserialize(io);
+            list << item;
         }
+
+        io.leaveSection();
+    }
 }
 
 void FrontScene::saveXml(const QString &filename) const
@@ -193,7 +196,7 @@ void FrontScene::setXml(const QString & xmls)
     xml.stopReading();
 }
 
-bool FrontScene::editMode() const
+bool FrontScene::isEditMode() const
 {
     return p_->editMode;
 }
@@ -235,11 +238,21 @@ void FrontScene::sendValue(const QString &idName, Float value)
 
 void FrontScene::Private::addItem(AbstractFrontItem *item)
 {
+    // add to scene (if not already)
     if (!item->parentItem() || item->parentItem()->scene() != gscene)
         gscene->addItem(item);
 
     // init
     item->setEditMode(editMode);
+
+    // ensure unique id
+    if (usedIds.contains(item->idName()))
+    {
+        auto oldid = item->idName();
+        item->setNewId();
+        MO_DEBUG("changed id '" << oldid << "' to '" << item->idName())
+    }
+    usedIds.insert(item->idName());
 
     // children
     auto childs = item->childFrontItems();
@@ -277,13 +290,14 @@ void FrontScene::Private::createItems(Object *root, const QPointF& pos, Abstract
 
 void FrontScene::clearInterface()
 {
-    // get the all IDs
+    // get all IDs
     QStringList ids;
     auto list = frontItems();
     for (auto i : list)
         ids << i->idName();
 
     clear();
+    p_->usedIds.clear();
     emit itemsDeleted(ids);
     emit itemUnselected();
 }
@@ -414,11 +428,11 @@ void FrontScene::getLocalPos(QPointF& inout, AbstractFrontItem** item) const
     *item = 0;
 }
 
-AbstractFrontItem * FrontScene::itemForId(const QString &id) const
+AbstractFrontItem * FrontScene::itemForId(const QString &id, const AbstractFrontItem * ignore) const
 {
     auto list = frontItems();
     for (auto i : list)
-        if (i->idName() == id)
+        if (i->idName() == id && i != ignore)
             return i;
     return 0;
 }
@@ -545,6 +559,28 @@ QPointF FrontScene::getTopLeftPosition(const QList<AbstractFrontItem*>& list)
     return p;
 }
 
+void FrontScene::addItems(const QList<AbstractFrontItem*>& list, AbstractFrontItem * parent)
+{
+    if (list.isEmpty())
+        return;
+
+    // find parent to insert
+    while (parent && !parent->canHaveChildren())
+        parent = parent->parentFrontItem();
+
+    QPointF tl = getTopLeftPosition(list);
+    parent->setPos(parent->pos() - tl);
+
+    for (auto i : list)
+    {
+        if (parent)
+            i->setParentItem(parent);
+        p_->addItem(i);
+    }
+}
+
+
+
 void FrontScene::onSelectionChanged_()
 {
     auto fitems = selectedFrontItems();
@@ -559,31 +595,33 @@ void FrontScene::onSelectionChanged_()
 }
 
 
-
+#if 0
 QList<QAction*> FrontScene::createDefaultActions()
 {
     QList<QAction*> list;
     QAction * a;
+
     list.push_back( a = new QAction(tr("Edit"), this) );
     a->setCheckable(true);
-    a->setChecked(editMode());
+    a->setChecked(isEditMode());
     a->setShortcut(Qt::ALT + Qt::Key_E);
-    connect(a, &QAction::triggered, [=]() { setEditMode(!editMode()); });
+    connect(a, &QAction::triggered, [=]() { setEditMode(!isEditMode()); });
 
     list.push_back( a = new QAction(tr("New group"), this) );
     a->setShortcut(Qt::CTRL + Qt::Key_1);
-    connect(a, &QAction::triggered, [=]() { if (editMode()) createNew(FIT_GROUP, cursorPos()); });
+    connect(a, &QAction::triggered, [=]() { if (isEditMode()) createNew(FIT_GROUP, cursorPos()); });
 
     list.push_back( a = new QAction(tr("New float control"), this) );
     a->setShortcut(Qt::CTRL + Qt::Key_2);
-    connect(a, &QAction::triggered, [=]() { if (editMode()) createNew(FIT_FLOAT, cursorPos()); });
+    connect(a, &QAction::triggered, [=]() { if (isEditMode()) createNew(FIT_FLOAT, cursorPos()); });
 
     list.push_back( a = new QAction(tr("Group selected items"), this) );
     a->setShortcut(Qt::ALT + Qt::Key_G);
-    connect(a, &QAction::triggered, [=]() { if (editMode()) groupItems(selectedFrontItems()); });
+    connect(a, &QAction::triggered, [=]() { if (isEditMode()) groupItems(selectedFrontItems()); });
 
     return list;
 }
+#endif
 
 QMenu* FrontScene::Private::createNewItemMenu(const QPointF& insertPos)
 {
@@ -624,6 +662,18 @@ void FrontScene::Private::createEditActions()
         // NEW
         editActions.addMenu(createNewItemMenu(QPointF(0,0)), gscene);
         editActions.addSeparator(gscene);
+
+        // PASTE
+        if (gscene->isItemsInClipboard())
+        {
+            editActions.append( a = new QAction(tr("paste"), gscene) );
+            a->setShortcut(Qt::CTRL + Qt::Key_V);
+            connect(a, &QAction::triggered, [=]()
+            {
+                auto list = gscene->getItemsFromClipboard();
+                gscene->addItems(list);
+            });
+        }
     }
 
     // single item actions
@@ -681,16 +731,8 @@ void FrontScene::Private::createEditActions()
             a->setShortcut(Qt::CTRL + Qt::Key_V);
             connect(a, &QAction::triggered, [=]()
             {
-                auto list = gscene->pasteFromClipboard();
-                if (list.isEmpty())
-                    return;
-                QPointF tl = getTopLeftPosition(list);
-                for (auto i : list)
-                {
-                    item->setPos(item->pos() - tl);
-                    i->setParentItem(item);
-                    addItem(i);
-                }
+                auto list = gscene->getItemsFromClipboard();
+                gscene->addItems(list, item);
             });
         }
     }
@@ -785,7 +827,7 @@ bool FrontScene::copyToClipboard(const QList<AbstractFrontItem *> & list) const
     return true;
 }
 
-QList<AbstractFrontItem*> FrontScene::pasteFromClipboard() const
+QList<AbstractFrontItem*> FrontScene::getItemsFromClipboard() const
 {
     QList<AbstractFrontItem*> list;
 
@@ -821,7 +863,7 @@ namespace { const qreal FAR = 10000000.; }
 
 void FrontScene::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 {
-    if (editMode())
+    if (isEditMode())
     {
         //update(viewsRect());
         update();
@@ -832,7 +874,7 @@ void FrontScene::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 
 void FrontScene::drawForeground(QPainter *p, const QRectF &)
 {
-    if (editMode())
+    if (isEditMode())
     {
         auto cpos = cursorPos();
 
