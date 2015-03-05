@@ -19,6 +19,7 @@
 #include <QMessageBox>
 
 #include "frontscene.h"
+#include "frontpreset.h"
 #include "gui/item/frontgroupitem.h"
 #include "gui/item/frontfloatitem.h"
 #include "object/object.h"

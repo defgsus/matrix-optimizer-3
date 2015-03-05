@@ -62,6 +62,7 @@ FrontFloatItem::~FrontFloatItem()
 }
 
 
+
 void FrontFloatItem::onPropertiesChanged()
 {
     if (!p_->fader)
@@ -96,6 +97,11 @@ void FrontFloatItem::setValue(Float v)
 {
     if (p_->fader)
         p_->fader->setValue(v);
+}
+
+void FrontFloatItem::setValueVariant(const QVariant& v)
+{
+    setValue(v.toFloat());
 }
 
 void FrontFloatItem::onEditModeChanged()

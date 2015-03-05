@@ -214,6 +214,13 @@ protected:
     /** Reimplement to return a new instance of your derived item. */
     virtual AbstractFrontItem * cloneClass() const = 0;
 
+    /** Return the value of the control as QVariant. (Used for presets)
+        If this function returns an invalid QVariant(), the item is not
+        included in presets. */
+    virtual QVariant valueVariant() const = 0;
+    /** Sets the value of the control. (Used for presets) */
+    virtual void setValueVariant(const QVariant&) = 0;
+
     /** Called whenever the Properties have changed.
         Do all necessary changes here. */
     virtual void onPropertiesChanged() { }

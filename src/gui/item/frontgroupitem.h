@@ -34,9 +34,12 @@ public:
 
     // ----------- virtual interface ------------
 protected:
-    const QString& className() const { static QString s("Group"); return s; }
+    const QString& className() const Q_DECL_OVERRIDE { static QString s("Group"); return s; }
 
-    FrontGroupItem * cloneClass() const { return new FrontGroupItem; }
+    FrontGroupItem * cloneClass() const Q_DECL_OVERRIDE { return new FrontGroupItem; }
+
+    QVariant valueVariant() const Q_DECL_OVERRIDE { return QVariant(); }
+    void setValueVariant(const QVariant&) Q_DECL_OVERRIDE { }
 
     //void onPropertiesChanged() Q_DECL_OVERRIDE;
     //void onEditModeChanged() Q_DECL_OVERRIDE;

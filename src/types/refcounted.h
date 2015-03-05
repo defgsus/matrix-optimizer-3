@@ -16,6 +16,7 @@
 namespace MO {
 
 
+/** Basic strong reference counting type */
 class RefCounted
 {
 public:
@@ -36,6 +37,12 @@ private:
     std::atomic_int p_refcount_;
 };
 
+
+/** Deleter for smart-pointer of RefCounted types */
+struct RefCountedDeleter
+{
+    void operator()(RefCounted * r) { r->releaseRef(); }
+};
 
 
 } // namespace MO

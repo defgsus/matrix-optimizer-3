@@ -119,6 +119,9 @@ Properties::Properties()
 
 void Properties::swap(Properties &other)
 {
+    if (&other == this)
+        return;
+
     p_props_.swap(other.p_props_);
 }
 

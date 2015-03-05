@@ -39,9 +39,12 @@ public:
     // ----------- virtual interface ------------
 protected:
 
-    const QString& className() const { static QString s("Float"); return s; }
+    const QString& className() const Q_DECL_OVERRIDE { static QString s("Float"); return s; }
 
-    FrontFloatItem * cloneClass() const { return new FrontFloatItem; }
+    FrontFloatItem * cloneClass() const Q_DECL_OVERRIDE { return new FrontFloatItem; }
+
+    QVariant valueVariant() const Q_DECL_OVERRIDE { return QVariant(value()); }
+    void setValueVariant(const QVariant&) Q_DECL_OVERRIDE;
 
     void onPropertiesChanged() Q_DECL_OVERRIDE;
     void onEditModeChanged() Q_DECL_OVERRIDE;
