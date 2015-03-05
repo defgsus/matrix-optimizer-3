@@ -248,9 +248,9 @@ void FrontScene::Private::addItem(AbstractFrontItem *item)
     // ensure unique id
     if (usedIds.contains(item->idName()))
     {
-        auto oldid = item->idName();
+//        auto oldid = item->idName();
         item->setNewId();
-        MO_DEBUG("changed id '" << oldid << "' to '" << item->idName())
+//        MO_DEBUG("changed id '" << oldid << "' to '" << item->idName())
     }
     usedIds.insert(item->idName());
 
