@@ -434,11 +434,14 @@ bool XmlStream::read(const QString& key, QVariant& v, const QVariant& def) const
     int idx = a.indexOf("#");
     if (idx <= 0) { v = def; return false; }
 
-    QStringRef typeName = a.left(idx);
-    QStringRef value = a.right(idx+1);
+    QString typeName = a.toString().left(idx);
+    QString value = a.toString().mid(idx+1);
 
     int typeId = QVariant::nameToType(typeName.toLatin1().constData());
     if (typeId == QVariant::Invalid) { v = def; return false; }
+
+//    MO_DEBUG("read xml QVariant: '" << a.toString() << "' ('" << typeName << "'/"
+//             "'" << value << "'/" << idx << ")");
 
     // handle compound types
     if (typeId == QVariant::Color)
@@ -452,28 +455,28 @@ bool XmlStream::read(const QString& key, QVariant& v, const QVariant& def) const
     else
     if (typeId == QVariant::Size)
     {
-        auto list = value.toString().split(",");
+        auto list = value.split(",");
         if (list.size() < 2) { v = def; return false; }
         v = QSize(list[0].toInt(), list[1].toInt());
     }
     else
     if (typeId == QVariant::SizeF)
     {
-        auto list = value.toString().split(",");
+        auto list = value.split(",");
         if (list.size() < 2) { v = def; return false; }
         v = QSizeF(list[0].toDouble(), list[1].toDouble());
     }
     else
     if (typeId == QVariant::Point)
     {
-        auto list = value.toString().split(",");
+        auto list = value.split(",");
         if (list.size() < 2) { v = def; return false; }
         v = QPoint(list[0].toInt(), list[1].toInt());
     }
     else
     {
         QVariant var;
-        var = value.toString();
+        var = value;
         if (!var.convert(typeId)) { v = def; return false; }
         v = var;
     }
