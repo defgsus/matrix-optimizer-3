@@ -494,15 +494,14 @@ QRectF AbstractFrontItem::innerRect() const
 QRectF AbstractFrontItem::rect() const
 {
     int pad = p_props_->get("padding").toInt();
-    return innerRect().adjusted(-pad, -pad, pad, pad);
+    return innerRect().adjusted(-pad, -pad-p_headerHeight_, pad, pad);
 }
 
 QRectF AbstractFrontItem::boundingRect() const
 {
-    qreal pad = p_props_->get("padding").toInt()
-                + p_props_->get("border").toInt();
-    return innerRect().adjusted(-pad, -pad, pad, pad)
-            | p_labelRect_;
+    qreal pad = p_props_->get("border").toInt();
+    return rect().adjusted(-pad, -pad, pad, pad)
+                    | p_labelRect_;
 }
 
 QColor AbstractFrontItem::borderColor() const
@@ -520,6 +519,31 @@ QColor AbstractFrontItem::backgroundColor() const
        c = c.lighter();
     return c;
 }
+
+
+void AbstractFrontItem::setHeaderHeight(qreal h)
+{
+    if (h == p_headerHeight_)
+        return;
+
+    p_headerHeight_ = h;
+
+    prepareGeometryChange();
+    update();
+}
+
+QRectF AbstractFrontItem::headerRect() const
+{
+    auto r = innerRect();
+    return QRectF(
+                r.left(), r.top() - p_headerHeight_,
+                r.width(), p_headerHeight_);
+}
+
+
+
+
+// -------------------- QGraphicsItem ---------------------------------
 
 QVariant AbstractFrontItem::itemChange(GraphicsItemChange change, const QVariant &value)
 {

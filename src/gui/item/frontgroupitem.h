@@ -41,7 +41,7 @@ protected:
     QVariant valueVariant() const Q_DECL_OVERRIDE { return QVariant(); }
     void setValueVariant(const QVariant&) Q_DECL_OVERRIDE { }
 
-    //void onPropertiesChanged() Q_DECL_OVERRIDE;
+    void onPropertiesChanged() Q_DECL_OVERRIDE;
     //void onEditModeChanged() Q_DECL_OVERRIDE;
 public:
 

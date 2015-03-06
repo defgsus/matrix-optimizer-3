@@ -138,6 +138,12 @@ public:
     /** Returns the list of all presets */
     QList<const FrontPreset*> presets() const;
 
+    /** Returns the list of all presets with their ids */
+    QList<QPair<FrontPreset*, QString>> presetsIds();
+
+    /** Returns the list of all presets with their ids */
+    QList<QPair<const FrontPreset*, QString>> presetsIds() const;
+
     // ------------- setter -------------------
 
     void setName(const QString& name) { p_name_ = name; }

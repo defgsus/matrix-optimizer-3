@@ -176,6 +176,13 @@ public:
     /** Returns true when layout editing is enabled for this item. */
     bool isEditMode() const { return p_editMode_; }
 
+    /** Changes the height of the header.
+        The rect() of this item will be adjusted to make room inside */
+    void setHeaderHeight(qreal h);
+
+    /** Returns the rectangle of the header, as set with setHeaderHeight() */
+    QRectF headerRect() const;
+
     // ------------------ tree ------------------
 
     /** All direct children that are AbstractFrontItem castable */
@@ -258,8 +265,9 @@ private:
     QString p_id_;
     Properties * p_props_;
     QStaticText * p_statictext_name_;
-    QRectF p_oldRect_;
-    QRectF p_labelRect_;
+    QRectF p_oldRect_,
+           p_labelRect_;
+    qreal p_headerHeight_;
     bool p_prop_changed_,
          p_editMode_,
          p_canHaveChildren_,

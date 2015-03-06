@@ -9,6 +9,8 @@
 */
 
 #include "frontgroupitem.h"
+#include "gui/util/frontpreset.h"
+#include "types/properties.h"
 //#include "types/properties.h"
 
 
@@ -28,6 +30,8 @@ FrontGroupItem::FrontGroupItem(QGraphicsItem * parent)
 
     initProperty("padding", 8);
     initProperty("border", 3.);
+
+    initProperty("presets-enabled", false);
 }
 
 
@@ -35,18 +39,22 @@ FrontGroupItem::~FrontGroupItem()
 {
 }
 
-/*
+
 void FrontGroupItem::onPropertiesChanged()
 {
-    if (!p_->fader)
-    {
-        p_->fader = new FaderItem(this);
-        onEditModeChanged();
-    }
+    bool doPreset = properties().get("presets-enabled").toBool();
 
-    p_->fader->setRect(innerRect());
+    if (doPreset)
+    {
+        setHeaderHeight(30);
+    }
+    else
+    {
+        setHeaderHeight(0);
+    }
 }
 
+/*
 void FrontGroupItem::onEditModeChanged()
 {
     // disable mouse events for controls in edit mode
