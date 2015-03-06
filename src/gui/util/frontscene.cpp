@@ -206,10 +206,20 @@ void FrontScene::setEditMode(bool e)
 {
     if (p_->editMode == e)
         return;
+
+    // flag
     p_->editMode = e;
+    // and each item
     auto list = frontItems();
     for (auto i : list)
         i->setEditMode(e);
+
+    // also hide properties
+    if (!e)
+        emit itemUnselected();
+
+    emit editModeChanged(e);
+
     update();
 }
 
@@ -584,6 +594,9 @@ void FrontScene::addItems(const QList<AbstractFrontItem*>& list, AbstractFrontIt
 
 void FrontScene::onSelectionChanged_()
 {
+    if (!isEditMode())
+        return;
+
     auto fitems = selectedFrontItems();
     if (fitems.isEmpty())
         emit itemUnselected();
@@ -799,7 +812,7 @@ const QString FrontScene::FrontItemMimeType = "matrixoptimizer/frontitems-xml";
 
 bool FrontScene::isItemsInClipboard() const
 {
-    return application->clipboard()->mimeData()->hasFormat(FrontItemMimeType);
+    return application()->clipboard()->mimeData()->hasFormat(FrontItemMimeType);
 }
 
 bool FrontScene::copyToClipboard(const QList<AbstractFrontItem *> & list) const
@@ -829,7 +842,7 @@ bool FrontScene::copyToClipboard(const QList<AbstractFrontItem *> & list) const
     auto data = new QMimeData;
     data->setData(FrontItemMimeType, xml.data().toUtf8());
     // put into clipboard
-    application->clipboard()->setMimeData(data);
+    application()->clipboard()->setMimeData(data);
 
     return true;
 }
@@ -838,7 +851,7 @@ QList<AbstractFrontItem*> FrontScene::getItemsFromClipboard() const
 {
     QList<AbstractFrontItem*> list;
 
-    auto data = application->clipboard()->mimeData();
+    auto data = application()->clipboard()->mimeData();
     if (!data->hasFormat(FrontItemMimeType))
         return list;
 

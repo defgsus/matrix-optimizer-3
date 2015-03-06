@@ -107,7 +107,7 @@ void FrontFloatItem::setValueVariant(const QVariant& v)
 void FrontFloatItem::onEditModeChanged()
 {
     // disable mouse events for controls in edit mode
-    Qt::MouseButtons mb = editMode() ? Qt::NoButton : Qt::AllButtons;
+    Qt::MouseButtons mb = isEditMode() ? Qt::NoButton : Qt::AllButtons;
 
     if (p_->fader)
         p_->fader->setAcceptedMouseButtons(mb);

@@ -52,7 +52,7 @@ namespace {
 ObjectFactory * ObjectFactory::instance_ = 0;
 
 ObjectFactory::ObjectFactory() :
-    QObject(application)
+    QObject(application())
 {
 }
 

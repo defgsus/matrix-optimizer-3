@@ -77,7 +77,7 @@ TextEditDialog::TextEditDialog(TextType textType, QWidget *parent) :
 
     // --- load user settings ---
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
 
     p_->createWidgets();
@@ -91,7 +91,7 @@ TextEditDialog::TextEditDialog(const QString &text, TextType textType, QWidget *
 
 TextEditDialog::~TextEditDialog()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
     delete p_;
 }
 

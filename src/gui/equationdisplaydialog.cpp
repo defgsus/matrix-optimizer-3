@@ -31,7 +31,7 @@ EquationDisplayDialog::EquationDisplayDialog(QWidget *parent) :
 
     setMinimumSize(640,800);
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     createWidgets_();
 
@@ -176,29 +176,29 @@ void EquationDisplayDialog::updateModeBox_()
 
 void EquationDisplayDialog::saveSettings_()
 {
-    settings->storeGeometry(this);
-    settings->setValue("EquEdit/equation", display_->equation());
-    settings->setValue("EquEdit/paintmode", display_->paintMode());
-    settings->setValue("EquEdit/x0", spinX0_->value());
-    settings->setValue("EquEdit/x1", spinX1_->value());
-    settings->setValue("EquEdit/y0", spinY0_->value());
-    settings->setValue("EquEdit/y1", spinY1_->value());
+    settings()->storeGeometry(this);
+    settings()->setValue("EquEdit/equation", display_->equation());
+    settings()->setValue("EquEdit/paintmode", display_->paintMode());
+    settings()->setValue("EquEdit/x0", spinX0_->value());
+    settings()->setValue("EquEdit/x1", spinX1_->value());
+    settings()->setValue("EquEdit/y0", spinY0_->value());
+    settings()->setValue("EquEdit/y1", spinY1_->value());
 }
 
 void EquationDisplayDialog::loadSettings_()
 {
-    const QString equ = settings->getValue("EquEdit/equation").toString();
+    const QString equ = settings()->getValue("EquEdit/equation").toString();
     editor_->setPlainText( equ );
 
     auto pm = (EquationDisplayWidget::PaintMode)
-                settings->getValue("EquEdit/paintmode").toInt();
+                settings()->getValue("EquEdit/paintmode").toInt();
     display_->setPaintMode( pm );
     updateModeBox_();
 
-    spinX0_->setValue( settings->getValue("EquEdit/x0").toDouble() );
-    spinX1_->setValue( settings->getValue("EquEdit/x1").toDouble() );
-    spinY0_->setValue( settings->getValue("EquEdit/y0").toDouble() );
-    spinY1_->setValue( settings->getValue("EquEdit/y1").toDouble() );
+    spinX0_->setValue( settings()->getValue("EquEdit/x0").toDouble() );
+    spinX1_->setValue( settings()->getValue("EquEdit/x1").toDouble() );
+    spinY0_->setValue( settings()->getValue("EquEdit/y0").toDouble() );
+    spinY1_->setValue( settings()->getValue("EquEdit/y1").toDouble() );
     updateViewspace_();
 }
 

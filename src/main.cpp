@@ -8,7 +8,7 @@
     <p>created 2014/04/21</p>
 */
 
-#include <iostream>
+#include <memory>
 
 #include <QFile>
 #include <QTextStream>
@@ -23,7 +23,7 @@
 #include "gui/mainwindow.h"
 #include "gui/splashscreen.h"
 #include "engine/clientengine.h"
-
+#include "maincommandline.h"
 
 void showHelp()
 {
@@ -36,6 +36,7 @@ void showHelp()
         << MO::applicationName()
         << "\n\n"
         << s.readAll()
+        << "\n" << MO::MainCommandLine().help()
         );
 }
 
@@ -107,73 +108,77 @@ int main(int argc, char *argv[])
         MO::setThisApplicationToClient();
     }
     else
-    if (!command.isEmpty())
+    if (!command.isEmpty() && !command.startsWith("-"))
     {
         showHelp();
-        MO_PRINT("Unrecognized command '" << command << "'");
+        MO_PRINT("Unrecognized mode '" << command << "'");
         return 1;
     }
 
-    // any 3rd library code that needs global initialization
-    // goes in here
-    MO::startOfProgram();
-
-    int dummy;
-    MO::application = new MO::Application(dummy, 0);
-    MO::settings = new MO::Settings(MO::application);
-
-    // tests with QApplication
-    //{ MO::TestHelpSystem test; return test.run(); }
-    //{ MO::TestCommandLineParser test; return test.run(argc, argv, 1); }
-
-
-    // ------ start program ---------
-
+    // application scope
     int ret;
-
-    // --- client engine ---
-    if (MO::isClient())
     {
-        ret = MO::clientEngine().run(argc, argv, 2);
-    }
+        // create QApplication
+        MO::createApplication(argc, argv);
+        std::unique_ptr<MO::Application> app_deleter(MO::application());
 
-    // --- server/gui engine ---
-    else
-    {
+        MO::application()->setAttribute(Qt::AA_X11InitThreads);
 
-    #ifdef NDEBUG
-        MO::GUI::SplashScreen * splash = 0;
-        if (1)
+        // tests with QApplication
+        //{ MO::TestHelpSystem test; return test.run(); }
+        //{ MO::TestCommandLineParser test; return test.run(argc, argv, 1); }
+
+        // any 3rd library code that needs global initialization
+        // goes in here
+        MO::startOfProgram();
+
+        // ------ start program ---------
+
+        // --- client engine ---
+        if (MO::isClient())
         {
-            splash = new MO::GUI::SplashScreen();
-            splash->show();
+            ret = MO::clientEngine().run(argc, argv, 2);
         }
-    #endif
 
-        auto mainwin = new MO::GUI::MainWindow;
-        MO::application->setMainWindow(mainwin);
+        // --- server/gui engine ---
+        else
+        {
+            // parse server/gui/desktop commandline
+            MO::MainCommandLine cl;
+            auto comret= cl.parse(argc, argv, 1);
+            if (comret != MO::MainCommandLine::Ok)
+                return comret == MO::MainCommandLine::Error ? 1 : 0;
 
-        mainwin->show();
+        #ifdef NDEBUG
+            MO::GUI::SplashScreen * splash = 0;
+            if (1)
+            {
+                splash = new MO::GUI::SplashScreen();
+                splash->show();
+            }
+        #endif
 
-        //auto audiowin = new MO::GUI::AudioLinkWindow;
-        //audiowin->show();
+            auto mainwin = new MO::GUI::MainWindow;
+            MO::application()->setMainWindow(mainwin);
 
-    #ifdef NDEBUG
-        if (splash)
-            splash->raise();
-    #endif
+            mainwin->show();
 
-        MO::application->setStyleSheet(MO::settings->styleSheet());
+        #ifdef NDEBUG
+            if (splash)
+                splash->raise();
+        #endif
 
-        //MO::GUI::QObjectInspector oi(&w);
-        //oi.show();
+            MO::application()->setStyleSheet(MO::settings()->styleSheet());
 
-        ret = MO::application->exec();
+            //MO::GUI::QObjectInspector oi(&w);
+            //oi.show();
+
+            ret = MO::application()->exec();
+        }
+
+        // ----- end of program ------
+
     }
-
-    // ----- end of program ------
-
-    delete MO::application;
 
     std::cout << std::endl
 #if (0)

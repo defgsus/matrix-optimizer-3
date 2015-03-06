@@ -37,7 +37,7 @@ QObjectInspector::QObjectInspector(QObject * rootObject, QWidget *parent) :
     setMinimumSize(900,400);
     setCentralWidget(new QWidget(this));
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     auto lh = new QHBoxLayout(centralWidget());
 
@@ -60,7 +60,7 @@ QObjectInspector::QObjectInspector(QObject * rootObject, QWidget *parent) :
 
 QObjectInspector::~QObjectInspector()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
 }
 
 void QObjectInspector::setRootObject(QObject *rootObject)

@@ -52,7 +52,7 @@ void ObjectGraphView::createWidgets_()
         // -- qgraphicsview --
 
         gview_ = new QGraphicsView(this);
-        lv->addWidget(gview_);
+        lv->addWidget(gview_, 1);
 
         gview_->setBackgroundBrush(ObjectGraphSettings::brushBackground());
 #if QT_VERSION >= 0x050300

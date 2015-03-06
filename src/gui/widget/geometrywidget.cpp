@@ -34,11 +34,11 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     tex_            (0),
     texNorm_        (0),
     lights_         (new GL::LightSettings()),
-    showGrid_       (settings->value("GeometryWidget/showGrid", false).toBool()),
-    showTexture_    (settings->value("GeometryWidget/showTexture", false).toBool()),
-    showNormalMap_  (settings->value("GeometryWidget/showNormalMap", false).toBool()),
-    showLights_     (settings->value("GeometryWidget/showLights", false).toBool()),
-    pointsize_      (settings->value("GeometryWidget/pointsize", 4).toInt())
+    showGrid_       (settings()->value("GeometryWidget/showGrid", false).toBool()),
+    showTexture_    (settings()->value("GeometryWidget/showTexture", false).toBool()),
+    showNormalMap_  (settings()->value("GeometryWidget/showNormalMap", false).toBool()),
+    showLights_     (settings()->value("GeometryWidget/showLights", false).toBool()),
+    pointsize_      (settings()->value("GeometryWidget/pointsize", 4).toInt())
 {
     setMinimumSize(128, 128);
 
@@ -64,11 +64,11 @@ void GeometryWidget::setLights_(Float amp, const Mat4& trans)
 
 GeometryWidget::~GeometryWidget()
 {
-    settings->setValue("GeometryWidget/showGrid", showGrid_);
-    settings->setValue("GeometryWidget/showTexture", showTexture_);
-    settings->setValue("GeometryWidget/showNormalMap", showNormalMap_);
-    settings->setValue("GeometryWidget/showLights", showLights_);
-    settings->setValue("GeometryWidget/pointsize", pointsize_);
+    settings()->setValue("GeometryWidget/showGrid", showGrid_);
+    settings()->setValue("GeometryWidget/showTexture", showTexture_);
+    settings()->setValue("GeometryWidget/showNormalMap", showNormalMap_);
+    settings()->setValue("GeometryWidget/showLights", showLights_);
+    settings()->setValue("GeometryWidget/pointsize", pointsize_);
 
     delete drawable_;
     delete lights_;

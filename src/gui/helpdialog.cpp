@@ -35,7 +35,7 @@ HelpDialog::HelpDialog(const QString &url, QWidget *parent)
 
     setMinimumSize(640,480);
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     createWidgets_();
 
@@ -44,12 +44,12 @@ HelpDialog::HelpDialog(const QString &url, QWidget *parent)
 
 HelpDialog::~HelpDialog()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
 }
 
 void HelpDialog::run(const QString &url)
 {
-    auto help = new HelpDialog(url, application->mainWindow());
+    auto help = new HelpDialog(url, application()->mainWindow());
     help->setAttribute(Qt::WA_DeleteOnClose);
     help->show();
 }

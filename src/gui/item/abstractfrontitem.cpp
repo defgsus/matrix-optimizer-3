@@ -54,7 +54,7 @@ void FrontItemMimeData::setItem(AbstractFrontItem* item)
     setData(ItemPtrMimeType,
             QByteArray::fromRawData(reinterpret_cast<const char*>(item), sizeof(item)) );
     setData(AppPtrMimeType,
-            QByteArray::fromRawData(reinterpret_cast<const char*>(application), sizeof(application)) );
+            QByteArray::fromRawData(reinterpret_cast<const char*>(application()), sizeof(application())) );
 }
 
 QString FrontItemMimeData::getItemId() const
@@ -79,7 +79,7 @@ bool FrontItemMimeData::isSameApplicationInstance() const
         return true;
     const char * d = data(AppPtrMimeType).constData();
     auto app = reinterpret_cast<const Application*>(d);
-    return app == application;
+    return app == application();
 }
 
 
@@ -470,7 +470,7 @@ void AbstractFrontItem::setEditMode(bool e)
 {
     p_editMode_ = e;
     setFlag(ItemIsMovable, e);
-    setFlag(ItemIsSelectable, e);
+    setFlag(ItemIsSelectable, true);
     // derived code
     onEditModeChanged();
 }
@@ -508,7 +508,7 @@ QRectF AbstractFrontItem::boundingRect() const
 QColor AbstractFrontItem::borderColor() const
 {
     QColor c = p_props_->get("border-color").value<QColor>();
-    if (isSelected())
+    if (isSelected() && isEditMode())
        c = c.lighter();
     return c;
 }
@@ -516,7 +516,7 @@ QColor AbstractFrontItem::borderColor() const
 QColor AbstractFrontItem::backgroundColor() const
 {
     QColor c = p_props_->get("background-color").value<QColor>();
-    if (isSelected())
+    if (isSelected() && type() != FIT_GROUP)
        c = c.lighter();
     return c;
 }

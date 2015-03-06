@@ -77,7 +77,7 @@ void Window::setScreen(uint screenIndex)
 {
     // XXX workaround because setScreen() is not very reliable right now
     // ( https://bugreports.qt-project.org/browse/QTBUG-33138 )
-    setGeometry(application->screenGeometry(screenIndex));
+    setGeometry(application()->screenGeometry(screenIndex));
 }
 
 void Window::setRenderer(SceneRenderer *renderer)

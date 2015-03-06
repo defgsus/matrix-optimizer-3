@@ -58,7 +58,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     setObjectName("ProjectorSetupDialog");
     setMinimumSize(760,600);
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     createWidgets_();
     createMenu_();
@@ -77,7 +77,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
 
     delete copyOfCameraSettings_;
     delete cameraSettings_;
@@ -528,7 +528,7 @@ void ProjectorSetupDialog::createWidgets_()
                 comboContent_->addItem(tr("display blendings"));
                 comboContent_->addItem(tr("display test scene"));
                 //comboContent_->addItem(tr("display current scene"));
-                comboContent_->setCurrentIndex(settings->value(objectName() + "/displayContent", 0).toInt());
+                comboContent_->setCurrentIndex(settings()->value(objectName() + "/displayContent", 0).toInt());
                 connect(comboContent_, SIGNAL(currentIndexChanged(int)),
                         this, SLOT(onComboContent_()));
 
@@ -1011,7 +1011,7 @@ void ProjectorSetupDialog::loadDefault_()
     if (!saveToClear_())
         return;
 
-    *settings_ = settings->getDefaultProjectionSettings();
+    *settings_ = settings()->getDefaultProjectionSettings();
     *orgSettings_ = *settings_;
     *projectorSettings_ = settings_->projectorSettings(0);
     *cameraSettings_ = settings_->cameraSettings(0);
@@ -1029,7 +1029,7 @@ void ProjectorSetupDialog::loadDefault_()
 
 void ProjectorSetupDialog::saveDefault_()
 {
-    settings->setDefaultProjectionSettings(*settings_);
+    settings()->setDefaultProjectionSettings(*settings_);
 
     // update clients
     if (serverEngine().isRunning())
@@ -1268,7 +1268,7 @@ void ProjectorSetupDialog::onComboContent_()
         idx = 0;
 
     // store in settings
-    settings->setValue(objectName() + "/displayContent", idx);
+    settings()->setValue(objectName() + "/displayContent", idx);
 
     if (idx == 0)
         display_->setShowTexture(false);

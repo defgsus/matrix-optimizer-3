@@ -22,7 +22,10 @@ class DomeSettings;
 class ProjectorSettings;
 class CameraSettings;
 class ProjectionSystemSettings;
+class Settings;
 
+/** singleton instance */
+Settings * settings();
 
 class Settings : public QSettings
 {
@@ -97,9 +100,6 @@ private:
 
     QMap<QString, QVariant> defaultValues_;
 };
-
-/** singleton instance */
-extern Settings * settings;
 
 
 } // namespace MO

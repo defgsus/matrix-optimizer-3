@@ -315,7 +315,7 @@ void Shader::getUniforms_()
     MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &labelLength) );
 
     // don't expose these to user
-    QStringList specialUniforms;// XXX = appSettings->getShaderUniforms();
+    QStringList specialUniforms;// XXX = appsettings()->getShaderUniforms();
 
     // get each uniform data
     for (int i=0; i<numu; ++i)

@@ -58,7 +58,7 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     setObjectName("_GeometryWidget");
 
     setMinimumSize(960,600);
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     if (set)
         *settings_ = *set;
@@ -76,7 +76,7 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
 
 GeometryDialog::~GeometryDialog()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
     delete settings_;
 }
 

@@ -26,7 +26,7 @@ ServerEngine & serverEngine()
 {
     static ServerEngine * instance_ = 0;
     if (!instance_)
-        instance_ = new ServerEngine(application);
+        instance_ = new ServerEngine(application());
 
     return *instance_;
 }
@@ -202,7 +202,7 @@ void ServerEngine::sendProjectionSettings()
     auto event = new NetEventRequest;
     event->setRequest(NetEventRequest::SET_PROJECTION_SETTINGS);
 
-    auto s = settings->getDefaultProjectionSettings();
+    auto s = settings()->getDefaultProjectionSettings();
     QByteArray data;
     s.serialize(data);
 
@@ -236,7 +236,7 @@ void ServerEngine::sendProjectionSettings_(ClientInfo & inf)
     NetEventRequest event;
     event.setRequest(NetEventRequest::SET_PROJECTION_SETTINGS);
 
-    auto s = settings->getDefaultProjectionSettings();
+    auto s = settings()->getDefaultProjectionSettings();
     QByteArray data;
     s.serialize(data);
 

@@ -120,8 +120,8 @@ bool UdpAudioConnection::openForRead()
 {
     MO_ASSERT(isClient(), "wrong request");
 
-    return p_->udp->openMulticastRead(settings->udpAudioMulticastAddress(),
-                                      settings->udpAudioMulticastPort());
+    return p_->udp->openMulticastRead(settings()->udpAudioMulticastAddress(),
+                                      settings()->udpAudioMulticastPort());
 }
 
 void UdpAudioConnection::close()
@@ -153,8 +153,8 @@ bool UdpAudioConnection::sendAudioBuffer(AUDIO::AudioBuffer * buf, SamplePos pos
     Private::constructPacket_(data, b);
 
     // send off
-    return p_->udp->sendDatagram(data, QHostAddress(settings->udpAudioMulticastAddress()),
-                                       settings->udpAudioMulticastPort());
+    return p_->udp->sendDatagram(data, QHostAddress(settings()->udpAudioMulticastAddress()),
+                                       settings()->udpAudioMulticastPort());
 }
 #endif
 

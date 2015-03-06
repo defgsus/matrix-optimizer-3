@@ -27,20 +27,25 @@ FrontView::FrontView(QWidget *parent)
 #endif
 
     setRubberBandSelectionMode(Qt::IntersectsItemShape);
-    setDragMode(RubberBandDrag);
     setMouseTracking(true);
 
     setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+
 }
 
 void FrontView::setFrontScene(FrontScene * s)
 {
-//    bool changed = gscene_ != s;
+    bool changed = gscene_ != s;
     setScene(gscene_ = s);
 
-    // install default actions
-//    if (changed)
-//        addActions(gscene_->createDefaultActions());
+    if (changed)
+    {
+        onEditModeChange_(gscene_->isEditMode());
+        connect(gscene_, SIGNAL(editModeChanged(bool)),
+                this, SLOT(onEditModeChange_(bool)));
+        // install default actions
+        //addActions(gscene_->createDefaultActions());
+    }
 }
 
 void FrontView::setFocusObject(Object * o)
@@ -48,6 +53,14 @@ void FrontView::setFocusObject(Object * o)
     //gscene_->setFocusObject(o);
     //if (auto i = gscene_->itemForObject(o))
     //    centerOn(i);
+}
+
+void FrontView::onEditModeChange_(bool e)
+{
+    if (e)
+        setDragMode(RubberBandDrag);
+    else
+        setDragMode(ScrollHandDrag);
 }
 
 } // namespace GUI

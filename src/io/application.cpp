@@ -18,11 +18,13 @@
 #include <QScreen>
 #include <QDockWidget>
 
+#include "gui/mainwindow.h"
 #include "io/application.h"
-#include "io/error.h"
 #include "io/isclient.h"
 #include "io/settings.h"
-#include "gui/mainwindow.h"
+#include "io/error.h"
+#include "io/log.h"
+
 
 // usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
@@ -36,19 +38,34 @@
 
 namespace MO {
 
-Application * application;
+namespace { static Application * app_ = 0; }
+
+void createApplication(int &argc, char **argv)
+{
+    app_ = new MO::Application(argc, argv);
+}
+
+Application * application()
+{
+    return app_;
+}
 
 Application::Application(int& argc, char** args)
     : QApplication  (argc, args)
 {
-
+    MO_DEBUG_GUI("Application::Application()");
 }
 
+void Application::setUserName(const QString &n)
+{
+    userName_ = n;
+    sessionId_ = n;
+}
 
 QDockWidget * Application::createDockWidget(const QString& name, QWidget *w)
 {
     auto main = qobject_cast<GUI::MainWindow*>(mainWindow());
-    MO_ASSERT(main, "wrong main window " << mainWindow());
+    MO_ASSERT(main, "wrong main window class " << mainWindow());
 
     auto dw = main->createDockWidget(name, w);
 

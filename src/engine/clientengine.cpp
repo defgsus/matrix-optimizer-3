@@ -43,7 +43,7 @@ ClientEngine & clientEngine()
 {
     static ClientEngine * instance_ = 0;
     if (!instance_)
-        instance_ = new ClientEngine(application);
+        instance_ = new ClientEngine(application());
 
     return *instance_;
 }
@@ -94,8 +94,8 @@ bool ClientEngine::isRunning() const
 int ClientEngine::run(int argc, char ** argv, int skip)
 {
     // stats
-    settings->setValue("Stats/clientRuns",
-                        settings->value("Stats/clientRuns").toInt() + 1);
+    settings()->setValue("Stats/clientRuns",
+                        settings()->value("Stats/clientRuns").toInt() + 1);
 
     // print some info
     MO_PRINT(applicationName());
@@ -138,13 +138,13 @@ int ClientEngine::run(int argc, char ** argv, int skip)
 
     // when not connecting to server and no window is opened
     // we exit
-    if (!cl_->doNetwork() && application->allWindows().isEmpty())
+    if (!cl_->doNetwork() && application()->allWindows().isEmpty())
     {
         MO_PRINT(tr("Nothing to do, exiting..."));
     }
     else
 
-        ret = application->exec();
+        ret = application()->exec();
 
     shutDown_();
 
@@ -190,7 +190,7 @@ void ClientEngine::startNetwork_()
     connect(client_, SIGNAL(connected()), this, SLOT(onConnected_()));
     connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
-    client_->connectTo(settings->serverAddress());
+    client_->connectTo(settings()->serverAddress());
 
     // receive files-ready signal from file cacher
     connect(&IO::fileManager(), SIGNAL(filesReady()),
@@ -226,8 +226,8 @@ void ClientEngine::showInfoWindow_(bool enable)
 
         // move to desired desktop
         infoWindow_->setGeometry(
-                    application->screenGeometry(
-                        settings->desktop()));
+                    application()->screenGeometry(
+                        settings()->desktop()));
         // show
         infoWindow_->showFullScreen();
     }
@@ -247,7 +247,7 @@ void ClientEngine::showRenderWindow_(bool enable)
                 createGlObjects_();
 
             // move to desired desktop
-            glWindow_->setScreen(settings->desktop());
+            glWindow_->setScreen(settings()->desktop());
             // show
             glWindow_->showFullScreen();
         }
@@ -270,7 +270,7 @@ void ClientEngine::updateDesktopIndex_()
         if (vis)
             glWindow_->hide();
 
-        glWindow_->setScreen(settings->desktop());
+        glWindow_->setScreen(settings()->desktop());
 
         // XXX moving by above 'workaround' leaves fullscreen
         if (vis)
@@ -284,8 +284,8 @@ void ClientEngine::updateDesktopIndex_()
         if (vis)
             infoWindow_->hide();
 
-        infoWindow_->setGeometry(application->screenGeometry(
-                                     settings->desktop()));
+        infoWindow_->setGeometry(application()->screenGeometry(
+                                     settings()->desktop()));
         if (vis)
             infoWindow_->showFullScreen();
     }
@@ -338,7 +338,7 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         if (e->request() == NetEventRequest::SET_DESKTOP_INDEX)
         {
             MO_NETLOG(EVENT, "setting desktop/screen index to " << e->data().toInt());
-            settings->setDesktop(e->data().toInt());
+            settings()->setDesktop(e->data().toInt());
             updateDesktopIndex_();
             return;
         }
@@ -435,13 +435,13 @@ void ClientEngine::setProjectionSettings_(NetEventRequest * e)
     {
         s.deserialize(data);
         // update system settings
-        settings->setDefaultProjectionSettings(s);
+        settings()->setDefaultProjectionSettings(s);
 
         // update scene
         if (scene_)
         {
             scene_->setProjectionSettings(s);
-            scene_->setProjectorIndex(settings->clientIndex());
+            scene_->setProjectorIndex(settings()->clientIndex());
         }
     }
     catch (const Exception& e)
@@ -491,8 +491,8 @@ void ClientEngine::setSceneObject(Scene * scene)
     // update resolution from output window
     scene_->setResolution(glWindow_->frameSize());
     // update projection settings
-    scene_->setProjectionSettings(settings->getDefaultProjectionSettings());
-    scene_->setProjectorIndex(settings->clientIndex());
+    scene_->setProjectionSettings(settings()->getDefaultProjectionSettings());
+    scene_->setProjectorIndex(settings()->clientIndex());
 
     // create audio engine
     if (!audioEngine_)
@@ -547,7 +547,7 @@ void ClientEngine::setPlayback_(bool play)
 void ClientEngine::setClientIndex_(int index)
 {
     // XXX this variable requires parsing the whole xml
-    const int maxi = settings->getDefaultProjectionSettings().numProjectors();
+    const int maxi = settings()->getDefaultProjectionSettings().numProjectors();
 
     MO_ASSERT(maxi > 0, "Somethings wrong with the DefaultProjectionSettings");
 
@@ -557,7 +557,7 @@ void ClientEngine::setClientIndex_(int index)
                    << " because it's out of range (0-" << (maxi-1) << ")");
         index = maxi - 1;
     }
-    settings->setClientIndex(index);
+    settings()->setClientIndex(index);
     if (scene_)
         scene_->setProjectorIndex(index);
     sendState_();
@@ -625,8 +625,8 @@ void ClientEngine::setNextScene_()
 void ClientEngine::sendState_()
 {
     NetEventClientState state;
-    state.state_.index_ = settings->clientIndex();
-    state.state_.desktop_ = settings->desktop();
+    state.state_.index_ = settings()->clientIndex();
+    state.state_.desktop_ = settings()->desktop();
     state.state_.isInfoWindow_ = infoWindow_ && infoWindow_->isVisible();
     state.state_.isRenderWindow_ = glWindow_ && glWindow_->isVisible();
     state.state_.isSceneReady_ = scene_ && !nextScene_;

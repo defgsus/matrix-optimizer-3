@@ -27,7 +27,7 @@ FileManager & fileManager()
 {
     static FileManager * instance_ = 0;
     if (!instance_)
-        instance_ = new FileManager(application);
+        instance_ = new FileManager(application());
 
     return *instance_;
 }

@@ -29,7 +29,7 @@ ObjectDescription::ObjectDescription(Object * o)
       p_id_     (o == 0 ? "" : o->idName()),
       p_name_   (o == 0 ? "" : o->name()),
       p_ptr_    (o),
-      p_app_    (application)
+      p_app_    (application())
 { }
 
 QByteArray ObjectDescription::toByteArray() const

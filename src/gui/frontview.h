@@ -39,6 +39,10 @@ public slots:
     /** Focuses the view on the object */
     void setFocusObject(Object * o);
 
+private slots:
+
+    void onEditModeChange_(bool e);
+
 private:
 
     FrontScene * gscene_;

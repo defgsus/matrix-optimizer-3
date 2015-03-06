@@ -297,8 +297,8 @@ void AudioDevice::stop()
 
 bool AudioDevice::isAudioConfigured()
 {
-    const QString inname = settings->getValue("Audio/indevice").toString();
-    const QString outname = settings->getValue("Audio/outdevice").toString();
+    const QString inname = settings()->getValue("Audio/indevice").toString();
+    const QString outname = settings()->getValue("Audio/outdevice").toString();
     // it's enough to have outputs defined
     return !(outname.isEmpty() || outname == "None");
 }
@@ -306,10 +306,10 @@ bool AudioDevice::isAudioConfigured()
 Configuration AudioDevice::defaultConfiguration()
 {
     return Configuration(
-            settings->value("Audio/samplerate", 44100).toInt(),
-            settings->value("Audio/buffersize", 256).toInt(),
-            settings->value("Audio/channelsIn", 0).toInt(),
-            settings->value("Audio/channelsOut", 0).toInt());
+            settings()->value("Audio/samplerate", 44100).toInt(),
+            settings()->value("Audio/buffersize", 256).toInt(),
+            settings()->value("Audio/channelsIn", 0).toInt(),
+            settings()->value("Audio/channelsOut", 0).toInt());
 }
 
 bool AudioDevice::initFromSettings()
@@ -318,9 +318,9 @@ bool AudioDevice::initFromSettings()
 
     // check config
 
-    QString inDeviceName = settings->getValue("Audio/indevice").toString();
+    QString inDeviceName = settings()->getValue("Audio/indevice").toString();
 
-    QString outDeviceName = settings->getValue("Audio/outdevice").toString();
+    QString outDeviceName = settings()->getValue("Audio/outdevice").toString();
     if (outDeviceName.isEmpty())
         return false;
 
@@ -378,10 +378,10 @@ bool AudioDevice::initFromSettings()
     }
 
     // get the other settings
-    uint sampleRate = settings->getValue("Audio/samplerate").toInt();
-    uint bufferSize = settings->getValue("Audio/buffersize").toInt();
-    uint numInputs = settings->getValue("Audio/channelsIn").toInt();
-    uint numOutputs = settings->getValue("Audio/channelsOut").toInt();
+    uint sampleRate = settings()->getValue("Audio/samplerate").toInt();
+    uint bufferSize = settings()->getValue("Audio/buffersize").toInt();
+    uint numInputs = settings()->getValue("Audio/channelsIn").toInt();
+    uint numOutputs = settings()->getValue("Audio/channelsOut").toInt();
 
     // initialize
 

@@ -11,8 +11,10 @@
 #include <QPainter>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSceneWheelEvent>
+#include <QGraphicsScene>
 
 #include "faderitem.h"
+#include "io/error.h"
 
 namespace MO {
 namespace GUI {
@@ -44,6 +46,17 @@ void FaderItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
         do_drag_ = true;
         drag_start_value_ = value_;
 
+        // select parent
+        if (parentItem())
+        {
+            MO_ASSERT(scene(), "missing scene in QGraphicsItem event");
+            scene()->clearSelection();
+            parentItem()->setSelected(true);
+            // not ideal. should actually single-select parent only
+            //scene()->setSelectionArea(parentItem()->mapToScene(parentItem()->shape()),
+            //                          Qt::IntersectsItemShape);
+        }
+
         e->accept();
     }
 }
@@ -62,7 +75,7 @@ void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
         if (e->modifiers() && Qt::SHIFT)
             dm /= 10.;
 
-        setEmit_(drag_start_value_ + dm);
+        p_setEmit_(drag_start_value_ + dm);
         e->accept();
     }
 }
@@ -83,10 +96,10 @@ void FaderItem::wheelEvent(QGraphicsSceneWheelEvent * e)
     if (e->delta()<0)
         dm = -dm;
 
-    setEmit_(value_ + dm);
+    p_setEmit_(value_ + dm);
 }
 
-void FaderItem::setEmit_(Float v)
+void FaderItem::p_setEmit_(Float v)
 {
     Float newValue = std::max(min_,std::min(max_, v ));
 

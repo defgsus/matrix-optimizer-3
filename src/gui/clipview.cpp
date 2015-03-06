@@ -803,7 +803,7 @@ void ClipView::openPopup_()
             {
                 QList<Object*> list =
                 static_cast<const ObjectTreeMimeData*>(
-                        application->clipboard()->mimeData())->getObjectTrees();
+                        application()->clipboard()->mimeData())->getObjectTrees();
                 if (list.empty())
                     return;
                 pasteClips_(list, curX_, curY_);
@@ -824,7 +824,7 @@ void ClipView::openPopup_()
             {
                 QList<Object*> list =
                 static_cast<const ObjectTreeMimeData*>(
-                        application->clipboard()->mimeData())->getObjectTrees();
+                        application()->clipboard()->mimeData())->getObjectTrees();
                 if (list.empty())
                     return;
                 pasteSubObjects_(list, curClip_);
@@ -875,7 +875,7 @@ void ClipView::openPopup_()
             {
                 auto data = new ObjectTreeMimeData();
                 data->storeObjectTree(curClip_);
-                application->clipboard()->setMimeData(data);
+                application()->clipboard()->setMimeData(data);
             });
 
             // cut clip
@@ -884,7 +884,7 @@ void ClipView::openPopup_()
             {
                 auto data = new ObjectTreeMimeData();
                 data->storeObjectTree(curClip_);
-                application->clipboard()->setMimeData(data);
+                application()->clipboard()->setMimeData(data);
 
                 //YYY delete
 
@@ -912,7 +912,7 @@ void ClipView::openPopup_()
                 {
                     QList<Object*> list =
                     static_cast<const ObjectTreeMimeData*>(
-                            application->clipboard()->mimeData())->getObjectTrees();
+                            application()->clipboard()->mimeData())->getObjectTrees();
                     if (list.empty())
                         return;
                     pasteSubObjects_(list, curClip_);
@@ -927,7 +927,7 @@ void ClipView::openPopup_()
                 {
                     QList<Object*> list =
                     static_cast<const ObjectTreeMimeData*>(
-                            application->clipboard()->mimeData())->getObjectTrees();
+                            application()->clipboard()->mimeData())->getObjectTrees();
                     if (list.empty())
                         return;
                     pasteClipsInClip_(list, curClip_);
@@ -947,7 +947,7 @@ void ClipView::openPopup_()
                     if (w->clip())
                         list << w->clip();
                 data->storeObjectTrees(list);
-                application->clipboard()->setMimeData(data);
+                application()->clipboard()->setMimeData(data);
             });
 
             // cut clips
@@ -960,7 +960,7 @@ void ClipView::openPopup_()
                     if (w->clip())
                         list << w->clip();
                 data->storeObjectTrees(list);
-                application->clipboard()->setMimeData(data);
+                application()->clipboard()->setMimeData(data);
                 for (auto w : selection_)
                 if (w->clip())
                 {

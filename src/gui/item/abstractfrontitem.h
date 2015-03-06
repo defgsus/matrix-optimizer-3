@@ -174,7 +174,7 @@ public:
     /** Enables editing and disables functionality */
     void setEditMode(bool);
     /** Returns true when layout editing is enabled for this item. */
-    bool editMode() const { return p_editMode_; }
+    bool isEditMode() const { return p_editMode_; }
 
     // ------------------ tree ------------------
 

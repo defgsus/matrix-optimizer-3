@@ -48,11 +48,11 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
 {
     setObjectName("_DomePreviewWidget");
 
-    showGrid_ = MO::settings->value(objectName()+"/showGrid", true).toBool();
-    showDome_ = MO::settings->value(objectName()+"/showDome", true).toBool();
-    showRays_ = MO::settings->value(objectName()+"/showRays", true).toBool();
-    showSliceTexture_ = MO::settings->value(objectName()+"/showTex", true).toBool();
-    showHighlight_ = MO::settings->value(objectName()+"/showHighlight", true).toBool();
+    showGrid_ = MO::settings()->value(objectName()+"/showGrid", true).toBool();
+    showDome_ = MO::settings()->value(objectName()+"/showDome", true).toBool();
+    showRays_ = MO::settings()->value(objectName()+"/showRays", true).toBool();
+    showSliceTexture_ = MO::settings()->value(objectName()+"/showTex", true).toBool();
+    showHighlight_ = MO::settings()->value(objectName()+"/showHighlight", true).toBool();
 
     createDomeGeometry_();
     createProjectorGeometry_();
@@ -60,11 +60,11 @@ DomePreviewWidget::DomePreviewWidget(QWidget *parent)
 
 DomePreviewWidget::~DomePreviewWidget()
 {
-    MO::settings->setValue(objectName()+"/showGrid", showGrid_);
-    MO::settings->setValue(objectName()+"/showDome", showDome_);
-    MO::settings->setValue(objectName()+"/showRays", showRays_);
-    MO::settings->setValue(objectName()+"/showTex", showSliceTexture_);
-    MO::settings->setValue(objectName()+"/showHighlight", showHighlight_);
+    MO::settings()->setValue(objectName()+"/showGrid", showGrid_);
+    MO::settings()->setValue(objectName()+"/showDome", showDome_);
+    MO::settings()->setValue(objectName()+"/showRays", showRays_);
+    MO::settings()->setValue(objectName()+"/showTex", showSliceTexture_);
+    MO::settings()->setValue(objectName()+"/showHighlight", showHighlight_);
 
     delete glProps_;
 

@@ -33,16 +33,16 @@ TimelineEditDialog::TimelineEditDialog(QWidget *parent)
 
     setMinimumSize(320,200);
 
-    settings->restoreGeometry(this);
-    autoUpdate_ = settings->value(objectName()+"/autoupdate", autoUpdate_).toBool();
+    settings()->restoreGeometry(this);
+    autoUpdate_ = settings()->value(objectName()+"/autoupdate", autoUpdate_).toBool();
 
     createWidgets_();
 }
 
 TimelineEditDialog::~TimelineEditDialog()
 {
-    settings->storeGeometry(this);
-    settings->setValue(objectName()+"/autoupdate", autoUpdate_);
+    settings()->storeGeometry(this);
+    settings()->setValue(objectName()+"/autoupdate", autoUpdate_);
     delete tl_;
 }
 

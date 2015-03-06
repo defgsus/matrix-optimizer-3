@@ -1036,7 +1036,7 @@ void ObjectGraphScene::drawForeground(QPainter *p, const QRectF &)
 
 void ObjectGraphScene::Private::showPopup()
 {
-    auto popup = new QMenu(application->mainWindow());
+    auto popup = new QMenu(application()->mainWindow());
     popup->setAttribute(Qt::WA_DeleteOnClose, true);
 
     popup->addActions(actions);
@@ -1261,7 +1261,7 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
         a->setShortcut(Qt::CTRL + Qt::Key_C);
         connect(a, &QAction::triggered, [this, items]()
         {
-            application->clipboard()->setMimeData(scene->mimeData(items));
+            application()->clipboard()->setMimeData(scene->mimeData(items));
         });
 
         // delete
@@ -1280,7 +1280,7 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
 
     if (!plural)
     {
-        const auto data = application->clipboard()->mimeData();
+        const auto data = application()->clipboard()->mimeData();
         const bool isClipboard = data->formats().contains(ObjectTreeMimeData::objectMimeType);
 
         if (isClipboard)
@@ -1293,7 +1293,7 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
             a = actions.addAction(tr("Paste into %1").arg(pname), scene);
             connect(a, &QAction::triggered, [=]()
             {
-                scene->dropMimeData(application->clipboard()->mimeData(), popupGridPos);
+                scene->dropMimeData(application()->clipboard()->mimeData(), popupGridPos);
             });
         }
     }

@@ -68,7 +68,7 @@ public:
 
 private:
 
-    void setEmit_(Float v);
+    void p_setEmit_(Float v);
 
     Float value_, min_, max_,
         drag_start_value_;

@@ -28,13 +28,15 @@ namespace GUI {
 ServerView::ServerView(QWidget *parent)
     : QWidget       (parent)
 {
+    MO_DEBUG_GUI("ServerView::ServerView(" << parent << ")");
+
     setObjectName("_ServerView");
     //setWindowTitle("Server/client settings");
 
     setMinimumSize(320,320);
 //    setModal(false);
 
-//    settings->restoreGeometry(this);
+//    settings()->restoreGeometry(this);
 
     server_ = &serverEngine();
 
@@ -52,7 +54,7 @@ ServerView::ServerView(QWidget *parent)
 
 ServerView::~ServerView()
 {
-//    settings->storeGeometry(this);
+//    settings()->storeGeometry(this);
 }
 
 void ServerView::createWidgets_()
@@ -66,7 +68,7 @@ void ServerView::createWidgets_()
 
             cbRunning_ = new QCheckBox(tr("run server"), this);
             lh->addWidget(cbRunning_);
-            cbRunning_->setChecked(server_->isRunning());
+            cbRunning_->setChecked(settings()->value("Server/running").toBool());
             connect(cbRunning_, SIGNAL(clicked(bool)), this, SLOT(startServer_(bool)));
 
             labelNum_ = new QLabel(this);
@@ -208,7 +210,7 @@ void ServerView::startServer_(bool run)
         server_->close();
 
     // store as default
-    settings->setValue("Server/running", run);
+    settings()->setValue("Server/running", run);
 
     butSendScene_->setEnabled(server_->isRunning());
     //cbRunning_->setChecked(server_->isRunning());

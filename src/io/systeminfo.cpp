@@ -42,7 +42,7 @@ void SystemInfo::deserialize(IO::DataStream &io)
 
 void SystemInfo::get()
 {
-    appPath_ = application->applicationFilePath();
+    appPath_ = application()->applicationFilePath();
 
     // local ip
     localIp_ = "unknown";
@@ -59,7 +59,7 @@ void SystemInfo::get()
 
     // screen geometries
 #ifdef THATS_THE_QDESKTOPWIDGET_METHOD_
-    auto desk = application->desktop();
+    auto desk = application()->desktop();
     for (int i=0; i<desk->screenCount(); ++i)
     {
         screenSizes_.append(desk->screenGeometry(i).size());

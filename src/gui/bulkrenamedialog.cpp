@@ -34,14 +34,14 @@ BulkRenameDialog::BulkRenameDialog(QWidget *parent) :
     setObjectName("_BulkRenameDialog");
     setWindowTitle(tr("Batch scene converter"));
     setMinimumSize(640,480);
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     createWidgets_();
 }
 
 BulkRenameDialog::~BulkRenameDialog()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
 }
 
 void BulkRenameDialog::createWidgets_()

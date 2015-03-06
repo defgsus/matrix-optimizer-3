@@ -11,9 +11,9 @@
 
 #include <QtGlobal>
 
-#ifdef Q_OS_LINUX
-#   include <X11/Xlib.h>
-#endif
+//#ifdef Q_OS_LINUX
+//#   include <X11/Xlib.h>
+//#endif
 
 #include "init.h"
 
@@ -21,9 +21,9 @@ namespace MO {
 
 void startOfProgram()
 {
-#ifdef Q_OS_LINUX
-    XInitThreads();
-#endif
+//#ifdef Q_OS_LINUX
+//    XInitThreads();
+//#endif
 
 }
 

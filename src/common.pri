@@ -270,7 +270,8 @@ HEADERS += \
     src/io/time.h \
     src/tool/asciirect.h \
     src/types/properties.h \
-    src/io/docbookexporter.h
+    src/io/docbookexporter.h \
+    src/maincommandline.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -502,4 +503,5 @@ SOURCES += \
     src/io/time.cpp \
     src/tool/asciirect.cpp \
     src/types/properties.cpp \
-    src/io/docbookexporter.cpp
+    src/io/docbookexporter.cpp \
+    src/maincommandline.cpp

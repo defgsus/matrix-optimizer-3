@@ -52,7 +52,10 @@
 #include "gui/infowindow.h"
 #include "gui/timelineeditdialog.h"
 #include "gui/audiofilterdialog.h"
-#include "gui/serverview.h"
+#ifndef MO_DISABLE_SERVER
+#   include "gui/serverview.h"
+#   include "engine/serverengine.h"
+#endif
 #include "gui/resolutiondialog.h"
 #include "gui/objectgraphview.h"
 #include "gui/frontview.h"
@@ -62,9 +65,9 @@
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
 #ifndef MO_DISABLE_ANGLESCRIPT
-#include "gui/widget/angelscriptwidget.h"
-#include "script/angelscript.h"
-#include "script/angelscript_object.h"
+#   include "gui/widget/angelscriptwidget.h"
+#   include "script/angelscript.h"
+#   include "script/angelscript_object.h"
 #endif
 #include "gui/util/scenesettings.h"
 #include "gui/texteditdialog.h"
@@ -91,7 +94,6 @@
 #include "object/util/objectdsppath.h"
 #include "object/util/objecttree.h"
 #include "tool/commonresolutions.h"
-#include "engine/serverengine.h"
 
 namespace MO {
 namespace GUI {
@@ -132,9 +134,12 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
     createObjects_();
 
     // start server automatically
-    if (settings->value("Server/running").toBool()
-        && !serverEngine().isRunning())
-            serverEngine().open();
+#ifndef MO_DISABLE_SERVER
+    if (isServer())
+        if (settings()->value("Server/running").toBool()
+            && !serverEngine().isRunning())
+                serverEngine().open();
+#endif
 }
 
 MainWidgetController::~MainWidgetController()
@@ -244,9 +249,15 @@ void MainWidgetController::createObjects_()
             this, SLOT(onSequenceClicked_()));
 
     // server/client view
-    serverView_ = new ServerView(window_);
-    connect(serverView_, SIGNAL(sendScene()),
-            this, SLOT(sendSceneToClients_()));
+    serverView_ = 0;
+#ifndef MO_DISABLE_SERVER
+    if (isServer())
+    {
+        serverView_ = new ServerView(window_);
+        connect(serverView_, SIGNAL(sendScene()),
+                this, SLOT(sendSceneToClients_()));
+    }
+#endif
 
     // gl manager and window
     glManager_ = new GL::Manager(this);
@@ -413,7 +424,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
             connect(sub, &QMenu::triggered, [=](QAction*a)
             {
-                settings->setClientIndex(a->data().toInt());
+                settings()->setClientIndex(a->data().toInt());
                 updateSceneProjectionSettings_();
             });
 
@@ -533,13 +544,13 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            auto diag = new TextEditDialog(settings->styleSheet(), TT_APP_STYLESHEET, qApp->activeWindow());
+            auto diag = new TextEditDialog(settings()->styleSheet(), TT_APP_STYLESHEET, qApp->activeWindow());
             diag->setAttribute(Qt::WA_DeleteOnClose);
             diag->setModal(false);
             connect(diag, &TextEditDialog::textChanged, [=]()
             {
-                settings->setStyleSheet(diag->getText());
-                application->setStyleSheet(diag->getText());
+                settings()->setStyleSheet(diag->getText());
+                application()->setStyleSheet(diag->getText());
             });
             diag->show();
         });
@@ -557,7 +568,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            auto o = new QObjectInspector(application, window_);
+            auto o = new QObjectInspector(application(), window_);
             o->setAttribute(Qt::WA_DeleteOnClose);
             o->show();
         });
@@ -619,11 +630,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            auto diag = new QDialog(application->mainWindow());
+            auto diag = new QDialog(application()->mainWindow());
             diag->setObjectName("_AngelScriptTest");
             diag->setMinimumSize(580,740);
             diag->setAttribute(Qt::WA_DeleteOnClose);
-            //settings->restoreGeometry(diag);
+            //settings()->restoreGeometry(diag);
             auto l = new QVBoxLayout(diag);
 
             auto script = new AngelScriptWidget(diag);
@@ -631,10 +642,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             registerAngelScript_rootObject( script->scriptEngine(), scene_, true );
 
             l->addWidget(script);
-            script->setScriptText(settings->value("tmp/AngelScript", "//angelscript").toString());
+            script->setScriptText(settings()->value("tmp/AngelScript", "//angelscript").toString());
             connect(script, &AngelScriptWidget::scriptTextChanged, [=]()
             {
-                settings->setValue("tmp/AngelScript", script->scriptText());
+                settings()->setValue("tmp/AngelScript", script->scriptText());
             });
             auto but = new QPushButton(tr("&Run"), diag);
             //but->setShortcut(Qt::CTRL + Qt::Key_B);
@@ -669,7 +680,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         a = new QAction(tr("About Qt"), m);
         m->addAction(a);
-        connect(a, SIGNAL(triggered()), application, SLOT(aboutQt()));
+        connect(a, SIGNAL(triggered()), application(), SLOT(aboutQt()));
 
 
     // create projector-index-menu
@@ -810,8 +821,11 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     updateSystemInfo_();
     updateResolutionActions_();
 
-    if (serverEngine().isRunning())
-        serverEngine().sendScene(scene_);
+#ifndef MO_DISABLE_SERVER
+    if (isServer())
+        if (serverEngine().isRunning())
+            serverEngine().sendScene(scene_);
+#endif
 }
 
 
@@ -1402,8 +1416,11 @@ void MainWidgetController::start()
     }
 
     // update audio config for clients
-    if (serverEngine().isRunning())
-        serverEngine().sendAudioConfig( audioEngine_->config() );
+#ifndef MO_DISABLE_SERVER
+    if (isServer())
+        if (serverEngine().isRunning())
+            serverEngine().sendAudioConfig( audioEngine_->config() );
+#endif
 
     // audio input/output channels may have changed
     // XXX hacky but reliable
@@ -1417,8 +1434,11 @@ void MainWidgetController::start()
 
     glManager_->startAnimate();
 
-    if (serverEngine().isRunning())
-        serverEngine().setScenePlaying(true);
+#ifndef MO_DISABLE_SERVER
+    if (isServer())
+        if (serverEngine().isRunning())
+            serverEngine().setScenePlaying(true);
+#endif
 }
 
 void MainWidgetController::stop()
@@ -1843,7 +1863,7 @@ void MainWidgetController::onProjectionSettingsChanged_()
 
     auto g = new QActionGroup(menuProjectorIndex_);
 
-    const ProjectionSystemSettings& set = settings->getDefaultProjectionSettings();
+    const ProjectionSystemSettings& set = settings()->getDefaultProjectionSettings();
     for (uint i=0; i<set.numProjectors(); ++i)
     {
         auto a = new QAction(menuProjectorIndex_);
@@ -1852,7 +1872,7 @@ void MainWidgetController::onProjectionSettingsChanged_()
                    .arg(set.projectorSettings(i).name()));
         a->setData(i);
         a->setCheckable(true);
-        a->setChecked(settings->clientIndex() == (int)i);
+        a->setChecked(settings()->clientIndex() == (int)i);
 
         menuProjectorIndex_->addAction(a);
         g->addAction(a);
@@ -1865,8 +1885,8 @@ void MainWidgetController::updateSceneProjectionSettings_()
     if (!scene_)
         return;
 
-    scene_->setProjectionSettings(settings->getDefaultProjectionSettings());
-    scene_->setProjectorIndex(settings->clientIndex());
+    scene_->setProjectionSettings(settings()->getDefaultProjectionSettings());
+    scene_->setProjectorIndex(settings()->clientIndex());
 }
 
 void MainWidgetController::onOutputSizeChanged_(const QSize & size)

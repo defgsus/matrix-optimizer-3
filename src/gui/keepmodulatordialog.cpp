@@ -243,7 +243,7 @@ KeepModulatorDialog::KeepModulatorDialog(KeepModulators& mods, QWidget * parent)
 
     setMinimumSize(320, 200);
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     createWidgets_();
     createList_();
@@ -251,7 +251,7 @@ KeepModulatorDialog::KeepModulatorDialog(KeepModulators& mods, QWidget * parent)
 
 KeepModulatorDialog::~KeepModulatorDialog()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
 }
 
 

@@ -159,21 +159,30 @@ void MainWindow::createDockWidgets_()
 
     dock = createDockWidget(tr("Frontend"), controller_->frontView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    removeDockWidget(dock);
 
     dock = createDockWidget(tr("Sequence"), controller_->sequenceView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
     dock = createDockWidget(tr("Clips"), controller_->clipView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    removeDockWidget(dock);
 
     dock = createDockWidget(tr("Object"), controller_->objectView());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
 
     dock = createDockWidget(tr("Frontend settings"), controller_->frontItemEditor());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Horizontal);
+    removeDockWidget(dock);
 
-    dock = createDockWidget(tr("Server/Client"), controller_->serverView());
-    addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Vertical);
+#ifndef MO_DISABLE_SERVER
+    if (isServer())
+    {
+        dock = createDockWidget(tr("Server/Client"), controller_->serverView());
+        addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Vertical);
+        removeDockWidget(dock);
+    }
+#endif
 
 }
 
@@ -188,7 +197,13 @@ QDockWidget * MainWindow::createDockWidget(const QString &name, QWidget *widget)
     dock->setObjectName(widget->objectName() + "_Dock");
     dock->setAllowedAreas(Qt::AllDockWidgetAreas);
     dock->setWidget(widget);
-    viewMenu_->addAction( dock->toggleViewAction() );
+    dock->setFeatures(  QDockWidget::DockWidgetMovable
+                      | QDockWidget::DockWidgetFloatable
+                      | QDockWidget::DockWidgetClosable
+                      //| QDockWidget::DockWidgetVerticalTitleBar
+                      );
+    auto act = dock->toggleViewAction();
+    viewMenu_->addAction( act );
 
     dockMap_.insert(widget, dock);
 
@@ -212,16 +227,16 @@ void MainWindow::createMenus_()
 
 void MainWindow::saveAllGeometry_()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
     if (controller_->glWindow())
-        settings->storeGeometry(controller_->glWindow());
+        settings()->storeGeometry(controller_->glWindow());
 }
 
 bool MainWindow::restoreAllGeometry_()
 {
-    bool r = settings->restoreGeometry(this);
+    bool r = settings()->restoreGeometry(this);
     if (controller_->glWindow())
-        settings->restoreGeometry(controller_->glWindow());
+        settings()->restoreGeometry(controller_->glWindow());
     return r;
 }
 

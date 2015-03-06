@@ -1014,7 +1014,7 @@ void TrackView::createEditActions_()
         {
             auto data = new ObjectTreeMimeData();
             data->storeObjectTree(seq);
-            application->clipboard()->setMimeData(data);
+            application()->clipboard()->setMimeData(data);
         });
 
         // cut
@@ -1025,7 +1025,7 @@ void TrackView::createEditActions_()
         {
             auto data = new ObjectTreeMimeData();
             data->storeObjectTree(seq);
-            application->clipboard()->setMimeData(data);
+            application()->clipboard()->setMimeData(data);
             if (deleteObject_(seq))
                 emit sequenceSelected(0);
         });
@@ -1068,7 +1068,7 @@ void TrackView::createEditActions_()
             auto data = new ObjectTreeMimeData();
             data->storeObjectTrees(seqs);
             data->storeOrder(order);
-            application->clipboard()->setMimeData(data);
+            application()->clipboard()->setMimeData(data);
         });
 
         // cut
@@ -1087,7 +1087,7 @@ void TrackView::createEditActions_()
             auto data = new ObjectTreeMimeData();
             data->storeObjectTrees(seqs);
             data->storeOrder(order);
-            application->clipboard()->setMimeData(data);
+            application()->clipboard()->setMimeData(data);
 
             emit sequenceSelected(0);
             for (auto s : seqs)
@@ -1137,11 +1137,11 @@ void TrackView::createEditActions_()
         editActions_.addSeparator(this);
 
         // paste
-        if (application->clipboard()->mimeData()->formats().contains(
+        if (application()->clipboard()->mimeData()->formats().contains(
                     ObjectTreeMimeData::objectMimeType))
         {
             const ObjectTreeMimeData * data
-                    = qobject_cast<const ObjectTreeMimeData*>(application->clipboard()->mimeData());
+                    = qobject_cast<const ObjectTreeMimeData*>(application()->clipboard()->mimeData());
             if (data)
             {
                 // paste single
@@ -1178,7 +1178,7 @@ bool TrackView::paste_(bool single_track)
         return false;
 
     const ObjectTreeMimeData * data = qobject_cast<const ObjectTreeMimeData*>
-            (application->clipboard()->mimeData());
+            (application()->clipboard()->mimeData());
     if (!data)
         return false;
 

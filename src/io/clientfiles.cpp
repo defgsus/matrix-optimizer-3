@@ -74,7 +74,7 @@ ClientFiles & clientFiles()
 {
     static ClientFiles * instance_ = 0;
     if (!instance_)
-        instance_ = new ClientFiles(application);
+        instance_ = new ClientFiles(application());
 
     return *instance_;
 }
@@ -85,7 +85,7 @@ ClientFiles::ClientFiles(QObject *parent)
       p_        (new Private(this))
 {
     // be sure the directory for cached files is present
-    const QString cachedir = settings->getValue("Directory/filecache").toString();
+    const QString cachedir = settings()->getValue("Directory/filecache").toString();
 
     QDir dir(cachedir);
     if (!dir.exists() && !dir.mkpath("."))
@@ -215,7 +215,7 @@ void ClientFiles::receiveFile(NetEventFile * e)
     f->clientFilename.replace("\\","_");
     f->clientFilename.replace(":","_");
     f->clientFilename.insert(0,
-            settings->getValue("Directory/filecache").toString()
+            settings()->getValue("Directory/filecache").toString()
             + QDir::separator());
 
     f->clientTime = f->serverTime;
@@ -277,7 +277,7 @@ void ClientFiles::Private::saveCache()
         }
 
         xml.stopWriting();
-        xml.save(settings->getValue("File/filecache").toString());
+        xml.save(settings()->getValue("File/filecache").toString());
     }
     catch (const Exception& e)
     {
@@ -294,7 +294,7 @@ void ClientFiles::Private::loadCache()
 
     IO::XmlStream xml;
 
-    QString fn = settings->getValue("File/filecache").toString();
+    QString fn = settings()->getValue("File/filecache").toString();
     if (!QFileInfo(fn).exists())
         return;
 

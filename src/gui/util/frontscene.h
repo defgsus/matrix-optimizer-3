@@ -161,6 +161,9 @@ signals:
     /** Whenever the edit-actions have changed */
     void actionsChanged(const QList<QAction*>&);
 
+    /** Whenever the edit mode has been changed */
+    void editModeChanged(bool isEditMode);
+
     /** When an item was selected */
     void itemSelected(AbstractFrontItem*);
     /** When multiple items where selected */

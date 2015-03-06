@@ -31,7 +31,7 @@ ResolutionDialog::ResolutionDialog(const QSize& def, QWidget *parent)
 
     setMinimumSize(320,200);
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     createWidgets_();
 
@@ -40,7 +40,7 @@ ResolutionDialog::ResolutionDialog(const QSize& def, QWidget *parent)
 
 ResolutionDialog::~ResolutionDialog()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
 }
 
 

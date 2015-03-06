@@ -29,16 +29,36 @@
 
 namespace MO {
 
-Settings * settings = 0;
+namespace {
+    /** Name of the application ini file */
+    QString appIniString()
+    {
+        QString n = isClient()
+            ? "matrix-optimizer-3-client"
+            : "matrix-optimizer-3";
+
+        // append user name
+        if (!application()->sessionId().isEmpty())
+            n += "-" + application()->sessionId();
+
+        return n;
+    }
+}
+
+Settings * settings()
+{
+    static Settings * s = 0;
+    if (!s)
+        s = new Settings(application());
+    return s;
+}
 
 Settings::Settings(QObject *parent) :
     QSettings(
         QSettings::IniFormat,
         QSettings::UserScope,
         "modular-audio-graphics",
-        isClient()
-            ? "matrix-optimizer-3-client"
-            : "matrix-optimizer-3",
+        appIniString(),
         parent)
 {
     createDefaultValues_();
@@ -49,7 +69,8 @@ QString Settings::infoString() const
     QString str;
     QTextStream s(&str);
     s
-        << "mode : " << (isClient() ? "CLIENT" : isServer() ? "SERVER" : "DESKTOP")
+        << "mode       : " << (isClient() ? "CLIENT" : isServer() ? "SERVER" : "DESKTOP")
+        << (application()->userName().isEmpty() ? "" : QString("\nuser       : %1").arg(application()->userName()))
         << "\nnum. runs  : " << getValue("Status/desktopRuns").toString()
 #ifndef MO_DISABLE_SERVER
                     << " / " << getValue("Status/serverRuns").toString() << " server"
@@ -63,8 +84,8 @@ QString Settings::infoString() const
 #if !defined(MO_DISABLE_CLIENT) || !defined(MO_DISABLE_SERVER)
         << "\ntcp comm.  : " << getValue("Network/tcpport").toString()
         << "\nudp comm.  : " << getValue("Network/udpport").toString()
-        << "\nudp-audio  : " << settings->udpAudioMulticastAddress() << ":"
-                             << settings->udpAudioMulticastPort()
+        << "\nudp-audio  : " << settings()->udpAudioMulticastAddress() << ":"
+                             << settings()->udpAudioMulticastPort()
 #endif
     ;
 
@@ -139,6 +160,10 @@ void Settings::createDefaultValues_()
     // -- client --
 
     defaultValues_["Client/desktopIndex"] = 0;
+
+    // -- server --
+
+    defaultValues_["Server/running"] = false;
 }
 
 QVariant Settings::getValue(const QString &key) const
@@ -232,7 +257,7 @@ bool Settings::restoreGeometry(QWindow * win)
     if (!found)
     {
         // center on screen
-        QRect r = application->desktop()->screenGeometry(win->position());
+        QRect r = application()->desktop()->screenGeometry(win->position());
         win->setGeometry((r.width() - win->width())/2,
                          (r.height() - win->height())/2,
                          win->width(), win->height());
@@ -302,7 +327,7 @@ bool Settings::restoreGeometry(QWidget * win)
     if (!found)
     {
         // center on screen
-        QRect r = application->desktop()->screenGeometry(win->pos());
+        QRect r = application()->desktop()->screenGeometry(win->pos());
         win->setGeometry((r.width() - win->width())/2,
                          (r.height() - win->height())/2,
                          win->width(), win->height());
@@ -380,6 +405,9 @@ QString Settings::styleSheet() const
         return value("Application/styleSheet").toString();
 
     QFile f(":/stylesheet.css");
+    if (!f.open(QFile::ReadOnly | QFile::Text))
+        MO_WARNING("Could not load default stylesheet from resources.\n"
+                   << f.errorString());
     QTextStream s(&f);
     return s.readAll();
 }
@@ -401,13 +429,18 @@ ProjectionSystemSettings Settings::getDefaultProjectionSettings()
 {
     ProjectionSystemSettings s;
 
-    QByteArray data = getValue("ProjectionSystem/xml").toByteArray();
+    QByteArray data;
+    if (contains("ProjectionSystem/xml"))
+        data = getValue("ProjectionSystem/xml").toByteArray();
+
+    // create default settings
     if (data.isEmpty())
     {
         s.appendProjector(ProjectorSettings());
         return s;
     }
 
+    // load settings
     try
     {
         s.deserialize(data);
