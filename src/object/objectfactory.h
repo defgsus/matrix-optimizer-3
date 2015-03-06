@@ -61,6 +61,12 @@ public:
 
     // ----------- object infos -------------------
 
+    /** Translated name of the object group, or empty string for unknown */
+    static QString objectPriorityName(int priority);
+
+    /** Returns the type for a given classname, or -1 */
+    static int typeForClass(const QString& className);
+
     /** Hue value for object type (Object::Type).
         Returns hue for a defined object group, or -1 if undefined! */
     static int hueForObject(int type);
@@ -79,7 +85,7 @@ public:
     /** Returns a list of objects, possible to add to given object @p parent */
     static QList<const Object*> possibleChildObjects(const Object * parent);
 
-    /** Returns true of the object can have children at all. */
+    /** Returns true if the object can have children at all. */
     static bool canHaveChildObjects(const Object * parent);
 
     /** Returns a list of objects matching the Object::Type flags */

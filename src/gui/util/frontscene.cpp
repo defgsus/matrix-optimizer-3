@@ -682,13 +682,15 @@ void FrontScene::Private::createEditActions()
     {
         AbstractFrontItem * item = seltop[0];
 
+        editActions.addTitle(QString("\"%1\"").arg(item->name()), gscene);
+
         // NEW
         editActions.addMenu(createNewItemMenu(item->mapToScene(0,0)), gscene);
 
         editActions.addSeparator(gscene);
 
         // GROUP
-        editActions.append( a = new QAction(tr("group \"%1\"").arg(item->name()), gscene) );
+        editActions.append( a = new QAction(tr("Group"), gscene) );
         a->setShortcut(Qt::ALT + Qt::Key_G);
         connect(a, &QAction::triggered, [=]()
         {
@@ -698,7 +700,7 @@ void FrontScene::Private::createEditActions()
         editActions.addSeparator(gscene);
 
         // COPY
-        editActions.append( a = new QAction(tr("copy \"%1\"").arg(item->name()), gscene) );
+        editActions.append( a = new QAction(tr("Copy"), gscene) );
         a->setShortcut(Qt::CTRL + Qt::Key_C);
         connect(a, &QAction::triggered, [=]()
         {
@@ -706,7 +708,7 @@ void FrontScene::Private::createEditActions()
         });
 
         // CUT
-        editActions.append( a = new QAction(tr("cut \"%1\"").arg(item->name()), gscene) );
+        editActions.append( a = new QAction(tr("Cut"), gscene) );
         a->setShortcut(Qt::CTRL + Qt::Key_X);
         connect(a, &QAction::triggered, [=]()
         {
@@ -717,7 +719,7 @@ void FrontScene::Private::createEditActions()
         });
 
         // DELETE
-        editActions.append( a = new QAction(tr("delete \"%1\"").arg(item->name()), gscene) );
+        editActions.append( a = new QAction(tr("Delete"), gscene) );
         a->setShortcut(Qt::Key_Delete);
         connect(a, &QAction::triggered, [=]()
         {
@@ -728,7 +730,7 @@ void FrontScene::Private::createEditActions()
         // PASTE
         if (gscene->isItemsInClipboard())
         {
-            editActions.append( a = new QAction(tr("paste into \"%1\"").arg(item->name()), gscene) );
+            editActions.append( a = new QAction(tr("Paste into"), gscene) );
             a->setShortcut(Qt::CTRL + Qt::Key_V);
             connect(a, &QAction::triggered, [=]()
             {
@@ -741,8 +743,10 @@ void FrontScene::Private::createEditActions()
     // multi-item actions
     if (seltop.size() > 1)
     {
+        editActions.addTitle(tr("%1 items").arg(seltop.size()), gscene);
+
         // GROUP
-        editActions.append( a = new QAction(tr("group %1 items").arg(seltop.size()), gscene) );
+        editActions.append( a = new QAction(tr("Group"), gscene) );
         a->setShortcut(Qt::ALT + Qt::Key_G);
         connect(a, &QAction::triggered, [=]()
         {
@@ -754,7 +758,7 @@ void FrontScene::Private::createEditActions()
 
 
         // COPY
-        editActions.append( a = new QAction(tr("copy %1 items").arg(seltop.size()), gscene) );
+        editActions.append( a = new QAction(tr("Copy"), gscene) );
         a->setShortcut(Qt::CTRL + Qt::Key_C);
         connect(a, &QAction::triggered, [=]()
         {
@@ -762,7 +766,7 @@ void FrontScene::Private::createEditActions()
         });
 
         // CUT
-        editActions.append( a = new QAction(tr("cut %1 items").arg(seltop.size()), gscene) );
+        editActions.append( a = new QAction(tr("Cut"), gscene) );
         a->setShortcut(Qt::CTRL + Qt::Key_X);
         connect(a, &QAction::triggered, [=]()
         {
@@ -772,7 +776,7 @@ void FrontScene::Private::createEditActions()
         });
 
         // DELETE
-        editActions.append( a = new QAction(tr("delete %1 items").arg(seltop.size()), gscene) );
+        editActions.append( a = new QAction(tr("Delete"), gscene) );
         a->setShortcut(Qt::Key_Delete);
         connect(a, &QAction::triggered, [=]()
         {

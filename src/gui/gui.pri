@@ -97,7 +97,8 @@ HEADERS += \
     src/gui/widget/coloreditwidget.h \
     src/gui/item/frontfloatitem.h \
     src/gui/item/frontgroupitem.h \
-    src/gui/util/frontpreset.h
+    src/gui/util/frontpreset.h \
+    src/gui/widget/iconbar.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -194,4 +195,5 @@ SOURCES += \
     src/gui/widget/coloreditwidget.cpp \
     src/gui/item/frontfloatitem.cpp \
     src/gui/item/frontgroupitem.cpp \
-    src/gui/util/frontpreset.cpp
+    src/gui/util/frontpreset.cpp \
+    src/gui/widget/iconbar.cpp

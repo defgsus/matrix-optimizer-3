@@ -23,6 +23,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/modulatorfloat.h"
 #include "object/trackfloat.h"
+#include "gui/widget/iconbar.h"
 #include "io/error.h"
 
 namespace MO {
@@ -42,6 +43,8 @@ ObjectMenu::ObjectMenu()
 
 QMenu * ObjectMenu::createObjectMenu(int objectTypeFlags, QWidget *parent)
 {
+    objectTypeFlags &= ~(Object::T_SCENE | Object::T_DUMMY);
+
     QList<const Object*> list(ObjectFactory::objects(objectTypeFlags));
     if (list.empty())
         return 0;
@@ -354,6 +357,33 @@ QMenu * ObjectMenu::createHueMenu(QWidget *parent)
     return menu;
 }
 
+const QString ObjectMenu::NewObjectMimeType = "matrixoptimizer/new-obj";
+
+IconBar * ObjectMenu::createObjectToolBar(int objectTypeFlags, QWidget *parent)
+{
+    objectTypeFlags &= ~(Object::T_SCENE | Object::T_DUMMY);
+
+    // get all objects
+    QList<const Object*> list(ObjectFactory::objects(objectTypeFlags));
+    // sort by priority
+    qStableSort(list.begin(), list.end(), sortObjectList_Priority);
+
+    auto bar = new IconBar(parent);
+
+
+    for (auto o : list)
+    {
+        bar->addIcon(AppIcons::iconForObject(o, ObjectFactory::colorForObject(o)),
+                     o->name(),
+                     NewObjectMimeType,
+                     o->className().toUtf8(),
+                     ObjectFactory::objectPriorityName(Object::objectPriority(o)));
+    }
+
+    bar->finish();
+
+    return bar;
+}
 
 } // namespace GUI
 } // namespace MO

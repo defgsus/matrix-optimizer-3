@@ -8,6 +8,8 @@
     <p>created 7/1/2014</p>
 */
 
+#if 0
+
 #ifndef MOSRC_OBJECT_SEQUENCES_H
 #define MOSRC_OBJECT_SEQUENCES_H
 
@@ -32,3 +34,5 @@ public slots:
 } // namespace MO
 
 #endif // MOSRC_OBJECT_SEQUENCES_H
+
+#endif

@@ -36,6 +36,7 @@
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
 #include "gui/util/scenesettings.h"
+#include "gui/util/objectmenu.h"
 #include "model/objectmimedata.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -268,7 +269,10 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
 
 void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
 {
-    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    e->ignore();
+
+    // drop of real object
+    if (e->mimeData()->hasFormat(ObjectMimeData::mimeTypeString))
     {
         // avoid self-drop
         auto data = static_cast<const ObjectMimeData*>(e->mimeData());
@@ -281,6 +285,19 @@ void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
         p_oi_->dragHover = true;
         update();
         e->accept();
+    }
+
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        if (typ < 0)
+            return;
+        // check if dropable
+        if (object()->canHaveChildren(Object::Type(typ)))
+            e->accept();
     }
 }
 
@@ -296,27 +313,51 @@ void AbstractObjectItem::dragLeaveEvent(QGraphicsSceneDragDropEvent * )
 
 void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 {
-    // analyze mime data
-    if (!e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
-        return;
+    e->ignore();
+    p_oi_->dragHover = false;
 
-    // construct a wrapper
-    auto data = static_cast<const ObjectMimeData*>(e->mimeData());
-    auto desc = data->getDescription();
-
-    // analyze further
-    if (!desc.isFromSameApplicationInstance())
+    // drop of real object
+    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
     {
-        QMessageBox::information(0,
-                                 QMessageBox::tr("drop object"),
-                                 QMessageBox::tr("Can't drop an object from another application instance."));
+
+        // construct a wrapper
+        auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+        auto desc = data->getDescription();
+
+        // analyze further
+        if (!desc.isFromSameApplicationInstance())
+        {
+            QMessageBox::information(0,
+                                     QMessageBox::tr("drop object"),
+                                     QMessageBox::tr("Can't drop an object from another application instance."));
+            return;
+        }
+
+        if (desc.pointer() && objectScene())
+            objectScene()->popupObjectDrag(desc.pointer(), object(), e->scenePos());
+
+        e->accept();
         return;
     }
 
-    if (desc.pointer() && objectScene())
-        objectScene()->popupObjectDrag(desc.pointer(), object(), e->scenePos());
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !object()->canHaveChildren(Object::Type(typ)))
+            return;
 
-    p_oi_->dragHover = false;
+        objectScene()->addObject(object(),
+                                 ObjectFactory::createObject(classn),
+                                 mapToGrid(e->scenePos()) - gridPos());
+        setSelected(true);
+
+        e->accept();
+        return;
+    }
 }
 
 void AbstractObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)

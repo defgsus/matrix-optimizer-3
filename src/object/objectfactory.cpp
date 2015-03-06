@@ -64,6 +64,27 @@ ObjectFactory& ObjectFactory::instance()
     return *instance_;
 }
 
+QString ObjectFactory::objectPriorityName(int priority)
+{
+    switch (priority)
+    {
+        case 4: return tr("Transformation");
+        case 3: return tr("Visual");
+        case 2: return tr("Meta");
+        case 1: return tr("Control");
+        case 0: return tr("Audio");
+        default: return QString();
+    }
+}
+
+int ObjectFactory::typeForClass(const QString &className)
+{
+    auto i = instance().objectMap_.find(className);
+    return i == instance().objectMap_.end()
+            ? -1
+            : i->second->type();
+}
+
 int ObjectFactory::hueForObject(int type)
 {
     if (type == Object::T_DUMMY)
@@ -379,6 +400,10 @@ QList<const Object*> ObjectFactory::objects(int types)
             list.append(o);
     }
 
+    std::sort(list.begin(), list.end(), [](const Object * l, const Object * r)
+    {
+        return l->name() < r->name();
+    });
     return list;
 }
 

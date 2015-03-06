@@ -197,6 +197,7 @@ AppIcons::Private::IconId AppIcons::Private::idForType(int type) const
         case Object::T_CLIP: return I_CLIP;
         case Object::T_CLIP_CONTROLLER: return I_CLIP_CONTROL;
         case Object::T_AUDIO_OBJECT: return I_AUDIO;
+        case Object::T_ANGELSCRIPT: return I_ANGELSCRIPT;
     }
     if (type & Object::TG_TRACK) return I_TRACK;
     if (type & Object::TG_FLOAT) return I_PARAMETER;

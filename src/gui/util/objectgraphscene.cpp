@@ -39,6 +39,7 @@
 #include "object/util/objectmodulatorgraph.h"
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
+#include "model/objectmimedata.h"
 #include "model/objecttreemimedata.h"
 #include "tool/actionlist.h"
 #include "io/application.h"
@@ -644,10 +645,12 @@ QPoint ObjectGraphScene::nextFreePosition(Object *parent, const QPoint &pos1) co
         return pos1;
 
     QPoint pos(pos1);
-    while (p_->childItemAt(item, pos))
+    auto i = p_->childItemAt(item, pos);
+    while (i != 0 && i != item)
     {
         qDebug() << "failed for" << pos;
         ++pos.ry();
+        i = p_->childItemAt(item, pos);
     }
 
     return pos;
@@ -801,6 +804,87 @@ void ObjectGraphScene::Private::endConnection()
     connectStartItem = 0;
     connectEndItem = 0;
 }
+
+
+
+
+// ----------------------------- drag/drop --------------------------------------
+
+/** @todo drag-drop for ObjectGraphScene */
+#if 0
+void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
+{
+    e->ignore();
+
+    /// @todo drop of real object
+    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    {
+        //e->accept();
+        return;
+    }
+
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !p_->root->canHaveChildren(Object::Type(typ)))
+            return;
+        /// @todo whatever we do here, the event will not be accepted by the framework
+        MO_DEBUG("yes");
+        e->accept();
+        e->acceptProposedAction();
+        return;
+    }
+
+    QGraphicsScene::dragEnterEvent(e);
+}
+
+
+void ObjectGraphScene::dropEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // !! this event comes before the items, pew...
+
+    QGraphicsScene::dropEvent(e);
+    if (e->isAccepted())
+        return;
+
+    /// @todo drop of real object
+    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    {
+        //e->accept();
+        return;
+    }
+
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        MO_DEBUG("drop");
+
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !p_->root->canHaveChildren(Object::Type(typ)))
+            return;
+
+        addObject(p_->root,
+                  ObjectFactory::createObject(classn),
+                  mapToGrid(e->scenePos()));
+
+        e->accept();
+        return;
+    }
+}
+#endif
+
+
+
+
+
+
 
 
 // ------------------------------ mouse events ----------------------------------
@@ -1558,7 +1642,7 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
 
     // NOTE: dynamic_cast or qobject_cast won't work between
     // application boundaries, e.g. after quit or pasting into
-    // a different instance. But static_cast works alright after we checked the MimiType.
+    // a different instance. But static_cast works alright after we checked the MimeType.
     // It's important to not rely on class members of ObjectTreeMimeData
     // but to manage everything per QMimeData::data()
     auto objdata = static_cast<const ObjectTreeMimeData*>(data);
