@@ -22,6 +22,7 @@
 #include "frontpreset.h"
 #include "gui/item/frontgroupitem.h"
 #include "gui/item/frontfloatitem.h"
+#include "gui/util/frontpreset.h"
 #include "object/object.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterint.h"
@@ -31,8 +32,9 @@
 #include "object/param/parameterfilename.h"
 #include "object/param/parametertimeline1d.h"
 #include "object/util/objecteditor.h"
-#include "math/functions.h"
+#include "types/properties.h"
 #include "tool/actionlist.h"
+#include "math/functions.h"
 #include "io/application.h"
 #include "io/currenttime.h"
 #include "io/xmlstream.h"
@@ -48,6 +50,7 @@ struct FrontScene::Private
     Private(FrontScene * s)
         : gscene    (s)
         , editor    (0)
+        , presets   (0)
         , editMode  (false)
     {
     }
@@ -73,8 +76,8 @@ struct FrontScene::Private
     void createEditActions();
 
     FrontScene * gscene;
-
     ObjectEditor * editor;
+    FrontPresets * presets;
     bool editMode;
     ActionList editActions;
 
@@ -109,7 +112,11 @@ void FrontScene::serialize(IO::XmlStream & io, const QList<AbstractFrontItem*>& 
 
     io.newSection("user-interface");
 
-        io.write("version", 1);
+        io.write("version", 2);
+
+        // v2
+        if (p_->presets)
+            p_->presets->serialize(io, "ui-presets", "ui-preset");
 
         for (AbstractFrontItem * i : list)
         {
@@ -117,22 +124,39 @@ void FrontScene::serialize(IO::XmlStream & io, const QList<AbstractFrontItem*>& 
         }
 
     io.endSection();
+
+    MO_DEBUG(io.data());
 }
 
 void FrontScene::deserialize(IO::XmlStream & io)
 {
     QList<AbstractFrontItem*> list;
+    FrontPresets pres;
 
-    deserialize(io, list);
+    deserialize(io, list, pres);
 
-    clearInterface();
+    // can't call clearInterface() here
+    // (it would delete the modulator-proxies in the scene)
+    clear();
+    p_->usedIds.clear();
+    if (p_->presets)
+    {
+        p_->presets->releaseRef();
+        p_->presets = 0;
+    }
 
     // add the items to scene
     for (auto i : list)
         p_->addItem(i);
+
+    if (pres.numPresets())
+    {
+        p_->presets = new FrontPresets(pres);
+        emit presetsChanged();
+    }
 }
 
-void FrontScene::deserialize(IO::XmlStream& io, QList<AbstractFrontItem*>& list) const
+void FrontScene::deserialize(IO::XmlStream& io, QList<AbstractFrontItem*>& list, FrontPresets & presets) const
 {
     io.verifySection("user-interface");
 
@@ -146,6 +170,11 @@ void FrontScene::deserialize(IO::XmlStream& io, QList<AbstractFrontItem*>& list)
             auto item = AbstractFrontItem::deserialize(io);
             list << item;
         }
+        else
+
+        // v2
+        if (io.section() == "ui-presets")
+            presets.deserialize(io, "ui-preset");
 
         io.leaveSection();
     }
@@ -196,6 +225,7 @@ void FrontScene::setXml(const QString & xmls)
     }
     xml.stopReading();
 }
+
 
 bool FrontScene::isEditMode() const
 {
@@ -309,8 +339,15 @@ void FrontScene::clearInterface()
 
     clear();
     p_->usedIds.clear();
+    if (p_->presets)
+    {
+        p_->presets->releaseRef();
+        p_->presets = 0;
+    }
+
     emit itemsDeleted(ids);
     emit itemUnselected();
+    emit presetsChanged();
 }
 
 AbstractFrontItem * FrontScene::createNew(FrontItemType type,
@@ -592,6 +629,82 @@ void FrontScene::addItems(const QList<AbstractFrontItem*>& list, AbstractFrontIt
 
 
 
+FrontPresets * FrontScene::presets() const
+{
+    if (!p_->presets)
+    {
+        p_->presets = new FrontPresets("ui-presets");
+        p_->presets->newPreset("default", tr("default"));
+    }
+    return p_->presets;
+}
+
+void FrontScene::storePreset(const QString &id)
+{
+    auto preset = presets()->newPreset(id);
+
+    auto items = frontItems();
+    for (AbstractFrontItem * i : items)
+    {
+        // all items that have a value
+        if (!i->valueVariant().isValid())
+            continue;
+
+        preset->setValue(i->idName(), i->valueVariant());
+    }
+}
+
+void FrontScene::loadPreset(const QString &id)
+{
+    auto preset = presets()->preset(id);
+    if (!preset)
+    {
+        MO_DEBUG("FrontScene::loadPreset('" << id << "') not found");
+        return;
+    }
+    //else MO_DEBUG("FrontScene::loadPreset('" << id << "') loading...");
+
+    for (auto i = preset->properties().begin();
+              i != preset->properties().end(); ++i)
+    {
+        if (auto item = itemForId(i.key()))
+        {
+            item->setValueVariant( i.value() );
+            item->sendValue();
+        }
+        //else MO_DEBUG("FrontScene::loadPreset('" << id << "') item '" << i.key() << "' not found");
+    }
+}
+
+void FrontScene::importPresets(const QString &filename)
+{
+    try
+    {
+        presets()->loadFile(filename);
+        emit presetsChanged();
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("importing presets"),
+                              tr("The preset file\n%1\ncould not be loaded.\n%2")
+                              .arg(filename).arg(e.what()));
+    }
+}
+
+void FrontScene::exportPresets(const QString &filename)
+{
+    try
+    {
+        presets()->saveFile(filename);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("exporting presets"),
+                              tr("The preset file\n%1\ncould not be saved.\n%2")
+                              .arg(filename).arg(e.what()));
+    }
+}
+
 void FrontScene::onSelectionChanged_()
 {
     if (!isEditMode())
@@ -861,10 +974,11 @@ QList<AbstractFrontItem*> FrontScene::getItemsFromClipboard() const
     xml.startReading();
     try
     {
+        FrontPresets pres;
         while (xml.nextSubSection())
         {
             if (xml.section() == "user-interface")
-                deserialize(xml, list);
+                deserialize(xml, list, pres);
             xml.leaveSection();
         }
     }
@@ -880,6 +994,14 @@ QList<AbstractFrontItem*> FrontScene::getItemsFromClipboard() const
 
 
 namespace { const qreal FAR = 10000000.; }
+
+void FrontScene::mousePressEvent(QGraphicsSceneMouseEvent * e)
+{
+    QGraphicsScene::mousePressEvent(e);
+    if (!e->isAccepted() && isEditMode())
+        p_->createEditActions();
+
+}
 
 void FrontScene::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 {

@@ -15,16 +15,16 @@
     namespace MO {
     namespace Private {
 
-        std::mutex IoLock::mutex_;
+        static std::recursive_mutex log_mutex_;
 
         IoLock::IoLock()
         {
-            mutex_.lock();
+            log_mutex_.lock();
         }
 
         IoLock::~IoLock()
         {
-            mutex_.unlock();
+            log_mutex_.unlock();
         }
 
     } // namespace Private

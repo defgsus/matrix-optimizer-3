@@ -21,10 +21,9 @@
     namespace MO {
     namespace Private {
 
+        /** singelton scoped lock for string output */
         class IoLock
         {
-            static std::mutex mutex_;
-
         public:
             IoLock();
             ~IoLock();

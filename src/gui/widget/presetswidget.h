@@ -29,15 +29,30 @@ public:
     /** Returns the presets class, or NULL if none was assigned */
     FrontPresets * presets() const;
 
+    /** Returns currently selected preset id, or empty string */
+    QString currentPresetId() const;
+
 signals:
 
     /** Emitted when the user changed to another preset */
-    void presetSelected(const QString& id);
+    void presetLoaded(const QString& id);
+
+    /** Emitted, when the current preset should be saved. */
+    void presetSaveRequest(const QString& id);
+
+    /** Emitted, when the current preset should be loaded. */
+    void presetLoadRequest(const QString& id);
 
 public slots:
 
     /** Assigns a list of presets to the view */
     void setPresets(FrontPresets *);
+
+    /** Selects a preset in the combobox, if present. */
+    void selectPreset(const QString& id);
+
+    /** Updates the list of presets */
+    void updatePresets();
 
 private slots:
 

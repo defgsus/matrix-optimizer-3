@@ -25,6 +25,9 @@ class ObjectEditor;
 namespace IO { class XmlStream; }
 namespace GUI {
 
+class FrontPresets;
+
+/** This is the main container and controller for AbstractFrontItem. */
 class FrontScene : public QGraphicsScene
 {
     Q_OBJECT
@@ -54,7 +57,7 @@ public:
         Ownership is with caller.
         The stream is expected to be readable
         and current section must be "user-interface" */
-    void deserialize(IO::XmlStream&, QList<AbstractFrontItem*>&) const;
+    void deserialize(IO::XmlStream&, QList<AbstractFrontItem*>&, FrontPresets& presets) const;
 
     void saveXml(const QString& filename) const;
     void loadXml(const QString& filename);
@@ -136,6 +139,22 @@ public:
         @note <b>Always use this function</b> to add items. */
     void addItems(const QList<AbstractFrontItem*>& list, AbstractFrontItem * parent = 0);
 
+    // ------------- presets ---------------
+
+    /** Returns the instance of the presets container */
+    FrontPresets * presets() const;
+
+public slots:
+    /** Stores all current values in the given preset */
+    void storePreset(const QString& id);
+
+    /** Restores all values, if they are found in the given preset. */
+    void loadPreset(const QString& id);
+
+    void importPresets(const QString& filename);
+    void exportPresets(const QString& filename);
+
+public:
     // ------------ clipboard --------------
 
     /** The mime-type string for FrontScene/FrontItems */
@@ -173,6 +192,9 @@ signals:
     /** When items have been deleted.
         The list will conveniently include all child items as well. */
     void itemsDeleted(const QList<QString>&);
+
+    /** Emitted whenever the list of presets has changed */
+    void presetsChanged() const;
 
 public slots:
 
@@ -220,6 +242,7 @@ private slots:
 
 protected:
 
+    void mousePressEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
     void drawForeground(QPainter * p, const QRectF &rect) Q_DECL_OVERRIDE;
 

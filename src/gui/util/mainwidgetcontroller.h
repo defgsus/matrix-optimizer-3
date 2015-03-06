@@ -114,6 +114,8 @@ public slots:
     void newInterface();
     void loadInterface();
     void saveInterfaceAs();
+    void loadInterfacePresets();
+    void saveInterfacePresetsAs();
 
     void renderToDisk();
 

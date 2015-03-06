@@ -12,6 +12,15 @@
 #include "types/properties.h"
 #include "io/xmlstream.h"
 
+#if 1
+#   include "io/log.h"
+#   define MO_DEBUG_PRESET(arg__) MO_DEBUG("FrontPreset(" << this << ")::" << arg__)
+#   define MO_DEBUG_PRESETS(arg__) MO_DEBUG("FrontPresets(" << this << ")::" << arg__)
+#else
+#   define MO_DEBUG_PRESET(unused__)
+#   define MO_DEBUG_PRESETS(unused__)
+#endif
+
 namespace MO {
 namespace GUI {
 
@@ -20,16 +29,20 @@ FrontPreset::FrontPreset(const QString& name)
     , p_props_      (new Properties)
 
 {
-
+    MO_DEBUG_PRESET("FrontPreset(" << name << ")");
 }
 
 FrontPreset::~FrontPreset()
 {
+    MO_DEBUG_PRESET("~FrontPreset()");
+
     delete p_props_;
 }
 
 void FrontPreset::swap(FrontPreset & o)
 {
+    MO_DEBUG_PRESET("swap(" << &o << ")");
+
     if (&o == this)
         return;
 
@@ -41,6 +54,8 @@ void FrontPreset::swap(FrontPreset & o)
 
 void FrontPreset::serialize(IO::XmlStream& io) const
 {
+    MO_DEBUG_PRESET("serialize(" << &io << ") section = '" << io.section() << "'");
+
     io.write("version", 1);
     io.write("name", p_name_);
 
@@ -50,12 +65,16 @@ void FrontPreset::serialize(IO::XmlStream& io) const
 
 void FrontPreset::deserialize(IO::XmlStream& io)
 {
+    MO_DEBUG_PRESET("deserialize(" << &io << ") section = '" << io.section() << "'");
+
     auto tmp = fromStream(io);
     swap(*tmp);
 }
 
 FrontPreset * FrontPreset::fromStream(IO::XmlStream& io)
 {
+    //MO_DEBUG_PRESET("fromStream(" << &io << ")");
+
     const int ver = io.expectInt("version");
     Q_UNUSED(ver);
 
@@ -73,7 +92,7 @@ FrontPreset * FrontPreset::fromStream(IO::XmlStream& io)
         io.leaveSection();
     }
 
-    ptmp.reset();
+    tmp->addRef();
     return tmp;
 }
 
@@ -104,9 +123,18 @@ void FrontPreset::setValue(const QString& id, const QVariant& value)
 FrontPresets::FrontPresets(const QString& name)
     : p_name_       (name)
 {
-
+    MO_DEBUG_PRESETS("FrontPresets(" << name << ")");
 }
 
+FrontPresets::FrontPresets(const FrontPresets &other)
+{
+    copyFrom(other);
+}
+
+FrontPresets::~FrontPresets()
+{
+    MO_DEBUG_PRESETS("~FrontPreset()");
+}
 
 // ----------------- io -------------------
 
@@ -114,6 +142,8 @@ void FrontPresets::serialize(IO::XmlStream& io,
                              const QString& section,
                              const QString& preset_section) const
 {
+    MO_DEBUG_PRESETS("serialize(" << &io << ", " << section << ", " << preset_section << ") section = '" << io.section() << "'");
+
     io.newSection(section);
 
         io.write("version", 1);
@@ -128,27 +158,24 @@ void FrontPresets::serialize(IO::XmlStream& io,
         }
 
     io.endSection();
+
+    //MO_DEBUG_PRESETS(io.data());
 }
 
 
 void FrontPresets::deserialize(IO::XmlStream& io, const QString& preset_section)
 {
+    MO_DEBUG_PRESETS("deserialize(" << &io << ", " << preset_section << ") section = '" << io.section() << "'");
+
     auto tmp = fromStream(io, preset_section);
 
-    clear();
-
-    p_name_ = tmp->p_name_;
-
-    // copy each preset
-    for (auto i = tmp->p_map_.begin(); i != tmp->p_map_.end(); ++i)
-    {
-        p_map_.insert(i.key(), i.value());
-        i.value().get()->addRef();
-    }
+    copyFrom(*tmp);
 }
 
 FrontPresets * FrontPresets::fromStream(IO::XmlStream& io, const QString& preset_section)
 {
+    //MO_DEBUG_PRESETS("fromStream(" << &io << ", " << preset_section << ")");
+
     const int ver = io.expectInt("version");
     Q_UNUSED(ver);
 
@@ -172,11 +199,75 @@ FrontPresets * FrontPresets::fromStream(IO::XmlStream& io, const QString& preset
         io.leaveSection();
     }
 
-    ptmp.reset();
+    tmp->addRef();
     return tmp;
 }
 
+
+void FrontPresets::saveFile(const QString &filename)
+{
+    MO_DEBUG_PRESETS("saveFile(" << filename << ")");
+
+    IO::XmlStream xml;
+    xml.startWriting();
+    serialize(xml, "ui-presets", "ui-preset");
+    xml.stopWriting();
+    xml.save(filename);
+}
+
+void FrontPresets::loadFile(const QString &filename)
+{
+    MO_DEBUG_PRESETS("loadFile(" << filename << ")");
+
+    IO::XmlStream xml;
+    xml.load(filename);
+    xml.startReading();
+    while (xml.nextSubSection())
+    {
+        if (xml.section() == "ui-presets")
+        {
+            deserialize(xml, "ui-preset");
+            break;
+        }
+        xml.leaveSection();
+    }
+    xml.stopReading();
+}
+
+
+void FrontPresets::copyFrom(const FrontPresets &other)
+{
+    if (&other == this)
+        return;
+
+    clear();
+
+    p_name_ = other.p_name_;
+
+    // copy each preset
+    for (auto i = other.p_map_.begin(); i != other.p_map_.end(); ++i)
+    {
+        p_map_.insert(i.key(), i.value());
+        // XXX not needed when copy-assigning shared-ptr, isit?
+        //i.value().get()->addRef();
+    }
+}
+
+
+
+
+
+
+
 // ------------- getter -------------------
+
+QString FrontPresets::toString() const
+{
+    QString r;
+    for (auto & i : p_map_)
+        r += i->name() + i->properties().toString() + "\n";
+    return r;
+}
 
 uint FrontPresets::numPresets() const { return p_map_.size(); }
 
@@ -228,6 +319,18 @@ QList<QPair<const FrontPreset*, QString>> FrontPresets::presetsIds() const
     return list;
 }
 
+QString FrontPresets::uniqueId() const
+{
+    static uint count = 0;
+    QString id = QString("preset%1").arg(++count);
+    while (preset(id))
+    {
+        count += numPresets();
+        id = QString("preset%1").arg(count);
+    }
+    return id;
+}
+
 // ------------- setter -------------------
 
 void FrontPresets::clear()
@@ -254,6 +357,7 @@ void FrontPresets::setPreset(const QString &id, FrontPreset *preset)
 
     auto pp = std::shared_ptr<FrontPreset>(preset, RefCountedDeleter());
     p_map_.insert(id, pp);
+    preset->addRef();
 }
 
 void FrontPresets::removePreset(const QString &id)

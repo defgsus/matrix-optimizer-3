@@ -61,6 +61,7 @@
 #include "gui/frontview.h"
 #include "gui/frontitemeditor.h"
 #include "gui/util/frontscene.h"
+#include "gui/util/frontpreset.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
@@ -327,8 +328,16 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Import ..."), menuBar));
         connect(a, SIGNAL(triggered()), this, SLOT(loadInterface()));
 
-        m->addAction(a = new QAction(tr("Export As ..."), menuBar));
+        m->addAction(a = new QAction(tr("Export as ..."), menuBar));
         connect(a, SIGNAL(triggered()), this, SLOT(saveInterfaceAs()));
+
+        m->addSeparator();
+
+        m->addAction(a = new QAction(tr("Import presets ..."), menuBar));
+        connect(a, SIGNAL(triggered()), this, SLOT(loadInterfacePresets()));
+
+        m->addAction(a = new QAction(tr("Export presets as ..."), menuBar));
+        connect(a, SIGNAL(triggered()), this, SLOT(saveInterfacePresetsAs()));
 
         m->addSeparator();
 
@@ -710,6 +719,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     // manage memory
     scene_->setParent(this);
 
+    scene_->setObjectEditor(objectEditor_);
+
     /** @todo When to run startup scripts? */
     scene_->runScripts();
 
@@ -799,8 +810,6 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     // update widgets
 
-    scene_->setObjectEditor(objectEditor_);
-
     connect(scene_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
             objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
 
@@ -815,6 +824,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     frontItemEditor_->setItem(0);
     frontScene_->setRootObject(scene_);
+    frontScene_->loadPreset("default");
 
     glWindow_->renderLater();
 
@@ -1532,17 +1542,27 @@ bool MainWidgetController::isOkayToChangeScene()
 
 void MainWidgetController::initScene()
 {
+    QString fn;
+    fn = IO::Files::filename(IO::FT_SCENE);
+
     try
     {
-        QString fn = IO::Files::filename(IO::FT_SCENE);
-        if (!fn.isEmpty())
-            loadScene_(fn);
-        else
+        // load previous project ?
+        if (fn.isEmpty())
             newScene();
+        else
+        {
+            // clear filename temporarily (against continous crash-on-load)
+            IO::Files::setFilename(IO::FT_SCENE, "");
+            loadScene_(fn);
+            // and set back
+            IO::Files::setFilename(IO::FT_SCENE, fn);
+        }
     }
     catch (IoException& e)
     {
-        MO_WARNING(e.what());
+        MO_WARNING("IO error on load:\n" << e.what());
+        IO::Files::setFilename(IO::FT_SCENE, fn);
         newScene();
     }
 }
@@ -1646,6 +1666,8 @@ bool MainWidgetController::saveScene_(const QString &fn)
     {
         try
         {
+            // always store default preset
+            frontScene_->storePreset("default");
             scene_->setFrontScene(frontScene_);
             // actually save the scene
             ObjectFactory::saveScene(fn, scene_);
@@ -1709,6 +1731,24 @@ void MainWidgetController::loadInterface()
                               tr("Could not load the interface xml\n'%1'\n%2")
                               .arg(fn).arg(e.what()));
     }
+}
+
+void MainWidgetController::saveInterfacePresetsAs()
+{
+    QString fn = IO::Files::getSaveFileName(IO::FT_INTERFACE_PRESET, window_);
+    if (fn.isEmpty())
+        return;
+
+    frontScene_->exportPresets(fn);
+}
+
+void MainWidgetController::loadInterfacePresets()
+{
+    QString fn = IO::Files::getOpenFileName(IO::FT_INTERFACE_PRESET, window_);
+    if (fn.isEmpty())
+        return;
+
+    frontScene_->importPresets(fn);
 }
 
 

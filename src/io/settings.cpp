@@ -118,6 +118,8 @@ void Settings::createDefaultValues_()
                                 = mopath + "/data/projection_settings";
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_INTERFACE_XML]]
                                 = mopath + "/data/interface";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_INTERFACE_PRESET]]
+                                = mopath + "/data/interface/presets";
 
     defaultValues_["File/scene"] = "";
 

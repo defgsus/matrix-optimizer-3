@@ -11,8 +11,9 @@
 #ifndef MOSRC_GUI_FRONTVIEW_H
 #define MOSRC_GUI_FRONTVIEW_H
 
-#include <QGraphicsView>
+#include <QWidget>
 
+class QGraphicsView;
 
 namespace MO {
 class Object;
@@ -22,8 +23,11 @@ namespace GUI {
 
 class FrontScene;
 class AbstractFrontItem;
+class PresetsWidget;
 
-class FrontView : public QGraphicsView
+/** Complete view for user interface.
+    Contains the QGraphicsView and a PresetsWidget. */
+class FrontView : public QWidget
 {
     Q_OBJECT
 public:
@@ -45,7 +49,11 @@ private slots:
 
 private:
 
+    void createWidgets_();
+
+    QGraphicsView * gview_;
     FrontScene * gscene_;
+    PresetsWidget * presets_;
 };
 
 } // namespace GUI

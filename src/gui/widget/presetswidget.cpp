@@ -28,11 +28,17 @@ struct PresetsWidget::Private
 
     void createWidgets();
     void updateCombo();
+    void updateButtons();
     void setComboIndex(int);
+    void setComboIndex(const QString& id);
+
+    // actions
+    void newPreset();
 
     PresetsWidget * widget;
     FrontPresets * presets;
     QComboBox * combo;
+    QPushButton * butLoad, * butSave, * butNew;
     bool ignoreCombo;
 };
 
@@ -43,6 +49,7 @@ PresetsWidget::PresetsWidget(QWidget *parent)
     , p_            (new Private(this))
 {
     p_->createWidgets();
+    p_->updateButtons();
 }
 
 PresetsWidget::~PresetsWidget()
@@ -62,13 +69,34 @@ void PresetsWidget::Private::createWidgets()
         connect(combo, SIGNAL(currentIndexChanged(int)),
                 widget, SLOT(onComboChanged_()));
 
-        auto but = new QPushButton(tr("load"), widget);
-        but->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-        lh->addWidget(but);
+        butLoad = new QPushButton(tr("L"), widget);
+        butLoad->setStatusTip(tr("Loads the currently selected preset"));
+        butLoad->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+        lh->addWidget(butLoad);
+        connect(butLoad, &QPushButton::clicked, [=]()
+        {
+            QString id = widget->currentPresetId();
+            if (!id.isEmpty())
+                widget->presetLoadRequest(id);
+        });
 
-        but = new QPushButton(tr("overwrite"), widget);
-        but->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-        lh->addWidget(but);
+        butSave = new QPushButton(tr("S"), widget);
+        butSave->setStatusTip(tr("Overwrites the currently selected preset"));
+        butSave->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+        lh->addWidget(butSave);
+        connect(butSave, &QPushButton::clicked, [=]()
+        {
+            QString id = widget->currentPresetId();
+            if (!id.isEmpty())
+                widget->presetSaveRequest(id);
+        });
+
+        butNew = new QPushButton(tr("N"), widget);
+        butNew->setStatusTip(tr("Creates a new preset"));
+        butNew->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+        lh->addWidget(butNew);
+        connect(butNew, &QPushButton::clicked, [=](){ newPreset(); });
+
 }
 
 void PresetsWidget::Private::updateCombo()
@@ -82,7 +110,16 @@ void PresetsWidget::Private::updateCombo()
         combo->addItem(p.first->name(), p.second);
     }
 
-    setComboIndex(0);
+    //setComboIndex(0);
+}
+
+void PresetsWidget::Private::updateButtons()
+{
+    int i = combo->currentIndex();
+    bool valid = (i >= 0 && i < combo->count());
+
+    butLoad->setEnabled(valid);
+    butSave->setEnabled(valid);
 }
 
 void PresetsWidget::Private::setComboIndex(int i)
@@ -95,9 +132,34 @@ void PresetsWidget::Private::setComboIndex(int i)
     }
 }
 
+void PresetsWidget::Private::setComboIndex(const QString& id)
+{
+    for (int i=0; i<combo->count(); ++i)
+    if (combo->itemData(i).toString() == id)
+    {
+        ignoreCombo = true;
+        combo->setCurrentIndex(i);
+        ignoreCombo = false;
+        return;
+    }
+}
+
 FrontPresets * PresetsWidget::presets() const
 {
     return p_->presets;
+}
+
+QString PresetsWidget::currentPresetId() const
+{
+    int i = p_->combo->currentIndex();
+    return (i >= 0 && i < p_->combo->count())
+            ? p_->combo->itemData(i).toString()
+            : QString();
+}
+
+void PresetsWidget::selectPreset(const QString &id)
+{
+    p_->setComboIndex(id);
 }
 
 void PresetsWidget::setPresets(FrontPresets * p)
@@ -111,17 +173,31 @@ void PresetsWidget::setPresets(FrontPresets * p)
     p_->updateCombo();
 }
 
+void PresetsWidget::updatePresets()
+{
+    p_->updateCombo();
+    p_->updateButtons();
+}
+
 void PresetsWidget::onComboChanged_()
 {
-    if (p_->ignoreCombo)
-        return;
+    p_->updateButtons();
 
-    int i = p_->combo->currentIndex();
-    if (i < 0 || i >= p_->combo->count())
-        return;
-
-    emit presetSelected(p_->combo->itemData(i).toString());
+    //emit presetSelected(p_->combo->itemData(i).toString());
 }
+
+void PresetsWidget::Private::newPreset()
+{
+    if (!presets)
+        presets = new FrontPresets();
+
+    const QString id = presets->uniqueId();
+    presets->newPreset(id, id);
+
+    updateCombo();
+    setComboIndex(id);
+}
+
 
 } // namespace GUI
 } // namespace MO

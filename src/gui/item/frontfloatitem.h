@@ -28,10 +28,12 @@ public:
 
     // ---------------- getter ------------------
 
+    /** Current ui value */
     Float value() const;
 
     // -------------- setter --------------------
 
+    /** Sets the value of the ui item. No signals. */
     void setValue(Float v);
 
     // --------------- layout -------------------
@@ -43,6 +45,7 @@ protected:
 
     FrontFloatItem * cloneClass() const Q_DECL_OVERRIDE { return new FrontFloatItem; }
 
+    bool sendValue() Q_DECL_OVERRIDE;
     QVariant valueVariant() const Q_DECL_OVERRIDE { return QVariant(value()); }
     void setValueVariant(const QVariant&) Q_DECL_OVERRIDE;
 

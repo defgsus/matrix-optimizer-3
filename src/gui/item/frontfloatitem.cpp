@@ -68,11 +68,9 @@ void FrontFloatItem::onPropertiesChanged()
     if (!p_->fader)
     {
         p_->fader = new FaderItem(this);
-        p_->fader->setCallback([=](Float v)
+        p_->fader->setCallback([=](Float)
         {
-            auto s = frontScene();
-            if (s)
-                s->sendValue(idName(), v);
+            sendValue();
             update();
         });
         onEditModeChanged();
@@ -95,8 +93,20 @@ Float FrontFloatItem::value() const
 
 void FrontFloatItem::setValue(Float v)
 {
+    if (!p_->fader)
+        onPropertiesChanged();
+
     if (p_->fader)
         p_->fader->setValue(v);
+}
+
+bool FrontFloatItem::sendValue()
+{
+    auto s = frontScene();
+    if (!s)
+        return false;
+    s->sendValue(idName(), value());
+    return true;
 }
 
 void FrontFloatItem::setValueVariant(const QVariant& v)

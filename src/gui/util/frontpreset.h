@@ -66,6 +66,9 @@ public:
 
     QVariant value(const QString& id) const;
 
+    /** Read access to the Properties container where values are stored. */
+    const Properties& properties() const { return *p_props_; }
+
     // ------------- setter -------------------
 
     void setName(const QString& name) { p_name_ = name; }
@@ -83,10 +86,16 @@ private:
 /** A collection of FrontPreset */
 class FrontPresets : public RefCounted
 {
-    ~FrontPresets() { }
+
 public:
 
-    FrontPresets(const QString& name = QString("Presets"));
+    FrontPresets(const QString& name = QString("presets"));
+    FrontPresets(const FrontPresets& other);
+    ~FrontPresets();
+
+
+    /** Make this a copy of @p other */
+    void copyFrom(const FrontPresets& other);
 
     // ----------------- io -------------------
 
@@ -120,9 +129,15 @@ public:
     static FrontPresets * fromStream(IO::XmlStream& io,
                                      const QString& preset_section = QString("ui-preset"));
 
+    void saveFile(const QString& filename);
+    void loadFile(const QString& filename);
+
     // ------------- getter -------------------
 
     const QString& name() const { return p_name_; }
+
+    /** Returns a string with all consecutive presets */
+    QString toString() const;
 
     /** Returns the number of presets contained */
     uint numPresets() const;
@@ -143,6 +158,9 @@ public:
 
     /** Returns the list of all presets with their ids */
     QList<QPair<const FrontPreset*, QString>> presetsIds() const;
+
+    /** Returns a session-wide unqiue id */
+    QString uniqueId() const;
 
     // ------------- setter -------------------
 

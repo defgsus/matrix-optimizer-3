@@ -206,7 +206,7 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
         }
         catch (Exception& e)
         {
-            delete o;
+            o->releaseRef();
             e << "\nobject creation failed for class '" << className << "'";
             throw;
         }
@@ -214,7 +214,7 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
         // once in a while check stream for errors
         if (io.status() != QDataStream::Ok)
         {
-            delete o;
+            o->releaseRef();
             MO_IO_ERROR(READ, "error deserializing object '"<<idName<<"'.\n"
                         "QIODevice error: '"<<io.device()->errorString()<<"'");
         }
@@ -229,7 +229,7 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
         }
         catch (Exception& e)
         {
-            delete o;
+            o->releaseRef();
             e << "\nCould not read parameters for object '" << idName << "'";
             throw;
         }
@@ -786,7 +786,7 @@ void Object::deleteObject_(Object * child, bool destroy)
     {
         child->setParent(0);
         if (destroy)
-            delete child;
+            child->releaseRef();
         p_childrenHaveChanged_ = true;
     }
 }

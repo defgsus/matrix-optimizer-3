@@ -28,6 +28,7 @@ namespace IO {
         FT_MODEL,
         FT_GEOMETRY_SETTINGS,
         FT_INTERFACE_XML,
+        FT_INTERFACE_PRESET,
         FT_SOUND_FILE,
         /** Like .mod and .s3m */
         FT_TRACKER,
