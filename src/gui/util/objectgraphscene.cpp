@@ -79,7 +79,8 @@ public:
             action  (A_NONE),
             connectStartConnectItem (0),
             connectStartItem    (0),
-            connectEndItem      (0)
+            connectEndItem      (0),
+            nextSelectedObject  (0)
     { }
 
     /// Creates the items for o and all of its children
@@ -130,6 +131,8 @@ public:
     ObjectGraphConnectItem * connectStartConnectItem, * connectEndConnectItem;
     AbstractObjectItem * connectStartItem, * connectEndItem;
     QPointF connectStartPos, connectEndPos;
+
+    Object * nextSelectedObject;
 };
 
 
@@ -449,6 +452,13 @@ void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& local_
 
     // create modulator items
     createModulatorItems(o);
+
+    MO_DEBUG(nextSelectedObject << " " << o);
+    if (nextSelectedObject == o)
+    {
+        nextSelectedObject = 0;
+        item->setSelected(true);
+    }
 }
 
 void ObjectGraphScene::Private::resolveLayout(bool updateConnections)
@@ -1527,7 +1537,8 @@ void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint
 
     newObject->setAttachedData(gridPos, Object::DT_GRAPH_POS);
 
-    p_->root->editor()->addObject(parent, newObject, insert_index);
+    p_->nextSelectedObject = newObject;
+    p_->root->editor()->addObject(parent, newObject, insert_index);    
 }
 
 void ObjectGraphScene::addObjects(Object *parent, const QList<Object *> newObjects, const QPoint &gridPos, int insert_index)

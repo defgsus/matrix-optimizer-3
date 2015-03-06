@@ -277,6 +277,7 @@ void Model3d::createParameters()
 
 
     params()->beginParameterGroup("color", tr("color"));
+    initParameterGroupExpanded("color");
 
         cbright_ = params()->createFloatParameter("bright", "bright", tr("Overall brightness of the color"), 1.0, 0.1);
         cr_ = params()->createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);

@@ -186,7 +186,6 @@ void MainWidgetController::createObjects_()
 
     // object (parameter) View
     objectView_ = new ObjectView(window_);
-    objectView_->setSceneSettings(sceneSettings_);
     connect(objectView_, SIGNAL(objectSelected(MO::Object*)),
             this, SLOT(onObjectSelectedObjectView_(MO::Object*)));
     connect(objectView_, SIGNAL(statusTipChanged(QString)),

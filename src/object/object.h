@@ -604,6 +604,13 @@ public:
         XXX Right now it's a bit unclear, what is possible here except from lazy requests. */
     virtual void onParametersLoaded() { }
 
+protected:
+
+    /** Sets the given parameter group's expansion flag default value.
+        The value is unchanged if it had already been changed.
+        This can be used in createParameters() to set particular goups to expanded
+        by default. */
+    void initParameterGroupExpanded(const QString& groupId, bool expanded = true);
 
     // ------------------- audio ------------------
 public:

@@ -43,6 +43,7 @@ void AxisRotation::createParameters()
     Transformation::createParameters();
 
     params()->beginParameterGroup("trans", tr("transformation"));
+    initParameterGroupExpanded("trans");
 
         const QString axisTip = tr("Unit vector describing the axis to rotate around (internally normalized)");
         angle_ = params()->createFloatParameter("a", "angle",

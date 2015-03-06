@@ -61,11 +61,12 @@ public:
 
     // ------ expanded-flag of ParameterGroups -----------
 
+#if (0)
     void setParameterGroupExpanded(const Object *, const QString& groupId, bool expanded);
     bool getParameterGroupExpanded(const Object *, const QString& groupId) const;
 
     // ------------- ObjectGraphView ---------------------
-#if (0)
+
     bool hasLocalGridPos(const Object*, const QString& groupId) const;
     const QPoint &getLocalGridPos(const Object*, const QString& groupId) const;
     void setLocalGridPos(const Object*, const QString& groupdId, const QPoint&);
@@ -87,6 +88,7 @@ private:
     /** @deprecated */
     QHash<QString, QPoint> gridPos_;
     QSet<QString>
+    /** @deprecated */
         paramGroupExpanded_,
     /** @deprecated */
         treeExpanded_;

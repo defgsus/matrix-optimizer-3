@@ -101,6 +101,7 @@ void Synthesizer::createParameters()
     Object::createParameters();
 
     params()->beginParameterGroup("synthesizer", tr("synthesizer"));
+    initParameterGroupExpanded("synthesizer");
 
         synth_->createParameters("");
 

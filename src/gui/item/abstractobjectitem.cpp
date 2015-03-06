@@ -353,7 +353,6 @@ void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
         objectScene()->addObject(object(),
                                  ObjectFactory::createObject(classn),
                                  mapToGrid(e->scenePos()) - gridPos());
-        setSelected(true);
 
         e->accept();
         return;

@@ -95,6 +95,7 @@ void TextureOverlay::createParameters()
     params()->endParameterGroup();
 
     params()->beginParameterGroup("texturecolor", tr("color"));
+    initParameterGroupExpanded("texturecolor");
 
         cr_ = params()->createFloatParameter("red", tr("red"), tr("Red amount of color multiplier"), 1.0, 0.1);
         cr_->setMinValue(0.0);

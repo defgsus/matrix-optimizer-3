@@ -42,6 +42,7 @@ void LightSource::createParameters()
     Object::createParameters();
 
     params()->beginParameterGroup("color", tr("color"));
+    initParameterGroupExpanded("color");
 
         all_ = params()->createFloatParameter("all", tr("brightness"), tr("Amplifier for all colors"), 1.0, 0.1);
         r_ = params()->createFloatParameter("red", tr("red"), tr("Red amount of light color"), 1.0, 0.1);

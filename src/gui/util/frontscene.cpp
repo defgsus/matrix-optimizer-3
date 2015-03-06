@@ -667,7 +667,7 @@ void FrontScene::Private::createEditActions()
         // PASTE
         if (gscene->isItemsInClipboard())
         {
-            editActions.append( a = new QAction(tr("paste"), gscene) );
+            editActions.append( a = new QAction(tr("Paste"), gscene) );
             a->setShortcut(Qt::CTRL + Qt::Key_V);
             connect(a, &QAction::triggered, [=]()
             {
@@ -683,6 +683,7 @@ void FrontScene::Private::createEditActions()
         AbstractFrontItem * item = seltop[0];
 
         editActions.addTitle(QString("\"%1\"").arg(item->name()), gscene);
+        editActions.addSeparator(gscene);
 
         // NEW
         editActions.addMenu(createNewItemMenu(item->mapToScene(0,0)), gscene);
@@ -744,6 +745,7 @@ void FrontScene::Private::createEditActions()
     if (seltop.size() > 1)
     {
         editActions.addTitle(tr("%1 items").arg(seltop.size()), gscene);
+        editActions.addSeparator(gscene);
 
         // GROUP
         editActions.append( a = new QAction(tr("Group"), gscene) );

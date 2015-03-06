@@ -79,6 +79,7 @@ void AScriptObject::createParameters()
     Object::createParameters();
 
     params()->beginParameterGroup("_ascript", tr("script"));
+    initParameterGroupExpanded("_ascript");
 
         p_->scriptText = params()->createTextParameter("_ascript", tr("sourcecode"),
                                                     tr("The source code of the AngelScript program"),

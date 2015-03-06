@@ -73,6 +73,7 @@ void Camera::createParameters()
     ObjectGl::createParameters();
 
     params()->beginParameterGroup("camera", tr("camera settings"));
+    initParameterGroupExpanded("camera");
 
         p_cameraMode_ = params()->createSelectParameter("cammode", tr("render mode"),
                                             tr("Selects the display/render mode for this camera"),

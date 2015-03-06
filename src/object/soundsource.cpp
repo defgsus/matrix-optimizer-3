@@ -45,6 +45,7 @@ void SoundSource::createParameters()
     Object::createParameters();
 
     params()->beginParameterGroup("audiotrack", tr("audio"));
+    initParameterGroupExpanded("audiotrack");
 
         audioTrack_ = params()->createFloatParameter("audio_track", tr("audio"),
                                            tr("The audio signal of the sound source"),

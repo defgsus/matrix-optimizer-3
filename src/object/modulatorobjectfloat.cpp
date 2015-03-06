@@ -44,6 +44,7 @@ void ModulatorObjectFloat::createParameters()
     ModulatorObject::createParameters();
 
     params()->beginParameterGroup("modval", tr("value"));
+    initParameterGroupExpanded("modval");
 
         p_value_ = params()->createFloatParameter("val", tr("value"),
                                        tr("A float value - sent to all receivers of the modulator"),

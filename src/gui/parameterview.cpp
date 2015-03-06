@@ -36,7 +36,6 @@ ParameterView::ParameterView(QWidget *parent) :
     QWidget         (parent),
     scene_          (0),
     editor_         (0),
-    sceneSettings_  (0),
     object_         (0)
 {
     setObjectName("_ParameterView");
@@ -172,15 +171,19 @@ GroupWidget * ParameterView::getGroupWidget_(const Parameter * p)
         // get expanded flag from scene-settings
         MO_ASSERT(p->object(), "parameter without object in ParameterView");
         g->setExpanded(
-            sceneSettings_->getParameterGroupExpanded(p->object(), p->groupId()) );
+            //sceneSettings_->getParameterGroupExpanded(p->object(), p->groupId())
+            p->object()->getAttachedData(Object::DT_PARAM_GROUP_EXPANDED, p->groupId()).toBool()
+                    );
 
         connect(g, &GroupWidget::expanded, [=]()
         {
-            sceneSettings_->setParameterGroupExpanded(p->object(), p->groupId(), true);
+            //sceneSettings_->setParameterGroupExpanded(p->object(), p->groupId(), true);
+            p->object()->setAttachedData(true, Object::DT_PARAM_GROUP_EXPANDED, p->groupId());
         });
         connect(g, &GroupWidget::collapsed, [=]()
         {
-            sceneSettings_->setParameterGroupExpanded(p->object(), p->groupId(), false);
+            //sceneSettings_->setParameterGroupExpanded(p->object(), p->groupId(), false);
+            p->object()->setAttachedData(false, Object::DT_PARAM_GROUP_EXPANDED, p->groupId());
             squeezeView_();
         });
 

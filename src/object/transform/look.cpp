@@ -43,6 +43,7 @@ void Look::createParameters()
     Transformation::createParameters();
 
     params()->beginParameterGroup("trans", tr("transformation"));
+    initParameterGroupExpanded("trans");
 
         const QString lookTip = tr("unit vector describing the look axis (internally normalized)"),
                       upTip = tr("unit vector describing the up-axis (internally normalized)");

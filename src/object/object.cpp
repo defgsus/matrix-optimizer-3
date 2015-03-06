@@ -1126,7 +1126,11 @@ void Object::onParameterChanged(Parameter * p)
 }
 
 
-
+void Object::initParameterGroupExpanded(const QString &groupId, bool expanded)
+{
+    if (!hasAttachedData(DT_PARAM_GROUP_EXPANDED, groupId))
+        setAttachedData(expanded, DT_PARAM_GROUP_EXPANDED, groupId);
+}
 
 // ----------------- audio sources ---------------------
 

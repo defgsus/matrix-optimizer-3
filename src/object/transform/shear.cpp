@@ -41,6 +41,7 @@ void Shear::createParameters()
     Transformation::createParameters();
 
     params()->beginParameterGroup("trans", tr("transformation"));
+    initParameterGroupExpanded("trans");
 
         xy_ = params()->createFloatParameter("xy", "x -> y", tr("Shear influence of x axis on y axis"), 0);
         xz_ = params()->createFloatParameter("xz", "x -> z", tr("Shear influence of x axis on z axis"), 0);

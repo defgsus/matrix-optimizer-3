@@ -41,6 +41,7 @@ void Translation::createParameters()
     Transformation::createParameters();
 
     params()->beginParameterGroup("trans", tr("transformation"));
+    initParameterGroupExpanded("trans");
 
         x_ = params()->createFloatParameter("x", tr("x"), tr("Offset on the x axis"), 0.0, 0.1);
         y_ = params()->createFloatParameter("y", tr("y"), tr("Offset on the y axis"), 0.0, 0.1);
