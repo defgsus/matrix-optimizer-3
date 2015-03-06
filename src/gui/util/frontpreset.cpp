@@ -321,13 +321,13 @@ QList<QPair<const FrontPreset*, QString>> FrontPresets::presetsIds() const
 
 QString FrontPresets::uniqueId() const
 {
-    static uint count = 0;
-    QString id = QString("preset%1").arg(++count);
+    //static uint count = 0;
+    uint count = numPresets();
+
+    QString id = QString("preset%1").arg(count);
     while (preset(id))
-    {
-        count += numPresets();
-        id = QString("preset%1").arg(count);
-    }
+        id = QString("preset%1").arg(++count);
+
     return id;
 }
 

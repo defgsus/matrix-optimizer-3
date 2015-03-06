@@ -125,7 +125,7 @@ void FrontScene::serialize(IO::XmlStream & io, const QList<AbstractFrontItem*>& 
 
     io.endSection();
 
-    MO_DEBUG(io.data());
+    //MO_DEBUG(io.data());
 }
 
 void FrontScene::deserialize(IO::XmlStream & io)
@@ -348,6 +348,7 @@ void FrontScene::clearInterface()
     emit itemsDeleted(ids);
     emit itemUnselected();
     emit presetsChanged();
+    emit sceneChanged();
 }
 
 AbstractFrontItem * FrontScene::createNew(FrontItemType type,
@@ -364,6 +365,7 @@ AbstractFrontItem * FrontScene::createNew(FrontItemType type,
 
     item->setPos(snapGrid(pos));
     p_->addItem(item);
+    emit sceneChanged();
     return item;
 }
 
@@ -392,6 +394,7 @@ void FrontScene::removeItems(const QList<AbstractFrontItem *> &items)
 
     // signal gui and scene
     emit itemsDeleted(allIds);
+    emit sceneChanged();
 }
 
 void FrontScene::groupItems(const QList<AbstractFrontItem *> &items)
@@ -424,6 +427,8 @@ void FrontScene::groupItems(const QList<AbstractFrontItem *> &items)
         i->setParentItem(group);
         i->setPos(group->mapFromScene(i->pos()));
     }
+
+    emit sceneChanged();
 }
 
 QPointF FrontScene::cursorPos() const
@@ -625,6 +630,8 @@ void FrontScene::addItems(const QList<AbstractFrontItem*>& list, AbstractFrontIt
             i->setParentItem(parent);
         p_->addItem(i);
     }
+
+    emit sceneChanged();
 }
 
 
@@ -652,6 +659,8 @@ void FrontScene::storePreset(const QString &id)
 
         preset->setValue(i->idName(), i->valueVariant());
     }
+
+    emit sceneChanged();
 }
 
 void FrontScene::loadPreset(const QString &id)
@@ -682,6 +691,7 @@ void FrontScene::importPresets(const QString &filename)
     {
         presets()->loadFile(filename);
         emit presetsChanged();
+        emit sceneChanged();
     }
     catch (const Exception& e)
     {

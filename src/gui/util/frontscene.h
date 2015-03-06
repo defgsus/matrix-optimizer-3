@@ -183,6 +183,9 @@ signals:
     /** Whenever the edit mode has been changed */
     void editModeChanged(bool isEditMode);
 
+    /** Used for the modified flag of MainWindow */
+    void sceneChanged();
+
     /** When an item was selected */
     void itemSelected(AbstractFrontItem*);
     /** When multiple items where selected */

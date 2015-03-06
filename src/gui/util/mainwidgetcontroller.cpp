@@ -200,6 +200,7 @@ void MainWidgetController::createObjects_()
     // front-end scene
     frontScene_ = new FrontScene(window_);
     frontScene_->setObjectEditor(objectEditor_);
+    connect(frontScene_, SIGNAL(sceneChanged()), this, SLOT(onSceneChanged_()));
     connect(frontScene_, &FrontScene::actionsChanged, [=](const QList<QAction*>& a)
     {
         setEditActions_(frontScene_, a);

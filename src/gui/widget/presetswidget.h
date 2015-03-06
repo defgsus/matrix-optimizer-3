@@ -51,6 +51,11 @@ public slots:
     /** Selects a preset in the combobox, if present. */
     void selectPreset(const QString& id);
 
+    /** Selects the previous preset and emits presetLoadRequest() */
+    void loadPrevious();
+    /** Selects the next preset and emits presetLoadRequest() */
+    void loadNext();
+
     /** Updates the list of presets */
     void updatePresets();
 

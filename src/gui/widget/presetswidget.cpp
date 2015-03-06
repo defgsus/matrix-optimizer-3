@@ -38,7 +38,8 @@ struct PresetsWidget::Private
     PresetsWidget * widget;
     FrontPresets * presets;
     QComboBox * combo;
-    QPushButton * butLoad, * butSave, * butNew;
+    QPushButton * butLoad, * butSave, * butNew,
+                * butUp, * butDown;
     bool ignoreCombo;
 };
 
@@ -64,7 +65,21 @@ void PresetsWidget::Private::createWidgets()
     auto lh = new QHBoxLayout(widget);
     lh->setMargin(0);
 
+        butUp = new QPushButton(tr("<"), widget);
+        butUp->setStatusTip(tr("Loads the previous preset"));
+        butUp->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+        lh->addWidget(butUp);
+        connect(butUp, SIGNAL(clicked()), widget, SLOT(loadPrevious()));
+
+        butDown = new QPushButton(tr(">"), widget);
+        butDown->setStatusTip(tr("Loads the next preset"));
+        butDown->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+        lh->addWidget(butDown);
+        connect(butDown, SIGNAL(clicked()), widget, SLOT(loadNext()));
+
         combo = new QComboBox(widget);
+        combo->setStatusTip(tr("Preset list - only changes the selection - "
+                               "use the buttons to the right to act upon the selection"));
         lh->addWidget(combo, 1);
         connect(combo, SIGNAL(currentIndexChanged(int)),
                 widget, SLOT(onComboChanged_()));
@@ -119,7 +134,7 @@ void PresetsWidget::Private::updateButtons()
     bool valid = (i >= 0 && i < combo->count());
 
     butLoad->setEnabled(valid);
-    butSave->setEnabled(valid);
+    butSave->setEnabled(valid && widget->currentPresetId() != "default");
 }
 
 void PresetsWidget::Private::setComboIndex(int i)
@@ -160,6 +175,32 @@ QString PresetsWidget::currentPresetId() const
 void PresetsWidget::selectPreset(const QString &id)
 {
     p_->setComboIndex(id);
+}
+
+void PresetsWidget::loadPrevious()
+{
+    int i = p_->combo->currentIndex();
+    if (i < 0)
+        return;
+    if (--i < 0)
+        i = p_->combo->count() - 1;
+    p_->setComboIndex(i);
+    auto id = currentPresetId();
+    if (!id.isEmpty())
+        emit presetLoadRequest(id);
+}
+
+void PresetsWidget::loadNext()
+{
+    int i = p_->combo->currentIndex();
+    if (i < 0)
+        return;
+    if (++i >= p_->combo->count())
+        i = 0;
+    p_->setComboIndex(i);
+    auto id = currentPresetId();
+    if (!id.isEmpty())
+        emit presetLoadRequest(id);
 }
 
 void PresetsWidget::setPresets(FrontPresets * p)
