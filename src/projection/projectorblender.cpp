@@ -9,7 +9,9 @@
 */
 
 #include <QVector>
-
+#include <QImage>
+#include <QFileInfo>
+#include <QDir>
 
 #include "projectorblender.h"
 #include "projectionsystemsettings.h"
@@ -19,6 +21,8 @@
 #include "gl/screenquad.h"
 #include "gl/texture.h"
 #include "gl/framebufferobject.h"
+#include "gl/offscreencontext.h"
+#include "gl/opengl.h"
 #include "io/error.h"
 
 namespace MO {
@@ -32,6 +36,7 @@ public:
 
     void setSettings(const ProjectionSystemSettings & set);
     GL::Texture * renderBlendTexture(uint index, uint height);
+    void exportMaps(const QString &directory);
 };
 
 
@@ -141,6 +146,7 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index, uint hei
         u_dome_radius->floats[0] = set.domeSettings().radius();
         u_index->ints[0] = index;
         u_margin->floats[0] = set.blendMargin();
+        u_margin->floats[1] = set.blendMargin() * mapper[index].aspect();
 
         // prepare fbo
 
@@ -203,6 +209,54 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index, uint hei
     }
 
     return tex;
+}
+
+
+void ProjectorBlender::exportMaps(const QString &directory)
+{
+    p_->exportMaps(directory);
+}
+
+void ProjectorBlender::Private::exportMaps(const QString &directory)
+{
+    GL::OffscreenContext ctx;
+
+    if (!ctx.createGl())
+        MO_GL_ERROR("Could not create openGL context");
+
+    if (!ctx.makeCurrent())
+        MO_GL_ERROR("Could not make openGL current");
+
+
+
+    for (uint i=0; i<set.numProjectors(); ++i)
+    {
+        int width = set.cameraSettings(i).width(),
+            height = set.cameraSettings(i).height();
+
+        // create framebuffer
+        GL::FrameBufferObject fbo(width, height, gl::GL_RGBA, gl::GL_FLOAT);
+        fbo.create();
+        fbo.bind();
+
+        // init view
+        MO_CHECK_GL( gl::glViewport(0,0, width, height) );
+        MO_CHECK_GL( gl::glClearColor(0,0,0, 1) );
+        MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT) );
+
+        // render the texture
+        renderBlendTexture(i, 0);
+
+        // export via QImage
+
+        QImage img = fbo.colorTexture()->getImage();
+
+        QFileInfo fi(QDir(directory), QString("edgemap_%1.png").arg(i));
+        if (!img.save(fi.absoluteFilePath()))
+            MO_IO_ERROR(WRITE, "Could not save image file\n" << fi.absoluteFilePath());
+
+        fbo.release();
+    }
 }
 
 

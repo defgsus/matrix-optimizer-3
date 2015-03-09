@@ -12,7 +12,7 @@
 #include "types/properties.h"
 #include "io/xmlstream.h"
 
-#if 1
+#if 0
 #   include "io/log.h"
 #   define MO_DEBUG_PRESET(arg__) MO_DEBUG("FrontPreset(" << this << ")::" << arg__)
 #   define MO_DEBUG_PRESETS(arg__) MO_DEBUG("FrontPresets(" << this << ")::" << arg__)

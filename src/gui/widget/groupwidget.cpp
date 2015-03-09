@@ -194,7 +194,7 @@ void GroupWidget::addLayout(QLayout * l)
 
 void GroupWidget::updateArrow_()
 {
-    button_->setArrowType(expanded_? Qt::RightArrow : Qt::DownArrow);
+    button_->setArrowType(expanded_? Qt::DownArrow : Qt::RightArrow);
 }
 
 

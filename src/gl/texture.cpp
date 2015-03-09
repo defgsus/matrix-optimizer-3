@@ -554,7 +554,7 @@ QString Texture::info_str() const
 */
 
 
-QImage Texture::getImage()
+QImage Texture::getImage() const
 {
     MO_DEBUG_IMG("Texture::getImage()");
 
@@ -571,7 +571,7 @@ QImage Texture::getImage()
             // color components
             GL_RGB,
             // format
-            GL_UNSIGNED_INT,
+            GL_UNSIGNED_BYTE,
             // data
             &buffer[0])
         , err);

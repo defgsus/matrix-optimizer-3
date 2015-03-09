@@ -91,6 +91,7 @@ private slots:
     void pasteProjector_();
     void copyCamera_();
     void pasteCamera_();
+    void exportBlendMaps_();
 
     void createFromClients_();
     void onComboContent_();

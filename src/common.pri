@@ -271,7 +271,8 @@ HEADERS += \
     src/tool/asciirect.h \
     src/types/properties.h \
     src/io/docbookexporter.h \
-    src/maincommandline.h
+    src/maincommandline.h \
+    src/gl/offscreencontext.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -504,4 +505,5 @@ SOURCES += \
     src/tool/asciirect.cpp \
     src/types/properties.cpp \
     src/io/docbookexporter.cpp \
-    src/maincommandline.cpp
+    src/maincommandline.cpp \
+    src/gl/offscreencontext.cpp

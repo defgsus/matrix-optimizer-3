@@ -20,6 +20,7 @@ class QSurface;
 namespace MO {
 namespace GL {
 
+/** Wrapper for a QOpenGLContext with associated size */
 class Context : public QObject
 {
     Q_OBJECT
@@ -37,7 +38,7 @@ public:
 
     bool makeCurrent();
 
-private:
+protected:
 
     QSize size_;
     QOpenGLContext * qcontext_;

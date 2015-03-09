@@ -95,9 +95,9 @@ void ProjectorSetupDialog::createMenu_()
     QMenu * menu;
     QAction * a;
 
-    // ############### FILE ###############
+    // ############### Setup ###############
 
-    mainMenu_->addMenu(menu = new QMenu(tr("File"), mainMenu_));
+    mainMenu_->addMenu(menu = new QMenu(tr("Setup"), mainMenu_));
 
         menu->addAction(a = new QAction(tr("New setup"), menu));
         a->setShortcut(Qt::CTRL + Qt::Key_N);
@@ -127,6 +127,7 @@ void ProjectorSetupDialog::createMenu_()
         menu->addAction(a = new QAction(tr("Save as default"), menu));
         a->setShortcut(Qt::CTRL + Qt::Key_D);
         connect(a, SIGNAL(triggered()), this, SLOT(saveDefault_()));
+
 
 
     // ############### EDIT ###############
@@ -160,6 +161,11 @@ void ProjectorSetupDialog::createMenu_()
         menu->addAction(a = new QAction(tr("Paste camera settings"), menu));
         connect(a, SIGNAL(triggered()), this, SLOT(pasteCamera_()));
         aPasteCamera_ = a;
+
+        menu->addSeparator();
+
+        menu->addAction(a = new QAction(tr("Export blend maps"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(exportBlendMaps_()));
 
     // ############### CLIENT ###############
 
@@ -1302,6 +1308,26 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
     // blendings only
     ProjectorBlender blender(settings_);
     return blender.renderBlendTexture(index, 320);
+}
+
+void ProjectorSetupDialog::exportBlendMaps_()
+{
+    QString dir = IO::Files::getOpenDirectory(IO::FT_ANY, this, false);
+    if (dir.isEmpty())
+        return;
+
+    ProjectorBlender blender(settings_);
+
+    try
+    {
+        blender.exportMaps(dir);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("blend map export"),
+                              tr("Something went wrong while exporting the blend maps.\n%1")
+                              .arg(e.what()));
+    }
 }
 
 } // namespace GUI

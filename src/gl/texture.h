@@ -154,7 +154,7 @@ public:
 
     // ---------------- QImage ----------------
 
-    QImage getImage();
+    QImage getImage() const;
 
 private:
 
