@@ -1291,6 +1291,7 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
 
             // paste
             a = actions.addAction(tr("Paste into %1").arg(pname), scene);
+            a->setShortcut(Qt::CTRL + Qt::Key_P);
             connect(a, &QAction::triggered, [=]()
             {
                 scene->dropMimeData(application()->clipboard()->mimeData(), popupGridPos);

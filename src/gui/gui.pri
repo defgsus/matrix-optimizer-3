@@ -99,7 +99,10 @@ HEADERS += \
     src/gui/item/frontgroupitem.h \
     src/gui/util/frontpreset.h \
     src/gui/widget/iconbar.h \
-    src/gui/widget/presetswidget.h
+    src/gui/widget/presetswidget.h \
+    src/gui/item/knobitem.h \
+    src/gui/item/abstractfrontdisplayitem.h \
+    src/gui/item/frontdisplayfloatitem.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -198,4 +201,7 @@ SOURCES += \
     src/gui/item/frontgroupitem.cpp \
     src/gui/util/frontpreset.cpp \
     src/gui/widget/iconbar.cpp \
-    src/gui/widget/presetswidget.cpp
+    src/gui/widget/presetswidget.cpp \
+    src/gui/item/knobitem.cpp \
+    src/gui/item/abstractfrontdisplayitem.cpp \
+    src/gui/item/frontdisplayfloatitem.cpp

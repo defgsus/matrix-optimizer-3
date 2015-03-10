@@ -1,11 +1,11 @@
-/** @file faderitem.cpp
+/** @file knobitem.cpp
 
     @brief
 
     <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 31.01.2015</p>
+    <p>created 10.03.2015</p>
 */
 
 #include <QPainter>
@@ -13,13 +13,13 @@
 #include <QGraphicsSceneWheelEvent>
 #include <QGraphicsScene>
 
-#include "faderitem.h"
+#include "knobitem.h"
 #include "io/error.h"
 
 namespace MO {
 namespace GUI {
 
-FaderItem::FaderItem(QGraphicsItem * p)
+KnobItem::KnobItem(QGraphicsItem * p)
     : AbstractGuiItem   (p)
     , value_            (0.)
     , defValue_         (0.)
@@ -28,11 +28,10 @@ FaderItem::FaderItem(QGraphicsItem * p)
     , do_drag_          (false)
     , colorOn_          (QColor(100,150,100))
     , colorOff_         (QColor(30,70,30))
-    , vertical_         (true)
 {
 }
 
-void FaderItem::setRange(Float mi, Float ma)
+void KnobItem::setRange(Float mi, Float ma)
 {
     min_ = mi;
     max_ = ma;
@@ -40,13 +39,13 @@ void FaderItem::setRange(Float mi, Float ma)
     update();
 }
 
-void FaderItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent*e)
+void KnobItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent*e)
 {
     p_setEmit_(defaultValue());
     QGraphicsItem::mouseDoubleClickEvent(e);
 }
 
-void FaderItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
+void KnobItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 {
     if (e->button() == Qt::LeftButton)
     {
@@ -68,14 +67,12 @@ void FaderItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
     }
 }
 
-void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
+void KnobItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 {
     if (do_drag_)
     {
         // get mouse delta
-        Float dm = vertical_ ?
-                      (e->buttonDownScenePos(Qt::LeftButton).y() - e->scenePos().y()) / height()
-                  : -((e->buttonDownScenePos(Qt::LeftButton).x() - e->scenePos().x()) / width());
+        Float dm = (e->buttonDownScenePos(Qt::LeftButton).y() - e->scenePos().y()) / 100.;
 
         // get value change factor
         dm *= range();
@@ -87,13 +84,13 @@ void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
     }
 }
 
-void FaderItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void KnobItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     do_drag_ = false;
     AbstractGuiItem::mouseReleaseEvent(event);
 }
 
-void FaderItem::wheelEvent(QGraphicsSceneWheelEvent * e)
+void KnobItem::wheelEvent(QGraphicsSceneWheelEvent * e)
 {
     // get value change factor
     Float dm = range() / 500.;
@@ -106,7 +103,7 @@ void FaderItem::wheelEvent(QGraphicsSceneWheelEvent * e)
     p_setEmit_(value_ + dm);
 }
 
-void FaderItem::p_setEmit_(Float v)
+void KnobItem::p_setEmit_(Float v)
 {
     Float newValue = std::max(min_,std::min(max_, v ));
 
@@ -121,30 +118,31 @@ void FaderItem::p_setEmit_(Float v)
     }
 }
 
-void FaderItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
+int KnobItem::angle_(Float v) const
 {
-    p->setPen(Qt::NoPen);
+    return (225.f - v * 270.f) * 16;
+}
 
-    QRectF r = rect();
+void KnobItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
+{
+    Float v = (value_ - min_) / (max_ - min_);
+    int v0 = angle_(0),
+        v1 = angle_(v);
+    const int pw = 12;
 
-    if (vertical_)
-    {
-        qreal y = (1.0 - (value_ - min_) / (max_ - min_)) * r.height();
+    QRectF r(rect());
+    r.adjust(pw/2, pw/2, -pw/2, -pw/2);
 
-        p->setBrush(QBrush(colorOff_));
-        p->drawRect(r.left(), r.top(), r.width(), y);
-        p->setBrush(QBrush(colorOn_));
-        p->drawRect(r.left(), r.top() + y, r.width(), r.height() - y);
-    }
-    else
-    {
-        qreal x = (value_ - min_) / (max_ - min_) * r.width();
+    p->setBrush(Qt::NoBrush);
 
-        p->setBrush(QBrush(colorOn_));
-        p->drawRect(r.left(), r.top(), x, r.height());
-        p->setBrush(QBrush(colorOff_));
-        p->drawRect(r.left() + x, r.top(), r.width() - x, r.height());
-    }
+    QPen pen(colorOff_);
+    pen.setWidth(pw);
+    p->setPen(pen);
+    p->drawEllipse(r);
+
+    pen.setColor(colorOn_);
+    p->setPen(pen);
+    p->drawArc(r, v0, v1-v0);
 }
 
 

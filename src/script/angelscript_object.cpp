@@ -150,6 +150,8 @@ public:
 
     ObjectAS * findName(const StringAS& n) { auto obj = find_name(o, MO::toString(n)); return obj ? wrap_(obj) : 0; }
 
+    ObjectAS * findPath(const StringAS& path) { auto obj = o->findObjectByNamePath(MO::toString(path)); return obj ? wrap_(obj) : 0; }
+
     bool isSequence() const { return qobject_cast<Sequence*>(o) != 0; }
     bool isGroup() const { return qobject_cast<Group*>(o) != 0; }
     bool isModel() const { return qobject_cast<Model3d*>(o) != 0; }
@@ -608,6 +610,9 @@ static void register_object_base(asIScriptEngine *engine, const char * typ)
 
     MO__REG_METHOD("Object@ find(const string &in name)", findName);
     MO__REG_METHOD("const Object@ find(const string &in name) const", findName);
+
+    MO__REG_METHOD("Object@ findPath(const string &in path)", findPath);
+    MO__REG_METHOD("const Object@ findPath(const string &in path) const", findPath);
 
     MO__REG_METHOD_F("Sequence@ getSequence(const string &in name)", obj_getcreate<SequenceFloat>::get<SequenceAS>);
     MO__REG_METHOD_F("Model@ getModel(const string &in name)", obj_getcreate<Model3d>::get<ModelAS>);

@@ -58,7 +58,7 @@ ObjectDescription ObjectDescription::fromByteArray(const QByteArray & a)
 
 bool ObjectDescription::isFromSameApplicationInstance() const
 {
-    return p_app_ == application;
+    return p_app_ == application();
 }
 
 

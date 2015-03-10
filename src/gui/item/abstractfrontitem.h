@@ -36,7 +36,8 @@ enum FrontItemType
     FIT_ABSTRACT = QGraphicsItem::UserType + 1024,
     FIT_GROUP,
     FIT_FLOAT,
-    FIT_TEXT
+    FIT_TEXT,
+    FIT_DISPLAY_FLOAT
 };
 
 class AbstractFrontItem;
@@ -66,6 +67,11 @@ public:
 
     /** Returns the stored AbstractFrontItem::idName() */
     QString getItemId() const;
+
+    /** Returns the value from AbstractFrontItem::modulatorType().
+        Can be checked if this item can control a particular Parameter
+        via Parameter::getModulatorTypes() & modulatorType(). */
+    int modulatorType() const;
 
     bool isSameApplicationInstance() const;
 
@@ -201,12 +207,13 @@ public:
         @see setCanHaveChildren() */
     bool canHaveChildren() const { return p_canHaveChildren_; }
 
-    /** Enables or disables the use of this item as a group. */
+    /** Enables or disables the use of this item as a group.
+        Default value is false. */
     void setCanHaveChildren(bool e) { p_canHaveChildren_ = e; }
 
     // ----------------- editing ----------------
 
-    /** Starts a QDrag action with the item's id */
+    /** Starts a QDrag action with a FrontItemMimeData class. */
     void startDragging();
 
     /** Creates a pixmap from the item as it looks right now. */
@@ -230,12 +237,16 @@ protected:
 
 public:
 
-    /** Should call FrontScene::sendValue() to update the system with the current value.
+    /** Reimplement to return the type of modulator, this item represents.
+        E.g. Object::T_MODULATOR_OBJECT_FLOAT for float controller. */
+    virtual int modulatorType() const { return 0; }
+
+    /** Reimplement to call FrontScene::sendValue() to update the system with the current value.
         Default impl. does nothing.
         Returns true, when FrontScene::sendValue() has been called. */
     virtual bool sendValue() { return false; }
 
-    /** Return the value of the control as QVariant. (Used for presets)
+    /** Reimplement to return the value of the control as QVariant. (Used for presets)
         If this function returns an invalid QVariant(), the item is not
         included in presets.
         Default implementation does nothing. */

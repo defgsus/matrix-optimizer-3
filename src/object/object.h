@@ -415,6 +415,16 @@ public:
     /** Returns a set of all idNames */
     QSet<QString> getChildIds(bool recursive) const;
 
+    /** Returns the object matching the path in @p namePath.
+        @p namePath can be of the form '/name1/name2' or 'name1/name2'.
+        In the first form, name1 is expected to be a direct child of this object,
+        in the latter form, name1 can be anywhere down the branches.
+        Returns NULL, if the object was not found. */
+    Object * findObjectByNamePath(const QString& namePath) const;
+
+    /** Helper function for the other findObjectByIdPath() method. */
+    Object * findObjectByNamePath(const QStringList& names, int offset = 0, bool firstIsRoot = false) const;
+
     /** Returns the first object, including self, for which @p selector returns true,
         or NULL. */
     Object * findChildObject(std::function<bool(Object*)> selector);

@@ -1,15 +1,15 @@
-/** @file faderitem.h
+/** @file knobitem.h
 
     @brief
 
     <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 31.01.2015</p>
+    <p>created 10.03.2015</p>
 */
 
-#ifndef MOSRC_GUI_ITEM_FADERITEM_H
-#define MOSRC_GUI_ITEM_FADERITEM_H
+#ifndef MOSRC_GUI_ITEM_KNOBITEM_H
+#define MOSRC_GUI_ITEM_KNOBITEM_H
 
 #include <functional>
 
@@ -21,19 +21,16 @@ namespace GUI {
 
 /**
 */
-class FaderItem : public AbstractGuiItem
+class KnobItem : public AbstractGuiItem
 {
 public:
 
-    FaderItem(QGraphicsItem * parent = 0);
+    KnobItem(QGraphicsItem * parent = 0);
 
     // ---------------- getter ------------------
 
     const QColor onColor() const { return colorOn_; }
     const QColor offColor() const { return colorOff_; }
-    bool vertical() const { return vertical_; }
-    /* Length of value range in pixels */
-    //int length() const;
 
     /** Returns the range (rangeMax() - rangeMin()).
         Value is clipped to lower range 0.000001 */
@@ -47,7 +44,6 @@ public:
 
     void setOnColor(const QColor& c) { colorOn_ = c; update(); }
     void setOffColor(const QColor& c) { colorOff_ = c; update(); }
-    void setVertical(bool v) { vertical_ = v; update(); }
 
     void setRange(Float mi, Float ma);
     void setDefaultValue(Float value) { defValue_ = value; update(); }
@@ -59,7 +55,7 @@ public:
 
     // ----------- QGraphicsItem ----------------
 
-    enum { Type = AbstractGuiItem::Type + 1 };
+    enum { Type = AbstractGuiItem::Type + 2 };
     int type() const { return Type; }
 
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
@@ -73,6 +69,9 @@ private:
 
     void p_setEmit_(Float v);
 
+    /** Return arc angle for for in [0,1] */
+    int angle_(Float v) const;
+
     Float value_, defValue_, min_, max_,
         drag_start_value_;
     bool do_drag_;
@@ -80,10 +79,9 @@ private:
     std::function<void(Float)> callback_;
 
     QColor colorOn_, colorOff_;
-    bool vertical_;
 };
 
 } // namespace GUI
 } // namespace MO
 
-#endif // MOSRC_GUI_ITEM_FADERITEM_H
+#endif // MOSRC_GUI_ITEM_KNOBITEM_H

@@ -39,6 +39,9 @@ public:
 
     // ----------- QGraphicsItem ----------------
 
+    enum { Type = UserType + 2048 };
+    int type() const { return Type; }
+
     virtual QRectF boundingRect() const Q_DECL_OVERRIDE { return p_rect_; }
 
     //virtual void paint(QPainter * p, const QStyleOptionGraphicsItem *, QWidget *) Q_DECL_OVERRIDE;

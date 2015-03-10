@@ -1285,6 +1285,8 @@ void ProjectorSetupDialog::onComboContent_()
     }
 }
 
+/** @todo Refacture this please...
+    We can precalculate the maps now via GL::OffscreenContext. */
 GL::Texture * ProjectorSetupDialog::createTexture_(int index)
 {
     // test render
@@ -1312,7 +1314,7 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
 
 void ProjectorSetupDialog::exportBlendMaps_()
 {
-    QString dir = IO::Files::getOpenDirectory(IO::FT_ANY, this, false);
+    QString dir = IO::Files::getDirectory(tr("Choose directory to store the blend maps"), this);
     if (dir.isEmpty())
         return;
 

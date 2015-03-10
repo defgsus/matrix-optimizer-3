@@ -1,74 +1,62 @@
-/** @file frontfloatitem.h
+/** @file frontdisplayfloatitem.h
 
     @brief
 
     <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 26.02.2015</p>
+    <p>created 10.03.2015</p>
 */
 
-#ifndef MOSRC_GUI_ITEM_FRONTFLOATITEM_H
-#define MOSRC_GUI_ITEM_FRONTFLOATITEM_H
+#ifndef MOSRC_GUI_ITEM_FRONTDISPLAYFLOATITEM_H
+#define MOSRC_GUI_ITEM_FRONTDISPLAYFLOATITEM_H
 
-#include "abstractfrontitem.h"
+#include "abstractfrontdisplayitem.h"
 #include "types/float.h"
 
 namespace MO {
 namespace GUI {
 
-/** Wraps all possible continous value float controls
+/** Wraps all possible continous value float displays.
 */
-class FrontFloatItem : public AbstractFrontItem
+class FrontDisplayFloatItem : public AbstractFrontDisplayItem
 {
 public:
 
     // --------------- types --------------------
 
-    enum ControlType
+    enum DisplayType
     {
-        CT_FADER = 0,
-        CT_KNOB
+        DT_FADER = 0
     };
 
     // ----------------- ctor -------------------
 
-    explicit FrontFloatItem(QGraphicsItem * parent = 0);
-    ~FrontFloatItem();
+    explicit FrontDisplayFloatItem(QGraphicsItem * parent = 0);
+    ~FrontDisplayFloatItem();
 
     // ---------------- getter ------------------
 
-    /** Current ui value */
+    /** Returns the current float value, if an Object is assigned. */
     Float value() const;
 
-    Float defaultValue() const;
-
     // -------------- setter --------------------
-
-    /** Sets the value of the ui item. No signals. */
-    void setValue(Float v);
 
     // --------------- layout -------------------
 
     // ----------- virtual interface ------------
 protected:
 
-    const QString& className() const Q_DECL_OVERRIDE { static QString s("Float"); return s; }
+    const QString& className() const Q_DECL_OVERRIDE { static QString s("FloatDisplay"); return s; }
 
-    FrontFloatItem * cloneClass() const Q_DECL_OVERRIDE { return new FrontFloatItem; }
-
-    int modulatorType() const Q_DECL_OVERRIDE;
-
-    bool sendValue() Q_DECL_OVERRIDE;
-    QVariant valueVariant() const Q_DECL_OVERRIDE { return QVariant(value()); }
-    void setValueVariant(const QVariant&) Q_DECL_OVERRIDE;
+    FrontDisplayFloatItem * cloneClass() const Q_DECL_OVERRIDE { return new FrontDisplayFloatItem; }
 
     void onPropertiesChanged() Q_DECL_OVERRIDE;
     void onEditModeChanged() Q_DECL_OVERRIDE;
 
     // ----------- QGraphicsItem ----------------
 
-    enum { Type = FIT_FLOAT };
+    enum { Type = FIT_DISPLAY_FLOAT };
     virtual int type() const { return Type; }
 
     //virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
@@ -85,4 +73,4 @@ private:
 } // namespace GUI
 } // namespace MO
 
-#endif // MOSRC_GUI_ITEM_FRONTFLOATITEM_H
+#endif // MOSRC_GUI_ITEM_FRONTDISPLAYFLOATITEM_H

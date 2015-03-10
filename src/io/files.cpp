@@ -166,7 +166,7 @@ QString Files::getSaveFileName(FileType ft, QWidget *parent, bool updateDirector
 
 
 
-QString Files::getOpenDirectory(FileType ft, QWidget *parent, bool updateDirectory)
+QString Files::getDirectory(FileType ft, QWidget *parent, bool updateDirectory, const QString& title)
 {
     QString fn = directory(ft);
 
@@ -174,7 +174,10 @@ QString Files::getOpenDirectory(FileType ft, QWidget *parent, bool updateDirecto
     QFileDialog diag(parent);
     diag.setConfirmOverwrite(false);
     diag.setAcceptMode(QFileDialog::AcceptOpen);
-    diag.setWindowTitle(QFileDialog::tr("Choose directory for %1").arg(fileTypeNames[ft]));
+    if (title.isEmpty())
+        diag.setWindowTitle(QFileDialog::tr("Choose directory for %1").arg(fileTypeNames[ft]));
+    else
+        diag.setWindowTitle(title);
     diag.setDirectory(fn);
     diag.setFileMode(QFileDialog::Directory);
     diag.setOption(QFileDialog::ShowDirsOnly, true);

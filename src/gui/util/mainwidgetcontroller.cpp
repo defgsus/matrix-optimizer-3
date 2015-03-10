@@ -407,22 +407,22 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
             sub->addAction(a = aDrawCameras_ = new QAction(tr("Show cameras"), sub));
             a->setCheckable(true);
-            a->setShortcut(Qt::ALT + Qt::Key_1);
+            a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_1);
             connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
             sub->addAction(a = aDrawLightSources_= new QAction(tr("Show lights"), sub));
             a->setCheckable(true);
-            a->setShortcut(Qt::ALT + Qt::Key_2);
+            a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_2);
             connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
             sub->addAction(a = aDrawMicrophones_ = new QAction(tr("Show microphones"), sub));
             a->setCheckable(true);
-            a->setShortcut(Qt::ALT + Qt::Key_3);
+            a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_3);
             connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
             sub->addAction(a = aDrawAudioSources_ = new QAction(tr("Show soundsources"), sub));
             a->setCheckable(true);
-            a->setShortcut(Qt::ALT + Qt::Key_4);
+            a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_4);
             connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
         m->addSeparator();
@@ -1948,7 +1948,7 @@ void MainWidgetController::onOutputSizeChanged_(const QSize & size)
 
 void MainWidgetController::exportHelpHtml_()
 {
-    QString fn = IO::Files::getOpenDirectory(IO::FT_HELP_EXPORT);
+    QString fn = IO::Files::getDirectory(IO::FT_HELP_EXPORT);
     if (fn.isEmpty())
         return;
 

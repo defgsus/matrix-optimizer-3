@@ -64,6 +64,15 @@ QString FrontItemMimeData::getItemId() const
     return QString::fromUtf8(data(ItemIdMimeType));
 }
 
+int FrontItemMimeData::modulatorType() const
+{
+    if (!isSameApplicationInstance())
+        return 0;
+
+    auto i = getItem();
+    return i ? i->modulatorType() : 0;
+}
+
 AbstractFrontItem * FrontItemMimeData::getItem() const
 {
     if (!hasFormat(ItemPtrMimeType))
@@ -508,16 +517,16 @@ QRectF AbstractFrontItem::boundingRect() const
 QColor AbstractFrontItem::borderColor() const
 {
     QColor c = p_props_->get("border-color").value<QColor>();
-    if (isSelected() && isEditMode())
-       c = c.lighter();
+    if (isSelected())// && isEditMode())
+       c = c.lighter(120);
     return c;
 }
 
 QColor AbstractFrontItem::backgroundColor() const
 {
     QColor c = p_props_->get("background-color").value<QColor>();
-    if (isSelected() && type() != FIT_GROUP)
-       c = c.lighter();
+    if (isSelected())// && type() != FIT_GROUP)
+       c = c.lighter(120);
     return c;
 }
 
@@ -590,6 +599,14 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
     auto rec = rect();
     auto rr = p_props_->get("rounded-size").toSize();
     p->drawRoundedRect(rec, rr.width(), rr.height());
+
+    // -- edit frame --
+    if (isSelected() && isEditMode())
+    {
+        p->setPen(QPen(Qt::green));
+        p->setBrush(Qt::NoBrush);
+        p->drawRect(boundingRect());
+    }
 
     // -- label --
     if (p_props_->get("label-visible").toBool())

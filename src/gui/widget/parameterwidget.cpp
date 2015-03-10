@@ -113,7 +113,10 @@ void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
 
     if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
     {
-        if (!idata->isSameApplicationInstance())
+        if (   !param_->isModulateable()
+            || !idata->isSameApplicationInstance()
+            || !(idata->modulatorType() & param_->getModulatorTypes())
+                )
             return;
 
         e->setDropAction(Qt::LinkAction);
@@ -148,7 +151,13 @@ void ParameterWidget::dropEvent(QDropEvent * e)
     // drop of a ui-item
     if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
     {
+        if (!param_->isModulateable())
+            return;
+
         if (!idata->isSameApplicationInstance())
+            return;
+
+        if (!(idata->modulatorType() & param_->getModulatorTypes()))
             return;
 
         auto item = idata->getItem();
@@ -608,6 +617,7 @@ void ParameterWidget::addRemoveModMenu_(QMenu * menu, Parameter * param)
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
             QString ids = a->data().toString();
+            MO_DEBUG(ObjectMenu::getModulatorId(ids)<<" '"<<ObjectMenu::getOutputId(ids)<<"'");
             editor_->removeModulator(param, ObjectMenu::getModulatorId(ids),
                                             ObjectMenu::getOutputId(ids));
         });

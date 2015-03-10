@@ -849,6 +849,53 @@ QSet<QString> Object::getChildIds(bool recursive) const
     return ids;
 }
 
+Object * Object::findObjectByNamePath(const QString &namePath) const
+{
+    bool isRootPath = namePath.startsWith('/');
+
+    QStringList names = namePath.split('/', QString::SkipEmptyParts);
+    if (names.isEmpty())
+        return 0;
+
+    return findObjectByNamePath(names, 0, isRootPath);
+}
+
+Object * Object::findObjectByNamePath(const QStringList &names, int offset, bool firstIsRoot) const
+{
+    if (offset >= names.length())
+        return 0;
+
+    QString name = names[offset];
+    Object * obj = 0;
+    for (auto c : childObjects())
+    if (c->name() == name)
+    {
+        obj = c;
+        break;
+    }
+
+    // first id should be a child of this?
+    if (obj == 0 && firstIsRoot)
+        return 0;
+
+    // found id?
+    if (obj)
+    {
+        // last in path?
+        if (offset+1 == names.size())
+            return obj;
+        // otherwise traverse obj
+        return obj->findObjectByNamePath(names, offset + 1, true);
+    }
+
+    // otherwise check all children branches
+    for (auto c : childObjects())
+        if (auto obj = c->findObjectByNamePath(names, offset, firstIsRoot))
+            return obj;
+
+    return 0;
+}
+
 /*
 void Object::p_makeUniqueIds_(Object * root)
 {

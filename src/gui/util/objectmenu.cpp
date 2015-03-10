@@ -129,7 +129,7 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
 }
 
 
-namespace { static QString stupid_separator("*^_mo_sep_^*"); }
+namespace { static QString stupid_separator("_mo_sep_"); }
 
 QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *parent)
 {
@@ -166,12 +166,12 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
 
 QString ObjectMenu::getModulatorId(const QString &modAndOutputId)
 {
-    return modAndOutputId.section(stupid_separator, 0);
+    return modAndOutputId.section(stupid_separator, 0, 0);
 }
 
 QString ObjectMenu::getOutputId(const QString &modAndOutputId)
 {
-    return modAndOutputId.section(stupid_separator, 1);
+    return modAndOutputId.section(stupid_separator, 1, 1);
 }
 
 void ObjectMenu::setEnabled(QMenu *menu, const QStringList& ids, bool enable)

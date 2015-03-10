@@ -146,7 +146,7 @@ void BulkRenameDialog::createWidgets_()
 
 void BulkRenameDialog::chooseInputPath_()
 {
-    QString path = IO::Files::getOpenDirectory(IO::FT_ANY, this, false);
+    QString path = IO::Files::getDirectory(IO::FT_ANY, this, false);
     if (path.isEmpty())
         return;
 
