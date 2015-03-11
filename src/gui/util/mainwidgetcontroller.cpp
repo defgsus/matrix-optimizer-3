@@ -1439,10 +1439,15 @@ void MainWidgetController::start()
     objectGraphView()->setRootObject(scene_);
 
 
+
     // start engine
     if (audioEngine_->start())
         // start rythmic gui updates
         updateTimer_->start();
+
+    // XXX especially update CurrentTime
+    // Scene::sceneTime() is not really used
+    scene_->setSceneTime(audioEngine_->second());
 
     glManager_->startAnimate();
     frontScene_->startAnimate();
@@ -1473,12 +1478,16 @@ void MainWidgetController::stop()
             scene_->render();
         }
     }
+    else
+    {
+        scene_->setSceneTime(0.0);
+        scene_->render();
+    }
 
-
-    //scene_->stop();
-
+#ifndef MO_DISABLE_SERVER
     if (serverEngine().isRunning())
         serverEngine().setScenePlaying(false);
+#endif
 }
 
 void MainWidgetController::closeAudio()

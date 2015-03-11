@@ -28,12 +28,14 @@ void CurrentTime::setTime(Double time)
 {
     startTime_ = applicationTime() - time;
 
-    if (isClient() && serverEngine().isRunning())
+#ifndef MO_DISABLE_SERVER
+    if (isServer() && serverEngine().isRunning())
     {
         auto e = new NetEventTime();
         e->setTime(time);
         serverEngine().sendEvent(e);
     }
+#endif
 }
 
 }

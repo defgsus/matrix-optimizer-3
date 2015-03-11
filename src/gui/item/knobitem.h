@@ -55,7 +55,7 @@ public:
 
     // ----------- QGraphicsItem ----------------
 
-    enum { Type = AbstractGuiItem::Type + 2 };
+    enum { Type = GIT_KNOB };
     int type() const { return Type; }
 
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;

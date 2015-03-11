@@ -184,9 +184,10 @@ void FrontFloatItem::onEditModeChanged()
 
 QRectF FrontFloatItem::boundingRect() const
 {
-    return AbstractFrontItem::boundingRect()
-            | p_->labelRect;
-}
+    auto r = AbstractFrontItem::boundingRect();
+    if (properties().get("value-label-visible").toBool())
+        r |= p_->labelRect;
+    return r;}
 
 void FrontFloatItem::paint(QPainter *p, const QStyleOptionGraphicsItem * style, QWidget * widget)
 {

@@ -16,6 +16,14 @@
 namespace MO {
 namespace GUI {
 
+enum GuiItemType
+{
+    GIT_ABSTRACT = QGraphicsItem::UserType + 2048,
+    GIT_FADER,
+    GIT_KNOB,
+    GIT_SCOPE
+};
+
 /** Very general (normally rectangular) interface item,
     connecting some value/object with some gui control.
 */
@@ -39,7 +47,7 @@ public:
 
     // ----------- QGraphicsItem ----------------
 
-    enum { Type = UserType + 2048 };
+    enum { Type = GIT_ABSTRACT };
     int type() const { return Type; }
 
     virtual QRectF boundingRect() const Q_DECL_OVERRIDE { return p_rect_; }

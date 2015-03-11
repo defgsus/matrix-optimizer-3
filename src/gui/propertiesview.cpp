@@ -26,7 +26,7 @@ PropertiesView::PropertiesView(QWidget *parent)
     , p_stretch_    (0)
     , p_scroll_     (0)
 {
-
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 PropertiesView::~PropertiesView()
@@ -68,12 +68,13 @@ void PropertiesView::createWidgtes_()
     if (p_stretch_)
         p_stretch_->deleteLater();
 
-    // create scroll-area
     if (!p_scroll_)
     {
         auto lv = new QVBoxLayout(this);
-        lv->setMargin(2);
+        lv->setMargin(0);
+        lv->setSizeConstraint(QLayout::SetMaximumSize);
 
+        // create scroll-area
         p_scroll_ = new QScrollArea(this);
         lv->addWidget(p_scroll_);
 
@@ -82,7 +83,7 @@ void PropertiesView::createWidgtes_()
         p_container_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         // layout for property widgets
-        p_lv_ = new QVBoxLayout(p_scroll_);
+        p_lv_ = new QVBoxLayout(p_container_);
         p_lv_->setMargin(1);
         p_lv_->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
@@ -92,7 +93,9 @@ void PropertiesView::createWidgtes_()
     // create one for each property
     for (auto i = p_props_->begin(); i != p_props_->end(); ++i)
     {
-        auto widget = new QVariantWidget(i.key(), i.value(), this);
+        auto widget = new QVariantWidget(i.key(), i.value(), p_container_);
+        widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
         // keep track
         p_widgets_.insert(i.key(), widget);
 
@@ -110,7 +113,7 @@ void PropertiesView::createWidgtes_()
     }
 
     // a "stretch" that can be deleted later
-    p_stretch_ = new QWidget(this);
+    p_stretch_ = new QWidget(p_container_);
     p_lv_->addWidget(p_stretch_);
     p_lv_->setStretch(p_lv_->indexOf(p_stretch_), 2);
 

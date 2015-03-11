@@ -15,12 +15,16 @@
 #include "frontdisplayfloatitem.h"
 #include "faderitem.h"
 #include "gui/util/frontscene.h"
+#include "gui/painter/valuecurve.h"
 #include "object/object.h"
 #include "object/audioobject.h"
 #include "object/sequencefloat.h"
 #include "io/currenttime.h"
 #include "types/properties.h"
 
+//#include "object/util/objecteditor.h"
+//#include "object/scene.h"
+//#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -32,6 +36,9 @@ struct FrontDisplayFloatItem::Private
     Private(FrontDisplayFloatItem * i)
         : item      (i)
         , fader     (0)
+        , curvePainter(0)
+        , lookupTime(0.0)
+        , timeRange (1.0)
     { }
 
     void getValueFunction();
@@ -43,8 +50,10 @@ struct FrontDisplayFloatItem::Private
 
     DisplayType displayType;
     FaderItem * fader;
+    PAINTER::ValueCurve * curvePainter;
 
     std::function<Float(Double)> valueFunc;
+    Double lookupTime, timeRange;
 };
 
 FrontDisplayFloatItem::FrontDisplayFloatItem(QGraphicsItem * parent)
@@ -55,12 +64,13 @@ FrontDisplayFloatItem::FrontDisplayFloatItem(QGraphicsItem * parent)
     initProperty("label-text", QString("X"));
     initProperty("padding", 2);
     initProperty("label-outside", true);
-    initProperty("background-color", QColor(0x30, 0x30, 0x50));
-    initProperty("value-on-color", QColor(0xff,0xff,0xff,0x60));
-    initProperty("value-off-color", QColor(0,0,0,0x60));
+    initProperty("background-color", QColor(0x30, 0x30, 0x30));
+    initProperty("value-on-color", QColor(0xff,0x60,0xf0,0x60));
+    initProperty("value-off-color", QColor(0,0,0x60,0));
 
     initProperty("display-type", 0);
     initProperty("fader-vertical", true);
+    initProperty("scope-time-range", 1.0);
 
     initProperty("value-min", 0.0);
     initProperty("value-max", 1.0);
@@ -68,6 +78,7 @@ FrontDisplayFloatItem::FrontDisplayFloatItem(QGraphicsItem * parent)
 
 FrontDisplayFloatItem::~FrontDisplayFloatItem()
 {
+    delete p_->curvePainter;
     delete p_;
 }
 
@@ -75,6 +86,8 @@ void FrontDisplayFloatItem::onPropertiesChanged()
 {
     // assign object
     AbstractFrontDisplayItem::onPropertiesChanged();
+
+    p_->timeRange = properties().get("scope-time-range").toDouble();
 
     p_->getValueFunction();
     p_->createWidgets();
@@ -123,6 +136,8 @@ void FrontDisplayFloatItem::Private::createWidgets()
 
     if (displayType == DT_FADER)
     {
+        delete curvePainter;
+        curvePainter = 0;
 //        delete knob;
 //        knob = 0;
 
@@ -139,6 +154,35 @@ void FrontDisplayFloatItem::Private::createWidgets()
         fader->setVertical(item->properties().get("fader-vertical").toBool());
         fader->setRange(item->properties().get("value-min").toFloat(),
                         item->properties().get("value-max").toFloat());
+    }
+
+    if (displayType == DT_SCOPE)
+    {
+        delete fader;
+        fader = 0;
+        //        delete knob;
+        //        knob = 0;
+
+        if (!curvePainter)
+        {
+            curvePainter = new PAINTER::ValueCurve;
+            curvePainter->setOverpaint(1);
+        }
+
+        curvePainter->setPen(QPen(item->properties().get("value-on-color").value<QColor>()));
+        curvePainter->setViewSpace(UTIL::ViewSpace(
+                                       0.,
+                                       item->properties().get("value-min").toFloat(),
+                                       1.,
+                                       item->properties().get("value-max").toFloat() - item->properties().get("value-min").toFloat()
+                                    ));
+        curvePainter->setCurveFunction([this](Double x)
+        {
+            if (!valueFunc)
+                return Double(0.);
+            Double t = lookupTime - (1. - x) * timeRange;
+            return t >= 0. ? (Double)valueFunc(t) : 0.0;
+        });
     }
 
 /*    if (controlType == CT_KNOB)
@@ -183,8 +227,10 @@ void FrontDisplayFloatItem::onEditModeChanged()
 
 QRectF FrontDisplayFloatItem::boundingRect() const
 {
-    return AbstractFrontItem::boundingRect()
-            | p_->labelRect;
+    auto r = AbstractFrontItem::boundingRect();
+    if (properties().get("value-label-visible").toBool())
+        r |= p_->labelRect;
+    return r;
 }
 
 Float FrontDisplayFloatItem::value() const
@@ -196,6 +242,18 @@ Float FrontDisplayFloatItem::value() const
 
 void FrontDisplayFloatItem::Private::updateWidgetValue()
 {
+    if (curvePainter)
+    {
+        lookupTime = CurrentTime::time();
+        /*if (item->frontScene())
+            if (auto e = item->frontScene()->objectEditor())
+                if (auto s = e->scene())
+                    lookupTime = s->sceneTime();*/
+
+        item->update();
+        return;
+    }
+
     const Float v = item->value();
 
     if (fader)
@@ -214,6 +272,12 @@ void FrontDisplayFloatItem::paint(QPainter *p, const QStyleOptionGraphicsItem * 
     //p_->updateWidgetValue();
 
     AbstractFrontItem::paint(p, style, widget);
+
+    if (p_->curvePainter)
+    {
+        QRect r = innerRect().toRect();
+        p_->curvePainter->paint(*p, r, r);
+    }
 
     // -- value label --
     if (properties().get("value-label-visible").toBool())

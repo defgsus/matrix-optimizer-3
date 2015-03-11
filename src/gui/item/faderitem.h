@@ -63,7 +63,7 @@ public:
 
     // ----------- QGraphicsItem ----------------
 
-    enum { Type = AbstractGuiItem::Type + 1 };
+    enum { Type = GIT_FADER };
     int type() const { return Type; }
 
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;

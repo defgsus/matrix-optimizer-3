@@ -50,7 +50,7 @@ struct QVariantWidget::Private
         f_update_value;
     bool ignore_widget;
 
-    QLayout * l;
+    QHBoxLayout * l;
     QLabel * label;
     QWidget * edit;
 };
@@ -106,6 +106,7 @@ void QVariantWidget::Private::createWidgets()
     {
         l = new QHBoxLayout(widget);
         l->setMargin(2);
+        //l->setSizeConstraint(QLayout::SetMaximumSize);
     }
 
     if (!label)
@@ -116,6 +117,9 @@ void QVariantWidget::Private::createWidgets()
     else
         label->setText(name);
 
+    l->addStretch(1);
+
+    // clear previous edit widget
     if (edit)
     {
         edit->setVisible(false);
@@ -124,6 +128,7 @@ void QVariantWidget::Private::createWidgets()
         f_update_value = 0;
         f_update_widget = 0;
     }
+
 
     // ----- create appropriate sub-widgets -----
 

@@ -57,7 +57,7 @@ struct FrontScene::Private
         , editMode  (false)
         , displayItemsChanged(true)
     {
-        timer->setInterval(1000/10);
+        timer->setInterval(1000/30);
         timer->setSingleShot(false);
         connect(timer, &QTimer::timeout, [=](){ updateDisplays(); });
     }

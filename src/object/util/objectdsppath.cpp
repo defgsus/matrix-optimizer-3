@@ -837,7 +837,11 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
             const bool isModOut = hasAudioToModulator(ao, i);
 
             // number of buffers in output (dsp block size times this number)
-            uint numBlocks = 1;
+            uint numBlocks
+                    // at least 1 second for all (FrontDisplayItems might need it)
+                    /** @todo make this dynamic for actual displayItems */
+                         = (conf.sampleRate() * 1) / conf.bufferSize() + 1;
+
             if (isModOut)
                 // at least three seconds of buffer time for mod-outs
                 /** @todo make configurable */

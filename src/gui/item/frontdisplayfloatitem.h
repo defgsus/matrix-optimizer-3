@@ -27,7 +27,8 @@ public:
 
     enum DisplayType
     {
-        DT_FADER = 0
+        DT_FADER = 0,
+        DT_SCOPE
     };
 
     // ----------------- ctor -------------------

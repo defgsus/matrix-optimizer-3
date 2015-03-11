@@ -525,8 +525,12 @@ QRectF AbstractFrontItem::rect() const
 QRectF AbstractFrontItem::boundingRect() const
 {
     qreal pad = p_props_->get("border").toInt();
-    return rect().adjusted(-pad, -pad, pad, pad)
-                    | p_labelRect_;
+    auto r = rect().adjusted(-pad, -pad, pad, pad);
+
+    if (properties().get("label-visible").toBool())
+        r |= p_labelRect_;
+
+    return r;
 }
 
 QColor AbstractFrontItem::borderColor() const

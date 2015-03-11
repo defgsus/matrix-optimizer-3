@@ -102,7 +102,8 @@ HEADERS += \
     src/gui/widget/presetswidget.h \
     src/gui/item/knobitem.h \
     src/gui/item/abstractfrontdisplayitem.h \
-    src/gui/item/frontdisplayfloatitem.h
+    src/gui/item/frontdisplayfloatitem.h \
+    src/gui/item/scopeitem.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -204,4 +205,5 @@ SOURCES += \
     src/gui/widget/presetswidget.cpp \
     src/gui/item/knobitem.cpp \
     src/gui/item/abstractfrontdisplayitem.cpp \
-    src/gui/item/frontdisplayfloatitem.cpp
+    src/gui/item/frontdisplayfloatitem.cpp \
+    src/gui/item/scopeitem.cpp
