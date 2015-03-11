@@ -825,6 +825,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     frontItemEditor_->setItem(0);
     frontScene_->setRootObject(scene_);
+    frontScene_->assignObjects();
     frontScene_->loadPreset("default");
 
     glWindow_->renderLater();
@@ -1444,6 +1445,7 @@ void MainWidgetController::start()
         updateTimer_->start();
 
     glManager_->startAnimate();
+    frontScene_->startAnimate();
 
 #ifndef MO_DISABLE_SERVER
     if (isServer())
@@ -1455,6 +1457,7 @@ void MainWidgetController::start()
 void MainWidgetController::stop()
 {
     glManager_->stopAnimate();
+    frontScene_->stopAnimate();
     updateTimer_->stop();
 
     if (audioEngine_)
@@ -1467,6 +1470,7 @@ void MainWidgetController::stop()
             // XXX hacky
             //onSceneTimeChanged_(0.0);
             scene_->setSceneTime(0.0);
+            scene_->render();
         }
     }
 

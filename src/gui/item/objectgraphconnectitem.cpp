@@ -155,7 +155,7 @@ void ObjectGraphConnectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
     auto desc = data->getDescription();
 
     // analyze further
-    if (!desc.isFromSameApplicationInstance())
+    if (!desc.isSameApplicationInstance())
     {
         QMessageBox::information(0,
                                  QMessageBox::tr("drop object"),

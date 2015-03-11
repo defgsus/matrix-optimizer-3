@@ -325,7 +325,7 @@ void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
         auto desc = data->getDescription();
 
         // analyze further
-        if (!desc.isFromSameApplicationInstance())
+        if (!desc.isSameApplicationInstance())
         {
             QMessageBox::information(0,
                                      QMessageBox::tr("drop object"),
@@ -423,18 +423,19 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
     {
         if ((e->pos() - p_oi_->posMouseDown).manhattanLength() > 4)
         {
-            // drag object id (not position)
-            if (e->modifiers() & Qt::CTRL)
+            // start drag object (not position)
+            if (e->modifiers() & Qt::SHIFT)
             {
                 auto drag = new QDrag(scene());
                 auto data = new ObjectMimeData();
                 data->setObject(object());
                 drag->setMimeData(data);
                 drag->setPixmap(p_oi_->icon.pixmap(48, 48));
-                drag->exec(Qt::CopyAction);
+                drag->exec(Qt::LinkAction);
                 return;
             }
 
+            // start drag position
             p_oi_->dragging = true;
             if (!isSelected())
                 setSelected(true);

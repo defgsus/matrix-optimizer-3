@@ -25,7 +25,7 @@ public:
     ObjectDescription(Object *);
 
     bool isValid() const { return p_ptr_; }
-    bool isFromSameApplicationInstance() const;
+    bool isSameApplicationInstance() const;
 
     Object * pointer() const { return static_cast<Object*>(p_ptr_); }
     quint64 type() const { return p_type_; }
@@ -53,11 +53,16 @@ public:
 
     static const QString mimeTypeString;
 
+    /** Returns the ObjectMimeData wrapper if the mimedata is of that type */
+    static ObjectMimeData * objectMimeData(QMimeData*);
+    /** Returns the ObjectMimeData wrapper if the mimedata is of that type */
+    static const ObjectMimeData * objectMimeData(const QMimeData*);
+
     // ----------- restore ----------------
 
     /** If this returns false, getObjectPointer() is pretty useless */
-    bool isFromSameApplicationInstance() const
-        { return getDescription().isFromSameApplicationInstance(); }
+    bool isSameApplicationInstance() const
+        { return getDescription().isSameApplicationInstance(); }
 
     /** Returns the stored description.
         Returns invalid description if none was stored. */

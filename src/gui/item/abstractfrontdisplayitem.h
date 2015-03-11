@@ -43,9 +43,23 @@ public:
         must be assigned to the scene. */
     bool assignObject();
 
+    /** Assigns the object by setting the property 'object-id' to the object's
+        Object::idName() and calling the parameterless version of assignObject().
+        if @p o is NULL, the object will be unassigned. */
+    bool assignObject(Object* o);
+
     // --------------- layout -------------------
 
     // ----------- virtual interface ------------
+
+    /** Reimplement to tell if a certain object would be accepted as input */
+    virtual bool acceptObject(Object*) const = 0;
+
+    /** Reimplement to re-read the value from the object and update
+        the graphics.
+        Called regularily when scene is running. */
+    virtual void updateValue() = 0;
+
 protected:
 
     /** Calls assignObject() */
@@ -55,6 +69,11 @@ protected:
 public:
 
     // ----------- QGraphicsItem ----------------
+
+    /** Override to accept object drags */
+    virtual void dragEnterEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    /** Override to accept object drags */
+    virtual void dropEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
 
 private:
 

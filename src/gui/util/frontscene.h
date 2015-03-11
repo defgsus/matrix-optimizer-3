@@ -206,6 +206,10 @@ public slots:
         @todo Not used yet and will have a different function later. */
     void setRootObject(Object * root);
 
+    /** Once the Scene tree is ready and connected to the ObjectEditor,
+        this will (re-)assign every AbstractFrontDisplayItem to it's Object. */
+    void assignObjects();
+
     /** Change to/from edit/interaction mode */
     void setEditMode(bool e);
 
@@ -216,7 +220,8 @@ public slots:
         to update scene and gui. */
     void clearInterface();
 
-    /** Creates a new item of @p type. */
+    /** Creates a new item of @p type.
+        If the type is unknown, nothing happens and NULL is returned. */
     AbstractFrontItem* createNew(FrontItemType type, QGraphicsItem* parent,
                                  const QPointF& pos = QPointF());
 
@@ -238,6 +243,11 @@ public slots:
 
     /** Sends a float value to the scene, coming from interface item @p idName */
     void sendValue(const QString& idName, Float value);
+
+    /** Starts continous repaint of value display widgets */
+    void startAnimate();
+    /** Stops continous repaint of value display widgets */
+    void stopAnimate();
 
 private slots:
 

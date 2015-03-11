@@ -17,6 +17,7 @@
 #include "gui/util/frontscene.h"
 #include "object/object.h"
 #include "object/audioobject.h"
+#include "object/sequencefloat.h"
 #include "io/currenttime.h"
 #include "types/properties.h"
 
@@ -54,7 +55,7 @@ FrontDisplayFloatItem::FrontDisplayFloatItem(QGraphicsItem * parent)
     initProperty("label-text", QString("X"));
     initProperty("padding", 2);
     initProperty("label-outside", true);
-    initProperty("background-color", QColor(0x30, 0x50, 0x30));
+    initProperty("background-color", QColor(0x30, 0x30, 0x50));
     initProperty("value-on-color", QColor(0xff,0xff,0xff,0x60));
     initProperty("value-off-color", QColor(0,0,0,0x60));
 
@@ -63,11 +64,6 @@ FrontDisplayFloatItem::FrontDisplayFloatItem(QGraphicsItem * parent)
 
     initProperty("value-min", 0.0);
     initProperty("value-max", 1.0);
-
-    initProperty("value-label-visible", true);
-    initProperty("value-label-outside", true);
-    initProperty("value-label-align", Properties::Alignment(Properties::A_BOTTOM | Properties::A_HCENTER));
-    initProperty("value-label-margin", 0);
 }
 
 FrontDisplayFloatItem::~FrontDisplayFloatItem()
@@ -82,6 +78,12 @@ void FrontDisplayFloatItem::onPropertiesChanged()
 
     p_->getValueFunction();
     p_->createWidgets();
+}
+
+bool FrontDisplayFloatItem::acceptObject(Object * o) const
+{
+    return o->type() == Object::T_AUDIO_OBJECT
+        || o->type() == Object::T_SEQUENCE_FLOAT;
 }
 
 void FrontDisplayFloatItem::Private::getValueFunction()
@@ -103,6 +105,14 @@ void FrontDisplayFloatItem::Private::getValueFunction()
             return ao->getAudioOutputAsFloat(channel, time, MO_AUDIO_THREAD);
         };
     }
+
+    if (SequenceFloat * seq = dynamic_cast<SequenceFloat*>(item->assignedObject()))
+    {
+        valueFunc = [=](Double time)
+        {
+            return seq->value(time, MO_GUI_THREAD);
+        };
+    }
 }
 
 void FrontDisplayFloatItem::Private::createWidgets()
@@ -119,6 +129,7 @@ void FrontDisplayFloatItem::Private::createWidgets()
         if (!fader)
         {
             fader = new FaderItem(item);
+            fader->setControllable(false);
             item->onEditModeChanged();
         }
 
@@ -191,9 +202,16 @@ void FrontDisplayFloatItem::Private::updateWidgetValue()
         fader->setValue(v);
 }
 
-void FrontDisplayFloatItem::paint(QPainter *p, const QStyleOptionGraphicsItem * style, QWidget * widget)
+void FrontDisplayFloatItem::updateValue()
 {
     p_->updateWidgetValue();
+    if (properties().get("value-label-visible").toBool())
+        update();
+}
+
+void FrontDisplayFloatItem::paint(QPainter *p, const QStyleOptionGraphicsItem * style, QWidget * widget)
+{
+    //p_->updateWidgetValue();
 
     AbstractFrontItem::paint(p, style, widget);
 

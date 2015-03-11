@@ -17,11 +17,13 @@
 #include <QMimeData>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QTimer>
 
 #include "frontscene.h"
 #include "frontpreset.h"
 #include "gui/item/frontgroupitem.h"
 #include "gui/item/frontfloatitem.h"
+#include "gui/item/abstractfrontdisplayitem.h"
 #include "gui/util/frontpreset.h"
 #include "object/object.h"
 #include "object/param/parameters.h"
@@ -51,8 +53,13 @@ struct FrontScene::Private
         : gscene    (s)
         , editor    (0)
         , presets   (0)
+        , timer     (new QTimer(s))
         , editMode  (false)
+        , displayItemsChanged(true)
     {
+        timer->setInterval(1000/10);
+        timer->setSingleShot(false);
+        connect(timer, &QTimer::timeout, [=](){ updateDisplays(); });
     }
 
     //void createDefaultActions();
@@ -75,13 +82,19 @@ struct FrontScene::Private
     /** (Re-)Creates all context menu edit actions for the current selection */
     void createEditActions();
 
+    /** Updates all display items with current values */
+    void updateDisplays();
+
     FrontScene * gscene;
     ObjectEditor * editor;
     FrontPresets * presets;
+    QTimer * timer;
     bool editMode;
     ActionList editActions;
 
     QSet<QString> usedIds;
+    QList<AbstractFrontDisplayItem*> displayItems;
+    bool displayItemsChanged;
 };
 
 
@@ -144,6 +157,7 @@ void FrontScene::deserialize(IO::XmlStream & io)
         p_->presets->releaseRef();
         p_->presets = 0;
     }
+    p_->displayItemsChanged = true;
 
     // add the items to scene
     for (auto i : list)
@@ -255,9 +269,15 @@ void FrontScene::setEditMode(bool e)
 
 void FrontScene::setRootObject(Object *root)
 {
-    //clear();
 
-    //p_->createItems(root);
+}
+
+void FrontScene::assignObjects()
+{
+    auto list = items();
+    for (auto i : list)
+        if (auto d = dynamic_cast<AbstractFrontDisplayItem*>(i))
+            d->assignObject();
 }
 
 void FrontScene::setObjectEditor(ObjectEditor *e)
@@ -299,6 +319,8 @@ void FrontScene::Private::addItem(AbstractFrontItem *item)
     auto childs = item->childFrontItems();
     for (auto c : childs)
         addItem(c);
+
+    displayItemsChanged = true;
 }
 /*
 void FrontScene::Private::createItems(Object *root, const QPointF& pos, AbstractFrontItem *parent)
@@ -344,6 +366,7 @@ void FrontScene::clearInterface()
         p_->presets->releaseRef();
         p_->presets = 0;
     }
+    p_->displayItemsChanged = true;
 
     emit itemsDeleted(ids);
     emit itemUnselected();
@@ -354,16 +377,13 @@ void FrontScene::clearInterface()
 AbstractFrontItem * FrontScene::createNew(FrontItemType type,
                                           QGraphicsItem * parent, const QPointF& pos)
 {
-    AbstractFrontItem * item;
+    AbstractFrontItem * item = AbstractFrontItem::factory(type);
+    if (!item)
+        return 0;
 
-    switch (type)
-    {
-        default:
-        case FIT_GROUP: item = new FrontGroupItem(parent); break;
-        case FIT_FLOAT: item = new FrontFloatItem(parent); break;
-    }
 
     item->setPos(snapGrid(pos));
+    item->setParentItem(parent);
     p_->addItem(item);
     emit sceneChanged();
     return item;
@@ -391,6 +411,8 @@ void FrontScene::removeItems(const QList<AbstractFrontItem *> &items)
     // remove top-level items
     for (auto i : items)
         removeItem(i);
+
+    p_->displayItemsChanged = true;
 
     // signal gui and scene
     emit itemsDeleted(allIds);
@@ -634,7 +656,26 @@ void FrontScene::addItems(const QList<AbstractFrontItem*>& list, AbstractFrontIt
     emit sceneChanged();
 }
 
+void FrontScene::startAnimate() { p_->timer->start(); }
+void FrontScene::stopAnimate() { p_->timer->stop(); }
 
+void FrontScene::Private::updateDisplays()
+{
+    // update list
+    if (displayItemsChanged)
+    {
+        displayItems.clear();
+
+        auto list = gscene->items();
+        for (auto c : list)
+            if (auto d = dynamic_cast<AbstractFrontDisplayItem*>(c))
+                displayItems << d;
+    }
+
+    // update all items
+    for (auto d : displayItems)
+        d->updateValue();
+}
 
 FrontPresets * FrontScene::presets() const
 {
@@ -770,10 +811,15 @@ QMenu* FrontScene::Private::createNewItemMenu(const QPointF& insertPos)
     a->setStatusTip(tr("Creates a new group item"));
     connect(a, &QAction::triggered, [=]() { gscene->createNew(FIT_GROUP, insertPos); });
 
-    a = m->addAction(tr("Float value"));
+    a = m->addAction(tr("Float controller"));
     a->setShortcut(Qt::ALT + Qt::Key_2);
     a->setStatusTip(tr("Creates a new float controller"));
     connect(a, &QAction::triggered, [=]() { gscene->createNew(FIT_FLOAT, insertPos); });
+
+    a = m->addAction(tr("Float display"));
+    a->setShortcut(Qt::ALT + Qt::Key_3);
+    a->setStatusTip(tr("Creates a new display for continous float values"));
+    connect(a, &QAction::triggered, [=]() { gscene->createNew(FIT_DISPLAY_FLOAT, insertPos); });
 
     return m;
 }

@@ -43,6 +43,8 @@ public:
     Float value() const { return value_; }
     Float defaultValue() const { return defValue_; }
 
+    bool isControllable() const { return p_controllable_; }
+
     // --------------- setter -------------------
 
     void setOnColor(const QColor& c) { colorOn_ = c; update(); }
@@ -51,7 +53,9 @@ public:
 
     void setRange(Float mi, Float ma);
     void setDefaultValue(Float value) { defValue_ = value; update(); }
-    void setValue(Float value) { value_ = value; update(); }
+    void setValue(Float value);
+
+    void setControllable(bool enable) { p_controllable_ = enable; }
 
     void setCallback(std::function<void(Float)> cb) { callback_ = cb; }
 
@@ -80,7 +84,7 @@ private:
     std::function<void(Float)> callback_;
 
     QColor colorOn_, colorOff_;
-    bool vertical_;
+    bool vertical_, p_controllable_;
 };
 
 } // namespace GUI

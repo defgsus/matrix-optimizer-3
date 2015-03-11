@@ -54,6 +54,10 @@ protected:
     void onPropertiesChanged() Q_DECL_OVERRIDE;
     void onEditModeChanged() Q_DECL_OVERRIDE;
 
+    bool acceptObject(Object*) const Q_DECL_OVERRIDE;
+
+    void updateValue() Q_DECL_OVERRIDE;
+
     // ----------- QGraphicsItem ----------------
 
     enum { Type = FIT_DISPLAY_FLOAT };

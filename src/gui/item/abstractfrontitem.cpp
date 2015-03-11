@@ -99,6 +99,7 @@ bool FrontItemMimeData::isSameApplicationInstance() const
 
 
 QMap<QString, AbstractFrontItem*> AbstractFrontItem::p_reg_items_;
+QMap<int, AbstractFrontItem*> AbstractFrontItem::p_reg_items_t_;
 int AbstractFrontItem::p_id_count_ = 0;
 
 AbstractFrontItem::AbstractFrontItem(QGraphicsItem* parent)
@@ -157,15 +158,17 @@ AbstractFrontItem::~AbstractFrontItem()
 
 bool AbstractFrontItem::registerFrontItem(AbstractFrontItem * i)
 {
-    if (p_reg_items_.contains(i->className()))
+    if (p_reg_items_.contains(i->className())
+     || p_reg_items_t_.contains(i->type()))
     {
         MO_WARNING("AbstractFrontItem::registerFrontItem('"
-                   << i->className() << "'): duplicate call!");
+                   << i->className() << "'/" << i->type() << "): duplicate call!");
         delete i;
         return false;
     }
 
     p_reg_items_.insert(i->className(), i);
+    p_reg_items_t_.insert(i->type(), i);
 
     return true;
 }
@@ -176,6 +179,18 @@ AbstractFrontItem * AbstractFrontItem::factory(const QString &className)
     if (i == p_reg_items_.end())
     {
         MO_WARNING("Request for unknown FrontItem class '" << className << "'");
+        return 0;
+    }
+
+    return i.value()->cloneClass();
+}
+
+AbstractFrontItem * AbstractFrontItem::factory(FrontItemType itype)
+{
+    auto i = p_reg_items_t_.find(itype);
+    if (i == p_reg_items_t_.end())
+    {
+        MO_WARNING("Request for unknown FrontItem type " << itype);
         return 0;
     }
 

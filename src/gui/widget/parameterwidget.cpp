@@ -97,7 +97,7 @@ void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
         auto desc = data->getDescription();
 
         // analyze further
-        if (!desc.isFromSameApplicationInstance())
+        if (!desc.isSameApplicationInstance())
             return;
 
         if (desc.pointer() == param_->object())

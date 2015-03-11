@@ -29,6 +29,7 @@ FaderItem::FaderItem(QGraphicsItem * p)
     , colorOn_          (QColor(100,150,100))
     , colorOff_         (QColor(30,70,30))
     , vertical_         (true)
+    , p_controllable_   (true)
 {
 }
 
@@ -40,14 +41,26 @@ void FaderItem::setRange(Float mi, Float ma)
     update();
 }
 
+void FaderItem::setValue(Float v)
+{
+    value_ = std::max(min_,std::min(max_, v ));
+    update();
+}
+
 void FaderItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent*e)
 {
+    if (!p_controllable_)
+        return;
+
     p_setEmit_(defaultValue());
-    QGraphicsItem::mouseDoubleClickEvent(e);
+    AbstractGuiItem::mouseDoubleClickEvent(e);
 }
 
 void FaderItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 {
+    if (!p_controllable_)
+        return;
+
     if (e->button() == Qt::LeftButton)
     {
         do_drag_ = true;
@@ -66,10 +79,15 @@ void FaderItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
 
         e->accept();
     }
+
+    AbstractGuiItem::mousePressEvent(e);
 }
 
 void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 {
+    if (!p_controllable_)
+        return;
+
     if (do_drag_)
     {
         // get mouse delta
@@ -84,17 +102,26 @@ void FaderItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
 
         p_setEmit_(drag_start_value_ + dm);
         e->accept();
+        return;
     }
+
+    AbstractGuiItem::mouseMoveEvent(e);
 }
 
 void FaderItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (!p_controllable_)
+        return;
+
     do_drag_ = false;
     AbstractGuiItem::mouseReleaseEvent(event);
 }
 
 void FaderItem::wheelEvent(QGraphicsSceneWheelEvent * e)
 {
+    if (!p_controllable_)
+        return;
+
     // get value change factor
     Float dm = range() / 500.;
     if (e->modifiers() && Qt::SHIFT)
@@ -127,23 +154,39 @@ void FaderItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
 
     QRectF r = rect();
 
+    Float delta = std::max(0.00001f, max_ - min_);
+
     if (vertical_)
     {
-        qreal y = (1.0 - (value_ - min_) / (max_ - min_)) * r.height();
+        qreal y = std::max(0.f,std::min(1.f,
+                    Float(1) - (value_ - min_) / delta )) * r.height();
 
-        p->setBrush(QBrush(colorOff_));
-        p->drawRect(r.left(), r.top(), r.width(), y);
-        p->setBrush(QBrush(colorOn_));
-        p->drawRect(r.left(), r.top() + y, r.width(), r.height() - y);
+        if (y > 0)
+        {
+            p->setBrush(QBrush(colorOff_));
+            p->drawRect(r.left(), r.top(), r.width(), y);
+        }
+        if (y < r.height())
+        {
+            p->setBrush(QBrush(colorOn_));
+            p->drawRect(r.left(), r.top() + y, r.width(), r.height() - y);
+        }
     }
     else
     {
-        qreal x = (value_ - min_) / (max_ - min_) * r.width();
+        qreal x = std::max(0.f,std::min(1.f,
+                    (value_ - min_) / delta )) * r.width();
 
-        p->setBrush(QBrush(colorOn_));
-        p->drawRect(r.left(), r.top(), x, r.height());
-        p->setBrush(QBrush(colorOff_));
-        p->drawRect(r.left() + x, r.top(), r.width() - x, r.height());
+        if (x > 0.)
+        {
+            p->setBrush(QBrush(colorOn_));
+            p->drawRect(r.left(), r.top(), x, r.height());
+        }
+        if (x < r.width())
+        {
+            p->setBrush(QBrush(colorOff_));
+            p->drawRect(r.left() + x, r.top(), r.width() - x, r.height());
+        }
     }
 }
 

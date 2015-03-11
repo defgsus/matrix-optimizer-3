@@ -8,12 +8,15 @@
     <p>created 10.03.2015</p>
 */
 
+#include <QGraphicsSceneDragDropEvent>
+
 #include "abstractfrontdisplayitem.h"
 #include "gui/util/frontpreset.h"
 #include "gui/util/frontscene.h"
 #include "types/properties.h"
 #include "object/scene.h"
 #include "object/util/objecteditor.h"
+#include "model/objectmimedata.h"
 
 namespace MO {
 namespace GUI {
@@ -26,6 +29,11 @@ AbstractFrontDisplayItem::AbstractFrontDisplayItem(QGraphicsItem * parent)
 
     initProperty("object-id", QString("/"));
     initProperty("object-output", 0);
+
+    initProperty("value-label-visible", false);
+    initProperty("value-label-outside", true);
+    initProperty("value-label-align", Properties::Alignment(Properties::A_BOTTOM | Properties::A_HCENTER));
+    initProperty("value-label-margin", 0);
 }
 
 
@@ -54,6 +62,12 @@ bool AbstractFrontDisplayItem::assignObject()
     return p_d_object_ != 0;
 }
 
+bool AbstractFrontDisplayItem::assignObject(Object * o)
+{
+    setProperty("object-id", o ? o->idName() : QString(""));
+    return assignedObject();
+}
+
 uint AbstractFrontDisplayItem::assignedChannel() const
 {
     int c = properties().get("object-output").toInt();
@@ -70,6 +84,55 @@ void AbstractFrontDisplayItemItem::onEditModeChanged()
         p_->fader->setAcceptedMouseButtons(mb);
 }
 */
+
+
+
+void AbstractFrontDisplayItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // generally ignore
+    e->ignore();
+
+    // an object?
+    if (auto odata = ObjectMimeData::objectMimeData(e->mimeData()))
+    {
+        if (!odata->isSameApplicationInstance())
+            return;
+
+        Object * o = odata->getDescription().pointer();
+        if (acceptObject(o))
+        {
+            e->accept();
+            return;
+        }
+    }
+
+    AbstractFrontItem::dragEnterEvent(e);
+}
+
+void AbstractFrontDisplayItem::dropEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // generally ignore
+    e->ignore();
+
+    // an object?
+    if (auto odata = ObjectMimeData::objectMimeData(e->mimeData()))
+    {
+        if (!odata->isSameApplicationInstance())
+            return;
+
+        Object * o = odata->getDescription().pointer();
+        if (acceptObject(o))
+        {
+            assignObject(o);
+            e->accept();
+            return;
+        }
+    }
+
+    AbstractFrontItem::dropEvent(e);
+}
+
+
 
 } // namespace GUI
 } // namespace MO
