@@ -48,6 +48,16 @@ public slots:
 
     void setSettings(const GeometryFactorySettings&);
 
+    /** Stops the thread as soon as possible,
+        and blocks until actual end.
+        The thread will not emit succeeded(). */
+    void stop();
+
+    /** Tells the thread that you lost interest in it's result.
+        The thread will stop as soon as possible and will not emit
+        succeeded(). */
+    void discard();
+
 protected slots:
 
     void onTimer_();
@@ -63,6 +73,7 @@ protected:
     QTimer * timer_;
     /** Mutex around settings_ and geometry_ */
     QMutex * mutex_;
+    bool doStop_, doDiscard_;
 };
 
 

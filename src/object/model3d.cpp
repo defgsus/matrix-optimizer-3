@@ -54,6 +54,11 @@ Model3d::Model3d(QObject * parent)
     setName("Model3D");
 }
 
+Model3d::~Model3d()
+{
+    resetCreator_();
+}
+
 void Model3d::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);
@@ -441,6 +446,7 @@ void Model3d::initGl(uint /*thread*/)
 
     if (!nextGeometry_)
     {
+        resetCreator_();
         creator_ = new GEOM::GeometryCreator(this);
         connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
         connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
@@ -463,7 +469,21 @@ void Model3d::releaseGl(uint /*thread*/)
     delete draw_;
     draw_ = 0;
 
-    delete creator_;
+    resetCreator_();
+}
+
+void Model3d::resetCreator_()
+{
+    if (creator_)
+    {
+        if (creator_->isRunning())
+        {
+            connect(creator_, SIGNAL(finished()), creator_, SLOT(deleteLater()));
+            creator_->discard();
+        }
+        else
+            creator_->deleteLater();
+    }
     creator_ = 0;
 }
 
