@@ -422,6 +422,13 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         return;
     }
 
+    if (NetEventUiFloat * e = netevent_cast<NetEventUiFloat>(event))
+    {
+        if (scene_)
+            scene_->setUiValue(e->id(), e->time(), e->value());
+        return;
+    }
+
     MO_NETLOG(WARNING, "unhandled NetEvent " << event->infoName() << " in ClientEngine");
 }
 

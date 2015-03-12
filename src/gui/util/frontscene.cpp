@@ -71,6 +71,7 @@ struct FrontScene::Private
         @note Always use this function to add items!
         It's save to set the item's parent beforehand. */
     void addItem(AbstractFrontItem * item);
+    QString newUniqueId() const;
 
     /** Puts the @p item and all of it's children and sub-children into @p set */
     static void getAllItems(AbstractFrontItem * item, QSet<AbstractFrontItem*>& set);
@@ -260,7 +261,16 @@ void FrontScene::setEditMode(bool e)
 
     // also hide properties
     if (!e)
+    {
         emit itemUnselected();
+        emit actionsChanged(QList<QAction*>());
+    }
+    else
+    {
+        // re-emit the current selection
+        emit itemsSelected(selectedFrontItems());
+        p_->createEditActions();
+    }
 
     emit editModeChanged(e);
 
@@ -296,6 +306,19 @@ void FrontScene::sendValue(const QString &idName, Float value)
         p_->editor->setUiValue(idName, CurrentTime::time(), value);
 }
 
+QString FrontScene::Private::newUniqueId() const
+{
+    static int count = 0;
+    count = std::max(count, int(usedIds.size()));
+
+    QString id;
+    do
+    {
+        id = QString("item%1").arg(count++);
+    }
+    while (usedIds.contains(id));
+    return id;
+}
 
 void FrontScene::Private::addItem(AbstractFrontItem *item)
 {
@@ -310,7 +333,7 @@ void FrontScene::Private::addItem(AbstractFrontItem *item)
     if (usedIds.contains(item->idName()))
     {
 //        auto oldid = item->idName();
-        item->setNewId();
+        item->setId( newUniqueId() );
 //        MO_DEBUG("changed id '" << oldid << "' to '" << item->idName())
     }
     usedIds.insert(item->idName());
@@ -921,6 +944,14 @@ void FrontScene::Private::createEditActions()
                 gscene->addItems(list, item);
             });
         }
+
+        editActions.addSeparator(gscene);
+
+        editActions.append( a = new QAction(tr("Remove modulations"), gscene) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            if (editor) editor->removeUiModulator(item->idName());
+        });
     }
 
     // multi-item actions
@@ -968,6 +999,16 @@ void FrontScene::Private::createEditActions()
             gscene->removeItems(seltop);
         });
 
+        editActions.addSeparator(gscene);
+
+        editActions.append( a = new QAction(tr("Remove modulations"), gscene) );
+        connect(a, &QAction::triggered, [=]()
+        {
+            QStringList ids;
+            for (auto i : sel)
+                ids << i->idName();
+            if (editor) editor->removeUiModulators(ids);
+        });
     }
 
     emit gscene->actionsChanged(editActions);
@@ -1076,6 +1117,7 @@ void FrontScene::drawForeground(QPainter *p, const QRectF &)
     {
         auto cpos = cursorPos();
 
+        // draw cross-hair
         p->setPen(QPen(QColor(255,255,255,100)));
         p->drawLine(-FAR, cpos.y(), FAR, cpos.y());
         p->drawLine(cpos.x(), -FAR, cpos.x(), FAR);

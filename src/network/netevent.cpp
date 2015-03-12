@@ -464,4 +464,28 @@ void NetEventTime::deserialize(IO::DataStream &io)
 
 
 
+
+MO_REGISTER_NETEVENT(NetEventUiFloat)
+
+NetEventUiFloat::NetEventUiFloat()
+{
+}
+
+QString NetEventUiFloat::infoName() const
+{
+    return AbstractNetEvent::infoName() + QString("(%1, %2, %3)").arg(id_).arg(time_).arg(value_) + ")";
+}
+
+void NetEventUiFloat::serialize(IO::DataStream &io) const
+{
+    io << time_ << value_ << id_;
+}
+
+void NetEventUiFloat::deserialize(IO::DataStream &io)
+{
+    io >> time_ >> value_ >> id_;
+}
+
+
+
 } // namespace MO

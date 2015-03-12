@@ -46,6 +46,8 @@ void FrontItemEditor::setItems(const QList<AbstractFrontItem *> &items)
 void FrontItemEditor::createWidgets_()
 {
     auto lv = new QVBoxLayout(this);
+    lv->setSizeConstraint(QLayout::SetMaximumSize);
+
 
         p_label_ = new QLabel(this);
         p_label_->setProperty("GroupHeader", true);

@@ -9,7 +9,6 @@
 */
 
 #include <QLayout>
-#include <QScrollArea>
 
 #include "propertiesview.h"
 #include "gui/widget/qvariantwidget.h"
@@ -20,11 +19,11 @@ namespace GUI {
 
 
 PropertiesView::PropertiesView(QWidget *parent)
-    : QWidget       (parent)
+    : QScrollArea   (parent)
     , p_props_      (new Properties)
     , p_lv_         (0)
     , p_stretch_    (0)
-    , p_scroll_     (0)
+    , p_container_  (0)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
@@ -59,6 +58,7 @@ void PropertiesView::clear()
 void PropertiesView::createWidgtes_()
 {
     setUpdatesEnabled(false);
+
     // delete previous widgets
     for (auto w : p_widgets_)
     {
@@ -68,26 +68,21 @@ void PropertiesView::createWidgtes_()
     if (p_stretch_)
         p_stretch_->deleteLater();
 
-    if (!p_scroll_)
+    // widget container
+    if (!p_container_)
     {
-        auto lv = new QVBoxLayout(this);
-        lv->setMargin(0);
-        lv->setSizeConstraint(QLayout::SetMaximumSize);
-
-        // create scroll-area
-        p_scroll_ = new QScrollArea(this);
-        lv->addWidget(p_scroll_);
-
-        p_container_ = new QWidget(p_scroll_);
+        p_container_ = new QWidget(this);
         p_container_->setObjectName("_properties_container");
         p_container_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+        p_container_->setMinimumWidth(300);
+        p_container_->setMaximumWidth(1024);
+        setWidget(p_container_);
 
         // layout for property widgets
         p_lv_ = new QVBoxLayout(p_container_);
         p_lv_->setMargin(1);
         p_lv_->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
-        p_scroll_->setWidget(p_container_);
     }
 
     // create one for each property
@@ -116,6 +111,7 @@ void PropertiesView::createWidgtes_()
     p_stretch_ = new QWidget(p_container_);
     p_lv_->addWidget(p_stretch_);
     p_lv_->setStretch(p_lv_->indexOf(p_stretch_), 2);
+
 
     setUpdatesEnabled(true);
 }

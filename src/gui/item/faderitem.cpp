@@ -78,6 +78,7 @@ void FaderItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
         }
 
         e->accept();
+        return;
     }
 
     AbstractGuiItem::mousePressEvent(e);

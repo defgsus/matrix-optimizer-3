@@ -11,7 +11,7 @@
 #ifndef PROPERTIESVIEW_H
 #define PROPERTIESVIEW_H
 
-#include <QWidget>
+#include <QScrollArea>
 #include <QMap>
 
 class QVBoxLayout;
@@ -23,7 +23,7 @@ namespace GUI {
 class QVariantWidget;
 
 /** Generic gui display/editor for MO::Properties (types/properties.h) */
-class PropertiesView : public QWidget
+class PropertiesView : public QScrollArea
 {
     Q_OBJECT
 public:
@@ -58,7 +58,6 @@ private:
     QMap<QString, QVariantWidget*> p_widgets_;
     QVBoxLayout * p_lv_;
     QWidget * p_stretch_, * p_container_;
-    QScrollArea * p_scroll_;
 };
 
 } // namespace GUI

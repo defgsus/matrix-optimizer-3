@@ -59,6 +59,8 @@ ServerView::~ServerView()
 
 void ServerView::createWidgets_()
 {
+    const bool isRunning = settings()->value("Server/running").toBool();
+
     auto lv = new QVBoxLayout(this);
 
         auto lh = new QHBoxLayout();
@@ -68,7 +70,7 @@ void ServerView::createWidgets_()
 
             cbRunning_ = new QCheckBox(tr("run server"), this);
             lh->addWidget(cbRunning_);
-            cbRunning_->setChecked(settings()->value("Server/running").toBool());
+            cbRunning_->setChecked(isRunning);
             connect(cbRunning_, SIGNAL(clicked(bool)), this, SLOT(startServer_(bool)));
 
             labelNum_ = new QLabel(this);
@@ -81,7 +83,7 @@ void ServerView::createWidgets_()
 
             butSendScene_ = new QPushButton(tr("send current scene"), this);
             butSendScene_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-            butSendScene_->setEnabled(server_->isRunning());
+            butSendScene_->setEnabled(isRunning);
             lh->addWidget(butSendScene_);
             connect(butSendScene_, SIGNAL(clicked()), this, SIGNAL(sendScene()));
 

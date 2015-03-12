@@ -16,15 +16,15 @@
 #define MO_VERSION_MAJOR 3
 #define MO_VERSION_MINOR 0
 #define MO_VERSION_TINY  1
-#define MO_VERSION_MICRO 4
+#define MO_VERSION_MICRO 400
 
 /** Constructs a number from the smaller parts (major = most-significant).
     Should fit into 32 bit for a while... */
 #define MO_VERSION_COMBINE(maj__, min__, tiny__, micro__) \
-                (  (maj__)  * 1000000 \
-                 + (min__)  * 10000   \
-                 + (tiny__) * 100     \
-                 + (micro__)          )
+                (  (maj__)  * 10000000 \
+                 + (min__)  * 100000   \
+                 + (tiny__) * 1000     \
+                 + (micro__)           )
 
 /** The program version as one number (major == most-significant) */
 #define MO_VERSION                                                            \

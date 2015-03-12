@@ -35,6 +35,7 @@ signals:
 
 public slots:
 
+    /** Starts receiving of buffers send from server. */
     bool openForRead();
     void close();
 

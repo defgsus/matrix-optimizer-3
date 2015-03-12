@@ -150,8 +150,8 @@ public:
     // -------------- setter --------------------
 
     /** Sets a new idName() for this item.
-        The id will be unique for the current session/project. */
-    void setNewId();
+        Must not be called after insertion into scene! */
+    void setId(const QString& id);
 
     // ----- replic. of Properties interface ----
 

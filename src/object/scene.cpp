@@ -49,6 +49,8 @@
 #include "tool/locklessqueue.h"
 #include "projection/projectionsystemsettings.h"
 #include "gui/util/frontscene.h"
+#include "engine/serverengine.h"
+#include "network/netevent.h"
 
 namespace MO {
 
@@ -274,7 +276,6 @@ ModulatorObject * Scene::createUiModulator(const QString &uiId)
     return m;
 }
 
-
 QList<ModulatorObject*> Scene::getUiModulators(const QList<QString>& uiIds) const
 {
     // find all modulators matching any of the ids
@@ -299,6 +300,14 @@ void Scene::setUiValue(const QString &uiId, Double timeStamp, Float value)
         return;
     }
 
+#ifndef MO_DISABLE_SERVER
+    if (isServer() && serverEngine().isRunning())
+    {
+        auto e = new NetEventUiFloat;
+        e->setValue(uiId, timeStamp, value);
+        serverEngine().sendEvent(e);
+    }
+#endif
     i.value()->setValue(timeStamp, value);
     render_();
 }

@@ -111,8 +111,6 @@ AbstractFrontItem::AbstractFrontItem(QGraphicsItem* parent)
     , p_canHaveChildren_(false)
     , p_startDrag_      (false)
 {
-    setNewId();
-
     setFlag(ItemIsFocusable, true);
     setFlag(ItemSendsGeometryChanges, true);
     setAcceptDrops(true);
@@ -325,9 +323,9 @@ void AbstractFrontItem::p_update_from_properties_()
     update();
 }
 
-void AbstractFrontItem::setNewId()
+void AbstractFrontItem::setId(const QString& id)
 {
-    p_id_ = QString("item%1").arg(p_id_count_++);
+    p_id_ = id;
 }
 
 // -------------------------------- tree ---------------------------------------

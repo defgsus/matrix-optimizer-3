@@ -399,7 +399,7 @@ private:
 };
 
 
-/** Clients current state info event - typically an answer to NetEventRequest */
+/** Sends the current scene time to clients. */
 class NetEventTime : public AbstractNetEvent
 {
 public:
@@ -417,6 +417,30 @@ private:
 
     Double time_;
 };
+
+
+/** Sends an ui value to clients */
+class NetEventUiFloat : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventUiFloat)
+
+    // --------- getter -------------------
+
+    QString id() { return id_; }
+    Double time() { return time_; }
+    Double value() { return value_; }
+
+    // --------- setter -------------------
+
+    void setValue(const QString& id, Double time, Double value) { id_ = id; time_ = time; value_ = value; }
+
+private:
+
+    Double time_, value_;
+    QString id_;
+};
+
 
 } // namespace MO
 

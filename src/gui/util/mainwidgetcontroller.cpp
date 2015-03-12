@@ -201,6 +201,7 @@ void MainWidgetController::createObjects_()
     frontScene_ = new FrontScene(window_);
     frontScene_->setObjectEditor(objectEditor_);
     connect(frontScene_, SIGNAL(sceneChanged()), this, SLOT(onSceneChanged_()));
+    connect(frontScene_, SIGNAL(editModeChanged(bool)), this, SLOT(onUiEditModeChanged_(bool)));
     connect(frontScene_, &FrontScene::actionsChanged, [=](const QList<QAction*>& a)
     {
         setEditActions_(frontScene_, a);
@@ -1188,6 +1189,11 @@ void MainWidgetController::onSceneChanged_()
         sceneNotSaved_ = true;
         updateWindowTitle_();
     }
+}
+
+void MainWidgetController::onUiEditModeChanged_(bool /*isEdit*/)
+{
+    /* should show/hide the dock widget for the item properties */
 }
 
 void MainWidgetController::onSceneTimeChanged_(Double time)
