@@ -315,7 +315,7 @@ QList<QPair<const FrontPreset*, QString>> FrontPresets::presetsIds() const
 {
     QList<QPair<const FrontPreset*, QString>> list;
     for (auto i = p_map_.begin(); i != p_map_.end(); ++i)
-        list << qMakePair(i.value().get(), i.key());
+        list << QPair<const FrontPreset*, QString>(i.value().get(), i.key());
     return list;
 }
 
