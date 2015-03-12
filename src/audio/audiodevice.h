@@ -136,6 +136,7 @@ public:
     /** Initializes a device/stream.
         @p inDeviceIndex and @p outDeviceIndex are the host-os device numbers as returned by CSMOD::AudioDevices.
         One of them can be set to -1, if you do not need the particular stream.
+        If one of them is set to the 'null' device, initFake() will be called internally.
         @p numInputChannels and @p numOutputChannels is the number of channels requested
         for the input and output.
         @p sampleRate sets the desired samples per second and can be left zero
@@ -155,6 +156,13 @@ public:
 
     /** look for other init() function for description. */
     void init(int inDeviceIndex, int outDeviceIndex, const Configuration& props);
+
+    void initFake(const Configuration& c)
+        { initFake(c.numChannelsIn(), c.numChannelsOut(), c.sampleRate(), c.bufferSize()); }
+    void initFake(uint numInputChannels,
+                  uint numOutputChannels,
+                  uint sampleRate,
+                  uint bufferSize);
 
     /** Closes the audio stream.
         @throws AudioException on any error.

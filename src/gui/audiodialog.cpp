@@ -530,9 +530,9 @@ void AudioDialog::startTone_()
     // input device
     int inidx = selectedInDeviceIndex();
     
-    AUDIO::AudioDevices::DeviceInfo * ininf = 0;
+    const AUDIO::AudioDevices::DeviceInfo * ininf = 0;
     if (inidx >= 0)
-        devices_->getDeviceInfo(inidx);
+        ininf = devices_->getDeviceInfo(inidx);
 
     AUDIO::Configuration conf;
     conf.setNumChannelsIn(numInputs_->value());
@@ -645,7 +645,7 @@ void AudioDialog::startTone_()
     {
         QMessageBox::warning(this, tr("Error"),
                              tr("Failed to start audio device '%1' or '%2'.\n%3")
-                             .arg(ininf->name)
+                             .arg(ininf ? ininf->name : tr("None"))
                              .arg(outinf->name)
                              .arg(e.what())
                              );
