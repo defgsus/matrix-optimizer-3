@@ -21,6 +21,7 @@
 #include "object/objectfactory.h"
 #include "object/scene.h"
 #include "tool/stringmanip.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -311,6 +312,8 @@ void NetEventFile::loadFile(const QString &fn)
 
 bool NetEventFile::saveFile(const QString &fn) const
 {
+    MO_DEBUG("NetEventFile::saveFile(" << fn << ") data_.size() == " << data_.size());
+
     QFile f(fn);
     if (!f.open(QFile::WriteOnly))
     {

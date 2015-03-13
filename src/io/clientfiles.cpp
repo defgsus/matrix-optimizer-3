@@ -220,7 +220,8 @@ void ClientFiles::receiveFile(NetEventFile * e)
 
     f->clientTime = f->serverTime;
     f->timeUpdated = true;
-    f->clientPresent = f->serverPresent && e->saveFile(f->clientFilename);
+    f->clientPresent = //f->serverPresent &&
+                        e->saveFile(f->clientFilename);
 
     saveCache();
 

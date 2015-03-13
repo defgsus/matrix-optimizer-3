@@ -74,7 +74,7 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
 
     paramType_ = params->createSelectParameter(
             "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
-            { "none", "file", "master", "masterd", "camera", "camerad" },
+            { "none", "file", "as", "master", "masterd", "camera", "camerad" },
             textureTypeNames,
             { tr("No texture will be used"),
               tr("An image will be loaded from a file"),

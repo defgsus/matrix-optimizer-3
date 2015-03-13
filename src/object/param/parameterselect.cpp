@@ -84,7 +84,7 @@ const QString& ParameterSelect::valueName() const
 const QString& ParameterSelect::valueId() const
 {
     int idx = valueList_.indexOf(value_);
-    MO_ASSERT(idx>=0, "unknown value " << value_ << " in ParameterSelect('" << idName() << "')");
+    MO_ASSERT(idx>=0 && idx<valueIds_.size(), "unknown value " << value_ << " in ParameterSelect('" << idName() << "')");
     return valueIds_.at(idx);
 }
 
