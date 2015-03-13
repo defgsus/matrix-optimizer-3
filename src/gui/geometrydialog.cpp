@@ -534,8 +534,13 @@ void GeometryDialog::updateGeometry_()
 {
     if (creator_)
     {
-        updateGeometryLater_ = true;
-        return;
+        //updateGeometryLater_ = true;
+
+        // stop current creator
+        connect(creator_, SIGNAL(finished()), creator_, SLOT(deleteLater()));
+        creator_->discard();
+
+        //return;
     }
 
     updateGeometryLater_ = false;

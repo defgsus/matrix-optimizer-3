@@ -75,6 +75,15 @@ bool AudioDevices::checkDevices()
         api_infos_.push_back(inf);
     }
 
+    {
+        ApiInfo inf;
+        inf.name = "null";
+        inf.numDevices = 1;
+        api_infos_.push_back(inf);
+    }
+
+    numApis_ = api_infos_.size();
+
     // ----------- devices ---------------
 
     numDevices_ = Pa_GetDeviceCount();
@@ -98,6 +107,18 @@ bool AudioDevices::checkDevices()
         dev_infos_.push_back(inf);
     }
 
+    {
+        DeviceInfo inf;
+        inf.name = "null";
+        inf.apiIndex = api_infos_.size() - 1;
+        inf.numInputChannels = 1024;
+        inf.numOutputChannels = 1024;
+        inf.defaultSampleRate = 44100;
+        inf.defaultBufferLength = 128;
+        dev_infos_.push_back(inf);
+    }
+
+    numDevices_ = dev_infos_.size();
     return numDevices_ != 0;
 }
 

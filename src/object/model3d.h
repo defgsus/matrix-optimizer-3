@@ -32,6 +32,7 @@ public:
 
 
     MO_OBJECT_CONSTRUCTOR(Model3d);
+    ~Model3d();
 
     /** Returns the current geometry settings. */
     const GEOM::GeometryFactorySettings& geometrySettings() const;
@@ -66,7 +67,8 @@ private slots:
     void geometryFailed_();
 
     void setupDrawable_();
-
+    /** Discards the current thread, if any, and sets creator_=0. */
+    void resetCreator_();
 
 private:
     GL::Drawable * draw_;
