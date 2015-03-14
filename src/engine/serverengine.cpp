@@ -18,6 +18,7 @@
 #include "network/udpaudioconnection.h"
 #include "io/application.h"
 #include "io/settings.h"
+#include "io/filemanager.h"
 #include "tool/deleter.h"
 
 namespace MO {
@@ -307,7 +308,8 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
         if (req->request() == NetEventRequest::GET_SERVER_FILE)
         {
             auto f = req->createResponse<NetEventFile>();
-            f->loadFile(req->data().toString());
+            f->loadFile(IO::FileManager().localFilename( req->data().toString() ) );
+            f->setFilename( req->data().toString() );
 
             sendEvent(client, f);
             return;
