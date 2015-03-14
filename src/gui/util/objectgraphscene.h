@@ -55,6 +55,7 @@ public:
 
     /** Returns the next free position inside parent */
     QPoint nextFreePosition(Object * parent, const QPoint& localPos) const;
+    QPoint nextFreePosition(AbstractObjectItem * item, const QPoint& localPos) const;
 
     // -------------- item getter --------------
 

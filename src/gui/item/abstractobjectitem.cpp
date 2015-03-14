@@ -457,7 +457,7 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
                                        : QPoint(0,0)));
             if (it == 0 || it == this || object()->hasParentObject(it->object()))
             {
-                setGridPos(newGrid);
+                setGridPos(newGrid, true);
             }
         }
 
@@ -513,13 +513,15 @@ QSize AbstractObjectItem::gridSize() const
                  std::max(s.height(), p_oi_->minimumSize.height()));
 }
 
-void AbstractObjectItem::setGridPos(const QPoint &pos1)
+void AbstractObjectItem::setGridPos(const QPoint &pos1, bool expand)
 {
     // limit to positive parent area
     QPoint pos(pos1);
-    if (parentObjectItem())
+    if (expand && parentObjectItem())
     {
-        pos = QPoint(std::max(1, pos1.x()), std::max(1, pos1.y()));
+        if (pos.x() < 1 || pos.y() < 1)
+            parentObjectItem()->expandTopLeft(1-pos.x(), 1-pos.y());
+        //pos = QPoint(std::max(1, pos1.x()), std::max(1, pos1.y()));
     }
 
     // no change?
@@ -559,6 +561,16 @@ void AbstractObjectItem::setGridSize(const QSize &size)
 }
 
 // --------------------------- global queries ----------------------------------------------------
+
+QList<AbstractObjectItem*> AbstractObjectItem::childObjectItems() const
+{
+    QList<AbstractObjectItem*> ret;
+    auto l = childItems();
+    for (auto c : l)
+        if (c->type() >= AbstractObjectItem::T_BASE)
+            ret << static_cast<AbstractObjectItem*>(c);
+    return ret;
+}
 
 AbstractObjectItem * AbstractObjectItem::childItemAt(const QPoint& pos) const
 {
@@ -764,6 +776,23 @@ int AbstractObjectItem::channelForPosition(const QPointF &localPos)
     return -1;
 }
 
+void AbstractObjectItem::expandTopLeft(int x, int y)
+{
+    if (x < 1 && y < 1)
+        return;
+
+    x = std::max(0, x);
+    y = std::max(0, y);
+
+    auto childs = childObjectItems();
+    for (AbstractObjectItem * i : childs)
+        i->setGridPos(i->gridPos() + QPoint(x, y));
+
+    auto p = gridPos();
+    setGridPos(QPoint(p.x() - x, p.y() - y), true);
+}
+
+
 void AbstractObjectItem::adjustSizeToChildren()
 {
     // first do children
@@ -776,15 +805,25 @@ void AbstractObjectItem::adjustSizeToChildren()
             o->adjustSizeToChildren();
     }
 
-    // rect of children
-    const auto crect = childrenBoundingRect(true);
     // grid size
     const auto s = ObjectGraphSettings::gridSize();
-    const QSize gs = QSize(std::max(2.0, crect.right() / s.width() + 1),
-                           std::max(2.0, crect.bottom() / s.height() + 1));
+
+    // rect of children
+    const auto crectf = childrenBoundingRect(true);
+    // in grid coords
+    QRect crect(std::ceil(crectf.left() / s.width()),
+                std::ceil(crectf.top() / s.height()),
+                std::ceil(crectf.width() / s.width()),
+                std::ceil(crectf.height() / s.height()));
+
+    /// @todo also shrink top-left corner
+
+    const QSize gs = QSize(std::max(2, crect.right() ),
+                           std::max(2, crect.bottom() ));
     setGridSize(gs);
 }
 
+#if 0
 void AbstractObjectItem::adjustRightItems()
 {
     if (!scene())
@@ -819,7 +858,7 @@ void AbstractObjectItem::adjustRightItems()
                                Qt::DescendingOrder);
     */
 }
-
+#endif
 // --------------------------------------- shape and draw -----------------------------------------
 
 QPointF AbstractObjectItem::inputPos(uint c) const

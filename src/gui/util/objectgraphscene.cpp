@@ -296,11 +296,18 @@ void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObject
             item->setExpanded(c->getAttachedData(Object::DT_GRAPH_EXPANDED).toBool());
 
         // set initial position (from gui settings or top-to-bottom)
+        QPoint pos;
         if (c->hasAttachedData(Object::DT_GRAPH_POS))
-            item->setGridPos(c->getAttachedData(Object::DT_GRAPH_POS).toPoint());
+            pos = c->getAttachedData(Object::DT_GRAPH_POS).toPoint();
         else
-            item->setGridPos(QPoint(1, y));
+            pos = QPoint(1, y);
 
+        // limit to child area and find free pos
+        if (pitem)
+            pos = scene->nextFreePosition(pitem, pos);
+
+        item->setGridPos(pos);
+        // remember y extent
         y = std::max(y, item->gridRect().bottom() + 1);
 
         // install in item tree
@@ -411,6 +418,9 @@ void ObjectGraphScene::Private::addConItemMap(Object * o, AudioConnectionItem * 
 
 void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& local_pos)
 {
+    MO_DEBUG_GUI("ObjectGraphScene::createObjectItem(" << o << ", QPoint("
+             << local_pos.x() << ", " << local_pos.y() << "))");
+
     // create item
     auto item = new AbstractObjectItem(o);
     // save in map
@@ -652,13 +662,22 @@ QPoint ObjectGraphScene::nextFreePosition(Object *parent, const QPoint &pos1) co
 {
     auto item = itemForObject(parent);
     if (!item)
+        /** @todo find next free position in scene! */
         return pos1;
+    return nextFreePosition(item, pos1);
+}
 
+QPoint ObjectGraphScene::nextFreePosition(AbstractObjectItem * item, const QPoint &pos1) const
+{
     QPoint pos(pos1);
+    // limit to child area
+    pos.setX( std::max(pos.x(), 1));
+    pos.setY( std::max(pos.y(), 1));
+//    MO_DEBUG("find next free pos for " << pos.x() << ", " << pos.y());
     auto i = p_->childItemAt(item, pos);
     while (i != 0 && i != item)
     {
-        qDebug() << "failed for" << pos;
+//        qDebug() << "failed for" << pos;
         ++pos.ry();
         i = p_->childItemAt(item, pos);
     }
@@ -830,6 +849,7 @@ void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
     if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
     {
         //e->accept();
+        e->ignore();
         return;
     }
 
@@ -844,8 +864,9 @@ void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
             return;
         /// @todo whatever we do here, the event will not be accepted by the framework
         MO_DEBUG("yes");
-        e->accept();
-        e->acceptProposedAction();
+        e->setAccepted(true);
+        e->setDropAction(Qt::CopyAction);
+        //e->acceptProposedAction();
         return;
     }
 
@@ -856,9 +877,10 @@ void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
 void ObjectGraphScene::dropEvent(QGraphicsSceneDragDropEvent * e)
 {
     // !! this event comes before the items, pew...
-
+    e->ignore();
     QGraphicsScene::dropEvent(e);
-    if (e->isAccepted())
+    MO_DEBUG("after org: accepted == " << e->isAccepted());
+    //if (e->isAccepted())
         return;
 
     /// @todo drop of real object
