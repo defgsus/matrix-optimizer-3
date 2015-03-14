@@ -102,6 +102,7 @@ private:
         animating_;
 
     QTime * messure_;
+    QTimer * updateTimer_;
 
     double fps_;
 

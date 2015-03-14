@@ -200,7 +200,7 @@ void EventCom::processPacket_(const QByteArray & data, QAbstractSocket * sender)
         event->isReceived_ = true;
 
         MO_NETLOG(EVENT, "EventCom::eventReceived(" << sender->peerName()
-                  << ", " << event->infoName() << " )");
+                  << ", " << event->infoName() << ", size = " << data.size() << ")");
 
         emit eventReceived(event);
     }

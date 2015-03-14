@@ -1653,6 +1653,16 @@ void MainWidgetController::loadScene_(const QString &fn)
             return;
         }
 
+        if (!scene)
+        {
+            QMessageBox::critical(window_, tr("load scene failed"),
+                                  tr("Something went wrong opening the project\n'%1'\n")
+                                  .arg(fn));
+            statusBar()->showMessage(tr("Could not open project '%1'").arg(fn));
+            newScene();
+            return;
+        }
+
         // read gui settings
         SceneSettings sceneSettings;
         try
