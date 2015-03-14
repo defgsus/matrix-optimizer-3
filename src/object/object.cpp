@@ -179,6 +179,19 @@ Object * Object::deserializeTree(IO::DataStream & io)
     return obj;
 }
 
+QString Object::getIoLoadErrors() const
+{
+    QString e = ioLoadErrorStr_;
+    for (auto c : childObjects())
+    {
+        auto ce = c->getIoLoadErrors();
+        if (!ce.isEmpty())
+            e += "\n" + ce;
+    }
+
+    return e;
+}
+
 Object * Object::p_deserializeTree_(IO::DataStream & io)
 {
     MO_DEBUG_IO("Object::deserializeTree_()");
@@ -242,6 +255,10 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
 
         o = ObjectFactory::createDummy();
         name = name + " *missing*";
+
+        o->ioLoadErrorStr_ += tr("The scene contains an unknown object of type '%1'."
+                                 " Make sure you know what you are doing before you proceed.")
+                                .arg(className);
     }
 
     // set default object info

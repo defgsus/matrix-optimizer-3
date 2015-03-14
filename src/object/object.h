@@ -242,6 +242,8 @@ public:
     /** Override to restore custom data after all object childs have been deserialized. */
     virtual void deserializeAfterChilds(IO::DataStream&) { }
 
+    QString getIoLoadErrors() const;
+
     // --------------- getter -------------------
 
     /** Name of the object class, for creating objects at runtime.
@@ -794,6 +796,7 @@ private:
     /** @deprecated */
     Mat4 p_transformation_;
 
+    QString ioLoadErrorStr_;
 };
 
 

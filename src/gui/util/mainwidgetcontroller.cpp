@@ -1663,6 +1663,13 @@ void MainWidgetController::loadScene_(const QString &fn)
             return;
         }
 
+        QString err = scene->getIoLoadErrors();
+        if (!err.isEmpty())
+        {
+            QMessageBox::warning(window_, tr("load scene"),
+                                 tr("There where warnings while loading the scene:\n%1")
+                                 .arg(err));
+        }
         // read gui settings
         SceneSettings sceneSettings;
         try
