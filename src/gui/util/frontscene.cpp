@@ -330,7 +330,8 @@ void FrontScene::Private::addItem(AbstractFrontItem *item)
     item->setEditMode(editMode);
 
     // ensure unique id
-    if (usedIds.contains(item->idName()))
+    if (item->idName().isEmpty()
+        || usedIds.contains(item->idName()))
     {
 //        auto oldid = item->idName();
         item->setId( newUniqueId() );

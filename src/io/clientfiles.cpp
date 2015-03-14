@@ -23,6 +23,7 @@
 #include "engine/clientengine.h"
 #include "io/application.h"
 #include "network/netlog.h"
+#include "io/log.h"
 
 namespace MO {
 namespace IO {
@@ -170,7 +171,10 @@ void ClientFiles::receiveFileInfo(NetEventFileInfo * e)
             MO_NETLOG(DEBUG, "ClientFiles: file is UP-TO-DATE '" << e->filename() << "'");
             // done?
             if (p_->checkAllReady())
+            {
+                MO_NETLOG(DEBUG, "READY----------------------");
                 emit allFilesReady();
+            }
         }
         return;
     }
@@ -414,12 +418,25 @@ void ClientFiles::Private::requestFile(const QString& serverFilename)
 
 bool ClientFiles::Private::checkAllReady()
 {
+    MO_DEBUG("ClientFiles:------")
+    for (const FileInfo& f : files)
+    {
+        MO_DEBUG("serverpresent " << f.serverPresent
+                 << " servertime " << f.serverTime.toString()
+                 << " clientpresent " << f.clientPresent
+                 << " clienttimer " << f.clientTime.toString()
+                 << " timeupdate " << f.timeUpdated
+                 << " equal " << (f.serverTime == f.clientTime)
+                 << " fn " << f.serverFilename);
+    }
+
     for (const FileInfo& f : files)
         if (!(f.serverPresent && f.clientPresent
-           && f.timeUpdated
-           && f.clientTime == f.serverTime))
+              && f.timeUpdated
+              && f.clientTime == f.serverTime))
             return false;
 
+    MO_DEBUG("YESSSSSSSSSSSS");
     return true;
 }
 
