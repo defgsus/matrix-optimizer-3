@@ -19,6 +19,7 @@
 class QCheckBox;
 class QLabel;
 class QPushButton;
+class QTabWidget;
 
 namespace MO {
 namespace GUI {
@@ -57,6 +58,7 @@ private:
     QLabel * labelNum_;
     QLayout * clientLayout_;
     QList<QWidget*> clientWidgets_;
+    QTabWidget * tabWidget_;
 
     NetLogWidget * logger_;
 };

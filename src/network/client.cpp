@@ -56,7 +56,7 @@ bool Client::isRunning() const
 {
     return socket_->isOpen();
 }
-
+/*
 bool Client::connectToMaster()
 {
     //const QString name = "_tcp.matrixoptimizer.master";
@@ -85,7 +85,7 @@ bool Client::connectToMaster()
 
     return true;
 }
-
+*/
 void Client::reconnect_(int ms)
 {
     timer_->start(ms);
@@ -105,6 +105,11 @@ void Client::connectTo(const QHostAddress & a)
 {
     address_ = a;
     connect_();
+}
+
+void Client::closeConnection()
+{
+    socket_->close();
 }
 
 bool Client::sendEvent(AbstractNetEvent * event)

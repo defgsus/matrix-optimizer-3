@@ -17,14 +17,17 @@ void ClientState::serialize(IO::DataStream &io) const
 {
     io << index_ << desktop_
        << isPlayback_ << isInfoWindow_ << isRenderWindow_
-       << isSceneReady_ << isFilesReady_;
+       << isSceneReady_ << isFilesReady_
+       << cacheSize_ << memory_;
 }
 
 void ClientState::deserialize(IO::DataStream &io)
 {
     io >> index_ >> desktop_
        >> isPlayback_ >> isInfoWindow_ >> isRenderWindow_
-       >> isSceneReady_ >> isFilesReady_;
+       >> isSceneReady_ >> isFilesReady_
+       >> cacheSize_ >> memory_
+            ;
 }
 
 

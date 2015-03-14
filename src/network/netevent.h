@@ -157,7 +157,11 @@ public:
         /** Tells server to send a NetEventFileInfo for filename (QString) */
         GET_SERVER_FILE_TIME,
         /** Tells server to send a NetEventFile for filename (QString) */
-        GET_SERVER_FILE
+        GET_SERVER_FILE,
+        /** Signals the client to clear all it's file cache (e.g. delete all files in ./data/cache. */
+        CLEAR_FILE_CACHE,
+        /** The server sends this before stopping to listen. */
+        CLOSE_CONNECTION
     };
 
     static QString requestName(Request);

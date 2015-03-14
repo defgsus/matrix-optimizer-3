@@ -43,10 +43,13 @@ signals:
 
 public slots:
 
-    bool connectToMaster();
+    //bool connectToMaster();
 
     void connectTo(const QString& ip);
     void connectTo(const QHostAddress&);
+
+    /** Closes current connection and restarts ping mode */
+    void closeConnection();
 
     /** Sends event to server.
         Ownership of event is taken. */

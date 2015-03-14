@@ -32,6 +32,7 @@
 #include "io/filemanager.h"
 #include "tool/deleter.h"
 #include "io/version.h"
+#include "io/memory.h"
 #include "io/currenttime.h"
 #include "io/application.h"
 #include "io/error.h"
@@ -188,7 +189,8 @@ void ClientEngine::startNetwork_()
     client_ = new Client(this);
 
     connect(client_, SIGNAL(connected()), this, SLOT(onConnected_()));
-    connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
+    connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)),
+            this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
     client_->connectTo(settings()->serverAddress());
 
@@ -302,7 +304,7 @@ void ClientEngine::renderWindowSizeChanged_(const QSize & size)
 void ClientEngine::onConnected_()
 {
     MO_NETLOG(DEBUG, "ClientEngine connected :D");
-    IO::clientFiles().update();
+    IO::clientFiles().updateCache();
 }
 
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
@@ -382,6 +384,20 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         if (e->request() == NetEventRequest::STOP_RENDER)
         {
             setPlayback_(false);
+            return;
+        }
+
+        if (e->request() == NetEventRequest::CLEAR_FILE_CACHE)
+        {
+            IO::clientFiles().clearCache();
+            isFilesReady_ = false;
+            sendState_();
+            return;
+        }
+
+        if (e->request() == NetEventRequest::CLOSE_CONNECTION)
+        {
+            client_->closeConnection();
             return;
         }
     }
@@ -506,6 +522,9 @@ void ClientEngine::setSceneObject(Scene * scene)
         audioEngine_ = new AudioEngine(this);
     audioEngine_->setScene(scene_, audioConfig_, MO_AUDIO_THREAD);
     audioEngine_->prepareUdp();
+    /** @note The audio engine is not actually running on the clients.
+     * It just receives udp packets and puts them into the buffers of
+     * the dsp graph. */
 }
 
 
@@ -582,18 +601,22 @@ void ClientEngine::onSceneReceived_(Scene * scene)
 
     sendState_();
 
-    // check for needed files
+    // -- check for needed files --
 
     IO::FileList files;
+    // [The filenames are the original filenames,
+    //  absolute paths from the system where the scene file
+    //  was created.]
     nextScene_->getNeededFiles(files);
 
     IO::fileManager().clear();
     IO::fileManager().addFilenames(files);
 
     if (!files.isEmpty())
+    {
         MO_PRINT("Checking file cache..");
-
-    IO::fileManager().acquireFiles();
+        IO::fileManager().acquireFiles();
+    }
 }
 
 void ClientEngine::onFilesReady_()
@@ -615,6 +638,9 @@ void ClientEngine::onFilesNotReady_()
 
 void ClientEngine::setNextScene_()
 {
+    MO_DEBUG("ClientEngine::setNextScene_() nextScene_ == " << nextScene_
+             << ", scene_ == " << scene_);
+
     if (!nextScene_)
         return;
 
@@ -623,7 +649,7 @@ void ClientEngine::setNextScene_()
 
     setSceneObject(s);
 
-    if (glWindow_ && !glWindow_->isVisible())
+    if (glWindow_)// && !glWindow_->isVisible())
         showRenderWindow_(true);
 
     sendState_();
@@ -637,9 +663,10 @@ void ClientEngine::sendState_()
     state.state_.isInfoWindow_ = infoWindow_ && infoWindow_->isVisible();
     state.state_.isRenderWindow_ = glWindow_ && glWindow_->isVisible();
     state.state_.isSceneReady_ = scene_ && !nextScene_;
-    state.state_.isPlayback_ = scene_;//YYY && scene_->isPlayback();
+    state.state_.isPlayback_ = scene_ && glManager_ && glManager_->isAnimating();
     state.state_.isFilesReady_ = isFilesReady_;
-
+    state.state_.cacheSize_ = IO::clientFiles().cacheSize();
+    state.state_.memory_ = Memory::allocated();
     client_->sendEvent(state);
 }
 

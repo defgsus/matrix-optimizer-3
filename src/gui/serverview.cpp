@@ -12,12 +12,14 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QCheckBox>
+#include <QTabWidget>
 
 #include "serverview.h"
 #include "widget/netlogwidget.h"
 #include "gui/widget/spinbox.h"
 #include "engine/serverengine.h"
 #include "network/netevent.h"
+#include "tool/stringmanip.h"
 #include "io/application.h"
 #include "io/settings.h"
 #include "io/log.h"
@@ -91,12 +93,13 @@ void ServerView::createWidgets_()
 
         clientLayout_ = new QVBoxLayout();
         lv->addLayout(clientLayout_);
+        tabWidget_ = 0;
 
         // --- log ---
 
         // connects itself to NetworkLogger
         logger_ = new NetLogWidget(this);
-        lv->addWidget(logger_);
+        lv->addWidget(logger_, 1);
 }
 
 void ServerView::onClientsChanged_()
@@ -116,13 +119,23 @@ void ServerView::onClientMessage_(const ClientInfo & c, int level, const QString
 
 void ServerView::updateClientWidgets_()
 {
+    setUpdatesEnabled(false);
+
     // delete previous
+    /*
     for (auto w : clientWidgets_)
     {
         w->setVisible(false);
         w->deleteLater();
     }
     clientWidgets_.clear();
+    */
+    // XXX When removing via QTabWidget::removeTab()
+    // the tab still stays visible, so we recreate the whole thing
+    if (tabWidget_)
+        tabWidget_->deleteLater();
+    tabWidget_ = new QTabWidget(this);
+    clientLayout_->addWidget(tabWidget_);
 
     // update other widgets
     labelNum_->setText(tr("%1 connected clients").arg(server_->numClients()));
@@ -132,24 +145,29 @@ void ServerView::updateClientWidgets_()
     {
         QWidget * w = createClientWidget_(i, server_->clientInfo(i));
         clientWidgets_.append(w);
-        clientLayout_->addWidget(w);
+        tabWidget_->addTab(w, QString("%1").arg(i+1));
     }
+
+    setUpdatesEnabled(true);
 }
 
 QWidget * ServerView::createClientWidget_(int index, const ClientInfo & inf)
 {
-    QWidget * w = new QWidget(this);
+    QWidget * w = new QWidget(tabWidget_);
     auto lv = new QVBoxLayout(w);
 
         auto label = new QLabel(tr("Client %1 (desktop %2)\n"
-                                   "info win %3, render win %4, files ready %5, scene ready %6, playing %7")
+                                   "info win %3, render win %4, files ready %5, scene ready %6, playing %7\n"
+                                   "memory use %8, file cache %9")
                                 .arg(inf.index)
                                 .arg(inf.state.desktop())
-                                .arg(inf.state.isInfoWindow() ? tr("yes") : tr("no"))
-                                .arg(inf.state.isRenderWindow() ? tr("yes") : tr("no"))
-                                .arg(inf.state.isFilesReady() ? tr("yes") : tr("no"))
-                                .arg(inf.state.isSceneReady() ? tr("yes") : tr("no"))
-                                .arg(inf.state.isPlayback() ? tr("yes") : tr("no"))
+                                .arg(inf.state.isInfoWindow() ? tr("YES") : tr("no"))
+                                .arg(inf.state.isRenderWindow() ? tr("YES") : tr("no"))
+                                .arg(inf.state.isFilesReady() ? tr("YES") : tr("no"))
+                                .arg(inf.state.isSceneReady() ? tr("YES") : tr("no"))
+                                .arg(inf.state.isPlayback() ? tr("YES") : tr("no"))
+                                .arg(byte_to_string(inf.state.memory()))
+                                .arg(byte_to_string(inf.state.cacheSize()))
                                 , w);
         lv->addWidget(label);
 
@@ -200,6 +218,18 @@ QWidget * ServerView::createClientWidget_(int index, const ClientInfo & inf)
             {
                 server_->showRenderWindow(index, s);
             });
+
+        lh = new QHBoxLayout();
+        lv->addLayout(lh);
+
+            auto but = new QPushButton(tr("clear file cache"), w);
+            lh->addWidget(but);
+            connect(but, &QPushButton::clicked, [=]()
+            {
+                server_->sendClearFileCache(index);
+            });
+
+            lh->addStretch(1);
 
     return w;
 }

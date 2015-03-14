@@ -32,6 +32,8 @@ public:
     explicit Window();
     ~Window();
 
+    bool isAnimating() const { return animating_; }
+
     /** Returns the opengl renderer associated to this window */
     SceneRenderer * renderer() const { return renderer_; }
 

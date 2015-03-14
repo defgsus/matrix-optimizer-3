@@ -96,6 +96,7 @@ UdpAudioConnection * ServerEngine::getAudioOutStream()
 
 void ServerEngine::close()
 {
+    sendClose_();
     server_->close();
 
     for (auto &i : clients_)
@@ -104,6 +105,8 @@ void ServerEngine::close()
 
     emit numberClientsChanged(0);
 }
+
+
 
 int ServerEngine::clientForTcp_(QTcpSocket * s)
 {
@@ -298,8 +301,11 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
         if (req->request() == NetEventRequest::GET_SERVER_FILE_TIME)
         {
             auto f = req->createResponse<NetEventFileInfo>();
-            f->setFilename(req->data().toString());
+            /** @note We load the local file but keep the absolute real filename
+                as identifier for the file. */
+            f->setFilename( IO::FileManager().localFilename(req->data().toString()) );
             f->getFileTime();
+            f->setFilename(req->data().toString());
 
             sendEvent(client, f);
             return;
@@ -308,7 +314,9 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
         if (req->request() == NetEventRequest::GET_SERVER_FILE)
         {
             auto f = req->createResponse<NetEventFile>();
-            f->loadFile(IO::FileManager().localFilename( req->data().toString() ) );
+            /** @note We load the local file but keep the absolute real filename
+                as identifier for the file. */
+            f->loadFile( IO::FileManager().localFilename(req->data().toString()) );
             f->setFilename( req->data().toString() );
 
             sendEvent(client, f);
@@ -323,6 +331,9 @@ void ServerEngine::onEvent_(ClientInfo & client, AbstractNetEvent * event)
 
 void ServerEngine::showInfoWindow(int index, bool show)
 {
+    if (index >= clients_.size())
+        return;
+
     NetEventRequest r;
     r.setRequest(show? NetEventRequest::SHOW_INFO_WINDOW
                      : NetEventRequest::HIDE_INFO_WINDOW);
@@ -332,6 +343,9 @@ void ServerEngine::showInfoWindow(int index, bool show)
 
 void ServerEngine::showRenderWindow(int index, bool show)
 {
+    if (index >= clients_.size())
+        return;
+
     NetEventRequest r;
     r.setRequest(show? NetEventRequest::SHOW_RENDER_WINDOW
                      : NetEventRequest::HIDE_RENDER_WINDOW);
@@ -341,6 +355,9 @@ void ServerEngine::showRenderWindow(int index, bool show)
 
 void ServerEngine::setClientIndex(int index, int cindex)
 {
+    if (index >= clients_.size())
+        return;
+
     NetEventRequest r;
     r.setRequest(NetEventRequest::SET_CLIENT_INDEX);
     r.setData(cindex);
@@ -350,6 +367,9 @@ void ServerEngine::setClientIndex(int index, int cindex)
 
 void ServerEngine::setDesktopIndex(int index, int desk)
 {
+    if (index >= clients_.size())
+        return;
+
     NetEventRequest r;
     r.setRequest(NetEventRequest::SET_DESKTOP_INDEX);
     r.setData(desk);
@@ -358,8 +378,30 @@ void ServerEngine::setDesktopIndex(int index, int desk)
 }
 
 
+void ServerEngine::sendClearFileCache(int index)
+{
+    if (index >= clients_.size())
+        return;
+
+    NetEventRequest r;
+    r.setRequest(NetEventRequest::CLEAR_FILE_CACHE);
+
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
+}
+
+void ServerEngine::sendClose_()
+{
+    auto e = new NetEventRequest;
+    e->setRequest(NetEventRequest::CLOSE_CONNECTION);
+
+    sendEvent(e);
+}
+
 bool ServerEngine::sendScene(Scene *scene)
 {
+    if (!numClients())
+        return false;
+
     auto e = new NetEventScene();
     if (!e->setScene(scene))
     {
@@ -370,20 +412,27 @@ bool ServerEngine::sendScene(Scene *scene)
     return sendEvent(e);
 }
 
-void ServerEngine::setScenePlaying(bool enabled)
+bool ServerEngine::setScenePlaying(bool enabled)
 {
-    NetEventRequest r;
-    if (enabled)
-        r.setRequest(NetEventRequest::START_RENDER);
-    else
-        r.setRequest(NetEventRequest::STOP_RENDER);
+    if (!numClients())
+        return false;
 
-    for (int i=0; i<numClients(); ++i)
-        eventCom_->sendEvent(clients_[i].tcpSocket, &r);
+    auto r = new NetEventRequest();
+    if (enabled)
+        r->setRequest(NetEventRequest::START_RENDER);
+    else
+        r->setRequest(NetEventRequest::STOP_RENDER);
+
+    /** @todo send start/stop timestamp */
+
+    return sendEvent(r);
 }
 
 bool ServerEngine::sendAudioConfig(const AUDIO::Configuration& c)
 {
+    if (!numClients())
+        return false;
+
     auto e = new NetEventAudioConfig();
     e->setConfig(c);
 

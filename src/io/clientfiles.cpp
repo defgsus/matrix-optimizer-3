@@ -16,13 +16,14 @@
 #include <QDir>
 
 #include "clientfiles.h"
+#include "engine/clientengine.h"
+#include "network/netevent.h"
+#include "network/netlog.h"
 #include "io/xmlstream.h"
 #include "io/settings.h"
 #include "io/error.h"
-#include "network/netevent.h"
-#include "engine/clientengine.h"
+#include "io/files.h"
 #include "io/application.h"
-#include "network/netlog.h"
 #include "io/log.h"
 
 namespace MO {
@@ -32,7 +33,11 @@ class ClientFiles::Private
 {
 public:
 
-    Private(ClientFiles * cf) : cf(cf), saveCachePending(false) { }
+    Private(ClientFiles * cf)
+        : cf(cf)
+        , saveCachePending(false)
+        , cacheSizeChanged(true)
+    { }
 
     struct FileInfo
     {
@@ -60,13 +65,18 @@ public:
     void requestFileTime(const QString& serverFilename);
     void requestFile(const QString& serverFilename);
     bool checkAllReady();
+    /** Returns a list of all filenames in the cache directory */
+    QStringList getCacheFiles();
 
     ClientFiles * cf;
 
     /** serverFilename, FileInfo */
     QMap<QString, FileInfo> files;
 
-    bool saveCachePending;
+    bool saveCachePending,
+        cacheSizeChanged;
+    quint64 cacheSizeCurrent;
+
 };
 
 
@@ -224,21 +234,70 @@ void ClientFiles::receiveFile(NetEventFile * e)
 
     f->clientTime = f->serverTime;
     f->timeUpdated = true;
-    f->clientPresent = //f->serverPresent &&
+    f->clientPresent = f->serverPresent &&
                         e->saveFile(f->clientFilename);
+
+    p_->cacheSizeChanged = true;
 
     saveCache();
 
     if (!f->clientPresent)
         emit fileNotReady(f->serverFilename);
     else
+    {
+        emit fileReady(f->serverFilename, f->clientFilename);
 
-    // done?
-    if (p_->checkAllReady())
-        emit allFilesReady();
+        // done?
+        if (p_->checkAllReady())
+            emit allFilesReady();
+    }
 }
 
-void ClientFiles::update()
+QStringList ClientFiles::Private::getCacheFiles()
+{
+    QStringList files;
+    Files::findFiles(FT_ANY, settings()->getValue("Directory/filecache").toString(),
+                     true, files, true);
+    return files;
+}
+
+quint64 ClientFiles::cacheSize() const
+{
+    if (!p_->cacheSizeChanged)
+        return p_->cacheSizeCurrent;
+
+    quint64 size = 0;
+
+    auto fns = p_->getCacheFiles();
+    for (const auto & fn : fns)
+    {
+        QFileInfo inf(fn);
+        size += inf.size();
+    }
+
+    p_->cacheSizeChanged = false;
+    return p_->cacheSizeCurrent = size;
+}
+
+void ClientFiles::clearCache()
+{
+    p_->cacheSizeChanged = true;
+
+    auto fns = p_->getCacheFiles();
+    for (const auto & fn : fns)
+    {
+        QFile file(fn);
+        if (!file.remove())
+            MO_NETLOG(ERROR, "Could no delete '" << fn << "'");
+    }
+
+    p_->files.clear();
+    p_->saveCache();
+}
+
+
+
+void ClientFiles::updateCache()
 {
     p_->queryServerTime();
 }
@@ -418,6 +477,7 @@ void ClientFiles::Private::requestFile(const QString& serverFilename)
 
 bool ClientFiles::Private::checkAllReady()
 {
+#if 0
     MO_DEBUG("ClientFiles:------")
     for (const FileInfo& f : files)
     {
@@ -429,14 +489,14 @@ bool ClientFiles::Private::checkAllReady()
                  << " equal " << (f.serverTime == f.clientTime)
                  << " fn " << f.serverFilename);
     }
+#endif
 
     for (const FileInfo& f : files)
         if (!(f.serverPresent && f.clientPresent
               && f.timeUpdated
               && f.clientTime == f.serverTime))
             return false;
-
-    MO_DEBUG("YESSSSSSSSSSSS");
+//    MO_DEBUG("YES...............");
     return true;
 }
 

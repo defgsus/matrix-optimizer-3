@@ -104,6 +104,12 @@ void Manager::onRenderRequest_()
     window_->renderLater();
 }
 */
+
+bool Manager::isAnimating() const
+{
+    return window_ && window_->isAnimating();
+}
+
 void Manager::startAnimate()
 {
     if (window_)

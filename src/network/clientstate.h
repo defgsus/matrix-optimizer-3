@@ -11,6 +11,8 @@
 #ifndef MOSRC_NETWORK_CLIENTSTATE_H
 #define MOSRC_NETWORK_CLIENTSTATE_H
 
+#include <Qt>
+
 namespace MO {
 namespace IO { class DataStream; }
 
@@ -29,6 +31,12 @@ public:
     /** Output desktop/screen */
     int desktop() const { return desktop_; }
 
+    /** Returns the size of all files in the cache directory (bytes). */
+    quint64 cacheSize() const { return cacheSize_; }
+
+    /** Memory currently used by clients (bytes) */
+    quint64 memory() const { return memory_; }
+
     // state
     bool isPlayback() const { return isPlayback_; }
     bool isInfoWindow() const { return isInfoWindow_; }
@@ -46,6 +54,7 @@ private:
          isSceneReady_,
          isFilesReady_;
     int index_, desktop_;
+    quint64 cacheSize_, memory_;
 };
 
 

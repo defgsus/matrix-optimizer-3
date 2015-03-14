@@ -127,6 +127,8 @@ QString NetEventRequest::requestName(Request r)
         case SET_PROJECTION_SETTINGS: return "SET_PROJECTION_SETTINGS";
         case GET_SERVER_FILE_TIME: return "GET_SERVER_FILE_TIME";
         case GET_SERVER_FILE: return "GET_SERVER_FILE";
+        case CLEAR_FILE_CACHE: return "CLEAR_FILE_CACHE";
+        case CLOSE_CONNECTION: return "CLOSE_CONNECTION";
     }
     return "*UNKNOWN*";
 }
