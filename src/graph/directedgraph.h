@@ -11,7 +11,7 @@
 #ifndef MOSRC_GRAPH_DIRECTEDGRAPH_H
 #define MOSRC_GRAPH_DIRECTEDGRAPH_H
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) && !defined(MO_HAMBURG)
 // for debug/dump functions
 #   define MO_GRAPH_DEBUG
 #endif

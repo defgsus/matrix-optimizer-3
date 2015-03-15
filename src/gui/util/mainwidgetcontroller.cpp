@@ -331,6 +331,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Import ..."), menuBar));
         connect(a, SIGNAL(triggered()), this, SLOT(loadInterface()));
 
+        m->addAction(a = new QAction(tr("Import and insert..."), menuBar));
+        connect(a, SIGNAL(triggered()), this, SLOT(insertInterface()));
+
         m->addAction(a = new QAction(tr("Export as ..."), menuBar));
         connect(a, SIGNAL(triggered()), this, SLOT(saveInterfaceAs()));
 
@@ -1806,6 +1809,24 @@ void MainWidgetController::loadInterface()
     try
     {
         frontScene_->loadXml(fn);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(window_, tr("interface i/o"),
+                              tr("Could not load the interface xml\n'%1'\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+}
+
+void MainWidgetController::insertInterface()
+{
+    QString fn = IO::Files::getOpenFileName(IO::FT_INTERFACE_XML, window_);
+    if (fn.isEmpty())
+        return;
+
+    try
+    {
+        frontScene_->insertXml(fn);
     }
     catch (const Exception& e)
     {

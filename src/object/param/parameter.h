@@ -133,12 +133,18 @@ public:
     void removeModulator(const QString& idName, const QString& outputId);
     /** Removes all modulators coming from object @p idName */
     void removeAllModulators(const QString& idName);
+    /** Removes all modulators coming from any of the objects in @p idNames */
+    void removeAllModulators(const QList<QString>& idNames);
 
     /** Removes all modulators IDs */
     void removeAllModulators();
 
     /** Finds the actual objects associated to the modulatorIds(). */
     void collectModulators();
+
+    /** Removes all modulator ids for which not modulator has been found.
+        Must be called after collectModulators() or all modulators will be removed. */
+    void clearNullModulators();
 
     /** Returns a modulator for the given id.
         The Modulator is created or reused. */
@@ -152,8 +158,11 @@ public:
     /** Returns all modulators (valid after collectModulators) */
     const QList<Modulator*>& modulators() const { return modulators_; }
 
+    /** Returns a list of all modulator ids. */
+    QList<QString> getModulatorIds() const;
+
     /** Returns a list of all modulator objects (valid after collectModulators()) */
-    QList<Object*> getModulatingObjects() const;
+    QList<Object*> getModulatingObjects(bool recursive = true) const;
 
     /** Returns the list of objects that will be modulating objects when
         this object gets added to @p scene. */

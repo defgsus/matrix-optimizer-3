@@ -61,6 +61,7 @@ public:
 
     void saveXml(const QString& filename) const;
     void loadXml(const QString& filename);
+    void insertXml(const QString& filename);
 
     /** Returns the xml representation of the scene.
         @throws IoException on any errors. */

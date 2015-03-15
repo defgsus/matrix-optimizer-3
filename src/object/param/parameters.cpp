@@ -120,6 +120,47 @@ QMap<QString, QList<Parameter*>> Parameters::getParameterGroups() const
     return map;
 }
 
+QList<Object*> Parameters::getModulatingObjects(bool recursive) const
+{
+    QSet<Object*> set;
+    getModulatingObjects(set, recursive);
+    return set.toList();
+}
+
+void Parameters::getModulatingObjects(QSet<Object*>& set, bool recursive) const
+{
+    for (auto p : parameters_)
+    {
+        auto l = p->getModulatingObjects(recursive);
+        for (auto o : l)
+            set.insert(o);
+    }
+}
+
+QList<QString> Parameters::getModulatorIds() const
+{
+    QSet<QString> set;
+    getModulatorIds(set);
+    return set.toList();
+}
+
+void Parameters::getModulatorIds(QSet<QString>& set) const
+{
+    for (auto p : parameters_)
+    {
+        auto l = p->getModulatorIds();
+        for (auto o : l)
+            set.insert(o);
+    }
+}
+
+void Parameters::removeModulators(const QList<QString> &ids)
+{
+    for (auto p : parameters_)
+        p->removeAllModulators(ids);
+}
+
+
 namespace {
     QString toAnchor(QString name)
     {

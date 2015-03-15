@@ -218,6 +218,15 @@ void FrontScene::loadXml(const QString &filename)
     xml.stopReading();
 }
 
+void FrontScene::insertXml(const QString &filename)
+{
+    FrontScene s;
+    s.loadXml(filename);
+    auto list = s.topLevelFrontItems();
+    for (auto i : list)
+        p_->addItem(i);
+}
+
 QString FrontScene::toXml() const
 {
     IO::XmlStream xml;

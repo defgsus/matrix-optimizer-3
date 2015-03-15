@@ -113,6 +113,7 @@ public slots:
 
     void newInterface();
     void loadInterface();
+    void insertInterface();
     void saveInterfaceAs();
     void loadInterfacePresets();
     void saveInterfacePresetsAs();

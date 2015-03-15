@@ -187,7 +187,7 @@ public slots:
 
     /** Creates a connection between an ui-item and a parameter,
         if types do match. */
-    bool addUiModulator(MO::Parameter *, MO::GUI::AbstractFrontItem * item);
+    bool addUiModulator(MO::Parameter *, MO::GUI::AbstractFrontItem *);
 
     /** Removes the ModulatorObject previously created for the ui item with id @p uiId. */
     bool removeUiModulator(const QString& uiId);

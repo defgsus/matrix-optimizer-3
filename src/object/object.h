@@ -562,6 +562,19 @@ public:
         XXX Only used by TrackFloat a.t.m. */
     virtual void collectModulators() { };
 
+    /** Removes all modulator ids from all parameters for which
+        no modulator object has been found. */
+    void removeNullModulators(bool recursive);
+
+    /** Removes all modulators from all parameters, who's ids
+        are not in the current tree.
+        @note low-level function, not really part of interface. */
+    void removeOutsideModulators(bool recursive);
+
+    /** Removes all modulators with the given ids.
+        @note low-level function, not really part of interface. */
+    void removeModulators(const QList<QString>& modulatorIds, bool recursive);
+
     /** Returns all modulators of all parameters of this object.
         If @p recursive is true, all childs will add their Modulators too. */
     QList<Modulator*> getModulators(bool recursive = false) const;
@@ -637,6 +650,16 @@ public:
         @note Be sure to call the ancestor class implementation in your derived method!
         */
     virtual void setSampleRate(uint samplerate);
+
+    /** When the Object is loaded from a template via ObjectFactory::loadObject(),
+        it will have it's internal tree audio connections here, so the scene
+        can incorporate them. */
+    AudioObjectConnections * getAssignedAudioConnections() const;
+
+    /** Assigns audio connections to the object. This just copies the pointer.
+        Only used for saving templates via ObjectFactory::saveObject()
+        The ownership is taken. Assign NULL to clear existing. */
+    void assignAudioConnections(AudioObjectConnections *);
 
     // ------------------ spatial audio -------------------
 
@@ -782,6 +805,8 @@ private:
 
     uint p_sampleRate_;
     Double p_sampleRateInv_;
+
+    AudioObjectConnections * p_aoCons_;
 
     // ------------ runtime ------------------
 

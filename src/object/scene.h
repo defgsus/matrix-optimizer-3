@@ -100,8 +100,13 @@ public:
     ModulatorObject * createUiModulator(const QString& uiId);
 
     /** Returns all ModulatorObjects that belong to the ui item IDs */
-    QList<ModulatorObject*> getUiModulators(const QList<QString>& uiIds) const;
-
+    QList<ModulatorObject*> getUiModulatorObjects(const QList<QString>& uiIds) const;
+#if 0
+    /** Returns all Modulators that belong to the ui item IDs.
+        The Modulator will have as source the proxy ModulatorObject and as
+        goal the actual goal of the ui controller. */
+    QList<Modulator*> getUiModulators(const QList<QString>& uiIds) const;
+#endif
     /** Propagates a value from an ui-item to the appropriate ModulatorObjectFloat */
     void setUiValue(const QString& uiId, Double timeStamp, Float value);
 

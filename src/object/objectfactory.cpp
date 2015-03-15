@@ -35,6 +35,7 @@
 #include "sequencefloat.h"
 #include "modulatorobjectfloat.h"
 #include "synthesizer.h"
+#include "util/audioobjectconnections.h"
 #include "audio/filterao.h"
 #include "io/files.h"
 
@@ -46,7 +47,7 @@ namespace {
     static int     MO_SCENEFILE_VERSION( 1 );
 
     static QString MO_OBJECTFILE_HEADER( "matrix-optimizer-object" );
-    static int     MO_OBJECTFILE_VERSION( 1 );
+    static int     MO_OBJECTFILE_VERSION( 2 );
 
 }
 
@@ -598,6 +599,19 @@ void ObjectFactory::saveObject(IO::DataStream & io, const Object * obj)
         QByteArray data = obj->serializeTreeCompressed();
         io << data;
     }
+
+    // v2 - store audio connections
+    AudioObjectConnections acon;
+    if (auto s = obj->sceneObject())
+        acon = s->audioConnections()->reducedTo(obj);
+
+    if (acon.isEmpty())
+        io << (quint8)0;
+    else
+    {
+        io << (quint8)1;
+        acon.serialize(io);
+    }
 }
 
 Object * ObjectFactory::loadObject(const QString &fn)
@@ -615,9 +629,10 @@ Object * ObjectFactory::loadObject(const QString &fn)
 
 Object * ObjectFactory::loadObject(IO::DataStream &io)
 {
+    int ver;
     try
     {
-        io.readHeader(MO_OBJECTFILE_HEADER, MO_OBJECTFILE_VERSION);
+        ver = io.readHeader(MO_OBJECTFILE_HEADER, MO_OBJECTFILE_VERSION);
     }
     catch (const IoException &e)
     {
@@ -640,6 +655,27 @@ Object * ObjectFactory::loadObject(IO::DataStream &io)
         io >> data;
         o = Object::deserializeTreeCompressed(data);
     }
+
+    // audio connections
+    if (ver >= 2)
+    {
+        quint8 audio_present;
+        io >> audio_present;
+        if (audio_present != 0)
+        {
+            auto acon = new AudioObjectConnections();
+            acon->deserialize(io, o);
+            // store in object so scene can incorporate them on add
+            o->assignAudioConnections(acon);
+        }
+    }
+
+    // removes modulators that are outside of our own tree
+    // Important for loading templates which where previously connected
+    // to stuff which is not available now or is something different
+    o->removeOutsideModulators(true);
+
+    //o->clearNullModulators(true);
 
     return o;
 }

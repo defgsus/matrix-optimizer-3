@@ -13,16 +13,17 @@
 
 #include "object.h"
 #include "objectfactory.h"
-#include "object/util/objecteditor.h"
 #include "scene.h"
+#include "modulatorobjectfloat.h"
 #include "transform/transformation.h"
 #include "param/parameters.h"
 #include "param/parameterselect.h"
 #include "param/modulatoroutput.h"
 #include "audio/spatial/spatialsoundsource.h"
 #include "audio/spatial/spatialmicrophone.h"
+#include "util/objecteditor.h"
+#include "util/audioobjectconnections.h"
 #include "math/transformationbuffer.h"
-#include "modulatorobjectfloat.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -58,6 +59,7 @@ Object::Object(QObject *parent)
     , p_numberMicrophones_      (0)
     , p_sampleRate_             (44100)
     , p_sampleRateInv_          (1.0/44100.0)
+    , p_aoCons_                 (0)
     , p_parentActivityScope_    (AS_ON)
     , p_currentActivityScope_   (AS_ON)
 //  , parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY))
@@ -75,15 +77,19 @@ Object::Object(QObject *parent)
 
 Object::~Object()
 {
+    delete p_aoCons_;
+
     // release references on childs
     for (auto c : p_childObjects_)
         c->releaseRef();
 
+#ifndef MO_HAMBURG
     if (p_ref_ > 1)
     {
         MO_WARNING("Object(" << idName() << ")::~Object() with a ref-count of "
                    << p_ref_ << ". NOTE: ref-counting for Objects is not fully implemented yet.");
     }
+#endif
 
     delete p_parameters_;
 
@@ -170,10 +176,7 @@ Object * Object::deserializeTree(IO::DataStream & io)
     if (Scene * scene = qobject_cast<Scene*>(obj))
     {
         scene->updateTree_();
-
-        //YYY Something like below would be useful at the moment
-        //But modulator storage will be changed anyway
-        //scene->removeUninitializedModulators();
+        //scene->clearNullModulators(true);
     }
 
     return obj;
@@ -1239,7 +1242,72 @@ void Object::calculateMicrophoneTransformation(
         TransformationBuffer::copy(objectTransform, m->transformationBuffer());
 }
 
+void Object::assignAudioConnections(AudioObjectConnections * ao)
+{
+    delete p_aoCons_;
+    p_aoCons_ = ao;
+}
+
+AudioObjectConnections * Object::getAssignedAudioConnections() const
+{
+    return p_aoCons_;
+}
+
 // -------------------- modulators ---------------------
+
+void Object::removeNullModulators(bool recursive)
+{
+    for (auto p : params()->parameters())
+        p->clearNullModulators();
+
+    if (recursive)
+        for (auto c : childObjects())
+            c->removeNullModulators(true);
+}
+
+void Object::removeOutsideModulators(bool recursive)
+{
+    // -- get a list of ids of objects that are modulators
+    //    but are not in this tree --
+
+    QSet<QString> ids;
+
+    if (!recursive)
+    {
+        auto modids = params()->getModulatorIds();
+        for (auto id : modids)
+            // modulation from outside ourselfes?
+            if (!findChildObject(id))
+                ids.insert(id);
+    }
+    else
+    {
+        // whole self tree
+        auto all = findChildObjects(TG_ALL, true);
+        all.prepend(this);
+
+        for (Object * o : all)
+        {
+            auto modids = o->params()->getModulatorIds();
+            for (auto id : modids)
+                // modulation from outside ourselfes?
+                if (!findChildObject(id))
+                    ids.insert(id);
+        }
+    }
+
+    if (!ids.isEmpty())
+        removeModulators(ids.toList(), recursive);
+}
+
+void Object::removeModulators(const QList<QString> &modulatorIds, bool recursive)
+{
+    params()->removeModulators(modulatorIds);
+
+    if (recursive)
+        for (auto c : childObjects())
+            c->removeModulators(modulatorIds, recursive);
+}
 
 QList<Modulator*> Object::getModulators(bool recursive) const
 {

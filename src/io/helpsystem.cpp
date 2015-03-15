@@ -373,8 +373,6 @@ QImage HelpSystem::getObjectImage(const QString &url) const
 
     // create a temp object item (easiest way to paint nicely)
     GUI::AbstractObjectItem item(o);
-    // XXX not working
-    //item.updateConnectors();
 
     // determine width and height for drawing
     QSize itemsize = item.boundingRect().size().toSize(),

@@ -214,6 +214,14 @@ QList<QPair<QString, QString>> Parameter::modulatorIds() const
     return list;
 }
 
+QList<QString> Parameter::getModulatorIds() const
+{
+    QList<QString> list;
+    for (auto m : modulators_)
+        list << m->modulatorId();
+    return list;
+}
+
 Modulator * Parameter::addModulator(const QString &idName, const QString &outputId)
 {
     MO_DEBUG_MOD("Parameter(" << this->idName()
@@ -268,6 +276,24 @@ void Parameter::removeAllModulators(const QString &idName)
         std::swap(modulators_, mods);
 }
 
+void Parameter::removeAllModulators(const QList<QString>& idNames)
+{
+    MO_DEBUG_MOD("Parameter("<<this->idName()<<")::removeAllModulators(" << idNames.size() << ")");
+
+    QList<Modulator*> mods;
+
+    for (auto m : modulators_)
+    {
+        if (idNames.contains(m->modulatorId()))
+            delete m;
+        else
+            mods << m;
+    }
+
+    if (mods.size() != modulators_.size())
+        std::swap(modulators_, mods);
+}
+
 void Parameter::removeAllModulators()
 {
     clearModulators_();
@@ -306,7 +332,7 @@ Modulator * Parameter::findModulator(const QString& id) const
     return 0;
 }
 
-QList<Object*> Parameter::getModulatingObjects() const
+QList<Object*> Parameter::getModulatingObjects(bool recursive) const
 {
     QList<Object*> list;
 
@@ -314,9 +340,10 @@ QList<Object*> Parameter::getModulatingObjects() const
         if (m->modulator())
             list.append(m->modulator());
 
-    for (auto m : modulators_)
-        if (m->modulator())
-            list.append(m->modulator()->getModulatingObjects());
+    if (recursive)
+        for (auto m : modulators_)
+            if (m->modulator())
+                list.append(m->modulator()->getModulatingObjects());
 
     return list;
 }
@@ -331,6 +358,7 @@ void Parameter::collectModulators()
 
     Object * root = object()->rootObject();
 
+    bool error = false;
     uint k = 0;
     for (auto m : modulators())
     {
@@ -346,6 +374,7 @@ void Parameter::collectModulators()
             else
             {
                 m->setModulator(0);
+                error = true;
                 MO_WARNING("parameter '" << idName()
                            << "' can not work with modulator '" << m->modulatorId() << "'");
             }
@@ -353,6 +382,7 @@ void Parameter::collectModulators()
         else
         {
             m->setModulator(0);
+            error = true;
             MO_WARNING("parameter '" << idName()
                        << "' could not find modulator '" << m->modulatorId() << "'");
         }
@@ -360,8 +390,27 @@ void Parameter::collectModulators()
 
     MO_DEBUG_MOD("Parameter("<<idName()<<") found " << k << " of "
                  << modulators().size() << " modulator(s)");
+
+    if (error)
+        clearNullModulators();
 }
 
+void Parameter::clearNullModulators()
+{
+    QList<Modulator*> tmp;
+    for (Modulator * m : modulators())
+    {
+        if (m->modulator())
+            tmp << m;
+        else
+        {
+            MO_DEBUG("removing modulator '" << m->nameAutomatic());
+            delete m;
+        }
+    }
+
+    modulators_.swap(tmp);
+}
 
 QList<Object*> Parameter::getFutureModulatingObjects(const Scene *scene) const
 {

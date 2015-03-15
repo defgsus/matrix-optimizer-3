@@ -138,6 +138,11 @@ void Scene::deserialize(IO::DataStream & io)
 
     if (ver >= 2)
         io >> fbSizeRequest_ >> doMatchOutputResolution_;
+
+#ifdef MO_DISABLE_EXP
+    doMatchOutputResolution_ = true;
+    //fbSizeRequest_ = QSize(0, 0);
+#endif
 }
 
 void Scene::deserializeAfterChilds(IO::DataStream & io)
@@ -276,9 +281,9 @@ ModulatorObject * Scene::createUiModulator(const QString &uiId)
     return m;
 }
 
-QList<ModulatorObject*> Scene::getUiModulators(const QList<QString>& uiIds) const
+QList<ModulatorObject*> Scene::getUiModulatorObjects(const QList<QString>& uiIds) const
 {
-    // find all modulators matching any of the ids
+    // find all modulator objects matching any of the ids
     QList<ModulatorObject*> list;
     for (auto & id : uiIds)
     {
@@ -289,6 +294,26 @@ QList<ModulatorObject*> Scene::getUiModulators(const QList<QString>& uiIds) cons
 
     return list;
 }
+
+#if 0
+QList<Modulator*> Scene::getUiModulators(const QList<QString>& uiIds) const
+{
+    // find all modulator objects matching any of the ids
+    auto modobjs = getUiModulatorObjects(uiIds);
+
+    //getModulators()
+    QList<Modulator*> mods;
+    for (ModulatorObject * o : modobjs)
+    {
+        /*auto i = uiModsFloat_.find(id);
+        if (i != uiModsFloat_.end())
+            list << i.value();
+            */
+    }
+
+    return mods;
+}
+#endif
 
 void Scene::setUiValue(const QString &uiId, Double timeStamp, Float value)
 {
@@ -323,7 +348,14 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
 
     {
         ScopedSceneLockWrite lock(this);
+
         parent->addObject_(newChild, insert_index);
+        // get internal audio cons
+        if (auto acon = newChild->getAssignedAudioConnections())
+        {
+            audioConnections()->addFrom(*acon);
+            newChild->assignAudioConnections(0);
+        }
         parent->p_childrenChanged_();
         newChild->onParametersLoaded();
         newChild->updateParameterVisibility();
@@ -338,12 +370,20 @@ void Scene::addObjects(Object *parent, const QList<Object*>& newChilds, int inse
 
     {
         ScopedSceneLockWrite lock(this);
+
         for (auto n : newChilds)
         {
             // make the name unique
             n->setName( parent->makeUniqueName(n->name()) );
             // add (could be faster with a list version...)
             parent->addObject_(n, insert_index++);
+
+            // get internal audio cons
+            if (auto acon = n->getAssignedAudioConnections())
+            {
+                audioConnections()->addFrom(*acon);
+                n->assignAudioConnections(0);
+            }
         }
 
         parent->p_childrenChanged_();

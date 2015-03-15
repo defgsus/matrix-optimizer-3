@@ -546,10 +546,12 @@ bool ObjectEditor::addUiModulator(Parameter *p, GUI::AbstractFrontItem * item)
     Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
-        // create proxy object
+        // create or reuse proxy object
         mo = scene_->createUiModulator(item->idName());
         // connect to parameter
         m = p->addModulator(mo->idName(), "");
+        if (!m)
+            return false;
         p->collectModulators();
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
@@ -567,7 +569,7 @@ bool ObjectEditor::removeUiModulator(const QString &uiId)
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeUiModulator(" << uiId << ")");
     MO__CHECK_SCENE
 
-    auto list = scene_->getUiModulators(QList<QString>() << uiId);
+    auto list = scene_->getUiModulatorObjects(QList<QString>() << uiId);
     QList<Object*> objects;
     for (auto o : list)
         objects << o;
@@ -582,7 +584,7 @@ bool ObjectEditor::removeUiModulators(const QList<QString> &uiIds)
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeUiModulators(" << uiIds.size() << ")");
     MO__CHECK_SCENE
 
-    auto list = scene_->getUiModulators(uiIds);
+    auto list = scene_->getUiModulatorObjects(uiIds);
     QList<Object*> objects;
     for (auto o : list)
         objects << o;
