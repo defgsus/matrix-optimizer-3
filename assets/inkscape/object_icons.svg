@@ -132,8 +132,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="649.22597"
-     inkscape:cy="639.01877"
+     inkscape:cx="624.74168"
+     inkscape:cy="567.5902"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -2617,5 +2617,25 @@
        inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_angelscript.png"
        inkscape:export-xdpi="164"
        inkscape:export-ydpi="164" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-7-23"
+       width="68.188736"
+       height="68.188736"
+       x="442.91068"
+       y="-614.09436"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_oscillograph.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.70000005;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       d="m 555.44645,477.45962 c 0,0 16.28061,1.68888 19.98799,-1.1741 2.51694,-1.94368 3.29453,-10.98787 3.74975,-8.67489 2.40812,12.23547 -1.05895,21.74759 3.20812,13.16481 3.32908,-6.69611 22.55162,-3.31582 22.55162,-3.31582"
+       id="path3778-0-4"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="csssc"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_oscillograph.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
   </g>
 </svg>

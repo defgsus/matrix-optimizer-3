@@ -52,5 +52,6 @@
         <file alias="obj_clipcontroller.png">assets/icon/obj_clipcontroller.png</file>
         <file alias="obj_audio.png">assets/icon/obj_audio.png</file>
         <file alias="obj_angelscript.png">assets/icon/obj_angelscript.png</file>
+        <file alias="obj_oscillograph.png">assets/icon/obj_oscillograph.png</file>
     </qresource>
 </RCC>

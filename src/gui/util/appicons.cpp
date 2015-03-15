@@ -29,6 +29,7 @@
 #include "object/synthesizer.h"
 #include "object/audio/filterao.h"
 #include "object/ascriptobject.h"
+#include "object/oscillograph.h"
 #include "io/error.h"
 
 namespace MO {
@@ -61,7 +62,8 @@ struct AppIcons::Private
         I_MUSIC_NOTE,
         I_CLIP,
         I_CLIP_CONTROL,
-        I_ANGELSCRIPT
+        I_ANGELSCRIPT,
+        I_OSCILLOGRAPH
     };
 
     struct IconDesc { IconId id; QString name; };
@@ -127,6 +129,7 @@ void AppIcons::Private::init()
     nameMap_.insert(I_CLIP_CONTROL, ":/icon/obj_clipcontroller.png");
     nameMap_.insert(I_AUDIO, ":/icon/obj_audio.png");
     nameMap_.insert(I_ANGELSCRIPT, ":/icon/obj_angelscript.png");
+    nameMap_.insert(I_OSCILLOGRAPH, ":/icon/obj_oscillograph.png");
 }
 
 
@@ -164,6 +167,11 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
         return I_AUDIO;
     }
 
+    if (qobject_cast<const AScriptObject*>(o))
+        return I_ANGELSCRIPT;
+
+    if (qobject_cast<const Oscillograph*>(o))
+        return I_OSCILLOGRAPH;
 
 #ifndef MO_DISABLE_SPATIAL
     if (qobject_cast<const Synthesizer*>(o))
@@ -179,9 +187,6 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
     if (o->isParameter()) return I_PARAMETER;
     if (o->isLightSource()) return I_LIGHT;
     if (o->isModulatorObject()) return I_MODULATOR;
-
-    if (qobject_cast<const AScriptObject*>(o))
-        return I_ANGELSCRIPT;
 
     return I_NONE;
 }
