@@ -8,6 +8,8 @@
     <p>created 26.09.2014</p>
 */
 
+#ifndef MO_DISABLE_SPATIAL
+
 #include "synthesizer.h"
 #include "io/datastream.h"
 #include "param/parameters.h"
@@ -418,3 +420,5 @@ void Synthesizer::calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSour
 
 } // namespace MO
 
+
+#endif // #ifndef MO_DISABLE_SPATIAL

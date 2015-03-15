@@ -8,6 +8,8 @@
     <p>created 8/19/2014</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #ifndef MOSRC_OBJECT_SPRITE_H
 #define MOSRC_OBJECT_SPRITE_H
 
@@ -47,3 +49,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_OBJECT_SPRITE_H
+
+#endif // #ifndef MO_DISABLE_EXP

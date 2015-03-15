@@ -156,8 +156,10 @@ public:
     bool isGroup() const { return qobject_cast<Group*>(o) != 0; }
     bool isModel() const { return qobject_cast<Model3d*>(o) != 0; }
     bool isCamera() const { return qobject_cast<Camera*>(o) != 0; }
+#ifndef MO_DISABLE_SPATIAL
     bool isMicrophone() const { return qobject_cast<Microphone*>(o) != 0; }
     bool isSoundSource() const { return qobject_cast<SoundSource*>(o) != 0; }
+#endif
 
     uint parameterCount() { return o->params()->parameters().size(); }
     ParameterAS * parameter(uint index);
@@ -597,8 +599,10 @@ static void register_object_base(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("bool isGroup() const", isGroup);
     MO__REG_METHOD("bool isModel() const", isModel);
     MO__REG_METHOD("bool isCamera() const", isCamera);
+#ifndef MO_DISABLE_SPATIAL
     MO__REG_METHOD("bool isMicrophone() const", isMicrophone);
     MO__REG_METHOD("bool isSoundSource() const", isSoundSource);
+#endif
 
     MO__REG_METHOD("uint childrenCount() const", childrenCount);
     MO__REG_METHOD("Object@ children(uint)", children);

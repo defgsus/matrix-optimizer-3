@@ -8,6 +8,8 @@
     <p>created 8/19/2014</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #include "sprite.h"
 #include "io/datastream.h"
 #include "io/log.h"
@@ -233,3 +235,5 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 
 
 } // namespace MO
+
+#endif // #ifndef MO_DISABLE_EXP

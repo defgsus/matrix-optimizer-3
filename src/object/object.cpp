@@ -184,8 +184,8 @@ QString Object::getIoLoadErrors() const
     QString e = ioLoadErrorStr_;
     for (auto c : childObjects())
     {
-        auto ce = c->getIoLoadErrors();
-        if (!ce.isEmpty())
+        auto ce = c->getIoLoadErrors().trimmed();
+        if (ce.size() > 1)
             e += "\n" + ce;
     }
 
@@ -256,8 +256,7 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
         o = ObjectFactory::createDummy();
         name = name + " *missing*";
 
-        o->ioLoadErrorStr_ += tr("The scene contains an unknown object of type '%1'."
-                                 " Make sure you know what you are doing before you proceed.")
+        o->ioLoadErrorStr_ += tr("unknown object of type '%1'\n")
                                 .arg(className);
     }
 

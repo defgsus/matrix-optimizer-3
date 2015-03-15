@@ -8,6 +8,8 @@
     <p>created 6/28/2014</p>
 */
 
+#ifndef MO_DISABLE_SPATIAL
+
 #include <math.h>
 
 #include "microphone.h"
@@ -113,3 +115,5 @@ void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, u
 
 
 } // namespace MO
+
+#endif // #ifndef MO_DISABLE_SPATIAL

@@ -32,6 +32,7 @@
 #include "io/memory.h"
 #include "io/version.h"
 #include "io/filemanager.h"
+#include "io/helpsystem.h" // for setHelpUrl()
 #include "io/helpexporterhtml.h"
 #include "gui/timeline1dview.h"
 #include "gui/timeline1drulerview.h"
@@ -376,7 +377,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addSeparator();
 
         // ##### RESOLUTION SUBMENU #####
-        auto sub = new QMenu(tr("Resolution"), menuBar);
+        QMenu* sub;
+#ifndef MO_DISABLE_EXP
+        sub = new QMenu(tr("Resolution"), menuBar);
         m->addMenu(sub);
 
             ag = new QActionGroup(sub);
@@ -400,9 +403,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
                         this, SLOT(onResolutionPredefined_(QAction*)));
 
         m->addSeparator();
-
+#endif
 
         // ##### DEBUG VISIBILITY SUBMENU #####
+#ifndef MO_DISABLE_EXP
         sub = new QMenu(tr("Visibility"), menuBar);
         m->addMenu(sub);
 
@@ -427,6 +431,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
         m->addSeparator();
+#endif
 
         // ##### PROJECTOR INDEX SUBMENU #####
         sub = menuProjectorIndex_ = new QMenu(tr("Projector index"), menuBar);
@@ -441,10 +446,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         m->addSeparator();
 
+#ifndef MO_DISABLE_EXP
         m->addAction(a = new QAction(tr("Render to disk"), menuBar));
         ag->addAction(a);
         connect(a, SIGNAL(triggered()), this, SLOT(renderToDisk()));
-
+#endif
 
     // ######### OPTIONS MENU #########
     m = new QMenu(tr("Options"), menuBar);
@@ -520,7 +526,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             AudioFilterDialog diag;
             diag.exec();
         });
-
+#ifndef MO_HAMBURG
         a = new QAction(tr("Timeline editor"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
@@ -528,7 +534,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             TimelineEditDialog diag;
             diag.exec();
         });
-
+#endif
         a = new QAction(tr("Batch scene converter"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
@@ -545,12 +551,6 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             diag.exec();
         });
 
-
-    // ####################### DEBUG MENU #####################
-
-    m = new QMenu(tr("Debug"), menuBar);
-    menuBar->addMenu(m);
-
         a = new QAction(tr("StyleSheet editor"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
@@ -565,6 +565,12 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             });
             diag->show();
         });
+
+
+    // ####################### DEBUG MENU #####################
+
+    m = new QMenu(tr("Debug"), menuBar);
+    menuBar->addMenu(m);
 
         a = new QAction(tr("QObject inspector (mainwindow)"), m);
         m->addAction(a);
@@ -597,19 +603,19 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         m->addAction(a = new QAction(tr("Dump needed files"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpNeededFiles_()));
-
+#ifndef MO_HAMBURG
         m->addAction(a = new QAction(tr("Test transformation speed (new)"), m));
         connect(a, &QAction::triggered, [this](){ testSceneTransform_(true); });
 
         m->addAction(a = new QAction(tr("Test transformation speed (old)"), m));
         connect(a, &QAction::triggered, [this](){ testSceneTransform_(false); });
-
-        m->addAction(a = new QAction(tr("Test full audio speed"), m));
+#endif
+        m->addAction(a = new QAction(tr("Test audio speed"), m));
         connect(a, &QAction::triggered, [this](){ testAudioSpeed(); });
-
+#ifndef MO_DISABLE_EXP
         m->addAction(a = new QAction(tr("Export scene to povray"), m));
         connect(a, SIGNAL(triggered()), SLOT(exportPovray_()));
-
+#endif
         m->addAction( a = new QAction(tr("Info window"), m) );
         connect(a, &QAction::triggered, [=]()
         {
@@ -617,6 +623,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             w->showFullScreen();
         });
 
+#ifndef MO_HAMBURG
         m->addAction( a = new QAction(tr("Dump modulation graph"), m) );
         connect(a, &QAction::triggered, [=]()
         {
@@ -635,6 +642,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
                 std::cout << " " << o->idName();
             std::cout << std::endl;
         });
+#endif
 
 #ifndef MO_DISABLE_ANGELSCRIPT
         a = new QAction(tr("AngelScript test"), m);
@@ -653,7 +661,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             registerAngelScript_rootObject( script->scriptEngine(), scene_, true );
 
             l->addWidget(script);
-            script->setScriptText(settings()->value("tmp/AngelScript", "//angelscript").toString());
+            script->setScriptText(settings()->value("tmp/AngelScript", exampleAngelScript()).toString());
             connect(script, &AngelScriptWidget::scriptTextChanged, [=]()
             {
                 settings()->setValue("tmp/AngelScript", script->scriptText());
@@ -681,18 +689,36 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
-            HelpDialog diag;
-            diag.exec();
+            auto diag = new HelpDialog(window_);
+            diag->setAttribute(Qt::WA_DeleteOnClose);
+            diag->show();
         });
 
-        a = new QAction(tr("Export help (html)"), m);
+        a = new QAction(tr("Context help"), m);
+        a->setShortcut(Qt::Key_F1);
         m->addAction(a);
-        connect(a, SIGNAL(triggered()), this, SLOT(exportHelpHtml_()));
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new HelpDialog(currentHelpUrl(), window_);
+            diag->setAttribute(Qt::WA_DeleteOnClose);
+            diag->show();
+        });
+
+        m->addSeparator();
+
+        a = new QAction(tr("About Matrix Optimizer"), m);
+        m->addAction(a);
+        connect(a, SIGNAL(triggered()), application(), SLOT(aboutMO()));
 
         a = new QAction(tr("About Qt"), m);
         m->addAction(a);
         connect(a, SIGNAL(triggered()), application(), SLOT(aboutQt()));
 
+        m->addSeparator();
+
+        a = new QAction(tr("Export help (html)"), m);
+        m->addAction(a);
+        connect(a, SIGNAL(triggered()), this, SLOT(exportHelpHtml_()));
 
     // create projector-index-menu
     onProjectionSettingsChanged_();
@@ -1036,6 +1062,9 @@ void MainWidgetController::onObjectSelectedTree_(Object * o)
 {
     MO_DEBUG_GUI("MainWidgetController::objectSelectedTree(" << o << ")");
 
+    if (o)
+        setHelpUrl("_object_" + o->className());
+
     // update object editor
     objectView_->setObject(o);
 
@@ -1074,6 +1103,9 @@ void MainWidgetController::onObjectSelectedTree_(Object * o)
 void MainWidgetController::onObjectSelectedGraphView_(Object * o)
 {
     MO_DEBUG_GUI("MainWidgetController::objectSelectedGraphView(" << o << ")");
+
+    if (o)
+        setHelpUrl("_object_" + o->className());
 
     // update object editor
     objectView_->setObject(o);
@@ -1114,6 +1146,9 @@ void MainWidgetController::onObjectSelectedClipView_(Object * o)
 {
     MO_DEBUG_GUI("MainWidgetController::onObjectSelectedClipView_(" << o << ")");
 
+    if (o)
+        setHelpUrl("_object_" + o->className());
+
     // update object editor
     objectView_->setObject(o);
 
@@ -1129,6 +1164,9 @@ void MainWidgetController::onObjectSelectedClipView_(Object * o)
 void MainWidgetController::onObjectSelectedObjectView_(Object * o)
 {
     MO_DEBUG_GUI("MainWidgetController::objectSelectedObjectView_(" << o << ")");
+
+    if (o)
+        setHelpUrl("_object_" + o->className());
 
     // update sequence view
     updateSequenceView_(o);
@@ -1155,6 +1193,9 @@ void MainWidgetController::onObjectSelectedObjectView_(Object * o)
 void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
 {
     MO_DEBUG_GUI("MainWidgetController::objectSelectedSequencer_(" << o << ")");
+
+    if (o)
+        setHelpUrl("_object_" + o->className());
 
     // update object editor
     objectView_->setObject(o);
@@ -1402,13 +1443,14 @@ void MainWidgetController::updateDebugRender_()
 {
     if (!scene_)
         return;
-
+#ifndef MO_DISABLE_EXP
     scene_->setDebugRenderOptions(
           (Scene::DD_AUDIO_SOURCES * aDrawAudioSources_->isChecked())
         | (Scene::DD_CAMERAS * aDrawCameras_->isChecked())
         | (Scene::DD_LIGHT_SOURCES * aDrawLightSources_->isChecked())
         | (Scene::DD_MICROPHONES * aDrawMicrophones_->isChecked())
                 );
+#endif
 }
 
 bool MainWidgetController::isPlayback() const
@@ -1656,7 +1698,7 @@ void MainWidgetController::loadScene_(const QString &fn)
         if (!scene)
         {
             QMessageBox::critical(window_, tr("load scene failed"),
-                                  tr("Something went wrong opening the project\n'%1'\n")
+                                  tr("Something went wrong opening the project\n'%1'")
                                   .arg(fn));
             statusBar()->showMessage(tr("Could not open project '%1'").arg(fn));
             newScene();
@@ -1666,8 +1708,11 @@ void MainWidgetController::loadScene_(const QString &fn)
         QString err = scene->getIoLoadErrors();
         if (!err.isEmpty())
         {
-            QMessageBox::warning(window_, tr("load scene"),
-                                 tr("There where warnings while loading the scene:\n%1")
+            QMessageBox::warning(window_, tr("load scene warning"),
+                                 tr("There was something odd when loading the scene\n%1\n%2\n\n"
+                                    "Make sure you know what you are doing before you proceed. "
+                                    "Especially saving the scene is probably bad.")
+                                 .arg(fn)
                                  .arg(err));
         }
         // read gui settings
@@ -1888,6 +1933,7 @@ void MainWidgetController::updateResolutionActions_()
     if (!scene_)
         return;
 
+#ifndef MO_DISABLE_EXP
     // update from output window resolution
     aResolutionOutput_->setText(tr("Same as output window %1x%2")
                                 .arg(outputSize_.width())
@@ -1927,6 +1973,7 @@ void MainWidgetController::updateResolutionActions_()
                                         .arg(scene_->requestedFrameBufferSize().height()));
         }
     }
+#endif
 }
 
 void MainWidgetController::onProjectionSettingsChanged_()

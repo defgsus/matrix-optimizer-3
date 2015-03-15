@@ -27,12 +27,23 @@
 #include "object/objectfactory.h"
 #include "object/object.h"
 #include "object/param/parameters.h"
+#include "script/angelscript.h"
+
 
 #ifdef MO_DO_DEBUG_HELP
 #   include <iomanip>
 #endif
 
 namespace MO {
+
+
+namespace {
+    static QString help_url_ = "index.html";
+}
+
+void setHelpUrl(const QString &url) { help_url_ = url; }
+QString currentHelpUrl() { return help_url_; }
+
 
 HelpSystem::HelpSystem(QObject *parent) :
     QObject(parent)
@@ -362,6 +373,8 @@ QImage HelpSystem::getObjectImage(const QString &url) const
 
     // create a temp object item (easiest way to paint nicely)
     GUI::AbstractObjectItem item(o);
+    // XXX not working
+    //item.updateConnectors();
 
     // determine width and height for drawing
     QSize itemsize = item.boundingRect().size().toSize(),
@@ -585,9 +598,17 @@ void HelpSystem::addEquationInfo_(QString& doc)
 
 void HelpSystem::addAngelScriptInfo_(QString& doc)
 {
-    QString str;
+    if (doc.contains("!EXAMPLES!"))
+    {
+        QString str = exampleAngelScript().toHtmlEscaped();
+        doc.replace("!EXAMPLES!", str);
+    }
 
-    doc.replace("!FUNCTIONS!", str);
+    if (doc.contains("!FUNCTIONS!"))
+    {
+        QString str = getAngelScriptFunctionsHtml();
+        doc.replace("!FUNCTIONS!", str);
+    }
 }
 
 void HelpSystem::addObjectIndex_(QString &doc)

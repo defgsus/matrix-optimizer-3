@@ -728,6 +728,7 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
 void AbstractObjectItem::updateConnectors()
 {
     // clear previous items
+    if (scene())
     for (auto i : p_oi_->inputItems)
     {
         scene()->removeItem(i);
@@ -735,6 +736,7 @@ void AbstractObjectItem::updateConnectors()
     }
     p_oi_->inputItems.clear();
 
+    if (scene())
     for (auto i : p_oi_->outputItems)
     {
         scene()->removeItem(i);
@@ -811,15 +813,16 @@ void AbstractObjectItem::adjustSizeToChildren()
     // rect of children
     const auto crectf = childrenBoundingRect(true);
     // in grid coords
-    QRect crect(std::ceil(crectf.left() / s.width()),
-                std::ceil(crectf.top() / s.height()),
-                std::ceil(crectf.width() / s.width()),
-                std::ceil(crectf.height() / s.height()));
+    QRect crect(std::round(crectf.left() / s.width()),
+                std::round(crectf.top() / s.height()),
+                std::round(crectf.width() / s.width()),
+                std::round(crectf.height() / s.height())
+                );
 
     /// @todo also shrink top-left corner
 
-    const QSize gs = QSize(std::max(2, crect.right() ),
-                           std::max(2, crect.bottom() ));
+    const QSize gs = QSize(std::max(2, crect.right() + 1),
+                           std::max(2, crect.bottom() + 1));
     setGridSize(gs);
 }
 
@@ -937,6 +940,9 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
                         ObjectGraphSettings::gridSize().width();
 
     p->drawRoundedRect(r, cornerRadius, cornerRadius);
+
+    //p->setPen(QPen(Qt::green));
+    //p->drawRect(childrenBoundingRect(true));
 
     //p_oi_->icon.paint(p, 0, 0,
     //                  ObjectGraphSettings::gridSize().width(),

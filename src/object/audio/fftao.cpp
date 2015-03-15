@@ -8,6 +8,8 @@
     <p>created 05.12.2014</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #include "fftao.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/tool/resamplebuffer.h"
@@ -208,3 +210,5 @@ void FftAO::processAudio(uint , SamplePos , uint )
 }
 
 } // namespace MO
+
+#endif // #ifndef MO_DISABLE_EXP

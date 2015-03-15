@@ -17,11 +17,13 @@
 #include <QHostAddress>
 #include <QScreen>
 #include <QDockWidget>
+#include <QMessageBox>
 
 #include "gui/mainwindow.h"
 #include "io/application.h"
 #include "io/isclient.h"
 #include "io/settings.h"
+#include "io/version.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -150,5 +152,12 @@ void Application::setPaletteFor(QWidget * w)
     w->setPalette(p);
 }
 
+
+void Application::aboutMO()
+{
+    QString str = MO::applicationName();
+    str += "\ncreated by Stefan Berke\nand Martin Hünniger, Stephan S. Hepper, Jan Zehn";
+    QMessageBox::about(0, tr("Matrix Optimizer"), str);
+}
 
 } // namespace MO

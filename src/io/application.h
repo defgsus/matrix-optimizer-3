@@ -54,6 +54,9 @@ public slots:
         Must be called as early as possible */
     void setUserName(const QString& n);
 
+    /** About dialog */
+    void aboutMO();
+
 protected:
 
     virtual bool notify(QObject * o, QEvent * e);

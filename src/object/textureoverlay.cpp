@@ -8,6 +8,8 @@
     <p>created 8/12/2014</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #include "textureoverlay.h"
 #include "io/datastream.h"
 #include "param/parameters.h"
@@ -268,3 +270,5 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
 
 
 } // namespace MO
+
+#endif // #ifndef MO_DISABLE_EXP

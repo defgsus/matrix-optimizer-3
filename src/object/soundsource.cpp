@@ -8,6 +8,8 @@
     <p>created 6/27/2014</p>
 */
 
+#ifndef MO_DISABLE_SPATIAL
+
 #include "soundsource.h"
 #include "io/datastream.h"
 #include "audio/tool/audiobuffer.h"
@@ -64,3 +66,5 @@ void SoundSource::calculateSoundSourceBuffer(
 }
 
 } // namespace MO
+
+#endif

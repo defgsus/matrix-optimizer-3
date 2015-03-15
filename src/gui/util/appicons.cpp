@@ -165,9 +165,10 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
     }
 
 
+#ifndef MO_DISABLE_SPATIAL
     if (qobject_cast<const Synthesizer*>(o))
             return I_MUSIC_NOTE;
-
+#endif
     if (o->type() & Object::T_GROUP) return I_GROUP;
     if (o->isTrack()) return I_TRACK;
     if (o->type() & Object::TG_FLOAT) return I_PARAMETER;

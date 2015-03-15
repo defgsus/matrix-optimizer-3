@@ -24,6 +24,11 @@ namespace MO {
 
 class Object;
 
+/** Globally sets the help url for the next call of the context help */
+void setHelpUrl(const QString& url);
+
+QString currentHelpUrl();
+
 class HelpSystem : public QObject
 {
     Q_OBJECT

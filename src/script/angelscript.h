@@ -41,7 +41,12 @@ void registerDefaultAngelScript(asIScriptEngine *);
 /** Exports all functions available to a xml file */
 void exportAngelScriptFunctions(const QString& filename);
 
+/** Creates a html overview of the whole MO namespace.
+    XXX Temporary solution... */
+QString getAngelScriptFunctionsHtml();
 
+/** Some example/test code */
+QString exampleAngelScript();
 
 // ----- helper ------
 

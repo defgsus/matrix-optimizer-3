@@ -1,0 +1,306 @@
+// --- some angelscript examples ---
+//
+// This is all a test-bed before final implementation of the api
+//
+
+// print the parameters of an object
+void dumpParameter(Object@ o, string pre = "")
+{
+        for (uint i=0; i<o.parameterCount(); ++i)
+        {
+                Parameter@ p = o.parameter(i);
+                print(pre + p.name() + " (" + p.id() + ")");
+        }
+}
+
+// print the object tree
+void dumpTree(Object@ o, string pre = "")
+{
+    print(pre + o.name());
+    pre += " ";
+    for (uint i=0; i<o.childrenCount(); ++i)
+        dumpTree(o.children(i), pre);
+}
+
+
+void testObject()
+{
+    // get root object
+    Object@ o = scene;
+    print(o.name() + " " + o + " " + o.childrenCount());
+    // rename the first child
+    if (o.childrenCount() >= 1)
+    {
+        Object@ c = o.children(0);
+        c.setName("Children0");
+        print(c);
+    }
+
+    dumpTree(scene);
+}
+
+// set the timeline of a sequence named "camx"
+void testObjectTimelineChange()
+{
+        Object@ o = scene.find("camx");
+        print(o);
+        if (o is null)
+                return;
+        Timeline1@ tl = o.getTimeline();
+        if (tl is null)
+                return;
+        print(tl);
+
+        Random rnd;
+        tl.clear();
+        for (int i=0; i<60; ++i)
+                tl.add(i, rnd(-1,1));
+
+        o.setTimeline(tl);
+
+        Timeline3 tl3;
+        tl3.set(tl,tl,tl);
+        print(tl3);
+}
+
+// print the contents of an int array
+void printArray(const array<int> &in a)
+{
+    string s;
+    for (uint i = 0; i < a.length(); ++i)
+        s += a[i] + " ";
+    print(s);
+}
+
+// print the contents of a vec3 array
+void printArray(const array<vec3> &in a)
+{
+        string s;
+    for (uint i = 0; i < a.length(); ++i)
+                s += " " + a[i];
+        print(s);
+}
+
+// do stuff with arrays
+void testArray()
+{
+    array<int> a = { 5, 4, 3, 2, 1 };
+
+    print(a.toString());
+
+    a.resize(23);
+    print(a.toString());
+
+    array<string> as = { "hallo", "welt" };
+    print(as.toString());
+
+    array<vec3> b = { vec3(1), vec3(2) };
+    print(b.toString());
+
+    array<array<int>> aa = { a, a };
+    print(aa.toString());
+}
+
+// do stuff with vectors
+void testVec()
+{
+    vec2 v2(1,2);
+    vec3 v3(3,4,5);
+    vec4 v4(6,7,8,9);
+    print(""+v2+" "+v3+" "+v4);
+    v2 = v2 + 1.f;
+    v3 = v3 + 1.f;
+    v4 = v4 + 1.f;
+    print(""+v2+" "+v3+" "+v4);
+    print(""+smallest(v2)+" "+smallest(v3)+" "+smallest(v4));
+    print(""+largest(v2)+" "+largest(v3)+" "+largest(v4));
+
+    print(rgb2hsv(vec3(0.5,0.2,0.2)));
+    print(hsv2rgb(vec3(0.8,1,1)));
+    print(sin(vec3(1,2,3)));
+}
+
+// create dynamic geometry objects
+void testGeometry()
+{
+    Geometry g;
+    Geometry@ g2 = g;
+    print(""+g + " " + g2);
+    g.addLine(vec3(0,0,0), vec3(1,1,1));
+    print(""+g.vertexCount());
+}
+
+// test randomize class
+void testRandom()
+{
+    Random r;
+    for (int i=0; i<100; ++i)
+            print(""+r(10));
+}
+
+// get a sequence object and change a property
+void testSequence()
+{
+    Sequence@ s = scene.find("pathx").toSequence();
+    print(s);
+    print("" + s.start() + " " + s.end());
+    s.setStart(20);
+}
+
+
+// more object creation
+void testObjectCreation()
+{
+    const string groupName = "auto_generated_group";
+    Object@ obj = scene.find(groupName);
+    Group@ group;
+    if (obj !is null)
+            @group = obj.toGroup();
+
+    if (group is null)
+    {
+        print("Creating group " + groupName);
+        @group = Group(groupName);
+        print("" + group + " " + group.id() + " " + group.parameterCount());
+        scene.addObject(group);
+    }
+
+    group.deleteChildren();
+
+    for (int i=0; i<5; ++i)
+    {
+        Sequence s("created_" + (i+1));
+        s.setHue(i*40);
+        //s.setExpanded();
+        s.setPosition(2+i,1);
+        group.addObject(s);
+    }
+
+    //scene.find("created_1").setPosition(5,5);
+    //dumpParameter(scene.find("created_1"));
+}
+
+// parameter access
+void testParameter()
+{
+    Object@ o = scene.find("SequenceFloat");
+    dumpParameter(o);
+
+    Parameter@ p = o.parameter("freq");
+    p.setValue(3);
+}
+
+// get existing or create-new
+void testObjectCreation2()
+{
+    Sequence@ seq = scene.getSequence("new_or_reuse");
+    seq.setType(SEQ_OSCILLATOR);
+    seq.setType(WF_TRIANGLE);
+
+    Model@ model = scene.getModel("a_model");
+}
+
+
+// XXX very experimental right now
+void testImage()
+{
+    Image img(320,200,IMG_RGBA);
+
+    img.setPixel(10,10, 1,1,1);
+}
+
+// find an object by it's path
+void testObjectPath()
+{
+    Object@ o = scene.findPath("QuadScope1/Translation");
+    print( o );
+}
+
+
+
+
+// network info
+void printNetwork()
+{
+    print(" -------- network settings ------- ");
+    print("server           " + (isServer() ? "yes" : "no"));
+    print("local address    " + localAddress());
+    print("server address   " + serverAddress());
+}
+
+// callback for udp input
+void udpReceive(const string &in s)
+{
+    print("udp [" + s + "]");
+}
+
+// start listening for udp messages
+void testUDPReceive()
+{
+    UdpConnection con;
+    if (!con.open("192.168.0.1", 123))
+    {
+        print("Can't open");
+        return;
+    }
+    print(con);
+    con.addCallback(udpReceive);
+
+    con.send("hallo port");
+
+    // this keeps the connection alive after
+    // execution of the script
+    con.keepAlive();
+}
+
+// send some udp messages
+void testUDPSend()
+{
+    UdpConnection con;
+    if (!con.open("192.168.1.36", 51000))
+    {
+        print("Can't open");
+        return;
+    }
+    print(con);
+
+    con.send("hallo port");
+
+    int num = 20000;
+    string longs;
+    for (int i=0; i<num; ++i)
+            longs += int8(i / (num/10));
+
+    con.send(longs);
+}
+
+// other way to send udp messages
+void testUDPSend2()
+{
+    UdpConnection con;
+
+    con.send("direct access", "192.168.1.36", 51000);
+}
+
+
+
+
+
+void main()
+{
+    print("----------------------------");
+
+    //testObjectPath();
+    //testImage();
+    //testObject();
+    //testObjectTimelineChange();
+    //testObjectCreation();
+    //testObjectCreation2();
+    //testParameter();
+    //testSequence();
+    //printNetwork();
+    //testUDPSend2();
+    testRandom();
+    //testArray();
+    //testVec();
+}

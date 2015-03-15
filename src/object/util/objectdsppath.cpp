@@ -85,6 +85,7 @@ public:
             for (auto b : audioOutputs)
                 delete b;
 
+#ifndef MO_DISABLE_SPATIAL
             for (auto s : soundSources)
             {
                 delete s->signal();
@@ -97,6 +98,7 @@ public:
                 delete s->signal();
                 delete s;
             }
+#endif
         }
 
         /// Object associated to this buffer
@@ -119,6 +121,7 @@ public:
             *matrix;
 
         // --- spatialization ---
+#ifndef MO_DISABLE_SPATIAL
         QList<AUDIO::SpatialSoundSource*>
         /// Soundsources per object (memory managed)
             soundSources,
@@ -127,7 +130,7 @@ public:
         QList<AUDIO::SpatialMicrophone*>
         /// Microphones per object (memory managed)
             microphones;
-
+#endif
         // --- audio objects ---
         QList<AUDIO::AudioBuffer*>
         /// Audio output buffers (memory managed)
@@ -366,7 +369,7 @@ void ObjectDspPath::calcAudio(SamplePos pos)
 
 
     // ---------- process virtual sound sources --------
-
+#ifndef MO_DISABLE_SPATIAL
     for (Private::ObjectBuffer * b : p_->soundsourceObjects)
     {
         // get transformation-per-soundsource
@@ -415,6 +418,7 @@ void ObjectDspPath::calcAudio(SamplePos pos)
                             m->signal()->readPointer());
     }
 
+#endif // #ifndef MO_DISABLE_SPATIAL
 
     // ----- advance read/write pointer for system audio-outs -----
 
@@ -434,6 +438,7 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
             out << "(" << o->posParent->object->name() << ")";
     }
 
+#ifndef MO_DISABLE_SPATIAL
     out << "\nmicrophone objects:";
     for (auto o : p_->microphoneObjects)
     {
@@ -452,6 +457,7 @@ std::ostream& ObjectDspPath::dump(std::ostream & out) const
         out << "(" << o->matrixParent->object->name() << ")";
 #endif
     }
+#endif // #ifndef MO_DISABLE_SPATIAL
 
     out << "\naudio objects:";
     for (auto o : p_->audioObjects)
@@ -528,9 +534,6 @@ void ObjectDspPath::Private::createPath(Scene * s)
 {
     clear();
     scene = s;
-
-    // little hack until concept for microphone routing
-    uint numGlobalMicrophone = 0;
 
     // -------------------- system io ---------------------------
 
@@ -682,6 +685,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
         // find (parent) translation matrix
         assignMatrix(b);
 
+#ifndef MO_DISABLE_SPATIAL
         // create the soundsources
         for (uint i = 0; i < obj->numberSoundSources(); ++i)
         {
@@ -691,10 +695,15 @@ void ObjectDspPath::Private::createPath(Scene * s)
             auto src = new AUDIO::SpatialSoundSource(buf, delay);
             b->soundSources.append( src );
         }
+#endif
     }
 
 
     // ----------- get all microphone objects -------------------
+#ifndef MO_DISABLE_SPATIAL
+
+    // little hack until concept for microphone routing
+    uint numGlobalMicrophone = 0;
 
     QList<Object*> microphones;
     tree->makeLinear(microphones, [](const Object*o)
@@ -731,7 +740,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
             b->microphoneInputSoundSources.append( sbuf->soundSources );
         }
     }
-
+#endif
 
 }
 
