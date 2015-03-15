@@ -8,6 +8,7 @@
     <p>created 6/27/2014</p>
 */
 
+#include <QTextStream>
 
 #include "parameter.h"
 #include "modulator.h"
@@ -129,6 +130,32 @@ QString Parameter::infoName() const
 
     return s;
 }
+
+
+QString Parameter::getDoc() const
+{
+    QString str;
+    QTextStream html(&str);
+    html << "<b>" << name() << "</b> (<i>" << getDocType();
+    if (isModulateable())
+        html << ", " << Object::tr("modulateable");
+    html << "</i>)\n"
+         << "<ul>"; // inset paragraph
+
+        html << "<p>" << getDocDesc() << "</p>";
+
+        QString vals = getDocValues();
+        if (!vals.isEmpty())
+            html << "<p>" << vals << "</p>";
+
+    html << "</ul><br/>";
+
+    return str;
+}
+
+QString Parameter::getDocType() const { return typeName(); }
+QString Parameter::getDocValues() const { return QString(); }
+QString Parameter::getDocDesc() const { return statusTip(); }
 
 QString Parameter::infoIdName() const
 {

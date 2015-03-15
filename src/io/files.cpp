@@ -190,7 +190,7 @@ QString Files::getDirectory(FileType ft, QWidget *parent, bool updateDirectory, 
     if (!fn.isEmpty())
     {
         if (updateDirectory)
-            setDirectory(ft, QFileInfo(fn).absolutePath());
+            setDirectory(ft, fn);
     }
 
     return fn;

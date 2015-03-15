@@ -118,7 +118,7 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
     paramWrapX_ = params->createSelectParameter(
             "_imgwrapx" + id_suffix, tr("on horiz. edges"),
             tr("Selects what happens on the horizontal edges of the texture"),
-            { "clamp", "repeat" },
+            { "clamp", "repeat", "repeatm" },
             { tr("clamp"), tr("repeat"), tr("mirror") },
             { tr("Colors stay the same"),
               tr("The texture repeats"),

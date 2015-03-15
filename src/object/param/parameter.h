@@ -33,6 +33,24 @@ public:
 
     virtual const QString& typeName() const = 0;
 
+    // -------------- documentation -------------
+
+    /** Returns the html documentation of this parameter. */
+    QString getDoc() const;
+
+    /** Returns the typeName().
+        Reimplement to change behaviour. */
+    virtual QString getDocType() const;
+
+    /** Base implementation returns empty string.
+        Reimplement to add, e.g., range and default value,
+        or to add documentation for select states. */
+    virtual QString getDocValues() const;
+
+    /** Returns the statusTip().
+        Reimplement to add whatever. */
+    virtual QString getDocDesc() const;
+
     // --------------- getter -------------------
 
     /** Parent object */

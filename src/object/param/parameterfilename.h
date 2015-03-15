@@ -32,6 +32,8 @@ public:
 
     Modulator * getModulator(const QString &, const QString &) Q_DECL_OVERRIDE { return 0; }
 
+    virtual QString getDocType() const Q_DECL_OVERRIDE;
+
     // ---------------- getter -----------------
 
     QString value() const { return value_; }

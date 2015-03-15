@@ -52,6 +52,10 @@ void ParameterFilename::deserialize(IO::DataStream &io)
     io >> value_;
 }
 
+QString ParameterFilename::getDocType() const
+{
+    return IO::fileTypeNames.at(fileType_) + " " + QObject::tr("filename");
+}
 
 bool ParameterFilename::openFileDialog(QWidget * parent)
 {

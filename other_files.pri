@@ -27,4 +27,11 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/commandlinehelp.txt \
     assets/stylesheet.css \
     assets/help/en/angelscript.html \
-    doc/doxygen/Doxyfile
+    doc/doxygen/Doxyfile \
+    assets/help/en/object/camera.html \
+    assets/help/en/object/lightsource.html \
+    assets/help/en/object/scene.html \
+    assets/help/en/object/sequence_float.html \
+    assets/help/en/object/modulator_float.html \
+    assets/help/en/object/track_float.html
+    assets/help/en/object/model3d.html

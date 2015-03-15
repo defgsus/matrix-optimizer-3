@@ -12,6 +12,7 @@
 #define MOSRC_OBJECT_UTIL_PARAMETERS_H
 
 #include <QList>
+#include <QMap>
 
 #include "object/object_fwd.h"
 #include "types/float.h"
@@ -50,6 +51,12 @@ public:
 
     /** Returns the parameter with the given id, or NULL. */
     Parameter * findParameter(const QString& id);
+
+    /** Returns an automatic html from all parameters. */
+    QString getParameterDoc() const;
+
+    /** Returns the parameters per group name */
+    QMap<QString, QList<Parameter*>> getParameterGroups() const;
 
     // -------------- setter --------------------
 

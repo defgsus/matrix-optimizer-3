@@ -61,6 +61,10 @@ public:
 
     // ----------- object infos -------------------
 
+    /** Returns read access to an instantiation of the given object,
+        or NULL if @p className is unknown. */
+    static const Object * getObject(const QString& className);
+
     /** Translated name of the object group, or empty string for unknown */
     static QString objectPriorityName(int priority);
 
@@ -93,6 +97,10 @@ public:
 
     /** Returns the correct index to insert @p newChild into parent */
     static int getBestInsertIndex(Object * parent, Object * newChild, int desired_index);
+
+    /* Returns the html documentation of all parameters of the given object,
+        or empty QString if @p className is not known. */
+    //static QString getParameterDoc(const QString& className);
 
     // -------------- byte io ---------------------
 

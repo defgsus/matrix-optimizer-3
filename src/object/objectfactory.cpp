@@ -29,6 +29,7 @@
 #include "transform/look.h"
 #include "transform/lookat.h"
 #include "transform/mix.h"
+#include "param/parameters.h"
 #include "scene.h"
 #include "trackfloat.h"
 #include "sequencefloat.h"
@@ -83,6 +84,14 @@ int ObjectFactory::typeForClass(const QString &className)
     return i == instance().objectMap_.end()
             ? -1
             : i->second->type();
+}
+
+const Object * ObjectFactory::getObject(const QString &className)
+{
+    auto i = instance().objectMap_.find(className);
+    return i == instance().objectMap_.end()
+            ? 0
+            : i->second.get();
 }
 
 int ObjectFactory::hueForObject(int type)
@@ -406,6 +415,20 @@ QList<const Object*> ObjectFactory::objects(int types)
     });
     return list;
 }
+
+/*
+QString ObjectFactory::getParameterDoc(const QString &className)
+{
+    auto o = instance().createObject(className);
+    if (!o)
+        return QString();
+
+    QString doc = o->params()->getParameterDoc();
+    delete o;
+    return doc;
+}
+*/
+
 
 int ObjectFactory::getBestInsertIndex(Object *parent, Object *newChild, int idx)
 {

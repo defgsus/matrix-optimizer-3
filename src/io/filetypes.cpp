@@ -16,12 +16,24 @@ namespace MO {
 namespace IO {
 
     const QStringList fileTypeIds =
-    { "any", "scene", "object", "texture", "ntexture", "model",
-      "geom-set", "interface", "interface-p" "sound", "s3m", "projection-set",
-      "povray", "equpreset", "helpexp" };
+    { "any",
+      "scene",
+      "object",
+      "texture",
+      "ntexture",
+      "model",
+      "geom-set",
+      "interface",
+      "interface-p",
+      "sound",
+      "s3m",
+      "projection-set",
+      "povray",
+      "equpreset",
+      "helpexp" };
 
     const QStringList fileTypeNames =
-    { QObject::tr("Any file"),
+    { QObject::tr("Any"),
       QObject::tr("Scene"),
       QObject::tr("Object"),
       QObject::tr("Texture"),
