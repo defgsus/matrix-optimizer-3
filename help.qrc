@@ -16,6 +16,8 @@
         <file alias="_od_SequenceFloat.html">assets/help/en/object/sequence_float.html</file>
         <file alias="_od_TrackFloat.html">assets/help/en/object/track_float.html</file>
         <file alias="example_angelscript.txt">assets/help/example_angelscript.txt</file>
+        <file alias="geometry.html">assets/help/en/geometry.html</file>
+        <file alias="glsl.html">assets/help/en/glsl.html</file>
     </qresource>
     <qresource prefix="/">
         <file alias="stylesheet.css">assets/stylesheet.css</file>

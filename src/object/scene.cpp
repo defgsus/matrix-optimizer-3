@@ -541,7 +541,7 @@ void Scene::updateTree_()
 {
     MO_DEBUG_TREE("Scene::updateTree_()");
 
-    const int numlights = lightSources_.size();
+    //const int numlights = lightSources_.size();
 
     findObjects_();
 

@@ -34,5 +34,7 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/object/sequence_float.html \
     assets/help/en/object/modulator_float.html \
     assets/help/en/object/track_float.html \
-    assets/help/example_angelscript.txt
+    assets/help/example_angelscript.txt \
+    assets/help/en/geometry.html \
+    assets/help/en/glsl.html
     assets/help/en/object/model3d.html

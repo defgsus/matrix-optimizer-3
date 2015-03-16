@@ -1,0 +1,30 @@
+<h1>Geometry</h1>
+
+<p>A geometry contains 3D vertex data that can be drawn. Currently, it can not be accessed directly but is part of a <a href="_object_Model3d">Model3d</a> object. You can use the <b>geometry editor</b> the change, load, export and otherwise mangle geometries.</p>
+
+<p>The editor can be opened in the <b>Tools</b> menu, which will let you create a new geometry that is not assigned to a model. To change the geometry of a model, <i>right-click</i> the model in the scene view and select <b>edit geometry</b>.</p>
+
+<p>The data within the geometry is designed to work with the common <b>OpenGL</b> api. Basically, there are a number of <b>vertices</b> (which can be thought of simply as points in 3d space), and <b>indices</b> which define the primitive type and potentially define the edges between vertices. For example, to draw a line, there need to be 2 vertices and two indices. Vertices generally contain the 3d-position of the point (x,y,z), it's color (red, green, blue, alpha) and the <a href="#normals">normal</a> at that point (x,y,z). It's also possible to assign arbitrary user data to the vertices. Indices are grouped together in index arrays which are assigned to a particular type of primitive. The possible primitive types are <b>point</b>, <b>line</b> and <b>triangle</b>.</p>
+
+<p>The geometry editor allows to create simple 3d primitives on the fly, or to load <b>Wavefront Obj</b> formatted geometries. You do not need to know all the internals of this data type to make something interesting but some basic knowledge is needed to make the rendering efficient and/or visually pleasing.</p>
+
+<a name="vertexsharing"></a>
+<h3>Vertex sharing</h3>
+
+<p>The most important property is probably the <b>vertex sharing</b>. Suppose we are constructing a solid cube. A cube has 8 corners and 6 faces. The first thing to note is that quadratical or rectangular faces are not a supported primitive type. So the faces have to be split into two triangles each. This makes 12 triangles per cube. Now if the cube has a uniform color (each face has the same color) and we don't care for the <a href="#normals">normals</a> because we don't want to apply lighting, that we can actually get away with 8 vertices, one for each of the corners of the cube. Suppose the vertices of one side of the cube have the index 0, 1, 2 and 3 (in anti-clockwise order). Then the triangle indices for this face could be 0,1,2 and 0,2,3. Similiary, the adjacent faces of the cube can reuse part of these vertices. As said before, color and normal information is not stored per face but per vertex. Now that means that if we want to have a different color or normal for each cube face, we need to have different vertices for points that are still at the same position. We can at least share the vertices for the triangles that form one face (if the face is uniformly colored) so that makes a total of 4 x 6 = 24 vertices for the cube.</p>
+
+<p>Without the use of scripts, you have not that low level access to geometries. However, in the geometry editor, there is a modifier named <b>vertex sharing</b>. Using this you can combine (share) or split the vertices in the geometry. Splitting is done by creating one vertex for each primitive corner (e.g. every triangle get's three vertices). Sharing is done by combining vertices which positions are very close to each other (e.g. less than 0.0001 units away). This can make a huge difference in memory size of the geometry but may not lead to the desired visual result.</p>
+
+<p>Once a geometry is created (through the editor or scripts) it will be uploaded to the graphics memory to be rendered. <b>Currently</b>, only static geometries are supported. They can not be changed dynamically (It is still possible to change the data of each vertex dynamically by programming via <a href="glsl.html">GLSL</a>).</p>
+
+
+<a name="normals"></a>
+<h3>Normals</h3>
+
+<p>In computer graphics, a normal is a <a href="objects.html#unitvector">unit vector</a> describing the direction, a surface is facing at. For example, a floor plane might have a normal 0,1,0 at every point, meaning it faces up. Another, more geometric term, is orthogonal axis or ortho-normal. This normal is important to calculate lighting. That's it's main purpose actually.</p>
+
+<p>For geometries made from triangles, the geometry editor has a modifier named <b>normal modification</b>, which can calculate the normals. This is easy, every well-formed triangle has an implicit normal (it always faces a defined direction). The normals for a geometry made from points or lines can not be calculated because neither a point nor a line have a surface, so the surface can't face anywhere.</p>
+
+<p>It might seem odd, that in OpenGL, the normals are assigned to vertex <b>points</b> instead of faces, but that's just a data storage issue. Anyway, if vertices are <a href="vertexsharing">shared</a> across primitives or not, will make a big difference visually, when a virtual light hits the surface. Suppose again a cube where the vertices are shared among it's primitives (e.g. the cube has indeed exactly 8 vertices). When the normals for each triangle are calculated, the result is stored in each vertex of the triangle. Since they are shared with other triangles, in the end they will contain an average of all normals. Lighting the cube will not look 'physically correct'. Specifically the edges of the cube will be completely smoothed out. This might be desirable for other models where you do not want the edges to be seen and rather create the smoothest impression possible.</p>
+
+
