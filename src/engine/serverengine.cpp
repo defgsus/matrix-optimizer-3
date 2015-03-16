@@ -365,6 +365,17 @@ void ServerEngine::setClientIndex(int index, int cindex)
     eventCom_->sendEvent(clients_[index].tcpSocket, &r);
 }
 
+void ServerEngine::getClientState(int index)
+{
+    if (index >= clients_.size())
+        return;
+
+    NetEventRequest r;
+    r.setRequest(NetEventRequest::GET_CLIENT_STATE);
+
+    eventCom_->sendEvent(clients_[index].tcpSocket, &r);
+}
+
 void ServerEngine::setDesktopIndex(int index, int desk)
 {
     if (index >= clients_.size())

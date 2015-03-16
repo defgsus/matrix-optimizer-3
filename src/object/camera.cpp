@@ -530,7 +530,10 @@ void Camera::drawFramebuffer(uint thread, Double time)
         MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
     }
 
-    screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
+    if (isClient() && renderMode() == RM_PROJECTOR_SLICE)
+        screenQuad_[thread]->draw(scenefbo->width(), scenefbo->height());
+    else
+        screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
     fbo->colorTexture()->unbind();
 }
 

@@ -15,18 +15,22 @@ namespace MO {
 
 void ClientState::serialize(IO::DataStream &io) const
 {
+    io.writeHeader("cs", 1);
+
     io << index_ << desktop_
        << isPlayback_ << isInfoWindow_ << isRenderWindow_
        << isSceneReady_ << isFilesReady_
-       << cacheSize_ << memory_;
+       << cacheSize_ << memory_ << outputSize_;
 }
 
 void ClientState::deserialize(IO::DataStream &io)
 {
+    io.readHeader("cs", 1);
+
     io >> index_ >> desktop_
        >> isPlayback_ >> isInfoWindow_ >> isRenderWindow_
        >> isSceneReady_ >> isFilesReady_
-       >> cacheSize_ >> memory_
+       >> cacheSize_ >> memory_ >> outputSize_
             ;
 }
 

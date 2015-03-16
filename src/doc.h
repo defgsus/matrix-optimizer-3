@@ -11,6 +11,20 @@
 #ifndef MOSRC_DOC_H
 #define MOSRC_DOC_H
 
+/** @todo Hamburg impressions:
+  *
+  * - fullscreen issue (wtf???) and is the stretching hack a solution??
+  * - fisheye morph (and optional disable blend)
+  * - automatic projector camera for clients while dome preview for server
+  * - send interface position along with scene
+  * - disable floating dock windows on xubuntu!!!!
+  * - file klaus still not 100%
+  * - ...
+
+
+
+
+
 /** @page random_ideas
 
     <pre>

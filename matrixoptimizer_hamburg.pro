@@ -1,7 +1,7 @@
 
 #################### qt stuff #########################
 
-TARGET = matrixoptimizer
+TARGET = matrixoptimizer_plah
 
 !host_build:QMAKE_MAC_SDK = macosx10.10
 

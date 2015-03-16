@@ -16,6 +16,8 @@
 #include <QSyntaxHighlighter>
 #include <QCheckBox>
 #include <QPushButton>
+#include <QLabel>
+
 
 #include "abstractscriptwidget.h"
 #include "gui/helpdialog.h"
@@ -41,6 +43,7 @@ public:
     void createWidgets();
     void updateEditorColor();
     void updateErrorWidget();
+    void updateInfoWidget();
 
     void onTextChanged();
 
@@ -64,6 +67,7 @@ public:
     QListWidget * messageList;
     QCheckBox * cbAlwaysUpdate;
     QPushButton * butUpdate;
+    QLabel * lInfo;
     QTimer * timer;
 
     bool isValid, ignoreTextChange, isUpdateOptional;
@@ -81,6 +85,7 @@ AbstractScriptWidget::AbstractScriptWidget(QWidget *parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     p_sw_->createWidgets();
+    p_sw_->updateInfoWidget();
 }
 
 AbstractScriptWidget::~AbstractScriptWidget()
@@ -143,6 +148,10 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
             if (!ignoreTextChange)
                 timer->start();
         });
+        connect(editor, &QPlainTextEdit::cursorPositionChanged, [this]()
+        {
+            updateInfoWidget();
+        });
         //editor->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
         // --- setup font ---
@@ -170,6 +179,9 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
             curs.select(QTextCursor::LineUnderCursor);
             editor->setTextCursor(curs);
         });
+
+        lInfo = new QLabel("balbla", widget);
+        lv->addWidget(lInfo);
 
         // -- optional update --
 
@@ -243,6 +255,16 @@ void AbstractScriptWidget::PrivateSW::updateEditorColor()
     }
 
     editor->setPalette(p);
+}
+
+void AbstractScriptWidget::PrivateSW::updateInfoWidget()
+{
+    auto c = editor->textCursor();
+    lInfo->setText(tr("pos %1:%2, char %3")
+                   .arg(c.blockNumber())
+                   .arg(c.columnNumber())
+                   .arg(c.position())
+                   );
 }
 
 void AbstractScriptWidget::PrivateSW::updateErrorWidget()

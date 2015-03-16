@@ -119,6 +119,8 @@ public slots:
     /** Asks the client to clear it's complete file cache. */
     void sendClearFileCache(int index);
 
+    void getClientState(int index);
+
     // -- commands for all clients --
 
     /** Sends the current default ProjectionSystemSettings to all clients */

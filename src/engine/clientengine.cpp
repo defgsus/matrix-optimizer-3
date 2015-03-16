@@ -511,11 +511,11 @@ void ClientEngine::setSceneObject(Scene * scene)
     connect(scene_, SIGNAL(playbackStopped()),
             glWindow_, SLOT(stopAnimation()));
 
-    // update resolution from output window
-    scene_->setResolution(glWindow_->frameSize());
     // update projection settings
     scene_->setProjectionSettings(settings()->getDefaultProjectionSettings());
     scene_->setProjectorIndex(settings()->clientIndex());
+    // update resolution from output window
+    scene_->setResolution(glWindow_->frameSize());
 
     // create audio engine
     if (!audioEngine_)
@@ -617,6 +617,11 @@ void ClientEngine::onSceneReceived_(Scene * scene)
         MO_PRINT("Checking file cache..");
         IO::fileManager().acquireFiles();
     }
+    else
+    {
+        MO_PRINT("Proceeding...");
+        onFilesReady_();
+    }
 }
 
 void ClientEngine::onFilesReady_()
@@ -667,6 +672,7 @@ void ClientEngine::sendState_()
     state.state_.isFilesReady_ = isFilesReady_;
     state.state_.cacheSize_ = IO::clientFiles().cacheSize();
     state.state_.memory_ = Memory::allocated();
+    state.state_.outputSize_ = scene_ ? scene_->outputSize() : QSize();
     client_->sendEvent(state);
 }
 

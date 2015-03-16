@@ -116,12 +116,18 @@ bool Client::sendEvent(AbstractNetEvent * event)
 {
     ScopedDeleter<AbstractNetEvent> deleter(event);
 
-    return eventCom_->sendEvent(socket_, event);
+    if (socket_->isWritable())
+        return eventCom_->sendEvent(socket_, event);
+    else
+        return false;
 }
 
 bool Client::sendEvent(AbstractNetEvent & event)
 {
-    return eventCom_->sendEvent(socket_, &event);
+    if (socket_->isWritable())
+        return eventCom_->sendEvent(socket_, &event);
+    else
+        return false;
 }
 
 void Client::connect_()
@@ -129,12 +135,12 @@ void Client::connect_()
     MO_NETLOG(DEBUG, "Client::connect_(" << address_.toString() << ")");
 
     socket_->connectToHost(address_, NetworkManager::defaultTcpPort());
+    socket_->waitForConnected();
 }
 
 void Client::onError_()
 {
-    MO_NETLOG(ERROR, "Client: connection error:\n"
-              << socket_->errorString());
+    MO_NETLOG(ERROR, "Client: connection error: " << socket_->errorString());
 
     reconnect_(2000);
 }

@@ -206,7 +206,7 @@ bool Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
 
     // get the latin1 char source
     // NOTE: QString::toStdString() is a temporary, we can't just
-    // take the pointer to it because the pointet-at memory might
+    // take the pointer to it because the pointed-at memory might
     // have been deallocated already.
     // This is the totally safe way.
     // (unless the driver tries a buffer overflow attack :)
@@ -272,8 +272,11 @@ void Shader::parseLog_(const QString &log, ProgramType pt)
         cm.program = pt;
 
         // get line number
-        int x1 = line.indexOf('('),
-            x2 = line.indexOf(')');
+        int x1 = line.indexOf("("),
+            x2 = line.indexOf(")", x1);
+//        int x1 = line.indexOf(QRegExp("[0-9]")),
+//            x2 = line.indexOf(QRegExp("(?![0-9])"), x1);
+        MO_PRINT("----------- " << x1 << " " << x2);
         if (x1 >= 0 && x2 > x1 + 1)
             cm.line = line.mid(x1+1, x2-x1-1).toInt();
 

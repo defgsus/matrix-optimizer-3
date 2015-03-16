@@ -13,6 +13,7 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QTabWidget>
+#include <QTextStream>
 
 #include "serverview.h"
 #include "widget/netlogwidget.h"
@@ -29,6 +30,7 @@ namespace GUI {
 
 ServerView::ServerView(QWidget *parent)
     : QWidget       (parent)
+    , tabWidget_    (0)
 {
     MO_DEBUG_GUI("ServerView::ServerView(" << parent << ")");
 
@@ -130,10 +132,16 @@ void ServerView::updateClientWidgets_()
     }
     clientWidgets_.clear();
     */
+
+    int index = -1;
+
     // XXX When removing via QTabWidget::removeTab()
     // the tab still stays visible, so we recreate the whole thing
     if (tabWidget_)
+    {
+        index = tabWidget_->currentIndex();
         tabWidget_->deleteLater();
+    }
     tabWidget_ = new QTabWidget(this);
     clientLayout_->addWidget(tabWidget_);
 
@@ -148,6 +156,10 @@ void ServerView::updateClientWidgets_()
         tabWidget_->addTab(w, QString("%1").arg(i+1));
     }
 
+    // restore selected tab
+    if (index >= 0 && index < tabWidget_->count())
+        tabWidget_->setCurrentIndex(index);
+
     setUpdatesEnabled(true);
 }
 
@@ -156,19 +168,18 @@ QWidget * ServerView::createClientWidget_(int index, const ClientInfo & inf)
     QWidget * w = new QWidget(tabWidget_);
     auto lv = new QVBoxLayout(w);
 
-        auto label = new QLabel(tr("Client %1 (desktop %2)\n"
-                                   "info win %3, render win %4, files ready %5, scene ready %6, playing %7\n"
-                                   "memory use %8, file cache %9")
-                                .arg(inf.index)
-                                .arg(inf.state.desktop())
-                                .arg(inf.state.isInfoWindow() ? tr("YES") : tr("no"))
-                                .arg(inf.state.isRenderWindow() ? tr("YES") : tr("no"))
-                                .arg(inf.state.isFilesReady() ? tr("YES") : tr("no"))
-                                .arg(inf.state.isSceneReady() ? tr("YES") : tr("no"))
-                                .arg(inf.state.isPlayback() ? tr("YES") : tr("no"))
-                                .arg(byte_to_string(inf.state.memory()))
-                                .arg(byte_to_string(inf.state.cacheSize()))
-                                , w);
+        QString labelText;
+        QTextStream str(&labelText);
+        str << "Client " << inf.index << " (desktop " << inf.state.desktop()
+            << " / res = " << inf.state.outputSize().width() << "x" << inf.state.outputSize().height() << ")"
+            << "\ninfo win " << (inf.state.isInfoWindow() ? tr("YES") : tr("no"))
+            << " render win " << (inf.state.isRenderWindow() ? tr("YES") : tr("no"))
+            << " files ready " << (inf.state.isFilesReady() ? tr("YES") : tr("no"))
+            << " playing " << (inf.state.isPlayback() ? tr("YES") : tr("no"))
+            << "\nmemory use " << byte_to_string(inf.state.memory())
+            << ", file cache " << byte_to_string(inf.state.cacheSize());
+
+        auto label = new QLabel(labelText, w);
         lv->addWidget(label);
 
         auto lh = new QHBoxLayout();
@@ -227,6 +238,13 @@ QWidget * ServerView::createClientWidget_(int index, const ClientInfo & inf)
             connect(but, &QPushButton::clicked, [=]()
             {
                 server_->sendClearFileCache(index);
+            });
+
+            but = new QPushButton(tr("update state"), w);
+            lh->addWidget(but);
+            connect(but, &QPushButton::clicked, [=]()
+            {
+                server_->getClientState(index);
             });
 
             lh->addStretch(1);

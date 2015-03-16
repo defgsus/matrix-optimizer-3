@@ -882,7 +882,7 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
 
 /// @todo this is all to be moved out of this class REALLY!
 
-void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * outputFbo)
+void Scene::renderScene(Double time, uint thread)//, GL::FrameBufferObject * outputFbo)
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
 
@@ -1014,24 +1014,31 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
     int width = glContext_->size().width(),
         height = glContext_->size().height();
     // .. or output fbo
+    /*
     if (outputFbo)
     {
         width = outputFbo->width();
         height = outputFbo->height();
 
         outputFbo->bind();
-    }
+    }*/
+    width = fbSize_.width();
+    height = fbSize_.height();
 
     fboFinal_[thread]->colorTexture()->bind();
     MO_CHECK_GL( glViewport(0, 0, width, height) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_BLEND) );
-    screenQuad_[thread]->drawCentered(width, height, fboFinal_[thread]->aspect());
+    if (isClient())
+        screenQuad_[thread]->draw(width, height);
+    else
+        screenQuad_[thread]->drawCentered(width, height, fboFinal_[thread]->aspect());
+
     fboFinal_[thread]->colorTexture()->unbind();
 
-    if (outputFbo)
-        outputFbo->unbind();
+    //if (outputFbo)
+    //    outputFbo->unbind();
 }
 
 void Scene::updateLightSettings_(uint thread, Double time)
@@ -1232,6 +1239,11 @@ void Scene::setProjectorIndex(uint index)
         return;
 
     projectorIndex_ = index;
+
+    if (index < projectionSettings_->numProjectors())
+        fbSizeRequest_ = QSize(
+                    projectionSettings_->cameraSettings(index).width(),
+                    projectionSettings_->cameraSettings(index).height());
 
     // update all cameras
     for (Camera * c : cameras_)

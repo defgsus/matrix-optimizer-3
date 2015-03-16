@@ -139,6 +139,8 @@ public:
         This does not do anything else than storing the flag! */
     void setMatchOutputResolution(bool enable) { doMatchOutputResolution_ = enable; }
 
+    QSize outputSize() const { return fbSize_; }
+
     /** Sets the output framebuffer size.
         This is only a request! The framebuffer will change just
         before the scene is rendered again! */
@@ -301,7 +303,7 @@ public slots:
 
     /** Render the whole scene on the current context.
         If @p fbo is set, the scene will be rendered into the framebuffer object. */
-    void renderScene(Double time, uint thread, GL::FrameBufferObject * fbo = 0);
+    void renderScene(Double time, uint thread);//, GL::FrameBufferObject * fbo = 0);
 
 private slots:
 
