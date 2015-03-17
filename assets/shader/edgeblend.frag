@@ -293,7 +293,9 @@ float white_sb(in vec2 slice)
 
 void main(void)
 {
-#if MO_BLEND_METHOD == 0
+#if MO_BLEND_METHOD == -1
+    fragColor = vec4(1., 1., 1., 1.);
+#elif MO_BLEND_METHOD == 0
     float w = white_sb(v_texCoord.xy * 2. - 1.);
     fragColor = vec4(w,w,w,1.);
 #elif MO_BLEND_METHOD == 1

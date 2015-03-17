@@ -428,6 +428,11 @@ void DomePreviewWidget::releaseGL()
     }
     ptextureDrawable_.clear();
 
+    if (projectorGeometry_)
+        projectorGeometry_->releaseRef();
+    projectorGeometry_ = 0;
+
+    // release textures
     for (auto i : ptexture_)
     {
         if (i->isCreated())

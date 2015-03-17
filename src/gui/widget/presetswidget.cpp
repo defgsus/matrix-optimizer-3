@@ -47,8 +47,9 @@ struct PresetsWidget::Private
 
 PresetsWidget::PresetsWidget(QWidget *parent)
     : QWidget       (parent)
-    , p_            (new Private(this))
+    //, p_            (new Private(this))
 {
+    p_ = new Private(this);
     p_->createWidgets();
     p_->updateButtons();
 }

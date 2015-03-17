@@ -315,6 +315,13 @@ void ProjectorSetupDialog::createWidgets_()
                                              tr("Shift of projection on y axis"),
                                              0, 0.05, -1000, 1000, SLOT(updateProjectorSettings_()));
 
+                label = new QLabel(tr("distortion"), this);
+                gr->addWidget(label);
+
+                spinFisheyeness_ = createDoubleSpin_(gr, tr("fisheye distortion"),
+                                             tr("Experimental fisheye distorion level"),
+                                             0, 0.1, -1, 10, SLOT(updateProjectorSettings_()));
+
                 // ------- camera settings --------
 
                 cameraGroup_ = gr = new GroupWidget(tr("virtual camera settings"), this);
@@ -415,7 +422,7 @@ void ProjectorSetupDialog::createWidgets_()
 
                     spinBlendMethod_ = new SpinBox(this);
                     lh2->addWidget(spinBlendMethod_);
-                    spinBlendMethod_->setRange(0,1);
+                    spinBlendMethod_->setRange(-1,1);
                     connect(spinBlendMethod_, SIGNAL(valueChanged(int)),
                             this, SLOT(updateProjectorSettings_()));
 
@@ -829,6 +836,7 @@ void ProjectorSetupDialog::updateProjectorSettings_()
 #ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     projectorSettings_->setLensRadius(spinLensRad_->value() / 100);
 #endif
+    projectorSettings_->setFisheyeness(spinFisheyeness_->value());
     projectorSettings_->setDistance(spinDist_->value() / 100);
     projectorSettings_->setLatitude(spinLat_->value());
     projectorSettings_->setLongitude(spinLong_->value());
@@ -894,6 +902,7 @@ void ProjectorSetupDialog::updateProjectorWidgets_()
 #ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     spinLensRad_->setValue( projectorSettings_->lensRadius() );
 #endif
+    spinFisheyeness_->setValue( projectorSettings_->fisheyeness() );
     spinDist_->setValue( projectorSettings_->distance() );
     spinLat_->setValue( projectorSettings_->latitude() );
     spinLong_->setValue( projectorSettings_->longitude() );

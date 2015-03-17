@@ -26,7 +26,8 @@ ProjectorSettings::ProjectorSettings()
         yaw_        (0),
         roll_       (0),
         offsetX_    (0),
-        offsetY_    (0)
+        offsetY_    (0),
+        fisheyeness_(0)
 {
 }
 
@@ -34,7 +35,7 @@ void ProjectorSettings::serialize(IO::XmlStream & io) const
 {
     io.newSection("projector");
 
-        io.write("version", 3);
+        io.write("version", 4);
 
         io.write("id", id_);
         io.write("name", name_);
@@ -52,6 +53,9 @@ void ProjectorSettings::serialize(IO::XmlStream & io) const
         // v3
         io.write("offset_x", offsetX_);
         io.write("offset_y", offsetY_);
+
+        // v4
+        io.write("fisheyeness", fisheyeness_);
 
     io.endSection();
 }
@@ -76,8 +80,12 @@ void ProjectorSettings::deserialize(IO::XmlStream & io)
         yaw_ = io.expectFloat("yaw");
         roll_ = io.expectFloat("roll");
 
+        // v3
         offsetX_ = io.readFloat("offset_x", 0.f);
         offsetY_ = io.readFloat("offset_y", 0.f);
+
+        // v4
+        fisheyeness_ = io.readFloat("fisheyeness", 0.0);
 }
 
 bool ProjectorSettings::operator == (const ProjectorSettings& o) const
@@ -95,6 +103,7 @@ bool ProjectorSettings::operator == (const ProjectorSettings& o) const
             && roll_ == o.roll_
             && offsetX_ == o.offsetX_
             && offsetY_ == o.offsetY_
+            && fisheyeness_ == o.fisheyeness_
             //&& overlapAreas_ == o.overlapAreas_
             ;
 }

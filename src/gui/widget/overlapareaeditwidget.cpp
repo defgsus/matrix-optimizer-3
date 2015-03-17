@@ -95,6 +95,13 @@ void OverlapAreaEditWidget::updateFboSize_()
 
 void OverlapAreaEditWidget::createGeometry_()
 {
+    if (lineGeom_)
+        lineGeom_->releaseRef();
+    if (blendGeom_)
+        blendGeom_->releaseRef();
+    if (triangleGeom_)
+        triangleGeom_->releaseRef();
+
     const ProjectorSettings& proj = settings_->projectorSettings(projectorIndex_);
     const DomeSettings& dome = settings_->domeSettings();
 
@@ -246,14 +253,31 @@ void OverlapAreaEditWidget::releaseGL()
 {
     if (triangles_ && triangles_->isReady())
         triangles_->releaseOpenGl();
+    delete triangles_;
+    triangles_ = 0;
+
     if (lines_ && lines_->isReady())
         lines_->releaseOpenGl();
+    delete lines_;
+    lines_ = 0;
+
     if (blends_ && blends_->isReady())
         blends_->releaseOpenGl();
+    delete blends_;
+    blends_ = 0;
+
     if (blendTex_ && blendTex_->isAllocated())
         blendTex_->release();
     delete blendTex_;
     blendTex_ = 0;
+
+    if (lineGeom_)
+        lineGeom_->releaseRef();
+    lineGeom_ = 0;
+
+    if (blendGeom_)
+        blendGeom_->releaseRef();
+    blendGeom_ = 0;
 }
 
 void OverlapAreaEditWidget::drawGL(const Mat4& projection,

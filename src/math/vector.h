@@ -235,6 +235,16 @@ namespace MATH {
             return v;
     }
 
+
+    template <typename F, glm::precision P>
+    inline F length_safe(
+            const glm::detail::tvec2<F, P>& v)
+    {
+        F sqr = v.x * v.x + v.y * v.y;
+        return (sqr > 0)
+            ? std::sqrt(sqr) : 0.;
+    }
+
 #else // GLM_VERSION
 
 

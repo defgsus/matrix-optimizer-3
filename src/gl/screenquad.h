@@ -20,11 +20,15 @@
 namespace MO {
 namespace GL {
 
-
+/** Wrapper of a quad geometry and a shader to render stuff on FBOs */
 class ScreenQuad
 {
 public:
     ScreenQuad(const QString& name, ErrorReporting reporting = ER_THROW);
+    ~ScreenQuad();
+
+    /** Returns true when opengl resources are allocated. */
+    bool isCreated() const;
 
     /** 0 or 1 to switch off, 2-n for number of samples in x and y direction.
         @note Must be called before creation! */

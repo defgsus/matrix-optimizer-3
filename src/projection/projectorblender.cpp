@@ -133,20 +133,29 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index, uint hei
                     ":/shader/edgeblend.frag",
                     defines);
 
-        auto u_margin = quad->shader()->getUniform("u_margin", true);
-        auto u_projection = quad->shader()->getUniform("u_projection[0]", true);
-        auto u_inverseProjection = quad->shader()->getUniform("u_inverseProjection[0]", true);
-        auto u_view = quad->shader()->getUniform("u_view[0]", true);
-        auto u_inverseView = quad->shader()->getUniform("u_inverseView[0]", true);
-        auto u_dome_radius = quad->shader()->getUniform("u_dome_radius", true);
-        auto u_nearFar = quad->shader()->getUniform("u_nearFar[0]", true);
-        //auto u_aspect = quad->shader()->getUniform("u_aspect[0]", true);
-        auto u_index = quad->shader()->getUniform("u_index", true);
+        // check for existence of uniforms?
+        // [blendMethod() -1 means output white,
+        //  which we still need to archive somehow,
+        //  so we use the same shader as dummy without uniforms]
+        bool uniCheck = set.blendMethod() != -1;
 
-        u_dome_radius->floats[0] = set.domeSettings().radius();
-        u_index->ints[0] = index;
-        u_margin->floats[0] = set.blendMargin();
-        u_margin->floats[1] = set.blendMargin() * mapper[index].aspect();
+        auto u_margin = quad->shader()->getUniform("u_margin", uniCheck);
+        auto u_projection = quad->shader()->getUniform("u_projection[0]", uniCheck);
+        auto u_inverseProjection = quad->shader()->getUniform("u_inverseProjection[0]", uniCheck);
+        auto u_view = quad->shader()->getUniform("u_view[0]", uniCheck);
+        auto u_inverseView = quad->shader()->getUniform("u_inverseView[0]", uniCheck);
+        auto u_dome_radius = quad->shader()->getUniform("u_dome_radius", uniCheck);
+        auto u_nearFar = quad->shader()->getUniform("u_nearFar[0]", uniCheck);
+        //auto u_aspect = quad->shader()->getUniform("u_aspect[0]", uniCheck);
+        auto u_index = quad->shader()->getUniform("u_index", uniCheck);
+
+        if (uniCheck)
+        {
+            u_dome_radius->floats[0] = set.domeSettings().radius();
+            u_index->ints[0] = index;
+            u_margin->floats[0] = set.blendMargin();
+            u_margin->floats[1] = set.blendMargin() * mapper[index].aspect();
+        }
 
         // prepare fbo
 
@@ -154,7 +163,7 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index, uint hei
         fbo->create();
         fbo->bind();
 
-        // render
+        // ---- render ----
 
         MO_CHECK_GL( gl::glViewport(0,0,fbo->width(),fbo->height()) );
         MO_CHECK_GL( gl::glClearColor(1,1,1,1) );
@@ -166,18 +175,26 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index, uint hei
         // set uniforms
         quad->shader()->activate();
 
-        MO_CHECK_GL( gl::glUniformMatrix4fv(u_projection->location(), set.numProjectors(), gl::GL_FALSE,
-                                            &projections[0][0][0]) );
-        MO_CHECK_GL( gl::glUniformMatrix4fv(u_inverseProjection->location(), set.numProjectors(), gl::GL_FALSE,
-                                            &inverseProjections[0][0][0]) );
-        MO_CHECK_GL( gl::glUniformMatrix4fv(u_view->location(), set.numProjectors(), gl::GL_FALSE,
-                                            &views[0][0][0]) );
-        MO_CHECK_GL( gl::glUniformMatrix4fv(u_inverseView->location(), set.numProjectors(), gl::GL_FALSE,
-                                            &inverseViews[0][0][0]) );
-        MO_CHECK_GL( gl::glUniform2fv(u_nearFar->location(), set.numProjectors(),
-                                            &nearFars[0][0]) );
-        //MO_CHECK_GL( gl::glUniform1fv(u_aspect->location(), set.numProjectors(),
-        //                                    &aspects[0]) );
+        if (uniCheck)
+        {
+            MO_CHECK_GL( gl::glUniformMatrix4fv(
+                             u_projection->location(), set.numProjectors(), gl::GL_FALSE,
+                             &projections[0][0][0]) );
+            MO_CHECK_GL( gl::glUniformMatrix4fv(
+                             u_inverseProjection->location(), set.numProjectors(), gl::GL_FALSE,
+                             &inverseProjections[0][0][0]) );
+            MO_CHECK_GL( gl::glUniformMatrix4fv(
+                             u_view->location(), set.numProjectors(), gl::GL_FALSE,
+                             &views[0][0][0]) );
+            MO_CHECK_GL( gl::glUniformMatrix4fv(
+                             u_inverseView->location(), set.numProjectors(), gl::GL_FALSE,
+                             &inverseViews[0][0][0]) );
+            MO_CHECK_GL( gl::glUniform2fv(
+                             u_nearFar->location(), set.numProjectors(),
+                             &nearFars[0][0]) );
+            //MO_CHECK_GL( gl::glUniform1fv(u_aspect->location(), set.numProjectors(),
+            //                                    &aspects[0]) );
+        }
 
         quad->draw(width, height);
 
@@ -192,17 +209,26 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index, uint hei
         tex = fbo->takeColorTexture();
 
         fbo->release();
+        delete fbo;
+        fbo = 0;
 
         // set texture edge settings
-        // XXX not sure if this will stay until use...
+        /** @todo not sure if this will stay until use...
+                  [actually i'm never sure. Need to test that once!] */
         tex->bind();
         tex->setTexParameter(gl::GL_TEXTURE_WRAP_S, gl::GLint(gl::GL_CLAMP_TO_EDGE));
         tex->setTexParameter(gl::GL_TEXTURE_WRAP_T, gl::GLint(gl::GL_CLAMP_TO_EDGE));
     }
     catch (Exception & e)
     {
+        if (fbo && fbo->isCreated())
+            fbo->release();
         delete fbo;
+        if (quad && quad->isCreated())
+            quad->release();
         delete quad;
+        if (tex && tex->isAllocated())
+            tex->release();
         delete tex;
 
         throw;

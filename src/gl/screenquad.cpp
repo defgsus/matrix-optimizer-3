@@ -27,6 +27,18 @@ ScreenQuad::ScreenQuad(const QString &name, ErrorReporting reporting)
 {
 }
 
+ScreenQuad::~ScreenQuad()
+{
+    if (quad_ && quad_->isReady())
+        MO_GL_WARNING("Release of initialized ScreenQuad - OpenGL resource leak");
+    delete quad_;
+}
+
+bool ScreenQuad::isCreated() const
+{
+    return (quad_ && quad_->isCreated());
+}
+
 void ScreenQuad::setAntialiasing(uint samples)
 {
     antialias_ = samples;
@@ -41,7 +53,7 @@ bool ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile,
                         const QString& defines,
                         GEOM::Geometry * geom)
 {
-    // XXX add error reporting to Drawable and Shader
+    /// @todo add error reporting to Drawable and Shader
 
     MO_ASSERT(!quad_, "ScreenQuad::create() duplicate call");
 

@@ -18,7 +18,7 @@ namespace MO {
 
 
 ProjectionSystemSettings::ProjectionSystemSettings()
-    : blendMethod_  (1),
+    : blendMethod_  (-1),
       blendMargin_  (0.3f)
 {
 }
