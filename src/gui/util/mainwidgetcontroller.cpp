@@ -827,9 +827,9 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     // widgets -> scenetime
     connect(seqView_, SIGNAL(sceneTimeChanged(Double)),
-            scene_, SLOT(setSceneTime(Double)));
+            this, SLOT(setSceneTime(Double)));
     connect(sequencer_, SIGNAL(sceneTimeChanged(Double)),
-            scene_, SLOT(setSceneTime(Double)));
+            this, SLOT(setSceneTime(Double)));
 
     // scene changes
     connect(scene_, SIGNAL(numberOutputEnvelopesChanged(uint)),
@@ -911,8 +911,9 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
 
 void MainWidgetController::onUpdateTimer_()
 {
-    if (audioEngine_)
-        transportWidget_->setSceneTime(audioEngine_->second());
+    //if (audioEngine_)
+    //    transportWidget_->
+    onSceneTimeChanged_(audioEngine_->second());
 }
 
 
@@ -1496,7 +1497,7 @@ void MainWidgetController::start()
         // start rythmic gui updates
         updateTimer_->start();
 
-    // XXX especially update CurrentTime
+    // XXX especially update CurrentTime (for clients)
     // Scene::sceneTime() is not really used
     scene_->setSceneTime(audioEngine_->second());
 
@@ -1522,7 +1523,7 @@ void MainWidgetController::stop()
             audioEngine_->stop();
         else
         {
-            audioEngine_->seek(0);
+            audioEngine_->seek(0.0);
             // XXX hacky
             //onSceneTimeChanged_(0.0);
             scene_->setSceneTime(0.0);
@@ -1546,6 +1547,17 @@ void MainWidgetController::closeAudio()
     if (audioEngine_)
         audioEngine_->closeAudioDevice();
 }
+
+void MainWidgetController::setSceneTime(Double time)
+{
+    // does CurrentTime as well
+    if (scene_)
+        scene_->setSceneTime(time);
+    // that's our actual clock
+    if (audioEngine_)
+        audioEngine_->seek(time);
+}
+
 
 void MainWidgetController::updateNumberOutputEnvelopes_(uint num)
 {

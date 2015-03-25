@@ -60,7 +60,7 @@ namespace IO {
         { "mo3-geom" },
         { "xml-iface" },
         { "xml-iface-p" },
-        { "wav", "voc", "au", "snd", "aiff", "aifc", "w64", "flac" },
+        { "wav", "voc", "au", "snd", "aif", "aiff", "aifc", "w64", "flac" },
         { "mod", "s3m", "xm", "it" },
         { "xml-proj" },
         { "pov" },
@@ -92,7 +92,7 @@ namespace IO {
         { QObject::tr("Interface xml") + " ( *.xml *.xml-iface )" },
         { QObject::tr("Interface presets xml") + " ( *.xml *.xml-iface-p )" },
         { QObject::tr("all audio files")
-                    + " ( *.wav *.voc *.au *.snd *.aiff *.aifc *.w64 *.flac )" },
+                    + " ( *.wav *.voc *.au *.snd *.aif *.aiff *.aifc *.w64 *.flac )" },
         { QObject::tr("tracker files s3m/mod/xm/it")
                     + " ( *.S3M *.mod *.xm *.it )" },
         { QObject::tr("projector xml files") + " ( *.xml *.xml-proj )" },

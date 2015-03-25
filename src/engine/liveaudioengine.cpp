@@ -305,6 +305,10 @@ void LiveAudioEngine::seek(SamplePos pos)
     p_->engine->seek(pos);
 }
 
+void LiveAudioEngine::seek(Double time)
+{
+    p_->engine->seek(time * p_->engine->config().sampleRate());
+}
 
 void LiveAudioEngine::setScene(Scene * s, uint thread)
 {

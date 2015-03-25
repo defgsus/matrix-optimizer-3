@@ -136,7 +136,8 @@ void SequenceView::setScene(Scene *scene)
 void SequenceView::setSceneTime(Double time)
 {
     playBar_->setTime(time);
-    // check for containing clip
+
+    // sequence behaviour in containing clip
     if (sequence_ && sequence_->parentClip())
     {
         playBar_->setTimeOffset(-sequence_->realStart());
