@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<equations version="1" name="fractal">
+    <equation name="julia01" text="(juliai(x,y,-0.13,0.838343)%10)/10"/>
+    <equation name="mandel23" text="sin((mandel(x,y,200) - mandeli(x,y,200))/24)&#10;//(juliai(x,y,-0.13,0.838343)%10)/10"/>
+</equations>
