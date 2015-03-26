@@ -101,6 +101,8 @@ public slots:
     void start();
     void stop();
     void closeAudio();
+    /** Sets CurrentTime and audio engine's time at once */
+    void setSceneTime(Double time);
 
     /** Loads last or creates new */
     void initScene();

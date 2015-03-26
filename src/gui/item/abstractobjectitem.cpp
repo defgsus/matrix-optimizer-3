@@ -95,7 +95,8 @@ public:
 
 // -------------------------- AbstractObjectItem ------------------------------
 
-
+/** @todo when moving childs within a parent,
+    expand top-left only after certain threshold distance */
 AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     : QGraphicsItem     (parent),
       p_oi_             (new PrivateOI(this))

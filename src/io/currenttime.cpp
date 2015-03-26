@@ -14,6 +14,8 @@
 #include "engine/serverengine.h"
 #include "io/application.h"
 #include "io/isclient.h"
+//#include "io/log.h"
+
 
 namespace MO {
 
@@ -26,6 +28,8 @@ Double CurrentTime::time()
 
 void CurrentTime::setTime(Double time)
 {
+    //MO_DEBUG("CurrentTime::setSceneTime(" << time << ")");
+
     startTime_ = applicationTime() - time;
 
 #ifndef MO_DISABLE_SERVER

@@ -61,6 +61,8 @@ public slots:
 
     /** Seeks to a certain position in the scene */
     void seek(SamplePos pos);
+    /** Seeks to a certain position in the scene */
+    void seek(Double second);
 
     /** Opens the audio streams as configured.
         Returns true when the device is ready. */

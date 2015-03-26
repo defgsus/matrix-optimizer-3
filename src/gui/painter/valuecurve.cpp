@@ -48,7 +48,8 @@ void ValueCurve::paint(QPainter &p, const QRect &rect)
 
 void ValueCurve::paint(QPainter &p, const QRect& prect, const QRect &rect)
 {
-    if (!data_ && !func_)
+    if ((!data_ && !func_)
+        || (prect.width() < 1 || prect.height() < 1))
         return;
 
     p.setPen(pen_);
@@ -59,15 +60,15 @@ void ValueCurve::paint(QPainter &p, const QRect& prect, const QRect &rect)
     const int i0 = rect.left() - 1,
               i1 = rect.right() + 2,
               im = (i1 - i0) * overPaint_;
-
     int y0=0, x0=0, y;
+
     // draw by class
     if (data_)
     {
         for (int i=0; i<=im; ++i)
         {
-            Double xx = (Double)i / im;
-            Double x = prect.left() + prect.width() * xx;
+            Double x = i0 + (Double)i / overPaint_;
+            Double xx = (x - prect.left()) / prect.width();
             y = prect.top() + prect.height() - 1 - prect.height() *
                     viewspace_.mapYFrom( data_->value(viewspace_.mapXTo(xx)) );
 
@@ -78,13 +79,14 @@ void ValueCurve::paint(QPainter &p, const QRect& prect, const QRect &rect)
             y0 = y;
         }
     }
+
     // draw by functor
     else if (func_)
     {
         for (int i=0; i<=im; ++i)
         {
-            Double xx = (Double)i / im;
-            Double x = prect.left() + prect.width() * xx;
+            Double x = i0 + (Double)i / overPaint_;
+            Double xx = (x - prect.left()) / prect.width();
             y = prect.top() + prect.height() - 1 - prect.height() *
                     viewspace_.mapYFrom( func_(viewspace_.mapXTo(xx)) );
 

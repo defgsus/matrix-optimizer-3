@@ -260,9 +260,9 @@ void AbstractScriptWidget::PrivateSW::updateEditorColor()
 void AbstractScriptWidget::PrivateSW::updateInfoWidget()
 {
     auto c = editor->textCursor();
-    lInfo->setText(tr("pos %1:%2, char %3")
-                   .arg(c.blockNumber())
-                   .arg(c.columnNumber())
+    lInfo->setText(tr("%1:%2 (char %3)")
+                   .arg(c.blockNumber() + 1)
+                   .arg(c.columnNumber() + 1)
                    .arg(c.position())
                    );
 }

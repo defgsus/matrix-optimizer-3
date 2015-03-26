@@ -180,6 +180,8 @@ static void register_math_funcs(asIScriptEngine *engine, const char * floattyp, 
     MO__REG_FUNC("%1 length(%1 x, %1 y, %1 z)", MATH::advanced<F>::mag_3);
     MO__REG_FUNC("%1 length(%1 x, %1 y, %1 z, %1 w)", MATH::advanced<F>::mag_4);
 
+    MO__REG_FUNC("%1 note2freq(%1 note)", MATH::advanced<F>::note2freq_1);
+
     MO__REG_FUNC("%1 noise(%1 x)", MATH::advanced<F>::noise);
     MO__REG_FUNC("%1 noise(%1 x, %1 y)", MATH::advanced<F>::noise_2);
     MO__REG_FUNC("%1 noise(%1 x, %1 y, %1 z)", MATH::advanced<F>::noise_3);
