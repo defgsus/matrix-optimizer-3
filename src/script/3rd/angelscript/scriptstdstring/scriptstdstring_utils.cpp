@@ -1,5 +1,7 @@
 #ifndef MO_DISABLE_ANGELSCRIPT
 
+#include <Qt> // Q_UNUSED
+
 #include <assert.h>
 #include "scriptstdstring.h"
 #include "../scriptarray/scriptarray.h"
@@ -114,7 +116,7 @@ static void StringJoin_Generic(asIScriptGeneric *gen)
 // The string type must have been registered first.
 void RegisterStdStringUtils(asIScriptEngine *engine)
 {
-	int r;
+    int r; Q_UNUSED(r);
 
 	if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
 	{
