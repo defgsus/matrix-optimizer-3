@@ -16,7 +16,7 @@
   * - fullscreen issue (wtf???) and is the stretching hack a solution??
   * - fisheye distortion...
   * - automatic projector camera for clients while dome preview for server
-  * - send interface position along with scene
+  * - send interface preset along with scene
   * - disable floating dock windows on xubuntu!!!!
   * - file klaus still not 100%
   * - update comes one to late in ProjectorSetupDialog

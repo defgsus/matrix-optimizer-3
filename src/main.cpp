@@ -24,6 +24,7 @@
 #include "gui/splashscreen.h"
 #include "engine/clientengine.h"
 #include "maincommandline.h"
+#include "io/diskrendersettings.h"
 
 void showHelp()
 {
@@ -39,6 +40,13 @@ void showHelp()
         << "\n" << MO::MainCommandLine().help()
         );
 }
+
+
+int renderToDisk()
+{
+    return 0;
+}
+
 
 
 
@@ -96,6 +104,7 @@ int main(int argc, char *argv[])
         command = argv[1];
 
     // determine what to do
+    bool doRender = false;
     if (0 == command.compare("-h", Qt::CaseInsensitive)
      || command.contains("help", Qt::CaseInsensitive))
     {
@@ -106,6 +115,11 @@ int main(int argc, char *argv[])
     if (0 == command.compare("client", Qt::CaseInsensitive))
     {
         MO::setThisApplicationToClient();
+    }
+    else
+    if (0 == command.compare("render", Qt::CaseInsensitive))
+    {
+        doRender = true;
     }
     else
     if (!command.isEmpty() && !command.startsWith("-"))
@@ -134,7 +148,12 @@ int main(int argc, char *argv[])
 
         // ------ start program ---------
 
+        // disk renderer
+        if (doRender)
+            ret = renderToDisk();
+
         // --- client engine ---
+        else
         if (MO::isClient())
         {
             ret = MO::clientEngine().run(argc, argv, 2);

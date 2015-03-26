@@ -52,12 +52,13 @@ QToolButton[GroupHeader="true"] {
 /* ---- buttons --------- */
 
 QPushButton, QToolButton {
-        background-color: #444;
+        background-color: #555;
         color: #fff;
 }
 
 QPushButton:disabled, QToolButton:disabled {
         background-color: #222;
+        color: #000;
 }
 
 
@@ -76,6 +77,8 @@ QSpinBox, QDoubleSpinBox, QLineEdit {
 QSpinBox[readOnly="true"],
 QDoubleSpinBox[readOnly="true"],
 QLineEdit[readOnly="true"] { color: #888; border-color: #555; }
+
+QLineEdit[invalid="true"] { background-color: #111; color: #a00; }
 
 
 /* ---- lists ---- */

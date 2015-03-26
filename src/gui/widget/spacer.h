@@ -20,6 +20,10 @@ namespace MO {
 namespace GUI {
 
 
+/** Deprecated spacer between widgets.
+    @deprecated because it's far not good as QDockWidget,
+    although that has a serious issue with (at least x)ubuntu!
+*/
 class Spacer : public QWidget
 {
     Q_OBJECT

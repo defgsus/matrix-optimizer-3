@@ -73,6 +73,7 @@
 #endif
 #include "gui/util/scenesettings.h"
 #include "gui/texteditdialog.h"
+#include "gui/renderdialog.h"
 #include "io/datastream.h"
 #include "io/files.h"
 #include "io/povrayexporter.h"
@@ -1857,6 +1858,9 @@ void MainWidgetController::loadInterfacePresets()
 
 void MainWidgetController::renderToDisk()
 {
+    auto diag = new RenderDialog(window_);
+    diag->exec();
+    /*
     auto ren = new Renderer(this);
 
     ren->setScene(scene_);
@@ -1874,6 +1878,7 @@ void MainWidgetController::renderToDisk()
 
     MO_DEBUG_RENDER("starting renderer");
     ren->start();
+    */
 }
 
 void MainWidgetController::exportPovray_()
